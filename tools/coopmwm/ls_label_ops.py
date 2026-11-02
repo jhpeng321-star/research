@@ -140,6 +140,49 @@ print(json.dumps(dict(unix=time.time(),owner=d,state=(p/'stat').read_text().spli
     write(ops.EVIDENCE/f'LS_LABEL_STATUS_{int(value["unix"])}.json',value);print(json.dumps(value));return value
 
 
+def publish():
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,time
+c=Path({COLLECTION!r});labels=[json.loads(p.read_text()) for p in (c/'labels').glob('*_SUMOENV1.json')]
+labels=[x for x in labels if x['verification']['status'] in ('accepted','rejected')]
+assert labels,'no complete real label yet'
+first=min(labels,key=lambda x:x['verification']['timing']['finished_unix'])
+print(json.dumps(dict(unix=time.time(),first_label=first,smoke=json.loads((c/'LABEL_SUMO_SMOKE_SUMOENV1.json').read_text()),
+ voids=[json.loads(p.read_text()) for p in (c/'label_voids').glob('*.json')],new_searches_for_regrading=0)))'''))
+    p=ops.EVIDENCE/'LS_FIRST_REAL_LABEL_SUMOENV1.json'
+    if not p.exists():write(p,value)
+    print(json.dumps(dict(published=str(p),branches=len(value['first_label']['verification']['branches']),
+        status=value['first_label']['verification']['status'],smoke_pass=value['smoke']['pass_'])))
+
+
+def bank_status():
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,time,sys
+sys.path.insert(0,{SOURCE!r}+'/pytools')
+from tools.coopmwm.exact_grade import _bootstrap_mean
+c=Path({COLLECTION!r});all_labels=[json.loads(p.read_text()) for p in (c/'labels').glob('*.json')]
+labels=[x for x in all_labels if x['verification']['status'] in ('accepted','rejected')]
+assert len({{x['search_id'] for x in labels}})==len(labels),'duplicate usable labels'
+positive=[x for x in labels if x['verification']['status']=='accepted' and x['verification']['grade_veh_s']>0]
+values=[x['verification']['best_margin_veh_s'] for x in labels]
+mean,ci=_bootstrap_mean(values,[x['world_id'] for x in labels],10000,20261101) if labels else (None,None)
+focus=lambda x:x['verification']['episode']['world']['demand'] in (2400,2700) and x['verification']['episode']['world']['penetration'] in (.2,.4)
+print(json.dumps(dict(unix=time.time(),arm='B',policy_update=3,entries=len(labels),positives=len(positive),
+ mean_exact_advantage_veh_s=mean,world_bootstrap_ci95=ci,
+ estimand='best of eight exact candidate margins vs policy; includes nonpositive decisions',
+ rank5_8_winners=sum(x['verification']['chosen']>=4 for x in positive),
+ rank5_8_share_of_positive_winners=sum(x['verification']['chosen']>=4 for x in positive)/len(positive) if positive else None,
+ worlds=sorted(set(x['world_id'] for x in labels)),focus_share=sum(focus(x) for x in labels)/len(labels) if labels else None,
+ void_attempts=len(list((c/'label_voids').glob('*.json'))),training_paused=True,
+ prerequisite_positive_entries=20,prerequisite_met=len(positive)>=20,
+ R_bank_entries=0,training_changes_from_statistics=False)))'''))
+    target=ops.EVIDENCE/'BANK_STATUS.json';tmp=target.with_suffix('.publishing')
+    with tmp.open('w',encoding='utf-8') as f:json.dump(value,f,sort_keys=True)
+    __import__('os').replace(tmp,target)
+    write(ops.EVIDENCE/f'BANK_STATUS_{int(value["unix"])}.json',value)
+    print(json.dumps(value));return value
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','result','register','deploy','status'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','result','register','deploy','status','publish','bank_status'))
     globals()[p.parse_args().action]()

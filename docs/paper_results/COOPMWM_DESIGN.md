@@ -1,5 +1,5 @@
 # S-COOPMWM — frozen B-u3 collection recovery; B-REPLAY integration pending
-1. Ownercap14500000: prior11900000 + MAIN2232 restrictedbank_verification_ext2600000; priorrestrictedk8training1500000/interim900000 unchanged; liveLSenvelope2419200 uses existing train/verification only, remainingtrainingre-quote before resume; phaseguardsSTOP/ALERT.
+1. Briefowner cap14500000 retained; freshresume operational6Mhardguard includes811640superseded untilclarified; priorrestrictedbank2600000/k8training1500000/interim900000 unchanged; liveLS usesexistingphases, trainingre-quote before resume; phaseguardsSTOP/ALERT.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -40,7 +40,7 @@
 39. TRAIN4/dev16 reportingonly; primaryA24/B24/R24,secondaryA48. Finalspawnfault375800sim-squarantined; MAIN1556approvedreplacement; source4/89CPU PASS explicitcheckpoint/SHA+final-onlycaps; B/Rcontinue.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. A48complete,B/Ru3/noU4update; 72episodes/14534snapshots adopted; MAIN2127 lsvalidcpu3 218CPU PASS0skips42.672s; ALL8freshGPUgates/worker; modelarrivalphase1200=>t0<=780, SAMEscreenH300/final<=420; B-REPLAY delegated/pending20positiveBbank entries.
+42. A48/B3/R3;72episodes/14534snapshotsadopted;lslabelcpu2 223CPU PASS0skips40.235s; explicitSUMOenv/reusedpolicybranchsmokePASS;4real9branchlists/1positive,3originalzero-physicsvoidsretained; arrival1200=>t0<=780/SAMEH; B-REPLAYdelegated/pending20positivesandrelease.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
 44. Mechanics3600,calibration57600,discovery138200,pairedbranches1297400,reusecheck600; train2852400 inclMAIN1651 tenfresh-ID DNS replacements12000; allfailedchargesretained; verification2800000/exactgrade55360 plusinactivek8phase1500000.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.

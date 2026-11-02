@@ -1,5 +1,22 @@
 # S-COOPMWM — live checks
 
+## Real SUMO labels flowing — 23:53 UTC+8
+- **Real policy-branch smoke PASS** (world986020), including deterministic prefix
+  through t300. All nine branches completed; that list was rejected and consumed
+  **5,940 actual sim-s**, within its precharge.
+- **Four usable k8 lists** now exist on four TRAIN worlds. The three earlier
+  missing-binary labels were re-graded from saved candidates without WM replay;
+  their original charges and void/no-outcome receipts remain intact.
+- One list (world986016) has an exact-positive selected candidate,
+  **+522.037 veh-s**; the other three are rejected/tied. **1/20** positive entries
+  toward the prerequisite; this is selected bank evidence, not policy improvement.
+- Read-only observer V3 **14156** publishes `BANK_STATUS.json` every30min and
+  hourly `COLLECT_THROUGHPUT.json`. At23:48, the outage/startup-inclusive window
+  gives **4.11 searches/h** and **4.11 verified lists/h**; no steady-state ETA.
+- cpuQ has **2,155,585,536 bytes free**, only8,101,888 above its registered2GiB
+  guard. Further storage requires expansion or explicit SHA-gated archive authority.
+  No additional deletion. B/R remainu3; B-REPLAY release readiness is still absent.
+
 ## MAIN23:32 — SUMO label launcher recovered; real smoke pending
 - Two genuine full-pool searches completed on gpuA in **1,131.52 s** and
   **839.24 s**. A third completed before the handover. Their original label

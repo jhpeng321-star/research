@@ -1,5 +1,16 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+FIRSTREALSMOKE+LABELPASS: LS_FIRST_REAL_LABEL_SUMOENV1.json. By1793634788 FOUR
+real9branchlistscomplete; originalTHREEbinary-failureattemptsrecoveredwithoutWM
+replay, voidchargeskept. world986016positive+522.037018934veh-s; other3rejected/
+tied. BANK_STATUS4entries/1positive, NOT20prerequisite. Firstrealworld986020rejected
+all9graded/5940actualsim-s. Existing4poolsearches/h4.11 includesstartup/outage;
+notsteadyETA. OBSERVERV3local14156/unix1793634755 replacesONLYverified25264;
+statusrecognizesnewgradingowner, nullablefailedgradeshandled, publishesBANK_STATUS
+every30min/COLLECT_THROUGHPUThourly. Newdiskalert:_sol/COOPMWM_FIRST_LABEL_AND_DISK_2353.md:
+cpuQ2155585536bytesfree(8.1MBabove2GiBguard). NeedreceiptedWAITbeforefurther
+gradingadmission, storageexpansion/explicitSHAarchiveauthority; NODELETIONS.
+
 Fresh resume read ALL554brief lines; adoptedda7d24ef/uncommittedwork. FirstTWO
 genuineAsearchesfinished1131.52s/839.24s; labelsALL9failed/noSUMObinary/actual0.
 Thirdsearchfinishedbeforehandover, likewisefailed; NEVERredoWMsearches. Fixed

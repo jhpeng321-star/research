@@ -276,9 +276,10 @@ def status():
 import json,time,os,shutil
 c=Path({COLLECTION!r});r=Path({ROOT!r});v=dict(unix=time.time(),owners={{}},disk_free=shutil.disk_usage(c).free,load=os.getloadavg(),training_paused=all(not (r/(a+'_checkpoint_004.pt')).exists() for a in ('B','R')))
 for name in ('BROKER','SUPERVISOR'):
- d=json.loads((c/(name+'_DISPATCH_VALIDITY1.json')).read_text());p=Path('/proc',str(d['pid']));st=(p/'stat').read_text().split() if p.exists() else None
+ suffix='_SUMOENV1' if (c/(name+'_DISPATCH_SUMOENV1.json')).exists() else '_VALIDITY1'
+ d=json.loads((c/(name+'_DISPATCH'+suffix+'.json')).read_text());p=Path('/proc',str(d['pid']));st=(p/'stat').read_text().split() if p.exists() else None
  assert not st or st[21]==d['start_ticks']
- v['owners'][name]=dict(d,state=st[2] if st else 'exited',log_tail=(c/(name+'_VALIDITY1.log')).read_text()[-1800:])
+ v['owners'][name]=dict(d,state=st[2] if st else 'exited',log_tail=(c/(name+suffix+'.log')).read_text()[-1800:])
 v['collection']=json.loads((c/'LS_COLLECT_STATUS.json').read_text())
 v['broker_completed']=len(list((c/'broker_completed').glob('*.json')))
 v['successful_searches']=sum(json.loads(p.read_text()).get('proposer_receipt') is not None for p in (r/'responses').glob('*.json') if (c/'admissions'/p.name).exists())
@@ -416,7 +417,7 @@ def throughput():
     extra=json.loads(remote('cpuQ',f'''from pathlib import Path
 import json
 c=Path({COLLECTION!r});labels=[json.loads(p.read_text()) for p in (c/'labels').glob('*.json')]
-positive=[x for x in labels if x['verification'].get('grade_veh_s',0)>0 and x['verification']['status']=='accepted']
+positive=[x for x in labels if x['verification']['status']=='accepted' and (x['verification'].get('grade_veh_s') or 0)>0]
 recent=[x for x in positive if {before['unix']!r}<x['verification']['timing']['finished_unix']<={v['unix']!r}]
 print(json.dumps(dict(positive_lists=len(positive),positives_per_hour=len(recent)/{hours!r} if {hours!r} else None,positive_contract='exact-positive verified best-of-eight B lists; R collection not active')))
 '''))
@@ -467,6 +468,9 @@ def watch():
                 write(ops.EVIDENCE/f'LS_VALIDITY_PUBLISH_{int(now)}.json',v)
                 if cpu['successful_searches'] and not (ops.EVIDENCE/'LS_FIRST_SEARCH_VALIDITY1.json').exists():
                     write(ops.EVIDENCE/'LS_FIRST_SEARCH_VALIDITY1.json',v)
+                if (ops.EVIDENCE/'LS_LABEL_RECOVERY_DISPATCH.json').exists():
+                    from .ls_label_ops import bank_status
+                    bank_status()
                 last_publish=now
             if now-last_throughput>=3600:
                 with contextlib.redirect_stdout(io.StringIO()):throughput()
@@ -479,14 +483,14 @@ def watch():
 
 def watch_dispatch():
     import subprocess,sys,time
-    p=ops.EVIDENCE/'LS_VALIDITY_OBSERVER_DISPATCH_V2.json'
+    p=ops.EVIDENCE/'LS_VALIDITY_OBSERVER_DISPATCH_V3.json'
     if p.exists():print(json.dumps(read(p)));return
-    with (ops.EVIDENCE/'LS_VALIDITY_OBSERVER_V2.log').open('x',encoding='utf-8') as log:
+    with (ops.EVIDENCE/'LS_VALIDITY_OBSERVER_V3.log').open('x',encoding='utf-8') as log:
         child=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.ls_validity_ops','watch'],
             cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
     d=dict(pid=child.pid,unix=time.time(),source_sha256=sha(ops.LOCAL/'tools/coopmwm/ls_validity_ops.py'),
-        retired_observer=dict(pid=34636,unix=1793629346.4150927,verified_creation=True,verified_command='tools.coopmwm.ls_validity_ops watch'),
+        retired_observer=dict(pid=25264,unix=1793631295.6391697,verified_creation=True,verified_command='tools.coopmwm.ls_validity_ops watch'),
         mode='observe/publish; admit already-dispatched eight-fresh-gate slots only; no worker/training/physics dispatch')
     write(p,d);print(json.dumps(d))
 
