@@ -476,7 +476,7 @@ def accel_charge(run_root, phase='exact_plan_grading'):
     def charge(spec, attempt):
         from .warm_protocol import install_accounting
         from .accel_storage import reserve
-        install_accounting()
+        install_accounting(run_root)
         try:
             reserve(Path(run_root), [dict(id=f'{spec["grade_id"]}_a{attempt}', sim_s=spec['sim_s'])], phase)
         except ValueError as e:

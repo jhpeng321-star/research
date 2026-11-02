@@ -203,7 +203,8 @@ def run_arm(root,arm):
     except BaseException as error:
         write(root/f'WARM_{arm}_FAILED{suffix}.json',dict(timestamp_utc=timestamp(),error=repr(error)))
         if not isinstance(error,HealthPause):
-            guided_stop='WARM_GUIDED_STOP_V2.json' if (root/'MAIN0508_GUIDED_RELEASE.json').exists() else 'WARM_GUIDED_STOP.json'
+            guided_stop=('WARM_GUIDED_STOP_V3.json' if (root/'INCIDENT_GUIDED_RELEASE.json').exists() else
+                'WARM_GUIDED_STOP_V2.json' if (root/'MAIN0508_GUIDED_RELEASE.json').exists() else 'WARM_GUIDED_STOP.json')
             stop=root/(guided_stop if arm in ('B','R') and b.get('health_guards') else 'STOP.json')
             if not stop.exists():write(stop,dict(arm=arm,error=repr(error),timestamp_utc=timestamp()))
         raise

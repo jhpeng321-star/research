@@ -8,15 +8,19 @@ from .warm_spool import immutable
 
 def state(root,update):
     root=Path(root);folder=root/'quota_requests'/f'u{update:03}'
+    retired=root/'INCIDENT_RETIRED_JOBS.json'
+    excluded=set(json.loads(retired.read_text())['jobs']) if retired.exists() else set()
     allowed=None
     repair=root/'MAIN0508_REPAIR_BINDING.json'
     if update==1 and repair.exists():
         allowed={f'warm_u001_B_{w["seed"]}' for w in json.loads(repair.read_text())['repair_plan']['worlds']}
     starts={p.stem for p in (root/'guided_starts'/f'u{update:03}').glob('*.json')
-        if allowed is None or json.loads(p.read_text())['job'] in allowed}
+        if json.loads(p.read_text())['job'] not in excluded and
+        (allowed is None or json.loads(p.read_text())['job'] in allowed)}
     unresolved=0
     for p in folder.glob('*_RESERVE.json'):
         v=json.loads(p.read_text());token=v['token']
+        if v['job'] in excluded:continue
         bound=folder/(token+'_REQUEST.json')
         record=json.loads(bound.read_text()) if bound.exists() else None
         records=(record.get('records',[record]) if record else [])

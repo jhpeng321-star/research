@@ -66,15 +66,18 @@ def available(root):
 
 
 def worker_endpoints(root,binding,previous):
+    retired=root/'INCIDENT_RETIRED_JOBS.json'
+    disabled=set(json.loads(retired.read_text()).get('disabled_slots',[])) if retired.exists() else set()
     admitted=list(binding['endpoints'])
     for p in sorted(root.glob('WARM_REMOTE_ENDPOINT_ADMISSION_*.json')):
         v=json.loads(p.read_text())
         if v['amendment_sha256'] not in (root/'AUTHORITY.md').read_text():raise ValueError('unregistered GPU hot-add')
         if v['search_sha256']!=binding['search_sha256']:raise ValueError('hot-add search differs')
         admitted.extend(v['endpoints'])
-    result=dict(previous)
+    result={k:v for k,v in previous.items() if k not in disabled}
     for e in admitted:
         slot=e['slot']
+        if slot in disabled:continue
         if slot in result and result[slot]!=e:raise ValueError('worker endpoint changed')
         result[slot]=e
     return result

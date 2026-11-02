@@ -17,9 +17,12 @@ def worker_slots(root):
 
 
 def used_tickets(match):
+    retired=match.parent.parent/'INCIDENT_RETIRED_JOBS.json'
+    excluded=set(read(retired).get('R_ticket_keys',[])) if retired.exists() else set()
     return {read(x)['ticket'] for x in match.glob('*_START.json')
-        if not (match/x.name.replace('_START','_END')).exists()
-        or read(match/x.name.replace('_START','_END')).get('executed')}
+        if x.name.removesuffix('_START.json') not in excluded and
+        (not (match/x.name.replace('_START','_END')).exists()
+        or read(match/x.name.replace('_START','_END')).get('executed'))}
 
 
 def guide(job,generator):

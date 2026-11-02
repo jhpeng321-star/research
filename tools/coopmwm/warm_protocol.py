@@ -39,11 +39,19 @@ def batch_worlds(update):
     return result
 
 
-def install_accounting():
+def install_accounting(root=None):
     """Only the new registered runtime calls this; old run roots stay immutable."""
     import types
     from tools.coopnative import storage
     from . import accel_storage
     b=budget()
+    if root is not None:
+        import json
+        from pathlib import Path
+        r=Path(root);p=r/'INCIDENT_RECOVERY_BINDING.json'
+        if p.exists():
+            v=json.loads(p.read_text())
+            assert v['amendment_sha256'] in (r/'AUTHORITY.md').read_text()
+            b=v['budget']
     accel_storage._reserve=types.FunctionType(storage.reserve.__code__,
         dict(storage.reserve.__globals__,CAP=b['total']-SUPERSEDED_CHARGE,CAPS=b['phases']))

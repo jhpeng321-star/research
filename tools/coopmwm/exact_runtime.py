@@ -26,11 +26,13 @@ def enqueue(root,b,ep,u,arm,beta):
 
 
 def assert_live(root):
-    p=Path(root)/'EXACT_GRADER_DISPATCH_V2.json'
+    p=Path(root)/'INCIDENT_GRADER_DISPATCH.json'
+    if not p.exists():p=Path(root)/'EXACT_GRADER_DISPATCH_V2.json'
     d=read(p if p.exists() else Path(root)/'EXACT_GRADER_DISPATCH.json')
     assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
     stat=Path('/proc')/str(d['pid'])/'stat'
     assert stat.exists() and stat.read_text().split()[21]==d['start_ticks'],'exact grader owner not alive'
+    assert stat.read_text().split()[2]!='Z','exact grader owner is zombie'
     for name in ('GRADER_STOP.json','GRADER_BLOCKED.json'):
         assert not (Path(root)/'exact_grades'/name).exists(),name
 
@@ -82,7 +84,8 @@ def supervise(root,workers=8):
         for r in receipts:
             if r['status'] in ('failed','stopped') or (r['status']=='graded' and not r['noise'].get('crn_verified_t0')):
                 immutable(q.root/'GRADER_STOP.json',dict(grade_id=r['grade_id'],status=r['status'],reason=r.get('reason'),no_imputation=True))
-                target=root/('WARM_GUIDED_STOP_V2.json' if (root/'MAIN0508_GUIDED_RELEASE.json').exists() else 'WARM_GUIDED_STOP.json')
+                target=root/('WARM_GUIDED_STOP_V3.json' if (root/'INCIDENT_GUIDED_RELEASE.json').exists() else
+                    'WARM_GUIDED_STOP_V2.json' if (root/'MAIN0508_GUIDED_RELEASE.json').exists() else 'WARM_GUIDED_STOP.json')
                 immutable(target,dict(source='exact-grade engineering fault',grade_id=r['grade_id']))
                 return
         good=next((r for r in receipts if r['arm']=='B' and r['status']=='graded'),None)
