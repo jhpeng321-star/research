@@ -41,6 +41,9 @@ def group(rows):
 
 
 def family_seeds(rows, members, commands, bounds):
+    # Discovery search uses these only as post-hoc labels. Unsupported sizes
+    # have no inherited prototypes and must never fail a GPU query.
+    if len(members) not in (2,3):return []
     from tools.wmteach.labels import actions
     from tools.leverprobe.intervention import targets, requests
     out = []

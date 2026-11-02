@@ -11,6 +11,18 @@ def request(key,**extras):return ('plan',dict(state_id=key,**extras))
 
 
 class CapacityTests(unittest.TestCase):
+    def test_breadth_first_group_index_before_reservation_time(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);(root/'requests').mkdir();(root/'responses').mkdir()
+            q=root/'quota_requests/u004';q.mkdir(parents=True)
+            for name,stamp,keys in [('early',1.,['z0','a1']),('late',2.,['y0','b1'])]:
+                (q/(name+'_REQUEST.json')).write_text(json.dumps(dict(records=[dict(state_id=k) for k in keys])))
+                (q/(name+'_RESERVE.json')).write_text(json.dumps(dict(unix=stamp)))
+                for key in keys:
+                    (root/'requests'/(key+'.json')).write_text(json.dumps(dict(state_id=key,rows=[],time_s=300)))
+            with patch('tools.coopmwm.exploration.regime',return_value='ordinary'):
+                self.assertEqual([r['state_id'] for _,r in pending(root)],['z0','y0','a1','b1'])
+
     def test_legacy_partial_request_is_not_a_fatal_read_race(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);(root/'requests').mkdir();(root/'responses').mkdir()
