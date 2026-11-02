@@ -1,5 +1,17 @@
 # Evening evidence-review receipt
 
+## Current resumed review
+
+`RESUME_20261102.md` is the current resume and semantic-delta receipt;
+`SOURCE_REFRESH.json` binds the closing permitted source bytes. Both selector
+final handoffs/fleet evaluation are complete, main paired switching is held and
+incomplete, successor physics has adverse incomplete interims, cached ranking
+diagnostics are complete, exact-teacher student testing supplies no established
+win, and WM-teacher scale/student/live work is paused. The current sections of
+README/REFRESH and the claim/outline/figure/threat ledgers supersede historical
+live-status and insertion queues below. Later owner-approved manuscript deliveries
+are preserved separately in `../paperB_overleaf/`.
+
 ## Noon fresh-session evidence delta
 
 Preserved the clean committed worktree, existing figures, verified bibliography and

@@ -1,5 +1,11 @@
 # Paper B — figure/table plan and delivered artwork
 
+**Current refresh:** existing numerical figure sources are unchanged; delivered PNGs,
+vector twins and backing CSVs remain valid at their declared evidence cuts. Current
+switching coverage and successor/ranking/teacher diagnostics are specified below
+without relabeling historical panels or creating missing paired estimates. The
+owner-approved Overleaf delivery is separate; its empty figure boxes are preserved.
+
 ## Reproduction and provenance
 
 From `E:/agent-work/c4-paperb`, render entirely from the package's frozen data:
@@ -85,7 +91,7 @@ Every delivered figure has a PNG and vector PDF twin. Use the vector version at 
 
 ### Final feedback comparison table
 
-- **Purpose:** the empirical headline: structured versus comparable black-box errors/effects under executable excluded-controller feedback.
+- **Purpose:** show the completed scoped structured-versus-black-box comparison under executable feedback, including inconclusive superiority and decision-trust limits.
 - **Columns:** controller; horizon; eligible checkpoint; common worlds/starts; endpoint error; paired WM–BB difference/CI; effect sign/magnitude; oracle regret; execution caveat.
 - **Source:** `E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md`, `C1CLOSED_bootstrap.csv`, `C1CLOSED_ANALYSIS.json`; frozen package source/selected CSVs described below.
 - **Generating command:** overnight renderer below selects existing estimates and CIs only. Producer analysis command in its worktree is `python -B tools/c1closed/analyze.py`; the package does not rerun it.
@@ -187,15 +193,30 @@ Selection/transcription only: no experiment, model execution, fit or resampling.
 - **Purpose:** the requested controller-choice comparison with the primary fleet-PPO baseline and secondary per-CAV MAPPO selector.
 - **Planned columns/panels:** full-team episode cost/paired differences; decision regret; each model's training/data/compute budget; library/cadence/plant/handovers; safety; complete coverage; optional independently qualified model version.
 - **Sources:** `E:/agent-work/c4-c1switch2/docs/paper_results/C1SWITCH2_DESIGN.md`, `HANDOFF.md`, eventual complete identity-bound outputs and final selector receipts.
-- **Generating command/status:** `[[PENDING: complete paired coverage/exports, per-CAV final delivery and producer analysis/render command / S-C1SWITCH2 + S-SELMAPPO2 + MAIN]]`. SSH recovery reconciles WM episodes as terminal/incomplete; original oracle-only work and final-fleet evaluation have source-owned continuations. Fleet final checkpoint/source/config/budget receipt is delivered at `E:/agent-work/c4-c1switch2/SELMAPPO_FINAL.json`. BB startup is terminal before physics, with retained debit and explicit continuation exception required; per-CAV training is live without final delivery. No partial main efficacy figure. Sources: `E:/agent-work/c4-c1switch2/HANDOFF.md`, Current execution state; selector reports listed in `SOURCE_REFRESH.json`.
+- **Generating command/status:** `[[PENDING: complete paired coverage/exports and producer analysis/render command after authorized continuation / S-C1SWITCH2 + MAIN]]`. Both final checkpoint/source/config/budget receipts are delivered as `SELMAPPO_FINAL.json` and `SELMAPPO2_FINAL.json` in the source worktree. Fleet evaluation is complete, while WM/per-CAV coverage and BB physics are incomplete/unavailable. The latest switching reconciliation records exited supervisors/observer, an active GPU hold and an unstarted-scope CPU continuation request awaiting authority. No partial main efficacy figure. Sources: `E:/agent-work/c4-c1switch2/HANDOFF.md`, Current execution state; selector reports in `SOURCE_REFRESH.json`.
 
 ### Physics rebuild — final diagnostic ledger; no adoption claim
 
 - **Purpose:** preserve the independent adoption test without turning favorable available-case cells into a qualified replacement model.
 - **Sources available now:** final `E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md`; `docs/rbint/noon/20261101T113555+0800/PUBLICATION.json` in that worktree binds the frozen FULL-v4 comparison, endpoint and distribution/credibility exports under `docs/rbint/noon/20261101T093000+0800/FULL-v4/`. Exact paths/hashes are in `SOURCE_REFRESH.json`. The final publication explicitly reuses complete same-source forecasts; do not recollect them.
 - **Final status:** delay-distribution/endpoint point estimates and controller-effect signs improve, but breakdown-rate distance worsens: final point-rule FAIL, keep WM2. Earlier numerical CIs were retracted; full-world uncertainty remains unavailable under the sparse-stratum plan. Same-source action probabilities are not calibrated. Earlier-source A/B/C and later FULL cannot form a settings-only ablation figure. Final report/exports/adoption decision are resolved, not PENDING.
-- **Editorial use:** concise results text from WM-PHYS in `CLAIMS.md`, or an owner-typeset diagnostic row with separate metrics/units, explicit “point estimates; full-world uncertainty unavailable” and the failed gate beside improvements. No winner/adoption graphic. The package's existing generated artwork remains source-valid; this refresh changes no numerical input to it, so no rerender is needed. A successor illustration is `[[PENDING: independent successor result/identity and replicated-cell uncertainty / S-RB2-INT + successor agents + MAIN]]`.
-- **Companion figures:** exact-planner artwork remains owned by Paper A and its source report, `E:/agent-work/c4-coopplan/docs/paper_results/COOPPLAN.md`, final/H300 artifacts. Do not import those as WM-control success. New distillation and WM-teacher plots remain `[[PENDING: completed live/teacher-quality exports / S-DISTILL + S-WMTEACH]]`.
+- **Editorial use:** concise results text from WM-PHYS in `CLAIMS.md`, or an owner-typeset diagnostic row with separate metrics/units, explicit “point estimates; full-world uncertainty unavailable” and the failed gate beside improvements. No winner/adoption graphic. The existing artwork remains source-valid; unchanged inputs need no rerender. Successor interim support and remaining gate are specified next.
+- **Companion figures:** exact-planner artwork remains owned by Paper A and `E:/agent-work/c4-coopplan/docs/paper_results/COOPPLAN.md`. Exact-teacher student live exports and WM-teacher quality reports are now complete; use `DISTILL.md` and `WMTEACH.md` at the explicit paths in `SOURCE_REFRESH.json`. WM scale/student/live transfer is paused and remains `[[PENDING: completed WM-teacher scale-labelled corpus/frozen student/live transfer / S-WMTEACH + MAIN]]`. No companion artwork is needed for the core Paper B prediction claim.
+
+### Cached ranking versus useful selection — optional diagnostic row
+
+- **Purpose:** test whether good ordering or lower predicted breakdown probability alone supplies useful controller selection.
+- **Data source:** `E:/agent-work/c4-bdrank/docs/paper_results/BDRANK.md`, Q2/Q3; existing CSV/evidence index `E:/agent-work/c4-bdrank/docs/paper_results/bdrank/README.md`. Exact report hash is in `SOURCE_REFRESH.json`.
+- **Generating command:** no new renderer; owner typesets the already reported C1-RANK cells with separate development/reserved and controller/available-option labels. Producer reproduction is documented in `E:/agent-work/c4-bdrank/tools/bdrank/README.md`; no producer analysis is restarted here.
+- **Status:** completed cached analysis, optional manuscript row; no new image generated. Development ranking favors mean delay, probability saturation hides choices, and development-selected rules lose on the separate reserved panel. Keep tie-adjusted and untied metrics distinct; singleton-stratum full-panel CIs remain unavailable. Not a live picker result or causal breakdown-cost estimate.
+
+### Successor physics — adverse interim, incomplete final gate
+
+- **Purpose:** keep later engineering readiness and matched-cohort uncertainty distinct from a passed adoption condition.
+- **Data source:** `E:/agent-work/c4-rb2-int/docs/paper_results/WMPHYS_V5.md`, available-replicated-cell and separate reserved-subset interims; report hash in `SOURCE_REFRESH.json`.
+- **Generating command:** owner-typeset optional diagnostic row from WM-SUCCESSOR; no final-result renderer or new image. Do not pool cohorts or fabricate unobserved short source clocks.
+- **Caption claim if used:** “On **10 matched complete K8 worlds / five replicated cells**, v5−v4 delay CRPS is **+166.9 [64.6,269.3] / +1046.1 [356.5,1735.7] / +3618.5 [2051.0,5185.9] veh-s at 120/300/600 s**. Conditional within-family **95%** intervals; available-data interim, not final qualification or sequential inference. The separate reserved subset has singleton-stratum CI limitations.” <!-- Source: E:/agent-work/c4-rb2-int/docs/paper_results/WMPHYS_V5.md:69-83,121-134. -->
+- **Status:** INTERIM source complete; full comparison exited incomplete/held. `[[PENDING: complete final successor comparison/adoption and calibrated confidence after authorized continuation / S-RB2-INT + MAIN]]`. Short team-direction accuracy is partially identified; road-only and resolved-pair accuracy must not fill a missing full-team accuracy column.
 
 ## Visual QA
 

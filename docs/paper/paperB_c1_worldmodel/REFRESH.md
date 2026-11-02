@@ -1,6 +1,56 @@
 # Paper B — source refresh and end-of-night handoff
 
-## Current noon handoff
+## Current resumed handoff
+
+Preserved the clean committed package, bibliography verification, artwork,
+append-once registration and later owner-approved manuscript deliveries. Read the
+current summary and exact source cut together: `RESUME_20261102.md` and
+`SOURCE_REFRESH.json`. The original safe allowlist was reread; newly relevant
+ranking/successor/student/teacher reports are now explicitly hash-bound too.
+
+### Newly resolved and current boundaries
+
+- Both RL selector training/final handoffs and fleet evaluation are complete.
+  Main paired switching remains incomplete: original WM coverage is partial,
+  BB stopped before physics, and per-CAV evaluation has terminal adapter/import
+  failures. Latest switching-owner reconciliation records exited supervisors and
+  observer, GPU hold active, and a CPU-only unstarted-scope continuation REQUEST.
+  Do not treat training completion as a pending dependency or start replacements.
+- Final FULL-v4 still FAILS adoption. Successor physics exited incomplete/held;
+  its matched replicated-cell interim worsens delay error. Full comparison and
+  calibrated confidence are not established. Missing short source clocks leave
+  team-direction accuracy bounded, not exactly observed.
+- Cached ranking analysis is complete: mean delay orders development outcomes
+  better than saturated breakdown probabilities, but development-selected rules
+  lose on the separate reserved panel. Available-option teacher diagnostics are
+  distinct; favorable concordance alone does not demonstrate useful deployment.
+- Exact-teacher student live testing is complete without an established MAPPO win.
+  WM-teacher quality is complete; scale labelling, student and live testing are
+  paused. Generated states must not be counted as fully labelled examples.
+- Free-form learning has a final budget stop and inconclusive DEV contrasts.
+  Current companion search/verified-plan-bank work remains ongoing context,
+  not a completed Paper B picker or WM-policy efficacy result.
+- Owner-approved prose, IEEEtran compilation and PDF/ZIP delivery are complete
+  in `../paperB_overleaf/`, as recorded in `V2_RECEIPT.md`. The current package
+  refresh does not rebuild or overwrite that separate approved manuscript.
+
+### Current insertion queue
+
+- `[[PENDING: complete main wall-inclusive paired WM/BB/fleet-PPO/per-CAV-MAPPO coverage/exports and model/RL data-compute comparison after explicit terminal-scope continuation decisions / S-C1SWITCH2 + MAIN]]`.
+- `[[PENDING: complete independently bound successor-physics comparison/adoption and calibrated action confidence after authorized continuation / S-RB2-INT + successor agents + MAIN]]`.
+- `[[PENDING: complete WM-teacher scale-labelled corpus, frozen student and live transfer after explicit resume / S-WMTEACH + MAIN]]`.
+- `[[PENDING: causal wall executor/memory restoration and eligible autonomous wall feedback / S-C1CLOSED + MAIN]]`.
+- `[[PENDING: unbroken initialization exclusion, exact historical E1 cost/plant and E2 panel/checkpoint/rule bindings / S-C1GAP + MAIN]]`.
+- `[[PENDING: matched architecture ablations and original baseline data/compute comparability if claimed / MAIN]]`.
+- `[[PENDING: author/affiliation confirmation, exact CFP/template/deadline check and owner-approved refreshed final manuscript / owner]]`.
+
+Existing numerical figure inputs did not change. Reuse the delivered artwork,
+backing CSVs and prior visual review; optional new diagnostic rows are specified
+in `FIGURES.md`. Reproduction/verification commands below remain applicable.
+First-package registration is already complete and is not appended again.
+Historical queues below are provenance only; this section governs the handoff.
+
+## Historical noon handoff — superseded by resumed handoff above
 
 The previous session's clean package, bibliography verification and first-package
 registration are preserved. Fresh-session review and exact safe source hashes are
