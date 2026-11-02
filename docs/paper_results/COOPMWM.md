@@ -1,5 +1,18 @@
 # S-COOPMWM — live checks
 
+## Nov3 07:19 UTC+8 — MAIN07:06 train-phase transfer registered
+- Latest addendum authorizes144,000 sim-s **checks→train**. All of it fits the
+  unspent checks balance; sumo_verification contribution is0. Total remains14.5M.
+- New additive `B_REPLAY_PHASE_TRANSFER_0706.json` is registered canonically and
+  on cpuQ, SHA256 `b6c1b8bf12d228e5c923efc5d02e0803f0870a8c123a479d0fadd07bea4b5c28`.
+  Train allocation3,008,400 /charged1,798,800 /remaining**1,209,600**, exactly
+  covering B/R u4-u24 PPO. Checks allocation288,000; all existing charges retained.
+- Under B-REPLAY, lesson checks replace the old B/R learning checks and use
+  bank_verification_ext; interim uses interim_u8_test. Restricted allocations and
+  original bindings are retained. Six budget-contract tests PASS (0.12s).
+- No reservation/physics/optimizer in this amendment. Full-run PPO funding is
+  resolved; bank start threshold remains8/10 at the last validated read.
+
 ## Nov3 07:14 UTC+8 — full Linux B-REPLAY qualification and real bank-read PASS
 - Immutable `coopmwm20261103_replayreleasecpu5`: **694 CPU checks PASS, zero
   failures/skips,83.664s, zero SUMO** (642 tests plus52 subtests; the already

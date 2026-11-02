@@ -1,5 +1,5 @@
 # S-COOPMWM — frozen B-u3 bank confirmation; B-REPLAY integration pending
-1. MAIN06:27 operationalcap14500000 supersedesfresh6Mguard; append-onlyreconciliation b8d8f5bd:charged5430440/remaining9069560 incl811640superseded. Trainremaining1065600 vsB/Ru4-u24 PPO1209600 =>phasegap144000reportedMAIN; noimplicittransfer. Restrictedbank2600000/k8training1500000/interim900000 retained; liveimmutablebindingsawaitqualifiedhandover.
+1. MAIN06:27 operationalcap14500000 supersedesfresh6Mguard. MAIN07:06 authorized144000checks->train,append-onlySHA b6c1b8bf:train3008400/checks288000; traincharged1798800/remaining1209600 exactlyB/Ru4-u24 PPO. Oldrecords/failurechargesretained; restrictedbank2600000/k8training1500000/interim900000 unchanged; liveimmutablebindingsawaitqualifiedhandover.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -35,12 +35,12 @@
 34. Zero/tie credits reported separately; scale fitted from exact data, diagnostic only.
 35. TRAIN986000..986071 primary seed20261101 only, six worlds/cell; original fresh guards/registrations retained.
 36. Check986072..986083,one/cell; TRAIN50%focus,12focus+12other; MAIN0508 replacements retained; collection focus deficit repaid to>=50% via world-metadata/count ordering, unchanged within-stratum coverage/no dropped states.
-37. Every4updates checks A/B/R vs once-only MAPPO controls, J600/J900/safety; forced counts/type and SNR.
+37. AoriginalTRAINchecksretained; MAIN07:06 B-REPLAY lessons replaceoldB/Rlearningchecks, everyupdate fundedbank_verification_ext; u8interim fundedinterim_u8_test. Per-update ownPPO/SUMO+safety/bankexposure stillreported.
 38. Dev984000..984023 every16updates A/B/R; existing24bitwise MAPPO bytes reused; no MAPPO dev rerun.
 39. TRAIN4/dev16 reportingonly; primaryA24/B24/R24,secondaryA48. Finalspawnfault375800sim-squarantined; MAIN1556approvedreplacement; source4/89CPU PASS explicitcheckpoint/SHA+final-onlycaps; B/Rcontinue.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. A48/B3/R3;72episodes/14534snapshotsadopted. CPU7jointrelease273LinuxPASS;A237704READY8;controller24476continuesoriginalCPU7snapshotroll/onequalifierglobally. Delegatedreplayintegrated3cc4d0ab;replayreleasecpu5 full694LinuxPASS/0skips83.664s/noSUMO. RealLSreadPASS63decisions/8admitted/3cooperative/990samples; amendedsafetyoverlays+generationtapes adopted, notrerun. B-REPLAY stillrequires10admissions; trainphasegap144000reportedMAIN.
+42. A48/B3/R3;72episodes/14534snapshotsadopted. CPU7jointrelease273LinuxPASS;A237704READY8;controller24476continuesoriginalCPU7snapshotroll/onequalifierglobally. Delegatedreplayintegrated3cc4d0ab;replayreleasecpu5 full694LinuxPASS/0skips83.664s/noSUMO. RealLSreadPASS63decisions/8admitted/3cooperative/990samples; amendedsafetyoverlays+generationtapes adopted, notrerun. PPOphasefundingresolvedb6c1b8bf; B-REPLAY stillrequires10admissions.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
 44. Mechanics3600,calibration57600,discovery138200,pairedbranches1297400,reusecheck600; train2852400 inclMAIN1651 tenfresh-ID DNS replacements12000; allfailedchargesretained; verification2800000/exactgrade55360 plusinactivek8phase1500000.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
