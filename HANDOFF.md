@@ -5,6 +5,17 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**Nov2 09:41+08 fresh-session verification:** original final collection again
+validates COMPLETE/169updates/7774production/0open with the explicit final169
+checkpoint pin. Watcher12432 retains exact PID/executable/command/creation/source;
+local/peer final handoff bytes and all three retained peer status receipt hashes
+match. No complete evaluation manifest is available. Peer HANDOFF/STATUS_CURRENT
+remain at their Nov2 01:46 terminal-scope reconciliation; these are historical
+peer receipts, not a fresh remote process inspection. Existing MAIN continuation
+request remains the dependency. Evidence `selmappo2/RESUME_1793583661290373300.json`.
+Training supervision through final169 is fulfilled; no new dispatch, SSH poll,
+restart or simulation was needed in this session.
+
 **Nov2 fresh-session reconciliation:** the original final collection again passes
 `report.analyze`: COMPLETE/169updates, checkpoint82c6745b, collectiona8a08f8c,
 6997800actual/6998400reserved training+smoke. Local/peer final handoff bytes still

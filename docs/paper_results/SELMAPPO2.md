@@ -2,6 +2,15 @@
 
 ## Status (reconciled 2026-11-02)
 
+**09:41+08 fresh-session check:** original final collection and explicit final169
+checkpoint pin validate COMPLETE/169updates/7774production/0open. The existing
+watcher's exact process/source identity, matching local/peer handoff bytes and
+all three retained peer status receipt hashes validate. No complete evaluation
+manifest exists. C1SWITCH2's latest published terminal-scope status is still its
+Nov2 01:46 reconciliation, not a fresh remote process observation. No additional
+physics, dispatch or remote polling was performed. Evidence:
+`selmappo2/RESUME_1793583661290373300.json`.
+
 **Nov2 resume:** the original final collection passes `report.analyze` again;
 all169updates, checkpoint and handoff identities below are unchanged. Existing
 watcher12432 matches its exact recorded executable/command/creation/source identity.
@@ -326,11 +335,11 @@ J600 is full-team delay over the 600 s control interval; lower is better. Each p
 
 
 
-![Training learning curve](selmappo2/selmappo2_curve_1793555693498991700_d0a8501561f74218bcf1e148136e76f1.svg)
+![Training learning curve](selmappo2/selmappo2_curve_1793583599854107700_4df48e7c32a14ab6a2c2098aefaf8771.svg)
 
 
 
-[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793555693498991700_d0a8501561f74218bcf1e148136e76f1.csv)
+[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793583599854107700_4df48e7c32a14ab6a2c2098aefaf8771.csv)
 
 
 
