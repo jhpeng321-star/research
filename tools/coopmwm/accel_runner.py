@@ -72,8 +72,78 @@ def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
         admission(b)
         from .accel_plant import episode
         with ProcessPoolExecutor(max_workers=b['workers'],mp_context=multiprocessing.get_context('spawn')) as pool:
-            results.extend(pool.map(episode,jobs))
+            if role!='train':results.extend(pool.map(episode,jobs))
+            else:
+                used={j['world']['seed'] for j in jobs}|{r['world']['seed'] for r in results}
+                results.extend(run_train_jobs(root,jobs,phase,ident,used,precharged,pool.submit,episode))
     return sorted(results,key=lambda e:(e['world']['seed'],e['arm']))
+
+
+# MAIN decision (b), harden-2: one failed TRAIN episode is closed with a receipt
+# (claims never replayed) and replaced by a fresh, charged episode on the next
+# unused TRAIN world of the same cell; STOP only on 3 consecutive failures or
+# more than 20% of the wave. Global STOP/pause/deadline signals still propagate.
+MAX_CONSECUTIVE_EPISODE_FAILURES=3
+MAX_EPISODE_FAILURE_SHARE=.2
+
+
+class EpisodeFailureEscalation(RuntimeError):
+    """Episode failures beyond the registered MAIN tolerance: escalate to STOP."""
+
+
+def episode_local(error):
+    from .warm_health import HealthPause
+    if isinstance(error,(HealthPause,KeyboardInterrupt,SystemExit,EpisodeFailureEscalation)):return False
+    from concurrent.futures.process import BrokenProcessPool
+    if isinstance(error,BrokenProcessPool):return False   # the whole pool is gone, not one episode
+    text=str(error).lower()
+    return 'stop' not in text and 'deadline' not in text and 'pause' not in text
+
+
+def replacement_world(failed,used,taken_ids,arm,ident):
+    """Next unused TRAIN world of the failed world's cell (repeat order); None if exhausted."""
+    pool=[w for w in worlds('train') if w['cell']==failed['cell'] and w['seed'] not in used
+          and f'{ident}_{arm}_{w["seed"]}' not in taken_ids]
+    pool.sort(key=lambda w:((w['repeat']-failed['repeat'])%6,w['seed']))
+    return pool[0] if pool else None
+
+
+def replacement_job(job,world,ident):
+    key=f'{ident}_{job["arm"]}_{world["seed"]}'
+    return dict(job,id=key,path=str(Path(job['path']).parent/key),world=world,
+        noise_seed=int(digest(dict(seed=SEED,world=world['seed'],wave=ident))[:15],16),
+        replaces=job['id'])
+
+
+def run_train_jobs(root,jobs,phase,ident,used,precharged,submit,episode):
+    from concurrent.futures import wait,FIRST_COMPLETED
+    pending={submit(episode,j):j for j in jobs};results=[];failures=[];streak=0
+    taken=set(precharged)|{j['id'] for j in jobs}
+    while pending:
+        done,_=wait(list(pending),return_when=FIRST_COMPLETED)
+        for future in [f for f in pending if f in done]:  # submission order: deterministic streaks
+            job=pending.pop(future)
+            try:
+                results.append(future.result());streak=0;continue
+            except BaseException as error:
+                if not episode_local(error):raise
+                failure=repr(error)
+            streak+=1
+            world=replacement_world(job['world'],used,taken,job['arm'],ident)
+            new=replacement_job(job,world,ident) if world else None
+            receipt=dict(timestamp_utc=timestamp(),id=job['id'],world=job['world'],error=failure,
+                claims_replayed=False,excluded_from_update=True,replacement=new and new['id'],
+                replacement_shortfall=new is None,consecutive_failures=streak,
+                wave_failures=len(failures)+1,wave_jobs=len(jobs))
+            write(root/'jobs'/job['id']/'EPISODE_FAILED.json',receipt);failures.append(receipt)
+            if streak>=MAX_CONSECUTIVE_EPISODE_FAILURES or len(failures)>MAX_EPISODE_FAILURE_SHARE*len(jobs):
+                raise EpisodeFailureEscalation(f'{len(failures)} failed episodes ({streak} consecutive) '
+                    f'in {ident}: '+failure)
+            if new is not None:
+                used.add(world['seed']);taken.add(new['id'])
+                reserve(root,[new],phase)
+                pending[submit(episode,new)]=new
+    return results
 
 
 def compare(records,left,right,role):
