@@ -94,6 +94,18 @@ Shared coordination: `E:/agent-work/rb-shared/EVAL_WM2_COMPLETE_AND_CI_CORRECTIO
 - The requested support deadline has passed and no unresolved EVAL request was
   found. Exact future-builder CLI/API and canonical corrected report remain above.
 
+## Fresh-session reconciliation — 2026-11-02 15:48+08
+- Clean HEADa663469d preserved; registration5683/5697, frozen design, rationale,
+  WMBREAKDOWN gate, RUNA request and INT final-delivery receipt reread.
+- Read-only `ops status`: four40/40 WM2 shards; finalizer complete; support ended
+  at11:30 with REPORT_READY/report_verified=true; no matching EVAL process listed.
+- Read-only `ops candidate-status`: A2/FULL-v4=160 complete, B2=157/FAILED,
+  C2=102; both GPUs busy. These match INT's delivered terminal accounting.
+- Corrected gate remains NOT_QUALIFIED/scored-only-singleton-roundoff-v2.
+  Exact CLI/API above remains delivered. New RB2 infrastructure has its own INT
+  registration/ownership; the original overnight request has no pending EVAL step.
+- Receipt: `docs/paper_results/RBEVAL_RESUME_20261102.md`.
+
 ## Fresh-session reconciliation — 2026-11-02
 - Resumed clean HEADa663469d; read history/status and task receipts first.
   Reconciled owner registration5683/5697/5753, required rationale, the frozen
