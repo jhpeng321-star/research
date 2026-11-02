@@ -1,0 +1,52 @@
+{
+ "ready": true,
+ "branch": "c4/harden-int",
+ "commit": "d51051a9",
+ "base": "5d71ff01 (harden-2 final, includes harden-3 stall fix via af56d125)",
+ "date": "2026-11-03",
+ "host": "Windows CPU-only rehearsal (rl_driving env); no SUMO, GPU or remote writes",
+ "contains": [
+  "B-REPLAY binding + replay_bank collector/bank reader (LS labels tagged u3, R lag-1 fairness cap, demand-phase admission guard)",
+  "confirmation stage: replication (2nd CRN seed), extended window to min(end,t0+D+600), trace-based TTC<1.5 s safety (closing_ttc, no plant change), amended safety rule 2026-11-03 04:26 with old-rule disclosure and diagnostic twins",
+  "cooperation (synergy) solo branches + cooperative exposure oversampled to 50% of imitation samples, synergy twins in BANK_QUALITY",
+  "lesson check after every B/R update (frozen <=12 snapshots, recapture mean+CI, imitation action error)",
+  "kind-prefixed bank_verification_ext charges, charged exactly once"
+ ],
+ "test_counts": {
+  "command": "python -X utf8 -m pytest -q -p no:cacheprovider tools/coopmwm/ -k \"cpu and not RehearsalSmoke\"",
+  "passed": 443,
+  "failed": 62,
+  "error": 1,
+  "deselected": 3,
+  "subtests_passed": 38,
+  "wall_s": 259.89,
+  "failure_breakdown": {
+   "pre_existing_env": "59 failures + 1 error also fail at base aadee535 / 22:06 baseline on this Windows host (fcntl/proc/signal, missing tools.leverprobe/tools.wmteach, git --cached shim)",
+   "load_flaky": "test_sumo_verify_cpu.py::test_parallel_determinism passes in isolation",
+   "stale_budget_expectations": "3 failures (budget_keeps_every_failed_charge_and_approved_cap, final_phase_caps_use_approved_config_not_older_training_binding, exact_owner_budget_and_protected_liabilities) caused by the registered MAIN 2026-11-02 22:32 cap amendment (febba5bc added bank_verification_ext=2600000 to PHASES); guard semantics unchanged; NOT hand-edited - cpuQ suite is the deployment gate"
+  },
+  "cpuq_suite": "MUST be rerun on cpuQ (Linux) by the operator before deployment"
+ },
+ "scenario_table": [
+  {"scenario": "a_clean", "fault": "none", "batch": "rp4 (HEAD)", "wall_s": 1257.8, "B": "complete dec12 adm1 coop0", "R": "complete dec9 adm1 coop1 (twin gain +15.9 veh-s)", "engineering_stops": 0, "notes": "diagnostic twin for safety-rejected entry; LESSON_CHECK u4/u5 both arms"},
+  {"scenario": "b_slow_search", "fault": "search latency 10 s", "batch": "rp4 (HEAD)", "wall_s": 1093.6, "B": "complete dec8 adm1 coop0", "R": "complete dec4 adm1 coop1", "engineering_stops": 0, "notes": "overload attempt (4-5 concurrent heavy jobs on host) failed with BrokenProcessPool+STOP after 178.7 s; kept as b_slow_search_overload.*; rerun alone completed"},
+  {"scenario": "c_worker_dies", "fault": "GPU worker dies on gpuA_second", "batch": "rp6 (pre-amendment)", "wall_s": 644.6, "B": "complete dec5 adm0", "R": "complete dec4 adm0", "engineering_stops": 0, "notes": "gpu_worker_died -> slot quarantine + restart request, no STOP; earlier vintages agree"},
+  {"scenario": "c2_worker_dies_on_centre", "fault": "worker dies on the centre slot", "batch": "rp4 (HEAD)", "wall_s": 772.4, "B": "complete dec5 adm0 (diagnostic twin)", "R": "complete dec2 adm1 coop1", "engineering_stops": 0, "notes": "centre death quarantined without stopping the broker; rp5 vintage hit the 6800 s batch timeout on R (pre-amendment)"},
+  {"scenario": "d_transport_3", "fault": "3 transient transport errors", "batch": "rp4 (HEAD)", "wall_s": 766.3, "B": "complete dec5 adm0", "R": "complete dec3 adm0", "engineering_stops": 0, "notes": "all retries succeeded; rp3 vintage also complete (2443.2 s)"},
+  {"scenario": "e_malformed", "fault": "malformed GPU response", "batch": "rp4 (HEAD)", "wall_s": 1741.1, "B": "complete dec8 adm1 coop0", "R": "complete dec8 adm2 coop1 (1 diagnostic twin)", "engineering_stops": 0, "notes": "LESSON_CHECK u5_R: recapture mean 43.24 [30.58, 55.91], action error mean 1.38 m/s^2"},
+  {"scenario": "f_branch_crash", "fault": "SUMO branch crash", "batch": "rp4 (HEAD)", "wall_s": 706.7, "B": "complete dec6 adm0 (diagnostic twin)", "R": "complete dec2 adm0", "engineering_stops": 0, "notes": "partial branch failure rule; rp3 vintage complete (1057.1 s); rp6 vintage hit the batch timeout on B (pre-amendment)"}
+ ],
+ "receipt_evidence": {
+  "results": "C:/Users/jpeng/AppData/Local/Temp/h3res/rp4 (current code); rp3 kept for the record (pre charge fix); rp5/rp6 pre-safety-amendment; do not delete",
+  "bank_quality": "replay_bank/<arm>/BANK_QUALITY.json per run root (C:/Users/jpeng/AppData/Local/Temp/h3int2/<scenario>/run)",
+  "lesson": "LESSON_LIST_<arm>.json + LESSON_CHECK_u<k>_<arm>.json in each run root",
+  "exposure": "exact_imitation.exposure in *_UPDATE_*.json receipts (oversampling firing path unit-tested; short rehearsals admitted cooperative entries after updates, so receipts record no oversampling)"
+ },
+ "live_gates": [
+  "full CPU suite rerun on cpuQ (Linux)",
+  "real SUMO CRN/prefix branch determinism",
+  "arrival_fit observed_phase_end_s wired into the binding (demand-phase guard)",
+  "LS layout read-only check: replay_bank.bank_decisions(root,'B',sources=[lscollect1]) + bank_quality before training",
+  "offline bank builder on cpuQ over LS labels per MAIN 04:06, BANK_QUALITY_B.json, charges to bank_verification_ext"
+ ]
+}
