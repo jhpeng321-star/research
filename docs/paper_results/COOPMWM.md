@@ -1,5 +1,22 @@
 # S-COOPMWM — live checks
 
+## LS-COLLECT registered before collection physics
+- Registration SHA `edacc2b85b04b8c122c5827077be940e6582fe021f18c4b6094b7df507fac7aa`.
+- **201 CPU PASS**, zero skips, **42.334 s**, zero simulation; frozen release
+  `coopmwm20261102_lsreleasecpu2`. Harden-3 is integrated with MAIN18:54
+  breadth-first scheduling and compatibility with existing withdrawal markers.
+- Frozen B-u3 collection spans the **72 registered TRAIN worlds**. Episodes
+  snapshot eligible groups without waiting and execute policy actions only.
+- Registered envelope: **86,400 train sim-s** plus up to **2,332,800 verification
+  sim-s** (216 lists × eight original finalists + policy, worst-case full prefixes).
+  Each complete list is precharged before search; all failures retain charges.
+- Cap **11,900,000** includes the new restricted 900,000 interim phase. Collection
+  uses existing train/verification allocations. Remaining training will need a
+  fresh quote before MAIN authorizes learned-search resume.
+- Four existing GPU slots are adopted; a logging-only profile-capture handover
+  drains their current claims and requires fresh startup parity before serving.
+  Search arithmetic, horizons, population, iterations and Thompson choice stay fixed.
+
 ## MAIN19:12 latest-order pause confirmed
 - B/R remain at durable **u3**, with **no u4 checkpoint or PPO update**.
 - The superseded FAST1844 wave is closed: **10 B + 12 R claimed attempts**,

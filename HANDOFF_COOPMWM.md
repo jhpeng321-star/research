@@ -1,5 +1,18 @@
 # S-COOPMWM continuation — MAIN19:12 pause confirmed
 
+LS-COLLECT REGISTERED/BINDING before physics: edacc2b85b04b8c122c5827077be940e6582fe021f18c4b6094b7df507fac7aa.
+Frozen source /home/ubuntu/coopmwm20261102_lsreleasecpu2,201CPU/PASS0skips42.334s.
+Hardening cherry-pick fd8b2ab5 includes MAIN1854 breadth-first + legacy withdrawal
+compatibility. Four original slots ADOPTED live/qualified; no gate rerun yet.
+Collection root /home/ubuntu/coopmwm20261102_lscollect1:72frozenB3TRAIN episodes
+86400train + <=216lists of8originalfinalists+policy <=2332800verification.
+Envelope2419200 uses existing phases only; cap11900000/interim900000restricted
+registered. Remaining training needs a fresh quote before MAIN learned resume.
+NEXT freeze original FAST broker only; gpu_collect eachhost ONCE drains original
+claims and logging-only wrapper captures all8profiles,4adopted+4fresh gates;
+do not duplicate LS_GPU_DISPATCH. Then new qualified broker/collection supervisor.
+No collection SUMO started yet. B/R paused/no u4; no automatic training resume.
+
 Fresh resume read ALL458 prompt lines; latest MAIN19:12 overrides FAST1844.
 At unix1793618754 B/R remain durableu3, u4 checkpoints ABSENT. Receipt/boot/
 start/argv-verified FAST B1076539/R1076540 and owned descendants terminated;
