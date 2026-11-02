@@ -116,7 +116,8 @@ def main(root):
             result=credit(rt,r,speed2=speed2,memory=memory,transfers=transfers)
         else:
             from .mppi_runtime import plan
-            result=plan(rt,r,memory,binding)
+            from .query_errors import execute
+            result=execute(r,lambda:plan(rt,r,memory,binding))
         payload=dict(key=key,result=result,wall_s=time.monotonic()-start,unix=time.time())
         write(dest,payload);emit('RESULT',**payload)
 

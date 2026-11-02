@@ -152,6 +152,11 @@ def run(root,config_path):
                     if not value['status']['alive'] or value['status']['failed']:raise ValueError('GPU failed; no inference retry')
                     assert_running(root,'B');stop.wait(3)
                 payload=value['forecast']
+                from .query_errors import validate_response
+                validate_response(record,payload['result'])
+                if payload['result'].get('query_error'):
+                    remote.event(dict(event='query_code_declined',key=key,
+                        query_error=payload['result']['query_error'],global_stop=False))
                 immutable(root/('centre_responses' if kind=='centre' else 'responses')/(key+'.json'),payload['result'])
                 immutable(root/'broker_completed'/(key+'.json'),dict(slot=endpoint['slot'],kind=kind,key=key,
                     inference_wall_s=payload['wall_s'],delivery_wall_s=time.monotonic()-begin,unix=time.time()))

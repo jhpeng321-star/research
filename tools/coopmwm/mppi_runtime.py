@@ -7,6 +7,19 @@ from .plan_wm import evaluate
 from .exploration import regime
 
 
+def posthoc(plan,record,bounds,policy):
+    """Labels are descriptive only; unsupported prototypes cannot kill a search."""
+    if len(record['group']) not in (2,3):
+        return dict(label='new',reason='no inherited prototypes for this group size')
+    try:
+        from .plans import family_seeds
+        prototypes=family_seeds(record['rows'],record['group'],record['commands'],bounds)
+        return search.posthoc_label(plan,prototypes,policy)
+    except Exception as error:
+        import traceback
+        return dict(label='unlabelled',error=repr(error),traceback=traceback.format_exc())
+
+
 def imagined_centres(rt,record,memory,width=2,speed2=True,transfers=False):
     trace=[]
     acts=search.comparators(record,600)
@@ -50,9 +63,7 @@ def plan(rt,record,memory,binding):
         memory=memory.receipt if memory is not None else {'mode':'cold'})
     if result['accepted']:
         # Inherited families are used only AFTER the candidate has been selected.
-        from .plans import family_seeds
-        prototypes=family_seeds(record['rows'],record['group'],record['commands'],bounds)
-        label=search.posthoc_label(result['plan'],prototypes,policy)
+        label=posthoc(result['plan'],record,bounds,policy)
         result.update(predicted_rank=next(i+1 for i,p in enumerate(result['topk'])
-            if p['id']==result['plan']['id']),known_family=label['label']!='new',posthoc=label)
+            if p['id']==result['plan']['id']),known_family=label['label'] not in ('new','unlabelled'),posthoc=label)
     return result
