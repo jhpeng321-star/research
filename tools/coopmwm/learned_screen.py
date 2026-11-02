@@ -231,7 +231,7 @@ def _spearman(a, b):
     return float(np.corrcoef(ra, rb)[0, 1]) if np.std(ra) > 0 and np.std(rb) > 0 else 0.
 
 
-def replay(receipt, sur, mode, model=None, cfg=REGISTERED):
+def replay(receipt, sur, mode, model=None, cfg=REGISTERED, config=None, seed_tag=None):
     """Real ``mppi_search`` on the surrogate. Returns screened (vals, zs, Ds), final-stage values,
     WM futures used and network seconds."""
     group = le._group(receipt); m = len(group['members'])
@@ -253,7 +253,7 @@ def replay(receipt, sur, mode, model=None, cfg=REGISTERED):
         screened.extend(zip(v, [np.asarray(c['perturbation_canonical'], float) for c in cands],
                             [int(c['duration_s']) for c in cands]))
         return -np.asarray(v)
-    kw, seed_tag = {}, []
+    kw = {}
     if mode == 'ls':
         net = screen_fn(model, record, group, regime)
 
@@ -262,17 +262,19 @@ def replay(receipt, sur, mode, model=None, cfg=REGISTERED):
             screened.extend(zip(v, [np.asarray(c['perturbation_canonical'], float) for c in cands],
                                 [int(c['duration_s']) for c in cands]))
             return net(rec, grp, cands)
-        kw = dict(screen=ls_screen, config=dict(top_k=cfg['top_k'])); seed_tag = ['ls']
+        kw = dict(screen=ls_screen, config=dict(config or {}, top_k=cfg['top_k'])); seed_tag = ['ls']
     else:
-        kw = dict(screen=surrogate_screen); seed_tag = ['alt'] if mode == 'plain_alt' else []
+        kw = dict(screen=surrogate_screen, config=config)
+        seed_tag = seed_tag if seed_tag is not None else (['alt'] if mode == 'plain_alt' else [])
     seed = int(ms._digest([cfg['seed'], receipt.get('search_id')]+seed_tag)[:15], 16)
     res = ms.search(record, group, policy, le.WIDE, evaluate, regime, seed=seed, **kw)
     vals = np.array([v for v, _, _ in screened]); zs = [z for _, z, _ in screened]; Ds = [d for _, _, d in screened]
     nfin = len(calls[-1]) if calls else 0
     futures = (nfin+2)*ms.REGISTERED['final_K']
     if mode != 'ls':     # plain: WM screen futures + final (the surrogate stood in for the K4 screen)
-        sc = ms.scaling(m, N_KNOTS)
-        futures += (sc['population']+2)*ms.REGISTERED['screen_K']*ms.REGISTERED['iterations']
+        c2 = dict(ms.REGISTERED, **(config or {}))
+        sc = ms.scaling(m, N_KNOTS, c2['top_k'], c2)
+        futures += (sc['population']+2)*c2['screen_K']*c2['iterations']
     return dict(vals=vals, zs=zs, Ds=Ds, final=np.array(calls[-1] if calls else []), futures=futures,
                 net_s=net.timer['s'] if mode == 'ls' else 0., finalists=nfin,
                 res=res)
