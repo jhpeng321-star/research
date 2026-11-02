@@ -93,3 +93,18 @@ Shared coordination: `E:/agent-work/rb-shared/EVAL_WM2_COMPLETE_AND_CI_CORRECTIO
   remain the evidence; this resume did not regenerate forecasts, scores or tests.
 - The requested support deadline has passed and no unresolved EVAL request was
   found. Exact future-builder CLI/API and canonical corrected report remain above.
+
+## Fresh-session reconciliation — 2026-11-02
+- Resumed clean HEADa663469d; read history/status and task receipts first.
+  Reconciled owner registration5683/5697/5753, required rationale, the frozen
+  design, WMBREAKDOWN gate, RUNA request and INT's final-delivery receipt.
+- Read-only `python -B -m tools.rbeval.ops status` again confirms four40-task
+  WM2 shards COMPLETE and original FINALIZED.json; no matching EVAL process
+  was listed. Support ends at11:30+08 with REPORT_READY/report_verified=true.
+- Read-only `python -B -m tools.rbeval.ops candidate-status` confirms A2 and
+  FULL-v4=160 complete, B2=157/FAILED, C2=102; INT retains their final accounting.
+  Both GPUs are busy (gpuA98%, gpuR82–89%); no dispatch or process action taken.
+- Confirmed the future-builder API exists in run_wm.py and the canonical local
+  corrected gate remains NOT_QUALIFIED, scored-only-singleton-roundoff-v2.
+  Existing verification/test receipts remain applicable; no forecasts, scoring
+  or completed tests were repeated. This resume changes documentation only.
