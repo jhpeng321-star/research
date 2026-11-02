@@ -1,5 +1,14 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+MAIN03:19 RESTORED unix1793647712(03:28:32+08): exact original65cc714e gitblob
+9bbbe41c79eb4df4903be80753001a1b960b4199, SHA2567b060d35fe1cf66c...,
+opaque git-archive transfer ONLY/no template contents inspected. Amendment
+4fde4697... registered BEFORE restore. First Windows archive failed blobcheck
+(CRLF); retained .windows-crlf backup; LF archive uses invocation-only git-c,
+NOgitconfigchange. Noowners signalled/restarted, ZEROphysics. Existing grading
+willconsume future labels; failedSUMOENV1 labels need separate fresh-attempt
+precharge/regrade from SAVED snapshots, no new WMsearch. NEXTthat recovery.
+
 Nov3 fresh resume through ALL627 brief lines, HEAD1a36cd4e and uncommitted work
 ADOPTED. MAIN03:19 missing path reproduced with FULL traceback, ZERO physics:
 /home/ubuntu/aq_code/code_r13e_65cc714e/scenarios/idm/driver_routes.rou.xml.

@@ -1,5 +1,16 @@
 # S-COOPMWM — live checks
 
+## Nov3 03:28:32 UTC+8 — original scenario dependency restored
+- Registered amendment `4fde4697…` before restoring the missing template opaquely
+  from original revision `65cc714e`. Git blob matches exactly:
+  `9bbbe41c79eb4df4903be80753001a1b960b4199`; SHA256
+  `7b060d35fe1cf66ca5a01bfd7f2ad6be7f4172cba4154c0a5d67943c6eb1a65c`.
+- Initial Windows archive failed the digest gate because of line-ending conversion;
+  that artifact is preserved. The LF archive passed; no git configuration changed.
+- No template contents were inspected, no process signals or restarts, zero new
+  physics. Saved failed labels retain their receipts and charges; append-only
+  regrading is the next step, with no new WM search.
+
 ## Nov3 03:24 UTC+8 — deleted grading dependency identified
 - Adopted all work through `1a36cd4e` and the existing uncommitted changes.
 - Full missing-path traceback identifies

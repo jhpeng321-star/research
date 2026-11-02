@@ -1,12 +1,21 @@
 """Append-only MAIN03:19 grading dependency diagnosis and recovery."""
 import argparse
+import base64
+import hashlib
 import json
+from pathlib import Path
 import time
 
 from . import ops
 from .ls_collect_ops import COLLECTION
 from .ls_validity_ops import remote
 from .storage import write
+from .protocol import REGISTRY, checked, sha
+
+RESTORE=ops.EVIDENCE/'LS_TEMPLATE_RESTORE_LF_REGISTRATION.json'
+ARCHIVE=Path('E:/Temp/opencode/coopmwm_template_65cc714e_lf.tar')
+TEMPLATE_ROOT='/home/ubuntu/aq_code/code_r13e_65cc714e'
+BLOB='9bbbe41c79eb4df4903be80753001a1b960b4199'
 
 
 def diagnose():
@@ -84,7 +93,74 @@ print(json.dumps(dict(unix=time.time(),candidates=[dict(path=str(r/n),exists=(r/
     print(json.dumps(value))
 
 
+def register_restore():
+    import tarfile
+    with tarfile.open(ARCHIVE) as archive:
+        raw=archive.extractfile('scenarios/idm/driver_routes.rou.xml').read()
+    assert hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==BLOB
+    archive_sha=hashlib.sha256(ARCHIVE.read_bytes()).hexdigest()
+    if not RESTORE.exists():
+        line=('\nS-COOPMWM MAIN03:19 ENGINEERING DEPENDENCY RESTORATION: deleted aq_code '
+              'scenario template restored opaquely from original git revision65cc714e; '
+              'git blob9bbbe41c79eb4df4903be80753001a1b960b4199 equals current HEAD. '
+              'No assignment content inspection, policy/training/search change or new WM searches. '
+              'Existing supervisor/broker/GPU owners and failed receipts/charges retained. '
+              'Archive digest then git-blob digest checked before recovery declared. '
+              'Initial Windows archive had CRLF conversion (blob e2b027a8e39f5f188a7c28d763fbaa0eeae4d572), '
+              'failed digest gate before recovery; retained as .windows-crlf backup. '
+              'LF archive generated with invocation-only core.autocrlf=false; no git settings changed. '
+              'Fresh operational6M total guard unchanged; regrading separately precharged '\
+              'as new attempts from saved snapshots under sumo_verification.\n')
+        write(RESTORE,dict(line=line,unix=time.time(),archive_sha256=archive_sha,
+            git_revision='65cc714e',git_blob=BLOB,root=TEMPLATE_ROOT,
+            member='scenarios/idm/driver_routes.rou.xml',new_sumo_sim_s=0,
+            authority='MAIN2026-11-03 03:19',content_inspection=False))
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:
+            f.write(line+'amendmentSHA'+sha(RESTORE)+'\n')
+    print(json.dumps(dict(amendment_sha256=sha(RESTORE),archive_sha256=archive_sha)))
+
+
+def restore():
+    reg=json.loads(RESTORE.read_text());data=ARCHIVE.read_bytes()
+    assert hashlib.sha256(data).hexdigest()==reg['archive_sha256']
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,time,base64,hashlib,subprocess
+c=Path({COLLECTION!r});reg=json.loads({json.dumps(reg)!r});dest=Path(reg['root'])
+receipt=c/'TEMPLATE_RESTORED_0319.json'
+if receipt.exists():print(receipt.read_text());raise SystemExit
+assert Path('/home/ubuntu').is_dir()
+archive=c/'TEMPLATE_RESTORE_65cc714e_LF.tar';data=base64.b64decode({base64.b64encode(data).decode()!r})
+assert hashlib.sha256(data).hexdigest()==reg['archive_sha256']
+if archive.exists():assert hashlib.sha256(archive.read_bytes()).hexdigest()==reg['archive_sha256']
+else:
+ with archive.open('xb') as f:f.write(data)
+names=subprocess.check_output(['tar','-tf',str(archive)],text=True).splitlines()
+assert set(names)=={{'scenarios/','scenarios/idm/',reg['member']}},names
+target=dest/reg['member']
+if target.exists():
+ existing=subprocess.check_output(['git','hash-object','--',str(target)],text=True).strip()
+ if existing!=reg['git_blob']:
+  assert existing=='e2b027a8e39f5f188a7c28d763fbaa0eeae4d572'
+  target.rename(target.with_name(target.name+'.windows-crlf'))
+if not target.exists():
+ dest.mkdir(parents=True,exist_ok=True)
+ subprocess.check_call(['tar','-xf',str(archive),'-C',str(dest),reg['member']])
+blob=subprocess.check_output(['git','hash-object','--',str(target)],text=True).strip()
+assert blob==reg['git_blob'],blob
+sha256=subprocess.check_output(['sha256sum','--',str(target)],text=True).split()[0]
+out=dict(unix=time.time(),path=str(target),git_blob=blob,sha256=sha256,
+ archive_sha256=reg['archive_sha256'],amendment_sha256={sha(RESTORE)!r},
+ source_revision=reg['git_revision'],opaque_transfer=True,content_inspection=False,
+ new_sumo_sim_s=0,no_process_signals=True)
+with receipt.open('x') as f:json.dump(out,f)
+with (Path(json.loads((c/'LS_COLLECT_BINDING.json').read_text())['run_root'])/'AUTHORITY.md').open('a') as f:f.write(reg['line']+'amendmentSHA'+{sha(RESTORE)!r}+chr(10))
+print(json.dumps(out))''',timeout=60))
+    path=ops.EVIDENCE/'LS_TEMPLATE_RESTORED_0319.json'
+    if not path.exists():write(path,value)
+    print(json.dumps(value))
+
+
 if __name__ == '__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument('action', choices=('diagnose','sources','candidates'))
+    parser.add_argument('action', choices=('diagnose','sources','candidates','register_restore','restore'))
     globals()[parser.parse_args().action]()
