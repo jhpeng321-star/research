@@ -50,6 +50,13 @@ in `FIGURES.md`. Reproduction/verification commands below remain applicable.
 First-package registration is already complete and is not appended again.
 Historical queues below are provenance only; this section governs the handoff.
 
+Closing package validation and focused Python syntax/undefined-name checks PASS.
+The closing source inventory found only shared-log additions and a renewed
+per-CAV training-report publication; direct review confirms unchanged final
+training/checkpoint facts and still no complete evaluation receipt. No numerical
+figure source changed. `RESUME_20261102.md` records the checks and remaining
+owner/agent handoff; `VERIFICATION.json` retains the artifact QA results.
+
 ## Historical noon handoff — superseded by resumed handoff above
 
 The previous session's clean package, bibliography verification and first-package
@@ -220,7 +227,7 @@ Then semantically reread newly present/changed reports using their exact paths. 
 - C1CLOSED is now complete and incorporated. Future revisions must preserve its plant/cohort/mixed-results scope; only missing causal wall restoration or a separately authorized candidate may change those fields. Historical recorded-motion evidence stays historical.
 - Completed calibration is already incorporated; retain raw-WM/arm-mean comparators, independent transfer, reference arms and cost definitions. Do not replace the final negative verdict with old smoke results.
 - WMVALUE's necessary-condition FAIL and the expanded repair's early-stop partial result are also incorporated. Do not restart them, infer missing A or later-checkpoint values, or wait on their stale historical pending headers.
-- Recheck the model plan/change log, E1/E2 exports, corrected qualification and entry retarget reports. Never silently transfer the frozen direction envelope to a different model or population. FULL-v4's final freeze/report/adoption verdict and fleet final training/delivery are already resolved; only independently identity-bound successor or remaining evaluation evidence can change their open follow-ups.
+- Recheck the model plan/change log, E1/E2 exports, corrected qualification and entry retarget reports. Never silently transfer the frozen direction envelope to a different model or population. FULL-v4's final freeze/report/adoption verdict, both selector final training/deliveries, fleet evaluation and exact-teacher student live testing are resolved; only independently identity-bound successor or remaining evaluation evidence can change their open follow-ups. Respect current holds and terminal-scope authority; publication machinery is not an instruction to start jobs.
 - If numerical figure inputs changed, review provenance/metrics first, then refresh the appropriate historical/evening/overnight builder's explicit allowlist. Otherwise reuse frozen inputs. New result CSVs need an explicit rendering change, not a directory crawl.
 - Update `CLAIMS.md`, affected outline paragraphs/captions, and this handoff; retain failed and missing outcomes. Every numerical insertion needs an adjacent HTML source comment. Mark each remaining missing result `[[PENDING: what / agent]]`.
 - Run `python -B "docs/paper/paperB_c1_worldmodel/validate_package.py"`, inspect any changed PNGs, inspect status/diff/recent commits, and commit only package files. Source snapshots are byte-preserved by local `.gitattributes`; the data directory is intentionally tracked despite the repository's broad local exclusion.
