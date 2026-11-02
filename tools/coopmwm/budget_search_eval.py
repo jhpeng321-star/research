@@ -36,7 +36,7 @@ CONFIGS = {
 # v2 (BUDGET_SEARCH_PREREG_V2.md): + screen K2 (alone / with pop x0.5 / with 2 iterations)
 CONFIGS_V2 = dict(CONFIGS, K2=dict(screen_K=2), K2_pop50=dict(screen_K=2, pop_min=16, pop_per_dim=1),
                   it2_K2=dict(iterations=2, screen_K=2))
-ALPHA_V2 = None     # dev-calibrated noise multiplier (set in the v2 registration)
+ALPHA_V2 = .5       # v2: dev-calibrated noise multiplier (ls/calib.json; BUDGET_SEARCH_PREREG_V2.md)
 SEARCH_WALL_S = {2: 559.567, 3: 794.766, 4: 1029.964, 5: 964.120, 6: 898.275}   # COOPMWM.md measured
 SEED = 20261102
 
@@ -47,8 +47,9 @@ def futures(m, config):
     return (sc['population']+2)*c['screen_K']*c['iterations']+(sc['finalists']+2)*c['final_K']
 
 
-def noisy_replay(receipt, sur, sigma, config, tag):
-    """sigma = K4 screen noise sd; the screen uses sigma*sqrt(4/screen_K), the K8 final sigma/sqrt(2)."""
+def noisy_replay(receipt, sur, sigma, config, tag, extra_seeds=None):
+    """sigma = K4 screen noise sd; the screen uses sigma*sqrt(4/screen_K), the K8 final sigma/sqrt(2).
+    extra_seeds (v2 C only): iteration-0 proposer seeds; default None leaves the search unchanged."""
     sk = dict(ms.REGISTERED, **(config or {}))['screen_K']
     group = le._group(receipt); m = len(group['members'])
     policy = np.zeros((m, ms.REGISTERED['max_duration_s'])); regime = receipt.get('regime') or 'unknown'
@@ -72,7 +73,8 @@ def noisy_replay(receipt, sur, sigma, config, tag):
         final.extend(dict(id=a['id'], truth=float(x), final=float(y)) for a, x, y in zip(cands, t, noisy))
         val = {a['id']: float(y) for a, y in zip(cands, noisy)}
         return {a['id']: [-val.get(a['id'], 0.)]*K for a in actions}
-    ms.search(record, group, policy, le.WIDE, evaluate, regime, seed=seed, config=config, screen=screen)
+    ms.search(record, group, policy, le.WIDE, evaluate, regime, seed=seed, config=config, screen=screen,
+              extra_seeds=extra_seeds)
     return screened, final
 
 
@@ -154,6 +156,111 @@ def evaluate_configs(heldout, configs=CONFIGS, bootstraps=2000, collapse_ratio=.
     res['recommended'] = min(ok, key=lambda n: ok[n]['futures_ratio']) if ok else None
     res['per_search'] = rows
     return res
+
+
+# --------------------------------------------------------------------------- C. per-episode warm start
+
+EP_GAP_S = (10., 300.)     # registered: the later search 10-300 s after the earlier one
+MIN_EP_PAIRS = 20          # registered: evaluate only when at least this many qualifying pairs exist
+
+
+def shifted_seeds(early, gap, limit=8):
+    """v2 C seeds: the earlier same-episode search's final top-8 perturbations, time-shifted by
+    the gap (canonical knots span the registered 300 s, absolute frame) and zero after the end."""
+    m = len(early['members']); nc = ms.canonical_knots()
+    t = np.linspace(0., float(ms.REGISTERED['max_duration_s']), nc)
+    fin = sorted((c for c in early.get('candidates') or [] if c.get('stage') == 'final'
+                  and c.get('perturbation_canonical') is not None),
+                 key=lambda c: -(c['saving_vs_policy'] if c.get('saving_vs_policy') is not None else -np.inf))
+    out = []
+    for c in fin[:limit]:
+        z = np.asarray(c['perturbation_canonical'], float)
+        if z.shape != (m, nc) or int(c['duration_s']) not in ms.REGISTERED['durations_s']:
+            continue
+        out.append(dict(perturbation_canonical=np.stack([np.where(t+gap <= t[-1], np.interp(t+gap, t, row), 0.)
+                                                         for row in z]).tolist(),
+                        duration_s=int(c['duration_s'])))
+    return out
+
+
+def episode_pairs(cache):
+    """Consecutive same-episode searches: same world, same members, the later one 10-300 s
+    after the earlier (request ``time_s``). Returns (early id, late id, gap, world) rows."""
+    import glob
+    by_key = {}
+    for f in sorted(glob.glob(str(Path(cache))+'/cpuQ/home/ubuntu/*/requests/*.json')):
+        try:
+            q = json.load(open(f))
+        except (OSError, ValueError):
+            continue
+        wid, t, sid, group = q.get('world_id'), q.get('time_s'), q.get('state_id'), q.get('group')
+        if wid is None or t is None or not sid or not group:
+            continue
+        try:
+            wid = int(wid)
+        except (TypeError, ValueError):
+            continue
+        if not 986000 <= wid < 986072:
+            continue
+        by_key.setdefault((str(wid), tuple(sorted(group))), []).append((float(t), str(sid)))
+    out = []
+    for (world, _members), lst in sorted(by_key.items()):
+        lst.sort()
+        out.extend(dict(world=world, early=s0, late=s1, gap_s=t1-t0)
+                   for (t0, s0), (t1, s1) in zip(lst, lst[1:])
+                   if EP_GAP_S[0] <= t1-t0 <= EP_GAP_S[1])
+    return out
+
+
+def evaluate_warm_start(pairs, receipts, held_worlds=(), bootstraps=2000):
+    """v2 C: each later search's replay with (treatment) vs without (control) the earlier search's
+    top-8 as extra_seeds; same truth surrogate, same noise model (same alpha/tag/sigma), same futures
+    (the seeds displace sampled candidates). Report as A: world-bootstrap CIs of q8/q1 differences,
+    in pool-sd units."""
+    by_id = {}
+    for r in receipts:
+        for k in ('state_id', 'search_id'):
+            if r.get(k) is not None:
+                by_id.setdefault(str(r[k]), r)
+    rows = []
+    for p in pairs:
+        late, early = by_id.get(str(p['late'])), by_id.get(str(p['early']))
+        if late is None or early is None or len(late.get('members') or ()) != len(early.get('members') or ()):
+            continue
+        sur = le.surrogate_for(late)
+        if sur is None:
+            continue
+        seeds = shifted_seeds(early, p['gap_s'])
+        rec_sav = np.array([c['saving_vs_policy'] for c in late['candidates'] if c.get('stage', 'screen') == 'screen'
+                            and c.get('saving_vs_policy') is not None], float)
+        sigma = ALPHA_V2*math.sqrt(max(0., 1-sur.loo_r2))*float(rec_sav.std())
+        m = len(late['members']); base = float(sur([np.zeros((m, ms.canonical_knots()))], [300])[0])
+        pool = [c for c in late['candidates'] if c.get('stage', 'screen') == 'screen'
+                and c.get('perturbation_canonical') is not None]
+        scale = float(np.std(sur([c['perturbation_canonical'] for c in pool], [c['duration_s'] for c in pool])))
+        if not scale > 0:
+            continue
+
+        def best8(fi):
+            fin = sorted(fi, key=lambda f: -f['final'])[:8]
+            return (max(f['truth'] for f in fin)-base)/scale, (fin[0]['truth']-base)/scale
+        ctrl = best8(noisy_replay(late, sur, sigma, None, 'epws')[1])
+        warm = best8(noisy_replay(late, sur, sigma, None, 'epws', extra_seeds=seeds)[1])
+        rows.append(dict(world=str(p['world']), early=str(p['early']), late=str(p['late']), gap_s=p['gap_s'],
+                         seeds=len(seeds), held=str(p['world']) in set(held_worlds),
+                         modes=dict(control=dict(q8=ctrl[0], q1=ctrl[1]), warm_ep=dict(q8=warm[0], q1=warm[1]))))
+    ci = lambda v, ws, k: dict(zip(('mean', 'ci_lo', 'ci_hi'), pp._bootstrap_ci(v, ws, bootstraps, SEED+k)))
+    out = dict(pairs=len(pairs), evaluated=len(rows), min_pairs=MIN_EP_PAIRS, alpha=ALPHA_V2, scopes={})
+    for scope, sel in (('heldout', [r for r in rows if r['held']]), ('dev', [r for r in rows if not r['held']])):
+        ws = [r['world'] for r in sel]
+        sc = dict(searches=len(sel), worlds=len(set(ws)), enough_data=len(sel) >= MIN_EP_PAIRS)
+        if sel:   # the registered >= 20-pair gate is on the total; per-scope CIs are reported with their count
+            for j, k in enumerate(('q8', 'q1')):
+                sc[k+'_warm_minus_control'] = ci([r['modes']['warm_ep'][k]-r['modes']['control'][k] for r in sel], ws, 50+j)
+        out['scopes'][scope] = sc
+    out['enough_data'] = len(rows) >= MIN_EP_PAIRS
+    out['per_pair'] = rows
+    return out
 
 
 # --------------------------------------------------------------------------- B. state triage

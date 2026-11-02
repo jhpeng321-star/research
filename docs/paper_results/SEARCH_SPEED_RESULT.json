@@ -137,5 +137,47 @@
   "statement": "it2_K2 is non-inferior to plain_alt on best-of-final-top-8 (and top-1) at 2.47x wall / 2.45x WM futures",
   "enough_data": false,
   "activation": "owner-approved only (MAIN); data below registered minimum"
+ },
+ "warm_start": {
+  "protocol": "BUDGET_SEARCH_PREREG_V2.md C",
+  "pairs_found": 87,
+  "pairs_evaluated": 6,
+  "gate_min_pairs": 20,
+  "gate_met": false,
+  "evaluated": false,
+  "verdict": "NOT ENOUGH DATA (6 usable pairs < 20); exploratory only",
+  "scopes": {
+   "heldout": {
+    "searches": 2,
+    "worlds": 2,
+    "enough_data": false,
+    "q8_warm_minus_control": {
+     "mean": -0.39747848664428415,
+     "ci_lo": -0.7813244667874588,
+     "ci_hi": -0.013632506501109528
+    },
+    "q1_warm_minus_control": {
+     "mean": -0.23773318656812492,
+     "ci_lo": -0.46065509559163664,
+     "ci_hi": -0.014811277544613203
+    }
+   },
+   "dev": {
+    "searches": 4,
+    "worlds": 4,
+    "enough_data": false,
+    "q8_warm_minus_control": {
+     "mean": 0.06646885937532962,
+     "ci_lo": -0.23560667043277705,
+     "ci_hi": 0.462558101139915
+    },
+    "q1_warm_minus_control": {
+     "mean": 0.2751283324477612,
+     "ci_lo": -0.010320104412648856,
+     "ci_hi": 0.48333022014697413
+    }
+   }
+  },
+  "code": "budget_search_eval.episode_pairs / shifted_seeds / evaluate_warm_start; noisy_replay extra_seeds (default off)"
  }
 }

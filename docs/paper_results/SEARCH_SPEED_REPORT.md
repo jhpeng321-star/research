@@ -72,6 +72,24 @@ rollout costs it computes before any screening (MAPPO - policy cost, policy cost
 - Recommendation: **use it for ordering states only** (e.g. which state to search first under contention); do NOT
   gate searches on it until it passes with enough data.
 
-## 3. Per-episode warm start (v2 C)
+## 3. Per-episode warm start (v2 C: seed from the same episode's previous decision elites)
 
-(added by step 3 below)
+Registered protocol: pairs = same world, same members, the later search 10-300 s after the earlier one
+(request `time_s`); treatment = the later search's replay with the earlier search's final top-8 perturbations,
+time-shifted by the gap and zero after the end, as `extra_seeds` (they displace sampled candidates, so WM
+futures are unchanged); control = the same replay without them; same truth surrogate, same noise model
+(alpha 0.5, same tag), quality in pool-sd units. Coded in `budget_search_eval.py`
+(`episode_pairs`, `shifted_seeds`, `evaluate_warm_start`; noisy_replay gained a default-off `extra_seeds`
+argument — byte-identical when None), CPU tests in `test_budget_search_cpu.py` (58 tests pass).
+
+- **Pair availability:** 87 consecutive same-episode pairs exist among logged requests (56 episodes), but only
+  **6 pairs have both sides as full-pool receipts** (2 held-out / 4 dev).
+- **Registered gate (evaluate only when >= 20 such pairs exist): NOT MET → NOT EVALUATED**; the numbers below
+  are exploratory only and carry no recommendation.
+  - held-out 2 pairs: q8 warm - control -0.397 [-0.781, -0.014], q1 -0.238 [-0.461, -0.015]
+  - dev 4 pairs: q8 +0.066 [-0.236, +0.463], q1 +0.275 [-0.010, +0.483]
+- Interpretation: at 10-100 s gaps the shifted previous elites sometimes help (1 of 4 dev pairs gains +0.67
+  pool-sd) and sometimes hurt (one held-out pair loses -0.78); n is far too small to separate.
+- To make this evaluable, the collector needs to keep full-pool receipts for BOTH searches of a pair
+  (~40+ such pairs required; currently most pairs have a top-k-only or missing response on one side).
+
