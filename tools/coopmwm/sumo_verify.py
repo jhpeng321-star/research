@@ -53,6 +53,7 @@ METRIC = 'team_delay_vs'
 POLICY = 'policy'
 TOP_K = 4
 STATUSES = ('accepted', 'rejected', 'stopped', 'failed', 'budget_blocked')
+MIN_FREE_BYTES = 2*1024**3  # the registered cpuQ '2 GiB' disk admission guard (MAIN 14:47)
 PROPOSERS = ('wm', 'random')
 
 
@@ -206,6 +207,11 @@ def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, ro
             verification_id=vid, snapshot_sha256=body['snapshot_sha256'],
             candidate_plan_sha256=body['candidate_plan_sha256'],
             pid=os.getpid(), host=socket.gethostname(), unix=started))
+    blocked = runner.admit(specs) if hasattr(runner, 'admit') else None
+    if blocked:  # local resource guard: no charge, no physics, the group follows its policy
+        body.update(status='failed', chosen=None, chosen_plan=None, grade_veh_s=None, J_policy_veh_s=None,
+                    J_candidates_veh_s=None, branches=[], charged_sim_s=0, reason='resource guard: '+blocked)
+        return _finish(body, started, root)
     try:
         charge(vid, specs)
     except BudgetBlocked as e:
@@ -213,7 +219,13 @@ def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, ro
                     J_candidates_veh_s=None, branches=[], charged_sim_s=0, reason='BudgetBlocked: '+str(e))
         return _finish(body, started, root)
     if hasattr(runner, 'prepare'):
-        runner.prepare(specs, snapshot)
+        try:
+            runner.prepare(specs, snapshot)
+        except Exception as e:  # e.g. full disk writing SNAPSHOT.pt: one decision, never the episode
+            body.update(status='failed', chosen=None, chosen_plan=None, grade_veh_s=None, J_policy_veh_s=None,
+                        J_candidates_veh_s=None, branches=[], charged_sim_s=charged, actual_sim_s=0,
+                        reason='prepare failed before physics: '+repr(e))
+            return _finish(body, started, root)
     branches = run_parallel(specs, snapshot, runner, workers)
     status, best, reason = choose(branches, candidates)
     J_policy = branches[0]['J_veh_s']
@@ -322,12 +334,55 @@ def random_candidates(group, centre, bounds, regime, base_seed, k=TOP_K, duratio
     from .mppi_search import sample_unscored
     out = [first] if first is not None else []
     i = 0
-    while len(out) < k:
+    while len(out) < k and i < 64*int(k):  # bounded: identical (fully clipped) draws cannot spin forever
         seed = int(digest(dict(base=int(base_seed), i=i))[:8], 16);i += 1
         p = sample_unscored(group, centre, bounds, regime, seed, duration_s=duration_s)
         if all(p['id'] != q['id'] for q in out):
             out.append(p)
     return out
+
+
+# ---------------------------------------------------------------- resume preflight
+
+def resume_preflight(cfg, search_config=None, learned=False):
+    """Static checks of a job['sumo_verify'] binding before a k / proposer switch (no I/O, no SUMO).
+
+    Returns human-readable problems (empty = consistent). Advisory: it never changes a
+    registered setting; MAIN decides. ``search_config`` is the GPU binding's search_config.
+    """
+    import inspect
+    import math
+    from . import mppi_search as ms
+    problems = []
+    k = int(cfg.get('k', TOP_K))
+    top_k = int(dict(ms.REGISTERED, **(search_config or {}))['top_k'])
+    if k > top_k:
+        problems.append(f'B search top_k={top_k} < verification k={k}: B verifies at most {top_k} '
+                        f'candidates (fewer when savings <= 0) while R always gets {k}')
+    workers = cfg.get('workers')
+    if workers is not None and int(workers) < k+1:
+        problems.append(f'workers={workers} < k+1={k+1}: the blocking decision runs '
+                        f'{math.ceil((k+1)/int(workers))} branch waves')
+    if k != TOP_K and cfg.get('phase', 'sumo_verification') != 'sumo_verification_k8':
+        problems.append(f'k={k} charges must use the registered sumo_verification_k8 phase (MAIN 16:43)')
+    if learned:
+        params = inspect.signature(ms.search).parameters
+        for name in ('warm_start', 'extra_seeds'):
+            if name not in params:
+                problems.append(f'mppi_search.search lacks {name}: learned kwargs raise TypeError and '
+                                'query_errors declines EVERY query silently')
+        try:
+            from .plan_proposer import learned_search_kwargs, LEARNED_TOP_K  # noqa: F401
+        except ImportError:
+            problems.append('plan_proposer lacks learned_search_kwargs/LEARNED_TOP_K (c4/plan-proposer not merged)')
+        else:
+            if LEARNED_TOP_K < k:
+                problems.append(f'LEARNED_TOP_K={LEARNED_TOP_K} < k={k}')
+        from . import mppi_runtime
+        if 'learned_search_kwargs' not in inspect.getsource(mppi_runtime.plan):
+            problems.append('mppi_runtime.plan has no learned-search hook; its own config= keyword must be '
+                            'merged with the learned config (a second config= is a TypeError)')
+    return problems
 
 
 # ---------------------------------------------------------------- live integration hook
@@ -387,6 +442,10 @@ def verified_guide(guide, verifier, controller, prefixes, job, generator, k=TOP_
             candidates = random_proposer(proposal, k)
         else:
             candidates = list(proposal.get('topk') or [proposal['plan']])[:k]
+        # k=8 switch: the plain search returns at most its registered top_k (4) and
+        # only positive-saving finalists, so B may verify fewer than k. Record it
+        # per decision; the B/R count match is a live owner check, not imputed.
+        proposal['behaviour']['verify_k'] = dict(requested=int(k), available=len(candidates))
         from .exploration import bucket_beta
         b = proposal['behaviour']
         tracked_beta = bucket_beta(getattr(controller, 'beta', 1.),
@@ -441,7 +500,8 @@ def install(controller, job, prefixes, generator, runner=None, charge=None):
         return controller
     cfg = job['sumo_verify']
     root = Path(cfg['root'])
-    runner = runner or SubprocessBranchRunner(root/'branches', workers=cfg.get('workers', TOP_K+1),
+    k = int(cfg.get('k', TOP_K))
+    runner = runner or SubprocessBranchRunner(root/'branches', workers=cfg.get('workers', k+1),
                                               timeout_s=cfg.get('timeout_s', 3600))
     charge = charge or accel_charge(cfg['run_root'], cfg.get('phase', 'sumo_verification'))
     rp = None
@@ -453,7 +513,7 @@ def install(controller, job, prefixes, generator, runner=None, charge=None):
     verifier = lambda snap, cands, proposer: verify(snap, cands, runner, charge, proposer,
                                                     workers=cfg.get('workers'), root=root)
     controller.guide = verified_guide(controller.guide, verifier, controller, prefixes, job, generator,
-                                      k=cfg.get('k', TOP_K), random_proposer=rp)
+                                      k=k, random_proposer=rp)
     return controller
 
 
@@ -566,9 +626,19 @@ class SubprocessBranchRunner:
     """One subprocess per branch (nice 19 on POSIX), PIDs logged; only our own Popen objects are ever
     waited on or (on timeout) terminated. Never kills by name."""
 
-    def __init__(self, work_root, workers=TOP_K+1, timeout_s=3600., python=None):
+    def __init__(self, work_root, workers=TOP_K+1, timeout_s=3600., python=None, min_free_bytes=MIN_FREE_BYTES):
         self.work_root, self.workers, self.timeout_s = Path(work_root), workers, float(timeout_s)
         self.python = python or sys.executable
+        self.min_free_bytes = int(min_free_bytes)
+
+    def admit(self, specs):
+        """Existing cpuQ 2 GiB free-disk admission guard, checked before any charge."""
+        import shutil
+        self.work_root.mkdir(parents=True, exist_ok=True)
+        free = shutil.disk_usage(self.work_root).free
+        if free < self.min_free_bytes:
+            return f'free disk {free} B < registered cpuQ admission guard {self.min_free_bytes} B'
+        return None
 
     def prepare(self, specs, snapshot):
         """Write the shared decision snapshot once (before the parallel branches start)."""
