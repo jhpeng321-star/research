@@ -1,5 +1,5 @@
 # S-COOPMWM — frozen B-u3 bank confirmation; B-REPLAY integration pending
-1. Briefowner cap14500000 retained; freshresume operational6Mhardguard includes811640superseded untilclarified; priorrestrictedbank2600000/k8training1500000/interim900000 unchanged; liveLS usesexistingphases, trainingre-quote before resume; phaseguardsSTOP/ALERT.
+1. MAIN06:27 operationalcap14500000 supersedesfresh6Mguard; append-onlyreconciliation b8d8f5bd:charged5430440/remaining9069560 incl811640superseded. Trainremaining1065600 vsB/Ru4-u24 PPO1209600 =>phasegap144000reportedMAIN; noimplicittransfer. Restrictedbank2600000/k8training1500000/interim900000 retained; liveimmutablebindingsawaitqualifiedhandover.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.

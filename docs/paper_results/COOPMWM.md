@@ -1,5 +1,21 @@
 # S-COOPMWM — live checks
 
+## Nov3 06:56 UTC+8 — latest cap reconciled; exact phase shortage reported
+- MAIN06:27 supersedes the stale fresh6M guard with **14,500,000 sim-s**.
+  Append-only phase reconciliation is registered locally/canonically and on cpuQ,
+  SHA256 `b8d8f5bd0696da31ea15f04e4ca9e27a327712c667282347e93fc9fed56c68fc`.
+- Locked ledger snapshot: **5,430,440 charged /9,069,560 remaining** in total,
+  including all retained superseded/failure charges. The full per-phase balances
+  are in `coopmwm/B_REPLAY_PHASE_RECONCILIATION_0627.json`.
+- Train has1,065,600 remaining; B/R u4-u24 PPO requires1,209,600. The **144,000
+  sim-s train-phase shortfall** is reported to MAIN before any transfer or restart.
+  Restricted verification/interim/final allocations remain protected. No new
+  reservation or physics occurs in reconciliation; existing live immutable
+  bindings await their qualified handover.
+- Delegated READY atd51051a9 is integrated by3cc4d0ab. Its seven completed
+  rehearsals are adopted; full Linux unit qualification is running separately.
+  Bank remains7 admitted/3 cooperative at the last completed probe; B/R stayu3.
+
 ## Nov3 06:40 UTC+8 — durable checkpoint while remaining gates run
 - Worker237704 is alive with5 check receipts (4 SHA-adopted,1 fresh), no failure;
   gpuA100%,29,203MiB. Existing controller12200, activation waiter32220 and
