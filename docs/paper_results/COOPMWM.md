@@ -1,5 +1,19 @@
 # S-COOPMWM — live checks
 
+## MAIN19:12 latest-order pause confirmed
+- B/R remain at durable **u3**, with **no u4 checkpoint or PPO update**.
+- The superseded FAST1844 wave is closed: **10 B + 12 R claimed attempts**,
+  including eight completed R results preserved. None may be replayed.
+- Only dispatch/boot/start/argv-verified B/R owners and descendants were signalled;
+  the post-pause audit finds **zero remaining owned descendants**. GPU searches,
+  broker, grader and final coordinator were retained.
+- Closed-wave charges: **26,400 sim-s**, retained; total charged **4,490,930 sim-s**
+  at unix1793618754. No new simulation during this pause. Registration and
+  `LS_COLLECT_PAUSED_1912.json` preserve hashes and the process tree.
+- Next is non-blocking frozen-B-u3 LS-COLLECT under MAIN18:58/19:12. The latest
+  cap is **11,900,000 sim-s**, including the restricted interim allocation.
+  Training resumes only on MAIN's learned-search resume addendum.
+
 ## MAIN18:38 adopted — B/R paused for LS-COLLECT
 - Durable B/R checkpoints remain **u3**; **no u4 PPO update**. The ten stalled
   `warmdns1651_u004_B_*` attempts are closed permanently, with all charges kept.

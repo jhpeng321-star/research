@@ -1,4 +1,19 @@
-# S-COOPMWM continuation — MAIN18:38 LS-COLLECT handover
+# S-COOPMWM continuation — MAIN19:12 pause confirmed
+
+Fresh resume read ALL458 prompt lines; latest MAIN19:12 overrides FAST1844.
+At unix1793618754 B/R remain durableu3, u4 checkpoints ABSENT. Receipt/boot/
+start/argv-verified FAST B1076539/R1076540 and owned descendants terminated;
+audit finds ZERO remaining descendants. Closed permanently22 claimed u4 jobs
+(10B+12R;8R results retained),26400sim-s charged; total4490930. First pause
+attempt froze parents but refused the /dev/shm SUMO argv BEFORE extra signals;
+literal own shm prefixes added, same frozen owners adopted and closure finished.
+No new SUMO, no GPU/broker/grader/final signals. Adopt LS_COLLECT_PAUSED_1912.json
+and LS_COLLECT_PAUSE_AUDIT_1793618754.json; never resume/replay FAST1844 wave.
+NEXT: adopt harden3/breadth-first fixes and four qualified slots; quote/register
+LS-COLLECT frozen B3 TRAIN986000..986071 nonblocking snapshots/no plans, full
+plain-search pools, exact top8+policy labels. Latest cap11900000 includes
+restricted interim_u8_test900000; no LS auto-stop, wait MAIN before training.
+Command mirror gate alreadyFAILED/OFF; learned/k8 TRAINING not active.
 
 Fresh session read ALL407 prompt lines and adopted HEAD9bc17ca4/user changes.
 MAIN18:38 SUPERSEDES prior training-running notes: B/R PAUSED at durableu3,
