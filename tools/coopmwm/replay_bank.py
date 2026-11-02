@@ -86,6 +86,11 @@ def collector_guide(job, generator, controller, prefixes):
             write(bank/'snapshots'/(r['state_id']+'.json'), meta)
             from .warm_spool import immutable
             if arm == 'B':
+                # Bounded (fan-out) and admitted as blocking, as in live LS-COLLECT: the broker
+                # never capacity-declines a collector search; the episode never waits for it.
+                (root/'quota_admissions').mkdir(exist_ok=True)
+                immutable(root/'quota_admissions'/(r['state_id']+'.json'),
+                          dict(blocking=True, collection=True, unix=time.time()))
                 immutable(root/'requests'/(r['state_id']+'.json'), r)
             else:
                 write(root/'centre_requests'/(r['state_id']+'.json'), r)
