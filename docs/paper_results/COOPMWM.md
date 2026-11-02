@@ -1,5 +1,18 @@
 # S-COOPMWM — live checks
 
+## Nov3 06:22 UTC+8 — fresh-cap restart budget gate
+- Read-only append-only ledger: **5,391,140 sim-s charged**, including retained
+  superseded work; **608,860** remain under the fresh resume's6M guard.
+- B/R u3→u24 require42 updates ×24 episodes ×1200s = **1,209,600 sim-s for PPO
+  episodes alone**. Minimum shortfall600,740 excludes further bank verification,
+  confirmation/synergy, lesson checks and any unreserved learning checks.
+- `B_REPLAY_BUDGET_GATE_20261103_0622.json` preserves the quote, with zero new
+  reservation/physics. MAIN alert is published in `_sol`. Historical14.5M brief
+  authority remains recorded; it has not silently overridden the fresh6M guard.
+  Training restart requires authority/phase reconciliation as well as the existing
+  ten-admission and delegated release qualifications. Guarded registered collection
+  and confirmations continue; no B/R PPO update is applied by this quote.
+
 ## Nov3 06:10 UTC+8 — supervised release completion and replay readiness guard
 - Sequential rollout controller37004 adopts the live qualifier and will drain,
   qualify and admit each remaining slot only after its predecessor is READY.

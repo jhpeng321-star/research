@@ -1,0 +1,19 @@
+{
+  "unix": 1793658159.6123085,
+  "source": "read-only cpuQ accel_storage.charged plus append-only ledger; no outcome files",
+  "operational_guard_sim_s": 6000000,
+  "charged_including_superseded_sim_s": 5391140,
+  "remaining_to_guard_sim_s": 608860,
+  "current_checkpoints": {"B": 3, "R": 3},
+  "registered_final_updates": {"B": 24, "R": 24},
+  "remaining_training_updates": 42,
+  "episodes_per_update": 24,
+  "sim_s_per_episode": 1200,
+  "remaining_ppo_episode_lower_bound_sim_s": 1209600,
+  "minimum_shortfall_against_fresh_guard_sim_s": 600740,
+  "excludes": ["further bank verification", "confirmation and synergy", "lesson checks", "unreserved learning checks"],
+  "new_sumo_sim_s": 0,
+  "training_authorized_by_this_receipt": false,
+  "decision": "No B-REPLAY launch under this receipt. Preserve fresh-request 6M guard and existing phase guards. Full continuation requires budget-authority reconciliation before registration/launch; historical 14.5M brief allocation remains recorded but is not silently activated.",
+  "ongoing_jobs": "Existing registered collection, grading and confirmations continue only within their enforced total and phase guards. No job replay or additional reservation was made for this quote."
+}

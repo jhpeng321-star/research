@@ -1,5 +1,12 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+BUDGET_GATE Nov3 06:22+08: readonlycharged5391140 inclsuperseded; fresh6Mguard
+headroom608860. RemainingB/Ru3->u24 PPOalone42*24*1200=1209600; MINshortfall
+600740 beforebank/lesson/check extras. No restartauthorized; needMAINauthority/
+phase reconciliation. Historicalbrief14.5M kept, NEVERsilentlyraisefresh6Mguard.
+ReceiptB_REPLAY_BUDGET_GATE_20261103_0622.json and _sol/COOPMWM_B_REPLAY_BUDGET_GATE_0622.md.
+Existingcollection/builder remainenforcedguarded; no newreservation forthisquote.
+
 CURRENT Nov3~06:15+08: adopt controller37004/start1793656452.6925836,
 activationwaiter16784/start1793657357.4799392, observerV12=14132/start
 1793657441.882769. ALLcreation/argvverifiedLIVE; neverduplicate. Controller
