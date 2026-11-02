@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+## Nov3 06:40 UTC+8 — durable checkpoint while remaining gates run
+- Worker237704 is alive with5 check receipts (4 SHA-adopted,1 fresh), no failure;
+  gpuA100%,29,203MiB. Existing controller12200, activation waiter32220 and
+  observer40668 have verified creation identities and remain alive.
+- Collection has58 completed searches/58 usable lists. Bank:28 confirmed,
+  **7 admitted /3 cooperative**, zero pending; builder continues on every new
+  positive label. Latest baseline exact-delay null rate15/58 (25.86%); post-release
+  niche cohorts remain unobserved. Source-bound GPU/collector activation is pending.
+- Full delegated replay READY remains absent, with no duplicate qualification
+  dispatched. B/R stayu3; the explicit fresh-cap restart budget gate remains
+  unresolved. Latest checkpoint and receipts are committed for safe continuation.
+
 ## Nov3 06:36 UTC+8 — late dependency failure recovered without repeating exact checks
 - Worker220668 completed all4 committed-background/warm-single-batch checks with
   exact-zero errors, then exited on the lazy `resource_config` service import.
