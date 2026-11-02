@@ -1,5 +1,21 @@
 # S-COOPMWM — live checks
 
+## MAIN14:24 recovery — both GPUs serving all four slots
+- At **14:28:10 UTC+8**, the existing gpuA replacement **759743** was admitted
+  as `gpuA@incident1`. All eight startup gates were already **EXACT0**.
+- The admission fault was visibility: the legacy restricted RPC returned only
+  six gates. The original CPU26-qualified `hotadd_rpc` exposes both additional
+  committed-plan receipts; its source SHA was checked before installation.
+  Four focused local CPU tests pass. Fresh restricted credentials remain on cpuQ.
+- Broker receipt unix1793600899 confirms **four admitted slots, four assigned
+  queries, no unassigned queue**, with failed `gpuA@0` still disabled. Existing
+  workers, queries, numerical source and original deadline were retained.
+- No qualification or episode was repeated. Admission SHA:
+  `4aaa6fdd665bf4c873f3cd5dd8dd1ff1506703f1a1103118fb0ac3612e23777f`.
+- Next prescribed steps: finish existing B-u3/R-u2, real five-branch verification
+  smoke, then matched activation. The latest owner cap **9,500,000 sim-s** in the
+  complete brief supersedes earlier resume figures; old cap-block notes are historical.
+
 ## 11:18 continuation — verifier grade reuse CPU-qualified
 - Original warm-memory qualification, MAPPO-u0 starts, same-arm/seed library and
   remote owners adopted. At unix1793589133: **A48/B2/R1**, B/R/broker/grader

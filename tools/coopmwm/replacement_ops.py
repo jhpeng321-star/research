@@ -49,13 +49,41 @@ def authorize():
     w.authorize('INCIDENT_REPLACEMENT_RPC_AUTHORIZATION.json', roots={'gpuA': GPU, 'gpuR': GPU_R})
 
 
+def authorize_v2():
+    """Expose all eight existing gates through the already-qualified RPC wrapper."""
+    from . import warm_remote_ops as w
+    from .incident_ops import GPU
+    from .exact_ops import GPU_R
+    assert (ops.EVIDENCE/'INCIDENT_REPLACEMENT_ADMISSION_REGISTRATION.json').exists()
+    target = ops.EVIDENCE/'INCIDENT_REPLACEMENT_RPC_AUTHORIZATION_V2.json'
+    assert not target.exists(), 'adopt existing eight-gate routes'
+    cpu = read(ops.EVIDENCE/'SECOND_CPU_QUALIFICATION.json')
+    assert cpu['pass_'] and cpu['skips'] == cpu['sim_s'] == 0
+    wrapper = ops.checked(ops.LOCAL/'tools/coopmwm/hotadd_rpc.py').read_text(encoding='utf-8')
+    import hashlib
+    assert hashlib.sha256(wrapper.encode()).hexdigest() == cpu['staged']['hashes']['pytools/tools/coopmwm/hotadd_rpc.py']
+    line = '\nS-COOPMWM MAIN1424 REPLACEMENT RPC ENGINEERING AMENDMENT: all8 startup gates already exact-zero on owned gpuA759743; legacy restricted warm_rpc exposes only6. Install original CPU26-qualified byte-identical hotadd_rpc wrapper, fresh restricted routes2 key on cpuQ only; expose both committed gate receipts without rerunning inference or changing numerical source, search, deadlines, existing claims or physics. Original routes/failed attempts retained. Zero new SUMO allocation.\n'
+    with checked(REGISTRY).open('a', encoding='utf-8') as f:
+        f.write(line)
+    write(ops.EVIDENCE/'INCIDENT_REPLACEMENT_RPC_V2_REGISTRATION.json', dict(line=line, cpu=cpu, new_sumo_sim_s=0))
+    for host, root in (('gpuA', GPU), ('gpuR', GPU_R)):
+        ops.stage(host, root, {'tools/coopmwm/hotadd_rpc.py': wrapper})
+    w.ROUTES = '/home/ubuntu/coopmwm20261102_incident_routes2'
+    w.authorize(target.name, roots={'gpuA': GPU, 'gpuR': GPU_R}, rpc_module='tools.coopmwm.hotadd_rpc')
+
+
 def admit():
     plan = read(ops.EVIDENCE/'INCIDENT_REPLACEMENT_ADMISSION_PLAN.json')
     reg = read(ops.EVIDENCE/'INCIDENT_REPLACEMENT_ADMISSION_REGISTRATION.json')
-    endpoints = read(ops.EVIDENCE/'INCIDENT_REPLACEMENT_RPC_AUTHORIZATION.json')['endpoints']
+    endpoints = read(ops.EVIDENCE/'INCIDENT_REPLACEMENT_RPC_AUTHORIZATION_V2.json')['endpoints']
     endpoint = dict(next(e for e in endpoints if e['slot'] == 'gpuA@0'), slot=SLOT)
+    helper_sha = read(ops.EVIDENCE/'SECOND_CPU_QUALIFICATION.json')['staged']['hashes']['pytools/tools/coopmwm/hotadd.py']
     value = json.loads(ops.ssh.remote('cpuQ', f'''import pathlib,json,sys,time
 r=pathlib.Path({ROOT!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
+import tools.coopmwm,hashlib
+helper=pathlib.Path('/home/ubuntu/coopmwm20261102_hotadd1/pytools/tools/coopmwm/hotadd.py')
+assert hashlib.sha256(helper.read_bytes()).hexdigest()=={helper_sha!r}
+tools.coopmwm.__path__.append(str(helper.parent))
 from tools.coopmwm.warm_broker import Remote,worker_endpoints
 from tools.coopmwm.hotadd import qualified,GATES
 from tools.coopmwm.warm_spool import immutable
@@ -89,5 +117,5 @@ print(json.dumps(dict(admitted=True,slot=endpoint['slot'],owner=v['owner'],unix=
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=('register', 'authorize', 'admit'))
+    parser.add_argument('mode', choices=('register', 'authorize', 'authorize_v2', 'admit'))
     globals()[parser.parse_args().mode]()

@@ -1,5 +1,16 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN1424 recovery: full328line brief read. gpuA759743/start896453815 retained,
+all8startupgatesEXACT0 alreadycomplete; doNOTrerun. Actualfault was restricted
+warm_rpc exposingonly6receipts. ExistingCPU26-qualified hotadd_rpc wrapper copied
+byte-identically; freshcpuQ-onlyrestrictedroutes2 registered, originalrouteskept.
+ADMITTED gpuA@incident1 unix1793600890.1338277 (14:28:10UTC+8); admissionSHA
+4aaa6fdd665bf4c873f3cd5dd8dd1ff1506703f1a1103118fb0ac3612e23777f.
+Realbrokerstatus1793600899: FOURslots/FOURassigned/noqueue; failedgpuA@0disabled.
+4localhotaddCPUtestPASS; noqualification/inference/episode replay orPIDcontrol.
+Next: existingBu3/Ru2finish, thenrealverificationsmoke/commonboundaryswitch.
+Latestbrief9500000cap supersedesearlier6M; previousclarificationblockobsolete.
+
 FRESH11:18 continuation: all322brief lines/read; adoption7abb1ce5 retained
 originalwarmqualification/u0start/library and allremoteowners. Verified1793589133:
 A48/B2/R1; B4146203/R4146817/broker4145985/grader4146093 LIVE/noSTOP/pausereceipts;
