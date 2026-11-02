@@ -1,5 +1,27 @@
 # S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
 
+## RECOVERED Nov2 10:20 +08 — bounded pass EXITED INCOMPLETE; HOLD intact
+
+Supersedes all historical LIVE/ongoing-publication assertions below. Read
+`docs/rb2int/RECOVERY_20261102_1020.md` and its LOCAL/GPUA/GPUR JSON receipts.
+
+- Collector25240 and cache-only publisher23664 have EXITED with explicit
+  `INCOMPLETE_AT_DEADLINE.json` receipts. No replacement/standby was launched.
+- 31/216new world jobs collected;185remain unadmitted. All hold-time children
+  collected;12matched v5/v4worlds. Existing reserved8 and separate10world/
+  five-replicated-cell interims are preserved; no analysis/inference replay.
+- MAIN's17:55hold and Nov2 02:28resource priority remain; no explicit MAIN
+  `S-RB2-INT RESUME` release found. ZERO active INT evaluations on both GPUs.
+  gpuA514854 remains exact-incarnation stateT; other three capped/late owners
+  absent. No PID signals. No automatic restart under the old Nov4 bounds.
+- S-WMTEACH: FULL-v5 and FULL-v5-LP remain engineering READY at sourceb2df7458
+  with immutable recipes/canaries below. Current report `WMPHYS_V5.md` retains
+  worse v5 delay CRPS in the available replicated view. Engineering readiness
+  does not establish quality or release your separate resource hold.
+- Full four-model gate and short-horizon switching qualification remain NOT
+  ESTABLISHED. Continuation needs MAIN release plus claim/source/resource and
+  finite-deadline reconciliation; do not refit the frozen exposed candidates.
+
 ## RECOVERED Nov2 07:16 +08 — hold intact; admission ownership changed
 
 Supersedes older LIVE/paused-owner assertions below. Read

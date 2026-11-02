@@ -5,13 +5,21 @@
 See the interval-supported detailed results below. This is an available-data
 diagnostic, not model selection or a planner/cooperation switching authorization.
 
+**Status verified Nov2 10:20 +08: the bounded collection/publication pass has
+EXITED INCOMPLETE.** Both local owners retain incomplete-at-deadline receipts.
+The saved replicated interim shows worse v5 delay CRPS at all three horizons;
+the full four-model gate and switching eligibility remain NOT ESTABLISHED.
+
 **Owner17:55 GPU hold: ZERO new evaluation admissions on either GPU until MAIN
-appends `S-RB2-INT RESUME`.** Our current admission coordinators and late standbys
-are paused; existing evaluation tasks are now collected.
+appends `S-RB2-INT RESUME`.** Direct checks find three capped/late coordinators
+absent and one exact-incarnation gpuA standby still paused; ZERO active INT
+evaluations. Existing evaluation tasks are collected.
 31/216 new registered world jobs are collected. The frozen full comparison
-remains incomplete; this is not final delivery. Cache-only interim publication
-continues about every3h, with an additional snapshot when all hold-time tasks are
-collected and immediately on complete reserved8. No inference is redispatched.
+remains incomplete; this is not final delivery. The reserved8 and separate
+ten-world/five-replicated-cell interims below are the latest completed scientific
+snapshots. No publisher is currently running. Remaining185jobs require explicit
+MAIN release and ownership/source/resource/deadline reconciliation. Recovery
+receipts: `../rb2int/RECOVERY_20261102_1020.md`. No inference is redispatched.
 
 FULL-v5 and FULL-v5-LP remain engineering-ready at frozen sourceb2df7458.
 All four fixes and the all-five-arm600s development canaries are preserved.
@@ -50,8 +58,9 @@ Teacher readiness does not override the owner's GPU hold or establish quality.
 
 ## Remaining work / teacher status
 
-Baseline/source/input parity and final release are complete. Execute only the
-scheduled missing identity-bound tasks; score all models on matched
+Baseline/source/input parity and final release are complete. After explicit MAIN
+admission release and operational reconciliation, execute only the scheduled
+missing identity-bound tasks; score all models on matched
 complete K8 worlds, distributional components, credibility and switching rule.
 Keep source-bound v4 decision maps separate from v5. The FULL-v5 READY signal and
 immutable source/recipe/smoke binding in HANDOFF.md are now published for

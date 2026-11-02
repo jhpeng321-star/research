@@ -1,5 +1,24 @@
 # Resume here — INT owned development jobs, sourceb2df7458
 
+## AUTHORITATIVE Nov2 10:20 +08 — HOLD; local bounded pass EXITED INCOMPLETE
+
+Supersedes all historical LIVE/ongoing-publication notes below. Collector25240
+and cache-only publisher23664 have EXITED with `INCOMPLETE_AT_DEADLINE.json`.
+Their exact creation identities and terminals were audited; do not restart them
+or the old source-guard-stopped publisher44988/late waiter9724 automatically.
+
+31/216new jobs collected,185unadmitted,12matched complete-K8v5/v4worlds; all
+hold-time children collected. ZERO active INT evaluations on either GPU. gpuA
+514854 remains exact original incarnation/stateT;513448/gpuA and948148/949247/
+gpuR absent. Preserve all claims/results and the remaining paused PID unsignalled.
+
+No MAIN `S-RB2-INT RESUME` release found. Old Nov4 standby bounds confer no new
+authority. Explicit release and source/claim/resource/deadline reconciliation are
+required before any claim-preserving continuation. Report remains INTERIM;
+existing reserved8 and ten-world replicated views were retained without rescoring.
+Receipts: `RECOVERY_20261102_1020_{LOCAL,GPUA,GPUR}.json`; recovery note:
+`RECOVERY_20261102_1020.md`. Frozen modelb2df7458/recipes/canaries unchanged.
+
 ## AUTHORITATIVE Nov2 07:16 +08 — HOLD; three admission owners absent
 
 Supersedes all historical LIVE/paused-owner notes below. MAIN's Nov2 02:28
