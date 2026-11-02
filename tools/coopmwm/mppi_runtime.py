@@ -59,6 +59,12 @@ def label_list8_search(run):
         values[4]=score
         kwargs['config']=dict(kwargs.get('config') or {},top_k=8,finalists_per_k=1)
         out=run(*values,**kwargs)
+        # Niched search (config niches>1): carry each shortlisted plan's niche id
+        # onto the collected top-8 entries (additive; absent for niches=1).
+        niche_of={p['id']:p['niche'] for p in (out.get('topk') or []) if isinstance(p,dict) and 'niche' in p}
+        if niche_of:
+            for p in last[:8]:
+                if p['id'] in niche_of:p['niche']=niche_of[p['id']]
         out['collection_top8']=last[:8]
         out['topk']=copy.deepcopy(last[:8]);out['available_k']=len(out['topk'])
         return out
