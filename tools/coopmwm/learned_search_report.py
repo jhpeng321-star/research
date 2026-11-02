@@ -191,6 +191,7 @@ def run(cache, report, fetch_remote=True):
         check = pp.offline_check(model, [s for s in va if s['full_pool']])
         vcheck = pp.verification_check(model, va)
         res['verification_check'] = {k: v for k, v in vcheck.items() if k != 'per_list'}
+        res['rank5to8'] = pp.rank58_share(searches, receipts)
         ck = pp.save_checkpoint(model, dict(validation_worlds=vw, dataset_sha256=pp._digest(
             sorted(r['search_id'] for r in receipts)), offline_check={k: v for k, v in check.items() if k != 'per_search'}),
             cache/'checkpoints'/f'proposer_{when[:19].replace(":", "")}')
@@ -241,7 +242,8 @@ def write_report(res, path):
         L += ['## Offline check (held-out worlds; vs the search\'s own initial distribution)',
               f"- Train searches {res['train']['train_searches']} (selected step {res['train']['selected_step']}); "
               f"held-out {c.get('searches')} searches / {c.get('worlds')} worlds; enough data: {c.get('enough_data')}; "
-              f"registered minimum (200 searches, 32 worlds) met: {res['registered_minimum_met']}.",
+              f"registered minimum ({REGISTERED_MIN['full_pool']} full pools, {REGISTERED_MIN['worlds']} worlds) met: "
+              f"{res['registered_minimum_met']}.",
               f"- PASS: **{c.get('passed')}**. LL gain {_fmt(c.get('loglik_gain', {}).get('mean'))} nats/elite "
               f"CI {c.get('loglik_gain', {}).get('ci95')}; nearest-elite distance change vs initial "
               f"{_fmt(c.get('nearest_elite_distance_change', {}).get('mean'))} m/s^2 CI "
@@ -251,9 +253,13 @@ def write_report(res, path):
         v = res.get('verification_check') or {}
         L += ['## Offline check on VERIFICATION-labelled held-out searches (exact SUMO outcomes; separate)',
               f"- Lists {v.get('lists', 0)} / worlds {v.get('worlds', 0)}; enough data: {v.get('enough_data')}; "
-              f"PASS: **{v.get('passed')}**." + (f" Pairwise accuracy proposer {_fmt(v.get('pairwise_accuracy_proposer'))} "
-              f"vs initial {_fmt(v.get('pairwise_accuracy_initial'))} (gain CI {v.get('pairwise_accuracy_gain', {}).get('ci95')}); "
-              f"exact-best LL gain {v.get('exact_best_loglik_gain')}." if v.get('lists') else f" {v.get('reason', '')}"), '']
+              f"PASS: **{v.get('passed')}** (harm: {v.get('harm')})." + (f" Exact-best lists {v.get('lists_with_positive_best')}; "
+              f"pairwise accuracy proposer {_fmt(v.get('pairwise_accuracy_proposer'))} vs initial density "
+              f"{_fmt(v.get('pairwise_accuracy_initial_density'))} (gain CI {v.get('pairwise_accuracy_gain', {}).get('ci95')}); "
+              f"exact-best LL gain {v.get('exact_best_loglik_gain')}; exact-best WM rank counts "
+              f"{v.get('exact_best_wm_rank')}; rank quality {v.get('rank_quality')}." if v.get('lists') else f" {v.get('reason', '')}"),
+              f"- Share of verified decisions where a WM rank 5-8 candidate would be exact best (top-8 verification): "
+              f"{res.get('rank5to8')}.", '']
         ev = res.get('evaluations_curve')
         L += ['## Evaluations needed to reach the plain search\'s final elite quality (surrogate replay)']
         if isinstance(ev, str) or not ev or not ev.get('summary'):
@@ -262,8 +268,8 @@ def write_report(res, path):
             L += [f"- {ev['searches']} held-out searches / {ev['worlds']} worlds; mean screen budget {_fmt(ev['mean_budget'], 1)}; "
                   f"median surrogate LOO R^2 {_fmt(ev['median_surrogate_loo_r2'], 2)}.",
                   '', '| mode | evaluations used (x plain) | reached plain elite quality | evals to it | '
-                  'evals - plain_alt (95% CI) | final elite quality (95% CI) | quality - plain_alt (95% CI) | elite coverage |',
-                  '|---|---|---|---|---|---|---|---|']
+                  'evals - plain_alt (95% CI) | final elite quality (95% CI) | quality - plain_alt (95% CI) | elite coverage '
+                  '| top-8 quality (95% CI) |', '|---|---|---|---|---|---|---|---|---|']
             for m, s in ev['summary'].items():
                 e = s['elite']; q = e['final_quality']
                 da = e.get('evals_minus_plain_alt', {}); qa = e.get('quality_minus_plain_alt', {})
@@ -271,7 +277,9 @@ def write_report(res, path):
                          f"{_fmt(e['mean_evals_to_plain_elite_quality'], 1)} | {_fmt(da.get('mean'), 1)} "
                          f"[{_fmt(da.get('ci_lo'), 1)}, {_fmt(da.get('ci_hi'), 1)}] | "
                          f"{_fmt(q['mean'], 2)} [{_fmt(q['ci_lo'], 2)}, {_fmt(q['ci_hi'], 2)}] | {_fmt(qa.get('mean'), 2)} "
-                         f"[{_fmt(qa.get('ci_lo'), 2)}, {_fmt(qa.get('ci_hi'), 2)}] | {_fmt(s['elite_coverage'], 2)} |")
+                         f"[{_fmt(qa.get('ci_lo'), 2)}, {_fmt(qa.get('ci_hi'), 2)}] | {_fmt(s['elite_coverage'], 2)} | "
+                         f"{_fmt(s['top8_quality']['mean'], 2)} [{_fmt(s['top8_quality']['ci_lo'], 2)}, "
+                         f"{_fmt(s['top8_quality']['ci_hi'], 2)}] |")
             L += ['', 'Elite quality: 0 = centre seed (unchanged policy), 1 = plain 3-iteration final top-E mean. '
                   'plain_alt (independent plain seed) is the fair reference for savings and calibrates elite coverage. '
                   'Horizons are '

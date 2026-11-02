@@ -68,7 +68,7 @@ REGISTERED = dict(
     min_heldout_worlds=8, min_heldout_searches=40, threads=1, inner_frac=.2, inner_min_worlds=5, eval_every=100,
     min_pool=16, generic_share=.2, novelty_share=.1, novelty_oversample=4,
     entropy_floor=.5*math.log(4), entropy_weight=1.,
-    gold_weight=2., rank_weight=2., pre_fix_weight=.25, rank_noninferiority=.05)
+    gold_weight=2., rank_weight=2., pre_fix_weight=.25)
 # Owner/MAIN 2026-11-02: exact SUMO verification branches (top-4 candidates + 'policy
 # continues', same state, same window) are GOLD labels: a listwise ranking loss on
 # exact outcomes plus likelihood targets for exactly-positive candidates, each
@@ -76,6 +76,29 @@ REGISTERED = dict(
 # Post-safety command mirror (clipping fix): searches scored with the mirror ON are
 # 'post-fix'; while any post-fix search exists, pre-fix searches get ``pre_fix_weight``.
 MIRROR_KEYS = ('command_mirror', 'final_chain', 'post_safety_mirror')
+# Owner 2026-11-02: after the switch SUMO verification checks 8 candidates per decision,
+# so the learned search returns a RANKED TOP-8 (mppi_search config top_k=8; finalists
+# 2*top_k = 16 re-scored at K8/H_final). Generic 20% / novelty 10% slices unchanged.
+LEARNED_TOP_K = 8
+
+
+def learned_search_kwargs(record, group, proposer, regime, mode='warm', policy_traj=None, bounds=None,
+                          n_seeds=None, cov0=None):
+    """Keyword arguments for ``mppi_search.search`` in learned-search mode (flag use only).
+
+    mode: 'seeds' | 'warm' | 'both'. Always sets ``config=dict(top_k=LEARNED_TOP_K)``
+    (ranked top-8 by the WM's K8 final scores). Activation is owner-gated (prereg 9).
+    """
+    if mode not in ('seeds', 'warm', 'both'):
+        raise ValueError('learned-search mode must be seeds|warm|both')
+    kw = dict(config=dict(top_k=LEARNED_TOP_K))
+    if mode in ('warm', 'both'):
+        kw['warm_start'] = warm_start(record, group, proposer, regime, cov0=cov0)
+    if mode in ('seeds', 'both'):
+        if policy_traj is None or bounds is None:
+            raise ValueError('seeds need the policy trajectory and plant bounds')
+        kw['extra_seeds'] = proposal_seeds(record, group, policy_traj, n_seeds or 4, proposer, bounds, regime=regime)
+    return kw
 
 FEATURES = 41
 
@@ -600,7 +623,9 @@ def rank_loss(model, searches, cfg=REGISTERED):
     perturbation) get target probabilities softmax(gold / T), T = std of that list's
     exact savings (scale-free; uniform if all equal), and the proposer's
     log-likelihoods are pushed to the same ordering: cross-entropy against
-    softmax(log-likelihood). Weighted ``rank_weight`` per list (x ``rank_scale``).
+    softmax(log-likelihood). (A density-ratio score was tried on synthetic data and
+    discarded: it removes the initial distribution's informative preference for
+    small perturbations.) Weighted ``rank_weight`` per list (x ``rank_scale``).
     """
     lists = [s for s in searches if s.get('rank')]
     if not lists:
@@ -974,13 +999,14 @@ def offline_check(model, searches, cfg=REGISTERED):
 def verification_check(model, searches, cfg=REGISTERED):
     """Offline check on held-out VERIFICATION-labelled searches (exact SUMO outcomes).
 
-    Per list (top-k + 'policy continues'): pairwise ordering accuracy of the
-    proposer log-likelihood vs the exact savings, compared with the search's own
-    initial distribution's log-density (same items). Also the log-likelihood gain
-    on the exact-best candidate when it beat the policy. World-cluster bootstrap.
-    PASS iff >= min_heldout_worlds worlds, >= min_heldout_searches lists, the
-    exact-best log-likelihood gain CI lower bound > 0 AND the pairwise-accuracy gain
-    is non-inferior (CI lower bound > -``rank_noninferiority``, registered 0.05).
+    PRIMARY (gate): log-likelihood gain over the search's own initial distribution
+    on the exact-best candidate when it beat 'policy continues' (does the proposer
+    put more mass than the generic search on what exact SUMO found best?). PASS iff
+    >= min_heldout_worlds worlds, >= min_heldout_searches lists and its world-cluster
+    bootstrap CI lower bound > 0. REPORTED: pairwise ordering accuracy of exact
+    outcomes by proposer log-likelihood vs by initial log-density (same items; items
+    of different duration have different masked dimension, so this is descriptive)
+    and ``harm`` = exact-best gain CI upper bound < 0 (blocks activation readiness).
     """
     cfg = dict(REGISTERED, **cfg)
     ev = [s for s in searches if s.get('rank')]
@@ -999,21 +1025,89 @@ def verification_check(model, searches, cfg=REGISTERED):
         j = int(np.argmax(g))
         bg = float(lp[j]-lp0[j]) if g[j] > 0 and not s['rank'][j]['policy'] else None
         best_gain.append(bg)
-        rows.append(dict(id=s['id'], world=s['world'], pairs=len(pairs), acc_proposer=acc, acc_initial=acc0, best_ll_gain=bg))
+        # WM rank (1 = WM's best) of the exact-best item among the verified candidates ('policy' if it won)
+        wm_rank = 'policy' if s['rank'][j]['policy'] else j
+        rows.append(dict(id=s['id'], world=s['world'], pairs=len(pairs), acc_proposer=acc, acc_initial=acc0,
+                         best_ll_gain=bg, exact_best_wm_rank=wm_rank, k=k-1,
+                         ndcg_wm=_ndcg(g[1:]), ndcg_proposer=_ndcg(g[1:][np.argsort(-lp[1:], kind='stable')])))
     if not rows:
         return dict(passed=False, enough_data=False, lists=0, worlds=0, reason='no list with distinct exact outcomes')
     A = _bootstrap_ci(acc_gain, worlds, cfg['bootstraps'], cfg['seed']+7)
     bw = [(b, w) for b, w in zip(best_gain, worlds) if b is not None]
     B = _bootstrap_ci([b for b, _ in bw], [w for _, w in bw], cfg['bootstraps'], cfg['seed']+8) if bw else None
     nw = len(set(worlds))
-    enough = nw >= cfg['min_heldout_worlds'] and len(rows) >= cfg['min_heldout_searches']
-    ok = B is not None and B[1] > 0 and A[1] > -cfg['rank_noninferiority']
+    nb = len({w for _, w in bw})
+    enough = nb >= cfg['min_heldout_worlds'] and len(bw) >= cfg['min_heldout_searches']
+    ok = B is not None and B[1] > 0
     return dict(passed=bool(enough and ok), enough_data=enough, lists=len(rows), worlds=nw,
+                lists_with_positive_best=len(bw), worlds_with_positive_best=nb,
                 pairwise_accuracy_proposer=float(np.mean([r['acc_proposer'] for r in rows])),
-                pairwise_accuracy_initial=float(np.mean([r['acc_initial'] for r in rows])),
+                pairwise_accuracy_initial_density=float(np.mean([r['acc_initial'] for r in rows])),
                 pairwise_accuracy_gain=dict(mean=A[0], ci95=[A[1], A[2]]),
+                harm=bool(B is not None and B[2] < 0),
+                exact_best_wm_rank={str(r): sum(x['exact_best_wm_rank'] == r for x in rows)
+                                    for r in ['policy']+list(range(1, max(x['k'] for x in rows)+1))},
+                rank_quality=dict(ndcg_wm_order=float(np.mean([x['ndcg_wm'] for x in rows])),
+                                  ndcg_proposer_order=float(np.mean([x['ndcg_proposer'] for x in rows])),
+                                  note='NDCG of exact savings (shifted >= 0) in the given order of the verified '
+                                       'top-k; WM order = topk order'),
                 exact_best_loglik_gain=None if B is None else dict(mean=B[0], ci95=[B[1], B[2]], n=len(bw)),
                 per_list=rows)
+
+
+def _ndcg(gains_in_order):
+    g = np.asarray(gains_in_order, float)
+    if g.size == 0:
+        return float('nan')
+    g = g-g.min()
+    disc = 1/np.log2(np.arange(2, g.size+2))
+    ideal = (np.sort(g)[::-1]*disc).sum()
+    return float((g*disc).sum()/ideal) if ideal > 0 else 1.
+
+
+def rank58_share(searches, receipts, draws=2000, seed=0, min_lists=10):
+    """Estimated share of exact-verified decisions in which a WM rank 5-8 candidate
+    would have been the exact best (owner: verification moves from top-4 to top-8).
+
+    Exact outcomes exist only for ranks 1-4. Model, fitted on verified lists:
+    exact saving_i = c_list + b * WM_final_saving_i + e_i, with e ~ N(0, s^2) (least
+    squares with per-list intercepts). For each verified decision, ranks 5-8 are the
+    receipt's remaining K8 finalists (WM final savings known); their exact savings are
+    drawn from the model (ranks 1-4 keep their exact values) and P(best of 8 in
+    5-8) is averaged. Returns None fields when not estimable.
+    """
+    by = {str(r.get('search_id')): r for r in receipts}
+    lists = []
+    for s in searches:
+        r = by.get(s['id'])
+        sv = (r or {}).get('sumo_verification')
+        if not sv:
+            continue
+        fin = {c['id']: float(c['saving_vs_policy']) for c in r.get('candidates') or []
+               if c.get('stage') == 'final' and c.get('saving_vs_policy') is not None}
+        ids = sv['candidate_ids']
+        if not all(i in fin for i in ids):
+            continue
+        exact = [sv['J_policy_veh_s']-j for j in sv['J_candidates_veh_s']]
+        rest = sorted((v for k, v in fin.items() if k not in ids), reverse=True)[:8-len(ids)]
+        lists.append(([fin[i] for i in ids], exact, rest))
+    if len(lists) < min_lists:
+        return dict(estimable=False, verified_lists=len(lists), reason=f'needs >= {min_lists} verified lists with K8 finalists')
+    X = np.concatenate([np.asarray(w)-np.mean(w) for w, _, _ in lists])
+    Y = np.concatenate([np.asarray(e)-np.mean(e) for _, e, _ in lists])
+    b = float((X*Y).sum()/max((X*X).sum(), 1e-12))
+    resid = Y-b*X; dof = max(1, len(Y)-len(lists)-1); sd = float(np.sqrt((resid**2).sum()/dof))
+    rng = np.random.default_rng(seed); share = []
+    for w, e, rest in lists:
+        if not rest:
+            continue
+        c = float(np.mean(e)-b*np.mean(w))
+        sim = c+b*np.asarray(rest)[None, :]+sd*rng.standard_normal((draws, len(rest)))
+        share.append(float((sim.max(1) > max(e)).mean()))
+    observed = {str(k+1): sum(int(np.argmax(e)) == k for _, e, _ in lists)/len(lists) for k in range(4)}
+    return dict(estimable=bool(share), verified_lists=len(lists), share_rank5to8_best=float(np.mean(share)) if share else None,
+                slope_exact_on_wm=b, residual_sd_veh_s=sd, observed_exact_best_rank_share=observed,
+                model='exact = list intercept + b*WM final saving + N(0, sd^2); ranks 5-8 = remaining K8 finalists')
 
 
 def synthetic_verification(receipts, seed=0, sumo_noise=.5, policy_noise=.5):

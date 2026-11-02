@@ -198,6 +198,7 @@ def evaluations_curve(model, receipts, modes=MODES, cfg=None, config=None):
         # count ceil(N/4)) values found so far; target = plain's final elite mean.
         E = ms.scaling(len(r['members']), ms.canonical_knots())['elites']
         plain_e = _running_elite_mean(plain, E, len(plain)); target_e = float(plain_e[-1])
+        plain_8 = _running_elite_mean(plain, 8, len(plain)); target_8 = float(plain_8[-1])
         row = dict(id=r.get('search_id'), world=str(r.get('world_id')), m=len(r['members']), budget=len(plain),
                    target=target, target_elite=target_e, elites_E=E, centre=base, surrogate_loo_r2=sur.loo_r2,
                    recorded_elites=len(elites), modes={})
@@ -211,7 +212,9 @@ def evaluations_curve(model, receipts, modes=MODES, cfg=None, config=None):
             hit = np.nonzero(em[:len(vals)] >= target_e-1e-9*max(1., abs(target_e)))[0]
             ne = int(hit[0])+1 if hit.size else len(plain)+1
             eq = (em-base)/(target_e-base) if target_e > base else em*np.nan
-            row['modes'][mode] = dict(evals_to_elite=ne, elite_reached=ne <= len(vals),
+            t8 = _running_elite_mean(vals, 8, len(plain))
+            top8 = float((t8[len(vals)-1]-base)/(target_8-base)) if target_8 > base else float('nan')
+            row['modes'][mode] = dict(top8_quality=top8, evals_to_elite=ne, elite_reached=ne <= len(vals),
                                       final_elite_quality=float(eq[len(vals)-1]),
                                       elite_quality_at_frac={str(f): float(eq[max(0, int(math.ceil(f*len(plain)))-1)])
                                                              for f in cfg['curve_fracs']},
@@ -256,6 +259,10 @@ def evaluations_curve(model, receipts, modes=MODES, cfg=None, config=None):
             reached_rate=float(np.mean([x['modes'][mode]['reached'] for x in rows])),
             evaluations_fraction=float(np.mean([x['modes'][mode]['evaluations']/x['budget'] for x in rows])),
             elite_coverage=_mean_or_none([x['modes'][mode]['elite_coverage'] for x in rows]),
+            # ranked top-8 (owner: verification of 8 candidates): mean of the 8 best screened
+            # surrogate values, normalised centre=0 / plain final top-8 mean=1
+            top8_quality=dict(zip(('mean', 'ci_lo', 'ci_hi'), _ci(
+                [x['modes'][mode]['top8_quality'] for x in rows], worlds, cfg['bootstraps'], cfg['seed']+6))),
             elite_distance=_mean_or_none([x['modes'][mode]['elite_distance'] for x in rows]),
             final_quality=dict(zip(('mean', 'ci_lo', 'ci_hi'), _ci(
                 [x['modes'][mode]['final_quality'] for x in rows], worlds, cfg['bootstraps'], cfg['seed']+1))),

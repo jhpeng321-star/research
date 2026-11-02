@@ -49,6 +49,25 @@ path. The only change allowed before activation is logging-only receipts (8).
      - Top-k only: weight is proportional to positive saving vs the policy.
      - A SUMO-positive executed plan adds +1.
      - SUMO-negative executed plans are never targets.
+   - **Exact SUMO gold labels** (MAIN 2026-11-02; `sumo_verify` v1 receipts, arm-B
+     'wm' proposer, status accepted/rejected only). Each verified search's top-4
+     candidates and its 'policy continues' branch run from the same state over the
+     same window. Exact saving = J_policy - J_candidate (veh-s). These labels are
+     used two ways, each with weight 2 per search (above the WM unit weight of 1):
+     - a listwise ranking loss (ListNet) on the k+1 items, with target
+       softmax(saving / list std);
+     - likelihood targets for the exactly-positive candidates, weighted in
+       proportion to saving.
+   - Candidates that lost in exact SUMO are never likelihood targets. This includes
+     their WM-pool weight and any executed-plan bonus.
+   - **Command mirror (clipping fix).** A search scored with the post-safety command
+     mirror ON is 'post-fix'.
+     - Once any post-fix search exists, pre-fix searches are down-weighted x0.25.
+     - The offline check then runs on post-fix held-out searches once they meet
+       the minimum.
+     - Status 2026-11-02 16:30 CST: the mirror is OFF in the live service
+       (`plan_wm.evaluate(final_chain=False)`; the handoff says "command mirror
+       still OFF"). All searches are pre-fix, so weights are unchanged.
 4. **Frozen configuration** (`plan_proposer.REGISTERED` at the registered commit).
    Any change needs a new amendment before training.
    - Model: M=4, d=64, 2 layers, defensive 0.1.
@@ -58,7 +77,18 @@ path. The only change allowed before activation is logging-only receipts (8).
    - Early stopping on an inner world split of the TRAIN worlds only.
    - Seed and warm-start settings: 4 seeds, generic share 0.2, novelty share 0.1,
      novelty oversample 4.
-5. **Offline check (required, not sufficient).** Held-out searches only, using a
+5. **Offline checks (required, not sufficient).** There are two, reported
+   separately. Either one passing satisfies (9a); both are always reported.
+   - **5V, verification-labelled check.** It uses held-out searches with exact SUMO
+     outcomes: >= 8 worlds and >= 40 lists whose exact-best item is a candidate.
+     - PASS: the log-likelihood gain on the exact-best candidate, against the
+       initial distribution, has world-bootstrap CI lower bound > 0.
+     - Reported only: pairwise ordering accuracy against the initial density,
+       NDCG of the WM order and of the proposer order, and the WM rank of the exact
+       best.
+     - HARM: the exact-best gain CI upper bound < 0. Harm blocks readiness even if
+       5W passes.
+   - **5W, WM-pool check.** Held-out full-pool searches only, using a
    world-grouped split (25% of worlds by SHA256 rank of (seed, world)). The held-out
    set needs >= 8 worlds and >= 40 searches with elites. PASS requires all three,
    each judged on a world-cluster bootstrap (2000) 95% CI against the search's own
@@ -77,6 +107,11 @@ path. The only change allowed before activation is logging-only receipts (8).
    - Any proposal to cut iterations or population requires its own owner-approved
      amendment that cites these numbers.
 7. **Schedule (no gate shopping).**
+   - Each boundary attempt runs both 5W and 5V on the same world split.
+   - 5V needs >= 40 held-out verification-labelled lists from >= 8 worlds, which is
+     about 160 verified searches at the 25% split. Verification starts only from
+     accepted WM searches, so 5V cannot become eligible before 5W on the same split.
+   - Gold labels mainly sharpen training and give the SUMO-grounded check.
    - The check runs only at TRAIN-check boundaries (every 4 updates).
    - The first attempt needs **>= 160 full-pool B searches (>= 40 held out) from
      >= 32 TRAIN worlds (>= 8 held out)**. This is based on the synthetic curve,
@@ -97,6 +132,15 @@ path. The only change allowed before activation is logging-only receipts (8).
 9. **Activation requires BOTH** (a) a PASS in (5) under (7) **and** (b) **explicit
    owner approval recorded by MAIN** (owner statement, time, approved mode and
    checkpoint SHA).
+   - 2026-11-02 (MAIN): the owner approves switching B to the learned search on
+     condition that it PASSES the registered offline check. This satisfies (b),
+     conditional on (a).
+   - `tools/coopmwm/learned_search_watch.py` refreshes after every B update. When
+     (a) holds it writes `LEARNED_SEARCH_ACTIVATION_READY.json` and MAIN performs
+     the switch.
+   - The learned search returns a ranked **top-8** (`top_k=8`, 16 K8 finalists),
+     because verification moves to 8 candidates. The generic 20% and novelty 10%
+     slices are unchanged.
    - Activation is an engineering amendment at an update boundary:
      `ACTIVATE_PLAN_PROPOSER_u<k>.json`, with code commit, checkpoint SHA, the
      approved mode (seeds | warm | both) and the owner-approval reference.

@@ -138,3 +138,46 @@ class ReportPath(unittest.TestCase):
             self.assertIn('offline_check', res)
             self.assertIn('summary', res['evaluations_curve'])
             self.assertTrue((Path(d)/'REPORT.json').exists())
+
+
+class Watch(unittest.TestCase):
+    def test_readiness_saving_and_wallclock(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        from . import learned_search_watch as lw
+        base = dict(offline_check=dict(passed=True, enough_data=True), registered_minimum_met=True,
+                    verification_check=dict(passed=False, enough_data=False, harm=False))
+        self.assertEqual(lw.ready(base), (True, True, False))
+        self.assertFalse(lw.ready(dict(base, registered_minimum_met=False))[0])
+        self.assertFalse(lw.ready(dict(base, verification_check=dict(harm=True)))[0])
+        self.assertTrue(lw.ready(dict(offline_check={}, verification_check=dict(passed=True, enough_data=True)))[0])
+        curve = dict(mean_budget=200., summary={
+            'warm': dict(evaluations_fraction=1., elite=dict(evals_minus_plain_alt=dict(mean=-20.),
+                                                             quality_minus_plain_alt=dict(mean=.1, ci_lo=.01, ci_hi=.2))),
+            'warm_it2': dict(evaluations_fraction=2/3, elite=dict(evals_minus_plain_alt=dict(mean=-5.),
+                                                                 quality_minus_plain_alt=dict(mean=-.2, ci_lo=-.3, ci_hi=-.1)))})
+        sav, mode = lw.expected_saving(curve)
+        self.assertEqual(mode, 'warm'); self.assertAlmostEqual(sav['modes']['warm']['evaluation_saving_fraction'], .1)
+        self.assertFalse(sav['modes']['warm_it2']['noninferior'])
+        self.assertIsNone(lw.expected_saving('not run')[1])
+        self.assertGreater(lw.screen_share([2], 4), lw.screen_share([2], 8))
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d)/'updates').mkdir()
+            (Path(d)/'updates'/'B_UPDATE_002.json').write_text(json.dumps(dict(update=2, wall_s=100., gpu_busy=dict(
+                slots={'a': dict(completed_inference_s=50.), 'b': dict(completed_inference_s=100.)}))))
+            w = lw.wallclock(d, .1, [2, 2])
+            self.assertAlmostEqual(w['updates'][0]['gpu_busy_share'], .75)
+            self.assertAlmostEqual(w['expected_wall_saving_fraction'], .75*lw.screen_share([2], 4)*.1)
+
+    def test_learned_search_kwargs_top8(self):
+        from .test_mppi_search_cpu import Fake, group_of
+        g = group_of(3); fake = Fake(3)
+        model = pp.ProposerNet(dict(pp.REGISTERED, d_model=32))
+        rec = dict(state_id='k', rows=g['rows'], policy_residuals={v: 0. for v in g['members']})
+        kw = pp.learned_search_kwargs(rec, g, model, 'ordinary', 'both', fake.policy, (-3., 1.5))
+        self.assertEqual(kw['config'], dict(top_k=8)); self.assertEqual(len(kw['extra_seeds']), 4)
+        res = ms.search(rec, g, fake.policy, (-3., 1.5), fake, 'ordinary', seed=1, **kw)
+        self.assertEqual(len(res['finalists']), 16); self.assertLessEqual(len(res.get('topk') or []), 8)
+        with self.assertRaises(ValueError):
+            pp.learned_search_kwargs(rec, g, model, 'ordinary', 'nope')
