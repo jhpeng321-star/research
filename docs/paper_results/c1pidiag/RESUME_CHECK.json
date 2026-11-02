@@ -1,0 +1,27 @@
+{
+  "task": "S-C1PIDIAG",
+  "resumed_head": "f0d9e332",
+  "initial_worktree_clean": true,
+  "status": "completed_existing_work_verified",
+  "remote_checked_utc": "2026-11-02T22:05:49.172624+00:00",
+  "report_lines": 46,
+  "table_rows_reconciled": 20,
+  "report_sha256": "ef442d7dc93c3eddbac15ee5af7ff96c8ee06213639dae180abbe0913b7dac20",
+  "saved_report_receipt_matches": true,
+  "canonical_units": 4730,
+  "remote_phase_receipts_verified": 6,
+  "remote_source_hashes_verified": 14,
+  "remote_output_hashes_verified": 2,
+  "local_raw_hashes_verified": true,
+  "coverage_receipt_verified": true,
+  "owned_identities_checked": 11,
+  "owned_registered_processes_active": 0,
+  "new_dispatches": 0,
+  "new_inference_cells": 0,
+  "new_sumo_or_training": false,
+  "verification": [
+    "python -B tools/c1pidiag/validate_report.py --check-only",
+    "Read-only gpuA SSH audit of the six named phase receipts, 14 source hashes, two raw-output hashes and 11 PID/start-tick pairs bound by FINAL_RUN_AUDIT.json"
+  ],
+  "resume_changes": "Add a non-writing report verification mode and preserve this verification receipt; existing scientific artifacts and registration remain as completed."
+}

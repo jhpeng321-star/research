@@ -1,5 +1,6 @@
 """Independently reconcile every displayed table number with the analysis JSON."""
 from pathlib import Path
+import argparse
 import hashlib
 import json
 import re
@@ -12,6 +13,9 @@ def numbers(text):return [float(x.replace('âˆ’','-')) for x in re.findall(r'[+âˆ
 
 
 def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check-only',action='store_true',help='Verify without writing a new receipt')
+    args=parser.parse_args()
     path=ROOT/'docs/paper_results/C1PIDIAG.md';text=path.read_text(encoding='utf-8');lines=text.splitlines()
     assert len(lines)<=60
     summary=json.loads((OUT/'SUMMARY.json').read_text())
@@ -52,7 +56,10 @@ def main():
     value=dict(report_lines=len(lines),table_rows_reconciled=checked,all_table_values_match=True,
         canonical_units=4730,raw_hashes_verified=True,coverage_verified=True,
         report_sha256=hashlib.sha256(path.read_bytes()).hexdigest())
-    with (OUT/'FINAL_REPORT_CHECK.json').open('x') as f:json.dump(value,f,indent=2)
+    if args.check_only:
+        assert value==json.loads((OUT/'FINAL_REPORT_CHECK.json').read_text()),'saved report receipt differs'
+    else:
+        with (OUT/'FINAL_REPORT_CHECK.json').open('x') as f:json.dump(value,f,indent=2)
     print(json.dumps(value,indent=2))
 
 
