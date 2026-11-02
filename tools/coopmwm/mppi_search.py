@@ -571,7 +571,8 @@ def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, c
 
 
 def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None,
-           covariance=None, library=None, seed=None, config=None, extra_seeds=None, warm_start=None):
+           covariance=None, library=None, seed=None, config=None, extra_seeds=None, warm_start=None,
+           screen=None):
     """Policy-centred MPPI/CEM joint-plan search with WM screening and K_final rescoring.
 
     record: request passed unchanged to ``evaluate`` (needs ``policy_residuals``
@@ -583,6 +584,11 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
     extra_seeds: optional iteration-0 seeds (dicts with ``perturbation_canonical``
     on the current canonical grid and ``duration_s``; e.g. plan-proposer plans).
     They take population slots and are WM-scored like every other candidate.
+    screen: optional LEARNED SCREEN (flag; default None = unchanged WM screen):
+    ``screen(record, group, cands) -> predicted cost relative to 'policy continues'``
+    (lower = better, any scale). It replaces the K4/H_screen WM rollouts of every
+    iteration; sampling, MPPI/CEM updates, finalists, the K8/H_final WM re-score,
+    top-k and Thompson are unchanged.
     warm_start: optional learned initial sampling distribution replacing the
     policy-centred N(0, Sigma_0)/uniform-duration start (flag; default None =
     unchanged search): dict ``mean`` (members*n_canon), ``cov`` (square, same
@@ -659,10 +665,15 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
             p = build_plan(group, P, z.reshape(m, nc), D, bounds, 'sampled', regime,
                            f'i{it}s{len(cands)}-', span_s=_span(cfg, durations, D), n_canon=nc)
             cands.append(p); zs[p['id']] = z
-        scores = evaluate(record, base+cands, cfg['screen_K'], H_screen)
-        futures += (len(cands)+len(base))*cfg['screen_K']
-        c = _costs(scores, ['policy', 'MAPPO']+[p['id'] for p in cands], cfg['screen_K'])
-        rel = np.array([float((c[p['id']]-c['policy']).mean()) for p in cands])
+        if screen is None:
+            scores = evaluate(record, base+cands, cfg['screen_K'], H_screen)
+            futures += (len(cands)+len(base))*cfg['screen_K']
+            c = _costs(scores, ['policy', 'MAPPO']+[p['id'] for p in cands], cfg['screen_K'])
+            rel = np.array([float((c[p['id']]-c['policy']).mean()) for p in cands])
+        else:
+            rel = np.asarray(screen(record, group, cands), float).reshape(-1)
+            if rel.shape != (len(cands),) or not np.isfinite(rel).all():
+                raise ValueError('learned screen must return one finite cost per candidate')
         for p, r in zip(cands, rel):
             pool[p['id']] = (float(r), p)
         if it == 0:
@@ -700,6 +711,9 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
                finalists=[dict(id=p['id'], origin=p['origin'], duration_s=p['duration_s'],
                                saving_vs_mappo=float((costs['MAPPO']-costs[p['id']]).mean()),
                                saving_vs_policy=float((costs['policy']-costs[p['id']]).mean())) for p in finalists])
+    if screen is not None:
+        out['learned_screen'] = dict(source=getattr(screen, 'source', 'learned_screen'),
+                                     wm_screen_futures_skipped=True)
     if extra_seeds:  # key absent by default: unchanged output bytes without seeds
         out['extra_seeds'] = len(extra_seeds)
     if warm_start is not None:
