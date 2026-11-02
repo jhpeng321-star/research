@@ -588,3 +588,20 @@ passing evidence, the single canonical registration, and the appended owner
 hot-swap handoff remain present. No completed comparison was rerun. Further GPU
 experiments remain capacity-blocked; the exact release recipe above is ready for
 the owner's separately admitted activation.
+
+### Follow-up recovery — 2026-11-03 07:52 host time
+
+The clean worktree resumed at `e2c53dea`. Fresh inventories committed as
+`4b975f39` find **no live WMSPEED2 jobs**. GPU A is 86% utilized with 43,081 MiB
+allocated and two other compute processes; GPU R is 94% utilized with 20,694 MiB
+allocated and two other compute processes. Neither passes idle-device admission.
+Receipts: `coopmwm/WMSPEED2_gpu{A,R}_resume20261103b_inventory.json`.
+
+The numerical source still matches recommended release `fcc50296`; only the
+inventory helper differs under `tools/coopmwm`. Rechecked integrated qualification
+receipts retain warm H120/K4/w34 4.529x and cold H300/K8/w10 2.496x gains, with
+0.0 cost/trajectory errors and identical rankings/draw IDs. Existing CPU 79+7
+passing evidence applies. The single canonical registration and owner handoff
+are present; a short capacity update was appended to the handoff. No completed
+probe was repeated. Further GPU experiments await spare owner capacity; the
+source-bound hot-swap recipe above remains ready for separately admitted use.
