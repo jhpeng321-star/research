@@ -1,5 +1,19 @@
 # S-COOPMWM — live checks
 
+## Nov3 07:54 UTC+8 — AUTOMATIC B-REPLAY START WATCHER LIVE
+- Registered locally/canonically and on cpuQ before dispatch: amendment SHA256
+  `2b41922c9c5c6d95c20b34d0125860d324987da8507f962bd690b90437b563fa`.
+- Remote durable owner **2838584/start67791704**, boot identity checked;
+  `coopmwm20261102_warm1/replay_start_0735`. Detached session, SIGHUP ignored,
+  nice19, singleton lock,120s polling. Its first status at unix1793663647 is aliveS.
+- Gate status: **8/10 admitted B entries,3 cooperative**; qualified collector
+  activation and remaining joint-release GPU slots pending. Existing rollout
+  controller40408, activation waiter39660 and observer40668 are verified alive
+  and retained. This watcher does not duplicate their jobs/gates.
+- B/R stillu3; no `B_REPLAY_STARTED.json` yet. The remote watcher owns the future
+  handover, update4 start, continued updates through24 and registered fixed-u8
+  hash-sealed episode precompute. No extra reservation or SUMO at dispatch.
+
 ## Nov3 07:53 UTC+8 — durable automatic B-REPLAY start qualified
 - New isolated `coopmwm20261103_replaystartcpu2`: **705 Linux CPU checks PASS,
   zero failures/skips,82.780s, zero SUMO**. The first snapshot's missing-parent

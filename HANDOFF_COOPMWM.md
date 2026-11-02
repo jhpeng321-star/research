@@ -1,5 +1,34 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+CURRENT Nov3 07:54+08/unix1793663647: ALL666brief linesread; latestMAIN0735
+AUTOMATICSTART nowDISPATCHED cpuQ2838584/start67791704/bootb8bc1fcb;
+control/home/ubuntu/coopmwm20261102_warm1/replay_start_0735. ADOPT local
+B_REPLAY_START_WATCH_DISPATCH_0735.json, NEVERduplicate. Frozen
+replaystartcpu2 full705LinuxCPU PASS/0skips82.780s/zeroSUMO; source1 bridge
+missing-parentfailure retained. RegistrationSHA2b41922c9c5c6d95c20b34d0125860d324987da8507f962bd690b90437b563fa
+canonical+remote BEFOREdispatch. Watcher ignoresSIGHUP/detached/nice19/flock,
+poll120s; firstSTATUS aliveS/8admitted/3cooperative, waits10+FOURNICHENULL3
+owners/eightgates+LS_NULLFIX_CONFIG. No B_REPLAY_STARTED/noPPOrestart yet.
+
+On gate: no-active-grade LSmetadata handover to drain-only saved-label supervisor
+(broker/GPUs untouched); gracefuloldbuilderstop; freshB/Rfromexactu3AdamRNG,
+NEWreplay0735jobnamespace, Rlag1, endpoints24. Same24ownPPOepisodes capture
+nonblocking currentpolicy bank snapshots=>ZEROadditionalcollectiontraincharge.
+Bridge usesONEexistingLSbroker (Rcentreonly/no candidate scoring), Bniches1/4;
+actionablegate both, whole-decision confirmations, per-update lessons and bankAWR.
+OldR_PAUSEDu3SHA16b9c164... preserved by rename BEFORE_REPLAY0735 atlaunch only,
+notdeleted/overwritten, so freshfinal24certificate can be written. Restrictedu8
+interim max345600sim-s nowquoted/registered; autotriggerB8, A8/B8(+R8ifalready
+reached), hash-only/nooutcomes. Existingfinalcoordinator notredispatched.
+
+ExistingLOCALcontroller40408/create1793661876.0802872, activation39660/create
+1793662027.9718082, observer40668/create1793658957.771496 VERIFIEDLIVE; adopt.
+GPUA237704READY8+searches;261418qualifying; GPU R588039/623287oldREADYserve.
+Otheroldcollection/builder ownersretained UNTILfuturewatchergate. Total14.5M,
+traintransfer144000/remaining1209600exact, allchargeskept. Next observewatcher,
+rollinggates/bank and publish TRAININGSTARTED onlyafter actualB_REPLAY_STARTED.
+Use `python -X utf8 -m tools.coopmwm.replay_start_ops status`; no rerunlaunch.
+
 CURRENT Nov3 07:29+08 (unix1793662173): READ ALL664brief lines. Latest MAIN07:06
 phasefundingRESOLVED: checks->train144000, SHA b6c1b8bf12d228e5c923efc5d02e0803f0870a8c123a479d0fadd07bea4b5c28;
 train3008400/charged1798800/remaining1209600 exactlyB/Ru4-u24 PPO; total14.5M,
