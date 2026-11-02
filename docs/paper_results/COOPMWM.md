@@ -1,5 +1,29 @@
 # S-COOPMWM — live checks
 
+## Nov3 04:29:53 UTC+8 — FIRST14 BANK CONFIRMATIONS COMPLETE
+- `BANK_BUILDER_STATUS_1793651394415117200.json` preserves the remote
+  `FIRST_BATCH_COMPLETE.json`: all14 original positive decisions confirmed,
+  **3 admitted /11 rejected**, zero incomplete confirmations. The builder2332488
+  remains alive and is processing newly arriving positive labels.
+- Mean replicated advantage among the3 admitted entries: **169.935 veh-s**,
+  95% decision-bootstrap CI **[0.0101,509.667]**. Rejection counts overlap:
+  replication5, later harm2, safety7. These are conditional bank-admission
+  descriptives; they are not B-vs-A or policy-learning evidence.
+- All3 admitted multi-member entries received solo twins. **2 cooperative** by
+  the registered strict `group advantage > best solo advantage` rule:
+  - TRAIN986048,2 members: group **+958.677725**, best solo **−0.000358**,
+    cooperation gain **+958.678083 veh-s**; replication/extended/safety pass.
+  - TRAIN986052,2 members: group+0.013823, best solo+0.013327,
+    cooperation gain+0.000496 veh-s (near zero, retained without a new threshold).
+  - TRAIN986019,4 members: group+0.252190, best solo+0.263592,
+    cooperation gain−0.011402 veh-s; admitted but not cooperative.
+- Mean cooperation gain over all3 admitted entries:319.556 veh-s,
+  95% decision-bootstrap CI[−0.0114,958.6781]. `BANK_QUALITY_B.json` contains
+  the complete synergy table. Initial whole-decision precharge87,840 sim-s is
+  retained, including unused conditional solos; no refunds or search reruns.
+- Ten admitted entries are still required for the registered B-REPLAY start.
+  B/R remainu3; the full delegated release remains pending.
+
 ## Nov3 04:21 UTC+8 — first real bank confirmation complete
 - Owner2332488 remains live. The first existing positive decision (TRAIN986016,
   t300,D60) completed replication and extended-window branches with prefix
