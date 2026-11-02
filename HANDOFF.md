@@ -1,10 +1,10 @@
 # S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
 
-## RECOVERED Nov3 02:12 +08 — HOLD; saved report verified unchanged
+## RECOVERED Nov3 03:32 +08 — HOLD; saved report verified unchanged
 
 Fresh-session authority and direct ownership receipts:
-`docs/rb2int/RECOVERY_20261103_0209.md` and its LOCAL/GPUA/GPUR JSON files
-(direct ownership audit committed `f738c056`).
+`docs/rb2int/RECOVERY_20261103_0330.md` and its LOCAL/GPUA/GPUR JSON files
+(direct ownership audit committed `338dfa61`).
 
 - No explicit MAIN `S-RB2-INT RESUME` release found. Both local publication owners
   remain EXITED INCOMPLETE. No replacement collector, publisher or dispatch.
@@ -12,16 +12,19 @@ Fresh-session authority and direct ownership receipts:
   all hold-time children collected. Zero active INT evaluations on either GPU.
   gpuA514854 is still its exact original command/source/incarnation in stateT;
   the other three capped/late owners remain absent. No process signals.
-- nvidia-smi snapshots: gpuA100% utilization/12,390MiB free;
-  gpuR79%/8,215MiB free.
+- nvidia-smi snapshots: gpuA25% utilization/9,166MiB free;
+  gpuR24%/2,083MiB free.
   The admission hold and Nov2 resource priority remain controlling.
-- Report text matched saved commit `e966b25f` before this status refresh;
+- Report text matched saved commit `5a25785c` before this status refresh;
   scientific sections are unchanged. Reserved8 and ten-world/five-replicated-cell
   interims retained without rescoring; replicated
   v5 delay CRPS is worse at120/300/600s. Full gate/switching NOT ESTABLISHED.
 - S-WMTEACH: FULL-v5 and FULL-v5-LP remain engineering READY at frozen source
   `b2df7458`, with unchanged exact recipes/canaries below and the shared READY
   note. This is model availability, not quality or resource authorization.
+- CAL's new Nov3 03:17 cache-only closure has six complete K8 development
+  worlds and still does not establish calibration quality. It is component-only
+  evidence, not an integrated result or permission to refit the frozen candidates.
 - Missing-task continuation requires MAIN release plus exact owner/claim/source/
   resource/deadline reconciliation. Old Nov4 bounds do not authorize a restart.
   Reuse saved work; do not refit exposed candidates or duplicate registration.
