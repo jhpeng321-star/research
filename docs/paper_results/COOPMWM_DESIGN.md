@@ -1,5 +1,5 @@
 # S-COOPMWM — warm MPPI training live; frozen-policy evaluation precompute registered
-1. Recovery binding cap7500000/allocation7028840/free471160, failed charges retained; canonical owner cap9500000 vs fresh resume6000000 unresolved, no new verifier physics authorised by this session.
+1. Latest owner cap9500000 supersedes earlier resume figures; current recovery binding cap7500000/allocation7028840/free471160 retained until verifier re-quote/registration; failed charges retained.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -46,7 +46,7 @@
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins precharged/no refunds or automatic retries; af8b16e5 permits one qualified new-ID attempt per missing failed diagnostic branch, complete originals adopted, whole missing group charged inside discovery200000.
 47. A48complete; B24/R4/grader4nice19; MAIN0423 up to24 CPU-only precompute workers SCHED_IDLE/nice19, grade-queue priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no retries.
-48. Recovery B4146203/R4146817/broker4145985/grader4146093 live/sourceCPU118PASS; gpuA759743/incident1 READY8EXACT0, other3workersretained; preserve original claims, original18:07:02deadline. V10 observation only.
+48. Recovery B4146203/R4146817/broker4145985/grader4146093 retained/sourceCPU118PASS; gpuA759743/incident1 admitted1793600890 via originalCPU26 eightgateRPC; other3workersretained, all4assigned; original18:07:02deadline retained.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.

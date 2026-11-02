@@ -16,6 +16,23 @@
   smoke, then matched activation. The latest owner cap **9,500,000 sim-s** in the
   complete brief supersedes earlier resume figures; old cap-block notes are historical.
 
+### B-u3 complete; cpuQ disk blocks the next cohort
+- B-u3 durable update timestamp **14:27:12 UTC+8**: **10 executed plans**,
+  34 query records, 26 accepted forecasts. Exact-grading lag mean **10.51 s**,
+  max **19.06 s**, with no pending/running/failed grades at update publication.
+- Recorded collection-inclusive wall time **19,446.06 s** includes the incident
+  and prolonged replacement-admission outage. Its linear ETA is not a forecast
+  of the restored four-worker service.
+- At unix1793601294, R-u2's registered replacement schedule has **17/24 completed**,
+  four active episodes at sim t350–660, three still unclaimed. Existing owners
+  continue. B-u4 has **zero claims** and is waiting on disk admission.
+- cpuQ free disk at unix1793601042: **2,069,700,608 bytes**, below the existing
+  **2 GiB** guard. The only approved SHA-gated archive was already completed and
+  its source removed; its receipt is retained. Additional disk capacity or explicit
+  additional own-source archive/removal authority is needed. Alert sent through
+  canonical registration and `_sol/COOPMWM_MAIN1424_DISK_ALERT.md`.
+- Real SUMO verification smoke and matched-boundary activation remain pending.
+
 ## 11:18 continuation — verifier grade reuse CPU-qualified
 - Original warm-memory qualification, MAPPO-u0 starts, same-arm/seed library and
   remote owners adopted. At unix1793589133: **A48/B2/R1**, B/R/broker/grader
@@ -2960,3 +2977,68 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - `{"error": "ValueError('new durable guided engineering STOP')", "timestamp_utc": "2026-11-02T01:41:45.322047+00:00"}`
 - Receipt: `coopmwm/warm_live/WARM_R_FAILED_Q1.json`.
 <!-- warm-receipt:WARM_R_FAILED_Q1.json:da0aeaabe12c92d6b41685790c3d97a46fe5a7c2607902fd8051f7e9c0e25245 -->
+
+## Warm live publication — 2026-11-02T06:36:14.116206+00:00
+- Conservatively charged 3541050/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_0c8958f6326cb646c9e79c01203898110ddc2b43c690fa291e7776dda5c7ff3e.json
+- B u3: exact paired SUMO plan saving mean 136.1 veh-s, 95% world-cluster CI `[-56.946541822816314, 456.72515283199084]`, 16 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_0c8958f6326cb646c9e79c01203898110ddc2b43c690fa291e7776dda5c7ff3e.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_0c8958f6326cb646c9e79c01203898110ddc2b43c690fa291e7776dda5c7ff3e.json:3ca2ad711d6f43be090adc92a8d8ba586b2bf5314788c4db6be57e2442df0e7e -->
+
+### Warm continuation — B_EXACT_VIABILITY_2c4fde9b4d1caff8568aebfcbc7d01052cc337806741799b2c7b50da4aaf2fcf.json
+- B u3: exact paired SUMO plan saving mean 130.7 veh-s, 95% world-cluster CI `[-33.564138422912364, 391.64083244841953]`, 20 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_2c4fde9b4d1caff8568aebfcbc7d01052cc337806741799b2c7b50da4aaf2fcf.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_2c4fde9b4d1caff8568aebfcbc7d01052cc337806741799b2c7b50da4aaf2fcf.json:33c5f3ef424dd378f20c791638459b2d469fc6f7b259adacb02e9d4e6a77032e -->
+
+### Warm continuation — B_EXACT_VIABILITY_4170a33317214d9cbd24173b30c7da2507b03967c266de28cc533b05a4dc54df.json
+- B u3: exact paired SUMO plan saving mean 108.9 veh-s, 95% world-cluster CI `[-43.85938748656751, 347.3596921264801]`, 22 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_4170a33317214d9cbd24173b30c7da2507b03967c266de28cc533b05a4dc54df.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_4170a33317214d9cbd24173b30c7da2507b03967c266de28cc533b05a4dc54df.json:2cc80066096668f792456196f6dd6fab7af5980f8ee650d435df1c506c5153e9 -->
+
+### Warm continuation — B_EXACT_VIABILITY_42010834abe6a6f57ae77e4389afaf04c0c8c47052775cf64347f55010d8fb74.json
+- B u3: exact paired SUMO plan saving mean 96.94 veh-s, 95% world-cluster CI `[-44.60122551151658, 319.7964441086416]`, 24 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_42010834abe6a6f57ae77e4389afaf04c0c8c47052775cf64347f55010d8fb74.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_42010834abe6a6f57ae77e4389afaf04c0c8c47052775cf64347f55010d8fb74.json:5e8a9019f2813a5dfeb85b070010185d5e7837d66ef494e39d5f4e4bfef1c5ab -->
+
+### Warm continuation — B_EXACT_VIABILITY_4eb06ac1d63bf1f522fe30eae36ee93491b5b8a89b59cafa8a67f30f81d92893.json
+- B u3: exact paired SUMO plan saving mean 137.4 veh-s, 95% world-cluster CI `[-41.11234860466027, 424.1336676226603]`, 18 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_4eb06ac1d63bf1f522fe30eae36ee93491b5b8a89b59cafa8a67f30f81d92893.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_4eb06ac1d63bf1f522fe30eae36ee93491b5b8a89b59cafa8a67f30f81d92893.json:dc5b53087c204e577f3bfbe18623d8167e8b4bb68b54d0cb101d58e19cc72607 -->
+
+### Warm continuation — B_EXACT_VIABILITY_52feb3bc5373c7e5c2bf34dad70cb784dfd2ee387e2b8b70bb01127cfc300ff4.json
+- B u3: exact paired SUMO plan saving mean 137.5 veh-s, 95% world-cluster CI `[-35.693173042451086, 409.1304890657517]`, 19 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_52feb3bc5373c7e5c2bf34dad70cb784dfd2ee387e2b8b70bb01127cfc300ff4.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_52feb3bc5373c7e5c2bf34dad70cb784dfd2ee387e2b8b70bb01127cfc300ff4.json:482a63485e1adb15b2125a8ce7c9aa1e8df166423100a34e54849630f54b4087 -->
+
+### Warm continuation — B_EXACT_VIABILITY_a61d6b15e89623d46fc290a1ed0a240ec1502ecfe7b6df3dbf6ade28f3a01849.json
+- B u3: exact paired SUMO plan saving mean 123.4 veh-s, 95% world-cluster CI `[-33.00448622954187, 372.1497608971724]`, 21 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_a61d6b15e89623d46fc290a1ed0a240ec1502ecfe7b6df3dbf6ade28f3a01849.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_a61d6b15e89623d46fc290a1ed0a240ec1502ecfe7b6df3dbf6ade28f3a01849.json:c6bd151efd887adf880e1837a279fb24f497decd64db4b62a530ebd050f8ed69 -->
+
+### Warm continuation — B_EXACT_VIABILITY_c9674081b758a5ed2173956c653eb43d4b2b66ac706beb3a373a72dce8915b53.json
+- B u3: exact paired SUMO plan saving mean 109.4 veh-s, 95% world-cluster CI `[-37.67019314200868, 339.57944210475034]`, 23 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_c9674081b758a5ed2173956c653eb43d4b2b66ac706beb3a373a72dce8915b53.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_c9674081b758a5ed2173956c653eb43d4b2b66ac706beb3a373a72dce8915b53.json:ba5ecbc8d85201274facdbee30dd9d56e0ea191756b1724d477ffbc60d18dcc7 -->
+
+### Warm continuation — B_EXACT_VIABILITY_d1cbca5a52a9b461174bb28ec9258818f09c66c595d1478e445caf4cbdbe7b95.json
+- B u3: exact paired SUMO plan saving mean 128.1 veh-s, 95% world-cluster CI `[-52.51988902238005, 430.9817550540364]`, 17 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_d1cbca5a52a9b461174bb28ec9258818f09c66c595d1478e445caf4cbdbe7b95.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_d1cbca5a52a9b461174bb28ec9258818f09c66c595d1478e445caf4cbdbe7b95.json:c96a9c93204cec478b7e4af55223db5c42ca51bba5387eb4a346ae9e4d2bbfc1 -->
+
+### Warm continuation — B_EXACT_VIABILITY_fc40713c0db7757fb38449adffbee7c2884fa69a2f2f6fae927d2cc1986b83f3.json
+- B u3: exact paired SUMO plan saving mean 93.06 veh-s, 95% world-cluster CI `[-43.75592948832516, 310.2947246887355]`, 25 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_fc40713c0db7757fb38449adffbee7c2884fa69a2f2f6fae927d2cc1986b83f3.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_fc40713c0db7757fb38449adffbee7c2884fa69a2f2f6fae927d2cc1986b83f3.json:60d90fa2c6aecfec7c1e55ea8f5ac5affc3aa023986d4fb7d95d9057c47bdc29 -->
+
+### Warm continuation — B_UPDATE_003.json
+- B u3: queries/accepted/executed 34/26/10; wall 1.945e+04s; next beta 0.751. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 26, "executed": 10, "queries": 34}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Exact-grade queue/lag: `{"failed": 0, "graded": 10, "max_lag_s": 19.058584928512573, "mean_lag_s": 10.514461827278136, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 3}`; final ETA 113.4h.
+- Receipt: `coopmwm/warm_live/B_UPDATE_003.json`.
+<!-- warm-receipt:B_UPDATE_003.json:acec7dd6327cba304dcdb21e4e971e3f0b518a4c87a6bf9e3d97d1301cac463f -->
+
+### Warm continuation — B_VIABILITY_003.json
+- B u3: exact paired SUMO plan saving mean 96.94 veh-s, 95% world-cluster CI `[-45.644077496616276, 321.15091081315353]`, 24 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_VIABILITY_003.json`.
+<!-- warm-receipt:B_VIABILITY_003.json:830efd4034f651202b8db61d2b47ad1bae0b65a36f694c4ebaa9d5ca94f97ca6 -->

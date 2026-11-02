@@ -10,6 +10,13 @@ Realbrokerstatus1793600899: FOURslots/FOURassigned/noqueue; failedgpuA@0disabled
 4localhotaddCPUtestPASS; noqualification/inference/episode replay orPIDcontrol.
 Next: existingBu3/Ru2finish, thenrealverificationsmoke/commonboundaryswitch.
 Latestbrief9500000cap supersedesearlier6M; previousclarificationblockobsolete.
+B3complete14:27:12UTC+8:10executed/34queryrecords/26accepted; collectionwall19446s
+includesoutage, NOTrestoredserviceETA. Exactlagmean10.51/max19.06s/noqueue.
+R2actualreplacementprogress1793601294:17/24closed,4active,3unclaimed; neverrerun.
+B4reserved/ZEROclaims: DISKguardblocksfree2069700608<2147483648bytes. Approved
+archive2035ALREADYcomplete/source removed; nootherdeletion/guardbypassallowed.
+Canonicalregistry+_sol/COOPMWM_MAIN1424_DISK_ALERT.md escalateddiskexpansion or
+additionalexplicitSHA-gatedown-sourcearchiveauthority. Existingownerscontinue.
 
 FRESH11:18 continuation: all322brief lines/read; adoption7abb1ce5 retained
 originalwarmqualification/u0start/library and allremoteowners. Verified1793589133:
