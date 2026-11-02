@@ -139,6 +139,13 @@ print(json.dumps(dict(unix=time.time(),owner=d,state=(p/'stat').read_text().spli
  smoke=json.loads((c/'LABEL_SUMO_SMOKE_SUMOENV1.json').read_text()) if (c/'LABEL_SUMO_SMOKE_SUMOENV1.json').exists() else None,
  disk_wait=json.loads((c/'LABEL_DISK_WAIT_SUMOENV1.json').read_text()) if (c/'LABEL_DISK_WAIT_SUMOENV1.json').exists() else None,
  labels=[dict(search_id=x['search_id'],status=x['verification']['status'],branches=len(x['verification'].get('branches',[])),actual_sim_s=x['verification'].get('actual_sim_s'),grade=x['verification'].get('grade_veh_s'),reason=x['verification'].get('reason')) for x in labels],
+ grading_health=dict(disk_blocked=shutil.disk_usage(c).free<2*1024**3,
+  owner_identity_verified=bool(p.exists() and (p/'stat').read_text().split()[21]==d['start_ticks'] and Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']),
+  owner_argv=(p/'cmdline').read_bytes().replace(bytes([0]),b' ').decode() if p.exists() else None,
+  children=(p/'task'/str(d['pid'])/'children').read_text().split() if p.exists() else [],
+  threads=[dict(tid=t.name,wchan=(t/'wchan').read_text()) for t in (p/'task').iterdir()] if p.exists() else [],
+  inflight_semantics='thread futures include queued disk waiters; not a count of running SUMO branches',
+  automatic_resume='existing grading_disk_ready loop rechecks disk every 10 seconds'),
  collection=json.loads((c/'LS_COLLECT_STATUS.json').read_text()),disk_free=shutil.disk_usage(c).free,
  log_tail=(c/('SUPERVISOR_'+suffix+'.log')).read_text()[-2200:])))'''))
     write(ops.EVIDENCE/f'LS_LABEL_STATUS_{int(value["unix"])}.json',value);print(json.dumps(value));return value

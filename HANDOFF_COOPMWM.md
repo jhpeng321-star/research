@@ -1,5 +1,17 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+RESUME Nov3 00:32+08/unix1793637150: read ALL561 brief lines; adopted fd78bf4d
+and every uncommitted file. MAIN00:29 grading stall is the existing DISK WAIT,
+not a dead grading owner: boot/start/argv1728233 VERIFIED; both grade threads
+sleep before verification claim, automatic10s disk recheck. Free2105589760B,
+41893888B BELOW2GiB. grading_inflight2 counts waiting thread futures, NOT running
+SUMO. No restart/re-grade/deletion/physics. 27requests/19terminalanswers,5usable
+lists/2positive; A48/B3/R3 unchanged. Need storage expansion or NEW explicit
+SHA-gated archive authority; old v2 archive approval does not authorize other dirs.
+Read-only ls_label_ops.status now exposes owner/thread/disk wait diagnostics.
+Next inspect existing command-mirror FAIL receipts and delegated replay release;
+do not rerun completed gate unchanged or claim training viability.
+
 LATESTNov3~00:07+08: FIRSTLABELRECOVERYDONE; FIVEreal9branchlists/2exactpositive
 (+522.0370,+.25219veh-s), threevoidoriginalsretained, noWMreplay. SixthfinishedWM
 searchwaitingdisk. Freshsource/home/ubuntu/coopmwm20261102_lslabelcpu3 CPU224PASS/

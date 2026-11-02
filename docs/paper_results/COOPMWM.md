@@ -1,5 +1,18 @@
 # S-COOPMWM — live checks
 
+## Nov3 00:32 UTC+8 — grading stall diagnosed as disk admission wait
+- Adopted the existing supervisor **1728233**, verified boot/start/command line.
+  Both grading futures are sleeping in the registered pre-claim disk wait;
+  `grading_inflight=2` does **not** mean two SUMO jobs are running.
+- Free space **2,105,589,760 bytes**, **41,893,888 bytes below** the existing
+  2GiB admission requirement. The supervisor rechecks every10seconds and resumes
+  automatically when space is available. Restarting would not resolve this blocker.
+- **Five usable nine-branch lists / two positives** remain; A48/B3/R3 unchanged.
+  Existing episodes, searches and labels are adopted. Storage expansion or explicit
+  additional SHA-gated archive authority is required to resume grading.
+- Read-only status now publishes identity, thread waits and disk-blocked state.
+  Evidence: `coopmwm/LS_LABEL_STATUS_1793637150.json`. No new simulation or dispatch.
+
 ## Disk-safe grading wait deployed; four GPU slots qualified — Nov3 00:07 UTC+8
 - Frozen `lslabelcpu3`: **224 CPU PASS**, zero skips, **40.944 s**, zero sim-s.
   Amendment `073040972ba2f0576cd4403a733141b5c7d26c44b530639789510e04c717ee97`.
