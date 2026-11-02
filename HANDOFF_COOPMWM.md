@@ -1,5 +1,13 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+REPLAYoperatorpreparation: preserved/completedinheritedreplay_ops.py readinessguard;
+NEWfuturefrozenroot/home/ubuntu/coopmwm20261103_replayreleasecpu1 cannotdispatch
+untilHARDEN_INT_READYexistsANDitscommitisanancestorofcoopnativeHEAD.
+Packagesconfirmation+lessonCPUtests/pinsdelegatedrelease; NOjobdispatched.
+6localCPU PASS3.50s(incltimingreport). R623287now7/8gates/LIVE/noFAIL;
+otherworkerscontinue. StillneedREADY/cherry-pickintegration/Linuxsuite/confirmation
+quote+registration/10admittedentries BEFORE B-REPLAYtraining. Noactivationclaim.
+
 IT2_K2LIVEconfirmed04:02:49/unix1793649769: FOURactualforecastsconfigmatched/
 all8returned; A/n2mean1019.7s(n2), R/n2=1014.3s(n1),R/n6=2910.0s(n1).
 Read-onlysearch_timingreport4CPU PASS0.06s; ZEROnewWM/SUMO/ownercontrol.
