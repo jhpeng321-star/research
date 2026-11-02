@@ -223,6 +223,27 @@ print(json.dumps(dict(unix=time.time(),root=str(r),owner=owner,state=after[2] if
     print(out)
 
 
+def publish_variant():
+    """Adopt completed K2 gates without rerunning qualification or inference."""
+    target=ops.EVIDENCE/'IT2_K2_VARIANT_GPU_QUALIFIED.json'
+    if target.exists():print(json.dumps(read(target)));return
+    workers=[]
+    for host in ('gpuA','gpuR'):
+        p=max(ops.EVIDENCE.glob('LS_VALIDITY_GPU_'+host+'_*.json'),key=lambda p:p.stat().st_mtime_ns)
+        row=next(w for w in read(p)['workers'] if w.get('variant_gate') is not None)
+        gate=row['variant_gate']
+        assert gate['pass_'] and gate['max_cost_error']==gate['full_fast']['max_cost_error']==0
+        assert gate['identical_draw_ids'] and gate['full_fast']['identical_draw_ids']
+        assert all(x==0 for x in gate['full_fast']['trajectory_errors'].values())
+        workers.append(dict(host=host,owner=row['owner'],variant_gate=gate,
+            source_receipt=str(p),source_sha256=sha(p),startup_gates_complete=len(row['gates'])))
+    value=dict(unix=__import__('time').time(),pass_=True,search_config='it2_K2',
+        workers=workers,new_sumo_sim_s=0,new_wm_calls=0,activation=False,
+        note='parameter-size gates passed on both GPUs; wait for all eight fresh startup gates and admission',
+        amendment_sha256=sha(ops.EVIDENCE/REG))
+    write(target,value);print(json.dumps(value))
+
+
 def continue_roll():
     """Durable local deployment observer; only already-registered rolling steps."""
     import contextlib,io,msvcrt,time
@@ -293,7 +314,7 @@ def continue_recover():
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','result','register','broker','drain','gpu','progress','continue_roll','continue_dispatch','continue_recover'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','result','register','broker','drain','gpu','progress','publish_variant','continue_roll','continue_dispatch','continue_recover'))
     p.add_argument('--host',choices=('gpuA','gpuR'));p.add_argument('--root')
     a=p.parse_args()
     globals()[a.action](a.host,a.root) if a.action in ('drain','gpu','progress') else globals()[a.action]()

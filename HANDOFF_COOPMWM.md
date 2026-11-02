@@ -1,5 +1,14 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+Nov3 02:10 PARAMETER GATEPASS BOTH: IT2_K2_VARIANT_GPU_QUALIFIED.json;
+K2H300 full/fast cost+alltrajectoryerrorsEXACT0, identicaldraws/rankings,
+warmbatch/singleEXACT0; wallA272.589s/R264.914s. Adoptednotrerun/noSUMO.
+BothA110917/R576918 alive/fresh8startupgatesstillrunning(notREADYyet).
+Controller17620+observer34592 continue; other2oldslots/gradinglive.
+No configactivation/throughputgain/PPOrestartclaim. Needall8+admission+
+firstactualit2_K2forecast. NICHE_READY stillabsent atlastcheck; niche.log
+showsactivebuilderreviewingdiff, doNOTduplicate. B-REPLAYREADYabsent.
+
 Nov3~02:03 CURRENT: controllerV3=17620/start1793642480.6450145 LIVE,
 logLS_FAST_ROLL_V3.log; observerV9=34592/start1793642546.7220485 LIVE.
 NEVERduplicate either. PreviouscontrollerV2=26152creation/argvverifiedTERM

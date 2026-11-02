@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+## Nov3 02:10 UTC+8 — it2_K2 parameter-size gates PASS on both GPUs
+- `coopmwm/IT2_K2_VARIANT_GPU_QUALIFIED.json` adopts both completed gates;
+  no repeated qualification or SUMO. **K2/H300 full/fast trajectory and cost
+  error0.0**, identical CRN draw IDs and candidate rankings; warm batch/single
+  cost error0.0 on both hosts.
+- Gate wall times: **272.589 s gpuA**, **264.914 s gpuR**. These are qualification
+  timings, not plans/hour. Search horizons and final K8/H_final remain unchanged.
+- Both replacement owners are alive; their eight fresh inherited startup gates
+  are still running. The configuration is not yet serving searches. Controller
+  17620 and observer34592 continue the registered handover; other slots/grading
+  continue. Activation will be reported only after admission and a real receipt.
+
 ## Nov3 ~02:03 UTC+8 — registered it2_K2 GPU qualification in progress
 - Frozen `lsfastcpu3`: **231 Linux CPU PASS**, zero skips, **40.538 s**, zero
   sim-s; local ownership/payload/config tests **14 PASS**. Registration V4 SHA
