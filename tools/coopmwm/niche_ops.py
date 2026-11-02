@@ -8,7 +8,7 @@ from .ls_validity_ops import remote
 from .protocol import checked,sha,REGISTRY
 from .storage import read,write
 
-SOURCE='/home/ubuntu/coopmwm20261103_nichenullcpu6'
+SOURCE='/home/ubuntu/coopmwm20261103_nichenullcpu7'
 BASE='/home/ubuntu/coopmwm20261103_lsfastcpu5'
 
 
@@ -16,7 +16,7 @@ def qualify():
     import subprocess
     names=('mppi_search','mppi_runtime','plan_service','niche_collect','ls_gpu','ls_collection',
         'sumo_verify','feasible','nullfix_geometry','test_nullfix_cpu','test_nullfix_geometry_cpu',
-        'ls_feasible','test_ls_feasible_cpu','ls_broker','niche_worker','test_niche_drain_cpu',
+        'ls_feasible','test_ls_feasible_cpu','ls_broker','niche_worker','test_niche_worker_cpu','test_niche_drain_cpu',
         'test_niche_search_cpu','test_niche_collect_cpu')
     files={'pytools/tools/coopmwm/'+n+'.py':checked(ops.LOCAL/'tools/coopmwm'/(n+'.py')).read_text(encoding='utf-8') for n in names}
     fixture='pytools/tools/coopmwm/fixtures/niche1_golden.json'
@@ -42,7 +42,7 @@ if not r.exists():
  hashes['FROZEN_GEOMETRY_SOURCE.py']=hashlib.sha256((r/'FROZEN_GEOMETRY_SOURCE.py').read_bytes()).hexdigest()
  hashes['FROZEN_NETWORK.net.xml.gz']=hashlib.sha256((r/'FROZEN_NETWORK.net.xml.gz').read_bytes()).hexdigest()
  with (r/'LS_SOURCE_HASHES.json').open('x') as f:json.dump(hashes,f)
- tests=json.loads((base/'LS_RELEASE_TESTS.json').read_text())+['test_niche_search_cpu','test_niche_collect_cpu','test_nullfix_cpu','test_nullfix_geometry_cpu','test_ls_feasible_cpu','test_niche_drain_cpu']
+ tests=json.loads((base/'LS_RELEASE_TESTS.json').read_text())+['test_niche_search_cpu','test_niche_collect_cpu','test_nullfix_cpu','test_nullfix_geometry_cpu','test_ls_feasible_cpu','test_niche_drain_cpu','test_niche_worker_cpu']
  with (r/'LS_RELEASE_TESTS.json').open('x') as f:json.dump(sorted(set(tests)),f)
 for n,text in files.items():assert (r/n).read_text()==text,n
 done=r/'LS_CPU_RESULT.json';dispatch=r/'LS_CPU_DISPATCH.json'

@@ -11,6 +11,25 @@ def atomic(path,value):
     os.replace(temporary,path)
 
 
+def adopted_checks(root,binding,numerical,names):
+    """Only completed exact checks with byte-identical numerical sources qualify."""
+    import hashlib
+    spec=binding.get('adopted_joint_checks')
+    if not spec:return {}
+    assert set(spec['numerical_hashes'])==set(numerical)
+    assert set(spec['receipts'])==set(names)
+    for n,h in spec['numerical_hashes'].items():
+        assert binding['hashes'][n]==h
+        assert hashlib.sha256((root/n).read_bytes()).hexdigest()==h
+    result={}
+    for name,item in spec['receipts'].items():
+        path=root/item['file'];assert hashlib.sha256(path.read_bytes()).hexdigest()==item['sha256']
+        value=json.loads(path.read_text());assert value['pass_'] and value['max_cost_error']==0
+        result[name]=dict(value,adopted=True,original_receipt_sha256=item['sha256'],
+            adoption_reason='metadata dependency package only; identical numerical source hashes')
+    return result
+
+
 def run(root,generation='NICHENULL1'):
     import fcntl,signal,sys,hashlib
     root=Path(root)
@@ -20,7 +39,7 @@ def run(root,generation='NICHENULL1'):
     from tools.coopmwm.warm_spool import SpoolInput,immutable
     from tools.coopmwm.nullfix_geometry import install
     from tools.coopmwm.protocol import digest
-    assert generation in ('NICHENULL1','NICHENULL2')
+    assert generation in ('NICHENULL1','NICHENULL2','NICHENULL3')
     binding=json.loads((root/('GPU_BINDING_'+generation+'.json')).read_text())
     for name,h in binding['hashes'].items():
         assert hashlib.sha256((root/name).read_bytes()).hexdigest()==h,name
@@ -56,7 +75,12 @@ def run(root,generation='NICHENULL1'):
     mppi_runtime.plan=plan
     signal.signal(signal.SIGHUP,signal.SIG_IGN)
     sys.stdin=SpoolInput(root,binding['deadline_unix'])
-    try:warm_service.main(root)
+    try:
+        prior=adopted_checks(root,binding,warm_service.NUMERICAL,warm_service.ADOPTABLE)
+        if prior:
+            for name,value in prior.items():publish(root/name,value)
+            plan_service.main(root)
+        else:warm_service.main(root)
     except BaseException as error:
         import traceback
         immutable(root/('LS_GPU_FAILED_'+generation+'.json'),dict(owner=owner,error=repr(error),

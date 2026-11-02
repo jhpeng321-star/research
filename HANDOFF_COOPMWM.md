@@ -1,5 +1,22 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+CURRENT Nov3 06:36:09+08 (unix1793658969): A237704/start903906207 ALIVE,
+NICHENULL3, FOURsame-sourcechecksSHA-adopted/FOURfreshcold-warmchecksRUNNING.
+Prior220668passedall4exactthenEXIT onmissingresource_config late serviceimport.
+NEWCPU7 273LinuxPASS/0skips53.814s; actualGPU lazyimports+clocks smokePASS/noCUDA.
+Amendment9796569a299a83cb preserves4completedchecks via completeunchangedNUMERICAL
+hashesandreceiptSHA; no redo. Originalfailedlog/gates/bindingkept; newgen3binding.
+DepsNOWalsoincludeCPU-qualifiedresource_config/query_errors. Other3slotsserve;
+GPUA99%/27429MiB. NOcollectoractivation/PPOrestart yet.
+V1controller37004EXIT onfault, V2=12200/unix1793658867.853019 ACTIVE;
+activationwaiterV2=32220/unix1793658876.7249029 ACTIVE (old16784verifiedTERM);
+observerV13=40668/unix1793658957.7766564 (old14132verifiedTERM). NEVERduplicate.
+Latestcodecommits/receipts supersedeoldall8freshfirstworker requirement ONLY for
+thismetadata-onlyrecovery; untouchedslotsstillall8fresh. 17localmetadatachecksPASS.
+Existingcontroller_V2 finishesremainingregisteredone-slotroll; activationwaiter
+requiresfourNICHENULL3READY + verifiedno-gradeboundary. Intermediateclamp/plain
+labelsreportedseparatelyfrombefore-releaseandregisteredniches1/4 cohorts.
+
 BUDGET_GATE Nov3 06:22+08: readonlycharged5391140 inclsuperseded; fresh6Mguard
 headroom608860. RemainingB/Ru3->u24 PPOalone42*24*1200=1209600; MINshortfall
 600740 beforebank/lesson/check extras. No restartauthorized; needMAINauthority/

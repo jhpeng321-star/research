@@ -19,7 +19,7 @@
 18. Rolling60s genuine observable history -> frozen FULL-v4 encoder/motion posteriors/shrinkage; unseen prior; CRN across candidates; source pseudo-exposure disclosed.
 19. Groups2..6 anywhere/all lanes/ramp,100m chaining; >6 contiguous subsets prefer lane diversity, smallest span, downstream; disjoint rechaining.
 20. All A/B/R restart MAPPOu0 in isolated acceleration namespaces;811640superseded charges retained.
-21. Discovery-pure N=max(32,2*members*10)rounded4; livecollection it2_K2 uses2iterations/K2H300,finalK8/Hfinal,raw8goldlists/noexecution; jointniches1/4+feasibility271CPUqualified/registered, per-slotGPUactivationpending; no known-family seeds.
+21. Discovery-pure N=max(32,2*members*10)rounded4; livecollection it2_K2 uses2iterations/K2H300,finalK8/Hfinal,raw8goldlists/noexecution; jointniches1/4+feasibility273CPUqualified/registered, per-slotGPUactivationpending; no known-family seeds.
 22. No O1-O4 seeds; policy-centred generic smooth noise sigma.5, unique Cholesky basis; posterior bootstrap Thompson choice, beta1 initially; top-k gate is positive-vsMAPPO, own-policy contrast reported separately.
 23. H60/120/300/600. D_i=J(member-revert)-J(joint); D_G=J(all-revert)-J(joint).
 24. C_G=D_G-sum(D_i); complete paired futures required, including negative values.
@@ -40,7 +40,7 @@
 39. TRAIN4/dev16 reportingonly; primaryA24/B24/R24,secondaryA48. Finalspawnfault375800sim-squarantined; MAIN1556approvedreplacement; source4/89CPU PASS explicitcheckpoint/SHA+final-onlycaps; B/Rcontinue.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. A48/B3/R3;72episodes/14534snapshotsadopted. CPU6jointrelease271LinuxPASS;A220668qualifying/other3serve;onequalifierglobally. Bankcpu2/68CPU PASS owner2388293;25confirmed/6admitted/3cooperative at0558. Oldverdicts preserved; collision/teleport hard constraints + hardbrake/TTCeventsum no increase; diagnostic solos allrep/laterpasses. B-REPLAY requires10admissions+qualifieddelegatedrelease; no restart yet.
+42. A48/B3/R3;72episodes/14534snapshotsadopted. CPU7jointrelease273LinuxPASS;A2377044same-sourcechecksSHA-adopted/4freshqualifying;other3serve/onequalifierglobally. Bankcpu2/68CPU PASS owner2388293;28confirmed/7admitted/3cooperative at0611. Oldverdicts preserved; collision/teleport hard constraints + hardbrake/TTCeventsum no increase; diagnostic solos allrep/laterpasses. B-REPLAY requires10admissions+qualifieddelegatedrelease+budgetreconciliation; no restart yet.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
 44. Mechanics3600,calibration57600,discovery138200,pairedbranches1297400,reusecheck600; train2852400 inclMAIN1651 tenfresh-ID DNS replacements12000; allfailedchargesretained; verification2800000/exactgrade55360 plusinactivek8phase1500000.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.

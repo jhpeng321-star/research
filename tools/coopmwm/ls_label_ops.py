@@ -218,10 +218,10 @@ print(json.dumps(dict(unix=time.time(),arm='B',policy_update=3,entries=len(label
 
 def variation_summary(rows):
     """Describe exact labelled slates; missing post-release data stays missing."""
-    groups={key:[] for key in ('before_release','niches1','niches4')}
+    groups={key:[] for key in ('before_release','clamp_without_niche_config','niches1','niches4')}
     for row in rows:
         mode=row.get('niches')
-        key='niches'+str(mode) if row.get('search_clamp_enabled') and mode in (1,4) else 'before_release'
+        key=('niches'+str(mode) if mode in (1,4) else 'clamp_without_niche_config') if row.get('search_clamp_enabled') else 'before_release'
         groups[key].append(row)
     result={}
     for key,xs in groups.items():

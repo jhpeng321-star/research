@@ -8,7 +8,7 @@ def test_one_qualifier_across_hosts_and_failed_owner_blocks_roll():
     def worker(host,suffix,generation='FASTK2V5',ready=True,state='R',failure=None):
         return dict(owner=dict(root='/root/coopmwm20261102_'+suffix,generation=generation),
             ready=ready,state=state,failure=failure)
-    gpus={'gpuA':dict(workers=[worker('gpuA','incident1','NICHENULL2',False),worker('gpuA','deadlineA2')]),
+    gpus={'gpuA':dict(workers=[worker('gpuA','incident1','NICHENULL3',False),worker('gpuA','deadlineA2')]),
           'gpuR':dict(workers=[worker('gpuR','concurrent3'),worker('gpuR','deadlineR2')])}
     assert nr.roll_target(gpus) is None
     gpus['gpuA']['workers'][0]['ready']=True
@@ -20,7 +20,7 @@ def test_one_qualifier_across_hosts_and_failed_owner_blocks_roll():
 def test_activation_requires_all_four_ready_and_never_controls_them(monkeypatch,tmp_path):
     from . import ls_validity_ops as vo
     monkeypatch.setattr(nr.ops,'EVIDENCE',tmp_path)
-    monkeypatch.setattr(vo,'gpu_status',lambda host:dict(workers=[dict(ready=False,owner=dict(generation='NICHENULL2'))]*2))
+    monkeypatch.setattr(vo,'gpu_status',lambda host:dict(workers=[dict(ready=False,owner=dict(generation='NICHENULL3'))]*2))
     def forbidden(*args,**kwargs):raise AssertionError('no collector transport before all GPU gates')
     monkeypatch.setattr(nr,'remote',forbidden)
     assert nr.activate() is False
@@ -29,8 +29,8 @@ def test_activation_requires_all_four_ready_and_never_controls_them(monkeypatch,
 def test_activation_payload_compiles_and_waits_on_any_incomplete_claim(monkeypatch,tmp_path):
     from . import ls_validity_ops as vo
     monkeypatch.setattr(nr.ops,'EVIDENCE',tmp_path)
-    monkeypatch.setattr(vo,'gpu_status',lambda host:dict(workers=[dict(ready=True,owner=dict(generation='NICHENULL2'))]*2))
-    (tmp_path/'LS_LABEL_CPU_coopmwm20261103_nichenullcpu6.json').write_text('{}')
+    monkeypatch.setattr(vo,'gpu_status',lambda host:dict(workers=[dict(ready=True,owner=dict(generation='NICHENULL3'))]*2))
+    (tmp_path/'LS_LABEL_CPU_coopmwm20261103_nichenullcpu7.json').write_text('{}')
     (tmp_path/'NICHE_COLLECTOR_ACTIVATION_REGISTRATION.json').write_text('{}')
     def remote(host,code,**kwargs):
         assert host=='cpuQ'
@@ -86,14 +86,32 @@ def test_gpu_dispatch_payload_compiles_and_preserves_original_binding(monkeypatc
     hashes['FROZEN_NETWORK.net.xml.gz']=hashlib.sha256(
         (nr.ops.LOCAL/'assets/research/highway_merge_shepherd_long/osm.net.xml.gz').read_bytes()).hexdigest()
     (tmp_path/nr.REG).write_text(json.dumps(dict(cpu=dict(source_hashes=hashes))))
-    (tmp_path/'NICHE_DEPENDENCY_RECOVERY2.json').write_text(json.dumps(dict(source_hashes={})))
+    (tmp_path/'NICHE_DEPENDENCY_RECOVERY3.json').write_text(json.dumps(dict(source_hashes={})))
     seen=[]
     def remote(host,code,**kwargs):
         compile(code,'<gpu-dispatch>','exec');seen.append(host)
         if host=='cpuQ':return json.dumps(dict(pid=1,start_ticks='10',boot_id='b'))
-        assert 'GPU_BINDING_NICHENULL2.json' in code and 'PRE_NICHENULL1' in code
+        assert 'GPU_BINDING_NICHENULL3.json' in code and 'PRE_NICHENULL1' in code
         assert 'actual_exit' not in code or 'SPOOL_WORKER.claim' in code
         return json.dumps(dict(pid=2,start_ticks='20',root='/root/coopmwm20261102_incident1',host=host))
     monkeypatch.setattr(nr,'remote',remote)
     nr.gpu('gpuA','/root/coopmwm20261102_incident1')
     assert seen==['cpuQ','gpuA']
+
+
+def test_recovery3_payload_covers_lazy_imports_and_keeps_four_exact_checks(monkeypatch,tmp_path):
+    monkeypatch.setattr(nr.ops,'EVIDENCE',tmp_path)
+    files=nr.dependency_files()
+    files['pytools/tools/coopmwm/niche_worker.py']=(nr.ops.LOCAL/'tools/coopmwm/niche_worker.py').read_text(encoding='utf-8')
+    hashes={n:hashlib.sha256(t.encode()).hexdigest() for n,t in files.items()}
+    (tmp_path/'LS_LABEL_CPU_coopmwm20261103_nichenullcpu7.json').write_text(json.dumps(
+        dict(pass_=True,skips=0,sim_s=0,source_hashes=hashes)))
+    (tmp_path/'NICHE_DEPENDENCY_RECOVERY3.json').write_text('{}')
+    def remote(host,code,**kwargs):
+        compile(code,'<recovery3>', 'exec')
+        assert 'adopted_joint_checks' in code and 'NUMERICAL' in code
+        assert 'from tools.coopmwm.resource_config import clocks' in code
+        assert 'from tools.coopmwm.query_errors import execute' in code
+        return '{"pid":4}'
+    monkeypatch.setattr(nr,'remote',remote)
+    nr.recover3('gpuA','/root/coopmwm20261102_incident1')

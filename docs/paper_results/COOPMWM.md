@@ -1,5 +1,27 @@
 # S-COOPMWM — live checks
 
+## Nov3 06:36 UTC+8 — late dependency failure recovered without repeating exact checks
+- Worker220668 completed all4 committed-background/warm-single-batch checks with
+  exact-zero errors, then exited on the lazy `resource_config` service import.
+  Controller V1 stopped and retained the fault; other3 serving slots continued.
+- CPU7: **273 Linux PASS, zero skips,53.814s, zero SUMO**. Complete dependency
+  package now also includes the same qualified `resource_config` and
+  `query_errors`; actual GPU-environment smoke executes their lazy imports and
+  resource-clock loader before dispatch, with CUDA uninitialized.
+- Amendment `9796569a299a83cb…` adopts the4 completed checks only after exact
+  receipt SHA and complete unchanged numerical-manifest verification. New worker
+  **237704/start903906207** runs4 fresh cold/warm full-fast checks; all8 checks
+  remain required before admission. Untouched slots still run all8 fresh checks.
+  Original failed logs, gate results and bindings remain intact.
+- At unix1793658969: new worker alive/4 adopted checks/no failure, gpuA99%,
+  27,429MiB. V2 rollout controller12200 and activation waiter32220 are live;
+  observer40668 publishes quality/variation evidence. Seventeen local metadata
+  tests PASS (0.30s), including changed-source/receipt/nonzero-error rejection.
+- Intermediate clamp-enabled searches without a recorded niche configuration
+  have their own reporting cohort; they cannot contaminate the pre-release
+  baseline or the registered niches1-vs4 comparison. Collector gate and B/R PPO
+  restart are still pending; the fresh-cap budget blocker remains published.
+
 ## Nov3 06:22 UTC+8 — fresh-cap restart budget gate
 - Read-only append-only ledger: **5,391,140 sim-s charged**, including retained
   superseded work; **608,860** remain under the fresh resume's6M guard.
