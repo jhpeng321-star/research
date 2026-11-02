@@ -1,0 +1,48 @@
+{
+ "time": "2026-11-03T01:22:49.078509+08:00",
+ "owners": [
+  {
+   "stage": "owner_late_control",
+   "expected": {
+    "pid": 514854,
+    "start_ticks": "890706569",
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+   },
+   "status": "EXACT_INCARNATION",
+   "state": "T"
+  },
+  {
+   "stage": "owner1735_control",
+   "expected": {
+    "pid": 513448,
+    "start_ticks": "890664618",
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+   },
+   "status": "ABSENT"
+  }
+ ],
+ "active_evaluations": [],
+ "claimed_jobs": [
+  "v4_969590",
+  "v4_969592",
+  "v4_969595",
+  "v4_969599",
+  "v5-lp_969436",
+  "v5-lp_969590",
+  "v5-lp_969595",
+  "v5-lp_969599",
+  "v5_969434",
+  "v5_969435",
+  "v5_969436",
+  "v5_969439",
+  "v5_969590",
+  "v5_969592",
+  "v5_969595",
+  "v5_969599"
+ ],
+ "gpu": "100, 97",
+ "inference_dispatched": false,
+ "signals_sent": false,
+ "remote_writes": false,
+ "host": "gpuA"
+}

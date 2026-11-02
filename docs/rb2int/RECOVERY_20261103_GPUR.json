@@ -1,0 +1,46 @@
+{
+ "time": "2026-11-03T01:22:59.854143+08:00",
+ "owners": [
+  {
+   "stage": "owner_late_control",
+   "expected": {
+    "pid": 949247,
+    "start_ticks": "4215344299",
+    "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163"
+   },
+   "status": "ABSENT"
+  },
+  {
+   "stage": "owner1735_control",
+   "expected": {
+    "pid": 948148,
+    "start_ticks": "4215302457",
+    "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163"
+   },
+   "status": "ABSENT"
+  }
+ ],
+ "active_evaluations": [],
+ "claimed_jobs": [
+  "v5-lp_969433",
+  "v5-lp_969437",
+  "v5-lp_969438",
+  "v5_969432",
+  "v5_969433",
+  "v5_969437",
+  "v5_969438",
+  "wm2_969550",
+  "wm2_969554",
+  "wm2_969590",
+  "wm2_969592",
+  "wm2_969595",
+  "wm2_969597",
+  "wm2_969598",
+  "wm2_969599"
+ ],
+ "gpu": "45, 81",
+ "inference_dispatched": false,
+ "signals_sent": false,
+ "remote_writes": false,
+ "host": "gpuR"
+}

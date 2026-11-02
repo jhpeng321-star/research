@@ -1,0 +1,147 @@
+{
+ "time": "2026-11-03T01:22:39.684194+08:00",
+ "owners": [
+  {
+   "name": "rb2int_finish_v3",
+   "process": {
+    "pid": 25240,
+    "argv": [
+     "C:\\Users\\jpeng\\miniconda3\\python.exe",
+     "-B",
+     "-u",
+     "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\finish.py",
+     "watch",
+     "--out",
+     "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_finish_v3"
+    ],
+    "create_filetime": 134379970282244431,
+    "inference_dispatch": false
+   },
+   "alive": false,
+   "terminal": {
+    "INCOMPLETE_AT_DEADLINE.json": {
+     "world_jobs": 31,
+     "expected": 216,
+     "inference_repeated": false,
+     "qualification": "NOT_ESTABLISHED; full evaluation incomplete"
+    }
+   }
+  },
+  {
+   "name": "rb2int_interim_hold_v1",
+   "process": {
+    "pid": 23664,
+    "argv": [
+     "C:\\Users\\jpeng\\miniconda3\\python.exe",
+     "-B",
+     "-u",
+     "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py",
+     "watch-hold",
+     "--out",
+     "runs\\rb2int_interim_hold_v1"
+    ],
+    "create_filetime": 134380020249390235,
+    "cache_only": true
+   },
+   "alive": false,
+   "terminal": {
+    "INCOMPLETE_AT_DEADLINE.json": {
+     "label": "INTERIM; INCOMPLETE AT DEADLINE",
+     "time": "2026-11-02T09:41:30.544921+08:00",
+     "complete_world_jobs": 31,
+     "expected": 216,
+     "matched_v5_v4_worlds": [
+      969432,
+      969433,
+      969434,
+      969435,
+      969436,
+      969437,
+      969438,
+      969439,
+      969590,
+      969592,
+      969595,
+      969599
+     ],
+     "qualification": "NOT_ESTABLISHED",
+     "inference_repeated": false
+    }
+   }
+  },
+  {
+   "name": "rb2int_interim_v3",
+   "process": {
+    "pid": 44988,
+    "argv": [
+     "C:\\Users\\jpeng\\miniconda3\\python.exe",
+     "-B",
+     "-u",
+     "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py",
+     "watch",
+     "--out",
+     "runs\\rb2int_interim_v3"
+    ],
+    "create_filetime": 134379973214244749,
+    "cache_only": true
+   },
+   "alive": false,
+   "terminal": {
+    "STOP.json": {
+     "error": "ValueError('interim source/target changed; explicit recovery required')",
+     "automatic_retry": false,
+     "inference_repeated": false
+    }
+   }
+  },
+  {
+   "name": "rb2int_late_wait_v1",
+   "process": {
+    "pid": 9724,
+    "argv": [
+     "C:\\Users\\jpeng\\miniconda3\\python.exe",
+     "-B",
+     "-u",
+     "-m",
+     "tools.rb2int.late_watch",
+     "watch",
+     "--out",
+     "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_late_wait_v1"
+    ],
+    "create_filetime": 134380004640417822,
+    "inference_dispatch": false,
+    "standby_only": true
+   },
+   "alive": false,
+   "terminal": {
+    "STOP.json": {
+     "error": "ValueError('late source changed; explicit recovery required')",
+     "automatic_retry": false,
+     "inference_repeated": false,
+     "process_signals": false
+    }
+   }
+  }
+ ],
+ "complete_collected_world_jobs": 31,
+ "matched_v5_v4_worlds": [
+  969432,
+  969433,
+  969434,
+  969435,
+  969436,
+  969437,
+  969438,
+  969439,
+  969590,
+  969592,
+  969595,
+  969599
+ ],
+ "hold_children_all_collected": true,
+ "report_sha256": "c4bd8652c71888c96639bef34089a82565d5a0938c523d759d4de2475e0f0245",
+ "prior_report_unchanged": true,
+ "inference_dispatched": false,
+ "analysis_repeated": false,
+ "signals_sent": false
+}
