@@ -27,7 +27,7 @@ Final actual1,567,326/conservativecharged1,569,840sim-s; all jobs finished.
 First exact partial EXAM is published at
 `E:/agent-work/c4-coopbandit/docs/paper_results/coopbandit/partial135/exam-partial/`.
 135 complete-option states / 28 TRAIN worlds; exploratory completion order.
-Use `MANIFEST.json` to verify all files. Full 300-state panel is still running.
+Use `MANIFEST.json` to verify all files. The full 300-state panel is now complete above.
 No dev worlds enter this export. Split by `world_id`, never by decision state.
 
 ## Predictable contract
@@ -63,7 +63,17 @@ Branch ID: s<seed>_t<clock>_O<n>[_solo0|_solo1]. Source receipts bind tape hashe
 Current root/allocation: `tools/coopbandit/evidence/RECOVERY_PLAN_V5.json`.
 Only read explicit public observable/action/RESULT/CLOSE paths; all task restrictions apply.
 
-Registered learner remains cautious: 0 OOF interventions on partial data despite
-16/135 helpful states (best option D up to +6360 veh-s). Use the exact labels
+At the preserved partial milestone, the registered learner made 0 OOF interventions
+despite 16/135 helpful states (best option D up to +6360 veh-s). The full-panel
+learner also made 0 OOF interventions despite 45/300 helpful states. Use the exact labels
 to test WM sign/rank or drive the separately budgeted SUMO-oracle planner;
 do not represent this as demonstrated learned cooperation.
+
+## Fresh-session verification — 2026-11-02
+Reconciled clean branch `c4/coopbandit` at `e3dea23b` with the shared registration
+completion line, DATA_COMPLETE/LIVE_COMPLETE and the live summary. All 11 files
+bound by the full EXAM and live-report SHA256 manifests match their original bytes.
+Counts verified: 300 unique states, 60 worlds, 4,500 labels, 240 credit rows.
+The 1,452 successful-data ledger charges sum to 1,489,200 sim-s; including retained
+failed attempts, diagnostics and live receipts gives 1,567,326 actual / 1,569,840
+conservative charged sim-s. No new simulations or dispatches were started on resume.
