@@ -1,5 +1,29 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN1607CORRECTION currentunix1793608384: originalwarmqualification/u0/library/
+GPUgates/verificationsmoke ADOPTED/norerun. Fixedverifiedguide beta1 REGISTERED
+8d515de4...; numericalverifybeta2/131CPU PASS0skips34.463s, source2unchanged.
+R736732/start62221063 restoredoriginalu3AdamRNG/trust, fixedbeta1; waitsB4quota,
+ZERO R4claims. LegacyRu2/u3 beta0/zeroexecuted explicitlydisclosed.
+B598899 parentdeliberatelyT/childrencontinuealloriginalB4work; actualreplacement
+wave24claimed/14RESULT+CLOSE/10open (ignore24olderfailedB4attempts). NEVERCONT
+oldB, replayqueries/episodes, ordispatchnewarmsmanually. Newdurablecontroller
+748938/start62256954 sourceverifybeta5 LIVE/S/emptylog, originaldeadline
+1793614022.4598482 (18:07:02UTC+8) unchanged. ItadoptsRalreadydispatched, waits
+ALL24B4RESULT+CLOSE, verifiesidlepool/nophysicsdescendants, terminatesoldparent,
+thenpreflightsu3andadoptsB4results/applyu4once. B4oldtrusttimingretained; beta1
+fromsubsequentfreshBdecisions. Source5controller133CPU PASS0skips36.649s/zeroSUMO.
+Originalcontroller727109EXIT(emptyargvpostKILLrace), V2736281EXIT(missingdeadline),
+allfailuresretained; source4preflightmissingoverridekeyBEFOREdispatch. Recovery
+usesactualEXACT_OPERATIONAL_BINDINGbase deadline, noextension. Rnorepeatedsignals.
+Use `python -X utf8 -m tools.coopmwm.verification_beta_ops status` FIRST; adopt
+VERIFICATION_BETA_TRANSITION_DISPATCH_V3/BETA_R_DISPATCH andfutureBETA_B_DISPATCH.
+NEVERrerundispatch/recover/repair_wait. Currentcontrollersource5, numericalsource2.
+Grader598089/broker545008/fourGPUs/final689787/observer11640retained. Localstate
+nowBETA-aware24CPU PASS; currentlyrunningobserverstilloldimport, refreshneeded.
+Cap9500000/latestMAIN1556allocation unchanged; nofinaloutcomesopened. B4..6
+viabilitypending; resourcecontinuationrequestneededbeforeoriginal18:07:02deadline.
+
 MAIN1556ALLOCATIONAPPLIED16:04:22UTC+8/unix1793606662: final-only375800
 transfer REGISTERED758ad384/commitca2a1022; exactgrade431160->55360,
 finaltest691200/pairedbranch1297400; cap9500000/train2840400/discovery150200
@@ -1232,3 +1256,11 @@ At10:00 GPU A99%/two compute owners; GPU R23,204MiB/two compute owners despite
 Use the existing exact hot-swap recipe and registered amendment; no duplicate
 registration or dispatch. CPU79+7 passing evidence and additional measured
 transfer/width/graph results are preserved in WMSPEED2.md. NewSUMO/training0.
+
+### S-WMSPEED2 follow-up recovery 2026-11-02 16:22 — release unchanged
+
+Fresh inventories committed in c4/wmspeed2 `bb840a69`: no live WMSPEED2 jobs;
+GPU A83%/45,083MiB and GPU R91%/23,878MiB, each with two other compute owners.
+No GPU probe admitted or repeated. Release `fcc50296`, its manifest and exact
+startup/hot-swap recipe remain qualified; numerical source is unchanged.
+Existing single registration verified; no new training/SUMO or PID changes.

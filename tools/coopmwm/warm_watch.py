@@ -29,12 +29,12 @@ def state():
     return json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,time,shutil,sys
 r=pathlib.Path({ROOT!r});assert r.is_dir();owners={{}}
 source='/home/ubuntu/coopmwm20261102_exactcpu5'
-for name in ('VERIFICATION_CONTINUATION_BINDING.json','MATCH_RECOVERY_BINDING.json','INCIDENT_RECOVERY_BINDING.json','TAIL_RUNTIME_BINDING.json','MAIN0548_RUNTIME_BINDING_V2.json','MAIN0548_RUNTIME_BINDING.json','MAIN0508_REPAIR_BINDING_V2.json'):
+for name in ('VERIFICATION_BETA_BINDING.json','VERIFICATION_CONTINUATION_BINDING.json','MATCH_RECOVERY_BINDING.json','INCIDENT_RECOVERY_BINDING.json','TAIL_RUNTIME_BINDING.json','MAIN0548_RUNTIME_BINDING_V2.json','MAIN0548_RUNTIME_BINDING.json','MAIN0508_REPAIR_BINDING_V2.json'):
  if (r/name).exists():source=json.loads((r/name).read_text())['source_root'];break
 sys.path.insert(0,source+'/pytools')
 from tools.coopmwm.warm_health import assert_running,HealthPause
 for arm in ('A','B','R'):
- names=[f'VERIFIED_{{arm}}_DISPATCH.json',f'MATCH_{{arm}}_DISPATCH.json',f'INCIDENT_{{arm}}_DISPATCH.json',f'TAIL_{{arm}}_DISPATCH.json',f'QUOTA_{{arm}}_DISPATCH.json']+[f'WARM_{{arm}}_DISPATCH{{suffix}}.json' for suffix in ('_V6','_V4','_V3','2','')]
+ names=[f'BETA_{{arm}}_DISPATCH.json',f'VERIFIED_{{arm}}_DISPATCH.json',f'MATCH_{{arm}}_DISPATCH.json',f'INCIDENT_{{arm}}_DISPATCH.json',f'TAIL_{{arm}}_DISPATCH.json',f'QUOTA_{{arm}}_DISPATCH.json']+[f'WARM_{{arm}}_DISPATCH{{suffix}}.json' for suffix in ('_V6','_V4','_V3','2','')]
  p=next((r/name for name in names if (r/name).exists()),None)
  if p is None:continue
  d=json.loads(p.read_text());q=pathlib.Path('/proc')/str(d['pid']);s=(q/'stat').read_text().split() if (q/'stat').exists() else None
@@ -54,7 +54,7 @@ stop=None
 try:assert_running(r,'B')
 except (ValueError,HealthPause) as error:stop=dict(error=str(error),source='current registered warm_health guard')
 pauses=sorted(p.name for p in r.glob('PAUSE_*.json'))
-failures={{p.name:json.loads(p.read_text()) for pattern in ('WARM_*_FAILED_Q1.json','WARM_*_FAILED_V5.json','WARM_*_FAILED_T1.json','WARM_*_FAILED_I1.json','WARM_*_FAILED_M1.json','WARM_*_FAILED_SV1.json') for p in r.glob(pattern)}}
+failures={{p.name:json.loads(p.read_text()) for pattern in ('WARM_*_FAILED_Q1.json','WARM_*_FAILED_V5.json','WARM_*_FAILED_T1.json','WARM_*_FAILED_I1.json','WARM_*_FAILED_M1.json','WARM_*_FAILED_SV1.json','WARM_*_FAILED_SB1.json') for p in r.glob(pattern)}}
 if (r/'INCIDENT_RECOVERY_BINDING.json').exists() and stop is None:
  for name in ('WARM_B_FAILED_T1.json','WARM_R_FAILED_Q1.json'):failures.pop(name,None)
 if (r/'MATCH_GUIDED_RELEASE.json').exists() and stop is None:

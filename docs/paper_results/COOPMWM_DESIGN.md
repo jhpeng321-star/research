@@ -23,7 +23,7 @@
 22. No O1-O4 seeds; policy-centred generic smooth noise sigma.5, unique Cholesky basis; posterior bootstrap Thompson choice, beta1 initially; top-k gate is positive-vsMAPPO, own-policy contrast reported separately.
 23. H60/120/300/600. D_i=J(member-revert)-J(joint); D_G=J(all-revert)-J(joint).
 24. C_G=D_G-sum(D_i); complete paired futures required, including negative values.
-25. beta starts1 per training seed; immutable update receipts supply the next update's beta.
+25. MAIN16:07 verified B/R guide beta1; adaptive trust retained for reporting only. R u2/u3 beta0/zero executed disclosed; existing B4 legacy wave adopted, correction from fresh decisions.
 26. Log query mass p over eligible uncommitted decisions only; beta(type,regime); R quota exhausted=>own/p0.
 27. MAIN02:01 PPO only nonexecuted/own steps (including rejected queries), standard pi_new/pi_old; never score/ratio plan steps.
 28. Critic allsteps for own PPO baseline only; plans graded ONLY exact marginal SUMO saving g over executedD+120, identicalprefix/otherplans replayed; positivebuffer AWR weight1 until20grades then min(20,exp(g/T)),T=max(1,RMSfirst20veh-s) frozen perarm/seed; coefficient1; ungraded queued.
@@ -40,7 +40,7 @@
 39. TRAIN4/dev16 reportingonly; primaryA24/B24/R24,secondaryA48. Finalspawnfault375800sim-squarantined; MAIN1556approvedreplacement; source4/89CPU PASS explicitcheckpoint/SHA+final-onlycaps; B/Rcontinue.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. A48complete,B/R24endpoints; healthguards active/no owner-reviewpause; verifierCPU12/105PASS,real5branchPREFIX-CRN/live11fingerprintsPASS; B/RexactverificationLIVEfromcommonu4,pretrustdraw,winningbranchgradesreused.
+42. A48complete,B/R24endpoints; verifierCPU12 real5branch/livePASS retained; fixed-guide sourcebeta2/131CPU PASS, controllerbeta5/133PASS; count/safety/harm/learning guards active, report-only trust collapse cannot suppress verification.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
 44. Mechanics3600,calibration57600,discovery150200,pairedbranches1297400,reusecheck600; train2840400inclfailed-u4replacements; verification2800000/exactgrade55360; allocated9500000/free0.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.

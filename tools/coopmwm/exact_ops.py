@@ -47,7 +47,8 @@ print(json.dumps(v))''',timeout=30))
         values[host]=value
     cpu=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,sys,json,time,os
 r=pathlib.Path({ROOT!r});repair=r/'MAIN0508_REPAIR_BINDING_V2.json'
-current=r/'VERIFICATION_CONTINUATION_BINDING.json'
+current=r/'VERIFICATION_BETA_BINDING.json'
+if not current.exists():current=r/'VERIFICATION_CONTINUATION_BINDING.json'
 if not current.exists():current=r/'MATCH_RECOVERY_BINDING.json'
 if not current.exists():current=r/'INCIDENT_RECOVERY_BINDING.json'
 source=json.loads(current.read_text())['source_root'] if current.exists() else json.loads(repair.read_text())['source_root'] if repair.exists() else {CPU!r}
@@ -59,12 +60,12 @@ for name in ['WARM_A_DISPATCH_V3.json','WARM_B_DISPATCH_V4.json','WARM_R_DISPATC
   'QUOTA_B_DISPATCH.json','QUOTA_R_DISPATCH.json','QUOTA_broker_DISPATCH.json','CENTRE_FAIR_BROKER_DISPATCH.json','TAIL_B_DISPATCH.json','TAIL_DRAIN_BROKER_DISPATCH.json',
   'INCIDENT_B_DISPATCH.json','INCIDENT_R_DISPATCH.json','INCIDENT_BROKER_DISPATCH.json','INCIDENT_GRADER_DISPATCH.json',
   'MATCH_R_DISPATCH.json','MATCH_BROKER_DISPATCH.json','MATCH_GRADER_DISPATCH.json',
-  'VERIFIED_B_DISPATCH.json','VERIFIED_R_DISPATCH.json','VERIFIED_GRADER_DISPATCH.json']:
+  'VERIFIED_B_DISPATCH.json','VERIFIED_R_DISPATCH.json','VERIFIED_GRADER_DISPATCH.json','BETA_B_DISPATCH.json','BETA_R_DISPATCH.json']:
  if not (r/name).exists():continue
  d=read(r/name);assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
  p=pathlib.Path('/proc')/str(d['pid'])/'stat';s=p.read_text().split() if p.exists() else None
  assert not s or s[21]==d['start_ticks'];owners[name]=dict(owner=d,state=s[2] if s else 'exited')
-stops={{p.name:read(p) for pattern in ('PAUSE_*.json','WARM_GUIDED_STOP*.json','WARM_*_FAILED_V3.json','WARM_*_FAILED_V5.json','WARM_*_FAILED_Q1.json','WARM_*_FAILED_T1.json','WARM_*_FAILED_I1.json','WARM_*_FAILED_M1.json','WARM_*_FAILED_SV1.json') for p in r.glob(pattern)}}
+stops={{p.name:read(p) for pattern in ('PAUSE_*.json','WARM_GUIDED_STOP*.json','WARM_*_FAILED_V3.json','WARM_*_FAILED_V5.json','WARM_*_FAILED_Q1.json','WARM_*_FAILED_T1.json','WARM_*_FAILED_I1.json','WARM_*_FAILED_M1.json','WARM_*_FAILED_SV1.json','WARM_*_FAILED_SB1.json') for p in r.glob(pattern)}}
 if repair.exists():
  from tools.coopmwm.warm_health import assert_running
  try:assert_running(r,'B')

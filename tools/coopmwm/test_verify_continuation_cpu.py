@@ -9,7 +9,7 @@ from tools.coopmwm.protocol import digest
 from tools.coopmwm.test_sumo_verify_cpu import FakePlant, fp, plan, snapshot
 
 
-@pytest.mark.parametrize('fault', [None, 'boot', 'pid', 'argv', 'source'])
+@pytest.mark.parametrize('fault', [None, 'boot', 'pid', 'argv', 'source', 'exiting'])
 def test_beta_handover_controls_only_receipt_bound_supervisor(tmp_path, fault):
     from tools.coopmwm.verification_beta_ops import identity
     proc=tmp_path/'proc';boot=proc/'sys/kernel/random/boot_id'
@@ -21,12 +21,22 @@ def test_beta_handover_controls_only_receipt_bound_supervisor(tmp_path, fault):
     args=['/home/ubuntu/miniconda3/bin/python','-B','-u','-m','tools.coopmwm.incident_recovery','/run','--component','R']
     if fault=='argv':args[-1]='B'
     (p/'cmdline').write_bytes(b'\0'.join(x.encode() for x in args)+b'\0')
+    if fault=='exiting':(p/'cmdline').write_bytes(b'')
     env='PYTHONPATH='+('/other' if fault=='source' else '/source')+'/pytools:/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime'
     (p/'environ').write_bytes(env.encode()+b'\0')
     if fault=='boot':d['boot_id']='other'
-    if fault:
+    if fault=='exiting':assert identity(d,proc)=='exiting'
+    elif fault:
         with pytest.raises(AssertionError):identity(d,proc)
     else:assert identity(d,proc)=='S'
+
+
+def test_beta_transition_uses_original_nested_operational_deadline(tmp_path):
+    from tools.coopmwm.verification_beta_ops import resource_deadline
+    from tools.coopmwm.storage import write
+    write(tmp_path/'EXACT_OPERATIONAL_BINDING.json',dict(gpu_deadline=1793614022.4598482))
+    assert resource_deadline(tmp_path,{})==1793614022.4598482
+    assert resource_deadline(tmp_path,dict(gpu_deadline=123.))==123.
 
 
 @pytest.mark.parametrize('arm', ['B', 'R'])
