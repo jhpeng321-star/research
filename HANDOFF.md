@@ -1,7 +1,9 @@
 # S-RB2-LPHYS — DELIVERED, 2026-11-01 ~13:20 +08
 
-Fresh-session closure 2026-11-02: `docs/rb2lphys/RESUME_VERIFIED_20261102.md`.
-Latest clean recovery at d6292802; artifact/archive lineage verifier PASS.
+Fresh-session closure 2026-11-03: `docs/rb2lphys/RESUME_VERIFIED_20261103.md`.
+Recovered clean at b3787ef3; fresh artifact/archive lineage verifier PASS.
+INT's Nov3 01:23 receipt preserves the admission HOLD and incomplete comparison;
+no explicit MAIN release found by INT. Completed worker delivery remains default OFF.
 Completed development evidence and default-OFF recommendation stand. INT's
 Nov2 10:20 receipt records the bounded collector/publisher EXITED INCOMPLETE,
 31/216 new jobs collected, and the zero-admission HOLD still intact. Frozen
