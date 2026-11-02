@@ -1,0 +1,57 @@
+{
+ "time": "2026-11-02T10:19:52.766512+08:00",
+ "inference_dispatched": false,
+ "signals_sent": false,
+ "hosts": {
+  "gpuR": {
+   "time": "2026-11-02T10:19:53.249452+08:00",
+   "owners": [
+    {
+     "stage": "owner_late_control",
+     "expected": {
+      "pid": 949247,
+      "start_ticks": "4215344299",
+      "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163"
+     },
+     "present": false,
+     "same_incarnation": false
+    },
+    {
+     "stage": "owner1735_control",
+     "expected": {
+      "pid": 948148,
+      "start_ticks": "4215302457",
+      "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163"
+     },
+     "present": false,
+     "same_incarnation": false
+    }
+   ],
+   "claimed_jobs": [
+    "v5-lp_969433",
+    "v5-lp_969437",
+    "v5-lp_969438",
+    "v5_969432",
+    "v5_969433",
+    "v5_969437",
+    "v5_969438",
+    "wm2_969550",
+    "wm2_969554",
+    "wm2_969590",
+    "wm2_969592",
+    "wm2_969595",
+    "wm2_969597",
+    "wm2_969598",
+    "wm2_969599"
+   ],
+   "active_evaluations": [],
+   "gpu": {
+    "returncode": 0,
+    "stdout": "889, 0",
+    "stderr": ""
+   },
+   "inference_dispatched": false,
+   "signals_sent": false
+  }
+ }
+}

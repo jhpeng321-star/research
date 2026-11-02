@@ -1,0 +1,63 @@
+{
+ "time": "2026-11-02T10:19:46.303011+08:00",
+ "inference_dispatched": false,
+ "signals_sent": false,
+ "hosts": {
+  "gpuA": {
+   "time": "2026-11-02T10:19:45.895183+08:00",
+   "owners": [
+    {
+     "stage": "owner_late_control",
+     "expected": {
+      "pid": 514854,
+      "start_ticks": "890706569",
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+     },
+     "actual": {
+      "pid": 514854,
+      "start_ticks": "890706569",
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+     },
+     "same_incarnation": true,
+     "state": "T"
+    },
+    {
+     "stage": "owner1735_control",
+     "expected": {
+      "pid": 513448,
+      "start_ticks": "890664618",
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+     },
+     "present": false,
+     "same_incarnation": false
+    }
+   ],
+   "claimed_jobs": [
+    "v4_969590",
+    "v4_969592",
+    "v4_969595",
+    "v4_969599",
+    "v5-lp_969436",
+    "v5-lp_969590",
+    "v5-lp_969595",
+    "v5-lp_969599",
+    "v5_969434",
+    "v5_969435",
+    "v5_969436",
+    "v5_969439",
+    "v5_969590",
+    "v5_969592",
+    "v5_969595",
+    "v5_969599"
+   ],
+   "active_evaluations": [],
+   "gpu": {
+    "returncode": 0,
+    "stdout": "5104, 31",
+    "stderr": ""
+   },
+   "inference_dispatched": false,
+   "signals_sent": false
+  }
+ }
+}
