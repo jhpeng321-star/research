@@ -44,12 +44,39 @@ def assert_live(root):
         assert not (Path(root)/'exact_grades'/name).exists(),name
 
 
+def failed_grade(r):
+    return r['status'] in ('failed','stopped') or (r['status']=='graded' and not r['noise'].get('crn_verified_t0'))
+
+
+def record_failed_grade(qroot,r):
+    """MAIN decision (a), harden-2: one failed/stopped/non-CRN grade gets a durable
+    per-grade receipt + alert and is excluded from every summary; no global STOP,
+    no imputation, never replayed. Returns True when newly recorded."""
+    target=Path(qroot)/'failed_grades';target.mkdir(exist_ok=True)
+    path=target/(r['grade_id']+'.json')
+    if path.exists():return False
+    value=dict(grade_id=r['grade_id'],status=r['status'],reason=r.get('reason'),
+        crn_verified_t0=bool((r.get('noise') or {}).get('crn_verified_t0')),receipt_sha256=r.get('receipt_sha256'),
+        excluded_from_summaries=True,no_imputation=True,replayed=False,global_stop=False)
+    immutable(path,value)
+    alerts=Path(qroot)/'grade_alerts';alerts.mkdir(exist_ok=True)
+    immutable(alerts/(r['grade_id']+'.json'),dict(value,alert='exact grade failed; excluded, run continues'))
+    return True
+
+
+def usable(qroot,receipts):
+    """Receipts minus recorded per-grade failures (and any not-yet-recorded failure)."""
+    folder=Path(qroot)/'failed_grades'
+    excluded={p.stem for p in folder.glob('*.json')} if folder.is_dir() else set()
+    return [r for r in receipts if r['grade_id'] not in excluded and not failed_grade(r)]
+
+
 def evidence(root,arm,beta):
     assert_live(root)
     q=queue(root)
     # First real successful grade is the one-plan smoke, never duplicated. No
     # trust/imitation/library can consume any grade before its CRN/prefix gates.
-    receipts=q.receipts() if (q.root/'SMOKE_PASSED.json').exists() else []
+    receipts=usable(q.root,q.receipts()) if (q.root/'SMOKE_PASSED.json').exists() else []
     T=q.frozen_temperature(arm,SEED) if receipts else xg.temperature([],arm,SEED)
     W=xg.imitation_weights(receipts,arm,T,SEED)
     pairs=[p for e in W['weights'].values() for p in xg.imitation_pairs(read(Path(e['result_path'])),e)]
@@ -91,14 +118,8 @@ def supervise(root,workers=8):
         q.recover()
         receipts=q.receipts()
         for r in receipts:
-            if r['status'] in ('failed','stopped') or (r['status']=='graded' and not r['noise'].get('crn_verified_t0')):
-                immutable(q.root/'GRADER_STOP.json',dict(grade_id=r['grade_id'],status=r['status'],reason=r.get('reason'),no_imputation=True))
-                target=root/('WARM_GUIDED_STOP_V5.json' if (root/'DNS_GUIDED_RELEASE_1651.json').exists() else
-                    'WARM_GUIDED_STOP_V4.json' if (root/'MATCH_GUIDED_RELEASE.json').exists() else
-                    'WARM_GUIDED_STOP_V3.json' if (root/'INCIDENT_GUIDED_RELEASE.json').exists() else
-                    'WARM_GUIDED_STOP_V2.json' if (root/'MAIN0508_GUIDED_RELEASE.json').exists() else 'WARM_GUIDED_STOP.json')
-                immutable(target,dict(source='exact-grade engineering fault',grade_id=r['grade_id']))
-                return
+            if failed_grade(r):record_failed_grade(q.root,r)
+        receipts=usable(q.root,receipts)
         good=next((r for r in receipts if r['arm']=='B' and r['status']=='graded'),None)
         if good and not (q.root/'SMOKE_PASSED.json').exists():
             assert good['prefix']['pass_'] and good['noise']['crn_verified_t0'] and good['noise']['noise_mode_used']=='crn'
@@ -111,7 +132,8 @@ def supervise(root,workers=8):
             running[gid]=p
             stat=Path(f'/proc/{p.pid}/stat').read_text().split()
             with (q.root/'WORKERS.jsonl').open('a') as f:f.write(json.dumps(dict(pid=p.pid,start_ticks=stat[21],grade_id=gid,unix=time.time()))+'\n')
-        write(root/f'EXACT_GRADER_STATUS_{time.time_ns()}.json',dict(unix=time.time(),running=len(running),pending=len(q.pending()),receipts=len(receipts),smoke_passed=(q.root/'SMOKE_PASSED.json').exists(),workers=workers))
+        write(root/f'EXACT_GRADER_STATUS_{time.time_ns()}.json',dict(unix=time.time(),running=len(running),pending=len(q.pending()),receipts=len(receipts),
+            failed_grades=len(list((q.root/'failed_grades').glob('*.json'))) if (q.root/'failed_grades').is_dir() else 0,smoke_passed=(q.root/'SMOKE_PASSED.json').exists(),workers=workers))
         time.sleep(10)
 
 
