@@ -1,0 +1,22 @@
+{
+  "schema": "wm_phys.lc2013_shrinkage.v1",
+  "prior_count": 0.0,
+  "population_only": false,
+  "inverse_temperature": 0.2656413574761416,
+  "calibration_intervals_s": [
+    [
+      240,
+      270
+    ],
+    [
+      270,
+      300
+    ]
+  ],
+  "calibration_objective": "raw physical categorical Brier, not emission probability Brier",
+  "categorical_brier": 0.004593504027160403,
+  "raw_brier": 0.004593504027160403,
+  "population_brier": 0.004612772473373598,
+  "internal_empirical_bayes": true,
+  "already_applied": true
+}
