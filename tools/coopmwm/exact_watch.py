@@ -11,7 +11,7 @@ from .storage import read,write
 DISPATCHES={'grader':'EXACT_GRADER_DISPATCH.json','broker':'WARM_REMOTE_BROKER_DISPATCH.json',
             'B':'WARM_B_DISPATCH_V4.json','R':'WARM_R_DISPATCH_V4.json'}
 TAG='EXACT_OBSERVER_V2'
-OBSERVE_ONLY=('EXACT_OBSERVER_V6','EXACT_OBSERVER_V7','EXACT_OBSERVER_V8')
+OBSERVE_ONLY=('EXACT_OBSERVER_V6','EXACT_OBSERVER_V7','EXACT_OBSERVER_V8','EXACT_OBSERVER_V9')
 
 
 def adopt(cpu):
@@ -108,6 +108,22 @@ def run():
 
 def dispatch():
     target=ops.EVIDENCE/(TAG+'_DISPATCH.json');assert not target.exists()
+    if TAG=='EXACT_OBSERVER_V9':
+        from .protocol import checked,REGISTRY,sha
+        previous=read(ops.EVIDENCE/'EXACT_OBSERVER_V8_DISPATCH.json')
+        value=dict(previous=previous,purpose='reload TAIL current-owner status and explicit T1 failure publication; observation only',
+            status_sha256=sha(ops.LOCAL/'tools/coopmwm/exact_ops.py'),publisher_sha256=sha(ops.LOCAL/'tools/coopmwm/warm_publish.py'),
+            new_sumo_sim_s=0,dispatches_training=False,original_deadline_retained=True)
+        receipt=ops.EVIDENCE/'EXACT_OBSERVER_TAIL_RECOVERY.json';assert not receipt.exists();write(receipt,value)
+        line='\nS-COOPMWM TAIL OBSERVATION REFRESH REGISTERED amendmentSHA'+sha(receipt)+': exact current B3946079/broker3893211 receipt identities and T1 failure whitelist; CPU observer/publication suites PASS; replace ONLY verified localV8 PID/creation/exact tag; retain all remote owners/claims/deadline, no training or physics/inference dispatch.\n'
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+        code=(f"$p=Get-CimInstance Win32_Process -Filter 'ProcessId = {previous['pid']}'; "
+            "if ($null -ne $p) { "
+            "if ($p.CommandLine -notlike '*tools.coopmwm.exact_watch run --tag EXACT_OBSERVER_V8*') { throw 'observer command changed' }; "
+            f"$t=([DateTimeOffset]$p.CreationDate).ToUnixTimeMilliseconds()/1000; if ([Math]::Abs($t-{previous['unix']}) -gt 2) {{ throw 'observer PID reused' }}; "
+            f"Stop-Process -Id {previous['pid']} -ErrorAction Stop; Wait-Process -Id {previous['pid']} -Timeout 10 -ErrorAction SilentlyContinue; "
+            f"if (Get-CimInstance Win32_Process -Filter 'ProcessId = {previous['pid']}') {{ throw 'previous observer not absent' }} }}")
+        subprocess.run(['powershell','-NoProfile','-Command',code],capture_output=True,text=True,check=True)
     if TAG=='EXACT_OBSERVER_V8':
         from .protocol import checked,REGISTRY,sha
         receipt=ops.EVIDENCE/'EXACT_OBSERVER_COMMAND_LENGTH_RECOVERY.json';assert not receipt.exists()

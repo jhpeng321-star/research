@@ -181,6 +181,7 @@ for name in ('TAIL_TRANSITION_DISPATCH.json','TAIL_TRANSITION_DISPATCH_V2.json',
 receipts={{p.name:json.loads(p.read_text()) for name in ('TAIL_PARENT_FROZEN.json','TAIL_HANDOVER_COMPLETE.json','TAIL_TRANSITION_FAILED.json','WARM_B_FAILED_T1.json','WARM_GUIDED_STOP_V2.json','TAIL_DRAIN_BROKER_HANDOVER.json') for p in [r/name] if p.exists()}}
 updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')]) for a in ('A','B','R')}}
 u=updates['B']+1;jobs=list((r/'jobs').glob(f'warm_u{{u:03}}_B_*'))
+ru=updates['R']+1;rjobs=list((r/'jobs').glob(f'warm_u{{ru:03}}_R_*'))
 batch_records=[json.loads(p.read_text()) for p in (r/'quota_requests'/f'u{{u:03}}').glob('*_REQUEST.json')]
 parallel=[v for v in batch_records if 'records' in v]
 pending=[]
@@ -188,10 +189,18 @@ for p in (r/'requests').glob('*.json'):
  if (r/'responses'/p.name).exists():continue
  v=json.loads(p.read_text());a=r/'broker_assignments'/p.name
  pending.append(dict(key=p.stem,world=v['world_id'],time_s=v['time_s'],group_size=len(v['group']),assignment=json.loads(a.read_text()) if a.exists() else None))
-print(json.dumps(dict(unix=time.time(),owners=owners,receipts=receipts,updates=updates,current_B=dict(update=u,claimed=sum((p/'CLAIM.json').exists() for p in jobs),closed=sum((p/'RESULT.json').exists() for p in jobs)),quota=quota_state(r,u),parallel_groups=dict(windows=len(parallel),queries=sum(len(v['records']) for v in parallel)),pending=pending,load=os.getloadavg(),logs={{n:(r/n).read_text()[-2000:] for n in ('TAIL_TRANSITION.log','TAIL_TRANSITION_V2.log','TAIL_B.log','TAIL_DRAIN_BROKER.log') if (r/n).exists()}})))''',timeout=40)
+print(json.dumps(dict(unix=time.time(),owners=owners,receipts=receipts,updates=updates,current_B=dict(update=u,claimed=sum((p/'CLAIM.json').exists() for p in jobs),closed=sum((p/'RESULT.json').exists() for p in jobs)),current_R=dict(update=ru,claimed=sum((p/'CLAIM.json').exists() for p in rjobs),closed=sum((p/'RESULT.json').exists() for p in rjobs)),quota=quota_state(r,u),parallel_groups=dict(windows=len(parallel),queries=sum(len(v['records']) for v in parallel)),pending=pending,load=os.getloadavg(),logs={{n:(r/n).read_text()[-2000:] for n in ('TAIL_TRANSITION.log','TAIL_TRANSITION_V2.log','TAIL_B.log','TAIL_DRAIN_BROKER.log') if (r/n).exists()}})))''',timeout=40)
     v=json.loads(out);write(ops.EVIDENCE/f'TAIL_STATUS_{int(v["unix"])}.json',v)
+    adopted={name:x['owner'] for name,x in v['owners'].items() if name=='TAIL_B_DISPATCH.json'}
+    adopted.update({name:x for name,x in v['receipts'].items() if name in ('TAIL_HANDOVER_COMPLETE.json','TAIL_DRAIN_BROKER_HANDOVER.json')})
+    for name,value in adopted.items():
+        target=ops.EVIDENCE/name
+        if target.exists():assert read(target)==value,'remote immutable receipt changed'
+        else:write(target,value)
     print(json.dumps(dict(unix=v['unix'],owners={k:dict(pid=x['owner']['pid'],state=x['state']) for k,x in v['owners'].items()},
-        updates=v['updates'],current_B=v['current_B'],quota=v['quota'],parallel_groups=v['parallel_groups'],pending=v['pending'],
+        updates=v['updates'],current_B=v['current_B'],current_R=v['current_R'],quota=v['quota'],parallel_groups=v['parallel_groups'],
+        pending=dict(count=len(v['pending']),queued=sum(x['assignment'] is None for x in v['pending']),
+            assigned=[x for x in v['pending'] if x['assignment'] is not None]),
         receipt_names=sorted(v['receipts']),transition_failure=v['receipts'].get('TAIL_TRANSITION_FAILED.json'),
         training_failure=v['receipts'].get('WARM_B_FAILED_T1.json'),stop=v['receipts'].get('WARM_GUIDED_STOP_V2.json'),logs=v['logs'])))
     return v

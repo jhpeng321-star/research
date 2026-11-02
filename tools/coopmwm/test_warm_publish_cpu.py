@@ -55,6 +55,7 @@ class PublishTests(unittest.TestCase):
         self.assertIn('excludes collection time',text)
         self.assertNotIn('1.221h',text)
         self.assertTrue(p.publishable('WARM_B_FAILED_Q1.json'))
+        self.assertTrue(p.publishable('WARM_B_FAILED_T1.json'))
 
 
 if __name__=='__main__':unittest.main()

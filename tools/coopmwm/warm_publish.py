@@ -13,7 +13,7 @@ def number(value):return 'NA' if value is None else f'{value:.4g}'
 
 PUBLIC_RULES=(r'(?:A|B|R|AB)_(?:UPDATE|CHECK|DEV|VIABILITY)_(?:PRESERVED_)?[0-9]{3}\.json',
               r'B_EXACT_VIABILITY_[0-9a-f]{64}\.json',r'ACCEL_EXACT_PLAN_[0-9]{3}(?:_FAILED)?\.json',
-              r'WARM_[ABR]_(?:FAILED(?:_V[35]|_Q1)?|PAUSED)\.json',r'(?:WARM_GUIDED_STOP(?:_V2)?|STOP)\.json',
+              r'WARM_[ABR]_(?:FAILED(?:_V[35]|_Q1|_T1)?|PAUSED)\.json',r'(?:WARM_GUIDED_STOP(?:_V2)?|STOP)\.json',
               r'PAUSE_[A-Za-z0-9_]+\.json')
 
 
