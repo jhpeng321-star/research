@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 import threading
 import time
-from .warm_broker import Remote,worker_endpoints
+from .warm_broker import Remote,worker_endpoints,WorkerNotReady
 from .warm_spool import immutable
 from .warm_health import assert_running,HealthPause
 from .protocol import digest
@@ -281,6 +281,11 @@ def run(root,config_path):
     for name in ('broker_completed','capacity_declines','capacity_admissions'):(root/name).mkdir(exist_ok=True)
     stop=threading.Event();mutex=threading.Lock();inflight=set();errors=[];quarantined=set()
 
+    def record_stop(value):
+        # One STOP receipt; later threads observing it must not die on a conflict.
+        with mutex:
+            if not stop_path.exists():immutable(stop_path,value)
+
     def worker(endpoint):
         remote=Remote(root,endpoint);key=None
         try:
@@ -340,8 +345,8 @@ def run(root,config_path):
         except BaseException as error:
             if not isinstance(error,WorkerUnavailable) and not slot_local(error):
                 errors.append(repr(error));stop.set()
-                if not isinstance(error,HealthPause) and not stop_path.exists():
-                    immutable(stop_path,dict(error=repr(error),source='capacity broker',unix=time.time()))
+                if not isinstance(error,HealthPause):
+                    record_stop(dict(error=repr(error),source='capacity broker',unix=time.time()))
                 return
             # This slot is quarantined until an explicit owned replacement is
             # admitted. Other slots and policy/SUMO episodes remain independent.
@@ -384,8 +389,7 @@ def run(root,config_path):
             stop.wait(.1)
     except BaseException as error:
         errors.append(repr(error));stop.set()
-        if not stop_path.exists():
-            immutable(stop_path,dict(error=repr(error),source='capacity broker control',unix=time.time()))
+        record_stop(dict(error=repr(error),source='capacity broker control',unix=time.time()))
     finally:
         for t in threads.values():t.join()
         lock.close()

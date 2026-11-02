@@ -96,6 +96,10 @@ def main(root):
     claim=(root/'SPOOL_WORKER.claim').open('a')
     fcntl.flock(claim,fcntl.LOCK_EX|fcntl.LOCK_NB)
     binding=json.loads((root/'GPU_BINDING.json').read_text())
+    # Registered resource extensions are ADDITIVE records (MAIN16:51); the
+    # immutable binding keeps its original clock.
+    from .resource_config import clocks
+    binding=clocks(root,binding)
     assert binding.get('memory_mode')=='warm' and binding.get('startup_qualification')
     assert binding.get('speed2') and binding.get('speed2_transfers')
     signal.signal(signal.SIGHUP,signal.SIG_IGN)

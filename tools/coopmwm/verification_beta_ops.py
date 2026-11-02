@@ -105,6 +105,10 @@ def _resource_gpu_main(root,deadline,amendment):
 
 def extend_register():
     """Register MAIN16:34 before changing any resource clocks or process owners."""
+    # MAIN16:51: superseded. This path replaced immutable bindings in place
+    # (V1 failed with FileExistsError on WARM_BINDING.json). The extension is the
+    # additive RESOURCE_EXTENSION_1651 record read by resource_config.clocks.
+    raise ValueError('superseded by additive RESOURCE_EXTENSION_1651 (MAIN16:51); never overwrite immutable bindings')
     from . import ops
     from .protocol import REGISTRY,checked,sha
     from .warm_deploy import ROOT
