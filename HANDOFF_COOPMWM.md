@@ -1,5 +1,21 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN1556ALLOCATIONAPPLIED16:04:22UTC+8/unix1793606662: final-only375800
+transfer REGISTERED758ad384/commitca2a1022; exactgrade431160->55360,
+finaltest691200/pairedbranch1297400; cap9500000/train2840400/discovery150200
+unchanged. B25-48trainingalreadyreleased; no double counting. SOURCE4tiny
+final-only explicitbudget adapter (source3 otherwise readsoldphasecaps),
+89CPU/PASS0skips23.55s/zeroSUMO, commitf037d749. Originalsource3retained.
+NEWfinal689787/start62093997 cpuQbootb8bc1fcb LIVE/S, STARTED_V2/noFAILED,
+23A24v2completed at1793606718/sampleactualcheckpoint24SHA verified. ALL673
+opaqueoriginals+386invalid375800chargedjobs retained; NOoutcomeopening.
+Oldheld625637NEVERresumed: verified386closures/noSUMOdescendants; ONLYits
+24idlepoolchildrenTERM andparentKILL byboot/start/argv identity; nootherPID.
+FINAL_ENDPOINT_RECOVERY_DISPATCH_V2 adoptsoneowner; NEVERredispatch/oldreplace.
+TrainingB598899/R599343/broker545008/grader598089 retained, A48/B3/R3.
+NeedB4..6viability/curves+resourceextensionbeforeoriginal18:07:02deadline.
+Use final_recovery_ops status foropaqueprogress; previousholdnotes historical.
+
 15:51STATUS1793605864A48/B3/R3, B598899/R599343/broker545008/grader598089LIVE,
 stopNULL/noPAUSE/currentfailures{}. Charged3977330, disk5313327104,shm14335131648.
 FINALONLY625637remainsdeliberatelyT/nooutcomeopening; correctedsource3NOTdeployed

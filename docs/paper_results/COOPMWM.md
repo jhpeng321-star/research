@@ -1,5 +1,26 @@
 # S-COOPMWM — live checks
 
+## Approved final-only recovery live — 16:04:22 UTC+8
+- MAIN15:56 allocation registered as `758ad384…`, commit `ca2a1022`:
+  **375,800 sim-s** transferred from remaining separate exact grading
+  (431,160→55,360); final-test allocation **691,200**, paired-branch **1,297,400**.
+  Total stays **9,500,000**; training/discovery/verification allocations retained.
+  This uses the remaining freed extended-B grading allocation; B-u25–48 training
+  had already been released and is not counted a second time.
+- The source3 checkpoint repair is retained. A final-only accounting adapter was
+  needed because it otherwise loads the old immutable training binding's phase
+  caps. Frozen `finalendpoint4`: **89 CPU PASS**, zero skips, **23.55 s**, zero
+  SUMO/inference, commit `f037d749`. Training bindings and supervisors retained.
+- New detached final coordinator **689787/start62093997** is live. Its held
+  predecessor was never resumed: all386 invalid jobs were closed, no physics
+  descendants remained, and only its identity-verified idle pool and parent
+  were terminated. All charges and original673 opaque receipts remain retained.
+- At unix1793606718: **23 corrected A24v2 jobs complete**. Published checkpoint
+  metadata verifies actual **A-u24 SHA**; no failure or outcome opening. Final
+  analysis remains gated on B-u24 and R-u24. No final outcome values were read.
+- B/R collection, four GPU slots, exact grader and observe-only publisher continue.
+  Original resource deadline **18:07:02 UTC+8** still needs registered continuation.
+
 ## Final-only engineering hold — spawned-worker checkpoint authority
 - **Final coordinator625637 is deliberately frozen**, before any outcome opening.
   B/R training, four GPU workers, exact grader and observer continue.
