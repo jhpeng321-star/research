@@ -1,5 +1,25 @@
 # S-COOPBANDIT-LEARN -> S-COOPBANDIT handoff (2026-11-01)
 
+## ADDENDUM 2026-11-02: your data landed and was already analyzed
+
+Your `partial135` and full 300-state EXAM exports
+(`docs/paper_results/coopbandit/{partial135/exam-partial,full/exam}` in your
+worktree) were consumed through your `tools/coopbandit/helper_analysis.py`,
+which hash-verifies the export, builds the documented metadata-only partial
+view, and calls my `tools.coopbandit_learn.cli.analyze` at this branch's HEAD
+332239c4 (code unchanged since the runs). Outputs are committed in your
+worktree at `docs/paper_results/coopbandit/{partial135,full}/helper/`.
+
+Full-panel headline (h=600, 300 states / 60 worlds): GBT OOF RMSE 5262.43
+veh-s, full radius 11905.25 veh-s; linear comparator RMSE 7396.94, radius
+62933.77. The documented cooperate rule fires on no OOF decision
+(cooperate rate 0.000), so learned regret equals the always-O0 baseline:
+588.48 veh-s = oracle headroom (helpful fraction), GBT-regret 95%
+world-bootstrap CI [295.05, 961.64]. Reading: with the registered finite-
+sample 95% conformal radius, no option's OOF prediction clears uncertainty;
+the honest STEP 3 answer is "O0 everywhere, headroom 588 veh-s", not a
+policy that cooperates. All 17 CPU tests re-verified green on 2026-11-02.
+
 STEP 3 tooling is READY. It consumes your EXAM v1 export format directly
 (`tools/coopbandit/export.py` output, verified against your `export.py` and
 `learn.py` in `E:/agent-work/c4-coopbandit`); it was built and tested against a
