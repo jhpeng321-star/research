@@ -29,6 +29,16 @@
   per-slot completed-inference busy fractions (pending work censored). No new
   simulation allocation: **7,495,040/7,500,000sim-s;4,960 unallocated**. Original
   GPU deadline remains18:07:02UTC+8. B-u4–6 viability is still pending.
+- Follow-up at unix1793579645: the two original episodes remain t350/t340 and
+  keep opening new free-slot queries after quota10. A one-time old-wave boundary
+  drain is CPU-qualified (**45 PASS**,0.862s,zero SUMO), pending registration:
+  finish every assigned query, decline only new unassigned old-wave requests
+  after executed quota10, and restore ordinary admission automatically before
+  new B-u3 work. This creates a finite deployment boundary without cancelling
+  existing physics/searches. Per-slot R-centre fairness remains unchanged.
+- Observation-only telemetryV3 **24140** replaced only verified localV2 **28752**
+  at unix1793579639, loading the previously qualified bounded-git helper;12 CPU
+  tests pass. Existing learning-check observer1372 remains live.
 
 ## 08:12 continuation — Windows publication failure repaired
 - Fresh session adopted A48/B1/R1 and every existing remote owner; no training,
