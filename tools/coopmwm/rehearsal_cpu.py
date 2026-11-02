@@ -486,7 +486,7 @@ def build_root(root, cfg):
 
 def _check_worlds():
     from .accel_protocol import worlds
-    return worlds('check')[:3]
+    return worlds('check')        # the complete registered check panel (paired() requires it)
 
 
 def child_install(parent=False):
