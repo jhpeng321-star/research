@@ -17,6 +17,7 @@ finalists (Spearman 0.44, top-1 agreement 0.51 on TRAIN dev searches).
 """
 import json
 import math
+from pathlib import Path
 
 import numpy as np
 
@@ -153,3 +154,103 @@ def evaluate_configs(heldout, configs=CONFIGS, bootstraps=2000, collapse_ratio=.
     res['recommended'] = min(ok, key=lambda n: ok[n]['futures_ratio']) if ok else None
     res['per_search'] = rows
     return res
+
+
+# --------------------------------------------------------------------------- B. state triage
+
+TRIAGE_FEATURES = ('mappo_minus_policy', 'policy_cost', 'centre_gap', 'size', 'merge_dense', 'mean_v', 'sd_v',
+                   'spread_m', 'lanes', 'leader_s', 'zone_occupancy')
+
+
+def triage_features(request, centre_costs, centre_gap=None):
+    """Decision-time features: request rows/group (observable) + the K1/H300 centre rollout costs
+    {'policy': [..], 'MAPPO': [..]} (team_delay; already computed before any screening)."""
+    rows = request['rows']; by = {r['vid']: r for r in rows}
+    g = [by[v] for v in request['group'] if v in by]
+    s = np.array([float(r['s_m']) for r in g]); v = np.array([float(r['v_mps']) for r in g])
+    cost = lambda k: float(np.mean([x['team_delay'] if isinstance(x, dict) else x for x in centre_costs[k]]))
+    zone = sum(1 for r in rows if -100. <= float(r['s_m']) <= 75.44)
+    try:
+        from .exploration import regime as _regime
+        dense = float(_regime(rows) == 'merge-dense')
+    except Exception:   # noqa: BLE001 - regime helper needs live-only modules; fall back to the request label
+        dense = float(request.get('regime') == 'merge-dense')
+    return dict(mappo_minus_policy=cost('MAPPO')-cost('policy'), policy_cost=cost('policy'),
+                centre_gap=float(centre_gap or 0.), size=float(len(g)), merge_dense=dense, mean_v=float(v.mean()),
+                sd_v=float(v.std()), spread_m=float(s.max()-s.min()), lanes=float(len({int(r['lane']) for r in g})),
+                leader_s=float(s.max()), zone_occupancy=float(zone))
+
+
+def triage_data(cache):
+    """(features, y, world, size, search id) for every logged B search with finalists + centre rollout."""
+    import glob
+    out = []
+    for f in sorted(glob.glob(str(cache)+'/cpuQ/home/ubuntu/*/responses/*.json')):
+        d = json.load(open(f)); r = d.get('result', d)
+        if not isinstance(r, dict) or not r.get('finalists') or not isinstance(r.get('centre_rollout'), dict):
+            continue
+        req = str(Path(f).parent.parent/'requests'/Path(f).name)
+        try:
+            request = json.load(open(req))
+        except OSError:
+            continue
+        try:
+            wid = int(request.get('world_id'))
+        except (TypeError, ValueError):
+            continue
+        if not 986000 <= wid < 986072:
+            continue
+        request = dict(request, regime=r.get('regime'))
+        x = triage_features(request, r['centre_rollout']['costs'], r.get('centre_open_loop_gap'))
+        y = max(0., max(float(c['saving_vs_policy']) for c in r['finalists']))
+        out.append(dict(x=x, y=y, world=str(wid), m=len(request['group']), id=request.get('state_id')))
+    return out
+
+
+def fit_triage(rows):
+    """Ridge (alpha 10) on standardised features -> portable JSON coefficients."""
+    X = np.array([[r['x'][k] for k in TRIAGE_FEATURES] for r in rows]); y = np.log1p(np.array([r['y'] for r in rows]))
+    mu, sd = X.mean(0), X.std(0); sd[sd == 0] = 1.
+    Z = (X-mu)/sd
+    w = np.linalg.solve(Z.T@Z+10.*np.eye(Z.shape[1]), Z.T@(y-y.mean()))
+    return dict(features=list(TRIAGE_FEATURES), mean=mu.tolist(), sd=sd.tolist(), coef=w.tolist(), intercept=float(y.mean()),
+                target='log1p(max(0, best WM-final saving vs policy continues)) [veh-s]', fit_searches=len(rows))
+
+
+def triage_score(request, centre_costs, model, centre_gap=None):
+    """Score to hand to the collector (higher = search first). ``model`` = ``fit_triage`` JSON."""
+    x = triage_features(request, centre_costs, centre_gap)
+    z = (np.array([x[k] for k in model['features']])-np.array(model['mean']))/np.array(model['sd'])
+    return float(model['intercept']+z@np.array(model['coef']))
+
+
+def evaluate_triage(dev, held, bootstraps=2000):
+    model = fit_triage(dev)
+    sc = np.array([model['intercept']+((np.array([r['x'][k] for k in model['features']])-np.array(model['mean']))
+                                       / np.array(model['sd']))@np.array(model['coef']) for r in held])
+    y = np.array([r['y'] for r in held]); wall = np.array([SEARCH_WALL_S[min(6, max(2, r['m']))] for r in held])
+    worlds = [r['world'] for r in held]; out = dict(model=model, heldout=len(held), worlds=len(set(worlds)),
+                                                    total_y=float(y.sum()))
+    rng = np.random.default_rng(SEED)
+    single = {k: np.array([r['x'][k] for r in held]) for k in ('mappo_minus_policy', 'policy_cost')}
+    for frac in (.5, 1/3):
+        n = max(1, int(round(frac*len(held))))
+
+        def kept(score):
+            sel = np.argsort(-score, kind='stable')[:n]
+            return float(y[sel].sum()/max(y.sum(), 1e-12)), float(wall[sel].sum()/wall.sum())
+        k, wf = kept(sc)
+        # world-bootstrap CI of the kept fraction
+        u = sorted(set(worlds)); idx = {w: [i for i, x in enumerate(worlds) if x == w] for w in u}; bs = []
+        for _ in range(bootstraps):
+            ii = np.concatenate([idx[u[j]] for j in rng.integers(0, len(u), len(u))])
+            nn = max(1, int(round(frac*len(ii)))); sel = ii[np.argsort(-sc[ii], kind='stable')[:nn]]
+            bs.append(y[sel].sum()/max(y[ii].sum(), 1e-12))
+        oracle = float(np.sort(y)[::-1][:n].sum()/max(y.sum(), 1e-12))
+        out[f'top_{round(frac, 2)}'] = dict(kept=k, ci95=[float(np.quantile(bs, .025)), float(np.quantile(bs, .975))],
+                                            wall_fraction=wf, kept_per_gpu_second_ratio=k/wf if wf else None,
+                                            random=frac, oracle=oracle,
+                                            single_feature={f: kept(v)[0] for f, v in single.items()})
+    out['passed'] = bool(out['top_0.5']['ci95'][0] > .5)
+    out['enough_data'] = len(held) >= 40 and len(set(worlds)) >= 8
+    return out
