@@ -1,4 +1,15 @@
-# HANDOFF: c4/harden-int (worktree E:/agent-work/c4-harden-int), 2026-11-03 (resumed session)
+# HANDOFF: c4/harden-int (worktree E:/agent-work/c4-harden-int), 2026-11-03 (INTEGRATION COMPLETE)
+
+READY: HARDEN_INT_READY.json written at 8dd0607c (commit field d51051a9); HARDEN_INT_REPORT.md has
+the full scenario table, receipt evidence and test accounting. All 7 rehearsal scenarios completed
+on the current code (rp4 batch, roots h3int2, results h3res/rp4): a_clean, b_slow_search,
+e_malformed, c2_worker_dies_on_centre on HEAD; d_transport_3 and f_branch_crash also rp4;
+c_worker_dies latest at rp6 (pre-amendment, fault handling unaffected). No engineering STOPs.
+Test counts at 1d476704: 443 pass / 62 fail / 1 error (breakdown in READY.json; the only non-env
+delta is 3 stale budget-expectation failures caused by the registered 22:32 cap amendment
+febba5bc - not hand-edited, cpuQ suite is the gate). Remaining work is LIVE ONLY (operator):
+cpuQ suite rerun, arrival_fit phase-end wiring, LS layout read-only check, offline bank builder
+(MAIN 04:06). Earlier resume notes below are kept for the record.
 
 RESUME STATE (2026-11-03): items (1)-(3) of the original brief were already done (f023f10c, 62b80987);
 (D)/(E)/(F) cooperation+exposure (b58ca5b2) and (G) lesson check (4f090b76) are implemented. This
