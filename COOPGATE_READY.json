@@ -4,7 +4,7 @@
   "worktree": "E:/agent-work/c4-coop-gate",
   "ready": true,
   "based_on": "live c4/coopnative code (base commit e5603466, branch c4/coop-gate)",
-  "head_commit": "101215a8",
+  "head_commit": "ea740f59",
   "commits": [
     {"sha": "0ef532e2", "msg": "coopmwm: add COOPFIX gate (offline CPU imitation-phase verdict) with stubs for imitation_trust and bank_filter"},
     {"sha": "04087246", "msg": "coopmwm: merge c4/bank-stat-filter (statistical bank filter, BANKFILT READY) into the coop-gate branch"},
@@ -53,5 +53,6 @@
     "v2v_default_off_byte_identical": "no pre-existing module's default behaviour changed; option-off paths pinned by tests (gate-policy extra=0 forward equality; bank_pairs/pair_flags/filter/trust default-off suites all green after both merges)",
     "merged_branches": "c4/bank-stat-filter (BANKFILT READY) + c4/imit-fullpass (IMITFIX READY) merged and re-tested"
   },
-  "notes": "Fixed one latent bug in the merged c4/imit-fullpass code: bank_imitation._own_pass referenced an undefined `stop` in the error-not-decreased note path (NameError whenever the final cooperative/overall error did not decrease); it now writes the disclosure unconditionally (own_pass never stops on KL)."
+  "notes": "Fixed one latent bug in the merged c4/imit-fullpass code: bank_imitation._own_pass referenced an undefined `stop` in the error-not-decreased note path (NameError whenever the final cooperative/overall error did not decrease); it now writes the disclosure unconditionally (own_pass never stops on KL).",
+  "resume_session_fix": "ea740f59 (2026-11-03): the `status` subcommand now PRINTS the option READY/live state (as this receipt already documented); the returned dict is unchanged so tests keep passing - coopfix suite re-run green (16 passed)."
 }
