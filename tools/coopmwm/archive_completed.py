@@ -16,6 +16,7 @@ WARM = HOME/'coopmwm20261102_warm1'
 CONTROL = HOME/'coopmwm_archive_20261103_1450'
 DEST = '/root/cpuq_archive_20261103/interim008_observables'
 HOST = 'root@connect.westb.seetacloud.com'
+GPU_PYTHON = '/root/miniconda3/bin/python'
 HOST_KEY = '[connect.westb.seetacloud.com]:53897 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK3kwiFvUVgx1wVKa/LqYm6JNHZqht3d+OSpVJVG/AWa\n'
 BLOCKED = ('sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1',
            'hetdata_truth', 'vehicle_params', 'driver_params', 'vtype')
@@ -140,7 +141,7 @@ def run():
     if key.exists(): assert key.read_text() == HOST_KEY
     else: key.write_text(HOST_KEY)
     setup = "from pathlib import Path; import shutil; p=Path("+repr(DEST)+"); assert p.parent.parent.is_dir(); p.parent.mkdir(exist_ok=True); p.mkdir(exist_ok=True); assert shutil.disk_usage(p).free>"+str(sum(x['bytes'] for x in manifest)+1024**3)
-    subprocess.run(ssh()+[HOST, 'python -c '+__import__('shlex').quote(setup)], check=True, timeout=60)
+    subprocess.run(ssh()+[HOST, GPU_PYTHON+' -c '+__import__('shlex').quote(setup)], check=True, timeout=60)
     filelist = CONTROL/'FILES.null'
     data = b''.join(x['path'].encode()+b'\0' for x in manifest)
     if filelist.exists(): assert filelist.read_bytes() == data
@@ -165,7 +166,7 @@ else:
  with out.open('x') as f:json.dump(v,f,sort_keys=True)
 print(json.dumps(v))
 '''.replace('Path(DEST)', 'Path('+repr(DEST)+')').replace('MH)', repr(mh)+')')
-    result = subprocess.run(ssh()+[HOST, 'python -c '+__import__('shlex').quote(code)],
+    result = subprocess.run(ssh()+[HOST, GPU_PYTHON+' -c '+__import__('shlex').quote(code)],
         input=json.dumps(manifest), capture_output=True, text=True, check=True, timeout=180)
     verified = json.loads(result.stdout)
     assert verified['verified_files'] == len(manifest) and verified['manifest_sha256'] == mh
