@@ -1,6 +1,7 @@
 # SEARCH SPEED REPORT (plain-search speed-ups, registered v2; Paper A)
 
-Continuation of 2026-11-02 (~16:00 UTC). Branch `c4/plan-proposer`, CPU only (no SUMO, no GPU),
+Continuation of 2026-11-02 (~16:00 UTC); **topped up 2026-11-03 (~07:00 UTC)** with the `lscollect1`
+receipts that landed overnight. Branch `c4/plan-proposer`, CPU only (no SUMO, no GPU),
 TRAIN worlds 986000-986071 only, no sealed paths. Protocol: `BUDGET_SEARCH_PREREG_V2.md`
 (committed 29bb908e BEFORE any held-out result). Ranked recommendations: `SEARCH_SPEED_RESULT.json`.
 **Nothing here activates anything: owner-approved only (MAIN).**
@@ -9,46 +10,54 @@ TRAIN worlds 986000-986071 only, no sealed paths. Protocol: `BUDGET_SEARCH_PRERE
 - **Held-out:** the fixed 18 of 72 TRAIN worlds (`learned_screen_cv.HELD72`); developed/calibrated on the other 54 only.
 - **Noise calibration (dev only, registered rule):** alpha from {0.35, 0.5, 0.7} whose simulated screen-vs-final
   Spearman among finalists is closest to the observed 0.44 → **alpha = 0.5** (0.35→0.506, 0.5→0.457, 0.7→0.353;
-  `E:/agent-work/_plan_proposer_cache/ls/calib.json`). All results below use `unit='pool_sd'` (v2), horizons
-  unchanged in every config (screen K4/H300, final K8/H_final; only iterations / population / screen_K change).
-- **Data:** 28 held-out full-pool searches / 11 worlds; **27 evaluated** (1 skipped: surrogate pool too small).
-  Registered minimum is >= 40 searches (>= 8 worlds): **NOT ENOUGH DATA** — treat every verdict below as provisional.
+  `E:/agent-work/_plan_proposer_cache/ls/calib.json`, frozen BEFORE any v2 held-out look). All results below use
+  `unit='pool_sd'` (v2), horizons unchanged in every config (screen K4/H300, final K8/H_final; only iterations /
+  population / screen_K change).
+- **Data (top-up):** the overnight refresh (read-only collect, 2026-11-03) brought held-out full-pool receipts from
+  28 → **62 searches over all 18 held worlds**; **56 evaluated / 17 worlds** (6 skipped: surrogate unavailable or
+  degenerate pool scale). This clears the registered minimum (>= 40 searches, >= 8 worlds): **ENOUGH DATA.**
 
 ## 1. v2 held-out check (budget/screen configs vs independent plain search `plain_alt`)
 
-Seed-noise margins on the same held-out searches: d8 = 0.504, d1 = 0.513 pool-sd.
-Non-inferior = q8 CI-lo > -d8 AND q1 CI-lo > -d1 AND elite clusters >= 0.75 x plain_alt (8.81 → gate 6.61).
-Held-out noise-model sanity: simulated screen-vs-final Spearman 0.348 / top-1 agreement 0.357 (observed dev 0.44/0.51).
+Seed-noise margins on the same held-out searches: d8 = 0.417, d1 = 0.439 pool-sd.
+Non-inferior = q8 CI-lo > -d8 AND q1 CI-lo > -d1 AND elite clusters >= 0.75 x plain_alt (8.07 → gate 6.05).
+Held-out noise-model sanity: simulated screen-vs-final Spearman 0.400 / top-1 agreement 0.323 (observed dev 0.44/0.51).
 
 | config | q8 - plain_alt [95% CI] | q1 - plain_alt [95% CI] | WM futures x | wall s/search (x plain) | elite clusters | top-8 patterns | spread x | top-1 most-common | verdict |
 |---|---|---|---|---|---|---|---|---|---|
-| **it2+K2** | -0.240 [-0.419, -0.068] | -0.304 [-0.477, -0.119] | **0.409** | **282 (2.47x)** | 10.81 | 3.59 | 1.039 | 0.444 (6 distinct) | **PASS (rank 1)** |
-| K2 | -0.121 [-0.285, +0.101] | -0.137 [-0.344, +0.112] | 0.557 | 386 (1.81x) | 8.74 | 3.04 | 1.002 | 0.296 (9 distinct) | PASS (rank 2) |
-| it2 | -0.122 [-0.271, -0.028] | -0.095 [-0.256, +0.025] | 0.704 | 490 (1.42x) | 10.70 | 3.19 | 1.044 | 0.259 (6 distinct) | PASS (rank 3) |
-| K2+pop50 | -0.439 [-0.695, -0.205] | -0.510 [-0.792, -0.276] | 0.347 | 239 (2.92x) | 8.04 | 3.33 | 0.995 | 0.370 (8 distinct) | FAIL (CI below margin) |
-| pop50_it2 | -0.507 [-0.807, -0.129] | -0.516 [-0.814, -0.107] | 0.425 | 294 (2.37x) | 8.59 | 3.44 | 0.985 | 0.296 (6 distinct) | FAIL (CI below margin) |
-| pop50 | -0.138 [-0.353, +0.142] | -0.122 [-0.356, +0.178] | 0.581 | 403 (1.73x) | 6.56 | 2.56 | 0.967 | 0.296 (7 distinct) | FAIL (elite-cluster gate) |
-| plain | +0.260 [+0.056, +0.425] | +0.248 [+0.029, +0.415] | 1.000 | 698 (1.00x) | 9.78 | 2.96 | 1.000 | 0.259 (8 distinct) | reference |
-| plain_alt | 0 (ref) | 0 (ref) | 1.000 | 698 (1.00x) | 8.81 | 2.78 | 1.010 | 0.222 (7 distinct) | reference |
+| **K2** | -0.136 [-0.252, -0.035] | -0.136 [-0.274, -0.017] | 0.556 | 388 (**1.81x**) | 8.00 | 2.70 | 0.988 | 0.250 (11 distinct) | **PASS (rank 1)** |
+| **it2** | -0.192 [-0.393, -0.071] | -0.162 [-0.365, -0.041] | 0.704 | 493 (**1.43x**) | 9.93 | 3.27 | 1.039 | 0.232 (9 distinct) | **PASS (rank 2)** |
+| it2+K2 | -0.235 [-0.418, -0.128] | -0.247 [-0.435, -0.123] | **0.408** | 283 (2.48x) | 9.91 | 3.52 | 1.049 | 0.357 (11 distinct) | FAIL (q8 CI-lo misses margin by 0.001) |
+| K2+pop50 | -0.369 [-0.643, -0.181] | -0.392 [-0.677, -0.195] | 0.346 | 239 (2.92x) | 7.62 | 3.00 | 0.992 | 0.286 (9 distinct) | FAIL (CIs below margin) |
+| pop50_it2 | -0.540 [-0.836, -0.284] | -0.543 [-0.844, -0.273] | 0.424 | 294 (2.37x) | 8.77 | 3.34 | 0.999 | 0.196 (9 distinct) | FAIL (CIs below margin) |
+| pop50 | -0.261 [-0.478, -0.085] | -0.241 [-0.510, -0.062] | 0.580 | 405 (1.73x) | 6.88 | 2.64 | 0.968 | 0.232 (10 distinct) | FAIL (CIs below margin) |
+| plain | +0.130 [-0.030, +0.255] | +0.118 [-0.061, +0.240] | 1.000 | 702 (1.00x) | 8.43 | 2.88 | 1.000 | 0.286 (11 distinct) | reference |
+| plain_alt | 0 (ref) | 0 (ref) | 1.000 | 702 (1.00x) | 8.07 | 2.62 | 0.990 | 0.250 (10 distinct) | reference |
 
 Wall per search = COOPMWM.md measured wall (by group size) x the config's WM-futures ratio.
 
 **Recommendation (ranked, full detail in `SEARCH_SPEED_RESULT.json`):**
-1. **it2_K2** (2 iterations, screen K2; population unchanged): 2.45x fewer WM futures, 2.47x wall (698 → 282 s/search),
-   non-inferior on both q8 and q1, elite clusters and sample spread HIGHER than plain_alt (no diversity loss);
-   top-1 repetition rises (0.444 most-common share) — watch if the downstream verifier prefers distinct picks.
-2. **K2** (screen K2 only): 1.80x futures / 1.81x wall, q8 CI straddles 0.
-3. **it2** (2 iterations only): 1.42x, q8 CI strictly below 0 but well inside the seed-noise margin.
+1. **K2** (screen futures 2, everything else unchanged): 1.80x fewer WM futures, 1.81x wall (702 → 388 s/search).
+   The ONLY config that clears both registered CI gates with room (q8 lo -0.252 vs -0.417 margin; q1 lo -0.274 vs
+   -0.439) and the elite-cluster gate. Mean deltas are negative but small relative to seed noise.
+2. **it2** (2 iterations, full population): 1.42x futures / 1.43x wall; CI inside the seed-noise margin with more
+   headroom than at n=27; elite clusters 9.93 (above plain_alt) — no diversity loss.
+3. **it2_K2 (2.48x)** is the fastest config but **fails its registered gate at n=56**: q8 CI-lo -0.418 vs margin
+   -0.417 — a 0.001 miss. It would need its own pre-registered re-check (e.g. more held searches) to be considered;
+   NOT usable now under the registered rule.
 
-Population cuts (pop50 in any combination) stay unreliable on held-out too — every pop50 variant fails its
-registered gate (pop50 via the elite-cluster gate; pop50_it2 and K2_pop50 via CIs below the seed-noise margin),
-consistent with the v1 dev read.
+Population cuts stay unreliable with enough data: every pop50 variant now fails via CIs below the seed-noise margin
+(pop50 no longer fails only the elite-cluster gate — its q8/q1 CIs are below margin too). Consistent with v1 dev.
 
-Caveats: (a) NOT ENOUGH DATA (27/40 searches) — re-run before any activation; (b) q8 deltas of the passing configs
-are negative in mean (small real quality loss cannot be excluded; it2_K2's whole CI is below 0 but within the
-registered seed-noise margin — the registered non-inferiority criterion); (c) plain beats plain_alt by +0.26 on these
-searches, i.e. seed asymmetry widens the effective safety margin; (d) surrogate replays measure WM-pool quality
-(best-of-final-top-8 by the search's own truth surrogate), not exact-SUMO benefit.
+What changed at n=56 vs the provisional n=27 read: it2_K2 loses non-inferiority (its q8 CI tightened around a more
+negative mean, -0.240 → -0.235 with lo -0.419 → -0.418 while the margin narrowed 0.504 → 0.417); K2 and it2 keep it
+with margin to spare. The ranking flips: **K2 first, it2 second**. Registered criterion satisfied: ENOUGH DATA.
+
+Caveats: (a) mean q8/q1 deltas of ALL reduced configs are negative — the registered criterion tolerates small losses
+within seed noise, but a small real quality cost cannot be excluded, and plain still beats plain_alt by +0.13 on
+these searches; (b) top-1 quality drops more than top-8 (K2 q1 lo -0.274): if the downstream verifier needs the best
+single pick, prefer it2; (c) surrogate replays measure WM-pool quality (best-of-final-top-8 by the search's own truth
+surrogate), not exact-SUMO benefit.
 
 ## 2. State triage (v2 B: skip states unlikely to hold best-plan saving)
 

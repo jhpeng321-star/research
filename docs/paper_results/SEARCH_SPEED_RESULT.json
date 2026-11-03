@@ -1,183 +1,148 @@
 {
- "generated_utc": "2026-11-02T15:52:00+00:00",
+ "generated_utc": "2026-11-03T07:00:00+00:00",
  "protocol": "BUDGET_SEARCH_PREREG_V2.md (commit 29bb908e)",
  "data": {
-  "held_searches": 27,
-  "held_worlds": 11,
-  "enough_data": false,
+  "held_searches": 56,
+  "held_worlds": 17,
+  "enough_data": true,
   "registered_minimum": ">= 40 searches and >= 8 worlds",
-  "note": "1 of 28 held searches skipped (surrogate pool too small)"
+  "note": "62 held full-pool receipts loaded after the 2026-11-03 lscollect1 refresh; 6 skipped (surrogate unavailable or degenerate pool scale)"
  },
  "noise": {
   "alpha": 0.5,
   "unit": "pool_sd",
-  "alpha_rule": "closest simulated screen-vs-final Spearman among finalists to observed 0.44 (dev only; ls/calib.json)",
+  "alpha_rule": "closest simulated screen-vs-final Spearman among finalists to observed 0.44 (dev only; ls/calib.json, chosen before any v2 held-out look)",
   "simulated_dev": {
    "alt_035": 0.506,
    "alt_05": 0.457,
    "alt_07": 0.353
   },
   "held_check": {
-   "spearman_screen_final_finalists": 0.3477891156462585,
-   "top1_agreement": 0.35714285714285715,
+   "spearman_screen_final_finalists": 0.40015360983102927,
+   "top1_agreement": 0.3225806451612903,
    "observed_dev": {
     "spearman": 0.44,
     "top1_agreement": 0.51
    }
   },
-  "margin_q8": 0.504,
-  "margin_q1": 0.513
+  "margin_q8": 0.417,
+  "margin_q1": 0.439
  },
  "horizons_unchanged": "screen K4/H300, final K8/H_final in every config; only iterations/population/screen_K change",
  "recommendation_ranked": [
   {
    "rank": 1,
-   "config": "it2_K2",
+   "config": "K2",
    "noninferior": true,
-   "wm_futures_ratio": 0.409,
-   "speedup_wm_futures": 2.45,
-   "wall_s": 282.4,
-   "speedup_wall": 2.47,
+   "wm_futures_ratio": 0.556,
+   "speedup_wm_futures": 1.8,
+   "wall_s": 387.9,
+   "speedup_wall": 1.81,
    "q8_minus_plain_alt": {
-    "mean": -0.24,
-    "ci_lo": -0.419,
-    "ci_hi": -0.068
+    "mean": -0.136,
+    "ci_lo": -0.252,
+    "ci_hi": -0.035
    },
    "q1_minus_plain_alt": {
-    "mean": -0.304,
-    "ci_lo": -0.477,
-    "ci_hi": -0.119
+    "mean": -0.136,
+    "ci_lo": -0.274,
+    "ci_hi": -0.017
    },
    "diversity": {
-    "elite_clusters": 10.81,
-    "top8_patterns": 3.59,
-    "spread_ratio": 1.039,
-    "top1_most_common_share": 0.444,
-    "top1_distinct": 6
+    "elite_clusters": 8.0,
+    "top8_patterns": 2.7,
+    "spread_ratio": 0.988,
+    "top1_most_common_share": 0.25,
+    "top1_distinct": 11
    }
   },
   {
    "rank": 2,
-   "config": "K2",
-   "noninferior": true,
-   "wm_futures_ratio": 0.5567,
-   "speedup_wm_futures": 1.8,
-   "wall_s": 386.3,
-   "speedup_wall": 1.81,
-   "q8_minus_plain_alt": {
-    "mean": -0.121,
-    "ci_lo": -0.285,
-    "ci_hi": 0.101
-   },
-   "q1_minus_plain_alt": {
-    "mean": -0.137,
-    "ci_lo": -0.344,
-    "ci_hi": 0.112
-   },
-   "diversity": {
-    "elite_clusters": 8.74,
-    "top8_patterns": 3.04,
-    "spread_ratio": 1.002,
-    "top1_most_common_share": 0.296,
-    "top1_distinct": 9
-   }
-  },
-  {
-   "rank": 3,
    "config": "it2",
    "noninferior": true,
-   "wm_futures_ratio": 0.7045,
+   "wm_futures_ratio": 0.704,
    "speedup_wm_futures": 1.42,
-   "wall_s": 490.1,
-   "speedup_wall": 1.42,
+   "wall_s": 492.6,
+   "speedup_wall": 1.43,
    "q8_minus_plain_alt": {
-    "mean": -0.122,
-    "ci_lo": -0.271,
-    "ci_hi": -0.028
+    "mean": -0.192,
+    "ci_lo": -0.393,
+    "ci_hi": -0.071
    },
    "q1_minus_plain_alt": {
-    "mean": -0.095,
-    "ci_lo": -0.256,
-    "ci_hi": 0.025
+    "mean": -0.162,
+    "ci_lo": -0.365,
+    "ci_hi": -0.041
    },
    "diversity": {
-    "elite_clusters": 10.7,
-    "top8_patterns": 3.19,
-    "spread_ratio": 1.044,
-    "top1_most_common_share": 0.259,
-    "top1_distinct": 6
+    "elite_clusters": 9.93,
+    "top8_patterns": 3.27,
+    "spread_ratio": 1.039,
+    "top1_most_common_share": 0.232,
+    "top1_distinct": 9
    }
   }
  ],
  "failed": [
   {
-   "config": "pop50",
+   "config": "it2_K2",
    "noninferior": false,
-   "why": "; elite clusters < 0.75 x plain_alt",
-   "wm_futures_ratio": 0.5813,
-   "wall_s": 403.5
-  },
-  {
-   "config": "pop50_it2",
-   "noninferior": false,
-   "why": "q8 CI lo < -margin; q1 CI lo < -margin",
-   "wm_futures_ratio": 0.4254,
-   "wall_s": 293.9
+   "why": "q8 CI lo -0.418 just below the -0.417 seed-noise margin (q1 and elite-cluster gates pass)",
+   "wm_futures_ratio": 0.408,
+   "wall_s": 283.2,
+   "speedup_wall": 2.48
   },
   {
    "config": "K2_pop50",
    "noninferior": false,
    "why": "q8 CI lo < -margin; q1 CI lo < -margin",
-   "wm_futures_ratio": 0.3474,
-   "wall_s": 239.1
+   "wm_futures_ratio": 0.346,
+   "wall_s": 239.3,
+   "speedup_wall": 2.92
+  },
+  {
+   "config": "pop50_it2",
+   "noninferior": false,
+   "why": "q8 CI lo < -margin; q1 CI lo < -margin",
+   "wm_futures_ratio": 0.424,
+   "wall_s": 294.4,
+   "speedup_wall": 2.37
+  },
+  {
+   "config": "pop50",
+   "noninferior": false,
+   "why": "q8 CI lo -0.478 < -margin 0.417; q1 CI lo -0.510 < -margin 0.439",
+   "wm_futures_ratio": 0.58,
+   "wall_s": 404.7,
+   "speedup_wall": 1.73
   }
  ],
  "primary": {
-  "config": "it2_K2",
-  "statement": "it2_K2 is non-inferior to plain_alt on best-of-final-top-8 (and top-1) at 2.47x wall / 2.45x WM futures",
-  "enough_data": false,
-  "activation": "owner-approved only (MAIN); data below registered minimum"
+  "config": "K2",
+  "statement": "K2 (screen futures 2, everything else unchanged) is the only config that clears both registered CI gates with room (q8 lo -0.252 vs -0.417 margin; q1 lo -0.274 vs -0.439) and the elite-cluster gate, at 1.81x wall / 1.80x WM futures; it2 passes at 1.42x; it2_K2 (2.48x) misses the q8 gate by 0.001",
+  "enough_data": true,
+  "activation": "owner-approved only (MAIN)"
+ },
+ "triage": {
+  "held_searches": 60,
+  "held_worlds": 18,
+  "enough_data": true,
+  "top_0_5_kept": 0.695,
+  "top_0_5_ci": [0.35, 0.882],
+  "top_0_5_per_gpu_second": 1.26,
+  "top_0_33_kept": 0.533,
+  "top_0_33_per_gpu_second": 1.43,
+  "registered_pass": false,
+  "verdict": "ordering only"
  },
  "warm_start": {
   "protocol": "BUDGET_SEARCH_PREREG_V2.md C",
-  "pairs_found": 87,
+  "pairs_found": 103,
   "pairs_evaluated": 6,
   "gate_min_pairs": 20,
   "gate_met": false,
   "evaluated": false,
-  "verdict": "NOT ENOUGH DATA (6 usable pairs < 20); exploratory only",
-  "scopes": {
-   "heldout": {
-    "searches": 2,
-    "worlds": 2,
-    "enough_data": false,
-    "q8_warm_minus_control": {
-     "mean": -0.39747848664428415,
-     "ci_lo": -0.7813244667874588,
-     "ci_hi": -0.013632506501109528
-    },
-    "q1_warm_minus_control": {
-     "mean": -0.23773318656812492,
-     "ci_lo": -0.46065509559163664,
-     "ci_hi": -0.014811277544613203
-    }
-   },
-   "dev": {
-    "searches": 4,
-    "worlds": 4,
-    "enough_data": false,
-    "q8_warm_minus_control": {
-     "mean": 0.06646885937532962,
-     "ci_lo": -0.23560667043277705,
-     "ci_hi": 0.462558101139915
-    },
-    "q1_warm_minus_control": {
-     "mean": 0.2751283324477612,
-     "ci_lo": -0.010320104412648856,
-     "ci_hi": 0.48333022014697413
-    }
-   }
-  },
+  "verdict": "NOT ENOUGH DATA (6 usable full-pool pairs < 20); exploratory only: held-out 4 pairs q8 -0.200 [-0.781, -0.003], dev 2 pairs q8 -0.048 [-0.162, +0.066]",
   "code": "budget_search_eval.episode_pairs / shifted_seeds / evaluate_warm_start; noisy_replay extra_seeds (default off)"
  }
 }
