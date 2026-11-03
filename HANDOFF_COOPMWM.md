@@ -1,5 +1,29 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
+## Fresh-session adoption — Nov3 22:31 +08
+- Full brief read through982; latest all-pass/per-seed/intent/all8 conditions adopted.
+  Historical warm qualification/restarts are DONE, never repeat from opening summary.
+- HEAD872f82e6 and every existing dirty/untracked artifact preserved. No staged work
+  or in-progress merge found; archive_move_recovery_ops.py local edit left untouched.
+- Fresh identity-checked memory_RECOVERY_STATUS_1793716212369358100 confirms
+  B21/R20 and all4 held legacy arm/grader PIDs ABSENT. Their expected HealthPause
+  failures remain evidence, not a restart trigger. A48 already complete.
+- warm_watch state still exposes historical owners and reports B/R paused=false
+  after shared-root pause retirement; use memory recovery/legacy hold receipts for
+  the actual intentional old-owner hold, never infer permission to restart from it.
+- Fresh SEARCH_CURRENT_AUDIT_1793716279288040900: B4 pending assigned searches,
+  R0 pending; a B answer completed at1793716163.88, so queue is still advancing.
+  Existing4slot services retained; no new search/physics/gates/PID control dispatched.
+- Charged10,202,670/global17,471,840; disk4,161,101,824bytes and MemAvailable
+  22,240,324kB. bank_verification_ext only137,180 remains: re-quote/register the
+  all8_both_seeds builder before use, do not silently borrow other restricted phases.
+- c4/launch-final currentlyf6288c07, LAUNCH_FINAL_READY.json absent. Integrator
+  owns unfinished release; do not merge WIP or recreate its code. Current audit
+  still targetsf3caf85f and is BLOCKING; no exact gate or V2V launch allowed yet.
+- Next independent work: prepare existing Linux qualifier to explicitly overlay
+  and test final per-seed/all8 dependencies, without touching learner/integrator.
+  MAIN cleanup agent owns storage; no parallel cleanup.
+
 ## CURRENT — MAIN21:58/21:58b/22:10 adopted; old B/R resource-paused
 - FULL brief now read through982. Latest: NO partial/fallback V2V launch;
   per_seed_v1 + same-own-seed gate + intent + clean exact-commit audit + Linux +

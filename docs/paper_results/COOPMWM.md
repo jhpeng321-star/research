@@ -1,5 +1,22 @@
 # S-COOPMWM — live checks
 
+## Fresh-session adoption — Nov3 22:31 UTC+8
+- Completed warm-memory qualification/restarts and all existing work are adopted.
+  Actual durable legacy checkpoints remain **A48/B21/R20**; the four old B/R
+  arm/grader owners are absent under their registered intentional resource hold.
+- The saved search queue is advancing: a B answer completed at1793716163.88;
+  four B requests remain assigned, with no pending R centre requests. Existing
+  services are retained, without duplicate dispatches or inference replay.
+- Charged10,202,670sim-s; registered cap17,471,840 under the later explicit
+  addenda. The bank-confirmation phase has137,180sim-s remaining, so the expanded
+  both-seed verification allowance must be re-quoted and registered before use.
+- `LAUNCH_FINAL_READY.json` is absent and the available audit targets the older
+  f3caf85f code with blockers. V2V and the real-bank gate stay held. Disk is about
+  3.88GiB, below the6GiB launch gate; independent cleanup remains MAIN-owned.
+- Evidence:`coopmwm/memory_RECOVERY_STATUS_1793716212369358100.json`,
+  `coopmwm/SEARCH_CURRENT_AUDIT_1793716279288040900.json`. Zero new simulation,
+  inference, process control or deletion by this continuation.
+
 ## Latest continuation — resource pause and audit corrections
 - MAIN21:58/22:10 now requires per-seed own-tape bank examples, same-seed
   cooperation gate, all-eight-candidate verification on both seeds, intent for
