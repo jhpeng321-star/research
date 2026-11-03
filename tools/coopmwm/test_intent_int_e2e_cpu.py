@@ -26,11 +26,19 @@ import torch
 from tools.coopmwm.accel_learner import load as ckpt_load, save as ckpt_save, update
 from tools.coopmwm.acceleration import Policy, encode
 from tools.coopmwm.bank_imitation import action_error, intent_error, run_separate
-from tools.coopmwm.v2v_integrate import WidenedPolicy, widen_context
+from tools.coopmwm.v2v_integrate import policy_call, widen_context
 from tools.coopmwm.v2v_model import (INTENT_BOUNDS, V2V_INTENT_DIM, load_checkpoint,
                                     planned_commands)
 from tools.coopmwm.v2v_obs import (V2V_DIM, V2VConfig, V2VIntentBuffer, intent_block_width,
                                    publish_intents, v2v_features, v2v_intent_features)
+
+
+class WidenedModule(Policy):
+    """The runtime-shaped extended policy: forward handles widened contexts
+    exactly like tools/coopmwm/v2v_runtime.Policy (policy_call routing)."""
+
+    def forward(self, context):
+        return policy_call(self, context)
 
 INTENT_CFG = dict(v2v=True, v2v_intent=True, v2v_intent_horizon=5,
                   v2v_dim=V2V_INTENT_DIM, accel_bounds=INTENT_BOUNDS)
@@ -188,6 +196,7 @@ def test_one_full_pass_imitation_update_lowers_action_and_intent_error(tmp_path)
     path = tmp_path/'A_checkpoint_000.pt'
     fixture_checkpoint(path)
     ext, ext_opt, _, _ = load_checkpoint(path, config=INTENT_CFG)
+    ext.__class__ = WidenedModule   # runtime-shaped forward (widened context routing)
     for group in ext_opt.param_groups:
         group['lr'] = 0.05   # test-only scale so ONE update is decisive on CPU
     cfg = V2VConfig(v2v=True, v2v_intent=True, v2v_intent_horizon=H)
@@ -199,14 +208,13 @@ def test_one_full_pass_imitation_update_lowers_action_and_intent_error(tmp_path)
         target = {vid: dict(target=[0.5]*H, mask=[1.]*H) for vid in context['members']}
         contexts.append(context); blocks.append(block); targets.append(target)
     pairs = _bank_pairs(contexts, blocks, targets, 0.4)
-    wrapper = WidenedPolicy(ext)
-    reference = WidenedPolicy(copy.deepcopy(ext))
-    action_before = action_error(wrapper, pairs)
-    intent_before = intent_error(wrapper, pairs)
+    reference = copy.deepcopy(ext).eval()
+    action_before = action_error(ext, pairs)
+    intent_before = intent_error(ext, pairs)
     assert intent_before is not None and intent_before > 0.25
     v2v_before = ext.actor[0].weight[:, 29:29+V2V_INTENT_DIM].clone()
     head_before = ext.intent.weight.clone()
-    report = run_separate(wrapper, ext_opt, pairs, torch.Generator().manual_seed(5),
+    report = run_separate(ext, ext_opt, pairs, torch.Generator().manual_seed(5),
                           reference, coefficient=1., passes=5,
                           intent=dict(weight=.1, horizon=H, bounds=INTENT_BOUNDS))
     assert report['epochs_completed'] >= 5
