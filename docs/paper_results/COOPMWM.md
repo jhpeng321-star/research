@@ -1,5 +1,26 @@
 # S-COOPMWM — live checks
 
+## Nov3 12:17 UTC+8 — policy-cooperation diagnostic qualified and registered
+- MAIN12:05 is registered as amendment SHA
+  `8d01d928339efc54212ae9f47b1bd4a2a38e938cfe48816d510fa916a118d976`.
+  Immutable `policysynergycpu2`: **37 Linux CPU checks PASS, zero skips,
+  1.134s, zero SUMO**. Tests cover member-specific policy swaps with shared noise,
+  exact synergy algebra, snapshot/window/checkpoint identity, atomic complete-set
+  precharge, later-policy states' fresh u3 comparator, and no interrupted-job replay.
+- A separate durable diagnostic will measure every then-admitted cooperative bank
+  state after each B/R update8..24. It compares all group members using the new
+  policy with each member alone using it; the other group members use u3. Non-group
+  cars use the new policy as in the matched lesson check. The common captured t0
+  action is retained in every branch; the intervention starts at t0+1, as in lessons.
+- Sealed exact-checkpoint/state/window all-new lesson branches are adopted, never
+  rerun. Other branches are precharged as a complete set in `bank_verification_ext`.
+  Original plan cooperation gain is reported alongside policy cooperation gain.
+  Failures remain incomplete and alerted; no missing branch is imputed.
+- Read-only budget12:16:21: **6,388,610/14,500,000sim-s charged**,
+  **8,111,390remaining**; bank extension has **2,079,620remaining**. Every phase is
+  nonnegative. Artifact `COMPOSITE_PHASE_BALANCES_1793679382157456200.json`,
+  SHA`a33f9fbf037d8366…`. No new simulation or training handover at qualification.
+
 ## Nov3 11:54:33 UTC+8 — B/R-u7 complete; conditional learning checks continue
 - Both u7 update receipts exist; watcher3305066 and all four children remain live,
   with no alerts/dead children. Original minimum1800s update pacing remains active.

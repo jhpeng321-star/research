@@ -35,7 +35,7 @@
 34. Zero/tie credits reported separately; scale fitted from exact data, diagnostic only.
 35. TRAIN986000..986071 primary seed20261101 only, six worlds/cell; original fresh guards/registrations retained.
 36. Check986072..986083,one/cell; TRAIN50%focus,12focus+12other; MAIN0508 replacements retained; collection focus deficit repaid to>=50% via world-metadata/count ordering, unchanged within-stratum coverage/no dropped states.
-37. AoriginalTRAINchecksretained; MAIN07:06 B-REPLAY lessons replaceoldB/Rlearningchecks, everyupdate fundedbank_verification_ext; u8interim fundedinterim_u8_test. Per-update ownPPO/SUMO+safety/bankexposure stillreported.
+37. AoriginalTRAINchecksretained; MAIN07:06 B-REPLAY lessons replaceoldB/Rlearningchecks, everyupdate fundedbank_verification_ext; u8interim fundedinterim_u8_test. MAIN12:05 independent policy-synergy sidecar fromu8 botharms: ALL then-admittedcooperative states, samewindow/prefix/CRN; allgroupNEW vs eachmemberNEW/othergroupu3, nongroupNEW aslessons; commoncapturedt0action/interventiont0+1. Gain=delta(all)-maxdelta(solo), referenceu3; adoptSHA-matchedallNEWlesson, freshu3reference forlaterpolicystates; completebranchsetprechargedbankext, failuresneverimputed/retried. Per-update ownPPO/SUMO+safety/bankexposure stillreported.
 38. Dev984000..984023 every16updates A/B/R; existing24bitwise MAPPO bytes reused; no MAPPO dev rerun.
 39. LegacyA TRAIN4; B/Rmatched lessons everyupdate; dev16reportingonly. PrimaryA24/B24/R24,secondaryA48. Finalspawnfault375800sim-squarantined; MAIN1556approvedreplacement; source4/89CPU PASS explicitcheckpoint/SHA+final-onlycaps; B/Rcontinue.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
