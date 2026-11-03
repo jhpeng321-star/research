@@ -14,9 +14,9 @@ from .ls_validity_ops import remote
 from .protocol import checked
 from .storage import write
 
-BASE = '/home/ubuntu/coopmwm20261103_v2vcpu2'
-GENERATION = 'V4'
-SOURCE = '/home/ubuntu/coopmwm20261103_v2vcpu4'
+BASE = '/home/ubuntu/coopmwm20261103_v2vcpu7'
+GENERATION = 'V8'
+SOURCE = '/home/ubuntu/coopmwm20261103_v2vcpu8'
 FILES = (
     'tools/coopmwm/bank_v2v.py', 'tools/coopmwm/v2v_obs.py',
     'tools/coopmwm/v2v_model.py', 'tools/coopmwm/v2v_integrate.py',
@@ -27,6 +27,10 @@ FILES = (
     'tools/coopmwm/test_replay_bank_v2v_cpu.py',
     'tools/coopmwm/v2v_runtime.py', 'tools/coopmwm/test_v2v_runtime_cpu.py',
     'tools/coopmwm/accel_plant.py',
+    'tools/coopmwm/v2v_live.py', 'tools/coopmwm/test_v2v_live_cpu.py',
+    'tools/coopmwm/v2v_launch_ops.py',
+    'tools/coopmwm/bank_imitation.py', 'tools/coopmwm/bank_statistics.py',
+    'tools/coopmwm/test_bank_amendment_cpu.py',
     'traffic_shepherd/c4/env.py', 'traffic_shepherd/ownership.py',
     'tests/unit/test_c4_v2v_obs.py', 'tests/fixtures/v2v_golden.npz',
     'V2V_INT_READY.json',
@@ -61,7 +65,7 @@ if not (r/'STAGED.json').exists():
   target=(r/'pytools'/name if name.startswith('tools/') else r/'runtime_src'/name if name.startswith('traffic_shepherd/') else r/name)
   target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(base64.b64decode(data))
  tests=json.loads((base/'LS_RELEASE_TESTS.json').read_text())
- tests+=['test_v2v_runner_cpu','test_v2v_model_cpu','test_v2v_int_e2e_cpu','test_replay_bank_v2v_cpu','test_v2v_runtime_cpu']
+ tests+=['test_v2v_runner_cpu','test_v2v_model_cpu','test_v2v_int_e2e_cpu','test_replay_bank_v2v_cpu','test_v2v_runtime_cpu','test_v2v_live_cpu','test_bank_amendment_cpu']
  with (r/'LS_RELEASE_TESTS.json').open('x') as f:json.dump(sorted(set(tests)),f)
  selection=json.loads((base/'LS_CPU_SELECTION.json').read_text())
  selection['pytest_args']=[x.replace(str(base),str(r)) for x in selection.get('pytest_args',[])]
