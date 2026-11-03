@@ -189,3 +189,17 @@
   CUDA hidden and OMP/MKL single-threaded; no SUMO execution.
 - All60pairs remain COMPLETE; no dispatch/collection/replay/remote process action.
   Added simulation spend0; total725280/800000,74720unused. Task COMPLETE.
+
+## Fresh-session verification — 2026-11-03 / base0536699d
+- Arrived clean on `c4/coopplan`; read Git status/log, task handoff, shared MAIN
+  approval/amendments/completion entries, paper report and both final QA receipts.
+- Read-only `python -B -m tools.coopplan.extension_report --verify` PASS:
+  36worlds/432decisions/52group credits, source/design bound and both solos complete.
+- Read-only `python -B -m tools.coopplan.h300_report verify` PASS:
+  24worlds/288decisions/all group twins, availability recorded before pruning.
+  Both verifiers match all saved immutable artifact hashes.
+- Six-module CPU/analysis unittest command above PASS:41tests/0skips in1.805s,
+  CUDA hidden and OMP/MKL single-threaded; no SUMO execution.
+- All60pairs/66executed groups remain COMPLETE. No dispatch, collection, replay or
+  remote process action; added spend0, global725280/800000,74720unused.
+- Task COMPLETE; existing registration, designs, code, reports and figures preserved.
