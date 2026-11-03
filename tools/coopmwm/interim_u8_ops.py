@@ -131,7 +131,39 @@ print(json.dumps(dict(complete=v,payload=base64.b64encode(payload).decode())))''
     if target.exists():assert target.read_bytes() == blob
     else:
         with target.open('xb') as f:f.write(blob)
-    receipt = dict(value['complete'], main_report=str(target), local_sha256=sha(target))
+    report = json.loads(blob)
+    lines = ['# S-COOPMWM fixed-u8 interim — MAIN only', '',
+        'Fixed A/B/R u8,96 paired worlds,32 focus worlds. MAPPO/native reused; zero new SUMO.',
+        'Interim only; primary u24 unchanged. No training/search/checkpoint changes may follow these results.',
+        'Differences below are treatment minus comparator; negative delay is better.',
+        '95% intervals are10000 whole-world paired resamples,RNG20261101.', '']
+    for horizon in ('600', '900'):
+        for scope in ('all', 'focus'):
+            lines.append(f'## J{horizon} — {scope}')
+            for comparator in ('A', 'mappo', 'R'):
+                key=f'{horizon}:{scope}:B-{comparator}:'
+                x=report['results'][key+'team_delay_vs'];lo,hi=x['ci95']
+                pct=x['pct_delay_reduction'];plo,phi=x['pct_ci95']
+                adj=x.get('holm_within_endpoint_comparator')
+                inference=(f"; Holm p={adj['p_holm']:.6g},reject={adj['reject']}" if adj else '; descriptive secondary contrast')
+                lines.append(f"- B-{comparator}: {x['mean_diff_vs']:+.3f}veh-s95%CI[{lo:+.3f},{hi:+.3f}]; delay reduction{pct:+.3f}%[{plo:+.3f},{phi:+.3f}]{inference}.")
+                safety=[]
+                for metric in ('collisions','teleports','ttc_below_3_vs','hard_brake'):
+                    m=report['results'][key+metric];l,u=m['ci95']
+                    safety.append(f"{metric} {m['mean_diff_vs']:+.4f}[{l:+.4f},{u:+.4f}]")
+                lines.append('  - Safety mean differences95%CI: '+'; '.join(safety)+'.')
+            lines.append('')
+    lines += ['## Inference and provenance', report['holm'],
+        'Episode-level interim only; no branch outcomes or final-policy outcomes decoded.',
+        'Per-cell means,all arm contrasts and safety metrics are in the adjacent JSON.',
+        'ResultSHA256 '+value['complete']['result_sha256'],
+        'RegistrationSHA256 '+report['amendment_sha256'], '']
+    markdown = target.with_suffix('.md');text='\n'.join(lines)
+    if markdown.exists():assert markdown.read_text(encoding='utf-8') == text
+    else:
+        with markdown.open('x',encoding='utf-8',newline='\n') as f:f.write(text)
+    receipt = dict(value['complete'], main_report=str(target), main_summary=str(markdown),
+        local_sha256=sha(target), main_summary_sha256=sha(markdown))
     p = ops.EVIDENCE/'INTERIM_U8_ANALYSIS_DELIVERED_1235.json'
     if not p.exists():write(p, receipt)
     print(json.dumps(dict(receipt=str(p), **receipt)))

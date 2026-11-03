@@ -1,5 +1,10 @@
 # S-COOPMWM — live checks
 
+MAIN-only interim analysis is live under owned cpuQ3625742/start69850280 from
+13:37:05+08. Registration`99552af1…`/commit`c2ee5bf5` preceded launch; detached,
+nice19, no SUMO/inference. At13:38:14 it is running without a failure certificate.
+Adopt `coopmwm/INTERIM_U8_ANALYSIS_DISPATCH_1235.json`; never duplicate it.
+
 ## Nov3 — completed fixed-u8 interim; MAIN-only analysis registered before decoding
 - Public identities verify **96 episodes per A/B/R**, checkpoint8 SHA per arm,
   panelSHA`d74f685e…`; both completion certificates exist/no failure. Reused

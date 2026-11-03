@@ -1,5 +1,13 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+ANALYSIS LIVE Nov3 13:37:05+08: own3625742/start69850280/bootb8bc1fcb,
+controlwarm1/interim_analysis_1235_v1; ADOPTINTERIM_U8_ANALYSIS_DISPATCH_1235,
+NEVERduplicate. Registered99552af1/commitc2ee5bf5 BEFORElaunch. At13:38:14
+stateR/noFAILED/noCOMPLETEyet; zeroSUMO/inference. Existingtraininguntouched.
+Useinterim_u8_ops status; onCOMPLETE use deliver => _sol/COOPMWM_INTERIM_U8_MAIN
+.json/.md, reportvaluesMAINonly. Publiccompletionhashonly. DriverallowsONLY
+completedu8A/B/R+reusedMAPPO/native, finalpolicyoutcomesunopened.
+
 INTERIM COMPLETE: allA/B/R96publicreceipts +480withMAPPO/native identitiesPASS;
 noFAIL/bothcompletioncertificates. MAIN12:35analysisCPU4LinuxPASS/.107s/zeroSIM,
 registered99552af12ce0c52d BEFOREdecoding. NEWinterim_u8_analysis.py/operator:
