@@ -12,6 +12,11 @@ per-driver CSV 2 798 rows (population + per-driver modes); summary JSON
 headline matches DONE.md (v0=29.87, T=0.753, a=0.701, b=1.687, s0=1.91,
 sigma=0.178 m/s, n=226 431 cf tick pairs). No changes to deliverables.
 
+RESUME VERIFICATION 2026-11-04b (second fresh session today, no rework):
+6/6 CPU tests pass (9.7 s); all 5 rb-shared code/doc files sha256-identical
+to worktree; npz + manifest + CSV/JSON present, timestamps unchanged from
+2026-11-01. No changes to deliverables; task remains DONE.
+
 RESUME VERIFICATION 2026-11-03 (fresh session, no rework): 6/6 CPU tests
 pass (30.7 s); all 6 rb-shared files sha256-identical to worktree commit;
 npz re-checked: schema `setdata_hdv_histories/1`, 32 worlds, 2 831 segments,
