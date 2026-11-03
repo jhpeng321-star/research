@@ -166,8 +166,9 @@ def launch():
         print(json.dumps(dict(adopt=True,alive=alive,owner=d)));return
     assert read(ops.EVIDENCE/'ROLLING_ARCHIVE_ROUTE_GPUA_V4.json')['pass_']
     assert (ops.EVIDENCE/REG).is_file()
+    assert (ops.EVIDENCE/'ROLLING_ARCHIVE_WAITER_RETIRED_V4B.json').is_file()
     command=[sys.executable,'-B','-X','utf8','-m','tools.coopmwm.rolling_gpua_ops','handover']
-    with (ops.EVIDENCE/'ROLLING_ARCHIVE_BRIDGE_GPUA_V4.log').open('x',encoding='utf-8') as log:
+    with (ops.EVIDENCE/DISPATCH).with_suffix('.log').open('x',encoding='utf-8') as log:
         child=subprocess.Popen(command,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
             creationflags=(subprocess.DETACHED_PROCESS|subprocess.CREATE_NEW_PROCESS_GROUP) if os.name=='nt' else 0,start_new_session=os.name!='nt')
     d=dict(pid=child.pid,create_time=psutil.Process(child.pid).create_time(),unix=time.time(),argv=command)

@@ -17,3 +17,10 @@ its source hashes are unchanged.
 Next: retire only the identity-proven idle LOCAL waiter43764, after confirming
 the new remote mover never started, then dispatch generationV4B once. Original
 watcher/transfer/manifest receipts remain; no duplicate mover or physics.
+
+Local43764 retirement is now complete: creation time/argv and no children
+verified, suspended for a fresh remote no-OWNER/no-DISPATCH check, then retired.
+The initial replacement launch refused on the old log's existing path before
+any process started. Replacement now has its own immutable V4B log/dispatch and
+requires the retirement proof. Five operator tests PASS, including an actual
+mocked launch that preserves the old log while creating the new generation.

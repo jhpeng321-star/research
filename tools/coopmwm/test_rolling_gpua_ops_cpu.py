@@ -3,6 +3,7 @@ import ast
 import base64
 import re
 import shlex
+import tempfile
 import unittest
 from unittest.mock import patch
 from . import rolling_gpua_ops as m
@@ -13,6 +14,18 @@ class Intercepted(Exception):
 
 
 class GPUAOperations(unittest.TestCase):
+    def test_replacement_waiter_uses_a_new_log_and_preserves_the_old_generation(self):
+        from pathlib import Path
+        from unittest.mock import Mock
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);old=root/'ROLLING_ARCHIVE_BRIDGE_GPUA_V4.log';old.write_text('old proof')
+            (root/m.REG).write_text('{}')
+            (root/'ROLLING_ARCHIVE_WAITER_RETIRED_V4B.json').write_text('{}')
+            with patch.object(m.ops,'EVIDENCE',root),patch.object(m,'read',return_value={'pass_':True}),patch('subprocess.Popen',return_value=Mock(pid=123)),patch('psutil.Process',return_value=Mock(create_time=lambda:1.)),patch.object(m,'write'):
+                m.launch()
+            self.assertEqual(old.read_text(),'old proof')
+            self.assertTrue((root/m.DISPATCH).with_suffix('.log').is_file())
+
     def test_handover_waits_on_active_transfer_before_starting_bridge(self):
         events=[]
         with patch.object(m.ops,'EVIDENCE',__import__('pathlib').Path('/nonexistent-test-control')),patch.object(m,'drain',side_effect=[RuntimeError('prior archive transfer still active'),Intercepted]),patch.object(m.time,'sleep',side_effect=lambda _:events.append('wait')),patch.object(m,'bridge') as bridge:
