@@ -621,7 +621,8 @@ def all8_records(bank):
         verify_sealed(v, 'confirmation_sha256')
         if v.get('bank_rule') != PER_SEED or 'examples' not in (v.get('per_seed_v1') or {}):
             raise ValueError(f'{p}: not a per_seed_v1 all8 record')
-        out[v['verification_id']] = v
+        from .verify_perseed import relabel_reference_mismatch
+        out[v['verification_id']] = relabel_reference_mismatch(v, bank)
     return out
 
 

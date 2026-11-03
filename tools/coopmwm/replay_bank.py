@@ -435,8 +435,12 @@ def temperature(root, arm, training_seed, decisions):
     return t
 
 
+IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
+
+
 def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT_CLIP, sources=(),
-               max_decisions=None, v2v=False, v2v_cfg=None, v2v_intent=None):
+               max_decisions=None, v2v=False, v2v_cfg=None, v2v_intent=None,
+               imitation_bank_filter='all_admitted'):
     """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta.
 
     max_decisions (R fairness, MAIN): use at most this many admitted targets, oldest first;
@@ -449,7 +453,17 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     also carry partner-intent input slots (EMPTY here; exact_update refreshes them from the current
     intent head on the partners' own t-1 bank contexts - never recorded commands) and the plan
     members' own future plan commands as intent targets (tools/coopmwm/v2v_intent.py).
+    imitation_bank_filter (owner 2026-11-04 00:55; DEFAULT 'all_admitted' = byte-identical): with
+    'cooperative_only' only admitted examples whose within-seed cooperation label is True become
+    imitation pairs/entries; 'no_solos' and not_cooperative examples are excluded (counted in
+    summary['imitation_filter'] and still present in the bank records/reports). The exclusion
+    happens BEFORE the max_decisions (R lag-1) cap, so the cap counts post-filter examples. With
+    only cooperative pairs the 50% oversampling is a no-op (non-cooperative samples = 0).
     """
+    if imitation_bank_filter not in IMITATION_BANK_FILTERS:
+        raise ValueError(f'unknown imitation_bank_filter {imitation_bank_filter!r}')
+    coop_only = imitation_bank_filter == 'cooperative_only'
+    filtered = dict(filter=imitation_bank_filter, excluded_examples=0, excluded_by_status={})
     everything = bank_decisions(root, arm, upto_unix, sources)
     T = temperature(root, arm, training_seed, everything)
     decisions = everything
@@ -498,6 +512,12 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                 examples.append((t['branches_dir'], t['verification_id'], t['branch'], ex['advantage_veh_s'],
                                  t['intent_entry'], ex['cooperative'] is True, gain, ex))
         for branches_dir, tape_vid, branch, advantage, intent_key, cooperative, gain, ex in examples:
+            if coop_only and not cooperative:
+                status = ex['cooperative_status'] if ex is not None else (
+                    coop.get('cooperative_status') or 'not_cooperative')
+                filtered['excluded_examples'] += 1
+                filtered['excluded_by_status'][str(status)] = filtered['excluded_by_status'].get(str(status), 0)+1
+                continue
             if max_decisions is not None and len(entries)>=max(0,int(max_decisions)):
                 counts['admitted_excess_not_used']+=1;continue
             # per_seed_v1 all8 examples carry their OWN plan (seeds may admit different candidates)
@@ -554,6 +574,8 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
         full, rem = divmod(len(other)-len(coop_pairs), len(coop_pairs))
         pairs = other+coop_pairs*(1+full)+coop_pairs[:rem]
         exposure['duplicated_pairs'] = len(pairs)-len(other)-len(coop_pairs)
+    if coop_only:
+        exposure['oversampling'] = 'no-op: imitation_bank_filter=cooperative_only leaves no non-cooperative samples'
     exposure['rule'] = ('cooperative entries oversampled to 50% of imitation samples, weights unchanged'
                         if exposure['duplicated_pairs']
                         else ('cooperative entries already at least half of the imitation samples'
@@ -578,6 +600,12 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
             by_policy_version={v: sum(e['policy_version'] == v for e in entries)
                                for v in sorted({e['policy_version'] for e in entries})},
             plans_used=len({e['verification_id'] for e in entries}))
+    if coop_only:
+        filtered.update(imitated_cooperative_examples=len(entries), imitated_pairs=len(pairs),
+                        imitated_cooperative_by_seed={str(k): sum(e.get('seed_index') == k for e in entries)
+                                                      for k in (1, 2)} if any('seed_index' in e for e in entries) else None,
+                        empty_bank=not pairs,
+                        rule='only within-seed cooperative examples are imitation pairs; others stay in bank records')
     out = dict(rule='B-REPLAY bank: all CONFIRMED (replication, no later harm, safety) exact-positive entries; weight(mean replicated advantage) x beta; cooperative entries oversampled to 50% of samples',
                        temperature=T, beta=float(beta), counts=counts, entries=entries, clip=clip,
                         max_decisions=max_decisions, exposure=exposure)
@@ -585,6 +613,9 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
         out['rule'] = ('B-REPLAY bank per_seed_v1: every admitted (plan, seed) example is an entry with THAT '
                        "seed's plan-branch tape; weight(that seed's exact advantage) x beta; within-seed "
                        'cooperative examples oversampled to 50% of samples')
+    if coop_only:
+        out['imitation_filter'] = filtered
+        out['rule'] += '; imitation_bank_filter=cooperative_only (non-cooperative and no_solos examples excluded)'
     if v2v:
         out['v2v'] = dict(rule='each pair carries the partners v2v features of its second, from the winning '
                               'plan branch trace (positions, speeds, accelerations; last issued command at the '

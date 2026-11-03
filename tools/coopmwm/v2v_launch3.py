@@ -40,7 +40,10 @@ ARMS = ('A', 'B', 'R')
 INTENT_OPTIONS = dict(v2v=True, v2v_dim=48, v2v_intent=True,
     v2v_intent_horizon=5, v2v_intent_loss_weight=1.0,v2v_intent_detach_trunk=True)
 BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
-    bank_statistics='per_seed_v1')   # owner 2026-11-03 21:45 + audit: per_seed_v1 only (B and R)
+    bank_statistics='per_seed_v1',   # owner 2026-11-03 21:45 + audit: per_seed_v1 only (B and R)
+    # owner 2026-11-04 00:55: B and R imitate ONLY within-seed cooperative examples (A has no bank)
+    imitation_bank_filter='cooperative_only')
+IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
 DIAGNOSTIC_SCHEDULE = dict(A=dict(lessons=[], isolated=[]),
     B=dict(lessons=[6, 12, 18, 24], isolated=[6, 12, 18, 24]),
     R=dict(lessons=[], isolated=[12, 24]))
@@ -247,6 +250,21 @@ def check_hold(control, root):
     return dict(held=False)
 
 
+def imitation_filter_for(cfg, arm):
+    """The imitation bank filter of arm B or R. One key serves both arms; an optional per-arm
+    mapping cfg['imitation_bank_filter_by_arm'] is accepted only when B == R == the key."""
+    have = cfg.get('imitation_bank_filter', 'all_admitted')
+    if have not in IMITATION_BANK_FILTERS:
+        raise Refused('unknown imitation_bank_filter ' + repr(have))
+    by_arm = cfg.get('imitation_bank_filter_by_arm')
+    if by_arm is not None:
+        if not isinstance(by_arm, dict) or by_arm.get('B') != by_arm.get('R') or by_arm.get('B') != have:
+            raise Refused('imitation_bank_filter must be identical for B and R: ' + repr(by_arm))
+    if arm not in ('B', 'R'):
+        raise Refused('only arms B and R have an imitation bank')
+    return have
+
+
 def bind_runtime(value, *, root, source_root):
     """Validate deployed values, not newly manufactured desired arm configs."""
     cfg = value.get('config')
@@ -256,6 +274,7 @@ def bind_runtime(value, *, root, source_root):
         have = cfg.get(key)
         if have != want or isinstance(have, bool) != isinstance(want, bool):
             raise Refused('runtime option ' + key + ' differs: ' + repr(have))
+    imitation_filter_for(cfg, 'B'), imitation_filter_for(cfg, 'R')   # refuses B != R
     if 'v2v_intent_weight' in cfg:
         raise Refused('obsolete runtime v2v_intent_weight is not an intent loss binding')
     passes = cfg.get('imitation_epochs')
