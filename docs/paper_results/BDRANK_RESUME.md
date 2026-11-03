@@ -79,3 +79,22 @@
   missing-field and GPU-minute estimates. No SUMO, training, new inference,
   dispatch, process signals, peer writes, extra registration, deletion or push.
   This appended closeout receipt is the sole change for this resume.
+
+## Fresh-session closeout from e2a3a2ab — 2026-11-03
+
+- Began with clean `c4/bdrank` status/log; read saved report, evidence index,
+  verification, registration and resume receipts, then all four required source
+  reports and the detector/analysis contracts. Completed analysis remains `7655c0db`.
+- Current metadata still reports Nov3 01:23 +08 HOLD: 31/216 new round-2 jobs,
+  185 unadmitted, 12 matched K8 v5/v4 worlds, collector/publisher exited incomplete,
+  zero active INT evaluations. Full registered comparison remains incomplete;
+  no partial prediction cache was opened and no peer job was touched.
+- Ran only `python -B tools/bdrank/verify.py`: all checks PASS (4,500 recorded
+  rows, 27 paired-regression equivalences, 900 K8 aggregates, 17,750 pair/tie
+  classifications, 7,348 summaries, 300 decisions, 173 input hashes, development-only
+  selection and exactly one shared registration line). Git status/diff stayed
+  clean afterward; the 55-line report and evidence bytes were unchanged.
+- No new completion gap: existing duration/queue and option-detector STOP items
+  retain their missing-field/GPU-minute estimates. No analysis rerun, SUMO,
+  training, inference, dispatch, process signals, peer writes, extra registration,
+  deletion or push. This appended receipt is the only resume change.
