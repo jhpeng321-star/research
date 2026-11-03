@@ -472,7 +472,7 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
                 later = None;ex['later_harm_missing'] = True
             else:
                 try:
-                    ed, safe, _ = _pair_safety(x, bank/EXT_ROOTS[k]/'branches', j)
+                    ed, safe, _ = _pair_safety(x, bank/(EXT_ROOTS.get(k) or seed_kinds(k)[1])/'branches', j)
                 except (OSError, EOFError, KeyError, TypeError, ValueError):
                     later = None;ex['later_harm_missing'] = True
                 else:
