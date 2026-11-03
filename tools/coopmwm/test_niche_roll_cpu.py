@@ -41,6 +41,34 @@ def test_one_qualifier_across_hosts_and_failed_owner_blocks_roll():
     with pytest.raises(ValueError,match='diagnose'):nr.roll_target(gpus)
 
 
+def test_admission_refreshes_retired_owner_after_gpu_handover(monkeypatch):
+    import copy
+    def worker(suffix,generation='NICHENULL3',ready=True):
+        return dict(owner=dict(root='/root/coopmwm20261102_'+suffix,generation=generation),
+                    ready=ready,state='R',failure=None)
+    live={'gpuA':dict(workers=[worker('incident1'),worker('deadlineA2')]),
+          'gpuR':dict(workers=[worker('concurrent3','FASTK2V5'),worker('deadlineR2','FASTK2V5')])}
+    snapshots={};events=[]
+    def status(host):
+        events.append(('status',host));snapshots[host]=copy.deepcopy(live[host])
+        return snapshots[host]
+    monkeypatch.setattr(nr,'drain',lambda host,root:events.append(('drain',root)))
+    def handover(host,root):
+        events.append(('handover',root))
+        live[host]['workers'][0]=worker('concurrent3',ready=False)
+    monkeypatch.setattr(nr,'gpu',handover)
+    def admit():
+        events.append(('admit',None))
+        assert not snapshots['gpuR']['workers'][0]['ready']
+        assert snapshots['gpuR']['workers'][0]['owner']['generation']=='NICHENULL3'
+    _,target,ready=nr.roll_step(status,admit)
+    assert target==('gpuR','/root/coopmwm20261102_concurrent3')
+    assert len(ready)==2
+    assert [x for x in events if x[0]=='status']==[
+        ('status','gpuA'),('status','gpuR'),('status','gpuA'),('status','gpuR')]
+    assert events[-1][0]=='admit'
+
+
 def test_activation_requires_all_four_ready_and_never_controls_them(monkeypatch,tmp_path):
     from . import ls_validity_ops as vo
     monkeypatch.setattr(nr.ops,'EVIDENCE',tmp_path)

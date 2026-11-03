@@ -380,6 +380,22 @@ def roll_target(gpus):
     return None
 
 
+def roll_step(gpu_status, admit):
+    """Refresh ownership after a handover before publishing ready endpoints."""
+    gpus={h:gpu_status(h) for h in ('gpuA','gpuR')}
+    target=roll_target(gpus)
+    if target:
+        host,root=target
+        drain(host,root);gpu(host,root)
+        # gpu() may retire the owner in the pre-handover snapshot. In particular,
+        # never re-admit that cached READY owner while its successor qualifies.
+        gpus={h:gpu_status(h) for h in ('gpuA','gpuR')}
+    ready=[w for g in gpus.values() for w in g['workers']
+        if w['ready'] and w['owner'].get('generation')=='NICHENULL3']
+    if ready:admit()
+    return gpus,target,ready
+
+
 def continue_roll():
     """Finish only registered drained-boundary handovers; never dispatch SUMO/PPO."""
     import contextlib,io,msvcrt
@@ -390,14 +406,7 @@ def continue_roll():
     while time.time()<1793894340:
         try:
             with contextlib.redirect_stdout(io.StringIO()):
-                gpus={h:gpu_status(h) for h in ('gpuA','gpuR')}
-                target=roll_target(gpus)
-                if target:
-                    host,root=target
-                    drain(host,root);gpu(host,root)
-                ready=[w for g in gpus.values() for w in g['workers']
-                    if w['ready'] and w['owner'].get('generation')=='NICHENULL3']
-                if ready:admit()
+                gpus,target,ready=roll_step(gpu_status,admit)
             print(json.dumps(dict(unix=time.time(),ready=[w['owner']['root'] for w in ready],
                 target=target,training_paused=True,no_sumo_dispatch=True)),flush=True)
             if len(ready)==4:
@@ -415,35 +424,31 @@ def continue_roll():
 def roll_dispatch():
     import subprocess,sys,psutil
     from .protocol import REGISTRY
-    target=ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V5.json'
+    target=ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V6.json'
     if target.exists():
         d=read(target)
         if psutil.pid_exists(d['pid']):
             p=psutil.Process(d['pid']);assert abs(p.create_time()-d['unix'])<5
             assert p.cmdline()[-3:]==['-m','tools.coopmwm.niche_roll','continue_roll']
         print(json.dumps(dict(adopted=d)));return
-    reg=ops.EVIDENCE/'NICHE_ROLL_CONTROLLER_REGISTRATION_V5.json'
+    reg=ops.EVIDENCE/'NICHE_ROLL_CONTROLLER_REGISTRATION_V6.json'
     if not reg.exists():
-        line=('\nS-COOPMWM joint-release controller V5 engineering amendment: V4 retired '
-            'the drained Asecond then refused stale binding hashes: its per-file '
-            'source symlinks point at the already-qualified Afirst package. Install '
-            'owned destination entries ATOMICALLY (detach aliases, never write through '
-            'to a serving peer); preserve original bytes and link metadata with SHA. '
-            'Accept prior-binding bytes OR exact incoming CPU7-qualified bytes only. '
-            'Numerical files/network still from immutable CPU7 with full hashes. '
-            'Same qualified source/all8fresh gates, no numerical change. '
-            'Retain all earlier controller faults and original workers/requests. Adopt live '
-            'source-qualified NICHENULL3 successor; retain stopped V1 fault receipt; finish registered Asecond/Rfirst/Rsecond drained '
-            'handovers ONE qualifier globally. Preserve requests/claims/forecasts; '
-            'no inference replay or SUMO/PPO dispatch. Source-bound dependency package '
-            'and all8 checks per slot before admission (first metadata recovery adopts4 same-source; untouched slots all8fresh). Stop controller on code '
-            'fault; bounded existing transport retries. Collector activation remains '
-            'separate after all4ready; other slots keep serving.\n')
+        line=('\nS-COOPMWM joint-release controller V6 engineering amendment: V5 '
+            'exited after launching gpuR successor766170 because admission reused '
+            'the retired READY owner from its pre-handover GPU snapshot. Refresh '
+            'both host inventories after every drain/dispatch before admission; '
+            'live RPC owner verification remains mandatory. Adopt live qualifier '
+            '766170 and all completed source-bound gates, never restart them. '
+            'One qualifier globally, immutable CPU7 numerical sources, original '
+            'claims/receipts/searches retained. Metadata-only regression tested; '
+            'no new SUMO/PPO, inference replay or budget change. Retain original '
+            'V5 fault, controller exits on code error; bounded transport retries. '
+            'Existing activation waiter and observer retained.\n')
         write(reg,dict(line=line,source_sha256=sha(ops.LOCAL/'tools/coopmwm/niche_roll.py'),new_sumo_sim_s=0))
         with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(reg)+'\n')
-    old=read(ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V4.json')
+    old=read(ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V5.json')
     assert not psutil.pid_exists(old['pid']),'adopt original controller until exited'
-    with (ops.EVIDENCE/'LS_NICHENULL_ROLL_V5.log').open('x',encoding='utf-8') as log:
+    with (ops.EVIDENCE/'LS_NICHENULL_ROLL_V6.log').open('x',encoding='utf-8') as log:
         p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.niche_roll','continue_roll'],
             cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
