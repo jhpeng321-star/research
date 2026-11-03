@@ -623,3 +623,15 @@ and exact release/hot-swap handoff were verified. Further GPU work remains
 capacity-blocked; no completed comparison was rerun and no inference, training,
 or process change was made. An append-only capacity update was sent to the owner
 handoff; the qualified release and activation recipe above remain current.
+
+### Capacity refresh — 2026-11-03 17:38 host time
+
+Fresh `resume20261103d` inventories committed as `13c363d3` again find no live
+WMSPEED2 jobs. GPU A has two other compute processes, 23% sampled utilization
+and 38,363 MiB allocated; GPU R has two other compute processes, 97% utilization
+and 4,406 MiB allocated. Neither passes idle-device admission. The existing
+afternoon receipts and handoff were preserved. Numerical source still matches
+`fcc50296`; re-read integrated receipts retain warm H120 **4.529x** and cold
+H300 **2.496x**, with **0.0 cost/trajectory errors** and identical ranks/draw IDs.
+The single registration, existing CPU 79+7 passing evidence, and exact hot-swap
+recipe remain current. Further GPU speed experiments remain capacity-blocked.
