@@ -369,20 +369,34 @@ def run_synergy_checks(root, budget, arms=('B',), update=FIRST_UPDATE):
     replay_start.owner = _harness_owner   # Windows rehearsal: /proc identity receipts are faked
     cfg = dict(control_root=str(Path(root)/'control'), collection_root=str(Path(root)/'ls_collect_fixture'),
                v2v=True, budget=dict(budget, total=14_500_000))   # accounting() registered total assertion
-    out = {}
-    for arm in arms:
-        try:
-            base = ps.run_update(root, arm, update, cfg)
-            isolated = ps.run_update(root, arm, update,
-                                     dict(cfg, isolated=True,
-                                          control_root=str(Path(root)/'control_isolated')))
-            out[arm] = dict(status=base['status'], entries=len(base['entries']),
-                            cooperative_entries=base['admitted_cooperative_entries'],
-                            v2v=base.get('v2v'), isolated_status=isolated['status'],
-                            isolated_entries=len(isolated['entries']), isolated_v2v=isolated.get('v2v'),
-                            gains=[e.get('policy_cooperation_gain_veh_s') for e in base['entries']])
-        except BaseException as error:
-            out[arm] = dict(error=repr(error), traceback=traceback.format_exc()[-800:])
+    # Fault 12: PAUSE_HARNESS_END.json is the rehearsal's own end marker (no live
+    # equivalent), but assert_running treats any unreleased PAUSE_*.json as a
+    # health pause - every synergy branch died on it. Hold the marker while the
+    # check's branches run (live ops run this check while the arm is live, before
+    # any pause), then restore it.
+    hold = Path(root)/'PAUSE_HARNESS_END.json'
+    held = None
+    if hold.exists():
+        held = Path(root)/'HELD_PAUSE_HARNESS_END.json'
+        hold.rename(held)
+    try:
+        out = {}
+        for arm in arms:
+            try:
+                base = ps.run_update(root, arm, update, cfg)
+                isolated = ps.run_update(root, arm, update,
+                                         dict(cfg, isolated=True,
+                                              control_root=str(Path(root)/'control_isolated')))
+                out[arm] = dict(status=base['status'], entries=len(base['entries']),
+                                cooperative_entries=base['admitted_cooperative_entries'],
+                                v2v=base.get('v2v'), isolated_status=isolated['status'],
+                                isolated_entries=len(isolated['entries']), isolated_v2v=isolated.get('v2v'),
+                                gains=[e.get('policy_cooperation_gain_veh_s') for e in base['entries']])
+            except BaseException as error:
+                out[arm] = dict(error=repr(error), traceback=traceback.format_exc()[-800:])
+    finally:
+        if held is not None and held.exists():
+            held.rename(hold)
     return out
 
 
@@ -613,8 +627,9 @@ _FAULTS = [
     'still registered when the post-run policy-synergy check executes; warm_health refuses every '
     'branch run while a pause receipt exists, so both synergy variants failed with HealthPause and '
     'status incomplete (gains null) even though their entries and v2v receipts were correct - '
-    'verify_checklist now removes the control file first (broker and collectors have already '
-    'exited by then; diagnose still records the pause for the scenario phase)',
+    'run_synergy_checks now HOLDS the marker (rename) for the duration of the synergy branch runs '
+    'and restores it afterwards (live ops run this check while the arm is live, before any pause; '
+    'no live-code change, and the end marker stays on disk for the record)',
 ]
 
 if __name__ == '__main__':
