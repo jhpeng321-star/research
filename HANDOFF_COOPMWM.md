@@ -1,5 +1,15 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3 08:12:32+08/unix1793664752: fresh-session adoption464d300c;
+ALL666brief linesread. Existing cpuQ watcher2855195/start67831802 LIVE/S,
+bank2388293/start66646196 LIVE/S:69usable/34confirmed/8admitted/3coop/0pending.
+B/Rremainu3; NO B_REPLAY_STARTED. Asecond261418 finished8gates; existing
+roll40408 is now draining Rconcurrent3, oldR588039/623287 remainREADY/serving.
+Activation39660/observer40668 verifiedcreation+argvLIVE. NEVERduplicate anyowner,
+gate or query. Lastwatchstatus1793664659936188300, bankstatus1793664754706524400.
+LatestMAIN0735 automaticstart remainsgated10+fourjointGPUowners+collectoractivation.
+No engineeringfault found/newdispatch/physics/reservation/signals/deletion thisresume.
+
 LATEST Nov3 08:00:47+08/unix1793664047: AUTOMATICSTART V2 LIVE
 cpuQ2855195/start67831802/bootb8bc1fcb, controlwarm1/replay_start_0735_v2;
 adopt B_REPLAY_START_WATCH_DISPATCH_0735_V2.json, NEVERduplicate. Idle V1

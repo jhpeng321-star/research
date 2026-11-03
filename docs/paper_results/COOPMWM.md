@@ -1,5 +1,23 @@
 # S-COOPMWM — live checks
 
+## Nov3 08:12:32 UTC+8 — fresh-session adoption; sequential release advances
+- Adopted the existing remote start watcher **2855195/start67831802**, bank
+  builder **2388293/start66646196**, rollout40408, activation39660 and observer40668.
+  Boot/start or Windows creation identity plus argv checked; no replacement dispatch.
+- gpuA's second slot261418 completed all eight gates. The existing controller
+  has moved to draining gpuR's first slot; both original gpuR workers remain
+  READY and serving. Completed qualifications and outstanding searches are retained.
+- Bank at unix1793664752: **69 usable decisions /34 confirmed /8 admitted /
+  3 cooperative**, zero pending confirmations. The remote watcher correctly waits
+  for ten admissions, four joint-release slots and collector activation. B/R remainu3;
+  no `B_REPLAY_STARTED.json` and no new learning/viability claim.
+- Latest MAIN06:27/07:06/07:35 authority and the14.5M append-only budget are adopted.
+  Warm-memory qualification and the706-check Linux release are completed prior work.
+  This resume adds no reservation, SUMO, optimizer application or process signal.
+- Evidence: `coopmwm/RESUME_20261103_0808.md`,
+  `coopmwm/B_REPLAY_START_WATCH_STATUS_1793664659936188300.json`,
+  `coopmwm/BANK_BUILDER_STATUS_1793664754706524400.json`.
+
 ## Nov3 08:00:47 UTC+8 — corrected automatic watcher V2 live
 - **2855195/start67831802** is aliveS on cpuQ, control
   `coopmwm20261102_warm1/replay_start_0735_v2`; adopt its dispatch receipt.
