@@ -358,6 +358,27 @@ def planned(root, control):
     return ceg.plan(root, 'B', control, Policy().state_dict(), Policy().state_dict(), offline=offline_fixture())
 
 
+def test_registered_scope_requires_986066_and_reports_other_certified_states(gate_bank, tmp_path, monkeypatch):
+    # MAIN00:40 restores the registered scientific gate, without selecting a new state.
+    assert MANDATORY_COPY == (986066,)
+    monkeypatch.setattr(ceg, 'MANDATORY_STATES', MANDATORY_COPY)
+    candidates, statuses = ceg.certified_candidates(gate_bank, 'B')
+    eligible = [x for x in candidates if x[0]['episode']['world']['seed'] != 986048]
+    for status in statuses.values():
+        if status['seed'] == 986048:
+            status.update(cooperative=False, cooperative_status='not_cooperative', certified_seeds=[])
+    monkeypatch.setattr(ceg, 'certified_candidates', lambda *a, **k: (eligible, statuses))
+    record = planned(gate_bank, tmp_path/'registered_scope')
+    assert record['mandatory_states'] == [986066]
+    assert {x['seed'] for x in record['states']} == {986066, 986003}
+    excluded = next(x for x in record['certification']['statuses'].values() if x['seed'] == 986048)
+    assert excluded['cooperative_status'] == 'not_cooperative'
+    monkeypatch.setattr(ceg, 'certified_candidates', lambda *a, **k: (
+        [x for x in eligible if x[0]['episode']['world']['seed'] != 986066], statuses))
+    failed = planned(gate_bank, tmp_path/'missing_required')
+    assert failed['verdict'] == 'FAIL' and failed['stage'] == 'certification'
+
+
 def test_per_seed_certifies_states_and_restores_the_reader(gate_bank, monkeypatch):
     monkeypatch.setattr(rb, 'confirmations', rb.confirmations)
     original = rb.confirmations

@@ -1,6 +1,16 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## CURRENT Nov4 00:21 +08 — final integration merged, Linux994 PASS
+- NEWMAINthrough1030READ: cleanfinalauditacceptedfor762bdc7d (notoldf3),
+  MAIN00:40 authorisesminimalMANDATORY_STATES=(986066,) wiringrepair, other
+  certifiedstatesreported/986048excluded. One-linefix+regressionwritten;
+  Linuxgate+launchfinalsuitesnext. No scientificrelaxation/newauditrequired.
+- MAIN00:15 nowrequiresrestore31missingBRESULTtapes+protectfrommover, then
+  previewrerun; MAIN00:28 permitsgateafter30minrestorationlimit. MAIN00:40
+  authorises1.5Mtransferintobankphasewithin17471840; registerbeforeexpandeduse.
+- NewV4Blocalhandover24748/create1793723923.463112 isLIVE; old43764retired
+  identity/nochild/remoteunstartedproof. NewremoteOWNERstillabsent8068993024
+  bytesfree. DO NOTredispatch; adoptROLLING_ARCHIVE_BRIDGE_GPUA_V4B.json.
 - DelegatedpreviewADOPTED(no rerun):B24admitted/7coop,R49/3coop,Rnonempty;
   bank_statistics SHAidenticalI3,replay_bankversiondiffdisclosed. Mandatory986048
   notcooperativeunderper_seed_v1(LB-779.708 onseed1,seed2notadmitted).

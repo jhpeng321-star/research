@@ -61,7 +61,7 @@ from .v2v_model import BASE_INPUT, FEATURES, _first_linear
 
 GATE = 'coopfix_exact'
 GATE_UPDATE = 0
-MANDATORY_STATES = (986066, 986048, 986003)
+MANDATORY_STATES = (986066,)
 GATE_STATE = 986066                    # the 6-CAV state the verdict is bound to
 MAX_GROUP = 6                          # registered isolated diagnostic caps (MAIN 12:26)
 MAX_WINDOW_END_S = 1200
