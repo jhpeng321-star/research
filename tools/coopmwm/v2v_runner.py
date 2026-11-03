@@ -75,12 +75,16 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
 
 
 def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sha256,
-                   imitation_bank_filter='cooperative_only'):
+                   imitation_bank_filter='cooperative_only', imitation_step_mode='fixed',
+                   v2v_intent_bank_term=True):
     """Audit I4: the registered producer of the intent-ON A/B/R runtime config (prospective
     binding only, like prepare). Identical for every arm: v2v_dim=48 (K4 x (6+5+1)),
     v2v_intent=True, horizon 5, loss weight 1.0, detach_trunk=True; bank labels
     bank_imitation='separate_full_pass', imitation_kl_cap=.045, bank_statistics='per_seed_v1'
-    (B and R; A has no bank) and imitation_bank_filter='cooperative_only' (B and R). Exactly the keys v2v_launch3.bind_runtime pins."""
+    (B and R; A has no bank) and imitation_bank_filter='cooperative_only' (B and R).
+    c4/imit-strength (prepared): imitation_step_mode='fixed' (byte-identical; 'kl_targeted' only
+    at a registered update boundary, B and R together) and v2v_intent_bank_term=True (the bank
+    intent term trains; False drops it). Exactly the keys v2v_launch3.bind_runtime pins."""
     from .v2v_launch3 import BANK_OPTIONS, INTENT_OPTIONS
     cfg = prepare(base, root=root, legacy_root=legacy_root, source_root=source_root,
                   common_checkpoint_sha256=common_checkpoint_sha256,
@@ -91,6 +95,9 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
     cfg.update(BANK_OPTIONS)
     # owner 2026-11-04 00:55: identical for B and R; the V2V runtime pins 'cooperative_only'
     cfg['imitation_bank_filter'] = imitation_bank_filter
+    # c4/imit-strength: identical for B and R; a non-pinned value refuses (registered flip only)
+    cfg['imitation_step_mode'] = imitation_step_mode
+    cfg['v2v_intent_bank_term'] = bool(v2v_intent_bank_term)
     if cfg['imitation_epochs'] < 5:
         raise ValueError('full-pass separate imitation requires at least five epochs')
     for key, want in dict(INTENT_OPTIONS, **BANK_OPTIONS).items():

@@ -90,6 +90,25 @@ def run(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5):
 
 MIN_ADDITIONAL_PASS_SCALE=1/64   # documented numeric floor for passes after pass 1 (fix2)
 MAX_ATTEMPTS=25
+STEP_MODES=('fixed','kl_targeted')   # c4/imit-strength: registered imitation-strength modes
+STEP_SCALE_CAP=16   # kl_targeted: a pass's step scale never exceeds 16x the base learning rate
+STEPS_CAP=4         # kl_targeted: optimizer steps per pass never exceed 4x (minibatch 128//mult)
+KL_LIMIT=.045       # the registered separate-imitation bound (report kl_limit; never exceeded)
+
+RUNTIME_STEP_MODE='fixed'       # bound from the deployed runtime by v2v_live.hooks (B and R alike)
+RUNTIME_INTENT_BANK_TERM=True   # bound likewise; False drops the bank intent term from the loss
+
+
+def install(step_mode='fixed',intent_bank_term=True):
+    """Bind the runtime's registered imitation-strength keys process-wide (v2v_live.hooks).
+
+    One key serves B and R (v2v_launch3 refuses any B/R mismatch before this is called); explicit
+    run_separate arguments still win, and the process default stays 'fixed'/True (byte-identical).
+    """
+    global RUNTIME_STEP_MODE,RUNTIME_INTENT_BANK_TERM
+    if step_mode not in STEP_MODES:raise ValueError('unknown imitation_step_mode '+repr(step_mode))
+    if not isinstance(intent_bank_term,bool):raise ValueError('v2v_intent_bank_term must be a bool')
+    RUNTIME_STEP_MODE,RUNTIME_INTENT_BANK_TERM=step_mode,bool(intent_bank_term)
 
 
 def trainable(sample,weight):
@@ -108,8 +127,9 @@ def _finite(x):
     return x is not None and math.isfinite(x)
 
 
-def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5):
-    """MAIN17:27: transactional full passes, KL relative to post-PPO policy.
+def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5,
+                 step_mode=None,intent_bank_term=None):
+    """MAIN17:27 transactional full passes, KL relative to post-PPO policy.
 
     Backtracking changes only the optimizer step size, never targets or AWR
     weights. A rejected attempt restores BOTH parameters and Adam state (from a
@@ -122,8 +142,28 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     Pairs with executed=False are not trainable and are filtered before counting.
     The inherited .045 KL budget is separate from PPO. Legacy non-V2V run()
     remains byte-for-byte unchanged.
+
+    c4/imit-strength: step_mode 'fixed' (default, byte-identical) keeps the
+    halving-only backtracking above. 'kl_targeted' additionally doubles the NEXT
+    pass's step scale (capped at STEP_SCALE_CAP x base lr) and its number of
+    optimizer steps (capped at STEPS_CAP x, via smaller minibatches of the same
+    fixed permutation) whenever the ACCEPTED pass ends with KL (vs the post-PPO
+    snapshot, same joint_kl measurement) below half the registered KL_LIMIT;
+    the existing halving backtracking is unchanged and KL_LIMIT is never
+    exceeded. Per accepted pass the report records step_scale_mult, steps_mult
+    and optimizer_steps. A None step_mode falls back to the runtime binding
+    installed by v2v_live.hooks (identical for B and R). intent_bank_term=False
+    (runtime key v2v_intent_bank_term, default True = current) drops the
+    v2v_intent bank term from the imitation loss; the TRAINED-subset (w>0,
+    trainable pairs) bank intent loss is reported by exact_update's v2v_intent
+    block as before_trained/after_trained alongside the all-pairs values.
     """
     if int(passes)!=passes or passes<5:raise ValueError('at least five requested passes')
+    step_mode=RUNTIME_STEP_MODE if step_mode is None else str(step_mode)
+    if step_mode not in STEP_MODES:raise ValueError('unknown imitation_step_mode '+repr(step_mode))
+    if intent_bank_term is None:intent_bank_term=RUNTIME_INTENT_BANK_TERM
+    intent_bank_term=bool(intent_bank_term)
+    targeted=step_mode=='kl_targeted'
     offered=[(s,float(w)) for s,w in pairs]
     unexecuted=sum(1 for s,w in offered if w>0 and not s.get('behaviour',{}).get('executed'))
     pairs=[(s,w) for s,w in offered if trainable(s,w)]
@@ -139,6 +179,8 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
         pass1_step_scale=None,pass1_loss_drop=None,pass1_effective=False,imitation_failed=False,
         min_additional_pass_step_scale=MIN_ADDITIONAL_PASS_SCALE,
         rule='full-bank transactional passes; separate imitation KL; AWR weights unchanged')
+    if targeted:report.update(step_mode=step_mode,step_scale_cap=STEP_SCALE_CAP,steps_cap=STEPS_CAP)
+    if not intent_bank_term:report['intent_bank_term']=False
     if not pairs:
         return dict(report,stop_reason='empty statistically qualified bank',kl=0.,action_error_after_mps2=None)
     samples=[s for s,_ in pairs]
@@ -152,7 +194,7 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
         for ids in order:
             batch=[pairs[int(i)] for i in ids]
             loss=torch.stack([imitation(policy,s,w) for s,w in batch]).mean()*coefficient
-            if getattr(policy,'intent_horizon',0):  # v2v_intent ON only: plan intent targets
+            if intent_on and intent_bank_term:  # v2v_intent ON only: plan intent targets
                 from .v2v_intent import bank_term;loss=loss+bank_term(policy,batch)
             if not bool(torch.isfinite(loss)):return 'nonfinite_loss',None,steps,last_loss,last_norm
             optimizer.zero_grad();loss.backward()
@@ -167,9 +209,11 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
         return ('accepted' if kl<=.045 else 'kl_exceeded'),kl,steps,last_loss,last_norm
 
     try:
+        mult=1.;steps_mult=1   # kl_targeted growth multipliers; both stay 1 in fixed mode
         for epoch in range(int(passes)):
             report['epochs_started']=epoch+1
-            order=torch.randperm(len(pairs),generator=generator).split(128)
+            order=torch.randperm(len(pairs),generator=generator).split(
+                max(1,128//(steps_mult if targeted else 1)))
             state=copy.deepcopy(policy.state_dict());adam=copy.deepcopy(optimizer.state_dict())
             loss_before=awr_loss(policy,pairs,coefficient);error_before=action_error(policy,pairs)
             # pass 1 keeps the guaranteed 25 halvings; later passes stop at scale 1/64 (attempt 6)
@@ -179,17 +223,18 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                 if attempt:
                     policy.load_state_dict(state);optimizer.load_state_dict(copy.deepcopy(adam))
                     report['backtracks']+=1
-                for g,lr in zip(optimizer.param_groups,original_lrs):g['lr']=lr*(.5**attempt)
+                scale=(mult if targeted else 1.)*(.5**attempt)
+                for g,lr in zip(optimizer.param_groups,original_lrs):g['lr']=lr*scale
                 status,kl,steps,last_loss,last_norm=attempt_pass(order)
                 statuses.append(status)
                 if status=='accepted':
                     accepted=True;break
                 rejected+=steps
-            scale=.5**attempt
             row=dict(epoch=epoch+1,accepted=accepted,step_scale=scale if accepted else None,
                      smallest_step_scale_tried=scale,attempts=len(statuses),attempt_status=statuses,kl=kl,
                      awr_loss_before=loss_before,l1_action_error_before=error_before,
                      rejected_optimizer_steps=rejected)
+            if targeted:row.update(step_scale_mult=mult,steps_mult=steps_mult,optimizer_steps=steps)
             report['rejected_optimizer_steps']+=rejected
             if not accepted:
                 policy.load_state_dict(state);optimizer.load_state_dict(copy.deepcopy(adam))
@@ -218,6 +263,10 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                       if _finite(row['awr_loss_before']) and _finite(row['awr_loss_after']) else None)
                 report.update(pass1_step_scale=scale,pass1_loss_drop=drop,
                               pass1_effective=bool(drop is not None and drop>0))
+            # kl_targeted: an accepted pass that ended below half the registered bound lets the
+            # next pass push harder (step scale x2 capped 16, optimizer steps x2 capped 4).
+            if targeted and epoch+1<int(passes) and kl is not None and kl<KL_LIMIT/2:
+                mult=min(float(STEP_SCALE_CAP),mult*2.);steps_mult=min(int(STEPS_CAP),steps_mult*2)
             if scale<MIN_ADDITIONAL_PASS_SCALE and epoch+1<int(passes):
                 report['stop_reason']=(f'accepted step scale {scale:g} below {MIN_ADDITIONAL_PASS_SCALE:g} '
                     'of base; additional passes stopped')

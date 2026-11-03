@@ -42,8 +42,13 @@ INTENT_OPTIONS = dict(v2v=True, v2v_dim=48, v2v_intent=True,
 BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
     bank_statistics='per_seed_v1',   # owner 2026-11-03 21:45 + audit: per_seed_v1 only (B and R)
     # owner 2026-11-04 00:55: B and R imitate ONLY within-seed cooperative examples (A has no bank)
-    imitation_bank_filter='cooperative_only')
+    imitation_bank_filter='cooperative_only',
+    # c4/imit-strength (prepared): 'fixed' stays byte-identical; 'kl_targeted' may only be
+    # registered at a registered update boundary, for B-v2v and R-v2v together. The bank intent
+    # term switch defaults True = current behaviour.
+    imitation_step_mode='fixed', v2v_intent_bank_term=True)
 IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
+IMITATION_STEP_MODES = ('fixed', 'kl_targeted')
 DIAGNOSTIC_SCHEDULE = dict(A=dict(lessons=[], isolated=[]),
     B=dict(lessons=[6, 12, 18, 24], isolated=[6, 12, 18, 24]),
     R=dict(lessons=[], isolated=[12, 24]))
@@ -260,6 +265,39 @@ def imitation_filter_for(cfg, arm):
     if by_arm is not None:
         if not isinstance(by_arm, dict) or by_arm.get('B') != by_arm.get('R') or by_arm.get('B') != have:
             raise Refused('imitation_bank_filter must be identical for B and R: ' + repr(by_arm))
+    if arm not in ('B', 'R'):
+        raise Refused('only arms B and R have an imitation bank')
+    return have
+
+
+def imitation_step_mode_for(cfg, arm):
+    """The imitation step mode of arm B or R (c4/imit-strength; 'kl_targeted' only ever at a
+    registered update boundary, for B and R together). One key serves both arms; an optional
+    per-arm mapping cfg['imitation_step_mode_by_arm'] is accepted only when B == R == the key."""
+    have = cfg.get('imitation_step_mode', 'fixed')
+    if have not in IMITATION_STEP_MODES:
+        raise Refused('unknown imitation_step_mode ' + repr(have))
+    by_arm = cfg.get('imitation_step_mode_by_arm')
+    if by_arm is not None:
+        if not isinstance(by_arm, dict) or by_arm.get('B') != by_arm.get('R') or by_arm.get('B') != have:
+            raise Refused('imitation_step_mode must be identical for B and R: ' + repr(by_arm))
+    if arm not in ('B', 'R'):
+        raise Refused('only arms B and R have an imitation bank')
+    return have
+
+
+def intent_bank_term_for(cfg, arm):
+    """Whether the bank intent term trains arm B or R (default True = current behaviour). One key
+    serves both arms; an optional per-arm mapping cfg['v2v_intent_bank_term_by_arm'] is accepted
+    only when B == R == the key."""
+    have = cfg.get('v2v_intent_bank_term', True)
+    if not isinstance(have, bool):
+        raise Refused('v2v_intent_bank_term must be a bool: ' + repr(have))
+    by_arm = cfg.get('v2v_intent_bank_term_by_arm')
+    if by_arm is not None:
+        if (not isinstance(by_arm, dict) or not all(isinstance(by_arm.get(a), bool) for a in ('B', 'R'))
+                or by_arm.get('B') is not by_arm.get('R') or by_arm.get('B') is not have):
+            raise Refused('v2v_intent_bank_term must be identical for B and R: ' + repr(by_arm))
     if arm not in ('B', 'R'):
         raise Refused('only arms B and R have an imitation bank')
     return have
