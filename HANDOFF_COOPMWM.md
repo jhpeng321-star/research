@@ -12,6 +12,12 @@
   arms411152/411153 + graders3305068/69 idle-boundary-verified, briefSTOP/CONT,
   then all4 exited through registered pause. No next-wave claims or new physics.
   Watcher411148 expected child-exit alert retained; NEVERauto-recover this pause.
+- MAIN22:03 conditional scoping APPLIED after all4 exited: registered16802967 /
+  LEGACY_ONLY_RESOURCE_HOLD_2203.json. Our shared-root PAUSE marker was retired
+  byte-for-byte to memory_recovery1/RESOURCE_MAIN2158B_RETIRED_2203.json (SHA7da89277),
+  preserving old-owner hold while unblocking required warm1 gate/solo/search tools.
+  This is NOT old B/R resumption; safety/other health pauses unchanged. Disk at
+  1793714998:4,168,466,432bytes; no cleanup by this agent.
 - At1793714710: MemAvailable22,223,320kB (22.76GB); disk3,783,544,832bytes.
   MAIN cleanup agent owns deletion/reference audits; do NOT run parallel cleanup.
 - Audit now EXISTS `_audit_20261103/AUDIT_REPORT.md`, with B1..B5 blockers;

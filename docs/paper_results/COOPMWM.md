@@ -9,6 +9,10 @@
   using registered `PAUSE_RESOURCE_MAIN2158B.json`. Four boot/start/argv-verified
   owned arm/grader PIDs acknowledged the pause and exited. No episode was replayed
   or checkpoint rolled back. The supervisor's expected child-exit alert is kept.
+- MAIN22:03 scopes this hold to the exited old owners: the original resource
+  pause bytes are retained in control metadata, allowing required shared-root
+  gate/solo/search tooling to pass its unchanged health checks. Old B/R remain
+  held. Registration16802967; no safety guard was relaxed.
 - Available memory rose from about14.22GB to22.76GB. Disk was3,783,544,832bytes
   after the pause; MAIN's separate cleanup agent owns further reference checks.
 - Audit report is now available and has blockers for its f3caf85f subject.
@@ -20,6 +24,7 @@
   not qualification of subsequent changes. No V2V launch or real-bank gate run.
 - Evidence:`coopmwm/LEGACY_RESOURCE_PAUSE_REGISTRATION_2158B.json`,
   `coopmwm/LEGACY_RESOURCE_PAUSE_2158B.json`,
+  `coopmwm/LEGACY_ONLY_RESOURCE_HOLD_2203.json`,
   `coopmwm/memory_RECOVERY_STATUS_1793714710968443000.json`.
 
 ## Nov3 ~22:00 UTC+8 — reviewed intent integration passes Linux qualification
