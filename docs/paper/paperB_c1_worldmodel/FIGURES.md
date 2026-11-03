@@ -5,6 +5,7 @@ vector twins and backing CSVs remain valid at their declared evidence cuts. Curr
 switching coverage and successor/ranking/teacher diagnostics are specified below
 without relabeling historical panels or creating missing paired estimates. The
 owner-approved Overleaf delivery is separate; its empty figure boxes are preserved.
+Current review: `RESUME_20261103.md`; exact safe source hashes: `SOURCE_REFRESH.json`.
 
 ## Reproduction and provenance
 
@@ -194,6 +195,7 @@ Selection/transcription only: no experiment, model execution, fit or resampling.
 - **Planned columns/panels:** full-team episode cost/paired differences; decision regret; each model's training/data/compute budget; library/cadence/plant/handovers; safety; complete coverage; optional independently qualified model version.
 - **Sources:** `E:/agent-work/c4-c1switch2/docs/paper_results/C1SWITCH2_DESIGN.md`, `HANDOFF.md`, eventual complete identity-bound outputs and final selector receipts.
 - **Generating command/status:** `[[PENDING: complete paired coverage/exports and producer analysis/render command after authorized continuation / S-C1SWITCH2 + MAIN]]`. Both final checkpoint/source/config/budget receipts are delivered as `SELMAPPO_FINAL.json` and `SELMAPPO2_FINAL.json` in the source worktree. Fleet evaluation is complete, while WM/per-CAV coverage and BB physics are incomplete/unavailable. The latest switching reconciliation records exited supervisors/observer, an active GPU hold and an unstarted-scope CPU continuation request awaiting authority. No partial main efficacy figure. Sources: `E:/agent-work/c4-c1switch2/HANDOFF.md`, Current execution state; selector reports in `SOURCE_REFRESH.json`.
+- **Artifact-location note:** source-owner audits verify surviving final fleet/per-CAV checkpoint copies on gpuR, although original training checkpoint locations are no longer loadable. Use C1-SWITCH2's exact surviving paths/hashes for any future source-owned analysis; preserve historical freeze/accounting receipts. Available weights do not supply the missing paired result or a new runtime pass. Sources: `E:/agent-work/c4-selmappo/docs/paper_results/SELMAPPO.md`; `E:/agent-work/c4-selmappo2/docs/paper_results/SELMAPPO2.md`, Final checkpoint location verified.
 
 ### Physics rebuild — final diagnostic ledger; no adoption claim
 
@@ -215,8 +217,9 @@ Selection/transcription only: no experiment, model execution, fit or resampling.
 - **Purpose:** keep later engineering readiness and matched-cohort uncertainty distinct from a passed adoption condition.
 - **Data source:** `E:/agent-work/c4-rb2-int/docs/paper_results/WMPHYS_V5.md`, available-replicated-cell and separate reserved-subset interims; report hash in `SOURCE_REFRESH.json`.
 - **Generating command:** owner-typeset optional diagnostic row from WM-SUCCESSOR; no final-result renderer or new image. Do not pool cohorts or fabricate unobserved short source clocks.
-- **Caption claim if used:** “On **10 matched complete K8 worlds / five replicated cells**, v5−v4 delay CRPS is **+166.9 [64.6,269.3] / +1046.1 [356.5,1735.7] / +3618.5 [2051.0,5185.9] veh-s at 120/300/600 s**. Conditional within-family **95%** intervals; available-data interim, not final qualification or sequential inference. The separate reserved subset has singleton-stratum CI limitations.” <!-- Source: E:/agent-work/c4-rb2-int/docs/paper_results/WMPHYS_V5.md:69-83,121-134. -->
+- **Caption claim if used:** “On **10 matched complete K8 worlds / five replicated cells**, v5−v4 delay CRPS is **+166.9 [64.6,269.3] / +1046.1 [356.5,1735.7] / +3618.5 [2051.0,5185.9] veh-s at 120/300/600 s**. Conditional within-family **95%** intervals; available-data interim, not final qualification or sequential inference. The separate reserved subset has singleton-stratum CI limitations.” <!-- Source: E:/agent-work/c4-rb2-int/docs/paper_results/WMPHYS_V5.md, INTERIM available_replicated_cells / Delay, breakdown and HDV60; separate reserved8 interim. -->
 - **Status:** INTERIM source complete; full comparison exited incomplete/held. `[[PENDING: complete final successor comparison/adoption and calibrated confidence after authorized continuation / S-RB2-INT + MAIN]]`. Short team-direction accuracy is partially identified; road-only and resolved-pair accuracy must not fill a missing full-team accuracy column.
+- **Linked component boundary:** newer successor status adds no scientific snapshot. `E:/agent-work/c4-rb2-cal/docs/paper_results/rb2cal/RECOVERY_20261103.md` permits only complete-ensemble partial development diagnostics after an owner stop; incomplete-world futures cannot enter those metrics. CPU candidate versus GPU baseline is not a device-controlled ablation. No integrated-successor or calibrated-confidence figure can be filled from that recovery; full component qualification remains blocked. Exact recovery-report hash is in `SOURCE_REFRESH.json`. Existing images/CSVs need no change.
 
 ## Visual QA
 

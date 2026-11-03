@@ -12,7 +12,7 @@ Target: IEEE IV, six pages including references; owner deadline November 15, 202
 - `THREATS.md`: reviewer objections and evidence-bounded answers.
 - `REFRESH.md`: final source refresh and remaining agent dependencies.
 - `SOURCE_REFRESH.json`: timestamped exact-path existence/hash inventory; `refresh_sources.py` updates it without dispatching any runs.
-- `NIGHT_SOURCE_REVIEW.md`: earlier source-review cuts; `RESUME_20261102.md` records the latest resume/refresh.
+- `NIGHT_SOURCE_REVIEW.md`: earlier source-review cuts; `RESUME_20261103.md` records the latest resume/refresh, following `RESUME_20261102.md`.
 
 ## Current resumed drafting cut
 
@@ -32,6 +32,10 @@ BB stopped before physics, and the latest source-owner reconciliation records
 exited supervisors/observer with the GPU hold active. A CPU-only unstarted-scope
 continuation request awaits authority. Full paired WM/BB/RL efficacy remains
 PENDING. Existing source owners retain continuation responsibility.
+Their current audits verify surviving final selector copies on gpuR; original
+training checkpoint paths are no longer loadable. Historical completion/accounting
+receipts remain evidence, while fresh full-ledger validation at fleet's old path
+is unavailable. See C1-SWITCH2's current artifact note for exact paths and scope.
 
 Final frozen causal-motion WM-PHYS improves delay/endpoint point estimates and
 reported controller-effect signs but FAILS the registered breakdown-distance
@@ -43,8 +47,12 @@ Cached mean-delay ordering outperforms saturated breakdown probability on
 development but does not yield positive reserved-panel selected-rule savings.
 Exact-teacher student testing is complete without an established MAPPO win.
 WM-teacher quality is complete; scale labelling/student/live transfer is paused.
+The renewed WM-teacher cache audit changes no scientific result. The successor's
+new operational reconciliation likewise adds no final gate; its linked cache-only
+calibration-component recovery is a separate partial development diagnostic with
+a cross-device comparator, not integrated candidate qualification.
 
-Current review: `RESUME_20261102.md`; exact source cut: `SOURCE_REFRESH.json`.
+Current review: `RESUME_20261103.md`; exact source cut: `SOURCE_REFRESH.json`.
 `CLAIMS.md` binds the new ranking/successor/teacher evidence and remaining gates.
 The separate owner-approved manuscript, compiled PDF and upload archive are already
 delivered in `../paperB_overleaf/`; `V2_RECEIPT.md` there records that completed

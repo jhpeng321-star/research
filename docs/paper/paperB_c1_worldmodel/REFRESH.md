@@ -2,6 +2,44 @@
 
 ## Current resumed handoff
 
+### Subsequent source cut
+
+Latest review: `RESUME_20261103.md`; exact permitted source hashes:
+`SOURCE_REFRESH.json`. The previous resumed evidence and original numerical
+figure inputs are unchanged. Newly published source-owner receipts add these
+reproducibility/status boundaries:
+
+- Both final selectors survive in hash-verified gpuR evaluation copies, but their
+  original training checkpoint locations are no longer loadable. Fleet's original
+  directory is absent, preventing fresh full-ledger validation there. Preserve
+  historical accounting/freeze receipts and use the current C1-SWITCH2 artifact
+  note for surviving locations. These are producer audits, not paper-agent remote
+  checks or new full-runtime passes.
+- Main switching remains incomplete with exited supervision and active GPU hold.
+  Resource relief is not approval of its pending CPU-only continuation request.
+- Successor physics has no new scientific snapshot or final gate. Its linked CAL
+  cache recovery supports only partial complete-ensemble development diagnostics,
+  with incomplete-world futures excluded and cross-device comparisons disclosed.
+  Full component qualification remains blocked; it cannot fill the integrated
+  successor gate or revise the separate negative WMCALIB result.
+- WMTEACH's renewed audit confirms unchanged paused caches; scale student/live
+  transfer remains missing. Later companion replay-learning/interim updates in
+  the owner summary belong to a separate pipeline, not Paper B picker efficacy.
+
+Sources: `E:/agent-work/c4-c1switch2/HANDOFF.md`, Current execution state;
+`E:/agent-work/c4-selmappo/docs/paper_results/SELMAPPO.md`;
+`E:/agent-work/c4-selmappo2/docs/paper_results/SELMAPPO2.md`;
+`E:/agent-work/c4-rb2-int/docs/paper_results/WMPHYS_V5.md`;
+`E:/agent-work/c4-rb2-cal/docs/paper_results/rb2cal/RECOVERY_20261103.md`;
+`E:/agent-work/c4-wmteach/docs/paper_results/WMTEACH.md`;
+`E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md`, READ FIRST.
+
+All missing scientific gates in the insertion queue below remain PENDING.
+Existing first-package registration, literature verification and separate approved
+manuscript delivery remain complete. This refresh adds no scientific dispatch.
+
+### Previous resumed cut, retained with the updates above
+
 Preserved the clean committed package, bibliography verification, artwork,
 append-once registration and later owner-approved manuscript deliveries. Read the
 current summary and exact source cut together: `RESUME_20261102.md` and
