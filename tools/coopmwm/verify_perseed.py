@@ -201,8 +201,32 @@ def _verify(kind, snapshot, candidates, root_dir, runner_for, run_root, phase, p
     return r
 
 
-def _cooperation(seed, plan, plan_tape, window, solo, solo_dir, reference_J, admitted):
-    """Within-seed cooperation label from one batched solo verification (never pooled)."""
+def _reference_agrees(ref_tape, solo_tape, window):
+    """Bitwise per-second fingerprint agreement of two policy-reference tapes over [start_s, end_s].
+
+    Missing fingerprints count as disagreement (never imputed)."""
+    from tools.coopnative.storage import canonical
+
+    def fp(tape, t):
+        v = tape['prefixes'].get(str(t))
+        if v is None and tape.get('final') is not None and float(tape['final']['t_s']) == float(t):
+            v = tape['final']
+        return v
+    for t in range(int(window['start_s']), int(window['end_s'])+1):
+        a, b = fp(ref_tape, t), fp(solo_tape, t)
+        if a is None or b is None or canonical(a) != canonical(b):
+            return False
+    return True
+
+
+def _cooperation(seed, plan, plan_tape, window, solo, solo_dir, reference_J, admitted, reference_tape=None):
+    """Within-seed cooperation label from one batched solo verification (never pooled).
+
+    The synergy is always computed on the COMMON window [t0, min(end_solo, end_group)]. A solo policy
+    branch whose total J differs from the reference J only because its window is shorter is NOT a
+    reference mismatch when the two policy tapes agree bit-for-bit over the common window
+    (``reference_tape`` = the group verification's policy branch tape); only tapes that actually differ
+    over the overlap are labelled reference_mismatch. Records whose J already match are unchanged."""
     from . import bank_statistics as bs
     if len(plan['members']) < 2:
         return dict(cooperative=False, cooperative_status='single_cav',
@@ -221,6 +245,10 @@ def _cooperation(seed, plan, plan_tape, window, solo, solo_dir, reference_J, adm
         solo_tape = bs._read_result(solo_dir/'branches', solo['verification_id'], solo['branches'][b+1])
         common = bs.paired_window(window, solo['window'])
         st = bs._stats([(solo_tape, plan_tape, common)])
+        agree = None
+        if not match and reference_tape is not None:
+            solo_ref = bs._read_result(solo_dir/'branches', solo['verification_id'], solo['branches'][0])
+            agree = _reference_agrees(reference_tape, solo_ref, common)
     except bs._Missing as e:
         return dict(cooperative=False, cooperative_status='data_missing', statistical_reason=str(e),
                     solo_advantages_veh_s=advs)
@@ -229,12 +257,20 @@ def _cooperation(seed, plan, plan_tape, window, solo, solo_dir, reference_J, adm
     positive = st['lower95_one_sided_veh_s'] > 0
     status = 'cooperative' if positive else 'not_cooperative'
     reason = f'seed-{seed} synergy lower95 ' + ('> 0' if positive else '<= 0')
+    extra = {}
     if not match:
-        status, positive = 'reference_mismatch', False
-        reason = f'seed-{seed} solo policy branch J differs from the reference policy branch; not counted'
+        if agree:
+            extra = dict(solo_policy_matches_reference_on_common_window=True, synergy_window_used=common)
+            reason += (f' (computed on common window [{common["start_s"]}, {common["end_s"]}]; policy reference '
+                       'tapes bit-identical there)')
+        else:
+            status, positive = 'reference_mismatch', False
+            reason = (f'seed-{seed} solo policy branch differs from the reference policy branch over the common '
+                      'window; not counted')
+            extra = dict(solo_policy_matches_reference_on_common_window=False)
     return dict(cooperative=bool(admitted and positive), cooperative_status=status, statistical_reason=reason,
                 synergy=st, solo_advantages_veh_s=advs, solo_verification_id=solo['verification_id'],
-                solo_receipt_sha256=solo['receipt_sha256'], solo_policy_matches_reference=match)
+                solo_receipt_sha256=solo['receipt_sha256'], solo_policy_matches_reference=match, **extra)
 
 
 # ---------------------------------------------------------------- confirmation (one decision)
@@ -363,8 +399,15 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
         if len(plan['members']) >= 2:
             solo = verify(KIND_SOLO[k], snaps[k], [rb.solo_candidate(plan, m) for m in plan['members']],
                           bank/SOLO_ROOTS[k], rb.sv.TAIL_S)
+        ref_tape = None
+        if solo is not None and solo['J_policy_veh_s'] != seeds[k][0]['J_policy_veh_s']:
+            try:     # only needed when the solo window differs from the group window
+                ref_tape = bs._read_result(seeds[k][1], seeds[k][0]['verification_id'],
+                                           seeds[k][0]['branches'][0])
+            except (bs._Missing, OSError, ValueError):
+                ref_tape = None
         ex.update(_cooperation(k, plan, evals[k][ex['candidate_index']]['tape'], ex['tape']['window'], solo,
-                               bank/SOLO_ROOTS[k], seeds[k][0]['J_policy_veh_s'], True))
+                               bank/SOLO_ROOTS[k], seeds[k][0]['J_policy_veh_s'], True, reference_tape=ref_tape))
 
     adm = [e for e in examples if e['admitted']]
     winners = {str(k): [e['plan_id'] for e in adm if e['seed_index'] == k] for k in (1, 2)}
@@ -410,14 +453,63 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
 
 # ---------------------------------------------------------------- readers (per_seed_v1 integration)
 
+def relabel_reference_mismatch(record, bank):
+    """Reader-side (no SUMO, nothing rewritten) correction of 'reference_mismatch' examples.
+
+    A sealed example labelled reference_mismatch only because its solo window is shorter than the group
+    window is re-derived from the stored solo receipt and tapes with ``_cooperation`` (synergy on the
+    common window; policy tapes compared bit-for-bit there). Returns the record unchanged (same object)
+    when no example changes, else a corrected deep copy with the per-seed aggregates recomputed and
+    ``reader_relabel`` set on each changed example. Any unreadable data keeps the stored label."""
+    from . import bank_statistics as bs
+    exs = record.get('per_seed_v1', {}).get('examples') or []
+    if not any(e.get('cooperative_status') == 'reference_mismatch' for e in exs):
+        return record
+    out = copy.deepcopy(record);changed = 0
+    for e in out['per_seed_v1']['examples']:
+        if e.get('cooperative_status') != 'reference_mismatch':
+            continue
+        try:
+            k, t = e['seed_index'], e['tape']
+            bdir = Path(t['branches_dir'])
+            solo_root = Path(bank)/SOLO_ROOTS[k]
+            solo = bs._receipt(solo_root, dict(verification_id=e['solo_verification_id'],
+                                               receipt_sha256=e.get('solo_receipt_sha256')))
+            grec = bs._receipt(bdir.parent, dict(verification_id=t['verification_id']))
+            plan_tape = bs._read_result(bdir, t['verification_id'], t['branch'])
+            ref_tape = bs._read_result(bdir, t['verification_id'], grec['branches'][0])
+            members = next(c['members'] for c in out['candidates'] if c['index'] == e['candidate_index'])
+            new = _cooperation(k, dict(members=members), plan_tape, t['window'], solo, solo_root,
+                               grec['J_policy_veh_s'], True, reference_tape=ref_tape)
+        except (bs._Missing, OSError, KeyError, ValueError, StopIteration, TypeError):
+            continue
+        if new['cooperative_status'] in ('reference_mismatch', 'data_missing', 'incomplete'):
+            continue
+        e.update(new);e['reader_relabel'] = 'reference_mismatch -> '+new['cooperative_status'];changed += 1
+    if not changed:
+        return record
+    ps, exs = out['per_seed_v1'], out['per_seed_v1']['examples']
+    coop = [e for e in exs if e.get('cooperative') is True]
+    by_plan = {}
+    for e in coop:
+        by_plan.setdefault(e['plan_id'], set()).add(e['seed_index'])
+    replicated = sorted(p for p, s in by_plan.items() if s == {1, 2})
+    seeds = sorted({e['seed_index'] for e in coop})
+    ps.update(cooperative_seeds=seeds, replicated=bool(replicated), replicated_plans=replicated)
+    out['cooperation'].update(cooperative=bool(coop), cooperative_seeds=seeds, cooperative_examples=len(coop),
+                              replicated=bool(replicated))
+    return out
+
+
 def records(root, arm):
     """{vid: sealed all8 record}; each record IS a per_seed_v1 view (bank_rule='per_seed_v1')."""
     from . import replay_bank as rb
     from .exact_grade import verify_sealed
     out = {}
-    for p in sorted((Path(rb.bank_root(root, arm))/RECORDS).glob('*.json')):
+    bank = rb.bank_root(root, arm)
+    for p in sorted((Path(bank)/RECORDS).glob('*.json')):
         v = json.loads(p.read_text());verify_sealed(v, 'confirmation_sha256')
-        out[v['verification_id']] = v
+        out[v['verification_id']] = relabel_reference_mismatch(v, bank)
     return out
 
 
