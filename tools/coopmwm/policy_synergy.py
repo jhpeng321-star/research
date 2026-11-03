@@ -149,6 +149,8 @@ def run_update(root, arm, update, cfg):
     root = Path(root);control = Path(cfg['control_root']);base = control/f'u{update:03}_{arm}'
     base.mkdir(parents=True, exist_ok=True)
     isolated = cfg.get('isolated', False)
+    from . import bank_v2v
+    v2v = bool(cfg.get('v2v'))   # v2v block in the new-policy branch observations (default off)
     suffix = cfg.get('output_suffix', '_ISOLATED') if isolated else ''
     claim = base/'CLAIM.json';result_path = root/f'POLICY_SYNERGY_u{update:03}_{arm}{suffix}.json'
     if result_path.exists():return json.loads(result_path.read_text())
@@ -216,7 +218,8 @@ def run_update(root, arm, update, cfg):
                 from .warm_health import assert_running
                 assert_running(root,arm)
                 runner.prepare([spec], snapshot)
-                results.append(sv.run_branch(spec, snapshot, runner))
+                with bank_v2v.enabled(v2v):
+                    results.append(sv.run_branch(spec, snapshot, runner))
             reference_result=results.pop() if fresh_reference else None
             J_u3=(reference_adopt['J_u3_veh_s'] if reference_adopt else
                   reference_result['J_veh_s'] if reference_result and reference_result['status']=='graded'
@@ -251,6 +254,10 @@ def run_update(root, arm, update, cfg):
         background=('non-group u3 for group/solo, non-group new for background-only; captured t0 action, intervention t0+1'
                     if isolated else 'non-group new policy exactly as lesson; common captured t0 action, intervention from t0+1'),
         outcomes_opened=False)
+    if v2v:
+        out['v2v'] = dict(enabled=True,
+                          rule='new-policy branch observations include the v2v block; '
+                               'last_commands computed per step (bank_v2v)')
     _write_new(result_path, _seal(out, 'policy_synergy_sha256'))
     if isolated:
         combined = dict(arm=arm, update=update, original=legacy,
