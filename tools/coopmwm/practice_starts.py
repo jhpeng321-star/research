@@ -131,7 +131,6 @@ def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_
         if record['arm'] != arm or record['update'] != int(update):
             raise ValueError('practice plan belongs to another arm/update')
         return record
-    from .warm_protocol import SEED
     coop = examples(root, arm, cooperative_only=True)
     pool = [dict(r) for r in coop]
     fallback = False
