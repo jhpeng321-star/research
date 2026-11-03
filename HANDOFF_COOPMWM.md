@@ -1,5 +1,32 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+## CURRENT Nov3 17:20 +08 — latest MAIN16:47 applied
+- Read ALL827brief lines; current HEAD81027a29 plus receipts/source work retained.
+- **Rolling mover LIVE** cpuQ4116186/start71133854/root
+  `/home/ubuntu/coopmwm20261103_rolling1647_v3`, local transport31320/create
+  1793697058.5070722. ADOPT `ROLLING_ARCHIVE_BRIDGE_DISPATCH_1647_V3.json`;
+  NEVERduplicate. Qualified6Linux safety tests; registrationcf49a514. V1 completed
+  9batches then boot/start/argv/idle/nochildren verified retirement; proofs retained.
+- At1793697573.94:16certified rollingbatches/2121435263bytes total;
+  cpuQfree4042629120/gpuRfree8304652288. Remainingeligible183854995bytes;
+  optimistic **2215966829bytes further capacity needed to reach6GiB**, before
+  new writes. Earlier5.05GBarchive complete/adopted. Protected replay_bank/final
+  fingerprint/detector inputs remain; Aoldjobs on/dev/shm cannotfreecpuQdisk.
+  MAINalert `_sol/COOPMWM_STORAGE_GATE_1720.md` gives exact gap/authority request.
+- **V2V resource watcher LIVE**4125157/start71158222, root`.../v2v2`, control
+  `/home/ubuntu/coopmwm20261103_v2v_resource1647`; ADOPT
+  `V2V_RESOURCE_WATCH_DISPATCH_1647.json`. TwoLinux resource tests PASS; original
+  769Linux numericalrelease/bankpreflight adopted. Append-only6GiB amendment
+  0a0fd436; numerical source/runtime bindings immutable. Gate requireslive mover/
+  health/noGPU-spaceSTOP; WATCH_OWNER/resource_wait/NOchildren/smoke/physics/start.
+  AutostartsregisteredALL3 realu1smokes thenu2..24 at>=6GiB. Do not claimV2V_STARTED.
+- Original3305066+fourchildren retained; latestwarmstateB16/R15, noSTOP/pause/fail,
+  A48done; charged8562480/global17471840. No simulation/inference by this resume.
+- Use `rolling_archive_ops status`/`evidence`, `v2v_resource_ops status`,
+  `warm_watch state`. Rolling15min maintenance8GiB/GPUfloor4GiB. Archive extra
+  scopes/recovered capacities require MAIN if existing authorised pool insufficient.
+- Preexisting uncommitted source/telemetry files untouched. Commit eachstep/no push.
+
 ARCHIVEV2 RECOVERY QUALIFIED: V1root3917084/client9360exitedbeforeANYrsync/
 namespacecreation/deletion onGPUloginPATHmissingpython3. Failure/sourcekept.
 NewROOT/home/ubuntu/coopmwm20261103_archive1450_v2 pins/root/miniconda3/bin/python;

@@ -212,6 +212,37 @@ if p.returncode:raise RuntimeError(p.stderr)
 print(p.stdout)''',timeout=75))
 
 
+def evidence():
+    value=json.loads(remote('cpuQ',f'''import subprocess
+code="""import sys,json,shutil,time
+from pathlib import Path
+sys.path.insert(0,{ROOT!r});import rolling_archive as m
+groups={{}};batches=0
+for root in (Path('/home/ubuntu/coopmwm20261103_rolling1647'),Path({ROOT!r})):
+ for p in root.glob('batch_*/ARCHIVE_MOVE.json'):
+  receipt=json.loads(p.read_text());manifest=p.parent/'MANIFEST.json'
+  assert m.base.digest_file(manifest)==receipt['manifest_sha256']
+  proof=json.loads((p.parent/'REMOTE_VERIFIED.json').read_text())
+  assert proof['manifest_sha256']==receipt['manifest_sha256']
+  mapping={{e['relative']:e for e in json.loads(manifest.read_text())['entries']}}
+  for name in receipt['deleted_sources']:
+   e=mapping[name];assert proof['hashes'][name]==e['sha256']
+   row=groups.setdefault(e['category'],dict(files=0,bytes=0));row['files']+=1;row['bytes']+=e['bytes']
+  batches+=1
+found,skipped=m.candidates();remaining=sum(Path(p).stat().st_size for p in found)
+free=shutil.disk_usage('/home/ubuntu').free;gpu=m.destination_free()
+print(json.dumps(dict(unix=time.time(),categories=groups,certified_batches=batches,
+ cpu_free=free,gpu_free=gpu,remaining_eligible_files=len(found),remaining_eligible_bytes=remaining,
+ launch_required_bytes=6*1024**3,minimum_additional_capacity_bytes=max(0,6*1024**3-free-remaining),
+ maintenance_required_bytes=8*1024**3,new_sim_s=0,new_inference=0,
+ contract='optimistic residual excludes concurrent writes; no extra transfer or outcome read')))"""
+p=subprocess.run(['sudo','-n','/home/ubuntu/miniconda3/bin/python','-B','-c',code],capture_output=True,text=True,timeout=75)
+if p.returncode:raise RuntimeError(p.stderr)
+print(p.stdout)''',timeout=90))
+    p=ops.EVIDENCE/f'ROLLING_ARCHIVE_EVIDENCE_{time.time_ns()}.json';write(p,value)
+    print(json.dumps(dict(receipt=str(p),**value)))
+
+
 def drain_prior():
     value=json.loads(remote('cpuQ',f'''import subprocess
 code="""from pathlib import Path
@@ -257,5 +288,5 @@ print(p.stdout)''',timeout=40))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('inventory','qualify','register','launch','bridge','status','preview','drain_prior','audit_training','audit_diagnostics'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('inventory','qualify','register','launch','bridge','status','preview','drain_prior','audit_training','audit_diagnostics','evidence'))
     globals()[p.parse_args().action]()

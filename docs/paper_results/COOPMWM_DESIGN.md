@@ -46,7 +46,7 @@
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins precharged/no refunds or automatic retries. Historicalaf8b16e5 permits one qualified new-ID attempt per missing failed diagnostic branch, originals adopted; its original200000 discovery quote is superseded by current126200 allocation/ledger.
 47. A48complete; B/R12episodeworkers each/lag1, bankbranchworkers2perarm,nice19. MAIN0423 frozen-policy precompute up to24 workers SCHED_IDLE/nice19, grade priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no physics retry.
-48. HistoricalMAIN1651 source13/PIDs821013/821014/821012/927733 and DNS replacements are retained as old recovery receipts, not current owners. ActiveC1 owners in42; clocksCPU/GPU/final remain Nov5 23:59. FourNICHENULL3 slots/eight qualified gates admitted; per-query code declines, no inference replay.
+48. HistoricalMAIN1651 source13/PIDs821013/821014/821012/927733 and DNS replacements retained,notcurrentowners. ActiveC1 in42; clocksNov5 23:59. FourNICHENULL3/eightgates,per-querydeclines/noinference replay. MAIN16:47 append-onlyV2Vlaunch6GiB/health/livemover; resourcewatcher4125157/0a0fd436 waits/noV2Vphysics. SHA-gatedrolling4116186/cf49a514:completed>30min/every15min/cpuQtarget8GiB/gpuRfloor4GiB; protectbank/checkpoints/finaldependencies,proofbeforeunlink.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.

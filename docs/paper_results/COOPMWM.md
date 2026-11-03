@@ -1,5 +1,28 @@
 # S-COOPMWM — live checks
 
+## Nov 3 17:20 UTC+8 — durable rolling storage and 6 GiB V2V auto-admission
+- MAIN16:47 is applied append-only. Rolling mover **4116186** is live on cpuQ;
+  six Linux safety tests pass. SHA manifest, rsync, gpuR `sha256sum`, durable
+  verification proof and fresh source SHA/inode/mtime/FD/reference checks precede
+  each source removal. Maintenance target8GiB, gpuR hard floor4GiB, cycle15min;
+  only authorised completed artifacts older than30min. Original archive adopted.
+- At17:19:33, **16 rolling batches / 2,121,435,263 bytes** are certified moved.
+  cpuQ free4,042,629,120bytes; gpuR free8,304,652,288. Only183,854,995bytes remain
+  eligible at the scan: at least**2,215,966,829bytes additional capacity** is still
+  needed for6GiB before concurrent writes. Bank inputs/checkpoints/future final
+  fingerprint and discovery inputs remain protected. Old A tapes on `/dev/shm`
+  cannot recover disk. MAIN has the exact storage blocker receipt.
+- V2V watcher **4125157** is durable and waiting on the corrected **6GiB** gate,
+  with live-mover/health checks. Two Linux gate tests pass; original769-check
+  numerical release and real-bank preflight are adopted unchanged. No V2V
+  physics/smoke/start is claimed. The watcher automatically launches all three
+  registered update1 smokes, then exact continuation, once the gate is satisfied.
+- Original non-V2V owners remain healthy at **B16/R15**, A48complete, no active
+  STOP/health pause. Latest charge8,562,480sim-s/global17,471,840; storage/resource
+  work adds zero simulation/inference. New registration SHAs: mover`cf49a514…`,
+  resource gate`0a0fd436…`. Evidence:`coopmwm/ROLLING_ARCHIVE_EVIDENCE_1793697575319448000.json`,
+  `coopmwm/V2V_RESOURCE_WATCH_DISPATCH_1647.json`.
+
 MAIN14:50 archive first pass is qualified/registered:4 Linux CPU safety checks
 pass; source mismatch,remote mismatch,open-FD and forbidden/scenario scope gates
 are tested. Privileged FD scan finds0 eligible open files; admitted-bank/lesson
