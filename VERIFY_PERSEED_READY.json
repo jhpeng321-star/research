@@ -1,0 +1,94 @@
+{
+ "status": "READY",
+ "branch": "c4/verify-perseed",
+ "base": "9e7a5315",
+ "code_commit": "b7135a20",
+ "files": [
+  "tools/coopmwm/verify_perseed.py",
+  "tools/coopmwm/test_verify_perseed_cpu.py",
+  "tools/coopmwm/bank_builder.py (all8 path, verify_mode gated)",
+  "tools/coopmwm/replay_bank.py (confirm_pending/collect kwarg, gated)"
+ ],
+ "tests": {
+  "new": "tools/coopmwm/test_verify_perseed_cpu.py: 8 passed (off-path identical bytes; both seeds all 8; seed-2-only winner admitted from seed-2 tape; different winners per seed + within-seed coop labels; charges via hooks == quote; builder precharge ids; per_seed_v1 bank_pairs stub integration; quote)",
+  "regression": "82 run across replay_bank_confirm/bank_builder/sumo_verify/solo_seed2(+links)/bank_boot/bank_safety/replay_bank_lesson/replay_bank_v2v + new: 81 passed, 1 pre-existing env failure (test_sumo_verify_cpu::test_real_controller_never_draws_trust_again_for_verified_plan: ModuleNotFoundError tools.leverprobe; sumo_verify untouched)",
+  "ruff": "only E702 semicolon style, same convention as existing files"
+ },
+ "config_keys": {
+  "verify_mode": "'legacy' (default; None/absent identical) | 'all8_both_seeds'",
+  "where": [
+   "bank_builder control BINDING.json: \"verify_mode\"",
+   "collector binding sumo_verify block: \"verify_mode\" (rb.collect -> confirm_pending)",
+   "rb.confirm_pending(..., verify_mode=...)"
+  ],
+  "later_harm_seed1": "vp.confirm_all8 kwarg, default True (extended-window later-harm + seed-1 safety window, as per_seed_v1)"
+ },
+ "outputs": {
+  "record": "replay_bank/<arm>/confirmations_all8/<vid>.json (sealed confirmation_sha256, bank_rule=per_seed_v1, per_seed_v1.examples: one per (candidate, seed) with plan, tape{branches_dir,verification_id,branch,window,intent_entry}, lower95, later_harm, safety, within-seed cooperative label)",
+  "receipts": {
+   "seed2 all K+policy": "confirm_seed2_all8",
+   "seed1 extended": "confirm_extended_all8",
+   "solos": {
+    "1": "confirm_solo_all8_s1",
+    "2": "confirm_solo_all8_s2"
+   }
+  },
+  "charge_kinds": [
+   "confirm_seed2_all8",
+   "confirm_extended_all8",
+   "confirm_solo_all8_s1",
+   "confirm_solo_all8_s2"
+  ],
+  "phase": "bank_verification_ext"
+ },
+ "per_seed_v1_interface": {
+  "status": "c4/bank-perseed has only UNCOMMITTED changes at build time -> stubbed, not merged",
+  "readers": "vp.overlay(conf, root, arm) adds/replaces views by vid; vp.bank_examples(root, arm); vp.imitation_entry(example, t0, weight)",
+  "required_changes_in_bank_pairs": [
+   "do not skip first-seed rejected/nonpositive decisions when an all8 record exists (seed-2-only winners)",
+   "use example['plan'] / example['plan_id'] / example['duration_s'] instead of r['chosen_plan'] (seeds may admit different plans)"
+  ],
+  "example_id": "'<vid>#c<i>#s<seed>'"
+ },
+ "cost": {
+  "rule": "branch sim-s charged from t=0; K=8, D=120 s, 2-member plans; legacy = first seed + (if positive) replication 2 + extended 2 + solos 2n",
+  "per_decision_t0_600": {
+   "first_seed_negative_seed2_none": {
+    "legacy_sim_s": 7560,
+    "all8_sim_s": 15120,
+    "multiplier": 2.0
+   },
+   "first_seed_negative_seed2_one": {
+    "legacy_sim_s": 7560,
+    "all8_sim_s": 17640,
+    "multiplier": 2.33
+   },
+   "one_winner_each_seed": {
+    "legacy_sim_s": 15000,
+    "all8_sim_s": 22560,
+    "multiplier": 1.5
+   },
+   "different_winners_each_seed": {
+    "legacy_sim_s": 15000,
+    "all8_sim_s": 22560,
+    "multiplier": 1.5
+   },
+   "two_winners_each_seed": {
+    "legacy_sim_s": 15000,
+    "all8_sim_s": 28800,
+    "multiplier": 1.92
+   }
+  },
+  "summary": "per decision incl. first seed: x2.0 when no seed admits anything (every decision now gets 9 seed-2 branches), x1.5 with one winner per seed, ~x1.9 with two winners per seed; seed-2 alone = +K+1 branches (7560 sim-s at t0=600)",
+  "quote_cli": "python -m tools.coopmwm.verify_perseed quote"
+ },
+ "cpuQ_enable_steps": [
+  "merge c4/verify-perseed (b7135a20) after per_seed_v1 lands; apply the two bank_pairs changes above",
+  "stage code to the cpuQ release dir and re-run the CPU tests there",
+  "register an owner amendment raising bank_verification_ext allowance by the quoted ~x2 confirmation cost (budget block -> BUDGET_WAIT file, no claim)",
+  "stop the running bank builder by its own PID/STOP.json; start a NEW control dir whose BINDING.json adds \"verify_mode\": \"all8_both_seeds\" (same sources, branch_timeout_s, poll_s, budget, deadline_unix)",
+  "first-seed candidate plans are read from <branches>/<vid>/cand<i>.spec.json (SubprocessBranchRunner); decisions lacking them fail once in attempts_all8 (never replayed)",
+  "trainer: install per_seed_v1 and overlay vp.records so each admitted (plan, seed) is its own imitation example"
+ ],
+ "hard_rules": "no SUMO/GPU/ssh run; no other worktree edited; no reset/clean/stash/push"
+}
