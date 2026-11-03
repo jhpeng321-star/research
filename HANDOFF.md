@@ -4,6 +4,9 @@ Branch `c4/rb-merge`, basef0db3c82. Prior work fully retained; see
 `docs/rb_merge/HANDOFF_HISTORY_{0100,0315,FINAL_VALIDATION}.md` and source ledger.
 
 ## Status
+- November 3 17:40 recovery: clean HEADda469d72 retained; four final local PIDs
+  absent at17:40:09+08. Current registration/INT/LANE/shared receipts confirm
+  original closure and no new owned repair. Same-day recovery receipt updated.
 - November 3 subsequent recovery: clean HEAD9a108e72 retained; four final local
   PIDs absent at15:16:15+08. Current registration/INT/LANE/shared receipts still
   confirm closure and no new owned repair. Same-day recovery receipt updated.
