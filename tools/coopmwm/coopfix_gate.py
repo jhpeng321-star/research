@@ -40,6 +40,11 @@ BOOTSTRAP_SEED = 20261101   # same estimator family seed as replay_bank._boot_ci
 N_BOOT = 10000
 READY_FILES = dict(imitation_trust=Path('E:/agent-work/c4-imit-fullpass/IMITFIX_READY.json'),
                    bank_filter=Path('E:/agent-work/c4-bank-stat-filter/BANKFILT_READY.json'))
+# Integration fallback (c4/coopfix-int): after a merge the option's receipt is committed at
+# this tree's root, byte-identical to the branch copy; when the option's sibling worktree no
+# longer exists on this host, the committed copy gates instead (same json, same semantics).
+READY_FALLBACK = dict(imitation_trust=Path(__file__).resolve().parents[2] / 'IMITFIX_READY.json',
+                      bank_filter=Path(__file__).resolve().parents[2] / 'BANKFILT_READY.json')
 
 
 class GatePolicy(AccelerationPolicy):
@@ -92,18 +97,23 @@ def load_gate_policy(checkpoint, v2v_dim):
 # ---------------------------------------------------------------- option interfaces (stubs until READY)
 
 def option_ready(name):
-    """Parsed READY json of an option branch, or None while it is not READY (stub active)."""
-    path = READY_FILES[name]
-    try:
-        if path.is_file():
-            return json.loads(path.read_text())
-    except (OSError, ValueError):
-        return None
+    """Parsed READY json of an option branch, or None while it is not READY (stub active).
+
+    The option branch's live worktree receipt is polled first; if that worktree is absent
+    on this host (e.g. removed after the branch was merged), the receipt committed at this
+    tree's root gates the option instead."""
+    for path in (READY_FILES[name], READY_FALLBACK[name]):
+        try:
+            if path.is_file():
+                return json.loads(path.read_text())
+        except (OSError, ValueError):
+            continue
     return None
 
 
 def option_status():
-    return {name: dict(ready_file=str(READY_FILES[name]), ready=option_ready(name) is not None,
+    return {name: dict(ready_file=str(READY_FILES[name]), ready_file_fallback=str(READY_FALLBACK[name]),
+                       ready=option_ready(name) is not None,
                        active='stub' if option_ready(name) is None else 'ready')
             for name in sorted(READY_FILES)}
 
