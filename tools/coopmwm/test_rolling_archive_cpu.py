@@ -44,6 +44,13 @@ class RollingArchiveSafety(unittest.TestCase):
         self.assertEqual(m.diagnostic_kind(root/'RESULT.json'),(10,'B'))
         self.assertIsNone(m.diagnostic_kind(m.base.RUN/'replay_bank/B/SNAPSHOT.pt'))
 
+    def test_verification_level_diagnostic_outputs_are_not_lost_by_depth_gate(self):
+        root=m.base.RUN/'policy_synergy_isolated_1226_v2/u021_B/branches/verification'
+        self.assertEqual(m.diagnostic_kind(root/'SNAPSHOT.pt'),(21,'B'))
+        self.assertEqual(m.diagnostic_kind(root/'all.result.json'),(21,'B'))
+        self.assertIsNone(m.diagnostic_kind(root.parent/'STATUS.json'))
+        self.assertIsNone(m.diagnostic_kind(m.base.RUN/'replay_bank/B/branches/verification/SNAPSHOT.pt'))
+
     def test_scope_never_accepts_outcomes_or_final_detector_inputs(self):
         root=m.base.RUN/'jobs'
         self.assertIsNone(m.job_kind(root/'fixedfinal_B_989600'/'observable.jsonl.gz'))

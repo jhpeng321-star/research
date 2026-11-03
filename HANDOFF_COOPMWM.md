@@ -1,6 +1,16 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## CURRENT Nov4 ~02:05 +08 — coop-only gate/launch DELEGATED; ours diagnostic only
+- All-admittedDIAGNOSTICCOMPLETE/FAIL:55/55graded0prefixfault;986066synergyLBs
+  seed1-.02085697/seed2-.03918591veh-s,meanIG-.01041290,groupdrivinggainnearzero.
+  ReportCOOPFIX_GATE_ALL_ADMITTED_DIAGNOSTIC.json sealedSHAverified. No launch.
+  CooperativeOnlygatefullydelegated; read-onlymixed-intentpublicationnote sent
+  `_sol/ALL_ADMITTED_DIAGNOSTIC_RESULT_AND_INTENT_NOTE.md` (no parallel fix).
+- ClosedoldDiagARCHIVE1 COMPLETE307709719bytes/3batches;79summariesretained;
+  observers3443527/3531845retired idle/nochild, regular1237127resumedfinally.
+  SourceSourceleftflat4-levelSNAPSHOT/resultJSON~1.89GB due five-levelscopebug.
+  One-linefour-levelclassificationfix+regression PASS10local+10Linux under
+  archiveflatcpu1. Newflatarchivecontrolregistered6327c97f; nextlaunchONCE.
 - Fullbriefreadthrough1081. MAIN01:47 delegatesmerge/qualification/runtime/
   cooperative_onlygate/launch to c4/launch-coop. DO NOT duplicate any of them.
   Ourall_admittedgateisDIAGNOSTICONLY,neverlaunchauthority. RuntimeflagFALSE.

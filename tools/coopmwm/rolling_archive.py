@@ -66,7 +66,7 @@ def diagnostic_kind(p):
     p=Path(p)
     try:parts=p.relative_to(base.RUN/'policy_synergy_isolated_1226_v2').parts
     except ValueError:return None
-    if (len(parts)>=5 and re.fullmatch(r'u\d{3}_[BR]',parts[0])
+    if (len(parts)>=4 and re.fullmatch(r'u\d{3}_[BR]',parts[0])
             and parts[1]=='branches'):
         return int(parts[0][1:4]),parts[0][-1]
     return None
