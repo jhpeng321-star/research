@@ -1,5 +1,18 @@
 # S-COOPMWM — live checks
 
+## Nov4 ~06:45 UTC+8 — V2V training adopted and progressing
+- **V2V_STARTED 06:29:32**, root `coopmwm20261104_v2v_coop3`; watcher and
+  all three arms verified by boot/start/command. Latest A2/B2/R1, no health pause.
+- B u2: **five complete imitation passes**, effective first pass, KL 0.001412,
+  eight cooperative examples; action MAE 1.335388 -> 1.331062 m/s².
+  Bank intent loss rose 2.400348 -> 2.535167; monitor the trend.
+- Composite safety B2 passes: collisions/teleports zero; critical-event delta
+  +2.0833 [−20.3964,+25.0219] per paired world. R1 passes with zero deltas.
+- Adopted qualified source/evidence `e3a56a76` preserving archive commits and
+  existing work. Option-2 recovery coordinator superseded/never run.
+- Regular archive mover live; disk ~6.79 GiB. Existing backfill/collection retained.
+  Evidence: `coopmwm/RESUME_ADOPTION_20261104_0645.md` and its live probe.
+
 ## Current continuation — diagnostic reported; primary launch delegated
 - Superseded all_admitted gate:55/55 exact branches graded,0prefix/physics
   faults; diagnostic **FAIL** on group cooperation (986066 bounds-0.020857/

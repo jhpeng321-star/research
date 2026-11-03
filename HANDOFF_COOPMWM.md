@@ -1,4 +1,17 @@
-# S-COOPMWM continuation — MAIN18:00b fix-first HOLD
+# S-COOPMWM continuation — V2V running; MAIN06:32 adopted
+
+## Fresh adoption Nov4 ~06:45 +08
+- Full1113-linebriefREAD. V2V_STARTED06:29:32/rootv2v_coop3/sourceLaunchcoop_src3.
+- Watcher2013844+arms2049830/2049879/2049891boot/start/cmdverifiedLIVE; A2/B2/R1.
+- Option1e3a56a76mergedpreservingallarchivecommits/dirtywork. Option2watchquote
+  recovery1SUPERSEDED/NEVER-RUN; doNOTdispatchuntrackedv2v_watch_resume.py.
+- B2fivepasses/pass1effective/KL.001412/noimitationfailure/8coopexamples,
+  MAE1.335388->1.331062. Bankintent2.400348->2.535167roseagain:monitor/report.
+- B2compositesafetyPASS/0collisions+teleports/critical+2.083CI[-20.396,25.022].
+- Mover1237127S/live;disk7291871232bytes/MemAvailable15483848kB. Backfill1132856
+  +collect900006/7retained; nostart/gate/requalificationduplicated.
+- See coopmwm/RESUME_ADOPTION_20261104_0645.md and RESUME_V2V_LIVE_1793745925076232400.
+- Nextresolvecollectioncoopconfigroutinggap,safehandover; monitorR2bankandB6synergy.
 
 ## Latest consolidated checkpoint
 Read `_sol/COOPMWM_LATEST_CHECKPOINT.md` before any new dispatch. All old-PPO/
