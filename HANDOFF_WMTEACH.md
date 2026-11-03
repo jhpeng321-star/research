@@ -1,6 +1,11 @@
 # S-WMTEACH resume / ownership
 
 ## CURRENT: PAUSED by MAIN 2026-11-01 17:35 — supersedes all launch instructions below
+- Fresh-session recheck1793744858 (recovered clean `afc70088`): no MAIN
+  resume authorization. All10503 cache paths/sizes/SHA256 match1793736279 and
+  original1793525989; three owned jobs inactive, both scale STOPs retained, live
+  root absent, local collector idle. Checkpoint committed `4a6ca4d6`; details in
+  `wmteach/PAUSE_RECHECK_1793744858.md`. Remain held; no new dispatch or inference.
 - Fresh-session recheck1793736279 (recovered clean `1fda657f`): no MAIN
   resume authorization. All10503 cache paths/sizes/SHA256 match1793726796 and
   original1793525989; three owned jobs inactive, both scale STOPs retained, live
