@@ -173,7 +173,8 @@ def run_arm(root,arm,hooks=None):
                     cap=imitation_decision_cap(read(bp)) if bp.exists() else 0
                     fair=dict(matched_B_update=bu,B_bank_decisions=cap,B_update_receipt_found=bp.exists())
                 pairs,weights=bank_pairs(root,arm,SEED,beta=replay_beta,sources=b.get('replay_sources',{}).get(arm,()),
-                    max_decisions=cap,v2v=bool(b.get('v2v')),bank_filter=b.get('bank_filter'))
+                    max_decisions=cap,v2v=bool(b.get('v2v')),bank_filter=b.get('bank_filter'),
+                    pair_flags=bool(b.get('imitation_trust')))
                 from .replay_bank import bank_quality
                 weights['bank_quality']=bank_quality(root,arm,b.get('replay_sources',{}).get(arm,()))
                 if fair is not None:
@@ -208,8 +209,11 @@ def run_arm(root,arm,hooks=None):
             state={k:v.detach().clone() for k,v in policy.state_dict().items()}
             if arm in ('B','R'):
                 from .exact_grade import exact_update,lag_report
+                imitation_trust=b.get('imitation_trust') if replay else None
                 metrics=exact_update(policy,opt,eps,rng,pairs,b['awr']['coefficient'],
-                    imitation_epochs=b.get('imitation_epochs',5) if replay else 0)
+                    imitation_epochs=b.get('imitation_epochs',5) if replay else 0,
+                    imitation_trust=imitation_trust,
+                    cooperative=weights.get('pair_cooperative') if imitation_trust else None)
                 grade_lag=None if replay else lag_report(xr.queue(root),u)
             else:
                 metrics=update(policy,opt,eps,rng,**({'awr':b['awr']} if 'awr' in b else {}));grade_lag=None

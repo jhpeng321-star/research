@@ -963,17 +963,27 @@ def _ppo_exact_update(policy, optimizer, episodes, generator, pairs, coefficient
     return metrics
 
 
-def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., epochs=4,imitation_epochs=0):
+def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., epochs=4,imitation_epochs=0,
+                 imitation_trust=None, cooperative=None):
+    """imitation_trust='own_pass' (DEFAULT OFF = byte-identical): bank imitation measures its
+    KL against the post-PPO policy instead of the pre-update one and guarantees a complete
+    cooperative-first first pass by adaptive per-step learning-rate halving; ``cooperative``
+    is the per-pair cooperative flag list from replay_bank.bank_pairs(pair_flags=True)."""
     if not imitation_epochs:return _ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs)
     import copy
     from .bank_imitation import run
     reference=copy.deepcopy(policy)
     metrics=_ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs)
-    report=run(policy,optimizer,pairs,generator,reference,coefficient,imitation_epochs)
+    report=run(policy,optimizer,pairs,generator,reference,coefficient,imitation_epochs,
+        imitation_trust=imitation_trust,cooperative=cooperative)
+    rule='MAIN0936 post-PPO full-bank AWR, pre-update KL bound; no plan ratios or critic loss'
+    if imitation_trust:
+        rule=('MAIN0936 post-PPO full-bank AWR, own pre-imitation KL bound (%s); '
+              'no plan ratios or critic loss')%(imitation_trust,)
     metrics.append(dict(loss=report['last_loss'],kl=report['kl'],gradient_norm=report['last_gradient_norm'],
         imitation=report['last_loss'],own_policy_steps=0,critic_steps=0,
         exact_imitation_steps=report['pairs_seen'],bank_imitation=report,
-        loss_rule='MAIN0936 post-PPO full-bank AWR, pre-update KL bound; no plan ratios or critic loss'))
+        loss_rule=rule))
     return metrics
 
 
