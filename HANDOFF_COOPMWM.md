@@ -1,6 +1,26 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
+## Latest consolidated checkpoint
+Read `_sol/COOPMWM_LATEST_CHECKPOINT.md` before any new dispatch. All old-PPO/
+closed-diagnostic archival is now COMPLETE (5418731087bytes), regular mover is
+live and never paused by recovery2. Sourcef497 adopted preservingmergedd93c53f.
+Budget/smokerestart remains MAIN04:17operator-owned; no V2V_STARTED atlastprobe,
+A1/B0/R0/resourcesREADY. No duplicatewatcher. Linkprotection/permanentlegacy-only
+stopdone; collectioncoopconfigrouting gapreported, notcosmeticallyrestarted.
+
 ## CURRENT — primary delegated, old-output SHA archive actively draining
+- PPOrecovery2 COMPLETE1781461256bytes/15batches,nofailure/noregularmoverpause.
+  PluspriorPPO1089928280=>all2871389536oldPPObytescertified; withcloseddiag
+  archivesTOTAL5418731087bytes retainedongpuA,CPUmetricskept. Completionfree
+  8327319552bytes;backfillhadresumed12->38decisions thenresourcepausedagain.
+- Permanentlegacy-onlystop+linkprotection03:46DONE:524safeprotectedpaths/
+ 11254metadata-linkrecords scanned,solo1755_v2/v3included; newpublicwarm1
+  LIVE_REPLAY_LINK_PROTECTION_BINDING_1793740523410927848.json; B21/R20SHAkept,
+  no bank/collector/shared-root pause. LIVE_BANK_LINK_PROTECTION_1793740524215264700.
+- Collectionrestart-onlywouldNOTactivatecoopforB-REPLAY: collection_options
+  doesn'treadLScoopfile andcollector_guide dropscoopargsunder niche alternation.
+  ReadonlyfindingpassedMAIN `_sol/COLLECTION_COOP_CONFIG_WIRING_FINDING.md`;
+  no cosmetic/duplicate restart or activefrozen-sourceedit. Integrationpending.
 - NEWbriefthrough1109READ. MAIN04:17 assignsstartupv2v_trainallocation/restart
   toClaudeoperator: DO NOTduplicate. OursresourcefixSIGCONT1237127 receipt
   MOVER_RESUMED_MAIN0412_1793736879211875400 verifiesS/S; actualdeployedresource

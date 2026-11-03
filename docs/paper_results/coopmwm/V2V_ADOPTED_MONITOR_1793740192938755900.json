@@ -1,0 +1,143 @@
+{
+  "cpu_free": 9412132864,
+  "current_resource_gate": {
+    "disk_free_bytes": 9412132864,
+    "mem_available_bytes": 22294319104,
+    "memory_per_arm_bytes": {
+      "A": 3221225472,
+      "B": 7516192768,
+      "R": 7516192768
+    },
+    "mover_alive": true,
+    "mover_stopped": false,
+    "ready": true,
+    "required_free_bytes": 6442450944,
+    "required_mem_available_bytes": 6442450944,
+    "rule": "MAIN16:47 disk/live mover plus MAIN20:28 MemAvailable; per-arm estimates are qualified policy"
+  },
+  "files": {
+    "WATCH_DISPATCH.json": {
+      "argv": [
+        "/home/ubuntu/miniconda3/bin/python",
+        "-B",
+        "-u",
+        "-m",
+        "tools.coopmwm.v2v_live",
+        "/home/ubuntu/coopmwm20261104_v2v_coop3",
+        "watch"
+      ],
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "pid": 1728407,
+      "root": "/home/ubuntu/coopmwm20261104_v2v_coop3",
+      "route": "launch3-gated v2v_live watch (smokes A/B/R -> train A/B/R; watcher writes V2V_STARTED.json)",
+      "source_root": "/home/ubuntu/coopmwm20261104_launchcoop_src2",
+      "start_ticks": "75058079",
+      "unix": 1793736303.06213
+    },
+    "WATCH_OWNER.json": {
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "pid": 1728407,
+      "start_ticks": "75058079",
+      "unix": 1793736303.1614418
+    },
+    "smoke_A_COMPLETE.json": {
+      "arm": "A",
+      "stage": "smoke",
+      "unix": 1793735430.6052892,
+      "update": 1
+    },
+    "smoke_A_DISPATCH.json": {
+      "argv": [
+        "/home/ubuntu/miniconda3/bin/python",
+        "-B",
+        "-u",
+        "-m",
+        "tools.coopmwm.v2v_live",
+        "/home/ubuntu/coopmwm20261104_v2v_coop3",
+        "smoke",
+        "--arm",
+        "A"
+      ],
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "label": "smoke_A",
+      "pid": 1676131,
+      "start_ticks": "74916815",
+      "unix": 1793734890.4292536
+    }
+  },
+  "latest": {
+    "A": 1,
+    "B": 0,
+    "R": 0
+  },
+  "launch3_authority": {
+    "authority": "owner 01:00 release + owner 02:30 gate rule; gate_coop5 PASS sha c1655547e88a0a1a66bd8a43d94518d957173b57e61c65bb923726fcbd084ce5",
+    "binding_path": "/home/ubuntu/coopmwm20261104_launch3_coop3/LAUNCH3_BINDING.json",
+    "binding_sha256": "f96a0ef8a5bacf68c6d344ce56e62fb8d210c8b4bda70aac5b7a636ec20c3939",
+    "control_root": "/home/ubuntu/coopmwm20261104_launch3_coop3",
+    "legacy_boundary": {
+      "checkpoints": {
+        "B": {
+          "path": "/home/ubuntu/coopmwm20261102_warm1/B_checkpoint_021.pt",
+          "sha256": "7a487a106b46120e4258b84ec48a3ac80ed03ecb740fb04388a50a82c9e845e7",
+          "update": 21
+        },
+        "R": {
+          "path": "/home/ubuntu/coopmwm20261102_warm1/R_checkpoint_020.pt",
+          "sha256": "608792037bb22017bbc6f5ce68ef031ab08413603cb4ea51977b4e5c331b3878",
+          "update": 20
+        }
+      },
+      "owners": {
+        "B": {
+          "argv": [
+            "/home/ubuntu/miniconda3/bin/python",
+            "-B",
+            "-u",
+            "-m",
+            "tools.coopmwm.replay_start",
+            "/home/ubuntu/coopmwm20261102_warm1",
+            "arm",
+            "--arm",
+            "B"
+          ],
+          "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+          "component": "arm",
+          "pid": 411152,
+          "start_ticks": "72386074",
+          "unix": 1793709583.0205088
+        },
+        "R": {
+          "argv": [
+            "/home/ubuntu/miniconda3/bin/python",
+            "-B",
+            "-u",
+            "-m",
+            "tools.coopmwm.replay_start",
+            "/home/ubuntu/coopmwm20261102_warm1",
+            "arm",
+            "--arm",
+            "R"
+          ],
+          "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+          "component": "arm",
+          "pid": 411153,
+          "start_ticks": "72386077",
+          "unix": 1793709583.0491397
+        }
+      },
+      "source": "warm1/LEGACY_ONLY_RESOURCE_HOLD_2203.json (legacy_training_held, no_old_restart)"
+    },
+    "mover_root": "/home/ubuntu/coopmwm20261103_rolling2318_gpua_v4",
+    "unix": 1793734868.7458496
+  },
+  "load": [
+    1.3896484375,
+    1.22802734375,
+    1.19580078125
+  ],
+  "pauses": [],
+  "root": "/home/ubuntu/coopmwm20261104_v2v_coop3",
+  "unix": 1793740191.3900797,
+  "watch_log_tail": "Traceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/coopmwm20261104_launchcoop_src2/pytools/tools/coopmwm/v2v_live.py\", line 400, in <module>\n    if args.stage=='watch':watch(args.root)\n  File \"/home/ubuntu/coopmwm20261104_launchcoop_src2/pytools/tools/coopmwm/v2v_live.py\", line 297, in watch\n    gate=launch3_check(root,cfg)\n  File \"/home/ubuntu/coopmwm20261104_launchcoop_src2/pytools/tools/coopmwm/v2v_live.py\", line 271, in launch3_check\n    result=launch3.wait_for_preflight(authority['binding_path'],\n  File \"/home/ubuntu/coopmwm20261104_launchcoop_src2/pytools/tools/coopmwm/v2v_launch3.py\", line 452, in wait_for_preflight\n    return preflight(binding_path, binding_sha256=binding_sha256,\n  File \"/home/ubuntu/coopmwm20261104_launchcoop_src2/pytools/tools/coopmwm/v2v_launch3.py\", line 432, in preflight\n    budget = requote(root, cfg, phase_costs=phase_costs)\n  File \"/home/ubuntu/coopmwm20261104_launchcoop_src2/pytools/tools/coopmwm/v2v_launch3.py\", line 409, in requote\n    raise Refused('budget phase shortfall: ' + phase)\ntools.coopmwm.v2v_launch3.Refused: budget phase shortfall: v2v_train\n"
+}
