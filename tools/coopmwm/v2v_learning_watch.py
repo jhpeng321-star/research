@@ -8,6 +8,20 @@ from pathlib import Path
 import time
 
 
+def complete_update(path):
+    """A receipt is published with open('x'), so its first read may be partial."""
+    import json
+    try:
+        before = path.stat()
+        value = json.loads(path.read_text())
+        after = path.stat()
+    except (FileNotFoundError, json.JSONDecodeError) as error:
+        return None, type(error).__name__
+    if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
+        return None, 'receipt_still_publishing'
+    return value, None
+
+
 def inspect_update(value):
     """Evaluate only the already registered numerical learning invariants."""
     bank = value.get('bank_imitation') or {}
@@ -79,7 +93,7 @@ def watch(root, control):
     write(control/'OWNER.json', owner())
     os.nice(max(0, 19 - os.getpriority(os.PRIO_PROCESS, 0)))
     while not (control/'STOP.json').exists():
-        summaries = {}
+        summaries, pending_reads = {}, {}
         for arm in ('A', 'B', 'R'):
             for path in sorted(root.glob(arm+'_UPDATE_*.json')):
                 if not path.stem.rsplit('_', 1)[-1].isdigit():
@@ -90,7 +104,11 @@ def watch(root, control):
                     if report['source_receipt_sha256'] != sha(path):
                         raise ValueError('immutable update receipt changed: '+path.name)
                 else:
-                    report = dict(inspect_update(read(path)), source_receipt_sha256=sha(path),
+                    value, pending = complete_update(path)
+                    if pending:
+                        pending_reads[path.name] = pending
+                        continue
+                    report = dict(inspect_update(value), source_receipt_sha256=sha(path),
                         unix=time.time(), new_sumo_sim_s=0)
                     safety = root/f'{arm}_SAFETY_COMPOSITE_{report["update"]:03}.json'
                     if safety.is_file():
@@ -103,7 +121,8 @@ def watch(root, control):
                         pause(root, 'V2V_LEARNING_MECHANICS', report)
                     except HealthPause:
                         atomic(control/'PAUSED.json', report)
-        atomic(control/'STATUS.json', dict(unix=time.time(), latest=summaries, new_sumo_sim_s=0))
+        atomic(control/'STATUS.json', dict(unix=time.time(), latest=summaries,
+            pending_receipt_reads=pending_reads, new_sumo_sim_s=0))
         if all(summaries.get(a, {}).get('update', 0) >= 24 for a in ('A', 'B', 'R')):
             write(control/'COMPLETE.json', dict(unix=time.time(), final_update=24, new_sumo_sim_s=0))
             return

@@ -34,13 +34,29 @@ for arm in ('B','R'):
  out['arms'][arm]=dict(pending=pending,answered_count=len(answered),latest_answers=sorted(answered,key=lambda x:x['response_unix'])[-4:])
 out['endpoints']=json.loads((c/'LS_ENDPOINTS.json').read_text())
 out['broker_failures_latest']=sorted(failures,key=lambda x:x.get('unix',0))[-6:]
-fund=json.loads((r/'V2V_CAP_1406.json').read_text());spent=defaultdict(int)
+budget_path=r/'B_REPLAY_BINDING.json'
+if not budget_path.exists():budget_path=r/'V2V_CAP_1406.json'
+fund=json.loads(budget_path.read_text());spent=defaultdict(int)
+assert fund['amendment_sha256'] in (r/'AUTHORITY.md').read_text(),'budget authority absent'
+out['budget_binding_path']=str(budget_path)
+out['budget_binding_sha256']=__import__('hashlib').sha256(budget_path.read_bytes()).hexdigest()
 for line in (r/'CHARGES.jsonl').read_text().splitlines():
  x=json.loads(line);spent[x['phase']]+=x['sim_s']
 out['phase_room']={k:dict(allocated=v,charged=spent[k],remaining=v-spent[k]) for k,v in fund['budget']['phases'].items()}
+# Superseded pre-acceleration charges live outside this ledger (accel_storage.charged).
+import sys
+sys.path.insert(0,'/home/ubuntu/coopmwm20261104_launchcoop_src3/pytools')
+from tools.coopmwm.accel_protocol import SUPERSEDED_CHARGE
+out['retained_superseded_sim_s']=SUPERSEDED_CHARGE
+if 'superseded' in out['phase_room']:
+ row=out['phase_room']['superseded'];row['charged']+=SUPERSEDED_CHARGE;row['remaining']-=SUPERSEDED_CHARGE
+out['charged_including_superseded']=sum(spent.values())+SUPERSEDED_CHARGE
+out['registered_cap_sim_s']=fund['budget']['total']
 print(json.dumps(out))''',timeout=40))
     p=ops.EVIDENCE/f'SEARCH_CURRENT_AUDIT_{time.time_ns()}.json';write(p,value)
     print(json.dumps(dict(receipt=str(p),unix=value['unix'],arms=value['arms'],phase_room=value['phase_room'],
+        budget_binding_path=value['budget_binding_path'],budget_binding_sha256=value['budget_binding_sha256'],
+        charged_including_superseded=value['charged_including_superseded'],registered_cap_sim_s=value['registered_cap_sim_s'],
         workers=[dict(slot=w['endpoint']['slot'],owner={k:v for k,v in w['owner'].items() if k in ('pid','start_ticks','boot_id','root')}) for w in value['endpoints']['workers']],failures=value['broker_failures_latest'])))
 
 

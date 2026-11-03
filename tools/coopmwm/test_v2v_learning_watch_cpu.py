@@ -1,7 +1,7 @@
 """Registered pause boundaries, using realistic update receipt fields."""
 import copy
 import unittest
-from .v2v_learning_watch import inspect_update
+from .v2v_learning_watch import inspect_update, complete_update
 
 
 def receipt():
@@ -15,6 +15,19 @@ def receipt():
 
 
 class LearningWatchTests(unittest.TestCase):
+    def test_incomplete_publication_is_observed_again_without_pause_or_exit(self):
+        import tempfile,json
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/'B_UPDATE_003.json'
+            self.assertEqual(complete_update(p),(None,'FileNotFoundError'))
+            p.write_text('{"arm":')
+            self.assertEqual(complete_update(p),(None,'JSONDecodeError'))
+            p.write_text(json.dumps(receipt()))
+            value,pending=complete_update(p)
+            self.assertIsNone(pending)
+            self.assertTrue(inspect_update(value)['learning_mechanics_ok'])
+
     def test_valid_update_and_rising_intent_are_reported_without_pause(self):
         value=receipt();original=copy.deepcopy(value);report=inspect_update(value)
         self.assertTrue(report['learning_mechanics_ok'])
