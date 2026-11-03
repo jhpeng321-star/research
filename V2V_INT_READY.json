@@ -3,7 +3,7 @@
  "part": "4 of 4 (INTEGRATOR) of the V2V intent-sharing build",
  "branch": "c4/v2v-int",
  "workspace": "E:/agent-work/c4-v2v-int",
- "merged_commit": "30d3fafe (30d3fafed7efc0a3e860299b45f72a3b6704239b)",
+ "merged_commit": "aac5469c (aac5469c9712d325016df97a7353bcff3beb0718; integration code at 30d3fafe, plus OBS/BANK receipt-update merges 8a5526f6/aac5469c)",
  "merge_history": [
   "f7012e6d int: merge V2V bank part (c4/v2v-bank, BANK READY aae60392)",
   "7fc93c42 int: merge V2V model part (c4/v2v-model, MODEL READY 066a0916)",
@@ -59,6 +59,7 @@
   "wired_default_off_guarantee": "every path above is gated by the v2v flag / C4NM_V2V env: flag off = no state key added, no summary field, plain controller class, accel_learner.load identity (pinned by test_bank_pairs_default_off_is_byte_identical, test_lesson_check_default_never_sets_the_flag_or_the_key, test_flag_off_is_byte_identical_to_registered_loader, test_branch_runner_controller_is_flag_gated, and the OBS flag-off golden byte-identity test)"
  },
  "resume_verification": "fresh-session resume (2026-11-03): merged remaining BANK receipt refresh c11a7b31 (line refs only, HEAD 1f4919ca); all three part branches fully contained (c4/v2v-int..* empty); re-ran targeted v2v suites with miniconda3/envs/rl_driving python: 30 passed (2 INT e2e + 7 MODEL + 10 BANK + 11 OBS)",
+ "resume_verification_2": "fresh-session resume (2026-11-04): merged trailing OBS receipt note 3512e45f (py313 onnxruntime env gap, docs-only) and BANK receipt note eccb8a59 (re-verification, docs-only) via merges 8a5526f6/aac5469c; all three part branches fully contained (c4/v2v-int..* empty) at aac5469c; re-ran the targeted v2v suites: 30 passed / 0 failed in 124.7 s (2 INT e2e + 7 MODEL + 10 BANK + 11 OBS, miniconda3/envs/rl_driving, torch 2.12.1+cpu)",
  "constraints_respected": "CPU only (no SUMO, no GPU, no remote writes); other worktrees only READ; merges/cherry-picks only INTO c4/v2v-int; no edits outside this worktree; no git reset/clean/stash-drop/push; no sealed/ or holdout/heldout/cal_split/chunk5/j4b/inc1 paths opened; no hetdata_truth or vType/driver truth files read; no behavioural thresholds introduced (only structural constants already registered by the parts)",
  "timestamp": "2026-11-03"
 }
