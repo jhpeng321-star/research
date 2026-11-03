@@ -58,3 +58,17 @@
 - No inference, dispatcher, collector, transport, SUMO or fitting was started.
   No fresh remote resource probe was made; resource closure remains the historical
   OWNED_RESOURCES_CLOSED.json audit. This resume changes only this verification note.
+
+## Fresh-session check (resumed at 3f8832cf)
+
+- Started with a clean worktree; read git log/status and completion/publication
+  receipts before action. The 480-task delivery remains published in b40939aa.
+- Original verify_delivery.py assertions PASS; only its exclusive receipt write
+  was intercepted in memory. Generated JSON exactly matches DELIVERY_VERIFIED.json;
+  all published scientific artifacts retain their registered hashes.
+- Confirmed the shared registry's line 5700 records COMPLETE. Directly rechecked
+  C1_GAPS, both conditional WM-fix reports and C1FLOOR: no independently passing
+  WM-fix verdict or RNG-only floor is available. Existing wall/lineage limits remain.
+- No inference, dispatch, collector, transport or SUMO was started. No remote
+  resource probe was made; process closure remains the historical audited receipt.
+  This verification note is the only change; no duplicate registration is needed.
