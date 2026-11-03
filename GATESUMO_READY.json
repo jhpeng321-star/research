@@ -1,0 +1,49 @@
+{
+ "receipt": "GATESUMO_READY",
+ "gate": "COOPFIX EXACT GATE RUNNER (S-COOPMWM, pre-V2V-launch check)",
+ "branch": "c4/gate-sumo",
+ "workspace": "E:/agent-work/c4-gate-sumo",
+ "based_on": "live c4/coopnative at 38366196 (coopmwm: register qualified full-pass V2V resource handover)",
+ "commit": "bd9e76ea (bd9e76ea coopmwm: coopfix exact gate CLI prints its json result)",
+ "build_commits": [
+  "6e6fb6d4 coopmwm: add coopfix exact gate runner (one fixed update, isolated synergy jobs, verdict)",
+  "bd9e76ea coopmwm: coopfix exact gate CLI prints its json result"
+ ],
+ "module": "tools/coopmwm/coopfix_exact_gate.py",
+ "what_it_does": {
+  "OFFLINE (CPU, any host)": "loads MAPPO u0 extended with v2v+intent (v2v_model.load_checkpoint, zero-init at v2v_obs.V2V_DIM=24), builds the STATISTICALLY FILTERED bank (replay_bank.bank_pairs under the bank v2 rule bank_statistics.view via a transient process-local adapter, restored immediately), runs ONE fixed update = one registered full-pass imitation run (bank_imitation.run, >=5 passes) and records the offline gate fields: passes, final joint KL (limit .045 imported from the runner report, never re-stated), cooperative-pair error change (paired per-pair cluster bootstrap 95% CI, seed 20261101), intent-pair error change (pairs whose context carries a present partner bit), partner-intent weight movement (the zero-initialised v2v columns of actor/critic).",
+  "PLAN": "certifies candidates with the bank v2 rule (cooperative = replicated Student-t synergy CI lower > 0), REQUIRES the mandatory states 986066, 986048, 986003 (+ includes every newly certified cooperative state), and plans the ISOLATED policy-synergy branches via the existing policy_synergy.specs_for(isolated=True) (group-only NEW / one SOLO NEW per member / background-only NEW; all other CAVs u3; captured t0 action retained; intervention t0+1) PLUS the SECOND-SEED solo branches (replay_bank.replicate salt, _seed2 ids). Writes sealed COOPFIX_EXACT_PLAN.json, per-job sealed spec jsons (policy_synergy format, branch_sha256) and per-job SNAPSHOT.pt under control/jobs/.",
+  "EXECUTE (cpuQ only, never on this laptop)": "runs every planned branch through the EXISTING policy_synergy.BranchRunner behind bank_v2v.enabled(v2v), one branch at a time, no retry, writing sumo_verify.run_branch graded receipts (.graded.json).",
+  "COLLECT": "consumes the job outputs (.graded.json, or raw BranchRunner .result.json regraded through sumo_verify.run_branch with the stored snapshot - prefix check included; no new SUMO wrapper), and writes sealed COOPFIX_GATE.json with per state: group-only gain, best solo, synergy (gain - best solo), per-vehicle paired bootstrap 95% CI over the two paired seeds plus the registered two-seed Student-t CI (bank_statistics.replicated_ci), background-only delta, ungraded branches; plus the offline gate fields and the verdict."
+ },
+ "verdict": "PASS iff the four offline checks pass (full_pass, kl_within_limit, cooperative_error_falls CI entirely below 0, partner_intent_weights_moved) AND the group-only synergy 95% CI lower bound > 0 on the 6-CAV state 986066 (which requires its two-seed solo replication graded). Every failure is disclosed in report['reasons']; no hand-set behavioural thresholds (the caps are the registered isolated-diagnostic budget rules).",
+ "registered_caps_respected": {
+  "per_state": "n<=6 group members, window end <= 1200 s, (n+2) isolated branches <= 9600 sim-s (isolated diagnostic registration MAIN2026-11-03 12:26); the plan REFUSES (before any physics) on violation",
+  "second_seed_cost": "the n seed-2 solo branches are quoted separately (seed2_solo_quote) and included in the plan totals; nothing is charged or run on this laptop"
+ },
+ "cost_in_sim_s": {
+  "formula": "per state: isolated (n+2)*window_end_s + second-seed solos n*window_end_s = (2n+2)*window_end_s; exact per-state sim-s is quoted in COOPFIX_EXACT_PLAN.json before any execution",
+  "synthetic_example_window_660": {
+   "6_CAV_state": "isolated 8*660 = 5280 sim-s + seed-2 solos 6*660 = 3960 sim-s = 9240 sim-s",
+   "2_CAV_state": "isolated 4*660 = 2640 sim-s + seed-2 solos 2*660 = 1320 sim-s = 3960 sim-s",
+   "three_mandatory_states_6_2_2": "9240 + 3960 + 3960 = 17160 sim-s total planned on the synthetic fixture (real totals depend on the live certified set and windows)"
+  }
+ },
+ "tests": {
+  "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -B -X utf8 -m pytest -q -p no:cacheprovider tools/coopmwm/test_coopfix_exact_gate_cpu.py",
+  "new_gate_tests": "10 passed / 0 failed (offline fields+checks algebra, widened fixed update + intent accounting, job planning + sealed specs + quotes + idempotence, mandatory-state/cap refusals, PASS/FAIL verdict algebra with per-vehicle CIs, incomplete-never-imputed, raw .result.json regrade without SUMO, execute plumbing through the registered runner)",
+  "regression_subset": "36 passed / 6 failed in tools/coopmwm/test_policy_synergy_cpu.py + test_policy_synergy_isolated_cpu.py + test_replay_bank_confirm_cpu.py + test_v2v_model_cpu.py + test_v2v_int_e2e_cpu.py + test_bank_imitation_cpu.py",
+  "pre_existing_failures_disclosed": "the 6 failures (test_complete_branch_set_precharged_once_and_later_snapshot_gets_u3_reference, test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson) fail IDENTICALLY in isolation WITHOUT this branch's files: FileNotFoundError '\\proc\\<pid>\\stat' - the known Linux-only replay_start.owner read on Windows (same env family documented in HANDOFF_HARDEN_INT.md / HARDEN_INT_READY.json). No coopfix-exact-gate code is imported by them."
+ },
+ "cli_live_agent_cpuQ": {
+  "1_plan": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 CUDA_VISIBLE_DEVICES= python -B -u -m tools.coopmwm.coopfix_exact_gate plan --root <live run root> --arm B --control <run root>/coopfix_gate_control --training-seed <seed>",
+  "2_execute": "python -B -u -m tools.coopmwm.coopfix_exact_gate execute --control <run root>/coopfix_gate_control   (cpuQ only; SUMO + SUMO_HOME env as in the registered policy_synergy dispatch; one branch at a time, nice 19)",
+  "3_collect": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 CUDA_VISIBLE_DEVICES= python -B -u -m tools.coopmwm.coopfix_exact_gate collect --control <run root>/coopfix_gate_control",
+  "status": "python -B -m tools.coopmwm.coopfix_exact_gate status --control <run root>/coopfix_gate_control",
+  "options": "--u0/--u3 (defaults {root}/{arm}_checkpoint_000.pt / _003.pt), --pairs-file (offline synthetic/recorded pairs instead of the live bank), --passes, --coefficient, --no-v2v, --v2v-dim",
+  "outputs": "control/COOPFIX_EXACT_PLAN.json (sealed gate_plan_sha256), control/COOPFIX_GATE.json (sealed gate_report_sha256; verdict inside), control/jobs/*.{spec.json,SNAPSHOT.pt}, control/branches/<vid>/<branch>.graded.json"
+ },
+ "reuses_only_existing_formats": "policy_synergy.specs_for sealed branch specs, replay_bank.replicate second-seed snapshots, bank decision receipts/confirmations + bank_statistics.view v2 rule, QUOTE layout, sumo_verify.run_branch graded receipts, exact_grade _seal/_write_new/verify_sealed; executor is the existing policy_synergy.BranchRunner behind bank_v2v.enabled - no new SUMO wrapper, no existing module modified (two new files only).",
+ "constraints_respected": "CPU only on this laptop (no SUMO, no GPU, no ssh/remote writes - the live agent runs plan/execute/collect on cpuQ); worked only in E:/agent-work/c4-gate-sumo; other c4-* worktrees read-only; no git reset/clean/stash-drop/push; no sealed/ or holdout/heldout/cal_split/chunk5/j4b/inc1 paths opened; no hetdata_truth or vType/driver/vehicle_params truth files read; no eval seeds 964000-964199/962xxx/977xxx used; no hand-set behavioural thresholds (budget caps imported as the registered constants, statistics from the registered estimator families); committed often",
+ "timestamp": "2026-11-03"
+}
