@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+## Nov3 15:16 UTC+8 — disk admission recovered with verified archive
+- **288 completed interim observable tapes / 529,080,134 bytes** rsynced to
+  gpuR and independently SHA256-verified before source removal. Privileged FD
+  and public binding/config checks pass; all RESULTs remain on cpuQ.
+- Free bytes **1,994,756,096 → 2,524,499,968** clear the unchanged2GiB guard.
+  The10GiB target remains unmet; other candidate roots have live/bank dependencies.
+- Six archive-safety CPU tests pass. Zero new simulation/inference/reservation;
+  existing training/GPU owners retained. Failed attempts and completed transfer
+  preserved/adopted. Evidence: `coopmwm/ARCHIVE_MOVE_interim008_observables.json`,
+  manifestSHA`b69f1c5c86d9f2fedc5dd317cbd68de76bd5508b46c7121ee0e2bfb1d46ef86a`,
+  `coopmwm/DISK_RECOVERY_1450_COMPLETED.md`.
+
 ## Nov3 — exact MAIN14:06 three-arm V2V budget registered; disk admission blocked
 - Reduced schedule fits **all3 V2V arms without dropping a test or diagnostic**:
   training2,073,600;u8/u24 episodes345,600 each;B lessons21,840;isolated checks

@@ -1,5 +1,17 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+RESUME Nov3 15:16+08: ALL803brief linesread/priorworkretained. MAIN1450archive
+SAFE SUBSET DONE:288completedinterim observationtapes/529080134bytes rsyncedgpuR
+/root/cpuq_archive_20261103/interim008_observables; ALLremote/sourceSHAverified
+BEFOREunlink, privilegedFD+bindingaudit/RESULTskept. Manifestb69f1c5c86d9f2fe;
+canonicalARCHIVE_MOVE_interim008_observables.json. Free1994756096->2524499968bytes
+restores2GiBguard; NOT10GiBtarget. Othercandidateroots bank/live-referenced; no
+whole-rootmove. Historicalfailedattemptskept/transfertimeoutADOPTED/notduplicated.
+NoSIM/inference/signals. Existing3305066/all4childrenLIVE/B-Ru11/noalerts atadoption.
+Warmrestart/fourGPUgates/u8analysisDONE/NEVERredo. Concurrentd4fd71e4capregistration
+ADOPTED; noV2Vphysicsbythissession. Freshuser6Mconflictswithregistered17,471,840;
+noNEWphysicsdispatch pendingauthorityclarification. V2VintREADYexists/Linuxpending.
+
 MAIN14:50NOWREAD/ALL803lines: explicitSHA-gatedMOVEauthority to
 gpuR:/root/cpuq_archive_20261103; candidatesclosedLSlabel_attempts/pending,
 closedpolicy_synergy andinterimobservables(RESULTskeptoncpuQ), no replay_bank/
