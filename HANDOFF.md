@@ -5,6 +5,18 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**Nov3 16:25+08 resume reconciliation:** fresh hashes match the original final
+collection/handoff, retained169-row CSV/SVG and latest peer receipt1793654998;
+local/peer final handoff bytes match. Adopt the previously completed final169
+analysis through unchanged collection SHA: COMPLETE/7774production/0open,
+6997800actual/6998400reserved; original7012800cap unchanged. Exact local
+watcher12432/supervisor46520 lookups are empty; final169 supervision is fulfilled.
+Peer HANDOFF has no newer result:2/16episodes, both per-CAV scopes EXITED,
+3300charged/2980closedactual; complete manifest absent. Existing76840sim-s/GPU0
+continuation request remains MAIN-dependent. Remote process/checkpoint observations
+are historical peer/retained evidence, not a fresh SSH inspection. Evidence
+`selmappo2/RESUME_20261103_1625.json`; no new compute or dispatch.
+
 **Nov3 09:05+08 resume check:** offline final169 analysis, collection/handoff
 and169-row curve hash checks PASS; COMPLETE/7774production/0open and original
 accounting unchanged. Exact local watcher12432/supervisor46520 lookups are empty.

@@ -2,6 +2,18 @@
 
 ## Status (reconciled 2026-11-03)
 
+**16:25+08 resume reconciliation:** fresh SHA checks match the original final
+collection/handoff, retained169-point CSV/SVG and latest peer receipt1793654998;
+local/peer handoff bytes match. The prior final169 analysis is adopted through
+unchanged collection SHA: COMPLETE/7774production/0open,6997800actual/
+6998400reserved sim-s under the original7012800cap. Exact local watcher12432
+and supervisor46520 lookups are empty; supervision through final169 is complete.
+Current peer HANDOFF still has2/16episodes, both per-CAV scopes EXITED,
+3300charged/2980closedactual and no complete evaluation manifest. Its existing
+76840sim-s/GPU0 request awaits MAIN authority and peer admission gates. These
+remote observations are retained evidence, not fresh SSH inspection here.
+Evidence: `selmappo2/RESUME_20261103_1625.json`.
+
 **09:05+08 resume check:** offline final collection analysis with explicit
 build/PID606968/final169 pin PASS; all169updates/7774production/0open,
 6997800actual/6998400reserved sim-s. Local/peer handoff bytes and169-row curve
