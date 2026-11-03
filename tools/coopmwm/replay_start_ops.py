@@ -228,7 +228,9 @@ for arm in ('B','R'):
  receipt=json.loads((r/(arm+'_UPDATE_'+str(done).zfill(3)+'.json')).read_text())
  latest[arm]=dict(update=done,receipt={{k:receipt.get(k) for k in
   ('timestamp_utc','wall_s','eta_final_hours','trust','quota_deviation','reward_source','charged_sim_s')}},
-  lesson=json.loads(lesson.read_text()) if lesson.exists() else None)
+  lesson=json.loads(lesson.read_text()) if lesson.exists() else None,
+  next_checkpoint_written=(r/(arm+'_checkpoint_'+str(u).zfill(3)+'.pt')).exists(),
+  next_lesson_written=(r/('LESSON_CHECK_u'+str(u).zfill(3)+'_'+arm+'.json')).exists())
  for job in sorted((r/'jobs').glob('replay0735_warm_u'+str(u).zfill(3)+'_'+arm+'_*')):
   result=(job/'RESULT.json').exists();claim=job/'CLAIM.json';trace=job/'observable.jsonl.gz';last=None
   if trace.exists() and not result:

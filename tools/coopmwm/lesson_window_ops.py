@@ -195,7 +195,9 @@ rp,argv=verified(rg)
 assert not (rp/'task'/str(rg['pid'])/'children').read_text().split(),'R grader has active branches'
 with (c/'PRIOR_OWNERS.json').open('x') as f:json.dump(dict(supervisor=old,children=previous['children']),f)
 for d in [old]+arms+[rg]:
- p,argv=verified(d);os.kill(d['pid'],signal.SIGTERM)
+ p,argv=verified(d);was_stopped=(p/'stat').read_text().split()[2]=='T'
+ os.kill(d['pid'],signal.SIGTERM)
+ if was_stopped:os.kill(d['pid'],signal.SIGCONT)  # deliver pending TERM to verified idle parent
  for _ in range(100):
   if not p.exists() or (p/'stat').read_text().split()[2]=='Z':break
   time.sleep(.1)
