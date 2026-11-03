@@ -40,8 +40,10 @@ except ImportError:
     V2V_DIM = 4  # local stub until tools/coopmwm/v2v_obs.py lands
 try:
     from .v2v_obs import V2V_INTENT_DIM as OBS_V2V_INTENT_DIM  # c4/intent-obs
+    from .v2v_obs import V2V_INTENT_H as OBS_V2V_INTENT_H
 except ImportError:
     OBS_V2V_INTENT_DIM = None  # local constant below until that branch lands
+    OBS_V2V_INTENT_H = None
 
 FEATURES = 29  # tools/coopnative/policy.py:9 sensor feature width, unchanged
 ACTOR_LATENT = 4  # broadcast latent concatenated per member, policy.py:49
@@ -51,7 +53,7 @@ INSERT_AT = FEATURES  # v2v channels join after the per-CAV x/pooled block,
 
 # --- intent option (part B); block contract shared with branch c4/intent-obs ---
 V2V_INTENT_K = 4  # nearest CAV partners, same slots/ordering as v2v_obs.V2V_K
-V2V_INTENT_H = 5  # planned commands per partner, one per 1 s control step
+V2V_INTENT_H = OBS_V2V_INTENT_H if OBS_V2V_INTENT_H is not None else 5  # planned commands, 1 s each
 #: Per-partner base block width (gap, lane offset, speed, accel, last_cmd, present).
 V2V_INTENT_BASE = 6
 #: Registered default clip for planned commands = the action clip (binding accel_bounds).
