@@ -190,6 +190,19 @@
 - All60pairs remain COMPLETE; no dispatch/collection/replay/remote process action.
   Added simulation spend0; total725280/800000,74720unused. Task COMPLETE.
 
+## Fresh-session verification — 2026-11-03 / resume at0536699d
+- Arrived on clean `c4/coopplan`; read Git status/log, shared approval/amendment/completion
+  entries, this handoff, paper report and both final QA receipts before verification.
+- Read-only extension verification PASS:36worlds/432decisions/52complete group credits.
+  Read-only H300 verification PASS:24worlds/288decisions/all group twins and pre-pruning
+  availability. All immutable result artifact hashes match the saved QA receipts.
+- Full six-module CPU/analysis command recorded above PASS:41tests/0skips in1.208s,
+  CUDA hidden and OMP/MKL/OpenBLAS single-threaded; no SUMO execution.
+- All60pairs and66complete group credits remain verified. No dispatch, collection,
+  replay or remote process action; added spend0, total725280/800000,74720unused.
+- Task COMPLETE; existing H120/H300 findings and backend qualification limits preserved.
+- A concurrent resume receipt landed as47f73ebd during this check; it is preserved.
+
 ## Fresh-session verification — 2026-11-03 / base0536699d
 - Arrived clean on `c4/coopplan`; read Git status/log, task handoff, shared MAIN
   approval/amendments/completion entries, paper report and both final QA receipts.
