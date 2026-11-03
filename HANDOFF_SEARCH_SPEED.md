@@ -23,20 +23,26 @@ Activation of any speed-up is owner-approved only once it passes its registered 
   - **pop50 and pop50_it2 are worse** on dev: q8 -0.67 and -0.29, both with CIs below 0. pop50 also loses elite clusters.
   - Held-out had 27 searches / 11 worlds, which is NOT ENOUGH DATA (40 needed).
   - The v1 normalisation is unstable, so v1 margins are too wide. This is why v2 exists.
-- **v2 registration (`BUDGET_SEARCH_PREREG_V2.md`, commit 29bb908e): committed, held-out NOT yet run.**
+- **v2 registration (`BUDGET_SEARCH_PREREG_V2.md`, commit 29bb908e): RUN and TOPPED UP to the registered
+  minimum (2026-11-03; report `SEARCH_SPEED_REPORT.md` §1, ranked `SEARCH_SPEED_RESULT.json`).**
   - What it registers:
     - configs pop50, it2, pop50_it2, K2, K2_pop50, it2_K2;
     - quality in pool-sd units (`unit='pool_sd'`);
     - margin = plain vs plain_alt seed noise;
     - primary metric = best of the final top-8.
-  - Noise alpha is calibrated on DEV only, choosing from {0.35, 0.5, 0.7} the value whose simulated screen-vs-final Spearman is closest to 0.44. alpha=0.35 gives 0.51. The 0.5 and 0.7 values were still running (`_plan_proposer_cache/ls/calib.log`): pick the closest, then run the held-out.
-- **State triage (v2 B; commit 14fe7d25; `docs/paper_results/TRIAGE_SCORE.json`):**
-  - Held-out 26 searches, NOT ENOUGH DATA.
-  - Top-50% of states keeps 0.64 [0.12, 0.89] of the saving (1.24x per GPU-second). Top-33% keeps 0.56 (1.51x).
-  - The single feature MAPPO-policy keeps 0.70 / 0.53.
-  - Function: `budget_search_eval.triage_score(request, centre_costs, model, centre_gap)`.
-  - Recommendation: use it for ordering only until it passes.
-- **Per-episode warm start (v2 C):** not started. It needs >= 20 same-world, same-member pairs 10-300 s apart.
+  - Noise alpha = 0.5, chosen by the registered dev-only rule (closest simulated screen-vs-final Spearman among
+    finalists to observed 0.44; 0.35→0.506, 0.5→0.457, 0.7→0.353; `_plan_proposer_cache/ls/calib.json`).
+  - **Result (56 evals / 17 held worlds — ENOUGH DATA): K2 PASSES (rank 1, 1.81x wall), it2 PASSES (rank 2,
+    1.43x); it2_K2 FAILS the q8 CI gate by 0.001 at 2.48x; every pop50 variant FAILS. Activation is
+    owner-approved only (MAIN).**
+- **State triage (v2 B; `docs/paper_results/TRIAGE_SCORE.json`):** TOPPED UP 2026-11-03: dev 153 searches refit;
+  held 60/18 ENOUGH DATA — top-50% keeps 0.695 [0.350, 0.882] of the saving (1.26x per GPU-second), top-33% keeps
+  0.533 (1.43x). Registered PASS rule still FAILS (CI-lo 0.350 < 0.5) — ordering only.
+- **Per-episode warm start (v2 C):** coded + tested (commit 237cbd82); refreshed 2026-11-03: 103 raw request pairs
+  but still only 6 usable full-pool pairs < 20 gate → NOT EVALUATED (exploratory: held 4, dev 2). Needs the
+  collector to log full-pool receipts on BOTH sides of a pair.
+- **Previous session's final commits (before freeze) already contained a provisional n=27/n=26 read; the numbers
+  above supersede them.**
 - **Watcher** (`tools/coopmwm/learned_search_watch.py`, PID 35992, log `E:/agent-work/_plan_proposer_cache/watch.log`):
   - It does an hourly and per-B-update refresh of the proposer checks. It writes `docs/paper_results/LEARNED_SEARCH_ACTIVATION_READY.json` on a PASS, and exits at 2026-11-03 10:00 +08.
   - It runs pre-noise-ceiling code. Restart it for the new report fields and the B-REPLAY bank discovery (`BANK_STATUS.json`).
