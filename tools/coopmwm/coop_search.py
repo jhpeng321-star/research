@@ -43,15 +43,19 @@ search with any known or hand-designed behaviour family. With the option off
    are hand-set.
 3. Novelty vs the verified bank (``coop_novelty``; ``coop_novelty_bank_sha256``
    references a content-addressed COOP_BANK_<sha>.json resolved on the GPU host,
-   never embedded in search_config; tests may pass ``coop_novelty_bank``):
-   a role summary descriptor (ramp lane 2 / mainline: participation share,
-   earliest onset, mean early/plan deviation, min/max plan deviation, mean |dev|,
-   plus ramp-minus-mainline onset order; 15 numbers, comparable across group
-   sizes; bank side from SUMO issued vs policy commands) is compared with the bank's descriptors; the k-NN mean distance
-   (features standardised over bank+candidates) is z-scored over the call's
-   candidates and added to the score scaled by ``coop_novelty_weight`` x the
-   std of the call's scores, so plans near already-verified kinds are
-   penalised and far ones favoured, in the score's own unit.
+    never embedded in search_config; tests may pass ``coop_novelty_bank``):
+    a role summary descriptor (ramp lane 2 / mainline: participation share,
+    earliest onset, mean early/plan deviation, min/max plan deviation, mean |dev|,
+    plus ramp-minus-mainline onset order; 15 numbers, comparable across group
+    sizes; bank side from SUMO issued vs policy commands) is compared with the bank's descriptors; the k-NN mean distance
+    (features standardised over bank+candidates) is z-scored over the call's
+    candidates and added to the score scaled by ``coop_novelty_weight`` x the
+    std of the call's scores, so plans near already-verified kinds are
+    penalised and far ones favoured, in the score's own unit.
+ 3b. Preflight: ``python -m tools.coopmwm.coop_search preflight --sha <sha>`` (GPU host,
+    ``COOPMWM_COOP_BANK_DIR`` exported) resolves and digest-checks the bank, exiting
+    non-zero on failure; the collector supervisor runs the same check at startup when
+    coop_novelty is on, failing loudly before admitting any work.
 4. Report per search: mean pairwise descriptor distance of the selected plans,
    number of distinct sign patterns (exact sign of each participant's plan mean)
    and of participation/onset-order patterns,
@@ -61,6 +65,7 @@ import argparse
 import hashlib
 import json
 import math
+import sys
 import numpy as np
 
 RAMP_LANE = 2   # observable convention used across the repo (speed2_transfers, coopfree.selection)
@@ -99,6 +104,12 @@ def resolve_bank(sha, dirs=None):
     raise ValueError(f'coop novelty bank {sha} not found in {roots}')
 
 
+def preflight(sha, dirs=None):
+    """GPU-host startup check (CLI ``preflight --sha`` and the collector supervisor's startup):
+    resolve and digest-check the novelty bank BEFORE budget is reserved or work is admitted.
+    Returns the descriptors; raises when the bank file is missing or does not match ``sha``."""
+
+
 def _digest(obj):
     return hashlib.sha256(json.dumps(obj, sort_keys=True, separators=(',', ':'), default=str).encode()).hexdigest()
 
@@ -123,8 +134,8 @@ def split_config(cfg):
     if not coop['coop_active_accel'] >= 0 or int(coop['coop_active_min_s']) < 1:
         raise ValueError('coop_active_accel>=0 and coop_active_min_s>=1 required')
     bank, sha = coop['coop_novelty_bank'], coop['coop_novelty_bank_sha256']
-    if bank is None and sha is not None:
-        bank = coop['coop_novelty_bank'] = resolve_bank(sha)
+    if bank is None and sha is not None and coop['coop_novelty']:
+        bank = coop['coop_novelty_bank'] = resolve_bank(sha)   # never touched with novelty off
     if bank is not None and sha is not None and bank_digest(bank) != sha:
         raise ValueError('coop_novelty_bank does not match coop_novelty_bank_sha256')
     if bank is not None:
@@ -329,21 +340,24 @@ def score_call(scores, plans, solo_scored, ctx, stage):
 
 
 def extend_solos(record, evaluate, base, pool, niche_of, n, K, H, ctx):
-    """Finalist eligibility needs MEASURED solos. If fewer than ``n`` screened candidates have
-    computed solos (or, with niches, a niche has none), ONE extra screen-K/H call computes the
-    solos of the best imputed candidates by group gain (each uncovered niche's best first).
+    """Finalist eligibility needs MEASURED solos. If fewer than ``n`` finalist-ELIGIBLE screened
+    candidates have computed solos (or, with niches, a niche has none), ONE extra screen-K/H call
+    computes the solos of the best imputed candidates by group gain (each uncovered niche's best
+    first). Eligibility follows ``_coop_finalists``: measured AND not a clipped policy duplicate.
     Updates ``ctx.info``/``pool`` in place; returns the extra action-futures."""
     info = {pid: ctx.info[st][pid] for pid, st in ctx.stage_of.items()}
+    eligible = {pid for pid in pool
+                if not info[pid]['synergy_imputed'] and not pool[pid][1].get('policy_duplicate')}
     imputed = [pid for pid in pool if info[pid]['synergy_imputed'] and not pool[pid][1].get('policy_duplicate')]
     if not imputed:
         return 0
     by_gain = sorted(imputed, key=lambda i: (-info[i]['group_gain'], i))
     need = []
     if niche_of is not None:
-        covered = {niche_of[pid] for pid in pool if not info[pid]['synergy_imputed']}
+        covered = {niche_of[pid] for pid in eligible}
         for k in sorted({niche_of[i] for i in imputed}-covered):
             need.append(next(i for i in by_gain if niche_of[i] == k))
-    computed = sum(not x['synergy_imputed'] for x in info.values())
+    computed = len(eligible)
     for pid in by_gain:
         if computed+len(need) >= n:
             break
@@ -529,11 +543,22 @@ def _cli():
     b.add_argument('plans', help='JSON list of {plan:{members, issued|profile|perturbation_profile}, '
                                  'lanes:{vid:lane}, policy_commands} (issued/policy = SUMO issued_safe/mappo_safe)')
     b.add_argument('--out', required=True)
+    pf = sub.add_parser('preflight', help='resolve and digest-check the novelty bank on THIS host '
+                                          '(exit 1 on failure; run at supervisor startup, before admissions)')
+    pf.add_argument('--sha', required=True, help='coop_novelty_bank_sha256 of the bank')
     a = p.parse_args()
     from pathlib import Path
     if a.cmd == 'cost':
         cfg = dict(json.loads(a.config), coop_solo_cap=a.solo_cap)
         print(json.dumps([cost_multiplier(m, cfg) for m in range(2, 7)], indent=1))
+    elif a.cmd == 'preflight':
+        try:
+            desc = preflight(a.sha)
+        except (ValueError, OSError) as error:   # missing file, digest mismatch, corrupt JSON
+            print(json.dumps(dict(ok=False, sha=a.sha, bank=bank_file_name(a.sha), error=str(error))),
+                  file=sys.stderr)
+            raise SystemExit(1)
+        print(json.dumps(dict(ok=True, sha=a.sha, bank=bank_file_name(a.sha), n=len(desc))))
     elif a.cmd == 'bank-descriptors':
         rows = json.loads(Path(a.plans).read_text())
         out = [[float(x) for x in plan_role_descriptor(r['plan'], r['lanes'], r.get('policy_commands'))] for r in rows]
