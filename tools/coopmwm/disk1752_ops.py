@@ -194,6 +194,44 @@ print(p.stdout)''',timeout=45))
     print(json.dumps({k:v for k,v in value.items() if k!='reference_audit'}))
 
 
+def temp_audit():
+    code='''from pathlib import Path
+import os,json,shutil,time
+bad=('sealed','holdout','heldout','cal_split','chunk5','j4b','inc1','hetdata_truth','vehicle_params','driver_params','vtype','assignment')
+paths=[p for p in Path('/tmp').glob('*.tgz') if not p.is_symlink() and not any(b in str(p).lower() for b in bad)]
+out={str(p):dict(bytes=p.stat().st_size,mtime_ns=p.stat().st_mtime_ns,inode=p.stat().st_ino,references=[],processes=[]) for p in paths}
+for proc in Path('/proc').iterdir():
+ if not proc.name.isdigit():continue
+ try:
+  values=[]
+  for field in ('cwd','exe'):
+   try:values.append(os.readlink(proc/field))
+   except FileNotFoundError:pass
+  values.extend([(proc/'cmdline').read_bytes().decode(errors='replace'),(proc/'environ').read_bytes().decode(errors='replace')])
+  for fd in (proc/'fd').iterdir():
+   try:values.append(os.readlink(fd))
+   except FileNotFoundError:pass
+  for p in paths:
+   if any(str(p) in s for s in values):out[str(p)]['processes'].append(proc.name)
+ except (FileNotFoundError,ProcessLookupError):pass
+for root in Path('/home/ubuntu').glob('coopmwm*'):
+ if not root.is_dir() or root.is_symlink() or any(b in str(root).lower() for b in bad):continue
+ if 'archive' in root.name or 'rolling' in root.name or 'cleanup' in root.name:continue
+ for p in root.glob('*.json'):
+  if any(b in str(p).lower() for b in bad) or p.is_symlink():continue
+  if not any(k in p.name.upper() for k in ('BINDING','CONFIG','MANIFEST','RUNTIME','OWNER','DISPATCH')):continue
+  text=p.read_text()
+  for q in paths:
+   if str(q) in text:out[str(q)]['references'].append(str(p))
+for p,v in out.items():v['eligible']=not v['processes'] and not v['references'] and time.time()-Path(p).stat().st_mtime>=1800
+print(json.dumps(dict(candidates=out,eligible_bytes=sum(v['bytes'] for v in out.values() if v['eligible']),cpu_free=shutil.disk_usage('/home/ubuntu').free,tmp_same_device=Path('/tmp').stat().st_dev==Path('/home/ubuntu').stat().st_dev)))'''
+    value=json.loads(remote('cpuQ',f'''import subprocess
+p=subprocess.run(['sudo','-n','/home/ubuntu/miniconda3/bin/python','-B','-'],input={code!r},capture_output=True,text=True,timeout=40)
+if p.returncode:raise RuntimeError(p.stderr)
+print(p.stdout)''',timeout=55))
+    write(ops.EVIDENCE/f'TEMP1752_AUDIT_{time.time_ns()}.json',value);print(json.dumps(value))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('audit','register','delete','adopt'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('audit','register','delete','adopt','temp_audit'))
     globals()[p.parse_args().action]()
