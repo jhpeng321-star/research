@@ -47,7 +47,8 @@ DEFAULTS = dict(k=8, N_exec=10, slots=4, workers=12, episodes_per_update=6, last
                 latency_s=1., stall_s=900., timeout_s=9000., transport_errors=0, malformed=0, branch_crash=0,
                 die_slot=None, die_after=1, decline_withdrawn=True, parallel_groups=True,
                 fanout_factor=2, r_concurrent=True, verify_workers=6,
-                b_replay=True, collect_episodes=1, bank_warmup_rounds=3, verify_per_round=3)
+                b_replay=True, collect_episodes=1, bank_warmup_rounds=2, verify_per_round=3,
+                bank_admission_rounds=8)
 
 
 # ============================================================== live-like root (three arms)
@@ -216,13 +217,31 @@ def run_scenario(name, cfg, workdir):
                 outcome.setdefault('collector_'+arm, []).append('failed: '+repr(error))
                 (Path(base)/f'collector_{arm}.tb.txt').write_text(traceback.format_exc())
                 event('collector_failed', arm=arm, error=repr(error), tb=traceback.format_exc())
-        # Warmup (both banks in parallel, rp4 width) before the arms start.
+        # Warmup (both banks in parallel, rp4 width) before the arms start, then
+        # admission top-up rounds: the arms imitate whatever their bank holds at u4,
+        # so the rehearsal waits (budget-bounded rounds, no thresholds) until each
+        # bank holds at least one ADMITTED entry - the live B-REPLAY start has the
+        # same preflight (bank readiness before the resumed updates).
+        def admitted_count(arm):
+            from .bank_safety import confirmations as amended_conf
+            return sum(1 for c in amended_conf(root, arm).values() if c.get('admitted'))
         warm = [threading.Thread(target=collector, args=(a, cfg['bank_warmup_rounds']), daemon=True) for a in ('B', 'R')]
         for t in warm:
             t.start()
         for t in warm:
             t.join()
-        event('bank_warmup_done', bank=bank_state(root))
+        for _extra in range(int(cfg.get('bank_admission_rounds', 8))):
+            lacking = [a for a in ('B', 'R') if admitted_count(a) < 1]
+            if not lacking:
+                break
+            event('bank_admission_topup', round=_extra, lacking=lacking)
+            ts = [threading.Thread(target=collector, args=(a, 1), daemon=True) for a in lacking]
+            for t in ts:
+                t.start()
+            for t in ts:
+                t.join()
+        event('bank_warmup_done', bank=bank_state(root),
+              admitted={a: admitted_count(a) for a in ('B', 'R')})
         collectors = {a: threading.Thread(target=collector, args=(a, None), daemon=True) for a in ('B', 'R')}
         for t in collectors.values():
             t.start()
