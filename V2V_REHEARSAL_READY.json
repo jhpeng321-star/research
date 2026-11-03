@@ -1,0 +1,646 @@
+{
+ "part": "PART 5 (REHEARSAL) V2V intent-sharing arms A/B/R, CPU end-to-end",
+ "commit": "48fd3ed6433d4e6f25c346b4070284971262090d",
+ "branch": "c4/v2v-rehearsal",
+ "integrated_branch_ready": true,
+ "hooks": {
+  "obs": "tools/coopmwm/v2v_obs.py (REAL, merged from c4/v2v-int; V2V_DIM=24, v2v_features/V2VConfig/v2v_slot_block)",
+  "model": "tools/coopmwm/v2v_model.py (REAL, merged from c4/v2v-int; extend_for_v2v/load_checkpoint/forward_with_v2v + rehearsal glue bind_forward/load_for/fit_policy appended on the real module)",
+  "wiring": "tools/coopmwm/bank_v2v.py (REAL, merged from c4/v2v-int; _frame_table/_obs_cfg adapter to the real v2v_obs contract, plain-float blocks; flag v2v default off)",
+  "integrate": "tools/coopmwm/v2v_integrate.py (REAL widen_context/policy_call/WidenedPolicy; the rehearsal uses the in-model bind_forward path instead - contexts are never pre-widened here)",
+  "stubs_removed": "the three local stub files were replaced by the merged real modules at merge commit 28a86126; no stub code remains on the rehearsal path"
+ },
+ "scenario_table": [
+  {
+   "arm": "A-v2v",
+   "update": 4,
+   "status": "complete",
+   "executed": 0,
+   "queries": 0,
+   "accepted": 0,
+   "ppo_steps": 172,
+   "imitation_steps": 0,
+   "checkpoint": true,
+   "wall_s": 378.1
+  },
+  {
+   "arm": "A-v2v",
+   "update": 5,
+   "status": "complete",
+   "executed": 0,
+   "queries": 0,
+   "accepted": 0,
+   "ppo_steps": 172,
+   "imitation_steps": 0,
+   "checkpoint": true,
+   "wall_s": 400.8
+  },
+  {
+   "arm": "B-v2v",
+   "update": 4,
+   "status": "complete",
+   "executed": 0,
+   "queries": 0,
+   "accepted": 0,
+   "ppo_steps": 189,
+   "imitation_steps": 5400,
+   "checkpoint": true,
+   "wall_s": 2618.7
+  },
+  {
+   "arm": "B-v2v",
+   "update": 5,
+   "status": "complete",
+   "executed": 0,
+   "queries": 0,
+   "accepted": 0,
+   "ppo_steps": 189,
+   "imitation_steps": 5400,
+   "checkpoint": true,
+   "wall_s": 2604.5
+  },
+  {
+   "arm": "R-v2v",
+   "update": 4,
+   "status": "complete",
+   "executed": 0,
+   "queries": 0,
+   "accepted": 0,
+   "ppo_steps": 173,
+   "imitation_steps": 0,
+   "checkpoint": true,
+   "wall_s": 1105.6
+  },
+  {
+   "arm": "R-v2v",
+   "update": 5,
+   "status": "complete",
+   "executed": 0,
+   "queries": 0,
+   "accepted": 0,
+   "ppo_steps": 181,
+   "imitation_steps": 2160,
+   "checkpoint": true,
+   "wall_s": 795.9
+  },
+  {
+   "arm": "broker",
+   "status": "stopped: ValueError([\"HealthPause('registered health pause PAUSE_HARNESS_END.json')\"])"
+  }
+ ],
+ "charges_per_update_per_arm": {
+  "A4": {
+   "executed": 0,
+   "queries": 0,
+   "accepted": 0,
+   "checkpoint": true,
+   "graded": null,
+   "wall_s": 378.1,
+   "bank": null,
+   "v2v_summary": null,
+   "imitation_steps": 0,
+   "ppo_steps": 172,
+   "train_charged_sim_s": 0.0,
+   "cumulative_charged_sim_s": 1153560,
+   "delta_charged_since_start": 41280.0,
+   "lesson": null,
+   "verifications": 0
+  },
+  "A5": {
+   "executed": 0,
+   "queries": 0,
+   "accepted": 0,
+   "checkpoint": true,
+   "graded": null,
+   "wall_s": 400.8,
+   "bank": null,
+   "v2v_summary": null,
+   "imitation_steps": 0,
+   "ppo_steps": 172,
+   "train_charged_sim_s": 0.0,
+   "cumulative_charged_sim_s": 1219210,
+   "delta_charged_since_start": 106930.0,
+   "lesson": null,
+   "verifications": 0
+  },
+  "B4": {
+   "executed": 0,
+   "queries": 0,
+   "accepted": 0,
+   "checkpoint": true,
+   "graded": 3,
+   "wall_s": 2618.7,
+   "bank": {
+    "admitted_excess_not_used": 0,
+    "available": 23,
+    "available_admitted": 2,
+    "by_policy_version": {
+     "u3": 23
+    },
+    "cooperative": 1,
+    "decisions": 23,
+    "nonpositive": 20,
+    "not_admitted": 1,
+    "positive": 3,
+    "unconfirmed": 0,
+    "used": 23,
+    "used_admitted": 2
+   },
+   "v2v_summary": {
+    "cfg": {
+     "max_partners": 4
+    },
+    "counts": {
+     "excluded_missing_partner_command": 0,
+     "excluded_missing_prev_second": 0,
+     "kept": 600,
+     "pairs": 600,
+     "trace_missing": false
+    },
+    "rule": "each pair carries the partners v2v features of its second, from the winning plan branch trace (positions, speeds, accelerations; last issued command at the previous second); pairs whose trace lacks partner commands are excluded and counted",
+    "stub": false
+   },
+   "imitation_steps": 5400,
+   "ppo_steps": 189,
+   "train_charged_sim_s": 0.0,
+   "cumulative_charged_sim_s": 1320810,
+   "delta_charged_since_start": 101600.0,
+   "lesson": {
+    "enabled": true,
+    "rule": "new-policy branch observations include the v2v block; last_commands computed per step (bank_v2v)"
+   },
+   "verifications": 0
+  },
+  "B5": {
+   "executed": 0,
+   "queries": 0,
+   "accepted": 0,
+   "checkpoint": true,
+   "graded": 5,
+   "wall_s": 2604.5,
+   "bank": {
+    "admitted_excess_not_used": 0,
+    "available": 32,
+    "available_admitted": 2,
+    "by_policy_version": {
+     "u3": 32
+    },
+    "cooperative": 1,
+    "decisions": 32,
+    "nonpositive": 27,
+    "not_admitted": 2,
+    "positive": 5,
+    "unconfirmed": 1,
+    "used": 32,
+    "used_admitted": 2
+   },
+   "v2v_summary": {
+    "cfg": {
+     "max_partners": 4
+    },
+    "counts": {
+     "excluded_missing_partner_command": 0,
+     "excluded_missing_prev_second": 0,
+     "kept": 600,
+     "pairs": 600,
+     "trace_missing": false
+    },
+    "rule": "each pair carries the partners v2v features of its second, from the winning plan branch trace (positions, speeds, accelerations; last issued command at the previous second); pairs whose trace lacks partner commands are excluded and counted",
+    "stub": false
+   },
+   "imitation_steps": 5400,
+   "ppo_steps": 189,
+   "train_charged_sim_s": 0.0,
+   "cumulative_charged_sim_s": 1428810,
+   "delta_charged_since_start": 209600.0,
+   "lesson": {
+    "enabled": true,
+    "rule": "new-policy branch observations include the v2v block; last_commands computed per step (bank_v2v)"
+   },
+   "verifications": 0
+  },
+  "R4": {
+   "executed": 0,
+   "queries": 0,
+   "accepted": 0,
+   "checkpoint": true,
+   "graded": 9,
+   "wall_s": 1105.6,
+   "bank": {
+    "admitted_excess_not_used": 2,
+    "available": 26,
+    "available_admitted": 2,
+    "by_policy_version": {
+     "u3": 26
+    },
+    "cooperative": 0,
+    "decisions": 26,
+    "nonpositive": 17,
+    "not_admitted": 7,
+    "positive": 9,
+    "unconfirmed": 0,
+    "used": 26,
+    "used_admitted": 0
+   },
+   "v2v_summary": {
+    "cfg": {
+     "max_partners": 4
+    },
+    "counts": {
+     "excluded_missing_partner_command": 0,
+     "excluded_missing_prev_second": 0,
+     "kept": 0,
+     "pairs": 0,
+     "trace_missing": false
+    },
+    "rule": "each pair carries the partners v2v features of its second, from the winning plan branch trace (positions, speeds, accelerations; last issued command at the previous second); pairs whose trace lacks partner commands are excluded and counted",
+    "stub": false
+   },
+   "imitation_steps": 0,
+   "ppo_steps": 173,
+   "train_charged_sim_s": 0.0,
+   "cumulative_charged_sim_s": 1460250,
+   "delta_charged_since_start": 31440.0,
+   "lesson": {
+    "enabled": true,
+    "rule": "new-policy branch observations include the v2v block; last_commands computed per step (bank_v2v)"
+   },
+   "verifications": 0
+  },
+  "R5": {
+   "executed": 0,
+   "queries": 0,
+   "accepted": 0,
+   "checkpoint": true,
+   "graded": 10,
+   "wall_s": 795.9,
+   "bank": {
+    "admitted_excess_not_used": 0,
+    "available": 28,
+    "available_admitted": 2,
+    "by_policy_version": {
+     "u3": 28
+    },
+    "cooperative": 1,
+    "decisions": 28,
+    "nonpositive": 18,
+    "not_admitted": 7,
+    "positive": 10,
+    "unconfirmed": 1,
+    "used": 28,
+    "used_admitted": 2
+   },
+   "v2v_summary": {
+    "cfg": {
+     "max_partners": 4
+    },
+    "counts": {
+     "excluded_missing_partner_command": 0,
+     "excluded_missing_prev_second": 0,
+     "kept": 180,
+     "pairs": 180,
+     "trace_missing": false
+    },
+    "rule": "each pair carries the partners v2v features of its second, from the winning plan branch trace (positions, speeds, accelerations; last issued command at the previous second); pairs whose trace lacks partner commands are excluded and counted",
+    "stub": false
+   },
+   "imitation_steps": 2160,
+   "ppo_steps": 181,
+   "train_charged_sim_s": 0.0,
+   "cumulative_charged_sim_s": 1501480,
+   "delta_charged_since_start": 72670.0,
+   "lesson": {
+    "enabled": true,
+    "rule": "new-policy branch observations include the v2v block; last_commands computed per step (bank_v2v)"
+   },
+   "verifications": 0
+  }
+ },
+ "charges_by_phase": {
+  "train": 74400,
+  "sumo_verification_k8": 505280,
+  "bank_verification_ext": 122920,
+  "checks": 14400
+ },
+ "outcome": {
+  "collector_R": [
+   {
+    "rounds": 2,
+    "statuses": [
+     "rejected",
+     "rejected"
+    ]
+   },
+   {
+    "rounds": 1,
+    "statuses": [
+     "rejected",
+     "rejected",
+     "accepted"
+    ]
+   },
+   {
+    "rounds": 1,
+    "statuses": [
+     "rejected",
+     "accepted",
+     "rejected"
+    ]
+   },
+   {
+    "rounds": 1,
+    "statuses": [
+     "accepted",
+     "rejected",
+     "rejected"
+    ]
+   },
+   {
+    "rounds": 1,
+    "statuses": [
+     "rejected",
+     "accepted",
+     "accepted"
+    ]
+   },
+   {
+    "rounds": null,
+    "statuses": [
+     "rejected",
+     "rejected",
+     "rejected",
+     "rejected",
+     "accepted",
+     "rejected",
+     "accepted",
+     "accepted",
+     "accepted",
+     "rejected",
+     "rejected",
+     "rejected",
+     "accepted",
+     "rejected",
+     "rejected"
+    ]
+   }
+  ],
+  "collector_B": [
+   {
+    "rounds": 2,
+    "statuses": [
+     "accepted",
+     "rejected",
+     "rejected",
+     "rejected",
+     "rejected"
+    ]
+   },
+   {
+    "rounds": 1,
+    "statuses": [
+     "rejected",
+     "rejected",
+     "rejected"
+    ]
+   },
+   {
+    "rounds": 1,
+    "statuses": [
+     "rejected",
+     "rejected",
+     "rejected"
+    ]
+   },
+   {
+    "rounds": 1,
+    "statuses": [
+     "rejected",
+     "rejected",
+     "rejected"
+    ]
+   },
+   {
+    "rounds": 1,
+    "statuses": [
+     "rejected",
+     "rejected",
+     "rejected"
+    ]
+   },
+   {
+    "rounds": 1,
+    "statuses": [
+     "rejected",
+     "accepted",
+     "accepted"
+    ]
+   },
+   {
+    "rounds": null,
+    "statuses": [
+     "rejected",
+     "rejected",
+     "rejected",
+     "rejected",
+     "rejected",
+     "rejected",
+     "rejected",
+     "rejected",
+     "accepted",
+     "rejected",
+     "rejected",
+     "accepted",
+     "rejected",
+     "rejected",
+     "rejected",
+     "rejected",
+     "rejected",
+     "rejected",
+     "rejected",
+     "rejected",
+     "rejected",
+     "accepted",
+     "rejected",
+     "accepted"
+    ]
+   }
+  ],
+  "A": "complete",
+  "B": "complete",
+  "R": "complete",
+  "broker": "stopped: ValueError([\"HealthPause('registered health pause PAUSE_HARNESS_END.json')\"])"
+ },
+ "harness_events": [],
+ "faults_found_and_fixed": [
+  "fault 1: warm_runner.run_arm arm-A resume ignored stop_after_update (hard-coded last=48); fixed to min(48, stop_after_update default 48) - identical behaviour when the key is absent",
+  "fault 2: accel_plant.episode loaded every snapshot into a plain Policy(); v2v-widened weights would crash - fixed with v2v_model.fit_policy (shape-driven, no-op for base widths)",
+  "fault 3: replay_bank.collect reloaded the newest checkpoint with the base loader - collectors would crash on v2v-widened checkpoints - fixed with v2v_model.load_for",
+  "fault 4: rehearsal fake SUMO trace rows lacked the real backend issued_acceleration_mps2/command_present slots, so bank_v2v pair blocks would have been excluded as missing partner commands - fake_tick now records the issued command per CAV row (harness parity fix)",
+  "fault 5: capacity_broker.forecast_result rejected centre-only forecasts whose record_sha256 was computed over the prepared (mode-stripped) record - every R centre rollout was declined (\"centre unavailable\", 322 skips, R bank empty); fixed with the same two-representation centre identity rule the bank reader already applies (MAIN bank part 3 centre_identity)",
+  "fault 6: arm A crashed with FileExistsError writing A_CHECK_RECORDS_004.json (its registered u4 check output; storage.write is exclusive-create) because the rp4 fixture pre-seeded the same path (only read by replay-B, which never runs check) - the rehearsal no longer seeds it",
+  "fault 7 (rehearsal shims, disclosed): policy_synergy accounting() registered-total assertion needs budget.total=14_500_000 and replay_start.owner needs a /proc identity - the rehearsal passes a mirrored budget and a harness owner receipt (same pattern as FakeGPU.owner); the isolated synergy variant runs from its own control root (one-use CLAIM guard is per control dir)",
+  "fault 8: with three concurrent arm waves plus two collector pools the host re-created the hard-en-int overload artifact (BrokenProcessPool kills a spawn worker -> WARM_B_FAILED -> guided STOP; rp4 recorded the same for b_slow_search_overload and re-ran alone) - the rehearsal now runs the arms SEQUENTIALLY (A, then B, then R; recipes unchanged, schedule serialized) and keeps the rp4-proven collector width",
+  "fault 9: replay_bank.verify_pending took its \"already decided\" set from the caller's memory only, so any FRESH collect() on the same bank (rehearsal warmup -> background handoff, or a live collector restart) re-verified already-verified states and crashed on the exclusive SNAPSHOT.pt create (FileExistsError 17) - verified pending now seeds its decided set from the durable decisions/ + skipped/ state markers first",
+  "fault 10: the rehearsal stall watchdog mis-fired on healthy silent phases (arm PPO updates are minutes of pure CPU with no file writes) and its os._exit killed a mid-update arm without any failure receipt - watchdog raised to 900 s and the debug dump keeps full tracebacks",
+  "fault 11: bank_v2v v2v blocks were numpy float32 scalars (v2v_features returns a float32 ndarray); injected into branch samples they reach the episode RESULT tape and canonical JSON serialization raises TypeError - EVERY lesson and policy-synergy new-policy branch failed (\"Object of type float32 is not JSON serializable\") - the wiring now emits plain python floats (superseded by the merged real bank_v2v adapter, which keeps the plain-float output)",
+  "fault 12: the scenario-end PAUSE_HARNESS_END.json control file (stops broker/collectors) is still registered when the post-run policy-synergy check executes; warm_health refuses every branch run while a pause receipt exists, so both synergy variants failed with HealthPause and status incomplete (gains null) even though their entries and v2v receipts were correct - run_synergy_checks now HOLDS the marker (rename) for the duration of the synergy branch runs and restores it afterwards (live ops run this check while the arm is live, before any pause; no live-code change, and the end marker stays on disk for the record)"
+ ],
+ "faults_open": [],
+ "ready": true,
+ "checks": {
+  "arms_complete_two_updates": {
+   "stops": [],
+   "failed": [],
+   "updates_ok": true,
+   "ok": true
+  },
+  "bank_pairs_carry_v2v": {
+   "B": {
+    "pairs": 600,
+    "pairs_missing_v2v": 0,
+    "v2v_dims": [
+     24
+    ],
+    "stub": false,
+    "v2v_counts": {
+     "pairs": 600,
+     "kept": 600,
+     "excluded_missing_prev_second": 0,
+     "excluded_missing_partner_command": 0,
+     "trace_missing": false
+    },
+    "entries": {
+     "decisions": 43,
+     "positive": 6,
+     "nonpositive": 37,
+     "unconfirmed": 1,
+     "not_admitted": 3,
+     "admitted_excess_not_used": 0,
+     "available": 43,
+     "used": 43,
+     "available_admitted": 2,
+     "used_admitted": 2,
+     "cooperative": 1,
+     "by_policy_version": {
+      "u3": 34,
+      "u4": 4,
+      "u5": 5
+     }
+    }
+   },
+   "R": {
+    "pairs": 240,
+    "pairs_missing_v2v": 0,
+    "v2v_dims": [
+     24
+    ],
+    "stub": false,
+    "v2v_counts": {
+     "pairs": 180,
+     "kept": 180,
+     "excluded_missing_prev_second": 0,
+     "excluded_missing_partner_command": 0,
+     "trace_missing": false
+    },
+    "entries": {
+     "decisions": 29,
+     "positive": 10,
+     "nonpositive": 19,
+     "unconfirmed": 0,
+     "not_admitted": 8,
+     "admitted_excess_not_used": 0,
+     "available": 29,
+     "used": 29,
+     "available_admitted": 2,
+     "used_admitted": 2,
+     "cooperative": 1,
+     "by_policy_version": {
+      "u3": 29
+     }
+    }
+   }
+  },
+  "lesson_checks_v2v": {
+   "B4": {
+    "v2v": {
+     "enabled": true,
+     "rule": "new-policy branch observations include the v2v block; last_commands computed per step (bank_v2v)"
+    },
+    "list_size": 2,
+    "graded_entries": 2,
+    "error": null,
+    "recapture_mean": 0.751297958986907
+   },
+   "B5": {
+    "v2v": {
+     "enabled": true,
+     "rule": "new-policy branch observations include the v2v block; last_commands computed per step (bank_v2v)"
+    },
+    "list_size": 2,
+    "graded_entries": 2,
+    "error": null,
+    "recapture_mean": 1.3417818819287959
+   },
+   "R4": {
+    "v2v": {
+     "enabled": true,
+     "rule": "new-policy branch observations include the v2v block; last_commands computed per step (bank_v2v)"
+    },
+    "list_size": 2,
+    "graded_entries": 2,
+    "error": null,
+    "recapture_mean": -18.17696332386996
+   },
+   "R5": {
+    "v2v": {
+     "enabled": true,
+     "rule": "new-policy branch observations include the v2v block; last_commands computed per step (bank_v2v)"
+    },
+    "list_size": 2,
+    "graded_entries": 2,
+    "error": null,
+    "recapture_mean": 2165.6047498514213
+   }
+  },
+  "policy_synergy_isolated_v2v": {
+   "B": {
+    "status": "complete",
+    "entries": 1,
+    "cooperative_entries": 1,
+    "v2v": {
+     "enabled": true,
+     "rule": "new-policy branch observations include the v2v block; last_commands computed per step (bank_v2v)"
+    },
+    "isolated_status": "complete",
+    "isolated_entries": 1,
+    "isolated_v2v": {
+     "enabled": true,
+     "rule": "new-policy branch observations include the v2v block; last_commands computed per step (bank_v2v)"
+    },
+    "gains": [
+     30.276487098897405
+    ]
+   },
+   "R": {
+    "status": "complete",
+    "entries": 1,
+    "cooperative_entries": 1,
+    "v2v": {
+     "enabled": true,
+     "rule": "new-policy branch observations include the v2v block; last_commands computed per step (bank_v2v)"
+    },
+    "isolated_status": "complete",
+    "isolated_entries": 1,
+    "isolated_v2v": {
+     "enabled": true,
+     "rule": "new-policy branch observations include the v2v block; last_commands computed per step (bank_v2v)"
+    },
+    "gains": [
+     -0.002684133204184036
+    ]
+   }
+  }
+ },
+ "wall_s": 8179.3,
+ "unix": 1793746590.9095309
+}
