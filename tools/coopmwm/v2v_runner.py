@@ -21,8 +21,14 @@ def remote_name(path):
 
 
 def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v2v_dim,
-            active_arms=ARMS):
-    """Prospective binding only: no directory, checkpoint, ledger or job mutation."""
+            active_arms=ARMS, v2v_intent=False):
+    """Prospective binding only: no directory, checkpoint, ledger or job mutation.
+
+    ``v2v_intent=True`` (default OFF) plans the intent-sharing observation: the
+    binding then requires the intent block dimension (V2V_INTENT_DIM at the
+    default horizon) and records the option keys on the config.  Default off
+    leaves the config byte-identical to the pre-intent binding.
+    """
     root, legacy_root = remote_name(root), remote_name(legacy_root)
     if root == legacy_root:
         raise ValueError('V2V needs a separate run root')
@@ -32,6 +38,11 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
         raise ValueError('MAIN14:06 keeps all three arms; only test/diagnostic fallbacks permitted')
     if type(v2v_dim) is not int or v2v_dim <= 0:
         raise ValueError('qualified observation dimension required; no stub default')
+    if v2v_intent:
+        from .v2v_obs import V2V_INTENT_DIM, V2V_INTENT_H
+        if v2v_dim != V2V_INTENT_DIM:
+            raise ValueError('v2v_intent requires the intent observation dimension '
+                             f'{V2V_INTENT_DIM}, got {v2v_dim}')
     cfg = deepcopy(base)
     cfg.update(v2v=True, v2v_dim=v2v_dim, run_root=root, legacy_root=legacy_root,
         accounting_root=legacy_root, source_root=remote_name(source_root),
@@ -56,6 +67,9 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
         physics_reservation_sim_s=0, new_sim_s=0,
         no_outcome_conditioned_changes=True,
         legacy_dev_checks='not included in new lesson+synergy reporting recipe; scope/funding must be explicit at admission')
+    if v2v_intent:
+        from .v2v_obs import V2V_INTENT_H
+        cfg.update(v2v_intent=True, v2v_intent_horizon=V2V_INTENT_H)
     # No in-episode plans or old quota/exact-grader work in B-REPLAY.
     for key in ('sumo_verify', 'quota_aware_admission', 'parallel_group_queries',
                 'bounded_fanout', 'parallel_fanout_factor', 'resume_progress'):

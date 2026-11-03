@@ -23,6 +23,14 @@ def accounting(root, cfg):
         dict(storage.reserve.__globals__,CAP=budget['total']-SUPERSEDED_CHARGE,CAPS=budget['phases']))
 
 
+def intent_binding_gate(binding):
+    """Option ``v2v_intent`` (default OFF) requires the intent observation dimension."""
+    if binding.get('v2v_intent'):
+        from .v2v_obs import V2V_INTENT_DIM
+        if binding.get('v2v_dim') != V2V_INTENT_DIM:
+            raise ValueError('v2v_intent requires the intent observation dimension')
+
+
 def hooks(root, cfg):
     from . import replay_bank as rb, warm_health as health
     from . import bank_imitation, bank_statistics
@@ -35,6 +43,7 @@ def hooks(root, cfg):
     def configure(r,arm,binding):
         if Path(r)!=Path(root) or not binding['v2v'] or binding.get('sumo_verify'):
             raise ValueError('V2V own-policy episodes only')
+        intent_binding_gate(binding)
 
     def safety(r,arm,u,episodes,ignored):
         if arm=='A':return
