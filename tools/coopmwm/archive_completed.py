@@ -15,6 +15,7 @@ HOME = Path('/home/ubuntu')
 WARM = HOME/'coopmwm20261102_warm1'
 CONTROL = HOME/'coopmwm_archive_20261103_1450'
 DEST = '/root/cpuq_archive_20261103/interim008_observables'
+RECEIPT_NAME = 'ARCHIVE_MOVE_interim008_observables.json'
 HOST = 'root@connect.westb.seetacloud.com'
 GPU_PYTHON = '/root/miniconda3/bin/python'
 HOST_KEY = '[connect.westb.seetacloud.com]:53897 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK3kwiFvUVgx1wVKa/LqYm6JNHZqht3d+OSpVJVG/AWa\n'
@@ -37,6 +38,10 @@ def sha(path):
     with Path(path).open('rb') as f:
         for block in iter(lambda: f.read(1024*1024), b''): h.update(block)
     return h.hexdigest()
+
+
+def source_paths():
+    return sorted((WARM/'jobs').glob('interim008_*/observable.jsonl.gz'))
 
 
 def immutable(path, value):
@@ -107,13 +112,13 @@ def run():
     assert CONTROL.is_dir() and WARM.is_dir()
     lock = (CONTROL/'RUN.claim').open('a')
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    receipt = CONTROL/'ARCHIVE_MOVE_interim008_observables.json'
+    receipt = CONTROL/RECEIPT_NAME
     if receipt.exists(): print(receipt.read_text(), flush=True); return
     os.nice(19)
     saved = CONTROL/'MANIFEST.json'
     manifest = json.loads(saved.read_text()) if saved.exists() else None
     paths = ([HOME/x['path'] for x in manifest if (HOME/x['path']).exists()]
-             if manifest is not None else sorted((WARM/'jobs').glob('interim008_*/observable.jsonl.gz')))
+             if manifest is not None else source_paths())
     assert paths or (CONTROL/'REMOTE_VERIFIED.json').exists(), 'no eligible source traces'
     for p in paths: checked_tape(p)
     refs = open_references(paths) + binding_references(paths)
@@ -146,7 +151,7 @@ def run():
     data = b''.join(x['path'].encode()+b'\0' for x in manifest)
     if filelist.exists(): assert filelist.read_bytes() == data
     else: filelist.write_bytes(data)
-    subprocess.run(['rsync', '-a', '--from0', '--files-from='+str(filelist),
+    subprocess.run(['rsync', '-az', '--from0', '--files-from='+str(filelist),
                     '-e', __import__('shlex').join(ssh()), str(HOME)+'/',
                     HOST+':'+DEST+'/'], check=True, timeout=1800)
     code = '''import sys,json,hashlib
