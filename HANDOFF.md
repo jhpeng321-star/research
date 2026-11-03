@@ -1,6 +1,7 @@
 # S-RB-INT FINAL — 2026-11-01
 
-Fresh-session closure verified: `docs/rbint/RESUME_FINAL_VERIFIED_20261101.md`.
+Fresh-session closure reverified: `docs/rbint/RESUME_FINAL_VERIFIED_20261103.md`.
+Prior closure receipt: `docs/rbint/RESUME_FINAL_VERIFIED_20261101.md`.
 Report/publication hashes match FINAL_PRESENTATION; original local collector12952
 and observer25668 are absent. Final registration already exists. No original INT
 work remains; round two is separately owned by `c4/rb2-int` (currently GPU HOLD).
