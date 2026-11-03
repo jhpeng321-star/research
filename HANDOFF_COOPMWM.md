@@ -1,5 +1,21 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
+## CURRENT Nov4 00:21 +08 — final integration merged, Linux994 PASS
+- MAINbrief readthrough1003. FinalREADY425e377a/codeac8e1f31 merged as762bdc7d,
+  preservingall dirty/untrackedwork. No directeditstointegrator-ownedlearner.
+- I3 immutablecoopmwm20261103_intentcpu_i3 COMPLETE979844/start73698574;
+  **994CPU PASS/0skip/138.534s/0SUMO**, exactsubject762bdc7d. NEVERredispatch.
+  I2failurepreserved. Intendedenvdeltafilterwasoverriddenbyinheritedexplicit
+  selection, soI3ranfullsuite; disclose/donotrepeat. FINAL_LINUX_QUALIFIED_I3.md.
+- Actualgate/V2VremainHELD: cleanindependentauditfor762bdc7drequired; current
+  AUDIT_REPORTtargetsolderf3caf85f. MAINdelegatedperseedpreview2400,don'tduplicate.
+- ProspectiveintentON/per_seed_v1runtime+SOURCES+u0hashin gate_inputs1, flags
+  launch_authorizedFALSE. Finalruntime/sourceauthoritymustbindbeforeactualgate.
+- gpuAarchivehandover43764LIVEwaitingoldtransfer; newremoteOWNERstillabsent.
+  cpuQfree7899439104bytes clears6GiB/not12GiB. Adoptwatcher,no secondmover.
+- Newverify_perseedincludesseed2extendedwindow: refresholdconditionalupperquote
+  beforeexpandedbuilder. Seed2-onlyminimumphasegap1409330unchanged; no transfer.
+
 ## Fresh-session adoption — Nov3 23:08 +08
 - MAIN00:00 pipeline APPLIED. I2 subjectac8e1f31 stagedexactgitblobs to
   coopmwm20261103_intentcpu_i2;952101COMPLETE,NEVERredispatch.932PASS+52subtests,

@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+## Nov4 00:21 UTC+8 — final integrated intent/per-seed source passes Linux
+- READY integration merged as`762bdc7d`; the exact immutable I3 source passes
+  **994 CPU checks,0 skips,138.534s,zero SUMO**. Both prior metadata-harness
+  failures now pass. The full I3 run is complete and must not be repeated.
+- Intent sharing, own-seed bank examples, all8 verification, the end-to-end
+  update and guarded launch interfaces are included. This is engineering
+  qualification; real-bank cooperation and the exact-commit audit remain gates.
+- Actual gate and V2V launch stay held. Prospective runtime/sources inputs are
+  prepared; MAIN's delegated bank preview and collection are not duplicated.
+- Evidence:`coopmwm/FINAL_LINUX_QUALIFIED_I3.md`,
+  `coopmwm/V2V_LINUX_CPU_RESULT_INTENT_I3.json`.
+
 ## Fresh-session adoption — Nov3 23:08 UTC+8
 - 23:41: restored702 archived candidate specs for88B decisions, exact SHA before
   and after copy, no overwrite/deletion/search replay. Independent proof702/702.
