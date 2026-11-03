@@ -1,5 +1,46 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3 11:45:04+08: currentwatcher3305066 LIVE/S/noalerts/no deadchildren,
+B/Rdurableu6; B-u7 24CLAIMs+24RESULTs nowprocessingguard/update, R7waitslag1.
+NOTa quota/WMblock. Localstatus1793677505498604800. Locked11:41:25budget
+6081770charged/14500000cap/8418230remaining, ALLphasesnonnegative; train1036800
+exact36fresharm-updates*24*1200. COMPOSITE_PHASE_BALANCES_1793677286478811300,
+SHA a9deb6e7210a69098ca69d1e7d43bebfe314bf925fd80d4dbaaac5ccc61fcf75.
+Freshwarm_watch state nowcorrectnewowners/LS3105652broker/activepausefiltered;
+stopNone,B/Rnotpaused, legacyA48completed. No newdispatch/worker/gate needed.
+Nextobserveu7receipts/newbankactionerrors and keepdurablerun going; sourceC1
+fullyqualified727 remainsunchanged. Allthissessioncode/receipts committedperstep.
+
+CURRENT Nov3~11:33+08 / FULL709brief linesread inclMAIN10:56:
+TRAINING RUNNING afterconditionalrelease. Actualrestart11:11:32/unix1793675492.874,
+watcher3305066/start68977029, B3305070/R3305071, graders3305068/69 allLIVE/noFAIL.
+ADOPT COMPOSITE_SAFETY_RESUME_DISPATCH_0957.json, NEVERrelaunch. Source
+/home/ubuntu/coopmwm20261103_compositereleasecpu1 / FULL727LinuxPASS / registration
+853bb0b6d3afcbc71b7f5ee7c028ebf971d196fe0380d7f977fb702c55d08dbe/commit709a2f4f.
+B/Ru6BOTHcompleteby11:20:36; B24closedu6episodesreused/zeroSIMrecharge,R6fresh.
+Bnewbank5requested,2FULL+partial3rd beforeKL.05557>.045;2236pairs/2013present-member
+targets/18steps, error.689699->.678985(beforewholeupdate.694563),critic0/ratios0.
+Rall5passes,600pairs/60targets/5steps,KL.003071,error.211841->.211027.
+B6fixed8lesson+413.050veh-s CI[1.992,956.951],6/8positive,perentryerror.627479;
+R6frozenlesson1entry+1207.756/noCI/error.182858. CONDITIONALbankdiagnostics only.
+B6criticaldelta+7.208[-19.855,33.021],R6-8.792[-35.626,15.792],24pairs each,
+collision/teleport0; bothcompositePASS beforePPO. Originalhardbrakefindingkept.
+Rbank11:24:6realgraded/4positive/4confirmed/1admitted+cooperative (group3037.483
+vsbestsolo593.902, difference2443.580); noCIfrom1admit. R actualimitationcap B8
+admittedtargets, NOT75rejected/otherlists. Sevenoriginalcentreidentityskips copied
+byte-for-byte+SHA underR/identity_declines_before_recovery; sourcepathsnotremoved;
+CENTRE_IDENTITY_DECLINE_PRESERVATION_1793675697582036300.json pinsallcopies.
+MAIN10:56 namedrelease publishedROOT+local SAFETY_RELEASE_u6.json, localSHAff8f4462
+remoteSHA96b61cfe, referencesactive853certificate. OriginalPAUSEpreserved; other/new
+pausesactive. Currentpendingu7 atoriginalminimum1800s afterNEWu6start (~11:41 B;
+Rlag1), no racing. Remotecontinues24+registeredsealedprecompute; NOoutcomesopened.
+Canonicalu6lessons+safetyreports NOWcopiedtopaperreceipts. Use
+`replay_start_ops status`, `warm_watch state`, `lesson_window_ops r_status` fresh.
+Old standaloneRrestore3066675stoppedonhealthpause; future Rcurrent-policy snapshots
+come from OWN live PPO episodes, not anothercollector. GPU/LS services unchanged.
+NEXT observeu7+bank growth, publishactualpasses/error/safety/lesson andphasebalances;
+do notduplicatecompletedu4correction,CPU/GPUgates or anycurrentcontroller.
+
 LATEST Nov3~11:02+08: MAIN09:57DIAGNOSIS COMPLETE/RELEASE_ELIGIBLE BOTH.
 LocalSAFETY_DIAGNOSIS_u6.json: B6-A6criticaltotal+7.208 CI[-19.855,+33.021],
 R5-A5+.083 CI[-21.104,+20.605]; all24pairs/allcollision-teleportdeltas0.

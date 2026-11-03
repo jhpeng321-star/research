@@ -157,6 +157,76 @@ print(json.dumps(d))''',timeout=60))
     print(json.dumps(value))
 
 
+def preserve_identity():
+    """Byte-preserve recovered pre-physics declines alongside their new decisions."""
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,time,hashlib,os
+r=Path({ROOT!r});c=Path({CONTROL!r});bank=r/'replay_bank/R'
+keys=json.loads((c/'CENTRE_IDENTITY_RECOVERY.json').read_text())['keys']
+dest=bank/'identity_declines_before_recovery';assert dest.parent.is_dir();dest.mkdir(exist_ok=True)
+rows=[]
+for key in keys:
+ p=bank/'skipped'/(key+'.json');q=dest/p.name
+ if q.exists():data=q.read_bytes()
+ elif p.exists() and json.loads(p.read_text()).get('reason')=='centre identity mismatch':
+  data=p.read_bytes()
+  with q.open('xb') as f:f.write(data);f.flush();os.fsync(f.fileno())
+ else:rows.append(dict(key=key,preserved=False,reason='original decline not currently present'));continue
+ assert q.read_bytes()==data
+ rows.append(dict(key=key,preserved=True,sha256=hashlib.sha256(data).hexdigest(),
+  original_path=str(p),preserved_path=str(q),source_removed=False))
+print(json.dumps(dict(unix=time.time(),rows=rows,new_sim_s=0,inference_replayed=False)))''',timeout=40))
+    p=ops.EVIDENCE/f'CENTRE_IDENTITY_DECLINE_PRESERVATION_{time.time_ns()}.json';write(p,value)
+    print(json.dumps(dict(receipt=str(p),**value)))
+
+
+def publish_release():
+    """MAIN10:56 named release receipt, retaining the active SHA-bound certificate."""
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,time,hashlib,sys,os
+r=Path({ROOT!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
+from tools.coopmwm.warm_health import assert_running
+assert_running(r,'B');assert_running(r,'R')
+p=r/'SAFETY_RELEASE_u6.json';active=r/'SAFETY_RELEASE_0957.json'
+if not p.exists():
+ v=dict(authority='MAIN2026-11-03 10:56',published_unix=time.time(),released=True,
+  active_certificate=active.name,active_certificate_sha256=hashlib.sha256(active.read_bytes()).hexdigest(),
+  certificate=json.loads(active.read_text()),original_pause_preserved=(r/'PAUSE_SAFETY.json').exists(),
+  training_start_receipt='B_REPLAY_COMPOSITE_STARTED_0957.json',
+  guard='same composite rule every B/R update; every other/new pause remains active')
+ with p.open('x') as f:json.dump(v,f);f.flush();os.fsync(f.fileno())
+v=json.loads(p.read_text());h=hashlib.sha256(p.read_bytes()).hexdigest()
+with (r/'AUTHORITY.md').open('a') as f:f.write('MAIN10:56 named SAFETY_RELEASE_u6.json remoteSHA'+h+chr(10))
+print(json.dumps(dict(value=v,remote_sha256=h,remote_path=str(p))))''',timeout=40))
+    p=ops.EVIDENCE/'SAFETY_RELEASE_u6.json'
+    if not p.exists():write(p,value['value'])
+    else:assert read(p)==value['value']
+    h=sha(p);registry=checked(REGISTRY)
+    if h not in registry.read_text(encoding='utf-8'):
+        with registry.open('a',encoding='utf-8') as f:
+            f.write('\nS-COOPMWM MAIN10:56 named safety release publication localSHA'+h+
+                ' remoteSHA'+value['remote_sha256']+'; active853bb0b6 certificate retained, no new pause cleared.\n')
+    print(json.dumps(dict(receipt=str(p),local_sha256=h,**value)))
+
+
+def budget_status():
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import sys,json,time
+r=Path({ROOT!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
+from tools.coopmwm.storage import ledger
+from tools.coopmwm.accel_protocol import SUPERSEDED_CHARGE
+budget=json.loads((r/{NAME!r}).read_text())['budget'];entries=ledger(r)
+used={{p:sum(x['sim_s'] for x in entries if x['phase']==p) for p in budget['phases']}}
+used['superseded']+=SUPERSEDED_CHARGE
+rows={{p:dict(allocated=n,charged=used[p],remaining=n-used[p]) for p,n in budget['phases'].items()}}
+total=SUPERSEDED_CHARGE+sum(x['sim_s'] for x in entries)
+assert total<=budget['total'] and all(x['remaining']>=0 for x in rows.values())
+print(json.dumps(dict(unix=time.time(),total_cap=budget['total'],allocated=sum(budget['phases'].values()),
+ charged=total,remaining=budget['total']-total,phases=rows,new_reserved_sim_s=0)))''',timeout=40))
+    p=ops.EVIDENCE/f'COMPOSITE_PHASE_BALANCES_{time.time_ns()}.json';write(p,value)
+    print(json.dumps(dict(receipt=str(p),sha256=sha(p),**value)))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('preregister','qualify','cpu_result','register','launch'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('preregister','qualify','cpu_result','register','launch','preserve_identity','publish_release','budget_status'))
     globals()[p.parse_args().action]()

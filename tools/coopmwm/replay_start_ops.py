@@ -225,10 +225,12 @@ episodes=[];latest={{}}
 for arm in ('B','R'):
  done=max([3]+[int(q.stem.rsplit('_',1)[1]) for q in r.glob(arm+'_UPDATE_[0-9][0-9][0-9].json')]);u=done+1
  lesson=r/('LESSON_CHECK_u'+str(done).zfill(3)+'_'+arm+'.json')
+ safety=r/(arm+'_SAFETY_COMPOSITE_'+str(done).zfill(3)+'.json')
  receipt=json.loads((r/(arm+'_UPDATE_'+str(done).zfill(3)+'.json')).read_text())
  latest[arm]=dict(update=done,receipt={{k:receipt.get(k) for k in
-  ('timestamp_utc','wall_s','eta_final_hours','trust','quota_deviation','reward_source','charged_sim_s')}},
+  ('timestamp_utc','wall_s','eta_final_hours','trust','quota_deviation','reward_source','charged_sim_s','bank_imitation')}},
   lesson=json.loads(lesson.read_text()) if lesson.exists() else None,
+  safety=json.loads(safety.read_text()) if safety.exists() else None,
   next_checkpoint_written=(r/(arm+'_checkpoint_'+str(u).zfill(3)+'.pt')).exists(),
   next_lesson_written=(r/('LESSON_CHECK_u'+str(u).zfill(3)+'_'+arm+'.json')).exists())
  for job in sorted((r/'jobs').glob('replay0735_warm_u'+str(u).zfill(3)+'_'+arm+'_*')):
@@ -243,6 +245,14 @@ print(json.dumps(dict(unix=time.time(),owner=d,state=st[2] if st else 'ABSENT',
  log=(c/'WATCH.log').read_text()[-5000:],started=start is not None,
  start_receipt=start,children=children,episodes=episodes,latest=latest)))''',timeout=40))
     p=ops.EVIDENCE/f'B_REPLAY_START_WATCH_STATUS_{time.time_ns()}.json';write(p,value)
+    for arm,entry in value.get('latest',{}).items():
+        u=entry['update']
+        if u<6:continue
+        for kind,name in (('lesson',f'LESSON_CHECK_u{u:03}_{arm}.json'),('safety',f'{arm}_SAFETY_COMPOSITE_{u:03}.json')):
+            if entry.get(kind) is None:continue
+            target=ops.EVIDENCE/name
+            if not target.exists():write(target,entry[kind])
+            else:assert read(target)==entry[kind], 'preserve changed receipt; inspect original '+name
     print(json.dumps(dict(receipt=str(p),**value)))
 
 

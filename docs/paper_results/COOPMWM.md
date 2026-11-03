@@ -1,5 +1,48 @@
 # S-COOPMWM — live checks
 
+## Nov3 11:20:36 UTC+8 — TRAINING RUNNING; B/R-u6 complete with full-bank exposure
+- Registered release/commit`709a2f4f` preceded actual restart **11:11:32+08**.
+  Durable cpuQ watcher **3305066/start68977029**, B**3305070**, R**3305071**,
+  graders**3305068/3305069** are verified alive, no child failures. Both update6
+  receipts exist. The24 closed B-u6 episodes were reused without simulation or
+  recharge; R-u6 collected fresh registered episodes.
+- B requested5 full bank-only AWR passes: **2 complete, third started**,2236 pair
+  visits/2013 present-member targets/18 optimizer steps. The sole early-stop reason
+  is the existing pre-update KL bound (final0.05557 after the triggering step,
+  threshold0.045). Bank action error **0.689699→0.678985m/s²**; before the whole
+  update it was0.694563. Imitation has0 critic steps and0 plan-ratio computations.
+- R completed **all5 passes**,600 pair visits/60 present-member targets/5 steps,
+  KL0.003071. Bank action error **0.211841→0.211027m/s²**. It imitated1 admitted
+  target within the actual B-target fairness cap; rejected lists do not consume it.
+- B-u6 fixed8-entry matched-window lesson: mean absolute saving **+413.050veh-s**,
+  entry-bootstrap95%CI **[+1.992,+956.951]**, **6/8 positive (75%)**, mean per-entry
+  action error0.627479m/s². This is the conditional frozen TRAIN-bank learning
+  check. R's frozen lesson currently has1 entry: saving+1207.756veh-s, no CI from
+  one entry; its mean action error is0.182858m/s².
+- Both actual u6 safety checks pass the same composite rule. B6-A6 critical total
+  **+7.208[-19.855,+33.021]**; R6-A6 **-8.792[-35.626,+15.792]**,24 paired worlds
+  each; all collision/teleport differences0. Hard-brake deltas remain separately
+  reported: B+3.625[+0.708,+6.521], R+0.750[-2.042,+3.542]veh-s/episode.
+- R bank at11:24:16: **6 exact-graded decisions/4 first-seed positives/4 confirmed/
+  1 admitted**,1 cooperative under the registered group-vs-best-solo criterion.
+  That entry's first-seed group gain3037.483, best solo593.902, difference2443.580
+  veh-s; one admitted entry gives no population CI. Original identity declines
+  remain byte-preserved with seven SHA-verified copies; no WM inference was rerun.
+- MAIN10:56's requested **`coopmwm/SAFETY_RELEASE_u6.json`** is published with
+  localSHA`ff8f4462e197138c…` and remoteSHA`96b61cfebea384ecb…`; it references the
+  active853bb0b6 certificate and preserves the original pause. Same guard runs
+  before every subsequent B/R PPO update. Fixed30-minute minimum pacing and final
+  checkpoints24 remain; sealed outputs remain unopened.
+- Published artifacts: `LESSON_CHECK_u006_B.json`, `LESSON_CHECK_u006_R.json`,
+  `B_SAFETY_COMPOSITE_006.json`, `R_SAFETY_COMPOSITE_006.json` in `coopmwm/`.
+- Locked budget snapshot11:41:25: **6,081,770/14,500,000sim-s charged**,
+  8,418,230remaining; every phase nonnegative. Train has1,036,800remaining,
+  exactly36 fresh arm-updates×24×1200 after u6. Per-phase artifact
+  `COMPOSITE_PHASE_BALANCES_1793677286478811300.json`, SHA`a9deb6e7210a6909…`.
+- At11:45:04, B-u7's24 episodes are already closed; its guard/update is processing.
+  R-u7 waits under the registered lag-1 rule. Watcher remains alive, no alerts or
+  dead children, and no sealed outcome access.
+
 ## Nov3 11:02 UTC+8 — MAIN09:57 diagnosis passes; SHA-bound release registered
 - Full read-only artifact **`coopmwm/SAFETY_DIAGNOSIS_u6.json`** is published.
   B6/A6 and last-completed R5/A5 each contain24 paired, unique TRAIN worlds.
