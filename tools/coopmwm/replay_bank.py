@@ -435,7 +435,7 @@ def temperature(root, arm, training_seed, decisions):
 
 
 def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT_CLIP, sources=(),
-               max_decisions=None, v2v=False, v2v_cfg=None):
+               max_decisions=None, v2v=False, v2v_cfg=None, v2v_intent=None):
     """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta.
 
     max_decisions (R fairness, MAIN): use at most this many admitted targets, oldest first;
@@ -444,6 +444,9 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     partners' v2v features of that second, computed from the winning plan's recorded branch
     trace (bank_v2v.attach_pairs); pairs whose trace lacks partner commands are excluded and
     counted in summary['v2v'].
+    v2v_intent (DEFAULT None = unchanged; requires v2v): binding dict with v2v_intent ON - pairs
+    also carry partner intents (the winning tape's recorded commands, published at t-1) and the
+    plan members' own future plan commands as intent targets (tools/coopmwm/v2v_intent.py).
     """
     everything = bank_decisions(root, arm, upto_unix, sources)
     T = temperature(root, arm, training_seed, everything)
@@ -476,10 +479,16 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
         entry = dict(start_s=r['t0'], duration_s=int(plan['duration_s']), plan_id=plan['id'], weight=w)
         coop = c.get('cooperation') or {}
         entry_pairs = xg.imitation_pairs(tape, entry)
+        intent = None
+        if v2v and v2v_intent:
+            from . import v2v_intent as vi
+            s = vi.settings(v2v_intent)
+            entry_pairs = vi.attach_bank_targets(entry_pairs, tape, entry, s['horizon'], s['bounds'])
+            intent = dict(horizon=s['horizon'], board=vi.tape_board(tape, s['horizon'], s['bounds']))
         if v2v:
             entry_pairs, entry_counts = bank_v2v.attach_pairs(
                 entry_pairs, Path(r['_branches'])/r['verification_id']/branch['branch']/'observable.jsonl.gz',
-                r['t0'], v2v_cfg)
+                r['t0'], v2v_cfg, **({'intent': intent} if intent else {}))
             v2v_counts = bank_v2v.merge_counts(v2v_counts, entry_counts)
         per_entry.append((entry_pairs, coop.get('cooperative') is True,
                           coop.get('cooperation_gain_veh_s')))
