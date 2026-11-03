@@ -215,6 +215,7 @@ def run_scenario(name, cfg, workdir):
             except BaseException as error:
                 outcome.setdefault('collector_'+arm, []).append('failed: '+repr(error))
                 event('collector_failed', arm=arm, error=repr(error), tb=traceback.format_exc())
+        # Warmup (both banks in parallel, rp4 width) before the arms start.
         warm = [threading.Thread(target=collector, args=(a, cfg['bank_warmup_rounds']), daemon=True) for a in ('B', 'R')]
         for t in warm:
             t.start()
@@ -225,20 +226,28 @@ def run_scenario(name, cfg, workdir):
         for t in collectors.values():
             t.start()
         started = time.time()
-    for t in threads.values():
-        t.start()
-    last, last_change, deadlock = None, time.time(), False
-    while any(t.is_alive() for t in threads.values()):
-        time.sleep(1.)
-        snap = progress_signature(root)
-        if snap != last:
-            last, last_change = snap, time.time()
-        elif time.time()-last_change > cfg['stall_s']:
-            deadlock = True
-            event('harness_stall', idle_s=time.time()-last_change, signature=snap)
+    # Arms run SEQUENTIALLY (A, then B, then R): three concurrent arm waves plus two
+    # collector pools overloaded this host (BrokenProcessPool, the same environment
+    # artifact the harden-int rehearsal recorded for b_slow_search_overload). The
+    # recipes are unchanged; only the schedule is serialized.
+    deadlock = False
+    for a in ARMS:
+        last, last_change = None, time.time()
+        threads[a].start()
+        while threads[a].is_alive():
+            time.sleep(1.)
+            snap = progress_signature(root)
+            if snap != last:
+                last, last_change = snap, time.time()
+            elif time.time()-last_change > cfg['stall_s']:
+                deadlock = True
+                event('harness_stall', arm=a, idle_s=time.time()-last_change, signature=snap)
+                break
+            if time.time()-started > cfg['timeout_s']:
+                event('harness_timeout', arm=a);break
+        if deadlock or outcome.get(a) != 'complete':
+            event('harness_aborted', arm=a, outcome=outcome.get(a), deadlock=deadlock)
             break
-        if time.time()-started > cfg['timeout_s']:
-            event('harness_timeout');break
     wall = time.time()-started
     if collectors:
         done.set()
@@ -507,6 +516,11 @@ _FAULTS = [
     'needs budget.total=14_500_000 and replay_start.owner needs a /proc identity - the rehearsal '
     'passes a mirrored budget and a harness owner receipt (same pattern as FakeGPU.owner); the '
     'isolated synergy variant runs from its own control root (one-use CLAIM guard is per control dir)',
+    'fault 8: with three concurrent arm waves plus two collector pools the host re-created the '
+    'hard-en-int overload artifact (BrokenProcessPool kills a spawn worker -> WARM_B_FAILED -> '
+    'guided STOP; rp4 recorded the same for b_slow_search_overload and re-ran alone) - the '
+    'rehearsal now runs the arms SEQUENTIALLY (A, then B, then R; recipes unchanged, schedule '
+    'serialized) and keeps the rp4-proven collector width',
 ]
 
 if __name__ == '__main__':
