@@ -1,5 +1,16 @@
 # S-RB-DECIDE handoff
 
+## Resume verified — 2026-11-04 01:58 +08
+
+- Preserved clean HEAD `604c94fa`; the requested implementation, saved-output
+  scoring and final INT delivery are complete. Rechecked the registration,
+  background documents, picker source, verification record and final routing.
+- Collector claim and terminal receipt still agree: normal deadline completion
+  at 2026-11-01 09:01:23 +08. Final INT manifest and morning credibility section
+  remain authoritative; the registered switching gate remains FAIL.
+- Receipt: `docs/paper_results/wmdecide/RESUME_VERIFIED_20261104.md`.
+  This resume updates documentation only; prior CPU verification is preserved.
+
 ## Resume verified — 2026-11-03 02:05 +08
 
 - Preserved clean HEAD `1b4ebe6c`; implementation, CPU verification, saved-output
