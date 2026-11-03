@@ -16,6 +16,7 @@ BINDING='POLICY_SYNERGY_BINDING_1205.json'
 DISPATCH='POLICY_SYNERGY_DISPATCH_1205.json'
 REPORT_PATTERN='POLICY_SYNERGY_u[0-9][0-9][0-9]_[BR].json'
 STATUS_PREFIX='POLICY_SYNERGY_STATUS'
+COMBINED_PATTERN=''
 
 
 def qualify():
@@ -106,14 +107,17 @@ c=Path({CONTROL!r});r=Path({ROOT!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
 from tools.coopmwm.replay_start import alive
 d=json.loads((c/'DISPATCH.json').read_text()) if (c/'DISPATCH.json').exists() else None
 reports={{p.name:json.loads(p.read_text()) for p in r.glob({REPORT_PATTERN!r})}}
+combined={{p.name:json.loads(p.read_text()) for p in r.glob({COMBINED_PATTERN!r})}} if {bool(COMBINED_PATTERN)!r} else {{}}
 entries={{}}
 for base in c.glob('u[0-9][0-9][0-9]_[BR]'):
  entries[base.name]={{p.name:json.loads(p.read_text()) for p in base.glob('sv_*.json') if not p.name.endswith(('.QUOTE.json','.ALERT.json'))}}
 print(json.dumps(dict(unix=time.time(),owner=d,alive=alive(d) if d else False,
 status=json.loads((c/'STATUS.json').read_text()) if (c/'STATUS.json').exists() else None,
-log=(c/'WATCH.log').read_text()[-8000:] if (c/'WATCH.log').exists() else '',reports=reports,completed_entries=entries)))''',timeout=45))
+ log=(c/'WATCH.log').read_text()[-8000:] if (c/'WATCH.log').exists() else '',reports=reports,combined_reports=combined,completed_entries=entries)))''',timeout=45))
     p=ops.EVIDENCE/f'{STATUS_PREFIX}_{time.time_ns()}.json';write(p,value)
     for n,v in value['reports'].items():
+        if not (ops.EVIDENCE/n).exists():write(ops.EVIDENCE/n,v)
+    for n,v in value['combined_reports'].items():
         if not (ops.EVIDENCE/n).exists():write(ops.EVIDENCE/n,v)
     summary={}
     for name,report in value['reports'].items():

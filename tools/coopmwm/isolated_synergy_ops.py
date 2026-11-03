@@ -73,6 +73,7 @@ def setup_parent():
     parent.DISPATCH='POLICY_SYNERGY_ISOLATED_DISPATCH_1226.json'
     parent.REPORT_PATTERN='POLICY_SYNERGY_u[0-9][0-9][0-9]_[BR]_ISOLATED.json'
     parent.STATUS_PREFIX='POLICY_SYNERGY_ISOLATED_STATUS'
+    parent.COMBINED_PATTERN='POLICY_SYNERGY_u[0-9][0-9][0-9]_[BR]_WITH_ISOLATED.json'
 
 
 def launch():setup_parent();parent.launch()

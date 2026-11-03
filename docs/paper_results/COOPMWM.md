@@ -1,5 +1,22 @@
 # S-COOPMWM — live checks
 
+## Nov3 12:50 UTC+8 — isolated cooperation diagnostic is durable from u9
+- MAIN12:26 is registered as SHA`efd1fefae30313b1…`; immutable`isosynergycpu1`
+  passes **45 Linux CPU checks**, zero skips,1.471s, zero SUMO. Commit`a6698e15`
+  precedes dispatch **12:47:54**, cpuQ owner3511227/start69555223.
+- From u9, both arms retain the original cooperation test and add group-only
+  all/solo-new-policy tests with every background CAV on u3, including arrivals.
+  A separate background-only test runs non-group cars new/group cars u3. All
+  use the original frozen state list, prefix, window and CRN. The exact sealed u3
+  reference is adopted; the all-new lesson is never mistaken for an isolated test.
+- Original diagnostic3443527 and training supervisors continue. Combined reports
+  use`POLICY_SYNERGY_uNNN_ARM_WITH_ISOLATED.json`; original reports stay immutable.
+  Complete new branch sets are precharged to the existing bank-extension phase.
+- At12:49:57, B-u9 is complete/R-u8 remains last complete; watcher is live with no
+  alerts/dead children. Read-only budget12:48:55: **6888240/14500000sim-s charged**,
+  7611760remaining, bank extension1981660remaining; all phases nonnegative.
+  BudgetSHA`372f9f6203ffa2f6…`. Interim outcomes remain closed.
+
 ## Nov3 12:44 UTC+8 — fixed-u8 interim running, including the requested R supplement
 - Existing A8/B8 interim was already running under3442884 since12:18:08. Its
   immutable192-episode manifest is retained. At12:44:07,77 A episode hash receipts

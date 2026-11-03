@@ -1,5 +1,18 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3 12:50+08: isolatedsynergy NOWLIVE3511227/start69555223/controlwarm1/
+policy_synergy_isolated_1226. ADOPT POLICY_SYNERGY_ISOLATED_DISPATCH_1226, NEVERduplicate.
+Immutableisosynergycpu1:45LinuxCPU PASS/0skips/1.471s/zeroSUMO, SHAefd1fefa,
+commita6698e15 BEFOREdispatch12:47:54. Additiveseparatewatcherfromu9 BOTHarms;
+legacy3443527kept. Isogroupall/soloNEW,otherCAVsu3inclnewarrivals; background-only
+NEW/groupu3. Originalfrozenstatelist+sameprefix/window/CRN, originalu3refSHAadopted/
+no rerun; all-newlessonNEVERadoptedasiso. n+2newbranches/statecompleteprechargebankext;
+phaseguard14.5M. CombinedPOLICY_SYNERGY_uNNN_ARM_WITH_ISOLATED retainsoriginalbytes.
+12:49:57trainingB9/R8, watcherLIVE/noalerts/deadchildren. Budget12:48:55charged
+6888240/14.5M,7611760remaining;bankext1981660/allphasesnonnegative (372f9f62).
+Localread-onlyisolated/interimmirrorprepared; committhenstart --isolated ONCE,
+adoptitsdistinctdispatch; originalmirror44248untouched. No sealedoutcomesopened.
+
 LATEST Nov3 12:44+08: ALL732brief linesread. Interim ALREADYowned3442884/start69376592
 since12:18:08; manifestA8/B8/230400, NOTmissing. MAIN12:35 R8supplement NOWLIVE
 3499917/start69527524/controlwarm1/interim_r_1235_v2; ADOPT INTERIM_R_DISPATCH_1235_V2,
