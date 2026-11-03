@@ -1,5 +1,27 @@
 # S-COOPMWM — live checks
 
+## Nov3 12:19:57 UTC+8 — diagnostic live; first real prefix/CRN checks pass
+- Registered code commit`668f04fd` preceded sidecar dispatch **12:18:26+08**.
+  cpuQ owner **3443527/start69378435** remains live under detached supervision;
+  adopt `POLICY_SYNERGY_DISPATCH_1205.json`. Training owners are untouched.
+- First2 B-u8 states have complete results:4 new solo SUMO branches are graded,
+  with exact prefix checks and CRN audit passing;2 all-new matched lessons were
+  SHA-adopted without simulation. At986048/t300 policy cooperation gain is
+  **+0.000008189veh-s** versus the original plan's+958.678; at986052/t300 it is
+  **-0.003890589veh-s** versus the plan's+0.000495724. These near-zero values
+  do not establish learned multi-car cooperation. Remaining states are in flight.
+- **B-u8 completed12:18:08**, R-u7 remains the last completed R update. B-u8 fixed
+  8-entry lesson saving **+276.946veh-s**, entry-bootstrap95%CI
+  **[-517.476,+1342.929]**,5/8 positive; fixed-entry action error0.601449m/s².
+- B-u8 imitates11 admitted targets/1620 pairs. It runs13 optimizer steps/1620
+  pair visits before the registered KL stop;0 full passes completed, final
+  KL0.050201. Within-update bank error **0.845886→0.833554m/s²**.
+- B8-A8 safety: critical total **+13.771[-12.876,+44.563]**, hard braking
+  **+1.438[-3.250,+6.146]**,24 paired worlds; collision/teleport deltas0. The
+  composite check passes. Watcher3305066 has no alerts or dead children.
+- Evidence:`B_REPLAY_START_WATCH_STATUS_1793679557665986900.json` and
+  `POLICY_SYNERGY_STATUS_1793679598403885800.json`; no sealed outcome access.
+
 ## Nov3 12:17 UTC+8 — policy-cooperation diagnostic qualified and registered
 - MAIN12:05 is registered as amendment SHA
   `8d01d928339efc54212ae9f47b1bd4a2a38e938cfe48816d510fa916a118d976`.
