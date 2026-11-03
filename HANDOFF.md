@@ -145,3 +145,14 @@ Shared coordination: `E:/agent-work/rb-shared/EVAL_WM2_COMPLETE_AND_CI_CORRECTIO
   corrected gate remains NOT_QUALIFIED/scored-only-singleton-roundoff-v2.
   Existing verification/test receipts apply. This resume updates handoff only;
   no inference, scoring, test repeat or process action. Original task is complete.
+
+## Resume confirmation — 2026-11-03, recovered HEAD0c364f09
+- Clean worktree preserved; required program/preregistration, rationale, gate,
+  frozen design, RUNA request and INT final-delivery receipts reread.
+- Read-only `ops status` confirms WM2 four40/40 shards, FINALIZED, and terminal
+  support REPORT_READY/report_verified=true; no matching EVAL process listed.
+  `ops candidate-status` confirms A2/FULL-v4=160, B2=157/FAILED, C2=102.
+- Future-builder callback/source binding remains present; corrected local gate
+  remains NOT_QUALIFIED/scored-only-singleton-roundoff-v2. Both GPUs busy.
+- Original task and November1 support window are complete. Documentation only;
+  existing verification receipts retained, no inference/scoring/tests repeated.
