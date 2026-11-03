@@ -3,9 +3,13 @@ import json
 import os
 from pathlib import Path
 import time
+import threading
 from contextlib import contextmanager
 
 from .protocol import checked, canonical, sha, budget, extension_budget, approval
+
+
+_windows_ledger_mutex = threading.Lock()
 
 
 def read(path):
@@ -63,12 +67,15 @@ def ledger_lock(root):
     with (root/'ledger.lock').open('a+b') as lock:
         if os.name == 'nt':
             import msvcrt
-            if not lock.tell():
-                lock.write(b'0');lock.flush()
-            lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_LOCK,1)
-            try:yield
-            finally:
-                lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_UNLCK,1)
+            # Windows can lock beyond EOF. Initializing an empty file before
+            # acquisition races with another worker that already owns byte 0.
+            # Serialize local threads before the CRT's bounded, 1s retry loop;
+            # the byte lock still excludes other processes sharing this root.
+            with _windows_ledger_mutex:
+                lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_LOCK,1)
+                try:yield
+                finally:
+                    lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_UNLCK,1)
         else:
             import fcntl
             fcntl.flock(lock,fcntl.LOCK_EX)

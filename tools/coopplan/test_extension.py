@@ -9,7 +9,7 @@ from unittest.mock import patch
 from .protocol import extension_worlds,extension_budget
 from .predictor import ObservableState,SumoOraclePredictor
 from .planner import Planner
-from .storage import write,charge,read
+from .storage import write,charge,read,ledger_lock
 from .quota import outstanding,reserve_actions,release_credit
 from .test_cpu import ROWS
 
@@ -94,6 +94,19 @@ class ExtensionTests(unittest.TestCase):
         a,p=plain.step(self.state);b,q=bounded.step(self.state)
         self.assertEqual(a['executed_action'],b['executed_action'])
         self.assertEqual(a['decision'],b['decision'])
+
+    def test_windows_lock_does_not_write_before_acquisition(self):
+        from types import SimpleNamespace
+        calls=[]
+        def locking(fd,mode,size):
+            self.assertEqual((self.root/'ledger.lock').stat().st_size,0)
+            calls.append((mode,size))
+        windows=SimpleNamespace(LK_LOCK=1,LK_UNLCK=2,locking=locking)
+        with patch('tools.coopplan.storage.os',SimpleNamespace(name='nt')):
+            with patch.dict('sys.modules',msvcrt=windows):
+                with ledger_lock(self.root):
+                    self.assertEqual(calls,[(windows.LK_LOCK,1)])
+        self.assertEqual(calls,[(windows.LK_LOCK,1),(windows.LK_UNLCK,1)])
 
     def test_parallel_worlds_cannot_steal_reserved_twins_or_pairs(self):
         from concurrent.futures import ThreadPoolExecutor
