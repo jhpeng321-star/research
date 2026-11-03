@@ -2,7 +2,7 @@
 import hashlib
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import shlex
 import shutil
@@ -11,12 +11,31 @@ import subprocess
 import time
 import archive_move as base
 
-CONTROL=Path('/home/ubuntu/coopmwm20261103_rolling1647_v3')
+CONTROL=Path(os.environ.get('COOPMWM_ARCHIVE_CONTROL','/home/ubuntu/coopmwm20261103_rolling1647_v3'))
 DEST='/root/cpuq_archive_20261103/rolling1647_v3'
 MIN_AGE=1800
 TARGET=8*1024**3
 FLOOR=4*1024**3
 LEGACY_SAFE=base.safe_file
+TARGET_SSH=None
+
+
+def configure_target(authority):
+    """Additive, SHA-bound archive routing; never widens source eligibility."""
+    global DEST,FLOOR,TARGET,TARGET_SSH
+    value=authority.get('archive_target')
+    if value is None:return
+    host=value['host']
+    floors={'gpuA':8*1024**3,'gpuR':4*1024**3}
+    if host not in floors or value['floor_bytes']<floors[host]:
+        raise ValueError('archive destination floor below authorised host minimum')
+    dest=PurePosixPath(value['destination'])
+    if dest.parent!=PurePosixPath('/root/cpuq_archive_20261103') or base.BAD.search(str(dest)):
+        raise ValueError('unregistered archive destination namespace')
+    if not value['ssh_command'] or value['ssh_command'][0]!='ssh':
+        raise ValueError('explicit archive SSH route required')
+    DEST=str(dest);FLOOR=value['floor_bytes'];TARGET=value['cpu_target_bytes']
+    TARGET_SSH=list(value['ssh_command'])
 
 
 def atomic(p,v):
@@ -124,7 +143,7 @@ def ssh():
     transport=json.loads((CONTROL/'TRANSPORT.json').read_text())
     env=dict(os.environ,SSH_AUTH_SOCK=transport['socket'])
     if not Path(transport['socket']).exists():raise RuntimeError('forwarded agent unavailable; sources retained')
-    return base.ssh_command(),env
+    return list(TARGET_SSH) if TARGET_SSH is not None else base.ssh_command(),env
 
 
 def remote(code):
@@ -193,7 +212,7 @@ for e in {checks!r}:
 print(json.dumps(dict(hashes=out,free=shutil.disk_usage(root).free)))''')
     # Durable proof precedes the first removal; a crash is always auditable.
     base.write(folder/'REMOTE_VERIFIED.json',dict(manifest_sha256=mh,**proof))
-    if proof['free']<FLOOR:raise RuntimeError('gpuR below 4GiB; retain sources and stop')
+    if proof['free']<FLOOR:raise RuntimeError('archive destination below registered floor; retain sources and stop')
     eligible,_=candidates();opened=base.open_files();deleted=[]
     for e in entries:
         if remove_one(e,proof['hashes'][e['relative']],eligible,opened):deleted.append(e['relative'])
@@ -210,6 +229,7 @@ def run():
     authority=json.loads((CONTROL/'AUTHORITY.json').read_text())
     assert authority['source_hashes']['rolling_archive.py']==base.digest_file(__file__)
     assert authority['source_hashes']['archive_move.py']==base.digest_file(base.__file__)
+    configure_target(authority)
     claim=(CONTROL/'RUN.claim').open('a');fcntl.flock(claim,fcntl.LOCK_EX|fcntl.LOCK_NB)
     if (CONTROL/'OWNER.json').exists():raise ValueError('adopt existing rolling owner')
     base.write(CONTROL/'OWNER.json',base.owner());total=0;index=0

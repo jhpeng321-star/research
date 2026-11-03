@@ -1,0 +1,44 @@
+# S-COOPNATIVE recovery from HEAD5721f1c7 — 2026-11-03
+
+Decision: preserve the completed native-start build; no dispatch pending resolution
+of the later registered supersession. This request repeats the historical Nov1
+16:05 approval already reconciled in `RESUME_20261102.md`.
+
+## Fresh evidence
+
+- Initial HEAD `5721f1c7`, branch `c4/coopnative`. Git status and ten recent
+  commits were inspected first. Existing successor edits and untracked receipts
+  were retained; no existing job was restarted or duplicated.
+- Shared registry `E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md`
+  still records native design/approval/readiness at lines 5876–5878, then MAIN's
+  owner-directed MAPPO-start S-COOPMWM supersession at line 5879 (Nov1 16:22).
+  The targeted S-COOPNATIVE search returned those four entries, no reactivation.
+- Registry lines 5893/5897 assign the former TRAIN/check blocks to the successor.
+  Line 6413 explicitly adopts all 72 completed TRAIN986000–986071 episodes.
+  These worlds cannot be reused as fresh native-start training worlds.
+- `HANDOFF_COOPMWM.md` now records Nov3 continuation, retained search services,
+  intentional legacy-owner holds, and separate budget/input blockers. This is
+  documentary evidence, not a fresh remote PID-liveness check.
+- `git diff --stat 8368ce1a HEAD -- tools/coopnative
+  docs/paper_results/COOPNATIVE_DESIGN.md` returned no changes. The native code
+  and original 61-line design remain at their completed build version.
+- Historical CPU receipt `CPU_coopnative20261101_cpu5.json` records PASS, zero
+  skips and zero simulation; COOPNATIVE.md records 15 checks. No completed tests
+  were repeated. This is not a qualification of later successor dependencies.
+
+## Budget and next decision
+
+`BUDGET_QUOTE.json` retains 4,664,400 total sim-s, below the requested 6,000,000
+ceiling. Historical throughput: cpuQ 180,000 sim-s/hour with two nice19 workers;
+optional qualified gpuA/gpuR add 70,000/50,000. First check/dev: 2–3h after
+admission; full cpuQ-only run: 28–36h. These are not a current resource admission.
+
+MAIN must confirm native-start reactivation despite the later supersession and
+reconcile its fresh seed allocation, independent budget and host admission.
+Before physics, implement/qualify the requested data-derived merge-dense versus
+ordinary start mixture and verify the additional sensed observables; refresh
+exposure audits, exact prospective registration and runtime binding. The existing
+DESIGN READY line is retained once, not duplicated.
+
+This recovery launched no SUMO, training, evaluation, timing episode or dispatcher;
+issued no process signals; and performed no deletion, push or environment setup.

@@ -1,6 +1,23 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## Fresh-session adoption — Nov3 23:08 +08
+- GPUAarchivehandover DISPATCHED ONCE:local43764/create1793721382.8047392,
+  ROLLING_ARCHIVE_BRIDGE_GPUA_V4.json. Currentoldtransferactive=>30sidlewait;
+  noSIG/newmoveruntilidleproof. ADOPT/no redispatch. Newcontrolrolling2318_gpua_v4.
+  See `_sol/COOPMWM_GPUA_ARCHIVE_HANDOVER_2357.md`; newGPUAtransfernotyetclaimed.
+- MAIN23:18 gpuA archiveextension QUALIFIED/REGISTERED, notyetlaunched atthis
+  checkpoint: rolling_gpua_ops, newcontrolrolling2318_gpua_v4,8GiBfloor/
+  cpuQtarget12GiB.9Linuxstorage+3localpayloadtestsPASS; routePASS29.2GBfree.
+  Amendment52a16836; oldv3retained untilidentityidle/nochildrenhandover.
+  See ROLLING_GPUA_QUALIFIED_2355.md; next drain/launch/status once only.
+- NEW brief through1000 read: MAIN23:23 delegatescollectionrestart; DO NOTstart
+  competingbuilder/collector. MAIN23:18 authorisesgpuAsecondrollingtarget,
+  floor8GiB; preparationnext while finalREADYpending.
+- Archived702candidate specs RESTORED byte/SHAexact for88B decisions; final
+  SPEC_RESTORE_INSPECT_1793720435312778700 proves702/702. No overwrites/deletes/
+  physics. SPEC_RESTORE_COMPLETE_1793720443807398000+batchproofs adopted.
+  Freshquote1793720489129734200 nowZEROmissingbotharms; minimumphasegap1409330
+  remains. Fullall-positiveupperB6807500/R6323870, notapprovedspending.
 - Local-only transport repair: exact observed OpenSSH 'Read from remote host
   ...: Connection timed out' now qualifies for existing bounded recovery.
  10CPU PASS; no remote deployment. Preserve warm_transport.py+regression in
