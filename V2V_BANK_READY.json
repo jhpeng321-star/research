@@ -3,7 +3,7 @@
  "workspace": "E:/agent-work/c4-v2v-bank",
  "branch": "c4/v2v-bank",
  "commit": "80c445f6",
- "receipt_note": "line refs re-verified at HEAD aae60392 (publish commit); receipt-refresh commit only touches this JSON",
+ "receipt_note": "line refs re-verified at HEAD aae60392 and again at c11a7b31 (both later commits touch only this JSON; code refs unchanged); 2026-11-04 fresh-session re-run: test_replay_bank_v2v_cpu.py 10 passed, regression confirm+lesson 17 passed",
  "feature_commits": [
   "656589f1 coopmwm: v2v bank pairs and new-policy branch wiring (flag off by default)",
   "80c445f6 coopmwm: v2v bank pair CPU tests with synthetic branch traces"
