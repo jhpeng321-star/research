@@ -957,22 +957,56 @@ def collect(control, plan_record=None):
                   unix=time.time(), plan_sha256=digest(plan_record),
                   offline=plan_record['offline'], offline_checks=plan_record['offline']['checks'],
                   states=states, plan_totals=plan_record['totals'], caps=plan_record['caps'])
+    report['safety'] = safety_totals(control, plan_record)
     report['verdict'] = verdict(report)
     _write_new(control/GATE_FILE, _seal(report, 'gate_report_sha256'))
     return report
 
 
+SAFETY_COUNTERS = ('collision_involvements', 'starting_teleports', 'teleports')
+
+
+def safety_totals(control, plan_record):
+    """Sum the hard safety counters over every planned branch's raw SUMO result
+    (final.counters; collisions and teleports). Branches without a raw result are listed as
+    unmeasured, never imputed."""
+    totals = {k: 0 for k in SAFETY_COUNTERS}
+    measured, unmeasured = 0, []
+    for state in plan_record['states']:
+        for job in state['jobs']:
+            path = Path(control)/'branches'/job['verification_id']/f'{job["branch"]}.result.json'
+            try:
+                counters = json.loads(path.read_text())['final']['counters']
+            except (OSError, KeyError, ValueError):
+                unmeasured.append(f'{job["verification_id"]}/{job["branch"]}')
+                continue
+            measured += 1
+            for k in SAFETY_COUNTERS:
+                totals[k] += int(counters.get(k, 0) or 0)
+    return dict(totals=totals, branches_measured=measured, branches_unmeasured=unmeasured,
+                rule='hard safety: zero collisions and teleports in every measured gate branch')
+
+
 def verdict(report):
-    """PASS iff the offline checks pass AND the 6-CAV state 986066 is complete on every planned
-    (certified) seed AND its single-seed synergy one-sided 95% lower bound > 0 on at least one
-    of those seeds (each seed's bound reported; no cross-seed transfer requirement)."""
+    """Owner decision 2026-11-04 02:30 (chat): PASS iff the learning checks pass (offline checks:
+    effective full imitation pass, loss drop, intent learning, KL limits, partner-intent use) AND
+    hard safety holds (zero collisions and teleports in every measured gate branch, at least one
+    branch measured) AND the 6-CAV state 986066 is present and complete (no missing data). The
+    one-update group-only cooperation result (synergy one-sided 95% lower bound per seed) is
+    REPORTED ONLY (report_only_checks) and does not decide the verdict; the update-6 isolated
+    synergy check is the cooperation decision point."""
     states = {s['seed']: s for s in report['states']}
     gate_state = states.get(GATE_STATE)
     lower = (gate_state or {}).get('synergy_lower95_veh_s')
+    safety = report.get('safety') or {}
+    totals = safety.get('totals') or {}
     checks = dict(offline_checks=all(report['offline_checks'].values()),
                   gate_state_present=gate_state is not None,
                   gate_state_complete=bool(gate_state and gate_state['complete']),
-                  gate_state_synergy_lower95_gt_0=bool(lower is not None and lower > 0.))
+                  safety_measured=bool(safety.get('branches_measured')),
+                  safety_zero_collisions_teleports=bool(totals) and all(int(v) == 0 for v in totals.values()))
+    report['report_only_checks'] = dict(gate_state_synergy_lower95_gt_0=bool(lower is not None and lower > 0.))
+    report['verdict_rule'] = 'owner 2026-11-04 02:30: learning + safety + complete data required; one-update cooperation reported only'
     report['gate_state_synergy_lower_bound'] = lower
     report['gate_state_synergy_lower_bounds_per_seed'] = (gate_state or {}).get('synergy_lower95_veh_s_per_seed')
     report['gate_state_seeds_tested'] = (gate_state or {}).get('seeds')

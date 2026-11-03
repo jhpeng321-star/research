@@ -548,7 +548,7 @@ def bfp(t, cum):
     return dict(t_s=float(t), metrics=dict(team_delay_vs=float(cum).hex(), collisions=(0.).hex()))
 
 
-def write_branch(control, job, window, J, noise):
+def write_branch(control, job, window, J, noise, collisions=0):
     """A graded receipt + RESULT.json tape whose per-second increments = the seed's common
     (CRN) noise + J/n, so within-seed differences are exact and cross-seed ones are not."""
     t0, t1 = window['start_s'], window['end_s']
@@ -560,6 +560,8 @@ def write_branch(control, job, window, J, noise):
     path.write_text(json.dumps(dict(branch=job['branch'], index=0, status='graded',
                                     J_veh_s=float(cum[-1]-cum[0]), branch_sha256=job['spec_sha256'],
                                     result_sha256=digest(tape))))
+    (control/'branches'/job['verification_id']/f'{job["branch"]}.result.json').write_text(json.dumps(
+        dict(final=dict(counters=dict(collision_involvements=collisions, starting_teleports=0)))))
 
 
 def crn_noise(n, seed):
@@ -662,8 +664,10 @@ def test_collect_fails_on_negative_or_missing_gate_state_data(gate_bank, tmp_pat
     record = planned(gate_bank, control)
     write_outputs(control, record, {986066: gains_for(6, (20., 20.), [22.]*6, [21.]*6), **PASS_DUOS})
     report = ceg.collect(control, record)
-    assert report['verdict'] == 'FAIL' and report['gate_state_synergy_lower_bound'] < 0
-    assert report['reasons'] == ['gate_state_synergy_lower95_gt_0']
+    # owner 2026-11-04 02:30: the one-update cooperation result is reported only
+    assert report['verdict'] == 'PASS' and report['gate_state_synergy_lower_bound'] < 0
+    assert report['reasons'] == []
+    assert report['report_only_checks'] == {'gate_state_synergy_lower95_gt_0': False}
     # a missing per-second tape is data_missing -> FAIL, never imputed
     control2 = tmp_path/'c2'
     record2 = planned(gate_bank, control2)
@@ -786,3 +790,22 @@ def test_all8_examples_certify_each_seed_with_its_own_plan(gate_bank):
     assert list(per_seed) == [2] and adopted is None
     assert [s['branch'] for s, _ in per_seed[2]] == ['all', 'solo0', 'solo1', 'background', 'reference']
     assert all(sn['policy_synergy'].get('group', alt['members']) == alt['members'] for _, sn in per_seed[2])
+
+
+def test_safety_collision_fails_and_unmeasured_safety_fails(gate_bank, tmp_path):
+    control = tmp_path/'s1'
+    record = planned(gate_bank, control)
+    write_outputs(control, record, {986066: gains_for(6, (20., 18.), [5.]*6, [4.]*6), **PASS_DUOS})
+    job = record['states'][0]['jobs'][0]
+    (control/'branches'/job['verification_id']/f'{job["branch"]}.result.json').write_text(json.dumps(
+        dict(final=dict(counters=dict(collision_involvements=1, starting_teleports=0)))))
+    report = ceg.collect(control, record)
+    assert report['verdict'] == 'FAIL' and 'safety_zero_collisions_teleports' in report['reasons']
+    assert report['safety']['totals']['collision_involvements'] == 1
+    control2 = tmp_path/'s2'
+    record2 = planned(gate_bank, control2)
+    write_outputs(control2, record2, {986066: gains_for(6, (20., 18.), [5.]*6, [4.]*6), **PASS_DUOS})
+    for p in (control2/'branches').rglob('*.result.json'):
+        p.unlink()
+    report2 = ceg.collect(control2, record2)
+    assert report2['verdict'] == 'FAIL' and 'safety_measured' in report2['reasons']
