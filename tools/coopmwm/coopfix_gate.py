@@ -45,6 +45,7 @@ READY_FILES = dict(imitation_trust=Path('E:/agent-work/c4-imit-fullpass/IMITFIX_
 # longer exists on this host, the committed copy gates instead (same json, same semantics).
 READY_FALLBACK = dict(imitation_trust=Path(__file__).resolve().parents[2] / 'IMITFIX_READY.json',
                       bank_filter=Path(__file__).resolve().parents[2] / 'BANKFILT_READY.json')
+_READY_DEFAULT = dict(READY_FILES)
 
 
 class GatePolicy(AccelerationPolicy):
@@ -99,10 +100,15 @@ def load_gate_policy(checkpoint, v2v_dim):
 def option_ready(name):
     """Parsed READY json of an option branch, or None while it is not READY (stub active).
 
-    The option branch's live worktree receipt is polled first; if that worktree is absent
-    on this host (e.g. removed after the branch was merged), the receipt committed at this
-    tree's root gates the option instead."""
-    for path in (READY_FILES[name], READY_FALLBACK[name]):
+    The option branch's live worktree receipt is polled first. When it still points at the
+    default sibling path and that worktree is absent on this host (e.g. removed after the
+    branch was merged), the receipt committed at this tree's root gates the option instead.
+    A caller that overrides READY_FILES[name] (tests, redirected polls) defines the truth
+    for that name and the fallback never applies."""
+    paths = [READY_FILES[name]]
+    if READY_FILES.get(name) == _READY_DEFAULT.get(name):
+        paths.append(READY_FALLBACK[name])
+    for path in paths:
         try:
             if path.is_file():
                 return json.loads(path.read_text())
