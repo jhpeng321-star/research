@@ -1,6 +1,13 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## CURRENT Nov4 00:21 +08 — final integration merged, Linux994 PASS
+- Scopefixe7f8ae16 qualifiedNEWsourcecoopmwm20261104_gatescope1, owner1044134
+  COMPLETE: requestedgate+launchfinalsuites36PASS/0skip/33.118s/0SUMO.
+  AdoptGATE_SCOPE_LINUX_STATUS_1793724923148582800; NEVERredispatch.
+- MAIN00:40 phaseTRANSFERREGISTERED ead07c01: unspentinlinek8 1500000->bankext,
+  capsbank4100000/k8zero,total17471840unchanged. Newappend-onlyB_REPLAY_BINDING
+  inwarm1usesexistingloaderpriority; loaderprobePASS/fullcap+811640retained.
+  bankremaining1598460atregistration/no newreserve. Otherallocationsunchanged.
 - NEWMAINthrough1030READ: cleanfinalauditacceptedfor762bdc7d (notoldf3),
   MAIN00:40 authorisesminimalMANDATORY_STATES=(986066,) wiringrepair, other
   certifiedstatesreported/986048excluded. One-linefix+regressionwritten;
