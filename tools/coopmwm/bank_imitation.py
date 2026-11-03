@@ -66,6 +66,8 @@ def run(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5):
             report['member_actions_seen']+=sum(len(indices(s)) for s,_ in active)
             if not active:continue
             loss=torch.stack([imitation(policy,s,w) for s,w in active]).mean()*coefficient
+            if getattr(policy,'intent_horizon',0):  # v2v_intent ON only: plan intent targets
+                from .v2v_intent import bank_term;loss=loss+bank_term(policy,active)
             if not bool(torch.isfinite(loss)):raise ValueError('nonfinite full-bank imitation')
             optimizer.zero_grad();loss.backward()
             norm=torch.nn.utils.clip_grad_norm_(policy.parameters(),.5,error_if_nonfinite=True)
@@ -124,6 +126,8 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                 for ids in order:
                     batch=[pairs[int(i)] for i in ids]
                     loss=torch.stack([imitation(policy,s,w) for s,w in batch]).mean()*coefficient
+                    if getattr(policy,'intent_horizon',0):  # v2v_intent ON only: plan intent targets
+                        from .v2v_intent import bank_term;loss=loss+bank_term(policy,batch)
                     if not bool(torch.isfinite(loss)):raise ValueError('nonfinite full-bank imitation')
                     optimizer.zero_grad();loss.backward()
                     torch.nn.utils.clip_grad_norm_(policy.parameters(),.5,error_if_nonfinite=True)

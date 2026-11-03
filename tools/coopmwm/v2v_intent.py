@@ -1,0 +1,446 @@
+"""Planned-command intent sharing for the V2V policy (option ``v2v_intent``, DEFAULT OFF).
+
+MAPPO-PIS-like (arXiv 2408.06656) but learned, identical for A/B/R-v2v:
+
+- POLICY: :class:`IntentPolicy` is the v2v-widened per-CAV policy plus an INTENT
+  HEAD, one zero-initialised ``Linear(64, H)`` off the shared actor trunk (the
+  64-wide hidden activation that feeds the unchanged action head).  It predicts
+  the next ``H`` planned commands (absolute acceleration, m/s^2, seconds
+  t+1..t+H, the same unit as the executed command; the published value is
+  clipped to the registered ``accel_bounds``).  The action path is untouched:
+  at load from MAPPO u0 the zero-initialised input columns and the separate head
+  keep the executed actions identical to the current v2v policy.
+- BROADCAST: after each policy step every CAV publishes its intent
+  (``sample['published_intent']``); at step t an ego observes, per partner slot,
+  the intent published at t-1 plus ``intent_valid`` (tools/coopmwm/v2v_obs.py
+  ``v2v_intent_features``).  Per-partner features 6 + H + 1.
+- TRAINING: masked MSE between the intent head at step t and the agent's own
+  REALISED commands at t+1..t+H (``step_commands``: the issued pre-safety
+  absolute command = native/MAPPO command + residual, or the plan's absolute
+  command; clipped to the action bounds).  Positions past the episode end, after
+  a despawn or across a missing second are masked.  Added to the PPO loss with
+  ``v2v_intent_loss_weight`` (default 1.0).  For B/R bank pairs the plan's own
+  future commands (inside the plan window) are intent targets in the imitation
+  phase; bank partner intents are the partners' recorded commands of the
+  winning branch tape (hindsight broadcast; no policy is run offline).
+
+Config keys (binding): ``v2v_intent`` (bool, default False), ``v2v_intent_horizon``
+(int, default 5), ``v2v_intent_loss_weight`` (float, default 1.0 when on),
+``v2v_dim`` must equal ``v2v_intent_dim(K, H)`` (48 for K=4, H=5).
+"""
+import math
+
+import numpy as np
+import torch
+from torch import nn
+
+from .acceleration import Policy as BasePolicy
+from .v2v_integrate import widen_context
+from .v2v_model import FEATURES, extend_for_v2v
+from .v2v_obs import V2V_INTENT_HORIZON, V2V_K, V2V_PARTNER_FEATURES, intent_columns, v2v_intent_dim
+
+DEFAULT_LOSS_WEIGHT = 1.
+#: Registered acceleration bounds (accel_deploy / binding ``accel_bounds``); the binding wins.
+ACCEL_BOUNDS = (-3., 2.6)
+TARGET_RULE = ('own issued pre-safety absolute command at t+1..t+H (native+residual or plan '
+               'absolute), clipped to accel_bounds; masked past episode end/despawn/missing second')
+
+
+def settings(cfg):
+    """Resolved intent settings from a binding, or None when ``v2v_intent`` is off (default)."""
+    if not cfg or not cfg.get('v2v_intent'):
+        return None
+    horizon = int(cfg.get('v2v_intent_horizon', V2V_INTENT_HORIZON))
+    weight = float(cfg.get('v2v_intent_loss_weight', DEFAULT_LOSS_WEIGHT))
+    bounds = tuple(float(b) for b in (cfg.get('accel_bounds') or ACCEL_BOUNDS))
+    if horizon < 1:
+        raise ValueError('v2v_intent_horizon must be >= 1')
+    if not math.isfinite(weight) or weight < 0:
+        raise ValueError('v2v_intent_loss_weight must be finite and >= 0')
+    if len(bounds) != 2 or not bounds[0] < bounds[1]:
+        raise ValueError('accel_bounds must be (low, high)')
+    dim = v2v_intent_dim(V2V_K, horizon)
+    if cfg.get('v2v_dim') is not None and int(cfg['v2v_dim']) != dim:
+        raise ValueError(f'v2v_dim {cfg["v2v_dim"]} != intent block width {dim}')
+    return dict(horizon=horizon, loss_weight=weight, bounds=bounds, k=V2V_K, dim=dim)
+
+
+def config_keys(horizon=V2V_INTENT_HORIZON, loss_weight=DEFAULT_LOSS_WEIGHT):
+    """Exact binding keys for an intent-ON arm (identical for A, B and R)."""
+    return dict(v2v=True, v2v_dim=v2v_intent_dim(V2V_K, horizon), v2v_intent=True,
+                v2v_intent_horizon=int(horizon), v2v_intent_loss_weight=float(loss_weight))
+
+
+# ---------------------------------------------------------------- policy
+
+class IntentPolicy(BasePolicy):
+    """v2v-widened per-CAV policy (block width K*(6+H+1)) with a planned-command intent head."""
+
+    def __init__(self, horizon=V2V_INTENT_HORIZON, loss_weight=DEFAULT_LOSS_WEIGHT, bounds=ACCEL_BOUNDS):
+        super().__init__()
+        extend_for_v2v(self, v2v_intent_dim(V2V_K, horizon))
+        self._attach_intent(horizon, loss_weight, bounds)
+
+    def _attach_intent(self, horizon, loss_weight, bounds):
+        self.intent_horizon, self.intent_k = int(horizon), V2V_K
+        self.v2v_width = v2v_intent_dim(V2V_K, horizon)
+        self.intent_loss_weight = float(loss_weight)
+        hidden = int(self.actor[-1].in_features)
+        with torch.random.fork_rng(devices=[]):  # no global RNG side effect
+            head = nn.Linear(hidden, self.intent_horizon)
+        nn.init.zeros_(head.weight)
+        nn.init.zeros_(head.bias)
+        self.intent_head = head
+        self.register_buffer('intent_bounds', torch.tensor([float(b) for b in bounds], dtype=torch.float32))
+
+    def _inputs(self, context):
+        x = context['x']
+        if x and len(x[0]) == FEATURES:
+            blocks = context.get('v2v')
+            if not blocks:
+                raise ValueError('V2V policy requires recorded partner observations')
+            context = widen_context(context, blocks)
+            x = context['x']
+        if not x:
+            x = torch.empty((0, FEATURES+self.v2v_width), dtype=torch.float32)
+        else:
+            x = torch.as_tensor(x, dtype=torch.float32)
+        if x.shape[1] != FEATURES+self.v2v_width:
+            raise ValueError('V2V intent feature width mismatch')
+        return x, torch.as_tensor(context['rsu'], dtype=torch.float32)
+
+    def heads(self, context):
+        """(mean, value, trunk hidden); same ops as v2v_model.forward_with_v2v."""
+        x, rsu = self._inputs(context)
+        latent = self.broadcast(rsu).expand(len(x), -1)
+        hidden = self.actor[:-1](torch.cat((x, latent), -1))
+        mean = self.actor[-1](hidden)
+        pooled = x.mean(0) if len(x) else torch.zeros(x.shape[1], dtype=x.dtype)
+        value = self.critic(torch.cat((pooled, rsu))).squeeze(-1)
+        return mean, value, hidden
+
+    def forward(self, context):
+        mean, value, _ = self.heads(context)
+        return mean, value
+
+    def intent(self, context):
+        """Raw intent head (n_members, H); unclipped (training uses this)."""
+        return self.intent_head(self.heads(context)[2])
+
+    @torch.no_grad()
+    def publish(self, context):
+        """{member vid: H planned commands clipped to the action bounds} for broadcast."""
+        lo, hi = (float(b) for b in self.intent_bounds)
+        values = self.intent(context).clamp(lo, hi)
+        return {vid: [float(v) for v in row] for vid, row in zip(context['members'], values)}
+
+
+def intent_model(policy, depth=4):
+    """The IntentPolicy behind runtime wrappers (Proxy, _OneShot, MixedPolicy), or None."""
+    for _ in range(depth):
+        if policy is None:
+            return None
+        if isinstance(policy, IntentPolicy):
+            return policy
+        nxt = None
+        for name in ('real', 'policy', 'base_policy', 'new', 'model'):
+            value = getattr(policy, name, None) if not isinstance(policy, nn.Module) else None
+            if value is not None and value is not policy:
+                nxt = value
+                break
+        policy = nxt
+    return None
+
+
+def convert(policy, horizon, loss_weight=DEFAULT_LOSS_WEIGHT, bounds=ACCEL_BOUNDS):
+    """Turn an already v2v-widened (block width K*(6+H+1)) base policy into an IntentPolicy in place."""
+    width = int(policy.actor[0].weight.shape[1])-FEATURES-4
+    if width != v2v_intent_dim(V2V_K, horizon):
+        raise ValueError(f'widened width {width} != intent block width {v2v_intent_dim(V2V_K, horizon)}')
+    policy.__class__ = IntentPolicy
+    policy._attach_intent(horizon, loss_weight, bounds)
+    return policy
+
+
+def with_head(policy, optimizer):
+    """Fresh Adam over all parameters; existing moments/steps kept, the new head starts empty.
+
+    The intent head registers after every existing parameter, so existing indices are unchanged.
+    """
+    state = optimizer.state_dict()
+    n = len(list(policy.parameters()))
+    groups = [dict(state['param_groups'][0], params=list(range(n)))]
+    rebuilt = torch.optim.Adam(policy.parameters(), lr=3e-4)
+    rebuilt.load_state_dict(dict(state=state['state'], param_groups=groups))
+    return rebuilt
+
+
+def _regrid(tensor, horizon):
+    """v2v-only (6 per partner) input columns -> intent layout (6 + H + 1 per partner), zero gaps."""
+    width = len(V2V_PARTNER_FEATURES)
+    old, new = V2V_K*width, v2v_intent_dim(V2V_K, horizon)
+    out = torch.zeros(*tensor.shape[:-1], tensor.shape[-1]-old+new, dtype=tensor.dtype)
+    out[..., :FEATURES] = tensor[..., :FEATURES]
+    for slot in range(V2V_K):
+        dst = FEATURES+slot*(width+horizon+1)
+        out[..., dst:dst+width] = tensor[..., FEATURES+slot*width:FEATURES+(slot+1)*width]
+    out[..., FEATURES+new:] = tensor[..., FEATURES+old:]
+    return out
+
+
+def _from_v2v_only(policy, optimizer, horizon):
+    """Re-grid a v2v-only (block 24) policy and its Adam moments to the intent block width."""
+    index = {id(p): i for i, p in enumerate(policy.parameters())}
+    state = optimizer.state_dict()
+    for head in ('actor', 'critic'):
+        layer = getattr(policy, head)[0]
+        i = index[id(layer.weight)]
+        layer.weight = nn.Parameter(_regrid(layer.weight.detach(), horizon))
+        for key, value in state['state'].get(i, {}).items():
+            if torch.is_tensor(value) and value.dim() == 2:
+                state['state'][i][key] = _regrid(value, horizon)
+    rebuilt = torch.optim.Adam(policy.parameters(), lr=3e-4)
+    rebuilt.load_state_dict(state)
+    return rebuilt
+
+
+def load_checkpoint(path, config):
+    """Intent-ON loader for MAPPO u0 (base width), v2v-only (block 24) and intent checkpoints.
+
+    u0 and v2v-only checkpoints are widened with ZERO intent input columns and a zero head,
+    so the executed actions equal the current v2v policy; Adam moments are kept/re-gridded.
+    """
+    import random
+    s = settings(config)
+    if s is None:
+        raise ValueError('v2v_intent loader requires v2v_intent=True')
+    saved = torch.load(path, map_location='cpu', weights_only=False)
+    if 'intent_head.weight' in saved['policy']:
+        if int(saved['policy']['intent_head.weight'].shape[0]) != s['horizon']:
+            raise ValueError('intent checkpoint horizon differs from v2v_intent_horizon')
+        policy = IntentPolicy(s['horizon'], s['loss_weight'], s['bounds'])
+        policy.load_state_dict(saved['policy'])
+        optimizer = torch.optim.Adam(policy.parameters(), lr=3e-4)
+        optimizer.load_state_dict(saved['optimizer'])
+        generator = torch.Generator()
+        generator.set_state(saved['generator'])
+        torch.set_rng_state(saved['torch_rng'])
+        np.random.set_state(saved['numpy_rng'])
+        random.setstate(saved['python_rng'])
+        return policy, optimizer, generator, saved
+    from .v2v_model import BASE_INPUT, load_checkpoint as widened
+    width = int(saved['policy']['actor.0.weight'].shape[1])-BASE_INPUT['actor']
+    if width == V2V_K*len(V2V_PARTNER_FEATURES):
+        policy, optimizer, generator, payload = widened(path, v2v_dim=width)
+        optimizer = _from_v2v_only(policy, optimizer, s['horizon'])
+    else:
+        policy, optimizer, generator, payload = widened(path, v2v_dim=s['dim'])
+    convert(policy, s['horizon'], s['loss_weight'], s['bounds'])
+    return policy, with_head(policy, optimizer), generator, payload
+
+
+def from_weights(weights, *, enabled=False):
+    """Spawned-worker reconstruction from a state dict carrying ``intent_head.*``."""
+    if not enabled:
+        raise ValueError('widened policy without explicit V2V job/branch flag')
+    horizon = int(weights['intent_head.weight'].shape[0])
+    bounds = [float(b) for b in weights.get('intent_bounds', torch.tensor(ACCEL_BOUNDS))]
+    model = IntentPolicy(horizon, bounds=bounds)
+    model.load_state_dict(weights)
+    return model
+
+
+# ---------------------------------------------------------------- targets
+
+def step_commands(step, bounds=ACCEL_BOUNDS):
+    """{vid: issued pre-safety absolute command of this step}, clipped to the action bounds.
+
+    Live/branch tape steps carry ``commands`` (native/MAPPO base) and ``requests``
+    (``requested_raw`` = base + residual, or the plan's absolute command); plan tapes
+    without them fall back to ``sample['absolute_accels']``.  Non-finite values are dropped.
+    """
+    lo, hi = float(bounds[0]), float(bounds[1])
+    raw = {}
+    commands = step.get('commands')
+    if commands is not None:
+        requests = step.get('requests') or {}
+        for vid, base in commands.items():
+            raw[vid] = requests[vid]['requested_raw'] if vid in requests else base
+    else:
+        raw.update((step.get('sample') or {}).get('absolute_accels') or {})
+    out = {}
+    for vid, value in raw.items():
+        if value is not None and math.isfinite(float(value)):
+            out[vid] = min(hi, max(lo, float(value)))
+    return out
+
+
+def commands_by_time(steps, bounds=ACCEL_BOUNDS):
+    return {int(s['time_s']): step_commands(s, bounds) for s in steps}
+
+
+def own_targets(members, t, by_time, horizon, allowed=None, end_s=None):
+    """(targets, mask) lists [n][H]: own command at t+k, k=1..H; masked when unavailable."""
+    targets = [[0.]*horizon for _ in members]
+    mask = [[0.]*horizon for _ in members]
+    for k in range(1, horizon+1):
+        if end_s is not None and t+k >= end_s:
+            break
+        later = by_time.get(int(t)+k)
+        if later is None:
+            continue
+        for j, vid in enumerate(members):
+            if (allowed is None or vid in allowed) and vid in later:
+                targets[j][k-1] = later[vid]
+                mask[j][k-1] = 1.
+    return targets, mask
+
+
+def episode_targets(steps, horizon, bounds=ACCEL_BOUNDS):
+    """Per step: (targets, mask) aligned with ``sample['context']['members']``."""
+    by_time = commands_by_time(steps, bounds)
+    return [own_targets(s['sample']['context']['members'], int(s['time_s']), by_time, horizon)
+            for s in steps]
+
+
+def tape_board(tape, horizon, bounds=ACCEL_BOUNDS):
+    """second t -> {vid: (t-1, commands at t..t+H-1)} from a recorded tape (hindsight broadcast).
+
+    Only partners with all H recorded commands are published (else intent_valid stays 0).
+    """
+    by_time = commands_by_time(tape['steps'], bounds)
+
+    def board(t):
+        frames = [by_time.get(int(t)+j) for j in range(horizon)]
+        if any(f is None for f in frames):
+            return {}
+        return {vid: (int(t)-1, [f[vid] for f in frames]) for vid in frames[0]
+                if all(vid in f for f in frames)}
+    return board
+
+
+def attach_bank_targets(pairs, tape, entry, horizon, bounds=ACCEL_BOUNDS):
+    """Plan members' own future plan commands as intent targets (pair i = second t0+i).
+
+    Targets stop at the plan end (``t0 + duration_s``); non-plan members are masked.
+    Mutates the (already deep-copied) pair samples and returns ``pairs``.
+    """
+    by_time = commands_by_time(tape['steps'], bounds)
+    t0, end = int(entry['start_s']), int(entry['start_s'])+int(entry['duration_s'])
+    for i, (sample, _w) in enumerate(pairs):
+        members = list(sample['context'].get('members') or sample['behaviour']['proposal_members'])
+        allowed = set(sample.get('behaviour', {}).get('proposal_members') or ())
+        sample['intent_target'], sample['intent_mask'] = own_targets(
+            members, t0+i, by_time, horizon, allowed=allowed, end_s=end)
+    return pairs
+
+
+# ---------------------------------------------------------------- losses and reports
+
+def masked_terms(policy, contexts, targets, masks):
+    """(sum of masked squared errors, masked count) over aligned contexts (with grad)."""
+    total = sum(p.sum() for p in policy.intent_head.parameters())*0
+    count = 0.
+    for context, target, mask in zip(contexts, targets, masks):
+        if not context['members']:
+            continue
+        m = torch.as_tensor(mask, dtype=torch.float32).reshape(-1, policy.intent_horizon)
+        if not bool(m.any()):
+            continue
+        y = torch.as_tensor(target, dtype=torch.float32).reshape(-1, policy.intent_horizon)
+        total = total+((policy.intent(context)-y).square()*m).sum()
+        count += float(m.sum())
+    return total, count
+
+
+def mean_loss(policy, contexts, targets, masks):
+    total, count = masked_terms(policy, contexts, targets, masks)
+    return total/max(count, 1.), count
+
+
+def bank_term(policy, batch):
+    """Weighted intent loss over bank pairs carrying ``intent_target`` (imitation-phase hook)."""
+    rows = [s for s, _w in batch if 'intent_target' in s]
+    loss, _ = mean_loss(policy, [s['context'] for s in rows], [s['intent_target'] for s in rows],
+                        [s['intent_mask'] for s in rows])
+    return loss*policy.intent_loss_weight
+
+
+@torch.no_grad()
+def bank_stats(policy, pairs):
+    rows = [s for s, _w in pairs if 'intent_target' in s]
+    loss, count = mean_loss(policy, [s['context'] for s in rows], [s['intent_target'] for s in rows],
+                            [s['intent_mask'] for s in rows])
+    return dict(intent_loss=float(loss) if count else None, intent_targets=int(count), pairs=len(rows))
+
+
+def weight_norms(policy):
+    """Frobenius norms of the partner-intent input columns (H values + valid bit per slot)."""
+    cols = [FEATURES+c for c in intent_columns(policy.intent_k, policy.intent_horizon)]
+    return dict(actor=float(policy.actor[0].weight[:, cols].detach().norm()),
+                critic=float(policy.critic[0].weight[:, cols].detach().norm()))
+
+
+def coverage(contexts, horizon, k=V2V_K):
+    """Share of present partner slots whose intent was valid, over member blocks."""
+    width = len(V2V_PARTNER_FEATURES)
+    stride = width+horizon+1
+    present = valid = 0
+    for context in contexts:
+        for block in (context.get('v2v') or {}).values():
+            for slot in range(k):
+                if len(block) >= (slot+1)*stride and block[slot*stride+width-1] > 0:
+                    present += 1
+                    valid += block[slot*stride+width+horizon] > 0
+    return dict(partner_intent_coverage=valid/present if present else None,
+                partner_slots_present=int(present), partner_slots_intent_valid=int(valid))
+
+
+class PPOIntent:
+    """Per-update PPO-phase intent loss over rollout records; None-target records are skipped."""
+
+    def __init__(self, policy, episodes, extra_records=0):
+        self.policy, h = policy, policy.intent_horizon
+        self.contexts, self.targets, self.masks = [], [], []
+        for ep in episodes:
+            for step, (target, mask) in zip(ep['steps'], episode_targets(ep['steps'], h, self.bounds())):
+                self.contexts.append(step['sample']['context'])
+                self.targets.append(target)
+                self.masks.append(mask)
+        self.extra = int(extra_records)
+        self.report = dict(horizon=h, loss_weight=policy.intent_loss_weight, target_rule=TARGET_RULE,
+                           **coverage(self.contexts, h, policy.intent_k))
+        before = self.stats()
+        self.report.update(intent_loss_before=before['intent_loss'], intent_targets=before['intent_targets'],
+                           partner_intent_weight_norm_before=weight_norms(policy))
+
+    def bounds(self):
+        return tuple(float(b) for b in self.policy.intent_bounds)
+
+    def term(self, indices):
+        """Weighted masked MSE for record indices (ints); bank/extra records carry no PPO target."""
+        rows = [int(i) for i in indices if int(i) < len(self.contexts)]
+        loss, _ = mean_loss(self.policy, [self.contexts[i] for i in rows], [self.targets[i] for i in rows],
+                            [self.masks[i] for i in rows])
+        return loss*self.policy.intent_loss_weight
+
+    @torch.no_grad()
+    def stats(self):
+        loss, count = mean_loss(self.policy, self.contexts, self.targets, self.masks)
+        return dict(intent_loss=float(loss) if count else None, intent_targets=int(count))
+
+    def close(self, metrics):
+        self.report.update(intent_loss_after=self.stats()['intent_loss'],
+                           partner_intent_weight_norm_after=weight_norms(self.policy))
+        if metrics:
+            metrics[-1]['v2v_intent'] = self.report
+        else:
+            metrics.append(dict(v2v_intent=self.report))
+        return metrics
+
+
+def ppo_setup(policy, episodes, extra_records=0):
+    """None for every non-intent policy (default path byte-identical)."""
+    if not getattr(policy, 'intent_horizon', 0):
+        return None
+    return PPOIntent(policy, episodes, extra_records)

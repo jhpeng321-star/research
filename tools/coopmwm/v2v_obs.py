@@ -80,6 +80,20 @@ def _last_command(last_commands: Mapping | None, vid: str) -> float:
     return float(np.asarray(row, dtype=np.float64).reshape(-1)[0])
 
 
+def _ranked_partners(state, cav_id, ego, cfg) -> list:
+    """Partner vids in slot order (nearest first, stable ties), at most ``cfg.k``."""
+    ego_s = _scalar(ego, "s_m")
+    ranked = []
+    for position, (vid, record) in enumerate(state.items()):
+        if vid == cav_id or not record.get("is_cav", True):
+            continue
+        gap = _scalar(record, "s_m") - ego_s
+        if abs(gap) <= float(cfg.range_m):
+            ranked.append((abs(gap), position, vid))
+    ranked.sort()
+    return [vid for _distance, _position, vid in ranked[:int(cfg.k)]]
+
+
 def v2v_features(state, cav_id, last_commands, cfg=None) -> np.ndarray:
     """Fixed-size ``float32`` v2v block for one CAV: shape ``(V2V_DIM,)``.
 
@@ -103,15 +117,7 @@ def v2v_features(state, cav_id, last_commands, cfg=None) -> np.ndarray:
         return out
     ego_s = _scalar(ego, "s_m")
     ego_lane = _scalar(ego, "lane")
-    ranked = []
-    for position, (vid, record) in enumerate(state.items()):
-        if vid == cav_id or not record.get("is_cav", True):
-            continue
-        gap = _scalar(record, "s_m") - ego_s
-        if abs(gap) <= float(cfg.range_m):
-            ranked.append((abs(gap), position, vid))
-    ranked.sort()
-    for block, (_distance, _position, vid) in enumerate(ranked[:k]):
+    for block, vid in enumerate(_ranked_partners(state, cav_id, ego, cfg)):
         record = state[vid]
         base = block * len(V2V_PARTNER_FEATURES)
         out[base + 0] = _scalar(record, "s_m") - ego_s
@@ -155,3 +161,82 @@ def v2v_slot_block(s_m, lane, v_mps, a_mps2, present, is_cav, slot_ids, last_com
             continue
         out[slot] = v2v_features(table, vid, last_commands, cfg)
     return out
+
+
+# ---------------------------------------------------------------- planned-command intent (option)
+#
+# ``v2v_intent`` (DEFAULT OFF; nothing above changes): after each policy step
+# every CAV publishes its next ``H`` planned commands (absolute acceleration,
+# m/s^2, for seconds publish+1 .. publish+H).  At step ``t`` an ego sees, for
+# each of its K partner slots (SAME slot order as the block above), the intent
+# that partner published at ``t-1`` -- one-step latency, never same-step -- plus
+# an ``intent_valid`` bit.  Absent slot, no publication, stale publication
+# (published before ``t-1``) or a malformed one -> H zeros and valid 0.
+#
+# Partner-major layout with intent (per partner 6 + H + 1):
+#   [gap_m, lane_offset, v_mps, a_mps2, last_cmd, present,
+#    intent_1 .. intent_H, intent_valid] * K
+
+#: Default intent horizon (1 s control steps).
+V2V_INTENT_HORIZON = 5
+
+
+def v2v_intent_dim(k: int = V2V_K, horizon: int = V2V_INTENT_HORIZON) -> int:
+    """Per-ego block width with partner intents: ``K * (6 + H + 1)``."""
+    return int(k) * (len(V2V_PARTNER_FEATURES) + int(horizon) + 1)
+
+
+def v2v_partner_ids(state, cav_id, cfg=None) -> list:
+    """Partner vids in the exact slot order of :func:`v2v_features` ([] when off/unknown ego)."""
+    cfg = cfg if cfg is not None else V2VConfig()
+    ego = state.get(cav_id)
+    if not cfg.v2v or ego is None:
+        return []
+    return _ranked_partners(state, cav_id, ego, cfg)
+
+
+def published_intent(board, vid, now, horizon: int):
+    """Partner intent visible at ``now``: published exactly at ``now-1``, H finite values, else None.
+
+    ``board`` maps vid -> ``(published_time_s, sequence of H floats)``.
+    """
+    entry = (board or {}).get(vid)
+    if entry is None:
+        return None
+    published, values = entry
+    if int(published) != int(now) - 1:
+        return None
+    arr = np.asarray(values, dtype=np.float64).reshape(-1)
+    if arr.size != int(horizon) or not np.isfinite(arr).all():
+        return None
+    return arr
+
+
+def v2v_intent_features(state, cav_id, last_commands, board, now,
+                        horizon: int = V2V_INTENT_HORIZON, cfg=None) -> np.ndarray:
+    """Fixed-size ``float32`` block ``(v2v_intent_dim(K, H),)`` = base block + partner intents."""
+    cfg = cfg if cfg is not None else V2VConfig()
+    k, h = int(cfg.k), int(horizon)
+    width = len(V2V_PARTNER_FEATURES)
+    out = np.zeros(v2v_intent_dim(k, h), np.float32)
+    if not cfg.v2v:
+        return out
+    base = v2v_features(state, cav_id, last_commands, cfg)
+    stride = width + h + 1
+    for slot in range(k):
+        out[slot*stride:slot*stride+width] = base[slot*width:(slot+1)*width]
+    for slot, vid in enumerate(v2v_partner_ids(state, cav_id, cfg)):
+        intent = published_intent(board, vid, now, h)
+        if intent is None:
+            continue
+        start = slot*stride + width
+        out[start:start+h] = intent
+        out[start+h] = 1.0
+    return out
+
+
+def intent_columns(k: int = V2V_K, horizon: int = V2V_INTENT_HORIZON) -> list:
+    """Offsets (within the block) of every partner-intent input (H values + valid bit per slot)."""
+    width = len(V2V_PARTNER_FEATURES)
+    stride = width + int(horizon) + 1
+    return [slot*stride + width + j for slot in range(int(k)) for j in range(int(horizon) + 1)]

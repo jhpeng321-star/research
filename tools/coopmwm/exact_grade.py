@@ -925,6 +925,8 @@ def _ppo_exact_update(policy, optimizer, episodes, generator, pairs, coefficient
     own = torch.tensor([own_step(x[0]) and not x[4] for x in records])
     if own.any():
         adv = (adv-adv[own].mean())/adv[own].std(unbiased=False).clamp_min(1e-8)
+    from .v2v_intent import ppo_setup
+    intent = ppo_setup(policy, episodes)  # None unless an IntentPolicy (v2v_intent ON)
     metrics = []
     for _ in range(epochs):
         for idx in torch.randperm(len(records), generator=generator).split(128):
@@ -950,6 +952,8 @@ def _ppo_exact_update(policy, optimizer, episodes, generator, pairs, coefficient
                 vloss = zero
             aux = torch.stack([imitation(policy, x[0], x[3]) if x[4] else zero for x in batch]).mean()*coefficient
             loss = actor+.5*vloss+aux
+            if intent is not None:
+                loss = loss+intent.term(idx)
             if not bool(torch.isfinite(loss)):
                 raise ValueError('nonfinite acceleration PPO')
             optimizer.zero_grad();loss.backward()
@@ -959,8 +963,8 @@ def _ppo_exact_update(policy, optimizer, episodes, generator, pairs, coefficient
                                 exact_imitation_steps=sum(x[4] for x in batch),
                                 loss_rule='MAIN0201 own PPO + all-step critic; lever5 exact-positive plan AWR'))
             if kl > .045:
-                return metrics
-    return metrics
+                return metrics if intent is None else intent.close(metrics)
+    return metrics if intent is None else intent.close(metrics)
 
 
 def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., epochs=4,imitation_epochs=0):
@@ -969,7 +973,15 @@ def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., 
     from .bank_imitation import run
     reference=copy.deepcopy(policy)
     metrics=_ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs)
+    intent=None
+    if getattr(policy,'intent_horizon',0):
+        from .v2v_intent import bank_stats,coverage,weight_norms
+        intent=dict(before=bank_stats(policy,pairs),weight_norm_before=weight_norms(policy),
+            **coverage([s['context'] for s,w in pairs if w>0],policy.intent_horizon,policy.intent_k))
     report=run(policy,optimizer,pairs,generator,reference,coefficient,imitation_epochs)
+    if intent is not None:
+        report['v2v_intent']=dict(intent,after=bank_stats(policy,pairs),weight_norm_after=weight_norms(policy),
+            loss_weight=policy.intent_loss_weight,rule='plan members own plan commands t+1..t+H inside the plan window')
     metrics.append(dict(loss=report['last_loss'],kl=report['kl'],gradient_norm=report['last_gradient_norm'],
         imitation=report['last_loss'],own_policy_steps=0,critic_steps=0,
         exact_imitation_steps=report['pairs_seen'],bank_imitation=report,
