@@ -1,5 +1,20 @@
 # S-COOPMWM — live checks
 
+## Nov3 12:44 UTC+8 — fixed-u8 interim running, including the requested R supplement
+- Existing A8/B8 interim was already running under3442884 since12:18:08. Its
+  immutable192-episode manifest is retained. At12:44:07,77 A episode hash receipts
+  are complete; B follows in the original manifest order.
+- MAIN12:35's R8 supplement is now live under3499917/start69527524, independently
+  of training and the existing A/B process. First2 R episode hash receipts exist,
+  no failure. All96 R episodes are precharged115200sim-s to`interim_u8_test`;
+  combined A/B/R quote345600 remains within the registered restricted allocation.
+- Immutable`interimrcpu2`:22 Linux CPU checks PASS, zero skips,0.861s, zero SUMO.
+  AmendmentSHA`f377f10f7f414783…` and commit`ba37ebea` preceded dispatch. V1's
+  source-identity assertion failed before accounting/reservation/physics; its
+  receipts remain preserved. V2 validates the original training-source hashes.
+- Status is metadata-only; outcome values remain closed. Training owners and
+  original update pacing continue. Artifact`INTERIM_U8_PUBLIC_STATUS_1793681049101241300.json`.
+
 ## Nov3 12:27 UTC+8 — both arms at u8; future diagnostic publication is durable
 - B/R-u8 complete; watcher3305066 and all children live with no alerts/dead children.
   Original minimum1800s pacing continues to fixedu24. R-u8 has8 admitted targets,
