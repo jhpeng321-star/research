@@ -299,7 +299,9 @@ def _rebuilt_optimizer(policy, previous):
     extend_for_v2v only widens the two input-layer weight tensors in place, so
     module registration order - and therefore optimizer state indices - are
     unchanged; widened moment tensors are zero-gapped at INSERT_AT exactly like
-    the weights and step counters are preserved.
+    the weights and step counters are preserved. Newly attached heads (the
+    intent head) have no saved moments: they start fresh, and their indices are
+    appended to the saved parameter group so the sizes match again.
     """
     optimizer = torch.optim.Adam(policy.parameters(), lr=3e-4)
     state = previous.state_dict()
@@ -311,6 +313,12 @@ def _rebuilt_optimizer(policy, previous):
             or value.shape[-1] == shape[-1] or value.shape[:-1] != shape[:-1]
             else _insert_columns(value, shape[-1]-value.shape[-1])
             for key, value in entry.items()}
+    listed = {index for group in state['param_groups'] for index in group['params']}
+    missing = [index for index in range(len(parameters)) if index not in listed]
+    if missing:
+        anchor = max(listed, default=-1)
+        group = next((g for g in state['param_groups'] if anchor in g['params']), state['param_groups'][0])
+        group['params'] = list(group['params'])+missing
     optimizer.load_state_dict(dict(state=transferred, param_groups=state['param_groups']))
     return optimizer
 
