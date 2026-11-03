@@ -1,0 +1,52 @@
+{
+ "receipt": "GATEFIX_READY",
+ "branch": "c4/gate-fix",
+ "workspace": "E:/agent-work/c4-gate-fix",
+ "based_on": "live cf3efc9e + merge of c4/gate-sumo (bd9e76ea; only new files, no conflicts)",
+ "commit": "COMMIT_PLACEHOLDER",
+ "module": "tools/coopmwm/coopfix_exact_gate.py",
+ "test": "tools/coopmwm/test_coopfix_exact_gate_cpu.py",
+ "defects_fixed": {
+  "1_certification": "certified_candidates runs inside bank_statistics.install(rb, sources=...) (boot_v2; restores rb.confirmations only if this call installed it); requires admitted AND cooperation.cooperative is True AND cooperative_status == 'replicated'; view() dropped; per-decision statuses disclosed (replicated / single_seed / not_cooperative / data_missing / not_confirmed); BankDataMissing -> all data_missing; uncertified mandatory state -> sealed FAIL report, no physics planned",
+  "2_sources": "--sources ARM=PATH[,PATH] (repeatable) or a JSON file ({arm:[paths]} or V2V_RUNTIME.json config.replay_sources); threaded into install(sources=dict), bank_decisions/bank_pairs(sources=sources[arm])",
+  "3_imitation": "fixed update = bank_imitation.run_separate on v2v_runtime.load_checkpoint(path, config=gate_config) (v2v-only {'v2v':True,'v2v_dim':24}; intent auto-detected -> v2v_intent.config_keys(), --intent auto|on|off); vi.WidenedPolicy/widen_pairs dropped (pairs lacking v2v blocks refused, as live). Recorded: pass1_effective, pass1_loss_drop, pass1_step_scale, imitation_failed(+failure_reason/imitation_error), epochs, backtracks, pairs_filtered_unexecuted. Offline checks: full_pass, kl_within_limit, pass1_effective (True AND loss drop > 0), imitation_ok, cooperative_error_falls, partner_intent_weights_moved",
+  "4_coop_slice": "unique cooperative pairs = pairs[n_non_coop : n_non_coop+raw] from summary.exposure (structural content-dedup fallback only without a summary, disclosed)",
+  "5_layout": "presence index and row width from v2v_obs (V2V_PARTNER_FEATURES.index('present'), V2V_DIM/V2V_K); intent layout feature-detected (v2v_intent_dim/intent_columns: 48 = 4 x (6+5+1), presence 5, intent_valid 11/23/35/47; also a named V2V_INTENT_PARTNER_FEATURES layout). intent_pairs use intent_valid when present. weight_report reports v2v and intent input columns separately and requires the intent columns when they exist, else the v2v columns",
+  "6_crn_synergy": "per state and per CRN seed (seed 1 = decision snapshot, seed 2 = replay_bank.replicate salt 'coopfix_exact:<vid>_seed2'): all / solo_i / background NEW + u3 reference; synergy per seed = best-solo branch - group branch on the same seed's RESULT.json tapes; bank_statistics._stats (boot_v2 paired per-second block bootstrap, B=2000, RNG 20261103) pooled over both seeds -> one-sided 95% lower bound; Student-t of the two seed synergies disclosed only. Verdict PASS iff offline checks AND lower bound > 0 on 986066 (complete on both seeds)",
+  "7_u3_reference": "fresh u3 reference branch (specs_for(old,old)[0] renamed 'reference') on seed 2 always and on seed 1 unless the decision snapshot policy IS u3 (then the first-seed receipt policy branch + its tape are adopted)",
+  "8_budget": "execute: per-state durable claim (never replayed), runner.admit (disk guard) before any charge, ONE atomic replay_bank._confirm_charge(root, phase, 'coopfix_exact_u000_<arm>') of the complete two-seed set with seed-qualified ids, warm_health.assert_running before every branch",
+  "9_new_state": "plan uses the _new weights returned by fixed_update when it runs the offline stage"
+ },
+ "tests": {
+  "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -B -X utf8 -m pytest -q -p no:cacheprovider tools/coopmwm/test_coopfix_exact_gate_cpu.py",
+  "gate_tests": "19 passed / 0 failed (run_separate on the live loader, coop slice, 24/48 layouts + weight report, gate_config, boot_v2 replicated/single_seed/data_missing->FAIL, sources threading + CLI parsing, CRN two-seed planning + references + overage, u3 adoption, offline FAIL before planning, CRN paired bootstrap PASS/FAIL, data_missing/incomplete never imputed, raw regrade, admit/precharge/running/claims)",
+  "regression": "test_bank_*cpu.py + test_imitfix2_cpu.py + test_policy_synergy*cpu.py: 60 passed / 6 failed; all 6 are the Linux-only FileNotFoundError '\\proc\\<pid>\\stat' (replay_start.owner) in test_policy_synergy_cpu.py::test_complete_branch_set_precharged_once_and_later_snapshot_gets_u3_reference[False/True] and test_policy_synergy_isolated_cpu.py::test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson[4 params] - pre-existing on Windows, not gate code",
+  "intent_compat": "temporary detached merge of c4/intent-claude (5965e131) onto this branch (bank_imitation conflict resolved by the receipt's 2-line hook): CPU smoke fixed_update intent=auto -> config v2v_dim 48 / v2v_intent, IntentPolicy width 81, run_separate ran, intent columns required and moved, v2v_runtime.from_weights -> IntentPolicy; gate tests + test_v2v_intent_cpu.py 31 passed / 1 failed - the failure is intent-claude's test_option_off_is_byte_identical_to_branch_point (compares run_separate with its base 56c37cb0, which cf3efc9e already changed; integration-branch issue, not gate code)"
+ },
+ "cli_cpuQ": {
+  "env": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=",
+  "1_plan": "python -B -u -m tools.coopmwm.coopfix_exact_gate plan --root <run root> --arm B --control <run root>/coopfix_gate_control --sources <run root>/V2V_RUNTIME.json [or --sources B=<LS root>[,<LS root>]] [--intent auto|on|off] [--training-seed 20261101]",
+  "2_execute": "python -B -u -m tools.coopmwm.coopfix_exact_gate execute --control <run root>/coopfix_gate_control [--root <run root>]   (cpuQ only; SUMO env as the registered policy_synergy dispatch; one branch at a time)",
+  "3_collect": "python -B -u -m tools.coopmwm.coopfix_exact_gate collect --control <run root>/coopfix_gate_control",
+  "status": "python -B -m tools.coopmwm.coopfix_exact_gate status --control <run root>/coopfix_gate_control",
+  "options": "--u0/--u3 (defaults {root}/{arm}_checkpoint_000.pt/_003.pt), --pairs-file, --passes 5, --coefficient 1, --no-v2v, --phase bank_verification_ext",
+  "outputs": "COOPFIX_EXACT_PLAN.json (sealed, per-state quotes/cost/overage/certification statuses) or a sealed FAIL COOPFIX_GATE.json at plan time; jobs/*.spec.json + *.SNAPSHOT.pt; claims/*.CLAIM.json; branches/<vid>/<branch>.graded.json + <branch>/RESULT.json tapes; COOPFIX_GATE.json (sealed, verdict)"
+ },
+ "sim_s_quote_per_state": {
+  "rule": "every branch charged sim_s = window end_s (sumo_verify.branch_sim_s). Per state: seed 1 = all + n solos + background (+ fresh reference unless the snapshot policy is u3) ; seed 2 = all + n solos + background + reference. Total = 2(n+3)*end_s (fresh seed-1 reference) or (2n+5)*end_s (adopted). Exact values are written into the plan before any execution.",
+  "986066_6CAV": "18*end_s (17*end_s if adopted); e.g. end_s 660 -> 11880 sim-s = 2280 over the 9600 registered isolated cap (the seed-1 isolated n+2 set alone = 5280)",
+  "986048_2CAV": "10*end_s (9*end_s if adopted); end_s 660 -> 6600",
+  "986003_2CAV": "10*end_s (9*end_s if adopted); end_s 660 -> 6600",
+  "cap_policy": "per-state overage over ISOLATED_STATE_CAP_SIM_S=9600 is printed to stderr and recorded in plan caps.overages / states[].cost / totals.overage_sim_s; never trimmed or refused. Group > 6 or window end > 1200 still refuse."
+ },
+ "open_issues": [
+  "The 6-CAV two-seed CRN set (18 branches) exceeds the registered isolated 9600 sim-s per-state cap for any window end > 533 s; the overage needs an explicit owner/registration decision before execute (the gate prints it; the ledger phase cap still governs the precharge).",
+  "Seed 2 uses a fresh replicate salt ('coopfix_exact:<vid>_seed2'), not the bank confirmation replication seed, so the gate seeds are not the certification selection seeds except seed 1 (the decision snapshot itself).",
+  "With the intent option, run_separate's pass1_loss_drop is the AWR imitation loss only (the intent bank term is optimised but not in awr_loss), so pass1_effective can be False while the intent loss falls; observed on a tiny CPU fixture (drop -2e-5).",
+  "Merging c4/intent-claude into cf3efc9e conflicts in bank_imitation.run_separate (as its receipt notes): re-add the 2-line intent bank_term hook after the AWR loss line in attempt_pass; the gate needs no change for that.",
+  "On the cf3efc9e+intent-claude integration, test_v2v_intent_cpu.py::test_option_off_is_byte_identical_to_branch_point fails (base-point byte comparison of run_separate); the integrator must re-baseline it.",
+  "Execution/collect run only on cpuQ; nothing was simulated, charged or launched here."
+ ],
+ "constraints_respected": "CPU only; no SUMO/GPU/ssh; worked only in E:/agent-work/c4-gate-fix (a temporary detached checkout under it merged c4/intent-claude for a compatibility check and was removed; other worktrees read-only); no git reset/clean/stash drop/push; no sealed/ or holdout/heldout/cal_split/chunk5/j4b/inc1 paths; no truth files; no hand-set behavioural thresholds",
+ "timestamp": "2026-11-03"
+}
