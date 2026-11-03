@@ -1,12 +1,20 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## CURRENT — MAIN21:58/21:58b/22:10 adopted; old B/R resource-paused
-- FULL brief now read through976. Latest: NO partial/fallback V2V launch;
+- FULL brief now read through982. Latest: NO partial/fallback V2V launch;
   per_seed_v1 + same-own-seed gate + intent + clean exact-commit audit + Linux +
   resources + reviewed cooperation-search --alternate are ALL required.
 - MAIN22:10 adds all8_both_seeds verification; integrator owns
   c4/launch-final/LAUNCH_FINAL_READY.json. Merge THAT single READY branch,
   preserving our later live fixes below; do not separately duplicate builders.
+- LAUNCH_FINAL_READY still absent at last check. verify-perseed quote CLI ran
+  read-only: examplet600/D120/n2 one winner/seed confirmation15000vs7440legacy;
+  not a full registered allowance. Re-quote actual final slate/remainingledger,
+  register bank_verification_ext allowance within17.5M BEFORE newbuilder use.
+- No further learner edits after MAIN22:10 request (f59d0f66 is the last).
+  `_sol/COOPMWM_R_FAIRNESS_AUDIT_SCOPE.md` asks MAIN to reconcile auditB4(c)'s
+  Rcap-drop recommendation with the explicitly retained registered fairness cap;
+  no unapproved scientific-scope change was made.
 - OLD B/R PAUSED at actual durable B21/R20 via existing HealthPause;
   amendment35c1022b/LEGACY_RESOURCE_PAUSE_2158B.json. Exact owned
   arms411152/411153 + graders3305068/69 idle-boundary-verified, briefSTOP/CONT,
