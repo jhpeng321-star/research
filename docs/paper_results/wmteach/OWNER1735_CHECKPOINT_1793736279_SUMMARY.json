@@ -1,0 +1,89 @@
+{
+  "gpu": "237704, 22940 MiB\n261418, 17520 MiB\n",
+  "jobs": [
+    {
+      "cache_files": 5325,
+      "complete_lineages": 64,
+      "failure": {
+        "automatic_retry": false,
+        "new_sumo_sim_s": 0,
+        "traceback": "Traceback (most recent call last):\n  File \"/root/autodl-tmp/wmteach_scale20261101_v3/tools/wmteach/scale.py\", line 261, in <module>\n    try:execute(root)\n        ^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/wmteach_scale20261101_v3/tools/wmteach/scale.py\", line 246, in execute\n    guard();start=time.monotonic();compute(r)\n    ^^^^^^^\n  File \"/root/autodl-tmp/wmteach_scale20261101_v3/tools/wmteach/scale.py\", line 189, in guard\n    if (root/'STOP').exists():raise RuntimeError('own STOP; preserve all completed work')\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: own STOP; preserve all completed work\n",
+        "unix": 1793525870.976122
+      },
+      "generated": 5120,
+      "labelled": 47,
+      "name": "v4scale",
+      "next_unlabelled_state": "w969400_line0_t1695",
+      "partial_lineages": [],
+      "process": {
+        "active": false,
+        "command": null,
+        "cwd": null,
+        "identity_matches": false,
+        "state": null
+      },
+      "quality_futures": 0,
+      "quality_labels": 0,
+      "root": "/root/autodl-tmp/wmteach_scale20261101_v3",
+      "stop": true,
+      "unfinished": []
+    },
+    {
+      "cache_files": 5058,
+      "complete_lineages": 62,
+      "failure": {
+        "automatic_retry": false,
+        "new_sumo_sim_s": 0,
+        "traceback": "Traceback (most recent call last):\n  File \"/root/autodl-tmp/wmteach_scale_v5_20261101_v2/tools/wmteach/scale.py\", line 261, in <module>\n    try:execute(root)\n        ^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/wmteach_scale_v5_20261101_v2/tools/wmteach/scale.py\", line 232, in execute\n    guard();save(folder/(record['state_id']+'.json'),record)\n    ^^^^^^^\n  File \"/root/autodl-tmp/wmteach_scale_v5_20261101_v2/tools/wmteach/scale.py\", line 189, in guard\n    if (root/'STOP').exists():raise RuntimeError('own STOP; preserve all completed work')\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: own STOP; preserve all completed work\n",
+        "unix": 1793525843.7051008
+      },
+      "generated": 4993,
+      "labelled": 1,
+      "name": "v5scale",
+      "next_unlabelled_state": "w969400_line0_t1005",
+      "partial_lineages": [
+        {
+          "last_saved_time_s": 547.5,
+          "name": "w969430_line1",
+          "states": 33
+        }
+      ],
+      "process": {
+        "active": false,
+        "command": null,
+        "cwd": null,
+        "identity_matches": false,
+        "state": null
+      },
+      "quality_futures": 0,
+      "quality_labels": 0,
+      "root": "/root/autodl-tmp/wmteach_scale_v5_20261101_v2",
+      "stop": true,
+      "unfinished": []
+    },
+    {
+      "cache_files": 120,
+      "complete_lineages": 0,
+      "failure": null,
+      "generated": 0,
+      "labelled": 0,
+      "name": "v5quality",
+      "next_unlabelled_state": null,
+      "partial_lineages": [],
+      "process": {
+        "active": false,
+        "command": null,
+        "cwd": null,
+        "identity_matches": false,
+        "state": null
+      },
+      "quality_futures": 96,
+      "quality_labels": 24,
+      "root": "/root/autodl-tmp/wmteach_v5quality20261101_v2",
+      "stop": false,
+      "unfinished": []
+    }
+  ],
+  "live_root_exists": false,
+  "path": "E:\\agent-work\\c4-wmteach\\docs\\paper_results\\wmteach\\OWNER1735_CHECKPOINT_1793736279.json"
+}
