@@ -1,0 +1,162 @@
+{
+  "adopted_graders": {
+    "B": {
+      "argv": [
+        "/home/ubuntu/miniconda3/bin/python",
+        "-B",
+        "-u",
+        "-m",
+        "tools.coopmwm.replay_start",
+        "/home/ubuntu/coopmwm20261102_warm1",
+        "grade",
+        "--arm",
+        "B"
+      ],
+      "arm": "B",
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "completion_root": "/home/ubuntu/coopmwm20261102_warm1/replay_composite_0957",
+      "component": "grade",
+      "pid": 3305068,
+      "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+      "start_ticks": "68977059",
+      "unix": 1793675492.8660207
+    },
+    "R": {
+      "argv": [
+        "/home/ubuntu/miniconda3/bin/python",
+        "-B",
+        "-u",
+        "-m",
+        "tools.coopmwm.replay_start",
+        "/home/ubuntu/coopmwm20261102_warm1",
+        "grade",
+        "--arm",
+        "R"
+      ],
+      "arm": "R",
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "completion_root": "/home/ubuntu/coopmwm20261102_warm1/replay_composite_0957",
+      "component": "grade",
+      "pid": 3305069,
+      "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+      "start_ticks": "68977059",
+      "unix": 1793675492.8683271
+    }
+  },
+  "binding_sha256": "f5aac6ea92af7390621689374f5ca04d2f9df42573ae30b232ebf92346581de2",
+  "checkpoint_restore": {
+    "B": {
+      "adam_bitwise": true,
+      "adam_states": 17,
+      "generator_sha256": "53d2ba5fd4e78d81760d52deb60f9d0bb24e078bc842b125b140c8e0dc43fa92",
+      "parameters": 17,
+      "policy_bitwise": true,
+      "torch_generator_bitwise": true,
+      "update": 18
+    },
+    "R": {
+      "adam_bitwise": true,
+      "adam_states": 17,
+      "generator_sha256": "8760d5001aac332054f787d41a78b9c6acc7101dbdbb6376f3f3dbd276e081d7",
+      "parameters": 17,
+      "policy_bitwise": true,
+      "torch_generator_bitwise": true,
+      "update": 17
+    }
+  },
+  "checkpoints": {
+    "B": "0286c65a82e57209c6df4d4ef7a263043e9042e027e4f5b2527c691140ba5e60",
+    "R": "c7d799f252901dbff41d54d8de8af4aa6e1f5e27cf397e3203a09ca533c4933d"
+  },
+  "cpu": {
+    "pass_": true,
+    "sim_s": 0,
+    "skips": 0,
+    "tests": 731
+  },
+  "old_arms": {
+    "B": {
+      "argv": [
+        "/home/ubuntu/miniconda3/bin/python",
+        "-B",
+        "-u",
+        "-m",
+        "tools.coopmwm.replay_start",
+        "/home/ubuntu/coopmwm20261102_warm1",
+        "arm",
+        "--arm",
+        "B"
+      ],
+      "arm": "B",
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "component": "arm",
+      "pid": 3305070,
+      "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+      "start_ticks": "68977059",
+      "unix": 1793675492.8703508
+    },
+    "R": {
+      "argv": [
+        "/home/ubuntu/miniconda3/bin/python",
+        "-B",
+        "-u",
+        "-m",
+        "tools.coopmwm.replay_start",
+        "/home/ubuntu/coopmwm20261102_warm1",
+        "arm",
+        "--arm",
+        "R"
+      ],
+      "arm": "R",
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "component": "arm",
+      "pid": 3305071,
+      "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+      "start_ticks": "68977060",
+      "unix": 1793675492.8724575
+    }
+  },
+  "old_watcher": {
+    "amendment_sha256": "853bb0b6d3afcbc71b7f5ee7c028ebf971d196fe0380d7f977fb702c55d08dbe",
+    "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+    "control_root": "/home/ubuntu/coopmwm20261102_warm1/replay_composite_0957",
+    "pid": 3305066,
+    "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+    "source_root": "/home/ubuntu/coopmwm20261103_compositereleasecpu1",
+    "start_ticks": "68977029",
+    "unix": 1793675492.5633712
+  },
+  "registered": true,
+  "registration": {
+    "binding_name": "memory_RECOVERY_BINDING_V1.json",
+    "binding_sha256": "f5aac6ea92af7390621689374f5ca04d2f9df42573ae30b232ebf92346581de2",
+    "line": "MEMORY_RECOVERY MAIN19:45/20:05 owner urgent engineering correction. Frozen C1 legacy reference only; release previous rollout aliases plus gc/malloc_trim before next admission. No numerical source change, legacy bank_imitation.run, no bank_statistics install. B/R exact checkpoint Adam/torch Generator continuation to u24, pacing1800, R lag1, fairness, safety and admission8GiB unchanged. Existing shared warm1 ledger; adopt only 24 no-CLAIM precharges per arm; no new allocation; global registered17471840<=17500000. Retire identity-verified idle watcher/arms only; preserve/adopt graders and original broker/GPU/collection services. New V2V remains HELD. Registration before fresh SUMO.",
+    "old_authority_sha256": "4ce0f3e46a232a4d9fef335a1d99e9eafa396e8830d1ceeb6ecef43b3c7e764f",
+    "old_binding_sha256": "b6900631920dcede03216a897f76b67f1018c58fe0401418dc589a6b8e1f22b0",
+    "quote": {
+      "adopted_precharged_sim_s": 57600,
+      "fresh_train_sim_s": 316800,
+      "global_registered": 17471840,
+      "new_allocation_sim_s": 0,
+      "remaining_train": 316800,
+      "train_charged": 2691600
+    },
+    "source_delta_sha256": "1b3b673b4dbc3584bf7042a31eda3582a413be39b36722c93e0d259f496cbe1e",
+    "source_root": "/home/ubuntu/coopmwm20261103_memory_recovery2",
+    "unix": 1793709528.7415144
+  },
+  "resumes": {
+    "B": 18,
+    "R": 17
+  },
+  "source_delta": {
+    "pytools/tools/coopmwm/replay_start.py": {
+      "after": "999430946b03bd8b419b1353ffca80d5f9a0d4e85f2bafae732609c0b412ad0f",
+      "before": "2bfe0be0778906c0a679f5c6a8e6022c36d8f8f37196cf9392be24c2bb358524"
+    },
+    "pytools/tools/coopmwm/warm_runner.py": {
+      "after": "bd3ec778a723fa47e85e7a88fd6af2d2633cb223eff43daea0940bd9054fb1b6",
+      "before": "ef19520c8dcdd1584fdccd93d13cb5fb3a88bd19d94f114e83c072951cf8d62e"
+    }
+  }
+}
