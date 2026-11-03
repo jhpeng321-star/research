@@ -1,5 +1,5 @@
 {
-  "captured_local": "2026-11-03T18:12:26.558177+08:00",
+  "captured_local": "2026-11-03T18:51:12.551243+08:00",
   "reports": {
     "owner_read_first": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
@@ -12,10 +12,10 @@
     "registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "exists": true,
-      "sha256": "9cf478a4b4eac0937287bfdc0689113df0703e4896cab57180d9838c4295a008",
-      "bytes": 2806888,
-      "modified_local": "2026-11-03T18:09:57.859677+08:00",
-      "snapshot": "source_snapshots/registration_9cf478a4b4eac093.md"
+      "sha256": "26dc4f719f5a5f7f22f2709894c6d29a8c7f5bf2c657df3b9020948f981d2e28",
+      "bytes": 2808279,
+      "modified_local": "2026-11-03T18:31:25.698440+08:00",
+      "snapshot": "source_snapshots/registration_26dc4f719f5a5f7f.md"
     },
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
@@ -360,10 +360,10 @@
     "coopmwm_report": {
       "path": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM.md",
       "exists": true,
-      "sha256": "625a173410be93db09dad75b50f85a8bd614f268f9a81c658446c2f925af799d",
-      "bytes": 402406,
-      "modified_local": "2026-11-03T17:25:17.168082+08:00",
-      "snapshot": "source_snapshots/coopmwm_report_625a173410be93db.md"
+      "sha256": "5a9d0b986f6b38916752bb915f655c7f806c194ca96ec37d5f5beee9e6dce2d9",
+      "bytes": 404325,
+      "modified_local": "2026-11-03T18:17:22.130920+08:00",
+      "snapshot": "source_snapshots/coopmwm_report_5a9d0b986f6b3891.md"
     },
     "coopmwm_design": {
       "path": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md",
@@ -567,15 +567,8 @@
     }
   },
   "changed_since_prior_cut": [
-    "owner_read_first",
     "registration",
-    "behavior_report",
-    "wmteach_report",
-    "coopmwm_report",
-    "coopmwm_design",
-    "coopmwm_interim_u8",
-    "wmspeed2_report",
-    "wmphys_v5_report"
+    "coopmwm_report"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
   "claim_review": "manual; file appearance or a canary is not an efficacy result"
