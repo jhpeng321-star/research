@@ -4,13 +4,13 @@
   "branch": "c4/intent-int",
   "ready": true,
   "date": "2026-11-03",
-  "head_commit": "60f334bf intent-int: gate bank_inputs passes intent kwargs only when enabled (keeps bank-filter monkeypatched-runner contract)",
+  "head_commit": "3e7933f2 merge c4/coopfix-int e2e: synthetic bank -> statistical filter + v2v pairs + own_pass -> gate PASS; options-off byte-identity",
   "design": "each CAV policy carries an INTENT HEAD: H=5 planned absolute-acceleration commands (1 s steps, action units/clip) broadcast at step t and observed by the K=4 nearest CAV partners at t+1 (one-step V2V latency, no simultaneous dependency) plus an intent_valid mask; executed action is UNCHANGED (existing action head); head trained for ALL arms identically by supervised loss to the agent's OWN realised next-H commands (masked at episode end/despawn); B/R bank pairs additionally carry the winning plan's future commands as intent targets (MAPPO-PIS-style, arXiv 2408.06656, but learned)",
   "merged": {
     "c4/intent-obs": "a8fda5c5 (INTENT_OBS_READY.json merged): v2v_obs.py V2V_INTENT_DIM=48=K*(6+H+1), K=4, H=5, V2VConfig(v2v_intent, v2v_intent_horizon), V2VIntentBuffer/publish_intents (t-1 freshness gate, reset/despawn), v2v_intent_features/slot_block, v2v_live.intent_binding_gate, v2v_runner.prepare(v2v_intent=), v2v_runtime controller intent mode + Policy(v2v_dim); test_v2v_intent_obs_cpu.py 12 passed",
     "c4/intent-head": "1ad10d44, 03d06943, ad7fbc7b, ae7268ea, f2a0d352, e5aeb239, 000f086a, f6d98631 (INTENT_HEAD_READY.json merged): v2v_model.py add_intent_head (zero-init nn.Linear(64,H) off the shared actor trunk, action-clip buffers), extend_for_v2v(..., intent_horizon), forward_with_intent/planned_commands, intent_examples (realised next-H targets, masked) / intent_loss / intent_error, load_checkpoint intent paths, optimizer group growth for attached heads; accel_learner.update(intent=), exact_grade._ppo_exact_update/exact_update(intent=), bank_imitation intent_terms/intent_error/run_separate(intent=), bank_v2v.plan_intent_targets/attach_pairs(intent=), replay_bank.bank_pairs(intent=, intent_horizon=), accel_runner + warm_runner intent_config plumbing and update receipts; test_v2v_intent_cpu.py 9 passed",
-    "c4/coopfix-int": "a0cd5a6e..a7978998 (COOPFIX_INT_READY.json pending at write time - branch head a7978998 merged, which is the full integration: statistical bank filter (bank_filter.py, BANKFILT), full-pass own_pass imitation (IMITFIX), COOPGATE merge, offline COOPFIX gate tools/coopmwm/coopfix_gate.py + test_coopfix_gate_cpu.py)",
-    "integrator_commits": "8d9cdf51, 02591bad, bfeeab44, cbffff42, bca44f59, 4b27c333, b41d3138, e4868eb2, 65296bc3, 626fa7c5, 60f334bf"
+    "c4/coopfix-int": "a0cd5a6e..ef2cd5ec merged (COOPFIX_INT_READY.json pending at write time - branch head ef2cd5ec = full integration: statistical bank filter (bank_filter.py, BANKFILT), full-pass own_pass imitation (IMITFIX), COOPGATE merge, offline COOPFIX gate tools/coopmwm/coopfix_gate.py + test_coopfix_gate_cpu.py + their e2e test_coopfix_int_e2e_cpu.py 2 passed in this tree)",
+    "integrator_commits": "8d9cdf51, 02591bad, bfeeab44, cbffff42, bca44f59, 4b27c333, b41d3138, e4868eb2, 65296bc3, 626fa7c5, 60f334bf, 3752fd91, 3e7933f2"
   },
   "option": {
     "key": "v2v_intent",
