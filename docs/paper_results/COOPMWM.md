@@ -1,5 +1,21 @@
 # S-COOPMWM — live checks
 
+## Nov3 08:00:47 UTC+8 — corrected automatic watcher V2 live
+- **2855195/start67831802** is aliveS on cpuQ, control
+  `coopmwm20261102_warm1/replay_start_0735_v2`; adopt its dispatch receipt.
+  Only the idle V1 watcher was identity/argv/no-children checked and retired.
+- V2 amendment SHA256
+  `929b1ed89b947fd59387a594b2dc721a89825c4fc5a9d7d514cee17f79ab8e18`
+  is registered and committed before dispatch. Original bindings/receipts retained.
+- Real-u3 read-only runtime preflight passes for both checkpoint hashes, restored
+  Adam/torch generators (5056-byte state), warm history and plant bounds. The B
+  wrapper preserves fresh job IDs and same-episode nonblocking snapshot capture.
+  Zero optimizer applications, children, reservations, CUDA or SUMO.
+- First V2 status: **8 admitted /3 cooperative**, waiting ten admissions,
+  four joint-release GPU slots and collector activation; no training-start claim.
+  Latest bank probe has67 usable decisions/34 confirmed/zero pending. Existing
+  builder, GPU workers, sequential rollout and observer remain active.
+
 ## Nov3 08:00 UTC+8 — current-policy R centre propagation corrected before activation
 - Pre-activation inspection found the inherited bank collector forwarded actor
   weights only for B; R's centre-only request consequently lacked its current R

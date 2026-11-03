@@ -1,5 +1,19 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3 08:00:47+08/unix1793664047: AUTOMATICSTART V2 LIVE
+cpuQ2855195/start67831802/bootb8bc1fcb, controlwarm1/replay_start_0735_v2;
+adopt B_REPLAY_START_WATCH_DISPATCH_0735_V2.json, NEVERduplicate. Idle V1
+2838584 identity/argv/nochildren verified and retired BEFOREstart (allreceipt/config
+bytes retained). Engineeringfix: inherited Rcollector omitted Ractorweights;
+now BOTHarms'centre requests carry their OWNcurrentpolicy; RnoBweights/library/
+candidate scoring. Newreplaystartcpu3 full706LinuxPASS/0skips83.720s/zeroSUMO.
+Additive B_REPLAY_START_0735_V2.json SHA929b1ed89b947fd59387a594b2dc721a89825c4fc5a9d7d514cee17f79ab8e18
+registered+committed BEFOREdispatch. Realu3runtimeprobe BOTHcheckpointSHA,
+Adam/generator5056bytes/warmhistory/boundsPASS; Bfreshnamespace/nonblocking
+same-PPOcapturePASS; no optimizer/children/SUMO/reservation. ExistingSTARTgate
+still8/10+fourjointgates+collectoractivation; no B_REPLAY_STARTED yet.
+Othercontrollers/builder/GPUownersunchanged. OriginalV1notesbelowhistorical.
+
 CURRENT Nov3 07:54+08/unix1793663647: ALL666brief linesread; latestMAIN0735
 AUTOMATICSTART nowDISPATCHED cpuQ2838584/start67791704/bootb8bc1fcb;
 control/home/ubuntu/coopmwm20261102_warm1/replay_start_0735. ADOPT local
