@@ -435,7 +435,7 @@ def temperature(root, arm, training_seed, decisions):
 
 
 def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT_CLIP, sources=(),
-               max_decisions=None, v2v=False, v2v_cfg=None):
+               max_decisions=None, v2v=False, v2v_cfg=None, intent=False, intent_horizon=5):
     """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta.
 
     max_decisions (R fairness, MAIN): use at most this many admitted targets, oldest first;
@@ -444,6 +444,9 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     partners' v2v features of that second, computed from the winning plan's recorded branch
     trace (bank_v2v.attach_pairs); pairs whose trace lacks partner commands are excluded and
     counted in summary['v2v'].
+    intent (part B, DEFAULT OFF = byte-identical, requires v2v): kept pairs additionally carry
+    the winning plan's plan-future-command intent targets for the next intent_horizon steps
+    (bank_v2v.plan_intent_targets) for the v2v_intent head loss.
     """
     everything = bank_decisions(root, arm, upto_unix, sources)
     T = temperature(root, arm, training_seed, everything)
@@ -479,7 +482,7 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
         if v2v:
             entry_pairs, entry_counts = bank_v2v.attach_pairs(
                 entry_pairs, Path(r['_branches'])/r['verification_id']/branch['branch']/'observable.jsonl.gz',
-                r['t0'], v2v_cfg)
+                r['t0'], v2v_cfg, plan=plan, intent=bool(intent), intent_horizon=int(intent_horizon))
             v2v_counts = bank_v2v.merge_counts(v2v_counts, entry_counts)
         per_entry.append((entry_pairs, coop.get('cooperative') is True,
                           coop.get('cooperation_gain_veh_s')))

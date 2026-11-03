@@ -912,10 +912,14 @@ def lag_report(queue, update, now=None):
                 mean_lag_s=float(np.mean(lags)) if lags else None)
 
 
-def _ppo_exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., epochs=4):
+def _ppo_exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., epochs=4, intent=None):
     """MAIN 02:01 update with lever-5 plan grades: PPO on own steps only (no plan ratios), critic on
     all current-batch steps, imitation ONLY from exact-positive graded plans (pairs may come from
-    earlier episodes; they enter neither the actor nor the critic loss)."""
+    earlier episodes; they enter neither the actor nor the critic loss).
+
+    intent (v2v_intent, DEFAULT None = byte-identical): registered dict(weight, horizon, bounds)
+    adding the supervised planned-vs-realised next-H command loss to the PPO objective for the
+    rollout records, with the before/after intent error appended to the returned metrics."""
     from .accel_learner import advantages, own_step, ratio, imitation
     records = []
     for ep in episodes:
@@ -926,6 +930,14 @@ def _ppo_exact_update(policy, optimizer, episodes, generator, pairs, coefficient
     if own.any():
         adv = (adv-adv[own].mean())/adv[own].std(unbiased=False).clamp_min(1e-8)
     metrics = []
+    pack = None
+    before = None
+    if intent is not None:
+        from .v2v_model import intent_error, intent_examples
+        # Rollout records only: pairs may predate the current policy and carry no next-step tape.
+        episodes_n = sum(len(ep['steps']) for ep in episodes)
+        pack = intent_examples(episodes, intent['horizon'], intent.get('bounds') or (0., 1.))
+        before = intent_error(policy, [x[0] for x in records[:episodes_n]], *pack)
     for _ in range(epochs):
         for idx in torch.randperm(len(records), generator=generator).split(128):
             batch = [records[int(i)] for i in idx]
@@ -950,26 +962,50 @@ def _ppo_exact_update(policy, optimizer, episodes, generator, pairs, coefficient
                 vloss = zero
             aux = torch.stack([imitation(policy, x[0], x[3]) if x[4] else zero for x in batch]).mean()*coefficient
             loss = actor+.5*vloss+aux
+            penalty = None
+            if intent is not None:
+                from .v2v_model import intent_loss
+                roll = [(j, i) for j, i in enumerate(idx) if int(i) < episodes_n]
+                if roll:
+                    penalty = intent_loss(policy, [batch[j][0] for j, _ in roll],
+                                          [pack[0][int(i)] for _, i in roll], [pack[1][int(i)] for _, i in roll])
+                    loss = loss+intent['weight']*penalty
             if not bool(torch.isfinite(loss)):
                 raise ValueError('nonfinite acceleration PPO')
             optimizer.zero_grad();loss.backward()
             norm = torch.nn.utils.clip_grad_norm_(policy.parameters(), .5, error_if_nonfinite=True);optimizer.step()
-            metrics.append(dict(loss=float(loss.detach()), kl=kl, gradient_norm=float(norm), imitation=float(aux.detach()),
+            entry = dict(loss=float(loss.detach()), kl=kl, gradient_norm=float(norm), imitation=float(aux.detach()),
                                 own_policy_steps=len(own_j), critic_steps=len(crit),
                                 exact_imitation_steps=sum(x[4] for x in batch),
-                                loss_rule='MAIN0201 own PPO + all-step critic; lever5 exact-positive plan AWR'))
+                                loss_rule='MAIN0201 own PPO + all-step critic; lever5 exact-positive plan AWR')
+            if intent is not None:
+                entry['intent_error'] = float(penalty.detach()) if penalty is not None else None
+            metrics.append(entry)
             if kl > .045:
+                if intent is not None:
+                    metrics.append(_intent_metrics(policy, intent, before, records[:episodes_n], pack))
                 return metrics
+    if intent is not None:
+        metrics.append(_intent_metrics(policy, intent, before, records[:episodes_n], pack))
     return metrics
 
 
-def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., epochs=4,imitation_epochs=0):
-    if not imitation_epochs:return _ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs)
+def _intent_metrics(policy, intent, before, samples_records, pack):
+    """Registered before/after intent error summary for the rollout records only."""
+    from .accel_learner import intent_report
+    from .v2v_model import intent_error
+    after = intent_error(policy, [x[0] for x in samples_records], *pack) if pack else None
+    return intent_report(intent, before, after)
+
+
+def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., epochs=4,imitation_epochs=0,intent=None):
+    if not imitation_epochs:return _ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs,intent=intent)
     import copy
-    from .bank_imitation import run
+    from . import bank_imitation
     reference=copy.deepcopy(policy)
-    metrics=_ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs)
-    report=run(policy,optimizer,pairs,generator,reference,coefficient,imitation_epochs)
+    metrics=_ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs,intent=intent)
+    report=bank_imitation.run(policy,optimizer,pairs,generator,reference,coefficient,imitation_epochs,
+        **({'intent':intent} if intent is not None else {}))
     metrics.append(dict(loss=report['last_loss'],kl=report['kl'],gradient_norm=report['last_gradient_norm'],
         imitation=report['last_loss'],own_policy_steps=0,critic_steps=0,
         exact_imitation_steps=report['pairs_seen'],bank_imitation=report,

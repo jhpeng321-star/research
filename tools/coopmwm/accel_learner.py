@@ -89,7 +89,14 @@ def imitation(policy,sample,weight=0.):
     return -weight*gaussian_log_prob(action[indices],mean[indices],RHO,policy.log_std.exp())/len(indices)
 
 
-def update(policy,optimizer,episodes,generator,epochs=4,awr=None):
+def intent_report(config,before,after):
+    """Registered before/after intent error summary appended to update metrics."""
+    return dict(intent=dict(weight=float(config['weight']),horizon=int(config['horizon']),
+        error_before_mps2=before,error_after_mps2=after,
+        rule='supervised planned-vs-realised next-H commands, masked, all arms identically'))
+
+
+def update(policy,optimizer,episodes,generator,epochs=4,awr=None,intent=None):
     if awr is None and any(s['sample'].get('behaviour',{}).get('executed') for ep in episodes for s in ep['steps']):
         raise ValueError('executed plans require pre-registered AWR scale')
     records=[]
@@ -99,6 +106,12 @@ def update(policy,optimizer,episodes,generator,epochs=4,awr=None):
     adv=torch.tensor([a for _,a,_,_ in records]);own=torch.tensor([own_step(s['sample']) for s,_,_,_ in records])
     if own.any():adv=(adv-adv[own].mean())/adv[own].std(unbiased=False).clamp_min(1e-8)
     metrics=[]
+    pack=None;before=None
+    if intent is not None:
+        from .v2v_model import intent_error,intent_examples
+        pack=intent_examples(episodes,intent['horizon'],intent.get('bounds') or (0.,1.))
+        samples=[r[0]['sample'] for r in records]
+        before=intent_error(policy,samples,*pack)
     for _ in range(epochs):
         for idx in torch.randperm(len(records),generator=generator).split(128):
             samples=[records[int(i)][0]['sample'] for i in idx]
@@ -117,14 +130,29 @@ def update(policy,optimizer,episodes,generator,epochs=4,awr=None):
             weights=[records[int(i)][3] for i in idx]
             auxiliary=torch.stack([imitation(policy,s,w) for s,w in zip(samples,weights)]).mean()
             auxiliary=auxiliary*(awr['coefficient'] if awr is not None else 1.)
-            loss=actor+.5*vloss+auxiliary
+            if intent is None:loss=actor+.5*vloss+auxiliary
+            else:
+                from .v2v_model import intent_loss
+                penalty=intent_loss(policy,samples,[pack[0][int(i)] for i in idx],[pack[1][int(i)] for i in idx])
+                loss=actor+.5*vloss+auxiliary+intent['weight']*penalty
             if not bool(torch.isfinite(loss)):raise ValueError('nonfinite acceleration PPO')
             optimizer.zero_grad();loss.backward()
             norm=torch.nn.utils.clip_grad_norm_(policy.parameters(),.5,error_if_nonfinite=True);optimizer.step()
-            metrics.append(dict(loss=float(loss.detach()),kl=kl,gradient_norm=float(norm),imitation=float(auxiliary.detach()),
+            entry=dict(loss=float(loss.detach()),kl=kl,gradient_norm=float(norm),imitation=float(auxiliary.detach()),
                 own_policy_steps=len(own_indices),critic_steps=len(samples),awr_positive_steps=sum(w>0 for w in weights),
-                loss_rule='MAIN0201 own PPO; positive completed-plan AWR; all-step critic'))
-            if kl>.045:return metrics
+                loss_rule='MAIN0201 own PPO; positive completed-plan AWR; all-step critic')
+            if intent is not None:entry['intent_error']=float(penalty.detach())
+            metrics.append(entry)
+            if kl>.045:
+                if intent is not None:
+                    from .v2v_model import intent_error
+                    metrics.append(intent_report(intent,before,
+                        intent_error(policy,[r[0]['sample'] for r in records],*pack)))
+                return metrics
+    if intent is not None:
+        from .v2v_model import intent_error
+        metrics.append(intent_report(intent,before,
+            intent_error(policy,[r[0]['sample'] for r in records],*pack)))
     return metrics
 
 

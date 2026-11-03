@@ -285,6 +285,8 @@ def run(root,smoke_only=False):
             eta_primary_hours=b['eta_primary_hours'],charged_sim_s=charged(root)))
         primary={};exact_count=0;exact_rng=np.random.default_rng(SEED)
         from . import search_learning
+        from .v2v_model import intent_config
+        intent_cfg=intent_config(b)  # None unless the binding enables v2v_intent (default off)
         learned=search_learning.empty('B',SEED,b['accel_bounds'])
         controls=read(root/'MAPPO_CHECK.json')['records']
         for arms in (('A','B'),('R',)):
@@ -322,15 +324,17 @@ def run(root,smoke_only=False):
                     vr=viability(ev)
                     # Publish real-SUMO evidence BEFORE any optimizer work.
                     write(root/f'{a}_VIABILITY_{u:03}.json',dict(timestamp_utc=timestamp(),update=u,arm=a,viability=vr,routing=routes))
-                    metrics=update(policies[a],opts[a],eps,rngs[a])
+                    metrics=update(policies[a],opts[a],eps,rngs[a],**({'intent':intent_cfg} if intent_cfg else {}))
                     tr=trust(betas[a],running[a]) if a in ('B','R') else dict(beta=0.)
                     save(root/f'{a}_checkpoint_{u:03}.pt',policies[a],opts[a],rngs[a],u,charged(root))
                     raw=[v*UNIT for e in eps for v,_ in advantages(e['steps'])]
+                    intent_report=next((m['intent'] for m in metrics if 'intent' in m),None) if intent_cfg else None
                     write(root/f'{a}_UPDATE_{u:03}.json',dict(timestamp_utc=timestamp(),update=u,arm=a,training_seed=SEED,
                         ppo=metrics,trust=tr,beta_used=betas[a] if a in ('B','R') else 0.,proposal_routing=routes,
                         team_only_noise=dict(advantage_variance_veh_s_squared=float(np.var(raw,ddof=1))),
                         wall_s=time.monotonic()-start,eta_update24_hours=(24-u)*(time.monotonic()-start)/3600,
-                        charged_sim_s=charged(root),reward_source='SUMO source-inclusive team J only'))
+                        charged_sim_s=charged(root),reward_source='SUMO source-inclusive team J only',
+                        **({'intent':intent_report} if intent_report is not None else {})))
                     betas[a]=tr
                     if a=='B':
                         write(root/f'B_RANDOM_QUOTA_{u:03}.json',dict(sampling=routes['sampling'],
