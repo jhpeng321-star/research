@@ -16,19 +16,33 @@ def put(path, value):
 class StartGateTests(unittest.TestCase):
     def test_threshold_release_and_budget_are_joint_gates(self):
         with tempfile.TemporaryDirectory() as d:
-            r=Path(d);c=r/'collection';v=dict(collection_root=str(c), budget={'total':14500000},start_admitted_min=8)
+            r=Path(d);c=r/'collection';s=r/'source'
+            v=dict(collection_root=str(c),source_root=str(s),budget={'total':14500000,'phases':{'train':3008400}},start_admitted_min=8)
+            put(s/'LS_CPU_RESULT.json',dict(pass_=True,sim_s=0,skips=0))
+            put(r/'B_REPLAY_PHASE_TRANSFER_0706.json',dict(funding_complete=True,budget=v['budget']))
             put(r/'replay_bank/B/BANK_QUALITY.json', dict(admitted=7,cooperative=3))
-            put(c/'LS_ENDPOINTS.json', dict(workers=[]))
             with patch('tools.coopmwm.warm_health.assert_running'):
                 self.assertFalse(rs.prereqs(r,v,False)['ready'])
                 put(r/'replay_bank/B/BANK_QUALITY.json', dict(admitted=8,cooperative=3))
-                put(c/'LS_ENDPOINTS.json', dict(workers=[dict(owner={'generation':'NICHENULL3'})]*4))
-                self.assertFalse(rs.prereqs(r,v,False)['ready'])
-                put(c/'LS_NULLFIX_CONFIG.json', dict(nullfix_active=True,budget=v['budget']))
+                # No endpoint/collector activation files exist; no GPU RPC needed.
                 self.assertTrue(rs.prereqs(r,v,False)['ready'])
                 self.assertEqual(rs.prereqs(r,v,False)['start_admitted_min'],8)
-                put(c/'LS_NULLFIX_CONFIG.json', dict(nullfix_active=True,budget={'total':6000000}))
+                put(s/'LS_CPU_RESULT.json',dict(pass_=False,sim_s=0,skips=0))
                 with self.assertRaises(AssertionError):rs.prereqs(r,v,False)
+                put(s/'LS_CPU_RESULT.json',dict(pass_=True,sim_s=0,skips=0))
+                put(r/'B_REPLAY_PHASE_TRANSFER_0706.json',dict(funding_complete=False,budget=v['budget']))
+                with self.assertRaises(AssertionError):rs.prereqs(r,v,False)
+
+    def test_collection_config_follows_independent_activation(self):
+        with tempfile.TemporaryDirectory() as d:
+            r=Path(d);v=dict(collection_root=str(r),demand_phase_end_s=1200)
+            before=rs.collection_options(v)
+            self.assertFalse(before['niche_alternation'])
+            self.assertEqual(before['search_config'],dict(iterations=2,screen_K=2))
+            put(r/'LS_NULLFIX_CONFIG.json',dict(nullfix_active=True))
+            after=rs.collection_options(v)
+            self.assertTrue(after['niche_alternation'])
+            self.assertEqual(after['search_config']['niches'],1)
 
     def test_health_pause_is_never_bypassed(self):
         with patch('tools.coopmwm.warm_health.assert_running', side_effect=RuntimeError('pause')):

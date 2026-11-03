@@ -17,7 +17,7 @@ import types
 from .protocol import digest, sha
 from .storage import read, write
 
-NAME = 'B_REPLAY_START_0816_V3.json'
+NAME = 'B_REPLAY_START_0835_V4.json'
 PREFIX = 'replay0735'
 
 
@@ -75,25 +75,28 @@ def prereqs(root, v, verify_gpu=True):
     threshold = v['start_admitted_min']
     assert threshold == 8, 'MAIN08:16 registered start threshold'
     if quality['admitted'] < threshold:reasons.append(f'B admitted bank <{threshold}')
-    c = Path(v['collection_root'])
-    nullconfig = c/'LS_NULLFIX_CONFIG.json'
-    if not nullconfig.exists():reasons.append('qualified collector boundary activation pending')
-    else:
-        nv = read(nullconfig)
-        assert nv['nullfix_active'] and nv['budget'] == v['budget']
-    endpoints = read(c/'LS_ENDPOINTS.json')['workers']
-    if len(endpoints) != 4 or any(w['owner'].get('generation') != 'NICHENULL3' for w in endpoints):
-        reasons.append('four joint-release GPU slots not admitted')
-    if not reasons and verify_gpu:
-        from .warm_broker import Remote
-        from .ls_broker import owner_matches
-        for w in endpoints:
-            remote = Remote(c, w['endpoint']);s = remote.call(dict(action='status'))
-            assert owner_matches(s, w['owner']), 'GPU owner/gate changed'
-            remote.verify()  # all eight exact source-bound gates, no inference
+    # MAIN08:35: training consumes the qualified bank, not a GPU query.
+    # config() verifies every file against the full Linux release receipt.
+    cpu = read(Path(v['source_root'])/'LS_CPU_RESULT.json')
+    assert cpu['pass_'] and cpu['sim_s'] == cpu['skips'] == 0
+    transfer = read(root/'B_REPLAY_PHASE_TRANSFER_0706.json')
+    assert transfer['funding_complete'] and transfer['budget'] == v['budget']
+    assert v['budget']['total'] == 14500000
+    assert sum(v['budget']['phases'].values()) <= v['budget']['total']
     return dict(unix=time.time(), ready=not reasons, reasons=reasons,
                 admitted=quality['admitted'], cooperative=quality['cooperative'],
-                start_admitted_min=threshold)
+                start_admitted_min=threshold, replay_release_qualified=True,
+                budget_reconciled=True, health_ok=True, gpu_rollout_required=False)
+
+
+def collection_options(v):
+    """Use niche alternation only after its independent collector activation."""
+    active = (Path(v['collection_root'])/'LS_NULLFIX_CONFIG.json').exists()
+    config = dict(iterations=2, screen_K=2)
+    if active:config['niches'] = 1
+    return dict(slots=4, fanout_factor=2, owned_pending_only=True,
+                niche_alternation=active, search_config=config,
+                demand_phase_end_s=v['demand_phase_end_s'])
 
 
 def binding(root, v, arm):
@@ -153,10 +156,7 @@ def run_arm(root, arm):
                     assert_running(root, arm);time.sleep(10)
             last_start[0] = time.time()
             extra = dict(extras or {}, b_replay=True, collector_policy_update=u-1,
-                collect=dict(slots=4, fanout_factor=2, owned_pending_only=True,
-                             niche_alternation=True,
-                             search_config=dict(iterations=2, screen_K=2, niches=1),
-                             demand_phase_end_s=v['demand_phase_end_s']))
+                collect=collection_options(v))
             # Capture from the PPO episodes themselves: no extra collection episodes
             # or train-phase spending. All actions remain own-policy/on-policy.
             cfg = dict(cfg, job_id_overrides={})
@@ -339,9 +339,8 @@ def watch(root):
         if gate['ready']:break
         time.sleep(120)
     else:raise ValueError('registered deadline before start')
-    while not handover_ls(root,v):
-        if time.time()>v['gpu_deadline']:raise ValueError('collector boundary deadline')
-        time.sleep(10)
+    # GPU rolling release and collector activation proceed independently. Transfer
+    # frozen-u3 admissions later; neither operation may delay own-policy PPO.
     # The original builder also sees future own-bank decisions. Transfer its
     # ownership at a graceful confirmation boundary before enabling the new one.
     old = Path(v['collection_root'])/'bank_builder_0426'
@@ -369,6 +368,8 @@ def watch(root):
         mode='own-policy PPO + confirmed positive bank AWR; collection never blocks episodes'))
     while time.time() < v['gpu_deadline']:
         bridge_once(root, v)
+        if (Path(v['collection_root'])/'LS_NULLFIX_CONFIG.json').exists():
+            handover_ls(root, v)
         # Hash-sealed interim episode jobs are a separate, fixed-checkpoint task.
         if (root/'B_UPDATE_008.json').exists():spawn(root, v, 'interim')
         updates = {a: max([3]+[int(p.stem.rsplit('_', 1)[1]) for p in root.glob(a+'_UPDATE_[0-9][0-9][0-9].json')]) for a in ('B', 'R')}
