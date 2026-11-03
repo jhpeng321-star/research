@@ -213,6 +213,28 @@ def test_zero_init_identity_at_load_from_u0_and_intent_checkpoints(tmp_path):
     assert torch.equal(intent.intent_head.weight, from_intent.intent_head.weight)
     assert float(from_intent.coop(wide).abs().max()) == 0.       # coop head starts at zero
     assert any(v['exp_avg'].shape == (64, 33+W) for v in iopt2.state_dict()['state'].values())
+    # a trained v2v-only (block 24) checkpoint loads into the coop policy: zero coop columns,
+    # identical actions, re-gridded Adam moments
+    from .v2v_obs import V2V_DIM as V24
+    v2v_only, vopt, gen, _ = load_checkpoint(u0, config=dict(v2v=True, v2v_dim=V24))
+    with torch.no_grad():
+        v2v_only.actor[0].weight[:, 29:29+V24].normal_(std=.2)
+        v2v_only.critic[0].weight[:, 29:29+V24].normal_(std=.2)
+    mean, value = v2v_only(dict(context, v2v={v: v2v_features(table, v, {'c1': .5},
+                                 V2VConfig(v2v=True)).tolist() for v in context['members']}))
+    (mean.sum()+value).backward()
+    vopt.step()
+    v2v_path = tmp_path/'v2v_only.pt'
+    save(v2v_path, v2v_only, vopt, gen, 2, 0)
+    from_v2v, vopt2, _, _ = load_checkpoint(v2v_path, config=dict(CFG))
+    av, _ = v2v_only.sample(dict(context, v2v={v: v2v_features(table, v, {'c1': .5},
+                             V2VConfig(v2v=True)).tolist() for v in context['members']}),
+                            torch.Generator().manual_seed(5), False, {})
+    bv, _ = from_v2v.sample(wide, torch.Generator().manual_seed(5), False, {})
+    assert np.allclose(av['action'], bv['action'], rtol=0., atol=1e-6)
+    assert abs(av['logp']-bv['logp']) < 1e-5
+    assert vi.weight_norms(from_v2v)['coop_actor'] == 0.
+    assert any(v['exp_avg'].shape == (64, 33+W) for v in vopt2.state_dict()['state'].values())
 
 
 def test_checkpoint_roundtrip_from_weights_and_rejections(tmp_path):
@@ -572,28 +594,41 @@ def test_bank_pairs_carry_coop_targets_only_through_cooperative_entries(tmp_path
 # ---------------------------------------------------------------- 9. bindings and hooks
 
 def test_runner_and_live_hooks_wire_the_coop_keys(tmp_path):
-    from . import v2v_live, v2v_runner
-    common = dict(root='/r/v2v', legacy_root='/r/legacy', source_root='/r/src',
-                  common_checkpoint_sha256='a'*64)
-    on = v2v_runner.prepare(dict(budget={}), v2v_dim=W, v2v_intent=True, v2v_coop_signal=True, **common)
-    assert {k: on[k] for k in CFG} == CFG
-    assert on['v2v_coop_signal'] is True and on['v2v_coop_signal_loss_weight'] == 1.
-    with pytest.raises(ValueError, match='coop signal block width'):
-        v2v_runner.prepare(dict(budget={}), v2v_dim=48, v2v_intent=True, v2v_coop_signal=True, **common)
-    with pytest.raises(ValueError, match='requires v2v_intent'):
-        v2v_runner.prepare(dict(budget={}), v2v_dim=W, v2v_coop_signal=True, **common)
-    off = v2v_runner.prepare(dict(budget={}), v2v_dim=48, v2v_intent=True, **common)
-    assert 'v2v_coop_signal' not in off and off['v2v_dim'] == 48
-    hooks = v2v_live.hooks(tmp_path, dict(on, accel_bounds=[-3., 2.6]))
-    policy = hooks['policy_factory']()
-    assert isinstance(policy, vi.IntentPolicy) and policy.coop_enabled
-    assert policy.v2v_width == W and policy.coop_loss_weight == 1.
-    plain = v2v_live.hooks(tmp_path, dict(off, accel_bounds=[-3., 2.6]))
-    p = plain['policy_factory']()
-    assert isinstance(p, vi.IntentPolicy) and not p.coop_enabled and not hasattr(p, 'coop_head')
-    u0 = tmp_path/'u0.pt'
-    mappo_u0(u0)
-    loaded, opt, _, _ = hooks['load_checkpoint'](u0, config=on)
-    assert loaded.coop_enabled and {id(q) for q in loaded.parameters()} == \
-        {id(q) for g in opt.param_groups for q in g['params']}
-    assert not hooks['load_checkpoint'](u0, config=off)[0].coop_enabled
+    # NOTE: relative imports on purpose. pytest imports this module under its own package name
+    # (coopmwm.*), so `from . import ...` below and inside v2v_live.hooks resolve to the SAME
+    # module objects; absolute tools.* imports would be a second module identity on Windows and
+    # the restore would miss the wrapped attributes.
+    from . import bank_imitation as bi, v2v_live, v2v_runner
+    from . import replay_bank as rb
+    # hooks() installs process-global adapters (rb.confirmations boot_v2, bank_imitation.run);
+    # restore both afterwards so other bank tests in this process stay untouched.
+    plain_confirmations, plain_run = rb.confirmations, bi.run
+    try:
+        common = dict(root='/r/v2v', legacy_root='/r/legacy', source_root='/r/src',
+                      common_checkpoint_sha256='a'*64)
+        on = v2v_runner.prepare(dict(budget={}), v2v_dim=W, v2v_intent=True, v2v_coop_signal=True, **common)
+        assert {k: on[k] for k in CFG} == CFG
+        assert on['v2v_coop_signal'] is True and on['v2v_coop_signal_loss_weight'] == 1.
+        with pytest.raises(ValueError, match='coop signal block width'):
+            v2v_runner.prepare(dict(budget={}), v2v_dim=48, v2v_intent=True, v2v_coop_signal=True, **common)
+        with pytest.raises(ValueError, match='requires v2v_intent'):
+            v2v_runner.prepare(dict(budget={}), v2v_dim=W, v2v_coop_signal=True, **common)
+        off = v2v_runner.prepare(dict(budget={}), v2v_dim=48, v2v_intent=True, **common)
+        assert 'v2v_coop_signal' not in off and off['v2v_dim'] == 48
+        hooks = v2v_live.hooks(tmp_path, dict(on, accel_bounds=[-3., 2.6]))
+        policy = hooks['policy_factory']()
+        assert isinstance(policy, vi.IntentPolicy) and policy.coop_enabled
+        assert policy.v2v_width == W and policy.coop_loss_weight == 1.
+        plain = v2v_live.hooks(tmp_path, dict(off, accel_bounds=[-3., 2.6]))
+        p = plain['policy_factory']()
+        assert isinstance(p, vi.IntentPolicy) and not p.coop_enabled and not hasattr(p, 'coop_head')
+        u0 = tmp_path/'u0.pt'
+        mappo_u0(u0)
+        loaded, opt, _, _ = hooks['load_checkpoint'](u0, config=on)
+        assert loaded.coop_enabled and {id(q) for q in loaded.parameters()} == \
+            {id(q) for g in opt.param_groups for q in g['params']}
+        assert not hooks['load_checkpoint'](u0, config=off)[0].coop_enabled
+    finally:
+        rb.confirmations = getattr(plain_confirmations, 'original', plain_confirmations)
+        bi.run = plain_run
+    assert getattr(rb.confirmations, 'bank_rule', None) is None and bi.run is plain_run
