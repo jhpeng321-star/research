@@ -1,6 +1,19 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-03 13:28 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-03 17:27 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+## Fresh-session terminal reconciliation — 2026-11-03 17:27
+- Preserved clean HEAD `33bf902d`; read log/status, common rules, noon schedule,
+  cutoff receipt and current INT/EVAL handoffs before the read-only audit.
+  The extended deadline was 2026-11-01 11:30+08; supervision and original-round
+  publication are complete. INT explicitly assigns round two to `c4/rb2-int`.
+- Existing observer confirms B2 unchanged157/160 (53/56/48), no live owned
+  supervisor and all three owned workers absent; original FAILED retained.
+  gpuR nvidia-smi4406MiB/94%, CPUload16.85. Receipt:
+  `runs/rbrunb/OBSERVE_1793698048943922000.json`.
+- Existing claims, completed tasks and partial/failed receipts preserved. No
+  dispatch, failed-job replay, scoring or process action; no `.done` for the
+  incomplete panel. INT's final comparison remains authoritative.
 
 ## Fresh-session terminal reconciliation — 2026-11-03 13:28
 - Preserved clean HEAD `dfaf3fc4`; read log/status, common rules, noon schedule,
