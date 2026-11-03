@@ -173,7 +173,7 @@ def run_arm(root,arm,hooks=None):
                     cap=imitation_decision_cap(read(bp)) if bp.exists() else 0
                     fair=dict(matched_B_update=bu,B_bank_decisions=cap,B_update_receipt_found=bp.exists())
                 pairs,weights=bank_pairs(root,arm,SEED,beta=replay_beta,sources=b.get('replay_sources',{}).get(arm,()),
-                    max_decisions=cap)
+                    max_decisions=cap,v2v=bool(b.get('v2v')))
                 from .replay_bank import bank_quality
                 weights['bank_quality']=bank_quality(root,arm,b.get('replay_sources',{}).get(arm,()))
                 if fair is not None:
@@ -226,7 +226,7 @@ def run_arm(root,arm,hooks=None):
                         timeout_s=cfg.get('timeout_s',3600))
                 try:
                     lesson=record_lesson(root,arm,policy,root,u,lesson_runner,
-                        sources=b.get('replay_sources',{}).get(arm,()))
+                        sources=b.get('replay_sources',{}).get(arm,()),v2v=bool(b.get('v2v')))
                 except Exception as error:
                     lesson=dict(arm=arm,update=u,error=repr(error),list_size=0,entries=[])
             if hooks is not None:

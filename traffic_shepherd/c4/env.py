@@ -106,7 +106,8 @@ class CavSumoEnv:
                  sensor_check_every_s: int = 10, physics_log: bool = True,
                  extra_sumo_cli=None, entry_queue_in_state: bool = False,
                  direct_accel_max_mps2: float = DIRECT_ACCEL_MAX_MPS2,
-                 cav_vtype: str | None = CAV_VTYPE, population: str = "legacy3"):
+                 cav_vtype: str | None = CAV_VTYPE, population: str = "legacy3",
+                 v2v: bool = False):
         if controller not in CONTROLLERS:
             raise ValueError(f"controller must be one of {CONTROLLERS}")
         self.config = load_config()
@@ -127,6 +128,9 @@ class CavSumoEnv:
         # opt-in ``state["entry_queue"]`` [1] (see :meth:`state`); off by default because
         # deploy / rsu_check / coop_imagine repeat or gather every state key.
         self.entry_queue_in_state = bool(entry_queue_in_state)
+        # opt-in ``state["v2v"]`` [K, V2V_DIM] partner block (tools/coopmwm/v2v_obs contract);
+        # off by default: without the flag ``state()`` is byte-identical to pre-v2v.
+        self.v2v = bool(v2v)
         # Direct-output upper bound (the policy's stored cap binds first; damping/PI/wall keep 1.5).
         self.direct_accel_max_mps2 = float(direct_accel_max_mps2)
         from .population import TEXTBOOK_CAV_VTYPE, check_population
@@ -314,7 +318,24 @@ class CavSumoEnv:
             queue = self.last_entry_queue_steps[-1] if self.last_entry_queue_steps else 0.0
             state["entry_queue"] = torch.tensor([float(queue)], dtype=torch.float32,
                                                 device=self.device)
+        if self.v2v:
+            state["v2v"] = self._v2v_block()
         return state
+
+    def _v2v_block(self) -> np.ndarray:
+        """Per-CAV v2v partner block ``[K, V2V_DIM]`` (tools/coopmwm/v2v_obs contract).
+
+        Partners = K nearest OTHER CAVs within comm range; per partner longitudinal gap,
+        lane offset, speed, acceleration and the LAST ISSUED command from the previous
+        control step (``CommandOwnership.last_commands``), plus a presence bit, zero-padded.
+        Rows for absent / non-CAV slots are zeros."""
+        from tools.coopmwm.v2v_obs import V2VConfig, v2v_slot_block   # repo-root tools pkg
+
+        frame = self.frame
+        return v2v_slot_block(frame.s, np.where(frame.junction, frame.lane_carry, frame.lane),
+                              frame.v, frame.a, frame.present, frame.is_cav,
+                              self.builder.slot_vehicle_ids(frame),
+                              self.ownership.last_commands(), V2VConfig(v2v=True))
 
     def entry_queue_now(self) -> int:
         """Vehicles requested (``ledger.due(now)``) but not yet inserted, at the current time."""

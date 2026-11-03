@@ -1,0 +1,46 @@
+{
+  "part": "2 of 3 (MODEL)",
+  "worktree": "E:/agent-work/c4-v2v-model",
+  "branch": "c4/v2v-model",
+  "commit": "066a0916",
+  "cpu_only": true,
+  "flag": {"name": "v2v", "default": false, "off_behavior": "byte-identical to accel_learner.load (tools/coopnative/learner.py:68 path)"},
+  "interfaces": {
+    "extend_for_v2v": {
+      "signature": "extend_for_v2v(model, extra_dim) -> list[dict(head, input_features, extra_dim)]",
+      "module": "tools/coopmwm/v2v_model.py:80",
+      "behavior": "Zero-extends the first nn.Linear input layer of model.actor and model.critic by extra_dim columns inserted at INSERT_AT=29 (end of the per-CAV x/pooled block, before the actor latent / critic rsu tails). Existing weights copied; all new input weights ZERO; biases untouched. extra_dim<=0 is a no-op. Outputs are identical to the original model for any finite extra input at load."
+    },
+    "load_checkpoint": {
+      "signature": "load_checkpoint(path, config=None, v2v_dim=None) -> (policy, optimizer, generator, payload)",
+      "module": "tools/coopmwm/v2v_model.py:153",
+      "behavior": "Flag off (default) delegates byte-identically to accel_learner.load. With v2v_dim=N or config={'v2v': True} (optional 'v2v_dim' override), loads then extends; Adam moments remapped index-for-index with zero gaps at the inserted columns, step counters preserved, lr preserved. Already-extended checkpoints of matching width load unchanged; mismatched width raises ValueError."
+    },
+    "v2v_extra": {"module": "tools/coopmwm/v2v_model.py:41", "behavior": "Resolves extra width from config flag; 0 when flag off/absent."},
+    "forward_with_v2v": {"module": "tools/coopmwm/v2v_model.py:95", "behavior": "Base actor/critic forward over widened per-CAV features x (n, 29+extra) and rsu; provided for the observation-side integration."},
+    "V2V_DIM": {"module": "tools/coopmwm/v2v_model.py:29", "behavior": "Imported from tools/coopmwm/v2v_obs.py when present; local stub V2V_DIM=4 until that module lands."}
+  },
+  "located_for_review": {
+    "per_cav_policy": "tools/coopmwm/acceleration.py:13 (Policy subclass of tools/coopnative/policy.py:45; actor tools/coopnative/policy.py:49, critic :50; MAPPO residual head acceleration.py:16-19)",
+    "critic": "tools/coopnative/policy.py:50 via tools/coopmwm/acceleration.py:13",
+    "checkpoint_load": "tools/coopmwm/accel_learner.py:10-11 (Policy rebinding of tools/coopnative/learner.py:68-81; Adam lr=3e-4 learner.py:74)",
+    "ppo_awr_update": "tools/coopmwm/accel_learner.py:92 update (own-action PPO + completed-plan AWR imitation :83); base PPO tools/coopnative/learner.py:23",
+    "train_loop_checkpoints": "tools/coopmwm/accel_runner.py:293-295,327 (save), resume load sites e.g. tools/coopmwm/final_discovery.py:78, tools/coopmwm/diagnostic_repair.py:65"
+  },
+  "abi_note": "v2v channels join after the 29-wide per-CAV x/pooled block; actor input becomes (x:29+e | latent:4), critic input (pooled:29+e | rsu:12). Observation part (v2v_obs.py) must emit x with V2V_DIM appended channels.",
+  "tests": {
+    "file": "tools/coopmwm/test_v2v_model_cpu.py",
+    "command": "python -m pytest tools/coopmwm/test_v2v_model_cpu.py -q  (env: miniconda3/envs/rl_driving, torch 2.12.1+cpu)",
+    "result": "7 passed",
+    "cases": [
+      "test_zero_init_warm_start_is_equivalent_on_random_observations (whitelisted sensors + random extra channels; max abs diff <= 1e-7 for actor and critic, for extra dims 1/3/V2V_DIM, invariant to extra values)",
+      "test_widened_layers_copy_weights_and_zero_new_inputs (shapes, zero gap at column 29, latent/rsu tail shifted, bias untouched)",
+      "test_gradients_flow_to_new_weights (nonzero grads into new actor/critic columns with a trained actor head; zero backward signal into new channels at load)",
+      "test_optimizer_state_survives_extension (moment remap index-for-index, zero gap, step counter and lr preserved, extended optimizer trains)",
+      "test_flag_off_is_byte_identical_to_registered_loader (state_dict/optimizer/generator/RNG payload equal for config None/{}/v2v:False/other)",
+      "test_flag_on_widens_and_extended_checkpoint_round_trips",
+      "test_width_mismatch_is_rejected_and_extra_dim_is_a_parameter"
+    ]
+  },
+  "untouched": ["tools/coopmwm/v2v_obs.py (observation part)", "replay_bank", "tools/coopnative (read-only reference)", "E:/agent-work/c4-coopnative", "E:/agent-work/_sol"]
+}

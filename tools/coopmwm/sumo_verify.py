@@ -732,7 +732,8 @@ class LocalBranchRunner:
     def run(self, spec, snapshot):
         from . import accel_plant
         t0, t_end = spec['window']['start_s'], spec['window']['end_s']
-        cls = verify_controller_class();holder = {}
+        from . import bank_v2v
+        cls = bank_v2v.branch_controller_class() or verify_controller_class();holder = {}
         def factory(policy, generator, deterministic=False, guide=None, beta=1., replay=None, branch=None):
             holder['c'] = cls(policy, generator, snapshot, spec['plan'])
             return holder['c']
