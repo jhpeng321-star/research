@@ -124,7 +124,7 @@ assert (r/'AUTHORITY.json').is_file()
 root=Path('/home/ubuntu/coopmwm20261103_v2v3');assert (root/'HOLD.json').exists()
 assert not list((root/'jobs').iterdir()) and not (root/'V2V_STARTED.json').exists()
 buf=io.StringIO()
-with contextlib.redirect_stdout(buf):exec(compile(AUDIT,'<fresh-scenario-reference-audit>','exec'))
+with contextlib.redirect_stdout(buf):exec(compile(AUDIT,'<fresh-scenario-reference-audit>','exec'),{})
 proof=json.loads(buf.getvalue());assert proof['eligible_no_references'] and proof['exists'],proof
 target=Path(proof['target']);assert target==Path('/home/ubuntu')/'mappospeed'/'production2'/'scenarios'
 assert not target.is_symlink()
@@ -146,7 +146,7 @@ for e in manifest:
  q.unlink();removed.append(e)
 v=dict(unix=time.time(),target=str(target),removed=removed,removed_bytes=sum(e['bytes'] for e in removed),files=len(removed),reference_audit=proof,cpu_free=shutil.disk_usage('/home/ubuntu').free,new_sim_s=0,reason='MAIN17:52 old unreferenced regenerable scenario outputs')
 with p.open('x') as f:json.dump(v,f);f.flush();os.fsync(f.fileno())
-print(json.dumps(v))'''
+print(json.dumps({k:x for k,x in v.items() if k!='removed'}))'''
     # Send the audit through stdin to avoid self-references in audit process argv.
     payload='AUDIT='+repr(audit_code())+'\n'+code
     value=json.loads(remote('cpuQ',f'''import subprocess
@@ -161,6 +161,39 @@ print(p.stdout)''',timeout=105))
     print(json.dumps({k:v for k,v in value.items() if k not in ('removed','reference_audit')}))
 
 
+def adopt():
+    code='''from pathlib import Path
+import json,hashlib,shutil
+r=Path('/home/ubuntu/coopmwm20261103_cleanup1752');manifest=json.loads((r/'DELETE_MANIFEST.json').read_text())
+receipt=r/'DELETION_RECEIPT.json';recovered=False
+if not receipt.exists():
+ # The first execution's inline exec polluted p with the final scenario leaf.
+ # Its own metadata JSON was written there AFTER all source leaves were removed.
+ # Recover that exact output, never reread any truth or route file.
+ source=Path(manifest['files'][-1]['path'])
+ assert source==Path('/home/ubuntu/mappospeed/production2/scenarios/pid199686/s4139_m2600_nn_ckea6/scenario.sumocfg')
+ assert source.is_file() and source.stat().st_size==4063316
+ v=json.loads(source.read_text());assert v['removed']==manifest['files'] and v['files']==23319
+ assert v['target']==str(Path('/home/ubuntu')/'mappospeed'/'production2'/'scenarios')
+ source.replace(receipt);recovered=True
+v=json.loads(receipt.read_text());assert v['removed']==manifest['files']
+h=hashlib.sha256(receipt.read_bytes()).hexdigest();v.pop('removed')
+v.update(full_receipt_sha256=h,full_receipt_path=str(receipt),current_cpu_free=shutil.disk_usage(r).free,metadata_receipt_recovered=recovered)
+print(json.dumps(v))'''
+    value=json.loads(remote('cpuQ',f'''import subprocess
+p=subprocess.run(['sudo','-n','/home/ubuntu/miniconda3/bin/python','-B','-'],input={code!r},capture_output=True,text=True,timeout=30)
+if p.returncode:raise RuntimeError(p.stderr)
+print(p.stdout)''',timeout=45))
+    record=ops.EVIDENCE/'SCENARIO_DELETION_RECEIPT_1752.json'
+    if not record.exists():write(record,value)
+    h=sha(record);registry=checked(REGISTRY)
+    if h not in registry.read_text(encoding='utf-8'):
+        with registry.open('a',encoding='utf-8') as f:f.write('\nS-COOPMWM MAIN1752 exact scenario cleanup COMPLETE; '
+            f"files={value['files']} bytes={value['removed_bytes']}; full receipt at {value['full_receipt_path']} "
+            'SHA'+value['full_receipt_sha256']+'; reporting variable-collision recovered, no truth data read; receiptSHA'+h+'\n')
+    print(json.dumps({k:v for k,v in value.items() if k!='reference_audit'}))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('audit','register','delete'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('audit','register','delete','adopt'))
     globals()[p.parse_args().action]()

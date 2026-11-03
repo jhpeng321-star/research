@@ -1,5 +1,32 @@
 # S-COOPMWM — live checks
 
+## Nov3 ~18:15 UTC+8 — fix-first V2V HOLD; storage recovered
+- All new MAIN addenda through18:00b/line872 read. Replacement V2V resource
+  watcher19184 was identity-verified idle/nochildren/nojobs and **HELD** before
+  disk recovery. No V2V physics, smoke or PPO update occurred. The historical
+  launcher refuses. Intent-int/BANK_STAT_V2/offline+exact gate/launch3 are now
+  required; the two-seed Student-t reader is superseded and will not launch.
+- Full-pass imitation remains qualified as MAIN17:55 directs:778LinuxPASS;
+  actual saved-bank scratch rehearsal completes5full passes,31present-member
+  pairs/155visits, error1.493048->1.484244m/s²,separateKL.004488. This is
+  mechanical qualification, not the pending cooperative/intent/exact fix gate.
+- MAIN17:31 opaque archive COMPLETE:2files/1,250,473,414bytes, SHA proofs before
+  removal; gpuR6.62GBfree at completion. e3final skipped as live-referenced.
+- MAIN17:52 old generated scenario cleanup COMPLETE:23,319plain leaves,
+  **4,875,992,378bytes**, under registered/reference-audited exact scope. No
+  scenario/truth/vType content read; checkpoints/logs/live sources untouched.
+  Full receipt SHA55217b51ea2f9113b1a67cd48b2722f1fb70b1bcef40217f9c72e2acd670acce.
+  A reporting-only exec-variable collision was recovered by moving the exact
+  manifest-matched metadata receipt into its control root; deletion not repeated.
+- cpuQfree7,362,523,136bytes (~6.86GiB), still below10GiBmaintenance target.
+  Existing rolling mover remains adopted. V2V stays held despite passing6GiB.
+- Current-policy collection advances: B110decisions/52confirmed withu14data;
+  R96/64withu15data;0pendingconfirmation. GPU samples94%/96%. No duplicate
+  collection restart is justified. Original nonV2V training remains unchanged.
+- Evidence:`coopmwm/V2V_FIX_FIRST_HOLD_1800.md`,
+  `coopmwm/SCENARIO_DELETION_RECEIPT_1752.json`,
+  `coopmwm/SCOPED_ARCHIVE_DISPATCH_1731.json`.
+
 ## Nov 3 17:20 UTC+8 — durable rolling storage and 6 GiB V2V auto-admission
 - **17:24:31 update:** initial rolling pool complete, **18 certified batches /
   2,308,751,466bytes**. Fresh scan has zero eligible files; cpuQ free4,194,525,184
