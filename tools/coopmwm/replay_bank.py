@@ -346,7 +346,8 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
         statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided,
                                    verify_per_round)
         confirm_pending(root, arm, runner_for, str(root), confirm_phase, workers=2,
-                        sources=binding.get('replay_sources', {}).get(arm, ()), limit=verify_per_round)
+                        sources=binding.get('replay_sources', {}).get(arm, ()), limit=verify_per_round,
+                        **({'verify_mode': cfg['verify_mode']} if cfg.get('verify_mode') else {}))
         bank_quality(root, arm, binding.get('replay_sources', {}).get(arm, ()))
         n += 1
         if 'budget_blocked' in statuses:
@@ -764,8 +765,16 @@ def _decision_snapshot(root, arm, r, by_vid):
     return torch.load(bank/'snapshots'/(link['state_id']+'.pt'), weights_only=False)
 
 
-def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None):
-    """Confirm every first-seed positive decision (own bank and, for B, live LS labels) once."""
+def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None, verify_mode=None):
+    """Confirm every first-seed positive decision (own bank and, for B, live LS labels) once.
+
+    verify_mode='all8_both_seeds' (owner 2026-11-03 22:05, default OFF): every completed decision
+    gets all K candidates + policy on the second CRN seed, per-seed winners, per-(plan, seed)
+    solos (tools/coopmwm/verify_perseed.py); None/'legacy' keeps this function unchanged."""
+    if verify_mode is not None:
+        from . import verify_perseed as vp
+        if vp.mode(verify_mode) == vp.ALL8:
+            return vp.confirm_pending_all8(root, arm, runner_for, run_root, phase, workers, sources, limit)
     bank = bank_root(root, arm);done = {p.stem for p in (bank/'confirmations').glob('*.json')}
     by_vid = {}
     for p in (bank/'decisions').glob('*.json'):
