@@ -1,5 +1,24 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
+## CURRENT Nov4 ~02:05 +08 — coop-only gate/launch DELEGATED; ours diagnostic only
+- Fullbriefreadthrough1081. MAIN01:47 delegatesmerge/qualification/runtime/
+  cooperative_onlygate/launch to c4/launch-coop. DO NOT duplicate any of them.
+  Ourall_admittedgateisDIAGNOSTICONLY,neverlaunchauthority. RuntimeflagFALSE.
+- All-admittedexecute1152004COMPLETE55/55graded/0failed/0prefixstops;collect
+  1272509dispatchedONCE. Controlgate0040. Collect/reportdiagnostic,don'tre-execute.
+- GPUArollingmoverNOWLIVE1237127/start74222230/controlrolling2318_gpua_v4;
+  localtransport43140/create1793727942.122476(V4C). Old4116186retiredsafely by
+  completedcommanddrain1169946; earlierlocalwaitersdead,keepreceipts/no redispatch.
+- Oldscopeeligibleonly433727559bytes;2batches269869249movedatlastprogress,
+  cpuQ6481956864bytes/~6GiB floor. Newclosed-old-diagnosticSHAarchiveREGISTERED
+  461265cc;79summaryJSONscopiedSHA-exact toE:/research-dense/docs/paper_results/
+  coopmwm/archived_diagnostic_summaries_20261104. NextlaunchONCE onlyifregular
+  moveridle/nochildren; retiresonlyidleoldobserver3443527/3531845, preserves
+  incomplete statuses, usesqualifiedSHA-before-unlink machinery, resumesmover.
+- Delegatehandoff `_sol/LAUNCH_COOP_DELEGATE_HANDOFF_0155.md` includes livebudget
+  prioritybinding4.1Mbankphase, restored31Binputs+traces, source/version caveat,
+  runtimeSHAauthorization caveat and needtomergeourreceiptsbeforefinalff.
+
 ## CURRENT Nov4 00:21 +08 — final integration merged, Linux994 PASS
 - ACTUALEXACTGATE EXECUTING1152004/start74125444/controlgate0040, registered
   35820sim-s beforephysics. At1793727278:29graded/0failed/0prefixstops.

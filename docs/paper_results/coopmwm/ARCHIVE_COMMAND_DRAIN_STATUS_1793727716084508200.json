@@ -1,0 +1,45 @@
+{
+  "COMPLETE": {
+    "child_processes_signalled": false,
+    "new_sim_s": 0,
+    "old_parent_retired": true,
+    "parent": {
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "pid": 4116186,
+      "start_ticks": "71133854",
+      "uid": 0,
+      "unix": 1793697060.8427145
+    },
+    "rule": "Existing V4B waiter adopts the dead parent and starts one new mover",
+    "source_files_removed": 0,
+    "unix": 1793727434.2602746
+  },
+  "DISPATCH": {
+    "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+    "new_sim_s": 0,
+    "pid": 1169945,
+    "start_ticks": "74171189",
+    "unix": 1793727434.1705132
+  },
+  "FAILED": null,
+  "OWNER": {
+    "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+    "pid": 1169946,
+    "start_ticks": "74171190",
+    "unix": 1793727434.1968477
+  },
+  "PARENT_PAUSED": {
+    "boundary": "pre-proof or completed batch; no current-batch deletion",
+    "children": [],
+    "new_sim_s": 0,
+    "parent": {
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "pid": 4116186,
+      "start_ticks": "71133854",
+      "uid": 0,
+      "unix": 1793697060.8427145
+    },
+    "unix": 1793727434.207764
+  },
+  "unix": 1793727715.392843
+}
