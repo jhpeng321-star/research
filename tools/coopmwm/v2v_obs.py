@@ -277,7 +277,7 @@ def v2v_intent_features(state, cav_id, last_commands, board, now,
     k, h = int(cfg.k), int(horizon)
     width = len(V2V_PARTNER_FEATURES)
     coop_w = len(V2V_COOP_SIGNAL_FEATURES) if coop is not None else 0
-    stride = width + h + 1
+    stride = width + h + 1 + coop_w
     out = np.zeros(v2v_intent_dim(k, h)+coop_w*k, np.float32)
     if not cfg.v2v:
         return out

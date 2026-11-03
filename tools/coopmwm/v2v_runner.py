@@ -22,11 +22,14 @@ def remote_name(path):
 
 def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v2v_dim,
             active_arms=ARMS, v2v_intent=False, v2v_intent_horizon=5, v2v_intent_loss_weight=1.,
-            v2v_intent_detach_trunk=True):
+            v2v_intent_detach_trunk=True, v2v_coop_signal=False, v2v_coop_signal_loss_weight=1.):
     """Prospective binding only: no directory, checkpoint, ledger or job mutation.
 
     ``v2v_intent`` (default False = unchanged binding) adds the planned-command intent keys,
     identical for every arm; ``v2v_dim`` must then be the intent block width K*(6+H+1).
+    ``v2v_coop_signal`` (default False = unchanged binding; requires ``v2v_intent``) adds the
+    cooperation-signal keys (identical for every arm); ``v2v_dim`` must then be the coop block
+    width K*(6+H+1+2).
     """
     root, legacy_root = remote_name(root), remote_name(legacy_root)
     if root == legacy_root:
@@ -70,7 +73,10 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
         cfg.update(v2v_intent=True, v2v_intent_horizon=int(v2v_intent_horizon),
                    v2v_intent_loss_weight=float(v2v_intent_loss_weight),
                    v2v_intent_detach_trunk=bool(v2v_intent_detach_trunk))
-        settings(cfg)  # validates v2v_dim against the intent block width
+        if v2v_coop_signal:
+            cfg.update(v2v_coop_signal=True,
+                       v2v_coop_signal_loss_weight=float(v2v_coop_signal_loss_weight))
+        settings(cfg)  # validates v2v_dim against the intent/coop block width
     return cfg
 
 

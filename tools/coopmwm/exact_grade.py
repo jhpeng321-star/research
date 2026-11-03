@@ -984,11 +984,14 @@ def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., 
     metrics=_ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs)
     intent=None
     if getattr(policy,'intent_horizon',0):
-        from .v2v_intent import bank_stats,coverage,weight_norms
+        from .v2v_intent import COOP_TARGET_RULE,bank_stats,coverage,weight_norms
         # refresh again with the post-PPO head the imitation phase starts from
         intent=dict(partner_intents_pre_ppo=refresh,partner_intents_pre_imitation=refresh_bank_intents(policy,pairs),
             before=bank_stats(policy,pairs),weight_norm_before=weight_norms(policy),
-            **coverage([s['context'] for s,w in pairs if w>0],policy.intent_horizon,policy.intent_k))
+            **coverage([s['context'] for s,w in pairs if w>0],policy.intent_horizon,policy.intent_k,
+                       getattr(policy,'coop_enabled',False)))
+        if getattr(policy,'coop_enabled',False):
+            intent['coop_target_rule']=COOP_TARGET_RULE
     report=run(policy,optimizer,pairs,generator,reference,coefficient,imitation_epochs)
     if intent is not None:
         shares=[x for row in report.get('epochs') or () for x in row.get('intent_grad_shares') or ()]

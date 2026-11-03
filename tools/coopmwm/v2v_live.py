@@ -53,10 +53,13 @@ def hooks(root, cfg):
     policy_factory,pairs=Policy,original_pairs
     if cfg.get('v2v_intent'):
         # v2v_intent ON (identical for A/B/R): intent-head policy, intent-carrying bank pairs.
+        # v2v_coop_signal ON (identical for A/B/R): additionally the coop-signal head; A has no
+        # bank, so its coop head never receives a target (unsupervised; see COOPSIG_READY.json).
         import functools
         from .v2v_intent import IntentPolicy,settings
         s=settings(cfg)
-        policy_factory=functools.partial(IntentPolicy,s['horizon'],s['loss_weight'],s['bounds'],s['detach_trunk'])
+        policy_factory=functools.partial(IntentPolicy,s['horizon'],s['loss_weight'],s['bounds'],
+            s['detach_trunk'],s['coop'],s['coop_loss_weight'])
         pairs=functools.partial(original_pairs,v2v_intent=cfg)
     return dict(configure=configure,accounting=accounting,policy_factory=policy_factory,
         load_checkpoint=load_checkpoint,bank_pairs=pairs,bank_quality=original_quality,

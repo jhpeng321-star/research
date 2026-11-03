@@ -352,7 +352,9 @@ def _intent_optimizer_into_coop(policy, saved_optimizer, horizon):
             key: (_add_coop(value, horizon) if name in regrid and torch.is_tensor(value)
                   and value.dim() == 2 else value) for key, value in entry.items()}
     rebuilt = torch.optim.Adam(policy.parameters(), lr=3e-4)
-    rebuilt.load_state_dict(dict(state=transferred, param_groups=saved_optimizer['param_groups']))
+    # the coop head registers after every existing parameter: same groups, extended index list
+    groups = [dict(saved_optimizer['param_groups'][0], params=list(range(len(list(policy.parameters())))))]
+    rebuilt.load_state_dict(dict(state=transferred, param_groups=groups))
     return rebuilt
 
 

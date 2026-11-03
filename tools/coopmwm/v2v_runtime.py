@@ -69,8 +69,8 @@ def controller_class(base):
     from .bank_v2v import _features, DEFAULT_CFG
 
     class Proxy:
-        def __init__(self, real, blocks, intent=None):
-            self.real, self.blocks, self.intent = real, blocks, intent
+        def __init__(self, real, blocks, intent=None, coop_slots=None):
+            self.real, self.blocks, self.intent, self.coop_slots = real, blocks, intent, coop_slots
 
         def sample(self, context, *args, **kwargs):
             context = dict(context, v2v={v: self.blocks(v) for v in context['members']})
@@ -80,6 +80,10 @@ def controller_class(base):
                 sample = out[0] if isinstance(out, tuple) else out
                 if 'published_intent' not in sample:  # replayed samples keep their record
                     sample['published_intent'] = self.intent.publish(context)
+                if getattr(self.intent, 'coop_enabled', False) and 'published_coop' not in sample:
+                    from .v2v_intent import resolve_coop
+                    sample['published_coop'] = resolve_coop(self.intent.publish_coop(context),
+                                                            self.coop_slots)
             return out
 
         def __getattr__(self, key):
@@ -90,6 +94,7 @@ def controller_class(base):
             super().__init__(*args, **kwargs)
             self.previous_frame = None
             self.intent_board = {}  # v2v_intent ON: vid -> (published second, H commands)
+            self.coop_board = {}    # v2v_coop_signal ON: vid -> (published second, p_coop, yield vid)
 
         def observe_issued(self, frame):
             self.previous_frame = frame
@@ -113,9 +118,18 @@ def controller_class(base):
                 self.policy = Proxy(saved, lambda vid: _features(frame, vid, previous, DEFAULT_CFG))
             else:
                 from .bank_v2v import _intent_features
+                coop = getattr(intent, 'coop_enabled', False)
+                coop_slots = None
                 spec = dict(horizon=intent.intent_horizon, board=dict(self.intent_board))
+                if coop:
+                    from .bank_v2v import _frame_table, _obs_cfg
+                    from .v2v_obs import v2v_partner_ids
+                    table, ocfg = _frame_table(frame), _obs_cfg(DEFAULT_CFG)
+                    coop_slots = {v['vid']: v2v_partner_ids(table, v['vid'], ocfg)
+                                  for v in frame.get('vehicles', []) if v.get('is_cav')}
+                    spec['coop'] = dict(board=dict(self.coop_board))
                 self.policy = Proxy(saved, lambda vid: _intent_features(frame, vid, previous, DEFAULT_CFG, spec),
-                                    intent)
+                                    intent, coop_slots)
             try:
                 desired = super().apply(rows, commands, now)
             finally:
@@ -125,6 +139,10 @@ def controller_class(base):
                 # silent CAVs simply have no fresh entry and read as invalid next second.
                 published = (self.events[-1]['sample'].get('published_intent') or {}) if self.events else {}
                 self.intent_board = {vid: (int(now), list(values)) for vid, values in published.items()}
+                if getattr(intent, 'coop_enabled', False):
+                    coop = (self.events[-1]['sample'].get('published_coop') or {}) if self.events else {}
+                    self.coop_board = {vid: (int(now), float(p), yield_vid)
+                                       for vid, (p, yield_vid) in coop.items()}
             return desired
 
     return Controller

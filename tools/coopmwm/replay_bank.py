@@ -448,6 +448,10 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     also carry partner-intent input slots (EMPTY here; exact_update refreshes them from the current
     intent head on the partners' own t-1 bank contexts - never recorded commands) and the plan
     members' own future plan commands as intent targets (tools/coopmwm/v2v_intent.py).
+    With ``v2v_coop_signal`` ON in the same binding, pairs of entries whose plan is labelled
+    cooperative within its seed additionally carry coop-signal targets (members p_coop=1, yield
+    slot from the plan's own deceleration geometry; tools/coopmwm/v2v_intent.attach_coop_targets);
+    all other pairs stay unsupervised.
     """
     everything = bank_decisions(root, arm, upto_unix, sources)
     T = temperature(root, arm, training_seed, everything)
@@ -459,6 +463,8 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     from . import bank_v2v
     v2v_counts = dict(pairs=0, kept=0, excluded_missing_prev_second=0,
                       excluded_missing_partner_command=0, trace_missing=False)
+    coop_signal = bool(v2v_intent.get('v2v_coop_signal')) if v2v_intent else False
+    coop_supervised = 0
     for r in decisions:
         if r['status'] != 'accepted' or not r['grade_veh_s'] or r['grade_veh_s'] <= 0:
             counts['nonpositive'] += 1;continue
@@ -485,12 +491,16 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
             from . import v2v_intent as vi
             s = vi.settings(v2v_intent)
             entry_pairs = vi.attach_bank_targets(entry_pairs, tape, entry, s['horizon'], s['bounds'])
-            intent = dict(horizon=s['horizon'], entry=f"{r['verification_id']}/{branch['branch']}")
+            intent = dict(horizon=s['horizon'], entry=f"{r['verification_id']}/{branch['branch']}",
+                          coop=dict(board={}) if coop_signal else None)
         if v2v:
+            trace_path = Path(r['_branches'])/r['verification_id']/branch['branch']/'observable.jsonl.gz'
             entry_pairs, entry_counts = bank_v2v.attach_pairs(
-                entry_pairs, Path(r['_branches'])/r['verification_id']/branch['branch']/'observable.jsonl.gz',
-                r['t0'], v2v_cfg, **({'intent': intent} if intent else {}))
+                entry_pairs, trace_path, r['t0'], v2v_cfg, **({'intent': intent} if intent else {}))
             v2v_counts = bank_v2v.merge_counts(v2v_counts, entry_counts)
+            if coop_signal and entry_pairs:
+                vi.attach_coop_targets(entry_pairs, tape, entry, trace_path,
+                                       coop.get('cooperative') is True, s['bounds'])
         per_entry.append((entry_pairs, coop.get('cooperative') is True,
                           coop.get('cooperation_gain_veh_s')))
         entries.append(dict(verification_id=r['verification_id'], grade_veh_s=r['grade_veh_s'], weight=w,
@@ -538,6 +548,14 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                               'previous second); pairs whose trace lacks partner commands are excluded and counted',
                           stub=bank_v2v.STUB, cfg=dict(bank_v2v.DEFAULT_CFG, **(v2v_cfg or {})),
                           counts=v2v_counts)
+    if coop_signal:
+        supervised = sum(1 for p, _w in pairs if p.get('coop_targets'))
+        out['v2v_coop_signal'] = dict(
+            rule='pairs of plans labelled cooperative within their seed carry coop targets (plan members '
+                 'p_coop=1; yield slot = nearest other plan member in the same lane behind at the plan-start '
+                 'trace frame when their plan window contains a deceleration, else none); every other pair '
+                 'and all PPO rollouts are unsupervised (masked)',
+            supervised_pairs=supervised, unsupervised_pairs=len(pairs)-supervised)
     return pairs, out
 
 

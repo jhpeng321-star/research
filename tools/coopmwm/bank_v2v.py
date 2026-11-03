@@ -137,19 +137,22 @@ def _features(frame, ego, known, cfg):
 
 def _intent_features(frame, ego, known, cfg, intent):
     """Planned-command intent variant of :func:`_features` (v2v_intent ON only): the base block
-    interleaved with the partner intents published at ``time_s-1`` (``intent['board']``)."""
+    interleaved with the partner intents published at ``time_s-1`` (``intent['board']``), plus --
+    when ``intent['coop']`` carries a coop board (``v2v_coop_signal`` ON) -- the partner's
+    published p_coop and whether this ego is its yield target (two extra features per slot)."""
     if STUB:
         raise ValueError('v2v intent requires the OBSERVATION part (tools/coopmwm/v2v_obs.py)')
     from .v2v_obs import v2v_intent_features
     return [float(x) for x in v2v_intent_features(_frame_table(frame), ego, known, intent['board'],
-            int(frame.get('time_s', 0)), int(intent['horizon']), _obs_cfg(cfg))]
+            int(frame.get('time_s', 0)), int(intent['horizon']), _obs_cfg(cfg), coop=intent.get('coop'))]
 
 
 def _block_dim(cfg, intent):
     if not intent:
         return V2V_DIM
-    from .v2v_obs import v2v_intent_dim
-    return v2v_intent_dim(_obs_cfg(cfg).k, int(intent['horizon']))
+    from .v2v_obs import v2v_coop_dim, v2v_intent_dim
+    dim = v2v_coop_dim if intent.get('coop') is not None else v2v_intent_dim
+    return dim(_obs_cfg(cfg).k, int(intent['horizon']))
 
 
 def pair_v2v_block(frame, prev_frame, members, cfg=None, intent=None):
@@ -192,11 +195,12 @@ def attach_pairs(pairs, trace_path, t0, cfg=None, intent=None):
     bank entry, from the winning plan's recorded branch trace; pair i is second t0+i.
     Pairs whose trace lacks the partners' commands (no previous second, no trace frame, or a
     partner command not recorded) are EXCLUDED and counted - never imputed.
-    ``intent`` (v2v_intent ON only): dict(horizon, entry).  Partner-intent inputs are built EMPTY
-    (zeros, intent_valid 0) and each kept pair gets ``sample['intent_link']`` = dict(entry, t,
-    slots={member: partner vids in slot order}); v2v_intent.refresh_bank_intents fills them each
-    update from the CURRENT intent head on the partners' own t-1 bank contexts (never from
-    recorded commands)."""
+    ``intent`` (v2v_intent ON only): dict(horizon, entry[, coop]).  Partner-intent inputs are
+    built EMPTY (zeros, intent_valid 0) and each kept pair gets ``sample['intent_link']`` =
+    dict(entry, t, slots={member: partner vids in slot order}); v2v_intent.refresh_bank_intents
+    fills them each update from the CURRENT intent head on the partners' own t-1 bank contexts
+    (never from recorded commands).  ``intent['coop']`` (v2v_coop_signal ON; dict(board)) widens
+    every block by two coop-signal columns per partner slot, built EMPTY the same way."""
     cfg = dict(DEFAULT_CFG, **(cfg or {}))
     counts = dict(pairs=len(pairs), kept=0, excluded_missing_prev_second=0,
                   excluded_missing_partner_command=0, trace_missing=False)
@@ -214,8 +218,11 @@ def attach_pairs(pairs, trace_path, t0, cfg=None, intent=None):
             continue
         context = sample.setdefault('context', {})
         members = list(context.get('members') or sample['behaviour']['proposal_members'])
-        block, missing = pair_v2v_block(frame, prev, members, cfg, None if intent is None else
-                                        dict(horizon=intent['horizon'], board={}))
+        spec = None
+        if intent is not None:
+            spec = dict(horizon=intent['horizon'], board={},
+                        coop=dict(board={}) if intent.get('coop') is not None else None)
+        block, missing = pair_v2v_block(frame, prev, members, cfg, spec)
         if missing:
             counts['excluded_missing_partner_command'] += 1
             continue
