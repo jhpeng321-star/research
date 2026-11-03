@@ -1,8 +1,8 @@
 # S-RB2-LPHYS — DELIVERED, 2026-11-01 ~13:20 +08
 
 Fresh-session closure 2026-11-03: `docs/rb2lphys/RESUME_VERIFIED_20261103.md`.
-Recovered clean at 16f18836; fresh artifact/archive lineage verifier PASS.
-INT's Nov3 15:49 receipt preserves the admission HOLD and incomplete comparison;
+Recovered clean at e8cbfafa; fresh artifact/archive lineage verifier PASS.
+INT's Nov3 16:52 receipt preserves the admission HOLD and incomplete comparison;
 no explicit MAIN release found by INT. Completed worker delivery remains default OFF.
 Completed development evidence and default-OFF recommendation stand. INT's
 Nov2 10:20 receipt records the bounded collector/publisher EXITED INCOMPLETE,

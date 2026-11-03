@@ -66,3 +66,24 @@
   is NOT ESTABLISHED. Worker default-OFF recommendation and 37-line report stand.
   No outstanding LP-owned work found. No tests, fitting, scoring, inference,
   dispatch, new tape exposure or process intervention; continuation is INT/MAIN-owned.
+
+## Subsequent fresh-session verification from e8cbfafa
+
+- Recovered clean at `e8cbfafa`; read git status/log and task receipts first,
+  then common rules, required round-1 morning/handoff/noon publication, worker
+  plan, shared parameter ownership, report, before/after CSV and QA receipt.
+- Fresh artifact/archive lineage verifier PASS:
+  `C:/Users/jpeng/Miniconda3/python.exe -B -m tools.rb2lphys.verify_delivery --out E:/Temp/opencode/rb2lphys_resume_e8cbfafa_audit.json`.
+  Parameter values/hash, development allowlists, two-field recipe difference
+  and historical evaluated-source/canary lineage remain verified.
+- Newer INT receipt `docs/rb2int/RECOVERY_20261103_1652.md` and its 16:52 handoff
+  record no explicit MAIN release through the Nov3 16:47 registration check.
+  Saved incomplete receipts still record 31/216 new jobs and 12 matched v5/v4
+  K8 worlds; remaining 185 jobs await release and operational reconciliation.
+  These are INT's recorded observations, not a fresh LP remote/process audit.
+- Completed development evidence, 37-line report and default-OFF recommendation
+  stand. Frozen `b2df7458` FULL-v5/LP remain engineering READY; full gate/switching
+  qualification is NOT ESTABLISHED. No outstanding LP-owned work found.
+- Recovery changes coordination receipts only. No tests, fitting, scoring,
+  inference, dispatch, new tape exposure or process intervention; final
+  comparison continuation remains INT/MAIN-owned under the admission HOLD.
