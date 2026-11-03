@@ -362,6 +362,8 @@ def confirmations_v2(original, rb, root, arm, sources=()):
     conf = original(root, arm)
     check_keys(conf.values(),bank_rule='boot_v2')
     bank = Path(rb.bank_root(root, arm))
+    from .solo_seed2_links import merge
+    conf = merge(bank,conf)
     def key(vid):
         return (str(root), arm, vid, conf[vid].get('confirmation_sha256'))
     need = [vid for vid in conf if key(vid) not in _CACHE]
