@@ -9,7 +9,19 @@ import time
 
 from .accel_storage import ledger, reserve, write
 from .protocol import sha
-from .replay_start import accounting, binding, config, interim_specs, owner
+from .replay_start import NAME, accounting, binding, interim_specs, owner
+
+
+def training_config(root):
+    """Validate the live binding without impersonating its immutable source."""
+    root = Path(root)
+    v = json.loads((root/NAME).read_text())
+    assert v['amendment_sha256'] in (root/'AUTHORITY.md').read_text()
+    source = Path(v['source_root'])
+    cpu = json.loads((source/'LS_CPU_RESULT.json').read_text())
+    assert cpu['pass_'] and cpu['sim_s'] == cpu['skips'] == 0
+    for name, h in cpu['source_hashes'].items():assert sha(source/name) == h, name
+    return v
 
 
 def supplement_specs(panel, existing):
@@ -30,7 +42,7 @@ def run(root, control):
     lock = (control/'RUN.claim').open('a')
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     write(control/'OWNER.json', owner())
-    v = config(root); accounting(v)
+    v = training_config(root); accounting(v)
     s = Path(v['source_root'])
     install(str(s/'FROZEN_GEOMETRY_SOURCE.py'), str(s/'FROZEN_NETWORK.net.xml.gz'))
     assert (root/'R_UPDATE_008.json').is_file()

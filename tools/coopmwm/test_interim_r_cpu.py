@@ -1,5 +1,21 @@
 import unittest
-from .interim_r import supplement_specs
+import json
+from .interim_r import supplement_specs, training_config, NAME
+from .protocol import sha
+
+
+def test_sidecar_validates_distinct_training_source_and_rejects_changed_bytes(tmp_path):
+    source=tmp_path/'original_source';source.mkdir()
+    code=source/'replay_start.py';code.write_text('frozen training bytes')
+    (source/'LS_CPU_RESULT.json').write_text(json.dumps(dict(pass_=True,sim_s=0,skips=0,
+        source_hashes={'replay_start.py':sha(code)})))
+    value=dict(amendment_sha256='registered',source_root=str(source))
+    (tmp_path/NAME).write_text(json.dumps(value))
+    (tmp_path/'AUTHORITY.md').write_text('registered')
+    assert training_config(tmp_path)==value
+    code.write_text('changed')
+    import pytest
+    with pytest.raises(AssertionError):training_config(tmp_path)
 
 
 class InterimSupplementTests(unittest.TestCase):

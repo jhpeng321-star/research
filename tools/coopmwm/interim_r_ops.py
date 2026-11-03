@@ -8,10 +8,10 @@ from .ls_validity_ops import remote
 from .protocol import REGISTRY, checked, sha
 from .storage import read, write
 
-SOURCE='/home/ubuntu/coopmwm20261103_interimrcpu1'
+SOURCE='/home/ubuntu/coopmwm20261103_interimrcpu2'
 BASE='/home/ubuntu/coopmwm20261103_compositereleasecpu1'
-CONTROL=ROOT+'/interim_r_1235'
-REG='INTERIM_R_REGISTRATION_1235.json'
+CONTROL=ROOT+'/interim_r_1235_v2'
+REG='INTERIM_R_REGISTRATION_1235_V2.json'
 
 
 def qualify():
@@ -31,7 +31,10 @@ def register():
     if not p.exists():
         cpu=read(ops.EVIDENCE/('B_REPLAY_START_CPU_'+SOURCE.rsplit('/',1)[1]+'.json'))
         assert cpu['pass_'] and cpu['sim_s']==cpu['skips']==0
-        line=('\nS-COOPMWM MAIN2026-11-03 12:35 fixed-u8 interim R supplement: '
+        line=('\nS-COOPMWM MAIN2026-11-03 12:35 fixed-u8 interim R supplement V2: '
+            'V1 failed before accounting/reservation/physics because the training config '
+            'asserts its immutable source identity; V2 validates that source separately. '
+            'Original failure/registration retained; no job/charge was created by V1. '
             'adopt running A/B interim3442884, never replay or interrupt it. '
             'R8 completed after the original trigger; add exactly96 R8 episode jobs, '
             '115200sim-s in restricted interim_u8_test; A/B230400 plusR115200 '
@@ -76,7 +79,7 @@ with (c/'RUN.log').open('x') as log:
 d=dict(owner(p.pid),source_root=str(s),control_root=str(c),amendment_sha256=v['amendment_sha256'])
 with (c/'DISPATCH.json').open('x') as f:json.dump(d,f)
 print(json.dumps(d))''',timeout=50))
-    p=ops.EVIDENCE/'INTERIM_R_DISPATCH_1235.json'
+    p=ops.EVIDENCE/'INTERIM_R_DISPATCH_1235_V2.json'
     if not p.exists():write(p,value)
     print(json.dumps(value))
 
