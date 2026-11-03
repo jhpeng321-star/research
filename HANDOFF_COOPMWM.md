@@ -23,6 +23,12 @@
 - Next independent work: prepare existing Linux qualifier to explicitly overlay
   and test final per-seed/all8 dependencies, without touching learner/integrator.
   MAIN cleanup agent owns storage; no parallel cleanup.
+- Qualification preparation DONE: intent_linux_ops now has `--final-release`,
+  requiring tracked LAUNCH_FINAL_READY + bank_builder/verify_perseed + both new
+  test suites in the exact committed source overlay. All staged artifacts are
+  SHA-manifested (including READY). Seven local CPU checks PASS; no remote test
+  or runtime dispatch. Once READY is merged, use a NEW generation (I2 if unused)
+  with `--final-release --commit <full HEAD>`; never reuse completed I1.
 
 ## CURRENT — MAIN21:58/21:58b/22:10 adopted; old B/R resource-paused
 - FULL brief now read through982. Latest: NO partial/fallback V2V launch;

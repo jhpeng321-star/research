@@ -61,6 +61,52 @@ def test_generation_cannot_reuse_legacy_root():
         assert q.SOURCE.endswith('intentcpu_i2') and q.GENERATION == 'INTENT_I2'
 
 
+def test_final_qualification_requires_committed_ready_and_new_dependencies():
+    commit = 'a'*40
+    seen = []
+
+    def git(*args):
+        seen.append(args)
+        if args[:2] == ('rev-parse', 'HEAD'):
+            return (commit+'\n').encode()
+        if args[0] == 'cat-file' and args[-1].endswith(':LAUNCH_FINAL_READY.json'):
+            raise subprocess.CalledProcessError(128, ['git', *args])
+        return b''
+
+    with patch.object(m, 'git', git), patch.object(q, 'remote') as remote:
+        with pytest.raises(subprocess.CalledProcessError):
+            m.release_options(commit, final_release=True)
+        remote.assert_not_called()
+    assert any(args[0] == 'cat-file' and args[-1].endswith(':LAUNCH_FINAL_READY.json')
+               for args in seen)
+
+
+def test_final_qualification_overlays_and_runs_both_seed_suites():
+    commit = 'a'*40
+    seen = []
+
+    def git(*args):
+        seen.append(args)
+        if args[:2] == ('rev-parse', 'HEAD'):
+            return (commit+'\n').encode()
+        if args[0] == 'rev-parse':
+            return b'c'*40+b'\n'
+        if args[0] == 'show':
+            return ('# frozen '+args[1]+'\n').encode()
+        return b''
+
+    with patch.object(m, 'git', git):
+        value = m.release_options(commit, final_release=True)
+    assert {'test_verify_perseed_cpu', 'test_bank_perseed_cpu'} <= set(value['additional_tests'])
+    for name in ('bank_builder', 'verify_perseed', 'test_verify_perseed_cpu',
+                 'test_bank_perseed_cpu'):
+        path = 'tools/coopmwm/'+name+'.py'
+        assert path in value['additional_files']
+        assert ('cat-file', '-e', commit+':'+path) in seen
+    assert 'all8_both_seeds' in value['integration']
+    assert 'per_seed_v1' in value['integration']
+
+
 def test_qualifier_accepts_pinned_fixture_payload_without_spawning(tmp_path):
     fixture = b'# frozen baseline\n'
     captured = []
