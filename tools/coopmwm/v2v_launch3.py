@@ -313,6 +313,8 @@ def bind_runtime(value, *, root, source_root):
         if have != want or isinstance(have, bool) != isinstance(want, bool):
             raise Refused('runtime option ' + key + ' differs: ' + repr(have))
     imitation_filter_for(cfg, 'B'), imitation_filter_for(cfg, 'R')   # refuses B != R
+    imitation_step_mode_for(cfg, 'B'), imitation_step_mode_for(cfg, 'R')   # refuses B != R
+    intent_bank_term_for(cfg, 'B'), intent_bank_term_for(cfg, 'R')   # refuses B != R
     if 'v2v_intent_weight' in cfg:
         raise Refused('obsolete runtime v2v_intent_weight is not an intent loss binding')
     passes = cfg.get('imitation_epochs')
