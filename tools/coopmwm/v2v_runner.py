@@ -36,6 +36,8 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
         raise ValueError('V2V needs a separate run root')
     if len(common_checkpoint_sha256) != 64:
         raise ValueError('common original MAPPO u0 checkpoint hash required')
+    if v2v_coop_signal and not v2v_intent:
+        raise ValueError('v2v_coop_signal requires v2v_intent=True')
     if tuple(active_arms) != ARMS:
         raise ValueError('MAIN14:06 keeps all three arms; only test/diagnostic fallbacks permitted')
     if type(v2v_dim) is not int or v2v_dim <= 0:

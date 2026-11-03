@@ -285,18 +285,16 @@ def v2v_intent_features(state, cav_id, last_commands, board, now,
     for slot in range(k):
         out[slot*stride:slot*stride+width] = base[slot*width:(slot+1)*width]
     for slot, vid in enumerate(v2v_partner_ids(state, cav_id, cfg)):
-        intent = published_intent(board, vid, now, h)
-        if intent is None:
-            continue
         start = slot*stride + width
-        out[start:start+h] = intent
-        out[start+h] = 1.0
+        intent = published_intent(board, vid, now, h)
+        if intent is not None:
+            out[start:start+h] = intent
+            out[start+h] = 1.0
         if coop is not None:
             signal = published_coop(coop.get('board'), vid, now)
-            if signal is None:
-                continue
-            out[start+h+1] = signal[0]
-            out[start+h+2] = 1. if signal[1] == cav_id else 0.
+            if signal is not None:
+                out[start+h+1] = signal[0]
+                out[start+h+2] = 1. if signal[1] == cav_id else 0.
     return out
 
 

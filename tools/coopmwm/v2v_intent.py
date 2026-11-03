@@ -702,6 +702,8 @@ def bank_term(policy, batch):
 @torch.no_grad()
 def coop_bank_stats(policy, pairs):
     """Supervised coop loss/count over bank pairs carrying ``coop_targets``."""
+    if not getattr(policy, 'coop_enabled', False):
+        return dict(coop_loss=None, coop_members_supervised=0, coop_pairs=0)
     rows = [s for s, _w in pairs if s.get('coop_targets')]
     total, count = coop_terms(policy, [s['context'] for s in rows], [s['coop_targets'] for s in rows])
     return dict(coop_loss=float(total)/count if count else None, coop_members_supervised=int(count),
