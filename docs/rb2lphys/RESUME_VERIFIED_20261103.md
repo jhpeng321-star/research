@@ -105,3 +105,22 @@
   No outstanding LP-owned work found; final comparison remains INT/MAIN-owned.
 - Only recovery receipts updated. No fitting, scoring, inference, dispatch,
   new tape exposure or process intervention; completed jobs were preserved.
+
+## Subsequent fresh-session verification from b33bf50a
+
+- Recovered clean at `b33bf50a`; read git status/log and worker receipts first,
+  then common rules, required round-1 morning/handoff/final noon publication,
+  worker plan, agreed parameter ownership, report, before/after CSV and QA.
+- Fresh artifact/archive lineage verifier PASS:
+  `C:/Users/jpeng/Miniconda3/python.exe -B -m tools.rb2lphys.verify_delivery --out E:/Temp/opencode/rb2lphys_resume_b33bf50a_audit.json`.
+  Parameter hash, development-only allowlists, exact two-field recipe difference
+  and historical evaluated-source/canary lineage remain verified.
+- INT's latest handoff and `docs/rb2int/RECOVERY_20261103_1652.md` still preserve
+  the admission HOLD and incomplete 31/216-job comparison. Those are INT's
+  recorded observations; no fresh worker remote/process audit was performed.
+- Worker implementation and development comparison are already delivered.
+  Preserve default OFF: tiny delay gains do not repair breakdown or credibility.
+  Report remains 37 lines; full qualification remains NOT ESTABLISHED.
+- No outstanding LP-owned implementation/development job identified. No fitting,
+  scoring, inference, dispatch, new tape exposure or process intervention.
+  Final comparison continuation remains INT/MAIN-owned under its recorded HOLD.
