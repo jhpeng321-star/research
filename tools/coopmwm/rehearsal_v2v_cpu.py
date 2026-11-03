@@ -414,7 +414,7 @@ def verify_checklist(root, layout_budget, arms=ARMS):
                                         graded_entries=v.get('graded_entries'), error=v.get('error'),
                                         recapture_mean=v.get('recapture_mean'))
     checks['lesson_checks_v2v'] = lessons
-    synergy = run_synergy_checks(root, layout_budget, arms=('B',))
+    synergy = run_synergy_checks(root, layout_budget, arms=('B', 'R'))
     for arm, row in synergy.items():
         if row.get('status') != 'complete' or row.get('isolated_status') != 'complete':
             faults.append(f'synergy {arm}: {row.get("status")}/{row.get("isolated_status")} {row.get("error", "")}')
@@ -425,18 +425,8 @@ def verify_checklist(root, layout_budget, arms=ARMS):
     return checks, faults, ready
 
 
-def main(argv=None):
-    import argparse
-    p = argparse.ArgumentParser()
-    p.add_argument('--workdir', default=None)
-    p.add_argument('--out', default=None)
-    a = p.parse_args(argv)
-    work = a.workdir or os.path.join(os.environ.get('TEMP', tempfile_root()), 'v2v_rehearsal')
-    result = run_scenario('v2v_arms', {}, work)
-    root = result['root']
-    checks, faults, ready = verify_checklist(root, _layout_budget(root))
-    result['checks'] = checks;result['faults'] = faults;result['ready'] = ready
-    receipt = dict(
+def build_receipt(root, state, checks, faults, ready, wall_s=None):
+    return dict(
         part='PART 5 (REHEARSAL) V2V intent-sharing arms A/B/R, CPU end-to-end',
         commit=_commit(),
         branch='c4/v2v-rehearsal',
@@ -444,16 +434,51 @@ def main(argv=None):
         hook_stub=dict(obs='tools/coopmwm/v2v_obs.py (local stub, same interface: V2V_DIM, v2v_features)',
                        model='tools/coopmwm/v2v_model.py (local stub, same interface: extend_for_v2v)',
                        wiring='tools/coopmwm/bank_v2v.py (flag v2v, default off; byte-identical when off)'),
-        scenario_table=_scenario_table(result),
-        charges_per_update_per_arm={k: v for k, v in result['updates'].items()},
-        charges_by_phase=result['charges_by_phase'],
-        outcome=result['outcome'],
-        harness_events=result['failures'],
+        scenario_table=_scenario_table(state),
+        charges_per_update_per_arm={k: v for k, v in state['updates'].items()},
+        charges_by_phase=state['charges_by_phase'],
+        outcome=state.get('outcome', {}),
+        harness_events=state.get('failures', []),
         faults_found_and_fixed=_FAULTS,
         faults_open=faults,
+        ready=ready,
         checks=checks,
-        wall_s=result['wall_s'],
+        wall_s=wall_s,
         unix=time.time())
+
+
+def evaluate_root(root):
+    """Checklist + receipts on a finished run root (scenario already executed)."""
+    from .rehearsal_cpu import bank_state
+    root = Path(root)
+    cfg = dict(DEFAULTS)
+    state = diagnose(root, cfg, gpus={})
+    state['bank'] = bank_state(root)
+    checks, faults, ready = verify_checklist(root, _layout_budget(root), arms=ARMS)
+    return build_receipt(root, state, checks, faults, ready)
+
+
+def main(argv=None):
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument('--workdir', default=None)
+    p.add_argument('--out', default=None)
+    p.add_argument('--evaluate', default=None, help='finished run root: run the checklist only')
+    a = p.parse_args(argv)
+    if a.evaluate:
+        receipt = evaluate_root(a.evaluate)
+        text = json.dumps(receipt, indent=1, default=str)
+        if a.out:
+            Path(a.out).write_text(text)
+        print(text)
+        sys.stdout.flush()
+        return 0 if receipt['ready'] else 2
+    work = a.workdir or os.path.join(os.environ.get('TEMP', tempfile_root()), 'v2v_rehearsal')
+    result = run_scenario('v2v_arms', {}, work)
+    root = result['root']
+    checks, faults, ready = verify_checklist(root, _layout_budget(root))
+    result['checks'] = checks;result['faults'] = faults;result['ready'] = ready
+    receipt = build_receipt(root, result, checks, faults, ready, wall_s=result['wall_s'])
     text = json.dumps(receipt, indent=1, default=str)
     if a.out:
         Path(a.out).write_text(text)
@@ -484,11 +509,11 @@ def _layout_budget(root):
     return read(Path(root)/'RESOURCE_EXTENSION_1651.json')['budget']
 
 
-def _scenario_table(result):
+def _scenario_table(state):
     rows = []
     for arm in ARMS:
         for u in (FIRST_UPDATE, LAST_UPDATE):
-            v = result['updates'].get(f'{arm}{u}')
+            v = state['updates'].get(f'{arm}{u}')
             rows.append(dict(arm=arm+'-v2v', update=u,
                              status='complete' if v else 'missing',
                              executed=v.get('executed') if v else None,
@@ -498,7 +523,7 @@ def _scenario_table(result):
                              imitation_steps=v.get('imitation_steps') if v else None,
                              checkpoint=v.get('checkpoint') if v else None,
                              wall_s=v.get('wall_s') if v else None))
-    rows.append(dict(arm='broker', status=result['outcome'].get('broker', '?')))
+    rows.append(dict(arm='broker', status=(state.get('outcome') or {}).get('broker', 'exited')))
     return rows
 
 
