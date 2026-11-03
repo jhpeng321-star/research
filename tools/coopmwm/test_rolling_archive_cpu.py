@@ -12,6 +12,13 @@ import rolling_archive as m
 
 
 class RollingArchiveSafety(unittest.TestCase):
+    def test_diagnostic_scope_excludes_bank(self):
+        root=m.base.RUN/'policy_synergy_isolated_1226_v2/u010_B/branches/vid/branch'
+        self.assertEqual(m.diagnostic_kind(root/'SNAPSHOT.pt'),(10,'B'))
+        self.assertEqual(m.diagnostic_kind(root/'observable.jsonl.gz'),(10,'B'))
+        self.assertEqual(m.diagnostic_kind(root/'RESULT.json'),(10,'B'))
+        self.assertIsNone(m.diagnostic_kind(m.base.RUN/'replay_bank/B/SNAPSHOT.pt'))
+
     def test_scope_never_accepts_outcomes_or_final_detector_inputs(self):
         root=m.base.RUN/'jobs'
         self.assertIsNone(m.job_kind(root/'fixedfinal_B_989600'/'observable.jsonl.gz'))

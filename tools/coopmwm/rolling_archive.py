@@ -11,8 +11,8 @@ import subprocess
 import time
 import archive_move as base
 
-CONTROL=Path('/home/ubuntu/coopmwm20261103_rolling1647')
-DEST='/root/cpuq_archive_20261103/rolling1647'
+CONTROL=Path('/home/ubuntu/coopmwm20261103_rolling1647_v3')
+DEST='/root/cpuq_archive_20261103/rolling1647_v3'
 MIN_AGE=1800
 TARGET=8*1024**3
 FLOOR=4*1024**3
@@ -38,7 +38,19 @@ def job_kind(p):
 def safe(p):
     p=Path(p)
     if base.BAD.search(str(p)) or p.is_symlink() or p.resolve()!=p:return False
-    return p.is_file() and (job_kind(p) is not None or LEGACY_SAFE(p))
+    if p.name.lower().endswith(('.xml','.xml.gz','.sumocfg','.sumocfg.gz')):return False
+    if 'checkpoint' in p.name.lower() or (p.suffix=='.pt' and p.name!='SNAPSHOT.pt'):return False
+    return p.is_file() and (job_kind(p) is not None or diagnostic_kind(p) is not None or LEGACY_SAFE(p))
+
+
+def diagnostic_kind(p):
+    p=Path(p)
+    try:parts=p.relative_to(base.RUN/'policy_synergy_isolated_1226_v2').parts
+    except ValueError:return None
+    if (len(parts)>=5 and re.fullmatch(r'u\d{3}_[BR]',parts[0])
+            and parts[1]=='branches'):
+        return int(parts[0][1:4]),parts[0][-1]
+    return None
 
 
 def aged(p,now):
@@ -73,10 +85,23 @@ def candidates():
         u,arm=kind
         if not (p.parent/'RESULT.json').is_file() or not (p.parent/'CLOSE.json').is_file():continue
         if not aged(p.parent/'CLOSE.json',now):continue
-        arms=('B','R') if arm=='A' else (arm,)
+        # B/R fixed endpoints are24. A25..48 references cannot be consumed by
+        # any future same-update guard; A's own completed update is mandatory.
+        arms=(('A',) if u>24 else ('B','R')) if arm=='A' else (arm,)
         if not all((base.RUN/f'{a}_UPDATE_{u:03}.json').is_file()
                    and aged(base.RUN/f'{a}_UPDATE_{u:03}.json',now) for a in arms):continue
         found[str(p)]='finished_train_observable'
+    diag=base.RUN/'policy_synergy_isolated_1226_v2'
+    for case in diag.glob('u[0-9][0-9][0-9]_[BR]'):
+        u=int(case.name[1:4]);arm=case.name[-1]
+        report=base.RUN/f'POLICY_SYNERGY_u{u:03}_{arm}_ISOLATED_V2.json'
+        if not report.is_file() or not aged(report,now):continue
+        # Read only the registered TRAIN diagnostic completion, never eval outcomes.
+        if json.loads(report.read_text()).get('status')!='complete':continue
+        for directory,dirs,names in os.walk(case/'branches',followlinks=False):
+            dirs[:]=[n for n in dirs if not base.BAD.search(str(Path(directory)/n))
+                     and not (Path(directory)/n).is_symlink()]
+            for n in names:found[str(Path(directory)/n)]='completed_isolated_diagnostic'
     opened=base.open_files()
     files,trees,keys=base.protected(base.final_labels())
     kept={}
