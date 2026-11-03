@@ -48,6 +48,51 @@ class StartGateTests(unittest.TestCase):
         with patch('tools.coopmwm.warm_health.assert_running', side_effect=RuntimeError('pause')):
             with self.assertRaisesRegex(RuntimeError,'pause'):rs.prereqs(Path('.'),{},False)
 
+    def test_cooperative_config_survives_real_admission_and_R_stays_unscored(self):
+        from .replay_bank import collector_guide
+        from .niche_collect import search_config
+        with tempfile.TemporaryDirectory() as d:
+            r=Path(d);v=dict(collection_root=str(r),demand_phase_end_s=1200)
+            before=rs.collection_options(v)
+            self.assertEqual(before,dict(slots=4,fanout_factor=2,owned_pending_only=True,
+                niche_alternation=False,search_config=dict(iterations=2,screen_K=2),
+                demand_phase_end_s=1200))
+            put(r/'LS_NULLFIX_CONFIG.json',dict(nullfix_active=True))
+            coop=dict(coop_objective=True,coop_lambda=1.,coop_solo_cap=16,coop_diversity=True)
+            put(r/'LS_COOP_SEARCH_CONFIG.json',dict(coop_search=coop,coop_alternation=True))
+            cfg=rs.collection_options(v)
+            (r/'requests').mkdir()
+            sample=dict(context=dict(members=['a','b']),own_action=[[0.],[0.]])
+            def job(arm):
+                return dict(id=arm+'_current',arm=arm,queue_root=str(r),world=dict(seed=986000),
+                    collector_policy_update=2,collect=cfg)
+            with patch('tools.coopmwm.mppi_search.group_components',return_value=[dict(members=['a','b'])]), \
+                 patch('tools.coopmwm.exploration.regime',return_value='ordinary'), \
+                 patch('tools.coopmwm.sumo_verify.capture',return_value={}),patch('torch.save'):
+                guide=collector_guide(job('B'),None,None,{})
+                for t in (300,310,320,330):guide([],dict(a=0.,b=0.),t,sample)
+                collector_guide(job('R'),None,None,{})([],dict(a=0.,b=0.),300,sample)
+            admissions=sorted((r/'replay_bank/B/collection_admissions').glob('*.json'))
+            configs=[json.loads(p.read_text())['search_config'] for p in admissions]
+            self.assertEqual(configs,[search_config(i,coop=coop,alternate=True) for i in range(4)])
+            self.assertEqual([c.get('coop_objective',False) for c in configs],[True,True,False,False])
+            requests=[json.loads(p.read_text()) for p in (r/'requests').glob('*.json')]
+            self.assertEqual({json.dumps(q['search_config'],sort_keys=True) for q in requests},
+                {json.dumps(c,sort_keys=True) for c in configs})
+            random=json.loads(next((r/'centre_requests').glob('*.json')).read_text())
+            self.assertEqual(random['mode'],'centre')
+            self.assertNotIn('search_config',random)
+
+    def test_cooperative_config_cannot_override_admission_or_silently_lose_alternation(self):
+        with tempfile.TemporaryDirectory() as d:
+            r=Path(d);v=dict(collection_root=str(r),demand_phase_end_s=1200)
+            cfg=dict(coop_search=dict(coop_objective=True),coop_alternation=True)
+            put(r/'LS_COOP_SEARCH_CONFIG.json',cfg)
+            with self.assertRaisesRegex(ValueError,'qualified niche'):rs.collection_options(v)
+            put(r/'LS_NULLFIX_CONFIG.json',{})
+            put(r/'LS_COOP_SEARCH_CONFIG.json',dict(cfg,slots=100))
+            with self.assertRaisesRegex(ValueError,'config keys'):rs.collection_options(v)
+
     def test_fresh_job_namespace_preserves_closed_attempts(self):
         for a in ('B','R'):
             self.assertNotEqual(rs.job_namespace('warm_u004',a),'warm_u004')

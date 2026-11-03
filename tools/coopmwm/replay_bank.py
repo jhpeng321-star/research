@@ -146,7 +146,9 @@ def collector_guide(job, generator, controller, prefixes):
                     with (bank/'COLLECTION_ADMISSION.claim').open('a') as lock:
                         fcntl.flock(lock, fcntl.LOCK_EX)
                         ordinal = len(list(admissions.glob('*.json')))
-                        r['search_config'] = search_config(ordinal)
+                        r['search_config'] = search_config(ordinal,
+                            coop=cfg.get('coop_search'),
+                            alternate=cfg.get('coop_alternation', False))
                         write(admissions/f'{ordinal:09}.json', dict(ordinal=ordinal,
                             job=job['id'], time_s=now, group=group['members'],
                             search_config=r['search_config']))

@@ -91,12 +91,30 @@ def prereqs(root, v, verify_gpu=True):
 
 def collection_options(v):
     """Use niche alternation only after its independent collector activation."""
-    active = (Path(v['collection_root'])/'LS_NULLFIX_CONFIG.json').exists()
+    root = Path(v['collection_root'])
+    active = (root/'LS_NULLFIX_CONFIG.json').exists()
     config = dict(iterations=2, screen_K=2)
     if active:config['niches'] = 1
-    return dict(slots=4, fanout_factor=2, owned_pending_only=True,
+    options = dict(slots=4, fanout_factor=2, owned_pending_only=True,
                 niche_alternation=active, search_config=config,
                 demand_phase_end_s=v['demand_phase_end_s'])
+    path = root/'LS_COOP_SEARCH_CONFIG.json'
+    if path.exists():
+        # Additive owner-approved admission config. Never rewrite an existing
+        # request or let unrelated binding keys override the collection contract.
+        value = read(path)
+        if set(value) != {'coop_search', 'coop_alternation'}:
+            raise ValueError('invalid cooperative collection config keys')
+        coop = value['coop_search']
+        if not isinstance(coop, dict) or type(value['coop_alternation']) is not bool:
+            raise ValueError('invalid cooperative collection config values')
+        if value['coop_alternation'] and not active:
+            raise ValueError('cooperative alternation requires qualified niche admission')
+        from .niche_collect import validate
+        validate(dict(config, **coop))
+        options.update(coop_search=dict(coop), coop_alternation=value['coop_alternation'])
+        options['search_config'] = dict(config, **coop)
+    return options
 
 
 def binding(root, v, arm):
