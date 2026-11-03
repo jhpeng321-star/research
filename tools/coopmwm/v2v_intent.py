@@ -376,15 +376,23 @@ def load_checkpoint(path, config):
     if 'intent_head.weight' in saved['policy']:
         if int(saved['policy']['intent_head.weight'].shape[0]) != s['horizon']:
             raise ValueError('intent checkpoint horizon differs from v2v_intent_horizon')
-        policy = IntentPolicy(s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'],
-                              s['coop'], s['coop_loss_weight'])
         if has_coop:
+            policy = IntentPolicy(s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'],
+                                  True, s['coop_loss_weight'])
             policy.load_state_dict(saved['policy'])
             optimizer = torch.optim.Adam(policy.parameters(), lr=3e-4)
             optimizer.load_state_dict(saved['optimizer'])
-        else:
+        elif s['coop']:
+            # intent-only checkpoint widened with ZERO coop columns; zero coop head, kept moments
+            policy = IntentPolicy(s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'],
+                                  True, s['coop_loss_weight'])
             _intent_sd_into_coop(policy, saved['policy'], s['horizon'])
             optimizer = _intent_optimizer_into_coop(policy, saved['optimizer'], s['horizon'])
+        else:
+            policy = IntentPolicy(s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'])
+            policy.load_state_dict(saved['policy'])
+            optimizer = torch.optim.Adam(policy.parameters(), lr=3e-4)
+            optimizer.load_state_dict(saved['optimizer'])
         generator = torch.Generator()
         generator.set_state(saved['generator'])
         torch.set_rng_state(saved['torch_rng'])
