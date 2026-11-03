@@ -12,15 +12,18 @@ import subprocess
 from . import ops, v2v_qualification_ops as qualification
 
 BASE_COMMIT = 'cf3efc9e'
+COOP_BASE_COMMIT = 'b20bec2f'
 BASE_SOURCE = '/home/ubuntu/coopmwm20261103_v2vcpu8'
 BASELINE_NAMES = ('accel_learner', 'exact_grade', 'bank_imitation', 'v2v_obs')
 EXTRA_FILES = tuple('tools/coopmwm/'+name+'.py' for name in (
     'accel_learner', 'exact_grade', 'v2v_intent', 'test_v2v_intent_cpu', 'coopfix_exact_gate',
     'test_coopfix_exact_gate_cpu', 'solo_seed2_links', 'test_solo_seed2_links_cpu',
-    'test_bank_boot_cpu', 'test_imitfix2_cpu', 'v2v_launch3', 'test_v2v_launch3_cpu'))
+    'test_bank_boot_cpu', 'test_imitfix2_cpu', 'v2v_launch3', 'test_v2v_launch3_cpu',
+    'coop_search', 'mppi_search', 'mppi_runtime', 'niche_collect', 'ls_collection',
+    'ls_gpu', 'test_coop_search_cpu')) + ('tools/coopmwm/fixtures/coop_off_golden.json',)
 EXTRA_TESTS = ('test_v2v_intent_cpu', 'test_coopfix_exact_gate_cpu',
     'test_solo_seed2_links_cpu', 'test_bank_boot_cpu', 'test_imitfix2_cpu',
-    'test_v2v_launch3_cpu')
+    'test_v2v_launch3_cpu', 'test_coop_search_cpu')
 
 
 def git(*args):
@@ -48,10 +51,17 @@ def release_options(commit):
         commit=git('rev-parse', BASE_COMMIT).decode().strip(),
         rule='exact pre-intent git blobs; qualification source manifest pins each fixture'),
         sort_keys=True).encode()
+    frozen['coop_baseline/mppi_search.py'] = git(
+        'show', COOP_BASE_COMMIT+':tools/coopmwm/mppi_search.py')
+    frozen['coop_baseline/PROVENANCE.json'] = json.dumps(dict(
+        commit=git('rev-parse', COOP_BASE_COMMIT).decode().strip(),
+        rule='pre-cooperation-search git blob; option-off comparison on the same BLAS'),
+        sort_keys=True).encode()
     return dict(additional_files=EXTRA_FILES, additional_tests=EXTRA_TESTS,
         frozen_files=frozen, source_commit=commit,
-        integration='reviewed intent + boot_v2 + full-pass + exact gate + launch3',
-        extra_env={'COOPMWM_INTENT_BASELINE_DIR': qualification.SOURCE+'/intent_baseline'})
+        integration='intent + bank rule + full-pass + exact gate + launch3 + cooperation search',
+        extra_env={'COOPMWM_INTENT_BASELINE_DIR': qualification.SOURCE+'/intent_baseline',
+            'COOPMWM_COOP_BASELINE': qualification.SOURCE+'/coop_baseline/mppi_search.py'})
 
 
 def configure(generation):

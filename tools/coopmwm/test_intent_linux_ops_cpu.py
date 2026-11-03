@@ -40,11 +40,14 @@ def test_frozen_identity_uses_exact_pre_intent_blobs():
     with patch.object(m, 'git', git):
         value = m.release_options(commit)
     assert value['source_commit'] == commit
-    assert len(value['frozen_files']) == 5
+    assert len(value['frozen_files']) == 7
     for name in m.BASELINE_NAMES:
         assert value['frozen_files']['intent_baseline/'+name+'.py'] == (
             '# exact cf3efc9e:tools/coopmwm/'+name+'.py\n').encode()
     assert any(args[:2] == ('diff', '--exit-code') for args in seen)
+    assert value['frozen_files']['coop_baseline/mppi_search.py'] == (
+        '# exact b20bec2f:tools/coopmwm/mppi_search.py\n').encode()
+    assert value['extra_env']['COOPMWM_COOP_BASELINE'].endswith('/coop_baseline/mppi_search.py')
     assert sum(args[0] == 'cat-file' for args in seen) == len(set(q.FILES+m.EXTRA_FILES))
 
 
