@@ -275,8 +275,11 @@ def run_scenario(name, cfg, workdir):
             t.join(600)
     state = diagnose(root, cfg, gpus)
     state['bank'] = bank_state(root)
-    (root/'PAUSE_HARNESS_END.json').write_text(json.dumps(dict(harness=True)))
-    bt.join(30)
+    # PAUSE_HARNESS_END is NOT written here: it is a registered health pause
+    # (warm_health.assert_running raises on any unreleased PAUSE_*.json), so the
+    # closing checklist (lesson/synergy branches) must run BEFORE it is registered
+    # - main() writes it after verify_checklist (fault 12). The broker thread is
+    # left running as a daemon until that write / os._exit.
     result = dict(scenario=name, config={k: v for k, v in cfg.items()}, outcome=outcome, deadlock_or_idle=deadlock,
                   wall_s=round(wall, 1), root=str(root), **state,
                   events=[{k: v for k, v in e.items() if k != 'tb'} for e in EVENTS][-40:],
@@ -393,6 +396,16 @@ def verify_checklist(root, layout_budget, arms=ARMS):
     from .warm_protocol import SEED
     replay_start.owner = _harness_owner
     checks, faults = {}, []
+    # Fault 12 fix: the scenario-end PAUSE_HARNESS_END.json (harness-stop control
+    # file for the broker/collectors) is still registered when the post-run
+    # policy-synergy check executes, and warm_health refuses every branch run
+    # while a pause receipt exists - both variants failed with HealthPause. By
+    # synergy time broker and collectors have already exited (outcome 'stopped:
+    # HealthPause' / done.set()), so the control file has no remaining role and
+    # is removed before the checks.
+    pause = Path(root)/'PAUSE_HARNESS_END.json'
+    if pause.exists():
+        pause.unlink()
     stops = sorted(p.name for p in Path(root).glob('*STOP*.json'))
     failed = sorted(p.name for p in Path(root).glob('WARM_*_FAILED*.json'))
     updates_ok = all((Path(root)/f'{a}_UPDATE_{LAST_UPDATE:03}.json').exists() and
@@ -503,6 +516,11 @@ def main(argv=None):
     root = result['root']
     checks, faults, ready = verify_checklist(root, _layout_budget(root))
     result['checks'] = checks;result['faults'] = faults;result['ready'] = ready
+    # Register the harness-end health pause only AFTER the checklist (its branch
+    # runners raise HealthPause on any registered pause; fault 12). Give the
+    # broker thread its poll interval to record the guided exit.
+    (Path(root)/'PAUSE_HARNESS_END.json').write_text(json.dumps(dict(harness=True)))
+    time.sleep(12.)
     receipt = build_receipt(root, result, checks, faults, ready, wall_s=result['wall_s'])
     text = json.dumps(receipt, indent=1, default=str)
     if a.out:
@@ -589,7 +607,14 @@ _FAULTS = [
     'fault 11: bank_v2v v2v blocks were numpy float32 scalars (v2v_features returns a float32 '
     'ndarray); injected into branch samples they reach the episode RESULT tape and canonical JSON '
     'serialization raises TypeError - EVERY lesson and policy-synergy new-policy branch failed '
-    '("Object of type float32 is not JSON serializable") - the wiring now emits plain python floats',
+    '("Object of type float32 is not JSON serializable") - the wiring now emits plain python floats '
+    '(superseded by the merged real bank_v2v adapter, which keeps the plain-float output)',
+    'fault 12: the scenario-end PAUSE_HARNESS_END.json control file (stops broker/collectors) is '
+    'still registered when the post-run policy-synergy check executes; warm_health refuses every '
+    'branch run while a pause receipt exists, so both synergy variants failed with HealthPause and '
+    'status incomplete (gains null) even though their entries and v2v receipts were correct - '
+    'verify_checklist now removes the control file first (broker and collectors have already '
+    'exited by then; diagnose still records the pause for the scenario phase)',
 ]
 
 if __name__ == '__main__':
