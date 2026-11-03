@@ -271,6 +271,19 @@ without regeneration, and no additional report worker was dispatched.
 
 ## Runtime, checks and continuing handoff
 
+### Fresh-session reconciliation (2026-11-03)
+
+Recovery from clean HEAD `eafce9db` preserved all completed work. The inherited
+watcher remains live as PID29244 with the original creation identity, polling
+every120s; its stderr is empty and no owned report is active in its status.
+A read-only gpuR inventory again finds the same canonical31-pair u15 TRAIN index
+and only the two already-reported u03 DEV indices, with identical SHA256s.
+The corrected audit handoff still lacks the geometric observables listed above;
+its live index is not ready. No completed report or coverage scan was rerun and
+no watcher/report was dispatched. The existing59-test CPU result remains the last
+implementation verification; this recovery changes only documentation/receipts.
+Recovery receipt: `tools/coopbehav/evidence/RESUME_20261103.json`.
+
 - CPU suite: **59 synthetic tests** covering all four detectors, identity/slot
   recycling, native/policy-mean contracts, credit reconstruction, discovery,
   source precision/hashes, complete reports and advancing-index publication,
