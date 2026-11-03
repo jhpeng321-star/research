@@ -1,0 +1,39 @@
+{
+  "task": "S-ENSPROBE",
+  "verification_date": "2026-11-04",
+  "resumed_from_commit": "7ef5bf8b",
+  "initial_branch": "c4/ensprobe",
+  "initial_worktree_clean": true,
+  "status": "previously_complete_verified",
+  "registration": {
+    "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
+    "owner_approval_line": 5671,
+    "exact_plan_line": 5672,
+    "completion_line": 5699
+  },
+  "commands": [
+    {
+      "command": "python -B -m tools.ensprobe.analyze --verify-only",
+      "exit_code": 0,
+      "verified_branches": 80,
+      "physical_gates": 80,
+      "charged_sim_s": 49869,
+      "actual_sim_s": 49869,
+      "retained_result_sha256_matches": true
+    },
+    {
+      "command": "python -B -m tools.ensprobe.analyze --verify-staged",
+      "exit_code": 0,
+      "staged_artifacts_sha256_verified": 12,
+      "passed": true
+    }
+  ],
+  "prior_resume_receipt": "tools/ensprobe/evidence/resume_verification.json",
+  "completion_receipt": "tools/ensprobe/evidence/v4_progress.json",
+  "worker_status_scope": "Saved terminal receipt reports COMPLETE and own_pid_exists=false; no new remote process query.",
+  "new_sim_s": 0,
+  "new_dispatches": 0,
+  "process_actions": 0,
+  "deliverables_regenerated": false,
+  "registration_modified": false
+}
