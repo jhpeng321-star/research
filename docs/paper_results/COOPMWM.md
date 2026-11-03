@@ -1,5 +1,27 @@
 # S-COOPMWM — live checks
 
+## Latest continuation — resource pause and audit corrections
+- MAIN21:58/22:10 now requires per-seed own-tape bank examples, same-seed
+  cooperation gate, all-eight-candidate verification on both seeds, intent for
+  all three arms, final exact-commit audit/Linux PASS, resources, and reviewed
+  cooperation-scored search enabled with `--alternate`. V2V remains held.
+- Old reference arms stopped at their actual idle checkpoint boundary **B21/R20**,
+  using registered `PAUSE_RESOURCE_MAIN2158B.json`. Four boot/start/argv-verified
+  owned arm/grader PIDs acknowledged the pause and exited. No episode was replayed
+  or checkpoint rolled back. The supervisor's expected child-exit alert is kept.
+- Available memory rose from about14.22GB to22.76GB. Disk was3,783,544,832bytes
+  after the pause; MAIN's separate cleanup agent owns further reference checks.
+- Audit report is now available and has blockers for its f3caf85f subject.
+  Live commits17533a50/f59d0f66 add actual launch-gate dispatch wiring (12 CPU
+  checks), isolate intent AWR from PPO, and require the detached intent head.
+  Per-seed/gate/interface fixes are being integrated on `c4/launch-final`.
+- Cooperation-search review fixes are merged but inactive;20 local CPU checks
+  pass. The earlier903-check Linux result remains evidence for its original pin,
+  not qualification of subsequent changes. No V2V launch or real-bank gate run.
+- Evidence:`coopmwm/LEGACY_RESOURCE_PAUSE_REGISTRATION_2158B.json`,
+  `coopmwm/LEGACY_RESOURCE_PAUSE_2158B.json`,
+  `coopmwm/memory_RECOVERY_STATUS_1793714710968443000.json`.
+
 ## Nov3 ~22:00 UTC+8 — reviewed intent integration passes Linux qualification
 - Reviewed intent and exact-cooperation-gate branches merged in commits
   `689a5c0f` and `b819c3d2`. Pinned integration `f3caf85f` passes **903 Linux CPU
