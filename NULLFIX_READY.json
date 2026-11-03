@@ -1,0 +1,41 @@
+{
+  "task": "NULL_DIAGNOSIS.md sections 8.1/8.2/8.3 (ceiling/jam-infeasible SUMO verifications)",
+  "branch": "c4/null-diag",
+  "worktree": "E:/agent-work/c4-nulldiag",
+  "commit": "21390262",
+  "merge": {
+    "merged_commit": "5df3e853",
+    "merged_branch": "c4/niche-search",
+    "merge_commit": "df0c2afd",
+    "conflicts": "none (clean ort merge; both behaviours kept)"
+  },
+  "tests": {
+    "runner": "python -m pytest tools/coopmwm/test_*cpu*.py (CPU only, no SUMO, no GPU)",
+    "new_tests_file": "tools/coopmwm/test_nullfix_cpu.py",
+    "new_tests_passed": 18,
+    "full_suite_passed": 492,
+    "full_suite_failed": 72,
+    "pre_existing_failures": 72,
+    "new_failures": 0,
+    "subtests_passed": 38,
+    "torch_skips": 0,
+    "verification": "re-verified twice: (1) in the first session, failure list compared 1:1 against the pristine merge base df0c2afd re-run in a throwaway worktree at E:/Temp/opencode/basewt (72 failed on both sides, Compare-Object diff empty; fix-side suite run twice with identical counts; collected-test delta base->fix is exactly the 18 new test_nullfix_cpu.py tests, all passing); (2) in the fresh resume session, full suite re-run end-to-end: 492 passed / 72 failed / 1 teardown error / 38 subtests passed, identical counts, sampled failures are host-environment class (KeyError COOPMWM_MOTION_SOURCE missing overlay, GBK locale decode, tmpdir teardown lock). Every failure is pre-existing on the base (missing tools.leverprobe overlay / remote-only assets on this host); interpreter Miniconda3 python 3.13.13, torch 2.14.1+cpu",
+    "golden": "tools/coopmwm/fixtures/niche1_golden.json niches=1 byte-identity still passes after the merge and the fix"
+  },
+  "config_keys": {
+    "state_rows.allowed_speed_mps": "per-row CAV-subscribed allowed speed (traffic_shepherd/c4/sumo_io.py); primary source for 8.1 and 8.2",
+    "traffic_shepherd.c4.geometry.lane_allowed_speeds_mps": "fallback lane table; reads lane speeds from the preserved net RESEARCH_DENSE_ROOT/assets/research/highway_merge_shepherd_long/osm.net.xml.gz via LANE_TABLE (no hand-set numbers; env RESEARCH_DENSE_ROOT relocates the root)",
+    "job.accel_bounds": "collector executor accel bounds; the 8.1 gate's pre-safety clip (already a registered job key)",
+    "mppi_search.centre_feasibility": "8.2 arming: request record['rows'] resolve an allowed speed for every member, else the clamp is inactive and the search is byte-identical",
+    "plan.policy_duplicate": "8.2 additive plan flag: the actuator clip turned the candidate into the clamped policy centre; excluded from the Thompson top-k in search() and _niche_search()",
+    "verify.members_t0": "8.3 additive receipt field: per-member t0 allowed_mps / headroom_mps2 / v_mps / policy_raw_at_clip / policy_raw_mps2 / leader_gap_m / leader_v_mps (when available)",
+    "behaviour.verify_k.inactionable": "8.1 additive behaviour key: dropped candidate ids; absent when the gate never binds",
+    "skip_reason": "sumo_verify skipped: no actionable candidate (ceiling/jam-infeasible group)"
+  },
+  "invariants_kept": {
+    "horizons_N_iterations_group_sizes": "unchanged (clamp alters profiles/top-k only)",
+    "feasible_groups": "byte-identical search output and verification decisions (proven against the committed fixtures and an armed all-feasible clamp)",
+    "crn_pad_draw": "exactly one generator draw consumed on the skip path, aligned with the branch protocol",
+    "no_sumo_gpu_remote_writes": "CPU only; no ssh, no pushes, no resets/cleans/stash drops"
+  }
+}
