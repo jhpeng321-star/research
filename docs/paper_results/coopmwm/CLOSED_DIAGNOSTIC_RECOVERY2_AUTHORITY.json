@@ -1,0 +1,40 @@
+{
+  "archive_target": {
+    "cpu_target_bytes": 12884901888,
+    "destination": "/root/cpuq_archive_20261103/closed_diagnostics_20261104_recovery2",
+    "floor_bytes": 8589934592,
+    "host": "gpuA",
+    "ssh_command": [
+      "ssh",
+      "-T",
+      "-o",
+      "BatchMode=yes",
+      "-o",
+      "IdentityFile=none",
+      "-o",
+      "IdentitiesOnly=no",
+      "-o",
+      "StrictHostKeyChecking=yes",
+      "-o",
+      "UserKnownHostsFile=/home/ubuntu/coopmwm20261102_remote_routes5/known_hosts_gpuA",
+      "-o",
+      "ConnectTimeout=20",
+      "-o",
+      "ServerAliveInterval=15",
+      "-o",
+      "ServerAliveCountMax=8",
+      "-p",
+      "11000",
+      "root@connect.bjb1.seetacloud.com"
+    ]
+  },
+  "authority": "MAIN17:52/23:18/01:20 completed diagnostic SHA archival; old-reference observers idle and source arms held",
+  "new_sim_s": 0,
+  "rule": "Only raw branches under old-reference diagnostic controls1205_v1/isolated1226_v2 older30min; incomplete statuses preserved as incomplete. Public summaries copied SHA-exact to canonical paper-results first. Retire only identity-proven idle old observer PIDs/no children. Pause regular mover only while idle, use its qualified SHA-before-unlink machinery, resume on every exit. No bank, checkpoint, final-eval, active gate or new-training path eligible. MAIN02:17 additionally authorises completed all_admitted gate0040/branches after collect; its report/plan/weights remain. Prior flat1 transfer failed only on SSH after3certified batches; select remaining sources only, never repeat certified moves. Up to6bounded connection-only retries before a durable remote proof, with fresh batch manifests and all source files still present; never retry source/identity/proof faults.",
+  "source_hashes": {
+    "archive_move.py": "58e539f077ccca8a33dd67e9e6ca74fb40b39e1e125628bd352e87d89a76251f",
+    "rolling_archive.py": "2fd17a1ca9398f4e80b5a555609f545a902efdca88556cb0252136f8ef265fc2",
+    "test_rolling_archive_cpu.py": "7dbfae39624129d1e53ce323f80027b90159386d61707e61c4864a34a3e0c75c"
+  },
+  "worker_sha256": "d4f40c0dfac578129c017aea4129e2838247fd42419573c3d28bb8e9aea095e0"
+}

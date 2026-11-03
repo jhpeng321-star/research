@@ -1,5 +1,18 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
+## CURRENT Nov4 ~03:15 +08 — archive recovery; primary launch still delegated
+- Briefreadthrough1096. Main02:45 currentgate=learning+hardsafety+complete data,
+  cooperationreportedonly; launchoperatorre-gatesefa9c39bandlaunches. DO NOT
+  duplicate/attemptblockedoverrideedit. Afterlaunchadopt/fffromlaunch-coop.
+- OursallAdmittedDIAGNOSTICFAILiscomplete,sealedreportretained; no veto/authority
+  fornewrecipe. Old55branchesgradedwithoutprefix/physicsfailure.
+- Flat1archivemoved410924380bytes/3certifiedbatches; batch4 SSHclose/rsync255
+  failedbeforeproof,sourcesretained,regularmoverresumed. Remainingrecovery2
+  REGISTEREDb92850bb, includesONLYremainingoldcloseddiag+completedgate0040raw
+  perMAIN02:17;80summariescopiedcanonicalSHAexact. NextlaunchONCE innewcontrol
+  coopmwm20261104_closed_diagnostic_archive_recovery2. Boundedconnection-only
+  retries/freshbatchmanifests; no proof/source/identity retry. No sciencechanges.
+
 ## CURRENT Nov4 ~02:05 +08 — coop-only gate/launch DELEGATED; ours diagnostic only
 - All-admittedDIAGNOSTICCOMPLETE/FAIL:55/55graded0prefixfault;986066synergyLBs
   seed1-.02085697/seed2-.03918591veh-s,meanIG-.01041290,groupdrivinggainnearzero.
