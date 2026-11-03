@@ -1,5 +1,14 @@
 # S-RB2-CAL — partial development delivery, recovered 2026-11-03
 
+## RESUME Nov3 19:38 +08 — authority checked; continuation still blocked
+
+Receipt: `docs/paper_results/rb2cal/RESUME_20261103_1938.md`. Clean start185de717;
+MAIN registration checked through latest19:03 entry/line6826, with no CAL resource
+release. Nov2 02:28 owner priority and INT's Nov3 16:52 HOLD remain controlling.
+Existing saved verification/results retained without repeat analysis or dispatch.
+Versions below remain frozen; over-confidence unresolved.39missing dev futures
+require explicit release plus source/claim/resource/new-deadline reconciliation.
+
 ## RESUME Nov3 18:50 +08 — saved evidence verified; resource hold remains
 
 Resume receipt: `docs/paper_results/rb2cal/RESUME_20261103_1850.md`.
