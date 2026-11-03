@@ -180,7 +180,7 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
     not_before=cfg.get('next_not_before_s',{}).get(arm)
     last_start = [None if not_before is None else not_before-cfg['pace_s']]
 
-    def practice_wave(r, b, policies, ws, ident, phase, extra, u, deterministic):
+    def practice_wave(r, b, policies, ws, ident, phase, extra, u, deterministic, role):
         """practice_starts scheduling (owner 2026-11-04 proposal, B/R only): the registered
         fraction of the update's PPO episodes are snapshot-restart episodes built by
         practice_starts.wave_call and dispatched through the SAME original_wave path (reserve,
@@ -218,7 +218,7 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
             extra['b_replay'] = arm in ('B', 'R')  # A remains plain PPO, no bank capture
             from . import practice_starts
             if practice_starts.enabled(cfg, arm):  # owner 2026-11-04 proposal (default OFF)
-                return practice_wave(r, b, policies, ws, ident, phase, extra, u, deterministic)
+                return practice_wave(r, b, policies, ws, ident, phase, extra, u, deterministic, role)
         return original_wave(r, b, policies, ws, role, cfg['job_namespace']+'_'+ident,
                              cfg['phase_map'].get(phase,phase), deterministic, extra)
 
