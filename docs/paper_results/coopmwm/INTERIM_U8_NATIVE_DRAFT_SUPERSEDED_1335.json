@@ -1,0 +1,15 @@
+{
+  "status": "superseded before dispatch; retained without deletion",
+  "reason": "The thawed prior session independently committed a3f93c2a while this fresh session was qualifying a separate B-native draft. Adopt that session's registered V2 analysis; no duplicate analysis was launched.",
+  "draft_registration_sha256": "5c902273d9ddbafecb4ded238896a0247affa1446439f56be1eba8326b88b5d8",
+  "canonical_operator": "tools.coopmwm.interim_native_ops",
+  "canonical_registration": "INTERIM_U8_ANALYSIS_REGISTRATION_1335_V2.json",
+  "canonical_dispatch": "INTERIM_U8_ANALYSIS_DISPATCH_1335_V2.json",
+  "draft_qualifications": "3 local and 3 Linux CPU tests PASS; no simulation or inference",
+  "draft_launch_blocked": true,
+  "new_sim_s": 0,
+  "new_inference": 0,
+  "new_analysis_dispatches": 0,
+  "training_owners_changed": false,
+  "original_analysis_preserved": true
+}
