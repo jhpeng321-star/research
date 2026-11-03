@@ -81,6 +81,7 @@ SOURCES = {
     "Completed exact-teacher observable student": "E:/agent-work/c4-distill-1101/docs/paper_results/DISTILL.md",
     "WM teacher quality and paused scale": "E:/agent-work/c4-wmteach/docs/paper_results/WMTEACH.md",
     "Final per-CAV selector delivery": "E:/agent-work/c4-c1switch2/SELMAPPO2_FINAL.json",
+    "Successor calibration cache-only development closure": "E:/agent-work/c4-rb2-cal/docs/paper_results/rb2cal/RECOVERY_20261103.md",
 }
 
 

@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-02T22:59:22+08:00",
+  "checked_at": "2026-11-03T18:49:44+08:00",
   "scope": "Explicit permitted evidence paths only; no automatic scientific status promotion",
   "sources": {
     "C1 gap authoritative report": {
@@ -256,8 +256,8 @@
     "Owner evening priorities": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
       "status": "PRESENT",
-      "sha256": "6302c7a7ba5944d053b2979ac0b410e04fcb8679f85b9a679db26245777947ba",
-      "bytes": 39676,
+      "sha256": "a3e36ef39a2b574d2ffcb1d7901a10bbd83dd55906bc820ef3bdcbca03c772d5",
+      "bytes": 42777,
       "heading": "# READ FIRST TONIGHT (kept current by MAIN; written 2026-10-31 ~15:58)",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
@@ -265,10 +265,10 @@
     "Shared registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "status": "PRESENT",
-      "sha256": "ccc7715845e204eeb3b85b4a2246d54014853700b0722298994eece3aec5b4b4",
-      "bytes": 2685936,
+      "sha256": "26dc4f719f5a5f7f22f2709894c6d29a8c7f5bf2c657df3b9020948f981d2e28",
+      "bytes": 2808279,
       "heading": "# C4-V7FT-20261017: world-model fixes (merge calibration) + policy-setting fixes; overnight on gpuR",
-      "changed_since_previous_refresh": true,
+      "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
     },
     "PI regression and genuine-history diagnosis": {
@@ -427,8 +427,8 @@
     "Main wall-inclusive switching handoff": {
       "path": "E:/agent-work/c4-c1switch2/HANDOFF.md",
       "status": "PRESENT",
-      "sha256": "1bfe96878072b2e04156fcb06178a187b61317c9e7c44f2d87ae45f57818c7c3",
-      "bytes": 74486,
+      "sha256": "fc87c53c6d8a202ad363ab7335c3531611e1fe5a7e6af799fe83c108d923c010",
+      "bytes": 80662,
       "heading": "# S-C1SWITCH2 integration handoff",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
@@ -436,8 +436,8 @@
     "Fleet picker status": {
       "path": "E:/agent-work/c4-selmappo/docs/paper_results/SELMAPPO.md",
       "status": "PRESENT",
-      "sha256": "c3636a7a0c5b4769f4d09f1f21820b24e3d89ab9e92b8bc4d789c53906d28861",
-      "bytes": 2106,
+      "sha256": "7889e0cc6b193cea9be27f8c6e43baf53d556f1d2e5379d15fef531f28f710a3",
+      "bytes": 5226,
       "heading": "# Fleet PPO controller-selector training status",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
@@ -445,10 +445,10 @@
     "Per-CAV picker status": {
       "path": "E:/agent-work/c4-selmappo2/docs/paper_results/SELMAPPO2.md",
       "status": "PRESENT",
-      "sha256": "acb1078b2b221f3c04819089ba503c72f716c73e05708ee5973781592761bec3",
-      "bytes": 21527,
+      "sha256": "fa74386daab28333fa10d7af6c4a2e40e8ae7636b86b9f25bda5406886039b07",
+      "bytes": 27167,
       "heading": "# S-SELMAPPO2 — per-CAV MAPPO controller picker",
-      "changed_since_previous_refresh": true,
+      "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
     },
     "Distributional bias diagnosis": {
@@ -571,8 +571,8 @@
     "Successor physics incomplete comparison": {
       "path": "E:/agent-work/c4-rb2-int/docs/paper_results/WMPHYS_V5.md",
       "status": "PRESENT",
-      "sha256": "c4bd8652c71888c96639bef34089a82565d5a0938c523d759d4de2475e0f0245",
-      "bytes": 25761,
+      "sha256": "9196c43793cf9b9604c039e2db824040fa83380d1a81eb5c009e039b9e1560aa",
+      "bytes": 26314,
       "heading": "# WM-PHYS v5 — INTERIM; final comparison pending",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
@@ -598,8 +598,8 @@
     "WM teacher quality and paused scale": {
       "path": "E:/agent-work/c4-wmteach/docs/paper_results/WMTEACH.md",
       "status": "PRESENT",
-      "sha256": "fa76bc6ca1842aac67d1493b42903aa509e3dd0de93c0adb4131d0e50a911108",
-      "bytes": 16502,
+      "sha256": "fdca82668b466cf190b2d51c547b8f68257ea6cd52051b6e6eda4032f4f18a48",
+      "bytes": 17002,
       "heading": "# S-WMTEACH — world-model planner → observable student",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
@@ -610,6 +610,15 @@
       "sha256": "9ae72e2702aac270afb97e0dce555006c651c040925f3885127e40ba18ced30e",
       "bytes": 16453,
       "heading": "",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Successor calibration cache-only development closure": {
+      "path": "E:/agent-work/c4-rb2-cal/docs/paper_results/rb2cal/RECOVERY_20261103.md",
+      "status": "PRESENT",
+      "sha256": "85d03a7dfea4df946c50e7775329fe4eea9d2b8946bbf5a0bab6e95b00a247d9",
+      "bytes": 2452,
+      "heading": "# S-RB2-CAL recovery — 2026-11-03 03:17 +08",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
     }
