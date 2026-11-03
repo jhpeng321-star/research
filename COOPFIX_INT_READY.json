@@ -1,0 +1,64 @@
+{
+  "task": "COOPFIX INTEGRATOR (cooperation fixes: imitation full-pass + statistical bank filter + coopfix gate)",
+  "branch": "c4/coopfix-int",
+  "worktree": "E:/agent-work/c4-coopfix-int",
+  "ready": true,
+  "integrated_head": "see receipt_commit below; feature-complete tree at the commit listed in merged_commits['e2e']",
+  "based_on": "live c4/coopnative code (base commit e5603466)",
+  "merged_commits": [
+    {"sha": "a0cd5a6e", "what": "integrate: merge c4/bank-stat-filter (BANKFILT READY 3efbb12a; statistical bank_filter, default off)"},
+    {"sha": "a33896f2", "what": "integrate: fix interim u8 test collection import for repo-root runs (pre-existing collection error: bare sibling import; try/except fallback, no behaviour change)"},
+    {"sha": "116910b7", "what": "integrate: merge c4/imit-fullpass (IMITFIX READY 9734a3e7; imitation_trust='own_pass', default off) - resolved bank_pairs/warm_runner kwarg conflicts (pair_flags + bank_filter additive)"},
+    {"sha": "1f0987ea", "what": "integrate: fix own_pass NameError on undefined `stop` in the no-error-drop explanation branch (latent crash in merged c4/imit-fullpass code whenever the final error did not decrease; the coop-gate branch independently fixed the same bug - see merge a7978998)"},
+    {"sha": "a7978998", "what": "integrate: merge c4/coop-gate (COOPGATE READY 101215a8, receipt commit 44f5bb90; offline CPU coopfix gate) - resolved kwarg-order/report-tail/NameError conflicts (identical semantics on both sides)"},
+    {"sha": "ef2cd5ec", "what": "integrate: END-TO-END CPU test tools/coopmwm/test_coopfix_int_e2e_cpu.py (2 tests): synthetic recorded bank -> bank_pairs(v2v=True, bank_filter='statistical', pair_flags=True) -> coopfix_gate via its CLI with imitation_trust='own_pass' -> verdict PASS; and all-options-off byte-identity (bank_pairs off == explicit-off kwargs == no new summary keys; gate off-path imitation sub-report equal to a direct registered bank_imitation.run)"}
+  ],
+  "review_of_other_agents_claims": {
+    "bank_stat_filter": "claims match code: bank_filter=None/False keeps every existing code path byte-identical (no new summary keys, invalid values raise ValueError); filter applied after admission, drops counted in counts['filter_dropped'], cooperative label re-issued from the statistical verdict and feeds the 50% oversampling; claimed 7 new tests verified passing (7 passed in this session)",
+    "imit_fullpass": "claims match code with ONE integration bug found and fixed (1f0987ea): _own_pass referenced an undefined `stop` -> NameError whenever the post-imitation error did not decrease (their tests only cover the error-drop path; the gate branch hit and fixed the same bug independently). Other claims verified: own post-PPO trust snapshot, cooperative-first guaranteed first pass, projected-KL lr halving with full parameter+optimizer rollback, control-config forwarding through replay_start.binding; claimed test counts verified in targeted runs",
+    "coop_gate": "claims match code: verdict PASS iff >=1 full pass, KL within the imported runner limit, cooperative fall CI entirely below 0 (10000 resamples, seed 20261101), v2v actor input columns non-zero; option gating against the READY files live (both present); gate re-runs bank_pairs from the bank root with bank_filter+pair_flags; claimed 16 tests verified passing",
+    "test_counts_real": true
+  },
+  "integration_bugs_fixed_in_this_branch": [
+    "bank_imitation._own_pass undefined `stop` NameError (1f0987ea; identical to the gate branch's independent fix confirmed at merge a7978998)",
+    "test_interim_u8_analysis_cpu.py collection import broke the whole `pytest tools/coopmwm -k cpu` run from the repo root (a33896f2)"
+  ],
+  "tests": {
+    "runner": "C:/Users/jpeng/Miniconda3/python.exe -m pytest (torch 2.14.1+cpu, CPU only; run from the worktree root so tools.* resolves)",
+    "full_suite_final_tree": {"cmd": "python -m pytest tools/coopmwm -k cpu -q -p no:cacheprovider", "result": "80 failed, 727 passed, 2 deselected, 4 warnings, 1 error, 38 subtests passed in 5829 s (97 min; host shared with 5+ concurrent agent pytest suites)"},
+    "failure_classification": "ALL 80 failures + 1 error are the documented Windows-host/snapshot baseline, none in any merged-feature test file: missing sibling packages (tools.leverprobe 15, tools.wmteach 11, psutil 5), Linux-only /proc owner checks (6), signal.SIGCONT/SIGSTOP (4), Windows tmp file locks WinError 32 (8), git --cached subprocess in non-repo tmp (2), missing WM fixture rt.model (2), downstream assertion/key errors of the same missing fixtures. Baseline cross-checks: V2V_INT_READY measured 76 failed/1 error at 30d3fafe; IMITFIX_READY verified the test_replay_start_cpu (3) and test_fast_resume_cpu (1) failures identical on base ad0435c4 with its changes reverted; the post-bankfilt full run on this host measured 79 failed/706 passed/1 collection error (the collection error is fixed by a33896f2 and that test now runs). test_replay_start_cpu.py is the only failure file a merged branch also touches - its 3 failures are the documented pre-existing Windows BANK_QUALITY.json path-fixture issue",
+    "merged_feature_suites_green": {
+      "targeted_run_on_integrated_tree": "94 passed (test_coopfix_gate_cpu 16 + test_bank_imitation_cpu + test_bank_filter_cpu 7 + test_replay_bank_confirm_cpu + test_replay_bank_v2v_cpu + test_replay_bank_lesson_cpu + test_exact_grade_cpu + test_v2v_model_cpu + test_awr_cpu), 21 min",
+      "e2e": "tools/coopmwm/test_coopfix_int_e2e_cpu.py: 2 passed (7 min)"
+    }
+  },
+  "live_config_B_v2v_and_R_v2v_identical": {
+    "note": "both keys groups are read onto the arm binding that warm_runner.run_arm consults for every B/R replay update (bank_pairs + exact_update); with all keys absent the runs are byte-identical to the pre-coopfix behaviour (A-v2v sets none of them - arm A has no replay-bank update path)",
+    "replay_control_config_B_REPLAY_EXPOSURE_V2_json": {
+      "imitation_trust": "own_pass",
+      "why_here": "replay_start.binding() forwards v.get('imitation_trust') onto the binding and UNCONDITIONALLY overwrites any binding-file value - the replay control config is the only live source for this key"
+    },
+    "warm_b_runtime_binding_v4_operational_block": {
+      "v2v": true,
+      "bank_filter": "statistical",
+      "why_here": "binding() reads EXACT_OPERATIONAL_BINDING.json then WARM_B_RUNTIME_BINDING_V4.json['operational'] straight onto the binding and never overwrites these two keys; v2v_cfg needs no entry (bank_pairs uses bank_v2v.DEFAULT_CFG on the replay path)"
+    },
+    "effective_binding_keys": "b['v2v'] -> bank_pairs(v2v=True); b['bank_filter'] -> bank_pairs(bank_filter='statistical'); b['imitation_trust'] -> bank_pairs(pair_flags=True) + exact_update(imitation_trust='own_pass', cooperative=summary['pair_cooperative'])",
+    "values_must_be_exactly": "\"v2v\": true, \"bank_filter\": \"statistical\" (any other value raises ValueError), \"imitation_trust\": \"own_pass\" (any other value raises ValueError)"
+  },
+  "gate_cli": {
+    "cwd": "the run root's source checkout (python -m keeps CWD on sys.path); CPU only",
+    "live_bank": "python -m tools.coopmwm.coopfix_gate run --checkpoint <B_checkpoint_XXX.pt> --bank-root <ROOT> --arm B --training-seed <N> --v2v --bank-filter --imitation-trust --passes 5 --out COOPFIX_GATE_REPORT.json",
+    "offline_pairs_file": "python -m tools.coopmwm.coopfix_gate run --checkpoint <CKPT> --pairs-file <bank_pairs.json> --v2v --passes 5 --out COOPFIX_GATE_REPORT.json",
+    "status": "python -m tools.coopmwm.coopfix_gate status",
+    "e2e_proof": "tools/coopmwm/test_coopfix_int_e2e_cpu.py::test_e2e_bank_filter_v2v_ownpass_gate_pass_and_off_identity exercises exactly the live-bank CLI form on a synthetic recorded bank and asserts verdict PASS with all four checks true"
+  },
+  "hard_rules_compliance": {
+    "cpu_only": true,
+    "own_worktree_only": "all commits/merges/tests in E:/agent-work/c4-coopfix-int only; c4-coopnative and E:/agent-work/_sol untouched (the three sibling READY receipts were read only)",
+    "no_destructive_git": "no reset/clean/stash-drop/push; merges are local --no-ff",
+    "forbidden_paths": "no sealed/, holdout/heldout/cal_split/chunk5/j4b/inc1 path opened; no hetdata_truth or vType/driver/vehicle_params truth file read",
+    "no_hand_set_thresholds": "no behavioural thresholds added; the only numeric criteria are the inherited kl_limit 0.045, the registered bootstrap rules (10000 resamples, 5th percentile / 2.5-97.5 CI, seed 20261101) and the structural v2v non-zero-column check",
+    "defaults": "v2v flag default off untouched; bank_filter/pair_flags/imitation_trust default off; every off-path byte-identity pinned by tests (branch suites + test_coopfix_int_e2e_cpu.py::test_all_options_off_is_byte_identical_to_the_registered_behaviour)"
+  }
+}
