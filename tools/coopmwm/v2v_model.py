@@ -1,38 +1,35 @@
-"""V2V intent-sharing model hooks - REHEARSAL STUB (part 5, branch c4/v2v-rehearsal).
+"""V2V intent-sharing warm start: widened actor/critic inputs, zero-initialised.
 
-LOCAL STUB of the part-2 model contract (branch c4/v2v-model,
-tools/coopmwm/v2v_model.py): same interface (``extend_for_v2v(model,
-extra_dim)``, ``load_checkpoint(path, config, v2v_dim)``, ``v2v_extra``,
-``forward_with_v2v``) and the same zero-initialised widening semantics, so the
-integrated module can replace this file unchanged. Used only while c4/v2v-int
-has not published V2V_INT_READY.json.
+Per-CAV policy and critic live in tools/coopmwm/acceleration.py (Policy,
+subclassing tools/coopnative/policy.py:45 with actor :49 and critic :50) and
+checkpoints load through tools/coopmwm/accel_learner.py (the Policy rebinding
+of tools/coopnative/learner.py:68 load). This module adds:
 
-Semantics (identical to the part-2 contract):
+  extend_for_v2v(model, extra_dim)   widen the first actor and critic input
+                                     layers by extra_dim with ZERO-initialised
+                                     new input weights, so outputs are
+                                     IDENTICAL to the original at load;
+   load_checkpoint(..., v2v_dim=N)    registered loader path that extends the
+                                      policy after loading and remaps the Adam
+                                      state with zero-gapped moments;
+  forward_with_v2v(model, x, rsu)    base actor/critic forward over widened
+                                     per-CAV features for the observation side.
 
-- ``extend_for_v2v(model, extra_dim)`` widens the FIRST actor and critic input
-  layers by ``extra_dim`` ZERO-initialised input weights, inserted at
-  ``INSERT_AT`` (= 29 sensor features): the actor input becomes
-  ``[x(29) | v2v(extra) | latent(4)]`` and the critic input
-  ``[pooled(29) | v2v(extra) | rsu(12)]``. Outputs on the original feature
-  block are IDENTICAL to the loaded model.
-- ``bind_forward(model, extra_dim)`` (rehearsal integration glue, the part-4
-  surface) binds a v2v-aware forward that consumes ``context['v2v']``
-  (``{member vid: features}``) and concatenates it at INSERT_AT; contexts
-  without the key (plain PPO episodes, replayed prefixes) get zeros, so
-  behaviour is unchanged while the widened inputs are actually exercised.
-- ``load_for(path, config)`` shape-driven loader: extends/binds when the
-  checkpoint is already widened, or when ``config`` enables v2v on a
-  base-width checkpoint; byte-identical to ``accel_learner.load`` otherwise.
+Everything sits behind the `v2v` config flag (default off): with the flag off
+load_checkpoint is byte-identical to the registered accel_learner.load.
 """
 import random
 
 import numpy as np
 import torch
 from torch import nn
-
 from .accel_learner import load as base_load
 from .acceleration import Policy
-from .v2v_obs import V2V_DIM  # observation part (rehearsal stub, same contract)
+
+try:
+    from .v2v_obs import V2V_DIM  # observation part, branch c4/v2v-intent
+except ImportError:
+    V2V_DIM = 4  # local stub until tools/coopmwm/v2v_obs.py lands
 
 FEATURES = 29  # tools/coopnative/policy.py:9 sensor feature width, unchanged
 ACTOR_LATENT = 4  # broadcast latent concatenated per member, policy.py:49
@@ -59,7 +56,13 @@ def _first_linear(sequence):
 
 
 def _insert_columns(tensor, extra_dim):
-    """Zero gap of extra_dim columns at INSERT_AT; the tail block shifts right."""
+    """Zero gap of extra_dim columns at INSERT_AT; the tail block shifts right.
+
+    Used for input weights and for optimizer moments alike: the actor input is
+    (x | latent) and the critic input is (pooled | rsu), so the new v2v
+    channels must sit between the x/pooled block and that tail for the copied
+    weights to keep multiplying the same features.
+    """
     rows = tensor.shape[:-1]
     out = torch.zeros(*rows, tensor.shape[-1]+extra_dim, dtype=tensor.dtype)
     out[..., :INSERT_AT] = tensor[..., :INSERT_AT]
@@ -86,15 +89,14 @@ def extend_for_v2v(model, extra_dim):
     if extra_dim <= 0:
         return []
     return [dict(head=name, input_features=_widen_input_layer(_first_linear(getattr(model, name)), extra_dim),
-                 extra_dim=extra_dim) for name in ('actor', 'critic')]
+        extra_dim=extra_dim) for name in ('actor', 'critic')]
 
 
-def forward_with_v2v(model, x, rsu, v2v=None):
+def forward_with_v2v(model, x, rsu):
     """Base actor/critic forward over widened per-CAV features x (n, F+extra).
 
     Mirrors tools/coopnative/policy.py:56 forward with the widened sensor
-    block; ``v2v`` is the per-member extra block ``(n, extra_dim)`` (zeros when
-    None). The broadcast latent stays per-member and the critic pools all
+    block; the broadcast latent stays per-member and the critic pools all
     member features against the same rsu block.
     """
     latent = model.broadcast(rsu).expand(len(x), -1)
@@ -104,13 +106,91 @@ def forward_with_v2v(model, x, rsu, v2v=None):
     return mean, value
 
 
-def bind_forward(model, extra_dim):
-    """Bind a v2v-aware forward consuming ``context['v2v']`` (integration glue).
+def _rebuilt_optimizer(policy, previous):
+    """Fresh Adam over widened parameters with remapped moments.
 
-    ``context['v2v']`` maps member vid -> features (list/tensor of extra_dim);
-    members without an entry - or contexts without the key at all - get zeros,
-    matching the zero-initialised extension columns. Only bound when extra_dim
-    is positive; the plain forward is untouched otherwise.
+    extend_for_v2v only widens the two input-layer weight tensors in place, so
+    module registration order - and therefore optimizer state indices - are
+    unchanged; widened moment tensors are zero-gapped at INSERT_AT exactly like
+    the weights and step counters are preserved.
+    """
+    optimizer = torch.optim.Adam(policy.parameters(), lr=3e-4)
+    state = previous.state_dict()
+    parameters = list(policy.parameters())
+    transferred = {}
+    for index, entry in state['state'].items():
+        shape = parameters[index].shape
+        transferred[index] = {key: value if not torch.is_tensor(value) or value.dim() == 0
+            or value.shape[-1] == shape[-1] or value.shape[:-1] != shape[:-1]
+            else _insert_columns(value, shape[-1]-value.shape[-1])
+            for key, value in entry.items()}
+    optimizer.load_state_dict(dict(state=transferred, param_groups=state['param_groups']))
+    return optimizer
+
+
+BASE_INPUT = dict(actor=FEATURES+ACTOR_LATENT, critic=FEATURES+CRITIC_RSU)
+
+
+def _load_extended(path, payload, extra_dim):
+    """learner.load against an already-widened checkpoint (learner.py:68 path)."""
+    policy = Policy()
+    extend_for_v2v(policy, extra_dim)
+    policy.load_state_dict(payload['policy'])
+    optimizer = torch.optim.Adam(policy.parameters(), lr=3e-4)
+    optimizer.load_state_dict(payload['optimizer'])
+    generator = torch.Generator()
+    generator.set_state(payload['generator'])
+    torch.set_rng_state(payload['torch_rng'])
+    np.random.set_state(payload['numpy_rng'])
+    random.setstate(payload['python_rng'])
+    return policy, optimizer, generator, payload
+
+
+def load_checkpoint(path, config=None, v2v_dim=None):
+    """Registered loader, extended after loading when the v2v flag is on.
+
+    Flag off (default) this is byte-identical to accel_learner.load. With
+    v2v_dim=N (or config={'v2v': True}) the loaded policy is widened by N
+    zero-initialised inputs and the optimizer moments are remapped. Loading an
+    already-extended checkpoint of the same width is accepted unchanged.
+    """
+    extra_dim = v2v_extra(config, v2v_dim)
+    if extra_dim <= 0:
+        return base_load(path)
+    saved = torch.load(path, map_location='cpu', weights_only=False)
+    widths = {head: int(saved['policy'][f'{head}.0.weight'].shape[1])
+              for head in ('actor', 'critic')}
+    if widths == {head: base+extra_dim for head, base in BASE_INPUT.items()}:
+        return _load_extended(path, saved, extra_dim)
+    if widths != BASE_INPUT:
+        raise ValueError('v2v checkpoint width mismatch '
+            f'{widths} against base {BASE_INPUT} and extra_dim {extra_dim}')
+    policy, optimizer, generator, payload = base_load(path)
+    extend_for_v2v(policy, extra_dim)
+    optimizer = _rebuilt_optimizer(policy, optimizer)
+    return policy, optimizer, generator, payload
+
+
+def _checkpoint_widths(policy_state):
+    heads = {}
+    for head in ('actor', 'critic'):
+        key = f'{head}.0.weight'
+        if key not in policy_state:
+            raise ValueError('v2v checkpoint lacks input layer '+key)
+        heads[head] = int(policy_state[key].shape[1])
+    return heads
+
+
+def bind_forward(model, extra_dim):
+    """Rehearsal in-model glue: a v2v-aware forward consuming ``context['v2v']``.
+
+    The registered integration glue (tools/coopmwm/v2v_integrate.py) widens the
+    CONTEXT at the call site; the rehearsal instead binds the model's forward so
+    every existing ``policy(context)`` call site (accel_learner.update/imitation,
+    accel_plant episodes, branch continuations) works unchanged: contexts with a
+    ``context['v2v']`` block ({member vid: extra_dim floats}) get their blocks
+    concatenated at INSERT_AT; contexts without the key get zeros, which the
+    zero-initialised extension columns turn into the exact pre-v2v behaviour.
     """
     extra_dim = int(extra_dim)
     if extra_dim <= 0:
@@ -139,35 +219,6 @@ def bind_forward(model, extra_dim):
     return forward
 
 
-def _rebuilt_optimizer(policy, previous):
-    """Fresh Adam over widened parameters with remapped moments."""
-    optimizer = torch.optim.Adam(policy.parameters(), lr=3e-4)
-    state = previous.state_dict()
-    parameters = list(policy.parameters())
-    transferred = {}
-    for index, entry in state['state'].items():
-        shape = parameters[index].shape
-        transferred[index] = {key: value if not torch.is_tensor(value) or value.dim() == 0
-            or value.shape[-1] == shape[-1] or value.shape[:-1] != shape[:-1]
-            else _insert_columns(value, shape[-1]-value.shape[-1])
-            for key, value in entry.items()}
-    optimizer.load_state_dict(dict(state=transferred, param_groups=state['param_groups']))
-    return optimizer
-
-
-def _checkpoint_widths(policy_state):
-    heads = {}
-    for head in ('actor', 'critic'):
-        key = f'{head}.0.weight'
-        if key not in policy_state:
-            raise ValueError('v2v checkpoint lacks input layer '+key)
-        heads[head] = int(policy_state[key].shape[1])
-    return heads
-
-
-BASE_INPUT = dict(actor=FEATURES+ACTOR_LATENT, critic=FEATURES+CRITIC_RSU)
-
-
 def _load_extended_payload(payload, extra_dim):
     """Build a widened, bound policy from an already-widened checkpoint payload."""
     policy = Policy()
@@ -176,6 +227,7 @@ def _load_extended_payload(payload, extra_dim):
     policy.load_state_dict(payload['policy'])
     optimizer = torch.optim.Adam(policy.parameters(), lr=3e-4)
     optimizer.load_state_dict(payload['optimizer'])
+    import random
     generator = torch.Generator()
     generator.set_state(payload['generator'])
     torch.set_rng_state(payload['torch_rng'])
@@ -185,7 +237,7 @@ def _load_extended_payload(payload, extra_dim):
 
 
 def load_for(path, config=None):
-    """Shape-driven ``accel_learner.load``: v2v-aware, byte-identical by default.
+    """Rehearsal shape-driven ``accel_learner.load``: v2v-aware, bound, default-identical.
 
     - Base-width checkpoint + v2v off (default): exactly ``accel_learner.load``.
     - Base-width checkpoint + ``config`` v2v on: load, widen by ``v2v_extra``,
@@ -210,12 +262,6 @@ def load_for(path, config=None):
     if extra <= 0 or widths != {head: base+extra for head, base in BASE_INPUT.items()}:
         raise ValueError(f'v2v checkpoint width mismatch {widths} against base {BASE_INPUT}')
     return _load_extended_payload(saved, extra)
-
-
-def load_checkpoint(path, config=None, v2v_dim=None):
-    """Part-2 contract loader (config-driven); delegates to :func:`load_for`."""
-    del v2v_dim  # resolved inside load_for through v2v_extra(config)
-    return load_for(path, config)
 
 
 def fit_policy(policy, weights):

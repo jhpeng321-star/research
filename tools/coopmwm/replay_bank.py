@@ -965,6 +965,11 @@ def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sou
         charge = _confirm_charge(run_root, phase, stamp)
         weights = {k: v.detach().cpu().clone() for k, v in policy.state_dict().items()}
         new_sha = sv._state_sha(weights)
+        from . import bank_v2v
+        if v2v:
+            out['v2v'] = dict(enabled=True,
+                              rule='new-policy branch observations include the v2v block; '
+                                   'last_commands computed per step (bank_v2v)')
         for vid in lst['verification_ids']:
             e = dict(verification_id=vid)
             r = receipts.get(vid)

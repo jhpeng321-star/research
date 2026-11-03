@@ -1,0 +1,45 @@
+{
+  "receipt": "V2V_OBS_READY",
+  "part": "1 of 3 (OBSERVATION) of the V2V intent-sharing build",
+  "branch": "c4/v2v-intent",
+  "workspace": "E:/agent-work/c4-v2v",
+  "commit": "330a3e55249f0032b4ce37665751582356397467",
+  "module": "tools/coopmwm/v2v_obs.py",
+  "V2V_DIM": 24,
+  "V2V_K": 4,
+  "range_m": 100.0,
+  "range_constant_source": "wms.control.contract.SENSOR_RANGE_M == 100.0 (src/wms/control/contract.py:49); mirrored as tools/coopmwm/v2v_obs.py:46 V2V_RANGE_M (plain float, torch-free module); equality pinned by tests/unit/test_c4_v2v_obs.py::test_v2v_dim_and_layout_constants",
+  "function_signature": "v2v_features(state, cav_id, last_commands, cfg=None) -> np.ndarray  # float32, shape (V2V_DIM,)",
+  "layout": {
+    "partner_major": true,
+    "per_partner": ["gap_m", "lane_offset", "v_mps", "a_mps2", "last_cmd", "present"],
+    "shape": "[K=4 partners] x 6 = 24, nearest first, zero-padded, presence bit last in each block",
+    "units": "physical SI (repo convention: observations stay unnormalized; networks normalize)",
+    "gap_m": "partner_s - ego_s, signed longitudinal (front positive); radio gap, NOT bumper-corrected",
+    "lane_offset": "partner_lane - ego_lane (junction rows pre-carried by the env wiring)",
+    "last_cmd": "partner's LAST ISSUED acceleration from the PREVIOUS control step; 0.0 when never commanded"
+  },
+  "config_flag": {
+    "name": "v2v",
+    "default": false,
+    "carrier": "V2VConfig(v2v=False, k=4, range_m=100.0) dataclass in tools/coopmwm/v2v_obs.py:52",
+    "wired_env_flag": "CavSumoEnv(v2v=False) kwarg, traffic_shepherd/c4/env.py:109/:133 self.v2v",
+    "byte_identity": "flag off: state() adds NO key; v2v_features returns all zeros; build_observations untouched (pinned by tests/fixtures/v2v_golden.npz captured from pristine HEAD bb27e9c0)"
+  },
+  "flag_on_payload": "CavSumoEnv.state() returns state[\"v2v\"] = np.ndarray [K_slots, 24] float32, slot-aligned, zeros for absent/non-CAV slots (traffic_shepherd/c4/env.py:325 _v2v_block; comm input: frame s/lane_eff/v/a + CommandOwnership.last_commands)",
+  "helper_for_slot_wiring": "v2v_slot_block(s_m, lane, v_mps, a_mps2, present, is_cav, slot_ids, last_commands, cfg=None) -> [K, V2V_DIM] (tools/coopmwm/v2v_obs.py:126); lane arg must already be junction-carried",
+  "observation_build_site": {
+    "per_cav_policy_observation": "src/wms/control/obs.py:68 build_observations(state, report_age_s=None) -> Observation(own [B,K,13], reports [B,K,16,13], report_mask [B,K,16], cav_mask [B,K]); UNCHANGED by this part (policy input dims must not move before the MODEL part opts in)",
+    "sumo_state_feeder": "traffic_shepherd/c4/env.py state() (env.py:310) -> frame_to_state (traffic_shepherd/c4/state.py:114); last-issued-command source: traffic_shepherd/ownership.py:60 CommandOwnership.last_commands() (new read-only accessor; records carry issued_acceleration_mps2)",
+    "coopmwm_callers": "tools/coopmwm/speed2_runtime.py:114/154 monkeypatch bridge.build_observations; wms.control.call sites of build_observations: src/wms/control/policy.py:431, src/wms/control/mappo/agent.py:128 and :198, src/wms/control/bridge.py:133"
+  },
+  "call_sites_to_change_by_other_parts": [
+    "MODEL (c4/v2v-model): consume state['v2v'] (or v2v_features) inside the policy stack - extend CavPolicy/own features or a side encoder at src/wms/control/policy.py (CavPolicy.forward, policy.py:159) and the ObservationBuilder call sites src/wms/control/mappo/agent.py:128/:198 + bridge.py:133; keep legacy checkpoints decoding (zero-pad precedent: upgrade_policy_state policy.py:360)",
+    "BANK (c4/v2v-bank): store the [K_slots, 24] block per decision step into replay_bank rows at the episode loop that already records state/info (env.step returns (state, info) with state['v2v'] when the flag is on)",
+    "both: import {V2V_DIM, V2VConfig, v2v_features, v2v_slot_block} from tools.coopmwm.v2v_obs (repo root on sys.path; module is numpy-only, torch-free)"
+  ],
+  "tests": "tests/unit/test_c4_v2v_obs.py - 11 CPU tests: V2V_DIM/layout/range-constant, flag-off zeros, values+mask+zero-padding, distance ordering (not insertion order), k-truncation, last_commands (float/record/None/missing), absent ego, slot-block alignment + zero rows, flag-off byte identity vs pristine golden + extra-key no-leak, slot-axis gather survival, config validation",
+  "verification": "pytest tests/unit/test_c4_v2v_obs.py (11 passed); regression: tests/unit/test_c4_deploy.py + test_c4_sumo.py (26 passed, includes real SUMO episode checks after the ownership fix); ruff clean on all touched files",
+  "constraints_respected": "no policy-network or replay_bank edits; no remote writes; no resets/cleans; sealed/holdout paths untouched; no truth files read; no behavioural thresholds introduced",
+  "timestamp": "2026-11-03"
+}

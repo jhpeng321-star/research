@@ -1,8 +1,7 @@
-"""V2V intent sharing on the B-REPLAY bank - REHEARSAL WIRING (part 5, branch c4/v2v-rehearsal).
+"""V2V intent sharing on the B-REPLAY bank (MAIN 2026-11-03, part 3/3 BANK/IMITATION).
 
-Same module surface as the part-3 bank wiring (branch c4/v2v-bank): flag ``v2v``
-(binding key ``v2v``, DEFAULT OFF: every code path here is skipped and all
-outputs stay byte-identical). When ON:
+Flag ``v2v`` (binding key ``v2v``, DEFAULT OFF: every code path in this module is skipped
+and all outputs stay byte-identical). When ON:
 
 - BANK PAIRS (replay_bank.bank_pairs): every imitation pair of an ADMITTED bank entry also
   carries the partners' V2V features of that second, computed from the winning plan's
@@ -16,9 +15,13 @@ outputs stay byte-identical). When ON:
   runs. Wired through bank_v2v.branch_controller_class() (sumo_verify.LocalBranchRunner);
   the env flag propagates to branch subprocesses via bank_v2v.enabled().
 
-The feature function is the OBSERVATION contract tools/coopmwm/v2v_obs.py
-(v2v_features(state, cav_id, last_commands, cfg), V2V_DIM) - in this rehearsal
-a LOCAL STUB with the same signature (disclosed in V2V_REHEARSAL_READY.json).
+The feature function is the OBSERVATION part's tools/coopmwm/v2v_obs.py
+(v2v_features(state, cav_id, last_commands, cfg), V2V_DIM). Until that module lands, a
+local dependency-free STUB with the same signature is used (STUB=True is disclosed in the
+bank-pairs summary). The stub block: for each of the max_partners nearest partner CAVs
+(by |s_m - ego s_m|, vid order tie-break) 4 floats - relative position (s_m - ego s_m),
+speed (v_mps), acceleration at that second (issued_acceleration_mps2, 0 when absent) and
+the partner's last issued command at the previous second (0 when absent) - then zero padded.
 """
 import os
 
@@ -26,9 +29,9 @@ ENV = 'C4NM_V2V'             # branch-runner flag; set inside bank_v2v.enabled()
 DEFAULT_CFG = dict(max_partners=4)
 
 try:
-    from .v2v_obs import v2v_features, V2V_DIM      # observation contract (rehearsal stub)
+    from .v2v_obs import v2v_features, V2V_DIM      # OBSERVATION part (other workstream)
     STUB = False
-except Exception:                                    # not present: local fallback, same signature
+except Exception:                                    # not present yet: local stub, same signature
     STUB = True
     MAX_PARTNERS = DEFAULT_CFG['max_partners']
     V2V_DIM = 4*MAX_PARTNERS
@@ -98,6 +101,40 @@ def _last_commands(frame):
     return out
 
 
+def _frame_table(frame):
+    """``{vid: row}`` view of a trace frame for the OBSERVATION part's v2v_features (which takes
+    a vid -> record mapping, not the raw trace frame); the partner acceleration feature a_mps2
+    maps the row's recorded issued_acceleration_mps2 (0.0 when absent - only the PREVIOUS-second
+    command gates exclusion, exactly as before)."""
+    vehicles = frame.get('vehicles', []) if isinstance(frame, dict) else list(frame)
+    table = {}
+    for v in vehicles:
+        row = dict(v)
+        accel = row.get('issued_acceleration_mps2')
+        row['a_mps2'] = float(accel) if accel is not None else 0.
+        table[v['vid']] = row
+    return table
+
+
+def _obs_cfg(cfg=None):
+    """The real v2v_features takes a V2VConfig; the bank cfg carries max_partners/range_m."""
+    from .v2v_obs import V2V_RANGE_M, V2VConfig
+    if isinstance(cfg, V2VConfig):
+        return cfg
+    merged = dict(DEFAULT_CFG, **(cfg or {}))
+    return V2VConfig(v2v=True, k=int(merged['max_partners']),
+                     range_m=float(merged.get('range_m', V2V_RANGE_M)))
+
+
+def _features(frame, ego, known, cfg):
+    """Dispatch on the feature source: the local STUB takes the raw frame + dict cfg; the
+    OBSERVATION part's v2v_features takes the {vid: row} table + a V2VConfig. Both return
+    plain Python floats (bank pairs are JSON-serialised into receipts)."""
+    if STUB:
+        return [float(x) for x in v2v_features(frame, ego, known, cfg)]
+    return [float(x) for x in v2v_features(_frame_table(frame), ego, known, _obs_cfg(cfg))]
+
+
 def pair_v2v_block(frame, prev_frame, members, cfg=None):
     """The v2v block for one pair second: {member vid: features} for every member present as a
     CAV in ``frame`` (zeros for absent members); partners = the other CAVs of the frame.
@@ -113,9 +150,7 @@ def pair_v2v_block(frame, prev_frame, members, cfg=None):
         if me is None:
             block[ego] = [0.]*V2V_DIM
             continue
-        # plain python floats: v2v_features returns a float32 ndarray, and these
-        # blocks reach JSON-serialized artifacts (branch RESULT tapes, pair samples)
-        block[ego] = [float(x) for x in v2v_features(frame, ego, known, cfg)]
+        block[ego] = list(_features(frame, ego, known, cfg))
     return block, missing
 
 
@@ -171,8 +206,8 @@ def branch_controller_class():
 
     class _V2VPolicy:
         """Injects context['v2v'] just before the wrapped policy samples; everything else is
-        delegated (a base model ignores the extra context key; a v2v-extended model consumes
-        it through its bound forward)."""
+        delegated (the current model ignores the extra context key, so pre-model runs and
+        sealed digests are unaffected)."""
 
         def __init__(self, outer, real):
             self.outer, self.real = outer, real
@@ -188,15 +223,15 @@ def branch_controller_class():
             return getattr(self.real, name)
 
     class V2VController(base):
-        """last_commands per step = the commands in effect at the previous second (the apply()
-        ``commands`` argument, i.e. what was issued at t-1); partner accelerations = the
-        per-second finite difference of the recorded speeds (the offline trace records the
-        issued command in the same slot)."""
+        """last_commands per step = the commands in effect at the current second (the apply()
+        ``commands`` argument), i.e. the commands issued at the PREVIOUS second - the same
+        quantity the offline trace records as issued_acceleration_mps2 of the previous frame.
+        Partner accelerations = the per-second finite difference of the recorded speeds."""
 
         def __init__(self, *a, **k):
             super().__init__(*a, **k)
             self.v2v_cfg = dict(DEFAULT_CFG)
-            self.v2v_last, self._v2v_prev_v, self._v2v_state = {}, None, None
+            self._v2v_prev_v, self._v2v_state = None, None
 
         def apply(self, rows, commands, now):
             self._v2v_state = (list(rows), dict(commands), int(now))
@@ -206,8 +241,6 @@ def branch_controller_class():
                 return super().apply(rows, commands, now)
             finally:
                 self.policy = saved
-                self.v2v_last = {r['vid']: float(commands[r['vid']]) for r in rows
-                                 if r.get('is_cav') and r['vid'] in commands}
                 self._v2v_prev_v = {r['vid']: float(r['v_mps']) for r in rows}
 
         def v2v_block(self, context):
@@ -221,14 +254,13 @@ def branch_controller_class():
                     v['issued_acceleration_mps2'] = a
                     v['command_present'] = a is not None
                 vehicles.append(v)
-            known = {k: c for k, c in self.v2v_last.items() if c is not None}
+            known = {r['vid']: float(commands[r['vid']]) for r in rows
+                     if r.get('is_cav') and r['vid'] in commands}
             frame = dict(time_s=now, vehicles=vehicles)
             block = {}
             for m in context['members']:
                 if any(v.get('vid') == m and v.get('is_cav') for v in vehicles):
-                    # plain python floats: the block enters the sample and therefore the
-                    # episode RESULT tape (canonical JSON rejects numpy float32 scalars)
-                    block[m] = [float(x) for x in v2v_features(frame, m, known, self.v2v_cfg)]
+                    block[m] = list(_features(frame, m, known, self.v2v_cfg))
                 else:
                     block[m] = [0.]*V2V_DIM
             return block
