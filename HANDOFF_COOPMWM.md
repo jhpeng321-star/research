@@ -1,6 +1,12 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## Fresh-session adoption — Nov3 22:31 +08
+- NEW MAIN22:30 read through986: all audit fixes assigned to launch-final and
+  bank-perseed; no edits to those files here. R lag1 cap explicitlyKEPT.
+  `coopmwm/LAUNCH_PREPARATION_MAIN2230.md` records builder-stop plan, qualified
+  R/B per-seed preflight commands and remaining phase room. No live builder or
+  replay_start command found on fresh cpuQ process inspection; retain original
+  collector3101232/broker3105652. Recheck identities at actual takeover.
 - Full brief read through982; latest all-pass/per-seed/intent/all8 conditions adopted.
   Historical warm qualification/restarts are DONE, never repeat from opening summary.
 - HEAD872f82e6 and every existing dirty/untracked artifact preserved. No staged work
