@@ -146,6 +146,10 @@ def runtime_gate_config(runtime_cfg, v2v=True, intent='auto'):
         problems.append(f'deployed runtime bank_statistics={rule!r}, gate rule is {GATE_RULE!r}')
     if rule != BANK_OPTIONS.get('bank_statistics'):
         problems.append(f'deployed runtime bank_statistics={rule!r} differs from the launcher')
+    want_filter = BANK_OPTIONS.get('imitation_bank_filter')
+    have_filter = runtime_cfg.get('imitation_bank_filter')
+    if want_filter is not None and have_filter != want_filter:
+        problems.append(f'deployed runtime imitation_bank_filter={have_filter!r} differs from the launcher {want_filter!r}')
     if problems:
         raise GateIdentityError('gate config refused: '+'; '.join(problems))
     return cfg if cfg.get('v2v') else None
@@ -187,7 +191,8 @@ def gate_identity(root, v2v=True, intent='auto', source_root=None, source_manife
     cfg = runtime_gate_config(runtime_cfg, v2v, intent)
     ident = dict(source_identity(source_root, source_manifest), runtime_sha256=runtime_sha256,
                  runtime_path=str(Path(root)/RUNTIME_FILE), runtime_config=cfg,
-                 bank_statistics=runtime_cfg.get('bank_statistics'))
+                 bank_statistics=runtime_cfg.get('bank_statistics'),
+                 imitation_bank_filter=runtime_cfg.get('imitation_bank_filter', 'all_admitted'))
     return cfg, ident, runtime_cfg
 
 
@@ -472,6 +477,8 @@ def statistical_bank_pairs(root, arm, training_seed, sources=None, config=None, 
     """bank_pairs(v2v=True) under per_seed_v1 with the per-arm sources; intent configs are
     passed as the live v2v_intent binding when this source's bank_pairs supports it."""
     kw = dict(kw, v2v=True, sources=_arm_sources(sources, arm))
+    if kw.get('imitation_bank_filter', 'all_admitted') == 'all_admitted':
+        kw.pop('imitation_bank_filter', None)     # default: call identical to the pre-filter gate
     if config and config.get('v2v_intent'):
         if 'v2v_intent' not in inspect.signature(rb.bank_pairs).parameters:
             raise ValueError('intent config but replay_bank.bank_pairs has no v2v_intent option')
@@ -612,7 +619,9 @@ def plan(root, arm, control, new_state=None, old_state=None, offline=None, train
         sources = {k: list(v) for k, v in runtime_cfg['replay_sources'].items()}
     if offline is None or new_state is None:
         try:
-            pairs, summary = (statistical_bank_pairs(root, arm, training_seed, sources, cfg)
+            pairs, summary = (statistical_bank_pairs(
+                root, arm, training_seed, sources, cfg,
+                imitation_bank_filter=identity.get('imitation_bank_filter', 'all_admitted'))
                               if pairs_source is None else _pairs_file(pairs_source))
         except bank_statistics.BankDataMissing as e:     # per_seed_v1 cannot evaluate the bank
             return _fail(control, arm, update, None, 'bank', [repr(e)], None, identity)

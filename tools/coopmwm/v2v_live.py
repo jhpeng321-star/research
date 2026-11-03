@@ -55,13 +55,19 @@ def hooks(root, cfg):
         health.braking(r,arm,u,episodes,refs)
 
     policy_factory,pairs=Policy,original_pairs
+    # Owner 2026-11-04 00:55: imitation_bank_filter is ONE key for B and R (A has no bank).
+    from .v2v_launch3 import imitation_filter_for
+    bank_filters={a:imitation_filter_for(cfg,a) for a in ('B','R')}
+    if bank_filters['B']!='all_admitted':
+        def pairs(r,arm,*a,**k):
+            return original_pairs(r,arm,*a,**dict(k,imitation_bank_filter=bank_filters[arm]))
     if cfg.get('v2v_intent'):
         # v2v_intent ON (identical for A/B/R): intent-head policy, intent-carrying bank pairs.
         import functools
         from .v2v_intent import IntentPolicy,settings
         s=settings(cfg)
         policy_factory=functools.partial(IntentPolicy,s['horizon'],s['loss_weight'],s['bounds'],s['detach_trunk'])
-        pairs=functools.partial(original_pairs,v2v_intent=cfg)
+        pairs=functools.partial(pairs,v2v_intent=cfg)
     return dict(configure=configure,accounting=accounting,policy_factory=policy_factory,
         load_checkpoint=load_checkpoint,bank_pairs=pairs,bank_quality=original_quality,
         record_lesson=original_lesson,health_before_update=health.before_update,safety=safety,
