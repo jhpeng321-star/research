@@ -1,5 +1,32 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3 08:54:40+08: MAIN08:35 DECOUPLE applied and **B_REPLAY_STARTED**
+at unix1793667164.8449004 / 08:52:44+08. New durable cpuQ watcher2979442/
+start68143223, control warm1/replay_start_0835_v4; ADOPT dispatch0835_V4,
+NEVER redispatch. All four gates PASS:8 admitted, replay release qualified,
+budget reconciled, healthOK. GPU rollout/collector activation no longer gate PPO.
+Immutable replaystartcpu5:707 Linux CPU PASS/0 skips/83.264s/zero SUMO.
+Amendment b967137614d30c9ab358f77670198e1784496deadee2c38a9b6eb76666bbd8bc
+registered before launch, code54be3ba4. Only verified idle watcher2926173 retired;
+builder2388293 gracefully STOPped and exited before new graders, no physics interrupted.
+Children: B2979632/R2979633; graders2979630/2979631, all start68144256/7,
+bootb8bc1fcb/argv verified LIVE/no failures. Actual B-u4:24 fresh replay0735 jobs
+claimed,12 RESULT files, remaining12 observed t721..978/1200 at08:54:40.
+R supervisor waits registered lag1 B-u4 completion; no R-u4 physical-progress claim.
+STATUS bridge8/no dead children/no alerts; B/R optimizer endpoints stillu3.
+Original u3 Adam/RNG/checkpoint SHAs preserved; no old closed-u4 replay.
+Original collector1834956 and GPU rolling owners10148/39660/40668 retained.
+Collection stays qualified it2_K2 until independent joint activation; niche alternation
+only after LS_NULLFIX_CONFIG. Frozen-u3 collector drains asynchronously after that
+activation at no-active-grade boundary; never gates training. Builder confirmations
+now owned by grade_B, including original collection sources. gpuR766170 5/8 gates,
+peer623287 READY8 serving; no repeated qualification/search dispatch.
+Latest charged5633000/14500000, disk16.26GB. Observe using
+`python -X utf8 -m tools.coopmwm.replay_start_ops status` (child identity/failure/log
+and fresh TRAIN episode progress included). warm_watch state still reports historical
+arm owners; replay_start_ops is authoritative for new replay owners. Next publish B-u4
+lesson/update and R-u4 launch; keep rollout/bank collection alive. No learning claim yet.
+
 LATEST Nov3 08:34:11+08/unix1793666051: V5roll40408 FOUND EXITED, originalfaultlog
 retained: afterR766170dispatch it read cached pre-handover READY588039 then
 admitRPCassertgpuR@0. Metadatafix5295b6ed refreshesBOTHhostinventories after

@@ -1,4 +1,4 @@
-# S-COOPMWM — frozen B-u3 bank confirmation; B-REPLAY integration pending
+# S-COOPMWM — B-REPLAY running from u3; independent bank collection
 1. MAIN06:27 operationalcap14500000 supersedesfresh6Mguard. MAIN07:06 authorized144000checks->train,append-onlySHA b6c1b8bf:train3008400/checks288000; traincharged1798800/remaining1209600 exactlyB/Ru4-u24 PPO. Oldrecords/failurechargesretained; restrictedbank2600000/k8training1500000/interim900000 unchanged; liveimmutablebindingsawaitqualifiedhandover.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
@@ -40,7 +40,7 @@
 39. TRAIN4/dev16 reportingonly; primaryA24/B24/R24,secondaryA48. Finalspawnfault375800sim-squarantined; MAIN1556approvedreplacement; source4/89CPU PASS explicitcheckpoint/SHA+final-onlycaps; B/Rcontinue.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. Nov3 08:34 A48/B3/R3;8admitted/3coop. MAIN0816 threshold10->8 append-onlySHA26535926; watcherV3 2926173/start68009586 LIVEcpuQ/poll120s,replaystartcpu4/706LinuxPASS0skips85.010s/noSUMO. Actualbankgate8/8PASS; fourjointGPUgates+collectoractivation pending; bothAready8/Rfirst2gates. Freshreplay0735jobs/exactu3AdamRNG; samePPOepisodes capturebothOWNcurrentpolicy/nonblocking/noextratraincharge,Rlag1,lessons/update;fixedu8interim<=345600restricted/hash-only. RollV6=10148 fixesposthandoverstaleowner/13CPUchecks; activation39660/observer40668adopted. Fundingresolvedb6c1b8bf; noPPOrestartclaim.
+42. MAIN0835 decouplesGPUroll/collectoractivation fromPPOstart: admitted>=8+qualifiedrelease+reconciledbudget+healthOK ONLY. SHA b9671376/V4/replaystartcpu5/707LinuxPASS0skips83.264s/zeroSUMO. B_REPLAY_STARTED Nov3 08:52:44+08; watcher2979442/B2979632/R2979633/graders2979630,31 LIVE. B-u4 fresh24claims/12RESULT+12t721..978at08:54:40; Rwaitslag1, optimizerB3/R3/A48. SamePPOepisodes capturebothOWNcurrentpolicy/nonblocking/noextratraincharge;lessons/update;fixedu8interim<=345600restricted/hash-only. Existingroll10148/activation39660/observer40668continue; it2_K2 untilindependentnicheactivation; collector drainslater/noactivegrade. Bank8admitted/3coop, total14.5M/fundingb6c1b8bf/nooutcomeselection.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
 44. Mechanics3600,calibration57600,discovery138200,pairedbranches1297400,reusecheck600; train2852400 inclMAIN1651 tenfresh-ID DNS replacements12000; allfailedchargesretained; verification2800000/exactgrade55360 plusinactivek8phase1500000.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.

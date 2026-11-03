@@ -1,5 +1,33 @@
 # S-COOPMWM — live checks
 
+## Nov3 08:52:44 UTC+8 — B_REPLAY_STARTED; MAIN08:35 decoupling live
+- Append-only V4 amendment SHA256
+  `b967137614d30c9ab358f77670198e1784496deadee2c38a9b6eb76666bbd8bc`
+  was registered and committed (`54be3ba4`) before launch. Immutable
+  `replaystartcpu5`: **707 Linux CPU checks PASS, zero skips,83.264s, zero SUMO**.
+- Start requires **8 admitted entries + qualified replay release + reconciled
+  budget + health OK**. GPU niche/nullfix rollout and collector activation proceed
+  independently. The actual gate receipt passes all four requirements.
+- Remote `B_REPLAY_STARTED.json` was written at **unix1793667164.8449004**.
+  Durable watcher **2979442/start68143223**; arm owners **B2979632/R2979633**;
+  graders **2979630/2979631**. Boot/start/argv verified alive, no child failures.
+  Only the verified idle previous watcher was retired; the original bank builder
+  exited gracefully before confirmation ownership moved to the new graders.
+- At08:54:40, B-u4 has24 fresh `replay0735` episode claims,12 RESULT files and
+  12 ongoing episodes observed at t721–978/1200s. R's supervisor waits under the
+  registered lag-1 rule. Both optimizer endpoints remainu3 at this observation.
+- Collection continues on existing services; qualified it2_K2 requests remain in
+  use until independent joint collector activation enables niches1/4 alternation.
+  Frozen-u3 admissions hand over later at a no-active-grade boundary. Existing
+  sequential rollout/activation/observer owners10148/39660/40668 remain alive.
+- Bank at handover:75 usable decisions,36 confirmations,**8 admitted/3 cooperative**.
+  Charged5,633,000 sim-s at08:53:18, including retained superseded/failure charges;
+  approved cap14,500,000. CPU disk16.26GB. No policy-learning result yet.
+- Evidence: `coopmwm/B_REPLAY_START_WATCH_DISPATCH_0835_V4.json` and
+  `coopmwm/B_REPLAY_START_WATCH_STATUS_1793667281338361200.json`.
+  `replay_start_ops status` now reports the new child identities and fresh TRAIN
+  episode progress; historical `warm_watch` arm-owner precedence predates replay.
+
 ## Nov3 08:34 UTC+8 — rolling-controller stale-owner fault fixed
 - V5 controller40408 exited after starting gpuR qualifier766170: it attempted
   admission using the retired worker's cached pre-handover READY status. Its

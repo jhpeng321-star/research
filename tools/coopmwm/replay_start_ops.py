@@ -203,14 +203,36 @@ print(json.dumps(d))''',timeout=60))
 
 def status():
     value=json.loads(remote('cpuQ',f'''from pathlib import Path
-import json,time
+import json,time,zlib
 c=Path({CONTROL!r});d=json.loads((c/'DISPATCH.json').read_text());p=Path('/proc',str(d['pid']))
 st=(p/'stat').read_text().split() if p.exists() else None
 assert st is None or st[21]==d['start_ticks']
 assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
+r=Path({ROOT!r});started=r/'B_REPLAY_STARTED.json'
+start=json.loads(started.read_text()) if started.exists() else None
+children=[]
+for child in (start or {{}}).get('children',[]):
+ q=Path('/proc',str(child['pid']));s=(q/'stat').read_text().split() if q.exists() else None
+ assert s is None or s[21]==child['start_ticks']
+ label=child['component']+'_'+child['arm'];log=c/(label+'.log');failure=c/(label+'_FAILED.json')
+ children.append(dict(owner=child,state=s[2] if s else 'ABSENT',
+  argv=(q/'cmdline').read_bytes().replace(bytes([0]),b' ').decode() if q.exists() else None,
+  failure=json.loads(failure.read_text()) if failure.exists() else None,
+  log=log.read_text()[-2500:] if log.exists() else None))
+episodes=[]
+for arm in ('B','R'):
+ u=max([3]+[int(q.stem.rsplit('_',1)[1]) for q in r.glob(arm+'_UPDATE_[0-9][0-9][0-9].json')])+1
+ for job in sorted((r/'jobs').glob('replay0735_warm_u'+str(u).zfill(3)+'_'+arm+'_*')):
+  result=(job/'RESULT.json').exists();claim=job/'CLAIM.json';trace=job/'observable.jsonl.gz';last=None
+  if trace.exists() and not result:
+   lines=zlib.decompressobj(16+zlib.MAX_WBITS).decompress(trace.read_bytes()).split(b'\\n')[:-1]
+   if lines:last=json.loads(lines[-1])['time_s']
+  episodes.append(dict(id=job.name,arm=arm,update=u,claimed=claim.exists(),closed=result,
+   observed_sim_time_s=1200 if result else last,progress_censored=not result))
 print(json.dumps(dict(unix=time.time(),owner=d,state=st[2] if st else 'ABSENT',
  status=json.loads((c/'STATUS.json').read_text()) if (c/'STATUS.json').exists() else None,
- log=(c/'WATCH.log').read_text()[-5000:],started=(Path({ROOT!r})/'B_REPLAY_STARTED.json').exists())))''',timeout=40))
+ log=(c/'WATCH.log').read_text()[-5000:],started=start is not None,
+ start_receipt=start,children=children,episodes=episodes)))''',timeout=40))
     p=ops.EVIDENCE/f'B_REPLAY_START_WATCH_STATUS_{time.time_ns()}.json';write(p,value)
     print(json.dumps(dict(receipt=str(p),**value)))
 
