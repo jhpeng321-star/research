@@ -1,5 +1,15 @@
 # S-RB2-CAL — partial development delivery, recovered 2026-11-03
 
+## RESUME Nov3 22:18 +08 — later MAIN entries checked; CAL HOLD persists
+
+Receipt: `docs/paper_results/rb2cal/RESUME_20261103_2218.md`. Clean start
+`d3a44003`; MAIN registration checked through line6865/Nov3 22:03 entry.
+No CAL release found. Nov2 02:28 owner resource stop and INT's Nov3 16:52
+HOLD remain controlling. Saved versions and partial results below are preserved;
+over-confidence remains unresolved. The39 missing development futures await
+explicit MAIN release and source/claim/resource/new-deadline reconciliation.
+This session checked coordination only; no new remote liveness assertion.
+
 ## RESUME Nov3 20:17 +08 — current coordination checked; HOLD persists
 
 Receipt: `docs/paper_results/rb2cal/RESUME_20261103_2017.md`. Clean start
