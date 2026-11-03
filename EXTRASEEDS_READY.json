@@ -1,0 +1,68 @@
+{
+  "schema": "coopmwm.extra_seeds_ready.v1",
+  "branch": "c4/extra-seeds",
+  "base": "f9bd9cad (c4/launch-coop head)",
+  "commit": "ccd7ec3a",
+  "new_sumo_sim_s": 0,
+  "gpu_jobs": 0,
+  "deployed": false,
+  "option": {
+    "name": "extra_seeds",
+    "default": 0,
+    "semantics": "BUILD option on verify_mode='all8_both_seeds' (tools/coopmwm/verify_perseed.py): for every decision with at least one within-seed COOPERATIVE example on seeds 1/2, each such plan (distinct candidate index) is re-verified together with the policy-continues reference on CRN seeds 3..(2+extra_seeds); one batched group verification per extra seed. Each (plan, extra seed) is admitted INDEPENDENTLY by the same per-seed rules (within-seed per-second paired block bootstrap lower95 > 0 + own-seed composite MAIN04:26 safety + own-seed measured extended-window later-harm), then gets its own batched solo verification on THAT seed (roots named like the kinds: confirm_seed<k>_all8, confirm_extended_seed<k>_all8, confirm_solo_all8_s<k>). Admitted examples are APPENDED to per_seed_v1.examples with seed_index >= 3 (own plan/tape/label), so the per_seed_v1 bank rule consumes them unchanged. Arms B and R use the identical code path. No cross-seed requirement; seeds >= 3 never alter the seed-1/2 examples, mean_replicated_advantage_veh_s (seeds-1/2 admission mean), the legacy replicated flag (now '{1,2} <= cooperative seeds of the plan'), or the exact gate.",
+    "salt_convention": "seed 2 keeps the existing replicate(snapshot, vid) salt; extra seed k >= 3 uses replicate(snapshot, extra_seed_salt(vid, k)) with salt = f'{vid}#seed{k}' - a pure deterministic function of the first-seed verification_id and k only (distinct from the seed-2 salt, from every other extra seed, and from every other vid). The replicate() generator seed implied by the salt is checked against the evaluation world-seed ranges 962000-962999 / 964000-964199 / 977000-977999 (EVAL_SEED_RANGES); in the collision case the salt is deterministically re-derived with a '#x<n>' suffix, so no evaluation seed is ever a CRN generator seed input. Documented in verify_perseed.extra_seed_salt and the module docstring."
+  },
+  "keys": {
+    "record_new_when_on": [
+      "extra_seeds (int n)",
+      "extra.{k} per extra seed k=3..2+n: seed_index, salt, kind, verification_id, status, snapshot_sha256, receipt_sha256, root, candidates (cooperative candidate indices), J_policy_veh_s, extended (verification_id/status/receipt_sha256/candidate_indices or null), later_harm_measured=true, solo_root"
+    ],
+    "record_extended_when_on": [
+      "winners gains one key per extra seed (strings '3'..'2+n'); distinct_winners_across_seeds stays the seed-1 vs seed-2 comparison",
+      "per_seed_v1.examples gains the appended seed_index>=3 examples (admitted_seeds/cooperative_seeds derive from examples unchanged)"
+    ],
+    "record_unchanged_when_off": "with extra_seeds=0 (or the key absent) no new keys are written, no extra verify() calls are made, and records/receipts/charges are byte-identical (test_extra_seeds_zero_is_byte_identical; the only difference between two roots is the bank's absolute path inside the record and its own seal digest over it)",
+    "config": "binding 'sumo_verify' config key extra_seeds (replay_bank.collect passes it to confirm_pending only when set); builder BINDING.json key extra_seeds (bank_builder.run_all8_round -> vp.confirm_all8; extra-seed verifications are conditional on the seeds-1/2 cooperation labels so they are charged LIVE through rb._confirm_charge - only the seed-2 all-K branches are precharged)",
+    "api": "vp.confirm_all8(..., extra_seeds=0), vp.confirm_pending_all8(..., extra_seeds=0), rb.confirm_pending(..., extra_seeds=0)",
+    "cli": "python -m tools.coopmwm.verify_perseed extra-seeds [--n N] (default n=4) prints extra_seeds_quote(n); the existing 'quote' command is unchanged",
+    "charges": "every extra verification (group, extended, solos) goes through the SAME hooks as seeds 1/2: sv.verify -> runner.admit (disk guard) -> rb._confirm_charge(run_root, phase, kind) with kind in {confirm_seed<k>_all8, confirm_extended_seed<k>_all8, confirm_solo_all8_s<k>}, warm_health.assert_running checked before each"
+  },
+  "option_off_byte_identical": "test_verify_perseed_cpu.py::test_extra_seeds_zero_is_byte_identical: the SAME decision run with verify_mode=all8_both_seeds (extra_seeds absent) vs extra_seeds=0 explicit gives byte-identical verification receipts, byte-identical ledger charge rows, and a record identical modulo the bank absolute path and the self-referential confirmation_sha256; no confirm_seed3_all8 root is created and the record has no 'extra'/'extra_seeds' keys; quote_decision gains no extra keys when extra_seeds=0. PASSES.",
+  "cost_quote_cli": "python -m tools.coopmwm.verify_perseed extra-seeds   # per-decision sim-s, branch sim-s charged from t=0 (warm-up included), as sv.quote; t0=600 rows:",
+  "cost_quote_t0_600": {
+    "no_cooperative_example_on_seeds_1_2": {"all8_total_sim_s": 15120, "extra_seeds_sim_s": 0, "all8_total_with_extra_sim_s": 15120, "multiplier_total_with_extra": 2.0},
+    "one_cooperative_winner": {"all8_total_sim_s": 24960, "extra_seeds_group_sim_s": 6720, "extra_seeds_extended_sim_s": 9600, "extra_seeds_solo_sim_s": 10080, "extra_seeds_sim_s": 26400, "all8_total_with_extra_sim_s": 51360, "multiplier_total_with_extra": 3.424},
+    "two_cooperative_winners": {"all8_total_sim_s": 32400, "extra_seeds_group_sim_s": 13440, "extra_seeds_extended_sim_s": 19200, "extra_seeds_solo_sim_s": 30240, "extra_seeds_sim_s": 62880, "all8_total_with_extra_sim_s": 95280, "multiplier_total_with_extra": 6.352},
+    "assumptions": "K=8, D=120 s, 2-member plans; quote assumes every cooperative plan is LB>0 and admitted on each extra seed (upper bound, consistent with the seed-1/2 quote assumptions); a plan with no cooperative example on seeds 1/2 costs 0 extra sim-s"
+  },
+  "tests_run": {
+    "new": "test_verify_perseed_cpu.py: test_extra_seed_salts_deterministic_distinct_and_never_evaluation_seeds, test_extra_seeds_zero_is_byte_identical, test_extra_seeds_independent_admission_own_solos_and_charges (E2E extra_seeds=4: seed 3 admits+cooperative, seed 4 rejects on own LB, seed 5 fails its OWN later-harm window, seed 6 admits but solo does as well; 15 charges through the existing hook incl. confirm_seed4_all8 with no extended and no solos; per_seed_v1 overlay/bank_examples/imitation_entry on the seed-3 tape), test_extra_seeds_quote_keys_and_cli, test_extra_seeds_on_arm_R (extra_seeds=2 on the R bank), test_reader_relabels_stored_reference_mismatch_on_extra_seed (seed_kinds solo-root fallback, replicated flag untouched); test_bank_perseed_cpu.py: test_all8_extra_seed_examples_flow_through_per_seed_v1_unchanged (bank_pairs entries carry seed_index 3 with THAT seed's tape, report rows, by_seed summary shape unchanged)"
+  },
+  "tests_passed": {
+    "verify_perseed": "18/18 (tools/coopmwm/test_verify_perseed_cpu.py: 12 pre-existing + 6 new)",
+    "bank_boot_perseed_imitation_builder": "34/34 (test_bank_boot_cpu.py, test_bank_perseed_cpu.py 16/16 incl. 1 new, test_bank_imitation_cpu.py, test_bank_builder_cpu.py)",
+    "bank_amendment_safety_restore": "13/13 (test_bank_amendment_cpu.py, test_bank_safety_cpu.py, test_bank_restore_ops_cpu.py)",
+    "launch_final": "13/13 (test_launch_final_cpu.py)",
+    "coop_only": "9/9 (test_coop_only_cpu.py)",
+    "overall": "87/87, 0 failed"
+  },
+  "cpuq_run_command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_verify_perseed_cpu.py tools/coopmwm/test_bank_boot_cpu.py tools/coopmwm/test_bank_perseed_cpu.py tools/coopmwm/test_bank_imitation_cpu.py tools/coopmwm/test_bank_builder_cpu.py tools/coopmwm/test_bank_amendment_cpu.py tools/coopmwm/test_bank_safety_cpu.py tools/coopmwm/test_bank_restore_ops_cpu.py tools/coopmwm/test_launch_final_cpu.py tools/coopmwm/test_coop_only_cpu.py   # run from the worktree root E:/agent-work/c4-extra-seeds; CPU only (no SUMO, no GPU, no ssh)",
+  "changed_files": [
+    "tools/coopmwm/verify_perseed.py (EVAL_SEED_RANGES + extra_seed_salt eval-seed guard, extra_seed_indices; confirm_all8 extra_seeds=0 wiring with build_eval/build_example/run_solo refactor - seeds 1/2 behavior and record bytes unchanged; per_seed_v1 examples appended with seed_index>=3; relabel_reference_mismatch resolves seed>=3 solo roots via seed_kinds; quote_decision extra_seeds/cooperative keys only when n>0; extra_seeds_quote + CLI extra-seeds)",
+    "tools/coopmwm/replay_bank.py (confirm_pending extra_seeds=0 pass-through; collect reads binding sumo_verify cfg extra_seeds only when set)",
+    "tools/coopmwm/bank_builder.py (run_all8_round reads config extra_seeds (default 0), passes to confirm_all8; extra-seed charges stay on the live rb._confirm_charge hook)",
+    "tools/coopmwm/test_verify_perseed_cpu.py (6 new tests + seed_of extra-seed salt parsing + arm parameter of setup + ExtraPlant later-harm plant)",
+    "tools/coopmwm/test_bank_perseed_cpu.py (1 new consumption test)"
+  ],
+  "hard_rules_respected": {
+    "cpu_only": "no SUMO/GPU/ssh used; deterministic per-second plant runners in tests",
+    "own_worktree_only": "all work in E:/agent-work/c4-extra-seeds on branch c4/extra-seeds",
+    "no_git_reset_clean_stash_push": "commits only",
+    "sealed_holdout_paths": "sealed/, holdout/heldout/cal_split/chunk5/j4b/inc1 paths and truth files never opened",
+    "eval_seeds": "964000-964199/962xxx/977xxx never an input of an extra-seed salt (enforced by extra_seed_salt)"
+  },
+  "commit_history": [
+    "7bded5e3 coopmwm: BUILD option extra_seeds (default 0) - CRN seeds 3..2+n for cooperative plans, per-seed admission, per-seed solos, appended seed_index>=3 examples",
+    "ccd7ec3a coopmwm: extra_seeds CPU tests - off byte-identity, deterministic salts, per-seed admission/solos/charges, arm R, per_seed_v1 consumption of seed_index>=3"
+  ]
+}
