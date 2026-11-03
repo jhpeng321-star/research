@@ -52,6 +52,13 @@ class CommandOwnership:
         self.cav_ids = frozenset(cav_ids)
         self._owned: dict[str, str] = {}
         self._last: dict[str, CommandRecord] = {}
+
+    def last_commands(self) -> dict[str, CommandRecord]:
+        """Copy of the most recent CommandRecord per CAV (empty before the first decision).
+
+        Read-only view for observers (e.g. the v2v partner block); the writer stays internal."""
+        return dict(self._last)
+
         self._time: float | None = None
         # Upper bound of wall/direct requests; None = the adopted config bound (1.5).  Set only by
         # CavSumoEnv for C4 DIRECT-output ticks (ACCELCAP_NOTES.md).
