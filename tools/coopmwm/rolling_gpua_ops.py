@@ -12,7 +12,7 @@ ROOT='/home/ubuntu/coopmwm20261103_rolling2318_gpua_v4'
 PRIOR='/home/ubuntu/coopmwm20261103_rolling1647_v3'
 CPU='ROLLING_ARCHIVE_CPU_GPUA_V4.json'
 REG='ROLLING_ARCHIVE_REGISTRATION_GPUA_V4.json'
-DISPATCH='ROLLING_ARCHIVE_BRIDGE_GPUA_V4.json'
+DISPATCH='ROLLING_ARCHIVE_BRIDGE_GPUA_V4B.json'
 ROUTE=['ssh','-T','-o','BatchMode=yes','-o','IdentityFile=none','-o','IdentitiesOnly=no',
     '-o','StrictHostKeyChecking=yes','-o','UserKnownHostsFile=/home/ubuntu/coopmwm20261102_remote_routes5/known_hosts_gpuA',
     '-o','ConnectTimeout=20','-o','ServerAliveInterval=15','-o','ServerAliveCountMax=8',
@@ -100,6 +100,7 @@ def drain():
 code="""from pathlib import Path
 import json,os,signal,time,hashlib
 r=Path({PRIOR!r});new=Path({ROOT!r});assert (new/'AUTHORITY.json').is_file()
+assert (new/'HANDOVER_BOUNDARY_V4B.json').is_file(),'safe-boundary amendment missing'
 d=json.loads((r/'OWNER.json').read_text());p=Path('/proc',str(d['pid']))
 assert d['boot_id']==Path('/proc/sys/kernel/random/boot_id').read_text().strip()
 v=dict(owner=d,unix=time.time(),new_sim_s=0,prior_root=str(r),source_receipts_preserved=True)
@@ -108,7 +109,6 @@ if p.exists():
  if s[2]!='Z':
   assert str(r/'rolling_archive.py') in (p/'cmdline').read_bytes().replace(bytes([0]),b' ').decode()
   assert not (p/'task'/str(d['pid'])/'children').read_text().strip(),'prior archive transfer still active'
-  assert (p/'wchan').read_text().strip() in ('hrtimer_nanosleep','do_nanosleep','do_select'),'prior mover not idle'
   os.kill(d['pid'],signal.SIGSTOP)
   try:
    for _ in range(50):
@@ -116,6 +116,12 @@ if p.exists():
     time.sleep(.01)
    assert (p/'stat').read_text().split()[2]=='T','prior did not acknowledge stop'
    assert not (p/'task'/str(d['pid'])/'children').read_text().strip(),'prior acquired a child before stop'
+   folders=sorted(r.glob('batch_*'))
+   last=folders[-1] if folders else None
+   completed=last is None or (last/'ARCHIVE_MOVE.json').exists() or (last/'CAPACITY_BLOCKED.json').exists()
+   pre_proof=last is not None and not (last/'REMOTE_VERIFIED.json').exists()
+   assert completed or pre_proof,'prior mover finishing SHA-certified removals'
+   v['boundary']='completed_batch' if completed else 'source_hashing_or_pre_verification; no current-batch deletion'
   except BaseException:
    os.kill(d['pid'],signal.SIGCONT);raise
   os.kill(d['pid'],signal.SIGTERM);os.kill(d['pid'],signal.SIGCONT)
@@ -174,10 +180,52 @@ def handover():
     while not proof.exists():
         try:drain()
         except RuntimeError as error:
-            if not any(x in str(error) for x in ('prior archive transfer still active','prior mover not idle')):raise
+            if not any(x in str(error) for x in ('prior archive transfer still active','prior mover not idle','prior mover finishing SHA-certified removals')):raise
             print(json.dumps(dict(unix=time.time(),waiting_for_prior_idle=True,new_sim_s=0)),flush=True)
             time.sleep(30)
     bridge()
+
+
+def boundary_register():
+    """No source deletion or signal; qualify a safe pre-proof boundary as idle."""
+    record=ops.EVIDENCE/'ROLLING_ARCHIVE_BOUNDARY_AMENDMENT_V4B.json'
+    if not record.exists():write(record,dict(new_sim_s=0,original_amendment_sha256=sha(ops.EVIDENCE/REG),
+        rule='One mover only. Old parent may be retired with no active children at a completed-batch OR source-hashing/pre-verification boundary (no REMOTE_VERIFIED proof, hence no current-batch deletion). SIGSTOP then recheck identity/state/children/latest proof; any incomplete proof-certified removal phase resumes untouched. Transfers are never interrupted. This prevents starvation while old cpuQ maintenance target is never reached.',
+        source_sha256=sha(ops.LOCAL/'tools/coopmwm/rolling_gpua_ops.py')))
+    h=sha(record);registry=checked(REGISTRY)
+    if h not in registry.read_text(encoding='utf-8'):
+        with registry.open('a',encoding='utf-8') as f:f.write('\nS-COOPMWM archive safe-boundary engineering amendment '+read(record)['rule']+' amendmentSHA'+h+'\n')
+    print(remote('cpuQ',f'''from pathlib import Path
+import json
+p=Path({ROOT!r})/'HANDOVER_BOUNDARY_V4B.json';v=json.loads({json.dumps(dict(read(record),amendment_sha256=h))!r})
+if p.exists():assert json.loads(p.read_text())==v
+else:
+ with p.open('x') as f:json.dump(v,f)
+print(json.dumps(dict(registered=True,sha256={h!r},new_sim_s=0)))''',timeout=35))
+
+
+def retire_waiter():
+    """Retire only the old local waiter while it has no SSH child/remote operation."""
+    import psutil
+    old=ops.EVIDENCE/'ROLLING_ARCHIVE_BRIDGE_GPUA_V4.json';d=read(old)
+    proc=psutil.Process(d['pid']);assert proc.create_time()==d['create_time']
+    assert 'tools.coopmwm.rolling_gpua_ops' in proc.cmdline()
+    assert not proc.children(recursive=True),'old waiter has an active metadata/drain call'
+    proc.suspend()
+    try:
+        assert not proc.children(recursive=True),'waiter acquired a child'
+        print(remote('cpuQ',f'''from pathlib import Path
+import json
+r=Path({ROOT!r});assert not (r/'OWNER.json').exists() and not (r/'DISPATCH.json').exists(),'archive worker already started; adopt it'
+print(json.dumps(dict(no_remote_worker=True,new_sim_s=0)))''',timeout=30))
+        proc.terminate()
+    except BaseException:
+        proc.resume();raise
+    proc.wait(timeout=5)
+    value=dict(owner=d,unix=time.time(),idle_local_no_children=True,remote_worker_started=False,new_sim_s=0)
+    p=ops.EVIDENCE/'ROLLING_ARCHIVE_WAITER_RETIRED_V4B.json'
+    if not p.exists():write(p,value)
+    print(json.dumps(value))
 
 
 def bridge():
@@ -216,5 +264,5 @@ def status():
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','register','route','drain','launch','handover','bridge','status'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','register','route','boundary_register','retire_waiter','drain','launch','handover','bridge','status'))
     globals()[p.parse_args().action]()

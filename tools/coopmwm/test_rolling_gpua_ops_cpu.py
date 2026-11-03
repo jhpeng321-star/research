@@ -29,6 +29,9 @@ class GPUAOperations(unittest.TestCase):
             ast.parse(inner)
             self.assertIn('signal.SIGCONT);raise',inner)
             self.assertIn('prior archive transfer still active',inner)
+            self.assertIn('assert completed or pre_proof',inner)
+            self.assertIn('REMOTE_VERIFIED.json',inner)
+            self.assertIn('prior mover finishing SHA-certified removals',inner)
             raise Intercepted
         with patch.object(m,'read',return_value={'pass_':True}),patch.object(m,'remote',side_effect=intercept):
             with self.assertRaises(Intercepted):m.drain()

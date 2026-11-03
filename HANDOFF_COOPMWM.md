@@ -1,6 +1,17 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## CURRENT Nov4 00:21 +08 — final integration merged, Linux994 PASS
+- DelegatedpreviewADOPTED(no rerun):B24admitted/7coop,R49/3coop,Rnonempty;
+  bank_statistics SHAidenticalI3,replay_bankversiondiffdisclosed. Mandatory986048
+  notcooperativeunderper_seed_v1(LB-779.708 onseed1,seed2notadmitted).
+  Integratedgatewouldfailcertification; NOrelaxation/state-substitution/SUMO.
+  MAINnotified`_sol/COOPMWM_GATE_CERTIFICATION_BLOCK_2432.md`forwiring/scopeverdict.
+- Finalsourcequote1793723241055578200:B131/R122seed2minimum1572340,
+  bankphase113900remaining=>mingap1458440. Noimplicittransfer/expandedbuilder.
+- GPUAarchivehandoverlivenessfix807d6863registered/4CPUtestsPASS; allows
+  stable no-child completed-batch OR pre-proof hashingboundary (never active
+  transfer/incompleteverifieddeletion). Nextretirelocalwaiter43764onlyifidle+
+  remotestillunstarted; dispatchV4Bonce. Keeporiginalreceipts. SeeARCHIVE_HANDOVER_BOUNDARY_V4B.md.
 - MAINbrief readthrough1003. FinalREADY425e377a/codeac8e1f31 merged as762bdc7d,
   preservingall dirty/untrackedwork. No directeditstointegrator-ownedlearner.
 - I3 immutablecoopmwm20261103_intentcpu_i3 COMPLETE979844/start73698574;
