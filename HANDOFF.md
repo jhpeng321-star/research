@@ -5,6 +5,15 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**Nov3 09:05+08 resume check:** offline final169 analysis, collection/handoff
+and169-row curve hash checks PASS; COMPLETE/7774production/0open and original
+accounting unchanged. Exact local watcher12432/supervisor46520 lookups are empty.
+Peer HANDOFF still points to receipt1793654998:2/16episodes, both scopes EXITED,
+3300charged/2980closedactual; no complete panel manifest. Existing MAIN-dependent
+76840sim-s/GPU0 continuation request remains the evaluation dependency. Remote
+artifact inspection below is historical, not repeated here. Evidence
+`selmappo2/RESUME_20261103_0905.json`; final169 supervision is fulfilled.
+
 **Nov3 07:07+08 fresh-session reconciliation:** original final collection SHA and
 explicit build/PID/final169 analysis PASS: COMPLETE/169updates/7774production,
 6997800actual/6998400reserved; local/peer final handoff bytes and retained169-row

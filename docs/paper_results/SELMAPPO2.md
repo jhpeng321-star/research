@@ -2,6 +2,17 @@
 
 ## Status (reconciled 2026-11-03)
 
+**09:05+08 resume check:** offline final collection analysis with explicit
+build/PID606968/final169 pin PASS; all169updates/7774production/0open,
+6997800actual/6998400reserved sim-s. Local/peer handoff bytes and169-row curve
+hashes match. Exact local watcher12432/supervisor46520 lookups are empty;
+supervision through final169 is complete. Latest peer HANDOFF still cites
+receipt1793654998:2/16episodes, both per-CAV scopes EXITED,
+3300charged/2980closedactual sim-s; no complete evaluation manifest. Its existing
+76840sim-s/GPU0 request remains MAIN-dependent. These are retained peer remote
+observations; last checkpoint-location inspection remains the one below.
+Evidence: `selmappo2/RESUME_20261103_0905.json`.
+
 **07:07+08 resume verification:** retained final collection SHA and explicit
 continuation build/PID/final169 analysis PASS: COMPLETE/169updates/7774production,
 6997800actual/6998400reserved sim-s. Local/peer final handoff bytes match; retained
