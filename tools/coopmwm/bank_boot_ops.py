@@ -4,10 +4,10 @@ import json
 import time
 from . import ops
 from .ls_validity_ops import remote
-from .storage import write
-from .protocol import checked
+from .storage import write,read
+from .protocol import checked,sha,REGISTRY
 
-SOURCE='/home/ubuntu/coopmwm20261103_bankboot1900_v3'
+SOURCE='/home/ubuntu/coopmwm20261103_bankboot1900_v5'
 
 
 def qualify():
@@ -33,7 +33,7 @@ if not p.exists():
  v=dict(pass_=x.returncode==0,stdout=x.stdout,stderr=x.stderr,wall_s=time.time()-start,new_sim_s=0)
  with p.open('x') as f:json.dump(v,f)
 print(p.read_text())''',timeout=110))
-    p=ops.EVIDENCE/'BANK_BOOT_IMITFIX2_LINUX_CPU_1900.json'
+    p=ops.EVIDENCE/'BANK_BOOT_PAIRED_WINDOW_LINUX_CPU_1910.json'
     if not p.exists():write(p,value)
     print(json.dumps(value))
 
@@ -53,11 +53,32 @@ for arm in ('B','R'):
   with done.open('x') as f:json.dump(v,f)
  out[arm]=json.loads(done.read_text())
 print(json.dumps(out))''',timeout=160))
-    p=ops.EVIDENCE/'BANK_BOOT_IMITFIX2_PREVIEW_1900.json'
+    p=ops.EVIDENCE/'BANK_BOOT_PAIRED_WINDOW_PREVIEW_1910.json'
     if not p.exists():write(p,value)
     print(json.dumps(value))
 
 
+def register():
+    cpu=read(ops.EVIDENCE/'BANK_BOOT_PAIRED_WINDOW_LINUX_CPU_1910.json');assert cpu['pass_']
+    record=ops.EVIDENCE/'BANK_BOOT_PAIRED_WINDOW_REGISTRATION_1910.json'
+    line=('\nS-COOPMWM MAIN19:00/19:10 engineering integration: bank-boot92d4deca + '
+        'imit-fix2128516c9; boot_v2 remains default. Schema guard checks only '
+        'boot_v2-required verification/replication/later-harm/safety keys; missing '
+        'second-seed solo evidence is single_seed, not a t1727 schema exception. '
+        'Legacy first top8 group tape can end later than the chosen-plan solo; '
+        'synergy uses their exact shared recorded interval (same start, min(end)), '
+        'records both original/used windows, never unmatched totals/missing seconds. '
+        'No outcome-selected threshold or new SUMO. 96 targeted Linux tests PASS '
+        'including exact_update/full+empty bank/Adam rollback/schema/synergy. '
+        'V2V remains HELD; full source qualification and intent/fix gate still required.\n')
+    if not record.exists():write(record,dict(line=line,cpu=cpu,new_sim_s=0,source=SOURCE,
+        hashes={n:sha(ops.LOCAL/'tools/coopmwm'/n) for n in ('bank_statistics.py','bank_imitation.py','test_bank_boot_cpu.py','test_imitfix2_cpu.py')}))
+    h=sha(record);registry=checked(REGISTRY)
+    if h not in registry.read_text(encoding='utf-8'):
+        with registry.open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+h+'\n')
+    print(json.dumps(dict(registered=True,sha256=h,new_sim_s=0)))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','preview'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','preview','register'))
     globals()[p.parse_args().action]()

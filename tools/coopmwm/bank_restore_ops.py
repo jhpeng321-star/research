@@ -121,6 +121,33 @@ print(p.stdout)''',timeout=200))
     print(json.dumps(value))
 
 
+def protect_pending():
+    line=('\nS-COOPMWM MAIN19:03 archive protection amendment: all currently present '
+        'LS pending inputs are explicitly listed in a public PENDING_PROTECTION_BINDING '
+        'consumed by the existing mover metadata-reference guard. No pending input '
+        'may be newly archived; restoration bindings also protect recovered inputs. '
+        'No simulation/inference, no mover/source restart.\n')
+    registry=checked(REGISTRY)
+    if line not in registry.read_text(encoding='utf-8'):
+        with registry.open('a',encoding='utf-8') as f:f.write(line)
+    value=json.loads(remote('cpuQ','''from pathlib import Path
+import os,json,time,hashlib
+root=Path('/home/ubuntu/coopmwm20261102_lscollect1');p=root/'PENDING_PROTECTION_BINDING_1903.json'
+if p.exists():print(json.dumps(dict(adopt=True,files=len(json.loads(p.read_text())['paths']),sha256=hashlib.sha256(p.read_bytes()).hexdigest())));raise SystemExit
+bad=('sealed','holdout','heldout','cal_split','chunk5','j4b','inc1','hetdata_truth','vehicle_params','driver_params','vtype','assignment')
+paths=[]
+for directory,dirs,names in os.walk(root/'pending',followlinks=False):
+ dirs[:]=[n for n in dirs if not any(b in str(Path(directory)/n).lower() for b in bad) and not (Path(directory)/n).is_symlink()]
+ for name in names:
+  q=Path(directory)/name
+  if not any(b in str(q).lower() for b in bad) and not q.is_symlink():paths.append(str(q))
+with p.open('x') as f:json.dump(dict(paths=sorted(paths),unix=time.time(),authority='MAIN19:03; pending inputs protected from archive'),f)
+print(json.dumps(dict(files=len(paths),sha256=hashlib.sha256(p.read_bytes()).hexdigest(),new_sim_s=0)))''',timeout=35))
+    p=ops.EVIDENCE/'PENDING_ARCHIVE_PROTECTION_1903.json'
+    if not p.exists():write(p,value)
+    print(json.dumps(value))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('plan','register','restore'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('plan','register','restore','protect_pending'))
     globals()[p.parse_args().action]()

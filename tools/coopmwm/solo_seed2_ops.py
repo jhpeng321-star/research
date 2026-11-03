@@ -7,7 +7,7 @@ from .ls_validity_ops import remote
 from .storage import write,read
 from .protocol import sha,checked,REGISTRY
 
-CONTROL='/home/ubuntu/coopmwm20261103_solo1755_v2'
+CONTROL='/home/ubuntu/coopmwm20261103_solo1755_v3'
 SOURCE='/home/ubuntu/coopmwm20261103_compositereleasecpu1'
 ROOT='/home/ubuntu/coopmwm20261102_warm1'
 
@@ -30,17 +30,26 @@ if not p.exists():
  code="import sys,json;sys.path.insert(0,"+repr(str(r))+");import solo_seed2 as m;print(json.dumps(m.quote("+repr({ROOT!r})+")))"
  q=subprocess.run(['/home/ubuntu/miniconda3/bin/python','-B','-c',code],capture_output=True,text=True,env=env,timeout=40)
  assert q.returncode==0,q.stderr
- v=dict(pass_=True,stdout=x.stdout,stderr=x.stderr,quote=json.loads(q.stdout),new_sim_s=0,source_sha256=hashlib.sha256((r/'solo_seed2.py').read_bytes()).hexdigest())
+ quote=json.loads(q.stdout);prior=Path('/home/ubuntu/coopmwm20261103_solo1755_v2');adopted=[];remaining=[]
+ assert (prior/'FAILED.json').exists()
+ old=json.loads((prior/'DISPATCH.json').read_text());proc=Path('/proc',str(old['pid']))
+ if proc.exists():assert (proc/'stat').read_text().split()[2]=='Z' or (proc/'stat').read_text().split()[21]!=old['start_ticks'],'adopt live solo owner'
+ for item in quote['entries']:
+  p=prior/(item['verification_id']+'.json')
+  if p.exists() and json.loads(p.read_text()).get('status')=='complete':adopted.append(dict(item,receipt=str(p)))
+  else:remaining.append(item)
+ quote.update(entries=remaining,total_sim_s=sum(e['sim_s'] for e in remaining),adopted_complete=adopted)
+ v=dict(pass_=True,stdout=x.stdout,stderr=x.stderr,quote=quote,new_sim_s=0,source_sha256=hashlib.sha256((r/'solo_seed2.py').read_bytes()).hexdigest())
  with p.open('x') as f:json.dump(v,f)
 print(p.read_text())''',timeout=85))
-    p=ops.EVIDENCE/'SOLO_SEED2_CPU_QUOTE_1755.json'
+    p=ops.EVIDENCE/'SOLO_SEED2_CPU_QUOTE_1755_V3.json'
     if not p.exists():write(p,value)
     print(json.dumps(value))
 
 
 def register():
-    cpu=read(ops.EVIDENCE/'SOLO_SEED2_CPU_QUOTE_1755.json');assert cpu['pass_']
-    record=ops.EVIDENCE/'SOLO_SEED2_REGISTRATION_1755.json'
+    cpu=read(ops.EVIDENCE/'SOLO_SEED2_CPU_QUOTE_1755_V3.json');assert cpu['pass_']
+    record=ops.EVIDENCE/'SOLO_SEED2_REGISTRATION_1755_V3.json'
     line=('\nS-COOPMWM MAIN17:55/18:00b second-seed solo supplement: B every first-seed '
         'positive cooperative candidate passing existing replication+later-harm checks, '
         'including986066/048/003 and qualifying newer snapshots. Frozen issue list, '
@@ -53,7 +62,12 @@ def register():
         'does NOT itself certify a CI: BANK_STAT_V2 bootstrap required. '
         f"Exact quote {cpu['quote']['total_sim_s']}sim-s, {len(cpu['quote']['entries'])}decisions. "
         'Inside existing17471840cap/restricted phase; fail before physics on insufficient '
-        'room. Durable own cpuQ supervisor/nice19/two branches max; no replay on failure.\n')
+        'room. MAIN19:03 recovery V3 adopts the three complete V2 supplements '
+        '(7950sim-s retained), resumes the remaining seven PLUS the new u15 '
+        'cooperative candidate after26 SHA-restored '
+        'bank inputs; original failed owner127691 verified exited. No repeated '
+        'priority branches. Durable own cpuQ supervisor/nice19/two branches max; '
+        'no replay on failure.\n')
     if not record.exists():write(record,dict(line=line,cpu=cpu,quote=cpu['quote'],source_sha256=cpu['source_sha256'],new_sim_s=0))
     h=sha(record);registry=checked(REGISTRY)
     if h not in registry.read_text(encoding='utf-8'):
@@ -80,7 +94,7 @@ with (r/'RUN.log').open('x') as log:
 v=dict(pid=child.pid,start_ticks=Path('/proc',str(child.pid),'stat').read_text().split()[21],boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),argv=command)
 with p.open('x') as f:json.dump(v,f)
 print(json.dumps(v))''',timeout=40))
-    p=ops.EVIDENCE/'SOLO_SEED2_DISPATCH_1755.json'
+    p=ops.EVIDENCE/'SOLO_SEED2_DISPATCH_1755_V3.json'
     if not p.exists():write(p,value)
     print(json.dumps(value))
 

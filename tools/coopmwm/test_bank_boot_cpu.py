@@ -176,6 +176,15 @@ def test_single_seed_synergy_path(tmp_path, v2):
     assert rep['cooperative_replicated'] == 0 and rep['admitted'] == 2
 
 
+def test_boot_merge_checks_only_boot_schema_and_allows_missing_seed2_solos(tmp_path, v2):
+    c=make_entry(tmp_path,'merge',noisy(5.,.1,50),noisy(5.,.1,51),synergy1=noisy(3.,.1,52))
+    assert 'replication_cooperation_gain_veh_s' not in c['cooperation']
+    bs.check_keys([c],bank_rule='boot_v2')
+    assert v2(tmp_path,'B')['merge']['cooperation']['cooperative_status']=='single_seed'
+    c['checks'].pop('safety')
+    with pytest.raises(KeyError,match='checks.safety'):bs.check_keys([c],bank_rule='boot_v2')
+
+
 def test_per_vehicle_units_used_when_stored(tmp_path, v2):
     g = np.concatenate([np.full(40, 3.), np.zeros(10)])
     make_entry(tmp_path, 'pv', g, g, per_vehicle=True)
@@ -213,3 +222,12 @@ def test_bootstrap_deterministic_and_block_mode():
     assert a == b and a['per_seed'][0]['block_len'] == 30
     zero = bs.paired_bootstrap([np.zeros(10)])
     assert zero['lower95_one_sided_veh_s'] == 0.
+
+
+def test_legacy_common_top8_window_is_clipped_to_recorded_solo_window():
+    group=dict(start_s=300,end_s=720,tail_s=120)
+    solo=dict(start_s=300,end_s=570,tail_s=120)
+    assert bs.paired_window(group,solo)['end_s']==570
+    assert group['end_s']==720
+    with pytest.raises(ValueError,match='start times'):
+        bs.paired_window(group,dict(solo,start_s=301))

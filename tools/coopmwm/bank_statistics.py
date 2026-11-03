@@ -63,14 +63,23 @@ def _applicable(c,key):
 
 
 def _has(c,key):
-    if key.startswith('cooperation.'):return key.split('.',1)[1] in (c.get('cooperation') or {})
-    return key in c
+    for part in key.split('.'):
+        if not isinstance(c,dict) or part not in c:return False
+        c=c[part]
+    return True
 
 
-def check_keys(records):
+def check_keys(records,bank_rule='t1727'):
     """Schema guard: a statistical key absent from EVERY applicable record is a schema
     mismatch, not evidence; raise instead of silently rejecting the whole bank."""
     records=list(records)
+    if bank_rule=='boot_v2':
+        rows=[c for c in records if 'confirmation_branches_complete' not in (c.get('checks') or {})]
+        for key in ('verification_id','replication.verification_id','checks.no_later_harm','checks.safety'):
+            if rows and not any(_has(c,key) for c in rows):
+                raise KeyError(f'bank_statistics boot_v2: key {key!r} missing from all applicable confirmations')
+        return
+    if bank_rule!='t1727':raise ValueError('unknown schema rule '+str(bank_rule))
     for key in REQUIRED_KEYS:
         rows=[c for c in records if _applicable(c,key)]
         if rows and not any(_has(c,key) for c in rows):
@@ -238,6 +247,20 @@ def _best_solo(solo_root, solos):
     return member, adv, _read_result(Path(solo_root)/'branches', r['verification_id'], r['branches'][1]), r['window']
 
 
+def paired_window(group,solo):
+    """Legacy top-eight group tails can be longer than the chosen-plan solos.
+
+    Use their exact shared recorded window; never compare unmatched totals or
+    extend a missing trace. The minimum end is a data-availability boundary,
+    not an outcome-selected horizon.
+    """
+    if group['start_s']!=solo['start_s']:
+        raise ValueError('solo and group start times differ; synergy not paired')
+    end=min(group['end_s'],solo['end_s'])
+    if end<=group['start_s']:raise ValueError('empty paired synergy window')
+    return dict(group,end_s=end)
+
+
 def _cooperation(bank, c, group_tapes, admitted):
     """Synergy per unit = best-solo branch minus group branch (same seed); positive = group better.
 
@@ -260,14 +283,16 @@ def _cooperation(bank, c, group_tapes, admitted):
     if rep_solos:
         seeds.append((bank/'confirm_solo_replication', rep_solos, group_tapes[1]))
     pairs, best = [], []
+    paired_windows=[]
     for d, solos, (grp, window) in seeds:
         member, adv, solo_tape, sw = _best_solo(d, solos)
-        if sw != window:
-            raise ValueError('solo and group windows differ; synergy not paired')
-        pairs.append((solo_tape, grp, window))
+        common=paired_window(window,sw)
+        pairs.append((solo_tape, grp, common))
+        paired_windows.append(dict(group_window=window,solo_window=sw,used=common))
         best.append(dict(member=member, solo_advantage_veh_s=adv))
     st = _stats(pairs)
     st['best_solo_per_seed'] = best
+    st['paired_windows'] = paired_windows
     co['synergy_v2'] = st
     positive = st['lower95_one_sided_veh_s'] > 0 and all(s['mean_per_unit_veh_s'] > 0 for s in st['per_seed'])
     if len(seeds) == 2:
@@ -335,6 +360,7 @@ def confirmations_v2(original, rb, root, arm, sources=()):
     """{vid: v2 view}. Per-entry missing data -> not admitted with the reason; raises
     BankDataMissing when NO complete confirmation has per-unit data (never silently reject all)."""
     conf = original(root, arm)
+    check_keys(conf.values(),bank_rule='boot_v2')
     bank = Path(rb.bank_root(root, arm))
     def key(vid):
         return (str(root), arm, vid, conf[vid].get('confirmation_sha256'))
