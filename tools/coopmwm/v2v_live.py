@@ -26,7 +26,7 @@ def accounting(root, cfg):
 def hooks(root, cfg):
     from . import replay_bank as rb, warm_health as health
     from . import bank_imitation, bank_statistics
-    bank_statistics.install(rb)
+    bank_statistics.install(rb, sources=cfg.get('replay_sources'))
     bank_imitation.run=bank_imitation.run_separate
     from .v2v_runtime import Policy, load_checkpoint
     from .accel_storage import read
