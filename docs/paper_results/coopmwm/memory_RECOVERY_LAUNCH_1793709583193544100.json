@@ -1,0 +1,119 @@
+{
+  "adopted_graders": {
+    "B": {
+      "argv": [
+        "/home/ubuntu/miniconda3/bin/python",
+        "-B",
+        "-u",
+        "-m",
+        "tools.coopmwm.replay_start",
+        "/home/ubuntu/coopmwm20261102_warm1",
+        "grade",
+        "--arm",
+        "B"
+      ],
+      "arm": "B",
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "completion_root": "/home/ubuntu/coopmwm20261102_warm1/replay_composite_0957",
+      "component": "grade",
+      "pid": 3305068,
+      "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+      "start_ticks": "68977059",
+      "unix": 1793675492.8660207
+    },
+    "R": {
+      "argv": [
+        "/home/ubuntu/miniconda3/bin/python",
+        "-B",
+        "-u",
+        "-m",
+        "tools.coopmwm.replay_start",
+        "/home/ubuntu/coopmwm20261102_warm1",
+        "grade",
+        "--arm",
+        "R"
+      ],
+      "arm": "R",
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "completion_root": "/home/ubuntu/coopmwm20261102_warm1/replay_composite_0957",
+      "component": "grade",
+      "pid": 3305069,
+      "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+      "start_ticks": "68977059",
+      "unix": 1793675492.8683271
+    }
+  },
+  "owner": {
+    "binding_sha256": "f5aac6ea92af7390621689374f5ca04d2f9df42573ae30b232ebf92346581de2",
+    "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+    "control_root": "/home/ubuntu/coopmwm20261102_warm1/memory_recovery1",
+    "pid": 411148,
+    "source_root": "/home/ubuntu/coopmwm20261103_memory_recovery2",
+    "start_ticks": "72386051",
+    "unix": 1793709582.7856135
+  },
+  "quote": {
+    "adopted_precharged_sim_s": 57600,
+    "fresh_train_sim_s": 316800,
+    "global_registered": 17471840,
+    "new_allocation_sim_s": 0,
+    "remaining_train": 316800,
+    "train_charged": 2691600
+  },
+  "resumes": {
+    "B": 18,
+    "R": 17
+  },
+  "retired": [
+    {
+      "amendment_sha256": "853bb0b6d3afcbc71b7f5ee7c028ebf971d196fe0380d7f977fb702c55d08dbe",
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "control_root": "/home/ubuntu/coopmwm20261102_warm1/replay_composite_0957",
+      "pid": 3305066,
+      "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+      "source_root": "/home/ubuntu/coopmwm20261103_compositereleasecpu1",
+      "start_ticks": "68977029",
+      "unix": 1793675492.5633712
+    },
+    {
+      "argv": [
+        "/home/ubuntu/miniconda3/bin/python",
+        "-B",
+        "-u",
+        "-m",
+        "tools.coopmwm.replay_start",
+        "/home/ubuntu/coopmwm20261102_warm1",
+        "arm",
+        "--arm",
+        "B"
+      ],
+      "arm": "B",
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "component": "arm",
+      "pid": 3305070,
+      "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+      "start_ticks": "68977059",
+      "unix": 1793675492.8703508
+    },
+    {
+      "argv": [
+        "/home/ubuntu/miniconda3/bin/python",
+        "-B",
+        "-u",
+        "-m",
+        "tools.coopmwm.replay_start",
+        "/home/ubuntu/coopmwm20261102_warm1",
+        "arm",
+        "--arm",
+        "R"
+      ],
+      "arm": "R",
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "component": "arm",
+      "pid": 3305071,
+      "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+      "start_ticks": "68977060",
+      "unix": 1793675492.8724575
+    }
+  ]
+}
