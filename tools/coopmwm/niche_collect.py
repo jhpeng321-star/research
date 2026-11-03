@@ -4,14 +4,32 @@ import itertools
 import numpy as np
 
 
-def search_config(ordinal):
+def search_config(ordinal,coop=None,alternate=False):
+    """it2_K2 niches 1/4 alternation; optional additive coop_objective keys (default none).
+
+    alternate: coop only on ordinals with (ordinal//2)%2==0, crossing the niche parity
+    (outcome-blind 2x2: niches1/4 x coop on/off)."""
     if int(ordinal)!=ordinal or ordinal<0:raise ValueError('nonnegative niche admission ordinal')
-    return dict(iterations=2,screen_K=2,niches=(1,4)[int(ordinal)%2])
+    out=dict(iterations=2,screen_K=2,niches=(1,4)[int(ordinal)%2])
+    if coop and coop.get('coop_objective') and not (alternate and (int(ordinal)//2)%2):
+        out.update(coop)
+    return out
 
 
 def validate(config):
-    if config not in (search_config(0),search_config(1)):
+    base={k:v for k,v in config.items() if not k.startswith('coop_')}
+    if base not in (search_config(0),search_config(1)):
         raise ValueError('registered it2_K2 niches=1/4 configuration required')
+    coop={k:v for k,v in config.items() if k.startswith('coop_')}
+    if coop:
+        from .coop_search import split_config
+        if not coop.get('coop_objective'):raise ValueError('coop keys require coop_objective=True')
+        if 'coop_novelty_bank' in coop:raise ValueError('reference the novelty bank by coop_novelty_bank_sha256, never embed it')
+        sha=coop.get('coop_novelty_bank_sha256')
+        if sha is not None and not (isinstance(sha,str) and len(sha)==64 and all(c in '0123456789abcdef' for c in sha)):
+            raise ValueError('coop_novelty_bank_sha256 must be a sha256 hex digest')
+        coop=dict(coop,coop_novelty_bank_sha256=None)   # the digest is resolved on the GPU host
+        split_config(dict(coop))   # registered keys and value checks only
     return dict(config)
 
 

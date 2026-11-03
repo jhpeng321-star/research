@@ -129,7 +129,7 @@ def label(root,envelope,response,config):
             generation=config.get('label_generation')
             target=root/'labels'/(key+('_'+generation if generation else '')+'.json')
             target.parent.mkdir(parents=True,exist_ok=True)
-            extra={k:response[k] for k in ('variation','search_config','nullfix') if k in response}
+            extra={k:response[k] for k in ('variation','search_config','nullfix','coop_objective') if k in response}
             immutable(target,dict(search_id=key,world_id=envelope['world_id'],
                 record_sha256=digest(envelope['record']),verification=result,
                 feasibility=feasibility,policy_frozen_u3=True,
@@ -165,7 +165,7 @@ def label(root,envelope,response,config):
             reservation=reservation,branches=specs,no_double_charge=True))
     kw=dict(members_t0=feasibility['members_t0']) if feasibility else {}
     result=verify(snapshot,candidates,runner,charge,'wm',workers=9,root=attempt/'verification',**kw)
-    extra={k:response[k] for k in ('variation','search_config','nullfix') if k in response}
+    extra={k:response[k] for k in ('variation','search_config','nullfix','coop_objective') if k in response}
     if feasibility is not None:extra['feasibility']=feasibility
     immutable(target,dict(search_id=key,world_id=envelope['world_id'],
         record_sha256=digest(envelope['record']),verification=result,
@@ -211,6 +211,8 @@ def supervise(root):
         config.update(json.loads((root/'LS_NULLFIX_CONFIG.json').read_text()))
     if (root/'LS_REPLAY_DRAIN_CONFIG.json').exists():
         config.update(json.loads((root/'LS_REPLAY_DRAIN_CONFIG.json').read_text()))
+    if (root/'LS_COOP_SEARCH_CONFIG.json').exists():   # additive; absent = unchanged collector
+        config.update(json.loads((root/'LS_COOP_SEARCH_CONFIG.json').read_text()))
     main=Path(config['run_root']);install_accounting(main,config['budget'])
     if config.get('operational_spend_cap'):
         from . import accel_storage
@@ -289,7 +291,9 @@ def supervise(root):
                         if config.get('niche_alternation'):
                             from .niche_collect import search_config
                             ordinal=len(admitted)+admission_offset-config['niche_alternation']['start_admission_count']
-                            r['search_config']=search_config(ordinal)
+                            if config.get('coop_search'):
+                                r['search_config']=search_config(ordinal,config['coop_search'],config.get('coop_alternation',False))
+                            else:r['search_config']=search_config(ordinal)
                         key=r['state_id'];charge=9*min(1200,r['time_s']+420)
                         try:reserve(main,[dict(id='lslabel_'+key,sim_s=charge)],'sumo_verification')
                         except Exception as error:
