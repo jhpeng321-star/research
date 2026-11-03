@@ -307,8 +307,9 @@ def _move_verified(bdir, dest, body):
         if body['payload_sha256'] is not None:
             if not dpayload.exists():
                 raise SlimError(f'{dpayload} missing after copy')
+            import gzip
             dm = json.loads(dmarker.read_text(encoding='utf-8'))
-            payload_bytes = dpayload.read_bytes()
+            payload_bytes = gzip.decompress(dpayload.read_bytes())
             if hashlib.sha256(payload_bytes).hexdigest() != dm['sha256']:
                 raise SlimError(f'{dpayload} uncompressed payload digest mismatch')
             if digest(json.loads(payload_bytes.decode('utf-8'))) != body['result_sha256']:
@@ -332,8 +333,8 @@ def slim_record(bank, record, dry_run=False, archive_dir=None):
                already_slim=0, bytes_removed=0, bytes_moved=0, slim_bytes=0, errors=[])
     try:
         plan = slim_plan(bank, record)
-    except SlimError as e:
-        out['errors'].append(dict(error=str(e)))
+    except Exception as e:      # any planning failure keeps every tape and is reported
+        out['errors'].append(dict(error=repr(e)))
         return out
     out['records'] = len(plan)
     for entry in plan:
@@ -401,8 +402,8 @@ def migrate(bank, archive_dir, dry_run=False):
     layout, sha256-verified) instead of deleting. Never touches admitted/reference/solo tapes,
     observable traces or the sealed records."""
     bank, archive_dir = Path(bank), Path(archive_dir)
-    resolved = bank.resolve()
-    if archive_dir.resolve() == resolved or archive_dir.resolve() in resolved.parents:
+    a, b = archive_dir.resolve(), bank.resolve()
+    if a == b or a in b.parents or b in a.parents:
         raise SlimError('archive dir must be outside the bank')
     out = dict(bank=str(bank), archive=str(archive_dir), dry_run=bool(dry_run), records=0,
                bytes_moved=0, bytes_removed=0, slim_bytes=0, errors=[])
