@@ -216,7 +216,9 @@ def test_one_full_pass_imitation_update_lowers_action_and_intent_error(tmp_path)
     head_before = ext.intent.weight.clone()
     report = run_separate(ext, ext_opt, pairs, torch.Generator().manual_seed(5),
                           reference, coefficient=1., passes=5,
-                          intent=dict(weight=.1, horizon=H, bounds=INTENT_BOUNDS))
+                          intent=dict(weight=1.0, horizon=H, bounds=INTENT_BOUNDS))
+    # weight 1.0 = config key v2v_intent_weight (registered default .1; this test
+    # exercises the knob so ONE update is decisive for BOTH heads on CPU)
     assert report['epochs_completed'] >= 5
     assert report['action_error_after_mps2'] < action_before
     assert report['intent']['error_after_mps2'] < intent_before
