@@ -1,6 +1,12 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## Fresh-session adoption — Nov3 23:08 +08
+- Independent actual-slate all8 budget/input preflight DONE, no physics:
+  ALL8_SLATE_QUOTE_1793718753675224300.json. B129/R120completed decisions,
+  seed2alone1546510sim-s vs137180bankextremaining => MINshortfall1409330.
+  Conditionalextended/soloscostextra;88B LS candidate-spec sets missing at
+  originalpaths (archiverestore required). MAIN/integrator notified in
+  `_sol/COOPMWM_ALL8_INPUT_BUDGET_BLOCKERS_2312.md`. No allowance silently moved.
 - Full986-line brief read; start38e60421, all dirty/untracked work retained.
 - Fresh memory_RECOVERY_STATUS_1793718388686627500 confirms B21/R20, all4 old
   owners ABSENT under intentional hold; A48 complete. No legacy restart.
