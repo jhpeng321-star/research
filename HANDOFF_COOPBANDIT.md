@@ -117,3 +117,11 @@ Independent verification PASS: all 11 manifest hashes; 300 unique states / 60
 worlds / 4,500 labels / 240 credit rows; 1,452 unique data and 72 unique live
 charges; 59-line report. Actual 1,567,326 / charged 1,569,840 sim-s satisfy all
 ceilings. All four steps remain complete; no simulations or dispatches started.
+
+Fresh owner-requested resume on 2026-11-03 started from clean `e79309b1`.
+Shared COMPLETE registration and both completion receipts were read first.
+Independent verification PASS: all 11 EXAM/live-report manifest hashes, 300 unique
+states / 60 worlds / 4,500 labels / 240 credit rows, and 1,452 unique data / 72
+unique live charges. Reconciled actual 1,567,326 / conservative charged 1,569,840
+sim-s; data/live/global ceilings PASS; final report remains 59/70 lines.
+Existing completed work preserved; no simulations or dispatches started.
