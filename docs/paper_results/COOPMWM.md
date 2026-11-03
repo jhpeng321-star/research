@@ -1,5 +1,28 @@
 # S-COOPMWM — live checks
 
+## Nov3 11:54:33 UTC+8 — B/R-u7 complete; conditional learning checks continue
+- Both u7 update receipts exist; watcher3305066 and all four children remain live,
+  with no alerts/dead children. Original minimum1800s update pacing remains active.
+- B-u7 bank grows to11 admitted targets/1620 pair records. It requests5 passes,
+  starts the first and takes4 optimizer steps/512 pair visits before the
+  **minibatch-local KL stop**. Its final all-bank mean KL0.038714 is a different
+  aggregate from the triggering minibatch. Action error0.846535→0.846204m/s²;
+  the growing bank makes this raw error incomparable across updates.
+- R-u7 has3 admitted targets/450 pairs and completes all5 passes,2250 pair visits,
+  KL0.007434; action error0.753600→0.747355m/s². Actual target counts satisfy the
+  registered admitted-target cap, with no B data supplied to R.
+- Fixed8-entry B lesson: **+445.012veh-s**, entry-bootstrapCI
+  **[-78.696,+1025.124]**,6/8 positive; mean fixed-entry action error0.614341m/s²
+  (u4/u5/u6:0.646729/0.641686/0.627479). R's fixed1-entry lesson:+3736.900veh-s,
+  no CI; that entry's action error0.195964m/s². These remain conditional bank checks.
+- u7 B-A hard-brake delta **-1.354[-4.250,+1.458]**, critical total
+  **-13.813[-41.188,+19.417]**; R-A hard braking **+0.083[-3.521,+3.229]**,
+  critical total **-13.000[-41.084,+15.729]**,24 paired worlds each. All collision/
+  teleport differences0; both composite checks pass.
+- Canonical u7 lesson/safety receipts are published in `coopmwm/`; full current
+  status:`B_REPLAY_START_WATCH_STATUS_1793678074743887200.json`. The remote run
+  continues to fixedu24 and the pre-registered hash-sealed evaluation stages.
+
 ## Nov3 11:20:36 UTC+8 — TRAINING RUNNING; B/R-u6 complete with full-bank exposure
 - Registered release/commit`709a2f4f` preceded actual restart **11:11:32+08**.
   Durable cpuQ watcher **3305066/start68977029**, B**3305070**, R**3305071**,
