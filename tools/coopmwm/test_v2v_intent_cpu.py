@@ -4,6 +4,7 @@ import gzip
 import importlib.util
 import json
 import math
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -366,11 +367,21 @@ def test_checkpoint_save_load_roundtrip(tmp_path):
 
 def _base_module(name, tmp_path):
     """Import the pre-intent source of tools/coopmwm/<name>.py at the branch point."""
-    try:
-        source = subprocess.run(['git', 'show', f'{BASE}:tools/coopmwm/{name}.py'], capture_output=True,
-                                text=True, check=True, cwd=Path(__file__).resolve().parents[2]).stdout
-    except (OSError, subprocess.CalledProcessError):
-        pytest.skip('branch-point source unavailable')
+    fixture_dir = os.environ.get('COOPMWM_INTENT_BASELINE_DIR')
+    if fixture_dir:
+        # Immutable Linux releases pin these exact git blobs in LS_SOURCE_HASHES.
+        # A configured but incomplete fixture is a gate failure, never a skip.
+        assert name in ('accel_learner', 'exact_grade', 'bank_imitation', 'v2v_obs')
+        baseline = Path(fixture_dir)
+        provenance = json.loads((baseline/'PROVENANCE.json').read_text(encoding='utf-8'))
+        assert provenance['commit'].startswith(BASE)
+        source = (baseline/(name+'.py')).read_text(encoding='utf-8')
+    else:
+        try:
+            source = subprocess.run(['git', 'show', f'{BASE}:tools/coopmwm/{name}.py'], capture_output=True,
+                                    text=True, check=True, cwd=Path(__file__).resolve().parents[2]).stdout
+        except (OSError, subprocess.CalledProcessError):
+            pytest.skip('branch-point source unavailable')
     path = tmp_path/f'base_{name}.py'
     path.write_text(source, encoding='utf-8')
     package = __name__.rpartition('.')[0]  # the package THIS test imported (pytest may root it)

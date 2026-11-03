@@ -15,7 +15,7 @@ BASE_COMMIT = 'cf3efc9e'
 BASE_SOURCE = '/home/ubuntu/coopmwm20261103_v2vcpu8'
 BASELINE_NAMES = ('accel_learner', 'exact_grade', 'bank_imitation', 'v2v_obs')
 EXTRA_FILES = tuple('tools/coopmwm/'+name+'.py' for name in (
-    'v2v_intent', 'test_v2v_intent_cpu', 'coopfix_exact_gate',
+    'accel_learner', 'exact_grade', 'v2v_intent', 'test_v2v_intent_cpu', 'coopfix_exact_gate',
     'test_coopfix_exact_gate_cpu', 'solo_seed2_links', 'test_solo_seed2_links_cpu',
     'test_bank_boot_cpu', 'test_imitfix2_cpu', 'v2v_launch3', 'test_v2v_launch3_cpu'))
 EXTRA_TESTS = ('test_v2v_intent_cpu', 'test_coopfix_exact_gate_cpu',
