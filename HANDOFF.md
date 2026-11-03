@@ -133,3 +133,21 @@ switches every existing result is bit-identical.
 - The full-panel S-RB-EVAL distributional scoring (breakdown/delay) runs on the
   integrated WM-PHYS config (S-RB-INT); this stream's parity evidence is the
   tape check above plus the unit parity tests.
+
+## Post-freeze status (2026-11-03 11:45, fresh-session audit; no new runs)
+
+- S-RB-CF deliverables 1-2 are COMPLETE and consumed: all four frozen INT
+  recipes set `cf_model="sumo_idm"` with `sumo_cf_emergency_decel_mps2=9.0`
+  and learned corrections OFF. No pending CF asks in rb-shared or the
+  REGISTRATION tail (program has moved to RB2/S-COOPMWM; v5/teacher frozen
+  under the MAIN `S-RB2-INT RESUME` hold).
+- GAP (published as
+  `rb-shared/CF_TO_INT_POSITION_RULE_UNCONSUMED_20261103.md`): NO frozen
+  recipe (v4/lp/v5/v5-LP) sets `physics.position_rule`, so every frozen panel
+  ran `legacy_trapezoid`; the committed, default-OFF `sumo_euler` switch
+  (18291ef5) and `PURE_SUMO_PHYSICS_EULER` preset are unconsumed. Evidence and
+  consumption line are in that note; revision decision belongs to INT/MAIN.
+- Tests re-verified green this session: 92 passed, 16 pre-existing skips.
+  ENV NOTE: machine default `python` is now 3.14 (no torch); use
+  `C:/Users/jpeng/miniconda3/python.exe` (conda base 3.13.13).
+- Branch quiescent unless INT opens a recipe revision.
