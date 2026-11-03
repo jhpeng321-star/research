@@ -57,6 +57,12 @@ class CommandOwnership:
         # CavSumoEnv for C4 DIRECT-output ticks (ACCELCAP_NOTES.md).
         self.wall_accel_max_mps2: float | None = None
 
+    def last_commands(self) -> dict[str, CommandRecord]:
+        """Copy of the most recent CommandRecord per CAV (empty before the first decision).
+
+        Read-only view for observers (e.g. the v2v partner block); the writer stays internal."""
+        return dict(self._last)
+
     def step(self, frames: Mapping, *, now_s: float, live_ids,
              wall_commands: Mapping[str, float] | None = None, native_ids=(),
              record_callback: Callable[[CommandRecord], None] | None = None) -> list[CommandRecord]:
