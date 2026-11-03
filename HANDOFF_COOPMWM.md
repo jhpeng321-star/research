@@ -1,6 +1,19 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## CURRENT — primary delegated, old-output SHA archive actively draining
+- NEWbriefthrough1109READ. MAIN04:17 assignsstartupv2v_trainallocation/restart
+  toClaudeoperator: DO NOTduplicate. OursresourcefixSIGCONT1237127 receipt
+  MOVER_RESUMED_MAIN0412_1793736879211875400 verifiesS/S; actualdeployedresource
+  checkreadyTRUE/free9312317440/mem22340571136/moverAliveTRUE. Watcher1728407
+  thenexitedonfullinitialv2v_trainre-quote; reportedtoMAIN. STARTEDstillabsent
+  atlastknownprobe; waitoperatorresume/monitor,don'tforkanotherwatcher.
+- Launchsourcef497ae26adoptedpreservingmergedd93c53f(5opscommitsaheadpreventedff).
+- Draftremaining-workcoordinator4local+4LinuxPASS,registeredBUTNOTDISPATCHED;
+  v2v_watch_resume.py+testUNTRACKED preserved; no runtime/guard/ledgerchanges.
+- OldPPOarchive1 FAILEDSSHverificationtimeoutafter8certifiedbatches1089928280
+  bytes,finallyresumedregularmover. Remaining-sourcePPOrecovery2REGISTERED
+  3fa3817c; newcontrolold_ppo_archive_recovery2 readsLIVEtransportpercall, fresh
+  pre-proofretries, andNEVERpauses/signalsregularmover. NextdispatchONCE.
 - Authoritative live handover `_sol/COOPMWM_STORAGE_AND_HANDOVER_LIVE.md`.
 - OursallAdmittedDIAGNOSTICfinishedFAIL,55/55graded0prefix/physicsfaults; no launch.
   CurrentcoopOnlylearning/safetygate+launchfullydelegatedc4/launch-coop; don't
