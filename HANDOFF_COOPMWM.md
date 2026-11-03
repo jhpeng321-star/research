@@ -1,4 +1,50 @@
-# S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
+# S-COOPMWM continuation — MAIN18:00b fix-first HOLD
+
+## CURRENT Nov3 ~22:00 +08 — latest brief through line937; intent Linux PASS
+- Preserve all earlier work, owners, charges and telemetry. Historical warm-memory
+  qualification/restarts are DONE; do not repeat them.
+- Reviewed `c4/intent-merged` integrated as689a5c0f; `c4/gate-fix`1862431a
+  integrated asb819c3d2. Current qualified code pinf3caf85fdd387239d503f4cd47cc73729b8d8b53.
+- NEW immutable cpuQ `/home/ubuntu/coopmwm20261103_intentcpu_i1` completed
+  **903 Linux CPU checks PASS, zero skips,107.265s,zero SUMO**. Dispatch544809/
+  start72735767 is complete; NEVERredispatch. Adopt
+  `V2V_LINUX_CPU_RESULT_INTENT_I1.json` and matching DISPATCH receipt.
+- Four cf3efc9e git blobs are frozen/hash-manifested for option-off identity;
+  merged accel_learner/exact_grade are explicitly staged, not inherited stale.
+- AUDIT_REPORT.md remains absent at last existence check; do not Read absent
+  report or run real-bank exact gate before independent audit clears deployed pin.
+- V2V remains HELD/no V2V physics or new gate executed. launch3 is a read-only
+  checker; actual durable supervisor still needs its mandatory binding/check wiring.
+- Last live warm state B20/R19, no active healthSTOP/pause; historical owner fields
+  are retired, adopt latest memory-recovery dispatches rather than redispatching.
+- Global registered cap17471840 retained. No new simulation/inference/charge by
+  this resume. Existing running observers/collection/graders retained.
+- Real-bank gate currently requires all three mandatory worlds to be replicated
+  cooperative; linked preview986048 was admitted/not replicated cooperative.
+  Disclosed to MAIN in `_sol/COOPMWM_RESUME_2158.md`; do not relax silently.
+
+## CURRENT Nov3~18:00 +08 — READ NEW ADDENDA THROUGH LINE872
+- V2V MUST NOT LAUNCH until intent-int + BANK_STAT_V2 + offline/exact fix gate PASS.
+  Source8/778Linux PASS/full-pass imitation kept per MAIN17:55, but Student-t
+  statistical rule SUPERSEDED/DO NOT USE. No V2V physics occurred.
+- Original resourcewatcher4125157 identity-idle retired; replacement19184 also
+  now HELD/exited (boot/start/argv/nochildren/nojobs proof). Receipt
+  `V2V_HOLD_MAIN1740_1800.json`; old launch action refuses. NEWrootv2v3/source8
+  retained historical. Future launcher from c4/v2v-launch3, NOT these watchers.
+- Missingsecond-seed solos and per-vehiclebootstrap next; use READY agents on
+  c4/bank-stat-filter,c4/intent-int,c4/gate-sumo,c4/v2v-launch3. Do not duplicate.
+- ScopedopaqueSHA archiveLIVE owner7221(start71351887), parent7220;
+  CONTROL`/home/ubuntu/coopmwm20261103_archive1731`. ADOPT
+  SCOPED_ARCHIVE_DISPATCH_1731; do not redispatch. 1,250,473,414bytes pending,
+  noCOMPLETEyet. Existingrolling4116186 LIVE retained. e3final live-referenced
+  inclWARM/EXACT/V2V/LSbindings+environments =>SKIP.
+- MAIN17:52 NOWallows referenced-audited deletions; PRIORITY disk>=10GiB:
+  mappospeed/production2/scenarios, completedjobs, diagnosticraw aftersummarycopy.
+  Protectbank/grades/finalreceipts/checkpoints/source/livepaths. Nothingdeleted
+  bythissessionexceptverifiedrollingownedmoves. Do not touch accel1/livecwd.
+- Actualcollectionhealth: B110/52confirmed/u14,R96/64/u15,pending0; GPU94/96%.
+  No restartneeded/stall13:04supersededbyliveevidence. NonV2VB17/R16~17:31,
+  original3305066/childrencontinue/nohealthpause. Observebeforeanynewdispatch.
 
 ## CURRENT Nov3 17:20 +08 — latest MAIN16:47 applied
 - **17:24:31 update:** initialrollingpool COMPLETE18batches/2308751466bytes;
@@ -2637,3 +2683,22 @@ No new probe dispatched. Numerical source still matches qualified `fcc50296`;
 integrated warm H1204.529x/cold H3002.496x receipts retain EXACT0 costs and
 trajectories, identical ranks/draws. Existing single registration and exact
 source-bound hot-swap recipe in c4-wmspeed2/docs/paper_results/WMSPEED2.md apply.
+
+### S-WMSPEED2 recovery 2026-11-03 17:35 — qualified release preserved
+
+Fresh inventories committed in c4/wmspeed2 `df8ecf32`: no live WMSPEED2 jobs;
+GPU A96%/38,363MiB and GPU R96%/4,406MiB, each with two other compute processes.
+Further GPU experiments remain capacity-blocked. Numerical source still matches
+`fcc50296`; integrated warm H1204.529x/cold H3002.496x receipts retain EXACT0
+costs/trajectories and identical ranks/draws. The single registration and exact
+hot-swap recipe in c4-wmspeed2/docs/paper_results/WMSPEED2.md remain current.
+New inference/training/SUMO0; no owner process changed.
+
+### S-WMSPEED2 recovery 2026-11-03 17:38 — capacity receipts refreshed
+
+Inventories committed in c4/wmspeed2 `13c363d3`: no live WMSPEED2 jobs;
+GPU A23%/38,363MiB and GPU R97%/4,406MiB, each with two other compute processes.
+Further GPU speed experiments remain capacity-blocked. Release `fcc50296`,
+its exact cold/warm startup gate and source-bound hot-swap recipe remain current;
+integrated warm H1204.529x/cold H3002.496x receipts rechecked, EXACT0 costs and
+trajectories, identical ranks/draws. Existing registration preserved.

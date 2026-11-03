@@ -1,5 +1,21 @@
 # S-COOPMWM — live checks
 
+## Nov3 ~22:00 UTC+8 — reviewed intent integration passes Linux qualification
+- Reviewed intent and exact-cooperation-gate branches merged in commits
+  `689a5c0f` and `b819c3d2`. Pinned integration `f3caf85f` passes **903 Linux CPU
+  checks, zero failures/skips,107.265s,zero simulation** in an immutable cpuQ root.
+- This includes causal t-1 intent sharing, zero-init loading, separate full-pass
+  imitation, boot_v2 certification, and the paired exact-gate CPU suite. Frozen
+  pre-intent git fixtures verify option-off identity inside the no-physics guard.
+- Independent audit report is pending. The real-bank exact gate and V2V launch
+  remain held; Linux success alone is not a cooperation or launch result.
+- Legacy checkpoints are B20/R19 at the live state check, with no health STOP.
+  Existing collection/graders/observers are retained. No new SUMO or WM search
+  was dispatched by this continuation. Cap17,471,840 and prior charges retained.
+- Evidence:`coopmwm/V2V_LINUX_CPU_DISPATCH_INTENT_I1.json`,
+  `coopmwm/V2V_LINUX_CPU_RESULT_INTENT_I1.json`; source
+  `/home/ubuntu/coopmwm20261103_intentcpu_i1`.
+
 ## Nov3 ~18:15 UTC+8 — fix-first V2V HOLD; storage recovered
 - All new MAIN addenda through18:00b/line872 read. Replacement V2V resource
   watcher19184 was identity-verified idle/nochildren/nojobs and **HELD** before
