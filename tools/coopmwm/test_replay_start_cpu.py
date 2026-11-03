@@ -16,16 +16,17 @@ def put(path, value):
 class StartGateTests(unittest.TestCase):
     def test_threshold_release_and_budget_are_joint_gates(self):
         with tempfile.TemporaryDirectory() as d:
-            r=Path(d);c=r/'collection';v=dict(collection_root=str(c), budget={'total':14500000})
-            put(r/'replay_bank/B/BANK_QUALITY.json', dict(admitted=9,cooperative=3))
+            r=Path(d);c=r/'collection';v=dict(collection_root=str(c), budget={'total':14500000},start_admitted_min=8)
+            put(r/'replay_bank/B/BANK_QUALITY.json', dict(admitted=7,cooperative=3))
             put(c/'LS_ENDPOINTS.json', dict(workers=[]))
             with patch('tools.coopmwm.warm_health.assert_running'):
                 self.assertFalse(rs.prereqs(r,v,False)['ready'])
-                put(r/'replay_bank/B/BANK_QUALITY.json', dict(admitted=10,cooperative=3))
+                put(r/'replay_bank/B/BANK_QUALITY.json', dict(admitted=8,cooperative=3))
                 put(c/'LS_ENDPOINTS.json', dict(workers=[dict(owner={'generation':'NICHENULL3'})]*4))
                 self.assertFalse(rs.prereqs(r,v,False)['ready'])
                 put(c/'LS_NULLFIX_CONFIG.json', dict(nullfix_active=True,budget=v['budget']))
                 self.assertTrue(rs.prereqs(r,v,False)['ready'])
+                self.assertEqual(rs.prereqs(r,v,False)['start_admitted_min'],8)
                 put(c/'LS_NULLFIX_CONFIG.json', dict(nullfix_active=True,budget={'total':6000000}))
                 with self.assertRaises(AssertionError):rs.prereqs(r,v,False)
 

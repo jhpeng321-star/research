@@ -17,7 +17,7 @@ import types
 from .protocol import digest, sha
 from .storage import read, write
 
-NAME = 'B_REPLAY_START_0735_V2.json'
+NAME = 'B_REPLAY_START_0816_V3.json'
 PREFIX = 'replay0735'
 
 
@@ -72,7 +72,9 @@ def prereqs(root, v, verify_gpu=True):
     root = Path(root);assert_running(root, 'B');assert_running(root, 'R')
     quality = read(root/'replay_bank/B/BANK_QUALITY.json')
     reasons = []
-    if quality['admitted'] < 10:reasons.append('B admitted bank <10')
+    threshold = v['start_admitted_min']
+    assert threshold == 8, 'MAIN08:16 registered start threshold'
+    if quality['admitted'] < threshold:reasons.append(f'B admitted bank <{threshold}')
     c = Path(v['collection_root'])
     nullconfig = c/'LS_NULLFIX_CONFIG.json'
     if not nullconfig.exists():reasons.append('qualified collector boundary activation pending')
@@ -90,7 +92,8 @@ def prereqs(root, v, verify_gpu=True):
             assert owner_matches(s, w['owner']), 'GPU owner/gate changed'
             remote.verify()  # all eight exact source-bound gates, no inference
     return dict(unix=time.time(), ready=not reasons, reasons=reasons,
-                admitted=quality['admitted'], cooperative=quality['cooperative'])
+                admitted=quality['admitted'], cooperative=quality['cooperative'],
+                start_admitted_min=threshold)
 
 
 def binding(root, v, arm):

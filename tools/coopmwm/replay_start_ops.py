@@ -10,11 +10,11 @@ from .ls_validity_ops import remote
 from .protocol import checked, sha, REGISTRY
 from .storage import read, write
 
-SOURCE='/home/ubuntu/coopmwm20261103_replaystartcpu3'
-BASE='/home/ubuntu/coopmwm20261103_replayreleasecpu6'
-CONTROL=ROOT+'/replay_start_0735_v2'
-REG='B_REPLAY_START_REGISTRATION_0735_V2.json'
-BINDING_NAME='B_REPLAY_START_0735_V2.json'
+SOURCE='/home/ubuntu/coopmwm20261103_replaystartcpu4'
+BASE='/home/ubuntu/coopmwm20261103_replaystartcpu3'
+CONTROL=ROOT+'/replay_start_0816_v3'
+REG='B_REPLAY_START_REGISTRATION_0816_V3.json'
+BINDING_NAME='B_REPLAY_START_0816_V3.json'
 
 
 def qualification_payload(files, source=SOURCE):
@@ -104,9 +104,12 @@ def register():
             interim_max_sim_s=345600,interim_phase='interim_u8_test',
             bank_branch_phase='sumo_verification',confirmation_lesson_phase='bank_verification_ext',
             new_reserved_sim_s=0)
-        line=('\nS-COOPMWM MAIN2026-11-03 07:35 AUTOMATIC B-REPLAY START: durable cpuQ '
+        line=('\nS-COOPMWM MAIN2026-11-03 08:16/08:25 AUTOMATIC B-REPLAY START AMENDMENT: '
+            'start threshold10->8 confirmed/admitted B entries; append-only V3 binding, '
+            'original V2/source/receipts retained; replace only the verified idle watcher. '
+            'All other release, fairness, safety and budget gates unchanged. Durable cpuQ '
             'nohup-equivalent detached watcher, ownedPID/boot/start receipts, flock; poll120s. '
-            'Gate ten confirmed/admitted B entries, full Linux CPU PASS, four joint-release '
+            'Gate eight confirmed/admitted B entries, full Linux CPU PASS, four joint-release '
             'eight-gate GPU owners and qualified collector boundary activation. Gracefully '
             'handover original bank builder only after gate; no physics interrupted. '
             'B/R exactu3 Adam/RNG restore, NEW replay0735 job namespace/no old job replay; '
@@ -120,9 +123,9 @@ def register():
             'boundary; new drain-only supervisor finishes saved labels without any new '
             'frozen-u3 admissions, original claims/labels/precharges retained. Broker '
             'delivers Bsearch and Rcentre-only requests; R candidates never WMscored. '
-            'EngineeringV2: R centre requests now include R currentpolicy weights '
+            'Retain qualified V2: R centre requests include R currentpolicy weights '
             'as B does; no B weights, scoring or library supplied to R. Replace '
-            'only verified idle V1watcher before any start; original config retained. '
+            'only verified idle V2watcher before any start; original config retained. '
             'B it2_K2 niches1/4 alternating, unchanged finalK8/Hfinal, actionablegate both. '
             'Whole-decision precharge/one-use confirmations; all exact-positive safe '
             'same-arm bank entries AWR/cooperative exposure; per-update lessons. '
@@ -134,7 +137,8 @@ def register():
             'final coordinator owns final24 evaluation; never duplicate it. Health/STOP '
             'rules active; dead child alerts/preserves jobs, no physics auto-retry. '
             'Register before any newphysics; unchanged failed mirror remainsOFF.\n')
-        write(path,dict(line=line,authority='MAIN2026-11-03 07:35',source_root=SOURCE,
+        write(path,dict(line=line,authority='MAIN2026-11-03 08:16/08:25',source_root=SOURCE,
+            start_admitted_min=8,
             control_root=CONTROL,collection_root=COLLECTION,budget=budget,cpu=cpu,
             checkpoints=live['checkpoint_sha256'],demand_phase_end_s=live['demand_phase_end_s'],
             old_endpoints=live['paused'],
@@ -170,7 +174,7 @@ for n,h in cpu['source_hashes'].items():assert hashlib.sha256((s/n).read_bytes()
 env=dict(os.environ,PYTHONPATH=str(s/'pytools')+':'+str(s/'WM_PACKAGE')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime',CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',SUMO_HOME='/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo')
 env['PATH']=env['SUMO_HOME']+'/bin:'+env['PATH']
 assert Path(env['SUMO_HOME'],'bin/sumo').is_file()
-old=json.loads((r/'replay_start_0735/DISPATCH.json').read_text());p=Path('/proc',str(old['pid']))
+old=json.loads((r/'replay_start_0735_v2/DISPATCH.json').read_text());p=Path('/proc',str(old['pid']))
 assert not (r/'B_REPLAY_STARTED.json').exists(),'adopt started training; no watcher handover'
 assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==old['boot_id']
 if p.exists():
@@ -190,7 +194,7 @@ with (c/'WATCH.log').open('x') as log:
 d=dict(pid=p.pid,start_ticks=Path('/proc',str(p.pid),'stat').read_text().split()[21],boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),source_root=str(s),control_root=str(c),amendment_sha256=v['amendment_sha256'])
 with (c/'DISPATCH.json').open('x') as f:json.dump(d,f)
 print(json.dumps(d))''',timeout=60))
-    p=ops.EVIDENCE/'B_REPLAY_START_WATCH_DISPATCH_0735_V2.json'
+    p=ops.EVIDENCE/'B_REPLAY_START_WATCH_DISPATCH_0816_V3.json'
     if not p.exists():write(p,value)
     print(json.dumps(value))
 
