@@ -29,6 +29,12 @@ cdcc7c1a; npz re-checked: schema `setdata_hdv_histories/1`, 32 worlds,
 2 831 segments, 256 527 ticks, 652 LC events, 104 ramp merges — all match
 DONE.md. No changes to deliverables; task remains DONE.
 
+RESUME VERIFICATION 2026-11-04c (third fresh session today, no rework):
+6/6 CPU tests pass (5.4 s); all 5 rb-shared code/doc files diff-empty vs
+commit cdcc7c1a; npz re-checked: 58 arrays, 32 worlds, 256 527 ticks;
+summary JSON headline intact (v0=29.87, T=0.753, a=0.701, b=1.687).
+No changes to deliverables; task remains DONE.
+
 ## What exists (new files only, no shared file touched)
 
 * `tools/rbsetdata/extract_hdv_histories.py` — per-driver observable 60 s
