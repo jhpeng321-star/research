@@ -13,6 +13,7 @@ from build_morning_figures import check_morning, extract_morning
 from build_noon_figures import check_noon, extract_noon
 from build_student_figures import check_student, extract_student
 from build_evening_figures import check_evening, extract_evening
+from build_interim_figures import check_interim, extract_interim
 
 
 def main():
@@ -36,7 +37,8 @@ def main():
                     "P-WIN", "P-INTERACT", "P-WALL", "P-TRANSFER", "N-BANDIT", "N-FREE",
                      "W-TEACH", "N-DISTILL", "W-CORE", "M-CREDIT", "W-GUIDE",
                        "W-NOISE", "W-RANK", "W-V5", "W-WARM", "W-EVAL",
-                         "W-BANK", "W-SEARCH", "M-BESTSOLO"):
+                          "W-BANK", "W-SEARCH", "M-BESTSOLO", "W-INTERIM",
+                          "W-ISOLATE", "W-V2V"):
         assert re.search(r"^### " + claim + r"\b", docs["CLAIMS.md"], re.MULTILINE), claim
     for name in ("OUTLINE.md", "FIGURES.md", "THREATS.md", "README.md"):
         assert "WMVALUE" in docs[name], name
@@ -80,6 +82,8 @@ def main():
     student_figures = check_student(student_rows, student_sources, student_worlds)
     evening_rows, evening_source = extract_evening()
     evening_figures = check_evening(evening_rows, evening_source)
+    interim_rows = extract_interim()
+    interim_figures = check_interim(interim_rows)
     # Check staged byte preservation as well as working-copy provenance.
     index_checks = []
     identities = [(entry["snapshot"], entry["snapshot_sha256"]) for entry in manifest.values()]
@@ -90,6 +94,7 @@ def main():
     identities.extend((name, entry["sha256"]) for name, entry in noon_figures["artifacts"].items())
     identities.extend((name, entry["sha256"]) for name, entry in student_figures["artifacts"].items())
     identities.extend((name, entry["sha256"]) for name, entry in evening_figures["artifacts"].items())
+    identities.extend((name, entry["sha256"]) for name, entry in interim_figures["artifacts"].items())
     for name, expected in identities:
         relative = "docs/paper/paperA_cooperation/" + name
         command = subprocess.run(["git", "show", ":" + relative], cwd=ROOT,
@@ -105,7 +110,8 @@ def main():
                 "morning_figure_source_cells": len(morning_rows),
                 "noon_figure_source_cells": len(noon_rows),
                  "student_figure_source_cells": len(student_rows),
-                 "evening_figure_source_cells": len(evening_rows),
+                  "evening_figure_source_cells": len(evening_rows),
+                  "interim_figure_source_cells": len(interim_rows),
               "pending_insertions": {name: text.count("[[PENDING:") for name, text in docs.items()
                                      if name.endswith(".md")},
               "scope": "local links, provenance structure, bibliography identity coverage, CSV schema, plotted source values and hashes",
