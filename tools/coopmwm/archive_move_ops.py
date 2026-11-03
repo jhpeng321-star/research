@@ -12,6 +12,12 @@ from .storage import read,write
 from .ls_validity_ops import remote
 
 ROOT='/home/ubuntu/coopmwm20261103_archive1450'
+CPU_RECORD='ARCHIVE_MOVE_CPU_1450.json'
+PREPARE_RECORD='ARCHIVE_MOVE_PREPARE_DISPATCH_1450.json'
+REG_RECORD='ARCHIVE_MOVE_REGISTRATION_1450.json'
+CLIENT_RECORD='ARCHIVE_MOVE_CLIENT_DISPATCH_1450.json'
+CLIENT_LOG='ARCHIVE_MOVE_CLIENT_1450.log'
+RECOVERY_NOTE=''
 
 
 def qualify():
@@ -31,7 +37,7 @@ if not p.exists():
  v=dict(pass_=x.returncode==0,returncode=x.returncode,stdout=x.stdout,stderr=x.stderr,wall_s=time.time()-start,new_sim_s=0,moved_bytes=0,source_hashes={{n:hashlib.sha256((r/n).read_bytes()).hexdigest() for n in files}})
  with p.open('x') as f:json.dump(v,f)
 print(p.read_text())''',timeout=75))
-    p=ops.EVIDENCE/'ARCHIVE_MOVE_CPU_1450.json'
+    p=ops.EVIDENCE/CPU_RECORD
     if not p.exists():write(p,value)
     print(json.dumps(dict(receipt=str(p),**value)))
 
@@ -47,7 +53,7 @@ if not p.exists():
  v=dict(pid=child.pid,start_ticks=Path('/proc',str(child.pid),'stat').read_text().split()[21],boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),mode='manifest only; no transfer/deletion')
  with p.open('x') as f:json.dump(v,f)
 print(p.read_text())''',timeout=45))
-    p=ops.EVIDENCE/'ARCHIVE_MOVE_PREPARE_DISPATCH_1450.json'
+    p=ops.EVIDENCE/PREPARE_RECORD
     if not p.exists():write(p,value)
     print(json.dumps(value))
 
@@ -79,7 +85,7 @@ categories={{}}
 for e in m['entries']:
  item=categories.setdefault(e['category'],dict(files=0,bytes=0));item['files']+=1;item['bytes']+=e['bytes']
 print(json.dumps(dict(prepared=v,source_sha256=cpu['source_hashes']['archive_move.py'],categories=categories)))''',timeout=45))
-    p=ops.EVIDENCE/'ARCHIVE_MOVE_REGISTRATION_1450.json'
+    p=ops.EVIDENCE/REG_RECORD
     if not p.exists():
         line=('\nS-COOPMWM MAIN2026-11-03 14:50 SHA-GATED MOVE: selected completed '
             'LS label_attempts/pending, completed original policy-synergy branch artifacts, '
@@ -93,7 +99,7 @@ print(json.dumps(dict(prepared=v,source_sha256=cpu['source_hashes']['archive_mov
             'Existing unrestricted identity forwarded through SSH agent, no private '
             'key copied/no host config changed. Own durable CPU worker/PID receipts, '
             'no simulation/inference/reservation, no failed physics replay.\n')
-        write(p,dict(authority='MAIN2026-11-03 14:50',line=line,**value,new_sim_s=0,moved_bytes=0))
+        write(p,dict(authority='MAIN2026-11-03 14:50',line=line+RECOVERY_NOTE,**value,new_sim_s=0,moved_bytes=0))
     v=read(p);h=sha(p);registry=checked(REGISTRY)
     if h not in registry.read_text(encoding='utf-8'):
         with registry.open('a',encoding='utf-8') as f:f.write(v['line']+'amendmentSHA'+h+'\n')
@@ -108,19 +114,19 @@ print(json.dumps(dict(registered=True,sha256={h!r},manifest_sha256=v['manifest_s
 
 def launch():
     import psutil
-    p=ops.EVIDENCE/'ARCHIVE_MOVE_CLIENT_DISPATCH_1450.json'
+    p=ops.EVIDENCE/CLIENT_RECORD
     if p.exists():
         d=read(p)
         try:q=psutil.Process(d['pid']);alive=q.create_time()==d['create_time'] and 'ssh' in q.name().lower()
         except psutil.NoSuchProcess:alive=False
         print(json.dumps(dict(owner=d,alive=alive,adopt=True)));return
-    v=read(ops.EVIDENCE/'ARCHIVE_MOVE_REGISTRATION_1450.json');h=v['prepared']['manifest_sha256']
+    v=read(ops.EVIDENCE/REG_RECORD);h=v['prepared']['manifest_sha256']
     # SSH-agent forwarding keeps key bytes on Windows. The root worker ignores
     # HUP; any transport/verification error retains unverified source files.
     command=['ssh','-A','-T','-o','BatchMode=yes','-o','ServerAliveInterval=15','-o','ServerAliveCountMax=8','cpuQ',
         'sudo -n env SSH_AUTH_SOCK="$SSH_AUTH_SOCK" /home/ubuntu/miniconda3/bin/python -B -u '+ROOT+'/archive_move.py move --manifest-sha '+h]
     assert ops.EVIDENCE.is_dir()
-    with (ops.EVIDENCE/'ARCHIVE_MOVE_CLIENT_1450.log').open('x',encoding='utf-8') as log:
+    with (ops.EVIDENCE/CLIENT_LOG).open('x',encoding='utf-8') as log:
         child=subprocess.Popen(command,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
             creationflags=(subprocess.DETACHED_PROCESS|subprocess.CREATE_NEW_PROCESS_GROUP) if os.name=='nt' else 0,
             start_new_session=os.name!='nt')

@@ -1,0 +1,20 @@
+{
+  "authority": "MAIN2026-11-03 14:50 engineering recovery",
+  "original_worker_pid": 3917084,
+  "original_client_pid": 9360,
+  "original_failure": "gpuR login PATH has no python3; failure before archive namespace creation or rsync",
+  "original_batches": 0,
+  "original_bytes_moved_or_deleted": 0,
+  "original_receipts_preserved": true,
+  "fix": "pin /root/miniconda3/bin/python (direct forwarded-agent preflight Python3.12.3)",
+  "new_control": "/home/ubuntu/coopmwm20261103_archive1450_v2",
+  "linux_cpu_passed": 4,
+  "linux_cpu_wall_s": 0.004,
+  "new_source_sha256": "63d982f4d7f58d9bbea3e0c7ac2d7848fc9d7513243f06b2560e115ebcfad005",
+  "manifest_sha256": "f5c9fde4c3fddc40b24a746024f46c767f8b4c6022d9a5b7a9a5e0a6fccd1ed0",
+  "manifest_adopted_without_rehashing_or_source_deletion": true,
+  "destination_namespace_confirmed_absent": true,
+  "recovery_registration_sha256": "20a59e91cd736369f835e2e4d526006b70580aaaf8298da777318648889a83bf",
+  "new_sim_s": 0,
+  "new_inference": 0
+}

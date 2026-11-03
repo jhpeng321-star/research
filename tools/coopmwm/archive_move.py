@@ -18,7 +18,7 @@ import time
 HOME=Path('/home/ubuntu')
 RUN=HOME/'coopmwm20261102_warm1'
 LS=HOME/'coopmwm20261102_lscollect1'
-CONTROL=HOME/'coopmwm20261103_archive1450'
+CONTROL=HOME/'coopmwm20261103_archive1450_v2'
 DEST='/root/cpuq_archive_20261103/coopmwm_1450_v1'
 TARGET=10*1024**3
 BAD=re.compile(r'sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth|vehicle_params|driver_params|vtype|assignment',re.I)
@@ -209,7 +209,7 @@ def ssh_command():
 def remote(code):
     import base64
     encoded=base64.b64encode(code.encode()).decode()
-    command=ssh_command()+['python3 -c '+shlex.quote('import base64;exec(base64.b64decode('+repr(encoded)+'))')]
+    command=ssh_command()+['/root/miniconda3/bin/python -c '+shlex.quote('import base64;exec(base64.b64decode('+repr(encoded)+'))')]
     p=subprocess.run(command,capture_output=True,text=True,timeout=600)
     if p.returncode:raise RuntimeError('archive SSH verification failed: '+p.stderr[-3000:])
     return json.loads(p.stdout)

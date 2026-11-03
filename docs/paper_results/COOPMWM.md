@@ -1,5 +1,38 @@
 # S-COOPMWM — live checks
 
+MAIN14:50 archive first pass is qualified/registered:4 Linux CPU safety checks
+pass; source mismatch,remote mismatch,open-FD and forbidden/scenario scope gates
+are tested. Privileged FD scan finds0 eligible open files; admitted-bank/lesson
+references are protected. Independent audit validates11 existing chosen-branch
+trees and11 pending envelopes,with0 manifest conflicts.
+ManifestSHA`f5c9fde4c3fddc40b24a746024f46c767f8b4c6022d9a5b7a9a5e0a6fccd1ed0`
+contains7391 files/5,048,777,074bytes;55 protected and2922 sensitive/scenario
+files are excluded. Registration`51f152c9…` precedes transfer/deletion by this
+worker. The other session's529,080,134-byte interim-observable move is adopted;
+no interim file appears in this new manifest. Only verified rsync batches may
+unlink exact matching sources. This safe pool alone is below the10GiB-free
+target; additional eligibility auditing will continue. No simulation/inference.
+
+## Nov3 ~15:35 UTC+8 — V2V Linux qualification passes; disk margin consumed
+- Merged V2V release passes **764 CPU checks**, zero failures/skips,86.636s,
+  zero simulation/inference. One real-SUMO rehearsal is deselected by the
+  inherited CPU selection; this is not a physics/launch qualification.
+  Evidence:`coopmwm/V2V_LINUX_CPU_RESULT_V2.json`,SHA
+  `ab514b5440fcd3f2820a2713573cccbe5fa2277842611019d470311bfbb40eda`.
+- B-u12 finished15:23:03; the original B-u13/R-u12 owners progressed without
+  replacement. Disk free then fell to1,823,289,344bytes: the earlier archive
+  cleared admission temporarily, not the requested10GiB sustained margin.
+- A second narrow archive safely declined before transfer/deletion because it
+  overlaps another session's prepared5.05GB manifest. Adopt/coordinate that
+  plan; no competing transfer started. See`ARCHIVE_LABEL_OVERLAP_DECLINED.md`.
+- Current banks remain B12admitted/5cooperative,R13/11,0pendingconfirmations.
+  These selected-bank counts are not evidence of learned policy cooperation.
+  Live-bank receipt`LIVE_BANK_NULL_DIVERSITY_1793691302441970300.json` preserves
+  null/diversity denominators and failed-list counts separately.
+- No new physics dispatch from this session. V2V runtime/rehearsal gates remain.
+  The opening6M cover-note concern is reconciled under the user's explicit
+  latest-addendum precedence and already-registered17,471,840 cap; no new authority.
+
 ## Nov3 15:16 UTC+8 — disk admission recovered with verified archive
 - **288 completed interim observable tapes / 529,080,134 bytes** rsynced to
   gpuR and independently SHA256-verified before source removal. Privileged FD

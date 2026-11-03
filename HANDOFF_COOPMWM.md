@@ -1,5 +1,43 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+ARCHIVEV2 RECOVERY QUALIFIED: V1root3917084/client9360exitedbeforeANYrsync/
+namespacecreation/deletion onGPUloginPATHmissingpython3. Failure/sourcekept.
+NewROOT/home/ubuntu/coopmwm20261103_archive1450_v2 pins/root/miniconda3/bin/python;
+directforwardedagentpreflight3.12.3+4LinuxCPU PASS/.004s. F5c9manifestADOPTED
+byte-for-byte/no rehash, destinationcoopmwm_1450_v1stillabsentconfirmed. Registration
+20a59e91cd736369f835e2e4d526006b70580aaaf8298da777318648889a83bf BEFOREtransfer.
+Committhen`archive_move_recovery_ops launch` ONCE/adopt*_1450_V2client+remoteowner;
+useNEWwrapperstatus, oldV1statushistorical. No filesmoved/deletedYETbyourworker.
+
+ARCHIVE1450 OURFIRSTMANIFEST READY: prepare3873940/root3873941 COMPLETE/noFAIL;
+4LinuxCPU PASS/.005s, sourcec0c5cb44. ManifestF5c9fde4:7391files/5048777074bytes;
+55protected/2922scenario-or-forbiddenexcluded/0openFD. Independentreferenceaudit
+PASS:11existingchosenbranchtrees+11pending.json.gzenvelopes/0manifestconflicts.
+RealLSenvelopespointtosnapshots(outsideMOVEscopeUNTOUCHED). Registration51f152c9
+canonical+CPUauthoritybeforeMOVE. Committhenarchive_move_ops launch ONCE/adopt
+CLIENTDISPATCH+remoteMOVE_OWNER. ForwardedexistingSSHagent/no privatekeycopied.
+Initial5GBsafe(a/b/c)poolalonecannotreach10GiB; partialrecoverythenreportremaining.
+Other session's288interimtapes/529080134byteMOVEisADOPTED; OURmanifesthasNO
+interimfile/no duplicatedataaction. Othernarrowlabelarchivecorrectlydeclinedoverlap.
+Ourdestination/root/cpuq_archive_20261103/coopmwm_1450_v1 isdistinctfromitsarchive.
+LatestMAIN14:06/14:50explicitcap17471840 supersedesopening6Mcovernoteperuser's
+later-addenda-order rule; no repeatedcapclarificationneeded. V2V764LinuxPASS
+ab514b54fromothersessionADOPTED/NEVERredo; actualruntime/smoke gatesstillneeded.
+
+Nov3~15:35+08 UPDATE: V2V merged2de40a3c/LinuxQUALIFIED sourcev2vcpu2:
+764checks(712+52subtests)PASS/0fail0skip/1inheritedrealSUMOdeselected/86.636s/0SIM.
+RESULTSHAab514b5440fcd3f2820a2713573cccbe5fa2277842611019d470311bfbb40eda;
+3886625COMPLETED/NEVERredo. V1singlefixtureenvironmentFAILpreserved; helper-only
+installcorrected/V2fullsuitePASS. NoV2Vphysics/rehearsal/launch; budgetconflict6M
+covernote reconciledbyexplicitlatest-addendumprecedence:17,471,840registeredcap
+ADOPTED/no newauthority. Runtimeadaptersstillpending/noV2Vphysicsbythissession.
+DiskmarginCONSUMED:1823289344bytes15:35/<2GiB again. B12DONE15:23:03;B13/R12
+wereinflight/allownershealthy. OwnsecondarchiveSAFEDECLINED BEFOREanytransfer/
+unlink: overlapsCONCURRENT `/home/ubuntu/coopmwm20261103_archive1450/MANIFEST.json`
+SHAf5c9fde4c3fddc40. Otherplan7391files/5048777074bytes/CPU4PASS, prepfinished/
+no activeprocessat15:35. COORDINATEthatowner; doNOTrepeatourrelay33076/3898748.
+Originalinterimarchive288filesCOMPLETE remainsvalid. SeeARCHIVE_LABEL_OVERLAP_DECLINED.
+
 RESUME Nov3 15:16+08: ALL803brief linesread/priorworkretained. MAIN1450archive
 SAFE SUBSET DONE:288completedinterim observationtapes/529080134bytes rsyncedgpuR
 /root/cpuq_archive_20261103/interim008_observables; ALLremote/sourceSHAverified
