@@ -1,5 +1,22 @@
 # S-COOPMWM — live checks
 
+## Nov3 09:02 UTC+8 — B-u4 completed; lesson-window diagnostic fault isolated
+- B-u4's own-policy PPO and bank-imitation update completed;24 fresh episodes
+  finished. The update receipt reports324.571s wall time. R-u4 has24 RESULT files;
+  supervisors and graders remain alive with no health STOP.
+- Read-only probe found **6/8 B-u4 lesson branches use shorter windows than their
+  original bank reference**. `lesson_check` rebuilt a policy branch from only the
+  selected candidate, shrinking the original slate's common-max-duration window.
+  Its very large recapture ratios are therefore **invalid learning evidence**.
+  Original lesson receipts/charges remain retained. This affects the diagnostic,
+  not PPO rewards, bank admission or AWR training targets. A registered engineering
+  correction is being prepared for the next idle update boundary.
+- Evidence: `coopmwm/LESSON_WINDOW_PROBE_1793667760930470800.json`.
+- Read-only `warm_watch state` now prefers actual replay arm/grader owners over
+  closed historical runs, retaining PID boot/start validation and never hiding an
+  exited replay child.14 CPU checks PASS (0.263s); live cpuQ payload PASS. Registered
+  observation amendment `e726efe260fb4063…`; no runtime/physics/PID change.
+
 ## Nov3 08:52:44 UTC+8 — B_REPLAY_STARTED; MAIN08:35 decoupling live
 - Append-only V4 amendment SHA256
   `b967137614d30c9ab358f77670198e1784496deadee2c38a9b6eb76666bbd8bc`

@@ -13,6 +13,23 @@ from . import warm_health  # Bind its real pathlib.Path before the transport stu
 
 
 class WarmStateTests(unittest.TestCase):
+    def test_replay_owners_and_graders_override_closed_training_without_fallback(self):
+        children=[dict(self.owner(),component='arm',arm='B'),
+            dict(self.owner(22),component='arm',arm='R'),
+            dict(self.owner(),component='grade',arm='B')]
+        v=self.collect({'B_REPLAY_STARTED.json':dict(children=children),
+            'FAST_B_DISPATCH_1844.json':self.owner(22),
+            'FAST_R_DISPATCH_1844.json':self.owner()})
+        self.assertEqual(v['owners']['B']['dispatch_receipt'],'B_REPLAY_STARTED.json')
+        self.assertEqual(v['owners']['B']['state'],'S')
+        self.assertEqual(v['owners']['R']['state'],'exited')
+        self.assertEqual(v['service_owners']['replay_grader_B']['state'],'S')
+
+    def test_replay_reused_pid_is_never_reported_healthy(self):
+        with self.assertRaisesRegex(AssertionError,'owner PID reused'):
+            self.collect({'B_REPLAY_STARTED.json':dict(children=[
+                dict(self.owner(),component='arm',arm='B')])},start='456')
+
     def test_fast_resume_owners_override_closed_dns_and_surface_new_failure(self):
         files={'FAST_B_DISPATCH_1844.json':self.owner(),
             'DNS_B_DISPATCH_1651.json':self.owner(22),

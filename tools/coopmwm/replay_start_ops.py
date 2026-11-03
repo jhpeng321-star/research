@@ -219,9 +219,14 @@ for child in (start or {{}}).get('children',[]):
   argv=(q/'cmdline').read_bytes().replace(bytes([0]),b' ').decode() if q.exists() else None,
   failure=json.loads(failure.read_text()) if failure.exists() else None,
   log=log.read_text()[-2500:] if log.exists() else None))
-episodes=[]
+episodes=[];latest={{}}
 for arm in ('B','R'):
- u=max([3]+[int(q.stem.rsplit('_',1)[1]) for q in r.glob(arm+'_UPDATE_[0-9][0-9][0-9].json')])+1
+ done=max([3]+[int(q.stem.rsplit('_',1)[1]) for q in r.glob(arm+'_UPDATE_[0-9][0-9][0-9].json')]);u=done+1
+ lesson=r/('LESSON_CHECK_u'+str(done).zfill(3)+'_'+arm+'.json')
+ receipt=json.loads((r/(arm+'_UPDATE_'+str(done).zfill(3)+'.json')).read_text())
+ latest[arm]=dict(update=done,receipt={{k:receipt.get(k) for k in
+  ('timestamp_utc','wall_s','eta_final_hours','trust','quota_deviation','reward_source','charged_sim_s')}},
+  lesson=json.loads(lesson.read_text()) if lesson.exists() else None)
  for job in sorted((r/'jobs').glob('replay0735_warm_u'+str(u).zfill(3)+'_'+arm+'_*')):
   result=(job/'RESULT.json').exists();claim=job/'CLAIM.json';trace=job/'observable.jsonl.gz';last=None
   if trace.exists() and not result:
@@ -232,7 +237,7 @@ for arm in ('B','R'):
 print(json.dumps(dict(unix=time.time(),owner=d,state=st[2] if st else 'ABSENT',
  status=json.loads((c/'STATUS.json').read_text()) if (c/'STATUS.json').exists() else None,
  log=(c/'WATCH.log').read_text()[-5000:],started=start is not None,
- start_receipt=start,children=children,episodes=episodes)))''',timeout=40))
+ start_receipt=start,children=children,episodes=episodes,latest=latest)))''',timeout=40))
     p=ops.EVIDENCE/f'B_REPLAY_START_WATCH_STATUS_{time.time_ns()}.json';write(p,value)
     print(json.dumps(dict(receipt=str(p),**value)))
 

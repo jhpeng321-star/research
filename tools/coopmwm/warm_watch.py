@@ -33,14 +33,18 @@ for name in ('FAST_RESUME_1844.json','RESOURCE_EXTENSION_1651.json','VERIFICATIO
  if (r/name).exists():source=json.loads((r/name).read_text())['source_root'];break
 sys.path.insert(0,source+'/pytools')
 from tools.coopmwm.warm_health import assert_running,HealthPause
+replay=json.loads((r/'B_REPLAY_STARTED.json').read_text()) if (r/'B_REPLAY_STARTED.json').exists() else {{}}
 for arm in ('A','B','R'):
  names=[f'FAST_{{arm}}_DISPATCH_1844.json',f'DNS_{{arm}}_DISPATCH_1651.json',f'BETA_{{arm}}_DISPATCH.json',f'VERIFIED_{{arm}}_DISPATCH.json',f'MATCH_{{arm}}_DISPATCH.json',f'INCIDENT_{{arm}}_DISPATCH.json',f'TAIL_{{arm}}_DISPATCH.json',f'QUOTA_{{arm}}_DISPATCH.json']+[f'WARM_{{arm}}_DISPATCH{{suffix}}.json' for suffix in ('_V6','_V4','_V3','2','')]
  p=next((r/name for name in names if (r/name).exists()),None)
- if p is None:continue
- d=json.loads(p.read_text());q=pathlib.Path('/proc')/str(d['pid']);s=(q/'stat').read_text().split() if (q/'stat').exists() else None
+ d=next((c for c in replay.get('children',[]) if c['component']=='arm' and c['arm']==arm),None)
+ if d is None and p is None:continue
+ receipt='B_REPLAY_STARTED.json' if d is not None else p.name
+ if d is None:d=json.loads(p.read_text())
+ q=pathlib.Path('/proc')/str(d['pid']);s=(q/'stat').read_text().split() if (q/'stat').exists() else None
  assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'owner boot changed'
  assert not s or s[21]==d['start_ticks'],'owner PID reused'
- owners[arm]=dict(owner=d,state=s[2] if s else 'exited',dispatch_receipt=p.name)
+ owners[arm]=dict(owner=d,state=s[2] if s else 'exited',dispatch_receipt=receipt)
 services={{}}
 for component,names in {{'broker':('FAST_BROKER_DISPATCH_1844.json','GPU_RESOURCE_BROKER_DISPATCH_1651_V2.json','GPU_RESOURCE_BROKER_DISPATCH_1651.json','DNS_BROKER_DISPATCH_1651.json','MATCH_BROKER_DISPATCH.json','INCIDENT_BROKER_DISPATCH.json','TAIL_DRAIN_BROKER_DISPATCH.json','CENTRE_FAIR_BROKER_DISPATCH.json','QUOTA_broker_DISPATCH.json','CAPACITY_BROKER_DISPATCH_V2.json','WARM_REMOTE_BROKER_DISPATCH.json'),
                         'grader':('DNS_GRADER_DISPATCH_1651.json','VERIFIED_GRADER_DISPATCH.json','MATCH_GRADER_DISPATCH.json','INCIDENT_GRADER_DISPATCH.json','EXACT_GRADER_DISPATCH_V2.json','EXACT_GRADER_DISPATCH.json')}}.items():
@@ -50,6 +54,12 @@ for component,names in {{'broker':('FAST_BROKER_DISPATCH_1844.json','GPU_RESOURC
  assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'service boot changed'
  assert not s or s[21]==d['start_ticks'],'service PID reused'
  services[component]=dict(owner=d,state=s[2] if s else 'exited',dispatch_receipt=p.name)
+for d in replay.get('children',[]):
+ if d['component']!='grade':continue
+ q=pathlib.Path('/proc')/str(d['pid']);s=(q/'stat').read_text().split() if (q/'stat').exists() else None
+ assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'service boot changed'
+ assert not s or s[21]==d['start_ticks'],'service PID reused'
+ services['replay_grader_'+d['arm']]=dict(owner=d,state=s[2] if s else 'exited',dispatch_receipt='B_REPLAY_STARTED.json')
 stop=None
 try:assert_running(r,'B')
 except (ValueError,HealthPause) as error:stop=dict(error=str(error),source='current registered warm_health guard')
@@ -103,6 +113,26 @@ def register_service_owners():
     line='\nS-COOPMWM CURRENT SERVICE OWNER OBSERVATION REGISTERED evidenceSHA'+sha(target)+': '+value['repair']+';12CPU PASS including actual generated transport payload; real cpuQ state verified, zero SUMO/inference/PID control; existing observers/jobs retained, no release or deadline change.\n'
     with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     print(json.dumps(dict(receipt=str(target),service_owners=live['service_owners'],stop=live['stop'],tests=12)))
+
+
+def register_replay_observation():
+    """Record read-only guard compatibility; no runtime deployment or PID control."""
+    from .protocol import REGISTRY
+    target=ops.EVIDENCE/'WARM_STATE_REPLAY_OWNERS_REPAIR.json'
+    if not target.exists():
+        live=state()
+        assert all(live['owners'][a]['dispatch_receipt']=='B_REPLAY_STARTED.json' for a in ('B','R'))
+        write(target,dict(unix=time.time(),state=live,tests=14,new_sumo_sim_s=0,
+            source_sha256=sha(ops.LOCAL/'tools/coopmwm/warm_watch.py'),
+            repair='prefer B_REPLAY_STARTED arm/grade owners with boot/start checks; never fall back from exited replay child to historical owner',
+            training_or_inference_changes=False,observer_replacement=False))
+    h=sha(target);registry=checked(REGISTRY)
+    if h not in registry.read_text(encoding='utf-8'):
+        with registry.open('a',encoding='utf-8') as f:
+            f.write('\nS-COOPMWM replay owner observation engineering amendmentSHA'+h+
+                ': read-only warm_watch state adopts actual B_REPLAY_STARTED arm/grader owners; '
+                'boot/start identity and exited-child visibility retained;14CPU PASS,zero SUMO/inference/PID control.\n')
+    print(json.dumps(dict(receipt=str(target),amendment_sha256=h,tests=14,new_sumo_sim_s=0)))
 
 
 def commit():
@@ -216,6 +246,6 @@ def dispatch():
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('dispatch','run','state','register_state_repair','register_service_owners'));a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('dispatch','run','state','register_state_repair','register_service_owners','register_replay_observation'));a=p.parse_args()
     if a.mode=='state':print(json.dumps(state()))
     else:globals()[a.mode]()

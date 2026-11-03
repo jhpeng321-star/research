@@ -1,5 +1,15 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3~09:02+08: B-u4 DONE (324.571s), R-u4 24RESULT files; allreplay
+owners LIVE/noSTOP. CRITICAL reportingfault: read-only lesson_window_probe found
+6/8 B-u4 new-policy lesson windows SHORTER than original reference (selectedD
+vs originalslate maxD). Raw giant recapture ratios INVALID learningevidence.
+PPO/own SUMO reward/bank admission/AWR unaffected. Keep originalreceipts/charges;
+next engineeringstep correctlessoncommonwindow beforeu5 at idleboundary, registered,
+exactcheckpoint4 resume/no physicsreplay. Probe1793667760930470800.json pinswindows.
+Read-only warm_watch state ownerprecedence NOWfixed/14CPU PASS0.263s; e726efe2
+registered, actual newowners observed. Use replay_start_ops status for fullprogress.
+
 LATEST Nov3 08:54:40+08: MAIN08:35 DECOUPLE applied and **B_REPLAY_STARTED**
 at unix1793667164.8449004 / 08:52:44+08. New durable cpuQ watcher2979442/
 start68143223, control warm1/replay_start_0835_v4; ADOPT dispatch0835_V4,
