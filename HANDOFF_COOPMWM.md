@@ -1,5 +1,42 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
+## CURRENT — MAIN21:58/21:58b/22:10 adopted; old B/R resource-paused
+- FULL brief now read through976. Latest: NO partial/fallback V2V launch;
+  per_seed_v1 + same-own-seed gate + intent + clean exact-commit audit + Linux +
+  resources + reviewed cooperation-search --alternate are ALL required.
+- MAIN22:10 adds all8_both_seeds verification; integrator owns
+  c4/launch-final/LAUNCH_FINAL_READY.json. Merge THAT single READY branch,
+  preserving our later live fixes below; do not separately duplicate builders.
+- OLD B/R PAUSED at actual durable B21/R20 via existing HealthPause;
+  amendment35c1022b/LEGACY_RESOURCE_PAUSE_2158B.json. Exact owned
+  arms411152/411153 + graders3305068/69 idle-boundary-verified, briefSTOP/CONT,
+  then all4 exited through registered pause. No next-wave claims or new physics.
+  Watcher411148 expected child-exit alert retained; NEVERauto-recover this pause.
+- MAIN22:03 conditional scoping APPLIED after all4 exited: registered16802967 /
+  LEGACY_ONLY_RESOURCE_HOLD_2203.json. Our shared-root PAUSE marker was retired
+  byte-for-byte to memory_recovery1/RESOURCE_MAIN2158B_RETIRED_2203.json (SHA7da89277),
+  preserving old-owner hold while unblocking required warm1 gate/solo/search tools.
+  This is NOT old B/R resumption; safety/other health pauses unchanged. Disk at
+  1793714998:4,168,466,432bytes; no cleanup by this agent.
+- At1793714710: MemAvailable22,223,320kB (22.76GB); disk3,783,544,832bytes.
+  MAIN cleanup agent owns deletion/reference audits; do NOT run parallel cleanup.
+- Audit now EXISTS `_audit_20261103/AUDIT_REPORT.md`, with B1..B5 blockers;
+  it audits f3caf85f, NOT our later fixes/final future deployment. Rerun required.
+- Live17533a50 wires launch3 into actual watcher+spawn;12CPU PASS. Requires a
+  NEW registered LAUNCH3_AUTHORITY.json/binding and legacy boundary owner/checkpoint
+  proofs, rechecked after resource wait; no producer/launch dispatched.
+- Livef59d0f66 addresses auditI2/I3: intent bank AWR excluded from PPO when using
+  separate passes (historical option-off unchanged), detach=True bound. Targeted
+  pytest printed15PASS; final Linux qualification must cover all merged fixes.
+- Cooperation search93e1cd22 merged, DEFAULT OFF/no GPU activation yet;
+  20localCPU PASS. Qualifier now includes its code/tests + frozenb20bec2f baseline.
+- Existing immutable903LinuxPASS f3caf85f evidence retained; does NOT qualify
+  current changed source or new per-seed/all8 rules. I2 generation not dispatched.
+- Saved-state collectionhelper173902 COMPLETE16published; existing GPU queue drains.
+  Do not relaunch same16. No newSUMO/inference/charge/deletion in this continuation.
+- Unused c4/intent-launch-wire worktree initialization timed out; no agent/job
+  launched there. Preserve it; never commit apparent missing-file deletions.
+
 ## CURRENT Nov3 ~22:00 +08 — latest brief through line937; intent Linux PASS
 - Preserve all earlier work, owners, charges and telemetry. Historical warm-memory
   qualification/restarts are DONE; do not repeat them.

@@ -38,7 +38,7 @@ REQUIRED_FREE_BYTES = 6 * 1024 ** 3
 HOLD_NAME = 'V2V_LAUNCH3_HOLD.json'
 ARMS = ('A', 'B', 'R')
 INTENT_OPTIONS = dict(v2v=True, v2v_dim=48, v2v_intent=True,
-    v2v_intent_horizon=5, v2v_intent_loss_weight=1.0)
+    v2v_intent_horizon=5, v2v_intent_loss_weight=1.0,v2v_intent_detach_trunk=True)
 BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
     bank_statistics='boot_v2')
 DIAGNOSTIC_SCHEDULE = dict(A=dict(lessons=[], isolated=[]),

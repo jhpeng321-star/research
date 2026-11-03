@@ -20,10 +20,11 @@ EXTRA_FILES = tuple('tools/coopmwm/'+name+'.py' for name in (
     'test_coopfix_exact_gate_cpu', 'solo_seed2_links', 'test_solo_seed2_links_cpu',
     'test_bank_boot_cpu', 'test_imitfix2_cpu', 'v2v_launch3', 'test_v2v_launch3_cpu',
     'coop_search', 'mppi_search', 'mppi_runtime', 'niche_collect', 'ls_collection',
-    'ls_gpu', 'test_coop_search_cpu')) + ('tools/coopmwm/fixtures/coop_off_golden.json',)
+    'ls_gpu', 'test_coop_search_cpu', 'test_v2v_launch_wiring_cpu')) + (
+    'tools/coopmwm/fixtures/coop_off_golden.json',)
 EXTRA_TESTS = ('test_v2v_intent_cpu', 'test_coopfix_exact_gate_cpu',
     'test_solo_seed2_links_cpu', 'test_bank_boot_cpu', 'test_imitfix2_cpu',
-    'test_v2v_launch3_cpu', 'test_coop_search_cpu')
+    'test_v2v_launch3_cpu', 'test_coop_search_cpu', 'test_v2v_launch_wiring_cpu')
 
 
 def git(*args):

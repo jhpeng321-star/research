@@ -1,4 +1,4 @@
-# S-COOPMWM — B-REPLAY running from u3; independent bank collection
+# S-COOPMWM — legacy B21/R20 resource-paused; all-pass intent/V2V launch held
 1. MAIN14:06 V2Vcap17471840 registered67320dae supersedes14.5M/fresh6M; exact+2971840 onlynewV2Vphases,oldphaseallocationsunchanged. HistoricalMAIN07:06 checks->train144000/b6c1b8bf retained. Allcharges retained/sharedledger+lock. CurrentnonV2V sourcebindingsretainconservative14.5M in-memory, neverimplicitlymutated; newV2Vready/Linux/rehearsal/resourcegatesbeforephysics.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
@@ -46,7 +46,7 @@
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins precharged/no refunds or automatic retries. Historicalaf8b16e5 permits one qualified new-ID attempt per missing failed diagnostic branch, originals adopted; its original200000 discovery quote is superseded by current126200 allocation/ledger.
 47. A48complete; B/R12episodeworkers each/lag1, bankbranchworkers2perarm,nice19. MAIN0423 frozen-policy precompute up to24 workers SCHED_IDLE/nice19, grade priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no physics retry.
-48. HistoricalMAIN1651 source13/PIDs821013/821014/821012/927733 and DNS replacements retained,notcurrentowners. ActiveC1 in42; clocksNov5 23:59. FourNICHENULL3/eightgates,per-querydeclines/noinference replay. MAIN16:47 append-onlyV2Vlaunch6GiB/health/livemover; resourcewatcher4125157/0a0fd436 waits/noV2Vphysics. SHA-gatedrolling4116186/cf49a514:completed>30min/every15min/cpuQtarget8GiB/gpuRfloor4GiB; protectbank/checkpoints/finaldependencies,proofbeforeunlink.
+48. MAIN21:58b/22:10 oldB21/R20 resourcePAUSE35c1022b:arms411152/411153+graders3305068/69 exitedatidleboundary; checkpoints/charges retained. V2Vwatchersheld; clocksNov5 23:59. Launchrequiresper_seed_v1 own-tapeexamples/same-seedgate/intent/all8_both_seeds/exactcommitaudit/Linux/resources/re-reviewedcoopsearch--alternate; nofallback. c4/launch-final ownsremainingintegration. MAINcleanupagentownsreference-auditedstorage; no competingdeletion. Alllegacyreceiptsretained.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.
