@@ -1,5 +1,25 @@
 # S-COOPMWM — live checks
 
+## Nov3 09:37:08 UTC+8 — qualified continuation from both u5 checkpoints
+- B/R-u5 completed. At a verified idle boundary, both checkpoint5 hashes and
+  no-u6-job/no-physics-child conditions passed. Registered amendment
+  `de152a1b76837b9b…`/commit`2ab155f5` preceded the handover. Policy/Adam/RNG
+  resume exactly from u5; future first update6 and fixed final24 remain.
+- New durable watcher**3088220/start68410564**, B**3088230**, R**3088231**,
+  R grader**3088228**; B grader**2979630** was adopted. All alive/no child failure.
+  Original30-minute pacing is preserved using u5 claim timestamps. The saved-R
+  collector3066675 and GPU/LS services were not interrupted.
+- New `B_REPLAY_CONTINUED_LESSONWINDOW.json` preserves the original start receipt.
+  The qualified source applies independent per-arm admission and original common
+  windows/new primary delta metrics to future lesson checks.
+- The separate u4 correction exited before any new branch with a missing `copy`
+  import in its valid-branch adoption path. Its error/failed supplement are retained;
+  the small reporting-only fault is being repaired with an adoption regression.
+  No corrected-u4 learning result is claimed, and the4260 sim-s correction upper
+  bound has not been spent. This path is not used by training's future lesson calls.
+- Evidence: `coopmwm/B_REPLAY_START_WATCH_STATUS_1793669838696991200.json`,
+  `coopmwm/B_LESSON_CORRECTION_STATUS_1793670076564752700.json`.
+
 ## Nov3 09:28:03 UTC+8 — R collector live; MAIN09:06 recovery qualified
 - R-u4 had no bank because B filled the shared eight-pending admission cap.
   Qualified repair gives B and R independent equal bounded quotas; R keeps the

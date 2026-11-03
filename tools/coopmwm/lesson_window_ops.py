@@ -316,6 +316,21 @@ print(json.dumps(dict(unix=time.time(),owner=d,state=st[2] if st else 'ABSENT',
     print(json.dumps(dict(receipt=str(p),**value)))
 
 
+def correction_status():
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,time
+c=Path({CONTROL!r});d=json.loads((c/'lesson_window_correct_DISPATCH.json').read_text())
+p=Path('/proc',str(d['pid']));s=(p/'stat').read_text().split() if p.exists() else None
+assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
+assert s is None or s[21]==d['start_ticks']
+done=c/'CORRECTION_COMPLETE.json'
+print(json.dumps(dict(unix=time.time(),owner=d,state=s[2] if s else 'ABSENT',
+ complete=json.loads(done.read_text()) if done.exists() else None,
+ log=(c/'lesson_window_correct.log').read_text()[-3000:])))''',timeout=40))
+    p=ops.EVIDENCE/f'B_LESSON_CORRECTION_STATUS_{time.time_ns()}.json';write(p,value)
+    print(json.dumps(dict(receipt=str(p),**value)))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','cpu_result','register','launch','auxiliary','boundary_pause','r_collect','r_status'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','cpu_result','register','launch','auxiliary','boundary_pause','r_collect','r_status','correction_status'))
     globals()[p.parse_args().action]()

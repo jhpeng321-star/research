@@ -1,5 +1,25 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3 09:37:08+08 CONTINUATION LIVE from BOTHcheckpoint5/Adam/RNG:
+registered de152a1b76837b9b/commit2ab155f5 BEFOREhandover. Ownidleu5 freeze623ea887
+verifiedno-u6jobs/no-physicschildren; then oldwatcher/arms/idleRgrader retired by
+boot/start/argv only. NEWwatcher3088220/start68410564, B3088230/R3088231,
+Rgrader3088228; Bgrader2979630ADOPTED. AllLIVE/noFAIL/noSTOP; futurefirstu6,
+fixedfinal24. Original1800s pacing anchoredu5CLAIM timestamps preserved. Source
+replaylesson_cpu3/713LinuxPASS. Rcollector3066675/GPU/LSowners untouched.
+ADOPT B_REPLAY_LESSON_WINDOW_DISPATCH_V1; NEVERredispatch. Ownerreceipt now
+B_REPLAY_CONTINUED_LESSONWINDOW.json; originalB_REPLAY_STARTED retained.
+U4 correction3089289 EXIT with COMPLETE.error=NameError(copy), BEFORE any new
+branch. Original+failedsupplement retained, no valid corrected learningclaim.
+NEXT correct missingcopyimport with adoption regression and a NEW one-use correction
+root; no training restart needed (future lessons have no adopted entries). 4260
+matched-window branch budget stillavailable/unused. Correctionstatus1793670076564752700.
+R8centrequeries await GPUslots; metadata centre-priority CPU14PASS1.216s/zeroSUMO
+registered a44b766a72bc4a38 but broker handover NOTlaunched yet. It prioritises
+existing K1/H300 centre-only requests before unstarted B searches, FIFOwithinclass;
+no runningsearch withdrawal/inference replay. Finish prioritydeployment, then
+correctu4/firstRgrade. LastRroll:766170READY8,7852635gates; Aserve7/4searches.
+
 LATEST Nov3 09:29:09+08 / MAIN09:06 read through ALL685 lines:
 R saved-state collector NOW LIVE3066675/start68356119, warm1/r_bank_recover_0906_v1.
 ADOPT R_BANK_COLLECT_DISPATCH_0906.json, NEVERduplicate. Registered3fbaeb310468c897;
