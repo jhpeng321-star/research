@@ -149,3 +149,19 @@
   Added simulation spend0; verified accounting remains725280/800000,74720unused.
 - Task remains COMPLETE. WM-PHYS efficacy/calibration is still a separate backend qualification;
   pooled positive mean superadditivity and a causal horizon effect remain unestablished.
+
+## Subsequent resume — 2026-11-03 / Windows CPU portability
+- Resumed clean `c4/coopplan` at `7b280045`; reconciled shared registration and completed
+  H120/H300 receipts before any execution. All60 pairs remain COMPLETE.
+- Read-only extension and H300 verification PASS; all saved artifact hashes match QA.
+  Verified432+288 decisions and52+14 group credits, with both solos for every action.
+- Initial40-test CPU run exposed a Windows empty-lock initialization PermissionError.
+  Removing initialization alone passed41tests but a repeated concurrency stress run
+  still produced errors and timed out; this was not accepted as final verification.
+- Fix `41ec3dc5` removes pre-acquisition writes and serializes local Windows threads
+  ahead of the CRT's bounded retry loop, retaining byte locks between processes.
+  Added a deterministic regression check; immutable remote runtime sources preserved.
+- Final full CPU/analysis suite PASS:41tests/0skips in0.174s, CUDA hidden/single-thread.
+  Concurrent reservation test repeated100times PASS in1.782s after the complete fix.
+- No dispatch, collection, simulation replay or remote process action this resume.
+  Added simulation spend0; total remains725280/800000,74720unused. Task COMPLETE.
