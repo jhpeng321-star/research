@@ -37,6 +37,7 @@ per entry plus the mean with CI - how much of each verified win the policy now a
 own - and the imitation action error (m/s^2) of the new policy vs the plan actions on the chosen
 branch tape. LESSON_CHECK_u<k>_<arm>.json; charges lesson_u<k>-prefixed in bank_verification_ext.
 """
+import copy
 import json
 import os
 from pathlib import Path

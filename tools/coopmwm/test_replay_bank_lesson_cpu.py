@@ -174,6 +174,25 @@ def test_empty_bank_leaves_the_list_open(tmp_path):
     verify_sealed(saved, 'lesson_check_sha256')
 
 
+def test_valid_lesson_branch_is_adopted_without_charge_or_overwriting_original(tmp_path):
+    root=tmp_path;rb.bank_root(root,'B').mkdir(parents=True)
+    admitted_entry(root,420,'adopt',4.)
+    original=rb.record_lesson(root,'B',FakePolicy(),str(root),4,_runner)
+    raw=(root/'LESSON_CHECK_u004_B.json').read_bytes();charges=len(ledger(root))
+    def forbidden(work):
+        class Runner:
+            def run(self,*args):raise AssertionError('valid branch must never be repeated')
+        return Runner()
+    corrected=rb.record_lesson(root,'B',FakePolicy(),str(root),4,forbidden,
+        adopt_entries=original['entries'],receipt_suffix='_CORRECTED')
+    assert corrected.get('error') is None
+    assert corrected['graded_entries']==1 and corrected['entries'][0]['adopted_existing_branch']
+    assert corrected['delta_mean_veh_s']==30.
+    assert len(ledger(root))==charges
+    assert (root/'LESSON_CHECK_u004_B.json').read_bytes()==raw
+    verify_sealed(json.loads((root/'LESSON_CHECK_u004_B_CORRECTED.json').read_text()),'lesson_check_sha256')
+
+
 def test_budget_blocked_and_missing_receipts_are_never_imputed(tmp_path, monkeypatch):
     root = tmp_path;rb.bank_root(root, 'B').mkdir(parents=True)
     first = admitted_entry(root, 420, 'a', 4.)

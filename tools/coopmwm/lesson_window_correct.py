@@ -11,7 +11,16 @@ def run(root,control):
     from .accel_learner import load
     from .replay_bank import record_lesson
     from .sumo_verify import SubprocessBranchRunner
-    root=Path(root);control=Path(control);v=config(root);accounting(v);torch.set_num_threads(1)
+    root=Path(root);control=Path(control)
+    if (control/'CORRECTION_BINDING.json').exists():
+        from .protocol import sha
+        v=read(control/'CORRECTION_BINDING.json');s=Path(v['source_root'])
+        assert v['amendment_sha256'] in (root/'AUTHORITY.md').read_text()
+        assert Path(__file__).resolve()==s/'pytools/tools/coopmwm/lesson_window_correct.py'
+        cpu=read(s/'LS_CPU_RESULT.json');assert cpu['pass_'] and cpu['sim_s']==cpu['skips']==0
+        for n,h in cpu['source_hashes'].items():assert sha(s/n)==h,n
+    else:v=config(root)
+    accounting(v);torch.set_num_threads(1)
     lock=(control/'CORRECTION.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     assert not (control/'CORRECTION_STARTED.json').exists(),'adopt one-use diagnostic correction'
     old=read(root/'LESSON_CHECK_u004_B.json')
@@ -20,7 +29,8 @@ def run(root,control):
     policy,_,_,payload=load(root/'B_checkpoint_004.pt');assert payload['update']==4
     out=record_lesson(root,'B',policy,root,4,
         lambda work:SubprocessBranchRunner(Path(work),workers=2,timeout_s=3600),
-        sources=[v['collection_root']],adopt_entries=old['entries'],receipt_suffix='_MATCHED_WINDOW_V1')
+        sources=[v['collection_root']],adopt_entries=old['entries'],
+        receipt_suffix=v.get('correction_receipt_suffix','_MATCHED_WINDOW_V1'))
     write(control/'CORRECTION_COMPLETE.json',dict(unix=time.time(),list_size=out['list_size'],
         graded_entries=out.get('graded_entries'),error=out.get('error'),
         adopted_branches=sum(e.get('adopted_existing_branch',False) for e in out['entries']),

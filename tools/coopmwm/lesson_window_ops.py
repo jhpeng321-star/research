@@ -3,7 +3,7 @@ import argparse
 import json
 import time
 from . import ops, replay_start_ops as start
-from .ls_collect_ops import ROOT
+from .ls_collect_ops import ROOT,COLLECTION
 from .ls_validity_ops import remote
 from .protocol import checked, sha, REGISTRY
 from .storage import read, write
@@ -306,10 +306,21 @@ p=Path('/proc',str(d['pid']));st=(p/'stat').read_text().split() if p.exists() el
 assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
 assert st is None or st[21]==d['start_ticks']
 bank=r/'replay_bank/R';keys={{p.stem for p in (bank/'snapshots').glob('*.json')}}
+collection=Path({COLLECTION!r})
+transport=[]
+for k in sorted(keys):
+ assigned=collection/'broker_assignments'/(k+'.json');done=collection/'broker_completed'/(k+'.json')
+ raw=r/'responses'/(k+'.json')
+ skip=bank/'skipped'/(k+'.json')
+ transport.append(dict(key=k,forwarded=(collection/'requests'/(k+'.json')).exists(),
+  assigned=json.loads(assigned.read_text()) if assigned.exists() else None,
+  completed=json.loads(done.read_text()) if done.exists() else None,raw_response=raw.exists(),
+  response_sha256=json.loads(raw.read_text()).get('record_sha256') if raw.exists() else None,
+  skip=json.loads(skip.read_text()).get('reason') if skip.exists() else None))
 print(json.dumps(dict(unix=time.time(),owner=d,state=st[2] if st else 'ABSENT',
  status=json.loads((c/'STATUS.json').read_text()) if (c/'STATUS.json').exists() else None,
  complete=(c/'COMPLETE.json').exists(),log=(c/'RECOVER.log').read_text()[-3000:],
- snapshots=len(keys),centres_answered=sum((r/'centre_responses'/(k+'.json')).exists() for k in keys),
+ snapshots=len(keys),centres_answered=sum((r/'centre_responses'/(k+'.json')).exists() for k in keys),transport=transport,
  decisions=len(list((bank/'decisions').glob('*.json'))),
  quality=json.loads((bank/'BANK_QUALITY.json').read_text()) if (bank/'BANK_QUALITY.json').exists() else None)))''',timeout=40))
     p=ops.EVIDENCE/f'R_BANK_COLLECT_STATUS_{time.time_ns()}.json';write(p,value)
