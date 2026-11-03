@@ -560,6 +560,8 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
             examples.append(ex)
             if ex['status'] == 'admitted':
                 run_solo(k, ex)
+            elif 'cooperative' not in ex:     # same not_admitted fields the seed-1/2 loop sets
+                ex.update(cooperative=False, cooperative_status='not_admitted')
         extras[k] = dict(kind=kind, ext_kind=k_ext, solo_kind=k_solo, salt=salt, receipt=kr, root=kdir)
 
     adm = [e for e in examples if e['admitted']]

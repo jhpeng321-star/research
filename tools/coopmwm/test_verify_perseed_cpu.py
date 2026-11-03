@@ -9,6 +9,7 @@ import time
 import pytest
 import torch
 
+from tools.coopmwm import bank_statistics as bs
 from tools.coopmwm import replay_bank as rb
 from tools.coopmwm import sumo_verify as sv
 from tools.coopmwm import verify_perseed as vp
@@ -287,6 +288,65 @@ def test_builder_precharge_ids_match_live_hook(tmp_path):
     specs = sv.build_branches(rb.replicate(snap, r['verification_id']), plans)
     hook(specs[0]['verification_id'], specs)        # every seed-2 branch is covered by the precharge
     assert len(jobs) == 9 and sum(j['sim_s'] for j in jobs) == vp.quote_decision(600, [120]*8, [['a']]*8)['all8_seed2_sim_s']
+
+
+def test_builder_extras_group_precharge_all_seeds_one_transaction(tmp_path):
+    """bank_builder.extras_charge: the FIRST extra-seed group charge pre-reserves EVERY extra
+    seed's group verification (cooperative candidates + policy) in ONE transaction; the later
+    extra-seed charges only validate their precharged rows (no new ledger rows); extended/solo
+    kinds are not intercepted and keep the live hook."""
+    from tools.coopmwm import bank_builder as bb
+    from tools.coopmwm.accel_storage import reserve
+    from tools.coopmwm.warm_protocol import install_accounting
+    gains = {('p1', 1): 0.6, ('p1', 2): 0.6, ('p1', 1, 'solo'): 0.1, ('p1', 2, 'solo'): 0.1,
+             ('p1', 3): 0.6, ('p1', 3, 'solo'): 0.1}
+    root, snap, plans, r, _, _ = setup(tmp_path, gains)
+    _budget(root)
+    install_accounting(root)
+    vid = r['verification_id']
+    reserve(root, bb.quoted_jobs_all8(snap, plans, vid, sv.build_branches, rb.replicate), bb.PHASE)
+    hook = bb.extras_charge(bb.all8_charge(rb._confirm_charge, {j['id']: j for j in ledger(root)}),
+                            snap, vid, 2)
+    coop = [plans[0]]                                   # p1 is the only cooperative candidate
+    specs3 = sv.build_branches(rb.replicate(snap, vp.extra_seed_salt(vid, 3)), coop)
+    hook(str(root), bb.PHASE, 'confirm_seed3_all8')(specs3[0]['verification_id'], specs3)
+    rows = [x for x in ledger(root) if x['id'].startswith(('confirm_seed3_all8_', 'confirm_seed4_all8_'))]
+    assert len(rows) == 4                               # seeds 3 AND 4 were reserved by that ONE charge
+    specs4 = sv.build_branches(rb.replicate(snap, vp.extra_seed_salt(vid, 4)), coop)
+    hook(str(root), bb.PHASE, 'confirm_seed4_all8')(specs4[0]['verification_id'], specs4)
+    assert len([x for x in ledger(root) if x['id'].startswith('confirm_seed4_all8_')]) == 2   # no new rows
+    assert sum(j['sim_s'] for j in hook.extras_state['entries'].values()) == sum(x['sim_s'] for x in rows)
+    assert sum(x['sim_s'] for x in rows) == 4*sv.branch_sim_s(min(600+120+sv.TAIL_S, 1200))
+    # extended/solo kinds keep the live hook (each reserves its own kind-prefixed rows)
+    spec = sv.build_branches(snap, [plans[0]])[0]
+    hook(str(root), bb.PHASE, vp.KIND_EXT)(spec['verification_id'], [spec])
+    assert any(x['id'].startswith(vp.KIND_EXT+'_') for x in ledger(root))
+    assert not any(x['id'].startswith('confirm_seed5') for x in ledger(root))
+
+
+def test_builder_extras_group_precharge_budget_block_is_all_or_nothing(tmp_path):
+    """A budget shortfall at the first extra-seed group charge raises BudgetBlocked and leaves NO
+    extra-seed rows in the ledger (never partial extras); nothing is cached, so a decision with
+    a sufficient budget would reserve every extra seed's group instead."""
+    from tools.coopmwm import bank_builder as bb
+    from tools.coopmwm.sumo_verify import BudgetBlocked
+    from tools.coopmwm.warm_protocol import budget as warm_budget, install_accounting
+    gains = {('p1', 1): 0.6, ('p1', 2): 0.6, ('p1', 1, 'solo'): 0.1, ('p1', 2, 'solo'): 0.1,
+             ('p1', 3): 0.6, ('p1', 3, 'solo'): 0.1}
+    root, snap, plans, r, _, _ = setup(tmp_path, gains)
+    b = warm_budget();b['total'] += 1000;b['allocated'] += 1000
+    b['phases'] = dict(b['phases'], bank_verification_ext=1000)
+    (root/'B_REPLAY_PHASE_RECONCILIATION_0627.json').write_text(json.dumps(
+        dict(budget=b, amendment_sha256='test-bank-budget')))
+    (root/'AUTHORITY.md').write_text('test-bank-budget')
+    install_accounting(root)
+    vid = r['verification_id']
+    hook = bb.extras_charge(bb.all8_charge(rb._confirm_charge, {}), snap, vid, 2)
+    specs3 = sv.build_branches(rb.replicate(snap, vp.extra_seed_salt(vid, 3)), [plans[0]])
+    with pytest.raises(BudgetBlocked):
+        hook(str(root), bb.PHASE, 'confirm_seed3_all8')(specs3[0]['verification_id'], specs3)
+    assert not [x for x in ledger(root) if x['id'].startswith(('confirm_seed3_all8_', 'confirm_seed4_all8_'))]
+    assert not hook.extras_state                        # all-or-nothing: nothing reserved, nothing cached
 
 
 def test_per_seed_v1_bank_pairs_integration(tmp_path):
@@ -578,6 +638,37 @@ def test_extra_seeds_independent_admission_own_solos_and_charges(tmp_path, monke
     tape, entry = vp.imitation_entry(s3[0], conf[r['verification_id']]['t0'], 1.)
     assert len(xg.imitation_pairs(tape, entry)) == 120
     assert s3[0]['tape']['branch']['branch'] == 'cand1'
+
+
+def test_report_per_seed_consumes_rejected_extra_examples(tmp_path, monkeypatch):
+    """A rejected extra-seed example carries the SAME not_admitted cooperative fields as the
+    seeds-1/2 loop sets, so bank_statistics.report_per_seed reads a record with rejected extra
+    examples (here: seed 4 fails its own lower bound) without KeyError."""
+    gains = {('p1', 1): 0.6, ('p1', 2): 0.6, ('p1', 1, 'solo'): 0.1, ('p1', 2, 'solo'): 0.1,
+             ('p1', 3): 0.6, ('p1', 3, 'solo'): 0.1}
+    root, snap, plans, r, runner_for, _ = setup(tmp_path, gains)
+    assert rb.confirm_pending(root, 'B', runner_for, str(root), PHASE, verify_mode=vp.ALL8,
+                              extra_seeds=2) == [True]
+    c = vp.records(root, 'B')[r['verification_id']]
+    ex = {e['seed_index']: e for e in c['per_seed_v1']['examples'] if e['candidate_index'] == 0}
+    assert ex[3]['admitted'] and ex[3]['cooperative'] is True and ex[3]['cooperative_status'] == 'cooperative'
+    assert ex[4]['status'] == 'rejected' and 'seed-4 one-sided 95% lower bound' in ex[4]['reason']
+    assert ex[4]['cooperative'] is False and ex[4]['cooperative_status'] == 'not_admitted'
+    unwrapped = rb.confirmations
+    while hasattr(unwrapped, 'original'):
+        unwrapped = unwrapped.original
+    monkeypatch.setattr(rb, 'confirmations', unwrapped)
+    bs._CACHE.clear()
+    bs.install(rb, bank_rule='per_seed_v1')
+    rep = bs.report_per_seed(rb, root, 'B')                  # no KeyError on the rejected extra example
+    rows = {x['example_id']: x for x in rep['entries']}
+    for k in (1, 2, 3, 4):
+        row = rows[ex[k]['example_id']]
+        assert row['admitted'] == ex[k]['admitted']
+        assert row['cooperative'] == ex[k]['cooperative']
+        assert row['cooperative_status'] == ex[k]['cooperative_status']
+    assert rows[ex[4]['example_id']]['cooperative_status'] == 'not_admitted'
+    assert rep['cooperative_examples'] == 3 and rep['cooperative_by_seed'] == {'1': 1, '2': 1}
 
 
 def test_extra_seeds_quote_keys_and_cli():
