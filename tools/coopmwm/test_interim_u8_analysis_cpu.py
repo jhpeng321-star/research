@@ -3,7 +3,10 @@ import tempfile
 from pathlib import Path
 import unittest
 from unittest.mock import patch
-import interim_u8_analysis as a
+try:
+    import interim_u8_analysis as a
+except ModuleNotFoundError:  # collection from the repository root
+    from tools.coopmwm import interim_u8_analysis as a
 
 
 class InterimAnalysisTests(unittest.TestCase):

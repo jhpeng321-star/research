@@ -1,0 +1,57 @@
+{
+  "task": "FIX GATE (offline CPU check that the fixes make the policy learn the cooperative plans)",
+  "branch": "c4/coop-gate",
+  "worktree": "E:/agent-work/c4-coop-gate",
+  "ready": true,
+  "based_on": "live c4/coopnative code (base commit e5603466, branch c4/coop-gate)",
+  "head_commit": "101215a8",
+  "commits": [
+    {"sha": "0ef532e2", "msg": "coopmwm: add COOPFIX gate (offline CPU imitation-phase verdict) with stubs for imitation_trust and bank_filter"},
+    {"sha": "04087246", "msg": "coopmwm: merge c4/bank-stat-filter (statistical bank filter, BANKFILT READY) into the coop-gate branch"},
+    {"sha": "c63d5e1b", "msg": "coopmwm: wire the live statistical bank_filter into the COOPFIX gate; absolute test imports (pytest top-level package tree)"},
+    {"sha": "58894b86", "msg": "coopmwm: resolve merge of bank_filter + pair_flags/imitation_trust in replay_bank.bank_pairs and warm_runner"},
+    {"sha": "101215a8", "msg": "coopmwm: forward imitation_trust own_pass (with pair_cooperative flags) through the COOPFIX gate; fix undefined stop in _own_pass error-note path"}
+  ],
+  "module": "tools/coopmwm/coopfix_gate.py",
+  "what": "Given a MAPPO u0 checkpoint (accel_learner schema, extended for v2v with zero-initialised inputs via the registered v2v_model.load_checkpoint), a bank of pairs (replay_bank.bank_pairs, v2v partner features attached per pair) and the training options, runs ONE imitation phase offline - the registered bank_imitation.run loop, no PPO update, no SUMO - and reports: passes completed; final joint KL vs the frozen pre-update policy (runner's registered limit 0.045, imported, never re-stated); imitation L1 error on the COOPERATIVE pairs before/after with a pair-cluster bootstrap 95% CI on the per-member-step fall (10000 resamples, seed 20261101 - same estimator family as replay_bank._boot_ci); per cooperative entry the fraction of CAV-steps whose action moved toward the plan action; and whether the zero-initialised v2v ACTOR input weights moved (non-zero) - i.e. the policy can use partner intent. Cooperative entries are the bank's own record (summary entries/durations + exposure, with the structural len(proposal_members)>1 definitional fallback).",
+  "verdict": {
+    "PASS_iff": [
+      ">=1 full imitation pass completed (bank_imitation epochs_completed >= 1)",
+      "no registered KL stop and final joint KL <= the runner's kl_limit (0.045)",
+      "cooperative-pair error falls: the bootstrap 95% CI of the per-member-step fall is entirely below 0 (upper bound < 0); CI is None (insufficient clusters) => FAIL",
+      "v2v actor input columns non-zero (imitation trains the actor only; critic movement reported but not required)"
+    ],
+    "fail_reasons_disclosed": "report['checks'], report['reasons']; every failure named"
+  },
+  "options": {
+    "v2v": "default OFF (hard rule kept); with --v2v the policy is widened by V2V_DIM=24 zero-init inputs; flag off => GatePolicy is byte-identical to the registered base forward (pinned by test)",
+    "bank_filter": "REGISTERED VALUE 'statistical' - LIVE (BANKFILT_READY.json consumed; branch c4/bank-stat-filter merged at 04087246/58894b86). Applied per entry INSIDE replay_bank.bank_pairs (replicated-advantage + paired per-vehicle deficit bounds); the gate validates the value and discloses summary['bank_filter']. Cannot be applied to a bare pairs file (the rule needs recorded receipts/traces) - the gate raises instead of silently skipping.",
+    "imitation_trust": "REGISTERED VALUE 'own_pass' - LIVE (IMITFIX_READY.json consumed; branch c4/imit-fullpass merged at 58894b86). Forwarded to bank_imitation.run by parameter name together with the bank's summary['pair_cooperative'] flags when they align with the pairs (cooperative-first guaranteed first pass, projected-KL lr-halving).",
+    "ready_polling": "E:/agent-work/c4-imit-fullpass/IMITFIX_READY.json and E:/agent-work/c4-bank-stat-filter/BANKFILT_READY.json were polled during the build; both went READY and both branches are MERGED - nothing is stubbed anymore. gate.option_status() still reports the state."
+  },
+  "tests": {
+    "runner": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest (CPU only: torch cpu, no SUMO, no GPU; run from the worktree root so tools.* resolves)",
+    "new": "tools/coopmwm/test_coopfix_gate_cpu.py - 16 passed (~54s): gate-policy extra=0 byte-identity; zero-init extension equivalence (with and without v2v context, wild inputs); checkpoint round-trip with zero v2v columns; cooperative-pair bookkeeping (unique pairs out of the oversampled flatten, entry grouping by summary durations and by (plan_id,start_s) runs); toward-fraction exact values; bootstrap CI direction (wrong direction never passes); FULL VERDICT PASS on a synthetic bank modelled like the live one (plan actions = u0 means + noise + small consistent cooperative delta, v2v partner intent in the last-command channel): 5/5 passes, KL <= limit, error fall with CI excluding 0, toward fractions, v2v actor weights non-zero; FAIL when pairs carry no v2v features; FAIL when the v2v flag is off; FAIL on KL breach (huge-lr checkpoint); option validation + READY gating + live forwarding of bank_filter (inside bank_pairs) and imitation_trust (own_pass + cooperative flags); PASS with own_pass trust region; CLI writes the report (PASS with --v2v, FAIL without); insufficient-coop-clusters FAIL (CI None)",
+    "regression_after_merges": "test_bank_imitation_cpu + test_bank_filter_cpu + test_bank_safety_cpu + test_replay_bank_confirm_cpu + test_replay_bank_v2v_cpu + test_v2v_model_cpu + test_awr_cpu: 55 passed; coopfix suite re-run: 16 passed"
+  },
+  "cli": {
+    "cwd": "worktree root E:/agent-work/c4-coop-gate (python -m keeps CWD on sys.path; cpuQ: CPU only, no GPU, no SUMO)",
+    "offline_pairs_file": "python -m tools.coopmwm.coopfix_gate run --checkpoint <B_checkpoint_XXX.pt> --pairs-file <bank_pairs_v2v.json> --v2v --passes 5 --out COOPFIX_GATE_REPORT.json",
+    "live_bank": "python -m tools.coopmwm.coopfix_gate run --checkpoint <B_checkpoint_XXX.pt> --bank-root <ROOT> --arm B --training-seed <N> --v2v --bank-filter --imitation-trust --passes 5 --out COOPFIX_GATE_REPORT.json",
+    "flags": "--v2v (default off) | --v2v-dim N | --bank-filter (registered 'statistical', requires --bank-root) | --imitation-trust (registered 'own_pass'; implies pair_flags=True) | --beta | --max-decisions | --coefficient | --passes (>=5, registered rule) | --arm B|R | --training-seed",
+    "status": "python -m tools.coopmwm.coopfix_gate status   # prints each option's READY file + live/stub state",
+    "pairs_file_format": "{\"pairs\": [[sample, weight], ...], \"summary\": <bank_pairs summary or null>} (pairs exactly as replay_bank.bank_pairs(v2v=True) returns)",
+    "report_keys": "gate, checkpoint, update, options(+status), bank{pairs, cooperative_pairs, cooperative_raw, entries, pairs_with_v2v_features, v2v_feature_fraction, counts, exposure}, filter, trust, imitation{passes_requested, passes_completed, optimizer_steps, pairs_seen, kl, kl_limit, stop_reason}, cooperative{error_before_mps2, error_after_mps2, fall_mean_mps2, fall_ci95, fall_clusters, entries[{plan_id, start_s, pairs, member_steps, toward_steps, toward_fraction}]}, v2v_weights{extra_dim, heads{actor,critic}{nonzero,l2,max_abs}, moved, rule}, checks, reasons, verdict"
+  },
+  "hard_rules_compliance": {
+    "cpu_only": true,
+    "own_worktree_only": true,
+    "c4_coopnative_and_sol": "untouched (no writes; nothing read from either)",
+    "no_destructive_git": "no reset/clean/stash-drop/push (merges are --no-ff local merges of the two READY branches, as instructed)",
+    "forbidden_paths": "never opened sealed/ or any holdout/heldout/cal_split/chunk5/j4b/inc1 path; never read hetdata_truth or vType/driver/vehicle_params truth files",
+    "no_hand_set_thresholds": "KL limit imported from the registered bank_imitation runner (0.045); bootstrap CI statistical (seed 20261101, 10000 resamples); v2v-weights criterion structural (non-zero columns); >=1 pass structural",
+    "v2v_default_off_byte_identical": "no pre-existing module's default behaviour changed; option-off paths pinned by tests (gate-policy extra=0 forward equality; bank_pairs/pair_flags/filter/trust default-off suites all green after both merges)",
+    "merged_branches": "c4/bank-stat-filter (BANKFILT READY) + c4/imit-fullpass (IMITFIX READY) merged and re-tested"
+  },
+  "notes": "Fixed one latent bug in the merged c4/imit-fullpass code: bank_imitation._own_pass referenced an undefined `stop` in the error-not-decreased note path (NameError whenever the final cooperative/overall error did not decrease); it now writes the disclosure unconditionally (own_pass never stops on KL)."
+}

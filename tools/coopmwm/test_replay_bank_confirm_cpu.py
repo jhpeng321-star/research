@@ -284,6 +284,31 @@ def test_exposure_oversamples_cooperative_entries_to_half_with_unchanged_weights
     assert len(q['synergy_twins']) == 3 and sum(t['cooperative'] is True for t in q['synergy_twins']) == 1
 
 
+def test_pair_flags_off_by_default_and_cooperative_aligned_when_on(tmp_path):
+    """IMITFIX: pair_flags=True adds summary['pair_cooperative'] (one bool per imitation pair,
+    cooperative entries True including their oversampled duplicates); the DEFAULT OFF call stays
+    byte-identical. Feeds exact_update imitation_trust='own_pass' cooperative-first passes."""
+    root = tmp_path;bank = rb.bank_root(root, 'B');bank.mkdir(parents=True)
+    r = lambda work: TapeRunner(work)
+    _confirmed_decision(root, bank, 420, r, 'n1', 1.)
+    _confirmed_decision(root, bank, 460, r, 'n2', 1.)
+    rc = lambda work: TapeRunner(work, cooperative=True)
+    first = sv.verify(snapshot(440), [duo_plan('coop', 1., .5)], rc(bank/'sumo_verification'),
+                      lambda vid, specs: None, root=bank/'sumo_verification')
+    receipt = {k: v for k, v in first.items() if not k.startswith('_')}
+    out = rb.confirm(root, 'B', receipt, snapshot(440), rc, str(root),
+                     'bank_verification_ext', workers=2, version='u4')
+    assert out['admitted'] and out['cooperation']['cooperative'] is True
+    p1, s1 = rb.bank_pairs(root, 'B', 12345)
+    assert 'pair_cooperative' not in s1
+    p2, s2 = rb.bank_pairs(root, 'B', 12345, pair_flags=True)
+    assert p2 == p1 and s2['pair_cooperative'] is not None
+    s2.pop('pair_cooperative');assert s2 == s1
+    flags = [bool(f) for f in rb.bank_pairs(root, 'B', 12345, pair_flags=True)[1]['pair_cooperative']]
+    assert len(flags) == len(p2) == 480
+    assert sum(flags) == 240 and flags[:240] == [False]*240 and flags[240:] == [True]*240
+
+
 def test_fairness_caps_admitted_targets_after_rejected_prefix(tmp_path,monkeypatch):
     root=tmp_path;bank=rb.bank_root(root,'B');bank.mkdir(parents=True)
     _confirmed_decision(root,bank,420,TapeRunner,'first',1.)

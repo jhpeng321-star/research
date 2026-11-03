@@ -998,18 +998,30 @@ def _intent_metrics(policy, intent, before, samples_records, pack):
     return intent_report(intent, before, after)
 
 
-def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., epochs=4,imitation_epochs=0,intent=None):
+def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., epochs=4,imitation_epochs=0,intent=None,
+                 imitation_trust=None, cooperative=None):
+    """imitation_trust='own_pass' (DEFAULT OFF = byte-identical): bank imitation measures its
+    KL against the post-PPO policy instead of the pre-update one and guarantees a complete
+    cooperative-first first pass by adaptive per-step learning-rate halving; ``cooperative``
+    is the per-pair cooperative flag list from replay_bank.bank_pairs(pair_flags=True).
+    intent (v2v_intent, DEFAULT None = byte-identical): the registered plan-future-command
+    intent loss is forwarded to the bank pass together with the trust options."""
     if not imitation_epochs:return _ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs,intent=intent)
     import copy
     from . import bank_imitation
     reference=copy.deepcopy(policy)
     metrics=_ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs,intent=intent)
     report=bank_imitation.run(policy,optimizer,pairs,generator,reference,coefficient,imitation_epochs,
+        imitation_trust=imitation_trust,cooperative=cooperative,
         **({'intent':intent} if intent is not None else {}))
+    rule='MAIN0936 post-PPO full-bank AWR, pre-update KL bound; no plan ratios or critic loss'
+    if imitation_trust:
+        rule=('MAIN0936 post-PPO full-bank AWR, own pre-imitation KL bound (%s); '
+              'no plan ratios or critic loss')%(imitation_trust,)
     metrics.append(dict(loss=report['last_loss'],kl=report['kl'],gradient_norm=report['last_gradient_norm'],
         imitation=report['last_loss'],own_policy_steps=0,critic_steps=0,
         exact_imitation_steps=report['pairs_seen'],bank_imitation=report,
-        loss_rule='MAIN0936 post-PPO full-bank AWR, pre-update KL bound; no plan ratios or critic loss'))
+        loss_rule=rule))
     return metrics
 
 
