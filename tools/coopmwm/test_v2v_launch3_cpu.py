@@ -147,7 +147,8 @@ def test_resource_decision_boundary():
 def test_bind_runtime_refuses_wrong_options():
     good = dict(config=dict(budget=dict(total=l3.CEILING_SIM_S),
         diagnostic_schedule=dict(A=dict(isolated=[]), B=dict(isolated=[6, 12, 18, 24]),
-            R=dict(isolated=[12, 24])), **l3.INTENT_OPTIONS))
+            R=dict(isolated=[12, 24])), v2v_dim=l3.INTENT_OBS_DIM,
+        **l3.INTENT_OPTIONS))
     assert l3.bind_runtime(good)['bound']
     bad = json.loads(json.dumps(good))
     bad['config']['v2v_intent_horizon'] = 4
@@ -163,3 +164,22 @@ def test_bind_runtime_refuses_wrong_options():
         raise AssertionError('changed cap accepted')
     except Refused:
         pass
+
+
+def test_bind_runtime_requires_intent_obs_dim():
+    base = dict(budget=dict(total=l3.CEILING_SIM_S),
+        diagnostic_schedule=dict(A=dict(isolated=[]), B=dict(isolated=[6, 12, 18, 24]),
+            R=dict(isolated=[12, 24])), **l3.INTENT_OPTIONS)
+    wrong = dict(config=dict(base, v2v_dim=l3.INTENT_OBS_DIM - 1))
+    try:
+        l3.bind_runtime(wrong)
+        raise AssertionError('plain v2v_dim accepted with v2v_intent on')
+    except Refused as error:
+        assert 'v2v_dim' in str(error)
+    absent = dict(config=base)
+    try:
+        l3.bind_runtime(absent)
+        raise AssertionError('missing v2v_dim accepted with v2v_intent on')
+    except Refused:
+        pass
+    assert l3.INTENT_OBS_DIM == 4 * (6 + 5 + 1)

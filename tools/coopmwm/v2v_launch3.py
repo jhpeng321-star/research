@@ -13,9 +13,13 @@ import sys
 import time
 from pathlib import Path
 
-MERGED_COMMIT = '6c68cb7cafecffba8d4d6f8ca683792672769c51'
-INTENT_INT_COMMIT = 'b37d895bc1c1114c232c55f3c69e1f60baf47660'
+MERGED_COMMIT = 'ff5d70e995bce609db4c1f7f45d0266ec82a82ec'
+INTENT_INT_COMMIT = '3e7933f2f42307fc328587758fa41f7ca3efa38d'
 INTENT_HEAD_COMMIT = 'ad7fbc7b92c2a49435e709a282a4182315b99b7c'
+try:
+    from .v2v_obs import V2V_INTENT_DIM as INTENT_OBS_DIM  # numpy-only contract
+except ImportError:  # bare cpuQ checkout without the package tree
+    INTENT_OBS_DIM = 4 * (6 + 5 + 1)  # K * (base 6 + horizon 5 + valid 1)
 V2V_REGISTRATION_COMMIT = '38366196'
 CEILING_SIM_S = 17471840
 REQUIRED_FREE_BYTES = 6 * 1024 ** 3
@@ -209,6 +213,10 @@ def bind_runtime(value):
     for key, want in INTENT_OPTIONS.items():
         if cfg.get(key) != want:
             raise Refused(f'runtime option {key} is {cfg.get(key)!r}, want {want!r}')
+    if cfg.get('v2v_intent') and cfg.get('v2v_dim') != INTENT_OBS_DIM:
+        raise Refused(f'runtime option v2v_dim is {cfg.get("v2v_dim")!r}, want '
+            + str(INTENT_OBS_DIM) + ' (v2v_live.intent_binding_gate: intent '
+            + 'sharing requires the intent observation dimension)')
     for key, want in BANK_OPTIONS.items():
         have = cfg.get(key)
         if have is not None and have != want:
