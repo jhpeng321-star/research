@@ -36,8 +36,10 @@ def test_shared_ledger_and_lock_are_both_required(tmp_path):
     with pytest.raises(ValueError,match='cap/allocation'):live.accounting(tmp_path/'new',cfg)
 
 
-def test_hooks_keep_bank_readers_and_all_enabled_policy_paths(tmp_path):
-    from . import replay_bank as rb
+def test_hooks_keep_bank_readers_and_all_enabled_policy_paths(tmp_path, monkeypatch):
+    from . import replay_bank as rb, bank_imitation
+    monkeypatch.setattr(rb, 'confirmations', rb.confirmations)    # restored after hooks() installs
+    monkeypatch.setattr(bank_imitation, 'run', bank_imitation.run)  # audit M4: hooks() rebinds it
     from .v2v_runtime import Policy
     cfg=binding(tmp_path);hooks=live.hooks(tmp_path/'new',cfg)
     assert set(hooks)==set(runner.REQUIRED_HOOKS)

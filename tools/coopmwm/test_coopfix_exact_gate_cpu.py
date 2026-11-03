@@ -1,8 +1,9 @@
 ﻿"""CPU tests for the exact gate runner (synthetic banks and synthetic job outputs, no SUMO):
 the offline fixed update through bank_imitation.run_separate on the live V2V loader, the
-cooperative-pair slice of the bank layout, the v2v / intent block layouts, boot_v2
-certification (replicated / single_seed / data_missing), per-arm sources, CRN-paired
-two-seed planning with u3 references, the boot_v2 paired-bootstrap synergy, the ledger
+cooperative-pair slice of the bank layout, the v2v / intent block layouts, per_seed_v1
+certification (per seed; replicated / seed1_only / data_missing; all8 per-seed plans), per-arm
+sources, planning on each certified seed's own CRN with u3 references, the single-seed
+per_seed_v1 paired-bootstrap synergy (>= 1 certified seed must pass on 986066), the ledger
 precharge / admission / running hooks of execute, and the PASS/FAIL verdict."""
 import json
 
@@ -23,6 +24,19 @@ from tools.coopmwm.v2v_obs import V2VConfig, v2v_features
 from .test_replay_bank_confirm_cpu import snapshot, plan as group_plan, fp, SumRunner
 
 MANDATORY_COPY = tuple(ceg.MANDATORY_STATES)
+
+
+@pytest.fixture(autouse=True)
+def deployed_identity(monkeypatch, tmp_path):
+    """Audit B2/B3 (c4/launch-final): plan() binds the deployed V2V_RUNTIME.json and the source
+    commit. These synthetic banks carry no runtime file, so they bind a fixed synthetic identity
+    and keep the requested gate_config(v2v, intent); the real loaders are tested in
+    test_launch_final_cpu.py."""
+    def fake(root, v2v=True, intent='auto', source_root=None, source_manifest=None):
+        ident = dict(commit='0'*40, runtime_sha256='1'*64, source_manifest_sha256=None,
+                     method='test', runtime_path=str(tmp_path/'NO_V2V_RUNTIME.json'))
+        return ceg.gate_config(v2v, intent), ident, {}
+    monkeypatch.setattr(ceg, 'gate_identity', fake)
 
 
 @pytest.fixture(autouse=True)
@@ -344,32 +358,40 @@ def planned(root, control):
     return ceg.plan(root, 'B', control, Policy().state_dict(), Policy().state_dict(), offline=offline_fixture())
 
 
-def test_boot_v2_certifies_replicated_states_and_restores_the_reader(gate_bank):
+def test_per_seed_certifies_states_and_restores_the_reader(gate_bank, monkeypatch):
+    monkeypatch.setattr(rb, 'confirmations', rb.confirmations)
     original = rb.confirmations
     candidates, statuses = ceg.certified_candidates(gate_bank, 'B')
     assert rb.confirmations is original                    # installed here -> restored
-    assert sorted(r['episode']['world']['seed'] for r, _ in candidates) == [986003, 986048, 986066]
+    assert sorted(r['episode']['world']['seed'] for r, _, _ in candidates) == [986003, 986048, 986066]
     assert {v['cooperative_status'] for v in statuses.values()} == {'replicated'}
-    for _, c in candidates:
-        assert c['admitted'] is True and c['bank_rule'] == 'boot_v2'
-        assert c['cooperation']['cooperative'] is True
-        assert c['cooperation']['synergy_v2']['lower95_one_sided_veh_s'] > 0
-    bs.install(rb)                                          # pre-installed: left installed
+    for _, c, seeds in candidates:
+        assert c['admitted'] is True and c['bank_rule'] == 'per_seed_v1' and seeds == [1, 2]
+        for e in c['per_seed_v1']['examples']:
+            assert e['cooperative'] is True and e['synergy']['lower95_one_sided_veh_s'] > 0
+    bs.install(rb, bank_rule='per_seed_v1')                 # pre-installed: left installed
     installed = rb.confirmations
     ceg.certified_candidates(gate_bank, 'B')
     assert rb.confirmations is installed
+    monkeypatch.setattr(rb, 'confirmations', installed.original)
+    bs.install(rb)                                          # a different rule: unwrapped, then restored
+    boot = rb.confirmations
+    assert len(ceg.certified_candidates(gate_bank, 'B')[0]) == 3 and rb.confirmations is boot
 
 
-def test_single_seed_state_is_not_certified_and_the_gate_fails(tmp_path):
-    build_bank(tmp_path, single_seed=(986003,))
+def test_state_cooperative_on_one_seed_is_certified_and_planned_on_that_seed_only(tmp_path):
+    build_bank(tmp_path, single_seed=(986003,))              # no second-seed solos for 986003
     candidates, statuses = ceg.certified_candidates(tmp_path, 'B')
-    assert sorted(r['episode']['world']['seed'] for r, _ in candidates) == [986048, 986066]
-    assert {v['seed']: v['cooperative_status'] for v in statuses.values()}[986003] == 'single_seed'
-    report = planned(tmp_path, tmp_path/'control')
-    assert report['verdict'] == 'FAIL' and report['stage'] == 'certification'
-    assert any('986003' in r and 'single_seed' in r for r in report['reasons'])
-    assert not (tmp_path/'control'/ceg.PLAN_FILE).exists()  # no physics planned
-    verify_sealed(json.loads((tmp_path/'control'/ceg.GATE_FILE).read_text()), 'gate_report_sha256')
+    assert {r['episode']['world']['seed']: s for r, _, s in candidates} == {
+        986003: [1], 986048: [1, 2], 986066: [1, 2]}
+    st = {v['seed']: v for v in statuses.values()}[986003]
+    assert st['cooperative_status'] == 'seed1_only' and st['certified_seeds'] == [1]
+    assert [p['cooperative_status'] for p in st['per_seed']] == ['cooperative', 'no_solos']
+    record = planned(tmp_path, tmp_path/'control')
+    three = next(s for s in record['states'] if s['seed'] == 986003)
+    assert three['seeds'] == [1] and {j['seed'] for j in three['jobs']} == {1}
+    assert list(three['quotes']) == ['seed1'] and three['certification']['replicated'] is False
+    assert three['cost']['total_sim_s'] == three['quotes']['seed1']['sim_s']
 
 
 def test_data_missing_bank_fails_the_gate(tmp_path):
@@ -404,7 +426,7 @@ def test_sources_are_threaded_per_arm(gate_bank, monkeypatch):
     monkeypatch.setattr(rb, 'bank_decisions', decisions)
     sources = {'B': [str(gate_bank/'srcB')], 'R': [str(gate_bank/'srcR')]}
     ceg.certified_candidates(gate_bank, 'B', sources)
-    assert seen['install'] == dict(sources=sources)
+    assert seen['install'] == dict(bank_rule='per_seed_v1', sources=sources)
     assert set(seen['decisions']) == {(str(gate_bank/'srcB'),)}
     calls = []
     monkeypatch.setattr(rb, 'bank_pairs', lambda *a, **k: calls.append(k) or ([], {}))
@@ -434,11 +456,17 @@ def test_plan_two_crn_seeds_with_u3_references_and_quoted_overage(gate_bank, tmp
         assert len({j['generator_state_sha256'] for j in jobs}) == 1      # CRN within a seed
     g1 = {j['generator_state_sha256'] for j in six['jobs'] if j['seed'] == 1}
     g2 = {j['generator_state_sha256'] for j in six['jobs'] if j['seed'] == 2}
-    assert g1 != g2                                         # independent second seed
+    assert g1 != g2
+    # each seed is the VERIFIED example's own CRN: seed 1 = decision snapshot, seed 2 = the
+    # confirmation replication salt (replay_bank.replicate(snapshot, verification_id))
+    snap = torch.load(rb.bank_root(root, 'B')/'snapshots'/'st_986066.pt', weights_only=False)
+    assert g1 == {(snap.get('rng') or {}).get('generator_state_sha256')}
+    assert g2 == {rb.replicate(snap, six['verification_id'])['rng']['generator_state_sha256']}
+    assert six['seeds'] == [1, 2] and six['certification']['certified_seeds'] == [1, 2]
     assert six['reference_adopted'] is None
     sim = six['jobs'][0]['sim_s']
     assert six['cost']['total_sim_s'] == 18*sim == sum(q['sim_s'] for q in six['quotes'].values())
-    assert six['cost']['isolated_seed1_n_plus_2_sim_s'] == 8*sim
+    assert six['cost']['isolated_n_plus_2_sim_s'] == dict(seed1=8*sim, seed2=8*sim)
     assert six['cost']['overage_sim_s'] == max(0, 18*sim-ceg.ISOLATED_STATE_CAP_SIM_S)
     assert record['totals']['jobs'] == 18+10+10
     assert record['totals']['per_state_sim_s']['986066'] == 18*sim
@@ -558,18 +586,54 @@ def test_collect_crn_paired_bootstrap_synergy_pass(gate_bank, tmp_path):
     assert six['per_seed']['1']['best_solo_member'] == 'c5' and six['per_seed']['2']['best_solo_member'] == 'c0'
     assert six['per_seed']['1']['synergy_veh_s'] == pytest.approx(20.-6.)
     assert six['per_seed']['2']['synergy_veh_s'] == pytest.approx(18.-6.)
-    syn = six['synergy_v2']
-    assert syn['unit_source'] == bs.UNIT_PER_STEP and syn['B'] == bs.BOOT_B
-    assert syn['best_solo_branch_per_seed'] == {'1': 'solo5', '2': 'solo0'}
-    assert [s['total_veh_s'] for s in syn['per_seed']] == pytest.approx([14., 12.])
-    # CRN pairing within each seed cancels the common noise exactly: the bound is the total
-    assert six['synergy_lower95_veh_s'] == pytest.approx(26.)
-    assert six['group_only_v2']['pooled_total_veh_s'] == pytest.approx(38.)
+    s1, s2 = six['per_seed']['1'], six['per_seed']['2']
+    for s, best, total in ((s1, 'solo5', 14.), (s2, 'solo0', 12.)):   # never pooled across seeds
+        syn = s['synergy_v2']
+        assert syn['unit_source'] == bs.UNIT_PER_STEP and syn['B'] == bs.BOOT_B and len(syn['per_seed']) == 1
+        assert syn['best_solo_branch'] == best and syn['pooled_total_veh_s'] == pytest.approx(total)
+        # CRN pairing within the seed cancels the common noise exactly: the bound is the total
+        assert s['synergy_lower95_veh_s'] == pytest.approx(total)
+    assert s1['group_only_v2']['pooled_total_veh_s'] == pytest.approx(20.)
+    assert s2['group_only_v2']['pooled_total_veh_s'] == pytest.approx(18.)
+    assert s1['per_vehicle']['c1']['pooled_total_veh_s'] == pytest.approx(5.2)
     assert six['background_only_delta_veh_s'] == pytest.approx(1.)
-    assert six['per_vehicle']['c1']['pooled_total_veh_s'] == pytest.approx(5.2+5.5)
-    assert six['synergy_student_t_ci95_disclosed'] == pytest.approx(bs.replicated_ci(14., 12.))
+    assert six['synergy_lower95_veh_s_per_seed'] == pytest.approx({'1': 14., '2': 12.})
+    assert six['synergy_lower95_veh_s'] == pytest.approx(14.) and six['seeds_synergy_lower95_gt_0'] == [1, 2]
     assert report['verdict'] == 'PASS' and report['reasons'] == []
-    assert report['gate_state_synergy_lower_bound'] == pytest.approx(26.)
+    assert report['gate_state_synergy_lower_bound'] == pytest.approx(14.)
+    assert report['gate_state_synergy_lower_bounds_per_seed'] == pytest.approx({'1': 14., '2': 12.})
+    assert report['gate_state_seeds_tested'] == [1, 2]
+
+
+def test_both_seeds_tested_and_one_positive_seed_passes(gate_bank, tmp_path):
+    control = tmp_path/'control'
+    record = planned(gate_bank, control)
+    # seed 1: group 20 vs best solo 22 (synergy -2); seed 2: group 18 vs best solo 6 (+12)
+    write_outputs(control, record, {986066: gains_for(6, (20., 18.), [22.]*6, [6.]*6), **PASS_DUOS})
+    report = ceg.collect(control, record)
+    assert report['gate_state_synergy_lower_bounds_per_seed'] == pytest.approx({'1': -2., '2': 12.})
+    assert report['verdict'] == 'PASS' and report['gate_state_synergy_lower_bound'] == pytest.approx(12.)
+
+
+def test_state_certified_on_seed2_only_is_tested_on_its_own_seed2(gate_bank, tmp_path, monkeypatch):
+    real = ceg.certified_candidates
+
+    def seed2_only(root, arm, sources=None):
+        cands, statuses = real(root, arm, sources)
+        return [(r, c, [2] if r['episode']['world']['seed'] == 986066 else s) for r, c, s in cands], statuses
+    monkeypatch.setattr(ceg, 'certified_candidates', seed2_only)
+    control = tmp_path/'control'
+    record = planned(gate_bank, control)
+    six = next(s for s in record['states'] if s['seed'] == 986066)
+    assert six['seeds'] == [2] and {j['seed'] for j in six['jobs']} == {2} and list(six['quotes']) == ['seed2']
+    snap = torch.load(rb.bank_root(gate_bank, 'B')/'snapshots'/'st_986066.pt', weights_only=False)
+    assert {j['generator_state_sha256'] for j in six['jobs']} == {
+        rb.replicate(snap, six['verification_id'])['rng']['generator_state_sha256']}
+    write_outputs(control, record, {986066: gains_for(6, (0., 18.), [9.]*6, [6.]*6), **PASS_DUOS})
+    report = ceg.collect(control, record)
+    assert report['gate_state_seeds_tested'] == [2]
+    assert report['gate_state_synergy_lower_bounds_per_seed'] == pytest.approx({'2': 12.})
+    assert report['verdict'] == 'PASS'
 
 
 def test_collect_fails_on_negative_or_missing_gate_state_data(gate_bank, tmp_path):
@@ -685,3 +749,19 @@ def test_execute_admits_precharges_and_checks_running(gate_bank, tmp_path, monke
     assert all(q['status'] == 'claimed_previously_not_replayed' for q in again) and not log
     report = ceg.collect(control, record)                  # graded receipts feed collect
     assert all(s['ungraded_branches'] == [] for s in report['states'])
+
+
+def test_all8_examples_certify_each_seed_with_its_own_plan(gate_bank):
+    r = next(x for x in rb.bank_decisions(gate_bank, 'B') if x['episode']['world']['seed'] == 986048)
+    alt = dict(r['chosen_plan'], id='alt', members=list(reversed(r['chosen_plan']['members'])))
+    c = dict(verify_mode='all8_both_seeds', per_seed_v1=dict(examples=[
+        dict(seed_index=1, candidate_index=0, admitted=True, cooperative=False, plan=r['chosen_plan']),
+        dict(seed_index=2, candidate_index=3, admitted=True, cooperative=True, plan=alt),
+        dict(seed_index=2, candidate_index=5, admitted=True, cooperative=True, plan=r['chosen_plan'])]))
+    assert ceg.certified_seeds(c) == [2, 2] and ceg.certified_plans(r, c) == {2: alt}   # lowest index
+    snap = torch.load(rb.bank_root(gate_bank, 'B')/'snapshots'/'st_986048.pt', weights_only=False)
+    per_seed, adopted = ceg.state_jobs(r, snap, 0, 'B', Policy().state_dict(), Policy().state_dict(),
+                                       [2], {2: alt})
+    assert list(per_seed) == [2] and adopted is None
+    assert [s['branch'] for s, _ in per_seed[2]] == ['all', 'solo0', 'solo1', 'background', 'reference']
+    assert all(sn['policy_synergy'].get('group', alt['members']) == alt['members'] for _, sn in per_seed[2])

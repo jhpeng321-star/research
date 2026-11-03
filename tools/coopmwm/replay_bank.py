@@ -346,7 +346,8 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
         statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided,
                                    verify_per_round)
         confirm_pending(root, arm, runner_for, str(root), confirm_phase, workers=2,
-                        sources=binding.get('replay_sources', {}).get(arm, ()), limit=verify_per_round)
+                        sources=binding.get('replay_sources', {}).get(arm, ()), limit=verify_per_round,
+                        **({'verify_mode': cfg['verify_mode']} if cfg.get('verify_mode') else {}))
         bank_quality(root, arm, binding.get('replay_sources', {}).get(arm, ()))
         n += 1
         if 'budget_blocked' in statuses:
@@ -460,46 +461,85 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     v2v_counts = dict(pairs=0, kept=0, excluded_missing_prev_second=0,
                       excluded_missing_partner_command=0, trace_missing=False)
     for r in decisions:
-        if r['status'] != 'accepted' or not r['grade_veh_s'] or r['grade_veh_s'] <= 0:
-            counts['nonpositive'] += 1;continue
-        counts['positive'] += 1
         c = conf.get(r['verification_id'])
+        if r['status'] != 'accepted' or not r['grade_veh_s'] or r['grade_veh_s'] <= 0:
+            if not (c is not None and c.get('bank_rule') == 'per_seed_v1'):
+                counts['nonpositive'] += 1;continue
+            # per_seed_v1 all8 record of a first-seed-rejected decision: a seed-2-only winner
+            # is admitted from its own seed-2 tape (owner 2026-11-03 21:45/22:05).
+            counts['per_seed_first_seed_nonpositive_considered'] = counts.get(
+                'per_seed_first_seed_nonpositive_considered', 0)+1
+        else:
+            counts['positive'] += 1
         if c is None:
             counts['unconfirmed'] += 1;continue       # MAIN: only plans that actually work
         if not c['admitted']:
             counts['not_admitted'] += 1;continue
-        if max_decisions is not None and len(entries)>=max(0,int(max_decisions)):
-            counts['admitted_excess_not_used']+=1;continue
-        plan = r['chosen_plan'];branch = r['branches'][r['chosen']+1]
-        result_path = Path(r['_branches'])/r['verification_id']/branch['branch']/'RESULT.json'
-        from .accel_storage import read
-        tape = read(result_path)
-        if branch.get('result_sha256') and digest(tape) != branch['result_sha256']:
-            raise ValueError('bank branch tape differs from its sealed verification receipt')
-        w = float(beta)*xg.weight(c['mean_replicated_advantage_veh_s'], T['temperature_veh_s'], clip)
-        entry = dict(start_s=r['t0'], duration_s=int(plan['duration_s']), plan_id=plan['id'], weight=w)
         coop = c.get('cooperation') or {}
-        entry_pairs = xg.imitation_pairs(tape, entry)
-        intent = None
-        if v2v and v2v_intent:
-            from . import v2v_intent as vi
-            s = vi.settings(v2v_intent)
-            entry_pairs = vi.attach_bank_targets(entry_pairs, tape, entry, s['horizon'], s['bounds'])
-            intent = dict(horizon=s['horizon'], entry=f"{r['verification_id']}/{branch['branch']}")
-        if v2v:
-            entry_pairs, entry_counts = bank_v2v.attach_pairs(
-                entry_pairs, Path(r['_branches'])/r['verification_id']/branch['branch']/'observable.jsonl.gz',
-                r['t0'], v2v_cfg, **({'intent': intent} if intent else {}))
-            v2v_counts = bank_v2v.merge_counts(v2v_counts, entry_counts)
-        per_entry.append((entry_pairs, coop.get('cooperative') is True,
-                          coop.get('cooperation_gain_veh_s')))
-        entries.append(dict(verification_id=r['verification_id'], grade_veh_s=r['grade_veh_s'], weight=w,
-                            mean_replicated_advantage_veh_s=c['mean_replicated_advantage_veh_s'],
-                            policy_version=r['_policy_version'], available_k=r.get('available_k', r['k']),
-                            duration_s=entry['duration_s'], receipt_sha256=r['receipt_sha256'],
-                            cooperative=coop.get('cooperative') is True,
-                            group_size=coop.get('group_size'),
-                            cooperation_gain_veh_s=coop.get('cooperation_gain_veh_s')))
+        per_seed = (c.get('per_seed_v1') or {}).get('examples') if c.get('bank_rule') == 'per_seed_v1' else None
+        if per_seed is None:
+            # boot_v2 / t1727 / legacy: ONE entry, first-seed chosen tape (unchanged).
+            branch = r['branches'][r['chosen']+1]
+            examples = [(r['_branches'], r['verification_id'], branch, c['mean_replicated_advantage_veh_s'],
+                         f"{r['verification_id']}/{branch['branch']}", coop.get('cooperative') is True,
+                         coop.get('cooperation_gain_veh_s'), None)]
+        else:
+            # per_seed_v1 (owner 2026-11-03 21:45): every admitted (plan, seed) example is its own
+            # entry with THAT seed's plan-branch tape, advantage and within-seed cooperation label.
+            examples = []
+            for ex in per_seed:
+                if not ex['admitted']:
+                    counts['per_seed_examples_not_admitted'] = counts.get('per_seed_examples_not_admitted', 0)+1
+                    continue
+                t = ex['tape']
+                syn = ex.get('synergy') or {}
+                gain = (syn.get('pooled_total_veh_s') if ex['cooperative_status'] in ('cooperative', 'not_cooperative')
+                        else None)
+                examples.append((t['branches_dir'], t['verification_id'], t['branch'], ex['advantage_veh_s'],
+                                 t['intent_entry'], ex['cooperative'] is True, gain, ex))
+        for branches_dir, tape_vid, branch, advantage, intent_key, cooperative, gain, ex in examples:
+            if max_decisions is not None and len(entries)>=max(0,int(max_decisions)):
+                counts['admitted_excess_not_used']+=1;continue
+            # per_seed_v1 all8 examples carry their OWN plan (seeds may admit different candidates)
+            plan = ex['plan'] if ex is not None and ex.get('plan') is not None else r['chosen_plan']
+            result_path = Path(branches_dir)/tape_vid/branch['branch']/'RESULT.json'
+            from .accel_storage import read
+            tape = read(result_path)
+            if branch.get('result_sha256') and digest(tape) != branch['result_sha256']:
+                raise ValueError('bank branch tape differs from its sealed verification receipt')
+            w = float(beta)*xg.weight(advantage, T['temperature_veh_s'], clip)
+            entry = dict(start_s=r['t0'], duration_s=int(plan['duration_s']), plan_id=plan['id'], weight=w)
+            entry_pairs = xg.imitation_pairs(tape, entry)
+            intent = None
+            if v2v and v2v_intent:
+                from . import v2v_intent as vi
+                s = vi.settings(v2v_intent)
+                entry_pairs = vi.attach_bank_targets(entry_pairs, tape, entry, s['horizon'], s['bounds'])
+                intent = dict(horizon=s['horizon'], entry=intent_key)
+            if v2v:
+                entry_pairs, entry_counts = bank_v2v.attach_pairs(
+                    entry_pairs, Path(branches_dir)/tape_vid/branch['branch']/'observable.jsonl.gz',
+                    r['t0'], v2v_cfg, **({'intent': intent} if intent else {}))
+                v2v_counts = bank_v2v.merge_counts(v2v_counts, entry_counts)
+            per_entry.append((entry_pairs, cooperative, gain))
+            row = dict(verification_id=r['verification_id'], grade_veh_s=r['grade_veh_s'], weight=w,
+                       mean_replicated_advantage_veh_s=c['mean_replicated_advantage_veh_s'],
+                       policy_version=r['_policy_version'], available_k=r.get('available_k', r['k']),
+                       duration_s=entry['duration_s'], receipt_sha256=r['receipt_sha256'],
+                       cooperative=cooperative,
+                       group_size=coop.get('group_size'),
+                       cooperation_gain_veh_s=coop.get('cooperation_gain_veh_s'))
+            if ex is not None:
+                row.update(plan_id=plan['id'], group_size=ex.get('group_size', coop.get('group_size')),
+                           candidate_index=ex.get('candidate_index'),
+                           record=('all8' if c.get('verify_mode') == 'all8_both_seeds' else 'legacy'))
+                row.update(example_id=ex['example_id'], seed_index=ex['seed_index'],
+                           seed_advantage_veh_s=advantage, lower95_one_sided_veh_s=ex['lower95_one_sided_veh_s'],
+                           later_harm=ex['later_harm'], cooperative_status=ex['cooperative_status'],
+                           synergy_lower95_veh_s=(ex.get('synergy') or {}).get('lower95_one_sided_veh_s'),
+                           seed_synergy_total_veh_s=gain, plan_replicated=c['per_seed_v1']['replicated'],
+                           tape=f'{tape_vid}/{branch["branch"]}')
+            entries.append(row)
     # MAIN 2026-11-03 00:01 EXPOSURE: cooperative entries must reach the policy at least as
     # often as non-cooperative ones - oversample them up to 50% of the imitation samples
     # (pair duplication; the weights themselves are unchanged).
@@ -529,9 +569,22 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                   cooperative=exposure['cooperative_entries'],
                   by_policy_version={v: sum(r['_policy_version'] == v for r in decisions)
                                      for v in sorted({r['_policy_version'] for r in decisions})})
+    if any('seed_index' in e for e in entries):
+        counts['per_seed_v1'] = dict(
+            examples_used=len(entries),
+            by_seed={str(k): sum(e.get('seed_index') == k for e in entries) for k in (1, 2)},
+            cooperative_by_seed={str(k): sum(e.get('seed_index') == k and e['cooperative'] for e in entries)
+                                 for k in (1, 2)},
+            by_policy_version={v: sum(e['policy_version'] == v for e in entries)
+                               for v in sorted({e['policy_version'] for e in entries})},
+            plans_used=len({e['verification_id'] for e in entries}))
     out = dict(rule='B-REPLAY bank: all CONFIRMED (replication, no later harm, safety) exact-positive entries; weight(mean replicated advantage) x beta; cooperative entries oversampled to 50% of samples',
                        temperature=T, beta=float(beta), counts=counts, entries=entries, clip=clip,
                         max_decisions=max_decisions, exposure=exposure)
+    if 'per_seed_v1' in counts:
+        out['rule'] = ('B-REPLAY bank per_seed_v1: every admitted (plan, seed) example is an entry with THAT '
+                       "seed's plan-branch tape; weight(that seed's exact advantage) x beta; within-seed "
+                       'cooperative examples oversampled to 50% of samples')
     if v2v:
         out['v2v'] = dict(rule='each pair carries the partners v2v features of its second, from the winning '
                               'plan branch trace (positions, speeds, accelerations; last issued command at the '
@@ -764,8 +817,16 @@ def _decision_snapshot(root, arm, r, by_vid):
     return torch.load(bank/'snapshots'/(link['state_id']+'.pt'), weights_only=False)
 
 
-def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None):
-    """Confirm every first-seed positive decision (own bank and, for B, live LS labels) once."""
+def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None, verify_mode=None):
+    """Confirm every first-seed positive decision (own bank and, for B, live LS labels) once.
+
+    verify_mode='all8_both_seeds' (owner 2026-11-03 22:05, default OFF): every completed decision
+    gets all K candidates + policy on the second CRN seed, per-seed winners, per-(plan, seed)
+    solos (tools/coopmwm/verify_perseed.py); None/'legacy' keeps this function unchanged."""
+    if verify_mode is not None:
+        from . import verify_perseed as vp
+        if vp.mode(verify_mode) == vp.ALL8:
+            return vp.confirm_pending_all8(root, arm, runner_for, run_root, phase, workers, sources, limit)
     bank = bank_root(root, arm);done = {p.stem for p in (bank/'confirmations').glob('*.json')}
     by_vid = {}
     for p in (bank/'decisions').glob('*.json'):
@@ -878,7 +939,15 @@ def _action_error(policy, r, best):
                                           plan_id=best['id'], weight=1.))
     if getattr(policy, 'actor', None) is not None and policy.actor[0].weight.shape[1] > 33:
         from .bank_v2v import attach_pairs
-        pairs, _ = attach_pairs(pairs, Path(r['_branches'])/r['verification_id']/branch['branch']/'observable.jsonl.gz', r['t0'])
+        horizon = int(getattr(policy, 'intent_horizon', 0) or 0)
+        # Audit I5: an intent policy needs the K*(6+H+1) blocks plus refreshed partner intents
+        # (current head on the partners' own t-1 contexts, never recorded commands).
+        intent = dict(horizon=horizon, entry=f"{r['verification_id']}/{branch['branch']}") if horizon else None
+        pairs, _ = attach_pairs(pairs, Path(r['_branches'])/r['verification_id']/branch['branch']/'observable.jsonl.gz',
+                                r['t0'], **({'intent': intent} if intent else {}))
+        if horizon:
+            from .v2v_intent import refresh_bank_intents
+            refresh_bank_intents(policy, pairs)
     errs = []
     with torch.no_grad():
         for sample, _w in pairs:

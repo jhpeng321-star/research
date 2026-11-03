@@ -233,7 +233,7 @@ def test_missing_runtime_fails_and_binding_is_mandatory(deployed):
 @pytest.mark.parametrize('patch', [dict(v2v=False), dict(v2v_dim=24), dict(v2v_intent=False),
     dict(v2v_intent_horizon=4), dict(v2v_intent_loss_weight=.1), dict(v2v_intent_weight=.1),
     dict(v2v_intent_detach_trunk=False),
-    dict(bank_statistics='rule_v2'), dict(bank_imitation=None), dict(imitation_epochs=4),
+    dict(bank_statistics='rule_v2'), dict(bank_statistics='boot_v2'), dict(bank_imitation=None), dict(imitation_epochs=4),
     dict(diagnostic_schedule=dict(A={}, B={}, R={})), dict(active_arms=['A', 'B']),
     dict(phase_map=dict(train='train'))])
 def test_real_runtime_config_options_fail_closed(deployed, patch):

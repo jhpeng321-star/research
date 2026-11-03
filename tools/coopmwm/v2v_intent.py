@@ -190,7 +190,8 @@ def with_head(policy, optimizer):
     state = optimizer.state_dict()
     n = len(list(policy.parameters()))
     groups = [dict(state['param_groups'][0], params=list(range(n)))]
-    rebuilt = torch.optim.Adam(policy.parameters(), lr=3e-4)
+    from .v2v_model import install_fresh_columns
+    rebuilt = install_fresh_columns(torch.optim.Adam(policy.parameters(), lr=3e-4))
     rebuilt.load_state_dict(dict(state=state['state'], param_groups=groups))
     return rebuilt
 
@@ -219,9 +220,14 @@ def _from_v2v_only(policy, optimizer, horizon):
         for key, value in state['state'].get(i, {}).items():
             if torch.is_tensor(value) and value.dim() == 2:
                 state['state'][i][key] = _regrid(value, horizon)
-    rebuilt = torch.optim.Adam(policy.parameters(), lr=3e-4)
+            elif key == 'v2v_column_offset' and torch.is_tensor(value) and value.dim() == 1:
+                state['state'][i][key] = _regrid(value, horizon)   # fresh-column bookkeeping (I1)
+    from .v2v_model import install_fresh_columns, mark_fresh_columns
+    rebuilt = install_fresh_columns(torch.optim.Adam(policy.parameters(), lr=3e-4))
     rebuilt.load_state_dict(state)
-    return rebuilt
+    # MAIN decision I1: the new partner-intent columns start from a fresh Adam state (step 0).
+    cols = [FEATURES+c for c in intent_columns(V2V_K, horizon)]
+    return mark_fresh_columns(rebuilt, policy, dict(actor=cols, critic=cols))
 
 
 def load_checkpoint(path, config):
@@ -240,7 +246,8 @@ def load_checkpoint(path, config):
             raise ValueError('intent checkpoint horizon differs from v2v_intent_horizon')
         policy = IntentPolicy(s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'])
         policy.load_state_dict(saved['policy'])
-        optimizer = torch.optim.Adam(policy.parameters(), lr=3e-4)
+        from .v2v_model import install_fresh_columns
+        optimizer = install_fresh_columns(torch.optim.Adam(policy.parameters(), lr=3e-4))
         optimizer.load_state_dict(saved['optimizer'])
         generator = torch.Generator()
         generator.set_state(saved['generator'])

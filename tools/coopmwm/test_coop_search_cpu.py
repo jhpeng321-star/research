@@ -428,13 +428,147 @@ class ReviewFixes(unittest.TestCase):
             finally:
                 cs.BANK_DIRS.remove(tmp)
         with self.assertRaises(ValueError):
-            cs.split_config(dict(coop_objective=True, coop_novelty_bank_sha256='0'*64))   # not found
+            cs.split_config(dict(coop_objective=True, coop_novelty=True,
+                                 coop_novelty_bank_sha256='0'*64))   # not found (novelty on resolves)
+        self.assertIsNone(cs.split_config(dict(coop_objective=True, coop_novelty=False,
+                                               coop_novelty_bank_sha256='0'*64))['coop_novelty_bank'])
         sc = search_config(0, dict(coop_objective=True, coop_novelty=True, coop_novelty_bank_sha256=sha))
         self.assertEqual(validate(sc), sc)                       # digest only: validated without the file
         with self.assertRaises(ValueError):
             validate(dict(sc, coop_novelty_bank=bank))           # embedding is rejected
         with self.assertRaises(ValueError):
             validate(dict(sc, coop_novelty_bank_sha256='xyz'))
+
+
+class Fix2Review(unittest.TestCase):
+    """Second review round: bank preflight (CLI + supervisor startup), novelty-off resolution
+    skip, extension counting over finalist-ELIGIBLE measured candidates only."""
+
+    def _bank_file(self, tmp, sha=None, descriptors=None):
+        g = group(2, lanes=[2, 0]); P = np.full((2, T), .2)
+        probe = cs.Context(g, cs.split_config(dict(coop_objective=True)), P, BOUNDS)
+        bank = descriptors if descriptors is not None else \
+            [[float(x) for x in probe.role_descriptor(manual_plan(g, P, [-1., d], tag='b'))] for d in (0., .4)]
+        sha = sha or cs.bank_digest(bank)
+        (Path(tmp)/cs.bank_file_name(sha)).write_text(json.dumps(dict(descriptors=bank)))
+        return sha
+
+    def test_preflight_cli_and_supervisor_startup(self):
+        """`python -m tools.coopmwm.coop_search preflight --sha` (GPU host, COOPMWM_COOP_BANK_DIR)
+        exits 0 only when the bank resolves and matches its digest; the collector supervisor's
+        startup runs the same check and fails loudly before admitting work."""
+        import subprocess
+        import tempfile
+        from unittest.mock import patch
+        from .ls_collection import preflight_coop
+        root = Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory() as tmp:
+            sha = self._bank_file(tmp)
+            env = dict(os.environ, PYTHONPATH=str(root), COOPMWM_COOP_BANK_DIR=tmp)
+            r = subprocess.run([sys.executable, '-m', 'tools.coopmwm.coop_search', 'preflight',
+                                '--sha', sha], capture_output=True, text=True, cwd=str(root), env=env)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(json.loads(r.stdout)['n'], 2)
+            # Missing bank file: non-zero exit, JSON failure on stderr.
+            r = subprocess.run([sys.executable, '-m', 'tools.coopmwm.coop_search', 'preflight',
+                                '--sha', '0'*64], capture_output=True, text=True, cwd=str(root), env=env)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertFalse(json.loads(r.stderr.strip().splitlines()[-1])['ok'])
+            # Present file that does not match its digest: non-zero exit.
+            self._bank_file(tmp, sha='f'*64, descriptors=[[0.]*cs.ROLE_DIM, [1.]*cs.ROLE_DIM])
+            self.assertNotEqual(cs.bank_digest([[0.]*cs.ROLE_DIM, [1.]*cs.ROLE_DIM]), 'f'*64)
+            r = subprocess.run([sys.executable, '-m', 'tools.coopmwm.coop_search', 'preflight',
+                                '--sha', 'f'*64], capture_output=True, text=True, cwd=str(root), env=env)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('digest', r.stderr)
+            # Supervisor startup helper: same check, raising on missing/mismatched bank.
+            coop = dict(coop_objective=True, coop_novelty=True, coop_novelty_bank_sha256=sha)
+            with patch.dict(os.environ, {'COOPMWM_COOP_BANK_DIR': tmp}):
+                self.assertEqual(len(preflight_coop(dict(coop_search=coop))), 2)
+                with self.assertRaises(ValueError):
+                    preflight_coop(dict(coop_search=dict(coop, coop_novelty_bank_sha256='0'*64)))
+                with self.assertRaises(ValueError):
+                    preflight_coop(dict(coop_search=dict(coop, coop_novelty_bank_sha256='f'*64)))
+                # Novelty off or no coop config: no check, nothing resolved.
+                self.assertIsNone(preflight_coop({}))
+                self.assertIsNone(preflight_coop(dict(
+                    coop_search=dict(coop_objective=True, coop_novelty=False, coop_novelty_bank_sha256='0'*64))))
+
+    def test_novelty_off_skips_bank_resolution(self):
+        """A present sha with coop_novelty False must not touch the bank at all (no resolution,
+        no failure when the file is absent); novelty on resolves and fails loudly."""
+        from unittest.mock import patch
+        sha = '0'*64                                    # no file anywhere
+        calls = []
+        real = cs.resolve_bank
+        def spy(sha_, dirs=None):
+            calls.append(sha_); return real(sha_, dirs)
+        with patch.object(cs, 'resolve_bank', spy), patch.dict(os.environ, {'COOPMWM_COOP_BANK_DIR': 'no_such_dir'}):
+            cfg = dict(coop_objective=True, coop_novelty=False, coop_novelty_bank_sha256=sha)
+            coop = cs.split_config(cfg)
+            self.assertEqual(calls, [])
+            self.assertIsNone(coop['coop_novelty_bank'])
+            self.assertIsNone(cfg['coop_novelty_bank'])
+            self.assertNotIn('coop_novelty_bank_sha256', cfg)
+            with self.assertRaises(ValueError):          # same sha, novelty on: resolves
+                cs.split_config(dict(coop_objective=True, coop_novelty=True, coop_novelty_bank_sha256=sha))
+            self.assertEqual(calls, [sha])
+
+    def test_extension_counts_finalist_eligible_only(self):
+        g = group(2); P = np.full((2, T), .2)
+        def evaluate(record, actions, K, H):
+            return {a['id']: [dict(team_delay=100.) for _ in range(K)] for a in actions}
+        def setup(ctx, spec):
+            pool, ids = {}, {}
+            for i, (dup, imp, gg, niche) in enumerate(spec):
+                p = manual_plan(g, P, [-1., .5], tag=f'e{i}')
+                if dup:
+                    p['policy_duplicate'] = True
+                ctx.info.setdefault('screen0', {})[p['id']] = dict(
+                    group_gain=gg, novelty=0., synergy=0., synergy_imputed=imp,
+                    best_solo_gain=None, solo_gains=None)
+                ctx.stage_of[p['id']] = 'screen0'
+                pool[p['id']] = (-float(gg), p); ids[i] = p['id']
+            return pool, ids
+        base = ms.comparators(dict(policy_residuals={}))
+        # 4 candidates with computed solos but 3 of them clipped policy duplicates (finalist-
+        # ineligible); 2 imputed; n=4 finalists: the extension MUST run (the old count of all
+        # measured candidates saw 4 >= 4 and skipped it).
+        ctx = cs.Context(g, cs.split_config(dict(coop_objective=True)), P, BOUNDS)
+        spec = [(True, False, 5., 0), (True, False, 4., 0), (True, False, 3., 0), (False, False, 2., 0),
+                (False, True, 1., 0), (False, True, .5, 0)]
+        pool, ids = setup(ctx, spec)
+        extra = cs.extend_solos(dict(), evaluate, base, pool, None, 4, 2, 300, ctx)
+        self.assertEqual(extra, (len(base)+4)*2)             # the 2 imputed plans x 2 member solos
+        self.assertEqual(ctx.extra_calls, 1)
+        self.assertEqual(ctx.extended, 2)
+        ext = {pid for pid, x in ctx.info['screen0'].items() if x.get('solo_extension')}
+        self.assertEqual(ext, {ids[4], ids[5]})
+        for pid in ext:
+            x = ctx.info['screen0'][pid]
+            self.assertFalse(x['synergy_imputed'])
+            self.assertEqual(x['solo_gains'], {'c0': 0., 'c1': 0.})   # stub: solo delay = policy delay
+            self.assertAlmostEqual(x['score'], 2*x['group_gain'], places=9)   # synergy == group_gain, lambda 1
+            self.assertAlmostEqual(pool[pid][0], -x['score'], places=9)
+        self.assertEqual(ctx.solo_rollouts['extension'], 4)
+        # All 4 measured candidates eligible: no extension (measured >= n), unchanged rule.
+        ctx = cs.Context(g, cs.split_config(dict(coop_objective=True)), P, BOUNDS)
+        pool, _ = setup(ctx, [(False, False, 5., 0), (False, False, 4., 0), (False, False, 3., 0),
+                              (False, False, 2., 0), (False, True, 1., 0)])
+        self.assertEqual(cs.extend_solos(dict(), evaluate, base, pool, None, 4, 2, 300, ctx), 0)
+        self.assertEqual(ctx.extra_calls, 0)
+        # Niches: a niche covered only by a duplicate measured candidate is UNcovered, so its
+        # best imputed candidate gets solos (n=3; the old rule saw covered-by-dup + 3 >= 3 and
+        # skipped the call, leaving niche 0 without one finalist-eligible plan).
+        ctx = cs.Context(g, cs.split_config(dict(coop_objective=True)), P, BOUNDS)
+        spec = [(True, False, 5., 0), (False, True, 4., 0), (False, False, 3., 1), (False, False, 2., 2)]
+        pool, ids = setup(ctx, spec)
+        niche_of = {pid: spec[i][3] for i, pid in ids.items()}
+        extra = cs.extend_solos(dict(), evaluate, base, pool, niche_of, 3, 2, 300, ctx)
+        self.assertEqual(extra, (len(base)+2)*2)             # niche 0's best imputed plan x 2 solos
+        self.assertEqual(ctx.extended, 1)
+        self.assertEqual({pid for pid, x in ctx.info['screen0'].items() if x.get('solo_extension')},
+                         {ids[1]})
 
 
 class LiveWrappers(unittest.TestCase):

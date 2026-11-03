@@ -100,7 +100,8 @@ def _install_t1727(rb):
 
 # ---------------------------------------------------------------- rule v2: paired unit bootstrap
 
-BANK_RULES = ('boot_v2', 't1727')
+PER_SEED = 'per_seed_v1'
+BANK_RULES = ('boot_v2', 't1727', PER_SEED)
 BOOT_B = 2000
 BOOT_RNG_SEED = 20261103
 ALPHA_ONE_SIDED = 0.05
@@ -390,16 +391,314 @@ def confirmations_v2(original, rb, root, arm, sources=()):
     return {vid: _CACHE[key(vid)] for vid in conf}
 
 
+# ---------------------------------------------------------------- rule per_seed_v1 (owner 2026-11-03 21:45)
+
+RULE_PS1 = ('per_seed_v1: a cooperative plan need not generalise across traffic seeds. Every (plan, seed) '
+            'verification is its own example: admit it iff THAT seed\'s per-unit paired block bootstrap '
+            f'(policy-continues minus plan, B={BOOT_B}, RNG {BOOT_RNG_SEED} re-seeded per example, circular '
+            f'{BLOCK_S} s blocks or per-vehicle units) has one-sided 95% lower bound > 0 AND that seed\'s '
+            'composite safety check on its OWN deltas passes (seed 1: extended window; seed 2: replication '
+            'window [+ seed-2 extended when recorded]; absent own deltas = data_missing, no fallback) AND '
+            'that seed later-harm (extended-window) check passes when measured. Seed-2 later-harm is used '
+            'when a seed-2 extended window is recorded, else NOT MEASURED, disclosed per example and admitted '
+            'only under SEED2_UNMEASURED_LATER_HARM=admit (never imputed). '
+            'Imitation pairs of an example come from THAT seed\'s plan-branch tape. Cooperative label '
+            'per example: that seed\'s best-solo minus group per-unit bootstrap lower bound > 0 when '
+            'that seed\'s solos exist, else no_solos (admitted, not cooperative). replicated = '
+            'cooperative on both seeds (reporting only; weights unchanged).')
+SEED_DIRS = {1: ('first-seed decision', 'confirm_solo', 'solo'),
+             2: ('confirm_replication', 'confirm_solo_replication', 'replication_solo')}
+
+
+SAFETY_WINDOWS = {1: ('extended',), 2: ('replication', 'extended_seed2')}
+
+
+def _seed_safety(c, seed_index):
+    """(ok, source): the composite MAIN04:26 rule on THIS seed's own recorded deltas only
+    (seed 1: extended window; seed 2: replication window, plus a seed-2 extended window when
+    recorded). Absent own-seed deltas -> _Missing (data_missing); never a plan-level or
+    other-seed fallback (audit 2026-11-03)."""
+    from .bank_safety import verdict
+    recorded = c.get('safety_deltas') or {}
+    names = [n for n in SAFETY_WINDOWS[seed_index] if recorded.get(n) is not None]
+    if SAFETY_WINDOWS[seed_index][0] not in names:
+        raise _Missing(f'seed-{seed_index} safety deltas ({SAFETY_WINDOWS[seed_index][0]!r}) absent; '
+                       'no plan-level or other-seed fallback')
+    ok = all(verdict(recorded[n])['new_combined_rule'] for n in names)
+    return bool(ok), '+'.join(f'{n}_window_seed{seed_index}' for n in names)
+
+
+# Seed-2 later harm: a recorded seed-2 extended-window result is used when present
+# (checks['no_later_harm_seed2'] or 'seed2_extended_advantage_veh_s'); otherwise it is
+# 'not_measured'. SEED2_UNMEASURED_LATER_HARM decides admission of unmeasured seed-2 examples:
+# 'admit' (default; disclosed per example and counted) or 'reject' (integrator's choice).
+SEED2_UNMEASURED_LATER_HARM = 'admit'
+
+
+def _seed_later_harm(c, seed_index):
+    """True / False / None (not measured) from THIS seed's own extended window."""
+    checks = c.get('checks') or {}
+    if seed_index == 1:
+        return checks.get('no_later_harm') is True
+    if isinstance(checks.get('no_later_harm_seed2'), bool):
+        return checks['no_later_harm_seed2']
+    adv = c.get('seed2_extended_advantage_veh_s')
+    return None if adv is None else bool(float(adv) > 0)
+
+
+def _seed_cooperation(bank, c, seed_index, plan_tape, window, admitted, group_size):
+    """Within-seed cooperation label of one example (never pooled across seeds)."""
+    co = c.get('cooperation') or {}
+    if group_size < 2:
+        return dict(cooperative=False, cooperative_status='single_cav',
+                    statistical_reason='single-CAV plan: cooperative=False by definition')
+    _, solo_dir, key = SEED_DIRS[seed_index]
+    solos = co.get(key) or []
+    if seed_index == 1 and co.get('complete') is False:
+        return dict(cooperative=False, cooperative_status='incomplete',
+                    statistical_reason='first-seed solo branches incomplete; never imputed')
+    if not solos:
+        return dict(cooperative=False, cooperative_status='no_solos',
+                    statistical_reason=f'no seed-{seed_index} solos recorded; admitted, not counted as cooperative')
+    member, adv, solo_tape, sw = _best_solo(bank/solo_dir, solos)
+    common = paired_window(window, sw)
+    st = _stats([(solo_tape, plan_tape, common)])
+    st.update(best_solo_member=member, best_solo_advantage_veh_s=adv,
+              paired_window=dict(group_window=window, solo_window=sw, used=common))
+    positive = st['lower95_one_sided_veh_s'] > 0
+    reason = (f'seed-{seed_index} synergy lower95 > 0' if positive else f'seed-{seed_index} synergy lower95 <= 0')
+    if positive and not admitted:
+        reason += ' (example not admitted: not counted)'
+    return dict(cooperative=bool(admitted and positive),
+                cooperative_status='cooperative' if positive else 'not_cooperative',
+                statistical_reason=reason, synergy=st)
+
+
+def _seed_example(bank, c, seed_index, receipt, branches_dir, plan_index, advantage, group_size):
+    """One (plan, seed) example; raises _Missing on absent per-unit data."""
+    pol = _read_result(branches_dir, receipt['verification_id'], receipt['branches'][0])
+    branch = receipt['branches'][plan_index]
+    plan = _read_result(branches_dir, receipt['verification_id'], branch)
+    window = receipt['window']
+    st = _stats([(pol, plan, window)])
+    later = _seed_later_harm(c, seed_index)
+    safe, safety_source = _seed_safety(c, seed_index)
+    lower = st['lower95_one_sided_veh_s']
+    if later is False:
+        ok, reason = False, f'seed-{seed_index} later-harm check failed (extended-window advantage <= 0)'
+    elif later is None and SEED2_UNMEASURED_LATER_HARM == 'reject':
+        ok, reason = False, f'seed-{seed_index} later-harm NOT MEASURED and the policy rejects unmeasured examples'
+    elif not safe:
+        ok, reason = False, f'seed-{seed_index} composite safety check failed ({safety_source})'
+    elif not lower > 0:
+        ok, reason = False, f'seed-{seed_index} one-sided 95%% lower bound %.4g <= 0' % lower
+    else:
+        ok = True
+        reason = (f'seed-{seed_index} lower95 > 0, safety pass'
+                  + (', later-harm pass' if later else f', later-harm NOT MEASURED on seed {seed_index}'))
+    ex = dict(seed_index=seed_index, example_id=f'{c["verification_id"]}#s{seed_index}', admitted=ok,
+              status='admitted' if ok else 'rejected', reason=reason, admission=st,
+              lower95_one_sided_veh_s=lower, total_veh_s=st['pooled_total_veh_s'],
+              mean_per_unit_veh_s=st['per_seed'][0]['mean_per_unit_veh_s'], n_units=st['per_seed'][0]['n_units'],
+              advantage_veh_s=advantage, later_harm=('pass' if later else 'fail') if later is not None else 'not_measured',
+              safety_ok=safe, safety_source=safety_source,
+              tape=dict(branches_dir=str(branches_dir), verification_id=receipt['verification_id'],
+                        branch=dict(branch), window=dict(window),
+                        intent_entry=(f'{receipt["verification_id"]}/{branch["branch"]}' if seed_index == 1
+                                      else f'{receipt["verification_id"]}/seed2/{branch["branch"]}')))
+    ex.update(_seed_cooperation(bank, c, seed_index, plan, window, ok, group_size))
+    return ex
+
+
+def view_per_seed(c, first_receipt, bank):
+    """One confirmation under per_seed_v1 -> (view, n_examples_attempted, n_examples_missing)."""
+    out = copy.deepcopy(c)
+    out.update(legacy_admitted=c.get('admitted', False), bank_rule=PER_SEED, statistical_rule=RULE_PS1)
+    co = c.get('cooperation')
+    members = ((first_receipt or {}).get('chosen_plan') or {}).get('members')
+    group_size = (co or {}).get('group_size') if (co or {}).get('group_size') is not None else len(members or [])
+    if 'confirmation_branches_complete' in (c.get('checks') or {}):
+        examples, attempted = [], 0
+        reason = 'confirmation branches incomplete; never imputed'
+    else:
+        examples, attempted = [], 2
+        specs = []
+        if first_receipt is None:
+            specs.append((1, _Missing('first-seed receipt not found in the bank or its sources')))
+        else:
+            specs.append((1, (first_receipt, Path(first_receipt['_branches']), first_receipt['chosen']+1,
+                              c.get('first_seed_advantage_veh_s', first_receipt.get('grade_veh_s')))))
+        try:
+            rep_root = bank/'confirm_replication'
+            rep = _receipt(rep_root, c['replication'])
+            if rep['status'] not in ('accepted', 'rejected'):
+                raise _Missing('replication receipt ungraded')
+            specs.append((2, (rep, rep_root/'branches', 1, c.get('replication_advantage_veh_s'))))
+        except _Missing as e:
+            specs.append((2, e))
+        for k, spec in specs:
+            try:
+                if isinstance(spec, _Missing):
+                    raise spec
+                examples.append(_seed_example(bank, c, k, *spec, group_size=group_size))
+            except _Missing as e:
+                examples.append(dict(seed_index=k, example_id=f'{c["verification_id"]}#s{k}', admitted=False,
+                                     status='data_missing', reason='per-unit data missing: '+str(e),
+                                     cooperative=False, cooperative_status='data_missing'))
+        reason = '; '.join(f's{e["seed_index"]}: {e["reason"]}' for e in examples)
+    missing = sum(e['status'] == 'data_missing' for e in examples)
+    admitted_seeds = [e['seed_index'] for e in examples if e['admitted']]
+    coop_seeds = [e['seed_index'] for e in examples if e['cooperative'] is True]
+    out['admitted'] = bool(admitted_seeds)
+    out['per_seed_v1'] = dict(examples=examples, admitted_seeds=admitted_seeds, cooperative_seeds=coop_seeds,
+                              replicated=len(coop_seeds) == 2, reason=reason)
+    if co is not None or group_size >= 2:
+        v = copy.deepcopy(co or {})
+        v.update(legacy_cooperative=v.get('cooperative'), cooperative=bool(coop_seeds),
+                 cooperative_seeds=coop_seeds, replicated=len(coop_seeds) == 2, needs_second_seed_solos=False,
+                 cooperative_status=('replicated' if len(coop_seeds) == 2 else
+                                     f'seed{coop_seeds[0]}_only' if coop_seeds else
+                                     ('not_admitted' if not examples else examples[0]['cooperative_status'])),
+                 statistical_reason='per_seed_v1 within-seed synergy labels: '+(
+                     ', '.join(f's{e["seed_index"]}={e["cooperative_status"]}' for e in examples) or 'none'))
+        out['cooperation'] = v
+    return out, (attempted if attempted else 0), missing
+
+
+def confirmations_per_seed(original, rb, root, arm, sources=()):
+    """{vid: per_seed_v1 view}. A record with every example missing is data_missing; raises
+    BankDataMissing only when NO complete confirmation has any evaluable example (as boot_v2)."""
+    conf = original(root, arm)
+    check_keys(conf.values(), bank_rule='boot_v2')
+    bank = Path(rb.bank_root(root, arm))
+    from .solo_seed2_links import merge
+    conf = merge(bank, conf)
+    all8 = all8_records(bank)
+    conf = {vid: c for vid, c in conf.items() if vid not in all8}
+
+    def key(vid):
+        return (PER_SEED, SEED2_UNMEASURED_LATER_HARM, str(root), arm, vid, conf[vid].get('confirmation_sha256'))
+    need = [vid for vid in conf if key(vid) not in _CACHE]
+    evaluable_all8 = sum(any(e.get('status') != 'data_missing' for e in v['per_seed_v1']['examples'])
+                         for v in all8.values())
+    if need:
+        receipts = {r['verification_id']: r for r in rb.bank_decisions(root, arm, sources=sources)}
+        fresh, attempted, all_missing, first = {}, 0, 0, {}
+        for vid in need:
+            v, n, miss = view_per_seed(conf[vid], receipts.get(vid), bank)
+            fresh[vid] = v
+            if n:
+                attempted += 1
+                if miss >= n:
+                    all_missing += 1
+                    if len(first) < 3:
+                        first[vid] = v['per_seed_v1']['reason']
+        if attempted and all_missing >= attempted and not evaluable_all8:
+            raise BankDataMissing(
+                f'per_seed_v1: per-unit outcome data absent for every example of all {attempted} complete '
+                f'confirmations of arm {arm}; required: first-seed receipt + policy/chosen tapes and/or '
+                'replication receipt + policy/cand1 tapes with per-second team_delay_vs fingerprints. First '
+                'missing: '+json.dumps(first))
+        for vid, v in fresh.items():
+            _CACHE[key(vid)] = v
+    out = {vid: _CACHE[key(vid)] for vid in conf}
+    out.update(all8)
+    return out
+
+
+ALL8_RECORDS = 'confirmations_all8'
+
+
+def all8_records(bank):
+    """{vid: sealed all8_both_seeds record} (c4/verify-perseed verify_perseed.confirm_all8 layout:
+    <bank>/confirmations_all8/<vid>.json, bank_rule='per_seed_v1', one example per (candidate,
+    seed) with its OWN plan and that seed's tape). Each replaces that decision's legacy view and
+    is added for decisions without one (first-seed-rejected decisions with a seed-2 winner)."""
+    from .exact_grade import verify_sealed
+    out = {}
+    for p in sorted((Path(bank)/ALL8_RECORDS).glob('*.json')):
+        v = json.loads(p.read_text())
+        verify_sealed(v, 'confirmation_sha256')
+        if v.get('bank_rule') != PER_SEED or 'examples' not in (v.get('per_seed_v1') or {}):
+            raise ValueError(f'{p}: not a per_seed_v1 all8 record')
+        out[v['verification_id']] = v
+    return out
+
+
+def _install_per_seed(rb, sources=None):
+    if getattr(rb.confirmations, 'bank_rule', None) == PER_SEED:
+        return
+    if getattr(rb.confirmations, 'statistical_1727', False):
+        raise ValueError('t1727 adapter already installed in this process; refusing to stack rules')
+    original = rb.confirmations
+    srcs = {k: tuple(v) for k, v in (sources or {}).items()}
+
+    def confirmations(root, arm):
+        return confirmations_per_seed(original, rb, root, arm, srcs.get(arm, ()))
+    confirmations.bank_rule = PER_SEED
+    confirmations.original = original
+    rb.confirmations = confirmations
+
+
+def report_per_seed(rb, root, arm, sources=()):
+    """Per-example table + counts (admitted per arm / seed index / policy version, cooperative)."""
+    base = getattr(rb.confirmations, 'original', rb.confirmations)
+    conf = confirmations_per_seed(base, rb, root, arm, tuple(sources))
+    rows = []
+    for vid, c in sorted(conf.items()):
+        ps = c['per_seed_v1']
+        for e in ps['examples']:
+            syn = e.get('synergy') or {}
+            rows.append(dict(verification_id=vid, example_id=e['example_id'], seed_index=e['seed_index'],
+                             record=('all8' if c.get('verify_mode') == 'all8_both_seeds' else 'legacy'),
+                             plan_id=e.get('plan_id'), candidate_index=e.get('candidate_index'),
+                             policy_version=c.get('policy_version'), admitted=e['admitted'], status=e['status'],
+                             reason=e['reason'], unit_source=(e.get('admission') or {}).get('unit_source'),
+                             lower95_veh_s=e.get('lower95_one_sided_veh_s'), total_veh_s=e.get('total_veh_s'),
+                             mean_per_unit_veh_s=e.get('mean_per_unit_veh_s'), n_units=e.get('n_units'),
+                             advantage_veh_s=e.get('advantage_veh_s'), later_harm=e.get('later_harm'),
+                             safety_ok=e.get('safety_ok'), safety_source=e.get('safety_source'),
+                             cooperative=e['cooperative'], cooperative_status=e['cooperative_status'],
+                             synergy_lower95_veh_s=syn.get('lower95_one_sided_veh_s'),
+                             synergy_total_veh_s=syn.get('pooled_total_veh_s'),
+                             best_solo_member=syn.get('best_solo_member'), plan_replicated=ps['replicated']))
+    adm = [r for r in rows if r['admitted']]
+    versions = sorted({str(r['policy_version']) for r in rows})
+    per_plan = [len(c['per_seed_v1']['admitted_seeds']) for c in conf.values()]
+    return dict(arm=arm, bank_rule=PER_SEED, rule=RULE_PS1, B=BOOT_B, rng_seed=BOOT_RNG_SEED, block_s=BLOCK_S,
+                confirmations=len(conf), examples=len(rows), examples_admitted=len(adm),
+                legacy_admitted_plans=sum(bool(c.get('legacy_admitted')) for c in conf.values()),
+                plans_contributing={str(n): per_plan.count(n) for n in (0, 1, 2)},
+                admitted_by_seed={str(k): sum(r['seed_index'] == k for r in adm) for k in (1, 2)},
+                cooperative_examples=sum(r['cooperative'] is True for r in rows),
+                cooperative_by_seed={str(k): sum(r['cooperative'] is True and r['seed_index'] == k for r in rows)
+                                     for k in (1, 2)},
+                replicated_cooperative_plans=sum(c['per_seed_v1']['replicated'] for c in conf.values()),
+                no_solos_admitted=sum(r['cooperative_status'] == 'no_solos' for r in adm),
+                admitted_later_harm_not_measured=sum(r['later_harm'] == 'not_measured' for r in adm),
+                data_missing_examples=sum(r['status'] == 'data_missing' for r in rows),
+                by_policy_version={v: dict(admitted=sum(str(r['policy_version']) == v for r in adm),
+                                           cooperative=sum(str(r['policy_version']) == v and r['cooperative'] is True
+                                                           for r in rows)) for v in versions},
+                entries=rows)
+
+
 def install(rb, bank_rule='boot_v2', sources=None):
     """Process-local V2V reader adapter; never changes legacy training or files.
 
-    bank_rule='boot_v2' (default, rule v2) or 't1727' (MAIN17:27 two-seed Student-t, unchanged).
+    bank_rule='boot_v2' (default, rule v2), 't1727' (MAIN17:27 two-seed Student-t, unchanged) or
+    'per_seed_v1' (owner 2026-11-03 21:45: each (plan, seed) verification is its own example).
     sources: {arm: [LS-collect roots]} (the V2V cfg['replay_sources']) so first-seed receipts of
     live-labelled entries are found. Without install() the legacy readers are unchanged."""
     if bank_rule not in BANK_RULES:
         raise ValueError(f'unknown bank_rule {bank_rule!r}')
+    have = getattr(rb.confirmations, 'bank_rule', None)
+    if have is not None and have != bank_rule:
+        raise ValueError(f'bank rule {have!r} already installed in this process; refusing to stack {bank_rule!r}')
     if bank_rule == 't1727':
         return _install_t1727(rb)
+    if bank_rule == PER_SEED:
+        return _install_per_seed(rb, sources)
     if getattr(rb.confirmations, 'bank_rule', None) == 'boot_v2':
         return
     if getattr(rb.confirmations, 'statistical_1727', False):
@@ -445,7 +744,8 @@ def report(rb, root, arm, sources=()):
 
 def main(argv=None):
     """Read-only preview (no SUMO, no writes except --out):
-    python -m tools.coopmwm.bank_statistics preview --root R --arm B --source S --out BANK_BOOT_PREVIEW.json"""
+    python -m tools.coopmwm.bank_statistics preview --root R --arm B --source S --out BANK_BOOT_PREVIEW.json
+    [--rule boot_v2|per_seed_v1]  (default boot_v2, unchanged)"""
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument('cmd', choices=('preview',))
@@ -453,12 +753,13 @@ def main(argv=None):
     ap.add_argument('--arm', required=True)
     ap.add_argument('--source', action='append', default=[])
     ap.add_argument('--out', required=True)
+    ap.add_argument('--rule', default='boot_v2', choices=('boot_v2', PER_SEED))
     a = ap.parse_args(argv)
     from . import replay_bank as rb
     out = Path(a.out)
     if out.exists():
         raise SystemExit(f'{out} exists; never overwritten')
-    value = report(rb, a.root, a.arm, a.source)
+    value = (report_per_seed if a.rule == PER_SEED else report)(rb, a.root, a.arm, a.source)
     out.write_text(json.dumps(value, indent=1))
     print(json.dumps({k: v for k, v in value.items() if k != 'entries'}, indent=1))
 

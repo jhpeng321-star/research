@@ -22,6 +22,79 @@ def quoted_jobs(snapshot, best, verify, solo_candidate):
     return jobs
 
 
+def quoted_jobs_all8(snapshot, candidates, vid, verify, replicate):
+    """verify_mode=all8_both_seeds: reserve the seed-2 all-K + policy branches before physics
+    (same ids as the live charge hook: <kind>_<vid>_<branch>). Extended/solo verifications are
+    conditional on the per-seed admission and are charged live through rb._confirm_charge."""
+    from .verify_perseed import KIND_SEED2
+    jobs = [dict(id=f'{KIND_SEED2}_{spec["verification_id"]}_{spec["branch"]}', sim_s=spec['sim_s'])
+            for spec in verify(replicate(snapshot, vid), candidates)]
+    assert len({j['id'] for j in jobs}) == len(jobs)
+    return jobs
+
+
+def all8_charge(original, entries):
+    """Seed-2 branches use the precharged rows; every other kind keeps the live hook."""
+    from .verify_perseed import KIND_SEED2
+    def charge_for(run_root, phase, kind):
+        if kind == KIND_SEED2:
+            return precharged_charge(entries, kind)
+        return original(run_root, phase, kind)
+    return charge_for
+
+
+def run_all8_round(root, control, config, immutable, phase=PHASE):
+    """One builder pass under verify_mode=all8_both_seeds (accepted AND rejected decisions)."""
+    import traceback
+    from . import replay_bank as rb, sumo_verify as sv, verify_perseed as vp
+    from . import accel_storage
+    from .storage import ledger
+    original_charge = rb._confirm_charge
+    for r in vp.pending(root, 'B', sources=config['sources']):
+        vid = r['verification_id']
+        attempt = control/'attempts_all8'/(vid+'.json')
+        claim = control/'attempts_all8'/(vid+'.claim.json')
+        if attempt.exists():
+            continue
+        if claim.exists():
+            immutable(attempt, dict(verification_id=vid, status='interrupted',
+                reason='existing claim without completion; never replay', unix=time.time()))
+            continue
+        snapshot = rb._decision_snapshot(root, 'B', r, {})
+        candidates = vp.first_seed_candidates(r, r['_branches'])
+        jobs = quoted_jobs_all8(snapshot, candidates, vid, sv.build_branches, rb.replicate)
+        try:
+            accel_storage.reserve(root, jobs, phase)
+        except ValueError as error:
+            immutable(control/f'BUDGET_WAIT_{time.time_ns()}.json', dict(unix=time.time(), verification_id=vid,
+                required_sim_s=sum(j['sim_s'] for j in jobs), error=repr(error), new_sumo_sim_s=0,
+                verify_mode=vp.ALL8, action='wait before claim; no partial confirmation'))
+            break
+        immutable(claim, dict(unix=time.time(), verification_id=vid, jobs=jobs, verify_mode=vp.ALL8,
+            precharged_sim_s=sum(j['sim_s'] for j in jobs),
+            conditional_live_charges='extended/solo verifications via rb._confirm_charge'))
+        charges = {j['id']: j for j in ledger(root)}
+        rb._confirm_charge = all8_charge(original_charge, charges)
+        try:
+            receipt = {k: v for k, v in r.items() if not k.startswith('_')}
+            def runner_for(work):
+                return sv.SubprocessBranchRunner(Path(work)/'branches', workers=2,
+                    timeout_s=config['branch_timeout_s'])
+            out = vp.confirm_all8(root, 'B', receipt, snapshot, runner_for, str(root), phase, workers=2,
+                version=r['_policy_version'], candidates=candidates, branches_dir=r['_branches'])
+            result = dict(unix=time.time(), verification_id=vid, status='complete', verify_mode=vp.ALL8,
+                admitted=out['admitted'], winners=out['winners'], record_sha256=out['confirmation_sha256'],
+                precharged_sim_s=sum(j['sim_s'] for j in jobs), charged_sim_s=out['charged_sim_s'])
+        except Exception as error:
+            result = dict(unix=time.time(), verification_id=vid, status='failed', verify_mode=vp.ALL8,
+                error=repr(error), traceback=traceback.format_exc(),
+                precharged_sim_s=sum(j['sim_s'] for j in jobs), replay=False)
+        finally:
+            rb._confirm_charge = original_charge
+        immutable(attempt, result)
+        print(json.dumps(result), flush=True)
+
+
 def precharged_charge(entries, kind):
     """Read-only delegated charge hook: all jobs were reserved in one transaction."""
     def charge(vid, specs):
@@ -63,6 +136,13 @@ def run(control):
         accel_storage._reserve.__globals__['CAP'] = config['operational_cap']-SUPERSEDED_CHARGE
         (control/'attempts').mkdir(exist_ok=True)
         original_charge = rb._confirm_charge
+        from .verify_perseed import mode, ALL8
+        if mode(config.get('verify_mode')) == ALL8:
+            (control/'attempts_all8').mkdir(exist_ok=True)
+            while time.time() < config['deadline_unix'] and not (control/'STOP.json').exists():
+                run_all8_round(root, control, config, immutable)
+                time.sleep(config['poll_s'])
+            return
         while time.time() < config['deadline_unix'] and not (control/'STOP.json').exists():
             originals = bs.legacy(root, 'B')
             done = bs.confirmations(root, 'B')

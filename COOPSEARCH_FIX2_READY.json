@@ -1,0 +1,39 @@
+{
+  "schema": "coopmwm.coopsearch_fix2_ready.v1",
+  "branch": "c4/coop-search-fix2",
+  "base": "83727133 (c4/coop-search head)",
+  "commit": "74f8ae81",
+  "new_sumo_sim_s": 0,
+  "gpu_jobs": 0,
+  "deployed": false,
+  "review_fixes": {
+    "1_bank_preflight": "A missing or digest-mismatched COOP_BANK_<sha>.json used to raise inside mppi_search.search on the GPU host during collection (split_config/_coop_split), after budget was reserved. Now: new `python -m tools.coopmwm.coop_search preflight --sha <sha>` (run on the GPU host with COOPMWM_COOP_BANK_DIR exported) resolves and digest-checks the bank via coop_search.preflight() and exits 1 with a JSON failure line on stderr on missing file / digest mismatch / corrupt JSON, and a JSON ok/n line on success; the collector supervisor (ls_collection.supervise) runs the SAME check (preflight_coop(config) -> coop_search.preflight) at startup, right after LS_COOP_SEARCH_CONFIG.json is merged and BEFORE install_accounting/episode reserve/admissions, failing loudly when coop_novelty is on. Novelty off or no coop config: no check, no filesystem access.",
+    "2_novelty_off_no_resolution": "coop_search.split_config no longer resolves the bank when coop_novelty is False even if coop_novelty_bank_sha256 is present (no filesystem access, no not-found/digest error; coop['coop_novelty_bank'] stays None; score_call never used the bank with novelty off). Novelty on still resolves and re-verifies the digest. Existing test updated: the not-found assertion now passes coop_novelty=True (resolution is novelty-gated by contract).",
+    "3_extension_eligible_count": "coop_search.extend_solos now counts only finalist-ELIGIBLE measured candidates (not synergy_imputed AND not policy_duplicate - the _coop_finalists rule) both for `computed` and for niche `covered`, when deciding whether the extra solo call is needed. Previously clipped policy duplicates counted as measured, so a search whose measured pool was mostly duplicates skipped the extension call and left niches/finalists without an eligible measured plan. Unchanged when all measured candidates are eligible."
+  },
+  "option_off_byte_identical": "Golden fixture test test_off_is_byte_identical_to_base_b20bec2f (4 cases x 3 off variants vs tools/coopmwm/fixtures/coop_off_golden.json, base b20bec2f) PASSES unchanged: split_config still returns None before any coop key survives when coop_objective is off; extend_solos/preflight only run in coop mode; ls_collection only gains a startup no-op without the config file.",
+  "tests_run": {
+    "new": "tools/coopmwm/test_coop_search_cpu.py Fix2Review: 3 tests (preflight CLI subprocess ok/missing/mismatch + supervisor startup helper raising/no-op; novelty-off skips resolve_bank (spy) and fails loudly with novelty on; extension counts finalist-eligible only - plain 3-dup case, no-over-extension guard, niche covered-only-by-duplicate case)",
+    "required": "test_coop_search_cpu.py, test_mppi_search_cpu.py (test_mppi_search*cpu), test_niche_ops_cpu.py, test_niche_worker_cpu.py, test_niche_drain_cpu.py, test_niche_collect_cpu.py, test_niche_roll_cpu.py, test_niche_search_cpu.py (test_niche*cpu); test_mppi_runtime_cpu.py run for safety (changed-adjacent module, untouched vs base)"
+  },
+  "tests_passed": {
+    "coop_search": "23/23 (unittest; includes golden off-identical fixture)",
+    "mppi_search": "15/15 (unittest)",
+    "niche": "30/30 (pytest over the 6 test_niche*cpu.py files)",
+    "mppi_runtime": "6/8 - the 2 errors are PRE-EXISTING environmental failures on Windows (ModuleNotFoundError: fcntl = Linux-only; ModuleNotFoundError: tools.leverprobe = sibling package absent in this worktree); files untouched vs base 83727133, same failures documented on base in COOPSEARCH_READY.json",
+    "overall": "74/76, all failures pre-existing and unrelated to the change"
+  },
+  "changed_files": [
+    "tools/coopmwm/coop_search.py (preflight(), CLI preflight subcommand, novelty-gated bank resolution, extend_solos eligible-only counting)",
+    "tools/coopmwm/ls_collection.py (preflight_coop() helper + supervise() startup call before accounting/reserve/admissions)",
+    "tools/coopmwm/test_coop_search_cpu.py (Fix2Review class; not-found assertion now novelty-gated)"
+  ],
+  "gpu_host_usage": {
+    "preflight": "cd <qualified source root>/pytools && COOPMWM_COOP_BANK_DIR=<bank dir> python -m tools.coopmwm.coop_search preflight --sha <coop_novelty_bank_sha256>   # exit 0 = bank present and digest-verified; exit 1 = do not admit work",
+    "supervisor": "automatic: ls_collection.supervise fails at startup (LS_COLLECT_FAILED.json + raise) when LS_COOP_SEARCH_CONFIG.json has coop_objective+coop_novelty+sha and the bank does not resolve on that host"
+  },
+  "commit_history": [
+    "d88d4118 coop_search/ls_collection fix2 sources",
+    "74f8ae81 fix2 tests"
+  ]
+}

@@ -1,0 +1,72 @@
+{
+ "schema": "coopmwm.launch_final_ready.v1",
+ "status": "READY",
+ "branch": "c4/launch-final",
+ "base": "9e7a5315",
+ "commit": "ac8e1f318b70b1a9faf7b99c13589696f76601e2",
+ "commit_note": "code commit tested; this READY file is committed on top of it",
+ "merged": {
+  "c4/coop-search": "83727133 (8d44d32c, 93e1cd22) - already contained in base 9e7a5315 (merge = no-op)",
+  "c4/verify-perseed": "b7135a20 + receipt 3e3b12c7 (merge 4fc862eb)",
+  "c4/coop-search-fix2": "a68174f4 (d88d4118, 74f8ae81) reviewed: preflight keyed on config['coop_search'] (the enable CLI key), no bank resolve with novelty off, extend_solos counts finalist-eligible only; option-off golden passes (merge a6a5a4ad)",
+  "c4/bank-perseed": "e6243ea5 (fac980ab) tree verified == HEAD, objects complete; test_v2v_launch3 conflict resolved keeping both sides (merge 9eb122ee)",
+  "c4/coopnative live": "287deca8 (f6288c07), 5721f1c7, 98df6c98 (ac8e1f31)",
+  "not_merged": "c4/v2v-launch3 (M5: superseded pinned launcher)"
+ },
+ "own_commits": {
+  "12c16050": "I1 input scales + fresh-column Adam, I5 lesson action error, epochs=0 intent-row test fix",
+  "c5559871": "B1 B2 B3 B5, I4 producer, seed-2 later harm + own-seed safety, M4, test_launch_final_cpu.py (13 tests incl. end-to-end)"
+ },
+ "audit_checklist": {
+  "B1 gate refresh_bank_intents": "coopfix_exact_gate.fixed_update -> test_launch_final::test_gate_fixed_update_refreshes_partner_intents_so_intent_columns_move (moved True; without refresh False = audit repro)",
+  "B2 gate seals commit/runtime_sha256/source_manifest_sha256": "plan/_fail/collect + launcher read_gate -> test_gate_seals_commit_and_runtime_and_the_launcher_reads_it",
+  "B3 gate config from <root>/V2V_RUNTIME.json, refuse on mismatch": "load_runtime/runtime_gate_config -> test_gate_config_is_the_deployed_runtime_and_refuses_mismatch",
+  "B4 per_seed_v1": "c4/bank-perseed + c4/verify-perseed merged; end-to-end test",
+  "B5 launch3 preflight before every spawn": "spawn refuses non-intent (10 GiB V2V-only route disabled), launch3_check (= before_launch preflight via wait_for_preflight) before each Popen, V2V_STARTED collision refused -> test_dispatch_requires_launch3_and_never_collides_with_another_start + test_v2v_launch_wiring_cpu",
+  "I1 fixed physical scales + fresh Adam (step 0) for widened columns": "v2v_model.V2VInputLinear (gap/100, lane/1, v/30, a/3, cmd/3, intent/3, bits/1; state-dict keys unchanged, zero-init parity kept) + per-column bias-correction hook -> test_widened_columns_get_a_fresh_adam_state (equals fresh torch Adam), test_first_ppo_minibatch_kl...: KL frozen 0.00097 / fixed 0.0030 / legacy 4.47",
+  "I2 bank rows not in PPO when imitation_epochs>0": "exact_update: [] for every intent policy (all launched arms); intent-OFF historical path kept byte-identical (registered test_option_off_is_byte_identical_to_branch_point) -> test_intent_launch_keeps_bank_rows_out_of_ppo, e2e",
+  "I3 detach_trunk in launcher INTENT_OPTIONS": "present (live f59d0f66); test_v2v_launch3 detach=False refused",
+  "I4 registered intent-runtime producer, per_seed_v1 required": "v2v_runner.prepare_intent; BANK_OPTIONS bank_statistics='per_seed_v1' (boot_v2 refused) -> test_intent_runtime_producer_is_accepted_by_the_launcher",
+  "I5 lesson action error under intent": "replay_bank._action_error attaches intent blocks + refresh_bank_intents -> test_lesson_action_error_with_an_intent_policy",
+  "I6 R bank may be empty": "UNVERIFIED (needs bank_statistics preview --rule per_seed_v1 on the live roots before launch)",
+  "M4 test isolation": "test_v2v_live_cpu restores bank_imitation.run; new tests restore rb.confirmations/run",
+  "M5": "c4/v2v-launch3 not merged",
+  "M6 6-CAV gate state over 9600 cap": "unchanged; overage printed+recorded (per-seed quote halves single-seed states); owner decision",
+  "R cap": "KEPT intentionally: r_concurrent_lag1_quota=True is the registered fairness control (R imitates no more examples than B's matched count); counts per-seed examples",
+  "seed-2 examples": "verify_perseed: own-seed safety deltas required (missing -> data_missing); new all8 verifications measure the seed-2 extended later-harm window (failure rejects; cost in quote_decision all8_extended_sim_s); existing bank seed-2 examples without it stay later_harm='not_measured' (flagged) -> test_seed2_later_harm_is_measured_and_a_failure_rejects, test_seed2_later_harm_opt_out..."
+ },
+ "end_to_end_test": "tools/coopmwm/test_launch_final_cpu.py::test_end_to_end_final_configuration: MAPPO-u0-shaped (Adam-warmed) checkpoint; prepare_intent runtime identical keys A/B/R; one decision, 8 candidates, all8 on both seeds, p1 wins seed 1 / p3 wins seed 2 (within-seed cooperative); per_seed_v1 bank_pairs for B and R (same rule, 2x120 pairs, each pair's context/action/plan == its own seed's tape, != other seed's); one exact_update via run_separate: PPO got 0 bank rows, pass1_effective, KL<=.045, intent loss falls, partner-intent columns move; partner-intent inputs never equal recorded future plan commands; R same; A = accel_learner.update with no bank read",
+ "tests": {
+  "files": 44,
+  "passed": 434,
+  "real_failures": 0,
+  "platform_only_failures": [
+   "test_sumo_verify_cpu::test_real_controller_never_draws_trust_again_for_verified_plan (ModuleNotFoundError tools.leverprobe; fails identically at 9e7a5315)",
+   "test_ls_collection_cpu::test_snapshot_guide_never_waits_or_executes_and_covers_all_groups (Windows; fails identically at 9e7a5315)"
+  ],
+  "baseline_9e7a5315": "required suite 296 passed, 0 failed + test_exact_grade_cpu passed (Windows)",
+  "suites": "bank_*(amendment,boot,builder,imitation,perseed,restore_ops,safety), imitfix2, v2v_*(budget_quote,int_e2e,intent,launch3,launch_quote,launch_wiring,live,model,resource_watch,runner,runtime), replay_bank_(confirm,lesson,v2v), coopfix_exact_gate 22, coop_search 23, mppi_search 15, niche_* 30, exact_grade 23, verify_perseed 8, launch_final 13, solo_seed2*, sumo_verify, ls_collection, intent_linux_ops, warm_state, warm_transport, legacy_resource_pause_ops, rolling_archive+rolling_gpua_ops 13 (on ac8e1f31)",
+  "not_run": "Linux qualification (fcntl/SIGSTOP//proc paths), SUMO, GPU"
+ },
+ "arm_configs": {
+  "common (A-v2v, B-v2v, R-v2v identical)": {"v2v": true, "v2v_dim": 48, "v2v_intent": true, "v2v_intent_horizon": 5, "v2v_intent_loss_weight": 1.0, "v2v_intent_detach_trunk": true, "bank_imitation": "separate_full_pass", "imitation_kl_cap": 0.045, "bank_statistics": "per_seed_v1", "imitation_epochs": 5, "active_arms": ["A", "B", "R"], "start_checkpoint_sha256": "common MAPPO u0 for all arms"},
+  "A-v2v": "no bank (bank_arms={B,R}); accel_learner.update PPO only; diagnostics none",
+  "B-v2v": "per_seed_v1 bank, exact_update (PPO without bank rows + run_separate); lessons/isolated 6,12,18,24",
+  "R-v2v": "identical to B on its own bank; r_concurrent_lag1_quota=True cap; isolated 12,24",
+  "producer": "tools.coopmwm.v2v_runner.prepare_intent(base, root=, legacy_root=, source_root=, common_checkpoint_sha256=)",
+  "note": "v2v_launch_ops.prepare (remote, registered) still builds the old v2v_dim=24 runtime; regenerate the V2V_RUNTIME via prepare_intent"
+ },
+ "coop_search_launch": {
+  "cli": "python -m tools.coopmwm.coop_search enable <COLLECTION_ROOT> --lambda 1.0 --solo-cap 16 --alternate",
+  "written_keys": {"coop_search": {"coop_objective": true, "coop_lambda": 1.0, "coop_solo_cap": 16, "coop_diversity": true}, "coop_alternation": true},
+  "novelty": "OFF: no --bank-descriptors, no coop_novelty, no coop_novelty_bank_sha256 (c4/coop-search-fix2 merged; preflight no-op with novelty off)"
+ },
+ "verify_mode": {"key": "verify_mode", "value": "all8_both_seeds", "where": ["bank_builder control BINDING.json", "collector binding sumo_verify block (rb.collect -> confirm_pending)"], "quote": "python -m tools.coopmwm.verify_perseed quote (now includes seed-2 extended window)"},
+ "gate_cli": {
+  "plan": "python -m tools.coopmwm.coopfix_exact_gate plan --root <v2v run root with V2V_RUNTIME.json> --arm B --control <dir> [--source-root <deployed git checkout> | --source-manifest <qualified SOURCE_PROVENANCE.json>] [--u0 ..] [--u3 ..] [--sources ARM=PATH | V2V_RUNTIME.json]",
+  "execute": "python -m tools.coopmwm.coopfix_exact_gate execute --control <dir> --root <root>",
+  "collect": "python -m tools.coopmwm.coopfix_exact_gate collect --control <dir>  -> COOPFIX_GATE.json with commit, runtime_sha256, source_manifest_sha256",
+  "notes": "intent/--no-v2v flags must match the runtime or the gate refuses; replay_sources default from the runtime; source tree must have no tracked .py modifications"
+ },
+ "hard_rules": "no SUMO, GPU, ssh, push; no other worktree edited; no reset/clean/stash; no sealed/holdout paths opened"
+}

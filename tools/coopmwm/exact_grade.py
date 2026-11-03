@@ -981,9 +981,11 @@ def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., 
     import copy
     from .bank_imitation import run
     reference=copy.deepcopy(policy)
-    # Reviewed intent release: all bank AWR belongs to the separate imitation
-    # trust region. Keeping bank rows in PPO would also change its minibatches
-    # relative to A. Preserve the historical option-off update byte-for-byte.
+    # Reviewed intent release + MAIN 2026-11-03 decision I2 (launch audit): with the separate
+    # imitation phase (imitation_epochs>0) all bank AWR belongs to its own KL trust region, so
+    # bank rows never enter the PPO phase (A, B and R share identical PPO minibatches). Every
+    # launched V2V arm is intent-ON. The historical intent-OFF update stays byte-identical to
+    # its registered branch point (test_option_off_is_byte_identical_to_branch_point).
     ppo_pairs=[] if getattr(policy,'intent_horizon',0) else pairs
     metrics=_ppo_exact_update(policy,optimizer,episodes,generator,ppo_pairs,coefficient,epochs)
     intent=None
