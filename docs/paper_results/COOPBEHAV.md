@@ -301,11 +301,25 @@ not-ready audit index, all with unchanged hashes. Producer trace contracts retai
 the documented coverage limits. Receipt:
 `tools/coopbehav/evidence/RESUME_20261103_2236.json`.
 
+### Fresh-session reconciliation (2026-11-04)
+
+Recovery inherited clean HEAD `8a95a631`. PID29244 still matches its recorded
+parent, creation time, executable and polling command; its status has advanced
+since the preceding recovery, stderr is empty and no report is active. Direct
+read-only gpuR inventory confirms the same31-pair u15 TRAIN index and the same
+two u03 DEV indices, all with unchanged hashes. The audit index remains not ready;
+both producer handoffs retain the documented coverage limits. Completed reports,
+the59-test verification and the existing120s watcher were preserved. No new
+report or watcher was dispatched. Receipt:
+`tools/coopbehav/evidence/RESUME_20261104.json`.
+
+### Existing verification and continuing polling
+
 - CPU suite: **59 synthetic tests** covering all four detectors, identity/slot
   recycling, native/policy-mean contracts, credit reconstruction, discovery,
   source precision/hashes, complete reports and advancing-index publication,
   plus corrected audit coverage, corrupted-file rejection, manifest rosters and
-  restricted-seed preflight. The final full CPU suite passed in 2.70 s during this recovery;
+  restricted-seed preflight. The final full CPU suite passed in 2.70 s during the November 2 recovery;
   exact command/results in `evidence/RESUME_VERIFIED_20261102.json`. Prior 54-test
   verification remains in `evidence/RESUME_VERIFIED_20261031.json`.
 - Final descriptive runs use the physical closure implementation committed as
