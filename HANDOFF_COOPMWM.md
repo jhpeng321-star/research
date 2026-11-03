@@ -1,6 +1,10 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## Fresh-session adoption — Nov3 23:08 +08
+- GPUAarchivehandover DISPATCHED ONCE:local43764/create1793721382.8047392,
+  ROLLING_ARCHIVE_BRIDGE_GPUA_V4.json. Currentoldtransferactive=>30sidlewait;
+  noSIG/newmoveruntilidleproof. ADOPT/no redispatch. Newcontrolrolling2318_gpua_v4.
+  See `_sol/COOPMWM_GPUA_ARCHIVE_HANDOVER_2357.md`; newGPUAtransfernotyetclaimed.
 - MAIN23:18 gpuA archiveextension QUALIFIED/REGISTERED, notyetlaunched atthis
   checkpoint: rolling_gpua_ops, newcontrolrolling2318_gpua_v4,8GiBfloor/
   cpuQtarget12GiB.9Linuxstorage+3localpayloadtestsPASS; routePASS29.2GBfree.
