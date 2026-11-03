@@ -1,5 +1,20 @@
 # S-COOPMWM — live checks
 
+## Current continuation — diagnostic reported; primary launch delegated
+- Superseded all_admitted gate:55/55 exact branches graded,0prefix/physics
+  faults; diagnostic **FAIL** on group cooperation (986066 bounds-0.020857/
+  -0.039186veh-s, practically near-zero driving changes). No actor was launched
+  from it. Report:`coopmwm/COOPFIX_GATE_ALL_ADMITTED_DIAGNOSTIC.json`.
+- Current cooperative_only gate/launch belongs to MAIN's c4/launch-coop operator.
+  Under the latest owner rule, learning mechanics/hard safety/complete data gate
+  launch, while cooperation is reported. No duplicate primary job here.
+- Completed SHA archives recovered2,547,341,551bytes, all statuses/summaries kept.
+  An additional2,871,389,536-byte old B/Ru4..18 output pass is active, retaining
+  compact metrics locally and full originals on gpuA. Last proof:271,363,949bytes
+  moved/free8,500,752,384bytes. Backfill is correctly disk-paused pending9GiB.
+- Live owners, proofs and next checks:`_sol/COOPMWM_STORAGE_AND_HANDOVER_LIVE.md`.
+  No sealed outcomes or prohibited truth files were opened.
+
 ## Nov4 00:21 UTC+8 — final integrated intent/per-seed source passes Linux
 - READY integration merged as`762bdc7d`; the exact immutable I3 source passes
   **994 CPU checks,0 skips,138.534s,zero SUMO**. Both prior metadata-harness

@@ -1,5 +1,19 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
+## CURRENT — primary delegated, old-output SHA archive actively draining
+- Authoritative live handover `_sol/COOPMWM_STORAGE_AND_HANDOVER_LIVE.md`.
+- OursallAdmittedDIAGNOSTICfinishedFAIL,55/55graded0prefix/physicsfaults; no launch.
+  CurrentcoopOnlylearning/safetygate+launchfullydelegatedc4/launch-coop; don't
+  merge/gate/launchparallel or attemptblockedoverride. Afterlaunchffonly.
+- Completeclosedrawarchives2547341551bytes. ACTIVEoldPPOarchive1worker1721746/
+  start75037388(dispatch1721745),scope720oldB/Ru4..18/2871389536bytes.
+  Last2batches271363949bytes/freedisk8500752384bytes. MetricsretainedCPU/full
+  sourcesGPUA. OldRoot4mover1237127temporarilypausedbythisworker; finallyresumes.
+  DO NOTresumeitwhileoneoffactive; would overlap. Adoptcontrol/receipts.
+- Backfill1132856live/diskpaused157queued/12done,collection900006/7live;
+  doNOTredispatch. Needverifyresumeabove9GiBafterarchive. Environmentvoiditems
+  remainowningdelegatebookkeeping, no improvisedledgeredit/retry.
+
 ## CURRENT Nov4 ~03:15 +08 — archive recovery; primary launch still delegated
 - Recovery2 COMPLETE1828707452bytes/14certifiedbatches,regular1237127resumed;
   COMPLETEat1793734755/free8616538112bytes(~8.02GiB), notyetbackfill9GiBresume.
