@@ -50,3 +50,16 @@ Consumers: rb-cf / rb-int should port `ref_idm.py` into
 DriverState perception errors, IDMM adaptation, stops (processNextStop), TraCI
 influencer, lane-change patchSpeed, insertion speed procedures, junction
 right-of-way — all documented as out-of-scope no-ops in spec.md §8.
+
+## Re-verification (fresh session, 2026-11-04)
+Resumed after session freeze; nothing redone. Independently confirmed:
+- rb-shared/idmspec/ copies byte-identical to the committed docs/rb-idmspec/
+  (SHA-256 match on all 4 deliverables).
+- `run_tests.py` → ALL PASS (20 vectors + 8 invariants); test_vectors.json
+  regeneration is deterministic (hash unchanged).
+- Citations spot-checked against _sumo_src downloads: MSCFModel_IDM.cpp
+  (delta :41, iterations :44, _v :246-268, stopSpeed :178-200, freeSpeed
+  :104-127), MSCFModel.cpp (finalizeSpeed :199-265, maximumSafeStopSpeed
+  :806-884, calcEmergencyDecel :1037-1086), EMERGENCY_DECEL_AMPLIFIER=1.2
+  (MSCFModel.h:35), NUMERICAL_EPS=0.001 (config.h.cmake:236),
+  processActionStepLength (SUMOVehicleParserHelper.cpp:1772-1789). All exact.
