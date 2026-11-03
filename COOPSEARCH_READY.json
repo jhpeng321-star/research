@@ -2,20 +2,22 @@
   "schema": "coopmwm.coopsearch_ready.v1",
   "branch": "c4/coop-search",
   "base": "b20bec2f",
-  "commit": "8d44d32c",
+  "commit": "93e1cd22",
   "new_sumo_sim_s": 0,
   "gpu_jobs": 0,
   "deployed": false,
   "tests_run": {
-    "new": "tools/coopmwm/test_coop_search_cpu.py (16 tests: off byte-identical single+niche4, unregistered key rejected, joint-only synergy exact, single-CAV trap synergy 0 + lambda scaling, search prefers synergy, diversity spread + top-2 kept, descriptor on issued post-clamp commands, onset/participation, bank novelty penalty, bank descriptor, solo cap 16 respected + futures counted, uncapped solos batched in candidate call, cost multiplier bound, K8 capture excludes solos + carries coop, collector config validation)",
+    "new": "tools/coopmwm/test_coop_search_cpu.py: 20 tests (adds pessimistic imputation, extension call, niche-best-first + plain log, bank by digest; off test now vs base golden)",
     "existing": "28 test files touching the changed modules (committed, exact_grade, harden1, harden2_main, harden2_resume, harden3, incident, ls_collection, ls_fast_worker, ls_feasible, ls_label_runtime, ls_validity, mppi_runtime, mppi_search, niche_collect, niche_roll, niche_search, nullfix, overlap, plan_proposer, replay_start, sumo_verify, verify_continuation, ls_fast_ops, niche_ops, niche_worker, niche_drain + new)",
     "count_completed": 296,
     "harden3_rehearsal": "test_harden3_cpu.py did not finish within the 25 min per-file timeout (45 min fake-SUMO subprocess rehearsal); not counted"
   },
   "tests_passed": {
-    "new": "16/16",
+    "new": "20/20",
     "existing_mppi_search_and_niche_golden": "mppi_search 15/15, niche_search 12/12, niche_collect 4/4 (byte-identical off path incl. golden fixtures)",
-    "overall": "275/296 per-file run; all 17-21 failures are pre-existing on the unmodified base b20bec2f (failed-node lists compared base vs branch: IDENTICAL; Windows temp-dir/claim-lock and env issues in committed, harden1, incident, ls_collection, ls_label_runtime, mppi_runtime, overlap, replay_start, sumo_verify)"
+    "overall": "275/296 per-file run; all 17-21 failures are pre-existing on the unmodified base b20bec2f (failed-node lists compared base vs branch: IDENTICAL; Windows temp-dir/claim-lock and env issues in committed, harden1, incident, ls_collection, ls_label_runtime, mppi_runtime, overlap, replay_start, sumo_verify)",
+    "after_review_fixes": "coop_search 20/20, mppi_search 15/15, niche_search 12/12, niche_collect 4/4, ls_fast_worker 5/5, plan_proposer 14/14, nullfix 18/18; ls_collection 9/10, mppi_runtime 4/8, overlap 2/3 (same failures as on base b20bec2f)",
+    "independent_review": "61/61 (coordinator review of 8d44d32c)"
   },
   "config_keys": {
     "coop_objective": "False (master switch; False/absent = byte-identical legacy search)",
@@ -27,9 +29,10 @@
     "coop_active_accel": "0.3 m/s^2 (|issued plan - issued policy| above this = active second)",
     "coop_active_min_s": "5 (active seconds for 'participates')",
     "coop_novelty": "False (k-NN novelty vs verified bank; needs coop_novelty_bank)",
-    "coop_novelty_bank": "None or list of 15-number role descriptors (from the bank-descriptors CLI)",
+    "coop_novelty_bank": "direct-API/tests only (rejected inside search_config)",
     "coop_novelty_k": "3",
-    "coop_novelty_weight": "0.5 (x std of the call's scores, times z-scored k-NN distance)"
+    "coop_novelty_weight": "0.5 (x std of the call's scores, times z-scored k-NN distance)",
+    "coop_novelty_bank_sha256": "None or sha256 of the descriptor list (content-addressed COOP_BANK_<sha>.json)"
   },
   "descriptor": "per member [participates, onset_s, early mean, plan mean, mean |dev|] of ISSUED plan command (post feasibility clamp) minus ISSUED policy command (WM policy forecast under the same clamp); z-normalised over the searched pool; bank side: role summary (ramp lane 2 / mainline) of SUMO issued_safe - mappo_safe",
   "gpu_cost_multiplier_estimate": {
@@ -43,24 +46,38 @@
     "cli": "python -m tools.coopmwm.coop_search cost --solo-cap 16"
   },
   "enable_for_next_batch": {
-    "what_changes_live": "GPU workers must run the commit's mppi_search.py + coop_search.py + ls_gpu.py (+ niche_collect.py validator); cpuQ collector must run niche_collect.py + ls_collection.py. Both need the usual source-bound CPU qualification and rolling drained-boundary GPU handover by the live agent (not done here). Without the config file the new sources behave byte-identically.",
-    "cpuQ_enable": "cd <qualified source root>/pytools && python -m tools.coopmwm.coop_search enable <COLLECTION_ROOT> [--lambda 1.0] [--solo-cap 16] [--alternate] [--bank-descriptors BANK_DESC.json]   # writes immutable LS_COOP_SEARCH_CONFIG.json (open 'x'); the collector loads it at supervisor start; new admissions then carry search_config = it2_K2 niches1/4 + coop keys (--alternate: coop on ordinals with (ordinal//2)%2==0, an outcome-blind 2x2 with niche parity)",
+    "what_changes_live": "GPU workers must run the 93e1cd22 mppi_search.py + coop_search.py + ls_gpu.py (+ niche_collect.py validator); cpuQ collector must run niche_collect.py + ls_collection.py. Both need the usual source-bound CPU qualification and rolling drained-boundary GPU handover by the live agent (not done here). Without the config file the new sources behave byte-identically.",
+    "cpuQ_enable": "cd <qualified source root>/pytools && python -m tools.coopmwm.coop_search enable <COLLECTION_ROOT> [--lambda 1.0] [--solo-cap 16] [--alternate] [--bank-descriptors BANK_DESC.json  (writes COOP_BANK_<sha>.json beside it; copy to the GPU bank dir and export COOPMWM_COOP_BANK_DIR)]   # writes immutable LS_COOP_SEARCH_CONFIG.json (open 'x'); the collector loads it at supervisor start; new admissions then carry search_config = it2_K2 niches1/4 + coop keys (--alternate: coop on ordinals with (ordinal//2)%2==0, an outcome-blind 2x2 with niche parity)",
     "bank_descriptors": "python -m tools.coopmwm.coop_search bank-descriptors PLANS.json --out BANK_DESC.json   # PLANS.json = list of {plan:{members, issued}, lanes:{vid:lane}, policy_commands} from SUMO branch observable issued_safe / mappo_safe",
     "gpu": "no new GPU CLI: plan_service/mppi_runtime pass record.search_config (validated by niche_collect.validate, binding niche_comparison=True) into mppi_search.search; coop report lands in result.coop_objective, per-finalist result.finalists[i].coop and collection_top8[i].coop; ls_collection copies coop_objective into labels"
   },
   "source_sha256_committed_bytes": {
-    "tools/coopmwm/coop_search.py": "9dfa440b8c259f319a83cc3e6ae9efb5c2696da3d35bd37505366e9d0286e0c2",
-    "tools/coopmwm/mppi_search.py": "b7252e57a7944ee0abaf2f15ca2b5d173f8a3053a68e43ddaa97657560ca1457",
+    "tools/coopmwm/coop_search.py": "a7b8a88f7be4d8e3b2fa74632ac0d9f4396ab468801bbd09062db52dde982ae7",
+    "tools/coopmwm/mppi_search.py": "291d1992b31cdbe6504229067d1985f2ae94d4b7615781eace7c56b2ab7eea05",
+    "tools/coopmwm/niche_collect.py": "f129d7043a9e51862ffab1c9b96b8a6b5ecb22ea99f181e18b06cbead54756e4",
     "tools/coopmwm/ls_gpu.py": "546015022d68522c1adb8f788821a19c906131ad1653bc9c5345075807be703c",
     "tools/coopmwm/mppi_runtime.py": "7d80a10dba4126fca3ce5164c1cc921d41e034cd20d99475042995149a3c7026",
-    "tools/coopmwm/niche_collect.py": "4a0c6d1f5218a77013da10717d12600ff4a668f92ccdaf57b20851ed770a4b1a",
     "tools/coopmwm/ls_collection.py": "583b980bdfb1a9ade57567c72200cb2ea3df857494318258570bacdca2b65b01",
-    "tools/coopmwm/test_coop_search_cpu.py": "b7793c5d0aee3d7d02d90f7f215ba487d386c9a4212ada6d7ccbad3dd5a4bf05"
+    "tools/coopmwm/test_coop_search_cpu.py": "788389271040e007ea30568a168c2cdac11a94820148d42c3cf5987347d50791",
+    "tools/coopmwm/fixtures/coop_off_golden.json": "07db8a4c782649d3f8054ec3e50e000a4aac27792a7df06ba2c6491c8f2b9e09"
   },
   "caveats": [
     "Synergy is WM-predicted; solo gains are paired vs 'policy' in the same WM call, the capped screen solos use a second call with the same K/H (CRN futures by index).",
-    "Uncapped candidates in a screen call get the median computed synergy (flagged synergy_imputed).",
     "Diversity lowers the mean synergy of the 8 finalists vs synergy-only ranking (it spreads them) but keeps the top-2; set coop_diversity=False to compare.",
-    "Coop finalist rule replaces niche-best-first in niches=4 mode when the option is on."
-  ]
+    "Diversity and the measured-only finalist rule select among the 2x16 candidates with computed solos in the live shape; widen coop_solo_cap to widen that set (cost rises ~linearly)."
+  ],
+  "commit_history": [
+    "8d44d32c initial option",
+    "93e1cd22 independent-review fixes (1)-(4)"
+  ],
+  "review_fixes": {
+    "1_imputation": "uncapped screen candidates get the MIN computed synergy of their call (pessimistic); imputed candidates are finalist-ineligible; one extension call (screen K/H) computes solos when measured < finalists or a niche has none; logged per screen: imputed_share, solo_extended; result: extended_candidates, solo_rollouts.extension. Live it2_K2 with cap 16: imputed_share = (N-16)/N per screen (0.6 for m=2 .. 0.87 for m=6); 2x16 measured >= 8 finalists, so no extension call in the live shape",
+    "2_niches": "coop with niches>1: finalists and top-k keep best-of-each-niche first (by coop score among measured), then farthest-point descriptor fill; iteration and per-niche best/mean_rel_cost (and repulsion choice) use the plain group-gain cost; coop versions logged as best/mean_coop_rel_cost",
+    "3_bank": "search_config carries coop_novelty_bank_sha256 only (niche_collect.validate rejects an embedded coop_novelty_bank and malformed digests); GPU host resolves COOP_BANK_<sha>.json from coop_search.BANK_DIRS or $COOPMWM_COOP_BANK_DIR and re-verifies the content digest; the enable CLI writes the bank file into the collection root (copy it to the GPU bank dir)",
+    "4_golden": "test_off_is_byte_identical_to_base_b20bec2f compares output and WM-call digests for 4 cases (niches 1/4 x default/live it2_K2 shape) x 3 off variants against tools/coopmwm/fixtures/coop_off_golden.json generated from the base b20bec2f mppi_search.py (sha256 f2faeeeecf06eb74d22df56300dae39ec31d7afabb664d25a47f5a0650567c77); on Linux set COOPMWM_COOP_BASELINE=<base mppi_search.py> to evaluate the base module on the same BLAS"
+  },
+  "data_selection_knobs": {
+    "participation_rule": "coop_active_accel=0.3 m/s^2 and coop_active_min_s=5 s: a member \"participates\" if >= 5 s with |issued plan - issued policy| > 0.3 m/s^2; onset = first such second. These are DATA-SELECTION knobs of the descriptor (they change which plans are spread apart, hence which 8 reach SUMO), adopted from the PLAN_TYPES_20261103 analysis thresholds, not fitted; treat a change as a registered config change",
+    "others": "coop_early_s=10, coop_keep_top=2, coop_solo_cap=16, coop_lambda=1.0, coop_novelty_k=3, coop_novelty_weight=0.5 are likewise registered selection/score knobs"
+  }
 }
