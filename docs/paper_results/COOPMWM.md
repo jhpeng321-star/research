@@ -1,5 +1,33 @@
 # S-COOPMWM — live checks
 
+## Nov3 14:21:56 UTC+8 — four slots and both builders healthy; live-bank niche evidence
+- All4 NICHENULL3 workers are live/8 exact startup gates each/no failure. GPU
+  snapshots14:09 show94%/96% utilisation. `LS_NULLFIX_CONFIG.json` is active;
+  the joint niche/nullfix rollout is complete, so no gate/worker is relaunched.
+- Existing `NULL_DIVERSITY_BY_CONFIG.json` covers legacy LS labels only. Current
+  B/R bank verifications are now reported separately in
+  `coopmwm/LIVE_BANK_NULL_DIVERSITY_BY_CONFIG.json`, preserving that old scope.
+  Every current verification digest and all count/denominator invariants validate.
+- Current B niches1:8 graded lists,7 complete eight-candidate lists,**0/7 exact
+  null**; mean pairwise canonical-perturbation RMS distance **0.215238m/s²**,
+  mean occupied niches1,any-member net-deceleration share0.578125.
+  Niches4:5 lists,4 complete,**0/4 exact null**; distance **0.253278m/s²**,
+  occupied niches4,deceleration share0.15. One partial list per config is excluded
+  from null-rate denominators. These small cohorts are descriptive, not a causal
+  estimate of the configuration's effect. Full command mirror remains off.
+- R random-unscored bank:64 graded lists,54 complete,**10/54 exact null(18.52%)**;
+  10 partial lists excluded. R shortlist diversity is unrecorded here and stays
+  null rather than being inferred from B. Two additional B snapshots were skipped
+  as inactionable before verification. Retained failed/ungraded verifications
+  (B3/R9) are excluded and separately counted.
+- Banks: B101 valid decisions/49 first-seed positives/49 confirmed/12 admitted/
+  5 cooperative; R64/41/41/13/11. Both have0 pending confirmations at this snapshot.
+- Logging-only hourly reporter is registeredSHA
+  `64217ca2fedfe53862f087dbeb7b9483d23116cbef5fbe1fca6d73618edc7b60`,
+  actual saved-TRAIN-read validation passes; zero SUMO/inference. Commit precedes
+  its distinct read-only observer dispatch. It never owns simulation or search jobs.
+  Evidence:`coopmwm/LIVE_BANK_NULL_DIVERSITY_1793686918953534400.json`.
+
 MAIN13:43/13:45 supersedes the initial V2V start/launch assumptions: all active
 arms start from **the same original MAPPO u0**,zero-init V2V,updates1..24.
 Runner preparation is updated;7 local CPU tests pass(0.006s),zero simulation.

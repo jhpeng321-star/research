@@ -1,5 +1,24 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST AUTHORITY ALL792linesREAD inclMAIN14:06: KEEPALL3V2Varms/commonu0/u1..24,
+fixedtrain+u8/u24episodes2764800; diagnosticsBlesson+isolatedONLY6/12/18/24,
+RisolatedONLY12/24,Anoextradiagnostics; noV2Vfinalpairedbranches. Qualifiedbaseline
+reuseonlyexactSHA. If>+3M dropRu8firstthenB6/18diagnostics, NOTanarm. Capregister
+14.5M+exactquote<=17.5M thenautolaunchonintegrationLinux+rehearsal/realallarmsmoke.
+Runnerfe11cd86stillneedsTHISschedule/armfallbackupdatebeforequalification/launch;
+noV2Vphysicshasrun. ExistingnonV2V24/gates/builders/collectioncontinue.
+
+COLLECTION14:21:56+08: all4NICHENULL3slotsLIVE/8gates/noFAIL; GPU94/96%sample,
+LS_NULLFIX_CONFIGactive =>jointrolloutDONE, NEVERrepeatgates. OldnullreportLS-only;
+NEWlive-bankreportchecksallverifSHA/counts: Bniches1=0/7complete8-null,8lists,
+RMSdistance.215238mps2/occupied1/decelshare.578125; niches4=0/4,5lists,.253278/
+occupied4/decel.15;1partialeach excluded. Rrandomnull10/54(18.52%),64lists,
+10partialexcluded/diversityNA; retainedfailedB3/R9countedseparately, noimputation.
+BanksB101valid/49positiveconfirmed/12admit/5coop;R64/41/13/11,0pendingconfirmations.
+live_bank_report.pyreadonlyhourlyregistered64217ca2/actualTRAINreadvalidationPASS,
+zeroSUMO/inference. NOTdispatchedyet; committhen`live_bank_report start`ONCE,
+adoptLIVE_BANK_REPORT_DISPATCH.json. OldLSobserver+alltraining/GPUownersretained.
+
 ALL781brief linesNOWREAD inclMAIN13:43 COMMONu0 and13:45AUTOGOgated.
 V2VrunnerNOWcommonoriginalMAPPOu0forallactivearms/u1..24; ownu3prepwasNEVER
 dispatchedandreceiptretainedassuperseded. SevenlocalCPU PASS/.006s/0skips:
