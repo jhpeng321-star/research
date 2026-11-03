@@ -957,7 +957,10 @@ def _ppo_exact_update(policy, optimizer, episodes, generator, pairs, coefficient
             if not bool(torch.isfinite(loss)):
                 raise ValueError('nonfinite acceleration PPO')
             optimizer.zero_grad();loss.backward()
-            norm = torch.nn.utils.clip_grad_norm_(policy.parameters(), .5, error_if_nonfinite=True);optimizer.step()
+            norm = torch.nn.utils.clip_grad_norm_(policy.parameters(), .5, error_if_nonfinite=True)
+            if intent is not None:
+                intent.log_grad()
+            optimizer.step()
             metrics.append(dict(loss=float(loss.detach()), kl=kl, gradient_norm=float(norm), imitation=float(aux.detach()),
                                 own_policy_steps=len(own_j), critic_steps=len(crit),
                                 exact_imitation_steps=sum(x[4] for x in batch),
@@ -968,6 +971,12 @@ def _ppo_exact_update(policy, optimizer, episodes, generator, pairs, coefficient
 
 
 def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., epochs=4,imitation_epochs=0):
+    refresh=None
+    if getattr(policy,'intent_horizon',0):
+        # v2v_intent ON: bank partner intents = CURRENT head on the partners' own t-1 contexts
+        # (deployment-consistent, recomputed every update; never recorded future commands).
+        from .v2v_intent import refresh_bank_intents
+        refresh=refresh_bank_intents(policy,pairs)
     if not imitation_epochs:return _ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs)
     import copy
     from .bank_imitation import run
@@ -976,12 +985,18 @@ def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., 
     intent=None
     if getattr(policy,'intent_horizon',0):
         from .v2v_intent import bank_stats,coverage,weight_norms
-        intent=dict(before=bank_stats(policy,pairs),weight_norm_before=weight_norms(policy),
+        # refresh again with the post-PPO head the imitation phase starts from
+        intent=dict(partner_intents_pre_ppo=refresh,partner_intents_pre_imitation=refresh_bank_intents(policy,pairs),
+            before=bank_stats(policy,pairs),weight_norm_before=weight_norms(policy),
             **coverage([s['context'] for s,w in pairs if w>0],policy.intent_horizon,policy.intent_k))
     report=run(policy,optimizer,pairs,generator,reference,coefficient,imitation_epochs)
     if intent is not None:
+        shares=[x for row in report.get('epochs') or () for x in row.get('intent_grad_shares') or ()]
+        from .v2v_intent import share_summary
         report['v2v_intent']=dict(intent,after=bank_stats(policy,pairs),weight_norm_after=weight_norms(policy),
-            loss_weight=policy.intent_loss_weight,rule='plan members own plan commands t+1..t+H inside the plan window')
+            loss_weight=policy.intent_loss_weight,detach_trunk=policy.intent_detach_trunk,
+            intent_grad_share=share_summary(shares),
+            rule='plan members own plan commands t+1..t+H inside the plan window')
     metrics.append(dict(loss=report['last_loss'],kl=report['kl'],gradient_norm=report['last_gradient_norm'],
         imitation=report['last_loss'],own_policy_steps=0,critic_steps=0,
         exact_imitation_steps=report['pairs_seen'],bank_imitation=report,

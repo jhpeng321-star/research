@@ -123,7 +123,9 @@ def update(policy,optimizer,episodes,generator,epochs=4,awr=None):
             if intent is not None:loss=loss+intent.term(idx)
             if not bool(torch.isfinite(loss)):raise ValueError('nonfinite acceleration PPO')
             optimizer.zero_grad();loss.backward()
-            norm=torch.nn.utils.clip_grad_norm_(policy.parameters(),.5,error_if_nonfinite=True);optimizer.step()
+            norm=torch.nn.utils.clip_grad_norm_(policy.parameters(),.5,error_if_nonfinite=True)
+            if intent is not None:intent.log_grad()
+            optimizer.step()
             metrics.append(dict(loss=float(loss.detach()),kl=kl,gradient_norm=float(norm),imitation=float(auxiliary.detach()),
                 own_policy_steps=len(own_indices),critic_steps=len(samples),awr_positive_steps=sum(w>0 for w in weights),
                 loss_rule='MAIN0201 own PPO; positive completed-plan AWR; all-step critic'))

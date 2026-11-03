@@ -21,11 +21,18 @@ MAPPO-PIS-like (arXiv 2408.06656) but learned, identical for A/B/R-v2v:
   a despawn or across a missing second are masked.  Added to the PPO loss with
   ``v2v_intent_loss_weight`` (default 1.0).  For B/R bank pairs the plan's own
   future commands (inside the plan window) are intent targets in the imitation
-  phase; bank partner intents are the partners' recorded commands of the
-  winning branch tape (hindsight broadcast; no policy is run offline).
+  phase.  Bank partner intents are NEVER recorded future commands: each update
+  (exact_grade.exact_update) recomputes them with a no-grad pass of the CURRENT
+  intent head on each partner's own t-1 bank context (:func:`refresh_bank_intents`),
+  exactly as a deployed partner publishes at t-1; a partner whose t-1 context is
+  not in the bank entry reads intent_valid=0 with zero intents.
+- TRUNK: with ``v2v_intent_detach_trunk`` (DEFAULT True) the intent loss trains
+  the intent head only (trunk features detached), so it cannot move the action
+  trunk, the PPO KL or the imitation KL; the intent gradient share is logged.
 
 Config keys (binding): ``v2v_intent`` (bool, default False), ``v2v_intent_horizon``
 (int, default 5), ``v2v_intent_loss_weight`` (float, default 1.0 when on),
+``v2v_intent_detach_trunk`` (bool, default True),
 ``v2v_dim`` must equal ``v2v_intent_dim(K, H)`` (48 for K=4, H=5).
 """
 import math
@@ -40,6 +47,8 @@ from .v2v_model import FEATURES, extend_for_v2v
 from .v2v_obs import V2V_INTENT_HORIZON, V2V_K, V2V_PARTNER_FEATURES, intent_columns, v2v_intent_dim
 
 DEFAULT_LOSS_WEIGHT = 1.
+#: Intent loss trains the intent head only (trunk features detached) unless the binding says False.
+DEFAULT_DETACH_TRUNK = True
 #: Registered acceleration bounds (accel_deploy / binding ``accel_bounds``); the binding wins.
 ACCEL_BOUNDS = (-3., 2.6)
 TARGET_RULE = ('own issued pre-safety absolute command at t+1..t+H (native+residual or plan '
@@ -59,16 +68,20 @@ def settings(cfg):
         raise ValueError('v2v_intent_loss_weight must be finite and >= 0')
     if len(bounds) != 2 or not bounds[0] < bounds[1]:
         raise ValueError('accel_bounds must be (low, high)')
+    detach = cfg.get('v2v_intent_detach_trunk', DEFAULT_DETACH_TRUNK)
+    if not isinstance(detach, bool):
+        raise ValueError('v2v_intent_detach_trunk must be a bool')
     dim = v2v_intent_dim(V2V_K, horizon)
     if cfg.get('v2v_dim') is not None and int(cfg['v2v_dim']) != dim:
         raise ValueError(f'v2v_dim {cfg["v2v_dim"]} != intent block width {dim}')
-    return dict(horizon=horizon, loss_weight=weight, bounds=bounds, k=V2V_K, dim=dim)
+    return dict(horizon=horizon, loss_weight=weight, bounds=bounds, k=V2V_K, dim=dim, detach_trunk=detach)
 
 
-def config_keys(horizon=V2V_INTENT_HORIZON, loss_weight=DEFAULT_LOSS_WEIGHT):
+def config_keys(horizon=V2V_INTENT_HORIZON, loss_weight=DEFAULT_LOSS_WEIGHT, detach_trunk=None):
     """Exact binding keys for an intent-ON arm (identical for A, B and R)."""
     return dict(v2v=True, v2v_dim=v2v_intent_dim(V2V_K, horizon), v2v_intent=True,
-                v2v_intent_horizon=int(horizon), v2v_intent_loss_weight=float(loss_weight))
+                v2v_intent_horizon=int(horizon), v2v_intent_loss_weight=float(loss_weight),
+                v2v_intent_detach_trunk=DEFAULT_DETACH_TRUNK if detach_trunk is None else bool(detach_trunk))
 
 
 # ---------------------------------------------------------------- policy
@@ -76,13 +89,15 @@ def config_keys(horizon=V2V_INTENT_HORIZON, loss_weight=DEFAULT_LOSS_WEIGHT):
 class IntentPolicy(BasePolicy):
     """v2v-widened per-CAV policy (block width K*(6+H+1)) with a planned-command intent head."""
 
-    def __init__(self, horizon=V2V_INTENT_HORIZON, loss_weight=DEFAULT_LOSS_WEIGHT, bounds=ACCEL_BOUNDS):
+    def __init__(self, horizon=V2V_INTENT_HORIZON, loss_weight=DEFAULT_LOSS_WEIGHT, bounds=ACCEL_BOUNDS,
+                 detach_trunk=DEFAULT_DETACH_TRUNK):
         super().__init__()
         extend_for_v2v(self, v2v_intent_dim(V2V_K, horizon))
-        self._attach_intent(horizon, loss_weight, bounds)
+        self._attach_intent(horizon, loss_weight, bounds, detach_trunk)
 
-    def _attach_intent(self, horizon, loss_weight, bounds):
+    def _attach_intent(self, horizon, loss_weight, bounds, detach_trunk=DEFAULT_DETACH_TRUNK):
         self.intent_horizon, self.intent_k = int(horizon), V2V_K
+        self.intent_detach_trunk = bool(detach_trunk)
         self.v2v_width = v2v_intent_dim(V2V_K, horizon)
         self.intent_loss_weight = float(loss_weight)
         hidden = int(self.actor[-1].in_features)
@@ -124,8 +139,12 @@ class IntentPolicy(BasePolicy):
         return mean, value
 
     def intent(self, context):
-        """Raw intent head (n_members, H); unclipped (training uses this)."""
-        return self.intent_head(self.heads(context)[2])
+        """Raw intent head (n_members, H); unclipped (training uses this).
+
+        With ``intent_detach_trunk`` the trunk features are detached: the intent loss
+        then reaches only the intent head, never the shared action/value trunk."""
+        hidden = self.heads(context)[2]
+        return self.intent_head(hidden.detach() if self.intent_detach_trunk else hidden)
 
     @torch.no_grad()
     def publish(self, context):
@@ -152,13 +171,14 @@ def intent_model(policy, depth=4):
     return None
 
 
-def convert(policy, horizon, loss_weight=DEFAULT_LOSS_WEIGHT, bounds=ACCEL_BOUNDS):
+def convert(policy, horizon, loss_weight=DEFAULT_LOSS_WEIGHT, bounds=ACCEL_BOUNDS,
+            detach_trunk=DEFAULT_DETACH_TRUNK):
     """Turn an already v2v-widened (block width K*(6+H+1)) base policy into an IntentPolicy in place."""
     width = int(policy.actor[0].weight.shape[1])-FEATURES-4
     if width != v2v_intent_dim(V2V_K, horizon):
         raise ValueError(f'widened width {width} != intent block width {v2v_intent_dim(V2V_K, horizon)}')
     policy.__class__ = IntentPolicy
-    policy._attach_intent(horizon, loss_weight, bounds)
+    policy._attach_intent(horizon, loss_weight, bounds, detach_trunk)
     return policy
 
 
@@ -218,7 +238,7 @@ def load_checkpoint(path, config):
     if 'intent_head.weight' in saved['policy']:
         if int(saved['policy']['intent_head.weight'].shape[0]) != s['horizon']:
             raise ValueError('intent checkpoint horizon differs from v2v_intent_horizon')
-        policy = IntentPolicy(s['horizon'], s['loss_weight'], s['bounds'])
+        policy = IntentPolicy(s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'])
         policy.load_state_dict(saved['policy'])
         optimizer = torch.optim.Adam(policy.parameters(), lr=3e-4)
         optimizer.load_state_dict(saved['optimizer'])
@@ -235,7 +255,7 @@ def load_checkpoint(path, config):
         optimizer = _from_v2v_only(policy, optimizer, s['horizon'])
     else:
         policy, optimizer, generator, payload = widened(path, v2v_dim=s['dim'])
-    convert(policy, s['horizon'], s['loss_weight'], s['bounds'])
+    convert(policy, s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'])
     return policy, with_head(policy, optimizer), generator, payload
 
 
@@ -303,20 +323,60 @@ def episode_targets(steps, horizon, bounds=ACCEL_BOUNDS):
             for s in steps]
 
 
-def tape_board(tape, horizon, bounds=ACCEL_BOUNDS):
-    """second t -> {vid: (t-1, commands at t..t+H-1)} from a recorded tape (hindsight broadcast).
+def refresh_bank_intents(policy, pairs):
+    """Recompute every bank pair's partner-intent inputs with the CURRENT head (no grad), in place.
 
-    Only partners with all H recorded commands are published (else intent_valid stays 0).
+    Deployment-consistent: a partner's intent visible at second t is what the partner itself
+    publishes from its own t-1 context (``IntentPolicy.publish``, clipped to the action bounds).
+    Pairs carry ``intent_link`` = dict(entry, t, slots={ego: partner vids in slot order}) from
+    bank_v2v.attach_pairs; the partner's t-1 context is the same entry's kept pair at t-1, already
+    refreshed (ascending t), so intents chain exactly like the live board.  A partner that is not a
+    member of that t-1 context, or whose t-1 pair is absent (plan start, excluded second), gets
+    zero intents and intent_valid=0 (per partner).  Recorded commands are NEVER used as inputs
+    (they are only the ego's own intent TARGETS).  Shared (oversampled) pair objects are refreshed
+    once.  Returns a JSON-safe report.
     """
-    by_time = commands_by_time(tape['steps'], bounds)
-
-    def board(t):
-        frames = [by_time.get(int(t)+j) for j in range(horizon)]
-        if any(f is None for f in frames):
-            return {}
-        return {vid: (int(t)-1, [f[vid] for f in frames]) for vid in frames[0]
-                if all(vid in f for f in frames)}
-    return board
+    groups, seen = {}, set()
+    for sample, _w in pairs:
+        link = sample.get('intent_link')
+        if link is None or id(sample) in seen:
+            continue
+        seen.add(id(sample))
+        groups.setdefault(link['entry'], {}).setdefault(int(link['t']), []).append(sample)
+    width, h = len(V2V_PARTNER_FEATURES), policy.intent_horizon
+    stride = width+h+1
+    report = dict(pairs_refreshed=0, partner_slots=0, partner_slots_valid=0,
+                  partner_slots_no_prev_context=0,
+                  rule='current intent head (no grad) on the partner own t-1 bank context; '
+                       'missing t-1 context or non-member partner -> zeros, intent_valid 0')
+    was_training = policy.training
+    policy.eval()
+    try:
+        with torch.no_grad():
+            for by_t in groups.values():
+                for t in sorted(by_t):
+                    prev = by_t.get(t-1)
+                    published = policy.publish(prev[0]['context']) if prev else {}
+                    for sample in by_t[t]:
+                        blocks = sample['context'].get('v2v') or {}
+                        for ego, slots in sample['intent_link']['slots'].items():
+                            block = blocks.get(ego)
+                            if block is None:
+                                continue
+                            for slot, vid in enumerate(slots[:policy.intent_k]):
+                                start = slot*stride+width
+                                values = published.get(vid)
+                                block[start:start+h] = [float(v) for v in values] if values else [0.]*h
+                                block[start+h] = 1. if values else 0.
+                                report['partner_slots'] += 1
+                                report['partner_slots_valid'] += bool(values)
+                                report['partner_slots_no_prev_context'] += not prev
+                        report['pairs_refreshed'] += 1
+    finally:
+        policy.train(was_training)
+    report['partner_intent_coverage'] = (report['partner_slots_valid']/report['partner_slots']
+                                         if report['partner_slots'] else None)
+    return report
 
 
 def attach_bank_targets(pairs, tape, entry, horizon, bounds=ACCEL_BOUNDS):
@@ -396,6 +456,29 @@ def coverage(contexts, horizon, k=V2V_K):
                 partner_slots_present=int(present), partner_slots_intent_valid=int(valid))
 
 
+def grad_share(policy):
+    """||intent-head gradient|| / ||all gradients|| from the current ``.grad`` (scale-invariant,
+    so identical before or after clip_grad_norm_).
+
+    Exact share of the intent loss when ``intent_detach_trunk`` (only the intent loss reaches
+    the head and the head feeds nothing else); a head-only lower bound otherwise."""
+    head_ids = {id(p) for p in policy.intent_head.parameters()}
+    head = total = 0.
+    for p in policy.parameters():
+        if p.grad is None:
+            continue
+        sq = float(p.grad.detach().double().square().sum())
+        total += sq
+        if id(p) in head_ids:
+            head += sq
+    return math.sqrt(head/total) if total > 0 and math.isfinite(total) else 0.
+
+
+def share_summary(shares):
+    return dict(mean=float(np.mean(shares)) if shares else None, max=float(max(shares)) if shares else None,
+                steps=len(shares))
+
+
 class PPOIntent:
     """Per-update PPO-phase intent loss over rollout records; None-target records are skipped."""
 
@@ -408,7 +491,9 @@ class PPOIntent:
                 self.targets.append(target)
                 self.masks.append(mask)
         self.extra = int(extra_records)
+        self.shares = []
         self.report = dict(horizon=h, loss_weight=policy.intent_loss_weight, target_rule=TARGET_RULE,
+                           detach_trunk=policy.intent_detach_trunk,
                            **coverage(self.contexts, h, policy.intent_k))
         before = self.stats()
         self.report.update(intent_loss_before=before['intent_loss'], intent_targets=before['intent_targets'],
@@ -429,8 +514,12 @@ class PPOIntent:
         loss, count = mean_loss(self.policy, self.contexts, self.targets, self.masks)
         return dict(intent_loss=float(loss) if count else None, intent_targets=int(count))
 
+    def log_grad(self):
+        self.shares.append(grad_share(self.policy))
+
     def close(self, metrics):
-        self.report.update(intent_loss_after=self.stats()['intent_loss'],
+        self.report.update(intent_grad_share=share_summary(self.shares),
+                           intent_loss_after=self.stats()['intent_loss'],
                            partner_intent_weight_norm_after=weight_norms(self.policy))
         if metrics:
             metrics[-1]['v2v_intent'] = self.report

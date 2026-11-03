@@ -21,7 +21,8 @@ def remote_name(path):
 
 
 def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v2v_dim,
-            active_arms=ARMS, v2v_intent=False, v2v_intent_horizon=5, v2v_intent_loss_weight=1.):
+            active_arms=ARMS, v2v_intent=False, v2v_intent_horizon=5, v2v_intent_loss_weight=1.,
+            v2v_intent_detach_trunk=True):
     """Prospective binding only: no directory, checkpoint, ledger or job mutation.
 
     ``v2v_intent`` (default False = unchanged binding) adds the planned-command intent keys,
@@ -67,7 +68,8 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
     if v2v_intent:
         from .v2v_intent import settings
         cfg.update(v2v_intent=True, v2v_intent_horizon=int(v2v_intent_horizon),
-                   v2v_intent_loss_weight=float(v2v_intent_loss_weight))
+                   v2v_intent_loss_weight=float(v2v_intent_loss_weight),
+                   v2v_intent_detach_trunk=bool(v2v_intent_detach_trunk))
         settings(cfg)  # validates v2v_dim against the intent block width
     return cfg
 

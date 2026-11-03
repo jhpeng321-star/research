@@ -56,7 +56,7 @@ def hooks(root, cfg):
         import functools
         from .v2v_intent import IntentPolicy,settings
         s=settings(cfg)
-        policy_factory=functools.partial(IntentPolicy,s['horizon'],s['loss_weight'],s['bounds'])
+        policy_factory=functools.partial(IntentPolicy,s['horizon'],s['loss_weight'],s['bounds'],s['detach_trunk'])
         pairs=functools.partial(original_pairs,v2v_intent=cfg)
     return dict(configure=configure,accounting=accounting,policy_factory=policy_factory,
         load_checkpoint=load_checkpoint,bank_pairs=pairs,bank_quality=original_quality,

@@ -192,7 +192,11 @@ def attach_pairs(pairs, trace_path, t0, cfg=None, intent=None):
     bank entry, from the winning plan's recorded branch trace; pair i is second t0+i.
     Pairs whose trace lacks the partners' commands (no previous second, no trace frame, or a
     partner command not recorded) are EXCLUDED and counted - never imputed.
-    ``intent`` (v2v_intent ON only): dict(horizon, board=callable(second) -> board)."""
+    ``intent`` (v2v_intent ON only): dict(horizon, entry).  Partner-intent inputs are built EMPTY
+    (zeros, intent_valid 0) and each kept pair gets ``sample['intent_link']`` = dict(entry, t,
+    slots={member: partner vids in slot order}); v2v_intent.refresh_bank_intents fills them each
+    update from the CURRENT intent head on the partners' own t-1 bank contexts (never from
+    recorded commands)."""
     cfg = dict(DEFAULT_CFG, **(cfg or {}))
     counts = dict(pairs=len(pairs), kept=0, excluded_missing_prev_second=0,
                   excluded_missing_partner_command=0, trace_missing=False)
@@ -211,11 +215,18 @@ def attach_pairs(pairs, trace_path, t0, cfg=None, intent=None):
         context = sample.setdefault('context', {})
         members = list(context.get('members') or sample['behaviour']['proposal_members'])
         block, missing = pair_v2v_block(frame, prev, members, cfg, None if intent is None else
-                                        dict(horizon=intent['horizon'], board=intent['board'](t)))
+                                        dict(horizon=intent['horizon'], board={}))
         if missing:
             counts['excluded_missing_partner_command'] += 1
             continue
         context['v2v'] = block
+        if intent is not None:
+            from .v2v_obs import v2v_partner_ids
+            seen = causal_frame(frame, prev)  # the exact frame pair_v2v_block ranked partners on
+            table, ocfg = _frame_table(seen), _obs_cfg(cfg)
+            cavs = {v.get('vid') for v in seen.get('vehicles', []) if v.get('is_cav')}
+            sample['intent_link'] = dict(entry=str(intent['entry']), t=t, slots={
+                ego: list(v2v_partner_ids(table, ego, ocfg)) for ego in members if ego in cavs})
         kept.append((sample, w))
     counts['kept'] = len(kept)
     return kept, counts

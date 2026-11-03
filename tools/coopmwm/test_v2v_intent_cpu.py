@@ -35,8 +35,8 @@ def single_thread():
 
 
 def report_keys(run):
-    """Base-commit run_separate omits last_loss/last_gradient_norm (fixed on c4/imit-fix2); the
-    shim only fills ABSENT keys so exact_update can build its metric row in this branch."""
+    """Historical shim (pre-imit-fix2 run_separate lacked last_loss/last_gradient_norm); on the
+    merged base the keys exist, so it only fills ABSENT keys and is a no-op here."""
     def wrapped(*args, **kwargs):
         report = run(*args, **kwargs)
         for key in ('last_loss', 'last_gradient_norm'):
@@ -260,14 +260,19 @@ def plan_command(vid, t):
     return 1.5*math.sin(.7*t) if vid in ('c0', 'c1') else 0.
 
 
-def cooperative_bank(tmp_path, t0=420, duration=12):
-    """Plan c0+c1: c1 mirrors c0's plan -> partner intent predicts c1's action."""
+def cooperative_bank(tmp_path, t0=420, duration=12, drop_context=None, command=None):
+    """Plan c0+c1: c1 mirrors c0's plan -> partner intent predicts c1's action.
+
+    drop_context: {second: vid} removes that CAV from the recorded policy context of that second
+    (still a partner in the trace frame).  command: override for plan_command."""
     from .exact_grade import imitation_pairs
+    command = command or plan_command
+    tmp_path.mkdir(parents=True, exist_ok=True)
     steps, frames = [], []
     for t in range(t0-1, t0+duration+H):
         sensor = rows(t-t0)
-        context = encode(sensor)
-        raw = {v: plan_command(v, t) for v in ('c0', 'c1')}
+        context = encode([r for r in sensor if r['vid'] != (drop_context or {}).get(t)])
+        raw = {v: command(v, t) for v in ('c0', 'c1')}
         commands = {r['vid']: 0. for r in sensor if r['is_cav']}
         steps.append(dict(time_s=t, commands=commands, requests={v: dict(requested_raw=x) for v, x in raw.items()},
             sample=dict(context=context, action=[[raw.get(v, 0.)] for v in context['members']],
@@ -283,7 +288,7 @@ def cooperative_bank(tmp_path, t0=420, duration=12):
     entry = dict(start_s=t0, duration_s=duration, plan_id='p', weight=1.)
     pairs = imitation_pairs(dict(steps=[s for s in steps if t0 <= s['time_s'] < t0+duration]), entry)
     pairs = vi.attach_bank_targets(pairs, tape, entry, H)
-    kept, counts = bank_v2v.attach_pairs(pairs, trace, t0, intent=dict(horizon=H, board=vi.tape_board(tape, H)))
+    kept, counts = bank_v2v.attach_pairs(pairs, trace, t0, intent=dict(horizon=H, entry='v/b'))
     assert counts['kept'] == duration
     return kept
 
@@ -298,8 +303,11 @@ def test_cooperative_bank_update_lowers_action_and_intent_error(tmp_path, monkey
     from .bank_imitation import action_error
     policy, optimizer, generator = intent_policy(tmp_path)
     pairs = cooperative_bank(tmp_path)
-    block = pairs[0][0]['context']['v2v']['c1']
-    assert block[11] == 1. and block[6] == pytest.approx(plan_command('c0', 420))    # c0 intent seen by c1
+    assert all(b[s*12+11] == 0. for p, _ in pairs for b in p['context']['v2v'].values() for s in range(4))
+    vi.refresh_bank_intents(policy, pairs)
+    assert pairs[0][0]['context']['v2v']['c1'][11] == 0.                       # plan start: no t-1 context
+    block = pairs[1][0]['context']['v2v']['c1']
+    assert block[11] == 1. and block[6:11] == [0.]*H                           # zero-init head at load
     mask = pairs[-1][0]['intent_mask']
     members = pairs[-1][0]['context']['members']
     assert mask[members.index('c0')] == [0.]*H and mask[members.index('c3')] == [0.]*H  # plan end / non-member
@@ -546,12 +554,184 @@ def test_bank_pairs_carry_intents_through_the_registered_bank(tmp_path, bank_bud
     first, last = pairs[0][0], pairs[-1][0]
     members = first['context']['members']
     assert all(len(b) == W for b in first['context']['v2v'].values())
-    assert first['context']['v2v']['c1'][6:12] == pytest.approx([.5]*H+[1.])   # c2 plan intent at t-1
+    # inputs are built EMPTY: no recorded (hindsight) command ever reaches a partner-intent input
+    assert all(b[s*12+6:s*12+12] == [0.]*(H+1) for p, _ in pairs for b in p['context']['v2v'].values()
+               for s in range(4))
     assert first['intent_target'][members.index('c1')] == [.5]*H and first['intent_mask'][0] == [1.]*H
     assert last['intent_mask'][0] == [0.]*H                                   # plan end
-    assert last['context']['v2v']['c1'][11] == 0.                             # tape ends: no broadcast
+    json.dumps([p for p, _ in pairs])                                         # links stay JSON-safe
+    class Publisher(torch.nn.Module):  # this fixture's contexts carry members only (no x/rsu)
+        intent_horizon, intent_k = H, 4
+
+        def publish(self, context):
+            return {v: [.1*len(context['members'])+.01*i]*H for i, v in enumerate(context['members'])}
+    policy = Publisher()
+    report = vi.refresh_bank_intents(policy, pairs)
+    assert report['partner_slots_valid'] > 0 and report['partner_slots_no_prev_context'] > 0
+    by_key = {(p['intent_link']['entry'], p['intent_link']['t']): p for p, _ in pairs}
+    checked = 0
+    for p, _ in pairs:
+        prev = by_key.get((p['intent_link']['entry'], p['intent_link']['t']-1))
+        for ego, slots in p['intent_link']['slots'].items():
+            for slot, vid in enumerate(slots):
+                got = p['context']['v2v'][ego][slot*12+6:slot*12+12]
+                if prev is None:
+                    assert got == [0.]*(H+1)
+                elif vid in prev['context']['members']:
+                    assert got[:H] == pytest.approx(policy.publish(prev['context'])[vid], abs=1e-6) and got[H] == 1.
+                    checked += 1
+    assert checked > 0
     # the base 6 per-partner features are exactly the v2v-only bank features
     for (a, _), (b, _) in zip(plain[:3], pairs[:3]):
         for vid, block in a['context']['v2v'].items():
             for slot in range(4):
                 assert b['context']['v2v'][vid][slot*12:slot*12+6] == block[slot*6:slot*6+6]
+
+
+# ---------------------------------------------------------------- 10. review fixes (merged branch)
+
+def _intent_inputs(pairs):
+    return [{ego: [list(b[s*12+6:s*12+12]) for s in range(4)] for ego, b in p['context']['v2v'].items()}
+            for p, _ in pairs]
+
+
+def test_bank_partner_intents_come_from_current_head_on_t_minus_1_context(tmp_path):
+    """Fix 1: no hindsight leak - partner intents = current head on the partner's own t-1 context."""
+    policy = nonzero_head(intent_policy(tmp_path)[0])
+    pairs = cooperative_bank(tmp_path)
+    vi.refresh_bank_intents(policy, pairs)
+    checked = 0
+    for i, (p, _) in enumerate(pairs):
+        for ego, slots in p['intent_link']['slots'].items():
+            assert slots == v2v_partner_ids({r['vid']: r for r in rows(i)}, ego, V2VConfig(v2v=True))
+            for slot, vid in enumerate(slots):
+                got = p['context']['v2v'][ego][slot*12+6:slot*12+12]
+                if i == 0:
+                    assert got == [0.]*(H+1)
+                    continue
+                expect = policy.publish(pairs[i-1][0]['context'])[vid]
+                assert got[:H] == pytest.approx(expect, abs=1e-6) and got[H] == 1.
+                recorded = [plan_command(vid, 420+i+k) for k in range(H)]
+                assert got[:H] != pytest.approx(recorded, abs=1e-3)          # never recorded commands
+                checked += 1
+    assert checked > 0
+    # recorded FUTURE commands never reach the inputs: a bank whose plan commands differ only
+    # from second 422 on yields identical partner-intent inputs at pairs 420 and 421
+    other = cooperative_bank(tmp_path/'o', command=lambda v, t: plan_command(v, t)+(1. if t >= 422 else 0.))
+    vi.refresh_bank_intents(policy, other)
+    assert _intent_inputs(other)[:2] == _intent_inputs(pairs)[:2]
+    # recomputed with the CURRENT head on every refresh
+    before = _intent_inputs(pairs)
+    with torch.no_grad():
+        policy.intent_head.bias.add_(.3)
+    vi.refresh_bank_intents(policy, pairs)
+    after = _intent_inputs(pairs)
+    assert after[0] == before[0] and after[1] != before[1]
+
+
+def test_partner_validity_is_per_partner_and_targets_per_element(tmp_path):
+    """Fix 2: a partner absent from the t-1 context is invalid alone; a missing t-1 pair blanks
+    only its successor; own targets mask only the missing element."""
+    policy = nonzero_head(intent_policy(tmp_path)[0])
+    pairs = cooperative_bank(tmp_path, drop_context={423: 'c3'})
+    vi.refresh_bank_intents(policy, pairs)
+    p = pairs[4][0]                                                    # second 424, t-1 = 423
+    slots = p['intent_link']['slots']['c0']
+    block = p['context']['v2v']['c0']
+    assert 'c3' in slots and 'c1' in slots
+    j = slots.index('c3')*12
+    assert block[j+11] == 0. and block[j+6:j+11] == [0.]*H
+    assert block[slots.index('c1')*12+11] == 1.
+    # an excluded second (pair 6 removed) blanks pair 7 only; pair 8 is valid again
+    fresh = cooperative_bank(tmp_path/'gap')
+    kept = fresh[:6]+fresh[7:]
+    vi.refresh_bank_intents(policy, kept)
+    assert all(b[s*12+11] == 0. for b in kept[6][0]['context']['v2v'].values() for s in range(4))
+    assert any(b[s*12+11] == 1. for b in kept[7][0]['context']['v2v'].values() for s in range(4))
+    # own targets: a missing tape second masks that element only, not the whole horizon
+    steps = [dict(time_s=t, commands={'a': 0.}, requests={'a': dict(requested_raw=.1*t)})
+             for t in (10, 11, 13, 14, 15, 16)]
+    target, mask = vi.own_targets(['a'], 10, vi.commands_by_time(steps, (-3., 2.6)), H)
+    assert mask == [[1., 0., 1., 1., 1.]] and target[0][2] == pytest.approx(1.3)
+    assert not hasattr(vi, 'tape_board')
+
+
+def test_intent_loss_detaches_trunk_by_default_and_logs_grad_share(tmp_path):
+    """Fix 3: default intent loss trains the head only; option False restores the shared trunk."""
+    assert CFG['v2v_intent_detach_trunk'] is True and vi.settings(dict(CFG))['detach_trunk'] is True
+    with pytest.raises(ValueError, match='bool'):
+        vi.settings(dict(CFG, v2v_intent_detach_trunk='yes'))
+    helper_eps = [synthetic_episode()]
+    for detach in (True, False):
+        path = tmp_path/f'u0_{detach}.pt'
+        mappo_u0(path)
+        policy = load_checkpoint(path, config=dict(CFG, v2v_intent_detach_trunk=detach))[0]
+        nonzero_head(policy)
+        assert policy.intent_detach_trunk is detach
+        helper = vi.ppo_setup(policy, helper_eps)
+        policy.zero_grad()
+        helper.term(range(len(helper.contexts))).backward()
+        trunk = sum(float(p.grad.abs().sum()) for n, p in policy.named_parameters()
+                    if not n.startswith('intent_head') and p.grad is not None)
+        head = float(policy.intent_head.weight.grad.abs().sum())
+        assert head > 0 and ((trunk == 0.) if detach else (trunk > 0.))
+        share = vi.grad_share(policy)
+        assert (share == pytest.approx(1.)) if detach else (0. < share < 1.)
+    assert vi.IntentPolicy().intent_detach_trunk is True
+
+
+def test_e2e_u0_intent_exact_update_through_run_separate(tmp_path, monkeypatch):
+    """MAPPO-u0 checkpoint, intent ON -> ONE exact_update through the merged run_separate on a
+    cooperative bank: pass1_effective, intent loss falls, intent input columns move, refreshed
+    partner intents, grad share logged, and every backtrack restores the exact Adam snapshot."""
+    from .exact_grade import exact_update
+    from .test_imitfix2_cpu import same_adam
+    policy, optimizer, generator = intent_policy(tmp_path)
+    pairs = cooperative_bank(tmp_path)
+    episodes = [rollout(from_weights({k: v.clone() for k, v in policy.state_dict().items()}, enabled=True))]
+    norms_before = vi.weight_norms(policy)
+    captured = dict(restores=[])
+    original_load = optimizer.load_state_dict
+
+    def load(sd):
+        original_load(sd)
+        captured['restores'].append(copy.deepcopy(optimizer.state_dict()))
+    monkeypatch.setattr(optimizer, 'load_state_dict', load)
+
+    def separate(policy_, optimizer_, pairs_, generator_, reference, coefficient=1., passes=5):
+        captured['snapshot'] = copy.deepcopy(optimizer_.state_dict())
+        captured['restores'] = []
+        captured['pair_inputs'] = _intent_inputs(pairs_)
+        lrs = [g['lr'] for g in optimizer_.param_groups]
+        for g in optimizer_.param_groups:
+            g['lr'] = .05                                     # force pass-1 backtracking
+        try:
+            return bank_imitation.run_separate(policy_, optimizer_, pairs_, generator_, reference,
+                                               coefficient, passes)
+        finally:
+            for g, lr in zip(optimizer_.param_groups, lrs):
+                g['lr'] = lr
+    monkeypatch.setattr(bank_imitation, 'run', separate)
+    torch.manual_seed(0)
+    metrics = exact_update(policy, optimizer, episodes, generator, pairs, 1., epochs=1, imitation_epochs=5)
+    report = metrics[-1]['bank_imitation']
+    assert report['pass1_effective'] is True and report['epochs_completed'] >= 1
+    assert report['imitation_failed'] is False and report['kl'] <= .045
+    intent = report['v2v_intent']
+    assert intent['after']['intent_loss'] < intent['before']['intent_loss']
+    assert intent['detach_trunk'] is True and intent['intent_grad_share']['steps'] > 0
+    assert 0. < intent['intent_grad_share']['mean'] < 1.
+    assert intent['partner_intents_pre_imitation']['partner_slots_valid'] > 0
+    norms_after = vi.weight_norms(policy)
+    assert norms_before == dict(actor=0., critic=0.) and norms_after['actor'] > 0.   # intent columns moved
+    # the imitation phase saw the post-PPO head's (nonzero) intents, not recorded commands
+    assert any(any(x != 0. for x in slot[:H]) for row in captured['pair_inputs'][1:] for blocks in row.values()
+               for slot in blocks)
+    # Adam rollback exactness: every pass-1 backtrack restores the pre-pass Adam snapshot exactly
+    attempts = report['epochs'][0]['attempts']
+    assert attempts >= 2 and report['backtracks'] >= 1
+    for sd in captured['restores'][:attempts-1]:
+        same_adam(sd, captured['snapshot'])
+    ppo = next(m['v2v_intent'] for m in metrics if 'v2v_intent' in m)
+    assert ppo['intent_grad_share']['steps'] > 0 and ppo['detach_trunk'] is True
+    json.dumps(metrics)
