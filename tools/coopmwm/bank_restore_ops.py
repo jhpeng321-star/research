@@ -101,14 +101,14 @@ for i,e in enumerate(v['entries']):
  assert not m.base.BAD.search(str(p));assert p.name in ('RESULT.json','RESULT.json.gz') or (p.parent.name=='pending' and p.name.endswith('.json.gz'))
  assert e['archive'].startswith('/root/cpuq_archive_20261103/')
  if p.exists():assert p.stat().st_size==e['bytes'] and m.base.digest_file(p)==e['sha256'];restored.append(e['source']);continue
- proof=m.remote("from pathlib import Path\nimport hashlib,json\np=Path("+repr(e['archive'])+");print(json.dumps(dict(sha256=hashlib.sha256(p.read_bytes()).hexdigest(),bytes=p.stat().st_size)))")
+ proof=m.remote("from pathlib import Path\\nimport hashlib,json\\np=Path("+repr(e['archive'])+");print(json.dumps(dict(sha256=hashlib.sha256(p.read_bytes()).hexdigest(),bytes=p.stat().st_size)))")
  assert proof['sha256']==e['sha256'] and proof['bytes']==e['bytes']
  temp=control/('restore_'+str(i));command,env=m.ssh()
  x=subprocess.run(['rsync','-a','--checksum','--no-owner','--no-group','-e',' '.join(shlex.quote(k) for k in command[:-1]),command[-1]+':'+e['archive'],str(temp)],env=env,capture_output=True,text=True,timeout=180)
  assert x.returncode==0,x.stderr
  assert temp.stat().st_size==e['bytes'] and m.base.digest_file(temp)==e['sha256']
  assert not p.exists();p.parent.mkdir(parents=True,exist_ok=True);temp.replace(p);restored.append(e['source'])
- with (control/'RESTORED.jsonl').open('a') as f:f.write(json.dumps(dict(path=str(p),sha256=e['sha256'],unix=time.time()))+'\n')
+ with (control/'RESTORED.jsonl').open('a') as f:f.write(json.dumps(dict(path=str(p),sha256=e['sha256'],unix=time.time()))+'\\n')
 out=dict(unix=time.time(),files=len(restored),bytes=v['bytes'],new_sim_s=0,protected_binding=str(binding))
 with done.open('x') as f:json.dump(out,f)
 print(json.dumps(out))'''
