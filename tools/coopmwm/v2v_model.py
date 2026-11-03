@@ -40,8 +40,10 @@ except ImportError:
     V2V_DIM = 4  # local stub until tools/coopmwm/v2v_obs.py lands
 try:
     from .v2v_obs import V2V_INTENT_DIM as OBS_V2V_INTENT_DIM  # c4/intent-obs
+    from .v2v_obs import V2V_INTENT_H as OBS_V2V_INTENT_H
 except ImportError:
     OBS_V2V_INTENT_DIM = None  # local constant below until that branch lands
+    OBS_V2V_INTENT_H = None
 
 FEATURES = 29  # tools/coopnative/policy.py:9 sensor feature width, unchanged
 ACTOR_LATENT = 4  # broadcast latent concatenated per member, policy.py:49
@@ -51,7 +53,7 @@ INSERT_AT = FEATURES  # v2v channels join after the per-CAV x/pooled block,
 
 # --- intent option (part B); block contract shared with branch c4/intent-obs ---
 V2V_INTENT_K = 4  # nearest CAV partners, same slots/ordering as v2v_obs.V2V_K
-V2V_INTENT_H = 5  # planned commands per partner, one per 1 s control step
+V2V_INTENT_H = OBS_V2V_INTENT_H if OBS_V2V_INTENT_H is not None else 5  # planned commands, 1 s each
 #: Per-partner base block width (gap, lane offset, speed, accel, last_cmd, present).
 V2V_INTENT_BASE = 6
 #: Registered default clip for planned commands = the action clip (binding accel_bounds).
@@ -299,7 +301,9 @@ def _rebuilt_optimizer(policy, previous):
     extend_for_v2v only widens the two input-layer weight tensors in place, so
     module registration order - and therefore optimizer state indices - are
     unchanged; widened moment tensors are zero-gapped at INSERT_AT exactly like
-    the weights and step counters are preserved.
+    the weights and step counters are preserved. Newly attached heads (the
+    intent head) have no saved moments: they start fresh, and their indices are
+    appended to the saved parameter group so the sizes match again.
     """
     optimizer = torch.optim.Adam(policy.parameters(), lr=3e-4)
     state = previous.state_dict()
@@ -311,6 +315,12 @@ def _rebuilt_optimizer(policy, previous):
             or value.shape[-1] == shape[-1] or value.shape[:-1] != shape[:-1]
             else _insert_columns(value, shape[-1]-value.shape[-1])
             for key, value in entry.items()}
+    listed = {index for group in state['param_groups'] for index in group['params']}
+    missing = [index for index in range(len(parameters)) if index not in listed]
+    if missing:
+        anchor = max(listed, default=-1)
+        group = next((g for g in state['param_groups'] if anchor in g['params']), state['param_groups'][0])
+        group['params'] = list(group['params'])+missing
     optimizer.load_state_dict(dict(state=transferred, param_groups=state['param_groups']))
     return optimizer
 

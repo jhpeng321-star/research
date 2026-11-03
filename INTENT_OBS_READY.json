@@ -1,0 +1,89 @@
+{
+  "part": "INTENT PART A (observation + runtime broadcast) - planned-command intent sharing, option v2v_intent",
+  "worktree": "E:/agent-work/c4-intent-obs",
+  "branch": "c4/intent-obs",
+  "ready": true,
+  "date": "2026-11-03",
+  "commits": [
+    "a8fda5c5 coopmwm v2v_obs: planned-command intent buffer, t-1 masked partner features, slot block, coverage telemetry (option v2v_intent default OFF); runtime/runner/live gates"
+  ],
+  "head_commit": "a8fda5c5 coopmwm v2v_obs: planned-command intent buffer, t-1 masked partner features, slot block, coverage telemetry (option v2v_intent default OFF); runtime/runner/live gates",
+  "option": {
+    "key": "v2v_intent",
+    "default": false,
+    "horizon_key": "v2v_intent_horizon",
+    "horizon_default": 5,
+    "latency_steps": 1,
+    "block_when_on": "V2V_INTENT_DIM = K*(6+H+1) = 48 (K=4, H=5); per partner: the 6 existing v2v features, then H planned absolute accelerations (same units/clip as the action) broadcast at t-1, then intent_valid (1.0 iff fresh broadcast at exactly t-1; 0.0 absent/stale, intent values zeroed)",
+    "block_when_off": "exactly the existing V2V_DIM=24 block (byte-identical, tested)"
+  },
+  "api": {
+    "module": "tools/coopmwm/v2v_obs.py",
+    "constants": {
+      "V2V_INTENT_H": 5,
+      "V2V_INTENT_LATENCY": 1,
+      "V2V_INTENT_DIM": 48,
+      "V2V_INTENT_PARTNER_FEATURES": "6 v2v features + intent_0..intent_4 + intent_valid",
+      "V2VConfig.v2v_intent": false,
+      "V2VConfig.v2v_intent_horizon": 5
+    },
+    "functions": {
+      "V2VIntentBuffer(horizon=5)": "broadcast store keyed by CAV id: (step_index, float32[H]). reset() (episode start), publish(step_index, {vid: H values|None}, clip=(lo,hi) optional) -> count (wrong-length row raises; None skipped), drop(vid), retain(vids) (despawned CAVs drop out), fresh(vid, t) -> float32[H] iff broadcast at exactly t-1 else None (one-step latency gate: t never sees a t publish), ids(), __contains__, __iter__, __len__",
+      "publish_intents(buffer, step_index, intents, clip=None) -> int": "the function the runner calls after each policy step to publish planned intents (bulk publish)",
+      "v2v_intent_features(state, cav_id, last_commands, intent_buffer, step_index, cfg=None) -> float32[width]": "single-CAV block; partner ranking/range/zero-padding identical to v2v_features; cfg.v2v_intent off -> EXACTLY v2v_features (byte-identical)",
+      "v2v_intent_slot_block(s_m, lane, v_mps, a_mps2, present, is_cav, slot_ids, last_commands, intent_buffer, step_index, cfg=None) -> float32[n, width]": "slot-aligned, same slots/ordering as v2v_slot_block; option off -> EXACTLY v2v_slot_block",
+      "intent_block_width(cfg=None) -> int": "V2V_DIM when off; K*(6+H+1) when on",
+      "is_intent_block_width(width, k=4) -> bool": "width == K*(6+H+1) classifier for checkpoint loading",
+      "intent_coverage(intent_block, horizon=5) -> float": "per-step mean partner-intent coverage (fresh/present partner slots, mean over egos with >=1 present partner; 0.0 when none)",
+      "intent_coverage_stats(intent_block, horizon=5) -> dict": "telemetry detail: coverage, egos_with_partners, rows, present_slots, fresh_slots"
+    }
+  },
+  "call_sites": {
+    "tools/coopmwm/v2v_runtime.py": [
+      "Policy(v2v_dim=V2V_DIM default): forward uses self.v2v_dim (29+v2v_dim width); default constructor unchanged",
+      "from_weights: width 33 -> BasePolicy, 33+V2V_DIM -> Policy(), any K*(6+H+1) block width -> Policy(v2v_dim=extra) (requires enabled flag; unsupported widths still raise as before)",
+      "load_checkpoint: sets model.v2v_dim from config['v2v_dim'] after the v2v_model loader (arbitrary intent width already supported there)",
+      "controller_class(base, *, intent=False): intent=True swaps the block builder to v2v_intent_features, holds V2VIntentBuffer (reset_intents() for episode start), drops despawned CAVs each step (retain on frame CAV ids), exposes publish_planned_intents(step_index, planned, clip=self.intent_clip) for the post-step runner hook, and auto-publishes policy.last_planned_intents when the model-side intent head provides it; intent=False byte-identical to the previous controller"
+    ],
+    "tools/coopmwm/v2v_runner.py": [
+      "prepare(..., v2v_intent=False): when True requires v2v_dim == V2V_INTENT_DIM and adds cfg keys v2v_intent=True, v2v_intent_horizon=5; default OFF leaves the binding dict byte-identical (no new keys)"
+    ],
+    "tools/coopmwm/v2v_live.py": [
+      "intent_binding_gate(binding): module-level gate used by hooks().configure - v2v_intent bindings must carry v2v_dim == V2V_INTENT_DIM; option absent/off passes unchanged"
+    ]
+  },
+  "telemetry": "intent_coverage / intent_coverage_stats per step over the slot block; runtime controller blocks feed the same scalar (used in tests; expose per-step in runner diagnostics when the option is on)",
+  "training_note": "Intent-head supervised training (all arms A/B/R identical; realised next-H commands as targets; B/R bank plan commands as targets) belongs to the MODEL/BANK workstreams (c4-intent-head / c4-intent-int); this part ships the buffer, the t-1 latency gate, the observation block, the publish entry point and the option plumbing they consume.",
+  "tests": {
+    "file": "tools/coopmwm/test_v2v_intent_obs_cpu.py",
+    "result": "12 passed",
+    "covers": [
+      "shape/order: V2V_INTENT_DIM=48 layout (6 plain prefix identical, H intents, intent_valid), partner-major nearest-first, zero-padded slots",
+      "latency: features at t read ONLY the t-1 broadcast (same-step publish invisible; stale at t+2 masked; latest broadcast wins)",
+      "masking: absent partner -> intent zeros + valid 0; unknown ego -> all zeros; despawned CAV drop() / retain()",
+      "reset: buffer.reset() masks everything (episode start)",
+      "publish: counts, None skip, wrong-length raises, optional clip to action bounds",
+      "slot block: row-for-row equality with v2v_intent_features, zero rows for absent/id-less slots",
+      "option-off byte-identical: intent functions == v2v_features / v2v_slot_block even with fresh broadcasts in the buffer; V2VConfig defaults; intent_block_width",
+      "coverage telemetry: fractional/stale/full/empty cases",
+      "runner prepare: default-off binding byte-identical (no new keys); intent=True dimension gate",
+      "live gate: intent_binding_gate default-off pass / dimension mismatch raises",
+      "runtime (torch): zero-init extension at intent width, from_weights width inference incl. rejection, controller intent blocks with t-1 latency, publish hook, despawn drop, reset, coverage 0 -> 1 -> 0"
+    ],
+    "command": "C:\\Users\\jpeng\\Miniconda3\\python.exe -m pytest tools/coopmwm/test_v2v_intent_obs_cpu.py -q  (12 passed, CPU only)",
+    "regression": "tools/coopmwm/test_v2v_runtime_cpu.py + test_v2v_int_e2e_cpu.py + test_v2v_model_cpu.py + test_replay_bank_v2v_cpu.py: 24 passed (option-off unchanged)"
+  },
+  "constraints": {
+    "cpu_only": true,
+    "no_sumo": true,
+    "no_gpu": true,
+    "no_remote_writes": true,
+    "worktree_only": true,
+    "other_c4_worktrees": "read-only (none needed; no merges required)",
+    "no_sealed_or_holdout_paths": true,
+    "no_truth_files": true,
+    "no_handset_thresholds": "none added; clip bounds are caller-supplied (action bounds), all thresholds are structural (dimensions, latency step count)",
+    "default_off_byte_identical": "tested (test_option_off_is_byte_identical_even_with_fresh_broadcasts, test_runner_prepare_option_default_off_and_dimension_gate, regression suites)"
+  },
+  "how_to_enable": "runner cfg: v2v_dim=48 (tools.coopmwm.v2v_obs.V2V_INTENT_DIM) with v2v=True; prepare(..., v2v_intent=True); policy v2v_dim=V2V_INTENT_DIM; controller_class(base, intent=True); call controller.publish_planned_intents(t, {vid: H accels}) (or controller.intent_buffer via publish_intents) after each policy step; reset_intents() at episode start"
+}

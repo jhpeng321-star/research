@@ -109,6 +109,7 @@ def binding(root, v, arm):
         awr=read(root/'AWR_BINDING.json')['config'], resume_update=v.get('resume_update',3), stop_after_update=24,
         runtime_receipt_suffix=v.get('runtime_receipt_suffix','_REPLAY0735'), workers=12,
         imitation_epochs=v.get('imitation_epochs',5),
+        imitation_trust=v.get('imitation_trust'),
         quota_aware_admission=False, parallel_group_queries=False,
         bounded_fanout=False, r_concurrent_lag1_quota=True,
         demand_phase_end_s=v['demand_phase_end_s'], precharged_unattempted=[],

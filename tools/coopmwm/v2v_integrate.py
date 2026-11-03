@@ -76,4 +76,9 @@ class WidenedPolicy:
         return policy_call(self.model, context)
 
     def __getattr__(self, name):
+        # copy/deepcopy probes dunders on a not-yet-populated instance: without
+        # this guard the self.model lookup recurses forever (no implicit dunder
+        # delegation existed before - Python binds dunders on the type).
+        if name.startswith('__') or 'model' not in self.__dict__:
+            raise AttributeError(name)
         return getattr(self.model, name)
