@@ -33,7 +33,13 @@
 
 ## Status
 **PAUSED by MAIN17:35 (2026-11-01), pending explicit `S-WMTEACH RESUME`.**
-Latest fresh-session read-only recheck1793629183 (checkpoint commit `ec82a464`)
+Latest Nov3 fresh-session read-only recheck1793699002 (checkpoint commit `ee1ceae7`)
+confirms all10503 cached files unchanged from1793629183 by root/path/size/SHA256.
+All three owned jobs are inactive, both scale STOPs remain, local collector is idle,
+and live root is absent. Shared registration still contains no MAIN resume authority.
+Receipts: `wmteach/OWNER1735_CHECKPOINT_1793699002.json` and `_SUMMARY.json`;
+verification details: `wmteach/PAUSE_RECHECK_1793699002.md`. New inference/SUMO0.
+Previous fresh-session read-only recheck1793629183 (checkpoint commit `ec82a464`)
 confirms all10503 cached files unchanged from1793556739 by root/path/size/SHA256.
 All three owned jobs are inactive, both scale STOPs remain, local collector is idle,
 and live root is absent. Shared registration still contains no MAIN resume authority.
