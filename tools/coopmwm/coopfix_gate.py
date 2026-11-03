@@ -488,7 +488,8 @@ def bank_inputs(bank_root, arm, training_seed, beta=1., max_decisions=None, v2v=
     return replay_bank.bank_pairs(Path(bank_root), arm, int(training_seed), beta=float(beta),
                                   max_decisions=max_decisions, v2v=v2v, v2v_cfg=v2v_cfg,
                                   bank_filter=bank_filter, pair_flags=pair_flags,
-                                  intent=bool(intent), intent_horizon=int(intent_horizon))
+                                  **({'intent': bool(intent), 'intent_horizon': int(intent_horizon)}
+                                     if intent else {}))
 
 
 def pairs_file(path):
