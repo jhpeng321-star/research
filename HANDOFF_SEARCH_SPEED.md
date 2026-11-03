@@ -43,10 +43,16 @@ Activation of any speed-up is owner-approved only once it passes its registered 
   collector to log full-pool receipts on BOTH sides of a pair.
 - **Previous session's final commits (before freeze) already contained a provisional n=27/n=26 read; the numbers
   above supersede them.**
-- **Watcher** (`tools/coopmwm/learned_search_watch.py`, PID 35992, log `E:/agent-work/_plan_proposer_cache/watch.log`):
-  - It does an hourly and per-B-update refresh of the proposer checks. It writes `docs/paper_results/LEARNED_SEARCH_ACTIVATION_READY.json` on a PASS, and exits at 2026-11-03 10:00 +08.
-  - It runs pre-noise-ceiling code. Restart it for the new report fields and the B-REPLAY bank discovery (`BANK_STATUS.json`).
-  - It is my own process: stop it by PID only.
+- **Watcher** (`tools/coopmwm/learned_search_watch.py`): **STOPPED by MAIN on 2026-11-03 (PID 35992 gone);
+  the branch is owned by the resumed session.** Log was `E:/agent-work/_plan_proposer_cache/watch.log`.
+  - It did an hourly and per-B-update refresh of the proposer checks and wrote
+    `docs/paper_results/LEARNED_SEARCH_ACTIVATION_READY.json` on a PASS. It ran pre-noise-ceiling code; restart it
+    for the new report fields and the B-REPLAY bank discovery (`BANK_STATUS.json`).
+- **Resumed-session verification (2026-11-03, post-d1e42afe):** all v2 tracks re-checked against the committed
+  artifacts with no new remote data (`collect` no-op, still 103 raw / 6 usable full-pool warm-start pairs < 20 gate,
+  exploratory numbers reproduce exactly; `ls/budget_held_v2.json` and `ls/triage.json` match the report and
+  `SEARCH_SPEED_RESULT.json` to 3 decimals). Noise-calibration PIDs (5268) finished; `ls/calib.json` has all three
+  alphas. No budget/v2 processes running. K2 + it2 remain the PASS set; activation still owner-approved only (MAIN).
 
 ## Data and cache
 - Local read-only copies live in `E:/agent-work/_plan_proposer_cache/`:
