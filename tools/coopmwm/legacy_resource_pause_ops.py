@@ -100,5 +100,55 @@ finally:
     print(json.dumps(value))
 
 
+def scope():
+    """MAIN22:03: keep old owners stopped, unblock tooling on the shared root."""
+    path=ops.EVIDENCE/'LEGACY_ONLY_HOLD_REGISTRATION_2203.json'
+    if not path.exists():
+        write(path,dict(authority='MAIN2026-11-03 22:03',new_sim_s=0,
+            line='\nS-COOPMWM MAIN22:03 scoped resource HOLD: after all four exact '
+            'legacy arm/grader owners acknowledge and exit, retain their checkpoint '
+            'hold but retire ONLY our SHA-matched RESOURCE_MAIN2158B pause marker '
+            'into memory_recovery1/ metadata. This preserves the pause bytes and all '
+            'health/safety guards while allowing required gate/solo/search tooling '
+            'to call assert_running on the shared warm1 root. No old runner restart.\n'))
+    reg=read(path);h=sha(path);registry=checked(REGISTRY)
+    if h not in registry.read_text(encoding='utf-8'):
+        with registry.open('a',encoding='utf-8') as f:f.write(reg['line']+'amendmentSHA'+h+'\n')
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,sys,time,hashlib,shutil
+r=Path({ROOT!r});s=Path({SOURCE!r});sys.path.insert(0,str(s/'pytools'))
+from tools.coopmwm import replay_start as rs
+from tools.coopmwm.storage import read,write
+proof=read(r/'LEGACY_RESOURCE_PAUSE_2158B.json')
+for d in proof['owners']:assert not rs.alive(d),'legacy owner still alive'
+p=r/'PAUSE_RESOURCE_MAIN2158B.json';dest=r/'memory_recovery1/RESOURCE_MAIN2158B_RETIRED_2203.json'
+out=r/'LEGACY_ONLY_RESOURCE_HOLD_2203.json'
+if out.exists():
+ assert not p.exists() and dest.exists()
+ print(out.read_text());raise SystemExit
+if p.exists():
+ marker=read(p);assert marker['evidence']==proof and marker['rule']=='RESOURCE_MAIN2158B'
+else:
+ assert dest.exists();marker=read(dest);assert marker['evidence']==proof
+raw=(p if p.exists() else dest).read_bytes();digest=hashlib.sha256(raw).hexdigest()
+reg=json.loads({json.dumps(reg)!r});authority=r/'AUTHORITY.md'
+if {h!r} not in authority.read_text():
+ with authority.open('a') as f:f.write(reg['line']+'amendmentSHA'+{h!r}+'\\n')
+v=dict(unix=time.time(),authority='MAIN22:03',amendment_sha256={h!r},
+ owners_exited=proof['owners'],checkpoints=proof['checkpoints'],updates=proof['updates'],
+ legacy_training_held=True,shared_root_health_pause_retired=str(dest),
+ original_pause_sha256=digest,no_old_restart=True,new_sim_s=0,disk_free_bytes=shutil.disk_usage(r).free)
+intent=r/'memory_recovery1/RESOURCE_SCOPE_INTENT_2203.json'
+if not intent.exists():write(intent,v)
+if p.exists():assert not dest.exists();p.rename(dest)
+assert hashlib.sha256(dest.read_bytes()).hexdigest()==digest
+write(out,v);print(json.dumps(v))''',timeout=35))
+    target=ops.EVIDENCE/'LEGACY_ONLY_RESOURCE_HOLD_2203.json'
+    if not target.exists():write(target,value)
+    print(json.dumps(value))
+
+
 if __name__=='__main__':
-    pause()
+    import argparse
+    parser=argparse.ArgumentParser();parser.add_argument('action',nargs='?',default='pause',choices=('pause','scope'))
+    globals()[parser.parse_args().action]()
