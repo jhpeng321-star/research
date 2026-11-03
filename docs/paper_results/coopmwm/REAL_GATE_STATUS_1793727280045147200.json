@@ -1,0 +1,3241 @@
+{
+  "branches": {
+    "counts": {
+      "failed": 0,
+      "graded": 29,
+      "stopped": 0
+    },
+    "failures": [],
+    "total": 29
+  },
+  "collect": {
+    "dispatch": null,
+    "failed": null,
+    "result": null
+  },
+  "control": "/home/ubuntu/coopmwm20261104_gate0040",
+  "execute": {
+    "dispatch": {
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "control": "/home/ubuntu/coopmwm20261104_gate0040",
+      "new_sim_s": 0,
+      "pid": 1152004,
+      "stage": "execute",
+      "start_ticks": "74125444",
+      "unix": 1793726976.7128172
+    },
+    "failed": null,
+    "result": null
+  },
+  "plan": {
+    "dispatch": {
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "control": "/home/ubuntu/coopmwm20261104_gate0040",
+      "new_sim_s": 0,
+      "pid": 1123876,
+      "stage": "plan",
+      "start_ticks": "74055245",
+      "unix": 1793726274.7304237
+    },
+    "failed": null,
+    "result": {
+      "new_sim_s": 0,
+      "result": {
+        "arm": "B",
+        "caps": {
+          "isolated_state_cap_sim_s": 9600,
+          "max_group": 6,
+          "overages": [
+            "state 986066: certified-seed CRN set (seeds [1, 2]) 12240 sim-s exceeds the registered isolated cap 9600 sim-s by 2640 sim-s (isolated n+2 sets {'seed1': 5760, 'seed2': 5760}); not trimmed"
+          ],
+          "source": "isolated diagnostic registration MAIN2026-11-03 12:26",
+          "window_end_s": 1200
+        },
+        "certification": {
+          "rule": "per_seed_v1: a state is certified on each seed whose example is admitted AND cooperative within that seed",
+          "statuses": {
+            "sv_lscollect1_B3_986002_t0380_50fb4021": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": -26.58170962798614,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": -41.91657133858498
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 135.08334141419238,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 composite safety check failed (extended_window_seed1); s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986002,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986003_t0390_b18c6000": {
+              "admitted": true,
+              "certified_seeds": [
+                1
+              ],
+              "cooperative": true,
+              "cooperative_status": "seed1_only",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "cooperative",
+                  "lower95_one_sided_veh_s": 1385.486272328087,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": 84.67698723739667
+                },
+                {
+                  "admitted": true,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": 2869.695934014287,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": -276.65820608734555
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 lower95 > 0, safety pass, later-harm NOT MEASURED on seed 2",
+              "seed": 986003,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=not_cooperative"
+            },
+            "sv_lscollect1_B3_986007_t0360_98f90704": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": -108.40549874329422,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": -208.28021237963873
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -4.6826135057085585,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -108.4 <= 0; s2: seed-2 one-sided 95% lower bound -4.683 <= 0",
+              "seed": 986007,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986011_t0350_db7319bf": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": 37.689213819756155,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": -48.482151888701694
+                },
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 31.958882556664822,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 composite safety check failed (extended_window_seed1); s2: seed-2 lower95 > 0, safety pass, later-harm NOT MEASURED on seed 2",
+              "seed": 986011,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986012_t0310_31c75eec": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 53.6415518356077,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -2305.0954951258004,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986012,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986016_t0300_cbe404c7": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": 211.76886452703954,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": -85.72490620398617
+                },
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 143.48323472484506,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 lower95 > 0, safety pass, later-harm NOT MEASURED on seed 2",
+              "seed": 986016,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986017_t0330_685afa3c": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.3242842925940977,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 0.0,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 one-sided 95% lower bound 0 <= 0",
+              "seed": 986017,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986019_t0300_a2e287a8": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": 0.00022404139144782675,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": -0.033318077613836296
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.052991262505014444,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 one-sided 95% lower bound -0.05299 <= 0",
+              "seed": 986019,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986024_t0300_79aa5d7b": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.0039168673344647685,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -242.47586616891513,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986024,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986025_t0300_66da22c3": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 0.4635560854877014,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 3.002911579832636,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 lower95 > 0, safety pass, later-harm NOT MEASURED on seed 2",
+              "seed": 986025,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986028_t0300_024ea4e7": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": -4.958388517479753e-05,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": 0.0
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": -0.40766854114314127,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": 0.0
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -4.958e-05 <= 0; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986028,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=not_cooperative"
+            },
+            "sv_lscollect1_B3_986029_t0390_c286653c": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": -46.319661084849486,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": -0.5688687967055103
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -18.6020858174003,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -46.32 <= 0; s2: seed-2 one-sided 95% lower bound -18.6 <= 0",
+              "seed": 986029,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986031_t0310_91d1e160": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 1133.618778379881,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -779.3046501957576,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986031,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986040_t0300_a78c1bf6": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 4.183096499588146e-06,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.010009672090585297,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 one-sided 95% lower bound -0.01001 <= 0",
+              "seed": 986040,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986042_t0600_731c2587": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": 1103.5387110603365,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": 0.0
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": -5.593653341505705,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": 0.0
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986042,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=not_cooperative"
+            },
+            "sv_lscollect1_B3_986043_t0600_d783b7b9": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 742.5171363240454,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -1327.7599883412283,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 composite safety check failed (extended_window_seed1); s2: seed-2 one-sided 95% lower bound -1328 <= 0",
+              "seed": 986043,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986044_t0300_4a5cc0e5": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -170.0513014373232,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -2.433238465602699,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -170.1 <= 0; s2: seed-2 one-sided 95% lower bound -2.433 <= 0",
+              "seed": 986044,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986044_t0600_2a365c5d": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.023482495936877967,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.05055482196621597,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -0.02348 <= 0; s2: seed-2 one-sided 95% lower bound -0.05055 <= 0",
+              "seed": 986044,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986045_t0300_0db818a0": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 635.4485013662373,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -1908.2106737306476,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986045,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986045_t0600_294cff9a": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.7710613692061088,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -81.95664608535625,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 composite safety check failed (extended_window_seed1); s2: seed-2 one-sided 95% lower bound -81.96 <= 0",
+              "seed": 986045,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986046_t0300_6cdd77bd": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": -40.4300093300626,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": -0.015849013275237668
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": 63.81426353170029,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": -0.0005082773203866964
+                }
+              ],
+              "reason": "s1: seed-1 composite safety check failed (extended_window_seed1); s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986046,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=not_cooperative"
+            },
+            "sv_lscollect1_B3_986046_t0600_a9646987": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 109.82979941839368,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -3832.5787260333027,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986046,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986047_t0600_1f1376af": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -1.2745447384077124e-05,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.00013025153120906907,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -1.275e-05 <= 0; s2: seed-2 one-sided 95% lower bound -0.0001303 <= 0",
+              "seed": 986047,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986048_t0300_8515db74": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": 108.71244346732456,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": -779.7075001400042
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": -142.5916847639432,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": 0.0
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 one-sided 95% lower bound -142.6 <= 0",
+              "seed": 986048,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=not_cooperative"
+            },
+            "sv_lscollect1_B3_986048_t0600_d6de35f8": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": 1.695895698503591e-05,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": 0.0
+                },
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 6.066245987312868e-06,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 lower95 > 0, safety pass, later-harm NOT MEASURED on seed 2",
+              "seed": 986048,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986049_t0300_679d1baf": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.001881995241342338,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.0005278643886640566,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -0.001882 <= 0; s2: seed-2 one-sided 95% lower bound -0.0005279 <= 0",
+              "seed": 986049,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986049_t0600_4184f65c": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 955.3537911005199,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -559.4916349080122,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986049,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986051_t0300_6d166153": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -1.7261786467770435e-05,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 0.0,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -1.726e-05 <= 0; s2: seed-2 one-sided 95% lower bound 0 <= 0",
+              "seed": 986051,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986051_t0600_3ad3f182": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 451.2975574766293,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.7101803218261921,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 one-sided 95% lower bound -0.7102 <= 0",
+              "seed": 986051,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986052_t0300_5ab45ace": {
+              "admitted": true,
+              "certified_seeds": [
+                1
+              ],
+              "cooperative": true,
+              "cooperative_status": "seed1_only",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "cooperative",
+                  "lower95_one_sided_veh_s": 0.001921863289899761,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": 5.7618149867266766e-05
+                },
+                {
+                  "admitted": true,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": 0.0004487288469363193,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": -4.403180319627608e-05
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 lower95 > 0, safety pass, later-harm NOT MEASURED on seed 2",
+              "seed": 986052,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=not_cooperative"
+            },
+            "sv_lscollect1_B3_986052_t0600_dd577482": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.2632276688473212,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -1551.6049519989822,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -0.2632 <= 0; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986052,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986053_t0600_f7db26fb": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 3516.3640371922975,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -854.9681818201989,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 one-sided 95% lower bound -855 <= 0",
+              "seed": 986053,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986054_t0300_0398fc4f": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.010556876814611371,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.019456064053642308,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -0.01056 <= 0; s2: seed-2 one-sided 95% lower bound -0.01946 <= 0",
+              "seed": 986054,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986055_t0300_4c5899db": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 131.09497486596894,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -620.5456916369046,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986055,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986056_t0300_a951dc7d": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": -7.63484288768268e-07,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": -6.661872657787171e-06
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -1.8715402291036297e-06,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -7.635e-07 <= 0; s2: seed-2 one-sided 95% lower bound -1.872e-06 <= 0",
+              "seed": 986056,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986057_t0300_2af9da01": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": -0.011273703004243884,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": -0.00040221978128229807
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -0.0028540844082726832,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -0.01127 <= 0; s2: seed-2 one-sided 95% lower bound -0.002854 <= 0",
+              "seed": 986057,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986063_t0300_a1b156ed": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": 104.19047295135164,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": -21.47566663300747
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -28.54318553897273,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 composite safety check failed (extended_window_seed1); s2: seed-2 one-sided 95% lower bound -28.54 <= 0",
+              "seed": 986063,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986066_t0300_d13b0e6c": {
+              "admitted": true,
+              "certified_seeds": [
+                1,
+                2
+              ],
+              "cooperative": true,
+              "cooperative_status": "replicated",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "cooperative",
+                  "lower95_one_sided_veh_s": 3831.0933820361083,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": 282.946243233605
+                },
+                {
+                  "admitted": true,
+                  "cooperative_status": "cooperative",
+                  "lower95_one_sided_veh_s": 550.7412709376013,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": 203.85774266363123
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 lower95 > 0, safety pass, later-harm NOT MEASURED on seed 2",
+              "seed": 986066,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=cooperative"
+            },
+            "sv_lscollect1_B3_986068_t0300_549fe91a": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -9.296432015162281e-05,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 0.0,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 one-sided 95% lower bound 0 <= 0",
+              "seed": 986068,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986068_t0600_a7ec9bd2": {
+              "admitted": true,
+              "certified_seeds": [
+                1
+              ],
+              "cooperative": true,
+              "cooperative_status": "seed1_only",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "cooperative",
+                  "lower95_one_sided_veh_s": 2081.3772890206046,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": 18.57565429413007
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": 3144.8539461566525,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": -1.3214772712090053
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986068,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=not_cooperative"
+            },
+            "sv_lscollect1_B3_986070_t0600_100a90f3": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 945.5446892142041,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -28.73579766376497,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986070,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_lscollect1_B3_986071_t0300_e0895739": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -8.191045708372257e-09,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -4.49127967840468e-05,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -8.191e-09 <= 0; s2: seed-2 one-sided 95% lower bound -4.491e-05 <= 0",
+              "seed": 986071,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u006_B_986040_t0300_82b05bc2": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 209.9319551895945,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 22.466509234860897,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986040,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u006_B_986040_t0300_884b6aab": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 20.21971239178315,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -174.96494814427425,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 composite safety check failed (extended_window_seed1); s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986040,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u006_B_986040_t0310_40b3dfd8": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 1.7627731252879246,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -146.30833940489933,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 one-sided 95% lower bound -146.3 <= 0",
+              "seed": 986040,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u007_B_986036_t0300_6a57be40": {
+              "admitted": true,
+              "certified_seeds": [
+                1
+              ],
+              "cooperative": true,
+              "cooperative_status": "seed1_only",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "cooperative",
+                  "lower95_one_sided_veh_s": 64.1318936030894,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": 106.8912892304697
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": 151.4740740279027,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": -362.57485910254275
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986036,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=not_cooperative"
+            },
+            "sv_replay0735_warm_u007_B_986036_t0300_e5176236": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 20.971819630511302,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -26.19922631178096,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986036,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u008_B_986026_t0300_e8f07481": {
+              "admitted": true,
+              "certified_seeds": [
+                1
+              ],
+              "cooperative": true,
+              "cooperative_status": "seed1_only",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "cooperative",
+                  "lower95_one_sided_veh_s": 248.80337739101103,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": 9.18108043366193
+                },
+                {
+                  "admitted": true,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": 461.4674882960959,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": -33.679553013682565
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 lower95 > 0, safety pass, later-harm NOT MEASURED on seed 2",
+              "seed": 986026,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=not_cooperative"
+            },
+            "sv_replay0735_warm_u009_B_986023_t0310_ec774c93": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 940.8149851410386,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -709.8274472585853,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986023,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u012_B_986040_t0300_3ed9e70e": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 41.00712557649883,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -284.97978465962535,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986040,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u014_B_986038_t0300_409a3178": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -3.8387450798199927,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -209.00269500970893,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 one-sided 95% lower bound -209 <= 0",
+              "seed": 986038,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u015_B_986044_t0490_bde87ef9": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 62.26354671636127,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -85.1939439162259,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986044,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u015_B_986058_t0390_d43a677b": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 1817.9696031782692,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 4.213415208671519,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 lower95 > 0, safety pass, later-harm NOT MEASURED on seed 2",
+              "seed": 986058,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u016_B_986036_t0300_d14c44f8": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": -9.223140948125952,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": -8.285011872824677
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": -59.51252618313206,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": -318.4120254921766
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -9.223 <= 0; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986036,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=not_cooperative"
+            },
+            "sv_replay0735_warm_u017_B_986008_t0320_cc9bff94": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -31.56812935449392,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -47.382557228774694,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -31.57 <= 0; s2: seed-2 one-sided 95% lower bound -47.38 <= 0",
+              "seed": 986008,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u017_B_986020_t0300_f9dbe5c2": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 689.3902266836116,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -1259.1684912440717,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986020,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u017_B_986066_t0360_78ae1334": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -257.19053502708687,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -3114.7898897698647,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 composite safety check failed (extended_window_seed1); s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986066,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u018_B_986047_t0360_4f83130c": {
+              "admitted": true,
+              "certified_seeds": [
+                1
+              ],
+              "cooperative": true,
+              "cooperative_status": "seed1_only",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "cooperative",
+                  "lower95_one_sided_veh_s": 92.33686935879108,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": 113.97933096861208
+                },
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 63.76064003445295,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 lower95 > 0, safety pass, later-harm NOT MEASURED on seed 2",
+              "seed": 986047,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=no_solos"
+            },
+            "sv_replay0735_warm_u018_B_986051_t0360_e0b0241b": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -110.67670664116463,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -681.9729982097,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -110.7 <= 0; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986051,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u018_B_986053_t0360_4ec827d0": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -16.35958980815469,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -32.95032838996853,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 one-sided 95% lower bound -32.95 <= 0",
+              "seed": 986053,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u018_B_986064_t0360_5a0410f3": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 1001.4615531363175,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -654.6341611092898,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986064,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u018_B_986065_t0360_ce71130d": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -176.63156168266758,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -96.85474535099237,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 one-sided 95% lower bound -96.85 <= 0",
+              "seed": 986065,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u018_B_986069_t0360_691f8a89": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -21.11938568327882,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 199.4753419924592,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 later-harm check failed (extended-window advantage <= 0); s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986069,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u018_B_986070_t0360_01c7786f": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 3441.2427381587945,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -108.33387640629812,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 one-sided 95% lower bound -108.3 <= 0",
+              "seed": 986070,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u018_B_986071_t0360_ed18a413": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "not_cooperative",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "not_cooperative",
+                  "lower95_one_sided_veh_s": -775.1942745702754,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": -1211.7766691555596
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -71.33075888269795,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 one-sided 95% lower bound -775.2 <= 0; s2: seed-2 one-sided 95% lower bound -71.33 <= 0",
+              "seed": 986071,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=not_cooperative, s2=no_solos"
+            },
+            "sv_replay0735_warm_u021_B_986066_t0360_66fd88d6": {
+              "admitted": true,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": true,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 143.38914784138473,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -273.43269633040757,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 lower95 > 0, safety pass, later-harm pass; s2: seed-2 composite safety check failed (replication_window_seed2)",
+              "seed": 986066,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            },
+            "sv_replay0735_warm_u021_B_986067_t0360_6ba13223": {
+              "admitted": false,
+              "certified_seeds": [],
+              "cooperative": false,
+              "cooperative_status": "no_solos",
+              "per_seed": [
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": 1051.3358541683233,
+                  "seed_index": 1,
+                  "synergy_lower95_veh_s": null
+                },
+                {
+                  "admitted": false,
+                  "cooperative_status": "no_solos",
+                  "lower95_one_sided_veh_s": -6.8727394830323645,
+                  "seed_index": 2,
+                  "synergy_lower95_veh_s": null
+                }
+              ],
+              "reason": "s1: seed-1 composite safety check failed (extended_window_seed1); s2: seed-2 one-sided 95% lower bound -6.873 <= 0",
+              "seed": 986067,
+              "synergy_reason": "per_seed_v1 within-seed synergy labels: s1=no_solos, s2=no_solos"
+            }
+          }
+        },
+        "commit": "e7f8ae1616ca0f7490bac933729733001cc27272",
+        "gate": "coopfix_exact",
+        "gate_plan_sha256": "0fa251bb4ea801a06effcf8c4431fa2c8a3157898db855e523fc1401a073d979",
+        "identity": {
+          "bank_statistics": "per_seed_v1",
+          "commit": "e7f8ae1616ca0f7490bac933729733001cc27272",
+          "method": "qualified_source_manifest",
+          "runtime_config": {
+            "v2v": true,
+            "v2v_dim": 48,
+            "v2v_intent": true,
+            "v2v_intent_detach_trunk": true,
+            "v2v_intent_horizon": 5,
+            "v2v_intent_loss_weight": 1.0
+          },
+          "runtime_path": "/home/ubuntu/coopmwm20261104_v2v_intent1/V2V_RUNTIME.json",
+          "runtime_sha256": "3e90123ea759170b0da0f4ee7945f9a0da74e5308252da2907abe5335f4168a1",
+          "source_manifest_sha256": "f29c471bd7c4fe9b8bf3a92fb60d88bf6689bd782627568d74132ebf17579c77",
+          "source_root": "/home/ubuntu/coopmwm20261104_gatescope1"
+        },
+        "mandatory_states": [
+          986066
+        ],
+        "new_state_sha256": "772695a762aad96e0f4e4c1e35c4d30de3f2c9b9fca6aac451b3e76ee0684820",
+        "offline": {
+          "checkpoint": "/home/ubuntu/coopmwm20261104_v2v_intent1/B_checkpoint_000.pt",
+          "checkpoint_sha256": "5ea2296470c2af2855f9e292b03eeaa62bafdfec08146712d7347d7ce117d734",
+          "checks": {
+            "cooperative_error_falls": true,
+            "full_pass": true,
+            "imitation_ok": true,
+            "kl_within_limit": true,
+            "partner_intent_weights_moved": true,
+            "pass1_effective": true
+          },
+          "config": {
+            "v2v": true,
+            "v2v_dim": 48,
+            "v2v_intent": true,
+            "v2v_intent_detach_trunk": true,
+            "v2v_intent_horizon": 5,
+            "v2v_intent_loss_weight": 1.0
+          },
+          "cooperative_pairs": {
+            "change_ci95": [
+              -0.029430894828959758,
+              -0.022259036534308354
+            ],
+            "change_mean_mps2": -0.025868182918041393,
+            "clusters": 226,
+            "count": 893,
+            "error_after_mps2": 1.4786467918120654,
+            "error_before_mps2": 1.5045149747301068,
+            "n_non_coop": 2646,
+            "raw": 893,
+            "slice": [
+              2646,
+              3539
+            ],
+            "source": "bank_exposure_slice"
+          },
+          "gate": "coopfix_exact",
+          "imitation": {
+            "action_error_after_mps2": 1.1886417429506366,
+            "action_error_before_mps2": 1.2041138597921293,
+            "backtracks": 6,
+            "epochs": [
+              {
+                "accepted": true,
+                "attempt_status": [
+                  "accepted"
+                ],
+                "attempts": 1,
+                "awr_loss_after": 29.056062698364258,
+                "awr_loss_before": 30.142004013061523,
+                "epoch": 1,
+                "intent_grad_shares": [
+                  0.02675623901344189,
+                  0.036758789820811676,
+                  0.023537198006232263,
+                  0.03263182644832775,
+                  0.05115030817104276,
+                  0.029417268057006413,
+                  0.06258271791167087,
+                  0.03284712282014477,
+                  0.03092717381445757,
+                  0.027718918934262704,
+                  0.03129313079649604,
+                  0.0295900637325046,
+                  0.03409270815656174
+                ],
+                "kl": 0.04391975579727217,
+                "l1_action_error_after": 1.1886417429506366,
+                "l1_action_error_before": 1.2041138597921293,
+                "rejected_optimizer_steps": 0,
+                "smallest_step_scale_tried": 1.0,
+                "step_scale": 1.0
+              },
+              {
+                "accepted": false,
+                "attempt_status": [
+                  "kl_exceeded",
+                  "kl_exceeded",
+                  "kl_exceeded",
+                  "kl_exceeded",
+                  "kl_exceeded",
+                  "kl_exceeded",
+                  "kl_exceeded"
+                ],
+                "attempts": 7,
+                "awr_loss_after": 29.056062698364258,
+                "awr_loss_before": 29.056062698364258,
+                "epoch": 2,
+                "kl": 0.04605472748397838,
+                "l1_action_error_after": 1.1886417429506366,
+                "l1_action_error_before": 1.1886417429506366,
+                "rejected_optimizer_steps": 91,
+                "smallest_step_scale_tried": 0.015625,
+                "step_scale": null
+              }
+            ],
+            "failure_reason": null,
+            "imitation_error": null,
+            "imitation_failed": false,
+            "pairs_filtered_unexecuted": 0,
+            "pairs_total": 1660,
+            "pass1_effective": true,
+            "pass1_loss_drop": 1.0859413146972656,
+            "pass1_step_scale": 1.0,
+            "rejected_optimizer_steps": 91
+          },
+          "imitation_runner": "bank_imitation.run_separate",
+          "intent_pairs": {
+            "change_ci95": [
+              -0.01826920180793823,
+              -0.014099595455430594
+            ],
+            "change_mean_mps2": -0.016201709235578954,
+            "clusters": 1135,
+            "count": 2959,
+            "error_after_mps2": 1.2998444525360864,
+            "error_before_mps2": 1.3160461617716652
+          },
+          "kl": 0.04391975579727217,
+          "kl_limit": 0.045,
+          "kl_reference": "frozen pre-imitation (post-PPO) policy",
+          "partner_intent_weights": {
+            "extra_dim": 48,
+            "heads": {
+              "actor": {
+                "intent": {
+                  "columns": 24,
+                  "l2": 0.04883449524641037,
+                  "max_abs": 0.003408144460991025,
+                  "nonzero": true
+                },
+                "v2v": {
+                  "columns": 24,
+                  "l2": 0.09881649166345596,
+                  "max_abs": 0.003426904324442148,
+                  "nonzero": true
+                }
+              },
+              "critic": {
+                "intent": {
+                  "columns": 24,
+                  "l2": 0.0,
+                  "max_abs": 0.0,
+                  "nonzero": false
+                },
+                "v2v": {
+                  "columns": 24,
+                  "l2": 0.0,
+                  "max_abs": 0.0,
+                  "nonzero": false
+                }
+              }
+            },
+            "intent_columns_moved": true,
+            "intent_head": {
+              "bias_l2": 0.008457770571112633,
+              "weight_l2": 0.06613951921463013
+            },
+            "layout": {
+              "horizon": 5,
+              "intent": [
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47
+              ],
+              "intent_valid": [
+                11,
+                23,
+                35,
+                47
+              ],
+              "k": 4,
+              "kind": "v2v_intent",
+              "present": 5,
+              "stride": 12,
+              "width": 48
+            },
+            "moved": true,
+            "required": "intent columns",
+            "v2v_columns_moved": true
+          },
+          "partner_intents_refreshed": {
+            "pairs_refreshed": 3539,
+            "partner_intent_coverage": 0.6585840521775721,
+            "partner_slots": 76048,
+            "partner_slots_no_prev_context": 25964,
+            "partner_slots_valid": 50084,
+            "rule": "current intent head (no grad) on the partner own t-1 bank context; missing t-1 context or non-member partner -> zeros, intent_valid 0"
+          },
+          "passes": {
+            "completed": 1,
+            "optimizer_steps": 13,
+            "pairs_seen": 1660,
+            "requested": 5,
+            "stop_reason": "pass 2 not accepted at any step scale >= 0.015625 of base (statuses ['kl_exceeded', 'kl_exceeded', 'kl_exceeded', 'kl_exceeded', 'kl_exceeded', 'kl_exceeded', 'kl_exceeded']); additional passes stopped"
+          },
+          "rule": "full-bank transactional passes; separate imitation KL; AWR weights unchanged",
+          "update": 0,
+          "v2v": true,
+          "v2v_dim": 48
+        },
+        "old_state_sha256": "7f0b7571eef5e5daef54d42dc4053ebf1b4a7ea8ae7a48c5a50f410098f6c625",
+        "phase": "bank_verification_ext",
+        "root": "/home/ubuntu/coopmwm20261104_v2v_intent1",
+        "rule": "per CERTIFIED seed only, on the verified example's own CRN (seed 2 = replay_bank.replicate(snapshot, verification_id)): group-only NEW, solo NEW per member, background-only NEW, u3 reference; synergy = best-solo branch - group branch on that seed's tapes; per_seed_v1 single-seed paired bootstrap (bank_statistics._stats); PASS iff offline checks pass AND state 986066 is complete on every planned seed AND its one-sided 95% lower bound > 0 on at least one certified seed (both reported); no cross-seed transfer requirement",
+        "runtime_sha256": "3e90123ea759170b0da0f4ee7945f9a0da74e5308252da2907abe5335f4168a1",
+        "source_manifest_sha256": "f29c471bd7c4fe9b8bf3a92fb60d88bf6689bd782627568d74132ebf17579c77",
+        "sources": {
+          "B": [
+            "/home/ubuntu/coopmwm20261102_lscollect1"
+          ],
+          "R": []
+        },
+        "states": [
+          {
+            "certification": {
+              "certified_seeds": [
+                1
+              ],
+              "cooperative_status": "seed1_only",
+              "replicated": false,
+              "rule": "per_seed_v1",
+              "statistical_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=not_cooperative",
+              "synergy_lower95_veh_s_per_seed": {
+                "1": 84.67698723739667,
+                "2": -276.65820608734555
+              }
+            },
+            "cost": {
+              "cap_sim_s": 9600,
+              "isolated_n_plus_2_sim_s": {
+                "seed1": 3240
+              },
+              "overage_sim_s": 0,
+              "total_sim_s": 3240
+            },
+            "grade_veh_s": 2909.829893602271,
+            "group": [
+              "ramp.40",
+              "mainline.153"
+            ],
+            "groups": {
+              "1": [
+                "ramp.40",
+                "mainline.153"
+              ]
+            },
+            "jobs": [
+              {
+                "branch": "all",
+                "generator_state_sha256": "407d02289e2097d91d8df0404a0766315a1d80770c25bd4219f996163f68351f",
+                "seed": 1,
+                "sim_s": 810,
+                "snapshot_sha256": "033ad3800741614e68a98761ec0b3c262992b8621313d8bfb4f7bf4f3d08be11",
+                "spec_sha256": "3ed85a1d0b7aeb76a389588ce70427a4d1ddb7b8862c6443aabb59376b153af6",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986003_t0390_b18c6000_all"
+              },
+              {
+                "branch": "solo0",
+                "generator_state_sha256": "407d02289e2097d91d8df0404a0766315a1d80770c25bd4219f996163f68351f",
+                "seed": 1,
+                "sim_s": 810,
+                "snapshot_sha256": "f497cfad3227bc3dfea253364825960ed4252acd56bd3532552d1575c3a426d0",
+                "spec_sha256": "b6273b78523d4ce0a01823226eec2b3a1eb590263182ea0ea113791b64f549c7",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986003_t0390_b18c6000_solo0"
+              },
+              {
+                "branch": "solo1",
+                "generator_state_sha256": "407d02289e2097d91d8df0404a0766315a1d80770c25bd4219f996163f68351f",
+                "seed": 1,
+                "sim_s": 810,
+                "snapshot_sha256": "b625edc70f5eb4f88216718cc77f2317966fa50f759d2ed3fbbf8608b53ce6a4",
+                "spec_sha256": "d51b74e89f5f3d93a48452ab4cd4ed1542293422573b4d4bccd466c7f91977d5",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986003_t0390_b18c6000_solo1"
+              },
+              {
+                "branch": "background",
+                "generator_state_sha256": "407d02289e2097d91d8df0404a0766315a1d80770c25bd4219f996163f68351f",
+                "seed": 1,
+                "sim_s": 810,
+                "snapshot_sha256": "ea0081303f15fa1de28ec0bf0fa825dd001022df724a097808c90e1eb1b211af",
+                "spec_sha256": "25eb370b23f1198acb66c102e38683ebd2281c2a3207088ae688c19fee3dc2c7",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986003_t0390_b18c6000_background"
+              }
+            ],
+            "plan_cooperation_gain_veh_s": 894.8785011453474,
+            "plan_ids": {
+              "1": "i0s12-M51408653ea3e17c1"
+            },
+            "quotes": {
+              "seed1": {
+                "branch_ids": [
+                  "psi_u000_B_sv_lscollect1_B3_986003_t0390_b18c6000_all",
+                  "psi_u000_B_sv_lscollect1_B3_986003_t0390_b18c6000_solo0",
+                  "psi_u000_B_sv_lscollect1_B3_986003_t0390_b18c6000_solo1",
+                  "psi_u000_B_sv_lscollect1_B3_986003_t0390_b18c6000_background"
+                ],
+                "phase": "bank_verification_ext",
+                "sim_s": 3240,
+                "verification_id": "sv_lscollect1_B3_986003_t0390_b18c6000"
+              }
+            },
+            "reference_adopted": {
+              "J_veh_s": 12249.00911984286,
+              "branch": {
+                "J_veh_s": 12249.00911984286,
+                "actual_sim_s": 810.0,
+                "audit": {
+                  "candidate": null,
+                  "crn_verified_t0": true,
+                  "live_steps": 420,
+                  "noise_mode_used": "crn",
+                  "replayed_prefix_steps": 90
+                },
+                "branch": "policy",
+                "branch_sha256": "7da550bd15759ede2f6bde11ca952ef4e5131f5bdd32e0ff33626b292cf925cd",
+                "continuation_prefix_sha256": {
+                  "390": "588673320c9004c74c85d1401d4a0f4f40d38ab34ca300caea89f6bf76222812",
+                  "391": "f0862a1f93244949f4b5ec05ac8ff5c53061418c9d33ed0bdac085d15241b105",
+                  "392": "ac8a9ee9988242b72a0657d4ea147f81146cd65ff8f8c12e125eb0a02ac68b14",
+                  "393": "31ea2f9685e65d9e5125efb8293f0ea240363a2702e471daf741570983b0849c",
+                  "394": "7555e719eecd48fbf180431dceab66105bad181d2733060910274ab096d126fb",
+                  "395": "276eaff9e0b28b172c97d4da14a7a3d16d5932ed7c7325860078a7eb7747df09",
+                  "396": "3e29bb3f071550c791b8770e76ff38b44dc0bdd744485e0b9500b80c9270df74",
+                  "397": "408f83fe8b1563bd801f3703ab7dcb6128d104a9515c2d6a9716aebd5da25d31",
+                  "398": "85c94bcbe867cb192a0f379b656012b6bedaf67162305be3b0cfdf38a1d4c2e4",
+                  "399": "bc8a358bb44dd9bb2b089dc83b530032ad14d2c0213b0345d52a9c34b3a0d3c1",
+                  "400": "1f5f35ce95b2375418446f78a0d0fea0475cf2ff83d37e5a14c5473877e912c6"
+                },
+                "index": 0,
+                "result_sha256": "53cf843bccdba5b9e606f1ebe4ad289848da045aa66a81dbdb6f811751e992c0",
+                "status": "graded",
+                "window": {
+                  "collisions": 0.0,
+                  "hard_brake": 36.5,
+                  "road_delay_vs": 12012.37733684285,
+                  "source_wait_vs": 236.63178300000015,
+                  "team_delay_vs": 12249.00911984286,
+                  "teleports": 0.0,
+                  "ttc_below_3_vs": 371.0
+                }
+              },
+              "branches_dir": "/home/ubuntu/coopmwm20261102_lscollect1/label_attempts/SUMOENV1/branches",
+              "rule": "decision snapshot policy is u3: first-seed receipt policy branch adopted",
+              "seed": 1,
+              "verification_id": "sv_lscollect1_B3_986003_t0390_b18c6000"
+            },
+            "seed": 986003,
+            "seeds": [
+              1
+            ],
+            "verification_id": "sv_lscollect1_B3_986003_t0390_b18c6000",
+            "window": {
+              "end_s": 810,
+              "metric": "team_delay_vs",
+              "start_s": 390,
+              "tail_s": 120,
+              "truncated": false
+            }
+          },
+          {
+            "certification": {
+              "certified_seeds": [
+                1
+              ],
+              "cooperative_status": "seed1_only",
+              "replicated": false,
+              "rule": "per_seed_v1",
+              "statistical_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=not_cooperative",
+              "synergy_lower95_veh_s_per_seed": {
+                "1": 9.18108043366193,
+                "2": -33.679553013682565
+              }
+            },
+            "cost": {
+              "cap_sim_s": 9600,
+              "isolated_n_plus_2_sim_s": {
+                "seed1": 2250
+              },
+              "overage_sim_s": 0,
+              "total_sim_s": 2700
+            },
+            "grade_veh_s": 626.5987840405014,
+            "group": [
+              "ramp.24",
+              "mainline.108",
+              "mainline.111"
+            ],
+            "groups": {
+              "1": [
+                "ramp.24",
+                "mainline.108",
+                "mainline.111"
+              ]
+            },
+            "jobs": [
+              {
+                "branch": "all",
+                "generator_state_sha256": "0b0bd1444fc745554f4f270739fc9b0fbef4f0a47b43681387f8dfe801203616",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "de60bc11732f3a3b686e896634e0518cb1b58ea68e3ffccd5dc895c04ab8b586",
+                "spec_sha256": "b7d64451d0416ab264ac8d4ea057081d123d898cd203434152c557d96ab76386",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u008_B_986026_t0300_e8f07481_all"
+              },
+              {
+                "branch": "solo0",
+                "generator_state_sha256": "0b0bd1444fc745554f4f270739fc9b0fbef4f0a47b43681387f8dfe801203616",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "da09bb63bb6cfefa112722a855bdae0629ce14844bcda7483cd17af731b3fe08",
+                "spec_sha256": "30ea19d483688514fed953aba4bf5b2ddfc18eab9aa47945e1fb20c846ccae8a",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u008_B_986026_t0300_e8f07481_solo0"
+              },
+              {
+                "branch": "solo1",
+                "generator_state_sha256": "0b0bd1444fc745554f4f270739fc9b0fbef4f0a47b43681387f8dfe801203616",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "7b99ac80ff21a9ae9237a6398caaffc20a5dd65c57ced71ce7c2ac0bdc71bffe",
+                "spec_sha256": "fa2026ad250484fe5b4083b6e96fc6cd1f09214881d3c66fda0584471323918f",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u008_B_986026_t0300_e8f07481_solo1"
+              },
+              {
+                "branch": "solo2",
+                "generator_state_sha256": "0b0bd1444fc745554f4f270739fc9b0fbef4f0a47b43681387f8dfe801203616",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "695b08b25b82de8c4be95f8cd8d6dc92aa5a091f10ae1be9fcf5c36bbdadb111",
+                "spec_sha256": "caea15f2a68fa62e73a7127d44ecb276caef5b3411cad3ff7a4c9d78e67d7717",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u008_B_986026_t0300_e8f07481_solo2"
+              },
+              {
+                "branch": "background",
+                "generator_state_sha256": "0b0bd1444fc745554f4f270739fc9b0fbef4f0a47b43681387f8dfe801203616",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "e8e1ccbc0bd0cbc8a51b7e34f9322bf1780b39e76137cfe5fb84a57c2047d47d",
+                "spec_sha256": "d461abbeb7f327bcaa57322b3a2b452fdde57537537e3facf8becb3a968dc926",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u008_B_986026_t0300_e8f07481_background"
+              },
+              {
+                "branch": "reference",
+                "generator_state_sha256": "0b0bd1444fc745554f4f270739fc9b0fbef4f0a47b43681387f8dfe801203616",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "c671a55be9323e3e7b8758b0e6af71877702c43b491e9b1c85c0c5056f16c9ef",
+                "spec_sha256": "4e30db692a0e4aa221b4f4e6bb62b90ea33a3153a6e535a72a4d17e43d742f15",
+                "verification_id": "ps_u000_B_sv_replay0735_warm_u008_B_986026_t0300_e8f07481_all_u3_reference"
+              }
+            ],
+            "plan_cooperation_gain_veh_s": 40.10126354235399,
+            "plan_ids": {
+              "1": "i1n1s15-Mf04b6026bd7ff451"
+            },
+            "quotes": {
+              "seed1": {
+                "branch_ids": [
+                  "psi_u000_B_sv_replay0735_warm_u008_B_986026_t0300_e8f07481_all",
+                  "psi_u000_B_sv_replay0735_warm_u008_B_986026_t0300_e8f07481_solo0",
+                  "psi_u000_B_sv_replay0735_warm_u008_B_986026_t0300_e8f07481_solo1",
+                  "psi_u000_B_sv_replay0735_warm_u008_B_986026_t0300_e8f07481_solo2",
+                  "psi_u000_B_sv_replay0735_warm_u008_B_986026_t0300_e8f07481_background",
+                  "ps_u000_B_sv_replay0735_warm_u008_B_986026_t0300_e8f07481_all_u3_reference"
+                ],
+                "phase": "bank_verification_ext",
+                "sim_s": 2700,
+                "verification_id": "sv_replay0735_warm_u008_B_986026_t0300_e8f07481"
+              }
+            },
+            "reference_adopted": null,
+            "seed": 986026,
+            "seeds": [
+              1
+            ],
+            "verification_id": "sv_replay0735_warm_u008_B_986026_t0300_e8f07481",
+            "window": {
+              "end_s": 450,
+              "metric": "team_delay_vs",
+              "start_s": 300,
+              "tail_s": 120,
+              "truncated": false
+            }
+          },
+          {
+            "certification": {
+              "certified_seeds": [
+                1
+              ],
+              "cooperative_status": "seed1_only",
+              "replicated": false,
+              "rule": "per_seed_v1",
+              "statistical_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=not_cooperative",
+              "synergy_lower95_veh_s_per_seed": {
+                "1": 106.8912892304697,
+                "2": -362.57485910254275
+              }
+            },
+            "cost": {
+              "cap_sim_s": 9600,
+              "isolated_n_plus_2_sim_s": {
+                "seed1": 3600
+              },
+              "overage_sim_s": 0,
+              "total_sim_s": 4050
+            },
+            "grade_veh_s": 270.85763912331004,
+            "group": [
+              "mainline.118",
+              "ramp.23",
+              "mainline.122",
+              "ramp.27",
+              "ramp.30",
+              "mainline.126"
+            ],
+            "groups": {
+              "1": [
+                "mainline.118",
+                "ramp.23",
+                "mainline.122",
+                "ramp.27",
+                "ramp.30",
+                "mainline.126"
+              ]
+            },
+            "jobs": [
+              {
+                "branch": "all",
+                "generator_state_sha256": "0479ab181cdf63508bf04e7031c7b31ebad2798f8b962d6ce0b4d996467dee09",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "34af15a6b953a664a6252f3897b8395c2cc350fcdac554981468e6fc6c9a7ca1",
+                "spec_sha256": "0123295ac7c0e75593c744140614307e5c931a8e0fc9697edf11377aefcc9e26",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_all"
+              },
+              {
+                "branch": "solo0",
+                "generator_state_sha256": "0479ab181cdf63508bf04e7031c7b31ebad2798f8b962d6ce0b4d996467dee09",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "24a6394b40e63a31b7e80106c3ed619f189974920865be48194bfce32258397a",
+                "spec_sha256": "a47ce7e68805fa1b38081b8323a739a1f970de72ae53fcfc0d2f88e9b3ffa835",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_solo0"
+              },
+              {
+                "branch": "solo1",
+                "generator_state_sha256": "0479ab181cdf63508bf04e7031c7b31ebad2798f8b962d6ce0b4d996467dee09",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "1438e93fd02c853e6fc570f27b586e63746a655be9cdc96c5ddadb1d98a7d2db",
+                "spec_sha256": "473b76b67285026fc3af89dbcb279bedbc6648ecff0f49f13707e9285b9873b3",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_solo1"
+              },
+              {
+                "branch": "solo2",
+                "generator_state_sha256": "0479ab181cdf63508bf04e7031c7b31ebad2798f8b962d6ce0b4d996467dee09",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "db3b3e519717c3a92312081646c245483b7c8069581bc861fbb08dd832b26c9d",
+                "spec_sha256": "180ed7f04a1b320c4c92136fe9842fd4d0570f8d0fa64ab734f19c387f1d2d51",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_solo2"
+              },
+              {
+                "branch": "solo3",
+                "generator_state_sha256": "0479ab181cdf63508bf04e7031c7b31ebad2798f8b962d6ce0b4d996467dee09",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "c65800a522db03b930cd8bcd2d853fac2dd56ecddba3a8839e7cfd26c99eb705",
+                "spec_sha256": "b4fbcc4b7dbb9c63bb9d6939525ad8f630fac81edcacee91de1ba1dbcadc6013",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_solo3"
+              },
+              {
+                "branch": "solo4",
+                "generator_state_sha256": "0479ab181cdf63508bf04e7031c7b31ebad2798f8b962d6ce0b4d996467dee09",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "7e552aaa27add5f36760d7e02a4d211b96df526f22a519b04f63b9357ff596fa",
+                "spec_sha256": "f49ec30e119861ae7d80252ded47b7215cab09116d62073c68e967718b4a9205",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_solo4"
+              },
+              {
+                "branch": "solo5",
+                "generator_state_sha256": "0479ab181cdf63508bf04e7031c7b31ebad2798f8b962d6ce0b4d996467dee09",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "227b5627fb8de05e52146d00b696ef3eaf8d22e06e2200d862af60acfa90f32c",
+                "spec_sha256": "3b68d93e0b19b40980f8d76ee6189f906e1313d949543f4de63707f8614db603",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_solo5"
+              },
+              {
+                "branch": "background",
+                "generator_state_sha256": "0479ab181cdf63508bf04e7031c7b31ebad2798f8b962d6ce0b4d996467dee09",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "31f2104f047c394907da0a561dea9d40bd06906adafd9d50457ef4365313e8e4",
+                "spec_sha256": "bcba217a72bebafcd29fa0563f967ee3336a7ffc228ec134939477b430dddbd3",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_background"
+              },
+              {
+                "branch": "reference",
+                "generator_state_sha256": "0479ab181cdf63508bf04e7031c7b31ebad2798f8b962d6ce0b4d996467dee09",
+                "seed": 1,
+                "sim_s": 450,
+                "snapshot_sha256": "e29ebdc8593a0a9f94d8f2360d4c6aad2c160bc52e0f7fc5e9993ef82d3f2065",
+                "spec_sha256": "3b9eb1ef06500332001258f5d5a01dd35b12b85b18959d16c27a1522b8f6be97",
+                "verification_id": "ps_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_all_u3_reference"
+              }
+            ],
+            "plan_cooperation_gain_veh_s": 249.90743568256948,
+            "plan_ids": {
+              "1": "i0n0s7-M4d2faf4aa693e4f2"
+            },
+            "quotes": {
+              "seed1": {
+                "branch_ids": [
+                  "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_all",
+                  "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_solo0",
+                  "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_solo1",
+                  "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_solo2",
+                  "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_solo3",
+                  "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_solo4",
+                  "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_solo5",
+                  "psi_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_background",
+                  "ps_u000_B_sv_replay0735_warm_u007_B_986036_t0300_6a57be40_all_u3_reference"
+                ],
+                "phase": "bank_verification_ext",
+                "sim_s": 4050,
+                "verification_id": "sv_replay0735_warm_u007_B_986036_t0300_6a57be40"
+              }
+            },
+            "reference_adopted": null,
+            "seed": 986036,
+            "seeds": [
+              1
+            ],
+            "verification_id": "sv_replay0735_warm_u007_B_986036_t0300_6a57be40",
+            "window": {
+              "end_s": 450,
+              "metric": "team_delay_vs",
+              "start_s": 300,
+              "tail_s": 120,
+              "truncated": false
+            }
+          },
+          {
+            "certification": {
+              "certified_seeds": [
+                1
+              ],
+              "cooperative_status": "seed1_only",
+              "replicated": false,
+              "rule": "per_seed_v1",
+              "statistical_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=no_solos",
+              "synergy_lower95_veh_s_per_seed": {
+                "1": 113.97933096861208,
+                "2": null
+              }
+            },
+            "cost": {
+              "cap_sim_s": 9600,
+              "isolated_n_plus_2_sim_s": {
+                "seed1": 4080
+              },
+              "overage_sim_s": 0,
+              "total_sim_s": 4590
+            },
+            "grade_veh_s": 595.8200177477538,
+            "group": [
+              "mainline.141",
+              "mainline.143",
+              "mainline.142",
+              "mainline.147",
+              "ramp.44",
+              "ramp.45"
+            ],
+            "groups": {
+              "1": [
+                "mainline.141",
+                "mainline.143",
+                "mainline.142",
+                "mainline.147",
+                "ramp.44",
+                "ramp.45"
+              ]
+            },
+            "jobs": [
+              {
+                "branch": "all",
+                "generator_state_sha256": "301111c61b2d7e9f9b55f0cca52eb23cb53e182efd9a7b63dc31fc4f8ad529e2",
+                "seed": 1,
+                "sim_s": 510,
+                "snapshot_sha256": "da0568150e4669e7b445a359ead65dd5c68082b6efd5aaa9f74ac78b65e114d8",
+                "spec_sha256": "acba72bf201b64681fb4fd304108bb910d2003d2ab2fc14cce7e8a8a5057e518",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_all"
+              },
+              {
+                "branch": "solo0",
+                "generator_state_sha256": "301111c61b2d7e9f9b55f0cca52eb23cb53e182efd9a7b63dc31fc4f8ad529e2",
+                "seed": 1,
+                "sim_s": 510,
+                "snapshot_sha256": "23a14ab2a7ffc39a01bc43571b7256a9d6d8f4461342db6f79f24404ef52a1ab",
+                "spec_sha256": "166263f8dab572f0ec173f531ee4ec8be46fb4bca180a73fb461166ccdd51d21",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_solo0"
+              },
+              {
+                "branch": "solo1",
+                "generator_state_sha256": "301111c61b2d7e9f9b55f0cca52eb23cb53e182efd9a7b63dc31fc4f8ad529e2",
+                "seed": 1,
+                "sim_s": 510,
+                "snapshot_sha256": "e894667724d10f8ee9ef40d012c980b05c1fd930368078bf3620cb0740ca3500",
+                "spec_sha256": "8e9aad1419637ce815925bf984c4ea80ea3305fd683a943e626e1cdb65075a20",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_solo1"
+              },
+              {
+                "branch": "solo2",
+                "generator_state_sha256": "301111c61b2d7e9f9b55f0cca52eb23cb53e182efd9a7b63dc31fc4f8ad529e2",
+                "seed": 1,
+                "sim_s": 510,
+                "snapshot_sha256": "b7ab23cda2ce9b0503fed217a9f37ec67460d5899d22c046d0fe4d8dd50b526d",
+                "spec_sha256": "1cfd0e4b2040dfb8083b7bd6e1808a6ad7d804ec1b5683b2d91606bf3855e41a",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_solo2"
+              },
+              {
+                "branch": "solo3",
+                "generator_state_sha256": "301111c61b2d7e9f9b55f0cca52eb23cb53e182efd9a7b63dc31fc4f8ad529e2",
+                "seed": 1,
+                "sim_s": 510,
+                "snapshot_sha256": "773399b7a80f2a42be339c30b9fc7ef87c9a2d9b63c9823b326c582e173297dc",
+                "spec_sha256": "afdcb49bc85669f44a536a646daad1666b290a8712a06b97553d13b87712ce44",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_solo3"
+              },
+              {
+                "branch": "solo4",
+                "generator_state_sha256": "301111c61b2d7e9f9b55f0cca52eb23cb53e182efd9a7b63dc31fc4f8ad529e2",
+                "seed": 1,
+                "sim_s": 510,
+                "snapshot_sha256": "08d5d3aa285ad98eaa7b2b1ebdb3049bedceca68712e695e6b8368c8193c5f60",
+                "spec_sha256": "dc95e62f9f9be71ee16ae3f0a6f9268c9e956e9077869788fb783503f44fda4d",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_solo4"
+              },
+              {
+                "branch": "solo5",
+                "generator_state_sha256": "301111c61b2d7e9f9b55f0cca52eb23cb53e182efd9a7b63dc31fc4f8ad529e2",
+                "seed": 1,
+                "sim_s": 510,
+                "snapshot_sha256": "1f58d722c0d08f937153b488a898c1b266df6174d31c5e29c277fdc6108f1cab",
+                "spec_sha256": "4281bf57a6a1c93006fca4d7b91de2628fa77abb113ad1ca9ac9d3e9797ace7b",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_solo5"
+              },
+              {
+                "branch": "background",
+                "generator_state_sha256": "301111c61b2d7e9f9b55f0cca52eb23cb53e182efd9a7b63dc31fc4f8ad529e2",
+                "seed": 1,
+                "sim_s": 510,
+                "snapshot_sha256": "17f9652144a4c795516ba2a2709bf7e9ea4a673651947ec60d96faf931251e79",
+                "spec_sha256": "c69aea4a19ed73ef7add4d3a3344f07bb082ac912ebdf2ac975de96fbd417a33",
+                "verification_id": "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_background"
+              },
+              {
+                "branch": "reference",
+                "generator_state_sha256": "301111c61b2d7e9f9b55f0cca52eb23cb53e182efd9a7b63dc31fc4f8ad529e2",
+                "seed": 1,
+                "sim_s": 510,
+                "snapshot_sha256": "df3cab50208836ffa01229127a9db0f36c6d1841a329a10748b31be657de640d",
+                "spec_sha256": "7fdce4a11b4da2eecf4aa795cd3858e09589e7ad3c1c6b22d9f2d1a8cc7b4856",
+                "verification_id": "ps_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_all_u3_reference"
+              }
+            ],
+            "plan_cooperation_gain_veh_s": 311.5017669114386,
+            "plan_ids": {
+              "1": "i1s10-M0cd450f7d6bd0adb"
+            },
+            "quotes": {
+              "seed1": {
+                "branch_ids": [
+                  "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_all",
+                  "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_solo0",
+                  "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_solo1",
+                  "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_solo2",
+                  "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_solo3",
+                  "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_solo4",
+                  "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_solo5",
+                  "psi_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_background",
+                  "ps_u000_B_sv_replay0735_warm_u018_B_986047_t0360_4f83130c_all_u3_reference"
+                ],
+                "phase": "bank_verification_ext",
+                "sim_s": 4590,
+                "verification_id": "sv_replay0735_warm_u018_B_986047_t0360_4f83130c"
+              }
+            },
+            "reference_adopted": null,
+            "seed": 986047,
+            "seeds": [
+              1
+            ],
+            "verification_id": "sv_replay0735_warm_u018_B_986047_t0360_4f83130c",
+            "window": {
+              "end_s": 510,
+              "metric": "team_delay_vs",
+              "start_s": 360,
+              "tail_s": 120,
+              "truncated": false
+            }
+          },
+          {
+            "certification": {
+              "certified_seeds": [
+                1
+              ],
+              "cooperative_status": "seed1_only",
+              "replicated": false,
+              "rule": "per_seed_v1",
+              "statistical_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=not_cooperative",
+              "synergy_lower95_veh_s_per_seed": {
+                "1": 5.7618149867266766e-05,
+                "2": -4.403180319627608e-05
+              }
+            },
+            "cost": {
+              "cap_sim_s": 9600,
+              "isolated_n_plus_2_sim_s": {
+                "seed1": 2880
+              },
+              "overage_sim_s": 0,
+              "total_sim_s": 2880
+            },
+            "grade_veh_s": 0.013822659471770748,
+            "group": [
+              "mainline.101",
+              "mainline.71"
+            ],
+            "groups": {
+              "1": [
+                "mainline.101",
+                "mainline.71"
+              ]
+            },
+            "jobs": [
+              {
+                "branch": "all",
+                "generator_state_sha256": "765bb95c184f61586d90cec25c561badda488d4d70cea527ffcf27ac2437e6d3",
+                "seed": 1,
+                "sim_s": 720,
+                "snapshot_sha256": "3ff852f67fd43b9dca13c2f1fc0cb0f1ee58c4e5412ddc74462ec9a1b87d20df",
+                "spec_sha256": "f86b775b5b039d71ec735302835ee9470acce772e77666adae27230e38db1fad",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986052_t0300_5ab45ace_all"
+              },
+              {
+                "branch": "solo0",
+                "generator_state_sha256": "765bb95c184f61586d90cec25c561badda488d4d70cea527ffcf27ac2437e6d3",
+                "seed": 1,
+                "sim_s": 720,
+                "snapshot_sha256": "88ba5aae343d5d1a90ec7456b49c5abea56f49d557f6334b9db681daf7ddb5ba",
+                "spec_sha256": "cf6bb1d28af030fa119ae5c81593bab55fbfb027f913fdcfed1e71848e90fdac",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986052_t0300_5ab45ace_solo0"
+              },
+              {
+                "branch": "solo1",
+                "generator_state_sha256": "765bb95c184f61586d90cec25c561badda488d4d70cea527ffcf27ac2437e6d3",
+                "seed": 1,
+                "sim_s": 720,
+                "snapshot_sha256": "f6bd52ab7f1492721e5b12568327e841a98d7cf9efb8d3502e98f54b31d311d1",
+                "spec_sha256": "c82d867e0c9d78f3eb45b18b0596587d6723aab1a58f23eedaae9a851861b651",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986052_t0300_5ab45ace_solo1"
+              },
+              {
+                "branch": "background",
+                "generator_state_sha256": "765bb95c184f61586d90cec25c561badda488d4d70cea527ffcf27ac2437e6d3",
+                "seed": 1,
+                "sim_s": 720,
+                "snapshot_sha256": "048fc7780d1b109b62542f86642e4d1e11f83c1856e6a14942f37a386d4d473d",
+                "spec_sha256": "918c7063f8261769573633a085ec254e459e14ff09aaee0c07b7e934bfad5596",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986052_t0300_5ab45ace_background"
+              }
+            ],
+            "plan_cooperation_gain_veh_s": 0.0004957243436365388,
+            "plan_ids": {
+              "1": "i0s0-Mf5d55eeb03648be5"
+            },
+            "quotes": {
+              "seed1": {
+                "branch_ids": [
+                  "psi_u000_B_sv_lscollect1_B3_986052_t0300_5ab45ace_all",
+                  "psi_u000_B_sv_lscollect1_B3_986052_t0300_5ab45ace_solo0",
+                  "psi_u000_B_sv_lscollect1_B3_986052_t0300_5ab45ace_solo1",
+                  "psi_u000_B_sv_lscollect1_B3_986052_t0300_5ab45ace_background"
+                ],
+                "phase": "bank_verification_ext",
+                "sim_s": 2880,
+                "verification_id": "sv_lscollect1_B3_986052_t0300_5ab45ace"
+              }
+            },
+            "reference_adopted": {
+              "J_veh_s": 47081.229781195674,
+              "branch": {
+                "J_veh_s": 47081.229781195674,
+                "actual_sim_s": 720.0,
+                "audit": {
+                  "candidate": null,
+                  "crn_verified_t0": true,
+                  "live_steps": 420,
+                  "noise_mode_used": "crn",
+                  "replayed_prefix_steps": 0
+                },
+                "branch": "policy",
+                "branch_sha256": "24ebdc669fcbd7ce2827637f474ea27474fcf686ecea213317dc543db6ee7437",
+                "continuation_prefix_sha256": {
+                  "300": "677b509120ac30b1e82ecfee70fd62e43bc2bb3cfa5e12c95464743178d5045d",
+                  "301": "199f3ec6d204cff4c27342bc783d8fc06cc18ce7b6ed79ef921545bccad21a4e",
+                  "302": "a6df932e939aadfbe03ec95b8179438e3b9425607163ff1b58f74b5dc86983ef",
+                  "303": "027f8f550bb940c0aadab35803d0146202e29bb9ed49d063bbf0a6eabe327ad4",
+                  "304": "201182dad10c2978ce646c3c88f11a6acc7491799427cc762f0c5c3314d83ec4",
+                  "305": "e9ee33c69909ab03aad2891e2a7df94317427e571821cbf5943a450cc4f15bb3",
+                  "306": "246dec2528b5409b54d6df183bdd3c37414b78ddb2d1a8ae700c851f87a76b02",
+                  "307": "bd4e264ccc5118c3052c8d4d72def24e7275426b6e932569b6afdf209ef50c1d",
+                  "308": "dfe70e9bf6d895a18c6373a8ac0a999ecf07265b5b3a87381f6ffd79974fab1e",
+                  "309": "30c603df9ab93062b20e793f6d4df90b7193320878690b21a5573a29b7f270b9",
+                  "310": "ba08d610e8b3e7edf454b5d578cfdfd308435c71372e17736842ef21eb1ff813"
+                },
+                "index": 0,
+                "result_sha256": "ff98e4407ee50b61ff54bb1811bcab3b315c6e6fd7613328c90b3f4239208591",
+                "status": "graded",
+                "window": {
+                  "collisions": 0.0,
+                  "hard_brake": 6.5,
+                  "road_delay_vs": 8862.829951195703,
+                  "source_wait_vs": 38218.399829999995,
+                  "team_delay_vs": 47081.229781195674,
+                  "teleports": 0.0,
+                  "ttc_below_3_vs": 116.5
+                }
+              },
+              "branches_dir": "/home/ubuntu/coopmwm20261102_lscollect1/label_attempts/SUMOPATH1/branches",
+              "rule": "decision snapshot policy is u3: first-seed receipt policy branch adopted",
+              "seed": 1,
+              "verification_id": "sv_lscollect1_B3_986052_t0300_5ab45ace"
+            },
+            "seed": 986052,
+            "seeds": [
+              1
+            ],
+            "verification_id": "sv_lscollect1_B3_986052_t0300_5ab45ace",
+            "window": {
+              "end_s": 720,
+              "metric": "team_delay_vs",
+              "start_s": 300,
+              "tail_s": 120,
+              "truncated": false
+            }
+          },
+          {
+            "certification": {
+              "certified_seeds": [
+                1,
+                2
+              ],
+              "cooperative_status": "replicated",
+              "replicated": true,
+              "rule": "per_seed_v1",
+              "statistical_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=cooperative",
+              "synergy_lower95_veh_s_per_seed": {
+                "1": 282.946243233605,
+                "2": 203.85774266363123
+              }
+            },
+            "cost": {
+              "cap_sim_s": 9600,
+              "isolated_n_plus_2_sim_s": {
+                "seed1": 5760,
+                "seed2": 5760
+              },
+              "overage_sim_s": 2640,
+              "total_sim_s": 12240
+            },
+            "grade_veh_s": 5580.842392459883,
+            "group": [
+              "mainline.104",
+              "ramp.17",
+              "ramp.20",
+              "ramp.24",
+              "mainline.117",
+              "ramp.26"
+            ],
+            "groups": {
+              "1": [
+                "mainline.104",
+                "ramp.17",
+                "ramp.20",
+                "ramp.24",
+                "mainline.117",
+                "ramp.26"
+              ],
+              "2": [
+                "mainline.104",
+                "ramp.17",
+                "ramp.20",
+                "ramp.24",
+                "mainline.117",
+                "ramp.26"
+              ]
+            },
+            "jobs": [
+              {
+                "branch": "all",
+                "generator_state_sha256": "666062234deb016e482865fff6dcbea5ba9e0184c23ddc0bae67ee49f813d68b",
+                "seed": 1,
+                "sim_s": 720,
+                "snapshot_sha256": "97d5a4d4b1a2ca76a8ab82b2e0d4301bac794655b66c1f3055266cf5ece3671c",
+                "spec_sha256": "22fa05553f28f4b0b75c30841240cde8231fb2b3a2c6144b4e1d7dbb0abc54db",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_all"
+              },
+              {
+                "branch": "solo0",
+                "generator_state_sha256": "666062234deb016e482865fff6dcbea5ba9e0184c23ddc0bae67ee49f813d68b",
+                "seed": 1,
+                "sim_s": 720,
+                "snapshot_sha256": "8432ceac88720ab57d8ad3d12d1eb40f963a093f44b5963a9ea32bcf398a7f43",
+                "spec_sha256": "be910a33a08e20f9cb1d670f9bd38dde58aaffe11d25d4f8bc36069f3a1ec851",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_solo0"
+              },
+              {
+                "branch": "solo1",
+                "generator_state_sha256": "666062234deb016e482865fff6dcbea5ba9e0184c23ddc0bae67ee49f813d68b",
+                "seed": 1,
+                "sim_s": 720,
+                "snapshot_sha256": "7c40aaf637d365a7c5585634d0a6e3e095836058b701aaefc4794614f6e3ca32",
+                "spec_sha256": "adc4a0529893782d7ca30898eff5922c22969e43448ae93949bfacaffba9fce7",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_solo1"
+              },
+              {
+                "branch": "solo2",
+                "generator_state_sha256": "666062234deb016e482865fff6dcbea5ba9e0184c23ddc0bae67ee49f813d68b",
+                "seed": 1,
+                "sim_s": 720,
+                "snapshot_sha256": "0680692dff878babc20653ff5b9a2304f2dacbad3b36ca2f3ef8cff09d33dc35",
+                "spec_sha256": "6b3f10eecf1bce56ae98625e1a1e1b6eab9e8d956a37bed2893006d5550cd0e8",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_solo2"
+              },
+              {
+                "branch": "solo3",
+                "generator_state_sha256": "666062234deb016e482865fff6dcbea5ba9e0184c23ddc0bae67ee49f813d68b",
+                "seed": 1,
+                "sim_s": 720,
+                "snapshot_sha256": "e6c62085df4fd62a18b3e32579793fdc4f18c9a4fe44303627dc9d7518117b6b",
+                "spec_sha256": "a1517b25d33e0e56f2d036bdb455d9938e24b8dd3f28c24fe270522792b47ab5",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_solo3"
+              },
+              {
+                "branch": "solo4",
+                "generator_state_sha256": "666062234deb016e482865fff6dcbea5ba9e0184c23ddc0bae67ee49f813d68b",
+                "seed": 1,
+                "sim_s": 720,
+                "snapshot_sha256": "844fb14b84f5dd213dc0478074c07831362a34e1ab827f7f75912e55505ef06e",
+                "spec_sha256": "0e761c18b46af49e246c29624451b02ec78e9054114639881890fce82cb185d9",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_solo4"
+              },
+              {
+                "branch": "solo5",
+                "generator_state_sha256": "666062234deb016e482865fff6dcbea5ba9e0184c23ddc0bae67ee49f813d68b",
+                "seed": 1,
+                "sim_s": 720,
+                "snapshot_sha256": "c855021282eac696cb7bb990473fe2c8a10cf5c4637056bb7b6259981c9e6cc4",
+                "spec_sha256": "b780f45e1e1dfda61c6ecb404b88c30825bf861d39fa006a297e4092a4c387c5",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_solo5"
+              },
+              {
+                "branch": "background",
+                "generator_state_sha256": "666062234deb016e482865fff6dcbea5ba9e0184c23ddc0bae67ee49f813d68b",
+                "seed": 1,
+                "sim_s": 720,
+                "snapshot_sha256": "5fe32567e1deec0f92aba93f9dd22e8bd5d3eba70ada8c5dbabd24f9ad2c926a",
+                "spec_sha256": "df47253c87530425a0739d0218d33cbef29c3eb3459d4ab04f48a5c9dee3e8f8",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_background"
+              },
+              {
+                "branch": "all",
+                "generator_state_sha256": "f7bfa81cff168560abf8a9dd76e38ff123e039f2bda7e27b8f3fa8c32fc78c5b",
+                "seed": 2,
+                "sim_s": 720,
+                "snapshot_sha256": "22d34917cbe415d46e999653338ff752f3ef901b7839e08abf6a587182a4faa6",
+                "spec_sha256": "74a2496d329be7c042fef0c77d67b918399d1622619053cc511842a8396c8f4e",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_all"
+              },
+              {
+                "branch": "solo0",
+                "generator_state_sha256": "f7bfa81cff168560abf8a9dd76e38ff123e039f2bda7e27b8f3fa8c32fc78c5b",
+                "seed": 2,
+                "sim_s": 720,
+                "snapshot_sha256": "6d2bcb2029480ccdae861557afb6afca4a6a395b8299a581d448f81eeb342651",
+                "spec_sha256": "9bfdc384f1df58bd369ca59d447e8917c2b28f74ac73a0f84731eb8b7ac078e0",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_solo0"
+              },
+              {
+                "branch": "solo1",
+                "generator_state_sha256": "f7bfa81cff168560abf8a9dd76e38ff123e039f2bda7e27b8f3fa8c32fc78c5b",
+                "seed": 2,
+                "sim_s": 720,
+                "snapshot_sha256": "ff013025622b4c81046bdad63678879f02035f2a04e73a56267ace78d6e163cc",
+                "spec_sha256": "471cfa2300e6f53d9bc492f3df256bce20cdd912fe10d69527f0f19fe4e8ecc8",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_solo1"
+              },
+              {
+                "branch": "solo2",
+                "generator_state_sha256": "f7bfa81cff168560abf8a9dd76e38ff123e039f2bda7e27b8f3fa8c32fc78c5b",
+                "seed": 2,
+                "sim_s": 720,
+                "snapshot_sha256": "189b9aedd54e5caa8b85a3b92350584d526ee7823ff88cc8784355b91a90365a",
+                "spec_sha256": "cf04635d55f5a09859eb1ba2e93789a7c5601cb6f99fafb1d242396d23405adb",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_solo2"
+              },
+              {
+                "branch": "solo3",
+                "generator_state_sha256": "f7bfa81cff168560abf8a9dd76e38ff123e039f2bda7e27b8f3fa8c32fc78c5b",
+                "seed": 2,
+                "sim_s": 720,
+                "snapshot_sha256": "9de10036156993d69f34a0cd9be5c63e4d8f2815de2a5d0609afd157b056fb57",
+                "spec_sha256": "38eada6c269ed8c15810fcb2df7874c0ea8029db88fe0c7c01701c8ac731735a",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_solo3"
+              },
+              {
+                "branch": "solo4",
+                "generator_state_sha256": "f7bfa81cff168560abf8a9dd76e38ff123e039f2bda7e27b8f3fa8c32fc78c5b",
+                "seed": 2,
+                "sim_s": 720,
+                "snapshot_sha256": "9921bf4da69741af8db4c8a4fd0c812af9ccc1b26e7bad5be021f08438a432a4",
+                "spec_sha256": "ae71951bc4c12a03ceb7ee4dcdfaf31b65a4a3a52563c321a9e3812a0f96af55",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_solo4"
+              },
+              {
+                "branch": "solo5",
+                "generator_state_sha256": "f7bfa81cff168560abf8a9dd76e38ff123e039f2bda7e27b8f3fa8c32fc78c5b",
+                "seed": 2,
+                "sim_s": 720,
+                "snapshot_sha256": "dd85f98992d407f6740db3a9f78bc774568c197b2f5d8ccf180578760d62c546",
+                "spec_sha256": "6ee4e4a6cf00f3acafd553c8981ab558414e89999b9a44a347c6d929c19c87b7",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_solo5"
+              },
+              {
+                "branch": "background",
+                "generator_state_sha256": "f7bfa81cff168560abf8a9dd76e38ff123e039f2bda7e27b8f3fa8c32fc78c5b",
+                "seed": 2,
+                "sim_s": 720,
+                "snapshot_sha256": "8a5f2d51d6ea8b9daeb4bfb97335568ef7e315d855c54a51098302969ec004eb",
+                "spec_sha256": "1a6fa67e98e0f28792dadf28205a1344df5b8f6b334bd3a4f2ac23d8a6612a39",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_background"
+              },
+              {
+                "branch": "reference",
+                "generator_state_sha256": "f7bfa81cff168560abf8a9dd76e38ff123e039f2bda7e27b8f3fa8c32fc78c5b",
+                "seed": 2,
+                "sim_s": 720,
+                "snapshot_sha256": "245f398b642a7babd0f5dce939b74c7dc297ccad7b5822eef815e7c3f717bf86",
+                "spec_sha256": "70e5213bbc67fc3ec7cf641cfd658993d898d32ec3e398485c967457335ee47b",
+                "verification_id": "ps_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_all_u3_reference"
+              }
+            ],
+            "plan_cooperation_gain_veh_s": 4430.098730046535,
+            "plan_ids": {
+              "1": "i1s35-Md311d02a00a82bbd",
+              "2": "i1s35-Md311d02a00a82bbd"
+            },
+            "quotes": {
+              "seed1": {
+                "branch_ids": [
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_all",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_solo0",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_solo1",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_solo2",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_solo3",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_solo4",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_solo5",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_background"
+                ],
+                "phase": "bank_verification_ext",
+                "sim_s": 5760,
+                "verification_id": "sv_lscollect1_B3_986066_t0300_d13b0e6c"
+              },
+              "seed2": {
+                "branch_ids": [
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_all",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_solo0",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_solo1",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_solo2",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_solo3",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_solo4",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_solo5",
+                  "psi_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_background",
+                  "ps_u000_B_sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2_all_u3_reference"
+                ],
+                "phase": "bank_verification_ext",
+                "sim_s": 6480,
+                "verification_id": "sv_lscollect1_B3_986066_t0300_d13b0e6c_seed2"
+              }
+            },
+            "reference_adopted": {
+              "J_veh_s": 61495.13353957855,
+              "branch": {
+                "J_veh_s": 61495.13353957855,
+                "actual_sim_s": 720.0,
+                "audit": {
+                  "candidate": null,
+                  "crn_verified_t0": true,
+                  "live_steps": 420,
+                  "noise_mode_used": "crn",
+                  "replayed_prefix_steps": 0
+                },
+                "branch": "policy",
+                "branch_sha256": "956c8d3e18bad3c8d1ef0c5a1064b0b5484fcc22b3f735ed8f330495740cfc2b",
+                "continuation_prefix_sha256": {
+                  "300": "1bd88ae409d879a2ef72f975a3ececd4065beb2c26d9bf2bad17589ffc84bfe8",
+                  "301": "22a4e56c8ea1da54bf8343e55f4d71bd4ec6e91280e6ad5a5c716b8e595564d5",
+                  "302": "8e09f4afe610e132371d2c82264b5222716ceab5ec61455a191fdb669267c1e3",
+                  "303": "3c4e1e6351444cf086904da5e19f1860fb53a568b7b3d4834fd48c75113a5a01",
+                  "304": "5ec5007293b27db3cb7496826ae5cc41d904d1fd7935b03cf3c92a2437915ac3",
+                  "305": "9fc4318244a4ddd001c6af2ad41af1f7b59712336892cc5b01f71784d9333bf6",
+                  "306": "d46aeb37f1572b2090bdafc6dd368bfa766c2e8615c2678c8727c3415c7ce1b2",
+                  "307": "5864d116a2f2e5aea94db06132c8d481f2554586b8d85f0080f8ffbddd1f87b5",
+                  "308": "6d252af1ecccddabd0ce7ceb4e8a1d5fdfe7bd2c7e2fe6899ec2b070728d2754",
+                  "309": "3c5c7ef0e1a806cbfabccfb25642f07345c852d6fdff824c37e416de5afd0085",
+                  "310": "a91cb696023a1c135653008c19e783c6e44be3345e4431d6546e25d2750f1f0c"
+                },
+                "index": 0,
+                "result_sha256": "897cf182b00a96d293223f40d39a729b09be5649cd4d157a75872091824775de",
+                "status": "graded",
+                "window": {
+                  "collisions": 0.0,
+                  "hard_brake": 7.0,
+                  "road_delay_vs": 18178.17504657855,
+                  "source_wait_vs": 43316.958493,
+                  "team_delay_vs": 61495.13353957855,
+                  "teleports": 0.0,
+                  "ttc_below_3_vs": 453.5
+                }
+              },
+              "branches_dir": "/home/ubuntu/coopmwm20261102_lscollect1/label_attempts/SUMOENV1/branches",
+              "rule": "decision snapshot policy is u3: first-seed receipt policy branch adopted",
+              "seed": 1,
+              "verification_id": "sv_lscollect1_B3_986066_t0300_d13b0e6c"
+            },
+            "seed": 986066,
+            "seeds": [
+              1,
+              2
+            ],
+            "verification_id": "sv_lscollect1_B3_986066_t0300_d13b0e6c",
+            "window": {
+              "end_s": 720,
+              "metric": "team_delay_vs",
+              "start_s": 300,
+              "tail_s": 120,
+              "truncated": false
+            }
+          },
+          {
+            "certification": {
+              "certified_seeds": [
+                1
+              ],
+              "cooperative_status": "seed1_only",
+              "replicated": false,
+              "rule": "per_seed_v1",
+              "statistical_reason": "per_seed_v1 within-seed synergy labels: s1=cooperative, s2=not_cooperative",
+              "synergy_lower95_veh_s_per_seed": {
+                "1": 18.57565429413007,
+                "2": -1.3214772712090053
+              }
+            },
+            "cost": {
+              "cap_sim_s": 9600,
+              "isolated_n_plus_2_sim_s": {
+                "seed1": 6120
+              },
+              "overage_sim_s": 0,
+              "total_sim_s": 6120
+            },
+            "grade_veh_s": 3216.944237807562,
+            "group": [
+              "mainline.264",
+              "ramp.51",
+              "mainline.267",
+              "mainline.270"
+            ],
+            "groups": {
+              "1": [
+                "mainline.264",
+                "ramp.51",
+                "mainline.267",
+                "mainline.270"
+              ]
+            },
+            "jobs": [
+              {
+                "branch": "all",
+                "generator_state_sha256": "795688923361bd25a62e1e60a8a7a7ef51ec7eef30574c2830aa50bb8e41693a",
+                "seed": 1,
+                "sim_s": 1020,
+                "snapshot_sha256": "230e683fa720075aab44f2d25df0b7f21a710ba930dbbe813080f77956ceb9d7",
+                "spec_sha256": "70421a427a258a0549f278b8fd134aae4d854d255ea62ca0af65cdf96b578d0d",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986068_t0600_a7ec9bd2_all"
+              },
+              {
+                "branch": "solo0",
+                "generator_state_sha256": "795688923361bd25a62e1e60a8a7a7ef51ec7eef30574c2830aa50bb8e41693a",
+                "seed": 1,
+                "sim_s": 1020,
+                "snapshot_sha256": "fef01b84a83857b327dfab69f4aec68b108cefeb2d7a17877d602f4635b799f0",
+                "spec_sha256": "081ced3d02b187c355b9a493d16abdf33cc553b41efaeea552995b7e4108660e",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986068_t0600_a7ec9bd2_solo0"
+              },
+              {
+                "branch": "solo1",
+                "generator_state_sha256": "795688923361bd25a62e1e60a8a7a7ef51ec7eef30574c2830aa50bb8e41693a",
+                "seed": 1,
+                "sim_s": 1020,
+                "snapshot_sha256": "f3b5ad48f9a50c01f775c33f707047f5e88fdb28d98a3d5986a39ecc72bbe85e",
+                "spec_sha256": "43280af5641ca47bf63d060df774c05bb12b76d9a7632e74c65cf78ee42b6077",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986068_t0600_a7ec9bd2_solo1"
+              },
+              {
+                "branch": "solo2",
+                "generator_state_sha256": "795688923361bd25a62e1e60a8a7a7ef51ec7eef30574c2830aa50bb8e41693a",
+                "seed": 1,
+                "sim_s": 1020,
+                "snapshot_sha256": "608891782d7c1337ef36ed76a2008f2ebc8728039eb5a5d9841c2b1c6e8bba24",
+                "spec_sha256": "f12427dc9b84904ef1c7a292c37e23c22fb3d1f8626e77aef5beafe29357c585",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986068_t0600_a7ec9bd2_solo2"
+              },
+              {
+                "branch": "solo3",
+                "generator_state_sha256": "795688923361bd25a62e1e60a8a7a7ef51ec7eef30574c2830aa50bb8e41693a",
+                "seed": 1,
+                "sim_s": 1020,
+                "snapshot_sha256": "1864ccfcb66181d06f44d933abcd28da862891ea9e6da7003540fbcf9296a6db",
+                "spec_sha256": "b817da86316a2afeb73137914caf98f537c6c1f87ba324282091d61f3d19d186",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986068_t0600_a7ec9bd2_solo3"
+              },
+              {
+                "branch": "background",
+                "generator_state_sha256": "795688923361bd25a62e1e60a8a7a7ef51ec7eef30574c2830aa50bb8e41693a",
+                "seed": 1,
+                "sim_s": 1020,
+                "snapshot_sha256": "6ed69e43c6c6540c554c529d9bc347dfe33d5c455ca82a923ecd9de0d4c2ccdf",
+                "spec_sha256": "100aa999287f002c02f76f98c1cdb63159b4567ec843f9edad14b095bd4cd7eb",
+                "verification_id": "psi_u000_B_sv_lscollect1_B3_986068_t0600_a7ec9bd2_background"
+              }
+            ],
+            "plan_cooperation_gain_veh_s": 548.6363044015307,
+            "plan_ids": {
+              "1": "i1s9-Md2fa7333fcf29485"
+            },
+            "quotes": {
+              "seed1": {
+                "branch_ids": [
+                  "psi_u000_B_sv_lscollect1_B3_986068_t0600_a7ec9bd2_all",
+                  "psi_u000_B_sv_lscollect1_B3_986068_t0600_a7ec9bd2_solo0",
+                  "psi_u000_B_sv_lscollect1_B3_986068_t0600_a7ec9bd2_solo1",
+                  "psi_u000_B_sv_lscollect1_B3_986068_t0600_a7ec9bd2_solo2",
+                  "psi_u000_B_sv_lscollect1_B3_986068_t0600_a7ec9bd2_solo3",
+                  "psi_u000_B_sv_lscollect1_B3_986068_t0600_a7ec9bd2_background"
+                ],
+                "phase": "bank_verification_ext",
+                "sim_s": 6120,
+                "verification_id": "sv_lscollect1_B3_986068_t0600_a7ec9bd2"
+              }
+            },
+            "reference_adopted": {
+              "J_veh_s": 86819.02385145475,
+              "branch": {
+                "J_veh_s": 86819.02385145475,
+                "actual_sim_s": 1020.0,
+                "audit": {
+                  "candidate": null,
+                  "crn_verified_t0": true,
+                  "live_steps": 420,
+                  "noise_mode_used": "crn",
+                  "replayed_prefix_steps": 300
+                },
+                "branch": "policy",
+                "branch_sha256": "a2de5737cbc3fe63cefde1ec09cc95f81b3b4dbf83d46f8e32505d65a8410aa1",
+                "continuation_prefix_sha256": {
+                  "600": "81914a8ea6dce482f64c5d55851945dc836543f6e2affae6287a7de3dc44e035",
+                  "601": "c4ce40a73618fe3bba477f2af1c85d75c89f10f4e4c9e2d8373ad43cfe8e481d",
+                  "602": "4ba01e6190284eb573915f6d2b3cf0c2d7757322f87523faea2064993fb61e5f",
+                  "603": "0c9919db5192e673f17e622959b0e7043b9000874125aab40dd12b16404c1c35",
+                  "604": "566e8e79ec24588463abad19d5769858329db314e9776119235d99e40ee92157",
+                  "605": "b253aef77a9f4efa797ad4be55f36e721ee0b9c159ca216b3a51ab07079a54e8",
+                  "606": "a2c22c18738fb004ba64b592ffdbe78192a61a52c22f2e7d740513bc7df6b021",
+                  "607": "e2005fbf439c595cf88be7d764e0d38101e355c9612ae4eabde2916fedd9d527",
+                  "608": "15ba859eb7075c0f8798d1ded07ff97aa89f569e0d72bc46be0f56b3105a5b9a",
+                  "609": "85cbe4fc41a20cd7c1a7c113012c635fc81dbdca6946a59222b32f7ef899ec9e",
+                  "610": "c8398ecf4f9738f9e43ac8c535b9c82a4ec719786c6904c5b33d7c1f93e8e351"
+                },
+                "index": 0,
+                "result_sha256": "26e8db2f6575f46ba3a2874f1ca656bd3d26f4e9a326d32e55b8d94e5ed6569b",
+                "status": "graded",
+                "window": {
+                  "collisions": 0.0,
+                  "hard_brake": 13.5,
+                  "road_delay_vs": 16695.564711454674,
+                  "source_wait_vs": 70123.45914000002,
+                  "team_delay_vs": 86819.02385145475,
+                  "teleports": 0.0,
+                  "ttc_below_3_vs": 351.5
+                }
+              },
+              "branches_dir": "/home/ubuntu/coopmwm20261102_lscollect1/label_attempts/SUMOENV1/branches",
+              "rule": "decision snapshot policy is u3: first-seed receipt policy branch adopted",
+              "seed": 1,
+              "verification_id": "sv_lscollect1_B3_986068_t0600_a7ec9bd2"
+            },
+            "seed": 986068,
+            "seeds": [
+              1
+            ],
+            "verification_id": "sv_lscollect1_B3_986068_t0600_a7ec9bd2",
+            "window": {
+              "end_s": 1020,
+              "metric": "team_delay_vs",
+              "start_s": 600,
+              "tail_s": 120,
+              "truncated": false
+            }
+          }
+        ],
+        "totals": {
+          "jobs": 55,
+          "overage_sim_s": 2640,
+          "per_state_sim_s": {
+            "986003": 3240,
+            "986026": 2700,
+            "986036": 4050,
+            "986047": 4590,
+            "986052": 2880,
+            "986066": 12240,
+            "986068": 6120
+          },
+          "states": 7,
+          "total_sim_s": 35820
+        },
+        "unix": 1793726420.7652485,
+        "update": 0
+      },
+      "unix": 1793726421.96054
+    }
+  },
+  "unix": 1793727278.9164104
+}

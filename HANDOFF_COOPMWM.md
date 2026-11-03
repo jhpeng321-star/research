@@ -1,6 +1,13 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## CURRENT Nov4 00:21 +08 — final integration merged, Linux994 PASS
+- ACTUALEXACTGATE EXECUTING1152004/start74125444/controlgate0040, registered
+  35820sim-s beforephysics. At1793727278:29graded/0failed/0prefixstops.
+  ADOPT/no duplicateexecute. PLAN1123876done/offlinePASS; collectonlyafterexecutecomplete.
+- ArchiveoneshotcommanddrainAUTH0df139bd registered, CPUdurablehelpernext:
+  stopONLYoldownedarchiveparentpre-proof; letcurrentchildfinishunsignalled;
+  retireparentafterchildexit; onfault/600sresumeoldparent. V4Bexistingwaiter
+  thenadopts. No parallelmover/sourceunlink/physics. See_sol/COOPMWM_EXACT_GATE_RUNNING_0135.md.
 - ACTUALGATEPLAN CPUstage1123876COMPLETE/all6offlinechecksPASS:1effectivefullpass,
   KL.0439198<=.045,cooperativeMAE1.504515->1.478647(CInegative),intenterrorfalls,
   partnerintentweightsmove. NOproductionPPOupdate. REAL_GATE_OFFLINE_PASS_0040.md.

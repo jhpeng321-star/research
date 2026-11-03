@@ -1,0 +1,6 @@
+{
+  "authority": "MAIN23:18 archive expansion; engineering liveness amendment",
+  "new_sim_s": 0,
+  "rule": "Identity-verified old archive parent only: suspend at a completed/pre-proof boundary, let its current child command finish without signalling children; terminate the still-suspended parent only after children exited/zombie. On600s bound or any fault resume old parent unchanged. Existing single V4B waiter adopts exit. No source deletion, physics, new archive command or duplicate mover.",
+  "worker_sha256": "3f12a49ddccf34a57a9e944c7c5249756129a4be6b408cd06eb4d7c6cc8a44a3"
+}
