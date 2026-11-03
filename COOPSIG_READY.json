@@ -1,0 +1,69 @@
+{
+ "receipt": "COOPSIG_READY",
+ "part": "OPTIONAL FEATURE (prepared, not deployed): explicit cooperation signal in V2V intent",
+ "branch": "c4/coop-signal",
+ "workspace": "E:/agent-work/c4-coop-signal",
+ "base_commit": "9e7a5315 (9e7a5315, live head with planned-command intent sharing: v2v_intent/v2v_obs/v2v_runtime/v2v_runner/v2v_live)",
+ "head_commit": "96688ea9 (96688ea9ccb0e842940e7cd768bc810747710f15)",
+ "commits": [
+  "092b0653 coopsig: coop-signal option core (obs contract, policy head, loaders, targets, losses)",
+  "043882b3 coopsig: wire coop signal through bank_v2v, replay_bank, runtime controller, runner/live bindings, exact_grade report",
+  "4649e704 coopsig: fix intent-checkpoint dispatch (coop off stays on the direct load path)",
+  "ada05fb5 coopsig: CPU gates for the coop-signal option (off identity, t-1 latency, zero-init load, masked targets, save/load, bank wiring)",
+  "96688ea9 coopsig: hooks test restores process-global adapters on the same module identity; v2v-only -> coop loader gate"
+ ],
+ "option": {
+  "name": "v2v_coop_signal",
+  "default": "OFF (bool; everything byte-identical when off; requires v2v_intent=True)",
+  "summary": "each CAV's policy gets a small extra zero-initialised head off the shared 64-wide actor trunk: one logit for p_coop (sigmoid; probability 'I am in a cooperative manoeuvre') and K+1 yield-slot logits (softmax over the K=4 partner slots + none; 'I am giving way to this partner'). Broadcast with the SAME t-1 latency as the planned-command intents (sample['published_coop']); partners observe 2 extra features per partner slot (partner_p_coop, yield_target) through ZERO-INITIALISED input columns, so the loaded policy acts identically.",
+  "block_layout": "[gap_m, lane_offset, v_mps, a_mps2, last_cmd, present, intent_1..intent_H, intent_valid, partner_p_coop, yield_target] * K",
+  "dims": "v2v_dim = v2v_coop_dim(4, 5) = 56 with the coop signal (48 = K*(6+H+1) without it); per-partner slot stride 14 = 6+H+1+2",
+  "coop_columns": "2 per partner slot at offsets slot*14+12..slot*14+13 (tools/coopmwm/v2v_obs.coop_columns)"
+ },
+ "config_keys": {
+  "v2v_coop_signal": "bool, default False; requires v2v_intent=True (ValueError otherwise, in vi.settings and v2v_runner.prepare)",
+  "v2v_coop_signal_loss_weight": "float, default 1.0 when on; must be finite and >= 0",
+  "v2v_dim": "must equal v2v_coop_dim(K, H) = 56 when on (validated by v2v_intent.settings)",
+  "identical_for_arms": "v2v_runner.prepare(...) emits the SAME coop keys for A, B and R (arm-agnostic binding, like the intent keys)",
+  "A_arm": "A runs the same IntentPolicy coop head from the same u0; A has no bank (b_replay only for B/R), so no pair of A ever carries coop_targets"
+ },
+ "training_targets": {
+  "source": "bank pairs of entries whose plan is labelled cooperative within its seed (the confirmation record's existing cooperation label, computed on the first seed; replay_bank.bank_pairs coop.get('cooperative') is True)",
+  "p_coop": "plan members of those pairs get p_coop target 1 (tools/coopmwm/v2v_intent.attach_coop_targets: sample['coop_targets'][vid] = [1., yield_slot or None])",
+  "yield_target": "the plan member whose gap their deceleration opens, determined from the plan only: the member's own plan-window commands must contain a deceleration (min command < 0, pure sign rule - NO hand-set behavioural threshold), and the target is the NEAREST other plan member in the SAME lane BEHIND them at the plan-start trace frame (max s_m, vid tie-break); the slot index is resolved through the pair's recorded partner ranking (intent_link.slots); not determinable or not among the partner slots -> none (CE target = none class)",
+  "masking": "ALL other pairs (non-cooperative bank entries) and ALL PPO rollouts get NO coop supervision (masked): the coop term exists only in bank_imitation's bank_term over pairs carrying coop_targets; p_coop is never pushed down outside cooperative plans; PPOIntent.term touches only the intent head",
+  "loss": "BCE(p_coop logit) + CE(yield logits over K slots + none) per supervised member, mean over members, times v2v_coop_signal_loss_weight; shares the intent trunk-detach setting (v2v_intent_detach_trunk, default True)",
+  "inputs_refresh": "bank coop INPUTS are built empty (zeros) at pair attach and recomputed every update by v2v_intent.refresh_bank_intents from the CURRENT head on each partner's own t-1 bank context (deployment-consistent; yield slot resolved via the t-1 pair's recorded ranking; never recorded commands), exactly like the intent inputs"
+ },
+ "fairness_note": "CONSEQUENCE FOR ARM A (documented as required): A has no bank, and coop supervision exists ONLY on bank pairs of cooperative plans - PPO rollouts are masked by design. A's coop head therefore receives NO gradient ever (its output feeds nothing in the action path and the coop loss never sees an A pair), so it stays frozen at its zero initialisation for the whole run: A permanently publishes p_coop=0.5 and a uniform yield distribution, and its partner coop-signal input columns stay at their zero initialisation. B and R (bank arms) learn the head. This is a real asymmetry: with v2v_coop_signal ON, B/R get an extra supervised signalling channel A cannot learn. It is disclosed here and in the binding keys (identical for every arm) so the A/B/R comparison under this option is interpreted with A as the no-bank reference, exactly like the existing intent-head asymmetry (A's intent head trains only from PPO own-command targets, which DO exist for A).",
+ "wiring": {
+  "v2v_obs": "v2v_coop_dim/published_coop/coop_columns/V2V_COOP_SIGNAL_FEATURES; v2v_intent_features(..., coop=dict(board)) appends the 2 coop features per slot at the same t-1 validity rule (published exactly at now-1, p in [0,1]; coop validity independent of intent validity)",
+  "v2v_intent": "settings/config_keys coop keys; IntentPolicy._attach_intent(..., coop) adds zero-init coop_head Linear(64, 1+K+1); coop()/publish_coop(); resolve_yield/resolve_coop (deterministic argmax, lowest index on ties, none index or empty slot -> None); coop_terms/coop_bank_term/coop_bank_stats; bank_term adds the coop term only when policy.coop_enabled; bank_stats/weight_norms gain coop keys only when on; attach_coop_targets + yield_target_vid; refresh_bank_intents writes coop inputs and reports coop_slots/coop_slots_valid only when on; loaders accept u0/v2v-only(24)/intent(48)/coop(56) checkpoints into a coop policy with ZERO new input columns and zero heads (actions identical at load; Adam moments kept/re-gridded); a coop checkpoint requires v2v_coop_signal on (ValueError otherwise); from_weights detects coop from state-dict keys",
+  "bank_v2v": "intent dict gains coop=dict(board); _block_dim/_intent_features honour it; attach_pairs builds coop inputs EMPTY (zeros)",
+  "replay_bank": "bank_pairs(..., v2v_intent=binding) detects v2v_coop_signal in the binding, passes coop board placeholder to attach_pairs and calls vi.attach_coop_targets on the kept pairs of cooperative entries; summary gains 'v2v_coop_signal' (supervised_pairs/unsupervised_pairs) ONLY when on",
+  "v2v_runtime": "controller_class Controller keeps coop_board (vid -> (published second, p_coop, yield vid)); Proxy publishes sample['published_coop'] (resolved against the frame's partner ranking) and passes the coop board into the observation spec; all gated on policy.coop_enabled",
+  "v2v_runner": "prepare(..., v2v_coop_signal=False, v2v_coop_signal_loss_weight=1.) adds the coop keys when v2v_intent is on; explicit ValueError when coop is set without v2v_intent or with v2v_dim != 56",
+  "v2v_live": "hooks() policy_factory constructs IntentPolicy(..., coop, coop_loss_weight) from the resolved settings; bank_pairs hook unchanged (the binding dict carries the coop keys)",
+  "exact_grade": "exact_update report['v2v_intent'] gains coop_target_rule and coop_loss/coop_members_supervised/coop_pairs in before/after (bank_stats) ONLY when the policy has coop enabled; coverage() is stride-aware"
+ },
+ "tests": {
+  "new_file": "tools/coopmwm/test_v2v_coopsig_cpu.py (17 CPU tests, real torch, no SUMO)",
+  "covers": [
+   "coop block layout/columns and coop-off zeros; published_coop validity (never same-step, stale, non-probability)",
+   "OPTION OFF: settings/keys/policy unchanged; stray coop_targets never reach a coop-off loss (exact equality with the intent-only term); runtime publishes no coop",
+   "ZERO-INIT IDENTITY AT LOAD: u0 -> coop, intent(48) -> coop, v2v-only(24) -> coop all give identical actions/logp/values (<=1e-7) with zero coop columns and zero coop head; Adam moments kept/re-gridded",
+   "BROADCAST t-1 LATENCY: runtime controller - nothing at t, partner publication visible at t+1 only, same-step never, skipped second goes stale; yield_target bit marks only the named partner",
+   "MASKED TARGETS: coop targets only for cooperative plans and only plan members (p_coop=1; yield slot from the plan geometry: c1 -> none, non-decelerating plan -> all none, non-cooperative entry -> no targets); coop_terms grad reaches only the coop head (trunk detached); PPO rollouts unsupervised",
+   "refresh fills coop inputs from the current head on t-1 contexts; recomputed every refresh",
+   "one cooperative bank update end to end: coop loss falls, coop input columns move, metrics JSON-serialisable",
+   "registered bank wiring: coop targets only through cooperative entries (coop False -> none), 56-wide blocks, summary section; save/load roundtrip incl. from_weights and rejection paths",
+   "runner/live binding keys identical for the arms; coop-without-intent and width mismatches rejected"
+  ],
+  "run_command": "python -m pytest tools/coopmwm/test_v2v_intent_cpu.py tools/coopmwm/test_v2v_coopsig_cpu.py -q  -> 33 passed",
+  "family_run": "python -m pytest <all tools/coopmwm/test_v2v_*cpu.py> + test_replay_bank_v2v_cpu.py + test_replay_bank_confirm_cpu.py + test_bank_imitation_cpu.py + test_imitfix2_cpu.py + test_coopfix_exact_gate_cpu.py  -> 190 passed, 0 failed (single combined run at head 96688ea9)",
+  "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe (torch CPU)",
+  "required_files": "test_v2v_intent_cpu.py PASSED (17 tests) and every test_v2v_*cpu.py PASSED (11 files, including the new test_v2v_coopsig_cpu.py)"
+ },
+ "constraints_respected": "CPU only (no SUMO, no GPU, no ssh/remote); work confined to this worktree (E:/agent-work/c4-coop-signal, branch c4/coop-signal); no git reset/clean/stash-drop/push; no sealed/ or holdout/heldout/cal_split/chunk5/j4b/inc1 paths opened; no hetdata_truth or vType/driver/vehicle_params truth files read; NO hand-set behavioural thresholds introduced (the yield rule is a pure sign test min(command) < 0 plus nearest-same-lane-follower-from-the-plan geometry; publication validity uses the already-registered exact t-1 rule and the probability range [0,1])",
+ "timestamp": "2026-11-04"
+}
