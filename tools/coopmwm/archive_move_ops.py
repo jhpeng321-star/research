@@ -84,7 +84,8 @@ assert not (r/'PREPARE_FAILED.json').exists() and cpu['pass_']
 categories={{}}
 for e in m['entries']:
  item=categories.setdefault(e['category'],dict(files=0,bytes=0));item['files']+=1;item['bytes']+=e['bytes']
-print(json.dumps(dict(prepared=v,source_sha256=cpu['source_hashes']['archive_move.py'],categories=categories)))''',timeout=45))
+print(json.dumps(dict(prepared=v,source_sha256=cpu['source_hashes']['archive_move.py'],categories=categories,
+ **(dict(resume=json.loads((r/'RESUME.json').read_text())) if (r/'RESUME.json').exists() else {{}}))))''',timeout=45))
     p=ops.EVIDENCE/REG_RECORD
     if not p.exists():
         line=('\nS-COOPMWM MAIN2026-11-03 14:50 SHA-GATED MOVE: selected completed '
@@ -135,6 +136,45 @@ def launch():
     write(p,d);print(json.dumps(d))
 
 
+def collect():
+    """Mirror immutable per-batch proofs; never modifies an archive source."""
+    import base64,hashlib
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,base64,hashlib,shutil,time
+r=Path({ROOT!r});m=json.loads((r/'MANIFEST.json').read_text());rows=[]
+for p in sorted(r.glob('ARCHIVE_MOVE_batch*.json')):
+ data=p.read_bytes()
+ try:json.loads(data)
+ except json.JSONDecodeError:continue
+ rows.append(dict(name=p.name,sha256=hashlib.sha256(data).hexdigest(),data=base64.b64encode(data).decode()))
+print(json.dumps(dict(unix=time.time(),manifest_sha256=hashlib.sha256((r/'MANIFEST.json').read_bytes()).hexdigest(),
+ entries=m['entries'],batches=rows,disk_free=shutil.disk_usage('/home/ubuntu').free)))''',timeout=45))
+    categories={}
+    mapping={e['relative']:e for e in value['entries']}
+    for e in value['entries']:
+        c=categories.setdefault(e['category'],dict(planned_files=0,planned_bytes=0,moved_files=0,moved_bytes=0))
+        c['planned_files']+=1;c['planned_bytes']+=e['bytes']
+    for item in value['batches']:
+        blob=base64.b64decode(item['data']);assert hashlib.sha256(blob).hexdigest()==item['sha256']
+        batch=json.loads(blob);assert batch['manifest_sha256']==value['manifest_sha256']
+        verified={e['relative']:e for e in batch['verified']}
+        for rel in batch['deleted_sources']:
+            e=mapping[rel];assert verified[rel]['sha256']==e['sha256']
+            c=categories[e['category']];c['moved_files']+=1;c['moved_bytes']+=e['bytes']
+        for c in categories.values():
+            if c['moved_files']==c['planned_files'] and 'source_free_at_completion_batch' not in c:
+                c['source_free_at_completion_batch']=batch['source_free']
+        target=ops.EVIDENCE/(item['name'].removesuffix('.json')+'_'+ROOT.rsplit('_',1)[-1]+'.json')
+        if target.exists():assert target.read_bytes()==blob
+        else:
+            with target.open('xb') as f:f.write(blob)
+    result=dict(unix=value['unix'],manifest_sha256=value['manifest_sha256'],categories=categories,
+        batches=len(value['batches']),disk_free=value['disk_free'],new_sim_s=0,new_deletions=0,
+        contract='byte-identical copied completed batch proofs; free space reported at observed category-completion batch')
+    p=ops.EVIDENCE/f'ARCHIVE_MOVE_PROGRESS_{time.time_ns()}.json';write(p,result)
+    print(json.dumps(dict(receipt=str(p),**result)))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','prepare','status','register','launch'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','prepare','status','register','launch','collect'))
     globals()[p.parse_args().action]()

@@ -18,7 +18,7 @@ import time
 HOME=Path('/home/ubuntu')
 RUN=HOME/'coopmwm20261102_warm1'
 LS=HOME/'coopmwm20261102_lscollect1'
-CONTROL=HOME/'coopmwm20261103_archive1450_v2'
+CONTROL=HOME/'coopmwm20261103_archive1450_v3'
 DEST='/root/cpuq_archive_20261103/coopmwm_1450_v1'
 TARGET=10*1024**3
 BAD=re.compile(r'sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth|vehicle_params|driver_params|vtype|assignment',re.I)
@@ -207,12 +207,30 @@ def ssh_command():
 
 
 def remote(code):
-    import base64
-    encoded=base64.b64encode(code.encode()).decode()
-    command=ssh_command()+['/root/miniconda3/bin/python -c '+shlex.quote('import base64;exec(base64.b64decode('+repr(encoded)+'))')]
-    p=subprocess.run(command,capture_output=True,text=True,timeout=600)
+    command=ssh_command()+['/root/miniconda3/bin/python -']
+    p=subprocess.run(command,input=code,capture_output=True,text=True,timeout=600)
     if p.returncode:raise RuntimeError('archive SSH verification failed: '+p.stderr[-3000:])
     return json.loads(p.stdout)
+
+
+def resumed_entries(entries, receipts):
+    """Skip only sources whose exact deletion is certified by a prior SHA batch."""
+    manifest={e['relative']:e for e in entries};removed={}
+    for receipt in receipts:
+        verified={e['relative']:e for e in receipt['verified']}
+        for name in receipt['deleted_sources']:
+            if name not in manifest or name not in verified:raise ValueError('uncertified archive deletion')
+            entry=manifest[name];proof=verified[name]
+            if proof['sha256']!=entry['sha256'] or proof['bytes']!=entry['bytes']:
+                raise ValueError('prior archive batch differs from manifest')
+            if Path(entry['source']).exists():raise ValueError('deleted archive source reappeared')
+            removed[name]=entry
+    remaining=[]
+    for entry in entries:
+        if entry['relative'] in removed:continue
+        if not Path(entry['source']).is_file():raise ValueError('missing source without verified archive receipt')
+        remaining.append(entry)
+    return remaining,list(removed.values())
 
 
 def delete_verified(entry,remote_sha,opened):
@@ -235,12 +253,47 @@ def move(manifest_sha):
     if digest_file(__file__)!=authority['source_sha256']:raise ValueError('archive worker source changed')
     write(CONTROL/'MOVE_OWNER.json',owner());m=json.loads((CONTROL/'MANIFEST.json').read_text())
     # Both parent location and available target space are verified before transfer.
+    recovery=authority.get('resume')
+    prior_bytes=0;index=0
+    if recovery:
+        prior=Path(recovery['prior_control']);assert prior==HOME/'coopmwm20261103_archive1450_v2'
+        assert digest_file(prior/'MANIFEST.json')==manifest_sha
+        old=json.loads((prior/'MOVE_OWNER.json').read_text());proc=Path('/proc',str(old['pid']))
+        if proc.exists():
+            stat=(proc/'stat').read_text().split()
+            assert stat[21]==old['start_ticks'] and stat[2]=='Z','adopt live archive worker'
+        assert "Argument list too long" in json.loads((prior/'MOVE_FAILED.json').read_text())['error']
+        batches=sorted(prior.glob('ARCHIVE_MOVE_batch*.json'))
+        receipts=[json.loads(p.read_text()) for p in batches]
+        assert all(v['manifest_sha256']==manifest_sha and v['destination']==DEST for v in receipts)
+        m['entries'],removed=resumed_entries(m['entries'],receipts)
+        checks=[dict(relative=e['relative'],sha256=e['sha256'],bytes=e['bytes']) for e in removed]
+        proof=remote(f'''from pathlib import Path
+import json,hashlib
+base=Path({DEST!r});assert base.is_dir();n=0
+for e in {checks!r}:
+ p=base/e['relative'];assert p.is_file() and not p.is_symlink()
+ h=hashlib.sha256()
+ with p.open('rb') as f:
+  for block in iter(lambda:f.read(1048576),b''):h.update(block)
+ assert p.stat().st_size==e['bytes'] and h.hexdigest()==e['sha256']
+ n+=1
+print(json.dumps(dict(verified=n)))''')
+        assert proof['verified']==len(removed)
+        prior_bytes=sum(e['bytes'] for e in removed)
+        index=max((int(p.stem.rsplit('batch',1)[1]) for p in batches),default=-1)+1
+        write(CONTROL/'ADOPTED_BATCHES.json',dict(prior_control=str(prior),verified_files=len(removed),
+            verified_bytes=prior_bytes,next_batch=index,manifest_sha256=manifest_sha))
     target=remote(f'''from pathlib import Path
 import json,shutil
 p=Path({DEST!r});assert p.parent.parent.is_dir();p.parent.mkdir(exist_ok=True)
-if p.exists():raise ValueError('archive namespace exists; inspect/adopt before any overwrite')
-p.mkdir();print(json.dumps(dict(free=shutil.disk_usage(p).free)))''')
+if {bool(recovery)!r}:assert p.is_dir()
+else:
+ if p.exists():raise ValueError('archive namespace exists; inspect/adopt before any overwrite')
+ p.mkdir()
+print(json.dumps(dict(free=shutil.disk_usage(p).free)))''')
     needed=max(0,TARGET-shutil.disk_usage(HOME).free)
+    needed=min(needed,sum(e['bytes'] for e in m['entries']))
     if target['free']-needed<2*1024**3:raise ValueError('insufficient archive target margin')
     moved=0;batch=[];size=0
     def transfer(xs,index):
@@ -277,7 +330,6 @@ print(json.dumps(out))''')
             if delete_verified(e,verified[e['relative']],opened):deleted.append(e['relative']);moved+=e['bytes']
         write(CONTROL/f'ARCHIVE_MOVE_batch{index:04}.json',dict(unix=time.time(),manifest_sha256=manifest_sha,
             verified=checks,deleted_sources=deleted,destination=DEST,source_free=shutil.disk_usage(HOME).free,new_sim_s=0))
-    index=0
     for entry in m['entries']:
         if shutil.disk_usage(HOME).free>=TARGET:break
         batch.append(entry);size+=entry['bytes']
@@ -285,6 +337,7 @@ print(json.dumps(out))''')
             transfer(batch,index);index+=1;batch=[];size=0
     if batch and shutil.disk_usage(HOME).free<TARGET:transfer(batch,index)
     result=dict(unix=time.time(),manifest_sha256=manifest_sha,moved_bytes=moved,
+        adopted_verified_bytes=prior_bytes,total_verified_moved_bytes=prior_bytes+moved,
         source_free=shutil.disk_usage(HOME).free,target_reached=shutil.disk_usage(HOME).free>=TARGET,
         destination=DEST,new_sim_s=0,all_deleted_files_remote_and_source_SHA_verified=True)
     write(CONTROL/'COMPLETE.json',result);return result

@@ -55,5 +55,27 @@ class ArchiveTests(unittest.TestCase):
         e,p=self.entry();self.assertTrue(a.delete_verified(e,e['sha256'],set()))
         self.assertFalse(p.exists())
 
+    def test_large_verification_payload_uses_stdin_not_an_argv_element(self):
+        import types
+        code='x=' + repr('x'*300000)
+        with patch.object(a.subprocess,'run',return_value=types.SimpleNamespace(returncode=0,stdout='{}')) as call:
+            self.assertEqual(a.remote(code),{})
+        args,kwargs=call.call_args
+        self.assertEqual(args[0][-1],'/root/miniconda3/bin/python -')
+        self.assertEqual(kwargs['input'],code)
+        self.assertLess(max(map(len,args[0])),1000)
+
+    def test_partial_resume_requires_recorded_deletion_and_exact_manifest(self):
+        e,p=self.entry();e['relative']=str(p.relative_to(self.home))
+        left,done=a.resumed_entries([e],[]);self.assertEqual(left,[e]);self.assertEqual(done,[])
+        p.unlink()
+        with self.assertRaisesRegex(ValueError,'missing source'):
+            a.resumed_entries([e],[])
+        receipt=dict(verified=[dict(relative=e['relative'],sha256=e['sha256'],bytes=e['bytes'])],deleted_sources=[e['relative']])
+        left,done=a.resumed_entries([e],[receipt]);self.assertEqual(left,[]);self.assertEqual(done,[e])
+        receipt['verified'][0]['sha256']='wrong'
+        with self.assertRaisesRegex(ValueError,'differs from manifest'):
+            a.resumed_entries([e],[receipt])
+
 
 if __name__=='__main__':unittest.main()
