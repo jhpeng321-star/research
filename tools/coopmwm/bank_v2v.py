@@ -189,15 +189,15 @@ def branch_controller_class():
             return getattr(self.real, name)
 
     class V2VController(base):
-        """last_commands per step = the commands in effect at the previous second (the apply()
-        ``commands`` argument, i.e. what was issued at t-1); partner accelerations = the
-        per-second finite difference of the recorded speeds (the offline trace records the
-        issued command in the same slot)."""
+        """last_commands per step = the commands in effect at the current second (the apply()
+        ``commands`` argument), i.e. the commands issued at the PREVIOUS second - the same
+        quantity the offline trace records as issued_acceleration_mps2 of the previous frame.
+        Partner accelerations = the per-second finite difference of the recorded speeds."""
 
         def __init__(self, *a, **k):
             super().__init__(*a, **k)
             self.v2v_cfg = dict(DEFAULT_CFG)
-            self.v2v_last, self._v2v_prev_v, self._v2v_state = {}, None, None
+            self._v2v_prev_v, self._v2v_state = None, None
 
         def apply(self, rows, commands, now):
             self._v2v_state = (list(rows), dict(commands), int(now))
@@ -207,8 +207,6 @@ def branch_controller_class():
                 return super().apply(rows, commands, now)
             finally:
                 self.policy = saved
-                self.v2v_last = {r['vid']: float(commands[r['vid']]) for r in rows
-                                 if r.get('is_cav') and r['vid'] in commands}
                 self._v2v_prev_v = {r['vid']: float(r['v_mps']) for r in rows}
 
         def v2v_block(self, context):
@@ -222,7 +220,8 @@ def branch_controller_class():
                     v['issued_acceleration_mps2'] = a
                     v['command_present'] = a is not None
                 vehicles.append(v)
-            known = {k: c for k, c in self.v2v_last.items() if c is not None}
+            known = {r['vid']: float(commands[r['vid']]) for r in rows
+                     if r.get('is_cav') and r['vid'] in commands}
             frame = dict(time_s=now, vehicles=vehicles)
             block = {}
             for m in context['members']:
