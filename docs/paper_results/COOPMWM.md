@@ -1,8 +1,20 @@
 # S-COOPMWM — live checks
 
+Operational check13:16+08: both GPUs' two existing NICHENULL3 workers are live,
+eight gates qualified per slot, no failure; utilisation snapshots93%/94%.
+B-u10's first12 episodes are advancing (observed t1005–1139/1200 at13:13:09);
+R remains at completedu9 under lag-1 pacing. No STOP/active B/R pause. Interim
+public completions13:13:46:A96/B62/R84, no failures. Local integrity validation
+passes all4 u9 report seals, combined/original identity, all20 isolated branches
+and phase arithmetic, with zero new SUMO/inference. Artifact
+`coopmwm/U9_RECEIPT_INTEGRITY_1793682964164781700.json`. Corrected status also counts
+R-u9's5 separately stored fresh-u3 references:38 new branches, not33. Original
+R-u9 diagnostic has8 graded states; its+140.267veh-s gain on986036/t300 retains
+the original new-policy background, so the isolated variant is needed to interpret it.
+
 ## Nov3 13:10 UTC+8 — complete isolated B-u9 check; current banks keep growing
 - All four original cooperative B-u9 states are now graded in the isolated V2
-  diagnostic: 16 new branches,14,760sim-s precharge, no failed or imputed state.
+  diagnostic: 20 new branches,14,760sim-s precharge, no failed or imputed state.
   With every non-group CAV on u3, group-only saving / best-solo saving /
   isolated cooperation gain are, in veh-s:
   - 986048/t300: **+0.270240 / +0.270273 / -0.000032718**.
@@ -32,6 +44,11 @@
 - Evidence: `coopmwm/RESUME_BANK_ISOLATED_1793682632904292600.json`,
   `coopmwm/POLICY_SYNERGY_u009_B_ISOLATED_V2.json`,
   `coopmwm/COMPOSITE_PHASE_BALANCES_1793682516626446700.json`.
+- Receipt-integrity correction: the earlier public status counter counted16
+  group/all/solo branches but omitted4 background-only branches stored separately
+  in each entry. The charge already includes all20. Local status counting now
+  also includes separately stored fresh-u3 reference branches. Original raw
+  reports and earlier status receipts are preserved.
 
 Interim metadata update13:00:41+08: **A96/B26/R48** episode hash receipts complete,
 both owners live/no failures; outcome values remain closed. V2 read-only observer7456

@@ -123,7 +123,9 @@ status=json.loads((c/'STATUS.json').read_text()) if (c/'STATUS.json').exists() e
     for name,report in value['reports'].items():
         summary[name]=dict(status=report['status'],charged_sim_s=sum(e.get('charged_sim_s',0) for e in report['entries']),
             adopted_branches=sum('adopted_lesson_sha256' in b for e in report['entries'] for b in e.get('results',[])),
-            new_branches=sum('adopted_lesson_sha256' not in b for e in report['entries'] for b in e.get('results',[])),
+            new_branches=sum(sum('adopted_lesson_sha256' not in b for b in e.get('results',[]))
+                +int(e.get('background_only_result') is not None)
+                +int(e.get('fresh_u3_reference') is not None) for e in report['entries']),
             entries=[{k:e.get(k) for k in
             ('verification_id','status','reason','policy_cooperation_gain_veh_s','plan_cooperation_gain_veh_s')}
             for e in report['entries']])

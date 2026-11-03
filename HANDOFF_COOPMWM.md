@@ -1,6 +1,16 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
-PUBLISH Nov3 13:10+08: B9ISOLATEDV2ALL4states/16branchesCOMPLETE14760sim-s,
+CHECK Nov3 13:16+08: all4GPUslotsLIVE/8gates/noFAIL, util93/94sample.
+B10first12episodesat1005..1139/1200at13:13:09; R9waitinglag1, noSTOP/pause.
+InterimA96B62R84at13:13:46/noFAIL. OriginalR9diagnostic8statesCOMPLETE;
++140.267on986036hasNEWbackground/notisolatedproof. MetadataintegrityPASS:
+4seals/jointidentities/20isolatedbranches/phasearithmetic/zeroSUMO+inference.
+ReceiptU9_RECEIPT_INTEGRITY_1793682964164781700; localstatuscounterNOWincludes
+4backgroundbranchesB9(20total) and5fresh-u3referencesR9(38newtotal).
+Existingread-onlyobserversmayretainoldcounterintheirloadedmodule; rawreports
+includeallbranchesandcharges, no numerical/trainingdeployment needed.
+
+PUBLISH Nov3 13:10+08: B9ISOLATEDV2ALL4states/20branchesCOMPLETE14760sim-s,
 gains-.000032718/-.000713562/-.069573605/0 => NOlearnedgroupsynergyatu9.
 Backgrounddeltas+564.694/-379.788/+4989.651/+2071.233; originalplangainsretained.
 BanksB96decisions46positive12admitted5coop;R46/31/12/10at13:10:31;
@@ -16,6 +26,8 @@ gains-.000032718/-.000713562/-.069573605/0, R9firstentry-.003237410.
 Interim3442884+3499917LIVE/noFAIL/publichashcountsA96B45R68at13:07:37;
 outcomesclosed. No newdispatch/gates/signals/physics. Adoptcurrentowners.
 ReceiptRESUME_20261103_1308.md. Nextpublishcompleteisolatedevidence/balances.
+Laterintegrityauditcorrects16->20: statusomitted4separatebackgroundbranches;
+14760chargealreadyincludesall20. Originalreceiptsretained, localcounterfixed.
 
 OBSERVE Nov3 13:00:41+08: interimA96/B26/R48 publichashcompletions, owners3442884/
 3499917LIVE/noFAIL/outcomesclosed. V2readonlymirror7456creationverifiedLIVE.
