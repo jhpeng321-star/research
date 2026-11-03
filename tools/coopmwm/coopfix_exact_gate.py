@@ -556,4 +556,4 @@ def main(argv=None):
 
 
 if __name__ == '__main__':
-    main()
+    print(json.dumps(main(), indent=1, default=str))
