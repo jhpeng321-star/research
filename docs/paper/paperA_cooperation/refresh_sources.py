@@ -62,6 +62,7 @@ REPORTS = {
     "wmteach_report": "E:/agent-work/c4-wmteach/docs/paper_results/WMTEACH.md",
     "coopmwm_report": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM.md",
     "coopmwm_design": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md",
+    "coopmwm_interim_u8": "E:/agent-work/c4-coopnative/docs/paper_results/coopmwm/INTERIM_U8_RESULT.json",
     "coopmwm_warm_scope": "E:/agent-work/c4-coopnative/docs/paper_results/coopmwm/WARM2354_AMENDMENT.json",
     "mppi_search_contract": "E:/agent-work/c4-mppi-search/MPPI_SEARCH_README.md",
     "branch_eval_initial_contract": "E:/agent-work/c4-branch-eval/BRANCH_EVAL_README.md",

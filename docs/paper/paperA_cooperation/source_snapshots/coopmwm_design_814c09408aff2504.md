@@ -1,0 +1,70 @@
+# S-COOPMWM — B-REPLAY running from u3; independent bank collection
+1. MAIN14:06 V2Vcap17471840 registered67320dae supersedes14.5M/fresh6M; exact+2971840 onlynewV2Vphases,oldphaseallocationsunchanged. HistoricalMAIN07:06 checks->train144000/b6c1b8bf retained. Allcharges retained/sharedledger+lock. CurrentnonV2V sourcebindingsretainconservative14.5M in-memory, neverimplicitlymutated; newV2Vready/Linux/rehearsal/resourcegatesbeforephysics.
+2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
+3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
+4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
+5. LatestB-REPLAY: own-policy SUMO PPO episodes/no executedplans or WMwait; plus AWRfromsame-arm exact-positive replicated/later-safe bank; Rownrandombank. Aunchanged. No WM/behaviour reward.
+6. All live CAVs choose1s acceleration residuals added to MAPPO raw commands; no gap/speed action coordinates.
+7. Exact zero abstains before unchanged safety: actual frozen MAPPO executor bitwise parity CPU-tested.
+8. Reuse COOPFREE pre-safety injection, unchanged safety/CommandOwnership; MAIN1639 CUDAcallbackgate CPU/GPU EXACT0 but absoluteobservabletrajectoryFAIL(.860m/.381mps max); mirrorOFF botharms/no full-road parity claim.
+9. Actor uses whitelisted local telemetry/neighbours; zero-init4D RSU broadcast.
+10. Central critic pools CAV features plus12RSU zone observations; no hidden channels.
+11. AR1 phi=exp(-1/5), spatialshared rho.5, sigma.5m/s²; logged conditional joint density/previous noise.
+12. Reuse PPO4epochs/Adam3e-4/clip.2/KL.045; gamma exp(-1/600),lambda exp(-1/1200).
+13. Critic GAE e-folding400s; complete900s task after300s warmup, terminal0.
+14. WM fixed FULL-v4 source22cc32f6; later qualified v5 requires a new registered arm.
+15. Reuse WMTEACH futures/executors; speed2 masked-virgin-prefix pure geometry, full1600-slot source/controller; transfers opt-in exact parity.
+16. R=random generic profiles around SAME warm current-policy centre(K1/H300); zero candidate WM scoring/ranking/library; MAIN1447 best-effort count/regime/size+-1, ticketduration retained, allstratumshortfalls reported.
+17. Roster only; joint FIT driver prior/uniform32FIT source: integer round(rate*t) pseudo-counts/exposure t.
+18. Rolling60s genuine observable history -> frozen FULL-v4 encoder/motion posteriors/shrinkage; unseen prior; CRN across candidates; source pseudo-exposure disclosed.
+19. Groups2..6 anywhere/all lanes/ramp,100m chaining; >6 contiguous subsets prefer lane diversity, smallest span, downstream; disjoint rechaining.
+20. All A/B/R restart MAPPOu0 in isolated acceleration namespaces;811640superseded charges retained.
+21. Discovery-pure N=max(32,2*members*10)rounded4; livecollection it2_K2 uses2iterations/K2H300,finalK8/Hfinal,raw8goldlists/noexecution; jointniches1/4+feasibility273CPUqualified/registered, per-slotGPUactivationpending; no known-family seeds.
+22. No O1-O4 seeds; policy-centred generic smooth noise sigma.5, unique Cholesky basis; posterior bootstrap Thompson choice, beta1 initially; top-k gate is positive-vsMAPPO, own-policy contrast reported separately.
+23. H60/120/300/600. D_i=J(member-revert)-J(joint); D_G=J(all-revert)-J(joint).
+24. C_G=D_G-sum(D_i); complete paired futures required, including negative values.
+25. MAIN16:07 verified B/R guide beta1; adaptive trust retained for reporting only. R u2/u3 beta0/zero executed disclosed; existing B4 legacy wave adopted, correction from fresh decisions.
+26. Log query mass p over eligible uncommitted decisions only; beta(type,regime); R quota exhausted=>own/p0.
+27. MAIN02:01 PPO only nonexecuted/own steps (including rejected queries), standard pi_new/pi_old; never score/ratio plan steps.
+28. Critic allsteps for own PPO baseline only; plans graded ONLY exact marginal SUMO g overD+120/identicalprefix/background. Positivebuffer AWR weight1 until20grades then min(20,exp(g/T)),T=max(1,RMSfirst20veh-s) frozenperarm/seed,coefficient1 x beta. MAIN0936 adds5FULLbank-onlypostPPOpasses, pre-updatejointGaussianKL>.045 soleearlystop; no planratios/criticloss. Log requested/started/completedpasses, allpair/presentmembercoverage anderrorbefore/after. Rcap actualB-admittedtargets AFTERpositiveconfirmationfilter, legacylistcountsretained.
+29. Original E2 retained; cold/warm qualification reuses exact-labelled00/01; acceleration E2 first12random executed TRAIN plans,RNG20261101.
+30. Exact/WM E2 keeps all background CAVs on MAPPO after decision, group commitment then MAPPO; no native reversion.
+31. Select t<=600 so all H600 twins finish by1200; full-prefix COOPFREE quartet once/window.
+32. Publish C_G/D_i sign agreement, whole-world10000bootstrap95CI plus Wilson, scale95CI; 2-state qualification is descriptive, not accuracy proof.
+33. E2 runs in a2worker diagnostic thread beside PPO; serialized accounting; never reward/training gate.
+34. Zero/tie credits reported separately; scale fitted from exact data, diagnostic only.
+35. TRAIN986000..986071 primary seed20261101 only, six worlds/cell; original fresh guards/registrations retained.
+36. Check986072..986083,one/cell; TRAIN50%focus,12focus+12other; MAIN0508 replacements retained; collection focus deficit repaid to>=50% via world-metadata/count ordering, unchanged within-stratum coverage/no dropped states.
+37. AoriginalTRAINchecksretained; MAIN07:06 B-REPLAY lessons replaceoldB/Rlearningchecks, everyupdate fundedbank_verification_ext; u8interim fundedinterim_u8_test. MAIN12:05 sidecar fromu8 BOTHarms: allthen-admittedcooperative states/window/prefix/CRN; allgroupNEW vs eachmemberNEW/othergroupu3,nongroupNEW; capturedt0/interventiont0+1. Gain=delta(all)-maxdelta(solo),u3reference; adoptSHA-matchedallNEWlesson,freshu3reference forlaterstates. MAIN12:26 fromu9 ADD isolatedgroupall/soloNEW,nongroupu3 inclarrivals,plusbackground-onlyNEW/groupu3; reuseoriginalsealedu3reference/samefrozenstatelist,neverallNEWlesson asisolated. JointWITH_ISOLATED_V2 reports retainimmutableoriginals/V1chargeblocks; distinctisolatedchargekind. Completebranchsets prechargedbankext,noretry/impute; trainingunchanged.
+38. Dev984000..984023 every16updates A/B/R; existing24bitwise MAPPO bytes reused; no MAPPO dev rerun.
+39. LegacyA TRAIN4; B/Rmatched lessons everyupdate; dev16reportingonly. PrimaryA24/B24/R24,secondaryA48. Finalspawnfault375800sim-squarantined; MAIN1556approvedreplacement; source4/89CPU PASS explicitcheckpoint/SHA+final-onlycaps; B/Rcontinue.
+40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
+41. Learning reports teamreturn/value/KL, bankgrades/confirmations/admissions/coop, fullbankepoch/targetcoverage/error, matchedlesson delta andcomposite safety. Legacyguided proposal routes/O1-O4 posthoc counts remain in historical receipts.
+42. MAIN0957/1056 compositeRELEASE853bb0b6 SHA-preservesoldpause/otherguards; C1full727LinuxPASS. Restart11:11:32:watcher3305066/B3305070/R3305071/grades3305068,69 LIVE; BOTHu6complete. B6resultsreused/noSIM,Rfresh; new5requestedB2full+partial3/KL.05557,error.689699->.678985;R5full/KL.003071,error.211841->.211027. B6fixed8lesson+413.05CI[1.99,956.95]/6positive;R1lesson/noCI. Actualu6compositecriticalB+7.208CI[-19.855,33.021],R-8.792[-35.626,15.792],collisionteleport0,24pairs each. Rbank6graded/1admit+coop, targetcapB8; mode-strippedidentityrepair/noinference redo. Everyupdate samecompositeguard, original1800spacing/Rlag1/final24/cap14.5M. NamedSAFETY_RELEASE_u6(localSHAff8f4462)published. U4correct8/8done2adopt+6fresh,mean+110.659CI[-252.400,511.493]; oldrawratiosretainedinvalid. AllbanklessonsconditionalTRAIN diagnostics, sealedunopened.
+43. Globalcap17471840: OLD14.5Mphasesunchanged; NEWv2v_train2073600/interim345600/final345600/lessons21840/isolated185200. Snapshotc45a1cb0:7709790charged/9762050remaining/allphasesnonnegative/newV2Vspent0. B/Ru11complete/source3305066healthy,u12admissiondisk<2GiBblocked; R11originalsynergy9resourcefailuresretained. Hourlylive-bankreport10428,4NICHENULL3slotsREADY8/activationdone. Interim96each COMPLETE/publicMAIN13:35 resultSHAF4f357e3; finalpolicyoutcomesclosed/no result-conditionedchanges.
+44. Historical7500000/9500000/11000000/11900000/14500000 caps and previous transfers remain immutable; current17471840 globalphaseledger governs. All superseded/failed/warmup/branch charges retained,no refunds/phaseoverspend/implicittransfer. V2Vfresh-referencequote includesall5B/11Rcoopstates; futuregrowthneedsphase room beforebranch.
+45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
+46. All failures/warmup/twins precharged/no refunds or automatic retries. Historicalaf8b16e5 permits one qualified new-ID attempt per missing failed diagnostic branch, originals adopted; its original200000 discovery quote is superseded by current126200 allocation/ledger.
+47. A48complete; B/R12episodeworkers each/lag1, bankbranchworkers2perarm,nice19. MAIN0423 frozen-policy precompute up to24 workers SCHED_IDLE/nice19, grade priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no physics retry.
+48. HistoricalMAIN1651 source13/PIDs821013/821014/821012/927733 and DNS replacements retained,notcurrentowners. ActiveC1 in42; clocksNov5 23:59. FourNICHENULL3/eightgates,per-querydeclines/noinference replay. MAIN16:47 append-onlyV2Vlaunch6GiB/health/livemover; resourcewatcher4125157/0a0fd436 waits/noV2Vphysics. SHA-gatedrolling4116186/cf49a514:completed>30min/every15min/cpuQtarget8GiB/gpuRfloor4GiB; protectbank/checkpoints/finaldependencies,proofbeforeunlink.
+49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
+50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
+51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.
+52. E2 diagnostic multi-H weights normalize measured agreement on horizons with sign95CI lower>.5.
+53. Legacyguided MAIN0548/0818 quota-aware10s admission/Nexec10 applies only to old executed-plan episodes. CurrentB-REPLAY collects nonblocking snapshots from own PPO episodes, independent equal per-arm bounded queues, centre-onlyR priority before unstarted longsearches/FIFOwithinclass; no executed-plan quota or WM wait.
+54. Per-window/H report K8 joint-return advantage variance and paired-credit variance in veh-s².
+55. Frozen critic baseline is constant within window; variance is conditional WM-estimated noise.
+56. Report actual PPO advantages across TRAIN windows separately; no empirical SUMO-noise claim.
+57. Same-group CRN removes shared hidden-driver/arrival variation only to extent model supports it.
+58. Legacyguided Nexec10/u1deviation and R executed-count matching remain disclosed for u1-u3. CurrentR(u) lagsB(u), imitates at most B(u-1)'s admitted target count; whole ownPPOepisodes never wait for WM/grades. All ungraded plans are excluded from targets, never estimated or padded from B.
+59. FINAL96=989600..989635 plus fresh990600..990659,8/cell; SHAd74f685ef75a819248bbe7bb0bef89cf0295037ff3b03b334b13ccec75c40bcc.
+60. Original673opaqueMAPPO/native/A48+386invalidjobsretained; newfinal689787/start62093997 source4LIVE; MAIN1556freshA24v2full460800approved, actualcheckpointSHAchecked; B24twinsafteranalysis/noRbranches.
+61. BranchesT300/500/700/900,H300; exact same MAPPO prefix, mismatchSTOP; MAPPO-reuse600 check first; failure+115200 needs MAIN approval.
+62. Final paired world-bootstrap95CI B-MAPPO/B-A/B-R/A-MAPPO J600/J900; percell/safety; controls reused.
+63. Legacyfirst12executedBstarts RNG20261101 and final detector-first twins use current discovery126200 allocation (original200000 quote retained historically); complete n+2 full-prefix reruns before any attempt, insufficient phase stops before physics.
+64. Trust/library/covariance exact SUMO only; prefix/CRNfaultSTOP; asyncgrader live. CPU-only verifier adapter reuses exact decision-local common-maxD+120 grades with zero newbranch/charge after fivebranch+live smoke; truncatedD marginalgraded; partialplans excludedfromlibrary; reportlag.
+65. 10000 world bootstrap95CI[L,U]; e=max(|mean-L|,|U-mean|); beta=min(old,max(0,U)/(|mean|+e)).
+66. MPPI/type x regime EB buckets: tau²=max(0,var(bucketmeans)-mean(bootstrapSE²)); weight=tau²/(tau²+SE²); O1-O4 posthoc labels only.
+67. Two Holm families per comparator B-MAPPO/B-A over{allbranch,focus},two-sidedalpha.05; whole-world clusters; focus sources exact lines/SHA in amendment.
+68. Regime=LEVERPROBE ramp+crosslane pair+union of four recorded upper-quartile CAV/density bands; observable only.
+69. PlansD={30,60,90,120,150,180,240,300},knots<=10; Hfinal=min(600,max(300,D+120)); same-arm/seed SUMO-positive library/covariance only. NEWV2VA/B/R commonMAPPOu0/u1..24; B lesson+isolated6/12/18/24,Risolated12/24,Anoextra; allu8/u24episodetests/noV2Vpairedbranches; originalnonV2Vrununchanged.
