@@ -1,5 +1,17 @@
 # S-RB2-CAL — partial development delivery, recovered 2026-11-03
 
+## RESUME Nov3 18:50 +08 — saved evidence verified; resource hold remains
+
+Resume receipt: `docs/paper_results/rb2cal/RESUME_20261103_1850.md`.
+Independent verification commit `e008de54`: all57 retained task hashes,
+48 complete-world conservation checks, frozen artifact identity and saved
+report support PASS; prior report hashes unchanged. Local collector33284 is
+absent. MAIN's Nov2 02:28 resource stop remains the latest CAL authority;
+INT's Nov3 16:52 handoff also retains HOLD. Physical/probability versions below
+stay frozen and unqualified. Full dev12 needs39 missing futures after explicit
+MAIN release and source/claim/resource/deadline reconciliation. Current session
+performed verification only; no new remote liveness assertion or dispatch.
+
 ## RECOVERED Nov3 03:17 +08 — owner-stopped; cache-only completion
 
 Supersedes historical LIVE collector/CPU assertions below. Fresh-session audit:
