@@ -1,0 +1,38 @@
+{
+  "branch": "c4/intent-merged",
+  "commit": "4ebb10c6",
+  "commits": {
+    "merge": "659cefcb (c4/intent-claude 5965e131+daf9b8c7 onto cf3efc9e; run_separate conflict resolved: cf3efc9e attempt_pass kept, guarded intent bank_term hook re-added after the AWR loss line so it shares backtracking/KL/non-finite rollback)",
+    "review_fixes": "4ebb10c6"
+  },
+  "base": "cf3efc9e",
+  "review_fixes": {
+    "1_hindsight_leak": "tape_board removed. bank_v2v.attach_pairs builds partner-intent inputs EMPTY and records sample['intent_link']=(entry, t, slot partner ids on the causal frame). v2v_intent.refresh_bank_intents recomputes them in exact_update (before PPO and again before imitation) with a no-grad pass of the CURRENT head on each partner's own t-1 bank context (same entry, chained ascending t like the live board, publish() clipping). Recorded commands are only the ego's intent TARGETS. Report keys partner_intents_pre_ppo / partner_intents_pre_imitation.",
+    "2_tape_end": "validity per partner: partner not a member of the t-1 context, or t-1 pair absent (plan start / excluded second) -> zeros + intent_valid 0 for that partner only; own targets masked per element (missing second masks that element only).",
+    "3_interference": "v2v_intent_detach_trunk (default True; settings/config_keys/loader/live hooks/v2v_runner.prepare): intent loss trains the intent head only. Intent grad share (||head grad||/||all grads||, scale-invariant; exact under detach) logged in PPO metrics (accel_learner, exact_grade) and in run_separate epoch rows + report v2v_intent.intent_grad_share. Weight stays 1.0. Note: the shared .5 clip_grad_norm_ still couples magnitudes (Adam largely scale-invariant); share is logged to monitor it."
+  },
+  "tests_run": {
+    "required_suite": "test_v2v_intent_cpu, test_imitfix2_cpu, test_bank_{amendment,boot,builder,imitation,restore_ops,safety}_cpu, test_v2v_{budget_quote,int_e2e,intent,launch_quote,model,resource_watch,runner,runtime}_cpu, test_replay_bank_v2v_cpu, test_exact_grade_cpu, test_awr_cpu (18 files)",
+    "required_suite_result": "138 passed, 0 failed",
+    "new_tests": "test_v2v_intent_cpu: bank intents from current head on t-1 context (no recorded commands, future-command invariance, recomputed on head change); per-partner validity + per-element targets; detach default + grad share; e2e MAPPO-u0 intent-on -> one exact_update through run_separate on a cooperative bank (pass1_effective, intent loss falls, intent input columns move, refreshed post-PPO intents, exact Adam snapshot on every pass-1 backtrack). Option-off byte-identity gate now against cf3efc9e (passes).",
+    "related_suite": "20 other tools/coopmwm test files importing a changed module: 189 passed, 27 failed + 1 error; the same 26 failures + 1 error reproduce at cf3efc9e in a temporary detached checkout (removed); the 27th is the thread-race flake test_verify_continuation::test_concurrent_verified_grade_importers_adopt_one_receipt (fails at base with the other parametrization; 2/3 reruns pass here)"
+  },
+  "tests_passed": true,
+  "platform_only_failures": [
+    "test_acceleration_cpu.py x8 (AccelerationCPU)",
+    "test_diagnostic_repair_cpu.py::test_whole_missing_group_blocked_before_any_charge_or_launch",
+    "test_final_endpoint_cpu.py::test_spawn_worker_uses_serialized_checkpoint_even_when_import_budget_is_48",
+    "test_policy_synergy_cpu.py x2, test_policy_synergy_isolated_cpu.py x4",
+    "test_replay_start_cpu.py x3",
+    "test_sumo_verify_cpu.py::test_parallel_determinism, ::test_real_controller_never_draws_trust_again_for_verified_plan",
+    "test_tail_runtime_cpu.py x5 (+1 teardown error)",
+    "test_verify_continuation_cpu.py::test_concurrent_verified_grade_importers_adopt_one_receipt (race flake)"
+  ],
+  "arm_config_keys": {
+    "A": {"v2v": true, "v2v_dim": 48, "v2v_intent": true, "v2v_intent_horizon": 5, "v2v_intent_loss_weight": 1.0, "v2v_intent_detach_trunk": true},
+    "B": {"v2v": true, "v2v_dim": 48, "v2v_intent": true, "v2v_intent_horizon": 5, "v2v_intent_loss_weight": 1.0, "v2v_intent_detach_trunk": true},
+    "R": {"v2v": true, "v2v_dim": 48, "v2v_intent": true, "v2v_intent_horizon": 5, "v2v_intent_loss_weight": 1.0, "v2v_intent_detach_trunk": true},
+    "how": "v2v_runner.prepare(base, ..., v2v_dim=48, v2v_intent=True, v2v_intent_horizon=5, v2v_intent_loss_weight=1.0, v2v_intent_detach_trunk=True); defaults keep intent OFF"
+  },
+  "constraints": "no SUMO, no GPU, no ssh; no reset/clean/stash/push; only this worktree edited (plus a temporary detached cf3efc9e checkout for the platform comparison, removed with git worktree remove)"
+}
