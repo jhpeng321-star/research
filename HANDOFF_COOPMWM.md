@@ -1,5 +1,44 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+ALL781brief linesNOWREAD inclMAIN13:43 COMMONu0 and13:45AUTOGOgated.
+V2VrunnerNOWcommonoriginalMAPPOu0forallactivearms/u1..24; ownu3prepwasNEVER
+dispatchedandreceiptretainedassuperseded. SevenlocalCPU PASS/.006s/0skips:
+sameu0/ceiling17.5M/+3M/ABfallback/60min+ALLarmsmokegate/no-pre-gatecallbacks.
+NewreceiptV2V_RUNNER_COMMON_U0_PREPARATION_1343.json. Quote24213236ADOPTED:
+3armsexceedceiling; ABconditionalbaseline-reuse2921760fits, capnotraisedyet.
+NeverassumenewV2Vu3==legacybankbaselineu3. Legacydev16costAB57600/3arms86400.
+AutolaunchONCEintegrationREADY+rehearsal(orregisteredlatefallback)+LinuxPASS+
+registeredbudget; no additionalMAINlaunchaddendumneeded. Runtimeadapters/source
+qualification anddurablewatcherremainpending. ExistingnoV2VB/Rcontinue24.
+
+Nov3 13:59+08: V2VrunnerPREPARED (v2v_runner.py +4localCPU PASS/.004s/0skips),
+neverdispatched. OWNnewroot+v2v1jobs/ownu3/24endpoints/1800s/Rlag1/sharedledger,
+mandatoryqualifiedcomponentadapters +MAINlaunch/fundingSHAs/slatescopegates.
+Warm_runneroptionalhooks/defaultA48unchanged; newA_stop_after_update24 ONLYnewbinding;
+liveC1sourceunchanged. _sol/COOPMWM_V2V_RUNNER_CONTRACT_1354 forintegrator;
+doNOTduplicateOBS/MODEL/BANK/rehearsal. READYstillpendingatlastcheck; fullLinuxsuite
+onlyonceV2V_INT_READYexists. Existingquote16729f67/2fadf9acadopted, diagnostics/funding
+pending; legacydev16ifkept+86400notinquote. No V2Vphysics/phaseauthority.
+ActualnonV2VB/Ru11BOTHdone13:48:29/13:53:51, watcherhealthy/noalerts/dead.
+Bfixed8lesson+609.555CI[-78.492,1450.336]/5positive/error.592863;
+bankerror.893650->.895515/KLstop.065677/0fullpasses(10steps1280/1650),
+receipt explainsKLpreventedfurtherfitting. R1lesson+1573.780/noCI/error.421133;
+1FULL+partial2/19steps2312visits/error.622130->.616824/KL.051399.
+Safety24pairs/collisionteleport0; Bcritical-13.167[-38.730,9.584]/hard-1.167
+[-3.604,1.480],Rcritical-14.063[-43.376,15.042]/hard+1.104[-1.979,4.208];bothPASS.
+Canonicalu11lessons/safetycopied; status1793685565867810700. RuntimeETA~6.4hto24.
+
+INTERIM V2 COMPLETE13:47:56+08/PUBLICperMAIN13:35: canonicalINTERIM_U8_RESULT.json,
+SHAf4f357e377fe5c5385460af42ef3fb717dcb2760f9233f91e7d9e95f21c74ef2;
+_sol/COOPMWM_INTERIM_U8_MAIN_V2.md+.json, 3647689completed/adoptNEVERredo.
+FullJ900B-A-532.630CI[-1641.897,560.383],B-MAPPO-762.266[-1822.305,287.144],
+B-R-900.813[-1789.251,3.098] =>noneHolmresolved. B-native-2406.308[-3927.485,-952.685]
+/2.408%/Holmp.0044; focusallunresolved. Collisionteleportdeltas0. Nochangesconditioned
+oninterim,currentnonV2Vcontinue24. V1/private-onlyreceiptretained,historicalreport_to
+fieldis supersededby13:35publicauthority. NewresultusesSAME480episodes/zeroSUMO.
+NextV2Vrunnerwiring; quote2fadf9ac/16729f67ADOPTED(diagnostics+DEVscopepending),
+integrator/rehearsalownmerges. All766brief linesread, noV2Vlaunchapproved.
+
 NEW MAIN throughALL766linesREAD:13:24/13:32/13:40 V2V PREPAREonly: OURrunner
 wiring+budget+cpuQsuiteonce c4/v2v-int READY; otherGLMintegrator/rehearsalownmerge.
 No V2VphysicswithoutMAINlaunchaddendum. ExistingB/RnoV2Vcontinue24,4GPUcollection

@@ -1,0 +1,32 @@
+{
+  "authority": "MAIN2026-11-03 13:24/13:32/13:40 PREPARE ONLY",
+  "status": "runner hooks prepared; component integration and Linux release qualification pending",
+  "arms": ["A-v2v", "B-v2v", "R-v2v"],
+  "resume_update": 3,
+  "first_update": 4,
+  "final_update": 24,
+  "pace_s": 1800,
+  "non_v2v_live_source_modified": false,
+  "job_namespace": "v2v1",
+  "accounting": "same authoritative ledger AND accounting lock; no separate cap",
+  "bank_inputs": "read-only own-arm B/R confirmed bank; no B targets for R",
+  "reporting": "per-update matched lessons plus original/isolated synergy and composite safety; A diagnostic slate and legacy-dev scope require explicit admission",
+  "gates": ["qualified non-stub integration", "Linux CPU pass", "zero-init parity", "byte-identical default-off", "MAIN launch SHA", "phase-funding SHA", "A diagnostic slate", "reporting scope", "all component adapters"],
+  "local_verification": {
+    "command": "python -X utf8 -m unittest tools.coopmwm.test_v2v_runner_cpu -v",
+    "platform": "Windows",
+    "passed": 4,
+    "skips": 0,
+    "wall_s": 0.004,
+    "engineering_fix": "prospective Linux paths preserve POSIX separators when prepared on Windows"
+  },
+  "linux_release_qualification": "await V2V_INT_READY.json; integrator/rehearsal retain their work",
+  "budget_quote_adopted": "16729f67/2fadf9ac, fixed 3196800 sim-s before diagnostic/growth allowances",
+  "legacy_dev16_if_kept_sim_s": 86400,
+  "launch_authorized": false,
+  "phase_funding_authorized": false,
+  "new_sim_s": 0,
+  "new_inference": 0,
+  "reservation_sim_s": 0,
+  "integration_contract": "E:/agent-work/_sol/COOPMWM_V2V_RUNNER_CONTRACT_1354.md"
+}

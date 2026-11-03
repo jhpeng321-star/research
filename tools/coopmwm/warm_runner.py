@@ -86,7 +86,7 @@ def random_reference(root,u,concurrent=False):
     return path
 
 
-def run_arm(root,arm):
+def run_arm(root,arm,hooks=None):
     import fcntl
     import os
     b=verify(root,arm)
@@ -98,7 +98,7 @@ def run_arm(root,arm):
     if arm=='A':
         resume=b.get('A_resume_update',4)
         policy,opt,rng,payload=load(root/f'A_checkpoint_{resume:03}.pt');assert payload['update']==resume
-        first,last=resume+1,48
+        first,last=resume+1,b.get('A_stop_after_update',48)
     elif 'resume_update' in b:
         resume=b['resume_update']
         policy,opt,rng,payload=load(root/f'{arm}_checkpoint_{resume:03}.pt');assert payload['update']==resume
@@ -117,7 +117,7 @@ def run_arm(root,arm):
         exact_rng.bit_generator.state=progress['exact_rng_state'];exact_count=progress['exact_count']
     diagnostics=ThreadPoolExecutor(max_workers=1)
     try:
-        if arm=='A' and b.get('health_guards'):
+        if arm=='A' and b.get('health_guards') and not b.get('skip_legacy_reporting'):
             # Finish any due reporting interrupted after the durable u16 checkpoint.
             if not (root/'A_CHECK_016.json').exists():check(root,b,arm,policy,16)
             if not (root/'A_DEV_016.json').exists():
@@ -229,6 +229,10 @@ def run_arm(root,arm):
                         sources=b.get('replay_sources',{}).get(arm,()))
                 except Exception as error:
                     lesson=dict(arm=arm,update=u,error=repr(error),list_size=0,entries=[])
+            if hooks is not None:
+                # New V2V roots only: component-owned lesson/synergy integration.
+                # Default callers never enter this path or invoke a new callback.
+                lesson=hooks['diagnostics'](root,arm,u,policy,b,lesson)
             raw=[v*UNIT for e in eps for v,_ in advantages(e['steps'])]
             gpu_busy=None
             if b.get('parallel_group_queries') and arm=='B':
@@ -258,8 +262,8 @@ def run_arm(root,arm):
                 for i in exact_rng.permutation(len(candidates))[:max(0,12-exact_count)]:
                     e,s=candidates[int(i)]
                     diagnostics.submit(diagnostic_task,root,b,state,e,s,exact_count);exact_count+=1
-            if u%4==0 and not replay:check(root,b,arm,policy,u)
-            if u%16==0:
+            if u%4==0 and not replay and not b.get('skip_legacy_reporting'):check(root,b,arm,policy,u)
+            if u%16==0 and not b.get('skip_legacy_reporting'):
                 dev=wave(root,b,{arm:policy},worlds('dev'),'dev',f'warmdev{u:03}_{arm}','dev')
                 panel_report(root,f'{arm}_DEV_{u:03}.json',dev,read(root/'MAPPO_DEV.json')['records'],'dev')
         diagnostics.shutdown(wait=True)

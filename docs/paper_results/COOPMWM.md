@@ -1,5 +1,73 @@
 # S-COOPMWM — live checks
 
+MAIN13:43/13:45 supersedes the initial V2V start/launch assumptions: all active
+arms start from **the same original MAPPO u0**,zero-init V2V,updates1..24.
+Runner preparation is updated;7 local CPU tests pass(0.006s),zero simulation.
+Automatic launch is conditionally authorised after integration READY,rehearsal
+(or the registered >60min fallback plus real all-active-arm smokes),Linux PASS
+and budget registration. The +3M ceiling/17.5M total guard and A/B-only fallback
+are fail-closed. Quote24213236's conditional A/B reuse scenario2,921,760sim-s
+is adopted; no cap/allocation change has occurred. New V2V u3 weights must never
+be mistaken for an old bank reference when qualifying baseline reuse. Historical
+own-u3 preparation receipts remain preserved. Evidence:
+`coopmwm/V2V_RUNNER_COMMON_U0_PREPARATION_1343.json`.
+
+## Nov3 13:59 UTC+8 — non-V2V u11 checks; V2V runner preparation
+- B/R-u11 completed13:48:29/13:53:51. Existing watcher3305066 is healthy,
+  no alerts/dead children; original pacing to24, runtime ETA~6.4h.
+- B's8-state lesson saves **+609.555[-78.492,+1450.336]veh-s**,5/8 positive,
+  fixed-entry action error0.592863m/s². Its bank error0.893650→0.895515 increases
+  slightly during imitation; the receipt explains the registered KL stop prevented
+  further fitting. Ten steps/1280 of1650 pair visits,0 full passes,KL0.065677.
+- R's single-state lesson saves **+1573.780veh-s**, no CI; fixed error0.421133.
+  Bank error0.622130→0.616824;1 full+partial second pass,19 steps/2312 visits,
+  KL0.051399 stop. These remain conditional own-bank diagnostics.
+- Composite safety passes24 paired worlds each, collision/teleport deltas0:
+  B critical-13.167[-38.730,+9.584],hard-1.167[-3.604,+1.480];
+  R critical-14.063[-43.376,+15.042],hard+1.104[-1.979,+4.208].
+- A/B/R-v2v runner hooks are prepared with4 local CPU checks passing. Separate
+  roots/job namespace,ownu3 checkpoints,zero-init component gate,endpoints24,
+  inherited1800s pacing,R lag-1,shared authoritative accounting. No V2V dispatch.
+  Full Linux release qualification awaits the existing integrator's READY.
+- Budget helper/quote16729f67/2fadf9ac is adopted: fixed3,196,800sim-s before
+  diagnostics/growth. Explicit A slate,phase funding and reporting scope remain
+  admission gates; retaining legacy dev16 would add86,400sim-s. No cap is raised
+  or allocation spent by this preparation. Evidence:
+  `coopmwm/V2V_RUNNER_PREPARATION_1354.json`,
+  `coopmwm/B_REPLAY_START_WATCH_STATUS_1793685565867810700.json`.
+
+## Nov3 13:47:56 UTC+8 — fixed-u8 interim result (public per MAIN13:35)
+- All96 paired worlds (32 focus), fixed A/B/R8; MAPPO/native reused. V2 adds
+  B-native without rerunning simulation. Full result: `coopmwm/INTERIM_U8_RESULT.json`,
+  SHA`f4f357e377fe5c5385460af42ef3fb717dcb2760f9233f91e7d9e95f21c74ef2`.
+- Full-panel treatment-minus-comparator delay, veh-s,95% paired world-bootstrapCI:
+  - B-A: J600 **-208.070[-835.088,+428.595]**; J900
+    **-532.630[-1641.897,+560.383]**,0.543% reduction; J900 Holm p0.666333.
+  - B-MAPPO: J600 **-558.379[-1184.419,+52.760]**; J900
+    **-762.266[-1822.305,+287.144]**,0.776% reduction; J900 Holm p0.318768.
+  - B-R: J600 **-398.038[-979.476,+175.839]**; J900
+    **-900.813[-1789.251,+3.098]**,0.915% reduction; J900 Holm p0.102790.
+  - B-native: J600 **-1313.881[-2203.660,-435.751]**,2.356% reduction,
+    Holm p0.005599; J900 **-2406.308[-3927.485,-952.685]**,2.408% reduction,
+    Holm p0.004400. Only this full-panel comparator is resolved at the stated level.
+- Focus J900: B-A **-440.173[-2615.379,+1736.107]**; B-MAPPO
+  **-880.858[-2903.912,+1212.533]**; B-R **-152.000[-1661.045,+1381.973]**;
+  B-native **-538.002[-3137.097,+1863.053]**. No focus contrast resolves.
+- Collision/teleport differences are0 for every reported comparison. Full-panel
+  J900 B-native TTC<3 vehicle-seconds **-39.474[-77.448,-2.180]**, hard brake
+  **-4.854[-7.297,-2.458]**; individual safety CIs are descriptive/unadjusted.
+  Corresponding B-MAPPO differences are-13.807[-43.531,+15.641] and
+  -1.391[-2.860,+0.125]. Per-cell and full/focus safety results are in the JSON.
+- These are **interim episode-level** results, not the final paired-branch tests
+  and not evidence of learned group cooperation. Bootstrap10000/RNG20261101;
+  alpha.05 Holm over{all,focus} separately per comparator and J endpoint, with
+  no across-endpoint/interim-final multiplicity claim. V1 results are preserved.
+  No training/search/checkpoint change is conditioned on the interim; current
+  non-V2V B/R continue to fixedu24. V2V follows the separately approved preparation.
+- V2 registration`3ca57ba9…`/commit`a3f93c2a` preceded analysis. Owner3647689
+  completed/no failure, zero SUMO/inference. Delivery receipt
+  `coopmwm/INTERIM_U8_ANALYSIS_DELIVERED_1335_V2.json`.
+
 MAIN13:35 authorises public interim results and adds B-native. Additive V2 uses
 the same completed episodes/qualified bootstrap and retains all V1 artifacts.
 Four Linux CPU tests pass(0.121s), zero simulation/inference. Registration

@@ -1,0 +1,32 @@
+{
+  "authority": "MAIN2026-11-03 13:43/13:45",
+  "supersedes_start_and_launch_assumptions": "V2V_RUNNER_PREPARATION_1354.json",
+  "status": "common-u0 runner wiring prepared; integration adapters/Linux/rehearsal and registered funding pending",
+  "start_rule": "all active arms use the SAME original MAPPO u0 checkpoint bytes, extended with zero-init V2V",
+  "first_update": 1,
+  "final_update": 24,
+  "eligible_arm_sets": [["A-v2v", "B-v2v", "R-v2v"], ["A-v2v", "B-v2v"]],
+  "fallback_rule": "A/B only if three-arm quote exceeds +3000000",
+  "pace_s": 1800,
+  "additional_cap_ceiling_sim_s": 3000000,
+  "total_cap_ceiling_sim_s": 17500000,
+  "automatic_launch_authorized_conditionally": true,
+  "allocation_or_cap_change_performed": false,
+  "rehearsal_gate": "READY pass, or more than60min after integration READY plus Linux suite and real one-update smoke for every active arm",
+  "shared_accounting": "same original authoritative ledger and lock; separate new outputs/job IDs",
+  "budget_quote_adopted": "24213236; conditional A/B reuse scenario2921760, not yet phase funding",
+  "baseline_reuse_rule": "matching state/window/prefix/CRN and actual baseline-policy SHA; never assume a newly trained V2V u3 equals the original frozen bank reference",
+  "legacy_dev16_if_kept": {"three_arms_sim_s": 86400, "A_B_only_sim_s": 57600},
+  "verification": {
+    "command": "python -X utf8 -m unittest tools.coopmwm.test_v2v_runner_cpu -v",
+    "platform": "Windows",
+    "passed": 7,
+    "skips": 0,
+    "wall_s": 0.006,
+    "coverage": ["no callback before admission", "common-u0 identity", "budget ceiling", "A/B-only fallback", "rehearsal delay and all-arm smoke gate", "POSIX paths prepared on Windows", "patch restoration"]
+  },
+  "new_sim_s": 0,
+  "new_inference": 0,
+  "reservation_sim_s": 0,
+  "physics_dispatched": false
+}
