@@ -1,5 +1,18 @@
 # HANDOFF: c4/harden-int (worktree E:/agent-work/c4-harden-int), 2026-11-03 (INTEGRATION COMPLETE)
 
+RESUME RECEIPT 2026-11-03 18:1x (+08), fresh session: nothing outstanding on this branch. Verified
+intact, no code changes: tree clean at f3ad7c78; HARDEN_INT_READY.json (ready=true, commit
+d51051a9) and HARDEN_INT_REPORT.md present; rp4 results (7 scenarios) and run-root receipts
+verified on disk (h3int2 a_clean/b_slow_search/c2/e_malformed each with 2 BANK_QUALITY + 4
+LESSON_CHECK; d_transport_3/f_branch_crash rp4 vintage under h3int4; rp3 kept for the record).
+Targeted fresh test receipt on HEAD: replay_bank confirm+lesson+noop_report CPU tests 15 passed
+(72.6 s). Full targeted suite NOT rerun this session: host load 87% with ~30 foreign python
+processes (other agents; not signalled, per rules) - the documented 443/62/1 counts stand, and
+cpuQ (Linux) remains the deployment gate anyway. MAIN addenda after 04:26 (17:27/17:31/17:40/
+17:52/17:55/18:00) assign the statistical bank filter, synergy replication, coopfix/intent merges
+and V2V work to OTHER branches (c4/bank-stat-filter, c4/coopfix-int, c4/intent-int); nothing new
+is assigned to c4/harden-int. Remaining work for this branch stays LIVE ONLY (operator gates below).
+
 READY: HARDEN_INT_READY.json written at 8dd0607c (commit field d51051a9); HARDEN_INT_REPORT.md has
 the full scenario table, receipt evidence and test accounting. All 7 rehearsal scenarios completed
 on the current code (rp4 batch, roots h3int2, results h3res/rp4): a_clean, b_slow_search,
