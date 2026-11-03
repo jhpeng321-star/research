@@ -5,14 +5,14 @@ published; current-source physical LS fit reused the completed decision cache.
 All three owned job PIDs exited. Old watcher exited; no repeated LC inference.
 Recovery receipt:`artifacts/rbfit/receipts/RESUME_20261102.md`.
 
-Latest resume2026-11-03:clean starting HEAD6a389f0f preserved. Fresh read-only
+Latest resume2026-11-03:clean starting HEAD866ad9ae preserved. Fresh read-only
 cpuQ inspections confirm977061/1076804/3951028 complete/verified/exited,
 32worlds each, no PID reuse. LANE physics remains80541278 with clean source diff;
 no source-triggered fit remains. Original November1 continuation window is over.
-Prior reconciliation:`artifacts/rbfit/receipts/RESUME_FRESH_20261103.md`.
-Prior local mirror PASS:29artifact hashes across original IDM/LC and three
-recovered publications; report40lines. Receipt (commitef8aab0a):
-`artifacts/rbfit/receipts/DELIVERY_MIRROR_FRESH_20261103.json`.
+Latest reconciliation:`artifacts/rbfit/receipts/RESUME_866ad9ae.md`.
+Fresh local mirror PASS:29artifact hashes across original IDM/LC and three
+recovered publications; report40lines. Receipt:
+`artifacts/rbfit/receipts/DELIVERY_MIRROR_RESUME_866ad9ae.json`.
 Prior numerical/UNC checks retained; unchanged model/artifacts needed no rerun.
 
 <!-- LC-CONTINUATION:BEGIN -->
