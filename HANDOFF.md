@@ -1,5 +1,18 @@
 # S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
 
+## RECOVERED Nov3 16:52 +08 — authority rechecked; HOLD unchanged
+
+Receipt: `docs/rb2int/RECOVERY_20261103_1652.md`. MAIN registration checked
+through Nov3 16:47; no explicit MAIN `S-RB2-INT RESUME` release. Existing
+registration, report, candidates, claims and completed work are preserved.
+Read-only nvidia-smi: gpuA92%/10,148MiB free; gpuR95%/19,687MiB free.
+Saved incomplete receipts still record31/216 jobs and12 matched v5/v4 worlds;
+no new process-identity audit or scientific snapshot in this recovery.
+FULL-v5/LP remain engineering READY atb2df7458 with exact bindings below;
+full gate/switching NOT ESTABLISHED. No inference, scoring, dispatch, publisher
+restart or process signal. Remaining185jobs await explicit release and operational
+reconciliation; prior direct ownership receipts and report remain unchanged.
+
 ## RECOVERED Nov3 15:49 +08 — HOLD; saved report verified unchanged
 
 Fresh-session authority and direct ownership receipts:
