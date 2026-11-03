@@ -23,5 +23,30 @@
     "python -B tools/c1pidiag/validate_report.py --check-only",
     "Read-only gpuA SSH audit of the six named phase receipts, 14 source hashes, two raw-output hashes and 11 PID/start-tick pairs bound by FINAL_RUN_AUDIT.json"
   ],
-  "resume_changes": "Add a non-writing report verification mode and preserve this verification receipt; existing scientific artifacts and registration remain as completed."
+  "resume_changes": "Add a non-writing report verification mode and preserve this verification receipt; existing scientific artifacts and registration remain as completed.",
+  "subsequent_resume_verifications": [
+    {
+      "resumed_head": "686abb8f",
+      "initial_worktree_clean": true,
+      "remote_checked_utc": "2026-11-03T07:53:22.527983+00:00",
+      "status": "completed_existing_work_verified",
+      "local_report_check": "python -B tools/c1pidiag/validate_report.py --check-only",
+      "report_lines": 46,
+      "table_rows_reconciled": 20,
+      "saved_report_receipt_matches": true,
+      "local_raw_hashes_verified": true,
+      "coverage_receipt_verified": true,
+      "canonical_units": 4730,
+      "remote_phase_receipts_verified": 6,
+      "remote_source_hashes_verified": 14,
+      "remote_output_hashes_verified": 2,
+      "owned_identities_checked": 11,
+      "owned_registered_processes_active": 0,
+      "remote_verification": "Read-only gpuA audit using /root/miniconda3/bin/python -B - of named phase receipts, source/output hashes and registered PID/start-tick pairs in FINAL_RUN_AUDIT.json",
+      "new_dispatches": 0,
+      "new_inference_cells": 0,
+      "new_sumo_or_training": false,
+      "resume_changes": "Append this verification receipt; completed scientific artifacts and registration retained."
+    }
+  ]
 }
