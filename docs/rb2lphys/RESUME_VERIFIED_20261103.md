@@ -87,3 +87,21 @@
 - Recovery changes coordination receipts only. No tests, fitting, scoring,
   inference, dispatch, new tape exposure or process intervention; final
   comparison continuation remains INT/MAIN-owned under the admission HOLD.
+
+## Subsequent fresh-session verification from df9775de
+
+- Recovered clean at `df9775de`; read git status/log and worker receipts first,
+  then common rules, required round-1 morning/handoff/noon publication, worker
+  plan, agreed shared parameter ownership, report, before/after CSV and QA.
+- Fresh artifact/archive lineage verifier PASS:
+  `C:/Users/jpeng/Miniconda3/python.exe -B -m tools.rb2lphys.verify_delivery --out E:/Temp/opencode/rb2lphys_resume_df9775de_audit.json`.
+  Artifact values/hash, development allowlists, exact two-field recipe difference
+  and historical evaluated-source/canary lineage remain verified.
+- Latest INT handoff still references its Nov3 16:52 recovery: admission HOLD,
+  saved incomplete 31/216-job comparison and engineering-only readiness. These
+  are INT's recorded observations; this recovery performed no remote audit.
+- Completed worker delivery and default-OFF recommendation stand. The 37-line
+  report and full development before/after table already satisfy delivery.
+  No outstanding LP-owned work found; final comparison remains INT/MAIN-owned.
+- Only recovery receipts updated. No fitting, scoring, inference, dispatch,
+  new tape exposure or process intervention; completed jobs were preserved.
