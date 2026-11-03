@@ -139,21 +139,26 @@ def test_intents_published_at_t_observed_by_partners_at_t_plus_1(tmp_path):
                 # each ego's real partners (2 of the K=4 slots within 100 m) saw the t-1 broadcast
                 assert float(bits[:2].min()) == 1. and float(bits[2:].max()) == 0.
         # policy publishes its planned commands at t (runner hook, post-step)
-        published = publish_intents(buffer, step, {vid: [float(v) for v in row]
+        published = publish_intents(buffer, step, {vid: [float(v) for v in row.detach()]
                                                    for vid, row in zip(context['members'], planned)})
         assert published == 3
-    # one-step latency: fresh exactly one step, stale afterwards (zeros + mask 0)
-    fresh = buffer.fresh('cav0', 1)
+    # one-step latency: the latest broadcast (t=3) is fresh at t=4, stale at t=5
+    fresh = buffer.fresh('cav0', 4)
     assert fresh is not None and fresh.shape == (H,)
-    assert buffer.fresh('cav0', 2) is None
-    late = intent_blocks(rows(4), ['cav0', 'cav1', 'cav2'], buffer, 4, cfg)
+    assert buffer.fresh('cav0', 5) is None
+    state4 = rows(4)
+    mid = intent_blocks(state4, ['cav0', 'cav1', 'cav2'], buffer, 4, cfg)
+    for vid in ('cav0', 'cav1', 'cav2'):
+        bits = valid_bits(mid[vid])
+        assert float(bits[:2].min()) == 1. and float(bits[2:].max()) == 0.
+    late = intent_blocks(state4, ['cav0', 'cav1', 'cav2'], buffer, 5, cfg)
     for vid in ('cav0', 'cav1', 'cav2'):
         assert float(valid_bits(late[vid]).max()) == 0.
     # the intent payload of a FRESH broadcast is byte-exact the published row
-    table = {r['vid']: r for r in rows(1)}
-    block = v2v_intent_features(table, 'cav1', {}, buffer, 1, cfg)
+    table = {r['vid']: r for r in state4}
+    block = v2v_intent_features(table, 'cav1', {}, buffer, 4, cfg)
     view = slot_view(block)
-    ego_row = np.asarray(buffer.fresh('cav0', 1), dtype=np.float32)
+    ego_row = np.asarray(buffer.fresh('cav0', 4), dtype=np.float32)
     assert np.array_equal(view[0, 6:6+H], ego_row)
     # option OFF: EXACTLY the plain v2v block (byte-identical)
     plain_cfg = V2VConfig(v2v=True)
