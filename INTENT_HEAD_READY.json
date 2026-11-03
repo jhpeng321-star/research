@@ -1,0 +1,95 @@
+{
+  "part": "INTENT PART B (policy intent head + training losses) - planned-command intent sharing, option v2v_intent",
+  "worktree": "E:/agent-work/c4-intent-head",
+  "branch": "c4/intent-head",
+  "ready": true,
+  "date": "2026-11-03",
+  "head_commit": "000f086a coopmwm: source intent horizon from landed v2v_obs contract",
+  "commits": [
+    "1ad10d44 coopmwm: register intent head with zero-init v2v widening and supervised next-H PPO loss",
+    "03d06943 coopmwm: add masked plan-future intent targets and bank intent training behind v2v_intent",
+    "ad7fbc7b coopmwm: plumb v2v_intent binding through bank pairs, PPO/exact updates and update receipts",
+    "ae7268ea coopmwm: fix optimizer group growth for attached heads and intent CPU gates",
+    "f2a0d352 coopmwm: stabilize intent CPU gates; clip-aware bank target expectations",
+    "e5aeb239 merge c4/intent-obs: planned-command intent observation block, buffer and runtime gates",
+    "000f086a coopmwm: source intent horizon from landed v2v_obs contract"
+  ],
+  "merged": {
+    "c4/intent-obs": "e5aeb239 (INTENT_OBS_READY.json: V2V_INTENT_DIM=48 = K*(6+H+1), K=4, H=5, t-1 latency gate, V2VIntentBuffer/publish_intents, v2v_intent_features/slot block); v2v_model now sources V2V_INTENT_DIM/V2V_INTENT_H from the landed tools/coopmwm/v2v_obs.py with the pre-land stub retained as fallback"
+  },
+  "option": {
+    "key": "v2v_intent",
+    "default": false,
+    "horizon_key": "v2v_intent_horizon",
+    "horizon_default": 5,
+    "weight_key": "v2v_intent_weight",
+    "weight_default": 0.1,
+    "block": "v2v_intent ON widens actor/critic inputs by V2V_INTENT_DIM=48 zero-initialised columns (extend_for_v2v style, INSERT_AT=29) and attaches the intent head; OFF keeps every code path byte-identical"
+  },
+  "model": {
+    "module": "tools/coopmwm/v2v_model.py",
+    "widen": "extend_for_v2v(model, extra_dim, intent_horizon=0, intent_bounds=INTENT_BOUNDS): zero-init input widening for actor AND critic; with intent_horizon>0 also add_intent_head",
+    "intent_head": "add_intent_head: small zero-initialised nn.Linear(64, H) off the shared actor trunk (actor[:-1]); clipped to the action clip (persistent=False buffers intent_low/intent_high, sourced from binding accel_bounds [-3., 2.6], never hand-set); new module appended LAST so loaded parameter order - and therefore the executed action - is unchanged",
+    "forward": "forward_with_intent(model, x, rsu) -> (mean, value, planned): mean/value byte-identical to forward_with_v2v, planned = intent(hidden).clamp(bounds); narrow rows zero-padded (absent v2v channels read as zeros)",
+    "load_checkpoint": "v2v_extra resolves 48 for {'v2v_intent': True} (supersedes plain v2v width); _load_extended accepts checkpoints with or without intent.* keys (missing non-intent keys and any unexpected key still raise); _rebuilt_optimizer now appends newly attached head indices to the saved Adam group (fresh moments) so base->widen+intent loads",
+    "targets": "intent_examples(episodes, horizon, bounds): per record/step i, member v: target[j] = realised absolute acceleration at step i+1+j (requests requested_raw, else baseline command - the accel_runner absolute_accels convention), clipped to bounds; mask[j]=0 at episode end or once v is no longer commanded (despawn)",
+    "loss": "intent_loss: masked mean squared command error (m/s^2)^2; intent_error: masked mean absolute error m/s^2 (the before/after metric)"
+  },
+  "losses": {
+    "ppo": "accel_learner.update(..., intent=None): with the registered intent dict the masked intent loss is added as intent['weight']*penalty to the PPO objective for ALL ARMS identically (A-v2v, B-v2v, R-v2v call the same update); a final metrics entry intent={weight, horizon, error_before_mps2, error_after_mps2, rule} is appended when on; intent=None keeps the registered metric schema and numerics unchanged (tested)",
+    "exact": "exact_grade._ppo_exact_update/exact_update(..., intent=None): same intent loss on the rollout records only (bank pairs have no next-step tape), same summary entry; forwards intent to the bank pass",
+    "bank": "bank_imitation.run_separate(..., intent=None): pairs carrying context['intent_target'] add the masked plan-future loss with the same registered weight inside every imitation minibatch (subject to the unchanged separate-KL bound); report['intent'] carries before/after; legacy run() untouched (byte-for-byte)"
+  },
+  "bank_targets": {
+    "attach": "bank_v2v.attach_pairs(..., plan=None, intent=False, intent_horizon=5): when intent and plan are given, each kept pair also carries context['intent_target'] = {vid: {target[H], mask[H]}}; without intent the pairs are byte-identical to the plain v2v attachment (tested)",
+    "source": "bank_v2v.plan_intent_targets(plan, elapsed, members, horizon, bounds): the winning plan's ABSOLUTE commands at elapsed+1..elapsed+H via plans.acceleration_at (the executed plan itself is the label), zero-masked beyond plan duration, clipped to the action bounds, members outside the plan omitted",
+    "call_site": "replay_bank.bank_pairs(..., intent=False, intent_horizon=5) passes plan + intent flags to attach_pairs (DEFAULT OFF = byte-identical)"
+  },
+  "update_json": "intent error before/after lands in {arm}_UPDATE_{u:03}.json: ppo metrics carry the intent summary entry and a top-level intent key is added (both runners) ONLY when the option is on - warm_runner.py and accel_runner.py extract it exactly like the existing bank_imitation key; option off adds no key (byte-identical receipts)",
+  "call_sites": [
+    "tools/coopmwm/v2v_model.py - constants (V2V_INTENT_K/H/BASE, INTENT_BOUNDS, DEFAULT_INTENT_WEIGHT, V2V_INTENT_DIM), intent_options/intent_config/v2v_extra, add_intent_head/forward_with_intent/planned_commands, intent_examples/intent_loss/intent_error, extend_for_v2v/_rebuilt_optimizer/_load_extended/load_checkpoint",
+    "tools/coopmwm/accel_learner.py - intent_report + update(..., intent=None)",
+    "tools/coopmwm/exact_grade.py - _ppo_exact_update/exact_update/_intent_metrics intent plumbing",
+    "tools/coopmwm/bank_v2v.py - plan_intent_targets + attach_pairs intent attachment",
+    "tools/coopmwm/bank_imitation.py - intent_terms/intent_error + run_separate(..., intent=None)",
+    "tools/coopmwm/replay_bank.py - bank_pairs(..., intent=False, intent_horizon=5)",
+    "tools/coopmwm/warm_runner.py - intent_config(b) -> update/exact_update + conditional intent key in the update receipt",
+    "tools/coopmwm/accel_runner.py - intent_config(b) -> update + conditional intent key in the update receipt",
+    "tools/coopmwm/test_v2v_intent_cpu.py - all CPU gates"
+  ],
+  "config_keys": {
+    "v2v_intent": "bool, DEFAULT OFF (binding/run cfg)",
+    "v2v_intent_horizon": "int, default 5 (part A contract)",
+    "v2v_intent_weight": "float, default 0.1 (tools/coopmwm/v2v_model.DEFAULT_INTENT_WEIGHT)",
+    "clip": "binding accel_bounds ([-3., 2.6]); no hand-set behavioural thresholds"
+  },
+  "tests": {
+    "file": "tools/coopmwm/test_v2v_intent_cpu.py",
+    "result": "9 passed",
+    "command": "C:\\Users\\jpeng\\Miniconda3\\python.exe -m pytest tools/coopmwm/test_v2v_intent_cpu.py -q",
+    "covers": [
+      "option resolution: v2v_intent default OFF; width K*(6+H+1)=48 supersedes plain v2v; horizon/weight overrides; intent_config clip from binding accel_bounds",
+      "executed action IDENTICAL at load: zero-init widened inputs under arbitrary channel values + zero-init intent head; planned starts neutral and action-clipped",
+      "checkpoint save/load round trip at intent width (weights restored); plain checkpoint loads with option on (zero-init head, optimizer moments remapped with fresh head moments)",
+      "intent head trains through accel_learner.update: supervised planned-vs-realised next-H error falls to <20% of before on a synthetic learnable sequence; also through widened 48-channel v2v contexts",
+      "masking: episode end, despawn (member leaves commands), requests-over-baseline fallback, clip to the action bounds",
+      "option-off byte-identical: loader state/RNG equality, registered update metric schema with no intent fields, bank pairs carry no intent_target and equal the plain v2v attachment",
+      "bank plan-future targets: plans.acceleration_at labels, beyond-duration masking, non-plan members omitted; run_separate(intent) trains the head and reports before/after; legacy run() and intent-off run_separate carry no intent block",
+      "shared trunk: a warmed head pushes intent gradient into the actor trunk features"
+    ],
+    "regression": "55 passed: test_v2v_intent_cpu (9) + merged test_v2v_intent_obs_cpu (12) + test_v2v_model_cpu + test_v2v_int_e2e_cpu + test_replay_bank_v2v_cpu + test_v2v_runtime_cpu + test_awr_cpu + test_bank_amendment_cpu; additionally test_exact_grade_cpu, test_v2v_runner_cpu, test_bank_imitation_cpu, test_harden2_resume_cpu, test_replay_start_cpu, test_cpu.py, test_acceleration_cpu.py show ONLY failures already present at base commit ee6a803f (verified on a detached temp worktree: Windows fcntl/SUPERVISOR.claim file-lock and frozen-checkpoint environment issues, untouched by this branch)"
+  },
+  "constraints": {
+    "cpu_only": true,
+    "no_sumo": true,
+    "no_gpu": true,
+    "no_remote_writes": true,
+    "worktree_only": true,
+    "no_git_reset_clean_stash_push": true,
+    "other_c4_worktrees": "read-only; merged branch c4/intent-obs only",
+    "no_sealed_or_holdout_paths": true,
+    "no_truth_files": true,
+    "no_handset_thresholds": "none added; the intent clip is the binding's own action clip (accel_bounds), the loss weight is a registered config default, all other thresholds are structural (dimensions, horizon, latency)"
+  },
+  "how_to_enable": "run binding/cfg: v2v_intent=true, v2v_dim=48 (tools.coopmwm.v2v_obs.V2V_INTENT_DIM), optionally v2v_intent_horizon/v2v_intent_weight; part A's runtime gates (v2v_runner.prepare(..., v2v_intent=True), v2v_live.intent_binding_gate, controller publish hooks) feed the widened contexts and the intent buffer this part trains against; part C/D (c4-intent-int) owns the end-to-end launch wiring"
+}

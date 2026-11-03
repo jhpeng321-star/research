@@ -121,15 +121,21 @@ class V2vIntentCPU(unittest.TestCase):
             # executed action identical on the plain context...
             context = encode(rows())
             base_mean, base_value = policy(context)
-            mean, value = forward_with_intent(extended, torch.tensor(context['x']), context['rsu'])
+            mean, value, _ = forward_with_intent(extended, torch.tensor(context['x']), context['rsu'])
             self.assertLessEqual(float((base_mean-mean).abs().max()), 1e-7)
             self.assertLessEqual(float((base_value-value).abs().max()), 1e-7)
             # ...and under ANY (random) intent/v2v channel values: zero-init columns.
             generator = torch.Generator().manual_seed(3)
-            wide = torch.randn((len(context['x']), 29+V2V_INTENT_DIM), generator=generator)
-            mean2, value2 = forward_with_intent(extended, wide, context['rsu'])
+            x_plain = torch.tensor(context['x'], dtype=torch.float32)
+            wide = torch.cat((x_plain, torch.randn((len(x_plain), V2V_INTENT_DIM), generator=generator)), -1)
+            mean2, value2, _ = forward_with_intent(extended, wide, context['rsu'])
             self.assertLessEqual(float((base_mean-mean2).abs().max()), 1e-7)
             self.assertLessEqual(float((base_value-value2).abs().max()), 1e-7)
+            # replacing ONLY the extra block with other values stays identical too
+            wide[:, 29:] = torch.randn(wide[:, 29:].shape, generator=generator)*17.
+            mean3, value3, _ = forward_with_intent(extended, wide, context['rsu'])
+            self.assertLessEqual(float((base_mean-mean3).abs().max()), 1e-7)
+            self.assertLessEqual(float((base_value-value3).abs().max()), 1e-7)
             # the intent plan is clipped to the action clip and starts neutral
             planned = forward_with_intent(extended, wide, context['rsu'])[2]
             self.assertTrue(torch.equal(planned, torch.zeros(len(wide), V2V_INTENT_H)))
@@ -140,7 +146,8 @@ class V2vIntentCPU(unittest.TestCase):
             path = Path(tmp)/'A_checkpoint_000.pt'
             torch.manual_seed(5)
             policy = Policy()
-            add_intent_head(policy, V2V_INTENT_H, INTENT_BOUNDS)
+            from .v2v_model import extend_for_v2v
+            extend_for_v2v(policy, V2V_INTENT_DIM, V2V_INTENT_H, INTENT_BOUNDS)
             with torch.no_grad():
                 policy.intent.weight.normal_()
                 policy.intent.bias.fill_(.25)
@@ -293,13 +300,14 @@ class V2vIntentCPU(unittest.TestCase):
                 for frame in frames:
                     stream.write(json.dumps(frame)+'\n')
             plan = dict(id='p', members=['cav0'], duration_s=30, knots=[[0., 1., 2.]])
-            kept_off, _ = bank_v2v.attach_pairs([(dict(s['sample']), w) for s, w in pairs], trace, 10, plan=plan)
+            import copy
+            kept_off, _ = bank_v2v.attach_pairs([(dict(copy.deepcopy(s)), w) for s, w in pairs], trace, 10, plan=plan)
             self.assertEqual(len(kept_off), 1)
             self.assertNotIn('intent_target', kept_off[0][0]['context'])
-            kept_on, _ = bank_v2v.attach_pairs([(dict(s['sample']), w) for s, w in pairs], trace, 10,
+            kept_on, _ = bank_v2v.attach_pairs([(dict(copy.deepcopy(s)), w) for s, w in pairs], trace, 10,
                                                plan=plan, intent=True, intent_horizon=3)
             self.assertIn('intent_target', kept_on[0][0]['context'])
-            off = {k: v for k, v in kept_off[0][0]['context'].items()}
+            off = dict(kept_off[0][0]['context'])
             on = {k: v for k, v in kept_on[0][0]['context'].items() if k != 'intent_target'}
             self.assertEqual(off, on)
 
@@ -309,16 +317,26 @@ class V2vIntentCPU(unittest.TestCase):
                     knots=[[0., 1., 2.], [0., -1., -2.]])  # 10 s knots, plans.acceleration_at
         targets = bank_v2v.plan_intent_targets(plan, 24, ['downstream', 'ramp', 'upstream'], 5)
         self.assertNotIn('upstream', targets)               # member outside the plan: no target
-        at26 = acceleration_at(plan, 26)
+        expected = [acceleration_at(plan, 24+j) for j in range(1, 6)]
         for vid in ('downstream', 'ramp'):
-            self.assertEqual(targets[vid]['mask'], [1., 0., 0., 0., 0.])  # plan ends at 30
-            self.assertAlmostEqual(targets[vid]['target'][0], at26[vid], places=7)
+            self.assertEqual(targets[vid]['mask'], [1., 1., 1., 1., 1.])  # plan covers 24+1..24+5
+            clipped = min(max(expected[2][vid], INTENT_BOUNDS[0]), INTENT_BOUNDS[1])
+            self.assertAlmostEqual(targets[vid]['target'][2], clipped, places=7)
+        # beyond the plan duration the future commands are masked, never imputed
+        tail = bank_v2v.plan_intent_targets(plan, 28, ['downstream', 'ramp'], 5)
+        self.assertEqual(tail['downstream']['mask'], [1., 0., 0., 0., 0.])
+        self.assertAlmostEqual(tail['downstream']['target'][0],
+                               min(max(acceleration_at(plan, 29)['downstream'], INTENT_BOUNDS[0]), INTENT_BOUNDS[1]),
+                               places=7)
         # bank_imitation trains the head on those pairs and reports before/after
         policy = frozen_trunk(Policy())
         add_intent_head(policy, V2V_INTENT_H, INTENT_BOUNDS)
-        reference = Policy()
-        reference.load_state_dict(policy.state_dict())
+        reference = frozen_trunk(Policy())
+        reference.load_state_dict(policy.state_dict(), strict=False)
         add_intent_head(reference, V2V_INTENT_H, INTENT_BOUNDS)
+        with torch.no_grad():  # identical starting head: only training may differ
+            reference.intent.weight.copy_(policy.intent.weight)
+            reference.intent.bias.copy_(policy.intent.bias)
         pairs = []
         for i in range(8):
             context = encode(sensor(i))
@@ -331,17 +349,20 @@ class V2vIntentCPU(unittest.TestCase):
         report = bank_imitation.run_separate(policy, optimizer, pairs, torch.Generator().manual_seed(7),
                                              reference, passes=5, intent=dict(weight=1., horizon=V2V_INTENT_H))
         self.assertIn('intent', report)
-        self.assertEqual(report['intent']['weight'], 5.)
+        self.assertEqual(report['intent']['weight'], 1.)
         self.assertIsNotNone(report['intent']['error_before_mps2'])
         self.assertIsNotNone(report['intent']['error_after_mps2'])
         self.assertLess(report['intent']['error_after_mps2'], report['intent']['error_before_mps2'])
         # the head changed on the intent loss; legacy run() stays intent-free
         self.assertGreater(float(policy.intent.weight.abs().sum()), 0.)
-        legacy = bank_imitation.run(policy, optimizer, pairs, torch.Generator().manual_seed(7),
+        unfrozen = Policy()
+        add_intent_head(unfrozen, V2V_INTENT_H, INTENT_BOUNDS)
+        unfrozen_opt = torch.optim.Adam(unfrozen.parameters(), lr=.02)
+        legacy = bank_imitation.run(unfrozen, unfrozen_opt, pairs, torch.Generator().manual_seed(7),
                                     reference, passes=5)
         self.assertNotIn('intent', legacy)
         # option-off run_separate reports no intent block at all
-        plain = bank_imitation.run_separate(policy, optimizer, pairs, torch.Generator().manual_seed(7),
+        plain = bank_imitation.run_separate(unfrozen, unfrozen_opt, pairs, torch.Generator().manual_seed(7),
                                             reference, passes=5)
         self.assertNotIn('intent', plain)
 
