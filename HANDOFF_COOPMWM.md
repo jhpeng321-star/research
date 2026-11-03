@@ -1,6 +1,9 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
 ## CURRENT Nov4 ~07:45 +08 — disk extension LIVE; checkpoint fault DELEGATED
+- COMPLETEinitialV2Vpool1793750112:499403300bytes/216files/4certifiedbatches,
+  workerLIVE/eligible0/free7084539904bytes(~6.60GiB),2579136512bytesshortof9GiB.
+  Onepre-prooftransportfailurepreserved/recovered; no threshold/protectionchange.
 - ACTUALPROOF1793749716:2certifiedbatches/285407020bytes/132files moved,
   CPUfree6880182272bytes(~6.41GiB),213996280furthereligible. See
   coopmwm/V2V_CONTINUATION_0745.md; old first-transfer-only probe below historical.

@@ -1,6 +1,9 @@
 # S-COOPMWM — live checks
 
 ## Nov4 ~07:45 UTC+8 — V2V u3 namespace fault delegated; disk scope extension live
+- **07:55 update:** the entire eligible initial pool is archived: **499,403,300
+  bytes /216 files /4 SHA-certified batches**. Worker remains live; zero eligible
+  files remain. Free space ~6.60GiB, still 2.58GB below the9GiB target.
 - A reached u4. B/R remain durably at u2 after B's u3 checkpoint save collided
   with pre-launch legacy-reference symlinks. MAIN07:20 assigned recovery to a
   separate operator. This continuation performed no competing repair or restart.

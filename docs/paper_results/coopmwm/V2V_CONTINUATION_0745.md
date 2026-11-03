@@ -1,5 +1,14 @@
 # Continuation at 2026-11-04 ~07:45–07:50 +08
 
+## Initial archive pool COMPLETE (~07:55 +08)
+Probe1793750112 confirms **499,403,300 bytes /216 files /4 certified batches**
+moved; one earlier connection-failed namespace is retained. Current eligible
+pool is zero; the durable worker remains live for future eligible updates.
+cpuQ free7,084,539,904bytes (~6.60GiB), still **2,579,136,512bytes short of9GiB**
+before further writes. Backfill remains paused; no protection/age/lag rule was
+lowered. Receipt `V2V_ARCHIVE_SCOPE_0712_V2_STATUS_1793750113792383600.json`.
+The earlier partial-transfer snapshots below remain the chronological evidence.
+
 ## Current ownership
 - Latest full brief read through line1119. MAIN07:20 owns the checkpoint-link
   recovery through a delegated operator. Original B/R stopped at u2; A reached
