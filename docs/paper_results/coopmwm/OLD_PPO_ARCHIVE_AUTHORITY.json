@@ -1,0 +1,40 @@
+{
+  "archive_target": {
+    "cpu_target_bytes": 12884901888,
+    "destination": "/root/cpuq_archive_20261103/receipted_old_ppo_20261104",
+    "floor_bytes": 8589934592,
+    "host": "gpuA",
+    "ssh_command": [
+      "ssh",
+      "-T",
+      "-o",
+      "BatchMode=yes",
+      "-o",
+      "IdentityFile=none",
+      "-o",
+      "IdentitiesOnly=no",
+      "-o",
+      "StrictHostKeyChecking=yes",
+      "-o",
+      "UserKnownHostsFile=/home/ubuntu/coopmwm20261102_remote_routes5/known_hosts_gpuA",
+      "-o",
+      "ConnectTimeout=20",
+      "-o",
+      "ServerAliveInterval=15",
+      "-o",
+      "ServerAliveCountMax=8",
+      "-p",
+      "11000",
+      "root@connect.bjb1.seetacloud.com"
+    ]
+  },
+  "authority": "MAIN17:52/23:18/01:20 completed diagnostic SHA archival; old-reference observers idle and source arms held",
+  "new_sim_s": 0,
+  "rule": "MAIN02:17 old A/B/R episode outputs already graded and receipted: ONLY plain-PPO replay0735 B/R updates4..18, completed CLOSE+published UPDATE older30min, same cpuQ filesystem. No A reference, latest B/R collection source, plan episode, bank, checkpoint or evaluation output. Before copy/unlink retain a CPU compact id/world/arm/metrics/final summary and original result identity. Own-bank snapshots retain complete prefixes/samples (sv.capture); no _ls_snapshot episode is in this namespace. Full original bytes SHA-moved to gpuA, source/FD/reference/age/inode/mtime guards unchanged; same single regular-mover pause/resume protocol.",
+  "source_hashes": {
+    "archive_move.py": "58e539f077ccca8a33dd67e9e6ca74fb40b39e1e125628bd352e87d89a76251f",
+    "rolling_archive.py": "2fd17a1ca9398f4e80b5a555609f545a902efdca88556cb0252136f8ef265fc2",
+    "test_rolling_archive_cpu.py": "7dbfae39624129d1e53ce323f80027b90159386d61707e61c4864a34a3e0c75c"
+  },
+  "worker_sha256": "efa1a415a66ab408e7ece0f7bdb413c087d5185e67c398202d1c578c44c21032"
+}

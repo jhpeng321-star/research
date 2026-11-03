@@ -1,0 +1,471 @@
+{
+  "controls": {
+    "coopmwm20261103_collect2323": {
+      "COLLECTION_RESTART.json": {
+        "authority": "511715c95512c80f4d4f808b248cff8f2d0d66064dfb1e0ed713c26502faaa5c",
+        "charged_by_this_restart": {
+          "sumo_verification": 57600
+        },
+        "decisions_queued": {
+          "B_answered_ready": 0,
+          "B_awaiting_gpu": 8,
+          "B_undecided_lists": 8,
+          "R_queued_snapshots": 4,
+          "R_rule": "R decision i waits for B decision i (b_available_k): paced 1:1",
+          "search2323_max": 16,
+          "search2323_published": 8
+        },
+        "disk_free_bytes": 7904677888,
+        "env_failure": {
+          "actual_sim_s": 0,
+          "charged_sim_s": 45360,
+          "decisions": 8,
+          "receipt": "/home/ubuntu/coopmwm20261103_collect2323/ENV_FAILURE_2342.json"
+        },
+        "events_tail": [
+          {
+            "arm": "R",
+            "event": "verified",
+            "keys": [
+              "6e5eac9b23b4bacc28d68545cce29dda1521374e4389decbeeadb7db10db3378",
+              "7c59957f05586496a30ad4140209b81e2872a9f82664046e8a5efdae48164a8f"
+            ],
+            "statuses": [
+              "failed",
+              "failed"
+            ],
+            "unix": 1793720472.3180368
+          },
+          {
+            "arm": "R",
+            "event": "verified",
+            "keys": [
+              "916846a3dd4ea5f2f8c1d56558f63f55218617b403c918d683c302ba8d29589b",
+              "93802dc1fd553790a76be06af90289728e85f668d8944b7fd30b45bb3931bf7e"
+            ],
+            "statuses": [
+              "failed",
+              "failed"
+            ],
+            "unix": 1793720485.3073757
+          },
+          {
+            "arm": "R",
+            "event": "exit",
+            "stop": true,
+            "unix": 1793720546.8926287
+          },
+          {
+            "arm": "R",
+            "decided": 141,
+            "event": "start",
+            "sources": [],
+            "unix": 1793720733.5525894,
+            "workers": 5
+          },
+          {
+            "arm": "R",
+            "event": "verified",
+            "keys": [
+              "9d23ba39f827fd0afd86d9eb24fd25e001f678eed8fa28c0e4dca3c90de94296"
+            ],
+            "statuses": [
+              "accepted"
+            ],
+            "unix": 1793721456.8648689
+          },
+          {
+            "arm": "R",
+            "event": "confirmed",
+            "live_confirmations": 77,
+            "unix": 1793721526.1953769
+          }
+        ],
+        "first_result_expected": "first new B decision minutes after the next GPU answer (76344725 on gpuR, or search2323 lists at ~35-60 min GPU inference per list on 4 slots, i.e. ~00:20-00:45); R follows 1:1",
+        "local_time": "2026-11-04 00:06 CST",
+        "processes": {
+          "grader_B": {
+            "alive": true,
+            "argv": [
+              "/home/ubuntu/miniconda3/bin/python",
+              "-B",
+              "-u",
+              "/home/ubuntu/coopmwm20261103_collect2323/collect_runner.py",
+              "/home/ubuntu/coopmwm20261102_warm1",
+              "/home/ubuntu/coopmwm20261103_collect2323",
+              "B",
+              "8"
+            ],
+            "pid": 900006,
+            "start_ticks": "73500990"
+          },
+          "grader_R": {
+            "alive": true,
+            "argv": [
+              "/home/ubuntu/miniconda3/bin/python",
+              "-B",
+              "-u",
+              "/home/ubuntu/coopmwm20261103_collect2323/collect_runner.py",
+              "/home/ubuntu/coopmwm20261102_warm1",
+              "/home/ubuntu/coopmwm20261103_collect2323",
+              "R",
+              "5"
+            ],
+            "pid": 900007,
+            "start_ticks": "73501040"
+          },
+          "search": {
+            "alive": true,
+            "argv": [
+              "/home/ubuntu/miniconda3/bin/python",
+              "-B",
+              "-u",
+              "/home/ubuntu/coopmwm20261103_search2323/search_saved_current.py",
+              "/home/ubuntu/coopmwm20261102_warm1",
+              "/home/ubuntu/coopmwm20261103_search2323"
+            ],
+            "pid": 889383,
+            "start_ticks": "73473647"
+          }
+        },
+        "quote": {
+          "bank_verification_ext_room": 137180,
+          "ceiling": 17471840,
+          "ledger_total": 9391030,
+          "sumo_verification_upper": 324000
+        },
+        "retired_own_launches": {
+          "GRADER_B": 889374,
+          "GRADER_B_ENV2": 896404,
+          "GRADER_R": 889382,
+          "GRADER_R_ENV2": 896450
+        },
+        "search1829_v2_status": "11/16 verified by held B grader before 22:04 (8 accepted+confirmed, 3 rejected); 4 sealed failed by env error at 23:41 (see ENV_FAILURE_2342.json); 76344725 awaiting gpuR",
+        "stop": "write /home/ubuntu/coopmwm20261103_collect2323/STOP.json (graders); search2323 stops after 16 lists",
+        "unix": 1793722005.537616
+      },
+      "exists": true,
+      "receipts": [
+        "OWNER_R_LAUNCH1.json",
+        "AUTHORITY.json",
+        "OWNER_B_LAUNCH1.json",
+        "STOP_ENV_2342.json",
+        "COLLECTION_RESTART_1793720821.json",
+        "GRADER_B_ENV3_DISPATCH.json",
+        "COLLECTION_RESTART.json",
+        "GRADER_B_ENV2_DISPATCH.json",
+        "OWNER_B.json",
+        "REGISTRATION_2323.json",
+        "GRADER_R_DISPATCH.json",
+        "GRADER_R_ENV2_DISPATCH.json",
+        "GRADER_R_ENV3_DISPATCH.json",
+        "probe_out.json",
+        "OWNER_R.json",
+        "ENV_FAILURE_2342.json",
+        "GRADER_B_DISPATCH.json"
+      ]
+    },
+    "coopmwm20261103_search2323": {
+      "exists": true,
+      "receipts": [
+        "AUTHORITY.json",
+        "OWNER.json",
+        "CPU_RESULT.json",
+        "CPU_BINDING.json",
+        "SEARCH_DISPATCH.json"
+      ]
+    },
+    "coopmwm20261104_backfill0057": {
+      "BACKFILL_START.json": {
+        "authority": "Claude delegate of MAIN (S-COOPMWM), MAIN ADDENDA 2026-11-04 00:57/00:58/01:01; owner 00:55 \"just use the current cpu for checking right now\"",
+        "branch_workers_per_decision": 4,
+        "budget_authority": "bank_verification_ext 1,500,000 sim-s transfer registered by the run main agent: warm1/B_REPLAY_BINDING.json amendment ead07c01953f7b65ce63537645e4345889a8b7a6dbe6cd89a712ce6bdbc33cfd (in AUTHORITY.md), BANK_PHASE_TRANSFER_20261104_0040.json; global ceiling 17,471,840 unchanged",
+        "coordinator": {
+          "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+          "pid": 1104408,
+          "start_ticks": "74008465"
+        },
+        "disk_guard": {
+          "no_new_decision_below_bytes": 4831838208,
+          "runner_admit_guard": "sv.MIN_FREE_BYTES"
+        },
+        "entry": "tools.coopmwm.verify_perseed.confirm_all8 per decision (one worker process each), seed-2 K+1 precharged (bank_builder.quoted_jobs_all8 ids) + live rb._confirm_charge for extended/solos; runner.admit disk guard; warm_health.assert_running before every verification",
+        "glue_sha256": {
+          "BINDING.json": "464f2d480d41617d6c497fb186e4ffc642053c5044adc2c433922ea51af4c04b",
+          "backfill_coord.py": "91ddb3c9e737163355e63662b92d92001c5819a3e2209c20edc5e144573c102c",
+          "backfill_worker.py": "4a5a523287c93ea832d115e73037b888809d4b6176403581c1efe57889715812",
+          "launch.py": "cbc54dd20105413982ce881856d5cd0b1661e0ef3cb5ec776af7777ed5acc455"
+        },
+        "ledger_at_start": {
+          "all8_kind_sim_s": 0,
+          "bank_verification_ext_sim_s": 2514460,
+          "rows": 9680,
+          "total_sim_s": 9538610
+        },
+        "max_decisions_concurrent": 7,
+        "max_load": 30,
+        "queue": {
+          "B": 45,
+          "R": 124,
+          "frozen_at_start": true,
+          "new_live_decisions": "not included (existing decisions only)",
+          "order": "tier0 = decisions with admitted no_solos examples (preview 2400), then the rest; newest policy version first; alternating B/R",
+          "tier0": {
+            "B": 6,
+            "R": 33
+          }
+        },
+        "reserve_cores": 4,
+        "rules": "own processes only; nothing killed/signalled; no training; no sealed/holdout paths; STOP via control/STOP.json; concurrency knob control/CONCURRENCY.json",
+        "schema": "coopmwm/backfill0057-start/v1",
+        "sim_s_quote": {
+          "delegate_cap_sim_s": 1500000,
+          "note": "queue exceeds the 1.5M transfer: workers stop starting decisions when used + in-flight worst case (30k each) > cap; each live charge is cap-guarded under the control-dir lock and then the registered phase caps",
+          "one_winner_each_seed_all_queued": {
+            "B": 601220,
+            "R": 1924690
+          },
+          "one_winner_total": 2525910,
+          "seed2_lists_only_all_queued": {
+            "B": 215100,
+            "R": 787150
+          },
+          "seed2_total": 1002250
+        },
+        "skipped": {
+          "n": 88,
+          "nosolo_vids": [
+            "sv_lscollect1_B3_986016_t0300_cbe404c7",
+            "sv_lscollect1_B3_986025_t0300_66da22c3",
+            "sv_lscollect1_B3_986048_t0600_d6de35f8",
+            "sv_lscollect1_B3_986011_t0350_db7319bf"
+          ],
+          "reason": "first-seed branch tapes absent on cpuQ (archived; candidate specs present). Not restored: restoring ~88 x 9 tapes would consume the disk headroom; seed-1 examples would otherwise be sealed data_missing in the all8 record.",
+          "vids": [
+            "sv_lscollect1_B3_986020_t0300_6b538a45",
+            "sv_lscollect1_B3_986018_t0300_a7c52a07",
+            "sv_lscollect1_B3_986004_t0380_c4cab5f8",
+            "sv_lscollect1_B3_986016_t0300_cbe404c7",
+            "sv_lscollect1_B3_986019_t0300_a2e287a8",
+            "sv_lscollect1_B3_986024_t0300_79aa5d7b",
+            "sv_lscollect1_B3_986025_t0300_66da22c3",
+            "sv_lscollect1_B3_986030_t0300_d2b3a131",
+            "sv_lscollect1_B3_986028_t0300_024ea4e7",
+            "sv_lscollect1_B3_986032_t0300_b00e5714",
+            "sv_lscollect1_B3_986035_t0300_6be66ecd",
+            "sv_lscollect1_B3_986026_t0300_90eea8e3",
+            "sv_lscollect1_B3_986033_t0300_d628b1df",
+            "sv_lscollect1_B3_986023_t0300_28edf32c",
+            "sv_lscollect1_B3_986036_t0300_f9f38209",
+            "sv_lscollect1_B3_986034_t0300_9d8bb042",
+            "sv_lscollect1_B3_986039_t0300_1e338659",
+            "sv_lscollect1_B3_986037_t0300_f90a7f0c",
+            "sv_lscollect1_B3_986038_t0300_47171cf5",
+            "sv_lscollect1_B3_986041_t0300_246120f2",
+            "sv_lscollect1_B3_986042_t0300_dc55c883",
+            "sv_lscollect1_B3_986043_t0300_6a95ad15",
+            "sv_lscollect1_B3_986045_t0300_0db818a0",
+            "sv_lscollect1_B3_986040_t0300_a78c1bf6",
+            "sv_lscollect1_B3_986044_t0300_4a5cc0e5",
+            "sv_lscollect1_B3_986047_t0300_d027c363",
+            "sv_lscollect1_B3_986046_t0300_6cdd77bd",
+            "sv_lscollect1_B3_986065_t0300_f1e1dfab",
+            "sv_lscollect1_B3_986048_t0300_8515db74",
+            "sv_lscollect1_B3_986049_t0300_679d1baf",
+            "sv_lscollect1_B3_986050_t0300_de6685ed",
+            "sv_lscollect1_B3_986051_t0300_6d166153",
+            "sv_lscollect1_B3_986052_t0300_5ab45ace",
+            "sv_lscollect1_B3_986053_t0300_928c0774",
+            "sv_lscollect1_B3_986060_t0300_c2a7547e",
+            "sv_lscollect1_B3_986061_t0300_d17a9e77",
+            "sv_lscollect1_B3_986062_t0300_e907e21a",
+            "sv_lscollect1_B3_986064_t0300_30b11e1d",
+            "sv_lscollect1_B3_986063_t0300_a1b156ed",
+            "sv_lscollect1_B3_986067_t0300_e9a99949",
+            "sv_lscollect1_B3_986066_t0300_d13b0e6c",
+            "sv_lscollect1_B3_986069_t0300_0c4be68d",
+            "sv_lscollect1_B3_986068_t0300_549fe91a",
+            "sv_lscollect1_B3_986070_t0300_bc346db3",
+            "sv_lscollect1_B3_986071_t0300_e0895739",
+            "sv_lscollect1_B3_986042_t0600_731c2587",
+            "sv_lscollect1_B3_986044_t0600_2a365c5d",
+            "sv_lscollect1_B3_986043_t0600_d783b7b9",
+            "sv_lscollect1_B3_986047_t0600_1f1376af",
+            "sv_lscollect1_B3_986046_t0600_a9646987",
+            "sv_lscollect1_B3_986045_t0600_294cff9a",
+            "sv_lscollect1_B3_986054_t0300_0398fc4f",
+            "sv_lscollect1_B3_986048_t0600_d6de35f8",
+            "sv_lscollect1_B3_986056_t0300_a951dc7d",
+            "sv_lscollect1_B3_986055_t0300_4c5899db",
+            "sv_lscollect1_B3_986049_t0600_4184f65c",
+            "sv_lscollect1_B3_986050_t0600_48b6e4dd",
+            "sv_lscollect1_B3_986058_t0300_155baa72",
+            "sv_lscollect1_B3_986059_t0300_b644788a",
+            "sv_lscollect1_B3_986051_t0600_3ad3f182",
+            "sv_lscollect1_B3_986057_t0300_2af9da01",
+            "sv_lscollect1_B3_986012_t0310_31c75eec",
+            "sv_lscollect1_B3_986053_t0600_f7db26fb",
+            "sv_lscollect1_B3_986013_t0310_27aa2cc8",
+            "sv_lscollect1_B3_986052_t0600_dd577482",
+            "sv_lscollect1_B3_986031_t0310_91d1e160",
+            "sv_lscollect1_B3_986060_t0600_26a1bbfd",
+            "sv_lscollect1_B3_986008_t0320_4ff4453f",
+            "sv_lscollect1_B3_986062_t0600_4d459b27",
+            "sv_lscollect1_B3_986061_t0600_d1033e2c",
+            "sv_lscollect1_B3_986017_t0330_685afa3c",
+            "sv_lscollect1_B3_986021_t0330_9f219fc2",
+            "sv_lscollect1_B3_986063_t0600_0fc9636e",
+            "sv_lscollect1_B3_986011_t0350_db7319bf",
+            "sv_lscollect1_B3_986065_t0600_32f6e697",
+            "sv_lscollect1_B3_986064_t0600_cc09087c",
+            "sv_lscollect1_B3_986066_t0600_56920005",
+            "sv_lscollect1_B3_986022_t0350_88843444",
+            "sv_lscollect1_B3_986067_t0600_832a1604",
+            "sv_lscollect1_B3_986002_t0380_50fb4021",
+            "sv_lscollect1_B3_986006_t0380_ce632c68",
+            "sv_lscollect1_B3_986068_t0600_a7ec9bd2",
+            "sv_lscollect1_B3_986007_t0360_98f90704",
+            "sv_lscollect1_B3_986003_t0390_b18c6000",
+            "sv_lscollect1_B3_986070_t0600_100a90f3",
+            "sv_lscollect1_B3_986071_t0600_fdd3c261",
+            "sv_lscollect1_B3_986029_t0390_c286653c",
+            "sv_lscollect1_B3_986069_t0600_d6f54345"
+          ]
+        },
+        "source_commit": "762bdc7d3e9eddc6d7d494a9c1a44d948388a157",
+        "source_root": "/home/ubuntu/coopmwm20261103_intentcpu_i3",
+        "transfer_receipt": "warm1/B_REPLAY_BINDING.json (00:52) + BANK_PHASE_TRANSFER_20261104_0040.json; amendment ead07c01... in AUTHORITY.md",
+        "transfer_receipt_present": true,
+        "unix": 1793726084.3194146,
+        "verify_mode": "all8_both_seeds",
+        "workers_started": [
+          {
+            "arm": "B",
+            "pid": 1104460,
+            "policy_version": "u17",
+            "start_ticks": "74008562",
+            "tier": 0,
+            "verification_id": "sv_replay0735_warm_u018_B_986047_t0360_4f83130c"
+          },
+          {
+            "arm": "R",
+            "pid": 1111090,
+            "policy_version": "u18",
+            "start_ticks": "74024337",
+            "tier": 0,
+            "verification_id": "sv_replay0735_warm_u019_R_986042_t0320_781c85d6"
+          },
+          {
+            "arm": "B",
+            "pid": 1111239,
+            "policy_version": "u17",
+            "start_ticks": "74024539",
+            "tier": 0,
+            "verification_id": "sv_replay0735_warm_u018_B_986064_t0360_5a0410f3"
+          },
+          {
+            "arm": "R",
+            "pid": 1111410,
+            "policy_version": "u17",
+            "start_ticks": "74024741",
+            "tier": 0,
+            "verification_id": "sv_replay0735_warm_u018_R_986034_t0390_e83363b2"
+          },
+          {
+            "arm": "B",
+            "pid": 1111612,
+            "policy_version": "u17",
+            "start_ticks": "74024943",
+            "tier": 0,
+            "verification_id": "sv_replay0735_warm_u018_B_986070_t0360_01c7786f"
+          },
+          {
+            "arm": "R",
+            "pid": 1111774,
+            "policy_version": "u16",
+            "start_ticks": "74025145",
+            "tier": 0,
+            "verification_id": "sv_replay0735_warm_u017_R_986021_t0340_fe069b46"
+          },
+          {
+            "arm": "B",
+            "pid": 1111930,
+            "policy_version": "u14",
+            "start_ticks": "74025348",
+            "tier": 0,
+            "verification_id": "sv_replay0735_warm_u015_B_986058_t0390_d43a677b"
+          }
+        ]
+      },
+      "STATUS.json": {
+        "admitted_examples": {
+          "B": 26,
+          "R": 22
+        },
+        "cap": 1500000,
+        "complete": {
+          "B": 6,
+          "R": 6
+        },
+        "cooperative_examples": {
+          "B": 8,
+          "R": 1
+        },
+        "delegate_used_sim_s": 273700,
+        "dispatched": 0,
+        "failed": 0,
+        "free": 7458902016,
+        "load1": 2.1953125,
+        "paused_disk": true,
+        "queued": 157,
+        "running": 0,
+        "running_pids": [],
+        "stopped_reason": null,
+        "unix": 1793734018.258249
+      },
+      "exists": true,
+      "receipts": [
+        "ENV_FAILURE_0118.json",
+        "STATUS.json",
+        "BINDING.json",
+        "QUEUE.json",
+        "COORD_V2_DISPATCH.json",
+        "STOP.json",
+        "PROBE_DECISIONS.json",
+        "BINDING_V2.json",
+        "BINDING.pre.json",
+        "CONCURRENCY.json",
+        "QUEUE_V2.json",
+        "BACKFILL_START.json",
+        "COORD_DISPATCH.json"
+      ]
+    }
+  },
+  "disk_free": 7600701440,
+  "load": [
+    2.19921875,
+    2.0302734375,
+    1.78955078125
+  ],
+  "previous_owners": [
+    {
+      "argv": "/home/ubuntu/miniconda3/bin/python -B -u /home/ubuntu/coopmwm20261103_collect2323/collect_runner.py /home/ubuntu/coopmwm20261102_warm1 /home/ubuntu/coopmwm20261103_collect2323 B 8 ",
+      "pid": 900006,
+      "start_ticks": "73500990",
+      "state": "S"
+    },
+    {
+      "argv": "/home/ubuntu/miniconda3/bin/python -B -u /home/ubuntu/coopmwm20261103_collect2323/collect_runner.py /home/ubuntu/coopmwm20261102_warm1 /home/ubuntu/coopmwm20261103_collect2323 R 5 ",
+      "pid": 900007,
+      "start_ticks": "73501040",
+      "state": "S"
+    },
+    {
+      "argv": "/home/ubuntu/miniconda3/bin/python -B -u /home/ubuntu/coopmwm20261104_backfill0057/backfill_coord_v2.py /home/ubuntu/coopmwm20261104_backfill0057 ",
+      "pid": 1132856,
+      "start_ticks": "74076075",
+      "state": "S"
+    }
+  ],
+  "unix": 1793734074.8330605
+}

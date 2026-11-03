@@ -1,0 +1,83 @@
+{
+  "COMPLETE": {
+    "all_raw_statuses_and_summaries_retained": true,
+    "batches": 14,
+    "cpu_free": 8616538112,
+    "moved_bytes": 1828707452,
+    "new_sim_s": 0,
+    "unix": 1793734755.3034203
+  },
+  "DISPATCH": {
+    "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+    "control": "/home/ubuntu/coopmwm20261104_closed_diagnostic_archive_recovery2",
+    "new_sim_s": 0,
+    "pid": 1631855,
+    "start_ticks": "74800507",
+    "unix": 1793733727.3500998
+  },
+  "FAILED": null,
+  "OBSERVERS_RETIRED": {
+    "new_sim_s": 0,
+    "owners": [
+      {
+        "control": "/home/ubuntu/coopmwm20261102_warm1/policy_synergy_1205_v1",
+        "owner": {
+          "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+          "pid": 3443527,
+          "start_ticks": "69378435",
+          "unix": 1793679507.483889
+        },
+        "raw_statuses_preserved": true
+      },
+      {
+        "control": "/home/ubuntu/coopmwm20261102_warm1/policy_synergy_isolated_1226_v2",
+        "owner": {
+          "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+          "pid": 3531845,
+          "start_ticks": "69609344",
+          "unix": 1793681816.5790517
+        },
+        "raw_statuses_preserved": true
+      }
+    ],
+    "unix": 1793733727.3936255
+  },
+  "OWNER": {
+    "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+    "pid": 1631856,
+    "start_ticks": "74800508",
+    "uid": 0,
+    "unix": 1793733727.391559
+  },
+  "PLAN": {
+    "bytes": 1828707452,
+    "files": 3111,
+    "new_sim_s": 0,
+    "skipped": {
+      "forbidden_or_scenario": 4872,
+      "open": 0,
+      "protected": 267
+    }
+  },
+  "REGULAR_MOVER_PAUSED": {
+    "idle_no_children": true,
+    "new_sim_s": 0,
+    "owner": {
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "pid": 1237127,
+      "start_ticks": "74222230",
+      "uid": 0,
+      "unix": 1793727944.6067522
+    },
+    "unix": 1793733727.4054193
+  },
+  "control": "/home/ubuntu/coopmwm20261104_closed_diagnostic_archive_recovery2",
+  "progress": {
+    "batches": 14,
+    "cpu_free": 8616542208,
+    "moved_bytes": 1828707452,
+    "new_sim_s": 0,
+    "unix": 1793734755.3015268
+  },
+  "unix": 1793735930.4707859
+}

@@ -1,6 +1,13 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## CURRENT Nov4 ~03:15 +08 — archive recovery; primary launch still delegated
+- Recovery2 COMPLETE1828707452bytes/14certifiedbatches,regular1237127resumed;
+  COMPLETEat1793734755/free8616538112bytes(~8.02GiB), notyetbackfill9GiBresume.
+- Newapproved02:17 old-PPO pool inventory720B/R own-policy episodes u4..18,
+  2871389536bytesONcpuQdisk/nosymlinks. Arefs/latestB/R19+/bank/eval/checkpoints
+  excluded. Compactmetrics/identitysummaryretainedbeforeunlink; fullSHAarchive.
+  REGISTERED572b5b3f/controlcoopmwm20261104_old_ppo_archive1; nextlaunchonce
+  onlyafterrecovery2complete+regularmoveridle. No SUMO/inference/primarygate.
 - Briefreadthrough1096. Main02:45 currentgate=learning+hardsafety+complete data,
   cooperationreportedonly; launchoperatorre-gatesefa9c39bandlaunches. DO NOT
   duplicate/attemptblockedoverrideedit. Afterlaunchadopt/fffromlaunch-coop.
