@@ -151,3 +151,12 @@ switches every existing result is bit-identical.
   ENV NOTE: machine default `python` is now 3.14 (no torch); use
   `C:/Users/jpeng/miniconda3/python.exe` (conda base 3.13.13).
 - Branch quiescent unless INT opens a recipe revision.
+- 2026-11-04 (fresh-session recheck, no new runs): no new CF asks in
+  rb-shared (newest file RB2_INT_FULL_V5_READY 11-03 15:50) or the
+  REGISTRATION tail (program in S-COOPMWM / S-WMTEACH holds). Re-verified
+  the frozen `wm_phys_v5.toml` / `wm_phys_v5_lp.toml` still set
+  `cf_model="sumo_idm"` + `sumo_cf_emergency_decel_mps2=9.0` + corrections
+  OFF but NOT `physics.position_rule` — the unconsumed-Euler gap note
+  (rb-shared/CF_TO_INT_POSITION_RULE_UNCONSUMED_20261103.md) still stands;
+  revision decision remains with INT/MAIN. Tree clean, no commits since
+  5928fcd6, so the 92-pass test verification of 11-03 remains current.
