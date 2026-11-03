@@ -223,8 +223,9 @@ assert d['boot_id']==Path('/proc/sys/kernel/random/boot_id').read_text().strip()
 if proc.exists():
  s=(proc/'stat').read_text().split();assert s[21]==d['start_ticks']
  if s[2]!='Z':
-  assert (proc/'wchan').read_text().strip() in ('hrtimer_nanosleep','do_nanosleep'),'prior mover not idle'
+  assert (proc/'wchan').read_text().strip() in ('hrtimer_nanosleep','do_nanosleep','do_select'),'prior mover not idle'
   assert not (proc/'task'/str(d['pid'])/'children').read_text().strip(),'active transfer children'
+  assert all((p/'ARCHIVE_MOVE.json').exists() or (p/'CAPACITY_BLOCKED.json').exists() for p in old.glob('batch_*')),'unfinished prior batch'
   assert str(old/'rolling_archive.py') in (proc/'cmdline').read_bytes().decode().replace(chr(0),' ')
   os.kill(d['pid'],signal.SIGTERM)
   for _ in range(50):
@@ -245,9 +246,10 @@ print(p.stdout)''',timeout=40))
         proc=psutil.Process(d['pid']);assert proc.create_time()==d['create_time']
         assert 'tools.coopmwm.rolling_archive_ops' in proc.cmdline()
         children=proc.children(recursive=True)
-        for child in children:assert child.name().lower() in ('ssh.exe','ssh')
+        for child in children:assert child.name().lower() in ('ssh.exe','ssh','conhost.exe')
         proc.terminate()
-        for child in children:child.terminate()
+        for child in children:
+            if child.name().lower() in ('ssh.exe','ssh'):child.terminate()
     except psutil.NoSuchProcess:pass
     p=ops.EVIDENCE/'ROLLING_ARCHIVE_PRIOR_DRAINED_1647_V3.json'
     if not p.exists():write(p,value)
