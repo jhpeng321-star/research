@@ -200,12 +200,61 @@ def spawn(root, stage, arm=None):
         if not alive(d) and not (root/(label+'_COMPLETE.json')).exists():
             raise ValueError('owned V2V child exited: '+label)
         return d
+    # Intent arms must use the reviewed additive launch binding. Historical
+    # V2V-only sources retain their existing route; none is re-released here.
+    cfg=configuration(root)['config']
+    if cfg.get('v2v_intent'):
+        launch3_check(root,cfg,stage,arm)
     command=[sys.executable,'-B','-u','-m','tools.coopmwm.v2v_live',str(root),stage]
     if arm:command+=['--arm',arm]
     with (root/(label+'.log')).open('x') as log:
         child=subprocess.Popen(command,stdin=subprocess.DEVNULL,stdout=log,
             stderr=subprocess.STDOUT,start_new_session=True)
     d=dict(owner(child.pid),argv=command,label=label);write(dispatch,d);return d
+
+
+def launch3_check(root, cfg, stage=None, arm=None):
+    """Validate a registered additive trust anchor immediately before dispatch.
+
+    The anchor lives outside immutable V2V_RUNTIME, avoiding a circular hash
+    between the runtime and the launch binding that pins that runtime.
+    Only resource waits are retryable; every other failed condition is fatal.
+    """
+    from . import v2v_launch3 as launch3
+    from .protocol import sha
+    from .storage import read
+    from .replay_start import alive
+    root=Path(root)
+    path=root/'LAUNCH3_AUTHORITY.json'
+    authority=read(path)
+    if sha(path) not in (root/'AUTHORITY.md').read_text():
+        raise ValueError('launch3 additive authority is not registered')
+    boundary=authority['legacy_boundary']
+    if set(boundary['owners'])!={'B','R'} or set(boundary['checkpoints'])!={'B','R'}:
+        raise ValueError('both legacy arm boundary proofs required')
+    def check_boundary():
+        for a,d in boundary['owners'].items():
+            if alive(d):raise ValueError('legacy arm still running: '+a)
+            saved=boundary['checkpoints'][a]
+            expected=Path(cfg['legacy_root'])/f'{a}_checkpoint_{saved["update"]:03}.pt'
+            if Path(saved['path'])!=expected or sha(expected)!=saved['sha256']:
+                raise ValueError('legacy boundary checkpoint mismatch: '+a)
+    check_boundary()
+    costs=None
+    if stage in ('smoke','train'):
+        if arm not in ('A','B','R'):raise ValueError('launch3 training arm required')
+        costs={'v2v_train':24*1200*(1 if stage=='smoke' else 23)}
+    elif stage in ('test8','test24'):
+        costs={'v2v_interim' if stage=='test8' else 'v2v_final':3*96*1200}
+    elif stage is not None:
+        raise ValueError('unregistered launch3 stage: '+str(stage))
+    result=launch3.wait_for_preflight(authority['binding_path'],
+        binding_sha256=authority['binding_sha256'],root=root,
+        control=authority['control_root'],mover=authority['mover_root'],phase_costs=costs,
+        wait_seconds=max(0,int(cfg['gpu_deadline']-time.time())))
+    check_boundary()
+    launch3.check_hold(authority['control_root'],root)
+    return result
 
 
 def watch(root):
@@ -218,8 +267,13 @@ def watch(root):
     if (root/'WATCH_OWNER.json').exists():raise ValueError('adopt existing V2V watcher')
     write(root/'WATCH_OWNER.json',owner())
     children=[]
+    if cfg.get('v2v_intent'):
+        # Full frozen-slate quote and all launch prerequisites once before the
+        # first smoke; each new child then checks its own remaining phase cost.
+        launch3_check(root,cfg)
     while True:
-        gate=resource_gate(root,cfg)
+        gate=(dict(ready=True,rule='registered launch3 preflight checked')
+            if cfg.get('v2v_intent') else resource_gate(root,cfg))
         atomic(root/'V2V_WATCH_STATUS.json',dict(gate,unix=time.time(),stage='resource_wait',children=children))
         if gate['ready']:break
         time.sleep(120)
