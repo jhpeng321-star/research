@@ -204,17 +204,27 @@ def spawn(root, stage, arm=None):
         if not alive(d) and not (root/(label+'_COMPLETE.json')).exists():
             raise ValueError('owned V2V child exited: '+label)
         return d
-    # Intent arms must use the reviewed additive launch binding. Historical
-    # V2V-only sources retain their existing route; none is re-released here.
+    # Every V2V dispatch uses the reviewed additive launch binding (audit B5): the launch3
+    # preflight runs synchronously immediately before EACH Popen (smoke, train, test8/test24)
+    # and any Refused aborts. The V2V-only (10 GiB resource_gate) route is disabled.
     cfg=configuration(root)['config']
-    if cfg.get('v2v_intent'):
-        launch3_check(root,cfg,stage,arm)
+    if not cfg.get('v2v_intent'):
+        raise ValueError('V2V dispatch requires the intent launch3 binding; the V2V-only route is disabled')
+    launch3_check(root,cfg,stage,arm)
     command=[sys.executable,'-B','-u','-m','tools.coopmwm.v2v_live',str(root),stage]
     if arm:command+=['--arm',arm]
     with (root/(label+'.log')).open('x') as log:
         child=subprocess.Popen(command,stdin=subprocess.DEVNULL,stdout=log,
             stderr=subprocess.STDOUT,start_new_session=True)
     d=dict(owner(child.pid),argv=command,label=label);write(dispatch,d);return d
+
+
+def _require_launch3(root, cfg):
+    """Audit B5: intent launch3 binding mandatory; never collide with another launcher's start."""
+    if not cfg.get('v2v_intent'):
+        raise ValueError('V2V watcher requires the intent launch3 binding; the V2V-only route is disabled')
+    if (Path(root)/'V2V_STARTED.json').exists():
+        raise ValueError('V2V_STARTED.json already exists: another launcher owns this root')
 
 
 def launch3_check(root, cfg, stage=None, arm=None):
@@ -271,16 +281,16 @@ def watch(root):
     if (root/'WATCH_OWNER.json').exists():raise ValueError('adopt existing V2V watcher')
     write(root/'WATCH_OWNER.json',owner())
     children=[]
-    if cfg.get('v2v_intent'):
-        # Full frozen-slate quote and all launch prerequisites once before the
-        # first smoke; each new child then checks its own remaining phase cost.
-        launch3_check(root,cfg)
-    while True:
-        gate=(dict(ready=True,rule='registered launch3 preflight checked')
-            if cfg.get('v2v_intent') else resource_gate(root,cfg))
-        atomic(root/'V2V_WATCH_STATUS.json',dict(gate,unix=time.time(),stage='resource_wait',children=children))
-        if gate['ready']:break
-        time.sleep(120)
+    # Audit B5 (c4/launch-final): the launch3 preflight (= v2v_launch3.before_launch: HOLD,
+    # binding, deployed commit, runtime, PASS gate, resources, budget) is the ONLY dispatch
+    # gate. The former V2V-only 10 GiB resource_gate route is disabled, and an existing
+    # V2V_STARTED.json (another launcher) refuses before any child is spawned.
+    _require_launch3(root,cfg)
+    # Full frozen-slate quote and all launch prerequisites once before the
+    # first smoke; each new child then checks its own remaining phase cost.
+    gate=launch3_check(root,cfg)
+    atomic(root/'V2V_WATCH_STATUS.json',dict(ready=True,rule='registered launch3 preflight checked',
+        unix=time.time(),stage='resource_wait',children=children,preflight=bool(gate)))
     children=[spawn(root,'smoke',a) for a in ('A','B','R')]
     while not all((root/f'smoke_{a}_COMPLETE.json').exists() for a in ('A','B','R')):
         for child in children:
@@ -304,6 +314,7 @@ def watch(root):
         saved=root/f'WARM_{arm}_PAUSED_AFTER_SMOKE.json'
         if saved.exists():raise ValueError('smoke endpoint already adopted')
         path.rename(saved)
+    _require_launch3(root,cfg)
     children=[spawn(root,'train',a) for a in ('A','B','R')]
     write(root/'V2V_STARTED.json',dict(unix=time.time(),children=children,first_update=1,
         resumed_after_smoke=2,final_update=24,common_u0_sha256=cfg['common_checkpoint_sha256'],

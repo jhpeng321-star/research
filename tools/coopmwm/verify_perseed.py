@@ -10,9 +10,11 @@ Per completed first-seed decision (accepted OR rejected - a plan may win only on
   (bank_statistics._stats: policy-continues minus plan, B=2000, RNG 20261103, circular 30 s
   blocks or per-vehicle units) is > 0 AND whose composite MAIN04:26 safety verdict passes
   is admitted - not only the best; seeds select their winners independently;
-  seed 1 additionally keeps the existing later-harm check (one extended-window verification
-  of all seed-1 LB>0 candidates, tail 600 s, also the seed-1 safety window - as per_seed_v1);
-  seed 2 later-harm is NOT MEASURED (disclosed per example, never imputed);
+  each seed additionally needs the later-harm check on its OWN CRN (one extended-window
+  verification of all that seed's LB>0 candidates, tail 600 s, also that seed's safety window;
+  MAIN 2026-11-03 launch-final: seed 2 is now measured for new verifications and a measured
+  failure rejects; ``later_harm_seed2=False`` reproduces the earlier not-measured records);
+  own-seed safety deltas are required (missing -> data_missing, never another seed's window);
   per admitted (plan, seed) with >= 2 members: ONE batched solo verification on THAT seed
   (one member follows the plan, the others policy-continue; one shared policy branch),
   within-seed cooperative label = best-solo minus group per-second bootstrap LB > 0.
@@ -37,13 +39,17 @@ SCHEMA = 'coopmwm/verify-perseed/v1'
 RECORDS = 'confirmations_all8'
 SEED2_ROOT = 'confirm_seed2_all8'
 EXT_ROOT = 'confirm_extended_all8'
+EXT2_ROOT = 'confirm_extended_seed2_all8'
 SOLO_ROOTS = {1: 'confirm_solo_all8_s1', 2: 'confirm_solo_all8_s2'}
 KIND_SEED2, KIND_EXT = 'confirm_seed2_all8', 'confirm_extended_all8'
+KIND_EXT2 = 'confirm_extended_seed2_all8'
+EXT_ROOTS = {1: EXT_ROOT, 2: EXT2_ROOT}
+KIND_EXTS = {1: KIND_EXT, 2: KIND_EXT2}
 KIND_SOLO = {1: 'confirm_solo_all8_s1', 2: 'confirm_solo_all8_s2'}
 RULE = ('all8_both_seeds (owner 2026-11-03 22:05): all K candidates + policy-continues on BOTH CRN seeds; '
         'per seed every candidate with within-seed per-second paired bootstrap lower95 > 0 and composite '
-        'safety pass is admitted (seed 1 also needs the extended-window later-harm pass; seed 2 later-harm '
-        'not measured); solos per admitted (plan, seed); within-seed cooperative label; each admitted '
+        'safety pass is admitted (each seed also needs its own extended-window later-harm pass, measured '
+        'on that seed\'s CRN); solos per admitted (plan, seed); within-seed cooperative label; each admitted '
         '(plan, seed) is its own imitation example from THAT seed\'s tape.')
 
 
@@ -86,6 +92,10 @@ def quote_decision(t0, durations, members, admitted=None, first_seed_positive=No
     seed2 = (K+1)*_branch(t0, maxD, TAIL_S, end_s)
     s1 = admitted.get(1) or []
     ext = (len(s1)+1)*_branch(t0, max(durations[i] for i in s1), EXTENDED_TAIL_S, end_s) if s1 else 0
+    # MAIN 2026-11-03 (launch-final): seed-2 later harm is MEASURED for new all8 verifications -
+    # one extended-window verification of the seed-2 LB>0 set (assumed == admitted[2]) on seed 2.
+    s2 = admitted.get(2) or []
+    ext += (len(s2)+1)*_branch(t0, max(durations[i] for i in s2), EXTENDED_TAIL_S, end_s) if s2 else 0
     solos = sum((len(members[i])+1)*_branch(t0, durations[i], TAIL_S, end_s)
                 for k in (1, 2) for i in admitted.get(k) or [] if len(members[i]) >= 2)
     legacy = first+legacy_conf
@@ -230,7 +240,7 @@ def _cooperation(seed, plan, plan_tape, window, solo, solo_dir, reference_J, adm
 # ---------------------------------------------------------------- confirmation (one decision)
 
 def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, workers=2, version=None,
-                 candidates=None, branches_dir=None, health=None, later_harm_seed1=True):
+                 candidates=None, branches_dir=None, health=None, later_harm_seed1=True, later_harm_seed2=True):
     """all8_both_seeds confirmation of ONE completed first-seed decision -> sealed record."""
     from . import replay_bank as rb
     from . import bank_statistics as bs
@@ -269,16 +279,26 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
                 st, tape = _candidate_stats(r, bdir, i+1)
             except bs._Missing as e:
                 evals[k][i] = dict(missing=str(e));continue
-            deltas, safe, old_safe = _pair_safety(r, bdir, i+1)
+            try:     # own-seed safety deltas are REQUIRED (no fallback to another seed's window)
+                deltas, safe, old_safe = _pair_safety(r, bdir, i+1)
+            except (OSError, EOFError, KeyError, TypeError, ValueError) as e:
+                evals[k][i] = dict(missing=f'seed-{k} safety deltas unavailable: {e!r}');continue
             evals[k][i] = dict(stats=st, tape=tape, window_deltas=deltas, window_safe=safe,
                                window_safe_old=old_safe, advantage=r['J_policy_veh_s']-r['J_candidates_veh_s'][i])
 
-    # Seed 1 later-harm: one extended-window verification of every seed-1 LB>0 candidate.
-    ext, ext_index = None, {}
-    lb1 = [i for i, e in evals[1].items() if 'stats' in e and e['stats']['lower95_one_sided_veh_s'] > 0]
-    if later_harm_seed1 and lb1:
-        ext = verify(KIND_EXT, snapshot, [plans[i] for i in lb1], bank/EXT_ROOT, rb.EXTENDED_TAIL_S)
-        ext_index = {i: j+1 for j, i in enumerate(lb1)}
+    # Later harm, per seed: one extended-window verification of every LB>0 candidate of that seed
+    # on THAT seed's CRN (seed 1 = decision snapshot, seed 2 = the seed-2 replicate); MAIN
+    # 2026-11-03: new all8 verifications measure seed 2 too and a measured failure rejects.
+    measure = {1: bool(later_harm_seed1), 2: bool(later_harm_seed2)}
+    snaps = {1: snapshot, 2: s2_snapshot}
+    exts, ext_index, lbs = {1: None, 2: None}, {1: {}, 2: {}}, {}
+    for k in (1, 2):
+        lbs[k] = [i for i, e in evals[k].items() if 'stats' in e and e['stats']['lower95_one_sided_veh_s'] > 0]
+        if measure[k] and lbs[k]:
+            exts[k] = verify(KIND_EXTS[k], snaps[k], [plans[i] for i in lbs[k]], bank/EXT_ROOTS[k],
+                             rb.EXTENDED_TAIL_S)
+            ext_index[k] = {i: j+1 for j, i in enumerate(lbs[k])}
+    ext, lb1 = exts[1], lbs[1]
 
     examples = []
     for k in (1, 2):
@@ -294,19 +314,23 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
                 examples.append(ex);continue
             st = e['stats'];lower = st['lower95_one_sided_veh_s']
             later, safe, source = None, e['window_safe'], f'seed{k}_window'
-            if k == 1 and later_harm_seed1 and lower > 0:
-                j = ext_index[i]
-                if not _complete(ext) or ext['J_candidates_veh_s'][j-1] is None:
+            if measure[k] and lower > 0:
+                j, x = ext_index[k][i], exts[k]
+                if not _complete(x) or x['J_candidates_veh_s'][j-1] is None:
                     later = None;ex['later_harm_missing'] = True
                 else:
-                    later = ext['J_policy_veh_s']-ext['J_candidates_veh_s'][j-1] > 0
-                    ed, safe, _ = _pair_safety(ext, bank/EXT_ROOT/'branches', j)
-                    ex['extended_deltas'] = ed;source = 'extended_window_seed1'
-                    ex['extended_advantage_veh_s'] = ext['J_policy_veh_s']-ext['J_candidates_veh_s'][j-1]
-            if k == 1 and later_harm_seed1 and lower > 0 and later is None:
-                ok, reason = False, 'seed-1 extended-window branch missing; never imputed'
+                    try:
+                        ed, safe, _ = _pair_safety(x, bank/EXT_ROOTS[k]/'branches', j)
+                    except (OSError, EOFError, KeyError, TypeError, ValueError):
+                        later = None;ex['later_harm_missing'] = True
+                    else:
+                        later = x['J_policy_veh_s']-x['J_candidates_veh_s'][j-1] > 0
+                        ex['extended_deltas'] = ed;source = f'extended_window_seed{k}'
+                        ex['extended_advantage_veh_s'] = x['J_policy_veh_s']-x['J_candidates_veh_s'][j-1]
+            if measure[k] and lower > 0 and later is None:
+                ok, reason = False, f'seed-{k} extended-window branch missing; never imputed'
             elif later is False:
-                ok, reason = False, 'seed-1 later-harm check failed (extended-window advantage <= 0)'
+                ok, reason = False, f'seed-{k} later-harm check failed (extended-window advantage <= 0)'
             elif not lower > 0:
                 ok, reason = False, f'seed-{k} one-sided 95% lower bound {lower:.4g} <= 0'
             elif not safe:
@@ -329,7 +353,6 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
             examples.append(ex)
 
     # Solos per admitted (plan, seed) on THAT seed: one batched verification, shared policy branch.
-    snaps = {1: snapshot, 2: s2_snapshot}
     for ex in examples:
         if ex['status'] != 'admitted':
             if 'cooperative' not in ex:
@@ -362,6 +385,10 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
                extended=(dict(verification_id=ext['verification_id'], status=ext['status'],
                               receipt_sha256=ext['receipt_sha256'], candidate_indices=lb1)
                          if ext is not None else None),
+               extended_seed2=(dict(verification_id=exts[2]['verification_id'], status=exts[2]['status'],
+                                    receipt_sha256=exts[2]['receipt_sha256'], candidate_indices=lbs[2])
+                               if exts[2] is not None else None),
+               later_harm_measured=dict(seed1=measure[1], seed2=measure[2]),
                candidates=[dict(index=i, plan_id=p['id'], plan_sha256=digest(p), members=list(p['members']),
                                 duration_s=int(p['duration_s'])) for i, p in enumerate(plans)],
                winners=winners, distinct_winners_across_seeds=set(winners['1']) != set(winners['2']),

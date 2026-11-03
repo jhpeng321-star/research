@@ -38,10 +38,13 @@ cap is printed and recorded, never silently trimmed. Execution admits, precharge
 import argparse
 import contextlib
 import copy
+import hashlib
 import importlib
 import importlib.util
 import inspect
 import json
+import re
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -89,6 +92,106 @@ def intent_module():
     if importlib.util.find_spec(name) is None:
         return None
     return importlib.import_module(name)
+
+
+RUNTIME_FILE = 'V2V_RUNTIME.json'
+RUNTIME_KEYS = ('v2v', 'v2v_dim', 'v2v_intent', 'v2v_intent_horizon', 'v2v_intent_loss_weight',
+                'v2v_intent_detach_trunk')
+
+
+class GateIdentityError(ValueError):
+    """The gate cannot bind itself to the deployed runtime/commit (audit B2/B3): refuse."""
+
+
+def load_runtime(root):
+    """(sha256 of <root>/V2V_RUNTIME.json bytes, its config) - the SAME file the launcher hashes
+    into binding['runtime_sha256'] (audit B2/B3). Missing or malformed -> GateIdentityError."""
+    path = Path(root)/RUNTIME_FILE
+    try:
+        raw = path.read_bytes()
+        value = json.loads(raw)
+    except (OSError, ValueError) as error:
+        raise GateIdentityError(f'deployed runtime {path} unavailable: {error!r}') from error
+    cfg = value.get('config') if isinstance(value, dict) else None
+    if not isinstance(cfg, dict):
+        raise GateIdentityError(f'{path} has no config object')
+    return hashlib.sha256(raw).hexdigest(), cfg
+
+
+def runtime_gate_config(runtime_cfg, v2v=True, intent='auto'):
+    """Audit B3: the gate's model config IS the deployed runtime's v2v/intent keys; any mismatch
+    with the requested gate options, the launcher's pinned options or the gate bank rule refuses."""
+    from .v2v_launch3 import BANK_OPTIONS, INTENT_OPTIONS
+    if intent not in ('auto', 'on', 'off'):
+        raise ValueError(f'intent must be auto/on/off, not {intent!r}')
+    cfg = {k: runtime_cfg[k] for k in RUNTIME_KEYS if k in runtime_cfg}
+    on = bool(cfg.get('v2v_intent'))
+    problems = []
+    if not v2v and cfg.get('v2v'):
+        problems.append('gate --no-v2v but the deployed runtime has v2v=True')
+    if (intent == 'on' and not on) or (intent == 'off' and on):
+        problems.append(f'gate intent={intent} but the deployed runtime has v2v_intent={on}')
+    if on:
+        for key, want in INTENT_OPTIONS.items():
+            have = cfg.get(key)
+            if have != want or isinstance(have, bool) != isinstance(want, bool):
+                problems.append(f'deployed runtime {key}={have!r} differs from launcher {want!r}')
+        module = intent_module()
+        if module is None:
+            problems.append('deployed runtime is intent-ON but this source has no v2v_intent module')
+        elif not problems:
+            module.settings(cfg)                 # validates v2v_dim against the intent block width
+    rule = runtime_cfg.get('bank_statistics')
+    if rule != GATE_RULE:
+        problems.append(f'deployed runtime bank_statistics={rule!r}, gate rule is {GATE_RULE!r}')
+    if rule != BANK_OPTIONS.get('bank_statistics'):
+        problems.append(f'deployed runtime bank_statistics={rule!r} differs from the launcher')
+    if problems:
+        raise GateIdentityError('gate config refused: '+'; '.join(problems))
+    return cfg if cfg.get('v2v') else None
+
+
+def source_identity(source_root=None, source_manifest=None):
+    """Audit B2: the commit the gate ran from - the qualified source manifest's commit for a
+    packaged release (with that manifest's SHA256), else the exact git HEAD of the source root,
+    refusing tracked modifications (the launcher compares this with its deployed commit)."""
+    source = Path(source_root) if source_root else Path(__file__).resolve().parents[2]
+    if source_manifest:
+        raw = Path(source_manifest).read_bytes()
+        manifest = json.loads(raw)
+        commit = manifest.get('commit')
+        if (not isinstance(commit, str) or not re.fullmatch('[0-9a-f]{40}', commit)
+                or manifest.get('complete_source_inventory') is not True):
+            raise GateIdentityError('qualified complete source manifest with a 40-hex commit required')
+        return dict(commit=commit, source_manifest_sha256=hashlib.sha256(raw).hexdigest(),
+                    method='qualified_source_manifest', source_root=str(source))
+
+    def git(*args):
+        try:
+            return subprocess.run(['git', '-C', str(source), *args], capture_output=True, timeout=60)
+        except (OSError, subprocess.SubprocessError) as error:
+            raise GateIdentityError(f'git identity of {source} unavailable: {error!r}') from error
+    head = git('rev-parse', '--verify', 'HEAD')
+    if head.returncode:
+        raise GateIdentityError(f'git HEAD of {source} unavailable; pass a source manifest')
+    dirty = git('diff', '--quiet', 'HEAD', '--', '*.py')
+    if dirty.returncode:
+        raise GateIdentityError(f'tracked python sources under {source} differ from HEAD')
+    return dict(commit=head.stdout.decode().strip(), source_manifest_sha256=None,
+                method='exact_git_HEAD', source_root=str(source))
+
+
+def gate_identity(root, v2v=True, intent='auto', source_root=None, source_manifest=None):
+    """(model config, identity record, runtime config) bound into the plan and the gate report."""
+    runtime_sha256, runtime_cfg = load_runtime(root)
+    cfg = runtime_gate_config(runtime_cfg, v2v, intent)
+    ident = dict(source_identity(source_root, source_manifest), runtime_sha256=runtime_sha256,
+                 runtime_path=str(Path(root)/RUNTIME_FILE), runtime_config=cfg,
+                 bank_statistics=runtime_cfg.get('bank_statistics'))
+    return cfg, ident, runtime_cfg
+
+
+IDENTITY_FIELDS = ('commit', 'runtime_sha256', 'source_manifest_sha256')
 
 
 def gate_config(v2v=True, intent='auto'):
@@ -275,6 +378,13 @@ def fixed_update(checkpoint, pairs, summary=None, passes=5, coefficient=1., v2v=
                              'policy refuses them (bank_pairs(v2v=True) excludes such pairs)')
     policy, optimizer, generator, payload = v2v_runtime.load_checkpoint(checkpoint, config=cfg)
     reference = copy.deepcopy(policy)
+    refresh = None
+    if getattr(policy, 'intent_horizon', 0):
+        # Audit B1: exactly like the live exact_update, the bank partner-intent inputs are the
+        # CURRENT head's publications on the partners' own t-1 contexts (never recorded commands);
+        # without this refresh the intent columns see only zeros and can never move.
+        from .v2v_intent import refresh_bank_intents
+        refresh = refresh_bank_intents(policy, pairs)
     try:
         report = bank_imitation.run_separate(policy, optimizer, pairs, generator, reference,
                                              coefficient=coefficient, passes=passes)
@@ -310,7 +420,7 @@ def fixed_update(checkpoint, pairs, summary=None, passes=5, coefficient=1., v2v=
                           error_after_mps2=float(np.mean(intent_after)) if intent_after else None,
                           change_mean_mps2=intent_mean, change_ci95=intent_ci,
                           clusters=intent_clusters),
-        partner_intent_weights=weight_report(policy))
+        partner_intent_weights=weight_report(policy), partner_intents_refreshed=refresh)
     offline['checks'] = offline_checks(offline)
     return {k: v.detach().cpu().clone() for k, v in policy.state_dict().items()}, offline
 
@@ -486,22 +596,26 @@ def state_jobs(r, snap, update, arm, new_state, old_state, seeds=SEEDS, plans=No
 
 def plan(root, arm, control, new_state=None, old_state=None, offline=None, training_seed=SEED,
          pairs_source=None, update=GATE_UPDATE, sources=None, v2v=True, intent='auto', passes=5,
-         coefficient=1., u0=None, u3=None, phase=PHASE):
+         coefficient=1., u0=None, u3=None, phase=PHASE, source_root=None, source_manifest=None):
     """Plan every SUMO job of the gate (sealed existing-format specs + snapshots + sim-s
     quotes) after the offline fixed update; writes COOPFIX_EXACT_PLAN.json atomically.
-    Offline FAIL or uncertified mandatory states write a FAIL gate report (no physics)."""
+    Offline FAIL or uncertified mandatory states write a FAIL gate report (no physics).
+    The model config comes from <root>/V2V_RUNTIME.json (audit B3) and the plan and every gate
+    report seal commit / runtime_sha256 / source_manifest_sha256 (audit B2)."""
     root, control = Path(root), Path(control)
     if (control/PLAN_FILE).exists():
         return load_plan(control)
     if (control/GATE_FILE).exists():
         return json.loads((control/GATE_FILE).read_text())
+    cfg, identity, runtime_cfg = gate_identity(root, v2v, intent, source_root, source_manifest)
+    if sources is None and runtime_cfg.get('replay_sources'):
+        sources = {k: list(v) for k, v in runtime_cfg['replay_sources'].items()}
     if offline is None or new_state is None:
-        cfg = gate_config(v2v, intent)
         try:
             pairs, summary = (statistical_bank_pairs(root, arm, training_seed, sources, cfg)
                               if pairs_source is None else _pairs_file(pairs_source))
         except bank_statistics.BankDataMissing as e:     # per_seed_v1 cannot evaluate the bank
-            return _fail(control, arm, update, None, 'bank', [repr(e)], None)
+            return _fail(control, arm, update, None, 'bank', [repr(e)], None, identity)
         _new, offline = fixed_update(u0 or u0_path(root, arm), pairs, summary, passes=passes,
                                      coefficient=coefficient, config=cfg)
         new_state = _new                                     # the fixed update's own weights
@@ -509,7 +623,7 @@ def plan(root, arm, control, new_state=None, old_state=None, offline=None, train
         old_state = torch.load(u3 or root/f'{arm}_checkpoint_003.pt', map_location='cpu',
                                weights_only=False)['policy']
     if not all(offline['checks'].values()):
-        return _fail(control, arm, update, offline, 'offline', [], None)
+        return _fail(control, arm, update, offline, 'offline', [], None, identity)
     try:
         candidates, statuses = certified_candidates(root, arm, sources)
         seeds = {r['episode']['world']['seed']: (r, c, cs) for r, c, cs in candidates}
@@ -521,7 +635,7 @@ def plan(root, arm, control, new_state=None, old_state=None, offline=None, train
                 f'(statuses {dict((s, seen.get(s, "absent")) for s in missing)}); '
                 f'certified: {sorted(seeds)}', statuses)
     except CertificationFailed as e:
-        return _fail(control, arm, update, offline, 'certification', [str(e)], e.statuses)
+        return _fail(control, arm, update, offline, 'certification', [str(e)], e.statuses, identity)
     links = [json.loads(p.read_text()) for p in (rb.bank_root(root, arm)/'decisions').glob('*.json')]
     by_vid = {link['verification_id']: link for link in links}
     states, snapshots, overages = [], {}, []
@@ -575,6 +689,7 @@ def plan(root, arm, control, new_state=None, old_state=None, offline=None, train
     for line in overages:
         print('COOPFIX GATE CAP NOTE: '+line, file=sys.stderr)
     plan_record = dict(gate=GATE, arm=arm, update=update, unix=time.time(), root=str(root), phase=phase,
+                       identity=identity, **{k: identity[k] for k in IDENTITY_FIELDS},
                        sources={k: list(v) for k, v in (sources or {}).items()},
                        new_state_sha256=sv._state_sha(new_state),
                        old_state_sha256=sv._state_sha(old_state),
@@ -609,15 +724,17 @@ def plan(root, arm, control, new_state=None, old_state=None, offline=None, train
     return load_plan(control)
 
 
-def _fail(control, arm, update, offline, stage, reasons, statuses):
+def _fail(control, arm, update, offline, stage, reasons, statuses, identity=None):
     """FAIL gate report written before any physics (offline or certification failure)."""
     control.mkdir(parents=True, exist_ok=True)
+    identity = identity or {}
     checks = dict(offline_checks=bool(offline) and all(offline['checks'].values()),
                   mandatory_states_certified=False if stage == 'certification' else None)
     report = dict(gate=GATE, arm=arm, update=update, unix=time.time(), stage=stage, offline=offline,
                   offline_checks=(offline or {}).get('checks'), certification_statuses=statuses, states=[],
                   gate_checks=checks, reasons=[k for k, ok in checks.items() if ok is False]+list(reasons),
-                  gate_state_synergy_lower_bound=None, sim_s_planned=0, verdict='FAIL')
+                  gate_state_synergy_lower_bound=None, sim_s_planned=0, verdict='FAIL',
+                  identity=identity or None, **{k: identity.get(k) for k in IDENTITY_FIELDS})
     _write_new(control/GATE_FILE, _seal(report, 'gate_report_sha256'))
     return report
 
@@ -819,8 +936,15 @@ def collect(control, plan_record=None):
     write COOPFIX_GATE.json (offline fields from the sealed plan; verdict per the gate rule)."""
     control = Path(control)
     plan_record = plan_record or load_plan(control)
+    identity = plan_record.get('identity')
+    if not identity or any(k not in plan_record for k in IDENTITY_FIELDS):
+        raise GateIdentityError('gate plan lacks the sealed commit/runtime identity (audit B2)')
+    runtime = Path(identity['runtime_path'])
+    if runtime.exists() and hashlib.sha256(runtime.read_bytes()).hexdigest() != plan_record['runtime_sha256']:
+        raise GateIdentityError(f'{runtime} changed after the gate was planned')
     states = [state_metrics(state, state_receipts(control, state)) for state in plan_record['states']]
     report = dict(gate=GATE, arm=plan_record['arm'], update=plan_record['update'],
+                  identity=identity, **{k: plan_record[k] for k in IDENTITY_FIELDS},
                   unix=time.time(), plan_sha256=digest(plan_record),
                   offline=plan_record['offline'], offline_checks=plan_record['offline']['checks'],
                   states=states, plan_totals=plan_record['totals'], caps=plan_record['caps'])
@@ -887,6 +1011,10 @@ def main(argv=None):
     p.add_argument('--no-v2v', action='store_true')
     p.add_argument('--intent', default='auto', choices=('auto', 'on', 'off'))
     p.add_argument('--phase', default=PHASE)
+    p.add_argument('--source-root', type=Path,
+                   help='deployed source root whose git HEAD is sealed as the gate commit (default: this checkout)')
+    p.add_argument('--source-manifest', type=Path,
+                   help='qualified source manifest of a packaged release (commit + sha256 sealed instead of git HEAD)')
     a = p.parse_args(argv)
     if a.cmd == 'status':
         control = Path(a.control)
@@ -903,8 +1031,9 @@ def main(argv=None):
     if not a.root:
         p.error('plan requires --root')
     return plan(a.root, a.arm, a.control, training_seed=a.training_seed, pairs_source=a.pairs_file,
-                sources=parse_sources(a.sources), v2v=not a.no_v2v, intent=a.intent, passes=a.passes,
-                coefficient=a.coefficient, u0=a.u0, u3=a.u3, phase=a.phase)
+                sources=parse_sources(a.sources) or None, v2v=not a.no_v2v, intent=a.intent, passes=a.passes,
+                coefficient=a.coefficient, u0=a.u0, u3=a.u3, phase=a.phase,
+                source_root=a.source_root, source_manifest=a.source_manifest)
 
 
 if __name__ == '__main__':

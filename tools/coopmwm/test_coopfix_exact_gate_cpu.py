@@ -27,6 +27,19 @@ MANDATORY_COPY = tuple(ceg.MANDATORY_STATES)
 
 
 @pytest.fixture(autouse=True)
+def deployed_identity(monkeypatch, tmp_path):
+    """Audit B2/B3 (c4/launch-final): plan() binds the deployed V2V_RUNTIME.json and the source
+    commit. These synthetic banks carry no runtime file, so they bind a fixed synthetic identity
+    and keep the requested gate_config(v2v, intent); the real loaders are tested in
+    test_launch_final_cpu.py."""
+    def fake(root, v2v=True, intent='auto', source_root=None, source_manifest=None):
+        ident = dict(commit='0'*40, runtime_sha256='1'*64, source_manifest_sha256=None,
+                     method='test', runtime_path=str(tmp_path/'NO_V2V_RUNTIME.json'))
+        return ceg.gate_config(v2v, intent), ident, {}
+    monkeypatch.setattr(ceg, 'gate_identity', fake)
+
+
+@pytest.fixture(autouse=True)
 def bank_budget(tmp_path):
     """Same authorised additive binding as the confirmation-stage tests (never the shared
     historical quote)."""

@@ -74,6 +74,28 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
     return cfg
 
 
+def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sha256):
+    """Audit I4: the registered producer of the intent-ON A/B/R runtime config (prospective
+    binding only, like prepare). Identical for every arm: v2v_dim=48 (K4 x (6+5+1)),
+    v2v_intent=True, horizon 5, loss weight 1.0, detach_trunk=True; bank labels
+    bank_imitation='separate_full_pass', imitation_kl_cap=.045, bank_statistics='per_seed_v1'
+    (B and R; A has no bank). Exactly the keys v2v_launch3.bind_runtime pins."""
+    from .v2v_launch3 import BANK_OPTIONS, INTENT_OPTIONS
+    cfg = prepare(base, root=root, legacy_root=legacy_root, source_root=source_root,
+                  common_checkpoint_sha256=common_checkpoint_sha256,
+                  v2v_dim=int(INTENT_OPTIONS['v2v_dim']), v2v_intent=True,
+                  v2v_intent_horizon=INTENT_OPTIONS['v2v_intent_horizon'],
+                  v2v_intent_loss_weight=INTENT_OPTIONS['v2v_intent_loss_weight'],
+                  v2v_intent_detach_trunk=INTENT_OPTIONS['v2v_intent_detach_trunk'])
+    cfg.update(BANK_OPTIONS)
+    if cfg['imitation_epochs'] < 5:
+        raise ValueError('full-pass separate imitation requires at least five epochs')
+    for key, want in dict(INTENT_OPTIONS, **BANK_OPTIONS).items():
+        if cfg.get(key) != want or isinstance(cfg.get(key), bool) != isinstance(want, bool):
+            raise ValueError(f'intent runtime key {key} differs from the launcher: {cfg.get(key)!r}')
+    return cfg
+
+
 def admit(cfg, release, hooks):
     """Fail before loading models or invoking any physics/adapter on missing gates."""
     if not cfg.get('launch_authorized') or not cfg.get('phase_funding_authorized'):

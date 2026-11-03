@@ -173,7 +173,9 @@ def test_seed2_only_winner_admitted_from_seed2_tape(tmp_path):
     c = record(root)
     assert c['first_seed_status'] == 'rejected' and c['winners'] == {'1': [], '2': ['p5']}
     e = ex(c, 4, 2)
-    assert e['admitted'] and e['later_harm'] == 'not_measured' and e['plan']['id'] == 'p5'
+    # MAIN 2026-11-03 (launch-final): seed-2 later harm is MEASURED on seed 2's own CRN
+    assert e['admitted'] and e['later_harm'] == 'pass' and e['plan']['id'] == 'p5'
+    assert e['safety_source'] == 'extended_window_seed2' and c['extended_seed2']['candidate_indices'] == [4]
     assert e['tape']['branches_dir'].replace('\\', '/').endswith(vp.SEED2_ROOT+'/branches')
     assert e['tape']['intent_entry'] == f'{r["verification_id"]}/seed2/cand5'
     assert not ex(c, 4, 1)['admitted']
@@ -204,7 +206,8 @@ def test_different_winners_per_seed_and_within_seed_cooperation(tmp_path):
     assert ex(c, 0, 2)['cooperative_status'] == 'not_admitted'
     assert c['per_seed_v1']['cooperative_seeds'] == [1, 2] and c['per_seed_v1']['replicated_plans'] == []
     kinds = sorted(x['kind'] for x in c['charges'])
-    assert kinds == sorted([vp.KIND_SEED2, vp.KIND_EXT, vp.KIND_SOLO[1], vp.KIND_SOLO[1], vp.KIND_SOLO[2]])
+    assert kinds == sorted([vp.KIND_SEED2, vp.KIND_EXT, vp.KIND_EXT2, vp.KIND_SOLO[1], vp.KIND_SOLO[1],
+                            vp.KIND_SOLO[2]])
     bank = rb.bank_root(root, 'B')
     assert len(list((bank/vp.SOLO_ROOTS[1]/'verifications').glob('*.json'))) == 2
     assert len(list((bank/vp.SOLO_ROOTS[2]/'verifications').glob('*.json'))) == 1
@@ -230,11 +233,12 @@ def test_charges_recorded_through_existing_hooks(tmp_path, monkeypatch):
     rows = [x for x in ledger(root) if x['phase'] == PHASE]
     by_kind = {}
     for x in rows:
-        k = next(k for k in (vp.KIND_SEED2, vp.KIND_EXT, vp.KIND_SOLO[1], vp.KIND_SOLO[2]) if x['id'].startswith(k+'_'))
+        k = next(k for k in (vp.KIND_SEED2, vp.KIND_EXT, vp.KIND_EXT2, vp.KIND_SOLO[1], vp.KIND_SOLO[2])
+                 if x['id'].startswith(k+'_'))
         by_kind[k] = by_kind.get(k, 0)+x['sim_s']
     assert sum(by_kind.values()) == c['charged_sim_s'] > 0
     assert sorted(seen) == sorted(x['kind'] for x in c['charges'])
-    assert len(health) == len(c['charges']) == 4               # assert_running before every verification
+    assert len(health) == len(c['charges']) == 5               # assert_running before every verification
     assert sum(len(a) for p in plants for a in p.admits) == sum(x['n_branches'] for x in c['charges'])
     q = vp.quote_decision(600, [120]*8, [['c1', 'c2']]*8, {1: [0], 2: [2]})
     assert q['all8_confirmation_sim_s'] == c['charged_sim_s']   # quote == actual charges
