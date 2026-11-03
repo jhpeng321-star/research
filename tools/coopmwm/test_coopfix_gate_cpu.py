@@ -25,7 +25,6 @@ from tools.coopmwm.v2v_obs import V2V_DIM
 COOP_MEMBERS = ['m0', 'm1']
 SOLO_MEMBER = 'm0'
 SIGNAL, NOISE = 0.03, 0.01
-READY_FILES_DIR = gate.READY_FILES['imitation_trust'].parent
 
 
 def u0_checkpoint(tmp_path, lr=1e-4, seed=5):
@@ -323,12 +322,14 @@ def test_option_stubs_identity_and_ready_gating(monkeypatch, tmp_path):
         gate.filter_report(dict(bank_filter='statistical'), summary)
 
 
-def test_imitation_trust_own_pass_is_forwarded_with_cooperative_flags(monkeypatch):
+def test_imitation_trust_own_pass_is_forwarded_with_cooperative_flags(monkeypatch, tmp_path):
     absent = Path('/nonexistent/IMITFIX_READY.json')
     monkeypatch.setitem(gate.READY_FILES, 'imitation_trust', absent)
     with pytest.raises(ValueError):
         gate.trust_kwargs(dict(imitation_trust='own_pass'), [], None)
-    monkeypatch.setitem(gate.READY_FILES, 'imitation_trust', READY_FILES_DIR/'IMITFIX_READY.json')
+    ready = tmp_path/'IMITFIX_READY.json'
+    ready.write_text(json.dumps(dict(branch='c4/imit-fullpass')))
+    monkeypatch.setitem(gate.READY_FILES, 'imitation_trust', ready)
     pairs, summary = synthetic_pairs(n_coop_entries=2, n_solo=4)
     kwargs, report = gate.trust_kwargs(dict(imitation_trust='own_pass'), pairs, summary)
     assert report['enabled'] is True and kwargs['imitation_trust'] == 'own_pass'
