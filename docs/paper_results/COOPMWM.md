@@ -1,5 +1,26 @@
 # S-COOPMWM — live checks
 
+## Nov3 13:20:58 UTC+8 — isolated R-u9 complete on all8 frozen states
+- R-u9 isolated V2 is complete: **42 new branches /34,080sim-s precharge**,
+  all8 states graded, report seals and combined/original identities verified.
+  The original+140.267veh-s gain on986036/t300 becomes **-225.481veh-s** when
+  background CAVs stay on u3: group-only saving+74.059 versus best solo+299.540
+  (ramp.23); background-only saving+570.164. Its original verified-plan gain437.185
+  remains a separate plan result.
+- On986040/t300 (three-member state), group-only saving+820.868 is below the
+  best solo+993.583, isolated cooperation gain **-172.716veh-s**. The other
+  isolated gains are -0.003237410(986037/t360),-0.000282770(986065/t760),
+  -0.023060614(986001/t510),-0.702182829(986051/t360),
+  -0.000000889(986040/t300 two-member state), and **+0.000050677**(986038/t320).
+  The one positive sign is retained at its measured magnitude. These results
+  do not demonstrate substantive transfer of verified-plan cooperation at u9.
+- B and R diagnostics use their own frozen bank states; these are not paired
+  B-vs-R estimates. Existing sidecars continue subsequent updates. Canonical
+  `coopmwm/POLICY_SYNERGY_u009_R_ISOLATED_V2.json` and
+  `coopmwm/POLICY_SYNERGY_u009_R_WITH_ISOLATED_V2.json` preserve the original
+  diagnostic alongside the isolated one. Status evidence:
+  `coopmwm/POLICY_SYNERGY_ISOLATED_STATUS_1793683258153140100.json`.
+
 ## Nov3 13:19 UTC+8 — B-u10 complete; R-u10 collecting
 - B-u10 completed **13:18:52**, with runtime ETA about7.04h to fixedu24.
   Watcher3305066 remains live/no alerts/dead children. R-u10 has12 claimed

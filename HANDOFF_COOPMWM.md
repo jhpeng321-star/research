@@ -1,5 +1,13 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+ISOLATED Nov3 13:20:58+08: R9ALL8statesCOMPLETE/42newbranches/34080sim-s,
+seals+joint/originalidentitiesPASS. Original+140.267on986036becomesiso-225.481
+(group74.059/bestsolo299.540/background570.164). Otherlargeiso986040n3-172.716
+(group820.868/bestsolo993.583). Onlypositive986038t320+.000050677; exactsignkept,
+notmeaningfulgrouptransferproof. B/RownbankstatesNOTpairedcomparison.
+3531845LIVE/continuesnextupdates, canonicalR9ISOLATED_V2+WITH_ISOLATED_V2published.
+Status1793683258153140100. No numericalchange/newdispatch/physics byoperator.
+
 LATEST Nov3 13:19+08: B10DONE13:18:52/ETA7.04h/fixed24; R10first12claimed.
 Watcher3305066healthy/noalerts/dead. Bfixed8lesson-296.774CI[-784.598,96.451],
 2/8positive/error.591195; bankerror.898004->.895713,7steps896/1650visits,
