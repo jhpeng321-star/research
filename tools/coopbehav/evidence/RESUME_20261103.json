@@ -1,0 +1,47 @@
+{
+  "task": "S-COOPBEHAV",
+  "observed_local": "2026-11-03T13:00:39+08:00",
+  "inherited_head": "eafce9db",
+  "initial_git_status": "clean c4/coopbehav",
+  "authority": "REGISTRATION.md owner approval 2026-10-31 15:45, line 5545",
+  "preserved_work": "Existing implementation, tests, descriptive reports, corrected paired reports and invalidated historical outputs retained",
+  "watcher": {
+    "pid": 29244,
+    "parent_pid": 23892,
+    "creation_epoch_ms": 1793437674201,
+    "executable": "C:/Python314/python.exe",
+    "command": "python -u -m tools.coopbehav.poll --config E:/agent-work/c4-coopbehav/tools/coopbehav/handoffs.json --out E:/agent-work/c4-coopbehav/runs/coopbehav_poll --watch --interval 120",
+    "exact_identity_live": true,
+    "observed_status_timestamp": 1793681928.8018334,
+    "stderr_empty": true,
+    "active_owned_reports_in_status": 0,
+    "new_watcher_or_report_dispatches": 0
+  },
+  "sumocf_read_only_inventory": {
+    "host": "gpuR",
+    "root": "/root/sumocf20261031",
+    "canonical_index_sha256": "1c94ebe359532d3d00e6fa2d72af557791e71709691a78b26196cd4973f76c2e",
+    "canonical_pairs": 31,
+    "canonical_already_complete": true,
+    "deployed_indices": [
+      {"name": "COOPBEHAV_dev_u03_INDEX.json", "sha256": "eafd90892099bfc0e8ac18967208b1c297d89f12386ccc656bd333d5d5a41998", "pairs": 2},
+      {"name": "COOPBEHAV_dev_u03_fullfleet_INDEX.json", "sha256": "bc782dd4b08fb81b8c2775732fb97b4148acb92707716600f10f20ccc934452d", "pairs": 2}
+    ],
+    "new_ready_exports": 0
+  },
+  "coopaudit": {
+    "producer_handoff": "E:/agent-work/c4-coopmeasure/tools/coopaudit/TRACE_HANDOFF.md",
+    "corrected_contract_unchanged": true,
+    "existing_verified_coverage": "COOPAUDIT_V2_COVERAGE.json",
+    "live_corrected_v2_jobs": 29,
+    "ready": false,
+    "geometry_blockers": ["No observed lengths", "No additional mainline neighbours", "No per-row is_cav/controller flags"],
+    "detector_counts": null,
+    "completed_coverage_scan_repeated": false
+  },
+  "completed_reports_regenerated": 0,
+  "new_simulation_seconds": 0,
+  "process_signals": 0,
+  "research_data_deletions": 0,
+  "pushes": 0
+}
