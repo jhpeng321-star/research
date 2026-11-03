@@ -1,5 +1,38 @@
 # S-COOPMWM — live checks
 
+## Nov3 13:10 UTC+8 — complete isolated B-u9 check; current banks keep growing
+- All four original cooperative B-u9 states are now graded in the isolated V2
+  diagnostic: 16 new branches,14,760sim-s precharge, no failed or imputed state.
+  With every non-group CAV on u3, group-only saving / best-solo saving /
+  isolated cooperation gain are, in veh-s:
+  - 986048/t300: **+0.270240 / +0.270273 / -0.000032718**.
+  - 986052/t300: **+0.022878 / +0.023592 / -0.000713562**.
+  - 986066/t300: **-0.051186 / +0.018387 / -0.069574**.
+  - 986003/t390: **0 / 0 / 0**.
+- Background-only savings on the same states are respectively **+564.694,
+  -379.788,+4989.651,+2071.233veh-s**. Original verified-plan cooperation gains
+  remain +958.678,+0.000496,+4430.099,+894.879. This complete conditional check
+  does **not demonstrate learned group synergy at u9**. Background effects are
+  measured by their own branches; group and background effects need not add.
+- Independent isolated owner3531845 remains live; R-u9 is in progress. Original
+  diagnostic3443527 and training3305066/children continue with unchanged settings.
+- At13:10:31 the banks contain B **96 decisions /46 first-seed positives /
+  12 admitted /5 cooperative** and R **46 /31 /12 /10**. Conditional admitted-plan
+  mean gains are B **+725.069[126.613,1516.417]**, R
+  **+573.599[181.437,1039.873]veh-s**, decision-bootstrap95%CIs. These are separate
+  selected-bank summaries, not a paired B-vs-R effect or policy-performance result.
+  The B bank now includes one admitted u7-policy state; the u9 diagnostic retains
+  its original frozen four-state list rather than adding later admissions.
+- Budget13:08:35: **7,073,420/14,500,000sim-s charged**,7,426,580remaining;
+  bank extension1,889,900remaining; all phase balances nonnegative. SHA
+  `4a7cf8124826c2eb9dcda1cc8c7421f0731be9c0bd07edc97b5cc2c464c55486`.
+- Both interim owners are live/no failure. Public completions at13:07:37 are
+  A96/B45/R68; only public metadata was observed. Canonical isolated and combined
+  V2 reports are mirrored; no training, inference or SUMO dispatch was duplicated.
+- Evidence: `coopmwm/RESUME_BANK_ISOLATED_1793682632904292600.json`,
+  `coopmwm/POLICY_SYNERGY_u009_B_ISOLATED_V2.json`,
+  `coopmwm/COMPOSITE_PHASE_BALANCES_1793682516626446700.json`.
+
 Interim metadata update13:00:41+08: **A96/B26/R48** episode hash receipts complete,
 both owners live/no failures; outcome values remain closed. V2 read-only observer7456
 is creation-time/argv verified live and continues the120s receipt mirror.

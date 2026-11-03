@@ -1,5 +1,14 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+PUBLISH Nov3 13:10+08: B9ISOLATEDV2ALL4states/16branchesCOMPLETE14760sim-s,
+gains-.000032718/-.000713562/-.069573605/0 => NOlearnedgroupsynergyatu9.
+Backgrounddeltas+564.694/-379.788/+4989.651/+2071.233; originalplangainsretained.
+BanksB96decisions46positive12admitted5coop;R46/31/12/10at13:10:31;
+selectedbankmeansB725.069[126.613,1516.417]/R573.599[181.437,1039.873],
+NOTpairedBvsR/policyproof. Bnewu7admitdoesnotalterfrozenB9statelist.
+Budget13:08:35charged7073420/14.5M/7426580remaining/bankext1889900/SHA4a7cf812,
+allphasesnonnegative. Existingownerscontinue; no blockers/newdispatch found.
+
 RESUME Nov3 13:08+08: all732brief linesread; HEAD75ea9873+alllocalworkADOPTED.
 Watcher3305066/children3305068..71LIVE/identitymatched/B9R9/noalerts/noFAIL.
 IsolatedV23531845LIVE: B9ALL4statesCOMPLETE/16newgradedbranches/14760sim-s;
