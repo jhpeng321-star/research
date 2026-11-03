@@ -29,6 +29,23 @@ class Transport(unittest.TestCase):
         self.assertEqual(result,'persisted')
         self.assertEqual(events,['operation','record','sleep','verify','operation'])
 
+    def test_remote_read_timeout_retries_only_after_identity_verification(self):
+        # Actual cpuQ SSH diagnostic observed during the read-only archive probe.
+        message=('Read from remote host 1.15.42.207: Connection timed out\n'
+                 'client_loop: send disconnect: Connection reset')
+        self.assertTrue(connection_error(RuntimeError(message)))
+        events=[]
+        def operation():
+            events.append('read')
+            if events.count('read')==1:raise RuntimeError(message)
+            return 'metadata'
+        self.assertEqual(retry(operation,lambda:events.append('verify'),
+            lambda _:events.append('record'),sleep=lambda _:events.append('sleep')),'metadata')
+        self.assertEqual(events,['read','record','sleep','verify','read'])
+        # A transport-looking suffix must never hide executor/code failures.
+        self.assertFalse(connection_error(RuntimeError('Traceback\n'+message)))
+        self.assertFalse(connection_error(RuntimeError('SUMO failed\n'+message)))
+
     def test_identity_failure_blocks_replay(self):
         op=Mock(side_effect=RuntimeError('Connection closed by host port 22'))
         with self.assertRaisesRegex(ValueError,'PID'):

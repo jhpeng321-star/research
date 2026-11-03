@@ -1,6 +1,11 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## Fresh-session adoption — Nov3 23:08 +08
+- Local-only transport repair: exact observed OpenSSH 'Read from remote host
+  ...: Connection timed out' now qualifies for existing bounded recovery.
+ 10CPU PASS; no remote deployment. Preserve warm_transport.py+regression in
+  finalmerge. Archive manifest metadata was reachable once; next bare35sSSH
+  timeout remained fatal/no automatic retry. See SSH_READ_TIMEOUT_REPAIR_2318.md.
 - Independent actual-slate all8 budget/input preflight DONE, no physics:
   ALL8_SLATE_QUOTE_1793718753675224300.json. B129/R120completed decisions,
   seed2alone1546510sim-s vs137180bankextremaining => MINshortfall1409330.
