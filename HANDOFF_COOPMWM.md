@@ -1,6 +1,19 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## CURRENT Nov4 00:21 +08 — final integration merged, Linux994 PASS
+- ACTUALGATEPLAN CPUstage1123876COMPLETE/all6offlinechecksPASS:1effectivefullpass,
+  KL.0439198<=.045,cooperativeMAE1.504515->1.478647(CInegative),intenterrorfalls,
+  partnerintentweightsmove. NOproductionPPOupdate. REAL_GATE_OFFLINE_PASS_0040.md.
+- Exactplan7certifiedTRAINstates/986066onlymandatory/owncertifiedseeds frozen,
+  **35820sim-s registered beforeSUMO**, authorityb1a9b3b6. NEXTexecuteONCE then
+  collect; no physicsyetatthischeckpoint. Controlcoopmwm20261104_gate0040.
+- RuntimeROOTcoopmwm20261104_v2v_intent1/sourcegatescope1 e7f8ae16REGISTERED
+  prepare_intent48wide/per_seed_v1/sourcepackageverified; launch_authorizedFALSE.
+- All31BmissingRESULTinputsRESTORED124files139852944bytes; causalV2Vtraces
+  RESTORED62files62623795bytes beforegateplan, allbefore/afterSHAverified.
+  Publicbindingsprotect1558RESULT+779tracepaths fromexistingmoverrefs guard.
+  NewqualifiedBpreview36admitted/8coop/0dataMissing. OriginalrestorersDONE,
+  DON'Tredispatch1093256/1116872/preview1105857.
 - Scopefixe7f8ae16 qualifiedNEWsourcecoopmwm20261104_gatescope1, owner1044134
   COMPLETE: requestedgate+launchfinalsuites36PASS/0skip/33.118s/0SUMO.
   AdoptGATE_SCOPE_LINUX_STATUS_1793724923148582800; NEVERredispatch.

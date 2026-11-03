@@ -1,0 +1,85 @@
+{
+  "complete": true,
+  "result": {
+    "B": 2000,
+    "admitted_by_seed": {
+      "1": 26,
+      "2": 10
+    },
+    "admitted_later_harm_not_measured": 10,
+    "arm": "B",
+    "bank_rule": "per_seed_v1",
+    "block_s": 30,
+    "by_policy_version": {
+      "u11": {
+        "admitted": 0,
+        "cooperative": 0
+      },
+      "u13": {
+        "admitted": 0,
+        "cooperative": 0
+      },
+      "u14": {
+        "admitted": 1,
+        "cooperative": 0
+      },
+      "u15": {
+        "admitted": 0,
+        "cooperative": 0
+      },
+      "u16": {
+        "admitted": 0,
+        "cooperative": 0
+      },
+      "u17": {
+        "admitted": 4,
+        "cooperative": 1
+      },
+      "u20": {
+        "admitted": 1,
+        "cooperative": 0
+      },
+      "u3": {
+        "admitted": 25,
+        "cooperative": 5
+      },
+      "u5": {
+        "admitted": 0,
+        "cooperative": 0
+      },
+      "u6": {
+        "admitted": 2,
+        "cooperative": 1
+      },
+      "u7": {
+        "admitted": 2,
+        "cooperative": 1
+      },
+      "u8": {
+        "admitted": 1,
+        "cooperative": 0
+      }
+    },
+    "confirmations": 67,
+    "cooperative_by_seed": {
+      "1": 7,
+      "2": 1
+    },
+    "cooperative_examples": 8,
+    "data_missing_examples": 0,
+    "examples": 134,
+    "examples_admitted": 36,
+    "legacy_admitted_plans": 14,
+    "no_solos_admitted": 20,
+    "plans_contributing": {
+      "0": 38,
+      "1": 22,
+      "2": 7
+    },
+    "replicated_cooperative_plans": 1,
+    "rng_seed": 20261103,
+    "rule": "per_seed_v1: a cooperative plan need not generalise across traffic seeds. Every (plan, seed) verification is its own example: admit it iff THAT seed's per-unit paired block bootstrap (policy-continues minus plan, B=2000, RNG 20261103 re-seeded per example, circular 30 s blocks or per-vehicle units) has one-sided 95% lower bound > 0 AND that seed's composite safety check on its OWN deltas passes (seed 1: extended window; seed 2: replication window [+ seed-2 extended when recorded]; absent own deltas = data_missing, no fallback) AND that seed later-harm (extended-window) check passes when measured. Seed-2 later-harm is used when a seed-2 extended window is recorded, else NOT MEASURED, disclosed per example and admitted only under SEED2_UNMEASURED_LATER_HARM=admit (never imputed). Imitation pairs of an example come from THAT seed's plan-branch tape. Cooperative label per example: that seed's best-solo minus group per-unit bootstrap lower bound > 0 when that seed's solos exist, else no_solos (admitted, not cooperative). replicated = cooperative on both seeds (reporting only; weights unchanged)."
+  },
+  "sha256": "778a14e8ce3e505db1988079cb197d9422f54df8dfc19b7eec9f98ce0c28dd70",
+  "unix": 1793725922.794435
+}

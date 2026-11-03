@@ -1,0 +1,104 @@
+{
+  "commit": "e7f8ae1616ca0f7490bac933729733001cc27272",
+  "new_reserved_sim_s": 0,
+  "phase": "bank_verification_ext",
+  "plan_record_sha256": "0fa251bb4ea801a06effcf8c4431fa2c8a3157898db855e523fc1401a073d979",
+  "plan_sha256": "049c3021230846fbc87e5ce06383e35485fc82219ddb630dc7e732d41b79127e",
+  "runtime_sha256": "3e90123ea759170b0da0f4ee7945f9a0da74e5308252da2907abe5335f4168a1",
+  "states": [
+    {
+      "group": [
+        "ramp.40",
+        "mainline.153"
+      ],
+      "seed": 986003,
+      "seeds": [
+        1
+      ],
+      "sim_s": 3240
+    },
+    {
+      "group": [
+        "ramp.24",
+        "mainline.108",
+        "mainline.111"
+      ],
+      "seed": 986026,
+      "seeds": [
+        1
+      ],
+      "sim_s": 2700
+    },
+    {
+      "group": [
+        "mainline.118",
+        "ramp.23",
+        "mainline.122",
+        "ramp.27",
+        "ramp.30",
+        "mainline.126"
+      ],
+      "seed": 986036,
+      "seeds": [
+        1
+      ],
+      "sim_s": 4050
+    },
+    {
+      "group": [
+        "mainline.141",
+        "mainline.143",
+        "mainline.142",
+        "mainline.147",
+        "ramp.44",
+        "ramp.45"
+      ],
+      "seed": 986047,
+      "seeds": [
+        1
+      ],
+      "sim_s": 4590
+    },
+    {
+      "group": [
+        "mainline.101",
+        "mainline.71"
+      ],
+      "seed": 986052,
+      "seeds": [
+        1
+      ],
+      "sim_s": 2880
+    },
+    {
+      "group": [
+        "mainline.104",
+        "ramp.17",
+        "ramp.20",
+        "ramp.24",
+        "mainline.117",
+        "ramp.26"
+      ],
+      "seed": 986066,
+      "seeds": [
+        1,
+        2
+      ],
+      "sim_s": 12240
+    },
+    {
+      "group": [
+        "mainline.264",
+        "ramp.51",
+        "mainline.267",
+        "mainline.270"
+      ],
+      "seed": 986068,
+      "seeds": [
+        1
+      ],
+      "sim_s": 6120
+    }
+  ],
+  "total_sim_s": 35820
+}
