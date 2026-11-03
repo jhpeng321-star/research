@@ -135,10 +135,29 @@ def _features(frame, ego, known, cfg):
     return [float(x) for x in v2v_features(_frame_table(frame), ego, known, _obs_cfg(cfg))]
 
 
-def pair_v2v_block(frame, prev_frame, members, cfg=None):
+def _intent_features(frame, ego, known, cfg, intent):
+    """Planned-command intent variant of :func:`_features` (v2v_intent ON only): the base block
+    interleaved with the partner intents published at ``time_s-1`` (``intent['board']``)."""
+    if STUB:
+        raise ValueError('v2v intent requires the OBSERVATION part (tools/coopmwm/v2v_obs.py)')
+    from .v2v_obs import v2v_intent_features
+    return [float(x) for x in v2v_intent_features(_frame_table(frame), ego, known, intent['board'],
+            int(frame.get('time_s', 0)), int(intent['horizon']), _obs_cfg(cfg))]
+
+
+def _block_dim(cfg, intent):
+    if not intent:
+        return V2V_DIM
+    from .v2v_obs import v2v_intent_dim
+    return v2v_intent_dim(_obs_cfg(cfg).k, int(intent['horizon']))
+
+
+def pair_v2v_block(frame, prev_frame, members, cfg=None, intent=None):
     """The v2v block for one pair second: {member vid: features} for every member present as a
     CAV in ``frame`` (zeros for absent members); partners = the other CAVs of the frame.
-    Returns (block, sorted vids of partners whose previous-second command is missing)."""
+    Returns (block, sorted vids of partners whose previous-second command is missing).
+    ``intent`` (v2v_intent ON only; default None = unchanged): dict(horizon, board) with
+    board = {vid: (published_time_s, H planned commands)} visible at this second."""
     cfg = dict(DEFAULT_CFG, **(cfg or {}))
     last = _last_commands(prev_frame) if prev_frame is not None else {}
     known = {k: c for k, c in last.items() if c is not None}
@@ -149,9 +168,10 @@ def pair_v2v_block(frame, prev_frame, members, cfg=None):
     for ego in members:
         me = next((v for v in vehicles if v.get('vid') == ego and v.get('is_cav')), None)
         if me is None:
-            block[ego] = [0.]*V2V_DIM
+            block[ego] = [0.]*_block_dim(cfg, intent)
             continue
-        block[ego] = list(_features(frame, ego, known, cfg))
+        block[ego] = list(_intent_features(frame, ego, known, cfg, intent) if intent
+                          else _features(frame, ego, known, cfg))
     return block, missing
 
 
@@ -167,11 +187,16 @@ def causal_frame(frame, previous):
     return dict(frame, vehicles=vehicles)
 
 
-def attach_pairs(pairs, trace_path, t0, cfg=None):
+def attach_pairs(pairs, trace_path, t0, cfg=None, intent=None):
     """(kept pairs, counts): add ``sample['context']['v2v']`` to every pair of one admitted
     bank entry, from the winning plan's recorded branch trace; pair i is second t0+i.
     Pairs whose trace lacks the partners' commands (no previous second, no trace frame, or a
-    partner command not recorded) are EXCLUDED and counted - never imputed."""
+    partner command not recorded) are EXCLUDED and counted - never imputed.
+    ``intent`` (v2v_intent ON only): dict(horizon, entry).  Partner-intent inputs are built EMPTY
+    (zeros, intent_valid 0) and each kept pair gets ``sample['intent_link']`` = dict(entry, t,
+    slots={member: partner vids in slot order}); v2v_intent.refresh_bank_intents fills them each
+    update from the CURRENT intent head on the partners' own t-1 bank contexts (never from
+    recorded commands)."""
     cfg = dict(DEFAULT_CFG, **(cfg or {}))
     counts = dict(pairs=len(pairs), kept=0, excluded_missing_prev_second=0,
                   excluded_missing_partner_command=0, trace_missing=False)
@@ -189,11 +214,19 @@ def attach_pairs(pairs, trace_path, t0, cfg=None):
             continue
         context = sample.setdefault('context', {})
         members = list(context.get('members') or sample['behaviour']['proposal_members'])
-        block, missing = pair_v2v_block(frame, prev, members, cfg)
+        block, missing = pair_v2v_block(frame, prev, members, cfg, None if intent is None else
+                                        dict(horizon=intent['horizon'], board={}))
         if missing:
             counts['excluded_missing_partner_command'] += 1
             continue
         context['v2v'] = block
+        if intent is not None:
+            from .v2v_obs import v2v_partner_ids
+            seen = causal_frame(frame, prev)  # the exact frame pair_v2v_block ranked partners on
+            table, ocfg = _frame_table(seen), _obs_cfg(cfg)
+            cavs = {v.get('vid') for v in seen.get('vehicles', []) if v.get('is_cav')}
+            sample['intent_link'] = dict(entry=str(intent['entry']), t=t, slots={
+                ego: list(v2v_partner_ids(table, ego, ocfg)) for ego in members if ego in cavs})
         kept.append((sample, w))
     counts['kept'] = len(kept)
     return kept, counts

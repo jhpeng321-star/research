@@ -1,0 +1,38 @@
+{
+  "commit": "5965e131",
+  "branch": "c4/intent-claude",
+  "base": "56c37cb0",
+  "tests_run": {
+    "new": "tools/coopmwm/test_v2v_intent_cpu.py (13 tests: shapes/order, t-1 latency, target masking end/despawn/gap, runtime reset/despawn/respawn, actions identical at load, head learns synthetic sequence, cooperative bank update x2 (run_separate with 1 PPO epoch; legacy run with 0 PPO epochs), checkpoint roundtrip, option-off byte-identical vs 56c37cb0, u0/v2v-only/intent loaders, live hooks + runner binding, registered bank_pairs with intents)",
+    "required_suite": "test_v2v_*cpu.py + test_bank_*cpu.py + test_replay_bank_v2v_cpu.py + test_exact_grade_cpu.py + test_awr_cpu.py",
+    "required_suite_result": "106 passed, 0 failed",
+    "related_suite": "all 34 tools/coopmwm test files importing a changed module: 294 passed, 25 failed + 1 error that fail identically at base 56c37cb0 on this Windows host (missing tools.leverprobe, /proc, signal.SIGSTOP/SIGHUP, os.nice, WinError 32); 1 thread-race flake (test_verify_continuation legacy-trust tmp-name collision) passed 40/40 on rerun"
+  },
+  "tests_passed": true,
+  "config_keys": {
+    "A": {"v2v": true, "v2v_dim": 48, "v2v_intent": true, "v2v_intent_horizon": 5, "v2v_intent_loss_weight": 1.0},
+    "B": {"v2v": true, "v2v_dim": 48, "v2v_intent": true, "v2v_intent_horizon": 5, "v2v_intent_loss_weight": 1.0},
+    "R": {"v2v": true, "v2v_dim": 48, "v2v_intent": true, "v2v_intent_horizon": 5, "v2v_intent_loss_weight": 1.0},
+    "how": "v2v_runner.prepare(base, ..., v2v_dim=48, v2v_intent=True, v2v_intent_horizon=5, v2v_intent_loss_weight=1.0); defaults keep intent OFF (v2v_dim=24 binding unchanged). accel_bounds from the binding clip targets and published intents (default [-3.0, 2.6]).",
+    "layout": "per partner slot (K=4, v2v_obs order): gap_m, lane_offset, v_mps, a_mps2, last_cmd, present, intent_1..intent_5 (absolute accel at publish+1..publish+5), intent_valid"
+  },
+  "call_sites_changed": [
+    "tools/coopmwm/v2v_intent.py (NEW: IntentPolicy, loaders, from_weights, targets, losses, reports)",
+    "tools/coopmwm/v2v_obs.py (_ranked_partners refactor, byte-identical; v2v_intent_dim, v2v_partner_ids, published_intent, v2v_intent_features, intent_columns)",
+    "tools/coopmwm/v2v_runtime.py (from_weights/load_checkpoint dispatch on intent; controller_class publishes after each step and reads t-1 board)",
+    "tools/coopmwm/bank_v2v.py (pair_v2v_block/attach_pairs optional intent=dict(horizon, board))",
+    "tools/coopmwm/replay_bank.py (bank_pairs kwarg v2v_intent: partner intents from winning tape + own plan targets)",
+    "tools/coopmwm/accel_learner.py (update: intent term + report when policy is IntentPolicy)",
+    "tools/coopmwm/exact_grade.py (_ppo_exact_update intent term + report; exact_update bank intent before/after report)",
+    "tools/coopmwm/bank_imitation.py (one guarded 2-line hook each in run and run_separate: loss += v2v_intent.bank_term)",
+    "tools/coopmwm/v2v_live.py (hooks: IntentPolicy factory + bank_pairs partial when v2v_intent)",
+    "tools/coopmwm/v2v_runner.py (prepare kwargs v2v_intent/v2v_intent_horizon/v2v_intent_loss_weight, width validated)"
+  ],
+  "per_update_cost_note": "Training-side only, no extra simulation. PPO phase: +1 policy forward/backward per rollout record per epoch for the intent term (existing ~2 forwards: value + score) => roughly +40-50% PPO optimizer compute, plus 2 no-grad passes over the rollout (intent loss before/after). Imitation phase: +1 forward per bank pair per pass (+~100% of that phase) plus 2 no-grad bank passes. Runtime: one extra trunk forward per control step for publishing. All small next to the 1800 s pace / SUMO episode time.",
+  "open_issues": [
+    "Base run_separate lacks report keys last_loss/last_gradient_norm (KeyError in exact_update); fixed on c4/imit-fix2 (128516c9). Tests shim only absent keys. The c4/imit-fix2 rewrite of run_separate will conflict with the 2-line hook: re-add 'if getattr(policy,\"intent_horizon\",0): loss=loss+v2v_intent.bank_term(policy,batch)' after its AWR loss line in attempt_pass.",
+    "Bank partner intents are the partners' recorded commands from the winning tape (hindsight broadcast), whereas deployed intents are head predictions; train/deploy gap disclosed.",
+    "Targets are issued pre-safety absolute commands (native+residual or plan absolute, clipped to accel_bounds), not post-safety issued_safe (not recorded in steps).",
+    "Legacy bank_imitation.run bounds KL vs the pre-PPO policy: with a cold Adam fixture one PPO step exceeds .045 and blocks imitation (pre-existing behaviour, not intent-specific)."
+  ]
+}

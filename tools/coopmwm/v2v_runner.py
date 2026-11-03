@@ -21,8 +21,13 @@ def remote_name(path):
 
 
 def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v2v_dim,
-            active_arms=ARMS):
-    """Prospective binding only: no directory, checkpoint, ledger or job mutation."""
+            active_arms=ARMS, v2v_intent=False, v2v_intent_horizon=5, v2v_intent_loss_weight=1.,
+            v2v_intent_detach_trunk=True):
+    """Prospective binding only: no directory, checkpoint, ledger or job mutation.
+
+    ``v2v_intent`` (default False = unchanged binding) adds the planned-command intent keys,
+    identical for every arm; ``v2v_dim`` must then be the intent block width K*(6+H+1).
+    """
     root, legacy_root = remote_name(root), remote_name(legacy_root)
     if root == legacy_root:
         raise ValueError('V2V needs a separate run root')
@@ -60,6 +65,12 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
     for key in ('sumo_verify', 'quota_aware_admission', 'parallel_group_queries',
                 'bounded_fanout', 'parallel_fanout_factor', 'resume_progress'):
         cfg.pop(key, None)
+    if v2v_intent:
+        from .v2v_intent import settings
+        cfg.update(v2v_intent=True, v2v_intent_horizon=int(v2v_intent_horizon),
+                   v2v_intent_loss_weight=float(v2v_intent_loss_weight),
+                   v2v_intent_detach_trunk=bool(v2v_intent_detach_trunk))
+        settings(cfg)  # validates v2v_dim against the intent block width
     return cfg
 
 

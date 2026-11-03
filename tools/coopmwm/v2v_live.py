@@ -50,8 +50,16 @@ def hooks(root, cfg):
             refs.append(read(p))
         health.braking(r,arm,u,episodes,refs)
 
-    return dict(configure=configure,accounting=accounting,policy_factory=Policy,
-        load_checkpoint=load_checkpoint,bank_pairs=original_pairs,bank_quality=original_quality,
+    policy_factory,pairs=Policy,original_pairs
+    if cfg.get('v2v_intent'):
+        # v2v_intent ON (identical for A/B/R): intent-head policy, intent-carrying bank pairs.
+        import functools
+        from .v2v_intent import IntentPolicy,settings
+        s=settings(cfg)
+        policy_factory=functools.partial(IntentPolicy,s['horizon'],s['loss_weight'],s['bounds'],s['detach_trunk'])
+        pairs=functools.partial(original_pairs,v2v_intent=cfg)
+    return dict(configure=configure,accounting=accounting,policy_factory=policy_factory,
+        load_checkpoint=load_checkpoint,bank_pairs=pairs,bank_quality=original_quality,
         record_lesson=original_lesson,health_before_update=health.before_update,safety=safety,
         diagnostics=lambda r,a,u,p,b,l:diagnostics(r,a,u,p,b,l))
 

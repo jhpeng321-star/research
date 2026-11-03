@@ -98,6 +98,8 @@ def update(policy,optimizer,episodes,generator,epochs=4,awr=None):
         records.extend((s,a,r,targets.get(i,{}).get('weight',0.)) for i,(s,(a,r)) in enumerate(zip(ep['steps'],advantages(ep['steps']))))
     adv=torch.tensor([a for _,a,_,_ in records]);own=torch.tensor([own_step(s['sample']) for s,_,_,_ in records])
     if own.any():adv=(adv-adv[own].mean())/adv[own].std(unbiased=False).clamp_min(1e-8)
+    from .v2v_intent import ppo_setup
+    intent=ppo_setup(policy,episodes)  # None unless an IntentPolicy (v2v_intent ON)
     metrics=[]
     for _ in range(epochs):
         for idx in torch.randperm(len(records),generator=generator).split(128):
@@ -118,14 +120,17 @@ def update(policy,optimizer,episodes,generator,epochs=4,awr=None):
             auxiliary=torch.stack([imitation(policy,s,w) for s,w in zip(samples,weights)]).mean()
             auxiliary=auxiliary*(awr['coefficient'] if awr is not None else 1.)
             loss=actor+.5*vloss+auxiliary
+            if intent is not None:loss=loss+intent.term(idx)
             if not bool(torch.isfinite(loss)):raise ValueError('nonfinite acceleration PPO')
             optimizer.zero_grad();loss.backward()
-            norm=torch.nn.utils.clip_grad_norm_(policy.parameters(),.5,error_if_nonfinite=True);optimizer.step()
+            norm=torch.nn.utils.clip_grad_norm_(policy.parameters(),.5,error_if_nonfinite=True)
+            if intent is not None:intent.log_grad()
+            optimizer.step()
             metrics.append(dict(loss=float(loss.detach()),kl=kl,gradient_norm=float(norm),imitation=float(auxiliary.detach()),
                 own_policy_steps=len(own_indices),critic_steps=len(samples),awr_positive_steps=sum(w>0 for w in weights),
                 loss_rule='MAIN0201 own PPO; positive completed-plan AWR; all-step critic'))
-            if kl>.045:return metrics
-    return metrics
+            if kl>.045:return metrics if intent is None else intent.close(metrics)
+    return metrics if intent is None else intent.close(metrics)
 
 
 def evidence(episodes):

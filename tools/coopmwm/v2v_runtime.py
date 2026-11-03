@@ -35,6 +35,9 @@ class Policy(BasePolicy):
 
 
 def from_weights(weights, *, enabled=False):
+    if 'intent_head.weight' in weights:  # v2v_intent ON (tools/coopmwm/v2v_intent.py)
+        from .v2v_intent import from_weights as intent_weights
+        return intent_weights(weights, enabled=enabled)
     width = int(weights['actor.0.weight'].shape[1])
     if width == 33+V2V_DIM:
         if not enabled:
@@ -50,6 +53,9 @@ def from_weights(weights, *, enabled=False):
 
 
 def load_checkpoint(path, config=None):
+    if config and config.get('v2v') and config.get('v2v_intent'):
+        from .v2v_intent import load_checkpoint as intent_load
+        return intent_load(path, config)
     from .v2v_model import load_checkpoint as load
     model, optimizer, generator, payload = load(path, config=config)
     if config and config.get('v2v'):
@@ -63,12 +69,18 @@ def controller_class(base):
     from .bank_v2v import _features, DEFAULT_CFG
 
     class Proxy:
-        def __init__(self, real, blocks):
-            self.real, self.blocks = real, blocks
+        def __init__(self, real, blocks, intent=None):
+            self.real, self.blocks, self.intent = real, blocks, intent
 
         def sample(self, context, *args, **kwargs):
             context = dict(context, v2v={v: self.blocks(v) for v in context['members']})
-            return self.real.sample(context, *args, **kwargs)
+            out = self.real.sample(context, *args, **kwargs)
+            if self.intent is not None:
+                # Broadcast AFTER the policy step; partners see it at the next second.
+                sample = out[0] if isinstance(out, tuple) else out
+                if 'published_intent' not in sample:  # replayed samples keep their record
+                    sample['published_intent'] = self.intent.publish(context)
+            return out
 
         def __getattr__(self, key):
             return getattr(self.real, key)
@@ -77,6 +89,7 @@ def controller_class(base):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.previous_frame = None
+            self.intent_board = {}  # v2v_intent ON: vid -> (published second, H commands)
 
         def observe_issued(self, frame):
             self.previous_frame = frame
@@ -94,11 +107,24 @@ def controller_class(base):
             previous = {k:v for k,v in _last_commands(self.previous_frame or {}).items() if v is not None}
             self.feature_frame,self.feature_previous=frame,previous
             saved = self.policy
-            self.policy = Proxy(saved, lambda vid: _features(frame, vid, previous, DEFAULT_CFG))
+            from .v2v_intent import intent_model
+            intent = intent_model(saved)
+            if intent is None:
+                self.policy = Proxy(saved, lambda vid: _features(frame, vid, previous, DEFAULT_CFG))
+            else:
+                from .bank_v2v import _intent_features
+                spec = dict(horizon=intent.intent_horizon, board=dict(self.intent_board))
+                self.policy = Proxy(saved, lambda vid: _intent_features(frame, vid, previous, DEFAULT_CFG, spec),
+                                    intent)
             try:
                 desired = super().apply(rows, commands, now)
             finally:
                 self.policy = saved
+            if intent is not None:
+                # Publish this second's intents (also from replayed samples); despawned or
+                # silent CAVs simply have no fresh entry and read as invalid next second.
+                published = (self.events[-1]['sample'].get('published_intent') or {}) if self.events else {}
+                self.intent_board = {vid: (int(now), list(values)) for vid, values in published.items()}
             return desired
 
     return Controller

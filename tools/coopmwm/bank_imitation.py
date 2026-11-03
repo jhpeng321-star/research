@@ -66,6 +66,8 @@ def run(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5):
             report['member_actions_seen']+=sum(len(indices(s)) for s,_ in active)
             if not active:continue
             loss=torch.stack([imitation(policy,s,w) for s,w in active]).mean()*coefficient
+            if getattr(policy,'intent_horizon',0):  # v2v_intent ON only: plan intent targets
+                from .v2v_intent import bank_term;loss=loss+bank_term(policy,active)
             if not bool(torch.isfinite(loss)):raise ValueError('nonfinite full-bank imitation')
             optimizer.zero_grad();loss.backward()
             norm=torch.nn.utils.clip_grad_norm_(policy.parameters(),.5,error_if_nonfinite=True)
@@ -142,16 +144,22 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     samples=[s for s,_ in pairs]
     original_lrs=[g['lr'] for g in optimizer.param_groups]
 
+    intent_on=bool(getattr(policy,'intent_horizon',0));shares=[]  # v2v_intent ON: grad share log
+
     def attempt_pass(order):
         """One full pass -> (status, kl, steps, last_loss, last_norm). Never raises on non-finite values."""
-        steps=0;last_loss=last_norm=None
+        steps=0;last_loss=last_norm=None;shares.clear()
         for ids in order:
             batch=[pairs[int(i)] for i in ids]
             loss=torch.stack([imitation(policy,s,w) for s,w in batch]).mean()*coefficient
+            if getattr(policy,'intent_horizon',0):  # v2v_intent ON only: plan intent targets
+                from .v2v_intent import bank_term;loss=loss+bank_term(policy,batch)
             if not bool(torch.isfinite(loss)):return 'nonfinite_loss',None,steps,last_loss,last_norm
             optimizer.zero_grad();loss.backward()
             norm=torch.nn.utils.clip_grad_norm_(policy.parameters(),.5)
             if not bool(torch.isfinite(norm)):return 'nonfinite_gradient',None,steps,last_loss,last_norm
+            if intent_on:
+                from .v2v_intent import grad_share;shares.append(grad_share(policy))
             optimizer.step();steps+=1
             last_loss=float(loss.detach());last_norm=float(norm)
         try:kl=joint_kl(policy,centre,samples)
@@ -198,6 +206,7 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                     f'{MIN_ADDITIONAL_PASS_SCALE:g} of base (statuses {statuses}); additional passes stopped')
                 break
             row.update(awr_loss_after=awr_loss(policy,pairs,coefficient),l1_action_error_after=action_error(policy,pairs))
+            if intent_on:row['intent_grad_shares']=list(shares)
             report['epochs'].append(row)
             report['epochs_completed']+=1;report['pairs_seen']+=len(pairs)
             report['member_actions_seen']+=sum(len(indices(s)) for s,_ in pairs)
