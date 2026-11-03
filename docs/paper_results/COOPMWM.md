@@ -1,6 +1,12 @@
 # S-COOPMWM — live checks
 
 ## Fresh-session adoption — Nov3 23:08 UTC+8
+- 23:41: restored702 archived candidate specs for88B decisions, exact SHA before
+  and after copy, no overwrite/deletion/search replay. Independent proof702/702.
+  Fresh all8 cost quote now has zero missing specs for either arm. Seed2-only
+  minimum1,546,510sim-s still exceeds bank-phase room by1,409,330; no transfer.
+  Evidence:`coopmwm/SPEC_RESTORE_AND_QUOTE_2341.md`. Latest delegated collection
+  restart is respected; no competing builder/collector was launched.
 - Durable legacy state remains A48/B21/R20; all four intentionally held old
   B/R arm/grader owners are absent. No restart or duplicate dispatch.
 - Saved searches continue to answer: two B requests remain assigned, zero R

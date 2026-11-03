@@ -1,6 +1,14 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## Fresh-session adoption — Nov3 23:08 +08
+- NEW brief through1000 read: MAIN23:23 delegatescollectionrestart; DO NOTstart
+  competingbuilder/collector. MAIN23:18 authorisesgpuAsecondrollingtarget,
+  floor8GiB; preparationnext while finalREADYpending.
+- Archived702candidate specs RESTORED byte/SHAexact for88B decisions; final
+  SPEC_RESTORE_INSPECT_1793720435312778700 proves702/702. No overwrites/deletes/
+  physics. SPEC_RESTORE_COMPLETE_1793720443807398000+batchproofs adopted.
+  Freshquote1793720489129734200 nowZEROmissingbotharms; minimumphasegap1409330
+  remains. Fullall-positiveupperB6807500/R6323870, notapprovedspending.
 - Local-only transport repair: exact observed OpenSSH 'Read from remote host
   ...: Connection timed out' now qualifies for existing bounded recovery.
  10CPU PASS; no remote deployment. Preserve warm_transport.py+regression in
