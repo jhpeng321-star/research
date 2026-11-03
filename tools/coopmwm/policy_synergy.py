@@ -149,7 +149,7 @@ def run_update(root, arm, update, cfg):
     root = Path(root);control = Path(cfg['control_root']);base = control/f'u{update:03}_{arm}'
     base.mkdir(parents=True, exist_ok=True)
     isolated = cfg.get('isolated', False)
-    suffix = '_ISOLATED' if isolated else ''
+    suffix = cfg.get('output_suffix', '_ISOLATED') if isolated else ''
     claim = base/'CLAIM.json';result_path = root/f'POLICY_SYNERGY_u{update:03}_{arm}{suffix}.json'
     if result_path.exists():return json.loads(result_path.read_text())
     if claim.exists():return dict(status='interrupted_claim_not_replayed', arm=arm, update=update)
@@ -209,7 +209,8 @@ def run_update(root, arm, update, cfg):
                 sim_s=sum(s['sim_s'] for s in specs),phase='bank_verification_ext',
                 adopted_all=adopt is not None,fresh_u3_reference=fresh_reference))
             # Complete member set precharged atomically before the first branch.
-            rb._confirm_charge(root, 'bank_verification_ext', f'policy_synergy_u{update:03}_{arm}')(vid, specs)
+            kind = ('policy_synergy'+suffix.lower()) if isolated else 'policy_synergy'
+            rb._confirm_charge(root, 'bank_verification_ext', f'{kind}_u{update:03}_{arm}')(vid, specs)
             results = [adopt] if adopt else []
             for spec, snapshot in pending:
                 from .warm_health import assert_running
@@ -255,7 +256,7 @@ def run_update(root, arm, update, cfg):
         combined = dict(arm=arm, update=update, original=legacy,
             isolated=json.loads(result_path.read_text()),
             rule='MAIN12:26; original and isolated variants retained; no training change')
-        _write_new(root/f'POLICY_SYNERGY_u{update:03}_{arm}_WITH_ISOLATED.json',
+        _write_new(root/f'POLICY_SYNERGY_u{update:03}_{arm}_WITH{suffix}.json',
             _seal(combined, 'policy_synergy_sha256'))
     return out
 
@@ -269,7 +270,7 @@ def watch(root, cfg):
     _write_new(c/'OWNER.json', owner())
     while time.time()<cfg['gpu_deadline']:
         progress = {}
-        suffix = '_ISOLATED' if cfg.get('isolated') else ''
+        suffix = cfg.get('output_suffix', '_ISOLATED') if cfg.get('isolated') else ''
         for u in range(cfg.get('first_update',8),25):
             for arm in ('B','R'):
                 key=f'{arm}{u}'

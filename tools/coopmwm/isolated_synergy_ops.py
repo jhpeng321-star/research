@@ -7,11 +7,11 @@ from .ls_validity_ops import remote
 from .protocol import REGISTRY, checked, sha
 from .storage import read, write
 
-SOURCE='/home/ubuntu/coopmwm20261103_isosynergycpu1'
+SOURCE='/home/ubuntu/coopmwm20261103_isosynergycpu2'
 BASE='/home/ubuntu/coopmwm20261103_policysynergycpu2'
-CONTROL=ROOT+'/policy_synergy_isolated_1226'
-REG='POLICY_SYNERGY_ISOLATED_REGISTRATION_1226.json'
-BINDING='POLICY_SYNERGY_ISOLATED_BINDING_1226.json'
+CONTROL=ROOT+'/policy_synergy_isolated_1226_v2'
+REG='POLICY_SYNERGY_ISOLATED_REGISTRATION_1226_V2.json'
+BINDING='POLICY_SYNERGY_ISOLATED_BINDING_1226_V2.json'
 
 
 def qualify():
@@ -36,7 +36,11 @@ def register():
 import json
 r=Path({ROOT!r});b=json.loads((r/'B_REPLAY_EXPOSURE_V2.json').read_text())
 print(json.dumps(dict(budget=b['budget'],gpu_deadline=b['gpu_deadline'])))''',timeout=40))
-        line=('\nS-COOPMWM MAIN2026-11-03 12:26 ISOLATED POLICY COOPERATION DIAGNOSTIC: '
+        line=('\nS-COOPMWM MAIN2026-11-03 12:26 ISOLATED POLICY COOPERATION DIAGNOSTIC V2: '
+            'V1 isolated charge keys collided with original diagnostic, all blocked '
+            'BEFORE any isolated reservation/physics. Retain V1 reports/alerts/source; '
+            'retire only verified idle isolated owner3511227. V2 distinct charge/output '
+            'namespaces and one-use IDs; no original branch/job replay. '
             'add independent durable sidecar fromu9 throughu24 for BOTH B/R, keep '
             'original3443527 and every original report/branch. Same frozen cooperative '
             'state list as original each update; isolate allgroupNEW vs eachsoloNEW, '
@@ -47,12 +51,12 @@ print(json.dumps(dict(budget=b['budget'],gpu_deadline=b['gpu_deadline'])))''',ti
             'atomically bank_verification_ext, <=9600sim-s/state n<=6/end<=1200; '
             'phase/total guard14.5M unchanged, no implicit transfer; shortage alerts '
             'before physics. One branch/nice19, health guards/no physics retry. '
-            'Publish isolated and original jointly as POLICY_SYNERGY_uNNN_ARM_WITH_ISOLATED.json, '
+            'Publish isolated and original jointly as POLICY_SYNERGY_uNNN_ARM_WITH_ISOLATED_V2.json, '
             'original sealed canonical remains immutable. No training/GPU/optimizer '
             'handover or scientific selection; no sealed outcome access.\n')
         write(p,dict(line=line,authority='MAIN2026-11-03 12:26',source_root=SOURCE,
             control_root=CONTROL,collection_root=COLLECTION,cpu=cpu,**live,
-            isolated=True,first_update=9,final_update=24,phase='bank_verification_ext',new_reserved_sim_s=0))
+            isolated=True,output_suffix='_ISOLATED_V2',first_update=9,final_update=24,phase='bank_verification_ext',new_reserved_sim_s=0))
     v=read(p);h=sha(p);registry=checked(REGISTRY)
     if h not in registry.read_text(encoding='utf-8'):
         with registry.open('a',encoding='utf-8') as f:f.write(v['line']+'amendmentSHA'+h+'\n')
@@ -70,10 +74,10 @@ print(json.dumps(dict(registered=True,sha256={h!r},new_reserved_sim_s=0)))''',ti
 
 def setup_parent():
     parent.SOURCE=SOURCE;parent.CONTROL=CONTROL;parent.BINDING=BINDING
-    parent.DISPATCH='POLICY_SYNERGY_ISOLATED_DISPATCH_1226.json'
-    parent.REPORT_PATTERN='POLICY_SYNERGY_u[0-9][0-9][0-9]_[BR]_ISOLATED.json'
+    parent.DISPATCH='POLICY_SYNERGY_ISOLATED_DISPATCH_1226_V2.json'
+    parent.REPORT_PATTERN='POLICY_SYNERGY_u[0-9][0-9][0-9]_[BR]_ISOLATED_V2.json'
     parent.STATUS_PREFIX='POLICY_SYNERGY_ISOLATED_STATUS'
-    parent.COMBINED_PATTERN='POLICY_SYNERGY_u[0-9][0-9][0-9]_[BR]_WITH_ISOLATED.json'
+    parent.COMBINED_PATTERN='POLICY_SYNERGY_u[0-9][0-9][0-9]_[BR]_WITH_ISOLATED_V2.json'
 
 
 def launch():setup_parent();parent.launch()

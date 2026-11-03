@@ -23,7 +23,7 @@ def live(d):
 
 
 def run():
-    claim=ops.EVIDENCE/('POLICY_SYNERGY_ISOLATED_OBSERVER.claim' if ISOLATED else 'POLICY_SYNERGY_OBSERVER.claim')
+    claim=ops.EVIDENCE/('POLICY_SYNERGY_ISOLATED_OBSERVER_V2.claim' if ISOLATED else 'POLICY_SYNERGY_OBSERVER.claim')
     # One-use ownership even across duplicate launches; never controls a remote job.
     with claim.open('x') as f:json.dump(dict(pid=os.getpid(),unix=time.time()),f)
     deadline=read(ops.EVIDENCE/ps.REG)['gpu_deadline']
@@ -33,7 +33,7 @@ def run():
             if ISOLATED:
                 from . import interim_r_ops
                 interim_r_ops.status()
-            suffix='_ISOLATED' if ISOLATED else ''
+            suffix='_ISOLATED_V2' if ISOLATED else ''
             if all(f'POLICY_SYNERGY_u024_{a}{suffix}.json' in value['reports'] for a in ('B','R')):return
         except Exception as e:
             prefix='POLICY_SYNERGY_ISOLATED_OBSERVER_ERROR' if ISOLATED else 'POLICY_SYNERGY_OBSERVER_ERROR'
@@ -46,7 +46,7 @@ def start():
     if RECEIPT.exists():
         d=read(RECEIPT);print(json.dumps(dict(owner=d,alive=live(d),adopt=True)));return
     assert ops.EVIDENCE.is_dir()
-    log_name='POLICY_SYNERGY_ISOLATED_OBSERVER.log' if ISOLATED else 'POLICY_SYNERGY_OBSERVER.log'
+    log_name='POLICY_SYNERGY_ISOLATED_OBSERVER_V2.log' if ISOLATED else 'POLICY_SYNERGY_OBSERVER.log'
     with (ops.EVIDENCE/log_name).open('x',encoding='utf-8') as log:
         p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.policy_synergy_observer','run']+(['--isolated'] if ISOLATED else []),
             cwd=str(ops.LOCAL),stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
@@ -64,7 +64,7 @@ if __name__=='__main__':
     if a.isolated:
         from . import isolated_synergy_ops as ps
         ISOLATED=True
-        RECEIPT=ops.EVIDENCE/'POLICY_SYNERGY_ISOLATED_OBSERVER_DISPATCH.json'
+        RECEIPT=ops.EVIDENCE/'POLICY_SYNERGY_ISOLATED_OBSERVER_DISPATCH_V2.json'
     if cmd=='status':
         d=read(RECEIPT);print(json.dumps(dict(owner=d,alive=live(d))))
     else:globals()[cmd]()

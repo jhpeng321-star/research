@@ -46,7 +46,8 @@ def test_isolated_specs_bind_masks_original_window_and_distinct_ids():
 
 
 @pytest.mark.parametrize('later_source',[False,True])
-def test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson(tmp_path,monkeypatch,later_source):
+@pytest.mark.parametrize('suffix',['_ISOLATED','_ISOLATED_V2'])
+def test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson(tmp_path,monkeypatch,later_source,suffix):
     s,r,new,old=fixture();s['weights']={'w':torch.full((2,),2.)} if later_source else old
     r.update(status='accepted',branches=[dict(J_veh_s=999.)])
     bank=ps.rb.bank_root(tmp_path,'B');(bank/'decisions').mkdir(parents=True)
@@ -64,8 +65,11 @@ def test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson(tmp
         cooperation=dict(cooperative=True,cooperation_gain_veh_s=17.))})
     monkeypatch.setattr(ps.rb,'_decision_snapshot',lambda *a:s)
     calls=[]
-    monkeypatch.setattr(ps.rb,'_confirm_charge',lambda *a:lambda vid,specs:
-        calls.append(('charge',len(specs),sum(x['sim_s'] for x in specs))))
+    kinds=[]
+    def charger(root,phase,kind):
+        kinds.append(kind)
+        return lambda vid,specs:calls.append(('charge',len(specs),sum(x['sim_s'] for x in specs)))
+    monkeypatch.setattr(ps.rb,'_confirm_charge',charger)
     monkeypatch.setattr(ps,'adopted_all',lambda *a:pytest.fail('all-new lesson is not isolated'))
     class Runner:
         def __init__(self,*a,**kw):pass
@@ -76,14 +80,15 @@ def test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson(tmp
         assert calls[0][0]=='charge';calls.append(('run',spec['branch']))
         return dict(status='graded',J_veh_s={'all':70.,'solo0':90.,'solo1':85.,'background':40.}[spec['branch']])
     monkeypatch.setattr(ps.sv,'run_branch',branch)
-    cfg=dict(control_root=str(tmp_path/'isolated'),collection_root='unused',isolated=True)
+    cfg=dict(control_root=str(tmp_path/'isolated'),collection_root='unused',isolated=True,output_suffix=suffix)
     out=ps.run_update(tmp_path,'B',9,cfg);row=out['entries'][0]
     assert out['status']=='complete' and row['policy_cooperation_gain_veh_s']==15.
     assert row['background_only_delta_veh_s']==60. and row['J_u3_veh_s']==100.
     assert row['adopted_u3_reference_sha256']==legacy['policy_synergy_sha256']
     assert calls[0]==('charge',4,840*4) and len(calls)==5
+    assert kinds==['policy_synergy'+suffix.lower()+'_u009_B']
     assert lp.read_bytes()==original
-    combined=json.loads((tmp_path/'POLICY_SYNERGY_u009_B_WITH_ISOLATED.json').read_text())
+    combined=json.loads((tmp_path/f'POLICY_SYNERGY_u009_B_WITH{suffix}.json').read_text())
     assert combined['original']==legacy
     before=list(calls);ps.run_update(tmp_path,'B',9,cfg);assert calls==before
 
@@ -92,3 +97,11 @@ def test_isolated_interrupted_claim_is_not_replayed(tmp_path):
     base=tmp_path/'control/u009_B';base.mkdir(parents=True)
     (base/'CLAIM.json').write_text('{}')
     assert ps.run_update(tmp_path,'B',9,dict(control_root=str(tmp_path/'control'),isolated=True))['status']=='interrupted_claim_not_replayed'
+
+
+def test_real_charge_adapter_separates_original_and_isolated_identity(monkeypatch):
+    seen=[]
+    monkeypatch.setattr(ps.sv,'accel_charge',lambda root,phase:lambda vid,specs:seen.append(vid))
+    for kind in ('policy_synergy_u009_B','policy_synergy_isolated_v2_u009_B'):
+        ps.rb._confirm_charge('root','bank_verification_ext',kind)('same_saved_state',[])
+    assert len(set(seen))==2
