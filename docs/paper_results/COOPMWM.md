@@ -1,5 +1,24 @@
 # S-COOPMWM — live checks
 
+## Nov3 12:27 UTC+8 — both arms at u8; future diagnostic publication is durable
+- B/R-u8 complete; watcher3305066 and all children live with no alerts/dead children.
+  Original minimum1800s pacing continues to fixedu24. R-u8 has8 admitted targets,
+  7 cooperative; its AWR completes3 full passes before KL0.045123 stops it, action
+  error **0.689350→0.666460m/s²**. R's fixed1-entry lesson saves **+199.140veh-s**,
+  no CI from one state, fixed-entry action error0.242092m/s².
+- R8-A8 composite safety passes: critical total **+17.688[-6.876,+43.813]**,
+  hard braking **+0.0625[-3.354,+3.333]**,24 paired worlds and collision/teleport
+  deltas0. Positive critical point estimates for both arms remain disclosed.
+- Policy-synergy sidecar3443527 continues R-u8 and every later update8..24.
+  Detached read-only local observer **44248/create1793679983.3196542** is verified
+  live and has completed its first receipt mirror. It publishes future canonical
+  reports every120s without owning training, inference or SUMO jobs.
+- Latest budget **6,527,020/14,500,000sim-s charged**,7,972,980remaining;
+  bank extension2,039,970remaining, every phase nonnegative. Artifact
+  `COMPOSITE_PHASE_BALANCES_1793680041357999500.json`, SHA`382cce69e605d154…`.
+  Interim charges are present in the ledger; no sealed outcome access occurred.
+- MAIN notification:`E:/agent-work/_sol/COOPMWM_POLICY_SYNERGY_U8_1227.md`.
+
 ## Nov3 12:23:02 UTC+8 — B-u8 policy-cooperation test complete on all4 states
 - `coopmwm/POLICY_SYNERGY_u008_B.json` is complete: every then-admitted
   cooperative B bank state is graded, with no failed/imputed branch. Three

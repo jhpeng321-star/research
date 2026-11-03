@@ -1,5 +1,17 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3 12:27+08: B/RBOTHu8DONE,3305066+allchildrenLIVE/noalerts/dead/pauses.
+R8bank8targets/7coop,3FULLpasses/KL.045123,error.689350->.666460; fixed1lesson
++199.140/noCI/error.242092. R8safetycritical+17.688[-6.876,43.813],hard+.0625
+[-3.354,3.333],24worlds/collisionteleport0/PASS. B8publishedbelow. Remote3443527
+synergycontinuesR8(firstrow-.001913094)thenallupdates8..24; neverduplicate.
+NEWlocalread-onlyobserver44248/create1793679983.3196542 LIVE/firstmirrorPASS,
+DISPATCH POLICY_SYNERGY_OBSERVER_DISPATCH.json/claim mustbeadopted, poll120s.
+No training/GPUhandover. LatestphaseSHA382cce69e605d154:6527020charged/14500000/
+7972980remaining,bankext2039970/allphasesnonnegative. Ledgerinterimchargespresent,
+NOsealedpaths/outcomesopened. MAINreport_sol/COOPMWM_POLICY_SYNERGY_U8_1227.md.
+NEXTobserveR8completeandfutureupdates/health, keepallowners; sourceCPU2fixed.
+
 LATEST Nov3 12:23:02+08: B8POLICY_SYNERGY COMPLETEall4then-admittedcooperative
 states/no failures. Gainsveh-s986048t300+.000008189/986052t300-.003890589/
 986066t300-168.935077/986003t390=0; originalplans958.678/.000495724/4430.099/
