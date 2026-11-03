@@ -435,7 +435,7 @@ def temperature(root, arm, training_seed, decisions):
 
 
 def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT_CLIP, sources=(),
-               max_decisions=None, v2v=False, v2v_cfg=None):
+               max_decisions=None, v2v=False, v2v_cfg=None, bank_filter=None):
     """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta.
 
     max_decisions (R fairness, MAIN): use at most this many admitted targets, oldest first;
@@ -444,13 +444,28 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     partners' v2v features of that second, computed from the winning plan's recorded branch
     trace (bank_v2v.attach_pairs); pairs whose trace lacks partner commands are excluded and
     counted in summary['v2v'].
+    bank_filter (FIX 2, DEFAULT OFF = byte-identical): None/False keeps the old behaviour
+    exactly; the registered value 'statistical' applies the read-only statistical bank
+    filter (bank_filter.RULE): an admitted entry feeds imitation only when its replicated
+    advantage is significantly > 0 (paired per-vehicle bootstrap across the replicate
+    seeds, one-sided 95% lower bound > 0; aggregate fallback documented there) and the
+    cooperative label is re-issued statistically (group-minus-best-solo bound > 0, plus
+    the sum-of-solos synergy where available). Kept/dropped entries with reasons and
+    bounds are reported under summary['bank_filter']; the 50% cooperative oversampling
+    applies to the filtered cooperative set (weights unchanged).
     """
+    if bank_filter not in (None, False, 'statistical'):
+        raise ValueError("bank_filter must be None/False or the registered value 'statistical'")
+    use_filter = bank_filter == 'statistical'
     everything = bank_decisions(root, arm, upto_unix, sources)
     T = temperature(root, arm, training_seed, everything)
     decisions = everything
     pairs, entries, counts = [], [], dict(decisions=len(decisions), positive=0, nonpositive=0)
     conf = confirmations(root, arm)
     counts.update(unconfirmed=0, not_admitted=0,admitted_excess_not_used=0)
+    filter_rows = []
+    if bank_filter == 'statistical':
+        counts['filter_dropped'] = 0
     per_entry = []
     from . import bank_v2v
     v2v_counts = dict(pairs=0, kept=0, excluded_missing_prev_second=0,
@@ -466,6 +481,15 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
             counts['not_admitted'] += 1;continue
         if max_decisions is not None and len(entries)>=max(0,int(max_decisions)):
             counts['admitted_excess_not_used']+=1;continue
+        verdict = None
+        if use_filter:
+            from . import bank_filter as bf
+            verdict = bf.entry_verdict(root, arm, r, c)
+            if not verdict['keep']:
+                counts['filter_dropped'] += 1
+                filter_rows.append(dict(verdict, decision='dropped'))
+                continue
+            filter_rows.append(dict(verdict, decision='kept'))
         plan = r['chosen_plan'];branch = r['branches'][r['chosen']+1]
         result_path = Path(r['_branches'])/r['verification_id']/branch['branch']/'RESULT.json'
         from .accel_storage import read
@@ -475,19 +499,22 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
         w = float(beta)*xg.weight(c['mean_replicated_advantage_veh_s'], T['temperature_veh_s'], clip)
         entry = dict(start_s=r['t0'], duration_s=int(plan['duration_s']), plan_id=plan['id'], weight=w)
         coop = c.get('cooperation') or {}
+        cooperative = coop.get('cooperative') is True
+        if use_filter:
+            cooperative = bool(verdict['cooperation']['cooperative'])
         entry_pairs = xg.imitation_pairs(tape, entry)
         if v2v:
             entry_pairs, entry_counts = bank_v2v.attach_pairs(
                 entry_pairs, Path(r['_branches'])/r['verification_id']/branch['branch']/'observable.jsonl.gz',
                 r['t0'], v2v_cfg)
             v2v_counts = bank_v2v.merge_counts(v2v_counts, entry_counts)
-        per_entry.append((entry_pairs, coop.get('cooperative') is True,
+        per_entry.append((entry_pairs, cooperative,
                           coop.get('cooperation_gain_veh_s')))
         entries.append(dict(verification_id=r['verification_id'], grade_veh_s=r['grade_veh_s'], weight=w,
                             mean_replicated_advantage_veh_s=c['mean_replicated_advantage_veh_s'],
                             policy_version=r['_policy_version'], available_k=r.get('available_k', r['k']),
                             duration_s=entry['duration_s'], receipt_sha256=r['receipt_sha256'],
-                            cooperative=coop.get('cooperative') is True,
+                            cooperative=cooperative,
                             group_size=coop.get('group_size'),
                             cooperation_gain_veh_s=coop.get('cooperation_gain_veh_s')))
     # MAIN 2026-11-03 00:01 EXPOSURE: cooperative entries must reach the policy at least as
@@ -528,6 +555,13 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                               'previous second); pairs whose trace lacks partner commands are excluded and counted',
                           stub=bank_v2v.STUB, cfg=dict(bank_v2v.DEFAULT_CFG, **(v2v_cfg or {})),
                           counts=v2v_counts)
+    if use_filter:
+        from . import bank_filter as bf
+        out['bank_filter'] = dict(mode=bank_filter,
+                                  rule=bf.RULE,
+                                  keys='binding key bank_filter; replay_bank.bank_pairs(bank_filter=...)',
+                                  counts=dict(kept=len(entries), dropped=counts['filter_dropped']),
+                                  entries=filter_rows)
     return pairs, out
 
 
