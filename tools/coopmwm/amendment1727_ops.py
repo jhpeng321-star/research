@@ -320,6 +320,10 @@ print(json.dumps(dict(pass_=True,arms=out,new_sim_s=0,scratch_optimizer_only=Tru
 
 
 def release_launch():
+    raise RuntimeError('SUPERSEDED MAIN17:40/17:55/18:00: use gate-bound intent-int / v2v_launch3 only')
+
+
+def _historical_release_launch():
     value=json.loads(remote('cpuQ','''from pathlib import Path
 import os,json,subprocess,time,signal
 old=Path('/home/ubuntu/coopmwm20261103_v2v2');root=Path('/home/ubuntu/coopmwm20261103_v2v3');control=Path('/home/ubuntu/coopmwm20261103_v2v_resource1727')
@@ -357,8 +361,38 @@ print(json.dumps(out))''',timeout=45))
     print(json.dumps(value))
 
 
+def hold():
+    value=json.loads(remote('cpuQ','''from pathlib import Path
+import json,os,signal,time
+root=Path('/home/ubuntu/coopmwm20261103_v2v3');control=Path('/home/ubuntu/coopmwm20261103_v2v_resource1727')
+p=control/'HOLD_MAIN1740_1800.json'
+if p.exists():print(p.read_text());raise SystemExit
+d=json.loads((root/'WATCH_DISPATCH.json').read_text());proc=Path('/proc',str(d['pid']))
+assert d['pid']==19184 and d['start_ticks']=='71388685'
+assert not (root/'V2V_STARTED.json').exists() and not (root/'V2V_REAL_SMOKES_PASS.json').exists()
+assert not list((root/'jobs').iterdir())
+state=json.loads((root/'V2V_WATCH_STATUS.json').read_text());assert state['stage']=='resource_wait' and not state['children']
+if proc.exists() and (proc/'stat').read_text().split()[2]!='Z':
+ assert (proc/'stat').read_text().split()[21]==d['start_ticks']
+ assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
+ assert (proc/'cmdline').read_bytes().split(bytes([0]))[:-1]==[s.encode() for s in d['argv']]
+ assert not (proc/'task'/str(d['pid'])/'children').read_text().strip()
+ os.kill(d['pid'],signal.SIGTERM)
+ for _ in range(100):
+  if not proc.exists() or (proc/'stat').read_text().split()[2]=='Z':break
+  time.sleep(.05)
+ else:raise ValueError('held watcher did not exit')
+v=dict(unix=time.time(),held=True,owner=d,reason='MAIN17:40/17:55/18:00 intent integration + bank v2 + fix gate required; do not relaunch',new_sim_s=0,no_children=True,no_physics=True)
+with p.open('x') as f:json.dump(v,f)
+with (root/'HOLD.json').open('x') as f:json.dump(v,f)
+print(json.dumps(v))''',timeout=40))
+    p=ops.EVIDENCE/'V2V_HOLD_MAIN1740_1800.json'
+    if not p.exists():write(p,value)
+    print(json.dumps(value))
+
+
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('action',choices=('audit','register','preflight',
         'archive_qualify','archive_register','archive_launch','archive_status',
-        'release_prepare','release_register','release_preflight','release_launch'))
+        'release_prepare','release_register','release_preflight','release_launch','hold'))
     globals()[p.parse_args().action]()
