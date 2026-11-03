@@ -419,7 +419,9 @@ def main(argv=None):
     p.add_argument('--out', type=Path, default=Path('COOPFIX_GATE_REPORT.json'))
     a = p.parse_args(argv)
     if a.cmd == 'status':
-        return option_status()
+        printed = option_status()
+        print(json.dumps(printed, indent=1, sort_keys=True))
+        return printed
     if not a.checkpoint:
         p.error('--checkpoint is required for run')
     options = dict(v2v=a.v2v, v2v_dim=a.v2v_dim, passes=a.passes, coefficient=a.coefficient,
