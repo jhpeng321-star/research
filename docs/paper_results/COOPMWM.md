@@ -1,5 +1,21 @@
 # S-COOPMWM — live checks
 
+## Nov3 08:34 UTC+8 — rolling-controller stale-owner fault fixed
+- V5 controller40408 exited after starting gpuR qualifier766170: it attempted
+  admission using the retired worker's cached pre-handover READY status. Its
+  log and original dispatch remain retained. The GPU qualifier continued running.
+- Engineering commit `5295b6ed` refreshes both host inventories after a handover
+  before endpoint admission. Live RPC identity checks remain mandatory.
+  **13 targeted CPU checks PASS (0.36s)**, including the retired-owner race.
+- Registered amendment SHA256
+  `818e14acaf073715d1603518c665da71db4a453b430567af1bdf8c54515c175c`;
+  V6 controller **10148/create1793665996.30793** is verified alive with expected
+  argv and has adopted the existing qualifier. Activation39660 and observer40668
+  are also verified alive. No gate or search was repeated.
+- gpuR766170 now has **2/8 gates**, aliveR/no failure; its peer623287 is READY8
+  and serving. Bank:73 usable decisions/35 confirmed/**8 admitted /3 cooperative**.
+  B/R remainu3, no STOP; charged5,582,380 sim-s, cpuQ free16.46GB.
+
 ## Nov3 08:30:25 UTC+8 — MAIN threshold amendment live; bank gate satisfied
 - MAIN08:16/08:25 lowers the automatic-start requirement from10 to **8 admitted B
   entries**. Append-only V3 binding SHA256

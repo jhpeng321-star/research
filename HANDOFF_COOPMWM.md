@@ -1,5 +1,17 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3 08:34:11+08/unix1793666051: V5roll40408 FOUND EXITED, originalfaultlog
+retained: afterR766170dispatch it read cached pre-handover READY588039 then
+admitRPCassertgpuR@0. Metadatafix5295b6ed refreshesBOTHhostinventories after
+drain/gpu BEFOREadmit; liveRPCgate remains.13targetedCPU PASS0.36s/zeroSUMO.
+Registered818e14acaf073715 V6controller10148/create1793665996.30793 NOWLIVE;
+adopts766170, NEVERduplicatesitsgates. Activation39660/observer40668 stillcreation/
+argvverifiedLIVE. R766170now2/8gates/aliveR/noFAIL; R623287READY8stillserves.
+Bank2388293LIVE:73usable/35confirmed/8admitted/3coop/0pending. cpuQdisk16.46GB,
+charged5582380, STOPnone, A48/B3/R3. ThresholdV3watcher2926173stillownsautomatic
+start at8+fourjointREADY+collectorboundary. NOtrainingstartclaim. NEXTobserveV6
+andRqualifier; no newcontroller/gate/querydispatch. Commitreceiptsbelow.
+
 LATEST Nov3 08:30:25+08/unix1793665825: ALL671brief lines read. MAIN08:16/08:25
 threshold10->8 APPLIED append-only: B_REPLAY_START_0816_V3.json SHA26535926cb96ab7f
 registered/committed37723cb8 BEFORE handover. New remote watcher2926173/start68009586
