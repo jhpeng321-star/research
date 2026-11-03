@@ -240,6 +240,12 @@ def run_arm(root,arm,hooks=None):
                 from .plan_client import worker_slots
                 gpu_busy=busy_report(root,u,collection_begin,time.time(),[w['slot'] for w in worker_slots(root)])
             elapsed=time.time()-collection_begin if b.get('parallel_group_queries') else time.monotonic()-start
+            # practice_starts (owner 2026-11-04 proposal): per-update report only when the option
+            # is ON (default OFF keeps every receipt byte-identical).
+            practice=None
+            if b.get('practice_starts') and arm in ('B','R'):
+                from .practice_starts import update_report
+                practice=update_report(eps)
             write(root/f'{arm}_UPDATE_{u:03}.json',dict(timestamp_utc=timestamp(),update=u,arm=arm,
                 training_seed=SEED,ppo=metrics,trust=tr,beta_used=beta if arm!='A' else 0.,
                 effective_guide_beta=(b.get('sumo_verify') or {}).get('guide_beta'),
@@ -252,7 +258,8 @@ def run_arm(root,arm,hooks=None):
                 concurrently_active_plans=max(s.get('simultaneously_active_plans',0) for e in eps for s in e['steps']),
                 overlap_rechecks=[s['proposal']['overlap_recheck'] for e in eps for s in e['steps']
                     if s.get('proposal') and s['proposal'].get('overlap_recheck')],
-                charged_sim_s=charged(root),reward_source='SUMO source-inclusive team J only'))
+                charged_sim_s=charged(root),reward_source='SUMO source-inclusive team J only',
+                **({'practice':practice} if practice is not None else {})))
             beta=tr
             if arm=='B':
                 write(root/f'B_RANDOM_QUOTA_{u:03}.json',dict(sampling=routes['sampling'],

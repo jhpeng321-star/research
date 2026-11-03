@@ -42,8 +42,21 @@ INTENT_OPTIONS = dict(v2v=True, v2v_dim=48, v2v_intent=True,
 BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
     bank_statistics='per_seed_v1',   # owner 2026-11-03 21:45 + audit: per_seed_v1 only (B and R)
     # owner 2026-11-04 00:55: B and R imitate ONLY within-seed cooperative examples (A has no bank)
-    imitation_bank_filter='cooperative_only')
+    imitation_bank_filter='cooperative_only',
+    # owner 2026-11-04 proposal practice_starts: DEFAULT OFF (byte-identical); the launch default
+    # is OFF, and bind_runtime validates - never pins - the B/R-equal registered values, so a
+    # later runtime may enable it at an update boundary. One key set serves B and R (A unchanged).
+    practice_starts=False, practice_fraction=0.25, practice_repeat_cap=2)
 IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
+PRACTICE_KEYS = ('practice_starts', 'practice_fraction', 'practice_repeat_cap')
+PRACTICE_FRACTIONS = (0.25,)     # registered values of practice_fraction (proposal 0.25 => 6 of 24)
+PRACTICE_REPEAT_CAPS = (1, 2)    # registered per-example repeat caps per update
+PRACTICE_RULE = ('owner 2026-11-04 proposal: a fraction of each B/R update PPO episodes start from '
+                 'the arm\'s own admitted within-seed cooperative bank examples (same snapshot and '
+                 'CRN seed as the example, current policy from t0, normal horizon/reward/charge); '
+                 'R falls back to its other admitted examples when it has fewer cooperative ones '
+                 '(same count as B); empty bank -> normal starts; A unchanged; default OFF is '
+                 'byte-identical and OFF is the launch default')
 DIAGNOSTIC_SCHEDULE = dict(A=dict(lessons=[], isolated=[]),
     B=dict(lessons=[6, 12, 18, 24], isolated=[6, 12, 18, 24]),
     R=dict(lessons=[], isolated=[12, 24]))
@@ -265,16 +278,45 @@ def imitation_filter_for(cfg, arm):
     return have
 
 
+def practice_options_for(cfg, arm):
+    """Registered practice_starts options of arm B or R (owner 2026-11-04 proposal).
+
+    Unlike the pinned BANK_OPTIONS entries, practice_starts is a runtime TOGGLE: bind_runtime
+    accepts the OFF default and the registered ON values, always identical for B and R (an
+    optional cfg['practice_starts_by_arm'] mapping is accepted only when B == R == the values).
+    Only arms B and R may carry the keys; A-v2v is unchanged."""
+    starts = cfg.get('practice_starts', False)
+    fraction = cfg.get('practice_fraction', BANK_OPTIONS['practice_fraction'])
+    cap = cfg.get('practice_repeat_cap', BANK_OPTIONS['practice_repeat_cap'])
+    values = dict(practice_starts=starts, practice_fraction=fraction, practice_repeat_cap=cap)
+    if not isinstance(starts, bool):
+        raise Refused('practice_starts must be a bool, not ' + repr(starts))
+    if not isinstance(fraction, float) or not math.isfinite(fraction) or fraction not in PRACTICE_FRACTIONS:
+        raise Refused('registered practice_fraction required: ' + repr(fraction))
+    if type(cap) is not int or cap not in PRACTICE_REPEAT_CAPS:
+        raise Refused('registered practice_repeat_cap required: ' + repr(cap))
+    by_arm = cfg.get('practice_starts_by_arm')
+    if by_arm is not None:
+        if (not isinstance(by_arm, dict) or set(by_arm) != {'B', 'R'}
+                or by_arm['B'] != values or by_arm['R'] != values):
+            raise Refused('practice_starts options must be identical for B and R: ' + repr(by_arm))
+    if arm not in ('B', 'R'):
+        raise Refused('only arms B and R have practice starts (A-v2v is unchanged)')
+    return values
+
+
 def bind_runtime(value, *, root, source_root):
     """Validate deployed values, not newly manufactured desired arm configs."""
     cfg = value.get('config')
     if not isinstance(cfg, dict):
         raise Refused('V2V_RUNTIME config object required')
-    for key, want in dict(INTENT_OPTIONS, **BANK_OPTIONS).items():
+    for key, want in dict(INTENT_OPTIONS, **{k: v for k, v in BANK_OPTIONS.items()
+                                             if k not in PRACTICE_KEYS}).items():
         have = cfg.get(key)
         if have != want or isinstance(have, bool) != isinstance(want, bool):
             raise Refused('runtime option ' + key + ' differs: ' + repr(have))
     imitation_filter_for(cfg, 'B'), imitation_filter_for(cfg, 'R')   # refuses B != R
+    practice_options_for(cfg, 'B'), practice_options_for(cfg, 'R')   # B == R; OFF or registered ON
     if 'v2v_intent_weight' in cfg:
         raise Refused('obsolete runtime v2v_intent_weight is not an intent loss binding')
     passes = cfg.get('imitation_epochs')

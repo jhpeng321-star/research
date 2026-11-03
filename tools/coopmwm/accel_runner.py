@@ -110,9 +110,14 @@ def replacement_world(failed,used,taken_ids,arm,ident):
 
 def replacement_job(job,world,ident):
     key=f'{ident}_{job["arm"]}_{world["seed"]}'
-    return dict(job,id=key,path=str(Path(job['path']).parent/key),world=world,
+    out=dict(job,id=key,path=str(Path(job['path']).parent/key),world=world,
         noise_seed=int(digest(dict(seed=SEED,world=world['seed'],wave=ident))[:15],16),
         replaces=job['id'])
+    if job.get('practice') is not None:
+        # practice_starts: a failed snapshot-restart episode is replaced by a NORMAL fresh start
+        # (same cell rule, same charge); the snapshot state belongs to its own sealed attempt.
+        for k in ('practice','branch','samples'):out.pop(k,None)
+    return out
 
 
 def run_train_jobs(root,jobs,phase,ident,used,precharged,submit,episode):

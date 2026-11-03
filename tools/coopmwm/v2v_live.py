@@ -56,11 +56,14 @@ def hooks(root, cfg):
 
     policy_factory,pairs=Policy,original_pairs
     # Owner 2026-11-04 00:55: imitation_bank_filter is ONE key for B and R (A has no bank).
-    from .v2v_launch3 import imitation_filter_for
+    from .v2v_launch3 import imitation_filter_for, practice_options_for
     bank_filters={a:imitation_filter_for(cfg,a) for a in ('B','R')}
     if bank_filters['B']!='all_admitted':
         def pairs(r,arm,*a,**k):
             return original_pairs(r,arm,*a,**dict(k,imitation_bank_filter=bank_filters[arm]))
+    # Owner 2026-11-04 proposal: practice_starts options validated at hook time (B == R, OFF or
+    # registered ON); the scheduling itself lives in v2v_runner.run_arm's train wave.
+    practice_options_for(cfg,'B'),practice_options_for(cfg,'R')
     if cfg.get('v2v_intent'):
         # v2v_intent ON (identical for A/B/R): intent-head policy, intent-carrying bank pairs.
         import functools
