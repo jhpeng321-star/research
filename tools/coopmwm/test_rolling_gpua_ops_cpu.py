@@ -13,6 +13,13 @@ class Intercepted(Exception):
 
 
 class GPUAOperations(unittest.TestCase):
+    def test_handover_waits_on_active_transfer_before_starting_bridge(self):
+        events=[]
+        with patch.object(m.ops,'EVIDENCE',__import__('pathlib').Path('/nonexistent-test-control')),patch.object(m,'drain',side_effect=[RuntimeError('prior archive transfer still active'),Intercepted]),patch.object(m.time,'sleep',side_effect=lambda _:events.append('wait')),patch.object(m,'bridge') as bridge:
+            with self.assertRaises(Intercepted):m.handover()
+            bridge.assert_not_called()
+        self.assertEqual(events,['wait'])
+
     def test_actual_drain_payload_compiles_before_any_signal(self):
         def intercept(host, code, **kwargs):
             self.assertEqual(host,'cpuQ')

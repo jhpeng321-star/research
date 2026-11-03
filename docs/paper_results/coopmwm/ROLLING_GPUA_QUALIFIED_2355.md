@@ -22,3 +22,9 @@
 At this checkpoint the prior mover is still retained; handover/launch is next,
 only after proving the old owner idle with no transfer children. No new SUMO,
 inference, simulator charge or V2V dispatch.
+
+The first drain precheck found an active old transfer and refused before any
+signal. The registered launch path now waits for an idle boundary (30s polls),
+then performs the same identity-proven drain and starts the new durable mover.
+Only those two explicit busy conditions are retried. Four operator CPU tests
+PASS, including the actual generated programs and no launch during a transfer.

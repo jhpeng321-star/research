@@ -158,14 +158,26 @@ def launch():
         try:alive=psutil.Process(d['pid']).create_time()==d['create_time']
         except psutil.NoSuchProcess:alive=False
         print(json.dumps(dict(adopt=True,alive=alive,owner=d)));return
-    assert (ops.EVIDENCE/'ROLLING_ARCHIVE_PRIOR_DRAINED_GPUA_V4.json').is_file()
+    assert read(ops.EVIDENCE/'ROLLING_ARCHIVE_ROUTE_GPUA_V4.json')['pass_']
     assert (ops.EVIDENCE/REG).is_file()
-    command=[sys.executable,'-B','-X','utf8','-m','tools.coopmwm.rolling_gpua_ops','bridge']
+    command=[sys.executable,'-B','-X','utf8','-m','tools.coopmwm.rolling_gpua_ops','handover']
     with (ops.EVIDENCE/'ROLLING_ARCHIVE_BRIDGE_GPUA_V4.log').open('x',encoding='utf-8') as log:
         child=subprocess.Popen(command,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
             creationflags=(subprocess.DETACHED_PROCESS|subprocess.CREATE_NEW_PROCESS_GROUP) if os.name=='nt' else 0,start_new_session=os.name!='nt')
     d=dict(pid=child.pid,create_time=psutil.Process(child.pid).create_time(),unix=time.time(),argv=command)
     write(p,d);print(json.dumps(d))
+
+
+def handover():
+    """Wait out an existing transfer without interrupting it or adding a mover."""
+    proof=ops.EVIDENCE/'ROLLING_ARCHIVE_PRIOR_DRAINED_GPUA_V4.json'
+    while not proof.exists():
+        try:drain()
+        except RuntimeError as error:
+            if not any(x in str(error) for x in ('prior archive transfer still active','prior mover not idle')):raise
+            print(json.dumps(dict(unix=time.time(),waiting_for_prior_idle=True,new_sim_s=0)),flush=True)
+            time.sleep(30)
+    bridge()
 
 
 def bridge():
@@ -204,5 +216,5 @@ def status():
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','register','route','drain','launch','bridge','status'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','register','route','drain','launch','handover','bridge','status'))
     globals()[p.parse_args().action]()
