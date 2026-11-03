@@ -1,0 +1,11 @@
+{"record":"S-COOPMWM LAUNCH-COOP option 1 (MAIN 04:55): watcher restart quote fix, re-bound runtime, gate_coop6 PASS, launch3-gated V2V training start",
+"fix_commit":"7e832acc31f76ebb623655c4dc9bd44ea5f2976f","reviewed_from":"567906f8 (GLM)","v2v_launch3_changed":false,
+"local_tests":"test_v2v_live_cpu+test_launch_final_cpu+test_coop_only_cpu+test_coopfix_exact_gate_cpu: 55 passed (rl_driving, Windows)",
+"source_root":"/home/ubuntu/coopmwm20261104_launchcoop_src3","tools_archive_sha256":"855ca58adde388901ac3f3c861e78d877295903dd2251de7cfb837e2071015ab",
+"source_manifest_sha256":"03867403672549387f94a028db860123f47d80e39a1315b474337c2c784c2cbf","linux_release":"18 suites 224/224 PASS 0 skip 0 SUMO",
+"root":"/home/ubuntu/coopmwm20261104_v2v_coop3","root_continued":true,"superseded_runtime_sha256":"3145b1a660c0393ae1d454f6d26ffabf95b8b869f58c5b29713389ac1aa711ec",
+"runtime_sha256":"f73298f008090666ace8694c177aa292c48c44c1888d3b0e98a63fa40960ec17","runtime_amendment_sha256":"410728fa37bb5ce8e2178c8205e3de63d75e80dbd3dc65926f73858a0dec149f",
+"gate":{"control":"/home/ubuntu/coopmwm20261104_gate_coop6","verdict":"PASS","report_sha256":"5480ef3d794ef84fb9cca0db24db1d9f774dc50d70874f1a798aa6af2f291f2c","plan_sha256":"0769538bed05bc2dddb36f5a7401996d2df019b19f30da5ffd5928d888bf0c17","execution_amendment_sha256":"a9aee122a5d1ca790d19fce7f0c34d499d434040c6881e7ff811a6d7c2c36f87","sim_s":35820,"phase":"bank_verification_ext","ledger_kind":"coopfix_exact_coop6_u000_B","safety":"0 collisions / 0 teleports in 55/55 measured branches","report_only_986066_synergy_lb95":{"seed1":-0.01544525826991503,"seed2":-0.027918040923105993}},
+"launch3":{"binding_sha256":"e98f0e5fe29338c769c97e919ddf471e9ad650e857fa41f993747664e85660c9","authority_sha256":"c698cb2f63f4ae7bbdd5c0bfc39b9db2de933f71a741ec59a42e6b6ad7cde44d","restart_phase_costs":{"v2v_train":2016000,"v2v_interim":345600,"v2v_final":345600,"v2v_lessons":21840,"v2v_isolated":185200}},
+"watcher_pid":2013844,"smokes":{"A":"reused complete","B":"complete, 24 closed u001 episodes reused, 0 new sim-s","R":"complete, 24 new episodes 28800 sim-s"},
+"v2v_started_unix":1793744972.2211275,"train_pids":{"A":2049830,"B":2049879,"R":2049891}}

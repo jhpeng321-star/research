@@ -233,12 +233,75 @@ def _require_launch3(root, cfg):
         raise ValueError('V2V_STARTED.json already exists: another launcher owns this root')
 
 
-def launch3_check(root, cfg, stage=None, arm=None):
+SMOKE_EPISODE_SIM_S=1200     # one registered update-1 smoke/train episode (launch3_check unit)
+SMOKE_EPISODES_PER_ARM=24
+
+
+def remaining_phase_costs(root, cfg):
+    """Exact remaining registered phase_costs for a (re)started watcher gate.
+
+    requote's contract: a later wave passes its exact remaining positive
+    phase_costs, never the whole initial run again. A watcher can only be
+    (re)started before V2V_STARTED (``_require_launch3``), i.e. while the real
+    one-update smokes are still the only work that may have been charged. The
+    restart quote therefore credits ONLY reusable smoke physics of THIS root:
+    a v2v_train charge whose id is ``<job_namespace>_warm_u001_<A|B|R>_<seed>``,
+    of exactly one registered episode (1200 sim-s), whose job directory under
+    this root is closed with a result (the runner reuses it, never re-runs or
+    re-charges it). Everything else stays in the full registered quote:
+    foreign, void, partial or unexpected charges are NOT credited, so they keep
+    counting as spent in requote and the quote can never fall below the real
+    remaining work (an overdrawn or over-committed ledger is still refused).
+    Nothing credited -> None -> the unchanged full quote (fresh-root behaviour
+    byte-identical). Any v2v diagnostic/test phase already charged means the
+    run is past the smokes: no credit (full quote, which requote refuses).
+    """
+    import re
+    from . import v2v_launch3,storage
+    namespace=cfg.get('job_namespace')
+    if not isinstance(namespace,str) or not namespace:return None
+    try:entries=storage.ledger(root)
+    except (OSError,ValueError):return None
+    pattern=re.compile(re.escape(namespace)+r'_warm_u001_([ABR])_([0-9]+)')
+    credited,per_arm=set(),{}
+    for entry in entries:
+        if not isinstance(entry,dict):return None
+        phase,ident=entry.get('phase'),entry.get('id')
+        if phase in v2v_launch3.V2V_PHASES and phase!='v2v_train':return None
+        if phase!='v2v_train' or not isinstance(ident,str):continue
+        match=pattern.fullmatch(ident)
+        if not match:continue
+        if ident in credited:return None    # duplicate charge: requote refuses it
+        amount=entry.get('sim_s')
+        if type(amount) is not int or amount!=SMOKE_EPISODE_SIM_S:continue
+        job=Path(root)/'jobs'/ident
+        if not ((job/'CLOSE.json').is_file() and (job/'RESULT.json').is_file()):continue
+        credited.add(ident);per_arm[match[1]]=per_arm.get(match[1],0)+1
+    if not credited:return None
+    if any(n>SMOKE_EPISODES_PER_ARM for n in per_arm.values()):
+        raise ValueError('more reusable update-1 episodes than one registered smoke per arm')
+    costs=dict(v2v_launch3.V2V_PHASES)
+    costs['v2v_train']-=SMOKE_EPISODE_SIM_S*len(credited)
+    if costs['v2v_train']<=0:raise ValueError('restart credit cannot consume the training quote')
+    return costs
+
+
+def watch_gate(root, cfg):
+    """Initial launch3 gate of a (re)started watcher: the full registered quote
+    on a fresh ledger; after closed smoke episodes of this root were charged,
+    the full quote minus exactly those reusable episodes."""
+    return launch3_check(root,cfg,phase_costs=remaining_phase_costs(root,cfg))
+
+
+def launch3_check(root, cfg, stage=None, arm=None, phase_costs=None):
     """Validate a registered additive trust anchor immediately before dispatch.
 
     The anchor lives outside immutable V2V_RUNTIME, avoiding a circular hash
     between the runtime and the launch binding that pins that runtime.
     Only resource waits are retryable; every other failed condition is fatal.
+    A stageless watcher (re)start takes the exact remaining registered
+    phase_costs via ``phase_costs`` (None keeps the full frozen-slate quote);
+    spawned children always keep their own registered unit cost.
     """
     from . import v2v_launch3 as launch3
     from .protocol import sha
@@ -266,7 +329,9 @@ def launch3_check(root, cfg, stage=None, arm=None):
         costs={'v2v_train':24*1200*(1 if stage=='smoke' else 23)}
     elif stage in ('test8','test24'):
         costs={'v2v_interim' if stage=='test8' else 'v2v_final':3*96*1200}
-    elif stage is not None:
+    elif stage is None:
+        costs=phase_costs
+    else:
         raise ValueError('unregistered launch3 stage: '+str(stage))
     result=launch3.wait_for_preflight(authority['binding_path'],
         binding_sha256=authority['binding_sha256'],root=root,
@@ -294,7 +359,9 @@ def watch(root):
     _require_launch3(root,cfg)
     # Full frozen-slate quote and all launch prerequisites once before the
     # first smoke; each new child then checks its own remaining phase cost.
-    gate=launch3_check(root,cfg)
+    # A restarted watcher (smokes already charged part of v2v_train) passes the
+    # exact remaining quote instead; a fresh ledger keeps the full quote.
+    gate=watch_gate(root,cfg)
     atomic(root/'V2V_WATCH_STATUS.json',dict(ready=True,rule='registered launch3 preflight checked',
         unix=time.time(),stage='resource_wait',children=children,preflight=bool(gate)))
     children=[spawn(root,'smoke',a) for a in ('A','B','R')]
