@@ -28,3 +28,16 @@
   resource probe and started no inference, transport, collector or dispatcher.
 - All frozen scientific outputs remain byte-identical. No SUMO, fitting,
   baseline retraining, peer signalling, research-data deletion or push occurred.
+
+## Subsequent fresh-session check (resumed at 98951c97)
+
+- Clean branch; reran the original delivery assertions with only the exclusive
+  receipt write redirected to memory. All checks passed and the generated receipt
+  exactly matched `DELIVERY_VERIFIED.json`; published artifacts were not rewritten.
+- Directly confirmed the shared REGISTRATION.md line 5700 records COMPLETE.
+  No duplicate registration, inference, dispatch, transport or collector was started.
+- Rechecked both conditional WM-fix reports, including ES's November 3 stop audit;
+  neither supplies a passing verdict. Re-read C1FLOOR: its approved native-only
+  speed-pulse sensitivity does not fill the RNG-only reference slot.
+- Resource status remains the historical closure audit, not a fresh remote probe.
+  Scientific scope and all existing limitations remain as published.
