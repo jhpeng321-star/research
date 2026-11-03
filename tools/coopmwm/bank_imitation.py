@@ -11,6 +11,52 @@ def indices(sample):
     return [members.index(v) for v in sample.get('behaviour',{}).get('proposal_members',[]) if v in members]
 
 
+def intent_terms(policy,batch):
+    """Masked plan-future intent losses for pairs carrying context['intent_target'].
+
+    Each target ({vid: {target, mask}} from bank_v2v.plan_intent_targets) is the
+    winning plan's absolute next-H commands; the loss is the masked mean squared
+    error against the intent head plan of the pair's own members. [] when the
+    batch carries no intent targets."""
+    from .v2v_model import planned_commands
+    terms=[]
+    for sample,_ in batch:
+        pack=(sample.get('context') or {}).get('intent_target') or {}
+        if not pack:continue
+        members=sample['context']['members']
+        planned=planned_commands(policy,sample['context'])
+        losses=[]
+        for vid,item in pack.items():
+            if vid not in members:continue
+            mask=torch.as_tensor(item['mask'],dtype=torch.float32)
+            total=float(mask.sum())
+            if total<=0:continue
+            target=torch.as_tensor(item['target'],dtype=torch.float32)
+            losses.append(((planned[members.index(vid)]-target).square()*mask).sum()/total)
+        if losses:terms.append(torch.stack(losses).mean())
+    return terms
+
+
+@torch.no_grad()
+def intent_error(policy,pairs):
+    """Masked mean absolute plan-future command error (m/s^2); None with no targets."""
+    from .v2v_model import planned_commands
+    total=0.;count=0.
+    for sample,_ in pairs:
+        pack=(sample.get('context') or {}).get('intent_target') or {}
+        if not pack:continue
+        members=sample['context']['members']
+        planned=planned_commands(policy,sample['context'])
+        for vid,item in pack.items():
+            if vid not in members:continue
+            mask=torch.as_tensor(item['mask'],dtype=torch.float32)
+            weight=float(mask.sum())
+            if weight<=0:continue
+            target=torch.as_tensor(item['target'],dtype=torch.float32)
+            total+=float(((planned[members.index(vid)]-target).abs()*mask).sum());count+=weight
+    return total/count if count else None
+
+
 @torch.no_grad()
 def action_error(policy,pairs):
     total=0.;count=0
@@ -86,7 +132,7 @@ def run(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5):
     return report
 
 
-def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5):
+def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5,intent=None):
     """MAIN17:27: transactional full passes, KL relative to post-PPO policy.
 
     Backtracking changes only the optimizer step size, never targets or AWR
@@ -94,18 +140,29 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     permutation is retried without consuming additional sampling RNG. No partial
     pass can become the published policy. The inherited .045 KL budget is separate
     from PPO. Legacy non-V2V run() remains byte-for-byte unchanged.
-    """
+
+    With ``intent`` (DEFAULT OFF: dict(weight, horizon) from v2v_model.intent_config)
+    the pairs' plan-future-command intent targets add a supervised loss with the
+    registered weight to every minibatch, and the report carries
+    report['intent'] with the intent error before/after the passes."""
     if int(passes)!=passes or passes<5:raise ValueError('at least five requested passes')
     pairs=[(s,float(w)) for s,w in pairs if w>0 and indices(s)]
     centre=copy.deepcopy(policy).eval()
     before=action_error(policy,pairs)
+    intent_before=intent_error(policy,pairs) if intent is not None else None
     report=dict(requested_epochs=int(passes),epochs_completed=0,epochs_started=0,
         pairs_total=len(pairs),pairs_seen=0,member_actions_seen=0,optimizer_steps=0,
         critic_steps=0,own_policy_steps=0,plan_ratios_computed=0,backtracks=0,
         action_error_before_mps2=before,action_error_before_update_mps2=action_error(reference,pairs),
         kl_limit=.045,kl_reference='frozen pre-imitation (post-PPO) policy',
         rule='full-bank transactional passes; separate imitation KL; AWR weights unchanged')
+    if intent is not None:
+        report['intent']=dict(weight=float(intent['weight']),horizon=int(intent['horizon']),
+            error_before_mps2=intent_before,error_after_mps2=None,
+            rule='bank plan-future-command intent targets, masked, same registered weight path as PPO')
     if not pairs:
+        if intent is not None:
+            report['intent']=dict(report['intent'],error_after_mps2=intent_error(policy,pairs))
         return dict(report,stop_reason='empty statistically qualified bank',kl=0.,action_error_after_mps2=None)
     samples=[s for s,_ in pairs]
     original_lrs=[g['lr'] for g in optimizer.param_groups]
@@ -124,6 +181,9 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                 for ids in order:
                     batch=[pairs[int(i)] for i in ids]
                     loss=torch.stack([imitation(policy,s,w) for s,w in batch]).mean()*coefficient
+                    if intent is not None:
+                        terms=intent_terms(policy,batch)
+                        if terms:loss=loss+intent['weight']*torch.stack(terms).mean()
                     if not bool(torch.isfinite(loss)):raise ValueError('nonfinite full-bank imitation')
                     optimizer.zero_grad();loss.backward()
                     torch.nn.utils.clip_grad_norm_(policy.parameters(),.5,error_if_nonfinite=True)
@@ -144,6 +204,8 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     finally:
         for g,lr in zip(optimizer.param_groups,original_lrs):g['lr']=lr
     report.update(kl=joint_kl(policy,centre,samples),action_error_after_mps2=action_error(policy,pairs))
+    if intent is not None:
+        report['intent']=dict(report['intent'],error_after_mps2=intent_error(policy,pairs))
     if report['action_error_after_mps2']>=before:
         report['error_not_decreased_explanation']='AWR likelihood and unweighted L1 differ; full-pass coverage and separate KL recorded'
     return report

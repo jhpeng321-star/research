@@ -167,11 +167,16 @@ def causal_frame(frame, previous):
     return dict(frame, vehicles=vehicles)
 
 
-def attach_pairs(pairs, trace_path, t0, cfg=None):
+def attach_pairs(pairs, trace_path, t0, cfg=None, plan=None, intent=False, intent_horizon=5):
     """(kept pairs, counts): add ``sample['context']['v2v']`` to every pair of one admitted
     bank entry, from the winning plan's recorded branch trace; pair i is second t0+i.
     Pairs whose trace lacks the partners' commands (no previous second, no trace frame, or a
-    partner command not recorded) are EXCLUDED and counted - never imputed."""
+    partner command not recorded) are EXCLUDED and counted - never imputed.
+
+    With ``intent`` (DEFAULT OFF) and the winning ``plan``, each kept pair ALSO carries the
+    plan-future-command intent targets ``sample['context']['intent_target']`` for the next
+    H control steps (bank_imitation trains the intent head on them); without ``intent`` the
+    pairs are byte-identical to the plain v2v attachment."""
     cfg = dict(DEFAULT_CFG, **(cfg or {}))
     counts = dict(pairs=len(pairs), kept=0, excluded_missing_prev_second=0,
                   excluded_missing_partner_command=0, trace_missing=False)
@@ -194,9 +199,38 @@ def attach_pairs(pairs, trace_path, t0, cfg=None):
             counts['excluded_missing_partner_command'] += 1
             continue
         context['v2v'] = block
+        if intent and plan is not None:
+            context['intent_target'] = plan_intent_targets(plan, i, members, int(intent_horizon))
         kept.append((sample, w))
     counts['kept'] = len(kept)
     return kept, counts
+
+
+def plan_intent_targets(plan, elapsed, members, horizon=5, bounds=None):
+    """Plan-future-command intent targets for one bank pair: for every plan member the
+    winning plan's ABSOLUTE acceleration command at elapsed+1 .. elapsed+H (plans.acceleration_at,
+    the executed plan itself is the label), zero-masked beyond the plan duration or for
+    members outside the plan.     Plain floats (bank pairs are JSON-serialised)."""
+    from .plans import acceleration_at
+    if bounds is None:
+        from .v2v_model import INTENT_BOUNDS as bounds
+    low, high = float(bounds[0]), float(bounds[1])
+    out = {}
+    for vid in members:
+        if vid not in plan['members']:
+            continue
+        target, mask = [], []
+        for j in range(1, int(horizon)+1):
+            step = acceleration_at(plan, elapsed+j)
+            value = step.get(vid)
+            if value is None:
+                mask.append(0.)
+                target.append(0.)
+                continue
+            mask.append(1.)
+            target.append(min(max(float(value), low), high))
+        out[vid] = dict(target=target, mask=mask)
+    return out
 
 
 def merge_counts(total, counts):
