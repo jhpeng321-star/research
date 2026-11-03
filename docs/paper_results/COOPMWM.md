@@ -1,5 +1,27 @@
 # S-COOPMWM — live checks
 
+## Nov3 13:40 UTC+8 — fixed-u8 analysis delivered to MAIN; durable training healthy
+- The authorised interim analysis completed **13:38:57**, all96 paired worlds,
+  fixed A/B/R8 plus reused MAPPO/native. All480 episode identities and stored
+  outcome fingerprints validate. No SUMO/inference was added. Owner3625742 exited
+  with a completion certificate/no failure; adopt completion and never rerun.
+- MAIN-only delivery is `E:/agent-work/_sol/COOPMWM_INTERIM_U8_MAIN.md` with
+  adjacent JSON. Public resultSHA
+  **`b7046c883cc60532587343830026ace78de9ba6e7527db7ff6f43e07fedb7450`**;
+  manifestSHA`5ff0fd41fafdf86cb5553849713812239722e1937748d09338dbbecc2a7db74e`.
+  Report values are not reproduced here. Final-policy outcomes remain unopened.
+- At13:41:00 watcher3305066 and all4 original training/grading children are live,
+  no failures/alerts/dead children; B/R remain completedu10 under original pacing
+  to fixedu24. Analysis supplied no data to training and changed no live source.
+- Budget13:40:49: **7,459,360/14,500,000sim-s charged**,7,040,640remaining;
+  bank extension1,723,900remaining. Train806,400 exactly funds28 remaining arm
+  updates. Every phase is nonnegative; interim charge345,600 equals its complete
+  A/B/R episode quote. SnapshotSHA`236f9c0d8c46d77ad29d0a119f288a25fde9fa3e06a0b12174a6b45a6a66701d`.
+- Evidence: `coopmwm/INTERIM_U8_ANALYSIS_DELIVERED_1235.json`,
+  `coopmwm/INTERIM_U8_ANALYSIS_STATUS_1793684395479193800.json`,
+  `coopmwm/B_REPLAY_START_WATCH_STATUS_1793684462261363500.json`,
+  `coopmwm/COMPOSITE_PHASE_BALANCES_1793684451329583600.json`.
+
 MAIN-only interim analysis is live under owned cpuQ3625742/start69850280 from
 13:37:05+08. Registration`99552af1…`/commit`c2ee5bf5` preceded launch; detached,
 nice19, no SUMO/inference. At13:38:14 it is running without a failure certificate.

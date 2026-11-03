@@ -1,5 +1,19 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3 13:41+08: fixedu8ANALYSIS COMPLETE13:38:57, MAINonlyDELIVERED
+_sol/COOPMWM_INTERIM_U8_MAIN.md+.json; 96pairedworlds/480identities+fingerprints,
+zeroSIM/inference. ResultSHAb7046c883cc60532587343830026ace78de9ba6e7527db7ff6f43e07fedb7450;
+manifest5ff0fd41. Owner3625742completed/exited/noFAIL, NEVERredo/adoptDELIVERED_1235.
+InterimvaluesMAINonly, no data supplied totraining; FINALpolicyoutcomesstillclosed.
+13:41:00watcher3305066+3305068..71LIVE/noFAIL/alerts/dead; B/Ru10complete,
+originalpacing/fixed24. Budget13:40:49charged7459360/14.5M/7040640remaining,
+bankext1723900/train806400EXACT28updates/allphasesnonnegative/SHA236f9c0d.
+Interim345600fullychargedasquoted. SourceC1/727Linuxunchanged; no GPU/training
+handover. NewanalysisCPU4PASS/registration99552af1/commitc2ee5bf5beforedecode.
+Localcounterfix294bf1b0+receiptintegrityPASS; earlier16branchsummarycorrected20.
+Nextobserveu11+newsynergy/bankreceipts, keepallowners/read-onlyobservers;
+neverrelaunchfinishedwarm/restarts/interim/gates. Do notconditionanythingoninterim.
+
 ANALYSIS LIVE Nov3 13:37:05+08: own3625742/start69850280/bootb8bc1fcb,
 controlwarm1/interim_analysis_1235_v1; ADOPTINTERIM_U8_ANALYSIS_DISPATCH_1235,
 NEVERduplicate. Registered99552af1/commitc2ee5bf5 BEFORElaunch. At13:38:14
