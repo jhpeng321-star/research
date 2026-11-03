@@ -110,6 +110,8 @@ def run_arm(root,arm,hooks=None):
     write(root/f'WARM_{arm}_STARTED{suffix}.json',dict(timestamp_utc=timestamp(),first_update=first,
         pause_update=last,full_endpoint=budget()['updates'][arm],charged_sim_s=charged(root)))
     running=[];beta=1.;learned=search_learning.empty(arm,SEED,b['accel_bounds'])
+    from .v2v_model import intent_config
+    intent_cfg=intent_config(b)  # None unless the binding enables v2v_intent (default off)
     exact_rng=np.random.default_rng(SEED);exact_count=0
     if b.get('resume_progress'):
         progress=b['resume_progress'];running=progress['running'];beta=progress['beta']
@@ -173,7 +175,8 @@ def run_arm(root,arm,hooks=None):
                     cap=imitation_decision_cap(read(bp)) if bp.exists() else 0
                     fair=dict(matched_B_update=bu,B_bank_decisions=cap,B_update_receipt_found=bp.exists())
                 pairs,weights=bank_pairs(root,arm,SEED,beta=replay_beta,sources=b.get('replay_sources',{}).get(arm,()),
-                    max_decisions=cap,v2v=bool(b.get('v2v')))
+                    max_decisions=cap,v2v=bool(b.get('v2v')),
+                    **({'intent':intent_cfg is not None,'intent_horizon':intent_cfg['horizon']} if intent_cfg else {}))
                 from .replay_bank import bank_quality
                 weights['bank_quality']=bank_quality(root,arm,b.get('replay_sources',{}).get(arm,()))
                 if fair is not None:
@@ -209,10 +212,12 @@ def run_arm(root,arm,hooks=None):
             if arm in ('B','R'):
                 from .exact_grade import exact_update,lag_report
                 metrics=exact_update(policy,opt,eps,rng,pairs,b['awr']['coefficient'],
-                    imitation_epochs=b.get('imitation_epochs',5) if replay else 0)
+                    imitation_epochs=b.get('imitation_epochs',5) if replay else 0,
+                    **({'intent':intent_cfg} if intent_cfg else {}))
                 grade_lag=None if replay else lag_report(xr.queue(root),u)
             else:
-                metrics=update(policy,opt,eps,rng,**({'awr':b['awr']} if 'awr' in b else {}));grade_lag=None
+                metrics=update(policy,opt,eps,rng,**({'awr':b['awr']} if 'awr' in b else {}),
+                    **({'intent':intent_cfg} if intent_cfg else {}));grade_lag=None
             save(root/f'{arm}_checkpoint_{u:03}.pt',policy,opt,rng,u,charged(root))
             lesson=None
             if replay:
@@ -240,6 +245,7 @@ def run_arm(root,arm,hooks=None):
                 from .plan_client import worker_slots
                 gpu_busy=busy_report(root,u,collection_begin,time.time(),[w['slot'] for w in worker_slots(root)])
             elapsed=time.time()-collection_begin if b.get('parallel_group_queries') else time.monotonic()-start
+            intent_report=next((m['intent'] for m in metrics if 'intent' in m),None) if intent_cfg else None
             write(root/f'{arm}_UPDATE_{u:03}.json',dict(timestamp_utc=timestamp(),update=u,arm=arm,
                 training_seed=SEED,ppo=metrics,trust=tr,beta_used=beta if arm!='A' else 0.,
                 effective_guide_beta=(b.get('sumo_verify') or {}).get('guide_beta'),
@@ -248,6 +254,7 @@ def run_arm(root,arm,hooks=None):
                 gpu_busy=gpu_busy,
                  exact_imitation=weights,grading_lag=grade_lag,
                  bank_imitation=next((m['bank_imitation'] for m in metrics if 'bank_imitation' in m),None),
+                **({'intent':intent_report} if intent_report is not None else {}),
                 quota_deviation=deviation,random_matching=matching,
                 concurrently_active_plans=max(s.get('simultaneously_active_plans',0) for e in eps for s in e['steps']),
                 overlap_rechecks=[s['proposal']['overlap_recheck'] for e in eps for s in e['steps']
