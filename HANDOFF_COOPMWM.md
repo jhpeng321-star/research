@@ -1,5 +1,18 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3 08:30:25+08/unix1793665825: ALL671brief lines read. MAIN08:16/08:25
+threshold10->8 APPLIED append-only: B_REPLAY_START_0816_V3.json SHA26535926cb96ab7f
+registered/committed37723cb8 BEFORE handover. New remote watcher2926173/start68009586
+bootb8bc1fcb LIVE/S, controlwarm1/replay_start_0816_v3; ADOPT dispatch0816_V3,
+NEVERduplicate. Only idleV2 2855195 boot/start/argv/nochildren verified+retired;
+all originalsources/bindings/receipts retained. replaystartcpu4 full706LinuxCPU
+PASS/0skips85.010s/zeroSUMO. ActualSTATUS admitted8/cooperative3/threshold8;
+remaining reasons ONLY collectorboundaryactivation + fourjointGPUslots. B/Rstillu3,
+noB_REPLAY_STARTED. Existingroll40408/activation39660/observer40668 adopted;
+gpuR766170/start4229162208 NICHENULL3 aliveR/1gate/noFAIL at08:28; otherR623287
+READY8 serving. BothgpuA previousgates complete. No newphysics/reservation/episode
+replay/GPUdispatch. Current14.5M authority and allRfairness/health gates retained.
+
 LATEST Nov3 08:12:32+08/unix1793664752: fresh-session adoption464d300c;
 ALL666brief linesread. Existing cpuQ watcher2855195/start67831802 LIVE/S,
 bank2388293/start66646196 LIVE/S:69usable/34confirmed/8admitted/3coop/0pending.
@@ -2013,3 +2026,12 @@ the exact cold/warm transfer release, manifest, startup gate and drained-boundar
 recipe above remain current (details: c4-wmspeed2/docs/paper_results/WMSPEED2.md).
 Integrated warm H120 4.529x and cold H300 2.496x receipts rechecked: EXACT0
 costs/trajectories and identical ranks/draws. Single registration preserved.
+
+### S-WMSPEED2 recovery 2026-11-03 07:52 — further GPU work capacity-blocked
+
+Fresh inventories committed in c4/wmspeed2 `4b975f39`: no live WMSPEED2 jobs;
+GPU A86%/43,081MiB and GPU R94%/20,694MiB, each with two other compute owners.
+No new probe dispatched. Numerical source still matches qualified `fcc50296`;
+integrated warm H1204.529x/cold H3002.496x receipts retain EXACT0 costs and
+trajectories, identical ranks/draws. Existing single registration and exact
+source-bound hot-swap recipe in c4-wmspeed2/docs/paper_results/WMSPEED2.md apply.

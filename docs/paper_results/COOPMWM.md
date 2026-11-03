@@ -1,5 +1,21 @@
 # S-COOPMWM — live checks
 
+## Nov3 08:30:25 UTC+8 — MAIN threshold amendment live; bank gate satisfied
+- MAIN08:16/08:25 lowers the automatic-start requirement from10 to **8 admitted B
+  entries**. Append-only V3 binding SHA256
+  `26535926cb96ab7fc828901097cba958b8de19decfe39825545c9d886d8c43b0`
+  was registered and committed (`37723cb8`) before watcher handover.
+- Immutable `replaystartcpu4`: **706 Linux CPU checks PASS, zero skips,
+  85.010s, zero SUMO**. Only the verified idle V2 watcher was retired; original
+  bindings, source and receipts remain on disk.
+- New durable cpuQ owner **2926173/start68009586** is aliveS. Actual status sees
+  **8 admitted /3 cooperative /threshold8**. Remaining gates: four joint-release
+  GPU slots admitted, then qualified collector activation at a no-active-grade
+  boundary. The existing sequential rollout and activation owners continue.
+- B/R remainu3; no `B_REPLAY_STARTED.json` yet. Evidence:
+  `coopmwm/B_REPLAY_START_WATCH_DISPATCH_0816_V3.json` and
+  `coopmwm/B_REPLAY_START_WATCH_STATUS_1793665826404307800.json`.
+
 ## Nov3 08:12:32 UTC+8 — fresh-session adoption; sequential release advances
 - Adopted the existing remote start watcher **2855195/start67831802**, bank
   builder **2388293/start66646196**, rollout40408, activation39660 and observer40668.
