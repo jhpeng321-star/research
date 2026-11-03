@@ -4,7 +4,7 @@
   "inherited_head": "8a95a631",
   "initial_git_status": "clean c4/coopbehav",
   "authority": "REGISTRATION.md line 5545, owner approval 2026-10-31 15:45",
-  "recovery_state": "watcher reconciled; producer handoff reconciliation pending",
+  "recovery_state": "complete; inherited watcher preserved; no new eligible exports",
   "watcher": {
     "pid": 29244,
     "parent_pid": 23892,
@@ -22,7 +22,26 @@
   "concurrent_continuation": {
     "observed_commit": "7f41a62e",
     "receipt": "RESUME_20261104.json",
-    "action": "Preserved concurrent watcher reconciliation; using a distinct session receipt"
+    "matching_handoff_receipt": "RESUME_20261104_0103.json",
+    "action": "Preserved concurrent reconciliation and documentation; independent read-only inventory agrees"
+  },
+  "producer_handoff_check": {
+    "state": "complete; no new eligible exports",
+    "read_only_remote_inventory": true,
+    "remote_interpreter": "/root/miniconda3/bin/python",
+    "canonical_index_sha256": "1c94ebe359532d3d00e6fa2d72af557791e71709691a78b26196cd4973f76c2e",
+    "canonical_pairs": 31,
+    "deployed_index_sha256s": [
+      "eafd90892099bfc0e8ac18967208b1c297d89f12386ccc656bd333d5d5a41998",
+      "bc782dd4b08fb81b8c2775732fb97b4148acb92707716600f10f20ccc934452d"
+    ],
+    "deployed_pairs_per_index": 2,
+    "audit_index_sha256": "390e07437e9f0c73790309c496b4c1dc068c19ea76373d10d9d24be290e4579e",
+    "audit_ready": false,
+    "audit_pairs": 0,
+    "producer_trace_handoffs_rechecked": true,
+    "audit_detector_counts": null,
+    "new_ready_exports": 0
   },
   "implementation_verification": {
     "last_verified_receipt": "RESUME_VERIFIED_20261102.json",
