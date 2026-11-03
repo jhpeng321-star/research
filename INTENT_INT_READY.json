@@ -1,0 +1,86 @@
+{
+  "part": "C4 INTENT INTEGRATOR (c4/intent-int): merged planned-command intent sharing (obs + head + coopfix), E2E CPU gate, COOPFIX-gate intent extension",
+  "worktree": "E:/agent-work/c4-intent-int",
+  "branch": "c4/intent-int",
+  "ready": true,
+  "date": "2026-11-03",
+  "head_commit": "60f334bf intent-int: gate bank_inputs passes intent kwargs only when enabled (keeps bank-filter monkeypatched-runner contract)",
+  "design": "each CAV policy carries an INTENT HEAD: H=5 planned absolute-acceleration commands (1 s steps, action units/clip) broadcast at step t and observed by the K=4 nearest CAV partners at t+1 (one-step V2V latency, no simultaneous dependency) plus an intent_valid mask; executed action is UNCHANGED (existing action head); head trained for ALL arms identically by supervised loss to the agent's OWN realised next-H commands (masked at episode end/despawn); B/R bank pairs additionally carry the winning plan's future commands as intent targets (MAPPO-PIS-style, arXiv 2408.06656, but learned)",
+  "merged": {
+    "c4/intent-obs": "a8fda5c5 (INTENT_OBS_READY.json merged): v2v_obs.py V2V_INTENT_DIM=48=K*(6+H+1), K=4, H=5, V2VConfig(v2v_intent, v2v_intent_horizon), V2VIntentBuffer/publish_intents (t-1 freshness gate, reset/despawn), v2v_intent_features/slot_block, v2v_live.intent_binding_gate, v2v_runner.prepare(v2v_intent=), v2v_runtime controller intent mode + Policy(v2v_dim); test_v2v_intent_obs_cpu.py 12 passed",
+    "c4/intent-head": "1ad10d44, 03d06943, ad7fbc7b, ae7268ea, f2a0d352, e5aeb239, 000f086a, f6d98631 (INTENT_HEAD_READY.json merged): v2v_model.py add_intent_head (zero-init nn.Linear(64,H) off the shared actor trunk, action-clip buffers), extend_for_v2v(..., intent_horizon), forward_with_intent/planned_commands, intent_examples (realised next-H targets, masked) / intent_loss / intent_error, load_checkpoint intent paths, optimizer group growth for attached heads; accel_learner.update(intent=), exact_grade._ppo_exact_update/exact_update(intent=), bank_imitation intent_terms/intent_error/run_separate(intent=), bank_v2v.plan_intent_targets/attach_pairs(intent=), replay_bank.bank_pairs(intent=, intent_horizon=), accel_runner + warm_runner intent_config plumbing and update receipts; test_v2v_intent_cpu.py 9 passed",
+    "c4/coopfix-int": "a0cd5a6e..a7978998 (COOPFIX_INT_READY.json pending at write time - branch head a7978998 merged, which is the full integration: statistical bank filter (bank_filter.py, BANKFILT), full-pass own_pass imitation (IMITFIX), COOPGATE merge, offline COOPFIX gate tools/coopmwm/coopfix_gate.py + test_coopfix_gate_cpu.py)",
+    "integrator_commits": "8d9cdf51, 02591bad, bfeeab44, cbffff42, bca44f59, 4b27c333, b41d3138, e4868eb2, 65296bc3, 626fa7c5, 60f334bf"
+  },
+  "option": {
+    "key": "v2v_intent",
+    "default": false,
+    "keys": {
+      "v2v": "bool, true for the intent arms",
+      "v2v_dim": "48 == tools/coopmwm/v2v_obs.V2V_INTENT_DIM (K*(6+H+1), K=4, H=5)",
+      "v2v_intent": "bool, DEFAULT OFF; requires v2v_dim==48 (enforced by v2v_runner.prepare and v2v_live.intent_binding_gate)",
+      "v2v_intent_horizon": "int, default 5 (v2v_obs.V2V_INTENT_H)",
+      "v2v_intent_weight": "float, default 0.1 (tools/coopmwm/v2v_model.DEFAULT_INTENT_WEIGHT)",
+      "accel_bounds": "the binding's own action clip [-3., 2.6] is the intent clip (never hand-set)"
+    },
+    "off_contract": "flag off: every code path skipped; observations byte-identical (v2v_intent_features returns EXACTLY v2v_features), loader byte-identical to accel_learner.load, update metric schema unchanged (no intent keys), bank pairs carry no intent_target, gate report/verdict checks are exactly the pre-intent four - all asserted by tests"
+  },
+  "arm_config": {
+    "A-v2v": {"v2v": true, "v2v_dim": 48, "v2v_intent": true, "v2v_intent_horizon": 5, "v2v_intent_weight": 0.1, "accel_bounds": [-3.0, 2.6], "paths": "accel_runner.run: update(policy, opts, eps, rng, intent=intent_config(b)) - PPO + supervised intent loss; no bank options"},
+    "B-v2v": {"v2v": true, "v2v_dim": 48, "v2v_intent": true, "v2v_intent_horizon": 5, "v2v_intent_weight": 0.1, "accel_bounds": [-3.0, 2.6], "bank_and_imitation_only_for_B_R": {"replay_bank.bank_pairs": {"v2v": true, "intent": true, "intent_horizon": 5, "bank_filter": "statistical (BANKFILT option, default off)", "pair_flags": true}, "exact_update": {"imitation_epochs": 5, "imitation_trust": "own_pass (IMITFIX option, default off)", "intent": "intent_config(b)"}}, "paths": "warm_runner.run_arm: A update(intent=cfg); B/R exact_update(intent=cfg, imitation_epochs, imitation_trust, cooperative) + bank pairs carrying context['v2v'] and context['intent_target']"},
+    "R-v2v": "identical to B-v2v (same keys; R fairness max_decisions unchanged)"
+  },
+  "e2e_test": {
+    "file": "tools/coopmwm/test_intent_int_e2e_cpu.py",
+    "result": "4 passed",
+    "covers": [
+      "MAPPO-u0-shaped checkpoint loads through v2v_model.load_checkpoint with the intent binding keys: zero-init 48-column input extension + zero-init intent head; executed actions byte-identical (<=1e-7) to the non-v2v load; plain load state-dict-equal to the registered loader (all options off)",
+      "3 synthetic CAVs over several steps: planned commands published at t (publish_intents), observed by partners at t+1 with intent_valid=1 and byte-exact payload; stale at t+2 (zeros + mask 0); option-off block EXACTLY the plain v2v block",
+      "ONE full-pass imitation update on a synthetic cooperative bank (bank_imitation.run_separate, intent=) lowers BOTH the action imitation error (L1, report['action_error_after_mps2'] < before) and the masked intent error (report['intent']['error_after_mps2'] < before), with gradient flowing through the v2v channels and the intent head",
+      "options off = byte-identical behaviour: accel_learner.update() == update(intent=None) (metrics and post-update weights equal, no intent keys)"
+    ]
+  },
+  "gate": {
+    "module": "tools/coopmwm/coopfix_gate.py (extended)",
+    "extension": "option v2v_intent (DEFAULT OFF): loads through the intent binding (intent head attached exactly as the live runner), trains the head on the pairs' plan-future targets during the offline phase with the registered weight, and the report adds report['intent'] = {enabled, horizon, weight, error_before_mps2, error_after_mps2 (bank_imitation.intent_error, masked mean absolute plan-future command error m/s^2 on the COOPERATIVE pairs), pairs_with_intent_targets, runner_report} and report['v2v_weights']['partner_intent'] = {columns (K*H=20), horizon, heads{actor,critic:{nonzero,l2,max_abs}}, moved, rule} - the PARTNER-INTENT input columns (per-partner intent_0..intent_4 inside the K*(6+H+1) block, plain six features and mask channel excluded)",
+    "verdict": "PASS iff the four pre-intent checks hold, plus intent_error_falls (after < before) and partner_intent_weights_moved when v2v_intent is on; option off keeps the pre-intent verdict semantics byte-identical",
+    "cli": "python -m tools.coopmwm.coopfix_gate run --checkpoint CKPT (--pairs-file P.json | --bank-root ROOT --arm B --training-seed N) [--v2v --v2v-dim 48 --v2v-intent --v2v-intent-horizon 5 --bank-filter --imitation-trust --passes 5 --coefficient 1.0 --out COOPFIX_GATE_REPORT.json]; 'status' lists option READY state"
+  },
+  "gate_tests": {
+    "file": "tools/coopmwm/test_coopfix_gate_intent_cpu.py",
+    "result": "4 passed",
+    "covers": "intent_columns/partner_intent weight report shapes (None on plain 24-wide, 20 columns on 48-wide, zero at load); option-off report has no intent keys and exactly the four pre-intent checks; option-on phase lowers intent error and moves the partner-intent columns (verdict PASS); planned_commands reads the zero-init head"
+  },
+  "test_counts": {
+    "intent_files": "29 passed: test_intent_int_e2e_cpu (4, new) + test_coopfix_gate_intent_cpu (4, new) + test_v2v_intent_cpu (9, head part) + test_v2v_intent_obs_cpu (12, obs part)",
+    "gate": "tools/coopmwm/test_coopfix_gate_cpu.py 16 passed (incl. the bank-filter forwarding test fixed during this integration)",
+    "full_suite": "command: set OMP_NUM_THREADS=1 & set MKL_NUM_THREADS=1 & python -X utf8 -m pytest -q --tb=no -p no:cacheprovider tools/coopmwm/ -k \"cpu and not RehearsalSmoke\" (env: miniconda3/envs/rl_driving, torch 2.12.1+cpu, Windows)",
+    "full_suite_result": "764 passed / 75 failed / 1 error / 38 subtests passed in 714 s at 60f334bf",
+    "failure_audit": "ALL 73 distinct failures + 1 error match the documented pre-existing baseline (E:/Temp/opencode/base_failures.txt, Windows fcntl/SUPERVISOR.claim file-lock and frozen-checkpoint env issues, HANDOFF_HARDEN_INT.md); the single name-level delta (test_scoped_archive1731_cpu::test_only_exact_authorised_opaque_files_no_directory_or_alias, WinError 1314 rename privilege) was REPRODUCED failing at this branch's starting commit b37d895b in a detached temp worktree - environmental, not a regression",
+    "targeted_regression": "62 passed: all v2v/intent/bank modules (test_v2v_intent_cpu, test_v2v_intent_obs_cpu, test_intent_int_e2e_cpu, test_v2v_model_cpu, test_v2v_int_e2e_cpu, test_replay_bank_v2v_cpu, test_v2v_runtime_cpu, test_awr_cpu, test_bank_amendment_cpu, test_bank_imitation_cpu)"
+  },
+  "per_update_cost": {
+    "policy_update_cpu": "+29% wall (measured CPU micro-benchmark, single-thread torch: accel_learner.update on 4x8-step synthetic episodes, intent off 2.951 s vs on 3.806 s; the intent loss adds one trunk forward per record per epoch plus before/after intent-error passes)",
+    "end_to_end": "negligible vs the SUMO rollout (sampling dominates update wall time; the intent loss touches only the policy update); bank-path B/R adds intent_terms per imitation minibatch (one extra trunk forward per pair) and one intent_error pass before/after the phase"
+  },
+  "review_findings": [
+    "FIXED: c4/coopfix-int a7978998 was committed with literal conflict markers left inside the replay_bank.bank_pairs docstring (their c4/coop-gate merge) - resolved in merge 65296bc3",
+    "FIXED: head-part exact_update(intent=) forwarded intent into bank_imitation.run which did not accept it (latent TypeError on B/R intent+imitation_epochs runs) - run()/_own_pass() now take the gated intent kwarg with byte-identical off-path",
+    "FIXED: v2v_integrate.WidenedPolicy.__getattr__ recursed infinitely on copy/deepcopy dunder probes, breaking run_separate's deepcopy contract for wrapped policies - guarded",
+    "FIXED: _rebuilt_optimizer could not load a base checkpoint with the intent head attached (Adam param-group size mismatch) - fixed identically by me and the head part (ae7268ea); contents merged cleanly",
+    "VERIFIED: the INTENT_HEAD_READY '9 passed' and regression claims against base ee6a803f reproduce in this tree; INTENT_OBS_READY dimension contract (48 = K*(6+H+1)) is consistent with v2v_model (which now sources V2V_INTENT_DIM from v2v_obs)",
+    "NOTE: COOPFIX_INT_READY.json was not yet published at write time; their branch head a7978998 (gate + tests + filter + full-pass) is merged, extended and green here; re-merge will follow if they publish commits beyond a7978998"
+  ],
+  "constraints": {
+    "cpu_only": true,
+    "no_sumo": true,
+    "no_gpu": true,
+    "no_remote_writes": true,
+    "worktree_only": true,
+    "no_git_reset_clean_stash_push": true,
+    "read_only_siblings": "read + git-merge of c4/intent-obs, c4/intent-head, c4/coopfix-int branches only; c4-coopnative and E:/agent-work/_sol untouched",
+    "no_sealed_or_holdout_paths": true,
+    "no_truth_files": true,
+    "no_handset_thresholds": "intent clip = binding accel_bounds; weight = registered config default; gate checks are structural or estimator-based with the registered bootstrap seed"
+  }
+}
