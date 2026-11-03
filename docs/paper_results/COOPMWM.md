@@ -1,5 +1,29 @@
 # S-COOPMWM — live checks
 
+## Nov3 13:19 UTC+8 — B-u10 complete; R-u10 collecting
+- B-u10 completed **13:18:52**, with runtime ETA about7.04h to fixedu24.
+  Watcher3305066 remains live/no alerts/dead children. R-u10 has12 claimed
+  episodes at13:19:39 and follows the original lag-1 pacing.
+- B's fixed8-entry matched lesson saves **-296.774veh-s**, entry-bootstrap95%CI
+  **[-784.598,+96.451]**,2/8 positive. Fixed-entry imitation error0.591195m/s².
+  The selected-bank check is noisy across updates and does not establish a gain.
+- Bank-only imitation requests5 passes and stops during the first at the existing
+  KL bound:7 optimizer steps,896/1650 pair visits,607 present-member targets,
+  zero complete passes; final all-bank KL0.047416. Within-update bank action error
+  **0.898004→0.895713m/s²**. The enlarged bank makes its raw error incomparable
+  with u9's different target set. Critic steps and plan-ratio computations are0.
+- B10-A10 safety passes on24 paired TRAIN worlds: collision/teleport deltas0;
+  hard braking **-0.083[-3.479,+3.125]**, critical total
+  **+5.750[-26.729,+39.396]** per episode. The positive critical point estimate
+  remains disclosed; the registered nonsignificance predicate passes.
+- R-u8 interim has completed **96/96**, completion certificate present/no failure;
+  its owner exited normally and is adopted as complete. A/B owner3442884 remains
+  live, public completions A96/B78 at13:19:29. Outcome values remain closed.
+- Canonical `coopmwm/LESSON_CHECK_u010_B.json` and
+  `coopmwm/B_SAFETY_COMPOSITE_010.json` are published. Full metadata:
+  `coopmwm/B_REPLAY_START_WATCH_STATUS_1793683180855652300.json`,
+  `coopmwm/INTERIM_U8_PUBLIC_STATUS_1793683171122168300.json`.
+
 Operational check13:16+08: both GPUs' two existing NICHENULL3 workers are live,
 eight gates qualified per slot, no failure; utilisation snapshots93%/94%.
 B-u10's first12 episodes are advancing (observed t1005–1139/1200 at13:13:09);
