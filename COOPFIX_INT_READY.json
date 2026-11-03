@@ -3,7 +3,7 @@
   "branch": "c4/coopfix-int",
   "worktree": "E:/agent-work/c4-coopfix-int",
   "ready": true,
-  "integrated_head": "see receipt_commit below; feature-complete tree at the commit listed in merged_commits['e2e']",
+  "integrated_head": "d0ede911 (receipt refreshes included; feature-complete tree at ef2cd5ec, READY-fallback robustness fix at d0ede911)",
   "based_on": "live c4/coopnative code (base commit e5603466)",
   "merged_commits": [
     {"sha": "a0cd5a6e", "what": "integrate: merge c4/bank-stat-filter (BANKFILT READY 3efbb12a; statistical bank_filter, default off)"},
@@ -13,8 +13,16 @@
     {"sha": "a7978998", "what": "integrate: merge c4/coop-gate (COOPGATE READY 101215a8, receipt commit 44f5bb90; offline CPU coopfix gate) - resolved kwarg-order/report-tail/NameError conflicts (identical semantics on both sides)"},
     {"sha": "ef2cd5ec", "what": "integrate: END-TO-END CPU test tools/coopmwm/test_coopfix_int_e2e_cpu.py (2 tests): synthetic recorded bank -> bank_pairs(v2v=True, bank_filter='statistical', pair_flags=True) -> coopfix_gate via its CLI with imitation_trust='own_pass' -> verdict PASS; and all-options-off byte-identity (bank_pairs off == explicit-off kwargs == no new summary keys; gate off-path imitation sub-report equal to a direct registered bank_imitation.run)"},
     {"sha": "88ff13be", "what": "integrate: publish COOPFIX_INT_READY (first publication, resume session)"},
-    {"sha": "see resume_session note below", "what": "integrate: merge c4/coop-gate refresh (4a8ec3af; ea740f59 status subcommand actually prints option state + COOPGATE_READY receipt refreshes) - found unmerged on resume; clean merge, no conflicts, re-verified"}
+    {"sha": "see resume_session note below", "what": "integrate: merge c4/coop-gate refresh (4a8ec3af; ea740f59 status subcommand actually prints option state + COOPGATE_READY receipt refreshes) - found unmerged on resume; clean merge, no conflicts, re-verified"},
+    {"sha": "d0ede911", "what": "integrate: coopfix_gate READY fallback to the committed root receipt when an option branch's sibling worktree is absent (external disk-cleanup incident, see resume_session_20261104_b)"}
   ],
+  "resume_session_20261104_b": {
+    "action": "second resume: all three upstream heads re-verified still fully merged (7da322c3 / 4068b788 / 4a8ec3af are ancestors of HEAD); IMITFIX_READY.json in the c4-imit-fullpass worktree byte-identical to the merged copy (git hash d67c5cf9)",
+    "INCIDENT_external_worktree_deletions": "an external disk-cleanup process (not this agent; E: went 33MB -> 29-36GB free) deleted the sibling worktrees E:/agent-work/c4-bank-stat-filter and E:/agent-work/c4-coop-gate and ALSO emptied this worktree (directory + .git link) mid-verification between the 2026-11-04 02:39 green record and this session; recovered by git worktree add from the shared object store at E:/research-dense/.git (branch HEAD 4567ccf0 intact throughout - all work was committed) plus one git checkout -- . to re-materialize 4915 index files the sweep had removed; no uncommitted state ever existed to lose",
+    "integration_bug_found_and_fixed": "coopfix_gate READY_FILES hardcoded the sibling worktree receipt paths, so with c4-bank-stat-filter deleted the gate mis-reported the fully merged+tested bank_filter option as 'stub active' (ValueError in filter_report/trust_kwargs; the 02:39 '18 passed' record predates the deletion, the two failures reproduced twice on the restored stable tree). Fix d0ede911: option_ready polls the live sibling path first and falls back to the byte-identical receipt committed at this tree's root (hash-verified vs c4/bank-stat-filter:BANKFILT_READY.json and c4/imit-fullpass:IMITFIX_READY.json); a READY_FILES override (tests) never falls back, preserving stub-gating test semantics; options-off paths unchanged (byte-identity intact)",
+    "reverified_on_post_fix_tree_d0ede911": "tools/coopmwm/test_coopfix_gate_cpu.py 16 passed (2m39s); tools/coopmwm/test_coopfix_int_e2e_cpu.py 2 passed (17m39s, run on the fix's first revision whose option_ready behaviour for non-overriding callers is identical to d0ede911); test_bank_imitation_cpu + test_bank_filter_cpu + test_replay_bank_confirm_cpu + test_replay_bank_v2v_cpu + test_replay_bank_lesson_cpu + test_exact_grade_cpu 64 passed (12m26s); 82 green total this session; host heavily contended (5+ concurrent agent suites) - runtimes 2-4x the 02:39 records are contention, not regression",
+    "upstream_coopnative_divergence": "c4/coopnative advanced 97 commits past this branch's base e5603466 (up to 9ec7897f, 03:21, i.e. AFTER the 02:39 freeze) - its own live-run/archival work, NOT part of the three polled READY branches and not merged here (out of scope; full-suite re-verification against it would blow the READY budget). Verified at c4/coopnative HEAD: NONE of the three features are adopted upstream (no bank_filter.py, no own_pass/imitation_trust in bank_imitation.py, no bank_filter/pair_flags in replay_bank.py, no coopfix_gate.py); upstream's coopfix_exact_gate.py/v2v_live.py are its own independent implementations. replay_start.py and warm_runner.py are UNCHANGED upstream, so the live_config binding documentation below remains valid against live HEAD. When the live side adopts this branch expect merge conflicts in: tools/coopmwm/{bank_imitation,replay_bank,exact_grade,bank_v2v,v2v_model}.py"
+  },
   "resume_session_20261104": {
     "action": "all three upstream heads re-checked; c4/imit-fullpass (7da322c3) and c4/bank-stat-filter (4068b788) were already fully merged; c4/coop-gate had advanced to 4a8ec3af after the first merge (status-print fix + receipt refreshes) - merged cleanly and re-verified",
     "reverified_on_final_tree": "18 passed (test_coopfix_int_e2e_cpu 2 + test_coopfix_gate_cpu 16, 3m32s); 64 passed (test_bank_imitation_cpu + test_bank_filter_cpu + test_replay_bank_confirm_cpu + test_replay_bank_v2v_cpu + test_replay_bank_lesson_cpu + test_exact_grade_cpu, 3m38s)",
@@ -28,7 +36,8 @@
   },
   "integration_bugs_fixed_in_this_branch": [
     "bank_imitation._own_pass undefined `stop` NameError (1f0987ea; identical to the gate branch's independent fix confirmed at merge a7978998)",
-    "test_interim_u8_analysis_cpu.py collection import broke the whole `pytest tools/coopmwm -k cpu` run from the repo root (a33896f2)"
+    "test_interim_u8_analysis_cpu.py collection import broke the whole `pytest tools/coopmwm -k cpu` run from the repo root (a33896f2)",
+    "coopfix_gate READY gating hardcoded sibling-worktree receipt paths - gate falsely reported the merged bank_filter option 'stub active' after the external cleanup deleted the c4-bank-stat-filter worktree; fixed by the committed-root-receipt fallback (d0ede911, see resume_session_20261104_b)"
   ],
   "tests": {
     "runner": "C:/Users/jpeng/Miniconda3/python.exe -m pytest (torch 2.14.1+cpu, CPU only; run from the worktree root so tools.* resolves)",
