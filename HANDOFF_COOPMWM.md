@@ -1,6 +1,11 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## Fresh-session adoption — Nov3 23:08 +08
+- MAIN23:18 gpuA archiveextension QUALIFIED/REGISTERED, notyetlaunched atthis
+  checkpoint: rolling_gpua_ops, newcontrolrolling2318_gpua_v4,8GiBfloor/
+  cpuQtarget12GiB.9Linuxstorage+3localpayloadtestsPASS; routePASS29.2GBfree.
+  Amendment52a16836; oldv3retained untilidentityidle/nochildrenhandover.
+  See ROLLING_GPUA_QUALIFIED_2355.md; next drain/launch/status once only.
 - NEW brief through1000 read: MAIN23:23 delegatescollectionrestart; DO NOTstart
   competingbuilder/collector. MAIN23:18 authorisesgpuAsecondrollingtarget,
   floor8GiB; preparationnext while finalREADYpending.

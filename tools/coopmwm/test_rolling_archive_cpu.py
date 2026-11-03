@@ -12,6 +12,31 @@ import rolling_archive as m
 
 
 class RollingArchiveSafety(unittest.TestCase):
+    def test_registered_gpua_route_keeps_independent_eight_gib_floor(self):
+        value=dict(host='gpuA',floor_bytes=8*1024**3,cpu_target_bytes=12*1024**3,
+            destination='/root/cpuq_archive_20261103/rolling2330_v4',
+            ssh_command=['ssh','-T','gpuA'])
+        with patch.object(m,'DEST',m.DEST),patch.object(m,'FLOOR',m.FLOOR),patch.object(m,'TARGET',m.TARGET),patch.object(m,'TARGET_SSH',None):
+            m.configure_target(dict(archive_target=value))
+            self.assertEqual(m.DEST,value['destination'])
+            self.assertEqual(m.TARGET,12*1024**3)
+            self.assertFalse(m.capacity(8*1024**3+127,128))
+            self.assertTrue(m.capacity(8*1024**3+128,128))
+            self.assertEqual(m.TARGET_SSH,value['ssh_command'])
+
+    def test_target_configuration_rejects_unsafe_floor_and_namespace(self):
+        value=dict(host='gpuA',floor_bytes=8*1024**3,cpu_target_bytes=12*1024**3,
+            destination='/root/cpuq_archive_20261103/rolling2330_v4',ssh_command=['ssh','gpuA'])
+        for delta in (dict(host='unknown'),dict(floor_bytes=4*1024**3),
+                      dict(destination='/root/elsewhere'),dict(ssh_command=[])):
+            with self.subTest(delta=delta),self.assertRaises(ValueError):
+                m.configure_target(dict(archive_target=dict(value,**delta)))
+
+    def test_legacy_routing_is_unchanged_without_additive_record(self):
+        before=(m.DEST,m.FLOOR,m.TARGET,m.TARGET_SSH)
+        m.configure_target({})
+        self.assertEqual((m.DEST,m.FLOOR,m.TARGET,m.TARGET_SSH),before)
+
     def test_diagnostic_scope_excludes_bank(self):
         root=m.base.RUN/'policy_synergy_isolated_1226_v2/u010_B/branches/vid/branch'
         self.assertEqual(m.diagnostic_kind(root/'SNAPSHOT.pt'),(10,'B'))
