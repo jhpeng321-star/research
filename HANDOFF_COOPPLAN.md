@@ -217,6 +217,37 @@
   remote process action; added spend0, global725280/800000,74720unused.
 - Task COMPLETE; existing registration, designs, code, reports and figures preserved.
 
+## Fresh-session verification — 2026-11-03 / based7288ef3
+- Arrived clean on `c4/coopplan`; reconciled Git log/status, shared registration,
+  completion handoff, paper report and both final QA receipts before execution.
+- Read-only extension/H300 verifiers PASS:36+24worlds,432+288decisions,
+  52+14complete group credits; all saved immutable artifact hashes match.
+- Existing six-module CPU/analysis suite PASS:41tests/0skips in0.288s,
+  CUDA hidden and OMP/MKL/OpenBLAS single-threaded; no SUMO execution.
+- All60pairs remain COMPLETE. Added simulation spend0; global725280/800000,
+  74720unused. No dispatch, collection, replay or remote process action.
+
+## Fresh-session verification — 2026-11-03 / based7288ef3
+- Arrived clean; reconciled Git history, shared approval/amendments/completion entries,
+  handoff, paper report and both final QA receipts before verification.
+- Read-only extension and H300 verifiers PASS:36+24worlds,432+288decisions,
+  52+14executed groups with both solos; all saved immutable artifact hashes match.
+- Six-module CPU/analysis command above PASS:41tests/0skips in1.566s,
+  CUDA hidden and OMP/MKL/OpenBLAS single-threaded; no SUMO execution.
+- Added simulation spend0; total725280/800000sim-s,74720unused. No dispatch,
+  collection, replay or remote process action. Task COMPLETE; findings preserved.
+
+## Fresh-session verification — 2026-11-03 / base d7288ef3 / CPU1.225s
+- Arrived clean on `c4/coopplan`; reconciled Git log/status, shared approval/amendment/
+  completion entries, handoff, paper report and both saved final QA receipts first.
+- Read-only extension and H300 verifiers PASS; all saved immutable artifact hashes match.
+  All60 pairs/720decisions/66executed groups have complete member-alone coverage.
+- Existing six-module CPU/analysis suite PASS:41tests/0skips in1.225s, CUDA hidden,
+  OMP/MKL/OpenBLAS single-threaded; no SUMO execution.
+- Added spend0; verified total725280/800000sim-s,74720unused. No dispatch, collection,
+  replay or remote process action. Task COMPLETE; completed H120/H300 results preserved.
+- Concurrent resume receipt commit52043e8c landed during this check and is preserved.
+
 ## Fresh-session verification — 2026-11-03 / base d7288ef3
 - Arrived clean on `c4/coopplan`; reconciled Git status/log, shared registration,
   completed-panel handoff, paper report and both final QA receipts before execution.
