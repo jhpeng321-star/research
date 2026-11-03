@@ -1,0 +1,25 @@
+{
+  "observed_unix": 1793717129.8665605,
+  "authority": "MAIN22:03 scoped legacy resource hold; read-only reporting correction",
+  "tests": {"passed": 17, "subtests_passed": 2, "new_sim_s": 0},
+  "updates": {"A": 48, "B": 21, "R": 20},
+  "owners": {
+    "B": {"pid": 411152, "start_ticks": "72386074", "state": "exited"},
+    "R": {"pid": 411153, "start_ticks": "72386077", "state": "exited"}
+  },
+  "dispatch_receipt": "memory_RECOVERY_STARTED.json",
+  "paused": {"A": true, "B": true, "R": true},
+  "legacy_owner_hold": {
+    "receipt": "LEGACY_ONLY_RESOURCE_HOLD_2203.json",
+    "held_arms": ["B", "R"],
+    "shared_root_health_unchanged": true
+  },
+  "stop": null,
+  "disk_free_bytes": 6095859712,
+  "charged_sim_s": 10202670,
+  "registered_cap_sim_s": 17471840,
+  "new_dispatches": 0,
+  "new_sim_s": 0,
+  "pid_control": false,
+  "runtime_or_training_changes": false
+}

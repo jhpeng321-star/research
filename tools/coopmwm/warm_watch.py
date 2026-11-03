@@ -33,7 +33,7 @@ for name in ('B_REPLAY_EXPOSURE_V2.json','FAST_RESUME_1844.json','RESOURCE_EXTEN
  if (r/name).exists():source=json.loads((r/name).read_text())['source_root'];break
 sys.path.insert(0,source+'/pytools')
 from tools.coopmwm.warm_health import assert_running,HealthPause
-rp=next((r/n for n in ('B_REPLAY_COMPOSITE_STARTED_0957.json','B_REPLAY_CONTINUED_LESSONWINDOW.json','B_REPLAY_STARTED.json') if (r/n).exists()),None)
+rp=next((r/n for n in ('memory_RECOVERY_STARTED.json','B_REPLAY_COMPOSITE_STARTED_0957.json','B_REPLAY_CONTINUED_LESSONWINDOW.json','B_REPLAY_STARTED.json') if (r/n).exists()),None)
 replay=json.loads(rp.read_text()) if rp else {{}}
 for arm in ('A','B','R'):
  names=[f'FAST_{{arm}}_DISPATCH_1844.json',f'DNS_{{arm}}_DISPATCH_1651.json',f'BETA_{{arm}}_DISPATCH.json',f'VERIFIED_{{arm}}_DISPATCH.json',f'MATCH_{{arm}}_DISPATCH.json',f'INCIDENT_{{arm}}_DISPATCH.json',f'TAIL_{{arm}}_DISPATCH.json',f'QUOTA_{{arm}}_DISPATCH.json']+[f'WARM_{{arm}}_DISPATCH{{suffix}}.json' for suffix in ('_V6','_V4','_V3','2','')]
@@ -46,6 +46,14 @@ for arm in ('A','B','R'):
  assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'owner boot changed'
  assert not s or s[21]==d['start_ticks'],'owner PID reused'
  owners[arm]=dict(owner=d,state=s[2] if s else 'exited',dispatch_receipt=receipt)
+legacy_hold=None;held_arms=set()
+hp=r/'LEGACY_ONLY_RESOURCE_HOLD_2203.json'
+if hp.exists():
+ legacy_hold=json.loads(hp.read_text())
+ assert legacy_hold['amendment_sha256'] in (r/'AUTHORITY.md').read_text(),'unregistered legacy hold'
+ if legacy_hold['legacy_training_held']:
+  for arm,v in owners.items():
+   if any(d.get('component')=='arm' and d.get('arm')==arm and all(d[k]==v['owner'][k] for k in ('pid','start_ticks','boot_id')) for d in legacy_hold['owners_exited']):held_arms.add(arm)
 services={{}}
 for component,names in {{'broker':('FAST_BROKER_DISPATCH_1844.json','GPU_RESOURCE_BROKER_DISPATCH_1651_V2.json','GPU_RESOURCE_BROKER_DISPATCH_1651.json','DNS_BROKER_DISPATCH_1651.json','MATCH_BROKER_DISPATCH.json','INCIDENT_BROKER_DISPATCH.json','TAIL_DRAIN_BROKER_DISPATCH.json','CENTRE_FAIR_BROKER_DISPATCH.json','QUOTA_broker_DISPATCH.json','CAPACITY_BROKER_DISPATCH_V2.json','WARM_REMOTE_BROKER_DISPATCH.json'),
                         'grader':('DNS_GRADER_DISPATCH_1651.json','VERIFIED_GRADER_DISPATCH.json','MATCH_GRADER_DISPATCH.json','INCIDENT_GRADER_DISPATCH.json','EXACT_GRADER_DISPATCH_V2.json','EXACT_GRADER_DISPATCH.json')}}.items():
@@ -87,7 +95,8 @@ if failures and stop is None:stop=dict(error='current training supervisor failur
 charges=[json.loads(x) for x in (r/'CHARGES.jsonl').read_text().splitlines()]
 print(json.dumps(dict(unix=time.time(),owners=owners,service_owners=services,stop=stop,
    updates={{a:sorted(int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')) for a in ('A','B','R')}},
-   paused={{a:((r/f'WARM_{{a}}_PAUSED.json').exists() and not (a in ('B','R') and (r/f'VERIFIED_{{a}}_DISPATCH.json').exists() and json.loads((r/f'WARM_{{a}}_PAUSED.json').read_text())['update']<24)) or (a in ('B','R') and bool(pauses)) for a in ('A','B','R')}},
+   paused={{a:a in held_arms or ((r/f'WARM_{{a}}_PAUSED.json').exists() and not (a in ('B','R') and (r/f'VERIFIED_{{a}}_DISPATCH.json').exists() and json.loads((r/f'WARM_{{a}}_PAUSED.json').read_text())['update']<24)) or (a in ('B','R') and bool(pauses)) for a in ('A','B','R')}},
+   legacy_owner_hold=dict(receipt=hp.name,held_arms=sorted(held_arms),shared_root_health_unchanged=True) if legacy_hold else None,
   pause_receipts=pauses,failures=failures,
   historical_transport_stop=json.loads((r/'STOP.json').read_text()) if (r/'STOP.json').exists() else None,
   charged_sim_s=811640+sum(c['sim_s'] for c in charges),disk_free=shutil.disk_usage(r).free,

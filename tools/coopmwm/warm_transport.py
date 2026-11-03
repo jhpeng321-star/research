@@ -25,7 +25,7 @@ def connection_error(error):
         r'kex_exchange_identification: (?:read: Connection reset by peer|Connection closed by remote host)',
         r'ssh: connect to host \S+ port \d+: (?:Connection timed out|Connection refused|Connection reset by peer)',
         r'client_loop: send disconnect: (?:Broken pipe|Connection reset)',
-        r'Read from remote host \S+: Connection reset(?: by peer)?',
+        r'Read from remote host \S+: (?:Connection reset(?: by peer)?|Connection timed out)',
         r'Connection to \S+ (?:closed by remote host\.|closed\.)',
         r'ssh: Could not resolve hostname \S+: (?:Temporary failure in name resolution|Name or service not known|No such host is known\.?)',
         r'ssh_dispatch_run_fatal: Connection to \S+ port \d+: Connection timed out',

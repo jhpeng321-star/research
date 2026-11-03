@@ -1,12 +1,83 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
+## Fresh-session adoption — Nov3 23:08 +08
+- Local-only transport repair: exact observed OpenSSH 'Read from remote host
+  ...: Connection timed out' now qualifies for existing bounded recovery.
+ 10CPU PASS; no remote deployment. Preserve warm_transport.py+regression in
+  finalmerge. Archive manifest metadata was reachable once; next bare35sSSH
+  timeout remained fatal/no automatic retry. See SSH_READ_TIMEOUT_REPAIR_2318.md.
+- Independent actual-slate all8 budget/input preflight DONE, no physics:
+  ALL8_SLATE_QUOTE_1793718753675224300.json. B129/R120completed decisions,
+  seed2alone1546510sim-s vs137180bankextremaining => MINshortfall1409330.
+  Conditionalextended/soloscostextra;88B LS candidate-spec sets missing at
+  originalpaths (archiverestore required). MAIN/integrator notified in
+  `_sol/COOPMWM_ALL8_INPUT_BUDGET_BLOCKERS_2312.md`. No allowance silently moved.
+- Full986-line brief read; start38e60421, all dirty/untracked work retained.
+- Fresh memory_RECOVERY_STATUS_1793718388686627500 confirms B21/R20, all4 old
+  owners ABSENT under intentional hold; A48 complete. No legacy restart.
+- Search audit1793718465798377600: B2 assigned pending/R0; two more answers
+  since prior adoption. Existing4slot services retained, no duplicate dispatch.
+- cpuQfree6215000064bytes,227450880shortof6GiB; MemAvailable22143500kB.
+- Finalbranchf6288c07 stillWIP/READYabsent; auditstillBLOCKINGforf3caf85f.
+  Integrator/MAINcleanupownership respected. No gate/launch/newphysics.
+- See coopmwm/RESUME_ADOPTION_20261103_2308.md; next singleREADYmerge then
+  exact-source final-release Linux qualification, clean re-audit, own-seed gate.
+
+## Fresh-session adoption — Nov3 22:31 +08
+- NEW MAIN22:30 read through986: all audit fixes assigned to launch-final and
+  bank-perseed; no edits to those files here. R lag1 cap explicitlyKEPT.
+  `coopmwm/LAUNCH_PREPARATION_MAIN2230.md` records builder-stop plan, qualified
+  R/B per-seed preflight commands and remaining phase room. No live builder or
+  replay_start command found on fresh cpuQ process inspection; retain original
+  collector3101232/broker3105652. Recheck identities at actual takeover.
+- Full brief read through982; latest all-pass/per-seed/intent/all8 conditions adopted.
+  Historical warm qualification/restarts are DONE, never repeat from opening summary.
+- HEAD872f82e6 and every existing dirty/untracked artifact preserved. No staged work
+  or in-progress merge found; archive_move_recovery_ops.py local edit left untouched.
+- Fresh identity-checked memory_RECOVERY_STATUS_1793716212369358100 confirms
+  B21/R20 and all4 held legacy arm/grader PIDs ABSENT. Their expected HealthPause
+  failures remain evidence, not a restart trigger. A48 already complete.
+- warm_watch state reporting bug FIXED in this continuation: prefer the current
+  memory_RECOVERY_STARTED owners and annotate registered owner-specific HOLD.
+  Actual remote read-only check1793717129.87 now shows B411152/R411153 exited,
+  paused=true BOTH while shared-root health remainsOK. 17CPU+2subtests PASS;
+  WARM_STATE_SCOPED_HOLD_REPAIR_2245.json. Never infer resumption permission.
+- Fresh SEARCH_CURRENT_AUDIT_1793716279288040900: B4 pending assigned searches,
+  R0 pending; a B answer completed at1793716163.88, so queue is still advancing.
+  Existing4slot services retained; no new search/physics/gates/PID control dispatched.
+- Charged10,202,670/global17,471,840; disk4,161,101,824bytes and MemAvailable
+  22,240,324kB. bank_verification_ext only137,180 remains: re-quote/register the
+  all8_both_seeds builder before use, do not silently borrow other restricted phases.
+- c4/launch-final currentlyf6288c07, LAUNCH_FINAL_READY.json absent. Integrator
+  owns unfinished release; do not merge WIP or recreate its code. Current audit
+  still targetsf3caf85f and is BLOCKING; no exact gate or V2V launch allowed yet.
+- Next independent work: prepare existing Linux qualifier to explicitly overlay
+  and test final per-seed/all8 dependencies, without touching learner/integrator.
+  MAIN cleanup agent owns storage; no parallel cleanup.
+- Qualification preparation DONE: intent_linux_ops now has `--final-release`,
+  requiring tracked LAUNCH_FINAL_READY + bank_builder/verify_perseed + both new
+  test suites in the exact committed source overlay. All staged artifacts are
+  SHA-manifested (including READY). Seven local CPU checks PASS; no remote test
+  or runtime dispatch. Once READY is merged, use a NEW generation (I2 if unused)
+  with `--final-release --commit <full HEAD>`; never reuse completed I1.
+- Disk recovered by the independent cleanup agent to6,095,859,712bytes at22:45,
+  still346,591,232bytes short of6GiB. No cleanup/process control by this agent.
+
 ## CURRENT — MAIN21:58/21:58b/22:10 adopted; old B/R resource-paused
-- FULL brief now read through976. Latest: NO partial/fallback V2V launch;
+- FULL brief now read through982. Latest: NO partial/fallback V2V launch;
   per_seed_v1 + same-own-seed gate + intent + clean exact-commit audit + Linux +
   resources + reviewed cooperation-search --alternate are ALL required.
 - MAIN22:10 adds all8_both_seeds verification; integrator owns
   c4/launch-final/LAUNCH_FINAL_READY.json. Merge THAT single READY branch,
   preserving our later live fixes below; do not separately duplicate builders.
+- LAUNCH_FINAL_READY still absent at last check. verify-perseed quote CLI ran
+  read-only: examplet600/D120/n2 one winner/seed confirmation15000vs7440legacy;
+  not a full registered allowance. Re-quote actual final slate/remainingledger,
+  register bank_verification_ext allowance within17.5M BEFORE newbuilder use.
+- No further learner edits after MAIN22:10 request (f59d0f66 is the last).
+  `_sol/COOPMWM_R_FAIRNESS_AUDIT_SCOPE.md` asks MAIN to reconcile auditB4(c)'s
+  Rcap-drop recommendation with the explicitly retained registered fairness cap;
+  no unapproved scientific-scope change was made.
 - OLD B/R PAUSED at actual durable B21/R20 via existing HealthPause;
   amendment35c1022b/LEGACY_RESOURCE_PAUSE_2158B.json. Exact owned
   arms411152/411153 + graders3305068/69 idle-boundary-verified, briefSTOP/CONT,

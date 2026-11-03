@@ -90,6 +90,9 @@ if not (r/'STAGED.json').exists():
  if str(r/'tests/unit/test_c4_v2v_obs.py') not in selection['pytest_args']:selection['pytest_args'].append(str(r/'tests/unit/test_c4_v2v_obs.py'))
  with (r/'LS_CPU_SELECTION.json').open('x') as f:json.dump(selection,f)
  hashes={{str(p.relative_to(r)):hashlib.sha256(p.read_bytes()).hexdigest() for parent in (r/'pytools',r/'runtime_src',r/'tests') for p in parent.rglob('*') if p.is_file() and not p.is_symlink()}}
+ for name in files:
+  p=(r/'pytools'/name if name.startswith('tools/') else r/'runtime_src'/name if name.startswith('traffic_shepherd/') else r/name)
+  hashes[str(p.relative_to(r))]=hashlib.sha256(p.read_bytes()).hexdigest()
  for n in ('FROZEN_COSTS.json','FROZEN_MOTION_SOURCE.py','FROZEN_GEOMETRY_SOURCE.py','FROZEN_NETWORK.net.xml.gz','FROZEN_PRE_NICHE_SEARCH.py','V2V_INT_READY.json'):hashes[n]=hashlib.sha256((r/n).read_bytes()).hexdigest()
  for n in {list(frozen_files or {})!r}:hashes[n]=hashlib.sha256((r/n).read_bytes()).hexdigest()
  with (r/'LS_SOURCE_HASHES.json').open('x') as f:json.dump(hashes,f,sort_keys=True)

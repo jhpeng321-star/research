@@ -1,5 +1,39 @@
 # S-COOPMWM — live checks
 
+## Fresh-session adoption — Nov3 23:08 UTC+8
+- Durable legacy state remains A48/B21/R20; all four intentionally held old
+  B/R arm/grader owners are absent. No restart or duplicate dispatch.
+- Saved searches continue to answer: two B requests remain assigned, zero R
+  requests pending. Existing four-slot services are retained.
+- cpuQ free6,215,000,064bytes is227,450,880bytes below6GiB; MemAvailable
+  22,143,500kB. Final integration remains WIP/READY absent, and the available
+  audit is BLOCKING for an older commit. V2V and the real-bank gate stay held.
+- Evidence:`coopmwm/RESUME_ADOPTION_20261103_2308.md` and its two live receipts.
+  Zero new SUMO/inference/charges/process control/deletion by this adoption.
+
+## Fresh-session adoption — Nov3 22:31 UTC+8
+- Read-only guard reporting repaired and verified at22:45: memory-recovery
+  owners411152/411153 are correctly reported exited and B/R paused=true under
+  the registered owner-specific hold. Shared-root health remains unchanged.
+  17 CPU tests plus2subtests pass. Disk has recovered to6,095,859,712bytes,
+  still346,591,232bytes below the6GiB V2V gate. No process was restarted.
+  Evidence:`coopmwm/WARM_STATE_SCOPED_HOLD_REPAIR_2245.json`.
+- Completed warm-memory qualification/restarts and all existing work are adopted.
+  Actual durable legacy checkpoints remain **A48/B21/R20**; the four old B/R
+  arm/grader owners are absent under their registered intentional resource hold.
+- The saved search queue is advancing: a B answer completed at1793716163.88;
+  four B requests remain assigned, with no pending R centre requests. Existing
+  services are retained, without duplicate dispatches or inference replay.
+- Charged10,202,670sim-s; registered cap17,471,840 under the later explicit
+  addenda. The bank-confirmation phase has137,180sim-s remaining, so the expanded
+  both-seed verification allowance must be re-quoted and registered before use.
+- `LAUNCH_FINAL_READY.json` is absent and the available audit targets the older
+  f3caf85f code with blockers. V2V and the real-bank gate stay held. Disk is about
+  3.88GiB, below the6GiB launch gate; independent cleanup remains MAIN-owned.
+- Evidence:`coopmwm/memory_RECOVERY_STATUS_1793716212369358100.json`,
+  `coopmwm/SEARCH_CURRENT_AUDIT_1793716279288040900.json`. Zero new simulation,
+  inference, process control or deletion by this continuation.
+
 ## Latest continuation — resource pause and audit corrections
 - MAIN21:58/22:10 now requires per-seed own-tape bank examples, same-seed
   cooperation gate, all-eight-candidate verification on both seeds, intent for

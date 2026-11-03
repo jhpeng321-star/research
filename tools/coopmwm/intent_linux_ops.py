@@ -25,6 +25,13 @@ EXTRA_FILES = tuple('tools/coopmwm/'+name+'.py' for name in (
 EXTRA_TESTS = ('test_v2v_intent_cpu', 'test_coopfix_exact_gate_cpu',
     'test_solo_seed2_links_cpu', 'test_bank_boot_cpu', 'test_imitfix2_cpu',
     'test_v2v_launch3_cpu', 'test_coop_search_cpu', 'test_v2v_launch_wiring_cpu')
+FINAL_FILES = ('LAUNCH_FINAL_READY.json',) + tuple(
+    'tools/coopmwm/'+name+'.py' for name in (
+        'bank_builder', 'verify_perseed', 'test_verify_perseed_cpu',
+        'test_bank_perseed_cpu', 'intent_linux_ops', 'v2v_qualification_ops',
+        'test_intent_linux_ops_cpu'))
+FINAL_TESTS = ('test_verify_perseed_cpu', 'test_bank_perseed_cpu',
+               'test_intent_linux_ops_cpu')
 
 
 def git(*args):
@@ -32,13 +39,15 @@ def git(*args):
     return result.stdout
 
 
-def release_options(commit):
+def release_options(commit, *, final_release=False):
     """Only a complete committed integration can be staged; no dirty source overlay."""
     if not re.fullmatch('[0-9a-f]{40}', commit):
         raise ValueError('full final integration commit required')
     if git('rev-parse', 'HEAD').decode().strip() != commit:
         raise ValueError('current HEAD differs from the intended qualification commit')
-    required = tuple(dict.fromkeys(qualification.FILES + EXTRA_FILES))
+    additional_files = EXTRA_FILES + (FINAL_FILES if final_release else ())
+    additional_tests = EXTRA_TESTS + (FINAL_TESTS if final_release else ())
+    required = tuple(dict.fromkeys(qualification.FILES + additional_files))
     git('diff', '--exit-code', 'HEAD', '--', *required)
     # Verify every input is tracked at the pinned HEAD. The source reader itself
     # uses the dedicated whitelist and never traverses data or outcome folders.
@@ -58,9 +67,10 @@ def release_options(commit):
         commit=git('rev-parse', COOP_BASE_COMMIT).decode().strip(),
         rule='pre-cooperation-search git blob; option-off comparison on the same BLAS'),
         sort_keys=True).encode()
-    return dict(additional_files=EXTRA_FILES, additional_tests=EXTRA_TESTS,
+    return dict(additional_files=additional_files, additional_tests=additional_tests,
         frozen_files=frozen, source_commit=commit,
-        integration='intent + bank rule + full-pass + exact gate + launch3 + cooperation search',
+        integration=('intent + per_seed_v1 + all8_both_seeds + full-pass + exact gate + launch3 + cooperation search'
+            if final_release else 'intent + bank rule + full-pass + exact gate + launch3 + cooperation search'),
         extra_env={'COOPMWM_INTENT_BASELINE_DIR': qualification.SOURCE+'/intent_baseline',
             'COOPMWM_COOP_BASELINE': qualification.SOURCE+'/coop_baseline/mppi_search.py'})
 
@@ -78,16 +88,18 @@ def main(argv=None):
     parser.add_argument('action', choices=('prepare', 'qualify', 'status'))
     parser.add_argument('--generation', required=True)
     parser.add_argument('--commit')
+    parser.add_argument('--final-release', action='store_true',
+        help='require the tracked READY receipt and explicitly stage/test the per-seed/all8 release')
     args = parser.parse_args(argv)
     configure(args.generation)
     if args.action == 'status':
         qualification.status()
         return
-    options = release_options(args.commit or '')
+    options = release_options(args.commit or '', final_release=args.final_release)
     if args.action == 'prepare':
         print(json.dumps(dict(commit=args.commit, source=qualification.SOURCE,
-            files=list(qualification.FILES)+list(EXTRA_FILES),
-            tests=list(EXTRA_TESTS), frozen_baseline=list(options['frozen_files']),
+            files=list(dict.fromkeys(qualification.FILES+options['additional_files'])),
+            tests=list(options['additional_tests']), frozen_baseline=list(options['frozen_files']),
             new_sim_s=0, dispatched=False)))
     else:
         qualification.qualify(**options)
