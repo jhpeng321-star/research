@@ -215,7 +215,8 @@ import sys,json,time
 r=Path({ROOT!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
 from tools.coopmwm.storage import ledger
 from tools.coopmwm.accel_protocol import SUPERSEDED_CHARGE
-budget=json.loads((r/{NAME!r}).read_text())['budget'];entries=ledger(r)
+extension=r/'V2V_CAP_1406.json'
+budget=json.loads((extension if extension.exists() else r/{NAME!r}).read_text())['budget'];entries=ledger(r)
 used={{p:sum(x['sim_s'] for x in entries if x['phase']==p) for p in budget['phases']}}
 used['superseded']+=SUPERSEDED_CHARGE
 rows={{p:dict(allocated=n,charged=used[p],remaining=n-used[p]) for p,n in budget['phases'].items()}}

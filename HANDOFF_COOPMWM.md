@@ -1,5 +1,39 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+MAIN14:50NOWREAD/ALL803lines: explicitSHA-gatedMOVEauthority to
+gpuR:/root/cpuq_archive_20261103; candidatesclosedLSlabel_attempts/pending,
+closedpolicy_synergy andinterimobservables(RESULTskeptoncpuQ), no replay_bank/
+liveowners/checkpoints/bankreceipts. Mustprotecteveryruntime-readreference and
+openFD, manifest->rsync->remoteverify->sourceunlink ONLYverifiedfiles. Target10GiB.
+V2V_INT_READY announced816d045a/646pass76fail; CPUQ Linuxmustshowenvironment-only.
+Archive/release nowpriority. No archivejobhasbeendispatchedbythissessionyet.
+
+BUDGET14:06EXACTCONFIG REGISTERED: quoteF72346e4 ALL3/commonu0/u1..24,
+freshrefs/noassumedreuse/NOdrops: train2073600+interim345600+final345600+
+Blesson21840+isolated185200=2971840extra; totalcap17471840(<17.5M).
+Registration67320dae20a51b1ba71c874f686ab9c8c29a1eae25128c06488814e71ae91d7f,
+ROOT/V2V_CAP_1406.json additive, canonicalregistry+remoteauthority. Oldphasecaps
+unchanged;0V2Vcharges/physics. ALLcurrentadmittedB5/R11coopstatesincludedinquote,
+even9failedR11diagnostics; metadatafromoriginalverifiedbankreceipts/SHA, noomission.
+RunnerNOWenforcesALL3(replacesABfallback), exactreducedschedule/noAextra/noV2V
+pairedbranches, owntrainmappedv2v_train, off-scheduledlesson/diagnostichooksskipped.
+10localCPU checksPASS(.002s), fullintegrationLinuxstillpending. No baselineadoption
+requiredtofit. Globalledger14:49:59charged7709790/17471840/rem9762050/allphases
+nonnegative; newphasesall0spent. SourceparentnonV2Vworkersremainconservative14.5M
+in-memory; no sourcehot-swap. live_bank_report observer10428LIVE/read-only/hourly.
+
+BLOCKER Nov3 14:32+08: cpuQ~2.03GB<2147483648guard. Watcher+all4childrenLIVE/
+noSTOP/pause/dead, B/Rremainu11/nextu12episodesEMPTY14:33:03. R11originalsynergy
+9statesfailedresourceadmission BEFOREnewphysics, retained/incompleteNEVERreplay.
+_sol/COOPMWM_DISK_BLOCK_1432.md asksMAINspace/explicitarchiveauthority. No guard
+lowered/signals/deletions/archive. Earlierapprovedoldfoldersalreadyownerremoved;
+coopmwm20261102_* archive explicitlynotallowedwithoutnewauthority.
+Currentbankreportobserver10428/create1793687154.959028 LIVE/hourly/read-only,
+adoptLIVE_BANK_REPORT_DISPATCH. It reportsB/Rcurrent labels separatelyfromlegacyLS.
+Charge7709790/14.5M14:31:48. V2Vexact14:06quote module+3CPUtests prepared,
+u11slatemetadatarefusedbecauseR11synergyincomplete(disk); usecompleteprioru10
+or originalbankmetadata, neveromitfailedstatesfromcostquote. NoV2Vphysics.
+
 LATEST AUTHORITY ALL792linesREAD inclMAIN14:06: KEEPALL3V2Varms/commonu0/u1..24,
 fixedtrain+u8/u24episodes2764800; diagnosticsBlesson+isolatedONLY6/12/18/24,
 RisolatedONLY12/24,Anoextradiagnostics; noV2Vfinalpairedbranches. Qualifiedbaseline

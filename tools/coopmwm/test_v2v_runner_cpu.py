@@ -1,7 +1,7 @@
 """Preparation/launch isolation: no torch, model, simulator or network required."""
 import types
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from . import v2v_runner as v
 
 
@@ -39,9 +39,6 @@ class RunnerTests(unittest.TestCase):
             v.admit(b,dict(qualified=True),hooks)
         release=dict(qualified=True,linux_cpu_pass=True,zero_init_parity=True,
             default_off_byte_identical=True,stub=False,v2v_dim=24,rehearsal_pass=True)
-        with self.assertRaisesRegex(ValueError,'A-v2v'):
-            v.admit(b,release,hooks)
-        b.update(A_diagnostic_slate_authorized=True,reporting_scope_authorized=True)
         v.admit(b,release,hooks)
         b['accounting_root']='/new'
         with self.assertRaisesRegex(ValueError,'accounting'):
@@ -55,15 +52,16 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(m.wave,'original')
 
     def test_budget_fallback_and_common_start(self):
-        b=v.prepare({},root='/new',legacy_root='/old',source_root='/qualified',
-            common_checkpoint_sha256='b'*64,v2v_dim=24,active_arms=('A','B'))
-        self.assertEqual(b['active_arms'],['A','B'])
-        self.assertEqual(b['final_updates'],dict(A=24,B=24))
-        with self.assertRaisesRegex(ValueError,'registered V2V'):
-            v.run_arm('/new','R',b,{}, {})
-        with self.assertRaisesRegex(ValueError,'A/B-only'):
+        b=self.binding()
+        self.assertEqual(b['active_arms'],['A','B','R'])
+        self.assertEqual(b['diagnostic_schedule']['B']['lessons'],[6,12,18,24])
+        self.assertEqual(b['diagnostic_schedule']['R']['isolated'],[12,24])
+        self.assertEqual(b['diagnostic_schedule']['A'],dict(lessons=[],isolated=[]))
+        self.assertFalse(b['final_paired_branches'])
+        self.assertEqual(b['phase_map']['train'],'v2v_train')
+        with self.assertRaisesRegex(ValueError,'all three'):
             v.prepare({},root='/new',legacy_root='/old',source_root='/qualified',
-                common_checkpoint_sha256='b'*64,v2v_dim=24,active_arms=('B','R'))
+                common_checkpoint_sha256='b'*64,v2v_dim=24,active_arms=('A','B'))
 
     def test_budget_and_common_checkpoint_guards(self):
         b=self.binding();b.update(launch_authorized=True,phase_funding_authorized=True,
@@ -80,21 +78,17 @@ class RunnerTests(unittest.TestCase):
             v.admit(b,release,hooks)
         for hook in hooks.values():hook.assert_not_called()
 
-    def test_late_rehearsal_requires_clock_and_all_real_smokes(self):
+    def test_rehearsal_fallback_requires_all_real_smokes(self):
         b=self.binding();b.update(launch_authorized=True,phase_funding_authorized=True,
             launch_amendment_sha256='l'*64,funding_amendment_sha256='f'*64,
             A_diagnostic_slate_authorized=True,reporting_scope_authorized=True)
         release=dict(qualified=True,linux_cpu_pass=True,zero_init_parity=True,
             default_off_byte_identical=True,stub=False,v2v_dim=24,
-            late_rehearsal_smokes_pass=True,ready_unix=10,smoke_arms=['A','B'])
+            real_update_smokes_pass=True,smoke_arms=['A','B'])
         hooks={n:Mock() for n in v.REQUIRED_HOOKS}
-        with patch.object(v.time,'time',return_value=3600):
-            with self.assertRaisesRegex(ValueError,'60 minutes'):
-                v.admit(b,release,hooks)
-        with patch.object(v.time,'time',return_value=3610):
-            with self.assertRaisesRegex(ValueError,'every active arm'):
-                v.admit(b,release,hooks)
-            release['smoke_arms']=['A','B','R'];v.admit(b,release,hooks)
+        with self.assertRaisesRegex(ValueError,'every active arm'):
+            v.admit(b,release,hooks)
+        release['smoke_arms']=['A','B','R'];v.admit(b,release,hooks)
 
 
 if __name__=='__main__':unittest.main()

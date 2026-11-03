@@ -28,8 +28,8 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
         raise ValueError('V2V needs a separate run root')
     if len(common_checkpoint_sha256) != 64:
         raise ValueError('common original MAPPO u0 checkpoint hash required')
-    if tuple(active_arms) not in (ARMS, ('A', 'B')):
-        raise ValueError('MAIN permits three arms or budget-driven A/B-only fallback')
+    if tuple(active_arms) != ARMS:
+        raise ValueError('MAIN14:06 keeps all three arms; only test/diagnostic fallbacks permitted')
     if type(v2v_dim) is not int or v2v_dim <= 0:
         raise ValueError('qualified observation dimension required; no stub default')
     cfg = deepcopy(base)
@@ -42,11 +42,16 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
         arm_names={a: a+'-v2v' for a in ARMS}, job_namespace='v2v1',
         b_replay=True, replay_beta=1., imitation_epochs=5, pace_s=1800,
         r_concurrent_lag1_quota=True, skip_legacy_reporting=True,
-        diagnostics='every update: matched lesson plus original/isolated policy synergy; composite safety',
+        diagnostics='MAIN14:06 reduced schedule; composite safety every update',
+        diagnostic_schedule=dict(A=dict(lessons=[],isolated=[]),
+            B=dict(lessons=[6,12,18,24],isolated=[6,12,18,24]),R=dict(lessons=[],isolated=[12,24])),
+        phase_map=dict(train='v2v_train'),
+        diagnostic_phases=dict(lessons='v2v_lessons',isolated='v2v_isolated'),
+        reporting_scope_authorized=True,final_paired_branches=False,
         bank_source_root=legacy_root, bank_arms=dict(B='B', R='R'),
         bank_source_mode='read-only confirmed same-arm bank; V2V features from recorded observable traces',
         launch_authorized=False, phase_funding_authorized=False,
-        launch_authority='MAIN2026-11-03 13:45 automatic on qualified integration/rehearsal/Linux/budget gates',
+        launch_authority='MAIN2026-11-03 14:06 automatic on qualified integration/Linux/budget plus rehearsal or real one-update smokes',
         additional_cap_ceiling_sim_s=3000000,total_cap_ceiling_sim_s=17500000,
         physics_reservation_sim_s=0, new_sim_s=0,
         no_outcome_conditioned_changes=True,
@@ -68,11 +73,9 @@ def admit(cfg, release, hooks):
             or not release.get('zero_init_parity') or not release.get('default_off_byte_identical')
             or release.get('stub', True) or release.get('v2v_dim') != cfg['v2v_dim']):
         raise ValueError('qualified non-stub V2V integration required')
-    if not (release.get('rehearsal_pass') or release.get('late_rehearsal_smokes_pass')):
-        raise ValueError('rehearsal or authorised late-rehearsal real smokes required')
+    if not (release.get('rehearsal_pass') or release.get('real_update_smokes_pass')):
+        raise ValueError('rehearsal or real one-update smokes required')
     if not release.get('rehearsal_pass'):
-        if time.time() < release.get('ready_unix',float('inf'))+3600:
-            raise ValueError('late-rehearsal fallback requires 60 minutes after READY')
         if set(release.get('smoke_arms', ())) != set(cfg['active_arms']):
             raise ValueError('real one-update smoke required for every active arm')
     if not 14500000 <= cfg['budget']['total'] <= 17500000:
@@ -84,8 +87,6 @@ def admit(cfg, release, hooks):
     missing = [n for n in REQUIRED_HOOKS if not callable(hooks.get(n))]
     if missing:
         raise ValueError('integration hooks missing: '+','.join(missing))
-    if not cfg.get('A_diagnostic_slate_authorized'):
-        raise ValueError('explicit A-v2v lesson/cooperative slate required')
     if not cfg.get('reporting_scope_authorized'):
         raise ValueError('V2V diagnostic/dev reporting scope required')
 
@@ -137,7 +138,7 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
             last_start[0] = clock()
             extra['b_replay'] = arm in ('B', 'R')  # A remains plain PPO, no bank capture
         return original_wave(r, b, policies, ws, role, cfg['job_namespace']+'_'+ident,
-                             phase, deterministic, extra)
+                             cfg['phase_map'].get(phase,phase), deterministic, extra)
 
     def verify(r, a):
         if Path(r) != root or a != arm:raise ValueError('V2V root/arm binding mismatch')
@@ -149,6 +150,18 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
     changes = dict(verify=verify, budget=budget, wave=wave,
         Policy=hooks['policy_factory'], load=lambda p: hooks['load_checkpoint'](p, config=cfg),
         before_update=hooks['health_before_update'], braking=hooks['safety'])
-    bank = {n: hooks[n] for n in ('bank_pairs', 'bank_quality', 'record_lesson')}
+    def record_lesson(r,a,policy,run_root,u,*args,**kwargs):
+        if u not in cfg['diagnostic_schedule'][a]['lessons']:
+            return dict(arm=a,update=u,status='not_scheduled',new_sim_s=0)
+        return hooks['record_lesson'](r,a,policy,run_root,u,*args,
+            **dict(kwargs,phase=cfg['diagnostic_phases']['lessons']))
+
+    def diagnostics(r,a,u,policy,b,lesson):
+        schedule=cfg['diagnostic_schedule'][a]
+        if u not in schedule['lessons'] and u not in schedule['isolated']:
+            return lesson
+        return hooks['diagnostics'](r,a,u,policy,b,lesson)
+
+    bank = dict(bank_pairs=hooks['bank_pairs'],bank_quality=hooks['bank_quality'],record_lesson=record_lesson)
     with patched(wr, changes), patched(rb, bank):
-        wr.run_arm(root, arm, hooks=dict(diagnostics=hooks['diagnostics']))
+        wr.run_arm(root, arm, hooks=dict(diagnostics=diagnostics))

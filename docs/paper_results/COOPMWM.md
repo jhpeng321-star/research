@@ -1,5 +1,30 @@
 # S-COOPMWM — live checks
 
+## Nov3 — exact MAIN14:06 three-arm V2V budget registered; disk admission blocked
+- Reduced schedule fits **all3 V2V arms without dropping a test or diagnostic**:
+  training2,073,600;u8/u24 episodes345,600 each;B lessons21,840;isolated checks
+  185,200 = **2,971,840sim-s extra**, fresh references conservatively included.
+  Registered global cap **17,471,840sim-s**, below the17.5M ceiling. No V2V
+  final paired branches. B lessons+isolated6/12/18/24,R isolated12/24,A no extra.
+- Current admitted cooperative slate includes all5 B and11 R states, including
+  states whose later u11 diagnostics were refused for disk. Their original
+  verification metadata/SHA remains available, so no failed state is removed
+  from the cost quote. Future bank growth still needs phase room before a branch.
+- QuoteSHA`f72346e46440c2b3e1e8c210211ed39ad43e1c59f6a76a6341f1669bf302a950`;
+  cap registrationSHA`67320dae20a51b1ba71c874f686ab9c8c29a1eae25128c06488814e71ae91d7f`.
+  Old phase allocations/charges remain; new V2V phases have0 spent. At14:49:59,
+  global charges **7,709,790**,remaining9,762,050; every phase nonnegative.
+- Runner gates/schedule and cost fallbacks pass10 local CPU checks; integrated
+  Linux qualification remains pending. No V2V physics/reservation was dispatched.
+- cpuQ has~1.9GiB free, below the2GiB admission guard. Existing B/R supervisors
+  are alive at completedu11, no STOP or health pause, but next-wave admission is
+  stalled. Nine original R-u11 cooperation states have retained resource-admission
+  failures,not imputed/replayed. MAIN14:50 now authorises a precisely scoped,
+  SHA-gated move of eligible closed artifacts to gpuR; target10GiB free.
+- Evidence:`coopmwm/V2V_LAUNCH_QUOTE_1406_LIVE.json`,
+  `coopmwm/V2V_CAP_REGISTRATION_1406.json`,
+  `coopmwm/COMPOSITE_PHASE_BALANCES_1793688601087990800.json`.
+
 ## Nov3 14:21:56 UTC+8 — four slots and both builders healthy; live-bank niche evidence
 - All4 NICHENULL3 workers are live/8 exact startup gates each/no failure. GPU
   snapshots14:09 show94%/96% utilisation. `LS_NULLFIX_CONFIG.json` is active;
