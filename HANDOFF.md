@@ -1,21 +1,23 @@
 # S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
 
-## RECOVERED Nov3 03:32 +08 — HOLD; saved report verified unchanged
+## RECOVERED Nov3 15:49 +08 — HOLD; saved report verified unchanged
 
 Fresh-session authority and direct ownership receipts:
-`docs/rb2int/RECOVERY_20261103_0330.md` and its LOCAL/GPUA/GPUR JSON files
-(direct ownership audit committed `338dfa61`).
+`docs/rb2int/RECOVERY_20261103_1547.md` and its LOCAL/GPUA/GPUR JSON files
+(direct ownership audit committed `2a33c78c`; previous audit preserved in
+`docs/rb2int/RECOVERY_20261103_0330.md`).
 
-- No explicit MAIN `S-RB2-INT RESUME` release found. Both local publication owners
+- No explicit MAIN `S-RB2-INT RESUME` release found through Nov3 15:35 registration.
+  Both local publication owners
   remain EXITED INCOMPLETE. No replacement collector, publisher or dispatch.
 - 31/216 new world jobs collected, 185 unadmitted, 12 matched v5/v4 K8 worlds;
   all hold-time children collected. Zero active INT evaluations on either GPU.
   gpuA514854 is still its exact original command/source/incarnation in stateT;
   the other three capped/late owners remain absent. No process signals.
-- nvidia-smi snapshots: gpuA25% utilization/9,166MiB free;
-  gpuR24%/2,083MiB free.
+- nvidia-smi snapshots: gpuA96% utilization/10,148MiB free;
+  gpuR95%/19,687MiB free.
   The admission hold and Nov2 resource priority remain controlling.
-- Report text matched saved commit `5a25785c` before this status refresh;
+- Report text matched saved commit `3b23a35e` before this status refresh;
   scientific sections are unchanged. Reserved8 and ten-world/five-replicated-cell
   interims retained without rescoring; replicated
   v5 delay CRPS is worse at120/300/600s. Full gate/switching NOT ESTABLISHED.
@@ -25,6 +27,10 @@ Fresh-session authority and direct ownership receipts:
 - CAL's new Nov3 03:17 cache-only closure has six complete K8 development
   worlds and still does not establish calibration quality. It is component-only
   evidence, not an integrated result or permission to refit the frozen candidates.
+- BREAK's Nov3 06:49 audit still has seven saved development tasks/zero complete
+  K8 worlds; LP's Nov3 closure preserves its completed default-OFF delivery.
+  Neither adds an integrated result. All drain-time data is already published;
+  no new scientific snapshot is available under the hold.
 - Missing-task continuation requires MAIN release plus exact owner/claim/source/
   resource/deadline reconciliation. Old Nov4 bounds do not authorize a restart.
   Reuse saved work; do not refit exposed candidates or duplicate registration.
