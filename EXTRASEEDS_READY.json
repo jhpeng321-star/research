@@ -2,7 +2,7 @@
   "schema": "coopmwm.extra_seeds_ready.v1",
   "branch": "c4/extra-seeds",
   "base": "f9bd9cad (c4/launch-coop head)",
-  "commit": "ccd7ec3a",
+  "commit": "3c63f74d",
   "new_sumo_sim_s": 0,
   "gpu_jobs": 0,
   "deployed": false,
@@ -22,7 +22,7 @@
       "per_seed_v1.examples gains the appended seed_index>=3 examples (admitted_seeds/cooperative_seeds derive from examples unchanged)"
     ],
     "record_unchanged_when_off": "with extra_seeds=0 (or the key absent) no new keys are written, no extra verify() calls are made, and records/receipts/charges are byte-identical (test_extra_seeds_zero_is_byte_identical; the only difference between two roots is the bank's absolute path inside the record and its own seal digest over it)",
-    "config": "binding 'sumo_verify' config key extra_seeds (replay_bank.collect passes it to confirm_pending only when set); builder BINDING.json key extra_seeds (bank_builder.run_all8_round -> vp.confirm_all8; extra-seed verifications are conditional on the seeds-1/2 cooperation labels so they are charged LIVE through rb._confirm_charge - only the seed-2 all-K branches are precharged)",
+    "config": "binding 'sumo_verify' config key extra_seeds (replay_bank.collect passes it to confirm_pending only when set); builder BINDING.json key extra_seeds (bank_builder.run_all8_round -> vp.confirm_all8; FIX ROUND: every extra seed's GROUP verification is pre-reserved in ONE transaction at the first extra-seed charge via bank_builder.extras_charge - a mid-decision budget shortfall raises BudgetBlocked before ANY extra physics instead of leaving partial extras - while the extended/solo verifications stay conditional and charged LIVE through rb._confirm_charge, exactly like seed 2; only the seed-2 all-K branches are precharged at claim time)",
     "api": "vp.confirm_all8(..., extra_seeds=0), vp.confirm_pending_all8(..., extra_seeds=0), rb.confirm_pending(..., extra_seeds=0)",
     "cli": "python -m tools.coopmwm.verify_perseed extra-seeds [--n N] (default n=4) prints extra_seeds_quote(n); the existing 'quote' command is unchanged",
     "charges": "every extra verification (group, extended, solos) goes through the SAME hooks as seeds 1/2: sv.verify -> runner.admit (disk guard) -> rb._confirm_charge(run_root, phase, kind) with kind in {confirm_seed<k>_all8, confirm_extended_seed<k>_all8, confirm_solo_all8_s<k>}, warm_health.assert_running checked before each"
@@ -36,22 +36,23 @@
     "assumptions": "K=8, D=120 s, 2-member plans; quote assumes every cooperative plan is LB>0 and admitted on each extra seed (upper bound, consistent with the seed-1/2 quote assumptions); a plan with no cooperative example on seeds 1/2 costs 0 extra sim-s"
   },
   "tests_run": {
-    "new": "test_verify_perseed_cpu.py: test_extra_seed_salts_deterministic_distinct_and_never_evaluation_seeds, test_extra_seeds_zero_is_byte_identical, test_extra_seeds_independent_admission_own_solos_and_charges (E2E extra_seeds=4: seed 3 admits+cooperative, seed 4 rejects on own LB, seed 5 fails its OWN later-harm window, seed 6 admits but solo does as well; 15 charges through the existing hook incl. confirm_seed4_all8 with no extended and no solos; per_seed_v1 overlay/bank_examples/imitation_entry on the seed-3 tape), test_extra_seeds_quote_keys_and_cli, test_extra_seeds_on_arm_R (extra_seeds=2 on the R bank), test_reader_relabels_stored_reference_mismatch_on_extra_seed (seed_kinds solo-root fallback, replicated flag untouched); test_bank_perseed_cpu.py: test_all8_extra_seed_examples_flow_through_per_seed_v1_unchanged (bank_pairs entries carry seed_index 3 with THAT seed's tape, report rows, by_seed summary shape unchanged)"
+    "new": "test_verify_perseed_cpu.py: test_extra_seed_salts_deterministic_distinct_and_never_evaluation_seeds, test_extra_seeds_zero_is_byte_identical, test_extra_seeds_independent_admission_own_solos_and_charges (E2E extra_seeds=4: seed 3 admits+cooperative, seed 4 rejects on own LB, seed 5 fails its OWN later-harm window, seed 6 admits but solo does as well; 15 charges through the existing hook incl. confirm_seed4_all8 with no extended and no solos; per_seed_v1 overlay/bank_examples/imitation_entry on the seed-3 tape), test_extra_seeds_quote_keys_and_cli, test_extra_seeds_on_arm_R (extra_seeds=2 on the R bank), test_reader_relabels_stored_reference_mismatch_on_extra_seed (seed_kinds solo-root fallback, replicated flag untouched); test_bank_perseed_cpu.py: test_all8_extra_seed_examples_flow_through_per_seed_v1_unchanged (bank_pairs entries carry seed_index 3 with THAT seed's tape, report rows, by_seed summary shape unchanged)",
+    "fix_round": "test_verify_perseed_cpu.py: test_report_per_seed_consumes_rejected_extra_examples (E2E extra_seeds=2 with seed 4 rejected on its OWN lower bound: the rejected extra example carries cooperative=False/cooperative_status='not_admitted' like the seed-1/2 loop and bank_statistics.report_per_seed consumes the record without KeyError, rows agree per example), test_builder_extras_group_precharge_all_seeds_one_transaction (the FIRST extra-seed group charge pre-reserves seeds 3 AND 4 group branches in one transaction; the seed-4 charge only validates precharged rows with no new ledger rows; extended kinds keep the live hook), test_builder_extras_group_precharge_budget_block_is_all_or_nothing (insufficient bank_verification_ext budget -> BudgetBlocked at the first extra charge, ZERO extra-seed ledger rows, nothing cached)"
   },
   "tests_passed": {
-    "verify_perseed": "18/18 (tools/coopmwm/test_verify_perseed_cpu.py: 12 pre-existing + 6 new)",
+    "verify_perseed": "21/21 (tools/coopmwm/test_verify_perseed_cpu.py: 18 pre-existing + 3 fix-round)",
     "bank_boot_perseed_imitation_builder": "34/34 (test_bank_boot_cpu.py, test_bank_perseed_cpu.py 16/16 incl. 1 new, test_bank_imitation_cpu.py, test_bank_builder_cpu.py)",
     "bank_amendment_safety_restore": "13/13 (test_bank_amendment_cpu.py, test_bank_safety_cpu.py, test_bank_restore_ops_cpu.py)",
     "launch_final": "13/13 (test_launch_final_cpu.py)",
     "coop_only": "9/9 (test_coop_only_cpu.py)",
-    "overall": "87/87, 0 failed"
+    "overall": "90/90, 0 failed"
   },
   "cpuq_run_command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_verify_perseed_cpu.py tools/coopmwm/test_bank_boot_cpu.py tools/coopmwm/test_bank_perseed_cpu.py tools/coopmwm/test_bank_imitation_cpu.py tools/coopmwm/test_bank_builder_cpu.py tools/coopmwm/test_bank_amendment_cpu.py tools/coopmwm/test_bank_safety_cpu.py tools/coopmwm/test_bank_restore_ops_cpu.py tools/coopmwm/test_launch_final_cpu.py tools/coopmwm/test_coop_only_cpu.py   # run from the worktree root E:/agent-work/c4-extra-seeds; CPU only (no SUMO, no GPU, no ssh)",
   "changed_files": [
-    "tools/coopmwm/verify_perseed.py (EVAL_SEED_RANGES + extra_seed_salt eval-seed guard, extra_seed_indices; confirm_all8 extra_seeds=0 wiring with build_eval/build_example/run_solo refactor - seeds 1/2 behavior and record bytes unchanged; per_seed_v1 examples appended with seed_index>=3; relabel_reference_mismatch resolves seed>=3 solo roots via seed_kinds; quote_decision extra_seeds/cooperative keys only when n>0; extra_seeds_quote + CLI extra-seeds)",
+    "tools/coopmwm/verify_perseed.py (EVAL_SEED_RANGES + extra_seed_salt eval-seed guard, extra_seed_indices; confirm_all8 extra_seeds=0 wiring with build_eval/build_example/run_solo refactor - seeds 1/2 behavior and record bytes unchanged; per_seed_v1 examples appended with seed_index>=3; FIX ROUND: the extras loop sets the SAME not_admitted cooperative fields the seed-1/2 loop sets on rejected extra examples; relabel_reference_mismatch resolves seed>=3 solo roots via seed_kinds; quote_decision extra_seeds/cooperative keys only when n>0; extra_seeds_quote + CLI extra-seeds)",
     "tools/coopmwm/replay_bank.py (confirm_pending extra_seeds=0 pass-through; collect reads binding sumo_verify cfg extra_seeds only when set)",
-    "tools/coopmwm/bank_builder.py (run_all8_round reads config extra_seeds (default 0), passes to confirm_all8; extra-seed charges stay on the live rb._confirm_charge hook)",
-    "tools/coopmwm/test_verify_perseed_cpu.py (6 new tests + seed_of extra-seed salt parsing + arm parameter of setup + ExtraPlant later-harm plant)",
+    "tools/coopmwm/bank_builder.py (run_all8_round reads config extra_seeds (default 0), passes to confirm_all8; FIX ROUND: extras_charge pre-reserves EVERY extra seed's group verification in ONE transaction at the first extra-seed charge (BudgetBlocked = all-or-nothing, no partial extras; later extra charges validate precharged rows read-only; attempt records extra_group_precharged_sim_s), extended/solo stay live through rb._confirm_charge)",
+    "tools/coopmwm/test_verify_perseed_cpu.py (6 option tests + 3 fix-round tests + seed_of extra-seed salt parsing + arm parameter of setup + ExtraPlant later-harm plant)",
     "tools/coopmwm/test_bank_perseed_cpu.py (1 new consumption test)"
   ],
   "hard_rules_respected": {
@@ -63,6 +64,7 @@
   },
   "commit_history": [
     "7bded5e3 coopmwm: BUILD option extra_seeds (default 0) - CRN seeds 3..2+n for cooperative plans, per-seed admission, per-seed solos, appended seed_index>=3 examples",
-    "ccd7ec3a coopmwm: extra_seeds CPU tests - off byte-identity, deterministic salts, per-seed admission/solos/charges, arm R, per_seed_v1 consumption of seed_index>=3"
+    "ccd7ec3a coopmwm: extra_seeds CPU tests - off byte-identity, deterministic salts, per-seed admission/solos/charges, arm R, per_seed_v1 consumption of seed_index>=3",
+    "3c63f74d coopmwm: extra_seeds fix round - rejected extra examples carry not_admitted cooperative fields (report_per_seed safe), bank_builder pre-reserves ALL extra-seed group verifications in one transaction at the first extra charge (BudgetBlocked before any extra physics, no partial extras)"
   ]
 }
