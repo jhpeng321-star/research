@@ -17,7 +17,7 @@ REG='B_REPLAY_START_REGISTRATION_0835_V4.json'
 BINDING_NAME='B_REPLAY_START_0835_V4.json'
 
 
-def qualification_payload(files, source=SOURCE):
+def qualification_payload(files, source=SOURCE, selection=None):
     packed=base64.b64encode(zlib.compress(json.dumps(files).encode())).decode()
     return f'''from pathlib import Path
 import os,json,shutil,hashlib,subprocess,time,base64,zlib
@@ -31,7 +31,7 @@ if not r.exists():
  hashes={{n:hashlib.sha256((r/n).read_bytes()).hexdigest() for n in json.loads((base/'LS_SOURCE_HASHES.json').read_text())}}
  for n in files:hashes['pytools/tools/coopmwm/'+n+'.py']=hashlib.sha256((r/'pytools/tools/coopmwm'/(n+'.py')).read_bytes()).hexdigest()
  with (r/'LS_SOURCE_HASHES.json').open('x') as f:json.dump(hashes,f)
- tests=json.loads((base/'LS_RELEASE_TESTS.json').read_text())+['test_replay_start_cpu']+{[n for n in files if n.startswith('test_')]!r}
+ tests=(json.loads((base/'LS_RELEASE_TESTS.json').read_text())+['test_replay_start_cpu']+{[n for n in files if n.startswith('test_')]!r}) if {selection is None!r} else {selection!r}
  with (r/'LS_RELEASE_TESTS.json').open('x') as f:json.dump(sorted(set(tests)),f)
  shutil.copy2(base/'LS_CPU_SELECTION.json',r/'LS_CPU_SELECTION.json')
 for n,text in files.items():assert (r/'pytools/tools/coopmwm'/(n+'.py')).read_text()==text,n

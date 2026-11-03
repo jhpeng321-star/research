@@ -29,6 +29,15 @@ def drain_request(root,slot,owner):
     return None
 
 
+def request_order(root):
+    """Bounded R centre-only work cannot starve behind long B population searches."""
+    paths=sorted((Path(root)/'requests').glob('*.json'),key=lambda p:p.stat().st_mtime)
+    def priority(path):
+        try:return 0 if json.loads(path.read_text()).get('mode')=='centre' else 1
+        except (ValueError,OSError):return 1  # leave malformed-query handling to the worker
+    return sorted(paths,key=priority)  # stable FIFO within each work class
+
+
 def run(root,receipt_suffix=None):
     import fcntl,signal
     root=Path(root);cfg=json.loads((root/'LS_RECOVERY_CONFIG.json').read_text())
@@ -58,7 +67,7 @@ def run(root,receipt_suffix=None):
                     immutable(target,dict(slot=slot,owner=expected,unix=time.time(),inference_replayed=False))
                     return
                 with mutex:
-                    for p in sorted((root/'requests').glob('*.json'),key=lambda p:p.stat().st_mtime):
+                    for p in request_order(root):
                         k=p.stem;assigned=root/'broker_assignments'/p.name
                         if k in busy or (main/'responses'/p.name).exists() or (root/'broker_failures'/p.name).exists():continue
                         prior=json.loads(assigned.read_text()) if assigned.exists() else None

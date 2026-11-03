@@ -284,7 +284,7 @@ def status():
 import json,time,os,shutil
 c=Path({COLLECTION!r});r=Path({ROOT!r});v=dict(unix=time.time(),owners={{}},disk_free=shutil.disk_usage(c).free,load=os.getloadavg(),training_paused=all(not (r/(a+'_checkpoint_004.pt')).exists() for a in ('B','R')))
 for name in ('BROKER','SUPERVISOR'):
- suffix=next(s for s in ('_NICHENULL2','_NICHENULL1','_FASTK2V2','_FASTK2','_SUMOFOCUS1','_SUMODISK1','_SUMOENV1','_VALIDITY1') if (c/(name+'_DISPATCH'+s+'.json')).exists())
+ suffix=next(s for s in ('_RPRIORITY0906','_REPLAYDRAIN0735','_NICHENULL2','_NICHENULL1','_FASTK2V2','_FASTK2','_SUMOFOCUS1','_SUMODISK1','_SUMOENV1','_VALIDITY1') if (c/(name+'_DISPATCH'+s+'.json')).exists())
  d=json.loads((c/(name+'_DISPATCH'+suffix+'.json')).read_text());p=Path('/proc',str(d['pid']));st=(p/'stat').read_text().split() if p.exists() else None
  assert not st or st[21]==d['start_ticks']
  v['owners'][name]=dict(d,state=st[2] if st else 'exited',log_tail=(c/(name+suffix+'.log')).read_text()[-1800:])
