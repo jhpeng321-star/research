@@ -173,8 +173,8 @@ def run_arm(root,arm,hooks=None):
                     cap=imitation_decision_cap(read(bp)) if bp.exists() else 0
                     fair=dict(matched_B_update=bu,B_bank_decisions=cap,B_update_receipt_found=bp.exists())
                 pairs,weights=bank_pairs(root,arm,SEED,beta=replay_beta,sources=b.get('replay_sources',{}).get(arm,()),
-                    max_decisions=cap,v2v=bool(b.get('v2v')),pair_flags=bool(b.get('imitation_trust')),
-                    bank_filter=b.get('bank_filter'))
+                    max_decisions=cap,v2v=bool(b.get('v2v')),bank_filter=b.get('bank_filter'),
+                    pair_flags=bool(b.get('imitation_trust')))
                 from .replay_bank import bank_quality
                 weights['bank_quality']=bank_quality(root,arm,b.get('replay_sources',{}).get(arm,()))
                 if fair is not None:

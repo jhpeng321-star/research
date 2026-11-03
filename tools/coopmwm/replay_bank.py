@@ -435,7 +435,7 @@ def temperature(root, arm, training_seed, decisions):
 
 
 def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT_CLIP, sources=(),
-               max_decisions=None, v2v=False, v2v_cfg=None, pair_flags=False, bank_filter=None):
+               max_decisions=None, v2v=False, v2v_cfg=None, bank_filter=None, pair_flags=False):
     """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta.
 
     max_decisions (R fairness, MAIN): use at most this many admitted targets, oldest first;
@@ -455,10 +455,15 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     applies to the filtered cooperative set (weights unchanged).
     pair_flags (IMITFIX, DEFAULT OFF = byte-identical): summary also carries
     'pair_cooperative', one bool per imitation pair (aligned with the returned pairs list)
+<<<<<<< HEAD
     marking entries whose cooperative label is True (the recorded confirmation label, or the
     statistical bank-filter label when the filter is on; oversampled duplicates included);
     consumed by exact_update/bank_imitation imitation_trust='own_pass' cooperative-first
     passes.
+=======
+    marking entries whose confirmation recorded cooperation.cooperative is True; consumed by
+    exact_update/bank_imitation imitation_trust='own_pass' cooperative-first passes.
+>>>>>>> c4/coop-gate
     """
     if bank_filter not in (None, False, 'statistical'):
         raise ValueError("bank_filter must be None/False or the registered value 'statistical'")
@@ -564,8 +569,6 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                               'previous second); pairs whose trace lacks partner commands are excluded and counted',
                           stub=bank_v2v.STUB, cfg=dict(bank_v2v.DEFAULT_CFG, **(v2v_cfg or {})),
                           counts=v2v_counts)
-    if pair_flags:
-        out['pair_cooperative'] = pair_cooperative
     if use_filter:
         from . import bank_filter as bf
         out['bank_filter'] = dict(mode=bank_filter,
@@ -573,6 +576,8 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                                   keys='binding key bank_filter; replay_bank.bank_pairs(bank_filter=...)',
                                   counts=dict(kept=len(entries), dropped=counts['filter_dropped']),
                                   entries=filter_rows)
+    if pair_flags:
+        out['pair_cooperative'] = pair_cooperative
     return pairs, out
 
 

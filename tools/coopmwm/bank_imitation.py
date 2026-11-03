@@ -179,6 +179,5 @@ def _own_pass(policy,optimizer,pairs,generator,coefficient,passes,flags,pre_upda
         base_lr=base_lr,final_scale=lr_scale,total_halvings=halvings,per_step=schedule)
     report['stop_reason']='all registered imitation epochs complete'
     if report['action_error_after_mps2']>=before:
-        report['error_not_decreased_explanation']=\
-            'AWR likelihood improved objective need not reduce unweighted L1 action error; no outcome-based adjustment'
+        report['error_not_decreased_explanation']='AWR likelihood improved objective need not reduce unweighted L1 action error; no outcome-based adjustment'
     return report
