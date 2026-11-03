@@ -435,7 +435,7 @@ def temperature(root, arm, training_seed, decisions):
 
 
 def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT_CLIP, sources=(),
-               max_decisions=None, v2v=False, v2v_cfg=None, bank_filter=None):
+               max_decisions=None, v2v=False, v2v_cfg=None, pair_flags=False, bank_filter=None):
     """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta.
 
     max_decisions (R fairness, MAIN): use at most this many admitted targets, oldest first;
@@ -453,6 +453,12 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     the sum-of-solos synergy where available). Kept/dropped entries with reasons and
     bounds are reported under summary['bank_filter']; the 50% cooperative oversampling
     applies to the filtered cooperative set (weights unchanged).
+    pair_flags (IMITFIX, DEFAULT OFF = byte-identical): summary also carries
+    'pair_cooperative', one bool per imitation pair (aligned with the returned pairs list)
+    marking entries whose cooperative label is True (the recorded confirmation label, or the
+    statistical bank-filter label when the filter is on; oversampled duplicates included);
+    consumed by exact_update/bank_imitation imitation_trust='own_pass' cooperative-first
+    passes.
     """
     if bank_filter not in (None, False, 'statistical'):
         raise ValueError("bank_filter must be None/False or the registered value 'statistical'")
@@ -523,13 +529,16 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     other = [p for ps, co, _ in per_entry if not co for p in ps]
     coop_pairs = [p for ps, co, _ in per_entry if co for p in ps]
     pairs = other+coop_pairs
+    pair_cooperative = [False]*len(other)+[True]*len(coop_pairs)
     exposure = dict(cooperative_entries=sum(co for _, co, _ in per_entry),
                     non_cooperative_entries=sum(not co for _, co, _ in per_entry),
                     cooperative_samples_raw=len(coop_pairs), non_cooperative_samples=len(other),
                     duplicated_pairs=0)
     if coop_pairs and len(coop_pairs) < len(other):
         full, rem = divmod(len(other)-len(coop_pairs), len(coop_pairs))
-        pairs = other+coop_pairs*(1+full)+coop_pairs[:rem]
+        duplicated = coop_pairs*(1+full)+coop_pairs[:rem]
+        pairs = other+duplicated
+        pair_cooperative = [False]*len(other)+[True]*len(duplicated)
         exposure['duplicated_pairs'] = len(pairs)-len(other)-len(coop_pairs)
     exposure['rule'] = ('cooperative entries oversampled to 50% of imitation samples, weights unchanged'
                         if exposure['duplicated_pairs']
@@ -555,6 +564,8 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                               'previous second); pairs whose trace lacks partner commands are excluded and counted',
                           stub=bank_v2v.STUB, cfg=dict(bank_v2v.DEFAULT_CFG, **(v2v_cfg or {})),
                           counts=v2v_counts)
+    if pair_flags:
+        out['pair_cooperative'] = pair_cooperative
     if use_filter:
         from . import bank_filter as bf
         out['bank_filter'] = dict(mode=bank_filter,

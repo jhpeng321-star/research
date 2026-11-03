@@ -420,6 +420,38 @@ class ExactGradeCPU(unittest.TestCase):
                                             torch.Generator().manual_seed(1), [], epochs=1)
         self.assertEqual(sum(x['imitation'] for x in m2), 0.)
 
+    def test_exact_update_own_pass_trust_region_imitates_when_the_pre_update_rule_cannot(self):
+        """IMITFIX: PPO spends the shared pre-update KL budget (old rule: zero imitation steps);
+        imitation_trust='own_pass' anchors at the post-PPO policy and imitates within the limit."""
+        fx = Fixture(self.tmp)
+        q, _, receipts = self.grade_all(fx)
+        r = dict(receipts[0], status='graded', grade_veh_s=7.);r = xg._seal({k: v for k, v in r.items() if k != 'receipt_sha256'}, 'receipt_sha256')
+        entry = xg.imitation_weights([r], r['arm'], dict(temperature_veh_s=7.))['weights'][r['grade_id']]
+        pairs = xg.imitation_pairs(fx.original, entry)
+        current = dict(steps=[s for s in fx.original['steps'][:40]])
+        p = policy()
+        m = xg.exact_update(p, torch.optim.Adam(p.parameters(), lr=3e-2), [current], torch.Generator().manual_seed(1),
+                            pairs, epochs=4, imitation_epochs=5)
+        old = m[-1]['bank_imitation']
+        self.assertEqual(old['optimizer_steps'], 0)
+        self.assertEqual(old['stop_reason'], 'pre-imitation KL already exceeds existing bound')
+        self.assertNotIn('passes_completed', old)
+        self.assertEqual(m[-1]['loss_rule'], 'MAIN0936 post-PPO full-bank AWR, pre-update KL bound; no plan ratios or critic loss')
+        p2 = policy()
+        m2 = xg.exact_update(p2, torch.optim.Adam(p2.parameters(), lr=3e-2), [current], torch.Generator().manual_seed(1),
+                             pairs, epochs=4, imitation_epochs=5, imitation_trust='own_pass',
+                             cooperative=[True]*len(pairs))
+        new = m2[-1]['bank_imitation']
+        self.assertEqual(new['imitation_trust'], 'own_pass')
+        self.assertEqual(new['kl_reference'], 'frozen post-PPO pre-imitation policy (own_pass)')
+        self.assertGreater(new['optimizer_steps'], 0)
+        self.assertGreaterEqual(new['passes_completed'], 1)
+        self.assertLessEqual(new['kl'], .045)
+        self.assertGreater(new['lr_schedule']['total_halvings'], -1)
+        self.assertIn('kl_after_pass1', new)
+        self.assertEqual(m2[-1]['loss_rule'], 'MAIN0936 post-PPO full-bank AWR, own pre-imitation KL bound (own_pass); no plan ratios or critic loss')
+        self.assertEqual(m2[-1]['exact_imitation_steps'], new['pairs_seen'])
+
     def test_queue_resume_idempotence_and_orphan_recovery(self):
         fx = Fixture(self.tmp);specs = fx.specs()
         alive = {'v': True}
