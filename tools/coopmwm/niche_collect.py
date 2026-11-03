@@ -24,6 +24,11 @@ def validate(config):
     if coop:
         from .coop_search import split_config
         if not coop.get('coop_objective'):raise ValueError('coop keys require coop_objective=True')
+        if 'coop_novelty_bank' in coop:raise ValueError('reference the novelty bank by coop_novelty_bank_sha256, never embed it')
+        sha=coop.get('coop_novelty_bank_sha256')
+        if sha is not None and not (isinstance(sha,str) and len(sha)==64 and all(c in '0123456789abcdef' for c in sha)):
+            raise ValueError('coop_novelty_bank_sha256 must be a sha256 hex digest')
+        coop=dict(coop,coop_novelty_bank_sha256=None)   # the digest is resolved on the GPU host
         split_config(dict(coop))   # registered keys and value checks only
     return dict(config)
 

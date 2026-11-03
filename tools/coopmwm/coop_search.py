@@ -19,8 +19,11 @@ search with any known or hand-designed behaviour family. With the option off
    candidates of a call by group gain (default 16). When the cap covers the
    whole call the solos are batched INTO the candidate call; otherwise one
    extra call (candidates' solos + the two comparators) follows the screen
-   call. Candidates outside the cap get the median synergy of the computed
-   ones in that call (data-driven imputation, flagged ``synergy_imputed``).
+   call. Candidates outside the cap get the MINIMUM synergy computed in that
+   call (pessimistic, flagged ``synergy_imputed``; the imputed share is
+   logged) and are finalist-ineligible: if fewer measured candidates than
+   finalists exist (or, with niches, a niche has none), one extension call
+   computes the solos of the best imputed ones by group gain.
    The final K re-score batches the finalists' solos with the finalists.
 2. Behavioural diversity of the finalists (the eight plans sent to exact SUMO
    in the live label-list8 configuration) and of the top-k shortlist. The
@@ -33,10 +36,14 @@ search with any known or hand-designed behaviour family. With the option off
    order (role is fixed inside one search). Who participates, onset
    timing/order and magnitude spread vary even when every member is slower
    than the policy. Features are z-normalised over the
-   searched pool (std 0 -> 1). Selection keeps the top-2 by score, then greedy
-   max-min (farthest-point) among the candidates at or above the pool median
-   score, then fills by score. No behavioural categories are hand-set.
-3. Novelty vs the verified bank (``coop_novelty``, needs ``coop_novelty_bank``):
+   searched pool (std 0 -> 1). Selection keeps the top-2 by score (with
+   niches > 1: the best of each niche first, the niche comparison's rule),
+   then greedy max-min (farthest-point) among the measured candidates at or
+   above their median score, then fills by score. No behavioural categories
+   are hand-set.
+3. Novelty vs the verified bank (``coop_novelty``; ``coop_novelty_bank_sha256``
+   references a content-addressed COOP_BANK_<sha>.json resolved on the GPU host,
+   never embedded in search_config; tests may pass ``coop_novelty_bank``):
    a role summary descriptor (ramp lane 2 / mainline: participation share,
    earliest onset, mean early/plan deviation, min/max plan deviation, mean |dev|,
    plus ramp-minus-mainline onset order; 15 numbers, comparable across group
@@ -59,8 +66,37 @@ import numpy as np
 RAMP_LANE = 2   # observable convention used across the repo (speed2_transfers, coopfree.selection)
 COOP_REGISTERED = dict(coop_objective=False, coop_lambda=1.0, coop_solo_cap=16, coop_diversity=True,
                        coop_novelty=False, coop_novelty_k=3, coop_novelty_weight=.5,
-                       coop_novelty_bank=None, coop_early_s=10, coop_keep_top=2,
-                       coop_active_accel=.3, coop_active_min_s=5)
+                       coop_novelty_bank=None, coop_novelty_bank_sha256=None, coop_early_s=10,
+                       coop_keep_top=2, coop_active_accel=.3, coop_active_min_s=5)
+# Content-addressed bank files COOP_BANK_<sha256>.json ({descriptors: [...]}) are looked up
+# here (plus $COOPMWM_COOP_BANK_DIR, ':'/';'-separated); search_config carries the digest only.
+BANK_DIRS = []
+
+
+def bank_digest(descriptors):
+    return _digest([[float(x) for x in row] for row in descriptors])
+
+
+def bank_file_name(sha):
+    return f'COOP_BANK_{sha}.json'
+
+
+def resolve_bank(sha, dirs=None):
+    """Load the bank descriptors whose digest is ``sha``; the content digest is re-verified."""
+    import os
+    from pathlib import Path
+    roots = list(dirs or [])+list(BANK_DIRS)
+    env = os.environ.get('COOPMWM_COOP_BANK_DIR')
+    if env:
+        roots += [r for r in env.replace(';', os.pathsep).split(os.pathsep) if r]
+    for root in roots:
+        f = Path(root)/bank_file_name(sha)
+        if f.exists():
+            desc = json.loads(f.read_text())['descriptors']
+            if bank_digest(desc) != sha:
+                raise ValueError(f'coop bank file {f} does not match its digest')
+            return desc
+    raise ValueError(f'coop novelty bank {sha} not found in {roots}')
 
 
 def _digest(obj):
@@ -86,14 +122,18 @@ def split_config(cfg):
         raise ValueError('coop_novelty_k>=1, coop_keep_top>=0, coop_early_s>=1 required')
     if not coop['coop_active_accel'] >= 0 or int(coop['coop_active_min_s']) < 1:
         raise ValueError('coop_active_accel>=0 and coop_active_min_s>=1 required')
-    bank = coop['coop_novelty_bank']
+    bank, sha = coop['coop_novelty_bank'], coop['coop_novelty_bank_sha256']
+    if bank is None and sha is not None:
+        bank = coop['coop_novelty_bank'] = resolve_bank(sha)
+    if bank is not None and sha is not None and bank_digest(bank) != sha:
+        raise ValueError('coop_novelty_bank does not match coop_novelty_bank_sha256')
     if bank is not None:
         b = np.asarray(bank, float)
         if b.ndim != 2 or (b.size and b.shape[1] != ROLE_DIM) or not np.isfinite(b).all():
             raise ValueError(f'coop_novelty_bank must be a list of {ROLE_DIM}-number role descriptors')
     # Recorded in the search config by size and digest only (the bank can be long).
-    cfg.update({k: v for k, v in coop.items() if k != 'coop_novelty_bank'})
-    cfg['coop_novelty_bank'] = None if bank is None else dict(n=len(bank), sha256=_digest(bank))
+    cfg.update({k: v for k, v in coop.items() if k not in ('coop_novelty_bank', 'coop_novelty_bank_sha256')})
+    cfg['coop_novelty_bank'] = None if bank is None else dict(n=len(bank), sha256=bank_digest(bank))
     return coop
 
 
@@ -187,7 +227,7 @@ class Context:
         self.info, self._desc, self._role = {}, {}, {}
         self.bank = None if coop['coop_novelty_bank'] is None else np.asarray(coop['coop_novelty_bank'], float)
         self.solo_rollouts = dict(screen=0, final=0)
-        self.extra_calls = 0
+        self.extra_calls, self.extended, self.stage_of = 0, 0, {}
 
     def deviation(self, plan):
         """Issued (post-clamp) plan command minus the issued policy command, members x D."""
@@ -267,7 +307,9 @@ def score_call(scores, plans, solo_scored, ctx, stage):
         gains = {v: sp-_mean(s, f"{p['id']}__solo_{v}") for v in p['members']}
         solo[i] = gains; best[i] = max(gains.values()); syn[i] = g[i]-best[i]
     computed = ~np.isnan(syn)
-    imputed = float(np.median(syn[computed])) if computed.any() else 0.
+    # Pessimistic: an uncomputed candidate gets the LOWEST synergy computed in this call
+    # (never credited with cooperation it was not measured to have).
+    imputed = float(np.min(syn[computed])) if computed.any() else 0.
     syn_used = np.where(computed, syn, imputed)
     score = g+lam*syn_used
     nov = np.zeros(len(plans))
@@ -281,7 +323,54 @@ def score_call(scores, plans, solo_scored, ctx, stage):
             group_gain=float(g[i]), best_solo_gain=best[i], solo_gains=solo[i],
             synergy=float(syn_used[i]), synergy_imputed=not bool(computed[i]),
             novelty=float(nov[i]), score=float(total[i]))
+        if stage != 'final':
+            ctx.stage_of[p['id']] = stage
     return total
+
+
+def extend_solos(record, evaluate, base, pool, niche_of, n, K, H, ctx):
+    """Finalist eligibility needs MEASURED solos. If fewer than ``n`` screened candidates have
+    computed solos (or, with niches, a niche has none), ONE extra screen-K/H call computes the
+    solos of the best imputed candidates by group gain (each uncovered niche's best first).
+    Updates ``ctx.info``/``pool`` in place; returns the extra action-futures."""
+    info = {pid: ctx.info[st][pid] for pid, st in ctx.stage_of.items()}
+    imputed = [pid for pid in pool if info[pid]['synergy_imputed'] and not pool[pid][1].get('policy_duplicate')]
+    if not imputed:
+        return 0
+    by_gain = sorted(imputed, key=lambda i: (-info[i]['group_gain'], i))
+    need = []
+    if niche_of is not None:
+        covered = {niche_of[pid] for pid in pool if not info[pid]['synergy_imputed']}
+        for k in sorted({niche_of[i] for i in imputed}-covered):
+            need.append(next(i for i in by_gain if niche_of[i] == k))
+    computed = sum(not x['synergy_imputed'] for x in info.values())
+    for pid in by_gain:
+        if computed+len(need) >= n:
+            break
+        if pid not in need:
+            need.append(pid)
+    if not need:
+        return 0
+    plans = [pool[pid][1] for pid in need]
+    solos = solos_for(plans)
+    s = evaluate(record, base+solos, K, H)
+    ctx.solo_rollouts['extension'] = ctx.solo_rollouts.get('extension', 0)+len(solos); ctx.extra_calls += 1
+    lam = float(ctx.coop['coop_lambda']); sp = _mean(s, 'policy')
+    for p in plans:
+        x = info[p['id']]
+        gains = {v: sp-_mean(s, f"{p['id']}__solo_{v}") for v in p['members']}
+        syn = x['group_gain']-max(gains.values())
+        score = x['group_gain']+lam*syn+x['novelty']
+        x.update(best_solo_gain=max(gains.values()), solo_gains=gains, synergy=float(syn),
+                 synergy_imputed=False, solo_extension=True, score=float(score))
+        pool[p['id']] = (-float(score), p)
+    ctx.extended = len(plans)
+    return (len(base)+len(solos))*K
+
+
+def measured(pool, ctx):
+    """Pool ids whose screen solos were actually computed (finalist-eligible)."""
+    return [pid for pid in pool if not ctx.info[ctx.stage_of[pid]][pid]['synergy_imputed']]
 
 
 def screen(record, evaluate, base, cands, scores, K, H, ctx, stage):
@@ -325,18 +414,33 @@ def final_scores(scores, finalists, solos, ctx):
 
 # --------------------------------------------------------------------------- diversity
 
-def select_diverse(items, n, ctx, keep_top=None):
-    """items: (id, score higher-better, plan). Top ``keep_top`` by score, then greedy max-min
-    over normalised descriptors among items with score >= median, then fill by score."""
+def select_diverse(items, n, ctx, keep_top=None, niche_of=None):
+    """items: (id, score higher-better, plan). Seeds: the top ``keep_top`` by score, or with
+    ``niche_of`` the best of each niche (best-score order, the niche comparison's rule); then
+    greedy max-min over normalised descriptors among items with score >= median, then fill
+    by score."""
     order = sorted(items, key=lambda t: (-t[1], t[0]))
-    if not ctx.coop['coop_diversity'] or n <= 0:
-        return [t[0] for t in order[:max(n, 0)]]
-    keep = int(ctx.coop['coop_keep_top'] if keep_top is None else keep_top)
+    if n <= 0:
+        return []
+    if niche_of is not None:
+        seeds, seen = [], set()
+        for t in order:
+            if niche_of[t[0]] not in seen:
+                seen.add(niche_of[t[0]]); seeds.append(t)
+        seeds = seeds[:n]
+    else:
+        keep = int(ctx.coop['coop_keep_top'] if keep_top is None else keep_top)
+        seeds = order[:min(keep, n)]
+    # Descriptors of every eligible item are computed in both modes, so the report's
+    # pool normalisation is identical with and without diversity.
     X = _zscore_cols(np.stack([ctx.descriptor(t[2]) for t in order])) if order else None
+    if not ctx.coop['coop_diversity']:
+        taken = {t[0] for t in seeds}
+        return [t[0] for t in seeds]+[t[0] for t in order if t[0] not in taken][:n-len(seeds)]
     idx = {t[0]: i for i, t in enumerate(order)}
-    chosen = [t for t in order[:min(keep, n)]]
+    chosen = list(seeds)
     med = float(np.median([t[1] for t in order])) if order else 0.
-    rest = [t for t in order[len(chosen):] if t[1] >= med]
+    rest = [t for t in order if t[1] >= med and t[0] not in {c[0] for c in chosen}]
     while len(chosen) < n and rest:
         if chosen:
             S = X[[idx[c[0]] for c in chosen]]
@@ -441,14 +545,25 @@ def _cli():
     else:
         coop = dict(coop_objective=True, coop_lambda=a.lam, coop_solo_cap=a.solo_cap,
                     coop_diversity=not a.no_diversity)
+        bank_note = None
         if a.bank_descriptors:
+            desc = json.loads(Path(a.bank_descriptors).read_text())['descriptors']
+            sha = bank_digest(desc)
+            bank = Path(a.collection)/bank_file_name(sha)
+            if not bank.exists():
+                with bank.open('x') as f:
+                    json.dump(dict(descriptors=desc, sha256=sha, source=str(a.bank_descriptors)), f)
+            # search_config carries the digest only; GPU hosts resolve it from BANK_DIRS or
+            # $COOPMWM_COOP_BANK_DIR (copy this file there before admissions start).
             coop.update(coop_novelty=True, coop_novelty_k=a.novelty_k, coop_novelty_weight=a.novelty_weight,
-                        coop_novelty_bank=json.loads(Path(a.bank_descriptors).read_text())['descriptors'])
-        probe = dict(coop); split_config(probe)        # validate before writing
+                        coop_novelty_bank_sha256=sha)
+            bank_note = dict(bank_file=str(bank), sha256=sha, n=len(desc))
+            BANK_DIRS.append(str(Path(a.collection)))
+        probe = dict(coop); split_config(probe)        # validate (and resolve the bank) before writing
         target = Path(a.collection)/'LS_COOP_SEARCH_CONFIG.json'
         with target.open('x') as f:
             json.dump(dict(coop_search=coop, coop_alternation=bool(a.alternate)), f)
-        print(json.dumps(dict(written=str(target), config=probe)))
+        print(json.dumps(dict(written=str(target), config=probe, bank=bank_note)))
 
 
 if __name__ == '__main__':

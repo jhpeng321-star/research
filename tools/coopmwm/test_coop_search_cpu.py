@@ -2,8 +2,13 @@
 
 Real torch on CPU with a synthetic WM stub; no SUMO, no WM checkpoint, no GPU job.
 """
+import hashlib
+import importlib.util
 import json
+import os
+import sys
 import unittest
+from pathlib import Path
 import numpy as np
 import torch
 from . import mppi_search as ms
@@ -71,6 +76,38 @@ def manual_plan(g, P, delta_rows, duration=60, tag='x'):
     return ms.build_plan(g, P, z, duration, BOUNDS, 'sampled', 'ordinary', tag)
 
 
+GOLDEN = Path(__file__).resolve().parent/'fixtures'/'coop_off_golden.json'
+OFF_CASES = (('n1_m2', 1, 2, {}), ('n4_m2', 4, 2, {}), ('n1_m3_live', 1, 3, LIVE), ('n4_m3_live', 4, 3, LIVE))
+OFF_VARIANTS = (None, dict(coop_objective=False), dict(coop_objective=False, coop_lambda=3., coop_solo_cap=2))
+
+
+def off_digests(module, config_extra=None):
+    """sha256 of the serialized search output and of the WM call sequence per off case."""
+    out = {}
+    for name, niches, m, cfg in OFF_CASES:
+        fake = Fake(m); g = group(m); config = dict(cfg, **(config_extra or {}))
+        if niches > 1:
+            config['niches'] = niches
+        res = module.search(dict(state_id='s', policy_residuals={v: 0. for v in g['members']}), g, fake.policy,
+                            BOUNDS, fake, 'ordinary', mappo_traj=fake.mappo, seed=5, config=config)
+        out[name] = dict(result=hashlib.sha256(json.dumps(res, sort_keys=True).encode()).hexdigest(),
+                         calls=hashlib.sha256(json.dumps(fake.calls).encode()).hexdigest(),
+                         coop_key=any('coop' in k for k in res) or any(k.startswith('coop') for k in res['config']))
+    return out
+
+
+def golden_reference():
+    """Base b20bec2f outputs. Linux qualification sets COOPMWM_COOP_BASELINE to the immutable
+    pre-change mppi_search.py (same interpreter/BLAS); otherwise the committed Windows fixture
+    generated from that base module is used. Never regenerated from the new implementation."""
+    path = os.environ.get('COOPMWM_COOP_BASELINE')
+    if not path:
+        return json.loads(GOLDEN.read_text())['digests']
+    spec = importlib.util.spec_from_file_location('tools.coopmwm._pre_coop_reference', path)
+    old = importlib.util.module_from_spec(spec); sys.modules[spec.name] = old; spec.loader.exec_module(old)
+    return off_digests(old)
+
+
 class OffIdentical(unittest.TestCase):
     def _run(self, config, niches=1, m=2):
         fake = Fake(m); g = group(m); cfg = dict(config or {})
@@ -80,14 +117,13 @@ class OffIdentical(unittest.TestCase):
                         BOUNDS, fake, 'ordinary', mappo_traj=fake.mappo, seed=5, config=cfg)
         return json.dumps(res, sort_keys=True), fake.calls
 
-    def test_off_is_byte_identical_single_and_niche(self):
-        for niches in (1, 4):
-            ref, calls = self._run(None, niches)
-            for off in (dict(coop_objective=False), dict(coop_objective=False, coop_lambda=3., coop_solo_cap=2)):
-                out, calls2 = self._run(off, niches)
-                self.assertEqual(out, ref)
-                self.assertEqual(calls2, calls)
-            self.assertNotIn('coop', ref)
+    def test_off_is_byte_identical_to_base_b20bec2f(self):
+        ref = golden_reference()
+        self.assertEqual(sorted(ref), sorted(c[0] for c in OFF_CASES))
+        for variant in OFF_VARIANTS:
+            got = off_digests(ms, variant)
+            self.assertEqual(got, ref, variant)
+            self.assertFalse(any(v['coop_key'] for v in got.values()))
 
     def test_unregistered_coop_key_rejected(self):
         with self.assertRaises(ValueError):
@@ -321,6 +357,84 @@ class CostCap(unittest.TestCase):
             est = cs.cost_multiplier(m, dict(LIVE, coop_solo_cap=16))
             self.assertLess(est['multiplier_action_futures'], 2.6)
             self.assertGreater(est['multiplier_action_futures'], 1.5)
+
+
+class ReviewFixes(unittest.TestCase):
+    def test_pessimistic_imputation_and_measured_finalists(self):
+        g = group(6); stub = JointStub(g, solo_w=5.)
+        res = coop_search_run(stub, g, coop_objective=True, coop_solo_cap=16, **LIVE)
+        co = res['coop_objective']
+        for sc in co['screens']:
+            self.assertAlmostEqual(sc['imputed_share'], (sc['candidates']-sc['solo_computed'])/sc['candidates'])
+            self.assertGreater(sc['imputed_share'], .5)
+        # Recompute: every imputed synergy equals the MIN computed synergy of its call.
+        ctx = cs.Context(g, cs.split_config(dict(coop_objective=True)))
+        base = ms.comparators(dict(policy_residuals={}))
+        plans = [manual_plan(g, stub.policy, [(-1.)**i*.2*j for i in range(6)], tag=f'p{j}') for j in range(5)]
+        ctx.coop['coop_solo_cap'] = 2
+        scores = stub({}, base+plans, 2, 300)
+        cs.screen({}, stub, base, plans, scores, 2, 300, ctx, 's')
+        info = ctx.info['s']
+        computed = [x['synergy'] for x in info.values() if not x['synergy_imputed']]
+        self.assertEqual(len(computed), 2)
+        for x in info.values():
+            if x['synergy_imputed']:
+                self.assertEqual(x['synergy'], min(computed))
+        # Finalists only from candidates with measured solos.
+        for f in res['finalists']:
+            self.assertFalse(f['coop']['synergy_imputed'])
+        self.assertEqual(co['extended_candidates'], 0)        # 2 x 16 measured >= 8 finalists
+
+    def test_extension_call_when_too_few_measured(self):
+        g = group(2); stub = JointStub(g, solo_w=5.)
+        res = coop_search_run(stub, g, coop_objective=True, coop_solo_cap=2, **LIVE)
+        co = res['coop_objective']
+        self.assertEqual(co['extended_candidates'], 8-2*2)       # 4 measured in screens, 8 finalists
+        ext = [c for c in stub.calls if c['solos'] and c['K'] == 2][-1]
+        self.assertEqual(len({s['solo_of'] for s in ext['solos']}), 4)
+        self.assertEqual(co['solo_rollouts']['extension'], 8)
+        self.assertEqual(sum(sc['solo_extended'] for sc in co['screens']), 4)
+        self.assertEqual(res['imagined_futures'], sum(len(c['ids'])*c['K'] for c in stub.calls))
+        self.assertEqual(len(res['finalists']), 8)
+
+    def test_niche_best_first_and_plain_log(self):
+        g = group(3); stub = JointStub(g, solo_w=10.)
+        res = coop_search_run(stub, g, coop_objective=True, niches=4, **LIVE)
+        fin = res['finalists']
+        self.assertEqual(len({f['niche'] for f in fin}), 4)
+        firsts = fin[:4]
+        self.assertEqual(len({f['niche'] for f in firsts}), 4)  # best of each niche first
+        for it, sc in zip(res['iterations'], res['coop_objective']['screens']):
+            self.assertAlmostEqual(it['mean_rel_cost'], -sc['mean_group_gain'], places=9)
+            for n in it['niches']:
+                self.assertIn('mean_coop_rel_cost', n)
+
+    def test_bank_by_digest(self):
+        import tempfile
+        from .niche_collect import search_config, validate
+        g = group(2, lanes=[2, 0]); P = np.full((2, T), .2)
+        probe = cs.Context(g, cs.split_config(dict(coop_objective=True)), P, BOUNDS)
+        bank = [[float(x) for x in probe.role_descriptor(manual_plan(g, P, [-1., d], tag='q'))] for d in (0., .5)]
+        sha = cs.bank_digest(bank)
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp)/cs.bank_file_name(sha)).write_text(json.dumps(dict(descriptors=bank)))
+            cs.BANK_DIRS.append(tmp)
+            try:
+                cfg = dict(coop_objective=True, coop_novelty=True, coop_novelty_bank_sha256=sha)
+                coop = cs.split_config(cfg)
+                self.assertEqual(coop['coop_novelty_bank'], bank)
+                self.assertEqual(cfg['coop_novelty_bank'], dict(n=2, sha256=sha))
+                self.assertNotIn('coop_novelty_bank_sha256', cfg)
+            finally:
+                cs.BANK_DIRS.remove(tmp)
+        with self.assertRaises(ValueError):
+            cs.split_config(dict(coop_objective=True, coop_novelty_bank_sha256='0'*64))   # not found
+        sc = search_config(0, dict(coop_objective=True, coop_novelty=True, coop_novelty_bank_sha256=sha))
+        self.assertEqual(validate(sc), sc)                       # digest only: validated without the file
+        with self.assertRaises(ValueError):
+            validate(dict(sc, coop_novelty_bank=bank))           # embedding is rejected
+        with self.assertRaises(ValueError):
+            validate(dict(sc, coop_novelty_bank_sha256='xyz'))
 
 
 class LiveWrappers(unittest.TestCase):

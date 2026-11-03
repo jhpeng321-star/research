@@ -651,13 +651,17 @@ def _coop_split(cfg):
     return (coop, cs) if coop is not None else (None, None)
 
 
-def _coop_finalists(pool, n, ctx, cs):
-    """Coop mode finalists (= the eight plans sent to SUMO in the live label-list8 run):
-    top-2 by coop score, then max-min descriptor spread above the pool median score.
-    Clipped duplicates of the policy centre are skipped unless nothing else exists."""
-    items = [(pid, -r, p) for pid, (r, p) in pool.items() if not p.get('policy_duplicate')]
+def _coop_finalists(pool, n, ctx, cs, niche_of=None):
+    """Coop mode finalists (= the eight plans sent to SUMO in the live label-list8 run).
+    Eligible: candidates whose solos were actually computed (``coop_search.extend_solos``
+    runs first). niches=1: top-2 by coop score; niches>1: best of each niche first; then
+    max-min descriptor spread above the eligible median score. Clipped duplicates of the
+    policy centre are skipped unless nothing else exists."""
+    ok = set(cs.measured(pool, ctx))
+    items = [(pid, -r, p) for pid, (r, p) in pool.items() if pid in ok and not p.get('policy_duplicate')]
+    items = items or [(pid, -r, p) for pid, (r, p) in pool.items() if pid in ok]
     items = items or [(pid, -r, p) for pid, (r, p) in pool.items()]
-    return [pool[i][1] for i in cs.select_diverse(items, min(n, len(items)), ctx)]
+    return [pool[i][1] for i in cs.select_diverse(items, min(n, len(items)), ctx, niche_of=niche_of)]
 
 
 def _coop_finish(out, finalists, ctx, cs, members, cfg):
@@ -666,6 +670,9 @@ def _coop_finish(out, finalists, ctx, cs, members, cfg):
     for f in out['finalists']:
         f['coop'] = {k: info[f['id']][k] for k in keys}
     screens = [dict(stage=k, candidates=len(v), solo_computed=sum(not x['synergy_imputed'] for x in v.values()),
+                    imputed_share=sum(x['synergy_imputed'] for x in v.values())/len(v),
+                    solo_extended=sum(bool(x.get('solo_extension')) for x in v.values()),
+                    mean_group_gain=float(np.mean([x['group_gain'] for x in v.values()])),
                     best_synergy=max(x['synergy'] for x in v.values()),
                     mean_synergy=float(np.mean([x['synergy'] for x in v.values()])))
                for k, v in ctx.info.items() if k != 'final']
@@ -674,6 +681,9 @@ def _coop_finish(out, finalists, ctx, cs, members, cfg):
              'follows the plan, all other CAVs policy continues; WM-predicted, paired vs policy per call',
         coop_lambda=ctx.coop['coop_lambda'], solo_cap=ctx.coop['coop_solo_cap'],
         solo_rollouts=dict(ctx.solo_rollouts), extra_wm_calls=ctx.extra_calls, screens=screens,
+        imputation='pessimistic: min computed synergy of the same call; imputed candidates are '
+                   'finalist-ineligible (extension call computes solos when needed)',
+        extended_candidates=ctx.extended,
         cost_estimate=cs.cost_multiplier(members, dict(cfg)),
         finalists_report=cs.report(finalists, ctx, 'final'))
     if out.get('topk'):
@@ -835,6 +845,7 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
             futures += (len(cands)+len(base)+len(solo_now))*cfg['screen_K']
         c = _costs(scores, ['policy', 'MAPPO']+[p['id'] for p in cands], cfg['screen_K'])
         rel = np.array([float((c[p['id']]-c['policy']).mean()) for p in cands])
+        plain = rel  # group-gain cost: niche statistics, repulsion and the log
         if it == 0:
             centre_gap = float(rel[0])
         if ctx is not None:
@@ -850,6 +861,7 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
         for i in range(M):
             n_i = counts[i]
             rel_i, cands_i = rel[start:start+n_i], cands[start:start+n_i]
+            plain_i = plain[start:start+n_i]
             Z = np.stack([zs[p['id']] for p in cands_i])
             target = max(1, int(math.ceil(cfg['elite_frac']*n_i)))
             if cfg['method'] == 'cem':
@@ -862,8 +874,10 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
             st['mu'] = mu
             wd = np.array([w[[p['duration_s'] == d for p in cands_i]].sum() for d in durations])
             st['pd'] = (st['pd']+neff*wd/wd.sum())/(1.+neff)
-            per.append(dict(best_rel_cost=float(rel_i.min()), mean_rel_cost=float(rel_i.mean()),
+            per.append(dict(best_rel_cost=float(plain_i.min()), mean_rel_cost=float(plain_i.mean()),
                             ess=float(neff), temperature=lam))
+            if ctx is not None:
+                per[-1].update(best_coop_rel_cost=float(rel_i.min()), mean_coop_rel_cost=float(rel_i.mean()))
             start += n_i
         # Repulsion: at most one re-seed per iteration, threshold data-driven.
         repulsion = None
@@ -877,8 +891,8 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
                 rngs[worse] = np.random.default_rng(np.random.SeedSequence([int(seed), 0x4E494348, it, worse]))
                 repulsion = dict(pair=[int(i), int(j)], reseeded=int(worse), distance=float(d),
                                  threshold=threshold)
-        log.append(dict(iteration=it, candidates=len(cands), best_rel_cost=float(rel.min()),
-                        mean_rel_cost=float(rel.mean()), ess=float(sum(p['ess'] for p in per)),
+        log.append(dict(iteration=it, candidates=len(cands), best_rel_cost=float(plain.min()),
+                        mean_rel_cost=float(plain.mean()), ess=float(sum(p['ess'] for p in per)),
                         temperature=[p['temperature'] for p in per],
                         duration_probs=dict(zip(map(str, durations),
                                                 map(float, np.mean([s['pd'] for s in state], axis=0)))),
@@ -895,7 +909,9 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
     if ctx is None:
         finalists = [pool[pid][1] for pid in (niche_best+fill)[:sc['finalists']]]
     else:
-        finalists = _coop_finalists(pool, sc['finalists'], ctx, cs)
+        futures += cs.extend_solos(record, evaluate, base, pool, niche_of, sc['finalists'],
+                                   cfg['screen_K'], H_screen, ctx)
+        finalists = _coop_finalists(pool, sc['finalists'], ctx, cs, niche_of)
     H_final = final_horizon(max(p['duration_s'] for p in finalists), cfg)
     if ctx is None:
         scores = evaluate(record, base+finalists, cfg['final_K'], H_final)
@@ -918,7 +934,7 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
         else:
             eligible = [(p['id'], fscore[p['id']], p) for p in choosable
                         if float((costs['MAPPO']-costs[p['id']]).mean()) > 0]
-            selected = cs.select_diverse(eligible, cfg['top_k'], ctx)
+            selected = cs.select_diverse(eligible, cfg['top_k'], ctx, niche_of=niche_of)
         t = thompson_topk(finalists, costs, cfg['top_k'], choice_rng, cfg['thompson_bootstraps'],
                           selected=selected)
     else:
@@ -1043,6 +1059,7 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
             # Open-loop policy trajectory minus closed-loop 'policy continues' on
             # the same futures: a check of the imagined-trajectory extraction.
             centre_gap = float(rel[0])
+        plain = rel  # group-gain cost for the log
         if ctx is not None:
             rel, extra = cs.screen(record, evaluate, base, cands, scores, cfg['screen_K'], H_screen, ctx, f'screen{it}')
             futures += extra
@@ -1058,13 +1075,15 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
         cov = (cov+neff*S)/(1.+neff)
         wd = np.array([w[[p['duration_s'] == d for p in cands]].sum() for d in durations])
         pd = (pd+neff*wd/wd.sum())/(1.+neff)
-        log.append(dict(iteration=it, candidates=len(cands), best_rel_cost=float(rel.min()),
-                        mean_rel_cost=float(rel.mean()), ess=float(neff), temperature=lam,
+        log.append(dict(iteration=it, candidates=len(cands), best_rel_cost=float(plain.min()),
+                        mean_rel_cost=float(plain.mean()), ess=float(neff), temperature=lam,
                         duration_probs=dict(zip(map(str, durations), map(float, pd)))))
     ranked = sorted(pool.values(), key=lambda x: (x[0], x[1]['id']))
     if ctx is None:
         finalists = [p for _, p in ranked[:min(sc['finalists'], len(ranked))]]
     else:
+        futures += cs.extend_solos(record, evaluate, base, pool, None, sc['finalists'],
+                                   cfg['screen_K'], H_screen, ctx)
         finalists = _coop_finalists(pool, sc['finalists'], ctx, cs)
     H_final = final_horizon(max(p['duration_s'] for p in finalists), cfg)
     if ctx is None:
