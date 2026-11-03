@@ -41,3 +41,20 @@
   speed-pulse sensitivity does not fill the RNG-only reference slot.
 - Resource status remains the historical closure audit, not a fresh remote probe.
   Scientific scope and all existing limitations remain as published.
+
+## Fresh-session check (resumed at ef0d549a)
+
+- Initial git status was clean. COMPLETE.json confirms 480 successful tasks;
+  WATCH_COMPLETE.json binds publication to b40939aa and subsequent closure.
+- Re-executed every original verify_delivery.py assertion with only its exclusive
+  receipt write intercepted in memory; generated JSON exactly matches the existing
+  DELIVERY_VERIFIED.json. Published hashes, populations, paired arithmetic, signed
+  component additivity, intervals, report length and PNG checks all pass.
+- Re-read the design, report, runtime supplement, C1 claim checklist and C1_GAPS.
+  Shared runs/active/C4-V7FT-20261017/REGISTRATION.md line 5700 still records COMPLETE.
+- Directly rechecked WMFIX_PILOT_V2DATA.md, WMFIX_ES.md and C1FLOOR.md: neither
+  WM-fix supplies the required passing verdict; the RNG-only floor is unavailable.
+  Wall executor restoration and initialization ancestry remain unresolved as reported.
+- No inference, dispatcher, collector, transport, SUMO or fitting was started.
+  No fresh remote resource probe was made; resource closure remains the historical
+  OWNED_RESOURCES_CLOSED.json audit. This resume changes only this verification note.
