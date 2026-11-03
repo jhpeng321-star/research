@@ -59,3 +59,23 @@
   analysis was rerun and no SUMO, training, inference, dispatch, process signals,
   peer writes, additional registration, deletion or push occurred. This appended
   resume receipt is the only change.
+
+## Fresh-session closeout from da953f52 — 2026-11-03
+
+- Started with clean `c4/bdrank` status and Git log at `da953f52`; read the saved
+  report, evidence index, registration, verification and prior resume receipts
+  first. Preserved completed analysis `7655c0db` and all subsequent receipts.
+- Re-read the four required source reports and both detector/analysis method
+  contracts. Metadata-only round-2 `CURRENT_JOBS.md` still has the Nov3 01:23 +08
+  HOLD: 31/216 new jobs collected, 185 unadmitted, 12 matched K8 v5/v4 worlds,
+  collector/publisher exited incomplete and zero active INT evaluations. The full
+  registered comparison remains incomplete; no partial prediction cache was read.
+- Ran only `python -B tools/bdrank/verify.py`: all checks PASS, including 4,500
+  recorded rows, 900 K8 aggregates, 17,750 pair/tie classifications, 300 decisions,
+  173 input hashes, development-only selection and the single registration line.
+  Git status stayed clean afterward; the 55-line report and all evidence bytes
+  were unchanged. No completed analysis or inference job was repeated.
+- Duration/queue extent and option breakdown items remain STOP with their existing
+  missing-field and GPU-minute estimates. No SUMO, training, new inference,
+  dispatch, process signals, peer writes, extra registration, deletion or push.
+  This appended closeout receipt is the sole change for this resume.
