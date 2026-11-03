@@ -1,5 +1,9 @@
 # S-COOPMWM — live checks
 
+Interim metadata update13:00:41+08: **A96/B26/R48** episode hash receipts complete,
+both owners live/no failures; outcome values remain closed. V2 read-only observer7456
+is creation-time/argv verified live and continues the120s receipt mirror.
+
 ## Nov3 12:59 UTC+8 — both u9 checks published; first isolated state is graded
 - B-u9 completed12:48:41, R-u9 at12:53:56. Watcher3305066 and its children
   remain healthy, no alerts/dead children; fixedu24 and original pacing continue.
