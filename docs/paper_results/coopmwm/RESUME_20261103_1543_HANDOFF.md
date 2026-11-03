@@ -32,3 +32,8 @@ Budget authority follows the user's latest-addendum precedence: the existing
 registered17,471,840cap is adopted; this note creates no authority or reservation.
 Status snapshot7,772,850charged/9,698,990remaining, every phase nonnegative and
 all V2V phases unspent. Preserve all original/failure/dispatch receipts.
+
+Final read-only probe15:45:03+08: **B-u13/R-u12 are both completed**, all original
+five owners live, noalerts/deadchildren. B-u14/R-u13 have no jobs yet; disk free
+1,812,410,368bytes remains belowguard. Probe
+`RESUME_DISK_RECOVERY_PROGRESS_1793691905450378500.json`. No new dispatch.
