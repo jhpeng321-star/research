@@ -15,7 +15,8 @@ from .protocol import checked
 from .storage import write
 
 BASE = '/home/ubuntu/coopmwm20261103_compositereleasecpu1'
-SOURCE = '/home/ubuntu/coopmwm20261103_v2vcpu1'
+GENERATION = 'V2'
+SOURCE = '/home/ubuntu/coopmwm20261103_v2vcpu2'
 FILES = (
     'tools/coopmwm/bank_v2v.py', 'tools/coopmwm/v2v_obs.py',
     'tools/coopmwm/v2v_model.py', 'tools/coopmwm/v2v_integrate.py',
@@ -47,7 +48,9 @@ if not (r/'STAGED.json').exists():
   if not (r/n).exists():shutil.copytree(base/n,r/n,ignore=shutil.ignore_patterns('__pycache__'))
  for n in ('FROZEN_COSTS.json','FROZEN_MOTION_SOURCE.py','FROZEN_GEOMETRY_SOURCE.py','FROZEN_NETWORK.net.xml.gz','FROZEN_PRE_NICHE_SEARCH.py'):
   if not (r/n).exists():shutil.copy2(base/n,r/n)
- runtime=Path('/home/ubuntu/e3final/runtime/src/traffic_shepherd');assert runtime.is_dir()
+ candidates=[Path('/home/ubuntu/e3final/runtime/src/traffic_shepherd'),Path('/home/ubuntu/e3final/runtime/traffic_shepherd')]
+ present=[p for p in candidates if p.is_dir()];assert len(present)==1,present
+ runtime=present[0]
  for p in runtime.rglob('*.py'):
   assert not any(s in str(p).lower() for s in ('sealed','holdout','heldout','cal_split','chunk5','j4b','inc1','hetdata_truth','vehicle_params','driver_params'))
   assert not p.is_symlink()
@@ -69,14 +72,14 @@ for name,data in files.items():
  p=(r/'pytools'/name if name.startswith('tools/') else r/'runtime_src'/name if name.startswith('traffic_shepherd/') else r/name)
  assert p.read_bytes()==base64.b64decode(data),name
 env=dict(os.environ,PYTHONPATH=str(r/'pytools')+':'+str(r/'WM_PACKAGE')+':'+str(r/'runtime_src')+':/home/ubuntu/e3final/runtime',CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',COOPMWM_NICHE_BASELINE=str(r/'FROZEN_PRE_NICHE_SEARCH.py'),COOPMWM_NULLFIX_GEOMETRY=str(r/'FROZEN_GEOMETRY_SOURCE.py'),COOPMWM_NULLFIX_NETWORK=str(r/'FROZEN_NETWORK.net.xml.gz'))
-code='from tools.coopmwm.nullfix_geometry import install;install('+repr(str(r/'FROZEN_GEOMETRY_SOURCE.py'))+','+repr(str(r/'FROZEN_NETWORK.net.xml.gz'))+');from tools.coopmwm.ls_cpu_test import run;run('+repr(str(r))+')'
+code='from tools.coopmwm.nullfix_geometry import install;install('+repr(str(r/'FROZEN_GEOMETRY_SOURCE.py'))+');from tools.coopmwm.ls_cpu_test import run;run('+repr(str(r))+')'
 with (r/'LS_CPU.log').open('x') as log:
  p=subprocess.Popen(['/home/ubuntu/miniconda3/bin/python','-B','-u','-c',code],env=env,cwd=str(r),stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
 v=dict(pid=p.pid,start_ticks=Path('/proc',str(p.pid),'stat').read_text().split()[21],boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),source_root=str(r),sim_s=0)
 with dispatch.open('x') as f:json.dump(v,f)
 print(json.dumps(v))'''
     value = json.loads(remote('cpuQ', code, timeout=60))
-    target = ops.EVIDENCE/'V2V_LINUX_CPU_DISPATCH_V1.json'
+    target = ops.EVIDENCE/f'V2V_LINUX_CPU_DISPATCH_{GENERATION}.json'
     if not target.exists(): write(target, value)
     print(json.dumps(value))
 
@@ -92,7 +95,7 @@ done=r/'LS_CPU_RESULT.json'
 print(json.dumps(dict(unix=time.time(),owner=d,alive=alive,result=json.loads(done.read_text()) if done.exists() else None,log=(r/'LS_CPU.log').read_text()[-16000:])))''', timeout=35))
     write(ops.EVIDENCE/f'V2V_LINUX_CPU_STATUS_{time.time_ns()}.json', value)
     if value['result']:
-        p = ops.EVIDENCE/'V2V_LINUX_CPU_RESULT_V1.json'
+        p = ops.EVIDENCE/f'V2V_LINUX_CPU_RESULT_{GENERATION}.json'
         if not p.exists(): write(p, value['result'])
     result = value.pop('result')
     if result:
