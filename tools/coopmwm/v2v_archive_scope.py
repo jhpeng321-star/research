@@ -21,6 +21,12 @@ def under(path, parent):
     except ValueError:return False
 
 
+def job_refs(root, refs):
+    """Run/storage-root declarations are locations, not pending job inputs."""
+    jobs=Path(root)/'jobs'
+    return {q for q in refs if Path(q)!=jobs and under(q,jobs)}
+
+
 def job_info(root, path):
     root, path = Path(root), Path(path)
     if BAD.search(str(path)) or '..' in path.parts or path.is_symlink():return None
@@ -112,7 +118,7 @@ def run(control):
     m.job_kind=lambda p:job_info(root,p) or original_kind(p)
     def candidates():
         files,trees,_=m.base.protected(m.base.final_labels())
-        refs=pending_refs(root)|m.metadata_refs()
+        refs=job_refs(root,pending_refs(root)|m.metadata_refs())
         paths,_=select(root,m.base.open_files(),files,trees,refs,time.time())
         return paths,dict(scope='V2V outputs only; original mover stays live')
     m.candidates=candidates

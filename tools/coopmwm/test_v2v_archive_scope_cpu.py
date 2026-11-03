@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import time
 import unittest
-from .v2v_archive_scope import job_info,completed_updates,pending_refs,select
+from .v2v_archive_scope import job_info,completed_updates,pending_refs,select,job_refs
 
 
 class V2VArchiveScopeTests(unittest.TestCase):
@@ -34,6 +34,10 @@ class V2VArchiveScopeTests(unittest.TestCase):
             self.assertFalse(any(str(job) in p for p in paths))
             (r/'requests').mkdir();(r/'requests/q.json').write_text(json.dumps(dict(job=str(job))))
             self.assertIn(str(job),pending_refs(r))
+            # A runtime's run_root/jobs-root declaration must not turn into a
+            # blanket protection of every finished episode.
+            refs=job_refs(r,{str(r),str(r/'jobs'),str(job)})
+            self.assertEqual(refs,{str(job)})
 
     def test_incomplete_recent_and_invalid_receipts_never_qualify(self):
         with tempfile.TemporaryDirectory() as d:
