@@ -13,7 +13,7 @@ def launch():
     text = p.read_text(encoding='utf-8'); h = sha(p)
     code = f'''from pathlib import Path
 import json,subprocess,hashlib,os,time,fcntl
-r=Path({str(CONTROL)!r});assert r.parent.is_dir();r.mkdir(exist_ok=True)
+r=Path({CONTROL.as_posix()!r});assert r.is_absolute() and r.parent.is_dir();r.mkdir(exist_ok=True)
 lock=(r/'DISPATCH.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
 d=r/'DISPATCH.json'
 if d.exists():print(d.read_text());raise SystemExit
@@ -27,7 +27,7 @@ v=dict(pid=child.pid,start_ticks=Path('/proc',str(child.pid),'stat').read_text()
 with d.open('x') as f:json.dump(v,f)
 print(json.dumps(v))'''
     value = json.loads(remote('cpuQ', code, timeout=35))
-    target = ops.EVIDENCE/'ARCHIVE_MOVE_INTERIM008_DISPATCH_1450.json'
+    target = ops.EVIDENCE/'ARCHIVE_MOVE_INTERIM008_DISPATCH_1450_V2.json'
     if not target.exists(): write(target, value)
     print(json.dumps(value))
 
@@ -35,13 +35,12 @@ print(json.dumps(v))'''
 def status():
     value = json.loads(remote('cpuQ', f'''from pathlib import Path
 import json,time
-r=Path({str(CONTROL)!r});d=json.loads((r/'DISPATCH.json').read_text());p=Path('/proc',str(d['pid']))
+r=Path({CONTROL.as_posix()!r});d=json.loads((r/'DISPATCH.json').read_text());p=Path('/proc',str(d['pid']))
 alive=False
 if p.exists():
  st=(p/'stat').read_text().split();alive=st[21]==d['start_ticks'] and st[2]!='Z'
 receipt=r/'ARCHIVE_MOVE_interim008_observables.json'
 print(json.dumps(dict(unix=time.time(),owner=d,alive=alive,receipt=json.loads(receipt.read_text()) if receipt.exists() else None,log=(r/'ARCHIVE.log').read_text()[-6000:])))''', timeout=35))
-    p = ops.EVIDENCE/'ARCHIVE_MOVE_INTERIM008_STATUS_1450.json'
     # Snapshot names are immutable; canonical result is copied only on completion.
     write(ops.EVIDENCE/f'ARCHIVE_MOVE_INTERIM008_STATUS_{__import__("time").time_ns()}.json', value)
     if value['receipt']:
