@@ -270,3 +270,18 @@
   collection, replay or remote process action. Existing designs/code/results preserved.
 - Task COMPLETE; WM-PHYS efficacy/calibration, robust pooled mean superadditivity
   and a causal horizon effect remain unestablished, as reported in COOPPLAN.md.
+
+## Fresh-session verification — 2026-11-04 / base2b45981b
+- Arrived clean on `c4/coopplan`; reconciled Git log/status, shared registration,
+  completed-task handoff, paper report and both final QA receipts before execution.
+- Read-only extension/H300 verifiers PASS:36+24worlds,432+288decisions,
+  all66executed groups with both solos; saved immutable artifact hashes match.
+- Existing six-module CPU/analysis suite PASS:41tests/0skips in0.222s,
+  CUDA hidden and OMP/MKL/OpenBLAS single-threaded; no SUMO execution.
+- Added simulation spend0; global725280/800000sim-s,74720unused. No dispatch,
+  collection, replay or remote process action. All60pairs remain COMPLETE.
+- Existing designs/code/registration/results/figures preserved; WM backend
+  qualification and statistical limitations remain as stated in COOPPLAN.md.
+- Recovery at `2b45981b` found this verification receipt already uncommitted;
+  reconciled it with shared MAIN completion entries, COOPPLAN.md and both saved
+  final QA receipts. Preserved the existing checks without repeating completed work.
