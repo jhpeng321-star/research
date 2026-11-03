@@ -70,11 +70,137 @@ def _insert_columns(tensor, extra_dim):
     return out
 
 
+#: MAIN 2026-11-03 launch-audit decision I1: fixed PHYSICAL input scales of the v2v channels,
+#: applied inside the model (input layer) so the zero-initialised columns see O(1) inputs.
+#: Per partner: gap/100 m, lane offset/1, speed/30 m/s, accel/3 m/s^2, last command/3 m/s^2,
+#: presence/1; with intent sharing additionally intent_1..H/3 m/s^2 and intent_valid/1.
+V2V_PARTNER_SCALES = (100., 1., 30., 3., 3., 1.)
+V2V_INTENT_SCALE = 3.
+V2V_VALID_SCALE = 1.
+_V2V_K = 4  # partner slots (v2v_obs.V2V_K); kept local to avoid an import cycle
+
+
+def v2v_input_scales(extra_dim, k=_V2V_K):
+    """Divisors of the extra_dim v2v columns: K blocks of 6 (v2v only) or 6+H+1 (intent).
+
+    Any other width (development stubs) is left unscaled (all ones)."""
+    extra_dim = int(extra_dim)
+    per = extra_dim//k if k else 0
+    if extra_dim <= 0 or extra_dim % k or per < len(V2V_PARTNER_SCALES):
+        return [1.]*max(extra_dim, 0)
+    block = list(V2V_PARTNER_SCALES)
+    if per > len(block):
+        block += [V2V_INTENT_SCALE]*(per-len(block)-1)+[V2V_VALID_SCALE]
+    return block*k
+
+
+class V2VInputLinear(nn.Linear):
+    """Widened first actor/critic layer that divides the v2v columns by fixed physical scales.
+
+    Parameters, state-dict keys and shapes are exactly nn.Linear's; columns [0, FEATURES) and
+    the tail block (actor latent / critic rsu) are unscaled, so with zero-initialised v2v
+    weights the outputs are identical to the unwidened model. The scale is derived from the
+    current weight width, so a v2v-only -> intent re-grid picks up the intent layout."""
+
+    def _input_scale(self):
+        width = int(self.weight.shape[1])
+        cache = self.__dict__.setdefault('_v2v_scale_cache', {})
+        if width not in cache:
+            extra = width-FEATURES-int(self.v2v_tail)
+            cache[width] = torch.tensor([1.]*FEATURES+[1./s for s in v2v_input_scales(extra)]
+                                        + [1.]*int(self.v2v_tail), dtype=torch.float32)
+        return cache[width].to(dtype=self.weight.dtype)
+
+    def forward(self, x):
+        return nn.functional.linear(x*self._input_scale(), self.weight, self.bias)
+
+
 def _widen_input_layer(layer, extra_dim):
     """Copy the input layer into a wider one; new input weights are ZERO."""
     original = int(layer.weight.shape[1])
+    tail = getattr(layer, 'v2v_tail', original-FEATURES)
     layer.weight = nn.Parameter(_insert_columns(layer.weight.detach(), extra_dim))
+    layer.__class__ = V2VInputLinear
+    layer.v2v_tail = int(tail)
+    layer.__dict__.pop('_v2v_scale_cache', None)
     return original
+
+
+# ---------------------------------------------------------------- fresh Adam state of new columns
+
+def _adam_defaults_ok(group):
+    return (not group.get('amsgrad') and not group.get('maximize') and not group.get('capturable')
+            and not group.get('weight_decay') and not group.get('fused'))
+
+
+def _fresh_columns_hook(optimizer, args, kwargs):
+    """Post-step correction: columns with ``v2v_column_offset`` > 0 are bias-corrected with their
+    OWN step count (t - offset) instead of the tensor's step t - i.e. exactly Adam's update for a
+    column whose state started at step 0 when it was created (MAIN decision I1). The moments
+    themselves are column-wise already (zeroed at creation); only the bias correction differs."""
+    with torch.no_grad():
+        for group in optimizer.param_groups:
+            b1, b2 = group['betas']
+            lr, eps = float(group['lr']), float(group['eps'])
+            for p in group['params']:
+                st = optimizer.state.get(p)
+                if not st or 'v2v_column_offset' not in st or 'step' not in st:
+                    continue
+                t = float(st['step'])
+                if float(st.get('v2v_last_step', torch.tensor(-1.))) == t:
+                    continue  # no Adam step for this tensor (no gradient): nothing to correct
+                st['v2v_last_step'] = torch.tensor(t)
+                offset = st['v2v_column_offset'].to(p.dtype)
+                fresh = offset > 0
+                if not bool(fresh.any()):
+                    continue
+                if not _adam_defaults_ok(group):
+                    raise ValueError('fresh-column Adam correction supports default Adam only')
+                c = (t-offset).clamp_min(1.)
+                m, v = st['exp_avg'], st['exp_avg_sq']
+                old = (lr/(1-b1**t))*m/(v.sqrt()/((1-b2**t)**.5)+eps)
+                new = (lr/(1-b1**c))*m/(v.sqrt()/((1-b2**c).sqrt())+eps)
+                p.add_(torch.where(fresh, old-new, torch.zeros_like(old)))
+
+
+def install_fresh_columns(optimizer):
+    """Register the fresh-column correction once per optimizer instance (idempotent)."""
+    if getattr(optimizer, '_v2v_fresh_columns_hook', None) is None:
+        optimizer._v2v_fresh_columns_hook = optimizer.register_step_post_hook(_fresh_columns_hook)
+    return optimizer
+
+
+def mark_fresh_columns(optimizer, policy, columns_by_head):
+    """Give the listed input columns of actor/critic[0].weight a fresh Adam state (step 0).
+
+    ``columns_by_head``: {'actor': [col, ...], 'critic': [...]}. Their moments are zeroed and
+    their bias-correction step restarts now (offset = the tensor's current Adam step)."""
+    install_fresh_columns(optimizer)
+    for head, columns in columns_by_head.items():
+        weight = getattr(policy, head)[0].weight
+        st = optimizer.state.get(weight)
+        if not st or 'step' not in st or not columns:
+            continue  # never stepped: the whole tensor is fresh already
+        offset = st.get('v2v_column_offset')
+        if offset is None or int(offset.shape[0]) != int(weight.shape[1]):
+            offset = torch.zeros(int(weight.shape[1]), dtype=weight.dtype)
+        idx = torch.as_tensor(list(columns), dtype=torch.long)
+        offset = offset.clone()
+        offset[idx] = float(st['step'])
+        st['v2v_column_offset'] = offset
+        for key in ('exp_avg', 'exp_avg_sq'):
+            st[key][:, idx] = 0.
+    return optimizer
+
+
+def v2v_columns(policy):
+    """Input-column indices of the v2v block of the widened actor/critic input layers."""
+    out = {}
+    for head in ('actor', 'critic'):
+        layer = getattr(policy, head)[0]
+        extra = int(layer.weight.shape[1])-FEATURES-int(getattr(layer, 'v2v_tail', 0))
+        out[head] = list(range(FEATURES, FEATURES+max(extra, 0)))
+    return out
 
 
 def extend_for_v2v(model, extra_dim):
@@ -136,7 +262,7 @@ def _load_extended(path, payload, extra_dim):
     policy = Policy()
     extend_for_v2v(policy, extra_dim)
     policy.load_state_dict(payload['policy'])
-    optimizer = torch.optim.Adam(policy.parameters(), lr=3e-4)
+    optimizer = install_fresh_columns(torch.optim.Adam(policy.parameters(), lr=3e-4))
     optimizer.load_state_dict(payload['optimizer'])
     generator = torch.Generator()
     generator.set_state(payload['generator'])
@@ -168,4 +294,6 @@ def load_checkpoint(path, config=None, v2v_dim=None):
     policy, optimizer, generator, payload = base_load(path)
     extend_for_v2v(policy, extra_dim)
     optimizer = _rebuilt_optimizer(policy, optimizer)
+    # MAIN decision I1: the widened columns start from a fresh Adam state (step 0).
+    mark_fresh_columns(optimizer, policy, v2v_columns(policy))
     return policy, optimizer, generator, payload

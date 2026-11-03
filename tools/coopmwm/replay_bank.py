@@ -887,7 +887,15 @@ def _action_error(policy, r, best):
                                           plan_id=best['id'], weight=1.))
     if getattr(policy, 'actor', None) is not None and policy.actor[0].weight.shape[1] > 33:
         from .bank_v2v import attach_pairs
-        pairs, _ = attach_pairs(pairs, Path(r['_branches'])/r['verification_id']/branch['branch']/'observable.jsonl.gz', r['t0'])
+        horizon = int(getattr(policy, 'intent_horizon', 0) or 0)
+        # Audit I5: an intent policy needs the K*(6+H+1) blocks plus refreshed partner intents
+        # (current head on the partners' own t-1 contexts, never recorded commands).
+        intent = dict(horizon=horizon, entry=f"{r['verification_id']}/{branch['branch']}") if horizon else None
+        pairs, _ = attach_pairs(pairs, Path(r['_branches'])/r['verification_id']/branch['branch']/'observable.jsonl.gz',
+                                r['t0'], **({'intent': intent} if intent else {}))
+        if horizon:
+            from .v2v_intent import refresh_bank_intents
+            refresh_bank_intents(policy, pairs)
     errs = []
     with torch.no_grad():
         for sample, _w in pairs:
