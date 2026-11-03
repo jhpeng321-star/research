@@ -286,3 +286,106 @@ def test_quote():
     q = vp.standard_quote()['t0_600']
     assert q['first_seed_negative_seed2_none']['multiplier_total'] == 2.0
     assert q['one_winner_each_seed']['all8_total_sim_s'] > q['one_winner_each_seed']['legacy_total_sim_s']
+
+
+# ---------------------------------------------------------------- common-window cooperation label
+
+def _tape(t0, t_end, rate):
+    cum, prefixes = 100., {}
+    for t in range(t0, t_end):
+        prefixes[str(t)] = fp(t, cum)
+        cum += rate(t)
+    return dict(prefixes=prefixes, final=fp(t_end, cum), steps=[]), cum
+
+
+def _base(t):
+    return 2.0+0.4*math.sin(0.21*t)
+
+
+def _solo_fixture(tmp_path, solo_end, group_end=720, t0=600, solo_ref_bump=None):
+    """Group policy/plan tapes over [t0, group_end]; one solo verification over [t0, solo_end]."""
+    from tools.coopmwm.accel_storage import write as awrite
+    ref, J_ref = _tape(t0, group_end, _base)
+    plan, _ = _tape(t0, group_end, lambda t: _base(t)-0.6)
+    bump = (lambda t: 0.5 if (solo_ref_bump is not None and t == solo_ref_bump) else 0.)
+    sref, J_sp = _tape(t0, solo_end, lambda t: _base(t)+bump(t))
+    ssolo, J_ss = _tape(t0, solo_end, lambda t: _base(t)-0.1)
+    vid = 'solo_v'
+    sworse, J_sw = _tape(t0, solo_end, lambda t: _base(t)-0.02)
+    for b, tape in (('policy', sref), ('cand1', ssolo), ('cand2', sworse)):
+        d = tmp_path/'branches'/vid/b;d.mkdir(parents=True);awrite(d/'RESULT.json', tape)
+    solo = dict(verification_id=vid, receipt_sha256='x', status='accepted', J_policy_veh_s=J_sp-100.,
+                J_candidates_veh_s=[J_ss-100., J_sw-100.], window=dict(start_s=t0, end_s=solo_end),
+                branches=[dict(branch='policy'), dict(branch='cand1'), dict(branch='cand2')])
+    window = dict(start_s=t0, end_s=group_end)
+    return plan, ref, window, solo, J_ref-100.
+
+
+def test_shorter_solo_window_identical_reference_is_cooperative_on_common_window(tmp_path):
+    plan, ref, window, solo, J_ref = _solo_fixture(tmp_path, solo_end=660)
+    out = vp._cooperation(1, dict(members=['a', 'b']), plan, window, solo, tmp_path, J_ref, True, reference_tape=ref)
+    assert solo['J_policy_veh_s'] != J_ref
+    assert out['cooperative'] is True and out['cooperative_status'] == 'cooperative'
+    assert out['solo_policy_matches_reference'] is False
+    assert out['solo_policy_matches_reference_on_common_window'] is True
+    assert out['synergy_window_used']['end_s'] == 660 and out['synergy']['paired_window']['used']['end_s'] == 660
+
+
+def test_shorter_solo_window_differing_reference_is_mismatch(tmp_path):
+    plan, ref, window, solo, J_ref = _solo_fixture(tmp_path, solo_end=660, solo_ref_bump=630)
+    out = vp._cooperation(1, dict(members=['a', 'b']), plan, window, solo, tmp_path, J_ref, True, reference_tape=ref)
+    assert out['cooperative'] is False and out['cooperative_status'] == 'reference_mismatch'
+    assert out['solo_policy_matches_reference_on_common_window'] is False
+    # a difference AFTER the common window is irrelevant
+    plan, ref, window, solo, J_ref = _solo_fixture(tmp_path/'late', solo_end=660)
+    ref['prefixes']['700'] = fp(700, 1.)
+    out = vp._cooperation(1, dict(members=['a', 'b']), plan, window, solo, tmp_path/'late', J_ref, True,
+                          reference_tape=ref)
+    assert out['cooperative_status'] == 'cooperative'
+    # no reference tape available -> conservative mismatch
+    plan, ref, window, solo, J_ref = _solo_fixture(tmp_path/'none', solo_end=660)
+    out = vp._cooperation(1, dict(members=['a', 'b']), plan, window, solo, tmp_path/'none', J_ref, True)
+    assert out['cooperative_status'] == 'reference_mismatch'
+
+
+def test_equal_windows_unchanged_keys(tmp_path):
+    plan, ref, window, solo, J_ref = _solo_fixture(tmp_path, solo_end=720)
+    assert solo['J_policy_veh_s'] == J_ref
+    a = vp._cooperation(1, dict(members=['a', 'b']), plan, window, solo, tmp_path, J_ref, True)
+    b = vp._cooperation(1, dict(members=['a', 'b']), plan, window, solo, tmp_path, J_ref, True, reference_tape=ref)
+    assert a == b and a['solo_policy_matches_reference'] is True
+    assert set(a) == {'cooperative', 'cooperative_status', 'statistical_reason', 'synergy', 'solo_advantages_veh_s',
+                      'solo_verification_id', 'solo_receipt_sha256', 'solo_policy_matches_reference'}
+    assert a['cooperative_status'] == 'cooperative' and 'common window' not in a['statistical_reason']
+
+
+def test_reader_relabels_stored_reference_mismatch(tmp_path):
+    from tools.coopmwm.accel_storage import write as awrite
+    bank = tmp_path/'bank';t0 = 600
+    plan, ref, window, solo, J_ref = _solo_fixture(bank/vp.SOLO_ROOTS[1], solo_end=660)
+    sroot = bank/vp.SOLO_ROOTS[1];(sroot/'verifications').mkdir()
+    solo.pop('receipt_sha256');solo = xg._seal(solo, 'receipt_sha256')
+    (sroot/'verifications'/'solo_v.json').write_text(json.dumps(solo))
+    gdir = tmp_path/'first';gv = 'grp_v'
+    for b, tape in (('policy', ref), ('cand1', plan)):
+        d = gdir/'branches'/gv/b;d.mkdir(parents=True);awrite(d/'RESULT.json', tape)
+    grec = xg._seal(dict(verification_id=gv, status='accepted', J_policy_veh_s=J_ref,
+                         branches=[dict(branch='policy'), dict(branch='cand1')], window=window), 'receipt_sha256')
+    (gdir/'verifications').mkdir();(gdir/'verifications'/(gv+'.json')).write_text(json.dumps(grec))
+    stale = dict(seed_index=1, example_id=gv+'#s1', plan_id='p1', candidate_index=0, admitted=True, status='admitted',
+                 cooperative=False, cooperative_status='reference_mismatch', solo_verification_id='solo_v',
+                 solo_receipt_sha256=solo['receipt_sha256'],
+                 tape=dict(branches_dir=str(gdir/'branches'), verification_id=gv, branch=dict(branch='cand1'),
+                           window=window))
+    rec = dict(verification_id=gv, candidates=[dict(index=0, plan_id='p1', members=['a', 'b'])],
+               per_seed_v1=dict(examples=[stale], cooperative_seeds=[], replicated=False, replicated_plans=[]),
+               cooperation=dict(cooperative=False, cooperative_seeds=[], cooperative_examples=0, replicated=False))
+    out = vp.relabel_reference_mismatch(rec, bank)
+    e = out['per_seed_v1']['examples'][0]
+    assert e['cooperative'] is True and e['cooperative_status'] == 'cooperative' and e['reader_relabel']
+    assert out['per_seed_v1']['cooperative_seeds'] == [1] and out['cooperation']['cooperative'] is True
+    assert rec['per_seed_v1']['examples'][0]['cooperative_status'] == 'reference_mismatch'   # input untouched
+    # nothing to relabel -> same object; unreadable solo -> stored label kept
+    ok = dict(rec, per_seed_v1=dict(rec['per_seed_v1'], examples=[dict(stale, cooperative_status='not_cooperative')]))
+    assert vp.relabel_reference_mismatch(ok, bank) is ok
+    assert vp.relabel_reference_mismatch(rec, tmp_path/'nowhere') is rec
