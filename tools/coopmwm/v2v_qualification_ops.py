@@ -9,6 +9,7 @@ import hashlib
 import json
 import time
 import zlib
+from pathlib import PurePosixPath
 from . import ops
 from .ls_validity_ops import remote
 from .protocol import checked
@@ -37,8 +38,17 @@ FILES = (
 )
 
 
-def qualify():
-    files = {n: base64.b64encode(checked(ops.LOCAL/n).read_bytes()).decode() for n in FILES}
+def qualify(*, additional_files=(), additional_tests=(), frozen_files=None,
+            integration=None, source_commit=None, extra_env=None):
+    names = tuple(dict.fromkeys(FILES + tuple(additional_files)))
+    files = {n: base64.b64encode(checked(ops.LOCAL/n).read_bytes()).decode() for n in names}
+    for name, raw in (frozen_files or {}).items():
+        checked(name)
+        if PurePosixPath(name).is_absolute() or '..' in PurePosixPath(name).parts or '\\' in name or ':' in name:
+            raise ValueError('frozen fixture must have a safe relative path')
+        if name in files:
+            raise ValueError('frozen fixture conflicts with deployed source: '+name)
+        files[name] = base64.b64encode(raw).decode()
     packed = base64.b64encode(zlib.compress(json.dumps(files).encode())).decode()
     code = f'''from pathlib import Path
 import json,base64,zlib,shutil,hashlib,subprocess,os,time,fcntl
@@ -46,9 +56,16 @@ r=Path({SOURCE!r});base=Path({BASE!r});assert r.parent.is_dir() and base.is_dir(
 r.mkdir(exist_ok=True)
 lock=(r/'QUALIFY.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
 dispatch=r/'LS_CPU_DISPATCH.json';done=r/'LS_CPU_RESULT.json'
+files=json.loads(zlib.decompress(base64.b64decode({packed!r})))
+if source_commit := {source_commit!r}:
+ if (r/'STAGED.json').exists():assert json.loads((r/'STAGED.json').read_text()).get('commit')==source_commit,'generation belongs to another commit; adopt it or use a new generation'
+ if dispatch.exists() or done.exists():
+  assert (r/'STAGED.json').exists(),'incomplete staging receipt'
+  for name,data in files.items():
+   p=(r/'pytools'/name if name.startswith('tools/') else r/'runtime_src'/name if name.startswith('traffic_shepherd/') else r/name)
+   assert p.read_bytes()==base64.b64decode(data),name
 if done.exists():print(done.read_text());raise SystemExit
 if dispatch.exists():print(dispatch.read_text());raise SystemExit
-files=json.loads(zlib.decompress(base64.b64decode({packed!r})))
 if not (r/'STAGED.json').exists():
  for n in ('pytools','WM_PACKAGE'):
   if not (r/n).exists():shutil.copytree(base/n,r/n,ignore=shutil.ignore_patterns('__pycache__'))
@@ -66,6 +83,7 @@ if not (r/'STAGED.json').exists():
   target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(base64.b64decode(data))
  tests=json.loads((base/'LS_RELEASE_TESTS.json').read_text())
  tests+=['test_v2v_runner_cpu','test_v2v_model_cpu','test_v2v_int_e2e_cpu','test_replay_bank_v2v_cpu','test_v2v_runtime_cpu','test_v2v_live_cpu','test_bank_amendment_cpu']
+ tests+={list(additional_tests)!r}
  with (r/'LS_RELEASE_TESTS.json').open('x') as f:json.dump(sorted(set(tests)),f)
  selection=json.loads((base/'LS_CPU_SELECTION.json').read_text())
  selection['pytest_args']=[x.replace(str(base),str(r)) for x in selection.get('pytest_args',[])]
@@ -73,12 +91,14 @@ if not (r/'STAGED.json').exists():
  with (r/'LS_CPU_SELECTION.json').open('x') as f:json.dump(selection,f)
  hashes={{str(p.relative_to(r)):hashlib.sha256(p.read_bytes()).hexdigest() for parent in (r/'pytools',r/'runtime_src',r/'tests') for p in parent.rglob('*') if p.is_file() and not p.is_symlink()}}
  for n in ('FROZEN_COSTS.json','FROZEN_MOTION_SOURCE.py','FROZEN_GEOMETRY_SOURCE.py','FROZEN_NETWORK.net.xml.gz','FROZEN_PRE_NICHE_SEARCH.py','V2V_INT_READY.json'):hashes[n]=hashlib.sha256((r/n).read_bytes()).hexdigest()
+ for n in {list(frozen_files or {})!r}:hashes[n]=hashlib.sha256((r/n).read_bytes()).hexdigest()
  with (r/'LS_SOURCE_HASHES.json').open('x') as f:json.dump(hashes,f,sort_keys=True)
- with (r/'STAGED.json').open('x') as f:json.dump(dict(base=str(base),integration='c4/v2v-int 816d045a + current runner; merged in c4/coopnative',sim_s=0),f)
+ with (r/'STAGED.json').open('x') as f:json.dump(dict(base=str(base),integration={integration or 'c4/v2v-int 816d045a + current runner; merged in c4/coopnative'!r},commit={source_commit!r},sim_s=0),f)
 for name,data in files.items():
  p=(r/'pytools'/name if name.startswith('tools/') else r/'runtime_src'/name if name.startswith('traffic_shepherd/') else r/name)
  assert p.read_bytes()==base64.b64decode(data),name
 env=dict(os.environ,PYTHONPATH=str(r/'pytools')+':'+str(r/'WM_PACKAGE')+':'+str(r/'runtime_src')+':/home/ubuntu/e3final/runtime',CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',COOPMWM_NICHE_BASELINE=str(r/'FROZEN_PRE_NICHE_SEARCH.py'),COOPMWM_NULLFIX_GEOMETRY=str(r/'FROZEN_GEOMETRY_SOURCE.py'),COOPMWM_NULLFIX_NETWORK=str(r/'FROZEN_NETWORK.net.xml.gz'))
+env.update({dict(extra_env or {})!r})
 code='from tools.coopmwm.nullfix_geometry import install;install('+repr(str(r/'FROZEN_GEOMETRY_SOURCE.py'))+');from tools.coopmwm.ls_cpu_test import run;run('+repr(str(r))+')'
 with (r/'LS_CPU.log').open('x') as log:
  p=subprocess.Popen(['/home/ubuntu/miniconda3/bin/python','-B','-u','-c',code],env=env,cwd=str(r),stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
