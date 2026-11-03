@@ -256,3 +256,17 @@
 - Six-module CPU/analysis suite PASS:41tests/0skips in1.098s, CUDA hidden and
   OMP/MKL/OpenBLAS single-threaded. No simulation or remote process action.
 - Task COMPLETE; added simulation spend0, total725280/800000sim-s,74720unused.
+
+## Fresh-session verification — 2026-11-04 / base4dd38680
+- Arrived clean on `c4/coopplan`; read Git status/log, shared S-COOPPLAN approval,
+  MAIN amendments/completion entries, handoff, paper report and both final QA receipts.
+- Read-only extension verifier PASS:36worlds/432decisions/52complete group credits.
+  Read-only H300 verifier PASS:24worlds/288decisions/all group twins and pre-pruning
+  availability. All saved immutable artifact hashes match the final QA receipts.
+- Existing six-module CPU/analysis suite PASS:41tests/0skips in1.442s, CUDA hidden,
+  OMP/MKL/OpenBLAS single-threaded; no SUMO execution.
+- All60pairs/720decisions/66executed groups remain COMPLETE, both solos covered.
+  Added simulation spend0; total725280/800000sim-s,74720unused. No dispatch,
+  collection, replay or remote process action. Existing designs/code/results preserved.
+- Task COMPLETE; WM-PHYS efficacy/calibration, robust pooled mean superadditivity
+  and a causal horizon effect remain unestablished, as reported in COOPPLAN.md.
