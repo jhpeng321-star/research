@@ -1,0 +1,54 @@
+{
+ "part": "3 of 3 (BANK/IMITATION) of the V2V intent-sharing build",
+ "workspace": "E:/agent-work/c4-v2v-bank",
+ "branch": "c4/v2v-bank",
+ "commit": "80c445f6",
+ "feature_commits": [
+  "656589f1 coopmwm: v2v bank pairs and new-policy branch wiring (flag off by default)",
+  "80c445f6 coopmwm: v2v bank pair CPU tests with synthetic branch traces"
+ ],
+ "flag": {
+  "binding_key": "v2v",
+  "default": false,
+  "byte_identical_when_off": true,
+  "mechanism": "bank_pairs(..., v2v=False)/lesson_check(..., v2v=False)/run_update cfg['v2v']; the branch runner is switched by env C4NM_V2V, set only inside bank_v2v.enabled() (subprocesses inherit it); sumo_verify.LocalBranchRunner falls back to the plain verify_controller_class() when the env flag is unset"
+ },
+ "v2v_obs_status": "tools/coopmwm/v2v_obs.py is NOT on this branch yet; bank_v2v uses a local dependency-free STUB with the exact signature v2v_features(state, cav_id, last_commands, cfg) and V2V_DIM=16 (4 floats x 4 nearest partner CAVs: relative position, speed, this-second acceleration, previous-second last issued command; zero padded). When the OBSERVATION part lands, bank_v2v's try-import picks it up unchanged (bank_v2v.STUB flips to False and is disclosed in every summary).",
+ "imitation_pair_construction_found": {
+  "pairs_from_branch_tape": "tools/coopmwm/exact_grade.py:818 imitation_pairs(original, entry) -> (sample, weight) per committed plan second (plan_executions at exact_grade.py:174)",
+  "admitted_entry_loop": "tools/coopmwm/replay_bank.py:437 bank_pairs: admitted (replication+later-harm+safety) exact-positive entries only; chosen winning-plan branch tape read at replay_bank.py:469-474 (RESULT.json of <branches>/<verification_id>/<branch>, sha-checked against the sealed receipt); pairs built at replay_bank.py:478",
+  "branch_observable_trace": "tools/coopmwm/replay_bank.py:481 <branches>/<verification_id>/<branch>/observable.jsonl.gz - lines {time_s, vehicles[{vid, s_m, v_mps, lane, is_cav, length_m, issued_acceleration_mps2, command_present}], actions} (written by tools/coopfree/backend.py:26-58)",
+  "consumed_by": "tools/coopmwm/warm_runner.py:175 (update-time imitation batch) -> tools/coopmwm/exact_grade.py:966 exact_update -> bank_imitation.run (AWR)"
+ },
+ "v2v_pair_additions": {
+  "features_per_pair": "tools/coopmwm/bank_v2v.py attach_pairs(): pair i of an entry is second t0+i; the block sample['context']['v2v'] = {member vid: [V2V_DIM floats]} is computed from the recorded branch trace at that second - partner CAV positions (s_m - ego s_m), speeds (v_mps), accelerations (issued_acceleration_mps2 at t) and their LAST ISSUED command at the PREVIOUS second (issued_acceleration_mps2 of frame t-1)",
+  "excluded_and_counted": "pairs whose trace lacks partner commands are excluded and counted in summary['v2v']['counts']: excluded_missing_prev_second (no frame at t-1), excluded_missing_partner_command (a partner CAV has no issued command at t-1), trace_missing; kept pairs keep their unchanged weights; excluded pairs are never imputed",
+  "summary_disclosure": "tools/coopmwm/replay_bank.py:526-531 summary['v2v'] = {rule, stub, cfg, counts} - written ONLY when the flag is on"
+ },
+ "lesson_and_policy_synergy_runtime_wiring": {
+  "branch_runner": "tools/coopmwm/sumo_verify.py:735-736 LocalBranchRunner.run uses bank_v2v.branch_controller_class() (env-gated V2VController subclass of verify_controller_class()): computes last_commands per step (the commands in effect at the current second = issued at the previous second) and injects context['v2v'] just before the wrapped policy samples; the current model ignores the extra context key, so pre-model runs are unaffected",
+  "lesson_check": "tools/coopmwm/replay_bank.py:923,956-960,987 lesson_check(v2v=False) wraps charge+run_branch in bank_v2v.enabled(v2v) and discloses out['v2v']; record_lesson passes it through at replay_bank.py:1026-1030",
+  "policy_synergy": "tools/coopmwm/policy_synergy.py:152-153,221,257-260 run_update reads cfg['v2v'] and enables the same env flag around every new-policy branch run",
+  "update_path": "tools/coopmwm/warm_runner.py:175-176 (bank_pairs v2v=bool(b.get('v2v'))) and :228-229 (record_lesson v2v=bool(b.get('v2v')))"
+ },
+ "block_shape_for_the_model_part": "sample['context']['v2v'] (offline pairs) and context['v2v'] (runtime branches) are {member vid: list of V2V_DIM floats}; members absent from the trace frame get the zero block; non-CAV rows are never partners",
+ "tests": {
+  "file": "tools/coopmwm/test_replay_bank_v2v_cpu.py",
+  "runner": "C:/Users/jpeng/Miniconda3/python.exe -m pytest tools/coopmwm/test_replay_bank_v2v_cpu.py -q",
+  "cases": [
+   "test_stub_features_from_synthetic_trace",
+   "test_attach_pairs_excludes_and_counts_missing_commands",
+   "test_bank_pairs_default_off_is_byte_identical",
+   "test_bank_pairs_v2v_attaches_partner_features_from_the_branch_trace",
+   "test_bank_pairs_v2v_excludes_pairs_lacking_the_previous_second",
+   "test_bank_pairs_v2v_excludes_pairs_lacking_partner_commands",
+   "test_branch_runner_controller_is_flag_gated",
+   "test_runtime_branch_runner_computes_last_commands_per_step",
+   "test_lesson_check_v2v_enables_the_branch_runner_block_and_discloses",
+   "test_lesson_check_default_never_sets_the_flag_or_the_key"
+  ],
+  "result": "10 passed",
+  "regression": "tools/coopmwm/test_replay_bank_confirm_cpu.py + test_replay_bank_lesson_cpu.py: 17 passed. test_policy_synergy_cpu/test_sumo_verify_cpu failures (/proc/<pid>/stat POSIX-ism, parallel_determinism load flake) are identical on the HEAD~1 baseline worktree - pre-existing, unrelated to this change"
+ },
+ "hard_rules": "CPU only (no SUMO, no GPU, no remote writes); no other worktree touched (baseline check used a scratch worktree under E:/Temp/opencode, removed afterwards); no git reset/clean/stash/push; no sealed/, holdout/heldout/cal_split/chunk5/j4b/inc1 paths opened; no truth files read; no hand-set behavioural thresholds (only structural constants: max_partners=4, trace window arithmetic)"
+}

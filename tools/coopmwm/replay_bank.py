@@ -477,7 +477,6 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
         coop = c.get('cooperation') or {}
         entry_pairs = xg.imitation_pairs(tape, entry)
         if v2v:
-            from . import bank_v2v
             entry_pairs, entry_counts = bank_v2v.attach_pairs(
                 entry_pairs, Path(r['_branches'])/r['verification_id']/branch['branch']/'observable.jsonl.gz',
                 r['t0'], v2v_cfg)
