@@ -276,8 +276,15 @@ def _cooperation(seed, plan, plan_tape, window, solo, solo_dir, reference_J, adm
 # ---------------------------------------------------------------- confirmation (one decision)
 
 def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, workers=2, version=None,
-                 candidates=None, branches_dir=None, health=None, later_harm_seed1=True, later_harm_seed2=True):
-    """all8_both_seeds confirmation of ONE completed first-seed decision -> sealed record."""
+                 candidates=None, branches_dir=None, health=None, later_harm_seed1=True, later_harm_seed2=True,
+                 slim_rejected_tapes=None):
+    """all8_both_seeds confirmation of ONE completed first-seed decision -> sealed record.
+
+    slim_rejected_tapes (DEFAULT OFF = None -> the C4NM_SLIM_REJECTED_TAPES env var, unset
+    means OFF; byte-identical when off): after the record is sealed, every explicitly rejected
+    candidate branch tape (and its extended-window branch) is slimmed to SLIM.json and the full
+    RESULT.json(.gz) removed (tools/coopmwm/slim_tapes.py). Admitted, policy-reference and solo
+    tapes are never touched; the record itself is unchanged."""
     from . import replay_bank as rb
     from . import bank_statistics as bs
     from . import exact_grade as xg
@@ -448,7 +455,11 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
                charges=charges, charged_sim_s=sum(c['charged_sim_s'] or 0 for c in charges),
                actual_sim_s=sum(c['actual_sim_s'] or 0 for c in charges), unix=time.time())
     xg._write_new(target, xg._seal(out, 'confirmation_sha256'))
-    return json.loads(target.read_text())
+    sealed = json.loads(target.read_text())
+    from . import slim_tapes
+    if slim_tapes.enabled(slim_rejected_tapes):
+        slim_tapes.slim_record(bank, sealed)
+    return sealed
 
 
 # ---------------------------------------------------------------- readers (per_seed_v1 integration)
@@ -555,7 +566,8 @@ def pending(root, arm, sources=()):
             if r['status'] in ('accepted', 'rejected') and r['verification_id'] not in done]
 
 
-def confirm_pending_all8(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None, health=None):
+def confirm_pending_all8(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None, health=None,
+                         slim_rejected_tapes=None):
     from . import replay_bank as rb
     by_vid = {}
     for p in (Path(rb.bank_root(root, arm))/'decisions').glob('*.json'):
@@ -566,7 +578,8 @@ def confirm_pending_all8(root, arm, runner_for, run_root, phase, workers=2, sour
             break
         snap = rb._decision_snapshot(root, arm, r, by_vid)
         out.append(confirm_all8(root, arm, r, snap, runner_for, run_root, phase, workers,
-                                r['_policy_version'], health=health)['admitted'])
+                                r['_policy_version'], health=health,
+                                slim_rejected_tapes=slim_rejected_tapes)['admitted'])
     return out
 
 

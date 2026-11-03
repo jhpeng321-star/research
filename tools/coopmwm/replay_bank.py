@@ -848,16 +848,20 @@ def _decision_snapshot(root, arm, r, by_vid):
     return torch.load(bank/'snapshots'/(link['state_id']+'.pt'), weights_only=False)
 
 
-def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None, verify_mode=None):
+def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None, verify_mode=None,
+                    slim_rejected_tapes=None):
     """Confirm every first-seed positive decision (own bank and, for B, live LS labels) once.
 
-    verify_mode='all8_both_seeds' (owner 2026-11-03 22:05, default OFF): every completed decision
-    gets all K candidates + policy on the second CRN seed, per-seed winners, per-(plan, seed)
-    solos (tools/coopmwm/verify_perseed.py); None/'legacy' keeps this function unchanged."""
+    verify_mode='all8_both_seeds' (owner 2026-11-03 22:05, default OFF = legacy): every completed
+    decision gets all K candidates + policy on the second CRN seed, per-seed winners, per-(plan, seed)
+    solos (tools/coopmwm/verify_perseed.py); None/'legacy' keeps this function unchanged.
+    slim_rejected_tapes (owner 2026-11-04, DEFAULT OFF, all8 only): after each decision's record is
+    sealed, rejected candidate branch tapes are slimmed to SLIM.json (tools/coopmwm/slim_tapes.py)."""
     if verify_mode is not None:
         from . import verify_perseed as vp
         if vp.mode(verify_mode) == vp.ALL8:
-            return vp.confirm_pending_all8(root, arm, runner_for, run_root, phase, workers, sources, limit)
+            return vp.confirm_pending_all8(root, arm, runner_for, run_root, phase, workers, sources, limit,
+                                           slim_rejected_tapes=slim_rejected_tapes)
     bank = bank_root(root, arm);done = {p.stem for p in (bank/'confirmations').glob('*.json')}
     by_vid = {}
     for p in (bank/'decisions').glob('*.json'):
