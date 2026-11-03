@@ -7,7 +7,16 @@
   "commits": [
     "a8fda5c5 coopmwm v2v_obs: planned-command intent buffer, t-1 masked partner features, slot block, coverage telemetry (option v2v_intent default OFF); runtime/runner/live gates"
   ],
-  "head_commit": "a8fda5c5 coopmwm v2v_obs: planned-command intent buffer, t-1 masked partner features, slot block, coverage telemetry (option v2v_intent default OFF); runtime/runner/live gates",
+  "head_commit": "1a79c2e7 (this receipt; implementation at a8fda5c5 coopmwm v2v_obs: planned-command intent buffer, t-1 masked partner features, slot block, coverage telemetry (option v2v_intent default OFF); runtime/runner/live gates)",
+  "verified_resume": {
+    "date": "2026-11-03",
+    "session": "fresh resume after frozen predecessor; nothing redone, only re-verified",
+    "head": "1a79c2e7",
+    "tree": "clean",
+    "intent_tests": "12 passed in 108.91s (tools/coopmwm/test_v2v_intent_obs_cpu.py)",
+    "regression_tests": "24 passed in 64.59s (test_v2v_runtime_cpu.py + test_v2v_int_e2e_cpu.py + test_v2v_model_cpu.py + test_replay_bank_v2v_cpu.py)",
+    "no_gaps": "all receipt claims hold on current HEAD; PART A complete, no follow-up work items open in this worktree"
+  },
   "option": {
     "key": "v2v_intent",
     "default": false,
