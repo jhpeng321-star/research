@@ -44,10 +44,10 @@ ARMS = ('A', 'B', 'R')
 FIRST_UPDATE, LAST_UPDATE = 4, 5   # u3-like checkpoints -> exactly 2 updates each
 
 DEFAULTS = dict(k=8, N_exec=10, slots=4, workers=12, episodes_per_update=6, last_update=LAST_UPDATE,
-                latency_s=1., stall_s=240., timeout_s=3600., transport_errors=0, malformed=0, branch_crash=0,
+                latency_s=1., stall_s=900., timeout_s=5400., transport_errors=0, malformed=0, branch_crash=0,
                 die_slot=None, die_after=1, decline_withdrawn=True, parallel_groups=True,
                 fanout_factor=2, r_concurrent=True,
-                b_replay=True, collect_episodes=1, bank_warmup_rounds=3, verify_per_round=2)
+                b_replay=True, collect_episodes=1, bank_warmup_rounds=3, verify_per_round=3)
 
 
 # ============================================================== live-like root (three arms)
@@ -257,10 +257,14 @@ def run_scenario(name, cfg, workdir):
     state['bank'] = bank_state(root)
     (root/'PAUSE_HARNESS_END.json').write_text(json.dumps(dict(harness=True)))
     bt.join(30)
-    return dict(scenario=name, config={k: v for k, v in cfg.items()}, outcome=outcome, deadlock_or_idle=deadlock,
-                wall_s=round(wall, 1), root=str(root), **state,
-                events=[{k: v for k, v in e.items() if k != 'tb'} for e in EVENTS][-40:],
-                failures=[e for e in EVENTS if e['kind'] in ('arm_failed', 'gpu_worker_exception')][:4])
+    result = dict(scenario=name, config={k: v for k, v in cfg.items()}, outcome=outcome, deadlock_or_idle=deadlock,
+                  wall_s=round(wall, 1), root=str(root), **state,
+                  events=[{k: v for k, v in e.items() if k != 'tb'} for e in EVENTS][-40:],
+                  failures=[e for e in EVENTS if e['kind'] in ('arm_failed', 'collector_failed', 'gpu_worker_exception',
+                                                               'harness_stall', 'harness_timeout', 'harness_aborted')][:6])
+    with (Path(base)/'result_debug.json').open('w') as f:
+        json.dump(dict(result, events_full=[{k: v for k, v in e.items() if k != 'tb'} for e in EVENTS]), f, indent=1, default=str)
+    return result
 
 
 def diagnose(root, cfg, gpus):
@@ -442,6 +446,8 @@ def main(argv=None):
         scenario_table=_scenario_table(result),
         charges_per_update_per_arm={k: v for k, v in result['updates'].items()},
         charges_by_phase=result['charges_by_phase'],
+        outcome=result['outcome'],
+        harness_events=result['failures'],
         faults_found_and_fixed=_FAULTS,
         faults_open=faults,
         checks=checks,
