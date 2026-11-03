@@ -113,7 +113,9 @@ def pair_v2v_block(frame, prev_frame, members, cfg=None):
         if me is None:
             block[ego] = [0.]*V2V_DIM
             continue
-        block[ego] = list(v2v_features(frame, ego, known, cfg))
+        # plain python floats: v2v_features returns a float32 ndarray, and these
+        # blocks reach JSON-serialized artifacts (branch RESULT tapes, pair samples)
+        block[ego] = [float(x) for x in v2v_features(frame, ego, known, cfg)]
     return block, missing
 
 
@@ -224,7 +226,9 @@ def branch_controller_class():
             block = {}
             for m in context['members']:
                 if any(v.get('vid') == m and v.get('is_cav') for v in vehicles):
-                    block[m] = list(v2v_features(frame, m, known, self.v2v_cfg))
+                    # plain python floats: the block enters the sample and therefore the
+                    # episode RESULT tape (canonical JSON rejects numpy float32 scalars)
+                    block[m] = [float(x) for x in v2v_features(frame, m, known, self.v2v_cfg)]
                 else:
                     block[m] = [0.]*V2V_DIM
             return block

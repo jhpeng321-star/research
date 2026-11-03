@@ -44,9 +44,9 @@ ARMS = ('A', 'B', 'R')
 FIRST_UPDATE, LAST_UPDATE = 4, 5   # u3-like checkpoints -> exactly 2 updates each
 
 DEFAULTS = dict(k=8, N_exec=10, slots=4, workers=12, episodes_per_update=6, last_update=LAST_UPDATE,
-                latency_s=1., stall_s=900., timeout_s=5400., transport_errors=0, malformed=0, branch_crash=0,
+                latency_s=1., stall_s=900., timeout_s=9000., transport_errors=0, malformed=0, branch_crash=0,
                 die_slot=None, die_after=1, decline_withdrawn=True, parallel_groups=True,
-                fanout_factor=2, r_concurrent=True,
+                fanout_factor=2, r_concurrent=True, verify_workers=6,
                 b_replay=True, collect_episodes=1, bank_warmup_rounds=3, verify_per_round=3)
 
 
@@ -536,6 +536,10 @@ _FAULTS = [
     'fault 10: the rehearsal stall watchdog mis-fired on healthy silent phases (arm PPO updates are '
     'minutes of pure CPU with no file writes) and its os._exit killed a mid-update arm without any '
     'failure receipt - watchdog raised to 900 s and the debug dump keeps full tracebacks',
+    'fault 11: bank_v2v v2v blocks were numpy float32 scalars (v2v_features returns a float32 '
+    'ndarray); injected into branch samples they reach the episode RESULT tape and canonical JSON '
+    'serialization raises TypeError - EVERY lesson and policy-synergy new-policy branch failed '
+    '("Object of type float32 is not JSON serializable") - the wiring now emits plain python floats',
 ]
 
 if __name__ == '__main__':
