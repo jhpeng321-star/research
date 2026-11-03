@@ -13,14 +13,14 @@ offline - the registered bank_imitation.run loop, no PPO update, no SUMO - and r
 - whether the zero-initialised v2v input weights moved (non-zero): the policy can use
   partner intent.
 
-Verdict PASS iff all four hold. The two training options are interfaces until live: 
-``bank_filter`` (c4/bank-stat-filter, BANKFILT READY, registered value 'statistical') is
-applied per entry inside replay_bank.bank_pairs and disclosed here; ``imitation_trust``
-(c4/imit-fullpass, IMITFIX_READY.json) is a stub until that branch publishes READY and is
-then forwarded to the registered runner by parameter name. The READY paths are polled
-(file read only) and the stub state is disclosed in the report. The v2v flag defaults OFF;
-no existing module is modified, so behaviour with the options off is byte-identical (the
-gate itself is a new, self-contained module).
+Verdict PASS iff all four hold. Both training options are live and default off:
+``bank_filter='statistical'`` (c4/bank-stat-filter, BANKFILT READY) is applied per entry
+inside replay_bank.bank_pairs and disclosed here; ``imitation_trust='own_pass'``
+(c4/imit-fullpass, IMITFIX READY) runs the phase on its own trust region with the
+guaranteed cooperative-first first pass and is forwarded to the registered runner with the
+bank's pair_cooperative flags. The READY paths are still polled (file read only) and the
+option state is disclosed in the report. The v2v flag defaults OFF; no pre-existing module
+behaviour changes with the options off (the gate itself is a new, self-contained module).
 """
 import copy
 import inspect
@@ -129,13 +129,11 @@ def filter_report(options, summary):
                       '+ paired per-vehicle deficit bounds)', report=applied)
 
 
-def trust_kwargs(options):
-    """imitation_trust option (c4/imit-fullpass): kwargs for the registered imitation runner.
-
-    Stub while that branch is not READY: no own trust region, the registered KL machinery of
-    bank_imitation.run stands alone. When READY and configured, the option is passed to the
-    runner by its parameter name; a runner without the parameter raises instead of silently
-    ignoring the option."""
+def trust_kwargs(options, pairs=None, summary=None):
+    """imitation_trust option (c4/imit-fullpass, IMITFIX READY): kwargs for the registered
+    imitation runner. The registered value 'own_pass' is forwarded by its parameter name
+    together with the bank's pair_cooperative flags when they align with the pairs; a runner
+    without the parameter raises instead of silently ignoring the option."""
     spec = options.get('imitation_trust')
     if not spec:
         return {}, dict(option='imitation_trust', enabled=False, active='stub',
@@ -146,7 +144,12 @@ def trust_kwargs(options):
     parameters = inspect.signature(bank_imitation.run).parameters
     for name in ('imitation_trust', 'trust'):
         if name in parameters:
-            return {name: spec}, dict(option='imitation_trust', enabled=True, active='ready', parameter=name)
+            kwargs = {name: spec}
+            flags = (summary or {}).get('pair_cooperative')
+            if 'cooperative' in parameters and flags is not None and len(flags) == len(pairs or ()):
+                kwargs['cooperative'] = flags
+            return kwargs, dict(option='imitation_trust', enabled=True, active='ready', value=spec,
+                                parameter=name, cooperative_flags=kwargs.get('cooperative') is not None)
     raise ValueError('imitation_trust option configured but bank_imitation.run does not accept it')
 
 
@@ -311,9 +314,12 @@ def normalize_options(options=None):
     bank_filter = source.get('bank_filter')
     if bank_filter not in (None, False, 'statistical'):
         raise ValueError("bank_filter must be None/False or the registered value 'statistical'")
+    imitation_trust = source.get('imitation_trust')
+    if imitation_trust not in (None, False, 'own_pass'):
+        raise ValueError("imitation_trust must be None/False or the registered value 'own_pass'")
     return dict(v2v=bool(source.get('v2v', False)), v2v_dim=source.get('v2v_dim'),
                 passes=int(source.get('passes', 5)), coefficient=float(source.get('coefficient', 1.)),
-                bank_filter=bank_filter, imitation_trust=source.get('imitation_trust'))
+                bank_filter=bank_filter, imitation_trust=imitation_trust)
 
 
 def run_gate(checkpoint, pairs, summary=None, options=None):
@@ -323,7 +329,7 @@ def run_gate(checkpoint, pairs, summary=None, options=None):
     extra = v2v_model.v2v_extra({'v2v': opts['v2v']}, opts['v2v_dim'])
     policy, optimizer, generator, payload = load_gate_policy(checkpoint, extra)
     reference = copy.deepcopy(policy)
-    kwargs, trust_report = trust_kwargs(opts)
+    kwargs, trust_stage = trust_kwargs(opts, pairs, summary)
     run_report = bank_imitation.run(policy, optimizer, pairs, generator, reference,
                                     coefficient=opts['coefficient'], passes=opts['passes'], **kwargs)
     entries, coop, raw = cooperative_entries(pairs, summary)
@@ -338,7 +344,7 @@ def run_gate(checkpoint, pairs, summary=None, options=None):
                   pairs_with_v2v_features=with_v2v,
                   v2v_feature_fraction=with_v2v/len(pairs) if pairs else None,
                   counts=(summary or {}).get('counts'), exposure=(summary or {}).get('exposure')),
-        filter=filter_stage, trust=trust_report,
+        filter=filter_stage, trust=trust_stage,
         imitation=dict(passes_requested=run_report['requested_epochs'],
                        passes_completed=run_report['epochs_completed'],
                        optimizer_steps=run_report['optimizer_steps'],
@@ -374,13 +380,14 @@ def verdict(report):
 # ---------------------------------------------------------------- inputs and CLI
 
 def bank_inputs(bank_root, arm, training_seed, beta=1., max_decisions=None, v2v=True,
-                v2v_cfg=None, bank_filter=None):
+                v2v_cfg=None, bank_filter=None, pair_flags=False):
     """(pairs, summary) from the live B-REPLAY bank (CPU-only read of recorded receipts);
-    bank_filter='statistical' (BANKFILT READY) is applied per entry inside bank_pairs."""
+    bank_filter='statistical' (BANKFILT READY) is applied per entry inside bank_pairs and
+    pair_flags=True (IMITFIX READY) adds the summary['pair_cooperative'] imitation flags."""
     from . import replay_bank
     return replay_bank.bank_pairs(Path(bank_root), arm, int(training_seed), beta=float(beta),
                                   max_decisions=max_decisions, v2v=v2v, v2v_cfg=v2v_cfg,
-                                  bank_filter=bank_filter)
+                                  bank_filter=bank_filter, pair_flags=pair_flags)
 
 
 def pairs_file(path):
@@ -405,6 +412,8 @@ def main(argv=None):
     p.add_argument('--v2v-dim', type=int)
     p.add_argument('--bank-filter', dest='bank_filter', action='store_true',
                    help="apply the registered statistical bank filter (requires --bank-root)")
+    p.add_argument('--imitation-trust', dest='imitation_trust', action='store_true',
+                   help="run the imitation phase with the registered own_pass trust region")
     p.add_argument('--passes', type=int, default=5)
     p.add_argument('--coefficient', type=float, default=1.)
     p.add_argument('--out', type=Path, default=Path('COOPFIX_GATE_REPORT.json'))
@@ -414,14 +423,16 @@ def main(argv=None):
     if not a.checkpoint:
         p.error('--checkpoint is required for run')
     options = dict(v2v=a.v2v, v2v_dim=a.v2v_dim, passes=a.passes, coefficient=a.coefficient,
-                   bank_filter='statistical' if a.bank_filter else None)
+                   bank_filter='statistical' if a.bank_filter else None,
+                   imitation_trust='own_pass' if a.imitation_trust else None)
     if a.pairs_file:
         if a.bank_filter:
             p.error('--bank-filter requires --bank-root (the rule needs the recorded receipts and traces)')
         pairs, summary = pairs_file(a.pairs_file)
     elif a.bank_root:
         pairs, summary = bank_inputs(a.bank_root, a.arm, a.training_seed, a.beta,
-                                     a.max_decisions, v2v=a.v2v, bank_filter=options['bank_filter'])
+                                     a.max_decisions, v2v=a.v2v, bank_filter=options['bank_filter'],
+                                     pair_flags=bool(options['imitation_trust']))
     else:
         p.error('one of --pairs-file or --bank-root is required for run')
     report = run_gate(a.checkpoint, pairs, summary, options)

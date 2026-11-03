@@ -7,6 +7,7 @@ No SUMO, no GPU, no writes outside tmp_path. The v2v flag default-off path is as
 byte-identical.
 """
 import json
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -24,6 +25,7 @@ from tools.coopmwm.v2v_obs import V2V_DIM
 COOP_MEMBERS = ['m0', 'm1']
 SOLO_MEMBER = 'm0'
 SIGNAL, NOISE = 0.03, 0.01
+READY_FILES_DIR = gate.READY_FILES['imitation_trust'].parent
 
 
 def u0_checkpoint(tmp_path, lr=1e-4, seed=5):
@@ -306,9 +308,11 @@ def test_option_stubs_identity_and_ready_gating(monkeypatch, tmp_path):
     with pytest.raises(ValueError):
         gate.normalize_options(dict(bank_filter='unregistered'))
     with pytest.raises(ValueError):
+        gate.normalize_options(dict(imitation_trust='unregistered'))
+    with pytest.raises(ValueError):
         gate.filter_report(dict(bank_filter='statistical'), summary)
     with pytest.raises(ValueError):
-        gate.trust_kwargs(dict(imitation_trust={'kind': 'own'}))
+        gate.trust_kwargs(dict(imitation_trust='own_pass'))
     ready = tmp_path/'BANKFILT_READY.json'
     ready.write_text(json.dumps(dict(branch='c4/bank-stat-filter')))
     monkeypatch.setitem(gate.READY_FILES, 'bank_filter', ready)
@@ -317,24 +321,52 @@ def test_option_stubs_identity_and_ready_gating(monkeypatch, tmp_path):
     assert stage['active'] == 'ready' and stage['report'] == applied
     with pytest.raises(ValueError):                          # a bare pairs file cannot apply the rule
         gate.filter_report(dict(bank_filter='statistical'), summary)
-    monkeypatch.setitem(gate.READY_FILES, 'imitation_trust', ready)
+
+
+def test_imitation_trust_own_pass_is_forwarded_with_cooperative_flags(monkeypatch):
+    absent = Path('/nonexistent/IMITFIX_READY.json')
+    monkeypatch.setitem(gate.READY_FILES, 'imitation_trust', absent)
     with pytest.raises(ValueError):
-        gate.trust_kwargs(dict(imitation_trust={'kind': 'own'}))    # runner has no trust parameter yet
+        gate.trust_kwargs(dict(imitation_trust='own_pass'), [], None)
+    monkeypatch.setitem(gate.READY_FILES, 'imitation_trust', READY_FILES_DIR/'IMITFIX_READY.json')
+    pairs, summary = synthetic_pairs(n_coop_entries=2, n_solo=4)
+    kwargs, report = gate.trust_kwargs(dict(imitation_trust='own_pass'), pairs, summary)
+    assert report['enabled'] is True and kwargs['imitation_trust'] == 'own_pass'
+    assert kwargs.get('cooperative') is None                 # no pair flags in this summary
+    flags = [gate.is_cooperative(s) for s, _ in pairs]
+    summary['pair_cooperative'] = flags
+    kwargs, report = gate.trust_kwargs(dict(imitation_trust='own_pass'), pairs, summary)
+    assert kwargs['cooperative'] == flags and report['cooperative_flags'] is True
+    kwargs, report = gate.trust_kwargs(dict(imitation_trust='own_pass'), pairs[:-1], summary)
+    assert kwargs.get('cooperative') is None                 # misaligned flags are not forwarded
+
+
+def test_run_gate_with_own_pass_trust_region(tmp_path):
+    path, pairs, summary = build_bank(tmp_path)
+    summary['pair_cooperative'] = [gate.is_cooperative(s) for s, _ in pairs]
+    report = gate.run_gate(path, pairs, summary, dict(v2v=True, passes=5, imitation_trust='own_pass'))
+    assert report['verdict'] == 'PASS', report['reasons']
+    assert report['imitation']['passes_completed'] == 5
+    assert report['imitation']['kl'] <= report['imitation']['kl_limit']
+    assert report['trust']['enabled'] is True and report['trust']['cooperative_flags'] is True
+    coop = report['cooperative']
+    assert coop['fall_ci95'][1] < 0. and coop['fall_mean_mps2'] < 0.
+    assert report['v2v_weights']['moved'] is True
 
 
 def test_bank_filter_option_is_forwarded_to_bank_pairs(monkeypatch, tmp_path):
     seen = {}
 
     def fake_bank_pairs(root, arm, seed, beta=1., max_decisions=None, v2v=True, v2v_cfg=None,
-                        bank_filter=None):
-        seen.update(bank_filter=bank_filter, v2v=v2v)
+                        bank_filter=None, pair_flags=False):
+        seen.update(bank_filter=bank_filter, v2v=v2v, pair_flags=pair_flags)
         pairs, base = synthetic_pairs(n_coop_entries=1, n_solo=2)
         base['bank_filter'] = dict(mode='statistical', kept=2, dropped=1)
         return pairs, base
     from tools.coopmwm import replay_bank
     monkeypatch.setattr(replay_bank, 'bank_pairs', fake_bank_pairs)
     pairs, summary = gate.bank_inputs('root', 'B', 7, bank_filter='statistical')
-    assert seen == dict(bank_filter='statistical', v2v=True) and len(pairs) == 4
+    assert seen == dict(bank_filter='statistical', v2v=True, pair_flags=False) and len(pairs) == 4
     path, _ = u0_checkpoint(tmp_path)
     report = gate.run_gate(path, pairs, summary, dict(v2v=True, passes=5, bank_filter='statistical'))
     assert report['filter']['enabled'] is True and report['filter']['report']['mode'] == 'statistical'
