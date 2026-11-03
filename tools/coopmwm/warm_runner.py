@@ -86,6 +86,13 @@ def random_reference(root,u,concurrent=False):
     return path
 
 
+def resume_load(path,b):
+    """accel_learner.load, v2v-aware (v2v_model.load_for): byte-identical when the binding
+    has no ``v2v`` key and the checkpoint is base-width."""
+    from .v2v_model import load_for
+    return load_for(path,b)
+
+
 def run_arm(root,arm):
     import fcntl
     import os
@@ -97,11 +104,11 @@ def run_arm(root,arm):
     torch.manual_seed(SEED)
     if arm=='A':
         resume=b.get('A_resume_update',4)
-        policy,opt,rng,payload=load(root/f'A_checkpoint_{resume:03}.pt');assert payload['update']==resume
-        first,last=resume+1,48
+        policy,opt,rng,payload=resume_load(root/f'A_checkpoint_{resume:03}.pt',b);assert payload['update']==resume
+        first,last=resume+1,min(48,b.get('stop_after_update',48))
     elif 'resume_update' in b:
         resume=b['resume_update']
-        policy,opt,rng,payload=load(root/f'{arm}_checkpoint_{resume:03}.pt');assert payload['update']==resume
+        policy,opt,rng,payload=resume_load(root/f'{arm}_checkpoint_{resume:03}.pt',b);assert payload['update']==resume
         first,last=resume+1,min(budget()['updates'][arm],b.get('stop_after_update',budget()['updates'][arm]))
     else:
         policy=Policy();opt=torch.optim.Adam(policy.parameters(),lr=3e-4)
@@ -173,7 +180,7 @@ def run_arm(root,arm):
                     cap=imitation_decision_cap(read(bp)) if bp.exists() else 0
                     fair=dict(matched_B_update=bu,B_bank_decisions=cap,B_update_receipt_found=bp.exists())
                 pairs,weights=bank_pairs(root,arm,SEED,beta=replay_beta,sources=b.get('replay_sources',{}).get(arm,()),
-                    max_decisions=cap)
+                    max_decisions=cap,v2v=bool(b.get('v2v')))
                 from .replay_bank import bank_quality
                 weights['bank_quality']=bank_quality(root,arm,b.get('replay_sources',{}).get(arm,()))
                 if fair is not None:
@@ -226,7 +233,7 @@ def run_arm(root,arm):
                         timeout_s=cfg.get('timeout_s',3600))
                 try:
                     lesson=record_lesson(root,arm,policy,root,u,lesson_runner,
-                        sources=b.get('replay_sources',{}).get(arm,()))
+                        sources=b.get('replay_sources',{}).get(arm,()),v2v=bool(b.get('v2v')))
                 except Exception as error:
                     lesson=dict(arm=arm,update=u,error=repr(error),list_size=0,entries=[])
             raw=[v*UNIT for e in eps for v,_ in advantages(e['steps'])]

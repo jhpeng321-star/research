@@ -1,0 +1,496 @@
+"""PART 5 end-to-end CPU rehearsal of the V2V intent-sharing arms (branch c4/v2v-rehearsal).
+
+Runs the REAL orchestration (warm_runner.run_arm, accel_runner.wave, replay_bank
+collect/verify/confirm, exact grading, lesson check, capacity broker, GPU RPC
+spool) for THREE arms A-v2v, B-v2v and R-v2v - each resuming a u3-like
+checkpoint with ``v2v=True`` in its binding, following the same recipes as the
+registered arms (A plain PPO; B with B-bank imitation; R with R-bank
+imitation + fairness cap) - for TWO updates (u4, u5). CPU only: the fake
+SUMO plant / GPU spool / WM evaluator of rehearsal_cpu are the only leaves.
+
+While c4/v2v-int has not published V2V_INT_READY.json, the v2v observation and
+model hooks are LOCAL STUBS with the integrated interface
+(v2v_obs.V2V_DIM/v2v_features, v2v_model.extend_for_v2v) plus the flag-gated
+bank wiring (bank_v2v, default off; byte-identical when off). When the
+integrated branch is READY this rehearsal is re-run on the real code.
+
+Checks rehearsed (V2V_REHEARSAL_READY.json):
+- all three arms complete 2 updates with no STOP and no arm failure;
+- bank imitation pairs carry v2v features (offline bank_pairs re-read of the
+  finished root: every kept pair sample['context']['v2v'] present, V2V_DIM wide);
+- the lesson check and the isolated policy-synergy check run with v2v
+  observations (receipts carry v2v.enabled and their new-policy branches run
+  under bank_v2v.enabled);
+- budget charges per arm per update are reported.
+"""
+import copy
+import json
+import os
+import shutil
+import sys
+import threading
+import time
+import traceback
+from pathlib import Path
+
+import numpy as np
+import torch
+
+from .rehearsal_cpu import (AMENDMENT, BOUNDS, DEADLINE, SLOTS, _child_environment, _proposer_search,
+                            _seed_check_fixtures, bank_state, event, make_remote_class, progress_signature,
+                            tiny_proposer, FakeGPU, EVENTS, _seal)
+
+ARMS = ('A', 'B', 'R')
+FIRST_UPDATE, LAST_UPDATE = 4, 5   # u3-like checkpoints -> exactly 2 updates each
+
+DEFAULTS = dict(k=8, N_exec=10, slots=4, workers=12, episodes_per_update=6, last_update=LAST_UPDATE,
+                latency_s=1., stall_s=240., timeout_s=3600., transport_errors=0, malformed=0, branch_crash=0,
+                die_slot=None, die_after=1, decline_withdrawn=True, parallel_groups=True,
+                fanout_factor=2, r_concurrent=True,
+                b_replay=True, collect_episodes=1, bank_warmup_rounds=1, verify_per_round=2)
+
+
+# ============================================================== live-like root (three arms)
+
+def build_root(root, cfg):
+    from .accel_learner import save
+    from .acceleration import Policy
+    from .accel_protocol import worlds
+    from .storage import write
+    from . import search_learning
+    from .warm_protocol import SEED
+    root.mkdir(parents=True)
+    for d in ('requests', 'responses', 'centre_requests', 'centre_responses', 'jobs'):
+        (root/d).mkdir()
+    (root/'AUTHORITY.md').write_text('V2V intent-sharing CPU rehearsal authority (temporary root)\n'+AMENDMENT+'\n')
+    train = worlds('train')
+    n = cfg['episodes_per_update']
+    plans = {u: [train[(u*7+i*5) % len(train)] for i in range(n)] for u in (FIRST_UPDATE, LAST_UPDATE)}
+    for u in plans:
+        seen = set();out = []
+        for w in plans[u]+train:
+            if w['seed'] not in seen and len(out) < n:
+                seen.add(w['seed']);out.append(w)
+        plans[u] = out
+    torch.manual_seed(SEED)
+    for arm in ARMS:   # u3-like checkpoints for all three arms
+        policy = Policy();opt = torch.optim.Adam(policy.parameters(), lr=3e-4)
+        rng = torch.Generator().manual_seed(SEED)
+        save(root/f'{arm}_checkpoint_003.pt', policy, opt, rng, 3, 0)
+    budget = dict(total=13_600_000, phases=dict(superseded=811640, train=3_000_000, checks=500_000, dev=500_000,
+                                                sumo_verification=1_000_000, sumo_verification_k8=1_500_000,
+                                                bank_verification_ext=2_600_000,
+                                                exact_plan_grading=500_000, discovery=138_200))
+    budget['allocated'] = sum(budget['phases'].values());budget['unallocated'] = budget['total']-budget['allocated']
+    budget.update(updates=dict(A=48, B=24, R=24))
+    write(root/'RESOURCE_EXTENSION_1651.json', dict(amendment_sha256=AMENDMENT, gpu_deadline=DEADLINE,
+                                                    budget=budget, harness=True))
+    (root/'DNS_GUIDED_RELEASE_1651.json').write_text(json.dumps(dict(harness=True)))
+    write(root/'WORKERS.json', dict(workers=[dict(slot=s) for s in SLOTS]))
+    write(root/'WARM_REMOTE_BINDING.json', dict(endpoints=[dict(slot=s) for s in SLOTS], deadline_unix=DEADLINE,
+                                                search_sha256='harness'))
+    write(root/'BROKER_CONFIG.json', dict(amendment_sha256=AMENDMENT, deadline_unix=DEADLINE,
+                                          source_root=str(Path(__file__).resolve().parents[2]),
+                                          receipt_tag='_H3', decline_withdrawn=cfg.get('decline_withdrawn', True)))
+    for d in (root/'exact_grades', root/'sumo_verification'):
+        d.mkdir(parents=True, exist_ok=True)
+    smoke = _seal(dict(pass_=True, all_five_branches_graded=True, harness_fixture=True), 'smoke_sha256')
+    (root/'sumo_verification'/'SMOKE_PASSED.json').write_text(json.dumps(smoke))
+    (root/'exact_grades'/'SMOKE_PASSED.json').write_text(json.dumps(dict(harness_fixture=True)))
+    # Live A reporting fixtures (already published by the completed live A u16
+    # checkpoint); mirrored here so the rehearsal resume does not re-run them.
+    (root/'A_CHECK_016.json').write_text(json.dumps(dict(harness=True)))
+    (root/'A_DEV_016.json').write_text(json.dumps(dict(harness=True)))
+    learned = search_learning.empty('B', SEED, BOUNDS)
+    progress = {arm: dict(running=[], beta=1., learned=learned,
+                          exact_rng_state=np.random.default_rng(SEED).bit_generator.state, exact_count=12)
+                for arm in ARMS}
+    return dict(plans=plans, budget=budget, progress=progress)
+
+
+def install_runtime(root, cfg, layout):
+    """rehearsal_cpu.install_runtime (all leaf/platform patches), then a v2v binding verify()."""
+    from . import warm_runner as wr
+    from .warm_protocol import install_accounting
+    rc_install = _rc_install_runtime()
+    rc_install(root, cfg, layout)
+
+    def verify(r, a):
+        install_accounting(r, layout['budget'])
+        k = cfg['k']
+        b = dict(runtime='fake-runtime', checkpoint='fake-checkpoint', accel_bounds=BOUNDS,
+                 gpu_deadline=DEADLINE, N_exec=cfg['N_exec'], workers=cfg['workers'], warm_history=False,
+                 health_guards=True, safety_reference=dict(by_world={}, unmatched_zero_event_benchmark=True,
+                                                           source='harness'),
+                 budget=layout['budget'], awr=dict(coefficient=1.), resume_update=3,
+                 A_resume_update=3, v2v=True,
+                 resume_progress=copy.deepcopy(layout['progress'][a]), runtime_receipt_suffix='_H3',
+                 quota_aware_admission=True, parallel_group_queries=a == 'B' and cfg.get('parallel_groups', True),
+                 precharged_unattempted=[], stop_after_update=cfg['last_update'],
+                 sumo_verify=dict(root=str(r/'sumo_verification'), run_root=str(r),
+                                  phase='sumo_verification_k8' if k == 8 else 'sumo_verification',
+                                  k=k, workers=cfg.get('verify_workers') or k+1, timeout_s=3600, guide_beta=1.))
+        if cfg.get('b_replay'):
+            b.update(b_replay=True, replay_beta=1., slots=cfg['slots'])
+        if cfg.get('fanout_factor'):
+            b['parallel_fanout_factor'] = cfg['fanout_factor']
+        if cfg.get('r_concurrent') and a == 'R':
+            b['r_concurrent_lag1_quota'] = True
+        return b
+    wr.verify = verify
+
+
+def _rc_install_runtime():
+    from . import rehearsal_cpu as rc
+    return rc.install_runtime
+
+
+# ============================================================== scenario run
+
+def run_scenario(name, cfg, workdir):
+    from . import capacity_broker
+    from . import rehearsal_cpu as rc
+    EVENTS.clear()
+    cfg = dict(DEFAULTS, **cfg)
+    base = Path(workdir)/name
+    if base.exists():
+        shutil.rmtree(base)
+    root = base/'run'
+    _child_environment(base, cfg)
+    layout = build_root(root, cfg)
+    install_runtime(root, cfg, layout)
+    _seed_check_fixtures(root)
+    proposer = tiny_proposer(base)
+    from . import mppi_search
+    if not hasattr(mppi_search.search, 'harness_original'):
+        mppi_search.search = _proposer_search(proposer)
+    if cfg.get('r_concurrent'):
+        from .storage import write
+        write(root/'B_RANDOM_QUOTA_003.json', dict(sampling={'merge-dense': .95, 'ordinary': .95},
+              tickets=[dict(regime='ordinary', duration_s=d, group_size=n, id=i)
+                       for i, (d, n) in enumerate([(60, 2), (120, 3), (180, 2), (300, 4), (90, 2), (240, 3),
+                                                   (60, 5), (150, 2), (120, 6), (30, 2)])]))
+    gpus = {s: FakeGPU(s, cfg) for s in SLOTS[:cfg['slots']]}
+    with (root/'WARM_REMOTE_BINDING.json').open('w') as f:
+        json.dump(dict(endpoints=[dict(slot=s) for s in gpus], deadline_unix=DEADLINE, search_sha256='harness'), f)
+    (root/'WORKERS.json').unlink();(root/'WORKERS.json').write_text(json.dumps(dict(workers=[dict(slot=s) for s in gpus])))
+    capacity_broker.Remote = make_remote_class(gpus, cfg)
+    from . import warm_runner as wr
+    outcome = {}
+    started = time.time()
+
+    def arm_thread(arm):
+        try:
+            wr.run_arm(root, arm);outcome[arm] = 'complete'
+        except BaseException as error:
+            outcome[arm] = 'failed: '+repr(error)
+            event('arm_failed', arm=arm, error=repr(error), tb=traceback.format_exc())
+
+    def broker_thread():
+        try:
+            capacity_broker.run(root, root/'BROKER_CONFIG.json');outcome['broker'] = 'exited'
+        except BaseException as error:
+            outcome['broker'] = 'stopped: '+repr(error)[:400]
+    threads = {a: threading.Thread(target=arm_thread, args=(a,), daemon=True, name='arm-'+a) for a in ARMS}
+    bt = threading.Thread(target=broker_thread, daemon=True, name='broker');bt.start()
+    collectors = {}
+    if cfg.get('b_replay'):
+        from . import replay_bank
+        from .accel_protocol import worlds
+        train = [w for w in worlds('train') if w not in sum(layout['plans'].values(), [])]
+        done = threading.Event()
+
+        def collector(arm, rounds):
+            try:
+                b = wr.verify(root, arm)
+                st = replay_bank.collect(root, arm, b, train[(0 if arm == 'B' else 7):], lambda: done.is_set(),
+                                         episodes_per_round=cfg['collect_episodes'],
+                                         verify_workers=cfg.get('verify_workers'), rounds=rounds,
+                                         verify_per_round=cfg.get('verify_per_round'))
+                outcome.setdefault('collector_'+arm, []).append(dict(rounds=rounds, statuses=st))
+            except BaseException as error:
+                outcome.setdefault('collector_'+arm, []).append('failed: '+repr(error))
+                event('collector_failed', arm=arm, error=repr(error), tb=traceback.format_exc())
+        warm = [threading.Thread(target=collector, args=(a, cfg['bank_warmup_rounds']), daemon=True) for a in ('B', 'R')]
+        for t in warm:
+            t.start()
+        for t in warm:
+            t.join()
+        event('bank_warmup_done', bank=bank_state(root))
+        collectors = {a: threading.Thread(target=collector, args=(a, None), daemon=True) for a in ('B', 'R')}
+        for t in collectors.values():
+            t.start()
+        started = time.time()
+    for t in threads.values():
+        t.start()
+    last, last_change, deadlock = None, time.time(), False
+    while any(t.is_alive() for t in threads.values()):
+        time.sleep(1.)
+        snap = progress_signature(root)
+        if snap != last:
+            last, last_change = snap, time.time()
+        elif time.time()-last_change > cfg['stall_s']:
+            deadlock = True
+            event('harness_stall', idle_s=time.time()-last_change, signature=snap)
+            break
+        if time.time()-started > cfg['timeout_s']:
+            event('harness_timeout');break
+    wall = time.time()-started
+    if collectors:
+        done.set()
+        for t in collectors.values():
+            t.join(600)
+    state = diagnose(root, cfg, gpus)
+    state['bank'] = bank_state(root)
+    (root/'PAUSE_HARNESS_END.json').write_text(json.dumps(dict(harness=True)))
+    bt.join(30)
+    return dict(scenario=name, config={k: v for k, v in cfg.items()}, outcome=outcome, deadlock_or_idle=deadlock,
+                wall_s=round(wall, 1), root=str(root), **state,
+                events=[{k: v for k, v in e.items() if k != 'tb'} for e in EVENTS][-40:],
+                failures=[e for e in EVENTS if e['kind'] in ('arm_failed', 'gpu_worker_exception')][:4])
+
+
+def diagnose(root, cfg, gpus):
+    from .storage import ledger
+    from .sumo_verify import quote
+    stops = sorted(p.name for p in root.glob('*STOP*.json'))
+    pauses = sorted(p.name for p in root.glob('PAUSE_*.json'))
+    verifs = []
+    for p in sorted((root/'sumo_verification'/'verifications').glob('*.json')):
+        v = json.loads(p.read_text())
+        verifs.append(dict(id=v['verification_id'], arm=v['episode']['arm'], update=v['episode']['update'],
+                           status=v['status'], k=v['k'], t0=v['t0'], end=v['window']['end_s'],
+                           charged=v['charged_sim_s'], quote_k=quote(v['t0'], v['k']),
+                           matches_k_plus_1=v['charged_sim_s'] in (0, (v['k']+1)*v['window']['end_s'])))
+    charges = ledger(root)
+    phases = {}
+    for c in charges:
+        phases[c['phase']] = phases.get(c['phase'], 0)+c['sim_s']
+    updates = {}
+    for arm in ARMS:
+        started = json.loads((root/f'WARM_{arm}_STARTED_H3.json').read_text()) if \
+            (root/f'WARM_{arm}_STARTED_H3.json').exists() else {}
+        cumulative = float(started.get('charged_sim_s', 0.))
+        for u in (FIRST_UPDATE, LAST_UPDATE):
+            p = root/f'{arm}_UPDATE_{u:03}.json'
+            if not p.exists():
+                continue
+            v = json.loads(p.read_text())
+            results = 0.
+            for e in (root/'jobs').glob(f'warm_u{u:03}_{arm}_*/RESULT.json'):
+                results += json.loads(e.read_text()).get('charged_sim_s', 0.)
+            updates[f'{arm}{u}'] = dict(executed=v['proposal_routing']['executed'],
+                                        queries=v['proposal_routing']['queries'],
+                                        accepted=v['proposal_routing']['accepted'],
+                                        checkpoint=(root/f'{arm}_checkpoint_{u:03}.pt').exists(),
+                                        graded=v['trust'].get('graded'), wall_s=round(v['wall_s'], 1),
+                                        bank=v['trust'].get('bank'),
+                                        v2v_summary=(v.get('exact_imitation') or {}).get('v2v'),
+                                        imitation_steps=sum(m.get('exact_imitation_steps', 0) for m in v['ppo']),
+                                        ppo_steps=len(v['ppo']),
+                                        train_charged_sim_s=round(results, 1),
+                                        cumulative_charged_sim_s=v['charged_sim_s'],
+                                        delta_charged_since_start=round(v['charged_sim_s']-cumulative, 1),
+                                        lesson=(json.loads((root/f'LESSON_CHECK_u{u:03}_{arm}.json').read_text()
+                                                           ).get('v2v') if arm in ('B', 'R') and
+                                                (root/f'LESSON_CHECK_u{u:03}_{arm}.json').exists() else None),
+                                        verifications=sum(1 for x in verifs if x['arm'] == arm and x['update'] == u))
+    req = sum(1 for _ in root.glob('requests/*.json'))
+    resp = sum(1 for _ in root.glob('responses/*.json'))
+    return dict(stops=stops, pauses=pauses, updates=updates, plan_requests=req, plan_responses=resp,
+                unanswered_requests=req-resp,
+                verifications=dict(n=len(verifs), by_status={s: sum(1 for v in verifs if v['status'] == s)
+                                                             for s in {v['status'] for v in verifs}},
+                                   all_charges_equal_k_plus_1_branches=all(v['matches_k_plus_1'] for v in verifs),
+                                   all_within_quote=all(v['charged'] <= v['quote_k'] for v in verifs),
+                                   charged_sim_s=sum(v['charged'] for v in verifs),
+                                   ledger_verification_sim_s=sum(c['sim_s'] for c in charges
+                                                                 if c['phase'].startswith('sumo_verification'))),
+                charges_by_phase=phases, ledger_entries=len(charges),
+                gpu=dict({s: dict(alive=g.alive, searches=g.searches, failure=g.failure)
+                          for s, g in gpus.items()}))
+
+
+# ============================================================== checklist + receipts
+
+def _harness_owner(pid=None):
+    import os as _os
+    import time as _time
+    return dict(pid=pid or _os.getpid(), start_ticks='1', boot_id='harness', unix=_time.time())
+
+
+def run_synergy_checks(root, budget, arms=('B',), update=FIRST_UPDATE):
+    """Non-isolated then ISOLATED policy-synergy check with v2v=True (real code path)."""
+    from . import policy_synergy as ps
+    from . import replay_start
+    replay_start.owner = _harness_owner   # Windows rehearsal: /proc identity receipts are faked
+    cfg = dict(control_root=str(Path(root)/'control'), collection_root=str(Path(root)/'ls_collect_fixture'),
+               v2v=True, budget=dict(budget, total=14_500_000))   # accounting() registered total assertion
+    out = {}
+    for arm in arms:
+        try:
+            base = ps.run_update(root, arm, update, cfg)
+            isolated = ps.run_update(root, arm, update, dict(cfg, isolated=True))
+            out[arm] = dict(status=base['status'], entries=len(base['entries']),
+                            cooperative_entries=base['admitted_cooperative_entries'],
+                            v2v=base.get('v2v'), isolated_status=isolated['status'],
+                            isolated_entries=len(isolated['entries']), isolated_v2v=isolated.get('v2v'),
+                            gains=[e.get('policy_cooperation_gain_veh_s') for e in base['entries']])
+        except BaseException as error:
+            out[arm] = dict(error=repr(error), traceback=traceback.format_exc()[-800:])
+    return out
+
+
+def verify_checklist(root, layout_budget, arms=ARMS):
+    """The rehearsal acceptance checks; returns (checks, faults, ready)."""
+    from . import bank_v2v
+    from . import policy_synergy as ps
+    from . import replay_start
+    from . import replay_bank as rb
+    from .exact_grade import verify_sealed
+    from .warm_protocol import SEED
+    replay_start.owner = _harness_owner
+    checks, faults = {}, []
+    stops = sorted(p.name for p in Path(root).glob('*STOP*.json'))
+    failed = sorted(p.name for p in Path(root).glob('WARM_*_FAILED*.json'))
+    updates_ok = all((Path(root)/f'{a}_UPDATE_{LAST_UPDATE:03}.json').exists() and
+                     (Path(root)/f'{a}_checkpoint_{LAST_UPDATE:03}.pt').exists() and
+                     (Path(root)/f'WARM_{a}_PAUSED.json').exists() for a in arms)
+    checks['arms_complete_two_updates'] = dict(stops=stops, failed=failed, updates_ok=updates_ok,
+                                               ok=not stops and not failed and updates_ok)
+    pair_report = {}
+    for arm in ('B', 'R'):
+        pairs, weights = rb.bank_pairs(Path(root), arm, SEED, v2v=True)
+        missing = 0;dims = set()
+        for s, w in pairs:
+            block = (s.get('context') or {}).get('v2v')
+            if not block:
+                missing += 1
+            else:
+                dims |= {len(v) for v in block.values()}
+        pair_report[arm] = dict(pairs=len(pairs), pairs_missing_v2v=missing, v2v_dims=sorted(dims),
+                                stub=weights.get('v2v', {}).get('stub'),
+                                v2v_counts=(weights.get('v2v') or {}).get('counts'),
+                                entries=weights['counts'])
+        if missing or not pairs or dims-{int(bank_v2v.V2V_DIM)}:
+            faults.append(f'{arm}: bank pairs v2v check failed (pairs={len(pairs)} missing={missing} dims={sorted(dims)})')
+    checks['bank_pairs_carry_v2v'] = pair_report
+    lessons = {}
+    for arm in ('B', 'R'):
+        for u in (FIRST_UPDATE, LAST_UPDATE):
+            p = Path(root)/f'LESSON_CHECK_u{u:03}_{arm}.json'
+            if not p.exists():
+                faults.append(f'{arm} u{u}: LESSON_CHECK receipt missing')
+                continue
+            v = json.loads(p.read_text())
+            try:
+                verify_sealed(v, 'lesson_check_sha256')
+            except Exception as error:
+                faults.append(f'{arm} u{u}: lesson receipt seal {error!r}')
+            lessons[f'{arm}{u}'] = dict(v2v=v.get('v2v'), list_size=v.get('list_size'),
+                                        graded_entries=v.get('graded_entries'), error=v.get('error'),
+                                        recapture_mean=v.get('recapture_mean'))
+    checks['lesson_checks_v2v'] = lessons
+    synergy = run_synergy_checks(root, layout_budget, arms=('B',))
+    for arm, row in synergy.items():
+        if row.get('status') != 'complete' or row.get('isolated_status') != 'complete':
+            faults.append(f'synergy {arm}: {row.get("status")}/{row.get("isolated_status")} {row.get("error", "")}')
+        elif not (row.get('v2v') or {}).get('enabled') or not (row.get('isolated_v2v') or {}).get('enabled'):
+            faults.append(f'synergy {arm}: v2v receipt missing')
+    checks['policy_synergy_isolated_v2v'] = synergy
+    ready = not faults and checks['arms_complete_two_updates']['ok']
+    return checks, faults, ready
+
+
+def main(argv=None):
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument('--workdir', default=None)
+    p.add_argument('--out', default=None)
+    a = p.parse_args(argv)
+    work = a.workdir or os.path.join(os.environ.get('TEMP', tempfile_root()), 'v2v_rehearsal')
+    result = run_scenario('v2v_arms', {}, work)
+    root = result['root']
+    checks, faults, ready = verify_checklist(root, _layout_budget(root))
+    result['checks'] = checks;result['faults'] = faults;result['ready'] = ready
+    receipt = dict(
+        part='PART 5 (REHEARSAL) V2V intent-sharing arms A/B/R, CPU end-to-end',
+        commit=_commit(),
+        branch='c4/v2v-rehearsal',
+        integrated_branch_ready=_integrated_ready(),
+        hook_stub=dict(obs='tools/coopmwm/v2v_obs.py (local stub, same interface: V2V_DIM, v2v_features)',
+                       model='tools/coopmwm/v2v_model.py (local stub, same interface: extend_for_v2v)',
+                       wiring='tools/coopmwm/bank_v2v.py (flag v2v, default off; byte-identical when off)'),
+        scenario_table=_scenario_table(result),
+        charges_per_update_per_arm={k: v for k, v in result['updates'].items()},
+        charges_by_phase=result['charges_by_phase'],
+        faults_found_and_fixed=_FAULTS,
+        faults_open=faults,
+        checks=checks,
+        wall_s=result['wall_s'],
+        unix=time.time())
+    text = json.dumps(receipt, indent=1, default=str)
+    if a.out:
+        Path(a.out).write_text(text)
+    print(text)
+    import multiprocessing
+    for child in multiprocessing.active_children():
+        child.terminate()
+    sys.stdout.flush();os._exit(0)
+
+
+def tempfile_root():
+    import tempfile
+    return tempfile.gettempdir()
+
+
+def _commit():
+    import subprocess
+    return subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True,
+                          cwd=str(Path(__file__).resolve().parents[2])).stdout.strip()
+
+
+def _integrated_ready():
+    return Path('E:/agent-work/c4-v2v-int/V2V_INT_READY.json').exists()
+
+
+def _layout_budget(root):
+    from .storage import read
+    return read(Path(root)/'RESOURCE_EXTENSION_1651.json')['budget']
+
+
+def _scenario_table(result):
+    rows = []
+    for arm in ARMS:
+        for u in (FIRST_UPDATE, LAST_UPDATE):
+            v = result['updates'].get(f'{arm}{u}')
+            rows.append(dict(arm=arm+'-v2v', update=u,
+                             status='complete' if v else 'missing',
+                             executed=v.get('executed') if v else None,
+                             queries=v.get('queries') if v else None,
+                             accepted=v.get('accepted') if v else None,
+                             ppo_steps=v.get('ppo_steps') if v else None,
+                             imitation_steps=v.get('imitation_steps') if v else None,
+                             checkpoint=v.get('checkpoint') if v else None,
+                             wall_s=v.get('wall_s') if v else None))
+    rows.append(dict(arm='broker', status=result['outcome'].get('broker', '?')))
+    return rows
+
+
+_FAULTS = [
+    'fault 1: warm_runner.run_arm arm-A resume ignored stop_after_update (hard-coded last=48); '
+    'fixed to min(48, stop_after_update default 48) - identical behaviour when the key is absent',
+    'fault 2: accel_plant.episode loaded every snapshot into a plain Policy(); v2v-widened weights '
+    'would crash - fixed with v2v_model.fit_policy (shape-driven, no-op for base widths)',
+    'fault 3: replay_bank.collect reloaded the newest checkpoint with the base loader - collectors '
+    'would crash on v2v-widened checkpoints - fixed with v2v_model.load_for',
+    'fault 4: rehearsal fake SUMO trace rows lacked the real backend issued_acceleration_mps2/'
+    'command_present slots, so bank_v2v pair blocks would have been excluded as missing partner '
+    'commands - fake_tick now records the issued command per CAV row (harness parity fix)',
+    'fault 5 (rehearsal shims, disclosed): policy_synergy accounting() registered-total assertion '
+    'needs budget.total=14_500_000 and replay_start.owner needs a /proc identity - the rehearsal '
+    'passes a mirrored budget and a harness owner receipt (same pattern as FakeGPU.owner)',
+]
+
+if __name__ == '__main__':
+    main()

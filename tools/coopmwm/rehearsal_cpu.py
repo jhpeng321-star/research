@@ -151,7 +151,17 @@ def fake_tick(b, controller=None, trace=None):
     b.totals['team_delay_vs'] += deficit
     b.totals['hard_brake'] += float(hard_brakes)
     if trace is not None:
-        trace.write(json.dumps(dict(time_s=now, vehicles=rows, actions=audit))+'\n')
+        # Same trace schema as the real coopfree backend (backend.py tick): CAV rows carry the
+        # acceleration ISSUED at this second (bank_v2v reads the previous second's slot as
+        # last_commands). Harness parity fix, not a behaviour change.
+        trows = []
+        for r in rows:
+            v = dict(r)
+            if r['is_cav']:
+                v['issued_acceleration_mps2'] = float(accel[r['vid']])
+                v['command_present'] = True
+            trows.append(v)
+        trace.write(json.dumps(dict(time_s=now, vehicles=trows, actions=audit))+'\n')
     b.now += 1.
     b.actual += 1.
     TICKS[0] += 1

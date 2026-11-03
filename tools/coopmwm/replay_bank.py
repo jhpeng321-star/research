@@ -310,7 +310,7 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
     import multiprocessing
     from .accel_plant import episode
     from .accel_storage import reserve
-    from .accel_learner import load
+    from .v2v_model import load_for
     from .policy_wm import actor_state
     root = Path(root);bank = bank_root(root, arm);bank.mkdir(parents=True, exist_ok=True)
     cfg = binding['sumo_verify'];vroot = bank/'sumo_verification'
@@ -324,7 +324,7 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
     decided = set();n = 0;statuses = []
     while not stop() and (rounds is None or n < rounds):
         path, u = latest_checkpoint(root, arm)
-        policy, _, _, _ = load(path)
+        policy, _, _, _ = load_for(path, binding)   # v2v-aware (byte-identical when flag off)
         jobs = []
         # Episode index continues across collector restarts: a job id is never reused/retried.
         start = sum(1 for _ in (root/'jobs').glob(f'collect_{arm}_*'))
@@ -435,11 +435,15 @@ def temperature(root, arm, training_seed, decisions):
 
 
 def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT_CLIP, sources=(),
-               max_decisions=None):
+               max_decisions=None, v2v=False, v2v_cfg=None):
     """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta.
 
     max_decisions (R fairness, MAIN): use at most this many admitted targets, oldest first;
     never padded from another arm's data.
+    v2v (MAIN 2026-11-03, part 3/3, DEFAULT OFF = byte-identical): each pair also carries the
+    partners' v2v features of that second, computed from the winning plan's recorded branch
+    trace (bank_v2v.attach_pairs); pairs whose trace lacks partner commands are excluded and
+    counted in summary['v2v'].
     """
     everything = bank_decisions(root, arm, upto_unix, sources)
     T = temperature(root, arm, training_seed, everything)
@@ -448,6 +452,9 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     conf = confirmations(root, arm)
     counts.update(unconfirmed=0, not_admitted=0,admitted_excess_not_used=0)
     per_entry = []
+    from . import bank_v2v
+    v2v_counts = dict(pairs=0, kept=0, excluded_missing_prev_second=0,
+                      excluded_missing_partner_command=0, trace_missing=False)
     for r in decisions:
         if r['status'] != 'accepted' or not r['grade_veh_s'] or r['grade_veh_s'] <= 0:
             counts['nonpositive'] += 1;continue
@@ -468,7 +475,13 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
         w = float(beta)*xg.weight(c['mean_replicated_advantage_veh_s'], T['temperature_veh_s'], clip)
         entry = dict(start_s=r['t0'], duration_s=int(plan['duration_s']), plan_id=plan['id'], weight=w)
         coop = c.get('cooperation') or {}
-        per_entry.append((xg.imitation_pairs(tape, entry), coop.get('cooperative') is True,
+        entry_pairs = xg.imitation_pairs(tape, entry)
+        if v2v:
+            entry_pairs, entry_counts = bank_v2v.attach_pairs(
+                entry_pairs, Path(r['_branches'])/r['verification_id']/branch['branch']/'observable.jsonl.gz',
+                r['t0'], v2v_cfg)
+            v2v_counts = bank_v2v.merge_counts(v2v_counts, entry_counts)
+        per_entry.append((entry_pairs, coop.get('cooperative') is True,
                           coop.get('cooperation_gain_veh_s')))
         entries.append(dict(verification_id=r['verification_id'], grade_veh_s=r['grade_veh_s'], weight=w,
                             mean_replicated_advantage_veh_s=c['mean_replicated_advantage_veh_s'],
@@ -506,9 +519,16 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                   cooperative=exposure['cooperative_entries'],
                   by_policy_version={v: sum(r['_policy_version'] == v for r in decisions)
                                      for v in sorted({r['_policy_version'] for r in decisions})})
-    return pairs, dict(rule='B-REPLAY bank: all CONFIRMED (replication, no later harm, safety) exact-positive entries; weight(mean replicated advantage) x beta; cooperative entries oversampled to 50% of samples',
+    out = dict(rule='B-REPLAY bank: all CONFIRMED (replication, no later harm, safety) exact-positive entries; weight(mean replicated advantage) x beta; cooperative entries oversampled to 50% of samples',
                        temperature=T, beta=float(beta), counts=counts, entries=entries, clip=clip,
                         max_decisions=max_decisions, exposure=exposure)
+    if v2v:
+        out['v2v'] = dict(rule='each pair carries the partners v2v features of its second, from the winning '
+                              'plan branch trace (positions, speeds, accelerations; last issued command at the '
+                              'previous second); pairs whose trace lacks partner commands are excluded and counted',
+                          stub=bank_v2v.STUB, cfg=dict(bank_v2v.DEFAULT_CFG, **(v2v_cfg or {})),
+                          counts=v2v_counts)
+    return pairs, out
 
 
 def imitation_decision_cap(update_receipt):
@@ -899,7 +919,7 @@ def lesson_metrics(entries, confirmed):
 
 
 def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sources=(),
-                 phase='bank_verification_ext', adopt_entries=(),attempt_kind=None):
+                 phase='bank_verification_ext', adopt_entries=(),attempt_kind=None, v2v=False):
     """LESSON-LEARNED CHECK after an update (never raises; the training run must not depend on it).
 
     For each FROZEN lesson entry: ONE exact SUMO branch of the NEW policy continuing from the
@@ -907,7 +927,9 @@ def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sou
     the policy weights differ. recapture = (J_policy_u3 - J_new_policy)/(J_policy_u3 - J_best_plan)
     per entry plus the mean (95% bootstrap CI); plus the imitation action error (m/s^2) on the
     bank states. Charges are lesson_u<k>-prefixed (the same entry is re-measured every update,
-    so unqualified ids would hit the duplicate-charge guard from the second update on)."""
+    so unqualified ids would hit the duplicate-charge guard from the second update on).
+    v2v (DEFAULT OFF): the new-policy branch runner computes last_commands per step and the
+    policy observation includes the v2v block (bank_v2v.branch_controller_class)."""
     import numpy as np
     bank = bank_root(root, arm);stamp = attempt_kind or f'lesson_u{int(update):03}'
     out = dict(arm=arm, update=int(update), unix=time.time(), phase=phase,
@@ -915,6 +937,11 @@ def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sou
                     '1.0 = the new policy achieves the whole verified win on its own',
                list_size=0, entries=[])
     try:
+        from . import bank_v2v
+        if v2v:
+            out['v2v'] = dict(enabled=True,
+                              rule='new-policy branch observations include the v2v block; '
+                                   'last_commands computed per step (bank_v2v)')
         lst = lesson_list(root, arm, sources)
         if lst is None:
             out['reason'] = 'no admitted entries yet; the lesson list is still empty'
@@ -956,11 +983,12 @@ def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sou
             best = r['chosen_plan']
             spec = lesson_policy_spec(new_snap, best, r)
             try:
-                charge(vid, [spec])        # before physics, like every branch charge
+                with bank_v2v.enabled(v2v):
+                    charge(vid, [spec])        # before physics, like every branch charge
+                    res = sv.run_branch(spec, new_snap, runner)
             except sv.BudgetBlocked as err:
                 e.update(status='budget_blocked', reason=str(err), recapture=None)
                 out['entries'].append(e);continue
-            res = sv.run_branch(spec, new_snap, runner)
             e.update(status=res['status'], J_policy_u3_veh_s=J_u3, J_best_plan_veh_s=J_best,
                      new_policy_branch=dict(verification_id=spec['verification_id'],
                                             snapshot_sha256=spec['snapshot_sha256'],
@@ -993,11 +1021,12 @@ def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sou
 
 
 def record_lesson(root, arm, policy, run_root, update, runner_for, workers=2, sources=(),
-                  phase='bank_verification_ext', adopt_entries=(), receipt_suffix='',attempt_kind=None):
+                  phase='bank_verification_ext', adopt_entries=(), receipt_suffix='',attempt_kind=None,
+                  v2v=False):
     """Run the lesson check and write LESSON_CHECK_u<k>_<arm>.json (arm-suffixed: B and R share
     the run root; the check runs after every update of both arms). Atomic replace, so an exact
     resume that re-applies update k re-measures instead of failing on an existing file."""
-    out = lesson_check(root, arm, policy, run_root, update, runner_for, workers, sources, phase,adopt_entries,attempt_kind)
+    out = lesson_check(root, arm, policy, run_root, update, runner_for, workers, sources, phase,adopt_entries,attempt_kind,v2v)
     path = Path(root)/f'LESSON_CHECK_u{int(update):03}_{arm}{receipt_suffix}.json'
     tmp = path.with_name(path.name+'.writing')
     tmp.write_text(json.dumps(xg._seal(out, 'lesson_check_sha256'), indent=1))

@@ -6,6 +6,7 @@ import torch
 from .accel_protocol import guard,install_seed_scope
 from .accel_storage import write
 from .acceleration import Policy,Controller
+from .v2v_model import fit_policy
 
 
 def episode(job):
@@ -21,7 +22,7 @@ def episode(job):
     from tools.coopfree import backend as cf
     exact.setup(job['runtime'],job['checkpoint']);install_seed_scope();guard(job['world'],job['role'])
     exact.guard=lambda w:guard(w,job['role'])
-    policy=Policy();policy.load_state_dict(job['weights']);policy.eval()
+    policy=fit_policy(Policy(),job['weights']);policy.load_state_dict(job['weights']);policy.eval()
     generator=torch.Generator().manual_seed(job['noise_seed'])
     from .plan_client import guide
     controller=Controller(policy,generator,job['deterministic'],
