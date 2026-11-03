@@ -149,40 +149,60 @@ def test_startup_never_reopens_assignment_named_paths_and_pins_receipt(tmp_path,
 
 # ---------------------------------------------------------------- restarted watcher remaining quote
 
-def test_remaining_quote_is_allocation_minus_ledger_spent(tmp_path,charges_ledger):
+NS='v2v1'
+
+
+def smoke_ids(arm,count,first=986000):
+    return [f'{NS}_warm_u001_{arm}_{first+i}' for i in range(count)]
+
+
+def smoke_charges(root,arm,count,*,closed=True,first=986000):
+    """Ledger rows of one arm's update-1 smoke episodes plus their job directories."""
+    rows=[]
+    for ident in smoke_ids(arm,count,first):
+        job=Path(root)/'jobs'/ident;job.mkdir(parents=True,exist_ok=True)
+        if closed:
+            (job/'CLOSE.json').write_text('{}');(job/'RESULT.json').write_text('{}')
+        rows.append(dict(id=ident,phase='v2v_train',sim_s=1200))
+    return rows
+
+
+def test_remaining_quote_credits_only_closed_reusable_smokes_of_this_root(tmp_path,charges_ledger):
     from . import v2v_launch3 as launch
-    root=tmp_path/'run';root.mkdir()
+    root=tmp_path/'run';root.mkdir();cfg=dict(job_namespace=NS)
+    full=launch.V2V_PHASES['v2v_train']
     # fresh root: nothing charged -> full quote (byte-identical watcher start)
-    assert live.remaining_phase_costs(root) is None
+    assert live.remaining_phase_costs(root,cfg) is None
     write_charges(root,[])
-    assert live.remaining_phase_costs(root) is None
-    # after smoke A+B charged their update 1 (the restart that used to refuse):
-    # remaining = registered allocation - what the ledger already charged
-    write_charges(root,[dict(id='v2v1_warm_u001_A_'+s,phase='v2v_train',sim_s=1200) for s in ('a','b')
-        ]+[dict(id='v2v1_warm_u001_B_'+s,phase='v2v_train',sim_s=1200) for s in ('a','b')])
-    assert live.remaining_phase_costs(root)==dict(
-        launch.V2V_PHASES,v2v_train=launch.V2V_PHASES['v2v_train']-4*1200)
-    # completed smokes: exact remaining v2v_train for the documented restart case
-    write_charges(root,[dict(id='smoke_A',phase='v2v_train',sim_s=SMOKE_SIM_S),
-                        dict(id='smoke_B',phase='v2v_train',sim_s=SMOKE_SIM_S)])
-    remaining=live.remaining_phase_costs(root)
-    assert remaining['v2v_train']==launch.V2V_PHASES['v2v_train']-2*SMOKE_SIM_S==2016000
-    assert set(remaining)==set(launch.V2V_PHASES) and all(c>0 for c in remaining.values())
-    # an exhausted (or overdrawn) phase is omitted: costs are never zero/negative
-    write_charges(root,[dict(id='smoke_A',phase='v2v_train',sim_s=SMOKE_SIM_S),
-        dict(id='smoke_B',phase='v2v_train',sim_s=SMOKE_SIM_S),
-        dict(id='interim',phase='v2v_interim',sim_s=launch.V2V_PHASES['v2v_interim'])])
-    remaining=live.remaining_phase_costs(root)
-    assert 'v2v_interim' not in remaining and all(c>0 for c in remaining.values())
-    write_charges(root,[dict(id='interim',phase='v2v_interim',sim_s=launch.V2V_PHASES['v2v_interim']+1)])
-    assert 'v2v_interim' not in live.remaining_phase_costs(root)
-    # fully charged slate -> None keeps the (then refusing) full quote; never an empty dict
-    write_charges(root,[dict(id=name,phase=name,sim_s=amount) for name,amount in launch.V2V_PHASES.items()])
-    assert live.remaining_phase_costs(root) is None
-    # malformed entries are ignored here; requote re-checks the ledger authoritatively
-    write_charges(root,[dict(id='smoke_A',phase='v2v_train',sim_s=SMOKE_SIM_S),
-        dict(id='bad',phase='v2v_train',sim_s=-1),dict(id='alsobad',phase='v2v_train',sim_s=True)])
-    assert live.remaining_phase_costs(root)['v2v_train']==launch.V2V_PHASES['v2v_train']-SMOKE_SIM_S
+    assert live.remaining_phase_costs(root,cfg) is None
+    # the documented restart: smoke A and B update 1 charged and closed, R not run
+    rows=smoke_charges(root,'A',24)+smoke_charges(root,'B',24)
+    write_charges(root,rows+[dict(id='other_kind_x',phase='bank_verification_ext',sim_s=500)])
+    remaining=live.remaining_phase_costs(root,cfg)
+    assert remaining==dict(launch.V2V_PHASES,v2v_train=full-2*SMOKE_SIM_S)
+    assert remaining['v2v_train']==2016000==SMOKE_SIM_S+3*23*24*1200
+    # no namespace -> no credit
+    assert live.remaining_phase_costs(root,{}) is None
+    # charged but NOT closed (void/partial) episodes are never credited
+    write_charges(root,rows+smoke_charges(root,'R',3,closed=False))
+    assert live.remaining_phase_costs(root,cfg)['v2v_train']==full-2*SMOKE_SIM_S
+    # foreign / non-u001 / unexpected-amount charges are not credited
+    write_charges(root,rows+[dict(id='v2v1_warm_u002_A_986000',phase='v2v_train',sim_s=1200),
+        dict(id='other_warm_u001_A_986000',phase='v2v_train',sim_s=1200),
+        dict(id='smoke_A',phase='v2v_train',sim_s=SMOKE_SIM_S)])
+    assert live.remaining_phase_costs(root,cfg)['v2v_train']==full-2*SMOKE_SIM_S
+    bad=smoke_charges(root,'R',1,first=987000);bad[0]['sim_s']=2400
+    write_charges(root,rows+bad)
+    assert live.remaining_phase_costs(root,cfg)['v2v_train']==full-2*SMOKE_SIM_S
+    # duplicate charge or any charged diagnostic/test phase -> no credit (full quote)
+    write_charges(root,rows+rows[:1])
+    assert live.remaining_phase_costs(root,cfg) is None
+    write_charges(root,rows+[dict(id='v2vtest008_A_1',phase='v2v_interim',sim_s=1200)])
+    assert live.remaining_phase_costs(root,cfg) is None
+    # more than one registered smoke per arm is refused outright
+    write_charges(root,rows+smoke_charges(root,'A',1,first=990000))
+    with pytest.raises(ValueError,match='one registered smoke per arm'):
+        live.remaining_phase_costs(root,cfg)
 
 
 def test_watch_restarted_after_smokes_passes_exact_remaining_preflight(tmp_path,monkeypatch,deployed):
@@ -190,36 +210,32 @@ def test_watch_restarted_after_smokes_passes_exact_remaining_preflight(tmp_path,
     from . import replay_start
     from . import v2v_launch3 as launch
     d=deployed;root=d.root
-    cfg=dict(v2v_intent=True,gpu_deadline=10**12,legacy_root=str(tmp_path/'legacy'))
+    cfg=dict(v2v_intent=True,gpu_deadline=10**12,legacy_root=str(tmp_path/'legacy'),job_namespace=NS)
     watch_authority(tmp_path,root,binding_path=d.path,
         binding_sha256=d.kwargs['binding_sha256'],control=d.control,mover=d.mover)
     with patch.object(replay_start,'alive',return_value=False):
-        # fresh ledger: the full registered quote is the exact remaining quote and passes
-        assert live.remaining_phase_costs(root) is None
-        fresh=live.launch3_check(root,cfg)
+        # fresh ledger: the full registered quote passes, unchanged
+        assert live.remaining_phase_costs(root,cfg) is None
+        fresh=live.watch_gate(root,cfg)
         assert fresh['ready'] and fresh['budget']['phase_costs']==dict(launch.V2V_PHASES)
         # the bug: after smoke A+B charged update 1 the full quote refuses although
         # the remaining work (R smoke + 3x23 train updates) fits exactly
-        write_charges(root,[dict(id='smoke_A',phase='v2v_train',sim_s=SMOKE_SIM_S),
-                            dict(id='smoke_B',phase='v2v_train',sim_s=SMOKE_SIM_S)])
+        rows=smoke_charges(root,'A',24)+smoke_charges(root,'B',24)
+        write_charges(root,rows)
         with pytest.raises(launch.Refused,match='budget phase shortfall: v2v_train'):
             live.launch3_check(root,cfg)
-        # the fix: pass the exact remaining quote and the same preflight passes
-        remaining=live.remaining_phase_costs(root)
-        assert remaining['v2v_train']==launch.V2V_PHASES['v2v_train']-2*SMOKE_SIM_S==2016000
-        receipt=live.launch3_check(root,cfg,phase_costs=remaining)
-        assert receipt['ready'] and receipt['budget']['phase_costs']==remaining
-        assert receipt['budget']['quote_total_sim_s']==sum(remaining.values())
-        assert receipt['budget']['charged_to_date_sim_s']==2*SMOKE_SIM_S+811640
-        # an overdrawn ledger is still refused through the remaining quote
-        write_charges(root,[dict(id='smoke_A',phase='v2v_train',sim_s=SMOKE_SIM_S),
-            dict(id='smoke_B',phase='v2v_train',sim_s=SMOKE_SIM_S),
-            dict(id='over',phase='v2v_train',
-                 sim_s=launch.V2V_PHASES['v2v_train']-2*SMOKE_SIM_S+1)])
-        over=live.remaining_phase_costs(root)
-        assert 'v2v_train' not in over and all(c>0 for c in over.values())
+        # the fix: the restarted watcher's gate passes the exact remaining quote
+        receipt=live.watch_gate(root,cfg)
+        assert receipt['ready'] and receipt['budget']['phase_costs']['v2v_train']==2016000
+        assert receipt['budget']['quote_total_sim_s']==sum(launch.V2V_PHASES.values())-2*SMOKE_SIM_S
+        # every v2v_train sim-s is committed exactly: one more uncredited charge refuses
+        write_charges(root,rows+[dict(id='void_x',phase='v2v_train',sim_s=1200)])
+        with pytest.raises(launch.Refused,match='budget phase shortfall: v2v_train'):
+            live.watch_gate(root,cfg)
+        # an overdrawn ledger is still refused
+        write_charges(root,rows+[dict(id='over',phase='v2v_train',sim_s=launch.V2V_PHASES['v2v_train'])])
         with pytest.raises(launch.Refused,match='overdrawn'):
-            live.launch3_check(root,cfg,phase_costs=over)
+            live.watch_gate(root,cfg)
 
 
 def test_watch_gate_wiring_full_quote_and_watch_uses_it(tmp_path,monkeypatch,charges_ledger,fake_fcntl):
@@ -227,7 +243,7 @@ def test_watch_gate_wiring_full_quote_and_watch_uses_it(tmp_path,monkeypatch,cha
     root=tmp_path/'run';root.mkdir()
     watch_authority(tmp_path,root,binding_path=tmp_path/'binding.json',
         binding_sha256='a'*64,control=tmp_path/'control',mover=tmp_path/'mover')
-    cfg=dict(v2v_intent=True,gpu_deadline=10**12,legacy_root=str(tmp_path/'legacy'))
+    cfg=dict(v2v_intent=True,gpu_deadline=10**12,legacy_root=str(tmp_path/'legacy'),job_namespace=NS)
     seen=[]
     monkeypatch.setattr(v2v_launch3,'wait_for_preflight',
         lambda *a,**k:seen.append(k) or {'ready':True})
@@ -236,8 +252,7 @@ def test_watch_gate_wiring_full_quote_and_watch_uses_it(tmp_path,monkeypatch,cha
     # fresh ledger: watch's own gate keeps the full quote (phase_costs=None)
     assert live.watch_gate(root,cfg)=={'ready':True}
     assert len(seen)==1 and seen[0]['phase_costs'] is None
-    write_charges(root,[dict(id='smoke_A',phase='v2v_train',sim_s=SMOKE_SIM_S),
-                        dict(id='smoke_B',phase='v2v_train',sim_s=SMOKE_SIM_S)])
+    write_charges(root,smoke_charges(root,'A',24)+smoke_charges(root,'B',24))
     assert live.watch_gate(root,cfg)=={'ready':True}
     assert seen[1]['phase_costs']['v2v_train']==2073600-2*SMOKE_SIM_S==2016000
     # child spawns keep their registered unit cost regardless of the restart quote
