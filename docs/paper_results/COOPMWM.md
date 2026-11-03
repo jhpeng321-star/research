@@ -1,5 +1,13 @@
 # S-COOPMWM — live checks
 
+MAIN13:35 authorises public interim results and adds B-native. Additive V2 uses
+the same completed episodes/qualified bootstrap and retains all V1 artifacts.
+Four Linux CPU tests pass(0.121s), zero simulation/inference. Registration
+`3ca57ba9c925f179df5e1798972eac954ddc7791f6c365c15730a65c2b130c8b`
+precedes V2 decoding. B-R/B-native two-scope Holm families are added separately
+per endpoint; original B-A/B-MAPPO families retain their values. V2V work is
+preparation-only per MAIN13:40; current non-V2V training continues.
+
 ## Nov3 13:40 UTC+8 — fixed-u8 analysis delivered to MAIN; durable training healthy
 - The authorised interim analysis completed **13:38:57**, all96 paired worlds,
   fixed A/B/R8 plus reused MAPPO/native. All480 episode identities and stored

@@ -14,6 +14,12 @@ BASE = '/home/ubuntu/coopmwm20261103_compositereleasecpu1'
 SOURCE = '/home/ubuntu/coopmwm20261103_interimanalysis1'
 CONTROL = ROOT+'/interim_analysis_1235_v1'
 REG = 'INTERIM_U8_ANALYSIS_REGISTRATION_1235.json'
+CPU = 'INTERIM_U8_ANALYSIS_CPU_1235.json'
+DISPATCH = 'INTERIM_U8_ANALYSIS_DISPATCH_1235.json'
+DELIVERED = 'INTERIM_U8_ANALYSIS_DELIVERED_1235.json'
+AUTHORITY = 'MAIN2026-11-03 12:35'
+MAIN_TARGET = 'E:/agent-work/_sol/COOPMWM_INTERIM_U8_MAIN.json'
+PUBLISH_PUBLIC = False
 
 
 def qualify():
@@ -35,7 +41,7 @@ if not cpu.exists():
  v=dict(pass_=p.returncode==0,returncode=p.returncode,stdout=p.stdout,stderr=p.stderr,wall_s=time.time()-start,new_sim_s=0,new_inference=0,source_hashes={{n:hashlib.sha256((r/n).read_bytes()).hexdigest() for n in files}})
  with cpu.open('x') as f:json.dump(v,f)
 print(cpu.read_text())''', timeout=75))
-    p = ops.EVIDENCE/'INTERIM_U8_ANALYSIS_CPU_1235.json'
+    p = ops.EVIDENCE/CPU
     if not p.exists():write(p, v)
     print(json.dumps(dict(receipt=str(p), **v)))
 
@@ -43,7 +49,7 @@ print(cpu.read_text())''', timeout=75))
 def register():
     p = ops.EVIDENCE/REG
     if not p.exists():
-        cpu = read(ops.EVIDENCE/'INTERIM_U8_ANALYSIS_CPU_1235.json')
+        cpu = read(ops.EVIDENCE/CPU)
         assert cpu['pass_'] and cpu['new_sim_s'] == cpu['new_inference'] == 0
         live = json.loads(remote('cpuQ', f'''from pathlib import Path
 import json,sys
@@ -69,7 +75,13 @@ print(json.dumps(dict(panel_sha256=digest(panel),public_manifest_sha256=digest(m
             'hash/completion metadata only. No training/search/loss/checkpoint/endpoint '
             'change conditioned on results; primaryu24 unchanged. One-use detached nice19 '
             'CPU analysis, no SUMO/inference/reservation, zero additional sim-s.\n')
-        write(p, dict(authority='MAIN2026-11-03 12:35', line=line, cpu=cpu,
+        if PUBLISH_PUBLIC:
+            line += ('MAIN13:35 extension: add B-native to the same completed episode grid; '
+                'also report B-R/B-native two-scope Holm families separately per endpoint, '
+                'without changing original B-A/B-MAPPO families. Publish INTERIM_U8_RESULT.json '
+                'and authorised summary. Original analysis/source/receipts retained; zero '
+                'new physics/inference. Training and V2V decisions never conditioned on interim.\n')
+        write(p, dict(authority=AUTHORITY, line=line, cpu=cpu,
             source_root=BASE, driver_root=SOURCE, control_root=CONTROL,
             driver_sha256=cpu['source_hashes']['interim_u8_analysis.py'], **live))
     v = read(p);h = sha(p);registry = checked(REGISTRY)
@@ -101,7 +113,7 @@ with (c/'RUN.log').open('x') as log:
 d=dict(pid=p.pid,start_ticks=Path('/proc',str(p.pid),'stat').read_text().split()[21],boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),control_root=str(c),amendment_sha256=v['amendment_sha256'],analysis_only=True,new_sim_s=0)
 with (c/'DISPATCH.json').open('x') as f:json.dump(d,f)
 print(json.dumps(d))''', timeout=45))
-    p = ops.EVIDENCE/'INTERIM_U8_ANALYSIS_DISPATCH_1235.json'
+    p = ops.EVIDENCE/DISPATCH
     if not p.exists():write(p, v)
     print(json.dumps(v))
 
@@ -125,7 +137,7 @@ c=Path({CONTROL!r});v=json.loads((c/'COMPLETE.json').read_text());assert v['pass
 payload=(c/'RESULT.json').read_bytes();assert hashlib.sha256(payload).hexdigest()==v['result_sha256']
 print(json.dumps(dict(complete=v,payload=base64.b64encode(payload).decode())))''', timeout=45))
     # Private MAIN delivery; result values are never printed in this operator CLI.
-    target = checked(Path('E:/agent-work/_sol/COOPMWM_INTERIM_U8_MAIN.json'))
+    target = checked(Path(MAIN_TARGET))
     assert target.parent.is_dir()
     blob = base64.b64decode(value['payload'])
     if target.exists():assert target.read_bytes() == blob
@@ -140,7 +152,7 @@ print(json.dumps(dict(complete=v,payload=base64.b64encode(payload).decode())))''
     for horizon in ('600', '900'):
         for scope in ('all', 'focus'):
             lines.append(f'## J{horizon} — {scope}')
-            for comparator in ('A', 'mappo', 'R'):
+            for comparator in (('A', 'mappo', 'R', 'native') if PUBLISH_PUBLIC else ('A', 'mappo', 'R')):
                 key=f'{horizon}:{scope}:B-{comparator}:'
                 x=report['results'][key+'team_delay_vs'];lo,hi=x['ci95']
                 pct=x['pct_delay_reduction'];plo,phi=x['pct_ci95']
@@ -164,7 +176,11 @@ print(json.dumps(dict(complete=v,payload=base64.b64encode(payload).decode())))''
         with markdown.open('x',encoding='utf-8',newline='\n') as f:f.write(text)
     receipt = dict(value['complete'], main_report=str(target), main_summary=str(markdown),
         local_sha256=sha(target), main_summary_sha256=sha(markdown))
-    p = ops.EVIDENCE/'INTERIM_U8_ANALYSIS_DELIVERED_1235.json'
+    if PUBLISH_PUBLIC:
+        public = ops.EVIDENCE/'INTERIM_U8_RESULT.json'
+        if public.exists():assert read(public) == report
+        else:write(public, report)
+    p = ops.EVIDENCE/DELIVERED
     if not p.exists():write(p, receipt)
     print(json.dumps(dict(receipt=str(p), **receipt)))
 

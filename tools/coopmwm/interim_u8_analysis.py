@@ -11,7 +11,7 @@ from tools.coopmwm.accel_protocol import worlds
 from tools.coopmwm.branch_eval import cluster_bootstrap, holm, in_focus
 
 ARMS = ('A', 'B', 'R', 'mappo', 'native')
-CONTRASTS = (('B', 'A'), ('B', 'mappo'), ('B', 'R'), ('A', 'mappo'), ('R', 'mappo'))
+CONTRASTS = (('B', 'A'), ('B', 'mappo'), ('B', 'R'), ('B', 'native'), ('A', 'mappo'), ('R', 'mappo'))
 METRICS = ('team_delay_vs', 'collisions', 'teleports', 'ttc_below_3_vs', 'hard_brake')
 
 
@@ -83,7 +83,7 @@ def analyze(records, panel):
                     results[f'{h}:{scope}:{a}-{b}:{metric}'] = row
         # Interim episode analogue: two scopes per comparator, separately at each
         # endpoint. No claim of multiplicity control across endpoints/interim/final.
-        for b in ('A', 'mappo'):
+        for b in ('A', 'mappo', 'R', 'native'):
             keys = [f'{h}:{scope}:B-{b}:team_delay_vs' for scope in scopes]
             for k, adjusted in holm({k: results[k]['p_two_sided'] for k in keys}).items():
                 results[k]['holm_within_endpoint_comparator'] = adjusted
@@ -95,7 +95,7 @@ def analyze(records, panel):
         checkpoints=dict(A=8, B=8, R=8), role='fixed interim; u24 remains primary',
         sign='treatment minus comparator; negative delay is better; positive percent reduction is better',
         bootstrap='10000 whole-world paired resamples; RNG20261101; 95% percentile intervals',
-        holm='alpha .05; {all,focus} within each B-A/B-MAPPO comparator and endpoint separately; no cross-endpoint or interim/final correction',
+        holm='alpha .05; {all,focus} within each B-A/B-MAPPO/B-R/B-native comparator and endpoint separately; no cross-endpoint or interim/final correction; added secondary families do not change the original families',
         safety='existing episode metrics, reported individually; no new thresholds or selection',
         no_training_selection=True)
 
