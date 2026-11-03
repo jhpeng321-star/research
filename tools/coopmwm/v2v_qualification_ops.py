@@ -100,6 +100,7 @@ print(json.dumps(dict(unix=time.time(),owner=d,alive=alive,result=json.loads(don
     result = value.pop('result')
     if result:
         value['result'] = {k: result[k] for k in ('pass_', 'tests', 'skips', 'sim_s', 'wall_s', 'root')}
+        if result['pass_']: value['log'] = 'Complete; full log retained in immutable remote source root.'
     print(json.dumps(value))
 
 
