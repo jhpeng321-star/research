@@ -96,6 +96,10 @@ print(json.dumps(dict(unix=time.time(),owner=d,state=s[2] if s else 'ABSENT',
         final=ops.EVIDENCE/'SAFETY_DIAGNOSIS_u6.json'
         if not final.exists():write(final,diagnosis)
         summary={k:diagnosis[k] for k in ('release_eligible','B_u6_vs_A_u6','R_u5_vs_A_u5','A_update_changes','imitation_exposure')}
+        summary['A_variability']={u:{k:v for k,v in x.items() if k!='by_world'} for u,x in diagnosis['A_variability'].items()}
+        summary['acceleration_braking_proxy']=diagnosis['acceleration_braking_proxy']
+        summary['braking_history']=diagnosis['braking_history']
+        summary['top_worlds']=[dict(seed=x['seed'],world=x['world'],hard_brake_delta=x['hard_brake_delta']) for x in diagnosis['situations'][:3]]
     else:summary=None
     print(json.dumps(dict(receipt=str(p),**value,summary=summary)))
 

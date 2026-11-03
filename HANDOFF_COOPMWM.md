@@ -1,5 +1,51 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3~11:02+08: MAIN09:57DIAGNOSIS COMPLETE/RELEASE_ELIGIBLE BOTH.
+LocalSAFETY_DIAGNOSIS_u6.json: B6-A6criticaltotal+7.208 CI[-19.855,+33.021],
+R5-A5+.083 CI[-21.104,+20.605]; all24pairs/allcollision-teleportdeltas0.
+Originalhardbrake+3.625 CI[.708,6.521]retained; positivecriticalpointestimate
+NOTa safetyproof, justpassesMAINfixednonsignificancepredicate. A5/6/7means17.354/
+15.979/16.125 SD10.185/7.128/8.881; no commonworlds. Proxyr=-.278/2160windows,
+topworlds986046/070/040. Oldimitation3960pairvisits/705,706mixedbatches, error
+.646729->.641686; nocaustalimitationeffectidentified.
+NEWcompositereleasecpu1 FULL727LinuxPASS0skips84.104s/zeroSUMO;16localmetadataPASS.
+Registered/rootBOUND SHA853bb0b6d3afcbc71b7f5ee7c028ebf971d196fe0380d7f977fb702c55d08dbe
+underCOMPOSITE_SAFETY_RELEASE_REGISTRATION_0957.json. OriginalSAFETYpausepreserved,
+SAFETY_RELEASE_0957 validatesexactoldpause/diagnosis/ruleSHA; allother/newpauses
+remainactive. Rootassert_running B/R PASS fromqualifiedsource. NOdispatchyet.
+NEXT `python -X utf8 -m tools.coopmwm.composite_release_ops launch` ONCE onlyafter
+committingregistration; receiptCOMPOSITE_SAFETY_RESUME_DISPATCH_0957.json mustbe
+adoptediftransportdrops. Newcontrolwarm1/replay_composite_0957, SOURCE
+/home/ubuntu/coopmwm20261103_compositereleasecpu1. RuntimeNAME B_REPLAY_EXPOSURE_V2,
+resume5/first6/newloss5fullpasses/preupdateKL.045. OldownersallABSENT; NOsignals
+needed. B6all24RESULTs reused/noSIMrecharge;R6fresh,quote1065600fitsphase. Rcap
+NOWactualadmittedBtargets (not75totalverifications), afterconfirmed-positivefilter;
+newcountsavailable_admitted/used_admitted retainedwithlegacycounters. Ridentity
+exactmode-strippedhashrepair/recoverdeclines beforephysics, originalskipskept.
+Source727SHA-bound compositeguard everyfutureupdate, includingR6, stillhardcollision
+checks; newlivecollisioncreatesNEWpause receipt, neverhiddenbyoldrelease.
+Reportersupdatedto newCOMPOSITEowner receipt/source; freshwarm_watch state filters
+onlySHA-releasedpause andpointsbroker toactualLS/Rpriority owner. NoSEALEDreads.
+
+LATEST Nov3 10:42:25+08: u4correctV3 COMPLETE1793672826/10:27:06,8/8graded,
+2validadopted/6freshmatchedwindows<=4260registered. NoFAIL; original/V1/V2retained.
+Fixed8-entry mean delta+110.659veh-s CI[-252.400,+511.493],5/8positive; conditional
+ENTRYbootstrap/notpopulationlearningclaim. Secondarymedian1.318/7eligible stillhuge
+CI[-.147,1633604.461], absoluteveh-s primary. LocalartifactLESSON_CHECK_u004_B_
+MATCHED_WINDOW_V3.json. ADOPTcorrectionDISPATCH_V3, completed owner3200175, NEVERredo.
+LatestMAIN09:57 NOWreadthroughALL703lines suppliesCOMPOSITE safetyrelease rule.
+RegisteredSHA1870328f0245c967 BEFOREnewnumbers; safetydiagcpu1 targeted10LinuxPASS/
+0skips/.925s/zeroSUMO. DurableREADONLYdiagnosis3231042/start68780909 launched10:38:51,
+controlwarm1/safety_diagnosis_0957; ADOPT SAFETY_DIAGNOSIS_DISPATCH_0957.json,
+NEVERduplicate. At10:40:48aliveR/noerror/resultpending. RuleB6-A6 andRlatest5-A5:
+no pairedcollision/teleportincrease AND criticaltotal(hardbrake+inheritedtraceTTC1.5)
+not significantlyhigher(CI lower<=0); samecompositeguardbeforeR6PPO. VariabilityA5/6/7,
+world/situationcontinuousproxies andu4/u5imitationexposure included. Zero newphysics.
+NEXT `safety_diagnosis_ops status`; ifeligible, qualify SHA-bound release/newcomposite
+warm_healthguard and combinewith720CPU-qualified5fullAWRpasses/Rcentreidentityfix
+fromACTUALcheckpoint5,u6first(oldB6resultsreuse;R6fresh). Ifnoteligible,keepPAUSE/report.
+No safetyrelease record/actor/graderrestart yet; originalPAUSE_SAFETY remains intact.
+
 CRITICAL Nov3 10:16:44+08: REGISTERED SAFETY PAUSE since09:55:36/unix1793670936.
 PAUSE_SAFETY SHA9e65c7f83ac0bf7961a826fe072be82aa81056d9f25b1a1b93392c03399da238.
 ActualB-u6hardbrake vsA24matchedUNIQUE/equal-worlds mean+.00402778/control-s,

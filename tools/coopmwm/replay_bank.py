@@ -438,15 +438,15 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                max_decisions=None):
     """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta.
 
-    max_decisions (R fairness, MAIN): use at most this many verified decisions, oldest first;
+    max_decisions (R fairness, MAIN): use at most this many admitted targets, oldest first;
     never padded from another arm's data.
     """
     everything = bank_decisions(root, arm, upto_unix, sources)
     T = temperature(root, arm, training_seed, everything)
-    decisions = everything if max_decisions is None else everything[:max(0, int(max_decisions))]
+    decisions = everything
     pairs, entries, counts = [], [], dict(decisions=len(decisions), positive=0, nonpositive=0)
     conf = confirmations(root, arm)
-    counts.update(unconfirmed=0, not_admitted=0)
+    counts.update(unconfirmed=0, not_admitted=0,admitted_excess_not_used=0)
     per_entry = []
     for r in decisions:
         if r['status'] != 'accepted' or not r['grade_veh_s'] or r['grade_veh_s'] <= 0:
@@ -457,6 +457,8 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
             counts['unconfirmed'] += 1;continue       # MAIN: only plans that actually work
         if not c['admitted']:
             counts['not_admitted'] += 1;continue
+        if max_decisions is not None and len(entries)>=max(0,int(max_decisions)):
+            counts['admitted_excess_not_used']+=1;continue
         plan = r['chosen_plan'];branch = r['branches'][r['chosen']+1]
         result_path = Path(r['_branches'])/r['verification_id']/branch['branch']/'RESULT.json'
         from .accel_storage import read
@@ -500,12 +502,21 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     exposure.update(mean_cooperation_gain_veh_s=float(np.mean(gains)) if gains else None,
                     mean_cooperation_gain_ci95=_boot_ci(gains))
     counts.update(available=len(everything), used=len(decisions),
+                   available_admitted=len(entries)+counts['admitted_excess_not_used'],used_admitted=len(entries),
                   cooperative=exposure['cooperative_entries'],
                   by_policy_version={v: sum(r['_policy_version'] == v for r in decisions)
                                      for v in sorted({r['_policy_version'] for r in decisions})})
     return pairs, dict(rule='B-REPLAY bank: all CONFIRMED (replication, no later harm, safety) exact-positive entries; weight(mean replicated advantage) x beta; cooperative entries oversampled to 50% of samples',
                        temperature=T, beta=float(beta), counts=counts, entries=entries, clip=clip,
-                       max_decisions=max_decisions, exposure=exposure)
+                        max_decisions=max_decisions, exposure=exposure)
+
+
+def imitation_decision_cap(update_receipt):
+    """R matches plans B actually imitated, not rejected/non-admitted verification lists."""
+    weights=update_receipt.get('exact_imitation') or {}
+    if isinstance(weights.get('entries'),list):return len(weights['entries'])
+    counts=weights.get('counts') or (update_receipt.get('trust',{}).get('bank') or {})
+    return int(counts.get('used_admitted',0))
 
 
 def main(argv=None):

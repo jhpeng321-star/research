@@ -53,7 +53,8 @@ def assert_running(root,arm):
                 and read(p2).get('error')=="ValueError('GPU failed; no inference retry')"
                 and v.get('amendment_sha256','UNREGISTERED') in (root/'AUTHORITY.md').read_text()):
                 raise ValueError('new durable guided engineering STOP')
-        pauses=sorted(root.glob('PAUSE_*.json'))
+        from .composite_health import released
+        pauses=sorted(p for p in root.glob('PAUSE_*.json') if not released(root,p))
         if pauses:raise HealthPause('registered health pause '+pauses[0].name)
         p=root/'WARM_GUIDED_STOP.json'
         if p.exists():
@@ -69,6 +70,9 @@ def assert_running(root,arm):
 
 def pause(root,rule,evidence):
     path=Path(root)/('PAUSE_'+rule+'.json')
+    from .composite_health import released
+    if path.exists() and released(root,path):
+        path=path.with_name('PAUSE_'+rule+'_'+str(time.time_ns())+'.json')
     value=dict(rule=rule,evidence=evidence,unix=time.time(),arms=['B','R'],
         action='pause; preserve receipts/checkpoints/charges; diagnosis and registered release required',
         checkpoint_selection=False,final_panel_access=False)
@@ -133,6 +137,8 @@ def after_check(root,arm,u,report):
 
 def braking(root,arm,u,episodes,a_records):
     if arm not in ('B','R'):return
+    from .composite_health import braking as composite_braking
+    if composite_braking(root,arm,u,episodes,a_records,pause):return
     a={e['world']['seed']:e for e in a_records}
     common=[e for e in episodes if e['world']['seed'] in a]
     if len(common)<2:return

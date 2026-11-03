@@ -99,8 +99,14 @@ result=Path({ROOT!r})/'LESSON_CHECK_u004_B_MATCHED_WINDOW_V3.json'
 entries=json.loads(result.read_text()).get('entries',[]) if result.exists() else []
 print(json.dumps(dict(unix=time.time(),owner=d,state=s[2] if s else 'ABSENT',
  complete=json.loads(done.read_text()) if done.exists() else None,
+ corrected_lesson=json.loads(result.read_text()) if result.exists() else None,
  entry_statuses=[dict(id=e['verification_id'],status=e.get('status'),reason=e.get('reason') or e.get('new_policy_branch',{{}}).get('reason')) for e in entries],
  log=(c/'CORRECTION.log').read_text()[-3000:])))''',timeout=40))
+    lesson=value.pop('corrected_lesson')
+    if lesson:
+        target=ops.EVIDENCE/'LESSON_CHECK_u004_B_MATCHED_WINDOW_V3.json'
+        if not target.exists():write(target,lesson)
+        else:assert read(target)==lesson
     p=ops.EVIDENCE/f'B_LESSON_CORRECTION_V3_STATUS_{time.time_ns()}.json';write(p,value)
     print(json.dumps(dict(receipt=str(p),**value)))
 

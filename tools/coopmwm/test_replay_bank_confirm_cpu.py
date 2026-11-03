@@ -284,6 +284,21 @@ def test_exposure_oversamples_cooperative_entries_to_half_with_unchanged_weights
     assert len(q['synergy_twins']) == 3 and sum(t['cooperative'] is True for t in q['synergy_twins']) == 1
 
 
+def test_fairness_caps_admitted_targets_after_rejected_prefix(tmp_path,monkeypatch):
+    root=tmp_path;bank=rb.bank_root(root,'B');bank.mkdir(parents=True)
+    _confirmed_decision(root,bank,420,TapeRunner,'first',1.)
+    _confirmed_decision(root,bank,460,TapeRunner,'second',1.)
+    valid=rb.bank_decisions(root,'B')
+    rejected=dict(valid[0],verification_id='rejected',status='rejected',grade_veh_s=0.)
+    monkeypatch.setattr(rb,'bank_decisions',lambda *a,**kw:[rejected]+valid)
+    pairs,s=rb.bank_pairs(root,'B',12345,max_decisions=1)
+    assert pairs and len(s['entries'])==1
+    assert s['counts']['available']==3 and s['counts']['available_admitted']==2
+    assert s['counts']['used_admitted']==1 and s['entries'][0]['verification_id']==valid[0]['verification_id']
+    legacy=dict(trust={'bank':{'available':75}},exact_imitation={'entries':[{},{}]})
+    assert rb.imitation_decision_cap(legacy)==2
+
+
 def test_quality_counts_admitted_after_confirmation(tmp_path):
     root = tmp_path;bank = rb.bank_root(root, 'B');bank.mkdir(parents=True)
     first = sv.verify(snapshot(), [plan('a', 4.)], FakeRunner(bank/'sumo_verification'),

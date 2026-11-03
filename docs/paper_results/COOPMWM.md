@@ -1,5 +1,63 @@
 # S-COOPMWM — live checks
 
+## Nov3 11:02 UTC+8 — MAIN09:57 diagnosis passes; SHA-bound release registered
+- Full read-only artifact **`coopmwm/SAFETY_DIAGNOSIS_u6.json`** is published.
+  B6/A6 and last-completed R5/A5 each contain24 paired, unique TRAIN worlds.
+  Collision and teleport differences are0 in every pair.
+- B6-A6 total safety-critical events: **+7.208/world**,95%CI
+  **[-19.855,+33.021]**; hard-brake component+3.625[+0.708,+6.521], TTC<1.5
+  component+3.583[-23.417,+28.917]. The positive point estimate is retained;
+  total critical harm is not statistically higher under MAIN's fixed rule.
+- R5-A5 total:+0.083[-21.104,+20.605]. Both comparisons satisfy the registered
+  release predicate. R6 has not run and must pass the same composite guard before
+  its PPO update. The original pause remains on disk; only its exactSHA is released.
+- A hard-braking means for u5/u6/u7 are17.354/15.979/16.125veh-s; SDs
+  10.185/7.128/8.881. Panel-mean changes are-1.375/+0.146, but panels have no
+  common worlds, so these are descriptive and are not paired variability CIs.
+- Largest extra-braking worlds:986046(+18),986070(+16.5),986040(+9.5veh-s).
+  Across2160 inherited10s windows, continuous deceleration variation versus
+  positive issued-CAV-acceleration differences have Pearson r=-0.278. This is a
+  descriptive proxy, not an event locator, known-move detector or causal test.
+- B5-A5 hard braking:-0.542[-3.083,+2.000]; B6-A6:+3.625[+0.708,+6.521].
+  Bank action error changes0.646729→0.641686m/s². Saved metrics show3960 bank-pair
+  visits across705/706 mixed PPO batches, rather than only four pair visits; those
+  losses were diluted among PPO records. Episode data do not isolate an
+  imitation-only braking effect. Five dedicated post-PPO passes remain the fixed
+  owner-approved correction, with pre-update KL stopping and before/after errors.
+- Immutable `compositereleasecpu1`: **727 Linux CPU checks PASS, zero skips,
+  84.104s,zero SUMO**, plus16 local observer/payload checks. Registered release
+  binding SHA **`853bb0b6d3afcbc71b7f5ee7c028ebf971d196fe0380d7f977fb702c55d08dbe`**
+  verifies diagnosis/rule/pause hashes and leaves every other/new pause active.
+  Future B/R updates use the same paired composite check; new live-safety evidence
+  cannot overwrite or hide behind the released original.
+- Prepared continuation starts from actualcheckpoint5, applying u6 once with the
+  new loss;24 completed B-u6 episodes are reused without simulation or recharge.
+  Fresh PPO remaining quote1,065,600sim-s fits the existing train phase. R's cap is
+  corrected to actual admitted B imitation targets, applied after confirmation;
+  rejected lists no longer consume the cap. This is before any R bank grading.
+  Dispatch follows the committed binding; no training-start claim at registration.
+
+## Nov3 10:27:06 UTC+8 — corrected fixed-u4 lesson complete, all8 entries graded
+- The reporting-only correction **adopted2 valid branches and ran only6 missing
+  matched-window branches** under the fresh registered `lesson_u004matched_v3`
+  charge/work namespace. All8 entries are graded; no completed branch or episode
+  was rerun. Original/V1/V2 outputs and charges remain retained.
+- Primary fixed-bank paired saving `J_policy_u3 - J_new_policy`: **+110.659veh-s**,
+  95% entry-bootstrapCI **[-252.400,+511.493]**; **5/8 entries improved (62.5%)**.
+  This is a conditional diagnostic on the frozen8 admitted TRAIN entries, not a
+  population/dev/test policy-effect estimate; the interval includes zero.
+- Replication-spread-qualified secondary recapture:7 eligible entries, median1.318,
+  CI[-0.147,1,633,604.461]. The raw ratios/very wide secondary interval are retained;
+  primary reporting uses absolute veh-s as MAIN09:06 requested.
+- New artifact:`coopmwm/LESSON_CHECK_u004_B_MATCHED_WINDOW_V3.json`.
+  Receipt:`coopmwm/B_LESSON_CORRECTION_V3_STATUS_1793673746905980500.json`.
+  Correction release:8 targeted Linux CPU checks PASS/0skips,0.772s,zero SUMO;
+  registeredSHA`7b1b585cc3524fe2…`,4260sim-s upper in existing extension phase.
+- Training remains health-paused at checkpoint5. MAIN09:57's composite safety
+  diagnosis is registered before its numbers (SHA`1870328f0245c967…`), passes10
+  targeted Linux CPU checks, and is running read-only under durable owner3231042.
+  Its result, not this lesson diagnostic, determines eligibility for MAIN's release.
+
 ## Nov3 09:55:36 UTC+8 — registered SAFETY pause before B-u6 PPO
 - The fixed hard-braking guard paused B/R. Across24 unique matched TRAIN worlds,
   B-u6 minus A-u6 is **+0.00402778 hard-brake vehicle-seconds/control-second**,

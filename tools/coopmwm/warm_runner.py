@@ -161,23 +161,23 @@ def run_arm(root,arm):
             ev=evidence(eps);running+=ev
             exact_receipts=[];weights=None;pairs=[]
             if replay:
-                from .replay_bank import bank_pairs
+                from .replay_bank import bank_pairs,imitation_decision_cap
                 replay_beta=float(b.get('replay_beta',1.))
                 cap=fair=None
                 if arm=='R':
-                    # MAIN fairness: R imitates at most as many verified decisions as B's bank
+                    # MAIN fairness: R imitates at most as many admitted targets as B's bank
                     # had at the matching B update (lag 1 when R runs concurrently).
                     bu=u-1 if b.get('r_concurrent_lag1_quota') else u
                     bp=root/f'B_UPDATE_{bu:03}.json'
                     if bu==u:wait(root,bp,b['gpu_deadline'],arm)
-                    cap=(read(bp).get('trust',{}).get('bank') or {}).get('available',0) if bp.exists() else 0
+                    cap=imitation_decision_cap(read(bp)) if bp.exists() else 0
                     fair=dict(matched_B_update=bu,B_bank_decisions=cap,B_update_receipt_found=bp.exists())
                 pairs,weights=bank_pairs(root,arm,SEED,beta=replay_beta,sources=b.get('replay_sources',{}).get(arm,()),
                     max_decisions=cap)
                 from .replay_bank import bank_quality
                 weights['bank_quality']=bank_quality(root,arm,b.get('replay_sources',{}).get(arm,()))
                 if fair is not None:
-                    have=weights['counts']['available'];fair.update(R_available=have,R_used=weights['counts']['used'],
+                    have=weights['counts']['available_admitted'];fair.update(R_available=have,R_used=weights['counts']['used_admitted'],
                         shortfall=max(0,cap-have),excess_not_used=max(0,have-cap),padding_from_B=False)
                     weights['fairness']=fair
                 tr=dict(beta=replay_beta,graded=weights['counts']['positive'],bank=weights['counts'],

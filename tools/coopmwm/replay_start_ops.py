@@ -204,13 +204,13 @@ print(json.dumps(d))''',timeout=60))
 def status():
     value=json.loads(remote('cpuQ',f'''from pathlib import Path
 import json,time,zlib
-r=Path({ROOT!r});continued=r/'replay_lesson_window_v1'
-c=continued if (continued/'DISPATCH.json').exists() else Path({CONTROL!r})
+r=Path({ROOT!r});continued=r/'replay_lesson_window_v1';composite=r/'replay_composite_0957'
+c=composite if (composite/'DISPATCH.json').exists() else continued if (continued/'DISPATCH.json').exists() else Path({CONTROL!r})
 d=json.loads((c/'DISPATCH.json').read_text());p=Path('/proc',str(d['pid']))
 st=(p/'stat').read_text().split() if p.exists() else None
 assert st is None or st[21]==d['start_ticks']
 assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
-started=r/('B_REPLAY_CONTINUED_LESSONWINDOW.json' if c==continued else 'B_REPLAY_STARTED.json')
+started=r/('B_REPLAY_COMPOSITE_STARTED_0957.json' if c==composite else 'B_REPLAY_CONTINUED_LESSONWINDOW.json' if c==continued else 'B_REPLAY_STARTED.json')
 start=json.loads(started.read_text()) if started.exists() else None
 children=[]
 for child in (start or {{}}).get('children',[]):
