@@ -214,6 +214,7 @@ def run_scenario(name, cfg, workdir):
                 outcome.setdefault('collector_'+arm, []).append(dict(rounds=rounds, statuses=st))
             except BaseException as error:
                 outcome.setdefault('collector_'+arm, []).append('failed: '+repr(error))
+                (Path(base)/f'collector_{arm}.tb.txt').write_text(traceback.format_exc())
                 event('collector_failed', arm=arm, error=repr(error), tb=traceback.format_exc())
         # Warmup (both banks in parallel, rp4 width) before the arms start.
         warm = [threading.Thread(target=collector, args=(a, cfg['bank_warmup_rounds']), daemon=True) for a in ('B', 'R')]
@@ -527,6 +528,14 @@ _FAULTS = [
     'guided STOP; rp4 recorded the same for b_slow_search_overload and re-ran alone) - the '
     'rehearsal now runs the arms SEQUENTIALLY (A, then B, then R; recipes unchanged, schedule '
     'serialized) and keeps the rp4-proven collector width',
+    'fault 9: replay_bank.verify_pending took its "already decided" set from the caller\'s memory '
+    'only, so any FRESH collect() on the same bank (rehearsal warmup -> background handoff, or a '
+    'live collector restart) re-verified already-verified states and crashed on the exclusive '
+    'SNAPSHOT.pt create (FileExistsError 17) - verified pending now seeds its decided set from the '
+    'durable decisions/ + skipped/ state markers first',
+    'fault 10: the rehearsal stall watchdog mis-fired on healthy silent phases (arm PPO updates are '
+    'minutes of pure CPU with no file writes) and its os._exit killed a mid-update arm without any '
+    'failure receipt - watchdog raised to 900 s and the debug dump keeps full tracebacks',
 ]
 
 if __name__ == '__main__':

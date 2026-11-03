@@ -247,6 +247,14 @@ def verify_pending(root, arm, bounds, runner, charge, workers, decided, limit=No
     """
     from concurrent.futures import ThreadPoolExecutor
     bank = bank_root(root, arm);todo = []
+    # Durable one-per-state markers survive collector restarts: a fresh collect()
+    # (new in-memory `decided`) must never re-verify or re-skip an already decided
+    # state - the verification snapshot is exclusive-create (SNAPSHOT.pt 'xb'), so a
+    # second verification of the same state would crash the collector round.
+    decided = set(decided or ())
+    decided |= {p.stem for p in (bank/'decisions').glob('*.json')}
+    if (bank/'skipped').exists():
+        decided |= {p.stem for p in (bank/'skipped').glob('*.json')}
     matched = b_available_k(root) if arm == 'R' else None
     used = sum(1 for _ in (bank/'decisions').glob('*.json')) if arm == 'R' else 0
     for p in sorted((bank/'snapshots').glob('*.json')):
