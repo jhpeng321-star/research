@@ -1,6 +1,15 @@
 # S-COOPMWM continuation — MAIN18:00b fix-first HOLD
 
 ## Fresh-session adoption — Nov3 23:08 +08
+- MAIN00:00 pipeline APPLIED. I2 subjectac8e1f31 stagedexactgitblobs to
+  coopmwm20261103_intentcpu_i2;952101COMPLETE,NEVERredispatch.932PASS+52subtests,
+  2FAIL(onlyblanketPopen guardblockedCLIpreflight/tempgitfixture),0SIM/139.323s.
+  Harness-only exactmetadataallowlist+3localboundarytestsPASS prepared forI3;
+  see LINUX_I2_METADATA_GUARD_2415.md. No integratorlearner/gatemoduleedited.
+- ProspectivegateinputsREADYcontrolcoopmwm20261104_gate_inputs1 via
+  prepare_intent(48wide/per_seed_v1/sources/u0SHA), launch_authorizedFALSE.
+  No actualgate/fixedupdate/physics. Finalsource/runtimebindingstillrequired.
+  PerseedpreviewdelegatedMAIN00:00; doNOTduplicate.
 - GPUAarchivehandover DISPATCHED ONCE:local43764/create1793721382.8047392,
   ROLLING_ARCHIVE_BRIDGE_GPUA_V4.json. Currentoldtransferactive=>30sidlewait;
   noSIG/newmoveruntilidleproof. ADOPT/no redispatch. Newcontrolrolling2318_gpua_v4.

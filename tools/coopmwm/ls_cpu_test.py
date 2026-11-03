@@ -6,6 +6,29 @@ import sys
 import time
 
 
+def metadata_command(args, kwargs):
+    """Only the two CPU-test metadata subprocess forms; never a trainer or shell."""
+    import re
+    import tempfile
+    if not isinstance(args,(list,tuple)) or not all(isinstance(x,str) for x in args):return False
+    if kwargs.get('shell') or kwargs.get('executable') or kwargs.get('preexec_fn'):return False
+    def temporary(path):
+        p=Path(path)
+        return p.is_absolute() and p.resolve().is_relative_to(Path(tempfile.gettempdir()).resolve())
+    if (len(args)==6 and args[:5]==[sys.executable,'-m','tools.coopmwm.coop_search','preflight','--sha']
+            and re.fullmatch('[0-9a-f]{64}',args[5])):
+        return temporary(kwargs.get('env',{}).get('COOPMWM_COOP_BANK_DIR',''))
+    if len(args)>=4 and args[:2]==['git','-C'] and temporary(args[2]) and Path(args[2]).name=='gitsrc':
+        return tuple(args[3:]) in (('init','-q'),('add','-A'),('commit','-q','-m','x'),
+            ('rev-parse','HEAD'),('rev-parse','--verify','HEAD'),('diff','--quiet','HEAD','--','*.py'))
+    return False
+
+
+def guarded_popen(original,args,**kwargs):
+    if not metadata_command(args,kwargs):raise AssertionError('CPU qualification forbids physics/inference')
+    return original(args,**kwargs)
+
+
 def run(root):
     from unittest.mock import patch
     import fcntl
@@ -33,7 +56,9 @@ def run(root):
             if selection.exists() else sorted(str(p) for p in (root/'pytools/tools/coopmwm').glob('test_*cpu.py')))
         settings=root/'LS_CPU_SELECTION.json'
         extra=json.loads(settings.read_text()) if settings.exists() else {}
-        with patch('subprocess.Popen',side_effect=AssertionError('CPU qualification forbids physics/inference')):
+        import subprocess
+        original_popen=subprocess.Popen
+        with patch('subprocess.Popen',side_effect=lambda args,**kwargs:guarded_popen(original_popen,args,**kwargs)):
             code=pytest.main(paths+['-v','--tb=short','-p','no:cacheprovider']+extra.get('pytest_args',[]),plugins=[c])
         v=dict(pass_=code==0,tests=c.tests,skips=c.skips,sim_s=0,wall_s=time.monotonic()-start,root=str(root),
             selection=extra,source_hashes=json.loads((root/'LS_SOURCE_HASHES.json').read_text()))
