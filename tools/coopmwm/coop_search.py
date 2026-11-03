@@ -108,6 +108,7 @@ def preflight(sha, dirs=None):
     """GPU-host startup check (CLI ``preflight --sha`` and the collector supervisor's startup):
     resolve and digest-check the novelty bank BEFORE budget is reserved or work is admitted.
     Returns the descriptors; raises when the bank file is missing or does not match ``sha``."""
+    return resolve_bank(sha, dirs)
 
 
 def _digest(obj):
