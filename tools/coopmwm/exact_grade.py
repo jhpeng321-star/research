@@ -981,7 +981,11 @@ def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., 
     import copy
     from .bank_imitation import run
     reference=copy.deepcopy(policy)
-    metrics=_ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs)
+    # Reviewed intent release: all bank AWR belongs to the separate imitation
+    # trust region. Keeping bank rows in PPO would also change its minibatches
+    # relative to A. Preserve the historical option-off update byte-for-byte.
+    ppo_pairs=[] if getattr(policy,'intent_horizon',0) else pairs
+    metrics=_ppo_exact_update(policy,optimizer,episodes,generator,ppo_pairs,coefficient,epochs)
     intent=None
     if getattr(policy,'intent_horizon',0):
         from .v2v_intent import bank_stats,coverage,weight_norms

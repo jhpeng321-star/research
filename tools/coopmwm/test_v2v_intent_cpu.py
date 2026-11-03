@@ -321,6 +321,8 @@ def test_cooperative_bank_update_lowers_action_and_intent_error(tmp_path, monkey
     torch.manual_seed(0)
     before = action_error(policy, pairs)
     metrics = exact_update(policy, optimizer, episodes, generator, pairs, 1., epochs=epochs, imitation_epochs=5)
+    assert all(row['exact_imitation_steps']==0 and row['imitation']==0.
+               for row in metrics if 'bank_imitation' not in row)
     report = metrics[-1]['bank_imitation']
     assert report['action_error_after_mps2'] < report['action_error_before_mps2'] and action_error(policy, pairs) < before
     intent = report['v2v_intent']
@@ -725,6 +727,8 @@ def test_e2e_u0_intent_exact_update_through_run_separate(tmp_path, monkeypatch):
     monkeypatch.setattr(bank_imitation, 'run', separate)
     torch.manual_seed(0)
     metrics = exact_update(policy, optimizer, episodes, generator, pairs, 1., epochs=1, imitation_epochs=5)
+    assert all(row['exact_imitation_steps']==0 and row['imitation']==0.
+               for row in metrics if 'bank_imitation' not in row)
     report = metrics[-1]['bank_imitation']
     assert report['pass1_effective'] is True and report['epochs_completed'] >= 1
     assert report['imitation_failed'] is False and report['kl'] <= .045
