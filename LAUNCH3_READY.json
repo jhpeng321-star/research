@@ -3,43 +3,44 @@
  "workspace": "E:/agent-work/c4-v2v-launch3",
  "branch": "c4/v2v-launch3",
  "commit": {
-  "merged": "6c68cb7cafecffba8d4d6f8ca683792672769c51",
-  "merged_note": "merge of c4/intent-head INTO c4/v2v-launch3 on top of c4/intent-int; the registered launcher refuses any other --commit",
-  "intent_int": "b37d895bc1c1114c232c55f3c69e1f60baf47660",
+  "merged": "ff5d70e995bce609db4c1f7f45d0266ec82a82ec",
+  "merged_note": "re-merge of the UPDATED c4/intent-int (3e7933f2: coopfix-int COOPFIX gate + v2v_intent gate extension + e2e gate PASS, options-off byte-identity) into c4/v2v-launch3; supersedes the frozen session's 6c68cb7c; the registered launcher refuses any other --commit",
+  "intent_int": "3e7933f2f42307fc328587758fa41f7ca3efa38d",
   "intent_head": "ad7fbc7b92c2a49435e709a282a4182315b99b7c",
   "v2v_registration": "383661969a18b56206167d9a4d2707445960d175",
-  "git_ancestry_check": "launcher verifies commit==registered merged commit always, and merge-base ancestry when run inside a git worktree; skipped silently on bare cpuQ deploys"
+  "git_ancestry_check": "launcher verifies commit==registered merged commit always, plus merge-base ancestry (merged in HEAD; intent-int 3e7933f2 and intent-head ad7fbc7b inside the commit) when run inside a git worktree; skipped silently on bare cpuQ deploys"
  },
  "launcher": {
   "path": "tools/coopmwm/v2v_launch3.py",
-  "sha256": "e7392ff9af5200298ddeccd1dc03beb5c92569d385ba397057a0a1340df834dd",
+  "sha256": "8013c88b66b3bb409fffd11022c25cc4483111cfd2cd3929a9885a3527b2520b",
   "tests": {
    "path": "tools/coopmwm/test_v2v_launch3_cpu.py",
-   "sha256": "923a300355502ab09e2846e7faeeb28fbe02776ff31951774999f99a1ea9b101",
+   "sha256": "c3e8ada75ac95ed3cbff53bb0e82b636e9a2e6f2d276bd5e57197430d69af83c",
    "command": "python -m pytest tools/coopmwm/test_v2v_launch3_cpu.py -q",
-   "result": "8 passed",
+   "result": "9 passed",
    "covers": [
     "refuses without a COOPFIX_GATE.json whose verdict is exactly PASS (missing/FAIL/lowercase/absent-verdict all refused)",
     "refuses while a HOLD file exists (V2V_LAUNCH3_HOLD.json in control OR root)",
     "arm configs: intent ON for all three (v2v_intent=true, horizon=5, weight=0.1); B-v2v and R-v2v canonical-hash identical; A-v2v carries no bank/imitation options; unequal B/R and intent-off refused",
     "budget arithmetic: ledger sum + SUPERSEDED_CHARGE 811640, fits/shortfall boundaries at the 17471840 ceiling, worst-case compute bound",
     "resource decision boundary at 6 GiB / mover alive / mover stopped",
-    "commit refusals; runtime binding refusals (cap change, horizon 4)"
+    "commit refusals; runtime binding refusals (cap change, horizon 4)",
+    "NEW after re-merge: runtime binding requires v2v_dim == v2v_obs.V2V_INTENT_DIM (48) whenever v2v_intent is on, mirroring v2v_live.intent_binding_gate (wrong dim and missing dim refused)"
    ]
   }
  },
  "cli_for_cpuQ": {
-  "check": "python -B -u -m tools.coopmwm.v2v_launch3 --commit 6c68cb7cafecffba8d4d6f8ca683792672769c51 --gate /home/ubuntu/coopmwm20261103_v2v_resource1727/COOPFIX_GATE.json --control /home/ubuntu/coopmwm20261103_v2v_resource1727 --root /home/ubuntu/coopmwm20261103_v2v3 --mover /home/ubuntu/coopmwm20261103_rolling1647_v3 --mode check",
+  "check": "python -B -u -m tools.coopmwm.v2v_launch3 --commit ff5d70e995bce609db4c1f7f45d0266ec82a82ec --gate /home/ubuntu/coopmwm20261103_v2v_resource1727/COOPFIX_GATE.json --control /home/ubuntu/coopmwm20261103_v2v_resource1727 --root /home/ubuntu/coopmwm20261103_v2v3 --mover /home/ubuntu/coopmwm20261103_rolling1647_v3 --mode check",
   "start": "same plus --mode start --wait-seconds 7200 ; writes V2V_STARTED.json at the run root only after every gate passes; refuses (exit 2, JSON reason) otherwise; --wait-seconds re-polls ONLY the resource gate every 120s and never bypasses HOLD/gate/commit/budget refusals",
   "defaults": "root /home/ubuntu/coopmwm20261103_v2v3, mover /home/ubuntu/coopmwm20261103_rolling1647_v3, control /home/ubuntu/coopmwm20261103_v2v_resource1727; ledger defaults to <root>/CHARGES.jsonl"
  },
  "gates": {
-  "commit": "must equal the registered merged commit above",
-  "gate_file": "COOPFIX_GATE.json, JSON with verdict == 'PASS' (exact); sha256 recorded into the receipt",
+  "commit": "must equal the registered merged commit above (ff5d70e9, the updated c4/intent-int merge)",
+  "gate_file": "COOPFIX_GATE.json, JSON with verdict == 'PASS' (exact); sha256 recorded into the receipt; the gated build itself is in this merge (c4/intent-int 3e7933f2: coopfix-int gate + v2v_intent gate extension + e2e PASS)",
   "hold": "V2V_LAUNCH3_HOLD.json honoured in control dir or run root: refuse immediately, even under --wait-seconds",
   "resource": "disk free >= 6442450944 bytes (6 GiB) at the run root; mover alive via OWNER.json pid/start_ticks/boot_id /proc identity check; mover STOP_GPU_SPACE.json marks stopped; rule MAIN2026-11-03 16:27/16:47",
   "config_binding": "canonical-json sha256 per arm (arm key excluded); B==R required; B-v2v and R-v2v identity hash f424646abbe760143509c1d04129bb58af0689b59e6f63f40729096d0eb26f99 (A-v2v: 4dd6ebdd42257982655fb336215caa070182bc7be313ded403f3556ab9587649, differs only by the absent bank options)",
-  "runtime_binding": "when V2V_RUNTIME.json exists at the root its config must carry the intent options verbatim, cap total 17471840, and the registered diagnostic schedule (A [] / B [6,12,18,24] / R [12,24])"
+  "runtime_binding": "when V2V_RUNTIME.json exists at the root its config must carry the intent options verbatim, v2v_dim == 48 (v2v_obs.V2V_INTENT_DIM) while v2v_intent is on, cap total 17471840, and the registered diagnostic schedule (A [] / B [6,12,18,24] / R [12,24])"
  },
  "arm_configs": {
   "all_three": {"v2v": true, "v2v_intent": true, "v2v_intent_horizon": 5, "v2v_intent_weight": 0.1, "first_update": 1, "final_update": 24, "common_start": "original MAPPO u0, zero-init V2V"},
@@ -50,9 +51,9 @@
  "budget": {
   "ceiling_sim_s": 17471840,
   "ceiling_source": "V2V_CAP_REGISTRATION_1406.json; v2v_live.accounting hard-checks budget total == 17471840",
-  "charged_to_date_sim_s_observed": 7651910,
-  "charged_source": "B_REPLAY_START_WATCH_STATUS_1793688858672178400.json latest.R.receipt.charged_sim_s (bank_verification_ext, unix 1793685214.39); local snapshot only - the launcher re-reads the live ledger at start: charged = 811640 (SUPERSEDED_CHARGE) + sum(CHARGES.jsonl sim_s)",
-  "remaining_headroom_sim_s": 9819930,
+  "charged_to_date_sim_s_observed": 8995350,
+  "charged_source": "B_REPLAY_START_WATCH_STATUS_1793703157024912400.json latest.R.receipt.charged_sim_s (c4-coopnative docs/paper_results/coopmwm, read-only; timestamp_utc 2026-11-03T10:01:06Z); supersedes the frozen session's 7651910 snapshot - the launcher re-reads the live ledger at start: charged = 811640 (SUPERSEDED_CHARGE) + sum(CHARGES.jsonl sim_s)",
+  "remaining_headroom_sim_s": 8476490,
   "quote_total_sim_s": 2971840,
   "registered_v2v_phases_sim_s": {"v2v_train": 2073600, "v2v_interim": 345600, "v2v_final": 345600, "v2v_lessons": 21840, "v2v_isolated": 185200},
   "intent_head_cost": {
@@ -61,19 +62,19 @@
    "compute_disclosure": "actor/critic first layers widen 33->81 and 41->89 input columns (+3072/+6144 params) plus zero-init 64x5 intent head (+325): +9541 params on a 20711-param network (~+46% network compute); registered dims from tools/coopmwm/v2v_model.py and tools/coopnative/policy.py"
   },
   "worst_case_compute_bound_sim_s": 5045440,
-  "worst_case_rule": "disclosure-only bound: even if the entire v2v_train compute doubled it fits the remaining headroom; no additional SUMO episode is ever charged",
+  "worst_case_rule": "disclosure-only bound: even if the entire v2v_train compute doubled it fits the remaining headroom (8995350 + 5045440 = 14040790 < 17471840); no additional SUMO episode is ever charged",
   "fits": true,
   "shortfall_sim_s": 0,
   "worst_case_shortfall_sim_s": 0,
   "shortfall_rule": "shortfall_sim_s = max(0, charged + quote_total - 17471840) printed and enforced as a refusal when nonzero"
  },
  "hard_rules_compliance": {
-  "cpu_only": "launcher and tests are stdlib/pure-CPU; no torch import, no SUMO, no GPU, no ssh/remote writes",
-  "worktree_only": "all writes inside E:/agent-work/c4-v2v-launch3; c4-coopnative and _sol untouched",
-  "no_history_rewrite": "only merge + ordinary commits; no reset/clean/stash drop/push",
+  "cpu_only": "launcher and tests are stdlib/numpy-only (v2v_obs import is torch-free by contract); no torch import in the launcher, no SUMO, no GPU, no ssh/remote writes",
+  "worktree_only": "all writes inside E:/agent-work/c4-v2v-launch3; c4-coopnative and _sol untouched (c4-coopnative read for the newer charged receipt only)",
+  "no_history_rewrite": "only merges + ordinary commits; no reset/clean/stash drop/push",
   "forbidden_paths": "no sealed/ or holdout/heldout/cal_split/chunk5/j4b/inc1 paths opened; no truth files read; no eval seeds used",
-  "no_hand_set_thresholds": "all constants are the registered ones (cap 17471840, 6 GiB gate, KL .045, weight .1, horizon 5, schedule [6,12,18,24]/[12,24])"
+  "no_hand_set_thresholds": "all constants are the registered ones (cap 17471840, 6 GiB gate, KL .045, weight .1, horizon 5, schedule [6,12,18,24]/[12,24], v2v_dim 48 from v2v_obs)"
  },
  "new_sim_s": 0,
- "unix": 1793701839.4743383
+ "unix": 1793716818.19529
 }
