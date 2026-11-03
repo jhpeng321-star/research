@@ -120,7 +120,26 @@ print(json.dumps(v))''',timeout=40))
     print(json.dumps(value))
 
 
+def status():
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,time,shutil
+r=Path({CONTROL!r});root=Path('/home/ubuntu/coopmwm20261102_warm1');out=dict(unix=time.time(),cpu_free=shutil.disk_usage(r).free)
+for n in ('DISPATCH','OWNER','COMPLETE'):
+ p=r/(n+'.json');out[n]=json.loads(p.read_text()) if p.exists() else None
+progress=r/'PROGRESS.jsonl';rows=[json.loads(s) for s in progress.read_text().splitlines()] if progress.exists() else []
+for row in rows:
+ key=row['key'];answer=root/'responses'/(key+'.json');label=root/'replay_bank/B/decisions'/(key+'.json')
+ row['answered_unix']=answer.stat().st_mtime if answer.exists() else None
+ row['labelled_unix']=label.stat().st_mtime if label.exists() else None
+out['progress']=rows;out['log']=(r/'RUN.log').read_text()[-4000:] if (r/'RUN.log').exists() else None
+d=out['DISPATCH'];p=Path('/proc',str(d['pid'])) if d else None
+out['alive']=bool(p and p.exists() and (p/'stat').read_text().split()[21]==d['start_ticks'] and (p/'stat').read_text().split()[2]!='Z')
+print(json.dumps(out))''',timeout=35))
+    write(ops.EVIDENCE/f'SEARCH_RESTART_STATUS_{time.time_ns()}.json',value)
+    print(json.dumps(value))
+
+
 if __name__=='__main__':
     import argparse
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('audit','qualify','register','launch'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('audit','qualify','register','launch','status'))
     globals()[p.parse_args().action]()
