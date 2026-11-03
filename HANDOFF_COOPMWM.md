@@ -1,5 +1,14 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+INTERIM COMPLETE: allA/B/R96publicreceipts +480withMAPPO/native identitiesPASS;
+noFAIL/bothcompletioncertificates. MAIN12:35analysisCPU4LinuxPASS/.107s/zeroSIM,
+registered99552af12ce0c52d BEFOREdecoding. NEWinterim_u8_analysis.py/operator:
+readONLYinterim008A/B/R+reusedMAPPO/native episodes/checkedpaths, nofinalpolicy
+outcomes. All/focus,J600/J900,existingbootstrap+per-endpointtwo-scopeHolm;
+MAINonlydelivery/nooutcome-conditionedchanges. NOTdispatchedyet; committhen
+`python -X utf8 -m tools.coopmwm.interim_u8_ops launch` ONCE/adoptDISPATCH.
+No traininghandover/SUMO/inference/reservation, newdriverseparatefromlivecode.
+
 LATEST Nov3 13:25+08: B/Ru10BOTHcomplete (B13:18:52/R13:23:57),allownersLIVE,
 noalerts/dead. Rfixed1lesson+853.695/noCI/error.364220;11usedadmitof13/capB9=11,
 1FULL+partial2/18steps2252visits/KL.055908stop,error.620863->.608462.

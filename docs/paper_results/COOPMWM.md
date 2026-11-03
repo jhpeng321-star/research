@@ -1,5 +1,27 @@
 # S-COOPMWM — live checks
 
+## Nov3 — completed fixed-u8 interim; MAIN-only analysis registered before decoding
+- Public identities verify **96 episodes per A/B/R**, checkpoint8 SHA per arm,
+  panelSHA`d74f685e…`; both completion certificates exist/no failure. Reused
+  MAPPO/native public completions also validate,480 episode identities total.
+- MAIN12:35's completed-interim analysis is registered as
+  **`99552af12ce0c52d0d06d1bd1690dc42a9d1078fd5f9d727c8008a8dd54f1e62`**
+  before outcome decoding. Four Linux CPU tests PASS (0.107s), zero SUMO/inference:
+  incomplete-grid and final-checkpoint exclusion, fingerprint mismatch before
+  decode, paired-statistic/focus/duplicate-world fixtures and finite JSON safety.
+- A detached analysis will read only the completed interim008 A/B/R episodes
+  and reused fixedfinal MAPPO/native episodes through checked paths; no final
+  policy outcomes. Existing bootstrap10000/RNG20261101/95%CIs, all96/focus,
+  J600/J900 contrasts and existing safety metrics; percent reductions/per-cell
+  descriptives. Interim Holm is disclosed per endpoint/comparator over{all,focus},
+  with no across-endpoint/interim-final multiplicity claim; final branch families
+  retain their registration. MAIN-only delivery; public metadata/hashes only.
+- No SUMO reservation, inference or training handover. All result-dependent
+  training/search/loss/checkpoint changes remain prohibited. Evidence:
+  `coopmwm/INTERIM_U8_ANALYSIS_CPU_1235.json`,
+  `coopmwm/INTERIM_U8_ANALYSIS_REGISTRATION_1235.json`,
+  `coopmwm/INTERIM_U8_COMPLETION_INTEGRITY_1793683899283639300.json`.
+
 ## Nov3 13:25 UTC+8 — both u10 updates complete; all phases remain funded
 - R-u10 completed **13:23:57**. Watcher3305066 and all four children remain live,
   no alerts/dead children. Runtime ETA to R-u24 is about7.01h; B-u24 about7.04h
