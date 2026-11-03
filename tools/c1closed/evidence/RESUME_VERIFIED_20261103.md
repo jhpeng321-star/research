@@ -72,3 +72,20 @@
 - No inference, dispatch, collector, transport or SUMO was started. No remote
   resource probe was made; process closure remains the historical audited receipt.
   This verification note is the only change; no duplicate registration is needed.
+
+## Fresh-session check (resumed at 7c9e5010)
+
+- Initial git status was clean. Read status/log and completion, publication and
+  resource-closure receipts before action; the frozen 480-task delivery is complete.
+- Re-executed original verify_delivery.py assertions with its exclusive receipt
+  write intercepted in memory. All checks PASS and generated JSON exactly matches
+  DELIVERY_VERIFIED.json; no scientific artifact or existing receipt was rewritten.
+- Re-read design/report/runtime, C1 checklist, historical E1/E2 evidence and C1_GAPS.
+  Shared REGISTRATION.md line 5700 already records S-C1CLOSED COMPLETE.
+- Directly rechecked WMFIX_PILOT_V2DATA.md, WMFIX_ES.md and C1FLOOR.md: neither
+  candidate has the required passing verdict; the native speed-pulse study is not
+  an RNG-only floor. Wall-state restoration and initialization lineage remain
+  unresolved; the optional component ablation remains unrun.
+- No jobs were launched or processes signalled. Resource closure remains the
+  historical OWNED_RESOURCES_CLOSED.json audit, not a fresh remote observation.
+  This resume changes only this note; the completed scientific panel is preserved.
