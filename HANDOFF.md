@@ -5,6 +5,15 @@ published; current-source physical LS fit reused the completed decision cache.
 All three owned job PIDs exited. Old watcher exited; no repeated LC inference.
 Recovery receipt:`artifacts/rbfit/receipts/RESUME_20261102.md`.
 
+Latest resume from clean `3c3588bc` (2026-11-04): all29local delivery hashes
+PASS; report40lines. Receipt:`receipts/DELIVERY_MIRROR_RESUME_3c3588bc.json`.
+LANE/SUMOCORE worktree paths are unavailable in this session; read their committed
+handoffs via Git instead. Branch `c4/rb-lane` physical-source diff against80541278
+is empty, so the delivered LC fit remains committed-source-current; uncommitted
+peer state cannot be checked. No new source-triggered fit remains. No remote
+inspection or job dispatch was repeated. Numerical/UNC evidence below is retained
+historical verification; LC adoption and600s sign repair remain unestablished.
+
 Latest resume2026-11-03:clean starting HEAD866ad9ae preserved. Fresh read-only
 cpuQ inspections confirm977061/1076804/3951028 complete/verified/exited,
 32worlds each, no PID reuse. LANE physics remains80541278 with clean source diff;
