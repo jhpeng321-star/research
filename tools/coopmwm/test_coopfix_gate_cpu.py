@@ -15,11 +15,11 @@ import torch
 torch.set_num_threads(1)
 
 from tools.coopnative.test_cpu import rows
-from . import coopfix_gate as gate
-from . import v2v_model
-from .accel_learner import save
-from .acceleration import Policy, encode
-from .v2v_obs import V2V_DIM
+from tools.coopmwm import coopfix_gate as gate
+from tools.coopmwm import v2v_model
+from tools.coopmwm.accel_learner import save
+from tools.coopmwm.acceleration import Policy, encode
+from tools.coopmwm.v2v_obs import V2V_DIM
 
 COOP_MEMBERS = ['m0', 'm1']
 SOLO_MEMBER = 'm0'
@@ -297,29 +297,47 @@ def test_option_stubs_identity_and_ready_gating(monkeypatch, tmp_path):
     pairs, summary = synthetic_pairs(n_solo=3)
     opts = gate.normalize_options(None)
     assert opts['v2v'] is False and opts['passes'] == 5 and opts['coefficient'] == 1.
-    filtered, report = gate.apply_bank_filter(pairs, summary, opts)
-    assert filtered == pairs and report['stage'] == 'identity'
+    stage = gate.filter_report(opts, summary)
+    assert stage['enabled'] is False and stage['stage'].startswith('identity')
     kwargs, report = gate.trust_kwargs(opts)
     assert kwargs == {} and report['enabled'] is False
     status = gate.option_status()
     assert set(status) == {'imitation_trust', 'bank_filter'}
     with pytest.raises(ValueError):
-        gate.apply_bank_filter(pairs, summary, dict(bank_filter={'module': 'x', 'callable': 'y'}))
+        gate.normalize_options(dict(bank_filter='unregistered'))
+    with pytest.raises(ValueError):
+        gate.filter_report(dict(bank_filter='statistical'), summary)
     with pytest.raises(ValueError):
         gate.trust_kwargs(dict(imitation_trust={'kind': 'own'}))
     ready = tmp_path/'BANKFILT_READY.json'
     ready.write_text(json.dumps(dict(branch='c4/bank-stat-filter')))
     monkeypatch.setitem(gate.READY_FILES, 'bank_filter', ready)
-    filtered, report = gate.apply_bank_filter(pairs, summary, dict(
-        bank_filter=dict(module='tools.coopmwm.test_coopfix_gate_cpu', callable='fake_filter')))
-    assert report['active'] == 'ready' and filtered == pairs[:2]
+    applied = dict(mode='statistical', kept=1, dropped=1)
+    stage = gate.filter_report(dict(bank_filter='statistical'), dict(summary, bank_filter=applied))
+    assert stage['active'] == 'ready' and stage['report'] == applied
+    with pytest.raises(ValueError):                          # a bare pairs file cannot apply the rule
+        gate.filter_report(dict(bank_filter='statistical'), summary)
     monkeypatch.setitem(gate.READY_FILES, 'imitation_trust', ready)
     with pytest.raises(ValueError):
         gate.trust_kwargs(dict(imitation_trust={'kind': 'own'}))    # runner has no trust parameter yet
 
 
-def fake_filter(pairs, summary, spec):
-    return pairs[:2], dict(rule='test')
+def test_bank_filter_option_is_forwarded_to_bank_pairs(monkeypatch, tmp_path):
+    seen = {}
+
+    def fake_bank_pairs(root, arm, seed, beta=1., max_decisions=None, v2v=True, v2v_cfg=None,
+                        bank_filter=None):
+        seen.update(bank_filter=bank_filter, v2v=v2v)
+        pairs, base = synthetic_pairs(n_coop_entries=1, n_solo=2)
+        base['bank_filter'] = dict(mode='statistical', kept=2, dropped=1)
+        return pairs, base
+    from tools.coopmwm import replay_bank
+    monkeypatch.setattr(replay_bank, 'bank_pairs', fake_bank_pairs)
+    pairs, summary = gate.bank_inputs('root', 'B', 7, bank_filter='statistical')
+    assert seen == dict(bank_filter='statistical', v2v=True) and len(pairs) == 4
+    path, _ = u0_checkpoint(tmp_path)
+    report = gate.run_gate(path, pairs, summary, dict(v2v=True, passes=5, bank_filter='statistical'))
+    assert report['filter']['enabled'] is True and report['filter']['report']['mode'] == 'statistical'
 
 
 def test_cli_run_writes_report(tmp_path):

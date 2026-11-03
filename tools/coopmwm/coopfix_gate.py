@@ -13,12 +13,14 @@ offline - the registered bank_imitation.run loop, no PPO update, no SUMO - and r
 - whether the zero-initialised v2v input weights moved (non-zero): the policy can use
   partner intent.
 
-Verdict PASS iff all four hold. The two training options are interfaces with stubs until
-their branches publish READY files: ``imitation_trust`` (c4/imit-fullpass,
-IMITFIX_READY.json) and ``bank_filter`` (c4/bank-stat-filter, BANKFILT_READY.json); the
-READY paths are polled (file read only) and the stub state is disclosed in the report.
-The v2v flag defaults OFF; no existing module is modified, so behaviour with the options
-off is byte-identical (the gate itself is a new, self-contained module).
+Verdict PASS iff all four hold. The two training options are interfaces until live: 
+``bank_filter`` (c4/bank-stat-filter, BANKFILT READY, registered value 'statistical') is
+applied per entry inside replay_bank.bank_pairs and disclosed here; ``imitation_trust``
+(c4/imit-fullpass, IMITFIX_READY.json) is a stub until that branch publishes READY and is
+then forwarded to the registered runner by parameter name. The READY paths are polled
+(file read only) and the stub state is disclosed in the report. The v2v flag defaults OFF;
+no existing module is modified, so behaviour with the options off is byte-identical (the
+gate itself is a new, self-contained module).
 """
 import copy
 import inspect
@@ -106,23 +108,25 @@ def option_status():
             for name in sorted(READY_FILES)}
 
 
-def apply_bank_filter(pairs, summary, options):
-    """bank_filter option (c4/bank-stat-filter). Stub while that branch is not READY:
-    identity - pairs pass through unchanged and the stage is disclosed. When READY, the
-    branch's registered module path (options['bank_filter']['module'/'callable']) is used;
-    until then any configured spec raises instead of silently ignoring the option."""
+def filter_report(options, summary):
+    """bank_filter option (c4/bank-stat-filter, BANKFILT READY): the statistical rule is
+    applied INSIDE replay_bank.bank_pairs (per-entry replicated advantage + paired
+    per-vehicle deficit bounds, bank_filter.RULE); the gate validates the option and
+    discloses the bank's own summary['bank_filter'] report. It can never be applied to a
+    bare pairs file - the rule needs the recorded receipts and branch traces."""
     spec = options.get('bank_filter')
     if not spec:
-        return pairs, dict(option='bank_filter', enabled=False, active='stub', stage='identity')
-    ready = option_ready('bank_filter')
-    if ready is None:
+        return dict(option='bank_filter', enabled=False, active='stub', stage='identity (all admitted pairs)')
+    if option_ready('bank_filter') is None:
         raise ValueError('bank_filter option configured but BANKFILT_READY.json is absent (stub active)')
-    module_path, callable_name = spec.get('module'), spec.get('callable', 'filter_pairs')
-    module = __import__(module_path, fromlist=[callable_name]) if module_path else None
-    if module is None or not hasattr(module, callable_name):
-        raise ValueError(f'bank_filter READY without a resolvable {module_path}:{callable_name}')
-    filtered, report = getattr(module, callable_name)(pairs, summary, spec)
-    return list(filtered), dict(option='bank_filter', enabled=True, active='ready', report=report)
+    applied = (summary or {}).get('bank_filter')
+    if applied is None:
+        raise ValueError("bank_filter='statistical' requires pairs produced by "
+                         "replay_bank.bank_pairs(bank_filter='statistical'); a bare pairs file "
+                         'cannot apply the per-entry statistical rule')
+    return dict(option='bank_filter', enabled=True, active='ready', value=spec,
+                stage='applied inside replay_bank.bank_pairs (per-entry replicated advantage '
+                      '+ paired per-vehicle deficit bounds)', report=applied)
 
 
 def trust_kwargs(options):
@@ -304,15 +308,18 @@ def v2v_weight_report(policy):
 
 def normalize_options(options=None):
     source = dict(options or {})
+    bank_filter = source.get('bank_filter')
+    if bank_filter not in (None, False, 'statistical'):
+        raise ValueError("bank_filter must be None/False or the registered value 'statistical'")
     return dict(v2v=bool(source.get('v2v', False)), v2v_dim=source.get('v2v_dim'),
                 passes=int(source.get('passes', 5)), coefficient=float(source.get('coefficient', 1.)),
-                bank_filter=source.get('bank_filter'), imitation_trust=source.get('imitation_trust'))
+                bank_filter=bank_filter, imitation_trust=source.get('imitation_trust'))
 
 
 def run_gate(checkpoint, pairs, summary=None, options=None):
     """One offline imitation phase and the COOPFIX verdict (see module docstring)."""
     opts = normalize_options(options)
-    pairs, filter_report = apply_bank_filter(pairs, summary, opts)
+    filter_stage = filter_report(opts, summary)
     extra = v2v_model.v2v_extra({'v2v': opts['v2v']}, opts['v2v_dim'])
     policy, optimizer, generator, payload = load_gate_policy(checkpoint, extra)
     reference = copy.deepcopy(policy)
@@ -331,7 +338,7 @@ def run_gate(checkpoint, pairs, summary=None, options=None):
                   pairs_with_v2v_features=with_v2v,
                   v2v_feature_fraction=with_v2v/len(pairs) if pairs else None,
                   counts=(summary or {}).get('counts'), exposure=(summary or {}).get('exposure')),
-        filter=filter_report, trust=trust_report,
+        filter=filter_stage, trust=trust_report,
         imitation=dict(passes_requested=run_report['requested_epochs'],
                        passes_completed=run_report['epochs_completed'],
                        optimizer_steps=run_report['optimizer_steps'],
@@ -366,11 +373,14 @@ def verdict(report):
 
 # ---------------------------------------------------------------- inputs and CLI
 
-def bank_inputs(bank_root, arm, training_seed, beta=1., max_decisions=None, v2v=True, v2v_cfg=None):
-    """(pairs, summary) from the live B-REPLAY bank (CPU-only read of recorded receipts)."""
+def bank_inputs(bank_root, arm, training_seed, beta=1., max_decisions=None, v2v=True,
+                v2v_cfg=None, bank_filter=None):
+    """(pairs, summary) from the live B-REPLAY bank (CPU-only read of recorded receipts);
+    bank_filter='statistical' (BANKFILT READY) is applied per entry inside bank_pairs."""
     from . import replay_bank
     return replay_bank.bank_pairs(Path(bank_root), arm, int(training_seed), beta=float(beta),
-                                  max_decisions=max_decisions, v2v=v2v, v2v_cfg=v2v_cfg)
+                                  max_decisions=max_decisions, v2v=v2v, v2v_cfg=v2v_cfg,
+                                  bank_filter=bank_filter)
 
 
 def pairs_file(path):
@@ -393,6 +403,8 @@ def main(argv=None):
     p.add_argument('--max-decisions', type=int)
     p.add_argument('--v2v', action='store_true')
     p.add_argument('--v2v-dim', type=int)
+    p.add_argument('--bank-filter', dest='bank_filter', action='store_true',
+                   help="apply the registered statistical bank filter (requires --bank-root)")
     p.add_argument('--passes', type=int, default=5)
     p.add_argument('--coefficient', type=float, default=1.)
     p.add_argument('--out', type=Path, default=Path('COOPFIX_GATE_REPORT.json'))
@@ -401,12 +413,15 @@ def main(argv=None):
         return option_status()
     if not a.checkpoint:
         p.error('--checkpoint is required for run')
-    options = dict(v2v=a.v2v, v2v_dim=a.v2v_dim, passes=a.passes, coefficient=a.coefficient)
+    options = dict(v2v=a.v2v, v2v_dim=a.v2v_dim, passes=a.passes, coefficient=a.coefficient,
+                   bank_filter='statistical' if a.bank_filter else None)
     if a.pairs_file:
+        if a.bank_filter:
+            p.error('--bank-filter requires --bank-root (the rule needs the recorded receipts and traces)')
         pairs, summary = pairs_file(a.pairs_file)
     elif a.bank_root:
         pairs, summary = bank_inputs(a.bank_root, a.arm, a.training_seed, a.beta,
-                                     a.max_decisions, v2v=a.v2v)
+                                     a.max_decisions, v2v=a.v2v, bank_filter=options['bank_filter'])
     else:
         p.error('one of --pairs-file or --bank-root is required for run')
     report = run_gate(a.checkpoint, pairs, summary, options)
