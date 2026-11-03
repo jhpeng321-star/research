@@ -33,13 +33,14 @@ for name in ('FAST_RESUME_1844.json','RESOURCE_EXTENSION_1651.json','VERIFICATIO
  if (r/name).exists():source=json.loads((r/name).read_text())['source_root'];break
 sys.path.insert(0,source+'/pytools')
 from tools.coopmwm.warm_health import assert_running,HealthPause
-replay=json.loads((r/'B_REPLAY_STARTED.json').read_text()) if (r/'B_REPLAY_STARTED.json').exists() else {{}}
+rp=next((r/n for n in ('B_REPLAY_CONTINUED_LESSONWINDOW.json','B_REPLAY_STARTED.json') if (r/n).exists()),None)
+replay=json.loads(rp.read_text()) if rp else {{}}
 for arm in ('A','B','R'):
  names=[f'FAST_{{arm}}_DISPATCH_1844.json',f'DNS_{{arm}}_DISPATCH_1651.json',f'BETA_{{arm}}_DISPATCH.json',f'VERIFIED_{{arm}}_DISPATCH.json',f'MATCH_{{arm}}_DISPATCH.json',f'INCIDENT_{{arm}}_DISPATCH.json',f'TAIL_{{arm}}_DISPATCH.json',f'QUOTA_{{arm}}_DISPATCH.json']+[f'WARM_{{arm}}_DISPATCH{{suffix}}.json' for suffix in ('_V6','_V4','_V3','2','')]
  p=next((r/name for name in names if (r/name).exists()),None)
  d=next((c for c in replay.get('children',[]) if c['component']=='arm' and c['arm']==arm),None)
  if d is None and p is None:continue
- receipt='B_REPLAY_STARTED.json' if d is not None else p.name
+ receipt=rp.name if d is not None else p.name
  if d is None:d=json.loads(p.read_text())
  q=pathlib.Path('/proc')/str(d['pid']);s=(q/'stat').read_text().split() if (q/'stat').exists() else None
  assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'owner boot changed'
@@ -59,7 +60,7 @@ for d in replay.get('children',[]):
  q=pathlib.Path('/proc')/str(d['pid']);s=(q/'stat').read_text().split() if (q/'stat').exists() else None
  assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'service boot changed'
  assert not s or s[21]==d['start_ticks'],'service PID reused'
- services['replay_grader_'+d['arm']]=dict(owner=d,state=s[2] if s else 'exited',dispatch_receipt='B_REPLAY_STARTED.json')
+ services['replay_grader_'+d['arm']]=dict(owner=d,state=s[2] if s else 'exited',dispatch_receipt=rp.name)
 stop=None
 try:assert_running(r,'B')
 except (ValueError,HealthPause) as error:stop=dict(error=str(error),source='current registered warm_health guard')

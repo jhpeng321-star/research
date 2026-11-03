@@ -17,7 +17,7 @@ import types
 from .protocol import digest, sha
 from .storage import read, write
 
-NAME = 'B_REPLAY_START_0835_V4.json'
+NAME = 'B_REPLAY_LESSON_WINDOW_V1.json'
 PREFIX = 'replay0735'
 
 
@@ -106,8 +106,8 @@ def binding(root, v, arm):
     b = clocks(root, b)
     b.update(budget=v['budget'], gpu_deadline=v['gpu_deadline'], b_replay=True,
         replay_beta=1., replay_sources={'B': [v['collection_root']], 'R': []},
-        awr=read(root/'AWR_BINDING.json')['config'], resume_update=3, stop_after_update=24,
-        runtime_receipt_suffix='_REPLAY0735', workers=12,
+        awr=read(root/'AWR_BINDING.json')['config'], resume_update=v.get('resume_update',3), stop_after_update=24,
+        runtime_receipt_suffix=v.get('runtime_receipt_suffix','_REPLAY0735'), workers=12,
         quota_aware_admission=False, parallel_group_queries=False,
         bounded_fanout=False, r_concurrent_lag1_quota=True,
         demand_phase_end_s=v['demand_phase_end_s'], precharged_unattempted=[],
@@ -130,17 +130,18 @@ def run_arm(root, arm):
     root = Path(root);v = config(root);accounting(v)
     torch.set_num_threads(1)
     b = binding(root, v, arm)
-    assert sha(root/f'{arm}_checkpoint_003.pt') == v['checkpoints'][arm]
+    resume=b['resume_update']
+    assert sha(root/f'{arm}_checkpoint_{resume:03}.pt') == v['checkpoints'][arm]
     # The checkpoint loader restores policy, Adam and torch Generator exactly.
     # Old diagnostic counters are irrelevant: replay never executes a plan.
     import numpy as np
-    b['resume_progress'] = dict(running=[], beta=read(root/f'{arm}_UPDATE_003.json')['trust'],
-        learned=read(root/'B_SEARCH_LEARNING_003.json') if arm == 'B' else None,
+    b['resume_progress'] = dict(running=[], beta=read(root/f'{arm}_UPDATE_{resume:03}.json')['trust'],
+        learned=read(root/f'B_SEARCH_LEARNING_{resume:03}.json') if arm == 'B' else None,
         exact_rng_state=np.random.default_rng(SEED).bit_generator.state, exact_count=12)
     wr.verify = lambda r, a: b if a == arm and Path(r) == root else (_ for _ in ()).throw(ValueError('arm/root'))
     wr.budget = lambda: copy.deepcopy(v['budget'])
     original_wave = wr.wave
-    last_start = [None]
+    last_start = [v['next_not_before_s'][arm]-v['pace_s'] if 'next_not_before_s' in v else None]
 
     def wave(r, cfg, policies, ws, role, ident, phase, deterministic=True, extras=None):
         if role == 'train':
@@ -353,8 +354,9 @@ def watch(root):
             if time.time() > v['gpu_deadline']:raise ValueError('builder boundary deadline')
             time.sleep(5)
     for arm in ('B', 'R'):
-        assert sha(root/f'{arm}_checkpoint_003.pt') == v['checkpoints'][arm]
-        assert not (root/f'{arm}_checkpoint_004.pt').exists(), 'adopt optimizer; do not duplicate'
+        resume=v.get('resume_update',3)
+        assert sha(root/f'{arm}_checkpoint_{resume:03}.pt') == v['checkpoints'][arm]
+        assert not (root/f'{arm}_checkpoint_{resume+1:03}.pt').exists(), 'adopt optimizer; do not duplicate'
         from .warm_health import assert_running
         assert_running(root, arm)
         # Probe original arm lock; it must be released by all superseded runs.
@@ -363,8 +365,8 @@ def watch(root):
         retire_endpoint(root, arm, v['old_endpoints'][arm])
     children = [spawn(root, v, 'grade', a) for a in ('B', 'R')]
     children += [spawn(root, v, 'arm', a) for a in ('B', 'R')]
-    write(root/'B_REPLAY_STARTED.json', dict(unix=time.time(), gate=gate, children=children,
-        checkpoints=v['checkpoints'], first_update=4, final_update=24,
+    write(root/v.get('start_receipt_name','B_REPLAY_STARTED.json'), dict(unix=time.time(), gate=gate, children=children,
+        checkpoints=v['checkpoints'], first_update=v.get('resume_update',3)+1, final_update=24,
         mode='own-policy PPO + confirmed positive bank AWR; collection never blocks episodes'))
     while time.time() < v['gpu_deadline']:
         bridge_once(root, v)

@@ -31,7 +31,7 @@ if not r.exists():
  hashes={{n:hashlib.sha256((r/n).read_bytes()).hexdigest() for n in json.loads((base/'LS_SOURCE_HASHES.json').read_text())}}
  for n in files:hashes['pytools/tools/coopmwm/'+n+'.py']=hashlib.sha256((r/'pytools/tools/coopmwm'/(n+'.py')).read_bytes()).hexdigest()
  with (r/'LS_SOURCE_HASHES.json').open('x') as f:json.dump(hashes,f)
- tests=json.loads((base/'LS_RELEASE_TESTS.json').read_text())+['test_replay_start_cpu']
+ tests=json.loads((base/'LS_RELEASE_TESTS.json').read_text())+['test_replay_start_cpu']+{[n for n in files if n.startswith('test_')]!r}
  with (r/'LS_RELEASE_TESTS.json').open('x') as f:json.dump(sorted(set(tests)),f)
  shutil.copy2(base/'LS_CPU_SELECTION.json',r/'LS_CPU_SELECTION.json')
 for n,text in files.items():assert (r/'pytools/tools/coopmwm'/(n+'.py')).read_text()==text,n
@@ -204,11 +204,13 @@ print(json.dumps(d))''',timeout=60))
 def status():
     value=json.loads(remote('cpuQ',f'''from pathlib import Path
 import json,time,zlib
-c=Path({CONTROL!r});d=json.loads((c/'DISPATCH.json').read_text());p=Path('/proc',str(d['pid']))
+r=Path({ROOT!r});continued=r/'replay_lesson_window_v1'
+c=continued if (continued/'DISPATCH.json').exists() else Path({CONTROL!r})
+d=json.loads((c/'DISPATCH.json').read_text());p=Path('/proc',str(d['pid']))
 st=(p/'stat').read_text().split() if p.exists() else None
 assert st is None or st[21]==d['start_ticks']
 assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
-r=Path({ROOT!r});started=r/'B_REPLAY_STARTED.json'
+started=r/('B_REPLAY_CONTINUED_LESSONWINDOW.json' if c==continued else 'B_REPLAY_STARTED.json')
 start=json.loads(started.read_text()) if started.exists() else None
 children=[]
 for child in (start or {{}}).get('children',[]):

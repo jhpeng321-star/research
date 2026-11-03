@@ -30,6 +30,14 @@ class WarmStateTests(unittest.TestCase):
             self.collect({'B_REPLAY_STARTED.json':dict(children=[
                 dict(self.owner(),component='arm',arm='B')])},start='456')
 
+    def test_replay_continuation_receipt_has_priority_over_original(self):
+        v=self.collect({'B_REPLAY_STARTED.json':dict(children=[
+            dict(self.owner(22),component='arm',arm='B')]),
+            'B_REPLAY_CONTINUED_LESSONWINDOW.json':dict(children=[
+                dict(self.owner(),component='arm',arm='B')])})
+        self.assertEqual(v['owners']['B']['state'],'S')
+        self.assertEqual(v['owners']['B']['dispatch_receipt'],'B_REPLAY_CONTINUED_LESSONWINDOW.json')
+
     def test_fast_resume_owners_override_closed_dns_and_surface_new_failure(self):
         files={'FAST_B_DISPATCH_1844.json':self.owner(),
             'DNS_B_DISPATCH_1651.json':self.owner(22),

@@ -128,6 +128,9 @@ class StartGateTests(unittest.TestCase):
         from .replay_bank import collector_guide
         with tempfile.TemporaryDirectory() as d:
             r=Path(d)
+            for i in range(8):
+                put(r/'replay_bank/B/snapshots'/f'pending_B{i}.json',dict(arm='B'))
+                put(r/'requests'/f'pending_B{i}.json',dict(arm='B'))
             job=dict(id='R_current',arm='R',queue_root=str(r),world=dict(seed=986001),
                 collector_policy_update=5,policy_state={'R_current_weights':[1.,2.]},
                 search_learning={'must_not_reach_R':True},
@@ -144,7 +147,7 @@ class StartGateTests(unittest.TestCase):
             self.assertEqual(q['policy_state'],job['policy_state'])
             self.assertEqual(q['mode'],'centre')
             self.assertNotIn('search_learning',q)
-            self.assertFalse((r/'requests').exists())
+            self.assertEqual(len(list((r/'requests').glob('*.json'))),8)  # R never scores candidates
 
 
 

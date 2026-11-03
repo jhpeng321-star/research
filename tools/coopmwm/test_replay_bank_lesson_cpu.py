@@ -95,6 +95,42 @@ def _runner(work):
     return LessonTapeRunner(work)
 
 
+def test_selected_short_plan_retains_original_long_slate_window_and_charge():
+    snap=snapshot(420);short=plan('short',4.)
+    original=sv.build_branches(snap,[short])[0]
+    window=dict(original['window'],end_s=840)
+    r=dict(proposer='wm',window=window)
+    spec=rb.lesson_policy_spec(snap,short,r)
+    verify_sealed(spec,'branch_sha256')
+    assert spec['window']==window and spec['sim_s']==840
+    assert spec['plan'] is None and spec['index']==0
+    assert spec['snapshot_sha256']==original['snapshot_sha256']
+    assert spec['verification_id']!=original['verification_id']
+    assert spec['window']['end_s']>original['window']['end_s']
+    assert sv.build_branches(snap,[short])[0]==original  # default verifier unchanged
+
+
+def test_lesson_rejects_reference_window_from_another_state():
+    snap=snapshot(420)
+    with pytest.raises(AssertionError):
+        rb.lesson_policy_spec(snap,plan('short',4.),dict(proposer='wm',
+            window=dict(start_s=300,end_s=840,metric='team_delay_vs')))
+
+
+def test_primary_absolute_delta_and_replication_qualified_ratio():
+    entries=[dict(verification_id='tiny',status='graded',J_policy_u3_veh_s=100.,
+        J_best_plan_veh_s=99.999,J_new_policy_veh_s=90.),
+        dict(verification_id='real',status='graded',J_policy_u3_veh_s=100.,
+        J_best_plan_veh_s=80.,J_new_policy_veh_s=90.)]
+    conf={'tiny':dict(first_seed_advantage_veh_s=.001,replication_advantage_veh_s=1.),
+          'real':dict(first_seed_advantage_veh_s=20.,replication_advantage_veh_s=19.)}
+    out=rb.lesson_metrics(entries,conf)
+    assert out['delta_mean_veh_s']==10. and out['delta_ci95_veh_s']==[10.,10.]
+    assert out['share_delta_positive']==1.
+    assert out['recapture_eligible_entries']==1 and out['recapture_median']==.5
+    assert entries[0]['recapture_eligible'] is False
+
+
 def test_recapture_frozen_list_action_error_and_charges(tmp_path):
     root = tmp_path;bank = rb.bank_root(root, 'B');bank.mkdir(parents=True)
     first = admitted_entry(root, 420, 'a', 4.)

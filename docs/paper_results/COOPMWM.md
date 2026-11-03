@@ -1,5 +1,34 @@
 # S-COOPMWM — live checks
 
+## Nov3 09:28:03 UTC+8 — R collector live; MAIN09:06 recovery qualified
+- R-u4 had no bank because B filled the shared eight-pending admission cap.
+  Qualified repair gives B and R independent equal bounded quotas; R keeps the
+  registered imitation cap. Existing LS B receipts supply count/K matching metadata
+  only; no B actions, search scores or library are supplied to R.
+- Durable saved-state collector **3066675/start68356119**, registration SHA256
+  `3fbaeb310468c897439a7f180e751a29b538c970a90809cb050b9062de8eea8d`.
+  Immutable `replaylesson_cpu3`: **713 Linux CPU checks PASS, zero skips,
+  83.796s, zero SUMO**. Real R986045/t360 preflight regenerates every saved own
+  action and torch RNG bitwise before publishing a snapshot.
+- At09:29:09: **8 recovered R snapshots**,0 centre answers,0 verified decisions,
+  0 admitted R entries. These are honestly tagged policyu3, recovered from saved
+  R-u4 observable tapes; no episode rerun or extra episode charge. The existing
+  watcher has bridged16 total B/R snapshots. Same centre-only +8 random candidates,
+  exact verification/replication/safety/synergy; branches retain existing phase caps.
+- Source2's real preflight caught a compressed RESULT-marker reader mismatch before
+  dispatch. Source3 uses the lossless reader and adds its regression; all earlier
+  qualifications/failures are retained. No inference/physics attempt was repeated.
+- B-u5 began on the registered30-minute pacing. Its24 episodes have finished;
+  R-u5 waits for the completed B-u5 receipt. An attempted u4 boundary freeze
+  refused before any signals because u5 had already started. The qualified trainer
+  handover will use the next fully idle boundary, exact checkpoint5/Adam/RNG.
+- MAIN09:06 lesson reporting is qualified: primary paired absolute saving in veh-s
+  with bootstrapCI and positive share; ratio median/CI only when its denominator
+  exceeds per-entry replication spread. The common-window correction is also
+  qualified; original u4/u5 raw ratios remain excluded from learning evidence.
+- Evidence: `coopmwm/R_BANK_COLLECT_DISPATCH_0906.json`,
+  `coopmwm/R_BANK_COLLECT_STATUS_1793669350716185400.json`.
+
 ## Nov3 09:02 UTC+8 — B-u4 completed; lesson-window diagnostic fault isolated
 - B-u4's own-policy PPO and bank-imitation update completed;24 fresh episodes
   finished. The update receipt reports324.571s wall time. R-u4 has24 RESULT files;

@@ -1,5 +1,35 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3 09:29:09+08 / MAIN09:06 read through ALL685 lines:
+R saved-state collector NOW LIVE3066675/start68356119, warm1/r_bank_recover_0906_v1.
+ADOPT R_BANK_COLLECT_DISPATCH_0906.json, NEVERduplicate. Registered3fbaeb310468c897;
+source replaylesson_cpu3 FULL713LinuxPASS/0skips/83.796s/zeroSUMO. Actualpreflight
+R986045/t360 regenerates every saved own action+torchRNG BITWISE; policyu3 tag honest.
+EIGHT missed R-u4 snapshots published from saved observable tapes/no episode rerun,
+60s history, centre-only requests, no B scoring/library. At09:29:09:8snapshots,
+0centreanswers/0decisions/0admitted; existing broker/watcher bridges16(B8+R8).
+Existing R grader staysalive but its own-B-only matching metadata also needs the
+qualified fallback to original LS B receipts (counts/K only). MAIN R-u4 empty-bank
+deviation disclosed; future per-arm pendingcap8 prevents B starvation of R.
+SOURCE3 also qualifies common-window lessonfix and MAIN09:06 absolute-delta metrics.
+SOURCE1 709PASS; SOURCE2 712PASS but REAL preflight caught compressed RESULT marker
+read bug before any dispatch; retained/fixed inSOURCE3 with regression.
+Original B5 already started before attempted u4 idlefreeze; guard REFUSED before
+anysignals. At09:28:31 B5 all24RESULTs, update/lessonpending; R5 awaits B5 receipt.
+NEXT: finish B5/R5; use lesson_window_ops boundary_pause ONLY once BOTHu5 complete
+and no u6jobs/physicschildren; then register/commit/launch qualified continuation
+fromcheckpoint5/AdamRNG, keeping original 1800s pacing via u5CLAIM timestamps.
+Local lesson_window_ops register/launch now targetu5; metadata16CPU PASS0.265s.
+No continuation binding/dispatch exists yet. Current watcher2979442 and original
+arms2979632/33/graders2979630/31 remainowners. Newcontroller mustADOPT Bgrader,
+replace ONLY idleRgrader, and retain standaloneRcollector3066675 (auxiliary starts
+ONLY lesson_window_correct, never another R collector). Future lessons same original
+slate window. New B-u4 correction adopts2valid branches and runsONLY6malformed
+windows as fresh matched-window jobs<=4260sim-s; original outputs/charges retained.
+Report PRIMARY paired delta mean/CI+positive share; ratio median only denominator
+above per-entry replication spread. Raw u4/u5 legacy ratios not learning evidence.
+GPU sequential rollout10148/activation39660/observer40668 and collection continue.
+
 LATEST Nov3~09:02+08: B-u4 DONE (324.571s), R-u4 24RESULT files; allreplay
 owners LIVE/noSTOP. CRITICAL reportingfault: read-only lesson_window_probe found
 6/8 B-u4 new-policy lesson windows SHORTER than original reference (selectedD

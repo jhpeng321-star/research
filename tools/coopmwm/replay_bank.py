@@ -120,8 +120,9 @@ def collector_guide(job, generator, controller, prefixes):
         # requests are retained forever, but cannot consume current collection slots.
         scope = None
         if cfg.get('owned_pending_only'):
-            scope = {p.stem for a in ('B', 'R') for p in
-                     (bank_root(root, a)/'snapshots').glob('*.json')}
+            # Independent, equal bounded admission: a full B search queue must
+            # not erase every R snapshot before R's PPO episodes close.
+            scope = {p.stem for p in (bank/'snapshots').glob('*.json')}
         pending = sum((scope is None or p.stem in scope) and not (root/'responses'/p.name).exists()
                       for p in (root/'requests').glob('*.json'))
         pending += sum((scope is None or p.stem in scope) and not (root/'centre_responses'/p.name).exists()
@@ -191,6 +192,14 @@ def b_available_k(root):
     for p in sorted((bank_root(root, 'B')/'decisions').glob('*.json')):
         v = json.loads(p.read_text())
         out.append((v['issued_unix'], v['verification_id'], v['available_k']))
+    binding=Path(root)/'B_REPLAY_START_0835_V4.json'
+    if binding.exists():
+        source=json.loads(binding.read_text())['collection_root']
+        seen={vid for _,vid,_ in out}
+        for r in bank_decisions(root,'B',sources=[source]):
+            if r['verification_id'] not in seen:
+                out.append((r['timing']['finished_unix'],r['verification_id'],r['k']))
+                seen.add(r['verification_id'])
     return [dict(verification_id=vid, available_k=k) for _, vid, k in sorted(out)]
 
 
@@ -827,8 +836,48 @@ def _action_error(policy, r, best):
     return float(np.mean(errs)) if errs else None
 
 
+def lesson_policy_spec(snapshot, best, receipt):
+    """Policy-only branch with the ORIGINAL slate's exact comparison window."""
+    spec = sv.build_branches(snapshot, [best], receipt['proposer'])[0]
+    window = dict(receipt['window'])
+    assert window['start_s'] == snapshot['t0']
+    assert window['start_s'] < window['end_s'] <= snapshot.get('end_s', 1200)
+    assert window['metric'] == spec['window']['metric']
+    spec.pop('branch_sha256')
+    spec.update(window=window, sim_s=sv.branch_sim_s(window['end_s']),
+                verification_id=spec['verification_id']+'_matched_window_v1')
+    return sv._seal(spec, 'branch_sha256')
+
+
+def lesson_metrics(entries, confirmed):
+    """MAIN09:06: absolute paired savings primary, replication-qualified ratios."""
+    import numpy as np
+    deltas=[];ratios=[]
+    for e in entries:
+        if e.get('status')!='graded':continue
+        delta=e['J_policy_u3_veh_s']-e['J_new_policy_veh_s']
+        e['delta_veh_s']=delta;deltas.append(delta)
+        c=confirmed.get(e['verification_id'],{})
+        first=c.get('first_seed_advantage_veh_s');rep=c.get('replication_advantage_veh_s')
+        spread=abs(first-rep) if first is not None and rep is not None else None
+        denominator=e['J_policy_u3_veh_s']-e['J_best_plan_veh_s']
+        eligible=spread is not None and abs(denominator)>spread
+        e.update(replication_spread_veh_s=spread,recapture_eligible=eligible)
+        if eligible:ratios.append(delta/denominator)
+    rng=np.random.default_rng(20261101)
+    ci=None
+    if ratios:
+        a=np.asarray(ratios,float)
+        ci=list(map(float,np.quantile(np.median(a[rng.integers(0,len(a),(10000,len(a)))],axis=1),[.025,.975])))
+    return dict(primary_metric='paired delta_veh_s; no ratio normalization',
+        delta_mean_veh_s=float(np.mean(deltas)) if deltas else None,
+        delta_ci95_veh_s=_boot_ci(deltas),share_delta_positive=sum(d>0 for d in deltas)/len(deltas) if deltas else None,
+        recapture_eligible_entries=len(ratios),recapture_median=float(np.median(ratios)) if ratios else None,
+        recapture_median_ci95=ci,recapture_rule='abs(first-seed gain) > abs(first-seed gain - replication gain)')
+
+
 def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sources=(),
-                 phase='bank_verification_ext'):
+                 phase='bank_verification_ext', adopt_entries=()):
     """LESSON-LEARNED CHECK after an update (never raises; the training run must not depend on it).
 
     For each FROZEN lesson entry: ONE exact SUMO branch of the NEW policy continuing from the
@@ -854,6 +903,7 @@ def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sou
         for p in (bank/'decisions').glob('*.json'):
             v = json.loads(p.read_text());by_vid[v['verification_id']] = v
         receipts = {r['verification_id']: r for r in bank_decisions(root, arm, sources=sources)}
+        adopted={e['verification_id']:e for e in adopt_entries}
         runner = runner_for(bank/'lesson_check'/stamp/'branches')
         charge = _confirm_charge(run_root, phase, stamp)
         weights = {k: v.detach().cpu().clone() for k, v in policy.state_dict().items()}
@@ -864,6 +914,13 @@ def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sou
             if r is None or r['status'] != 'accepted' or r.get('chosen') is None:
                 e.update(status='missing_or_ungraded', recapture=None)
                 out['entries'].append(e);continue
+            prior=adopted.get(vid)
+            if prior and prior.get('status')=='graded' and prior.get('new_policy_branch',{}).get('window')==r['window']:
+                e=copy.deepcopy(prior);e['adopted_existing_branch']=True
+                out['entries'].append(e)
+                if e.get('recapture') is not None:out.setdefault('recaptures',[]).append(e['recapture'])
+                if e.get('imitation_action_error_mps2') is not None:out.setdefault('action_errors_mps2',[]).append(e['imitation_action_error_mps2'])
+                continue
             try:
                 snap = _decision_snapshot(root, arm, r, by_vid)
             except Exception as err:
@@ -875,7 +932,7 @@ def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sou
             new_snap['weights'] = weights
             new_snap['policy'] = dict(state_dict_sha256=new_sha)
             best = r['chosen_plan']
-            spec = sv.build_branches(new_snap, [best], r['proposer'])[0]   # branch 0: NEW policy continues
+            spec = lesson_policy_spec(new_snap, best, r)
             try:
                 charge(vid, [spec])        # before physics, like every branch charge
             except sv.BudgetBlocked as err:
@@ -907,18 +964,19 @@ def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sou
                    recapture_ci95=_boot_ci(recaptures), graded_entries=len(recaptures),
                    imitation_action_error_mean_mps2=(float(np.mean(errs)) if errs else None),
                    imitation_action_error_ci95=_boot_ci(errs))
+        out.update(lesson_metrics(out['entries'],confirmations(root,arm)))
     except Exception as err:   # the update must survive any lesson-check failure
         out['error'] = repr(err)
     return out
 
 
 def record_lesson(root, arm, policy, run_root, update, runner_for, workers=2, sources=(),
-                  phase='bank_verification_ext'):
+                  phase='bank_verification_ext', adopt_entries=(), receipt_suffix=''):
     """Run the lesson check and write LESSON_CHECK_u<k>_<arm>.json (arm-suffixed: B and R share
     the run root; the check runs after every update of both arms). Atomic replace, so an exact
     resume that re-applies update k re-measures instead of failing on an existing file."""
-    out = lesson_check(root, arm, policy, run_root, update, runner_for, workers, sources, phase)
-    path = Path(root)/f'LESSON_CHECK_u{int(update):03}_{arm}.json'
+    out = lesson_check(root, arm, policy, run_root, update, runner_for, workers, sources, phase,adopt_entries)
+    path = Path(root)/f'LESSON_CHECK_u{int(update):03}_{arm}{receipt_suffix}.json'
     tmp = path.with_name(path.name+'.writing')
     tmp.write_text(json.dumps(xg._seal(out, 'lesson_check_sha256'), indent=1))
     os.replace(tmp, path)
