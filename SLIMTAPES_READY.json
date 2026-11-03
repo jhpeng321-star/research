@@ -1,0 +1,69 @@
+{
+ "status": "READY",
+ "branch": "c4/slim-tapes",
+ "base": "c4/launch-coop @ f9bd9cad",
+ "code_commit": "26c9d220",
+ "feature": "slim_rejected_tapes (disk saving): after an all8_both_seeds decision's per-seed admission is sealed, every explicitly REJECTED candidate branch tape (and its extended-window branch) is reduced to a small SLIM.json; the full RESULT.json + RESULT.json.gz are removed (live path) or moved with sha256 verification (one-off migration). DEFAULT OFF.",
+ "files": [
+  "tools/coopmwm/slim_tapes.py (new: plan/build/slim/migrate/quote/CLI + slim_tape reconstruction)",
+  "tools/coopmwm/verify_perseed.py (slim_rejected_tapes kwarg on confirm_all8/confirm_pending_all8; slim_record runs AFTER the record is sealed)",
+  "tools/coopmwm/replay_bank.py (confirm_pending passes slim_rejected_tapes through to the all8 path only)",
+  "tools/coopmwm/bank_statistics.py (_read_result: SLIM.json fallback - exact per-second stats reconstruction when the full tape was slimmed)",
+  "tools/coopmwm/test_slim_tapes_cpu.py (new)"
+ ],
+ "config_keys": {
+  "slim_rejected_tapes": {
+   "default": "OFF (parameter None + env unset -> nothing written or removed anywhere; byte-identical, tested)",
+   "where": [
+    "rb.confirm_pending(..., slim_rejected_tapes=True/False/None) -> all8 path only",
+    "vp.confirm_pending_all8 / vp.confirm_all8(..., slim_rejected_tapes=...)",
+    "None reads env C4NM_SLIM_REJECTED_TAPES=='1' (same convention as C4NM_V2V)"
+   ]
+  }
+ },
+ "what_is_slimmed_vs_kept": {
+  "slimmed": "per sealed all8 record: each example with admitted=False AND status='rejected' (data_missing keeps its tape) on seed 1 (first verification) and seed 2 (confirm_seed2_all8), plus that candidate's branch in its seed's extended verification (confirm_extended_all8 / confirm_extended_seed2_all8)",
+  "kept": [
+   "ADMITTED (plan, seed) plan-branch tapes (imitation: bank_pairs per_seed_v1, bank_examples, imitation_entry)",
+   "policy REFERENCE tapes of every verification (grading/bootstrap, relabel_reference_mismatch, coopfix_exact_gate reference_adopted)",
+   "the first-seed CHOSEN branch even when seed 1 rejected it (legacy bank_pairs/lesson _action_error readers)",
+   "all solo tapes (confirm_solo_all8_s1/s2) and every observable.jsonl.gz trace",
+   "the sealed record itself (byte-identical, re-verified after slimming) and all receipts"
+  ],
+  "slim_json": "per branch: verification-window per-second cumulative team_delay_vs series (branch_eval.totals_at-compatible floats, bit-exact round-trip), J_veh_s/status/actual_sim_s/result_sha256/payload_sha256, per-vehicle window outcomes when the tape carried them, sealed 'slim_sha256'; integrity-checked against the sealed receipt's result_sha256 on every read"
+ },
+ "reader_audit": "grep RESULT.json/branches_dir/tape readers across bank_statistics, replay_bank (bank_pairs/bank_examples/lesson/_action_error), verify_perseed (relabel/bank_examples/imitation_entry), exact_grade, policy_synergy, coopfix_exact_gate (state_receipts/certified_candidates): after sealing, NO reader opens a non-admitted candidate tape; the kept list above covers every post-seal read; unexpected future reads still work via the bank_statistics._read_result SLIM fallback (bit-identical per-second stats, sealed-admission equality tested)",
+ "migration": {
+  "quote": "python -m tools.coopmwm.slim_tapes quote --root R --arm B   (read-only bytes-saved quote)",
+  "move": "python -m tools.coopmwm.slim_tapes migrate --root R --arm B --archive /target/dir [--dry-run]",
+  "rule": "one-off for EXISTING sealed decisions: copies RESULT.json(.gz) into the bank-relative archive layout, sha256-verifies the copies (file digests + decompressed payload vs marker sha + sealed result digest), writes SLIM.json into the branch dir, only then drops the source; never deletes without verification, never touches admitted/reference/solo tapes; any failure restores the branch untouched; archive dir must be outside the bank (operator rsyncs the target to another host)"
+ },
+ "tests": {
+  "new": "tools/coopmwm/test_slim_tapes_cpu.py: 11 passed (option default OFF matrix; OFF byte-identical record + all 32 tapes kept across absent/False/env-0; ON slims exactly the 13 planned dirs and keeps admitted/reference/solo/observables; slim_record changes nothing outside planned dirs and the sealed record re-verifies; first-seed CHOSEN branch kept when seed 1 rejected it; readers after slimming = per_seed_v1 preview + imitation entries + relabel_reference_mismatch re-derivation + gate certification seeds [1,2]; slim-tape paired bootstrap EQUALS the sealed admission stats exactly on all 13 branches and a tampered SLIM.json is refused; migration dry-run/move/idempotent with sha256 equality and outside-bank guard; corrupted copy keeps source intact and cleans partials; quote bytes == measured file bytes and CLI migrate/quote/dry-run)",
+  "regression": {
+   "test_verify_perseed_cpu.py": "12 passed",
+   "test_bank_perseed_cpu.py": "15 passed",
+   "test_bank_boot_cpu.py": "13 passed",
+   "test_bank_imitation_cpu.py": "3 passed",
+   "test_bank_amendment_cpu.py": "3 passed",
+   "test_bank_builder_cpu.py": "2 passed",
+   "test_bank_restore_ops_cpu.py": "1 passed",
+   "test_bank_safety_cpu.py": "9 passed",
+   "test_launch_final_cpu.py": "13 passed",
+   "test_coop_only_cpu.py": "9 passed",
+   "test_coopfix_exact_gate_cpu.py": "23 passed"
+  },
+  "total": "114 passed, 0 failed, 0 skipped (python -m pytest -q, rl_driving env, worktree root)",
+  "ruff": "clean (exit 0, no findings) on all five touched files"
+ },
+ "bytes_saved": {
+  "measured_end_to_end": "one synthetic sealed record (K=8, t0=600): 13 rejected branch tapes slimmed, 137015 bytes of RESULT.json(.gz) removed/moved, quote matched the per-file measurement exactly, migration sha-verified 137015 bytes with 0 errors, post-migration preview still admits 3 examples with 0 data_missing",
+  "production_estimate": "task brief: 6-8 MB full tape per verified candidate branch, ~137 MB per B decision; SLIM.json keeps only the verification-window per-second series + summary (measured share 0.61 on the tiny synthetic tapes; on production tapes the removed payload additionally carries the warm-up prefixes, steps/samples and rng state, so the kept share is a low single-digit percentage - the quote CLI prints the exact number per bank before migrating)"
+ },
+ "cpuQ_enable_steps": [
+  "merge c4/slim-tapes; nothing changes until the option is turned on (default OFF, byte-identical)",
+  "live: set C4NM_SLIM_REJECTED_TAPES=1 (or pass slim_rejected_tapes=True) for the trainer/confirm_pending process running verify_mode=all8_both_seeds",
+  "existing sealed decisions: run the quote CLI, rsync the archive target to the other host, then run migrate WITHOUT --dry-run (idempotent; full_restored dirs are reported and skipped)"
+ ],
+ "hard_rules": "CPU only (no SUMO/GPU/ssh/remote); only the c4-slim-tapes worktree touched; no reset/clean/stash/push; no sealed/, holdout/heldout/cal_split/chunk5/j4b/inc1 paths opened (slim_tapes refuses them via the repo-wide archive_move.BAD rule); no hetdata_truth/vType/driver/vehicle_params truth files read"
+}
