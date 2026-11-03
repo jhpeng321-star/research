@@ -38,10 +38,42 @@ def view(confirmation):
     return c
 
 
+REQUIRED_KEYS=('first_seed_advantage_veh_s','replication_advantage_veh_s',
+               'cooperation.replication_cooperation_gain_veh_s')
+
+
+def _applicable(c,key):
+    """Records whose producer would carry ``key``; failed confirmations / incomplete or
+    single-CAV cooperation legitimately lack the replicated values."""
+    if key=='first_seed_advantage_veh_s':return True
+    if key=='replication_advantage_veh_s':
+        return 'replication' in (c.get('checks') or {}) or 'extended_advantage_veh_s' in c
+    co=c.get('cooperation') or {}
+    return bool(co.get('complete')) and co.get('cooperation_gain_veh_s') is not None
+
+
+def _has(c,key):
+    if key.startswith('cooperation.'):return key.split('.',1)[1] in (c.get('cooperation') or {})
+    return key in c
+
+
+def check_keys(records):
+    """Schema guard: a statistical key absent from EVERY applicable record is a schema
+    mismatch, not evidence; raise instead of silently rejecting the whole bank."""
+    records=list(records)
+    for key in REQUIRED_KEYS:
+        rows=[c for c in records if _applicable(c,key)]
+        if rows and not any(_has(c,key) for c in rows):
+            raise KeyError(f'bank_statistics: key {key!r} missing from all {len(rows)} applicable '
+                           'confirmation records; refusing to reject the whole bank silently')
+
+
 def install(rb):
     """Process-local V2V reader adapter; never changes legacy training or files."""
     if getattr(rb.confirmations,'statistical_1727',False):return
     original=rb.confirmations
-    def confirmations(root,arm):return {k:view(v) for k,v in original(root,arm).items()}
+    def confirmations(root,arm):
+        records=original(root,arm);check_keys(records.values())
+        return {k:view(v) for k,v in records.items()}
     confirmations.statistical_1727=True
     rb.confirmations=confirmations
