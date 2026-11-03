@@ -1,5 +1,28 @@
 # S-COOPMWM — live checks
 
+## Nov4 ~07:45 UTC+8 — V2V u3 namespace fault delegated; disk scope extension live
+- A reached u4. B/R remain durably at u2 after B's u3 checkpoint save collided
+  with pre-launch legacy-reference symlinks. MAIN07:20 assigned recovery to a
+  separate operator. This continuation performed no competing repair or restart.
+- R u2 now confirms five full imitation passes on three cooperative examples,
+  effective first pass, KL 0.00007318; bank intent loss 0.60790 -> 0.59379.
+  B's last complete u2 remains healthy, with the reported rising intent-loss trend.
+- Registered protected V2V archive extension is live, using unchanged qualified
+  SHA-before-removal machinery. Original regular mover remains running. First
+  two batches **285,407,020 bytes / 132 files** are certified moved; compact
+  metrics remain local. cpuQ free ~6.41 GiB; the initial eligible pool falls short by
+  ~2.57 GB to reach 9 GiB. Backfill remains correctly disk-paused.
+- Durable per-update learning monitor2 is live, with six local and six Linux
+  checks. It enforces registered learning-mechanics pauses and reports intent
+  trends. The existing safety guard remains active.
+- Collection config routing repair passes 50 Linux checks, but activation still
+  needs V2V capture/WM-intent-actor wiring and per-slot numerical qualification.
+  No new collection is claimed from an unchanged supervisor restart.
+- The budget observer now reads the additive authority: 11,630,140 charged of
+  17,471,840 sim-s, including retained superseded charges; bank phase 597,790
+  remaining at that snapshot. No new physics charges from monitoring/archive work.
+  Evidence: `coopmwm/V2V_CONTINUATION_0745.md` and its named public receipts.
+
 ## Nov4 ~06:45 UTC+8 — V2V training adopted and progressing
 - **V2V_STARTED 06:29:32**, root `coopmwm20261104_v2v_coop3`; watcher and
   all three arms verified by boot/start/command. Latest A2/B2/R1, no health pause.

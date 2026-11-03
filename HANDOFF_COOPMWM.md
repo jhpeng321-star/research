@@ -1,5 +1,35 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 ~07:45 +08 — disk extension LIVE; checkpoint fault DELEGATED
+- ACTUALPROOF1793749716:2certifiedbatches/285407020bytes/132files moved,
+  CPUfree6880182272bytes(~6.41GiB),213996280furthereligible. See
+  coopmwm/V2V_CONTINUATION_0745.md; old first-transfer-only probe below historical.
+- FullbriefNOW1119linesREAD. MAIN07:20assignscheckpoint003collisiontoClaude:
+  doNOTrunourUNTRACKEDcheckpoint_link_recovery.py/opsdraft. QualifyfailedSAFE
+  afterdelegatealreadymovedlinks; NOauthority/repair/STOPmove/dispatchbySol.
+- B/Roriginal2049879/2049891exited07:12/B-Ru2durable; A2049830continues/A4.
+  Originalwatcher2013844failedchild; adoptdelegate'sreplacementwhenpublished.
+- MAIN07:12archiveEXTENSION LIVE/disjoint, oldmover1237127NEVERpaused:
+  /home/ubuntu/coopmwm20261104_v2v_archive0712_v2, ROOT2213098/start76350343,
+  dispatch2213097. Reg518ddd8d/4local+4LinuxPASS; first128MBbatchtransferring,
+  NOcertifiedsourceremovalsat1793749511. CPUfree6595444736bytes(~6.14GiB).
+  Eligible214files491729681bytes/u1only; all3updatessealed+aged30m/k<=minlatest-1,
+  FD/bank/pendingrefsprotected. Evenfullcurrentpoolcannotreach9GiB (~2.57GBgap).
+  Source/metricskeptCPU+fullSHAoriginalsongpuA. V1zeroMOVEretiredownPIDonly.
+- Durablelearningmonitor2 LIVE2200255/start76315304/controllearningwatch2;
+  oldmonitor1(PID2138610)exitedgracefully/receiptskept. 6local+6LinuxPASS/partial
+  publicationreadguard; registeredmechanics-onlypause, intent/cooperationreportonly.
+- R2now5fullpasses/3coopexamples/pass1effective/KL.00007318, intent.6079->.5938;
+  B2fivepasses/8examples/KL.001412/MAE1.335388->1.331062, intent2.4003->2.5352.
+- CurrentbudgetauditFIXEDusesB_REPLAY_BINDING+811640retainedsuperseded:
+  11630140/17471840charged,bankext597790remainingat1793747437; nostalephasealarm.
+- Collectionstarvation:80B/146Rallanswered, nofreshV2Vcapture; minimalconfig
+  forwardingrepair30d027f0/50LinuxPASSprepared/notlive. policy_wmcurrentlyold
+  actorcannotload48wideV2Vintent; GPUcoopnumericalrolloutstillneeded. MAINnotified
+  _sol/COOPMWM_COLLECTION_CURRENT_POLICY_BLOCK_0700.md; no cosmeticrestart.
+- Ops: _sol/coopmwm_v2v_archive_ops.py status (adoptONLY); learningwatch_ops.py
+  status; _sol/COOPMWM_V2V_ARCHIVE_0741.md givesdeadline-report/targetshortfall.
+
 ## Fresh adoption Nov4 ~06:45 +08
 - Full1113-linebriefREAD. V2V_STARTED06:29:32/rootv2v_coop3/sourceLaunchcoop_src3.
 - Watcher2013844+arms2049830/2049879/2049891boot/start/cmdverifiedLIVE; A2/B2/R1.

@@ -1,9 +1,9 @@
-# S-COOPMWM — intent/per-seed source Linux-qualified; legacy B21/R20 held; audit/gate pending
+# S-COOPMWM — V2V launched; B/R checkpoint-link recovery delegated; protected archival live
 1. MAIN14:06 V2Vcap17471840 registered67320dae supersedes14.5M/fresh6M; exact+2971840 onlynewV2Vphases,oldphaseallocationsunchanged. HistoricalMAIN07:06 checks->train144000/b6c1b8bf retained. Allcharges retained/sharedledger+lock. CurrentnonV2V sourcebindingsretainconservative14.5M in-memory, neverimplicitlymutated; newV2Vready/Linux/rehearsal/resourcegatesbeforephysics.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
-5. LatestB-REPLAY: own-policy SUMO PPO episodes/no executedplans or WMwait; plus AWRfromsame-arm exact-positive replicated/later-safe bank; Rownrandombank. Aunchanged. No WM/behaviour reward.
+5. V2V B-REPLAY: own-policy SUMO PPO/no executedplans or WMwait; AWRfromsame-arm within-seed cooperative-only exact bank; Rownrandombank+lag1cap. AplainPPO. No WM/behaviour reward; no cross-seed repeatability requirement.
 6. All live CAVs choose1s acceleration residuals added to MAPPO raw commands; no gap/speed action coordinates.
 7. Exact zero abstains before unchanged safety: actual frozen MAPPO executor bitwise parity CPU-tested.
 8. Reuse COOPFREE pre-safety injection, unchanged safety/CommandOwnership; MAIN1639 CUDAcallbackgate CPU/GPU EXACT0 but absoluteobservabletrajectoryFAIL(.860m/.381mps max); mirrorOFF botharms/no full-road parity claim.
@@ -26,7 +26,7 @@
 25. MAIN16:07 verified B/R guide beta1; adaptive trust retained for reporting only. R u2/u3 beta0/zero executed disclosed; existing B4 legacy wave adopted, correction from fresh decisions.
 26. Log query mass p over eligible uncommitted decisions only; beta(type,regime); R quota exhausted=>own/p0.
 27. MAIN02:01 PPO only nonexecuted/own steps (including rejected queries), standard pi_new/pi_old; never score/ratio plan steps.
-28. Critic ownPPO baseline only; exact-positive AWR weight1 until20grades then min(20,exp(g/T)),T=max(1,RMSfirst20veh-s) frozenperarm/seed,coefficient1 x beta. V2Vfix:5requested bank-only passes, separate pre-imitation GaussianKL.045 with deep-copied Adam rollback/nonfinite rejection; report fullpass/pass1_effective/loss+actionerror/stepscales. boot_v2 paired30s block-bootstrap acrossseeds+positiveeachseed; cooperative requires replicatedsolo synergy. Rcap actualB-admittedtargets; no planratios/criticloss.
+28. Critic ownPPO baseline only; AWR weight1 until20grades then min(20,exp(g/T)),T=max(1,RMSfirst20veh-s) frozenperarm/seed,coefficient1 x beta. V2V5bank-onlypasses/separate pre-imitation GaussianKL.045/deepcopiedAdamrollback/nonfinite rejection; report fullpass/pass1_effective/loss+MAE. per_seed_v1 own-seed paired30s block-bootstrap LB>0+safety; cooperative own-seed group-bestsolo LB>0. cooperative_only excludes unknown/no_solos/noncoop BEFORE Rlag1cap; own-seed tapes only. No planratios/criticloss.
 29. Original E2 retained; cold/warm qualification reuses exact-labelled00/01; acceleration E2 first12random executed TRAIN plans,RNG20261101.
 30. Exact/WM E2 keeps all background CAVs on MAPPO after decision, group commitment then MAPPO; no native reversion.
 31. Select t<=600 so all H600 twins finish by1200; full-prefix COOPFREE quartet once/window.
@@ -46,7 +46,7 @@
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins precharged/no refunds or automatic retries. Historicalaf8b16e5 permits one qualified new-ID attempt per missing failed diagnostic branch, originals adopted; its original200000 discovery quote is superseded by current126200 allocation/ledger.
 47. A48complete; B/R12episodeworkers each/lag1, bankbranchworkers2perarm,nice19. MAIN0423 frozen-policy precompute up to24 workers SCHED_IDLE/nice19, grade priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no physics retry.
-48. MAIN21:58b/22:10 oldB21/R20 resourcePAUSE35c1022b:arms411152/411153+graders3305068/69 exitedatidleboundary; checkpoints/charges retained. V2Vwatchersheld; clocksNov5 23:59. FinalREADYmerged762bdc7d/LinuxI3 994PASS; launchstillrequiresper_seed_v1 own-tapeexamples/same-seedgate/intent/all8_both_seeds/cleanexactcommitaudit/resources/re-reviewedcoopsearch--alternate; nofallback. MAINdelegatedbankpreview/collectionnotduplicated. SHA-rollinggpuA8GiBfloor/cpuQtarget12GiBhandoverwaitingoldtransfer. Alllegacyreceiptsretained.
+48. V2V_STARTEDNov4 06:29:32/source7e832acc/Linux224PASS/runtimef73298f0/gate_coop6learning+safetyPASS; cooperation report-only perowner02:08/02:45. Acontinues; B/Ru2checkpoint-linkcollisionat07:12, recoveryMAIN07:20DELEGATED/no duplicate. Learningmonitor2source/runtimebound30s/registeredmechanicspauses only; safety composite unchanged. MAIN07:12 disjoint SHA-archive olderV2Voutputs: all3receiptsealed+aged30m,k<=minlatest-1,FD/pendingconsumer/bankprotected; gpuAfloor8GiB/cpuQtarget9GiB. Originalmoverkeptlive; no threshold relaxation.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.
@@ -67,4 +67,4 @@
 66. MPPI/type x regime EB buckets: tau²=max(0,var(bucketmeans)-mean(bootstrapSE²)); weight=tau²/(tau²+SE²); O1-O4 posthoc labels only.
 67. Two Holm families per comparator B-MAPPO/B-A over{allbranch,focus},two-sidedalpha.05; whole-world clusters; focus sources exact lines/SHA in amendment.
 68. Regime=LEVERPROBE ramp+crosslane pair+union of four recorded upper-quartile CAV/density bands; observable only.
-69. PlansD={30,60,90,120,150,180,240,300},knots<=10; Hfinal=min(600,max(300,D+120)); same-arm/seed positive library only. V2VA/B/R commonMAPPOu0/u1..24 with48-wide t-1 partnerintent/H5/mask/zero-init/head-onlyintentloss1; causal current-head bankinputs, realisedegotargets. Blesson+isolated6/12/18/24,Risolated12/24; allu8/u24episodes/noV2Vbranches. f3caf85f Linux903PASS; HELD pendingexact-commit audit+realbankgate, noV2Vphysics.
+69. PlansD={30,60,90,120,150,180,240,300},knots<=10; Hfinal=min(600,max(300,D+120)); same-arm/seed positive library only. V2VA/B/R commonMAPPOu0/u1..24,48-wide t-1 partnerintent/H5/mask/zero-init/head-onlyintentloss1; causal current-head bankinputs/realisedegotargets. Blesson+isolated6/12/18/24,Risolated12/24; allu8/u24episodes/noV2Vbranches. Freshcurrent-policycollection remains wiring-blocked: V2Vcapture+WMintentactor+per-slotcoopnumericalqualification needed; config-routing repair50LinuxPASS/notactivated.
