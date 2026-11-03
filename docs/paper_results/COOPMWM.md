@@ -1,6 +1,11 @@
 # S-COOPMWM — live checks
 
 ## Nov 3 17:20 UTC+8 — durable rolling storage and 6 GiB V2V auto-admission
+- **17:24:31 update:** initial rolling pool complete, **18 certified batches /
+  2,308,751,466bytes**. Fresh scan has zero eligible files; cpuQ free4,194,525,184
+  bytes/gpuR free8,142,802,944. Launch shortfall**2,247,925,760bytes** before future
+  writes. Mover and resource watcher remain live/no failures; V2V still waits.
+  Evidence:`coopmwm/ROLLING_ARCHIVE_EVIDENCE_1793697872664154100.json`.
 - MAIN16:47 is applied append-only. Rolling mover **4116186** is live on cpuQ;
   six Linux safety tests pass. SHA manifest, rsync, gpuR `sha256sum`, durable
   verification proof and fresh source SHA/inode/mtime/FD/reference checks precede

@@ -1,6 +1,11 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
 ## CURRENT Nov3 17:20 +08 — latest MAIN16:47 applied
+- **17:24:31 update:** initialrollingpool COMPLETE18batches/2308751466bytes;
+  cpuQfree4194525184/gpuRfree8142802944, freshscanZEROeligible remaining.
+  Launchshortfall2247925760bytes beforefuturewrites. MoverstillLIVE/noALERT,
+  V2VwatcherLIVE/resource_wait/nochildren/failure; automaticfuture15minscans.
+  Evidence`ROLLING_ARCHIVE_EVIDENCE_1793697872664154100.json`; MAINalertupdated.
 - Read ALL827brief lines; current HEAD81027a29 plus receipts/source work retained.
 - **Rolling mover LIVE** cpuQ4116186/start71133854/root
   `/home/ubuntu/coopmwm20261103_rolling1647_v3`, local transport31320/create
