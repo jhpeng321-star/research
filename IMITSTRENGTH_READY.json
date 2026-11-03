@@ -1,0 +1,41 @@
+{
+  "feature": "imitation strength (prepared; enabled only at a registered update boundary for B-v2v and R-v2v together)",
+  "branch": "c4/imit-strength",
+  "base": {"branch": "c4/watch-remaining", "commit": "e3a56a763804f25cfcb01d22f6a50c2e2d524f82", "note": "the code now training"},
+  "commit": "7355cbd0639d9ddcc4b0b1e5479df979125f33d9",
+  "commits": [
+    {"sha": "c234db01", "what": "kl_targeted step mode + v2v_intent_bank_term switch + trained-subset intent metric; wired through prepare_intent/BANK_OPTIONS (B==R)"},
+    {"sha": "7355cbd0639d9ddcc4b0b1e5479df979125f33d9", "what": "CPU tests + bind_runtime validates the new keys via the B/R helpers"}
+  ],
+  "keys": {
+    "imitation_step_mode": {
+      "registered_value": "fixed",
+      "values": ["fixed", "kl_targeted"],
+      "default": "fixed (= byte-identical)",
+      "kl_targeted_rule": "within each pass, if the accepted pass ends with KL (joint_kl vs the post-PPO snapshot, same measurement) below half the registered limit, the next pass doubles its step scale (cap 16x base lr) and its optimizer steps (cap 4x, minibatch 128//mult of the same fixed permutation); existing halving backtracking unchanged; the registered KL limit 0.045 is never exceeded",
+      "per_pass_report": ["step_scale", "step_scale_mult", "steps_mult", "optimizer_steps", "kl", "l1_action_error_before", "l1_action_error_after"],
+      "enablement": "registered flip of BANK_OPTIONS['imitation_step_mode'] (+ deployed runtime) at a registered update boundary; B and R move together (bind_runtime refuses any B/R mismatch; optional *_by_arm mapping accepted only when B == R == the key)",
+      "wiring": ["v2v_launch3.BANK_OPTIONS", "v2v_launch3.imitation_step_mode_for", "v2v_launch3.bind_runtime", "v2v_runner.prepare_intent(imitation_step_mode='fixed')", "v2v_live.hooks -> bank_imitation.install (bank_imitation.run is still bank_imitation.run_separate)", "bank_imitation.run_separate(step_mode=..., falls back to the installed runtime value)"]
+    },
+    "v2v_intent_bank_term": {
+      "registered_value": true,
+      "default": true,
+      "default_note": "true = current behaviour",
+      "false_drops": "the v2v_intent bank intent term is removed from the run_separate imitation loss (legacy run() unchanged)",
+      "wiring": ["v2v_launch3.BANK_OPTIONS", "v2v_launch3.intent_bank_term_for", "v2v_launch3.bind_runtime", "v2v_runner.prepare_intent(v2v_intent_bank_term=True)", "v2v_live.hooks -> bank_imitation.install", "bank_imitation.run_separate(intent_bank_term=..., falls back to the installed runtime value)"]
+    },
+    "intent_metric_honesty": "exact_grade.exact_update reports the bank intent loss on the TRAINED subset (w>0, trainable pairs) as v2v_intent.before_trained/after_trained (bank_imitation.trainable) alongside the all-pairs before/after"
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "scope": "CPU only (no SUMO, no GPU, no ssh/remote)",
+    "new": [{"file": "tools/coopmwm/test_imitstrength_cpu.py", "result": "12 passed", "covers": ["fixed mode identical (default == explicit, no new report keys)", "kl_targeted grows step scale when KL low and never exceeds the limit (mults 1..16 cap, steps 1..4 cap)", "action error falls more than fixed on a synthetic bank", "backtracking intact (halving on exceed, growth resumes after a low accept, lr restored)", "refusal unchanged when the limit never fits (both modes)", "intent metric on trained subset (exact_update before_trained/after_trained)", "bank_term off removes the term (spy) and flags the report", "B/R equality: BANK_OPTIONS pin, bind_runtime refusals, by-arm mapping rules, A refused", "registered flip to kl_targeted binds+prepares+installs for B and R together", "hooks default install is fixed/True"]}],
+    "required_suites": [
+      {"files": ["test_imitfix2_cpu.py", "test_bank_amendment_cpu.py", "test_bank_boot_cpu.py", "test_bank_builder_cpu.py", "test_bank_imitation_cpu.py", "test_bank_perseed_cpu.py", "test_bank_restore_ops_cpu.py", "test_bank_safety_cpu.py", "test_coop_only_cpu.py"], "result": "69 passed"},
+      {"files": ["test_launch_final_cpu.py"], "result": "13 passed"},
+      {"files": ["test_v2v_budget_quote_cpu.py", "test_v2v_intent_cpu.py", "test_v2v_int_e2e_cpu.py", "test_v2v_launch3_cpu.py", "test_v2v_launch_quote_cpu.py", "test_v2v_launch_wiring_cpu.py", "test_v2v_live_cpu.py", "test_v2v_model_cpu.py", "test_v2v_resource_watch_cpu.py", "test_v2v_runner_cpu.py", "test_v2v_runtime_cpu.py"], "result": "136 passed"}
+    ],
+    "total": "230 passed, 0 failed"
+  },
+  "hard_rules_respected": {"cpu_only": true, "own_worktree_only": true, "no_reset_clean_stashdrop_push": true, "sealed_and_holdout_paths_never_opened": true, "truth_files_never_read": true}
+}
