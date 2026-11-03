@@ -73,9 +73,15 @@ def admit(cfg, release, hooks):
             or not release.get('zero_init_parity') or not release.get('default_off_byte_identical')
             or release.get('stub', True) or release.get('v2v_dim') != cfg['v2v_dim']):
         raise ValueError('qualified non-stub V2V integration required')
-    if not (release.get('rehearsal_pass') or release.get('real_update_smokes_pass')):
+    smoke = cfg.get('qualification_stage') == 'one_update_smoke'
+    if smoke:
+        if (not cfg.get('smoke_authority_sha256') or not cfg.get('rehearsal_late_60min')
+                or cfg.get('stop_after_update') != 1 or cfg.get('A_stop_after_update') != 1
+                or cfg.get('resume_update') != 0 or cfg.get('A_resume_update') != 0):
+            raise ValueError('registered late-rehearsal one-update smoke only')
+    elif not (release.get('rehearsal_pass') or release.get('real_update_smokes_pass')):
         raise ValueError('rehearsal or real one-update smokes required')
-    if not release.get('rehearsal_pass'):
+    if not smoke and not release.get('rehearsal_pass'):
         if set(release.get('smoke_arms', ())) != set(cfg['active_arms']):
             raise ValueError('real one-update smoke required for every active arm')
     if not 14500000 <= cfg['budget']['total'] <= 17500000:
@@ -123,7 +129,8 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
     hooks['accounting'](root, cfg)  # shared ledger + shared lock; never a second cap
     hooks['configure'](root, arm, cfg)
     original_wave = wr.wave
-    last_start = [None]
+    not_before=cfg.get('next_not_before_s',{}).get(arm)
+    last_start = [None if not_before is None else not_before-cfg['pace_s']]
 
     def wave(r, b, policies, ws, role, ident, phase, deterministic=True, extras=None):
         extra = dict(extras or {}, v2v=True, v2v_dim=cfg['v2v_dim'])
