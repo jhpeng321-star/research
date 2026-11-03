@@ -1,0 +1,64 @@
+{
+  "fix": "IMITFIX 1 (imitation full pass)",
+  "workspace": "E:/agent-work/c4-imit-fullpass",
+  "branch": "c4/imit-fullpass",
+  "based_on": "live c4/coopnative code (base commit ad0435c4)",
+  "head_commit": "9734a3e7",
+  "commits": [
+    {"sha": "18fbd044", "msg": "coopmwm: imitation_trust own_pass option with post-PPO trust region and guaranteed cooperative-first first pass (default off)"},
+    {"sha": "dc14025f", "msg": "coopmwm: CPU tests for imitation_trust own_pass (full first pass, KL bound, coop-first error drop, option-off exactness)"},
+    {"sha": "4f310140", "msg": "coopmwm: forward imitation_trust from the replay control config into the arm binding (default absent = off)"},
+    {"sha": "9734a3e7", "msg": "coopmwm: fix own_pass projected-step lr retry to read live param_groups after optimizer state rollback"}
+  ],
+  "problem": "B_UPDATE_010/013/016 live: tools/coopmwm/bank_imitation.run AWR imitation of verified plan-bank pairs after PPO stops via the KL trust region (kl_limit 0.045, reference = frozen PRE-UPDATE policy) inside the FIRST pass (pairs_seen 768-1280 of 1650, epochs_completed 0 of 5); the policy never completed one pass over the bank (imitation 13 steps vs 115 PPO steps).",
+  "build": {
+    "option": "imitation_trust='own_pass'",
+    "default": "off (key absent/None); registered MAIN09:36 rule reproduced byte-identically when off",
+    "own_trust_region": "bank_imitation._own_pass snapshots the policy at run() entry, which exact_update calls immediately after _ppo_exact_update, so the imitation KL anchor is the post-PPO pre-imitation policy; PPO's KL spend no longer consumes the imitation budget",
+    "guaranteed_first_pass": "pass 1 is ordered cooperative-first (flags from the bank's confirmation cooperation record, oversampled duplicates included); instead of stopping, the per-step learning rate is halved and the rejected trial step is fully rolled back (parameters AND optimizer state) whenever the projected post-step FULL-bank KL would exceed kl_limit 0.045, so every committed step keeps KL <= limit and pass 1 always completes; additional passes beyond the first keep the same projected-KL adaptive response (statistical rule, no behavioural thresholds; kl_limit 0.045 inherited unchanged) and the registered KL early-stop remains available for them",
+    "report_fields_added_when_on": [
+      "imitation_trust", "kl_reference ('frozen post-PPO pre-imitation policy (own_pass)')",
+      "passes_completed", "pairs_total", "pairs_seen", "epochs_completed", "kl_after_pass1", "kl",
+      "cooperative_pairs",
+      "action_error_before_cooperative_mps2", "action_error_after_cooperative_mps2",
+      "action_error_before_other_mps2", "action_error_after_other_mps2",
+      "lr_schedule (rule, base_lr, final_scale, total_halvings, per_step[{step,scale,kl,trials}])"
+    ],
+    "all_previous_report_fields": "unchanged and still present"
+  },
+  "config_keys": {
+    "imitation_trust": "string; set 'own_pass' to enable; absent/None = off. Flow: replay control config (v['imitation_trust']) -> replay_start.binding -> warm_runner binding b -> exact_grade.exact_update -> bank_imitation.run",
+    "imitation_epochs": "existing key, unchanged (>=5 passes)",
+    "pair_flags": "internal bank_pairs(root,arm,seed,...,pair_flags=False) kwarg; True adds summary['pair_cooperative'] (one bool per imitation pair, cooperative entries True including oversampled duplicates); warm_runner requests it only when imitation_trust is set"
+  },
+  "call_sites": [
+    "tools/coopmwm/bank_imitation.py: run(..., imitation_trust=None, cooperative=None); new _own_pass + _projected_step",
+    "tools/coopmwm/exact_grade.py: exact_update(..., imitation_trust=None, cooperative=None) threads to run; loss_rule string gains the own-pass clause only when on",
+    "tools/coopmwm/warm_runner.py: bank_pairs(..., pair_flags=bool(b.get('imitation_trust'))); exact_update(..., imitation_trust=b.get('imitation_trust'), cooperative=weights.get('pair_cooperative')) (replay path only)",
+    "tools/coopmwm/replay_bank.py: bank_pairs(..., pair_flags=False) emits out['pair_cooperative'] only when requested",
+    "tools/coopmwm/replay_start.py: binding() forwards v.get('imitation_trust') beside imitation_epochs"
+  ],
+  "tests": {
+    "runner": "C:/Users/jpeng/Miniconda3/python.exe -m pytest (torch 2.14.1+cpu, pytest 9.1.1; CPU only)",
+    "suites": [
+      {"file": "tools/coopmwm/test_bank_imitation_cpu.py", "result": "5 passed (3 pre-existing + 2 new: own_pass full first pass/KL bound/coop error drop; option-off exactness + inert cooperative flags)"},
+      {"file": "tools/coopmwm/test_exact_grade_cpu.py", "result": "all passed incl. new test_exact_update_own_pass_trust_region_imitates_when_the_pre_update_rule_cannot"},
+      {"file": "tools/coopmwm/test_replay_bank_confirm_cpu.py", "result": "all passed incl. new test_pair_flags_off_by_default_and_cooperative_aligned_when_on"},
+      {"file": "tools/coopmwm/test_replay_bank_v2v_cpu.py", "result": "all passed (bank_pairs default-off byte-identity intact)"},
+      {"file": "tools/coopmwm/test_replay_bank_lesson_cpu.py", "result": "all passed"},
+      {"file": "tools/coopmwm/test_awr_cpu.py", "result": "all passed"},
+      {"file": "tools/coopmwm/test_harden2_main_cpu.py", "result": "all passed"},
+      {"file": "tools/coopmwm/test_replay_start_cpu.py", "result": "9 passed, 3 FAILED - verified pre-existing on base ad0435c4 with my four modified files reverted (Windows path fixture issue: replay_bank\\\\B\\\\BANK_QUALITY.json), unrelated to this fix"},
+      {"file": "tools/coopmwm/test_fast_resume_cpu.py", "result": "FAILED test_accepted_first_response_does_not_wait_for_slower_groups - verified identical failure on base ad0435c4, pre-existing, unrelated"}
+    ],
+    "key_new_test_numbers": "synthetic bank (120 other + 40 cooperative pairs, lr .08): OLD rule stops inside pass 1 (pairs_seen 128/160, epochs_completed 0); NEW rule completes 5/5 passes (pairs_seen >= pairs_total), kl_after_pass1 and final kl <= 0.045, cooperative-pair L1 error 0.15 -> <0.09, other-pair error 0.05 -> lower, lr_schedule records halvings; option-off runs reproduce the registered rule dict exactly"
+  },
+  "hard_rules_compliance": {
+    "cpu_only": "no SUMO, no GPU, no remote/ssh writes; tests are pure CPU torch",
+    "scope": "only E:/agent-work/c4-imit-fullpass touched; c4-coopnative and _sol untouched (read-only)",
+    "git": "no reset/clean/stash-drop/push; note: one no-op stash entry 'imitfix-wip' (stash@{0}) was created inadvertently while the tree was already clean (contains no changes); left in place per no-drop rule",
+    "sealed_paths": "never opened sealed/ or any holdout/heldout/cal_split/chunk5/j4b/inc1 path; never read hetdata_truth or vType/driver/vehicle_params truth files",
+    "thresholds": "no hand-set behavioural thresholds; only the inherited kl_limit 0.045 and statistical/adaptive lr-halving projected-KL rule",
+    "defaults": "v2v flag untouched (default off); every new option defaults off; option-off behaviour byte-identical (pinned by tests)"
+  }
+}
