@@ -24,8 +24,9 @@ from .protocol import digest, sha
 
 class MixedPolicy:
     """Two policy evaluations, identical CRN draws; u3 only on reverted members."""
-    def __init__(self, new, old, reverted):
+    def __init__(self, new, old, reverted, new_members_only=None):
         self.new, self.old, self.reverted = new, old, set(reverted)
+        self.new_members_only = None if new_members_only is None else set(new_members_only)
 
     def __call__(self, *args, **kwargs):
         return self.new(*args, **kwargs)
@@ -39,7 +40,8 @@ class MixedPolicy:
         if not torch.equal(after, other.get_state()):
             raise ValueError('policy synergy CRN draw counts differ')
         for i, vid in enumerate(context['members']):
-            if vid in self.reverted:
+            if (vid in self.reverted if self.new_members_only is None
+                    else vid not in self.new_members_only):
                 a['action'][i] = b['action'][i]
                 a['own_action'][i] = b['own_action'][i]
                 ma[vid] = mb[vid]
@@ -61,7 +63,8 @@ def controller_class():
             if sv._state_sha(policy.state_dict()) != cfg['new_state_sha256']:
                 raise ValueError('policy synergy new weights mismatch')
             reverted = set(cfg['group'])-set(cfg['new_members'])
-            super().__init__(MixedPolicy(policy, old, reverted), generator, snapshot, plan)
+            selected = cfg['new_members'] if cfg.get('background_old') else None
+            super().__init__(MixedPolicy(policy, old, reverted, selected), generator, snapshot, plan)
             self.audit['policy_synergy'] = {k: v for k, v in cfg.items()}
     return SynergyController
 
@@ -89,24 +92,30 @@ class BranchRunner(sv.SubprocessBranchRunner):
         return v
 
 
-def specs_for(snapshot, receipt, update, arm, new_weights, old_weights):
+def specs_for(snapshot, receipt, update, arm, new_weights, old_weights, isolated=False):
     group = list(receipt['chosen_plan']['members'])
     if len(group)<2 or len(set(group))!=len(group):raise ValueError('invalid cooperative group')
     if not 986000 <= snapshot['episode']['world']['seed'] <= 986071:
         raise ValueError('policy synergy requires registered TRAIN worlds')
     new_sha, old_sha = map(sv._state_sha, (new_weights, old_weights))
     out = []
-    for label, selected in [('all', group)]+[(f'solo{i}', [m]) for i, m in enumerate(group)]:
+    choices = [('all', group)]+[(f'solo{i}', [m]) for i, m in enumerate(group)]
+    if isolated:choices += [('background', [])]
+    for label, selected in choices:
         snap = dict(snapshot, weights=new_weights, u3_weights=old_weights)
         cfg = dict(group=group, new_members=selected, new_state_sha256=new_sha,
                    u3_state_sha256=old_sha, update=update, arm=arm,
                    non_group='new policy, as in lesson check', intervention_start_s=snapshot['t0']+1)
+        if isolated:
+            cfg.update(background_old=label!='background',
+                non_group='u3 policy' if label!='background' else 'new policy; group u3')
         snap['policy_synergy'] = cfg
         # snapshot_sha binds the extra weights and the exact member intervention.
         snap['policy'] = dict(state_dict_sha256=new_sha, policy_synergy=cfg)
         spec = rb.lesson_policy_spec(snap, receipt['chosen_plan'], receipt)
         spec.pop('branch_sha256')
-        spec.update(verification_id=f'ps_u{update:03}_{arm}_{receipt["verification_id"]}_{label}', branch=label)
+        prefix = 'psi' if isolated else 'ps'
+        spec.update(verification_id=f'{prefix}_u{update:03}_{arm}_{receipt["verification_id"]}_{label}', branch=label)
         out.append((_seal(spec, 'branch_sha256'), snap))
     return out
 
@@ -139,7 +148,9 @@ def metrics(J_u3, results, group):
 def run_update(root, arm, update, cfg):
     root = Path(root);control = Path(cfg['control_root']);base = control/f'u{update:03}_{arm}'
     base.mkdir(parents=True, exist_ok=True)
-    claim = base/'CLAIM.json';result_path = root/f'POLICY_SYNERGY_u{update:03}_{arm}.json'
+    isolated = cfg.get('isolated', False)
+    suffix = '_ISOLATED' if isolated else ''
+    claim = base/'CLAIM.json';result_path = root/f'POLICY_SYNERGY_u{update:03}_{arm}{suffix}.json'
     if result_path.exists():return json.loads(result_path.read_text())
     if claim.exists():return dict(status='interrupted_claim_not_replayed', arm=arm, update=update)
     from .replay_start import owner, accounting
@@ -152,6 +163,16 @@ def run_update(root, arm, update, cfg):
     receipts = [r for r in rb.bank_decisions(root, arm, sources=sources)
         if confirmed.get(r['verification_id'], {}).get('admitted')
         and confirmed[r['verification_id']].get('cooperation', {}).get('cooperative') is True]
+    if isolated:
+        # Use the same update's frozen state list, not a later enlarged bank.
+        legacy = json.loads((root/f'POLICY_SYNERGY_u{update:03}_{arm}.json').read_text())
+        verify_sealed(legacy, 'policy_synergy_sha256')
+        if legacy['checkpoint_sha256'] != sha(checkpoint):
+            raise ValueError('isolated diagnostic checkpoint differs from original')
+        wanted = {r['verification_id'] for r in legacy['entries']}
+        receipts = [r for r in receipts if r['verification_id'] in wanted]
+        if {r['verification_id'] for r in receipts} != wanted:
+            raise ValueError('isolated diagnostic missing original cooperative states')
     _write_new(claim, dict(owner(), arm=arm, update=update, checkpoint_sha256=sha(checkpoint),
                           verification_ids=[r['verification_id'] for r in receipts]))
     by_vid = {v['verification_id']:v for v in
@@ -163,11 +184,17 @@ def run_update(root, arm, update, cfg):
         vid = r['verification_id'];entry_path = base/(vid+'.json')
         try:
             snap = rb._decision_snapshot(root, arm, r, by_vid)
-            pairs = specs_for(snap, r, update, arm, new, old)
-            adopt = adopted_all(lesson, r, snap, new)
+            pairs = specs_for(snap, r, update, arm, new, old, isolated=isolated)
+            adopt = None if isolated else adopted_all(lesson, r, snap, new)
             runner = BranchRunner(base/'branches', workers=1)
             pending = pairs[1:] if adopt else pairs
-            fresh_reference = sv._state_sha(snap['weights']) != sv._state_sha(old)
+            reference_adopt = None
+            if isolated:
+                reference_adopt = next(e for e in legacy['entries'] if e['verification_id']==vid)
+                if (reference_adopt['status']!='graded' or reference_adopt['window']!=r['window']
+                        or reference_adopt['group']!=r['chosen_plan']['members']):
+                    raise ValueError('original u3 reference ungraded or different state/window/group')
+            fresh_reference = not isolated and sv._state_sha(snap['weights']) != sv._state_sha(old)
             if fresh_reference:
                 # Later-policy snapshots cannot reuse a policy J as a u3 label.
                 ref_spec, ref_snap = specs_for(snap, r, update, arm, old, old)[0]
@@ -190,16 +217,26 @@ def run_update(root, arm, update, cfg):
                 runner.prepare([spec], snapshot)
                 results.append(sv.run_branch(spec, snapshot, runner))
             reference_result=results.pop() if fresh_reference else None
-            J_u3=(reference_result['J_veh_s'] if reference_result and reference_result['status']=='graded'
+            J_u3=(reference_adopt['J_u3_veh_s'] if reference_adopt else
+                  reference_result['J_veh_s'] if reference_result and reference_result['status']=='graded'
                   else float(r['branches'][0]['J_veh_s']) if not fresh_reference else None)
+            background = results.pop() if isolated else None
             measure=(metrics(J_u3,results,r['chosen_plan']['members']) if J_u3 is not None
                      else dict(status='incomplete',policy_cooperation_gain_veh_s=None,reason='u3 reference ungraded'))
+            if isolated:
+                measure['background_only_delta_veh_s'] = (J_u3-background['J_veh_s']
+                    if J_u3 is not None and background['status']=='graded' else None)
+                if background['status']!='graded':
+                    measure.update(status='incomplete',reason='background branch ungraded')
             row = dict(verification_id=vid, group=r['chosen_plan']['members'],
                 window=r['window'], reference='u3 policy, same captured state/prefix/CRN',
                 J_u3_veh_s=J_u3,fresh_u3_reference=reference_result,
                 plan_cooperation_gain_veh_s=confirmed[vid]['cooperation']['cooperation_gain_veh_s'],
                 results=results, charged_sim_s=sum(s['sim_s'] for s in specs),
                 **measure)
+            if isolated:
+                row.update(background_only_result=background,
+                    adopted_u3_reference_sha256=legacy['policy_synergy_sha256'])
         except Exception as e:
             row = dict(verification_id=vid, status='failed', reason=repr(e), policy_cooperation_gain_veh_s=None)
         if row['status']!='graded':
@@ -210,9 +247,16 @@ def run_update(root, arm, update, cfg):
         status='complete' if all(e['status']=='graded' for e in entries) else 'incomplete',
         admitted_cooperative_entries=len(receipts), checkpoint_sha256=sha(checkpoint),
         phase='bank_verification_ext', rule='delta(all new) - max delta(only member new); positive means multi-car improvement',
-        background='non-group new policy exactly as lesson; common captured t0 action, intervention from t0+1',
+        background=('non-group u3 for group/solo, non-group new for background-only; captured t0 action, intervention t0+1'
+                    if isolated else 'non-group new policy exactly as lesson; common captured t0 action, intervention from t0+1'),
         outcomes_opened=False)
     _write_new(result_path, _seal(out, 'policy_synergy_sha256'))
+    if isolated:
+        combined = dict(arm=arm, update=update, original=legacy,
+            isolated=json.loads(result_path.read_text()),
+            rule='MAIN12:26; original and isolated variants retained; no training change')
+        _write_new(root/f'POLICY_SYNERGY_u{update:03}_{arm}_WITH_ISOLATED.json',
+            _seal(combined, 'policy_synergy_sha256'))
     return out
 
 
@@ -225,11 +269,13 @@ def watch(root, cfg):
     _write_new(c/'OWNER.json', owner())
     while time.time()<cfg['gpu_deadline']:
         progress = {}
-        for u in range(8,25):
+        suffix = '_ISOLATED' if cfg.get('isolated') else ''
+        for u in range(cfg.get('first_update',8),25):
             for arm in ('B','R'):
                 key=f'{arm}{u}'
                 if not (Path(root)/f'{arm}_UPDATE_{u:03}.json').exists():continue
                 if not (Path(root)/f'LESSON_CHECK_u{u:03}_{arm}.json').exists():continue
+                if cfg.get('isolated') and not (Path(root)/f'POLICY_SYNERGY_u{u:03}_{arm}.json').exists():continue
                 try:
                     assert_running(root,arm)
                     result=run_update(root,arm,u,cfg);progress[key]=result['status']
@@ -238,7 +284,7 @@ def watch(root, cfg):
                     alert=c/f'ALERT_{key}.json'
                     if not alert.exists():_write_new(alert,dict(unix=time.time(),error=repr(e)))
         atomic(c/'STATUS.json',dict(unix=time.time(),progress=progress,training_owners_untouched=True))
-        if all((Path(root)/f'POLICY_SYNERGY_u024_{a}.json').exists() for a in ('B','R')):return
+        if all((Path(root)/f'POLICY_SYNERGY_u024_{a}{suffix}.json').exists() for a in ('B','R')):return
         time.sleep(30)
 
 

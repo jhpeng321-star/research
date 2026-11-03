@@ -13,6 +13,9 @@ BASE='/home/ubuntu/coopmwm20261103_compositereleasecpu1'
 CONTROL=ROOT+'/policy_synergy_1205_v1'
 REG='POLICY_SYNERGY_REGISTRATION_1205.json'
 BINDING='POLICY_SYNERGY_BINDING_1205.json'
+DISPATCH='POLICY_SYNERGY_DISPATCH_1205.json'
+REPORT_PATTERN='POLICY_SYNERGY_u[0-9][0-9][0-9]_[BR].json'
+STATUS_PREFIX='POLICY_SYNERGY_STATUS'
 
 
 def qualify():
@@ -91,7 +94,7 @@ with (c/'WATCH.log').open('x') as log:
 d=dict(owner(p.pid),source_root=str(s),control_root=str(c),amendment_sha256=v['amendment_sha256'])
 with (c/'DISPATCH.json').open('x') as f:json.dump(d,f)
 print(json.dumps(d))''',timeout=50))
-    p=ops.EVIDENCE/'POLICY_SYNERGY_DISPATCH_1205.json'
+    p=ops.EVIDENCE/DISPATCH
     if not p.exists():write(p,value)
     print(json.dumps(value))
 
@@ -102,14 +105,14 @@ import json,sys,time
 c=Path({CONTROL!r});r=Path({ROOT!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
 from tools.coopmwm.replay_start import alive
 d=json.loads((c/'DISPATCH.json').read_text()) if (c/'DISPATCH.json').exists() else None
-reports={{p.name:json.loads(p.read_text()) for p in r.glob('POLICY_SYNERGY_u[0-9][0-9][0-9]_[BR].json')}}
+reports={{p.name:json.loads(p.read_text()) for p in r.glob({REPORT_PATTERN!r})}}
 entries={{}}
 for base in c.glob('u[0-9][0-9][0-9]_[BR]'):
  entries[base.name]={{p.name:json.loads(p.read_text()) for p in base.glob('sv_*.json') if not p.name.endswith(('.QUOTE.json','.ALERT.json'))}}
 print(json.dumps(dict(unix=time.time(),owner=d,alive=alive(d) if d else False,
 status=json.loads((c/'STATUS.json').read_text()) if (c/'STATUS.json').exists() else None,
 log=(c/'WATCH.log').read_text()[-8000:] if (c/'WATCH.log').exists() else '',reports=reports,completed_entries=entries)))''',timeout=45))
-    p=ops.EVIDENCE/f'POLICY_SYNERGY_STATUS_{time.time_ns()}.json';write(p,value)
+    p=ops.EVIDENCE/f'{STATUS_PREFIX}_{time.time_ns()}.json';write(p,value)
     for n,v in value['reports'].items():
         if not (ops.EVIDENCE/n).exists():write(ops.EVIDENCE/n,v)
     summary={}
