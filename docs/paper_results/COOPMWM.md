@@ -1,5 +1,16 @@
 # S-COOPMWM — live checks
 
+## Fresh-session adoption — Nov3 23:08 UTC+8
+- Durable legacy state remains A48/B21/R20; all four intentionally held old
+  B/R arm/grader owners are absent. No restart or duplicate dispatch.
+- Saved searches continue to answer: two B requests remain assigned, zero R
+  requests pending. Existing four-slot services are retained.
+- cpuQ free6,215,000,064bytes is227,450,880bytes below6GiB; MemAvailable
+  22,143,500kB. Final integration remains WIP/READY absent, and the available
+  audit is BLOCKING for an older commit. V2V and the real-bank gate stay held.
+- Evidence:`coopmwm/RESUME_ADOPTION_20261103_2308.md` and its two live receipts.
+  Zero new SUMO/inference/charges/process control/deletion by this adoption.
+
 ## Fresh-session adoption — Nov3 22:31 UTC+8
 - Read-only guard reporting repaired and verified at22:45: memory-recovery
   owners411152/411153 are correctly reported exited and B/R paused=true under

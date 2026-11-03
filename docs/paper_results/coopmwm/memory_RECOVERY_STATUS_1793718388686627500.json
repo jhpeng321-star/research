@@ -1,0 +1,714 @@
+{
+  "arm_logs": {
+    "B": "reate: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\nTraceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 456, in <module>\n    if __name__ == '__main__':main()\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 443, in main\n    if a.component == 'arm':run_arm(a.root, a.arm)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 170, in run_arm\n    wr.run_arm(root, arm)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/warm_runner.py\", line 151, in run_arm\n    eps=wave(root,dict(b,beta=beta),{arm:policy},batch_worlds(u),'train',f'warm_u{u:03}','train',False,extra)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 158, in wave\n    assert_running(root, arm);time.sleep(10)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/warm_health.py\", line 58, in assert_running\n    if pauses:raise HealthPause('registered health pause '+pauses[0].name)\ntools.coopmwm.warm_health.HealthPause: registered health pause PAUSE_RESOURCE_MAIN2158B.json\n",
+    "R": "find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\nTraceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 456, in <module>\n    if __name__ == '__main__':main()\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 443, in main\n    if a.component == 'arm':run_arm(a.root, a.arm)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 170, in run_arm\n    wr.run_arm(root, arm)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/warm_runner.py\", line 151, in run_arm\n    eps=wave(root,dict(b,beta=beta),{arm:policy},batch_worlds(u),'train',f'warm_u{u:03}','train',False,extra)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 158, in wave\n    assert_running(root, arm);time.sleep(10)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/warm_health.py\", line 58, in assert_running\n    if pauses:raise HealthPause('registered health pause '+pauses[0].name)\ntools.coopmwm.warm_health.HealthPause: registered health pause PAUSE_RESOURCE_MAIN2158B.json\n"
+  },
+  "binding_sha256": "f5aac6ea92af7390621689374f5ca04d2f9df42573ae30b232ebf92346581de2",
+  "charged_sim_s": 10202670,
+  "children": [
+    {
+      "alive": false,
+      "children": [],
+      "owner": {
+        "argv": [
+          "/home/ubuntu/miniconda3/bin/python",
+          "-B",
+          "-u",
+          "-m",
+          "tools.coopmwm.replay_start",
+          "/home/ubuntu/coopmwm20261102_warm1",
+          "grade",
+          "--arm",
+          "B"
+        ],
+        "arm": "B",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "completion_root": "/home/ubuntu/coopmwm20261102_warm1/replay_composite_0957",
+        "component": "grade",
+        "pid": 3305068,
+        "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+        "start_ticks": "68977059",
+        "unix": 1793675492.8660207
+      },
+      "rss": [],
+      "state": "ABSENT"
+    },
+    {
+      "alive": false,
+      "children": [],
+      "owner": {
+        "argv": [
+          "/home/ubuntu/miniconda3/bin/python",
+          "-B",
+          "-u",
+          "-m",
+          "tools.coopmwm.replay_start",
+          "/home/ubuntu/coopmwm20261102_warm1",
+          "grade",
+          "--arm",
+          "R"
+        ],
+        "arm": "R",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "completion_root": "/home/ubuntu/coopmwm20261102_warm1/replay_composite_0957",
+        "component": "grade",
+        "pid": 3305069,
+        "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+        "start_ticks": "68977059",
+        "unix": 1793675492.8683271
+      },
+      "rss": [],
+      "state": "ABSENT"
+    },
+    {
+      "alive": false,
+      "children": [],
+      "owner": {
+        "argv": [
+          "/home/ubuntu/miniconda3/bin/python",
+          "-B",
+          "-u",
+          "-m",
+          "tools.coopmwm.replay_start",
+          "/home/ubuntu/coopmwm20261102_warm1",
+          "arm",
+          "--arm",
+          "B"
+        ],
+        "arm": "B",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "component": "arm",
+        "pid": 411152,
+        "start_ticks": "72386074",
+        "unix": 1793709583.0205088
+      },
+      "rss": [],
+      "state": "ABSENT"
+    },
+    {
+      "alive": false,
+      "children": [],
+      "owner": {
+        "argv": [
+          "/home/ubuntu/miniconda3/bin/python",
+          "-B",
+          "-u",
+          "-m",
+          "tools.coopmwm.replay_start",
+          "/home/ubuntu/coopmwm20261102_warm1",
+          "arm",
+          "--arm",
+          "R"
+        ],
+        "arm": "R",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "component": "arm",
+        "pid": 411153,
+        "start_ticks": "72386077",
+        "unix": 1793709583.0491397
+      },
+      "rss": [],
+      "state": "ABSENT"
+    }
+  ],
+  "disk_free": 6215000064,
+  "episodes": {
+    "B": {
+      "claimed": 24,
+      "completed": 24,
+      "jobs": [
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986000",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986006",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986007",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986012",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986018",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986019",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986024",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986030",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986031",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986036",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986042",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986043",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986044",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986048",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986049",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986050",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986054",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986055",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986060",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986061",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986062",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986066",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986067",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u019_B_986068",
+          "observed_sim_time_s": 1200,
+          "result": true
+        }
+      ],
+      "update": 19
+    },
+    "R": {
+      "claimed": 24,
+      "completed": 24,
+      "jobs": [
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986004",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986005",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986010",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986016",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986017",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986022",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986028",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986029",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986034",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986040",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986041",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986045",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986046",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986047",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986051",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986052",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986053",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986058",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986063",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986064",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986065",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986069",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986070",
+          "observed_sim_time_s": 1200,
+          "result": true
+        },
+        {
+          "claim": true,
+          "id": "replay0735_warm_u018_R_986071",
+          "observed_sim_time_s": 1200,
+          "result": true
+        }
+      ],
+      "update": 18
+    }
+  },
+  "failures": {
+    "WARM_B_FAILED_MEMORY_RECOVERY1.json": {
+      "error": "HealthPause('registered health pause PAUSE_RESOURCE_MAIN2158B.json')",
+      "timestamp_utc": "2026-11-03T14:04:35.468218+00:00"
+    },
+    "WARM_R_FAILED_MEMORY_RECOVERY1.json": {
+      "error": "HealthPause('registered health pause PAUSE_RESOURCE_MAIN2158B.json')",
+      "timestamp_utc": "2026-11-03T14:04:42.338572+00:00"
+    },
+    "memory_recovery1/arm_B_FAILED.json": {
+      "error": "HealthPause('registered health pause PAUSE_RESOURCE_MAIN2158B.json')",
+      "physics_retry": false,
+      "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 443, in main\n    if a.component == 'arm':run_arm(a.root, a.arm)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 170, in run_arm\n    wr.run_arm(root, arm)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/warm_runner.py\", line 151, in run_arm\n    eps=wave(root,dict(b,beta=beta),{arm:policy},batch_worlds(u),'train',f'warm_u{u:03}','train',False,extra)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 158, in wave\n    assert_running(root, arm);time.sleep(10)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/warm_health.py\", line 58, in assert_running\n    if pauses:raise HealthPause('registered health pause '+pauses[0].name)\ntools.coopmwm.warm_health.HealthPause: registered health pause PAUSE_RESOURCE_MAIN2158B.json\n",
+      "unix": 1793714675.4711185
+    },
+    "memory_recovery1/arm_R_FAILED.json": {
+      "error": "HealthPause('registered health pause PAUSE_RESOURCE_MAIN2158B.json')",
+      "physics_retry": false,
+      "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 443, in main\n    if a.component == 'arm':run_arm(a.root, a.arm)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 170, in run_arm\n    wr.run_arm(root, arm)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/warm_runner.py\", line 151, in run_arm\n    eps=wave(root,dict(b,beta=beta),{arm:policy},batch_worlds(u),'train',f'warm_u{u:03}','train',False,extra)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/replay_start.py\", line 158, in wave\n    assert_running(root, arm);time.sleep(10)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/warm_health.py\", line 58, in assert_running\n    if pauses:raise HealthPause('registered health pause '+pauses[0].name)\ntools.coopmwm.warm_health.HealthPause: registered health pause PAUSE_RESOURCE_MAIN2158B.json\n",
+      "unix": 1793714682.340884
+    },
+    "memory_recovery1/memory_WATCH_FAILED.json": {
+      "error": "RuntimeError('reference child exited; preserve claims and diagnose')",
+      "physics_retry": false,
+      "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/memory_recovery.py\", line 95, in main\n    watch(a.root)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/memory_recovery.py\", line 76, in watch\n    raise RuntimeError('reference child exited; preserve claims and diagnose')\nRuntimeError: reference child exited; preserve claims and diagnose\n",
+      "unix": 1793714684.0286396
+    }
+  },
+  "latest": {
+    "B": 21,
+    "R": 20
+  },
+  "load": [
+    1.125,
+    1.37109375,
+    1.29296875
+  ],
+  "mem": [
+    "MemTotal:       64411928 kB",
+    "MemAvailable:   22143500 kB"
+  ],
+  "numerical_hashes": {
+    "accel_learner": "60520b4597ba0b01945c43c9b003f194fc36606031bea9e2326419c225b5ce74",
+    "accel_plant": "713ad61ca4b40f872dfc94fd7bfac56e91a2269f706bcca2af007de906b859ff",
+    "acceleration": "9bc5192ad01f1db130a7aad0c3d41c72608307732286ff6c2d74248d38127f67",
+    "bank_imitation": "ad9aa4962adf9084a250488fcd3ad14e8bc0dbb760f05346ef7cc87b575ef0e0",
+    "exact_grade": "d17ec318d8fd2a89faacdc2de1e17c42afa3a4e1d3b0b827d3c666a5dce15454",
+    "mppi_search": "f2faeeeecf06eb74d22df56300dae39ec31d7afabb664d25a47f5a0650567c77",
+    "replay_bank": "9fa0069ed71b0178ee7404990daa164ad5be4c250b838b2361ea29d3d83b49bf"
+  },
+  "retired": [
+    {
+      "alive": false,
+      "children": [],
+      "owner": {
+        "argv": [
+          "/home/ubuntu/miniconda3/bin/python",
+          "-B",
+          "-u",
+          "-m",
+          "tools.coopmwm.replay_start",
+          "/home/ubuntu/coopmwm20261102_warm1",
+          "arm",
+          "--arm",
+          "B"
+        ],
+        "arm": "B",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "component": "arm",
+        "pid": 3305070,
+        "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+        "start_ticks": "68977059",
+        "unix": 1793675492.8703508
+      },
+      "rss": [],
+      "state": "ABSENT"
+    },
+    {
+      "alive": false,
+      "children": [],
+      "owner": {
+        "argv": [
+          "/home/ubuntu/miniconda3/bin/python",
+          "-B",
+          "-u",
+          "-m",
+          "tools.coopmwm.replay_start",
+          "/home/ubuntu/coopmwm20261102_warm1",
+          "arm",
+          "--arm",
+          "R"
+        ],
+        "arm": "R",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "component": "arm",
+        "pid": 3305071,
+        "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+        "start_ticks": "68977060",
+        "unix": 1793675492.8724575
+      },
+      "rss": [],
+      "state": "ABSENT"
+    },
+    {
+      "alive": false,
+      "children": [],
+      "owner": {
+        "amendment_sha256": "853bb0b6d3afcbc71b7f5ee7c028ebf971d196fe0380d7f977fb702c55d08dbe",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "control_root": "/home/ubuntu/coopmwm20261102_warm1/replay_composite_0957",
+        "pid": 3305066,
+        "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+        "source_root": "/home/ubuntu/coopmwm20261103_compositereleasecpu1",
+        "start_ticks": "68977029",
+        "unix": 1793675492.5633712
+      },
+      "rss": [],
+      "state": "ABSENT"
+    }
+  ],
+  "root": "/home/ubuntu/coopmwm20261102_warm1",
+  "source_root": "/home/ubuntu/coopmwm20261103_memory_recovery2",
+  "started": true,
+  "status": {
+    "alert": true,
+    "children": [
+      {
+        "argv": [
+          "/home/ubuntu/miniconda3/bin/python",
+          "-B",
+          "-u",
+          "-m",
+          "tools.coopmwm.replay_start",
+          "/home/ubuntu/coopmwm20261102_warm1",
+          "grade",
+          "--arm",
+          "B"
+        ],
+        "arm": "B",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "completion_root": "/home/ubuntu/coopmwm20261102_warm1/replay_composite_0957",
+        "component": "grade",
+        "pid": 3305068,
+        "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+        "start_ticks": "68977059",
+        "unix": 1793675492.8660207
+      },
+      {
+        "argv": [
+          "/home/ubuntu/miniconda3/bin/python",
+          "-B",
+          "-u",
+          "-m",
+          "tools.coopmwm.replay_start",
+          "/home/ubuntu/coopmwm20261102_warm1",
+          "grade",
+          "--arm",
+          "R"
+        ],
+        "arm": "R",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "completion_root": "/home/ubuntu/coopmwm20261102_warm1/replay_composite_0957",
+        "component": "grade",
+        "pid": 3305069,
+        "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+        "start_ticks": "68977059",
+        "unix": 1793675492.8683271
+      },
+      {
+        "argv": [
+          "/home/ubuntu/miniconda3/bin/python",
+          "-B",
+          "-u",
+          "-m",
+          "tools.coopmwm.replay_start",
+          "/home/ubuntu/coopmwm20261102_warm1",
+          "arm",
+          "--arm",
+          "B"
+        ],
+        "arm": "B",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "component": "arm",
+        "pid": 411152,
+        "start_ticks": "72386074",
+        "unix": 1793709583.0205088
+      },
+      {
+        "argv": [
+          "/home/ubuntu/miniconda3/bin/python",
+          "-B",
+          "-u",
+          "-m",
+          "tools.coopmwm.replay_start",
+          "/home/ubuntu/coopmwm20261102_warm1",
+          "arm",
+          "--arm",
+          "R"
+        ],
+        "arm": "R",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "component": "arm",
+        "pid": 411153,
+        "start_ticks": "72386077",
+        "unix": 1793709583.0491397
+      }
+    ],
+    "dead_children": [
+      {
+        "argv": [
+          "/home/ubuntu/miniconda3/bin/python",
+          "-B",
+          "-u",
+          "-m",
+          "tools.coopmwm.replay_start",
+          "/home/ubuntu/coopmwm20261102_warm1",
+          "grade",
+          "--arm",
+          "B"
+        ],
+        "arm": "B",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "completion_root": "/home/ubuntu/coopmwm20261102_warm1/replay_composite_0957",
+        "component": "grade",
+        "pid": 3305068,
+        "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+        "start_ticks": "68977059",
+        "unix": 1793675492.8660207
+      },
+      {
+        "argv": [
+          "/home/ubuntu/miniconda3/bin/python",
+          "-B",
+          "-u",
+          "-m",
+          "tools.coopmwm.replay_start",
+          "/home/ubuntu/coopmwm20261102_warm1",
+          "grade",
+          "--arm",
+          "R"
+        ],
+        "arm": "R",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "completion_root": "/home/ubuntu/coopmwm20261102_warm1/replay_composite_0957",
+        "component": "grade",
+        "pid": 3305069,
+        "run_root": "/home/ubuntu/coopmwm20261102_warm1",
+        "start_ticks": "68977059",
+        "unix": 1793675492.8683271
+      },
+      {
+        "argv": [
+          "/home/ubuntu/miniconda3/bin/python",
+          "-B",
+          "-u",
+          "-m",
+          "tools.coopmwm.replay_start",
+          "/home/ubuntu/coopmwm20261102_warm1",
+          "arm",
+          "--arm",
+          "B"
+        ],
+        "arm": "B",
+        "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+        "component": "arm",
+        "pid": 411152,
+        "start_ticks": "72386074",
+        "unix": 1793709583.0205088
+      }
+    ],
+    "single_existing_broker": true,
+    "unix": 1793714684.024807,
+    "updates": {
+      "B": 21,
+      "R": 20
+    }
+  },
+  "train_charged": 2806800,
+  "unix": 1793718387.8724864,
+  "watch_log": "Traceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/memory_recovery.py\", line 104, in <module>\n    main()\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/memory_recovery.py\", line 95, in main\n    watch(a.root)\n  File \"/home/ubuntu/coopmwm20261103_memory_recovery2/pytools/tools/coopmwm/memory_recovery.py\", line 76, in watch\n    raise RuntimeError('reference child exited; preserve claims and diagnose')\nRuntimeError: reference child exited; preserve claims and diagnose\n",
+  "watcher": {
+    "alive": false,
+    "children": [],
+    "owner": {
+      "binding_sha256": "f5aac6ea92af7390621689374f5ca04d2f9df42573ae30b232ebf92346581de2",
+      "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+      "control_root": "/home/ubuntu/coopmwm20261102_warm1/memory_recovery1",
+      "pid": 411148,
+      "source_root": "/home/ubuntu/coopmwm20261103_memory_recovery2",
+      "start_ticks": "72386051",
+      "unix": 1793709582.7856135
+    },
+    "rss": [],
+    "state": "ABSENT"
+  }
+}
