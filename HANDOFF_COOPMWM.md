@@ -1,5 +1,33 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3 12:59+08: isolatedV2FIRSTREALstate986048/t300 COMPLETE/GRADED,
+all4newbranches/2880sim-s/prefix+CRNpassed. Group-onlyNEWdelta+.270240,
+solo ramp.20-.000059318/ramp.22+.270273 =>isolatedgain-.000032718veh-s;
+background-only+564.693983,originalplangain958.678083. NOTlearnedgroupsynergy.
+V2 3531845LIVE, otherstatesinflight; nochargefault. Mirror7456LIVE/adoptV2.
+B/Ru9BOTHcomplete: B12:48:41/R12:53:56,3305066+childrenhealthy/noalerts.
+Blesson8+874.800CI[-135.269,2245.181],4positive,fixederror.592962; Rlesson1
++1750.802/noCI/error.297508. Bbank11/error.829575->.826316/0fullpasses,
+Rbank10/error.637467->.617574/1full+partial2;bothMINIBATCH_KLstop.
+Safety24pairs/collisionteleport0both; Bcritical+.104CI[-20.792,21.834],
+R+6.604CI[-17.771,30.710];hardB+.354[-3.146,3.792],R-.146[-3.875,3.167];PASS.
+Budget12:59charged6953330/14.5M/7546670remaining,bankext1951370/allphasesnonnegative,
+SHA6c4da9c2. Canonicalu9lessons/safetycopied. Continueexistingowners/fixed24;
+interimA96/B17/R38atlast12:57:18/noFAIL; ONLYhashmetadata, nooutcomesopened.
+
+LATEST Nov3 12:57+08: isolatedV1B9ALL4chargeattempts BLOCKEDbeforeANYphysics:
+sharedlegacychargekind collided. PreserveallincompleteV1reports/alerts. Verifiedidle
+3511227/boot/start/argv/nochildrenTERM at12:54:48; training/legacyuntouched. NewV2
+3531845/start69609344 LIVE12:56:55/controlpolicy_synergy_isolated_1226_v2;
+ADOPT POLICY_SYNERGY_ISOLATED_DISPATCH_1226_V2, NEVERduplicate. 48LinuxCPU PASS/
+0skips/1.428s/zeroSUMO, registered097e9069/commit909b0139 BEFORElaunch. V2chargekind
+policy_synergy_isolated_v2_uNNN_ARM; distinct_ISOLATED_V2/_WITH_ISOLATED_V2reports,
+originalV1retained/notrerun. ReadonlymirrorV2=7456/create1793681824.706049LIVE;
+adoptdistinctDISPATCH_V2; oldisolated8132verifiedretired, original44248untouched.
+Interim12:57:18 A96/B17/R38publichashreceipts,both3442884/3499917LIVE/noFAIL;
+outcomesclosed. Trainingcontinuesfixed24. Nextobservefirstisolatedrealprefix/CRN
+branchresults, R9receipt, andinterimcompletion. No sealedoutcomesopened.
+
 LATEST Nov3 12:50+08: isolatedsynergy NOWLIVE3511227/start69555223/controlwarm1/
 policy_synergy_isolated_1226. ADOPT POLICY_SYNERGY_ISOLATED_DISPATCH_1226, NEVERduplicate.
 Immutableisosynergycpu1:45LinuxCPU PASS/0skips/1.471s/zeroSUMO, SHAefd1fefa,

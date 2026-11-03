@@ -1,5 +1,45 @@
 # S-COOPMWM — live checks
 
+## Nov3 12:59 UTC+8 — both u9 checks published; first isolated state is graded
+- B-u9 completed12:48:41, R-u9 at12:53:56. Watcher3305066 and its children
+  remain healthy, no alerts/dead children; fixedu24 and original pacing continue.
+- B's fixed8-entry matched lesson saves **+874.800veh-s**, entry-bootstrap95%CI
+  **[-135.269,+2245.181]**,4/8 positive, fixed-entry action error0.592962m/s².
+  Its11 admitted bank targets run8 imitation optimizer steps/1024 pair visits,
+  zero full passes before minibatch KL stops; within-update error0.829575→0.826316.
+- R's fixed1-entry lesson saves **+1750.802veh-s**, no CI from one entry, fixed
+  error0.297508. Its10 admitted targets complete1 full pass plus part of the second,
+  17 steps/2080 pair visits; within-update error0.637467→0.617574. Both arms keep
+  the requested5-pass rule with the registered KL early stop.
+- u9 safety passes for both arms on24 paired worlds, collision/teleport deltas0:
+  B critical total **+0.104[-20.792,+21.834]**, hard braking+0.354[-3.146,+3.792];
+  R critical total **+6.604[-17.771,+30.710]**, hard braking-0.146[-3.875,+3.167].
+- First isolated V2 state986048/t300 is fully graded:4 new branches,2880sim-s,
+  exact prefix/CRN checks passed. Group-only-new-policy saving **+0.270240veh-s**;
+  solo ramp.20 **-0.000059318**, solo ramp.22 **+0.270273**; isolated cooperation
+  gain **-0.000032718veh-s**. Background-only saving **+564.693983veh-s**, while
+  the original verified plan's cooperation gain was+958.678083. This state does
+  not show learned group synergy. Remaining states are in flight; no extrapolation
+  to the final panel is made from these conditional TRAIN-bank diagnostics.
+- Budget12:59: **6953330/14500000sim-s charged**,7546670remaining,
+  bank extension1951370remaining; all phases nonnegative. SHA`6c4da9c2aa2701cc…`.
+  Canonical u9 lessons/safety are published. Interim outcome values remain closed.
+
+## Nov3 12:57 UTC+8 — isolated accounting guard fixed; interim continues
+- First isolated B-u9 attempts collided with the original diagnostic's charge
+  identity. The duplicate guard rejected all4 **before any new reservation or
+  physics**. Original failed receipts/alerts remain; the verified idle isolated
+  watcher alone was retired. Training and the original diagnostic were unaffected.
+- V2 has a distinct isolated charge namespace and output suffix. It passes
+  **48 Linux CPU checks**, zero skips,1.428s, zero SUMO, including the real charge
+  adapter's identity separation and both output namespaces. RegisteredSHA
+  `097e90690ac079f2…`/commit`909b0139` precede dispatch **12:56:55**, owner3531845.
+- New read-only mirror7456/create1793681824.706049 is live; it publishes isolated
+  and joint`WITH_ISOLATED_V2` receipts plus public interim counts every120s.
+  Original observer44248 remains untouched; all previous receipts are retained.
+- Interim at12:57:18: **A96/B17/R38** episode hash receipts complete. Both interim
+  owners remain live, no failure; outcome values remain closed.
+
 ## Nov3 12:50 UTC+8 — isolated cooperation diagnostic is durable from u9
 - MAIN12:26 is registered as SHA`efd1fefae30313b1…`; immutable`isosynergycpu1`
   passes **45 Linux CPU checks**, zero skips,1.471s, zero SUMO. Commit`a6698e15`
