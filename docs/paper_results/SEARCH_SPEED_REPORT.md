@@ -91,14 +91,15 @@ futures are unchanged); control = the same replay without them; same truth surro
 (`episode_pairs`, `shifted_seeds`, `evaluate_warm_start`; noisy_replay gained a default-off `extra_seeds`
 argument — byte-identical when None), CPU tests in `test_budget_search_cpu.py` (58 tests pass).
 
-- **Pair availability:** 87 consecutive same-episode pairs exist among logged requests (56 episodes), but only
-  **6 pairs have both sides as full-pool receipts** (2 held-out / 4 dev).
+- **Pair availability (top-up):** 103 consecutive same-episode pairs exist among logged requests, but only
+  **6 pairs have both sides as full-pool receipts** (4 held-out / 2 dev) — the overnight receipts added pairs but
+  almost all still have a top-k-only or missing response on one side.
 - **Registered gate (evaluate only when >= 20 such pairs exist): NOT MET → NOT EVALUATED**; the numbers below
   are exploratory only and carry no recommendation.
-  - held-out 2 pairs: q8 warm - control -0.397 [-0.781, -0.014], q1 -0.238 [-0.461, -0.015]
-  - dev 4 pairs: q8 +0.066 [-0.236, +0.463], q1 +0.275 [-0.010, +0.483]
-- Interpretation: at 10-100 s gaps the shifted previous elites sometimes help (1 of 4 dev pairs gains +0.67
-  pool-sd) and sometimes hurt (one held-out pair loses -0.78); n is far too small to separate.
+  - held-out 4 pairs (3 worlds): q8 warm - control -0.200 [-0.781, -0.003], q1 -0.119 [-0.461, -0.001]
+  - dev 2 pairs: q8 -0.048 [-0.162, +0.066], q1 +0.142 [-0.162, +0.446]
+- Interpretation: unchanged — at 10-100 s gaps the shifted previous elites sometimes help and sometimes hurt;
+  n is far too small to separate, and the exploratory point estimates moved toward negative with the new pairs.
 - To make this evaluable, the collector needs to keep full-pool receipts for BOTH searches of a pair
   (~40+ such pairs required; currently most pairs have a top-k-only or missing response on one side).
 
