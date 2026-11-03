@@ -1,5 +1,19 @@
 # Fresh-session adoption and completed interim delivery
 
+## Continuation 13:59:09 UTC+8
+
+Watcher3305066 remains live (state R), no alerts or dead children; both B and R
+have completed update11. Receipt
+`B_REPLAY_START_WATCH_STATUS_1793685550999504000.json`. New MAIN13:40/13:43/13:45
+addenda are fully read: V2V integration/rehearsal remain with their agents;
+runner wiring remains with the thawed original session (live warm_runner edits
+preserved). Updated common-MAPPO-u0 budget helper/6 CPU tests committed24213236.
+Current-slate three-arm quote5,268,000 exceeds+3M; A/B-only3,085,920 also exceeds
+unless exact baseline reuse qualifies, then2,921,760. No cap/phase/launch change
+made by this session; detailed conditional quote sent to MAIN under `_sol`.
+Old1332 quote is superseded on start point and workload. Non-V2V training stays
+at fixedu24; no outcome-conditioned changes or duplicate dispatches.
+
 - Read the entire 760-line brief, git status/log and latest handoff/design/results.
   Current addenda supersede the initial task priorities and cap: warm memory and
   the B-REPLAY release are complete; total authority is 14,500,000 sim-s.
