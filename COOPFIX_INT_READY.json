@@ -3,7 +3,7 @@
   "branch": "c4/coopfix-int",
   "worktree": "E:/agent-work/c4-coopfix-int",
   "ready": true,
-  "integrated_head": "d0ede911 (receipt refreshes included; feature-complete tree at ef2cd5ec, READY-fallback robustness fix at d0ede911)",
+  "integrated_head": "f74127aa (last code commit: READY-fallback d0ede911 + hermetic gate-test receipt fix f74127aa; the commits after it on c4/coopfix-int are receipt-only refreshes, so the feature-complete tree is f74127aa's)",
   "based_on": "live c4/coopnative code (base commit e5603466)",
   "merged_commits": [
     {"sha": "a0cd5a6e", "what": "integrate: merge c4/bank-stat-filter (BANKFILT READY 3efbb12a; statistical bank_filter, default off)"},
