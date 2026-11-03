@@ -13,7 +13,19 @@ offline - the registered bank_imitation.run loop, no PPO update, no SUMO - and r
 - whether the zero-initialised v2v input weights moved (non-zero): the policy can use
   partner intent.
 
-Verdict PASS iff all four hold. Both training options are live and default off:
+Intent extension (c4/intent-int, option ``v2v_intent``, DEFAULT OFF): with the option on the
+phase also trains the zero-initialised intent head on the pairs' plan-future-command targets
+(``context['intent_target']`` from replay_bank.bank_pairs(intent=True)) with the registered
+weight, and the report additionally carries
+
+- the masked plan-future intent error (m/s^2) on the cooperative pairs before/after
+  (bank_imitation.intent_error estimator; PASS requires it to fall);
+- whether the PARTNER-INTENT input columns of the widened actor moved (non-zero): the
+  per-partner ``intent_0..intent_{H-1}`` channels inside the ``K*(6+H+1)`` v2v block,
+  reported separately from the plain six-feature partner columns.
+
+Verdict PASS iff all four hold, plus the two intent checks when ``v2v_intent`` is on (the
+option-off verdict semantics are byte-identical to the pre-intent gate). Both training options are live and default off:
 ``bank_filter='statistical'`` (c4/bank-stat-filter, BANKFILT READY) is applied per entry
 inside replay_bank.bank_pairs and disclosed here; ``imitation_trust='own_pass'``
 (c4/imit-fullpass, IMITFIX READY) runs the phase on its own trust region with the
@@ -78,13 +90,20 @@ class GatePolicy(AccelerationPolicy):
         return mean, value
 
 
-def load_gate_policy(checkpoint, v2v_dim):
+def load_gate_policy(checkpoint, v2v_dim, intent=False, intent_horizon=v2v_model.V2V_INTENT_H):
     """Registered v2v_model.load_checkpoint, rebound to the v2v-aware GatePolicy forward.
 
     Same state layout (the extension only widens the two input layers in place), so the
     rebind changes nothing about the loaded parameters, optimizer or RNG state.
-    """
-    policy, optimizer, generator, payload = v2v_model.load_checkpoint(checkpoint, v2v_dim=v2v_dim)
+    ``intent=True`` (DEFAULT OFF) loads through the intent binding config instead, so the
+    zero-initialised intent head is attached exactly as in the live runner (the widened
+    width is the K*(6+H+1) intent block)."""
+    if intent:
+        policy, optimizer, generator, payload = v2v_model.load_checkpoint(checkpoint, config=dict(
+            v2v=True, v2v_intent=True, v2v_intent_horizon=int(intent_horizon),
+            v2v_dim=v2v_dim, accel_bounds=v2v_model.INTENT_BOUNDS), v2v_dim=v2v_dim)
+    else:
+        policy, optimizer, generator, payload = v2v_model.load_checkpoint(checkpoint, v2v_dim=v2v_dim)
     policy.__class__ = GatePolicy
     return policy, optimizer, generator, payload
 
@@ -307,6 +326,55 @@ def v2v_weight_report(policy):
                 rule='actor input columns non-zero (the imitation phase trains the actor only)')
 
 
+def intent_columns(policy, horizon=None):
+    """Per-partner partner-intent input columns of the widened actor, or None.
+
+    For an intent block (extra == K*(6+H+1), v2v_obs.is_intent_block_width) the partner
+    slot's planned-command channels sit at slot*(6+H+1)+6 .. +6+H inside the v2v block;
+    returns the FEATURES-offset column index list. None for a plain six-feature v2v block
+    (option off) so callers can skip the report."""
+    extra = policy.v2v_width()
+    from .v2v_obs import is_intent_block_width
+    if extra <= 0 or not is_intent_block_width(extra):
+        return None
+    h = int(horizon) if horizon is not None else v2v_model.V2V_INTENT_H
+    k, stride = v2v_model.V2V_INTENT_K, v2v_model.V2V_INTENT_BASE+int(h)+1
+    if extra != k*stride:
+        raise ValueError('intent block width mismatch: extra=%d, expected K*(6+H+1)=%d' % (extra, k*stride))
+    return [FEATURES+slot*stride+v2v_model.V2V_INTENT_BASE+j
+            for slot in range(k) for j in range(int(h))]
+
+
+def intent_weight_report(policy, horizon=None):
+    """Whether the PARTNER-INTENT input columns moved (non-zero), per head.
+
+    The intent channels are the per-partner ``intent_0..intent_{H-1}`` values inside the
+    ``K*(6+H+1)`` block (mask channel and the six plain partner features excluded)."""
+    columns = intent_columns(policy, horizon)
+    if columns is None:
+        return None
+    heads = {}
+    for name, layer in (('actor', policy.actor[0]), ('critic', policy.critic[0])):
+        block = layer.weight.detach()[:, columns]
+        heads[name] = dict(nonzero=bool((block != 0).any()), l2=float(block.norm()),
+                           max_abs=float(block.abs().max()))
+    return dict(columns=len(columns), horizon=int(horizon if horizon is not None
+                                                   else v2v_model.V2V_INTENT_H),
+                heads=heads, moved=bool(heads['actor']['nonzero']),
+                rule='actor partner-intent input columns non-zero (the imitation phase trains the actor only)')
+
+
+@torch.no_grad()
+def coop_intent_error(policy, pairs):
+    """Masked mean absolute plan-future intent error (m/s^2) over the cooperative pairs.
+
+    bank_imitation.intent_error estimator; None when no pair carries intent targets or
+    the policy carries no intent head (option off)."""
+    if not hasattr(policy, 'intent'):
+        return None
+    return bank_imitation.intent_error(policy, pairs)
+
+
 # ---------------------------------------------------------------- the gate itself
 
 def normalize_options(options=None):
@@ -317,9 +385,14 @@ def normalize_options(options=None):
     imitation_trust = source.get('imitation_trust')
     if imitation_trust not in (None, False, 'own_pass'):
         raise ValueError("imitation_trust must be None/False or the registered value 'own_pass'")
+    v2v_intent = source.get('v2v_intent')
+    if v2v_intent not in (None, False, True):
+        raise ValueError('v2v_intent must be None/False or True')
     return dict(v2v=bool(source.get('v2v', False)), v2v_dim=source.get('v2v_dim'),
                 passes=int(source.get('passes', 5)), coefficient=float(source.get('coefficient', 1.)),
-                bank_filter=bank_filter, imitation_trust=imitation_trust)
+                bank_filter=bank_filter, imitation_trust=imitation_trust,
+                v2v_intent=bool(v2v_intent),
+                v2v_intent_horizon=int(source.get('v2v_intent_horizon') or v2v_model.V2V_INTENT_H))
 
 
 def run_gate(checkpoint, pairs, summary=None, options=None):
@@ -327,11 +400,17 @@ def run_gate(checkpoint, pairs, summary=None, options=None):
     opts = normalize_options(options)
     filter_stage = filter_report(opts, summary)
     extra = v2v_model.v2v_extra({'v2v': opts['v2v']}, opts['v2v_dim'])
-    policy, optimizer, generator, payload = load_gate_policy(checkpoint, extra)
+    intent_phase = None
+    if opts['v2v_intent']:
+        intent_phase = dict(weight=v2v_model.DEFAULT_INTENT_WEIGHT,
+                            horizon=opts['v2v_intent_horizon'], bounds=v2v_model.INTENT_BOUNDS)
+    policy, optimizer, generator, payload = load_gate_policy(
+        checkpoint, extra, intent=opts['v2v_intent'], intent_horizon=opts['v2v_intent_horizon'])
     reference = copy.deepcopy(policy)
     kwargs, trust_stage = trust_kwargs(opts, pairs, summary)
     run_report = bank_imitation.run(policy, optimizer, pairs, generator, reference,
-                                    coefficient=opts['coefficient'], passes=opts['passes'], **kwargs)
+                                    coefficient=opts['coefficient'], passes=opts['passes'],
+                                    **({'intent': intent_phase} if intent_phase else {}), **kwargs)
     entries, coop, raw = cooperative_entries(pairs, summary)
     fall_mean, fall_ci, fall_clusters = coop_fall_bootstrap(reference, policy, coop)
     with_v2v = sum(1 for s, _ in pairs if any(
@@ -356,6 +435,17 @@ def run_gate(checkpoint, pairs, summary=None, options=None):
                          fall_mean_mps2=fall_mean, fall_ci95=fall_ci, fall_clusters=fall_clusters,
                          entries=entry_toward_fractions(reference, policy, entries)),
         v2v_weights=v2v_weight_report(policy))
+    if opts['v2v_intent']:
+        report['intent'] = dict(enabled=True, horizon=opts['v2v_intent_horizon'],
+                                weight=v2v_model.DEFAULT_INTENT_WEIGHT,
+                                error_before_mps2=coop_intent_error(reference, coop),
+                                error_after_mps2=coop_intent_error(policy, coop),
+                                estimator='bank_imitation.intent_error: masked mean absolute '
+                                          'plan-future command error (m/s^2) on the cooperative pairs',
+                                pairs_with_intent_targets=sum(
+                                    1 for s, _ in coop if (s.get('context', {}) or {}).get('intent_target')),
+                                runner_report=run_report.get('intent'))
+        report['v2v_weights']['partner_intent'] = intent_weight_report(policy, opts['v2v_intent_horizon'])
     report['verdict'] = verdict(report)
     return report
 
@@ -363,7 +453,8 @@ def run_gate(checkpoint, pairs, summary=None, options=None):
 def verdict(report):
     """PASS iff: >=1 full pass, no registered KL stop and final KL within the runner limit,
     the cooperative error falls with the bootstrap CI entirely below 0, and the v2v input
-    weights moved (non-zero). Every failure is disclosed with its reason."""
+    weights moved (non-zero). With ``v2v_intent`` on: the partner-intent error falls and
+    the partner-intent input weights moved. Every failure is disclosed with its reason."""
     imitation, coop, weights = report['imitation'], report['cooperative'], report['v2v_weights']
     checks = dict(
         full_pass=imitation['passes_completed'] >= 1,
@@ -371,6 +462,13 @@ def verdict(report):
             imitation.get('stop_reason', '')).startswith(('pre-imitation', 'imitation minibatch', 'full-bank')),
         cooperative_error_falls=bool(coop['fall_ci95']) and coop['fall_ci95'][1] < 0.,
         v2v_weights_moved=bool(weights['moved']))
+    intent = report.get('intent')
+    if intent is not None:
+        checks['intent_error_falls'] = bool(intent['error_before_mps2'] is not None
+            and intent['error_after_mps2'] is not None
+            and intent['error_after_mps2'] < intent['error_before_mps2'])
+        partner = (report['v2v_weights'].get('partner_intent') or {})
+        checks['partner_intent_weights_moved'] = bool(partner.get('moved'))
     report['checks'] = checks
     reasons = [name for name, ok in checks.items() if not ok]
     report['reasons'] = reasons
@@ -380,14 +478,17 @@ def verdict(report):
 # ---------------------------------------------------------------- inputs and CLI
 
 def bank_inputs(bank_root, arm, training_seed, beta=1., max_decisions=None, v2v=True,
-                v2v_cfg=None, bank_filter=None, pair_flags=False):
+                v2v_cfg=None, bank_filter=None, pair_flags=False, intent=False,
+                intent_horizon=v2v_model.V2V_INTENT_H):
     """(pairs, summary) from the live B-REPLAY bank (CPU-only read of recorded receipts);
-    bank_filter='statistical' (BANKFILT READY) is applied per entry inside bank_pairs and
-    pair_flags=True (IMITFIX READY) adds the summary['pair_cooperative'] imitation flags."""
+    bank_filter='statistical' (BANKFILT READY) is applied per entry inside bank_pairs,
+    pair_flags=True (IMITFIX READY) adds the summary['pair_cooperative'] imitation flags,
+    intent=True (v2v_intent, DEFAULT OFF) adds the pairs' plan-future intent targets."""
     from . import replay_bank
     return replay_bank.bank_pairs(Path(bank_root), arm, int(training_seed), beta=float(beta),
                                   max_decisions=max_decisions, v2v=v2v, v2v_cfg=v2v_cfg,
-                                  bank_filter=bank_filter, pair_flags=pair_flags)
+                                  bank_filter=bank_filter, pair_flags=pair_flags,
+                                  intent=bool(intent), intent_horizon=int(intent_horizon))
 
 
 def pairs_file(path):
@@ -414,6 +515,11 @@ def main(argv=None):
                    help="apply the registered statistical bank filter (requires --bank-root)")
     p.add_argument('--imitation-trust', dest='imitation_trust', action='store_true',
                    help="run the imitation phase with the registered own_pass trust region")
+    p.add_argument('--v2v-intent', dest='v2v_intent', action='store_true',
+                   help='train and report the plan-future intent head (option v2v_intent, '
+                        'requires pairs carrying context["intent_target"])')
+    p.add_argument('--v2v-intent-horizon', dest='v2v_intent_horizon', type=int,
+                   default=v2v_model.V2V_INTENT_H)
     p.add_argument('--passes', type=int, default=5)
     p.add_argument('--coefficient', type=float, default=1.)
     p.add_argument('--out', type=Path, default=Path('COOPFIX_GATE_REPORT.json'))
@@ -424,7 +530,8 @@ def main(argv=None):
         p.error('--checkpoint is required for run')
     options = dict(v2v=a.v2v, v2v_dim=a.v2v_dim, passes=a.passes, coefficient=a.coefficient,
                    bank_filter='statistical' if a.bank_filter else None,
-                   imitation_trust='own_pass' if a.imitation_trust else None)
+                   imitation_trust='own_pass' if a.imitation_trust else None,
+                   v2v_intent=bool(a.v2v_intent), v2v_intent_horizon=a.v2v_intent_horizon)
     if a.pairs_file:
         if a.bank_filter:
             p.error('--bank-filter requires --bank-root (the rule needs the recorded receipts and traces)')
@@ -432,7 +539,9 @@ def main(argv=None):
     elif a.bank_root:
         pairs, summary = bank_inputs(a.bank_root, a.arm, a.training_seed, a.beta,
                                      a.max_decisions, v2v=a.v2v, bank_filter=options['bank_filter'],
-                                     pair_flags=bool(options['imitation_trust']))
+                                     pair_flags=bool(options['imitation_trust']),
+                                     intent=bool(options['v2v_intent']),
+                                     intent_horizon=options['v2v_intent_horizon'])
     else:
         p.error('one of --pairs-file or --bank-root is required for run')
     report = run_gate(a.checkpoint, pairs, summary, options)
