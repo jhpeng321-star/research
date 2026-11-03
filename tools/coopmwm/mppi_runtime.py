@@ -51,7 +51,7 @@ def label_list8_search(run):
                 def mean(key):
                     xs=costs[key]
                     return sum(x['team_delay'] if isinstance(x,dict) else x for x in xs)/len(xs)
-                plans=[a for a in actions if 'profile' in a]
+                plans=[a for a in actions if 'profile' in a and 'solo_of' not in a]  # coop_objective solos are WM-only
                 last[:]=[dict(copy.deepcopy(p),saving_vs_mappo=mean('MAPPO')-mean(p['id']),
                     saving_vs_policy=mean('policy')-mean(p['id']))
                     for p in sorted(plans,key=lambda p:(mean(p['id']),p['id']))]
@@ -62,6 +62,10 @@ def label_list8_search(run):
         if 'niches' in kwargs['config']:
             from .niche_collect import annotate
             last[:]=annotate(out,last,values[0],kwargs['config'])
+        if 'coop_objective' in out:
+            coop={f['id']:f['coop'] for f in out['finalists'] if 'coop' in f}
+            for p in last:
+                if p['id'] in coop:p['coop']=coop[p['id']]
         out['collection_top8']=last[:8]
         out['topk']=copy.deepcopy(last[:8]);out['available_k']=len(out['topk'])
         return out
