@@ -26,8 +26,11 @@ def accounting(root, cfg):
 def hooks(root, cfg):
     from . import replay_bank as rb, warm_health as health
     from . import bank_imitation, bank_statistics
-    # cfg['bank_statistics']: 'boot_v2' (registered default) or 'per_seed_v1' (owner 2026-11-03 21:45)
-    bank_statistics.install(rb, bank_rule=cfg.get('bank_statistics', 'boot_v2'), sources=cfg.get('replay_sources'))
+    # Owner 2026-11-03 21:45 + audit: the V2V runtime (B and R alike) uses per_seed_v1 only.
+    rule = cfg.get('bank_statistics', bank_statistics.PER_SEED)
+    if rule != bank_statistics.PER_SEED:
+        raise ValueError(f'V2V runtime requires bank_statistics=per_seed_v1, not {rule!r}')
+    bank_statistics.install(rb, bank_rule=rule, sources=cfg.get('replay_sources'))
     bank_imitation.run=bank_imitation.run_separate
     from .v2v_runtime import Policy, load_checkpoint
     from .accel_storage import read

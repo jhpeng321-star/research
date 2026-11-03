@@ -376,6 +376,19 @@ def certified_seeds(c):
             if e.get('admitted') is True and e.get('cooperative') is True]
 
 
+def certified_plans(r, c):
+    """{seed: plan} of the certified cooperative example per seed. Legacy per_seed_v1 views
+    carry no per-example plan (the first-seed chosen plan on both seeds); c4/verify-perseed all8
+    records carry each example's OWN plan - the lowest candidate index wins on a seed with several
+    cooperative examples (fixed rule, never outcome-selected)."""
+    out = {}
+    for e in sorted(((c or {}).get('per_seed_v1') or {}).get('examples', []),
+                    key=lambda e: (e['seed_index'], e.get('candidate_index') or 0)):
+        if e.get('admitted') is True and e.get('cooperative') is True and e['seed_index'] not in out:
+            out[e['seed_index']] = copy.deepcopy(e.get('plan') or r['chosen_plan'])
+    return out
+
+
 def certified_candidates(root, arm, sources=None):
     """(candidates, statuses): admitted positive decisions certified cooperative on >= 1 seed
     under per_seed_v1 (no replication requirement), oldest first, as (receipt, confirmation,
@@ -392,9 +405,10 @@ def certified_candidates(root, arm, sources=None):
             return [], statuses
     out, statuses = [], {}
     for r in decisions:
-        if r['status'] != 'accepted' or not (r['grade_veh_s'] or 0) > 0:
-            continue
         c = confirmed.get(r['verification_id'])
+        if (r['status'] != 'accepted' or not (r['grade_veh_s'] or 0) > 0) and not (
+                c is not None and c.get('verify_mode') == 'all8_both_seeds'):
+            continue                    # all8 records: seed-2-only winners of first-seed losers count
         co = (c or {}).get('cooperation') or {}
         status = 'not_confirmed' if c is None else co.get('cooperative_status', 'no_cooperation_record')
         seeds = certified_seeds(c)
@@ -447,19 +461,22 @@ def seed_snapshot(r, snap, seed):
     return dict(r, verification_id=r['verification_id']+'_seed2'), rb.replicate(snap, r['verification_id'])
 
 
-def state_jobs(r, snap, update, arm, new_state, old_state, seeds=SEEDS):
+def state_jobs(r, snap, update, arm, new_state, old_state, seeds=SEEDS, plans=None):
     """Per certified seed: all / solo_i / background NEW (+ fresh u3 reference) on that
-    example's own CRN snapshot. Seed 1 adopts the receipt's policy branch as the u3 reference
-    only when the decision snapshot policy is u3."""
+    example's own CRN snapshot and with that seed's certified plan group (plans={seed: plan};
+    default the first-seed chosen plan). Seed 1 adopts the receipt's policy branch as the u3
+    reference only when the decision snapshot policy is u3 AND seed 1 tests the chosen plan."""
     u3_snapshot = _policy_sha(snap) == sv._state_sha(old_state)
     out, adopted = {}, None
     for seed in sorted(seeds):
         receipt, sn = seed_snapshot(r, snap, seed)
+        if plans and seed in plans:
+            receipt = dict(receipt, chosen_plan=plans[seed])
         specs = ps.specs_for(sn, receipt, update, arm, new_state, old_state, isolated=True)
         if seed == 2 or not u3_snapshot:
             specs.append(_reference(sn, receipt, update, arm, old_state))
         out[seed] = specs
-    if u3_snapshot and 1 in out:
+    if u3_snapshot and 1 in out and (not plans or plans.get(1, r['chosen_plan']) == r['chosen_plan']):
         branch = r['branches'][0]
         adopted = dict(seed=1, verification_id=r['verification_id'], branches_dir=str(r['_branches']),
                        branch=dict(branch), J_veh_s=float(branch['J_veh_s']),
@@ -510,15 +527,18 @@ def plan(root, arm, control, new_state=None, old_state=None, offline=None, train
     states, snapshots, overages = [], {}, []
     for seed in sorted(seeds):
         r, c, crn_seeds = seeds[seed]
-        group = list(r['chosen_plan']['members'])
+        plans = certified_plans(r, c)
+        groups = {str(k): list(plans.get(k, r['chosen_plan'])['members']) for k in crn_seeds}
+        group = groups[str(min(crn_seeds))]
         end_s = int(r['window']['end_s'])
-        if not 2 <= len(group) <= MAX_GROUP:
-            raise ValueError(f'state {seed}: group size {len(group)} outside the registered '
-                             f'isolated diagnostic range 2..{MAX_GROUP}')
+        for g in groups.values():
+            if not 2 <= len(g) <= MAX_GROUP:
+                raise ValueError(f'state {seed}: group size {len(g)} outside the registered '
+                                 f'isolated diagnostic range 2..{MAX_GROUP}')
         if end_s > MAX_WINDOW_END_S:
             raise ValueError(f'state {seed}: window end {end_s} > registered {MAX_WINDOW_END_S}')
         snap = rb._decision_snapshot(root, arm, r, by_vid)
-        per_seed, adopted = state_jobs(r, snap, update, arm, new_state, old_state, crn_seeds)
+        per_seed, adopted = state_jobs(r, snap, update, arm, new_state, old_state, crn_seeds, plans)
         jobs = []
         for s, specs in per_seed.items():
             for spec, sn in specs:
@@ -537,7 +557,8 @@ def plan(root, arm, control, new_state=None, old_state=None, offline=None, train
         co = c.get('cooperation') or {}
         examples = {e['seed_index']: e for e in (c.get('per_seed_v1') or {}).get('examples', [])}
         states.append(dict(
-            seed=int(seed), verification_id=r['verification_id'], group=group, seeds=sorted(per_seed),
+            seed=int(seed), verification_id=r['verification_id'], group=group, groups=groups,
+            plan_ids={str(k): plans.get(k, r['chosen_plan'])['id'] for k in crn_seeds}, seeds=sorted(per_seed),
             window=dict(r['window']), grade_veh_s=float(r['grade_veh_s']),
             plan_cooperation_gain_veh_s=co.get('cooperation_gain_veh_s'),
             certification=dict(rule=GATE_RULE, certified_seeds=sorted(per_seed),
@@ -737,26 +758,27 @@ def state_metrics(state, receipts):
     members = list(state['group'])
     window = state['window']
     seeds = [int(s) for s in state.get('seeds', SEEDS)]
-    names = ['all', 'background', 'reference']+[f'solo{i}' for i in range(len(members))]
+    groups = {s: list((state.get('groups') or {}).get(str(s), members)) for s in seeds}
+    names = {s: ['all', 'background', 'reference']+[f'solo{i}' for i in range(len(groups[s]))] for s in seeds}
     out = dict(seed=state['seed'], verification_id=state['verification_id'], group=members, seeds=seeds,
                window=window, quotes=state.get('quotes'), cost=state.get('cost'),
                reference_adopted=bool(state.get('reference_adopted')))
     status = {(s, b): (receipts.get((s, b)) or ({'status': 'missing'},))[0]['status']
-              for s in seeds for b in names}
+              for s in seeds for b in names[s]}
     out['ungraded_branches'] = sorted(f'seed{s}/{b}' for (s, b), v in status.items() if v != 'graded')
 
     def J(s, b):
         return float(receipts[(s, b)][0]['J_veh_s'])
     per_seed = {}
     for s in seeds:
-        if any(status[(s, b)] != 'graded' for b in names):
+        if any(status[(s, b)] != 'graded' for b in names[s]):
             continue
-        ref = J(s, 'reference')
-        solos = {m: ref-J(s, f'solo{i}') for i, m in enumerate(members)}
-        best = max(members, key=lambda m: solos[m])
-        per_seed[s] = dict(J_reference_veh_s=ref, group_only_gain_veh_s=ref-J(s, 'all'),
+        ref, g = J(s, 'reference'), groups[s]
+        solos = {m: ref-J(s, f'solo{i}') for i, m in enumerate(g)}
+        best = max(g, key=lambda m: solos[m])
+        per_seed[s] = dict(group=g, J_reference_veh_s=ref, group_only_gain_veh_s=ref-J(s, 'all'),
                            solo_gain_veh_s=solos, best_solo_member=best, best_solo_gain_veh_s=solos[best],
-                           synergy_veh_s=J(s, f'solo{members.index(best)}')-J(s, 'all'),
+                           synergy_veh_s=J(s, f'solo{g.index(best)}')-J(s, 'all'),
                            background_only_delta_veh_s=ref-J(s, 'background'))
     out['per_seed'] = {str(s): v for s, v in per_seed.items()}
     if out['ungraded_branches']:
@@ -771,11 +793,11 @@ def state_metrics(state, receipts):
         return bank_statistics._stats([(tape(s, ref), tape(s, alt), window)])
     try:
         for s in seeds:
-            best = f'solo{members.index(per_seed[s]["best_solo_member"])}'
+            best = f'solo{groups[s].index(per_seed[s]["best_solo_member"])}'
             synergy = dict(stats(s, 'all', ref=best), best_solo_branch=best)
             per_seed[s].update(synergy_lower95_veh_s=synergy['lower95_one_sided_veh_s'], synergy_v2=synergy,
                                group_only_v2=stats(s, 'all'), background_only_v2=stats(s, 'background'),
-                               per_vehicle={m: stats(s, f'solo{i}') for i, m in enumerate(members)})
+                               per_vehicle={m: stats(s, f'solo{i}') for i, m in enumerate(groups[s])})
     except (bank_statistics._Missing, ValueError) as e:
         out.update(status='data_missing', complete=False, synergy_lower95_veh_s=None,
                    reason='per-unit tape data missing or inconsistent: '+repr(e))

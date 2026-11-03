@@ -1,8 +1,9 @@
 ﻿"""CPU tests for the exact gate runner (synthetic banks and synthetic job outputs, no SUMO):
 the offline fixed update through bank_imitation.run_separate on the live V2V loader, the
-cooperative-pair slice of the bank layout, the v2v / intent block layouts, boot_v2
-certification (replicated / single_seed / data_missing), per-arm sources, CRN-paired
-two-seed planning with u3 references, the boot_v2 paired-bootstrap synergy, the ledger
+cooperative-pair slice of the bank layout, the v2v / intent block layouts, per_seed_v1
+certification (per seed; replicated / seed1_only / data_missing; all8 per-seed plans), per-arm
+sources, planning on each certified seed's own CRN with u3 references, the single-seed
+per_seed_v1 paired-bootstrap synergy (>= 1 certified seed must pass on 986066), the ledger
 precharge / admission / running hooks of execute, and the PASS/FAIL verdict."""
 import json
 
@@ -735,3 +736,19 @@ def test_execute_admits_precharges_and_checks_running(gate_bank, tmp_path, monke
     assert all(q['status'] == 'claimed_previously_not_replayed' for q in again) and not log
     report = ceg.collect(control, record)                  # graded receipts feed collect
     assert all(s['ungraded_branches'] == [] for s in report['states'])
+
+
+def test_all8_examples_certify_each_seed_with_its_own_plan(gate_bank):
+    r = next(x for x in rb.bank_decisions(gate_bank, 'B') if x['episode']['world']['seed'] == 986048)
+    alt = dict(r['chosen_plan'], id='alt', members=list(reversed(r['chosen_plan']['members'])))
+    c = dict(verify_mode='all8_both_seeds', per_seed_v1=dict(examples=[
+        dict(seed_index=1, candidate_index=0, admitted=True, cooperative=False, plan=r['chosen_plan']),
+        dict(seed_index=2, candidate_index=3, admitted=True, cooperative=True, plan=alt),
+        dict(seed_index=2, candidate_index=5, admitted=True, cooperative=True, plan=r['chosen_plan'])]))
+    assert ceg.certified_seeds(c) == [2, 2] and ceg.certified_plans(r, c) == {2: alt}   # lowest index
+    snap = torch.load(rb.bank_root(gate_bank, 'B')/'snapshots'/'st_986048.pt', weights_only=False)
+    per_seed, adopted = ceg.state_jobs(r, snap, 0, 'B', Policy().state_dict(), Policy().state_dict(),
+                                       [2], {2: alt})
+    assert list(per_seed) == [2] and adopted is None
+    assert [s['branch'] for s, _ in per_seed[2]] == ['all', 'solo0', 'solo1', 'background', 'reference']
+    assert all(sn['policy_synergy'].get('group', alt['members']) == alt['members'] for _, sn in per_seed[2])

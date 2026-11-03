@@ -397,9 +397,11 @@ RULE_PS1 = ('per_seed_v1: a cooperative plan need not generalise across traffic 
             'verification is its own example: admit it iff THAT seed\'s per-unit paired block bootstrap '
             f'(policy-continues minus plan, B={BOOT_B}, RNG {BOOT_RNG_SEED} re-seeded per example, circular '
             f'{BLOCK_S} s blocks or per-vehicle units) has one-sided 95% lower bound > 0 AND that seed\'s '
-            'composite safety check passes (seed 1: extended-window deltas; seed 2: replication-window '
-            'deltas) AND, on seed 1, the existing later-harm (extended-window) check passes. Seed 2 has no '
-            'extended window: its later-harm is NOT MEASURED and disclosed per example (never imputed). '
+            'composite safety check on its OWN deltas passes (seed 1: extended window; seed 2: replication '
+            'window [+ seed-2 extended when recorded]; absent own deltas = data_missing, no fallback) AND '
+            'that seed later-harm (extended-window) check passes when measured. Seed-2 later-harm is used '
+            'when a seed-2 extended window is recorded, else NOT MEASURED, disclosed per example and admitted '
+            'only under SEED2_UNMEASURED_LATER_HARM=admit (never imputed). '
             'Imitation pairs of an example come from THAT seed\'s plan-branch tape. Cooperative label '
             'per example: that seed\'s best-solo minus group per-unit bootstrap lower bound > 0 when '
             'that seed\'s solos exist, else no_solos (admitted, not cooperative). replicated = '
@@ -408,14 +410,40 @@ SEED_DIRS = {1: ('first-seed decision', 'confirm_solo', 'solo'),
              2: ('confirm_replication', 'confirm_solo_replication', 'replication_solo')}
 
 
+SAFETY_WINDOWS = {1: ('extended',), 2: ('replication', 'extended_seed2')}
+
+
 def _seed_safety(c, seed_index):
-    """(ok, source): the composite MAIN04:26 rule on THIS seed's recorded deltas."""
-    deltas = (c.get('safety_deltas') or {}).get('extended' if seed_index == 1 else 'replication')
-    if deltas is not None:
-        from .bank_safety import verdict
-        return bool(verdict(deltas)['new_combined_rule']), ('extended_window_seed1' if seed_index == 1
-                                                          else 'replication_window_seed2')
-    return c.get('checks', {}).get('safety') is True, 'plan_level_check (per-seed deltas absent)'
+    """(ok, source): the composite MAIN04:26 rule on THIS seed's own recorded deltas only
+    (seed 1: extended window; seed 2: replication window, plus a seed-2 extended window when
+    recorded). Absent own-seed deltas -> _Missing (data_missing); never a plan-level or
+    other-seed fallback (audit 2026-11-03)."""
+    from .bank_safety import verdict
+    recorded = c.get('safety_deltas') or {}
+    names = [n for n in SAFETY_WINDOWS[seed_index] if recorded.get(n) is not None]
+    if SAFETY_WINDOWS[seed_index][0] not in names:
+        raise _Missing(f'seed-{seed_index} safety deltas ({SAFETY_WINDOWS[seed_index][0]!r}) absent; '
+                       'no plan-level or other-seed fallback')
+    ok = all(verdict(recorded[n])['new_combined_rule'] for n in names)
+    return bool(ok), '+'.join(f'{n}_window_seed{seed_index}' for n in names)
+
+
+# Seed-2 later harm: a recorded seed-2 extended-window result is used when present
+# (checks['no_later_harm_seed2'] or 'seed2_extended_advantage_veh_s'); otherwise it is
+# 'not_measured'. SEED2_UNMEASURED_LATER_HARM decides admission of unmeasured seed-2 examples:
+# 'admit' (default; disclosed per example and counted) or 'reject' (integrator's choice).
+SEED2_UNMEASURED_LATER_HARM = 'admit'
+
+
+def _seed_later_harm(c, seed_index):
+    """True / False / None (not measured) from THIS seed's own extended window."""
+    checks = c.get('checks') or {}
+    if seed_index == 1:
+        return checks.get('no_later_harm') is True
+    if isinstance(checks.get('no_later_harm_seed2'), bool):
+        return checks['no_later_harm_seed2']
+    adv = c.get('seed2_extended_advantage_veh_s')
+    return None if adv is None else bool(float(adv) > 0)
 
 
 def _seed_cooperation(bank, c, seed_index, plan_tape, window, admitted, group_size):
@@ -453,12 +481,13 @@ def _seed_example(bank, c, seed_index, receipt, branches_dir, plan_index, advant
     plan = _read_result(branches_dir, receipt['verification_id'], branch)
     window = receipt['window']
     st = _stats([(pol, plan, window)])
-    checks = c.get('checks') or {}
-    later = checks.get('no_later_harm') is True if seed_index == 1 else None
+    later = _seed_later_harm(c, seed_index)
     safe, safety_source = _seed_safety(c, seed_index)
     lower = st['lower95_one_sided_veh_s']
     if later is False:
-        ok, reason = False, 'seed-1 later-harm check failed (extended-window advantage <= 0)'
+        ok, reason = False, f'seed-{seed_index} later-harm check failed (extended-window advantage <= 0)'
+    elif later is None and SEED2_UNMEASURED_LATER_HARM == 'reject':
+        ok, reason = False, f'seed-{seed_index} later-harm NOT MEASURED and the policy rejects unmeasured examples'
     elif not safe:
         ok, reason = False, f'seed-{seed_index} composite safety check failed ({safety_source})'
     elif not lower > 0:
@@ -466,7 +495,7 @@ def _seed_example(bank, c, seed_index, receipt, branches_dir, plan_index, advant
     else:
         ok = True
         reason = (f'seed-{seed_index} lower95 > 0, safety pass'
-                  + (', later-harm pass' if later else ', later-harm NOT MEASURED on seed 2'))
+                  + (', later-harm pass' if later else f', later-harm NOT MEASURED on seed {seed_index}'))
     ex = dict(seed_index=seed_index, example_id=f'{c["verification_id"]}#s{seed_index}', admitted=ok,
               status='admitted' if ok else 'rejected', reason=reason, admission=st,
               lower95_one_sided_veh_s=lower, total_veh_s=st['pooled_total_veh_s'],
@@ -544,10 +573,14 @@ def confirmations_per_seed(original, rb, root, arm, sources=()):
     bank = Path(rb.bank_root(root, arm))
     from .solo_seed2_links import merge
     conf = merge(bank, conf)
+    all8 = all8_records(bank)
+    conf = {vid: c for vid, c in conf.items() if vid not in all8}
 
     def key(vid):
-        return (PER_SEED, str(root), arm, vid, conf[vid].get('confirmation_sha256'))
+        return (PER_SEED, SEED2_UNMEASURED_LATER_HARM, str(root), arm, vid, conf[vid].get('confirmation_sha256'))
     need = [vid for vid in conf if key(vid) not in _CACHE]
+    evaluable_all8 = sum(any(e.get('status') != 'data_missing' for e in v['per_seed_v1']['examples'])
+                         for v in all8.values())
     if need:
         receipts = {r['verification_id']: r for r in rb.bank_decisions(root, arm, sources=sources)}
         fresh, attempted, all_missing, first = {}, 0, 0, {}
@@ -560,7 +593,7 @@ def confirmations_per_seed(original, rb, root, arm, sources=()):
                     all_missing += 1
                     if len(first) < 3:
                         first[vid] = v['per_seed_v1']['reason']
-        if attempted and all_missing >= attempted:
+        if attempted and all_missing >= attempted and not evaluable_all8:
             raise BankDataMissing(
                 f'per_seed_v1: per-unit outcome data absent for every example of all {attempted} complete '
                 f'confirmations of arm {arm}; required: first-seed receipt + policy/chosen tapes and/or '
@@ -568,7 +601,28 @@ def confirmations_per_seed(original, rb, root, arm, sources=()):
                 'missing: '+json.dumps(first))
         for vid, v in fresh.items():
             _CACHE[key(vid)] = v
-    return {vid: _CACHE[key(vid)] for vid in conf}
+    out = {vid: _CACHE[key(vid)] for vid in conf}
+    out.update(all8)
+    return out
+
+
+ALL8_RECORDS = 'confirmations_all8'
+
+
+def all8_records(bank):
+    """{vid: sealed all8_both_seeds record} (c4/verify-perseed verify_perseed.confirm_all8 layout:
+    <bank>/confirmations_all8/<vid>.json, bank_rule='per_seed_v1', one example per (candidate,
+    seed) with its OWN plan and that seed's tape). Each replaces that decision's legacy view and
+    is added for decisions without one (first-seed-rejected decisions with a seed-2 winner)."""
+    from .exact_grade import verify_sealed
+    out = {}
+    for p in sorted((Path(bank)/ALL8_RECORDS).glob('*.json')):
+        v = json.loads(p.read_text())
+        verify_sealed(v, 'confirmation_sha256')
+        if v.get('bank_rule') != PER_SEED or 'examples' not in (v.get('per_seed_v1') or {}):
+            raise ValueError(f'{p}: not a per_seed_v1 all8 record')
+        out[v['verification_id']] = v
+    return out
 
 
 def _install_per_seed(rb, sources=None):
@@ -596,6 +650,8 @@ def report_per_seed(rb, root, arm, sources=()):
         for e in ps['examples']:
             syn = e.get('synergy') or {}
             rows.append(dict(verification_id=vid, example_id=e['example_id'], seed_index=e['seed_index'],
+                             record=('all8' if c.get('verify_mode') == 'all8_both_seeds' else 'legacy'),
+                             plan_id=e.get('plan_id'), candidate_index=e.get('candidate_index'),
                              policy_version=c.get('policy_version'), admitted=e['admitted'], status=e['status'],
                              reason=e['reason'], unit_source=(e.get('admission') or {}).get('unit_source'),
                              lower95_veh_s=e.get('lower95_one_sided_veh_s'), total_veh_s=e.get('total_veh_s'),

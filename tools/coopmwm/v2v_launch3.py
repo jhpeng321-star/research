@@ -40,8 +40,7 @@ ARMS = ('A', 'B', 'R')
 INTENT_OPTIONS = dict(v2v=True, v2v_dim=48, v2v_intent=True,
     v2v_intent_horizon=5, v2v_intent_loss_weight=1.0)
 BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
-    bank_statistics='boot_v2')
-BANK_RULES_ALLOWED = ('boot_v2', 'per_seed_v1')
+    bank_statistics='per_seed_v1')   # owner 2026-11-03 21:45 + audit: per_seed_v1 only (B and R)
 DIAGNOSTIC_SCHEDULE = dict(A=dict(lessons=[], isolated=[]),
     B=dict(lessons=[6, 12, 18, 24], isolated=[6, 12, 18, 24]),
     R=dict(lessons=[], isolated=[12, 24]))
@@ -255,8 +254,6 @@ def bind_runtime(value, *, root, source_root):
         raise Refused('V2V_RUNTIME config object required')
     for key, want in dict(INTENT_OPTIONS, **BANK_OPTIONS).items():
         have = cfg.get(key)
-        if key == 'bank_statistics' and have in BANK_RULES_ALLOWED:
-            continue        # owner 2026-11-03 21:45: per_seed_v1 selectable; boot_v2 stays the default
         if have != want or isinstance(have, bool) != isinstance(want, bool):
             raise Refused('runtime option ' + key + ' differs: ' + repr(have))
     if 'v2v_intent_weight' in cfg:

@@ -460,10 +460,16 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     v2v_counts = dict(pairs=0, kept=0, excluded_missing_prev_second=0,
                       excluded_missing_partner_command=0, trace_missing=False)
     for r in decisions:
-        if r['status'] != 'accepted' or not r['grade_veh_s'] or r['grade_veh_s'] <= 0:
-            counts['nonpositive'] += 1;continue
-        counts['positive'] += 1
         c = conf.get(r['verification_id'])
+        if r['status'] != 'accepted' or not r['grade_veh_s'] or r['grade_veh_s'] <= 0:
+            if not (c is not None and c.get('bank_rule') == 'per_seed_v1'):
+                counts['nonpositive'] += 1;continue
+            # per_seed_v1 all8 record of a first-seed-rejected decision: a seed-2-only winner
+            # is admitted from its own seed-2 tape (owner 2026-11-03 21:45/22:05).
+            counts['per_seed_first_seed_nonpositive_considered'] = counts.get(
+                'per_seed_first_seed_nonpositive_considered', 0)+1
+        else:
+            counts['positive'] += 1
         if c is None:
             counts['unconfirmed'] += 1;continue       # MAIN: only plans that actually work
         if not c['admitted']:
@@ -493,7 +499,8 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
         for branches_dir, tape_vid, branch, advantage, intent_key, cooperative, gain, ex in examples:
             if max_decisions is not None and len(entries)>=max(0,int(max_decisions)):
                 counts['admitted_excess_not_used']+=1;continue
-            plan = r['chosen_plan']
+            # per_seed_v1 all8 examples carry their OWN plan (seeds may admit different candidates)
+            plan = ex['plan'] if ex is not None and ex.get('plan') is not None else r['chosen_plan']
             result_path = Path(branches_dir)/tape_vid/branch['branch']/'RESULT.json'
             from .accel_storage import read
             tape = read(result_path)
@@ -522,6 +529,9 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                        group_size=coop.get('group_size'),
                        cooperation_gain_veh_s=coop.get('cooperation_gain_veh_s'))
             if ex is not None:
+                row.update(plan_id=plan['id'], group_size=ex.get('group_size', coop.get('group_size')),
+                           candidate_index=ex.get('candidate_index'),
+                           record=('all8' if c.get('verify_mode') == 'all8_both_seeds' else 'legacy'))
                 row.update(example_id=ex['example_id'], seed_index=ex['seed_index'],
                            seed_advantage_veh_s=advantage, lower95_one_sided_veh_s=ex['lower95_one_sided_veh_s'],
                            later_harm=ex['later_harm'], cooperative_status=ex['cooperative_status'],

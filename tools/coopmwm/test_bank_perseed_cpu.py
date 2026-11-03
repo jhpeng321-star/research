@@ -213,7 +213,8 @@ def test_B_and_R_identical(tmp_path, ps):
     for arm in ('B', 'R'):
         make(tmp_path, 'x', lose(), win(), arm=arm, syn1=noisy(3., .5, 110), syn2=noisy(3., .5, 111))
     b, r = ps(tmp_path, 'B')['x'], ps(tmp_path, 'R')['x']
-    strip = lambda c: [{k: v for k, v in e.items() if k != 'tape'} for e in c['per_seed_v1']['examples']]
+    def strip(c):
+        return [{k: v for k, v in e.items() if k != 'tape'} for e in c['per_seed_v1']['examples']]
     assert strip(b) == strip(r)
     pb, sb = rb.bank_pairs(tmp_path, 'B', 12345)
     pr, sr = rb.bank_pairs(tmp_path, 'R', 12345)
@@ -289,15 +290,94 @@ def test_report_and_preview_cli(tmp_path, monkeypatch):
         bs.main(['preview', '--root', str(tmp_path), '--arm', 'B', '--out', str(out), '--rule', 'per_seed_v1'])
 
 
-def test_live_config_key_selects_rule(tmp_path, monkeypatch):
+def test_live_config_requires_per_seed_v1(tmp_path, monkeypatch):
     from tools.coopmwm import v2v_launch3 as launch
     from tools.coopmwm import v2v_live
     seen = []
     monkeypatch.setattr(bs, 'install', lambda rb_, bank_rule='boot_v2', sources=None: seen.append(bank_rule))
     monkeypatch.setattr(bi, 'run', bi.run)
     v2v_live.hooks(tmp_path, dict(bank_statistics='per_seed_v1'))
-    v2v_live.hooks(tmp_path, dict(bank_statistics='boot_v2'))
     v2v_live.hooks(tmp_path, dict())
-    assert seen == ['per_seed_v1', 'boot_v2', 'boot_v2']
-    assert launch.BANK_OPTIONS['bank_statistics'] == 'boot_v2'
-    assert set(launch.BANK_RULES_ALLOWED) == {'boot_v2', 'per_seed_v1'}
+    assert seen == ['per_seed_v1', 'per_seed_v1']
+    with pytest.raises(ValueError, match='per_seed_v1'):
+        v2v_live.hooks(tmp_path, dict(bank_statistics='boot_v2'))
+    assert launch.BANK_OPTIONS['bank_statistics'] == 'per_seed_v1'
+
+
+def test_seed2_safety_needs_its_own_deltas_and_seed2_later_harm_when_recorded(tmp_path, ps, monkeypatch):
+    make(tmp_path, 'nodelta', win(), win(), deltas=dict(extended=dict(SAFE)))
+    make(tmp_path, 'harm2', win(), win(), checks=dict(replication=True, no_later_harm=True, safety=True,
+                                                      no_later_harm_seed2=False))
+    c = make(tmp_path, 'ok2', win(), win())
+    conf = ps(tmp_path, 'B')
+    ex = {e['seed_index']: e for e in conf['nodelta']['per_seed_v1']['examples']}
+    assert ex[1]['admitted'] and ex[2]['status'] == 'data_missing' and 'safety deltas' in ex[2]['reason']
+    ex = {e['seed_index']: e for e in conf['harm2']['per_seed_v1']['examples']}
+    assert ex[1]['admitted'] and not ex[2]['admitted'] and ex[2]['later_harm'] == 'fail'
+    assert {e['seed_index']: e['later_harm'] for e in conf['ok2']['per_seed_v1']['examples']} == {
+        1: 'pass', 2: 'not_measured'}
+    assert c
+    monkeypatch.setattr(bs, 'SEED2_UNMEASURED_LATER_HARM', 'reject')
+    ex = {e['seed_index']: e for e in ps(tmp_path, 'B')['ok2']['per_seed_v1']['examples']}
+    assert ex[1]['admitted'] and not ex[2]['admitted'] and 'NOT MEASURED' in ex[2]['reason']
+
+
+def test_r_lag_cap_counts_examples(tmp_path, ps):
+    make(tmp_path, 'both', win(), win())
+    pairs, s = rb.bank_pairs(tmp_path, 'B', 12345, max_decisions=1)
+    assert len(s['entries']) == 1 and s['counts']['admitted_excess_not_used'] == 1 and len(pairs) == D
+    assert rb.imitation_decision_cap(dict(exact_imitation=dict(entries=s['entries']))) == 1
+
+
+def all8_record(root, vid, arm='B'):
+    """A sealed c4/verify-perseed all8 record for a FIRST-SEED-REJECTED decision whose seed-2
+    winner is a DIFFERENT candidate plan ('q', 3 members) than the first-seed chosen plan."""
+    bank = rb.bank_root(root, arm)
+    rng = np.random.default_rng(7)
+    base = 2.+rng.random(N)
+    first = write_receipt(bank/'sumo_verification', vid, tape(base), plan_tape(base+noisy(1., .5, 120), 1),
+                          arm)                                   # first seed: chosen plan loses
+    assert first['grade_veh_s'] < 0 and first['status'] == 'accepted'
+    q = dict(id='q', members=['c1', 'c2', 'c3'], duration_s=D)
+    s2_dir = bank/'confirm_seed2_all8'
+    branch_tape = plan_tape(base-win(), 2, q['members'])
+    for st in branch_tape['steps']:
+        st['sample']['plan_executions'][0]['plan_id'] = 'q'
+    s2 = write_receipt(s2_dir, vid+'_s2', tape(base), branch_tape, arm, q['members'])
+    ex2 = dict(seed_index=2, candidate_index=1, example_id=f'{vid}#c2#s2', plan=q, plan_id='q',
+               duration_s=D, members=q['members'], group_size=3, admitted=True, status='admitted',
+               reason='seed-2 lower95 > 0', lower95_one_sided_veh_s=10., advantage_veh_s=s2['grade_veh_s'],
+               later_harm='not_measured', cooperative=True, cooperative_status='cooperative',
+               synergy=dict(lower95_one_sided_veh_s=4., pooled_total_veh_s=9.),
+               tape=dict(branches_dir=str(s2_dir/'branches'), verification_id=vid+'_s2',
+                         branch=dict(s2['branches'][1]), window=dict(s2['window']), seed_index=2,
+                         intent_entry=f'{vid}/seed2/cand1'))
+    ex1 = dict(seed_index=1, candidate_index=0, example_id=f'{vid}#c1#s1', plan_id='p', admitted=False,
+               status='rejected', reason='seed-1 lower bound <= 0', cooperative=False,
+               cooperative_status='not_admitted', later_harm='not_measured')
+    rec = dict(schema='coopmwm/verify-perseed/v1', verify_mode='all8_both_seeds', bank_rule='per_seed_v1',
+               verification_id=vid, arm=arm, policy_version='u3', t0=T0, admitted=True,
+               mean_replicated_advantage_veh_s=s2['grade_veh_s'],
+               per_seed_v1=dict(examples=[ex1, ex2], admitted_seeds=[2], cooperative_seeds=[2],
+                                replicated=False, reason='x'),
+               cooperation=dict(group_size=3, cooperative=True, cooperative_seeds=[2], replicated=False))
+    (bank/bs.ALL8_RECORDS).mkdir(parents=True, exist_ok=True)
+    (bank/bs.ALL8_RECORDS/(vid+'.json')).write_text(json.dumps(xg._seal(rec, 'confirmation_sha256')))
+    return rec
+
+
+def test_all8_records_seed2_only_winner_with_its_own_plan(tmp_path, ps):
+    make(tmp_path, 'legacy', win(), win())                     # legacy confirmation still read
+    all8_record(tmp_path, 'a8')
+    conf = ps(tmp_path, 'B')
+    assert conf['a8']['verify_mode'] == 'all8_both_seeds' and conf['legacy']['bank_rule'] == 'per_seed_v1'
+    pairs, s = rb.bank_pairs(tmp_path, 'B', 12345)
+    a8 = [e for e in s['entries'] if e['verification_id'] == 'a8']
+    assert len(a8) == 1 and a8[0]['seed_index'] == 2 and a8[0]['plan_id'] == 'q' and a8[0]['record'] == 'all8'
+    assert a8[0]['grade_veh_s'] < 0 and a8[0]['weight'] == 1. and a8[0]['cooperative'] is True
+    assert s['counts']['per_seed_first_seed_nonpositive_considered'] == 1
+    q_pairs = [p for p, _ in pairs if p['behaviour']['proposal_members'] == ['c1', 'c2', 'c3']]
+    assert len(q_pairs) >= D and {p['behaviour']['seed_tag'] for p in q_pairs} == {2}
+    rep = bs.report_per_seed(rb, tmp_path, 'B')
+    row = next(r for r in rep['entries'] if r['example_id'] == 'a8#c2#s2')
+    assert row['record'] == 'all8' and row['plan_id'] == 'q' and row['admitted']
