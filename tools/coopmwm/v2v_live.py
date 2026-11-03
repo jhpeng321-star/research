@@ -233,12 +233,53 @@ def _require_launch3(root, cfg):
         raise ValueError('V2V_STARTED.json already exists: another launcher owns this root')
 
 
-def launch3_check(root, cfg, stage=None, arm=None):
+def remaining_phase_costs(root):
+    """Exact remaining registered phase_costs for a (re)started watcher gate.
+
+    requote's contract: a later wave charges its exact remaining positive
+    phase_costs, never the whole initial run again. A watcher restart therefore
+    subtracts from the registered V2V_PHASES quote exactly what this root's
+    authoritative ledger already charged per phase (children charge the same
+    registered constants the watcher spawns them with). Only actual ledger
+    amounts are subtracted, so the result never rounds down below the real
+    remaining work; phases with no positive remainder are omitted because
+    requote refuses non-positive costs. An untouched ledger returns None and
+    the caller passes None: requote then expands the unchanged full quote, so
+    fresh-root behaviour is byte-identical. A missing/malformed ledger also
+    degrades to the full quote; requote re-checks it authoritatively.
+    """
+    from . import v2v_launch3,storage
+    try:entries=storage.ledger(root)
+    except (OSError,ValueError):return None
+    spent={}
+    for entry in entries:
+        if not isinstance(entry,dict):continue
+        phase,amount=entry.get('phase'),entry.get('sim_s')
+        if isinstance(phase,str) and type(amount) is int and amount>0:
+            spent[phase]=spent.get(phase,0)+amount
+    if not spent:return None
+    remaining={phase:quote-spent.get(phase,0)
+        for phase,quote in v2v_launch3.V2V_PHASES.items()}
+    costs={phase:cost for phase,cost in remaining.items() if cost>0}
+    return costs or None
+
+
+def watch_gate(root, cfg):
+    """Initial launch3 gate of a (re)started watcher: the full registered quote
+    on a fresh ledger, the exact remaining quote once earlier waves (smoke
+    A/B/R updates) have already charged part of the allocation."""
+    return launch3_check(root,cfg,phase_costs=remaining_phase_costs(root))
+
+
+def launch3_check(root, cfg, stage=None, arm=None, phase_costs=None):
     """Validate a registered additive trust anchor immediately before dispatch.
 
     The anchor lives outside immutable V2V_RUNTIME, avoiding a circular hash
     between the runtime and the launch binding that pins that runtime.
     Only resource waits are retryable; every other failed condition is fatal.
+    A stageless watcher (re)start takes the exact remaining registered
+    phase_costs via ``phase_costs`` (None keeps the full frozen-slate quote);
+    spawned children always keep their own registered unit cost.
     """
     from . import v2v_launch3 as launch3
     from .protocol import sha
@@ -266,7 +307,9 @@ def launch3_check(root, cfg, stage=None, arm=None):
         costs={'v2v_train':24*1200*(1 if stage=='smoke' else 23)}
     elif stage in ('test8','test24'):
         costs={'v2v_interim' if stage=='test8' else 'v2v_final':3*96*1200}
-    elif stage is not None:
+    elif stage is None:
+        costs=phase_costs
+    else:
         raise ValueError('unregistered launch3 stage: '+str(stage))
     result=launch3.wait_for_preflight(authority['binding_path'],
         binding_sha256=authority['binding_sha256'],root=root,
@@ -294,7 +337,9 @@ def watch(root):
     _require_launch3(root,cfg)
     # Full frozen-slate quote and all launch prerequisites once before the
     # first smoke; each new child then checks its own remaining phase cost.
-    gate=launch3_check(root,cfg)
+    # A restarted watcher (smokes already charged part of v2v_train) passes the
+    # exact remaining quote instead; a fresh ledger keeps the full quote.
+    gate=watch_gate(root,cfg)
     atomic(root/'V2V_WATCH_STATUS.json',dict(ready=True,rule='registered launch3 preflight checked',
         unix=time.time(),stage='resource_wait',children=children,preflight=bool(gate)))
     children=[spawn(root,'smoke',a) for a in ('A','B','R')]
