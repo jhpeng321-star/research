@@ -1,7 +1,8 @@
 """No SUMO, outcomes, model imports or reservation in the V2V quote."""
 import unittest
 
-from tools.coopmwm.v2v_budget_quote import quote, receipt_scenarios
+from tools.coopmwm.v2v_budget_quote import (quote, receipt_scenarios,
+    reduced_schedule_quote, reduced_schedule_scenarios)
 
 
 class BudgetQuoteTests(unittest.TestCase):
@@ -71,6 +72,53 @@ class BudgetQuoteTests(unittest.TestCase):
         reports['lesson_R']['entries'][0]['status'] = 'failed'
         with self.assertRaises(ValueError):
             receipt_scenarios(reports)
+
+    @staticmethod
+    def reduced_reports(n=1):
+        return {kind+'_'+a:dict(arm=a, entries=[dict(status='graded', group=['c1', 'c2'],
+            window=dict(end_s=720), new_policy_branch=dict(window=dict(end_s=720))) for _ in range(n)])
+            for a in ('B', 'R') for kind in ('lesson', 'synergy')}
+
+    def test_main1406_exact_schedule_and_full_prefix(self):
+        q = reduced_schedule_quote(self.reduced_reports())
+        self.assertEqual(q['fixed_sim_s'], 2764800)
+        self.assertEqual(q['phase_costs']['lessons'], dict(A=0, B=2880, R=0))
+        self.assertEqual(q['phase_costs']['policy_synergy'], dict(A=0, B=14400, R=7200))
+        self.assertEqual(q['frozen_slate_total_sim_s'], 2789280)
+        self.assertEqual(q['diagnostic_updates']['isolated_synergy']['R'], [12, 24])
+        self.assertEqual(q['diagnostic_updates']['lessons']['A'], [])
+        self.assertEqual(q['episode_test_updates']['R'], [8, 24])
+        self.assertEqual(q['phase_costs']['paired_branch'], 0)
+        self.assertFalse(q['launch_authorized'])
+        self.assertFalse(q['is_full_run_upper_bound'])
+
+    def test_main1406_only_authorized_fallbacks_and_reuse(self):
+        reports = self.reduced_reports()
+        q = reduced_schedule_quote(reports, reference_reuse=True)
+        self.assertEqual(q['frozen_slate_total_sim_s'], 2784960)
+        q = reduced_schedule_quote(reports, drop_r_u8=True, b_diagnostic_updates=(12,24))
+        self.assertEqual(q['fixed_sim_s'], 2649600)
+        self.assertEqual(q['frozen_slate_total_sim_s'], 2665440)
+        self.assertEqual(q['episode_test_updates']['R'], [24])
+        self.assertEqual(len(q['arms']), 3)
+        self.assertEqual(len(q['fallback_drops']), 2)
+        with self.assertRaises(ValueError):
+            reduced_schedule_quote(reports, b_diagnostic_updates=(24,))
+
+    def test_main1406_fallback_chooses_on_cost_not_outcomes(self):
+        reports = self.reduced_reports(n=12)
+        q = reduced_schedule_scenarios(reports)
+        self.assertEqual(q['cost_feasible_without_reuse'], 'drop_r_u8_fresh')
+        # Pure metadata arithmetic; outcome/grade fields cannot steer the quote.
+        for report in reports.values():
+            for row in report['entries']:row['delta_veh_s'] = -1e9
+        self.assertEqual(q, reduced_schedule_scenarios(reports))
+
+    def test_incomplete_synergy_never_silently_underquotes(self):
+        reports = self.reduced_reports()
+        reports['synergy_B']['entries'].append(dict(status='failed', reason='missing metadata'))
+        with self.assertRaisesRegex(ValueError, 'never omit failed states'):
+            reduced_schedule_quote(reports)
 
 
 if __name__ == '__main__':
