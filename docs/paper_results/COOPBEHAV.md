@@ -293,6 +293,14 @@ remains not ready. Both producer trace handoffs retain the same evidence limits.
 All completed analyses and the existing120s watcher were preserved. Receipt:
 `tools/coopbehav/evidence/RESUME_20261103_2153.json`.
 
+The 22:36 local continuation inherited clean HEAD `ba76743d`. PID29244 again
+matches its recorded creation identity and command; polling status has advanced,
+stderr is empty and no report is active. Direct read-only gpuR inspection confirms
+the same canonical31-pair u15 TRAIN index, the same two u03 DEV indices and the
+not-ready audit index, all with unchanged hashes. Producer trace contracts retain
+the documented coverage limits. Receipt:
+`tools/coopbehav/evidence/RESUME_20261103_2236.json`.
+
 - CPU suite: **59 synthetic tests** covering all four detectors, identity/slot
   recycling, native/policy-mean contracts, credit reconstruction, discovery,
   source precision/hashes, complete reports and advancing-index publication,
