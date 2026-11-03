@@ -71,7 +71,8 @@ def _projected_step(policy,optimizer,reference,samples,limit,lr_scale,base_lr):
     trials=0
     while True:
         trials+=1
-        for g,lr in zip(groups,base_lr):g['lr']=lr*lr_scale
+        # load_state_dict rebuilds param_groups; always read the live ones.
+        for g,lr in zip(optimizer.param_groups,base_lr):g['lr']=lr*lr_scale
         optimizer.step()
         kl=joint_kl(policy,reference,samples)
         if kl<=limit:return lr_scale,kl,trials
