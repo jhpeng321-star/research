@@ -1,6 +1,12 @@
 # S-COOPMWM — live checks
 
 ## Fresh-session adoption — Nov3 22:31 UTC+8
+- Read-only guard reporting repaired and verified at22:45: memory-recovery
+  owners411152/411153 are correctly reported exited and B/R paused=true under
+  the registered owner-specific hold. Shared-root health remains unchanged.
+  17 CPU tests plus2subtests pass. Disk has recovered to6,095,859,712bytes,
+  still346,591,232bytes below the6GiB V2V gate. No process was restarted.
+  Evidence:`coopmwm/WARM_STATE_SCOPED_HOLD_REPAIR_2245.json`.
 - Completed warm-memory qualification/restarts and all existing work are adopted.
   Actual durable legacy checkpoints remain **A48/B21/R20**; the four old B/R
   arm/grader owners are absent under their registered intentional resource hold.

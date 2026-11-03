@@ -38,6 +38,39 @@ class WarmStateTests(unittest.TestCase):
         self.assertEqual(v['owners']['B']['state'],'S')
         self.assertEqual(v['owners']['B']['dispatch_receipt'],'B_REPLAY_CONTINUED_LESSONWINDOW.json')
 
+    def test_memory_recovery_and_scoped_hold_survive_shared_root_pause_retirement(self):
+        children=[dict(self.owner(22),component='arm',arm='B'),
+            dict(self.owner(23),component='arm',arm='R'),
+            dict(self.owner(24),component='grade',arm='B')]
+        v=self.collect({'B_REPLAY_COMPOSITE_STARTED_0957.json':dict(children=[
+                dict(self.owner(),component='arm',arm='B')]),
+            'memory_RECOVERY_STARTED.json':dict(children=children),
+            'LEGACY_ONLY_RESOURCE_HOLD_2203.json':dict(amendment_sha256='registered-hold',
+                legacy_training_held=True,owners_exited=children),
+            'AUTHORITY.md':'registered-hold'})
+        self.assertEqual(v['owners']['B']['owner']['pid'],22)
+        self.assertEqual(v['owners']['B']['state'],'exited')
+        self.assertEqual(v['owners']['R']['dispatch_receipt'],'memory_RECOVERY_STARTED.json')
+        self.assertEqual(v['service_owners']['replay_grader_B']['owner']['pid'],24)
+        self.assertTrue(v['paused']['B']);self.assertTrue(v['paused']['R'])
+        self.assertEqual(v['legacy_owner_hold']['held_arms'],['B','R'])
+        self.assertIsNone(v['stop'])
+        self.assertEqual(v['pause_receipts'],[])
+
+    def test_scoped_hold_matches_owner_identity_only_and_requires_registration(self):
+        files={'memory_RECOVERY_STARTED.json':dict(children=[
+                dict(self.owner(),component='arm',arm='B')]),
+            'LEGACY_ONLY_RESOURCE_HOLD_2203.json':dict(amendment_sha256='registered-hold',
+                legacy_training_held=True,owners_exited=[
+                    dict(self.owner(22),component='arm',arm='B')]),
+            'AUTHORITY.md':'registered-hold'}
+        v=self.collect(files)
+        self.assertFalse(v['paused']['B'])
+        self.assertEqual(v['legacy_owner_hold']['held_arms'],[])
+        files['AUTHORITY.md']='different authority'
+        with self.assertRaisesRegex(AssertionError,'unregistered legacy hold'):
+            self.collect(files)
+
     def test_fast_resume_owners_override_closed_dns_and_surface_new_failure(self):
         files={'FAST_B_DISPATCH_1844.json':self.owner(),
             'DNS_B_DISPATCH_1651.json':self.owner(22),

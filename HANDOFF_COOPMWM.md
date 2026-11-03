@@ -8,9 +8,11 @@
 - Fresh identity-checked memory_RECOVERY_STATUS_1793716212369358100 confirms
   B21/R20 and all4 held legacy arm/grader PIDs ABSENT. Their expected HealthPause
   failures remain evidence, not a restart trigger. A48 already complete.
-- warm_watch state still exposes historical owners and reports B/R paused=false
-  after shared-root pause retirement; use memory recovery/legacy hold receipts for
-  the actual intentional old-owner hold, never infer permission to restart from it.
+- warm_watch state reporting bug FIXED in this continuation: prefer the current
+  memory_RECOVERY_STARTED owners and annotate registered owner-specific HOLD.
+  Actual remote read-only check1793717129.87 now shows B411152/R411153 exited,
+  paused=true BOTH while shared-root health remainsOK. 17CPU+2subtests PASS;
+  WARM_STATE_SCOPED_HOLD_REPAIR_2245.json. Never infer resumption permission.
 - Fresh SEARCH_CURRENT_AUDIT_1793716279288040900: B4 pending assigned searches,
   R0 pending; a B answer completed at1793716163.88, so queue is still advancing.
   Existing4slot services retained; no new search/physics/gates/PID control dispatched.
@@ -29,6 +31,8 @@
   SHA-manifested (including READY). Seven local CPU checks PASS; no remote test
   or runtime dispatch. Once READY is merged, use a NEW generation (I2 if unused)
   with `--final-release --commit <full HEAD>`; never reuse completed I1.
+- Disk recovered by the independent cleanup agent to6,095,859,712bytes at22:45,
+  still346,591,232bytes short of6GiB. No cleanup/process control by this agent.
 
 ## CURRENT — MAIN21:58/21:58b/22:10 adopted; old B/R resource-paused
 - FULL brief now read through982. Latest: NO partial/fallback V2V launch;
