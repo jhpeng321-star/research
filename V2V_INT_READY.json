@@ -1,0 +1,63 @@
+{
+ "receipt": "V2V_INT_READY",
+ "part": "4 of 4 (INTEGRATOR) of the V2V intent-sharing build",
+ "branch": "c4/v2v-int",
+ "workspace": "E:/agent-work/c4-v2v-int",
+ "merged_commit": "30d3fafe (30d3fafed7efc0a3e860299b45f72a3b6704239b)",
+ "merge_history": [
+  "f7012e6d int: merge V2V bank part (c4/v2v-bank, BANK READY aae60392)",
+  "7fc93c42 int: merge V2V model part (c4/v2v-model, MODEL READY 066a0916)",
+  "0dc0ba5d int: merge V2V observation part (c4/v2v-intent, OBS READY 330a3e55)",
+  "461e4aac int: adapt bank_v2v to the real v2v_obs contract (frame table + V2VConfig, plain floats); tests to the 24-float OBS layout",
+  "30d3fafe int: v2v widened-context glue (widen_context/policy_call/WidenedPolicy) + end-to-end CPU gate"
+ ],
+ "parts": {
+  "OBS": "c4/v2v-intent 330a3e55 (V2V_OBS_READY.json): tools/coopmwm/v2v_obs.py (V2V_DIM=24, V2VConfig, v2v_features, v2v_slot_block), CavSumoEnv(v2v=) wiring, tests/unit/test_c4_v2v_obs.py (11 CPU tests)",
+  "MODEL": "c4/v2v-model 066a0916 (V2V_MODEL_READY.json): tools/coopmwm/v2v_model.py (extend_for_v2v zero-init at input column 29, load_checkpoint with Adam moment remap, forward_with_v2v), tools/coopmwm/test_v2v_model_cpu.py (7 CPU tests)",
+  "BANK": "c4/v2v-bank aae60392 (V2V_BANK_READY.json): tools/coopmwm/bank_v2v.py (bank pairs with context['v2v'], env-gated branch runner), replay_bank.bank_pairs/record_lesson v2v= kwargs, policy_synergy cfg['v2v'], warm_runner binding passthrough, tools/coopmwm/test_replay_bank_v2v_cpu.py (10 CPU tests)",
+  "INT": "this branch: bank_v2v->v2v_obs adapter (integration fix), tools/coopmwm/v2v_integrate.py (widen_context/policy_call/WidenedPolicy), tools/coopmwm/test_v2v_int_e2e_cpu.py (2 CPU tests)"
+ },
+ "integration_fixes_on_this_branch": [
+  "bank_v2v called the OBSERVATION part's real v2v_features with the trace FRAME dict and a plain dict cfg (its local stub accepted both; the real module takes a {vid: record} mapping and a V2VConfig and would have raised AttributeError / returned zeros). Fix: bank_v2v._features() adapter - frame->{vid: row} table (a_mps2 mapped from issued_acceleration_mps2, 0.0 when absent), dict cfg -> V2VConfig(v2v=True, k=max_partners), plain-float output kept (bank pairs are JSON-serialised). Stub fallback path unchanged.",
+  "tools/coopmwm/test_replay_bank_v2v_cpu.py updated from the 4-float stub layout (STUB=True, V2V_DIM=16) to the landed OBS contract (6-float partner blocks [gap_m, lane_offset, v_mps, a_mps2, last_cmd, present], STUB=False, V2V_DIM=24); added an out-of-comm-range (100 m) exclusion check.",
+  "No stubs needed removal: this worktree had no local v2v stubs; the parts' own files were preferred everywhere (merges were clean, disjoint file sets)."
+ ],
+ "end_to_end_cpu_gate": {
+  "file": "tools/coopmwm/test_v2v_int_e2e_cpu.py",
+  "chain": "accel_learner.save fixture (schema coopnative/1, warmed Adam) -> v2v_model.load_checkpoint(config={'v2v': True, 'v2v_dim': 24}) -> zero-init widened actor/critic -> v2v_obs.v2v_features for a synthetic 3-CAV+HDV state -> v2v_integrate.widen_context -> policy_call -> actions/values IDENTICAL to the non-v2v load (<=1e-7, new columns exactly zero) -> ONE accel_learner.imitation step on a synthetic bank pair with context['v2v'] partner features -> the widened v2v input weights (and the shared columns) move."
+ },
+ "test_counts": {
+  "command": "set OMP_NUM_THREADS=1 & set MKL_NUM_THREADS=1 & python -X utf8 -m pytest -q -p no:cacheprovider tools/coopmwm/ -k \"cpu and not RehearsalSmoke\"  (env: miniconda3/envs/rl_driving, torch 2.12.1+cpu, Windows)",
+  "baseline_pre_merge": "e2d0a98b: 629 passed / 74 failed / 1 error / 38 subtests, 519.6 s (failure list E:/Temp/opencode/base_failures.txt; all pre-existing Windows/env failures documented in HANDOFF_HARDEN_INT.md)",
+  "final_at_30d3fafe": "646 passed / 76 failed / 1 error / 38 subtests, 1349.3 s (host under heavy parallel load during this run)",
+  "delta": "+19 collected = ALL 19 new tools/coopmwm v2v tests pass (7 MODEL + 10 BANK + 2 INT E2E); the ONLY failures beyond baseline are the two documented load flakes (see below), each verified passing in isolation in this session",
+  "load_flakes": [
+   "tools/coopmwm/test_sumo_verify_cpu.py::test_parallel_determinism (documented load flake in HARDEN_INT_READY.json; passes in isolation)",
+   "tools/coopmwm/test_verify_continuation_cpu.py::test_concurrent_verified_grade_importers_adopt_one_receipt[verified-beta1-zero-trust] (same flake family; passed in isolation twice this session)"
+  ],
+  "obs_tests": "tests/unit/test_c4_v2v_obs.py (outside the tools/coopmwm suite): 11 passed; merged OBS+MODEL targeted run 18 passed",
+  "error_note": "the 1 error is the pre-existing test_tail_runtime_cpu.py Windows flock/proc env failure, identical at baseline"
+ },
+ "live_runner_config": {
+  "model_keys": {
+   "v2v": "bool, DEFAULT FALSE (byte-identical when off); truthy value enables the zero-init widened inputs",
+   "v2v_dim": "int, OPTIONAL; default = tools/coopmwm/v2v_obs.V2V_DIM = 24; explicit value must match an already-extended checkpoint's width or load_checkpoint raises ValueError",
+   "resolution": "tools/coopmwm/v2v_model.v2v_extra(config, v2v_dim): v2v_dim kwarg > config['v2v_dim'] > V2V_DIM when config['v2v'] truthy > 0 when flag off"
+  },
+  "exact_call_sites": [
+   "LOAD (resume): tools/coopmwm/final_discovery.py:78 and tools/coopmwm/diagnostic_repair.py:65 currently call accel_learner.load(root/'B_checkpoint_*.pt') - the live runner must call tools/coopmwm/v2v_model.load_checkpoint(path, config={'v2v': True, 'v2v_dim': 24}) at these sites when the binding sets v2v=True (flag off: load_checkpoint IS accel_learner.load, byte-identical)",
+   "SAVE: unchanged - tools/coopmwm/accel_learner.save / accel_runner.py:293-295,327 save the widened state as a normal coopnative/1 checkpoint; an extended checkpoint reloads unchanged via load_checkpoint(path, v2v_dim=24)",
+   "IMITATION/SCORING with widened contexts: route policy calls through tools/coopmwm/v2v_integrate.policy_call / WidenedPolicy (widen_context(context, sample['context']['v2v']) first); accel_learner.imitation, bank_imitation.action_error/joint_kl keep their exact signatures",
+   "BANK PAIRS: tools/coopmwm/replay_bank.py:438 bank_pairs(root, arm, seed, v2v=<binding v2v>, v2v_cfg=None) - attached at :479-483 via bank_v2v.attach_pairs; summary['v2v'] written only when on (:525-530)",
+   "LESSON CHECK: tools/coopmwm/replay_bank.py:922 record_lesson(..., v2v=<binding v2v>) - enables the branch-runner v2v block via bank_v2v.enabled() around branch runs (:986), discloses out['v2v'] (:956-959)",
+   "BINDING PASSTHROUGH: tools/coopmwm/warm_runner.py:176 bank_pairs(v2v=bool(b.get('v2v'))) and :229 record_lesson(v2v=bool(b.get('v2v'))) - set the single binding key 'v2v': true (plus optional 'v2v_dim': 24 for the loader config)",
+   "POLICY SYNERGY: tools/coopmwm/policy_synergy.py:153 v2v=bool(cfg.get('v2v')) -> :221 bank_v2v.enabled(v2v) around every new-policy branch run; disclosure at :257-260",
+   "BRANCH SUBPROCESSES: env flag C4NM_V2V=1, set ONLY inside bank_v2v.enabled(v2v) (tools/coopmwm/bank_v2v.py ENV); tools/coopmwm/sumo_verify.py LocalBranchRunner falls back to the plain controller class when unset (byte-identical)",
+   "SUMO ENV (live collection): traffic_shepherd/c4/env.py:109/:133 CavSumoEnv(v2v=True) adds state['v2v'] [K_slots, 24] float32 (slot-aligned; nothing added when off)",
+   "OBS BUILD (offline/sim): tools/coopmwm/v2v_obs.v2v_features(state_table, cav_id, last_commands, V2VConfig(v2v=True)) per ego or v2v_slot_block(...) for slot-aligned [K, 24]; partners ranked by |gap| <= range_m=100, zero-padded"
+  ],
+  "wired_default_off_guarantee": "every path above is gated by the v2v flag / C4NM_V2V env: flag off = no state key added, no summary field, plain controller class, accel_learner.load identity (pinned by test_bank_pairs_default_off_is_byte_identical, test_lesson_check_default_never_sets_the_flag_or_the_key, test_flag_off_is_byte_identical_to_registered_loader, test_branch_runner_controller_is_flag_gated, and the OBS flag-off golden byte-identity test)"
+ },
+ "constraints_respected": "CPU only (no SUMO, no GPU, no remote writes); other worktrees only READ; merges/cherry-picks only INTO c4/v2v-int; no edits outside this worktree; no git reset/clean/stash-drop/push; no sealed/ or holdout/heldout/cal_split/chunk5/j4b/inc1 paths opened; no hetdata_truth or vType/driver truth files read; no behavioural thresholds introduced (only structural constants already registered by the parts)",
+ "timestamp": "2026-11-03"
+}
