@@ -176,6 +176,10 @@ def v2v_slot_block(s_m, lane, v_mps, a_mps2, present, is_cav, slot_ids, last_com
 # Partner-major layout with intent (per partner 6 + H + 1):
 #   [gap_m, lane_offset, v_mps, a_mps2, last_cmd, present,
 #    intent_1 .. intent_H, intent_valid] * K
+#
+# With ``v2v_coop_signal`` (requires intent; DEFAULT OFF) each partner block
+# gains two columns after ``intent_valid``:
+#   [..., intent_valid, partner_p_coop, yield_target] * K
 
 #: Default intent horizon (1 s control steps).
 V2V_INTENT_HORIZON = 5
@@ -184,6 +188,54 @@ V2V_INTENT_HORIZON = 5
 def v2v_intent_dim(k: int = V2V_K, horizon: int = V2V_INTENT_HORIZON) -> int:
     """Per-ego block width with partner intents: ``K * (6 + H + 1)``."""
     return int(k) * (len(V2V_PARTNER_FEATURES) + int(horizon) + 1)
+
+
+# ---------------------------------------------------------------- cooperation signal (option)
+#
+# ``v2v_coop_signal`` (DEFAULT OFF; requires ``v2v_intent``): on top of the
+# planned-command intent, every CAV also publishes ``p_coop`` (its policy's
+# probability of being in a cooperative manoeuvre) and, when it is giving way,
+# WHICH partner slot it is yielding to.  Partners read both at the SAME t-1
+# latency as the intents -- two extra features per partner slot:
+#
+#   [ ..., intent_valid, partner_p_coop, yield_target] * K
+#
+# ``partner_p_coop`` = the partner's published p_coop at ``t-1`` (0.0 when
+# absent/stale/malformed); ``yield_target`` = 1.0 iff that same publication
+# names THIS ego as the yield target (its argmax yield slot), else 0.0.
+
+#: Per-partner coop-signal feature order (appended after ``intent_valid``).
+V2V_COOP_SIGNAL_FEATURES = ("partner_p_coop", "yield_target")
+
+
+def v2v_coop_dim(k: int = V2V_K, horizon: int = V2V_INTENT_HORIZON) -> int:
+    """Per-ego block width with intents AND the coop signal: ``K * (6 + H + 1 + 2)``."""
+    return int(k) * (len(V2V_PARTNER_FEATURES) + int(horizon) + 1 + len(V2V_COOP_SIGNAL_FEATURES))
+
+
+def published_coop(board, vid, now):
+    """Coop publication visible at ``now``: published exactly at ``now-1``, else None.
+
+    ``board`` maps vid -> ``(published_time_s, p_coop, yield_vid_or_None)``; ``p_coop``
+    must be a finite probability in [0, 1] (a malformed publication reads as absent).
+    """
+    entry = (board or {}).get(vid)
+    if entry is None:
+        return None
+    published, p, yield_vid = entry
+    if int(published) != int(now) - 1:
+        return None
+    value = np.asarray(p, dtype=np.float64).reshape(-1)
+    if value.size != 1 or not np.isfinite(value[0]) or not 0.0 <= float(value[0]) <= 1.0:
+        return None
+    return float(value[0]), (None if yield_vid is None else str(yield_vid))
+
+
+def coop_columns(k: int = V2V_K, horizon: int = V2V_INTENT_HORIZON) -> list:
+    """Offsets (within the coop block) of every coop-signal input (2 per partner slot)."""
+    stride = len(V2V_PARTNER_FEATURES) + int(horizon) + 1 + len(V2V_COOP_SIGNAL_FEATURES)
+    base = len(V2V_PARTNER_FEATURES) + int(horizon) + 1
+    return [slot*stride + base + j for slot in range(int(k)) for j in range(len(V2V_COOP_SIGNAL_FEATURES))]
 
 
 def v2v_partner_ids(state, cav_id, cfg=None) -> list:
@@ -213,16 +265,23 @@ def published_intent(board, vid, now, horizon: int):
 
 
 def v2v_intent_features(state, cav_id, last_commands, board, now,
-                        horizon: int = V2V_INTENT_HORIZON, cfg=None) -> np.ndarray:
-    """Fixed-size ``float32`` block ``(v2v_intent_dim(K, H),)`` = base block + partner intents."""
+                        horizon: int = V2V_INTENT_HORIZON, cfg=None, coop=None) -> np.ndarray:
+    """Fixed-size ``float32`` block = base block + partner intents (+ coop signal).
+
+    ``coop`` (``v2v_coop_signal`` ON only; default None = unchanged 48-wide block):
+    dict(board={vid: (published_time_s, p_coop, yield_vid_or_None)}) -- per partner
+    slot two extra features (the partner's p_coop and whether this ego is its yield
+    target) published at ``t-1``, zeros when absent/stale/malformed.
+    """
     cfg = cfg if cfg is not None else V2VConfig()
     k, h = int(cfg.k), int(horizon)
     width = len(V2V_PARTNER_FEATURES)
-    out = np.zeros(v2v_intent_dim(k, h), np.float32)
+    coop_w = len(V2V_COOP_SIGNAL_FEATURES) if coop is not None else 0
+    stride = width + h + 1
+    out = np.zeros(v2v_intent_dim(k, h)+coop_w*k, np.float32)
     if not cfg.v2v:
         return out
     base = v2v_features(state, cav_id, last_commands, cfg)
-    stride = width + h + 1
     for slot in range(k):
         out[slot*stride:slot*stride+width] = base[slot*width:(slot+1)*width]
     for slot, vid in enumerate(v2v_partner_ids(state, cav_id, cfg)):
@@ -232,6 +291,12 @@ def v2v_intent_features(state, cav_id, last_commands, board, now,
         start = slot*stride + width
         out[start:start+h] = intent
         out[start+h] = 1.0
+        if coop is not None:
+            signal = published_coop(coop.get('board'), vid, now)
+            if signal is None:
+                continue
+            out[start+h+1] = signal[0]
+            out[start+h+2] = 1. if signal[1] == cav_id else 0.
     return out
 
 
