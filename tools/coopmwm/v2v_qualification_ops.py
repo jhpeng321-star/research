@@ -14,9 +14,9 @@ from .ls_validity_ops import remote
 from .protocol import checked
 from .storage import write
 
-BASE = '/home/ubuntu/coopmwm20261103_compositereleasecpu1'
-GENERATION = 'V2'
-SOURCE = '/home/ubuntu/coopmwm20261103_v2vcpu2'
+BASE = '/home/ubuntu/coopmwm20261103_v2vcpu2'
+GENERATION = 'V4'
+SOURCE = '/home/ubuntu/coopmwm20261103_v2vcpu4'
 FILES = (
     'tools/coopmwm/bank_v2v.py', 'tools/coopmwm/v2v_obs.py',
     'tools/coopmwm/v2v_model.py', 'tools/coopmwm/v2v_integrate.py',
@@ -25,6 +25,8 @@ FILES = (
     'tools/coopmwm/v2v_runner.py', 'tools/coopmwm/test_v2v_runner_cpu.py',
     'tools/coopmwm/test_v2v_model_cpu.py', 'tools/coopmwm/test_v2v_int_e2e_cpu.py',
     'tools/coopmwm/test_replay_bank_v2v_cpu.py',
+    'tools/coopmwm/v2v_runtime.py', 'tools/coopmwm/test_v2v_runtime_cpu.py',
+    'tools/coopmwm/accel_plant.py',
     'traffic_shepherd/c4/env.py', 'traffic_shepherd/ownership.py',
     'tests/unit/test_c4_v2v_obs.py', 'tests/fixtures/v2v_golden.npz',
     'V2V_INT_READY.json',
@@ -59,10 +61,11 @@ if not (r/'STAGED.json').exists():
   target=(r/'pytools'/name if name.startswith('tools/') else r/'runtime_src'/name if name.startswith('traffic_shepherd/') else r/name)
   target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(base64.b64decode(data))
  tests=json.loads((base/'LS_RELEASE_TESTS.json').read_text())
- tests+=['test_v2v_runner_cpu','test_v2v_model_cpu','test_v2v_int_e2e_cpu','test_replay_bank_v2v_cpu']
+ tests+=['test_v2v_runner_cpu','test_v2v_model_cpu','test_v2v_int_e2e_cpu','test_replay_bank_v2v_cpu','test_v2v_runtime_cpu']
  with (r/'LS_RELEASE_TESTS.json').open('x') as f:json.dump(sorted(set(tests)),f)
  selection=json.loads((base/'LS_CPU_SELECTION.json').read_text())
- selection.setdefault('pytest_args',[]).append(str(r/'tests/unit/test_c4_v2v_obs.py'))
+ selection['pytest_args']=[x.replace(str(base),str(r)) for x in selection.get('pytest_args',[])]
+ if str(r/'tests/unit/test_c4_v2v_obs.py') not in selection['pytest_args']:selection['pytest_args'].append(str(r/'tests/unit/test_c4_v2v_obs.py'))
  with (r/'LS_CPU_SELECTION.json').open('x') as f:json.dump(selection,f)
  hashes={{str(p.relative_to(r)):hashlib.sha256(p.read_bytes()).hexdigest() for parent in (r/'pytools',r/'runtime_src',r/'tests') for p in parent.rglob('*') if p.is_file() and not p.is_symlink()}}
  for n in ('FROZEN_COSTS.json','FROZEN_MOTION_SOURCE.py','FROZEN_GEOMETRY_SOURCE.py','FROZEN_NETWORK.net.xml.gz','FROZEN_PRE_NICHE_SEARCH.py','V2V_INT_READY.json'):hashes[n]=hashlib.sha256((r/n).read_bytes()).hexdigest()

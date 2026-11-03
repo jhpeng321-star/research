@@ -88,9 +88,9 @@ def test_pair_v2v_block_from_synthetic_trace():
     assert bank_v2v.STUB is False and bank_v2v.V2V_DIM == 24   # OBS part landed and is picked up
     # partner c2 by ego c1 - OBSERVATION layout: gap, lane offset, speed, accel,
     # previous-second command, presence
-    assert block['c1'][:6] == pytest.approx([14., 0., 10.5, -2., -2., 1.])
+    assert block['c1'][:6] == pytest.approx([14., 0., 10.5, 0., -2., 1.])
     assert block['c1'][6:] == [0.]*18                       # zero padded to V2V_DIM
-    assert block['c2'][:6] == pytest.approx([-14., 0., 8., 1., 1., 1.])
+    assert block['c2'][:6] == pytest.approx([-14., 0., 8., 0., 1., 1.])
     # non-CAV rows are never partners
     frame = dict(time_s=420, vehicles=[dict(vid='c1', is_cav=True, s_m=10., v_mps=8.,
                                            issued_acceleration_mps2=1.)])
@@ -166,10 +166,10 @@ def test_bank_pairs_v2v_attaches_partner_features_from_the_branch_trace(tmp_path
         # pair i is second 420+i: partner c2 by ego c1 (OBS layout: gap, lane offset,
         # speed, accel, previous-second command, presence)
         assert block['c1'][:6] == pytest.approx(
-            [14.+0.5*i, 0., 10.5, -2.-0.1*i, -1.9-0.1*i, 1.])
+            [14.+0.5*i, 0., 10.5, 0., -1.9-0.1*i, 1.])
         # partner c1 by ego c2 (relative position carries the other sign)
         assert block['c2'][:6] == pytest.approx(
-            [-(14.+0.5*i), 0., 8., 1.+0.1*i, 0.9+0.1*i, 1.])
+            [-(14.+0.5*i), 0., 8., 0., 0.9+0.1*i, 1.])
         assert len(block['c1']) == bank_v2v.V2V_DIM and w == 1.
         assert block['c1'][6:] == [0.]*18
     assert s['entries'][0]['verification_id'] == s['entries'][0]['verification_id']
@@ -185,7 +185,7 @@ def test_bank_pairs_v2v_excludes_pairs_lacking_the_previous_second(tmp_path):
                                       excluded_missing_partner_command=0, trace_missing=False)
     assert len(pairs) == 119
     # the first kept pair is second 421 (i=1 in the trace frame arithmetic)
-    assert pairs[0][0]['context']['v2v']['c1'][:6] == pytest.approx([14.5, 0., 10.5, -2.1, -2., 1.])
+    assert pairs[0][0]['context']['v2v']['c1'][:6] == pytest.approx([14.5, 0., 10.5, 0., -2., 1.])
 
 
 def test_bank_pairs_v2v_excludes_pairs_lacking_partner_commands(tmp_path):
@@ -234,6 +234,9 @@ def test_runtime_branch_runner_computes_last_commands_per_step(monkeypatch):
     c = cls(policy, torch.Generator().manual_seed(1), snapshot(300), None)
     c.apply([_row('c1', 10., 8.), _row('c2', 24., 10.5), _row('hd', 5., 9., cav=False)],
             dict(c1=.5, c2=-1.), 418)
+    c.observe_issued(dict(time_s=418, vehicles=[
+        dict(_row('c1',10.,8.),issued_acceleration_mps2=.5),
+        dict(_row('c2',24.,10.5),issued_acceleration_mps2=-1.)]))
     c.apply([_row('c1', 18., 7.6), _row('c2', 35.5, 9.9), _row('hd', 14., 9., cav=False)],
             dict(c1=.4, c2=-.9), 419)
     # the v2v block reached the policy observation at every step
@@ -241,9 +244,9 @@ def test_runtime_branch_runner_computes_last_commands_per_step(monkeypatch):
     block = policy.contexts[1]['v2v']
     # partner c2 by ego c1 at 419 (OBS layout): relative position 17.5, lane offset 0,
     # speed 9.9, this-second accel 9.9-10.5, and the LAST ISSUED command of the previous
-    # second (in effect at 419) = -0.9; presence 1.
-    assert block['c1'][:6] == pytest.approx([17.5, 0., 9.9, -0.6, -0.9, 1.])
-    assert block['c2'][:6] == pytest.approx([-17.5, 0., 7.6, -0.4, 0.4, 1.])
+    # second = -1.0 (not this second's -0.9 raw command); presence 1.
+    assert block['c1'][:6] == pytest.approx([17.5, 0., 9.9, -0.6, -1., 1.])
+    assert block['c2'][:6] == pytest.approx([-17.5, 0., 7.6, -0.4, 0.5, 1.])
     # non-CAV 'hd' is never a partner and absent members get the zero block
     assert block['c1'][6:] == [0.]*18 and len(block['c1']) == bank_v2v.V2V_DIM
     gone = c.v2v_block(dict(members=['c1', 'gone']))

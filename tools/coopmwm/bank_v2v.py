@@ -142,6 +142,7 @@ def pair_v2v_block(frame, prev_frame, members, cfg=None):
     cfg = dict(DEFAULT_CFG, **(cfg or {}))
     last = _last_commands(prev_frame) if prev_frame is not None else {}
     known = {k: c for k, c in last.items() if c is not None}
+    frame = causal_frame(frame, prev_frame)
     vehicles = frame.get('vehicles', [])
     missing = sorted({v['vid'] for v in vehicles if v.get('is_cav') and last.get(v['vid']) is None})
     block = {}
@@ -152,6 +153,18 @@ def pair_v2v_block(frame, prev_frame, members, cfg=None):
             continue
         block[ego] = list(_features(frame, ego, known, cfg))
     return block, missing
+
+
+def causal_frame(frame, previous):
+    """Sensed acceleration is a past speed difference, never this step's target."""
+    prior = {v['vid']:v for v in (previous or {}).get('vehicles', [])}
+    dt = float(frame.get('time_s', 0))-float((previous or {}).get('time_s', 0))
+    vehicles = []
+    for v in frame.get('vehicles', []):
+        old = prior.get(v['vid'])
+        accel = ((float(v['v_mps'])-float(old['v_mps']))/dt if old and dt > 0 else None)
+        vehicles.append(dict(v, issued_acceleration_mps2=accel))
+    return dict(frame, vehicles=vehicles)
 
 
 def attach_pairs(pairs, trace_path, t0, cfg=None):
@@ -202,67 +215,6 @@ def branch_controller_class():
     if os.environ.get(ENV) != '1':
         return None
     from . import sumo_verify as sv
-    base = sv.verify_controller_class()
+    from .v2v_runtime import controller_class
+    return controller_class(sv.verify_controller_class())
 
-    class _V2VPolicy:
-        """Injects context['v2v'] just before the wrapped policy samples; everything else is
-        delegated (the current model ignores the extra context key, so pre-model runs and
-        sealed digests are unaffected)."""
-
-        def __init__(self, outer, real):
-            self.outer, self.real = outer, real
-
-        def sample(self, context, *a, **k):
-            context['v2v'] = self.outer.v2v_block(context)
-            return self.real.sample(context, *a, **k)
-
-        def __call__(self, *a, **k):
-            return self.real(*a, **k)
-
-        def __getattr__(self, name):
-            return getattr(self.real, name)
-
-    class V2VController(base):
-        """last_commands per step = the commands in effect at the current second (the apply()
-        ``commands`` argument), i.e. the commands issued at the PREVIOUS second - the same
-        quantity the offline trace records as issued_acceleration_mps2 of the previous frame.
-        Partner accelerations = the per-second finite difference of the recorded speeds."""
-
-        def __init__(self, *a, **k):
-            super().__init__(*a, **k)
-            self.v2v_cfg = dict(DEFAULT_CFG)
-            self._v2v_prev_v, self._v2v_state = None, None
-
-        def apply(self, rows, commands, now):
-            self._v2v_state = (list(rows), dict(commands), int(now))
-            saved = self.policy
-            self.policy = _V2VPolicy(self, saved)
-            try:
-                return super().apply(rows, commands, now)
-            finally:
-                self.policy = saved
-                self._v2v_prev_v = {r['vid']: float(r['v_mps']) for r in rows}
-
-        def v2v_block(self, context):
-            rows, commands, now = self._v2v_state
-            vehicles = []
-            for r in rows:
-                v = dict(r)
-                if v.get('is_cav'):
-                    prev = (self._v2v_prev_v or {}).get(v['vid'])
-                    a = float(v['v_mps'])-prev if prev is not None else None
-                    v['issued_acceleration_mps2'] = a
-                    v['command_present'] = a is not None
-                vehicles.append(v)
-            known = {r['vid']: float(commands[r['vid']]) for r in rows
-                     if r.get('is_cav') and r['vid'] in commands}
-            frame = dict(time_s=now, vehicles=vehicles)
-            block = {}
-            for m in context['members']:
-                if any(v.get('vid') == m and v.get('is_cav') for v in vehicles):
-                    block[m] = list(_features(frame, m, known, self.v2v_cfg))
-                else:
-                    block[m] = [0.]*V2V_DIM
-            return block
-
-    return V2VController

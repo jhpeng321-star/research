@@ -21,10 +21,20 @@ def episode(job):
     from tools.coopfree import backend as cf
     exact.setup(job['runtime'],job['checkpoint']);install_seed_scope();guard(job['world'],job['role'])
     exact.guard=lambda w:guard(w,job['role'])
-    policy=Policy();policy.load_state_dict(job['weights']);policy.eval()
+    v2v = bool(job.get('v2v')) or os.environ.get('C4NM_V2V') == '1'
+    if v2v:
+        from .v2v_runtime import from_weights
+        policy=from_weights(job['weights'], enabled=True)
+    else:
+        policy=Policy();policy.load_state_dict(job['weights'])
+    policy.eval()
     generator=torch.Generator().manual_seed(job['noise_seed'])
     from .plan_client import guide
-    controller=Controller(policy,generator,job['deterministic'],
+    controller_type=Controller
+    if job.get('v2v'):
+        from .v2v_runtime import controller_class
+        controller_type=controller_class(controller_type)
+    controller=controller_type(policy,generator,job['deterministic'],
         guide=guide(job,generator) if not job['deterministic'] and not job.get('b_replay') else None,beta=job.get('beta',1.),
         replay=job.get('samples'),branch=job.get('branch'))
     steps=[];metrics={};prefixes={};horizon_totals={};requested=overrides=0
@@ -47,6 +57,9 @@ def episode(job):
     branch=job.get('branch')
     try:
         with gzip.open(path/'observable.jsonl.gz','xt',encoding='utf-8') as trace:
+            if v2v and hasattr(controller,'observe_issued'):
+                from .v2v_runtime import ObservedTrace
+                trace=ObservedTrace(trace,controller)
             for t in range(300,job.get('stop',1200)):
                 if job.get('health_guards'):
                     from .warm_health import assert_running
