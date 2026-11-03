@@ -2,6 +2,19 @@
 
 ## Current resumed handoff
 
+### Latest fresh-session check
+
+Preserved the interrupted session's uncommitted source audit in `6b8705bd`, then
+reread the explicit permitted-source inventory and owner's READ FIRST summary.
+Paper B producer reports and numerical figure inputs are unchanged. The latest
+shared-log additions concern companion admission/launch requirements, resource
+holds and machine-maintenance receipts; they supply no new Paper B efficacy or
+qualification result. Existing OUTLINE/CLAIMS/FIGURES/THREATS remain the current
+evidence cut, with the named insertion queue below still PENDING. Sources:
+`SOURCE_REFRESH.json`; `RESUME_20261103.md`, Fresh-session preservation and reread;
+`E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md`, latest companion
+admission/resource/maintenance entries; owner READ FIRST summary.
+
 ### Subsequent source cut
 
 Latest review: `RESUME_20261103.md`; exact permitted source hashes:
