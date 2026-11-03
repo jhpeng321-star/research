@@ -1,8 +1,8 @@
 # S-RB-FIT — observable-motion physical parameter learning
-**Delivery rechecked2026-11-03: IDM exported; current-source LC fitted/verified, but exact-event fidelity remains inadequate.**
+**Delivery rechecked2026-11-04: IDM exported; current-source LC fitted/verified, but exact-event fidelity remains inadequate.**
 
 ## Contract
-- Owner WM-PHYS amendment REGISTRATION.md:5701; branch `c4/rb-fit`, base `f0db3c82`; all prior work retained.
+- Owner WM-PHYS registration5683, FIT5703/addendum5736; branch `c4/rb-fit`, base `f0db3c82`; all prior work retained.
 - Only native FIT worlds969400–969431; six allowlisted observable files, hashes in `artifacts/rbfit/*/provenance.json`.
 - Fit [240,300]s:229,839 mainline acceleration observations,2,956 fitted HDVs;3,130 driver records incl174 population fallbacks;1,154 have full60s motion histories.
 - Validation [300,360]s:232,648 acceleration observations;9,758/8,303 stable-leader5s/10s windows. Leaders/lanes teacher-forced; endpoint positions actually recorded.
@@ -37,4 +37,4 @@
 - v0 maps to speedFactor by division by actual lane limit; shared CF compatibility note records NUMERICAL_EPS=.001/emergencyDecel9 source defaults.
 - These are conditional held-in FIT engineering results; no unseen-world, intervention, free-running breakdown, queue-clearing or action-value improvement claim. Pooled point candidate is ready for INT/EVAL testing.
 - SUMOCORE saved-six-FIT-state diagnosis: inference changes600s MAPPO/PI effects by **+4171/+3909veh-s**, almost entirely road; native road improves8523 vs controlled4351/4617veh-s. Incumbents+entrant donors changed together; culpable parameter unidentified. See `RBFIT_SUMOCORE_DIAG.md`; no demonstrated sign repair.
-- Fresh2026-11-03 resume866ad9ae: owned977061/1076804/3951028 complete/verified/exited, watcher absent, LANE80541278 unchanged.29publication hashes PASS (`receipts/DELIVERY_MIRROR_RESUME_866ad9ae.json`); numerical/UNC evidence retained. No repeated fit/inference/SUMO/GPU/training/prohibited data/push.
+- Fresh2026-11-04 resume747239d8: LANE80541278 unchanged;29local publication hashes PASS (`receipts/DELIVERY_MIRROR_RESUME_747239d8.json`), numerical/UNC evidence retained. Current cpuQ lacks recorded job roots/helper; November3 completion receipts remain historical. No repeated fit/inference/SUMO/GPU/training.

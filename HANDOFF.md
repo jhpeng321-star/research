@@ -1,4 +1,4 @@
-# S-RB-FIT — recovered delivery, rechecked 2026-11-03
+# S-RB-FIT — recovered delivery, rechecked 2026-11-04
 
 Resume complete: both previously SSH-blocked fits independently verified and
 published; current-source physical LS fit reused the completed decision cache.
@@ -14,6 +14,13 @@ Fresh local mirror PASS:29artifact hashes across original IDM/LC and three
 recovered publications; report40lines. Receipt:
 `artifacts/rbfit/receipts/DELIVERY_MIRROR_RESUME_866ad9ae.json`.
 Prior numerical/UNC checks retained; unchanged model/artifacts needed no rerun.
+
+Latest resume2026-11-04 from clean747239d8: LANE80541278 still unchanged;
+29local artifact hashes PASS, report40lines. Current cpuQ SSH is reachable but
+all three recorded remote job roots/helper are absent; prior November3 remote
+completion receipts are historical, NOT a fresh live confirmation. No restart.
+Receipt:`artifacts/rbfit/receipts/RESUME_747239d8.md`; local verification:
+`artifacts/rbfit/receipts/DELIVERY_MIRROR_RESUME_747239d8.json`.
 
 <!-- LC-CONTINUATION:BEGIN -->
 Latest verified `lane_raw_5a5b15ef118c` (2026-11-02T09:04:39+08:00); LC SHAe61f897c5e7a, snapshotv2;3130driver posteriors.
