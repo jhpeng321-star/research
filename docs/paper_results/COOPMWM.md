@@ -1,5 +1,30 @@
 # S-COOPMWM — live checks
 
+## Nov3 13:25 UTC+8 — both u10 updates complete; all phases remain funded
+- R-u10 completed **13:23:57**. Watcher3305066 and all four children remain live,
+  no alerts/dead children. Runtime ETA to R-u24 is about7.01h; B-u24 about7.04h
+  as of its own last update. Original pacing and fixed endpoints continue.
+- R's single frozen lesson saves **+853.695veh-s**, no CI from one entry;
+  fixed-entry action error0.364220m/s². It is not a paired B-vs-R performance
+  estimate. R imitates **11 of13** available admitted targets, capped by B-u9's11.
+  Five passes requested;1 full pass plus part of the second,18 optimizer steps,
+  2252 pair visits/1830 present-member targets, KL0.055908 stop. Within-update
+  bank action error **0.620863→0.608462m/s²**.
+- R10-A10 safety passes on24 paired worlds, collision/teleport deltas0:
+  hard brake **+0.021[-3.438,+3.333]**, critical total
+  **+18.396[-8.918,+45.813]**. Both arms' positive critical point estimates are
+  reported; neither exceeds the registered composite significance predicate.
+- Budget13:25:12: **7,323,310/14,500,000sim-s charged**,7,176,690remaining;
+  bank extension1,805,760remaining. Train has806,400remaining, exactly28 remaining
+  arm-updates×24×1200. Every phase is nonnegative. SnapshotSHA
+  `eebd6fd86209415598f9703ab1b154822b9c45898e7e3edf0db32398f066545e`.
+- Interim public completions13:25:01:A96/B91/R96; R completion/no-failure is
+  adopted, A/B still live. Outcome values remain closed.
+- Canonical `coopmwm/LESSON_CHECK_u010_R.json` and
+  `coopmwm/R_SAFETY_COMPOSITE_010.json` are published. Evidence:
+  `coopmwm/B_REPLAY_START_WATCH_STATUS_1793683486875221800.json`,
+  `coopmwm/COMPOSITE_PHASE_BALANCES_1793683513532494000.json`.
+
 ## Nov3 13:20:58 UTC+8 — isolated R-u9 complete on all8 frozen states
 - R-u9 isolated V2 is complete: **42 new branches /34,080sim-s precharge**,
   all8 states graded, report seals and combined/original identities verified.
