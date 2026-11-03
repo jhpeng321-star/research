@@ -1,0 +1,38 @@
+{
+  "task": "S-COOPBEHAV",
+  "recovery_commit": "28b91bb1",
+  "handoff_documentation_commit": "a40a91d3",
+  "change_scope": "Documentation and recovery receipts only",
+  "verification": {
+    "recovery_json_valid": true,
+    "git_diff_check_passed": true,
+    "watcher_exact_identity_rechecked": true,
+    "watcher_pid": 29244,
+    "watcher_creation_epoch_ms": 1793437674201,
+    "status_timestamp": 1793682059.3276682,
+    "status_age_s_at_check": 94.52,
+    "status_advanced_since_resume": true,
+    "canonical_report_state": "complete",
+    "active_owned_reports": 0
+  },
+  "implementation_tests": {
+    "last_verified_receipt": "RESUME_VERIFIED_20261102.json",
+    "passed": 59,
+    "failed": 0,
+    "rerun_this_session": false,
+    "reason": "No implementation changes or new eligible trace exports; preserve completed verification and reports"
+  },
+  "continuation": {
+    "watcher_preserved": true,
+    "interval_s": 120,
+    "new_ready_exports": 0,
+    "corrected_audit_detector_counts": null,
+    "awaiting": "Producer ready indices with the required observable geometry and neighbours",
+    "new_watcher_or_report_dispatches": 0,
+    "completed_reports_regenerated": 0
+  },
+  "new_simulation_seconds": 0,
+  "process_signals": 0,
+  "research_data_deletions": 0,
+  "pushes": 0
+}
