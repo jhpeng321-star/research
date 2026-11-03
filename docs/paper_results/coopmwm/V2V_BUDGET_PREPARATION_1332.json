@@ -1,0 +1,47 @@
+{
+  "authority": "MAIN2026-11-03 13:24/13:32 PREPARE ONLY",
+  "status": "fixed workload quoted; diagnostic slates and phase funding pending",
+  "code_commit": "16729f67",
+  "arms": ["A-v2v", "B-v2v", "R-v2v"],
+  "resume_checkpoint_update": 3,
+  "first_update": 4,
+  "final_update": 24,
+  "episodes_per_update": 24,
+  "episode_sim_s": 1200,
+  "training_sim_s": 1814400,
+  "interim_u8_episodes_sim_s": 345600,
+  "final_u24_episodes_sim_s": 345600,
+  "final_paired_branch_sim_s": 691200,
+  "fixed_workload_sim_s": 3196800,
+  "paired_branch_assumption": "A-v2v and B-v2v, 96 worlds, T=300/500/700/900, full prefix plus 300s; existing MAPPO references reused subject to their registered equivalence gate; no R paired branches",
+  "diagnostic_cost_per_arm": {
+    "lessons": "21 * sum(end_s of each frozen lesson entry)",
+    "original_and_isolated_policy_synergy": "21 * sum((2*members+4)*end_s of each cooperative entry)",
+    "reference_adoption": "conservative fresh all-new and u3-reference in original variant; identical reference reused by isolated variant; any additional SHA-verified adoption can reduce actual costs"
+  },
+  "diagnostic_scope_pending": [
+    "explicit A-v2v diagnostic slate",
+    "B-v2v and R-v2v frozen lesson/cooperative metadata at qualification",
+    "budget for future growth of all-admitted cooperative-state diagnostics",
+    "whether V2V-specific bank confirmation requires additional branches"
+  ],
+  "additional_exclusions": [
+    "MAPPO reference-reuse failure",
+    "failed or replacement jobs",
+    "new bank verification and confirmation workload"
+  ],
+  "is_full_run_upper_bound": false,
+  "phase_allocation_authorized": false,
+  "launch_authorized": false,
+  "reservation_sim_s": 0,
+  "new_sim_s": 0,
+  "new_inference": 0,
+  "verification": {
+    "command": "python -X utf8 -m unittest tools.coopmwm.test_v2v_budget_quote_cpu -v",
+    "platform": "local Windows",
+    "passed": 4,
+    "failed": 0,
+    "linux_release_qualification": "pending READY integration"
+  },
+  "integration_status": "At initial inspection all three V2V branches pointed to e2d0a98b and their root READY receipts were absent; no component implementation was duplicated. Existing non-V2V training and interim owners remain adopted."
+}
