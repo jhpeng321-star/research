@@ -284,6 +284,15 @@ no watcher/report was dispatched. The existing59-test CPU result remains the las
 implementation verification; this recovery changes only documentation/receipts.
 Recovery receipt: `tools/coopbehav/evidence/RESUME_20261103.json`.
 
+The 21:53 local fresh-session check inherited clean HEAD `8851a413` and again
+verified PID29244's original parent, creation time, executable and polling command.
+Its status has advanced since the prior recovery, stderr remains empty, and no
+report is active. Read-only producer-index inspection found the same31-pair u15
+index and the same two u03 DEV indices, with unchanged hashes; the audit index
+remains not ready. Both producer trace handoffs retain the same evidence limits.
+All completed analyses and the existing120s watcher were preserved. Receipt:
+`tools/coopbehav/evidence/RESUME_20261103_2153.json`.
+
 - CPU suite: **59 synthetic tests** covering all four detectors, identity/slot
   recycling, native/policy-mean contracts, credit reconstruction, discovery,
   source precision/hashes, complete reports and advancing-index publication,

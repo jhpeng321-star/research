@@ -17,7 +17,46 @@
     "active_owned_reports_in_status": 0,
     "preserved": true
   },
-  "producer_handoff_check": "pending",
+  "producer_handoff_check": {
+    "state": "complete; no new eligible exports",
+    "read_only_remote_inventory": true,
+    "canonical_index_sha256": "1c94ebe359532d3d00e6fa2d72af557791e71709691a78b26196cd4973f76c2e",
+    "canonical_pairs": 31,
+    "canonical_existing_report_state": "complete",
+    "deployed_indices": [
+      {
+        "name": "COOPBEHAV_dev_u03_INDEX.json",
+        "sha256": "eafd90892099bfc0e8ac18967208b1c297d89f12386ccc656bd333d5d5a41998",
+        "ready": true,
+        "pairs": 2
+      },
+      {
+        "name": "COOPBEHAV_dev_u03_fullfleet_INDEX.json",
+        "sha256": "bc782dd4b08fb81b8c2775732fb97b4148acb92707716600f10f20ccc934452d",
+        "ready": true,
+        "pairs": 2
+      }
+    ],
+    "audit_index_sha256": "390e07437e9f0c73790309c496b4c1dc068c19ea76373d10d9d24be290e4579e",
+    "audit_ready": false,
+    "audit_pairs": 0,
+    "producer_trace_handoffs_rechecked": true,
+    "audit_geometry_blockers": [
+      "No observed vehicle lengths",
+      "No additional mainline neighbours",
+      "No per-row CAV/controller flags"
+    ],
+    "audit_detector_counts": null,
+    "new_ready_exports": 0,
+    "inspection_note": "Initial inline command failed local quoting; first script attempt lacked remote module search path. Read-only inspection succeeded after adding the existing analysis root; no dispatch occurred."
+  },
+  "implementation_verification": {
+    "last_verified_receipt": "RESUME_VERIFIED_20261102.json",
+    "passed": 59,
+    "failed": 0,
+    "rerun_this_session": false,
+    "reason": "No implementation changes or new eligible inputs; preserve completed tests and reports"
+  },
   "new_watcher_or_report_dispatches": 0,
   "completed_reports_regenerated": 0,
   "new_simulation_seconds": 0,
