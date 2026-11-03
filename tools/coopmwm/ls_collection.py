@@ -185,6 +185,18 @@ def episode_worker(job):
         if not p.exists():immutable(p,dict(unix=time.time(),charges_retained=True))
 
 
+def preflight_coop(config):
+    """Supervisor startup check: with coop_objective's novelty on, the bank file must exist on
+    THIS host and match its digest BEFORE any work is admitted (the same check as
+    ``python -m tools.coopmwm.coop_search preflight --sha``; missing/mismatched bank raises)."""
+    coop=config.get('coop_search') or {}
+    sha=coop.get('coop_novelty_bank_sha256')
+    if coop.get('coop_objective') and coop.get('coop_novelty') and sha:
+        from .coop_search import preflight
+        return preflight(sha)
+    return None
+
+
 def supervise(root):
     """One durable owner, concurrent episode collection/search/label queues."""
     import fcntl
@@ -213,6 +225,7 @@ def supervise(root):
         config.update(json.loads((root/'LS_REPLAY_DRAIN_CONFIG.json').read_text()))
     if (root/'LS_COOP_SEARCH_CONFIG.json').exists():   # additive; absent = unchanged collector
         config.update(json.loads((root/'LS_COOP_SEARCH_CONFIG.json').read_text()))
+    preflight_coop(config)   # fail loudly at startup, before any episode/search is admitted
     main=Path(config['run_root']);install_accounting(main,config['budget'])
     if config.get('operational_spend_cap'):
         from . import accel_storage
