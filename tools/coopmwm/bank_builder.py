@@ -44,12 +44,17 @@ def all8_charge(original, entries):
 
 
 def run_all8_round(root, control, config, immutable, phase=PHASE):
-    """One builder pass under verify_mode=all8_both_seeds (accepted AND rejected decisions)."""
+    """One builder pass under verify_mode=all8_both_seeds (accepted AND rejected decisions).
+
+    BUILD option extra_seeds (config key, DEFAULT 0 = unchanged): the extra-seed group/extended/
+    solo verifications are conditional on the seeds-1/2 cooperation labels, so they are charged
+    LIVE through rb._confirm_charge (only the seed-2 all-K branches are precharged)."""
     import traceback
     from . import replay_bank as rb, sumo_verify as sv, verify_perseed as vp
     from . import accel_storage
     from .storage import ledger
     original_charge = rb._confirm_charge
+    extra_seeds = int(config.get('extra_seeds') or 0)
     for r in vp.pending(root, 'B', sources=config['sources']):
         vid = r['verification_id']
         attempt = control/'attempts_all8'/(vid+'.json')
@@ -81,10 +86,12 @@ def run_all8_round(root, control, config, immutable, phase=PHASE):
                 return sv.SubprocessBranchRunner(Path(work)/'branches', workers=2,
                     timeout_s=config['branch_timeout_s'])
             out = vp.confirm_all8(root, 'B', receipt, snapshot, runner_for, str(root), phase, workers=2,
-                version=r['_policy_version'], candidates=candidates, branches_dir=r['_branches'])
+                version=r['_policy_version'], candidates=candidates, branches_dir=r['_branches'],
+                extra_seeds=extra_seeds)
             result = dict(unix=time.time(), verification_id=vid, status='complete', verify_mode=vp.ALL8,
                 admitted=out['admitted'], winners=out['winners'], record_sha256=out['confirmation_sha256'],
-                precharged_sim_s=sum(j['sim_s'] for j in jobs), charged_sim_s=out['charged_sim_s'])
+                precharged_sim_s=sum(j['sim_s'] for j in jobs), charged_sim_s=out['charged_sim_s'],
+                **({'extra_seeds': extra_seeds} if extra_seeds else {}))
         except Exception as error:
             result = dict(unix=time.time(), verification_id=vid, status='failed', verify_mode=vp.ALL8,
                 error=repr(error), traceback=traceback.format_exc(),

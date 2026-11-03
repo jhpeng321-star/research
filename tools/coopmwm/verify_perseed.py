@@ -19,6 +19,23 @@ Per completed first-seed decision (accepted OR rejected - a plan may win only on
   (one member follows the plan, the others policy-continue; one shared policy branch),
   within-seed cooperative label = best-solo minus group per-second bootstrap LB > 0.
 
+OPTION ``extra_seeds`` (owner 2026-11-04 02:10; DEFAULT 0 = byte-identical records, calls and charges):
+for every decision with at least one within-seed COOPERATIVE example (seeds 1/2, after their solos),
+each such plan (distinct candidate index; one batched verification per extra seed holds all of them)
+is also run - together with the policy-continues reference - on the additional CRN seeds
+3..(2+extra_seeds). Salt derivation (``extra_seed_salt``): seed 2 keeps ``replicate(snapshot, vid)``;
+seed k >= 3 uses ``replicate(snapshot, f'{vid}#seed{k}')`` - a deterministic function of the first-seed
+verification_id and k only (distinct from vid, from each other and from every evaluation world seed;
+no evaluation seed 964000-964199/962xxx/977xxx is ever an input). Each (plan, seed) is admitted on its
+own with the SAME per-seed rules (within-seed paired-bootstrap LB > 0, own-seed composite safety, own-seed
+extended-window later-harm), then gets its own batched solo verification on THAT seed; admitted examples
+are appended to ``per_seed_v1.examples`` with ``seed_index >= 3`` (own plan/tape/label), so the per_seed_v1
+bank rule consumes them unchanged. No cross-seed requirement; seeds >= 3 do not alter the seed-1/2
+examples, the legacy ``replicated`` flag (cooperative on BOTH seeds 1 and 2) or the exact gate.
+``mean_replicated_advantage_veh_s`` stays the seeds-1/2 admission mean; ``winners``/admitted/cooperative
+seed lists simply gain the extra seed indices. Every extra verification (group, extended, solos) is
+charged through the SAME hooks as seeds 1/2. Both arms (B and R) use the identical code path.
+
 Every verification is charged through the existing hooks before physics: sv.verify ->
 runner.admit (disk guard) -> rb._confirm_charge(run_root, phase, kind) (looked up at call time,
 so precharged/builder overrides apply); warm_health.assert_running(root, arm) is checked before
@@ -46,6 +63,51 @@ KIND_EXT2 = 'confirm_extended_seed2_all8'
 EXT_ROOTS = {1: EXT_ROOT, 2: EXT2_ROOT}
 KIND_EXTS = {1: KIND_EXT, 2: KIND_EXT2}
 KIND_SOLO = {1: 'confirm_solo_all8_s1', 2: 'confirm_solo_all8_s2'}
+FIRST_EXTRA_SEED = 3
+EVAL_SEED_RANGES = ((962000, 962999), (964000, 964199), (977000, 977999))
+# Evaluation world seeds (964000-964199, 962xxx, 977xxx): never an input or output of an
+# extra-seed CRN salt (see extra_seed_salt).
+
+
+def seed_kinds(k):
+    """(seed_kind, extended_kind, solo_kind) of CRN seed k; roots are named like the kinds.
+    k=1 has no seed-kind (first-seed receipt already exists); k=2 are the existing constants."""
+    if k == 1:
+        return None, KIND_EXT, KIND_SOLO[1]
+    if k == 2:
+        return KIND_SEED2, KIND_EXT2, KIND_SOLO[2]
+    return f'confirm_seed{k}_all8', f'confirm_extended_seed{k}_all8', f'confirm_solo_all8_s{k}'
+
+
+def extra_seed_salt(vid, k):
+    """CRN salt of extra seed k >= 3: a pure deterministic function of (first-seed vid, k).
+
+    salt = f'{vid}#seed{k}' - distinct from the seed-2 salt (vid) and from every other extra
+    seed's salt. The generator seed replicate() derives from it (int(digest(...)))
+    is checked against the evaluation world-seed ranges above; in the collision case the salt is
+    deterministically re-derived with a '#x<n>' suffix, so no evaluation seed is ever the CRN
+    generator seed of an extra seed."""
+    if int(k) < FIRST_EXTRA_SEED:
+        raise ValueError(f'extra seeds start at {FIRST_EXTRA_SEED}, not {k}')
+    from .protocol import digest
+
+    def gen_seed(s):
+        return int(digest(dict(replication=s))[:15], 16)
+    base = f'{vid}#seed{int(k)}'
+    for n in range(1000):
+        candidate = base if not n else f'{base}#x{n}'
+        if not any(lo <= gen_seed(candidate) <= hi for lo, hi in EVAL_SEED_RANGES):
+            return candidate
+    raise ValueError(f'extra_seed_salt: cannot avoid evaluation seeds for {vid!r} seed {k}')
+
+
+def extra_seed_indices(extra_seeds):
+    n = int(extra_seeds or 0)
+    if n < 0:
+        raise ValueError('extra_seeds must be >= 0')
+    return list(range(FIRST_EXTRA_SEED, FIRST_EXTRA_SEED+n))
+
+
 RULE = ('all8_both_seeds (owner 2026-11-03 22:05): all K candidates + policy-continues on BOTH CRN seeds; '
         'per seed every candidate with within-seed per-second paired bootstrap lower95 > 0 and composite '
         'safety pass is admitted (each seed also needs its own extended-window later-harm pass, measured '
@@ -68,13 +130,21 @@ def _branch(t0, duration_s, tail_s, end_s=1200):
     return sv.branch_sim_s(min(int(t0)+int(duration_s)+int(tail_s), int(end_s)))
 
 
-def quote_decision(t0, durations, members, admitted=None, first_seed_positive=None, end_s=1200):
-    """Charged sim-s of ONE decision: today (legacy) vs all8_both_seeds.
+def quote_decision(t0, durations, members, admitted=None, first_seed_positive=None, end_s=1200,
+                   extra_seeds=0, cooperative=None):
+    """Charged sim-s of ONE decision: today (legacy) vs all8_both_seeds (vs + extra seeds).
 
     durations/members: per candidate (K entries). admitted: {1: [idx..], 2: [idx..]} (0-based
     candidate indices admitted per seed; seed-1 LB>0 set is assumed == admitted for the extended
     quote). Legacy: first-seed K+1 branches; if the first seed is positive, replication (2) +
-    extended (2) + per-member solos (2n, run when replication + later-harm pass, here assumed)."""
+    extended (2) + per-member solos (2n, run when replication + later-harm pass, here assumed).
+    extra_seeds (BUILD option, DEFAULT 0 = output keys unchanged): per extra CRN seed every
+    COOPERATIVE plan is re-verified + policy reference (group), gets its extended later-harm
+    window (all plans assumed LB>0 on the extra seed, like the seed-1/2 assumption) and its
+    solos (assumed admitted; cooperative plans always have >= 2 members). cooperative: candidate
+    indices with a within-seed cooperative example on seeds 1/2; None = the union of the
+    admitted seed-1/2 candidates with >= 2 members (upper bound, consistent with the other
+    assumptions here)."""
     from .replay_bank import EXTENDED_TAIL_S
     from .sumo_verify import TAIL_S
     admitted = {int(k): list(v) for k, v in (admitted or {1: [], 2: []}).items()}
@@ -100,12 +170,25 @@ def quote_decision(t0, durations, members, admitted=None, first_seed_positive=No
                 for k in (1, 2) for i in admitted.get(k) or [] if len(members[i]) >= 2)
     legacy = first+legacy_conf
     new = first+seed2+ext+solos
-    return dict(t0=t0, K=K, first_seed_sim_s=first, legacy_confirmation_sim_s=legacy_conf,
-                legacy_total_sim_s=legacy, all8_seed2_sim_s=seed2, all8_extended_sim_s=ext,
-                all8_solo_sim_s=solos, all8_confirmation_sim_s=seed2+ext+solos, all8_total_sim_s=new,
-                multiplier_total=new/legacy, multiplier_confirmation=((seed2+ext+solos)/legacy_conf
-                                                                      if legacy_conf else None),
-                admitted=admitted, note='branch sim-s charged from t=0 (warm-up included), as sv.quote')
+    out = dict(t0=t0, K=K, first_seed_sim_s=first, legacy_confirmation_sim_s=legacy_conf,
+               legacy_total_sim_s=legacy, all8_seed2_sim_s=seed2, all8_extended_sim_s=ext,
+               all8_solo_sim_s=solos, all8_confirmation_sim_s=seed2+ext+solos, all8_total_sim_s=new,
+               multiplier_total=new/legacy, multiplier_confirmation=((seed2+ext+solos)/legacy_conf
+                                                                     if legacy_conf else None),
+               admitted=admitted, note='branch sim-s charged from t=0 (warm-up included), as sv.quote')
+    coop = (sorted({int(i) for i in cooperative}) if cooperative is not None
+            else sorted({i for k in (1, 2) for i in admitted.get(k) or [] if len(members[i]) >= 2}))
+    n_extra = int(extra_seeds or 0)
+    if n_extra > 0:
+        eg = (len(coop)+1)*_branch(t0, max((durations[i] for i in coop), default=maxD), TAIL_S, end_s) if coop else 0
+        ee = (len(coop)+1)*_branch(t0, max((durations[i] for i in coop), default=maxD), EXTENDED_TAIL_S, end_s) if coop else 0
+        es = sum((len(members[i])+1)*_branch(t0, durations[i], TAIL_S, end_s) for i in coop)
+        extra_total = n_extra*(eg+ee+es)
+        out.update(extra_seeds=n_extra, cooperative=coop, extra_seeds_group_sim_s=n_extra*eg,
+                   extra_seeds_extended_sim_s=n_extra*ee, extra_seeds_solo_sim_s=n_extra*es,
+                   extra_seeds_sim_s=extra_total, all8_total_with_extra_sim_s=new+extra_total,
+                   multiplier_total_with_extra=((new+extra_total)/legacy if legacy else None))
+    return out
 
 
 def standard_quote():
@@ -119,6 +202,23 @@ def standard_quote():
             one_winner_each_seed=quote_decision(t0, D, M, {1: [0], 2: [0]}),
             different_winners_each_seed=quote_decision(t0, D, M, {1: [0], 2: [5]}),
             two_winners_each_seed=quote_decision(t0, D, M, {1: [0, 1], 2: [0, 2]}))
+    return rows
+
+
+def extra_seeds_quote(n=4):
+    """Per-decision quote for BUILD option extra_seeds=n (CLI 'extra-seeds'; DEFAULT 4).
+
+    Rows: no cooperative example on seeds 1/2 -> the extra seeds never run (0 extra sim-s);
+    one/two cooperative winners -> group+reference, extended later-harm window and solos per
+    extra seed (upper-bound admission assumption, see quote_decision)."""
+    D, M = [120]*8, [['a', 'b']]*8
+    rows = {}
+    for t0 in (420, 600, 900):
+        rows[f't0_{t0}'] = dict(
+            no_cooperative=quote_decision(t0, D, M, {1: [], 2: []}, extra_seeds=n),
+            one_cooperative_winner=quote_decision(t0, D, M, {1: [0], 2: [0]}, extra_seeds=n, cooperative=[0]),
+            two_cooperative_winners=quote_decision(t0, D, M, {1: [0, 1], 2: [0, 2]}, extra_seeds=n,
+                                                   cooperative=[0, 1, 2]))
     return rows
 
 
@@ -276,8 +376,19 @@ def _cooperation(seed, plan, plan_tape, window, solo, solo_dir, reference_J, adm
 # ---------------------------------------------------------------- confirmation (one decision)
 
 def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, workers=2, version=None,
-                 candidates=None, branches_dir=None, health=None, later_harm_seed1=True, later_harm_seed2=True):
-    """all8_both_seeds confirmation of ONE completed first-seed decision -> sealed record."""
+                 candidates=None, branches_dir=None, health=None, later_harm_seed1=True, later_harm_seed2=True,
+                 extra_seeds=0):
+    """all8_both_seeds confirmation of ONE completed first-seed decision -> sealed record.
+
+    extra_seeds (BUILD option, DEFAULT 0 = records, calls and charges byte-identical): after
+    seeds 1/2 and their solos, every plan with a within-seed COOPERATIVE example is re-verified
+    (+ policy-continues reference, one batched verification per extra seed) on CRN seeds
+    3..(2+extra_seeds) with extra_seed_salt salts; each (plan, extra seed) is admitted
+    independently by the SAME per-seed rules (LB > 0, own-seed safety, own-seed measured
+    later harm), then gets its own solos on THAT seed; examples are appended with
+    seed_index >= 3 (per_seed_v1 consumes them unchanged). Seeds >= 3 never alter the seed-1/2
+    examples, mean_replicated_advantage_veh_s (seeds-1/2 admission mean), the legacy
+    ``replicated`` flag (cooperative on BOTH seeds 1 and 2) or the exact gate."""
     from . import replay_bank as rb
     from . import bank_statistics as bs
     from . import exact_grade as xg
@@ -303,32 +414,38 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
     s2_dir = bank/SEED2_ROOT
     s2 = verify(KIND_SEED2, s2_snapshot, plans, s2_dir, rb.sv.TAIL_S)
     seeds = {1: (rc, first_dir), 2: (s2, s2_dir/'branches')}
+    branch_of = {k: {i: i+1 for i in range(len(plans))} for k in seeds}
+
+    def build_eval(k, i):
+        """Within-seed paired bootstrap + REQUIRED own-seed safety deltas of candidate i on seed k."""
+        r, bdir = seeds[k]
+        if not _complete(r):
+            return dict(missing=f'seed-{k} decision {r.get("status")}: {r.get("reason")}')
+        try:
+            st, tape = _candidate_stats(r, bdir, branch_of[k][i])
+        except bs._Missing as e:
+            return dict(missing=str(e))
+        try:     # own-seed safety deltas are REQUIRED (no fallback to another seed's window)
+            deltas, safe, old_safe = _pair_safety(r, bdir, branch_of[k][i])
+        except (OSError, EOFError, KeyError, TypeError, ValueError) as e:
+            return dict(missing=f'seed-{k} safety deltas unavailable: {e!r}')
+        return dict(stats=st, tape=tape, window_deltas=deltas, window_safe=safe,
+                    window_safe_old=old_safe,
+                    advantage=r['J_policy_veh_s']-r['J_candidates_veh_s'][branch_of[k][i]-1])
 
     # Within-seed paired bootstrap of every candidate on each seed (independent selection).
-    evals = {1: {}, 2: {}}
-    for k, (r, bdir) in seeds.items():
+    evals = {k: {} for k in seeds}
+    for k in seeds:
         for i in range(len(plans)):
-            if not _complete(r):
-                evals[k][i] = dict(missing=f'seed-{k} decision {r.get("status")}: {r.get("reason")}')
-                continue
-            try:
-                st, tape = _candidate_stats(r, bdir, i+1)
-            except bs._Missing as e:
-                evals[k][i] = dict(missing=str(e));continue
-            try:     # own-seed safety deltas are REQUIRED (no fallback to another seed's window)
-                deltas, safe, old_safe = _pair_safety(r, bdir, i+1)
-            except (OSError, EOFError, KeyError, TypeError, ValueError) as e:
-                evals[k][i] = dict(missing=f'seed-{k} safety deltas unavailable: {e!r}');continue
-            evals[k][i] = dict(stats=st, tape=tape, window_deltas=deltas, window_safe=safe,
-                               window_safe_old=old_safe, advantage=r['J_policy_veh_s']-r['J_candidates_veh_s'][i])
+            evals[k][i] = build_eval(k, i)
 
     # Later harm, per seed: one extended-window verification of every LB>0 candidate of that seed
     # on THAT seed's CRN (seed 1 = decision snapshot, seed 2 = the seed-2 replicate); MAIN
     # 2026-11-03: new all8 verifications measure seed 2 too and a measured failure rejects.
     measure = {1: bool(later_harm_seed1), 2: bool(later_harm_seed2)}
     snaps = {1: snapshot, 2: s2_snapshot}
-    exts, ext_index, lbs = {1: None, 2: None}, {1: {}, 2: {}}, {}
-    for k in (1, 2):
+    exts, ext_index, lbs = {k: None for k in seeds}, {k: {} for k in seeds}, {}
+    for k in sorted(snaps):
         lbs[k] = [i for i, e in evals[k].items() if 'stats' in e and e['stats']['lower95_one_sided_veh_s'] > 0]
         if measure[k] and lbs[k]:
             exts[k] = verify(KIND_EXTS[k], snaps[k], [plans[i] for i in lbs[k]], bank/EXT_ROOTS[k],
@@ -336,69 +453,70 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
             ext_index[k] = {i: j+1 for j, i in enumerate(lbs[k])}
     ext, lb1 = exts[1], lbs[1]
 
-    examples = []
-    for k in (1, 2):
-        for i, plan in enumerate(plans):
-            e = evals[k][i]
-            branch = seeds[k][0]['branches'][i+1] if _complete(seeds[k][0]) else None
-            ex = dict(seed_index=k, candidate_index=i, example_id=f'{vid}#c{i+1}#s{k}', plan=copy.deepcopy(plan),
-                      plan_id=plan['id'], plan_sha256=digest(plan), duration_s=int(plan['duration_s']),
-                      members=list(plan['members']), group_size=len(plan['members']))
-            if 'missing' in e:
-                ex.update(admitted=False, status='data_missing', reason='per-unit data missing: '+e['missing'],
-                          cooperative=False, cooperative_status='data_missing', later_harm='not_measured')
-                examples.append(ex);continue
-            st = e['stats'];lower = st['lower95_one_sided_veh_s']
-            later, safe, source = None, e['window_safe'], f'seed{k}_window'
-            if measure[k] and lower > 0:
-                j, x = ext_index[k][i], exts[k]
-                if not _complete(x) or x['J_candidates_veh_s'][j-1] is None:
+    def build_example(k, i):
+        e = evals[k][i]
+        branch = seeds[k][0]['branches'][branch_of[k][i]] if _complete(seeds[k][0]) else None
+        plan = plans[i]
+        ex = dict(seed_index=k, candidate_index=i, example_id=f'{vid}#c{i+1}#s{k}', plan=copy.deepcopy(plan),
+                  plan_id=plan['id'], plan_sha256=digest(plan), duration_s=int(plan['duration_s']),
+                  members=list(plan['members']), group_size=len(plan['members']))
+        if 'missing' in e:
+            ex.update(admitted=False, status='data_missing', reason='per-unit data missing: '+e['missing'],
+                      cooperative=False, cooperative_status='data_missing', later_harm='not_measured')
+            return ex
+        st = e['stats'];lower = st['lower95_one_sided_veh_s']
+        later, safe, source = None, e['window_safe'], f'seed{k}_window'
+        if measure[k] and lower > 0:
+            j, x = ext_index[k][i], exts[k]
+            if not _complete(x) or x['J_candidates_veh_s'][j-1] is None:
+                later = None;ex['later_harm_missing'] = True
+            else:
+                try:
+                    ed, safe, _ = _pair_safety(x, bank/EXT_ROOTS[k]/'branches', j)
+                except (OSError, EOFError, KeyError, TypeError, ValueError):
                     later = None;ex['later_harm_missing'] = True
                 else:
-                    try:
-                        ed, safe, _ = _pair_safety(x, bank/EXT_ROOTS[k]/'branches', j)
-                    except (OSError, EOFError, KeyError, TypeError, ValueError):
-                        later = None;ex['later_harm_missing'] = True
-                    else:
-                        later = x['J_policy_veh_s']-x['J_candidates_veh_s'][j-1] > 0
-                        ex['extended_deltas'] = ed;source = f'extended_window_seed{k}'
-                        ex['extended_advantage_veh_s'] = x['J_policy_veh_s']-x['J_candidates_veh_s'][j-1]
-            if measure[k] and lower > 0 and later is None:
-                ok, reason = False, f'seed-{k} extended-window branch missing; never imputed'
-            elif later is False:
-                ok, reason = False, f'seed-{k} later-harm check failed (extended-window advantage <= 0)'
-            elif not lower > 0:
-                ok, reason = False, f'seed-{k} one-sided 95% lower bound {lower:.4g} <= 0'
-            elif not safe:
-                ok, reason = False, f'seed-{k} composite safety check failed ({source})'
-            else:
-                ok = True
-                reason = f'seed-{k} lower95 > 0, safety pass' + (', later-harm pass' if later else
-                                                                  ', later-harm NOT MEASURED')
-            ex.update(admitted=ok, status='admitted' if ok else 'rejected', reason=reason, admission=st,
-                      lower95_one_sided_veh_s=lower, total_veh_s=st['pooled_total_veh_s'],
-                      mean_per_unit_veh_s=st['per_seed'][0]['mean_per_unit_veh_s'],
-                      n_units=st['per_seed'][0]['n_units'], advantage_veh_s=e['advantage'],
-                      later_harm=('pass' if later else 'fail') if later is not None else 'not_measured',
-                      safety_ok=safe, safety_source=source, window_deltas=e['window_deltas'],
-                      window_safety_old_rule_ok=e['window_safe_old'],
-                      tape=dict(branches_dir=str(seeds[k][1]), verification_id=seeds[k][0]['verification_id'],
-                                branch=dict(branch), window=dict(seeds[k][0]['window']), seed_index=k,
-                                intent_entry=(f'{vid}/{branch["branch"]}' if k == 1
-                                              else f'{vid}/seed2/{branch["branch"]}')))
-            examples.append(ex)
+                    later = x['J_policy_veh_s']-x['J_candidates_veh_s'][j-1] > 0
+                    ex['extended_deltas'] = ed;source = f'extended_window_seed{k}'
+                    ex['extended_advantage_veh_s'] = x['J_policy_veh_s']-x['J_candidates_veh_s'][j-1]
+        if measure[k] and lower > 0 and later is None:
+            ok, reason = False, f'seed-{k} extended-window branch missing; never imputed'
+        elif later is False:
+            ok, reason = False, f'seed-{k} later-harm check failed (extended-window advantage <= 0)'
+        elif not lower > 0:
+            ok, reason = False, f'seed-{k} one-sided 95% lower bound {lower:.4g} <= 0'
+        elif not safe:
+            ok, reason = False, f'seed-{k} composite safety check failed ({source})'
+        else:
+            ok = True
+            reason = f'seed-{k} lower95 > 0, safety pass' + (', later-harm pass' if later else
+                                                              ', later-harm NOT MEASURED')
+        ex.update(admitted=ok, status='admitted' if ok else 'rejected', reason=reason, admission=st,
+                  lower95_one_sided_veh_s=lower, total_veh_s=st['pooled_total_veh_s'],
+                  mean_per_unit_veh_s=st['per_seed'][0]['mean_per_unit_veh_s'],
+                  n_units=st['per_seed'][0]['n_units'], advantage_veh_s=e['advantage'],
+                  later_harm=('pass' if later else 'fail') if later is not None else 'not_measured',
+                  safety_ok=safe, safety_source=source, window_deltas=e['window_deltas'],
+                  window_safety_old_rule_ok=e['window_safe_old'],
+                  tape=dict(branches_dir=str(seeds[k][1]), verification_id=seeds[k][0]['verification_id'],
+                            branch=dict(branch), window=dict(seeds[k][0]['window']), seed_index=k,
+                            intent_entry=(f'{vid}/{branch["branch"]}' if k == 1
+                                          else f'{vid}/seed{k}/{branch["branch"]}')))
+        return ex
+
+    examples = []
+    for k in sorted(seeds):
+        for i in range(len(plans)):
+            examples.append(build_example(k, i))
 
     # Solos per admitted (plan, seed) on THAT seed: one batched verification, shared policy branch.
-    for ex in examples:
-        if ex['status'] != 'admitted':
-            if 'cooperative' not in ex:
-                ex.update(cooperative=False, cooperative_status='not_admitted')
-            continue
-        k, plan = ex['seed_index'], ex['plan']
+    def run_solo(k, ex):
+        s_kind = KIND_SOLO.get(k) or seed_kinds(k)[2]
+        plan = ex['plan']
         solo = None
         if len(plan['members']) >= 2:
-            solo = verify(KIND_SOLO[k], snaps[k], [rb.solo_candidate(plan, m) for m in plan['members']],
-                          bank/SOLO_ROOTS[k], rb.sv.TAIL_S)
+            solo = verify(s_kind, snaps[k], [rb.solo_candidate(plan, m) for m in plan['members']],
+                          bank/s_kind, rb.sv.TAIL_S)
         ref_tape = None
         if solo is not None and solo['J_policy_veh_s'] != seeds[k][0]['J_policy_veh_s']:
             try:     # only needed when the solo window differs from the group window
@@ -407,16 +525,52 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
             except (bs._Missing, OSError, ValueError):
                 ref_tape = None
         ex.update(_cooperation(k, plan, evals[k][ex['candidate_index']]['tape'], ex['tape']['window'], solo,
-                               bank/SOLO_ROOTS[k], seeds[k][0]['J_policy_veh_s'], True, reference_tape=ref_tape))
+                               bank/s_kind, seeds[k][0]['J_policy_veh_s'], True, reference_tape=ref_tape))
+
+    for ex in examples:
+        if ex['status'] != 'admitted':
+            if 'cooperative' not in ex:
+                ex.update(cooperative=False, cooperative_status='not_admitted')
+            continue
+        run_solo(ex['seed_index'], ex)
+
+    # Extra seeds (BUILD option, DEFAULT 0 = nothing below runs): seeds 3..(2+extra_seeds) for
+    # the plans that carry a within-seed COOPERATIVE example on seeds 1/2. Each (plan, extra
+    # seed) stands alone: independent admission by the same per-seed rules, own extended
+    # later-harm window, own solos; examples are APPENDED (seed_index >= 3).
+    coop_idx = sorted({e['candidate_index'] for e in examples if e.get('cooperative') is True})
+    extras = {}
+    for k in extra_seed_indices(extra_seeds):
+        if not coop_idx:
+            break
+        kind, k_ext, k_solo = seed_kinds(k)
+        salt = extra_seed_salt(vid, k)
+        ksnap = rb.replicate(snapshot, salt)
+        kdir = bank/kind
+        kr = verify(kind, ksnap, [plans[i] for i in coop_idx], kdir, rb.sv.TAIL_S)
+        seeds[k] = (kr, kdir/'branches');snaps[k] = ksnap;measure[k] = True
+        branch_of[k] = {i: j+1 for j, i in enumerate(coop_idx)}
+        evals[k] = {i: build_eval(k, i) for i in coop_idx}
+        lbs[k] = [i for i, e in evals[k].items() if 'stats' in e and e['stats']['lower95_one_sided_veh_s'] > 0]
+        if lbs[k]:
+            exts[k] = verify(k_ext, ksnap, [plans[i] for i in lbs[k]], bank/k_ext, rb.EXTENDED_TAIL_S)
+            ext_index[k] = {i: j+1 for j, i in enumerate(lbs[k])}
+        for i in coop_idx:
+            ex = build_example(k, i)
+            examples.append(ex)
+            if ex['status'] == 'admitted':
+                run_solo(k, ex)
+        extras[k] = dict(kind=kind, ext_kind=k_ext, solo_kind=k_solo, salt=salt, receipt=kr, root=kdir)
 
     adm = [e for e in examples if e['admitted']]
-    winners = {str(k): [e['plan_id'] for e in adm if e['seed_index'] == k] for k in (1, 2)}
+    adm12 = [e for e in adm if e['seed_index'] in (1, 2)]
+    winners = {str(k): [e['plan_id'] for e in adm if e['seed_index'] == k] for k in sorted(seeds)}
     coop = [e for e in examples if e.get('cooperative') is True]
     coop_seeds = sorted({e['seed_index'] for e in coop})
     by_plan = {}
     for e in coop:
         by_plan.setdefault(e['plan_id'], set()).add(e['seed_index'])
-    replicated = sorted(p for p, s in by_plan.items() if s == {1, 2})
+    replicated = sorted(p for p, s in by_plan.items() if {1, 2} <= s)
     group_sizes = [len(p['members']) for p in plans]
     out = dict(schema=SCHEMA, verify_mode=ALL8, bank_rule='per_seed_v1', rule=RULE, verification_id=vid, arm=arm,
                policy_version=version, t0=rc['t0'], K=len(plans), first_seed_status=rc['status'],
@@ -436,7 +590,8 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
                                 duration_s=int(p['duration_s'])) for i, p in enumerate(plans)],
                winners=winners, distinct_winners_across_seeds=set(winners['1']) != set(winners['2']),
                admitted=bool(adm),
-               mean_replicated_advantage_veh_s=(sum(e['advantage_veh_s'] for e in adm)/len(adm) if adm else None),
+               mean_replicated_advantage_veh_s=(sum(e['advantage_veh_s'] for e in adm12)/len(adm12)
+                                                if adm12 else None),
                per_seed_v1=dict(examples=examples, admitted_seeds=sorted({e['seed_index'] for e in adm}),
                                 cooperative_seeds=coop_seeds, replicated=bool(replicated),
                                 replicated_plans=replicated,
@@ -447,6 +602,17 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
                                 rule='within-seed synergy per admitted (plan, seed); never pooled'),
                charges=charges, charged_sim_s=sum(c['charged_sim_s'] or 0 for c in charges),
                actual_sim_s=sum(c['actual_sim_s'] or 0 for c in charges), unix=time.time())
+    if extras:     # only present with extra_seeds >= 1: never written when the option is off
+        out['extra_seeds'] = int(extra_seeds)
+        out['extra'] = {str(k): dict(
+            seed_index=k, salt=x['salt'], kind=x['kind'],
+            verification_id=x['receipt']['verification_id'], status=x['receipt']['status'],
+            snapshot_sha256=x['receipt'].get('snapshot_sha256'), receipt_sha256=x['receipt']['receipt_sha256'],
+            root=str(x['root']), candidates=coop_idx, J_policy_veh_s=x['receipt'].get('J_policy_veh_s'),
+            extended=(dict(verification_id=exts[k]['verification_id'], status=exts[k]['status'],
+                           receipt_sha256=exts[k]['receipt_sha256'], candidate_indices=lbs[k])
+                      if exts.get(k) is not None else None),
+            later_harm_measured=True, solo_root=str(bank/x['solo_kind'])) for k, x in sorted(extras.items())}
     xg._write_new(target, xg._seal(out, 'confirmation_sha256'))
     return json.loads(target.read_text())
 
@@ -472,7 +638,7 @@ def relabel_reference_mismatch(record, bank):
         try:
             k, t = e['seed_index'], e['tape']
             bdir = Path(t['branches_dir'])
-            solo_root = Path(bank)/SOLO_ROOTS[k]
+            solo_root = Path(bank)/(SOLO_ROOTS.get(k) or seed_kinds(k)[2])
             solo = bs._receipt(solo_root, dict(verification_id=e['solo_verification_id'],
                                                receipt_sha256=e.get('solo_receipt_sha256')))
             grec = bs._receipt(bdir.parent, dict(verification_id=t['verification_id']))
@@ -493,7 +659,7 @@ def relabel_reference_mismatch(record, bank):
     by_plan = {}
     for e in coop:
         by_plan.setdefault(e['plan_id'], set()).add(e['seed_index'])
-    replicated = sorted(p for p, s in by_plan.items() if s == {1, 2})
+    replicated = sorted(p for p, s in by_plan.items() if {1, 2} <= s)   # extra seeds (>= 3) never change it
     seeds = sorted({e['seed_index'] for e in coop})
     ps.update(cooperative_seeds=seeds, replicated=bool(replicated), replicated_plans=replicated)
     out['cooperation'].update(cooperative=bool(coop), cooperative_seeds=seeds, cooperative_examples=len(coop),
@@ -555,7 +721,10 @@ def pending(root, arm, sources=()):
             if r['status'] in ('accepted', 'rejected') and r['verification_id'] not in done]
 
 
-def confirm_pending_all8(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None, health=None):
+def confirm_pending_all8(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None, health=None,
+                         extra_seeds=0):
+    """extra_seeds (BUILD option, DEFAULT 0 = unchanged): extra CRN seeds 3..(2+extra_seeds) for
+    the plans cooperative on seeds 1/2, per decision (arms B and R alike)."""
     from . import replay_bank as rb
     by_vid = {}
     for p in (Path(rb.bank_root(root, arm))/'decisions').glob('*.json'):
@@ -566,17 +735,22 @@ def confirm_pending_all8(root, arm, runner_for, run_root, phase, workers=2, sour
             break
         snap = rb._decision_snapshot(root, arm, r, by_vid)
         out.append(confirm_all8(root, arm, r, snap, runner_for, run_root, phase, workers,
-                                r['_policy_version'], health=health)['admitted'])
+                                r['_policy_version'], health=health,
+                                extra_seeds=extra_seeds)['admitted'])
     return out
 
 
 def main(argv=None):
-    """python -m tools.coopmwm.verify_perseed quote  (no SUMO; prints the per-decision quote)."""
+    """python -m tools.coopmwm.verify_perseed quote|extra-seeds  (no SUMO; prints the quote).
+
+    ``quote``: the per-decision all8_both_seeds quote. ``extra-seeds`` (BUILD option quote,
+    default n=4): the same rows plus the extra-seed sim-s of the cooperative plans."""
     import argparse
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=('quote',))
-    ap.parse_args(argv)
-    print(json.dumps(standard_quote(), indent=1))
+    ap.add_argument('cmd', choices=('quote', 'extra-seeds'))
+    ap.add_argument('--n', type=int, default=4, help='extra CRN seeds (extra-seeds command; default 4)')
+    a = ap.parse_args(argv)
+    print(json.dumps(standard_quote() if a.cmd == 'quote' else extra_seeds_quote(a.n), indent=1))
 
 
 if __name__ == '__main__':
