@@ -101,6 +101,40 @@ def _last_commands(frame):
     return out
 
 
+def _frame_table(frame):
+    """``{vid: row}`` view of a trace frame for the OBSERVATION part's v2v_features (which takes
+    a vid -> record mapping, not the raw trace frame); the partner acceleration feature a_mps2
+    maps the row's recorded issued_acceleration_mps2 (0.0 when absent - only the PREVIOUS-second
+    command gates exclusion, exactly as before)."""
+    vehicles = frame.get('vehicles', []) if isinstance(frame, dict) else list(frame)
+    table = {}
+    for v in vehicles:
+        row = dict(v)
+        accel = row.get('issued_acceleration_mps2')
+        row['a_mps2'] = float(accel) if accel is not None else 0.
+        table[v['vid']] = row
+    return table
+
+
+def _obs_cfg(cfg=None):
+    """The real v2v_features takes a V2VConfig; the bank cfg carries max_partners/range_m."""
+    from .v2v_obs import V2V_RANGE_M, V2VConfig
+    if isinstance(cfg, V2VConfig):
+        return cfg
+    merged = dict(DEFAULT_CFG, **(cfg or {}))
+    return V2VConfig(v2v=True, k=int(merged['max_partners']),
+                     range_m=float(merged.get('range_m', V2V_RANGE_M)))
+
+
+def _features(frame, ego, known, cfg):
+    """Dispatch on the feature source: the local STUB takes the raw frame + dict cfg; the
+    OBSERVATION part's v2v_features takes the {vid: row} table + a V2VConfig. Both return
+    plain Python floats (bank pairs are JSON-serialised into receipts)."""
+    if STUB:
+        return [float(x) for x in v2v_features(frame, ego, known, cfg)]
+    return [float(x) for x in v2v_features(_frame_table(frame), ego, known, _obs_cfg(cfg))]
+
+
 def pair_v2v_block(frame, prev_frame, members, cfg=None):
     """The v2v block for one pair second: {member vid: features} for every member present as a
     CAV in ``frame`` (zeros for absent members); partners = the other CAVs of the frame.
@@ -116,7 +150,7 @@ def pair_v2v_block(frame, prev_frame, members, cfg=None):
         if me is None:
             block[ego] = [0.]*V2V_DIM
             continue
-        block[ego] = list(v2v_features(frame, ego, known, cfg))
+        block[ego] = list(_features(frame, ego, known, cfg))
     return block, missing
 
 
@@ -226,7 +260,7 @@ def branch_controller_class():
             block = {}
             for m in context['members']:
                 if any(v.get('vid') == m and v.get('is_cav') for v in vehicles):
-                    block[m] = list(v2v_features(frame, m, known, self.v2v_cfg))
+                    block[m] = list(_features(frame, m, known, self.v2v_cfg))
                 else:
                     block[m] = [0.]*V2V_DIM
             return block

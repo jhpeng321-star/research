@@ -77,24 +77,31 @@ def _bank(root, bank, runner):
     assert out['admitted'] is True, out
 
 
-def test_stub_features_from_synthetic_trace():
+def test_pair_v2v_block_from_synthetic_trace():
     frames = {t: dict(time_s=t, vehicles=[
-        dict(vid='c1', is_cav=True, s_m=10.+t, v_mps=8., issued_acceleration_mps2=1.),
-        dict(vid='c2', is_cav=True, s_m=24.-t, v_mps=10.5, issued_acceleration_mps2=-2.),
+        dict(vid='c1', is_cav=True, s_m=10., v_mps=8., issued_acceleration_mps2=1.),
+        dict(vid='c2', is_cav=True, s_m=24., v_mps=10.5, issued_acceleration_mps2=-2.),
         dict(vid='hd', is_cav=False, s_m=3., v_mps=9., issued_acceleration_mps2=9.)])
         for t in (419, 420)}
     block, missing = bank_v2v.pair_v2v_block(frames[420], frames[419], ['c1', 'c2'])
     assert missing == [] and sorted(block) == ['c1', 'c2']
-    assert bank_v2v.STUB is True and bank_v2v.V2V_DIM == 16
-    # partner c2 seen by ego c1: relative position, speed, this-second accel, previous-second command
-    assert block['c1'][:4] == pytest.approx([14.-2*420, 10.5, -2., -2.])
-    assert block['c1'][4:] == [0.]*12                       # zero padded to V2V_DIM
-    assert block['c2'][:4] == pytest.approx([-14.+2*420, 8., 1., 1.])
+    assert bank_v2v.STUB is False and bank_v2v.V2V_DIM == 24   # OBS part landed and is picked up
+    # partner c2 by ego c1 - OBSERVATION layout: gap, lane offset, speed, accel,
+    # previous-second command, presence
+    assert block['c1'][:6] == pytest.approx([14., 0., 10.5, -2., -2., 1.])
+    assert block['c1'][6:] == [0.]*18                       # zero padded to V2V_DIM
+    assert block['c2'][:6] == pytest.approx([-14., 0., 8., 1., 1., 1.])
     # non-CAV rows are never partners
     frame = dict(time_s=420, vehicles=[dict(vid='c1', is_cav=True, s_m=10., v_mps=8.,
                                            issued_acceleration_mps2=1.)])
     solo, _ = bank_v2v.pair_v2v_block(frame, frame, ['c1'])
     assert solo['c1'] == [0.]*bank_v2v.V2V_DIM
+    # partners beyond the shared comm range are invisible (drifted far apart)
+    far = dict(time_s=420, vehicles=[
+        dict(vid='c1', is_cav=True, s_m=10., v_mps=8., issued_acceleration_mps2=1.),
+        dict(vid='c3', is_cav=True, s_m=500., v_mps=9., issued_acceleration_mps2=.5)])
+    out_block, _ = bank_v2v.pair_v2v_block(far, far, ['c1'])
+    assert out_block['c1'] == [0.]*bank_v2v.V2V_DIM
 
 
 def test_attach_pairs_excludes_and_counts_missing_commands(tmp_path):
@@ -150,17 +157,21 @@ def test_bank_pairs_v2v_attaches_partner_features_from_the_branch_trace(tmp_path
     _bank(root, bank, lambda work: V2VTapeRunner(work))
     pairs, s = rb.bank_pairs(root, 'B', 12345, v2v=True)
     assert len(pairs) == 120
-    assert s['v2v']['stub'] is True and s['v2v']['cfg'] == bank_v2v.DEFAULT_CFG
+    assert s['v2v']['stub'] is False and s['v2v']['cfg'] == bank_v2v.DEFAULT_CFG
     assert s['v2v']['counts'] == dict(pairs=120, kept=120, excluded_missing_prev_second=0,
                                       excluded_missing_partner_command=0, trace_missing=False)
     for i, (sample, w) in enumerate(pairs[:2]):
         block = sample['context']['v2v']
         assert sorted(block) == ['c1', 'c2']
-        # pair i is second 420+i: partner c2 by ego c1
-        assert block['c1'][:4] == pytest.approx([14.+0.5*i, 10.5, -2.-0.1*i, -1.9-0.1*i])
+        # pair i is second 420+i: partner c2 by ego c1 (OBS layout: gap, lane offset,
+        # speed, accel, previous-second command, presence)
+        assert block['c1'][:6] == pytest.approx(
+            [14.+0.5*i, 0., 10.5, -2.-0.1*i, -1.9-0.1*i, 1.])
         # partner c1 by ego c2 (relative position carries the other sign)
-        assert block['c2'][:4] == pytest.approx([-(14.+0.5*i), 8., 1.+0.1*i, 0.9+0.1*i])
+        assert block['c2'][:6] == pytest.approx(
+            [-(14.+0.5*i), 0., 8., 1.+0.1*i, 0.9+0.1*i, 1.])
         assert len(block['c1']) == bank_v2v.V2V_DIM and w == 1.
+        assert block['c1'][6:] == [0.]*18
     assert s['entries'][0]['verification_id'] == s['entries'][0]['verification_id']
     assert s['counts']['used_admitted'] == 1            # the entry itself is unchanged
 
@@ -174,7 +185,7 @@ def test_bank_pairs_v2v_excludes_pairs_lacking_the_previous_second(tmp_path):
                                       excluded_missing_partner_command=0, trace_missing=False)
     assert len(pairs) == 119
     # the first kept pair is second 421 (i=1 in the trace frame arithmetic)
-    assert pairs[0][0]['context']['v2v']['c1'][:4] == pytest.approx([14.5, 10.5, -2.1, -2.])
+    assert pairs[0][0]['context']['v2v']['c1'][:6] == pytest.approx([14.5, 0., 10.5, -2.1, -2., 1.])
 
 
 def test_bank_pairs_v2v_excludes_pairs_lacking_partner_commands(tmp_path):
@@ -228,12 +239,13 @@ def test_runtime_branch_runner_computes_last_commands_per_step(monkeypatch):
     # the v2v block reached the policy observation at every step
     assert [sorted(x['v2v']) for x in policy.contexts] == [['c1', 'c2'], ['c1', 'c2']]
     block = policy.contexts[1]['v2v']
-    # partner c2 by ego c1 at 419: relative position 17.5, speed 9.9, this-second accel
-    # 9.9-10.5, and the LAST ISSUED command of the previous second (in effect at 419) = -0.9
-    assert block['c1'][:4] == pytest.approx([17.5, 9.9, -0.6, -0.9])
-    assert block['c2'][:4] == pytest.approx([-17.5, 7.6, -0.4, 0.4])
+    # partner c2 by ego c1 at 419 (OBS layout): relative position 17.5, lane offset 0,
+    # speed 9.9, this-second accel 9.9-10.5, and the LAST ISSUED command of the previous
+    # second (in effect at 419) = -0.9; presence 1.
+    assert block['c1'][:6] == pytest.approx([17.5, 0., 9.9, -0.6, -0.9, 1.])
+    assert block['c2'][:6] == pytest.approx([-17.5, 0., 7.6, -0.4, 0.4, 1.])
     # non-CAV 'hd' is never a partner and absent members get the zero block
-    assert all(v == 0. for v in block['c1'][4:]) and len(block['c1']) == bank_v2v.V2V_DIM
+    assert block['c1'][6:] == [0.]*18 and len(block['c1']) == bank_v2v.V2V_DIM
     gone = c.v2v_block(dict(members=['c1', 'gone']))
     assert gone['gone'] == [0.]*bank_v2v.V2V_DIM
     assert os.environ.get(bank_v2v.ENV) is None
