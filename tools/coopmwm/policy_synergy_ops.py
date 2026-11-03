@@ -112,7 +112,19 @@ log=(c/'WATCH.log').read_text()[-8000:] if (c/'WATCH.log').exists() else '',repo
     p=ops.EVIDENCE/f'POLICY_SYNERGY_STATUS_{time.time_ns()}.json';write(p,value)
     for n,v in value['reports'].items():
         if not (ops.EVIDENCE/n).exists():write(ops.EVIDENCE/n,v)
-    print(json.dumps(dict(receipt=str(p),**value)))
+    summary={}
+    for name,report in value['reports'].items():
+        summary[name]=dict(status=report['status'],charged_sim_s=sum(e.get('charged_sim_s',0) for e in report['entries']),
+            adopted_branches=sum('adopted_lesson_sha256' in b for e in report['entries'] for b in e.get('results',[])),
+            new_branches=sum('adopted_lesson_sha256' not in b for e in report['entries'] for b in e.get('results',[])),
+            entries=[{k:e.get(k) for k in
+            ('verification_id','status','reason','policy_cooperation_gain_veh_s','plan_cooperation_gain_veh_s')}
+            for e in report['entries']])
+    partial={name:[{k:e.get(k) for k in ('verification_id','status','reason','policy_cooperation_gain_veh_s')}
+                   for e in entries.values()] for name,entries in value['completed_entries'].items()}
+    print(json.dumps(dict(receipt=str(p),owner=value['owner'],alive=value['alive'],
+                         status=value['status'],reports=summary,completed_entries=partial)))
+    return value
 
 
 if __name__=='__main__':

@@ -1,5 +1,15 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATEST Nov3 12:23:02+08: B8POLICY_SYNERGY COMPLETEall4then-admittedcooperative
+states/no failures. Gainsveh-s986048t300+.000008189/986052t300-.003890589/
+986066t300-168.935077/986003t390=0; originalplans958.678/.000495724/4430.099/
+894.879. DOESNOTdemonstratemeaningfulsynergytransferatu8. 3allNEWlessonsadopted;
+13newbranchesprecharged9630sim-s. R8diagnosticnowinflight, meansR8lessonready.
+3443527stillLIVE; no traininghandover. LocalcanonicalPOLICY_SYNERGY_u008_B.json
+copied, status1793679826611507000. Read-onlylocalobserverpreparednotstarted;
+aftercommit use policy_synergy_observer start ONCE/adoptdispatch. Existingremote
+sidecarcontinuesallupdates8..24 independently; no newscientificsettings.
+
 LATEST Nov3 12:19:57+08: POLICY_SYNERGY sidecar LIVE3443527/start69378435/
 bootb8bc1fcb since12:18:26; ADOPT POLICY_SYNERGY_DISPATCH_1205.json, NEVERrelaunch.
 QualifiedsourceCPU2/registration8d01d928/commit668f04fd. Existingtrainingowners

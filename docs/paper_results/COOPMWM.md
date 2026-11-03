@@ -1,5 +1,23 @@
 # S-COOPMWM — live checks
 
+## Nov3 12:23:02 UTC+8 — B-u8 policy-cooperation test complete on all4 states
+- `coopmwm/POLICY_SYNERGY_u008_B.json` is complete: every then-admitted
+  cooperative B bank state is graded, with no failed/imputed branch. Three
+  all-new lesson branches were adopted;13 new branches were run, precharged
+  **9,630sim-s** in the existing bank-extension phase.
+- Policy cooperation gains, with original plan gains alongside (veh-s):
+  - 986048/t300: **+0.000008189**, plan+958.678.
+  - 986052/t300: **−0.003890589**, plan+0.000495724.
+  - 986066/t300: **−168.935077**, plan+4430.099.
+  - 986003/t390: **0**, plan+894.879.
+- Thus the first u8 check does **not demonstrate meaningful transfer of the
+  bank plans' multi-car synergy into the policy**. The tiny positive numerical
+  sign on986048 is retained, without a new behavioural threshold. This is a
+  conditional TRAIN-bank diagnostic, not the registered final comparison.
+- The same sidecar has begun R-u8. Training remains under its original owners
+  and pacing; no search/loss/checkpoint change is conditioned on these numbers.
+  A read-only local observer is prepared to mirror future reports every120s.
+
 ## Nov3 12:19:57 UTC+8 — diagnostic live; first real prefix/CRN checks pass
 - Registered code commit`668f04fd` preceded sidecar dispatch **12:18:26+08**.
   cpuQ owner **3443527/start69378435** remains live under detached supervision;
