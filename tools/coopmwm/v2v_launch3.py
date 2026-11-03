@@ -248,18 +248,43 @@ def preflight(commit, gate, control, root, mover, ledger=None):
     return receipt
 
 
-def start(commit, gate, control, root, mover, ledger=None):
+def start(commit, gate, control, root, mover, ledger=None, wait_seconds=0):
     root = Path(root)
     started = root / STARTED_NAME
     if started.exists():
         raise Refused(STARTED_NAME + ' already exists; adopt instead of relaunching')
-    receipt = preflight(commit, gate, control, root, mover, ledger)
+    while True:
+        try:
+            receipt = preflight(commit, gate, control, root, mover, ledger)
+            break
+        except Refused as error:
+            if wait_seconds <= 0 or l3_hold(control, root) or 'resource gate' not in str(error):
+                raise
+            atomic(root / 'V2V_LAUNCH3_STATUS.json',
+                dict(unix=time.time(), stage='resource_wait', reason=str(error),
+                     new_sim_s=0))
+            time.sleep(min(120, wait_seconds))
+            wait_seconds = max(0, wait_seconds - 120)
     payload = dict(receipt, stage='launch3_start', first_update=1, final_update=24,
         resumed_after_smoke=None, launcher='tools/coopmwm/v2v_launch3.py',
         launcher_sha256=digest(__file__))
     with started.open('x', encoding='utf-8') as f:
         json.dump(payload, f, indent=1, sort_keys=True)
     return dict(payload, wrote=str(started))
+
+
+def l3_hold(control, root):
+    for base in (Path(control), Path(root)):
+        if (base / HOLD_NAME).exists():
+            return True
+    return False
+
+
+def atomic(path, value):
+    path = Path(path)
+    tmp = path.with_suffix('.tmp')
+    tmp.write_text(json.dumps(value, sort_keys=True), encoding='utf-8')
+    tmp.replace(path)
 
 
 def main(argv=None):
@@ -271,9 +296,12 @@ def main(argv=None):
     p.add_argument('--root', default=DEFAULT_ROOT)
     p.add_argument('--mover', default=DEFAULT_MOVER)
     p.add_argument('--ledger', default=None)
+    p.add_argument('--wait-seconds', type=int, default=0,
+        help='re-poll only the resource gate every 120s; HOLD still refuses at once')
     p.add_argument('--mode', choices=('check', 'start'), default='check')
     a = p.parse_args(argv)
-    action = start if a.mode == 'start' else preflight
+    action = (lambda *args: start(*args, wait_seconds=a.wait_seconds)) if a.mode == 'start' \
+        else preflight
     try:
         value = action(a.commit, a.gate, a.control, a.root, a.mover, a.ledger)
     except Refused as error:
