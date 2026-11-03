@@ -450,9 +450,15 @@ def build_receipt(root, state, checks, faults, ready, wall_s=None):
         commit=_commit(),
         branch='c4/v2v-rehearsal',
         integrated_branch_ready=_integrated_ready(),
-        hook_stub=dict(obs='tools/coopmwm/v2v_obs.py (local stub, same interface: V2V_DIM, v2v_features)',
-                       model='tools/coopmwm/v2v_model.py (local stub, same interface: extend_for_v2v)',
-                       wiring='tools/coopmwm/bank_v2v.py (flag v2v, default off; byte-identical when off)'),
+        hooks=dict(obs='tools/coopmwm/v2v_obs.py (REAL, merged from c4/v2v-int; V2V_DIM=24, v2v_features/V2VConfig/v2v_slot_block)',
+                   model='tools/coopmwm/v2v_model.py (REAL, merged from c4/v2v-int; extend_for_v2v/load_checkpoint/forward_with_v2v '
+                         '+ rehearsal glue bind_forward/load_for/fit_policy appended on the real module)',
+                   wiring='tools/coopmwm/bank_v2v.py (REAL, merged from c4/v2v-int; _frame_table/_obs_cfg adapter to the real '
+                          'v2v_obs contract, plain-float blocks; flag v2v default off)',
+                   integrate='tools/coopmwm/v2v_integrate.py (REAL widen_context/policy_call/WidenedPolicy; the rehearsal '
+                             'uses the in-model bind_forward path instead - contexts are never pre-widened here)',
+                   stubs_removed='the three local stub files were replaced by the merged real modules at merge commit '
+                                 '28a86126; no stub code remains on the rehearsal path'),
         scenario_table=_scenario_table(state),
         charges_per_update_per_arm={k: v for k, v in state['updates'].items()},
         charges_by_phase=state['charges_by_phase'],
