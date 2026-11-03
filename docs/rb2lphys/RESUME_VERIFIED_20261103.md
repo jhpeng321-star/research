@@ -47,3 +47,22 @@
 - Completed numerical results and default-OFF recommendation stand. Full gate
   qualification remains NOT ESTABLISHED; continuation is INT/MAIN-owned.
   No tests, scoring, fit, inference or dispatch repeated; no GPU/process action.
+
+## Subsequent fresh-session verification from 16f18836
+
+- Recovered clean at `16f18836`; read git status/log, worker delivery receipts,
+  common rules, required round-1 report/handoff/noon publication and agreed shared
+  parameter ownership. Completed implementation and development results preserved.
+- Fresh artifact/archive lineage verifier PASS:
+  `C:/Users/jpeng/Miniconda3/python.exe -B -m tools.rb2lphys.verify_delivery --out E:/Temp/opencode/rb2lphys_resume_16f18836_audit.json`.
+  Parameter values/hash, development allowlists, exact two-field recipe difference
+  and historical evaluated-source/canary hashes remain unchanged and verified.
+- Newer INT receipt `docs/rb2int/RECOVERY_20261103_1547.md` and its 15:49 handoff
+  record no explicit MAIN release through the Nov3 15:35 registration read.
+  Both local publication owners remain exited incomplete; 31/216 new jobs and
+  12 matched v5/v4 K8 worlds are unchanged. No new scientific snapshot is available.
+  These are INT's recorded observations, not a fresh LP remote/resource audit.
+- Frozen `b2df7458` FULL-v5/LP remain engineering READY only; full qualification
+  is NOT ESTABLISHED. Worker default-OFF recommendation and 37-line report stand.
+  No outstanding LP-owned work found. No tests, fitting, scoring, inference,
+  dispatch, new tape exposure or process intervention; continuation is INT/MAIN-owned.
