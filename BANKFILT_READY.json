@@ -1,0 +1,53 @@
+{
+  "task": "FIX 2 (statistical bank filter)",
+  "branch": "c4/bank-stat-filter",
+  "worktree": "E:/agent-work/c4-bank-stat-filter",
+  "ready": true,
+  "commit": "3efbb12a",
+  "commits": [
+    {"sha": "e82999d0", "what": "bank_filter='statistical' module + bank_pairs/warm_runner wiring + CPU tests (default off, byte-identical)"},
+    {"sha": "3efbb12a", "what": "BANK_FILTER_PREVIEW.md: read-only preview of the rule on the published live bank + live-agent data requirements"}
+  ],
+  "option": {
+    "binding_key": "bank_filter",
+    "registered_value": "statistical",
+    "default_off": "absent/None/False = old behaviour byte-identical (no new summary keys, no new reads)",
+    "invalid_values": "anything else raises ValueError"
+  },
+  "rule": {
+    "imitation_admission": "aggregate gate (every replicate advantage > 0: first seed + confirmation replication) AND significance: paired per-vehicle road-speed-deficit differences (policy vs chosen plan) from the recorded observable.jsonl.gz traces, pooled across the replicate seeds, one-sided 95% bootstrap lower bound of the mean > 0 (10000 resamples, 5th percentile, numpy default_rng(20261101)); documented fallback when no traces are readable: the bound over the >= 2 replicate aggregates must be > 0",
+    "deficit_integrand": "the plant's own registered speed deficit max(0, 1 - v_mps/SPEED_LIMIT_MPS) per vehicle-second (traffic_shepherd.c4.env SPEED_LIMIT_MPS=31.29); paired per vehicle over seconds both traces record; missing traces degrade to the aggregate rule, never imputed",
+    "cooperative_label": "group-minus-best-solo paired per-vehicle bound > 0 on the first seed (fallback: recorded aggregate gain > 0), plus the group-minus-sum-of-solos synergy C_G > 0 where all solos completed (C_G has no physical branch, so its requirement is the recorded aggregate; disclosed)",
+    "reporting": "kept/dropped entries with reason, bound, n_paired, replicate aggregates and cooperative old/new under summary['bank_filter']; 50% cooperative oversampling applies to the filtered cooperative set, weights unchanged",
+    "thresholds": "statistical rules only; no hand-set behavioural thresholds"
+  },
+  "config_keys": ["bank_filter"],
+  "call_sites": [
+    {"file": "tools/coopmwm/replay_bank.py", "function": "bank_pairs", "change": "new bank_filter kwarg; per-entry verdict via bank_filter.entry_verdict; drops counted in counts['filter_dropped']; cooperative label from the verdict; summary['bank_filter'] report"},
+    {"file": "tools/coopmwm/warm_runner.py", "function": "run_arm", "change": "bank_pairs(..., bank_filter=b.get('bank_filter')) - binding key plumbed into every B/R replay update's exact_imitation"},
+    {"file": "tools/coopmwm/bank_filter.py", "function": "entry_verdict / advantage_verdict / cooperation_verdict / paired_differences / one_sided_lb95", "change": "new read-only module; never writes bank artifacts"}
+  ],
+  "tests": {
+    "new": "tools/coopmwm/test_bank_filter_cpu.py",
+    "new_result": "7 passed (CPU only, fake plant, no SUMO/no GPU)",
+    "new_cases": ["zero-gain dropped", "noisy positive dropped (mixed-sign paired differences)", "clear positive kept", "~zero synergy not cooperative despite recorded gain > 0", "label driven by paired traces, C_G sum-of-solos gate", "unreadable traces degrade to documented aggregate rules", "option off byte-identical + invalid value raises"],
+    "regression": "tools/coopmwm/test_replay_bank_confirm_cpu.py + test_replay_bank_v2v_cpu.py + test_bank_safety_cpu.py: 28 passed (v2v default-off byte-identity included)",
+    "environmental_failures_noted": "test_mppi_runtime_cpu.py / test_fast_resume_cpu.py / test_capacity_recovery_cpu.py have pre-existing Windows-host failures (missing WM fixture rt.model, WORKERS.json worker bookkeeping); they exercise arm-A / plan_wm paths untouched by this change (verified: replay branch is B/R-only, these tests never call bank_pairs)"
+  },
+  "preview": {
+    "file": "BANK_FILTER_PREVIEW.md",
+    "live_data_reachable": false,
+    "why": "E:/research-dense/docs/paper_results/coopmwm absent; c4-coopnative publishes receipts only (B_UPDATE_001-003 pre-confirmation format; B_UPDATE_016 not published; no confirmations/branch traces)",
+    "partial_application": "aggregate fallback applied read-only to the real published snapshot B_REPLAY_LS_LAYOUT_1793661280011983300.json (8 admitted entries; all pass the weak aggregate fallback; 986052 +0.0005 cooperative label and the near-zero rows are the cases the primary per-vehicle rule/statistical label remove once traces are passed)",
+    "live_agent_must_pass": "per entry: first-seed receipt (window, branch names, grade) + policy/chosen observable traces; confirmation record (replication id/window/advantage, cooperation block); confirm_replication receipt+traces; confirm_solo receipts+traces (exact paths in BANK_FILTER_PREVIEW.md)"
+  },
+  "hard_rules_compliance": {
+    "cpu_only": true,
+    "own_worktree_only": true,
+    "c4_coopnative_and_sol": "read-only (receipts read from c4-coopnative docs; nothing written)",
+    "no_destructive_git": "no reset/clean/stash-drop/push used",
+    "forbidden_paths": "no sealed/, holdout/heldout/cal_split/chunk5/j4b/inc1 paths opened; no truth files read",
+    "v2v_default_off_untouched": true,
+    "byte_identical_when_off": "asserted by test (pairs_none == pairs_off and s_none == s_off; no new summary keys)"
+  }
+}
