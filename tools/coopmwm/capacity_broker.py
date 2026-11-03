@@ -152,7 +152,14 @@ def forecast_result(kind,record,payload):
     from .query_errors import validate_response
     try:
         result=payload['result']
-        if not isinstance(result,dict) or result.get('record_sha256')!=digest(record):
+        # Centre-only dispatch envelopes have TWO signed representations (MAIN, bank
+        # part 3 centre_identity): the stored record (with mode='centre') and the
+        # prepared record the centre service hashed (mode stripped). Either identity
+        # is valid; anything else is a mismatch.
+        expected={digest(record)}
+        if record.get('mode')=='centre':
+            expected.add(digest({k:v for k,v in record.items() if k!='mode'}))
+        if not isinstance(result,dict) or result.get('record_sha256') not in expected:
             raise ValueError('forecast identity/shape mismatch')
         if kind=='plan' and record.get('mode')!='diagnostic' and not isinstance(result.get('accepted'),bool):
             raise ValueError('forecast lacks accepted flag')

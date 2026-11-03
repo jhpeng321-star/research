@@ -47,7 +47,7 @@ DEFAULTS = dict(k=8, N_exec=10, slots=4, workers=12, episodes_per_update=6, last
                 latency_s=1., stall_s=240., timeout_s=3600., transport_errors=0, malformed=0, branch_crash=0,
                 die_slot=None, die_after=1, decline_withdrawn=True, parallel_groups=True,
                 fanout_factor=2, r_concurrent=True,
-                b_replay=True, collect_episodes=1, bank_warmup_rounds=1, verify_per_round=2)
+                b_replay=True, collect_episodes=1, bank_warmup_rounds=3, verify_per_round=2)
 
 
 # ============================================================== live-like root (three arms)
@@ -160,6 +160,10 @@ def run_scenario(name, cfg, workdir):
     layout = build_root(root, cfg)
     install_runtime(root, cfg, layout)
     _seed_check_fixtures(root)
+    # Arm A runs its own registered check at u4 and WRITES A_CHECK_RECORDS_004.json
+    # (storage.write is exclusive-create); the pre-seeded rp4 fixture for B's AB panel
+    # (unused here: replay B never runs check) would collide -> fault 7 fix.
+    (root/'A_CHECK_RECORDS_004.json').unlink()
     proposer = tiny_proposer(base)
     from . import mppi_search
     if not hasattr(mppi_search.search, 'harness_original'):
@@ -320,7 +324,10 @@ def _harness_owner(pid=None):
 
 
 def run_synergy_checks(root, budget, arms=('B',), update=FIRST_UPDATE):
-    """Non-isolated then ISOLATED policy-synergy check with v2v=True (real code path)."""
+    """Non-isolated then ISOLATED policy-synergy check with v2v=True (real code path).
+
+    The isolated variant runs from its OWN control root: run_update's one-use
+    CLAIM guard is per control dir (live ops run the two variants separately)."""
     from . import policy_synergy as ps
     from . import replay_start
     replay_start.owner = _harness_owner   # Windows rehearsal: /proc identity receipts are faked
@@ -330,7 +337,9 @@ def run_synergy_checks(root, budget, arms=('B',), update=FIRST_UPDATE):
     for arm in arms:
         try:
             base = ps.run_update(root, arm, update, cfg)
-            isolated = ps.run_update(root, arm, update, dict(cfg, isolated=True))
+            isolated = ps.run_update(root, arm, update,
+                                     dict(cfg, isolated=True,
+                                          control_root=str(Path(root)/'control_isolated')))
             out[arm] = dict(status=base['status'], entries=len(base['entries']),
                             cooperative_entries=base['admitted_cooperative_entries'],
                             v2v=base.get('v2v'), isolated_status=isolated['status'],
@@ -487,9 +496,17 @@ _FAULTS = [
     'fault 4: rehearsal fake SUMO trace rows lacked the real backend issued_acceleration_mps2/'
     'command_present slots, so bank_v2v pair blocks would have been excluded as missing partner '
     'commands - fake_tick now records the issued command per CAV row (harness parity fix)',
-    'fault 5 (rehearsal shims, disclosed): policy_synergy accounting() registered-total assertion '
+    'fault 5: capacity_broker.forecast_result rejected centre-only forecasts whose record_sha256 was '
+    'computed over the prepared (mode-stripped) record - every R centre rollout was declined '
+    '("centre unavailable", 322 skips, R bank empty); fixed with the same two-representation centre '
+    'identity rule the bank reader already applies (MAIN bank part 3 centre_identity)',
+    'fault 6: arm A crashed with FileExistsError writing A_CHECK_RECORDS_004.json (its registered u4 '
+    'check output; storage.write is exclusive-create) because the rp4 fixture pre-seeded the same '
+    'path (only read by replay-B, which never runs check) - the rehearsal no longer seeds it',
+    'fault 7 (rehearsal shims, disclosed): policy_synergy accounting() registered-total assertion '
     'needs budget.total=14_500_000 and replay_start.owner needs a /proc identity - the rehearsal '
-    'passes a mirrored budget and a harness owner receipt (same pattern as FakeGPU.owner)',
+    'passes a mirrored budget and a harness owner receipt (same pattern as FakeGPU.owner); the '
+    'isolated synergy variant runs from its own control root (one-use CLAIM guard is per control dir)',
 ]
 
 if __name__ == '__main__':
