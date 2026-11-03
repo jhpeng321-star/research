@@ -204,6 +204,14 @@ def b_available_k(root):
     return [dict(verification_id=vid, available_k=k) for _, vid, k in sorted(out)]
 
 
+def centre_identity(record, expected_sha256, response):
+    """Validate both signed representations of the centre-only dispatch envelope."""
+    if record.get('mode')!='centre' or digest(record)!=expected_sha256:return False
+    if response.get('candidate_scores',0)!=0:return False
+    prepared={k:v for k,v in record.items() if k!='mode'}
+    return response.get('record_sha256') in (expected_sha256,digest(prepared))
+
+
 def candidates_for(root, arm, meta, bounds, k=K):
     """(candidates, proposer) or (None, reason) once the request is answered."""
     key = meta['state_id']
@@ -223,7 +231,9 @@ def candidates_for(root, arm, meta, bounds, k=K):
         return None, 'pending'
     v = json.loads(p.read_text())
     if v.get('record_sha256') != meta['record_sha256']:
-        return [], 'centre identity mismatch'
+        request=Path(root)/'centre_requests'/(key+'.json')
+        if not request.exists() or not centre_identity(json.loads(request.read_text()),meta['record_sha256'],v):
+            return [], 'centre identity mismatch'
     if v.get('unavailable') or v.get('query_error') or v.get('worker_unavailable') or v.get('policy_traj') is None:
         return [], 'centre unavailable'
     seed = int(digest(dict(state=key, arm='R'))[:8], 16)
@@ -878,7 +888,7 @@ def lesson_metrics(entries, confirmed):
 
 
 def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sources=(),
-                 phase='bank_verification_ext', adopt_entries=()):
+                 phase='bank_verification_ext', adopt_entries=(),attempt_kind=None):
     """LESSON-LEARNED CHECK after an update (never raises; the training run must not depend on it).
 
     For each FROZEN lesson entry: ONE exact SUMO branch of the NEW policy continuing from the
@@ -888,7 +898,7 @@ def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sou
     bank states. Charges are lesson_u<k>-prefixed (the same entry is re-measured every update,
     so unqualified ids would hit the duplicate-charge guard from the second update on)."""
     import numpy as np
-    bank = bank_root(root, arm);stamp = f'lesson_u{int(update):03}'
+    bank = bank_root(root, arm);stamp = attempt_kind or f'lesson_u{int(update):03}'
     out = dict(arm=arm, update=int(update), unix=time.time(), phase=phase,
                rule='recapture = (J_policy_u3 - J_new_policy) / (J_policy_u3 - J_best_plan); '
                     '1.0 = the new policy achieves the whole verified win on its own',
@@ -972,11 +982,11 @@ def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sou
 
 
 def record_lesson(root, arm, policy, run_root, update, runner_for, workers=2, sources=(),
-                  phase='bank_verification_ext', adopt_entries=(), receipt_suffix=''):
+                  phase='bank_verification_ext', adopt_entries=(), receipt_suffix='',attempt_kind=None):
     """Run the lesson check and write LESSON_CHECK_u<k>_<arm>.json (arm-suffixed: B and R share
     the run root; the check runs after every update of both arms). Atomic replace, so an exact
     resume that re-applies update k re-measures instead of failing on an existing file."""
-    out = lesson_check(root, arm, policy, run_root, update, runner_for, workers, sources, phase,adopt_entries)
+    out = lesson_check(root, arm, policy, run_root, update, runner_for, workers, sources, phase,adopt_entries,attempt_kind)
     path = Path(root)/f'LESSON_CHECK_u{int(update):03}_{arm}{receipt_suffix}.json'
     tmp = path.with_name(path.name+'.writing')
     tmp.write_text(json.dumps(xg._seal(out, 'lesson_check_sha256'), indent=1))

@@ -193,6 +193,23 @@ def test_valid_lesson_branch_is_adopted_without_charge_or_overwriting_original(t
     verify_sealed(json.loads((root/'LESSON_CHECK_u004_B_CORRECTED.json').read_text()),'lesson_check_sha256')
 
 
+def test_changed_window_uses_a_fresh_registered_charge_namespace(tmp_path,monkeypatch):
+    root=tmp_path;rb.bank_root(root,'B').mkdir(parents=True)
+    admitted_entry(root,420,'window',4.)
+    old=rb.record_lesson(root,'B',FakePolicy(),str(root),4,_runner)
+    original=(root/'LESSON_CHECK_u004_B.json').read_bytes();before=len(ledger(root))
+    records=rb.bank_decisions(root,'B')
+    records[0]=dict(records[0],window=dict(records[0]['window'],end_s=840))
+    monkeypatch.setattr(rb,'bank_decisions',lambda *a,**kw:records)
+    fixed=rb.record_lesson(root,'B',FakePolicy(),str(root),4,_runner,
+        adopt_entries=old['entries'],receipt_suffix='_MATCHED3',attempt_kind='lesson_u004matched_v3')
+    assert fixed.get('error') is None and fixed['graded_entries']==1
+    assert fixed['entries'][0]['new_policy_branch']['window']['end_s']==840
+    assert len(ledger(root))==before+1
+    assert len([x for x in ledger(root) if x['id'].startswith('lesson_u004matched_v3_')])==1
+    assert (root/'LESSON_CHECK_u004_B.json').read_bytes()==original
+
+
 def test_budget_blocked_and_missing_receipts_are_never_imputed(tmp_path, monkeypatch):
     root = tmp_path;rb.bank_root(root, 'B').mkdir(parents=True)
     first = admitted_entry(root, 420, 'a', 4.)

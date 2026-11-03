@@ -86,6 +86,14 @@ class StartGateTests(unittest.TestCase):
             with patch.object(rs,'alive',return_value=False):
                 with self.assertRaisesRegex(AssertionError,'exited'):rs.spawn(r,v,'grade','B')
 
+    def test_adopted_grader_completion_is_read_from_its_original_control(self):
+        with tempfile.TemporaryDirectory() as d:
+            r=Path(d);old=r/'old';current=r/'new'
+            put(old/'grade_B_COMPLETE.json',dict(done=True))
+            receipt=dict(component='grade',arm='B',completion_root=str(old))
+            self.assertTrue(rs.completed(current,receipt))
+            self.assertFalse(rs.completed(current,dict(component='grade',arm='R')))
+
     def test_old_endpoint_preserved_by_sha_and_final_path_released(self):
         from .protocol import sha
         with tempfile.TemporaryDirectory() as d:

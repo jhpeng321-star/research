@@ -912,7 +912,7 @@ def lag_report(queue, update, now=None):
                 mean_lag_s=float(np.mean(lags)) if lags else None)
 
 
-def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., epochs=4):
+def _ppo_exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., epochs=4):
     """MAIN 02:01 update with lever-5 plan grades: PPO on own steps only (no plan ratios), critic on
     all current-batch steps, imitation ONLY from exact-positive graded plans (pairs may come from
     earlier episodes; they enter neither the actor nor the critic loss)."""
@@ -960,6 +960,20 @@ def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., 
                                 loss_rule='MAIN0201 own PPO + all-step critic; lever5 exact-positive plan AWR'))
             if kl > .045:
                 return metrics
+    return metrics
+
+
+def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., epochs=4,imitation_epochs=0):
+    if not imitation_epochs:return _ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs)
+    import copy
+    from .bank_imitation import run
+    reference=copy.deepcopy(policy)
+    metrics=_ppo_exact_update(policy,optimizer,episodes,generator,pairs,coefficient,epochs)
+    report=run(policy,optimizer,pairs,generator,reference,coefficient,imitation_epochs)
+    metrics.append(dict(loss=report['last_loss'],kl=report['kl'],gradient_norm=report['last_gradient_norm'],
+        imitation=report['last_loss'],own_policy_steps=0,critic_steps=0,
+        exact_imitation_steps=report['pairs_seen'],bank_imitation=report,
+        loss_rule='MAIN0936 post-PPO full-bank AWR, pre-update KL bound; no plan ratios or critic loss'))
     return metrics
 
 

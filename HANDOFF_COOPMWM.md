@@ -1,5 +1,32 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+CRITICAL Nov3 10:16:44+08: REGISTERED SAFETY PAUSE since09:55:36/unix1793670936.
+PAUSE_SAFETY SHA9e65c7f83ac0bf7961a826fe072be82aa81056d9f25b1a1b93392c03399da238.
+ActualB-u6hardbrake vsA24matchedUNIQUE/equal-worlds mean+.00402778/control-s,
+95CI[+.000787037,+.00724537] =>+3.625veh-s/900,CI[+.708333,+6.520833].
+AllB-u6stepsown/noexecutedplans. No pairing/wiringfault found. B24u6RESULTs,
+R0u6RESULTs, BOTHcheckpoint5 only; NOu6PPO applied. Trainers/graders stoppedvia
+healthassert; watchdog3088220 subsequentlyEXIT on deadchildren. DO NOTrestart/
+clearpausewithoutrequiredMAINscientificdecision. Evidence SAFETY_PAUSE_PROBE_
+1793672206176824700.json. MAINalert _sol/COOPMWM_SAFETY_PAUSE_U6_1017.md.
+Charged5806820/14.5M. ExistingGPU/queue-onlyservices mayfinishsavedWMwork;
+no newtraining/SUMO restart. No sealedoutcomesopened.
+Latestbrief NOWreadALL693lines inclMAIN09:36fullbank5passes. Newexposurecpu1
+FULL720LinuxPASS0skips84.077s/zeroSUMO: five post-PPO fullbank AWR passes,
+pre-updateKL.045 onlyearlystop, before/aftererror/membercoverage, centre hash
+repair exactmode-strippedrequest only. Preregabbfd4cd earlierASSUMEDu6applied/
+firstu7; ACTUALpauseprovesu6unapplied. Reconcile futurebindingfromcheckpoint5/
+existingB6results only AFTERMAINhealthdecision; exposure_ops register/launch
+currentlyblocked/notdispatched. Do NOTuseitsdraftu6-checkpoint/u7 boundary blindly.
+Rfirstcentresdelivered9:50+, butoldgrader declined mode-stripped hash identities.
+Allrawforecasts/skips preserved; new720qualifiedhelper fixeswithoutnewWMqueries.
+U4correctionV2 adopted2valid but6blockedDUPLICATE lesson_u004 charge beforeSUMO;
+partial2-stateaggregate NOTcompletelearningevidence. Newcorrection SOURCE
+lessonfixcpu2/control lesson_correction_v3/NEW lesson_u004matched_v3 kind currently
+CPUqualifying3182813/start68655379; ADOPT, neverduplicate. Newchanged-window
+charge regression; originalV1/V2receipts/chargeskept. NextobserveCPUqual, finish
+already-authorizedu4diagnostic ifgatespass; reportguardtoMAINbeforeanytrainingresume.
+
 LATEST Nov3 09:37:08+08 CONTINUATION LIVE from BOTHcheckpoint5/Adam/RNG:
 registered de152a1b76837b9b/commit2ab155f5 BEFOREhandover. Ownidleu5 freeze623ea887
 verifiedno-u6jobs/no-physicschildren; then oldwatcher/arms/idleRgrader retired by

@@ -1,5 +1,30 @@
 # S-COOPMWM — live checks
 
+## Nov3 09:55:36 UTC+8 — registered SAFETY pause before B-u6 PPO
+- The fixed hard-braking guard paused B/R. Across24 unique matched TRAIN worlds,
+  B-u6 minus A-u6 is **+0.00402778 hard-brake vehicle-seconds/control-second**,
+  paired-world95%CI **[+0.000787037,+0.00724537]**. Equivalently+3.625veh-s/900s,
+  CI[+0.708333,+6.520833]. Registered10000 world-bootstrap/RNG20261101.
+- Read-only checks confirm identical A/B world descriptors for all24 pairs and
+  zero executed-plan steps in B-u6. No pairing/wiring fault was found. B has24
+  completed u6 episodes; R has0. **Both durable checkpoints remainu5; u6 PPO was
+  not applied.** The pause and all receipts/charges are preserved. Training remains
+  paused under the registered rule pending MAIN's scientific decision.
+- Pause SHA256 `9e65c7f83ac0bf7961a826fe072be82aa81056d9f25b1a1b93392c03399da238`.
+  Evidence:`coopmwm/SAFETY_PAUSE_PROBE_1793672206176824700.json`.
+- MAIN09:36 exposure correction is CPU-qualified: **720 Linux checks PASS,
+  zero skips,84.077s,zero SUMO**. It adds at least5 full post-PPO AWR passes,
+  frozen-pre-update0.045 KL stopping, full member coverage and before/after error.
+  The centre transport-identity repair is qualified too. Neither is deployed while
+  the health pause is active. The draft u7 activation assumption must be reconciled
+  with the now-confirmed unapplied u6 boundary before any permitted restart.
+- The separate u4 diagnostic correction preserved2 valid branches. Six new
+  branches were blocked before physics by an old charge-kind collision; a fresh
+  registered correction namespace with a dedicated regression is being qualified.
+  The partial2-entry aggregate is not the complete8-entry learning result.
+- Total charged5,806,820/14,500,000 at10:16:44, including retained failures.
+  No sealed outcome was opened. MAIN report:`_sol/COOPMWM_SAFETY_PAUSE_U6_1017.md`.
+
 ## Nov3 09:37:08 UTC+8 — qualified continuation from both u5 checkpoints
 - B/R-u5 completed. At a verified idle boundary, both checkpoint5 hashes and
   no-u6-job/no-physics-child conditions passed. Registered amendment

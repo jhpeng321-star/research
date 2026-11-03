@@ -17,7 +17,7 @@ import types
 from .protocol import digest, sha
 from .storage import read, write
 
-NAME = 'B_REPLAY_LESSON_WINDOW_V1.json'
+NAME = 'B_REPLAY_EXPOSURE_V2.json'
 PREFIX = 'replay0735'
 
 
@@ -108,6 +108,7 @@ def binding(root, v, arm):
         replay_beta=1., replay_sources={'B': [v['collection_root']], 'R': []},
         awr=read(root/'AWR_BINDING.json')['config'], resume_update=v.get('resume_update',3), stop_after_update=24,
         runtime_receipt_suffix=v.get('runtime_receipt_suffix','_REPLAY0735'), workers=12,
+        imitation_epochs=v.get('imitation_epochs',5),
         quota_aware_admission=False, parallel_group_queries=False,
         bounded_fanout=False, r_concurrent_lag1_quota=True,
         demand_phase_end_s=v['demand_phase_end_s'], precharged_unattempted=[],
@@ -202,6 +203,16 @@ def grade(root, arm):
     lock = (bank/'LIVE_GRADER.claim').open('a');fcntl.flock(lock, fcntl.LOCK_EX|fcntl.LOCK_NB)
     cfg = binding(root, v, arm);bounds = cfg['accel_bounds']
     decided = {p.stem for n in ('decisions', 'skipped', 'live_failures') for p in (bank/n).glob('*.json')}
+    if arm=='R' and v.get('recover_centre_identity'):
+        recovered=[]
+        for p in (bank/'skipped').glob('*.json'):
+            meta=read(p);key=p.stem
+            if meta.get('reason')!='centre identity mismatch' or (bank/'decisions'/p.name).exists():continue
+            request=root/'centre_requests'/p.name;response=root/'centre_responses'/p.name
+            if request.exists() and response.exists() and rb.centre_identity(read(request),meta['record_sha256'],read(response)):
+                decided.discard(key);recovered.append(key)
+        write(Path(v['control_root'])/'CENTRE_IDENTITY_RECOVERY.json',dict(unix=time.time(),
+            keys=recovered,original_skips_preserved=True,inference_replayed=False,physics_retry=False))
     runner = sv.SubprocessBranchRunner(bank/'sumo_verification/branches', workers=2, timeout_s=3600)
     charge = sv.accel_charge(str(root), 'sumo_verification')
     def runner_for(work):return sv.SubprocessBranchRunner(Path(work)/'branches', workers=2, timeout_s=3600)
@@ -248,12 +259,17 @@ def confirm_one(root, arm, sources, runner_for):
         return
 
 
+def completed(control,receipt,label=None):
+    if label is None:label=receipt['component']+('_'+receipt['arm'] if receipt.get('arm') else '')
+    return (Path(receipt.get('completion_root',control))/(label+'_COMPLETE.json')).exists()
+
+
 def spawn(root, v, component, arm=None):
     control = Path(v['control_root']);label = component+('_'+arm if arm else '')
     target = control/(label+'_DISPATCH.json')
     if target.exists():
         d = read(target)
-        assert alive(d) or (control/(label+'_COMPLETE.json')).exists(), 'owned child exited; inspect '+label
+        assert alive(d) or completed(control,d,label), 'owned child exited; inspect '+label
         return d
     command = [sys.executable, '-B', '-u', '-m', 'tools.coopmwm.replay_start', str(root), component]
     if arm:command += ['--arm', arm]
@@ -375,7 +391,7 @@ def watch(root):
         # Hash-sealed interim episode jobs are a separate, fixed-checkpoint task.
         if (root/'B_UPDATE_008.json').exists():spawn(root, v, 'interim')
         updates = {a: max([3]+[int(p.stem.rsplit('_', 1)[1]) for p in root.glob(a+'_UPDATE_[0-9][0-9][0-9].json')]) for a in ('B', 'R')}
-        dead = [d for d in children if not alive(d) and not (control/(d['component']+'_'+d['arm']+'_COMPLETE.json')).exists()]
+        dead = [d for d in children if not alive(d) and not completed(control,d)]
         atomic(control/'STATUS.json', dict(unix=time.time(), started=True, updates=updates,
             bridge_snapshots=sum(len(list((root/'replay_bank'/a/'snapshots').glob('*.json'))) for a in ('B', 'R')),
             dead_children=dead, alert=bool(dead), outcomes_opened=False))

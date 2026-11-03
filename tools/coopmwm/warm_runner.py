@@ -208,7 +208,8 @@ def run_arm(root,arm):
             state={k:v.detach().clone() for k,v in policy.state_dict().items()}
             if arm in ('B','R'):
                 from .exact_grade import exact_update,lag_report
-                metrics=exact_update(policy,opt,eps,rng,pairs,b['awr']['coefficient'])
+                metrics=exact_update(policy,opt,eps,rng,pairs,b['awr']['coefficient'],
+                    imitation_epochs=b.get('imitation_epochs',5) if replay else 0)
                 grade_lag=None if replay else lag_report(xr.queue(root),u)
             else:
                 metrics=update(policy,opt,eps,rng,**({'awr':b['awr']} if 'awr' in b else {}));grade_lag=None
@@ -241,7 +242,8 @@ def run_arm(root,arm):
                 proposal_routing=routes,team_only_noise=dict(advantage_variance_veh_s_squared=float(np.var(raw,ddof=1))),
                 wall_s=elapsed,eta_final_hours=(budget()['updates'][arm]-u)*elapsed/3600,
                 gpu_busy=gpu_busy,
-                exact_imitation=weights,grading_lag=grade_lag,
+                 exact_imitation=weights,grading_lag=grade_lag,
+                 bank_imitation=next((m['bank_imitation'] for m in metrics if 'bank_imitation' in m),None),
                 quota_deviation=deviation,random_matching=matching,
                 concurrently_active_plans=max(s.get('simultaneously_active_plans',0) for e in eps for s in e['steps']),
                 overlap_rechecks=[s['proposal']['overlap_recheck'] for e in eps for s in e['steps']

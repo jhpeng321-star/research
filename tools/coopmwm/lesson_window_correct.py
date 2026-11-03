@@ -30,7 +30,8 @@ def run(root,control):
     out=record_lesson(root,'B',policy,root,4,
         lambda work:SubprocessBranchRunner(Path(work),workers=2,timeout_s=3600),
         sources=[v['collection_root']],adopt_entries=old['entries'],
-        receipt_suffix=v.get('correction_receipt_suffix','_MATCHED_WINDOW_V1'))
+        receipt_suffix=v.get('correction_receipt_suffix','_MATCHED_WINDOW_V1'),
+        attempt_kind=v.get('correction_attempt_kind'))
     write(control/'CORRECTION_COMPLETE.json',dict(unix=time.time(),list_size=out['list_size'],
         graded_entries=out.get('graded_entries'),error=out.get('error'),
         adopted_branches=sum(e.get('adopted_existing_branch',False) for e in out['entries']),
