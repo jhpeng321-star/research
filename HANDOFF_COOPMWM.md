@@ -1,5 +1,27 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 15:48 +08 — A20; B12 recovery pending; disk below dispatch floor
+- Complete1134-linebrief/log/status/receipts+canonicalregistrythrough7221READ;
+  existingdirtyworkkept. Adoptiond02a616c; nofinishedqualification/restartredo.
+- DirectCONTINUATION_1440_1793778536895942300: A20sealed/A2049830LIVE;
+  r3supervisor+B/RownersABSENT/original15:00guidedSTOPpresent. B/Rsealed11/11;
+  completedB12checkpoint+24episodes+passingcompositesafety mustNEVERreapply.
+- Prior26fileSHArestore/17distinctfunctionalinputsCOMPLETE; allrestoredpaths
+  protected. Operatorownsadditivelessons/interruptedisolatedclaim/adoption;
+  updatedexisting_sol/COOPMWM_U12_ARCHIVE_STOP_1512_MAIN.md. Norestartclaimed.
+- Monitor2635161LIVE/old06e88ecd-bindingvsruntime1d67a685stilldrifted;
+  healthysealedB11/R11doesNOTmeanlivetraining. Operatorhandoverrequested.
+- BothmoversLIVE/extension5329783960certified/lastzeroeligible. NEWcpuQfree
+  6276259840bytes(~5.85GiB),166191104BELOW6GiBdispatchfloor; MAINnotified.
+  Keepallguards/protections/9GiBCPU-Slandingguard; nocleanup/signalbythissession.
+- Latestreconciled14516720charged/cap17471840/811640countonce/nonnegativephases;
+  futurelesson13200gapstillopen/u12fits. u8interimCOMPLETE288/288/outcomesclosed.
+- NooursSUMO/inference/dispatch/allocation/deployment. Effectiveimitation/
+  collection/checkingremainoperator-owned; cleanrerunPREPAREONLY.
+- ProofRESUME_ADOPTION_20261104_1545.md+PUBLIC_PROGRESS_1793778267562456300+
+  RESUME_LIVE_0815_1793778310133824500. Nextcheckpoint-safeoperatorrecovery
+  ANDdiskheadroom; doNOTstartcompetingrecoveryorreattemptfinishedphysics.
+
 ## CURRENT Nov4 15:22 +08 — u12 input restoration COMPLETE; r3 recovery pending
 - 15:30freshownerproofCONTINUATION_1440_1793777359595148300: A19LIVE/r3BR+
   supervisorABSENT/guidedSTOPstillpresent/monitor+bothmoversLIVE/free6758567936.

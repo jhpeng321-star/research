@@ -1,5 +1,27 @@
 # S-COOPMWM — live checks
 
+### Nov4 15:48 UTC+8 — A20; B/R recovery pending; disk below dispatch floor
+- Fresh-session adoption confirms **A20 sealed and its training owner live**.
+  B/R remain sealed at11/11; their old r3 supervisor and children are absent,
+  and the original15:00 guided engineering STOP remains. B12's checkpoint,
+  24 completed episodes and passing safety receipt must be adopted without
+  repeating PPO. The preceding SHA-restoration is complete; the existing
+  operator retains additive diagnostic completion and continuation.
+- **Disk has fallen below the unchanged6GiB dispatch floor:** latest
+  6,276,259,840bytes (~5.85GiB), a166,191,104byte shortfall. Both archive
+  movers remain live; their last eligible count was zero. MAIN/operator
+  notice updated. No protection or resource guard was weakened.
+- Monitor4 remains live and reports healthy sealedB11/R11, but its binding
+  still pins06e88ecd rather than current runtime1d67a685. This is an outstanding
+  operator handover item, not evidence that B/R are running.
+- Latest public accounting reconciles14,516,720charged/cap17,471,840,
+  retained811,640counted once, nonnegative phase balances. The previously
+  reported13,200future-lesson shortfall remains open. u8 interim completion
+  is288/288; outcomes remain closed. No new simulation, inference or dispatch.
+- Evidence:`coopmwm/RESUME_ADOPTION_20261104_1545.md`,
+  `coopmwm/CONTINUATION_1440_1793778536895942300.json`, and
+  `coopmwm/PUBLIC_PROGRESS_1793778267562456300.json`.
+
 ### Nov4 15:22 UTC+8 — u12 input archive fault corrected; checkpoint-safe recovery pending
 - **B/R r3 stopped at15:00 during B-u12 diagnostics.** B's u12 checkpoint and
   all24ordinary episodes completed; its composite safety passes (zero collisions/
