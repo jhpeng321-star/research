@@ -19,18 +19,40 @@ def per_seed(bank_fixture):
     return bank_fixture
 
 
-def augment(root, arm='B', *, rows=None):
+def augment(root, arm='B', *, rows=None, verified=True):
     bank = rb.bank_root(root, arm)
     state = f'aug_state_{arm}'
     snap = snapshot(world_seed=986020, gen_seed=21)
+    snap['episode']['arm'] = arm
     torch.save(snap, bank/'snapshots'/(state+'.pt'))
     (bank/'decisions'/(state+'.json')).write_text(json.dumps(
         dict(verification_id='aug1', state_id=state)))
     row = dict(example_id='aug1#s1', parent_example_id='v0#s1',
                verification_id='aug1', state_id=state, seed_index=1,
-               wm_cooperative=True, snapshot_sha256=sv.snapshot_sha(snap))
+                wm_cooperative=True, snapshot_sha256=sv.snapshot_sha(snap))
+    prelaunch = dict(phase='track2_augmentation', allocation_sim_s=200000,
+                     provenance='registered prelaunch allocation; CPU fixture')
+    if verified:
+        from .test_bank_perseed_cpu import make, win, lose
+        from . import bank_statistics as bs
+        from .protocol import digest
+        make(root, 'aug1', win(), lose(), arm=arm, syn1=win())
+        path = bank/'sumo_verification'/'verifications'/'aug1.json'
+        receipt = json.loads(path.read_text())
+        receipt.update(snapshot_sha256=sv.snapshot_sha(snap), episode=snap['episode'],
+                       branch_sim_s=1200, charged_sim_s=2400)
+        receipt = xg._seal(receipt, 'receipt_sha256')
+        path.write_text(json.dumps(receipt))
+        ids = ['aug1_policy', 'aug1_cand1']
+        row['sumo_evidence'] = dict(receipt_path='sumo_verification/verifications/aug1.json',
+            receipt_sha256=receipt['receipt_sha256'], plan_sha256=digest(receipt['chosen_plan']),
+            charge_ids=ids)
+        (root/'CHARGES.jsonl').write_text(''.join(json.dumps(dict(id=i,
+            phase=prelaunch['phase'], sim_s=1200))+'\n' for i in ids))
+        bs._CACHE.clear()
     record = xg._seal(dict(schema=pw.SCHEMA, arm=arm, rows=rows if rows is not None else [row]),
                       'practice_augmented_sha256')
+    record = xg._seal(dict(record, prelaunch=prelaunch), 'practice_augmented_sha256')
     (bank/'PRACTICE_AUGMENTED.json').write_text(json.dumps(record))
     return row, record
 
@@ -126,10 +148,91 @@ def test_manifest_integrity_arm_and_duplicate_state(tmp_path, ps):
     path.write_text(json.dumps(record))
     with pytest.raises(ValueError, match='mismatch'):
         pw.augmented_examples(tmp_path, 'B', starts.examples(tmp_path, 'B'))
-    # Multiple perturbed plans at one restart state cannot bypass the repeat cap.
+    # An alias of a verified example is not independently admitted evidence.
     augment(tmp_path, rows=[row, dict(row, example_id='aug2#s1')])
-    rows, _ = pw.augmented_examples(tmp_path, 'B', starts.examples(tmp_path, 'B'))
-    assert len(rows) == 1
+    with pytest.raises(ValueError, match='own admitted'):
+        pw.augmented_examples(tmp_path, 'B', starts.examples(tmp_path, 'B'))
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_wm_only_child_never_enters_plan(tmp_path, ps, arm):
+    bank_with_snapshots(tmp_path, arm, vids=('v0',))
+    augment(tmp_path, arm, verified=False)
+    with pytest.raises(ValueError, match='receipt path'):
+        starts.plan_for_update(tmp_path, arm, 1, fraction=.5, repeat_cap=2,
+                              count=12, training_seed=4, weighting=True)
+    assert not starts.plan_path(tmp_path, arm, 1).exists()
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('failure', ['missing', 'failed', 'world', 'snapshot', 'arm', 'plan',
+    'seed', 'admission', 'budget', 'charges', 'receipt_hash', 'overdrawn', 'wrong_phase',
+    'undercharged'])
+def test_child_verification_and_prelaunch_binding(tmp_path, ps, arm, failure):
+    from . import bank_statistics as bs
+    bank_with_snapshots(tmp_path, arm, vids=('v0',))
+    row, manifest = augment(tmp_path, arm)
+    bank = rb.bank_root(tmp_path, arm)
+    path = bank/'sumo_verification'/'verifications'/'aug1.json'
+    receipt = json.loads(path.read_text())
+    if failure == 'missing':
+        path.unlink()
+    elif failure == 'seed':
+        manifest['rows'][0]['seed_index'] = 2
+    elif failure == 'admission':
+        cpath = bank/'confirmations'/'aug1.json'
+        confirmation = json.loads(cpath.read_text())
+        confirmation['checks']['safety'] = False
+        confirmation['safety_deltas']['replication']['collisions'] = 1
+        confirmation['safety_deltas']['extended']['collisions'] = 1
+        cpath.write_text(json.dumps(xg._seal(confirmation, 'confirmation_sha256')))
+    elif failure == 'budget':
+        manifest['prelaunch']['allocation_sim_s'] = 200001
+    elif failure == 'charges':
+        (tmp_path/'CHARGES.jsonl').write_text('')
+    elif failure in ('overdrawn', 'wrong_phase', 'undercharged'):
+        path_ledger = tmp_path/'CHARGES.jsonl'
+        charges = [json.loads(line) for line in path_ledger.read_text().splitlines()]
+        if failure == 'overdrawn':
+            charges.append(dict(id='other_prelaunch', phase=manifest['prelaunch']['phase'], sim_s=200000))
+        elif failure == 'wrong_phase':
+            charges[0]['phase'] = 'other_phase'
+        else:
+            charges[0]['sim_s'] = 1
+        path_ledger.write_text(''.join(json.dumps(c)+'\n' for c in charges))
+    elif failure == 'receipt_hash':
+        manifest['rows'][0]['sumo_evidence']['receipt_sha256'] = '0'*64
+    else:
+        if failure == 'failed':
+            receipt['status'] = 'failed'
+        elif failure == 'world':
+            receipt['episode']['world']['seed'] += 1
+        elif failure == 'snapshot':
+            receipt['snapshot_sha256'] = '0'*64
+        elif failure == 'arm':
+            receipt['episode']['arm'] = 'A'
+        elif failure == 'plan':
+            receipt['chosen_plan']['id'] = 'different'
+        receipt = xg._seal(receipt, 'receipt_sha256')
+        path.write_text(json.dumps(receipt))
+        manifest['rows'][0]['sumo_evidence']['receipt_sha256'] = receipt['receipt_sha256']
+    bs._CACHE.clear()
+    (bank/'PRACTICE_AUGMENTED.json').write_text(json.dumps(
+        xg._seal(manifest, 'practice_augmented_sha256')))
+    with pytest.raises((ValueError, FileNotFoundError)):
+        starts.plan_for_update(tmp_path, arm, 1, fraction=.5, repeat_cap=2,
+                              count=12, training_seed=4, weighting=True)
+
+
+def test_frozen_augmented_plan_rechecks_evidence_before_wave(tmp_path, ps):
+    bank_with_snapshots(tmp_path, vids=('v0',))
+    augment(tmp_path)
+    plan = starts.plan_for_update(tmp_path, 'B', 1, fraction=.5, repeat_cap=2,
+                                 count=12, training_seed=4, weighting=True)
+    child = next(r for r in plan['rows'] if r['source'] == 'augmented')
+    (rb.bank_root(tmp_path, 'B')/'sumo_verification'/'verifications'/'aug1.json').unlink()
+    with pytest.raises(FileNotFoundError):
+        starts.wave_call(tmp_path, 'B', 'training', 'train', child, 0, {})
 
 
 def test_real_wave_receipt_twelve_of_twenty_four_and_r_matches_realised(tmp_path, monkeypatch, ps):

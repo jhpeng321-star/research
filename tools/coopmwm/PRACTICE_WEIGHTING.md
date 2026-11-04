@@ -28,15 +28,20 @@ This base does not contain `plan_augment.py`. Its producer (or T2C adapter) can
 write `replay_bank/<ARM>/PRACTICE_AUGMENTED.json`, sealed with
 `exact_grade._seal(record, 'practice_augmented_sha256')`. The object contains:
 
-- `schema`: `coopmwm-practice-augmented-v1`
+- `schema`: `coopmwm-practice-augmented-v2` (v1 WM-only manifests refuse)
 - `arm`: `B` or `R`, matching the containing own-bank directory
 - `rows`: objects containing `example_id` (unique augmentation ID),
   `parent_example_id` (an own admitted cooperative bank example),
   `verification_id` (an own decision link), `state_id` (that link's snapshot ID),
   `seed_index` (the parent's seed index), `wm_cooperative: true`, and
-  `snapshot_sha256` (the snapshot **after** the existing seed-index CRN derivation).
+  `snapshot_sha256` (the snapshot **after** the existing seed-index CRN derivation),
+  and `sumo_evidence` with `receipt_path` (relative to the own bank),
+  `receipt_sha256`, `plan_sha256`, and `charge_ids`.
+- `prelaunch`: the parent integration's registered `phase`, `allocation_sim_s`
+  (positive integer, at most 200000), and nonempty registration `provenance`.
+  P1 also requires this object to equal `cfg.augmentation_prelaunch`.
 
-The producer supplies only WM-retained cooperative augmentations and applies
+The producer supplies only SUMO-verified, admitted cooperative children and applies
 the same augmentation procedure to B and R's respective banks. It stages the
 decision link under `decisions/` and the restart snapshot under `snapshots/` in
 the same arm's bank. Snapshot and CRN semantics are unchanged; practice does not
@@ -45,8 +50,13 @@ state does not manufacture practice capacity: identical `(state_id, seed_index,
 CRN salt)` entries are deduplicated, including against the bank pool. Missing
 manifest means bank-only sampling; a present invalid manifest refuses before
 sealing a new practice plan or dispatching episodes. No arbitrary snapshot paths
-or foreign-bank parents are accepted. Manifest WM labels are supplied by T2G;
-T2H does not invoke a teacher, SUMO verifier, or augmentation job.
+or foreign-bank parents are accepted. A child needs its own admitted cooperative
+per-seed bank example and sealed accepted SUMO receipt. Its selected branch tape,
+chosen plan, derived snapshot hash, world, seed index and arm must agree. Each
+receipt branch must resolve to its existing `<verification_id>_<branch>` charge
+in the parent's prelaunch ledger phase, at the receipt's full branch cost. The
+entire phase must fit its registered allocation. WM flags and parent admission
+alone are insufficient. T2H does not execute verification jobs.
 
 ## Budget, receipts, and resume
 
@@ -65,7 +75,8 @@ the per-update `practice.weighting` aggregates realised weighted/cooperative/
 augmented counts. Empty banks still produce a weighted frozen-plan receipt.
 Safety references retain the same provenance. Frozen plans are always reused,
 even if config or the bank/manifest grows on restart; enable changes at a new
-update boundary. Augmented snapshot hashes are checked again at replay time.
+update boundary. Augmented snapshot hashes, child verification/admission and
+prelaunch charges are checked again at replay time, including frozen old plans.
 
 When weighting is absent/false, no augmentation manifest is read, RNG inputs and
 sampling calls are unchanged, and plan/episode/update fields remain unchanged.

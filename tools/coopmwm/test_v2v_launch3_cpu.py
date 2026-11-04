@@ -2,6 +2,7 @@
 import copy
 import hashlib
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -16,6 +17,13 @@ def write_json(path, value):
 
 @pytest.fixture
 def deployed(tmp_path, monkeypatch):
+    # Model a no-checkout package filesystem without moving test artifacts out
+    # of the authorized worktree. Only Git markers OUTSIDE this fixture are
+    # hidden; markers created inside it still exercise the production gate.
+    external_markers = {parent/'.git' for parent in tmp_path.resolve().parents}
+    exists, symlink = Path.exists, Path.is_symlink
+    monkeypatch.setattr(Path, 'exists', lambda p: False if p in external_markers else exists(p))
+    monkeypatch.setattr(Path, 'is_symlink', lambda p: False if p in external_markers else symlink(p))
     root, control, source, mover = [tmp_path / n for n in ('run', 'control', 'source', 'mover')]
     for path in (root, control, source, mover):
         path.mkdir()
@@ -165,6 +173,18 @@ def test_enclosing_checkout_cannot_be_disguised_as_packaged_source(deployed, mon
         return SimpleNamespace(returncode=0, stdout=value.encode())
     monkeypatch.setattr(launch.subprocess, 'run', run)
     with pytest.raises(launch.Refused, match='actual deployed HEAD'):
+        check(d)
+
+
+@pytest.mark.parametrize('marker', ['file', 'directory'])
+def test_package_cannot_bypass_unavailable_enclosing_git(deployed, marker):
+    d = deployed
+    path = d.source.parent/'.git'
+    if marker == 'file':
+        path.write_text('gitdir: unavailable')
+    else:
+        path.mkdir()
+    with pytest.raises(launch.Refused, match='package provenance cannot bypass Git'):
         check(d)
 
 

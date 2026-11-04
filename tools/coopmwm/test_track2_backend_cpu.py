@@ -37,6 +37,7 @@ def cfg(tmp_path):
         runtime='unused', checkpoint='unused', accel_bounds=[-3, 2.6], gpu_deadline=9999999999,
         workers=2, load_max=40, budget=dict(total=5000000, phases=dict(track2_train=4000000)),
         safety_reference=dict(by_world={}, unmatched_zero_event_benchmark=True, source='CPU fixture'),
+        track2_reward=dict(weight=.5, provenance='owner registration; CPU fixture'),
         imitation_epochs=5)
 
 
@@ -68,6 +69,21 @@ def fake_load(monkeypatch):
         base = IntentPolicy()
         return base, torch.optim.Adam(base.parameters(), lr=.0003), torch.Generator().manual_seed(3), {'update': update}
     monkeypatch.setattr(tb, '_load_base', load)
+
+
+def reward_result(cfg, sample, arm='B', *, outcomes=None):
+    """Test-only P2 output from real-outcome inputs, never WM estimates."""
+    outcomes = outcomes or dict(c1=1., c2=-2., h1=3.)
+    registration = cfg['track2_reward']
+    rows = []
+    for vid in reversed(sample['context']['members']):
+        neighbours = {v: outcomes[v] for v in sample['track2']['reward_neighbourhoods'][vid]}
+        reward = outcomes[vid]+registration['weight']*(sum(neighbours.values())/len(neighbours)
+                                                       if neighbours else 0.)
+        rows.append(dict(episode_id='ep1', time_s=300, cav_id=vid, source='sumo',
+            own_reward=outcomes[vid], neighbour_rewards=neighbours, reward=reward,
+            weight=registration['weight'], weight_provenance=registration['provenance']))
+    return dict(schema=tb.REWARD_SCHEMA, arm=arm, update=1, rows=rows)
 
 
 def test_default_off_exact_objects():
@@ -135,10 +151,54 @@ def test_real_move_commitment_hold_release_and_no_hdv(cfg):
     p.executor = tb.MoveExecutor(moves_api=tb.MoveAPI())
     p.executor.start(move, ego='c1', observable_cav_ids=['c1', 'c2'], now=320, until=340)
     near = rows()
-    near[0]['s_m'] = 0.
+    near[0]['s_m'] = -100.
+    near[1]['s_m'] = -105.
     p.observe(near, 321)
     s, _ = p.sample(context, torch.Generator().manual_seed(1), True)
     assert s['context']['move_offsets'] == dict(c1=0., c2=0.)
+
+
+def test_production_adapter_unobserved_wall_partner_crossing_is_invariant(cfg):
+    p = policy(cfg)
+    for parameter in p.layer.base.parameters():
+        parameter.data.zero_()
+    p.layer.trigger_gain.data.fill_(.5)
+    job = dict(track2_backend=True, track2_config=cfg, arm='B',
+               track2_state=p.worker_state(), noise_seed=81)
+    results = []
+    for partner_position in (-101., -100.):
+        out, factory = tb.episode_components(job, p.layer.base, controller_class(Controller))
+        controller = factory(out, torch.Generator().manual_seed(2), True)
+        move = tb.TriggerMove(tb.moves.Move('wall', ('c1', 'c2'), 0, 20, .3))
+        assert out.executor.start(move, ego='c1', observable_cav_ids=['c1', 'c2'], now=300, until=320)
+        out.last_decision = 300
+        separated = rows()[:2]
+        separated[0]['s_m'], separated[1]['s_m'] = -300., partner_position
+        controller.apply(separated, {'c1': 0., 'c2': 0.}, 319)
+        sample = controller.events[-1]['sample']
+        assert out.visible['c1'] == ['c1']
+        assert sample['context']['move_offsets']['c1'] == -.3
+        assert sample['track2']['active_moves'][0]['until'] == 320
+        results.append((sample['action'][0], out.blocks['c1'], out.local_states['c1']))
+        controller.apply(separated, {'c1': 0., 'c2': 0.}, 320)
+        assert controller.events[-1]['sample']['context']['move_offsets']['c1'] == 0.
+    assert results[0] == results[1]
+
+
+@pytest.mark.parametrize('report_time,expected', [(318, 0.), (317, -.3)])
+def test_wall_release_accepts_only_authorized_t_minus_one_report(cfg, report_time, expected):
+    p = policy(cfg)
+    local = rows()[:2]
+    local[0]['s_m'], local[1]['s_m'] = -300., -100.
+    local.append(dict(local[0], vid='c3', s_m=-200.))
+    p.observe(local, report_time)
+    move = tb.TriggerMove(tb.moves.Move('wall', ('c1', 'c2'), 0, 20, .3))
+    p.executor.start(move, ego='c1', observable_cav_ids=['c1', 'c2'], now=300, until=320)
+    p.last_decision = 300
+    p.observe(local, 319)
+    controller = controller_class(Controller)(p, torch.Generator().manual_seed(2), True)
+    controller.apply(local, {'c1': 0., 'c2': 0., 'c3': 0.}, 319)
+    assert controller.events[-1]['sample']['context']['move_offsets']['c1'] == expected
 
 
 def test_spawn_state_and_practice_factory_wrapper(cfg):
@@ -159,9 +219,10 @@ def test_spawn_state_and_practice_factory_wrapper(cfg):
     deepcopy(out)  # bank imitation's transactional reference must be copyable
 
 
-def test_group_credit_and_dense_updates_freeze_base(cfg, monkeypatch):
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_observable_sumo_rewards_update_layer_and_trigger_freeze_base(cfg, monkeypatch, arm):
     fake_load(monkeypatch)
-    hooks = tb.build_arm_runtime(cfg, 'B')
+    hooks = tb.build_arm_runtime(cfg, arm)
     runtime = hooks['runtime']
     runtime.safety_checked = True  # safety's own paired adapter is tested separately
     p = runtime.policy
@@ -169,37 +230,144 @@ def test_group_credit_and_dense_updates_freeze_base(cfg, monkeypatch):
     p.observe(rows(), 300)
     controller.apply(rows(), {'c1': 0., 'c2': 0.}, 300)
     s = controller.events[-1]['sample']
-    episodes = [dict(id='ep1', arm='B', steps=[dict(time_s=300, sample=s, reward=-999999.)])]
+    episodes = [dict(id='ep1', arm=arm, steps=[dict(time_s=300, sample=s, reward=-999999.)])]
     before = deepcopy(p.layer.base.state_dict())
     weights = deepcopy(p.layer.residual.state_dict())
     monkeypatch.setattr(runtime, 'bank_pairs', lambda: ([], {'pairs': 0}))
-    result = hooks['train_update'](episodes,
-        credit=[dict(episode_id='ep1', time_s=300, group_advantage=1.)],
-        labels=[dict(episode_id='ep1', time_s=300, targets=[1, 1], calibrated_probability=.8)])
+    targets = []
+    layer_targets = []
+    layer_update = p.layer.update_rewards
+    def capture_layer(records, **kwargs):
+        layer_targets.extend(r['rewards'] for r in records)
+        return layer_update(records, **kwargs)
+    monkeypatch.setattr(p.layer, 'update_rewards', capture_layer)
+    update = tb.ppo_update
+    def capture(model, optimizer, batch, advantages, returns, **kw):
+        targets.append((advantages, returns))
+        return update(model, optimizer, batch, advantages, returns, **kw)
+    monkeypatch.setattr(tb, 'ppo_update', capture)
+    result = hooks['train_update'](episodes, rewards=reward_result(cfg, s, arm))
     assert result['layer'][0]['accepted']
     assert result['trigger'][0]['cav_count'] == 2
-    assert result['dense'][0]['ce'] > 0
+    assert targets == [([1.25, -1.], [1.25, -1.])]
+    assert layer_targets == [[1.25, -1.]]
+    assert result['dense'] == result['wm_credit'] == dict(enabled=False)
+    assert result['reward']['registration'] == cfg['track2_reward']
     assert any(not torch.equal(weights[k], v) for k, v in p.layer.residual.state_dict().items())
     assert all(torch.equal(before[k], v) for k, v in p.layer.base.state_dict().items())
     assert all(v.grad is None and not v.requires_grad for v in p.layer.base.parameters())
 
 
-@pytest.mark.parametrize('probability', [.79, float('nan'), float('inf'), 1.1])
-def test_bad_dense_confidence_refuses(cfg, monkeypatch, probability):
+@pytest.mark.parametrize('kwargs', [dict(labels=[dict(calibrated_probability=1.)]),
+    dict(labels=[dict(sumo_verified=True)]), dict(credit=[dict(group_advantage=1.)])])
+def test_retired_dense_labels_and_wm_credit_refused(cfg, monkeypatch, kwargs):
     fake_load(monkeypatch)
     runtime = tb.build_arm_runtime(cfg, 'R')['runtime']
-    with pytest.raises(ValueError, match='unfiltered'):
-        runtime._imitate_labels([dict(calibrated_probability=probability)], {})
+    with pytest.raises(ValueError, match='OFF'):
+        runtime.train([], **kwargs)
 
 
-def test_group_credit_required_and_no_positional_join(cfg, monkeypatch):
+def test_stochastic_samples_required(cfg, monkeypatch):
     fake_load(monkeypatch)
     runtime = tb.build_arm_runtime(cfg, 'B')['runtime']
     runtime.safety_checked = True
-    with pytest.raises(ValueError, match='P2 group credit'):
+    with pytest.raises(ValueError, match='stochastic own-action'):
         runtime.train([])
-    with pytest.raises(ValueError, match='unmatched'):
-        runtime.train([], credit=[dict(episode_id='unknown', time_s=300, group_advantage=1.)])
+
+
+def test_p2_lazy_dependency_uses_episode_outcomes_and_common_registration(cfg, monkeypatch):
+    fake_load(monkeypatch)
+    calls = []
+    def reward_update(config, arm, update, episodes):
+        calls.append((config['track2_reward'], arm, update))
+        step = episodes[0]['steps'][0]
+        return reward_result(config, step['sample'], arm, outcomes=step['per_vehicle_rewards'])
+    fake = types.ModuleType(tb.__package__+'.track2_reward')
+    fake.reward_update = reward_update
+    monkeypatch.setitem(sys.modules, tb.__package__+'.track2_reward', fake)
+    for arm in ('B', 'R'):
+        runtime = tb.build_arm_runtime(cfg, arm)['runtime']
+        runtime.safety_checked = True
+        _, s, _ = sample(cfg)
+        monkeypatch.setattr(runtime, 'bank_pairs', lambda: ([], {}))
+        report = runtime.train([dict(id='ep1', arm=arm, steps=[dict(time_s=300, sample=s,
+            per_vehicle_rewards=dict(c1=1., c2=-2., h1=3.))])])
+        assert report['reward']['cav_rows'] == 2
+    assert calls == [(cfg['track2_reward'], 'B', 1), (cfg['track2_reward'], 'R', 1)]
+
+
+def test_same_mean_rewards_with_different_cav_alignment_learn_differently(cfg, monkeypatch):
+    """A scalar broadcast/mean reduction must not erase which CAV earned reward."""
+    fake_load(monkeypatch)
+    _, s, _ = sample(cfg)
+    results = []
+    totals = []
+    for outcomes in (dict(c1=1., c2=-2., h1=3.), dict(c1=-2., c2=1., h1=3.)):
+        runtime = tb.build_arm_runtime(cfg, 'B')['runtime']
+        runtime.safety_checked = True
+        monkeypatch.setattr(runtime, 'bank_pairs', lambda: ([], {}))
+        envelope = reward_result(cfg, s, outcomes=outcomes)
+        totals.append(sum(row['reward'] for row in envelope['rows']))
+        runtime.train([dict(id='ep1', arm='B', steps=[dict(time_s=300, sample=deepcopy(s))])],
+                      rewards=envelope)
+        results.append((deepcopy(runtime.policy.layer.residual.state_dict()),
+                        deepcopy(runtime.policy.trigger.state_dict())))
+    assert totals[0] == totals[1]
+    assert any(not torch.equal(v, results[1][0][k]) for k, v in results[0][0].items())
+    assert any(not torch.equal(v, results[1][1][k]) for k, v in results[0][1].items())
+
+
+@pytest.mark.parametrize('failure', ['missing', 'duplicate', 'unknown_cav', 'episode', 'time',
+    'arm', 'update', 'source', 'provenance', 'weight', 'neighbour', 'missing_neighbour',
+    'formula', 'nonfinite', 'trigger_order'])
+def test_invalid_reward_alignment_or_provenance_refuses_before_optimizer(cfg, monkeypatch, failure):
+    fake_load(monkeypatch)
+    runtime = tb.build_arm_runtime(cfg, 'B')['runtime']
+    runtime.safety_checked = True
+    _, s, _ = sample(cfg)
+    envelope = reward_result(cfg, s)
+    row = envelope['rows'][0]
+    if failure == 'missing':
+        envelope['rows'].pop()
+    elif failure == 'duplicate':
+        envelope['rows'].append(deepcopy(row))
+    elif failure == 'unknown_cav':
+        row['cav_id'] = 'other'
+    elif failure in ('arm', 'update'):
+        envelope[failure] = 'A' if failure == 'arm' else 2
+    elif failure == 'episode':
+        row['episode_id'] = 'unknown'
+    elif failure == 'time':
+        row['time_s'] = 301
+    elif failure == 'source':
+        row['source'] = 'wm'
+    elif failure == 'provenance':
+        row['weight_provenance'] = 'unregistered'
+    elif failure == 'weight':
+        row['weight'] = .7
+    elif failure == 'neighbour':
+        row['neighbour_rewards']['unobserved'] = 0.
+    elif failure == 'missing_neighbour':
+        row['neighbour_rewards'].pop('h1')
+    elif failure == 'formula':
+        row['reward'] += 1.
+    elif failure == 'trigger_order':
+        s['track2_trigger']['context'] = dict(s['track2_trigger']['context'], members=['c2', 'c1'])
+    else:
+        row['own_reward'] = float('nan')
+    monkeypatch.setattr(runtime.policy.layer, 'update_rewards', lambda *a, **k: pytest.fail('optimized'))
+    with pytest.raises(ValueError):
+        runtime.train([dict(id='ep1', arm='B', steps=[dict(time_s=300, sample=s)])], rewards=envelope)
+
+
+def test_missing_p2_dependency_is_explicit(cfg, monkeypatch):
+    fake_load(monkeypatch)
+    runtime = tb.build_arm_runtime(cfg, 'B')['runtime']
+    runtime.safety_checked = True
+    _, s, _ = sample(cfg)
+    monkeypatch.setitem(sys.modules, tb.__package__+'.track2_reward', None)
+    with pytest.raises(RuntimeError, match='P2 track2_reward.reward_update integration dependency'):
+        runtime.train([dict(id='ep1', arm='B', steps=[dict(time_s=300, sample=s)])])
 
 
 def test_collect_uses_real_wave_contract_and_refuses_without_approval(cfg, monkeypatch):
@@ -254,7 +422,9 @@ def test_save_resume_includes_trainable_weights_and_optimizers(cfg, monkeypatch)
 
 
 @pytest.mark.parametrize('change', [dict(track2_backend=False), dict(coop_reward=True),
-    dict(host='cpuS'), dict(device='cuda'), dict(v2v=False), dict(merge_features=False)])
+    dict(host='cpuS'), dict(device='cuda'), dict(v2v=False), dict(merge_features=False),
+    dict(dense_teacher=True), dict(group_credit=True), dict(track2_reward={}),
+    dict(track2_reward=dict(weight=.5, provenance=''))])
 def test_config_refusals_before_loading(cfg, monkeypatch, change):
     monkeypatch.setattr(tb, '_load_base', lambda *a: pytest.fail('loaded before validation'))
     with pytest.raises(ValueError):
@@ -277,7 +447,7 @@ def test_nonempty_effective_bank_trains_layer_only(cfg, monkeypatch):
     before = deepcopy(p.layer.base.state_dict())
     monkeypatch.setattr(runtime, 'bank_pairs', lambda: ([(bank, 1.)], {'pairs': 1}))
     report = runtime.train([dict(id='ep1', arm='B', steps=[dict(time_s=300, sample=s, reward=-100)])],
-        credit=[dict(episode_id='ep1', time_s=300, group_advantage=1.)])
+        rewards=reward_result(cfg, s))
     assert report['bank']['imitation_target_space'] == 'effective'
     assert report['bank']['optimizer_steps'] >= 5
     assert report['bank']['effective']['binding_share'] == 1.
@@ -324,6 +494,34 @@ def test_weighted_practice_uses_existing_frozen_plan_and_batch(cfg, monkeypatch)
     assert calls[1][1]['used_seeds'] == {1}
     assert calls[1][0][4]['practice_batch'][0]['branch'] == {'test': True}
     assert episodes[1]['steps'] == [dict(time_s=401)]
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_production_weighted_practice_requires_compliant_dependency(cfg, monkeypatch, arm):
+    fake_load(monkeypatch)
+    from . import practice_weighting as pw, accel_protocol
+    cfg.update(practice_starts=True, practice_weighting=True, practice_repeat_cap=2)
+    (tb._path(cfg['run_root'])/'OWNER_APPROVAL.json').write_text('{"approved":true}')
+    monkeypatch.setattr(accel_protocol, 'guard', lambda *a: None)
+    monkeypatch.setattr(pw, 'VERIFIED_CHILDREN', False)
+    monkeypatch.setattr(tb, '_wave', lambda *a, **k: pytest.fail('dispatched before child gate'))
+    with pytest.raises(ValueError, match='SUMO-verified augmentation dependency'):
+        tb.collect_update(cfg, arm, 1)
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_production_frozen_child_cannot_bypass_registered_prelaunch(cfg, monkeypatch, arm):
+    fake_load(monkeypatch)
+    from . import practice_starts as ps, accel_protocol
+    cfg.update(practice_starts=True, practice_weighting=True, practice_repeat_cap=2)
+    (tb._path(cfg['run_root'])/'OWNER_APPROVAL.json').write_text('{"approved":true}')
+    monkeypatch.setattr(accel_protocol, 'guard', lambda *a: None)
+    monkeypatch.setattr(ps, 'realised_count', lambda *a: 1)
+    monkeypatch.setattr(ps, 'plan_for_update', lambda *a, **k: dict(rows=[dict(
+        source='augmented', prelaunch=dict(provenance='unbound'))]))
+    monkeypatch.setattr(tb, '_wave', lambda *a, **k: pytest.fail('dispatched unbound child'))
+    with pytest.raises(ValueError, match='registered prelaunch provenance'):
+        tb.collect_update(cfg, arm, 1)
 
 
 def test_r_practice_uses_b_realised_count(cfg, monkeypatch):
@@ -456,6 +654,7 @@ def test_real_accel_plant_full_episode_with_fake_physics(cfg, monkeypatch):
 def test_a_uses_real_ppo_without_bank_or_coop_layer(cfg, monkeypatch):
     fake_load(monkeypatch)
     runtime = tb.build_arm_runtime(cfg, 'A')['runtime']
+    monkeypatch.setitem(sys.modules, tb.__package__+'.track2_reward', None)
     monkeypatch.setattr(runtime, 'bank_pairs', lambda: pytest.fail('A bank accessed'))
     controller = controller_class(Controller)(runtime.policy, torch.Generator().manual_seed(9), False)
     steps = []
@@ -483,7 +682,7 @@ def test_real_checkpoint_round_trip_no_fake_loader(cfg):
     assert all(torch.equal(v, restored.base.state_dict()[k]) for k, v in base.state_dict().items())
 
 
-def test_trigger_and_dense_kl_rejection_restore_adam_and_weights(cfg, monkeypatch):
+def test_trigger_kl_rejection_restore_adam_and_weights(cfg, monkeypatch):
     cfg['layer_config']['kl_budget'] = 1e-12
     cfg['trigger_lr'] = 1.
     fake_load(monkeypatch)
@@ -495,13 +694,14 @@ def test_trigger_and_dense_kl_rejection_restore_adam_and_weights(cfg, monkeypatc
     controller.apply(rows(), {'c1': 0., 'c2': 0.}, 300)
     s = controller.events[-1]['sample']
     before = deepcopy(p.trigger.state_dict())
+    layer_before = deepcopy(p.layer.state_dict())
     monkeypatch.setattr(runtime, 'bank_pairs', lambda: ([], {}))
     report = runtime.train([dict(id='ep1', arm='B', steps=[dict(time_s=300, sample=s, reward=0.)])],
-        credit=[dict(episode_id='ep1', time_s=300, group_advantage=1.)],
-        labels=[dict(episode_id='ep1', time_s=300, sumo_verified=True, targets=[1, 1])])
+        rewards=reward_result(cfg, s))
     assert report['trigger'][0]['accepted'] is False
-    assert report['dense'][0]['accepted'] is False
     assert all(torch.equal(v, p.trigger.state_dict()[k]) for k, v in before.items())
+    assert all(torch.equal(v, p.layer.state_dict()[k]) for k, v in layer_before.items())
+    assert p.layer.optimizer.state_dict()['state'] == {}
     assert p.trigger_optimizer.state_dict()['state'] == {}
 
 

@@ -1,9 +1,10 @@
 """P1 production adapter for the clean Track-2 run (explicit opt-in only).
 
 Public API: build_arm_runtime(cfg, arm) -> hooks; collect_update(cfg, arm, u)
--> episode receipts. ``hooks['train_update'](episodes, credit=..., labels=...)``
-is called AFTER hooks['safety'] and P2 have processed those episodes; no team or
-per-vehicle reward substitutes for group credit in B/R. A uses MAPPO PPO.
+-> episode receipts. ``hooks['train_update'](episodes, rewards=...)`` is called
+AFTER hooks['safety']. P2 track2_reward supplies per-CAV observable-neighbourhood
+SUMO rewards; dense WM teaching and counterfactual WM credit are disabled.
+A uses the unchanged MAPPO PPO path.
 
 Required config: run_root, training_seed, worlds_by_update (TRAIN worlds),
 runtime/checkpoint/accel_bounds/gpu_deadline/workers/load_max, budget={total,
@@ -29,15 +30,18 @@ import numpy as np
 import torch
 
 from . import moves
+from .acceleration import PHI
 from .coop_layer import CooperationLayer, LayerConfig
 from .merge_features import (MERGE_DIM, MERGE_FEATURES, MergeFeaturesConfig,
                              ObservedVehicle, SENSOR_RANGE_M, SensorReport,
-                             merge_features)
+                             merge_features, _valid_report, _local_rows,
+                             CONTROL_DT_S, V2V_K, V2V_RANGE_M)
 from .trigger_policy import MoveExecutor, TriggerBatch, TriggerPolicy, ppo_update
 
 SCHEMA = 'coopmwm-track2-backend-v1'
 FEATURE_DIM = 29 + MERGE_DIM + 1  # local sensor, separate merge block, active move offset
 ARMS = ('A', 'B', 'R')
+REWARD_SCHEMA = 'coopmwm-track2-reward-v1'
 
 
 class TriggerMove:
@@ -94,12 +98,20 @@ def _check(cfg, arm):
         raise ValueError('production backend requires the real V2V runtime')
     if cfg.get('host', 'cpuV') != 'cpuV':
         raise ValueError('registered host is cpuV')
+    if cfg.get('dense_teacher') or cfg.get('group_credit'):
+        raise ValueError('clean run requires dense teaching and WM credit OFF')
     _path(cfg['run_root'])
     if arm != 'A':
         if not cfg.get('merge_features', False):
             raise ValueError('B/R require observable merge features')
         if type(cfg['decision_interval_s']) is not int or cfg['decision_interval_s'] < 1:
             raise ValueError('positive registered decision interval required')
+        reward = cfg.get('track2_reward', {})
+        if (set(reward) != {'weight', 'provenance'}
+                or type(reward['weight']) not in (int, float)
+                or not math.isfinite(reward['weight'])
+                or not isinstance(reward['provenance'], str) or not reward['provenance'].strip()):
+            raise ValueError('common B/R track2_reward weight and registration provenance required')
 
 
 def _batch_dict(batch):
@@ -135,7 +147,7 @@ def _features(context):
 
 
 class ProductionLayer(CooperationLayer):
-    """Use T2D's transactional group PPO/KL with a causal committed-move gain.
+    """Use T2D's transactional joint KL with a causal committed-move gain.
 
     The last feature records the already selected move's offset. Its trainable
     gain is zero initially, preserving exact base action bytes, and its gradient
@@ -148,6 +160,83 @@ class ProductionLayer(CooperationLayer):
     def _distribution(self, features, move_offsets=None):
         residual, logits, gain, offsets = super()._distribution(features, move_offsets)
         return residual + gain * features[:, -1], logits, gain, offsets
+
+    def member_scores(self, sample, *, old=False):
+        """Marginal Gaussian scores, retaining each CAV's own learning target.
+
+        The inherited exact correlated JOINT KL remains the update trust region.
+        A joint score times a mean reward would discard neighbourhood alignment.
+        """
+        record = sample['coop_layer']
+        features = self._features(sample['context'])
+        if old:
+            residual = features.new_tensor(record['old_residual'])
+        else:
+            residual = self._distribution(features, record['offsets'])[0]
+        with torch.no_grad():
+            mean = self.base(sample['context'])[0].reshape(-1)
+        mean = mean + residual + PHI * features.new_tensor(sample['previous_noise']).reshape(-1)
+        sigma = self.base.log_std.detach().exp().reshape(()) * math.sqrt(1-PHI**2)
+        action = features.new_tensor(sample['own_action']).reshape(-1)
+        return torch.distributions.Normal(mean, sigma).log_prob(action)
+
+    def update_rewards(self, records, *, epochs):
+        """Layer-only per-CAV reward PPO; transactional inherited joint KL cap."""
+        self._check_frozen()
+        self._check_optimizer()
+        if type(epochs) is not int or epochs < 1 or not records:
+            raise ValueError('positive epochs and per-CAV reward records required')
+        parameters = self.layer_parameters()
+        def kl():
+            return torch.stack([self.joint_kl(r['sample']) for r in records]).mean()
+        with torch.no_grad():
+            initial = float(kl())
+        if not math.isfinite(initial) or initial > self.config.kl_budget:
+            raise ValueError('rollout already exceeds registered layer KL budget')
+        metrics = []
+        for _ in range(epochs):
+            weights = [p.detach().clone() for p in parameters]
+            optimizer = deepcopy(self.optimizer.state_dict())
+            losses = []
+            for record in records:
+                sample = record['sample']
+                scores = self.member_scores(sample)
+                old_scores = self.member_scores(sample, old=True).detach()
+                advantage = scores.new_tensor(record['rewards'])
+                if advantage.shape != scores.shape or not bool(torch.isfinite(advantage).all()):
+                    raise ValueError('per-CAV reward alignment/nonfinite target')
+                ratio = (scores-old_scores).exp()
+                losses.append(-torch.minimum(ratio*advantage,
+                    ratio.clamp(1-self.config.clip_ratio, 1+self.config.clip_ratio)*advantage).mean())
+            loss = torch.stack(losses).mean()
+            self.optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            norm = torch.nn.utils.clip_grad_norm_(parameters, self.config.max_grad_norm,
+                                                  error_if_nonfinite=True)
+            try:
+                self.optimizer.step()
+                with torch.no_grad():
+                    current = float(kl())
+                accepted = math.isfinite(current) and current <= self.config.kl_budget
+            except Exception:
+                with torch.no_grad():
+                    for p, old in zip(parameters, weights):
+                        p.copy_(old)
+                self.optimizer.load_state_dict(optimizer)
+                self.optimizer.zero_grad(set_to_none=True)
+                raise
+            if not accepted:
+                with torch.no_grad():
+                    for p, old in zip(parameters, weights):
+                        p.copy_(old)
+                self.optimizer.load_state_dict(optimizer)
+            self.optimizer.zero_grad(set_to_none=True)
+            metrics.append(dict(loss=float(loss.detach()), kl=current, accepted=accepted,
+                                gradient_norm=float(norm), target='per_cav_observable_sumo_reward'))
+            if not accepted:
+                break
+        self._check_frozen()
+        return metrics
 
 
 class EpisodePolicy(torch.nn.Module):
@@ -189,6 +278,7 @@ class EpisodePolicy(torch.nn.Module):
                  for r in rows}
         cavs = sorted(v for v, r in table.items() if r['is_cav'])
         reports, states, visible, blocks, local_contexts = {}, {}, {}, {}, {}
+        execution_positions, neighbourhoods = {}, {}
         for vid in cavs:
             ego = table[vid]
             sensed = [r for r in table.values() if abs(r['s_m']-ego['s_m']) <= SENSOR_RANGE_M]
@@ -200,6 +290,22 @@ class EpisodePolicy(torch.nn.Module):
             vehicle = lambda r: ObservedVehicle(r['vid'], r['s_m'], int(r['lane']), r['v_mps'], r['length_m'])
             reports[vid] = SensorReport(float(now), vehicle(ego), (0, 1, 2),
                                        tuple(vehicle(r) for r in sensed if r['vid'] != vid))
+            # Exactly the merge-feature packet authorization: t-1, selected
+            # publisher, registered radio range/count, direct sensing only.
+            accepted = []
+            for partner in partners:
+                report = self.reports.get(partner)
+                if _valid_report(report, partner, float(now)-CONTROL_DT_S):
+                    distance = abs(report.source.s_m-ego['s_m'])
+                    if distance <= V2V_RANGE_M:
+                        accepted.append((distance, partner, report))
+            accepted.sort(key=lambda entry: (entry[0], entry[1]))
+            positions = {r['vid']: r['s_m'] for r in sensed}
+            for _, _, report in accepted[:V2V_K]:
+                for observed in _local_rows(report):
+                    positions.setdefault(observed.vehicle_id, observed.s_m)
+            execution_positions[vid] = positions
+            neighbourhoods[vid] = sorted(set(positions)-{vid})
             blocks[vid] = merge_features(reports[vid], vid, self.reports, now_s=float(now),
                 partner_ids=partners, cfg=MergeFeaturesConfig(True)).tolist()
             if getattr(self.layer.base, 'intent_horizon', 0):
@@ -209,6 +315,7 @@ class EpisodePolicy(torch.nn.Module):
         self.now, self.reports = now, reports
         self.local_states, self.visible, self.blocks = states, visible, blocks
         self.local_intents = local_contexts
+        self.execution_positions, self.neighbourhoods = execution_positions, neighbourhoods
 
     @torch.no_grad()
     def sample(self, context, generator, deterministic=False, memory=None):
@@ -230,9 +337,15 @@ class EpisodePolicy(torch.nn.Module):
             self.last_decision = self.now
         self.executor._advance(self.now)
         offsets = {}
-        positions = {r['vid']: r['s_m'] for state in self.local_states.values() for r in state['rows']}
         for entry in self.executor.active:
-            offsets.update(moves.offsets(entry['move'].move, self.now-entry['start'], state={'s_m': positions}))
+            for vid in entry['move'].members:
+                if vid in context['members']:
+                    # Missing partner evidence does not trigger early release:
+                    # keep the registered commitment until locally witnessed
+                    # release or its original expiry; never extrapolate.
+                    local = moves.offsets(entry['move'].move, self.now-entry['start'],
+                        state={'s_m': self.execution_positions[vid]})
+                    offsets[vid] = local[vid]
         context['move_offsets'] = {v: offsets.get(v, 0.) for v in context['members']}
         sample, memory = self.layer.sample(context, generator, deterministic, memory)
         if getattr(self.layer.base, 'intent_horizon', 0) and context['members']:
@@ -242,7 +355,8 @@ class EpisodePolicy(torch.nn.Module):
             sample['track2_trigger'] = dict(_batch_dict(decision), accepted=accepted)
         sample['track2'] = dict(schema=SCHEMA, arm=self.arm, time_s=self.now,
             active_moves=[dict(move=e['move'].to_dict(), start=e['start'], until=e['until'])
-                          for e in self.executor.active], merge_features=context['merge_features'])
+                          for e in self.executor.active], merge_features=context['merge_features'],
+            reward_neighbourhoods={v: self.neighbourhoods[v] for v in context['members']})
         return sample, memory
 
     def worker_state(self):
@@ -409,6 +523,10 @@ class ArmRuntime:
         from .practice_weighting import effective_fraction
         with _bank_view(cfg):
             if ps.enabled(cfg, arm):
+                if cfg.get('practice_weighting'):
+                    from . import practice_weighting
+                    if not getattr(practice_weighting, 'VERIFIED_CHILDREN', False):
+                        raise ValueError('SUMO-verified augmentation dependency required before collection')
                 fraction = effective_fraction(cfg)
                 want = (ps.realised_count(cfg['run_root'], 'B', u) if arm == 'R'
                         else ps.practice_count(len(worlds), fraction))
@@ -416,6 +534,12 @@ class ArmRuntime:
                     repeat_cap=cfg['practice_repeat_cap'], count=want, training_seed=cfg['training_seed'],
                     **(dict(weighting=True) if cfg.get('practice_weighting') else {}))
                 rows = plan['rows']
+                for row in rows:
+                    if row.get('source') == 'augmented' or row.get('parent_example_id'):
+                        if (not cfg.get('augmentation_prelaunch')
+                                or row.get('prelaunch') != cfg['augmentation_prelaunch']):
+                            raise ValueError('augmented practice needs parent registered prelaunch provenance')
+                        ps.load_snapshot(cfg['run_root'], arm, row)
                 episodes = (_wave(cfg, policies, worlds[:len(worlds)-len(rows)], ident, extras)
                             if len(rows) < len(worlds) else [])
                 if rows:
@@ -482,14 +606,19 @@ class ArmRuntime:
         return dict(status='checked', normal_references=len(normal), practice_references=len(pairs),
                     new_reference_sim_s=1200*len(pairs))
 
-    def train(self, episodes, *, credit=(), labels=()):
-        """P2 credit rows: episode_id,time_s,group_advantage; labels add targets.
+    def train(self, episodes, *, rewards=None, credit=(), labels=()):
+        """Consume P2 reward_update(cfg, arm, update, episodes) output.
 
-        Credit is matched by (episode_id,time_s), never list position. Labels
-        reference the recorded trigger table and must carry sumo_verified=True
-        or calibrated_probability >= .8. P2 owns actual WM scoring/verification.
+        The integration envelope is {schema=REWARD_SCHEMA, arm, update, rows}.
+        Rows carry episode_id,time_s,cav_id,source='sumo',own_reward,
+        neighbour_rewards (ID -> real reward), reward, weight, weight_provenance.
+        Neighbour IDs must match the recorded authorized observation exactly.
+        Callers may pass the envelope explicitly; otherwise import P2 lazily.
+        P2 is an external integration dependency, never a production stub.
         """
         cfg, arm = self.cfg, self.arm
+        if credit or labels:
+            raise ValueError('clean run requires dense labels and WM credit OFF')
         if any(e['arm'] != arm for e in episodes):
             raise ValueError('episode arm mismatch')
         if arm == 'A':
@@ -498,19 +627,26 @@ class ArmRuntime:
                         bank=dict(status='A_no_bank'))
         if not getattr(self, 'safety_checked', False):
             raise ValueError('paired safety hook must complete before B/R optimization')
-        by_key = {(e['id'], s['time_s']): s['sample'] for e in episodes for s in e['steps']}
-        advantages = {}
-        for row in credit:
-            key = (row['episode_id'], row['time_s'])
-            if key in advantages or key not in by_key or not math.isfinite(row['group_advantage']):
-                raise ValueError('invalid/duplicate/unmatched group credit')
-            advantages[key] = float(row['group_advantage'])
+        by_key = {}
+        for episode in episodes:
+            for step in episode['steps']:
+                key = (episode['id'], step['time_s'])
+                if key in by_key:
+                    raise ValueError('duplicate episode/time sample')
+                by_key[key] = step['sample']
         eligible = {k for k, s in by_key.items() if 'coop_layer' in s and not s.get('deterministic')
                     and not s.get('behaviour', {}).get('executed')}
-        records = [dict(sample=by_key[k], group_advantage=a) for k, a in advantages.items() if k in eligible]
-        if not records:
-            raise ValueError('B/R layer update requires P2 group credit, never team reward')
-        layer = self.policy.layer.update(records, epochs=cfg['layer_epochs'])
+        if not eligible:
+            raise ValueError('B/R layer update requires stochastic own-action samples')
+        if rewards is None:
+            try:
+                from .track2_reward import reward_update
+            except ImportError as error:
+                raise RuntimeError('P2 track2_reward.reward_update integration dependency unavailable') from error
+            rewards = reward_update(cfg, arm, self.update, episodes)
+        targets = self._reward_targets(rewards, by_key, eligible)
+        records = [dict(sample=by_key[k], rewards=targets[k]) for k in sorted(eligible)]
+        layer = self.policy.layer.update_rewards(records, epochs=cfg['layer_epochs'])
         reference = []
         for key in sorted(eligible):
             if 'track2_trigger' in by_key[key]:
@@ -519,22 +655,21 @@ class ArmRuntime:
                     logits = self.policy.trigger.distribution(batch.context, batch.descriptors, batch.mask)[0]
                 reference.append((batch, logits.detach()))
         trigger_metrics = []
-        for key, advantage in advantages.items():
+        for key in sorted(eligible):
             sample = by_key[key]
-            if key not in eligible or 'track2_trigger' not in sample:
+            if 'track2_trigger' not in sample:
                 continue
             batch = _batch(sample['track2_trigger'])
             before = deepcopy(self.policy.trigger.state_dict())
             optimizer = deepcopy(self.policy.trigger_optimizer.state_dict())
             metrics = ppo_update(self.policy.trigger, self.policy.trigger_optimizer, batch,
-                [advantage]*len(batch.actions), (batch.values+advantage).tolist(), **cfg['trigger_ppo'])
+                targets[key], targets[key], **cfg['trigger_ppo'])
             kl = self._trigger_kl(reference)
             accepted = math.isfinite(kl) and kl <= self.policy.layer.config.kl_budget
             if not accepted:
                 self.policy.trigger.load_state_dict(before)
                 self.policy.trigger_optimizer.load_state_dict(optimizer)
             trigger_metrics.append(dict(metrics, exact_kl=kl, accepted=accepted))
-        dense = self._imitate_labels(labels, by_key, reference=reference)
         pairs, bank_summary = self.bank_pairs()
         from . import bank_imitation as bi
         if cfg.get('v2v_intent'):
@@ -548,7 +683,46 @@ class ArmRuntime:
             imitation_target_space='effective')
         self.policy.layer._check_frozen()
         self.policy.trigger_optimizer.zero_grad(set_to_none=True)
-        return dict(layer=layer, trigger=trigger_metrics, dense=dense, bank=bank, bank_summary=bank_summary)
+        return dict(layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),
+            wm_credit=dict(enabled=False), reward=dict(schema=REWARD_SCHEMA,
+                registration=deepcopy(cfg['track2_reward']), cav_rows=sum(map(len, targets.values()))),
+            bank=bank, bank_summary=bank_summary)
+
+    def _reward_targets(self, envelope, by_key, eligible):
+        if (envelope.get('schema') != REWARD_SCHEMA or envelope.get('arm') != self.arm
+                or envelope.get('update') != self.update):
+            raise ValueError('P2 reward schema/arm/update mismatch')
+        expected = {(key[0], key[1], vid) for key in eligible
+                    for vid in by_key[key]['context']['members']}
+        values = {}
+        registration = self.cfg['track2_reward']
+        for row in envelope['rows']:
+            key = (row['episode_id'], row['time_s'], row['cav_id'])
+            if key not in expected or key in values:
+                raise ValueError('duplicate/unmatched per-CAV reward')
+            neighbours = row['neighbour_rewards']
+            observed = by_key[key[:2]]['track2']['reward_neighbourhoods'][key[2]]
+            if (row.get('source') != 'sumo' or row.get('weight') != registration['weight']
+                    or row.get('weight_provenance') != registration['provenance']
+                    or set(neighbours) != set(observed)):
+                raise ValueError('reward source/registration/observable neighbourhood mismatch')
+            numbers = [row['own_reward'], row['reward'], *neighbours.values()]
+            if not all(type(v) in (int, float) and math.isfinite(v) for v in numbers):
+                raise ValueError('nonfinite per-CAV SUMO reward')
+            target = row['own_reward'] + registration['weight'] * (
+                sum(neighbours.values())/len(neighbours) if neighbours else 0.)
+            if not math.isclose(row['reward'], target, rel_tol=1e-12, abs_tol=1e-12):
+                raise ValueError('observable SUMO reward formula mismatch')
+            values[key] = float(row['reward'])
+        if set(values) != expected:
+            raise ValueError('missing aligned per-CAV SUMO rewards')
+        for key in eligible:
+            sample = by_key[key]
+            trigger = sample.get('track2_trigger')
+            if trigger is not None and trigger['context']['members'] != sample['context']['members']:
+                raise ValueError('trigger/reward per-CAV member alignment mismatch')
+        return {key: [values[(*key, vid)] for vid in by_key[key]['context']['members']]
+                for key in sorted(eligible)}
 
     @torch.no_grad()
     def _trigger_kl(self, reference):
@@ -558,35 +732,6 @@ class ArmRuntime:
             values.append(torch.distributions.kl_divergence(torch.distributions.Categorical(logits=logits),
                 torch.distributions.Categorical(logits=after)).sum())
         return float(torch.stack(values).mean()) if values else 0.
-
-    def _imitate_labels(self, labels, by_key, *, reference=()):
-        reports = []
-        for row in labels:
-            if row.get('sumo_verified') is not True:
-                probability = float(row.get('calibrated_probability', 0.))
-                if not math.isfinite(probability) or not .8 <= probability <= 1.:
-                    raise ValueError('unfiltered dense label')
-            sample = by_key[(row['episode_id'], row['time_s'])]
-            if sample.get('deterministic') or sample.get('behaviour', {}).get('executed'):
-                raise ValueError('dense target is not a current-policy decision')
-            batch = _batch(sample['track2_trigger'])
-            model, optimizer = self.policy.trigger, self.policy.trigger_optimizer
-            weights, state = deepcopy(model.state_dict()), deepcopy(optimizer.state_dict())
-            logits = model.distribution(batch.context, batch.descriptors, batch.mask)[0].detach()
-            loss = model.imitation_loss(batch, row['targets'])
-            optimizer.zero_grad(set_to_none=True)
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.learning_parameters(), self.cfg['trigger_ppo']['max_grad_norm'],
-                                          error_if_nonfinite=True)
-            optimizer.step()
-            kl = self._trigger_kl(reference or [(batch, logits)])
-            accepted = math.isfinite(kl) and kl <= self.policy.layer.config.kl_budget
-            if not accepted:
-                model.load_state_dict(weights)
-                optimizer.load_state_dict(state)
-            reports.append(dict(ce=float(loss.detach()), accuracy=float((logits.argmax(-1)
-                == torch.tensor(row['targets'])).float().mean()), kl=kl, accepted=accepted))
-        return reports
 
     def save(self):
         """Own immutable base checkpoint plus layer/optimizer sidecar per update."""
@@ -612,7 +757,7 @@ def build_arm_runtime(cfg, arm):
     """Build one update's hooks without dispatch/reservation; caller owns gates.
 
     Set cfg['update'] before build (default 1). Keep this hook mapping until P2
-    returns labels; call safety, train_update and save_checkpoint. For cfg-only entry
+    returns observable SUMO rewards; call safety, train_update and save_checkpoint. For cfg-only entry
     points collect_update reconstructs the same pre-update checkpoint weights.
     """
     runtime = ArmRuntime(cfg, arm, int(cfg.get('update', 1)))

@@ -137,7 +137,8 @@ def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_
     if weighting:
         from .practice_weighting import augmented_examples
         augmented, augmentation_sha = augmented_examples(root, arm, coop)
-        coop = [dict(r, source='bank') for r in coop] + augmented
+        child_ids = {r['example_id'] for r in augmented}
+        coop = [dict(r, source='bank') for r in coop if r['example_id'] not in child_ids] + augmented
     pool = [dict(r) for r in coop]
     fallback = False
     if arm == 'R' and len(pool)*cap < count:
@@ -181,7 +182,7 @@ def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_
             augmented_examples=len(augmented), augmentation_sha256=augmentation_sha,
             cooperative_selected=sum(not r['fallback'] for r in rows),
             augmented_selected=sum(r['source'] == 'augmented' for r in rows if not r['fallback']),
-            rule='T2H: increased practice share; own bank + WM-cooperative augmented states; '
+            rule='T2H: increased practice share; own bank + SUMO-verified admitted augmented states; '
                  'cooperative capacity first; identical B/R procedure')
     sealed = xg._seal(record, 'practice_plan_sha256')
     xg._write_new(path, sealed)
@@ -207,6 +208,9 @@ def load_snapshot(root, arm, row):
         raise ValueError(f'unknown practice seed_index {row["seed_index"]!r}')
     if row.get('snapshot_sha256') is not None and sv.snapshot_sha(snap) != row['snapshot_sha256']:
         raise ValueError('practice augmentation snapshot_sha256 mismatch')
+    if row.get('source') == 'augmented' or row.get('parent_example_id'):
+        from .practice_weighting import verify_child
+        verify_child(root, arm, row, snap, row.get('prelaunch'))
     return snap
 
 
