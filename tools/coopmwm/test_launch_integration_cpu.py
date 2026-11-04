@@ -333,6 +333,19 @@ def test_legacy_plan_overlay_and_t300_direct_sensing_produce_two_real_distinct_v
     before = {r['snapshot_path']:__import__('pathlib').Path(r['snapshot_path']).read_bytes() for r in result}
     assert augmentation.proposals(cfg, arm) == result
     assert all(__import__('pathlib').Path(path).read_bytes() == data for path,data in before.items())
+    from .sumo_verify import snapshot_sha
+    from .protocol import digest
+    from .exact_grade import _seal
+    label=augmentation.moves.from_plan(plan)
+    parent_source=dict(row=parent,plan=plan,parameters=dict(onset_s=label.onset,hold_s=label.hold,depth=label.depth),
+        context=context,snapshot_sha256=snapshot_sha(snapshot),source_plan_sha256=digest(plan))
+    monkeypatch.setattr(augmentation,'full_bank_sources',lambda config,source_arm:[parent_source])
+    previous=__import__('pathlib').Path(cfg['run_root'])/'augmentation_sources'/f'PROPOSALS_{arm}.json'
+    augmentation.write(__import__('pathlib').Path(cfg['run_root'])/'AUGMENTATION_RESUME.json',_seal(dict(
+        previous_proposal_batches={arm:dict(file_sha256=rc.sha(previous))}),'receipt_sha256'))
+    extended=augmentation.proposals(dict(cfg,augmentation_recipe_version=2),arm)
+    assert len(extended)==4 and extended[:2]==result
+    assert all(__import__('pathlib').Path(path).read_bytes()==data for path,data in before.items())
     snapshot['policy'] = dict(state_dict_sha256='changed-source')
     __import__('torch').save(snapshot, result[0]['snapshot_path'])
     with pytest.raises(ValueError, match='snapshot changed'):
@@ -401,3 +414,61 @@ def test_smoke_bank_aliases_read_parent_evidence_without_a_second_ledger(tmp_pat
         raise error
     rows, _ = actual_pw.augmented_examples(smoke,'B',ps.examples(smoke,'B'))
     assert len(rows) == 1 and not (smoke/'CHARGES.jsonl').exists()
+
+
+def test_full_training_bank_sources_are_bound_but_not_promoted_to_direct_practice(tmp_path, monkeypatch):
+    from contextlib import contextmanager
+    from copy import deepcopy
+    from types import SimpleNamespace
+    import json
+    from . import launch_augmentation as aug, launch_production as production
+    from . import practice_starts as ps, practice_weighting as pw_local
+    from .test_plan_augment_cpu import source, first_receipt
+    from .exact_grade import _seal
+    root = tmp_path/'clean1';root.mkdir();(root/'AUTHORITY.md').write_text('own experiment\n')
+    cfg = rc.runtime_config({}, root=root, reference_root=tmp_path/'old', source_root=tmp_path/'source',
+        common_checkpoint_sha256='a'*64, track2=True)
+    cfg.update(training_seed=42, launch_optimization=deepcopy(production.OPTIMIZATION),
+        augmentation_recipe_version=2, augmentation_proposals=deepcopy(aug.PROPOSAL_SETTINGS),
+        augmentation_prelaunch=dict(allocation_sim_s=143280, phase='augment_verify', provenance='fixture',ledger_root=str(root)))
+    bases, plans, receipts, examples, frames = {}, {}, {}, {}, {}
+    for arm, seed in (('B',986026),('R',986023)):
+        raw = source(arm)
+        plan = raw['confirmation']['per_seed_v1']['examples'][0]['plan']
+        base = deepcopy(raw['verification']['snapshot_identity']);base['t0']=300
+        base['episode'].update(role='train',world=dict(seed=seed))
+        bases[arm],plans[arm] = base,plan
+        receipts[arm] = first_receipt(plan,base)
+        examples[arm] = dict(example_id='imported_'+arm+'#s1',seed_index=1,admitted=True,cooperative=True)
+        frames[arm] = {300:dict(time_s=300,vehicles=raw['context']['rows'])}
+    def bank_pairs(root_arg,arm,*args,example_consumer,**kwargs):
+        assert kwargs['imitation_target_space']=='effective' and kwargs['imitation_bank_filter']=='cooperative_only'
+        example_consumer(receipt=dict(receipts[arm],_policy_version='u3'),example=examples[arm],
+            plan=plans[arm],pairs=[({},1.)],trace=arm)
+        return [],{}
+    fake = SimpleNamespace(bank_pairs=bank_pairs)
+    @contextmanager
+    def view(config):yield fake
+    monkeypatch.setattr(aug.p1,'_bank_view',view)
+    monkeypatch.setattr(aug.rb,'_decision_snapshot',lambda root,arm,*a:bases[arm])
+    monkeypatch.setattr(aug.rb,'confirmations',lambda root,arm:{receipts[arm]['verification_id']:
+        dict(per_seed_v1=dict(examples=[examples[arm]]))})
+    monkeypatch.setattr(aug.bank_v2v,'trace_frames',lambda trace:frames[trace])
+    slates={arm:aug.proposals(cfg,arm) for arm in ('B','R')}
+    assert all(len(rows)==4 for rows in slates.values())
+    assert all(len({__import__('json').dumps(p['plan'],sort_keys=True) for p in rows})==4 for rows in slates.values())
+    for arm in ('B','R'):
+        assert ps.examples(root,arm)==[]  # parent-only imports never become practice starts
+        binding=json.loads((root/f'AUGMENTATION_PARENTS_{arm}.json').read_text())
+        assert binding['coverage']==[dict(example_id=examples[arm]['example_id'],members=2)]
+        parent=pw_local._bound_training_parent(root,arm,examples[arm]['example_id'],cfg['augmentation_prelaunch'])
+        assert parent['example_id']==examples[arm]['example_id']
+        assert all(p['parent_example_id']==parent['example_id'] for p in slates[arm])
+    quote=aug.slate_quote(cfg,slates)
+    assert quote['per_arm']==4 and quote['total_upper_bound_sim_s']==8*14*1200<=143280
+    wrong=json.loads((root/'AUGMENTATION_PARENTS_B.json').read_text())
+    wrong=_seal(dict(wrong,arm='R'),'parent_bank_sha256')
+    (root/'AUGMENTATION_PARENTS_B.json').write_text(json.dumps(wrong))
+    with (root/'AUTHORITY.md').open('a') as stream:stream.write('augmentationParentBankSHA'+wrong['parent_bank_sha256'])
+    with pytest.raises(ValueError,match='foreign'):
+        pw_local._bound_training_parent(root,'B',examples['B']['example_id'],cfg['augmentation_prelaunch'])

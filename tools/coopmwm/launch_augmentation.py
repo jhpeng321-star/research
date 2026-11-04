@@ -22,8 +22,81 @@ from .protocol import digest
 
 
 PROPOSAL_SETTINGS = dict(parameter_fraction=.01, partner_swap_probability=0., attempts_per_plan=2,
+    target_variants_per_arm=4, parent_cycles=2,
+    source_reader='complete same-arm verified effective training bank, not practice-only subset',
     observation='decision-second direct sensing clipped to 100m; no relayed/global inputs',
-    provenance='clean1 proposed small-perturbation radius; same B/R, two distinct variants, parent may repeat; no WM admission, SHA-bound before outcomes')
+    provenance='clean1 proposed small-perturbation radius; same B/R, four fixed distinct variants, parent may repeat; full reader coverage; no WM admission, SHA-bound before outcomes')
+
+
+def full_bank_sources(cfg, arm):
+    """Freeze every eligible source from the real, same-arm training-bank reader."""
+    from .sumo_verify import snapshot_sha
+    from .launch_preparation import stage_write
+    root, native = Path(cfg['run_root']), production.backend_config(cfg)
+    path = root/f'AUGMENTATION_PARENTS_{arm}.json'
+    if path.exists():
+        binding = read(path);verify_sealed(binding, 'parent_bank_sha256')
+        if (binding['arm'] != arm or 'augmentationParentBankSHA'+binding['parent_bank_sha256']
+                not in (root/'AUTHORITY.md').read_text()):
+            raise ValueError('foreign frozen augmentation parent bank')
+        if any(rc.sha(entry['snapshot_path']) != entry['base_snapshot_file_sha256'] or
+               digest(entry['plan']) != entry['source_plan_sha256'] for entry in binding['parents']):
+            raise ValueError('frozen training-bank source identity changed')
+        return binding['parents']
+    entries, coverage = [], []
+    with p1._bank_view(native) as bank:
+        own = {r['example_id']:r for r in ps.examples(root, arm)}
+        links = ps._links(root, arm)
+        def consume(*, receipt, example, plan, pairs, trace):
+            if not pairs or example is None:
+                return
+            coverage.append(dict(example_id=example['example_id'], members=len(plan['members'])))
+            if not 2 <= len(plan['members']) <= 4:
+                return
+            label = moves.from_plan(plan)
+            if label.family == 'none':
+                return
+            base = rb._decision_snapshot(root, arm, receipt, links)
+            seed_index = int(example['seed_index'])
+            snapshot = (rb.replicate(base, receipt['verification_id']) if seed_index == 2 else
+                rb.replicate(base, receipt['verification_id']+f'#s{seed_index}') if seed_index > 2 else base)
+            if snapshot['episode'].get('role') != 'train' or snapshot['episode'].get('arm') != arm:
+                raise ValueError('same-arm registered TRAIN source required')
+            frames = bank_v2v.trace_frames(trace)
+            context = proposal_context(plan, frames, snapshot['t0'])
+            if context is None:
+                return
+            parent = own.get(example['example_id'])
+            if parent is None:
+                state = 'augparent_'+arm+'_'+digest(dict(example_id=example['example_id']))[:16]
+                target = rb.bank_root(root, arm)/'snapshots'/(state+'.pt')
+                target.parent.mkdir(parents=True, exist_ok=True)
+                if target.exists():
+                    if snapshot_sha(torch.load(target, weights_only=False, map_location='cpu')) != snapshot_sha(base):
+                        raise ValueError('imported parent snapshot changed')
+                else:
+                    with target.open('xb') as stream:torch.save(base, stream)
+                parent = dict(verification_id=receipt['verification_id'], example_id=example['example_id'],
+                    seed_index=seed_index, salt=receipt['verification_id'], state_id=state, fallback=False)
+                stage_write(rb.bank_root(root, arm)/'decisions'/(receipt['verification_id']+'.json'),
+                    dict(verification_id=receipt['verification_id'], state_id=state, policy_update=3,
+                         augmentation_parent_only=True, source_receipt_sha256=receipt['receipt_sha256']))
+            base_path = rb.bank_root(root, arm)/'snapshots'/(parent['state_id']+'.pt')
+            entries.append(dict(row=parent, base_snapshot_file_sha256=rc.sha(base_path),
+                snapshot_sha256=snapshot_sha(snapshot), source_receipt={k:v for k,v in receipt.items() if not k.startswith('_')},
+                source_plan_sha256=digest(plan), plan=deepcopy(plan), context=context,
+                snapshot_path=str(base_path), parameters=dict(onset_s=label.onset, hold_s=label.hold, depth=label.depth)))
+        bank.bank_pairs(root, arm, cfg['training_seed'], sources=cfg.get('replay_sources', {}).get(arm, ()),
+            v2v=True, v2v_intent=cfg, imitation_bank_filter='cooperative_only',
+            imitation_target_space='effective', example_consumer=consume)
+    if not entries:
+        raise ValueError('full same-arm training bank has no observable eligible augmentation parents')
+    binding = _seal(dict(arm=arm, reader='replay_bank.bank_pairs:cooperative_only:effective',
+        coverage=coverage, parents=entries), 'parent_bank_sha256')
+    write(path, binding)
+    with (root/'AUTHORITY.md').open('a') as stream:
+        stream.write('\nDerived same-arm augmentation source bank augmentationParentBankSHA'+binding['parent_bank_sha256']+'\n')
+    return entries
 
 
 def example_plan(example, receipt):
@@ -77,6 +150,8 @@ class MergeEncoder:
 
 
 def proposals(cfg, arm):
+    if cfg.get('augmentation_recipe_version') == 2:
+        return full_bank_proposals(cfg, arm)
     if cfg.get('augmentation_proposals') != PROPOSAL_SETTINGS:
         raise ValueError('approval-bound common B/R augmentation settings required')
     root, native = Path(cfg['run_root']), production.backend_config(cfg)
@@ -153,6 +228,107 @@ def proposals(cfg, arm):
     write(cache, _seal(dict(arm=arm, settings=PROPOSAL_SETTINGS, training_seed=cfg['training_seed'],
         originating_config_sha256=digest(cfg), proposals=output), 'proposal_batch_sha256'))
     return output
+
+
+def full_bank_proposals(cfg, arm):
+    """Fixed symmetric four-candidate slate; preserve any registered prefix."""
+    from .sumo_verify import snapshot_sha
+    root = Path(cfg['run_root'])
+    cache = root/'augmentation_sources'/f'PROPOSALS_{arm}_v2.json'
+    target = PROPOSAL_SETTINGS['target_variants_per_arm']
+    if cfg.get('augmentation_proposals') != PROPOSAL_SETTINGS:
+        raise ValueError('full-bank augmentation registration required')
+    if cache.exists():
+        frozen = read(cache);verify_sealed(frozen, 'proposal_batch_sha256')
+        if frozen['settings'] != PROPOSAL_SETTINGS or frozen['training_seed'] != cfg['training_seed']:
+            raise ValueError('frozen full-bank proposal registration changed')
+        output = frozen['proposals']
+    else:
+        output = []
+        previous = root/'augmentation_sources'/f'PROPOSALS_{arm}.json'
+        if previous.exists():
+            resume = read(root/'AUGMENTATION_RESUME.json');verify_sealed(resume, 'receipt_sha256')
+            authorized = resume.get('previous_proposal_batches', {}).get(arm, {})
+            if authorized.get('file_sha256') != rc.sha(previous):
+                raise ValueError('previous measured proposal prefix needs explicit adoption binding')
+            old = read(previous);verify_sealed(old, 'proposal_batch_sha256')
+            output = deepcopy(old['proposals'])
+        parents = full_bank_sources(cfg, arm)
+        seen = {digest(p['plan']) for p in output}
+        for cycle in range(PROPOSAL_SETTINGS['parent_cycles']):
+            for source in parents:
+                row, plan = source['row'], source['plan']
+                have = sum(p['parent_example_id'] == row['example_id'] for p in output)
+                if have >= (cycle+1)*PROPOSAL_SETTINGS['attempts_per_plan']:
+                    continue
+                snapshot = ps.load_snapshot(root, arm, row)
+                if snapshot_sha(snapshot) != source['snapshot_sha256']:
+                    raise ValueError('source example CRN snapshot changed before augmentation')
+                settings = dict(parameter_fraction=PROPOSAL_SETTINGS['parameter_fraction'],
+                    partner_swap_probability=PROPOSAL_SETTINGS['partner_swap_probability'],
+                    variety=dict(plan_augment.variety.VARIETY_REGISTERED), bounds=(-3., 1.2))
+                for attempt in range(PROPOSAL_SETTINGS['attempts_per_plan']):
+                    if len(output) == target:break
+                    candidate = plan_augment._perturb(plan, source['parameters'], source['context'], settings,
+                        np.random.default_rng(cfg['training_seed']+len(output)+attempt+cycle*target))
+                    if candidate is None:continue
+                    modified, parameters = candidate
+                    if digest(modified) in seen:continue
+                    ident = f'clean1_aug_{arm}_{len(output):02}'
+                    directory = root/'augmentation_sources'/ident;directory.mkdir(parents=True, exist_ok=True)
+                    path = directory/'SNAPSHOT.pt'
+                    if path.exists():
+                        if snapshot_sha(torch.load(path, weights_only=False, map_location='cpu')) != snapshot_sha(snapshot):
+                            raise ValueError('frozen proposal source snapshot changed')
+                    else:
+                        with path.open('xb') as stream:torch.save(snapshot, stream)
+                    output.append(dict(id=ident, proposal_id=ident, source_id=row['example_id'],
+                        parent_example_id=row['example_id'], arm=arm, seed=snapshot['episode']['world']['seed'],
+                        plan=modified, source_plan_sha256=source['source_plan_sha256'], parameters=parameters,
+                        snapshot_path=str(path), snapshot_file_sha256=rc.sha(path),
+                        window=dict(start_s=snapshot['t0'], end_s=1200, truncated=False)))
+                    seen.add(digest(modified))
+                if len(output) == target:break
+            if len(output) == target:break
+        if len(output) != target:
+            raise ValueError('four fixed distinct observable variants per arm required')
+        write(cache, _seal(dict(arm=arm, settings=PROPOSAL_SETTINGS, training_seed=cfg['training_seed'],
+            proposals=output), 'proposal_batch_sha256'))
+    if len(output) != target or any(p['arm'] != arm or not 2 <= len(p['plan']['members']) <= 4 or
+            not Path(p['snapshot_path']).resolve().is_relative_to((root/'augmentation_sources').resolve()) or
+            rc.sha(p['snapshot_path']) != p['snapshot_file_sha256'] for p in output):
+        raise ValueError('full-bank frozen slate identity changed')
+    return output
+
+
+def slate_quote(cfg, slates):
+    """Conservative complete all8 quote; all already-measured outcomes retained."""
+    from .storage import ledger
+    from . import sumo_verify as sv
+    root = Path(cfg['run_root'])
+    if set(slates) != {'B','R'} or any(len(entries) != 4 for entries in slates.values()):
+        raise ValueError('matched fixed four-candidate B/R all8 slate required')
+    spent = sum(r['sim_s'] for r in ledger(root) if r['phase'] == 'augment_verify')
+    pending, completed = 0, []
+    for arm, entries in slates.items():
+        for item in entries:
+            snap = torch.load(item['snapshot_path'], weights_only=False, map_location='cpu')
+            if snap['episode'].get('arm') != arm or snap['episode'].get('role') != 'train':
+                raise ValueError('same-arm TRAIN snapshot required in all8 slate quote')
+            vid = sv.verification_id(snap['episode']['id'], snap['t0'], [item['plan']])
+            path = rb.bank_root(root, arm)/'confirmations_all8'/(vid+'.json')
+            if path.exists():
+                record = read(path);verify_sealed(record, 'confirmation_sha256')
+                completed.append(record['confirmation_sha256'])
+            else:
+                # First+second seeds, two later-harm checks, and each seed's
+                # policy+all solos. Every branch charged at full1200 ceiling.
+                pending += (10+2*len(item['plan']['members']))*1200
+    ceiling = cfg['augmentation_prelaunch']['allocation_sim_s']
+    if spent+pending > ceiling or ceiling > 200000:
+        raise ValueError('complete fixed all8 slate exceeds unchanged prelaunch allocation')
+    return dict(per_arm=4, already_charged_sim_s=spent, additional_upper_bound_sim_s=pending,
+        total_upper_bound_sim_s=spent+pending, allocation_sim_s=ceiling, completed_receipts=completed)
 
 
 def _install(root, arm, payload, result):
@@ -255,13 +431,18 @@ def run(cfg):
             dict(resume_sha256=resume['receipt_sha256'], config_sha256=digest(cfg)))
     else:
         write(started, dict(config_sha256=digest(cfg)))
+    if cfg.get('augmentation_recipe_version') != 2:
+        raise ValueError('complete same-arm bank augmentation recipe required')
+    slates = {arm:proposals(cfg, arm) for arm in ('B','R')}
+    quote = slate_quote(cfg, slates)
+    write(root/('AUGMENTATION_FIXED_SLATE_QUOTE_'+digest(cfg)[:12]+'.json'), quote)
     admissions, counts, receipts = {}, {}, []
     for arm in ('B', 'R'):
         runtime = p1.ArmRuntime(dict(native, update=1), arm, 1)
         backend = SimpleNamespace(models={arm:runtime.base},
             components={arm:dict(merge_features=MergeEncoder())})
         rows, accepted = [], []
-        for payload in proposals(cfg, arm):
+        for payload in slates[arm]:
             spent = 0
             def execute(pairs, suffix):
                 nonlocal spent

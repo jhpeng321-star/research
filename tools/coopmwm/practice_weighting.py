@@ -169,6 +169,8 @@ def augmented_examples(root, arm, parents):
         if not isinstance(item, dict):
             raise ValueError('practice augmentation row must be an object')
         parent = own.get(item.get('parent_example_id'))
+        if parent is None:
+            parent = _bound_training_parent(root, arm, item.get('parent_example_id'), record.get('prelaunch'))
         link = links.get(item.get('verification_id'))
         state = item.get('state_id')
         ident = item.get('example_id')
@@ -198,6 +200,53 @@ def augmented_examples(root, arm, parents):
             seen_states.add(key)
             out.append(row)
     return out, record['practice_augmented_sha256']
+
+
+def _bound_training_parent(root, arm, example_id, prelaunch):
+    """Imported same-arm training-bank parents remain excluded from practice.
+
+    Their *children* may enter only after the existing native all8 proof. The
+    parent itself must be bound by the real full-bank reader and its immutable
+    snapshot, not an arbitrary external example or an invented practice link.
+    """
+    from . import replay_bank as rb, practice_starts as ps, exact_grade as xg, sumo_verify as sv
+    from .rerun_cpus import guard_path, sha
+    artifact = Path(root).resolve()
+    registration = prelaunch if isinstance(prelaunch, dict) else {}
+    owner = Path(registration.get('ledger_root', root)).resolve()
+    if owner != artifact and artifact.parent != owner:
+        raise ValueError('training parent must belong to this experiment ledger')
+    path = owner/f'AUGMENTATION_PARENTS_{arm}.json'
+    if not path.is_file():
+        return None
+    binding = json.loads(path.read_text())
+    xg.verify_sealed(binding, 'parent_bank_sha256')
+    if (binding.get('arm') != arm or binding.get('reader') != 'replay_bank.bank_pairs:cooperative_only:effective' or
+            'augmentationParentBankSHA'+binding['parent_bank_sha256'] not in (owner/'AUTHORITY.md').read_text()):
+        raise ValueError('unregistered/foreign training parent bank')
+    entry = next((e for e in binding['parents'] if e['row']['example_id'] == example_id), None)
+    if entry is None:
+        return None
+    row = entry['row']
+    link = ps._links(root, arm).get(row['verification_id'], {})
+    if not link.get('augmentation_parent_only') or link.get('state_id') != row['state_id']:
+        return None
+    receipt = entry['source_receipt'];xg.verify_sealed(receipt, 'receipt_sha256')
+    snapshot_path = Path(guard_path(rb.bank_root(root, arm)/'snapshots'/(row['state_id']+'.pt')))
+    if sha(snapshot_path) != entry['base_snapshot_file_sha256']:
+        raise ValueError('registered training parent snapshot changed')
+    snapshot = ps.load_snapshot(root, arm, row)
+    if (snapshot['episode'].get('role') != 'train' or snapshot['episode'].get('arm') != arm or
+            not 986000 <= snapshot['episode']['world']['seed'] <= 986071 or
+            receipt['episode'].get('arm') != arm or sv.snapshot_sha(snapshot) != entry['snapshot_sha256']):
+        raise ValueError('training parent role/arm/snapshot provenance mismatch')
+    confirmation = rb.confirmations(root, arm).get(row['verification_id'], {})
+    example = next((e for e in (confirmation.get('per_seed_v1') or {}).get('examples', [])
+                    if e.get('example_id') == example_id), {})
+    if (not example.get('admitted') or example.get('cooperative') is not True or
+            example.get('seed_index') != row['seed_index']):
+        raise ValueError('training parent must be own admitted cooperative per-seed evidence')
+    return row
 
 
 def _native_seed_mapping(root, arm, child, parent, link):

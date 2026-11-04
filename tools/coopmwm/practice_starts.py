@@ -86,7 +86,7 @@ def examples(root, arm, cooperative_only=True):
     rows = []
     for vid, c in conf.items():
         link = links.get(vid)
-        if link is None:
+        if link is None or link.get('augmentation_parent_only'):
             continue                                     # imported/foreign label: never practice
         per = (c.get('per_seed_v1') or {}).get('examples') if c.get('bank_rule') == 'per_seed_v1' else None
         if per is None:

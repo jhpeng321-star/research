@@ -16,6 +16,8 @@ The real reward is P2's measured post-state speed deficit from direct sensing an
 
 The base quote is 4,310,220 sim-s. Carry parity960 once; reserve another10,400 smoke sim-s (20,000 total smoke ceiling) and35,820 solely for the owner's one environment-void gate rerun. Complete upper bound **4,357,400 <=5,000,000**. Every actual dispatch is precharged atomically to the new parent ledger. Augmentation has its own143,280 allocation, within200,000; no WM score admits a child.
 
+Coverage correction before further qualification: use the complete same-arm verified/effective training-bank reader, including imported B training sources. Imported parent snapshots are SHA-bound, registered and marked parent-only; they never enter practice directly. Only their native all8-admitted children can enter. The symmetric fixed slate is four candidates per arm, retaining the two already measured/rejected B candidates as its immutable prefix. The six remaining two-CAV candidates quote at most100,800 additional sim-s; with9,600 already spent the complete augmentation ceiling is110,400 <=143,280. No phase/global cap, radius, member limit, horizon or admission/launch criterion is relaxed.
+
 ## Verification checkpoint
 
 Windows full integration selection: **1090 passed, 1 platform skip, 14 subtests passed**, 430.38s. All required accepted component, launch/effective-imitation and V2V suites were included. The skipped symlink-ledger case is scheduled on cpuV before physics. Live smoke and safety gate remain mandatory; this document is not a launch receipt.

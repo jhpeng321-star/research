@@ -1,0 +1,39 @@
+{
+  "schema": "coopmwm.clean1.coverage_correction.v1",
+  "owned_pid": 101069,
+  "start_ticks": "2154817",
+  "owner_exited": true,
+  "completed_augmentation_charges_sim_s": 9600,
+  "ledger_rows": 8,
+  "cumulative_including_parity_sim_s": 10560,
+  "smoke_sim_s": 0,
+  "B_measured_candidates": 2,
+  "B_admitted_augmented_examples": 0,
+  "B_all8_results": "Both candidates rejected for admission on both measured CRN seeds; every result and charge retained unchanged",
+  "complete_reader_audit": {
+    "B_cooperative_training_examples": 8,
+    "B_effective_pairs": 893,
+    "R_cooperative_training_examples": 3,
+    "R_effective_pairs": 211,
+    "B_eligible_local_parents": 2,
+    "R_eligible_local_parents": 1,
+    "omitted_eligible_source": "sv_lscollect1_B3_986003_t0390_b18c6000#s1, own B imported verified training source, 2 directly observable CAVs"
+  },
+  "correction": "Use the complete real same-arm training-bank reader. Imported source snapshots and receipts are SHA-bound/registered as parent-only; they never enter direct practice. Only native-all8-admitted children enter practice.",
+  "fixed_corrected_slate": {
+    "candidates_per_arm": 4,
+    "B_prefix_measured_and_preserved": 2,
+    "additional_B_candidates": 2,
+    "R_candidates": 4,
+    "remaining_candidate_group_size": 2,
+    "additional_full_all8_upper_bound_sim_s": 100800,
+    "complete_augmentation_upper_bound_sim_s": 110400,
+    "unchanged_phase_allocation_sim_s": 143280,
+    "owner_augmentation_cap_sim_s": 200000,
+    "unchanged_complete_experiment_allocation_sim_s": 4357400,
+    "unchanged_owner_cap_sim_s": 5000000
+  },
+  "criteria_unchanged": "same radius0.01/partner-swap0, 2..4-member limit, direct100m sensing, complete1200s windows, native all8 admission, all smoke receipts, zero-collision/teleport gate",
+  "tests": "222 affected tests passed/1 Windows symlink skip; final reordered P1/launch/practice selection133 passed/1 platform skip, including test-isolation fixture correction",
+  "training_launched": false
+}
