@@ -642,6 +642,46 @@ def test_full_run_reaches_shared_final_harness(tmp_path, monkeypatch):
     assert (rt.root/'T2C_ISOLATED_EVAL.json').is_file()
 
 
+def test_fixed_sample_slate_is_equal_across_arms_and_independent_of_stream_size(tmp_path, monkeypatch):
+    cfg, reg, backend = prepare(tmp_path, monkeypatch)
+    rt = Runtime(cfg, reg, backend)
+    backend.grade_verification = lambda kind, payload, results: dict(status='graded', advantage=.2,
+        label_correct=None if payload.get('target') is None else True)
+    counts = {}
+    for arm in ('B', 'R'):
+        for u in range(1, 25):
+            # Deliberately unequal stream sizes, missing B targets: sample counts
+            # remain equal and absent targets never fabricate realised accuracy.
+            rows = [dict(row_id=f'{arm}_{u}_{i}', target=None if arm == 'B' else Move('none'),
+                         window=dict(start_s=0, end_s=1200)) for i in range(10 if arm == 'B' else 71)]
+            for kind in ('teacher', 'group_credit'):
+                checked = rt._verify(arm, u, kind, rows, .999)
+                counts[arm, u, kind] = len(checked)
+                assert len(checked) == int(u in rc.VERIFY_UPDATES)
+    for kind in ('teacher', 'group_credit'):
+        assert sum(counts['B', u, kind] for u in range(1, 25)) == 4
+        assert sum(counts['R', u, kind] for u in range(1, 25)) == 4
+
+
+def test_augmentation_is_once_and_precedes_first_arm_episode(tmp_path, monkeypatch):
+    cfg, reg, backend = prepare(tmp_path, monkeypatch)
+    rt = Runtime(cfg, reg, backend, smoke=True)
+    calls = []
+    for arm in ('B', 'R'):
+        augment = rt.components[arm]['plan_augment'].augment
+        def wrapped(bank, *, count, arm, original=augment):
+            calls.append(arm)
+            return original(bank, count=count, arm=arm)
+        rt.components[arm]['plan_augment'].augment = wrapped
+    episode = rt.episode
+    def inspect_episode(*a, **kw):
+        assert calls == ['B', 'R']
+        return episode(*a, **kw)
+    rt.episode = inspect_episode
+    rt.run()
+    assert calls == ['B', 'R']
+
+
 def test_admission_and_runtime_detect_frozen_base_mutation_and_kl_violation(tmp_path, monkeypatch):
     cfg, reg, backend = prepare(tmp_path, monkeypatch)
     rt = Runtime(cfg, reg, backend, smoke=True)

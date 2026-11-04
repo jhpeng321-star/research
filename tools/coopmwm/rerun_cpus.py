@@ -1,4 +1,4 @@
-"""PREPARE ONLY (owner 2026-11-04, c4/rerun-cpus): NEW standalone A/B/R-v2v experiment on cpuS
+"""Standalone rerun preparation; opt-in Track 2 production runtime targets cpuV.
 with ITS OWN root and ITS OWN single ledger. Supersedes the c4/rerun_clean prep (which kept the
 coop3 A as a remote control): here ALL THREE arms A, B and R run from MAPPO u0 with identical
 code in ONE new root - B and R with the full fix set (V2V intent, per_seed_v1 cooperative_only
@@ -22,13 +22,14 @@ MAPPO cooperation layer, trigger head, group credit, observable merge features, 
 WM/random teaching, augmentation and practice weighting from their own banks. coop_reward
 stays OFF. The proposed evaluation is the
 replicated isolated cooperation test at
-u6/u12/u18/u24: N replicates per arm per update in paired worlds (same world seed across
-arms by replicate index), bootstrap CIs on the paired B-vs-A differences, and a
+u6/u12/u24: N=5 B/R replicates per update in paired worlds (same world seed across
+arms by replicate index), bootstrap CIs against the matched common-base reference, and a
 PRE-REGISTERED pass criterion (sealed document, bound by OWNER_APPROVAL.json and the run
 root's AUTHORITY.md; the dry preflight refuses without all three bindings). The trigger
 head/teachers code against sibling-track modules through explicit injected adapters;
 only moves has a fixed symbol API in the shared spec. No sibling imports are needed to
-produce a config or budget. Tests provide local stubs; this is not a live dispatcher.
+produce a config or budget. The native production dispatcher is rerun_tracks_backend;
+tests replace unavailable sibling adapters and the SUMO boundary with CPU fakes.
 """
 import hashlib
 import json
@@ -131,7 +132,7 @@ CRITERION = dict(
     pairing=ISOLATED_TEST['pairing'],
     primary_update=24, secondary_updates=[6, 12],
     bootstrap=dict(ISOLATED_TEST['bootstrap']),
-    pass_rule=('PASS iff, at the primary update u24, the paired B-vs-A mean cooperation gain '
+    pass_rule=('PASS iff, at the primary update u24, the paired B-vs-common-u0 mean cooperation gain '
                 'difference vs common frozen u0 (its cooperation gain is identically zero) '
                 'has a two-sided 95% bootstrap CI lying entirely above 0 AND B has '
                 'no more total collisions/teleports/hard-brakes/TTC events than A across the replicates '
@@ -163,11 +164,11 @@ _TRUTH = re.compile(r'(vtype|driver|vehicle_params)[^/]*truth|truth[^/]*(vtype|d
 
 
 def quote():
-    """Full-run sim-s quote for ALL THREE arms (24 updates each) including the exact gate,
-    the group-credit verification allowance, the REPLICATED isolated cooperation test
-    (3 arms x u6/12/18/24 x 8 replicates in paired worlds) and the u8/u24 fixed-episode
-    test numbers. A trains plain PPO (no bank, no practice, no head); B and R each add 6
-    matched A-policy practice reference episodes per update."""
+    """Assert the complete budget-cut quote, including smoke and all phase ceilings.
+
+    A/B/R retain full 1200s episodes; B/R verification is a fixed whole-run sample
+    slate, augmentation is once, and isolated checks are B/R u6/u12/u24 N=5.
+    """
     a_train = UPDATES*EPISODES_PER_UPDATE*EPISODE_SIM_S
     practice_refs = math.ceil(EPISODES_PER_UPDATE*TRACK_SLOTS['practice_weighting']['fraction'])
     br_train = 2*UPDATES*(EPISODES_PER_UPDATE+practice_refs)*EPISODE_SIM_S
@@ -562,14 +563,14 @@ def check_pins(cfg):
             raise ValueError('REFUSED: registration differs: '+key)
     if cfg.get('isolated_test') != ISOLATED_TEST:
         raise ValueError('REFUSED: replicated isolated-test registration differs from the '
-                         'registered u6/12/18/24 N=%d paired-worlds spec' % ISOLATED_REPLICATES)
+                         'registered u6/12/24 N=%d paired-worlds spec' % ISOLATED_REPLICATES)
     if cfg.get('criterion_sha256') != criterion_document()['criterion_sha256']:
         raise ValueError('REFUSED: config does not bind the current pre-registered criterion')
     for arm in ISOLATED_TEST['arms']:
         if list((cfg.get('diagnostic_schedule') or {}).get(arm, {}).get('isolated', ())) \
                 != list(ISOLATED_TEST['updates']):
             raise ValueError('REFUSED: arm '+arm+' must run the replicated isolated test at '
-                             'u6/12/18/24')
+                             'u6/12/24')
     if (cfg.get('diagnostic_phases') or {}).get('isolated') != 'isolated_replicated':
         raise ValueError('REFUSED: isolated diagnostics must charge the isolated_replicated phase')
     from .practice_starts import enabled
@@ -987,12 +988,13 @@ def verify_staged(manifest, stage_dir, *, checkpoint_sha256=None):
                 manifest_sha256=manifest['manifest_sha256'])
 
 
-def staging_files_command(manifest):
+def staging_files_command(manifest, *, track2=False):
     """Operator commands: write the file list, then rsync+sha it to cpuS (relative to /home/ubuntu)."""
     files = '\n'.join(sorted(manifest['entries']))
+    target = 'cpuV' if track2 else 'cpuS'
     return ('cat > STAGING_FILES.txt <<\'EOF\'\n'+files+'\nEOF\n'
             'rsync -a --numeric-ids --files-from=STAGING_FILES.txt '
-            '<original-host>:/ /home/ubuntu/   # then rsync /home/ubuntu to cpuS unchanged')
+            '<original-host>:/ /home/ubuntu/   # then rsync /home/ubuntu to '+target+' unchanged')
 
 
 # ---------------------------------------------------------------- pre-registered criterion + replicated isolated test
@@ -1386,7 +1388,7 @@ if __name__ == '__main__':
         out = a.out or 'STAGING_MANIFEST.json'
         Path(out).write_text(json.dumps(m, indent=1, sort_keys=True)+'\n', encoding='utf-8')
         print(json.dumps(dict(entries=len(m['entries']), manifest_sha256=m['manifest_sha256'],
-                              command=staging_files_command(m))))
+                              command=staging_files_command(m, track2=a.track2))))
     elif a.cmd == 'preflight':
         print(json.dumps(preflight_dry(a.prep, stage_dir=a.stage, track2=a.track2)))
     elif a.cmd == 'monitor':

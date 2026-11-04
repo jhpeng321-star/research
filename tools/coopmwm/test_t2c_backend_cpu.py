@@ -51,6 +51,7 @@ def production(tmp_path, monkeypatch):
         from tools.coopmwm.test_replay_bank_confirm_cpu import plan
         p = plan('native_'+move.family, move.depth)
         p['members'] = list(move.members)
+        p.update(family=move.family, depth=move.depth)
         return p
     functions = {modules[name]: factory(name) for name in prod.COMPONENTS}
     functions[bindings['move_to_plan']] = convert
@@ -297,7 +298,7 @@ def test_native_replay_branch_uses_reviewed_runner_and_mixed_policy(production, 
     calls = []
     class Runner(native):
         def run(self, spec, snapshot):
-            controller = types.SimpleNamespace(policy=model, base_policy=model)
+            controller = types.SimpleNamespace(policy=model, base_policy=model, apply=lambda *a: {})
             self.controller_hook(controller, {}, {})
             assert isinstance(controller.base_policy, MixedPolicy)
             assert controller.base_policy.new_members_only == {'c1'}
@@ -316,3 +317,26 @@ def test_native_replay_branch_uses_reviewed_runner_and_mixed_policy(production, 
     spec = dict(branch='solo0', verification_id='native_replay', window=dict(start_s=600, end_s=1200))
     result = prod.branch_worker(spec, snap, cfg, str(tmp_path/'branch'))
     assert calls == [spec] and result['safety']['ttc_events'] == 0
+
+
+def test_native_all8_move_is_relative_to_each_branch_base_not_static_profile(production, monkeypatch):
+    from tools.coopmwm import exploration
+    from tools.coopmwm.acceleration import Controller
+    from tools.coopmwm.v2v_runtime import controller_class
+    monkeypatch.setattr(exploration, 'regime', lambda rows: 'ordinary')
+    sensor = rows()
+    members = prod.observation(sensor, None, 300, [-3., 2.6])['cav_ids']
+    move = Move('gap_open', tuple(members), .2)
+    plan = prod.native_move_plan(move, {}, production)
+    model = IntentPolicy()
+    c = controller_class(Controller)(model, torch.Generator().manual_seed(3), True)
+    c.active_plans = [dict(plan=plan, start_s=300)]
+    prod.relative_plan_hook(c, dict(accel_bounds=[-3., 2.6]), {})
+    commands = {r['vid']: .2 for r in sensor if r['is_cav']}
+    first = c.apply(sensor, commands, 300)
+    c.observe_issued(dict(time_s=300, vehicles=sensor))
+    commands = {v: .7 for v in commands}
+    second = c.apply(sensor, commands, 301)
+    for vid in members:
+        assert first[vid]['requested_raw'] == pytest.approx(.4)
+        assert second[vid]['requested_raw'] == pytest.approx(.9)

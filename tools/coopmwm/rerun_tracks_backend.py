@@ -56,6 +56,57 @@ def load_policy(weights):
     return from_weights(base_weights(weights), enabled=True)
 
 
+def native_move_plan(move, obs, cfg):
+    """Retain the native plan/window ABI, with exact *relative* move commands.
+
+    Static absolute profiles cannot represent offsets on a state-dependent base.
+    Verification therefore reuses native replay/CRN and adds these offsets to
+    the branch's own base action each second, just like the live controller.
+    """
+    from . import moves
+    plan = deepcopy(entrypoint(cfg['production']['move_to_plan'])(move, observation=obs, cfg=cfg))
+    if set(plan['members']) != set(move.members) or type(plan['duration_s']) is not int or plan['duration_s'] <= 0:
+        raise ValueError('REFUSED: native move adapter changed members/duration')
+    plan['track2_offsets'] = {v: [] for v in move.members}
+    for elapsed in range(plan['duration_s']):
+        offsets = moves.offsets(move, elapsed)
+        if not set(offsets).issubset(move.members):
+            raise ValueError('REFUSED: native move offset commands foreign member')
+        for vid in move.members:
+            value = float(offsets.get(vid, 0.))
+            if not math.isfinite(value):
+                raise ValueError('REFUSED: nonfinite native move offset')
+            plan['track2_offsets'][vid].append(value)
+    return plan
+
+
+def relative_plan_hook(controller, job, prefixes):
+    """Native all8 replay keeps its sole safety writer and dynamic base actions."""
+    original = controller.apply
+    def apply(rows, commands, now):
+        desired = original(rows, commands, now)
+        event = controller.events[-1]
+        sample = event['sample']
+        members = sample['context']['members']
+        for commitment in controller.active_plans:
+            plan = commitment['plan']
+            offsets = plan.get('track2_offsets')
+            elapsed = int(now)-int(commitment['start_s'])
+            if offsets is None or not 0 <= elapsed < plan['duration_s']:
+                continue
+            for vid in plan['members']:
+                if vid not in commands or vid not in members:
+                    continue
+                residual = float(sample['own_action'][members.index(vid)][0])
+                raw = commands[vid]+residual+offsets[vid][elapsed]
+                raw = min(1.2, float(job['accel_bounds'][1]), max(float(job['accel_bounds'][0]), raw))
+                desired[vid] = dict(requested_raw=raw, acceleration_residual=raw-commands[vid])
+                sample.setdefault('absolute_accels', {})[vid] = raw
+        event['requests'] = deepcopy(desired)
+        return desired
+    controller.apply = apply
+
+
 def component_weights(components):
     return {f't2c.{prefix}.{k}': v.detach().cpu().clone()
             for prefix, name in (('layer', 'coop_layer'), ('trigger', 'trigger_head'))
@@ -155,8 +206,7 @@ class EpisodeHook:
                         raise ValueError('REFUSED: nonfinite production group credit')
                     # The sibling move adapter supplies the native full-window
                     # plan representation; parameters/horizons are never guessed.
-                    convert = entrypoint(self.cfg['production']['move_to_plan'])
-                    plans = [convert(m, observation=obs, cfg=self.cfg) for m in proposals if m.family != 'none']
+                    plans = [native_move_plan(m, obs, self.cfg) for m in proposals if m.family != 'none']
                     if not plans:
                         raise ValueError('REFUSED: no native move plans for verification')
                     window = sv.build_branches(snapshot, plans)[0]['window']
@@ -407,8 +457,7 @@ class Backend:
         if kind == 'teacher':
             plans = payload['native_plans']
         elif kind == 'group_credit':
-            plan = entrypoint(cfg['production']['move_to_plan'])(payload['move'],
-                observation=payload['observation'], cfg=cfg)
+            plan = native_move_plan(payload['move'], payload['observation'], cfg)
             plans = [plan]+[rb.solo_candidate(plan, m) for m in plan['members']]
         else:
             plans = [payload['plan']]
@@ -537,6 +586,7 @@ def branch_worker(spec, snapshot, cfg, work):
             mixed = MixedPolicy(model, old, set(synergy['group'])-set(synergy['new_members']),
                                 synergy['new_members'] if synergy.get('background_old') else None)
             controller.policy = controller.base_policy = mixed
+        relative_plan_hook(controller, job, prefixes)
         layer_hook(controller, job, prefixes)
     runner = sv.LocalBranchRunner(work, controller_hook=hook, policy_loader=load_policy)
     with bank_v2v.enabled(True):
