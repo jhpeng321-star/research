@@ -9,8 +9,10 @@ provide *local observable* states and CAV identities, never a global frame.
 The base policy's forward/sample/score paths are delegated unchanged. Trigger
 sampling is separate (decision cadence belongs to the caller). PPO consumes
 the recorded table, mask and per-CAV old log probabilities, not fresh draws.
-Trigger features use only per-ego sensor/V2V inputs with a constant zero latent,
-never the base actor's global RSU broadcast. Frozen mode detaches the actor trunk
+Trigger features use only per-ego sensor/V2V inputs with a constant zero latent.
+Intent-enabled triggers require a separate recorded ``trigger_v2v`` block whose
+messages come from the local-only publisher, never the base intent board or RSU.
+Frozen mode detaches the actor trunk
 and excludes ALL base parameters from the trigger optimizer; explicit fine-tuning
 includes the actor only. The low-level MAPPO action path stays separate.
 
@@ -138,8 +140,35 @@ class TriggerPolicy(nn.Module):
         """Explicit opt-in discovery adapter for the existing V2V controller."""
         return self.base_policy
 
+    @torch.no_grad()
+    def publish_trigger_intent(self, context):
+        """Local-only messages; the runtime keeps a separate t-1 trigger board.
+
+        Reuse the loaded intent head and per-CAV trunk, but with zero broadcast
+        and *only* locally generated received intents. Never call base.publish:
+        that publication and its low-level action path remain independent.
+        """
+        lo, hi = (float(b) for b in self.base_policy.intent_bounds)
+        values = self.base_policy.intent_head(self._hidden(context)).clamp(lo, hi)
+        return {vid: row.tolist() for vid, row in zip(context['members'], values)}
+
     def _hidden(self, context):
         x = context['x']
+        if len(x) != len(context['members']) or len(set(context['members'])) != len(x):
+            raise ValueError('context member/feature mismatch')
+        # Even pre-widened rows can contain global-conditioned base intents.
+        # Always replace that block with the separately recorded local payload;
+        # missing provenance must fail closed, including during PPO/CE replay.
+        if getattr(self.base_policy, 'intent_horizon', 0):
+            blocks = context.get('trigger_v2v')
+            if len(x) and (not blocks or any(v not in blocks for v in context['members'])):
+                raise ValueError('trigger requires recorded local-only trigger_v2v partner observations')
+            if any(len(row) not in (FEATURES, FEATURES+self.v2v_dim) for row in x):
+                raise ValueError('trigger sensor feature width mismatch')
+            if any(len(blocks[v]) != self.v2v_dim for v in context['members']):
+                raise ValueError('trigger local-only V2V feature width mismatch')
+            x = [list(row[:FEATURES])+list(blocks[vid])
+                 for vid, row in zip(context['members'], x)]
         if len(x) and len(x[0]) == FEATURES:
             blocks = context.get('v2v')
             if not blocks:
@@ -189,6 +218,8 @@ class TriggerPolicy(nn.Module):
         ``obs_states[ego]`` is passed unchanged to moves.candidates. The separate
         ``observable_cavs[ego]`` must come from that ego's sensing/V2V reports
         (CAVs only, including ego), not context['members'] as a global fallback.
+        Intent-enabled contexts must record ``trigger_v2v`` from the separate
+        local-only runtime board; legacy base intent blocks are not a fallback.
         """
         context = copy.deepcopy(context)
         tables, descriptors, masks = [], [], []

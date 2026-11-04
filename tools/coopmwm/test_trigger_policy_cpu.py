@@ -10,6 +10,7 @@ import torch
 from .trigger_policy import TriggerPolicy, MoveExecutor, ppo_update
 from .acceleration import Controller, encode
 from .v2v_intent import IntentPolicy, intent_model
+from .v2v_integrate import widen_context
 from .v2v_runtime import Policy as V2VPolicy, controller_class
 
 
@@ -53,6 +54,8 @@ def setup_policy(*, freeze_base=True, dim=48, n=3):
                            freeze_base=freeze_base, moves_api=stub)
     context = dict(members=['ego', 'peer'], x=[[.1]*29, [.3]*29], rsu=[.2]*12,
                    v2v={'ego': [.5]*dim, 'peer': [.8]*dim})
+    if dim == 48:
+        context['trigger_v2v'] = copy.deepcopy(context['v2v'])
     states = {'ego': dict(choices=[Move(), Move('gap_open', depth=.8)]),
               'peer': dict(choices=[Move('wall')])}
     visible = {vid: ('ego', 'peer') for vid in context['members']}
@@ -116,7 +119,8 @@ def test_real_encoder_global_rsu_cannot_change_trigger_but_local_inputs_can(free
 
     def context(sensor):
         ctx = encode(sensor)
-        return dict(ctx, v2v={vid: [0.]*48 for vid in ctx['members']})
+        return dict(ctx, v2v={vid: [0.]*48 for vid in ctx['members']},
+                    trigger_v2v={vid: [0.]*48 for vid in ctx['members']})
 
     ctx = context(rows)
     distant = copy.deepcopy(rows)
@@ -144,7 +148,7 @@ def test_real_encoder_global_rsu_cannot_change_trigger_but_local_inputs_can(free
     local_logits, _ = policy.distribution(context(local), first.descriptors, first.mask)
     assert not torch.equal(logits.softmax(-1)[0], local_logits.softmax(-1)[0])
     reports = copy.deepcopy(local_only)
-    reports['v2v']['ego'][6:12] = [.5]*6  # legitimate recorded partner report
+    reports['trigger_v2v']['ego'][6:12] = [.5]*6  # legitimate recorded local partner report
     report_logits, _ = policy.distribution(reports, first.descriptors, first.mask)
     assert not torch.equal(logits.softmax(-1)[0], report_logits.softmax(-1)[0])
     assert torch.equal(logits[1], report_logits[1])  # no cross-ego pooling
@@ -177,11 +181,15 @@ def test_actual_intent_controller_wrapper_two_ticks_preserves_actions_noise_and_
         assert wrapped.apply(rows, commands, now) == baseline.apply(rows, commands, now)
         assert wrapped.policy is policy
         sample = wrapped.events[-1]['sample']
-        assert sample == baseline.events[-1]['sample']
+        low_level = copy.deepcopy(sample)
+        del low_level['context']['trigger_v2v']
+        del low_level['published_trigger_intent']
+        assert low_level == baseline.events[-1]['sample']
         assert wrapped.memory == baseline.memory
         assert torch.equal(wrapped.generator.get_state(), baseline.generator.get_state())
         assert wrapped.intent_board == baseline.intent_board
         assert sample['published_intent'] == policy.base_policy.publish(sample['context'])
+        assert sample['published_trigger_intent'] == policy.publish_trigger_intent(sample['context'])
         assert set(sample['published_intent']) == {'ego', 'peer'}
         for ego, partner in (('ego', 'peer'), ('peer', 'ego')):
             block = sample['context']['v2v'][ego]
@@ -192,12 +200,122 @@ def test_actual_intent_controller_wrapper_two_ticks_preserves_actions_noise_and_
                 assert block[11] == 1.
             else:
                 assert block[6:12] == [0.]*6  # first tick or stale after skipped tick
+                assert sample['context']['trigger_v2v'][ego][6:12] == [0.]*6
         if now == 302:
             assert sample['published_intent']['peer'] != previous_published['peer']
         previous_published = copy.deepcopy(sample['published_intent'])
         issued = dict(time_s=now, vehicles=[dict(r, issued_acceleration_mps2=.3) for r in rows])
         wrapped.observe_issued(issued)
         baseline.observe_issued(issued)
+
+
+@pytest.mark.parametrize('freeze_base', [True, False])
+def test_actual_controller_remote_state_cannot_leak_through_learned_partner_intents(freeze_base):
+    policy, _, states, visible, _ = setup_policy(freeze_base=freeze_base)
+    with torch.no_grad():
+        policy.base_policy.actor[0].weight[:, 29:77].normal_(std=.2)
+        policy.base_policy.intent_head.weight.normal_(std=.2)
+    control = controller_class(Controller)
+    worlds = [control(policy, torch.Generator().manual_seed(4), True) for _ in range(2)]
+    previous = None
+    for now in (301, 302, 303, 305):
+        contexts, batches = [], []
+        for world, remote_speed in zip(worlds, (5., 25.)):
+            rows = sensor_rows()
+            rows[-1]['v_mps'] = remote_speed
+            world.apply(rows, {'ego': .2, 'peer': .2}, now)
+            ctx = world.events[-1]['sample']['context']
+            contexts.append(ctx)
+            batches.append(decide(policy, ctx, states, visible))
+        a, b = batches
+        assert contexts[0]['x'] == contexts[1]['x']
+        assert contexts[0]['rsu'] != contexts[1]['rsu']
+        assert a.tables == b.tables and torch.equal(a.descriptors, b.descriptors)
+        assert torch.equal(a.mask, b.mask)
+        outputs = [policy.distribution(c, a.descriptors, a.mask) for c in contexts]
+        assert torch.equal(outputs[0][0], outputs[1][0])
+        assert torch.equal(outputs[0][1], outputs[1][1])
+        assert torch.equal(a.actions, b.actions) and torch.equal(a.logp, b.logp)
+        assert contexts[0]['trigger_v2v'] == contexts[1]['trigger_v2v']
+        if now in (302, 303):
+            assert contexts[0]['v2v'] != contexts[1]['v2v']  # reproduce the indirect channel
+        for ego, partner in (('ego', 'peer'), ('peer', 'ego')):
+            block = contexts[0]['trigger_v2v'][ego]
+            if now in (302, 303):
+                assert block[6:11] == pytest.approx(previous[partner], abs=1e-7)
+                assert block[11] == 1.
+            else:
+                assert block[6:12] == [0.]*6
+        previous = copy.deepcopy(worlds[0].events[-1]['sample']['published_trigger_intent'])
+        assert previous == worlds[1].events[-1]['sample']['published_trigger_intent']
+        # Collection and PPO replay use the same local-only recorded payloads,
+        # including after a fine-tuned actor update; no board is queried at replay.
+        if now == 303:
+            left, right = copy.deepcopy(policy), copy.deepcopy(policy)
+            assert update(left, a) == update(right, b)
+            assert all(torch.equal(v, right.state_dict()[k]) for k, v in left.state_dict().items())
+            assert all(torch.equal(x, y) for x, y in zip(left.evaluate(a), right.evaluate(b)))
+
+
+@pytest.mark.parametrize('freeze_base', [True, False])
+def test_actual_controller_local_partner_intent_remains_usable(freeze_base):
+    policy, _, states, visible, _ = setup_policy(freeze_base=freeze_base)
+    with torch.no_grad():
+        policy.base_policy.actor[0].weight[:, 29:77].normal_(std=.2)
+        policy.base_policy.intent_head.weight.normal_(std=.2)
+    control = controller_class(Controller)
+    worlds = [control(policy, torch.Generator().manual_seed(4), True) for _ in range(2)]
+    for now in (301, 302):
+        contexts = []
+        for world, speed in zip(worlds, (5., 25.)):
+            rows = sensor_rows()+[dict(vid='peer_local_hdv', s_m=-290., v_mps=speed,
+                                      lane=0, is_cav=False, length_m=5.)]
+            world.apply(rows, {'ego': .2, 'peer': .2}, now)
+            contexts.append(world.events[-1]['sample']['context'])
+        assert contexts[0]['x'][0] == contexts[1]['x'][0]  # outside ego sensing
+        assert contexts[0]['x'][1] != contexts[1]['x'][1]  # inside reporting peer sensing
+    assert contexts[0]['trigger_v2v']['ego'][:6] == contexts[1]['trigger_v2v']['ego'][:6]
+    assert contexts[0]['trigger_v2v']['ego'][6:11] != contexts[1]['trigger_v2v']['ego'][6:11]
+    batch = decide(policy, contexts[0], states, visible)
+    logits, values = policy.distribution(contexts[0], batch.descriptors, batch.mask)
+    other_logits, other_values = policy.distribution(contexts[1], batch.descriptors, batch.mask)
+    assert not torch.equal(logits.softmax(-1)[0], other_logits.softmax(-1)[0])
+    assert not torch.equal(values[0], other_values[0])
+    # Isolate the legitimate local partner report as the only changed ego input.
+    replaced = copy.deepcopy(contexts[1])
+    replaced['trigger_v2v']['ego'] = contexts[0]['trigger_v2v']['ego']
+    replaced_logits, replaced_values = policy.distribution(replaced, batch.descriptors, batch.mask)
+    assert torch.equal(logits[0], replaced_logits[0]) and torch.equal(values[0], replaced_values[0])
+
+
+@pytest.mark.parametrize('freeze_base', [True, False])
+def test_trigger_replay_ignores_base_intents_even_in_widened_rows_and_requires_local_payload(freeze_base):
+    policy, ctx, states, visible, _ = setup_policy(freeze_base=freeze_base)
+    with torch.no_grad():
+        policy.base_policy.actor[0].weight[:, 29:77].normal_(std=.2)
+    batch = decide(policy, ctx, states, visible)
+    expected = policy.evaluate(batch)
+    # A collector may store widened low-level rows. Neither these columns nor
+    # the separate base board may bypass the recorded local-only trigger board.
+    widened = widen_context(ctx, ctx['v2v'])
+    for row in widened['x']:
+        row[29:] = [17.]*48
+    widened['v2v'] = {vid: [-31.]*48 for vid in ctx['members']}
+    del widened['rsu']
+    replay = replace(batch, context=copy.deepcopy(widened))
+    assert all(torch.equal(x, y) for x, y in zip(expected, policy.evaluate(replay)))
+    assert torch.equal(policy.imitation_loss(batch, [1, 1]), policy.imitation_loss(replay, [1, 1]))
+    # Snapshot survives later board mutation; PPO never recomputes old intents
+    # with a new head or falls back to globally conditioned base payloads.
+    ctx['trigger_v2v']['ego'][6:12] = [999.]*6
+    assert all(torch.equal(x, y) for x, y in zip(expected, policy.evaluate(batch)))
+    for missing in (None, {}, {'ego': [0.]*48}):
+        invalid = copy.deepcopy(widened)
+        invalid['trigger_v2v'] = missing
+        with pytest.raises(ValueError, match='local-only'):
+            policy.evaluate(replace(batch, context=invalid))
+        with pytest.raises(ValueError, match='local-only'):
+            policy.imitation_loss(replace(batch, context=invalid), [1, 1])
 
 
 def test_per_cav_discrete_move_table_masks_snapshot_and_score_replay():
@@ -261,7 +379,7 @@ def test_candidates_refuse_nonlocal_members_and_unregistered_parameters(bad):
 
 def test_missing_v2v_and_candidate_overflow_refused():
     policy, ctx, states, visible, _ = setup_policy()
-    del ctx['v2v']
+    del ctx['trigger_v2v']
     with pytest.raises(ValueError, match='partner observations'):
         decide(policy, ctx, states, visible)
     policy, ctx, states, visible, _ = setup_policy(n=1)
