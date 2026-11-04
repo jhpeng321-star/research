@@ -1,15 +1,16 @@
 # Fleet PPO controller-selector training status
 
-## Latest reconciliation — 2026-11-04 17:16 +08:00
-- Fresh cpuQ exact-PID/root probes: original645235/root absent after owner cleanup;
-  disk5,854,359,552bytes free/89%used. Local observer3668/publisher44716 absent.
-- Fresh nice19 gpuR checkpoint AND frozen-receipt hashes match final169 bindings;
-  local design/byte-identical peer handoff/exact schedule/accounting checks PASS.
+## Latest reconciliation — resume using 2026-11-04 19:44 +08:00 evidence
+- Existing19:44 receipt records cpuQ original645235/root absent after owner cleanup;
+  disk7,655,567,360bytes free/85%used, and matching gpuR checkpoint/frozen-receipt
+  hashes. Remote evidence is reused; no additional SSH or inference probe this resume.
+- Fresh local exact-PID query finds observer3668/publisher44716 absent. Fresh SHA256
+  checks match registered design992c0560 and byte-identical frozen/peer handoff2ecb0e85.
 - Completed169updates/7,728gradient episodes/6,998,400charged remain unchanged;
   local14,400evaluation UNSTARTED, cap7,012,800. Supervision is complete.
 - Unchanged Nov3 peer status records fleet16worlds/480decisions/79,800sim-s COMPLETE;
   full paired comparison remains incomplete and C1SWITCH2-owned.
-- Evidence: `selmappo/RESUME_20261104_1716.json`. Prior CPU/integration PASS retained;
+- Evidence: `selmappo/RESUME_20261104_1944.json`. Prior CPU40/40/integration PASS retained;
   new dispatches/simulations/GPU allocations/process signals0.
 - Independent17:17 cross-check agrees on terminal state, both checkpoint/receipt
   hashes and exact accounting; see `selmappo/RESUME_20261104_1717.json`. Concurrent
