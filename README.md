@@ -1,3 +1,7 @@
+<!-- S-WMCHECK-closeout -->
+**2026-11-05, S-WMCHECK:** [Existing-plan WM error audit](runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md): positive WM gain wins 90/221 on 542 recovered training pairs. The >=80%-confidence question remains unresolved because paired probabilities were not recorded; mixed horizons and selection bias limit interpretation. Zero new SUMO or charges.
+<!-- /S-WMCHECK-closeout -->
+
 > **Current direction (2026-10-09):** the project is **WM-S**, a physics-informed
 > per-step traffic world model (IDM/MOBIL core + gated learned residual) used to pick
 > controllers per situation. Contribution **C1** (zero-shot prediction of unseen

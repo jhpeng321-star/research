@@ -1,4 +1,8 @@
 <!-- WM-S-open-questions-20261009 -->
+<!-- S-WMCHECK-closeout -->
+**2026-11-05, S-WMCHECK (partially answered):** [Gain-disagreement audit](../runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md) finds 90/221 positive predictions win on recovered selected training pairs. How wrong is the WM at raw/calibrated P>=0.8 remains **open**: no genuine candidate-bound probability evidence exists in these records. Matched original prediction-horizon provenance is also missing. No confidence inferred from gains and no new runs authorized by this analysis.
+<!-- /S-WMCHECK-closeout -->
+
 # WM-S open questions update (2026-10-09)
 
 Current direction: WM-S ([WM_STATE_PLAN.md](WM_STATE_PLAN.md),

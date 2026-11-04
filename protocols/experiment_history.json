@@ -27,6 +27,32 @@
   },
   "entries": [
     {
+      "id": "S-WMCHECK",
+      "date": "2026-11-05",
+      "family": "PL",
+      "name": "Existing verified-plan world-model gain and confidence error audit",
+      "status": "completed_with_probability_evidence_unavailable",
+      "question": "How wrong is the WM, especially when its raw or calibrated probability of beating the continuing policy is at least 80 percent?",
+      "changed_vars": "Analysis only: match existing candidate forecasts to SUMO outcomes; use accepted calibration eligibility and original-seed partitioning.",
+      "comparators": "Same-snapshot continuing current policy. Realised gain = J_policy - J_candidate; bias = mean(predicted gain - realised gain).",
+      "matching_reuse": "Reuse existing cpuQ warm1 bank/replay-bank verification and all8/confirmation records; inspect coop3 isolated records for pair eligibility. No new physical runs; WM-selected and available candidates only.",
+      "budget_registered": "Owner S-WMCHECK: analysis only, no SUMO or charges, training/dev seeds only, cpuQ read-only except own new directory or /tmp; finish within 90 minutes.",
+      "budget_actual": "Zero new simulation seconds, optimizer steps, GPU jobs or charges. Resume reused completed analysis and PASS receipt without remote access or redispatch.",
+      "criteria_verdict": "542 identity-checked pairs across 32 training seeds: positive-gain predictions win 90/221 (40.7%); median absolute logged gain error 328.77 veh-s, pred-minus-real bias +207.29 veh-s, Spearman 0.102542. Zero usable paired probability records: raw/calibrated >=80% rates, decile reliability and ECE unavailable. Seed-separated validation positive-prediction wins 0/26; no probability fit performed.",
+      "limitations": "Selected/available candidates, correlated candidates and CRN panels, one MPPI family. 320/542 realised windows shorter than registered minimum; original exact WM scoring-horizon contract unavailable. Missing specs/mounts; outcome-selected extended confirmations excluded. Error signs vary by seed, not a validated universal correction.",
+      "answers": "partial: gain disagreement measured; high-confidence calibration unidentifiable from recorded evidence",
+      "paths": ["runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md", "runs/active/C4-V7FT-20261017/S_WMCHECK_RESUME_RECEIPT_20261105.json"],
+      "structured": {
+        "record_kind": "analysis",
+        "execution_status": "completed",
+        "evidence_validity": "selected training/dev gain diagnostic; mixed horizons; probability evidence unavailable",
+        "scientific_verdict": "Positive WM gain is a weak signal on recovered selected candidates; >=80%-confidence error remains unresolved. No universal correction or probability calibration inferred.",
+        "evidence_status": "integrity_receipt_verified",
+        "review_status": "Prior-session independent arithmetic, Spearman, 32 seed rows and 10 unavailable probability deciles PASS, preserved on resume. Close-out: zero new validation errors (pre-existing missing paths remain); generated summary PASS; scoped receipt identity zero mismatches, zero physical-effect metric checks. Ledger tests 18 passed/5 skipped/7 failed: six restricted-path guard refusals and one pre-existing missing source. No restricted bytes read.",
+        "outcomes": []
+      }
+    },
+    {
       "id": "WM-S-TRAINSETUP-20261009",
       "date": "2026-10-09",
       "family": "WM",

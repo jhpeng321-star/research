@@ -1,5 +1,9 @@
 # INDEX — current documents and superseded pointers
 
+<!-- S-WMCHECK-closeout -->
+**2026-11-05, S-WMCHECK:** [WM error report](../runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md), [resume/verification receipt](../runs/active/C4-V7FT-20261017/S_WMCHECK_RESUME_RECEIPT_20261105.json). Existing selected training-plan pairs only; high-confidence probability evidence unavailable; zero new SUMO or charges.
+<!-- /S-WMCHECK-closeout -->
+
 > Added 2026-10-09 (docs-only). The append-only status log below is historical and
 > unchanged. Current direction: **WM-S** — see [ROUTE.md](ROUTE.md),
 > [WM_STATE_PLAN.md](WM_STATE_PLAN.md), [WM_S2_ROADMAP.md](WM_S2_ROADMAP.md).

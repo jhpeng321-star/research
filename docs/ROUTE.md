@@ -1,5 +1,9 @@
 # Current route — WM-S readiness (2026-10-09)
 
+<!-- S-WMCHECK-closeout -->
+**2026-11-05, S-WMCHECK:** [WM error audit](../runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md) measures disagreement on 542 recovered selected training pairs. Positive predictions win 40.7%; logged gain ranking is weak and error signs depend on seed. Raw/calibrated >=80% reliability remains unresolved because genuine paired probabilities are absent. Mixed horizons prevent an isolated matched-horizon WM-error claim. Zero new SUMO or charges; no calibration artifact fitted.
+<!-- /S-WMCHECK-closeout -->
+
 > Added 2026-10-09 (docs-only). The append-only route log below is historical and
 > unchanged. WM-S plan: [WM_STATE_PLAN.md](WM_STATE_PLAN.md); contributions and weekly
 > plan: [WM_S2_ROADMAP.md](WM_S2_ROADMAP.md); inventory:

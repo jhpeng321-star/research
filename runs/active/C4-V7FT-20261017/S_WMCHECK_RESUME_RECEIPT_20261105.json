@@ -31,5 +31,17 @@
   "new_training_steps": 0,
   "new_charges": 0,
   "remote_access_on_resume": false,
-  "scientific_followup": "The high-confidence error question remains unresolved pending genuine paired probability evidence."
+  "scientific_followup": "The high-confidence error question remains unresolved pending genuine paired probability evidence.",
+  "closeout": {
+    "ledger_entry": "S-WMCHECK",
+    "navigation_updated": ["README.md", "docs/INDEX.md", "docs/ROUTE.md", "docs/OPEN_QUESTIONS.md", "docs/EXPERIMENT_HISTORY.md"],
+    "generated_summary_check": "PASS",
+    "new_ledger_validation_errors": 0,
+    "global_ledger_validation": "Not clean: pre-existing missing archive/source paths remain; restricted archive path maps excluded before opening.",
+    "scoped_source_verification": "Zero mismatches; receipt identity only, zero physical-effect metric checks. Independent analysis arithmetic PASS preserved above.",
+    "ledger_tests": "18 passed, 5 skipped, 7 failed: six restricted-path guard refusals before opening archive/sealed_relocated_20261010/PATH_MAP.json, one pre-existing missing natural_final_decision.json source.",
+    "restricted_content_reads": 0,
+    "details": "E:/Temp/opencode/wmcheck_20261105/closeout_checks.json",
+    "command": "python -B E:/Temp/opencode/wmcheck_20261105/closeout.py checks; python -B E:/Temp/opencode/wmcheck_20261105/closeout.py tests"
+  }
 }
