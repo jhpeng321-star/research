@@ -63,6 +63,7 @@ REGISTERED = dict(
     runtime='', accel_bounds=None, gpu_deadline=0., worlds=None,
     slots=1, fanout_factor=2., demand_phase_end_s=1200., warm_history=False,
     workers=9, timeout_s=3600., drain_s=0., broker=None, variety=None, extra_seeds=0,
+    gpu_host=None,
 )
 
 
@@ -134,6 +135,9 @@ def split_config(cfg):
                          'cooperative plans, the live per_seed_v1 bank option; 0 = off)')
     if v['broker'] is not None:
         v['broker'] = validate_broker(v['broker'])
+        selected_gpu_host(v['broker'], v['gpu_host'])
+    elif v['gpu_host'] is not None and v['gpu_host'] not in GPU_HOSTS:
+        raise ValueError(f'gpu_host must be one of {GPU_HOSTS}')
     if v['variety'] is not None:
         from .variety import split_config as variety_split
         probe = dict(v['variety'])
@@ -360,6 +364,40 @@ FRESH_SERVICE_MODULE = 'tools.coopmwm.warm_spool'   # fresh service: runs ALL 8 
 # The GPU-side plan-variety sources: the fresh worker's binding must pin them alongside the
 # numerical set, so the served search re-derives the registered variety decision groups.
 VARIETY_GPU_SOURCES = ('pytools/tools/coopmwm/variety.py', 'pytools/tools/coopmwm/niche_collect.py')
+GPU_HOSTS = ('gpuA', 'gpuR')
+FRESH_GPU_SOURCES = tuple('pytools/tools/coopmwm/'+n+'.py' for n in
+                          ('fresh_worker', 'warm_service', 'warm_spool', 'hotadd'))
+
+
+def selected_gpu_host(broker, host=None):
+    slot = broker['workers'][0]['endpoint']['slot']
+    inferred = next((h for h in GPU_HOSTS if slot.startswith(h)), None)
+    host = host or inferred
+    if host not in GPU_HOSTS or (inferred is not None and inferred != host):
+        raise ValueError('gpu_host must select gpuA or gpuR and agree with the broker slot')
+    return host
+
+
+def worker_environment(host):
+    # Explicit deployment contracts, NEVER the cpuS collector's interpreter/torch.
+    # A different installed GPU image must supply its own explicit worker_env pin.
+    return dict(host=host, python_executable='/root/miniconda3/bin/python',
+                python_version='3.12', torch_version='2.8.0+cu128', cuda_version='12.8',
+                variables=dict(WMTEACH_BACKEND='FULL-v4', OMP_NUM_THREADS='1',
+                               MKL_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1'))
+
+
+def check_worker_environment(pin):
+    if not isinstance(pin, dict) or set(pin) != set(worker_environment('gpuA')) or \
+            any(not isinstance(pin[k], str) or not pin[k] for k in
+                ('host', 'python_executable', 'python_version', 'torch_version')) or \
+            pin['host'] not in GPU_HOSTS or \
+            not re.fullmatch(r'3\.\d+', pin['python_version']) or \
+            not re.fullmatch(r'\d+\.\d+\.\d+\+[a-z0-9]+', pin['torch_version']) or \
+            (pin['cuda_version'] is not None and not isinstance(pin['cuda_version'], str)) or \
+            pin['variables'] != worker_environment(pin['host'])['variables']:
+        raise ValueError('worker_env must be a complete explicit host environment pin')
+    return pin
 
 
 def validate_broker(broker):
@@ -368,7 +406,7 @@ def validate_broker(broker):
     hashes must pin the variety sources; an adopted-gate set refuses)."""
     if not isinstance(broker, dict):
         raise ValueError('broker must be a dict')
-    unknown = set(broker)-{'amendment_sha256', 'gpu_deadline', 'workers', 'binding'}
+    unknown = set(broker)-{'amendment_sha256', 'gpu_deadline', 'workers', 'binding', 'worker_env'}
     if unknown:
         raise ValueError(f'unregistered broker keys {sorted(unknown)}')
     for key in ('amendment_sha256', 'gpu_deadline'):
@@ -390,6 +428,8 @@ def validate_broker(broker):
         raise ValueError(f'broker owner needs {OWNER_KEYS}')
     if broker.get('binding') is not None:
         check_fresh_binding(broker['binding'])
+    if broker.get('worker_env') is not None:
+        check_worker_environment(broker['worker_env'])
     return broker
 
 
@@ -399,7 +439,7 @@ def check_fresh_binding(binding):
     numerical set (a binding without them cannot serve the registered variety search)."""
     if not isinstance(binding, dict):
         raise ValueError('broker binding must be a dict')
-    if binding.get('adopted_startup_gates'):
+    if 'adopted_startup_gates' in binding:
         raise ValueError('a fresh worker RUNS all eight startup gates itself; a binding with '
                          'adopted_startup_gates is an adoption record and refuses')
     hashes = binding.get('hashes')
@@ -410,6 +450,10 @@ def check_fresh_binding(binding):
     missing = [n for n in VARIETY_GPU_SOURCES if n not in hashes]
     if missing:
         raise ValueError(f'broker binding must pin the variety sources {missing}')
+    if 'qualification' in binding:
+        from .fresh_worker import pending
+        if binding['qualification'] != pending(hashes):
+            raise ValueError('fresh qualification must be pending, never copied from prior receipts')
     return binding
 
 
@@ -419,31 +463,42 @@ def repo_root():
     return Path(tools.coopmwm.__file__).resolve().parents[2]
 
 
-def fresh_binding(broker):
-    """The fresh-worker binding staged into STAGE_WORKER CONFIG: the explicitly staged
-    snapshot binding (broker['binding'], e.g. taken from the qualified source root - its
-    adopted-gate/variety rules are validated) or, when none was staged, the binding built
-    from THIS build's numerical + variety sources with the fresh 8-gate startup shape
-    (warm memory, startup qualification, concurrent plans; the service itself runs
-    WARM_BATCH_SINGLE x2 + COMMITTED x2 + PARITY x2 + WARM_PARITY x2 = ALL of hotadd.GATES)."""
-    if broker.get('binding') is not None:
-        return check_fresh_binding(dict(broker['binding']))
+def fresh_binding(broker, gpu_host=None):
+    """Source-pinned fresh worker with a PENDING qualification contract. All actual
+    qualification evidence is computed by its own eight startup gates; passing receipts
+    from another worker refuse, including in an explicitly supplied source binding.
+    The immutable contract points to the completed worker-owned qualification receipt.
+    GPU image pins are explicit and independent of the collector's CPU environment.
+    """
+    from .fresh_worker import pending
+    host = selected_gpu_host(broker, gpu_host)
+    supplied = check_fresh_binding(dict(broker['binding'])) if broker.get('binding') else {}
+    env = check_worker_environment(broker.get(
+        'worker_env', supplied.get('worker_env', worker_environment(host))))
+    if env['host'] != host:
+        raise ValueError('worker_env host differs from gpu_host')
     from .warm_service import NUMERICAL
     repo = repo_root()
     names = [n for n in NUMERICAL
              if n.endswith('.py') and n.startswith(('pytools/tools/coopmwm/',
                                                     'pytools/tools/coopnative/'))]
     hashes = {}
-    for rel in tuple(names)+VARIETY_GPU_SOURCES:
+    for rel in (() if supplied else tuple(names)+VARIETY_GPU_SOURCES+FRESH_GPU_SOURCES):
         path = repo/rel.split('pytools/', 1)[1]
         if not path.is_file():
             raise ValueError(f'fresh-worker source missing from this build: {rel}')
         hashes[rel] = file_sha256(path)
-    return dict(amendment_sha256=broker['amendment_sha256'],
+    hashes = supplied.get('hashes', hashes)
+    result = dict(supplied, amendment_sha256=broker['amendment_sha256'],
                 gpu_deadline=float(broker['gpu_deadline']), deadline_unix=float(broker['gpu_deadline']),
                 memory_mode='warm', startup_qualification=True, speed2=True, speed2_transfers=True,
-                concurrent_plans=True, memory_fraction=.34, batch_width_by_K={'4': 4, '8': 4},
-                service=FRESH_SERVICE_MODULE, hashes=hashes)
+                concurrent_plans=True, memory_fraction=.42 if host=='gpuA' else .34,
+                batch_width_by_K={'4': 18, '8': 10} if host=='gpuA' else {'4': 4, '8': 4},
+                niche_comparison=True, service=FRESH_SERVICE_MODULE, hashes=hashes,
+                gpu_host=host, worker_env=env, qualification=pending(hashes))
+    result.pop('batch_widths', None)
+    result.pop('batch_width', None)
+    return result
 
 
 def broker_readiness(broker, receipts):
@@ -552,7 +607,11 @@ def main():
         return refuse('overlay directory missing: '+str(overlay), root)
     if (overlay/'GPU_BINDING.json').is_file():
         return refuse('overlay carries its own GPU_BINDING.json; the fresh binding is written '
-                      'by this script from CONFIG only', root)
+                       'by this script from CONFIG only', root)
+    inherited = [n for n in CONFIG['startup_gates']+list(OWNER_OR_LOCK)+
+                 ['FRESH_STARTUP.json', 'FRESH_QUALIFICATION.json'] if (overlay/n).exists()]
+    if inherited:
+        return refuse('overlay carries prior worker evidence: '+','.join(inherited), root)
     missing = [n for n in binding['hashes'] if not (overlay/n).is_file()]
     if missing:
         return refuse('overlay lacks registered sources: '+','.join(sorted(missing)), root)
@@ -560,6 +619,20 @@ def main():
            if hashlib.sha256((overlay/n).read_bytes()).hexdigest() != h]
     if bad:
         return refuse('staged source sha256 mismatch: '+','.join(sorted(bad)), root)
+    pin = binding['worker_env']
+    env = dict(os.environ, **pin['variables'])
+    probe_code = ('import json,sys,torch; print(json.dumps(dict('
+                  'python_version=".".join(map(str,sys.version_info[:2])), '
+                  'torch_version=str(torch.__version__), cuda_version=torch.version.cuda)))')
+    try:
+        probe = subprocess.run([pin['python_executable'], '-B', '-c', probe_code],
+                               env=env, capture_output=True, text=True, timeout=60, check=True)
+        actual = json.loads(probe.stdout)
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        return refuse('pinned worker environment unavailable: '+str(error), root)
+    if any(actual.get(k) != pin[k] for k in actual) or set(actual) != {{
+            'python_version', 'torch_version', 'cuda_version'}}:
+        return refuse('pinned worker environment mismatch: '+str(actual), root)
     root.mkdir(parents=True)                 # exclusive: a raced second start refuses here too
     shutil.copytree(overlay, root, dirs_exist_ok=True)
     bad = [n for n, h in binding['hashes'].items()
@@ -569,12 +642,12 @@ def main():
         return refuse('copied source sha256 mismatch: '+','.join(sorted(bad)), root)
     with (root/'GPU_BINDING.json').open('x') as f:
         json.dump(binding, f, sort_keys=True)
-    env = dict(os.environ, PYTHONPATH=str(root/'pytools'))
+    env['PYTHONPATH'] = str(root/'pytools')
     # cwd = the worker root's own package tree: the freshly staged service module is the one
     # that runs; a repo checkout in the caller's cwd can never shadow it.
     extra = {{'start_new_session': True}} if os.name == 'posix' else {{}}
     with (root/'SPOOL.log').open('x') as log:
-        proc = subprocess.Popen([sys.executable, '-B', '-u', '-m', fresh['service'], str(root)],
+        proc = subprocess.Popen([pin['python_executable'], '-B', '-u', '-m', fresh['service'], str(root)],
                                 cwd=str(root/'pytools'), env=env, stdin=subprocess.DEVNULL,
                                 stdout=log, stderr=subprocess.STDOUT, **extra)
     print(json.dumps(dict(root=str(root), started=proc.pid, service=fresh['service'],
@@ -606,7 +679,8 @@ def stage_broker(cfg, root):
     config = dict(broker, shape='LS_ENDPOINTS.json (tools.coopmwm.ls_broker.run)',
                   startup_gates=list(GATES), path_shape_note='on cpuS install this file as '
                   '<collection_root>/LS_ENDPOINTS.json next to LS_RECOVERY_CONFIG.json',
-                  fresh=dict(binding=fresh_binding(broker), service=FRESH_SERVICE_MODULE))
+                   fresh=dict(binding=fresh_binding(broker, cfg.get('gpu_host')),
+                              service=FRESH_SERVICE_MODULE))
     _write_json(d/'BROKER_CONFIG.json', config)
     _write_json(d/'STARTUP_GATES.json', gates)
     script = STAGE_WORKER_TEMPLATE.format(config=repr(dict(
@@ -759,8 +833,11 @@ def main(argv=None):
     ap.add_argument('--arm', choices=ARMS, required=True)
     ap.add_argument('--rounds', type=int, default=None)
     ap.add_argument('--episodes', type=int, default=2)
+    ap.add_argument('--gpu-host', choices=GPU_HOSTS, help='host of the single fresh broker slot')
     a = ap.parse_args(argv)
     cfg = load_config(a.root)
+    if a.gpu_host is not None:
+        cfg = split_config(dict(cfg, gpu_host=a.gpu_host))
     statuses = collect(a.root, cfg, a.arm, lambda: (Path(a.root)/'MAIN_STOP.json').exists(),
                        episodes_per_round=a.episodes, rounds=a.rounds)
     print(json.dumps(dict(root=str(a.root), arm=a.arm, statuses=statuses), default=str))

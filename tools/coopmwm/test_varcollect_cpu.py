@@ -645,6 +645,215 @@ def test_fresh_binding_built_from_this_build_pins_variety_sources():
     assert b['deadline_unix'] == b['gpu_deadline'] == float(broker['gpu_deadline'])
 
 
+@pytest.mark.parametrize('host,widths,fraction', [
+    ('gpuA', {'4': 18, '8': 10}, .42), ('gpuR', {'4': 4, '8': 4}, .34)])
+def test_host_pins_are_not_inherited_from_the_cpu_collector(host, widths, fraction):
+    broker = broker_cfg()
+    broker['workers'][0]['endpoint']['slot'] = host+'-fresh'
+    b = vc.fresh_binding(broker, host)
+    assert b['gpu_host'] == b['worker_env']['host'] == host
+    assert b['worker_env']['python_version'] == '3.12'
+    assert b['worker_env']['torch_version'] == '2.8.0+cu128'
+    assert b['worker_env']['cuda_version'] == '12.8'
+    assert b['batch_width_by_K'] == widths and b['memory_fraction'] == fraction
+    assert b['niche_comparison'] is True
+    assert b['qualification']['pass_'] is False
+    assert b['qualification']['receipts'] == {}
+    with pytest.raises(ValueError, match='agree with the broker slot'):
+        vc.fresh_binding(broker, 'gpuR' if host == 'gpuA' else 'gpuA')
+
+
+def test_gpu_host_cli_selects_the_staged_slot(tmp_path):
+    cfg = base_config(tmp_path, broker=broker_cfg())
+    (tmp_path/'VARCOLLECT_CONFIG.json').write_text(json.dumps(cfg))
+    with patch.object(vc, 'collect', return_value=[]) as collect:
+        vc.main([str(tmp_path), '--arm', 'B', '--gpu-host', 'gpuA', '--rounds', '0'])
+    assert collect.call_args.args[1]['gpu_host'] == 'gpuA'
+    with pytest.raises(ValueError, match='agree with the broker slot'):
+        vc.main([str(tmp_path), '--arm', 'B', '--gpu-host', 'gpuR'])
+
+
+@pytest.mark.parametrize('failed_gate', [None, 'STARTUP_PARITY_K8_H300.json',
+                                       'STARTUP_WARM_BATCH_SINGLE_K4_H120.json'])
+def test_fresh_binding_through_real_warm_and_plan_service_all_eight_gates(
+        tmp_path, monkeypatch, failed_gate):
+    """Real generated staging -> warm_service -> plan_service load/READY path.
+
+    Only numerical GPU operations, POSIX locks and /proc identity are faked. In
+    particular neither service nor plan_service's binding read is replaced. This
+    catches the original four-gate crash rather than writing eight fake files.
+    """
+    import os
+    import types
+    from tools.coopmwm import fresh_worker as fw, warm_service as ws, plan_service as ps
+    from tools.coopmwm import plan_wm, speed2_runtime, speed2_memory, wm, plans, mppi_search
+    from tools.coopmwm.hotadd import GATES
+
+    broker = dict(broker_cfg(), worker_env=cpu_worker_environment())
+    binding = vc.fresh_binding(broker, 'gpuA')
+    overlay = tmp_path/'overlay'
+    overlay.mkdir()
+    for name in binding['hashes']:
+        dest = overlay/name
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes((vc.repo_root()/name.removeprefix('pytools/')).read_bytes())
+    rows = [dict(vid=v, is_cav=True) for v in ('a', 'b', 'c', 'd')]
+    record = dict(state_id='a'*64, world_id='world', time_s=300., rows=rows, group=['a', 'b'])
+    (overlay/'INPUTS.json').write_text(json.dumps(dict(records=[record])))
+    (overlay/'FROZEN_COSTS.json').write_text(json.dumps(dict(code='fake observable costs')))
+    out = vc.stage_broker(dict(broker=broker, gpu_host='gpuA'), tmp_path/'collection')
+    worker = tmp_path/'worker'
+    ns = {'__name__': 'cpu_staging_test'}
+    exec(compile(out['worker_script'].read_text(), str(out['worker_script']), 'exec'), ns)
+
+    rt = types.SimpleNamespace(frozen=types.SimpleNamespace(costs=object()),
+                               mp=types.SimpleNamespace(policy=types.SimpleNamespace(
+                                   accel_min=-3., accel_max=2.)))
+    memory = types.SimpleNamespace(receipt={'fake': True})
+    runtime = types.ModuleType('tools.wmteach.runtime')
+    runtime.bootstrap = lambda: rt
+    wmteach = types.ModuleType('tools.wmteach')
+    wmteach.runtime = runtime
+    monkeypatch.setitem(sys.modules, 'tools.wmteach', wmteach)
+    monkeypatch.setitem(sys.modules, 'tools.wmteach.runtime', runtime)
+    monkeypatch.setitem(sys.modules, 'fcntl', types.SimpleNamespace(
+        LOCK_EX=1, LOCK_NB=2, flock=lambda *args: None))
+    monkeypatch.setattr(ps, 'configured_runtime', lambda bootstrap, fraction: bootstrap())
+    monkeypatch.setattr(wm, 'cost_adapter', lambda costs, code, **kw: costs)
+    monkeypatch.setattr(speed2_memory, 'native_fixture', lambda rt: (record, memory))
+    monkeypatch.setattr(mppi_search, 'group_components', lambda rows: [dict(
+        size=2, members=['a', 'b'])])
+    monkeypatch.setattr(mppi_search, 'comparators', lambda *a: [dict(id='policy')])
+    monkeypatch.setattr(mppi_search, 'sample_unscored', lambda *a, **kw: dict(id='candidate'))
+    monkeypatch.setattr(plans, 'baseline_actions', lambda record: [dict(id='policy')])
+    monkeypatch.setattr(plans, 'family_seeds', lambda *a: [dict(id='candidate')])
+    order = []
+
+    def qualify(rt, record, acts, k, h, width, memory=None, **kw):
+        stem = 'COMMITTED' if h in (300, 420) and 'committed_plans' in record else (
+            'WARM_PARITY' if memory is not None else 'PARITY')
+        name = f'STARTUP_{stem}_K{k}_H{h}.json'
+        order.append(name)
+        return dict(pass_=name != failed_gate, max_cost_error=0. if name != failed_gate else 1.,
+                    K=k, H=h, width=width)
+
+    def evaluate(rt, record, acts, k, h, **kw):
+        name = f'STARTUP_WARM_BATCH_SINGLE_K{k}_H{h}.json'
+        if kw['chunk_actions'] != 1:
+            order.append(name)
+        value = 1. if name == failed_gate and kw['chunk_actions'] != 1 else 0.
+        return {'policy': [dict(team_delay=value, draw_id=0)]}
+
+    monkeypatch.setattr(speed2_runtime, 'qualify', qualify)
+    monkeypatch.setattr(plan_wm, 'evaluate', evaluate)
+    original_read_text = Path.read_text
+
+    def read_text(path, *args, **kw):
+        text = str(path).replace('\\', '/')
+        if text == f'/proc/{os.getpid()}/stat':
+            return ' '.join(['0']*21+['42'])
+        if text == '/proc/sys/kernel/random/boot_id':
+            return 'cpu-fake-boot'
+        return original_read_text(path, *args, **kw)
+
+    monkeypatch.setattr(Path, 'read_text', read_text)
+    monkeypatch.setattr(sys, 'stdin', io.StringIO())
+
+    def launch(argv, **kw):
+        assert argv[0] == binding['worker_env']['python_executable']
+        assert not (worker/'FRESH_QUALIFICATION.json').exists()
+        with patch.dict(os.environ, kw['env']):
+            ws.main(worker)
+        return types.SimpleNamespace(pid=os.getpid())
+
+    monkeypatch.setattr(subprocess, 'Popen', launch)
+    # Metadata probe is mocked separately because run() itself constructs Popen.
+    monkeypatch.setattr(subprocess, 'run', lambda *a, **kw: types.SimpleNamespace(
+        stdout=json.dumps({k: binding['worker_env'][k] for k in
+                           ('python_version', 'torch_version', 'cuda_version')})))
+    monkeypatch.setattr(sys, 'argv', ['STAGE_WORKER.py', str(worker), '--overlay', str(overlay)])
+    if failed_gate:
+        with pytest.raises(ValueError, match='parity failed'):
+            ns['main']()
+        assert not (worker/'SERVICE_OWNER.json').exists()
+        assert not (worker/fw.RECEIPT).exists()
+        assert vc.broker_readiness(broker, {n: json.loads((worker/n).read_text())
+            for n in GATES if (worker/n).exists()})['ready'] is False
+    else:
+        assert ns['main']() == 0
+        assert set(order) == set(GATES) and len(order) == 8
+        result = json.loads((worker/fw.RECEIPT).read_text())
+        assert result['pass_'] is True and result['status'] == 'passed'
+        assert result['pid'] == os.getpid()
+        assert result['binding_sha256'] == vc.file_sha256(worker/'GPU_BINDING.json')
+        assert set(result['receipts']) == set(GATES)
+        assert result['source_hashes'] == binding['hashes']
+        assert result['environment']['torch_version'] == str(torch.__version__)
+        assert (worker/'SERVICE_OWNER.json').is_file()
+        assert vc.broker_readiness(broker, result['receipts'])['ready'] is True
+        # Immutable staged binding remains a pending contract pointing at the
+        # worker-owned completed receipt, not a forged pre-passed qualification.
+        assert json.loads((worker/'GPU_BINDING.json').read_text()) == binding
+        with pytest.raises(ValueError, match='existing startup evidence'):
+            ws.main(worker)
+
+
+def test_fresh_binding_rejects_inherited_qualification():
+    b = vc.fresh_binding(broker_cfg())
+    b['qualification']['pass_'] = True
+    with pytest.raises(ValueError, match='never copied'):
+        vc.fresh_binding(dict(broker_cfg(), binding=b))
+
+
+def test_fresh_qualification_rejects_another_process_and_nonexact_gates(tmp_path, monkeypatch):
+    import os
+    from tools.coopmwm import fresh_worker as fw
+    from tools.coopmwm.hotadd import GATES
+    b = vc.fresh_binding(broker_cfg())
+    (tmp_path/'GPU_BINDING.json').write_text(json.dumps(b))
+    start = dict(pid=os.getpid(), binding_sha256=vc.file_sha256(tmp_path/'GPU_BINDING.json'),
+                 environment={})
+    (tmp_path/fw.START).write_text(json.dumps(start))
+    for name in GATES:
+        (tmp_path/name).write_text(json.dumps(dict(pid=os.getpid(), pass_=True, max_cost_error=0.)))
+    path = tmp_path/GATES[-1]
+    for bad in (dict(pid=os.getpid()+1, pass_=True, max_cost_error=0.),
+                dict(pid=os.getpid(), pass_=True, max_cost_error=.001),
+                dict(pid=os.getpid(), pass_=False, max_cost_error=0.)):
+        path.write_text(json.dumps(bad))
+        with pytest.raises(ValueError, match='nonexact fresh-worker gate'):
+            fw.finish(tmp_path, b)
+        assert not (tmp_path/fw.RECEIPT).exists()
+    (tmp_path/fw.START).write_text(json.dumps(dict(start, pid=os.getpid()+1)))
+    with pytest.raises(ValueError, match='process/binding changed'):
+        fw.qualification(tmp_path, b)
+
+
+@pytest.mark.parametrize('evidence', ['STARTUP_PARITY_K4_H120.json', 'SPOOL_OWNER.json',
+                                    'FRESH_QUALIFICATION.json'])
+def test_staging_refuses_overlay_receipts_before_creating_worker(tmp_path, evidence):
+    overlay = fake_overlay(tmp_path, [])
+    (overlay/evidence).write_text(json.dumps(dict(pass_=True)))
+    broker = dict(broker_cfg(), binding=staged_binding(overlay))
+    out = vc.stage_broker(dict(broker=broker), tmp_path/'collection')
+    worker = tmp_path/'worker'
+    rc, verdict = run_worker(out['worker_script'], worker, overlay)
+    assert rc == 3 and 'prior worker evidence' in verdict['reason']
+    assert not worker.exists()
+
+
+def test_staging_refuses_cpu_collector_environment_for_gpu_pin(tmp_path):
+    overlay = fake_overlay(tmp_path, [])
+    b = staged_binding(overlay)
+    # Probe the local CPU interpreter against the explicit GPU package contract.
+    b['worker_env'] = dict(vc.worker_environment('gpuA'), python_executable=sys.executable)
+    out = vc.stage_broker(dict(broker=dict(broker_cfg(), binding=b)), tmp_path/'collection')
+    worker = tmp_path/'worker'
+    rc, verdict = run_worker(out['worker_script'], worker, overlay)
+    assert rc == 3 and 'environment mismatch' in verdict['reason']
+    assert not worker.exists()
+
+
 def staged_binding(overlay):
     """An operator-staged binding snapshot: hashes over the staged overlay files, with the
     variety sources pinned (check_fresh_binding requires them)."""
@@ -654,6 +863,7 @@ def staged_binding(overlay):
         return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 
     return dict(memory_mode='warm', startup_qualification=True, speed2=True,
+                worker_env=cpu_worker_environment(),
                 speed2_transfers=True, concurrent_plans=True,
                 hashes={'INPUTS.json': sha(overlay/'INPUTS.json'),
                         'pytools/tools/coopmwm/warm_spool.py':
@@ -661,7 +871,14 @@ def staged_binding(overlay):
                         'pytools/tools/coopmwm/variety.py':
                             sha(overlay/'pytools/tools/coopmwm/variety.py'),
                         'pytools/tools/coopmwm/niche_collect.py':
-                            sha(overlay/'pytools/tools/coopmwm/niche_collect.py')})
+                             sha(overlay/'pytools/tools/coopmwm/niche_collect.py')})
+
+
+def cpu_worker_environment(host='gpuA'):
+    """Explicit test-only pin; production defaults never inspect collector metadata."""
+    return dict(vc.worker_environment(host), python_executable=sys.executable,
+                python_version='.'.join(map(str, sys.version_info[:2])),
+                torch_version=str(torch.__version__), cuda_version=torch.version.cuda)
 
 
 def fake_overlay(tmp, gates):
@@ -710,7 +927,7 @@ def test_fresh_worker_stages_new_root_and_runs_the_gates_itself(tmp_path):
     assert rc == 0 and started['service'] == 'tools.coopmwm.warm_spool'
     assert worker.is_dir() and (worker/'pytools'/'tools'/'coopmwm'/'variety.py').is_file()
     binding = json.loads((worker/'GPU_BINDING.json').read_text())
-    assert binding == json.loads(json.dumps(broker['binding']))   # exactly the staged binding
+    assert binding == json.loads(json.dumps(vc.fresh_binding(broker)))
     deadline = time.time()+30
     while time.time() < deadline and not (worker/'FAKE_DONE.json').exists():
         time.sleep(.2)

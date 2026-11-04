@@ -105,7 +105,15 @@ def main(root):
     binding=clocks(root,binding)  # additive RESOURCE_EXTENSION, never a rewrite
     for name,h in binding['hashes'].items():
         if sha(root/name)!=h:raise ValueError('immutable GPU source mismatch '+name)
-    assert binding['qualification']['pass_']
+    fresh=binding.get('qualification',{}).get('mode')=='fresh_startup_v1'
+    if fresh:
+        from . import fresh_worker
+        from .warm_service import ADOPTABLE
+        # These are this process's newly computed first four gates, never adopted
+        # receipts. Passing this handoff only permits running the remaining four.
+        binding=dict(binding,qualification=fresh_worker.qualification(root,binding,ADOPTABLE))
+    else:
+        assert binding['qualification']['pass_']
     import torch
     from tools.wmteach.runtime import bootstrap
     from .wm import cost_adapter
@@ -150,6 +158,9 @@ def main(root):
                 if not receipt['pass_']:raise ValueError('persistent worker warm speed2 parity failed')
     if binding.get('learned_search'):
         learned_gate(binding,startup_learned_problems(root,binding,rt))
+    if fresh:
+        binding['qualification']=fresh_worker.finish(root,binding)
+        assert binding['qualification']['pass_']
     def emit(event,**kw):print('COOPMWM_JSON '+json.dumps(dict(event=event,**kw)),flush=True)
     ready=dict(pid=os.getpid(),start_ticks=Path(f'/proc/{os.getpid()}/stat').read_text().split()[21],
         boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time())

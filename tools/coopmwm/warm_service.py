@@ -32,6 +32,10 @@ def adopted_gates(root,binding):
 def main(root):
     import os
     binding=read(root/'GPU_BINDING.json')
+    fresh=binding.get('qualification',{}).get('mode')=='fresh_startup_v1'
+    if fresh:
+        from .fresh_worker import begin
+        begin(root,binding)
     if adopted_gates(root,binding):
         from .plan_service import main as serve
         # Fresh process still runs all four cold/warm full-vs-fast gates before
@@ -67,6 +71,7 @@ def main(root):
                 width=batch_width(binding,k)
                 q=dict(qualify(rt,context,acts,k,h,width,memory=memory,transfers=True),
                     context='other committed group remains for40s then policy; every comparator/candidate',new_sumo_sim_s=0)
+                if fresh:q['pid']=os.getpid()
                 write(root/f'STARTUP_COMMITTED_K{k}_H{h}.json',q)
                 if not q['pass_']:raise ValueError('concurrent background full/fast parity failed')
         for k,h in ((4,120),(8,300)):
@@ -77,6 +82,7 @@ def main(root):
             draws=all(a['draw_id']==b['draw_id'] for key in single for a,b in zip(single[key],batch[key]))
             value=dict(pass_=error==0 and draws,max_cost_error=error,identical_draw_ids=draws,K=k,H=h,width=width,
                 group_size=group['size'],wall_s=time.monotonic()-begin,new_sumo_sim_s=0)
+            if fresh:value['pid']=os.getpid()
             write(root/f'STARTUP_WARM_BATCH_SINGLE_K{k}_H{h}.json',value)
             if not value['pass_']:raise ValueError('warm batched/single exact parity failed')
     finally:rt.frozen.costs=original

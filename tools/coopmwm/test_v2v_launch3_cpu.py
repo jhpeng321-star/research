@@ -19,6 +19,15 @@ def deployed(tmp_path, monkeypatch):
     root, control, source, mover = [tmp_path / n for n in ('run', 'control', 'source', 'mover')]
     for path in (root, control, source, mover):
         path.mkdir()
+    # Model a standalone packaged deployment even when CPU-only test artifacts
+    # must live inside the developer worktree. Git markers created by individual
+    # identity tests INSIDE tmp_path remain visible (including enclosing checkouts).
+    path_type = type(tmp_path)
+    exists, is_symlink = path_type.exists, path_type.is_symlink
+    def external_git(path):
+        return path.name == '.git' and not path.is_relative_to(tmp_path)
+    monkeypatch.setattr(path_type, 'exists', lambda p: False if external_git(p) else exists(p))
+    monkeypatch.setattr(path_type, 'is_symlink', lambda p: False if external_git(p) else is_symlink(p))
     files = {}
     for name in launch.REQUIRED_SOURCES:
         path = source / name
