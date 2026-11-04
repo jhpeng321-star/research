@@ -1,5 +1,21 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 ~09:00 +08 — B/R MECHANICS-PAUSED at u3; A continues
+- R3completed08:51:38; monitor3correctlyPAUSED_BOTH_BR08:52:00 forR3
+  pass1_effectiveFALSE: AWR19.347578->19.349314/drop-.001735687. Fivefullpasses
+  completed/102pairs/3coopexamples/KL.00015508; laterpassesend19.334106/netloss
+  improves. L1falls. No parser/finite/coverage/physics/accountingfaultestablished.
+- B3mechanics+safetyPASS; R3safetyPASS/0collisionteleport/critical-5.875
+  CI[-22.44,10.35]. B/Rworkers2339496/99andsupervisor2339490exitedHealthPause
+  08:52:07/08; NOu4update/restart/releasebySol. A2049830continues/A6.
+- KEEPPAUSE: registeredno-faultprocedure reportedtoMAIN beforeanyresume.
+  _sol/COOPMWM_LEARNING_PAUSE_R3_0900_MAIN.md; full diagnosis
+  coopmwm/R3_LEARNING_MECHANICS_PAUSE.md. DoNOTrelaxpass1guard/activatelearner
+  options/treatlaterlossdropasautomaticrelease. B6evidencestillpending.
+- monitor3LIVE2371588/currentruntimebound; storage1237127+2213098retained.
+  Latestfree7022444544bytes/~6.54GiB; backfillbelow9GiBpaused. Completedarchive
+  289878263bytes/255files/3proofsNEVERredispatch. Readnewsectionbefore08:50below.
+
 ## CURRENT Nov4 ~08:50 +08 — delegated recovery RUNNING; archive complete
 - A6/B3/R2. Delegateadopt_r1supervisor2339490/start76680313, B2339496/76680408,
   R2339499/76680450 LIVE; A2049830kept. Src4/runtime4a8890cd. NOduplicate

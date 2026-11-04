@@ -1,5 +1,18 @@
 # S-COOPMWM — live checks
 
+## Nov4 ~09:00 UTC+8 — registered mechanics pause at R u3
+- **A6/B3/R3.** R3's first imitation-pass AWR loss rose19.347578->19.349314,
+  so `pass1_effective=false` correctly triggered the registered B/R pause.
+  Both workers exited through the health guard; A continues.
+- R nevertheless completed five full passes, ended at lower AWR19.334106,
+  reduced L1 error, stayed within KL0.000155<0.045, and passed composite safety.
+  No parser, nonfinite, coverage, physics or accounting fault is established.
+- The pause is preserved and diagnosis reported to MAIN under the registered
+  procedure. No learner activation or criterion change was made. B-u6 remains
+  pending. Details: `coopmwm/R3_LEARNING_MECHANICS_PAUSE.md`.
+- Archive/monitor workers remain live; cpuQ6.54GiB at the last probe. Backfill
+  remains below its9GiB resume threshold.
+
 ## Nov4 ~08:50 UTC+8 — B recovery progresses; protected diagnostic archive complete
 - **A6/B3/R2**; replacement B/R supervisors observed live under the delegated
   launch3 resume. B's u3 reused24closed/precharged episodes, without replay.
