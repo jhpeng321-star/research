@@ -51,18 +51,22 @@ ALPHA = 0.05
 PLAN_FILE = 'PLANNER_EVAL_PLAN.json'
 JOBS_FILE = 'PLANNER_EVAL_JOBS.jsonl'
 
-FORBIDDEN = ('sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1', 'hetdata_truth')
+FORBIDDEN = ('sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1', 'hetdata_truth',
+             'vtype', 'vehicle_params', 'driver')
 _TRUTH = re.compile(r'(vtype|driver|vehicle_params)[^/]*truth|truth[^/]*(vtype|driver|vehicle_params)',
                     re.IGNORECASE)
 REGISTRATION_KEYS = ('schema', 'worlds', 'planner', 'episode', 'analysis', 'calibration', 'note')
 WORLD_KEYS = ('seed', 'demand', 'penetration')
 PLANNER_KEYS = ('decision_interval_s', 'p_star', 'lookahead_s')
-PLANNER_OPTIONAL = ('k_candidates',)
+PLANNER_OPTIONAL = ('k_candidates', 'wm_samples', 'groups_per_decision')
 EPISODE_KEYS = ('end_s',)
 ANALYSIS_KEYS = ('n_boot', 'boot_seed', 'alpha')
 CALIBRATION_KEYS = ('path', 'sha256')
-TRACE_KEYS = ('t_s', 'p_better', 'fired', 'family', 'members', 'lookahead_s')
+TRACE_KEYS = ('t_s', 'group_id', 'p_better', 'fired', 'family', 'members', 'lookahead_s')
 OUTCOME_KEYS = ('J', 'safety', 'planner_trace', 'executor', 'result_ref')
+RECEIPT_KEYS = ('schema', 'experiment', 'plan_sha256', 'job_id', 'seed', 'arm', 'planner_enabled',
+                'metric', 'J', 'safety', 'planner_trace', 'episode_end_s', 'executor', 'result_ref',
+                'receipt_sha256')
 
 
 # ---------------------------------------------------------------- canonical + sealing
@@ -93,12 +97,16 @@ def verify_seal(record, key):
 def guard_path(path):
     """Never open sealed/ or any path containing holdout/heldout/cal_split/chunk5/j4b/inc1;
     never read hetdata_truth or vType/driver/vehicle_params truth files."""
-    s = str(path).replace('\\', '/').lower()
-    hit = [t for t in FORBIDDEN if t in s]
-    if hit:
-        raise ValueError('REFUSED: forbidden path token '+repr(hit)+': '+str(path))
-    if _TRUTH.search(s):
-        raise ValueError('REFUSED: truth file path refused: '+str(path))
+    if not isinstance(path, (str, Path)) or not str(path):
+        raise ValueError('REFUSED: a non-empty path is required')
+    # Check spelling AND resolved target before opening; aliases cannot bypass the guard.
+    for candidate in (str(path), str(Path(path).resolve())):
+        s = candidate.replace('\\', '/').lower()
+        hit = [t for t in FORBIDDEN if t in s]
+        if hit:
+            raise ValueError('REFUSED: forbidden path token '+repr(hit)+': '+str(path))
+        if _TRUTH.search(s):
+            raise ValueError('REFUSED: truth file path refused: '+str(path))
     return path
 
 
@@ -129,7 +137,10 @@ def _walk_guard(value):
 
 
 def validate_registration(reg):
-    """Strict schema (unknown keys refused, registered values pinned). Normalizes: worlds sorted
+    """Strict schema (unknown keys refused, registered values pinned). Optional k_candidates,
+    wm_samples and groups_per_decision register the CPU rollout quote, with the latter an upper
+    bound on groups scored per decision. Missing counts leave the total WM quote unknown.
+    Normalizes: worlds sorted
     by seed, demand/penetration coerced to float, so registration_sha256 is stable across JSON
     formatting and int/float spellings. Seeds come ONLY from here - never a module constant."""
     if not isinstance(reg, dict) or reg.get('schema') != REGISTRATION_SCHEMA:
@@ -182,9 +193,14 @@ def validate_registration(reg):
     for k, want in (('decision_interval_s', DECISION_INTERVAL_S), ('p_star', P_STAR),
                     ('lookahead_s', LOOKAHEAD_S)):
         _check_registered('planner.'+k, planner.get(k), want)
-    k_candidates = planner.get('k_candidates')
-    if k_candidates is not None and (type(k_candidates) is not int or k_candidates < 1):
-        raise ValueError('REFUSED: planner.k_candidates must be a positive int')
+    optional = {}
+    for k in PLANNER_OPTIONAL:
+        if k in planner:
+            if type(planner[k]) is not int or planner[k] < 1:
+                raise ValueError(f'REFUSED: planner.{k} must be a positive int')
+            optional[k] = planner[k]
+    if optional.get('wm_samples', 2) < 2:
+        raise ValueError('REFUSED: the planner needs multiple WM samples (wm_samples >= 2)')
 
     episode = reg['episode']
     if not isinstance(episode, dict) or set(episode)-set(EPISODE_KEYS):
@@ -215,7 +231,7 @@ def validate_registration(reg):
     out = dict(schema=REGISTRATION_SCHEMA, worlds=worlds,
                planner=dict(decision_interval_s=DECISION_INTERVAL_S, p_star=P_STAR,
                             lookahead_s=LOOKAHEAD_S,
-                            **({'k_candidates': k_candidates} if k_candidates else {})),
+                            **optional),
                episode=dict(end_s=EPISODE_END_S),
                analysis=dict(n_boot=N_BOOT, boot_seed=BOOT_SEED, alpha=ALPHA))
     if cal is not None:
@@ -241,29 +257,44 @@ def load_registration(path):
 # ---------------------------------------------------------------- budget quote (dry: 0 charged)
 
 def decisions_per_episode(episode_end_s=EPISODE_END_S, decision_interval_s=DECISION_INTERVAL_S):
+    if any(type(v) is not int or v <= 0 for v in (episode_end_s, decision_interval_s)):
+        raise ValueError('REFUSED: episode length and decision interval must be positive ints')
     if episode_end_s % decision_interval_s:
         raise ValueError('REFUSED: episode_end_s must be a multiple of the decision interval')
     return episode_end_s // decision_interval_s
 
 
 def budget_quote(n_worlds, k_candidates=None, episode_end_s=EPISODE_END_S,
-                 decision_interval_s=DECISION_INTERVAL_S, lookahead_s=LOOKAHEAD_S):
+                 decision_interval_s=DECISION_INTERVAL_S, lookahead_s=LOOKAHEAD_S,
+                 wm_samples=None, groups_per_decision=None):
     """SUMO sim-s the REAL paired run would charge: both arms rerun the full paired world from
     t=0 (no prefix reuse - the planner can fire from its first decision). WM rollouts are CPU
     inference, quoted separately in WM-s and never charged as SUMO sim-s. The dry harness
     charges nothing: dry_run_sim_s = 0."""
-    if n_worlds < 2:
+    if type(n_worlds) is not int or n_worlds < 2:
         raise ValueError('REFUSED: the paired analysis needs at least two worlds')
+    for k, v in dict(k_candidates=k_candidates, lookahead_s=lookahead_s,
+                     wm_samples=wm_samples, groups_per_decision=groups_per_decision).items():
+        if (v is not None and (type(v) is not int or v <= 0)) or (k == 'lookahead_s' and v is None):
+            raise ValueError(f'REFUSED: {k} must be a positive int')
     decisions = decisions_per_episode(episode_end_s, decision_interval_s)
     per_arm = n_worlds*episode_end_s
+    unit_wm_s = n_worlds*decisions*(k_candidates+1)*lookahead_s if k_candidates else None
+    total_wm_s = (unit_wm_s*wm_samples*groups_per_decision
+                  if all(v is not None for v in (unit_wm_s, wm_samples, groups_per_decision))
+                  else None)
     out = dict(worlds=n_worlds, arms=list(ARMS), episode_end_s=episode_end_s,
                decision_interval_s=decision_interval_s, decisions_per_episode=decisions,
                lookahead_s=lookahead_s, per_arm_sim_s=per_arm, total_sim_s=2*per_arm,
                formula='2 arms x worlds x episode_end_s (paired worlds, no prefix reuse)',
-               planner_wm_rollout_s=(n_worlds*decisions*(k_candidates+1)*lookahead_s
-                                     if k_candidates is not None else None),
-               wm_quote_note=('WM-s = worlds x decisions x (k_candidates+1) x lookahead_s, CPU '
-                              'inference on arm PLANNER only; not SUMO sim-s, never charged'),
+               planner_wm_rollout_s=unit_wm_s, wm_samples=wm_samples,
+               groups_per_decision=groups_per_decision, planner_wm_total_rollout_s=total_wm_s,
+               wm_quote_complete=total_wm_s is not None,
+               wm_quote_note=('planner_wm_rollout_s is PER group PER WM sample: worlds x decisions '
+                              'x (k_candidates+1) x full lookahead_s. Total additionally multiplies '
+                              'registered wm_samples and groups_per_decision (a group-count upper '
+                              'bound); absent counts mean unknown total. CPU inference only; '
+                              'not wall-clock seconds or SUMO sim-s, never charged'),
                dry_run_sim_s=0)
     return out
 
@@ -283,7 +314,8 @@ def build_plan(reg):
         schema=SCHEMA, experiment=EXPERIMENT,
         worlds=reg['worlds'], n_worlds=len(reg['worlds']), panel_sha256=digest(reg['worlds']),
         paired=dict(rule='each world (same SUMO seed and demand/penetration) runs in BOTH arms '
-                         'from t=0; per-world paired d = PLANNER - MAPPO; no cross-world pairing'),
+                         'from t=0, with a common auxiliary noise seed; per-world paired '
+                         'd = PLANNER - MAPPO; no cross-world pairing'),
         arms=list(ARMS),
         metric=dict(key=METRIC, definition='cumulative episode team_delay_vs (veh-s)',
                     difference='treatment - comparator (negative = planner improved)',
@@ -312,7 +344,8 @@ def build_plan(reg):
                              '(registered MAIN 2026-11-03 04:26 combined rule, replay_bank._safety)'),
         budget=budget_quote(len(reg['worlds']), reg['planner'].get('k_candidates'),
                             reg['episode']['end_s'], reg['planner']['decision_interval_s'],
-                            reg['planner']['lookahead_s']),
+                            reg['planner']['lookahead_s'], reg['planner'].get('wm_samples'),
+                            reg['planner'].get('groups_per_decision')),
         note=reg.get('note'))
     plan['registration_sha256'] = digest(reg)
     plan['plan_sha256'] = plan_sha(plan)
@@ -329,7 +362,9 @@ def verify_plan(plan):
     if plan.get('budget') != budget_quote(plan['n_worlds'], plan['planner'].get('k_candidates'),
                                           plan['episode']['end_s'],
                                           plan['planner']['decision_interval_s'],
-                                          plan['planner']['lookahead_s']):
+                                          plan['planner']['lookahead_s'],
+                                          plan['planner'].get('wm_samples'),
+                                          plan['planner'].get('groups_per_decision')):
         raise ValueError('REFUSED: plan budget differs from the registered quote')
     reg = dict(schema=REGISTRATION_SCHEMA, worlds=plan['worlds'],
                planner={k: plan['planner'][k] for k in PLANNER_KEYS+PLANNER_OPTIONAL
@@ -347,8 +382,10 @@ def verify_plan(plan):
 # ---------------------------------------------------------------- paired job specs
 
 def noise_seed(world, arm):
-    # Deterministic arms draw no physical noise; the seed is recorded (branch_eval convention).
-    return int(digest(dict(experiment=EXPERIMENT, seed=world['seed'], arm=arm))[:15], 16)
+    # Common random numbers across both arms, even if a later executor uses this seed.
+    if arm not in ARMS:
+        raise ValueError(f'REFUSED: unknown arm {arm}')
+    return int(digest(dict(experiment=EXPERIMENT, seed=world['seed']))[:15], 16)
 
 
 def jobs(plan):
@@ -406,22 +443,33 @@ def check_paired(plan, job_list):
 # ---------------------------------------------------------------- receipts (sealed schema)
 
 def _check_trace(trace, arm, planner, episode_end_s):
+    if not isinstance(trace, list):
+        raise ValueError('REFUSED: planner_trace must be a list')
     if arm == COMPARATOR:
         if trace:
             raise ValueError('REFUSED: the MAPPO arm must record no planner trace')
         return []
     interval, p_star = planner['decision_interval_s'], planner['p_star']
-    out, last = [], 0
+    out, last, seen, groups = [], 0, set(), {}
     for x in trace:
+        if not isinstance(x, dict):
+            raise ValueError('REFUSED: trace entries must be objects')
         bad = set(x)-set(TRACE_KEYS)
         if bad:
             raise ValueError(f'REFUSED: unregistered trace keys {sorted(bad)}')
         t = x.get('t_s')
         if type(t) is not int or t <= 0 or t > episode_end_s or t % interval:
             raise ValueError(f'REFUSED: trace t_s {t!r} is off the {interval} s decision cadence')
-        if t <= last:
-            raise ValueError('REFUSED: trace entries must be strictly increasing and unique')
+        group = x.get('group_id', '')
+        if not isinstance(group, str):
+            raise ValueError('REFUSED: trace group_id must be a string')
+        if t < last or (t, group) in seen:
+            raise ValueError('REFUSED: trace entries must be ordered and unique per time/group')
         last = t
+        seen.add((t, group))
+        groups[t] = groups.get(t, 0)+1
+        if groups[t] > planner.get('groups_per_decision', math.inf):
+            raise ValueError('REFUSED: trace exceeds the registered groups_per_decision bound')
         p = x.get('p_better')
         if isinstance(p, bool) or not isinstance(p, (int, float)) or not 0 <= p <= 1:
             raise ValueError(f'REFUSED: trace p_better {p!r} must be within [0, 1]')
@@ -436,10 +484,14 @@ def _check_trace(trace, arm, planner, episode_end_s):
         if members is not None and (not isinstance(members, list)
                                     or any(type(m) not in (int, str) for m in members)):
             raise ValueError('REFUSED: trace members must be a list of member ids')
+        if members is not None and (not 1 <= len(members) <= 4 or len(set(members)) != len(members)):
+            raise ValueError('REFUSED: trace members must contain 1..4 unique CAV ids')
         lookahead = x.get('lookahead_s')
         if lookahead is not None and lookahead != planner['lookahead_s']:
             raise ValueError('REFUSED: trace lookahead_s differs from the registered horizon '
                              '(the look-ahead is NEVER shortened)')
+        if x['fired'] and (family in (None, 'none') or members is None or lookahead is None):
+            raise ValueError('REFUSED: fired moves need a non-none family, members and full lookahead_s')
         out.append({k: x[k] for k in TRACE_KEYS if k in x})
     return out
 
@@ -447,6 +499,9 @@ def _check_trace(trace, arm, planner, episode_end_s):
 def make_receipt(job, outcome):
     """Validate the executor outcome against the job and return the sealed receipt. An outcome
     is dict(J, safety, planner_trace, executor?, result_ref?); SUMO is never run here."""
+    if not isinstance(outcome, dict):
+        raise ValueError('REFUSED: outcome must be an object')
+    _walk_guard(outcome)
     if set(outcome)-set(OUTCOME_KEYS):
         raise ValueError(f'REFUSED: unregistered outcome keys {sorted(set(outcome)-set(OUTCOME_KEYS))}')
     if {'J', 'safety'}-set(outcome):
@@ -463,7 +518,7 @@ def make_receipt(job, outcome):
         if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0:
             raise ValueError(f'REFUSED: safety.{k} must be a finite non-negative count')
         safety[k] = float(v)
-    trace = _check_trace(list(outcome.get('planner_trace') or ()), job['arm'],
+    trace = _check_trace(outcome.get('planner_trace', []), job['arm'],
                          job['planner'] or job, job['episode_end_s'])
     rec = dict(schema=RECEIPT_SCHEMA, experiment=EXPERIMENT, plan_sha256=job['plan_sha256'],
                job_id=job['id'], seed=job['world']['seed'], arm=job['arm'],
@@ -471,17 +526,28 @@ def make_receipt(job, outcome):
                safety=safety, planner_trace=trace, episode_end_s=job['episode_end_s'],
                executor=str(outcome.get('executor', '')),
                result_ref=str(outcome.get('result_ref', '')))
-    return seal(rec, 'receipt_sha256')
+    rec = seal(rec, 'receipt_sha256')
+    validate_receipt(rec, job)
+    return rec
 
 
 def validate_receipt(record, job=None):
     if record.get('schema') != RECEIPT_SCHEMA or record.get('experiment') != EXPERIMENT:
         raise ValueError('REFUSED: not a planner_eval receipt')
     verify_seal(record, 'receipt_sha256')
+    if set(record) != set(RECEIPT_KEYS):
+        raise ValueError('REFUSED: receipt keys differ from the schema')
+    _walk_guard(record)
     if record['arm'] not in ARMS:
         raise ValueError(f'REFUSED: unknown arm {record["arm"]}')
     if record['planner_enabled'] != (record['arm'] == TREATMENT):
         raise ValueError('REFUSED: planner_enabled must mark exactly the PLANNER arm')
+    if type(record['planner_enabled']) is not bool or record.get('metric') != METRIC:
+        raise ValueError('REFUSED: receipt metric/planner_enabled differs from its job specification')
+    if type(record.get('episode_end_s')) is not int or record['episode_end_s'] != EPISODE_END_S:
+        raise ValueError('REFUSED: receipt episode_end_s differs from its job specification')
+    if type(record.get('seed')) is not int or record['seed'] <= 0:
+        raise ValueError('REFUSED: receipt seed must be a positive int')
     J = record['J']
     if isinstance(J, bool) or not isinstance(J, (int, float)) or not math.isfinite(J):
         raise ValueError('REFUSED: receipt J must be a finite number')
@@ -491,8 +557,9 @@ def validate_receipt(record, job=None):
         v = record['safety'][k]
         if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0:
             raise ValueError(f'REFUSED: receipt safety.{k} must be a finite non-negative count')
-    planner = dict(decision_interval_s=DECISION_INTERVAL_S, p_star=P_STAR, lookahead_s=LOOKAHEAD_S)
-    _check_trace(list(record.get('planner_trace') or ()), record['arm'], planner,
+    planner = (job['planner'] if job is not None and job['planner'] else
+               dict(decision_interval_s=DECISION_INTERVAL_S, p_star=P_STAR, lookahead_s=LOOKAHEAD_S))
+    _check_trace(record.get('planner_trace', []), record['arm'], planner,
                  record['episode_end_s'])
     if job is not None:
         expected = dict(job_id=job['id'], seed=job['world']['seed'], arm=job['arm'],
@@ -564,19 +631,21 @@ def pair_receipts(records, plan):
 
 
 def _paired_ci(deltas, n_boot, boot_seed, alpha):
-    """The registered world-cluster bootstrap on the per-world deltas (zero comparator)."""
-    from .branch_eval import cluster_bootstrap
-    raw = cluster_bootstrap(np.asarray(deltas, float)[:, None], np.zeros((len(deltas), 1)),
-                            n_boot, boot_seed, alpha)
-    return dict(n_worlds=raw['n_worlds'], mean_delta_vs=raw['mean_diff_vs'],
-                ci95=raw['ci95'], p_two_sided=raw['p_two_sided'],
-                worlds_improved=raw['worlds_improved'])
+    """Same whole-world resampling as branch_eval, without meaningless safety percentages."""
+    d = np.asarray(deltas, float)
+    idx = np.random.default_rng(boot_seed).integers(0, len(d), (n_boot, len(d)))
+    boot = d[idx].mean(1)
+    lo, hi = np.quantile(boot, [alpha/2, 1-alpha/2])
+    p = min(1., 2*min(np.sum(boot <= 0)+1, np.sum(boot >= 0)+1)/(n_boot+1))
+    return dict(n_worlds=len(d), mean_delta_vs=float(d.mean()), ci95=[float(lo), float(hi)],
+                p_two_sided=float(p), worlds_improved=int(np.sum(d < 0)))
 
 
 def analyze(records, plan):
     """Registered paired analysis: primary PLANNER-MAPPO whole-world bootstrap on J; per safety
     counter descriptive paired CIs; the hard per-world safety gate. Sealed."""
     verify_plan(plan)
+    records = list(records)
     pairs = pair_receipts(records, plan)
     seeds = sorted(pairs)
     planner_J = [float(pairs[s][0]['J']) for s in seeds]
@@ -607,8 +676,18 @@ def analyze(records, plan):
 
 def _bootstrap(treat, comp, n_boot, boot_seed, alpha):
     from .branch_eval import cluster_bootstrap
-    return cluster_bootstrap(np.asarray(treat, float)[:, None], np.asarray(comp, float)[:, None],
-                             n_boot, boot_seed, alpha)
+    if not np.any(comp):
+        ci = _paired_ci(np.asarray(treat)-np.asarray(comp), n_boot, boot_seed, alpha)
+        return dict(n_worlds=len(treat), mean_diff_vs=ci['mean_delta_vs'], ci95=ci['ci95'],
+                    p_two_sided=ci['p_two_sided'], mean_treatment_J=float(np.mean(treat)),
+                    mean_comparator_J=0., pct_delay_reduction=None, pct_ci95=[None, None],
+                    worlds_improved=ci['worlds_improved'])
+    raw = cluster_bootstrap(np.asarray(treat, float)[:, None], np.asarray(comp, float)[:, None],
+                            n_boot, boot_seed, alpha)
+    raw['pct_delay_reduction'] = (raw['pct_delay_reduction']
+                                  if math.isfinite(raw['pct_delay_reduction']) else None)
+    raw['pct_ci95'] = [v if math.isfinite(v) else None for v in raw['pct_ci95']]
+    return raw
 
 
 def verify_analysis(record):
@@ -621,25 +700,28 @@ def verify_analysis(record):
 
 def preflight_dry(registration):
     """Validate everything and quote; nothing is written and no SUMO is charged (new_sim_s=0)."""
-    reg = load_registration(registration)
-    plan = build_plan(reg)
+    return _dry_summary(build_plan(load_registration(registration)))
+
+
+def _dry_summary(plan):
     job_list = jobs(plan)
     check_paired(plan, job_list)
     return dict(dry_run=True, new_sim_s=0, worlds=plan['n_worlds'], jobs=len(job_list),
                 seeds=[w['seed'] for w in plan['worlds']], plan_sha256=plan['plan_sha256'],
                 budget=plan['budget'], receipt_schema=RECEIPT_SCHEMA,
-                safety_keys=list(SAFETY_KEYS), analysis_schema=ANALYSIS_SCHEMA)
+                safety_keys=list(SAFETY_KEYS), analysis_schema=ANALYSIS_SCHEMA,
+                calibration_pinned='calibration' in plan['planner'], dispatch_supported=False)
 
 
 def dry_run(registration, out_dir):
     """BUILD + DRY-RUN ONLY: write the sealed plan and the paired job specs. Refuses a non-empty
     output directory and any forbidden path. Never runs, charges or dispatches SUMO."""
-    summary = preflight_dry(registration)
+    plan = build_plan(load_registration(registration))
+    summary = _dry_summary(plan)
     out = Path(guard_path(out_dir))
-    if out.exists() and any(out.iterdir()):
+    if out.exists() and (not out.is_dir() or any(out.iterdir())):
         raise ValueError('REFUSED: output directory is not empty: '+str(out))
     out.mkdir(parents=True, exist_ok=True)
-    plan = build_plan(load_registration(registration))
     job_list = jobs(plan)
     plan_path, jobs_path = out/PLAN_FILE, out/JOBS_FILE
     plan_path.write_text(json.dumps(plan, indent=1, sort_keys=True)+'\n', encoding='utf-8')
@@ -659,9 +741,12 @@ if __name__ == '__main__':
     p.add_argument('--out', default='planner_eval_dry')
     p.add_argument('--worlds', type=int, default=None, help='quote only: world count')
     p.add_argument('--k-candidates', type=int, default=None)
+    p.add_argument('--wm-samples', type=int, default=None)
+    p.add_argument('--groups-per-decision', type=int, default=None)
     a = p.parse_args()
     if a.cmd == 'quote':
-        print(json.dumps(budget_quote(a.worlds or 0, a.k_candidates)))
+        print(json.dumps(budget_quote(a.worlds or 0, a.k_candidates, wm_samples=a.wm_samples,
+                                      groups_per_decision=a.groups_per_decision)))
     elif a.cmd == 'preflight':
         print(json.dumps(preflight_dry(a.registration)))
     else:

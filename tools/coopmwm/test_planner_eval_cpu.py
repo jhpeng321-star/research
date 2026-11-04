@@ -294,7 +294,7 @@ def test_jobs_paired_worlds_same_seed_both_arms(tmp_path):
         assert t['sim_s'] == c['sim_s'] == 1200 and t['mode'] == c['mode'] == 'run'
         assert t['deterministic'] and c['deterministic']
         assert t['plan_sha256'] == c['plan_sha256'] == p['plan_sha256']
-        assert t['noise_seed'] != c['noise_seed']                # recorded per arm, draws nothing
+        assert t['noise_seed'] == c['noise_seed']                # paired common random numbers
 
 
 def test_noise_seed_is_deterministic_and_job_binding(tmp_path):
@@ -420,8 +420,8 @@ def test_trace_rules_refused(tmp_path, trace):
 def test_trace_ok_forms(tmp_path):
     p = plan(tmp_path)
     receipt(p, SEEDS[0], trace=[dict(t_s=60, p_better=.79, fired=False)])       # abstain is fine
-    receipt(p, SEEDS[0], trace=[dict(t_s=60, p_better=.8, fired=True, family='none',
-                                       members=['cav_1'])])                     # exactly at the gate
+    receipt(p, SEEDS[0], trace=[dict(t_s=60, p_better=.8, fired=True, family='wall',
+                                       members=['cav_1'], lookahead_s=300)])      # exactly at the gate
     r = receipt(p, SEEDS[0], trace=[])
     assert r['planner_trace'] == []
 
@@ -582,3 +582,101 @@ def test_module_hardcodes_no_seed_list_and_opens_no_panel():
                    'traffic_shepherd.seeds'):
         assert marker not in src
     assert not hasattr(pe, 'SEEDS') and not hasattr(pe, 'WORLDS')
+
+
+# ---------------------------------------------------------------- resumed edge-case verification
+
+def test_budget_multiple_wm_samples_and_groups(tmp_path):
+    d = load(reg(tmp_path))
+    d['planner'].update(wm_samples=5, groups_per_decision=3)
+    p = pe.build_plan(d)
+    assert pe.verify_plan(p)
+    assert p['budget']['wm_quote_complete']
+    assert p['budget']['planner_wm_total_rollout_s'] == 216000*5*3
+    assert p['budget']['total_sim_s'] == 9600
+    assert not pe.budget_quote(4, 8)['wm_quote_complete']
+    assert pe.budget_quote(4, 8)['planner_wm_total_rollout_s'] is None
+    d['planner']['wm_samples'] = 1
+    with pytest.raises(ValueError, match='multiple WM samples'):
+        pe.build_plan(d)
+
+
+@pytest.mark.parametrize('kwargs', [dict(n_worlds=True), dict(n_worlds=2.5),
+    dict(k_candidates=-1), dict(k_candidates=True), dict(episode_end_s=0),
+    dict(decision_interval_s=0), dict(lookahead_s=-300), dict(wm_samples=0),
+    dict(groups_per_decision=1.5)])
+def test_budget_invalid_counts_refused(kwargs):
+    with pytest.raises(ValueError):
+        pe.budget_quote(**dict(dict(n_worlds=4), **kwargs))
+
+
+def test_multiple_groups_at_same_decision_and_fired_move_completeness(tmp_path):
+    p = plan(tmp_path)
+    trace = [dict(TRACE[0], group_id='near_merge'), dict(TRACE[0], group_id='upstream')]
+    assert len(receipt(p, SEEDS[0], trace=trace)['planner_trace']) == 2
+    for bad in (trace+[trace[0]], [dict(TRACE[0], members=[])],
+                [dict(TRACE[0], members=[1, 1])], [dict(TRACE[0], members=list(range(5)))],
+                [dict(TRACE[0], family='none')], [dict(TRACE[0], lookahead_s=None)]):
+        with pytest.raises(ValueError):
+            receipt(p, SEEDS[0], trace=bad)
+    d = load(reg(tmp_path))
+    d['planner']['groups_per_decision'] = 1
+    bounded = pe.build_plan(d)
+    with pytest.raises(ValueError, match='groups_per_decision bound'):
+        receipt(bounded, SEEDS[0], trace=trace)
+
+
+def test_zero_delay_panel_has_valid_json_and_no_percentage(tmp_path):
+    p = plan(tmp_path)
+    out = pe.analyze(full_records(p, planner_J=lambda s: 0., mappo_J=lambda s: 0.), p)
+    assert out['primary']['mean_diff_vs'] == 0.
+    assert out['primary']['ci95'] == [0., 0.]
+    assert out['primary']['pct_delay_reduction'] is None
+    assert out['primary']['pct_ci95'] == [None, None]
+    assert pe.verify_analysis(json.loads(pe.canonical(out)))
+
+
+def test_analysis_independent_of_receipt_order_and_accepts_iterator(tmp_path):
+    p = plan(tmp_path)
+    recs = full_records(p)
+    assert pe.analyze(iter(reversed(recs)), p) == pe.analyze(recs, p)
+
+
+def test_safety_ci_matches_registered_world_resampling_without_percentages():
+    import numpy as np
+    d = np.array([-2., 1., 3., 0.])
+    idx = np.random.default_rng(pe.BOOT_SEED).integers(0, 4, (pe.N_BOOT, 4))
+    expected = np.quantile(d[idx].mean(1), [.025, .975]).tolist()
+    ci = pe._paired_ci(d, pe.N_BOOT, pe.BOOT_SEED, pe.ALPHA)
+    assert ci['ci95'] == expected and ci['mean_delta_vs'] == .5
+
+
+def test_resolved_path_guard_blocks_alias_before_read(tmp_path, monkeypatch):
+    target = tmp_path/'sealed'/'registration.json'
+    monkeypatch.setattr(Path, 'resolve', lambda self: target)
+    with pytest.raises(ValueError, match='forbidden path token'):
+        pe.load_registration(tmp_path/'alias.json')
+
+
+def test_dry_run_reads_registration_once(tmp_path, monkeypatch):
+    path = reg(tmp_path)
+    original = pe.load_registration
+    calls = []
+
+    def once(p):
+        calls.append(p)
+        return original(p)
+
+    monkeypatch.setattr(pe, 'load_registration', once)
+    result = pe.dry_run(path, tmp_path/'dry')
+    assert calls == [path] and not result['dispatch_supported']
+    assert not result['calibration_pinned']
+
+
+def test_missing_or_unknown_receipt_fields_refused(tmp_path):
+    r = receipt(plan(tmp_path), SEEDS[0])
+    missing = dict(r)
+    missing.pop('executor')
+    for bad in (missing, dict(r, extra='unexpected')):
+        with pytest.raises(ValueError, match='receipt keys'):
+            pe.validate_receipt(pe.seal(bad, 'receipt_sha256'))
