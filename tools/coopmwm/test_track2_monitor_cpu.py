@@ -24,8 +24,13 @@ def metrics(**changes):
     return dict(value, **changes)
 
 
+def wm_config(root):
+    # The superseded profile is now explicit, rather than a default-on component.
+    return dict(run_root=str(root), group_credit=dict(enabled=True), dense_teacher=dict(enabled=True))
+
+
 def test_monitor_complete_metrics_hash_chain_summary_and_duplicate(tmp_path, capsys, monkeypatch):
-    cfg = dict(run_root=str(tmp_path))
+    cfg = wm_config(tmp_path)
     a = monitor.monitor_update(cfg, 'B', 1, dict(metrics=metrics(), sources=dict(labels='receipt-1')))
     b = monitor.monitor_update(cfg, 'B', 2, metrics(group_credit_wm=3.))
     assert a['trigger_rates'] == dict(none=.5, gap_open=.25, ease_off=.25)
@@ -45,7 +50,7 @@ def test_monitor_complete_metrics_hash_chain_summary_and_duplicate(tmp_path, cap
 
 
 def test_diagnose_only_learning_and_explicit_safety_pause(tmp_path):
-    cfg = dict(run_root=str(tmp_path))
+    cfg = wm_config(tmp_path)
     for u in (1, 2, 3):
         row = monitor.monitor_update(cfg, 'R', u,
             metrics(layer_kl=0., trigger_counts=dict(none=4, gap_open=0, ease_off=0)))
@@ -57,7 +62,7 @@ def test_diagnose_only_learning_and_explicit_safety_pause(tmp_path):
 
 
 def test_flat_accuracy_not_imputed_when_all_labels_filtered(tmp_path):
-    cfg = dict(run_root=str(tmp_path))
+    cfg = wm_config(tmp_path)
     for u in (1, 2, 3):
         row = monitor.monitor_update(cfg, 'B', u, metrics(dense_eligible_labels=0,
             dense_filtered_share=1., dense_ce=None, dense_accuracy=None, group_credit_wm=u))
@@ -66,7 +71,7 @@ def test_flat_accuracy_not_imputed_when_all_labels_filtered(tmp_path):
 
 
 def test_plain_a_not_applicable_and_sampled_subset(tmp_path):
-    cfg = dict(run_root=str(tmp_path))
+    cfg = wm_config(tmp_path)
     m = metrics()
     for k in monitor.METRICS:
         if k != 'reward':
@@ -89,12 +94,12 @@ def test_plain_a_not_applicable_and_sampled_subset(tmp_path):
     dict(group_credit_checked=0.), dict(dense_checked_accuracy=0.)])
 def test_reject_invalid_or_incomplete_component_metrics(tmp_path, change):
     with pytest.raises(ValueError):
-        monitor.monitor_update(dict(run_root=str(tmp_path)), 'B', 1, metrics(**change))
+        monitor.monitor_update(wm_config(tmp_path), 'B', 1, metrics(**change))
     assert not (tmp_path/'learning_monitor/B/u001.json').exists()
 
 
 def test_missing_metric_skips_and_tampered_history_refused(tmp_path):
-    cfg = dict(run_root=str(tmp_path))
+    cfg = wm_config(tmp_path)
     m = metrics(); del m['bank_move_ce']
     with pytest.raises(ValueError, match='missing'):
         monitor.monitor_update(cfg, 'B', 1, m)
@@ -123,11 +128,11 @@ def test_guard_output_escape_without_reading_link_target(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, 'resolve', lambda p, *a, **k:
         root.parent/'outside' if p == target else original(p, *a, **k))
     with pytest.raises(ValueError, match='escapes'):
-        monitor.monitor_update(dict(run_root=str(root)), 'B', 1, metrics())
+        monitor.monitor_update(wm_config(root), 'B', 1, metrics())
 
 
 def test_concurrent_all_arm_status_preserves_latest(tmp_path):
-    cfg = dict(run_root=str(tmp_path))
+    cfg = wm_config(tmp_path)
     # B/R may publish concurrently with the diagnostics thread.
     with ThreadPoolExecutor(max_workers=2) as pool:
         rows = list(pool.map(lambda a: monitor.monitor_update(cfg, a, 1, metrics()), ('B', 'R')))
@@ -135,6 +140,173 @@ def test_concurrent_all_arm_status_preserves_latest(tmp_path):
     assert monitor.read_monitor(tmp_path)['updates'] == dict(A=0, B=1, R=1)
     summary = (tmp_path/'CLEAN1_STATUS.md').read_text()
     assert 'B u1' in summary and 'R u1' in summary
+
+
+def real_reward_config(root):
+    return dict(run_root=str(root), group_credit=dict(enabled=False),
+        dense_teacher=dict(enabled=False), track2_reward=True, track2_reward_weight=1,
+        track2_reward_provenance='MAIN02:30 registered reward weight', track2_reward_arms=['B', 'R'])
+
+
+def reward_receipt(arm):
+    # Native P2 training_episodes/layer_records receipt fields, not WM advantages.
+    return dict(weight=1., provenance='MAIN02:30 registered reward weight', arms=['B', 'R'],
+        arm=arm, scope='cooperation layer only', wm_used=False, global_reward_used=False,
+        terminal_fallback_steps=0, steps=4, cav_outcomes=8, empty_cav_steps=0,
+        empty_neighbourhoods=1, neighbour_outcomes=10, partner_reports=2,
+        unavailable_partner_reports=1, own_reward_sum=-2., neighbourhood_reward_sum=-3.,
+        team_addition_sum=-3., reward_sum=-5., layer_records=4,
+        reward_source='SUMO observed speed deficit; local sensing + timestamped V2V only',
+        aggregation='equal acting-CAV mean; empty neighbourhood = 0',
+        outcome_rule='negative measured speed deficit, vehicle-seconds per control tick')
+
+
+def real_metrics(arm, **changes):
+    m = metrics(track2_reward=reward_receipt(arm))
+    for name in monitor.COMPONENT_METRICS:
+        m.update(dict.fromkeys(monitor.COMPONENT_METRICS[name], None))
+        m.update(dict.fromkeys(monitor.COMPONENT_COUNTS[name], 0))
+    return dict(m, **changes)
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_redesigned_profile_three_updates_native_reward_history_and_status(tmp_path, arm, capsys, monkeypatch):
+    cfg = real_reward_config(tmp_path)
+    rows = [monitor.monitor_update(cfg, arm, u,
+        dict(metrics=real_metrics(arm), sources=dict(reward=f'p2-{arm}-{u}'))) for u in (1, 2, 3)]
+    assert all(r['action'] == 'CONTINUE' and r['diagnose'] == [] for r in rows)
+    assert rows[-1]['components']['track2_reward_weight'] == 1.
+    assert rows[-1]['metrics']['track2_reward'] == reward_receipt(arm)
+    assert rows[-1]['metrics']['reward'] == 11.  # base/evaluation reward preserved
+    assert monitor.monitor_history(tmp_path, arm) == rows  # no cfg needed to reconstruct
+    for r in rows:
+        assert r['metrics']['group_credit_wm'] is None and r['metrics']['dense_filtered_share'] is None
+        verify_sealed(r, 'monitor_sha256')
+    assert monitor.monitor_update(cfg, arm, 3,
+        dict(metrics=real_metrics(arm), sources=dict(reward=f'p2-{arm}-3'))) == rows[-1]
+    summary = (tmp_path/'CLEAN1_STATUS.md').read_text()
+    assert 'group WM=disabled (N/A)' in summary and 'dense teacher=disabled (N/A)' in summary
+    assert 'Real observable team reward:' in summary and 'reward_sum=-5.0' in summary
+    assert 'cav_outcomes=8' in summary and 'provenance=MAIN02:30' in summary
+    assert 'not_rising' not in summary and 'dense_accuracy_flat' not in summary
+    monkeypatch.setattr('sys.argv', ['monitor', 'status', '--root', str(tmp_path)])
+    monitor.main()
+    status = json.loads(capsys.readouterr().out)
+    assert status['updates'][arm] == 3 and status['latest'][arm] == rows[-1]
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_disabled_components_are_default_off_and_never_imputed(tmp_path, arm):
+    row = monitor.monitor_update(dict(run_root=str(tmp_path)), arm, 1,
+        real_metrics(arm, track2_reward=None))
+    assert row['metrics']['track2_reward'] is None
+    assert row['diagnose'] == []
+
+
+@pytest.mark.parametrize('component', ['group_credit', 'dense_teacher'])
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_enabled_components_remain_strict_and_independent(tmp_path, component, arm):
+    cfg = real_reward_config(tmp_path)
+    cfg[component]['enabled'] = True
+    with pytest.raises(ValueError, match='invalid|missing learning component'):
+        monitor.monitor_update(cfg, arm, 1, real_metrics(arm))
+    m = real_metrics(arm)
+    legacy = metrics()
+    for key in monitor.COMPONENT_METRICS[component]+monitor.COMPONENT_COUNTS[component]:
+        m[key] = legacy[key]
+    for u in (1, 2, 3):
+        row = monitor.monitor_update(cfg, arm, u, m)
+    assert row['diagnose'] == (['group_credit_not_rising_3_updates'] if component == 'group_credit'
+                               else ['dense_accuracy_flat_3_updates'])
+    assert monitor.read_monitor(tmp_path)['latest'][arm] == row
+
+
+@pytest.mark.parametrize('component', ['group_credit', 'dense_teacher'])
+def test_enabled_component_counts_cannot_be_zero_even_with_numeric_scalars(tmp_path, component):
+    cfg = wm_config(tmp_path)
+    m = metrics()
+    for key in monitor.COMPONENT_COUNTS[component]:
+        m[key] = 0
+    with pytest.raises(ValueError, match='missing learning component'):
+        monitor.monitor_update(cfg, 'B', 1, m)
+
+
+@pytest.mark.parametrize('change', [dict(group_credit=True), dict(dense_teacher=dict(enabled=1)),
+    dict(track2_reward='true'), dict(track2_reward_weight=0), dict(track2_reward_weight=True),
+    dict(track2_reward_provenance=' '), dict(track2_reward_arms=['B'])])
+def test_component_registration_is_explicit_and_validated_before_persistence(tmp_path, change):
+    with pytest.raises(ValueError):
+        monitor.monitor_update(dict(real_reward_config(tmp_path), **change), 'B', 1, real_metrics('B'))
+    assert not (tmp_path/'learning_monitor/B/u001.json').exists()
+
+
+@pytest.mark.parametrize('change', [dict(group_credit_wm=0.), dict(credit_rows=1),
+    dict(group_credit_checked=0.), dict(dense_labels=1), dict(dense_ce=0.),
+    dict(dense_filtered_share=0.), dict(dense_checked_accuracy=0.)])
+def test_disabled_components_refuse_fabricated_measurements(tmp_path, change):
+    with pytest.raises(ValueError, match='disabled'):
+        monitor.monitor_update(real_reward_config(tmp_path), 'B', 1, real_metrics('B', **change))
+    assert not (tmp_path/'learning_monitor/B/u001.json').exists()
+
+
+@pytest.mark.parametrize('change', [dict(weight=2.), dict(provenance='different'), dict(arm='R'),
+    dict(wm_used=True), dict(global_reward_used=True), dict(terminal_fallback_steps=1),
+    dict(steps=0), dict(cav_outcomes=0), dict(empty_neighbourhoods=9),
+    dict(own_reward_sum=float('nan')), dict(reward_sum=None), dict(team_addition_sum=-4.),
+    dict(neighbour_outcomes=True), dict(reward_sum=0.)])
+def test_real_reward_requires_registered_finite_consistent_p2_evidence(tmp_path, change):
+    m = real_metrics('B', track2_reward=dict(reward_receipt('B'), **change))
+    with pytest.raises(ValueError, match='track2_reward'):
+        monitor.monitor_update(real_reward_config(tmp_path), 'B', 1, m)
+    assert not (tmp_path/'learning_monitor/B/u001.json').exists()
+
+
+def test_real_reward_cannot_be_missing_or_reported_for_disabled_or_a(tmp_path):
+    cfg = real_reward_config(tmp_path)
+    for m in (real_metrics('B', track2_reward=None),
+              {k: v for k, v in real_metrics('B').items() if k != 'track2_reward'}):
+        with pytest.raises(ValueError, match='native P2'):
+            monitor.monitor_update(cfg, 'B', 1, m)
+    with pytest.raises(ValueError, match='disabled track2_reward'):
+        monitor.monitor_update(dict(run_root=str(tmp_path)), 'B', 1, real_metrics('B'))
+    a = real_metrics('A')
+    with pytest.raises(ValueError, match='disabled track2_reward'):
+        monitor.monitor_update(cfg, 'A', 1, a)
+    a['track2_reward'] = None
+    assert monitor.monitor_update(cfg, 'A', 1, a)['action'] == 'CONTINUE'
+
+
+def test_registration_bound_to_history_and_rehashed_component_edit_refused(tmp_path):
+    cfg = real_reward_config(tmp_path)
+    monitor.monitor_update(cfg, 'B', 1, real_metrics('B'))
+    with pytest.raises(ValueError, match='registration changed'):
+        monitor.monitor_update(dict(cfg, track2_reward_weight=2.), 'B', 2, real_metrics('B'))
+    path = tmp_path/'learning_monitor/B/u001.json'
+    row = json.loads(path.read_text())
+    row['components']['dense_teacher']['enabled'] = True
+    path.write_text(json.dumps(monitor._seal(row, 'monitor_sha256')))
+    with pytest.raises(ValueError):
+        monitor.read_monitor(tmp_path)
+
+
+def test_legacy_v1_history_keeps_original_contract(tmp_path):
+    cfg = wm_config(tmp_path)
+    folder = tmp_path/'learning_monitor/B'
+    folder.mkdir(parents=True)
+    history = []
+    for u in (1, 2, 3):
+        diagnoses = ['group_credit_not_rising_3_updates', 'dense_accuracy_flat_3_updates'] if u == 3 else []
+        row = monitor._seal(dict(schema='coopmwm.track2.learning_monitor.v1', arm='B', update=u,
+            metrics=metrics(), trigger_rates=dict(none=.5, gap_open=.25, ease_off=.25),
+            diagnose=diagnoses, sources={}, settings=dict(monitor.MONITOR_DEFAULTS),
+            action='DIAGNOSE' if u == 3 else 'CONTINUE',
+            previous_monitor_sha256=history[-1]['monitor_sha256'] if history else None), 'monitor_sha256')
+        (folder/f'u{u:03}.json').write_text(json.dumps(row))
+        history.append(row)
+    assert monitor.monitor_history(tmp_path, 'B') == history
+    row = monitor.monitor_update(cfg, 'B', 4, metrics())
+    assert row['schema'].endswith('.v2') and row['previous_monitor_sha256'] == history[-1]['monitor_sha256']
+    assert monitor.read_monitor(tmp_path)['latest']['B'] == row
 
 
 class Backend:
@@ -148,6 +320,7 @@ class Backend:
         self.weight_calls = []
         self.weights_by_arm = {}
         self.base_shas = []
+        self.weight_evidence = []
         from .sumo_verify import _state_sha
         for rep in range(5):
             values = []
@@ -159,6 +332,7 @@ class Backend:
                 values.append((s, r))
             self.states[rep] = values
         self.new, self.old = new, old
+        self.current = dict(A={'w': torch.full((2,), 2.)}, B=new, R=new)
         self.base_sha = _state_sha(old)
 
     def resolve_states(self, job):
@@ -167,7 +341,7 @@ class Backend:
 
     def weights(self, arm, u):
         self.weight_calls.append((arm, u))
-        return (self.old if arm == 'A' else self.new), self.old
+        return self.current[arm], self.old
 
     def reserve(self, jobs, phase):
         self.calls.append(('reserve', jobs, phase))
@@ -185,14 +359,19 @@ class Backend:
         assert cfg['background_old'] is True
         assert cfg['intervention_start_s'] == snapshot['t0']+1
         assert cfg['u3_state_sha256'] == self.base_sha
+        expected = self.old if spec['branch'] == 'reference' else self.current[cfg['arm']]
+        assert _state_sha(snapshot['weights']) == _state_sha(expected)
+        assert cfg['new_state_sha256'] == _state_sha(expected)
+        self.weight_evidence.append(dict(arm=cfg['arm'], branch=spec['branch'],
+            current_sha=_state_sha(snapshot['weights']), reference_sha=_state_sha(snapshot['u3_weights']),
+            members=cfg['new_members'], group=cfg['group'], background_old=cfg['background_old']))
         safety = dict.fromkeys(monitor.SAFETY, 0)
         if self.safety_regression and cfg['arm'] == 'B' and spec['branch'] == 'all':
             safety['collisions'] = 1
         J = {'all': 70. if cfg['arm'] == 'B' else 80., 'solo0': 90.,
              'solo1': 85., 'reference': 100.}[spec['branch']]
         if cfg['arm'] == 'A':
-            assert _state_sha(snapshot['weights']) == self.base_sha
-            J = 100.
+            J = dict(all=75., solo0=90., solo1=85., reference=100.)[spec['branch']]
         return dict(status='graded', J_veh_s=J, safety=safety)
 
 
@@ -224,6 +403,7 @@ def test_replication_dry_real_specs_full_windows_and_no_charge(tmp_path):
 @pytest.mark.parametrize('u', [2, 4])
 def test_quick_probes_one_run_three_states_per_arm(tmp_path, u):
     cfg, backend = diagnostic_config(tmp_path)
+    cfg['early_probes'].pop('arms')  # exercise the default A/B/R wave
     cfg['monitor_dry_run'] = False
     row = monitor.probe(cfg, u)
     assert row['cells'] == 3 and row['branches'] == 3*3*4
@@ -231,9 +411,22 @@ def test_quick_probes_one_run_three_states_per_arm(tmp_path, u):
     assert len(backend.resolve_calls) == 3
     assert all(j['replicate'] == 0 for j in backend.resolve_calls)
     assert all(len(r['entries']) == 3 for r in row['records'])
-    assert [r['metric'] for r in row['records']] == [0., 15., 5.]
+    assert [r['metric'] for r in row['records']] == [10., 15., 5.]
     assert 'comparisons' not in row
     assert backend.calls[0][2] == 'early_probes'
+    # Both scheduled probes must evaluate trained A, including when arms are omitted.
+    from .sumo_verify import _state_sha
+    current_sha = _state_sha(backend.current['A'])
+    assert current_sha != backend.base_sha
+    evidence = [e for e in backend.weight_evidence if e['arm'] == 'A']
+    assert len(evidence) == 12
+    for e in evidence:
+        assert e['reference_sha'] == backend.base_sha and e['background_old']
+        assert e['current_sha'] == (backend.base_sha if e['branch'] == 'reference' else current_sha)
+        if e['branch'] in ('all', 'reference'):
+            assert e['members'] == e['group']
+        else:
+            assert len(e['members']) == 1
 
 
 def test_live_replication_paired_world_bootstrap_correct_and_immutable(tmp_path):

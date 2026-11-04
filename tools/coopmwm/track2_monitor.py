@@ -3,6 +3,12 @@
 Public API: monitor_update(cfg, arm, u, receipts), probe(cfg, u), replicated(cfg, u).
 ``receipts`` is the T2C metrics mapping, or an envelope with ``metrics`` and optional
 JSON ``sources`` (receipt IDs/hashes). Missing measurements are never replaced by zero.
+Component registration uses cfg.group_credit.enabled / dense_teacher.enabled (both
+default OFF) and P2's cfg.track2_reward + track2_reward_weight/provenance/arms.
+Enabled real reward consumes metrics.track2_reward, the native P2 training_episodes
+or layer_records receipt (step-mean reward sums and observable evidence counts).
+Disabled WM/dense components require explicit None scalars and zero counts. Each
+v2 row binds this registration; v1 histories retain their original WM/dense contract.
 Read everything with::
 
     python -m tools.coopmwm.track2_monitor status --root <clean1-root>
@@ -30,7 +36,9 @@ cooperation gain is algebraically zero. Each state runs group-new, each solo-new
 and a fresh all-base reference, with all background vehicles at common u0. Reuses
 policy_synergy.specs_for and metrics, including captured t0 and CRN; no shorter
 look-ahead. Probes at u2/u4 are one run on exactly three registered states per arm
-(A/B/R by default, configurable via early_probes.arms). Bootstrap over WORLD
+(A/B/R by default, configurable via early_probes.arms).
+The A group/solo branches use its actual current PPO checkpoint, independently of
+the frozen common-u0 reference/background used by every arm. Bootstrap over WORLD
 replicates, never over branches/states; u24 B-vs-common-base positive 95% CI and
 no safety regression is the criterion, B-R descriptive. Final paired episode
 evaluation belongs to T1D/T2C, not this isolated diagnostic.
@@ -54,6 +62,13 @@ METRICS = ('group_credit_wm', 'group_credit_checked', 'dense_ce', 'dense_accurac
 COUNTS = ('decisions', 'credit_rows', 'credit_checked_rows', 'dense_labels',
           'dense_eligible_labels', 'dense_checked_labels', 'augmented_examples', 'weighted_starts')
 SAFETY = ('collisions', 'teleports', 'hard_brakes', 'ttc_events')
+COMPONENT_METRICS = dict(group_credit=('group_credit_wm', 'group_credit_checked'),
+    dense_teacher=('dense_ce', 'dense_accuracy', 'dense_filtered_share', 'dense_checked_accuracy'))
+COMPONENT_COUNTS = dict(group_credit=('credit_rows', 'credit_checked_rows'),
+    dense_teacher=('dense_labels', 'dense_eligible_labels', 'dense_checked_labels'))
+REWARD_COUNTS = ('steps', 'cav_outcomes', 'empty_cav_steps', 'empty_neighbourhoods',
+    'neighbour_outcomes', 'partner_reports', 'unavailable_partner_reports')
+REWARD_SUMS = ('own_reward_sum', 'neighbourhood_reward_sum', 'team_addition_sum', 'reward_sum')
 MONITOR_DEFAULTS = dict(trigger_saturation=[0., 1.], history_updates=3,
                         accuracy_tolerance=1e-6, layer_kl_near_zero=1e-8,
                         action='DIAGNOSE; pause only for safety')
@@ -126,8 +141,70 @@ def _safety(value):
     return {k: _count(value[k], k) for k in SAFETY}
 
 
-def checked_metrics(arm, metrics):
+def _components(cfg):
+    """Serializable registration; keys match the P2 reward API and T2C switches."""
+    out = {}
+    for name in COMPONENT_METRICS:
+        block = cfg.get(name, {})
+        if not isinstance(block, dict) or type(block.get('enabled', False)) is not bool:
+            raise ValueError('REFUSED: explicit boolean '+name+'.enabled required')
+        out[name] = dict(enabled=block.get('enabled', False))
+    flag = cfg.get('track2_reward', False)
+    if type(flag) is not bool:
+        raise ValueError('REFUSED: explicit boolean track2_reward required')
+    out['track2_reward'] = flag
+    if flag:
+        weight = _number(cfg.get('track2_reward_weight'), 'track2_reward_weight', low=0)
+        provenance = cfg.get('track2_reward_provenance')
+        arms = cfg.get('track2_reward_arms', ['B', 'R'])
+        if (weight == 0 or not isinstance(provenance, str) or not provenance.strip()
+                or not isinstance(arms, (list, tuple)) or len(arms) != 2
+                or any(a not in ('B', 'R') for a in arms) or len(set(arms)) != 2):
+            raise ValueError('REFUSED: registered P2 reward weight/provenance/B-R arms required')
+        out.update(track2_reward_weight=float(weight), track2_reward_provenance=provenance,
+                   track2_reward_arms=['B', 'R'])
+    return out
+
+
+def _checked_reward(arm, metrics, components):
+    receipt = metrics.get('track2_reward')
+    if not components['track2_reward'] or arm == 'A':
+        if receipt is not None:
+            raise ValueError('REFUSED: disabled track2_reward must be None')
+        return
+    if not isinstance(receipt, dict):
+        raise ValueError('REFUSED: native P2 track2_reward receipt required')
+    expected = dict(arm=arm, weight=components['track2_reward_weight'],
+        provenance=components['track2_reward_provenance'], arms=['B', 'R'],
+        wm_used=False, global_reward_used=False, terminal_fallback_steps=0,
+        scope='cooperation layer only')
+    if any(type(receipt.get(k)) is not type(v) or receipt[k] != v for k, v in expected.items()):
+        raise ValueError('REFUSED: track2_reward registration/scope mismatch')
+    for key in REWARD_COUNTS:
+        _count(receipt.get(key), 'track2_reward.'+key)
+    for key in REWARD_SUMS:
+        _number(receipt.get(key), 'track2_reward.'+key)
+    if (not receipt['steps'] or not receipt['cav_outcomes']
+            or receipt['empty_cav_steps'] > receipt['steps']
+            or receipt['empty_neighbourhoods'] > receipt['cav_outcomes']):
+        raise ValueError('REFUSED: inconsistent track2_reward observations')
+    if (not math.isclose(receipt['team_addition_sum'],
+                         receipt['weight']*receipt['neighbourhood_reward_sum'], abs_tol=1e-10)
+            or not math.isclose(receipt['reward_sum'],
+                receipt['own_reward_sum']+receipt['team_addition_sum'], abs_tol=1e-10)):
+        raise ValueError('REFUSED: inconsistent track2_reward sums')
+
+
+def checked_metrics(arm, metrics, components=None):
     """Canonical T2C fields; None = unmeasured/not applicable, never a fake zero."""
+    components = _components({}) if components is None else components
+    disabled = set()
+    for name, keys in COMPONENT_METRICS.items():
+        if not components[name]['enabled']:
+            if any(metrics.get(k) is not None for k in keys) or any(
+                    metrics.get(k) != 0 for k in COMPONENT_COUNTS[name]):
+                raise ValueError('REFUSED: disabled '+name+' requires None measurements and zero counts')
+            disabled.update(keys)
     required = set(METRICS+COUNTS+('families', 'trigger_counts', 'safety', 'safety_stop'))
     if required-set(metrics):
         raise ValueError('REFUSED: missing monitor metrics: '+', '.join(sorted(required-set(metrics))))
@@ -152,7 +229,7 @@ def checked_metrics(arm, metrics):
             raise ValueError('REFUSED: unmeasured verification subset must be None: '+key)
     for key in METRICS:
         value = metrics[key]
-        nullable = (arm == 'A' and key != 'reward') or (
+        nullable = key in disabled or (arm == 'A' and key != 'reward') or (
             key == 'group_credit_checked' and metrics['credit_checked_rows'] == 0) or (
             key == 'dense_checked_accuracy' and metrics['dense_checked_labels'] == 0) or (
             key in ('dense_ce', 'dense_accuracy') and metrics['dense_eligible_labels'] == 0)
@@ -162,11 +239,18 @@ def checked_metrics(arm, metrics):
         high = 1 if 'share' in key or 'accuracy' in key else None
         _number(value, key, low=low, high=high)
     if arm != 'A':
-        if any(metrics[k] == 0 for k in ('decisions', 'credit_rows', 'dense_labels')):
+        observed = ['decisions']
+        if components['group_credit']['enabled']:
+            observed.append('credit_rows')
+        if components['dense_teacher']['enabled']:
+            observed.append('dense_labels')
+        if any(metrics[k] == 0 for k in observed):
             raise ValueError('REFUSED: missing learning component observations')
-        filtered = 1-metrics['dense_eligible_labels']/metrics['dense_labels']
-        if not math.isclose(metrics['dense_filtered_share'], filtered, abs_tol=1e-12):
-            raise ValueError('REFUSED: inconsistent calibrated dense filtered share')
+        if components['dense_teacher']['enabled']:
+            filtered = 1-metrics['dense_eligible_labels']/metrics['dense_labels']
+            if not math.isclose(metrics['dense_filtered_share'], filtered, abs_tol=1e-12):
+                raise ValueError('REFUSED: inconsistent calibrated dense filtered share')
+    _checked_reward(arm, metrics, components)
     _safety(metrics['safety'])
     if type(metrics['safety_stop']) is not bool:
         raise ValueError('REFUSED: explicit safety_stop required')
@@ -182,8 +266,15 @@ def _settings(cfg):
     return settings
 
 
-def _monitor_row(cfg, arm, update, metrics, history, sources):
-    checked_metrics(arm, metrics)
+def _monitor_row(cfg, arm, update, metrics, history, sources, *, legacy=False):
+    components = _components(dict(group_credit=dict(enabled=True),
+        dense_teacher=dict(enabled=True)) if legacy else cfg)
+    if history and not legacy:
+        previous = history[-1].get('components', _components(dict(
+            group_credit=dict(enabled=True), dense_teacher=dict(enabled=True))))
+        if components != previous:
+            raise ValueError('REFUSED: component registration changed across monitor history')
+    checked_metrics(arm, metrics, components)
     settings = _settings(cfg)
     decisions = metrics['decisions']
     rates = {f: n/decisions if decisions else None for f, n in metrics['trigger_counts'].items()}
@@ -195,14 +286,18 @@ def _monitor_row(cfg, arm, update, metrics, history, sources):
             diagnose.append('layer_kl_near_zero')
         window = [r['metrics'] for r in history[-2:]]+[metrics]
         if len(window) == 3:
-            if all(b['group_credit_wm'] <= a['group_credit_wm'] for a, b in zip(window, window[1:])):
+            if components['group_credit']['enabled'] and all(
+                    b['group_credit_wm'] <= a['group_credit_wm'] for a, b in zip(window, window[1:])):
                 diagnose.append('group_credit_not_rising_3_updates')
             accuracy = [m['dense_accuracy'] for m in window]
-            if all(v is not None for v in accuracy) and max(accuracy)-min(accuracy) <= settings['accuracy_tolerance']:
+            if (components['dense_teacher']['enabled'] and all(v is not None for v in accuracy)
+                    and max(accuracy)-min(accuracy) <= settings['accuracy_tolerance']):
                 diagnose.append('dense_accuracy_flat_3_updates')
-        if metrics['dense_eligible_labels'] == 0:
+        if components['dense_teacher']['enabled'] and metrics['dense_eligible_labels'] == 0:
             diagnose.append('no_eligible_dense_labels')
-    return _seal(dict(schema='coopmwm.track2.learning_monitor.v1', arm=arm, update=update,
+    return _seal(dict(schema='coopmwm.track2.learning_monitor.v1' if legacy else
+        'coopmwm.track2.learning_monitor.v2', **({} if legacy else dict(components=components)),
+        arm=arm, update=update,
         metrics=metrics, trigger_rates=rates, diagnose=diagnose, sources=sources,
         settings=settings, action='PAUSE_SAFETY' if metrics['safety_stop'] else
         ('DIAGNOSE' if diagnose else 'CONTINUE'),
@@ -220,7 +315,12 @@ def monitor_history(root, arm):
         u = len(rows)+1
         if row['arm'] != arm or row['update'] != u or path.name != f'u{u:03}.json':
             raise ValueError('REFUSED: monitor history must be contiguous')
-        expected = _monitor_row(dict(learning_monitor=row['settings']), arm, u, row['metrics'], rows, row['sources'])
+        if row['schema'] not in ('coopmwm.track2.learning_monitor.v1', 'coopmwm.track2.learning_monitor.v2'):
+            raise ValueError('REFUSED: unknown monitor schema')
+        legacy = row['schema'] == 'coopmwm.track2.learning_monitor.v1'
+        expected = _monitor_row(dict(learning_monitor=row['settings'],
+            **({} if legacy else row['components'])), arm, u, row['metrics'], rows,
+            row['sources'], legacy=legacy)
         if row != expected:
             raise ValueError('REFUSED: invalid monitor history chain')
         rows.append(row)
@@ -269,14 +369,23 @@ def _write_status(root):
             lines.append(f'- {arm}: no update receipt yet.')
             continue
         m = row['metrics']
+        components = row.get('components', dict(group_credit=dict(enabled=True),
+            dense_teacher=dict(enabled=True), track2_reward=False))
+        wm = (f"group WM/checked={m['group_credit_wm']}/{m['group_credit_checked']}"
+              if components['group_credit']['enabled'] else 'group WM=disabled (N/A)')
+        dense = (f"dense CE/accuracy={m['dense_ce']}/{m['dense_accuracy']}; "
+            f"filtered={m['dense_filtered_share']}; checked accuracy={m['dense_checked_accuracy']}"
+            if components['dense_teacher']['enabled'] else 'dense teacher=disabled (N/A)')
         lines += [f"- {arm} u{row['update']}: {row['action']}; reward={m['reward']}; "
-            f"group WM/checked={m['group_credit_wm']}/{m['group_credit_checked']}; "
-            f"dense CE/accuracy={m['dense_ce']}/{m['dense_accuracy']}; "
-            f"filtered={m['dense_filtered_share']}; checked accuracy={m['dense_checked_accuracy']}; "
+            f"{wm}; {dense}; "
             f"bank CE={m['bank_move_ce']}; layer KL={m['layer_kl']}; merge missing={m['merge_missing_share']}.",
             '  Trigger rates: '+json.dumps(row['trigger_rates'], sort_keys=True)+'.',
             '  Safety: '+json.dumps(m['safety'], sort_keys=True)+'.',
             '  DIAGNOSE: '+(', '.join(row['diagnose']) or 'none')+'.']
+        reward = m.get('track2_reward')
+        if reward is not None:
+            lines.append('  Real observable team reward: '+', '.join(
+                f'{k}={reward[k]}' for k in ('weight', 'provenance')+REWARD_COUNTS+REWARD_SUMS)+'.')
     for row in status['diagnostics']:
         lines.append(f"- {row['kind']} u{row['update']}: {row['status']}; dry={row['dry']}; "
                      f"quoted={row['quoted_sim_s']} sim-s; verdict={row.get('verdict', 'descriptive')}.")
@@ -487,8 +596,7 @@ def _diagnostic(cfg, u, kind):
             weight_binding = expanded[0][1][0][1]['policy_synergy']
             old_sha, new_sha = weight_binding['u3_state_sha256'], weight_binding['new_state_sha256']
             if ((common_sha is not None and common_sha != old_sha)
-                    or (arm in current_shas and current_shas[arm] != new_sha)
-                    or (arm == 'A' and new_sha != old_sha)):
+                    or (arm in current_shas and current_shas[arm] != new_sha)):
                 raise ValueError('REFUSED: common u0/current checkpoint changed across diagnostic cells')
             common_sha, current_shas[arm] = old_sha, new_sha
             cell_sim_s = sum(s['sim_s'] for _, pairs in expanded for s, _ in pairs)
