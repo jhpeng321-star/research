@@ -6,10 +6,12 @@ sha/k), charges ONLY through the cpuS->cpuQ RPC route with the registered phases
 wiring (B floor(share*N) search slots, R Bernoulli(share) unscored draws), parameterised
 episode ids, single-slot broker staging artifacts. No SUMO, no ssh, no GPU.
 """
+import hashlib
 import inspect
 import io
 import json
 import re
+import socket
 import subprocess
 import sys
 import tempfile
@@ -256,6 +258,128 @@ def test_refuse_local_ledger(tmp_path):
         vc.refuse_local_ledger(root)
 
 
+# ------------------------------------------------- ledger host modes (MAIN 2026-11-04 16:2x)
+
+def ledger_root(tmp):
+    """A temp ledger run root: accounting binding (amendment in AUTHORITY) + AUTHORITY line."""
+    from tools.coopmwm.warm_protocol import budget
+    root = tmp/'ledger_root';root.mkdir()
+    b = budget()
+    b['phases'] = dict(b['phases'], sumo_verification=2332800, bank_verification_ext=2600000)
+    b['total'] += 2332800+2600000
+    b['allocated'] = b['total']
+    (root/'B_REPLAY_PHASE_RECONCILIATION_0627.json').write_text(json.dumps(
+        dict(budget=b, amendment_sha256='ledger-host-test')))
+    authority = 'ledger-host-test amendment line'
+    (root/'AUTHORITY.md').write_text(authority+'\n')
+    return root, authority
+
+
+def register_ledger_host(root, authority_line, host=None, ledger_path=None):
+    binding = dict(host=host or socket.gethostname(),
+                   ledger_path=str(ledger_path or root),
+                   authority_sha256=hashlib.sha256(authority_line.encode('utf-8')).hexdigest())
+    (Path(root)/'LEDGER_HOST.json').write_text(json.dumps(binding))
+    return binding
+
+
+def local_config(tmp, root):
+    return base_config(tmp, charge_route=dict(run_root=str(root), mode='local'))
+
+
+def test_route_mode_registered_rpc_default(tmp_path):
+    cfg = vc.split_config(base_config(tmp_path))
+    assert vc.route_mode(cfg) == 'rpc'
+    local = vc.split_config(local_config(tmp_path, tmp_path/'ledger_root'))
+    assert vc.route_mode(local) == 'local'
+    with pytest.raises(ValueError, match='charge_route.mode'):
+        vc.split_config(base_config(tmp_path,
+                                    charge_route=dict(cfg['charge_route'], mode='rsync')))
+    with pytest.raises(ValueError, match='charge_route must carry'):
+        vc.split_config(base_config(tmp_path, charge_route=dict(mode='local')))
+    charges, ctx = routed(tmp_path, cfg)               # mode 'rpc' (default) is byte-unchanged
+    with ctx:
+        reserve = vc.route_charges(cfg)
+        reserve([dict(id=f'{PREFIX}_B_k003_e00000_{SEED}', sim_s=1)], 'sumo_verification')
+    assert charges['calls'] == [('sumo_verification', f'{PREFIX}_B_k003_e00000_{SEED}', 1)]
+
+
+def test_local_mode_charges_the_registered_single_ledger(tmp_path):
+    """On the registered ledger host itself, mode 'local' charges the ONE ledger at the
+    registered path through the UNCHANGED reserve; registered phases still enforced."""
+    root, authority = ledger_root(tmp_path)
+    binding = register_ledger_host(root, authority)
+    cfg = vc.split_config(local_config(tmp_path, root))
+    charge = vc.route_charges(cfg)
+    charge([dict(id=f'{PREFIX}_B_k003_e00000_{SEED}', sim_s=1200)], 'sumo_verification')
+    charge([dict(id=f'confirm_solo_sv_{PREFIX}_x_policy', sim_s=5)], 'bank_verification_ext')
+    with pytest.raises(ValueError, match='not registered on the collection charge route'):
+        charge([dict(id=f'{PREFIX}_x', sim_s=1)], 'discovery')
+    rows = [json.loads(l) for l in (root/'CHARGES.jsonl').read_text().splitlines()]
+    assert [(r['id'], r['phase'], r['sim_s']) for r in rows] == [
+        (f'{PREFIX}_B_k003_e00000_{SEED}', 'sumo_verification', 1200),
+        (f'confirm_solo_sv_{PREFIX}_x_policy', 'bank_verification_ext', 5)]
+    assert binding['ledger_path'] == str(root)
+    collect_root = tmp_path/'collect_root';collect_root.mkdir()
+    vc.refuse_local_ledger(collect_root)       # the collection root never holds a ledger
+
+
+def test_local_mode_refused_off_the_ledger_host(tmp_path):
+    """mode 'local' on any OTHER host refuses before anything runs (never two ledgers)."""
+    root, authority = ledger_root(tmp_path)
+    register_ledger_host(root, authority, host='cpuQ')
+    cfg = vc.split_config(local_config(tmp_path, root))
+    with patch('socket.gethostname', return_value='cpuS'):
+        with pytest.raises(ValueError, match='not the registered single ledger host'):
+            vc.route_charges(cfg)
+    assert not (root/'CHARGES.jsonl').exists()             # nothing charged anywhere
+    collect_root = tmp_path/'collect_root';collect_root.mkdir()
+    assert not list(collect_root.rglob('CHARGES.jsonl'))
+
+
+def test_local_mode_refuses_missing_or_tampered_binding(tmp_path):
+    root, authority = ledger_root(tmp_path)
+    cfg = vc.split_config(local_config(tmp_path, root))
+    with pytest.raises(ValueError, match='no LEDGER_HOST.json'):
+        vc.route_charges(cfg)
+    b = register_ledger_host(root, authority, ledger_path=str(tmp_path/'elsewhere'))
+    with pytest.raises(ValueError, match='ledger_path'):
+        vc.route_charges(cfg)
+    (root/'LEDGER_HOST.json').write_text(json.dumps(dict(b, bogus=1)))
+    with pytest.raises(ValueError, match='unregistered LEDGER_HOST.json keys'):
+        vc.route_charges(cfg)
+    (root/'LEDGER_HOST.json').write_text(json.dumps({k: v for k, v in b.items() if k != 'host'}))
+    with pytest.raises(ValueError, match='LEDGER_HOST.json must carry'):
+        vc.route_charges(cfg)
+    (root/'LEDGER_HOST.json').write_text(json.dumps(dict(b, authority_sha256='zz')))
+    with pytest.raises(ValueError, match='sha256 hex digest'):
+        vc.route_charges(cfg)
+    register_ledger_host(root, authority)          # a valid binding again...
+    (root/'AUTHORITY.md').write_text('a DIFFERENT amendment line\n')   # ...but tampered AUTHORITY
+    with pytest.raises(ValueError, match='AUTHORITY line'):
+        vc.route_charges(cfg)
+    assert not (root/'CHARGES.jsonl').exists()             # no charge ever left the refused path
+
+
+def test_collect_local_mode_charges_the_one_ledger(tmp_path):
+    """End to end in mode 'local': the episode charge lands ONLY in the registered ledger."""
+    root, authority = ledger_root(tmp_path)
+    register_ledger_host(root, authority)
+    cfg = vc.split_config(local_config(tmp_path, root))
+    collect_root = tmp_path/'varietycollect20261104b'
+    with patch.object(vc, 'run_episodes', fake_episodes):
+        statuses = vc.collect(collect_root, cfg, 'R', stop=lambda: False, rounds=1,
+                              episodes_per_round=1)
+    assert statuses == []
+    rows = [json.loads(l) for l in (root/'CHARGES.jsonl').read_text().splitlines()]
+    assert [(r['id'], r['phase'], r['sim_s']) for r in rows] == \
+        [(f'{PREFIX}_R_k003_e00000_{SEED}', cfg['episode_phase'], 1200)]
+    assert not list(collect_root.rglob('CHARGES.jsonl'))
+    vc.refuse_local_ledger(collect_root)
+    assert (collect_root/'jobs'/f'{PREFIX}_R_k003_e00000_{SEED}'/'RESULT.json').is_file()
+    assert (rb.bank_root(collect_root, 'R')/'BANK_QUALITY.json').is_file()
+
+
 def test_rpc_server_collect_route_all8_unchanged(tmp_path):
     """The REAL cpus_rpc op_reserve: the collect route charges the ONE local ledger; without the
     binding's 'collect' key the refusals are the original bytes."""
@@ -484,11 +608,66 @@ def test_stage_broker_writes_config_only_artifacts(tmp_path):
     assert config['shape'].startswith('LS_ENDPOINTS.json')
     assert len(config['workers']) == 1 and config['workers'][0]['endpoint']['slot'] == 'gpuA-new-1'
     gates = json.loads(out['gates'].read_text())
-    from tools.coopmwm.warm_service import ADOPTABLE
-    assert gates['required'] == list(ADOPTABLE) and gates['slot'] == 'gpuA-new-1'
+    from tools.coopmwm.hotadd import GATES
+    assert len(GATES) == 8                       # ALL 8 startup gates (fix round, was ADOPTABLE=4)
+    assert gates['required'] == list(GATES) and gates['slot'] == 'gpuA-new-1'
+    assert config['startup_gates'] == list(GATES)
     script = Path(out['worker_script']).read_text()
     compile(script, 'STAGE_WORKER.py', 'exec')       # the artifact parses
     assert '_VARCOLLECT' in script and 'gpuA-new-1' in script
+
+
+def test_broker_readiness_requires_all_eight_gates():
+    """Independent-review fix: readiness = ALL 8 hotadd.GATES present with pass_ true; the old
+    4-gate warm_service.ADOPTABLE subset is NOT enough (that was the BLOCK)."""
+    from tools.coopmwm.hotadd import GATES
+    from tools.coopmwm.warm_service import ADOPTABLE
+    assert len(GATES) == 8 and set(GATES) > set(ADOPTABLE)
+    broker = broker_cfg()
+    receipts = {name: dict(pass_=True) for name in GATES}
+    assert vc.broker_readiness(broker, receipts)['ready'] is True
+    partial = {name: dict(pass_=True) for name in ADOPTABLE}     # the 4-gate subset
+    verdict = vc.broker_readiness(broker, partial)
+    assert verdict['ready'] is False and verdict['required'] == list(GATES)
+    failing = dict(receipts)
+    failing[GATES[3]] = dict(pass_=False)
+    assert vc.broker_readiness(broker, failing)['ready'] is False
+    assert vc.broker_readiness(broker, {})['ready'] is False
+
+
+def test_staged_worker_requires_every_gate(tmp_path):
+    """The staged artifact's readiness: one gate MISSING -> not ready; one gate FAILING or
+    unparsable -> not ready; all 8 pass -> ready."""
+    from tools.coopmwm.hotadd import GATES
+    cfg = vc.split_config(base_config(tmp_path, broker=broker_cfg()))
+    out = vc.stage_broker(cfg, tmp_path/'collect_root')
+    py = sys.executable
+
+    def check(worker):
+        p = subprocess.run([py, str(out['worker_script']), str(worker), '--overlay', '/ov',
+                            '--check'], capture_output=True, text=True, timeout=60)
+        return p.returncode, json.loads(p.stdout)
+
+    missing = tmp_path/'worker_one_gate_missing';missing.mkdir()
+    for name in list(GATES)[:-1]:
+        (missing/name).write_text(json.dumps(dict(pass_=True, max_cost_error=0)))
+    rc, v = check(missing)
+    assert rc == 2 and v['ready'] is False and v['receipts'][GATES[-1]] is False
+
+    failing = tmp_path/'worker_one_gate_failing';failing.mkdir()
+    for i, name in enumerate(GATES):
+        body = 'not json' if i == 0 else json.dumps(dict(pass_=i != 1, max_cost_error=0))
+        (failing/name).write_text(body)
+    rc, v = check(failing)
+    assert rc == 2 and v['ready'] is False
+    assert v['receipts'][GATES[0]] is False and v['receipts'][GATES[1]] is False
+
+    passing = tmp_path/'worker_all_eight_pass';passing.mkdir()
+    for name in GATES:
+        (passing/name).write_text(json.dumps(dict(pass_=True, max_cost_error=0)))
+    rc, v = check(passing)
+    assert rc == 0 and v['ready'] is True and len(v['receipts']) == 8
+    assert v['slot'] == 'gpuA-new-1'
 
 
 def test_staged_worker_script_gate_check(tmp_path):
@@ -500,8 +679,8 @@ def test_staged_worker_script_gate_check(tmp_path):
     p = subprocess.run([py, str(out['worker_script']), str(worker), '--overlay', '/ov', '--check'],
                        capture_output=True, text=True, timeout=60)
     assert p.returncode == 2 and json.loads(p.stdout)['ready'] is False
-    from tools.coopmwm.warm_service import ADOPTABLE
-    for name in ADOPTABLE:
+    from tools.coopmwm.hotadd import GATES
+    for name in GATES:
         (worker/name).write_text(json.dumps(dict(pass_=True, max_cost_error=0)))
     p = subprocess.run([py, str(out['worker_script']), str(worker), '--overlay', '/ov', '--check'],
                        capture_output=True, text=True, timeout=60)

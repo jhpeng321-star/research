@@ -8,12 +8,16 @@ c4/plan-variety: a collection root that is SEPARATE from the ledger.
    k for both arms (``checkpoint_k_B``/``checkpoint_k_R`` must agree; a mismatch refuses and
    nothing runs). The collection root never stores or updates a policy.
 2. Split collection root from ledger: the new root (the argv; its NAME is a parameter) holds
-   jobs/snapshots/bank/broker files only. EVERY sim-s charge goes to the ONE shared cpuQ ledger
-   through the EXISTING cpuS->cpuQ RPC charge route (tools/coopmwm/cpus_rpc.py ``reserve``, the
-   binding's additive ``collect`` id-prefixes/phases): window verifications in
+   jobs/snapshots/bank/broker files only. EVERY sim-s charge goes to the ONE shared training
+   ledger through a configurable charge route (charge_route.mode, MAIN 2026-11-04 16:2x ledger
+   host move): 'rpc' (default) is the EXISTING cpuS->ledger-host RPC route
+   (tools/coopmwm/cpus_rpc.py ``reserve``, the binding's additive ``collect`` id-prefixes/
+   phases) and must answer a ``budget`` probe before anything runs; 'local' is allowed ONLY on
+   the registered single ledger host itself (LEDGER_HOST.json at the ledger run root: host name
+   + ledger path + sha256 of the AUTHORITY line) and charges the UNCHANGED accel_storage.reserve
+   there - any other host refuses, so exactly one ledger ever exists. Window verifications in
    ``sumo_verification``, confirmations in ``bank_verification_ext``. No second CHARGES.jsonl
-   is ever created under the collection root; the route must answer a ``budget`` probe before
-   anything runs, otherwise the path refuses.
+   is ever created under the collection root.
 3. Arm B searches the WM through the broker: CONFIG ONLY - ``stage_broker`` writes the worker
    staging script, the startup-gate list and the single-slot broker config file into the
    collection root. Nothing here ssh'es, stages remotely or starts any process. Arm R keeps the
@@ -36,8 +40,10 @@ from pathlib import Path
 WINDOW_PHASE = 'sumo_verification'        # window verification charges (ls_collection convention)
 CONFIRM_PHASE = 'bank_verification_ext'   # confirmation/solo charges (MAIN 2026-11-02 22:32)
 ROUTE_PHASES = (WINDOW_PHASE, CONFIRM_PHASE)
+ROUTE_MODES = ('rpc', 'local')            # how charges reach the ONE shared training ledger
 ARMS = ('B', 'R')
 ROUTE_KEYS = ('q_host', 'q_control', 'q_python', 'q_pythonpath', 'run_root')
+LEDGER_HOST_KEYS = ('host', 'ledger_path', 'authority_sha256')
 BROKER_ENDPOINT_KEYS = ('slot', 'destination', 'port', 'identity_file', 'known_hosts')
 OWNER_KEYS = ('boot_id', 'pid', 'start_ticks')
 
@@ -76,10 +82,13 @@ def split_config(cfg):
             not all(isinstance(s, str) and re.fullmatch(r'[0-9a-f]{64}', s) for s in shas.values()):
         raise ValueError(f'checkpoint_sha256 must map {ARMS} to sha256 hex digests')
     route = v['charge_route']
-    if not isinstance(route, dict) or any(not isinstance(route.get(key), str) or not route[key]
-                                          for key in ROUTE_KEYS):
-        raise ValueError(f'charge_route must carry non-empty {ROUTE_KEYS}')
-    unknown = set(route)-set(ROUTE_KEYS)-{'phases'}
+    mode = route.get('mode', 'rpc') if isinstance(route, dict) else None
+    if mode not in ROUTE_MODES:
+        raise ValueError(f'charge_route.mode must be one of {ROUTE_MODES}')
+    required = ROUTE_KEYS if mode == 'rpc' else ('run_root',)
+    if any(not isinstance(route.get(key), str) or not route[key] for key in required):
+        raise ValueError(f'charge_route must carry non-empty {required} for mode {mode!r}')
+    unknown = set(route)-set(ROUTE_KEYS)-{'phases', 'mode'}
     if unknown:
         raise ValueError(f'unregistered charge_route keys {sorted(unknown)}')
     if not route_phases(v):
@@ -192,12 +201,74 @@ def pinned_policy(cfg, arm):
     return policy, pin
 
 
-# ---------------------------------------------------------------- charge route (cpuS -> cpuQ)
+# ---------------------------------------------------------------- charge route (ONE ledger)
+
+def route_mode(cfg):
+    """'rpc' (default) or 'local' - how charges reach the ONE shared training ledger."""
+    route = cfg.get('charge_route') or {}
+    return route.get('mode', 'rpc')
+
+
+def ledger_host_binding(route):
+    """The registered single-ledger binding at the ledger run root: LEDGER_HOST.json carrying
+    the host name, the ledger path and the sha256 of the run root's AUTHORITY line. A missing,
+    incomplete, tampered or relocated binding refuses (ValueError)."""
+    root = Path(route['run_root'])
+    path = root/'LEDGER_HOST.json'
+    if not path.is_file():
+        raise ValueError(f'no LEDGER_HOST.json registered at {path}')
+    b = json.loads(path.read_text(encoding='utf-8'))
+    unknown = set(b)-set(LEDGER_HOST_KEYS)
+    if unknown:
+        raise ValueError(f'unregistered LEDGER_HOST.json keys {sorted(unknown)}')
+    if any(not isinstance(b.get(k), str) or not b.get(k) for k in LEDGER_HOST_KEYS):
+        raise ValueError(f'LEDGER_HOST.json must carry non-empty {LEDGER_HOST_KEYS}')
+    if not re.fullmatch(r'[0-9a-f]{64}', b['authority_sha256']):
+        raise ValueError('LEDGER_HOST.json authority_sha256 must be a sha256 hex digest')
+    authority = root/'AUTHORITY.md'
+    if not authority.is_file():
+        raise ValueError(f'no AUTHORITY.md at {authority}')
+    line = next((l.strip() for l in authority.read_text(encoding='utf-8').splitlines() if l.strip()), '')
+    if hashlib.sha256(line.encode('utf-8')).hexdigest() != b['authority_sha256']:
+        raise ValueError(f'LEDGER_HOST.json authority_sha256 does not match the AUTHORITY line '
+                         f'of {authority}')
+    if Path(b['ledger_path']) != root:
+        raise ValueError(f'LEDGER_HOST.json ledger_path {b["ledger_path"]} is not the registered '
+                         f'ledger run root {root}')
+    return b
+
+
+def local_charges(cfg, binding):
+    """The charge route of the ledger host ITSELF (mode 'local'): the UNCHANGED
+    accel_storage.reserve at the registered ledger path, with the ledger run root's own
+    registered caps (warm_protocol.install_accounting). Any OTHER host refuses here - charges
+    must then go through the ledger host's RPC route - so there is never a second ledger."""
+    import socket
+    here = socket.gethostname()
+    if here != binding['host']:
+        raise ValueError(f"mode 'local' refused: this host {here!r} is not the registered single "
+                         f"ledger host {binding['host']!r}; its charges must go through the RPC "
+                         "charge route of the ledger host")
+    from .warm_protocol import install_accounting
+    root = Path(binding['ledger_path'])
+    install_accounting(root)
+
+    def charged(jobs, phase):
+        phase_registered(cfg, phase)
+        from . import accel_storage
+        return accel_storage.reserve(root, jobs, phase)
+    return charged
+
 
 def route_charges(cfg):
-    """Install the EXISTING cpuS->cpuQ RPC charge route (cpus_checking.install_remote_accounting)
-    and refuse unless it answers a read-only ``budget`` probe (one attempt: an unavailable
-    route refuses the whole path, promptly). Returns the routed reserve."""
+    """Install the ONE-ledger charge route and refuse before anything runs. mode 'rpc'
+    (default): the EXISTING cpuS->ledger-host RPC route (cpus_checking.install_remote_accounting),
+    refused unless it answers a read-only ``budget`` probe (one attempt: an unavailable route
+    refuses the whole path, promptly). mode 'local': ONLY on the registered single ledger host
+    itself (LEDGER_HOST.json binding), charging the SAME unchanged reserve at the registered
+    ledger path. Returns the routed charge callable."""
+    if route_mode(cfg) == 'local':
+        return local_charges(cfg, ledger_host_binding(cfg['charge_route']))
     from .cpus_checking import install_remote_accounting, rpc
     route = dict(cfg['charge_route'])
     try:
@@ -216,11 +287,13 @@ def route_charges(cfg):
 
 def refuse_local_ledger(root):
     """A second ledger must never appear under the collection root (a file OR a directory
-    decoy named CHARGES.jsonl); the ONE shared ledger lives on cpuQ behind the RPC."""
+    decoy named CHARGES.jsonl); the ONE shared ledger lives on the registered single ledger
+    host (behind its RPC route, or directly through accel_storage.reserve in mode 'local' on
+    that host)."""
     p = Path(root)/'CHARGES.jsonl'
     if p.exists() or p.is_symlink():
         raise ValueError(f'a second ledger appeared at {p}: collection charges must only go '
-                         'through the cpuS->cpuQ RPC charge route')
+                         'through the registered charge route of the single ledger host')
 
 
 # ---------------------------------------------------------------- parameterised ids
@@ -261,16 +334,17 @@ def validate_broker(broker):
 
 
 def broker_readiness(broker, receipts):
-    """The single slot is admitted only when ALL registered startup gates are present and
-    pass_ true (the same rule as ls_collect_ops.collection_gpu_status)."""
-    from .warm_service import ADOPTABLE
+    """The single slot is admitted only when ALL 8 startup gates (hotadd.GATES, the fresh-worker
+    startup set; a warm_service.ADOPTABLE subset is NOT enough) are present and pass_ true
+    (the same rule shape as ls_collect_ops.collection_gpu_status)."""
+    from .hotadd import GATES
     gates = {}
-    for name in ADOPTABLE:
+    for name in GATES:
         value = receipts.get(name)
         if isinstance(value, dict):
             gates[name] = bool(value.get('pass_'))
-    ready = bool(broker['workers']) and all(gates.get(name) for name in ADOPTABLE)
-    return dict(ready=ready, gates=gates, required=list(ADOPTABLE))
+    ready = bool(broker['workers']) and all(gates.get(name) for name in GATES)
+    return dict(ready=ready, gates=gates, required=list(GATES))
 
 
 STAGE_WORKER_TEMPLATE = '''"""Variety collection GPU worker staging (c4/variety-collect; CONFIG artifact).
@@ -279,9 +353,10 @@ Staged by tools/coopmwm/varcollect.stage_broker; nothing ran at staging time. Th
 copies this script to the GPU host and runs it there; this build never ssh'es or starts it.
 
 Usage (GPU host): python3 STAGE_WORKER.py <worker_root> --overlay <overlay_dir> [--check]
-Only that ONE slot is served; the broker config refuses every other slot. The four startup
-gate receipts must already be present with pass_ true under <worker_root> before any search
-is served (STARTUP_GATES.json).
+Only that ONE slot is served; the broker config refuses every other slot. EVERY startup gate
+receipt named in STARTUP_GATES.json (the full 8-gate hotadd.GATES fresh-worker set) must be
+present under <worker_root> with pass_ true before any search is served - a missing OR failing
+gate keeps the slot unserved.
 """
 import argparse
 import json
@@ -301,11 +376,13 @@ def main():
     receipts = {{}}
     for name in CONFIG['startup_gates']:
         p = root/name
+        passed = False
         if p.is_file():
             try:
-                receipts[name] = json.loads(p.read_text()).get('pass_') is True
+                passed = json.loads(p.read_text()).get('pass_') is True
             except ValueError:
-                receipts[name] = False
+                passed = False
+        receipts[name] = passed    # EVERY named gate accounted for: missing file -> False
     ready = bool(receipts) and all(receipts.values())
     print(json.dumps(dict(root=str(root), overlay=a.overlay, ready=ready, receipts=receipts,
                           slot=CONFIG['endpoint']['slot'],
@@ -330,22 +407,23 @@ def stage_broker(cfg, root):
     start): broker/BROKER_CONFIG.json (the single-slot config; on cpuS it becomes the root's
     LS_ENDPOINTS.json), broker/STARTUP_GATES.json and broker/STAGE_WORKER.py."""
     broker = validate_broker(cfg['broker'])
-    from .warm_service import ADOPTABLE
+    from .hotadd import GATES
     d = Path(root)/'broker'
     d.mkdir(parents=True, exist_ok=True)
-    gates = dict(slot=broker['workers'][0]['endpoint']['slot'], required=list(ADOPTABLE),
-                 rule='all gate receipts present with pass_ true before the slot is served '
-                      '(ls_collect_ops.collection_gpu_status readiness); a failed/missing gate '
-                      'keeps the broker from assigning this slot any search')
+    gates = dict(slot=broker['workers'][0]['endpoint']['slot'], required=list(GATES),
+                 rule='ALL 8 startup gates (hotadd.GATES - the full fresh-worker startup set) '
+                      'must be present with pass_ true before the slot is served '
+                      '(ls_collect_ops.collection_gpu_status readiness rule shape); a '
+                      'failed/missing gate keeps the broker from assigning this slot any search')
     config = dict(broker, shape='LS_ENDPOINTS.json (tools.coopmwm.ls_broker.run)',
-                  startup_gates=list(ADOPTABLE), path_shape_note='on cpuS install this file as '
+                  startup_gates=list(GATES), path_shape_note='on cpuS install this file as '
                   '<collection_root>/LS_ENDPOINTS.json next to LS_RECOVERY_CONFIG.json')
     _write_json(d/'BROKER_CONFIG.json', config)
     _write_json(d/'STARTUP_GATES.json', gates)
     script = STAGE_WORKER_TEMPLATE.format(config=json.dumps(dict(
         amendment_sha256=broker['amendment_sha256'], gpu_deadline=broker['gpu_deadline'],
         endpoint=broker['workers'][0]['endpoint'], owner=broker['workers'][0]['owner'],
-        startup_gates=list(ADOPTABLE))))
+        startup_gates=list(GATES))))
     _write_text(d/'STAGE_WORKER.py', script)
     return dict(broker=d/'BROKER_CONFIG.json', gates=d/'STARTUP_GATES.json',
                 worker_script=d/'STAGE_WORKER.py')
