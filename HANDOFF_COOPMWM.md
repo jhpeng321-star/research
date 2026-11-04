@@ -1,5 +1,21 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 18:02 +08 — MONITOR ONLY; operator r4 resumed B13/R12 on cpuQ
+- Full1,140-linebrief/status/log/currentreceipts+canonicalthrough7289READ;
+  dirtyworkpreserved. MAIN16:03/16:25 retains operator ownership.
+- LatestSEALED A24/B12/R11. Existingr4supervisor3666926/B3666932/R3667029LIVE;
+  rawsrc8/runtime1d67a685; B13/R12resume receipts present. R12first2ordinaryjobs
+  claimed/0done/0failed; B13ordinaryjobsnotyetobserved. No completion claim.
+- Freshchain3670537/start80071619LIVE/logadoptstarted; old3539220absent.
+  EffectiveFIRSTu14BOTHarms/gate13stilloperator-owned/notclaimedactive.
+- Sixread-onlycpuSmountskept; FRESHpostmountscanrestore0/68preexistingunresolved.
+  LatestcpuQ9,663,565,824bytes/~9.00GiBclears6/6.5GiBgates; bothmoversLIVE.
+  This iscpuQtraining+cpuSarchive, NOTconfirmedcpuSlivetraining/ledgerhandover.
+- Monitor4old06e88ecdvsACTIVE1d67a685mismatchkept/operatornotified. B12lost
+  PPO/imitationNULL/disclosed/notmechanicsPASS. u8COMPLETE288/288/outcomesclosed.
+- Proofcoopmwm/RESUME_MONITOR_20261104_1802.md+5rawreceipts. Zerooursphysics/
+  inference/remotewrites/signals/moves/deletion/ledgeraccess/competingdispatch.
+
 ## CURRENT Nov4 17:46 +08 — MONITOR ONLY; A24/B12/R11; six read-only mounts observed
 - Full1,140-linebrief/gitstatus+log/currentreceipts/canonicalthrough7,285READ;
   dirtyworkpreserved. MAIN16:03/16:25 retains recovery/migration with operator.

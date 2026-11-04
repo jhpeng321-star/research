@@ -1,5 +1,24 @@
 # S-COOPMWM — live checks
 
+### Nov4 18:02 UTC+8 — operator r4 resumed on cpuQ; post-mount reader scan clear
+- **A24/B12/R11 remain the latest sealed updates.** Existing operator r4 processes
+  are live: supervisor3666926, B3666932 resumingu13, R3667029 resumingu12. R12 has
+  its first2ordinary jobs claimed/0complete/0failed; B13 ordinary jobs are not yet
+  observed. The operator launched at17:59:44+08, registered as18:01. No update
+  completion or live cpuS training/ledger handover is claimed.
+- Six read-only cpuS confirmation mounts remain. A **fresh post-mount scan**
+  reports0files needing restoration/68pre-existing unresolved decisions. Latest
+  cpuQfree**9,663,565,824bytes (~9.00GiB)** clears6GiB/6.5GiB recovery gates; both
+  original movers are live. Prior copy proof11,026files/4,511,278,304bytes/0bad.
+- Active raw runtime is1d67a685/src8. Monitor4 still pins06e88ecd; operator
+  handover remains pending. Fresh u14chain3670537 is live; old3539220 is absent.
+  Effective-command imitation FIRSTu14 for BOTH arms remains registered intent.
+- B12 missing PPO/imitation metadata remains null/disclosed. u8 interim remains
+  COMPLETE288/288/outcomes closed. This session is monitor/report only under
+  MAIN16:03/16:25; zero new SUMO/inference/remote writes/signals/moves/deletions/
+  ledger access or duplicate dispatches.
+- Evidence:`coopmwm/RESUME_MONITOR_20261104_1802.md` and five raw receipts.
+
 ### Nov4 17:46 UTC+8 — A24 complete; B12/R11 waiting; six read-only mounts observed
 - **A24 sealed17:40:19** and its former owner has exited. B12/R11 remain unchanged;
   no B/R training owner was observed on cpuQ. The existing operator's replacement
