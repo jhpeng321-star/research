@@ -1,0 +1,16 @@
+{
+  "schema": "coopmwm.clean1.qualification_fault.v1",
+  "owned_pid": 88407,
+  "start_ticks": "1866361",
+  "owner_exited": true,
+  "source_commit": "13887d2a6c0204d267cf3e8fc02c17b352d097ac",
+  "root": "/home/ubuntu/coopmwm20261105_clean1",
+  "failure": "launch_augmentation.proposals: KeyError('plan')",
+  "root_cause": "legacy per_seed_v1 compatibility examples do not embed plan; the reviewed bank reader uses the sealed chosen-plan receipt. Legacy bank also includes six-member groups and t300 tapes without t299 frames.",
+  "new_sim_s": 0,
+  "new_ledger_rows": 0,
+  "cumulative_prior_parity_sim_s": 960,
+  "fix": "reuse the real reader's legacy chosen-plan fallback; preserve max4 and direct100m visibility; use causal own t300 sensing; two distinct T2G variants may share one eligible own parent; native all8 admission and all smoke/gate assertions remain required",
+  "tests": "138 passed: launch integration, accepted plan augmentation, T2C augmentation",
+  "recovery": "Only after new source is SHA-staged and CPU-qualified, archive old administrative claim/log/config/approval and rebind the still-empty ledger root. Never duplicate a live process or retry a charged branch."
+}

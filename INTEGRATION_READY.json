@@ -50,6 +50,12 @@
     "latest_cpuv_tests": "b3b892dd: 310 passed, zero skips/failures, 14.61s",
     "real_bank_followup": "preserve disclosed unavailable historical LS contexts; only caught nonselected missing snapshot attempts are excluded from the actual successful-read inventory; selected and required dependencies still refuse"
   },
+  "qualification_followup": {
+    "attempt1": "owned augmentation/smoke PID88407 exited on legacy overlay plan schema before any charge or simulation",
+    "fix_tests": "138 passed; explicit legacy overlay/t300/one-parent-two-distinct-variants numerical regressions for BOTH B and R",
+    "checks_retained": "2..4-member source bound, direct100m observability, full original windows, native all8 admission, all smoke receipts and zero-event safety gate",
+    "recovery": "new committed source; CPU qualification; explicit archival/rebind of empty-ledger administrative attempt only"
+  },
   "new_sim_s": 0,
   "smoke_pass": false,
   "safety_gate_pass": false,

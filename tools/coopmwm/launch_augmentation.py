@@ -21,8 +21,49 @@ from .launch_training import write, read, health
 from .protocol import digest
 
 
-PROPOSAL_SETTINGS = dict(parameter_fraction=.01, partner_swap_probability=0.,
-    provenance='clean1 proposed small-perturbation radius; same B/R, no WM admission, SHA-bound before outcomes')
+PROPOSAL_SETTINGS = dict(parameter_fraction=.01, partner_swap_probability=0., attempts_per_plan=2,
+    observation='decision-second direct sensing clipped to 100m; no relayed/global inputs',
+    provenance='clean1 proposed small-perturbation radius; same B/R, two distinct variants, parent may repeat; no WM admission, SHA-bound before outcomes')
+
+
+def example_plan(example, receipt):
+    """The exact reviewed bank-reader fallback for legacy per-seed overlays."""
+    plan = example.get('plan')
+    if plan is None:
+        plan = receipt.get('chosen_plan')
+    if not isinstance(plan, dict) or not plan.get('members') or 'profile' not in plan:
+        raise ValueError('source example needs its own or legacy verified chosen plan')
+    return plan
+
+
+def proposal_context(plan, frames, time):
+    """An acting CAV's current own sensing is legal even at t300.
+
+    No partner packet is fabricated when the stored tape begins at t300. Only
+    directly measured vehicles within that ego's 100m sensor reach enter T2G.
+    Full six-member legacy plans are not silently shrunk to the new 1..4 API.
+    """
+    if not 2 <= len(plan['members']) <= 4:
+        return None
+    frame = frames.get(time)
+    if frame is None or frame.get('time_s') != time:
+        return None
+    ego, visible = None, None
+    for candidate in plan['members']:
+        own = next((r for r in frame['vehicles'] if r['vid'] == candidate), None)
+        if own is None:
+            continue
+        sensed = [r for r in frame['vehicles'] if abs(r['s_m']-own['s_m']) <= 100.]
+        if set(plan['members']) <= {r['vid'] for r in sensed if r['is_cav']}:
+            ego, visible = candidate, sensed
+            break
+    if ego is None:
+        return None
+    rows = [dict(vid=r['vid'], is_cav=r['is_cav'], s_m=r['s_m'], v_mps=r['v_mps'],
+        lane=r['lane'], allowed_speed_mps=31.29, observed_at_s=time) for r in visible]
+    centre = np.asarray(plan['profile'])-np.asarray(plan['perturbation_profile'])
+    return dict(ego_id=ego, t_s=time, rows=rows,
+        policy_traj={v: centre[i].tolist() for i,v in enumerate(plan['members'])})
 
 
 class MergeEncoder:
@@ -42,14 +83,16 @@ def proposals(cfg, arm):
     output, seen = [], set()
     with p1._bank_view(native):
         confirmations = rb.confirmations(root, arm)
+        decisions = {r['verification_id']:r for r in rb.bank_decisions(root, arm,
+            sources=cfg.get('replay_sources', {}).get(arm, ()))}
         parents = ps.examples(root, arm)
         for row in parents:
             if len(output) == 2:
                 break
             record = confirmations[row['verification_id']]
             example = next(e for e in record['per_seed_v1']['examples'] if e['example_id'] == row['example_id'])
-            plan = example['plan']
-            if plan['id'] in seen:
+            plan = example_plan(example, decisions[row['verification_id']])
+            if not 2 <= len(plan['members']) <= 4:
                 continue
             label = moves.from_plan(plan)
             if label.family == 'none':
@@ -58,46 +101,38 @@ def proposals(cfg, arm):
             trace = Path(example['tape']['branches_dir'])/example['tape']['verification_id']/example['tape']['branch']['branch']/'observable.jsonl.gz'
             frames = bank_v2v.trace_frames(trace)
             t = snapshot['t0']
-            frame = frames.get(t-1)
-            if frame is None:
+            context = proposal_context(plan, frames, t)
+            if context is None:
                 continue
-            # Source plan geometry is clipped to actual direct sensing. No
-            # all-road table is passed to T2G or a policy/scorer.
-            ego = plan['members'][0]
-            own = next((r for r in frame['vehicles'] if r['vid'] == ego), None)
-            if own is None:
-                continue
-            rows = [dict(vid=r['vid'], is_cav=r['is_cav'], s_m=r['s_m'], v_mps=r['v_mps'],
-                lane=r['lane'], allowed_speed_mps=31.29, observed_at_s=t-1)
-                for r in frame['vehicles'] if abs(r['s_m']-own['s_m']) <= 100.]
-            if not set(plan['members']) <= {r['vid'] for r in rows if r['is_cav']}:
-                continue
-            centre = np.asarray(plan['profile'])-np.asarray(plan['perturbation_profile'])
-            context = dict(ego_id=ego, t_s=t, rows=rows,
-                policy_traj={v: centre[i].tolist() for i,v in enumerate(plan['members'])})
             settings = dict(parameter_fraction=PROPOSAL_SETTINGS['parameter_fraction'],
                 partner_swap_probability=PROPOSAL_SETTINGS['partner_swap_probability'],
                 variety=dict(plan_augment.variety.VARIETY_REGISTERED), bounds=(-3., 1.2))
             parameters = dict(onset_s=label.onset, hold_s=label.hold, depth=label.depth)
-            candidate = plan_augment._perturb(plan, parameters, context, settings,
-                np.random.default_rng(cfg['training_seed']+len(output)))
-            if candidate is None:
-                continue
-            modified, perturbed = candidate
-            ident = f'clean1_aug_{arm}_{len(output):02}'
-            directory = root/'augmentation_sources'/ident
-            directory.mkdir(parents=True)
-            path = directory/'SNAPSHOT.pt'
-            with path.open('xb') as stream:
-                torch.save(snapshot, stream)
-            output.append(dict(id=ident, proposal_id=ident, source_id=row['example_id'],
-                parent_example_id=row['example_id'], arm=arm, seed=snapshot['episode']['world']['seed'],
-                plan=modified, source_plan_sha256=digest(plan), parameters=perturbed,
-                snapshot_path=str(path), snapshot_file_sha256=rc.sha(path),
-                window=dict(start_s=t, end_s=1200, truncated=False)))
-            seen.add(plan['id'])
+            for attempt in range(PROPOSAL_SETTINGS['attempts_per_plan']):
+                if len(output) == 2:
+                    break
+                candidate = plan_augment._perturb(plan, parameters, context, settings,
+                    np.random.default_rng(cfg['training_seed']+len(output)+attempt))
+                if candidate is None:
+                    continue
+                modified, perturbed = candidate
+                fingerprint = digest(modified)
+                if fingerprint in seen:
+                    continue
+                ident = f'clean1_aug_{arm}_{len(output):02}'
+                directory = root/'augmentation_sources'/ident
+                directory.mkdir(parents=True)
+                path = directory/'SNAPSHOT.pt'
+                with path.open('xb') as stream:
+                    torch.save(snapshot, stream)
+                output.append(dict(id=ident, proposal_id=ident, source_id=row['example_id'],
+                    parent_example_id=row['example_id'], arm=arm, seed=snapshot['episode']['world']['seed'],
+                    plan=modified, source_plan_sha256=digest(plan), parameters=perturbed,
+                    snapshot_path=str(path), snapshot_file_sha256=rc.sha(path),
+                    window=dict(start_s=t, end_s=1200, truncated=False)))
+                seen.add(fingerprint)
     if len(output) != 2:
-        raise ValueError('two distinct own-bank observable cooperative plan proposals required per arm')
+        raise ValueError('two distinct observable cooperative variants from the own bank required per arm')
     return output
 
 

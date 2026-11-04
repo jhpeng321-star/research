@@ -282,3 +282,51 @@ def test_staging_discloses_only_caught_nonselected_missing_snapshot_attempts(tmp
         successful_reader_inputs(recorder, {missing}, {missing})
     with pytest.raises(ValueError, match='selected/present'):
         successful_reader_inputs(recorder, set(), {present})
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_legacy_plan_overlay_and_t300_direct_sensing_produce_two_real_distinct_variants(tmp_path, monkeypatch, arm):
+    from contextlib import contextmanager
+    from copy import deepcopy
+    from types import SimpleNamespace
+    from . import launch_augmentation as augmentation, launch_production as production
+    from .test_plan_augment_cpu import source
+    raw = source(arm)
+    plan = raw['confirmation']['per_seed_v1']['examples'][0]['plan']
+    # Real legacy per_seed_v1 overlays lack an embedded plan, unlike native
+    # all8 examples. The production reader's verified chosen plan is the source.
+    example = dict(example_id='legacy#s1', admitted=True, cooperative=True,
+        tape=dict(branches_dir=str(tmp_path/'tapes/branches'), verification_id='legacy', branch=dict(branch='cand1')))
+    parent = dict(verification_id='legacy', example_id='legacy#s1', seed_index=1)
+    snapshot = dict(raw['verification']['snapshot_identity'], t0=300)
+    snapshot['episode'].update(role='train', world=dict(seed=986026))
+    frame = dict(time_s=300, vehicles=deepcopy(raw['context']['rows']))
+    # There is deliberately no t299 frame; own t300 sensing is causal. A far
+    # public row must be clipped before reaching the perturbation operator.
+    frame['vehicles'].append(dict(frame['vehicles'][0], vid='far', s_m=10000., unrelated='excluded'))
+    cfg = rc.runtime_config({}, root=tmp_path/'clean1', reference_root=tmp_path/'old',
+        source_root=tmp_path/'source', common_checkpoint_sha256='a'*64, track2=True)
+    cfg.update(training_seed=42, launch_optimization=deepcopy(production.OPTIMIZATION),
+        augmentation_proposals=deepcopy(augmentation.PROPOSAL_SETTINGS))
+    fake = SimpleNamespace(confirmations=lambda *a: {'legacy':dict(per_seed_v1=dict(examples=[example]))},
+        bank_decisions=lambda *a, **k: [dict(verification_id='legacy', chosen_plan=plan)])
+    @contextmanager
+    def view(config):
+        yield fake
+    monkeypatch.setattr(augmentation.p1, '_bank_view', view)
+    monkeypatch.setattr(augmentation.rb, 'confirmations', fake.confirmations)
+    monkeypatch.setattr(augmentation.rb, 'bank_decisions', fake.bank_decisions)
+    monkeypatch.setattr(augmentation.ps, 'examples', lambda *a: [parent])
+    monkeypatch.setattr(augmentation.ps, 'load_snapshot', lambda *a: snapshot)
+    monkeypatch.setattr(augmentation.bank_v2v, 'trace_frames', lambda *a: {300:frame})
+    context = augmentation.proposal_context(plan, {300:frame}, 300)
+    assert 'far' not in {r['vid'] for r in context['rows']}
+    assert all(r['observed_at_s'] == 300 for r in context['rows'])
+    result = augmentation.proposals(cfg, arm)
+    assert len(result) == 2 and result[0]['source_id'] == result[1]['source_id'] == 'legacy#s1'
+    assert result[0]['plan']['profile'] != result[1]['plan']['profile']
+    assert all(r['window'] == dict(start_s=300, end_s=1200, truncated=False) for r in result)
+    assert all(r['arm'] == arm for r in result)
+    oversized = dict(plan, members=['a','b','c','d','e','f'])
+    assert augmentation.proposal_context(oversized, {300:frame}, 300) is None
+    assert augmentation.proposal_context(plan, {301:dict(frame,time_s=301)}, 300) is None
