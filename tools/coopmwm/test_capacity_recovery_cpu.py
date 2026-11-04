@@ -18,6 +18,14 @@ class RepairTests(unittest.TestCase):
                 ('AWR_BINDING.json',dict(config=dict(coefficient=1)))]:
                 (root/name).write_text(json.dumps(value))
             b=dict(budget=budget(),repair_plan=dict(worlds=[],precharged_unattempted=['one']))
+            # pytest may import this test module as ``coopmwm.test_capacity_recovery_cpu`` while
+            # capacity_recovery.install rebinds ``tools.coopmwm.warm_runner`` globals: the patch
+            # contexts below then restore only the copy's attributes and the real module leaks
+            # install's closures. Re-anchor the real module afterwards (pre-existing dual-import
+            # artifact, not a behaviour change; every downstream test sees the registered
+            # functions again).
+            import tools.coopmwm.warm_runner as real_wr
+            saved={n:getattr(real_wr,n) for n in ('verify','budget','batch_worlds')}
             with patch.object(recovery,'binding',return_value=b),patch('tools.coopmwm.warm_health.assert_running'), \
                     patch.multiple(warm_runner,verify=warm_runner.verify,budget=warm_runner.budget,
                                    batch_worlds=warm_runner.batch_worlds), \
@@ -26,6 +34,7 @@ class RepairTests(unittest.TestCase):
                 self.assertEqual(wr.verify(root,'B')['workers'],24)
                 self.assertEqual(wr.verify(root,'R')['workers'],4)
                 self.assertEqual(wr.verify(root,'B')['resume_update'],0)
+            for n,v in saved.items():setattr(real_wr,n,v)
 
     def test_exact_six_precharges_and_eighteen_fresh_same_cell_worlds(self):
         old=batch_worlds(1);claimed={w['seed'] for w in old[:-6]}

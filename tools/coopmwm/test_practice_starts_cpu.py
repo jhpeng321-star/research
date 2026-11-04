@@ -539,7 +539,14 @@ def run_one_update(tmp_path, monkeypatch, *, arm='B', practice, vids=(), snap=No
         return out
 
     from tools.coopmwm import warm_runner as wr
+    from tools.coopmwm.warm_protocol import batch_worlds as registered_batch_worlds
+    from tools.coopmwm.warm_protocol import budget as registered_budget
     from tools.coopmwm import exact_grade as xg
+    # Pre-existing pytest dual-import artifact (coopmwm.* vs tools.coopmwm.*): capacity_recovery's
+    # install rebinds the real warm_runner globals while its test's patch context restores only a
+    # copy. Re-anchor the registered functions for this test; monkeypatch restores them after.
+    monkeypatch.setattr(wr, 'batch_worlds', registered_batch_worlds)
+    monkeypatch.setattr(wr, 'budget', registered_budget)
     monkeypatch.setattr(wr, 'wave', fake_wave)
     monkeypatch.setattr(xg, 'exact_update', lambda *a, **k: [])
     from tools.coopmwm import search_learning
