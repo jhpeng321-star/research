@@ -77,10 +77,13 @@ DIAGNOSTIC_SCHEDULE = dict(A=dict(lessons=[], isolated=[]),
 V2V_PHASES = dict(v2v_train=2073600, v2v_interim=345600, v2v_final=345600,
     v2v_lessons=21840, v2v_isolated=185200)
 # Minimum executable coverage, not a replacement for qualification's full inventory.
+# Fix round 2 (d): the practice runtime executes practice_starts, accel_runner and accel_plant
+# (the practice/reference waves and their episode machinery) - they are hashed sources too.
 REQUIRED_SOURCES = tuple('tools/coopmwm/' + name + '.py' for name in (
     'v2v_launch3', 'v2v_live', 'v2v_runner', 'v2v_runtime', 'v2v_model',
     'v2v_obs', 'v2v_integrate', 'bank_v2v', 'bank_imitation', 'bank_statistics',
-    'accel_storage', 'accel_protocol', 'storage'))
+    'accel_storage', 'accel_protocol', 'storage', 'practice_starts', 'accel_runner',
+    'accel_plant'))
 
 
 class Refused(ValueError):

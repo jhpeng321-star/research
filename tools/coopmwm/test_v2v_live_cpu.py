@@ -8,6 +8,7 @@ from . import v2v_live as live, v2v_runner as runner
 from .test_v2v_launch3_cpu import deployed  # noqa: F401 (real launch3 preflight fixture)
 
 SMOKE_SIM_S=24*1200                 # one real-one-update smoke arm (24 episodes x 1200 sim-s)
+SMOKE_EPISODE=1200                   # one registered update-1 smoke/train episode
 
 
 def write_charges(root,entries):
@@ -271,6 +272,41 @@ def test_watch_gate_wiring_full_quote_and_watch_uses_it(tmp_path,monkeypatch,cha
     assert calls==[(root,cfg)]
 
 
+def test_watch_restart_quote_is_practice_aware(tmp_path,charges_ledger):
+    """Fix round 2 (d): with practice ON the update-1 smoke charges practice episodes and their
+    matched A references too; the restarted watcher's quote covers the practice-aware allocation
+    minus exactly the closed update-1 work of this root."""
+    from . import v2v_launch3 as launch
+    from .practice_starts import practice_count
+    root=tmp_path/'run';root.mkdir()
+    pcount=practice_count(24,0.25)                                       # 6
+    cfg=dict(job_namespace=NS,practice_starts=True,practice_fraction=0.25,practice_repeat_cap=2)
+    full=launch.V2V_PHASES['v2v_train']+pcount*2*24*SMOKE_EPISODE        # practice-aware allocation
+    rows=[]
+    for arm,practice in (('A',0),('B',1),('R',1)):
+        rows+=smoke_charges(root,arm,24-practice*pcount)                 # normal smoke episodes
+        for i in range(practice*pcount):                                 # practice episodes
+            ident=f'{NS}_warm_u001_p{i+1:02d}_{arm}_{986000+i}'
+            job=Path(root)/'jobs'/ident;job.mkdir(parents=True,exist_ok=True)
+            (job/'CLOSE.json').write_text('{}');(job/'RESULT.json').write_text('{}')
+            rows.append(dict(id=ident,phase='v2v_train',sim_s=SMOKE_EPISODE))
+        for i in range(practice*pcount):                                 # matched A references
+            ident=f'{NS}_warm_u001_{arm}_practiceref_pa{i+1:02d}_A_{986000+i}'
+            job=Path(root)/'jobs'/ident;job.mkdir(parents=True,exist_ok=True)
+            (job/'CLOSE.json').write_text('{}');(job/'RESULT.json').write_text('{}')
+            rows.append(dict(id=ident,phase='v2v_train',sim_s=SMOKE_EPISODE))
+    write_charges(root,rows)
+    costs=live.remaining_phase_costs(root,cfg)
+    assert costs['v2v_train']==full-84*SMOKE_EPISODE==2318400            # every closed u1 work
+    assert costs['v2v_train']==full-(24+2*(24-6+6+6))*SMOKE_EPISODE
+    # an open practice reference of the smoke is not credited (stays in the quote)
+    open_ident=f'{NS}_warm_u001_B_practiceref_pa01_A_986000'
+    (Path(root)/'jobs'/open_ident/'CLOSE.json').unlink()
+    (Path(root)/'jobs'/open_ident/'RESULT.json').unlink()
+    write_charges(root,rows)
+    assert live.remaining_phase_costs(root,cfg)['v2v_train']==costs['v2v_train']+SMOKE_EPISODE
+
+
 # ---------------------------------------------------------------- resume a started root (MAIN 07:35)
 
 import json as _json
@@ -349,6 +385,85 @@ def test_resume_quote_is_exact_remaining_work(tmp_path,charges_ledger):
     # a sealed update without its own regular checkpoint file is refused
     write_charges(root,rows);(root/'R_checkpoint_002.pt').unlink()
     with pytest.raises(ValueError,match='lacks its own checkpoint'):live.sealed_update(root,'R')
+
+
+def practice_started_root(tmp_path):
+    """A started practice-ON root: A sealed u3 with a live closed u4; B sealed u2 whose live u3
+    is fully closed (18 normal + 6 practice episode charges + 6 closed matched references);
+    R sealed u2 with nothing of u3."""
+    from .practice_starts import practice_count
+    pcount=practice_count(24,0.25)                                       # 6
+    root=tmp_path/'run';root.mkdir(parents=True,exist_ok=True);rows=[]
+    def sealed(arm,u_count,practice=False):
+        for u in range(1,u_count+1):
+            (root/f'{arm}_UPDATE_{u:03}.json').write_text(_json.dumps(dict(update=u,arm=arm,
+                trust=dict(beta=1.,graded=0))))
+            (root/f'{arm}_checkpoint_{u:03}.pt').write_bytes(f'{arm}{u}'.encode())
+            for ident in _ids(u,arm,24):
+                _job(root,ident,claim_mtime=1000.+u*2000)
+                rows.append(dict(id=ident,phase='v2v_train',sim_s=1200))
+    sealed('A',3);sealed('B',2);sealed('R',2)
+    for ident in _ids(4,'A',24):                                         # the live A update
+        _job(root,ident,claim_mtime=9000.)
+        rows.append(dict(id=ident,phase='v2v_train',sim_s=1200))
+    normal=_ids(3,'B',18)
+    practice_ids=[f'{NS}_warm_u003_p{i+1:02d}_B_{986000+i}' for i in range(pcount)]
+    refs=[f'{NS}_warm_u003_B_practiceref_pa{i+1:02d}_A_{986000+i}' for i in range(pcount)]
+    for ident in normal+practice_ids+refs:
+        _job(root,ident,claim_mtime=7000.)
+        rows.append(dict(id=ident,phase='v2v_train',sim_s=1200))
+    write_charges(root,rows)
+    return root,rows,pcount
+
+
+def test_resume_quote_counts_practice_and_reference_charges(tmp_path,charges_ledger):
+    """Fix round 2 (d): with practice ON, _train_rows counts the practice episode ids
+    (_pNN_ slots, _practice_ replacements) and the matched practice reference ids
+    (..._<arm>_practiceref_paNN_A_...); a resumed arm's quote covers its remaining episodes
+    plus the registered practice A-reference cost of its remaining updates, crediting the
+    closed reference charges of the in-progress update; the algebra stays within the
+    practice-aware v2v_train allocation."""
+    from . import v2v_launch3 as launch
+    from .practice_starts import practice_count
+    root,rows,pcount=practice_started_root(tmp_path)
+    cfg=dict(job_namespace=NS,practice_starts=True,practice_fraction=0.25,practice_repeat_cap=2,
+        budget=dict(phases=dict(v2v_train=launch.V2V_PHASES['v2v_train']
+                                +launch.practice_reference_quote(0.25))))
+    costs,per=live.resume_phase_costs(root,cfg,('A',),('B','R'))
+    assert per['A']['credited_episodes']==24 and per['A']['remaining_reference_sim_s']==0
+    # B: the 6 practice charges count as its (k+1) episodes like any other episode; the 6
+    # closed references are credited against the remaining reference cost
+    assert per['B']['charged_current_update']==24 and per['B']['credited_episodes']==24
+    assert per['B']['credited_references']==6
+    assert per['B']['remaining_episodes']==22*24-24
+    assert per['B']['remaining_reference_sim_s']==(22*pcount-6)*1200
+    assert per['B']['remaining_sim_s']==((22*24-24)+(22*pcount-6))*1200
+    # R: charged nothing of u3 -> the full reference upper bound for its remaining updates
+    assert per['R']['credited_references']==0
+    assert per['R']['remaining_sim_s']==(22*24+22*pcount)*1200
+    assert costs['v2v_train']==sum(p['remaining_sim_s'] for p in per.values())
+    spent=sum(r['sim_s'] for r in rows)
+    assert spent+costs['v2v_train']<=launch.V2V_PHASES['v2v_train']+launch.practice_reference_quote(0.25)
+    # practice OFF keeps the old episodes-only quote (references are never credited then)
+    costs_off,_=live.resume_phase_costs(root,dict(job_namespace=NS),('A',),('B','R'))
+    assert costs_off['v2v_train']==(21*24-24+22*24-24+22*24)*1200==1814400
+    # an unclosed reference of a resumed arm can never be retried: refuse
+    root2,_,_=practice_started_root(tmp_path/'open')
+    (root2/'jobs'/f'{NS}_warm_u003_B_practiceref_pa01_A_986000'/'CLOSE.json').unlink()
+    with pytest.raises(ValueError,match='practice reference .* is not closed'):
+        live.arm_remaining(root2,cfg,'B',live=False)
+    # a reference charge beyond k+1 without a sealed k+1 is inconsistent
+    root3,rows3,_=practice_started_root(tmp_path/'ahead')
+    write_charges(root3,rows3+[dict(id=f'{NS}_warm_u004_B_practiceref_pa01_A_1',
+                                    phase='v2v_train',sim_s=1200)])
+    with pytest.raises(ValueError,match='reference charges beyond update 3'):
+        live.arm_remaining(root3,cfg,'B',live=False)
+    # an unexpected reference amount refuses
+    root4,rows4,_=practice_started_root(tmp_path/'bad')
+    write_charges(root4,rows4+[dict(id=f'{NS}_warm_u003_B_practiceref_pa07_A_1',
+                                    phase='v2v_train',sim_s=2400)])
+    with pytest.raises(ValueError,match='unexpected practice reference charge'):
+        live.arm_remaining(root4,cfg,'B',live=False)
 
 
 def test_adopt_preflight_is_real_launch3_exact_and_overdrawn_refused(tmp_path,monkeypatch,deployed):
