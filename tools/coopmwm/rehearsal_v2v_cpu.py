@@ -43,7 +43,7 @@ from .rehearsal_cpu import (AMENDMENT, BOUNDS, DEADLINE, SLOTS, _child_environme
 ARMS = ('A', 'B', 'R')
 FIRST_UPDATE, LAST_UPDATE = 4, 5   # u3-like checkpoints -> exactly 2 updates each
 
-DEFAULTS = dict(k=8, N_exec=10, slots=4, workers=12, episodes_per_update=6, last_update=LAST_UPDATE,
+DEFAULTS = dict(k=8, N_exec=10, slots=4, workers=6, episodes_per_update=6, last_update=LAST_UPDATE,
                 latency_s=1., stall_s=900., timeout_s=9000., transport_errors=0, malformed=0, branch_crash=0,
                 die_slot=None, die_after=1, decline_withdrawn=True, parallel_groups=True,
                 fanout_factor=2, r_concurrent=True, verify_workers=6,
@@ -630,6 +630,11 @@ _FAULTS = [
     'run_synergy_checks now HOLDS the marker (rename) for the duration of the synergy branch runs '
     'and restores it afterwards (live ops run this check while the arm is live, before any pause; '
     'no live-code change, and the end marker stays on disk for the record)',
+    'fault 13 (host capacity, resume run 2026-11-04): with co-tenant sessions the host runs at ~7 GB '
+    'free RAM; 12-wide spawn wave pools (each worker imports torch) had workers die abruptly '
+    '(BrokenProcessPool mid B-u5, native ucrtbase abort 0xc0000409 in another attempt) - the wave '
+    'width is lowered to 6. Host capacity knob only: same jobs, same seeds, same recipes; '
+    'episode/verification results are per-episode deterministic so receipts are unaffected',
 ]
 
 if __name__ == '__main__':
