@@ -476,7 +476,7 @@ def fake_step(t, value=0.):
 
 
 def run_one_update(tmp_path, monkeypatch, *, arm='B', practice, vids=(), snap=None, t0=400,
-                   b_practice=None, b_receipt_late=False):
+                    b_practice=None, b_receipt_late=False, weighting=None):
     """One smoke update of v2v_runner.run_arm with a recorded wave; returns (calls, receipt).
     ``b_practice`` seeds B's realised practice count in B_UPDATE_001.json (R reads it);
     ``b_receipt_late`` instead withholds that receipt until R's first wait tick - R must WAIT
@@ -503,7 +503,8 @@ def run_one_update(tmp_path, monkeypatch, *, arm='B', practice, vids=(), snap=No
                 gpu_deadline=1e12, awr=dict(coefficient=1.))
     cfg = v2v_runner.prepare_intent(base, root=tmp_path/'v2v', legacy_root=tmp_path/'legacy',
                                     source_root=tmp_path/'src', common_checkpoint_sha256=sha(ck),
-                                    practice_starts=practice)
+                                    practice_starts=practice,
+                                    **(dict(practice_weighting=weighting) if weighting is not None else {}))
     cfg.update(stop_after_update=1, launch_amendment_sha256='l'*64, funding_amendment_sha256='f'*64)
     (root/'AUTHORITY.md').write_text('authority '+('l'*64)+' '+('f'*64)+'\n')
     live = dict(cfg, launch_authorized=True, phase_funding_authorized=True,

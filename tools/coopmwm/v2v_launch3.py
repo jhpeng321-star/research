@@ -90,7 +90,7 @@ REQUIRED_SOURCES = tuple('tools/coopmwm/' + name + '.py' for name in (
     'v2v_launch3', 'v2v_live', 'v2v_runner', 'v2v_runtime', 'v2v_model',
     'v2v_obs', 'v2v_integrate', 'bank_v2v', 'bank_imitation', 'bank_statistics',
     'accel_storage', 'accel_protocol', 'storage', 'practice_starts', 'accel_runner',
-    'accel_plant'))
+    'accel_plant', 'practice_weighting'))
 
 
 class Refused(ValueError):
@@ -363,6 +363,13 @@ def practice_options_for(cfg, arm):
     fraction = cfg.get('practice_fraction', BANK_OPTIONS['practice_fraction'])
     cap = cfg.get('practice_repeat_cap', BANK_OPTIONS['practice_repeat_cap'])
     values = dict(practice_starts=starts, practice_fraction=fraction, practice_repeat_cap=cap)
+    from . import practice_weighting as pw
+    try:
+        weighting = pw.options(cfg)
+    except ValueError as error:
+        raise Refused(str(error)) from error
+    if any(k in cfg for k in pw.KEYS):
+        values.update(weighting)
     if not isinstance(starts, bool):
         raise Refused('practice_starts must be a bool, not ' + repr(starts))
     if not isinstance(fraction, float) or not math.isfinite(fraction) or fraction not in PRACTICE_FRACTIONS:
@@ -371,6 +378,12 @@ def practice_options_for(cfg, arm):
         raise Refused('registered practice_repeat_cap required: ' + repr(cap))
     by_arm = cfg.get('practice_starts_by_arm')
     if by_arm is not None:
+        if isinstance(by_arm, dict) and any(k in cfg for k in pw.KEYS):
+            try:
+                by_arm = {a: dict(v, **pw.options(v)) if isinstance(v, dict) else v
+                          for a, v in by_arm.items()}
+            except ValueError as error:
+                raise Refused(str(error)) from error
         if (not isinstance(by_arm, dict) or set(by_arm) != {'B', 'R'}
                 or by_arm['B'] != values or by_arm['R'] != values):
             raise Refused('practice_starts options must be identical for B and R: ' + repr(by_arm))

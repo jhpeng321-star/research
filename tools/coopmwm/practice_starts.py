@@ -116,7 +116,8 @@ def plan_path(root, arm, update):
     return Path(root)/'replay_bank'/arm/f'PRACTICE_PLAN_{arm}_{int(update):03}.json'
 
 
-def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_seed):
+def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_seed,
+                    weighting=False):
     """The frozen practice plan of one (arm, update): uniformly sampled examples with a
     per-example repeat cap; sealed once, never re-sampled (restarts reuse the same job ids)."""
     from . import exact_grade as xg
@@ -132,6 +133,11 @@ def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_
             raise ValueError('practice plan belongs to another arm/update')
         return record
     coop = examples(root, arm, cooperative_only=True)
+    augmented, augmentation_sha = [], None
+    if weighting:
+        from .practice_weighting import augmented_examples
+        augmented, augmentation_sha = augmented_examples(root, arm, coop)
+        coop = [dict(r, source='bank') for r in coop] + augmented
     pool = [dict(r) for r in coop]
     fallback = False
     if arm == 'R' and len(pool)*cap < count:
@@ -141,6 +147,8 @@ def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_
         have = {r['example_id'] for r in pool}
         additions = [dict(r, fallback=True) for r in extra if r['example_id'] not in have
                      and r['fallback']]
+        if weighting:
+            additions = [dict(r, source='bank') for r in additions]
         if additions:
             pool += additions
             fallback = True
@@ -152,6 +160,10 @@ def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_
         pickable = [r for r in pool if used.get(r['example_id'], 0) < cap]
         if not pickable:
             break                                        # cap exhausted: fewer practice episodes
+        if weighting:
+            # Exhaust cooperative capacity before R's documented fallback. Legacy
+            # sampling (including its RNG calls) is unchanged when weighting is off.
+            pickable = [r for r in pickable if not r['fallback']] or pickable
         row = pickable[int(rng.integers(0, len(pickable)))]
         used[row['example_id']] = used.get(row['example_id'], 0)+1
         rows.append(dict(row))
@@ -164,6 +176,13 @@ def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_
                   sampling=('uniform over eligible examples, per-example repeat cap %d, '
                             'RNG digest(practice=plan|arm|update|training_seed|fraction|cap)' % cap),
                   rule=PRACTICE_RULE, fallback_rule=R_FALLBACK_RULE, unix=time.time())
+    if weighting:
+        record['weighting'] = dict(enabled=True, effective_fraction=float(fraction),
+            augmented_examples=len(augmented), augmentation_sha256=augmentation_sha,
+            cooperative_selected=sum(not r['fallback'] for r in rows),
+            augmented_selected=sum(r['source'] == 'augmented' for r in rows if not r['fallback']),
+            rule='T2H: increased practice share; own bank + WM-cooperative augmented states; '
+                 'cooperative capacity first; identical B/R procedure')
     sealed = xg._seal(record, 'practice_plan_sha256')
     xg._write_new(path, sealed)
     return sealed
@@ -186,6 +205,8 @@ def load_snapshot(root, arm, row):
         snap = rb.replicate(snap, f'{row["salt"]}#s{seed_index}')
     elif seed_index != 1:
         raise ValueError(f'unknown practice seed_index {row["seed_index"]!r}')
+    if row.get('snapshot_sha256') is not None and sv.snapshot_sha(snap) != row['snapshot_sha256']:
+        raise ValueError('practice augmentation snapshot_sha256 mismatch')
     return snap
 
 
@@ -222,6 +243,9 @@ def _snapshot_call(root, arm, ident, row, index, base_extra, *, a_reference):
                         'current training policy from t0; snapshot prefix replayed; committed snapshot '
                         'plans continue; no new plan (plain-PPO b_replay episode)'),
                 rule=PRACTICE_RULE)
+    if row.get('source'):
+        meta['weighting'] = dict(enabled=True, source=row['source'],
+                                 parent_example_id=row.get('parent_example_id'))
     extras = dict(base_extra,
                   practice=dict(meta, snapshot=snap),
                   branch=dict(time_s=t0, takeover_s=t0, revert=[],
@@ -287,10 +311,16 @@ def update_report(eps):
         used[r['example_id']] = used.get(r['example_id'], 0)+1
     returns_practice = [r['return_veh_s']/r['steps'] for r in rows if r['steps']]
     returns_normal = [ret(e)/len(e['steps']) for e in normal if e['steps']]
-    return dict(practice=len(practice), normal=len(normal),
+    report = dict(practice=len(practice), normal=len(normal),
                 practice_return_veh_s=(float(np.mean([r['return_veh_s'] for r in rows])) if rows else None),
                 normal_return_veh_s=(float(np.mean([ret(e) for e in normal])) if normal else None),
                 practice_return_per_control_s=(float(np.mean(returns_practice)) if returns_practice else None),
                 normal_return_per_control_s=(float(np.mean(returns_normal)) if returns_normal else None),
                 examples_used=used, examples=sorted(used), episodes=rows,
                 rule=PRACTICE_RULE, fallback_rule=R_FALLBACK_RULE)
+    weighted = [e for e in practice if e['practice'].get('weighting')]
+    if weighted:
+        report['weighting'] = dict(enabled=True, practice=len(weighted),
+            cooperative=sum(not e['practice'].get('fallback') for e in weighted),
+            augmented=sum(e['practice']['weighting']['source'] == 'augmented' for e in weighted))
+    return report
