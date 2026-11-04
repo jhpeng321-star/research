@@ -109,6 +109,11 @@ def closure(paths, *, mirror=None):
             raise ValueError('REFUSED: invalid episode_path')
         _guard(value)
         posix = PurePosixPath(value.replace('\\', '/'))
+        local = Path(value)
+        if mirror is not None and local.is_absolute() and (local == mirror or mirror in local.parents):
+            # Envelopes produced locally in a Linux mirror already contain its
+            # absolute path. Do not map that host prefix into the mirror twice.
+            return local
         if mirror is not None and posix.parts[:3] == ('/', 'home', 'ubuntu'):
             return mirror.joinpath(*posix.parts[1:])
         path = Path(value)

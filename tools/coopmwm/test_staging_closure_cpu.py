@@ -98,9 +98,10 @@ def test_filesystem_root_mirror_maps_remote_episode_without_accessing_host(tmp_p
     assert closure([label], mirror=tmp_path) == (files, manifest)
 
 
-def test_nested_home_prefix_uses_innermost_mirror_on_every_platform(tmp_path):
+@pytest.mark.parametrize('remote', [False, True])
+def test_nested_home_prefix_uses_innermost_mirror_on_every_platform(tmp_path, remote):
     mirror = tmp_path/'home/ubuntu/operator/mirror'
-    src, label, pending, snapshot, episode = ls_source(mirror, remote_episode=True)
+    src, label, pending, snapshot, episode = ls_source(mirror, remote_episode=remote)
     files, manifest = closure([label])
     assert episode/'RESULT.json.gz' in files
     assert all(mirror in p.parents for p in files)
