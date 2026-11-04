@@ -117,6 +117,12 @@
     "jobs": "Local process inspection found no Python/pytest job matching this worktree or the requested suites. No test job or dispatch was started.",
     "worktree": "Tracked files and index were clean on entry; git diff --check passed. Both untracked blocked receipts were preserved. This resume changes only this readiness receipt."
   },
+  "resume_verification_2026_11_05": {
+    "resumed_head": "3602bd2c",
+    "concurrent_receipt_commit": "5adfcaec9c0aed3f9429f8f49c5febb2f72f8e94",
+    "finding": "Independently confirmed the implementation, host pins, real-service CPU regression and retained eight-gate receipt described in fresh_session_verification. That verification was committed concurrently during this session and is preserved in full.",
+    "execution": "No matching Round 4 job found; no tests or dispatches started. Completed suite results and both untracked blocked receipts retained. CPU-only local inspection; no SSH, SUMO or GPU execution."
+  },
   "hard_rules_compliance": {
     "cpu_only": true,
     "no_ssh_sumo_gpu_execution": true,
