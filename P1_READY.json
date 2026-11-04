@@ -1,91 +1,111 @@
 {
   "task": "P1",
+  "round": "fix_r0",
   "status": "CPU_READY_FOR_INTEGRATION",
   "branch": "c4/track2-backend",
   "worktree": "E:/agent-work/c4-track2-backend",
-  "base": "13f184b5",
+  "base": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
+  "review": "REVIEW_P1_r0.md",
+  "reviewed_head": "55737b03f0f102b04fc425a5fb539bcde9f2c26c",
   "commits": [
-    {"commit": "c9866ac8", "purpose": "Merge required component branches before implementation"},
-    {"commit": "297b6911", "purpose": "Production episode backend, additive worker hook and CPU contracts"},
-    {"commit": "d84a9078", "purpose": "Whole-update trigger KL, durable checkpoint identity and additional CPU coverage"}
+    {"commit": "297b6911", "purpose": "Original production backend and opt-in worker hook"},
+    {"commit": "d84a9078", "purpose": "Original whole-update trigger KL and checkpoint identity"},
+    {"commit": "e29efd91", "purpose": "Fix all four r0 blockers and add regression coverage"}
   ],
-  "merged_dependencies": {
-    "c4/moves": "0d5463d9",
-    "c4/trigger-policy": "1d21e39d",
-    "c4/coop-layer": "70a79af7",
-    "c4/merge-features": "8bea9f63",
-    "c4/practice-weight": "93da75f6"
-  },
-  "owned_files": [
-    "tools/coopmwm/track2_backend.py",
-    "tools/coopmwm/test_track2_backend_cpu.py",
-    "P1_READY.json"
+  "blocker_resolutions": [
+    {
+      "blocker": 1,
+      "fix": "Wall offsets are evaluated separately for each executing CAV using its current direct sensing and authorized t-1 partner sensor packets. No simulation-wide position union is supplied to moves.offsets.",
+      "missing_report_rule": "Unavailable partner positions do not cause early release. Continue the existing registered commitment until locally observed release or the original onset/hold expiry, without extrapolation or new behavioural thresholds.",
+      "tests": [
+        "Production episode_components/controller regression: separated unobserved c2 crossing -101 to -100 leaves c1 action, local features and move offset invariant at t319; original t320 expiry retained.",
+        "Wall release accepts an authorized t-1 partner report and ignores a stale report."
+      ]
+    },
+    {
+      "blocker": 2,
+      "fix": "Clean-run training consumes per-CAV observable-neighbourhood real SUMO rewards from P2 track2_reward output. Both residual-layer PPO and categorical trigger PPO retain CAV identity and distinct reward targets; scalar group-credit broadcasting is removed.",
+      "dense_and_wm_credit": "Disabled. Enabled dense_teacher/group_credit config or nonempty labels/credit train arguments refuse before optimization, including SUMO-verified dense labels.",
+      "tests": [
+        "B/R real-model updates with own and observable CAV/HDV neighbour reward inputs, reversed P2 row ordering, registered weight/provenance and frozen-base assertions.",
+        "Equal-mean rewards assigned to different CAVs produce different residual and trigger parameter updates, detecting scalar reduction/broadcast regressions.",
+        "Missing, duplicate, mismatched, nonfinite, unobserved-neighbour and incorrectly weighted reward rows refuse before either optimizer.",
+        "Test-only P2 module exercises lazy reward_update integration identically for B/R; absent P2 raises an explicit dependency error.",
+        "A uses real inherited PPO with no P2 reward module and no cooperation/bank path; joint layer/trigger KL rejection restores weights and Adam state."
+      ]
+    },
+    {
+      "blocker": 3,
+      "fix": "The practice dependency now requires a v2 augmentation manifest and each child's own sealed accepted SUMO receipt, admitted cooperative per-seed example, chosen-plan/tape binding, state/derived-snapshot/world/seed/arm alignment and existing prelaunch branch charges. P1 gates the consumer on the compliant dependency and registered parent provenance.",
+      "budget": "The shared parent prelaunch ledger phase must remain within its registered allocation, at most 200000 sim-s. Each receipt branch is charged at its full recorded branch cost. P1 requires row.prelaunch to equal cfg.augmentation_prelaunch.",
+      "resume": "Frozen augmented rows revalidate evidence through load_snapshot before collection/replay; old rows without evidence refuse. Admitted children are not duplicated as ordinary bank rows in weighted sampling.",
+      "tests": [
+        "WM-only, missing, failed, wrong-world, wrong-snapshot, wrong-arm, wrong-plan, wrong-seed, unadmitted and wrong-hash children refuse identically for B/R.",
+        "Absent, wrong-phase, undercharged and overdrawn prelaunch evidence refuses.",
+        "Verified child reaches the real practice wave; frozen child with removed evidence refuses before replay; P1 refuses an old dependency or unregistered frozen child."
+      ]
+    },
+    {
+      "blocker": 4,
+      "fix": "The CPU package fixture models absence of Git markers outside its own temporary sandbox while preserving all markers inside it. Production v2v_launch3 provenance checks are unchanged.",
+      "tests": [
+        "Both enclosing .git directory and worktree-pointer-file cases still refuse package fallback when Git is unavailable.",
+        "All three previously failing v2v_live budget assertions pass in the complete selected suite, without deselection."
+      ]
+    }
   ],
-  "additive_shared_hook": {
-    "file": "tools/coopmwm/accel_plant.py",
-    "lines_added": 5,
-    "flag": "job.track2_backend",
-    "default": false,
-    "description": "After normal/practice V2V controller construction, install production policy/controller components only for explicit Track-2 jobs. Existing requests, command ownership and feasibility enforcement remain the execution path."
-  },
   "api": {
-    "build_arm_runtime(cfg, arm)": "Returns hooks containing runtime, policy, policy_factory, bank_pairs, collect_update, safety, train_update, save_checkpoint and episode_components. No physics is dispatched by building hooks.",
-    "collect_update(cfg, arm, u)": "Rebuilds the pre-update runtime and returns real accel_runner episode receipts, including per-step track2/track2_trigger/coop_layer records for B/R.",
+    "build_arm_runtime(cfg, arm)": "Returns production hooks: runtime, policy, policy_factory, bank_pairs, collect_update, safety, train_update, save_checkpoint, episode_components. Building hooks dispatches no physics.",
+    "collect_update(cfg, arm, u)": "Uses the real accel_runner/accel_plant V2V path. B/R steps include track2, track2_trigger, coop_layer and authorized reward_neighbourhoods receipts.",
     "hook_order": [
-      "Set cfg.update=u and build hooks; A collection must precede same-update B/R safety references.",
-      "Collect episodes with hooks.collect_update() or collect_update(cfg, arm, u).",
-      "Run hooks.safety(episodes); same-update normal A results are required and matched practice A references are charged through the same wave.",
-      "P2 label_update produces labels and group credit.",
-      "Call hooks.train_update(episodes, credit=credit_rows, labels=label_rows).",
-      "Pass episode and optimizer diagnostics to P3, then hooks.save_checkpoint(). Publish the parent's update receipt, including the inherited practice update_report, before R practice collection."
+      "Build with cfg.update=u; collect A before same-update B/R safety references.",
+      "Collect episodes and run hooks.safety(episodes).",
+      "Obtain P2 track2_reward output and call hooks.train_update(episodes, rewards=envelope), or omit rewards to invoke P2 reward_update lazily.",
+      "Send optimizer/reward/practice diagnostics to the parent monitor; save_checkpoint. Publish practice update_report before R requests B's realized practice count."
     ],
-    "credit_row": ["episode_id", "time_s", "group_advantage"],
-    "dense_label_row": ["episode_id", "time_s", "targets", "sumo_verified=true OR finite calibrated_probability>=0.8"],
-    "dense_targets": "One candidate-table index per CAV in the recorded track2_trigger batch; padded/masked targets refuse.",
+    "P2_dependency": {
+      "module": "tools.coopmwm.track2_reward",
+      "function": "reward_update(cfg, arm, u, episodes) -> reward envelope",
+      "availability": "Absent on this branch. Explicit integration dependency; tests supply only a local fake. No production WM-credit or synthetic-reward fallback exists.",
+      "envelope": {"schema": "coopmwm-track2-reward-v1", "arm": "B or R", "update": "u", "rows": "per-CAV row list"},
+      "row_fields": ["episode_id", "time_s", "cav_id", "source=sumo", "own_reward", "neighbour_rewards: vehicle ID -> real reward", "reward", "weight", "weight_provenance"],
+      "alignment": "Join by episode_id,time_s,cav_id; require exactly every eligible own-action CAV row. Neighbour IDs equal sample.track2.reward_neighbourhoods[cav_id], including sensed/reported HDVs. Trigger member order must match the sample.",
+      "formula": "reward = own_reward + weight * mean(neighbour_rewards); empty observable neighbourhood contributes zero.",
+      "learning": "Direct per-CAV reward targets for layer and trigger, without cross-CAV scalar reduction. Layer uses marginal Gaussian PPO scores with inherited exact correlated joint KL; trigger retains its whole-update joint categorical KL cap. Base remains frozen."
+    },
     "required_common_config": [
-      "track2_backend=true", "run_root", "training_seed", "v2v=true", "v2v_dim",
-      "worlds_by_update (string update keys, registered TRAIN-world records)",
-      "runtime", "checkpoint", "initial_checkpoint (unless arm checkpoint_000 exists)",
+      "track2_backend=true", "run_root", "training_seed", "v2v=true", "v2v_dim", "host=cpuV", "device=cpu",
+      "worlds_by_update", "runtime", "checkpoint", "initial_checkpoint unless checkpoint_000 exists",
       "accel_bounds", "gpu_deadline", "workers", "load_max", "budget.total", "budget.phases"
     ],
     "required_bank_arm_config": [
-      "merge_features=true", "layer_config.hidden_dim", "layer_config.learning_rate",
-      "layer_config.kl_budget", "layer_config.clip_ratio", "layer_config.max_grad_norm",
-      "trigger_candidates", "trigger_partner_slots", "decision_interval_s",
-      "trigger_lr", "trigger_ppo.clip_ratio", "trigger_ppo.value_weight",
-      "trigger_ppo.entropy_weight", "trigger_ppo.max_grad_norm", "layer_epochs"
+      "merge_features=true", "layer_config.hidden_dim", "layer_config.learning_rate", "layer_config.kl_budget",
+      "layer_config.clip_ratio", "layer_config.max_grad_norm", "trigger_candidates", "trigger_partner_slots",
+      "decision_interval_s", "trigger_lr", "trigger_ppo", "layer_epochs",
+      "track2_reward={weight: finite registered number, provenance: nonempty registration reference}; common B/R object"
     ],
-    "coop3_options": "v2v_intent keys, replay_sources, practice_starts/practice_fraction/practice_repeat_cap, practice_weighting/practice_weighted_fraction, imitation_epochs and imitation_step_mode pass through to their real readers/learners.",
-    "accounting": "Own run_root/CHARGES.jsonl and ACCOUNTING.claim; budget.total <=5000000, phase_map.train defaults to track2_train, prior_charged_sim_s defaults to 960 and cannot be below 960. Parent allocations must include smoke and matched practice references. No inherited 17M budget is installed.",
-    "approval": "Collection requires OWNER_APPROVAL.json with approved=true; owner_approval_sha256 is checked when supplied. Parent launch/registration/source gates remain required.",
-    "checkpoint": "Normal {arm}_checkpoint_{u:03}.pt plus B/R {arm}_track2_{u:03}.pt sidecar with layer/trigger weights and Adam states; exclusive writes, strict arm/update restoration.",
-    "compatibility_adapter": "Local TriggerMove/MoveAPI bridges accepted T1A onset/hold to accepted T2A onset_s/hold_s without changing either component."
-  },
-  "implementation": {
-    "A": "Inherited V2V MAPPO PPO without cooperation layer or bank updates.",
-    "B_and_R": "Same frozen-base cooperation-layer/trigger architecture, optimizers, practice scheduling and effective-bank pipeline; teacher identity/filtering comes from P2.",
-    "zero_init": "Residual and committed-move gain start at zero; sampled base action bytes and base exploration RNG advancement are identical.",
-    "observable_inputs": "Layer uses local 29 sensor features, separate merge block and recorded committed-move offset. Trigger uses separate local-only t-1 intent messages and zero broadcast latent. No RSU/global channel enters layer/trigger features.",
-    "move_execution": "Observable CAV candidates, stable nonoverlap arbitration, registered move offsets/onset/hold and wall release; requests continue through the existing single-writer plant path.",
-    "learning": "T2D transactional layer-only PPO with P2 group advantages; T2A categorical PPO and dense CE have a whole-update exact joint categorical KL bound and restore weights plus Adam state on rejection. Executed prefix/committed-plan steps are excluded from own-action PPO.",
-    "bank": "Existing per_seed_v1 cooperative-only reader and transactional separate-full-pass effective imitation; only cooperation parameters change. Recorded limits use the registered shared 1.2 cap passed explicitly to attach_limits, avoiding a population-truth lookup.",
-    "practice": "Existing frozen plans, weighting and augmentation consumer, R=B realised count, batch dispatch, normal-world replacement exclusion, prefix stripping and pre-update A matched safety references.",
-    "horizon": "Production job construction keeps the inherited 1200 sim-s charge and 300..1199 control ticks; no look-ahead/horizon cut."
+    "augmentation": "See tools/coopmwm/PRACTICE_WEIGHTING.md for v2 evidence fields. cfg.augmentation_prelaunch must match the producer's common prelaunch registration when augmented rows are consumed.",
+    "disabled_clean_run_paths": "dense_teacher=false, group_credit=false, extra coop_reward=false; no nonempty labels or credit arguments.",
+    "bank": "Inherited per_seed_v1 cooperative-only effective imitation, separate full-pass optimizer, explicit registered 1.2 acceleration cap and frozen base.",
+    "practice": "Inherited frozen plans, effective fraction, repeat cap, own-bank states, R=B realized count, prefix stripping and matched pre-update A safety references.",
+    "accounting": "Own run_root ledger/claim, registered total <=5000000, train phase defaults to track2_train, prior charge at least parity960. Parent allocations include smoke and practice references.",
+    "approval": "Collection requires OWNER_APPROVAL.json approved=true; supplied approval SHA is verified. Parent registration/source/launch gates still apply.",
+    "checkpoint": "Normal arm_checkpoint_u plus B/R arm_track2_u sidecars with strict arm/update and Adam restoration; exclusive writes.",
+    "horizon": "Unchanged 1200 sim-s episode charge, t300..1199 control loop, registered move onset/hold and inherited look-ahead.",
+    "default_off": "Existing conditional accel_plant hook and exact-object off path retained; A unchanged; zero-init action bytes/RNG parity and base freezing remain tested."
   },
   "verification": {
     "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
-    "primary_tests": "34 P1 tests passed as part of the final regression command.",
-    "regression_result": "250 passed, 3 deselected in 98.30s",
-    "command": "$env:OMP_NUM_THREADS='1'; $env:MKL_NUM_THREADS='1'; & \"C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe\" -m pytest -q tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_v2v_live_cpu.py tools/coopmwm/test_v2v_runner_cpu.py tools/coopmwm/test_v2v_launch_wiring_cpu.py tools/coopmwm/test_coop_layer_cpu.py tools/coopmwm/test_trigger_policy_cpu.py tools/coopmwm/test_practice_weighting_cpu.py tools/coopmwm/test_practice_starts_cpu.py tests/unit/test_merge_features.py -k \"not test_watch_restarted_after_smokes_passes_exact_remaining_preflight and not test_adopt_preflight_is_real_launch3_exact_and_overdrawn_refused and not test_adopt_quote_subtracts_already_charged_diagnostics\" --basetemp=\"E:/agent-work/c4-track2-backend/_out/p1-pytest-5\"",
-    "full_worker_test": "Actual accel_plant.episode, real V2V controller, models, 900 control ticks, 15 decision intervals, compressed receipt writer; only physics/setup/seed guards replaced by CPU test fakes.",
-    "other_coverage": "Frozen base, zero-init RNG/action parity, local observation invariance, t-1 merge reports, nonoverlap/expiry/wall release, plain A PPO, group-credit joins, confidence filtering, nonempty effective imitation, practice scheduling/fairness/safety, accounting cap/duplicates, KL rejection/Adam rollback and real checkpoint round-trip.",
-    "static_checks": ["py_compile passed", "git diff --check passed"],
-    "earlier_regression_attempt": "Broad run exceeded the 120s tool window. A focused rerun reproduced three inherited launch-provenance fixture failures (24 passed, 3 failed); those three were explicitly deselected from the successful 250-test regression."
+    "result": "438 passed, 5 subtests passed in 206.52s; exit 0; no skips or deselections",
+    "junit": "_out/p1-fix-regression-final2.xml",
+    "command": "$env:OMP_NUM_THREADS='1'; $env:MKL_NUM_THREADS='1'; $env:CUDA_VISIBLE_DEVICES=''; $env:PYTHONDONTWRITEBYTECODE='1'; & \"C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe\" -m pytest -q tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_v2v_live_cpu.py tools/coopmwm/test_v2v_runner_cpu.py tools/coopmwm/test_v2v_launch_wiring_cpu.py tools/coopmwm/test_v2v_launch3_cpu.py tools/coopmwm/test_coop_layer_cpu.py tools/coopmwm/test_trigger_policy_cpu.py tools/coopmwm/test_practice_weighting_cpu.py tools/coopmwm/test_practice_starts_cpu.py tools/coopmwm/test_moves_cpu.py tests/unit/test_merge_features.py --basetemp=\"E:/agent-work/c4-track2-backend/_out/p1-fix-regression-final2\" --junitxml=\"E:/agent-work/c4-track2-backend/_out/p1-fix-regression-final2.xml\"",
+    "full_worker": "Actual accel_plant.episode 900-tick worker, real V2V controller/models and compressed receipt writer, with physics/setup/seed boundaries replaced by CPU fakes only.",
+    "static_checks": ["git diff --check", "git diff --check c4/track-base"]
   },
   "open_issues": [
-    "Three inherited v2v_live packaged-deployment tests require a fixture source outside Git ancestry. Worktree-local basetemp makes launch3 correctly refuse package fallback with 'deployed checkout identity unavailable; package provenance cannot bypass Git'. No launch3 gate or inherited test was changed.",
-    "G-T2C must bind its final registered config/worlds/allocations and consume these hooks; P2 supplies actual dense labels/group credit and P3 consumes learning/diagnostic receipts. Those separately owned files were not edited.",
-    "Linux/cpuV release qualification and owner-approved live SUMO smoke remain external integration checks. This task ran CPU fakes only and incurred zero simulation charge."
+    "Parent integration must provide P2 track2_reward real SUMO outcome extraction and conform/adapt its output to the explicit P1 envelope above, with the actual registered common reward weight/provenance. The module is absent here and unavailable integration fails explicitly.",
+    "Parent augmentation integration must emit v2 child evidence and the common registered prelaunch provenance; legacy WM-only manifests are intentionally refused.",
+    "Linux/cpuV release qualification and owner-approved live SUMO smoke remain external integration checks. No live simulation was run in this CPU-only fix round."
   ],
   "execution": {
     "cpu_only": true,
