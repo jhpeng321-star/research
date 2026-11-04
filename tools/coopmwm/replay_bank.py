@@ -737,6 +737,8 @@ def solo_candidate(plan, member):
     for key, val in plan.items():
         if isinstance(val, list) and len(val) == len(rows) and all(isinstance(x, list) for x in val):
             out[key] = [val[i]]                      # per-member matrices: keep only this row
+    if plan.get('lane_envelope') and member in plan['lane_envelope']:  # c4/lane-plans: own envelope
+        out['lane_envelope'] = {member: plan['lane_envelope'][member]}
     out['id'] = f"{plan['id']}__solo_{member}"
     return out
 

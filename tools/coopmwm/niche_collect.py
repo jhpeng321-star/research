@@ -17,10 +17,11 @@ def search_config(ordinal,coop=None,alternate=False):
 
 
 def validate(config):
-    from .lane_plans import split_config as lane_split
-    probe=dict(config)
-    lane_split(probe)   # c4/lane-plans: registered lane_* keys checked/popped (None = off, unchanged)
-    base={k:v for k,v in probe.items() if not k.startswith('coop_')}
+    lane = {k: v for k, v in config.items() if k.startswith('lane_')}
+    if lane:
+        from .lane_plans import split_config as lane_split
+        lane_split(dict(lane))   # c4/lane-plans: registered lane_* keys/values only (raises otherwise)
+    base={k:v for k,v in config.items() if not k.startswith(('coop_','lane_'))}
     if base not in (search_config(0),search_config(1)):
         raise ValueError('registered it2_K2 niches=1/4 configuration required')
     coop={k:v for k,v in config.items() if k.startswith('coop_')}

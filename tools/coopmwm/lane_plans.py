@@ -362,16 +362,19 @@ def intent_lane_targets(entry, members, second, horizon, end_s):
     actions = entry.get('lane_actions')
     if actions is None:
         return None, None
-    end = int(end_s)
+    t0, end = int(entry['start_s']), int(end_s)
+    width = len(actions[0])
     targets = [[0]*int(horizon) for _ in members]
     mask = [[0]*int(horizon) for _ in members]
     for k in range(1, int(horizon)+1):
         t = int(second)+k
         if t >= end:
             break
+        a = t-t0                       # plan-relative second (rows are 0..duration-1)
         for j in range(len(members)):
-            targets[j][k-1] = int(actions[j][t])
-            mask[j][k-1] = 1.
+            if 0 <= a < width:
+                targets[j][k-1] = int(actions[j][a])
+                mask[j][k-1] = 1.
     return targets, mask
 
 
@@ -387,17 +390,19 @@ def policy_lane_ce(policy, batch):
     if not rows or not hasattr(policy, 'lane_logits'):
         return None
     import torch
-    terms = []
+    total = None
     for sample, weight in rows:
         members = list(sample['context']['members'])
         logits = policy.lane_logits(sample['context'])
         slot = {v: i for i, v in enumerate(members)}
-        ce = 0.
+        ce = None
         for vid, action in sample['lane_target'].items():
             j = slot.get(vid)
             if j is None:
                 continue
-            ce = ce+float(torch.nn.functional.cross_entropy(
-                logits[j:j+1], torch.tensor([int(action)], dtype=torch.long)))
-        terms.append(float(weight)*ce/max(1, len(sample['lane_target'])))
-    return sum(terms)/len(terms)
+            term = torch.nn.functional.cross_entropy(
+                logits[j:j+1], torch.tensor([int(action)], dtype=torch.long))
+            ce = term if ce is None else ce+term
+        per = float(weight)*(ce if ce is not None else torch.tensor(0.))/max(1, len(sample['lane_target']))
+        total = per if total is None else total+per
+    return total/len(rows)
