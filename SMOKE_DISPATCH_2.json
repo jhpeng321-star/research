@@ -1,0 +1,19 @@
+{
+  "schema": "coopmwm.clean1.qualification_dispatch.v1",
+  "action": "owned replacement qualification after preserved zero-charge adapter failure",
+  "host": "cpuV",
+  "root": "/home/ubuntu/coopmwm20261105_clean1",
+  "source_root": "/home/ubuntu/coopmwm20261105_clean1_src_b4c399b3",
+  "runtime_commit": "b4c399b342ab855cbd06f2fd78d3490c4a7a6e4a",
+  "config_sha256": "1af9392a8180b635a1443c11a95aed8f8cea26b2c2318e346ef9c5d10079970c",
+  "pid": 93448,
+  "start_ticks": "1984379",
+  "unix": 1793829995.2839017,
+  "claim": "QUALIFICATION_DISPATCH_SMOKE.json",
+  "log": "QUALIFICATION_SMOKE.log",
+  "previous_attempt_archive": "qualification_attempts/zerocharge_c3d8285d5191",
+  "zerocharge_rebind_timestamp": "2026-11-05T06:05:23.732199+08:00",
+  "linux_tests": "313 passed, zero failed/skipped, 14.72s",
+  "training_launched": false,
+  "adoption_rule": "Inspect exact PID/start identity, claim/log/ledger. Never duplicate or kill by name."
+}
