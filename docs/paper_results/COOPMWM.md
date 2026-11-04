@@ -1,5 +1,31 @@
 # S-COOPMWM — live checks
 
+### Nov4 12:41 UTC+8 — A14/B7/R6; live phase authority reconciled
+- **B7 learning mechanics and composite safety pass.** Three full imitation
+  passes of five requested, KL0.044938<0.045, eight within-seed cooperative
+  examples; action MAE1.258998->1.237346m/s². First-pass loss-change95%CI
+  [-0.073663,-0.047613]. Bank intent loss2.254510->2.380863 rose (report-only).
+  On24paired worlds: collisions/teleports0; critical-total B-A=-8.5
+  CI[-31.439,13.959], hard-brake=-0.208CI[-3.313,2.854].
+- Existing r2 supervisors, A and runtime-bound monitor4 remain live. A14 completed
+  at12:39:09. B8/R7 had not claimed jobs at the preceding readiness probe;
+  no failed episode or new STOP was observed.
+- **Accounting reporting repair verified:** phase balances now use the registered
+  live B_REPLAY_BINDINGa91884b6, which includes MAIN's840,000sim-s bank transfer.
+  The frozen runtime's older phase table would falsely flag bank overspend.
+  Actual phases are nonnegative;13,080,120charged/cap17,471,840 at the budget probe,
+  including811,640retained superseded exactly once. MAIN/practice operator was
+  notified that this retained expense is spent, not available practice funding.
+  MAIN's registry13:10corrects the donor to`paired_branch`; the delegated practice
+  deployment remains separate. Future lesson-phase shortfall13,200still needs
+  an allocation decision.
+- cpuQ7,512,530,944bytes free (~7.00GiB); both archive movers live, unchanged
+  protected-input scope. CPU-S checking/practice changes remain delegate-owned.
+  Evidence:`coopmwm/RESUME_ADOPTION_20261104_1229.md`,
+  `coopmwm/ACCOUNTING_COHERENCE_20261104_1235.md`, and
+  `coopmwm/RESOURCE_READINESS_1130_1793767132124120800.json`.
+  Latest state proof:`coopmwm/RESUME_LIVE_0815_1793767218358734200.json`.
+
 ### Nov4 12:23 UTC+8 — A13/B6/R6; future diagnostic phase gap identified
 R6 completed five full imitation passes, KL0.038233<0.045 and no imitation
 failure. AWR18.1665->17.7739 fell; unweighted action MAE0.453507->0.455639

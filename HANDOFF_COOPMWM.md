@@ -1,5 +1,23 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 12:41 +08 — A14/B7/R6; funding correction registered
+- RESUME_LIVE_0815_1793767218358734200: A14sealed12:39:09; currentA/r2B/R+
+  monitor4LIVE/runtime06e88ecdMATCH/noSTOP. B7mechanics+safetyPASSbelow; R6same.
+- AccountingreportingfixedagainstregisteredliveB_REPLAY_BINDINGa91884b6,
+  notfrozenruntime'soldbankcaps. PUBLIC_PROGRESS_1793766958836422500:
+  charged13080120/cap17471840/actualphasesnonnegative/retained811640countedonce.
+- MAINregistry13:10correctspractice345600donortopaired_branch; operator13:05
+  confirmsbad`superseded`donorNEVERapplied. Stilldelegateowned/NOdeploymentbySol.
+  Onpracticehandoverre-auditBOTHnewruntimeandbankcaps; currentreporthelper
+  verificationcovers06e88ecd+a91884b6only. Futurelesson13200gapstillopen/u12fits.
+- CPU-Schecking+gate-dirarchive/minimallandingworkdelegateownedperregistry;
+  doNOTstartparallelcollection/backfill/slim/gate/cleanup. CurrentV2Vcapture/
+  WMintentactorqualificationgapunchanged; no cosmeticcollectorstart.
+- Latestdisk7219523584bytes/~6.72GiB/MemAvailable10657528KiB; bothmoversretained.
+  Extension2707739145bytescertified/zeroeligibleatlastscan. Protection710paths+
+  665bankfileskept; repairedu6lessons12/12COMPLETE/NEVERredispatch. Nextmonitor
+  B8/R7anddelegatepracticehandover; preserveallpendingdiagnosticinputs.
+
 ## UPDATE Nov4 12:36 +08 — accounting authority/reporting reconciled
 - MAIN12:45/12:50CPUStransfer is live inB_REPLAY_BINDINGa91884b6: bankext+840000/
   sumoverification-840000/capunchanged. FrozenV2Vruntime06e88ecdhasoldcaps;

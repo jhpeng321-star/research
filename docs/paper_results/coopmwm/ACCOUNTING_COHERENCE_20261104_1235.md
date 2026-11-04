@@ -27,3 +27,12 @@ allocation or cap mismatch. It does not install an accounting function or mutate
 the production runtime. Live verification:
 `PUBLIC_PROGRESS_1793766958836422500.json` reports13,080,120charged and **no
 negative live phases**, with amendment276799ab recorded. Monitor4 remains healthy.
+
+## Subsequent registry resolution (read at12:41)
+MAIN's13:10registry correction explicitly preserves the spent superseded charge
+and names`paired_branch` as the345,600sim-s practice donor. The launch operator's
+13:05receipt confirms the erroneous donor was never applied. Practice deployment
+is still operator-owned; no new runtime was adopted by this check. After that
+runtime changes, compare both its phase table and the bank binding again before
+reporting balances: today's helper verification covers runtime06e88ecd and bank
+bindinga91884b6, not an unobserved future practice authority.
