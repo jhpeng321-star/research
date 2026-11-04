@@ -1,5 +1,22 @@
 # S-COOPMWM — live checks
 
+### Nov4 14:57 UTC+8 — u8 interim COMPLETE288/288; A18/B11/R11
+- Registered V2V interim has288/288public completion receipts, completion marker
+  and no failure. Its original owned process exited after completion. Only
+  completion metadata checked; no outcome values opened or evaluation repeated.
+- **R11 mechanics/composite safety pass** under the registered statistical rule:
+  five passes, no imitation failure, KL0.0387903<0.045, actionMAE0.452487->0.452401.
+  Pass1_effective=false is disclosed; loss-changeCI[-0.002663,0.003281] is not
+  significantly harmful. Existing B11 health remains passing. Durable owners and
+  both movers live; next scheduled diagnostics are B12lessons+isolated/R12isolated.
+- cpuQ6,634,799,104bytes(~6.18GiB)>6GiBfloor; extension4,933,261,857bytescertified,
+  zeroeligible atlastscan. CPU-S9GiBlandingguard unchanged. Charged14,459,120/
+  cap17,471,840, retained811,640countedonce, reconciled phases nonnegative.
+  Futurelesson13,200gapremains/u12fits. Cleanrerun remains PREPAREONLY.
+- Evidence:`coopmwm/U8_COMPLETION_R11_HEALTH_20261104_1457.md`,
+  `coopmwm/CONTINUATION_1440_1793775308943854100.json`,
+  `coopmwm/PUBLIC_PROGRESS_1793775434861416500.json`.
+
 ### Nov4 14:43 UTC+8 — A18/B11/R10; disk recovered; reporting reconciled
 - Existing r3 supervisor3104282/B3104306/R3104318, A2049830, monitor2635161
   and both archive movers are live. R11 has14normal jobs claimed/12complete,

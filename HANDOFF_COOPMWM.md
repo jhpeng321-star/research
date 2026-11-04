@@ -1,6 +1,23 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
-## CURRENT Nov4 14:43 +08 — A18/B11/R10; disk recovered, R11 running
+## CURRENT Nov4 14:57 +08 — A18/B11/R11; u8 interim COMPLETE288/288
+- test8_COMPLETEexists/288publicreceipts/0failure;original3104322exitednormally.
+  MetadataONLY/nooutcomesopened/NEVERredispatchinterim. Existingr3+monitor+movers
+  adopted/live; B/RhealthPASS. Nooursphysics/signals/deployment/cleanup.
+- R11fivepasses/noimitationfailure/KL.0387903/MAE.452487->.452401;
+  pass1_effectiveFALSEbutCI[-.002663,.003281]NOTsignificantlyharmful/composite
+  safetyreleaseTRUE. Registeredstatisticalrulenoisefloorapplies/nopause.
+- cpuQ6634799104bytes(~6.18GiB)>6dispatchfloorbut<9CPU-Slandingguard;
+  extension4933261857bytescertified/lasteligible0/bothmoversretained.
+- Charged14459120/cap17471840/retained811640once/reconciledphasesnonnegative.
+  V2Vtrain1202400/bank282180/sumoverification148120/lessons13080/isolated152590
+  remaining/pairedbranch0. Futurelesson13200gapopen/u12fits/noallocationchange.
+- NextB12lesson+isolated/R12isolatedautomaticchecks. Delegatedeffectiveimitation/
+  CPU-Schecking/collectionkept; cleanrerunPREPAREONLY. u6repairsNEVERrepeat.
+- ProofU8_COMPLETION_R11_HEALTH_20261104_1457.md+CONTINUATION_1440_1793775308943854100+
+  PUBLIC_PROGRESS_1793775434861416500; localread-onlyhelpernowhas--statuscompact.
+
+## PREVIOUS Nov4 14:43 +08 — A18/B11/R10; disk recovered, R11 running
 - Existingr3supervisor3104282/B3104306/R3104318/A2049830+monitor2635161LIVE;
   regular1237127+extension2213098LIVE/nooursdispatch/signals/physics/deployment.
 - B11fourpasses/KL.043543/noimitationfailure/8coopexamples/MAE1.197105->1.180883;
