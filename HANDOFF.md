@@ -14,17 +14,17 @@
   receipt-filename probe. Prior CPU/runtime PASS and all peer notices retained;
   new dispatches/simulations/GPU allocations/process signals0; supervision complete.
 
-## Fresh remote verification — 2026-11-04 16:06 +08:00
+## Fresh remote verification — 2026-11-04 16:17 +08:00
 - Read git status/log, registration and existing completion receipts before action.
 - Fresh cpuQ exact-PID probe: original645235 absent; original training root absent
-  after registered owner cleanup. Uptime9days4:30; disk6,022,180,864bytes free/89%used.
-- Fresh gpuR checkpoint and frozen-receipt SHA256 both MATCH expected final169 bindings;
-  SSH probes exited successfully. Historical local observer3668/publisher44716 absent.
+  after registered owner cleanup. Disk5,971,947,520bytes free/89%used.
+- Fresh gpuR checkpoint SHA256 MATCHES final169; frozen-receipt verification is reused
+  from16:05:52. Both SSH probes succeeded. Local observer3668/publisher44716 absent.
 - Existing169updates/7,728gradient episodes/6,998,400charged remain COMPLETE. Local
   14,400evaluation remains UNSTARTED; exact cap7,012,800unchanged. Arithmetic/bindingsPASS.
 - Unchanged Nov3 peer status retains fleet16worlds/480decisions/96oraclebranches/
   79,800charged=actual COMPLETE; full paired comparison remains incomplete and peer-owned.
-- Evidence: `docs/paper_results/selmappo/RESUME_20261104_1606.json`. Fleet supervision
+- Evidence: `docs/paper_results/selmappo/RESUME_20261104_1617.json`. Fleet supervision
   is complete; no continuation required. Prior CPU/runtime PASS and peer work retained.
 
 ## Fresh resume — 2026-11-04 16:01 +08:00
