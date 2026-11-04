@@ -479,7 +479,7 @@ def migrate(bank, archive_dir, dry_run=False):
         out['bytes_removed'] += row['bytes_removed']
         out['slim_bytes'] += row['slim_bytes']
         out['errors'] += [dict(verification_id=vid, **e) for e in row['errors']]
-        for k in ('slimmed', 'moved', 'kept', 'already_slim'):
+        for k in ('slimmed', 'moved', 'kept', 'already_slim', 'full_restored', 'no_tape'):
             out[k] = out.get(k, 0)+row.get(k, 0)
         if row.get('partial'):      # STOP the whole migration after a partial move
             out['partial'] = vid

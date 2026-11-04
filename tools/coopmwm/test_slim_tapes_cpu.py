@@ -18,7 +18,8 @@ from tools.coopmwm import verify_perseed as vp
 from tools.coopmwm.exact_grade import _seal, verify_sealed
 from tools.coopmwm.protocol import digest
 from tools.coopmwm.test_replay_bank_confirm_cpu import fp, plan, snapshot, bank_budget  # noqa: F401
-from tools.coopmwm.test_verify_perseed_cpu import PHASE, _budget, record, setup  # noqa: F401
+from tools.coopmwm.test_verify_perseed_cpu import (ExtraPlant, PHASE, _budget,  # noqa: F401
+                                                   plants_of, record, setup)  # noqa: F401
 
 # p1 wins seed 1 (cooperative), p2 also admitted on seed 1 (not cooperative), p3 wins seed 2
 # (cooperative); every other candidate is explicitly rejected on BOTH seeds. Rejected branch
@@ -360,3 +361,197 @@ def test_cli_migrate_and_quote(tmp_path, monkeypatch):
         st.main(['migrate', '--root', str(root), '--arm', 'B', '--archive', str(tmp_path/'arc2'),
                  '--dry-run'])
     assert json.loads(buf.getvalue())['dry_run'] is True
+
+
+# ---------------------------------------------------------------- FIX ROUND (2026-11-04)
+
+def test_option_accepts_config_strings(monkeypatch):
+    """The BINDING/config key may hold a string ('1'/'true'/'on' ON, '0'/''/'false' OFF)."""
+    assert st.enabled('1') is True and st.enabled('true') is True and st.enabled('ON') is True
+    assert st.enabled(' yes ') is True
+    assert st.enabled('0') is False and st.enabled('false') is False and st.enabled('') is False
+    assert st.enabled('no') is False and st.enabled(None) is False
+
+
+def test_rejected_candidates_any_seed_index():
+    """rejected_candidates handles ANY seed_index (extra_seeds append seed_index >= 3 examples);
+    data_missing examples and admitted ones never appear."""
+    rec = dict(per_seed_v1=dict(examples=[
+        dict(seed_index=7, candidate_index=3, admitted=False, status='rejected'),
+        dict(seed_index=9, candidate_index=1, admitted=False, status='rejected'),
+        dict(seed_index=9, candidate_index=2, admitted=True, status='admitted'),
+        dict(seed_index=9, candidate_index=4, admitted=False, status='data_missing'),
+        dict(seed_index=1, candidate_index=5, admitted=False, status='rejected')]))
+    assert st.rejected_candidates(rec) == {7: {3}, 9: {1}, 1: {5}}
+
+
+def test_quote_survives_any_planning_error(tmp_path, monkeypatch):
+    """quote() must not crash when a record's planning raises ANY exception (not only SlimError):
+    the record is reported with zero branches instead."""
+    monkeypatch.setattr(time, 'time', lambda: 1700000000.0)
+    root, rec = build_bank(tmp_path/'off', slim=False)
+    bank = rb.bank_root(root, 'B')
+    def boom(b, r):
+        raise RuntimeError('unexpected planning crash')
+    monkeypatch.setattr(st, 'slim_plan', boom)
+    q = st.quote(bank)                                   # must NOT raise
+    assert q['records'] == 1 and q['branches'] == 0
+    assert q['per_record'][rec['verification_id']] == dict(branches=0, bytes_removed=0)
+
+
+def test_slim_record_never_raises_and_keeps_every_tape(tmp_path, monkeypatch):
+    """slim_record catches ANY Exception per branch (not only SlimError/(OSError,ValueError,
+    KeyError)) and NEVER raises; nothing changes on disk and the tapes are all kept. A crash of
+    slim_record itself (after sealing) never fails the sealed record either."""
+    monkeypatch.setattr(time, 'time', lambda: 1700000000.0)
+    root, rec = build_bank(tmp_path/'off', slim=False)
+    bank = rb.bank_root(root, 'B')
+    before = tree(bank)
+    def boom_branch(entry, bank=None, archive_dir=None, dry_run=False):
+        raise RuntimeError('unexpected branch crash')
+    monkeypatch.setattr(st, 'slim_branch', boom_branch)
+    out = st.slim_record(bank, rec)                      # must NOT raise
+    monkeypatch.undo()
+    assert out['slimmed'] == 0 and out['kept'] == N_SLIM and out['partial'] is False
+    assert len(out['errors']) == N_SLIM and all('RuntimeError' in e['error'] for e in out['errors'])
+    assert tree(bank) == before                          # nothing was touched anywhere
+    def boom_record(b, r, dry_run=False, archive_dir=None):
+        raise RuntimeError('record-level slim crash')
+    monkeypatch.setattr(st, 'slim_record', boom_record)
+    root2, rec2 = build_bank(tmp_path/'on', slim=True)   # confirm_all8 must survive this
+    monkeypatch.undo()
+    verify_sealed(rec2, 'confirmation_sha256')
+    assert not list(rb.bank_root(root2, 'B').rglob(st.SLIM))     # tapes kept, nothing slimmed
+    assert len(rec2['per_seed_v1']['examples']) == 16
+
+
+def test_partial_move_keeps_both_sides_marks_and_stops(tmp_path, monkeypatch):
+    """THE data-loss edge: the archive copies are NEVER deleted once ANY source file was
+    unlinked. Here the payload unlinks fine and the marker unlink fails: both sides are kept,
+    a sealed PARTIAL.json marker records the state, and the run STOPS (nothing else moves)."""
+    monkeypatch.setattr(time, 'time', lambda: 1700000000.0)
+    root, rec = build_bank(tmp_path/'off', slim=False)
+    bank = rb.bank_root(root, 'B')
+    d0 = slimmed_dirs(bank, rec)[0][0]                   # plan[0]: the very first branch
+    keep = {n: sha(d0/n) for n in (st.MARKER, st.PAYLOAD)}
+    real_unlink = Path.unlink
+    def fail_marker_unlink(self, missing_ok=False):
+        if self == d0/st.MARKER:
+            raise PermissionError(13, 'stub: marker unlink fails AFTER the payload was unlinked')
+        return real_unlink(self, missing_ok=missing_ok)
+    monkeypatch.setattr(Path, 'unlink', fail_marker_unlink)
+    archive = tmp_path/'archive_target'
+    out = st.migrate(bank, archive)
+    monkeypatch.undo()
+    rel = d0.relative_to(bank)
+    assert (d0/st.MARKER).exists()                       # the failing unlink left it in place
+    assert not (d0/st.PAYLOAD).exists()                  # the payload WAS unlinked first
+    assert (archive/rel/st.MARKER).exists() and (archive/rel/st.PAYLOAD).exists()
+    assert sha(archive/rel/st.MARKER) == keep[st.MARKER]          # copies NOT deleted
+    assert sha(archive/rel/st.PAYLOAD) == keep[st.PAYLOAD]        # (the only full payload left)
+    partial = json.loads((d0/st.PARTIAL).read_text())
+    verify_sealed(partial, 'partial_sha256')
+    assert partial['state'] == 'partial_move' and partial['unlinked'] == [st.PAYLOAD]
+    assert partial['kept_source'] == [st.MARKER] and partial['archive'] == str(archive/rel)
+    assert out['partial'] == rec['verification_id']      # STOP: nothing else moved this run
+    assert out['moved'] == 0 and out['kept'] == 1
+    assert len(out['errors']) == 1 and out['errors'][0]['partial'] is True
+    out2 = st.migrate(bank, archive)                     # clean re-run moves the REST
+    assert out2['partial'] is None and out2['errors'] == []
+    assert out2['moved'] == N_SLIM-1 and out2['full_restored'] == 1   # d0: SLIM+marker present
+    for d, _ in slimmed_dirs(bank, rec)[1:]:
+        assert (d/st.SLIM).exists() and not (d/st.MARKER).exists() and not (d/st.PAYLOAD).exists()
+    assert (d0/st.SLIM).exists() and (d0/st.MARKER).exists() and not (d0/st.PAYLOAD).exists()
+    bs._CACHE.clear()                                    # readers still work (slim fallback)
+    rep = bs.report_per_seed(rb, root, 'B')
+    assert rep['examples_admitted'] == 3 and rep['data_missing_examples'] == 0
+
+
+# ---------------------------------------------------------------- extra_seeds compatibility
+
+def test_extra_seeds_rejected_tapes_slimmed_on_every_seed_index(tmp_path, monkeypatch):
+    """extra_seeds=4 (merged c4/extra-seeds layout): rejected_candidates handles ANY seed_index
+    and slim_plan covers the extra-seed roots confirm_seed{k}_all8 / confirm_extended_seed{k}_all8.
+    p1 (candidate 0) is cooperative on seeds 1/2 and re-verified on seeds 3..6: seed 3 admits,
+    seed 4 rejects on its own LB (group branch only - no extended window ran), seed 5 fails its
+    own later-harm window (group + extended branches), seed 6 admits. Exactly 16 branches are
+    slimmed (7 first-seed + 6 seed-2 + the 3 extra-seed ones); every admitted (plan, seed) tape,
+    every policy reference, every extended/solo tape and all observables are kept."""
+    monkeypatch.setattr(time, 'time', lambda: 1700000000.0)
+    gains = {('p1', 1): 0.6, ('p1', 2): 0.6, ('p1', 1, 'solo'): 0.1, ('p1', 2, 'solo'): 0.1,
+             ('p1', 3): 0.6, ('p1', 3, 'solo'): 0.1, ('p1', 5): 0.6, ('p1', 6): 0.6, ('p1', 6, 'solo'): 0.6,
+             ('p3', 2): 0.6, ('p3', 2, 'solo'): 0.6}
+    root, snap, plans, r, _, _ = setup(tmp_path/'ext', gains)
+    _budget(root)
+    runner_for, _ = plants_of(ExtraPlant, gains, {('p1', 5): 0.5})
+    rb.confirm_pending(root, 'B', runner_for, str(root), PHASE, verify_mode=vp.ALL8,
+                       extra_seeds=4, slim_rejected_tapes=True)
+    bank = rb.bank_root(root, 'B')
+    rec = record(root)
+    assert rec['extra_seeds'] == 4 and sorted(rec['extra']) == ['3', '4', '5', '6']
+    rej = st.rejected_candidates(rec)
+    assert set(rej) == {1, 2, 4, 5}                      # ANY seed_index, not only {1, 2}
+    assert rej[4] == {0} and rej[5] == {0}
+    # exactly the planned branches were slimmed (16 total)
+    got = slimmed_names(bank)
+    want = {str(d.resolve()) for d, _, _ in st.slim_plan(bank, rec)}
+    assert got == want and len(want) == 16
+    roots = {d.parents[2] for d, _, _ in st.slim_plan(bank, rec)}
+    assert roots == {bank/'sumo_verification', bank/vp.SEED2_ROOT,
+                     bank/'confirm_seed4_all8', bank/'confirm_seed5_all8',
+                     bank/'confirm_extended_seed5_all8'}
+    # the extra-seed roots appear EXACTLY as named (each sub-verification has its own id)
+    for k in (4, 5):
+        gvid = rec['extra'][str(k)]['verification_id']
+        d = bank/f'confirm_seed{k}_all8'/'branches'/gvid/'cand1'
+        assert (d/st.SLIM).exists() and not (d/st.MARKER).exists(), d
+        pol = d.parent/'policy'
+        assert (pol/st.MARKER).exists() and not (pol/st.SLIM).exists()
+    assert not (bank/'confirm_extended_seed4_all8').exists()      # no extended window ran for s4
+    e5ext = rec['extra']['5']['extended']['verification_id']
+    d = bank/'confirm_extended_seed5_all8'/'branches'/e5ext/'cand1'
+    assert (d/st.SLIM).exists() and not (d/st.MARKER).exists(), d
+    pol = d.parent/'policy'
+    assert (pol/st.MARKER).exists() and not (pol/st.SLIM).exists()
+    for k in (3, 6):
+        gvid = rec['extra'][str(k)]['verification_id']
+        evids = {vp.seed_kinds(k)[0]: gvid,
+                 vp.seed_kinds(k)[1]: rec['extra'][str(k)]['extended']['verification_id']}
+        for name, evid in evids.items():
+            for b in ('policy', 'cand1'):
+                d = bank/name/'branches'/evid/b
+                assert (d/st.MARKER).exists() and not (d/st.SLIM).exists(), d   # admitted: kept
+    # every example's own tape: rejected slimmed, admitted full
+    for e in rec['per_seed_v1']['examples']:
+        t = e['tape']
+        d = Path(t['branches_dir'])/t['verification_id']/t['branch']['branch']
+        if e['status'] == 'rejected':
+            assert (d/st.SLIM).exists() and not (d/st.MARKER).exists(), d
+        else:
+            assert (d/st.MARKER).exists() and not (d/st.SLIM).exists(), d
+    # policy references of the first/seed2/extended verifications and the solos are untouched
+    for root_dir in (bank/'sumo_verification', bank/vp.SEED2_ROOT, bank/vp.EXT_ROOT,
+                     bank/vp.EXT2_ROOT, bank/'confirm_extended_seed5_all8',
+                     bank/'confirm_solo_all8_s1', bank/'confirm_solo_all8_s2',
+                     bank/'confirm_solo_all8_s3', bank/'confirm_solo_all8_s6'):
+        for vr in (root_dir/'verifications').glob('*.json'):
+            receipt = json.loads(vr.read_text())
+            d = root_dir/'branches'/receipt['verification_id']/receipt['branches'][0]['branch']
+            assert (d/st.MARKER).exists() and not (d/st.SLIM).exists(), d
+    # a slimmed EXTRA-seed branch feeds the stats readers exactly like the sealed admission
+    e5 = next(e for e in rec['per_seed_v1']['examples'] if e['seed_index'] == 5)
+    t = e5['tape']
+    pol = bs._read_result(t['branches_dir'], t['verification_id'], dict(branch='policy'))
+    slim = bs._read_result(t['branches_dir'], t['verification_id'], t['branch'])
+    st2 = bs._stats([(pol, slim, t['window'])])
+    assert st2['lower95_one_sided_veh_s'] == e5['admission']['lower95_one_sided_veh_s']
+    # admitted extra-seed examples are still readable imitation entries
+    rows = vp.bank_examples(root, 'B')
+    assert len(rows) == 5                                # p1 s1/s2/s3/s6 + p3 s2
+    for x in rows:
+        tape, entry = vp.imitation_entry(x, rec['t0'], 1.)
+        assert digest(tape) == x['tape']['branch']['result_sha256']
+    rep = bs.report_per_seed(rb, root, 'B')
+    assert rep['examples_admitted'] == 5 and rep['data_missing_examples'] == 0
+    q = st.quote(bank)
+    assert q['bytes_removed_total'] == 0 and q['slim_bytes_total'] > 0
