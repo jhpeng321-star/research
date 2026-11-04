@@ -329,7 +329,7 @@ def coordinator(control):
     log(control, event='start', B=len(queues['B']), R=len(queues['R']), pid=os.getpid())
     W, maxrun, worst = int(cfg['branch_workers']), int(cfg['max_running']), int(cfg['worst_case_sim_s'])
     started = {a: sum(1 for p in att.glob(f'{a}_*.claim.json')) for a in 'BR'}
-    py = sys.executable;me = str(Path(__file__).resolve())
+    py = sys.executable     # workers run as -m (never a script dir on sys.path[0]); cwd = control/logs
     (control/'logs').mkdir(exist_ok=True)
     running, pushed, stop_reason, last_status, budget = {}, set(), None, 0, None
     for p in (control/'pushed').glob('*.json') if (control/'pushed').exists() else []:
@@ -391,7 +391,8 @@ def coordinator(control):
                     else:
                         item = queues[arm].pop(0);vid = item['verification_id']
                         lf = (control/'logs'/f'{arm}_{vid}.log').open('x')
-                        p = subprocess.Popen([py, '-B', '-u', me, 'worker', str(control), arm, vid, str(W)],
+                        p = subprocess.Popen([py, '-B', '-u', '-m', 'tools.coopmwm.cpus_checking', 'worker',
+                                              str(control), arm, vid, str(W)],
                                              stdin=subprocess.DEVNULL, stdout=lf, stderr=subprocess.STDOUT,
                                              cwd=str(control/'logs'))
                         running[p.pid] = (p, arm, vid, time.time());started[arm] += 1;budget_t = 0
