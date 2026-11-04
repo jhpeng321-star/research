@@ -1,5 +1,18 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 ~10:25 +08 — tail COMPLETE; MAIN10:12 slim qualification PASS
+- legacy_tail_archive1000 COMPLETE476840470bytes/240files/4SHAcertificates;
+  workerexitednormally/NEVERredispatch. CompletioncpuQ6549172224bytes;
+  latest7198883840bytes(6.70GiB). Bothregularmoversunpaused.
+- NEWMAIN10:12READ: collectiongraderspausedbyMAIN; reviewedslimmigrationowns
+  rejected-only sealedbanktapes/directCPU->gpuA/noCPUstaging. Immutable
+  slim_migration1/source4 has23LinuxPASS(17reviewedslim+6remoteproofguards).
+  Reviewed3a0e selection unchanged;4078report-onlyfull_restored/no_tapecounterfix.
+- DRYRUNonly2590824dispatched/source4; noactualslimMOVEorregistryyet. Adoptvia
+  _sol/coopmwm_slim_migration_ops.py status; nextdryquote->register->commit->launch.
+- Olderqualificationfailurespreserved: source1missingarchive_move,source2missing
+  replay_banktestAPI,source3reportcountertest. No training/learner hot-swap.
+
 ## CURRENT Nov4 ~10:07 +08 — protected legacy-tail archive LIVE; release blocked
 - NEWdisjointSHAarchiveLIVE2548757/start77228342/controllegacy_tail_archive1000,
   dispatch2548756. Registration920c126b/commitd5aad13b/4local+4LinuxPASS BEFORE
