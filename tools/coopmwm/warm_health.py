@@ -144,7 +144,7 @@ def braking(root,arm,u,episodes,a_records,pairs=None):
     from .composite_health import braking as composite_braking
     if composite_braking(root,arm,u,episodes,a_records,pause,pairs=pairs):return
     a={e['world']['seed']:e for e in a_records}
-    ref=lambda e:(pairs or {}).get(e['id']) or a.get(e['world']['seed'])
+    ref=lambda e:(pairs or {}).get(e.get('id')) or a.get(e['world']['seed'])
     common=[e for e in episodes if ref(e) is not None]
     if len(common)<2:return
     delta=np.array([e['metrics']['900']['hard_brake']-ref(e)['metrics']['900']['hard_brake'] for e in common])/900.

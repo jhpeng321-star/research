@@ -93,6 +93,7 @@ def wave_jobs(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None
 def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
     jobs,results=wave_jobs(root,b,policies,ws,role,ident,phase,deterministic,extras)
     if jobs:
+        precharged={x['id'] for x in ledger(root)}
         fresh=[j for j in jobs if j['id'] not in precharged]
         if fresh:reserve(root,fresh,phase)
         from .runner import admission

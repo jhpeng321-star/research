@@ -5,48 +5,67 @@
   "base": "c4/launch-coop (f9bd9cad merge lineage, includes c4/coop-only 7a43e91a as the wiring template)",
   "commits": [
     {"sha": "f3fe6ccb", "title": "coopmwm: practice_starts option (B/R practice PPO starts from own cooperative bank snapshots)"},
-    {"sha": "c8fcfaee", "title": "coopmwm: practice_starts CPU tests + practice_wave role fix"}
+    {"sha": "c8fcfaee", "title": "coopmwm: practice_starts CPU tests + practice_wave role fix"},
+    {"sha": "ff57ccd0", "title": "coopmwm: drop unused import in practice_starts.plan_for_update"},
+    {"sha": "0785bab8", "title": "coopmwm: practice fix round 1 (wave_call/job keywords, one batch wave, B realised count, coop capacity, extra seeds, matched A references, proposal-None guard)"}
   ],
-  "head": "c8fcfaee",
+  "head": "0785bab8",
   "status": "READY",
+  "fix_round": {
+    "trigger": "independent review found 6 BLOCKING defects; all fixed with tests on the real paths",
+    "defects": [
+      {"id": 1, "was": "practice_starts.wave_call put runtime/checkpoint/noise_seed/warm_history/accel_bounds/sim_s/deterministic into extras while accel_runner.wave passes them as explicit keywords plus **extras -> TypeError 'multiple values for keyword argument noise_seed'", "now": "extras carry only practice+branch; the RECORDED snapshot sumo configuration travels inside extras['practice']['snapshot'] and accel_runner.wave_jobs (wave's job construction, extracted verbatim as the real path) passes each keyword EXACTLY ONCE sourced from the snapshot; a duplicate extras key is a hard TypeError again (EXPLICIT_JOB_KEYS guard). Test: test_wave_call_output_builds_real_accel_runner_wave_jobs calls the REAL wave job construction with wave_call output."},
+      {"id": 2, "was": "v2v_live.safety required a same-world A result (v2v1_warm_u{u}_A_{seed}) for every episode; practice episodes run on snapshot worlds -> ValueError", "now": "for each practice episode v2v_live.safety runs ONE matched A-policy reference episode from the SAME snapshot and CRN seed (frozen 'pa' slot ids, A's update-u checkpoint, no guide), dispatched as ONE batch wave charged 1200 sim-s to the arm's practice phase (v2v_train) and quoted (launch3_check phase_costs + prepare_intent's v2v_train allocation cover the registered upper bound practice_starts.reference quote = 2 arms x 24 updates x 6 x 1200 = 345600); the exact pairs feed composite_health.braking (collisions/teleports hard constraints + critical_total CI) and the paired hard-brake bootstrap via a new optional exact-pairs argument (default None = byte-identical legacy pairing); a missing matched reference fails closed. Hard safety applies to practice episodes as to all others; no check skipped or weakened."},
+      {"id": 3, "was": "practice episodes ran as 1-job waves -> one failure tripped run_train_jobs' >20% escalation before any replacement", "now": "all practice episodes of an update are dispatched as ONE batch wave (v2v1_warm_u<UUU>_practice ident) through the SAME original_wave path (reserve/admission/episode/failure replacement over the whole batch), each with a frozen per-episode slot id (p<NN>) so repeated snapshot worlds keep distinct one-use job ids. Test: test_one_failed_practice_episode_in_the_batch_wave_is_replaced_not_escalated runs the REAL run_train_jobs."},
+      {"id": 4, "was": "R planned the requested fraction count and fell back as soon as cooperative examples < count", "now": "R's plan count is B's REALISED practice count of the same update (B_UPDATE receipt practice block; realised_count refuses when unbound), and R's cooperative pool counts examples x repeat-cap BEFORE falling back to non-cooperative examples (registry records cooperative_capacity); B never falls back."},
+      {"id": 5, "was": "load_snapshot raised ValueError for seed_index >= 3 (extra_seeds examples)", "now": "seed_index >= 3 restarts from replicate(snapshot, 'salt#sN') - the same deterministic per-seed CRN derivation, an independent generator per extra seed; unknown seed_index (< 1) still refuses. Test asserts seed-3/seed-4 independence and reproducibility."},
+      {"id": 6, "was": "accel_plant.py ~92 crashed with TypeError on replayed plan_start ticks whose event['proposal'] is None (practice/replay episodes never propose a new plan)", "now": "the guided_starts backpressure write is guarded on event.get('proposal') is not None - a replayed plan_start tick records no queue record, real executed proposals still write exactly as before. Test drives the real VerifyController replay path with a plan_start t0 sample."}
+    ]
+  },
   "what_it_does": {
-    "summary": "DEFAULT OFF. For B-v2v and R-v2v a registered fraction (practice_fraction, proposal 0.25 => 6 of the 24 PPO episodes of one update) of each update's PPO episodes start from snapshots of the arm's OWN admitted within-seed cooperative bank examples instead of fresh t=300 starts. A-v2v is unchanged.",
-    "snapshot_and_seed": "The episode is a restart of the example's decision snapshot through the REGISTERED sumo_verify.VerifyController ('policy continues' branch semantics): exact prefix replay with the sealed prefix fingerprint check, the snapshot's own t0 command, CRN generator restore at t0 (seed-1 examples: the stored snapshot generator state; seed-2 examples: replay_bank.replicate(snapshot, verification_id) - exactly the seed-2 CRN the example's own branches ran with), committed snapshot plans continue, no new plan is ever proposed.",
+    "summary": "DEFAULT OFF. For B-v2v and R-v2v a registered fraction (practice_fraction, proposal 0.25 => 6 of the 24 PPO episodes of one update) of each update's PPO episodes start from snapshots of the arm's OWN admitted within-seed cooperative bank examples instead of fresh t=300 starts. A-v2v is unchanged (A keeps its 24 normal episodes; it only supplies the matched safety references).",
+    "snapshot_and_seed": "The episode is a restart of the example's decision snapshot through the REGISTERED sumo_verify.VerifyController ('policy continues' branch semantics): exact prefix replay with the sealed prefix fingerprint check, the snapshot's own t0 command, CRN generator restore at t0 (seed-1 examples: the stored snapshot generator state; seed-2 examples: replay_bank.replicate(snapshot, verification_id); extra-seed examples seed_index>=3: replicate(snapshot, 'salt#sN')), committed snapshot plans continue, no new plan is ever proposed.",
     "policy_from_t0": "CAVs are controlled by the CURRENT training policy from t0 (the job carries the same weights the update's normal episodes carry; v2v/intent observation wrappers apply exactly as in every other v2v controller). PPO/viability/routing see only the strictly post-t0 seconds (practice_starts.strip_steps): the replayed prefix seconds (<= t0, including the snapshot's t0 command) carry recorded behaviour-policy data and never become training steps.",
-    "horizon_reward_charge": "Normal 1200 s horizon stop and normal per-second team-J reward; every practice episode is charged sim_s=1200 in the SAME phase (v2v_train) through the SAME hooks as normal episodes (reserve -> admission -> episode -> failure replacement). A failed practice episode is replaced by a normal fresh start in the same cell (accel_runner.replacement_job strips the snapshot state).",
+    "horizon_reward_charge": "Normal 1200 s horizon stop and normal per-second team-J reward; every practice episode is charged sim_s=1200 in the SAME phase (v2v_train) through the SAME hooks as normal episodes (reserve -> admission -> episode -> failure replacement over the ONE batch wave). A failed practice episode is replaced by a normal fresh start in the same cell (accel_runner.replacement_job strips the snapshot state) and the batch failure accounting (>20%/3-consecutive escalation) applies to the WHOLE batch.",
+    "matched_a_safety_reference": "For EACH practice episode, v2v_live.safety also runs ONE matched A-policy reference episode: the SAME snapshot and CRN seed (same branch prefix replay and t0 generator restore), A's update-u policy from t0, no guide, frozen 'pa' slot ids, charged 1200 sim-s to the arm's practice cost (v2v_train) through the same wave hooks as one batch wave. The exact pairs feed the composite safety comparison (collisions/teleports hard constraints, critical_total CI) and the paired hard-brake bootstrap; practice episodes are additionally subject to live_safety per tick exactly like every guided episode. Missing reference fails closed.",
     "sampling": "Uniform over the eligible examples with a per-example repeat cap per update (practice_repeat_cap, registered values 1 or 2); deterministic RNG digest(practice=plan|arm|update|training_seed|fraction|cap). The sampled plan is sealed once (replay_bank/<ARM>/PRACTICE_PLAN_<ARM>_<UUU>.json, practice_plan_sha256) and FROZEN: process restarts reuse the same rows/job ids and never re-sample even if the bank grows.",
-    "r_fallback": "Documented: when R has fewer cooperative examples than the fraction requires, the remaining practice starts come from R's OTHER ADMITTED examples (rows flagged fallback=true); the practice count is always B's count; B never falls back.",
+    "r_fallback": "Documented: R's plan count is B's REALISED practice count of the same update (never the requested count); R's cooperative pool first counts examples x repeat-cap (registry cooperative_capacity) and only a count beyond that capacity is filled from R's OTHER ADMITTED examples (rows flagged fallback=true); B never falls back.",
     "empty_bank": "Empty or unresolvable bank (BankDataMissing) -> plan with zero rows -> a full normal 24-episode wave. Bank examples are the arm's own-bank decisions only (own replay_bank links; imported u3 labels are never practice starts).",
-    "receipts_and_report": "Each practice episode RESULT.json carries a practice block (practice=true, verification_id, example_id, seed_index, t0, snapshot_sha256, CRN provenance, fallback, charged_sim_s; never the snapshot itself). The per-update receipt <ARM>_UPDATE_<UUU>.json gains a 'practice' block ONLY when the option is ON: practice vs normal episode counts, distinct examples used with repeat counts, mean returns vs normal (per episode and per control second), per-episode rows.",
-    "per_update_sim_s_delta": 0,
-    "per_update_sim_s_rule": "24 PPO episodes per update as before; k practice episodes replace the last k worlds of batch_worlds(u) and charge the same 1200 sim_s each in v2v_train, so the per-update charge is identical (delta = 0 sim-s)."
+    "receipts_and_report": "Each practice episode RESULT.json carries a practice block (practice=true, a_reference=false, verification_id, example_id, seed_index, t0, slot, snapshot_sha256, CRN provenance, fallback, charged_sim_s; never the snapshot itself); each matched A reference carries the same block with a_reference=true. The per-update receipt <ARM>_UPDATE_<UUU>.json gains a 'practice' block ONLY when the option is ON: practice vs normal episode counts (the REALISED practice count is what R matches), distinct examples used with repeat counts, mean returns vs normal (per episode and per control second), per-episode rows.",
+    "per_update_sim_s_delta": 7200,
+    "per_update_sim_s_rule": "Per B/R update: 24 arm episodes at 1200 sim-s (6 practice replace 6 normal episodes, delta 0) PLUS one matched A reference per practice episode at 1200 sim-s each => +practice_count*1200 = +7200 sim-s per B/R update (A unchanged). Full-run upper bound quoted: reference quote = 2 arms x 24 updates x 6 x 1200 = 345600 sim-s; prepare_intent(ON) raises the runtime's shared v2v_train allocation to V2V_PHASES['v2v_train']+345600 and each B/R dispatch's launch3 quote adds practice_count*1200 per remaining update."
   },
   "keys": {
     "practice_starts": {"type": "bool", "default": false, "registered_on_value": true, "arms": "B and R equal; A unchanged"},
-    "practice_fraction": {"type": "float", "default": 0.25, "registered_values": [0.25], "meaning": "fraction of the update's 24 PPO episodes that start from snapshots (0.25 => 6)"},
-    "practice_repeat_cap": {"type": "int", "default": 2, "registered_values": [1, 2], "meaning": "max times one example may be used per update"},
+    "practice_fraction": {"type": "float", "default": 0.25, "registered_values": [0.25], "meaning": "fraction of the update's 24 PPO episodes that start from snapshots (0.25 => 6, and 6 matched A references per update)"},
+    "practice_repeat_cap": {"type": "int", "default": 2, "registered_values": [1, 2], "meaning": "max times one example may be used per update (the cooperative pool counts examples x cap before R falls back)"},
     "equality_rule": "One key set serves B and R (optional cfg['practice_starts_by_arm'] accepted only when B == R == the values); bind_runtime refuses mismatch and unregistered values"
   },
   "wiring": {
-    "v2v_launch3": "BANK_OPTIONS carries the registered launch defaults (practice_starts=False, 0.25, cap 2); PRACTICE_KEYS/PRACTICE_FRACTIONS/PRACTICE_REPEAT_CAPS; practice_options_for(cfg, arm) validates B == R, OFF or registered ON, refuses A; bind_runtime validates (never pins) the practice keys so a later runtime may enable at an update boundary",
-    "prepare_intent": "v2v_runner.prepare_intent(practice_starts=False, practice_fraction=None, practice_repeat_cap=None) - defaults produce the OFF launch config; ON differs from OFF in the single practice_starts key; producer refuses unregistered values",
-    "v2v_live": "hooks() validates practice_options_for for B and R at hook time; scheduling lives in v2v_runner",
-    "v2v_runner": "run_arm's train wave wrapper: when enabled, plan_for_update (frozen) -> original_wave for the remaining worlds -> one original_wave call per practice episode (practice_starts.wave_call builds ident/worlds/extras: snapshot branch prefix, snapshot runtime/checkpoint/noise, sim_s=1200) -> results merged and pre-t0 steps stripped",
-    "warm_runner": "run_arm writes the per-update 'practice' report into <ARM>_UPDATE_<UUU>.json only when b['practice_starts'] is set and the arm has a bank",
-    "accel_plant": "episode(): jobs with a 'practice' key restart through the registered VerifyController (+ the v2v observation wrapper for v2v jobs) and flag the receipt; jobs without the key are untouched",
-    "accel_runner": "replacement_job(): a failed practice job is replaced by a normal fresh start (practice/branch/samples keys stripped)"
+    "v2v_launch3": "BANK_OPTIONS carries the registered launch defaults (practice_starts=False, 0.25, cap 2); PRACTICE_KEYS/PRACTICE_FRACTIONS/PRACTICE_REPEAT_CAPS; practice_reference_quote(fraction) is the registered full-run upper bound of the matched A references; practice_options_for(cfg, arm) validates B == R, OFF or registered ON, refuses A; bind_runtime validates (never pins) the practice keys so a later runtime may enable at an update boundary",
+    "prepare_intent": "v2v_runner.prepare_intent(practice_starts=False, practice_fraction=None, practice_repeat_cap=None) - defaults produce the OFF launch config; ON differs from OFF in practice_starts plus the v2v_train allocation raised by the quoted A-reference upper bound; producer refuses unregistered values",
+    "v2v_live": "hooks() validates practice_options_for for B and R at hook time; safety() schedules the matched A references (practice_references: one batch wave, exact pairs, fail-closed) and passes them to health.braking; launch3_check quotes the per-dispatch A-reference cost when practice ON",
+    "v2v_runner": "run_arm's train wave wrapper: when enabled, plan_for_update (frozen; R counts B's REALISED practice episodes) -> original_wave for the remaining worlds -> ONE original_wave batch wave for all practice episodes (practice_batch extras, frozen p<NN> slot ids) -> results merged and pre-t0 steps stripped",
+    "warm_runner": "run_arm writes the per-update 'practice' report into <ARM>_UPDATE_<UUU>.json only when b['practice_starts'] is set and the arm has a bank (the REALISED count R matches)",
+    "accel_runner": "wave_jobs() is wave()'s job construction (real path): explicit keywords exactly once, extras duplicates raise TypeError, practice jobs source runtime/checkpoint/noise_seed/warm_history/accel_bounds from the recorded snapshot sumo config and key on the frozen slot id; replacement_job(): a failed practice job is replaced by a normal fresh start (practice/branch/samples keys stripped)",
+    "accel_plant": "episode(): jobs with a 'practice' key restart through the registered VerifyController (+ the v2v observation wrapper for v2v jobs) and flag the receipt; guided_starts backpressure write is guarded against replayed plan_start ticks with proposal None; jobs without the key are untouched",
+    "warm_health/composite_health": "braking() gained an optional exact-pairs map (episode id -> matched reference); default None keeps the legacy same-world pairing byte-identical - the rule is never weakened"
   },
   "tests": {
     "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/<test>.py  (from the worktree root)",
-    "practice": {"file": "tools/coopmwm/test_practice_starts_cpu.py", "passed": 18, "failed": 0,
-                 "covers": ["off identical (receipts/waves)", "fraction honoured (6 of 24)", "correct snapshot+seed (seed2 = replicate)",
-                            "R fallback (B never falls back)", "empty-bank fallback", "charges via existing reserve hooks",
-                            "B/R key equality and registered values", "frozen plan on restart", "episode smoke (prefix replay, CRN restore, receipt flag, prefix/CRN tamper refusals)", "replacement of a failed practice job"]},
+    "practice": {"file": "tools/coopmwm/test_practice_starts_cpu.py", "passed": 28, "failed": 0,
+                 "covers": ["off identical (receipts/waves)", "fraction honoured (6 of 24) as ONE batch wave", "correct snapshot+seed (seed2 = replicate, seed>=3 = replicate(salt#sN))",
+                            "R fallback only beyond the cooperative examples x cap capacity (B never falls back)", "R plans B's REALISED count", "empty-bank fallback", "charges via existing reserve hooks + quoted A-reference upper bound",
+                            "B/R key equality and registered values; ON raises v2v_train by the quote", "frozen plan + frozen per-episode slot ids on restart",
+                            "REAL accel_runner.wave_jobs on wave_call output (no duplicate keywords, snapshot sumo config, slot ids, digest noise for normal jobs)",
+                            "REAL run_train_jobs on a failed practice batch episode (replacement, no escalation, receipt)",
+                            "episode smoke (prefix replay, CRN restore, receipt flag, prefix/CRN tamper refusals)",
+                            "v2v_live.safety: matched A references (one batch wave, same snapshot+CRN, arm's practice cost), composite comparison on exact pairs, hard collision safety bites, normal episodes still require same-world A references",
+                            "replacement of a failed practice job", "guided replayed plan_start tick with proposal None guarded"]},
     "required_suites": [
-      {"suite": "test_launch_final_cpu.py", "passed": 13, "failed": 0},
-      {"suite": "test_coop_only_cpu.py", "passed": 9, "failed": 0},
-      {"suite": "test_coopfix_exact_gate_cpu.py", "passed": 23, "failed": 0},
-      {"suite": "test_bank_*_cpu (amendment, boot, builder, imitation, perseed, restore_ops, safety)", "passed": 46, "failed": 0},
+      {"suite": "test_launch_final_cpu.py + test_coop_only_cpu.py", "passed": 22, "failed": 0},
+      {"suite": "test_composite_health_cpu.py + test_warm_health_cpu.py", "passed": 12, "failed": 0},
+      {"suite": "test_harden2_main_cpu.py + test_harden2_resume_cpu.py", "passed": 42, "failed": 0},
       {"suite": "test_v2v_*_cpu (budget_quote, intent, int_e2e, launch3, launch_quote, launch_wiring, live, model, resource_watch, runner, runtime)", "passed": 133, "failed": 0}
     ],
     "additional_adjacent_suites": [
@@ -54,28 +73,31 @@
       {"suite": "test_replay_bank_*_cpu + test_replay_start_cpu", "passed": 36, "failed": 3, "note": "the 3 failures are pre-existing environment gaps (test relies on replay_bank/B/BANK_QUALITY.json relative to CWD); replay_start.py is untouched by this feature"},
       {"suite": "test_warm_cpu + test_warm_state_cpu + test_warm_protocol_cpu", "passed": 24, "failed": 3, "note": "the 3 failures are ModuleNotFoundError: tools.wmteach (package absent from this checkout; pre-existing)"},
       {"suite": "test_exact_grade_cpu + test_sumo_verify_cpu", "passed": 39, "failed": 3, "note": "the 3 failures are ModuleNotFoundError: tools.leverprobe (package absent from this checkout; pre-existing)"},
-      {"suite": "test_acceleration_cpu", "passed": 14, "failed": 8, "note": "all 8 failures are ModuleNotFoundError: tools.leverprobe / tools.wmteach (pre-existing; the OFF episode path itself is only unreachable because of the missing package)"}
+      {"suite": "test_acceleration_cpu", "passed": 14, "failed": 8, "note": "all 8 failures are ModuleNotFoundError: tools.leverprobe / tools.wmteach (pre-existing, identical to the pre-fix-round baseline; the OFF episode path itself is only unreachable because of the missing package)"}
     ],
     "pre_existing_failures_note": "Every failure outside tools/coopmwm/test_practice_starts_cpu.py is a ModuleNotFoundError for packages absent from this checkout (tools.leverprobe, tools.wmteach) or a CWD-relative evidence file; none touch practice_starts code paths (the OFF path is byte-identical by construction and the ON path is fully tested)."
   },
   "byte_identical_when_off": {
     "claim": true,
     "evidence": [
-      "accel_plant.episode: the practice block is gated on job.get('practice'); jobs without the key take the untouched code path",
+      "accel_plant.episode: the practice block is gated on job.get('practice'); jobs without the key take the untouched code path; the proposal-None guard only skips a write for replayed ticks that never had a proposal",
+      "accel_runner.wave_jobs/wave: non-practice extras take the original keywords verbatim (digest noise seed, binding runtime/checkpoint); only practice jobs source the snapshot sumo config",
       "accel_runner.replacement_job: gated on job.get('practice') is not None",
       "warm_runner.run_arm: the receipt gains the 'practice' key only when b['practice_starts'] is set and arm in (B,R) (**{} otherwise -> identical JSON bytes)",
-      "v2v_runner wave wrapper: practice_wave entered only when practice_starts.enabled(cfg, arm); OFF dispatches exactly one original_wave call with unchanged arguments (test_off_run_is_byte_identical_no_practice_keys_no_extra_waves)",
+      "v2v_runner wave wrapper: practice_wave entered only when practice_starts.enabled(cfg, arm); OFF dispatches exactly one original_wave call with unchanged arguments (test_off_run_is_byte_identical_no_practice_keys_no_extra_waves); prepare_intent OFF does not touch the budget",
+      "v2v_live.safety/practice_references: entered only for episodes carrying a practice block; normal episodes keep the same same-world A reference requirement",
+      "warm_health/composite_health braking: pairs=None (default) keeps the exact legacy pairing and rule",
       "bind_runtime accepts runtime files without the practice keys (legacy runtimes bind unchanged)",
-      "prepare_intent OFF differs from ON only in the practice_starts key; the other cfg keys equal the pre-feature launcher values"
+      "prepare_intent OFF differs from ON only in the practice_starts key plus the quoted v2v_train allocation; the other cfg keys equal the pre-feature launcher values"
     ]
   },
   "how_to_enable_at_an_update_boundary": [
     "1. Let the running V2V arms finish update k and pause at the boundary (WARM_<ARM>_PAUSED.json / resume_update=k as for any resume).",
-    "2. Produce the new runtime config: v2v_runner.prepare_intent(base, root=..., legacy_root=..., source_root=..., common_checkpoint_sha256=..., practice_starts=True) - practice_fraction/practice_repeat_cap default to the registered 0.25/2; B and R keys are identical by construction.",
+    "2. Produce the new runtime config: v2v_runner.prepare_intent(base, root=..., legacy_root=..., source_root=..., common_checkpoint_sha256=..., practice_starts=True) - practice_fraction/practice_repeat_cap default to the registered 0.25/2; B and R keys are identical by construction; the runtime's v2v_train allocation covers the quoted matched A-reference upper bound (V2V_PHASES v2v_train + 345600 sim-s).",
     "3. Re-register the launch identity for the new V2V_RUNTIME.json: the launch3 gate/binding flow (gate PASS for the exact deployed commit, runtime_sha256 in a new additive LAUNCH3 binding, check_hold) exactly as at first launch; v2v_launch3.bind_runtime validates the ON values (B == R, registered fraction/cap) instead of pinning them.",
-    "4. Re-run the launch3 preflight and re-dispatch the train children with resume_update=k (v2v_live.spawn('train', arm)); the first update each B/R child trains is update k+1 and its practice plan freezes at that boundary (replay_bank/<ARM>/PRACTICE_PLAN_<ARM>_<k+1:03>.json).",
-    "5. Verify per update in <ARM>_UPDATE_<UUU>.json['practice'] (practice/normal counts, examples, returns vs normal) and the per-episode receipt flags in jobs/<id>/RESULT.json['practice']. Turning it OFF again repeats the same steps with practice_starts=False; plans already frozen stay on disk as history.",
-    "Charge note: enabling does not change the per-update charge (6 practice episodes replace 6 normal episodes at the same 1200 sim_s in v2v_train; delta 0)."
+    "4. Re-run the launch3 preflight and re-dispatch the train children with resume_update=k (v2v_live.spawn('train', arm)); the launch3 quote for each B/R child adds the matched A-reference cost (practice_count*1200 per remaining update). The first update each B/R child trains is update k+1; its practice plan freezes at that boundary (replay_bank/<ARM>/PRACTICE_PLAN_<ARM>_<k+1:03>.json).",
+    "5. Verify per update in <ARM>_UPDATE_<UUU>.json['practice'] (practice/normal counts, examples, returns vs normal) and the per-episode receipt flags in jobs/<id>/RESULT.json['practice']; the matched A references appear as jobs/<...>_pa<NN>_A_<seed>/RESULT.json with a_reference=true and feed <ARM>_SAFETY_COMPOSITE_<UUU>.json. Turning it OFF again repeats the same steps with practice_starts=False; plans already frozen stay on disk as history.",
+    "Charge note: per B/R update the practice episodes replace 6 normal episodes (delta 0) and the matched A references add practice_count*1200 = 7200 sim-s (quoted above; upper bound over the full run 345600 sim-s)."
   ],
   "hard_rules_compliance": {
     "cpu_only": true,
@@ -84,6 +106,8 @@
     "no_git_reset_clean_stash_push": true,
     "sealed_holdout_paths_opened": [],
     "truth_files_read": [],
-    "default_off_byte_identical": true
+    "default_off_byte_identical": true,
+    "safety_checks_weakened": false,
+    "safety_checks_note": "fix round ADDS safety coverage: practice episodes now get the composite comparison (collisions/teleports hard constraints + critical_total CI) and the paired hard-brake bootstrap via matched same-snapshot/same-CRN A references, on top of the unchanged live_safety per-tick guard; the only new early-exit is the accel_plant guard that stops writing a backpressure record for a replayed tick that has no proposal (a record that never existed), never a safety verdict"
   }
 }

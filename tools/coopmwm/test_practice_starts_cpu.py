@@ -903,6 +903,43 @@ def test_replacement_of_a_failed_practice_job_is_a_normal_fresh_start():
     assert 'practice' not in out                                         # normal jobs unchanged
 
 
+def test_one_failed_practice_episode_in_the_batch_wave_is_replaced_not_escalated(
+        tmp_path, monkeypatch):
+    """Fix 3 evidence: the whole practice batch is ONE wave, so run_train_jobs' REAL accounting
+    replaces a single failed practice episode with a fresh normal start and does NOT trip the
+    >20% escalation that a 1-job wave would trip on its first failure."""
+    from concurrent.futures import ThreadPoolExecutor
+    from tools.coopmwm.accel_protocol import worlds
+    ws = [dict(worlds('train')[i], seed=986000+i) for i in range(5)]
+    spare = dict(worlds('train')[0], seed=986005)                        # the unused cell-0 world
+    jobs = [dict(id=f'v2v1_warm_u001_p{i+1:02d}_B_{w["seed"]}', arm='B', world=w,
+                 practice=dict(t0=400), path=str(tmp_path/'jobs'/f'p{i+1:02d}'))
+            for i, w in enumerate(ws)]
+    used = {w['seed'] for w in ws}
+    reserved = []
+    monkeypatch.setattr(accel_runner, 'reserve',
+                        lambda root, new_jobs, phase: reserved.extend(
+                            j['id'] for j in new_jobs))
+    def fake_episode(job):
+        if job['id'] == 'v2v1_warm_u001_p01_B_986000':
+            raise ValueError('snapshot episode failed')
+        return dict(id=job['id'], world=job['world'], arm=job['arm'])
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = accel_runner.run_train_jobs(tmp_path, jobs, 'v2v_train',
+                                              'v2v1_warm_u001_practice', used, set(),
+                                              pool.submit, fake_episode)
+    assert len(results) == 5                                             # 4 originals + 1 replacement
+    replacement, = [r for r in results if r['id'].startswith('v2v1_warm_u001_practice_B_')]
+    assert replacement['world']['seed'] == spare['seed']                 # a fresh TRAIN world
+    assert 'practice' not in replacement and 'branch' not in replacement  # a NORMAL fresh start
+    receipt = json.loads((tmp_path/'jobs'/'v2v1_warm_u001_p01_B_986000'/
+                          'EPISODE_FAILED.json').read_text())
+    assert receipt['replacement'] == replacement['id']
+    assert receipt['excluded_from_update'] is True
+    assert reserved == [replacement['id']]
+    assert not (tmp_path/'STOP.json').exists()                           # batch accounting, no STOP
+
+
 def test_guided_replayed_plan_start_tick_with_no_proposal_is_guarded(tmp_path):
     """accel_plant fix: a replayed snapshot tick can carry recorded plan_start behaviour with
     proposal None (a practice episode never proposes a new plan) - no TypeError, and no
