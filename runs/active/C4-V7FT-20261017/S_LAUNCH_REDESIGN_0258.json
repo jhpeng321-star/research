@@ -1,0 +1,36 @@
+{
+  "schema": "coopmwm.s_launch.prerequisites.v2",
+  "timestamp": "2026-11-05T02:58:06+08:00",
+  "status": "BLOCKED_BEFORE_INTEGRATION",
+  "s0": "PASS_REUSED",
+  "s0_receipts_commit": "684d433c",
+  "budget_amendment_receipts_commit": "8139aba7",
+  "owner_amendment": {
+    "source": "REGISTRATION.md:7368-7369",
+    "timestamp": "2026-11-05T02:28:00+08:00",
+    "quote": "yes",
+    "wm_dense_teaching": false,
+    "wm_group_credit": false,
+    "cooperation_reward": "real SUMO outcome team reward within observable neighbourhood only",
+    "augmented_bank_admission": "SUMO verified only"
+  },
+  "owner_total_cap_including_smoke_sim_s": 5000000,
+  "parity_spent_sim_s": 960,
+  "new_sim_s_this_continuation": 0,
+  "required_acceptances": ["T2C", "P1", "P2", "P3", "P4"],
+  "acceptances_present_at_last_check": ["P2", "P3", "P4"],
+  "acceptances_missing_at_last_check": ["T2C", "P1"],
+  "excluded_branches": ["c4/dense-teacher", "c4/planner-online"],
+  "latest_independent_t2c_review": "E:/agent-work/c4-rerun-tracks/REVIEW_T2C_r1.md",
+  "review_verdict": "BLOCK",
+  "review_blockers": [
+    "Owner redesign reward wiring and WM teaching/credit OFF",
+    "Verified-only augmented bank/practice admission",
+    "Production coverage of every CAV/group rather than one persistent ego",
+    "Smoke artifacts must not block the full launch",
+    "Default-off quote/budget compatibility"
+  ],
+  "integration_started": false,
+  "training_launched": false,
+  "next_action": "Wait for existing fix/review dispatches and all five acceptance receipts; preserve S0 and all existing work"
+}
