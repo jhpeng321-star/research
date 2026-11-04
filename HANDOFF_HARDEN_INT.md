@@ -1,5 +1,16 @@
 # HANDOFF: c4/harden-int (worktree E:/agent-work/c4-harden-int), 2026-11-03 (INTEGRATION COMPLETE)
 
+RESUME RECEIPT 2026-11-04 (fresh session, W12): STILL NOTHING OUTSTANDING on this branch. Tree clean at
+d90438ed (docs-only since READY d51051a9). Re-verified on disk: HARDEN_INT_READY.json (ready=true,
+commit d51051a9), HARDEN_INT_REPORT.md (12,973 bytes), rp4 results for the 6 HEAD-vintage scenarios
+(+ b_slow_search_overload kept), h3int2 roots (a_clean/b_slow_search/c2_worker_dies_on_centre/
+e_malformed) with exactly 8 BANK_QUALITY.json and 16 LESSON_CHECK files - all matching the prior
+receipt counts. MAIN addenda re-checked: coopmwm_prompt.md still ends at 2026-11-04 16:25 (cpuQ->cpuS
+migration, live operator, monitor/report only) - no new addendum since the W11 check. No tests or
+rehearsals rerun this session: host at 100% CPU with 31 foreign python processes, live and not
+signalled (other agents' jobs). The documented 443/62/1 counts stand; cpuQ (Linux) remains the
+deployment gate. Remaining work stays LIVE ONLY (operator gates at the bottom of this handoff).
+
 RESUME RECEIPT 2026-11-04 (fresh session, W11): STILL NOTHING OUTSTANDING on this branch. Tree clean at
 964ad038 (docs-only since READY d51051a9). Re-verified on disk: HARDEN_INT_READY.json (ready=true,
 commit d51051a9), HARDEN_INT_REPORT.md (12,973 bytes), rp4 results for the 6 HEAD-vintage scenarios
