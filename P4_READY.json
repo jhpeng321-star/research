@@ -1,0 +1,84 @@
+{
+  "task": "P4",
+  "status": "READY",
+  "branch": "c4/staging-closure",
+  "base": "13f184b5",
+  "worktree": "E:/agent-work/c4-staging-closure",
+  "commits": [
+    {
+      "sha": "fa1bc47122fd32e51a84f1802dfd443fa407c62f",
+      "description": "Close staged bank inputs over LS snapshots and linked tapes; production-reader parity CPU tests"
+    }
+  ],
+  "files": [
+    "tools/coopmwm/staging_closure.py",
+    "tools/coopmwm/test_staging_closure_cpu.py",
+    "P4_READY.json"
+  ],
+  "dependencies": {
+    "component_branches_merged": [],
+    "reason": "P4 requires only existing production bank-reader rules present on c4/track-base; no optional component-module dependency.",
+    "runtime": "Python standard library only; no torch or simulator import in staging_closure"
+  },
+  "api": {
+    "import": "from tools.coopmwm.staging_closure import closure",
+    "signature": "closure(paths, *, mirror=None) -> (list[pathlib.Path], dict)",
+    "input": "Iterable of reader-selected inventory FILE paths; a single str/Path is also accepted. Directories and an empty inventory are refused.",
+    "output_files": "Sorted absolute paths, including lexical aliases and physical link targets. Stage every returned file; aliases may be materialized as regular copies.",
+    "manifest": {
+      "schema": "coopmwm.staging_closure.v1",
+      "entries": "Absolute POSIX path -> {sha256, bytes, resolved_path, readers}",
+      "aliases": "Lexical alias -> resolved physical file",
+      "allowed_roots": "File-parent roots derived from the full closure, including resolved link targets",
+      "counts": "file_count, physical_file_count, physical_bytes",
+      "manifest_sha256": "SHA256 of canonical JSON excluding this field: sort_keys=True, separators=(',', ':'), ensure_ascii=True, allow_nan=False"
+    },
+    "mirror": "For /home/ubuntu envelope episode_path references, infer the filesystem-root mirror from input paths containing home/ubuntu; mirror= can bind it explicitly. No host-path fallback when a mirror is bound.",
+    "failure_behavior": "Missing required input raises FileNotFoundError; prohibited paths, unsafe identifiers, malformed generation layout, invalid result payload paths and digest/size mismatches refuse with ValueError. Snapshots remain opaque hashed bytes."
+  },
+  "reader_rules": [
+    "replay_bank._receipts: labels/<search_id>[_GENERATION].json -> branches/<verification_id>/<branch>/RESULT.json or label_attempts/<GENERATION>/branches/<verification_id>/<branch>/RESULT.json; existing observable traces included",
+    "replay_bank._decision_snapshot and practice_starts.load_snapshot: decisions/<state>.json state_id -> own snapshots/<state_id>.pt",
+    "replay_bank._ls_snapshot: LS label search_id -> pending/<search_id>.json.gz -> snapshots/<envelope.snapshot>.pt.gz + envelope.episode_path/RESULT.json",
+    "accel_storage.read: coopmwm-lossless-gzip-v1 RESULT.json marker -> RESULT.json.gz; decompressed SHA256 and declared byte length verified",
+    "solo_seed2_links.wire: directory-link branch views -> physical external source files, without a hand-written list of source run names"
+  ],
+  "tests": [
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_staging_closure_cpu.py --basetemp E:/agent-work/c4-staging-closure/runs/p4_pytest_tmp2",
+      "result": "33 passed in 9.01s",
+      "passed": 33,
+      "skipped": 0,
+      "coverage": [
+        "Original and generation-specific LS layouts checked against actual replay_bank._receipts and _decision_snapshot",
+        "Own decision snapshot checked against actual snapshot reader; closure prohibited from unpickling",
+        "RESULT marker parity with actual accel_storage.read",
+        "External warm1 receipt-view targets and compressed payloads using Windows directory junction fallback when symlink privilege is absent",
+        "Deterministic manifest, byte hashes, deduplication and mutation sensitivity",
+        "Missing pending/snapshot/episode marker/episode payload/branch marker fail closed",
+        "Mirror-relative absolute episode references",
+        "Prohibited direct and linked target paths refused before file open",
+        "Unsafe path identifiers, invalid generations, skipped labels, plain results and empty/directory inventories"
+      ]
+    },
+    {
+      "command": "git diff --cached --check",
+      "result": "PASS before implementation commit"
+    }
+  ],
+  "integration_handoff": [
+    "T2C should pass its reader-selected inventory file paths into closure before final staging manifest hashing.",
+    "Use every returned path, incorporate manifest.allowed_roots into local root admission and map them through the existing mirror-to-remote conversion.",
+    "Keep the closure receipt and alias map with the final SHA staging manifest. No shared rerun module was edited by P4."
+  ],
+  "open_issues": [],
+  "verification_scope": "Synthetic CPU fixtures only; live staged corpus validation belongs to the T2C/S-LAUNCH integration gate.",
+  "execution": {
+    "cpu_only": true,
+    "sumo_runs": 0,
+    "sim_s": 0,
+    "remote_commands": 0,
+    "gpu_calls": 0,
+    "writes_within_assigned_worktree_only": true
+  }
+}

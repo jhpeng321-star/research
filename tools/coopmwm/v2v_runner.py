@@ -78,7 +78,8 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
                    imitation_bank_filter='cooperative_only', imitation_step_mode=None,
                    v2v_intent_bank_term=True, practice_starts=False,
                    practice_fraction=None, practice_repeat_cap=None, budget_transfer=None,
-                   imitation_target_space=None):
+                   imitation_target_space=None, practice_weighting=None,
+                   practice_weighted_fraction=None):
     """Audit I4: the registered producer of the intent-ON A/B/R runtime config (prospective
     binding only, like prepare). Identical for every arm: v2v_dim=48 (K4 x (6+5+1)),
     v2v_intent=True, horizon 5, loss weight 1.0, detach_trunk=True; bank labels
@@ -116,6 +117,14 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
                                 else float(practice_fraction))
     cfg['practice_repeat_cap'] = (BANK_OPTIONS['practice_repeat_cap'] if practice_repeat_cap is None
                                   else int(practice_repeat_cap))
+    from . import practice_weighting as pw
+    # Absent new options emit exactly the legacy config. Explicit opt-in keys
+    # are retained in the registered runtime and shared by both bank arms.
+    if practice_weighting is not None:
+        cfg['practice_weighting'] = practice_weighting
+    if practice_weighted_fraction is not None:
+        cfg['practice_weighted_fraction'] = practice_weighted_fraction
+    practice_options_for(cfg, 'B'), practice_options_for(cfg, 'R')
     if cfg['practice_starts']:
         # Each practice episode also gets ONE matched A-policy safety reference from the same
         # snapshot and CRN seed, charged to the arm's practice cost (v2v_live.safety): the
@@ -123,7 +132,12 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
         from .v2v_launch3 import V2V_PHASES, practice_reference_quote
         budget = dict(cfg.get('budget') or {})
         phases = dict(budget.get('phases') or {})
-        target = V2V_PHASES['v2v_train'] + practice_reference_quote(cfg['practice_fraction'])
+        target = V2V_PHASES['v2v_train'] + practice_reference_quote(pw.effective_fraction(cfg))
+        if cfg.get('track2'):
+            from .rerun_cpus import budget as track2_budget
+            if budget != track2_budget(track2=True):
+                raise ValueError('Track 2 practice requires the complete fixed-total budget')
+            target = budget['phases']['v2v_train']
         increase = target - int(phases.get('v2v_train', 0))
         phases['v2v_train'] = target
         if budget_transfer is not None:
@@ -255,6 +269,7 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
         travel into the practice wave's replacement ``used`` set, so a failed practice episode's
         fresh replacement never duplicates a world the update's normal wave already ran."""
         from . import practice_starts
+        from . import practice_weighting as pw
         from .warm_protocol import SEED
         ns_ident = cfg['job_namespace']+'_'+ident
         phase_name = cfg['phase_map'].get(phase, phase)
@@ -269,9 +284,10 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
                 sleep(10)
             want = practice_starts.realised_count(root, 'B', u)   # B/R symmetry: realised, not requested
         else:
-            want = practice_starts.practice_count(len(ws), cfg['practice_fraction'])
-        plan = practice_starts.plan_for_update(root, arm, u, fraction=cfg['practice_fraction'],
-            repeat_cap=cfg['practice_repeat_cap'], count=want, training_seed=SEED)
+            want = practice_starts.practice_count(len(ws), pw.effective_fraction(cfg))
+        plan = practice_starts.plan_for_update(root, arm, u, fraction=pw.effective_fraction(cfg),
+            repeat_cap=cfg['practice_repeat_cap'], count=want, training_seed=SEED,
+            **(dict(weighting=True) if cfg.get('practice_weighting') else {}))
         rows = plan['rows']
         results = (original_wave(r, b, policies, ws[:len(ws)-len(rows)], role, ns_ident, phase_name,
                                  deterministic, extra) if len(rows) < len(ws) else [])

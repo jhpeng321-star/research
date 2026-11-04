@@ -1,0 +1,165 @@
+"""T2H opt-in practice share and T2G restart-manifest adapter (CPU only).
+
+No new keys are emitted for legacy configs. Augmentation producers write a sealed
+replay_bank/<ARM>/PRACTICE_AUGMENTED.json with schema SCHEMA, arm, and rows.
+Each row names example_id, parent_example_id, verification_id, state_id,
+seed_index, snapshot_sha256 (after CRN replication), and wm_cooperative=True.
+The parent AND child must be own admitted cooperative examples. Each child also
+needs its own sealed SUMO receipt bound to its plan, snapshot, world and arm,
+and the parent's pre-launch allocation/ledger provenance (<=200k sim-s).
+WM-only children and v1 manifests cannot enter practice.
+"""
+import json
+import math
+from pathlib import Path
+import re
+
+KEYS = ('practice_weighting', 'practice_weighted_fraction')
+FRACTIONS = (0.50,)  # T2H registered alternative: 12/24, versus legacy 6/24
+SCHEMA = 'coopmwm-practice-augmented-v2'
+VERIFIED_CHILDREN = True
+
+
+def verify_child(root, arm, row, snapshot, prelaunch):
+    """Recheck evidence even for a resumed frozen plan, before dispatch."""
+    from . import replay_bank as rb, exact_grade as xg, sumo_verify as sv
+    from .protocol import digest
+    evidence = row.get('sumo_evidence') or {}
+    relative = evidence.get('receipt_path', '')
+    parts = relative.replace('\\', '/').split('/')
+    if (not relative or Path(relative).is_absolute() or ':' in relative or '..' in parts
+            or any(s in relative.lower() for s in ('holdout', 'heldout', 'cal_split', 'chunk5',
+                'j4b', 'inc1', 'hetdata_truth', 'vtype', 'driver', 'vehicle_params'))
+            or 'sealed' in [s.lower() for s in parts]):
+        raise ValueError('invalid augmented child receipt path')
+    bank = rb.bank_root(root, arm).resolve()
+    receipt_path = (bank/relative).resolve()
+    if not receipt_path.is_relative_to(bank):
+        raise ValueError('augmented child receipt escapes own bank')
+    receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+    xg.verify_sealed(receipt, 'receipt_sha256')
+    if (receipt.get('status') != 'accepted'
+            or receipt.get('receipt_sha256') != evidence.get('receipt_sha256')
+            or receipt.get('verification_id') != row['verification_id']
+            or receipt.get('snapshot_sha256') != sv.snapshot_sha(snapshot)
+            or receipt.get('episode', {}).get('arm') != arm
+            or receipt['episode'].get('world') != snapshot['episode']['world']
+            or digest(receipt.get('chosen_plan')) != evidence.get('plan_sha256')):
+        raise ValueError('augmented child SUMO receipt binding mismatch')
+    confirmation = rb.confirmations(root, arm).get(row['verification_id'], {})
+    examples = (confirmation.get('per_seed_v1') or {}).get('examples', [])
+    child = next((e for e in examples if e.get('example_id') == row['example_id']), {})
+    tape = child.get('tape') or {}
+    if (not child.get('admitted') or child.get('cooperative') is not True
+            or child.get('seed_index') != row['seed_index']
+            or (Path(tape.get('branches_dir', ''))).resolve().parent != receipt_path.parent.parent
+            or tape.get('verification_id') != receipt['verification_id']
+            or tape.get('branch', {}).get('result_sha256') !=
+                receipt['branches'][receipt['chosen']+1].get('result_sha256')
+            or (child.get('plan') is not None and digest(child['plan']) != evidence['plan_sha256'])
+            or (child.get('plan_id') is not None
+                and child['plan_id'] != receipt['chosen_plan']['id'])):
+        raise ValueError('augmented child needs its own admitted cooperative SUMO example')
+    if (not isinstance(prelaunch, dict) or not prelaunch.get('provenance')
+            or type(prelaunch.get('allocation_sim_s')) is not int
+            or not 0 < prelaunch['allocation_sim_s'] <= 200000
+            or not isinstance(prelaunch.get('phase'), str) or not prelaunch['phase']):
+        raise ValueError('augmented child prelaunch budget provenance required')
+    charges = [json.loads(line) for line in (Path(root)/'CHARGES.jsonl').read_text().splitlines()]
+    charges = [c for c in charges if c.get('phase') == prelaunch['phase']]
+    if (any(type(c.get('sim_s')) is not int or c['sim_s'] < 0 for c in charges)
+            or len({c['id'] for c in charges}) != len(charges)
+            or sum(c['sim_s'] for c in charges) > prelaunch['allocation_sim_s']):
+        raise ValueError('augmented child prelaunch allocation exceeded/invalid ledger')
+    # Every policy/candidate branch actually graded by this receipt must have
+    # been charged in the parent's registered pre-launch phase.
+    ids = evidence.get('charge_ids')
+    by_id = {c['id']: c for c in charges}
+    if (not isinstance(ids, list) or not ids or len(ids) != len(set(ids))
+            or any(i not in by_id for i in ids)
+            or set(ids) != {f'{receipt["verification_id"]}_{b["branch"]}' for b in receipt['branches']}
+            or type(receipt.get('branch_sim_s')) is not int or receipt['branch_sim_s'] <= 0
+            or any(by_id[i]['sim_s'] != receipt['branch_sim_s'] for i in ids)
+            or sum(by_id[i]['sim_s'] for i in ids) != receipt.get('charged_sim_s')):
+        raise ValueError('augmented child missing prelaunch SUMO branch charges')
+
+
+def options(cfg):
+    on = cfg.get('practice_weighting', False)
+    fraction = cfg.get('practice_weighted_fraction', FRACTIONS[0])
+    if type(on) is not bool:
+        raise ValueError('practice_weighting must be a bool')
+    if (type(fraction) is not float or not math.isfinite(fraction)
+            or fraction not in FRACTIONS):
+        raise ValueError('registered practice_weighted_fraction required')
+    if on and cfg.get('practice_starts') is not True:
+        raise ValueError('practice_weighting requires practice_starts=True')
+    return dict(practice_weighting=on, practice_weighted_fraction=fraction)
+
+
+def effective_fraction(cfg):
+    values = options(cfg)
+    return (values['practice_weighted_fraction'] if values['practice_weighting']
+            else cfg.get('practice_fraction', 0.25))
+
+
+def _state_key(row):
+    # A seed-1 salt is unused; seed>=2 salts determine the actual CRN restart.
+    return (row['state_id'], int(row['seed_index']),
+            row['salt'] if int(row['seed_index']) > 1 else '')
+
+
+def augmented_examples(root, arm, parents):
+    """Return (distinct own-bank SUMO-verified restart rows, manifest hash).
+
+    Missing manifest means no augmentation yet. Present invalid manifests refuse
+    before dispatch; no foreign bank, arbitrary file path, or imported label is read.
+    """
+    from . import exact_grade as xg, practice_starts as ps
+    path = Path(root)/'replay_bank'/arm/'PRACTICE_AUGMENTED.json'
+    if not path.exists():
+        return [], None
+    record = json.loads(path.read_text(encoding='utf-8'))
+    xg.verify_sealed(record, 'practice_augmented_sha256')
+    if record.get('schema') != SCHEMA or record.get('arm') != arm:
+        raise ValueError('practice augmentation schema/arm mismatch')
+    if not isinstance(record.get('rows'), list):
+        raise ValueError('practice augmentation rows must be a list')
+    own = {r['example_id']: r for r in parents}
+    links = ps._links(root, arm)
+    child_ids = {r.get('example_id') for r in record['rows'] if isinstance(r, dict)}
+    seen_ids = set(own)-child_ids
+    seen_states = {_state_key(r) for r in parents if r['example_id'] not in child_ids}
+    out = []
+    for item in record['rows']:
+        if not isinstance(item, dict):
+            raise ValueError('practice augmentation row must be an object')
+        parent = own.get(item.get('parent_example_id'))
+        link = links.get(item.get('verification_id'))
+        state = item.get('state_id')
+        ident = item.get('example_id')
+        if (parent is None or item.get('parent_example_id') in child_ids
+                or link is None or item.get('wm_cooperative') is not True
+                or type(item.get('seed_index')) is not int
+                or item['seed_index'] != parent['seed_index']
+                or not isinstance(state, str) or not re.fullmatch(r'[A-Za-z0-9_-]+', state)
+                or link.get('state_id') != state
+                or not isinstance(ident, str) or not ident or ident in seen_ids
+                or not isinstance(item.get('snapshot_sha256'), str)
+                or not re.fullmatch(r'[0-9a-f]{64}', item['snapshot_sha256'])):
+            raise ValueError('invalid own-bank cooperative practice augmentation')
+        row = dict(verification_id=item['verification_id'], example_id=ident,
+                   seed_index=item['seed_index'], salt=item['verification_id'],
+                   state_id=state, fallback=False, source='augmented',
+                   parent_example_id=item['parent_example_id'],
+                   snapshot_sha256=item['snapshot_sha256'],
+                   sumo_evidence=item.get('sumo_evidence'), prelaunch=record.get('prelaunch'))
+        # Verify both the snapshot binding and the existing CRN derivation now,
+        # before a plan is sealed or any simulation is dispatched.
+        ps.load_snapshot(root, arm, row)
+        seen_ids.add(ident)
+        key = _state_key(row)
+        if key not in seen_states:
+            seen_states.add(key)
+            out.append(row)
+    return out, record['practice_augmented_sha256']

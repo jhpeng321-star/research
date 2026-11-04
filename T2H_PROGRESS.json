@@ -1,0 +1,18 @@
+{
+  "task": "T2H",
+  "base": "13f184b5",
+  "inspection_complete": true,
+  "prior_t2h_work": "No prior T2H commits, uncommitted files, or ready receipt in this worktree.",
+  "existing_receipt": "COOPPRACTICE_READY.json",
+  "design": {
+    "practice_weighting": "Additive bool, absent/false preserves existing bytes.",
+    "practice_weighted_fraction": "Registered opt-in value 0.50 (12 of 24); existing practice_fraction remains 0.25.",
+    "augmentation": "Own-arm sealed PRACTICE_AUGMENTED.json manifest of WM-cooperative restart rows, bound to own admitted parent examples and own decision snapshots. No T2G module exists at this base; document and test this integration contract.",
+    "fairness": "Same configuration and selection procedure for B/R; R still matches B's realised count.",
+    "budget": "Use effective fraction everywhere training/reference cost is quoted; preserve normal horizon and matched A references.",
+    "resume": "Reuse sealed plans without resampling or rereading growing augmentation inputs."
+  },
+  "execution": "CPU tests only; no training, SUMO, remote dispatch, or background job launched.",
+  "completed": true,
+  "ready_receipt": "T2H_READY.json"
+}

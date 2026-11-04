@@ -730,8 +730,9 @@ def verify_controller_class():
 class LocalBranchRunner:
     """In-process adapter onto accel_plant.episode (one isolated process per branch in production)."""
 
-    def __init__(self, work_root):
+    def __init__(self, work_root, *, controller_hook=None, policy_loader=None):
         self.work_root = Path(work_root)
+        self.controller_hook, self.policy_loader = controller_hook, policy_loader
 
     def run(self, spec, snapshot):
         from . import accel_plant
@@ -753,7 +754,11 @@ class LocalBranchRunner:
         original = accel_plant.Controller
         accel_plant.Controller = factory
         try:
-            result = accel_plant.episode(job)
+            if self.controller_hook is None and self.policy_loader is None:
+                result = accel_plant.episode(job)
+            else:
+                result = accel_plant.episode(job, controller_hook=self.controller_hook,
+                                            policy_loader=self.policy_loader)
         except ValueError as e:
             if 'prefix mismatch' in str(e):
                 raise PrefixMismatch(str(e)) from e

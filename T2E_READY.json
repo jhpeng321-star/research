@@ -1,0 +1,165 @@
+{
+  "schema": "coopmwm.t2e_ready.v1",
+  "task": "T2E",
+  "round": "fix_r1",
+  "status": "READY_CPU_BUILD_WITH_INHERITED_REGRESSION_LIMITATIONS",
+  "worktree": "E:/agent-work/c4-group-credit",
+  "branch": "c4/group-credit",
+  "base": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
+  "spec": "E:/agent-work/_sol/tracks_spec.md, Track 2 additions T2E",
+  "review": "REVIEW_T2E_r0.md",
+  "reviewed_head": "d54b3853735fa86de3ebd74149e3e86b67c0bbbd",
+  "independent_fix_review": {
+    "report": "REVIEW_T2E_r1.md",
+    "verdict": "PASS",
+    "reviewed_head": "75c804e96b71c318e298788ad40bc2f069f2fb75",
+    "acceptance_receipt": "T2E_ACCEPTED.json",
+    "scope": "Additive CPU-build/API deliverable; both r0 blockers resolved and no additional blocking defect found. Live training and simulator validation remain integration work."
+  },
+  "commits": [
+    {
+      "commit": "9f48aa0c8e81d398da8fc58bdf728fb8b310ac61",
+      "step": "Fix both review blockers: resolve and persist the full horizon, validate requests and every exact branch window, snapshot the scored move, and add seven CPU regression tests."
+    },
+    {
+      "commit": "75c804e96b71c318e298788ad40bc2f069f2fb75",
+      "step": "Regenerate readiness after the tested review fixes; subsequently independently reviewed PASS in REVIEW_T2E_r1.md."
+    }
+  ],
+  "receipt_commit_note": "This regenerated receipt is committed after the tested implementation commit above; identify its commit with git log -- T2E_READY.json.",
+  "owned_files": [
+    "tools/coopmwm/group_credit.py",
+    "tools/coopmwm/test_group_credit_cpu.py",
+    "T2E_READY.json"
+  ],
+  "blockers": [
+    {
+      "id": 1,
+      "priority": "P1",
+      "status": "FIXED",
+      "fix": "wm_estimate requires a resolved positive integer full horizon, supplied explicitly or declared as scorer.horizon_s. Both declarations must agree when present. Every WM branch, estimate and verification request carries that unchanged horizon. verify_requests rejects missing/invalid horizons before sampling, and verification_candidates rejects them before building branches. Every exact branch must share the same window, start at snapshot.t0 and have duration exactly equal to the resolved WM horizon, including near episode end.",
+      "regressions": [
+        "Estimate.test_omitted_horizon_uses_scorer_contract_and_refuses_short_exact_window",
+        "Estimate.test_unresolved_or_conflicting_scorer_horizon_refused_before_scoring",
+        "VerifyRequests.test_missing_or_invalid_horizon_refused_even_before_sampling",
+        "VerificationAdapter.test_missing_or_invalid_request_horizon_refused_before_branch_construction",
+        "VerificationAdapter.test_episode_end_never_shortens_resolved_horizon",
+        "VerificationAdapter.test_nonbase_branch_window_mismatch_refused"
+      ]
+    },
+    {
+      "id": 2,
+      "priority": "P2",
+      "status": "FIXED",
+      "fix": "Deep-copy the observable move before constructing or scoring interventions. The estimate retains that detached snapshot; subsequent requests deep-copy it again. Replace the original identity assertion with equality and independence checks. Nested caller mutations retain the originally scored move and its hand-checked credit.",
+      "regressions": [
+        "Estimate.test_nested_move_snapshot_retains_scored_intervention_and_credit",
+        "Estimate.test_decomposition_hand_check"
+      ]
+    }
+  ],
+  "api": {
+    "credit_config(cfg=None)": "Validate metric, direction, wm_samples, sumo_verify_fraction, verify_mode and isolated; reject unknown keys and invalid/nonfinite values.",
+    "assert_observable(payload, patterns=None)": "Reject truth-shaped keys recursively in mappings, sequences and dataclass moves. Callers remain responsible for observable sensing/V2V provenance.",
+    "wm_estimate(scorer, belief, members, move, rng, cfg=None, draw_id=None, *, horizon_s=None)": "Estimate full-group delay on base, joint, solos and member reversions with paired WM samples. horizon_s must resolve from the argument or scorer.horizon_s. Missing, invalid or conflicting declarations fail before scoring. Returns outcomes, credit, isolated diagnostics, member ids, a detached move snapshot, resolved horizon and sample seeds.",
+    "scorer(belief, intervention, rng_child)": "Injected belief-only CPU scorer returning finite full-group team delay over intervention.horizon_s. May declare its registered full horizon through a positive integer scorer.horizon_s. Each intervention specifies kind, active_members, group_members, base_mappo background, unchanged horizon and optional member/move. HDVs are never commanded.",
+    "layer_advantage(estimate, cfg=None)": "Return members, team and per_member=[group_credit]*group_size for the cooperation-layer loss only, replacing its per-CAV advantage signal.",
+    "verify_requests(estimates, rng, cfg=None)": "Validate each resolved horizon, then select with the registered Bernoulli fraction independent of predicted credit. Emit detached dry all8/isolated requests preserving move, credit, full horizon, draw_id and sample seeds.",
+    "verification_candidates(request, plan, snapshot)": "Dry ordinary-plan adapter returning candidates, branch_indices and existing sumo_verify.build_branches specs. Preserve duration/profile, deduplicate subset masks, reject background cooperation, unresolved horizons and any branch/window mismatch. No execution or charging.",
+    "verified_stats(records)": "Offline-only WM/exact D_G sign agreement, tie count and MAE. Exact outcomes never enter layer_advantage."
+  },
+  "semantics": {
+    "group_reward": "utility_with_move - utility_without_move, utility=-team_delay; group_credit=D_G=base_delay-joint_delay, positive for improvement",
+    "member_reversion": "D_i[i]=reverted_i_delay-joint_delay; C_G=D_G-sum(D_i), using existing credit.algebra",
+    "isolated_synergy": "best_solo_delay-joint_delay; solos and member reversions remain distinct diagnostics",
+    "layer_only": "Broadcast the same group credit to every group member. Base MAPPO rewards, parameters and optimizers are not inputs to this module.",
+    "pairing": "Every scenario uses a fresh generator initialized to the same per-sample seed and isolated copies of belief/intervention inputs.",
+    "move_identity": "Estimate move is value-equal to the scored intervention and independent of caller-owned nested mutable data; request move is independent of both.",
+    "horizon": "The unchanged full registered look-ahead is mandatory. The existing all8 machinery derives the exact window from duration plus its registered tail, capped by episode end. Only equal full windows are accepted; incompatibility never changes the scored move or shortens the WM horizon. A truncated flag alone does not imply mismatch if the actual full WM window is equal."
+  },
+  "config_defaults": {
+    "metric": "team_delay",
+    "direction": "lower",
+    "wm_samples": 4,
+    "sumo_verify_fraction": 0.25,
+    "verify_mode": "all8_both_seeds",
+    "isolated": true
+  },
+  "configuration_note": "The run registration must bind wm_samples, verification fraction and full horizon identically for B/R. This fix adds no numerical horizon default or behavioural threshold.",
+  "launch_profile_status": "The latest shared specification (MAIN 02:30 owner-approved redesign) keeps WM counterfactual group credit OFF in the clean-run launch profile. This accepted CPU/API module remains available as default-off code; production cooperation reward is owned by track2_reward/T2C.",
+  "integration": [
+    "T2C/T2D inject the registered full-horizon belief-only scorer, passing horizon_s or declaring scorer.horizon_s, and route layer_advantage.per_member only to the cooperation-layer PPO loss with base MAPPO frozen.",
+    "Use the same verification fraction and dedicated reproducible selection streams for B/R, with existing orchestration persisting selected draw_ids and claims.",
+    "Convert the snapshotted selected move to its ordinary feasible plan. verification_candidates requires an isolated frozen-base snapshot and an exact existing-verifier window compatible with the unchanged registered WM horizon. Incompatible requests fail before dispatch.",
+    "Execute later through existing sumo_verify.verify with the returned candidates, existing runner/charge/root guards, followed by verify_perseed.confirm_all8 with those same candidates. Use the ordinary matched-window branch outcomes to compute exact credit; later-harm windows remain separate diagnostics.",
+    "Offline exact.D_G=J_policy_veh_s-J_candidates_veh_s[joint_branch_index-1]. Never feed exact receipts or simulator snapshots back as policy/WM features."
+  ],
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1"
+    },
+    "focused": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_group_credit_cpu.py -p no:cacheprovider --basetemp E:/agent-work/c4-group-credit/output/t2e-fix-r1-focused",
+      "result": "38 passed, 1 warning in 24.08s"
+    },
+    "broader_regression": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_group_credit_cpu.py tools/coopmwm/test_sumo_verify_cpu.py tools/coopmwm/test_verify_perseed_cpu.py tools/coopmwm/test_policy_synergy_isolated_cpu.py -p no:cacheprovider --basetemp E:/agent-work/c4-group-credit/output/t2e-fix-r1-regression",
+      "result": "89 collected; 84 passed, 5 failed, 1 warning in 97.01s",
+      "per_suite": {
+        "test_group_credit_cpu.py": "38 passed",
+        "test_sumo_verify_cpu.py": "18 passed, 1 failed",
+        "test_verify_perseed_cpu.py": "21 passed",
+        "test_policy_synergy_isolated_cpu.py": "7 passed, 4 failed"
+      },
+      "inherited_failures": [
+        "test_real_controller_never_draws_trust_again_for_verified_plan: exploration.regime imports unavailable tools.leverprobe.selection",
+        "All four test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson parameterizations: replay_start.owner reads Linux /proc/<pid>/stat on Windows"
+      ],
+      "inheritance_check": "git diff c4/track-base for the affected verifier, isolated-synergy, exploration, replay_start and test files was empty, consistent with REVIEW_T2E_r0.md. No separate base test run was performed."
+    },
+    "regression_effectiveness": {
+      "method": "Loaded reviewed HEAD group_credit.py with git show into the module in memory, leaving working files unchanged, then ran four selected new unittest cases.",
+      "cases": [
+        "Omitted-horizon scorer contract",
+        "Nested move mutation and retained credit",
+        "Invalid/missing estimate horizon before sampling",
+        "Invalid/missing request horizon before branch construction"
+      ],
+      "result": "All four failed as expected against reviewed HEAD, zero errors; the probe exited successfully after asserting that result. All pass against the fix in both pytest runs."
+    },
+    "independent_fix_review": {
+      "source": "REVIEW_T2E_r1.md",
+      "result": "89 collected; 84 passed, 5 inherited failures, 0 skipped, 1 warning in 56.59s; all 38 T2E tests passed",
+      "additional_probes": "Credit-sign-independent verification selection and four-member branch/window mapping both passed.",
+      "resume_note": "These tests and probes completed before this fresh-session resume. Results are preserved, not rerun; production and test files have no changes since the independently reviewed HEAD."
+    },
+    "warning": "Disabling the cacheprovider plugin produces the existing unknown cache_dir configuration warning.",
+    "git_diff_check": "passed"
+  },
+  "open_issues": [
+    "The five inherited broader-regression failures remain; the four-suite run is not fully green on this Windows host.",
+    "Real WM rollout, SUMO verification and live cooperation-layer training integration remain runtime validation owned by T2C/T2D. This receipt establishes independently reviewed CPU-build readiness."
+  ],
+  "unresolved_review_blockers": [],
+  "fresh_session_resume": {
+    "date": "2026-11-05",
+    "starting_head": "e01c08d0086399ffe0f88aa5e62c7efbd37da2a6",
+    "tracked_worktree_changes_at_start": false,
+    "action": "Read status/log, shared specification, r0 review and current readiness receipt first, followed by the independent r1 PASS, acceptance and historical blocked receipts. Both fixes and their completed regression tests are already accepted. Preserve that work and all four untracked receipts; refresh only this readiness receipt and record the latest specification's launch-profile OFF decision.",
+    "verification": "Confirmed branch c4/group-credit and no tracked starting changes. git diff --exit-code 75c804e96b71c318e298788ad40bc2f069f2fb75 -- tools/coopmwm/group_credit.py tools/coopmwm/test_group_credit_cpu.py passed, confirming both files are identical to the independently accepted version. git diff --check c4/track-base -- tools/coopmwm/group_credit.py tools/coopmwm/test_group_credit_cpu.py T2E_READY.json passed. Existing completed test results retained; no tests, jobs or dispatches restarted."
+  },
+  "execution": {
+    "new_sim_s": 0,
+    "new_dispatches": 0,
+    "new_remote_jobs": 0,
+    "cpu_only": true,
+    "sumo_gpu_ssh_used": false,
+    "forbidden_data_paths_opened": false,
+    "truth_files_opened": false,
+    "shared_modules_changed": false,
+    "worktree_only": true
+  }
+}

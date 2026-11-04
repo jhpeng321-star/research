@@ -1,0 +1,152 @@
+{
+  "task": "T1A",
+  "status": "READY",
+  "round": "fix round after REVIEW_T1A_r0.md",
+  "scope": "CPU-only shared move library and bank-plan labelling API",
+  "branch": "c4/moves",
+  "base_branch": "c4/track-base",
+  "base_commit": "13f184b5",
+  "spec": "E:/agent-work/_sol/tracks_spec.md, Move library and task rules",
+  "review": "REVIEW_T1A_r0.md",
+  "independent_review": {
+    "review": "REVIEW_T1A_r1.md",
+    "verdict": "PASS",
+    "reviewed_commit": "7a76b8697512889530e544628fc86b1682cd2e41",
+    "acceptance_receipt": "T1A_ACCEPTED.json",
+    "blockers": []
+  },
+  "fresh_session_confirmation": {
+    "date": "2026-11-05",
+    "head_at_resume": "7a76b8697512889530e544628fc86b1682cd2e41",
+    "tracked_modifications_at_resume": false,
+    "preserved_untracked_artifacts": [
+      "REVIEW_T1A_r0.md",
+      "REVIEW_T1A_r1.md",
+      "T1A_ACCEPTED.json",
+      "T1A_READY.blocked0.json"
+    ],
+    "verification": "Read status/log, task receipts, shared spec, both reviews, committed fix summary, and the current projection/reference implementation and regressions. Both r0 blockers were already fixed and independently accepted.",
+    "test_jobs_launched": 0,
+    "dispatches_launched": 0,
+    "test_evidence": "Retained completed implementation and independent-review runs; no duplicate execution.",
+    "changes": ["T1A_READY.json"]
+  },
+  "resume": {
+    "implementation_already_committed": "df383ab7fc5508faea3d49e8709ca559d0f69326",
+    "preserved": [
+      "All existing implementation and regression-test commits",
+      "REVIEW_T1A_r0.md",
+      "T1A_READY.blocked0.json"
+    ],
+    "initial_status": "T1A_READY.json deleted; review and blocked receipt untracked",
+    "matching_T1A_python_jobs_at_resume": 0,
+    "test_jobs_launched_this_resume": 1,
+    "dispatches_launched": 0
+  },
+  "commits": [
+    {
+      "sha": "99ed4f48f0869ea794ddbdda14a30526a52c77e2",
+      "subject": "coopmwm moves: shared observable move library and bank-plan labels (T1A)"
+    },
+    {
+      "sha": "b1288605",
+      "subject": "coopmwm moves: T1A readiness receipt and CPU verification"
+    },
+    {
+      "sha": "df383ab7fc5508faea3d49e8709ca559d0f69326",
+      "subject": "coopmwm moves: fix nearest projection and require recorded policy references (T1A)",
+      "files": ["tools/coopmwm/moves.py", "tools/coopmwm/test_moves_cpu.py"]
+    },
+    {
+      "sha": "7a76b8697512889530e544628fc86b1682cd2e41",
+      "subject": "coopmwm moves: restore fix-round readiness and CPU verification (T1A)",
+      "files": ["T1A_READY.json"]
+    }
+  ],
+  "receipt_commit": "The separate commit refreshing this receipt follows 7a76b869; see git log on c4/moves.",
+  "blocker_resolutions": [
+    {
+      "review_blocker": 1,
+      "status": "FIXED",
+      "implementation": "Minimise full-duration squared policy-relative offset distance over all recorded-member actor subsets of size 1..4, all registered integer onset/hold windows, and analytically optimised continuous depth. Compare every shape with none. Include omitted members and zero padding through the latest allowed release. Family tags only break equal-distance ties.",
+      "regressions": [
+        "test_tagged_wall_subset_has_same_family_exact_match",
+        "test_staggered_weak_partner_does_not_exclude_closer_single_actor",
+        "test_tagged_wall_with_one_active_member_is_exact_ease_off",
+        "test_variety_family_tag_only_breaks_equal_distance_ties",
+        "test_member_selection_depends_on_window_fit_not_total_braking_energy",
+        "test_projection_matches_exhaustive_distance_oracle",
+        "test_projection_charges_for_release_beyond_short_record"
+      ]
+    },
+    {
+      "review_blocker": 2,
+      "status": "FIXED",
+      "implementation": "Use stored perturbation_profile offsets, or subtract a finite, aligned, explicit policy_profile from absolute profile/legacy-knot commands. Reject missing references; never infer a baseline from the plan median. Preserve receipt/example wrappers and legacy executor interpolation/extrapolation semantics.",
+      "regressions": [
+        "test_identical_absolute_profiles_require_different_labels_under_recorded_policies",
+        "test_validated_constant_legacy_knots_require_recorded_policy",
+        "test_recorded_policy_is_time_aligned_not_a_constant_summary",
+        "test_legacy_reference_matches_actual_knot_interpolation",
+        "test_recorded_policy_shape_finiteness_and_missing_reference_wrappers"
+      ]
+    }
+  ],
+  "api": {
+    "module": "tools.coopmwm.moves",
+    "FAMILIES": ["none", "ease_off", "wall", "gap_open", "ramp_assist"],
+    "Move": "Frozen Move(family, members, onset, hold, depth); actors property; to_dict()/from_dict()",
+    "none_move": "none_move(cav_id) -> Move; exactly zero offsets",
+    "candidates": "candidates(obs_state, numpy.random.Generator, n) -> exactly n non-baseline Move objects",
+    "obs_state": "self plus local observable sensing/V2V rows: vid, s_m, v_mps, lane, is_cav",
+    "offsets": "offsets(move, t, state=None) -> {cav_id: acceleration_offset}; t is an integer elapsed second",
+    "offset_state": "Optional original base commands, observable v_mps/allowed speeds, executor accel_bounds, and observable s_m for wall release",
+    "from_plan": "from_plan(verified_plan) -> nearest Move; accepts bare plans, chosen_plan receipts, or own-plan examples",
+    "policy_reference": "Stored perturbation_profile takes precedence. Absolute profile or legacy knots require policy_profile, a finite members x duration_s recorded policy-command matrix in the same member order and time frame. Missing or misaligned references raise ValueError."
+  },
+  "semantics": {
+    "members": "1..4 distinct CAV ids; online candidates include self, exclude HDVs, and restrict partners to the registered observable/V2V range",
+    "ranges_source": "variety.VARIETY_REGISTERED: onset 0..30s, hold 20..90s, depth 0.3..1.0; integer-second windows",
+    "offset_shape": "ease_off/gap_open ease members[0]; wall/ramp_assist ease all members; -depth during [onset,onset+hold), zero outside",
+    "projection_distance": "Sum of squared offset errors over every original member and every recorded second, zero-padded through max(duration_s, maximum registered release); omitted members receive zero predicted offsets",
+    "projection_search": "Enumerate actor subsets of size 1..4 and registered integer windows; continuous depth optimum clipped to the registered range. Equivalent single-actor shapes cover ease_off/gap_open; multi-actor shapes cover wall/ramp_assist. Gap_open uses the first other recorded member as its zero-offset partner.",
+    "projection_ties": "none wins unless strictly improved; otherwise prefer matching variety_family, then FAMILIES order, smaller membership, plan member order, earliest onset and shortest hold",
+    "wall": "Online candidates hold upstream within registered span and release by constant-speed observable arrival; current s_m state releases the wall at the merge boundary",
+    "clamp": "With complete observable state, clip base+offset to existing acceleration/speed bounds and the 1.2 m/s^2 cap; return correction relative to original base. Infeasible seconds receive zero correction; none/release preserve base identity.",
+    "executor_contract": "Without complete state offsets are nominal. The consuming single-writer executor must enforce feasibility and speedMode 27."
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider tools/coopmwm/test_moves_cpu.py tools/coopmwm/test_variety_cpu.py tools/coopmwm/test_mppi_search_cpu.py",
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "-1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+      "COOPMWM_COOP_BASELINE": "",
+      "TEMP": "E:/Temp/opencode",
+      "TMP": "E:/Temp/opencode"
+    },
+    "result": "PASS: 107 passed, 1 warning, 5 subtests passed in 156.47s",
+    "independent_review_result": "PASS: 107 passed, 0 failed, 0 skipped, 5 subtests passed, 1 warning in 58.29s; REVIEW_T1A_r1.md at 7a76b869.",
+    "warning": "PytestConfigWarning: Unknown config option cache_dir (cache provider intentionally disabled)",
+    "verification": "Real mppi_search.build_plan, variety generators and plans.validate exercised on synthetic inputs; exhaustive independent offset-distance oracle and all review counterexamples pass. Existing CPU variety/search regressions pass.",
+    "diff_check": "git diff --check c4/track-base -- tools/coopmwm/moves.py tools/coopmwm/test_moves_cpu.py passed"
+  },
+  "limitations": [
+    "Absolute/legacy bank records without stored policy-relative offsets or an explicit aligned recorded policy reference are unsupported and rejected.",
+    "The single-window vocabulary is a nearest offset projection of richer multi-window profiles; offline labels do not establish online geometry, observability, certification or efficacy.",
+    "Online runtime integration and SUMO/WM efficacy verification belong to consuming tracks."
+  ],
+  "open_issues": [],
+  "compliance": {
+    "CPU_only": true,
+    "SUMO_GPU_remote_runs_launched": 0,
+    "bank_data_files_read": 0,
+    "forbidden_data_paths_opened": false,
+    "population_or_driver_truth_lookup": false,
+    "changes_confined_to_owned_library_tests_and_receipt": true,
+    "shared_runtime_changes": false,
+    "new_hand_set_behavioral_thresholds": false,
+    "destructive_git_or_push": false
+  }
+}

@@ -1,0 +1,183 @@
+{
+  "schema": "coopmwm.t2c_ready.v1",
+  "task": "T2C",
+  "status": "READY_FOR_MERGE_AND_QUALIFIED_INTEGRATION (CPU dry preparation only)",
+  "branch": "c4/rerun-tracks",
+  "worktree": "E:/agent-work/c4-rerun-tracks",
+  "base": "13f184b5 (c4/track-base)",
+  "spec": "E:/agent-work/_sol/tracks_spec.md, including essentials-first amendment at lines 25-28",
+  "commits": [
+    {
+      "commit": "ca2e6830",
+      "step": "Preserve frozen-session implementation and repair its CPU fixtures; 23 passed, 1 Windows symlink skip"
+    },
+    {
+      "commit": "83784884",
+      "step": "Essentials-first cpuS profile, injected sibling adapters, explicit paired isolated grid, whole-payload approval checks; 42 passed, 1 Windows symlink skip"
+    }
+  ],
+  "receipt_commit": "The commit adding this receipt follows the two code commits above; obtain its exact ID from git log -- T2C_READY.json",
+  "owned_files": [
+    "tools/coopmwm/rerun_cpus.py",
+    "tools/coopmwm/test_rerun_cpus_cpu.py",
+    "T2C_READY.json"
+  ],
+  "resume": {
+    "initial_status": "Only rerun_cpus.py and test_rerun_cpus_cpu.py were modified; no prior T2C_READY.json or task-specific T2C commit existed",
+    "recovered_work_preserved": true,
+    "job_check": "Inspected local Python process command lines before testing; no matching T2C test/dispatch was running. Unrelated jobs were left alone. A later combined pytest call timed out; verified it was no longer running before retrying suites separately.",
+    "dispatches_started": 0
+  },
+  "profile": {
+    "name": "track2_essentials_first",
+    "A": "Plain MAPPO PPO; no trigger, layer, teacher, bank or practice components",
+    "B": "Frozen MAPPO base + trigger/cooperation layer + group credit + observable merge features + own WM-derived per_seed_v1 cooperative_only bank",
+    "R": "Same layer/trigger/credit/features and practice settings as B, with its own random bank",
+    "common_start": "All three arms use the same original MAPPO u0 SHA, all run 24 updates, local A results and one new root/ledger",
+    "enabled_slots": ["trigger_head", "coop_layer", "group_credit", "merge_features"],
+    "deferred_slots_off": ["dense_teacher", "plan_augment", "practice_weighting", "coop_reward"],
+    "teacher_roles_reserved": {
+      "A": null,
+      "B": "wm_dense: T1B-scored DAgger labels and cross-entropy targets; all8 verification fraction reserved for later registration",
+      "R": "random: same candidate/move proposal distribution; no dense teacher is called or charged in this essentials-first profile"
+    },
+    "coop_layer": "Frozen base, zero initialization, separate layer optimizer and proposed KL cap 0.045, included in the approval-bound registration",
+    "group_credit": "Layer advantage only; belief/observable input; verification through existing all8/isolated machinery",
+    "merge_features": "Own sensing and timestamped t-1 V2V partner reports, with missingness flags",
+    "existing_options": "V2V dim 48 / intent H5 / detach; kl_targeted imitation KL .045; per_seed_v1 cooperative_only; effective targets; equal B/R practice fraction .25 and repeat cap 2",
+    "cpu": {
+      "host": "cpuS",
+      "cores": 48,
+      "device": "cpu",
+      "max_sumo_workers": 40,
+      "workers": 24,
+      "diagnostic_workers": 16,
+      "torch_threads": 1,
+      "shared_worker_limit": true
+    },
+    "horizons": "1200 s episodes and intent H5 preserved; caller planner/search look-ahead fields preserved without truncation",
+    "namespace": "t2c"
+  },
+  "api": {
+    "runtime_config": "runtime_config(base, *, root, reference_root, source_root, common_checkpoint_sha256): serializable prospective config; no sibling imports, models, jobs or file writes",
+    "check_pins": "Validates profile/slots, all arms and common u0, own-root accounting and local A, full budget, CPU worker allocation, teachers OFF and diagnostic schedule",
+    "head_teacher_config": "Declares trigger bindings and deferred B WM/R random teacher roles without inventing sibling HEAD_ACTIONS or TEACHER_KINDS exports",
+    "track2_components": "track2_components(cfg, arm, *, adapters): A returns {}; B/R require injected merge_features, trigger_head, coop_layer, group_credit factories. Each factory receives cfg=, arm=, moves=, components=. Dependency order is merge_features -> trigger_head -> coop_layer -> group_credit. Config is copied; OFF factories are never called.",
+    "moves_contract": "Checks moves.FAMILIES includes none, plus callable candidates(obs_state,rng,n), offsets(move,t), from_plan(verified_plan); adapters handle sibling constructors on merge",
+    "episode_options": "episode_options(cfg, arm): A returns empty extras; B/R receive isolated copies of Track 2 worker bindings. Qualified episode integration must consume these explicitly.",
+    "criterion_document": "Returns deterministic self-hashed proposed pre-registration, including criterion, isolated-test spec, arm definitions, slot/teacher/CPU settings and quote",
+    "isolated_jobs": "isolated_jobs(registration): pure 96-cell grid, stable IDs, 3 arms x updates 6/12/18/24 x 8 replicates. Requires explicit distinct TRAIN world seeds, state-set and full-window hashes; never reads a seed file implicitly.",
+    "isolated_record": "isolated_record(job, *, delta_all_new_veh_s, delta_only_member_new_veh_s, safety): existing policy_synergy decomposition, 2..4 members, all safety counters required",
+    "evaluate_isolated_test": "evaluate_isolated_test(records, *, registration): complete graded grid only; exact job/metric/world/state/window/registration identities, finite metrics and nonnegative integer safety counters; deterministic paired bootstrap CIs",
+    "budget_request_document": "budget_request_document(cfg, registration): full quote/budget plus canonical config, registration and criterion hashes, new_sim_s=0",
+    "preflight_dry": "preflight_dry(prep_dir, *, stage_dir, ...): OWNER_APPROVAL required; exact bound artifacts, whole budget/config/registration, run-root authority/own ledger and staged SHA checks. Returns preflight_pass=true but ready_for_registered_launch=false and integration_required=true. Never dispatches.",
+    "cli": "python -m tools.coopmwm.rerun_cpus {quote,budget,wall_clock,criterion,isolated_plan,isolated_eval,manifest,preflight}; isolated_plan/eval require explicit --registration, eval also --records"
+  },
+  "isolated_registration": {
+    "criterion_document_sha256": "5aa43f09ad5dd6b285b0e2a939e43c4aef7b73029501bc992389b76aa6f87574",
+    "approval_status": "Proposed registration only; no OWNER_APPROVAL was fabricated",
+    "metric": "policy_cooperation_gain_veh_s",
+    "decomposition": "delta(all group new, background base) - max delta(one member new, background base), same full window and base reference",
+    "replicates": 8,
+    "updates": [6, 12, 18, 24],
+    "arms": ["A", "B", "R"],
+    "replicate_registration_shape": {
+      "role": "train",
+      "metric": "policy_cooperation_gain_veh_s",
+      "replicates": "8 objects with replicate=0..7, world_seed=<explicit distinct TRAIN seed>, state_set_sha256=<64 hex>, window_set_sha256=<64 hex>"
+    },
+    "bootstrap": {"reps": 10000, "level": 0.95, "seed": 20261104, "method": "percentile"},
+    "primary": "u24 B-A paired mean CI entirely above zero AND B total collisions/teleports/hard_brakes no greater than A (zero tolerance)",
+    "secondary": "u6/u12/u18 and B-R/R-A reported without gating; R dense teacher remains OFF",
+    "failure_handling": "Refuse missing, duplicate, ungraded, nonfinite, unpaired or unregistered results; never impute or discard failed cells"
+  },
+  "budget": {
+    "a_train_sim_s": 691200,
+    "b_train_sim_s": 864000,
+    "r_train_sim_s": 864000,
+    "v2v_train": 2419200,
+    "v2v_lessons_quote": 21120,
+    "v2v_lessons_budget": 21840,
+    "teacher_verify": 0,
+    "group_credit_verify": 35820,
+    "isolated_replicated": 3130560,
+    "isolated_replicated_basis": "96 whole isolated checks x measured 32,610 sim-s/check; supersedes the old single-run isolated allocation",
+    "gate_bank_verification_ext": 35820,
+    "v2v_interim": 345600,
+    "v2v_final": 345600,
+    "quote_total_sim_s": 6333720,
+    "phase_budget_total_sim_s": 6334440,
+    "cost_basis": "Isolated checks use a measured estimate; group-credit verification is an explicit gate-sized phase allowance, not a measured new-teacher cost. Real expanded branch specs must fit their phase ceilings before launch.",
+    "wall_estimate_hours": 59.0,
+    "wall_estimate_note": "Planning estimate only, retaining measured update/isolated throughput and 24 fixed-test workers; no cpuS benchmark or timing claim"
+  },
+  "approval_artifacts": {
+    "required_files": [
+      "RERUNCPUS_BUDGET_REQUEST.json",
+      "OWNER_APPROVAL.json",
+      "OWNER_QUOTE.txt",
+      "EVENING_VERDICT.json",
+      "PREREGISTERED_CRITERION.json",
+      "T2C_CONFIG.json",
+      "ISOLATED_REGISTRATION.json",
+      "STAGING_MANIFEST.json"
+    ],
+    "owner_approval_fields": [
+      "owner_approved=true",
+      "budget_request_sha256",
+      "owner_quote_sha256",
+      "verdict_file_sha256",
+      "criterion_sha256",
+      "config_file_sha256",
+      "registration_file_sha256",
+      "effective_imitation_commit=f35b193aa539c7ddec1bb20acaa1f6b13ffb3d31"
+    ],
+    "hash_distinction": "OWNER_APPROVAL criterion_sha256 hashes the criterion FILE bytes. Config and run AUTHORITY.md bind the DOCUMENT self-hash returned by criterion_document(). Preflight returns both.",
+    "root": "init_root creates only a new root with real CHARGES.jsonl, ACCOUNTING.claim, AUTHORITY.md; refuses existing roots/shared ledgers. Preflight checks this actual run root.",
+    "manifest": "Existing real-reader manifest/staged-file checks retained; every staging entry SHA checked"
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "focused": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_rerun_cpus_cpu.py",
+      "result": "42 passed, 1 skipped in 60.20s",
+      "skip": "Windows symlink privilege unavailable; equivalent hard-link/shared-ledger refusal runs and passes"
+    },
+    "post_edit_targeted": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_rerun_cpus_cpu.py -k init_root",
+      "result": "1 passed, 42 deselected after preserving original symlink-root refusal"
+    },
+    "required_regression": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_launch_final_cpu.py tools/coopmwm/test_effimit_cpu.py",
+      "result": "33 passed in 181.86s"
+    },
+    "expanded_regression": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_rerun_clean_cpu.py tools/coopmwm/test_v2v_runner_cpu.py tools/coopmwm/test_policy_synergy_isolated_cpu.py",
+      "result": "18 passed, 4 failed in 20.70s",
+      "failure": "Four parameter variants of test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson fail in inherited replay_start.owner at Path('/proc', str(pid), 'stat').read_text(): Linux /proc is unavailable on Windows",
+      "unchanged_base_evidence": "git diff c4/track-base -- tools/coopmwm/policy_synergy.py tools/coopmwm/replay_start.py tools/coopmwm/test_policy_synergy_isolated_cpu.py returned no diff"
+    },
+    "combined_timeout": "Initial combined focused+launch_final+effimit invocation exceeded 120s with no completed receipt; confirmed no matching process remained, then ran focused and required regressions separately with successful results above",
+    "cli_smoke": "python -m tools.coopmwm.rerun_cpus quote succeeded; criterion_document hash reproduced",
+    "diff_check": "git diff --check passed (only host CRLF conversion advisories)"
+  },
+  "open_issues": [
+    "Sibling modules and real runtime adapters are not merged in this worktree. track2_components/episode_options define and test the integration boundary using local stubs; no claim of live trigger/layer execution is made.",
+    "Qualified runtime integration must consume episode_options, install frozen-layer optimizer/credit/controller hooks, enforce the shared 24+16=40 worker ceiling across all arms/diagnostics, and expand the isolated plan through existing machinery using common pre-registered states, windows, groups and seeds. Legacy v2v_runner alone does not consume the new Track 2 bindings.",
+    "T2E's actual verification fraction/spec costs must be registered by its owner and checked against the explicit group_credit_verify allowance; actual isolated expanded specs must fit their measured phase allocation. Adjusting either requires a newly bound approval payload.",
+    "The retained legacy B/R u3 reference checkpoints are staging inputs only. The new paired A/B/R isolated adapter must use the registered common base reference/background; it must not silently reuse legacy arm-specific states as the new paired design.",
+    "Dense teachers, augmentation, practice weighting and coop_reward remain deferred OFF under the final shared-spec decision; their later enabling needs a new profile/quote/registration.",
+    "Four expanded legacy isolated-synergy regression cases require a Linux /proc environment; their inherited Windows failure is recorded above. No out-of-ownership files were changed."
+  ],
+  "hard_rules": {
+    "cpu_only": true,
+    "no_sumo_gpu_ssh_remote_dispatch": true,
+    "no_external_worktree_edits": true,
+    "no_reset_clean_stash_drop_push_rebase": true,
+    "no_sealed_or_forbidden_data_reads": true,
+    "no_truth_file_reads": true,
+    "no_hidden_state_policy_inputs": true,
+    "production_jobs_or_charges_started": 0,
+    "test_ledger_writes": "Temporary CPU-only synthetic fixtures only"
+  }
+}

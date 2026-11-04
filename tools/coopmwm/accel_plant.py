@@ -8,7 +8,7 @@ from .accel_storage import write
 from .acceleration import Policy,Controller
 
 
-def episode(job):
+def episode(job, *, controller_hook=None, policy_loader=None):
     if job.get('native_reference'):
         import types
         from . import plant as original
@@ -22,7 +22,9 @@ def episode(job):
     exact.setup(job['runtime'],job['checkpoint']);install_seed_scope();guard(job['world'],job['role'])
     exact.guard=lambda w:guard(w,job['role'])
     v2v = bool(job.get('v2v')) or os.environ.get('C4NM_V2V') == '1'
-    if v2v:
+    if policy_loader is not None:
+        policy=policy_loader(job['weights'])
+    elif v2v:
         from .v2v_runtime import from_weights
         policy=from_weights(job['weights'], enabled=True)
     else:
@@ -49,10 +51,17 @@ def episode(job):
         _plan = job['practice'].get('plan')
         def controller_type(*args, **kwargs):
             return _cls(args[0], args[1], _snapshot, _plan)
+    if job.get('track2_backend'):
+        # P1 production adapter: explicit clean-run opt-in, including practice
+        # controller factories. The existing command/safety chain remains last.
+        from .track2_backend import episode_components
+        policy, controller_type = episode_components(job, policy, controller_type)
     controller=controller_type(policy,generator,job['deterministic'],
         guide=guide(job,generator) if not job['deterministic'] and not job.get('b_replay') else None,beta=job.get('beta',1.),
         replay=job.get('samples'),branch=job.get('branch'))
     steps=[];metrics={};prefixes={};horizon_totals={};requested=overrides=0
+    if controller_hook is not None:
+        controller_hook(controller, job, prefixes)
     if job.get('ls_collect'):
         from .ls_collection import install
         install(controller,job,prefixes,generator)
@@ -97,6 +106,8 @@ def episode(job):
                     # step succeeded.
                     write(Path(job['queue_root'])/'guided_starts'/f'u{job["update"]:03}'/(event['proposal']['record_sha256']+'.json'),
                         dict(job=job['id'],time_s=t,behaviour=event['sample']['behaviour']))
+                if controller_hook is not None and hasattr(controller_hook, 'after_step'):
+                    controller_hook.after_step(t, cf.observations(b))
                 steps.append(dict(controller.events[-1],reward=before-b.totals['team_delay_vs']))
                 if t+1 in (900,1200):metrics[str(t+1-300)]=dict(b.totals)
                 if branch and t+1-branch['time_s'] in (60,120,300,600):

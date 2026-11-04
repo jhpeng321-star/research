@@ -1,0 +1,182 @@
+{
+  "schema": "coopmwm.t2c_ready.v2",
+  "task": "T2C",
+  "fix_round": "REVIEW_T2C_r0",
+  "status": "READY_FOR_INDEPENDENT_CPU_REVIEW; LIVE_QUALIFICATION_REQUIRED",
+  "branch": "c4/rerun-tracks",
+  "worktree": "E:/agent-work/c4-rerun-tracks",
+  "base": "13f184b5",
+  "spec": "E:/agent-work/_sol/tracks_spec.md, all amendments through lines 36-37",
+  "review": "REVIEW_T2C_r0.md",
+  "previous_receipt_preserved": "T2C_READY.blocked0.json (historical superseded receipt, not current readiness)",
+  "resume": {
+    "initial_head": "d217529d",
+    "recovered_changes_preserved": [
+      "rerun_cpus.py partial profile/compatibility/staging fixes",
+      "untracked rerun_cpus_compat.py",
+      "T2C_READY.json moved to T2C_READY.blocked0.json",
+      "independent review"
+    ],
+    "active_job_check": "Inspected local Python command lines first; no matching T2C test or dispatch was running. Unrelated processes left alone.",
+    "dispatches_started": 0
+  },
+  "commits": [
+    {
+      "commit": "24f60887",
+      "step": "Preserve recovered fix-round work; explicit opt-in and current clean profile with teaching/augmentation/weighting costs; step tests 38 passed, 1 skipped"
+    },
+    {
+      "commit": "e1f6c2c8",
+      "step": "Real-reader linked-bank discovery/materialization, compressed tapes and extended receipts, complete manifest roles and approval binding"
+    },
+    {
+      "commit": "9fd9ab30",
+      "step": "Executable CPU orchestration, full-window controller, real numerical learning tests, component smoke, monitors, early probes, paired diagnostic expansion and shared concurrency"
+    },
+    {
+      "commit": "f7442203",
+      "step": "Final CPU/path/inventory hardening, default-off direct runner parity, and separate smoke phase accounting"
+    }
+  ],
+  "receipt_commit": "The commit adding this file follows the code commits above; use git log -- T2C_READY.json for its exact ID.",
+  "review_blockers": {
+    "1_current_profile": {
+      "fix": "Explicit track2=True selects track2_clean_run. B WM teaching versus R random teaching over the same proposals, own-bank augmentation and identical weighted-start procedures are enabled and consumed. coop_reward stays OFF. Full costs and fractions bind the criterion and approval request.",
+      "tests": [
+        "test_clean_profile_has_fair_enabled_consumers_and_costs",
+        "test_smoke_executes_all_consumers_updates_and_full_isolated_expansion",
+        "test_runtime_refuses_foreign_bank_short_window_and_optimizer_overlap"
+      ]
+    },
+    "2_runtime_and_smoke": {
+      "fix": "run_tracks calls a new coordinator owning episode/controller/update/checkpoint/diagnostic paths. A runs plain base PPO. B/R bases are frozen, CPU-only, state-hash checked and excluded from the separate layer/trigger optimizer. Group advantages feed only layer updates. Full windows, sole CAV command writer, bounds, own ledger, whole-branch-wave precharge and one 24+16 aggregate pool are enforced. A claim prevents duplicate coordinators. CLI smoke executes 1 update, 2 episodes per arm and asserts all component receipts plus 96 dry isolated cells.",
+      "tests": [
+        "test_smoke_executes_all_consumers_updates_and_full_isolated_expansion",
+        "test_smoke_and_one_command_monitor_cli",
+        "test_worker_limit_is_aggregate_across_arms_and_diagnostics",
+        "test_executes_complete_paired_grid_and_scheduled_tests",
+        "test_admission_and_runtime_detect_frozen_base_mutation_and_kl_violation",
+        "test_zero_initialized_layer_identity_and_credit_changes_only_layer"
+      ]
+    },
+    "3_monitor_and_probes": {
+      "fix": "Strict self-hashed contiguous per-arm/update monitor receipts, per-family trigger rates, WM/checked credit, dense CE/accuracy, bank CE, layer KL, missing share, reward and four safety counters. A uses explicit nulls for inapplicable metrics. Saturation, three-update credit stagnation, flat accuracy and near-zero KL diagnose without non-safety pauses. u2/u4 three-state full-window probes are scheduled and quoted.",
+      "tests": [
+        "test_receipts_history_and_registered_diagnose_rules",
+        "test_missing_metrics_refused (11 cases)",
+        "test_improving_history_clears_trends_and_bad_history_is_refused",
+        "test_smoke_executes_all_consumers_updates_and_full_isolated_expansion"
+      ]
+    },
+    "4_staging_links": {
+      "fix": "Real bank readers discover linked targets under staging home. Manifest includes target destinations and materialized lexical aliases, all required snapshots/receipts/raw and compressed tapes/traces, extended-window and extra-seed layouts. No historical target directory is hard-coded. Lexical/resolved guards precede reads, including reads outside the original watched set; outside-home data is refused.",
+      "tests": [
+        "test_real_readers_discover_second_root_and_stage_complete_resolved_bank (PASS using Windows junction, not skipped)",
+        "test_guards_run_before_lexical_or_resolved_read",
+        "test_already_resolved_reader_data_outside_staging_home_is_refused"
+      ]
+    },
+    "5_default_off_identity": {
+      "fix": "Absent/false opt-in returns the previous preparation config; OFF runner dispatch directly invokes the legacy callable. No Track 2 factories, modules or RNG draws are needed. Explicit clean profile enables the components.",
+      "tests": [
+        "test_absent_and_false_opt_in_match_track_base_without_component_imports (actual committed baseline loaded in memory)",
+        "test_off_path_action_reward_rng_and_checkpoint_identity (matched-seed tensor/optimizer execution)"
+      ]
+    },
+    "6_approved_manifest": {
+      "fix": "Approval binds manifest FILE SHA; budget request also binds manifest DOCUMENT SHA. Empty inventories, missing bank/checkpoint/reference/rule roles, incomplete bank roles, unsafe/escaped destinations and checkpoint/config SHA mismatch are refused before qualification. Every staged file hash and size is checked.",
+      "tests": [
+        "test_preflight_rejects_substituted_inventory",
+        "test_inventory_missing_required_entries_are_refused (4 cases)",
+        "test_checkpoint_digest_and_containment_are_checked_before_reads",
+        "test_preflight_dry_passes_only_with_full_binding_and_matching_staged_shas"
+      ]
+    }
+  },
+  "api": {
+    "documentation": "RERUN_TRACKS_READY.md (consumed backend/component protocols, commands, admission and qualification)",
+    "config": "runtime_config(base, *, root, reference_root, source_root, common_checkpoint_sha256, track2=False)",
+    "runner": "run_tracks(cfg, registration, backend, *, smoke=False, legacy_run=None)",
+    "approval": "budget_request_document(cfg, registration, manifest); OWNER_APPROVAL additionally requires manifest_file_sha256",
+    "diagnostic_identity": "rerun_tracks_runtime.diagnostic_identity(states): bind observable TRAIN snapshots, chosen groups and original full windows before registration",
+    "diagnostic_expansion": "Existing policy_synergy.specs_for all/solo branches plus a common-u0 all-base reference; existing policy_synergy.metrics decomposition; complete paired 96-cell evaluator retained",
+    "smoke_command": "python -m tools.coopmwm.rerun_cpus smoke --config T2C_CONFIG.json --registration ISOLATED_REGISTRATION.json --adapter YOUR_QUALIFIED_MODULE:backend_factory",
+    "monitor_command": "python -m tools.coopmwm.rerun_cpus monitor --root PATH_TO_RUN_ROOT",
+    "cpu_test_factory": "tools.coopmwm.test_t2c_runtime_cpu:cpu_backend (test-only, never a production default)"
+  },
+  "registration": {
+    "criterion_document_sha256": "01746e63312ffd93050cca6147c5145f41261300c1ab2da55550f3868d905f85",
+    "status": "Proposed and approval-bound; no OWNER_APPROVAL fabricated",
+    "teacher_verify_fraction": 0.1,
+    "group_credit_verify_fraction": 0.1,
+    "augmentation": {"examples_per_arm_update": 24, "verify_fraction": 0.1},
+    "practice_weighted_fraction": 0.5,
+    "practice_repeat_cap": 2,
+    "decision_interval_s": 60,
+    "episode_horizon_s": 1200,
+    "intent_horizon": 5,
+    "probes": {"updates": [2, 4], "states": 3, "arms": ["A", "B", "R"]},
+    "replicated_test": {"updates": [6, 12, 18, 24], "replicates": 8, "arms": ["A", "B", "R"], "cells": 96},
+    "criterion": "u24 paired B-A bootstrap CI entirely above zero, with no increase in collisions/teleports/hard-brakes; secondary updates and B-R/R-A reported without gating",
+    "cpu": {"target_host": "cpuS", "cores": 48, "episode_workers": 24, "diagnostic_workers": 16, "aggregate_limit": 40, "torch_threads": 1}
+  },
+  "budget": {
+    "quote_total_sim_s": 178101480,
+    "phase_budget_total_sim_s": 178102200,
+    "phases": {
+      "v2v_train": 2764800,
+      "v2v_lessons": 21840,
+      "teacher_verify": 82529280,
+      "group_credit_verify": 82529280,
+      "augment_verify": 5158080,
+      "early_probes": 586980,
+      "track2_smoke": 654360,
+      "isolated_replicated": 3130560,
+      "gate_bank_verification_ext": 35820,
+      "v2v_interim": 345600,
+      "v2v_final": 345600
+    },
+    "cost_basis": "Conservative full-check ceilings: 2304 whole checks each for dense teaching and credit, 144 augmentation checks; each allowance 35820 sim-s. Expanded real specs must fit before dispatch. Three-state early probes are conservatively allocated three full measured isolated checks per arm. These are not newly measured timings and are not owner-approved spending.",
+    "smoke_phase": "All smoke work is charged to its own track2_smoke phase, with a separate 654360 cap; synthetic work writes only the synthetic ledger. Full runs and smokes use distinct fresh roots/coordinator claims.",
+    "wall_clock": "2440.3 hours is a conservative quote-derived estimate at historical 20 sim-s/wall-s, not a cpuS benchmark or a launch timing claim"
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "environment": {"CUDA_VISIBLE_DEVICES": "", "PYTHONDONTWRITEBYTECODE": "1", "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"},
+    "common_args": "-m pytest -q -p no:cacheprovider; each run used an explicit worktree-local --basetemp",
+    "final_runs": [
+      {"files": ["tools/coopmwm/test_rerun_cpus_cpu.py", "tools/coopmwm/test_t2c_compat_cpu.py"], "result": "44 passed, 1 skipped in 64.58s", "basetemp": ".t2c-final-focus"},
+      {"files": ["tools/coopmwm/test_t2c_staging_cpu.py"], "result": "9 passed in 50.22s", "basetemp": ".t2c-final-stage"},
+      {"files": ["tools/coopmwm/test_t2c_runtime_cpu.py", "tools/coopmwm/test_t2c_monitor_cpu.py"], "result": "21 passed in 88.18s", "basetemp": ".t2c-final-runtime"},
+      {"files": ["tools/coopmwm/test_t2c_runtime_cpu.py"], "result": "8 passed in 66.87s after separate smoke-phase accounting change; included smoke CLI and 96-cell execution", "basetemp": ".t2c-final-runtime4", "counting": "repeat of the same 8 runtime tests, not added to distinct total"},
+      {"files": ["tools/coopmwm/test_launch_final_cpu.py"], "result": "13 passed in 87.35s", "basetemp": ".t2c-reg-launch2"},
+      {"files": ["tools/coopmwm/test_effimit_cpu.py"], "result": "20 passed in 9.77s", "basetemp": ".t2c-reg-effimit"},
+      {"files": ["tools/coopmwm/test_rerun_clean_cpu.py", "tools/coopmwm/test_v2v_runner_cpu.py", "tools/coopmwm/test_policy_synergy_isolated_cpu.py"], "filter": "-k not test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson", "result": "18 passed, 4 deselected in 9.30s", "basetemp": ".t2c-reg-expanded"}
+    ],
+    "distinct_total": {"passed": 125, "skipped": 1, "deselected": 4},
+    "skip": "Windows file-symlink privilege unavailable in the legacy shared-ledger test; hard-link refusal assertions pass. The new cross-root reader-link regression uses a Windows junction and PASSES.",
+    "deselection": "Four inherited isolated precharge cases require Linux /proc. Their identical base failure is documented in REVIEW_T2C_r0.md and the preserved receipt. The new T2C full-grid expansion/execution test passes on Windows using deterministic CPU branches.",
+    "timeout": "An initial launch-final regression exceeded 120s after 12 progress dots. Confirmed no matching Python remained before rerunning that suite to the passing final receipt; no duplicate job was launched.",
+    "warnings": "One unknown cache_dir configuration warning per invocation because cacheprovider was intentionally disabled",
+    "cli": "Smoke and monitor commands executed as subprocesses inside test_smoke_and_one_command_monitor_cli; quote CLI and criterion self-hash also executed successfully",
+    "smoke_receipt": "T2C_CPU_SMOKE.json (copied from the actual final CLI fixture receipt)",
+    "temporary_artifacts": "Only this session's explicitly named .t2c-* synthetic test directories are removed after recording receipts; user/recovered files are preserved"
+  },
+  "open_issues": [
+    "Real sibling implementations and a qualified cpuS backend must be supplied on integration; test-only substitutes are used here as permitted by the shared spec. No live Linux/SUMO qualification or real-world learning efficacy is claimed.",
+    "The new proposed full-check verification quote is substantially larger than the superseded essentials-first quote. It requires a fresh bound OWNER_APPROVAL. Actual all8 expansions must fit their phase ceilings; any fraction/cost change requires a newly bound registration and approval.",
+    "The qualified diagnostic backend must load complete layer/trigger checkpoints using its reviewed controller; the inherited legacy BranchRunner is not automatically qualified to execute new layer checkpoints.",
+    "The four deselected inherited /proc-dependent regression variants remain Linux-only. Their source files were not changed."
+  ],
+  "hard_rules": {
+    "cpu_only": true,
+    "no_sumo_gpu_ssh_remote_dispatch": true,
+    "only_this_worktree_edited": true,
+    "no_reset_clean_stash_drop_push_rebase": true,
+    "no_prohibited_path_or_truth_file_reads": true,
+    "no_hidden_truth_policy_inputs_added": true,
+    "production_jobs_started": 0,
+    "production_sim_s_charged": 0,
+    "test_ledger_writes": "Worktree-local synthetic CPU fixtures only"
+  }
+}

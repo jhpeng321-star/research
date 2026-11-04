@@ -1,0 +1,107 @@
+{
+  "task": "T2H",
+  "status": "READY",
+  "scope": "CPU implementation and tests; prospective opt-in runtime configuration",
+  "worktree": "E:/agent-work/c4-practice-weight",
+  "branch": "c4/practice-weight",
+  "base": "13f184b5",
+  "commits": [
+    {"sha": "3ad844f6", "subject": "coopmwm T2H: record resumed inspection and weighting contract"},
+    {"sha": "ec1828ae", "subject": "coopmwm T2H: opt-in weighted practice starts with own augmented states"},
+    {"sha": "ee3af837", "subject": "coopmwm T2H: READY receipt with CPU checks and integration API"}
+  ],
+  "receipt_commit": "The final commit containing T2H_READY.json records verification and readiness.",
+  "api": {
+    "config": {
+      "practice_weighting": {"type": "bool", "default_when_absent": false, "requires_when_true": "practice_starts=True"},
+      "practice_weighted_fraction": {"type": "float", "default_when_absent": 0.5, "registered_values": [0.5]},
+      "legacy": "practice_fraction remains registered at 0.25; new keys are not emitted when omitted; A has no practice starts",
+      "fairness": "Identical values and selection procedure for B and R; practice_starts_by_arm validated; R still waits for B's realised practice count"
+    },
+    "producer": "v2v_runner.prepare_intent(..., practice_starts=True, practice_weighting=True, practice_weighted_fraction=0.50)",
+    "validation": "v2v_launch3.practice_options_for(cfg, arm), including bind_runtime and B/R equality",
+    "effective_fraction": "practice_weighting.effective_fraction(cfg): 0.50 when enabled, existing practice_fraction otherwise",
+    "planning": "practice_starts.plan_for_update(..., weighting=False): existing default; weighting=True includes own WM-cooperative augmented restart rows and prioritises cooperative capacity before R fallback",
+    "augmentation": {
+      "path": "replay_bank/<ARM>/PRACTICE_AUGMENTED.json",
+      "schema": "coopmwm-practice-augmented-v1",
+      "seal": "exact_grade._seal(record, 'practice_augmented_sha256')",
+      "record_keys": ["schema", "arm", "rows", "practice_augmented_sha256"],
+      "row_keys": ["example_id", "parent_example_id", "verification_id", "state_id", "seed_index", "snapshot_sha256", "wm_cooperative"],
+      "validation": "Parent is an own admitted cooperative bank example; verification/state link is own-arm; seed_index matches parent; wm_cooperative is true; snapshot hash matches after existing CRN replication; no arbitrary paths",
+      "capacity": "Deduplicate restart state/seed/CRN against bank and augmentation rows so multiple perturbed plans at one state cannot inflate repeat capacity",
+      "missing": "Bank-only sampling; present invalid manifest refuses before plan seal/dispatch",
+      "runtime": "No teacher, simulator, augmentation job, or verification dispatch invoked by this adapter"
+    },
+    "receipts": [
+      "Frozen PRACTICE_PLAN_<ARM>_<UUU>.json.weighting: fraction, manifest hash, augmented examples, cooperative/augmented selections",
+      "RESULT.json.practice.weighting: enabled, source, parent_example_id (also carried by matched A references)",
+      "<ARM>_UPDATE_<UUU>.json.practice.weighting: realised weighted/cooperative/augmented counts when weighted episodes exist",
+      "Empty banks still produce the weighted frozen-plan receipt and normal starts"
+    ],
+    "documentation": "tools/coopmwm/PRACTICE_WEIGHTING.md"
+  },
+  "budget": {
+    "requested_practice_episodes_per_24": 12,
+    "legacy_requested_practice_episodes_per_24": 6,
+    "horizon_sim_s": 1200,
+    "training_episode_delta_sim_s": 0,
+    "matched_a_reference_per_practice_episode": true,
+    "full_run_reference_upper_bound_sim_s": 691200,
+    "legacy_full_run_reference_upper_bound_sim_s": 345600,
+    "additional_full_run_reference_upper_bound_sim_s": 345600,
+    "updated_paths": ["prepare_intent allocation", "fresh watcher quote", "smoke/train child quotes", "smoke restart credits", "per-arm resume quote", "matched reference frozen-plan lookup"],
+    "existing_budget_transfer_and_ceiling_checks_retained": true
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "unique_passed": 210,
+    "failed": 0,
+    "skipped": 1,
+    "runs": [
+      {"command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_practice_weighting_cpu.py tools/coopmwm/test_practice_starts_cpu.py", "passed": 55, "note": "Initial 20 T2H cases plus 35 existing practice regression cases"},
+      {"command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_practice_weighting_cpu.py", "passed": 28, "note": "Final expanded T2H suite; supersedes its initial 20 cases; includes differential config/plan byte checks against shared base, real wave/update paths, augmentation, R fairness, quotes and resume"},
+      {"command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_v2v_launch3_cpu.py tools/coopmwm/test_v2v_launch_wiring_cpu.py tools/coopmwm/test_v2v_launch_quote_cpu.py tools/coopmwm/test_v2v_budget_quote_cpu.py", "passed": 87},
+      {"command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_v2v_live_cpu.py tools/coopmwm/test_v2v_runner_cpu.py tools/coopmwm/test_composite_health_cpu.py tools/coopmwm/test_warm_health_cpu.py", "passed": 42},
+      {"command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_rerun_cpus_cpu.py tools/coopmwm/test_rerun_clean_cpu.py", "passed": 18, "skipped": 1, "skip_reason": "Windows host without symlink privilege; hard-link case covered"}
+    ],
+    "diff_check": "git diff --cached --check passed before implementation commit"
+  },
+  "default_byte_identity": {
+    "verified_against": "13f184b5",
+    "evidence": [
+      "Differential prepare_intent JSON comparison with legacy practice starts OFF and ON; no new keys emitted by default",
+      "Differential sealed B/R plan file bytes and RNG selections, with timestamps fixed",
+      "Absent/false weighting never reads augmentation; existing default wave, episode, update, failure replacement and matched-safety tests pass",
+      "Only weighted plans and episodes gain weighting metadata; frozen plans reused without rereading growing augmentation inputs"
+    ],
+    "provenance": "The minimum executable source inventory now includes practice_weighting.py so deployed code qualification covers the new dependency"
+  },
+  "independent_review": {
+    "verdict": "PASS",
+    "report": "REVIEW_T2H_r0.md",
+    "acceptance_receipt": "T2H_ACCEPTED.json",
+    "reviewed_head": "ee3af8371e69a99f12657bf735ac5a9d3a1b5b8f",
+    "required_fixes": [],
+    "tests": {"passed": 209, "failed": 0, "skipped": 1, "deselected": 1},
+    "test_count_note": "The review deselected one synthetic restricted-path fixture; its 209 passes are independent of the original 210-pass readiness result.",
+    "resume": "Existing implementation, verification, and acceptance preserved; this resume records the completed independent review without rerunning tests or dispatching jobs."
+  },
+  "open_issues": [],
+  "integration_notes": [
+    "T2G is absent from the shared base. T2G/T2C must publish its WM-retained augmented restart states through the documented manifest contract; it is tested with CPU fixtures, not a real T2G producer.",
+    "T2C owns rerun_cpus integration and its end-to-end cpuS smoke. Pass the additive keys to prepare_intent and use effective_fraction for T2C's own quotes; no rerun_cpus.py ownership overlap in this task.",
+    "0.50 is the prospective T2H registered alternative implemented here, not an execution approval. Eligible capacity may reduce realised starts; same-state plan perturbations alone do not add restart capacity.",
+    "Apply config changes at a fresh update boundary; already frozen plans remain frozen."
+  ],
+  "hard_rules": {
+    "cpu_only": true,
+    "sumo_gpu_ssh_or_remote_used": false,
+    "training_or_background_dispatch_started": false,
+    "writes_only_in_own_worktree": true,
+    "restricted_data_paths_opened": [],
+    "truth_files_read": [],
+    "destructive_git_or_push_used": false,
+    "safety_or_horizon_weakened": false
+  }
+}

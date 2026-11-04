@@ -69,8 +69,9 @@ def controller_class(base):
     from .bank_v2v import _features, DEFAULT_CFG
 
     class Proxy:
-        def __init__(self, real, blocks, intent=None):
+        def __init__(self, real, blocks, intent=None, trigger_blocks=None, trigger_publish=None):
             self.real, self.blocks, self.intent = real, blocks, intent
+            self.trigger_blocks, self.trigger_publish = trigger_blocks, trigger_publish
 
         def sample(self, context, *args, **kwargs):
             context = dict(context, v2v={v: self.blocks(v) for v in context['members']})
@@ -80,6 +81,13 @@ def controller_class(base):
                 sample = out[0] if isinstance(out, tuple) else out
                 if 'published_intent' not in sample:  # replayed samples keep their record
                     sample['published_intent'] = self.intent.publish(context)
+            if self.trigger_blocks is not None:
+                # Explicit trigger opt-in only. Add its independent observations
+                # AFTER the unchanged low-level action/publication operations.
+                sample = out[0] if isinstance(out, tuple) else out
+                recorded = sample['context']
+                recorded['trigger_v2v'] = {v: self.trigger_blocks(v) for v in recorded['members']}
+                sample['published_trigger_intent'] = self.trigger_publish(recorded)
             return out
 
         def __getattr__(self, key):
@@ -90,6 +98,7 @@ def controller_class(base):
             super().__init__(*args, **kwargs)
             self.previous_frame = None
             self.intent_board = {}  # v2v_intent ON: vid -> (published second, H commands)
+            self.trigger_intent_board = {}  # explicit wrapper opt-in; never the base publication
 
         def observe_issued(self, frame):
             self.previous_frame = frame
@@ -109,13 +118,17 @@ def controller_class(base):
             saved = self.policy
             from .v2v_intent import intent_model
             intent = intent_model(saved)
+            trigger_publish = getattr(saved, 'publish_trigger_intent', None) if intent is not None else None
             if intent is None:
                 self.policy = Proxy(saved, lambda vid: _features(frame, vid, previous, DEFAULT_CFG))
             else:
                 from .bank_v2v import _intent_features
                 spec = dict(horizon=intent.intent_horizon, board=dict(self.intent_board))
+                trigger_spec = dict(horizon=intent.intent_horizon, board=dict(self.trigger_intent_board))
                 self.policy = Proxy(saved, lambda vid: _intent_features(frame, vid, previous, DEFAULT_CFG, spec),
-                                    intent)
+                                    intent,
+                                    (lambda vid: _intent_features(frame, vid, previous, DEFAULT_CFG, trigger_spec))
+                                    if callable(trigger_publish) else None, trigger_publish)
             try:
                 desired = super().apply(rows, commands, now)
             finally:
@@ -125,6 +138,10 @@ def controller_class(base):
                 # silent CAVs simply have no fresh entry and read as invalid next second.
                 published = (self.events[-1]['sample'].get('published_intent') or {}) if self.events else {}
                 self.intent_board = {vid: (int(now), list(values)) for vid, values in published.items()}
+                if callable(trigger_publish):
+                    published = ((self.events[-1]['sample'].get('published_trigger_intent') or {})
+                                 if self.events else {})
+                    self.trigger_intent_board = {vid: (int(now), list(values)) for vid, values in published.items()}
             return desired
 
     return Controller

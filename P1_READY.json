@@ -1,0 +1,113 @@
+{
+  "task": "P1",
+  "round": "fix_r1",
+  "status": "CPU_READY_FOR_INTEGRATION",
+  "branch": "c4/track2-backend",
+  "worktree": "E:/agent-work/c4-track2-backend",
+  "base": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
+  "review": "REVIEW_P1_r1.md",
+  "reviewed_head": "2b925ee8ef0b9fb9e2226c57000c9f91d29473a0",
+  "implementation_commit": "6f660574f86b1dc98bd457bca70bcfbc4df5c20e",
+  "commits": [
+    {"commit": "297b6911", "purpose": "Production backend and conditional worker hook"},
+    {"commit": "d84a9078", "purpose": "Whole-update trigger KL and checkpoint identity"},
+    {"commit": "e29efd91", "purpose": "Prior r0 fixes: observable execution, real rewards, verified practice"},
+    {"commit": "6f660574f86b1dc98bd457bca70bcfbc4df5c20e", "purpose": "Resolve r1 temporal-credit blocker and add regressions"}
+  ],
+  "blocker_resolutions": [
+    {
+      "blocker": 1,
+      "review_issue": "Decision-second rewards cannot credit delayed-onset and held moves; recorded trigger value was ignored.",
+      "fix": "Validate the complete observable-neighbourhood SUMO reward stream, then construct per-CAV discounted returns over every remaining control second of each complete episode before either optimizer runs. The residual receives return-to-go. Trigger PPO receives return-to-go as its value target and return minus its recorded per-CAV trigger value as its advantage.",
+      "registration": {
+        "source": "tools.coopmwm.accel_learner.GAMMA and UNIT",
+        "gamma": "exp(-1/600), once per physical control second",
+        "reward_unit": 10000.0,
+        "return_method": "Full-rollout Monte Carlo return, not lambda-truncated GAE; no new hyperparameter or credit horizon",
+        "formula": "G_i(t) = reward_i(t)/UNIT + GAMMA * G_i(t+1); trigger_advantage_i(t) = G_i(t) - recorded_trigger_value_i(t)",
+        "residual_baseline": "Zero: the cooperation residual has no per-CAV value head; the frozen global MAPPO critic is not used as a per-CAV neighbourhood baseline."
+      },
+      "identity_and_boundaries": "Join outcomes by episode_id,time_s,cav_id, not row or member position. Reset at each episode end, explicit done/terminated tick, or CAV departure. A reused ID after absence starts a new lifetime. Empty-member ticks remain temporal boundaries but are excluded from optimization.",
+      "completeness": "Every recorded tick requires outcomes for its present CAVs, including deterministic or externally executed ticks that are not PPO-eligible. Missing later outcomes, missing ticks, duplicate episode identity, truncated receipts, and a final tick inconsistent with actual_sim_s refuse before optimization. Complete finite-horizon receipts bootstrap to zero as in the inherited learner.",
+      "regressions": [
+        "For BOTH B and R: real episode_components, V2V controller, EpisodePolicy, MoveExecutor, residual Adam and trigger PPO over t300..363. Legal ease_off moves have onset=2, hold=20, depth=0.3; both selected commitments are accepted, offsets stay zero before onset and -0.3 throughout the full hold, then expire.",
+        "Identical action/observation/RNG tapes with only opposite delayed SUMO outcomes yield opposite originating-decision return/advantage targets and different trigger actor, trigger value, and residual parameters. The frozen MAPPO base stays byte-identical and gradient-free.",
+        "Outcomes after the next registered decision at t360 still contribute to the originating t300 decision; no decision-interval truncation.",
+        "Actual accel_plant.episode 900-tick CPU fake-physics receipt: the t1199 outcome reaches the t300 target with discount GAMMA**899, preserving the full production horizon.",
+        "CAV order changes, departure/re-entry, terminal ticks, overlapping episode times, and nonzero recorded trigger values retain correct identity, boundaries, and baseline subtraction.",
+        "Non-optimizable executed-tick rewards reach the prior trigger; all-CAV departure ticks are not optimized.",
+        "Nine invalid temporal-tape cases refuse before the layer optimizer, including missing later executed-tick outcomes."
+      ]
+    }
+  ],
+  "api": {
+    "build_arm_runtime(cfg, arm)": "Returns production hooks: runtime, policy, policy_factory, bank_pairs, collect_update, safety, train_update, save_checkpoint, episode_components. Building dispatches no simulation.",
+    "collect_update(cfg, arm, u)": "Uses the real accel_runner/accel_plant V2V path and existing practice/bank readers.",
+    "hook_order": [
+      "Build with cfg.update=u; collect A before same-update B/R safety references.",
+      "Collect complete episodes and call hooks.safety(episodes).",
+      "Call hooks.train_update(episodes, rewards=envelope), or omit rewards to import P2 reward_update lazily.",
+      "Publish diagnostics to parent monitoring, save_checkpoint, and publish B practice update_report before R requests B's realized practice count."
+    ],
+    "P2_dependency": {
+      "module": "tools.coopmwm.track2_reward",
+      "function": "reward_update(cfg, arm, u, episodes) -> reward envelope",
+      "availability": "External P2 integration dependency absent on this branch; tests use only a local fake and missing integration fails explicitly.",
+      "envelope": {"schema": "coopmwm-track2-reward-v1", "arm": "B or R", "update": "u", "rows": "per-CAV outcome rows for ALL recorded control ticks"},
+      "row_fields": ["episode_id", "time_s", "cav_id", "source=sumo", "own_reward", "neighbour_rewards: vehicle ID -> real reward", "reward", "weight", "weight_provenance"],
+      "alignment": "Exactly one row per episode/time/present CAV, including non-optimizable ticks. Neighbour IDs match sample.track2.reward_neighbourhoods[cav_id] exactly; member ordering may change between ticks.",
+      "formula": "reward = own_reward + registered weight * mean(observable neighbour rewards); empty neighbourhood contributes zero."
+    },
+    "required_common_config": [
+      "track2_backend=true", "run_root", "training_seed", "v2v=true", "v2v_dim", "host=cpuV", "device=cpu",
+      "worlds_by_update", "runtime", "checkpoint", "initial_checkpoint unless checkpoint_000 exists",
+      "accel_bounds", "gpu_deadline", "workers", "load_max", "budget.total", "budget.phases"
+    ],
+    "required_bank_arm_config": [
+      "merge_features=true", "layer_config.hidden_dim", "layer_config.learning_rate", "layer_config.kl_budget",
+      "layer_config.clip_ratio", "layer_config.max_grad_norm", "trigger_candidates", "trigger_partner_slots",
+      "decision_interval_s", "trigger_lr", "trigger_ppo", "layer_epochs",
+      "track2_reward={weight: finite registered number, provenance: nonempty registration reference}; common B/R configuration"
+    ],
+    "reward_diagnostics": "train_update returns reward.temporal with method, inherited gamma/reward_unit registration, trigger baseline and terminal rule, plus the validated real reward cav_rows count.",
+    "optimizer_contract": "Residual marginal per-CAV Gaussian PPO retains the exact correlated joint KL guard; trigger PPO retains whole-update joint categorical KL. Rejections restore weights and Adam state. Base remains frozen.",
+    "augmentation": "Existing verified-child v2 evidence gate and common cfg.augmentation_prelaunch provenance remain required.",
+    "disabled_clean_run_paths": "dense_teacher=false, group_credit=false, extra coop_reward=false; nonempty labels/credit refuse.",
+    "bank_and_practice": "Existing per_seed_v1 cooperative-only effective imitation, explicit 1.2 acceleration cap, frozen practice plans, own banks, R=B realized count, prefix stripping and matched pre-update A safety references.",
+    "accounting_and_approval": "Own run_root ledger, total <=5000000 including parent phases and prior parity960; OWNER_APPROVAL.json approved=true required for collection; supplied approval SHA verified.",
+    "checkpoint": "Normal arm checkpoint plus B/R cooperation/Adam sidecar, strict arm/update identity and exclusive writes.",
+    "horizon": "Existing 1200 sim-s charge and t300..1199 control loop; full remaining rollout outcomes contribute to temporal credit."
+  },
+  "verification": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "result": "452 passed, 5 subtests passed, 1 warning in 195.61s; exit 0; no failures, skips or deselections",
+    "new_test_cases": 14,
+    "junit": "P1_r1_tests.xml",
+    "command": "$env:OMP_NUM_THREADS='1'; $env:MKL_NUM_THREADS='1'; $env:CUDA_VISIBLE_DEVICES=''; $env:PYTHONDONTWRITEBYTECODE='1'; & \"C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe\" -m pytest -q tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_v2v_live_cpu.py tools/coopmwm/test_v2v_runner_cpu.py tools/coopmwm/test_v2v_launch_wiring_cpu.py tools/coopmwm/test_v2v_launch3_cpu.py tools/coopmwm/test_coop_layer_cpu.py tools/coopmwm/test_trigger_policy_cpu.py tools/coopmwm/test_practice_weighting_cpu.py tools/coopmwm/test_practice_starts_cpu.py tools/coopmwm/test_moves_cpu.py tests/unit/test_merge_features.py -p no:cacheprovider --basetemp=\"E:/agent-work/c4-track2-backend/_p1_r1_regression_tmp\" --junitxml=\"E:/agent-work/c4-track2-backend/P1_r1_tests.xml\"",
+    "warning": "Existing pytest cache_dir configuration warning when disabling cacheprovider.",
+    "retained_checks": [
+      "Observable-only move/merge inputs and authorized delayed partner packets",
+      "Reward formula, provenance and per-CAV alignment refusals",
+      "Residual/trigger KL rejection restores model and optimizer state",
+      "Frozen base and zero-init action/RNG identity",
+      "Nonempty bank/effective imitation and verified practice admission",
+      "Default-off differential and unchanged A PPO path",
+      "Real checkpoint round trips and 900-tick fake-physics production worker"
+    ],
+    "static_checks": ["git diff --check c4/track-base"],
+    "review_status": "r1 blocker implemented and CPU-verified; independent re-review pending"
+  },
+  "open_issues": [
+    "Parent integration must provide P2 real SUMO reward extraction matching the documented envelope, including outcomes at every recorded tick and the common registered reward weight/provenance.",
+    "Parent augmentation integration must provide accepted per-child evidence and common prelaunch registration.",
+    "Owner-approved cpuV live integration/smoke remains an external qualification step."
+  ],
+  "execution": {
+    "cpu_only": true,
+    "ssh_or_remote": false,
+    "sumo_executed": false,
+    "gpu_used": false,
+    "new_sim_s": 0,
+    "pushed": false
+  }
+}
