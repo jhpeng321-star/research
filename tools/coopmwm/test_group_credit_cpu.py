@@ -354,7 +354,7 @@ class VerifiedStats(unittest.TestCase):
 class VerificationAdapter(unittest.TestCase):
     def request(self, members):
         estimate = dict(draw_id='train#0', members=members, move=dict(MOVE, members=members),
-                        credit=dict(D_G=10.), horizon_s=600, sample_seeds=[1, 2])
+                        credit=dict(D_G=10.), horizon_s=720, sample_seeds=[1, 2])
         return gc.verify_requests([estimate], np.random.default_rng(0),
                                   cfg=dict(sumo_verify_fraction=1.))[0]
 
@@ -417,6 +417,7 @@ class VerificationAdapter(unittest.TestCase):
         from .test_sumo_verify_cpu import plan, snapshot
         req = self.request(['a', 'b'])
         for snap, p in ((snapshot(), plan('p', ['a', 'b'], duration=120)),
+                        (snapshot(), plan('p', ['a', 'b'], duration=650)),
                         (snapshot(t0=1000), plan('p', ['a', 'b'], duration=600)),
                         (snapshot(committed=[dict(plan=dict(members=['c']))]),
                          plan('p', ['a', 'b'], duration=600))):

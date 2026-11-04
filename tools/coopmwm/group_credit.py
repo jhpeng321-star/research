@@ -187,7 +187,8 @@ def verification_candidates(request, plan, snapshot):
     MAPPO snapshot with no active cooperation interventions in the background.
     The plan's full duration/profile is preserved, not shortened for solo masks.
     Existing branch specs are built without execution, and a truncated/shorter
-    verification horizon is refused before a caller can dispatch it.
+    verification horizon or any mismatch with the WM window is refused before a
+    caller can dispatch it.
     """
     if request.get('kind') != 'group_credit_verification' \
             or request.get('verify_mode') != 'all8_both_seeds' \
@@ -229,8 +230,8 @@ def verification_candidates(request, plan, snapshot):
     horizon = request.get('horizon_s')
     window = specs[0]['window']
     if horizon is not None and (type(horizon) is not int or horizon <= 0
-                               or window['end_s'] - window['start_s'] < horizon):
-        raise ValueError('existing all8 window cannot shorten full WM look-ahead')
+                               or window['end_s'] - window['start_s'] != horizon):
+        raise ValueError('existing all8 window must match full WM look-ahead')
     return dict(candidates=candidates, branch_indices=branches, specs=specs)
 
 
