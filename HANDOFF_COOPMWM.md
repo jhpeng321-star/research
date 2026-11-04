@@ -1,6 +1,12 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
 ## CURRENT Nov4 11:46 +08 — A11/B5/R4; memory admission recovered
+- 11:50 follow-up: canonicalCPUS-CHECK1 delegate wrote backfill0057/STOP_V2.json
+  for CPU-S handover; oldcpuQcoordinator exits; NEVERrestart/duplicate it.
+  CPU-S parity PASS/shim required; staging is NOT a launch claim. Delegate
+  phase-shortfall1.3435M reported/NOtransfer byours. Latestcharged12133780,
+  allphasesnonnegative/free7249117184bytes/B6diagnosticsstillpending. See
+  coopmwm/CONTINUATION_STATUS_20261104_1150.md and PUBLIC_PROGRESS_1793764162867718300.
 - Full1128-linebrief/log/status/receipts read; dirty work preserved. r2 supervisor
   2636865/B2636963/R2636968, A2049830 and runtime-bound monitor4 retained/live.
 - B5: five full passes, no imitation failure, KL.042415<.045; eight own-seed
