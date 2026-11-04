@@ -45,3 +45,23 @@ amended plan before the single native physical canary and training.
 
 This recovery uses zero new sim-s, starts no worker/dispatcher/monitor, issues
 no process signal and adds no duplicate DESIGN READY registration.
+
+## Subsequent fresh-session check — arrival HEAD `c74c8905`
+
+Read status/log and these receipts first. Targeted search of the current MAIN
+registry still finds no native-start reactivation after line 5879; the 16:05
+approval in the incoming resume precedes that supersession. Native source and
+the 61-line design have an empty diff against build `8368ce1a`; retained CPU5
+receipt has `pass_=true`, `skips=0`, `sim_s=0`. No completed CPU suite was rerun.
+
+Successor handoff now records Nov4 16:46 ownership: A22/B12/R11, an existing
+operator recovery waiter, and a completed 288-tape archive explicitly marked
+never to redispatch. This is saved handoff evidence, not a fresh remote liveness
+measurement. Modified successor sources/telemetry and untracked work are kept.
+
+The continuation decision above remains necessary: explicitly reactivate native
+alongside or replacing S-COOPMWM and reconcile the separate cap/host allocation.
+The historical 4,664,400-sim-s quote fits 6M but is not a new allocation. Refresh
+seeds/audits and finish the dense/ordinary start mixture and observable checks
+before registering a new native canary. This check launches no job, consumes
+zero sim-s, sends no signals and adds no duplicate registry readiness line.
