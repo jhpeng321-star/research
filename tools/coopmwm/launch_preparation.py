@@ -66,6 +66,7 @@ def _snapshot_registration(root, cfg):
     """Freeze states by metadata only, before any clean1 outcome is measured."""
     contexts = defaultdict(list)
     selected_inputs = set()
+    unresolved_nonselected = set()
     links = ps._links(root, 'B')
     decisions = rb.bank_decisions(root, 'B', sources=cfg.get('replay_sources', {}).get('B', ()))
     for receipt in decisions:
@@ -79,6 +80,8 @@ def _snapshot_registration(root, cfg):
             with rc._ReadRecorder([root], Path('/home/ubuntu')) as recorder:
                 snapshot = rb._decision_snapshot(root, 'B', receipt, links)
         except (FileNotFoundError, StopIteration, KeyError):
+            unresolved_nonselected.update(p for p in set(recorder.paths)|set(recorder.lexical)
+                                          if not p.is_file())
             continue
         seed = snapshot['episode']['world']['seed']
         if snapshot['episode'].get('role') != 'train' or not 986000 <= seed <= 986071:
@@ -116,7 +119,24 @@ def _snapshot_registration(root, cfg):
         final_evaluation=dict(role='train', worlds=[dict(world_id=str(w['seed']), world=w) for w in worlds]))
     rc.isolated_jobs(registration)
     rc.final_world_registration(registration)
-    return registration, selected_inputs
+    return registration, selected_inputs, unresolved_nonselected
+
+
+def successful_reader_inputs(recorder, selected_inputs, unresolved_nonselected):
+    """Only caught, nonselected missing-context attempts may leave the closure.
+
+    A required bank/practice read fails before reaching this boundary. A selected
+    diagnostic dependency may never be excluded. The historical unavailable
+    contexts remain disclosed in the final staging receipt.
+    """
+    actual = set(recorder.paths)|set(recorder.lexical)|set(selected_inputs)
+    unresolved = set(unresolved_nonselected)
+    if unresolved & set(selected_inputs) or any(p.is_file() for p in unresolved):
+        raise ValueError('a selected/present reader dependency cannot be marked unavailable')
+    for path in actual-unresolved:
+        if not path.is_file():
+            raise ValueError('required real-reader input missing: '+str(path))
+    return actual-unresolved
 
 
 def stage_write(path, value):
@@ -210,8 +230,8 @@ def prepare(source_root, *, root='/home/ubuntu/coopmwm20261105_clean1', resume=F
                 # set. Its dependencies are required even when no smoke chooses it.
                 for row in ps.examples(root, arm):
                     ps.load_snapshot(root, arm, row)
-        registration, selected_inputs = _snapshot_registration(root, cfg)
-    actual = set(recorder.paths)|set(recorder.lexical)|selected_inputs
+        registration, selected_inputs, unresolved_nonselected = _snapshot_registration(root, cfg)
+    actual = successful_reader_inputs(recorder, selected_inputs, unresolved_nonselected)
     # P4 expands only snapshot reader roots. Historical metadata reads do not
     # imply that every rejected/SLIM candidate tape or unusable LS snapshot is
     # opened by training. Preserve all actual metadata reads in the SHA inventory.
@@ -229,7 +249,8 @@ def prepare(source_root, *, root='/home/ubuntu/coopmwm20261105_clean1', resume=F
         entries[str(path)] = dict(sha256=rc.sha(path), bytes=path.stat().st_size,
                                   resolved_path=str(path.resolve()))
     manifest = _seal(dict(schema='coopmwm.clean1.reader_staging.v1', entries=entries,
-        closure=closure, bank_summaries=summaries, s0_manifest_sha256=setup['inventory_sha256']), 'manifest_sha256')
+        closure=closure, bank_summaries=summaries, s0_manifest_sha256=setup['inventory_sha256'],
+        unresolved_nonselected_snapshot_attempts=sorted(map(str, unresolved_nonselected))), 'manifest_sha256')
     write(root/'STAGING_MANIFEST.json', manifest)
     write(root/'ISOLATED_REGISTRATION.json', registration)
     cfg.update(staging_manifest_sha256=rc.sha(root/'STAGING_MANIFEST.json'),

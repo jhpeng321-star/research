@@ -46,7 +46,9 @@
     "second_linux_run": "303 passed, 3 failed: already-local Linux mirror envelopes were mapped twice; fixed with local-root containment check",
     "live_source_requalification": "cpuV commit22c23edb: 307 passed, zero failed/skipped, 14.56s; foreign symlink-ledger case passed",
     "preparation_followup": "zero-physics stage stopped on absent legacy training_seed; explicitly register inherited seed20261101 and resume only the unapproved empty-ledger staging root",
-    "preparation_fix_tests": "50 passed (launch integration and P4), including refusal to resume charged/approved/completed roots"
+    "preparation_fix_tests": "51 passed (launch integration and P4), including refusal to resume charged/approved/completed roots and fail-closed required-reader dependency checks",
+    "latest_cpuv_tests": "b3b892dd: 310 passed, zero skips/failures, 14.61s",
+    "real_bank_followup": "preserve disclosed unavailable historical LS contexts; only caught nonselected missing snapshot attempts are excluded from the actual successful-read inventory; selected and required dependencies still refuse"
   },
   "new_sim_s": 0,
   "smoke_pass": false,

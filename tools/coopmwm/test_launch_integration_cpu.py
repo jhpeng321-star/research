@@ -266,3 +266,19 @@ def test_unfinished_preparation_recovery_refuses_live_or_approved_roots(tmp_path
     monkeypatch.setattr(preparation, 'read', receipts)
     with pytest.raises(ValueError, match='unapproved zero-charge'):
         preparation.prepare(tmp_path/'source', root=root, resume=True)
+
+
+def test_staging_discloses_only_caught_nonselected_missing_snapshot_attempts(tmp_path):
+    from types import SimpleNamespace
+    from .launch_preparation import successful_reader_inputs
+    present = tmp_path/'selected.pt'
+    present.write_bytes(b'opaque input')
+    missing = tmp_path/'unselected_pending.json.gz'
+    recorder = SimpleNamespace(paths={present, missing}, lexical=set())
+    assert successful_reader_inputs(recorder, {present}, {missing}) == {present}
+    with pytest.raises(ValueError, match='required real-reader'):
+        successful_reader_inputs(recorder, {present}, set())
+    with pytest.raises(ValueError, match='selected/present'):
+        successful_reader_inputs(recorder, {missing}, {missing})
+    with pytest.raises(ValueError, match='selected/present'):
+        successful_reader_inputs(recorder, set(), {present})
