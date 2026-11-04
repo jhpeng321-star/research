@@ -29,12 +29,47 @@ class LearningWatchTests(unittest.TestCase):
             self.assertTrue(inspect_update(value)['learning_mechanics_ok'])
 
     def test_valid_update_and_rising_intent_are_reported_without_pause(self):
-        value=receipt();original=copy.deepcopy(value);report=inspect_update(value)
+        value=receipt();original=copy.deepcopy(value);report=inspect_update(value,.045)
         self.assertTrue(report['learning_mechanics_ok'])
         self.assertTrue(report['bank_intent_loss_increased'])
+        self.assertEqual(report['runtime_kl_limit'],.045)
+        self.assertIsNone(report['total_kl_above_ppo_stop_plus_limit'])
         self.assertEqual(report['first_minibatch_ppo_kl'],0.)
         self.assertEqual(report['ppo_kl_max'],.046)  # standard PPO stopping bound, not bank KL
         self.assertEqual(value,original)
+
+    def test_receipt_kl_limit_must_equal_the_pinned_runtime_limit(self):
+        # fix round c4/imit-kl-option: the receipt's own kl_limit is evidence, never authority.
+        value=receipt();value['bank_imitation'].update(kl=.0014,kl_limit=.06)
+        self.assertIn('imitation_kl_limit_mismatch',inspect_update(value,.045)['failures'])
+        # the same receipt against ITS runtime pin is fine, and its bound is the runtime's:
+        self.assertTrue(inspect_update(value,.06)['learning_mechanics_ok'])
+        wide=receipt();wide['bank_imitation'].update(kl=.055,kl_limit=1.)
+        self.assertIn('imitation_kl_out_of_limit',inspect_update(wide,.045)['failures'])
+        self.assertIn('imitation_kl_limit_mismatch',inspect_update(wide,.06)['failures'])
+        self.assertTrue(inspect_update(dict(wide,bank_imitation=dict(
+            wide['bank_imitation'],kl=.055,kl_limit=.06)),.06)['learning_mechanics_ok'])
+
+    def test_runtime_kl_limit_reader_pins_the_runtime_value(self):
+        from .v2v_learning_watch import runtime_kl_limit
+        self.assertEqual(runtime_kl_limit(dict(config=dict(imitation_kl_limit=.09))),.09)
+        self.assertEqual(runtime_kl_limit(dict(config=dict())),.045)  # pre-option runtime
+        for bad in (dict(config=dict(imitation_kl_limit=.05)),dict(config=None),{},'runtime'):
+            with self.assertRaises(ValueError):
+                runtime_kl_limit(bad)
+
+    def test_total_kl_above_ppo_stop_plus_limit_is_reported_only(self):
+        value=receipt();value['bank_imitation'].update(kl_limit=.06,total_kl_vs_pre_update=.2)
+        report=inspect_update(value,.06)   # .2 > PPO stop .045 + limit .06
+        self.assertTrue(report['learning_mechanics_ok'])
+        self.assertTrue(report['total_kl_above_ppo_stop_plus_limit'])
+        self.assertEqual(report['reported_only'],['total_kl_above_ppo_stop_plus_limit'])
+        below=receipt();below['bank_imitation'].update(kl_limit=.06,total_kl_vs_pre_update=.1)
+        report=inspect_update(below,.06)   # .1 <= .105
+        self.assertFalse(report['total_kl_above_ppo_stop_plus_limit'])
+        self.assertEqual(report['reported_only'],[])
+        default=receipt()                  # a .045 runtime never derives the flag
+        self.assertIsNone(inspect_update(default,.045)['total_kl_above_ppo_stop_plus_limit'])
 
     def test_empty_lag_one_bank_is_allowed(self):
         value=receipt();value.update(arm='R',bank_imitation=dict(pairs_total=0,

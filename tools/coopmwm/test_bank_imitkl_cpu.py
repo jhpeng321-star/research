@@ -7,10 +7,14 @@ installed by v2v_live.hooks (explicit arguments win; registered alternatives .04
 only). The configured limit is never exceeded (acceptance, halving backtracking and the
 kl_targeted growth threshold = limit/2 all read it). v2v_launch3 pins it per runtime
 (B == R enforced, A refused, unregistered values refused; a pre-option runtime without the
-key keeps .045). learningwatch reads the RUNTIME limit recorded in the receipt for its
-KL-breach check and fails closed on an unregistered limit. Safety note: the report adds
-total_kl_vs_pre_update = exact joint KL of the published policy vs the frozen PRE-UPDATE
-policy (PPO + imitation combined), report-only.
+key keeps .045). learningwatch checks every receipt against the RUNTIME limit pinned in the
+SHA-pinned V2V_RUNTIME.json (passed into inspect_update by watch): a receipt kl_limit that
+differs from the runtime value FAILS ('imitation_kl_limit_mismatch'), the KL-breach bound is
+the runtime limit (never the receipt's own claim), and an unregistered limit fails closed.
+Safety note: the report adds total_kl_vs_pre_update = exact joint KL of the published policy
+vs the frozen PRE-UPDATE policy (PPO + imitation combined), report-only; when the runtime
+limit exceeds .045 it also carries the boolean total_kl_above_ppo_stop_plus_limit
+(total_kl_vs_pre_update > PPO stop + limit), report-only and surfaced by the monitor.
 """
 import copy
 import json
@@ -93,6 +97,28 @@ def test_safety_note_reports_total_kl_vs_the_frozen_pre_update_policy():
                             torch.Generator().manual_seed(7), copy.deepcopy(plain), passes=5,
                             step_mode='fixed')
     assert 'total_kl_vs_pre_update' not in plain and 'safety_note' not in plain
+
+
+def test_total_kl_flag_above_ppo_stop_plus_limit_when_the_limit_exceeds_default():
+    # c4/imit-kl-option gate: with a limit above .045 the report carries the report-only
+    # boolean flag vs the PPO stopping bound (PPO_STOP_KL + limit); fixed/.045 never carries it.
+    pre_update = Policy()                       # the caller's frozen PRE-UPDATE policy
+    hot = Policy()
+    with torch.no_grad():hot.mean.fill_(1.)
+    out = bi.run_separate(hot, torch.optim.Adam(hot.parameters(), lr=.05), pairs(20),
+                          torch.Generator().manual_seed(7), copy.deepcopy(pre_update), passes=5,
+                          kl_limit=.06)
+    assert out['total_kl_vs_pre_update'] > bi.PPO_STOP_KL + .06   # PPO-sized drift + imitation
+    assert out['total_kl_above_ppo_stop_plus_limit'] is True
+    plain = bi.run_separate(Policy(), torch.optim.Adam(Policy().parameters(), lr=1e-3), pairs(40),
+                            torch.Generator().manual_seed(7), copy.deepcopy(Policy()), passes=5,
+                            step_mode='fixed')
+    assert 'total_kl_vs_pre_update' not in plain and 'total_kl_above_ppo_stop_plus_limit' not in plain
+    empty = bi.run_separate(Policy(), torch.optim.Adam(Policy().parameters()), [],
+                            torch.Generator().manual_seed(7), copy.deepcopy(Policy()), passes=5,
+                            kl_limit=.09)
+    assert empty['total_kl_above_ppo_stop_plus_limit'] is False
+    assert empty['total_kl_vs_pre_update'] == 0.
 
 
 # ------------------------------------------------------- the limit is read from the runtime
@@ -213,6 +239,25 @@ def test_pre_option_runtime_without_the_key_keeps_the_default(tmp_path):
     assert launch.imitation_kl_limit_for(legacy, 'B') == .045
 
 
+def test_stale_imitation_kl_cap_label_is_gone_and_refused_when_inconsistent(tmp_path):
+    # fix round: the pinned BANK_OPTIONS label is the runtime's imitation_kl_limit itself; the
+    # old imitation_kl_cap=.045 label left BANK_OPTIONS (nothing reads it) and bind_runtime
+    # refuses any runtime whose stale cap claim disagrees with its own imitation_kl_limit.
+    assert 'imitation_kl_cap' not in launch.BANK_OPTIONS
+    cfg, live = _cfg(tmp_path)
+    assert 'imitation_kl_cap' not in cfg and 'imitation_kl_cap' not in live
+    assert launch.bind_runtime(dict(config=live), root=tmp_path/'v2v', source_root=tmp_path/'src') is live
+    for cap, limit in ((.045, .06), (.06, .045), (.045, .09), (.09, .06), (True, .045)):
+        with pytest.raises(launch.Refused, match='imitation_kl_cap'):
+            launch.bind_runtime(dict(config=dict(live, imitation_kl_cap=cap, imitation_kl_limit=limit)),
+                                root=tmp_path/'v2v', source_root=tmp_path/'src')
+    # a pre-option runtime that still carries the legacy label WITH the matching default binds
+    old = dict(live);old.update(imitation_kl_cap=.045);old.pop('imitation_kl_limit')
+    assert launch.bind_runtime(dict(config=old), root=tmp_path/'v2v', source_root=tmp_path/'src') is old
+    agree = dict(live, imitation_kl_cap=.06, imitation_kl_limit=.06)
+    assert launch.bind_runtime(dict(config=agree), root=tmp_path/'v2v', source_root=tmp_path/'src') is agree
+
+
 def test_producer_refuses_non_registered_limits(tmp_path):
     with pytest.raises(ValueError, match='unregistered imitation_kl_limit'):
         _cfg(tmp_path, imitation_kl_limit=.05)
@@ -252,18 +297,55 @@ def receipt(**bank_extra):
                 ppo=[dict(own_policy_steps=128, kl=0., loss=8., gradient_norm=7.)])
 
 
-def test_monitor_checks_against_the_runtime_limit_from_the_receipt():
-    report = lw.inspect_update(receipt())
+def test_monitor_checks_against_the_pinned_runtime_limit():
+    report = lw.inspect_update(receipt(), .06)                # receipt agrees with the runtime pin
     assert report['learning_mechanics_ok'] and report['kl_limit'] == .06
+    assert report['runtime_kl_limit'] == .06
     assert report['total_kl_vs_pre_update'] == .061
-    over = lw.inspect_update(receipt(kl_limit=.045))          # same kl, default limit: breach
+    mismatch = lw.inspect_update(receipt(kl=.0014), .045)     # receipt claims .06, runtime pins .045
+    assert 'imitation_kl_limit_mismatch' in mismatch['failures'] and not mismatch['learning_mechanics_ok']
+    over = lw.inspect_update(receipt(kl=.061), .06)           # breach of the RUNTIME limit fails
     assert 'imitation_kl_out_of_limit' in over['failures'] and not over['learning_mechanics_ok']
-    missing = lw.inspect_update(receipt(kl_limit=None))
+    both = lw.inspect_update(receipt(), .045)                 # .055 > .045: the breach dominates
+    assert 'imitation_kl_out_of_limit' in both['failures'] and not both['learning_mechanics_ok']
+    missing = lw.inspect_update(receipt(kl_limit=None), .06)  # no receipt limit: cannot agree
     assert 'imitation_kl_out_of_limit' in missing['failures']
-    relaxed = lw.inspect_update(receipt(kl=.05, kl_limit=1.0))  # unregistered limit fails closed
-    assert 'unregistered_imitation_kl_limit' in relaxed['failures']
-    legacy = lw.inspect_update(receipt(kl=.0014, kl_limit=.045, total_kl_vs_pre_update=.002))
+    unregistered = lw.inspect_update(receipt(kl=.05, kl_limit=.05), .05)  # unregistered runtime value
+    assert 'unregistered_imitation_kl_limit' in unregistered['failures']
+    legacy = lw.inspect_update(receipt(kl=.0014, kl_limit=.045, total_kl_vs_pre_update=.002), .045)
     assert legacy['learning_mechanics_ok'] and legacy['kl_limit'] == .045
+    # a receipt can never relax its own bound: kl .055 inside a self-claimed 1.0 is still a
+    # breach of the runtime .045 pin (and the claim itself is a mismatch when it survives)
+    relaxed = lw.inspect_update(receipt(kl=.055, kl_limit=1.0), .045)
+    assert 'imitation_kl_out_of_limit' in relaxed['failures']
+
+
+def test_watch_reader_extracts_and_validates_the_pinned_runtime_limit():
+    assert lw.runtime_kl_limit(dict(config=dict(imitation_kl_limit=.06))) == .06
+    assert lw.runtime_kl_limit(dict(config=dict())) == .045          # pre-option runtime default
+    with pytest.raises(ValueError, match='imitation_kl_limit'):
+        lw.runtime_kl_limit(dict(config=dict(imitation_kl_limit=.05)))
+    with pytest.raises(ValueError, match='imitation_kl_limit'):
+        lw.runtime_kl_limit(dict())
+    with pytest.raises(ValueError, match='imitation_kl_limit'):
+        lw.runtime_kl_limit('not a runtime value')
+
+
+def test_monitor_derives_and_surfaces_the_total_kl_flag_report_only():
+    # bank_imitation sets the flag when the runtime limit exceeds .045; the monitor surfaces it
+    # and derives it for a receipt that predates the flag. Report-only: never in failures.
+    derived = lw.inspect_update(receipt(total_kl_vs_pre_update=.2), .06)   # .2 > .045 + .06
+    assert derived['total_kl_above_ppo_stop_plus_limit'] is True
+    assert derived['reported_only'] == ['total_kl_above_ppo_stop_plus_limit']
+    assert derived['learning_mechanics_ok']
+    below = lw.inspect_update(receipt(total_kl_vs_pre_update=.1), .06)     # .1 <= .045 + .06
+    assert below['total_kl_above_ppo_stop_plus_limit'] is False
+    assert below['reported_only'] == [] and below['learning_mechanics_ok']
+    explicit = lw.inspect_update(receipt(total_kl_vs_pre_update=.061,
+                                         total_kl_above_ppo_stop_plus_limit=False), .06)
+    assert explicit['total_kl_above_ppo_stop_plus_limit'] is False
+    none = lw.inspect_update(receipt(total_kl_vs_pre_update=None), .06)   # no total in the receipt
+    assert none['total_kl_above_ppo_stop_plus_limit'] is None and none['learning_mechanics_ok']
 
 
 # ------------------------------------------------------- receipt path carries the safety note

@@ -39,7 +39,7 @@ HOLD_NAME = 'V2V_LAUNCH3_HOLD.json'
 ARMS = ('A', 'B', 'R')
 INTENT_OPTIONS = dict(v2v=True, v2v_dim=48, v2v_intent=True,
     v2v_intent_horizon=5, v2v_intent_loss_weight=1.0,v2v_intent_detach_trunk=True)
-BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
+BANK_OPTIONS = dict(bank_imitation='separate_full_pass',
     bank_statistics='per_seed_v1',   # owner 2026-11-03 21:45 + audit: per_seed_v1 only (B and R)
     # owner 2026-11-04 00:55: B and R imitate ONLY within-seed cooperative examples (A has no bank)
     imitation_bank_filter='cooperative_only',
@@ -51,6 +51,8 @@ BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
     # c4/imit-kl-option: the runtime's separate-imitation KL limit. Default .045 = every earlier
     # receipt (byte-identical); prepare_intent may pin a REGISTERED alternative (.06/.09) for a
     # runtime, for B and R together; bind_runtime refuses any unregistered value or B/R mismatch.
+    # (fix round: the stale 'imitation_kl_cap' label is gone; bind_runtime refuses any runtime
+    # that still carries it with a value different from the runtime's own imitation_kl_limit.)
     imitation_kl_limit=.045)
 IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
 IMITATION_STEP_MODES = ('fixed', 'kl_targeted')
@@ -344,6 +346,16 @@ def bind_runtime(value, *, root, source_root):
             continue
         if have != want or isinstance(have, bool) != isinstance(want, bool):
             raise Refused('runtime option ' + key + ' differs: ' + repr(have))
+    # fix round (c4/imit-kl-option): the stale imitation_kl_cap label left BANK_OPTIONS; a
+    # runtime that still carries it must agree with its own imitation_kl_limit (the default
+    # .045 when that key is absent). A stale .045 claim next to a larger registered limit
+    # refuses, so the pinned cap can never disagree with the runtime's real trust region.
+    if 'imitation_kl_cap' in cfg:
+        limit = cfg['imitation_kl_limit'] if 'imitation_kl_limit' in cfg else BANK_OPTIONS['imitation_kl_limit']
+        cap = cfg['imitation_kl_cap']
+        if cap != limit or isinstance(cap, bool) != isinstance(limit, bool):
+            raise Refused('stale runtime imitation_kl_cap label differs from imitation_kl_limit: '
+                          + repr(cap) + ' vs ' + repr(limit))
     imitation_filter_for(cfg, 'B'), imitation_filter_for(cfg, 'R')   # refuses B != R
     imitation_step_mode_for(cfg, 'B'), imitation_step_mode_for(cfg, 'R')   # refuses B != R
     imitation_kl_limit_for(cfg, 'B'), imitation_kl_limit_for(cfg, 'R')   # refuses B != R

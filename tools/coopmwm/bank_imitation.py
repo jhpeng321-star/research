@@ -95,6 +95,8 @@ STEP_SCALE_CAP=16   # kl_targeted: a pass's step scale never exceeds 16x the bas
 STEPS_CAP=4         # kl_targeted: optimizer steps per pass never exceed 4x (minibatch 128//mult)
 KL_LIMIT=.045       # the registered separate-imitation bound (report kl_limit; never exceeded)
 KL_LIMITS=(.045,.06,.09)   # c4/imit-kl-option: registered imitation_kl_limit alternatives
+PPO_STOP_KL=.045    # accel_learner stops PPO as soon as its minibatch KL exceeds .045; the
+                    # report-only total-KL flag threshold is PPO_STOP_KL + the runtime limit
 
 RUNTIME_STEP_MODE='fixed'       # bound from the deployed runtime by v2v_live.hooks (B and R alike)
 RUNTIME_INTENT_BANK_TERM=True   # bound likewise; False drops the bank intent term from the loss
@@ -203,7 +205,12 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     total_kl_vs_pre_update, the exact joint KL of the published (post-PPO +
     imitation) policy vs the FROZEN PRE-UPDATE policy (the caller's reference
     snapshot) over the same bank samples, i.e. the PPO + imitation total drift;
-    report-only, no separate threshold. The 'fixed'/.045 report stays
+    report-only, no separate threshold. When the runtime limit EXCEEDS the
+    .045 default, the report additionally carries the boolean
+    total_kl_above_ppo_stop_plus_limit (True when total_kl_vs_pre_update
+    exceeds PPO_STOP_KL + kl_limit, i.e. the PPO stopping bound plus this
+    runtime's imitation limit); report-only, surfaced by the learningwatch
+    report, never a pause criterion. The 'fixed'/.045 report stays
     byte-identical to the branch point.
     """
     if int(passes)!=passes or passes<5:raise ValueError('at least five requested passes')
@@ -242,6 +249,8 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
         extra = dict(total_kl_vs_pre_update=0.,
                      total_kl_reference='frozen pre-update policy (PPO + imitation combined)') \
             if (targeted or kl_limit != KL_LIMIT) else {}
+        if kl_limit > KL_LIMIT:   # gate option: the report-only flag joins the empty-bank note too
+            extra['total_kl_above_ppo_stop_plus_limit']=False
         return dict(report,stop_reason='empty statistically qualified bank',kl=0.,
                     action_error_after_mps2=None,**extra)
     samples=[s for s,_ in pairs]
@@ -343,6 +352,9 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     if targeted or kl_limit != KL_LIMIT:   # see the safety-note comment above (byte-identical default)
         report['total_kl_vs_pre_update']=joint_kl(policy,reference,samples)
         report['total_kl_reference']='frozen pre-update policy (PPO + imitation combined)'
+    if kl_limit > KL_LIMIT:   # c4/imit-kl-option gate: report-only flag vs the PPO stopping bound
+        report['total_kl_above_ppo_stop_plus_limit']=bool(
+            report.get('total_kl_vs_pre_update',0.) > PPO_STOP_KL+kl_limit)
     after=report['action_error_after_mps2']
     if after is not None and before is not None and after>=before:
         report['error_not_decreased_explanation']='AWR likelihood and unweighted L1 differ; full-pass coverage and separate KL recorded'

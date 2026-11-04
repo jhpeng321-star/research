@@ -80,7 +80,8 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
     """Audit I4: the registered producer of the intent-ON A/B/R runtime config (prospective
     binding only, like prepare). Identical for every arm: v2v_dim=48 (K4 x (6+5+1)),
     v2v_intent=True, horizon 5, loss weight 1.0, detach_trunk=True; bank labels
-    bank_imitation='separate_full_pass', imitation_kl_cap=.045, bank_statistics='per_seed_v1'
+    bank_imitation='separate_full_pass', imitation_kl_limit=.045 (the launcher default; the
+    stale 'imitation_kl_cap' label left the registered options), bank_statistics='per_seed_v1'
     (B and R; A has no bank) and imitation_bank_filter='cooperative_only' (B and R).
     c4/imit-strength (prepared): imitation_step_mode='fixed' (byte-identical; 'kl_targeted' only
     at a registered update boundary, B and R together) and v2v_intent_bank_term=True (the bank
