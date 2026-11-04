@@ -88,19 +88,19 @@ def test_preflight_rejects_substituted_inventory(tmp_path, mirror):
     empty = _seal(dict(home=rc.HOME, entries={}), 'manifest_sha256')
     path.write_text(json.dumps(empty))
     with pytest.raises(SystemExit, match='empty staging'):
-        rc.preflight_dry(prep, stage_dir=stage)
+        rc.preflight_dry(prep, stage_dir=stage, track2=True)
     altered = deepcopy(original)
     altered['notes'].append('substituted but correctly resealed')
     altered = _seal({k: v for k, v in altered.items() if k != 'manifest_sha256'}, 'manifest_sha256')
     path.write_text(json.dumps(altered))
     with pytest.raises(SystemExit, match='manifest_file_sha256'):
-        rc.preflight_dry(prep, stage_dir=stage)
+        rc.preflight_dry(prep, stage_dir=stage, track2=True)
     apppath = prep/rc.APPROVAL
     app = json.loads(apppath.read_text())
     app['manifest_file_sha256'] = rc.sha(path)
     apppath.write_text(json.dumps(app))
     with pytest.raises(SystemExit, match='full budget request'):
-        rc.preflight_dry(prep, stage_dir=stage)
+        rc.preflight_dry(prep, stage_dir=stage, track2=True)
 
 
 @pytest.mark.parametrize('role', ['common_checkpoint', 'bank_B', 'bank_R', 'safety_rule'])

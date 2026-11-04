@@ -1,8 +1,10 @@
-"""Pre-T2C configuration path. No Track 2 imports, RNG draws, or worker changes.
+"""Pre-T2C configuration and preparation paths. No component imports or RNG draws.
 
 Kept separate so an absent/false opt-in produces the track-base serialized config.
 """
 from copy import deepcopy
+import json
+from pathlib import Path, PurePosixPath
 
 
 SCHEDULE = dict(A=dict(lessons=[], isolated=[]),
@@ -75,3 +77,77 @@ def check_pins(cfg):
     if cfg.get('budget') != budget() or cfg.get('diagnostic_schedule') != SCHEDULE:
         raise ValueError('REFUSED: legacy standalone registration differs')
     return True
+
+
+def preflight_dry(prep_dir, *, stage_dir, budget_request, approval, owner_quote, verdict, manifest):
+    """Legacy approval/quote/receipt contract, with guarded staged destinations.
+
+    Legacy v1 manifests have no Track 2 roles, config or registration. Never use this
+    path for an opted-in launch: the Track 2 runtime explicitly selects its preflight.
+    """
+    from .rerun_cpus import guard_path, sha, EFFECTIVE_IMITATION_COMMIT, HOME
+    from .exact_grade import verify_sealed
+
+    def checked(path):
+        guard_path(path)
+        guard_path(Path(path).resolve())
+        return Path(path)
+
+    prep, stage = checked(prep_dir), checked(stage_dir)
+    req = checked(prep/budget_request)
+    if not req.is_file():
+        raise SystemExit('REFUSED: budget request missing: '+str(req))
+    request = json.loads(req.read_text(encoding='utf-8'))
+    if request.get('quote', {}).get('total') != quote()['total']:
+        raise SystemExit('REFUSED: budget request total differs from the 3-arm quote')
+    app = checked(prep/approval)
+    if not app.is_file():
+        raise SystemExit('REFUSED: no OWNER_APPROVAL.json (owner budget approval required)')
+    a = json.loads(app.read_text(encoding='utf-8'))
+    if a.get('budget_request_sha256') != sha(req):
+        raise SystemExit('REFUSED: OWNER_APPROVAL budget sha differs from the request')
+    if a.get('owner_approved') is not True:
+        raise SystemExit('REFUSED: owner approval not positive')
+    q = checked(prep/owner_quote)
+    if not q.is_file() or a.get('owner_quote_sha256') != sha(q):
+        raise SystemExit('REFUSED: owner quote missing or sha differs')
+    v = checked(prep/verdict)
+    if not v.is_file() or a.get('verdict_file_sha256') != sha(v):
+        raise SystemExit('REFUSED: verdict file missing or sha differs')
+    if json.loads(v.read_text(encoding='utf-8')).get('verdict') != 'positive':
+        raise SystemExit('REFUSED: post-fix evening verdict not positive')
+    if a.get('effective_imitation_commit') != EFFECTIVE_IMITATION_COMMIT:
+        raise SystemExit('REFUSED: effective-imitation commit not pinned to '+EFFECTIVE_IMITATION_COMMIT)
+    m = checked(prep/manifest)
+    if not m.is_file():
+        raise SystemExit('REFUSED: staging manifest missing: '+str(m))
+    man = json.loads(m.read_text(encoding='utf-8'))
+    try:
+        verify_sealed(man, 'manifest_sha256')
+    except ValueError as e:
+        raise SystemExit('REFUSED: staging manifest seal broken: '+str(e))
+    if man.get('home') != HOME:
+        raise SystemExit('REFUSED: staging manifest home differs from '+HOME)
+    bad = []
+    for key, entry in sorted(man['entries'].items()):
+        guard_path(key)
+        p = PurePosixPath(key)
+        if (p.is_absolute() or p.parts[:2] != ('home', 'ubuntu') or len(p.parts) < 4
+                or '..' in p.parts or '\\' in key or ':' in key or str(p) != key):
+            raise SystemExit('REFUSED: unsafe staged destination: '+key)
+        staged = checked(stage.joinpath(*p.parts))
+        if stage.resolve() not in staged.resolve().parents:
+            raise SystemExit('REFUSED: staged destination escapes stage: '+key)
+        if not staged.is_file() or staged.is_symlink():
+            bad.append(key+': missing')
+        elif sha(staged) != entry['sha256']:
+            bad.append(key+': sha differs')
+    if bad:
+        raise SystemExit('REFUSED: %d staged file(s) do not match the manifest: %s'
+                         % (len(bad), '; '.join(bad[:5])))
+    staged = dict(files=len(man['entries']), bytes=sum(e['bytes'] for e in man['entries'].values()),
+                  manifest_sha256=man['manifest_sha256'])
+    return dict(ready_for_registered_launch=True, new_sim_s=0, budget_request_sha256=sha(req),
+                owner_quote_sha256=a.get('owner_quote_sha256'),
+                verdict_file_sha256=a.get('verdict_file_sha256'),
+                manifest_sha256=man['manifest_sha256'], staged=staged)

@@ -298,14 +298,14 @@ def test_runtime_config_refusals(tmp_path):
 
 def test_init_root_creates_the_own_single_ledger(tmp_path):
     root = tmp_path/'new_root'
-    bound = rcpu.init_root(root, amendment_shas=('c'*64,))
+    bound = rcpu.init_root(root, amendment_shas=('c'*64,), track2=True)
     assert bound['foreign'] is False
     assert (root/'CHARGES.jsonl').read_bytes() == b'' and (root/'ACCOUNTING.claim').exists()
     crit_sha = rcpu.criterion_document()['criterion_sha256']
     text = (root/'AUTHORITY.md').read_text(encoding='utf-8')
     assert 'SINGLE LEDGER' in text and rcpu.EFFECTIVE_IMITATION_COMMIT in text and 'c'*64 in text
     assert 'isolated-test criterion '+crit_sha in text                    # pre-registration bound
-    assert rcpu.own_ledger(root)['root'] == str(root.resolve())
+    assert rcpu.own_ledger(root, track2=True)['root'] == str(root.resolve())
     with pytest.raises(ValueError, match='already exists'):               # refuse existing root
         rcpu.init_root(root)
     with pytest.raises(ValueError, match='already exists'):
@@ -313,26 +313,26 @@ def test_init_root_creates_the_own_single_ledger(tmp_path):
     (root/'AUTHORITY.md').write_text('SINGLE LEDGER '+rcpu.EFFECTIVE_IMITATION_COMMIT+'\n',
                                      encoding='utf-8')
     with pytest.raises(ValueError, match='pre-registered.*criterion'):
-        rcpu.own_ledger(root)                                             # criterion line missing
+        rcpu.own_ledger(root, track2=True)                                # criterion line missing
     (root/'AUTHORITY.md').write_text('SINGLE LEDGER\n'+rcpu.EFFECTIVE_IMITATION_COMMIT
                                      +'\nisolated-test criterion '+'0'*64+'\n', encoding='utf-8')
     with pytest.raises(ValueError, match='pre-registered.*criterion'):
-        rcpu.own_ledger(root)                                             # criterion sha differs
+        rcpu.own_ledger(root, track2=True)                                # criterion sha differs
 
 
 def test_charge_lands_only_in_this_roots_own_ledger(tmp_path, monkeypatch):
     monkeypatch.setattr(accel_storage, '_reserve', accel_storage._reserve)
     a, b = tmp_path/'a', tmp_path/'b'
-    rcpu.init_root(a)
-    rcpu.init_root(b)
-    rcpu.charge(a, [dict(id='u001_a_1', sim_s=1200)], 'v2v_train', budget=rcpu.budget())
+    rcpu.init_root(a, track2=True)
+    rcpu.init_root(b, track2=True)
+    rcpu.charge(a, [dict(id='u001_a_1', sim_s=1200)], 'v2v_train', budget=rcpu.budget(), track2=True)
     from tools.coopmwm.storage import ledger
     assert [e['id'] for e in ledger(a)] == ['u001_a_1']
     assert ledger(b) == []                                                # own-ledger only: b untouched
     with pytest.raises(ValueError, match='duplicate charge'):
-        rcpu.charge(a, [dict(id='u001_a_1', sim_s=1200)], 'v2v_train', budget=rcpu.budget())
+        rcpu.charge(a, [dict(id='u001_a_1', sim_s=1200)], 'v2v_train', budget=rcpu.budget(), track2=True)
     with pytest.raises(ValueError, match='whole-wave budget blocked'):
-        rcpu.charge(a, [dict(id='x1', sim_s=30000)], 'v2v_lessons', budget=rcpu.budget())
+        rcpu.charge(a, [dict(id='x1', sim_s=30000)], 'v2v_lessons', budget=rcpu.budget(), track2=True)
 
 
 def test_refuses_foreign_ledger(tmp_path, monkeypatch):
@@ -695,7 +695,7 @@ def prep_dir(tmp_path, mirror, *, verdict='positive', approval_sha=True, commit=
     m = rcpu.staging_manifest(remote_root=LEGACY_REMOTE, sources={'B': [COLLECTION_REMOTE]})
     (prep/rcpu.MANIFEST_FILE).write_text(json.dumps(m), encoding='utf-8')
     cfg, registration = config(tmp_path, sha=hashlib.sha256(b'MAPPO-u0-common-checkpoint').hexdigest()), _registration()
-    rcpu.init_root(cfg['run_root'])
+    rcpu.init_root(cfg['run_root'], track2=True)
     (prep/rcpu.CONFIG_FILE).write_text(json.dumps(cfg), encoding='utf-8')
     (prep/rcpu.ISOLATED_REGISTRATION_FILE).write_text(json.dumps(registration), encoding='utf-8')
     request = rcpu.budget_request_document(cfg, registration, m)
@@ -722,7 +722,7 @@ def prep_dir(tmp_path, mirror, *, verdict='positive', approval_sha=True, commit=
 
 def test_preflight_dry_passes_only_with_full_binding_and_matching_staged_shas(tmp_path, mirror):
     prep, stage = prep_dir(tmp_path, mirror)
-    out = rcpu.preflight_dry(prep, stage_dir=stage)
+    out = rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     assert out['preflight_pass'] is True and out['new_sim_s'] == 0
     assert out['ready_for_registered_launch'] is False and out['integration_required'] is True
     assert out['staged']['files'] == len(json.loads((prep/rcpu.MANIFEST_FILE).read_text())['entries'])
@@ -746,45 +746,45 @@ def test_preflight_dry_refusals(tmp_path, mirror):
     request = json.loads((prep/rcpu.BUDGET_REQUEST).read_text())
     (prep/rcpu.BUDGET_REQUEST).unlink()
     with pytest.raises(SystemExit, match='budget request missing'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     (prep/rcpu.BUDGET_REQUEST).write_text(json.dumps(dict(quote=dict(total=1))), encoding='utf-8')
     with pytest.raises(SystemExit, match='differs from the 3-arm quote'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     (prep/rcpu.BUDGET_REQUEST).write_text(json.dumps(request), encoding='utf-8')
     (prep/rcpu.APPROVAL).unlink()
     with pytest.raises(SystemExit, match='OWNER_APPROVAL'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     (prep/rcpu.APPROVAL).write_text(json.dumps(dict(good, budget_request_sha256='0'*64)), encoding='utf-8')
     with pytest.raises(SystemExit, match='budget sha differs'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     (prep/rcpu.APPROVAL).write_text(json.dumps(dict(good, owner_approved=False)), encoding='utf-8')
     with pytest.raises(SystemExit, match='owner approval not positive'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     (prep/rcpu.APPROVAL).write_text(json.dumps(dict(good, owner_quote_sha256='1'*64)), encoding='utf-8')
     with pytest.raises(SystemExit, match='owner quote'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     (prep/rcpu.APPROVAL).write_text(json.dumps(dict(good, verdict_file_sha256='2'*64)), encoding='utf-8')
     with pytest.raises(SystemExit, match='verdict file'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     (prep/rcpu.VERDICT_FILE).write_text(json.dumps(dict(verdict='negative')), encoding='utf-8')
     (prep/rcpu.APPROVAL).write_text(json.dumps(dict(good, verdict_file_sha256=sha_of(prep/rcpu.VERDICT_FILE))),
                                     encoding='utf-8')
     with pytest.raises(SystemExit, match='verdict not positive'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     (prep/rcpu.VERDICT_FILE).write_text(json.dumps(dict(verdict='positive')), encoding='utf-8')
     (prep/rcpu.APPROVAL).write_text(json.dumps(dict(good, effective_imitation_commit='b'*40)),
                                     encoding='utf-8')
     with pytest.raises(SystemExit, match='not pinned'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     (prep/rcpu.APPROVAL).write_text(json.dumps(good), encoding='utf-8')
     # pre-registered criterion bindings: missing file, unbound sha, broken seal, foreign content
     (prep/rcpu.CRITERION_FILE).unlink()
     with pytest.raises(SystemExit, match='pre-registered criterion missing'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     (prep/rcpu.CRITERION_FILE).write_text(json.dumps(rcpu.criterion_document()), encoding='utf-8')
     (prep/rcpu.APPROVAL).write_text(json.dumps(dict(good, criterion_sha256='3'*64)), encoding='utf-8')
     with pytest.raises(SystemExit, match='criterion sha differs'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     (prep/rcpu.APPROVAL).write_text(json.dumps(good), encoding='utf-8')
     (prep/rcpu.CRITERION_FILE).write_text(json.dumps(dict(criterion=rcpu.CRITERION,
                                                           criterion_sha256='0'*64)),
@@ -792,30 +792,30 @@ def test_preflight_dry_refusals(tmp_path, mirror):
     (prep/rcpu.APPROVAL).write_text(json.dumps(dict(good, criterion_sha256=sha_of(
         prep/rcpu.CRITERION_FILE))), encoding='utf-8')
     with pytest.raises(SystemExit, match='criterion seal broken'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     foreign = _seal(dict(schema='x', criterion=dict(rcpu.CRITERION, primary_update=12),
                          isolated_test=rcpu.ISOLATED_TEST, quote=rcpu.quote()), 'criterion_sha256')
     (prep/rcpu.CRITERION_FILE).write_text(json.dumps(foreign), encoding='utf-8')
     (prep/rcpu.APPROVAL).write_text(json.dumps(dict(good, criterion_sha256=sha_of(
         prep/rcpu.CRITERION_FILE))), encoding='utf-8')
     with pytest.raises(SystemExit, match='does not carry the registered criterion'):
-        rcpu.preflight_dry(prep, stage_dir=stage)                          # re-sealed edit: still refused
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)              # re-sealed edit: still refused
     (prep/rcpu.CRITERION_FILE).write_text(json.dumps(rcpu.criterion_document()), encoding='utf-8')
     (prep/rcpu.APPROVAL).write_text(json.dumps(good), encoding='utf-8')
     (prep/rcpu.MANIFEST_FILE).unlink()
     with pytest.raises(SystemExit, match='staging manifest missing'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     (prep/rcpu.MANIFEST_FILE).write_text(json.dumps(dict(good_check='x')), encoding='utf-8')
     with pytest.raises(SystemExit, match='seal broken'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     m = rcpu.staging_manifest(remote_root=LEGACY_REMOTE, sources={'B': [COLLECTION_REMOTE]})
     (prep/rcpu.MANIFEST_FILE).write_text(json.dumps(m), encoding='utf-8')
     victim = next(iter((stage/'home'/'ubuntu'/'coopmwm20261102_warm1').glob('B_checkpoint_000.pt')))
     victim.write_bytes(b'tampered')
     with pytest.raises(SystemExit, match='sha differs'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     victim.write_bytes(b'MAPPO-u0-common-checkpoint')
-    assert rcpu.preflight_dry(prep, stage_dir=stage)['preflight_pass'] is True
+    assert rcpu.preflight_dry(prep, stage_dir=stage, track2=True)['preflight_pass'] is True
 
 
 # ----------------------- essentials-first integration and pairing/approval regression checks
@@ -963,26 +963,64 @@ def test_preflight_binds_whole_request_config_registration_and_root(tmp_path, mi
     (prep/rcpu.BUDGET_REQUEST).write_text(json.dumps(request), encoding='utf-8')
     approve_edit('budget_request_sha256', rcpu.BUDGET_REQUEST)
     with pytest.raises(SystemExit, match='full budget request'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     for n, data in original.items():
         (prep/n).write_bytes(data)
     cfg = json.loads(original[rcpu.CONFIG_FILE])
     cfg['device'] = 'cuda'
     (prep/rcpu.CONFIG_FILE).write_text(json.dumps(cfg), encoding='utf-8')
     with pytest.raises(SystemExit, match='unbound config_file_sha256'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     approve_edit('config_file_sha256', rcpu.CONFIG_FILE)
     with pytest.raises(SystemExit, match='CPU-only'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     for n, data in original.items():
         (prep/n).write_bytes(data)
     (prep/rcpu.ISOLATED_REGISTRATION_FILE).unlink()
     with pytest.raises(SystemExit, match='registration_file_sha256'):
-        rcpu.preflight_dry(prep, stage_dir=stage)
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
     for n, data in original.items():
         (prep/n).write_bytes(data)
     root = config(tmp_path)['run_root']
     from pathlib import Path
     (Path(root)/'AUTHORITY.md').write_text('wrong authority', encoding='utf-8')
     with pytest.raises(SystemExit, match='single-ledger rule'):
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
+
+
+def test_on_preflight_still_requires_each_track2_binding(tmp_path, mirror):
+    from pathlib import Path
+    prep, stage = prep_dir(tmp_path, mirror)
+    assert rcpu.preflight_dry(prep, stage_dir=stage, track2=True)['preflight_pass']
+    # A Track 2 quote cannot be accepted by accidentally omitting the opt-in.
+    with pytest.raises(SystemExit, match='differs from the 3-arm quote'):
         rcpu.preflight_dry(prep, stage_dir=stage)
+    original_app = (prep/rcpu.APPROVAL).read_bytes()
+    for field, error in (('criterion_sha256', 'criterion sha differs'),
+                         ('config_file_sha256', 'unbound config_file_sha256'),
+                         ('registration_file_sha256', 'unbound registration_file_sha256'),
+                         ('manifest_file_sha256', 'unbound manifest_file_sha256')):
+        app = json.loads(original_app)
+        del app[field]
+        (prep/rcpu.APPROVAL).write_text(json.dumps(app), encoding='utf-8')
+        with pytest.raises(SystemExit, match=error):
+            rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
+    (prep/rcpu.APPROVAL).write_bytes(original_app)
+    for name, error in ((rcpu.CRITERION_FILE, 'criterion missing'),
+                        (rcpu.CONFIG_FILE, 'config_file_sha256'),
+                        (rcpu.ISOLATED_REGISTRATION_FILE, 'registration_file_sha256')):
+        path = prep/name
+        original = path.read_bytes()
+        path.unlink()
+        with pytest.raises(SystemExit, match=error):
+            rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
+        path.write_bytes(original)
+    cfg = json.loads((prep/rcpu.CONFIG_FILE).read_text())
+    authority = Path(cfg['run_root'])/'AUTHORITY.md'
+    original = authority.read_bytes()
+    authority.write_text(rcpu.AUTHORITY_LINE+'effective-imitation commit '
+                         +rcpu.EFFECTIVE_IMITATION_COMMIT+'\n', encoding='utf-8')
+    with pytest.raises(SystemExit, match='pre-registered.*criterion'):
+        rcpu.preflight_dry(prep, stage_dir=stage, track2=True)
+    authority.write_bytes(original)
+    assert rcpu.preflight_dry(prep, stage_dir=stage, track2=True)['preflight_pass']

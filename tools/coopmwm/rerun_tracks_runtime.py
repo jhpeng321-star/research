@@ -141,13 +141,13 @@ class Runtime:
         self.cfg, self.registration, self.backend = deepcopy(cfg), deepcopy(registration), backend
         self.root = Path(rc.guard_path(cfg['run_root']))
         rc.guard_path(self.root.resolve())
-        rc.own_ledger(self.root)
+        rc.own_ledger(self.root, track2=True)
         self.smoke = smoke
         self.synthetic = backend.cpu_plant is True
         if not self.synthetic:
             # Admission binds preparation to THIS config and registration, rather
             # than accepting a stale preflight boolean from another experiment.
-            preflight = rc.preflight_dry(backend.prep_dir, stage_dir=backend.stage_dir)
+            preflight = rc.preflight_dry(backend.prep_dir, stage_dir=backend.stage_dir, track2=True)
             approved_cfg = json.loads((Path(backend.prep_dir)/rc.CONFIG_FILE).read_text())
             approved_reg = json.loads((Path(backend.prep_dir)/rc.ISOLATED_REGISTRATION_FILE).read_text())
             if approved_cfg != cfg or approved_reg != registration or not preflight['preflight_pass']:
@@ -235,7 +235,7 @@ class Runtime:
                     for job in jobs:
                         f.write(json.dumps(dict(job, phase=phase, synthetic=True))+'\n')
             else:
-                rc.charge(self.root, jobs, phase, budget=self.cfg['budget'])
+                rc.charge(self.root, jobs, phase, budget=self.cfg['budget'], track2=True)
             self.seen_jobs.update(ids)
             self.spend[phase] += sim_s
 

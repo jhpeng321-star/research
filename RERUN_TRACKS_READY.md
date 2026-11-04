@@ -6,6 +6,18 @@ directly calls that previous runner when OFF, without constructing Track 2 compo
 or consuming RNG. The parity tests compare serialized configuration against that actual
 commit and compare action, reward, updated model state and RNG under matched seeds.
 
+Preparation/accounting uses the same explicit boundary. Call `init_root(root,
+track2=True)`, `own_ledger(root, track2=True)`, `charge(..., track2=True)` and
+`preflight_dry(..., track2=True)` for Track 2; `bind_ledger(root, cfg)` selects from
+`cfg['track2']`. The runtime forwards ON at every admission and charge. The operator
+preflight command is `python -m tools.coopmwm.rerun_cpus preflight --track2 --prep
+PREP_DIR --stage STAGE_DIR`. ON requires the criterion-bound authority, complete
+config/registration/manifest and SHA-bound approval. Absent/false preserves legacy
+authority bytes, root admission, the historical superseded-charge CAP subtraction,
+and approved legacy preflight receipts without requiring Track 2 files or manifest
+roles. A Track 2 quote is refused by the legacy path, so omitting the flag cannot
+approve a Track 2 launch. Baseline comparisons exercise these shared entry points.
+
 ## Current registration
 
 A runs plain MAPPO PPO from the common u0. B/R share the frozen common base, separate

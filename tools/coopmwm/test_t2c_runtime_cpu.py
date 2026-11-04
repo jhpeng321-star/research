@@ -360,7 +360,7 @@ def prepare(tmp_path, monkeypatch):
     install_moves(monkeypatch)
     install_planner_eval(monkeypatch)
     root = tmp_path/'run'
-    rc.init_root(root)
+    rc.init_root(root, track2=True)
     model = nn.Linear(1, 1)
     with torch.no_grad():
         model.weight.zero_()

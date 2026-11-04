@@ -253,10 +253,9 @@ AUTHORITY_LINE = ('S-COOPMWM RERUN-CPUS 2026-11-04: NEW STANDALONE A/B/R-v2v EXP
                   'same root. No remote A reads, no shared accounting with any legacy root.\n')
 
 
-def init_root(root, *, amendment_shas=()):
+def init_root(root, *, amendment_shas=(), track2=False):
     """Create the NEW standalone run root with its own ledger; refuses if the root exists.
-    AUTHORITY.md binds the pre-registered isolated-test criterion SHA alongside the
-    effective-imitation commit."""
+    With explicit Track 2 opt-in, AUTHORITY.md also binds the isolated criterion SHA."""
     root = Path(guard_path(root))
     guard_path(root.resolve())
     if root.exists() or root.is_symlink():
@@ -266,15 +265,16 @@ def init_root(root, *, amendment_shas=()):
         with (root/name).open('x'):
             pass
     text = AUTHORITY_LINE+'effective-imitation commit '+EFFECTIVE_IMITATION_COMMIT+'\n'
-    text += 'isolated-test criterion '+criterion_document()['criterion_sha256']+'\n'
+    if track2:
+        text += 'isolated-test criterion '+criterion_document()['criterion_sha256']+'\n'
     for amendment in amendment_shas:
         text += 'amendmentSHA'+amendment+'\n'
     with (root/'AUTHORITY.md').open('x', encoding='utf-8') as f:
         f.write(text)
-    return own_ledger(root)
+    return own_ledger(root, track2=track2)
 
 
-def own_ledger(root):
+def own_ledger(root, *, track2=False):
     """The OWN single-ledger binding: CHARGES.jsonl, ACCOUNTING.claim and AUTHORITY.md must be
     REAL files inside this root (a symlink or a path resolving elsewhere is another root's
     ledger and is refused), and AUTHORITY.md must carry the standalone rule."""
@@ -296,30 +296,34 @@ def own_ledger(root):
         raise ValueError('REFUSED: AUTHORITY.md is not the standalone single-ledger rule: '+str(root))
     if EFFECTIVE_IMITATION_COMMIT not in text:
         raise ValueError('REFUSED: AUTHORITY.md does not pin the effective-imitation commit')
-    expected = 'isolated-test criterion '+criterion_document()['criterion_sha256']
-    if expected not in text:
-        raise ValueError('REFUSED: AUTHORITY.md does not bind the pre-registered '
-                         'isolated-test criterion ('+expected+')')
+    if track2:
+        expected = 'isolated-test criterion '+criterion_document()['criterion_sha256']
+        if expected not in text:
+            raise ValueError('REFUSED: AUTHORITY.md does not bind the pre-registered '
+                             'isolated-test criterion ('+expected+')')
     return dict(root=str(root_resolved), **files, foreign=False)
 
 
 def bind_ledger(root, cfg):
     """Standalone accounting hook (replaces v2v_live.accounting): binds accel_storage's reserve
     to THIS root's own ledger and the standalone budget; refuses any foreign ledger first."""
-    own_ledger(root)
+    track2 = cfg.get('track2', False)
+    own_ledger(root, track2=track2)
     import types
     from tools.coopnative import storage
     from . import accel_storage
+    from .accel_protocol import SUPERSEDED_CHARGE
     b = cfg['budget']
     accel_storage._reserve = types.FunctionType(storage.reserve.__code__,
-        dict(storage.reserve.__globals__, CAP=b['total'], CAPS=b['phases']))
+        dict(storage.reserve.__globals__,
+             CAP=b['total'] if track2 else b['total']-SUPERSEDED_CHARGE, CAPS=b['phases']))
     return dict(root=str(root), total=b['total'], phases=dict(b['phases']),
                 rule='own single ledger of this root only; no other root\'s ledger accepted')
 
 
-def charge(root, jobs, phase, *, budget):
+def charge(root, jobs, phase, *, budget, track2=False):
     """Reserve jobs against THIS root's own ledger (refuses any foreign ledger)."""
-    bind_ledger(root, dict(budget=budget))
+    bind_ledger(root, dict(budget=budget, track2=track2))
     from . import accel_storage
     return accel_storage.reserve(root, jobs, phase)
 
@@ -1178,7 +1182,7 @@ def final_world_registration(registration):
 def preflight_dry(prep_dir, *, stage_dir, budget_request=BUDGET_REQUEST, approval=APPROVAL,
                   owner_quote=OWNER_QUOTE, verdict=VERDICT_FILE, manifest=MANIFEST_FILE,
                   criterion=CRITERION_FILE, config=CONFIG_FILE,
-                  registration=ISOLATED_REGISTRATION_FILE):
+                  registration=ISOLATED_REGISTRATION_FILE, track2=False):
     """Zero-physics dry preflight: refuses unless OWNER_APPROVAL.json exists and binds the exact
     budget request SHA, the owner quote SHA, the verdict file SHA (verdict positive) and the
     PRE-REGISTERED criterion file SHA (sealed, carrying the registered criterion + replicated
@@ -1187,9 +1191,15 @@ def preflight_dry(prep_dir, *, stage_dir, budget_request=BUDGET_REQUEST, approva
     full budget and run-root authority are also required. Passing qualifies the preparation
     artifacts only: sibling runtime integration remains required. Never dispatches; new_sim_s=0.
 
+    Absent/false track2 preserves the approved legacy preflight and receipt contract.
     OWNER_APPROVAL criterion_sha256 is the FILE sha; AUTHORITY.md and config criterion_sha256
     use the DOCUMENT self-hash (separate digests, both returned in the receipt).
     """
+    if not track2:
+        from .rerun_cpus_compat import preflight_dry as legacy_preflight
+        return legacy_preflight(prep_dir, stage_dir=stage_dir, budget_request=budget_request,
+                                approval=approval, owner_quote=owner_quote, verdict=verdict,
+                                manifest=manifest)
     from .exact_grade import verify_sealed
     guard_path(prep_dir)
     guard_path(stage_dir)
@@ -1249,7 +1259,7 @@ def preflight_dry(prep_dir, *, stage_dir, budget_request=BUDGET_REQUEST, approva
         raise SystemExit('REFUSED: unbound manifest_file_sha256')
     try:
         expected = budget_request_document(cfg, reg, man)
-        own_ledger(cfg['run_root'])
+        own_ledger(cfg['run_root'], track2=True)
     except ValueError as e:
         raise SystemExit('REFUSED: Track 2 config/registration/root: '+str(e))
     if request != expected:
@@ -1292,6 +1302,7 @@ if __name__ == '__main__':
     p.add_argument('--config', default=CONFIG_FILE)
     p.add_argument('--adapter', default=None, help='qualified backend factory module:callable (explicit)')
     p.add_argument('--root', default=None, help='monitor run root')
+    p.add_argument('--track2', action='store_true', help='opt into strict Track 2 preflight')
     a = p.parse_args()
     if a.cmd == 'quote':
         print(json.dumps(dict(quote=quote(), wall_clock=wall_clock(), budget=budget())))
@@ -1317,7 +1328,7 @@ if __name__ == '__main__':
         print(json.dumps(dict(entries=len(m['entries']), manifest_sha256=m['manifest_sha256'],
                               command=staging_files_command(m))))
     elif a.cmd == 'preflight':
-        print(json.dumps(preflight_dry(a.prep, stage_dir=a.stage)))
+        print(json.dumps(preflight_dry(a.prep, stage_dir=a.stage, track2=a.track2)))
     elif a.cmd == 'monitor':
         from .rerun_tracks_monitor import read_monitor
         if not a.root:
