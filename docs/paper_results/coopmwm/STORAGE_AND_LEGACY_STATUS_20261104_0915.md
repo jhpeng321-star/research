@@ -6,6 +6,10 @@ direct verification, recorded in canonical REGISTRATION.md. The actual legacy
 endpoints are B21/R20 (not the rounded u20 description); checkpoint hashes,
 receipts and bank remain intact. All old arm/supervisor/grader PIDs are absent.
 No additional termination was necessary. Shared collection/bank services stay live.
+At 09:28 the explicit additive `warm1/STOPPED_PERMANENT_MAIN0910.json` receipt
+was written (SHA256 `92da212d725d606f2272850f17acc0c6ea3c5061df53cf2483194f65ebe554fa`).
+Both retained checkpoint files were independently SHA-verified against the
+original stop record, and old PID absence rechecked. No signals were sent.
 
 ## Approved SHA-gated archival is healthy
 The V2V companion 2213098 now reports **1,035,251,575 bytes moved**, up from
