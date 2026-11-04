@@ -1,0 +1,119 @@
+{
+  "schema": "coopmwm.t2c_ready.v3",
+  "task": "T2C",
+  "fix_round": "REVIEW_T2C_r1",
+  "status": "READY_FOR_INDEPENDENT_CPU_REVIEW; LIVE_INTEGRATION_QUALIFICATION_REQUIRED",
+  "branch": "c4/rerun-tracks",
+  "worktree": "E:/agent-work/c4-rerun-tracks",
+  "recovered_head": "588bc68b2c4e63c3b096fb7d3d721709339c3d8f",
+  "spec": "E:/agent-work/_sol/tracks_spec.md; complete current spec through lines 39-41",
+  "review": "REVIEW_T2C_r1.md",
+  "previous_receipt_preserved": "T2C_READY.blocked1.json",
+  "step_receipts": "T2C_FIX_R1.md",
+  "commits": [
+    {"commit": "5ce22253", "step": "Calibrated dense-label eligibility, symmetric filter, realised accuracy and auditable provenance"},
+    {"commit": "6cca2176", "step": "Shared T1D paired final evaluation, complete checkpoint/world identities, TTC, CIs and approval binding"},
+    {"commit": "66682f22", "step": "Source-conditioned bank/effective supervision and meaningful state-dependent numerical regressions"}
+  ],
+  "receipt_commit": "This final commit also handles all-null-target verification semantics; obtain its ID using git log -- T2C_READY.json",
+  "blockers_addressed": {
+    "1_dense_confidence_and_accuracy": {
+      "protocol": "target, calibrated_probability, provenance(kind/receipt_sha256), imitation_eligible; runtime independently validates eligibility",
+      "filter": "B and R both require T1C calibrated P(target beats base) >= 0.8; SUMO-verified provenance bypasses; no target is allowed",
+      "learning": "dense_mask excludes only imitation CE, retaining every valid policy/group-credit row and bank learning; zero eligible targets diagnose without pausing",
+      "realised_reporting": "Spot checks of actual targets, including rejected targets, supply boolean label_correct; receipts bind source row, target and verification IDs. All-null targets yield zero checked labels and null checked accuracy",
+      "monitor": ["dense_filtered_share", "dense_eligible_labels", "dense_checked_labels", "dense_checked_accuracy", "dense_ce", "dense_accuracy"],
+      "tests": ["test_dense_filter_boundary_bypass_and_empty_update (8 cases)", "test_dense_filter_rejects_missing_calibration_and_forged_mask", "test_all_null_targets_keep_three_update_history_diagnostic_only"]
+    },
+    "2_shared_final_evaluation": {
+      "harness": "tools.coopmwm.planner_eval; explicit consumed prepare_track2/analyse_track2 boundary documented in RERUN_TRACKS_READY.md",
+      "registration": "96 explicit common TRAIN-world objects in registration.final_evaluation; same world per index for A/B/R; no seed-file discovery",
+      "checkpoint_identity": "u24 full checkpoint file SHA plus inspected components; B/R base, layer, trigger and optimizer; A base and optimizer",
+      "execution": "288 full 1200-second episodes, shared worker pool and ledger, whole-grid precharge, echoed world/checkpoint/window identities required",
+      "analysis": "T1D paired-percentile bootstrap, 10000 draws, 95%, seed 20261104; B-A/R-A/B-R J_veh_s differences and complete per-arm safety totals",
+      "safety": ["collisions", "teleports", "hard_brakes", "ttc_events"],
+      "receipts": ["T2C_FINAL_PAIRED_EVAL.json", "T2C_ISOLATED_EVAL.json"],
+      "isolated_checks": "All 96 separately required replicated isolated cells and u2/u4 probes retained; TTC now required there too",
+      "tests": ["test_executes_complete_paired_grid_and_scheduled_tests", "test_shared_final_harness_rejects_incomplete_or_unpaired_results (8 cases)", "test_full_run_reaches_shared_final_harness", "test_final_worlds_and_approval_registration_are_bound"]
+    },
+    "3_bank_state_and_effective_supervision": {
+      "batch": "Each source-bound row carries own observation/features, move target, plan, source_id/arm/seed, unchanged positive per_seed_v1 weight and provenance, full effective sample/action/binding limits",
+      "validation": "Own-bank identities, source-state/feature and plan associations, weights/provenance, executed proposal members, finite actions/limits and t-1 reports checked before dispatch",
+      "learning": "State-conditioned trigger imitation and reviewed bank_imitation.pair_loss effective/Tobit objective on a detached-base/trainable-layer wrapper, separate full bank pass, separate layer optimizer and registered KL budget",
+      "receipts": "Per-update bank_batch and bank_learning receipts bind the entire batch SHA, options, move/effective row counts and effective loss; incomplete consumption refused",
+      "tests": ["test_state_target_association_drives_gradients_and_choices_in_runtime (2 swapped-label cases)", "test_effective_limits_and_weights_reach_only_trainable_layer", "test_invalid_bank_supervision_refused_before_episode_dispatch (9 cases)", "test_missing_effective_learning_receipt_refused"],
+      "numerical_evidence": "Equal class frequencies but swapped source-state labels reverse gradients and subsequent choices; effective target dead-zone invariance and limit/weight sensitivity pass; base remains frozen"
+    }
+  },
+  "registration": {
+    "criterion_sha256": "46d250d1769f70f6b2a22bbf9f6d3837781cc7b6060c457d56ef38d13b2acbfd",
+    "status": "Proposed, bound into config/criterion/budget request and approval; no owner approval fabricated",
+    "dense_threshold": 0.8,
+    "teacher_verify_fraction": 0.1,
+    "bank_target_space": "effective",
+    "bank_statistics": "per_seed_v1",
+    "bank_step_mode": "kl_targeted",
+    "final_evaluation_phase_sim_s": 345600,
+    "quote_total_sim_s": 178101480,
+    "phase_budget_total_sim_s": 178102200,
+    "cost_change": "Numeric total unchanged; final shared-world harness semantics, confidence filter and bank-training contract are newly approval-bound. Fresh SHA-bound approval is required"
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "environment": {"CUDA_VISIBLE_DEVICES": "", "PYTHONDONTWRITEBYTECODE": "1", "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"},
+    "common_args": "-m pytest -q -p no:cacheprovider; explicit files and fresh worktree-local basetemp only",
+    "final_runs": [
+      {"files": ["test_rerun_cpus_cpu.py", "test_t2c_compat_cpu.py", "test_t2c_staging_cpu.py", "test_t2c_monitor_cpu.py"], "result": "68 passed, 1 skipped in 237.86s", "basetemp": ".t2c-r1-reg-focused"},
+      {"files": ["test_launch_final_cpu.py", "test_effimit_cpu.py", "test_rerun_clean_cpu.py", "test_v2v_runner_cpu.py", "test_policy_synergy_isolated_cpu.py"], "filter": "not test_gate_seals_commit_and_runtime_and_the_launcher_reads_it and not test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson", "result": "50 passed, 5 deselected in 107.32s", "basetemp": ".t2c-r1-reg-legacy"},
+      {"files": ["test_t2c_runtime_cpu.py"], "result": "27 passed in 193.46s", "basetemp": ".t2c-r1-final-runtime2"},
+      {"files": ["test_t2c_bank_cpu.py", "test_t2c_monitor_cpu.py"], "result": "29 passed in 31.82s", "basetemp": ".t2c-r1-final-bank-monitor"}
+    ],
+    "distinct_total": {"passed": 159, "skipped": 1, "deselected": 5},
+    "counting": "The 15 earlier monitor cases repeat in the final selection and are counted once; step runs are not added again",
+    "skip": "Inherited Windows file-symlink privilege case; preceding hard-link checks and the real-reader cross-root junction test pass",
+    "deselections": "Four inherited Linux /proc-dependent cases documented by independent review; one legacy test fixture that makes an unrelated nested Git commit",
+    "incomplete_invocation": "Combined final runtime/bank/monitor attempt returned progress only, no final result; not counted. No matching process remained before separate successful reruns",
+    "warnings": "Inherited unknown cache_dir warning with intentionally disabled cacheprovider",
+    "temporary_artifacts": "Only this session's explicitly named .t2c-r1-* synthetic test directories were removed after recording results and refreshing the committed smoke receipt",
+    "diff_check": "git diff --check passed"
+  },
+  "smoke": {
+    "receipt": "T2C_CPU_SMOKE.json",
+    "source": ".t2c-r1-final-runtime2/test_smoke_and_one_command_mon0/run/T2C_SMOKE.json",
+    "result": "CPU_PLANT_SMOKE_PASS",
+    "episodes": 6,
+    "updates": 1,
+    "isolated_dry_cells": 96,
+    "new_sim_s": 0,
+    "virtual_sim_s": 31200,
+    "bank_effective_rows_per_arm": 26,
+    "checked_label_accuracy_B_and_R": 0.75,
+    "note": "Realised accuracy here is synthetic-plant verification, not actual SUMO efficacy; R near-zero KL correctly yields DIAGNOSE"
+  },
+  "api": {
+    "documentation": "RERUN_TRACKS_READY.md",
+    "entry": "run_tracks(cfg, registration, backend, smoke=False, legacy_run=None)",
+    "bank_batch": "rerun_tracks_bank.training_batch / batch_receipt",
+    "final_registration": "rerun_cpus.final_world_registration(registration)",
+    "smoke_command": "python -m tools.coopmwm.rerun_cpus smoke --config T2C_CONFIG.json --registration ISOLATED_REGISTRATION.json --adapter YOUR_QUALIFIED_MODULE:backend_factory",
+    "monitor_command": "python -m tools.coopmwm.rerun_cpus monitor --root PATH_TO_RUN_ROOT"
+  },
+  "open_issues": [
+    "Production sibling modules and a qualified cpuS backend must be integrated; planner_eval is absent on this branch and tested through the explicit test-only substitute permitted by the spec",
+    "Real adapters must supply auditable T1C calibration/verified-label receipts, bank per-seed/effective provenance, complete checkpoint inspection/loading, and the native T1D paired analysis",
+    "No live SUMO qualification, cpuS benchmark, or real learning efficacy is claimed; actual receipts/probes require the subsequent approved production integration",
+    "Fresh bound OWNER_APPROVAL is required for this changed complete-spec registration",
+    "Inherited Windows symlink privilege and Linux /proc limitations remain as documented"
+  ],
+  "hard_rules": {
+    "cpu_only": true,
+    "only_this_worktree_modified": true,
+    "no_prohibited_path_or_truth_file_reads": true,
+    "no_sumo_gpu_ssh_remote_dispatch": true,
+    "no_reset_clean_stash_drop_push_rebase": true,
+    "production_jobs_started": 0,
+    "production_sim_s_charged": 0,
+    "test_ledgers": "Worktree-local synthetic fixtures only",
+    "recovered_work_preserved": true
+  }
+}
