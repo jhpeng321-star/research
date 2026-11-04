@@ -1,5 +1,28 @@
 # S-COOPMWM — live checks
 
+## Nov4 11:46 UTC+8 — A11/B5/R4; memory admission recovered
+- **B5 completed five full imitation passes**, eight within-seed cooperative
+  examples, no imitation failure and KL0.042415<0.045. Action MAE decreased
+  1.297296->1.276354m/s²; first-pass AWR loss-change95%CI[-0.067176,-0.043125].
+  First-minibatch PPO KL0.0. Bank intent loss rose2.2574->3.0443, report-only.
+- **Composite safety passes**,24paired TRAIN worlds, zero collisions/teleports;
+  critical-event delta B-A=-15.0833CI[-39.4599,7.8547]. B-u6 lesson and isolated
+  policy synergy remain pending; imitation improvement alone is not cooperation
+  evidence.
+- A verified resource blocker was cleared: two superseded T-stopped owners plus
+  twelve parked children still held4,405,244KiB RSS. Following registration,
+  five local and five Linux checks, all14were retired with individual identity
+  checks. MemAvailable7.61->11.81GiB cleared the unchanged8GiB admission guard.
+  No files were deleted and all old charges remain. Existing A-u12/B-u6/R-u5
+  episode workers subsequently advanced (12/2/11episodes complete at11:46).
+- Current training supervisors, runtime-bound monitor4 and both movers are live.
+  cpuQ~6.99GiB disk free, still below the9GiB backfill-resume target. Backfill
+  and collector resource stops are retained. Latest budget12,104,980sim-s charged,
+  including811,640superseded, against17,471,840registered cap; no negative phases.
+- Receipts:`coopmwm/RESUME_ADOPTION_20261104_1130.md`,
+  `coopmwm/PARKED_RETIREMENT_1140_COMPLETE.md`,
+  `coopmwm/RESOURCE_READINESS_1130_1793763983848115600.json`.
+
 ## Nov4 11:10 UTC+8 — A11/B4/R4; recovered B/R updates pass mechanics and safety
 - Existing r2 supervisors and runtime-bound monitor4 are live. **B4 and R4 each
   completed five imitation passes**, with KL0.042823/0.035858 below0.045 and no

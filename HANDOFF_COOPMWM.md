@@ -1,5 +1,31 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 11:46 +08 — A11/B5/R4; memory admission recovered
+- Full1128-linebrief/log/status/receipts read; dirty work preserved. r2 supervisor
+  2636865/B2636963/R2636968, A2049830 and runtime-bound monitor4 retained/live.
+- B5: five full passes, no imitation failure, KL.042415<.045; eight own-seed
+  cooperative examples; MAE1.297296->1.276354; first-pass loss-changeCI
+  [-.067176,-.043125]. Composite safety PASS/24worlds/0collisions+teleports;
+  critical-total B-A -15.0833CI[-39.4599,7.8547]. Intent2.2574->3.0443 rose,
+  report-only. B6 lesson+isolated still PENDING at this checkpoint.
+- NEW engineering recovery COMPLETE: MAIN02:28 superseded stopped owners2146725/
+  2477255 +12parked children retired by14individual identity-pinned SIGKILLs;
+  noSIGCONT, no file deletion, no current owner signalled. Five local+five Linux
+  PASS, registrationSHA1b74376d/commit0b1b1e12 BEFORE action; completion4d2c106c.
+  MemAvailable7981084->12383524KiB clears unchanged8GiB gate. Never repeat.
+- Existing A12/B6/R5 episode workers resumed: at1793763982, completed12/2/11
+  respectively, zero failed; all checkpoints/receipts retained. No new coordinator.
+- Disk7503286272bytes(~6.99GiB), below9GiB backfill-resume target; original and
+  extension movers live, extension1621945597bytes/21batches/zeroeligible at
+  last scan. Backfill1132856 diskpaused/38done/157queued; MAINcollectorSTOP kept.
+- Budget12104980 charged INCLUDING811640superseded, cap17471840, no negative
+  phases at1793763869; no allocation change. CPU-S parity subsequently PASSes
+  per canonical registration; actual admission/use remains with its delegate.
+- Evidence PUBLIC_PROGRESS_1793763871103362000, RESOURCE_READINESS_1130_1793763983848115600,
+  RESUME_LIVE_0815_1793763915358083200, PARKED_RETIREMENT_1140_COMPLETE.json.
+  Next publish B6 lesson/isolated+composite safety when existing runner finishes;
+  fresh-V2V capture/WM-intent collection qualification remains previously blocked.
+
 ## CURRENT Nov4 11:10 +08 — fresh session adopted A11/B4/R4; both safety guards PASS
 - 11:15resource/accountingaudit:cpuQ7803940864bytes(~7.27GiB),extension
   1581086570bytes/19batches;9GiBshort1859735552bytes/40859027eligibleonly.
