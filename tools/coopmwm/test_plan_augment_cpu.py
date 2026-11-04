@@ -312,7 +312,10 @@ def test_no_partner_swap_keeps_ego_and_members():
 
 def test_B_R_identical_procedure_own_banks_and_repeatable():
     b, r = run(), run(arm='R')
-    assert [x['plan'] for x in b['examples']] == [x['plan'] for x in r['examples']]
+    # Verification IDs bind own-arm provenance; physical plans remain identical.
+    physical = lambda batch: [{k: v for k, v in x['plan'].items() if k != 'id'}
+                              for x in batch['examples']]
+    assert physical(b) == physical(r)
     assert [x['parameters'] for x in b['examples']] == [x['parameters'] for x in r['examples']]
     assert b['counts'] == r['counts']
     assert run() == b
@@ -707,3 +710,40 @@ def test_candidate_id_must_match_plan_even_when_plan_hash_matches(where):
             return result
         with pytest.raises(ValueError, match='candidate identity'):
             pa.resolve_spot_checks(batch, checker)
+
+
+def test_identical_perturbations_on_distinct_source_seeds_do_not_collide_in_all8_cache():
+    sources = []
+    for seed in (1, 2, 3):
+        src = source()
+        src['confirmation'] = seal(src['confirmation']['per_seed_v1']['examples'][0]['plan'],
+                                   seeds=(seed,))
+        sources.append(src)
+    batches = [run(src, attempts_per_plan=1, spot_check_fraction=1.) for src in sources]
+    plans = [b['spot_checks'][0]['plan'] for b in batches]
+    assert all({k: v for k, v in p.items() if k != 'id'} ==
+               {k: v for k, v in plans[0].items() if k != 'id'} for p in plans)
+    cache = {}
+    def cached_verify(kind, snap, candidates, *args, **kwargs):
+        first = first_receipt(candidates[0], snap)
+        key = first['verification_id']
+        # Existing sv.verify refuses this collision before executing branches.
+        if key in cache:
+            assert cache[key]['snapshot_sha256'] == first['snapshot_sha256'], 'foreign CRN cache collision'
+        cache[key] = first
+        return first
+    def confirm(root, arm, first, snap, *args, **kwargs):
+        return seal(kwargs['candidates'][0], arm=arm, snap=snap, seeds=(1, 2))
+    runner = Mock(side_effect=AssertionError('CPU test must not dispatch physics'))
+    with patch.object(vp, '_verify', side_effect=cached_verify), \
+         patch.object(vp, 'confirm_all8', side_effect=confirm):
+        for batch in batches:
+            req, = batch['spot_checks']
+            result = pa.resolve_spot_checks(batch, lambda request: pa.verify_all8(
+                request, snapshot=request['verification_provenance']['snapshot_identity'],
+                root='synthetic-root', run_root='single-ledger', runner_for=runner,
+                phase='registered-augment'))
+            assert len(result['examples']) == 2
+            assert all(ex['source_seed_index'] == req['source_seed_index'] for ex in result['examples'])
+    assert len(cache) == 3
+    runner.assert_not_called()

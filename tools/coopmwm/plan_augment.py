@@ -359,6 +359,10 @@ def augment(sources, *, arm, registration=None, score=None):
             if identity in seen:
                 continue
             seen.add(identity)
+            # sv.verification_id keys caches by episode/time/candidate IDs, not
+            # snapshot CRN. Bind this executable candidate to its source/seed so
+            # identical physical perturbations on different worlds never collide.
+            candidate['id'] = 'AUG'+identity[:24]
             out['counts']['wm_scored'] += 1
             wm = _screen(context, candidate, c, score)
             if wm is None:
