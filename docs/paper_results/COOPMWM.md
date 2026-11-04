@@ -1,5 +1,21 @@
 # S-COOPMWM — live checks
 
+### Nov4 12:23 UTC+8 — A13/B6/R6; future diagnostic phase gap identified
+R6 completed five full imitation passes, KL0.038233<0.045 and no imitation
+failure. AWR18.1665->17.7739 fell; unweighted action MAE0.453507->0.455639
+rose. Intent0.506662->0.447447 fell. Its24world composite safety check passes,
+zero collisions/teleports, critical-total R-A=-11.375CI[-26.833,3.938]. Existing
+supervisors and runtime-bound monitor4 remain live; B-u7 SUMO was observed.
+
+The full12-entry lesson slate costs8,760sim-s/check. Fixed futureu12/u18/u24
+need26,280; `v2v_lessons` has13,080remaining: **13,200sim-s forward phase
+shortfall**, reported to MAIN for reallocation within the existing cap.
+No allocation changed; current balances remain nonnegative and u12 fits.
+Budget12,691,610charged/cap17,471,840. cpuQ~6.14GiBfree; both movers active,
+with539MB newly eligible afterR6completion. Proof:
+`coopmwm/DIAGNOSTIC_BUDGET_FORECAST_1793766186218814600.json` and
+`coopmwm/PUBLIC_PROGRESS_1793766228801723500.json`.
+
 ### Nov4 12:20 UTC+8 — B-u6 frozen lessons repaired, 12/12 graded
 The additive `LESSON_CHECK_u006_B_MAIN1202_REPAIRED.json` completes all five
 previously missing entries and adopts the original seven unchanged. **Mean

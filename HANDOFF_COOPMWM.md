@@ -1,5 +1,29 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 12:23 +08 — A13/B6/R6; repair done, future phase gap reported
+- DirectPUBLIC_PROGRESS_1793766228801723500 and RESUME_LIVE_0815_1793766099105424300:
+  r2supervisor/B/R+A+monitor4LIVE/runtime06e88ecdMATCH/noSTOP; B7SUMOobserved.
+  R6fivefullpasses/KL.038233<.045/noimitationfailure/pass1CI[-.004085,-.0000655];
+  threecoopexamples; MAE.453507->.455639rose despite AWR18.1665->17.7739 falling;
+  intent.506662->.447447fell. CompositePASS/0collision+teleport/criticalR-A-11.375
+  CI[-26.833,3.938]. B6mechanics+safety/isolated results below unchanged.
+- MAIN12:02COMPLETE+independentlyVERIFIED:12of12lessons/+161.929CI[-335.497,
+  580.651]/8positive/sevenadoptedunchanged/fivenew3480sim-s. Worker2854683
+  exitednormally/NEVERredispatch; original7of12filekept. Repairs/protection
+  do not change scientific conclusions or training. Completioneebb90d2.
+- Forwardbudgetquote: fixed12lessons8760sim-s/check x3futureu12/18/24=26280;
+  v2v_lessonsremaining13080 => EXACT13200SHORTFALL reportedtoMAIN (no transfer).
+  u12fits/currentphasepositive. Isolatedu6cost32610/currentremaining152590,
+  listcangrow; eachnewcompletegrouprequiresadmission. Proof
+  DIAGNOSTIC_BUDGET_FORECAST_1793766186218814600.json; MAINnote_sol1223.
+- Currentcharged12691610/cap17471840/allphasesnonnegative. Disk6594940928bytes
+  (~6.14GiB); extensioneligible539010218bytes/216files afterR6completion,
+  bothmoversretained/draining. Do not widen sources or weaken protection/guards.
+  CPU-Schecking remains delegate-owned, oldcpuQbackfillSTOP_V2+MAINcollectorSTOP
+  retained; currentV2Vcapture/WMintentactorqualificationblockstillopen.
+- Next: monitoru7/u8+memory/disk; get MAINallocation decision beforelaterlessons;
+  preserve710protectedinputpaths/665bankfiles. No sealed outcomes opened.
+
 ## UPDATE Nov4 12:20 +08 — five missing u6 lessons COMPLETE+VERIFIED
 - Worker2854683 exited normally12:17:04; NEVERredispatch. Additive
   LESSON_CHECK_u006_B_MAIN1202_REPAIRED.json now12of12graded/8positive/mean

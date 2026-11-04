@@ -1,4 +1,4 @@
-# S-COOPMWM — V2V A13/B6/R5; u6 isolated complete, all 12 frozen lessons graded
+# S-COOPMWM — V2V A13/B6/R6; u6 diagnostics complete, future lesson phase gap reported
 1. MAIN14:06 V2Vcap17471840 registered67320dae supersedes14.5M/fresh6M; exact+2971840 onlynewV2Vphases,oldphaseallocationsunchanged. HistoricalMAIN07:06 checks->train144000/b6c1b8bf retained. Allcharges retained/sharedledger+lock. CurrentnonV2V sourcebindingsretainconservative14.5M in-memory, neverimplicitlymutated; newV2Vready/Linux/rehearsal/resourcegatesbeforephysics.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
