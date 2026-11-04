@@ -57,9 +57,14 @@ def verify_child(root, arm, row, snapshot, prelaunch):
     examples = (confirmation.get('per_seed_v1') or {}).get('examples', [])
     child = next((e for e in examples if e.get('example_id') == row['example_id']), {})
     tape = child.get('tape') or {}
+    from .rerun_cpus import guard_path
+    tape_result = Path(guard_path(Path(tape.get('branches_dir', ''))/
+        str(tape.get('verification_id', ''))/str(tape.get('branch', {}).get('branch', ''))/'RESULT.json'))
+    expected_result = Path(guard_path(receipt_path.parent.parent/'branches'/
+        receipt['verification_id']/str(tape.get('branch', {}).get('branch', ''))/'RESULT.json'))
     if (not child.get('admitted') or child.get('cooperative') is not True
             or child.get('seed_index') != row['seed_index']
-            or (Path(tape.get('branches_dir', ''))).resolve().parent != receipt_path.parent.parent
+            or not tape_result.is_file() or tape_result.resolve() != expected_result.resolve()
             or tape.get('verification_id') != receipt['verification_id']
             or tape.get('branch', {}).get('result_sha256') !=
                 receipt['branches'][receipt['chosen']+1].get('result_sha256')
