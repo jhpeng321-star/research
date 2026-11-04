@@ -49,6 +49,11 @@ def episode(job):
         _plan = job['practice'].get('plan')
         def controller_type(*args, **kwargs):
             return _cls(args[0], args[1], _snapshot, _plan)
+    if job.get('track2_backend'):
+        # P1 production adapter: explicit clean-run opt-in, including practice
+        # controller factories. The existing command/safety chain remains last.
+        from .track2_backend import episode_components
+        policy, controller_type = episode_components(job, policy, controller_type)
     controller=controller_type(policy,generator,job['deterministic'],
         guide=guide(job,generator) if not job['deterministic'] and not job.get('b_replay') else None,beta=job.get('beta',1.),
         replay=job.get('samples'),branch=job.get('branch'))
