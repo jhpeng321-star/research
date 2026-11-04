@@ -1,0 +1,16 @@
+{
+  "schema": "coopmwm.clean1.qualification_dispatch.v1",
+  "action": "once-only all8 augmentation then mandatory end-to-end smoke",
+  "host": "cpuV",
+  "root": "/home/ubuntu/coopmwm20261105_clean1",
+  "source_root": "/home/ubuntu/coopmwm20261105_clean1_src_13887d2a",
+  "runtime_commit": "13887d2a6c0204d267cf3e8fc02c17b352d097ac",
+  "pid": 88407,
+  "start_ticks": "1866361",
+  "unix": 1793828815.0964813,
+  "claim": "QUALIFICATION_DISPATCH_SMOKE.json",
+  "log": "QUALIFICATION_SMOKE.log",
+  "caps": {"augment_verify": 143280, "track2_smoke": 20000, "total_including_prior_parity": 5000000},
+  "adoption_rule": "Inspect this exact PID/start identity, its claim, log, artifacts and ledger; never duplicate this dispatch",
+  "training_launched": false
+}
