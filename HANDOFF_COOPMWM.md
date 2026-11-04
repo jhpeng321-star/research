@@ -1,5 +1,17 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 ~09:15 +08 — fresh adoption; MAIN09:00 recovery delegated
+- Full1125-linebriefREADthrough09:10. Direct09:12probeA7/B3/R3; A2049830LIVE.
+  B/R08:52mechanicspausekeptuntildelegatedoperatorrelease; 9ddb8d48onitsbranch
+  notyetobservedlive. DoNOTduplicate itsmonitor/rule/kl_targeted/practice work.
+- MAIN09:10legacypermanentstopALREADYdone03:46/a4dc8e10: B21/R20SHAkept,
+  all5oldownedPIDsabsent/nolegacytrainingsynergyprocess. Sharedbankcollectretained.
+- Monitor3runtime4a8890cdbound/LIVE; movers1237127+2213098LIVE/free6907314176bytes.
+  Backfill1132856diskpaused/38done/157queued; 778870of1.5Mallowanceused.
+  CurrentV2Vcapture+WMintentactorqualificationblockstillopen; nocosmeticrestart.
+- See coopmwm/RESUME_ADOPTION_20261104_0915.md. NoSUMO/inference/newdispatch,
+  budgetchange/processsignal/deletion/guardrelaxation/finishedworkredo byadoption.
+
 ## CURRENT Nov4 ~09:00 +08 — B/R MECHANICS-PAUSED at u3; A continues
 - R3completed08:51:38; monitor3correctlyPAUSED_BOTH_BR08:52:00 forR3
   pass1_effectiveFALSE: AWR19.347578->19.349314/drop-.001735687. Fivefullpasses

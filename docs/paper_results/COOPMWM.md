@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+## Nov4 ~09:15 UTC+8 — continuation adopted; existing owners preserved
+- Direct live check: **A7/B3/R3**. A continues; the B/R mechanics release and
+  statistical pass-1 refinement are with MAIN's delegated launch operator.
+- The requested permanent stop of old non-V2V B/R is already complete: actual
+  durable endpoints B21/R20, checkpoint hashes kept, all five old owned PIDs
+  absent. Shared bank and collection services remain live.
+- Both archive workers and runtime-bound monitor3 are live. cpuQ free ~6.43GiB;
+  backfill is correctly disk-paused (38 decisions complete). Fresh V2V collection
+  still needs its previously reported capture/WM-intent-actor qualification.
+- Full brief read; completed warm-memory work adopted. No new simulation or
+  duplicate recovery dispatched. `coopmwm/RESUME_ADOPTION_20261104_0915.md`.
+
 ## Nov4 ~09:00 UTC+8 — registered mechanics pause at R u3
 - **A6/B3/R3.** R3's first imitation-pass AWR loss rose19.347578->19.349314,
   so `pass1_effective=false` correctly triggered the registered B/R pause.
