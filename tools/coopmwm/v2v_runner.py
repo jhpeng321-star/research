@@ -22,11 +22,14 @@ def remote_name(path):
 
 def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v2v_dim,
             active_arms=ARMS, v2v_intent=False, v2v_intent_horizon=5, v2v_intent_loss_weight=1.,
-            v2v_intent_detach_trunk=True):
+            v2v_intent_detach_trunk=True, lane_actions=False):
     """Prospective binding only: no directory, checkpoint, ledger or job mutation.
 
     ``v2v_intent`` (default False = unchanged binding) adds the planned-command intent keys,
     identical for every arm; ``v2v_dim`` must then be the intent block width K*(6+H+1).
+    ``lane_actions`` (c4/lane-policy, default False) requires v2v_intent and additionally pins
+    the launcher's LANE_OPTIONS (identical for every arm); ``v2v_dim`` must then be the lane
+    block width K*(6+2H+2).
     """
     root, legacy_root = remote_name(root), remote_name(legacy_root)
     if root == legacy_root:
@@ -67,16 +70,21 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
         cfg.pop(key, None)
     if v2v_intent:
         from .v2v_intent import settings
+        if lane_actions:
+            from .v2v_launch3 import LANE_OPTIONS
+            cfg.update(LANE_OPTIONS)
         cfg.update(v2v_intent=True, v2v_intent_horizon=int(v2v_intent_horizon),
                    v2v_intent_loss_weight=float(v2v_intent_loss_weight),
                    v2v_intent_detach_trunk=bool(v2v_intent_detach_trunk))
-        settings(cfg)  # validates v2v_dim against the intent block width
+        settings(cfg)  # validates v2v_dim against the intent/lane block width
+    elif lane_actions:
+        raise ValueError('lane_actions requires the v2v_intent runtime (shared intent board)')
     return cfg
 
 
 def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sha256,
                    imitation_bank_filter='cooperative_only', imitation_step_mode=None,
-                   v2v_intent_bank_term=True):
+                   v2v_intent_bank_term=True, lane_actions=False):
     """Audit I4: the registered producer of the intent-ON A/B/R runtime config (prospective
     binding only, like prepare). Identical for every arm: v2v_dim=48 (K4 x (6+5+1)),
     v2v_intent=True, horizon 5, loss weight 1.0, detach_trunk=True; bank labels
@@ -84,14 +92,21 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
     (B and R; A has no bank) and imitation_bank_filter='cooperative_only' (B and R).
     c4/imit-strength (prepared): imitation_step_mode='fixed' (byte-identical; 'kl_targeted' only
     at a registered update boundary, B and R together) and v2v_intent_bank_term=True (the bank
-    intent term trains; False drops it). Exactly the keys v2v_launch3.bind_runtime pins."""
-    from .v2v_launch3 import BANK_OPTIONS, INTENT_OPTIONS
+    intent term trains; False drops it). Exactly the keys v2v_launch3.bind_runtime pins.
+    c4/lane-policy (prepared, OFF): ``lane_actions=True`` additionally pins the launcher's
+    LANE_OPTIONS (identical for A/B/R) and widens v2v_dim to the lane intent block (72)."""
+    from .v2v_launch3 import BANK_OPTIONS, INTENT_OPTIONS, LANE_OPTIONS
+    from .v2v_obs import V2V_K, lane_intent_dim
+    lane = bool(lane_actions)
+    dim = (lane_intent_dim(V2V_K, INTENT_OPTIONS['v2v_intent_horizon']) if lane
+           else int(INTENT_OPTIONS['v2v_dim']))
     cfg = prepare(base, root=root, legacy_root=legacy_root, source_root=source_root,
                   common_checkpoint_sha256=common_checkpoint_sha256,
-                  v2v_dim=int(INTENT_OPTIONS['v2v_dim']), v2v_intent=True,
+                  v2v_dim=dim, v2v_intent=True,
                   v2v_intent_horizon=INTENT_OPTIONS['v2v_intent_horizon'],
                   v2v_intent_loss_weight=INTENT_OPTIONS['v2v_intent_loss_weight'],
-                  v2v_intent_detach_trunk=INTENT_OPTIONS['v2v_intent_detach_trunk'])
+                  v2v_intent_detach_trunk=INTENT_OPTIONS['v2v_intent_detach_trunk'],
+                  lane_actions=lane)
     cfg.update(BANK_OPTIONS)
     # owner 2026-11-04 00:55: identical for B and R; the V2V runtime pins 'cooperative_only'
     cfg['imitation_bank_filter'] = imitation_bank_filter
@@ -102,7 +117,11 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
     cfg['v2v_intent_bank_term'] = bool(v2v_intent_bank_term)
     if cfg['imitation_epochs'] < 5:
         raise ValueError('full-pass separate imitation requires at least five epochs')
-    for key, want in dict(INTENT_OPTIONS, **BANK_OPTIONS).items():
+    expected = dict(INTENT_OPTIONS, **BANK_OPTIONS)
+    if lane:
+        expected.update(LANE_OPTIONS)
+    expected['v2v_dim'] = dim
+    for key, want in expected.items():
         if cfg.get(key) != want or isinstance(cfg.get(key), bool) != isinstance(want, bool):
             raise ValueError(f'intent runtime key {key} differs from the launcher: {cfg.get(key)!r}')
     return cfg

@@ -240,3 +240,76 @@ def intent_columns(k: int = V2V_K, horizon: int = V2V_INTENT_HORIZON) -> list:
     width = len(V2V_PARTNER_FEATURES)
     stride = width + int(horizon) + 1
     return [slot*stride + width + j for slot in range(int(k)) for j in range(int(horizon) + 1)]
+
+
+# ---------------------------------------------------------------- planned lane intent (option ``lane_actions``)
+#
+# ``lane_actions`` (DEFAULT OFF; nothing above changes): a per-CAV discrete lane head
+# (keep / left / right) additionally publishes its next ``H`` lane actions as SIGNED
+# values in {-1, 0, +1} (WM lane delta: left = -1, keep = 0, right = +1) beside the
+# planned-command intents.  Same freshness rule: at step ``t`` an ego sees the lane
+# intent published at ``t-1`` plus a ``lane_valid`` bit; absent/stale/malformed -> H
+# zeros and valid 0.  Per partner block with lane intents (interleaved per slot):
+#   [gap_m, lane_offset, v_mps, a_mps2, last_cmd, present,
+#    intent_1 .. intent_H, intent_valid, lane_1 .. lane_H, lane_valid] * K
+
+#: Signed WM lane delta of the three lane actions (index = the discrete choice).
+LANE_SIGNED = (0., -1., 1.)
+
+
+def lane_intent_dim(k: int = V2V_K, horizon: int = V2V_INTENT_HORIZON) -> int:
+    """Per-ego block width with planned-command AND lane intents: ``K * (6 + 2H + 2)``."""
+    return int(k) * (len(V2V_PARTNER_FEATURES) + 2 * int(horizon) + 2)
+
+
+def lane_intent_columns(k: int = V2V_K, horizon: int = V2V_INTENT_HORIZON) -> list:
+    """Offsets (within a lane block) of every partner LANE-intent input (H values + valid bit)."""
+    width = len(V2V_PARTNER_FEATURES)
+    stride = width + 2 * int(horizon) + 2
+    start = width + int(horizon) + 1
+    return [slot*stride + start + j for slot in range(int(k)) for j in range(int(horizon) + 1)]
+
+
+def published_lane_intent(board, vid, now, horizon: int):
+    """Partner LANE intent visible at ``now``: published exactly at ``now-1``, H values each in
+    [-1, 1], else None.  ``board`` maps vid -> ``(published_time_s, sequence of H floats)``."""
+    entry = (board or {}).get(vid)
+    if entry is None:
+        return None
+    published, values = entry
+    if int(published) != int(now) - 1:
+        return None
+    arr = np.asarray(values, dtype=np.float64).reshape(-1)
+    if arr.size != int(horizon) or not np.isfinite(arr).all() or float(np.abs(arr).max()) > 1.0:
+        return None
+    return arr
+
+
+def v2v_lane_intent_features(state, cav_id, last_commands, board, lane_board, now,
+                             horizon: int = V2V_INTENT_HORIZON, cfg=None) -> np.ndarray:
+    """``(v2v_lane_intent_dim(K, H),)`` block: :func:`v2v_intent_features` plus partner LANE intents.
+
+    ``lane_board`` None -> EXACTLY :func:`v2v_intent_features` (same stride/layout; the lane
+    option off keeps the block byte-identical)."""
+    cfg = cfg if cfg is not None else V2VConfig()
+    k, h = int(cfg.k), int(horizon)
+    width = len(V2V_PARTNER_FEATURES)
+    if lane_board is None:
+        return v2v_intent_features(state, cav_id, last_commands, board, now, h, cfg)
+    stride = width + 2 * h + 2
+    out = np.zeros(lane_intent_dim(k, h), np.float32)
+    base = v2v_features(state, cav_id, last_commands, cfg)
+    for slot in range(k):
+        out[slot*stride:slot*stride+width] = base[slot*width:(slot+1)*width]
+    for slot, vid in enumerate(v2v_partner_ids(state, cav_id, cfg)):
+        intent = published_intent(board, vid, now, h)
+        if intent is not None:
+            start = slot*stride + width
+            out[start:start+h] = intent
+            out[start+h] = 1.0
+        lane = published_lane_intent(lane_board, vid, now, h)
+        if lane is not None:
+            start = slot*stride + width + h + 1
+            out[start:start+h] = lane
+            out[start+h] = 1.0
+    return out

@@ -707,9 +707,14 @@ def verify_controller_class():
             sample = (self.events[-1] or {}).get('sample') or {}
             if 'lane_events' not in sample:
                 return
+            events = sample['lane_events']
+            if events and all((not e.get('issued') and not e.get('executed')
+                               and e.get('blocked') == 'unbound') for e in events.values()):
+                return  # no executor verdict: under the c4/lane-policy runtime these ride the
+                        # tick (observe_lane folds the real outcome into the audit instead)
             from .lane_plans import outcome_counts
             rec = self.audit.setdefault('lane_actions', dict(requests=0, issued=0, blocked=0, executed=0))
-            counts = outcome_counts(sample['lane_events'])
+            counts = outcome_counts(events)
             for k, v in counts.items():
                 rec[k] = rec.get(k, 0)+int(v)
 

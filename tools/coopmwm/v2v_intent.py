@@ -44,7 +44,9 @@ from torch import nn
 from .acceleration import Policy as BasePolicy
 from .v2v_integrate import widen_context
 from .v2v_model import FEATURES, extend_for_v2v
-from .v2v_obs import V2V_INTENT_HORIZON, V2V_K, V2V_PARTNER_FEATURES, intent_columns, v2v_intent_dim
+from .v2v_obs import (LANE_SIGNED, V2V_INTENT_HORIZON, V2V_K, V2V_PARTNER_FEATURES,
+                      intent_columns, lane_intent_columns, lane_intent_dim,
+                      v2v_intent_dim)
 
 DEFAULT_LOSS_WEIGHT = 1.
 #: Intent loss trains the intent head only (trunk features detached) unless the binding says False.
@@ -53,6 +55,8 @@ DEFAULT_DETACH_TRUNK = True
 ACCEL_BOUNDS = (-3., 2.6)
 TARGET_RULE = ('own issued pre-safety absolute command at t+1..t+H (native+residual or plan '
                'absolute), clipped to accel_bounds; masked past episode end/despawn/missing second')
+LANE_TARGET_RULE = ('own realised lane choice at t+1..t+H as signed WM lane delta '
+                    '(keep 0 / left -1 / right +1); masked past episode end/despawn/missing second')
 
 
 def settings(cfg):
@@ -71,7 +75,9 @@ def settings(cfg):
     detach = cfg.get('v2v_intent_detach_trunk', DEFAULT_DETACH_TRUNK)
     if not isinstance(detach, bool):
         raise ValueError('v2v_intent_detach_trunk must be a bool')
-    dim = v2v_intent_dim(V2V_K, horizon)
+    # ``lane_actions`` (DEFAULT OFF) widens the per-partner block by H lane intents + a valid bit.
+    dim = (lane_intent_dim(V2V_K, horizon) if cfg.get('lane_actions')
+           else v2v_intent_dim(V2V_K, horizon))
     if cfg.get('v2v_dim') is not None and int(cfg['v2v_dim']) != dim:
         raise ValueError(f'v2v_dim {cfg["v2v_dim"]} != intent block width {dim}')
     return dict(horizon=horizon, loss_weight=weight, bounds=bounds, k=V2V_K, dim=dim, detach_trunk=detach)
@@ -172,13 +178,19 @@ def intent_model(policy, depth=4):
 
 
 def convert(policy, horizon, loss_weight=DEFAULT_LOSS_WEIGHT, bounds=ACCEL_BOUNDS,
-            detach_trunk=DEFAULT_DETACH_TRUNK):
-    """Turn an already v2v-widened (block width K*(6+H+1)) base policy into an IntentPolicy in place."""
+            detach_trunk=DEFAULT_DETACH_TRUNK, lane=False):
+    """Turn an already v2v-widened base policy into an IntentPolicy in place.
+
+    ``lane=True`` (``lane_actions`` ON) expects the lane block width K*(6+2H+2); the lane heads
+    themselves are attached afterwards by ``v2v_lane.convert``."""
     width = int(policy.actor[0].weight.shape[1])-FEATURES-4
-    if width != v2v_intent_dim(V2V_K, horizon):
-        raise ValueError(f'widened width {width} != intent block width {v2v_intent_dim(V2V_K, horizon)}')
+    expected = lane_intent_dim(V2V_K, horizon) if lane else v2v_intent_dim(V2V_K, horizon)
+    if width != expected:
+        raise ValueError(f'widened width {width} != intent block width {expected}')
     policy.__class__ = IntentPolicy
     policy._attach_intent(horizon, loss_weight, bounds, detach_trunk)
+    if lane:
+        policy.v2v_width = expected
     return policy
 
 
@@ -196,38 +208,66 @@ def with_head(policy, optimizer):
     return rebuilt
 
 
-def _regrid(tensor, horizon):
-    """v2v-only (6 per partner) input columns -> intent layout (6 + H + 1 per partner), zero gaps."""
+def _regrid(tensor, horizon, lane=False):
+    """v2v-only (6 per partner) input columns -> intent layout (6 + H + 1 per partner), zero gaps.
+
+    ``lane=True`` re-grids to the lane layout (6 + 2H + 2 per partner; the lane columns start
+    zero)."""
     width = len(V2V_PARTNER_FEATURES)
-    old, new = V2V_K*width, v2v_intent_dim(V2V_K, horizon)
+    stride = width+(2*horizon+2 if lane else horizon+1)
+    old, new = V2V_K*width, V2V_K*stride
     out = torch.zeros(*tensor.shape[:-1], tensor.shape[-1]-old+new, dtype=tensor.dtype)
     out[..., :FEATURES] = tensor[..., :FEATURES]
     for slot in range(V2V_K):
-        dst = FEATURES+slot*(width+horizon+1)
+        dst = FEATURES+slot*stride
         out[..., dst:dst+width] = tensor[..., FEATURES+slot*width:FEATURES+(slot+1)*width]
     out[..., FEATURES+new:] = tensor[..., FEATURES+old:]
     return out
 
 
-def _from_v2v_only(policy, optimizer, horizon):
-    """Re-grid a v2v-only (block 24) policy and its Adam moments to the intent block width."""
+def _fresh_regrid(policy, optimizer, horizon, lane=False):
+    """Re-grid an intent-family policy's widened inputs (+ Adam moments) to ``horizon``'s layout.
+
+    ``lane=True`` targets the lane block (K*(6+2H+2)) and starts the LANE input columns from a
+    fresh Adam state (MAIN decision I1)."""
     index = {id(p): i for i, p in enumerate(policy.parameters())}
     state = optimizer.state_dict()
     for head in ('actor', 'critic'):
         layer = getattr(policy, head)[0]
         i = index[id(layer.weight)]
-        layer.weight = nn.Parameter(_regrid(layer.weight.detach(), horizon))
+        layer.weight = nn.Parameter(_regrid(layer.weight.detach(), horizon, lane))
         for key, value in state['state'].get(i, {}).items():
             if torch.is_tensor(value) and value.dim() == 2:
-                state['state'][i][key] = _regrid(value, horizon)
+                state['state'][i][key] = _regrid(value, horizon, lane)
             elif key == 'v2v_column_offset' and torch.is_tensor(value) and value.dim() == 1:
-                state['state'][i][key] = _regrid(value, horizon)   # fresh-column bookkeeping (I1)
+                state['state'][i][key] = _regrid(value, horizon, lane)   # fresh-column bookkeeping (I1)
     from .v2v_model import install_fresh_columns, mark_fresh_columns
     rebuilt = install_fresh_columns(torch.optim.Adam(policy.parameters(), lr=3e-4))
     rebuilt.load_state_dict(state)
     # MAIN decision I1: the new partner-intent columns start from a fresh Adam state (step 0).
-    cols = [FEATURES+c for c in intent_columns(V2V_K, horizon)]
+    columns = lane_intent_columns if lane else intent_columns
+    cols = [FEATURES+c for c in columns(V2V_K, horizon)]
     return mark_fresh_columns(rebuilt, policy, dict(actor=cols, critic=cols))
+
+
+def _from_v2v_only(policy, optimizer, horizon, lane=False):
+    """Re-grid a v2v-only (block 24) policy and its Adam moments to the intent(-lane) width."""
+    return _fresh_regrid(policy, optimizer, horizon, lane)
+
+
+def _intent_checkpoint_to_lane(saved, s, lane):
+    """A saved 48-wide intent checkpoint under a lane_actions-ON config: re-grid the widened
+    inputs to the lane block (K*(6+2H+2)), keep the command intent head, attach the lane heads."""
+    import random
+    policy = IntentPolicy(s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'])
+    policy.load_state_dict(saved['policy'])
+    from .v2v_model import install_fresh_columns
+    optimizer = install_fresh_columns(torch.optim.Adam(policy.parameters(), lr=3e-4))
+    optimizer.load_state_dict(saved['optimizer'])
+    optimizer = _fresh_regrid(policy, optimizer, s['horizon'], lane=True)
+    from .v2v_lane import convert
+    convert(policy, lane)
+    return policy, optimizer
 
 
 def load_checkpoint(path, config):
@@ -235,15 +275,26 @@ def load_checkpoint(path, config):
 
     u0 and v2v-only checkpoints are widened with ZERO intent input columns and a zero head,
     so the executed actions equal the current v2v policy; Adam moments are kept/re-gridded.
-    """
+    With ``lane_actions`` ON (config) everything lands on the lane block width and the lane
+    heads are attached with their neutral init (``v2v_lane.convert``)."""
     import random
     s = settings(config)
     if s is None:
         raise ValueError('v2v_intent loader requires v2v_intent=True')
+    lane = bool(config.get('lane_actions'))
     saved = torch.load(path, map_location='cpu', weights_only=False)
     if 'intent_head.weight' in saved['policy']:
         if int(saved['policy']['intent_head.weight'].shape[0]) != s['horizon']:
             raise ValueError('intent checkpoint horizon differs from v2v_intent_horizon')
+        if lane:
+            lane_settings = _lane_settings(config)
+            policy, optimizer = _intent_checkpoint_to_lane(saved, s, lane_settings)
+            generator = torch.Generator()
+            generator.set_state(saved['generator'])
+            torch.set_rng_state(saved['torch_rng'])
+            np.random.set_state(saved['numpy_rng'])
+            random.setstate(saved['python_rng'])
+            return policy, optimizer, generator, saved
         policy = IntentPolicy(s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'])
         policy.load_state_dict(saved['policy'])
         from .v2v_model import install_fresh_columns
@@ -259,11 +310,20 @@ def load_checkpoint(path, config):
     width = int(saved['policy']['actor.0.weight'].shape[1])-BASE_INPUT['actor']
     if width == V2V_K*len(V2V_PARTNER_FEATURES):
         policy, optimizer, generator, payload = widened(path, v2v_dim=width)
-        optimizer = _from_v2v_only(policy, optimizer, s['horizon'])
+        optimizer = _from_v2v_only(policy, optimizer, s['horizon'], lane)
     else:
         policy, optimizer, generator, payload = widened(path, v2v_dim=s['dim'])
-    convert(policy, s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'])
+    convert(policy, s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'], lane=lane)
+    if lane:
+        from .v2v_lane import convert as lane_convert
+        lane_convert(policy, _lane_settings(config))
     return policy, with_head(policy, optimizer), generator, payload
+
+
+def _lane_settings(config):
+    """Resolved lane settings for the lane-aware loader paths (None when lane_actions off)."""
+    from .v2v_lane import settings as lane_settings
+    return lane_settings(config)
 
 
 def from_weights(weights, *, enabled=False):
@@ -330,6 +390,42 @@ def episode_targets(steps, horizon, bounds=ACCEL_BOUNDS):
             for s in steps]
 
 
+def lane_choices_by_time(steps):
+    """{second: {vid: signed WM lane delta}} of the recorded lane choices (lane_actions ON)."""
+    out = {}
+    for s in steps:
+        sample = s.get('sample') or {}
+        choice = sample.get('lane_choice')
+        members = (sample.get('context') or {}).get('members') or []
+        if choice is not None and len(choice) == len(members):
+            out[int(s['time_s'])] = {v: LANE_SIGNED[int(c)] for v, c in zip(members, choice)}
+    return out
+
+
+def lane_own_targets(members, t, by_time, horizon, end_s=None):
+    """(targets, mask) of the realised signed lane choices at t+1..t+H, aligned with members."""
+    targets = [[0.]*horizon for _ in members]
+    mask = [[0.]*horizon for _ in members]
+    for k in range(1, horizon+1):
+        if end_s is not None and t+k >= end_s:
+            break
+        later = by_time.get(int(t)+k)
+        if later is None:
+            continue
+        for j, vid in enumerate(members):
+            if vid in later:
+                targets[j][k-1] = later[vid]
+                mask[j][k-1] = 1.
+    return targets, mask
+
+
+def lane_episode_targets(steps, horizon):
+    """Per step: (lane targets, mask) aligned with ``sample['context']['members']``."""
+    by_time = lane_choices_by_time(steps)
+    return [lane_own_targets(s['sample']['context']['members'], int(s['time_s']), by_time, horizon)
+            for s in steps]
+
+
 def refresh_bank_intents(policy, pairs):
     """Recompute every bank pair's partner-intent inputs with the CURRENT head (no grad), in place.
 
@@ -351,11 +447,18 @@ def refresh_bank_intents(policy, pairs):
         seen.add(id(sample))
         groups.setdefault(link['entry'], {}).setdefault(int(link['t']), []).append(sample)
     width, h = len(V2V_PARTNER_FEATURES), policy.intent_horizon
-    stride = width+h+1
+    lane = getattr(policy, 'lane_intent_head', None) is not None   # lane_actions ON layout
+    stride = width+(2*h+2 if lane else h+1)
     report = dict(pairs_refreshed=0, partner_slots=0, partner_slots_valid=0,
                   partner_slots_no_prev_context=0,
                   rule='current intent head (no grad) on the partner own t-1 bank context; '
                        'missing t-1 context or non-member partner -> zeros, intent_valid 0')
+    if lane:
+        report['lane_rule'] = ('current lane intent head (no grad) on the partner own t-1 bank '
+                               'context; missing t-1 context or non-member partner -> zeros, '
+                               'lane_valid 0')
+        report['partner_lane_slots'] = 0
+        report['partner_lane_slots_valid'] = 0
     was_training = policy.training
     policy.eval()
     try:
@@ -364,6 +467,7 @@ def refresh_bank_intents(policy, pairs):
                 for t in sorted(by_t):
                     prev = by_t.get(t-1)
                     published = policy.publish(prev[0]['context']) if prev else {}
+                    published_lane = policy.publish_lane(prev[0]['context']) if lane and prev else {}
                     for sample in by_t[t]:
                         blocks = sample['context'].get('v2v') or {}
                         for ego, slots in sample['intent_link']['slots'].items():
@@ -378,11 +482,23 @@ def refresh_bank_intents(policy, pairs):
                                 report['partner_slots'] += 1
                                 report['partner_slots_valid'] += bool(values)
                                 report['partner_slots_no_prev_context'] += not prev
+                                if lane:
+                                    lane_start = start+h+1
+                                    lane_values = published_lane.get(vid)
+                                    block[lane_start:lane_start+h] = ([float(v) for v in lane_values]
+                                                                      if lane_values else [0.]*h)
+                                    block[lane_start+h] = 1. if lane_values else 0.
+                                    report['partner_lane_slots'] += 1
+                                    report['partner_lane_slots_valid'] += bool(lane_values)
                         report['pairs_refreshed'] += 1
     finally:
         policy.train(was_training)
     report['partner_intent_coverage'] = (report['partner_slots_valid']/report['partner_slots']
                                          if report['partner_slots'] else None)
+    if lane:
+        report['partner_lane_intent_coverage'] = (report['partner_lane_slots_valid'] /
+                                                  report['partner_lane_slots']
+                                                  if report['partner_lane_slots'] else None)
     return report
 
 
@@ -431,6 +547,27 @@ def mean_loss(policy, contexts, targets, masks):
     return total/max(count, 1.), count
 
 
+def lane_masked_terms(policy, contexts, targets, masks):
+    """(sum of masked squared errors, masked count) of the LANE intent head (lane_actions ON)."""
+    total = sum(p.sum() for p in policy.lane_intent_head.parameters())*0
+    count = 0.
+    for context, target, mask in zip(contexts, targets, masks):
+        if not context['members']:
+            continue
+        m = torch.as_tensor(mask, dtype=torch.float32).reshape(-1, policy.intent_horizon)
+        if not bool(m.any()):
+            continue
+        y = torch.as_tensor(target, dtype=torch.float32).reshape(-1, policy.intent_horizon)
+        total = total+((policy.lane_intent(context)-y).square()*m).sum()
+        count += float(m.sum())
+    return total, count
+
+
+def lane_mean_loss(policy, contexts, targets, masks):
+    total, count = lane_masked_terms(policy, contexts, targets, masks)
+    return total/max(count, 1.), count
+
+
 def bank_term(policy, batch):
     """Weighted intent loss over bank pairs carrying ``intent_target`` (imitation-phase hook)."""
     rows = [s for s, _w in batch if 'intent_target' in s]
@@ -448,25 +585,40 @@ def bank_stats(policy, pairs):
 
 
 def weight_norms(policy):
-    """Frobenius norms of the partner-intent input columns (H values + valid bit per slot)."""
+    """Frobenius norms of the partner-intent input columns (H values + valid bit per slot).
+
+    With ``lane_actions`` ON the lane-intent columns are reported beside them."""
     cols = [FEATURES+c for c in intent_columns(policy.intent_k, policy.intent_horizon)]
-    return dict(actor=float(policy.actor[0].weight[:, cols].detach().norm()),
-                critic=float(policy.critic[0].weight[:, cols].detach().norm()))
+    out = dict(actor=float(policy.actor[0].weight[:, cols].detach().norm()),
+               critic=float(policy.critic[0].weight[:, cols].detach().norm()))
+    if getattr(policy, 'lane_intent_head', None) is not None:
+        lane = [FEATURES+c for c in lane_intent_columns(policy.intent_k, policy.intent_horizon)]
+        out['lane_actor'] = float(policy.actor[0].weight[:, lane].detach().norm())
+        out['lane_critic'] = float(policy.critic[0].weight[:, lane].detach().norm())
+    return out
 
 
-def coverage(contexts, horizon, k=V2V_K):
-    """Share of present partner slots whose intent was valid, over member blocks."""
+def coverage(contexts, horizon, k=V2V_K, lane=False):
+    """Share of present partner slots whose intent was valid, over member blocks.
+
+    ``lane=True`` (``lane_actions`` ON layout) also reports the lane-intent coverage."""
     width = len(V2V_PARTNER_FEATURES)
-    stride = width+horizon+1
-    present = valid = 0
+    stride = width+(2 if lane else 1)*int(horizon)+(2 if lane else 1)
+    present = valid = lane_valid = 0
     for context in contexts:
         for block in (context.get('v2v') or {}).values():
             for slot in range(k):
                 if len(block) >= (slot+1)*stride and block[slot*stride+width-1] > 0:
                     present += 1
                     valid += block[slot*stride+width+horizon] > 0
-    return dict(partner_intent_coverage=valid/present if present else None,
-                partner_slots_present=int(present), partner_slots_intent_valid=int(valid))
+                    if lane:
+                        lane_valid += block[slot*stride+width+2*horizon+1] > 0
+    out = dict(partner_intent_coverage=valid/present if present else None,
+               partner_slots_present=int(present), partner_slots_intent_valid=int(valid))
+    if lane:
+        out['partner_lane_intent_coverage'] = lane_valid/present if present else None
+        out['partner_slots_lane_intent_valid'] = int(lane_valid)
+    return out
 
 
 def grad_share(policy):
@@ -493,24 +645,42 @@ def share_summary(shares):
 
 
 class PPOIntent:
-    """Per-update PPO-phase intent loss over rollout records; None-target records are skipped."""
+    """Per-update PPO-phase intent loss over rollout records; None-target records are skipped.
+
+    With ``lane_actions`` ON (policy carries ``lane_intent_head``) the LANE intent head trains
+    beside the command intent head: masked MSE against the realised signed lane choices at
+    t+1..t+H (:data:`tools/coopmwm/v2v_obs.LANE_SIGNED`), weighted by the policy's
+    ``lane_intent_loss_weight``."""
 
     def __init__(self, policy, episodes, extra_records=0):
         self.policy, h = policy, policy.intent_horizon
+        self.lane = getattr(policy, 'lane_intent_head', None) is not None
         self.contexts, self.targets, self.masks = [], [], []
+        self.lane_targets, self.lane_masks = [], []
         for ep in episodes:
-            for step, (target, mask) in zip(ep['steps'], episode_targets(ep['steps'], h, self.bounds())):
+            steps = ep['steps']
+            lane_pairs = lane_episode_targets(steps, h) if self.lane else None
+            for step, (target, mask) in zip(steps, episode_targets(steps, h, self.bounds())):
                 self.contexts.append(step['sample']['context'])
                 self.targets.append(target)
                 self.masks.append(mask)
+                if self.lane:
+                    lane_target, lane_mask = lane_pairs[len(self.contexts)-1]
+                    self.lane_targets.append(lane_target)
+                    self.lane_masks.append(lane_mask)
         self.extra = int(extra_records)
         self.shares = []
         self.report = dict(horizon=h, loss_weight=policy.intent_loss_weight, target_rule=TARGET_RULE,
                            detach_trunk=policy.intent_detach_trunk,
-                           **coverage(self.contexts, h, policy.intent_k))
+                           **coverage(self.contexts, h, policy.intent_k, lane=self.lane))
+        if self.lane:
+            self.report['lane_target_rule'] = LANE_TARGET_RULE
+            self.report['lane_detach_trunk'] = policy.lane_intent_detach_trunk
         before = self.stats()
         self.report.update(intent_loss_before=before['intent_loss'], intent_targets=before['intent_targets'],
                            partner_intent_weight_norm_before=weight_norms(policy))
+        if self.lane:
+            self.report['lane_intent_loss_before'] = before['lane_intent_loss']
 
     def bounds(self):
         return tuple(float(b) for b in self.policy.intent_bounds)
@@ -520,20 +690,33 @@ class PPOIntent:
         rows = [int(i) for i in indices if int(i) < len(self.contexts)]
         loss, _ = mean_loss(self.policy, [self.contexts[i] for i in rows], [self.targets[i] for i in rows],
                             [self.masks[i] for i in rows])
+        if self.lane:
+            lane, _ = lane_mean_loss(self.policy, [self.contexts[i] for i in rows],
+                                     [self.lane_targets[i] for i in rows],
+                                     [self.lane_masks[i] for i in rows])
+            loss = loss+self.policy.lane_intent_loss_weight*lane
         return loss*self.policy.intent_loss_weight
 
     @torch.no_grad()
     def stats(self):
         loss, count = mean_loss(self.policy, self.contexts, self.targets, self.masks)
-        return dict(intent_loss=float(loss) if count else None, intent_targets=int(count))
+        out = dict(intent_loss=float(loss) if count else None, intent_targets=int(count))
+        if self.lane:
+            lane, lane_count = lane_mean_loss(self.policy, self.contexts, self.lane_targets,
+                                              self.lane_masks)
+            out['lane_intent_loss'] = float(lane) if lane_count else None
+        return out
 
     def log_grad(self):
         self.shares.append(grad_share(self.policy))
 
     def close(self, metrics):
+        after = self.stats()
         self.report.update(intent_grad_share=share_summary(self.shares),
-                           intent_loss_after=self.stats()['intent_loss'],
+                           intent_loss_after=after['intent_loss'],
                            partner_intent_weight_norm_after=weight_norms(self.policy))
+        if self.lane:
+            self.report['lane_intent_loss_after'] = after['lane_intent_loss']
         if metrics:
             metrics[-1]['v2v_intent'] = self.report
         else:

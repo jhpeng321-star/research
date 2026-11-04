@@ -75,6 +75,8 @@ class Controller:
     def apply(self, rows, commands, now):
         from .plans import acceleration_at
         from .exploration import regime, bucket_beta
+        if getattr(self.policy, 'lane_head', None) is not None and not getattr(self, 'lane_runtime', False):
+            raise ValueError('lane-head policy requires the lane execution runtime (v2v_runtime)')
         if self.guide and hasattr(self.guide,'observe'):
             self.guide.observe(rows,now)
         context = encode(rows)

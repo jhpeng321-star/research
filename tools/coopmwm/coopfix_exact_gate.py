@@ -96,7 +96,10 @@ def intent_module():
 
 RUNTIME_FILE = 'V2V_RUNTIME.json'
 RUNTIME_KEYS = ('v2v', 'v2v_dim', 'v2v_intent', 'v2v_intent_horizon', 'v2v_intent_loss_weight',
-                'v2v_intent_detach_trunk')
+                'v2v_intent_detach_trunk',
+                # c4/lane-policy (prepared, OFF): the lane runtime keys ride the same identity.
+                'lane_actions', 'lane_actions_entropy_weight', 'lane_intent_loss_weight',
+                'lane_intent_detach_trunk')
 
 
 class GateIdentityError(ValueError):
@@ -132,7 +135,19 @@ def runtime_gate_config(runtime_cfg, v2v=True, intent='auto'):
     if (intent == 'on' and not on) or (intent == 'off' and on):
         problems.append(f'gate intent={intent} but the deployed runtime has v2v_intent={on}')
     if on:
+        lane_on = bool(cfg.get('lane_actions'))
+        from .v2v_launch3 import LANE_OPTIONS
+        lane_keys = {key: cfg.get(key) for key in LANE_OPTIONS if key in cfg}
+        if cfg.get('lane_actions'):
+            for key, want in LANE_OPTIONS.items():
+                have = cfg.get(key)
+                if have != want or isinstance(have, bool) != isinstance(want, bool):
+                    problems.append(f'deployed runtime {key}={have!r} differs from launcher {want!r}')
+        elif lane_keys:
+            problems.append(f'deployed runtime lane options present with lane_actions off: {sorted(lane_keys)}')
         for key, want in INTENT_OPTIONS.items():
+            if key == 'v2v_dim' and lane_on:
+                continue                 # the lane block width is validated by settings() below
             have = cfg.get(key)
             if have != want or isinstance(have, bool) != isinstance(want, bool):
                 problems.append(f'deployed runtime {key}={have!r} differs from launcher {want!r}')

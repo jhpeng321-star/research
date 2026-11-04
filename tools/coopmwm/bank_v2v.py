@@ -137,10 +137,17 @@ def _features(frame, ego, known, cfg):
 
 def _intent_features(frame, ego, known, cfg, intent):
     """Planned-command intent variant of :func:`_features` (v2v_intent ON only): the base block
-    interleaved with the partner intents published at ``time_s-1`` (``intent['board']``)."""
+    interleaved with the partner intents published at ``time_s-1`` (``intent['board']``).
+    ``lane_actions`` ON (``'lane_board'`` in ``intent``): the partner LANE intents ride the same
+    t-1 rule (``v2v_obs.v2v_lane_intent_features``, per partner 6 + 2H + 2)."""
     if STUB:
         raise ValueError('v2v intent requires the OBSERVATION part (tools/coopmwm/v2v_obs.py)')
     from .v2v_obs import v2v_intent_features
+    if 'lane_board' in intent:
+        from .v2v_obs import v2v_lane_intent_features
+        return [float(x) for x in v2v_lane_intent_features(_frame_table(frame), ego, known,
+                intent['board'], intent['lane_board'], int(frame.get('time_s', 0)),
+                int(intent['horizon']), _obs_cfg(cfg))]
     return [float(x) for x in v2v_intent_features(_frame_table(frame), ego, known, intent['board'],
             int(frame.get('time_s', 0)), int(intent['horizon']), _obs_cfg(cfg))]
 
@@ -149,6 +156,9 @@ def _block_dim(cfg, intent):
     if not intent:
         return V2V_DIM
     from .v2v_obs import v2v_intent_dim
+    if 'lane_board' in intent:
+        from .v2v_obs import lane_intent_dim
+        return lane_intent_dim(_obs_cfg(cfg).k, int(intent['horizon']))
     return v2v_intent_dim(_obs_cfg(cfg).k, int(intent['horizon']))
 
 
@@ -214,8 +224,12 @@ def attach_pairs(pairs, trace_path, t0, cfg=None, intent=None):
             continue
         context = sample.setdefault('context', {})
         members = list(context.get('members') or sample['behaviour']['proposal_members'])
-        block, missing = pair_v2v_block(frame, prev, members, cfg, None if intent is None else
-                                        dict(horizon=intent['horizon'], board={}))
+        block_intent = None
+        if intent is not None:
+            block_intent = dict(horizon=intent['horizon'], board={})
+            if 'lane_board' in intent:      # lane_actions ON: partner LANE intent slots ride along
+                block_intent['lane_board'] = intent['lane_board']
+        block, missing = pair_v2v_block(frame, prev, members, cfg, block_intent)
         if missing:
             counts['excluded_missing_partner_command'] += 1
             continue
