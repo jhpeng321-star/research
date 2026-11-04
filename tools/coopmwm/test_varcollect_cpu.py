@@ -6,6 +6,7 @@ sha/k), charges ONLY through the cpuS->cpuQ RPC route with the registered phases
 wiring (B floor(share*N) search slots, R Bernoulli(share) unscored draws), parameterised
 episode ids, single-slot broker staging artifacts. No SUMO, no ssh, no GPU.
 """
+import ast
 import hashlib
 import inspect
 import io
@@ -15,6 +16,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from unittest.mock import patch
 
@@ -612,9 +614,193 @@ def test_stage_broker_writes_config_only_artifacts(tmp_path):
     assert len(GATES) == 8                       # ALL 8 startup gates (fix round, was ADOPTABLE=4)
     assert gates['required'] == list(GATES) and gates['slot'] == 'gpuA-new-1'
     assert config['startup_gates'] == list(GATES)
+    assert config['fresh']['service'] == 'tools.coopmwm.warm_spool'   # the FRESH service
+    assert 'adopted_startup_gates' not in config['fresh']['binding']
     script = Path(out['worker_script']).read_text()
     compile(script, 'STAGE_WORKER.py', 'exec')       # the artifact parses
-    assert '_VARCOLLECT' in script and 'gpuA-new-1' in script
+    assert 'NEW EMPTY' in script and 'OWNER_OR_LOCK' in script and 'gpuA-new-1' in script
+    assert 'ls_gpu' not in script and 'recover' not in script    # fix round 2: fresh path only
+
+
+def test_fresh_binding_built_from_this_build_pins_variety_sources():
+    """Without a staged snapshot binding, fresh_binding builds one from THIS build: the
+    numerical set plus the variety sources, in the fresh 8-gate startup shape."""
+    from tools.coopmwm.warm_service import NUMERICAL
+    broker = vc.validate_broker(broker_cfg())
+    b = vc.fresh_binding(broker)
+    assert set(vc.VARIETY_GPU_SOURCES) <= set(b['hashes'])
+    for rel in vc.VARIETY_GPU_SOURCES:
+        assert b['hashes'][rel] == vc.file_sha256(vc.repo_root()/rel.split('pytools/', 1)[1])
+    numerical = {n for n in NUMERICAL if n.endswith('.py') and
+                 n.startswith(('pytools/tools/coopmwm/', 'pytools/tools/coopnative/'))}
+    assert numerical <= set(b['hashes'])
+    # the fresh service itself runs WARM_BATCH_SINGLE x2 + COMMITTED x2 + PARITY x2 +
+    # WARM_PARITY x2 = ALL of hotadd.GATES: nothing is ever adopted/inherited
+    for key, value in dict(memory_mode='warm', startup_qualification=True, speed2=True,
+                           speed2_transfers=True, concurrent_plans=True).items():
+        assert b[key] == value
+    assert 'adopted_startup_gates' not in b
+    assert b['service'] == 'tools.coopmwm.warm_spool'
+    assert b['amendment_sha256'] == broker['amendment_sha256']
+    assert b['deadline_unix'] == b['gpu_deadline'] == float(broker['gpu_deadline'])
+
+
+def staged_binding(overlay):
+    """An operator-staged binding snapshot: hashes over the staged overlay files, with the
+    variety sources pinned (check_fresh_binding requires them)."""
+    overlay = Path(overlay)
+
+    def sha(p):
+        return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+
+    return dict(memory_mode='warm', startup_qualification=True, speed2=True,
+                speed2_transfers=True, concurrent_plans=True,
+                hashes={'INPUTS.json': sha(overlay/'INPUTS.json'),
+                        'pytools/tools/coopmwm/warm_spool.py':
+                            sha(overlay/'pytools/tools/coopmwm/warm_spool.py'),
+                        'pytools/tools/coopmwm/variety.py':
+                            sha(overlay/'pytools/tools/coopmwm/variety.py'),
+                        'pytools/tools/coopmwm/niche_collect.py':
+                            sha(overlay/'pytools/tools/coopmwm/niche_collect.py')})
+
+
+def fake_overlay(tmp, gates):
+    """A worker-root-shaped overlay whose fresh service module is a FAKE: it writes its own
+    owner receipt and then EVERY gate receipt itself (CPU stand-in for warm_spool ->
+    warm_service.main -> plan_service.main)."""
+    overlay = Path(tmp)/'overlay'
+    pkg = overlay/'pytools'/'tools'/'coopmwm'
+    pkg.mkdir(parents=True)
+    (overlay/'pytools'/'tools'/'__init__.py').write_text('')
+    (pkg/'__init__.py').write_text('')
+    (pkg/'variety.py').write_text('# pinned variety source\n')
+    (pkg/'niche_collect.py').write_text('# pinned niche source\n')
+    (pkg/'warm_spool.py').write_text(
+        'import json, sys\n'
+        'from pathlib import Path\n'
+        'root = Path(sys.argv[1])\n'
+        '(root/"SPOOL_OWNER.json").write_text(json.dumps(dict(pid=424242, fake=True)))\n'
+        f'for name in {list(gates)!r}:\n'
+        '    (root/name).write_text(json.dumps(dict(pass_=True, max_cost_error=0)))\n'
+        '(root/"FAKE_DONE.json").write_text(json.dumps(dict(ran="all gates")))\n')
+    (overlay/'INPUTS.json').write_text('{"records": [{"fake": true}]}')
+    return overlay
+
+
+def run_worker(script, worker, overlay, *extra):
+    p = subprocess.run([sys.executable, str(script), str(worker), '--overlay', str(overlay),
+                        *extra], capture_output=True, text=True, timeout=120)
+    if p.returncode not in (0, 2, 3):        # the artifact must never crash: rc is 0/2/3 only
+        raise AssertionError(f'STAGE_WORKER.py crashed rc={p.returncode}: {p.stderr[-2000:]}')
+    return p.returncode, (json.loads(p.stdout) if p.stdout.strip().startswith('{')
+                          else p.stdout.strip())
+
+
+def test_fresh_worker_stages_new_root_and_runs_the_gates_itself(tmp_path):
+    """Fix-round BLOCK: a fresh root + binding with the variety sources; the FRESH service
+    itself runs all 8 hotadd.GATES; the slot is admitted only after all 8 receipts pass."""
+    from tools.coopmwm.hotadd import GATES
+    overlay = fake_overlay(tmp_path, GATES)
+    broker = dict(broker_cfg(), binding=staged_binding(overlay))
+    cfg = vc.split_config(base_config(tmp_path, broker=broker))
+    out = vc.stage_broker(cfg, tmp_path/'collect_root')
+    worker = tmp_path/'fresh_worker_root'
+    assert not worker.exists()
+    rc, started = run_worker(out['worker_script'], worker, overlay)
+    assert rc == 0 and started['service'] == 'tools.coopmwm.warm_spool'
+    assert worker.is_dir() and (worker/'pytools'/'tools'/'coopmwm'/'variety.py').is_file()
+    binding = json.loads((worker/'GPU_BINDING.json').read_text())
+    assert binding == json.loads(json.dumps(broker['binding']))   # exactly the staged binding
+    deadline = time.time()+30
+    while time.time() < deadline and not (worker/'FAKE_DONE.json').exists():
+        time.sleep(.2)
+    assert (worker/'FAKE_DONE.json').exists()
+    assert json.loads((worker/'SPOOL_OWNER.json').read_text())['pid'] == 424242
+    for name in GATES:                 # the fresh service itself wrote every gate receipt
+        assert json.loads((worker/name).read_text())['pass_'] is True
+    rc, verdict = run_worker(out['worker_script'], worker, overlay, '--check')
+    assert rc == 0 and verdict['ready'] is True and len(verdict['receipts']) == 8
+    receipts = {name: json.loads((worker/name).read_text()) for name in GATES}
+    assert vc.broker_readiness(broker, receipts)['ready'] is True   # slot admitted only now
+
+
+def test_fresh_worker_refuses_existing_root_or_owner_or_lock(tmp_path):
+    """Refuse to start when the root already exists or has any owner PID/lock: never adopt,
+    never signal another process."""
+    from tools.coopmwm.hotadd import GATES
+    overlay = fake_overlay(tmp_path, GATES)
+    broker = dict(broker_cfg(), binding=staged_binding(overlay))
+    cfg = vc.split_config(base_config(tmp_path, broker=broker))
+    out = vc.stage_broker(cfg, tmp_path/'collect_root')
+
+    existing = tmp_path/'worker_exists';existing.mkdir()
+    (existing/'operator_leftover.txt').write_text('keep me')
+    rc, verdict = run_worker(out['worker_script'], existing, overlay)
+    assert rc == 3 and verdict['refused'] is True and 'already exists' in verdict['reason']
+    assert (existing/'operator_leftover.txt').read_text() == 'keep me'
+    assert not (existing/'GPU_BINDING.json').exists() and not (existing/'SPOOL.log').exists()
+
+    owner = tmp_path/'worker_owner';owner.mkdir()
+    (owner/'SPOOL_OWNER.json').write_text(json.dumps(dict(pid=99, start_ticks='7')))
+    rc, verdict = run_worker(out['worker_script'], owner, overlay)
+    assert rc == 3 and 'owner/lock' in verdict['reason'] and 'SPOOL_OWNER.json' in verdict['reason']
+    assert json.loads((owner/'SPOOL_OWNER.json').read_text())['pid'] == 99   # untouched
+    assert not (owner/'SPOOL.log').exists() and not (owner/'GPU_BINDING.json').exists()
+
+    lock = tmp_path/'worker_lock';lock.mkdir()
+    (lock/'SPOOL_WORKER.claim').write_text('')
+    rc, verdict = run_worker(out['worker_script'], lock, overlay)
+    assert rc == 3 and 'SPOOL_WORKER.claim' in verdict['reason']
+    assert not list(lock.rglob('GPU_BINDING.json'))
+
+    service_owner = tmp_path/'worker_service_owner';service_owner.mkdir()
+    (service_owner/'SERVICE_OWNER.json').write_text(json.dumps(dict(pid=100)))
+    rc, verdict = run_worker(out['worker_script'], service_owner, overlay)
+    assert rc == 3 and 'SERVICE_OWNER.json' in verdict['reason']
+
+
+def test_binding_staged_snapshot_rules(tmp_path):
+    """A staged binding snapshot is validated: adopted-gate sets refuse, the variety sources
+    must be pinned, hashes must be sha256 digests."""
+    hashes = staged_binding(fake_overlay(tmp_path, []))['hashes']
+    ok = vc.validate_broker(dict(broker_cfg(), binding=dict(hashes=hashes)))
+    assert set(vc.VARIETY_GPU_SOURCES) <= set(ok['binding']['hashes'])
+    with pytest.raises(ValueError, match='adopted_startup_gates'):
+        vc.validate_broker(dict(broker_cfg(),
+                                binding=dict(hashes=hashes, adopted_startup_gates={'x': '0'*64})))
+    missing_niche = {k: v for k, v in hashes.items() if 'niche_collect' not in k}
+    with pytest.raises(ValueError, match='variety sources'):
+        vc.validate_broker(dict(broker_cfg(), binding=dict(hashes=missing_niche)))
+    with pytest.raises(ValueError, match='sha256'):
+        vc.validate_broker(dict(broker_cfg(), binding=dict(hashes=dict(hashes, extra='nothex'))))
+    with pytest.raises(ValueError, match='non-empty hashes'):
+        vc.validate_broker(dict(broker_cfg(), binding=dict(hashes={})))
+    with pytest.raises(ValueError, match='dict'):
+        vc.validate_broker(dict(broker_cfg(), binding='GPU_BINDING'))
+    cfg = vc.split_config(base_config(tmp_path, broker=dict(broker_cfg(), binding=dict(hashes=hashes))))
+    assert set(vc.VARIETY_GPU_SOURCES) <= set(cfg['broker']['binding']['hashes'])
+
+
+def test_no_code_path_reaches_recover(tmp_path):
+    """Fix-round BLOCK: no code path reaches ls_gpu's recover/adoption path - the module and
+    the staged artifact carry neither ls_gpu nor the recover flag, and never import signal
+    machinery to terminate another process; the fresh service is warm_spool itself."""
+    source = Path(vc.__file__).read_text(encoding='utf-8')
+    assert 'ls_gpu' not in source and 'recover' not in source
+    assert vc.FRESH_SERVICE_MODULE == 'tools.coopmwm.warm_spool'
+    from tools.coopmwm.hotadd import GATES
+    overlay = fake_overlay(tmp_path, GATES)
+    broker = dict(broker_cfg(), binding=staged_binding(overlay))
+    cfg = vc.split_config(base_config(tmp_path, broker=broker))
+    out = vc.stage_broker(cfg, tmp_path/'collect_root')
+    script = Path(out['worker_script']).read_text(encoding='utf-8')
+    compile(script, 'STAGE_WORKER.py', 'exec')
+    assert 'ls_gpu' not in script and 'recover' not in script
+    assert 'import signal' not in script and 'os.kill' not in script
+    config = ast.literal_eval(re.search(r'^CONFIG = (.+)$', script, re.M).group(1))
+    assert config['fresh']['service'] == 'tools.coopmwm.warm_spool'
+    assert 'adopted_startup_gates' not in config['fresh']['binding']
+    assert 'owner' not in config      # no takeover target is staged at all
 
 
 def test_broker_readiness_requires_all_eight_gates():
@@ -743,3 +929,57 @@ def test_collect_pinned_refusal_happens_before_any_charge(tmp_path):
         with pytest.raises(ValueError, match='sha256 mismatch'):
             vc.collect(tmp_path/'root', cfg, 'R', stop=lambda: False, rounds=1)
     assert charges['calls'] == []          # refused BEFORE the route charged anything
+
+
+# ---------------------------------------------------------------- confirmations are all8 (fix round 2)
+
+def test_collect_confirms_are_all8_both_seeds(tmp_path):
+    """Fix round 2: confirm_pending is called with verify_mode 'all8_both_seeds' (the live
+    per_seed_v1 bank rule) and the configured extra seeds - never the legacy single-replica
+    path."""
+    import tools.coopmwm.verify_perseed as vp
+    cfg = vc.split_config(base_config(tmp_path, extra_seeds=2))
+    root = tmp_path/'collect_root'
+    charges, ctx = routed(tmp_path, cfg)
+    calls = []
+
+    def recorder(*args, **kwargs):
+        calls.append(dict(args=args, kwargs=kwargs))
+        return []
+    with ctx, patch.object(vc, 'run_episodes', fake_episodes), \
+            patch.object(vp, 'confirm_pending_all8', recorder):
+        vc.collect(root, cfg, 'R', stop=lambda: False, rounds=1, episodes_per_round=1)
+    assert len(calls) == 1                 # every round routes through the all8 builder
+    args, kwargs = calls[0]['args'], calls[0]['kwargs']
+    assert args[0] == root and args[1] == 'R' and args[4] == vc.CONFIRM_PHASE
+    assert str(args[3]) == str(cfg['charge_route']['run_root'])
+    assert kwargs['extra_seeds'] == 2      # the live per_seed_v1 bank extra-seeds option
+    assert charges['calls'] == [(cfg['episode_phase'], f'{PREFIX}_R_k003_e00000_{SEED}', 1200)]
+
+
+def test_collect_all8_extra_seeds_default_zero(tmp_path):
+    import tools.coopmwm.verify_perseed as vp
+    cfg = vc.split_config(base_config(tmp_path))     # extra_seeds absent = 0 (byte-identical off)
+    assert cfg['extra_seeds'] == 0
+    charges, ctx = routed(tmp_path, cfg)
+    calls = []
+
+    def recorder(*args, **kwargs):
+        calls.append(kwargs)
+        return []
+    with ctx, patch.object(vc, 'run_episodes', fake_episodes), \
+            patch.object(vp, 'confirm_pending_all8', recorder):
+        vc.collect(tmp_path/'collect_root', cfg, 'R', stop=lambda: False, rounds=1,
+                   episodes_per_round=1)
+    assert calls == [dict(extra_seeds=0, slim_rejected_tapes=None)]
+
+
+def test_extra_seeds_config_validation(tmp_path):
+    with pytest.raises(ValueError, match='extra_seeds'):
+        vc.split_config(base_config(tmp_path, extra_seeds=-1))
+    with pytest.raises(ValueError, match='extra_seeds'):
+        vc.split_config(base_config(tmp_path, extra_seeds='2'))
+    with pytest.raises(ValueError, match='extra_seeds'):
+        vc.split_config(base_config(tmp_path, extra_seeds=True))
+    assert vc.split_config(base_config(tmp_path, checkpoints=pin_checkpoints(tmp_path/'coop3'),
+                                       extra_seeds=4))['extra_seeds'] == 4

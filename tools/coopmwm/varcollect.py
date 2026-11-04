@@ -20,11 +20,17 @@ c4/plan-variety: a collection root that is SEPARATE from the ledger.
    is ever created under the collection root.
 3. Arm B searches the WM through the broker: CONFIG ONLY - ``stage_broker`` writes the worker
    staging script, the startup-gate list and the single-slot broker config file into the
-   collection root. Nothing here ssh'es, stages remotely or starts any process. Arm R keeps the
-   unscored random candidates with the SAME registered variety mix: B takes
-   floor(variety_structured_share*population) structured slots inside its search (mppi_search),
-   R draws each candidate as Bernoulli(share) structured/free (sample_unscored) - identical
-   registered keys on the snapshot meta.
+   collection root. Nothing here ssh'es, stages remotely or starts any process. The staged
+   STAGE_WORKER.py is a FRESH-WORKER path only (fix round 2): it stages a NEW EMPTY worker
+   root + a binding pinning this build's numerical and variety sources (sha256-checked against
+   the staged overlay) and starts the fresh service (tools.coopmwm.warm_spool), which itself
+   RUNS all 8 startup gates (hotadd.GATES; no adopted-gate set exists) before the slot is
+   served; the broker admits the slot only after all 8 receipts pass. It refuses to start when
+   the worker root already exists or carries any owner PID/lock - it never adopts and never
+   signals another process. Arm R keeps the unscored random candidates with the SAME registered
+   variety mix: B takes floor(variety_structured_share*population) structured slots inside its
+   search (mppi_search), R draws each candidate as Bernoulli(share) structured/free
+   (sample_unscored) - identical registered keys on the snapshot meta.
 4. Episode ids are parameterised: ``<collect_id_prefix>_<arm>_k<k:03>_e<n:05d>_<seed>``; the
    historical hard-coded id appears nowhere in this path.
 5. OFF/default byte-identity: no existing entry point imports this module; the only edits to
@@ -52,7 +58,7 @@ REGISTERED = dict(
     checkpoint_sha256=None, charge_route=None, collect_id_prefix='', episode_phase='',
     runtime='', accel_bounds=None, gpu_deadline=0., worlds=None,
     slots=1, fanout_factor=2., demand_phase_end_s=1200., warm_history=False,
-    workers=9, timeout_s=3600., drain_s=0., broker=None, variety=None,
+    workers=9, timeout_s=3600., drain_s=0., broker=None, variety=None, extra_seeds=0,
 )
 
 
@@ -118,6 +124,10 @@ def split_config(cfg):
     for key in ('fanout_factor', 'demand_phase_end_s', 'timeout_s', 'drain_s'):
         if not isinstance(v[key], (int, float)) or isinstance(v[key], bool) or not float(v[key]) >= 0:
             raise ValueError(f'{key} must be a non-negative number')
+    if not isinstance(v['extra_seeds'], int) or isinstance(v['extra_seeds'], bool) or \
+            v['extra_seeds'] < 0:
+        raise ValueError('extra_seeds must be a non-negative int (CRN seeds 3..2+n for '
+                         'cooperative plans, the live per_seed_v1 bank option; 0 = off)')
     if v['broker'] is not None:
         v['broker'] = validate_broker(v['broker'])
     if v['variety'] is not None:
@@ -306,11 +316,19 @@ def job_id(cfg, arm, index, world):
 
 # ---------------------------------------------------------------- arm B broker (CONFIG ONLY)
 
+FRESH_SERVICE_MODULE = 'tools.coopmwm.warm_spool'   # fresh service: runs ALL 8 gates itself
+# The GPU-side plan-variety sources: the fresh worker's binding must pin them alongside the
+# numerical set, so the served search re-derives the registered variety decision groups.
+VARIETY_GPU_SOURCES = ('pytools/tools/coopmwm/variety.py', 'pytools/tools/coopmwm/niche_collect.py')
+
+
 def validate_broker(broker):
-    """Exactly ONE new GPU worker slot, in the LS_ENDPOINTS.json shape ls_broker.run consumes."""
+    """Exactly ONE new GPU worker slot, in the LS_ENDPOINTS.json shape ls_broker.run consumes.
+    The optional ``binding`` is the operator-staged fresh-worker GPU binding snapshot (its
+    hashes must pin the variety sources; an adopted-gate set refuses)."""
     if not isinstance(broker, dict):
         raise ValueError('broker must be a dict')
-    unknown = set(broker)-{'amendment_sha256', 'gpu_deadline', 'workers'}
+    unknown = set(broker)-{'amendment_sha256', 'gpu_deadline', 'workers', 'binding'}
     if unknown:
         raise ValueError(f'unregistered broker keys {sorted(unknown)}')
     for key in ('amendment_sha256', 'gpu_deadline'):
@@ -330,7 +348,62 @@ def validate_broker(broker):
         raise ValueError(f'broker endpoint needs non-empty {BROKER_ENDPOINT_KEYS}')
     if not isinstance(owner, dict) or any(owner.get(key) in (None, '') for key in OWNER_KEYS):
         raise ValueError(f'broker owner needs {OWNER_KEYS}')
+    if broker.get('binding') is not None:
+        check_fresh_binding(broker['binding'])
     return broker
+
+
+def check_fresh_binding(binding):
+    """A fresh-worker GPU binding must NEVER be an adopted-gate set (the fresh service runs
+    ALL 8 hotadd.GATES itself) and its hashes must pin the variety sources alongside the
+    numerical set (a binding without them cannot serve the registered variety search)."""
+    if not isinstance(binding, dict):
+        raise ValueError('broker binding must be a dict')
+    if binding.get('adopted_startup_gates'):
+        raise ValueError('a fresh worker RUNS all eight startup gates itself; a binding with '
+                         'adopted_startup_gates is an adoption record and refuses')
+    hashes = binding.get('hashes')
+    if not isinstance(hashes, dict) or not hashes:
+        raise ValueError('broker binding must carry a non-empty hashes map')
+    if not all(re.fullmatch(r'[0-9a-f]{64}', str(h)) for h in hashes.values()):
+        raise ValueError('broker binding hashes must map source names to sha256 hex digests')
+    missing = [n for n in VARIETY_GPU_SOURCES if n not in hashes]
+    if missing:
+        raise ValueError(f'broker binding must pin the variety sources {missing}')
+    return binding
+
+
+def repo_root():
+    """This build's source tree root (the layout the staged overlay is produced from)."""
+    import tools.coopmwm
+    return Path(tools.coopmwm.__file__).resolve().parents[2]
+
+
+def fresh_binding(broker):
+    """The fresh-worker binding staged into STAGE_WORKER CONFIG: the explicitly staged
+    snapshot binding (broker['binding'], e.g. taken from the qualified source root - its
+    adopted-gate/variety rules are validated) or, when none was staged, the binding built
+    from THIS build's numerical + variety sources with the fresh 8-gate startup shape
+    (warm memory, startup qualification, concurrent plans; the service itself runs
+    WARM_BATCH_SINGLE x2 + COMMITTED x2 + PARITY x2 + WARM_PARITY x2 = ALL of hotadd.GATES)."""
+    if broker.get('binding') is not None:
+        return check_fresh_binding(dict(broker['binding']))
+    from .warm_service import NUMERICAL
+    repo = repo_root()
+    names = [n for n in NUMERICAL
+             if n.endswith('.py') and n.startswith(('pytools/tools/coopmwm/',
+                                                    'pytools/tools/coopnative/'))]
+    hashes = {}
+    for rel in tuple(names)+VARIETY_GPU_SOURCES:
+        path = repo/rel.split('pytools/', 1)[1]
+        if not path.is_file():
+            raise ValueError(f'fresh-worker source missing from this build: {rel}')
+        hashes[rel] = file_sha256(path)
+    return dict(amendment_sha256=broker['amendment_sha256'],
+                gpu_deadline=float(broker['gpu_deadline']), deadline_unix=float(broker['gpu_deadline']),
+                memory_mode='warm', startup_qualification=True, speed2=True, speed2_transfers=True,
+                concurrent_plans=True, memory_fraction=.34, batch_width_by_K={'4': 4, '8': 4},
+                service=FRESH_SERVICE_MODULE, hashes=hashes)
 
 
 def broker_readiness(broker, receipts):
@@ -349,30 +422,51 @@ def broker_readiness(broker, receipts):
 
 STAGE_WORKER_TEMPLATE = '''"""Variety collection GPU worker staging (c4/variety-collect; CONFIG artifact).
 
-Staged by tools/coopmwm/varcollect.stage_broker; nothing ran at staging time. The OPERATOR
+Staged by tools/coopmwm/varcollect.py stage_broker; nothing ran at staging time. The OPERATOR
 copies this script to the GPU host and runs it there; this build never ssh'es or starts it.
 
+FRESH-WORKER PATH ONLY (fix round 2). Starting this script stages a NEW EMPTY worker root plus
+the registered binding (hashes pin this build's numerical and VARIETY sources; the binding is
+checked against the --overlay byte for byte) and starts the FRESH service
+(CONFIG['fresh']['service'] = tools.coopmwm.warm_spool), which itself RUNS ALL EIGHT startup
+gates (hotadd.GATES: WARM_BATCH_SINGLE x2 + COMMITTED x2 + PARITY x2 + WARM_PARITY x2) before
+any search is served - the binding carries no adopted_startup_gates, so nothing is ever
+inherited. The broker admits the slot only after all 8 gate receipts pass (broker_readiness /
+STARTUP_GATES.json rule; this script's --check prints the same verdict). REFUSALS (exit 3,
+JSON on stdout): the worker root already exists, or any owner PID/lock file is present - a
+fresh worker never shares a root, never adopts a running process and never sends any process
+a termination request. There is no takeover mode in this script at all.
+
 Usage (GPU host): python3 STAGE_WORKER.py <worker_root> --overlay <overlay_dir> [--check]
-Only that ONE slot is served; the broker config refuses every other slot. EVERY startup gate
-receipt named in STARTUP_GATES.json (the full 8-gate hotadd.GATES fresh-worker set) must be
-present under <worker_root> with pass_ true before any search is served - a missing OR failing
-gate keeps the slot unserved.
+The --overlay directory has the worker-root layout: run artifacts at its top level
+(INPUTS.json, FROZEN_COSTS.json, ...) and the package tree under pytools/; its entire content
+is copied into the NEW worker root, then every binding hash is verified there.
 """
 import argparse
+import hashlib
 import json
+import os
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
 CONFIG = {config}
 
+OWNER_OR_LOCK = ('SPOOL_OWNER.json', 'SERVICE_OWNER.json', 'SPOOL_WORKER.claim', 'SERVICE.claim',
+                 'SPOOL_FAILED.json', 'SPOOL_STOP.json', 'LS_GPU_ORIGINALS.json',
+                 'FRESH_DISPATCH.json')
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument('root')
-    ap.add_argument('--overlay', required=True)
-    ap.add_argument('--check', action='store_true', help='print readiness only, start nothing')
-    a = ap.parse_args()
-    root = Path(a.root)
+
+def refuse(reason, root):
+    print(json.dumps(dict(refused=True, reason=reason, root=str(root),
+                          slot=CONFIG['endpoint']['slot'])))
+    return 3
+
+
+def gate_receipts(root):
+    """EVERY named gate accounted for: a missing file or an unparsable/failing receipt is
+    False, so the slot stays unserved until all eight pass."""
     receipts = {{}}
     for name in CONFIG['startup_gates']:
         p = root/name
@@ -382,18 +476,72 @@ def main():
                 passed = json.loads(p.read_text()).get('pass_') is True
             except ValueError:
                 passed = False
-        receipts[name] = passed    # EVERY named gate accounted for: missing file -> False
-    ready = bool(receipts) and all(receipts.values())
-    print(json.dumps(dict(root=str(root), overlay=a.overlay, ready=ready, receipts=receipts,
-                          slot=CONFIG['endpoint']['slot'],
-                          amendment_sha256=CONFIG['amendment_sha256'],
-                          gpu_deadline=CONFIG['gpu_deadline'])))
-    if a.check or not ready:
+        receipts[name] = passed
+    return receipts
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('root')
+    ap.add_argument('--overlay', required=True)
+    ap.add_argument('--check', action='store_true', help='print readiness only, start nothing')
+    a = ap.parse_args()
+    root = Path(a.root)
+    if a.check:
+        receipts = gate_receipts(root)
+        ready = bool(receipts) and all(receipts.values())
+        print(json.dumps(dict(root=str(root), overlay=a.overlay, ready=ready, receipts=receipts,
+                              slot=CONFIG['endpoint']['slot'],
+                              amendment_sha256=CONFIG['amendment_sha256'],
+                              gpu_deadline=CONFIG['gpu_deadline'])))
         return 0 if ready else 2
-    sys.path[:0] = [a.overlay, str(root/'pytools')]
-    from tools.coopmwm import ls_gpu
-    ls_gpu.run(str(root), CONFIG['owner'], CONFIG['gpu_deadline'], CONFIG['amendment_sha256'],
-               recover=True, generation='_VARCOLLECT', overlay=a.overlay)
+    # ---- fresh start: refuse every pre-existing root / owner PID / lock (never adopt,
+    # ---- never signal another process; there is no takeover mode in this script).
+    if root.exists():
+        owners = [n for n in OWNER_OR_LOCK if (root/n).exists()]
+        reason = ('owner/lock present in the existing root: '+','.join(owners) if owners else
+                  'worker root already exists; a fresh worker stages a NEW EMPTY root')
+        return refuse(reason, root)
+    fresh = CONFIG['fresh']
+    binding = fresh['binding']
+    if binding.get('adopted_startup_gates'):
+        return refuse('a fresh worker RUNS all eight startup gates itself; an adopted-gate '
+                      'binding refuses', root)
+    overlay = Path(a.overlay)
+    if not overlay.is_dir():
+        return refuse('overlay directory missing: '+str(overlay), root)
+    if (overlay/'GPU_BINDING.json').is_file():
+        return refuse('overlay carries its own GPU_BINDING.json; the fresh binding is written '
+                      'by this script from CONFIG only', root)
+    missing = [n for n in binding['hashes'] if not (overlay/n).is_file()]
+    if missing:
+        return refuse('overlay lacks registered sources: '+','.join(sorted(missing)), root)
+    bad = [n for n, h in binding['hashes'].items()
+           if hashlib.sha256((overlay/n).read_bytes()).hexdigest() != h]
+    if bad:
+        return refuse('staged source sha256 mismatch: '+','.join(sorted(bad)), root)
+    root.mkdir(parents=True)                 # exclusive: a raced second start refuses here too
+    shutil.copytree(overlay, root, dirs_exist_ok=True)
+    bad = [n for n, h in binding['hashes'].items()
+           if hashlib.sha256((root/n).read_bytes()).hexdigest() != h]
+    if bad:
+        shutil.rmtree(root)
+        return refuse('copied source sha256 mismatch: '+','.join(sorted(bad)), root)
+    with (root/'GPU_BINDING.json').open('x') as f:
+        json.dump(binding, f, sort_keys=True)
+    env = dict(os.environ, PYTHONPATH=str(root/'pytools'))
+    # cwd = the worker root's own package tree: the freshly staged service module is the one
+    # that runs; a repo checkout in the caller's cwd can never shadow it.
+    extra = {{'start_new_session': True}} if os.name == 'posix' else {{}}
+    with (root/'SPOOL.log').open('x') as log:
+        proc = subprocess.Popen([sys.executable, '-B', '-u', '-m', fresh['service'], str(root)],
+                                cwd=str(root/'pytools'), env=env, stdin=subprocess.DEVNULL,
+                                stdout=log, stderr=subprocess.STDOUT, **extra)
+    print(json.dumps(dict(root=str(root), started=proc.pid, service=fresh['service'],
+                          slot=CONFIG['endpoint']['slot'], gates=CONFIG['startup_gates'],
+                          note='the fresh service writes its own owner receipt and RUNS all '
+                               'eight startup gates itself; the broker admits the slot only '
+                               'after every gate receipt passes (--check reports readiness)')))
     return 0
 
 
@@ -417,13 +565,14 @@ def stage_broker(cfg, root):
                       'failed/missing gate keeps the broker from assigning this slot any search')
     config = dict(broker, shape='LS_ENDPOINTS.json (tools.coopmwm.ls_broker.run)',
                   startup_gates=list(GATES), path_shape_note='on cpuS install this file as '
-                  '<collection_root>/LS_ENDPOINTS.json next to LS_RECOVERY_CONFIG.json')
+                  '<collection_root>/LS_ENDPOINTS.json next to LS_RECOVERY_CONFIG.json',
+                  fresh=dict(binding=fresh_binding(broker), service=FRESH_SERVICE_MODULE))
     _write_json(d/'BROKER_CONFIG.json', config)
     _write_json(d/'STARTUP_GATES.json', gates)
-    script = STAGE_WORKER_TEMPLATE.format(config=json.dumps(dict(
+    script = STAGE_WORKER_TEMPLATE.format(config=repr(dict(
         amendment_sha256=broker['amendment_sha256'], gpu_deadline=broker['gpu_deadline'],
-        endpoint=broker['workers'][0]['endpoint'], owner=broker['workers'][0]['owner'],
-        startup_gates=list(GATES))))
+        endpoint=broker['workers'][0]['endpoint'],
+        startup_gates=list(GATES), fresh=config['fresh'])))
     _write_text(d/'STAGE_WORKER.py', script)
     return dict(broker=d/'BROKER_CONFIG.json', gates=d/'STARTUP_GATES.json',
                 worker_script=d/'STAGE_WORKER.py')
@@ -495,7 +644,9 @@ def collect(root, cfg, arm, stop, episodes_per_round=2, rounds=None, verify_work
 
     Every charge goes through the routed reserve (window verifications: ``sumo_verification``,
     confirmations: ``bank_verification_ext``, episodes: the registered ``episode_phase``);
-    ``episodes`` overrides the real runner (CPU tests inject a fake)."""
+    confirmations ALWAYS use the per-seed all8 verification (verify_mode 'all8_both_seeds',
+    the live per_seed_v1 bank rule; ``extra_seeds`` config = CRN seeds 3..2+n for cooperative
+    plans, 0 = off); ``episodes`` overrides the real runner (CPU tests inject a fake)."""
     from . import replay_bank as rb, sumo_verify as sv
     if arm not in ARMS:
         raise ValueError(f'unknown arm {arm}')
@@ -537,7 +688,8 @@ def collect(root, cfg, arm, stop, episodes_per_round=2, rounds=None, verify_work
         statuses += rb.verify_pending(root, arm, cfg['accel_bounds'], runner, charge, verify_workers,
                                       decided, verify_per_round)
         statuses += rb.confirm_pending(root, arm, runner_for, str(shared), CONFIRM_PHASE, workers=2,
-                                       limit=verify_per_round)
+                                       limit=verify_per_round, verify_mode='all8_both_seeds',
+                                       extra_seeds=int(cfg['extra_seeds']))
         rb.bank_quality(root, arm)
         refuse_local_ledger(root)
         n += 1
