@@ -1,0 +1,66 @@
+{
+  "feature": "variety plan-collection path for arms B and R (cpuS): pinned coop3 policies, ONE shared ledger via the cpuS->cpuQ RPC charge route, B WM search through a single new GPU broker slot (config only), R unscored random candidates with the same variety mix",
+  "branch": "c4/variety-collect",
+  "based_on": "ea778959 = c4/checking-cpus + c4/plan-variety (reviewed)",
+  "owner_direction": "2026-11-04: a variety plan-collection path for arms B and R - pinned read-only checkpoints from another root (coop3, sha-checked, same k), collection root split from the ledger (all charges through the existing RPC route, phases sumo_verification + bank_verification_ext, never a second CHARGES.jsonl, refuse if unavailable), B via a broker slot config pointing at ONE new GPU worker (config only, nothing ssh'd/started), R unscored random candidates with the same variety mix (B floor(0.25N), R Bernoulli(0.25)), parameterised episode ids and root name, OFF/default paths byte-identical.",
+  "commits": [
+    "0ed2f4a4 coopmwm variety-collect: varcollect path skeleton (pinned checkpoints, RPC charge route, parameterised ids, single-slot broker staging), cpus_rpc additive collect charge route (binding 'collect' key; absent = unchanged bytes), ls_collection additive episode_prefix (default lscollect1_B3)",
+    "da2a0f21 coopmwm variety-collect: CPU tests (26) - pinned sha/k refusals before any charge, RPC-only charges with registered collect phases/prefixes (real op_reserve + fake route), no second CHARGES.jsonl, R Bernoulli(.25) mix + B search_config wiring, parameterised ids + ls_collection default bytes, single-slot broker staging artifacts incl. --check gate run",
+    "53722f50 coopmwm variety-collect: collect() refuses before anything runs (charge phases validated before the route probe; arm B requires the staged single-slot broker config; pinned k/sha checked before any charge); the new root pre-creates its request/response dirs"
+  ],
+  "module": "tools/coopmwm/varcollect.py",
+  "config_keys": {
+    "policies_root": "REQUIRED str - the OTHER root (coop3) holding the read-only checkpoints",
+    "checkpoint_k": "REQUIRED int >= 0 - the ONE pinned k for both arms (default for k_B/k_R)",
+    "checkpoint_k_B / checkpoint_k_R": "optional per-arm override; MUST agree, mismatch refuses",
+    "checkpoint_sha256": "REQUIRED {'B': hex64, 'R': hex64} - sha256 of coop3's B_checkpoint_<k>.pt / R_checkpoint_<k>.pt; mismatch refuses BEFORE any charge",
+    "charge_route": "REQUIRED dict {run_root, q_host, q_control, q_python, q_pythonpath} (+ optional 'phases' list; default ['sumo_verification','bank_verification_ext']) - the cpuQ RPC binding the path charges through",
+    "collect_id_prefix": "REQUIRED str [a-z][a-z0-9_]{1,40} - episode ids <prefix>_<arm>_k<k:03>_e<n:05d>_<seed>; never the historical hard-coded id",
+    "episode_phase": "REQUIRED str - the route phase episodes are charged in (must be registered on the route)",
+    "runtime / accel_bounds / gpu_deadline / worlds": "REQUIRED - episode plant binding (as in every collector)",
+    "slots / fanout_factor / demand_phase_end_s / warm_history / workers / timeout_s / drain_s": "collector tuning, defaults = replay_bank conventions",
+    "broker": "REQUIRED for arm B - single-slot config {amendment_sha256, gpu_deadline, workers:[{endpoint:{slot,destination,port,identity_file,known_hosts}, owner:{boot_id,pid,start_ticks}}]}; exactly ONE worker",
+    "variety": "optional - the registered variety_* keys (variety.split_config validates; families False/absent = legacy bytes)"
+  },
+  "what_it_does": {
+    "pinned": "pinned_checkpoints/pinned_policy load B_checkpoint_<k>.pt / R_checkpoint_<k>.pt from policies_root, sha256-checked against the staged config, payload update must equal k; k_B != k_R refuses; the collection root never stores or updates a policy",
+    "ledger_split": "route_charges() probes the EXISTING cpuS->cpuQ RPC route with a read-only 'budget' op and refuses the whole path when unavailable; charges go through cpus_checking.install_remote_accounting (accel_storage.reserve routed to cpuQ's UNCHANGED reserve) with phases sumo_verification (window verifications), bank_verification_ext (confirmations) and the registered episode_phase; refuse_local_ledger guards the collection root against a second CHARGES.jsonl (file OR dir) at startup and after every round",
+    "rpc_route": "cpus_rpc.op_reserve gains an ADDITIVE binding key 'collect' {phases, id_prefixes}: registered collection ids (route_prefixes = [<prefix>_, sv_<prefix>_, confirm_replication_sv_<prefix>_, confirm_extended_sv_<prefix>_, confirm_solo_sv_<prefix>_]) charge the SAME cpuQ ledger in the registered phases without consuming the all8 delegate allowance; without the key the binding stays all8-only with byte-identical refusal texts (tested)",
+    "arm_b": "collector_guide queues WM-search requests (root/requests) carrying search_config = the registered it2_K2 boundary config PLUS the variety keys, so the GPU side re-derives the same additive decision groups and takes exactly floor(variety_structured_share * population) structured slots (mppi_search; byte-covered by test_variety_cpu SearchIntegration)",
+    "arm_r": "collector_guide queues centre-only requests (no WM scoring); rb.candidates_for draws sv.random_candidates with the snapshot meta's variety_config - each draw is Bernoulli(variety_structured_share) structured vs free (share 0.25 registered), identical registered keys as B",
+    "broker_config_only": "stage_broker writes THREE artifacts into <root>/broker and starts NOTHING: BROKER_CONFIG.json (the validated single-slot config; on cpuS the operator installs it as <root>/LS_ENDPOINTS.json next to LS_RECOVERY_CONFIG.json - the exact shape ls_broker.run consumes), STARTUP_GATES.json (the four warm_service.ADOPTABLE gate receipts that must be present with pass_ true before the slot is served), STAGE_WORKER.py (the generated worker staging script; '--check' prints readiness only, the real run is the operator's explicit action on the GPU host)",
+    "ids": "job_id() = <collect_id_prefix>_<arm>_k<k:03>_e<n:05d>_<seed>; the root name is the argv of the module; 'lscollect1' appears nowhere in varcollect.py (tested); ls_collection.supervise gains the additive episode_prefix key (default 'lscollect1_B3' = the historical bytes, used at both its construction sites)"
+  },
+  "how_to_run": {
+    "preflight_operator": [
+      "1. Stage this commit's source as the cpuS pytools overlay (same git-archive flow as cpuS checking; includes the plan-variety sources the GPU overlay needs).",
+      "2. cpuQ control dir: extend RPC_BINDING.json ADDITIVELY with collect = {phases: [...], id_prefixes: varcollect.route_prefixes(config)}. Default phases = ['sumo_verification','bank_verification_ext']. To charge episodes 'train' instead, add 'train' to BOTH this list and the config's episode_phase. cpus_rpc runs one short process per call, so the next call reads the new binding; without the key nothing changes.",
+      "3. Create the NEW collection root (its NAME is a parameter) and write VARCOLLECT_CONFIG.json (validated by varcollect.split_config: unknown keys refuse). checkpoint_sha256 = sha256 of coop3's B_checkpoint_003.pt / R_checkpoint_003.pt; charge_route.run_root = the ONE shared cpuQ run root.",
+      "4. Arm R: nice -n19 python -B -m tools.coopmwm.varcollect <root> --arm R (no broker needed; refuses immediately if the route is unavailable or the pinned k/sha mismatch).",
+      "5. Arm B: python -m tools.coopmwm.varcollect <root> --arm B stages the broker artifacts, then the OPERATOR (a) installs broker/BROKER_CONFIG.json as <root>/LS_ENDPOINTS.json + writes LS_RECOVERY_CONFIG.json (run_root=<root>, gpu_deadline, amendment_sha256, receipt_suffix), (b) stages/starts the ONE new GPU worker on the GPU host with broker/STAGE_WORKER.py (its four STARTUP_* gate receipts present, pass_ true), (c) starts tools.coopmwm.ls_broker <root> on cpuS. THIS BUILD ssh'es and starts nothing.",
+      "6. Verify charges remotely: cpuQ CHARGES.jsonl rows (ids carry <prefix>_ / sv_<prefix>_ / confirm_*_sv_<prefix>_) and <control>/CHARGES_RPC.jsonl rows with route='collect'; the collection root must contain NO CHARGES.jsonl."
+    ],
+    "stop": "MAIN_STOP.json in the collection root stops the loop after the current round; budget-blocked statuses stop the rounds (charges retained, never retried blindly)."
+  },
+  "tests": {
+    "new": "tools/coopmwm/test_varcollect_cpu.py (26 tests, all passing, CPU only, fake RPC + fake episodes + real sv.verify/runners): config validation/refusals (unknown keys, mismatched k, prefix, phases, prefixes), staged-config loader, pinned loader (real accel_learner checkpoints: refuses wrong sha per arm, missing file, mismatched k between arms, swapped payload update), route probe + routed charges with the registered phases and id prefixes, refuses unregistered phase BEFORE any RPC charge, refuses unavailable route (transport + ok=False), refuse_local_ledger (file and directory), REAL cpus_rpc op_reserve collect route on a temporary run root (charges the ONE local ledger; all8 route refusals byte-identical without the key), window+confirm charge shapes through the route (sv.verify with a real FakePlant runner + rb._confirm_charge), R Bernoulli(0.25) mix statistics (400 draws, structured ~= share, never all), B request carries the validated variety search_config / R carries none (mode centre), floor(share*N) covered by test_variety_cpu, parameterised ids + no 'lscollect' in varcollect source + ls_collection single default occurrence, broker single-slot validation refusals, staged artifacts (config/gates/staging script compile + real '--check' gate run exit codes), arm B broker requirement, collect round routes the episode charge and creates no local ledger, refusal ordering (phases -> route -> pinned) before anything runs.",
+    "required_suites": {
+      "test_variety_cpu.py": "PASS (24)",
+      "test_cpus_checking_cpu.py": "PASS (6)",
+      "test_bank_amendment_cpu.py / test_bank_boot_cpu.py / test_bank_builder_cpu.py / test_bank_imitation_cpu.py / test_bank_perseed_cpu.py / test_bank_restore_ops_cpu.py / test_bank_safety_cpu.py": "PASS",
+      "test_launch_final_cpu.py": "PASS",
+      "test_ls_collection_cpu.py": "PASS (10) with the canonical package identity (tools/__init__.py present, as on cpuQ deployments); WITHOUT it the pre-existing Windows namespace quirk (package imported twice -> absolute patch targets miss) fails its absolute-target test identically at base ea778959",
+      "combined": "133 passed, 1 warning in 372s (C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe, CPU only)"
+    }
+  },
+  "hard_rules_compliance": {
+    "cpu_only": true,
+    "no_ssh_remote": "stage_broker/route_charges only WRITE config files and call the cpus_checking.rpc CLIENT functions, which the tests fake; no subprocess ssh anywhere in varcollect",
+    "no_sumo_no_gpu": "tests use fake plants/episodes; real SUMO/GPU stays the operator's registered launch",
+    "worktree_only": true,
+    "no_reset_clean_stashdrop_push": true,
+    "no_sealed_or_forbidden_paths": "no sealed/, no holdout/heldout/cal_split/chunk5/j4b/inc1, no hetdata_truth or vType/driver/vehicle_params truth files touched",
+    "default_off_byte_identical": "no existing entry point imports varcollect; cpus_rpc without the binding 'collect' key returns the original refusal texts (asserted verbatim); ls_collection default prefix reproduces 'lscollect1_B3_<seed>' byte-for-byte (asserted)",
+    "one_ledger": "every charge ends in cpuQ's UNCHANGED accel_storage.reserve behind the RPC; refuse_local_ledger guards the collection root after startup, every round and every drain pass"
+  }
+}
