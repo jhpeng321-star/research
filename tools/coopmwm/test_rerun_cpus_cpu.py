@@ -438,6 +438,7 @@ def mirror(tmp_path):
     root = mirror/'home'/'ubuntu'/'coopmwm20261102_warm1'
     root.mkdir(parents=True)
     real_all8_bank(root)
+    shutil.copytree(root/'replay_bank'/'B', root/'replay_bank'/'R')
     ls_label_source(mirror/'home'/'ubuntu')
     (root/'B_checkpoint_000.pt').write_bytes(b'MAPPO-u0-common-checkpoint')
     (root/'B_checkpoint_003.pt').write_bytes(b'legacy B u3 reference')
@@ -690,11 +691,11 @@ def prep_dir(tmp_path, mirror, *, verdict='positive', approval_sha=True, commit=
     prep.mkdir()
     m = rcpu.staging_manifest(remote_root=LEGACY_REMOTE, sources={'B': [COLLECTION_REMOTE]})
     (prep/rcpu.MANIFEST_FILE).write_text(json.dumps(m), encoding='utf-8')
-    cfg, registration = config(tmp_path), _registration()
+    cfg, registration = config(tmp_path, sha=hashlib.sha256(b'MAPPO-u0-common-checkpoint').hexdigest()), _registration()
     rcpu.init_root(cfg['run_root'])
     (prep/rcpu.CONFIG_FILE).write_text(json.dumps(cfg), encoding='utf-8')
     (prep/rcpu.ISOLATED_REGISTRATION_FILE).write_text(json.dumps(registration), encoding='utf-8')
-    request = rcpu.budget_request_document(cfg, registration)
+    request = rcpu.budget_request_document(cfg, registration, m)
     (prep/rcpu.BUDGET_REQUEST).write_text(json.dumps(request), encoding='utf-8')
     (prep/rcpu.OWNER_QUOTE).write_text('owner quote: 6,333,720 sim-s for the 3-arm standalone '
                                        'rerun with the replicated isolated test',
@@ -709,6 +710,7 @@ def prep_dir(tmp_path, mirror, *, verdict='positive', approval_sha=True, commit=
         criterion_sha256=sha_of(prep/rcpu.CRITERION_FILE) if criterion_sha else '0'*64,
         config_file_sha256=sha_of(prep/rcpu.CONFIG_FILE),
         registration_file_sha256=sha_of(prep/rcpu.ISOLATED_REGISTRATION_FILE),
+        manifest_file_sha256=sha_of(prep/rcpu.MANIFEST_FILE),
         effective_imitation_commit=commit or rcpu.EFFECTIVE_IMITATION_COMMIT)), encoding='utf-8')
     stage = tmp_path/'stage'
     shutil.copytree(mirror, stage)
@@ -736,6 +738,7 @@ def test_preflight_dry_refusals(tmp_path, mirror):
                 criterion_sha256=sha_of(prep/rcpu.CRITERION_FILE),
                 config_file_sha256=sha_of(prep/rcpu.CONFIG_FILE),
                 registration_file_sha256=sha_of(prep/rcpu.ISOLATED_REGISTRATION_FILE),
+                manifest_file_sha256=sha_of(prep/rcpu.MANIFEST_FILE),
                 effective_imitation_commit=rcpu.EFFECTIVE_IMITATION_COMMIT)
     request = json.loads((prep/rcpu.BUDGET_REQUEST).read_text())
     (prep/rcpu.BUDGET_REQUEST).unlink()

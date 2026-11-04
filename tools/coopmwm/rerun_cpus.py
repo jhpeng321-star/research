@@ -717,6 +717,17 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
         entries[key] = dict(sha256=sha(resolved), bytes=resolved.stat().st_size, kind=kind)
         return True
 
+    def add_aliases(local_path, kind):
+        """Keep both the reader path and target; staging needs no symlink privilege."""
+        if not add(local_path, kind):
+            return False
+        lexical = Path(local_path).absolute()
+        if lexical != lexical.resolve():
+            key = 'home/ubuntu/'+lexical.relative_to(staging_home).as_posix()
+            guard_path(key)
+            entries[key] = dict(sha256=sha(local_path), bytes=lexical.stat().st_size, kind=kind)
+        return True
+
     # 1) the REAL readers, under read recording (proves the resolution and catches every read).
     #    READ-ONLY: rb.temperature is invoked only when its sealed file already exists (the
     #    unfrozen rule is derived deterministically on cpuS from the same decisions; calling it
@@ -741,32 +752,33 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
                           ('confirmations_all8', 'confirmation_all8'),
                           ('snapshots', 'snapshot')):
             for p in sorted((bank/sub).glob('*.*')):
-                add(p, kind)
+                add_aliases(p, kind)
         for temperature in sorted(bank.glob('TEMPERATURE_*.json')):
-            add(temperature, 'temperature')
+            add_aliases(temperature, 'temperature')
         lesson = bank/f'LESSON_LIST_{arm}.json'
         if lesson.exists():
-            add(lesson, 'lesson_list')
-        for name, kind in (('sumo_verification', 'bank_receipt'),
-                           ('confirm_replication', 'replication_receipt'),
-                           ('confirm_seed2_all8', 'seed2_receipt'),
-                           ('confirm_solo', 'solo_receipt'),
-                           ('confirm_solo_replication', 'solo_receipt'),
-                           ('confirm_solo_all8_s1', 'solo_receipt'),
-                           ('confirm_solo_all8_s2', 'solo_receipt')):
+            add_aliases(lesson, 'lesson_list')
+        verification_roots = dict(sumo_verification='bank_receipt',
+                                 confirm_replication='replication_receipt')
+        # Include the real per-seed reader layout (extended windows and extra
+        # seeds too), rather than a historically hand-written subset.
+        verification_roots.update({p.name: 'confirmation_receipt'
+                                   for p in bank.glob('confirm_*') if p.is_dir()})
+        for name, kind in sorted(verification_roots.items()):
             verifications = bank/name/'verifications'
             if not verifications.is_dir():
                 continue
             for p in sorted(verifications.glob('*.json')):
-                add(p, kind)
+                add_aliases(p, kind)
                 receipt = json.loads(p.read_text(encoding='utf-8'))
                 for branch in receipt.get('branches') or ():
                     d = bank/name/'branches'/receipt['verification_id']/branch['branch']
-                    add(d/'RESULT.json', 'tape')
-                    add(d/'observable.jsonl.gz', 'trace')
-        for name in ('confirm_solo_replication', 'confirm_solo_all8_s1', 'confirm_solo_all8_s2'):
+                    add_aliases(d/'RESULT.json', 'tape')
+                    add_aliases(d/'RESULT.json.gz', 'tape')
+                    add_aliases(d/'observable.jsonl.gz', 'trace')
+        for name in verification_roots:
             for p in sorted((bank/name/'links').glob('*.json')):
-                add(p, 'solo_link')
+                add_aliases(p, 'solo_link')
     for arm, paths in src_remote.items():
         for remote in paths:
             src = src_local[remote]
@@ -798,12 +810,24 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
             entry['kind'] = 'bank_input'
     if not entries:
         raise ValueError('REFUSED: the staging manifest resolved no files')
+    roles = dict(common_checkpoint=[], safety_rule=[], reference_B=[], reference_R=[],
+                 bank_B=[], bank_R=[])
+    for key, entry in entries.items():
+        if entry['kind'] == 'checkpoint_u0':
+            roles['common_checkpoint'].append(key)
+        if entry['kind'] == 'safety_rule':
+            roles['safety_rule'].append(key)
+        for arm in ('B', 'R'):
+            if entry['kind'] == 'checkpoint_reference_u3' and key.endswith('/'+arm+'_checkpoint_003.pt'):
+                roles['reference_'+arm].append(key)
+            if '/replay_bank/'+arm+'/' in key:
+                roles['bank_'+arm].append(key)
     from .exact_grade import _seal
     manifest = _seal(dict(schema='coopmwm.rerun_cpus.staging_manifest.v1', home=HOME,
         root=dict(remote=root_remote, local_mirror=str(root_local)),
         sources={arm: list(paths) for arm, paths in src_remote.items()},
         allowed_staged_roots=sorted('/home/ubuntu/'+p.name for p in discovered),
-        training_seed=training_seed, entries=dict(sorted(entries.items())),
+        training_seed=training_seed, entries=dict(sorted(entries.items())), roles=roles,
         counts={k: sum(1 for e in entries.values() if e['kind'] == k)
                 for k in sorted({e['kind'] for e in entries.values()})},
         supersets=['every enumerated receipt\'s full branch set (RESULT.json + observable.jsonl.gz)',
@@ -820,21 +844,58 @@ def manifest_source(mirror):
     return _mirror[0]
 
 
-def verify_staged(manifest, stage_dir):
-    """Every manifest file must exist under ``stage_dir`` (same /home/ubuntu-relative layout)
-    with the exact manifest SHA256; refuses otherwise. Read-only."""
+def validate_manifest(manifest, *, checkpoint_sha256=None):
+    """Validate the sealed inventory before any destination file is read."""
     from .exact_grade import verify_sealed
     try:
         verify_sealed(manifest, 'manifest_sha256')
-    except ValueError as e:
+    except (ValueError, KeyError) as e:
         raise SystemExit('REFUSED: staging manifest seal broken: '+str(e))
     if manifest.get('home') != HOME:
         raise SystemExit('REFUSED: staging manifest home differs from '+HOME)
-    stage = Path(stage_dir)
+    entries = manifest.get('entries')
+    if not isinstance(entries, dict) or not entries:
+        raise SystemExit('REFUSED: empty staging manifest')
+    for key, entry in entries.items():
+        p = PurePosixPath(key)
+        guard_path(key)
+        if (p.is_absolute() or p.parts[:2] != ('home', 'ubuntu') or len(p.parts) < 4
+                or '..' in p.parts or '\\' in key or ':' in key or str(p) != key):
+            raise SystemExit('REFUSED: unsafe staged destination: '+key)
+        if (not re.fullmatch('[0-9a-f]{64}', str(entry.get('sha256', '')))
+                or type(entry.get('bytes')) is not int or entry['bytes'] < 0):
+            raise SystemExit('REFUSED: invalid staging entry: '+key)
+    roles = manifest.get('roles', {})
+    for role in ('common_checkpoint', 'safety_rule', 'reference_B', 'reference_R', 'bank_B', 'bank_R'):
+        keys = roles.get(role)
+        if not isinstance(keys, list) or not keys or any(k not in entries for k in keys):
+            raise SystemExit('REFUSED: missing required staging role: '+role)
+        kinds = {entries[k]['kind'] for k in keys}
+        if role.startswith('bank_'):
+            if not {'decision_link', 'snapshot', 'tape', 'trace'}.issubset(kinds):
+                raise SystemExit('REFUSED: incomplete required staging role: '+role)
+        else:
+            kind = {'common_checkpoint': 'checkpoint_u0', 'safety_rule': 'safety_rule',
+                    'reference_B': 'checkpoint_reference_u3', 'reference_R': 'checkpoint_reference_u3'}[role]
+            if len(keys) != 1 or kinds != {kind}:
+                raise SystemExit('REFUSED: invalid staging role: '+role)
+    if checkpoint_sha256 is not None and entries[roles['common_checkpoint'][0]]['sha256'] != checkpoint_sha256:
+        raise SystemExit('REFUSED: staged common checkpoint/config u0 mismatch')
+    return manifest
+
+
+def verify_staged(manifest, stage_dir, *, checkpoint_sha256=None):
+    """Hash every approved file, refusing empty inventories and escaped destinations."""
+    validate_manifest(manifest, checkpoint_sha256=checkpoint_sha256)
+    stage = Path(guard_path(stage_dir)).resolve()
+    guard_path(stage)
     bad = []
     for key, entry in sorted(manifest['entries'].items()):
         guard_path(key)
         staged = stage.joinpath(*key.split('/'))
+        resolved = Path(guard_path(staged.resolve()))
+        if stage not in resolved.parents:
+            raise SystemExit('REFUSED: staged destination escapes stage: '+key)
         if not staged.is_file() or staged.is_symlink():
             bad.append(key+': missing')
         elif sha(staged) != entry['sha256']:
@@ -1050,15 +1111,19 @@ CONFIG_FILE = 'T2C_CONFIG.json'
 ISOLATED_REGISTRATION_FILE = 'ISOLATED_REGISTRATION.json'
 
 
-def budget_request_document(cfg, registration):
+def budget_request_document(cfg, registration, manifest):
     """Exact approval payload, with no model imports, charges or launches."""
     from .exact_grade import _seal
     check_pins(cfg)
+    if not cfg.get('track2'):
+        raise ValueError('REFUSED: Track 2 approval requires explicit opt-in')
+    validate_manifest(manifest, checkpoint_sha256=cfg['common_checkpoint_sha256'])
     jobs = isolated_jobs(registration)
     return dict(quote=quote(), budget=budget(), new_sim_s=0,
                 config_sha256=_seal(cfg, 'config_sha256')['config_sha256'],
                 registration_sha256=jobs[0]['registration_sha256'],
-                criterion_sha256=criterion_document()['criterion_sha256'])
+                criterion_sha256=criterion_document()['criterion_sha256'],
+                manifest_sha256=manifest['manifest_sha256'])
 
 
 def preflight_dry(prep_dir, *, stage_dir, budget_request=BUDGET_REQUEST, approval=APPROVAL,
@@ -1124,18 +1189,21 @@ def preflight_dry(prep_dir, *, stage_dir, budget_request=BUDGET_REQUEST, approva
             raise SystemExit('REFUSED: missing or unbound '+field)
     cfg = json.loads(config_path.read_text(encoding='utf-8'))
     reg = json.loads(reg_path.read_text(encoding='utf-8'))
+    m = Path(guard_path((prep/manifest).resolve()))
+    if not m.is_file():
+        raise SystemExit('REFUSED: staging manifest missing: '+str(m))
+    man = json.loads(m.read_text(encoding='utf-8'))
+    validate_manifest(man, checkpoint_sha256=cfg['common_checkpoint_sha256'])
+    if a.get('manifest_file_sha256') != sha(m):
+        raise SystemExit('REFUSED: unbound manifest_file_sha256')
     try:
-        expected = budget_request_document(cfg, reg)
+        expected = budget_request_document(cfg, reg, man)
         own_ledger(cfg['run_root'])
     except ValueError as e:
         raise SystemExit('REFUSED: Track 2 config/registration/root: '+str(e))
     if request != expected:
         raise SystemExit('REFUSED: full budget request/config/registration differs from registration')
-    m = Path(guard_path((prep/manifest).resolve()))
-    if not m.is_file():
-        raise SystemExit('REFUSED: staging manifest missing: '+str(m))
-    man = json.loads(m.read_text(encoding='utf-8'))
-    staged = verify_staged(man, stage)
+    staged = verify_staged(man, stage, checkpoint_sha256=cfg['common_checkpoint_sha256'])
     return dict(preflight_pass=True, ready_for_registered_launch=False,
                 ready_for_qualified_integration=True, prepare_only=True, integration_required=True,
                 target_host='cpuS', new_sim_s=0, budget_request_sha256=sha(req),

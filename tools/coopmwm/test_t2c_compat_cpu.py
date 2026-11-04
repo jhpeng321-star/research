@@ -5,7 +5,7 @@ import types
 
 import torch
 
-from . import rerun_cpus as rc
+from tools.coopmwm import rerun_cpus as rc
 
 
 def test_absent_and_false_opt_in_match_track_base_without_component_imports(tmp_path, monkeypatch):
