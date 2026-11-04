@@ -1,6 +1,11 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
 ## CURRENT Nov4 11:10 +08 — fresh session adopted A11/B4/R4; both safety guards PASS
+- 11:15resource/accountingaudit:cpuQ7803940864bytes(~7.27GiB),extension
+  1581086570bytes/19batches;9GiBshort1859735552bytes/40859027eligibleonly.
+  Livecharged12018580INCLUDING811640superseded/cap17471840, allphasesnonnegative;
+  bankext526150remaining,V2Vtrain1526400/lessons21840/isolated185200. Noallocation
+  changed. MAINnote_sol/COOPMWM_MAIN_STATUS_20261104_1115.md; proofPUBLIC_PROGRESS_1793762075776629700.
 - Full1128-linebriefREAD; gitlog/status/receiptsfirst, dirtyworkpreserved.
   r2supervisor2636865/B2636963/R2636968+monitor4LIVE/runtime06e88ecdMATCH.
 - B4/R4fivefullpasses/noimitationfailure/KL.042823/.035858<.045. BMAE

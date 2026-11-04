@@ -14,6 +14,11 @@
 - cpuQ~7.02GiB free; both archive movers live. Backfill correctly disk-paused
   below9GiB. Completed tail/slim migrations were adopted without redispatch.
   Full live evidence: `coopmwm/RESUME_ADOPTION_20261104_1110.md`.
+- 11:15 resource/accounting follow-up: cpuQ~7.27GiB; extension archive1.581GB
+  certified across19batches. The remaining40.9MB eligible pool cannot cover the
+  1.860GB gap to9GiB. Live budget12,018,580sim-s charged including811,640retained
+  superseded charges, against the later owner-approved17,471,840cap; all phases
+  nonnegative, no allocation change. `coopmwm/PUBLIC_PROGRESS_1793762075776629700.json`.
 
 ## Nov4 10:54 UTC+8 — TRAINING RUNNING r2; approved storage work complete
 - **A10/B3/R3 completed.** The delegated r2 supervisor and B/R runners are live;
