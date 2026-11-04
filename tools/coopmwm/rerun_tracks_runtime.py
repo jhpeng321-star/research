@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 import hashlib
+import importlib
 import json
 import math
 from pathlib import Path
@@ -155,6 +156,7 @@ class Runtime:
                         'single_writer', 'frozen_base', 'default_off_byte_identical'))):
                 raise ValueError('REFUSED: qualified cpuS CPU integration required')
         self.jobs = rc.isolated_jobs(registration)
+        self.final_worlds = rc.final_world_registration(registration)
         self.limiter = WorkerLimit()
         self.models, self.components = {}, {}
         self.spend = {p: 0 for p in cfg['budget']['phases']}
@@ -475,8 +477,8 @@ class Runtime:
             kinds = []
             if update in self.cfg['diagnostic_schedule'][arm]['lessons']:
                 kinds.append(('lesson', 'v2v_lessons'))
-            if update in (8, 24):
-                kinds.append(('fixed_test', 'v2v_interim' if update == 8 else 'v2v_final'))
+            if update == 8:
+                kinds.append(('fixed_test', 'v2v_interim'))
             for kind, phase in kinds:
                 pairs = self.backend.expand_scheduled(kind, arm=arm, update=update,
                                                        cfg=deepcopy(self.cfg))
@@ -491,6 +493,74 @@ class Runtime:
                 if receipt.get('status') != 'graded':
                     raise ValueError('REFUSED: scheduled '+kind+' receipt missing/ungraded')
                 self._write(f'diagnostics/u{update:03}_{arm}_{kind}.json', receipt)
+        if update == rc.FINAL_EVALUATION['update']:
+            return self.final_evaluation()
+
+    def final_evaluation(self):
+        """Explicit T1D integration boundary, tested using a test-only sibling module.
+
+        T1D adapter exports prepare_track2 / analyse_track2; it maps its native paired
+        harness to this contract. No opaque independent per-arm final evaluator.
+        """
+        contract = deepcopy(self.cfg['final_evaluation'])
+        harness = importlib.import_module(contract['module'])
+        checkpoints = {}
+        for arm in contract['arms']:
+            path = self.root/f'{arm}_checkpoint_{contract["update"]:03}.pt'
+            rc.guard_path(path.resolve())
+            if self.backend.checkpoint_components(path) != contract['checkpoint_components'][arm]:
+                raise ValueError('REFUSED: incomplete final checkpoint components')
+            checkpoints[arm] = dict(path=str(path), file_sha256=rc.sha(path),
+                components=contract['checkpoint_components'][arm], update=contract['update'])
+        worlds = deepcopy(self.final_worlds)
+        pairs = harness.prepare_track2(registration=deepcopy(worlds),
+            checkpoints=deepcopy(checkpoints), contract=deepcopy(contract))
+        expected = {(a, w['world_id']): w for a in contract['arms'] for w in worlds['worlds']}
+        seen = set()
+        for spec, snapshot in pairs:
+            key = (spec.get('arm'), spec.get('world_id'))
+            world = expected.get(key)
+            if (world is None or key in seen or spec.get('world') != world['world'] or
+                    spec.get('checkpoint') != checkpoints.get(key[0]) or
+                    spec.get('sim_s') != contract['horizon_s'] or
+                    spec.get('window') != dict(start_s=0, end_s=contract['horizon_s']) or
+                    spec.get('final_worlds_sha256') != worlds['final_worlds_sha256']):
+                raise ValueError('REFUSED: unpaired/incomplete shared final evaluation expansion')
+            seen.add(key)
+        if seen != set(expected) or sum(s['sim_s'] for s, _ in pairs) != contract['sim_s']:
+            raise ValueError('REFUSED: incomplete shared final evaluation grid/budget')
+        results = self._branches(pairs, contract['phase'], 't2c_final_planner_eval')
+        records = []
+        for (spec, _), result in zip(pairs, results):
+            if any(result.get(k) != spec[k] for k in
+                   ('arm', 'world_id', 'world', 'checkpoint', 'window', 'final_worlds_sha256')):
+                raise ValueError('REFUSED: shared final result world/checkpoint/window identity mismatch')
+            records.append(result)
+        analysis = harness.analyse_track2(registration=deepcopy(worlds),
+            checkpoints=deepcopy(checkpoints), records=deepcopy(records), contract=deepcopy(contract))
+        if (analysis.get('status') != 'graded' or analysis.get('bootstrap') != contract['bootstrap'] or
+                analysis.get('final_worlds_sha256') != worlds['final_worlds_sha256'] or
+                analysis.get('checkpoints') != checkpoints or
+                set(analysis.get('paired_ci', {})) != set(contract['comparisons'])):
+            raise ValueError('REFUSED: incomplete shared paired CI analysis')
+        by_key = {(r['arm'], r['world_id']): r for r in records}
+        for comparison, ci in analysis['paired_ci'].items():
+            a, b = comparison.split('-')
+            mean = fmean(by_key[a, w['world_id']]['J_veh_s']-
+                         by_key[b, w['world_id']]['J_veh_s'] for w in worlds['worlds'])
+            if (ci.get('n') != len(worlds['worlds']) or
+                    any(type(ci.get(k)) not in (int, float) or not math.isfinite(ci[k])
+                        for k in ('mean', 'low', 'high')) or
+                    not math.isclose(ci['mean'], mean, abs_tol=1e-10) or ci['low'] > ci['high']):
+                raise ValueError('REFUSED: invalid shared paired CI')
+        safety = {a: {k: sum(r['safety'][k] for r in records if r['arm'] == a)
+                      for k in contract['safety_counters']} for a in contract['arms']}
+        if analysis.get('safety') != safety:
+            raise ValueError('REFUSED: incomplete shared final safety analysis')
+        receipt = _seal(dict(synthetic=self.synthetic, harness=contract['module'], contract=contract,
+            registration=worlds, checkpoints=checkpoints, records=records, analysis=analysis), 'receipt_sha256')
+        self._write('T2C_FINAL_PAIRED_EVAL.json', receipt)
+        return receipt
 
     def run(self):
         """One coordinator owns the complete loop; every update has all-arm receipts."""

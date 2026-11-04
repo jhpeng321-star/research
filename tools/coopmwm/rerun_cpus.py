@@ -103,7 +103,16 @@ ISOLATED_TEST = dict(
     bootstrap=dict(reps=ISOLATED_BOOTSTRAP_REPS, level=ISOLATED_BOOTSTRAP_LEVEL,
                    seed=ISOLATED_BOOTSTRAP_SEED, method='percentile'),
     cell_seed_rule='seed = bootstrap.seed*10000 + 100*update + pair_index (pair order B-A, R-A, B-R)',
-    safety_counters=['collisions', 'teleports', 'hard_brakes'])
+    safety_counters=['collisions', 'teleports', 'hard_brakes', 'ttc_events'])
+FINAL_EVALUATION = dict(module='tools.coopmwm.planner_eval', update=24,
+    arms=['A', 'B', 'R'], comparisons=['B-A', 'R-A', 'B-R'],
+    episodes_per_arm=TEST_EPISODES, horizon_s=EPISODE_SIM_S,
+    metric='J_veh_s', higher_is_better=False,
+    bootstrap=dict(reps=10000, level=.95, seed=20261104, method='paired_percentile'),
+    safety_counters=list(ISOLATED_TEST['safety_counters']),
+    phase='v2v_final', sim_s=3*TEST_EPISODES*EPISODE_SIM_S,
+    checkpoint_components=dict(A=['base', 'optimizer'], B=['base', 'layer', 'trigger', 'optimizer'],
+                               R=['base', 'layer', 'trigger', 'optimizer']))
 CRITERION = dict(
     schema='coopmwm.rerun_cpus.isolated_criterion.v1',
     metric=ISOLATED_TEST['metric'], higher_is_better=True,
@@ -113,7 +122,7 @@ CRITERION = dict(
     bootstrap=dict(ISOLATED_TEST['bootstrap']),
     pass_rule=('PASS iff, at the primary update u24, the paired B-vs-A mean cooperation gain '
                'difference has a two-sided 95% bootstrap CI lying entirely above 0 AND B has '
-               'no more total collisions/teleports/hard-brakes than A across the replicates '
+                'no more total collisions/teleports/hard-brakes/TTC events than A across the replicates '
                '(tolerance 0). Secondary updates u6/u12/u18 and the B-vs-R bank ablation '
                'are reported, never gated.'),
     safety_counters=list(ISOLATED_TEST['safety_counters']), safety_tolerance=0,
@@ -175,7 +184,9 @@ def quote():
                gate_bank_verification_ext=GATE_SIM_S,
                interim_u8_sim_s=3*test_per_arm, final_u24_sim_s=3*test_per_arm,
                interim_u8=dict(per_arm=test_per_arm, arms=3, updates=8, episodes_per_arm=TEST_EPISODES),
-               final_u24=dict(per_arm=test_per_arm, arms=3, updates=24, episodes_per_arm=TEST_EPISODES))
+                final_u24=dict(per_arm=test_per_arm, arms=3, updates=24, episodes_per_arm=TEST_EPISODES,
+                               harness=FINAL_EVALUATION['module'], shared_worlds=True,
+                               bootstrap=deepcopy(FINAL_EVALUATION['bootstrap'])))
     out['total_without_tests'] = (a_train+br_train+lessons+teacher_verify+isolated+GATE_SIM_S
                                   + credit_verify + augment_verify + probes + SMOKE['total_sim_s'])
     out['cost_basis'] = dict(isolated='measured per-replicate estimate; actual specs must fit phase',
@@ -437,7 +448,8 @@ def runtime_config(base, *, root, reference_root, source_root, common_checkpoint
                control_arm=dict(arm='A', root=root, update=UPDATES),
                effective_imitation_commit=EFFECTIVE_IMITATION_COMMIT,
                trigger_head=head, teacher=teachers, coop_reward=dict(COOP_REWARD),
-               isolated_test=deepcopy(ISOLATED_TEST),
+                isolated_test=deepcopy(ISOLATED_TEST),
+                final_evaluation=deepcopy(FINAL_EVALUATION),
                criterion_sha256=criterion_document()['criterion_sha256'],
                diagnostic_schedule=deepcopy(SCHEDULE), # replicated isolated test, all arms
                 diagnostic_phases=dict(lessons='v2v_lessons', isolated='isolated_replicated',
@@ -515,7 +527,7 @@ def check_pins(cfg):
     if head != head_teacher_config()[0] or teachers != head_teacher_config()[1]:
         raise ValueError('REFUSED: trigger/teacher slots differ from clean-run registration')
     for key, value in (('early_probes', EARLY_PROBES), ('learning_monitor', LEARNING_MONITOR),
-                       ('smoke', SMOKE)):
+                        ('smoke', SMOKE), ('final_evaluation', FINAL_EVALUATION)):
         if cfg.get(key) != value:
             raise ValueError('REFUSED: registration differs: '+key)
     if cfg.get('isolated_test') != ISOLATED_TEST:
@@ -936,7 +948,8 @@ def criterion_document():
     the run root's AUTHORITY.md binds the document SHA."""
     from .exact_grade import _seal
     return _seal(dict(schema='coopmwm.rerun_cpus.preregistered_criterion.v1',
-                      criterion=deepcopy(CRITERION), isolated_test=deepcopy(ISOLATED_TEST),
+                       criterion=deepcopy(CRITERION), isolated_test=deepcopy(ISOLATED_TEST),
+                       final_evaluation=deepcopy(FINAL_EVALUATION),
                       arms=dict(A='plain MAPPO PPO (no trigger head, no teacher)',
                                 B='T2A trigger head + frozen cooperation layer + WM bank',
                                 R='T2A trigger head + frozen cooperation layer + own random bank'),
@@ -1128,11 +1141,34 @@ def budget_request_document(cfg, registration, manifest):
         raise ValueError('REFUSED: Track 2 approval requires explicit opt-in')
     validate_manifest(manifest, checkpoint_sha256=cfg['common_checkpoint_sha256'])
     jobs = isolated_jobs(registration)
+    final = final_world_registration(registration)
     return dict(quote=quote(), budget=budget(), new_sim_s=0,
                 config_sha256=_seal(cfg, 'config_sha256')['config_sha256'],
                 registration_sha256=jobs[0]['registration_sha256'],
                 criterion_sha256=criterion_document()['criterion_sha256'],
-                manifest_sha256=manifest['manifest_sha256'])
+                manifest_sha256=manifest['manifest_sha256'],
+                final_evaluation=deepcopy(FINAL_EVALUATION),
+                final_worlds_sha256=final['final_worlds_sha256'])
+
+
+def final_world_registration(registration):
+    """Explicit common-world registration shared with T1D; never discover seed files."""
+    from .exact_grade import _seal
+    final = deepcopy(registration.get('final_evaluation', {}))
+    worlds = final.get('worlds', [])
+    if final.get('role') != 'train' or len(worlds) != TEST_EPISODES:
+        raise ValueError('REFUSED: final paired evaluation requires 96 explicit TRAIN worlds')
+    ids, seeds = set(), set()
+    for row in worlds:
+        if set(row) != {'world_id', 'world'} or not isinstance(row['world_id'], str):
+            raise ValueError('REFUSED: invalid final world identity')
+        world = row['world']
+        if (not isinstance(world, dict) or type(world.get('seed')) is not int or world['seed'] < 0
+                or row['world_id'] in ids or world['seed'] in seeds):
+            raise ValueError('REFUSED: duplicate/invalid final paired world')
+        ids.add(row['world_id'])
+        seeds.add(world['seed'])
+    return _seal(final, 'final_worlds_sha256')
 
 
 def preflight_dry(prep_dir, *, stage_dir, budget_request=BUDGET_REQUEST, approval=APPROVAL,

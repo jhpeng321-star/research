@@ -98,7 +98,9 @@ def test_quote_three_arms_including_gate_teacher_verify_and_replicated_isolated(
     assert 'v2v_isolated' not in q
     assert q['gate_bank_verification_ext'] == 35820
     assert q['interim_u8'] == dict(per_arm=96*1200, arms=3, updates=8, episodes_per_arm=96)
-    assert q['final_u24'] == dict(per_arm=96*1200, arms=3, updates=24, episodes_per_arm=96)
+    assert q['final_u24'] == dict(per_arm=96*1200, arms=3, updates=24, episodes_per_arm=96,
+                                  harness='tools.coopmwm.planner_eval', shared_worlds=True,
+                                  bootstrap=rcpu.FINAL_EVALUATION['bootstrap'])
     assert q['interim_u8_sim_s'] == q['final_u24_sim_s'] == 3*96*1200 == 345600
     assert q['total_without_tests'] == sum(q[k] for k in (
         'v2v_train', 'v2v_lessons', 'teacher_verify_sim_s', 'group_credit_verify_sim_s',
@@ -212,7 +214,7 @@ def test_t2c_isolated_test_registration_matches_schedule_and_quote():
     assert spec['replicates'] == 8 and spec['sim_s_per_replicate'] == 32610
     assert spec['pairing'] == 'same world seed across arms (replicate index)'
     assert spec['bootstrap'] == dict(reps=10000, level=0.95, seed=20261104, method='percentile')
-    assert spec['safety_counters'] == ['collisions', 'teleports', 'hard_brakes']
+    assert spec['safety_counters'] == ['collisions', 'teleports', 'hard_brakes', 'ttc_events']
     for arm in ('A', 'B', 'R'):
         assert rcpu.SCHEDULE[arm]['isolated'] == spec['updates']          # every arm, every update
     assert rcpu.SCHEDULE == dict(A=dict(lessons=[], isolated=[6, 12, 18, 24]),
@@ -593,6 +595,8 @@ def test_bootstrap_ci_is_deterministic_percentile_with_registered_defaults():
 
 def _registration():
     return dict(role='train', metric=rcpu.ISOLATED_TEST['metric'],
+                final_evaluation=dict(role='train', worlds=[dict(world_id=f'w{i}', world=dict(seed=986100+i))
+                                                           for i in range(rcpu.TEST_EPISODES)]),
                 replicates=[dict(replicate=r, world_seed=986000+r,
                                  state_set_sha256='a'*64, window_set_sha256='b'*64)
                             for r in range(8)])
@@ -606,7 +610,7 @@ def _isolated_grid(b_delta=0.15, r_delta=0.0, collisions_b=0.0, at_update=None):
     """A full registered grid: 3 arms x u6/12/18/24 x 8 paired-world replicates."""
     return [dict(j, status='graded', metric=0.5+{'A': 0., 'B': b_delta, 'R': r_delta}[j['arm']],
                  collisions=collisions_b if j['arm'] == 'B' and j['update'] == at_update else 0,
-                 teleports=0, hard_brakes=0) for j in rcpu.isolated_jobs(_registration())]
+                 teleports=0, hard_brakes=0, ttc_events=0) for j in rcpu.isolated_jobs(_registration())]
 
 
 def test_evaluate_isolated_test_applies_the_registered_criterion():
@@ -937,7 +941,7 @@ def test_existing_synergy_decomposition_adapter():
     job = rcpu.isolated_jobs(_registration())[0]
     row = rcpu.isolated_record(job, delta_all_new_veh_s=12.,
                                delta_only_member_new_veh_s={'cav1': 3., 'cav2': 8.},
-                               safety=dict(collisions=0, teleports=0, hard_brakes=0))
+                               safety=dict(collisions=0, teleports=0, hard_brakes=0, ttc_events=0))
     assert row['metric'] == 4. and row['status'] == 'graded'
     assert row['world_seed'] == job['world_seed']
     with pytest.raises(ValueError, match='2..4 group members'):

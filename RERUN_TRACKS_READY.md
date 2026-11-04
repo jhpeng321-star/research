@@ -112,8 +112,40 @@ Backend protocol consumed by the coordinator:
   paired evaluator consumes the complete 96-cell grid. Probes use the first three
   registered states, full windows, at u2/u4.
 - `expand_scheduled(kind, arm=, update=, cfg=)` and `record_scheduled(...)` integrate the
-  existing lesson and fixed-test paths. Empty/ungraded work is refused, fixed tests need
-  96 whole episodes per arm. All branches use the same pool and own ledger.
+  existing lesson and u8 interim-test paths. Empty/ungraded work is refused; interim
+  tests need 96 whole episodes per arm. All branches use the same pool and own ledger.
+
+### Shared T1D final evaluation (current spec line 41)
+
+The u24 final path imports `tools.coopmwm.planner_eval`. That sibling module is absent
+on this branch. Its integration adapter must expose the following **explicit consumed
+boundary** (native sibling symbols are not assumed); tests install a small module only
+in the test process:
+
+- `prepare_track2(registration=, checkpoints=, contract=)` returns `(spec, snapshot)`
+  pairs for all 3 x 96 registered worlds. `registration.final_worlds_sha256` binds the
+  explicit TRAIN-world list from `ISOLATED_REGISTRATION.json.final_evaluation` (same
+  world objects used by Track 1). Every spec carries `arm, world_id, world, checkpoint,
+  final_worlds_sha256, sim_s=1200, window={start_s:0,end_s:1200}`.
+- Runtime binds **complete u24 checkpoint file hashes**, including base, layer,
+  trigger and separate optimizer for B/R; base and optimizer for A.
+  `backend.checkpoint_components(path)` must inspect the saved checkpoint and return
+  those component names in that order. The qualified branch controller loads that
+  complete checkpoint. Results must echo all world/checkpoint/window identities.
+- `analyse_track2(registration=, checkpoints=, records=, contract=)` uses the **T1D
+  paired analysis**, returning `status='graded'`, the bound world SHA/checkpoints,
+  `bootstrap` (10,000 paired-percentile draws, 95%, seed 20261104), `paired_ci` for
+  B-A/R-A/B-R (`n, mean, low, high`, signed J_veh_s differences), and per-arm totals
+  `safety` for collisions, teleports, hard braking and TTC events. Runtime checks full
+  pairing, exact counts, finite grades/CIs, paired means and all safety totals.
+
+All branches are precharged through the common pool/ledger. `v2v_final` funds 345,600
+sim-s: 96 full episodes for each arm with A reused as the paired baseline. The cost is
+unchanged, but its shared-harness semantics, world registration, checkpoint contract
+and bootstrap configuration are newly criterion/config/request/approval-bound. Receipt:
+`T2C_FINAL_PAIRED_EVAL.json`. This additional final evaluation preserves all 96
+replicated isolated cells and the separate `T2C_ISOLATED_EVAL.json`; isolated diagnostics
+now require TTC as well. No fallback to independent per-arm final tests is admitted.
 
 ## Smoke and monitoring commands
 

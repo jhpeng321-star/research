@@ -18,3 +18,23 @@ bytecode/cache writing disabled): runtime + monitor suites **32 passed** in
 corrected before this passing run. New regressions cover both arms at/below 0.8,
 verified bypass, null targets, empty imitation updates, mask forgery and realised
 accuracy/filtered-share receipts.
+
+## Step 2 — shared paired final evaluation
+
+u24 now invokes the explicit `planner_eval` T1D boundary, requiring all 288 paired
+full-world jobs, complete checkpoint file identity, echoed result identities, TTC,
+shared paired bootstrap analysis and a self-hashed final receipt. Isolated tests
+remain separate and now require TTC. The common-world list and changed evaluation
+semantics bind config/criterion/budget request/approval; the 345,600 sim-s final
+phase still covers 96 full episodes per arm (no horizon or cost reduction).
+
+Sibling `planner_eval.py` is absent here; the documented consumed protocol is
+exercised by a test-only module. Tests prove the full run routes into that module
+and reject unpaired worlds, missing jobs/components, wrong checkpoints, shortened
+windows, result-identity mismatch, missing TTC and incomplete CIs before readiness.
+
+CPU verification: focused evaluation cases **10 passed** in 53.86 s,
+`.t2c-r1-final-eval`; config/approval/evaluation selection **54 passed, 1 skipped,
+15 deselected** in 118.75 s, `.t2c-r1-final-bind2`. An earlier selection had two
+stale fixture assertions (new quote fields/TTC); both were updated. The skip is the
+inherited Windows file-symlink privilege case; hard-link assertions execute.

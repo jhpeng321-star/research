@@ -195,9 +195,14 @@ class CPUBackend:
 
     def run_branch(self, spec, snapshot):
         self.branch_calls.append((deepcopy(spec), deepcopy(snapshot)))
+        if spec['branch'] == 'shared_final':
+            return dict({k: deepcopy(spec[k]) for k in ('arm', 'world_id', 'world', 'checkpoint',
+                                                       'window', 'final_worlds_sha256')},
+                status='graded', J_veh_s=float(spec['world']['seed'] % 7)+{'A': 4, 'B': 2, 'R': 3}[spec['arm']],
+                safety=dict(collisions=0, teleports=0, hard_brakes=0, ttc_events=0))
         return dict(status='graded', J_veh_s={'reference': 10., 'all': 7., 'solo0': 9.,
             'solo1': 9.}.get(spec['branch'], 5.),
-            safety=dict(collisions=0, teleports=0, hard_brakes=0))
+            safety=dict(collisions=0, teleports=0, hard_brakes=0, ttc_events=0))
 
     def grade_verification(self, kind, payload, results):
         return dict(status='graded', advantage=.4, label_correct=payload.get('episode', 0) == 0)
@@ -206,8 +211,15 @@ class CPUBackend:
         return dict(sim_s=1200, window=start['window'], branch='reference'), dict(start)
 
     def save_checkpoint(self, path, model, components):
-        torch.save(dict(base=model.state_dict(), layer=components['coop_layer'].state_dict()
-                        if components else None), path)
+        data = dict(base=model.state_dict(), optimizer={})
+        if components:
+            data.update(layer=components['coop_layer'].state_dict(),
+                        trigger=components['trigger_head'].state_dict(),
+                        optimizer=components['coop_layer'].optimizer.state_dict())
+        torch.save(data, path)
+
+    def checkpoint_components(self, path):
+        return sorted(torch.load(path, weights_only=True), key=['base', 'layer', 'trigger', 'optimizer'].index)
 
     def diagnostic_weights(self, model, components):
         weights = deepcopy(model.state_dict())
@@ -251,11 +263,45 @@ def registration(backend):
     for r in range(8):
         job = dict(world_seed=986000+r)
         rows.append(dict(replicate=r, **job, **diagnostic_identity(backend.resolve_states(job))))
-    return dict(role='train', metric=rc.ISOLATED_TEST['metric'], replicates=rows)
+    return dict(role='train', metric=rc.ISOLATED_TEST['metric'], replicates=rows,
+                final_evaluation=dict(role='train', worlds=[dict(world_id=f'w{i}', world=dict(seed=986100+i))
+                                                           for i in range(rc.TEST_EPISODES)]))
+
+
+def install_planner_eval(monkeypatch):
+    """Test-only implementation of the explicit T1D integration boundary."""
+    mod = types.ModuleType('tools.coopmwm.planner_eval')
+    mod.calls = []
+    def prepare_track2(*, registration, checkpoints, contract):
+        mod.calls.append('prepare')
+        return [(dict(branch='shared_final', arm=a, **deepcopy(w),
+                      checkpoint=deepcopy(checkpoints[a]), sim_s=contract['horizon_s'],
+                      window=dict(start_s=0, end_s=contract['horizon_s']),
+                      final_worlds_sha256=registration['final_worlds_sha256']), {})
+                for a in contract['arms'] for w in registration['worlds']]
+    def analyse_track2(*, registration, checkpoints, records, contract):
+        mod.calls.append('analyse')
+        ci = {}
+        keyed = {(r['arm'], r['world_id']): r for r in records}
+        for pair in contract['comparisons']:
+            a, b = pair.split('-')
+            deltas = [keyed[a, w['world_id']]['J_veh_s']-keyed[b, w['world_id']]['J_veh_s']
+                      for w in registration['worlds']]
+            bs = contract['bootstrap']
+            stat = rc.bootstrap_ci(deltas, reps=bs['reps'], seed=bs['seed'], level=bs['level'])
+            ci[pair] = dict(n=len(deltas), mean=stat['mean'], low=stat['lo'], high=stat['hi'])
+        return dict(status='graded', paired_ci=ci, bootstrap=contract['bootstrap'], checkpoints=checkpoints,
+                    final_worlds_sha256=registration['final_worlds_sha256'],
+                    safety={a: {k: sum(r['safety'][k] for r in records if r['arm'] == a)
+                                for k in contract['safety_counters']} for a in contract['arms']})
+    mod.prepare_track2, mod.analyse_track2 = prepare_track2, analyse_track2
+    monkeypatch.setitem(sys.modules, mod.__name__, mod)
+    return mod
 
 
 def prepare(tmp_path, monkeypatch):
     install_moves(monkeypatch)
+    install_planner_eval(monkeypatch)
     root = tmp_path/'run'
     rc.init_root(root)
     model = nn.Linear(1, 1)
@@ -429,10 +475,17 @@ def test_executes_complete_paired_grid_and_scheduled_tests(tmp_path, monkeypatch
     assert len(rt.isolated_records) == 96
     analysis = rc.evaluate_isolated_test(rt.isolated_records, registration=reg)
     assert analysis['cells'] == 96 and analysis['verdict'] == 'fail'  # no fabricated learning claim
+    for arm in ('A', 'B', 'R'):
+        backend.save_checkpoint(rt.root/f'{arm}_checkpoint_024.pt', rt.models[arm], rt.components[arm])
     for update in (6, 8, 12, 18, 24):
         rt.scheduled_checks(update)
     assert rt.spend['v2v_interim'] == rt.spend['v2v_final'] == 3*96*1200
     assert rt.spend['v2v_lessons'] == 4*1200
+    receipt = json.loads((rt.root/'T2C_FINAL_PAIRED_EVAL.json').read_text())
+    assert sys.modules['tools.coopmwm.planner_eval'].calls == ['prepare', 'analyse']
+    assert receipt['analysis']['paired_ci']['B-A'] == dict(n=96, mean=-2., low=-2., high=-2.)
+    assert len(receipt['records']) == 288
+    assert all('ttc_events' in s for s in receipt['analysis']['safety'].values())
     assert all(rt.spend[p] <= cap for p, cap in cfg['budget']['phases'].items())
 
 
@@ -454,6 +507,77 @@ def test_smoke_and_one_command_monitor_cli(tmp_path, monkeypatch):
     completed = subprocess.run([sys.executable, '-m', 'tools.coopmwm.rerun_cpus', 'monitor',
         '--root', cfg['run_root']], env=env, text=True, capture_output=True, check=True, timeout=30)
     assert json.loads(completed.stdout)['updates'] == dict(A=1, B=1, R=1)
+
+
+@pytest.mark.parametrize('fault', ['unpaired', 'missing', 'short', 'checkpoint', 'component',
+                                   'result_identity', 'ttc', 'ci'])
+def test_shared_final_harness_rejects_incomplete_or_unpaired_results(tmp_path, monkeypatch, fault):
+    cfg, reg, backend = prepare(tmp_path, monkeypatch)
+    rt = Runtime(cfg, reg, backend)
+    for arm in ('A', 'B', 'R'):
+        backend.save_checkpoint(rt.root/f'{arm}_checkpoint_024.pt', rt.models[arm], rt.components[arm])
+    harness = sys.modules['tools.coopmwm.planner_eval']
+    original = harness.prepare_track2
+    def corrupt(**kw):
+        pairs = original(**kw)
+        if fault == 'missing':
+            return pairs[:-1]
+        spec = pairs[-1][0]
+        if fault == 'unpaired': spec['world']['seed'] += 1
+        if fault == 'short': spec['sim_s'] = 1199
+        if fault == 'checkpoint': spec['checkpoint']['file_sha256'] = '0'*64
+        return pairs
+    harness.prepare_track2 = corrupt
+    if fault == 'component':
+        backend.checkpoint_components = lambda p: ['base']
+    run_branch = backend.run_branch
+    def corrupt_result(spec, snapshot):
+        result = run_branch(spec, snapshot)
+        if fault == 'result_identity': result['checkpoint']['file_sha256'] = '0'*64
+        if fault == 'ttc': del result['safety']['ttc_events']
+        return result
+    backend.run_branch = corrupt_result
+    if fault == 'ci':
+        analyse = harness.analyse_track2
+        def corrupt_analysis(**kw):
+            result = analyse(**kw)
+            result['paired_ci']['B-A']['n'] = 95
+            return result
+        harness.analyse_track2 = corrupt_analysis
+    with pytest.raises(ValueError, match='REFUSED'):
+        rt.final_evaluation()
+    assert not (rt.root/'T2C_FINAL_PAIRED_EVAL.json').exists()
+    if fault in ('unpaired', 'missing', 'short', 'checkpoint', 'component'):
+        assert not backend.branch_calls and rt.spend['v2v_final'] == 0
+
+
+def test_final_worlds_and_approval_registration_are_bound(tmp_path, monkeypatch):
+    cfg, reg, backend = prepare(tmp_path, monkeypatch)
+    from tools.coopmwm.exact_grade import _seal
+    first = rc.final_world_registration(reg)
+    reg['final_evaluation']['worlds'][0]['world']['seed'] += 1000
+    assert rc.final_world_registration(reg)['final_worlds_sha256'] != first['final_worlds_sha256']
+    assert _seal(reg, 'sha256')['sha256'] != _seal(dict(reg, final_evaluation=first), 'sha256')['sha256']
+    reg['final_evaluation']['worlds'].pop()
+    with pytest.raises(ValueError, match='96 explicit'):
+        Runtime(cfg, reg, backend)
+
+
+def test_full_run_reaches_shared_final_harness(tmp_path, monkeypatch):
+    cfg, reg, backend = prepare(tmp_path, monkeypatch)
+    rt = Runtime(cfg, reg, backend)
+    def update(arm, u, **kw):
+        backend.save_checkpoint(rt.root/f'{arm}_checkpoint_{u:03}.pt', rt.models[arm], rt.components[arm])
+        return {}
+    # Skip repeated episode work here; separate tests exercise numerical updates and
+    # the entire 96-cell isolated expansion. This regression guards run-loop routing.
+    rt.update = update
+    rt.diagnostics = lambda *a, **kw: {}
+    monkeypatch.setattr(rc, 'evaluate_isolated_test', lambda *a, **kw: dict(status='test_isolated'))
+    rt.run()
+    assert sys.modules['tools.coopmwm.planner_eval'].calls == ['prepare', 'analyse']
+    assert (rt.root/'T2C_FINAL_PAIRED_EVAL.json').is_file()
+    assert (rt.root/'T2C_ISOLATED_EVAL.json').is_file()
 
 
 def test_admission_and_runtime_detect_frozen_base_mutation_and_kl_violation(tmp_path, monkeypatch):
