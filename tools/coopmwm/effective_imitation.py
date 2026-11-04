@@ -90,16 +90,16 @@ def censored_log_prob(action, mean, rho, sigma, limits):
     """Joint AR(1)-correlated Gaussian likelihood with Tobit censoring.
 
     action/mean/limits: (n,1) tensors; limits carry the binding residual threshold of every
-    proposal member (+inf = uncensored). Coordinates whose target lies below their limit
-    contribute the normal density at the target; coordinates whose target reached the limit
-    contribute P(policy command >= limit). Both terms are integrated over the shared factor
-    z0 (a = mean + sigma*(sqrt(rho) z0 + sqrt(1-rho) eps)) by fixed-node Gauss-Hermite.
-    With no censored coordinate the result equals gaussian_log_prob(action, mean, rho,
-    sigma) exactly."""
+    proposal member (inf = uncensored). A coordinate whose target lies BELOW its limit
+    contributes the normal density at the target; a coordinate whose target reached the
+    limit (target >= limit) contributes P(policy command >= limit). Both terms are
+    integrated over the shared factor z0 (a = mean + sigma*(sqrt(rho) z0 + sqrt(1-rho) eps))
+    by fixed-node Gauss-Hermite. With no censored coordinate the result equals
+    gaussian_log_prob(action, mean, rho, sigma) exactly."""
     if not 0 <= rho < 1:
         raise ValueError('nonsingular shared mixing required')
     limits = torch.as_tensor(limits, dtype=mean.dtype).reshape(-1, 1)
-    censored = torch.isfinite(limits)
+    censored = torch.isfinite(limits) & (torch.as_tensor(action, dtype=mean.dtype).reshape(-1, 1) >= limits)
     if not bool(censored.any()):
         return gaussian_log_prob(action, mean, rho, sigma)
     scale = torch.as_tensor(sigma, dtype=mean.dtype, device=mean.device)
@@ -287,11 +287,11 @@ def attach_limits(pairs, tape, trace_path, entry, cap=None):
             counts['excluded_missing_limit'] += 1
             continue
         proposed = [v for v in sample['behaviour'].get('proposal_members', []) if v in members]
-        residual, reason = {}, None
+        residual, absolute, reason = {}, {}, None
         for vid in proposed:
             command = _plan_command(step, vid)
             native = _native_command(step, vid)
-            if command is None or native is None:
+            if command is None or native is None or _vehicle(frame, vid) is None:
                 reason = 'missing'
                 break
             recorded = float(sample['action'][members.index(vid)][0])
@@ -301,11 +301,13 @@ def attach_limits(pairs, tape, trace_path, entry, cap=None):
             u = binding_limit(command, cap, _issued_safe(frame, vid),
                               _realised_accel(previous, frame, vid))
             residual[vid] = u-native
-            limits_by_time.setdefault(t, {})[vid] = u
+            absolute[vid] = u
         if reason is not None:
             counts['excluded_command_mismatch' if reason == 'mismatch'
                    else 'excluded_missing_limit'] += 1
             continue
+        for t_vid, u in absolute.items():          # only kept pairs publish their limits
+            limits_by_time.setdefault(t, {})[t_vid] = u
         sample['binding_limits'] = residual
         kept.append((sample, w))
     counts['kept'] = len(kept)
