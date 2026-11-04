@@ -94,6 +94,17 @@ Registered rules (all exposed in ``REGISTERED``):
   and the top-k are spread in a data-driven behaviour-descriptor space (top-2
   by score kept); optional k-NN novelty versus the verified bank. Still
   discovery-pure. See ``coop_search``.
+* Lane actions: config flag ``lane_actions`` (c4/lane-plans, owner 2026-11-04,
+  default False = all of the above, byte-identical; ``lane_plans`` is not even
+  imported). When True every sampled plan also carries per-second lane actions
+  (keep/left/right, the wms.control.lanes encoding): at most one lane-change
+  attempt per member at a uniform second inside the decision-time physical
+  envelope (``wms.control.lanes.lane_feasibility``, the SUMO-calibrated
+  lane-change safety model - no invented rules), on a separate SeedSequence
+  child stream. The learned WM lane model (``wms.physics.lane_learnable`` when
+  merged, else lane_v5) predicts each attempt's outcome probability onto
+  ``lane_predictions``; plans are tagged ``uses_lane_actions``. See
+  ``lane_plans`` and MPPI_SEARCH_README.
 """
 import hashlib
 import json
