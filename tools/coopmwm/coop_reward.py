@@ -42,7 +42,7 @@ def settings(cfg):
     Refuses a malformed registration BEFORE any training runs: missing/invalid weight (no
     default tuning), missing/empty provenance, and arms that do not keep B and R identical
     (A only by explicit inclusion)."""
-    if not cfg.get('coop_reward'):
+    if not (cfg or {}).get('coop_reward'):
         return None
     weight = cfg.get('coop_reward_weight')
     if (isinstance(weight, bool) or not isinstance(weight, (int, float))
