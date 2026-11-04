@@ -51,7 +51,7 @@ def label(t=None, step=0):
     return (t or teacher()).label_state('episode_B_1', step, 600+step, 'a', observation())
 
 
-def bank_label(none=False):
+def bank_label(none=False, arm='B'):
     obs = observation()
     obs['ego_id'] = 'c1'
     obs['rows'][0]['vid'], obs['rows'][1]['vid'] = 'c1', 'c2'
@@ -59,7 +59,10 @@ def bank_label(none=False):
                            [move(members=('c1', 'c2')) for _ in range(n)])
     t = dt.WMDenseTeacher(stub, scorer=lambda obs, c:
                          [dict(p_better=.1 if none else .9, gain=1)]*len(c))
-    return t.label_state('warm_u005_B_7', 0, 600, 'c1', obs)
+    if arm == 'R':
+        t = dt.RandomTeacher(stub)
+        t.choice_rng = np.random.default_rng(7)
+    return t.label_state(f'warm_u005_{arm}_7', 0, 600, 'c1', obs)
 
 
 def test_config_off_removes_all_teacher_keys():
@@ -116,7 +119,7 @@ def test_dependencies_only_receive_observables():
     seen = []
     def score(obs, cands):
         seen.append(obs)
-        assert obs == dict(dt.observable_state(observation()), cav='a')
+        assert obs == dict(dt.observable_state(observation()), cav='a', self='a')
         return [dict(p_better=.9, gain=1)]*len(cands)
     lb = label(teacher(scorer=score))
     assert seen and 'forbidden' not in json.dumps(lb)
@@ -235,7 +238,7 @@ def test_quote_is_all_candidates_admitted_upper_bound():
     from tools.coopmwm import verify_perseed as vp
     lb = bank_label()
     dt.select_for_verification([lb], 1.)
-    q = dt.verification_quote([lb], k=3, extra_seeds=1)
+    q = dt.verification_quote([lb], k=3, duration_s=120, members=2, extra_seeds=1)
     expected = vp.quote_decision(600, [120]*3, [['a', 'b']]*3,
                                  {1: [0, 1, 2], 2: [0, 1, 2]}, extra_seeds=1)
     assert q['all8_total_with_extra_sim_s'] == expected['all8_total_with_extra_sim_s']
@@ -243,18 +246,20 @@ def test_quote_is_all_candidates_admitted_upper_bound():
     assert dt.verification_quote([], 3)['all8_total_sim_s'] == 0
 
 
-def test_selected_all8_end_to_end_and_no_redispatch(tmp_path):
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_selected_all8_end_to_end_and_no_redispatch(tmp_path, arm):
     # Existing deterministic plant exercises real all8 seed-2, later-harm, solo, sealed-record
     # and ledger paths. It never invokes SUMO or a subprocess.
     from tools.coopmwm.test_verify_perseed_cpu import setup, _budget
     _budget(tmp_path)
     gains = {('p1', 1): .6, ('p1', 2): .6, ('p1', 1, 'solo'): .1, ('p1', 2, 'solo'): .1}
-    root, _, plans, receipt, runner_for, _ = setup(tmp_path, gains, k=2)
+    root, _, plans, receipt, runner_for, _ = setup(tmp_path, gains, k=2, arm=arm)
     t = teacher()
-    lb = bank_label()
+    lb = bank_label(arm=arm)
+    assert lb['source'] == ('wm' if arm == 'B' else 'random')
     # The test plan-to-move adapter follows the registered moves.from_plan contract.
     stub = SimpleNamespace(from_plan=lambda p: lb['move'])
-    verifier = dt.All8Verifier(root, 'B', runner_for, str(root), 'bank_verification_ext')
+    verifier = dt.All8Verifier(root, arm, runner_for, str(root), 'bank_verification_ext')
     calls = []
     def dispatch(row):
         calls.append(row['id'])
@@ -320,7 +325,71 @@ def test_no_selected_labels_never_dispatch_or_flush():
 
 def test_lazy_planner_import_seam(monkeypatch):
     from tools import coopmwm
-    scorer = lambda obs, candidates: [dict(p_better=.9, gain=1)]*len(candidates)
-    monkeypatch.setattr(coopmwm, 'planner_online', SimpleNamespace(score_moves=scorer), raising=False)
-    assert dt.planner_scorer() is scorer
-    assert label(teacher(scorer=None))['source'] == 'wm'
+    from dataclasses import dataclass
+    @dataclass
+    class Config:
+        n_candidates: int = 32
+        horizon_s: int = 600
+    calls = []
+    def scorer(record, rng, *, rollout, calibration, config, calibrate, move_api):
+        assert not {'cav', 'self'} & set(record)
+        assert config.horizon_s == 600
+        candidates = move_api.candidates(record, rng, config.n_candidates)
+        assert len(candidates) == config.n_candidates == 3
+        assert rollout == 'cpu-rollout' and calibration == 'fitted'
+        calls.append(candidates)
+        return dict(scores=[dict(p_calibrated=.9, expected_gain=i+1)
+                            for i in range(len(candidates))])
+    monkeypatch.setattr(coopmwm, 'planner_online', SimpleNamespace(score_moves=scorer, Config=Config),
+                        raising=False)
+    api = SimpleNamespace(FAMILIES=Moves.FAMILIES, offsets=lambda *_: {})
+    kwargs = dict(rollout='cpu-rollout', calibration='fitted', move_api=api)
+    t = teacher(scorer=None, planner_kwargs=kwargs)
+    lb = label(t)
+    assert calls == [lb['candidates']] and lb['candidate_class'] == 3
+    with pytest.raises(ValueError, match='explicit CPU rollout'):
+        dt.planner_scorer()
+
+
+def test_recorded_trigger_table_labels_and_ce_targets_without_redrawing():
+    api = SimpleNamespace(FAMILIES=Moves.FAMILIES,
+                          candidates=lambda *_: pytest.fail('recorded table was redrawn'))
+    t = dt.WMDenseTeacher(api, scorer=lambda obs, c: [dict(p_better=.9, gain=2)]*len(c))
+    table = [None, move(), move(depth=.3), None]
+    lb = t.label_state('ep', 0, 600, 'a', observation(), candidates=table)
+    batch = SimpleNamespace(context=dict(members=['a']), tables=(tuple(table),),
+                            mask=np.asarray([[True, True, True, False]]))
+    assert dt.trigger_targets([lb], batch) == [1]
+    reordered = [None, table[2], table[1], None]
+    batch.tables = (tuple(reordered),)
+    with pytest.raises(ValueError, match='support differs'):
+        dt.trigger_targets([lb], batch)
+    batch.tables = (tuple(table),)
+    batch.mask[0, 1] = False
+    with pytest.raises(ValueError, match='masked'):
+        dt.trigger_targets([lb], batch)
+
+
+def test_dagger_captures_recorded_table_and_move_parameter_aliases():
+    table = [None, dict(family='gap_open', members=['a', 'b'], onset_s=5, hold_s=40, depth=.2)]
+    buf = dt.DAggerBuffer(60)
+    buf.add('ep', 0, 600, 'a', observation(), candidates=table)
+    table[1]['depth'] = .8
+    lb = buf.label(teacher())[0]
+    assert lb['move']['depth'] == .2
+    assert lb['move']['onset'] == 5 and lb['move']['hold'] == 40
+
+
+def test_planner_belief_payload_and_history_preserved_without_hidden_rows():
+    obs = observation()
+    obs.update(group=['a', 'b'], commands=dict(a=.1, b=.2), policy_residuals=dict(a=0, b=0),
+               policy_state={'actor.test': [1, 2]}, committed_offsets=[dict(b=-.1)])
+    obs['history'] = [dict(time_s=600, rows=copy.deepcopy(obs['rows']), entrance_counts=[1, 2])]
+    result = dt.observable_state(obs)
+    assert result['policy_state'] == obs['policy_state']
+    assert result['commands'] == obs['commands']
+    assert 'forbidden' not in json.dumps(result)
+
+
+def test_nonpositive_expected_gain_always_labels_none():
+    assert label(teacher(scorer=lambda *_: [dict(p_better=1., gain=0)]*3))['move'] is None

@@ -26,7 +26,13 @@ tasks: this module codes against their registered APIs through two LAZY seams, b
   scorer(obs_state, candidates) -> [{'p_better': float,      T1B scoring seam: the CALIBRATED
                      'gain': float}, ...]                    P(move beats MAPPO-only) and
                                                              expected gain, aligned with the
-                                                             candidate list
+                                                              candidate list
+
+``make_teacher(..., planner_kwargs={'rollout': cpu_rollout, 'calibration': fitted, ...})``
+binds the concrete T1B API through ``planner_scorer``. For T2A imitation, pass the actual
+``TriggerBatch.tables[i]`` to ``label_state(..., candidates=...)`` (or DAggerBuffer.add),
+then pass ``trigger_targets(labels, batch)`` to ``TriggerPolicy.imitation_loss``. Fresh
+candidate draws are supported for standalone labelling but must never index another table.
 
 Labelling rule (mirrors the T1B firing rule): a candidate move is labelled only when its
 calibrated P >= ``dense_teacher_p_star`` (owner rule 10-18); maximize expected gain among
@@ -43,7 +49,9 @@ import numpy as np
 
 SCHEMA = 'coopmwm/dense-teacher/v1'
 NONE_FAMILY = 'none'
-OBSERVABLE_ROW_KEYS = ('vid', 's_m', 'v_mps', 'lane', 'is_cav')
+OBSERVABLE_ROW_KEYS = ('vid', 's_m', 'v_mps', 'lane', 'is_cav', 'length_m')
+PLANNER_KEYS = ('ego_id', 'group', 'rows', 'time_s', 'world_id', 'state_id', 'commands',
+                'policy_residuals', 'policy_state', 'history', 'committed_offsets')
 
 # Registered option config (all of it; unknown dense_teacher_* keys are refused even when the
 # option is off, mirroring coop_search.split_config / variety.split_config).
@@ -140,9 +148,15 @@ def observable_state(obs_state):
     seam; a hidden field on a supplied row is never forwarded to a dependency.
     """
     out = {'rows': observable_rows(obs_state)}
-    for key in ('ego_id', 'cav', 'time_s', 'sensing_range_m', 'v2v_partner_ids'):
+    for key in (*PLANNER_KEYS, 'self', 'cav', 'sensing_range_m', 'v2v_partner_ids'):
+        if key in ('rows', 'history'):
+            continue
         if key in obs_state:
             out[key] = copy.deepcopy(obs_state[key])
+    if 'history' in obs_state:
+        out['history'] = [dict(time_s=f['time_s'], rows=observable_rows(f),
+                               entrance_counts=copy.deepcopy(f.get('entrance_counts')))
+                          for f in obs_state['history']]
     return out
 
 
@@ -152,7 +166,12 @@ def _move_fields(move):
     get = (lambda key: move[key]) if isinstance(move, dict) else (lambda key: getattr(move, key))
     family = get('family')
     members = list(get('members'))
-    onset, hold, depth = float(get('onset')), float(get('hold')), float(get('depth'))
+    def parameter(name):
+        try:
+            return get(name)
+        except (KeyError, AttributeError):
+            return get(name+'_s')
+    onset, hold, depth = float(parameter('onset')), float(parameter('hold')), float(get('depth'))
     for name, x in (('onset', onset), ('hold', hold), ('depth', depth)):
         if not math.isfinite(x):
             raise ValueError(f'move {name} is not finite')
@@ -277,20 +296,35 @@ def default_moves():
     return moves
 
 
-def planner_scorer():
-    """The T1B WM scoring seam, imported lazily: returns
-    ``scorer(obs_state, candidates) -> [{'p_better', 'gain'}, ...]`` (calibrated P(move beats
-    MAPPO-only) from T1C + expected gain over the full look-ahead horizon)."""
+def planner_scorer(*, rollout=None, calibration=None, config=None, calibrate=None, move_api=None):
+    """Bind the concrete T1B scoring API to an EXACT recorded candidate table.
+
+    T1B owns paired WM samples, the full 600-second horizon and mandatory calibration.
+    This adapter supplies its candidate provider so no second, mismatched table is sampled.
+    ``rollout`` should be T1B.WMRollout(cpu_runtime); no WM is built or dispatched here.
+    """
     try:
         from . import planner_online as po
     except ImportError as e:
         raise ImportError('the WM planner (T1B tools/coopmwm/planner_online.py) is not on this '
                           'branch yet; inject scorer=<callable> (tests only) or land T1B') from e
-    fn = getattr(po, 'score_moves', None) or getattr(po, 'score_candidates', None)
-    if fn is None:
-        raise ValueError('planner_online exposes no score_moves/score_candidates: the seam '
-                         'contract is scorer(obs_state, candidates) -> [{"p_better", "gain"}]')
-    return fn
+    if rollout is None or calibration is None:
+        raise ValueError('T1B scoring requires explicit CPU rollout and fitted calibration')
+
+    def score(obs_state, candidates):
+        from dataclasses import replace
+        from types import SimpleNamespace
+        api = default_moves() if move_api is None else move_api
+        fixed = SimpleNamespace(FAMILIES=api.FAMILIES, offsets=api.offsets,
+                                candidates=lambda record, rng, n: copy.deepcopy(candidates))
+        cfg = po.Config() if config is None else config
+        cfg = replace(cfg, n_candidates=len(candidates))
+        record = {k: copy.deepcopy(obs_state[k]) for k in PLANNER_KEYS if k in obs_state}
+        result = po.score_moves(record, None, rollout=rollout, calibration=calibration,
+                                config=cfg, calibrate=calibrate, move_api=fixed)
+        return [dict(p_better=s['p_calibrated'], gain=s['expected_gain'])
+                for s in result['scores']]
+    return score
 
 
 class _TeacherBase:
@@ -323,12 +357,28 @@ class _TeacherBase:
             self._encoder = TargetEncoder(families, buckets=int(self.cfg['dense_teacher_buckets']))
         return self._encoder
 
-    def _candidates(self, obs_state):
+    def _candidates(self, obs_state, supplied=None):
         """The shared move distribution: BOTH teachers draw their candidates from the SAME T1A
         generator with the same K and their own seeded streams (R fairness, like
         variety.random_mix_candidates)."""
-        cands = list(self.moves.candidates(obs_state, self.rng,
-                                           int(self.cfg['dense_teacher_candidates'])))
+        budget = int(self.cfg['dense_teacher_candidates'])
+        if supplied is None:
+            view = dict(obs_state, self=obs_state['cav'])
+            if 'group' in view:
+                view['rows'] = [r for r in view['rows'] if r['vid'] in view['group']
+                                or not r.get('is_cav')]
+            cands = list(self.moves.candidates(view, self.rng, budget))
+        else:
+            cands = list(copy.deepcopy(supplied))
+            if not cands or cands[0] is not None:
+                raise ValueError('recorded trigger table must start with None')
+            cands = cands[1:]
+            while cands and cands[-1] is None:
+                cands.pop()
+            if any(c is None or _move_fields(c)[0] == NONE_FAMILY for c in cands):
+                raise ValueError('recorded trigger table has a hole or duplicate none')
+        if len(cands) > budget:
+            raise ValueError('candidate table exceeded registered budget')
         fams = self.moves.FAMILIES
         for c in cands:
             family = _move_fields(c)[0]
@@ -364,17 +414,20 @@ class _TeacherBase:
 
 class WMDenseTeacher(_TeacherBase):
     """The B-arm teacher: the WM planner labels the best move per state (T1B scoring seam;
-    label only when calibrated P >= dense_teacher_p_star, ties by gain then candidate order,
+    label only when calibrated P >= dense_teacher_p_star and expected gain > 0;
+    maximize gain, ties by candidate order,
     otherwise 'none')."""
 
-    def __init__(self, moves_mod=None, scorer=None, cfg=None, rng=None, encoder=None):
+    def __init__(self, moves_mod=None, scorer=None, cfg=None, rng=None, encoder=None,
+                 planner_kwargs=None):
         super().__init__(moves_mod=moves_mod, cfg=cfg, rng=rng, encoder=encoder)
         self._scorer = scorer
+        self._planner_kwargs = dict(planner_kwargs or {})
 
     @property
     def scorer(self):
         if self._scorer is None:
-            self._scorer = planner_scorer()
+            self._scorer = planner_scorer(**self._planner_kwargs)
         return self._scorer
 
     def _score(self, obs_state, cands):
@@ -391,12 +444,13 @@ class WMDenseTeacher(_TeacherBase):
                 raise ValueError('scorer probability is outside [0, 1]')
         return scores
 
-    def label_state(self, episode, step, t_s, cav, obs_state):
-        obs_state = dict(observable_state(obs_state), cav=str(cav))
-        cands = self._candidates(obs_state)
+    def label_state(self, episode, step, t_s, cav, obs_state, candidates=None):
+        obs_state = dict(observable_state(obs_state), cav=str(cav), ego_id=str(cav), self=str(cav))
+        cands = self._candidates(obs_state, candidates)
         scores = self._score(obs_state, cands)
         p_star = float(self.cfg['dense_teacher_p_star'])
-        gated = [(i, s) for i, s in enumerate(scores) if float(s['p_better']) >= p_star]
+        gated = [(i, s) for i, s in enumerate(scores)
+                 if float(s['p_better']) >= p_star and float(s['gain']) > 0]
         best = max(gated, key=lambda t: (t[1]['gain'], -t[0])) if gated else None
         return self._label(episode, step, t_s, cav, obs_state, cands,
                            0 if best is None else best[0]+1, 'wm',
@@ -406,17 +460,17 @@ class WMDenseTeacher(_TeacherBase):
 class RandomTeacher(_TeacherBase):
     """The R-arm teacher: a uniformly random label over the SAME candidate support + 'none'
     (same T1A generator, same K, own seeded stream). No WM scoring exists here at all - the
-    class has no scorer seam, so R's imitation signal is distribution-matched to B's by
-    construction and differs only by the (absent) planner."""
+    class has no scorer seam. Candidate proposals are distribution-matched to B's;
+    the label selector is random rather than WM-ranked."""
 
-    def label_state(self, episode, step, t_s, cav, obs_state):
-        obs_state = dict(observable_state(obs_state), cav=str(cav))
-        cands = self._candidates(obs_state)
+    def label_state(self, episode, step, t_s, cav, obs_state, candidates=None):
+        obs_state = dict(observable_state(obs_state), cav=str(cav), ego_id=str(cav), self=str(cav))
+        cands = self._candidates(obs_state, candidates)
         draw = int(self.choice_rng.integers(0, len(cands)+1))
         return self._label(episode, step, t_s, cav, obs_state, cands, draw, 'random')
 
 
-def make_teacher(cfg, moves_mod=None, scorer=None, rng=None, encoder=None):
+def make_teacher(cfg, moves_mod=None, scorer=None, rng=None, encoder=None, planner_kwargs=None):
     """Factory used by the T2C loop: ``dense_teacher_random`` -> RandomTeacher (R), else
     WMDenseTeacher (B). Refuses to build anything while the option is off."""
     cfg = dict(TEACHER_REGISTERED, **(cfg or {}))
@@ -424,10 +478,11 @@ def make_teacher(cfg, moves_mod=None, scorer=None, rng=None, encoder=None):
     if not cfg.get('dense_teacher'):
         raise ValueError('dense_teacher is OFF: resolve its config (plan_config) first')
     if cfg.get('dense_teacher_random'):
-        if scorer is not None:
+        if scorer is not None or planner_kwargs:
             raise ValueError('the random teacher takes no WM scorer (R fairness)')
         return RandomTeacher(moves_mod=moves_mod, cfg=cfg, rng=rng, encoder=encoder)
-    return WMDenseTeacher(moves_mod=moves_mod, scorer=scorer, cfg=cfg, rng=rng, encoder=encoder)
+    return WMDenseTeacher(moves_mod=moves_mod, scorer=scorer, cfg=cfg, rng=rng, encoder=encoder,
+                          planner_kwargs=planner_kwargs)
 
 
 # ---------------------------------------------------------------- DAgger buffer
@@ -445,7 +500,7 @@ class DAggerBuffer:
         self._ids = set()
         self._labels = {}
 
-    def add(self, episode, step, t_s, cav, obs_state):
+    def add(self, episode, step, t_s, cav, obs_state, candidates=None):
         at = True if self.cadence_s is None else at_decision_point(t_s, self.cadence_s)
         if not at:
             return False
@@ -454,7 +509,8 @@ class DAggerBuffer:
             return False
         self._ids.add(ident)
         self.records.append(dict(episode=episode, step=int(step), t_s=float(t_s), cav=str(cav),
-                                 obs_state=observable_state(obs_state), at_decision_point=at))
+                                 obs_state=observable_state(obs_state), at_decision_point=at,
+                                 candidates=copy.deepcopy(candidates)))
         return at
 
     def decision_points(self):
@@ -466,7 +522,8 @@ class DAggerBuffer:
             ident = _label_id(r['episode'], r['step'], r['t_s'], r['cav'])
             if ident not in self._labels:
                 self._labels[ident] = teacher.label_state(
-                    r['episode'], r['step'], r['t_s'], r['cav'], r['obs_state'])
+                    r['episode'], r['step'], r['t_s'], r['cav'], r['obs_state'],
+                    candidates=r['candidates'])
         return [self._labels[_label_id(r['episode'], r['step'], r['t_s'], r['cav'])] for r in rows]
 
 
@@ -517,7 +574,10 @@ def bind_receipt(label, receipt, candidate_index, plan=None, moves_mod=None):
         if list(plan['members']) != label['move']['members']:
             raise ValueError('candidate plan members differ from labelled move')
         moves_mod = default_moves() if moves_mod is None else moves_mod
-        if _move_fields(moves_mod.from_plan(plan)) != _move_fields(label['move']):
+        mapped, wanted = _move_fields(moves_mod.from_plan(plan)), _move_fields(label['move'])
+        if (mapped[:2] != wanted[:2]
+                or not all(math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-9)
+                           for a, b in zip(mapped[2:], wanted[2:]))):
             raise ValueError('candidate plan does not map to the labelled move')
     vid = receipt['verification_id']
     if label.get('verification_id', vid) != vid:
@@ -610,7 +670,7 @@ class All8Verifier:
         return summary
 
 
-def verification_quote(labels, k, duration_s=120, members=2, end_s=1200, extra_seeds=0):
+def verification_quote(labels, k, duration_s=None, members=4, end_s=1200, extra_seeds=0):
     """Upper-bound all8_both_seeds sim-s quote for the SELECTED labels: every candidate wins
     on every seed (including all solos and extra seeds), charged via
     the real ``verify_perseed.quote_decision`` arithmetic. Pure math - never runs SUMO."""
@@ -618,6 +678,11 @@ def verification_quote(labels, k, duration_s=120, members=2, end_s=1200, extra_s
     k = int(k)
     if k < 1:
         raise ValueError('k must be >= 1')
+    if duration_s is None:
+        windows = default_windows()
+        duration_s = math.ceil(windows['onset_s'][1]+windows['hold_s'][1])
+    if int(duration_s) < 1 or not 1 <= int(members) <= 4 or int(extra_seeds) < 0:
+        raise ValueError('positive duration, 1..4 members and nonnegative extra_seeds required')
     durations = [int(duration_s)]*k
     mem = [['m%d' % i for i in range(int(members))]]*k
     rows = [vp.quote_decision(int(lb['t_s']), durations, mem, {1: list(range(k)), 2: list(range(k))},
@@ -631,6 +696,30 @@ def verification_quote(labels, k, duration_s=120, members=2, end_s=1200, extra_s
 
 
 # ---------------------------------------------------------------- imitation dataset
+
+def trigger_targets(labels, batch):
+    """Indices for T2A ``TriggerPolicy.imitation_loss(batch, targets)``.
+
+    Refuse a different/reordered table: CE must index the learner's recorded choices,
+    not a fresh draw. Labels can be passed in any CAV order. No torch dependency.
+    """
+    by_cav = {lb['cav']: lb for lb in labels}
+    if len(by_cav) != len(labels) or set(by_cav) != set(batch.context['members']):
+        raise ValueError('one label per recorded trigger CAV is required')
+    targets = []
+    for i, (cav, table) in enumerate(zip(batch.context['members'], batch.tables)):
+        lb = by_cav[cav]
+        actual = [_move_fields(c) for c in table[1:] if c is not None]
+        if actual != [_move_fields(c) for c in lb['candidates']]:
+            raise ValueError('label candidate support differs from recorded trigger table')
+        index = int(lb['candidate_class'])
+        if index >= len(table) or not bool(batch.mask[i, index]):
+            raise ValueError('label selects a padded/masked trigger slot')
+        targets.append(index)
+    if len(targets) != len(batch.context['members']):
+        raise ValueError('trigger table count mismatch')
+    return targets
+
 
 def build_dataset(labels, encoder):
     """Imitation targets for the T2A head: one row per label (id, context, CE class target,
