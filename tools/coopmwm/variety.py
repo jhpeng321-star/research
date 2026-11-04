@@ -79,13 +79,12 @@ CONTROL_DT_S = 1.0   # one-second MAPPO control interval (the plant's decision t
 def split_config(cfg):
     """Pop every ``variety_*`` key from ``cfg`` (in place). Returns the resolved variety
     config, or None when the option is off (then cfg carries no variety key:
-    byte-identical output). Mirrors ``coop_search.split_config``."""
+    byte-identical output). Mirrors ``coop_search.split_config``; every registered value
+    is checked even while the option is off."""
     raw = {k: cfg.pop(k) for k in [k for k in cfg if k.startswith('variety_')]}
     unknown = set(raw)-set(VARIETY_REGISTERED)
     if unknown:
         raise ValueError(f'unregistered variety config keys {sorted(unknown)}')
-    if not raw.get('variety_families'):
-        return None
     v = dict(VARIETY_REGISTERED, **raw)
     share = float(v['variety_structured_share'])
     if not 0. <= share <= 1:
@@ -104,6 +103,8 @@ def split_config(cfg):
         w = tuple(float(x) for x in v[key])
         if len(w) != 2 or not (all(math.isfinite(x) for x in w) and 0 <= w[0] <= w[1]):
             raise ValueError(f'{key} must be an ordered finite (lo, hi) window with lo >= 0')
+    if not raw.get('variety_families'):
+        return None
     cfg.update({k: v[k] for k in VARIETY_REGISTERED})
     return v
 
@@ -245,6 +246,7 @@ def wall_candidate(group, P, bounds, regime, rng, vcfg, feas, durations):
     """WALL: abreast members synchronise to the group mean observable speed, then
     decelerate together at a sampled depth for a sampled hold, then release."""
     members = group['members']
+    P = np.asarray(P, float)
     if len(members) < 2 or len({int(r['lane']) for r in group['rows']}) < int(vcfg['variety_wall_min_lanes']):
         return None
     D = int(durations[int(rng.choice(len(durations)))])
@@ -266,6 +268,7 @@ def gap_open_candidate(group, P, bounds, regime, rng, vcfg, feas, durations):
     """GAP_OPEN: a mainline member eases ahead of the ramp partner's predicted
     arrival, then recovers; other members keep the policy forecast."""
     members = group['members']
+    P = np.asarray(P, float)
     ramp, main = _lane_counts(group, vcfg)
     if not ramp or not main:
         return None
@@ -294,6 +297,7 @@ def ramp_assist_candidate(group, P, bounds, regime, rng, vcfg, feas, durations):
     """RAMP_ASSIST: the mainline CAV ahead eases and the ramp CAV synchronises to the
     eased speed in a sampled offset window (coordinated timing), then both recover."""
     members = group['members']
+    P = np.asarray(P, float)
     ramp, main = _lane_counts(group, vcfg)
     if not ramp or not main:
         return None

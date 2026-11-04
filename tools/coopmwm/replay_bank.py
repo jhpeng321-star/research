@@ -75,6 +75,17 @@ def variety_config(meta):
     return split_config(probe)   # registered keys only; raises on unknown keys
 
 
+def collect_config(job):
+    """Registered search_families config from the collector job (None = option off:
+    exactly the legacy ``group_components`` groups). Validated against the registered keys."""
+    cfg = (job.get('collect') or {}).get('variety')
+    if not cfg:
+        return None
+    from .variety import split_config
+    probe = dict(cfg)
+    return split_config(probe)   # registered keys only; raises on unknown keys
+
+
 def preflight_binding(binding):
     """Startup check for the collector: with coop_objective's novelty on in the binding's
     search_config, the bank file must exist on THIS host and match its digest BEFORE any
@@ -121,7 +132,7 @@ def collector_guide(job, generator, controller, prefixes):
     history = ObservableHistory()
     root = Path(job['queue_root']);cfg = job['collect'];arm = job['arm']
     bank = bank_root(root, arm);(bank/'snapshots').mkdir(parents=True, exist_ok=True)
-    vcfg = variety_config(cfg)   # ADDITIVE group kinds when search_families is registered
+    vcfg = collect_config(job)   # ADDITIVE group kinds when search_families is registered
 
     from .mppi_search import REGISTERED, final_horizon
     # MAIN: the WM arrival model is fitted only up to the observed demand phase end
