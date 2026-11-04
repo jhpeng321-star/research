@@ -1,5 +1,41 @@
 # S-COOPMWM — live checks
 
+## Nov4 12:15 UTC+8 — B-u6 complete; isolated check does not show learned cooperation
+- **A13/B6/R5 complete**, with the existing r2 training supervisors and bound
+  monitor4 running. B6 completed **3 full imitation passes of 5 requested**,
+  no imitation failure, KL0.043269<0.045, eight within-seed cooperative examples.
+  Action MAE1.277327->1.256317m/s²; first-pass AWR loss-change95%CI
+  [-0.066063,-0.042092]. Bank intent loss2.230793->2.417256 rose; report-only.
+- **B6 composite safety passes**,24paired TRAIN worlds: zero collisions and
+  teleports; critical-total B-A=-7.354CI[-25.292,10.063], hard-brake
+  -0.354CI[-3.667,2.875]. R5 safety/mechanics also pass. No active run STOP.
+- **The registered isolated-synergy check is complete on seven state rows.**
+  Group-only cooperation gain (all group new minus best solo new), veh-s:
+  986052:-0.0082;986066:-0.0468;986068:+0.0002;986003:0;
+  u8/986026:-514.8703;u7/986036:-160.0504;u18/986047:-0.0560.
+  These point results do not establish positive learned cooperation. In the
+  six-CAV986066 state, background-only new-policy saving is+2,807.324veh-s;
+  it must not be attributed to coordinated improvement of the isolated group.
+  State-level point results are conditional TRAIN diagnostics, not final-panel
+  evidence or a fresh-seed generalization test.
+- Original B6 lesson report is **7/12 graded**, mean delta-32.456veh-s,
+  95%CI[-779.163,603.191],4/7positive. Five missing pending envelopes were
+  traced to the old certified archive batch, restored655,103bytes with exact
+  SHA proofs, and functionally loaded5/5. Both mover scopes exclude replay_bank;
+  an additive binding protects710input paths, including665bank files.
+- MAIN12:02 now explicitly requests completion of the five missing lessons.
+  Registered **3,480sim-s** from existing `v2v_lessons` headroom, fixed B6
+  checkpoint, seven existing rows adopted. A single durable worker2854683 is
+  running; its additive `_MAIN1202_REPAIRED` output will preserve the original.
+  No policy update, duplicate training or rerun of the seven graded lessons.
+- cpuQ~6.38GiB free; both archive movers live. Budget12,615,640sim-s charged
+  including retained superseded, cap17,471,840; all phases nonnegative.
+  CPU-S checking remains separately delegated; cpuQ backfill/collector STOPs
+  remain. Current-V2V collection wiring is still the previously reported blocker.
+- Evidence:`coopmwm/PUBLIC_PROGRESS_1793765713183406300.json`,
+  `coopmwm/U6_PENDING_RESTORE_COMPLETE_1205.md`, and
+  `coopmwm/U6_LESSON_REPAIR_DISPATCH_MAIN1202.json`.
+
 ## Nov4 11:46 UTC+8 — A11/B5/R4; memory admission recovered
 - **B5 completed five full imitation passes**, eight within-seed cooperative
   examples, no imitation failure and KL0.042415<0.045. Action MAE decreased

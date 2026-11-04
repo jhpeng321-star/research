@@ -1,5 +1,37 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 12:15 +08 — A13/B6/R5; u6 evidence + five-input repair
+- Full brief through NEW MAIN12:02 read; original warm-memory/slim work already
+  complete and never redispatched. Existing r2 supervisor2636865/B2636963/R2636968
+  and A2049830 retained; monitor4 runtime06e88ecd matches/live, no STOP.
+- B6 COMPLETE:3/5 full passes, no imitation_failed, KL.043269<.045,8cooperative
+  examples, MAE1.277327->1.256317, pass1lossCI[-.066063,-.042092]. Intent
+  2.230793->2.417256 rose/reportonly. Composite safety PASS/24worlds/0collision+
+  teleport/critical B-A -7.354CI[-25.292,10.063]. R5mechanics+safetyPASS.
+- Isolatedu6 COMPLETE7states: gains986052-.0082,986066-.0468,986068+.0002,
+  986003zero,u8/986026-514.8703,u7/986036-160.0504,u18/986047-.0560veh-s.
+  No positive learned cooperation established. 986066background-only+2807.324;
+  do not label this a coordinated group gain. Cooperation is report-only.
+- Original lesson7/12/mean-32.456CI[-779.163,603.191]; five missing PENDING
+  envelopes from oldarchive1450_v3/batch0028 SHA-restored655103bytes/5functional
+  loads+actualmoverprotectionPASS. Bothmoverssourceclassesexclude replay_bank;
+  new FROZEN_DIAGNOSTIC_PROTECTION_BINDING_MAIN1202 protects710paths/665bankfiles.
+- NEW MAIN12:02 explicitly requests five missing grades: registered3480sim-s,
+  phasev2v_lessons/16560headroom atquote, fixedB6checkpointSHAbfe29812,
+  sevenrowsadopted/originalSHApreserved. Durableworker2854683/start77993202
+  /home/ubuntu/coopmwm20261104_lessonrepair1202 LIVE. ADOPT via
+  _sol/coopmwm_u6_lesson_repair_ops.py status; NEVER launch a second worker.
+  Additive output LESSON_CHECK_u006_B_MAIN1202_REPAIRED.json; no source hot-swap.
+  First setup-only attempt lacked scope-module import/no dispatch/no charge;
+  corrected to existing extension module, then dispatched successfully.
+- Latestfree6852386816bytes(~6.38GiB); regular1237127+extension2213098LIVE,
+  extension2168728927bytescertified. Budget12615640/cap17471840/allphasesnonnegative.
+  CPU-SdelegateCHECK1ownschecking; oldcpuQbackfillSTOP_V2 retained/neverrestart.
+  MAINcollectorSTOP+freshV2Vcapture/WMintentactorblockretained. Next collect
+  additive12/12lesson report, publish MAIN/results, monitor u7/u8 safety.
+- Evidence PUBLIC_PROGRESS_1793765713183406300; restore ad049daa; registration
+  7d8d7d1a; audit U6_INPUT_AUDIT_1793765187218817200. Dirty work kept.
+
 ## CURRENT Nov4 11:46 +08 — A11/B5/R4; memory admission recovered
 - 11:50 follow-up: canonicalCPUS-CHECK1 delegate wrote backfill0057/STOP_V2.json
   for CPU-S handover; oldcpuQcoordinator exits; NEVERrestart/duplicate it.
