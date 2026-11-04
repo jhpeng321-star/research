@@ -27,13 +27,14 @@
     }
   },
   "resume": {
-    "starting_commit": "70ae5400c3affb26a8780e086c8d181f552ad4d2",
-    "previous_resume_starting_commit": "0ba5e75a6dea0da703e38f234de1ffc4ade36fa8",
+    "starting_commit": "8a44ae7caded611baee484a305046d0c24b01414",
+    "previous_resume_starting_commit": "70ae5400c3affb26a8780e086c8d181f552ad4d2",
     "completed_fix_work_preserved": true,
-    "action": "Read status/log, the spec, both reviews and acceptance/readiness receipts. Confirmed that only T1D_READY.json changed since the independently reviewed revision and refreshed this resume record; completed implementation, tests and dry run were not repeated.",
+    "action": "Read status/log, the spec, both reviews and all existing T1D acceptance/readiness receipts, including the historical blocked receipt. Confirmed that only T1D_READY.json changed since the independently reviewed revision and refreshed this resume record; completed implementation, regression tests, independent verification and dry run were preserved without repetition.",
     "verification": {
       "reviewed_revision_comparison": "git diff --name-status 0ba5e75a6dea0da703e38f234de1ffc4ade36fa8 HEAD: only T1D_READY.json modified",
       "diff_check": "git diff --check c4/track-base: exit code 0",
+      "base_diff_scope": "Only tools/coopmwm/planner_eval.py, tools/coopmwm/test_planner_eval_cpu.py and T1D_READY.json differ from c4/track-base",
       "existing_untracked_review_and_receipt_files_preserved": true,
       "tests_repeated": false,
       "dry_run_repeated": false
