@@ -613,7 +613,13 @@ def resume_prepare(root, attempt, resume_arms):
             selected+=[dispatch,root/(label+'_FAILED.json'),root/(label+'.log')]
         for record in sorted(root.glob(f'WARM_{arm}_FAILED_*.json')):
             error=str(read(record).get('error',''))
-            if error.startswith('HealthPause'):raise ValueError('registered health pause needs a MAIN release: '+record.name)
+            if error.startswith('HealthPause'):
+                # only a pause that already carries its registered SHA-bound release may be resumed
+                import re
+                from .composite_health import released
+                named=re.search(r'(PAUSE_[A-Za-z0-9_]+\.json)',error)
+                if not named or not (root/named[1]).is_file() or not released(root,root/named[1]):
+                    raise ValueError('registered health pause needs a MAIN release: '+record.name)
             failures.setdefault(arm,set()).add(error)
             selected.append(record)
         if (root/'isolated'/f'u{k+1:03}_{arm}'/'CLAIM.json').exists():

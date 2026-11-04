@@ -43,10 +43,11 @@ BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
     bank_statistics='per_seed_v1',   # owner 2026-11-03 21:45 + audit: per_seed_v1 only (B and R)
     # owner 2026-11-04 00:55: B and R imitate ONLY within-seed cooperative examples (A has no bank)
     imitation_bank_filter='cooperative_only',
-    # c4/imit-strength (prepared): 'fixed' stays byte-identical; 'kl_targeted' may only be
-    # registered at a registered update boundary, for B-v2v and R-v2v together. The bank intent
-    # term switch defaults True = current behaviour.
-    imitation_step_mode='fixed', v2v_intent_bank_term=True)
+    # c4/imit-strength: 'fixed' stays byte-identical; 'kl_targeted' only at a registered update
+    # boundary, for B-v2v and R-v2v together. OWNER 2026-11-04 08:52 ("yes, switch on stronger
+    # imitation now"): the pinned value is 'kl_targeted' (KL limit .045 and every check unchanged).
+    # The bank intent term switch defaults True = current behaviour.
+    imitation_step_mode='kl_targeted', v2v_intent_bank_term=True)
 IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
 IMITATION_STEP_MODES = ('fixed', 'kl_targeted')
 DIAGNOSTIC_SCHEDULE = dict(A=dict(lessons=[], isolated=[]),

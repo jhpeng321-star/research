@@ -127,6 +127,31 @@ def _finite(x):
     return x is not None and math.isfinite(x)
 
 
+PASS1_BOOTSTRAP=10000        # MAIN 2026-11-04 09:00: statistical pass-1 effectiveness (report)
+PASS1_BOOTSTRAP_SEED=20261101
+
+
+@torch.no_grad()
+def pair_losses(policy,pairs,coefficient=1.):
+    """Per-pair AWR imitation loss (the same term awr_loss averages)."""
+    return [float(imitation(policy,s,w))*coefficient for s,w in pairs]
+
+
+def pass1_loss_change(before,after,resamples=PASS1_BOOTSTRAP,seed=PASS1_BOOTSTRAP_SEED):
+    """Paired per-pair pass-1 loss change (after - before): mean and percentile bootstrap 95% CI
+    over imitation pairs (fixed seed). 'worse' only when the whole CI is above 0, i.e. pass 1
+    made the imitation loss significantly WORSE; a non-significant change is reported only."""
+    import numpy as np
+    d=np.asarray(after,dtype=float)-np.asarray(before,dtype=float)
+    if not len(d) or not np.all(np.isfinite(d)):
+        return dict(n=int(len(d)),mean=None,ci95=None,significantly_worse=None,significantly_better=None)
+    idx=np.random.default_rng(seed).integers(0,len(d),(int(resamples),len(d)))
+    lo,hi=(float(x) for x in np.quantile(d[idx].mean(1),[.025,.975]))
+    return dict(n=int(len(d)),mean=float(d.mean()),ci95=[lo,hi],significantly_worse=bool(lo>0),
+        significantly_better=bool(hi<0),bootstrap=int(resamples),seed=int(seed),
+        rule='paired per-pair pass-1 AWR loss change after-before; percentile bootstrap over imitation pairs')
+
+
 def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5,
                  step_mode=None,intent_bank_term=None):
     """MAIN17:27 transactional full passes, KL relative to post-PPO policy.
@@ -216,6 +241,7 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                 max(1,128//(steps_mult if targeted else 1)))
             state=copy.deepcopy(policy.state_dict());adam=copy.deepcopy(optimizer.state_dict())
             loss_before=awr_loss(policy,pairs,coefficient);error_before=action_error(policy,pairs)
+            if epoch==0:pass1_before=pair_losses(policy,pairs,coefficient)   # report only (no RNG, no grad)
             # pass 1 keeps the guaranteed 25 halvings; later passes stop at scale 1/64 (attempt 6)
             max_attempts=MAX_ATTEMPTS if epoch==0 else round(-math.log2(MIN_ADDITIONAL_PASS_SCALE))+1
             accepted=False;statuses=[];rejected=0;kl=None
@@ -262,7 +288,8 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                 drop=(row['awr_loss_before']-row['awr_loss_after']
                       if _finite(row['awr_loss_before']) and _finite(row['awr_loss_after']) else None)
                 report.update(pass1_step_scale=scale,pass1_loss_drop=drop,
-                              pass1_effective=bool(drop is not None and drop>0))
+                              pass1_effective=bool(drop is not None and drop>0),
+                              pass1_loss_change=pass1_loss_change(pass1_before,pair_losses(policy,pairs,coefficient)))
             # kl_targeted: an accepted pass that ended below half the registered bound lets the
             # next pass push harder (step scale x2 capped 16, optimizer steps x2 capped 4).
             if targeted and epoch+1<int(passes) and kl is not None and kl<KL_LIMIT/2:

@@ -33,8 +33,33 @@ def _released(root,stamps):
             and comparison(d['paired_world_rows']['R'])['release'])
 
 
+LEARNING_AUTHORITY='MAIN2026-11-04 09:00'
+LEARNING_PAUSE='PAUSE_V2V_LEARNING_MECHANICS.json'
+LEARNING_RELEASE='LEARNING_RELEASE_0900.json'
+LEARNING_DIAGNOSIS='LEARNING_DIAGNOSIS_0900.json'
+
+
+@lru_cache(maxsize=16)
+def _learning_released(root,stamps):
+    """MAIN 09:00: SHA-bound diagnosis + release of the receipt-only learning-mechanics pause
+    (same pattern as the 09:57 safety release). Only this exact pause file is released; any later
+    learning pause is written under a new name and stays active."""
+    root=Path(root);v=read(root/LEARNING_RELEASE)
+    return bool(v.get('authority')==LEARNING_AUTHORITY and v.get('released') is True
+        and v.get('pause')==LEARNING_PAUSE
+        and v.get('original_pause_sha256')==sha(root/LEARNING_PAUSE)
+        and v.get('diagnosis_sha256')==sha(root/LEARNING_DIAGNOSIS)
+        and v.get('amendment_sha256','UNREGISTERED') in (root/'AUTHORITY.md').read_text())
+
+
 def released(root,pause):
     root=Path(root);pause=Path(pause)
+    if pause.name==LEARNING_PAUSE:
+        names=(LEARNING_RELEASE,LEARNING_DIAGNOSIS,LEARNING_PAUSE,'AUTHORITY.md')
+        try:
+            stamps=tuple((p.stat().st_mtime_ns,p.stat().st_size) for p in (root/n for n in names))
+        except FileNotFoundError:return False
+        return _learning_released(str(root),stamps)
     if pause.name!='PAUSE_SAFETY.json':return False
     names=('SAFETY_RELEASE_0957.json','SAFETY_RULE_0957.json','SAFETY_DIAGNOSIS_u6.json','PAUSE_SAFETY.json','AUTHORITY.md')
     try:

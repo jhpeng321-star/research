@@ -626,3 +626,43 @@ def test_gate_default_u3_reference_is_the_legacy_root(tmp_path):
     from .coopfix_exact_gate import legacy_u3
     assert legacy_u3(tmp_path/'v2v','B',dict(legacy_root=str(tmp_path/'warm1')))==tmp_path/'warm1'/'B_checkpoint_003.pt'
     assert legacy_u3(tmp_path/'warm1','R',{})==tmp_path/'warm1'/'R_checkpoint_003.pt'
+
+
+def test_learning_pause_release_is_sha_bound_and_resume_prepare_accepts_only_released(tmp_path,monkeypatch,charges_ledger):
+    """MAIN 09:00: the receipt-only learning pause is released only by its registered SHA-bound
+    diagnosis/release; any later learning pause stays active; resume_prepare archives a HealthPause
+    failure only once its named pause is released."""
+    from . import replay_start
+    from .protocol import sha
+    from .warm_health import assert_running,pause,HealthPause
+    from . import composite_health as ch
+    root,_=started_root(tmp_path);_failed_attempt(root)
+    for name in ('WARM_GUIDED_STOP.json',):(root/name).unlink()
+    paused="HealthPause('registered health pause PAUSE_V2V_LEARNING_MECHANICS.json')"
+    for arm in ('B','R'):(root/f'WARM_{arm}_FAILED_V2V_LIVE.json').write_text(_json.dumps(dict(error=paused)))
+    monkeypatch.setattr(replay_start,'alive',lambda d:d.get('pid')==5001)
+    with pytest.raises(HealthPause):pause(root,'V2V_LEARNING_MECHANICS',dict(failures=['ineffective_pass1']))
+    with pytest.raises(HealthPause):assert_running(root,'B')
+    with pytest.raises(ValueError,match='health pause needs a MAIN release'):live.resume_prepare(root,'r2',['B','R'])
+    (root/ch.LEARNING_DIAGNOSIS).write_text(_json.dumps(dict(diagnosis='saturated tiny bank')))
+    amendment='d'*64
+    release=dict(authority=ch.LEARNING_AUTHORITY,released=True,pause=ch.LEARNING_PAUSE,
+        original_pause_sha256=sha(root/ch.LEARNING_PAUSE),diagnosis_sha256=sha(root/ch.LEARNING_DIAGNOSIS),
+        amendment_sha256=amendment)
+    (root/ch.LEARNING_RELEASE).write_text(_json.dumps(release))
+    with pytest.raises(HealthPause):assert_running(root,'B')          # not yet registered
+    with (root/'AUTHORITY.md').open('a') as f:f.write('\namendmentSHA'+amendment+'\n')
+    assert_running(root,'B');assert_running(root,'R')
+    receipt=live.resume_prepare(root,'r2',['B','R'])
+    assert {'WARM_B_FAILED_V2V_LIVE.json','WARM_R_FAILED_V2V_LIVE.json'}<={m['name'] for m in receipt['moved']}
+    assert (root/ch.LEARNING_PAUSE).is_file()                          # the pause record stays in place
+    # a NEW learning-mechanics failure writes a new pause name that is not released
+    with pytest.raises(HealthPause):pause(root,'V2V_LEARNING_MECHANICS',dict(failures=['imitation_failed']))
+    with pytest.raises(HealthPause):assert_running(root,'R')
+    # a changed pause/diagnosis byte invalidates the release
+    root2,_=started_root(tmp_path/'z')
+    (root2/ch.LEARNING_PAUSE).write_text('{"rule":"x"}');(root2/ch.LEARNING_DIAGNOSIS).write_text('{}')
+    (root2/ch.LEARNING_RELEASE).write_text(_json.dumps(dict(release,original_pause_sha256=sha(root2/ch.LEARNING_PAUSE),
+        diagnosis_sha256='0'*64)))
+    (root2/'AUTHORITY.md').write_text('amendmentSHA'+amendment)
+    with pytest.raises(HealthPause):assert_running(root2,'B')

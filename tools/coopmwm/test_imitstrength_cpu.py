@@ -209,24 +209,25 @@ def _cfg(tmp_path, **kw):
 
 
 def test_runtime_pins_the_prepared_defaults_and_refuses_deviations(tmp_path):
-    assert launch.BANK_OPTIONS['imitation_step_mode'] == 'fixed'
+    # owner 2026-11-04 08:52: the registered pin is 'kl_targeted' for B and R together
+    assert launch.BANK_OPTIONS['imitation_step_mode'] == 'kl_targeted'
     assert launch.BANK_OPTIONS['v2v_intent_bank_term'] is True
     cfg, live = _cfg(tmp_path)
-    assert cfg['imitation_step_mode'] == 'fixed' and cfg['v2v_intent_bank_term'] is True
+    assert cfg['imitation_step_mode'] == 'kl_targeted' and cfg['v2v_intent_bank_term'] is True
     assert launch.bind_runtime(dict(config=live), root=tmp_path/'v2v', source_root=tmp_path/'src') is live
-    assert (launch.imitation_step_mode_for(live, 'B'), launch.imitation_step_mode_for(live, 'R')) == ('fixed', 'fixed')
+    assert (launch.imitation_step_mode_for(live, 'B'), launch.imitation_step_mode_for(live, 'R')) == ('kl_targeted', 'kl_targeted')
     assert (launch.intent_bank_term_for(live, 'B'), launch.intent_bank_term_for(live, 'R')) == (True, True)
-    for bad in (dict(imitation_step_mode='kl_targeted'), dict(imitation_step_mode=None),
+    for bad in (dict(imitation_step_mode='fixed'), dict(imitation_step_mode=None),
                 dict(imitation_step_mode='bogus'), dict(v2v_intent_bank_term=False),
                 dict(v2v_intent_bank_term=None), dict(v2v_intent_bank_term=1),
                 dict(imitation_step_mode_by_arm=dict(B='kl_targeted', R='fixed')),
-                dict(imitation_step_mode_by_arm=dict(B='kl_targeted', R='kl_targeted')),
+                dict(imitation_step_mode_by_arm=dict(B='fixed', R='fixed')),
                 dict(v2v_intent_bank_term_by_arm=dict(B=True, R=False)),
                 dict(v2v_intent_bank_term_by_arm=dict(B=False, R=False)),
                 dict(v2v_intent_bank_term_by_arm=dict(B=1, R=True))):
         with pytest.raises(launch.Refused):
             launch.bind_runtime(dict(config=dict(live, **bad)), root=tmp_path/'v2v', source_root=tmp_path/'src')
-    ok = dict(live, imitation_step_mode_by_arm=dict(B='fixed', R='fixed'),
+    ok = dict(live, imitation_step_mode_by_arm=dict(B='kl_targeted', R='kl_targeted'),
               v2v_intent_bank_term_by_arm=dict(B=True, R=True))
     assert launch.bind_runtime(dict(config=ok), root=tmp_path/'v2v', source_root=tmp_path/'src') is ok
     for arm in ('A',):
@@ -241,7 +242,7 @@ def test_runtime_pins_the_prepared_defaults_and_refuses_deviations(tmp_path):
     with pytest.raises(launch.Refused, match='v2v_intent_bank_term'):
         launch.intent_bank_term_for(dict(live, v2v_intent_bank_term=1), 'B')
     with pytest.raises(ValueError):                       # producer refuses a non-pinned value
-        _cfg(tmp_path, imitation_step_mode='kl_targeted')
+        _cfg(tmp_path, imitation_step_mode='fixed')
     with pytest.raises(ValueError):
         _cfg(tmp_path, v2v_intent_bank_term=False)
 
