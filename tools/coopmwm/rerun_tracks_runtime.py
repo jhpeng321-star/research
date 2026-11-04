@@ -13,6 +13,7 @@ import json
 import math
 from pathlib import Path
 import random
+import re
 from statistics import fmean
 import threading
 
@@ -28,6 +29,36 @@ def state_sha(model):
         h.update(str((tensor.dtype, tuple(tensor.shape))).encode())
         h.update(tensor.detach().cpu().contiguous().numpy().tobytes())
     return h.hexdigest()
+
+
+def dense_label(label, proposals, cfg):
+    """Consumed T2B/T1C boundary: validate provenance, derive eligibility ourselves.
+
+    Calibration is for this target beating the base, including R's random target.
+    A missing target is permitted; it masks imitation only, never PPO/group credit.
+    """
+    if not isinstance(label, dict):
+        raise ValueError('REFUSED: dense label needs calibration/verification provenance')
+    target = label.get('target')
+    if target is not None and target not in proposals:
+        raise ValueError('REFUSED: dense label outside common proposal distribution')
+    provenance = label.get('provenance', {})
+    kind = provenance.get('kind')
+    if (kind not in ('planner_calibration', 'sumo_verified', 'no_target') or
+            not re.fullmatch('[0-9a-f]{64}', provenance.get('receipt_sha256', ''))):
+        raise ValueError('REFUSED: dense label needs auditable provenance receipt')
+    p = label.get('calibrated_probability')
+    if kind == 'planner_calibration' and (isinstance(p, bool) or
+            not isinstance(p, (int, float)) or not math.isfinite(p) or not 0 <= p <= 1):
+        raise ValueError('REFUSED: dense label requires calibrated probability')
+    if kind == 'no_target' and target is not None:
+        raise ValueError('REFUSED: no-target provenance carries a target')
+    eligible = target is not None and (kind == 'sumo_verified' or
+        (kind == 'planner_calibration' and p >= cfg['dense_teacher']['calibrated_p_min']))
+    if label.get('imitation_eligible') is not eligible:
+        raise ValueError('REFUSED: teacher imitation eligibility disagrees with registered filter')
+    return dict(target=target, calibrated_probability=p, provenance=deepcopy(provenance),
+                imitation_eligible=eligible)
 
 
 class WorkerLimit:
@@ -244,7 +275,10 @@ class Runtime:
             grade = self.backend.grade_verification(kind, payload, results)
             if grade.get('status') != 'graded':
                 raise ValueError('REFUSED: verification must produce graded receipt')
-            verified.append(grade)
+            if kind == 'teacher' and type(grade.get('label_correct')) is not bool:
+                raise ValueError('REFUSED: teacher verification needs realised label_correct')
+            verified.append(dict(grade, row_id=row.get('row_id', row.get('id')),
+                                 verification_id=ident))
         self._write(f'components/u{update:03}_{arm}_{kind}_verification.json',
                     dict(synthetic=self.synthetic, selected=count, proposals=len(rows), receipts=verified))
         return verified
@@ -284,16 +318,15 @@ class Runtime:
                         move = comp['trigger_head'].choose(obs, features, proposals, rng)
                         if move not in proposals or not set(move.members).issubset(obs['cav_ids']):
                             raise ValueError('REFUSED: trigger selected unobservable/non-CAV members')
-                        target = comp['dense_teacher'].label(obs, proposals,
-                                    kind=rc.teacher_kind(self.cfg, arm), rng=label_rng)
-                        if target not in proposals:
-                            raise ValueError('REFUSED: dense label outside common proposal distribution')
+                        label = dense_label(comp['dense_teacher'].label(obs, proposals,
+                                     kind=rc.teacher_kind(self.cfg, arm), rng=label_rng), proposals, self.cfg)
                         advantage = float(comp['group_credit'].estimate(obs, move, model))
                         if not math.isfinite(advantage):
                             raise ValueError('REFUSED: nonfinite group credit')
                         active = move
                         rows.append(dict(observation=obs, features=features, move=move,
-                            target=target, group_advantage=advantage, family=move.family,
+                             **label, row_id=ident+f'_t{t:04}',
+                             group_advantage=advantage, family=move.family,
                             window=plant.full_window(), episode=index))
                     offsets = moves.offsets(active, t) if active is not None else {}
                     residual = comp['coop_layer'].residual(obs, features)
@@ -344,22 +377,31 @@ class Runtime:
             safety_stop=any(ep['safety_stop'] for ep in episodes_out),
             families=list(moves.FAMILIES), decisions=len(rows),
             trigger_counts={f: sum(r['family'] == f for r in rows) for f in moves.FAMILIES},
-            credit_rows=len(rows), credit_checked_rows=0, dense_labels=len(rows),
+             credit_rows=len(rows), credit_checked_rows=0, dense_labels=len(rows),
+             dense_eligible_labels=0, dense_checked_labels=0,
             augmented_examples=len(augmented), weighted_starts=sum(s is not None for s in starts))
         if not comp:
             self.backend.ppo_update(self.models[arm], [ep['training'] for ep in episodes_out])
             metrics.update({k: None for k in ('group_credit_wm', 'group_credit_checked',
-                'dense_ce', 'dense_accuracy', 'bank_move_ce', 'layer_kl', 'merge_missing_share')})
+                'dense_ce', 'dense_accuracy', 'dense_filtered_share', 'dense_checked_accuracy',
+                'bank_move_ce', 'layer_kl', 'merge_missing_share')})
         else:
             credit = self._verify(arm, update, 'group_credit', rows, self.cfg['group_credit']['verify_fraction'])
-            self._verify(arm, update, 'teacher', rows, self.cfg['dense_teacher']['verify_fraction'])
+            teacher_checks = self._verify(arm, update, 'teacher', rows, self.cfg['dense_teacher']['verify_fraction'])
+            mask = [r['imitation_eligible'] for r in rows]
+            self._write(f'components/u{update:03}_{arm}_dense_labels.json', dict(
+                arm=arm, update=update, synthetic=self.synthetic,
+                rows=[{k: r[k] for k in ('row_id', 'calibrated_probability', 'provenance',
+                                         'imitation_eligible')} for r in rows],
+                checked=teacher_checks))
             bank_targets = [moves.from_plan(e['plan']) for e in bank+augmented]
             # Group advantages enter ONLY the layer/trigger update. Reward and A's
             # PPO stream remain untouched. Base params are frozen and excluded.
             self._check_optimizer(arm)
             losses = comp['coop_layer'].update(rows=rows, bank_targets=bank_targets,
                       group_advantages=[r['group_advantage'] for r in rows],
-                      dense_targets=[r['target'] for r in rows],
+                       dense_targets=[r['target'] for r in rows],
+                       dense_mask=mask,
                       trigger=comp['trigger_head'], kl_cap=self.cfg['coop_layer']['kl_cap'])
             if state_sha(self.models[arm]) != self.base_sha[arm]:
                 raise ValueError('REFUSED: frozen MAPPO base changed after layer update')
@@ -367,6 +409,9 @@ class Runtime:
                 raise ValueError('REFUSED: cooperation layer KL budget exceeded')
             metrics.update({k: losses[k] for k in ('dense_ce', 'dense_accuracy', 'bank_move_ce', 'layer_kl')})
             metrics.update(group_credit_wm=fmean(r['group_advantage'] for r in rows),
+                 dense_eligible_labels=sum(mask), dense_filtered_share=1-sum(mask)/len(rows),
+                 dense_checked_labels=len(teacher_checks),
+                 dense_checked_accuracy=fmean(r['label_correct'] for r in teacher_checks),
                 group_credit_checked=fmean(r['advantage'] for r in credit), credit_checked_rows=len(credit),
                 merge_missing_share=fmean(v for ep in episodes_out for v in ep['missing']))
             # Each weighted start gets its matched all-base reference, same seed and

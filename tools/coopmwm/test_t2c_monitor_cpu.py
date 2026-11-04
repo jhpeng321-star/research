@@ -9,6 +9,7 @@ def metrics():
     return dict(group_credit_wm=1., group_credit_checked=.9, dense_ce=.6,
         dense_accuracy=.5, bank_move_ce=.5, layer_kl=0., merge_missing_share=.25, reward=2.,
         decisions=10, credit_rows=10, credit_checked_rows=1, dense_labels=10,
+        dense_eligible_labels=10, dense_checked_labels=1, dense_filtered_share=0., dense_checked_accuracy=1.,
         augmented_examples=2, weighted_starts=1, families=['none', 'gap_open'],
         trigger_counts=dict(none=10, gap_open=0),
         safety=dict(collisions=0, teleports=0, hard_brakes=0, ttc_events=0), safety_stop=False)

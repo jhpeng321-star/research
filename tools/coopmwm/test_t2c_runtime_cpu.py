@@ -58,24 +58,26 @@ class Layer(nn.Module):
     def residual(self, obs, features):
         return {v: float(self.correction.detach()) for v in obs['cav_ids']}
 
-    def update(self, *, rows, bank_targets, group_advantages, dense_targets, trigger, kl_cap):
+    def update(self, *, rows, bank_targets, group_advantages, dense_targets, dense_mask, trigger, kl_cap):
         old = trigger.logits.detach().softmax(0)
-        label = torch.tensor([int(m.family != 'none') for m in dense_targets])
+        label = torch.tensor([int(m.family != 'none') for m, use in zip(dense_targets, dense_mask) if use], dtype=torch.long)
         bank_label = torch.tensor([int(m.family != 'none') for m in bank_targets])
         logits = trigger.logits.expand(len(rows), -1)
         selected = torch.tensor([int(r['family'] != 'none') for r in rows])
         advantage = torch.tensor(group_advantages)
         # Actual autograd/optimizer updates: group credit enters ONLY layer loss.
         ppo = -(logits.log_softmax(-1).gather(1, selected[:, None]).squeeze(1)*advantage).mean()
-        loss = ppo+F.cross_entropy(logits, label)+F.cross_entropy(
+        dense_loss = F.cross_entropy(trigger.logits.expand(len(label), -1), label) if len(label) else logits.sum()*0
+        self.last_dense_count, self.last_policy_count = len(label), len(rows)
+        loss = ppo+dense_loss+F.cross_entropy(
             trigger.logits.expand(len(bank_label), -1), bank_label)-self.correction*advantage.mean()
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         with torch.no_grad():
             p = trigger.logits.softmax(0)
-            return dict(dense_ce=float(F.cross_entropy(trigger.logits.expand(len(label), -1), label)),
-                dense_accuracy=float((trigger.logits.argmax() == label).float().mean()),
+            return dict(dense_ce=float(F.cross_entropy(trigger.logits.expand(len(label), -1), label)) if len(label) else None,
+                dense_accuracy=float((trigger.logits.argmax() == label).float().mean()) if len(label) else None,
                 bank_move_ce=float(F.cross_entropy(trigger.logits.expand(len(bank_label), -1), bank_label)),
                 layer_kl=float((old*(old.log()-p.log())).sum()))
 
@@ -98,7 +100,9 @@ class Teacher:
     def label(self, obs, proposals, *, kind, rng):
         self.kinds.append(kind)
         self.slates.append(proposals)
-        return proposals[1] if kind == 'wm_dense' else rng.choice(proposals)
+        return dict(target=proposals[1] if kind == 'wm_dense' else rng.choice(proposals),
+                    calibrated_probability=.8, imitation_eligible=True,
+                    provenance=dict(kind='planner_calibration', receipt_sha256='a'*64))
 
 
 class Augment:
@@ -196,7 +200,7 @@ class CPUBackend:
             safety=dict(collisions=0, teleports=0, hard_brakes=0))
 
     def grade_verification(self, kind, payload, results):
-        return dict(status='graded', advantage=.4)
+        return dict(status='graded', advantage=.4, label_correct=payload.get('episode', 0) == 0)
 
     def practice_reference(self, start, *, common_weights):
         return dict(sim_s=1200, window=start['window'], branch='reference'), dict(start)
@@ -373,6 +377,48 @@ def test_zero_initialized_layer_identity_and_credit_changes_only_layer():
     assert layer.residual(dict(cav_ids=['c1']), {}) == {'c1': 0.}
     base = torch.tensor([.125, -.25])
     assert torch.equal(base, base+layer.correction.detach())
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('prob,verified,eligible', [(.799999, False, False), (.8, False, True),
+                                                 (.01, True, True), (None, False, False)])
+def test_dense_filter_boundary_bypass_and_empty_update(tmp_path, monkeypatch, arm, prob, verified, eligible):
+    cfg, reg, backend = prepare(tmp_path, monkeypatch)
+    rt = Runtime(cfg, reg, backend, smoke=True)
+    teacher = rt.components[arm]['dense_teacher']
+    def label(obs, proposals, **kwargs):
+        return dict(target=proposals[1] if prob is not None else None,
+                    calibrated_probability=prob, imitation_eligible=eligible,
+                    provenance=dict(kind='sumo_verified' if verified else
+                        ('planner_calibration' if prob is not None else 'no_target'), receipt_sha256='b'*64))
+    teacher.label = label
+    monitor = rt.update(arm, 1, episodes=2)
+    m = monitor['metrics']
+    layer = rt.components[arm]['coop_layer']
+    assert layer.last_policy_count == m['credit_rows'] == 40
+    assert layer.last_dense_count == m['dense_eligible_labels'] == (40 if eligible else 0)
+    assert m['dense_filtered_share'] == (0. if eligible else 1.)
+    assert (m['dense_ce'] is None) == (not eligible)
+    receipt = json.loads((rt.root/f'components/u001_{arm}_dense_labels.json').read_text())
+    checks = receipt['checked']
+    assert m['dense_checked_labels'] == len(checks) == 4
+    assert m['dense_checked_accuracy'] == sum(c['label_correct'] for c in checks)/len(checks)
+    assert all(c['row_id'] in {r['row_id'] for r in receipt['rows']} for c in checks)
+    assert all(r['imitation_eligible'] == eligible for r in receipt['rows'])
+    assert monitor['action'] != 'PAUSE_SAFETY'
+    assert (rt.root/f'{arm}_checkpoint_001.pt').exists()
+
+
+def test_dense_filter_rejects_missing_calibration_and_forged_mask():
+    from tools.coopmwm.rerun_tracks_runtime import dense_label
+    proposals = [Move('none')]
+    label = dict(target=proposals[0], calibrated_probability=.79, imitation_eligible=True,
+                 provenance=dict(kind='planner_calibration', receipt_sha256='b'*64))
+    with pytest.raises(ValueError, match='eligibility disagrees'):
+        dense_label(label, proposals, dict(dense_teacher=rc.TRACK_SLOTS['dense_teacher']))
+    label['calibrated_probability'] = None
+    with pytest.raises(ValueError, match='calibrated probability'):
+        dense_label(label, proposals, dict(dense_teacher=rc.TRACK_SLOTS['dense_teacher']))
 
 
 def test_executes_complete_paired_grid_and_scheduled_tests(tmp_path, monkeypatch):

@@ -53,14 +53,24 @@ Backend protocol consumed by the coordinator:
   They receive `cfg=, arm=, moves=, components=` in dependency order. Required instances:
   `merge_features.encode(obs)`; `trigger_head.choose(obs, features, proposals, rng)`;
   `coop_layer.residual(obs, features)` and `.update(rows=, bank_targets=,
-  group_advantages=, dense_targets=, trigger=, kl_cap=)`;
+   group_advantages=, dense_targets=, trigger=, kl_cap=)`;
   `group_credit.estimate(obs, move, base)`;
   `dense_teacher.label(obs, proposals, kind=, rng=)`;
   `plan_augment.augment(bank, count=, arm=)`;
   `practice_weighting.select(bank, augmented, count=, repeat_cap=)`.
   Layer and trigger expose `parameters()` and the layer exposes `optimizer` owning
   exactly their trainable parameters, disjoint from the frozen base. Layer update
-  returns finite `dense_ce`, `dense_accuracy`, `bank_move_ce`, `layer_kl`.
+   returns finite `dense_ce`, `dense_accuracy`, `bank_move_ce`, `layer_kl`.
+   The update additionally consumes `dense_mask`, aligned with all on-policy rows.
+   False entries contribute no dense CE but retain policy/group-credit supervision.
+   When none are eligible, dense CE/accuracy are null and learning continues.
+   `label` returns `{target, calibrated_probability, provenance, imitation_eligible}`.
+   Provenance is `{kind, receipt_sha256}`: `planner_calibration` (T1C calibrated
+   P(this target beats base)), `sumo_verified` (realised verification receipt), or
+   `no_target` (null target). Runtime independently enforces P >= **0.8** for
+   unverified B **and** R labels; verified examples bypass this filter. Eligibility
+   claims inconsistent with this rule are refused. The registration/criterion and
+   approval payload bind the threshold and symmetric filter.
 - `new_episode(arm=, update=, index=, start=, horizon_s=, options=)` returns a plant with
   `observe()`, `full_window()`, `step(commands, speed_mode=27)`, `finish()`.
   Observations have exactly `time_s, own_sensing, v2v_reports, cav_ids, bounds`:
@@ -85,8 +95,11 @@ Backend protocol consumed by the coordinator:
   budgets and dispatches via `run_branch(spec, snapshot)` under a permit. That call must
   keep its entire subprocess lifetime inside the call and may not dispatch elsewhere.
   `grade_verification(kind, payload, results)` returns a graded receipt (including
-  `advantage` for credit). `practice_reference(start, common_weights=)` returns the
-  full matched same-snapshot/same-seed all-base reference pair.
+   `advantage` for credit). `practice_reference(start, common_weights=)` returns the
+   full matched same-snapshot/same-seed all-base reference pair.
+   Teacher verification must return a realised boolean `label_correct`, evaluated
+   against the candidate target, including filtered proposals. Runtime preserves
+   verification ID and source row ID in `components/uNNN_<arm>_dense_labels.json`.
 - `resolve_states(job)` returns registered `(snapshot, receipt)` pairs. Use
   `diagnostic_identity(states)` when registering hashes. Explicit TRAIN seeds, snapshots,
   member groups and full-window digests are checked before expansion.
@@ -126,6 +139,9 @@ checkpoint. Required metrics: rates for every family, WM credit and checked subs
 dense-label CE/accuracy, bank-move CE, layer KL, missing-feature share, reward and
 collisions/teleports/hard-brakes/TTC events. A reports explicit nulls for inapplicable
 layer metrics, with zero component counts. History is contiguous and self-hashed.
+Dense reporting separates imitation accuracy from realised `dense_checked_accuracy`;
+`dense_filtered_share`, `dense_eligible_labels` and `dense_checked_labels` expose the
+denominators. No eligible dense targets adds a DIAGNOSE, never a learning pause.
 
 Pre-registered DIAGNOSE rules: total non-none trigger rate 0 or 1, credit not rising
 over three updates, dense accuracy flat within 1e-6 over three updates, layer KL <=1e-8.

@@ -7,8 +7,10 @@ from . import rerun_cpus as rc
 from .exact_grade import _seal, verify_sealed
 
 METRICS = ('group_credit_wm', 'group_credit_checked', 'dense_ce', 'dense_accuracy',
+           'dense_filtered_share', 'dense_checked_accuracy',
            'bank_move_ce', 'layer_kl', 'merge_missing_share', 'reward')
 COUNTS = ('decisions', 'credit_rows', 'credit_checked_rows', 'dense_labels',
+          'dense_eligible_labels', 'dense_checked_labels',
           'augmented_examples', 'weighted_starts')
 SAFETY = ('collisions', 'teleports', 'hard_brakes', 'ttc_events')
 
@@ -22,9 +24,11 @@ def checked_metrics(arm, metrics):
         value = metrics[name]
         if value is None and arm == 'A' and name != 'reward':
             continue
+        if value is None and name in ('dense_ce', 'dense_accuracy') and metrics['dense_eligible_labels'] == 0:
+            continue
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
             raise ValueError('REFUSED: invalid monitor metric: '+name)
-        if name in ('dense_accuracy', 'merge_missing_share') and not 0 <= value <= 1:
+        if name in ('dense_accuracy', 'dense_filtered_share', 'dense_checked_accuracy', 'merge_missing_share') and not 0 <= value <= 1:
             raise ValueError('REFUSED: monitor share outside [0,1]: '+name)
         if name in ('dense_ce', 'bank_move_ce', 'layer_kl') and value < 0:
             raise ValueError('REFUSED: negative monitor loss: '+name)
@@ -39,8 +43,14 @@ def checked_metrics(arm, metrics):
             or sum(triggers.values()) != metrics['decisions']):
         raise ValueError('REFUSED: inconsistent monitor trigger counts')
     if arm != 'A' and any(metrics[k] <= 0 for k in
-                          ('decisions', 'credit_rows', 'credit_checked_rows', 'dense_labels')):
+                          ('decisions', 'credit_rows', 'credit_checked_rows', 'dense_labels', 'dense_checked_labels')):
         raise ValueError('REFUSED: missing learning component observations')
+    if (metrics['dense_eligible_labels'] > metrics['dense_labels'] or
+            metrics['dense_checked_labels'] > metrics['dense_labels']):
+        raise ValueError('REFUSED: inconsistent dense counts')
+    if arm != 'A' and not math.isclose(metrics['dense_filtered_share'],
+            1-metrics['dense_eligible_labels']/metrics['dense_labels']):
+        raise ValueError('REFUSED: inconsistent dense filtered share')
     for name in SAFETY:
         n = metrics['safety'].get(name)
         if type(n) is not int or n < 0:
@@ -73,8 +83,10 @@ def monitor_row(arm, update, metrics, history=()):
             if all(b['group_credit_wm'] <= a['group_credit_wm'] for a, b in zip(window, window[1:])):
                 diagnose.append('group_credit_not_rising_3_updates')
             accuracy = [r['dense_accuracy'] for r in window]
-            if max(accuracy)-min(accuracy) <= rc.LEARNING_MONITOR['accuracy_tolerance']:
+            if all(v is not None for v in accuracy) and max(accuracy)-min(accuracy) <= rc.LEARNING_MONITOR['accuracy_tolerance']:
                 diagnose.append('dense_accuracy_flat_3_updates')
+        if metrics['dense_eligible_labels'] == 0:
+            diagnose.append('no_eligible_dense_labels')
     return _seal(dict(schema='coopmwm.t2c.learning_monitor.v1', arm=arm, update=update,
         metrics=metrics, trigger_rates=rates, diagnose=diagnose,
         action='PAUSE_SAFETY' if metrics['safety_stop'] else ('DIAGNOSE' if diagnose else 'CONTINUE'),
