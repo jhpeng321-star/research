@@ -1,5 +1,25 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+## Current completion summary — 2026-11-04 14:22 +08:00
+- Resume reconciled git status/log and current task registrations first. Design/build/
+  CPU gates/training and the peer-owned fleet evaluation are already COMPLETE.
+- Fresh local SHA256 checks match the registered39-line design992c0560, peer final
+  handoff2ecb0e85 and successful remote receipt1402/a2176a4b. Exact local PID query
+  again finds observer3668 and noonpublisher44716 absent; their deadlines are complete.
+- Reuse `docs/paper_results/selmappo/RESUME_20261104_1402.json` and committed
+  `RESUME_20261104_1409_CROSSCHECK.json` (365ae440): remote checkpoint verification
+  belongs to the existing1402 probe, not a new SSH/load/inference check this resume.
+- Final169 remains at gpuR `/root/c1switch2_selector_fleet_bb77eb9ce7fc1dd4/checkpoint.pt`,
+  SHA256 `be0bb66dba7ec2059de9d7ca57993731d8383a0a5bf69c52cbfcafc10c457ddc`.
+- Retain169updates/7,728new gradient episodes/6,998,400charged sim-s; local14,400
+  evaluation reservation UNSTARTED, cap7,012,800. Original cpuQ training root was
+  removed by registered owner cleanup; immutable local completion evidence remains.
+- Peer STATUS_CURRENT still records Nov3 fleet16worlds/480decisions/96oraclebranches,
+  79,800charged=actual under S-C1SWITCH2. Its full WM/BB/per-CAV comparison and primary
+  efficacy CI remain incomplete. Evaluation/statistics remain peer-owned.
+- Fleet supervision is complete. Prior CPU PASS receipts retained; current changes
+  are documentation only. Existing peer notices/work preserved; no new dispatch.
+
 ## Fresh resume — 2026-11-04 14:01 +08:00
 - Concurrent-session follow-up: `docs/paper_results/selmappo/RESUME_20261104_1402.json`
   appeared during this reconciliation and independently records SUCCESSFUL metadata/
