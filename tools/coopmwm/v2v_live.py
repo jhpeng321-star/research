@@ -33,10 +33,13 @@ def hooks(root, cfg):
     bank_statistics.install(rb, bank_rule=rule, sources=cfg.get('replay_sources'))
     # c4/imit-strength: one registered imitation step mode and bank-intent switch for B and R
     # alike; any B/R mismatch refuses here, before the runner is bound.
-    from .v2v_launch3 import imitation_step_mode_for, intent_bank_term_for
+    # c4/imit-kl-option: the runtime's registered imitation_kl_limit joins the binding (default
+    # .045 = every earlier receipt; registered alternatives only, B and R together).
+    from .v2v_launch3 import imitation_step_mode_for, intent_bank_term_for, imitation_kl_limit_for
     bank_imitation.install(step_mode=imitation_step_mode_for(cfg, 'B'),
-                           intent_bank_term=intent_bank_term_for(cfg, 'B'))
-    imitation_step_mode_for(cfg, 'R'), intent_bank_term_for(cfg, 'R')
+                           intent_bank_term=intent_bank_term_for(cfg, 'B'),
+                           kl_limit=imitation_kl_limit_for(cfg, 'B'))
+    imitation_step_mode_for(cfg, 'R'), intent_bank_term_for(cfg, 'R'), imitation_kl_limit_for(cfg, 'R')
     bank_imitation.run=bank_imitation.run_separate
     from .v2v_runtime import Policy, load_checkpoint
     from .accel_storage import read

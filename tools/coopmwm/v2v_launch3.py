@@ -47,9 +47,14 @@ BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
     # boundary, for B-v2v and R-v2v together. OWNER 2026-11-04 08:52 ("yes, switch on stronger
     # imitation now"): the pinned value is 'kl_targeted' (KL limit .045 and every check unchanged).
     # The bank intent term switch defaults True = current behaviour.
-    imitation_step_mode='kl_targeted', v2v_intent_bank_term=True)
+    imitation_step_mode='kl_targeted', v2v_intent_bank_term=True,
+    # c4/imit-kl-option: the runtime's separate-imitation KL limit. Default .045 = every earlier
+    # receipt (byte-identical); prepare_intent may pin a REGISTERED alternative (.06/.09) for a
+    # runtime, for B and R together; bind_runtime refuses any unregistered value or B/R mismatch.
+    imitation_kl_limit=.045)
 IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
 IMITATION_STEP_MODES = ('fixed', 'kl_targeted')
+IMITATION_KL_LIMITS = (.045, .06, .09)   # c4/imit-kl-option: registered imitation_kl_limit values
 DIAGNOSTIC_SCHEDULE = dict(A=dict(lessons=[], isolated=[]),
     B=dict(lessons=[6, 12, 18, 24], isolated=[6, 12, 18, 24]),
     R=dict(lessons=[], isolated=[12, 24]))
@@ -287,6 +292,23 @@ def imitation_step_mode_for(cfg, arm):
     return have
 
 
+def imitation_kl_limit_for(cfg, arm):
+    """The separate-imitation KL limit of arm B or R (c4/imit-kl-option). The runtime pins ONE
+    registered value (default .045 = every earlier receipt; a pre-option runtime without the key
+    keeps the .045 default, byte-identical). One key serves both arms; an optional per-arm mapping
+    cfg['imitation_kl_limit_by_arm'] is accepted only when B == R == the key."""
+    have = cfg.get('imitation_kl_limit', .045)
+    if have not in IMITATION_KL_LIMITS:
+        raise Refused('unknown imitation_kl_limit ' + repr(have))
+    by_arm = cfg.get('imitation_kl_limit_by_arm')
+    if by_arm is not None:
+        if not isinstance(by_arm, dict) or by_arm.get('B') != by_arm.get('R') or by_arm.get('B') != have:
+            raise Refused('imitation_kl_limit must be identical for B and R: ' + repr(by_arm))
+    if arm not in ('B', 'R'):
+        raise Refused('only arms B and R have an imitation bank')
+    return have
+
+
 def intent_bank_term_for(cfg, arm):
     """Whether the bank intent term trains arm B or R (default True = current behaviour). One key
     serves both arms; an optional per-arm mapping cfg['v2v_intent_bank_term_by_arm'] is accepted
@@ -311,10 +333,20 @@ def bind_runtime(value, *, root, source_root):
         raise Refused('V2V_RUNTIME config object required')
     for key, want in dict(INTENT_OPTIONS, **BANK_OPTIONS).items():
         have = cfg.get(key)
+        if key == 'imitation_kl_limit':
+            # c4/imit-kl-option: the runtime may pin any REGISTERED alternative (chosen by
+            # prepare_intent); everything else refuses. A pre-option runtime without the key
+            # keeps the registered default .045 (byte-identical). B == R is enforced below.
+            if 'imitation_kl_limit' not in cfg:
+                have = want
+            if have not in IMITATION_KL_LIMITS:
+                raise Refused('runtime option imitation_kl_limit differs: ' + repr(have))
+            continue
         if have != want or isinstance(have, bool) != isinstance(want, bool):
             raise Refused('runtime option ' + key + ' differs: ' + repr(have))
     imitation_filter_for(cfg, 'B'), imitation_filter_for(cfg, 'R')   # refuses B != R
     imitation_step_mode_for(cfg, 'B'), imitation_step_mode_for(cfg, 'R')   # refuses B != R
+    imitation_kl_limit_for(cfg, 'B'), imitation_kl_limit_for(cfg, 'R')   # refuses B != R
     intent_bank_term_for(cfg, 'B'), intent_bank_term_for(cfg, 'R')   # refuses B != R
     if 'v2v_intent_weight' in cfg:
         raise Refused('obsolete runtime v2v_intent_weight is not an intent loss binding')

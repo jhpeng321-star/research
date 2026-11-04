@@ -22,6 +22,14 @@ def complete_update(path):
     return value, None
 
 
+def registered_kl_limits():
+    """The registered imitation_kl_limit values (c4/imit-kl-option). The runtime's limit arrives
+    inside each receipt (bank_imitation.kl_limit, recorded by bank_imitation.run_separate); the
+    KL-breach check below must use that runtime limit, never a hardcoded bound."""
+    from .bank_imitation import KL_LIMITS
+    return KL_LIMITS
+
+
 def inspect_update(value):
     """Evaluate only the already registered numerical learning invariants."""
     bank = value.get('bank_imitation') or {}
@@ -51,6 +59,10 @@ def inspect_update(value):
             failures.append('nonfinite_imitation_kl')
         elif not isinstance(limit, (float, int)) or not math.isfinite(limit) or kl > limit:
             failures.append('imitation_kl_out_of_limit')
+        elif limit not in registered_kl_limits():
+            # c4/imit-kl-option: the receipt's limit is the runtime's registered option; a limit
+            # outside the registered set fails closed (unregistered values must never relax this).
+            failures.append('unregistered_imitation_kl_limit')
     for i, row in enumerate(ppo):
         for key in ('loss', 'kl', 'gradient_norm'):
             number = row.get(key)
@@ -70,6 +82,7 @@ def inspect_update(value):
         pass1_loss_change_mean=change.get('mean'), pass1_loss_change_ci95=change.get('ci95'),
         pass1_loss_change_n=change.get('n'), reported_only=reported,
         imitation_failed=bank.get('imitation_failed'), kl=bank.get('kl'), kl_limit=bank.get('kl_limit'),
+        total_kl_vs_pre_update=bank.get('total_kl_vs_pre_update'),
         action_error_before_mps2=bank.get('action_error_before_mps2'),
         action_error_after_mps2=bank.get('action_error_after_mps2'),
         imitated_cooperative_examples=filtered.get('imitated_cooperative_examples'),
@@ -81,7 +94,8 @@ def inspect_update(value):
         ppo_kl_max=max((row.get('kl', 0.) for row in own_ppo), default=None),
         wall_s=value.get('wall_s'), eta_final_hours=value.get('eta_final_hours'),
         rule='registered mechanics only; empty fairness-capped bank is allowed; intent/cooperation trends report-only; '
-             'pass 1 pauses only on a significantly worse paired loss change (bootstrap CI > 0), MAIN 2026-11-04 09:00')
+             'pass 1 pauses only on a significantly worse paired loss change (bootstrap CI > 0), MAIN 2026-11-04 09:00; '
+             'imitation KL is checked against the RUNTIME limit recorded in the receipt (imitation_kl_limit), MAIN 2026-11-04 c4/imit-kl-option')
 
 
 def watch(root, control):

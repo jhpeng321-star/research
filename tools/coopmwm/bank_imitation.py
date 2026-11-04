@@ -94,21 +94,28 @@ STEP_MODES=('fixed','kl_targeted')   # c4/imit-strength: registered imitation-st
 STEP_SCALE_CAP=16   # kl_targeted: a pass's step scale never exceeds 16x the base learning rate
 STEPS_CAP=4         # kl_targeted: optimizer steps per pass never exceed 4x (minibatch 128//mult)
 KL_LIMIT=.045       # the registered separate-imitation bound (report kl_limit; never exceeded)
+KL_LIMITS=(.045,.06,.09)   # c4/imit-kl-option: registered imitation_kl_limit alternatives
 
 RUNTIME_STEP_MODE='fixed'       # bound from the deployed runtime by v2v_live.hooks (B and R alike)
 RUNTIME_INTENT_BANK_TERM=True   # bound likewise; False drops the bank intent term from the loss
+RUNTIME_KL_LIMIT=KL_LIMIT       # bound likewise; the runtime's registered imitation_kl_limit
 
 
-def install(step_mode='fixed',intent_bank_term=True):
+def install(step_mode='fixed',intent_bank_term=True,kl_limit=None):
     """Bind the runtime's registered imitation-strength keys process-wide (v2v_live.hooks).
 
     One key serves B and R (v2v_launch3 refuses any B/R mismatch before this is called); explicit
-    run_separate arguments still win, and the process default stays 'fixed'/True (byte-identical).
+    run_separate arguments still win, and the process default stays 'fixed'/True/.045 (byte-identical).
+    kl_limit must be a registered alternative (KL_LIMITS); None keeps the current binding (the
+    module default is .045, identical to every receipt published before c4/imit-kl-option).
     """
-    global RUNTIME_STEP_MODE,RUNTIME_INTENT_BANK_TERM
+    global RUNTIME_STEP_MODE,RUNTIME_INTENT_BANK_TERM,RUNTIME_KL_LIMIT
     if step_mode not in STEP_MODES:raise ValueError('unknown imitation_step_mode '+repr(step_mode))
     if not isinstance(intent_bank_term,bool):raise ValueError('v2v_intent_bank_term must be a bool')
-    RUNTIME_STEP_MODE,RUNTIME_INTENT_BANK_TERM=step_mode,bool(intent_bank_term)
+    if kl_limit is None:kl_limit=RUNTIME_KL_LIMIT
+    kl_limit=float(kl_limit)
+    if kl_limit not in KL_LIMITS:raise ValueError('unknown imitation_kl_limit '+repr(kl_limit))
+    RUNTIME_STEP_MODE,RUNTIME_INTENT_BANK_TERM,RUNTIME_KL_LIMIT=step_mode,bool(intent_bank_term),kl_limit
 
 
 def trainable(sample,weight):
@@ -153,7 +160,7 @@ def pass1_loss_change(before,after,resamples=PASS1_BOOTSTRAP,seed=PASS1_BOOTSTRA
 
 
 def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5,
-                 step_mode=None,intent_bank_term=None):
+                 step_mode=None,intent_bank_term=None,kl_limit=None):
     """MAIN17:27 transactional full passes, KL relative to post-PPO policy.
 
     Backtracking changes only the optimizer step size, never targets or AWR
@@ -173,8 +180,8 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     pass's step scale (capped at STEP_SCALE_CAP x base lr) and its number of
     optimizer steps (capped at STEPS_CAP x, via smaller minibatches of the same
     fixed permutation) whenever the ACCEPTED pass ends with KL (vs the post-PPO
-    snapshot, same joint_kl measurement) below half the registered KL_LIMIT;
-    the existing halving backtracking is unchanged and KL_LIMIT is never
+    snapshot, same joint_kl measurement) below half the registered KL limit;
+    the existing halving backtracking is unchanged and the limit is never
     exceeded. Per accepted pass the report records step_scale_mult, steps_mult
     and optimizer_steps. A None step_mode falls back to the runtime binding
     installed by v2v_live.hooks (identical for B and R). intent_bank_term=False
@@ -182,10 +189,24 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     v2v_intent bank term from the imitation loss; the TRAINED-subset (w>0,
     trainable pairs) bank intent loss is reported by exact_update's v2v_intent
     block as before_trained/after_trained alongside the all-pairs values.
+
+    c4/imit-kl-option: the separate-imitation trust region is the registered
+    option imitation_kl_limit (default .045 = every earlier receipt,
+    byte-identical). A None kl_limit falls back to the runtime binding
+    (RUNTIME_KL_LIMIT, installed by v2v_live.hooks for B and R alike); an
+    explicit argument wins and only registered alternatives (KL_LIMITS) are
+    accepted. The limit bounds every acceptance check here and the kl_targeted
+    growth threshold (limit/2); the report records it as kl_limit. Per-update
+    safety note: the report adds total_kl_vs_pre_update, the exact joint KL of
+    the published (post-PPO + imitation) policy vs the FROZEN PRE-UPDATE policy
+    (the caller's reference snapshot) over the same bank samples, i.e. the PPO +
+    imitation total drift; report-only, no separate threshold.
     """
     if int(passes)!=passes or passes<5:raise ValueError('at least five requested passes')
     step_mode=RUNTIME_STEP_MODE if step_mode is None else str(step_mode)
     if step_mode not in STEP_MODES:raise ValueError('unknown imitation_step_mode '+repr(step_mode))
+    kl_limit=RUNTIME_KL_LIMIT if kl_limit is None else float(kl_limit)
+    if kl_limit not in KL_LIMITS:raise ValueError('unknown imitation_kl_limit '+repr(kl_limit))
     if intent_bank_term is None:intent_bank_term=RUNTIME_INTENT_BANK_TERM
     intent_bank_term=bool(intent_bank_term)
     targeted=step_mode=='kl_targeted'
@@ -199,7 +220,7 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
         optimizer_steps=0,rejected_optimizer_steps=0,
         critic_steps=0,own_policy_steps=0,plan_ratios_computed=0,backtracks=0,
         action_error_before_mps2=before,action_error_before_update_mps2=action_error(reference,pairs),
-        kl_limit=.045,kl_reference='frozen pre-imitation (post-PPO) policy',
+        kl_limit=kl_limit,kl_reference='frozen pre-imitation (post-PPO) policy',
         last_loss=0.,last_gradient_norm=0.,epochs=[],
         pass1_step_scale=None,pass1_loss_drop=None,pass1_effective=False,imitation_failed=False,
         min_additional_pass_step_scale=MIN_ADDITIONAL_PASS_SCALE,
@@ -207,7 +228,8 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     if targeted:report.update(step_mode=step_mode,step_scale_cap=STEP_SCALE_CAP,steps_cap=STEPS_CAP)
     if not intent_bank_term:report['intent_bank_term']=False
     if not pairs:
-        return dict(report,stop_reason='empty statistically qualified bank',kl=0.,action_error_after_mps2=None)
+        return dict(report,stop_reason='empty statistically qualified bank',kl=0.,
+                    total_kl_vs_pre_update=0.,action_error_after_mps2=None)
     samples=[s for s,_ in pairs]
     original_lrs=[g['lr'] for g in optimizer.param_groups]
 
@@ -231,7 +253,7 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
             last_loss=float(loss.detach());last_norm=float(norm)
         try:kl=joint_kl(policy,centre,samples)
         except ValueError:return 'nonfinite_kl',None,steps,last_loss,last_norm
-        return ('accepted' if kl<=.045 else 'kl_exceeded'),kl,steps,last_loss,last_norm
+        return ('accepted' if kl<=kl_limit else 'kl_exceeded'),kl,steps,last_loss,last_norm
 
     try:
         mult=1.;steps_mult=1   # kl_targeted growth multipliers; both stay 1 in fixed mode
@@ -292,9 +314,9 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                 # statistical pass-1 report (MAIN 09:00) in kl_targeted mode only: the 'fixed'
                 # report stays byte-identical to its branch point (test_option_off_...)
                 if targeted:report['pass1_loss_change']=pass1_loss_change(pass1_before,pair_losses(policy,pairs,coefficient))
-            # kl_targeted: an accepted pass that ended below half the registered bound lets the
-            # next pass push harder (step scale x2 capped 16, optimizer steps x2 capped 4).
-            if targeted and epoch+1<int(passes) and kl is not None and kl<KL_LIMIT/2:
+            # kl_targeted: an accepted pass that ended below half the runtime's registered bound
+            # lets the next pass push harder (step scale x2 capped 16, optimizer steps x2 capped 4).
+            if targeted and epoch+1<int(passes) and kl is not None and kl<kl_limit/2:
                 mult=min(float(STEP_SCALE_CAP),mult*2.);steps_mult=min(int(STEPS_CAP),steps_mult*2)
             if scale<MIN_ADDITIONAL_PASS_SCALE and epoch+1<int(passes):
                 report['stop_reason']=(f'accepted step scale {scale:g} below {MIN_ADDITIONAL_PASS_SCALE:g} '
@@ -303,7 +325,12 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
         else:report['stop_reason']='all registered imitation epochs complete'
     finally:
         for g,lr in zip(optimizer.param_groups,original_lrs):g['lr']=lr
-    report.update(kl=joint_kl(policy,centre,samples),action_error_after_mps2=action_error(policy,pairs))
+    # Per-update safety note (c4/imit-kl-option): the published policy's exact joint KL vs the
+    # frozen PRE-UPDATE policy (the caller's reference, before PPO and imitation) = the PPO +
+    # imitation total drift over the same bank samples. Report-only; no separate threshold.
+    report.update(kl=joint_kl(policy,centre,samples),total_kl_vs_pre_update=joint_kl(policy,reference,samples),
+        total_kl_reference='frozen pre-update policy (PPO + imitation combined)',
+        action_error_after_mps2=action_error(policy,pairs))
     after=report['action_error_after_mps2']
     if after is not None and before is not None and after>=before:
         report['error_not_decreased_explanation']='AWR likelihood and unweighted L1 differ; full-pass coverage and separate KL recorded'

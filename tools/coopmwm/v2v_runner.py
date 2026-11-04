@@ -76,7 +76,7 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
 
 def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sha256,
                    imitation_bank_filter='cooperative_only', imitation_step_mode=None,
-                   v2v_intent_bank_term=True):
+                   imitation_kl_limit=None, v2v_intent_bank_term=True):
     """Audit I4: the registered producer of the intent-ON A/B/R runtime config (prospective
     binding only, like prepare). Identical for every arm: v2v_dim=48 (K4 x (6+5+1)),
     v2v_intent=True, horizon 5, loss weight 1.0, detach_trunk=True; bank labels
@@ -84,8 +84,11 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
     (B and R; A has no bank) and imitation_bank_filter='cooperative_only' (B and R).
     c4/imit-strength (prepared): imitation_step_mode='fixed' (byte-identical; 'kl_targeted' only
     at a registered update boundary, B and R together) and v2v_intent_bank_term=True (the bank
-    intent term trains; False drops it). Exactly the keys v2v_launch3.bind_runtime pins."""
-    from .v2v_launch3 import BANK_OPTIONS, INTENT_OPTIONS
+    intent term trains; False drops it). Exactly the keys v2v_launch3.bind_runtime pins.
+    c4/imit-kl-option: imitation_kl_limit=None pins the launcher default .045 (byte-identical to
+    every earlier receipt); a REGISTERED alternative (.06/.09, launch3.IMITATION_KL_LIMITS) may
+    be pinned instead, for B and R together; anything else refuses."""
+    from .v2v_launch3 import BANK_OPTIONS, INTENT_OPTIONS, IMITATION_KL_LIMITS
     cfg = prepare(base, root=root, legacy_root=legacy_root, source_root=source_root,
                   common_checkpoint_sha256=common_checkpoint_sha256,
                   v2v_dim=int(INTENT_OPTIONS['v2v_dim']), v2v_intent=True,
@@ -99,10 +102,19 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
     # imitation_step_mode=None = the launcher's registered pin (owner 08:52: 'kl_targeted')
     cfg['imitation_step_mode'] = (BANK_OPTIONS['imitation_step_mode'] if imitation_step_mode is None
                                   else imitation_step_mode)
+    # c4/imit-kl-option: identical for B and R; None = the launcher default .045, otherwise a
+    # registered alternative only (the separate-imitation trust region of this runtime)
+    cfg['imitation_kl_limit'] = (BANK_OPTIONS['imitation_kl_limit'] if imitation_kl_limit is None
+                                 else imitation_kl_limit)
+    if cfg['imitation_kl_limit'] not in IMITATION_KL_LIMITS:
+        raise ValueError('unregistered imitation_kl_limit ' + repr(cfg['imitation_kl_limit'])
+                         + '; registered alternatives only: ' + repr(IMITATION_KL_LIMITS))
     cfg['v2v_intent_bank_term'] = bool(v2v_intent_bank_term)
     if cfg['imitation_epochs'] < 5:
         raise ValueError('full-pass separate imitation requires at least five epochs')
     for key, want in dict(INTENT_OPTIONS, **BANK_OPTIONS).items():
+        if key == 'imitation_kl_limit':
+            continue    # registered alternative pinned above (membership already enforced)
         if cfg.get(key) != want or isinstance(cfg.get(key), bool) != isinstance(want, bool):
             raise ValueError(f'intent runtime key {key} differs from the launcher: {cfg.get(key)!r}')
     return cfg
