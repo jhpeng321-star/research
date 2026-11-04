@@ -241,7 +241,7 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                 max(1,128//(steps_mult if targeted else 1)))
             state=copy.deepcopy(policy.state_dict());adam=copy.deepcopy(optimizer.state_dict())
             loss_before=awr_loss(policy,pairs,coefficient);error_before=action_error(policy,pairs)
-            if epoch==0:pass1_before=pair_losses(policy,pairs,coefficient)   # report only (no RNG, no grad)
+            if epoch==0 and targeted:pass1_before=pair_losses(policy,pairs,coefficient)   # report only (no RNG, no grad)
             # pass 1 keeps the guaranteed 25 halvings; later passes stop at scale 1/64 (attempt 6)
             max_attempts=MAX_ATTEMPTS if epoch==0 else round(-math.log2(MIN_ADDITIONAL_PASS_SCALE))+1
             accepted=False;statuses=[];rejected=0;kl=None
@@ -288,8 +288,10 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                 drop=(row['awr_loss_before']-row['awr_loss_after']
                       if _finite(row['awr_loss_before']) and _finite(row['awr_loss_after']) else None)
                 report.update(pass1_step_scale=scale,pass1_loss_drop=drop,
-                              pass1_effective=bool(drop is not None and drop>0),
-                              pass1_loss_change=pass1_loss_change(pass1_before,pair_losses(policy,pairs,coefficient)))
+                              pass1_effective=bool(drop is not None and drop>0))
+                # statistical pass-1 report (MAIN 09:00) in kl_targeted mode only: the 'fixed'
+                # report stays byte-identical to its branch point (test_option_off_...)
+                if targeted:report['pass1_loss_change']=pass1_loss_change(pass1_before,pair_losses(policy,pairs,coefficient))
             # kl_targeted: an accepted pass that ended below half the registered bound lets the
             # next pass push harder (step scale x2 capped 16, optimizer steps x2 capped 4).
             if targeted and epoch+1<int(passes) and kl is not None and kl<KL_LIMIT/2:

@@ -56,6 +56,14 @@ def test_explicit_fixed_overrides_an_installed_targeted_default():
                                 torch.Generator().manual_seed(7), copy.deepcopy(b), passes=5)
     assert 'step_mode' not in forced and installed['step_mode'] == 'kl_targeted'
     assert installed['epochs'][1]['step_scale_mult'] == 2.   # pass 2 runs at the doubled scale
+    # MAIN 09:00: the kl_targeted report carries the paired pass-1 loss change with a bootstrap CI
+    change = installed['pass1_loss_change']
+    assert 'pass1_loss_change' not in forced and change['n'] == installed['pairs_total'] == 40
+    lo, hi = change['ci95']
+    assert lo <= change['mean'] <= hi and change['bootstrap'] == 10000 and change['seed'] == 20261101
+    assert change['significantly_worse'] is (lo > 0) and change['significantly_better'] is (hi < 0)
+    assert bi.pass1_loss_change([1., 1.], [1.5, 1.7])['significantly_worse'] is True
+    assert bi.pass1_loss_change([1., 1., 1.], [1.01, .99, 1.])['significantly_worse'] is False
 
 
 def test_install_validates_and_restores_module_defaults():
