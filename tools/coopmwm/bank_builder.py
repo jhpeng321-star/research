@@ -100,13 +100,17 @@ def run_all8_round(root, control, config, immutable, phase=PHASE):
     cooperative candidates are only known after the seeds-1/2 solos), so a budget shortfall
     blocks every extra seed before any extra physics instead of leaving partial extras; the
     extended/solo verifications are conditional on the per-seed admission and stay charged
-    LIVE through rb._confirm_charge (the seed-2 all-K branches are precharged at claim time)."""
+    LIVE through rb._confirm_charge (the seed-2 all-K branches are precharged at claim time).
+    Config key slim_rejected_tapes (DEFAULT absent/None = the C4NM_SLIM_REJECTED_TAPES env var
+    decides): after each record is sealed, rejected candidate branch tapes are slimmed
+    (tools/coopmwm/slim_tapes.py)."""
     import traceback
     from . import replay_bank as rb, sumo_verify as sv, verify_perseed as vp
     from . import accel_storage
     from .storage import ledger
     original_charge = rb._confirm_charge
     extra_seeds = int(config.get('extra_seeds') or 0)
+    slim = config.get('slim_rejected_tapes')     # BINDING/config key; None falls back to the env var
     for r in vp.pending(root, 'B', sources=config['sources']):
         vid = r['verification_id']
         attempt = control/'attempts_all8'/(vid+'.json')
@@ -129,6 +133,7 @@ def run_all8_round(root, control, config, immutable, phase=PHASE):
             break
         immutable(claim, dict(unix=time.time(), verification_id=vid, jobs=jobs, verify_mode=vp.ALL8,
             precharged_sim_s=sum(j['sim_s'] for j in jobs),
+            slim_rejected_tapes=slim,
             conditional_live_charges=('extended/solo verifications via rb._confirm_charge' if not extra_seeds else
                                        'extended/solo verifications live via rb._confirm_charge; every extra-seed '
                                        'group verification pre-reserved at the first extra charge')))
@@ -144,7 +149,7 @@ def run_all8_round(root, control, config, immutable, phase=PHASE):
                     timeout_s=config['branch_timeout_s'])
             out = vp.confirm_all8(root, 'B', receipt, snapshot, runner_for, str(root), phase, workers=2,
                 version=r['_policy_version'], candidates=candidates, branches_dir=r['_branches'],
-                extra_seeds=extra_seeds)
+                extra_seeds=extra_seeds, slim_rejected_tapes=slim)
             result = dict(unix=time.time(), verification_id=vid, status='complete', verify_mode=vp.ALL8,
                 admitted=out['admitted'], winners=out['winners'], record_sha256=out['confirmation_sha256'],
                 precharged_sim_s=sum(j['sim_s'] for j in jobs), charged_sim_s=out['charged_sim_s'],

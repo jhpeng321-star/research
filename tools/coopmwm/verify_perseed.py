@@ -625,7 +625,10 @@ def confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase, work
     sealed = json.loads(target.read_text())
     from . import slim_tapes
     if slim_tapes.enabled(slim_rejected_tapes):
-        slim_tapes.slim_record(bank, sealed)
+        try:     # slimming runs AFTER sealing and must NEVER fail the sealed record
+            slim_tapes.slim_record(bank, sealed)
+        except Exception:
+            pass                      # slim_record already records its own errors internally
     return sealed
 
 
