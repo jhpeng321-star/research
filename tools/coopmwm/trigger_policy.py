@@ -9,8 +9,10 @@ provide *local observable* states and CAV identities, never a global frame.
 The base policy's forward/sample/score paths are delegated unchanged. Trigger
 sampling is separate (decision cadence belongs to the caller). PPO consumes
 the recorded table, mask and per-CAV old log probabilities, not fresh draws.
-Frozen mode detaches the actor trunk and excludes ALL base parameters from
-the trigger optimizer; fine-tuning explicitly includes actor+broadcast only.
+Trigger features use only per-ego sensor/V2V inputs with a constant zero latent,
+never the base actor's global RSU broadcast. Frozen mode detaches the actor trunk
+and excludes ALL base parameters from the trigger optimizer; explicit fine-tuning
+includes the actor only. The low-level MAPPO action path stays separate.
 
 MoveExecutor returns raw acceleration requests to the existing single-writer
 controller, never TraCI commands. The downstream speedMode-27 safety path
@@ -132,6 +134,10 @@ class TriggerPolicy(nn.Module):
     def score(self, sample):
         return self.base_policy.score(sample)
 
+    def intent_base_policy(self):
+        """Explicit opt-in discovery adapter for the existing V2V controller."""
+        return self.base_policy
+
     def _hidden(self, context):
         x = context['x']
         if len(x) and len(x[0]) == FEATURES:
@@ -142,10 +148,11 @@ class TriggerPolicy(nn.Module):
         x = torch.as_tensor(x, dtype=torch.float32).reshape(len(x), FEATURES+self.v2v_dim)
         if len(x) != len(context['members']) or len(set(context['members'])) != len(x):
             raise ValueError('context member/feature mismatch')
-        rsu = torch.as_tensor(context['rsu'], dtype=torch.float32)
-        # Same actor operations as v2v_model/IntentPolicy, no critic/global pool.
+        # Reuse the loaded per-CAV trunk, but never its shared global broadcast.
+        # Zero padding preserves the actor's input layout without a data channel
+        # from context['rsu']; even a trained nonzero broadcast cannot leak in.
         with torch.set_grad_enabled(torch.is_grad_enabled() and not self.freeze_base):
-            latent = self.base_policy.broadcast(rsu).expand(len(x), -1)
+            latent = x.new_zeros((len(x), ACTOR_LATENT))
             hidden = self.base_policy.actor[:-1](torch.cat((x, latent), -1))
         return hidden.detach() if self.freeze_base else hidden
 
@@ -230,7 +237,7 @@ class TriggerPolicy(nn.Module):
     def learning_parameters(self):
         parameters = list(self.trigger_head.parameters())+list(self.trigger_value.parameters())
         if not self.freeze_base:
-            parameters += list(self.base_policy.actor.parameters())+list(self.base_policy.broadcast.parameters())
+            parameters += list(self.base_policy.actor.parameters())
         return parameters
 
     def optimizer(self, *, lr):

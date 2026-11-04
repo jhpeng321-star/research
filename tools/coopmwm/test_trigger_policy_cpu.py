@@ -1,14 +1,16 @@
 """T2A contracts: local moves API stub only; no simulator, dispatch or truth."""
 import copy
 from dataclasses import dataclass, replace
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 import torch
 
 from .trigger_policy import TriggerPolicy, MoveExecutor, ppo_update
-from .v2v_intent import IntentPolicy
-from .v2v_runtime import Policy as V2VPolicy
+from .acceleration import Controller, encode
+from .v2v_intent import IntentPolicy, intent_model
+from .v2v_runtime import Policy as V2VPolicy, controller_class
 
 
 @dataclass(frozen=True)
@@ -95,6 +97,107 @@ def test_attachment_preserves_global_rng_and_validates_width():
     assert torch.equal(rng, torch.get_rng_state())
     with pytest.raises(ValueError, match='v2v_dim'):
         TriggerPolicy(base, v2v_dim=24, n_candidates=3, partner_slots=5, moves_api=MovesStub())
+
+
+def sensor_rows():
+    return [dict(vid='ego', s_m=-400., v_mps=10., lane=0, is_cav=True, length_m=5.),
+            dict(vid='peer', s_m=-380., v_mps=12., lane=0, is_cav=True, length_m=5.),
+            dict(vid='distant_hdv', s_m=0., v_mps=5., lane=0, is_cav=False, length_m=5.)]
+
+
+@pytest.mark.parametrize('freeze_base', [True, False])
+def test_real_encoder_global_rsu_cannot_change_trigger_but_local_inputs_can(freeze_base):
+    policy, _, states, visible, _ = setup_policy(freeze_base=freeze_base)
+    # A trained V2V checkpoint can have nonzero partner columns as well as the
+    # nonzero loaded broadcast from setup_policy. Exercise both input channels.
+    with torch.no_grad():
+        policy.base_policy.actor[0].weight[:, 29:77].normal_(std=.05)
+    rows = sensor_rows()
+
+    def context(sensor):
+        ctx = encode(sensor)
+        return dict(ctx, v2v={vid: [0.]*48 for vid in ctx['members']})
+
+    ctx = context(rows)
+    distant = copy.deepcopy(rows)
+    distant[-1]['v_mps'] = 25.
+    remote_ctx = context(distant)
+    assert ctx['x'] == remote_ctx['x'] and ctx['v2v'] == remote_ctx['v2v']
+    assert ctx['rsu'] != remote_ctx['rsu']
+    assert not torch.equal(policy.base_policy(ctx)[0], policy.base_policy(remote_ctx)[0])
+    first = decide(policy, ctx, states, visible)
+    remote = decide(policy, remote_ctx, states, visible)
+    assert torch.equal(first.descriptors, remote.descriptors)
+    assert torch.equal(first.mask, remote.mask)
+    logits, values = policy.distribution(ctx, first.descriptors, first.mask)
+    remote_logits, remote_values = policy.distribution(remote_ctx, remote.descriptors, remote.mask)
+    assert torch.equal(logits.softmax(-1), remote_logits.softmax(-1))
+    assert torch.equal(values, remote_values)
+    assert torch.equal(first.actions, remote.actions) and torch.equal(first.logp, remote.logp)
+
+    # Trigger evaluation must not require the global block at all.
+    local_only = {k: v for k, v in ctx.items() if k != 'rsu'}
+    assert all(torch.equal(a, b) for a, b in zip(
+        (logits, values), policy.distribution(local_only, first.descriptors, first.mask)))
+    local = copy.deepcopy(rows)
+    local[1]['v_mps'] = 22.
+    local_logits, _ = policy.distribution(context(local), first.descriptors, first.mask)
+    assert not torch.equal(logits.softmax(-1)[0], local_logits.softmax(-1)[0])
+    reports = copy.deepcopy(local_only)
+    reports['v2v']['ego'][6:12] = [.5]*6  # legitimate recorded partner report
+    report_logits, _ = policy.distribution(reports, first.descriptors, first.mask)
+    assert not torch.equal(logits.softmax(-1)[0], report_logits.softmax(-1)[0])
+    assert torch.equal(logits[1], report_logits[1])  # no cross-ego pooling
+
+
+def test_intent_discovery_requires_explicit_module_wrapper_adapter():
+    policy, _, _, _, _ = setup_policy()
+    assert intent_model(policy) is policy.base_policy
+    assert intent_model(SimpleNamespace(policy=policy)) is policy.base_policy
+    arbitrary = torch.nn.Module()
+    arbitrary.base_policy = policy.base_policy
+    assert intent_model(arbitrary) is None  # keep the existing arbitrary-module guard
+    plain, _, _, _, _ = setup_policy(dim=24)
+    assert intent_model(plain) is None
+
+
+@pytest.mark.parametrize('deterministic', [True, False])
+def test_actual_intent_controller_wrapper_two_ticks_preserves_actions_noise_and_latency(deterministic):
+    policy, _, _, _, _ = setup_policy()
+    with torch.no_grad():
+        policy.base_policy.intent_head.weight.normal_(std=.05)
+    control = controller_class(Controller)
+    baseline = control(policy.base_policy, torch.Generator().manual_seed(4), deterministic)
+    wrapped = control(policy, torch.Generator().manual_seed(4), deterministic)
+    previous_published = None
+    for now in (301, 302, 304):
+        rows = sensor_rows()
+        rows[0]['v_mps'] += now-301
+        commands = {'ego': .2, 'peer': .2}
+        assert wrapped.apply(rows, commands, now) == baseline.apply(rows, commands, now)
+        assert wrapped.policy is policy
+        sample = wrapped.events[-1]['sample']
+        assert sample == baseline.events[-1]['sample']
+        assert wrapped.memory == baseline.memory
+        assert torch.equal(wrapped.generator.get_state(), baseline.generator.get_state())
+        assert wrapped.intent_board == baseline.intent_board
+        assert sample['published_intent'] == policy.base_policy.publish(sample['context'])
+        assert set(sample['published_intent']) == {'ego', 'peer'}
+        for ego, partner in (('ego', 'peer'), ('peer', 'ego')):
+            block = sample['context']['v2v'][ego]
+            assert len(block) == 48 and block[5] == 1.
+            assert block[18:24] == [0.]*6  # no second partner
+            if now == 302:
+                assert block[6:11] == pytest.approx(previous_published[partner], abs=1e-7)
+                assert block[11] == 1.
+            else:
+                assert block[6:12] == [0.]*6  # first tick or stale after skipped tick
+        if now == 302:
+            assert sample['published_intent']['peer'] != previous_published['peer']
+        previous_published = copy.deepcopy(sample['published_intent'])
+        issued = dict(time_s=now, vehicles=[dict(r, issued_acceleration_mps2=.3) for r in rows])
+        wrapped.observe_issued(issued)
+        baseline.observe_issued(issued)
 
 
 def test_per_cav_discrete_move_table_masks_snapshot_and_score_replay():
@@ -211,7 +314,7 @@ def test_ppo_clips_both_advantage_signs_against_recorded_logp():
     assert metrics['approx_kl'] > 0
 
 
-def test_explicit_finetuning_reaches_actor_and_v2v_columns_but_not_critic():
+def test_explicit_finetuning_reaches_actor_and_v2v_columns_but_not_global_broadcast():
     policy, ctx, states, visible, _ = setup_policy(freeze_base=False)
     before = copy.deepcopy(policy.base_policy.state_dict())
     batch = decide(policy, ctx, states, visible)
@@ -219,9 +322,11 @@ def test_explicit_finetuning_reaches_actor_and_v2v_columns_but_not_critic():
     base = policy.base_policy
     assert base.actor[0].weight.grad[:, 29:29+48].abs().sum() > 0
     assert not torch.equal(before['actor.0.weight'], base.actor[0].weight)
-    assert not torch.equal(before['broadcast.2.weight'], base.broadcast[-1].weight)
+    assert all(p.grad is None for p in base.broadcast.parameters())
+    assert not {id(p) for p in base.broadcast.parameters()} & {
+        id(p) for p in policy.learning_parameters()}
     assert all(torch.equal(v, before[k]) for k, v in base.state_dict().items()
-               if k.startswith(('critic.', 'intent_head.')) or k == 'log_std')
+               if k.startswith(('broadcast.', 'critic.', 'intent_head.')) or k == 'log_std')
 
 
 def test_imitation_targets_are_indices_into_same_masked_table_and_train_head():
