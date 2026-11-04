@@ -123,15 +123,19 @@ def guide(job,generator):
                 b.update(queried_option=None,proposal_accepted=False,query_wall_s=0.)
                 result['behaviour']=b
                 return result
+            lane_config=job.get('lane_actions_config')  # c4/lane-plans: R/B symmetry, default off
+            lane_kwargs=dict(config=lane_config,record=dict(rows=r['rows'])) if lane_config else {}
             plan=sample_unscored(chosen_group,centre,bounds,traffic,
-                int(torch.randint(2**31,(),generator=generator)),duration_s=selected_ticket['duration_s'])
+                int(torch.randint(2**31,(),generator=generator)),duration_s=selected_ticket['duration_s'],**lane_kwargs)
             result=dict(accepted=True,plan=plan,option=plan['family'],expected_saving=None,
                 known_family=False,record_sha256=digest(r),random_match=dict(path=str(match),key=r['state_id']),
                 centre_contract='same warm K1/H300 current-policy trajectory as B; zero candidate WM scores',
                 centre_receipt=centre_receipt)
             if job.get('sumo_verify'):  # arm R verification: k random candidates around the same centre
-                result['verify_context']=dict(group=chosen_group,centre=centre,bounds=bounds,regime=traffic,
+                ctx=dict(group=chosen_group,centre=centre,bounds=bounds,regime=traffic,
                     duration_s=selected_ticket['duration_s'])
+                if lane_config:ctx['record']=dict(rows=r['rows'])  # envelope source of the same lane rule
+                result['verify_context']=ctx
         b.update(queried_option=result.get('option'),proposal_accepted=result['accepted'],
             query_wall_s=result.get('query_wall_s',0.))
         if result['accepted']:

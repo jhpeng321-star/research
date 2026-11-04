@@ -529,6 +529,8 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                 raise ValueError('bank branch tape differs from its sealed verification receipt')
             w = float(beta)*xg.weight(advantage, T['temperature_veh_s'], clip)
             entry = dict(start_s=r['t0'], duration_s=int(plan['duration_s']), plan_id=plan['id'], weight=w)
+            if plan.get('lane_actions') is not None:  # c4/lane-plans: lane-action imitation targets
+                entry['lane_actions'] = plan['lane_actions']
             entry_pairs = xg.imitation_pairs(tape, entry)
             intent = None
             if v2v and v2v_intent:

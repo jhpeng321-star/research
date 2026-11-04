@@ -45,12 +45,14 @@ def run(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5):
     if int(passes)!=passes or passes<5:raise ValueError('MAIN09:36 requires at least five passes')
     pairs=[(s,float(w)) for s,w in pairs if w>0]
     before=action_error(policy,pairs)
+    lane_pairs=sum(1 for s,_ in pairs if s.get('lane_target'))
     report=dict(requested_epochs=int(passes),epochs_completed=0,epochs_started=0,
         pairs_total=len(pairs),pairs_seen=0,member_actions_seen=0,optimizer_steps=0,
         critic_steps=0,own_policy_steps=0,plan_ratios_computed=0,
         action_error_before_mps2=before,action_error_before_update_mps2=action_error(reference,pairs),
         kl_limit=.045,kl_reference='frozen pre-update policy',last_loss=0.,last_gradient_norm=0.,
         rule='all bank pairs; inherited AWR x beta and cooperative oversampling unchanged')
+    if lane_pairs:report['lane_targets']=dict(pairs=lane_pairs,head=bool(hasattr(policy,'lane_logits')))
     samples=[s for s,_ in pairs if indices(s)]
     if not samples:
         report.update(stop_reason='empty bank or no present member targets',kl=0.,action_error_after_mps2=before)
@@ -68,6 +70,9 @@ def run(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5):
             loss=torch.stack([imitation(policy,s,w) for s,w in active]).mean()*coefficient
             if getattr(policy,'intent_horizon',0):  # v2v_intent ON only: plan intent targets
                 from .v2v_intent import bank_term;loss=loss+bank_term(policy,active)
+            from .lane_plans import policy_lane_ce  # c4/lane-plans: lane-head CE (None = inert)
+            lane=policy_lane_ce(policy,active)
+            if lane is not None:loss=loss+lane
             if not bool(torch.isfinite(loss)):raise ValueError('nonfinite full-bank imitation')
             optimizer.zero_grad();loss.backward()
             norm=torch.nn.utils.clip_grad_norm_(policy.parameters(),.5,error_if_nonfinite=True)
@@ -204,6 +209,8 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
         pass1_step_scale=None,pass1_loss_drop=None,pass1_effective=False,imitation_failed=False,
         min_additional_pass_step_scale=MIN_ADDITIONAL_PASS_SCALE,
         rule='full-bank transactional passes; separate imitation KL; AWR weights unchanged')
+    lane_pairs=sum(1 for s,_ in pairs if s.get('lane_target'))
+    if lane_pairs:report['lane_targets']=dict(pairs=lane_pairs,head=bool(hasattr(policy,'lane_logits')))
     if targeted:report.update(step_mode=step_mode,step_scale_cap=STEP_SCALE_CAP,steps_cap=STEPS_CAP)
     if not intent_bank_term:report['intent_bank_term']=False
     if not pairs:
@@ -221,6 +228,9 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
             loss=torch.stack([imitation(policy,s,w) for s,w in batch]).mean()*coefficient
             if intent_on and intent_bank_term:  # v2v_intent ON only: plan intent targets
                 from .v2v_intent import bank_term;loss=loss+bank_term(policy,batch)
+            from .lane_plans import policy_lane_ce  # c4/lane-plans: lane-head CE (None = inert)
+            lane=policy_lane_ce(policy,batch)
+            if lane is not None:loss=loss+lane
             if not bool(torch.isfinite(loss)):return 'nonfinite_loss',None,steps,last_loss,last_norm
             optimizer.zero_grad();loss.backward()
             norm=torch.nn.utils.clip_grad_norm_(policy.parameters(),.5)

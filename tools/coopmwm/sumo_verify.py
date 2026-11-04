@@ -102,6 +102,9 @@ def build_branches(snapshot, candidates, proposer='wm', tail_s=TAIL_S):
             raise ValueError('candidate duration must be positive')
         if set(c['members']) & committed:
             raise ValueError('candidate overlaps a committed plan group')
+        if 'lane_actions' in c:  # c4/lane-plans: structural check (envelope recorded at sampling)
+            from .lane_plans import validate as _lane_validate
+            _lane_validate(c)
     t_end = window_end(t0, candidates, end, tail_s)
     vid = verification_id(snapshot['episode']['id'], t0, candidates)
     snap = snapshot_sha(snapshot)
@@ -353,16 +356,24 @@ def accel_charge(run_root, phase='sumo_verification'):
 
 # ---------------------------------------------------------------- arm R proposer
 
-def random_candidates(group, centre, bounds, regime, base_seed, k=TOP_K, duration_s=None, first=None):
+def random_candidates(group, centre, bounds, regime, base_seed, k=TOP_K, duration_s=None, first=None,
+                      lane_config=None, record=None):
     """Arm R = 'random proposals + SUMO pick': k generic random plans around the same policy centre
     (mppi_search.sample_unscored, zero WM scoring). Seeds derive from base_seed only, so no extra
-    live generator draws. ``first`` (the matched random plan already drawn) is kept as candidate 1."""
+    live generator draws. ``first`` (the matched random plan already drawn) is kept as candidate 1.
+    ``lane_config`` (c4/lane-plans, default None = unchanged draws): the lane config of the SAME
+    sampling rule as arm B (R symmetry); ``record`` supplies the rows for the WM lane envelope."""
     from .mppi_search import sample_unscored
+    config = None
+    kwargs = {}
+    if lane_config:
+        config = dict(lane_config)
+        kwargs = dict(record=record)
     out = [first] if first is not None else []
     i = 0
     while len(out) < k and i < 64*int(k):  # bounded: identical (fully clipped) draws cannot spin forever
         seed = int(digest(dict(base=int(base_seed), i=i))[:8], 16);i += 1
-        p = sample_unscored(group, centre, bounds, regime, seed, duration_s=duration_s)
+        p = sample_unscored(group, centre, bounds, regime, seed, config=config, duration_s=duration_s, **kwargs)
         if all(p['id'] != q['id'] for q in out):
             out.append(p)
     return out
@@ -647,10 +658,13 @@ def install(controller, job, prefixes, generator, runner=None, charge=None):
     charge = charge or accel_charge(cfg['run_root'], cfg.get('phase', 'sumo_verification'))
     rp = None
     if job['arm'] == 'R':
+        lane_config = job.get('lane_actions_config')  # c4/lane-plans: R/B symmetry, default off
         def rp(proposal, k):
             ctx = proposal['verify_context']
             return random_candidates(ctx['group'], ctx['centre'], ctx['bounds'], ctx['regime'],
-                                     int(digest(proposal['plan'])[:8], 16), k, ctx.get('duration_s'), proposal['plan'])
+                                     int(digest(proposal['plan'])[:8], 16), k, ctx.get('duration_s'), proposal['plan'],
+                                     **({'lane_config': lane_config, 'record': ctx.get('record')}
+                                        if lane_config else {}))
     verifier = lambda snap, cands, proposer, members_t0=None: verify(snap, cands, runner, charge, proposer,
                                                                      workers=cfg.get('workers'), root=root,
                                                                      members_t0=members_t0)
@@ -687,6 +701,18 @@ def verify_controller_class():
             self.base_policy = policy
             self.audit = dict(replayed_prefix_steps=0, live_steps=0, candidate=(plan or {}).get('id'))
 
+        def _count_lane(self):
+            """c4/lane-plans: issued/blocked/executed lane requests of this branch (additive key,
+            present only when a plan carries lane actions)."""
+            sample = (self.events[-1] or {}).get('sample') or {}
+            if 'lane_events' not in sample:
+                return
+            from .lane_plans import outcome_counts
+            rec = self.audit.setdefault('lane_actions', dict(requests=0, issued=0, blocked=0, executed=0))
+            counts = outcome_counts(sample['lane_events'])
+            for k, v in counts.items():
+                rec[k] = rec.get(k, 0)+int(v)
+
         def apply(self, rows, commands, now):
             t = int(now)
             if t < self.t0:
@@ -717,6 +743,7 @@ def verify_controller_class():
                 torch.rand((), generator=self.generator)   # beta / pad draw (same in every branch and live)
             else:
                 desired = super().apply(rows, commands, now)
+            self._count_lane()
             self.audit['live_steps'] += 1
             return desired
 

@@ -404,7 +404,48 @@ def validate_plan(plan, bounds, durations=None):
         raise ValueError('more than the registered knots per member')
     if plan['origin'] not in ORIGINS:
         raise ValueError('unregistered plan origin (hand-designed families are labels only)')
+    if 'lane_actions' in plan:  # c4/lane-plans (OFF default): structural checks only
+        from .lane_plans import validate as _lane_validate
+        _lane_validate(plan)
     return plan
+
+
+def _lane_split(cfg):
+    """Option ``lane_actions`` (c4/lane-plans, default OFF). Off: no lane key survives in
+    ``cfg`` and ``lane_plans`` is never imported, so every output is byte-identical."""
+    if not any(k.startswith('lane_') for k in cfg):
+        return None
+    from .lane_plans import split_config as lane_split
+    return lane_split(cfg)
+
+
+def _lane_attach(plan, record, members, rng, lane, envelope, stored=None, model=None):
+    """Sample (or copy ``stored`` plan lane fields) into a built plan; inert when the
+    decision-time envelope is unresolvable (never guess)."""
+    if lane is None or envelope is None:
+        return plan
+    from .lane_plans import attach, predict, sample_lane_actions, validate
+    if stored is not None:
+        return validate(attach(plan, stored['lane_actions'], stored.get('lane_envelope') or envelope,
+                               stored.get('lane_predictions') or []))
+    actions = sample_lane_actions(envelope, members, plan['duration_s'], rng,
+                                  lane.get('lane_rate', .25))
+    return validate(attach(plan, actions, envelope, predict(record, members, actions, model)))
+
+
+def _lane_envelope(record, group, lane):
+    if lane is None:
+        return None
+    from .lane_plans import decision_envelope
+    return decision_envelope(record, group['members'])
+
+
+def _lane_model_of(lane):
+    """The learned WM lane model of the lane config (one build per process); None when off."""
+    if lane is None:
+        return None
+    from .lane_plans import resolve_model
+    return resolve_model(lane)
 
 
 def comparators(record, window_s=300):
@@ -487,6 +528,10 @@ class PlanLibrary:
         e = dict(descriptor=descriptor, duration_s=int(plan['duration_s']),
                  perturbation_canonical=plan['perturbation_canonical'], advantage=float(advantage),
                  plan_id=plan['id'], canonical_span_s=plan.get('canonical_span_s'))
+        if plan.get('lane_actions') is not None:  # c4/lane-plans: SUMO-positive lane plans reseed
+            e['lane_actions'] = plan['lane_actions']
+            e['lane_envelope'] = plan.get('lane_envelope', {})
+            e['lane_predictions'] = plan.get('lane_predictions', [])
         e['id'] = 'L'+_digest(e)[:12]
         self.entries.append(e)
         return e['id']
@@ -619,14 +664,18 @@ def _span(cfg, durations, D):
 
 
 def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, config=None, duration_s=None,
-                    feasibility=None):
+                    feasibility=None, record=None):
     """Arm R: one generic correlated perturbation of the policy, NOT scored by the WM.
 
     ``feasibility`` (NULL_DIAGNOSIS 8.2, see build_plan) clamps the profile to the
     actuator ceiling/floor when the caller resolved the members' allowed speeds;
-    default None keeps the exact legacy draw bytes.
+    default None keeps the exact legacy draw bytes. ``config`` with a truthy
+    ``lane_actions`` (c4/lane-plans) and ``record`` (rows for the decision-time WM
+    lane envelope) additionally samples one lane-change attempt per member inside
+    the envelope on a separate seeded stream; without them the draw is unchanged.
     """
     cfg = dict(REGISTERED, **(config or {})); durations = allowed_durations(cfg['durations_s'], cfg['max_duration_s'])
+    lane = _lane_split(cfg)
     m = len(group['members']); rng = np.random.default_rng(seed)
     mu, cov, pd = _distribution(cfg, m, durations, covariance, regime, default_sigma(bounds))
     z = mu+_sampler(cov)@rng.standard_normal(mu.size)
@@ -635,8 +684,13 @@ def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, c
         if duration_s not in durations:raise ValueError('unregistered matched duration')
         D=int(duration_s)
     nc = canonical_knots(durations[-1])
-    return build_plan(group, policy_traj, z.reshape(m, nc), D, bounds, 'sampled', regime, 'R',
+    plan = build_plan(group, policy_traj, z.reshape(m, nc), D, bounds, 'sampled', regime, 'R',
                       span_s=_span(cfg, durations, D), n_canon=nc, feasibility=feasibility)
+    if lane is not None and record is not None:
+        lane_rng = np.random.default_rng(np.random.SeedSequence(int(seed)).spawn(2)[1])
+        plan = _lane_attach(plan, record, group['members'], lane_rng, lane,
+                            _lane_envelope(record, group, lane))
+    return plan
 
 
 # --------------------------------------------------------------------------- coop_objective hooks
@@ -776,6 +830,7 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
     """
     cfg = dict(cfg); M = int(cfg['niches'])
     coop, cs = _coop_split(cfg)
+    lane = _lane_split(cfg)      # lane_actions off (default): no key, no import, identical output
     durations = allowed_durations(cfg['durations_s'], cfg['max_duration_s'])
     m = len(group['members'])
     if not cfg['min_size'] <= m <= cfg['max_size']:
@@ -785,9 +840,12 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
         raise ValueError('policy trajectory shorter than the maximum plan duration')
     feas = centre_feasibility(record, group['members'], P, bounds, durations)
     seed = _seed_from(record, group) if seed is None else int(seed)
-    children = np.random.SeedSequence(seed).spawn(1+M)      # [choice, niche streams...]
+    children = np.random.SeedSequence(seed).spawn(2+M if lane is not None else 1+M)
     choice_rng = np.random.default_rng(children[0])
     rngs = [np.random.default_rng(children[1+i]) for i in range(M)]
+    lane_rng = np.random.default_rng(children[-1]) if lane is not None else None
+    lenv = _lane_envelope(record, group, lane)
+    lane_model_obj = _lane_model_of(lane)
     nc = canonical_knots(durations[-1])
     sc = scaling(m, nc, cfg['top_k'], cfg)
     H_screen = int(min(cfg['final_H_max'], max(cfg['screen_H_min'], durations[-1])))
@@ -797,19 +855,21 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
     desc = describe(group, regime)
     base = comparators(record, cfg['final_H_max'])
     seeds = [(np.zeros((m, nc)), durations[-1], 'centre', None)]
+    seed_lane = [None]
     if mappo_traj is not None:
         seeds.append((None, durations[-1], 'mappo', _as_traj(mappo_traj, group['members'])))
+        seed_lane.append(None)
     lib_used = library.nearest(desc, cfg['library_seeds']) if library is not None else []
     for e in lib_used:
         D = min(durations, key=lambda d: (abs(d-e['duration_s']), d))
         old_span = e.get('canonical_span_s') or durations[-1]
         z = _regrid(e['perturbation_canonical'], old_span, _span(cfg, durations, D), nc)
-        seeds.append((z, D, 'library', None))
+        seeds.append((z, D, 'library', None)); seed_lane.append(e)
     for e in extra_seeds or ():
         z = np.asarray(e['perturbation_canonical'], float)
         if z.shape != (m, nc) or int(e['duration_s']) not in durations:
             raise ValueError('extra seed must be members x canonical knots with a registered duration')
-        seeds.append((z, int(e['duration_s']), 'proposer', None))
+        seeds.append((z, int(e['duration_s']), 'proposer', None)); seed_lane.append(e)
     sizes = niche_sizes(sc['population'], M, cfg['pop_multiple'])
     pool, zs, niche_of, log, futures = {}, {}, {}, [], 0
     threshold = None
@@ -822,6 +882,9 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
                 for j, (z, D, origin, absolute) in enumerate(seeds):
                     p = build_plan(group, P, z, D, bounds, origin, regime, f'i{it}n{i}s{j}-',
                                    absolute, _span(cfg, durations, D), nc, feasibility=feas)
+                    if seed_lane[j] is not None and 'lane_actions' in seed_lane[j]:
+                        p = _lane_attach(p, record, group['members'], lane_rng, lane, lenv,
+                                         stored=seed_lane[j], model=lane_model_obj)
                     cands.append(p); niche_of[p['id']] = i
                     zs[p['id']] = np.asarray(p['perturbation_canonical'], float).reshape(-1)
             mine = len(cands)-start_i
@@ -832,6 +895,7 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
                 p = build_plan(group, P, z.reshape(m, nc), D, bounds, 'sampled', regime,
                                f'i{it}n{i}s{mine}-', span_s=_span(cfg, durations, D), n_canon=nc,
                                feasibility=feas)
+                p = _lane_attach(p, record, group['members'], lane_rng, lane, lenv, model=lane_model_obj)
                 cands.append(p); niche_of[p['id']] = i
                 zs[p['id']] = z
                 mine += 1
@@ -955,6 +1019,10 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
                                saving_vs_policy=float((costs['policy']-costs[p['id']]).mean())) for p in finalists])
     if extra_seeds:  # key absent by default: mirrors the single-niche output shape
         out['extra_seeds'] = len(extra_seeds)
+    if lane is not None:  # c4/lane-plans marker (OFF default: key absent)
+        out['lane_actions'] = True
+        for f, p in zip(out['finalists'], finalists):
+            f['uses_lane_actions'] = bool(p.get('uses_lane_actions', False))
     if not t['accepted']:
         out.update(reason=t['reason'], plan=None, option=None, expected_saving=None)
         return out if ctx is None else _coop_finish(out, finalists, ctx, cs, m, cfg)
@@ -998,6 +1066,7 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
                              seed=seed, extra_seeds=extra_seeds)
     cfg.pop('niches', None)  # niches=1 (explicit or default): byte-identical legacy output
     coop, cs = _coop_split(cfg)  # coop_objective off (default): no key, no import, identical output
+    lane = _lane_split(cfg)      # lane_actions off (default): no key, no import, identical output
     durations = allowed_durations(cfg['durations_s'], cfg['max_duration_s'])
     m = len(group['members'])
     if not cfg['min_size'] <= m <= cfg['max_size']:
@@ -1007,7 +1076,11 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
         raise ValueError('policy trajectory shorter than the maximum plan duration')
     feas = centre_feasibility(record, group['members'], P, bounds, durations)
     seed = _seed_from(record, group) if seed is None else int(seed)
-    search_rng, choice_rng = (np.random.default_rng(s) for s in np.random.SeedSequence(seed).spawn(2))
+    children = np.random.SeedSequence(seed).spawn(3 if lane is not None else 2)
+    search_rng, choice_rng = (np.random.default_rng(s) for s in children[:2])
+    lane_rng = np.random.default_rng(children[2]) if lane is not None else None
+    lenv = _lane_envelope(record, group, lane)
+    lane_model_obj = _lane_model_of(lane)
     nc = canonical_knots(durations[-1])
     sc = scaling(m, nc, cfg['top_k'], cfg)
     H_screen = int(min(cfg['final_H_max'], max(cfg['screen_H_min'], durations[-1])))
@@ -1016,19 +1089,21 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
     desc = describe(group, regime)
     base = comparators(record, cfg['final_H_max'])
     seeds = [(np.zeros((m, nc)), durations[-1], 'centre', None)]
+    seed_lane = [None]
     if mappo_traj is not None:
         seeds.append((None, durations[-1], 'mappo', _as_traj(mappo_traj, group['members'])))
+        seed_lane.append(None)
     lib_used = library.nearest(desc, cfg['library_seeds']) if library is not None else []
     for e in lib_used:
         D = min(durations, key=lambda d: (abs(d-e['duration_s']), d))
         old_span = e.get('canonical_span_s') or durations[-1]
         z = _regrid(e['perturbation_canonical'], old_span, _span(cfg, durations, D), nc)
-        seeds.append((z, D, 'library', None))
+        seeds.append((z, D, 'library', None)); seed_lane.append(e)
     for e in extra_seeds or ():
         z = np.asarray(e['perturbation_canonical'], float)
         if z.shape != (m, nc) or int(e['duration_s']) not in durations:
             raise ValueError('extra seed must be members x canonical knots with a registered duration')
-        seeds.append((z, int(e['duration_s']), 'proposer', None))
+        seeds.append((z, int(e['duration_s']), 'proposer', None)); seed_lane.append(e)
     pool, zs, log, futures = {}, {}, [], 0
     ctx = cs.Context(group, coop, P, bounds, feas) if coop is not None else None
     for it in range(cfg['iterations']):
@@ -1037,6 +1112,9 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
             for j, (z, D, origin, absolute) in enumerate(seeds):
                 p = build_plan(group, P, z, D, bounds, origin, regime, f'i{it}s{j}-', absolute,
                                _span(cfg, durations, D), nc, feasibility=feas)
+                if seed_lane[j] is not None and 'lane_actions' in seed_lane[j]:
+                    p = _lane_attach(p, record, group['members'], lane_rng, lane, lenv,
+                                     stored=seed_lane[j], model=lane_model_obj)
                 cands.append(p); zs[p['id']] = np.asarray(p['perturbation_canonical'], float).reshape(-1)
         L = _sampler(cov)
         while len(cands) < sc['population']:
@@ -1045,6 +1123,7 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
             p = build_plan(group, P, z.reshape(m, nc), D, bounds, 'sampled', regime,
                            f'i{it}s{len(cands)}-', span_s=_span(cfg, durations, D), n_canon=nc,
                            feasibility=feas)
+            p = _lane_attach(p, record, group['members'], lane_rng, lane, lenv, model=lane_model_obj)
             cands.append(p); zs[p['id']] = z
         if ctx is None:
             scores = evaluate(record, base+cands, cfg['screen_K'], H_screen)
@@ -1123,6 +1202,10 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
                                saving_vs_policy=float((costs['policy']-costs[p['id']]).mean())) for p in finalists])
     if extra_seeds:  # key absent by default: unchanged output bytes without seeds
         out['extra_seeds'] = len(extra_seeds)
+    if lane is not None:  # c4/lane-plans marker (OFF default: key absent)
+        out['lane_actions'] = True
+        for f, p in zip(out['finalists'], finalists):
+            f['uses_lane_actions'] = bool(p.get('uses_lane_actions', False))
     if not t['accepted']:
         out.update(reason=t['reason'], plan=None, option=None, expected_saving=None)
         return out if ctx is None else _coop_finish(out, finalists, ctx, cs, m, cfg)

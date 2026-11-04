@@ -828,6 +828,13 @@ def imitation_pairs(original, entry):
                 raise ValueError('incomplete committed plan tape')
             sample = copy.deepcopy(s['sample'])
             sample['behaviour'] = dict(sample.get('behaviour') or {}, proposal_members=selected[0]['proposal_members'])
+            if entry.get('lane_actions') is not None:  # c4/lane-plans: lane-action targets for the lane head
+                from .lane_plans import pair_lane_target
+                sample['lane_target'] = pair_lane_target(entry, selected[0]['proposal_members'], t-t0)
+                events = (s['sample'] or {}).get('lane_events')
+                if events:
+                    sample['lane_target_outcome'] = {v: dict(e) for v, e in events.items()
+                                                     if v in sample['lane_target']}
             pairs.append((sample, entry['weight']))
     if len(pairs) != D:
         raise ValueError('committed plan extends past the recorded tape')

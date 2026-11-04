@@ -156,12 +156,17 @@ def solo_plan(plan, member):
 
     Minimal action dict for the WM evaluator (no canonical perturbation, so the
     proposer RecordingEvaluator never logs it as a searched candidate);
-    ``solo_of`` marks it for the K8 capture filters."""
+    ``solo_of`` marks it for the K8 capture filters. Plans with lane actions
+    (c4/lane-plans) keep the member's own lane row."""
     i = plan['members'].index(member)
-    return dict(id=f"{plan['id']}__solo_{member}", members=[member], duration_s=int(plan['duration_s']),
-                profile=[list(plan['profile'][i])], knot_times_s=list(plan['knot_times_s']),
-                origin=plan['origin'], regime=plan['regime'], family=plan['family'],
-                group_id=plan.get('group_id'), solo_of=plan['id'], solo_member=member)
+    out = dict(id=f"{plan['id']}__solo_{member}", members=[member], duration_s=int(plan['duration_s']),
+               profile=[list(plan['profile'][i])], knot_times_s=list(plan['knot_times_s']),
+               origin=plan['origin'], regime=plan['regime'], family=plan['family'],
+               group_id=plan.get('group_id'), solo_of=plan['id'], solo_member=member)
+    if plan.get('lane_actions') is not None:  # additive key only (lane plans OFF by default)
+        from .lane_plans import solo_lane_fields
+        out.update(solo_lane_fields(plan, member))
+    return out
 
 
 def solos_for(plans):

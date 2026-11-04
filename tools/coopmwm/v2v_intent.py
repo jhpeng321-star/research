@@ -390,6 +390,8 @@ def attach_bank_targets(pairs, tape, entry, horizon, bounds=ACCEL_BOUNDS):
     """Plan members' own future plan commands as intent targets (pair i = second t0+i).
 
     Targets stop at the plan end (``t0 + duration_s``); non-plan members are masked.
+    Plans with lane actions (c4/lane-plans) also attach the lane channel of the same
+    future as intent lane targets (``intent_lane_target``/``intent_lane_mask``).
     Mutates the (already deep-copied) pair samples and returns ``pairs``.
     """
     by_time = commands_by_time(tape['steps'], bounds)
@@ -399,6 +401,10 @@ def attach_bank_targets(pairs, tape, entry, horizon, bounds=ACCEL_BOUNDS):
         allowed = set(sample.get('behaviour', {}).get('proposal_members') or ())
         sample['intent_target'], sample['intent_mask'] = own_targets(
             members, t0+i, by_time, horizon, allowed=allowed, end_s=end)
+        if entry.get('lane_actions') is not None:  # intent targets include lane
+            from .lane_plans import intent_lane_targets
+            sample['intent_lane_target'], sample['intent_lane_mask'] = intent_lane_targets(
+                entry, members, t0+i, horizon, end)
     return pairs
 
 

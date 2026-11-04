@@ -61,9 +61,13 @@ def requests(sample, commands, *, ignore_departed=False):
 
 class Controller:
     def __init__(self, policy, generator, deterministic=False, guide=None, beta=1.,
-                 replay=None, branch=None):
+                 replay=None, branch=None, lane_executor=None):
         self.policy, self.generator, self.deterministic = policy, generator, deterministic
         self.guide, self.beta, self.replay, self.branch = guide, beta, replay, branch
+        # c4/lane-plans: safe changeLane executor for plan lane requests (the merged
+        # c4/lane-policy interface binds it, or lane_plans.bind_executor). None records
+        # the requests and counts them 'unbound' - never claimed as executed.
+        self.lane_executor = lane_executor
         self.events, self.memory = [], {}
         self.plan, self.plan_start = None, None
         self.active_plans = []
@@ -126,10 +130,23 @@ class Controller:
             b.update(plan_id=self.plan['id'], proposal_members=self.plan['members'])
             sample['absolute_accels']={}
             sample['plan_executions']=[]
+            lane_requests={}
             for c in self.active_plans:
                 sample['absolute_accels'].update(acceleration_at(c['plan'],now-c['start_s']))
+                if 'lane_actions' in c['plan']:
+                    from .lane_plans import requests_for
+                    lane_requests.update(requests_for(c['plan'],now-c['start_s']))
                 sample['plan_executions'].append(dict(plan_id=c['plan']['id'],proposal_members=c['plan']['members'],
                     start_s=c['start_s'],duration_s=c['plan']['duration_s'],plan_start=now==c['start_s']))
+            if lane_requests:
+                sample['lane_requests']=lane_requests
+                executor=self.lane_executor
+                if executor is None:
+                    from .lane_plans import default_executor
+                    executor=default_executor()
+                outcomes=executor(rows,lane_requests,now) if executor is not None else None
+                from .lane_plans import record_events
+                sample['lane_events']=record_events(lane_requests,outcomes)
             for vid, raw in sample['absolute_accels'].items():
                 if vid in context['members']:
                      sample['action'][context['members'].index(vid)] = [raw-commands[vid]]
