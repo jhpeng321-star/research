@@ -2,8 +2,8 @@
 
 Public API: build_arm_runtime(cfg, arm) -> hooks; collect_update(cfg, arm, u)
 -> episode receipts. ``hooks['train_update'](episodes, credit=..., labels=...)``
-    is called AFTER hooks['safety'] and P2 have processed those episodes; no per-vehicle/team reward is
-substituted for group credit in B/R. A uses the inherited MAPPO PPO learner.
+is called AFTER hooks['safety'] and P2 have processed those episodes; no team or
+per-vehicle reward substitutes for group credit in B/R. A uses MAPPO PPO.
 
 Required config: run_root, training_seed, worlds_by_update (TRAIN worlds),
 runtime/checkpoint/accel_bounds/gpu_deadline/workers/load_max, budget={total,
@@ -128,7 +128,10 @@ def _features(context):
             # Bank records without sensor packets remain explicitly missing.
             block = merge_features(None, vid, now_s=0, cfg=MergeFeaturesConfig(True)).tolist()
         rows.append(list(x[:29]) + list(block) + [context.get('move_offsets', {}).get(vid, 0.)])
-    return torch.tensor(rows, dtype=torch.float32).reshape(len(rows), FEATURE_DIM)
+    result = torch.tensor(rows, dtype=torch.float32).reshape(len(rows), FEATURE_DIM)
+    if not bool(torch.isfinite(result).all()):
+        raise ValueError('nonfinite local cooperation features')
+    return result
 
 
 class ProductionLayer(CooperationLayer):
@@ -313,13 +316,18 @@ def _reserve(cfg, jobs, phase):
     from tools.coopnative import storage
     budget = cfg['budget']
     total = budget['total']
-    if not isinstance(total, int) or total > 5000000 or total <= 0:
+    if type(total) is not int or total > 5000000 or total <= 0:
         raise ValueError('registered <=5M budget required')
+    prior = cfg.get('prior_charged_sim_s', 960)
+    if type(prior) is not int or prior < 960:
+        raise ValueError('carry the already charged parity960')
+    if any(type(v) is not int or v < 0 for v in budget['phases'].values()):
+        raise ValueError('invalid phase allocation')
     if sum(budget['phases'].values()) > total:
         raise ValueError('phase allocations exceed total')
     root = _path(cfg['run_root'])
     reserve = types.FunctionType(storage.reserve.__code__, dict(storage.reserve.__globals__,
-        CAP=total-int(cfg.get('prior_charged_sim_s', 960)), CAPS=budget['phases']))
+        CAP=total-prior, CAPS=budget['phases']))
     with (root/'ACCOUNTING.claim').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         return reserve(root, jobs, phase)
@@ -352,10 +360,14 @@ class ArmRuntime:
         _check(cfg, arm)
         self.cfg, self.arm, self.update = deepcopy(cfg), arm, update
         self.base, self.optimizer, self.generator, payload = _load_base(cfg, arm, update-1)
+        if payload.get('update') != update-1:
+            raise ValueError('base checkpoint update mismatch')
         self.policy = self.base if arm == 'A' else EpisodePolicy(self.base, cfg, arm)
         if arm != 'A' and update > 1:
             path = _path(Path(cfg['run_root'])/f'{arm}_track2_{update-1:03}.pt')
             state = torch.load(path, map_location='cpu', weights_only=False)
+            if state.get('arm') != arm or state.get('update') != update-1:
+                raise ValueError('cooperation checkpoint arm/update mismatch')
             self.policy.restore_worker(state['worker'])
             self.policy.layer.optimizer.load_state_dict(state['layer_optimizer'])
             self.policy.trigger_optimizer.load_state_dict(state['trigger_optimizer'])
@@ -493,32 +505,36 @@ class ArmRuntime:
             if key in advantages or key not in by_key or not math.isfinite(row['group_advantage']):
                 raise ValueError('invalid/duplicate/unmatched group credit')
             advantages[key] = float(row['group_advantage'])
-        records = [dict(sample=by_key[k], group_advantage=a) for k, a in advantages.items()
-                   if 'coop_layer' in by_key[k]]
+        eligible = {k for k, s in by_key.items() if 'coop_layer' in s and not s.get('deterministic')
+                    and not s.get('behaviour', {}).get('executed')}
+        records = [dict(sample=by_key[k], group_advantage=a) for k, a in advantages.items() if k in eligible]
         if not records:
             raise ValueError('B/R layer update requires P2 group credit, never team reward')
         layer = self.policy.layer.update(records, epochs=cfg['layer_epochs'])
+        reference = []
+        for key in sorted(eligible):
+            if 'track2_trigger' in by_key[key]:
+                batch = _batch(by_key[key]['track2_trigger'])
+                with torch.no_grad():
+                    logits = self.policy.trigger.distribution(batch.context, batch.descriptors, batch.mask)[0]
+                reference.append((batch, logits.detach()))
         trigger_metrics = []
         for key, advantage in advantages.items():
             sample = by_key[key]
-            if 'track2_trigger' not in sample:
+            if key not in eligible or 'track2_trigger' not in sample:
                 continue
             batch = _batch(sample['track2_trigger'])
             before = deepcopy(self.policy.trigger.state_dict())
             optimizer = deepcopy(self.policy.trigger_optimizer.state_dict())
-            old_logits = self.policy.trigger.distribution(batch.context, batch.descriptors, batch.mask)[0].detach()
             metrics = ppo_update(self.policy.trigger, self.policy.trigger_optimizer, batch,
                 [advantage]*len(batch.actions), (batch.values+advantage).tolist(), **cfg['trigger_ppo'])
-            with torch.no_grad():
-                logits = self.policy.trigger.distribution(batch.context, batch.descriptors, batch.mask)[0]
-                kl = torch.distributions.kl_divergence(torch.distributions.Categorical(logits=old_logits),
-                    torch.distributions.Categorical(logits=logits)).mean().item()
+            kl = self._trigger_kl(reference)
             accepted = math.isfinite(kl) and kl <= self.policy.layer.config.kl_budget
             if not accepted:
                 self.policy.trigger.load_state_dict(before)
                 self.policy.trigger_optimizer.load_state_dict(optimizer)
             trigger_metrics.append(dict(metrics, exact_kl=kl, accepted=accepted))
-        dense = self._imitate_labels(labels, by_key)
+        dense = self._imitate_labels(labels, by_key, reference=reference)
         pairs, bank_summary = self.bank_pairs()
         from . import bank_imitation as bi
         if cfg.get('v2v_intent'):
@@ -534,7 +550,16 @@ class ArmRuntime:
         self.policy.trigger_optimizer.zero_grad(set_to_none=True)
         return dict(layer=layer, trigger=trigger_metrics, dense=dense, bank=bank, bank_summary=bank_summary)
 
-    def _imitate_labels(self, labels, by_key):
+    @torch.no_grad()
+    def _trigger_kl(self, reference):
+        values = []
+        for batch, logits in reference:
+            after = self.policy.trigger.distribution(batch.context, batch.descriptors, batch.mask)[0]
+            values.append(torch.distributions.kl_divergence(torch.distributions.Categorical(logits=logits),
+                torch.distributions.Categorical(logits=after)).sum())
+        return float(torch.stack(values).mean()) if values else 0.
+
+    def _imitate_labels(self, labels, by_key, *, reference=()):
         reports = []
         for row in labels:
             if row.get('sumo_verified') is not True:
@@ -542,6 +567,8 @@ class ArmRuntime:
                 if not math.isfinite(probability) or not .8 <= probability <= 1.:
                     raise ValueError('unfiltered dense label')
             sample = by_key[(row['episode_id'], row['time_s'])]
+            if sample.get('deterministic') or sample.get('behaviour', {}).get('executed'):
+                raise ValueError('dense target is not a current-policy decision')
             batch = _batch(sample['track2_trigger'])
             model, optimizer = self.policy.trigger, self.policy.trigger_optimizer
             weights, state = deepcopy(model.state_dict()), deepcopy(optimizer.state_dict())
@@ -552,10 +579,7 @@ class ArmRuntime:
             torch.nn.utils.clip_grad_norm_(model.learning_parameters(), self.cfg['trigger_ppo']['max_grad_norm'],
                                           error_if_nonfinite=True)
             optimizer.step()
-            with torch.no_grad():
-                after = model.distribution(batch.context, batch.descriptors, batch.mask)[0]
-                kl = torch.distributions.kl_divergence(torch.distributions.Categorical(logits=logits),
-                    torch.distributions.Categorical(logits=after)).mean().item()
+            kl = self._trigger_kl(reference or [(batch, logits)])
             accepted = math.isfinite(kl) and kl <= self.policy.layer.config.kl_budget
             if not accepted:
                 model.load_state_dict(weights)
@@ -569,15 +593,17 @@ class ArmRuntime:
         from .accel_learner import save
         root = _path(self.cfg['run_root'])
         target = root/f'{self.arm}_checkpoint_{self.update:03}.pt'
-        if target.exists():
+        sidecar = root/f'{self.arm}_track2_{self.update:03}.pt'
+        if target.exists() or (self.arm != 'A' and sidecar.exists()):
             raise ValueError('checkpoint already exists')
         from .storage import ledger
         charged = int(self.cfg.get('prior_charged_sim_s', 960))+sum(r['sim_s'] for r in ledger(root))
         save(target, self.base, self.optimizer, self.generator, self.update, charged)
         if self.arm != 'A':
-            state = dict(worker=self.policy.worker_state(), layer_optimizer=self.policy.layer.optimizer.state_dict(),
+            state = dict(arm=self.arm, update=self.update, worker=self.policy.worker_state(),
+                         layer_optimizer=self.policy.layer.optimizer.state_dict(),
                          trigger_optimizer=self.policy.trigger_optimizer.state_dict())
-            with (root/f'{self.arm}_track2_{self.update:03}.pt').open('xb') as stream:
+            with sidecar.open('xb') as stream:
                 torch.save(state, stream)
         return str(target)
 
@@ -586,7 +612,7 @@ def build_arm_runtime(cfg, arm):
     """Build one update's hooks without dispatch/reservation; caller owns gates.
 
     Set cfg['update'] before build (default 1). Keep this hook mapping until P2
-    returns labels; then train_update and save_checkpoint. For cfg-only entry
+    returns labels; call safety, train_update and save_checkpoint. For cfg-only entry
     points collect_update reconstructs the same pre-update checkpoint weights.
     """
     runtime = ArmRuntime(cfg, arm, int(cfg.get('update', 1)))

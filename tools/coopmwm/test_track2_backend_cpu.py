@@ -66,7 +66,7 @@ def fake_load(monkeypatch):
     def load(cfg, arm, update):
         torch.manual_seed(7)
         base = IntentPolicy()
-        return base, torch.optim.Adam(base.parameters(), lr=.0003), torch.Generator().manual_seed(3), {}
+        return base, torch.optim.Adam(base.parameters(), lr=.0003), torch.Generator().manual_seed(3), {'update': update}
     monkeypatch.setattr(tb, '_load_base', load)
 
 
@@ -451,3 +451,81 @@ def test_real_accel_plant_full_episode_with_fake_physics(cfg, monkeypatch):
     assert set(result['metrics']) == {'600', '900'}
     assert calls == ['fake_setup', 'closed']
     assert (tb._path(job['path'])/'RESULT.json.gz').is_file()
+
+
+def test_a_uses_real_ppo_without_bank_or_coop_layer(cfg, monkeypatch):
+    fake_load(monkeypatch)
+    runtime = tb.build_arm_runtime(cfg, 'A')['runtime']
+    monkeypatch.setattr(runtime, 'bank_pairs', lambda: pytest.fail('A bank accessed'))
+    controller = controller_class(Controller)(runtime.policy, torch.Generator().manual_seed(9), False)
+    steps = []
+    for t, reward in [(300, -10.), (301, 20.)]:
+        controller.apply(rows(), {'c1': 0., 'c2': 0.}, t)
+        steps.append(dict(controller.events[-1], reward=reward))
+    before = deepcopy(runtime.policy.state_dict())
+    report = runtime.train([dict(arm='A', steps=steps)])
+    assert report['ppo'] and report['bank']['status'] == 'A_no_bank'
+    assert any(not torch.equal(before[k], v) for k, v in runtime.policy.state_dict().items())
+    assert not isinstance(runtime.policy, tb.EpisodePolicy)
+
+
+def test_real_checkpoint_round_trip_no_fake_loader(cfg):
+    from .accel_learner import save
+    base = IntentPolicy()
+    path = tb._path(cfg['run_root'])/'common_u0.pt'
+    save(path, base, torch.optim.Adam(base.parameters(), lr=.0003), torch.Generator().manual_seed(12), 0, 960)
+    cfg['initial_checkpoint'] = str(path)
+    runtime = tb.build_arm_runtime(cfg, 'B')['runtime']
+    runtime.policy.layer.trigger_gain.data.fill_(.12)
+    runtime.save()
+    restored = tb.build_arm_runtime(dict(cfg, update=2), 'B')['runtime']
+    assert restored.policy.layer.trigger_gain.item() == pytest.approx(.12)
+    assert all(torch.equal(v, restored.base.state_dict()[k]) for k, v in base.state_dict().items())
+
+
+def test_trigger_and_dense_kl_rejection_restore_adam_and_weights(cfg, monkeypatch):
+    cfg['layer_config']['kl_budget'] = 1e-12
+    cfg['trigger_lr'] = 1.
+    fake_load(monkeypatch)
+    runtime = tb.build_arm_runtime(cfg, 'B')['runtime']
+    runtime.safety_checked = True
+    p = runtime.policy
+    controller = controller_class(Controller)(p, torch.Generator().manual_seed(2), False)
+    p.observe(rows(), 300)
+    controller.apply(rows(), {'c1': 0., 'c2': 0.}, 300)
+    s = controller.events[-1]['sample']
+    before = deepcopy(p.trigger.state_dict())
+    monkeypatch.setattr(runtime, 'bank_pairs', lambda: ([], {}))
+    report = runtime.train([dict(id='ep1', arm='B', steps=[dict(time_s=300, sample=s, reward=0.)])],
+        credit=[dict(episode_id='ep1', time_s=300, group_advantage=1.)],
+        labels=[dict(episode_id='ep1', time_s=300, sumo_verified=True, targets=[1, 1])])
+    assert report['trigger'][0]['accepted'] is False
+    assert report['dense'][0]['accepted'] is False
+    assert all(torch.equal(v, p.trigger.state_dict()[k]) for k, v in before.items())
+    assert p.trigger_optimizer.state_dict()['state'] == {}
+
+
+def test_trigger_kl_is_joint_against_whole_update_reference(cfg, monkeypatch):
+    fake_load(monkeypatch)
+    runtime = tb.build_arm_runtime(cfg, 'B')['runtime']
+    _, s, _ = sample(cfg)
+    batch = tb._batch(s['track2_trigger'])
+    with torch.no_grad():
+        logits = runtime.policy.trigger.distribution(batch.context, batch.descriptors, batch.mask)[0]
+        reference = [(batch, logits.clone())]
+        runtime.policy.trigger.trigger_head[-1].weight.add_(.2)
+        after = runtime.policy.trigger.distribution(batch.context, batch.descriptors, batch.mask)[0]
+        expected = torch.distributions.kl_divergence(torch.distributions.Categorical(logits=logits),
+            torch.distributions.Categorical(logits=after)).sum().item()
+    assert runtime._trigger_kl(reference) == pytest.approx(expected)
+
+
+def test_bad_base_checkpoint_update_refuses(cfg, monkeypatch):
+    fake_load(monkeypatch)
+    load = tb._load_base
+    def wrong(*a):
+        p, o, g, payload = load(*a)
+        return p, o, g, dict(update=999)
+    monkeypatch.setattr(tb, '_load_base', wrong)
+    with pytest.raises(ValueError, match='checkpoint update mismatch'):
+        tb.build_arm_runtime(cfg, 'B')
