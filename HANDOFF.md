@@ -1,5 +1,17 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+## Terminal reconciliation — 2026-11-04 17:16 +08:00
+- Fresh cpuQ exact-PID/root probes confirm original645235/root absent after owner
+  cleanup; disk5,854,359,552bytes free/89%used. Local3668/44716 absent.
+- Fresh nice19 gpuR checkpoint AND frozen-receipt hashes match final169 bindings.
+  Local design/byte-identical peer handoff/exact schedule/accounting checks PASS.
+- Training169updates/7,728gradient episodes/6,998,400charged remains COMPLETE;
+  local14,400evaluation UNSTARTED, exact cap7,012,800. Supervision is complete.
+- Unchanged Nov3 peer status retains fleet16worlds/480decisions/79,800sim-s COMPLETE;
+  full paired comparison remains incomplete and C1SWITCH2-owned.
+- Evidence: `docs/paper_results/selmappo/RESUME_20261104_1716.json`. Prior CPU/integration
+  PASS retained; new dispatches/simulations/GPU allocations/process signals0.
+
 ## Fresh terminal verification — 2026-11-04 16:49 +08:00
 - Read git history/status, registrations and completion receipts before action.
 - Fresh cpuQ exact-PID/root probes: original645235 and training root absent;
