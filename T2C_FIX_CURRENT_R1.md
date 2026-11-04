@@ -84,3 +84,24 @@ The approval-bound quote is **4,310,220 sim-s INCLUDING smoke**, host cpuV,
 augmentation has one common 143,280 ceiling, below 200,000. The operator contract
 and exact monitor/smoke/run commands are in `RERUN_TRACKS_READY.md`. Qualified
 sibling exports and fresh deployment/owner bindings remain live-launch prerequisites.
+
+## Fresh-session final receipt verification
+
+Recovered HEAD `31b9a11e` already contains the completed five-blocker fix round.
+The tracked worktree was clean. A scoped Git comparison confirms that the
+implementation, tests, operator documentation and smoke record are unchanged from
+tested implementation commit `9f06f049`; the saved smoke receipt matches both
+`T2C_CPU_SMOKE.json` and the readiness record. `git diff --check c4/track-base`
+passed.
+
+CPU-only collection of the same 11 focused test files completed with **162 tests
+collected**, exit 0, in 14.53 s. This was collection only: the existing **216
+distinct passing tests** remain evidence from the completed runs above, with no
+new passing-test claims. An existing staging/integration pytest process was
+observed and left untouched; no completed suite, runtime or dispatch was repeated.
+All prior commits and untracked artifacts were preserved.
+
+`T2C_READY.json` was regenerated with these resume checks. The existing owner
+shortcut in `T2C_ACCEPTED.json` delegates deployment integration to S-LAUNCH while
+retaining the mandatory end-to-end smoke and safety gate. CPU fix readiness is
+unchanged; no live execution occurred in this resume.

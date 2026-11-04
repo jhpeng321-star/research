@@ -1,5 +1,5 @@
 {
-  "schema": "coopmwm.t2c_ready.v5",
+  "schema": "coopmwm.t2c_ready.v6",
   "task": "T2C",
   "fix_round": "current REVIEW_T2C_r1.md at 7b148d87; complete spec through MAIN 02:30",
   "status": "CPU_FIX_READY",
@@ -125,6 +125,29 @@
     "preparation": "quote/budget/wall_clock default to legacy; track2=True selects Track 2; CLI --track2",
     "documentation": "RERUN_TRACKS_READY.md",
     "fix_receipt": "T2C_FIX_CURRENT_R1.md"
+  },
+  "resume_verification": {
+    "date": "2026-11-05",
+    "recovered_head": "31b9a11e",
+    "implementation_commit": "9f06f049",
+    "inputs_read_first": ["git status", "git log", "tracks_spec.md through MAIN 02:30", "REVIEW_T2C_r1.md", "T2C_READY.json", "T2C_ACCEPTED.json", "T2C_FIX_CURRENT_R1.md"],
+    "implementation_matches_tested_commit": true,
+    "implementation_comparison": "git diff --exit-code 9f06f049 HEAD -- tools/coopmwm RERUN_TRACKS_READY.md T2C_CPU_SMOKE.json T2C_FIX_CURRENT_R1.md REVIEW_T2C_r1.md",
+    "tracked_worktree_clean_before_receipt_update": true,
+    "smoke_receipt_matches_ready_and_cpu_smoke_record": true,
+    "test_collection": {
+      "arguments": "-m pytest --collect-only -q --tb=short -p no:cacheprovider tools/coopmwm/test_rerun_cpus_cpu.py tools/coopmwm/test_t2c_compat_cpu.py tools/coopmwm/test_t2c_staging_cpu.py tools/coopmwm/test_t2c_runtime_cpu.py tools/coopmwm/test_t2c_bank_cpu.py tools/coopmwm/test_t2c_monitor_cpu.py tools/coopmwm/test_t2c_backend_cpu.py tools/coopmwm/test_t2c_augmentation_cpu.py tools/coopmwm/test_t2c_multicav_cpu.py tools/coopmwm/test_t2c_redesign_cpu.py tools/coopmwm/test_t2c_lifecycle_cpu.py",
+      "collected": 162,
+      "exit_code": 0,
+      "elapsed_s": 14.53,
+      "executed_tests": 0
+    },
+    "passing_counts_carried_from_completed_runs": true,
+    "completed_suites_repeated": false,
+    "active_process_check": "Observed an existing staging/integration pytest process (PID 33260); left it untouched and did not repeat its suites or launch runtime/dispatch jobs.",
+    "acceptance_receipt": "T2C_ACCEPTED.json delegates remaining deployment integration to S-LAUNCH; end-to-end smoke and safety gate remain mandatory.",
+    "diff_check": "git diff --check c4/track-base passed",
+    "new_sim_s": 0
   },
   "open_code_issues": [],
   "deployment_requirements": [
