@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+## Nov4 ~09:30 UTC+8 — legacy stop sealed; delegated recovery not yet qualified
+- **A7/B3/R3.** B/R mechanics recovery remains delegated. Candidate src5/
+  9ddb8d48 has a non-PASS Linux receipt (262 tests, zero simulation), so the
+  last qualified src4/runtime4a8890cd is retained; no competing launch here.
+- Latest completed B3/R3 composite safety passes with zero collisions/teleports.
+  Both completed five imitation passes; the old R3 first-pass criterion caused
+  the preserved mechanics pause. B-u6 lesson/isolated synergy remains pending.
+- Explicit MAIN09:10 `STOPPED_PERMANENT` receipt sealed; both legacy checkpoint
+  files SHA-verified. The approved V2V archive has certified1,035,251,575bytes;
+  cpuQ~6.35GiB, backfill correctly paused. Fresh current-V2V collection wiring
+  remains blocked and reported. `coopmwm/CONTINUATION_STATUS_20261104_0930.md`.
+
 ## Nov4 ~09:15 UTC+8 — continuation adopted; existing owners preserved
 - Direct live check: **A7/B3/R3**. A continues; the B/R mechanics release and
   statistical pass-1 refinement are with MAIN's delegated launch operator.

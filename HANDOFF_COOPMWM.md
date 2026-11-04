@@ -1,5 +1,21 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 ~09:30 +08 — A7/B3/R3; delegated release qualification pending
+- MAIN09:00operatorownsrelease/statisticalpass1/kl_targeted; MAIN09:10practice
+  alsodelegated. Src5/9ddb8d48LinuxNONPASS262tests/0skip/54.31s/0SIM.
+  Keepqualifiedsrc4/runtime4a8890cd; DO NOTmergetheunfinisheddelegatebranch
+  ordispatchcompetingrelease/wave/monitor. Oldmonitor3LIVE2371588; handover
+  reminder+collectionblock sent_sol/COOPMWM_RECOVERY_0925_OWNER_NOTE.md.
+- MAIN09:10DONEexplicitwarm1/STOPPED_PERMANENT_MAIN0910.json SHA92da212d;
+  B21/R20checkpointfilesindependentlySHAverified/all5oldPIDsabsent/zerosignals.
+  CanonicalREGISTRATIONconfirmationappended; sharedbank/collectretained.
+- V2VarchiveNOW1035251575bytescertified/8successfulbatchproofs/zeroeligible;
+  original1237127+extension2213098LIVE. cpuQ6822576128bytes09:29/~6.35GiB;
+  backfill9GiBguardkept. A-aheadRESULTsarefutureB/Rsame-update safetyrefs.
+- B3/R3latestcompositesafetyPASS/0collisionteleport; fivefullpassesboth;
+  intentlossrisesreportonly. B6lesson/isolatedsynergystillPENDING.
+  See coopmwm/CONTINUATION_STATUS_20261104_0930.md. No newSUMO/inference.
+
 ## CURRENT Nov4 ~09:15 +08 — fresh adoption; MAIN09:00 recovery delegated
 - Full1125-linebriefREADthrough09:10. Direct09:12probeA7/B3/R3; A2049830LIVE.
   B/R08:52mechanicspausekeptuntildelegatedoperatorrelease; 9ddb8d48onitsbranch
