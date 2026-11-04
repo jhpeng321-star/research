@@ -1,5 +1,16 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 15:12 +08 — NEW u12 diagnostic archive-dependency STOP
+- r3B/R/supervisorABSENTat1512; Bfailed150038readingwarm1/jobs/
+  lscollect1_B3_986052/RESULT.json via_ls_snapshotepisode_path. RguardSTOP;
+  A19/monitor4/bothmoversLIVE. Prior1509livenesssnapshotSUPERSEDED.
+- B12checkpointEXISTS/24of24ordinaryjobsCOMPLETE/0fail; B12compositesafetyPASS/
+  0collisionteleport/critical+3.5833CI[-14.75,23.1875]. B_UPDATE_012NOTsealed.
+- B12lessons0of12/ALLsnapshot_error; isolatedfailsbeforebranches. NOToutcome
+  evidence. LikelyMAIN1435warm1/jobsSHA-move. Soltracingmanifest+restoreONLY;
+  MAIN/operatornotifiedforcheckpoint-safeadoption/NEVERrepeatcompletedPPO.
+- ProofU12_CONTINUATION_1793776309256241300+U12_ARCHIVE_DEPENDENCY_STOP_20261104_1512.md.
+
 ## CURRENT Nov4 15:09 +08 — fresh-session A18/B11/R11 adoption
 - Full1134-linebrief/log/status/currentreceipts+canonicalregistrythrough7214READ;
   allpreviousdirtyworkpreserved. Existingr3+monitorandbothmoversretained.
