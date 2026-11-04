@@ -47,6 +47,11 @@
     "coop_only": "9/9 (test_coop_only_cpu.py)",
     "overall": "90/90, 0 failed"
   },
+  "reverification": {
+    "session": "fresh resume after frozen session; no code changes needed, work of 3c63f74d kept as-is",
+    "command": "cpuQ split in 2 chunks (see cpuq_run_command): 55 passed (verify_perseed/bank_boot/bank_perseed/bank_imitation/bank_builder, 395.66s) + 35 passed (bank_amendment/bank_safety/bank_restore_ops/launch_final/coop_only, 609.05s)",
+    "result": "90/90 passed, 0 failed, 2 unrelated pre-existing UserWarnings"
+  },
   "cpuq_run_command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_verify_perseed_cpu.py tools/coopmwm/test_bank_boot_cpu.py tools/coopmwm/test_bank_perseed_cpu.py tools/coopmwm/test_bank_imitation_cpu.py tools/coopmwm/test_bank_builder_cpu.py tools/coopmwm/test_bank_amendment_cpu.py tools/coopmwm/test_bank_safety_cpu.py tools/coopmwm/test_bank_restore_ops_cpu.py tools/coopmwm/test_launch_final_cpu.py tools/coopmwm/test_coop_only_cpu.py   # run from the worktree root E:/agent-work/c4-extra-seeds; CPU only (no SUMO, no GPU, no ssh)",
   "changed_files": [
     "tools/coopmwm/verify_perseed.py (EVAL_SEED_RANGES + extra_seed_salt eval-seed guard, extra_seed_indices; confirm_all8 extra_seeds=0 wiring with build_eval/build_example/run_solo refactor - seeds 1/2 behavior and record bytes unchanged; per_seed_v1 examples appended with seed_index>=3; FIX ROUND: the extras loop sets the SAME not_admitted cooperative fields the seed-1/2 loop sets on rejected extra examples; relabel_reference_mismatch resolves seed>=3 solo roots via seed_kinds; quote_decision extra_seeds/cooperative keys only when n>0; extra_seeds_quote + CLI extra-seeds)",
