@@ -9,7 +9,7 @@ import torch
 
 from tools.coopmwm import rerun_cpus as rc, rerun_tracks_backend as prod
 from tools.coopmwm.test_t2c_runtime_cpu import (Move, Trigger, Layer, Teacher, Credit, Augment,
-                                  Weighting, install_moves)
+                                  Weighting, install_moves, RealisedReward)
 from tools.coopmwm.rerun_tracks_runtime import state_sha
 from tools.coopmwm.v2v_intent import IntentPolicy
 from tools.coopmwm.test_v2v_runtime_cpu import rows
@@ -44,7 +44,7 @@ def production(tmp_path, monkeypatch):
         def build(*, base, components, **kw):
             return dict(merge_features=lambda: Features(), trigger_head=lambda: Trigger(),
                 coop_layer=lambda: Layer(components['trigger_head']), group_credit=lambda: ObservableCredit(),
-                dense_teacher=lambda: Teacher(), plan_augment=lambda: Augment(),
+                dense_teacher=lambda: Teacher(), track2_reward=lambda: RealisedReward(), plan_augment=lambda: Augment(),
                 practice_weighting=lambda: Weighting())[name]()
         return build
     def convert(move, *, observation, cfg):
@@ -80,6 +80,8 @@ def fake_episode(job, *, controller_hook=None, policy_loader=None):
             scoped = prod.observation(sensor, None, t, job['accel_bounds'])['cav_ids']
             assert all(desired[v]['requested_raw'] <= 1.2 for v in scoped if v in desired)
         steps.append(dict(controller.events[-1], reward=1.))
+        if controller_hook and hasattr(controller_hook, 'after_step'):
+            controller_hook.after_step(t, sensor)
         controller.observe_issued(dict(time_s=t, vehicles=[dict(r, issued_acceleration_mps2=.2) for r in sensor]))
     return dict(id=job['id'], world=job['world'], arm=job['arm'], steps=steps, prefixes=prefixes,
         totals=dict(team_delay_vs=900., collisions=0, teleports=0, hard_brake=0))
@@ -102,9 +104,9 @@ def test_native_worker_runs_full_window_components_and_A_native_ppo(production, 
         deterministic=False, accel_bounds=[-3., 2.6])
     out = prod.episode_worker(job, cfg, weights)
     assert len(out['training']['steps']) == 900  # native 300s warmup + 900 controlled seconds
-    assert len(out['rows']) == 15  # real native decision cadence, no extra WM/verification calls
-    assert all(Path(r['snapshot_path']).is_file() for r in out['rows'])
-    assert all(r['window']['end_s'] > r['window']['start_s'] for r in out['rows'])
+    assert len(out['rows']) == 15*sum(r['is_cav'] for r in rows())
+    assert all(r['reward_steps'] > 0 and r['realised_team_reward'] > 0 for r in out['rows'])
+    assert all('snapshot_path' not in r for r in out['rows'])
     assert state_sha(base) == before
     assert any(r['family'] != 'none' for r in out['rows'])
     for row in out['rows']:
@@ -177,7 +179,7 @@ def test_track2_launch3_uses_new_own_budget_without_legacy_superseded_charge(pro
     root = Path(cfg['run_root'])
     assert v2v_launch3.bind_runtime(dict(config=cfg), root=root, source_root=cfg['source_root']) == cfg
     out = v2v_launch3.requote(root, cfg)
-    assert out['charged_to_date_sim_s'] == 0 and out['quote_total_sim_s'] == 4883340
+    assert out['charged_to_date_sim_s'] == 0 and out['quote_total_sim_s'] == rc.quote(track2=True)['total']
     assert out['ceiling_sim_s'] <= 5000000
     rc.charge(root, [dict(id='closed', sim_s=1200)], 'v2v_train', budget=cfg['budget'], track2=True)
     assert v2v_launch3.requote(root, cfg, phase_costs={'v2v_train': 0})['charged_to_date_sim_s'] == 1200

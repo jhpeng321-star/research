@@ -7,6 +7,7 @@ Sibling factories are explicit approval-bound entry points: no synthetic fallbac
 from concurrent.futures import ProcessPoolExecutor
 from copy import deepcopy
 import importlib
+import hashlib
 import json
 import math
 import multiprocessing
@@ -132,20 +133,21 @@ def observation(rows, previous, now, bounds, *, ego=None):
     """
     from .v2v_obs import V2V_RANGE_M
     fields = ('vid', 's_m', 'v_mps', 'lane', 'is_cav', 'length_m')
-    cavs = [r for r in rows if r.get('is_cav')]
-    me = next((r for r in cavs if r['vid'] == ego), cavs[0] if cavs else None)
+    cavs = sorted((r for r in rows if r.get('is_cav')), key=lambda r: r['vid'])
+    me = next((r for r in cavs if r['vid'] == ego), None) if ego is not None else (cavs[0] if cavs else None)
     visible = ([r for r in rows if abs(float(r['s_m'])-float(me['s_m'])) <= V2V_RANGE_M]
                if me is not None else [])
     def project(row):
         return {k: deepcopy(row[k]) for k in fields if k in row}
+    visible = sorted(visible, key=lambda r: r['vid'])
     members = [r['vid'] for r in visible if r.get('is_cav')]
     reports = []
     if previous and previous['time_s'] == now-1:
-        for row in previous['vehicles']:
+        for row in sorted(previous['vehicles'], key=lambda r: r['vid']):
             if row.get('is_cav') and row['vid'] in members and row['vid'] != me['vid']:
                 reports.append(dict(project(row), time_s=now-1,
                     last_command=row.get('issued_acceleration_mps2')))
-    return dict(time_s=int(now), own_sensing=dict(ego_id=me['vid'] if me else None,
+    return dict(time_s=int(now), own_sensing=dict(ego_id=me['vid'] if me else ego,
                 vehicles=[project(r) for r in visible]), v2v_reports=reports,
                 cav_ids=members, bounds={v: [float(bounds[0]), min(1.2, float(bounds[1]))] for v in members})
 
@@ -165,6 +167,7 @@ class EpisodeHook:
         self.rows, self.missing = [], []
         self.rng = random.Random(20261104)
         self.label_rng = random.Random(20261105)
+        self.actors, self.pending, self.reward_rows = {}, {}, {}
 
     def __call__(self, controller, job, prefixes):
         if not self.components:
@@ -172,69 +175,69 @@ class EpisodeHook:
         from . import moves, sumo_verify as sv
         from .rerun_tracks_runtime import dense_label
         original = controller.apply
-        active, onset, ego = None, None, None
         def apply(rows, commands, now):
-            nonlocal active, onset, ego
             desired = original(rows, commands, now)
             if now <= self.takeover or (job.get('practice') and now <= job['practice']['snapshot']['t0']):
                 return desired
-            obs = observation(rows, controller.previous_frame, int(now), job['accel_bounds'], ego=ego)
-            if not obs['cav_ids']:
-                return desired
-            if ego != obs['own_sensing']['ego_id']:
-                active = None
-                ego = obs['own_sensing']['ego_id']
-            features = self.components['merge_features'].encode(obs)
-            self.missing.append(float(features['missing_share']))
-            if active is None or int(now) % self.cfg['trigger_head']['decision_interval_s'] == 0:
-                proposals = moves.candidates(obs, self.rng, self.cfg['dense_teacher']['candidates'])
-                if not proposals or not any(m.family == 'none' for m in proposals):
-                    raise ValueError('REFUSED: production move slate requires none')
-                active = self.components['trigger_head'].choose(obs, features, proposals, self.rng)
-                if active not in proposals or not set(active.members).issubset(obs['cav_ids']):
-                    raise ValueError('REFUSED: production trigger selected nonobservable CAV')
-                onset = int(now)
-                # Capture through the reviewed verification API. Only the exact
-                # executor receives this private snapshot; never WM/trigger inputs.
-                if self.selected is None:  # learning/teacher work only on training episodes
-                    if 'dense_teacher' not in self.components and 'group_credit' not in self.components:
+            cavs = {r['vid'] for r in rows if r.get('is_cav') and r['vid'] in commands}
+            acting = cavs if self.selected is None or isinstance(self.selected, AllMembers) else cavs & set(self.selected)
+            self.actors = {v: state for v, state in self.actors.items() if v in acting}
+            self.pending = {}
+            intents = {}
+            for ego in sorted(acting):
+                obs = observation(rows, controller.previous_frame, int(now), job['accel_bounds'], ego=ego)
+                features = self.components['merge_features'].encode(obs)
+                self.missing.append(float(features['missing_share']))
+                if ego not in self.actors:
+                    salt = int(hashlib.sha256((str(job.get('noise_seed', 20261104))+':'+ego).encode()).hexdigest()[:16], 16)
+                    self.actors[ego] = dict(move=None, onset=None, rng=random.Random(salt))
+                state = self.actors[ego]
+                if state['move'] is None or int(now) % self.cfg['trigger_head']['decision_interval_s'] == 0:
+                    proposals = moves.candidates(obs, state['rng'], self.cfg['dense_teacher']['candidates'])
+                    if not proposals or not any(m.family == 'none' for m in proposals):
+                        raise ValueError('REFUSED: production move slate requires none')
+                    active = self.components['trigger_head'].choose(obs, features, proposals, state['rng'])
+                    if active not in proposals or not set(active.members).issubset(obs['cav_ids']):
+                        raise ValueError('REFUSED: production trigger selected nonobservable CAV')
+                    state.update(move=active, onset=int(now))
+                    if self.selected is None:
+                        self.reward_rows[ego] = len(self.rows)
                         self.rows.append(dict(observation=obs, features=features, move=active,
-                            row_id=job['id']+f'_t{int(now):04}', family=active.family,
+                            ego_id=ego, row_id=job['id']+f'_t{int(now):04}_{ego}', family=active.family,
                             realised_team_reward=0., reward_steps=0))
-                        # No snapshot/WM construction on the MAIN 02:30 path.
-                    else:
-                        self._wm_row(controller, job, prefixes, now, obs, features, active, proposals, sv, dense_label)
-            offsets = moves.offsets(active, int(now)-onset)
-            residual = self.components['coop_layer'].residual(obs, features)
-            if not (set(offsets) | set(residual)).issubset(obs['cav_ids']):
-                raise ValueError('REFUSED: HDV/nonobservable production command')
-            allowed = (set(obs['cav_ids']) if self.selected is None or isinstance(self.selected, AllMembers)
-                       else set(self.selected))
+                offsets = moves.offsets(state['move'], int(now)-state['onset'])
+                residual = self.components['coop_layer'].residual(obs, features)
+                if not (set(offsets) | set(residual)).issubset(obs['cav_ids']):
+                    raise ValueError('REFUSED: HDV/nonobservable production command')
+                for vid in (set(offsets) | set(residual)) & acting & set(obs['cav_ids']):
+                    # Deterministic single ownership: a CAV's own policy context
+                    # wins its actuator; remaining ties use the stable actor ID.
+                    priority = (vid != ego, ego)
+                    if vid not in intents or priority < intents[vid][0]:
+                        intents[vid] = (priority, offsets.get(vid, 0.)+residual.get(vid, 0.), obs['bounds'][vid])
+                self.pending[ego] = obs
             sample = controller.events[-1]['sample']
-            for vid in allowed & set(obs['cav_ids']):
-                if vid not in commands:
-                    continue
+            for vid, (_, correction, bounds) in sorted(intents.items()):
                 raw = desired.get(vid, {}).get('requested_raw', commands[vid])
-                lo, hi = obs['bounds'][vid]
-                raw = min(hi, max(lo, raw+offsets.get(vid, 0.)+residual.get(vid, 0.)))
+                lo, hi = bounds
+                raw = min(hi, max(lo, raw+correction))
                 desired[vid] = dict(requested_raw=raw, acceleration_residual=raw-commands[vid])
                 sample.setdefault('absolute_accels', {})[vid] = raw
             controller.events[-1]['requests'] = deepcopy(desired)
-            self.pending_observation = obs
             return desired
         controller.apply = apply
 
     def after_step(self, now, rows):
-        if not self.components or self.selected is not None or not hasattr(self, 'pending_observation'):
+        if not self.components or self.selected is not None:
             return
         from .rerun_tracks_reward import team_reward
-        obs = self.pending_observation
-        after = observation(rows, None, int(now)+1, (-3., 1.2), ego=obs['own_sensing']['ego_id'])
-        receipt = team_reward(self.components['track2_reward'], obs, after, self.cfg)
-        row = self.rows[-1]
-        row['realised_team_reward'] += receipt['team_reward']
-        row['reward_steps'] += 1
-        row['reward_receipt'] = receipt
+        for ego, obs in self.pending.items():
+            after = observation(rows, None, int(now)+1, (-3., 1.2), ego=ego)
+            receipt = team_reward(self.components['track2_reward'], obs, after, self.cfg)
+            row = self.rows[self.reward_rows[ego]]
+            row['realised_team_reward'] += receipt['team_reward']
+            row['reward_steps'] += 1
+            row['reward_receipt'] = receipt
 
     def _wm_row(self, controller, job, prefixes, now, obs, features, active, proposals, sv, dense_label):
                     sample = controller.events[-1]['sample']
