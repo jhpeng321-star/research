@@ -13,7 +13,8 @@ Integration contract for probe/replicated:
   window_set_sha256). Same registered states/windows are used by B and R.
 * cfg.monitor_backend supplies resolve_states(job) -> [(snapshot, bank_receipt)],
   weights(arm, update) -> (current_weights, common_u0_weights),
-  reserve(jobs, phase) -> accounting receipt, and run_branch(spec, snapshot).
+  reserve(jobs, phase) -> {reserved: True, phase, sim_s, job_ids}, and
+  run_branch(spec, snapshot). The accounting receipt may carry additional fields.
   reserve MUST atomically precharge the whole wave in the experiment's own ledger;
   run_branch MUST use the coordinator worker permit and qualified full-layer policy
   controller. No runner, checkpoint reader, SUMO process or remote is created here.
@@ -133,7 +134,7 @@ def checked_metrics(arm, metrics):
     for key in COUNTS:
         _count(metrics[key], key)
     families, triggers = metrics['families'], metrics['trigger_counts']
-    if (not isinstance(families, (list, tuple)) or not families
+    if (not isinstance(families, list) or not families
             or any(not isinstance(f, str) or not f for f in families)
             or len(set(families)) != len(families) or 'none' not in families
             or not isinstance(triggers, dict) or set(triggers) != set(families)):
@@ -145,6 +146,10 @@ def checked_metrics(arm, metrics):
                            ('dense_checked_labels', 'dense_labels')):
         if metrics[checked] > metrics[total]:
             raise ValueError('REFUSED: inconsistent '+checked)
+    for key, count in (('group_credit_checked', 'credit_checked_rows'),
+                       ('dense_checked_accuracy', 'dense_checked_labels')):
+        if metrics[count] == 0 and metrics[key] is not None:
+            raise ValueError('REFUSED: unmeasured verification subset must be None: '+key)
     for key in METRICS:
         value = metrics[key]
         nullable = (arm == 'A' and key != 'reward') or (
@@ -378,6 +383,49 @@ def _analyse(records, update, settings):
         verdict=('pass' if positive and safety_ok else 'fail') if update == 24 else 'descriptive')
 
 
+def _run_wave(root, backend, jobs, prepared, phase):
+    """Account once before dispatch; retain every returned grade, including failures."""
+    accounting = backend.reserve(deepcopy(jobs), phase)
+    if (not isinstance(accounting, dict) or accounting.get('reserved') is not True
+            or accounting.get('phase') != phase
+            or accounting.get('sim_s') != sum(j['sim_s'] for j in jobs)
+            or accounting.get('job_ids') != [j['id'] for j in jobs]):
+        raise ValueError('REFUSED: accounting receipt does not bind whole diagnostic wave')
+    json.dumps(accounting, allow_nan=False)
+    _write(_path(root, f'track2_diagnostics/accounting/{prepared[0][0]["id"]}.json'),
+           _seal(accounting, 'accounting_sha256'))
+    from .policy_synergy import metrics as synergy_metrics
+    records = []
+    for job, expanded in prepared:
+        entries, safety, reference_safety = [], dict.fromkeys(SAFETY, 0), dict.fromkeys(SAFETY, 0)
+        for group, pairs in expanded:
+            results = []
+            for spec, snapshot in pairs:
+                branch_path = _path(root, f'track2_diagnostics/branches/{spec["verification_id"]}.json')
+                try:
+                    result = backend.run_branch(spec, snapshot)
+                except Exception as exc:
+                    _write(branch_path, _seal(dict(spec=spec, result=dict(status='failed',
+                        error=repr(exc))), 'branch_receipt_sha256'))
+                    raise
+                _write(branch_path, _seal(dict(spec=spec, result=result), 'branch_receipt_sha256'))
+                if result.get('status') != 'graded':
+                    raise ValueError('REFUSED: ungraded diagnostic; never drop/impute/retry')
+                _number(result.get('J_veh_s'), 'diagnostic J')
+                _safety(result.get('safety'))
+                results.append(result)
+            ref = results[-1]
+            measure = synergy_metrics(ref['J_veh_s'], results[:-1], group)
+            _number(measure['policy_cooperation_gain_veh_s'], 'cooperation gain')
+            entries.append(dict(group=group, window=pairs[0][0]['window'], results=results, **measure))
+            for k in SAFETY:
+                safety[k] += sum(r['safety'][k] for r in results)
+                reference_safety[k] += len(results)*ref['safety'][k]
+        records.append(dict(job, metric=fmean(e['policy_cooperation_gain_veh_s'] for e in entries),
+            status='graded', safety=safety, reference_safety=reference_safety, entries=entries))
+    return accounting, records
+
+
 def _diagnostic(cfg, u, kind):
     schedule = (2, 4) if kind == 'probe' else (6, 12, 24)
     if type(u) is not int:
@@ -397,11 +445,16 @@ def _diagnostic(cfg, u, kind):
     if cfg.get('early_probes', {}).get('states', 3) != 3:
         raise ValueError('REFUSED: quick probes require exactly three states')
     bs = dict(BOOTSTRAP, **cfg.get('isolated_test', {}).get('bootstrap', {}))
-    if bs != BOOTSTRAP or cfg.get('isolated_test', {}).get('replicates', 5) != 5:
+    if (bs != BOOTSTRAP or type(bs['reps']) is not int or type(bs['seed']) is not int
+            or type(cfg.get('isolated_test', {}).get('replicates', 5)) is not int
+            or cfg.get('isolated_test', {}).get('replicates', 5) != 5):
         raise ValueError('REFUSED: registered N=5/bootstrap settings differ')
     phase = 'early_probes' if kind == 'probe' else 'isolated_replicated'
     binding = dict(registration_sha256=registration_sha, arms=arms, bootstrap=bs,
-                   criterion_sha256=cfg.get('criterion_sha256'), phase=phase)
+                   criterion_sha256=cfg.get('criterion_sha256'), phase=phase,
+                   phase_cap=cfg['budget']['phases'][phase],
+                   cell_cap=cfg.get('early_probes' if kind == 'probe' else 'isolated_test', {}).get(
+                       'sim_s_per_arm' if kind == 'probe' else 'sim_s_per_replicate'))
     result_path = _path(root, f'track2_diagnostics/{kind}_u{u:03}_{"dry" if dry else "live"}.json')
     claim_path = _path(root, f'track2_diagnostics/claims/{kind}_u{u:03}.json')
     with _LOCK:
@@ -409,10 +462,13 @@ def _diagnostic(cfg, u, kind):
             saved = _read(result_path, 'receipt_sha256')
             if saved['binding'] != binding:
                 raise ValueError('REFUSED: diagnostic registration changed after completion')
+            if saved['status'] == 'failed':
+                raise ValueError('REFUSED: interrupted diagnostic claim; never replay')
             return saved
         if not dry and claim_path.exists():
             raise ValueError('REFUSED: interrupted diagnostic claim; never replay')
-    prepared, jobs = [], []
+    prepared, jobs, manifest = [], [], []
+    common_sha, current_shas = None, {}
     # Resolve and validate ALL cells before reserving the WHOLE wave.
     for arm in arms:
         for row in (rows[:1] if kind == 'probe' else rows):
@@ -428,6 +484,13 @@ def _diagnostic(cfg, u, kind):
                 job.update(diagnostic_identity(states))
             current, common = backend.weights(arm, u)
             expanded = isolated_expansion(job, states, current, common)
+            weight_binding = expanded[0][1][0][1]['policy_synergy']
+            old_sha, new_sha = weight_binding['u3_state_sha256'], weight_binding['new_state_sha256']
+            if ((common_sha is not None and common_sha != old_sha)
+                    or (arm in current_shas and current_shas[arm] != new_sha)
+                    or (arm == 'A' and new_sha != old_sha)):
+                raise ValueError('REFUSED: common u0/current checkpoint changed across diagnostic cells')
+            common_sha, current_shas[arm] = old_sha, new_sha
             cell_sim_s = sum(s['sim_s'] for _, pairs in expanded for s, _ in pairs)
             cap_key = 'sim_s_per_arm' if kind == 'probe' else 'sim_s_per_replicate'
             cap = cfg.get('early_probes' if kind == 'probe' else 'isolated_test', {}).get(cap_key)
@@ -436,43 +499,37 @@ def _diagnostic(cfg, u, kind):
             prepared.append((job, expanded))
             jobs.extend(dict(id=s['verification_id'], sim_s=_count(s['sim_s'], 'branch sim_s'))
                         for _, pairs in expanded for s, _ in pairs)
+            manifest.extend(dict(id=s['verification_id'], sim_s=s['sim_s'], window=s['window'],
+                branch_sha256=s['branch_sha256'], snapshot_sha256=s['snapshot_sha256'])
+                for _, pairs in expanded for s, _ in pairs)
     quoted = sum(j['sim_s'] for j in jobs)
     phase_cap = _count(cfg['budget']['phases'][phase], phase)
     if quoted > phase_cap:
         raise ValueError('REFUSED: full diagnostic wave exceeds phase allowance')
-    quote_sha = digest(jobs)
+    quote_sha = digest(manifest)
     accounting, records = None, []
     if not dry:
         with _LOCK:
-            _write(claim_path, dict(binding=binding, quoted_sim_s=quoted, quote_sha256=quote_sha))
-        accounting = backend.reserve(deepcopy(jobs), phase)
-        # Validate accounting is serializable before any dispatch.
-        json.dumps(accounting, allow_nan=False)
-        from .policy_synergy import metrics as synergy_metrics
-        for job, expanded in prepared:
-            entries, safety, reference_safety = [], dict.fromkeys(SAFETY, 0), dict.fromkeys(SAFETY, 0)
-            for group, pairs in expanded:
-                results = []
-                for spec, snapshot in pairs:
-                    result = backend.run_branch(spec, snapshot)
-                    if result.get('status') != 'graded':
-                        raise ValueError('REFUSED: ungraded diagnostic; never drop/impute/retry')
-                    _number(result.get('J_veh_s'), 'diagnostic J')
-                    _safety(result.get('safety'))
-                    results.append(result)
-                ref = results[-1]
-                measure = synergy_metrics(ref['J_veh_s'], results[:-1], group)
-                entries.append(dict(group=group, window=pairs[0][0]['window'], results=results, **measure))
-                for k in SAFETY:
-                    safety[k] += sum(r['safety'][k] for r in results)
-                    reference_safety[k] += len(results)*ref['safety'][k]
-            records.append(dict(job, metric=fmean(e['policy_cooperation_gain_veh_s'] for e in entries),
-                status='graded', safety=safety, reference_safety=reference_safety, entries=entries))
+            _write(claim_path, dict(binding=binding, quoted_sim_s=quoted, quote_sha256=quote_sha,
+                                   branch_manifest=manifest))
+        try:
+            accounting, records = _run_wave(root, backend, jobs, prepared, phase)
+        except Exception as exc:
+            failed = _seal(dict(schema='coopmwm.track2.isolated_diagnostic.v1', kind=kind, update=u,
+                status='failed', dry=False, binding=binding, quoted_sim_s=quoted,
+                quote_sha256=quote_sha, branch_manifest=manifest, new_sim_s=None,
+                error=repr(exc), evidence='track2_diagnostics/branches; accounting; claims; never replay'),
+                'receipt_sha256')
+            with _LOCK:
+                _write(result_path, failed)
+                _write_status(root)
+            raise
     analysis = _analyse(records, u, bs) if not dry and kind == 'replicated' else {}
     output = _seal(dict(schema='coopmwm.track2.isolated_diagnostic.v1', kind=kind, update=u,
         status='dry_run' if dry else 'complete', dry=dry, binding=binding,
         cells=len(prepared), branches=len(jobs), quoted_sim_s=quoted, quote_sha256=quote_sha,
-        new_sim_s=0 if dry else quoted, accounting=accounting, records=records, **analysis), 'receipt_sha256')
+        branch_manifest=manifest, new_sim_s=0 if dry else quoted,
+        accounting=accounting, records=records, **analysis), 'receipt_sha256')
     with _LOCK:
         _write(result_path, output)
         _write_status(root)

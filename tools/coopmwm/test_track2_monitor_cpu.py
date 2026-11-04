@@ -85,7 +85,8 @@ def test_plain_a_not_applicable_and_sampled_subset(tmp_path):
     dict(dense_accuracy=1.1), dict(dense_checked_labels=5), dict(credit_checked_rows=True),
     dict(trigger_counts=dict(none=2, gap_open=0, ease_off=0)), dict(decisions=0),
     dict(dense_filtered_share=0), dict(safety={'collisions': 0}), dict(safety_stop=None),
-    dict(families=['none', 'none']), dict(group_credit_checked=None, credit_checked_rows=1)])
+    dict(families=['none', 'none']), dict(group_credit_checked=None, credit_checked_rows=1),
+    dict(group_credit_checked=0.), dict(dense_checked_accuracy=0.)])
 def test_reject_invalid_or_incomplete_component_metrics(tmp_path, change):
     with pytest.raises(ValueError):
         monitor.monitor_update(dict(run_root=str(tmp_path)), 'B', 1, metrics(**change))
@@ -278,7 +279,11 @@ def test_interrupted_failed_wave_never_recharged_or_retried(tmp_path):
     with pytest.raises(ValueError, match='never replay'):
         monitor.replicated(cfg, 6)
     assert len(backend.calls) == 2
-    assert not (tmp_path/'track2_diagnostics/replicated_u006_live.json').exists()
+    failed = json.loads((tmp_path/'track2_diagnostics/replicated_u006_live.json').read_text())
+    assert failed['status'] == 'failed' and failed['new_sim_s'] is None
+    branch = json.loads(next((tmp_path/'track2_diagnostics/branches').glob('*.json')).read_text())
+    assert branch['result']['status'] == 'failed'
+    assert 'replicated u6: failed' in (tmp_path/'CLEAN1_STATUS.md').read_text()
 
 
 def test_budget_denial_before_branch_leaves_nonreplayable_claim(tmp_path):
@@ -292,6 +297,30 @@ def test_budget_denial_before_branch_leaves_nonreplayable_claim(tmp_path):
     with pytest.raises(ValueError, match='never replay'):
         monitor.probe(cfg, 2)
     assert not backend.calls
+
+
+def test_incomplete_accounting_receipt_cannot_dispatch(tmp_path):
+    cfg, backend = diagnostic_config(tmp_path)
+    cfg['monitor_dry_run'] = False
+    backend.reserve = lambda *a: dict(reserved=False)
+    with pytest.raises(ValueError, match='accounting receipt'):
+        monitor.probe(cfg, 2)
+    assert not backend.calls
+
+
+def test_branch_exception_retained_and_never_replayed(tmp_path):
+    cfg, backend = diagnostic_config(tmp_path)
+    cfg['monitor_dry_run'] = False
+    def fail(*a):
+        raise RuntimeError('fake plant interrupted')
+    backend.run_branch = fail
+    with pytest.raises(RuntimeError, match='interrupted'):
+        monitor.probe(cfg, 2)
+    evidence = json.loads(next((tmp_path/'track2_diagnostics/branches').glob('*.json')).read_text())
+    assert evidence['result']['status'] == 'failed'
+    assert 'fake plant interrupted' in evidence['result']['error']
+    with pytest.raises(ValueError, match='never replay'):
+        monitor.probe(cfg, 2)
 
 
 @pytest.mark.parametrize('mutation', ['phase_cap', 'cell_cap', 'state', 'window',
@@ -341,6 +370,21 @@ def test_registered_role_and_pairing_validated_at_snapshot_boundary(tmp_path):
     job.update(monitor.diagnostic_identity(states))
     with pytest.raises(ValueError, match='TRAIN'):
         monitor.isolated_expansion(job, states, backend.new, backend.old)
+
+
+@pytest.mark.parametrize('different_common', [True, False])
+def test_checkpoint_must_stay_fixed_and_common_across_cells(tmp_path, different_common):
+    cfg, backend = diagnostic_config(tmp_path)
+    calls = []
+    def changing_weights(arm, u):
+        calls.append(arm)
+        if len(calls) == 2:
+            return (backend.new, backend.new) if different_common else (backend.old, backend.old)
+        return backend.new, backend.old
+    backend.weights = changing_weights
+    with pytest.raises(ValueError, match='checkpoint changed'):
+        monitor.replicated(cfg, 6)
+    assert not backend.calls
 
 
 def test_bootstrap_pairs_worlds_and_not_individual_states():
