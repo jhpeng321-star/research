@@ -6,7 +6,8 @@ bank, imitation_step_mode kl_targeted, practice_starts 0.25/cap 2, imitation_tar
 'effective'), A the same runtime minus bank/practice (as in coop3) - so the B/R safety
 composites read A's results from the SAME new root and no remote A read ever happens.
 
-Nothing here dispatches, reserves, charges or runs SUMO. The new root owns CHARGES.jsonl +
+Preparation commands never dispatch or run SUMO. The explicit run_tracks/smoke boundary
+consumes qualified injected CPU integrations (or test-only CPU plants). The new root owns CHARGES.jsonl +
 ACCOUNTING.claim (lock) + AUTHORITY.md; it is created only if absent (refused otherwise), and
 every charge is refused unless it lands in THIS root's own ledger (never a symlink or another
 root's ledger). A read-only staging manifest lists every bank/tape/snapshot/MAPPO-checkpoint
@@ -294,10 +295,9 @@ def bind_ledger(root, cfg):
     import types
     from tools.coopnative import storage
     from . import accel_storage
-    from .accel_protocol import SUPERSEDED_CHARGE
     b = cfg['budget']
     accel_storage._reserve = types.FunctionType(storage.reserve.__code__,
-        dict(storage.reserve.__globals__, CAP=b['total']-SUPERSEDED_CHARGE, CAPS=b['phases']))
+        dict(storage.reserve.__globals__, CAP=b['total'], CAPS=b['phases']))
     return dict(root=str(root), total=b['total'], phases=dict(b['phases']),
                 rule='own single ledger of this root only; no other root\'s ledger accepted')
 
@@ -403,8 +403,8 @@ def runtime_config(base, *, root, reference_root, source_root, common_checkpoint
     'effective'), the 24-update cap, and the standalone bindings: accounting_root = run_root =
     the NEW root (its own ledger), legacy_root = the staged legacy reference dir (only the
     fresh legacy-u3 isolated reference checkpoints live there), control arm A in the SAME new
-    root (no remote A reads), own budget. Track 2/T2C essentials-first: B/R trigger + frozen
-    layer/group credit/observable merge features; deferred teachers and T2G/H/reward slots.
+    root (no remote A reads), own budget. Track 2 clean profile: B/R trigger, frozen
+    layer, credit, features, teaching, augmentation and weighting; extra shaper OFF.
     Diagnostic scheduling supersedes the v2v_runner default. The 1200 s episode horizon,
     intent horizon and caller's planner/search horizons are preserved (no speedup by truncation).
     This config requires qualified Track 2 adapters before any live run."""
@@ -1215,11 +1215,21 @@ def preflight_dry(prep_dir, *, stage_dir, budget_request=BUDGET_REQUEST, approva
                 manifest_sha256=man['manifest_sha256'], staged=staged)
 
 
+def run_tracks(cfg, registration, backend, *, smoke=False, legacy_run=None):
+    """Explicit opt-in call site. OFF calls the previous runner directly."""
+    if not cfg.get('track2'):
+        if legacy_run is None:
+            raise ValueError('legacy runtime callable required')
+        return legacy_run(cfg)
+    from .rerun_tracks_runtime import run
+    return run(cfg, registration, backend, smoke=smoke)
+
+
 if __name__ == '__main__':
     import argparse
     p = argparse.ArgumentParser()
     p.add_argument('cmd', choices=('quote', 'budget', 'wall_clock', 'criterion', 'isolated_plan',
-                                  'isolated_eval', 'manifest', 'preflight'))
+                                  'isolated_eval', 'manifest', 'preflight', 'smoke', 'monitor'))
     p.add_argument('--prep', default='.')
     p.add_argument('--stage', default='.')
     p.add_argument('--mirror', default=None, help='local mirror of /home/ubuntu')
@@ -1228,6 +1238,9 @@ if __name__ == '__main__':
     p.add_argument('--out', default=None)
     p.add_argument('--registration', default=ISOLATED_REGISTRATION_FILE)
     p.add_argument('--records', default=None)
+    p.add_argument('--config', default=CONFIG_FILE)
+    p.add_argument('--adapter', default=None, help='qualified backend factory module:callable (explicit)')
+    p.add_argument('--root', default=None, help='monitor run root')
     a = p.parse_args()
     if a.cmd == 'quote':
         print(json.dumps(dict(quote=quote(), wall_clock=wall_clock(), budget=budget())))
@@ -1254,3 +1267,17 @@ if __name__ == '__main__':
                               command=staging_files_command(m))))
     elif a.cmd == 'preflight':
         print(json.dumps(preflight_dry(a.prep, stage_dir=a.stage)))
+    elif a.cmd == 'monitor':
+        from .rerun_tracks_monitor import read_monitor
+        if not a.root:
+            p.error('monitor requires --root')
+        print(json.dumps(read_monitor(a.root), indent=1, sort_keys=True))
+    elif a.cmd == 'smoke':
+        import importlib
+        if not a.adapter or ':' not in a.adapter:
+            p.error('smoke requires explicit --adapter module:factory')
+        cfg = json.loads(Path(guard_path(Path(a.config).resolve())).read_text(encoding='utf-8'))
+        reg = json.loads(Path(guard_path(Path(a.registration).resolve())).read_text(encoding='utf-8'))
+        module, factory = a.adapter.split(':', 1)
+        backend = getattr(importlib.import_module(module), factory)()
+        print(json.dumps(run_tracks(cfg, reg, backend, smoke=True), indent=1, sort_keys=True))
