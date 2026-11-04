@@ -1,0 +1,29 @@
+{
+  "status": "CPU_PLANT_SMOKE_PASS",
+  "synthetic": true,
+  "target_host": "cpuS",
+  "updates": 1,
+  "episodes": 6,
+  "isolated_dry_cells": 96,
+  "new_sim_s": 0,
+  "virtual_sim_s": 31200,
+  "worker_peak": 2,
+  "monitors": [
+    "aebf90978a1a4f9d86e51037760858dca1b59b25633f1722de8cfaaac941c080",
+    "6ec6e7546e11cb1304ddffc0339865fb22db9be081f6265e0ad358e7b9f52b0a",
+    "400fd6aab58cfe4b11f9dbe6b8ea15c157a75d61d3925a1d1a8c3677e349292e"
+  ],
+  "spend": {
+    "augment_verify": 0,
+    "early_probes": 0,
+    "gate_bank_verification_ext": 0,
+    "group_credit_verify": 0,
+    "isolated_replicated": 0,
+    "teacher_verify": 0,
+    "track2_smoke": 31200,
+    "v2v_final": 0,
+    "v2v_interim": 0,
+    "v2v_lessons": 0,
+    "v2v_train": 0
+  }
+}
