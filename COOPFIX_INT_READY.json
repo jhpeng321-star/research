@@ -126,5 +126,11 @@
     "forbidden_paths": "no sealed/, holdout/heldout/cal_split/chunk5/j4b/inc1 path opened; no hetdata_truth or vType/driver/vehicle_params truth file read",
     "no_hand_set_thresholds": "no behavioural thresholds added; the only numeric criteria are the inherited kl_limit 0.045, the registered bootstrap rules (10000 resamples, 5th percentile / 2.5-97.5 CI, seed 20261101) and the structural v2v non-zero-column check",
     "defaults": "v2v flag default off untouched; bank_filter/pair_flags/imitation_trust default off; every off-path byte-identity pinned by tests (branch suites + test_coopfix_int_e2e_cpu.py::test_all_options_off_is_byte_identical_to_the_registered_behaviour)"
-  }
+  },
+ "resume_session_20261104_l": {
+  "action": "twelfth resume (fresh session): verification-only, no rework, no code changes; working tree clean at HEAD efc50d39; all three upstream branch tips UNCHANGED and fully merged (c4/imit-fullpass 7da322c3, c4/bank-stat-filter 4068b788, c4/coop-gate 4a8ec3af are ancestors of HEAD); c4/coopnative still frozen at 421ab5e9; all three committed root receipts hash-verified identical to their branch copies via git rev-parse blob SHAs (COOPGATE 2ef77b49, BANKFILT ba7c6661, IMITFIX d67c5cf9)",
+  "runner_note": "gate + 64-suite re-run with C:/Users/jpeng/AppData/Local/Programs/Python/Python313/python.exe (torch 2.15.0+cpu) because the default C:/Python314 python has no torch (collection error); prior runs used Miniconda3 python (torch 2.14.1+cpu)",
+  "reverified_on_final_tree": "gate CLI status live: bank_filter + imitation_trust both active:\"ready\", ready:true via committed-root-receipt fallback; tools/coopmwm/test_coopfix_gate_cpu.py 16 passed (49s, --basetemp E:/Temp/opencode/g12_gate3); 64-suite (test_bank_imitation_cpu + test_bank_filter_cpu + test_replay_bank_confirm_cpu + test_replay_bank_v2v_cpu + test_replay_bank_lesson_cpu + test_exact_grade_cpu) 64 passed (103s, basetemp E:/Temp/opencode/g12_s64); e2e NOT re-run - feature tree byte-identical to resume-8's 82-green run (all commits since receipt-only), per the no-redo rule",
+  "ready_state": "unchanged, ready:true; no new upstream READY work; the root E:/agent-work/<sibling> READY files remain absent, committed branch copies are authoritative"
+ }
 }
