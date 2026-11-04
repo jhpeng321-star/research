@@ -700,6 +700,73 @@ def _bootstrap(treat, comp, n_boot, boot_seed, alpha):
     return raw
 
 
+def prepare_track2(*, registration, checkpoints, contract):
+    """Three-arm adapter to the same paired TRAIN-world/full-window harness.
+
+    Track 2 has learned policies instead of a WM selector. This explicit adapter
+    preserves its own approval-bound panel and reuses this module's paired
+    bootstrap, completeness convention and physical-vector comparisons.
+    """
+    from copy import deepcopy
+    from .rerun_cpus import FINAL_EVALUATION, final_world_registration
+    interim = dict(FINAL_EVALUATION, update=8, phase='v2v_interim')
+    if contract not in (FINAL_EVALUATION, interim):
+        raise ValueError('Track 2 final evaluation contract differs')
+    worlds = final_world_registration(dict(final_evaluation=registration))
+    if worlds != registration or set(checkpoints) != set(contract['arms']):
+        raise ValueError('unbound/incomplete Track 2 paired world registration')
+    out = []
+    for arm in contract['arms']:
+        cp = checkpoints[arm]
+        guard_path(cp['path'])
+        if (cp.get('update') != contract['update'] or cp.get('components') !=
+                contract['checkpoint_components'][arm] or not re.fullmatch('[0-9a-f]{64}', cp.get('file_sha256', ''))):
+            raise ValueError('complete immutable final policy checkpoint required')
+        for row in worlds['worlds']:
+            out.append((dict(branch='shared_final', arm=arm, world_id=row['world_id'],
+                world=deepcopy(row['world']), checkpoint=deepcopy(cp), sim_s=contract['horizon_s'],
+                window=dict(start_s=0, end_s=contract['horizon_s']),
+                final_worlds_sha256=worlds['final_worlds_sha256']), {}))
+    return out
+
+
+def analyse_track2(*, registration, checkpoints, records, contract):
+    """Refuse incomplete/unpaired results; use native whole-world paired CIs."""
+    specs = prepare_track2(registration=registration, checkpoints=checkpoints, contract=contract)
+    expected = {(s['arm'], s['world_id']): s for s, _ in specs}
+    have = {}
+    for row in records:
+        key = (row.get('arm'), row.get('world_id'))
+        if key not in expected or key in have or row.get('status') != 'graded':
+            raise ValueError('incomplete/duplicate/outside Track 2 paired result')
+        spec = expected[key]
+        if any(row.get(k) != spec[k] for k in ('world', 'checkpoint', 'window', 'final_worlds_sha256')):
+            raise ValueError('Track 2 result world/checkpoint/window binding differs')
+        if not isinstance(row.get('J_veh_s'), (int, float)) or not math.isfinite(row['J_veh_s']):
+            raise ValueError('finite realised source-inclusive delay required')
+        safety = row.get('safety', {})
+        if set(safety) != set(contract['safety_counters']) or any(
+                type(v) is not int or v < 0 for v in safety.values()):
+            raise ValueError('all realised physical-vector counters required')
+        have[key] = row
+    if set(have) != set(expected):
+        raise ValueError('every registered world x arm must be graded exactly once')
+    bootstrap, paired = contract['bootstrap'], {}
+    for comparison in contract['comparisons']:
+        a, b = comparison.split('-')
+        deltas = [have[a, w['world_id']]['J_veh_s']-have[b, w['world_id']]['J_veh_s']
+                  for w in registration['worlds']]
+        ci = _paired_ci(deltas, bootstrap['reps'], bootstrap['seed'], 1-bootstrap['level'])
+        paired[comparison] = dict(n=ci['n_worlds'], mean=ci['mean_delta_vs'],
+                                  low=ci['ci95'][0], high=ci['ci95'][1], native=ci)
+    safety = {a: {k: sum(have[a, w['world_id']]['safety'][k] for w in registration['worlds'])
+                  for k in contract['safety_counters']} for a in contract['arms']}
+    return dict(status='graded', harness='tools.coopmwm.planner_eval',
+        bootstrap=bootstrap, final_worlds_sha256=registration['final_worlds_sha256'],
+        checkpoints=checkpoints, paired_ci=paired, safety=safety,
+        complete=True, physical_vector_rule='all counters retained; B-A and R-A descriptive')
+
+
 def verify_analysis(record):
     if record.get('schema') != ANALYSIS_SCHEMA or record.get('experiment') != EXPERIMENT:
         raise ValueError('REFUSED: not a planner_eval analysis')

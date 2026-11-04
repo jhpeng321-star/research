@@ -19,7 +19,8 @@ def verify(backend, payload, cfg, execute):
     snapshot = torch.load(path, map_location='cpu', weights_only=False)
     if snapshot['episode']['role'] != 'train' or snapshot['episode']['world']['seed'] != payload['seed']:
         raise ValueError('REFUSED: augmentation requires source-bound TRAIN state')
-    root = Path(cfg['run_root'])/'augmentation'/payload['id']
+    root = (Path(cfg['run_root']) if cfg.get('augmentation_layout') == 'own_bank' else
+            Path(cfg['run_root'])/'augmentation'/payload['id'])
     bank = rb.bank_root(root, payload['arm'])
     plan = payload['plan']
     # Keep the complete registered original window, even when native default tails
@@ -105,7 +106,7 @@ def materialise(backend, payload, cfg, record, snapshot, root):
         weight = xg.weight(ex['advantage_veh_s'], temperature['temperature_veh_s'], xg.WEIGHT_CLIP)
         entry = dict(start_s=snapshot['t0'], duration_s=plan['duration_s'], plan_id=plan['id'], weight=weight)
         pairs = xg.imitation_pairs(tape, entry)
-        pairs, _, limits = attach_limits(pairs, tape, trace, entry)
+        pairs, _, limits = attach_limits(pairs, tape, trace, entry, cap=1.2)
         s = settings(cfg)
         pairs = attach_bank_targets(pairs, tape, entry, s['horizon'], s['bounds'], limits=limits)
         pairs, _ = bank_v2v.attach_pairs(pairs, trace, snapshot['t0'], None,
@@ -129,10 +130,11 @@ def materialise(backend, payload, cfg, record, snapshot, root):
         snap = rb.replicate(snapshot, record['verification_id']) if ex['seed_index'] == 2 else snapshot
         bank = rb.bank_root(root, payload['arm'])
         (bank/'snapshots').mkdir(parents=True, exist_ok=True)
-        original_path = bank/'snapshots'/'source.pt'
+        state_id = payload['id']+'_source' if cfg.get('augmentation_layout') == 'own_bank' else 'source'
+        original_path = bank/'snapshots'/(state_id+'.pt')
         if not original_path.exists():
             torch.save(snapshot, original_path)
-        own_path = bank/'snapshots'/f'seed{ex["seed_index"]}.pt'
+        own_path = bank/'snapshots'/f'{state_id}_seed{ex["seed_index"]}.pt'
         torch.save(snap, own_path)
         effective_sha = _seal(dict(sample=effective), 'sha256')['sha256']
         weight_sha = _seal(dict(weight=weight, example=ex), 'sha256')['sha256']
@@ -141,7 +143,7 @@ def materialise(backend, payload, cfg, record, snapshot, root):
             snapshot_identity_sha256=snapshot_sha(snap),
             snapshot_path=str(own_path), snapshot_file_sha256=rc.sha(own_path), practice_root=str(root),
             practice_row=dict(verification_id=record['verification_id'], example_id=ex['example_id'],
-                seed_index=ex['seed_index'], salt=record['verification_id'], state_id='source', fallback=False),
+                seed_index=ex['seed_index'], salt=record['verification_id'], state_id=state_id, fallback=False),
             provenance=dict(verification_sha256=record['confirmation_sha256'],
                             weight_sha256=weight_sha, effective_sha256=effective_sha))
         e['augmentation_admission'] = dict(confirmation=record, verification_receipt=verification,

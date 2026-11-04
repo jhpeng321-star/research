@@ -1,0 +1,46 @@
+{
+  "schema": "coopmwm.clean1.integration.v1",
+  "status": "CPU_INTEGRATED_LIVE_QUALIFICATION_PENDING",
+  "branch": "c4/rerun-launch",
+  "base": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
+  "accepted_branches": ["c4/moves", "c4/trigger-policy", "c4/coop-layer", "c4/group-credit", "c4/merge-features", "c4/practice-weight", "c4/plan-augment", "c4/track2-backend", "c4/track2-reward", "c4/track2-monitor", "c4/staging-closure", "c4/rerun-tracks", "c4/planner-eval"],
+  "excluded_branches": ["c4/dense-teacher", "c4/planner-online"],
+  "acceptance": "P1 REVIEW_P1_r2 PASS; P2/P3/P4 accepted; T2C owner 03:33 handoff, finished here",
+  "tests": {
+    "interpreter": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "command": "-m pytest -q (all accepted component suites, every test_t2c_*cpu suite, test_launch_final_cpu, test_effimit_cpu, every test_v2v_*cpu, test_planner_eval_cpu, test_launch_integration_cpu)",
+    "passed": 1090,
+    "failed": 0,
+    "skipped": 1,
+    "subtests_passed": 14,
+    "seconds": 430.38,
+    "skip": "Windows symlink privilege; hard-link checks passed; exact skipped case scheduled on cpuV before physics"
+  },
+  "production": {
+    "host": "cpuV",
+    "backend": "track2_backend.build_arm_runtime",
+    "reward": "track2_reward.reward_update from real post-action local/V2V sensor packets",
+    "monitor": "track2_monitor.monitor_update/probe/replicated; one diagnostic owner",
+    "staging": "staging_closure.closure over real reader-selected snapshot dependencies plus complete actual-read SHA inventory",
+    "dense_teacher": false,
+    "wm_group_credit": false,
+    "bank": "own per_seed_v1 cooperative-only effective/Tobit full passes plus verified-plan state-conditioned trigger CE",
+    "augmentation": "accepted T2G perturbation operator; only native full-window SUMO all8 admissions enter bank/practice",
+    "initial_identity": "explicit immutable B/R u0 sidecars reused by gate, smoke and training",
+    "shared_worker_ceiling": "3 arm owners x 8 episode workers + 16 diagnostic workers = 40"
+  },
+  "budget": {
+    "base_quote_including_smoke_sim_s": 4310220,
+    "prior_parity_sim_s": 960,
+    "smoke_contingency_sim_s": 10400,
+    "environment_only_gate_rerun_reserve_sim_s": 35820,
+    "complete_upper_bound_sim_s": 4357400,
+    "owner_cap_sim_s": 5000000,
+    "total_smoke_cap_sim_s": 20000,
+    "no_shortened_horizons": true
+  },
+  "new_sim_s": 0,
+  "smoke_pass": false,
+  "safety_gate_pass": false,
+  "training_launched": false
+}

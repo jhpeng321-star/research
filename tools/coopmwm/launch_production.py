@@ -22,6 +22,7 @@ OPTIMIZATION = dict(layer_config=dict(hidden_dim=64, learning_rate=.0003,
     trigger_partner_slots=4, decision_interval_s=60, trigger_lr=.0003,
     trigger_ppo=dict(clip_ratio=.2, value_weight=.5, entropy_weight=.01,
                      max_grad_norm=.5), layer_epochs=4)
+CONTINGENCY = dict(smoke_sim_s=10400, environment_gate_rerun_sim_s=35820)
 
 
 def backend_config(cfg, *, root=None, smoke=False):
@@ -37,6 +38,13 @@ def backend_config(cfg, *, root=None, smoke=False):
         track2_reward={k: cfg['track2_reward'][k] for k in ('weight', 'provenance')},
         prior_charged_sim_s=960)
     out['budget'] = dict(total=rc.TOTAL_CAP_SIM_S, phases=deepcopy(cfg['budget']['phases']))
+    if cfg.get('launch_contingency') is not None:
+        if cfg['launch_contingency'] != CONTINGENCY:
+            raise ValueError('unregistered smoke/gate contingency')
+        out['budget']['phases']['track2_smoke'] += CONTINGENCY['smoke_sim_s']
+        out['budget']['phases']['gate_bank_verification_ext'] += CONTINGENCY['environment_gate_rerun_sim_s']
+    if sum(out['budget']['phases'].values())+960 > rc.TOTAL_CAP_SIM_S:
+        raise ValueError('complete production allocations plus prior parity exceed owner cap')
     if cfg['budget']['total']+960 > out['budget']['total']:
         raise ValueError('production quote plus prior parity exceeds owner cap')
     out['run_root'] = str(root or cfg['run_root'])

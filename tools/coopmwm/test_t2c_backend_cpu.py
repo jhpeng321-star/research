@@ -325,7 +325,10 @@ def test_augmented_targets_and_weights_come_from_new_native_execution(production
         assert entry['weight'] == pytest.approx(xg.weight(.4, 10., xg.WEIGHT_CLIP))
         return [(deepcopy(sample), entry['weight'])]
     monkeypatch.setattr(xg, 'imitation_pairs', pairs)
-    monkeypatch.setattr(eff, 'attach_limits', lambda pairs, *a: (pairs, {}, {}))
+    def limits(pairs, *args, cap):
+        assert cap == 1.2  # explicit registered cap; no population-truth lookup
+        return pairs, {}, {}
+    monkeypatch.setattr(eff, 'attach_limits', limits)
     monkeypatch.setattr(vi, 'attach_bank_targets', lambda pairs, *a, **kw: pairs)
     monkeypatch.setattr(vi, 'refresh_bank_intents', lambda *a: None)
     monkeypatch.setattr(bank_v2v, 'attach_pairs', lambda pairs, *a, **kw: (pairs, {}))

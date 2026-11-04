@@ -40,7 +40,7 @@ def verify_child(root, arm, row, snapshot, prelaunch):
     xg.verify_sealed(receipt, 'receipt_sha256')
     if (receipt.get('status') != 'accepted'
             or receipt.get('receipt_sha256') != evidence.get('receipt_sha256')
-            or receipt.get('verification_id') != row['verification_id']
+            or receipt.get('verification_id') != evidence.get('verification_id', row['verification_id'])
             or receipt.get('snapshot_sha256') != sv.snapshot_sha(snapshot)
             or receipt.get('episode', {}).get('arm') != arm
             or receipt['episode'].get('world') != snapshot['episode']['world']
@@ -152,7 +152,8 @@ def augmented_examples(root, arm, parents):
         if (parent is None or item.get('parent_example_id') in child_ids
                 or link is None or item.get('wm_cooperative') is not True
                 or type(item.get('seed_index')) is not int
-                or item['seed_index'] != parent['seed_index']
+                or (item['seed_index'] != parent['seed_index'] and
+                    not _native_seed_mapping(root, arm, item, parent, link))
                 or not isinstance(state, str) or not re.fullmatch(r'[A-Za-z0-9_-]+', state)
                 or link.get('state_id') != state
                 or not isinstance(ident, str) or not ident or ident in seen_ids
@@ -174,3 +175,21 @@ def augmented_examples(root, arm, parents):
             seen_states.add(key)
             out.append(row)
     return out, record['practice_augmented_sha256']
+
+
+def _native_seed_mapping(root, arm, child, parent, link):
+    """A new all8 decision numbers its own CRNs from one, independently of parent.
+
+    An explicit native decision link and actual parent snapshot must bind this
+    renumbering; a changed seed_index by itself remains invalid. The existing
+    verify_child check still validates the child's actual snapshot, own-seed
+    receipt, full tape, confirmation, plan and complete branch charges.
+    """
+    from . import practice_starts as ps, sumo_verify as sv
+    mapping = (link or {}).get('augmentation', {})
+    sha = child.get('source_snapshot_sha256')
+    if (child.get('seed_index') not in (1, 2) or not sha or
+            mapping.get('parent_example_id') != parent['example_id'] or
+            mapping.get('source_snapshot_sha256') != sha):
+        return False
+    return sv.snapshot_sha(ps.load_snapshot(root, arm, parent)) == sha

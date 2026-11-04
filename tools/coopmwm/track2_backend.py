@@ -409,7 +409,17 @@ def record_outcomes(policy, event, post_rows):
     from .track2_reward import _sensor_packet, neighbourhood_reward
     now = event['time_s'] + CONTROL_DT_S
     packets, neighbourhoods = {}, {}
+    present = {r['vid'] for r in post_rows}
     for vid in event['sample']['context']['members']:
+        if vid not in present:
+            # The public SUMO observation transition ended this agent lifetime.
+            # This is a measured terminal occupancy state, not a fabricated
+            # speed or a pre-action-frame reward fallback.
+            packets[vid] = dict(terminal_exit=dict(cav_id=vid, time_s=now,
+                before_time_s=event['time_s'], present_before=True, present_after=False,
+                source='sumo_observation_transition'))
+            neighbourhoods[vid] = []
+            continue
         own = _sensor_packet(post_rows, vid, now)
         partners = [p for p in policy.visible.get(vid, ()) if p != vid]
         packet = dict(own=own, partner_reports={p: policy.reports[p] for p in partners
@@ -513,7 +523,7 @@ class ArmRuntime:
         if payload.get('update') != update-1:
             raise ValueError('base checkpoint update mismatch')
         self.policy = self.base if arm == 'A' else EpisodePolicy(self.base, cfg, arm)
-        if arm != 'A' and update > 1:
+        if arm != 'A' and (update > 1 or cfg.get('initial_sidecars_required')):
             path = _path(Path(cfg['run_root'])/f'{arm}_track2_{update-1:03}.pt')
             state = torch.load(path, map_location='cpu', weights_only=False)
             if state.get('arm') != arm or state.get('update') != update-1:

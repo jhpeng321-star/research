@@ -184,6 +184,7 @@ def training_episodes(cfg, arm, episodes):
     have = settings(cfg)
     transformed = []
     totals = dict(steps=0, cav_outcomes=0, empty_cav_steps=0,
+                  terminal_exits=0,
                   empty_neighbourhoods=0, neighbour_outcomes=0,
                   partner_reports=0, unavailable_partner_reports=0,
                   own_reward_sum=0.0, neighbourhood_reward_sum=0.0,
@@ -214,6 +215,18 @@ def training_episodes(cfg, arm, episodes):
             for vid in members:
                 if packets is not None:
                     packet = packets[vid]
+                    if 'terminal_exit' in packet:
+                        expected = dict(cav_id=vid, time_s=now,
+                            before_time_s=step['time_s'], present_before=True, present_after=False,
+                            source='sumo_observation_transition')
+                        if set(packet) != {'terminal_exit'} or packet['terminal_exit'] != expected:
+                            raise ValueError('invalid measured terminal SUMO observation transition')
+                        components[vid] = dict(own_reward=0., neighbourhood_reward=0.,
+                            team_addition=0., reward=0., neighbour_ids=[], neighbour_rewards={},
+                            neighbour_timestamps_s={}, neighbours=0, empty_neighbourhood=True,
+                            partner_reports=0, unavailable_partner_reports=0, terminal_exit=True)
+                        totals['terminal_exits'] += 1
+                        continue
                     own = _decode_packet(packet["own"])
                     reports = {p: _decode_packet(r) for p, r in packet.get("partner_reports", {}).items()}
                     partners = packet.get("partner_ids", ())
