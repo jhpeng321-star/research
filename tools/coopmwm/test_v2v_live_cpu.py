@@ -781,3 +781,27 @@ def test_learning_pause_release_is_sha_bound_and_resume_prepare_accepts_only_rel
         diagnosis_sha256='0'*64)))
     (root2/'AUTHORITY.md').write_text('amendmentSHA'+amendment)
     with pytest.raises(HealthPause):assert_running(root2,'B')
+
+
+def test_adopt_quote_subtracts_already_charged_diagnostics(tmp_path,monkeypatch,deployed):
+    """After the u6 lessons/isolated synergy charged part of their registered phases, the adopt
+    quote is the registered remainder (a full re-quote would always refuse); train unchanged."""
+    from unittest.mock import patch
+    from . import replay_start
+    from . import v2v_launch3 as launch
+    d=deployed;root,rows=started_root(tmp_path)
+    cfg=dict(v2v_intent=True,gpu_deadline=10**12,legacy_root=str(tmp_path/'legacy'),job_namespace=NS)
+    watch_authority(tmp_path,root,binding_path=d.path,
+        binding_sha256=d.kwargs['binding_sha256'],control=d.control,mover=d.mover)
+    diag=[dict(id='v2v_isolated_u006_B_x',phase='v2v_isolated',sim_s=32610),
+          dict(id='v2v1_lesson_u006_x',phase='v2v_lessons',sim_s=8760)]
+    write_charges(root,rows+diag)
+    costs,_=live.resume_phase_costs(root,cfg,('A',),('B','R'))
+    assert costs['v2v_isolated']==launch.V2V_PHASES['v2v_isolated']-32610
+    assert costs['v2v_lessons']==launch.V2V_PHASES['v2v_lessons']-8760
+    assert costs['v2v_train']==1814400 and costs['v2v_final']==launch.V2V_PHASES['v2v_final']
+    with patch.object(replay_start,'alive',return_value=False):
+        receipt,_,_=live.adopt_gate(root,cfg,('A',),('B','R'))
+        assert receipt['ready']
+    write_charges(root,rows+[dict(id='lessons_all',phase='v2v_lessons',sim_s=launch.V2V_PHASES['v2v_lessons'])])
+    assert 'v2v_lessons' not in live.resume_phase_costs(root,cfg,('A',),('B','R'))[0]

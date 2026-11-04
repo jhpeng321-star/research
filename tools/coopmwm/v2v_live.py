@@ -706,6 +706,19 @@ def resume_phase_costs(root, cfg, live_arms, resume_arms):
     if train>ceiling:raise ValueError('remaining train work exceeds the registered phase')
     if train:costs['v2v_train']=train
     else:costs.pop('v2v_train')
+    # Diagnostic/test phases: the registered full-run quote MINUS what this phase has already
+    # charged (u6 lessons/isolated synergy etc. ran inside the registered quote); re-quoting the
+    # full amount after partial spending would always refuse a later adopt. Nothing is credited
+    # below zero and the train quote above is unchanged.
+    from . import storage
+    spent={}
+    for entry in storage.ledger(root):
+        if isinstance(entry,dict) and entry.get('phase') in costs and entry.get('phase')!='v2v_train':
+            spent[entry['phase']]=spent.get(entry['phase'],0)+int(entry.get('sim_s',0))
+    for phase in [p for p in costs if p!='v2v_train']:
+        left=costs[phase]-spent.get(phase,0)
+        if left>0:costs[phase]=left
+        else:costs.pop(phase)
     return costs,per_arm
 
 
