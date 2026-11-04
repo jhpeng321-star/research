@@ -97,18 +97,22 @@ KL_LIMIT=.045       # the registered separate-imitation bound (report kl_limit; 
 
 RUNTIME_STEP_MODE='fixed'       # bound from the deployed runtime by v2v_live.hooks (B and R alike)
 RUNTIME_INTENT_BANK_TERM=True   # bound likewise; False drops the bank intent term from the loss
+RUNTIME_MINIBATCH_SPLIT=False   # bound likewise; False (default) grows the lr scale, never the minibatch
 
 
-def install(step_mode='fixed',intent_bank_term=True):
+def install(step_mode='fixed',intent_bank_term=True,minibatch_split=False):
     """Bind the runtime's registered imitation-strength keys process-wide (v2v_live.hooks).
 
     One key serves B and R (v2v_launch3 refuses any B/R mismatch before this is called); explicit
-    run_separate arguments still win, and the process default stays 'fixed'/True (byte-identical).
+    run_separate arguments still win, and the process default stays 'fixed'/True/False
+    (byte-identical).
     """
-    global RUNTIME_STEP_MODE,RUNTIME_INTENT_BANK_TERM
+    global RUNTIME_STEP_MODE,RUNTIME_INTENT_BANK_TERM,RUNTIME_MINIBATCH_SPLIT
     if step_mode not in STEP_MODES:raise ValueError('unknown imitation_step_mode '+repr(step_mode))
     if not isinstance(intent_bank_term,bool):raise ValueError('v2v_intent_bank_term must be a bool')
+    if not isinstance(minibatch_split,bool):raise ValueError('imitation_minibatch_split must be a bool')
     RUNTIME_STEP_MODE,RUNTIME_INTENT_BANK_TERM=step_mode,bool(intent_bank_term)
+    RUNTIME_MINIBATCH_SPLIT=bool(minibatch_split)
 
 
 def trainable(sample,weight):
@@ -123,12 +127,22 @@ def awr_loss(policy,pairs,coefficient=1.):
     return float(torch.stack([imitation(policy,s,w) for s,w in pairs]).mean()*coefficient)
 
 
+@torch.no_grad()
+def param_displacement(policy,snapshot):
+    """L2 distance actually moved by an accepted pass: policy parameters vs its pre-pass snapshot."""
+    total=0.
+    for name,param in policy.named_parameters():
+        delta=param.detach()-snapshot[name]
+        total+=float(delta.square().sum())
+    return math.sqrt(total)
+
+
 def _finite(x):
     return x is not None and math.isfinite(x)
 
 
 def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5,
-                 step_mode=None,intent_bank_term=None):
+                 step_mode=None,intent_bank_term=None,minibatch_split=None):
     """MAIN17:27 transactional full passes, KL relative to post-PPO policy.
 
     Backtracking changes only the optimizer step size, never targets or AWR
@@ -145,24 +159,33 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
 
     c4/imit-strength: step_mode 'fixed' (default, byte-identical) keeps the
     halving-only backtracking above. 'kl_targeted' additionally doubles the NEXT
-    pass's step scale (capped at STEP_SCALE_CAP x base lr) and its number of
-    optimizer steps (capped at STEPS_CAP x, via smaller minibatches of the same
-    fixed permutation) whenever the ACCEPTED pass ends with KL (vs the post-PPO
-    snapshot, same joint_kl measurement) below half the registered KL_LIMIT;
-    the existing halving backtracking is unchanged and KL_LIMIT is never
-    exceeded. Per accepted pass the report records step_scale_mult, steps_mult
-    and optimizer_steps. A None step_mode falls back to the runtime binding
-    installed by v2v_live.hooks (identical for B and R). intent_bank_term=False
-    (runtime key v2v_intent_bank_term, default True = current) drops the
-    v2v_intent bank term from the imitation loss; the TRAINED-subset (w>0,
-    trainable pairs) bank intent loss is reported by exact_update's v2v_intent
-    block as before_trained/after_trained alongside the all-pairs values.
+    pass's step scale (capped at STEP_SCALE_CAP x base lr) whenever the ACCEPTED
+    pass ends with KL (vs the post-PPO snapshot, same joint_kl measurement)
+    below half the registered KL_LIMIT; the existing halving backtracking is
+    unchanged and KL_LIMIT is never exceeded. After any backtrack the NEXT pass
+    starts from what was accepted (step_scale_mult resets to the accepted
+    scale), and later passes retry halvings down to the same MIN_ADDITIONAL_PASS_SCALE
+    floor fixed mode reaches. Strength comes from the learning-rate scale: the
+    optimizer-step growth via smaller minibatches of the same fixed permutation
+    (steps_mult, capped STEPS_CAP x) only runs when minibatch_split is enabled
+    (runtime key imitation_minibatch_split, default False - smaller minibatches
+    add noise, not data). Per accepted pass the report records step_scale_mult,
+    steps_mult, optimizer_steps, backtracked, the next pass's multipliers, the
+    accepted policy's param_displacement (L2 vs its pre-pass snapshot) and the
+    L1 action error on the TRAINED subset (l1_action_error_trained_before/after).
+    A None step_mode/intent_bank_term/minibatch_split falls back to the runtime
+    binding installed by v2v_live.hooks (identical for B and R).
+    intent_bank_term=False (default True = current) drops the v2v_intent bank
+    term from the imitation loss; the TRAINED-subset (w>0, trainable pairs) bank
+    intent loss is reported by exact_update's v2v_intent block as
+    before_trained/after_trained alongside the all-pairs values.
     """
     if int(passes)!=passes or passes<5:raise ValueError('at least five requested passes')
     step_mode=RUNTIME_STEP_MODE if step_mode is None else str(step_mode)
     if step_mode not in STEP_MODES:raise ValueError('unknown imitation_step_mode '+repr(step_mode))
     if intent_bank_term is None:intent_bank_term=RUNTIME_INTENT_BANK_TERM
-    intent_bank_term=bool(intent_bank_term)
+    if minibatch_split is None:minibatch_split=RUNTIME_MINIBATCH_SPLIT
+    intent_bank_term=bool(intent_bank_term);minibatch_split=bool(minibatch_split)
     targeted=step_mode=='kl_targeted'
     offered=[(s,float(w)) for s,w in pairs]
     unexecuted=sum(1 for s,w in offered if w>0 and not s.get('behaviour',{}).get('executed'))
@@ -179,7 +202,8 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
         pass1_step_scale=None,pass1_loss_drop=None,pass1_effective=False,imitation_failed=False,
         min_additional_pass_step_scale=MIN_ADDITIONAL_PASS_SCALE,
         rule='full-bank transactional passes; separate imitation KL; AWR weights unchanged')
-    if targeted:report.update(step_mode=step_mode,step_scale_cap=STEP_SCALE_CAP,steps_cap=STEPS_CAP)
+    if targeted:report.update(step_mode=step_mode,step_scale_cap=STEP_SCALE_CAP,steps_cap=STEPS_CAP,
+                              minibatch_split=minibatch_split)
     if not intent_bank_term:report['intent_bank_term']=False
     if not pairs:
         return dict(report,stop_reason='empty statistically qualified bank',kl=0.,action_error_after_mps2=None)
@@ -212,12 +236,17 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
         mult=1.;steps_mult=1   # kl_targeted growth multipliers; both stay 1 in fixed mode
         for epoch in range(int(passes)):
             report['epochs_started']=epoch+1
+            split=int(steps_mult) if targeted and minibatch_split else 1
             order=torch.randperm(len(pairs),generator=generator).split(
-                max(1,128//(steps_mult if targeted else 1)))
+                max(1,128//split))
             state=copy.deepcopy(policy.state_dict());adam=copy.deepcopy(optimizer.state_dict())
             loss_before=awr_loss(policy,pairs,coefficient);error_before=action_error(policy,pairs)
-            # pass 1 keeps the guaranteed 25 halvings; later passes stop at scale 1/64 (attempt 6)
-            max_attempts=MAX_ATTEMPTS if epoch==0 else round(-math.log2(MIN_ADDITIONAL_PASS_SCALE))+1
+            # pass 1 keeps the guaranteed 25 halvings; later passes retry down to the same
+            # MIN_ADDITIONAL_PASS_SCALE floor fixed mode reaches, whatever mult currently is
+            if epoch==0:max_attempts=MAX_ATTEMPTS
+            elif targeted:
+                max_attempts=max(1,int(math.floor(math.log2(mult/MIN_ADDITIONAL_PASS_SCALE)))+1)
+            else:max_attempts=round(-math.log2(MIN_ADDITIONAL_PASS_SCALE))+1
             accepted=False;statuses=[];rejected=0;kl=None
             for attempt in range(max_attempts):
                 if attempt:
@@ -234,7 +263,9 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                      smallest_step_scale_tried=scale,attempts=len(statuses),attempt_status=statuses,kl=kl,
                      awr_loss_before=loss_before,l1_action_error_before=error_before,
                      rejected_optimizer_steps=rejected)
-            if targeted:row.update(step_scale_mult=mult,steps_mult=steps_mult,optimizer_steps=steps)
+            if targeted:
+                row.update(step_scale_mult=mult,steps_mult=steps_mult,optimizer_steps=steps,
+                           backtracked=len(statuses)>1)
             report['rejected_optimizer_steps']+=rejected
             if not accepted:
                 policy.load_state_dict(state);optimizer.load_state_dict(copy.deepcopy(adam))
@@ -251,6 +282,10 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                     f'{MIN_ADDITIONAL_PASS_SCALE:g} of base (statuses {statuses}); additional passes stopped')
                 break
             row.update(awr_loss_after=awr_loss(policy,pairs,coefficient),l1_action_error_after=action_error(policy,pairs))
+            if targeted:  # movement vs error on the TRAINED subset: does more movement lower error?
+                row.update(param_displacement=param_displacement(policy,state),
+                           l1_action_error_trained_before=row['l1_action_error_before'],
+                           l1_action_error_trained_after=row['l1_action_error_after'])
             if intent_on:row['intent_grad_shares']=list(shares)
             report['epochs'].append(row)
             report['epochs_completed']+=1;report['pairs_seen']+=len(pairs)
@@ -263,10 +298,16 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                       if _finite(row['awr_loss_before']) and _finite(row['awr_loss_after']) else None)
                 report.update(pass1_step_scale=scale,pass1_loss_drop=drop,
                               pass1_effective=bool(drop is not None and drop>0))
-            # kl_targeted: an accepted pass that ended below half the registered bound lets the
-            # next pass push harder (step scale x2 capped 16, optimizer steps x2 capped 4).
-            if targeted and epoch+1<int(passes) and kl is not None and kl<KL_LIMIT/2:
-                mult=min(float(STEP_SCALE_CAP),mult*2.);steps_mult=min(int(STEPS_CAP),steps_mult*2)
+            # kl_targeted: a backtracked pass restarts the next one from what was accepted; an
+            # accepted pass that ended below half the registered bound pushes the next pass
+            # harder via the learning-rate scale (cap 16x; smaller minibatches only when the
+            # optional split is enabled, cap 4x steps).
+            if targeted and epoch+1<int(passes):
+                if row['backtracked']:mult=float(scale)
+                elif kl is not None and kl<KL_LIMIT/2:
+                    mult=min(float(STEP_SCALE_CAP),mult*2.)
+                    if minibatch_split:steps_mult=min(int(STEPS_CAP),steps_mult*2)
+                row['next_pass_mult']=mult;row['next_pass_steps_mult']=steps_mult
             if scale<MIN_ADDITIONAL_PASS_SCALE and epoch+1<int(passes):
                 report['stop_reason']=(f'accepted step scale {scale:g} below {MIN_ADDITIONAL_PASS_SCALE:g} '
                     'of base; additional passes stopped')

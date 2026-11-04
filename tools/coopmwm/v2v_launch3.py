@@ -45,8 +45,10 @@ BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
     imitation_bank_filter='cooperative_only',
     # c4/imit-strength (prepared): 'fixed' stays byte-identical; 'kl_targeted' may only be
     # registered at a registered update boundary, for B-v2v and R-v2v together. The bank intent
-    # term switch defaults True = current behaviour.
-    imitation_step_mode='fixed', v2v_intent_bank_term=True)
+    # term switch defaults True = current behaviour; the optional minibatch split defaults False
+    # (kl_targeted strength comes from the learning-rate scale, capped 16x, never from a smaller
+    # minibatch of the same permutation).
+    imitation_step_mode='fixed', v2v_intent_bank_term=True, imitation_minibatch_split=False)
 IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
 IMITATION_STEP_MODES = ('fixed', 'kl_targeted')
 DIAGNOSTIC_SCHEDULE = dict(A=dict(lessons=[], isolated=[]),
@@ -303,6 +305,24 @@ def intent_bank_term_for(cfg, arm):
     return have
 
 
+def imitation_minibatch_split_for(cfg, arm):
+    """Whether kl_targeted passes may shrink the minibatch to add optimizer steps (default False:
+    strength comes from the learning-rate scale, capped 16x). One key serves both arms; an
+    optional per-arm mapping cfg['imitation_minibatch_split_by_arm'] is accepted only when
+    B == R == the key."""
+    have = cfg.get('imitation_minibatch_split', False)
+    if not isinstance(have, bool):
+        raise Refused('imitation_minibatch_split must be a bool: ' + repr(have))
+    by_arm = cfg.get('imitation_minibatch_split_by_arm')
+    if by_arm is not None:
+        if (not isinstance(by_arm, dict) or not all(isinstance(by_arm.get(a), bool) for a in ('B', 'R'))
+                or by_arm.get('B') is not by_arm.get('R') or by_arm.get('B') is not have):
+            raise Refused('imitation_minibatch_split must be identical for B and R: ' + repr(by_arm))
+    if arm not in ('B', 'R'):
+        raise Refused('only arms B and R have an imitation bank')
+    return have
+
+
 def bind_runtime(value, *, root, source_root):
     """Validate deployed values, not newly manufactured desired arm configs."""
     cfg = value.get('config')
@@ -315,6 +335,7 @@ def bind_runtime(value, *, root, source_root):
     imitation_filter_for(cfg, 'B'), imitation_filter_for(cfg, 'R')   # refuses B != R
     imitation_step_mode_for(cfg, 'B'), imitation_step_mode_for(cfg, 'R')   # refuses B != R
     intent_bank_term_for(cfg, 'B'), intent_bank_term_for(cfg, 'R')   # refuses B != R
+    imitation_minibatch_split_for(cfg, 'B'), imitation_minibatch_split_for(cfg, 'R')   # refuses B != R
     if 'v2v_intent_weight' in cfg:
         raise Refused('obsolete runtime v2v_intent_weight is not an intent loss binding')
     passes = cfg.get('imitation_epochs')

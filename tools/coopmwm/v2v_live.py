@@ -31,12 +31,15 @@ def hooks(root, cfg):
     if rule != bank_statistics.PER_SEED:
         raise ValueError(f'V2V runtime requires bank_statistics=per_seed_v1, not {rule!r}')
     bank_statistics.install(rb, bank_rule=rule, sources=cfg.get('replay_sources'))
-    # c4/imit-strength: one registered imitation step mode and bank-intent switch for B and R
-    # alike; any B/R mismatch refuses here, before the runner is bound.
-    from .v2v_launch3 import imitation_step_mode_for, intent_bank_term_for
+    # c4/imit-strength: one registered imitation step mode, bank-intent switch and optional
+    # minibatch split for B and R alike; any B/R mismatch refuses here, before the runner binds.
+    from .v2v_launch3 import (imitation_step_mode_for, intent_bank_term_for,
+                              imitation_minibatch_split_for)
     bank_imitation.install(step_mode=imitation_step_mode_for(cfg, 'B'),
-                           intent_bank_term=intent_bank_term_for(cfg, 'B'))
+                           intent_bank_term=intent_bank_term_for(cfg, 'B'),
+                           minibatch_split=imitation_minibatch_split_for(cfg, 'B'))
     imitation_step_mode_for(cfg, 'R'), intent_bank_term_for(cfg, 'R')
+    imitation_minibatch_split_for(cfg, 'R')
     bank_imitation.run=bank_imitation.run_separate
     from .v2v_runtime import Policy, load_checkpoint
     from .accel_storage import read
