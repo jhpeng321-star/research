@@ -15,6 +15,7 @@ from tools.coopmwm import bank_imitation as bi
 from tools.coopmwm import bank_statistics as bs
 from tools.coopmwm import exact_grade as xg
 from tools.coopmwm import replay_bank as rb
+from tools.coopmwm import verify_perseed as vp
 from tools.coopmwm.protocol import digest
 from tools.coopmwm.test_bank_boot_cpu import N, T0, T_END, noisy, tape
 from tools.coopmwm.test_bank_imitation_cpu import Policy
@@ -381,3 +382,58 @@ def test_all8_records_seed2_only_winner_with_its_own_plan(tmp_path, ps):
     rep = bs.report_per_seed(rb, tmp_path, 'B')
     row = next(r for r in rep['entries'] if r['example_id'] == 'a8#c2#s2')
     assert row['record'] == 'all8' and row['plan_id'] == 'q' and row['admitted']
+
+
+def test_all8_extra_seed_examples_flow_through_per_seed_v1_unchanged(tmp_path, ps):
+    """seed_index >= 3 examples in an all8 record are consumed UNCHANGED by per_seed_v1: each is
+    its own entry with that seed_index and THAT seed's tape; only the seeds-1/2 summary dicts
+    keep their shape (bank code untouched by the extra_seeds BUILD option)."""
+    make(tmp_path, 'legacy', win(), win(), cooperation=False)
+    bank = rb.bank_root(tmp_path, 'B')
+    rng = np.random.default_rng(9)
+    base = 2.+rng.random(N)
+    first = write_receipt(bank/'sumo_verification', 'a8x', tape(base), plan_tape(base+1., 1), 'B')
+    assert first['status'] == 'accepted' and first['grade_veh_s'] < 0
+    q = dict(id='q', members=['c1', 'c2', 'c3'], duration_s=D)
+    examples = []
+    for k in (2, 3):
+        root_dir = bank/('confirm_seed2_all8' if k == 2 else 'confirm_seed3_all8')
+        bt = plan_tape(base-win(), k, q['members'])
+        for st in bt['steps']:
+            st['sample']['plan_executions'][0]['plan_id'] = 'q'      # the tape executes plan q
+        rec_k = write_receipt(root_dir, f'a8x_s{k}', tape(base), bt, 'B', q['members'])
+        examples.append(dict(seed_index=k, candidate_index=1, example_id=f'a8x#c2#s{k}', plan=q, plan_id='q',
+                             duration_s=D, members=q['members'], group_size=3, admitted=True, status='admitted',
+                             reason=f'seed-{k} lower95 > 0, safety pass, later-harm pass',
+                             lower95_one_sided_veh_s=10., advantage_veh_s=rec_k['grade_veh_s'],
+                             later_harm='pass', safety_ok=True, cooperative=True,
+                             cooperative_status='cooperative',
+                             synergy=dict(lower95_one_sided_veh_s=4., pooled_total_veh_s=9.),
+                             tape=dict(branches_dir=str(root_dir/'branches'), verification_id=f'a8x_s{k}',
+                                       branch=dict(rec_k['branches'][1]), window=dict(rec_k['window']),
+                                       seed_index=k, intent_entry=f'a8x/seed{k}/cand1')))
+    rec = dict(schema='coopmwm/verify-perseed/v1', verify_mode='all8_both_seeds', bank_rule='per_seed_v1',
+               verification_id='a8x', arm='B', policy_version='u3', t0=T0, admitted=True,
+               mean_replicated_advantage_veh_s=-1.,
+               per_seed_v1=dict(examples=examples, admitted_seeds=[2, 3], cooperative_seeds=[2, 3],
+                                replicated=False, replicated_plans=[], reason='x'),
+               cooperation=dict(group_size=3, cooperative=True, cooperative_seeds=[2, 3], replicated=False))
+    (bank/bs.ALL8_RECORDS).mkdir(parents=True, exist_ok=True)
+    (bank/bs.ALL8_RECORDS/'a8x.json').write_text(json.dumps(xg._seal(rec, 'confirmation_sha256')))
+    conf = ps(tmp_path, 'B')['a8x']
+    assert {e['seed_index'] for e in conf['per_seed_v1']['examples']} == {2, 3}
+    assert conf['per_seed_v1']['examples'][1]['tape']['branches_dir'].replace('\\', '/').endswith(
+        'confirm_seed3_all8/branches')
+    loaded = json.loads((bank/bs.ALL8_RECORDS/'a8x.json').read_text())
+    assert vp.relabel_reference_mismatch(loaded, bank) is loaded     # nothing to relabel: untouched
+    pairs, s = rb.bank_pairs(tmp_path, 'B', 12345)
+    entries = [e for e in s['entries'] if e['verification_id'] == 'a8x']
+    assert [(e['seed_index'], e['plan_id']) for e in entries] == [(2, 'q'), (3, 'q')]
+    assert entries[1]['record'] == 'all8' and entries[1]['cooperative'] is True
+    assert entries[1]['tape'] == 'a8x_s3/cand1' and entries[1]['seed_advantage_veh_s'] > 0
+    q_pairs = [p for p, _ in pairs if p['behaviour']['proposal_members'] == ['c1', 'c2', 'c3']]
+    assert len(q_pairs) >= 2*D and {p['behaviour']['seed_tag'] for p in q_pairs} == {2, 3}   # each seed's OWN tape
+    assert set(s['counts']['per_seed_v1']['by_seed']) == {'1', '2'}   # summary shape unchanged; entries carry s3
+    assert s['exposure']['cooperative_entries'] == 2                  # the seed-3 example counts as cooperative
+    rep = bs.report_per_seed(rb, tmp_path, 'B')
+    assert [r['example_id'] for r in rep['entries'] if r['verification_id'] == 'a8x'] == ['a8x#c2#s2', 'a8x#c2#s3']

@@ -64,6 +64,42 @@ def bank_root(root, arm):
     return Path(root)/BANK/arm
 
 
+def variety_config(meta):
+    """The registered search_families config stored on a decision snapshot's meta (None =
+    option off: R keeps the exact legacy draws). Validated against the registered keys."""
+    cfg = meta.get('variety_config') if isinstance(meta, dict) else None
+    if not cfg:
+        return None
+    from .variety import split_config
+    probe = dict(cfg)
+    return split_config(probe)   # registered keys only; raises on unknown keys
+
+
+def collect_config(job):
+    """Registered search_families config from the collector job (None = option off:
+    exactly the legacy ``group_components`` groups). Validated against the registered keys."""
+    cfg = (job.get('collect') or {}).get('variety')
+    if not cfg:
+        return None
+    from .variety import split_config
+    probe = dict(cfg)
+    return split_config(probe)   # registered keys only; raises on unknown keys
+
+
+def preflight_binding(binding):
+    """Startup check for the collector: with coop_objective's novelty on in the binding's
+    search_config, the bank file must exist on THIS host and match its digest BEFORE any
+    work is admitted (the same check as ``coop_search.preflight`` / ls_collection.preflight_coop).
+    Returns the descriptors; raises when the bank is missing or mismatched. No coop novelty
+    config: no-op."""
+    cfg = (binding or {}).get('search_config') or {}
+    sha = cfg.get('coop_novelty_bank_sha256')
+    if cfg.get('coop_objective') and cfg.get('coop_novelty') and sha:
+        from .coop_search import preflight
+        return preflight(sha)
+    return None
+
+
 def latest_checkpoint(root, arm):
     found = sorted(Path(root).glob(f'{arm}_checkpoint_*.pt'))
     if not found:
@@ -90,12 +126,13 @@ def collector_guide(job, generator, controller, prefixes):
     No generator draw is consumed, so the collector episode is the plain policy episode.
     """
     from .warm_history import ObservableHistory
-    from .mppi_search import group_components
     from .exploration import regime
     from .storage import write
+    from .variety import decision_groups
     history = ObservableHistory()
     root = Path(job['queue_root']);cfg = job['collect'];arm = job['arm']
     bank = bank_root(root, arm);(bank/'snapshots').mkdir(parents=True, exist_ok=True)
+    vcfg = collect_config(job)   # ADDITIVE group kinds when search_families is registered
 
     from .mppi_search import REGISTERED, final_horizon
     # MAIN: the WM arrival model is fitted only up to the observed demand phase end
@@ -108,7 +145,7 @@ def collector_guide(job, generator, controller, prefixes):
     def call(rows, commands, now, sample):
         if int(now) % 10 or now > cfg.get('last_window_s', 900):
             return None
-        groups = group_components(rows)
+        groups = decision_groups(rows, vcfg)
         if not groups:
             return None
         if now+max_h > phase_end:
@@ -162,6 +199,8 @@ def collector_guide(job, generator, controller, prefixes):
             meta = dict(state_id=r['state_id'], arm=arm, job=job['id'], world=job['world'], t0=int(now),
                         group=group, regime=traffic, policy_update=job['collector_policy_update'],
                         record_sha256=digest(r), unix=time.time())
+            if cfg.get('variety'):   # additive meta key; R candidates reuse the same family mix
+                meta['variety_config'] = dict(cfg['variety'])
             torch.save(snap, bank/'snapshots'/(r['state_id']+'.pt'))
             write(bank/'snapshots'/(r['state_id']+'.json'), meta)
             from .warm_spool import immutable
@@ -237,7 +276,10 @@ def candidates_for(root, arm, meta, bounds, k=K):
     if v.get('unavailable') or v.get('query_error') or v.get('worker_unavailable') or v.get('policy_traj') is None:
         return [], 'centre unavailable'
     seed = int(digest(dict(state=key, arm='R'))[:8], 16)
-    return sv.random_candidates(meta['group'], v['policy_traj'], tuple(bounds), meta['regime'], seed, k), 'random'
+    # search_families: R draws from the same structured-family mix when the collector
+    # registered the variety config on the snapshot meta (identical registered keys).
+    return sv.random_candidates(meta['group'], v['policy_traj'], tuple(bounds), meta['regime'], seed, k,
+                                variety_config(meta)), 'random'
 
 
 def verify_pending(root, arm, bounds, runner, charge, workers, decided, limit=None):
@@ -312,6 +354,7 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
     from .accel_storage import reserve
     from .accel_learner import load
     from .policy_wm import actor_state
+    preflight_binding(binding)   # coop novelty bank must resolve before any work is admitted
     root = Path(root);bank = bank_root(root, arm);bank.mkdir(parents=True, exist_ok=True)
     cfg = binding['sumo_verify'];vroot = bank/'sumo_verification'
     runner = sv.SubprocessBranchRunner(vroot/'branches', workers=cfg.get('workers', K+1),
@@ -339,15 +382,21 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
                              policy_state=actor_state(policy), warm_history=binding.get('warm_history', False),
                              collector_policy_update=u, b_replay=True,
                              collect=dict(slots=binding['slots'], fanout_factor=binding.get('parallel_fanout_factor', 2),
-                                          demand_phase_end_s=binding.get('demand_phase_end_s', 1200.))))
+                                          demand_phase_end_s=binding.get('demand_phase_end_s', 1200.),
+                                          **(dict(variety=dict(binding['variety'])) if binding.get('variety') else {}))))
         reserve(root, jobs, binding.get('collect_phase', 'train'))
         with ProcessPoolExecutor(max_workers=len(jobs), mp_context=multiprocessing.get_context('spawn')) as pool:
             list(pool.map(episode, jobs))
         statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided,
                                    verify_per_round)
+        confirm_kw = {}
+        if cfg.get('verify_mode'):
+            confirm_kw['verify_mode'] = cfg['verify_mode']
+            if cfg.get('extra_seeds'):     # BUILD option extra_seeds, DEFAULT absent/0 = off
+                confirm_kw['extra_seeds'] = int(cfg['extra_seeds'])
         confirm_pending(root, arm, runner_for, str(root), confirm_phase, workers=2,
                         sources=binding.get('replay_sources', {}).get(arm, ()), limit=verify_per_round,
-                        **({'verify_mode': cfg['verify_mode']} if cfg.get('verify_mode') else {}))
+                        **confirm_kw)
         bank_quality(root, arm, binding.get('replay_sources', {}).get(arm, ()))
         n += 1
         if 'budget_blocked' in statuses:
@@ -882,16 +931,25 @@ def _decision_snapshot(root, arm, r, by_vid):
     return torch.load(bank/'snapshots'/(link['state_id']+'.pt'), weights_only=False)
 
 
-def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None, verify_mode=None):
+def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None, verify_mode=None,
+                    extra_seeds=0, slim_rejected_tapes=None):
     """Confirm every first-seed positive decision (own bank and, for B, live LS labels) once.
 
-    verify_mode='all8_both_seeds' (owner 2026-11-03 22:05, default OFF): every completed decision
-    gets all K candidates + policy on the second CRN seed, per-seed winners, per-(plan, seed)
-    solos (tools/coopmwm/verify_perseed.py); None/'legacy' keeps this function unchanged."""
+    verify_mode='all8_both_seeds' (owner 2026-11-03 22:05, default OFF = legacy): every completed
+    decision gets all K candidates + policy on the second CRN seed, per-seed winners, per-(plan, seed)
+    solos (tools/coopmwm/verify_perseed.py); None/'legacy' keeps this function unchanged.
+    extra_seeds (BUILD option, DEFAULT 0 = unchanged): with all8, the plans that carry a
+    within-seed COOPERATIVE example are additionally verified on CRN seeds 3..(2+extra_seeds)
+    (verify_perseed.extra_seed_salt salts; each (plan, extra seed) admitted on its own), arms
+    B and R alike; each extra verification is charged through the existing hooks.
+    slim_rejected_tapes (owner 2026-11-04, DEFAULT OFF, all8 only): after each decision's record is
+    sealed, rejected candidate branch tapes are slimmed to SLIM.json (tools/coopmwm/slim_tapes.py)."""
     if verify_mode is not None:
         from . import verify_perseed as vp
         if vp.mode(verify_mode) == vp.ALL8:
-            return vp.confirm_pending_all8(root, arm, runner_for, run_root, phase, workers, sources, limit)
+            return vp.confirm_pending_all8(root, arm, runner_for, run_root, phase, workers, sources, limit,
+                                           extra_seeds=extra_seeds,
+                                           slim_rejected_tapes=slim_rejected_tapes)
     bank = bank_root(root, arm);done = {p.stem for p in (bank/'confirmations').glob('*.json')}
     by_vid = {}
     for p in (bank/'decisions').glob('*.json'):

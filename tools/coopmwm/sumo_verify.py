@@ -353,16 +353,20 @@ def accel_charge(run_root, phase='sumo_verification'):
 
 # ---------------------------------------------------------------- arm R proposer
 
-def random_candidates(group, centre, bounds, regime, base_seed, k=TOP_K, duration_s=None, first=None):
+def random_candidates(group, centre, bounds, regime, base_seed, k=TOP_K, duration_s=None, first=None,
+                      config=None):
     """Arm R = 'random proposals + SUMO pick': k generic random plans around the same policy centre
     (mppi_search.sample_unscored, zero WM scoring). Seeds derive from base_seed only, so no extra
-    live generator draws. ``first`` (the matched random plan already drawn) is kept as candidate 1."""
+    live generator draws. ``first`` (the matched random plan already drawn) is kept as candidate 1.
+    ``config`` (optional) carries the registered variety_* keys: with search_families on, R draws
+    from the same structured-family mix with random parameters (share capped by the same key);
+    None (default) keeps the exact legacy draw bytes."""
     from .mppi_search import sample_unscored
     out = [first] if first is not None else []
     i = 0
     while len(out) < k and i < 64*int(k):  # bounded: identical (fully clipped) draws cannot spin forever
         seed = int(digest(dict(base=int(base_seed), i=i))[:8], 16);i += 1
-        p = sample_unscored(group, centre, bounds, regime, seed, duration_s=duration_s)
+        p = sample_unscored(group, centre, bounds, regime, seed, duration_s=duration_s, config=config)
         if all(p['id'] != q['id'] for q in out):
             out.append(p)
     return out

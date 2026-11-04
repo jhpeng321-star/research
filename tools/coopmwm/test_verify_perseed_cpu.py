@@ -1,13 +1,15 @@
-"""CPU tests: verify_mode='all8_both_seeds' (owner 2026-11-03 22:05). No SUMO: a deterministic
+﻿"""CPU tests: verify_mode='all8_both_seeds' (owner 2026-11-03 22:05). No SUMO: a deterministic
 per-second plant writes exact team_delay_vs fingerprints whose effect depends on (plan, seed)."""
 import gzip
 import json
 import math
+import re
 import time
 
 import pytest
 import torch
 
+from tools.coopmwm import bank_statistics as bs
 from tools.coopmwm import replay_bank as rb
 from tools.coopmwm import sumo_verify as sv
 from tools.coopmwm import verify_perseed as vp
@@ -21,7 +23,14 @@ PHASE = 'bank_verification_ext'
 
 
 def seed_of(snap):
-    return 2 if 'replication_salt' in snap['rng'] else 1
+    """CRN seed index of a snapshot: 1 = first seed, 2 = replicate(salt=vid),
+    k >= 3 = extra seed (salt '<vid>#seed<k>' ['#x<n>' only in the eval-collision case])."""
+    salt = snap['rng'].get('replication_salt')
+    if salt is None:
+        return 1
+    if '#seed' in salt:
+        return int(salt.split('#seed', 1)[1].split('#', 1)[0])
+    return 2
 
 
 class SeedPlant:
@@ -74,8 +83,9 @@ class SeedPlant:
         return dict(prefixes=prefixes, final=final, actual_sim_s=t_end-300, result_sha256=digest(tape))
 
 
-def setup(tmp_path, gains, k=8, t0=600):
-    root = tmp_path;bank = rb.bank_root(root, 'B');snap = snapshot(t0)
+def setup(tmp_path, gains, k=8, t0=600, arm='B'):
+    root = tmp_path;bank = rb.bank_root(root, arm);snap = snapshot(t0)
+    snap['episode'] = dict(snap['episode'], id=f'warm_u005_{arm}_7', arm=arm)
     plans = [plan(f'p{i+1}', 0.1) for i in range(k)]
     plant = SeedPlant(bank/'sumo_verification', gains)
     r = sv.verify(snap, plans, plant, sv.local_charge(tmp_path/'first'), 'wm', root=bank/'sumo_verification')
@@ -89,6 +99,30 @@ def setup(tmp_path, gains, k=8, t0=600):
     def runner_for(work):
         p = SeedPlant(work, gains);plants.append(p);return p
     return root, snap, plans, r, runner_for, plants
+
+
+class ExtraPlant(SeedPlant):
+    """SeedPlant whose per-(plan, seed) ``later_harm`` veh-s/s loss starts only AFTER the
+    ordinary window (t0+D+TAIL_S): only an extended-window verification can see it."""
+
+    def __init__(self, work, gains, later_harm=None):
+        super().__init__(work, gains)
+        self.later_harm = later_harm or {}
+
+    def rate(self, spec, snap, t):
+        r = super().rate(spec, snap, t)
+        p = spec['plan']
+        if p is not None and '__solo_' not in p['id'] and t >= spec['window']['start_s']+int(p['duration_s'])+sv.TAIL_S:
+            r += self.later_harm.get((p['id'], seed_of(snap)), 0.)
+        return r
+
+
+def plants_of(plant_cls, gains, later_harm=None):
+    made = []
+    def runner_for(work):
+        kw = dict(later_harm=later_harm) if plant_cls is ExtraPlant else {}
+        p = plant_cls(work, gains, **kw);made.append(p);return p
+    return runner_for, made
 
 
 def run_all8(root, runner_for, health=None):
@@ -256,6 +290,65 @@ def test_builder_precharge_ids_match_live_hook(tmp_path):
     assert len(jobs) == 9 and sum(j['sim_s'] for j in jobs) == vp.quote_decision(600, [120]*8, [['a']]*8)['all8_seed2_sim_s']
 
 
+def test_builder_extras_group_precharge_all_seeds_one_transaction(tmp_path):
+    """bank_builder.extras_charge: the FIRST extra-seed group charge pre-reserves EVERY extra
+    seed's group verification (cooperative candidates + policy) in ONE transaction; the later
+    extra-seed charges only validate their precharged rows (no new ledger rows); extended/solo
+    kinds are not intercepted and keep the live hook."""
+    from tools.coopmwm import bank_builder as bb
+    from tools.coopmwm.accel_storage import reserve
+    from tools.coopmwm.warm_protocol import install_accounting
+    gains = {('p1', 1): 0.6, ('p1', 2): 0.6, ('p1', 1, 'solo'): 0.1, ('p1', 2, 'solo'): 0.1,
+             ('p1', 3): 0.6, ('p1', 3, 'solo'): 0.1}
+    root, snap, plans, r, _, _ = setup(tmp_path, gains)
+    _budget(root)
+    install_accounting(root)
+    vid = r['verification_id']
+    reserve(root, bb.quoted_jobs_all8(snap, plans, vid, sv.build_branches, rb.replicate), bb.PHASE)
+    hook = bb.extras_charge(bb.all8_charge(rb._confirm_charge, {j['id']: j for j in ledger(root)}),
+                            snap, vid, 2)
+    coop = [plans[0]]                                   # p1 is the only cooperative candidate
+    specs3 = sv.build_branches(rb.replicate(snap, vp.extra_seed_salt(vid, 3)), coop)
+    hook(str(root), bb.PHASE, 'confirm_seed3_all8')(specs3[0]['verification_id'], specs3)
+    rows = [x for x in ledger(root) if x['id'].startswith(('confirm_seed3_all8_', 'confirm_seed4_all8_'))]
+    assert len(rows) == 4                               # seeds 3 AND 4 were reserved by that ONE charge
+    specs4 = sv.build_branches(rb.replicate(snap, vp.extra_seed_salt(vid, 4)), coop)
+    hook(str(root), bb.PHASE, 'confirm_seed4_all8')(specs4[0]['verification_id'], specs4)
+    assert len([x for x in ledger(root) if x['id'].startswith('confirm_seed4_all8_')]) == 2   # no new rows
+    assert sum(j['sim_s'] for j in hook.extras_state['entries'].values()) == sum(x['sim_s'] for x in rows)
+    assert sum(x['sim_s'] for x in rows) == 4*sv.branch_sim_s(min(600+120+sv.TAIL_S, 1200))
+    # extended/solo kinds keep the live hook (each reserves its own kind-prefixed rows)
+    spec = sv.build_branches(snap, [plans[0]])[0]
+    hook(str(root), bb.PHASE, vp.KIND_EXT)(spec['verification_id'], [spec])
+    assert any(x['id'].startswith(vp.KIND_EXT+'_') for x in ledger(root))
+    assert not any(x['id'].startswith('confirm_seed5') for x in ledger(root))
+
+
+def test_builder_extras_group_precharge_budget_block_is_all_or_nothing(tmp_path):
+    """A budget shortfall at the first extra-seed group charge raises BudgetBlocked and leaves NO
+    extra-seed rows in the ledger (never partial extras); nothing is cached, so a decision with
+    a sufficient budget would reserve every extra seed's group instead."""
+    from tools.coopmwm import bank_builder as bb
+    from tools.coopmwm.sumo_verify import BudgetBlocked
+    from tools.coopmwm.warm_protocol import budget as warm_budget, install_accounting
+    gains = {('p1', 1): 0.6, ('p1', 2): 0.6, ('p1', 1, 'solo'): 0.1, ('p1', 2, 'solo'): 0.1,
+             ('p1', 3): 0.6, ('p1', 3, 'solo'): 0.1}
+    root, snap, plans, r, _, _ = setup(tmp_path, gains)
+    b = warm_budget();b['total'] += 1000;b['allocated'] += 1000
+    b['phases'] = dict(b['phases'], bank_verification_ext=1000)
+    (root/'B_REPLAY_PHASE_RECONCILIATION_0627.json').write_text(json.dumps(
+        dict(budget=b, amendment_sha256='test-bank-budget')))
+    (root/'AUTHORITY.md').write_text('test-bank-budget')
+    install_accounting(root)
+    vid = r['verification_id']
+    hook = bb.extras_charge(bb.all8_charge(rb._confirm_charge, {}), snap, vid, 2)
+    specs3 = sv.build_branches(rb.replicate(snap, vp.extra_seed_salt(vid, 3)), [plans[0]])
+    with pytest.raises(BudgetBlocked):
+        hook(str(root), bb.PHASE, 'confirm_seed3_all8')(specs3[0]['verification_id'], specs3)
+    assert not [x for x in ledger(root) if x['id'].startswith(('confirm_seed3_all8_', 'confirm_seed4_all8_'))]
+    assert not hook.extras_state                        # all-or-nothing: nothing reserved, nothing cached
+
+
 def test_per_seed_v1_bank_pairs_integration(tmp_path):
     """Stub of the per_seed_v1 bank_pairs example loop (c4/bank-perseed, uncommitted at build time):
     every admitted example -> its own seed's tape -> imitation pairs with its own plan."""
@@ -389,3 +482,264 @@ def test_reader_relabels_stored_reference_mismatch(tmp_path):
     ok = dict(rec, per_seed_v1=dict(rec['per_seed_v1'], examples=[dict(stale, cooperative_status='not_cooperative')]))
     assert vp.relabel_reference_mismatch(ok, bank) is ok
     assert vp.relabel_reference_mismatch(rec, tmp_path/'nowhere') is rec
+
+
+# ---------------------------------------------------------------- BUILD option extra_seeds
+
+EXTRA_SEEDS4 = dict(extra_seeds=4)
+
+
+def test_extra_seed_salts_deterministic_distinct_and_never_evaluation_seeds():
+    """extra_seed_salt: pure deterministic function of (vid, k); distinct across seeds and vids;
+    the replicate() generator seed it implies never lands in an evaluation seed range."""
+    from tools.coopmwm.protocol import digest
+    assert vp.extra_seed_indices(4) == [3, 4, 5, 6] and vp.extra_seed_indices(0) == []
+    assert vp.extra_seed_indices(None) == []
+    with pytest.raises(ValueError):
+        vp.extra_seed_indices(-1)
+    with pytest.raises(ValueError):
+        vp.extra_seed_salt('v', 2)
+    s3 = vp.extra_seed_salt('vid1', 3)
+    assert s3 == vp.extra_seed_salt('vid1', 3) == 'vid1#seed3'      # deterministic
+    assert len({vp.extra_seed_salt('vid1', k) for k in range(3, 30)}) == 27
+    assert all(vp.extra_seed_salt('vid1', k) != 'vid1' for k in range(3, 8))   # seed-2 salt distinct
+    assert vp.extra_seed_salt('vid1', 3) != vp.extra_seed_salt('vid2', 3)
+    lo_hi = list(vp.EVAL_SEED_RANGES)
+    assert lo_hi == [(962000, 962999), (964000, 964199), (977000, 977999)]
+
+    def gen_seed(salt):
+        return int(digest(dict(replication=salt))[:15], 16)
+    for vid in ('a', 'vid1', 'x'*40):
+        for k in range(3, 40):
+            salt = vp.extra_seed_salt(vid, k)
+            g = gen_seed(salt)
+            assert not any(lo <= g <= hi for lo, hi in lo_hi), (vid, k, salt, g)
+            assert rb.replicate(snapshot(420), salt)['rng']['replication_salt'] == salt
+    states = {k: rb.replicate(snapshot(420), vp.extra_seed_salt('vid1', k))['generator_state'].numpy().tobytes()
+              for k in range(3, 8)}
+    assert len(set(states.values())) == 5                            # distinct CRN streams
+    assert states[3] != rb.replicate(snapshot(420), 'vid1')['generator_state'].numpy().tobytes()
+
+
+def test_extra_seeds_zero_is_byte_identical(tmp_path, monkeypatch):
+    """extra_seeds absent == extra_seeds 0: byte-identical records, receipts and charges; no
+    extra-seed verification roots are created and the record has no extra keys."""
+    monkeypatch.setattr(time, 'time', lambda: 1700000000.0)
+    gains = {('p1', 1): 0.6, ('p3', 2): 0.6, ('p1', 1, 'solo'): 0.1}     # cooperative example on seed 1
+    outs = []
+    for name, kw in (('absent', {}), ('zero', dict(extra_seeds=0))):
+        root = tmp_path/name;root.mkdir()
+        _budget(root)                       # sub-root budget, like test_off_path_identical
+        _, _, _, r, runner_for, _ = setup(root, gains)
+        rb.confirm_pending(root, 'B', runner_for, str(root), PHASE, verify_mode=vp.ALL8, **kw)
+        bank = rb.bank_root(root, 'B')
+        recs = sorted(p.relative_to(bank).as_posix()+':'+p.read_text(encoding='utf-8')
+                      for p in bank.rglob('verifications/*.json'))
+        ledger_rows = [{k: v for k, v in x.items() if k != 'id'} for x in ledger(root)]
+        rec = json.loads((bank/vp.RECORDS/(r['verification_id']+'.json')).read_text(encoding='utf-8'))
+        assert 'extra' not in rec and 'extra_seeds' not in rec
+        assert not (bank/vp.seed_kinds(3)[0]).exists()
+        # the record embeds the bank's absolute branches_dir/root (JSON-escaped) and its own
+        # seal digest over that path; identical modulo both
+        rec_text = (bank/vp.RECORDS/(r['verification_id']+'.json')).read_text(encoding='utf-8')
+        rec_text = rec_text.replace(json.dumps(str(bank))[1:-1], '<BANK>')
+        rec_text = re.sub(r'"confirmation_sha256":"[0-9a-f]{64}"', '"confirmation_sha256":"<SEAL>"', rec_text)
+        outs.append((recs, ledger_rows, rec_text))
+    assert outs[0] == outs[1]
+    q_off = vp.quote_decision(600, [120]*8, [['c1', 'c2']]*8, {1: [0], 2: [0]})
+    assert not any(k.startswith('extra') or k == 'cooperative' for k in q_off)
+
+
+def test_extra_seeds_independent_admission_own_solos_and_charges(tmp_path, monkeypatch):
+    """extra_seeds=4 (E2E): p1 is cooperative on seeds 1/2 -> verified on seeds 3..6. Seed 3
+    admits (and is cooperative), seed 4 rejects on its own LB, seed 5 fails ITS OWN later-harm
+    window, seed 6 admits but its solo does as well (not cooperative). Every extra seed is its
+    own batched verification + extended window + solos, charged through the existing hooks;
+    per_seed_v1 consumes the appended seed_index>=3 examples unchanged."""
+    gains = {('p1', 1): 0.6, ('p1', 2): 0.6, ('p1', 1, 'solo'): 0.1, ('p1', 2, 'solo'): 0.1,
+             ('p1', 3): 0.6, ('p1', 3, 'solo'): 0.1, ('p1', 5): 0.6, ('p1', 6): 0.6, ('p1', 6, 'solo'): 0.6,
+             ('p3', 2): 0.6, ('p3', 2, 'solo'): 0.6}
+    root, snap, plans, r, _, _ = setup(tmp_path, gains)
+    runner_for, _ = plants_of(ExtraPlant, gains, {('p1', 5): 0.5})
+    health, seen_kinds = [], []
+    import tools.coopmwm.warm_health as wh
+    monkeypatch.setattr(wh, 'assert_running', lambda rt, arm: health.append((str(rt), arm)))
+    original = rb._confirm_charge
+
+    def spy(run_root, phase, kind):
+        inner = original(run_root, phase, kind)
+        def charge(vid, specs):
+            seen_kinds.append(kind);return inner(vid, specs)
+        return charge
+    monkeypatch.setattr(rb, '_confirm_charge', spy)
+    assert rb.confirm_pending(root, 'B', runner_for, str(root), PHASE, verify_mode=vp.ALL8,
+                              **EXTRA_SEEDS4) == [True]
+    bank = rb.bank_root(root, 'B')
+    c = vp.records(root, 'B')[r['verification_id']]
+    assert c['extra_seeds'] == 4 and sorted(c['extra']) == ['3', '4', '5', '6']
+    for k in range(3, 7):
+        x = c['extra'][str(k)]
+        assert x['salt'] == vp.extra_seed_salt(r['verification_id'], k)
+        assert x['kind'] == f'confirm_seed{k}_all8' and x['later_harm_measured'] is True
+        assert x['candidates'] == [0]
+        assert sv.snapshot_sha(rb.replicate(snap, x['salt'])) == x['snapshot_sha256'] != c['seed2']['snapshot_sha256']
+    # independent per-seed admission of the SAME plan p1 (candidate 0)
+    ex = {e['seed_index']: e for e in c['per_seed_v1']['examples'] if e['candidate_index'] == 0}
+    assert sorted(ex) == [1, 2, 3, 4, 5, 6]
+    assert ex[3]['admitted'] and ex[3]['example_id'] == f'{r["verification_id"]}#c1#s3'
+    assert ex[4]['status'] == 'rejected' and 'seed-4 one-sided 95% lower bound' in ex[4]['reason']
+    assert ex[5]['later_harm'] == 'fail' and 'seed-5 later-harm check failed' in ex[5]['reason']
+    assert ex[5]['extended_advantage_veh_s'] < 0 and ex[5]['safety_source'] == 'extended_window_seed5'
+    assert ex[6]['admitted'] and ex[6]['cooperative'] is False and ex[6]['cooperative_status'] == 'not_cooperative'
+    assert ex[3]['cooperative'] is True and ex[2]['cooperative'] is True
+    assert ex[3]['tape']['branches_dir'].replace('\\', '/').endswith('confirm_seed3_all8/branches')
+    assert ex[3]['tape']['intent_entry'] == f'{r["verification_id"]}/seed3/cand1'
+    assert not (bank/'confirm_extended_seed4_all8').exists()
+    assert c['extra']['4']['extended'] is None and c['extra']['5']['extended']['candidate_indices'] == [0]
+    assert c['extra']['3']['extended']['candidate_indices'] == [0]
+    assert c['winners']['3'] == ['p1'] and c['winners']['4'] == [] and c['winners']['6'] == ['p1']
+    assert sorted(c['winners']) == ['1', '2', '3', '4', '5', '6']
+    assert c['per_seed_v1']['admitted_seeds'] == [1, 2, 3, 6]
+    assert c['per_seed_v1']['cooperative_seeds'] == [1, 2, 3]
+    assert c['per_seed_v1']['replicated'] is True and c['per_seed_v1']['replicated_plans'] == ['p1']
+    # solos per extra seed only for its ADMITTED examples, on that seed's own root and CRN
+    for k in (3, 6):
+        sroot = bank/f'confirm_solo_all8_s{k}'
+        receipts = list((sroot/'verifications').glob('*.json'))
+        assert len(receipts) == 1 and c['extra'][str(k)]['solo_root'] == str(sroot)
+        solo = json.loads(receipts[0].read_text(encoding='utf-8'))
+        assert sv.snapshot_sha(rb.replicate(snap, c['extra'][str(k)]['salt'])) == solo['snapshot_sha256']
+    assert not (bank/'confirm_solo_all8_s4').exists() and not (bank/'confirm_solo_all8_s5').exists()
+    # charges: every extra verification went through the SAME hook, ledger agrees with the record
+    assert len(health) == len(c['charges']) == 15
+    kinds = sorted(seen_kinds)
+    assert kinds.count('confirm_seed3_all8') == 1 and kinds.count('confirm_extended_seed4_all8') == 0
+    assert all(f'confirm_seed{k}_all8' in kinds for k in range(3, 7))
+    assert kinds.count('confirm_extended_seed5_all8') == 1
+    assert kinds.count('confirm_solo_all8_s3') == 1 and kinds.count('confirm_solo_all8_s6') == 1
+    assert sorted(seen_kinds) == sorted(x['kind'] for x in c['charges'])
+    rows = [x for x in ledger(root) if x['phase'] == PHASE]
+    assert sum(x['sim_s'] for x in rows) == c['charged_sim_s']
+    extra_kinds = [k for k in set(seen_kinds) if k.startswith(('confirm_seed3', 'confirm_seed4', 'confirm_seed5',
+                                                              'confirm_seed6', 'confirm_extended_seed3',
+                                                              'confirm_extended_seed5', 'confirm_extended_seed6',
+                                                              'confirm_solo_all8_s3', 'confirm_solo_all8_s6'))]
+    extra_rows = [x for x in rows if any(x['id'].startswith(k+'_') for k in extra_kinds)]
+    extra_charged = sum(x['charged_sim_s'] for x in c['charges'] if x['kind'] in extra_kinds)
+    assert extra_charged == sum(x['sim_s'] for x in extra_rows) > 0
+    q = vp.quote_decision(600, [120]*8, [['c1', 'c2']]*8, {1: [0], 2: [0]}, extra_seeds=4, cooperative=[0])
+    assert q['extra_seeds_sim_s'] >= extra_charged          # quote's upper-bound assumption
+    # per_seed_v1 consumption unchanged: overlay/bank_examples/imitation_entry on the seed-3 tape
+    conf = vp.overlay({}, root, 'B')
+    assert {e['seed_index'] for e in conf[r['verification_id']]['per_seed_v1']['examples']} == {1, 2, 3, 4, 5, 6}
+    rows2 = vp.bank_examples(root, 'B')
+    s3 = [x for x in rows2 if x['seed_index'] == 3]
+    assert len(s3) == 1 and s3[0]['example_id'] == f'{r["verification_id"]}#c1#s3'
+    tape, entry = vp.imitation_entry(s3[0], conf[r['verification_id']]['t0'], 1.)
+    assert len(xg.imitation_pairs(tape, entry)) == 120
+    assert s3[0]['tape']['branch']['branch'] == 'cand1'
+
+
+def test_report_per_seed_consumes_rejected_extra_examples(tmp_path, monkeypatch):
+    """A rejected extra-seed example carries the SAME not_admitted cooperative fields as the
+    seeds-1/2 loop sets, so bank_statistics.report_per_seed reads a record with rejected extra
+    examples (here: seed 4 fails its own lower bound) without KeyError."""
+    gains = {('p1', 1): 0.6, ('p1', 2): 0.6, ('p1', 1, 'solo'): 0.1, ('p1', 2, 'solo'): 0.1,
+             ('p1', 3): 0.6, ('p1', 3, 'solo'): 0.1}
+    root, snap, plans, r, runner_for, _ = setup(tmp_path, gains)
+    assert rb.confirm_pending(root, 'B', runner_for, str(root), PHASE, verify_mode=vp.ALL8,
+                              extra_seeds=2) == [True]
+    c = vp.records(root, 'B')[r['verification_id']]
+    ex = {e['seed_index']: e for e in c['per_seed_v1']['examples'] if e['candidate_index'] == 0}
+    assert ex[3]['admitted'] and ex[3]['cooperative'] is True and ex[3]['cooperative_status'] == 'cooperative'
+    assert ex[4]['status'] == 'rejected' and 'seed-4 one-sided 95% lower bound' in ex[4]['reason']
+    assert ex[4]['cooperative'] is False and ex[4]['cooperative_status'] == 'not_admitted'
+    unwrapped = rb.confirmations
+    while hasattr(unwrapped, 'original'):
+        unwrapped = unwrapped.original
+    monkeypatch.setattr(rb, 'confirmations', unwrapped)
+    bs._CACHE.clear()
+    bs.install(rb, bank_rule='per_seed_v1')
+    rep = bs.report_per_seed(rb, root, 'B')                  # no KeyError on the rejected extra example
+    rows = {x['example_id']: x for x in rep['entries']}
+    for k in (1, 2, 3, 4):
+        row = rows[ex[k]['example_id']]
+        assert row['admitted'] == ex[k]['admitted']
+        assert row['cooperative'] == ex[k]['cooperative']
+        assert row['cooperative_status'] == ex[k]['cooperative_status']
+    assert rows[ex[4]['example_id']]['cooperative_status'] == 'not_admitted'
+    assert rep['cooperative_examples'] == 3 and rep['cooperative_by_seed'] == {'1': 1, '2': 1}
+
+
+def test_extra_seeds_quote_keys_and_cli():
+    """Quote: extra-seed cost keys only with extra_seeds>0; CLI 'extra-seeds' prints n=4 rows."""
+    D, M = [120]*8, [['c1', 'c2']]*8
+    q = vp.quote_decision(600, D, M, {1: [0], 2: [0]}, extra_seeds=4, cooperative=[0])
+    one = sv.branch_sim_s(min(600+120+sv.TAIL_S, 1200))
+    ext = sv.branch_sim_s(min(600+120+rb.EXTENDED_TAIL_S, 1200))
+    assert q['extra_seeds'] == 4 and q['cooperative'] == [0]
+    assert q['extra_seeds_group_sim_s'] == 4*2*one
+    assert q['extra_seeds_extended_sim_s'] == 4*2*ext
+    assert q['extra_seeds_solo_sim_s'] == 4*3*one
+    assert q['extra_seeds_sim_s'] == (q['extra_seeds_group_sim_s']+q['extra_seeds_extended_sim_s']
+                                      + q['extra_seeds_solo_sim_s'])
+    assert q['all8_total_with_extra_sim_s'] == q['all8_total_sim_s']+q['extra_seeds_sim_s']
+    assert q['multiplier_total_with_extra'] > q['multiplier_total']
+    no_coop = vp.quote_decision(600, D, M, {1: [], 2: []}, extra_seeds=4)
+    assert no_coop['extra_seeds_sim_s'] == 0 and no_coop['cooperative'] == []
+    import io, sys
+    buf = io.StringIO();old = sys.stdout
+    sys.stdout = buf
+    try:
+        vp.main(['extra-seeds'])
+    finally:
+        sys.stdout = old
+    out = json.loads(buf.getvalue())
+    row = out['t0_600']['one_cooperative_winner']
+    assert row['extra_seeds'] == 4 and row['extra_seeds_sim_s'] == q['extra_seeds_sim_s']
+
+
+def test_extra_seeds_on_arm_R(tmp_path):
+    """Same BUILD option on the R bank: salts, admission and examples are arm-agnostic."""
+    gains = {('p1', 1): 0.6, ('p1', 2): 0.6, ('p1', 1, 'solo'): 0.1, ('p1', 2, 'solo'): 0.1, ('p1', 3): 0.6,
+             ('p1', 3, 'solo'): 0.1, ('p1', 4): 0.6, ('p1', 4, 'solo'): 0.6}
+    root, snap, plans, r, runner_for, _ = setup(tmp_path, gains, arm='R')
+    assert rb.confirm_pending(root, 'R', runner_for, str(root), PHASE, verify_mode=vp.ALL8,
+                              extra_seeds=2) == [True]
+    c = vp.records(root, 'R')[r['verification_id']]
+    assert c['arm'] == 'R' and sorted(c['extra']) == ['3', '4']
+    ex = {e['seed_index']: e for e in c['per_seed_v1']['examples'] if e['candidate_index'] == 0}
+    assert ex[3]['admitted'] and ex[3]['cooperative'] is True and ex[4]['admitted']
+    assert ex[4]['cooperative'] is False and ex[4]['cooperative_status'] == 'not_cooperative'
+    assert {e['seed_index'] for e in vp.bank_examples(root, 'R')} == {1, 2, 3, 4}
+    assert (rb.bank_root(root, 'R')/'confirm_solo_all8_s3').exists()
+
+
+def test_reader_relabels_stored_reference_mismatch_on_extra_seed(tmp_path):
+    """The reader-side relabel resolves seed_index>=3 solos via seed_kinds (not SOLO_ROOTS)."""
+    from tools.coopmwm.accel_storage import write as awrite
+    bank = tmp_path/'bank'
+    sroot = bank/vp.seed_kinds(3)[2]
+    plan, ref, window, solo, J_ref = _solo_fixture(sroot, solo_end=660)
+    (sroot/'verifications').mkdir()
+    solo.pop('receipt_sha256');solo = xg._seal(solo, 'receipt_sha256')
+    (sroot/'verifications'/'solo_v.json').write_text(json.dumps(solo))
+    gdir = tmp_path/'seed3';gv = 'grp_v3'
+    for b, tape in (('policy', ref), ('cand1', plan)):
+        d = gdir/'branches'/gv/b;d.mkdir(parents=True);awrite(d/'RESULT.json', tape)
+    grec = xg._seal(dict(verification_id=gv, status='accepted', J_policy_veh_s=J_ref,
+                         branches=[dict(branch='policy'), dict(branch='cand1')], window=window), 'receipt_sha256')
+    (gdir/'verifications').mkdir();(gdir/'verifications'/(gv+'.json')).write_text(json.dumps(grec))
+    stale = dict(seed_index=3, example_id=gv+'#c1#s3', plan_id='p1', candidate_index=0, admitted=True,
+                 status='admitted', cooperative=False, cooperative_status='reference_mismatch',
+                 solo_verification_id='solo_v', solo_receipt_sha256=solo['receipt_sha256'],
+                 tape=dict(branches_dir=str(gdir/'branches'), verification_id=gv, branch=dict(branch='cand1'),
+                           window=window))
+    rec = dict(verification_id=gv, candidates=[dict(index=0, plan_id='p1', members=['a', 'b'])],
+               per_seed_v1=dict(examples=[stale], cooperative_seeds=[], replicated=False, replicated_plans=[]),
+               cooperation=dict(cooperative=False, cooperative_seeds=[], cooperative_examples=0, replicated=False))
+    out = vp.relabel_reference_mismatch(rec, bank)
+    e = out['per_seed_v1']['examples'][0]
+    assert e['cooperative'] is True and e['cooperative_status'] == 'cooperative'
+    assert out['per_seed_v1']['cooperative_seeds'] == [3]
+    assert out['per_seed_v1']['replicated'] is False        # an extra seed alone never flips the legacy flag

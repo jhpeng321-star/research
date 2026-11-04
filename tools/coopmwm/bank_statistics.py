@@ -172,6 +172,10 @@ def _read_result(branches_dir, vid, branch):
     from .protocol import digest
     p = Path(branches_dir)/vid/branch['branch']/'RESULT.json'
     if not p.exists():
+        slim = Path(branches_dir)/vid/branch['branch']/'SLIM.json'
+        if slim.exists():     # slim_rejected_tapes branch: exact per-second stats reconstruction
+            from .slim_tapes import slim_tape
+            return slim_tape(branches_dir, vid, branch)
         raise _Missing(f'missing branch tape {p}')
     tape = read(p)
     if branch.get('result_sha256') and digest(tape) != branch['result_sha256']:

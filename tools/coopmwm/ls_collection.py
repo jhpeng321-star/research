@@ -19,17 +19,28 @@ def compressed_json(path,value):
     os.replace(tmp,path)
 
 
+def decision_config(job):
+    """Registered search_families config from the collection job (None = option off:
+    exactly the legacy ``group_components`` groups). Validated against the registered keys."""
+    cfg=(job.get('ls_collect') or {}).get('variety')
+    if not cfg:return None
+    from .variety import split_config
+    probe=dict(cfg)
+    return split_config(probe)   # registered keys only; raises on unknown keys
+
+
 def install(controller,job,prefixes,generator):
     """Observe all eligible windows, publish compressed snapshots, always act on policy."""
     from .warm_history import ObservableHistory
-    from .mppi_search import group_components
+    from .variety import decision_groups
     from .sumo_verify import capture
     from .exploration import regime
     import torch
     root=Path(job['ls_collect']['root']);history=ObservableHistory()
+    vcfg=decision_config(job)   # ADDITIVE group kinds when search_families is registered
     def call(rows,commands,now,sample):
         if int(now)%10 or now>900:return None
-        groups=group_components(rows)
+        groups=decision_groups(rows,vcfg)
         if not groups:return None
         assert not controller.active_plans,'collection must execute no guide plans'
         key=f'{job["id"]}_t{int(now):04}'
@@ -225,6 +236,8 @@ def supervise(root):
         config.update(json.loads((root/'LS_REPLAY_DRAIN_CONFIG.json').read_text()))
     if (root/'LS_COOP_SEARCH_CONFIG.json').exists():   # additive; absent = unchanged collector
         config.update(json.loads((root/'LS_COOP_SEARCH_CONFIG.json').read_text()))
+    if (root/'LS_VARIETY_CONFIG.json').exists():       # additive search_families config; absent = unchanged
+        config.update(json.loads((root/'LS_VARIETY_CONFIG.json').read_text()))
     preflight_coop(config)   # fail loudly at startup, before any episode/search is admitted
     main=Path(config['run_root']);install_accounting(main,config['budget'])
     if config.get('operational_spend_cap'):
@@ -244,14 +257,19 @@ def supervise(root):
         from .policy_wm import actor_state
         policy,_,_,progress=load(main/'B_checkpoint_003.pt')
         assert progress['update']==3
+        # Additive episode-prefix key (default = the historical hard-coded id, byte-identical;
+        # a variety collection root names its own ids instead).
+        prefix=config.get('episode_prefix','lscollect1_B3')
         jobs=[]
         for w in config['worlds']:
-            jid=f'lscollect1_B3_{w["seed"]}'
+            jid=f'{prefix}_{w["seed"]}'
             jobs.append(dict(id=jid,path=str(main/'jobs'/jid),world=w,role='train',arm='B',update=3,
                 training_seed=20261101,weights=policy.state_dict(),policy_state=actor_state(policy),
                 runtime=config['runtime'],checkpoint=config['checkpoint'],noise_seed=20261101+w['seed'],
                 deterministic=False,guided=False,health_guards=False,sim_s=1200,warm_history=True,
-                accel_bounds=config['accel_bounds'],queue_root=str(main),ls_collect=dict(root=str(root),budget=config['budget'])))
+                accel_bounds=config['accel_bounds'],queue_root=str(main),
+                ls_collect=dict(root=str(root),budget=config['budget'],
+                    **(dict(variety=dict(config['variety'])) if config.get('variety') else {}))))
         existing={c['id'] for c in ledger(main)}
         if not any(j['id'] in existing for j in jobs):reserve(main,jobs,'train')
         else:assert all(j['id'] in existing for j in jobs),'partial collection episode charge'
@@ -305,8 +323,15 @@ def supervise(root):
                             from .niche_collect import search_config
                             ordinal=len(admitted)+admission_offset-config['niche_alternation']['start_admission_count']
                             if config.get('coop_search'):
-                                r['search_config']=search_config(ordinal,config['coop_search'],config.get('coop_alternation',False))
-                            else:r['search_config']=search_config(ordinal)
+                                r['search_config']=search_config(ordinal,config['coop_search'],
+                                    config.get('coop_alternation',False),config.get('variety'))
+                            else:r['search_config']=search_config(ordinal,variety=config.get('variety'))
+                        elif config.get('variety'):
+                            # search_families without niche alternation: the registered it2_K2
+                            # config plus the variety keys, so the GPU side re-derives the same
+                            # additive decision groups the collector used for this snapshot.
+                            from .niche_collect import search_config
+                            r['search_config']=search_config(0,variety=config['variety'])
                         key=r['state_id'];charge=9*min(1200,r['time_s']+420)
                         try:reserve(main,[dict(id='lslabel_'+key,sim_s=charge)],'sumo_verification')
                         except Exception as error:
@@ -340,7 +365,7 @@ def supervise(root):
                         snapshot_queries=len(pending),searches_requested=len(admitted),searches_finished=len(answered),
                         worlds=sorted({pending[k]['world_id'] for k in answered}),
                         admitted_worlds=sorted({pending[k]['world_id'] for k in admitted}),
-                        episode_worlds=sorted(w['seed'] for w in config['worlds'] if (main/'jobs'/f'lscollect1_B3_{w["seed"]}'/'RESULT.json').exists()),
+                        episode_worlds=sorted(w['seed'] for w in config['worlds'] if (main/'jobs'/f'{prefix}_{w["seed"]}'/'RESULT.json').exists()),
                          verified_lists=sum(x['verification']['status'] in ('accepted','rejected') for x in labels),
                          label_failures=len(list((root/'label_failures').glob('*.json'))),
                         verification_statuses=[x['verification']['status'] for x in labels],grading_inflight=len(grading),

@@ -94,6 +94,24 @@ Registered rules (all exposed in ``REGISTERED``):
   and the top-k are spread in a data-driven behaviour-descriptor space (top-2
   by score kept); optional k-NN novelty versus the verified bank. Still
   discovery-pure. See ``coop_search``.
+* Plan-variety families: config keys ``variety_*`` (option ``search_families``,
+  default off = byte-identical; ``variety`` is not even imported). When on,
+  a share-capped slice of the population slots (registered
+  ``variety_structured_share``, default 0.25) is filled at iteration 0 by
+  structured candidate generators (wall = abreast CAVs synchronise then
+  decelerate together then release; gap_open = a mainline CAV eases ahead of a
+  ramp partner's predicted arrival then recovers; ramp_assist = ramp CAV and
+  mainline CAV ahead coordinate timing) with per-candidate randomised onset /
+  hold / depth / duration sampled from a dedicated child stream and the same
+  bounds + feasibility clamp as free candidates; free search keeps the
+  majority and the WM score decides. Every searched candidate is tagged
+  ``variety_family`` (free/wall/gap_open/ramp_assist; additive key only when
+  the option is on). ``sample_unscored`` (arm R) draws from the SAME family
+  mix under the SAME registered keys. Group selection can be widened
+  additively at the decision sites via ``variety.decision_groups`` (multi-lane
+  abreast wall candidates; ramp + mainline gap-opening candidates; registered
+  distances only). Soft guidance only: nothing forces a structured candidate
+  into the finalists or the top-k. See ``variety``.
 """
 import hashlib
 import json
@@ -625,9 +643,23 @@ def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, c
     ``feasibility`` (NULL_DIAGNOSIS 8.2, see build_plan) clamps the profile to the
     actuator ceiling/floor when the caller resolved the members' allowed speeds;
     default None keeps the exact legacy draw bytes.
+    With option ``search_families`` on (variety_* keys, the SAME registered keys as the
+    B search) the draw uses the SAME family mix: with probability
+    ``variety_structured_share`` it is a structured candidate (wall/gap_open/ramp_assist,
+    random parameters, dedicated child stream, same clamp); otherwise the unchanged
+    generic draw. No variety config: byte-identical legacy draws.
     """
     cfg = dict(REGISTERED, **(config or {})); durations = allowed_durations(cfg['durations_s'], cfg['max_duration_s'])
+    vcfg, vmod = _variety_split(cfg)
     m = len(group['members']); rng = np.random.default_rng(seed)
+    if vmod is not None and float(vcfg['variety_structured_share']) > 0:
+        # Dedicated stream: never advances the legacy draw rng (byte-identical fallback).
+        vrng = np.random.default_rng(np.random.SeedSequence([int(seed), 0x56415249]))
+        if float(vrng.random()) < float(vcfg['variety_structured_share']):
+            drawn = vmod.random_mix_candidates(group, policy_traj, bounds, regime, vrng, vcfg,
+                                               feasibility, 1, durations, duration_s=duration_s)
+            if drawn:
+                return drawn[0]
     mu, cov, pd = _distribution(cfg, m, durations, covariance, regime, default_sigma(bounds))
     z = mu+_sampler(cov)@rng.standard_normal(mu.size)
     D = int(durations[rng.choice(len(durations), p=pd)])
@@ -635,8 +667,11 @@ def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, c
         if duration_s not in durations:raise ValueError('unregistered matched duration')
         D=int(duration_s)
     nc = canonical_knots(durations[-1])
-    return build_plan(group, policy_traj, z.reshape(m, nc), D, bounds, 'sampled', regime, 'R',
+    p = build_plan(group, policy_traj, z.reshape(m, nc), D, bounds, 'sampled', regime, 'R',
                       span_s=_span(cfg, durations, D), n_canon=nc, feasibility=feasibility)
+    if vmod is not None:   # generic draw of a variety-on search: still tagged 'free'
+        p['variety_family'] = 'free'
+    return p
 
 
 # --------------------------------------------------------------------------- coop_objective hooks
@@ -649,6 +684,16 @@ def _coop_split(cfg):
     from . import coop_search as cs
     coop = cs.split_config(cfg)
     return (coop, cs) if coop is not None else (None, None)
+
+
+def _variety_split(cfg):
+    """Option ``search_families`` (default OFF, see ``variety``). Off: no variety key survives
+    in ``cfg`` and ``variety`` is never imported, so the search output is byte-identical."""
+    if not any(k.startswith('variety_') for k in cfg):
+        return None, None
+    from . import variety
+    v = variety.split_config(cfg)
+    return (v, variety) if v is not None else (None, None)
 
 
 def _coop_finalists(pool, n, ctx, cs, niche_of=None):
@@ -776,6 +821,7 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
     """
     cfg = dict(cfg); M = int(cfg['niches'])
     coop, cs = _coop_split(cfg)
+    vcfg, vmod = _variety_split(cfg)
     durations = allowed_durations(cfg['durations_s'], cfg['max_duration_s'])
     m = len(group['members'])
     if not cfg['min_size'] <= m <= cfg['max_size']:
@@ -785,9 +831,10 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
         raise ValueError('policy trajectory shorter than the maximum plan duration')
     feas = centre_feasibility(record, group['members'], P, bounds, durations)
     seed = _seed_from(record, group) if seed is None else int(seed)
-    children = np.random.SeedSequence(seed).spawn(1+M)      # [choice, niche streams...]
+    children = np.random.SeedSequence(seed).spawn(2+M)      # [choice, niche streams..., variety]
     choice_rng = np.random.default_rng(children[0])
     rngs = [np.random.default_rng(children[1+i]) for i in range(M)]
+    variety_rng = np.random.default_rng(children[1+M])   # consumed only with search_families on
     nc = canonical_knots(durations[-1])
     sc = scaling(m, nc, cfg['top_k'], cfg)
     H_screen = int(min(cfg['final_H_max'], max(cfg['screen_H_min'], durations[-1])))
@@ -824,6 +871,14 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
                                    absolute, _span(cfg, durations, D), nc, feasibility=feas)
                     cands.append(p); niche_of[p['id']] = i
                     zs[p['id']] = np.asarray(p['perturbation_canonical'], float).reshape(-1)
+                if vmod is not None:
+                    # Structured candidates take ordinary per-niche slots (share-capped);
+                    # the free fill below keeps the registered niche size and dominates.
+                    n_struct = int(math.floor(float(vcfg['variety_structured_share'])*sizes[i]))
+                    for p in vmod.pool_candidates(group, P, bounds, regime, variety_rng, vcfg,
+                                                  feas, n_struct, durations):
+                        cands.append(p); niche_of[p['id']] = i
+                        zs[p['id']] = np.asarray(p['perturbation_canonical'], float).reshape(-1)
             mine = len(cands)-start_i
             L = _sampler(st['cov'])
             while mine < sizes[i]:
@@ -836,6 +891,9 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
                 zs[p['id']] = z
                 mine += 1
             counts.append(len(cands)-start_i)
+        if vmod is not None:
+            for p in cands:   # additive tag only; byte-identical output without the option
+                p.setdefault('variety_family', 'free')
         if ctx is None:
             scores = evaluate(record, base+cands, cfg['screen_K'], H_screen)
             futures += (len(cands)+len(base))*cfg['screen_K']
@@ -998,6 +1056,7 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
                              seed=seed, extra_seeds=extra_seeds)
     cfg.pop('niches', None)  # niches=1 (explicit or default): byte-identical legacy output
     coop, cs = _coop_split(cfg)  # coop_objective off (default): no key, no import, identical output
+    vcfg, vmod = _variety_split(cfg)  # search_families off (default): no key, no import
     durations = allowed_durations(cfg['durations_s'], cfg['max_duration_s'])
     m = len(group['members'])
     if not cfg['min_size'] <= m <= cfg['max_size']:
@@ -1007,13 +1066,17 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
         raise ValueError('policy trajectory shorter than the maximum plan duration')
     feas = centre_feasibility(record, group['members'], P, bounds, durations)
     seed = _seed_from(record, group) if seed is None else int(seed)
-    search_rng, choice_rng = (np.random.default_rng(s) for s in np.random.SeedSequence(seed).spawn(2))
+    children = np.random.SeedSequence(seed).spawn(3)   # prefix-stable: [choice, search, variety]
+    search_rng, choice_rng = (np.random.default_rng(s) for s in children[:2])
+    variety_rng = np.random.default_rng(children[2])   # consumed only with search_families on
     nc = canonical_knots(durations[-1])
     sc = scaling(m, nc, cfg['top_k'], cfg)
     H_screen = int(min(cfg['final_H_max'], max(cfg['screen_H_min'], durations[-1])))
     sigma = default_sigma(bounds)
     mu, cov, pd = _distribution(cfg, m, durations, covariance, regime, sigma)
     desc = describe(group, regime)
+    structured_budget = int(math.floor(float(vcfg['variety_structured_share'])*sc['population'])) \
+        if vmod is not None else 0
     base = comparators(record, cfg['final_H_max'])
     seeds = [(np.zeros((m, nc)), durations[-1], 'centre', None)]
     if mappo_traj is not None:
@@ -1038,6 +1101,12 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
                 p = build_plan(group, P, z, D, bounds, origin, regime, f'i{it}s{j}-', absolute,
                                _span(cfg, durations, D), nc, feasibility=feas)
                 cands.append(p); zs[p['id']] = np.asarray(p['perturbation_canonical'], float).reshape(-1)
+            if vmod is not None and structured_budget:
+                # Structured candidates take ordinary population slots (share-capped); the
+                # free fill below keeps the registered total and dominates the pool.
+                for p in vmod.pool_candidates(group, P, bounds, regime, variety_rng, vcfg, feas,
+                                              structured_budget, durations):
+                    cands.append(p); zs[p['id']] = np.asarray(p['perturbation_canonical'], float).reshape(-1)
         L = _sampler(cov)
         while len(cands) < sc['population']:
             z = mu+L@search_rng.standard_normal(mu.size)
@@ -1046,6 +1115,9 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
                            f'i{it}s{len(cands)}-', span_s=_span(cfg, durations, D), n_canon=nc,
                            feasibility=feas)
             cands.append(p); zs[p['id']] = z
+        if vmod is not None:
+            for p in cands:   # additive tag only; byte-identical output without the option
+                p.setdefault('variety_family', 'free')
         if ctx is None:
             scores = evaluate(record, base+cands, cfg['screen_K'], H_screen)
             futures += (len(cands)+len(base))*cfg['screen_K']
