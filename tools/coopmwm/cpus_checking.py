@@ -311,6 +311,14 @@ def _attempts(control):
     return out
 
 
+def _max_running(control, default):
+    """Live concurrency knob: <control>/CONCURRENCY.json {"max_running": n} (else the BINDING value)."""
+    try:
+        return int(json.loads((Path(control)/'CONCURRENCY.json').read_text())['max_running'])
+    except (OSError, ValueError, KeyError):
+        return default
+
+
 def coordinator(control):
     control = Path(control)
     cfg = json.loads((control/'BINDING.json').read_text())
@@ -364,7 +372,7 @@ def coordinator(control):
                 if not running:
                     stop_reason = f'queue_done ({arm} queue empty; matched pace)'
                     log(control, event='queue_done', arm=arm, started=started)
-            elif len(running) < maxrun and os.getloadavg()[0] <= cfg['max_load'] and \
+            elif len(running) < _max_running(control, maxrun) and os.getloadavg()[0] <= cfg['max_load'] and \
                     abs(started['B']-started['R']) <= 1:
                 if time.time()-budget_t > 20:
                     try:
