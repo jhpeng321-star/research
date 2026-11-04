@@ -1,6 +1,11 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
 ## CURRENT Nov4 15:22 +08 — u12 input restoration COMPLETE; r3 recovery pending
+- 15:30freshownerproofCONTINUATION_1440_1793777359595148300: A19LIVE/r3BR+
+  supervisorABSENT/guidedSTOPstillpresent/monitor+bothmoversLIVE/free6758567936.
+  RemoteU12_INPUT_RESTORATION_COMPLETE_SOL.jsonnowpinsB12SHA6c721154;
+  localU12_RESTORE_NOTIFY_1793777430220012300. NOrestartclaimed. Initialcompact
+  adoptionhiddeadowners;1509livenessclaimwasinaccurate/STOPactually1500.
 - ROOTCAUSECONFIRMED MAIN1435movejobs_1441 movedtransitiveLSepisode_pathRESULTs.
   Registeredplan ddf68738/commit7eaf1c84 BEFORE26file/51960259byteSHArestore.
 - COMPLETEU12_RESTORE_RESTORE_1793776857639598100: remote+localSHAverified,

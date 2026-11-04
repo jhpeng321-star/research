@@ -43,3 +43,19 @@ command imitation deployment remains operator-owned.
 - `U12_RESTORE_RESTORE_1793776857639598100.json`
 - `U12_INPUT_VERIFIED_1793776957235172100.json`
 - Operator/MAIN notice: `_sol/COOPMWM_U12_ARCHIVE_STOP_1512_MAIN.md`
+
+### 15:30 follow-up: direct recovery notice and process evidence
+
+- `U12_INPUT_RESTORATION_COMPLETE_SOL.json` is now on the cpuQ run root,
+  referencing the completed restoration and checkpoint SHA256
+  `6c7211548da1ff2e638fd1f2dad9217fdfd3ef49c33c6aba8ee56f0b45545510`.
+  Receipt: `U12_RESTORE_NOTIFY_1793777430220012300.json`.
+- Latest direct owner check `CONTINUATION_1440_1793777359595148300.json`:
+  A19 continues; r3 B/R/supervisor absent; monitor and both movers live;
+  guided engineering STOP still present. cpuQ free 6,758,567,936 bytes.
+  No restart is claimed.
+- Reporting correction: the first compact adoption output omitted owner/STOP
+  details and its apparent liveness was inaccurate. The failure was already at
+  15:00, before the 15:09 adoption probe. Compact local reporting now exposes
+  each owner and engineering failure alongside the sealed update numbers;
+  monitor health on old sealed B11/R11 is not evidence of live training.
