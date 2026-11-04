@@ -1,5 +1,24 @@
 # S-COOPMWM — live checks
 
+### Nov4 18:14 UTC+8 — B13 sealed and cleanly boundary-stopped; R12 checks active
+- **Latest sealed updates: A24/B13/R11.** B13 completed18:11:31 with four full
+  imitation passes, effective first pass, no imitation failure, KL0.0392733,
+  six practice/eighteen normal episodes and composite safety PASS on24pairs.
+- The existing operator's u14chain3670537 remains live and records B3666932
+  stopped at its clean sealed-u13 boundary, with no charges after that boundary.
+  B's absence is expected. R3667029 is live with an R-u12 isolated solo branch
+  and SUMO observed; R12 completion is not yet claimed.
+- Active source/runtime remains raw src8/1d67a685. Effective-command imitation
+  FIRSTu14 for both arms and gate13 remain operator-owned pending handover.
+  Monitor4 still pins06e88ecd; this mismatch remains disclosed.
+- Latest cpuQ free space **9,131,917,312bytes (~8.50GiB)** clears unchanged6GiB/
+  6.5GiB gates. Both archive movers and all six read-only cpuS mounts remain.
+  Live cpuS training/ledger handover is not established.
+- B12's missing mechanics remain null/disclosed. u8 interim is complete288/288,
+  outcomes closed. This session remains monitor/report only under MAIN16:03/
+  16:25, with no new simulation, inference, remote writes, signals or dispatches.
+- Evidence:`coopmwm/RESUME_MONITOR_20261104_1814.md` and four linked raw receipts.
+
 ### Nov4 18:02 UTC+8 — operator r4 resumed on cpuQ; post-mount reader scan clear
 - **A24/B12/R11 remain the latest sealed updates.** Existing operator r4 processes
   are live: supervisor3666926, B3666932 resumingu13, R3667029 resumingu12. R12 has

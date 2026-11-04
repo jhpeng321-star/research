@@ -1,5 +1,22 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 18:14 +08 — MONITOR ONLY; B13 sealed/boundary stopped; R12 isolated active
+- Full1,140-linebrief/status/log/currentreceipts+canonicalthrough7294READ;
+  dirtyworkpreserved. MAIN16:03/16:25 retains operator ownership.
+- LatestSEALED A24/B13/R11. B13sealed18:11:31/fourfullpasses/pass1effective/
+  noimitationfailure/KL.0392733/compositesafetyPASS24pairs/sixpractice18normal.
+- Existingchain3670537/start80071619LIVE: ownB3666932stoppedatcleansealedu13
+  boundary/nochargesafter; absenceEXPECTED/notcrash/no competingrestart.
+  R3667029/start80066427LIVE/u12isolatedsolo+SUMOobserved/R12notyetsealed.
+- ActiveRAWsrc8/runtime1d67a685; effectiveFIRSTu14BOTHarms/gate13operatorowned/
+  notclaimedactive. Monitor4still06e88ecd-bound/mismatchdisclosed.
+- Sixread-onlycpuSmountskept/reader0restore+68preexistingunresolvedunchanged;
+  no cpuS live-training/ledger handover confirmed. BothmoversLIVE.
+  LatestcpuQ9,131,917,312bytes/~8.50GiBclears6/6.5GiBgates.
+- B12lostmetricsremainNULL/disclosed; u8COMPLETE288/288/outcomesclosed.
+  Proofcoopmwm/RESUME_MONITOR_20261104_1814.md+fourrawreceipts. Zerooursphysics/
+  inference/remotewrites/signals/moves/deletion/ledgeraccess/competingdispatch.
+
 ## CURRENT Nov4 18:02 +08 — MONITOR ONLY; operator r4 resumed B13/R12 on cpuQ
 - Full1,140-linebrief/status/log/currentreceipts+canonicalthrough7289READ;
   dirtyworkpreserved. MAIN16:03/16:25 retains operator ownership.
