@@ -58,3 +58,11 @@ C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cachepro
 ```
 
 Review was CPU-only, with no SSH, remote jobs, SUMO or GPU execution. No forbidden-path contents or prohibited truth artifacts were opened. No implementation edits or commits were made. The only review-authored worktree file is `REVIEW_T1B_r3.md`.
+
+## Fresh-session resume verification (2026-11-05)
+
+- Resumed at HEAD `29668d54ca69fcbfd32b84ecc8d435a4c0d1fdec` on `c4/planner-online`; initial worktree status was clean. Read git status/log, the shared spec, readiness receipt, this completed review and the acceptance receipt before proceeding.
+- Confirmed `c4/track-base` still resolves to `13f184b5a7e12be04aebf246ef8e4dbb81555545`. Since the independently reviewed HEAD, only this report, `T1B_ACCEPTED.json` and `T1B_READY.json` changed. Read the readiness delta; it records the existing acceptance without changing implementation requirements.
+- `git diff --exit-code 1f15a9ef0d249bebbbafd43efccd7c3f677778e7 --` over all seven changed implementation/test files returned success with no output. Their diff versus the unchanged base is therefore identical to the completed review's diff. The same files also passed `git diff --check c4/track-base --` again.
+- Preserved the completed PASS and its **188 passed plus 9 passing subtests**. These are the prior independent run counts documented above, not new executions in this resumed session. In accordance with the instruction not to redo finished work, no pytest job or other dispatch was started, and no additional tests are counted.
+- No blockers or required fixes were added. This resume changes only this review file; any resume commit is review-only. No restricted artifacts were opened and no SSH, SUMO or GPU execution occurred.
