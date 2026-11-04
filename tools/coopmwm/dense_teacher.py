@@ -29,11 +29,12 @@ tasks: this module codes against their registered APIs through two LAZY seams, b
                                                              candidate list
 
 Labelling rule (mirrors the T1B firing rule): a candidate move is labelled only when its
-calibrated P >= ``dense_teacher_p_star`` (owner rule 10-18); ties break by expected gain, then
-by candidate order; if no candidate clears the gate the state is labelled 'none' (class 0).
+calibrated P >= ``dense_teacher_p_star`` (owner rule 10-18); maximize expected gain among
+eligible moves, then break ties by candidate order; if none clear the gate label 'none'.
 DAgger: the labelled states are decision points of the CURRENT policy's OWN training rollouts
 (collected by the T2C loop into ``DAggerBuffer``), never expert states.
 """
+import copy
 import json
 import math
 from pathlib import Path
@@ -72,11 +73,23 @@ def split_config(cfg):
     """Pop every ``dense_teacher_*`` key from ``cfg`` (in place). Returns the resolved teacher
     config, or None when the option is off (then cfg carries no dense_teacher key:
     byte-identical output). Mirrors ``variety.split_config``."""
-    raw = {k: cfg.pop(k) for k in [k for k in cfg if k.startswith('dense_teacher_')]}
+    raw = {k: cfg.pop(k) for k in list(cfg)
+           if k == 'dense_teacher' or k.startswith('dense_teacher_')}
     unknown = set(raw)-set(TEACHER_REGISTERED)
     if unknown:
         raise ValueError(f'unregistered dense_teacher config keys {sorted(unknown)}')
     v = dict(TEACHER_REGISTERED, **raw)
+    for key in ('dense_teacher', 'dense_teacher_random'):
+        if not isinstance(v[key], bool):
+            raise ValueError(f'{key} must be a bool')
+    for key in ('dense_teacher_candidates', 'dense_teacher_buckets', 'dense_teacher_seed',
+                'dense_teacher_extra_seeds'):
+        x = v[key]
+        if isinstance(x, bool) or not math.isfinite(float(x)) or int(x) != float(x):
+            raise ValueError(f'{key} must be an integer')
+        v[key] = int(x)
+    if v['dense_teacher_seed'] < 0:
+        raise ValueError('dense_teacher_seed must be >= 0')
     if not 0. <= float(v['dense_teacher_fraction']) <= 1:
         raise ValueError('dense_teacher_fraction must be within [0, 1]')
     if int(v['dense_teacher_candidates']) < 1:
@@ -85,7 +98,8 @@ def split_config(cfg):
         raise ValueError('dense_teacher_p_star must be within [0, 1]')
     if int(v['dense_teacher_buckets']) < 2:
         raise ValueError('dense_teacher_buckets must be >= 2')
-    if not float(v['dense_teacher_cadence_s']) > 0:
+    if not (math.isfinite(float(v['dense_teacher_cadence_s']))
+            and float(v['dense_teacher_cadence_s']) > 0):
         raise ValueError('dense_teacher_cadence_s must be > 0')
     if int(v['dense_teacher_extra_seeds']) < 0:
         raise ValueError('dense_teacher_extra_seeds must be >= 0')
@@ -103,7 +117,10 @@ def plan_config(config=None):
 
 def at_decision_point(t_s, cadence_s):
     """The registered decision-interval cadence (60 s): teacher labels land only on these ticks."""
-    return int(t_s) % int(cadence_s) == 0
+    t, cadence = float(t_s), float(cadence_s)
+    if not (math.isfinite(t) and t >= 0 and math.isfinite(cadence) and cadence > 0):
+        raise ValueError('time must be finite/nonnegative and cadence finite/positive')
+    return math.isclose(t/cadence, round(t/cadence), rel_tol=0., abs_tol=1e-9)
 
 
 def observable_rows(obs_state):
@@ -111,7 +128,22 @@ def observable_rows(obs_state):
     (V2V/sensing state). No hidden driver type, vType or global-state field ever enters a label."""
     if not isinstance(obs_state, dict) or 'rows' not in obs_state:
         raise TypeError('obs_state must be a dict with observable "rows"')
-    return [{k: row[k] for k in OBSERVABLE_ROW_KEYS if k in row} for row in obs_state['rows']]
+    return copy.deepcopy([{k: row[k] for k in OBSERVABLE_ROW_KEYS if k in row}
+                          for row in obs_state['rows']])
+
+
+def observable_state(obs_state):
+    """Sensing/V2V boundary shared by capture, candidate generation AND WM scoring.
+
+    ``rows`` must already be the acting CAV's locally visible, timestamp-aligned reports,
+    not a global scene. T2C owns visibility/t-1 filtering. Only observable fields cross this
+    seam; a hidden field on a supplied row is never forwarded to a dependency.
+    """
+    out = {'rows': observable_rows(obs_state)}
+    for key in ('ego_id', 'cav', 'time_s', 'sensing_range_m', 'v2v_partner_ids'):
+        if key in obs_state:
+            out[key] = copy.deepcopy(obs_state[key])
+    return out
 
 
 def _move_fields(move):
@@ -184,7 +216,7 @@ class TargetEncoder:
 
 
 def softmax(logits):
-    z = np.asarray(logits, float)
+    z = _logits(logits)
     z = z-z.max()
     e = np.exp(z)
     return e/e.sum()
@@ -193,8 +225,17 @@ def softmax(logits):
 def cross_entropy(logits, class_index):
     """Numerically stable NLL of ``class_index`` under ``logits`` (numpy; the target-side check
     for the T2A head's imitation loss - the head itself owns its torch CE)."""
-    z = np.asarray(logits, float)
+    z = _logits(logits)
+    if isinstance(class_index, bool) or int(class_index) != class_index or not 0 <= class_index < len(z):
+        raise ValueError('class_index is outside the categorical head')
     return float(np.log(np.exp(z-z.max()).sum())-(z[int(class_index)]-z.max()))
+
+
+def _logits(logits):
+    z = np.asarray(logits, float)
+    if z.ndim != 1 or not len(z) or not np.isfinite(z).all():
+        raise ValueError('logits must be a nonempty finite vector')
+    return z
 
 
 # ---------------------------------------------------------------- labels
@@ -257,10 +298,17 @@ class _TeacherBase:
     built from moves.FAMILIES (minus 'none', which is class 0)."""
 
     def __init__(self, moves_mod=None, cfg=None, rng=None, encoder=None):
-        self.cfg = dict(TEACHER_REGISTERED, **(cfg or {}))
+        resolved = dict(TEACHER_REGISTERED, **(cfg or {}))
+        # Constructors also validate, including while disabled; no bypass through the factory.
+        split_config(dict(resolved))
+        self.cfg = resolved
         self._moves_mod = moves_mod
         self._encoder = encoder
         self.rng = np.random.default_rng(int(self.cfg['dense_teacher_seed'])) if rng is None else rng
+        # A separate choice stream makes BOTH arms' candidate streams identical for the same
+        # seed and observations across arbitrarily many calls, not merely the first call.
+        self.choice_rng = np.random.default_rng(np.random.SeedSequence(
+            [int(self.cfg['dense_teacher_seed']), 1]))
 
     @property
     def moves(self):
@@ -286,7 +334,29 @@ class _TeacherBase:
             family = _move_fields(c)[0]
             if family not in fams:
                 raise ValueError(f'candidate family {family!r} outside moves.FAMILIES')
+            if family != NONE_FAMILY:
+                members = _move_fields(c)[1]
+                visible = {str(r['vid']) for r in obs_state['rows'] if r.get('is_cav') is True}
+                if not 1 <= len(members) <= 4 or len(set(members)) != len(members):
+                    raise ValueError('candidate needs 1..4 distinct CAV members')
+                if not set(map(str, members)) <= visible or str(obs_state['cav']) not in set(map(str, members)):
+                    raise ValueError('candidate members must be visible CAVs including the acting CAV')
+        cands = [c for c in cands if _move_fields(c)[0] != NONE_FAMILY]
         return cands
+
+    def _label(self, episode, step, t_s, cav, obs_state, cands, index, source, scores=None):
+        from .protocol import digest
+        move = None if index == 0 else cands[index-1]
+        lb = make_label(episode, step, t_s, cav, obs_state, move, source, self.encoder,
+                        scores=scores, draw=index if source == 'random' else None)
+        support = []
+        for c in cands:
+            f, m, o, h, d = _move_fields(c)
+            support.append(dict(family=f, members=m, onset=o, hold=h, depth=d))
+        lb.update(candidates=support, candidate_index=None if index == 0 else index-1,
+                  candidate_class=index, n_candidate_classes=len(cands)+1,
+                  support_sha256=digest(support), obs_state=observable_state(obs_state))
+        return lb
 
     def label_state(self, episode, step, t_s, cav, obs_state):
         raise NotImplementedError
@@ -317,17 +387,20 @@ class WMDenseTeacher(_TeacherBase):
             for key in ('p_better', 'gain'):
                 if not math.isfinite(float(s[key])):
                     raise ValueError(f'scorer {key} is not finite')
+            if not 0 <= float(s['p_better']) <= 1:
+                raise ValueError('scorer probability is outside [0, 1]')
         return scores
 
     def label_state(self, episode, step, t_s, cav, obs_state):
+        obs_state = dict(observable_state(obs_state), cav=str(cav))
         cands = self._candidates(obs_state)
         scores = self._score(obs_state, cands)
         p_star = float(self.cfg['dense_teacher_p_star'])
         gated = [(i, s) for i, s in enumerate(scores) if float(s['p_better']) >= p_star]
-        best = max(gated, key=lambda t: (t[1]['p_better'], t[1]['gain'], -t[0])) if gated else None
-        move = None if best is None else cands[best[0]]
-        return make_label(episode, step, t_s, cav, obs_state, move, 'wm', self.encoder,
-                          scores=None if best is None else best[1])
+        best = max(gated, key=lambda t: (t[1]['gain'], -t[0])) if gated else None
+        return self._label(episode, step, t_s, cav, obs_state, cands,
+                           0 if best is None else best[0]+1, 'wm',
+                           scores=None if best is None else best[1])
 
 
 class RandomTeacher(_TeacherBase):
@@ -337,16 +410,17 @@ class RandomTeacher(_TeacherBase):
     construction and differs only by the (absent) planner."""
 
     def label_state(self, episode, step, t_s, cav, obs_state):
+        obs_state = dict(observable_state(obs_state), cav=str(cav))
         cands = self._candidates(obs_state)
-        draw = int(self.rng.integers(0, len(cands)+1))
-        move = None if draw == 0 else cands[draw-1]
-        return make_label(episode, step, t_s, cav, obs_state, move, 'random', self.encoder, draw=draw)
+        draw = int(self.choice_rng.integers(0, len(cands)+1))
+        return self._label(episode, step, t_s, cav, obs_state, cands, draw, 'random')
 
 
 def make_teacher(cfg, moves_mod=None, scorer=None, rng=None, encoder=None):
     """Factory used by the T2C loop: ``dense_teacher_random`` -> RandomTeacher (R), else
     WMDenseTeacher (B). Refuses to build anything while the option is off."""
     cfg = dict(TEACHER_REGISTERED, **(cfg or {}))
+    split_config(dict(cfg))
     if not cfg.get('dense_teacher'):
         raise ValueError('dense_teacher is OFF: resolve its config (plan_config) first')
     if cfg.get('dense_teacher_random'):
@@ -364,13 +438,23 @@ class DAggerBuffer:
     calls ``add`` at every control tick it wants considered; ``label`` runs the teacher."""
 
     def __init__(self, cadence_s=None):
-        self.cadence_s = None if cadence_s is None else int(cadence_s)
+        self.cadence_s = None if cadence_s is None else float(cadence_s)
+        if self.cadence_s is not None:
+            at_decision_point(0, self.cadence_s)
         self.records = []
+        self._ids = set()
+        self._labels = {}
 
     def add(self, episode, step, t_s, cav, obs_state):
         at = True if self.cadence_s is None else at_decision_point(t_s, self.cadence_s)
+        if not at:
+            return False
+        ident = _label_id(episode, step, t_s, cav)
+        if ident in self._ids:
+            return False
+        self._ids.add(ident)
         self.records.append(dict(episode=episode, step=int(step), t_s=float(t_s), cav=str(cav),
-                                 obs_state=obs_state, at_decision_point=at))
+                                 obs_state=observable_state(obs_state), at_decision_point=at))
         return at
 
     def decision_points(self):
@@ -378,8 +462,12 @@ class DAggerBuffer:
 
     def label(self, teacher, decisions_only=True):
         rows = self.decision_points() if decisions_only else list(self.records)
-        return [teacher.label_state(r['episode'], r['step'], r['t_s'], r['cav'], r['obs_state'])
-                for r in rows]
+        for r in rows:
+            ident = _label_id(r['episode'], r['step'], r['t_s'], r['cav'])
+            if ident not in self._labels:
+                self._labels[ident] = teacher.label_state(
+                    r['episode'], r['step'], r['t_s'], r['cav'], r['obs_state'])
+        return [self._labels[_label_id(r['episode'], r['step'], r['t_s'], r['cav'])] for r in rows]
 
 
 # ---------------------------------------------------------------- SUMO verification (all8)
@@ -401,17 +489,66 @@ def select_for_verification(labels, fraction):
     return out
 
 
-def bind_receipt(label, receipt, candidate_index):
+def bind_receipt(label, receipt, candidate_index, plan=None, moves_mod=None):
     """Bind a label to the completed first-seed verification receipt its move was executed in
     (the T2C branch runner produces it through the existing sv.verify machinery); the 0-based
     candidate index identifies the labelled move inside that decision."""
+    from .exact_grade import verify_sealed
+    from .protocol import digest
+    verify_sealed(receipt, 'receipt_sha256')
+    if receipt['status'] not in ('accepted', 'rejected'):
+        raise ValueError('verification must be completed')
+    if not label.get('selected_for_verification'):
+        raise ValueError('only selected labels may be bound')
+    if receipt['t0'] != label['t_s'] or receipt['episode']['id'] != label['episode']:
+        raise ValueError('receipt belongs to another decision state')
+    if receipt['episode'].get('role') != 'train':
+        raise ValueError('dense teacher verification requires training episodes')
+    if label['move'] is None:
+        if candidate_index is not None or plan is not None:
+            raise ValueError('none label binds to policy-continues, not a move')
+    else:
+        if (candidate_index is None or isinstance(candidate_index, bool)
+                or int(candidate_index) != candidate_index or not 0 <= candidate_index < receipt['k']):
+            raise ValueError('candidate index outside receipt')
+        candidate_index = int(candidate_index)
+        if plan is None or digest(plan) != receipt['candidate_plan_sha256'][candidate_index]:
+            raise ValueError('candidate plan differs from sealed receipt')
+        if list(plan['members']) != label['move']['members']:
+            raise ValueError('candidate plan members differ from labelled move')
+        moves_mod = default_moves() if moves_mod is None else moves_mod
+        if _move_fields(moves_mod.from_plan(plan)) != _move_fields(label['move']):
+            raise ValueError('candidate plan does not map to the labelled move')
     vid = receipt['verification_id']
     if label.get('verification_id', vid) != vid:
         raise ValueError('label is already bound to another verification')
     label['verification_id'] = vid
     label['receipt_status'] = receipt['status']
-    label['candidate_index'] = int(candidate_index)
+    label['verification_candidate_index'] = candidate_index
+    label['verification_receipt_sha256'] = receipt['receipt_sha256']
+    label['verification_plan_sha256'] = None if plan is None else digest(plan)
     return label
+
+
+def verify_selected(labels, fraction, submit_first_seed, verifier, moves_mod=None):
+    """T2C hook: select -> first-seed dispatch -> existing all8 confirmation -> consume.
+
+    ``submit_first_seed(label)`` returns ``(sealed_receipt, index, plan)`` and must persist
+    the decision/snapshot through the existing bank runner, with its usual ledger/health
+    hooks. For 'none', index/plan are None: all8 still measures the candidate support against
+    policy-continues. Already bound labels are never dispatched again. Existing all8 pending
+    detection handles completed confirmations. The caller must serialize this with its bank
+    dispatcher (as for varcollect); this module starts no background jobs.
+    """
+    selected = select_for_verification(labels, fraction)
+    for lb in selected:
+        if not lb.get('verification_id'):
+            receipt, index, plan = submit_first_seed(lb)
+            bind_receipt(lb, receipt, index, plan, moves_mod=moves_mod)
+    if any(not lb.get('verified') for lb in selected):
+        verifier.flush()
+    return verifier.consume(selected) if selected else dict(
+        labels=0, unbound=0, missing=0, sealed=0, replicated=0, flipped=0)
 
 
 class All8Verifier:
@@ -450,8 +587,15 @@ class All8Verifier:
                 summary['missing'] += 1
                 continue
             summary['sealed'] += 1
-            cand = lb.get('candidate_index')
+            if rec['first_seed']['receipt_sha256'] != lb['verification_receipt_sha256']:
+                raise ValueError('all8 record differs from bound first-seed receipt')
+            cand = lb.get('verification_candidate_index')
             mine = [e for e in rec['per_seed_v1']['examples'] if e['candidate_index'] == cand]
+            if cand is not None and ({1, 2} - {e['seed_index'] for e in mine}):
+                raise ValueError('all8 record is missing candidate seed examples')
+            from .protocol import digest
+            if any(digest(e['plan']) != lb['verification_plan_sha256'] for e in mine):
+                raise ValueError('all8 candidate differs from bound plan')
             admitted = sorted(e['seed_index'] for e in mine if e.get('admitted'))
             replicated = {1, 2} <= set(admitted)
             others = any(e.get('admitted') for e in rec['per_seed_v1']['examples']
@@ -467,8 +611,8 @@ class All8Verifier:
 
 
 def verification_quote(labels, k, duration_s=120, members=2, end_s=1200, extra_seeds=0):
-    """Upper-bound all8_both_seeds sim-s quote for the SELECTED labels: per decision one winner
-    per seed is assumed (the same convention as ``verify_perseed.standard_quote``), charged via
+    """Upper-bound all8_both_seeds sim-s quote for the SELECTED labels: every candidate wins
+    on every seed (including all solos and extra seeds), charged via
     the real ``verify_perseed.quote_decision`` arithmetic. Pure math - never runs SUMO."""
     from . import verify_perseed as vp
     k = int(k)
@@ -476,7 +620,7 @@ def verification_quote(labels, k, duration_s=120, members=2, end_s=1200, extra_s
         raise ValueError('k must be >= 1')
     durations = [int(duration_s)]*k
     mem = [['m%d' % i for i in range(int(members))]]*k
-    rows = [vp.quote_decision(int(lb['t_s']), durations, mem, {1: [0], 2: [0]},
+    rows = [vp.quote_decision(int(lb['t_s']), durations, mem, {1: list(range(k)), 2: list(range(k))},
                               first_seed_positive=True, end_s=int(end_s), extra_seeds=int(extra_seeds))
             for lb in labels if lb.get('selected_for_verification')]
     return dict(n_selected=len(rows), k=k,
@@ -506,11 +650,18 @@ def build_dataset(labels, encoder):
         targets.append(dict(id=lb['id'], episode=lb['episode'], step=lb['step'], t_s=lb['t_s'],
                             cav=lb['cav'], source=lb['source'], action_class=t['action_class'],
                             family_index=t['family_index'], buckets=t['buckets'],
-                            members=t['members'], weight=1.0, verified=bool(lb.get('verified')),
+                            members=t['members'], obs_state=copy.deepcopy(lb['obs_state']),
+                            candidates=copy.deepcopy(lb['candidates']),
+                            candidate_class=lb['candidate_class'],
+                            n_candidate_classes=lb['n_candidate_classes'],
+                            weight=1.0, verified=bool(lb.get('verified')),
                             verified_replicated=bool(lb.get('verified_replicated')),
                             selected_for_verification=bool(lb.get('selected_for_verification'))))
-    return dict(schema=SCHEMA, spec=encoder.spec(), counts=counts,
-                histogram={str(k): v for k, v in sorted(histogram.items())}, targets=targets)
+    return dict(schema=SCHEMA, spec=dict(encoder.spec(),
+                candidate_target='candidate_class: 0=none, i+1=candidates[i]; exact members/params',
+                action_target='action_class: family/parameter buckets; members is an auxiliary target'),
+                counts=counts, labels=copy.deepcopy(labels),
+                 histogram={str(k): v for k, v in sorted(histogram.items())}, targets=targets)
 
 
 def save_dataset(dataset, path):
