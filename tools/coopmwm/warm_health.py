@@ -135,14 +135,19 @@ def after_check(root,arm,u,report):
                 previous={k:prior[k] for k in bad}))
 
 
-def braking(root,arm,u,episodes,a_records):
+def braking(root,arm,u,episodes,a_records,pairs=None):
+    """Registered hard-brake + composite guard. ``pairs`` optionally maps an episode id to its
+    EXACT matched reference record (practice_starts: the same-snapshot/same-CRN A-policy
+    reference); episodes without an explicit pair fall back to the same-world reference exactly
+    as before - the guard is never weakened."""
     if arm not in ('B','R'):return
     from .composite_health import braking as composite_braking
-    if composite_braking(root,arm,u,episodes,a_records,pause):return
+    if composite_braking(root,arm,u,episodes,a_records,pause,pairs=pairs):return
     a={e['world']['seed']:e for e in a_records}
-    common=[e for e in episodes if e['world']['seed'] in a]
+    ref=lambda e:(pairs or {}).get(e.get('id')) or a.get(e['world']['seed'])
+    common=[e for e in episodes if ref(e) is not None]
     if len(common)<2:return
-    delta=np.array([e['metrics']['900']['hard_brake']-a[e['world']['seed']]['metrics']['900']['hard_brake'] for e in common])/900.
+    delta=np.array([e['metrics']['900']['hard_brake']-ref(e)['metrics']['900']['hard_brake'] for e in common])/900.
     idx=np.random.default_rng(20261101).integers(0,len(delta),(10000,len(delta)))
     ci=np.quantile(delta[idx].mean(1),[.025,.975]).tolist()
     if ci[0]>0:pause(root,'SAFETY',dict(update=u,arm=arm,metric='hard-brake vehicle-seconds / 900 control seconds',

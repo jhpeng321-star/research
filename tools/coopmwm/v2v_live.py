@@ -56,20 +56,84 @@ def hooks(root, cfg):
             health.assert_running(r,arm)
             if time.time()>cfg['gpu_deadline']:raise ValueError('registered resource deadline')
             time.sleep(5)
-        refs=[]
+        refs=[];pairs={};practice=[]
         for e in episodes:
+            if e.get('practice'):
+                practice.append(e);continue
             p=Path(r)/'jobs'/f'v2v1_warm_u{u:03}_A_{e["world"]["seed"]}'/'RESULT.json'
             if not p.exists():raise ValueError('missing same-world V2V A safety reference')
             refs.append(read(p))
-        health.braking(r,arm,u,episodes,refs)
+        if practice:
+            # Fix round 2 (review BLOCKING): the matched practice A references NEVER join
+            # ``refs``. Both guards key the same-world fallback records by WORLD SEED (last
+            # wins), and TRAIN worlds repeat across updates - a practice snapshot world can
+            # equal a normal episode's seed, so an appended practice reference would silently
+            # REPLACE that seed's true same-world normal reference in the paired composite
+            # comparison and the hard-brake bootstrap. Practice episodes and their references
+            # travel ONLY through their own pairs, keyed by the practice episode's frozen id.
+            practice_references(r,arm,u,practice,pairs)
+        health.braking(r,arm,u,episodes,refs,pairs)
+
+    def practice_references(r, arm, u, practice, pairs):
+        """One matched A-policy reference episode per practice episode (owner 2026-11-04 review
+        fix): the SAME snapshot and CRN seed as the practice episode, A policy from t0, normal
+        1200 s horizon and team-J reward, charged 1200 sim-s to the arm's practice phase
+        (v2v_train) through the SAME wave hooks as ONE batch wave (whole-batch failure
+        accounting). Fix round 2 (a): the reference runs the PRE-UPDATE checkpoint
+        ``A_checkpoint_{u-1}.pt`` - the exact policy version A's own update-u reference episodes
+        ran (a checkpoint file u is only written after A's update-u PPO step, while A_UPDATE_u
+        exists from that same step onward; loading post-update u would compare B against a
+        policy A never used at update u). Fills pairs (practice episode id -> its matched
+        reference record) for the composite safety comparison; hard safety (collisions/
+        teleports) and the paired hard-brake guard apply to practice episodes exactly as to
+        every other episode - no check is skipped or weakened, and a missing reference fails
+        closed. Fix round 2: the reference slot family carries the SERVING arm
+        (``..._{arm}_practiceref_paNN``) - B and R reference episodes would otherwise share
+        identical job ids (the dispatched arm is always A), silently reusing the other arm's
+        snapshot reference, and the resume accounting could not attribute reference charges."""
+        from . import practice_starts, accel_runner
+        from .v2v_runtime import load_checkpoint
+        from .warm_protocol import SEED
+        plan=practice_starts.plan_for_update(r,arm,u,fraction=cfg['practice_fraction'],
+            repeat_cap=cfg['practice_repeat_cap'],count=len(practice),training_seed=SEED)
+        rows=plan['rows']
+        base=dict(update=u,v2v=True,v2v_dim=cfg['v2v_dim'],b_replay=True)
+        policy,opt,rng,payload=load_checkpoint(Path(r)/f'A_checkpoint_{u-1:03}.pt',config=cfg)
+        worlds=[];batch=[];idents=[]
+        for e in practice:
+            slot=e['practice'].get('slot')
+            if not slot or '_p' not in slot:
+                raise ValueError('practice episode lacks its frozen slot id')
+            i=int(slot.rsplit('_p',1)[1])-1
+            if not 0<=i<len(rows) or rows[i]['example_id']!=e['practice']['example_id']:
+                raise ValueError('practice receipt does not match the frozen plan row')
+            call=practice_starts.a_reference_call(r,arm,
+                                                  slot.rsplit('_p',1)[0]+f'_{arm}_practiceref',
+                                                  rows[i],i,base)
+            worlds.append(call['worlds'][0]);idents.append(call['ident'])
+            batch.append(dict(practice=call['extras']['practice'],branch=call['extras']['branch']))
+        records=accel_runner.wave(Path(r),dict(cfg,beta=1.),{'A':policy},worlds,'train',
+            idents[0].rsplit('_pa',1)[0],cfg['phase_map'].get('train','train'),False,
+            extras=dict(base,practice_batch=batch))
+        by_id={rec['id']:rec for rec in records}
+        matched=[]
+        for e,ident,world in zip(practice,idents,worlds):
+            rec=by_id.get(f'{ident}_A_{world["seed"]}')
+            if rec is None or rec['world']['seed']!=world['seed']:
+                raise ValueError('matched V2V practice A safety reference incomplete')
+            pairs[e['id']]=rec;matched.append(rec)
+        return matched
 
     policy_factory,pairs=Policy,original_pairs
     # Owner 2026-11-04 00:55: imitation_bank_filter is ONE key for B and R (A has no bank).
-    from .v2v_launch3 import imitation_filter_for
+    from .v2v_launch3 import imitation_filter_for, practice_options_for
     bank_filters={a:imitation_filter_for(cfg,a) for a in ('B','R')}
     if bank_filters['B']!='all_admitted':
         def pairs(r,arm,*a,**k):
             return original_pairs(r,arm,*a,**dict(k,imitation_bank_filter=bank_filters[arm]))
+    # Owner 2026-11-04 proposal: practice_starts options validated at hook time (B == R, OFF or
+    # registered ON); the scheduling itself lives in v2v_runner.run_arm's train wave.
+    practice_options_for(cfg,'B'),practice_options_for(cfg,'R')
     # c4/effective-imitation: imitation_target_space is ONE key for B and R (A has no bank);
     # the runtime default 'raw' adds no kwarg (byte-identical).
     target_spaces={a:imitation_target_space_for(cfg,a) for a in ('B','R')}
@@ -273,42 +337,61 @@ def remaining_phase_costs(root, cfg):
     (re)started before V2V_STARTED (``_require_launch3``), i.e. while the real
     one-update smokes are still the only work that may have been charged. The
     restart quote therefore credits ONLY reusable smoke physics of THIS root:
-    a v2v_train charge whose id is ``<job_namespace>_warm_u001_<A|B|R>_<seed>``,
-    of exactly one registered episode (1200 sim-s), whose job directory under
-    this root is closed with a result (the runner reuses it, never re-runs or
-    re-charges it). Everything else stays in the full registered quote:
-    foreign, void, partial or unexpected charges are NOT credited, so they keep
-    counting as spent in requote and the quote can never fall below the real
-    remaining work (an overdrawn or over-committed ledger is still refused).
-    Nothing credited -> None -> the unchanged full quote (fresh-root behaviour
-    byte-identical). Any v2v diagnostic/test phase already charged means the
-    run is past the smokes: no credit (full quote, which requote refuses).
+    a v2v_train charge of exactly one registered episode (1200 sim-s) whose id
+    is an update-1 episode of this namespace - a normal
+    ``<job_namespace>_warm_u001_<A|B|R>_<seed>``, a practice ``..._pNN_<B|R>_<seed>``
+    or a practice replacement ``..._practice_<B|R>_<seed>`` - or a matched
+    practice A reference ``..._<B|R>_practiceref_paNN_A_<seed>`` (fix round 2:
+    a practice-ON smoke charges those too), whose job directory under this root
+    is closed with a result (the runner reuses it, never re-runs or re-charges
+    it). Everything else stays in the full registered quote: foreign, void,
+    partial or unexpected charges are NOT credited, so they keep counting as
+    spent in requote and the quote can never fall below the real remaining work
+    (an overdrawn or over-committed ledger is still refused). Nothing credited
+    -> None -> the unchanged full quote (fresh-root behaviour byte-identical).
+    Any v2v diagnostic/test phase already charged means the run is past the
+    smokes: no credit (full quote, which requote refuses). With practice ON the
+    full quote itself carries the registered practice A-reference allocation.
     """
-    import re
     from . import v2v_launch3,storage
     namespace=cfg.get('job_namespace')
     if not isinstance(namespace,str) or not namespace:return None
     try:entries=storage.ledger(root)
     except (OSError,ValueError):return None
-    pattern=re.compile(re.escape(namespace)+r'_warm_u001_([ABR])_([0-9]+)')
-    credited,per_arm=set(),{}
+    episode_patterns=_train_patterns(namespace);reference_pattern=_reference_pattern(namespace)
+    credited,per_arm,per_arm_refs=set(),{},{}
     for entry in entries:
         if not isinstance(entry,dict):return None
         phase,ident=entry.get('phase'),entry.get('id')
         if phase in v2v_launch3.V2V_PHASES and phase!='v2v_train':return None
         if phase!='v2v_train' or not isinstance(ident,str):continue
-        match=pattern.fullmatch(ident)
-        if not match:continue
+        match=next((p.fullmatch(ident) for p in episode_patterns if p.fullmatch(ident)),None)
+        ref_match=None if match else reference_pattern.fullmatch(ident)
+        if match is None and ref_match is None:continue
         if ident in credited:return None    # duplicate charge: requote refuses it
         amount=entry.get('sim_s')
+        # only update-1 (smoke) physics is creditable for a (re)started watcher
+        if match is not None and match.group(1)!='001':continue
+        if ref_match is not None and ref_match.group(1)!='001':continue
         if type(amount) is not int or amount!=SMOKE_EPISODE_SIM_S:continue
         job=Path(root)/'jobs'/ident
         if not ((job/'CLOSE.json').is_file() and (job/'RESULT.json').is_file()):continue
-        credited.add(ident);per_arm[match[1]]=per_arm.get(match[1],0)+1
+        credited.add(ident)
+        if ref_match is not None:per_arm_refs[ref_match.group(2)]=per_arm_refs.get(ref_match.group(2),0)+1
+        else:per_arm[match.group(2)]=per_arm.get(match.group(2),0)+1
     if not credited:return None
     if any(n>SMOKE_EPISODES_PER_ARM for n in per_arm.values()):
         raise ValueError('more reusable update-1 episodes than one registered smoke per arm')
     costs=dict(v2v_launch3.V2V_PHASES)
+    if cfg.get('practice_starts'):
+        # practice ON: the full remaining quote covers the registered practice A-reference
+        # allocation (the smokes charged part of it; the credit below removes only closed work)
+        from .practice_starts import practice_count
+        costs['v2v_train']+=practice_count(SMOKE_EPISODES_PER_ARM,
+            cfg['practice_fraction'])*2*TRAIN_FINAL_UPDATE*SMOKE_EPISODE_SIM_S
+        if any(n>practice_count(SMOKE_EPISODES_PER_ARM,cfg['practice_fraction'])
+               for n in per_arm_refs.values()):
+            raise ValueError('more reusable update-1 practice references than one registered smoke per arm')
     costs['v2v_train']-=SMOKE_EPISODE_SIM_S*len(credited)
     if costs['v2v_train']<=0:raise ValueError('restart credit cannot consume the training quote')
     return costs
@@ -354,10 +437,19 @@ def launch3_check(root, cfg, stage=None, arm=None, phase_costs=None):
     costs=None
     if stage in ('smoke','train'):
         if arm not in ('A','B','R'):raise ValueError('launch3 training arm required')
-        costs={'v2v_train':24*1200*(1 if stage=='smoke' else 23)}
+        updates=1 if stage=='smoke' else 23
+        costs={'v2v_train':24*1200*updates}
+        if arm in ('B','R') and cfg.get('practice_starts'):
+            # practice_starts: each practice episode also gets ONE matched A-policy reference
+            # episode from the same snapshot and CRN seed, charged to the arm's practice cost;
+            # the dispatch quote covers the registered per-update upper bound.
+            from .practice_starts import CHARGED_SIM_S,practice_count
+            costs['v2v_train']+=practice_count(24,cfg['practice_fraction'])*CHARGED_SIM_S*updates
     elif stage=='resume':
         # Exact remaining registered episodes of THIS resumed arm (closed reusable
         # episodes of its in-progress update credited); never a caller-supplied amount.
+        # With practice_starts ON this includes the arm's remaining matched practice
+        # A-reference cost (arm_remaining).
         if arm not in ('A','B','R'):raise ValueError('launch3 training arm required')
         need=arm_remaining(root,cfg,arm,live=False)['remaining_sim_s']
         if need<=0:raise ValueError('resumed arm has no remaining registered update: '+arm)
@@ -486,39 +578,73 @@ def sealed_update(root, arm):
     return k
 
 
-def _train_rows(root, cfg):
-    """This root's v2v_train episode charges by (update, arm); other ids are never credited."""
+def _train_patterns(namespace):
+    """Episode charge ids of one root's job namespace: the normal waves, the practice batch
+    (frozen ``_pNN_`` slots) and a failed practice episode's fresh replacement (``_practice_``)."""
     import re
+    ns=re.escape(namespace)+r'_warm_u([0-9]{3})_'
+    return tuple(re.compile(ns+suffix) for suffix in
+        (r'([ABR])_([0-9]+)',              # normal episode
+         r'p[0-9]{2}_([BR])_([0-9]+)',     # practice episode
+         r'practice_([BR])_([0-9]+)'))     # practice replacement (normal fresh start)
+
+
+def _reference_pattern(namespace):
+    """Matched practice A-reference charge ids (fix round 2 (d)): the serving arm is part of
+    the slot family, so each reference charge is attributable to its B/R arm from the id."""
+    import re
+    return re.compile(re.escape(namespace)+
+        r'_warm_u([0-9]{3})_([BR])_practiceref_pa[0-9]{2}_A_([0-9]+)')
+
+
+def _train_rows(root, cfg):
+    """This root's v2v_train charges by (update, arm): episodes under ``'episodes'`` (normal
+    waves, practice ``_pNN_`` slots, ``_practice_`` replacements) and the matched practice
+    A-reference charges under ``'references'`` - fix round 2 (d): the resume accounting counts
+    their charges; any other id is never credited."""
     from . import storage
     namespace=cfg.get('job_namespace')
     if not isinstance(namespace,str) or not namespace:raise ValueError('registered job_namespace required')
-    pattern=re.compile(re.escape(namespace)+r'_warm_u([0-9]{3})_([ABR])_([0-9]+)')
-    rows={}
+    patterns=_train_patterns(namespace);reference=_reference_pattern(namespace)
+    rows={};refs={}
     for entry in storage.ledger(root):
         if not isinstance(entry,dict):raise ValueError('malformed ledger entry')
         if entry.get('phase')!='v2v_train':continue
-        match=pattern.fullmatch(str(entry.get('id')))
-        if match:rows.setdefault((int(match[1]),match[2]),[]).append(entry)
-    return rows
+        ident=str(entry.get('id'))
+        for pattern in patterns:
+            match=pattern.fullmatch(ident)
+            if match:
+                rows.setdefault((int(match.group(1)),match.group(2)),[]).append(entry);break
+        else:
+            match=reference.fullmatch(ident)
+            if match:refs.setdefault((int(match.group(1)),match.group(2)),[]).append(entry)
+    return dict(episodes=rows,references=refs)
 
 
 def arm_remaining(root, cfg, arm, live, rows=None):
-    """Exact remaining registered episodes of one arm (accounting only; no outcome opened).
+    """Exact remaining registered work of one arm (accounting only; no outcome opened).
 
-    remaining = (24 - k) x 24 - credited, k = latest sealed update. Only charges of update
-    k+1 can be credited: a LIVE arm's charged k+1 episodes are owned by its running child
-    (never re-charged); a RESUMED arm's k+1 episodes are credited only when closed with a
-    result (the runner reuses them). Credit never exceeds one registered update, so the
-    quote is never below the real remaining work. A resumed arm refuses charged-but-unclosed
-    k+1 episodes (never retried), charges beyond k+1 and a stray k+1 checkpoint.
+    Episodes: remaining = (24 - k) x 24 - credited, k = latest sealed update. Only charges of
+    update k+1 can be credited: a LIVE arm's charged k+1 episodes are owned by its running
+    child (never re-charged); a RESUMED arm's k+1 episodes are credited only when closed with a
+    result (the runner reuses them). Credit never exceeds one registered update, so the quote
+    is never below the real remaining work. A resumed arm refuses charged-but-unclosed k+1
+    episodes (never retried), charges beyond k+1 and a stray k+1 checkpoint.
+
+    Fix round 2 (d): with practice_starts ON (B and R) the quote also covers the arm's matched
+    practice A-reference cost of its remaining updates - the registered per-update upper bound
+    (practice_count x 1200 sim-s) minus the reference charges already credited from update k+1
+    (same closed/live rule as episodes; unclosed references can never be retried and refuse a
+    resume exactly like unclosed episodes).
     """
     root=Path(root)
     if arm not in ARMS:raise ValueError('registered arm required')
     rows=_train_rows(root,cfg) if rows is None else rows
+    episodes,references=rows['episodes'],rows['references']
     k=sealed_update(root,arm)
-    ahead={u for (u,a) in rows if a==arm and u>k}
+    ahead={u for (u,a) in episodes if a==arm and u>k}
     if ahead-{k+1}:raise ValueError(f'{arm} charges beyond update {k+1} without a sealed update {k+1}')
-    current=rows.get((k+1,arm),[])
+    current=episodes.get((k+1,arm),[])
     ids=[e['id'] for e in current]
     if len(set(ids))!=len(ids):raise ValueError('duplicate train charge: '+arm)
     if not live and k<TRAIN_FINAL_UPDATE:
@@ -537,28 +663,72 @@ def arm_remaining(root, cfg, arm, live, rows=None):
         if closed:reusable.append(entry['id'])
     credited=min(EPISODES_PER_UPDATE,len(current) if live else len(reusable))
     remaining=(TRAIN_FINAL_UPDATE-k)*EPISODES_PER_UPDATE-credited if k<TRAIN_FINAL_UPDATE else 0
+    # matched practice A references (fix round 2 (d))
+    reference_sim_s=0;credited_references=0
+    if arm in ('B','R'):
+        ahead_refs={u for (u,a) in references if a==arm and u>k}
+        if ahead_refs-{k+1}:
+            raise ValueError(f'{arm} practice reference charges beyond update {k+1} without a '
+                f'sealed update {k+1}')
+        current_refs=references.get((k+1,arm),[])
+        ref_ids=[e['id'] for e in current_refs]
+        if len(set(ref_ids))!=len(ref_ids):raise ValueError('duplicate practice reference charge: '+arm)
+        for entry in current_refs:
+            if type(entry.get('sim_s')) is not int or entry['sim_s']!=EPISODE_SIM_S:
+                raise ValueError('unexpected practice reference charge '+entry['id'])
+            job=root/'jobs'/entry['id']
+            closed=(job/'CLOSE.json').is_file() and (job/'RESULT.json').is_file()
+            if not live and not closed:
+                raise ValueError(f'charged update-{k+1} practice reference {entry["id"]} is not '
+                    'closed: it can never be retried; MAIN void decision required')
+            if closed:credited_references+=1
+        if cfg.get('practice_starts') and k<TRAIN_FINAL_UPDATE:
+            from .practice_starts import CHARGED_SIM_S,practice_count
+            per_update=practice_count(EPISODES_PER_UPDATE,cfg['practice_fraction'])
+            reference_sim_s=max(0,(TRAIN_FINAL_UPDATE-k)*per_update-credited_references)*CHARGED_SIM_S
+    remaining_sim_s=remaining*EPISODE_SIM_S+reference_sim_s
     return dict(arm=arm,live=bool(live),sealed_update=k,resume_update=min(k+1,TRAIN_FINAL_UPDATE),
         charged_current_update=len(current),reusable=sorted(reusable),credited_episodes=credited,
-        remaining_episodes=remaining,remaining_sim_s=remaining*EPISODE_SIM_S)
+        remaining_episodes=remaining,credited_references=credited_references,
+        remaining_reference_sim_s=reference_sim_s,remaining_sim_s=remaining_sim_s)
 
 
 def _train_snapshot(root, cfg):
-    return tuple(sorted(e['id'] for v in _train_rows(root,cfg).values() for e in v))
+    rows=_train_rows(root,cfg)
+    return tuple(sorted(e['id'] for v in rows['episodes'].values() for e in v))
 
 
 def resume_phase_costs(root, cfg, live_arms, resume_arms):
     """Remaining registered phase_costs of a started root: v2v_train = sum over arms of the
-    exact remaining episodes; every diagnostic/test phase keeps its full registered quote."""
+    exact remaining episodes plus (practice ON) their remaining matched practice A-reference
+    cost (arm_remaining); every diagnostic/test phase keeps its full registered quote. The
+    v2v_train ceiling is the runtime's own practice-aware allocation, never just the base
+    phase (fix round 2 (d))."""
     from . import v2v_launch3
     if set(live_arms)&set(resume_arms) or set(live_arms)|set(resume_arms)!=set(ARMS):
         raise ValueError('every arm is either live (adopted) or resumed')
     rows=_train_rows(root,cfg)
     per_arm={a:arm_remaining(root,cfg,a,a in live_arms,rows) for a in ARMS}
     costs=dict(v2v_launch3.V2V_PHASES)
+    ceiling=max(costs['v2v_train'],int((cfg.get('budget') or {}).get('phases',{}).get('v2v_train',
+        costs['v2v_train'])))
     train=sum(p['remaining_sim_s'] for p in per_arm.values())
-    if train>costs['v2v_train']:raise ValueError('remaining train work exceeds the registered phase')
+    if train>ceiling:raise ValueError('remaining train work exceeds the registered phase')
     if train:costs['v2v_train']=train
     else:costs.pop('v2v_train')
+    # Diagnostic/test phases: the registered full-run quote MINUS what this phase has already
+    # charged (u6 lessons/isolated synergy etc. ran inside the registered quote); re-quoting the
+    # full amount after partial spending would always refuse a later adopt. Nothing is credited
+    # below zero and the train quote above is unchanged.
+    from . import storage
+    spent={}
+    for entry in storage.ledger(root):
+        if isinstance(entry,dict) and entry.get('phase') in costs and entry.get('phase')!='v2v_train':
+            spent[entry['phase']]=spent.get(entry['phase'],0)+int(entry.get('sim_s',0))
+    for phase in [p for p in costs if p!='v2v_train']:
+        left=costs[phase]-spent.get(phase,0)
+        if left>0:costs[phase]=left
+        else:costs.pop(phase)
     return costs,per_arm
 
 

@@ -48,24 +48,56 @@ def diagnostic_task(root,b,state,ep,step,index):
             diagnostic_only=True,physics_retry=False))
 
 
-def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
+def wave_jobs(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
+    """wave()'s job construction (real path, extracted verbatim so tests can call it).
+
+    Every explicit keyword below is passed EXACTLY ONCE; callers' extras must never duplicate
+    them. practice_starts jobs (extras['practice'] dict, or extras['practice_batch'] aligned
+    with ws) take the RECORDED snapshot runtime/checkpoint/noise_seed/warm_history/accel_bounds
+    (the exact CRN the example's branches ran with) and carry a per-episode frozen slot id
+    (practice['slot']) so repeated snapshot worlds keep distinct one-use job ids."""
     jobs=[];results=[];precharged={x['id'] for x in ledger(root)}
     from .policy_wm import actor_state
-    for w in ws:
+    for wi,w in enumerate(ws):
         for arm,policy in policies.items():
-            key=f'{ident}_{arm}_{w["seed"]}'
+            x=dict(extras or {})
+            batch=x.pop('practice_batch',None)
+            if batch is not None:x.update(batch[wi])
+            duplicate=set(x)&EXPLICIT_JOB_KEYS
+            if duplicate:raise TypeError('wave extras duplicate explicit job keywords: '
+                                         +','.join(sorted(duplicate)))
+            practice=x.get('practice')
+            sumo=practice['snapshot']['sumo'] if practice else None
+            key=(f'{practice["slot"]}_{arm}_{w["seed"]}' if practice and practice.get('slot')
+                 else f'{ident}_{arm}_{w["seed"]}')
             key=b.get('job_id_overrides',{}).get(key,key);path=root/'jobs'/key
             if (path/'RESULT.json').exists():results.append(read(path/'RESULT.json'));continue
             if key in precharged:
                 if key not in b.get('precharged_unattempted',[]) or (path/'CLAIM.json').exists():
                     raise ValueError('attempted job cannot be retried '+key)
             jobs.append(dict(id=key,path=str(path),world=w,role=role,arm=arm,
-                weights=policy.state_dict(),runtime=b['runtime'],checkpoint=b['checkpoint'],
-                noise_seed=int(digest(dict(seed=SEED,world=w['seed'],wave=ident))[:15],16),
-                deterministic=deterministic,sim_s=1200,queue_root=str(root),accel_bounds=b['accel_bounds'],
+                weights=policy.state_dict(),
+                runtime=sumo['runtime'] if sumo else b['runtime'],
+                checkpoint=sumo['checkpoint'] if sumo else b['checkpoint'],
+                noise_seed=(sumo.get('noise_seed') or 0) if sumo
+                    else int(digest(dict(seed=SEED,world=w['seed'],wave=ident))[:15],16),
+                deterministic=deterministic,sim_s=1200,queue_root=str(root),
+                accel_bounds=sumo['accel_bounds'] if sumo else b['accel_bounds'],
                 gpu_deadline=b['gpu_deadline'],guided=not deterministic and arm in ('B','R'),
-                beta=b.get('beta',1.),N_exec=b.get('N_exec'),policy_state=actor_state(policy),warm_history=b.get('warm_history',False),**(extras or {})))
+                beta=b.get('beta',1.),N_exec=b.get('N_exec'),policy_state=actor_state(policy),
+                warm_history=bool(sumo['warm_history']) if sumo else b.get('warm_history',False),
+                **x))
+    return jobs,results
+
+
+def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None,used_seeds=None):
+    """``used_seeds`` (practice_starts, fix round 2): train-wave failure replacements must also
+    avoid these world seeds - the second wave of one update (the practice batch) passes the
+    seeds its update's normal wave already closed, so a replacement never duplicates one of
+    the update's normal worlds."""
+    jobs,results=wave_jobs(root,b,policies,ws,role,ident,phase,deterministic,extras)
     if jobs:
+        precharged={x['id'] for x in ledger(root)}
         fresh=[j for j in jobs if j['id'] not in precharged]
         if fresh:reserve(root,fresh,phase)
         from .runner import admission
@@ -75,6 +107,7 @@ def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
             if role!='train':results.extend(pool.map(episode,jobs))
             else:
                 used={j['world']['seed'] for j in jobs}|{r['world']['seed'] for r in results}
+                if used_seeds:used |= set(used_seeds)
                 results.extend(run_train_jobs(root,jobs,phase,ident,used,precharged,pool.submit,episode))
     return sorted(results,key=lambda e:(e['world']['seed'],e['arm']))
 
@@ -85,6 +118,9 @@ def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
 # more than 20% of the wave. Global STOP/pause/deadline signals still propagate.
 MAX_CONSECUTIVE_EPISODE_FAILURES=3
 MAX_EPISODE_FAILURE_SHARE=.2
+EXPLICIT_JOB_KEYS=frozenset(('id','path','world','role','arm','weights','runtime','checkpoint',
+    'noise_seed','deterministic','sim_s','queue_root','accel_bounds','gpu_deadline','guided',
+    'beta','N_exec','policy_state','warm_history'))
 
 
 class EpisodeFailureEscalation(RuntimeError):
@@ -110,9 +146,14 @@ def replacement_world(failed,used,taken_ids,arm,ident):
 
 def replacement_job(job,world,ident):
     key=f'{ident}_{job["arm"]}_{world["seed"]}'
-    return dict(job,id=key,path=str(Path(job['path']).parent/key),world=world,
+    out=dict(job,id=key,path=str(Path(job['path']).parent/key),world=world,
         noise_seed=int(digest(dict(seed=SEED,world=world['seed'],wave=ident))[:15],16),
         replaces=job['id'])
+    if job.get('practice') is not None:
+        # practice_starts: a failed snapshot-restart episode is replaced by a NORMAL fresh start
+        # (same cell rule, same charge); the snapshot state belongs to its own sealed attempt.
+        for k in ('practice','branch','samples'):out.pop(k,None)
+    return out
 
 
 def run_train_jobs(root,jobs,phase,ident,used,precharged,submit,episode):
