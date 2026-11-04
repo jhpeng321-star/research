@@ -65,3 +65,21 @@ The historical 4,664,400-sim-s quote fits 6M but is not a new allocation. Refres
 seeds/audits and finish the dense/ordinary start mixture and observable checks
 before registering a new native canary. This check launches no job, consumes
 zero sim-s, sends no signals and adds no duplicate registry readiness line.
+
+## Fresh-session adoption — arrival HEAD `d5c5f5ad`
+
+Read git status/log and original task receipts before action. Canonical registry
+search again finds the original approval/readiness at 5876–5878 and the later
+explicit supersession at 5879, with no native-start reactivation. Entries
+5893/5897 assign the former native TRAIN/check blocks to S-COOPMWM.
+
+Native sources and the design still have an empty diff against `8368ce1a`;
+the existing CPU5/report qualification and historical quote above are retained,
+not rerun or represented as fresh runtime qualification. Latest saved successor
+handoff is Nov4 17:02: monitor-only, A22/B12/R11, existing operator recovery
+waiter and pending migration. No new remote liveness claim is made here.
+
+All tracked modifications and untracked successor work are preserved. Explicit
+MAIN reactivation and allocation reconciliation remain the blocking decision;
+the required dense/ordinary start mixture and observable checks remain pending.
+No new SUMO, tests, worker, dispatcher, monitor, registry entry or PID action.
