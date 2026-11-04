@@ -1,13 +1,14 @@
 {
   "task": "T1C",
   "status": "READY",
-  "scope": "CPU calibration tooling and fix-round regression tests ready for independent re-review",
+  "scope": "CPU calibration tooling and fix-round regression tests independently reviewed PASS",
   "planner_gate_available": false,
   "production_artifact": "UNAVAILABLE: no production development records fitted; missing or incompatible evidence fails closed",
   "branch": "c4/planner-calib",
   "worktree": "E:/agent-work/c4-planner-calib",
   "base": "13f184b5",
-  "review": "REVIEW_T1C_r0.md",
+  "review": "REVIEW_T1C_r1.md",
+  "original_blocking_review": "REVIEW_T1C_r0.md",
   "supersedes": "T1C_READY.blocked0.json (preserved verbatim as historical, superseded receipt)",
   "resumed_from": "ca9884fb plus the previous frozen session's uncommitted implementation and test edits",
   "commits": [
@@ -134,8 +135,7 @@
     "Production planner calibration is unavailable. No explicit production dev receipt list/allowlist was supplied or opened; only generated CPU fixtures were fitted.",
     "Existing gain-only or shorter-window receipts cannot establish operational full-horizon WM P(better). The current all8 producer also reuses candidate plans across replicas; probability evidence tied to another snapshot is refused. Compatible pre-verification evidence is required; this task does not launch new collection or retrofit records.",
     "T1B integration must adopt the exported typed contract in its own worktree; that module is not present here.",
-    "Bank-candidate selection may differ from online move distribution. Development-seed reliability is not a deployment performance claim.",
-    "Independent re-review of these fixes has not been performed in this session. REVIEW_T1C_r0.md is preserved as the original blocking review."
+    "Bank-candidate selection may differ from online move distribution. Development-seed reliability is not a deployment performance claim."
   ],
   "preserved_local_artifacts": [
     "REVIEW_T1C_r0.md (original independent review, unmodified)",
@@ -163,5 +163,23 @@
     "warning": "Inherited PytestConfigWarning: Unknown config option: cache_dir with cacheprovider disabled",
     "validation": "Read all three blocker fixes and their regression tests; git diff --check c4/track-base and JSON syntax validation passed. No implementation changes were needed after the preserved fixes.",
     "production_gate_available": false
+  },
+  "independent_review": {
+    "receipt": "REVIEW_T1C_r1.md",
+    "verdict": "PASS",
+    "remaining_blockers": 0,
+    "reviewed_head": "bb054d240698b7946147e72792ad080c3d7cf553",
+    "result": "107 passed, 0 failed, 0 skipped, 0 deselected in 40.00s",
+    "calibration_tests": 67,
+    "adjacent_regression_tests": 40,
+    "warning": "Inherited PytestConfigWarning: Unknown config option: cache_dir with cacheprovider disabled",
+    "acceptance_receipt": "T1C_ACCEPTED.json",
+    "scope": "CPU tooling and fail-closed probability, horizon and population contracts; production calibration availability and T1B integration remain open as documented above"
+  },
+  "fresh_session_reconciliation": {
+    "preserved_head": "bb054d240698b7946147e72792ad080c3d7cf553",
+    "inspection": "Read git status/log, shared task spec, readiness receipt, both independent reviews and acceptance receipt. Confirmed the branch is c4/planner-calib, tracked files are unchanged and no matching calibration/verifier pytest process is active.",
+    "action": "Refreshed this receipt to reflect the completed independent PASS and acceptance. Preserved implementation, regression tests, historical receipts and untracked artifacts.",
+    "test_execution": "Reused the completed implementation, resume and independent-review test evidence above; no duplicate pytest run, simulation job or dispatch was started."
   }
 }
