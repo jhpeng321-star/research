@@ -8,7 +8,7 @@ over the T1A move library (K candidate moves + 'none'); a REGISTERED fraction
 examples); the labels are imitation targets (cross-entropy classes) for the T2A discrete head;
 the R arm is labelled by a RANDOM teacher drawn from the SAME move distribution (same T1A
 generator, same K, own seeded stream, uniform over the same candidate support + 'none'), so a
-B-vs-R difference comes from WM scoring alone.
+B-vs-R selection differs only in WM ranking; both use the shared calibrated eligibility gate.
 
 DEFAULT OFF: every knob is a registered ``dense_teacher_*`` config key and ``split_config``
 mirrors ``variety.split_config`` (unknown keys refused, everything validated even while off,
@@ -37,6 +37,9 @@ candidate draws are supported for standalone labelling but must never index anot
 Labelling rule (mirrors the T1B firing rule): a candidate move is labelled only when its
 calibrated P >= ``dense_teacher_p_star`` (owner rule 10-18); maximize expected gain among
 eligible moves, then break ties by candidate order; if none clear the gate label 'none'.
+That firing fallback is an ABSTENTION for imitation, not a supervised comparator target.
+Both CE/export boundaries require calibrated P >= 0.8 (the minimum cannot be lowered).
+Only correctly bound, completed all8 verification bypasses that confidence requirement.
 DAgger: the labelled states are decision points of the CURRENT policy's OWN training rollouts
 (collected by the T2C loop into ``DAggerBuffer``), never expert states.
 """
@@ -51,7 +54,8 @@ SCHEMA = 'coopmwm/dense-teacher/v1'
 NONE_FAMILY = 'none'
 OBSERVABLE_ROW_KEYS = ('vid', 's_m', 'v_mps', 'lane', 'is_cav', 'length_m')
 PLANNER_KEYS = ('ego_id', 'group', 'rows', 'time_s', 'world_id', 'state_id', 'commands',
-                'policy_residuals', 'policy_state', 'history', 'committed_offsets')
+                'policy_residuals', 'policy_state', 'history', 'committed_offsets', 'policy_radio')
+MIN_IMITATION_P = 0.8
 
 # Registered option config (all of it; unknown dense_teacher_* keys are refused even when the
 # option is off, mirroring coop_search.split_config / variety.split_config).
@@ -102,8 +106,8 @@ def split_config(cfg):
         raise ValueError('dense_teacher_fraction must be within [0, 1]')
     if int(v['dense_teacher_candidates']) < 1:
         raise ValueError('dense_teacher_candidates must be >= 1')
-    if not 0. <= float(v['dense_teacher_p_star']) <= 1:
-        raise ValueError('dense_teacher_p_star must be within [0, 1]')
+    if not MIN_IMITATION_P <= float(v['dense_teacher_p_star']) <= 1:
+        raise ValueError('dense_teacher_p_star must be within [0.8, 1] (owner minimum)')
     if int(v['dense_teacher_buckets']) < 2:
         raise ValueError('dense_teacher_buckets must be >= 2')
     if not (math.isfinite(float(v['dense_teacher_cadence_s']))
@@ -156,8 +160,20 @@ def observable_state(obs_state):
     if 'history' in obs_state:
         out['history'] = [dict(time_s=f['time_s'], rows=observable_rows(f),
                                entrance_counts=copy.deepcopy(f.get('entrance_counts')))
-                          for f in obs_state['history']]
+                           for f in obs_state['history']]
+    if 'policy_radio' in out:
+        _validate_radio(out)
     return out
+
+
+def _validate_radio(record):
+    """Validate the local continuation at capture, before it can enter a stored label.
+
+    Use the production T1B contract, rather than retaining an unvalidated global board.
+    A supplied radio payload requires that dependency even on the capture-only path.
+    """
+    from .planner_online import validate_observation
+    validate_observation({k: record[k] for k in PLANNER_KEYS if k in record})
 
 
 def _move_fields(move):
@@ -322,7 +338,8 @@ def planner_scorer(*, rollout=None, calibration=None, config=None, calibrate=Non
         record = {k: copy.deepcopy(obs_state[k]) for k in PLANNER_KEYS if k in obs_state}
         result = po.score_moves(record, None, rollout=rollout, calibration=calibration,
                                 config=cfg, calibrate=calibrate, move_api=fixed)
-        return [dict(p_better=s['p_calibrated'], gain=s['expected_gain'])
+        return [dict(p_better=s['p_calibrated'], gain=s['expected_gain'],
+                     confidence_provenance='planner_calibration/T1C')
                 for s in result['scores']]
     return score
 
@@ -452,22 +469,40 @@ class WMDenseTeacher(_TeacherBase):
         gated = [(i, s) for i, s in enumerate(scores)
                  if float(s['p_better']) >= p_star and float(s['gain']) > 0]
         best = max(gated, key=lambda t: (t[1]['gain'], -t[0])) if gated else None
-        return self._label(episode, step, t_s, cav, obs_state, cands,
-                           0 if best is None else best[0]+1, 'wm',
-                           scores=None if best is None else best[1])
+        lb = self._label(episode, step, t_s, cav, obs_state, cands,
+                         0 if best is None else best[0]+1, 'wm',
+                         scores=None if best is None else best[1])
+        return self._confidence(lb, scores)
+
+    def _confidence(self, lb, scores):
+        from .protocol import digest
+        lb['candidate_scores'] = copy.deepcopy(scores)
+        selected = lb['candidate_index']
+        score = None if selected is None else scores[selected]
+        lb['confidence'] = None if score is None else dict(
+            p_calibrated=float(score['p_better']),
+            provenance=score.get('confidence_provenance', 'injected_calibrated_scorer'),
+            support_sha256=lb['support_sha256'], candidate_class=lb['candidate_class'],
+            observation_sha256=digest(lb['obs_state']))
+        lb['imitation_p_star'] = float(self.cfg['dense_teacher_p_star'])
+        lb['abstained'] = selected is None  # no calibrated P for the comparator itself
+        lb['original_teacher_target'] = copy.deepcopy(lb['target'])
+        return lb
 
 
-class RandomTeacher(_TeacherBase):
+class RandomTeacher(WMDenseTeacher):
     """The R-arm teacher: a uniformly random label over the SAME candidate support + 'none'
-    (same T1A generator, same K, own seeded stream). No WM scoring exists here at all - the
-    class has no scorer seam. Candidate proposals are distribution-matched to B's;
-    the label selector is random rather than WM-ranked."""
+    (same T1A generator, same K, own seeded stream). Scoring is ONLY for shared imitation
+    eligibility; it never changes the random draw or consumes the proposal RNG."""
 
     def label_state(self, episode, step, t_s, cav, obs_state, candidates=None):
         obs_state = dict(observable_state(obs_state), cav=str(cav), ego_id=str(cav), self=str(cav))
         cands = self._candidates(obs_state, candidates)
         draw = int(self.choice_rng.integers(0, len(cands)+1))
-        return self._label(episode, step, t_s, cav, obs_state, cands, draw, 'random')
+        scores = self._score(obs_state, cands)
+        lb = self._label(episode, step, t_s, cav, obs_state, cands, draw, 'random',
+                         scores=None if draw == 0 else scores[draw-1])
+        return self._confidence(lb, scores)
 
 
 def make_teacher(cfg, moves_mod=None, scorer=None, rng=None, encoder=None, planner_kwargs=None):
@@ -478,9 +513,8 @@ def make_teacher(cfg, moves_mod=None, scorer=None, rng=None, encoder=None, plann
     if not cfg.get('dense_teacher'):
         raise ValueError('dense_teacher is OFF: resolve its config (plan_config) first')
     if cfg.get('dense_teacher_random'):
-        if scorer is not None or planner_kwargs:
-            raise ValueError('the random teacher takes no WM scorer (R fairness)')
-        return RandomTeacher(moves_mod=moves_mod, cfg=cfg, rng=rng, encoder=encoder)
+        return RandomTeacher(moves_mod=moves_mod, scorer=scorer, cfg=cfg, rng=rng,
+                             encoder=encoder, planner_kwargs=planner_kwargs)
     return WMDenseTeacher(moves_mod=moves_mod, scorer=scorer, cfg=cfg, rng=rng, encoder=encoder,
                           planner_kwargs=planner_kwargs)
 
@@ -546,7 +580,8 @@ def select_for_verification(labels, fraction):
     return out
 
 
-def prepare_verification_plan(label, snapshot, base_profile=None, *, moves_mod=None, plan_id=None):
+def prepare_verification_plan(label, snapshot, base_profile=None, *, moves_mod=None, plan_id=None,
+                              candidate_plans=None, candidate_base_profiles=None):
     """Freeze the execution contract BEFORE dispatch; return an all8 absolute-profile plan.
 
     ``base_profile`` is the caller's independently recorded base-policy command schedule,
@@ -554,7 +589,9 @@ def prepare_verification_plan(label, snapshot, base_profile=None, *, moves_mod=N
     The existing branch executor consumes absolute profiles: every command here is exactly
     base + moves.offsets, before its ordinary feasibility/ownership clamp. This certifies
     that explicit base schedule, not an unrecorded future feedback-policy trajectory.
-    None uses the branch executor's actual policy-continues comparator instead.
+    None uses policy-continues, but must freeze its ENTIRE ordered alternative support via
+    ``candidate_plans`` and independently supplied ``candidate_base_profiles`` before dispatch.
+    One plan per recorded alternative is required, including duplicates (no implicit dedup).
     """
     from . import sumo_verify as sv
     from .protocol import digest
@@ -571,6 +608,25 @@ def prepare_verification_plan(label, snapshot, base_profile=None, *, moves_mod=N
     if label['move'] is None:
         if base_profile is not None:
             raise ValueError('none verification uses policy-continues, not a base profile')
+        support = label['candidates']
+        if (not support or candidate_plans is None or candidate_base_profiles is None
+                or len(candidate_plans) != len(support)
+                or len(candidate_base_profiles) != len(support)):
+            raise ValueError('none requires exact candidate support plans and independent base schedules')
+        commitments = []
+        for i, (move, submitted, base) in enumerate(zip(
+                support, candidate_plans, candidate_base_profiles)):
+            # Rebuild from the independent base, never infer it from submitted policy_profile.
+            probe = dict(id=submitted.get('dense_execution', {}).get('label_id', label['id']),
+                         episode=label['episode'], t_s=label['t_s'], move=copy.deepcopy(move))
+            expected = prepare_verification_plan(probe, snapshot, base, moves_mod=moves_mod,
+                                                 plan_id=submitted.get('id'))
+            if digest(submitted) != digest(expected):
+                raise ValueError('none candidate support differs from exact base-plus-offset execution')
+            commitments.append(dict(candidate_index=i, move=copy.deepcopy(move),
+                                    plan_sha256=digest(expected),
+                                    execution=copy.deepcopy(probe['verification_execution'])))
+        execution.update(support_sha256=digest(support), candidate_support=commitments)
         plan = None
     else:
         api = default_moves() if moves_mod is None else moves_mod
@@ -627,7 +683,7 @@ def _receipt_measurements(receipt, candidate_index):
         measured = measured and _finite_number(total) and total == branch.get('J_veh_s')
         outcomes.append(dict(branch=branch.get('branch', 'policy' if i == 0 else f'cand{i}'),
                              status=branch.get('status', 'missing'), measured=measured,
-                             reason=branch.get('reason')))
+                             J_veh_s=total, reason=branch.get('reason')))
     return dict(measured=all(b['measured'] for b in outcomes), branches=outcomes)
 
 
@@ -652,9 +708,17 @@ def bind_receipt(label, receipt, candidate_index, plan=None, moves_mod=None, *,
         raise ValueError('prepare the exact execution contract before dispatch')
     if execution['snapshot_sha256'] != receipt['snapshot_sha256']:
         raise ValueError('receipt differs from the execution snapshot/base policy')
+    if not _target_bound(label):
+        raise ValueError('candidate support/target differs from the exact labelled move')
     if label['move'] is None:
         if candidate_index is not None or plan is not None:
             raise ValueError('none label binds to policy-continues, not a move')
+        commitments = execution.get('candidate_support', [])
+        if (execution.get('support_sha256') != digest(label['candidates'])
+                or [c['move'] for c in commitments] != label['candidates']
+                or receipt['k'] != len(commitments)
+                or receipt['candidate_plan_sha256'] != [c['plan_sha256'] for c in commitments]):
+            raise ValueError('receipt differs from frozen none candidate support')
     else:
         if (candidate_index is None or isinstance(candidate_index, bool)
                 or int(candidate_index) != candidate_index or not 0 <= candidate_index < receipt['k']):
@@ -686,8 +750,9 @@ def bind_receipt(label, receipt, candidate_index, plan=None, moves_mod=None, *,
     label['verification_first_seed'] = _receipt_measurements(receipt, candidate_index)
     label.update(verified=False, verified_replicated=False, verified_cooperative=False,
                  verified_flip=False, verified_admitted_seeds=[], verification_status='incomplete',
-                 verification_seed_status={'1': copy.deepcopy(label['verification_first_seed']),
+                  verification_seed_status={'1': copy.deepcopy(label['verification_first_seed']),
                                            '2': dict(measured=False, status='pending')})
+    label.pop('verification_completion_sha256', None)
     return label
 
 
@@ -769,6 +834,8 @@ class All8Verifier:
             # Recompute on every consume, including resumed labels with stale success flags.
             lb.update(verified=False, verified_replicated=False, verified_cooperative=False,
                       verified_flip=False, verified_admitted_seeds=[], verification_status='incomplete')
+            lb.pop('verification_completion_sha256', None)
+            lb['label_correct'] = None
             vid = lb.get('verification_id')
             if vid is None:
                 summary['unbound'] += 1
@@ -778,6 +845,8 @@ class All8Verifier:
             if (not execution or digest(execution) != lb.get('verification_execution_sha256')
                     or 'verification_first_seed' not in lb):
                 raise ValueError('bound label lacks an exact execution/measurement contract')
+            if not _target_bound(lb):
+                raise ValueError('candidate support/target differs from the exact labelled move')
             rec = recs.get(vid)
             if rec is None:
                 summary['missing'] += 1
@@ -791,11 +860,30 @@ class All8Verifier:
                 raise ValueError('all8 record differs from bound first-seed receipt')
             cand = lb.get('verification_candidate_index')
             examples = rec['per_seed_v1']['examples']
-            mine = [e for e in examples if e['candidate_index'] == cand]
+            mine = [e for e in examples if e['candidate_index'] == cand and e['seed_index'] in (1, 2)]
             if any(digest(e['plan']) != lb['verification_plan_sha256'] for e in mine):
                 raise ValueError('all8 candidate differs from bound plan')
             # None needs the complete paired support, not a vacuous empty `mine` list.
-            needed = [cand] if cand is not None else list(range(lb['verification_k']))
+            if cand is None:
+                support = execution.get('candidate_support', [])
+                if (execution.get('support_sha256') != digest(lb['candidates'])
+                        or [c['move'] for c in support] != lb['candidates']
+                        or len(support) != lb['verification_k']):
+                    raise ValueError('none candidate support commitment changed')
+                needed = [c['candidate_index'] for c in support]
+                if (rec['K'] != len(support)
+                        or [(c['index'], c['plan_sha256']) for c in rec['candidates']]
+                        != [(c['candidate_index'], c['plan_sha256']) for c in support]):
+                    raise ValueError('all8 none candidate differs from frozen support')
+                for e in examples:
+                    index = e['candidate_index']
+                    if (index not in needed
+                            or digest(e['plan']) != support[index]['plan_sha256']):
+                        raise ValueError('all8 none candidate differs from frozen support')
+            else:
+                if execution.get('move') != lb['move']:
+                    raise ValueError('verified target differs from exact labelled move')
+                needed = [cand]
             statuses = {}
             for seed in (1, 2):
                 rows = []
@@ -819,13 +907,18 @@ class All8Verifier:
                                          or e.get('later_harm') in ('pass', 'fail')))
                         rows.append(dict(candidate_index=index, measured=bool(measured),
                                          status=e.get('status', 'missing'), reason=e.get('reason'),
-                                         later_harm=e.get('later_harm')))
+                                         later_harm=e.get('later_harm'), admitted=bool(e.get('admitted')),
+                                         plan_sha256=digest(e['plan']),
+                                         advantage_veh_s=e.get('advantage_veh_s'),
+                                         lower95_one_sided_veh_s=e.get('lower95_one_sided_veh_s')))
                 comparator = (lb['verification_first_seed']['measured'] if seed == 1 else
                               rec['seed2'].get('status') in ('accepted', 'rejected')
                               and _finite_number(rec['seed2'].get('J_policy_veh_s')))
                 statuses[str(seed)] = dict(measured=bool(comparator and rows
                                                         and all(r['measured'] for r in rows)),
-                                           comparator_measured=bool(comparator), examples=rows)
+                                           comparator_measured=bool(comparator), examples=rows,
+                                           receipt_sha256=(lb['verification_receipt_sha256']
+                                               if seed == 1 else rec['seed2']['receipt_sha256']))
             lb['verification_seed_status'] = statuses
             missing_seeds = sum(not s['measured'] for s in statuses.values())
             if missing_seeds:
@@ -836,12 +929,17 @@ class All8Verifier:
             admitted = sorted(e['seed_index'] for e in mine if e.get('admitted'))
             replicated = {1, 2} <= set(admitted)
             others = any(e.get('admitted') for e in rec['per_seed_v1']['examples']
-                         if e['candidate_index'] != cand)
+                         if e['candidate_index'] != cand and e['seed_index'] in (1, 2))
             lb.update(verified=True, verification_status='measured', verified_admitted_seeds=admitted,
                       verified_replicated=replicated,
                       verified_cooperative=bool(any(e.get('cooperative') is True
                                                     for e in mine if e.get('admitted'))),
                       verified_flip=bool((not replicated) and others))
+            # Registered realised outcome: move beats base iff all8 admits it on BOTH CRN
+            # seeds (paired lower95/safety/later-harm rules). None is correct only when no
+            # alternative is admitted on either required seed; its full support was measured.
+            lb['label_correct'] = bool(replicated if cand is not None else not others)
+            lb['verification_completion_sha256'] = digest(_completion_payload(lb))
             summary['verified'] += 1
             summary['replicated'] += int(replicated)
             summary['flipped'] += int(lb['verified_flip'])
@@ -875,6 +973,113 @@ def verification_quote(labels, k, duration_s=None, members=4, end_s=1200, extra_
 
 # ---------------------------------------------------------------- imitation dataset
 
+def _completion_payload(lb):
+    """A bare verified=True is never a ground-truth bypass."""
+    keys = ('id', 'episode', 't_s', 'cav', 'source', 'obs_state',
+            'move', 'target', 'candidates', 'candidate_class',
+            'original_teacher_target', 'verification_id', 'verification_execution',
+            'verification_execution_sha256', 'verification_receipt_sha256',
+            'verification_plan_sha256', 'verification_candidate_index', 'verification_k',
+            'verification_first_seed', 'verification_seed_status', 'label_correct')
+    return {k: copy.deepcopy(lb.get(k)) for k in keys}
+
+
+def _target_bound(lb):
+    from .protocol import digest
+    support, index = lb.get('candidates', []), lb.get('candidate_class', -1)
+    return bool(type(index) is int and 0 <= index <= len(support)
+                and lb.get('support_sha256') == digest(support)
+                and lb.get('candidate_index') == (index-1 if index else None)
+                and lb.get('move') == (support[index-1] if index else None)
+                and lb.get('target') == lb.get('original_teacher_target'))
+
+
+def _completed(lb):
+    from .protocol import digest
+    statuses = lb.get('verification_seed_status', {})
+    return bool(_target_bound(lb) and lb.get('verified') and lb.get('verification_status') == 'measured'
+                and all(statuses.get(str(s), {}).get('measured') is True for s in (1, 2))
+                and lb.get('verification_completion_sha256') == digest(_completion_payload(lb)))
+
+
+def imitation_eligibility(lb):
+    """Shared, fail-closed CE/dataset boundary. Unverified none means abstention, not class 0.
+
+    Scores supplied through the injectable scorer ABI must already be T1C-calibrated; the
+    production factory's planner adapter requires fitted calibration and marks provenance.
+    Only a bound, measured all8 completion may bypass confidence, for either arm.
+    """
+    from .protocol import digest
+    if _completed(lb):
+        return dict(eligible=True, reason='completed_all8', p_calibrated=None,
+                    provenance='all8_both_seeds', verified_bypass=True)
+    confidence = lb.get('confidence') or {}
+    reason = 'missing_calibration'
+    p = confidence.get('p_calibrated')
+    threshold = max(MIN_IMITATION_P, float(lb.get('imitation_p_star', MIN_IMITATION_P)))
+    index = lb.get('candidate_class', 0)
+    candidates = lb.get('candidates', [])
+    bound = (_target_bound(lb) and 0 < index <= len(candidates)
+             and confidence.get('candidate_class') == index
+             and confidence.get('support_sha256') == digest(candidates)
+             and confidence.get('observation_sha256') == digest(lb.get('obs_state')))
+    valid = (_finite_number(p) and 0 <= p <= 1 and bool(confidence.get('provenance')) and bound)
+    if lb.get('move') is None:
+        reason = 'abstention_without_measured_none'
+    elif valid:
+        reason = 'calibrated' if p >= threshold else 'below_calibrated_threshold'
+    return dict(eligible=bool(valid and p >= threshold and lb.get('move') is not None),
+                reason=reason, p_calibrated=p if valid else None,
+                provenance=confidence.get('provenance') if valid else None,
+                verified_bypass=False)
+
+
+def update_receipt(labels, update, arm):
+    """T2C learning-monitor payload. Bind once to an update and B/R arm, then recompute.
+
+    Accuracy is against the ORIGINAL teacher choice, never completion or flip rate. The
+    denominator contains only selected, correctly bound, fully measured paired checks.
+    An empty subset has accuracy=None. All counts are label counts (not candidate/seed rows).
+    """
+    from .protocol import digest
+    if type(update) is not int or update < 0 or arm not in ('B', 'R'):
+        raise ValueError('receipt requires nonnegative integer update and B/R arm')
+    for lb in labels:
+        if lb['source'] != {'B': 'wm', 'R': 'random'}[arm]:
+            raise ValueError('label source differs from receipt arm')
+        if lb.get('update', update) != update or lb.get('arm', arm) != arm:
+            raise ValueError('label is already bound to another update/arm')
+    for lb in labels:
+        lb.update(update=update, arm=arm)
+    decisions = [imitation_eligibility(lb) for lb in labels]
+    selected = [lb for lb in labels if lb.get('selected_for_verification')]
+    measured = [lb for lb in selected if _completed(lb)]
+    correct = sum(lb['label_correct'] is True for lb in measured)
+    eligible = sum(e['eligible'] for e in decisions)
+    counts = dict(attempted=len(labels), selected=len(selected), measured=len(measured),
+                  incomplete=len(selected)-len(measured), eligible=eligible,
+                  filtered=len(labels)-eligible, accuracy_correct=correct,
+                  accuracy_measured=len(measured))
+    return dict(schema='coopmwm/dense-update/v1', update=update, arm=arm, counts=counts,
+                filtered_denominator=len(labels),
+                filtered_share=(len(labels)-eligible)/len(labels) if labels else None,
+                accuracy_numerator=correct, accuracy_denominator=len(measured),
+                label_accuracy=correct/len(measured) if measured else None,
+                accuracy_definition='move: all8 admission on both required seeds; '
+                'none: no support alternative admitted on either required seed',
+                labels=[dict(id=lb['id'], original_teacher_target=copy.deepcopy(
+                    lb.get('original_teacher_target', lb['target'])),
+                    candidate_class=lb['candidate_class'], eligibility=e,
+                    selected=bool(lb.get('selected_for_verification')),
+                    measured=_completed(lb),
+                    correct=lb.get('label_correct') if _completed(lb) else None,
+                    verification_id=lb.get('verification_id'),
+                    receipt_sha256=lb.get('verification_receipt_sha256'),
+                    execution_sha256=lb.get('verification_execution_sha256'),
+                    paired_evidence=copy.deepcopy(lb.get('verification_seed_status')),
+                    support_sha256=digest(lb['candidates'])) for lb, e in zip(labels, decisions)])
+
+
 def trigger_targets(labels, batch):
     """Indices for T2A ``TriggerPolicy.imitation_loss(batch, targets)``.
 
@@ -893,29 +1098,43 @@ def trigger_targets(labels, batch):
         index = int(lb['candidate_class'])
         if index >= len(table) or not bool(batch.mask[i, index]):
             raise ValueError('label selects a padded/masked trigger slot')
+        if not imitation_eligibility(lb)['eligible']:
+            raise ValueError('filtered dense label cannot enter trigger CE; subset the batch first')
         targets.append(index)
     if len(targets) != len(batch.context['members']):
         raise ValueError('trigger table count mismatch')
     return targets
 
 
-def build_dataset(labels, encoder):
-    """Imitation targets for the T2A head: one row per label (id, context, CE class target,
-    decoded fields, weight 1.0), the head spec and the label provenance counts."""
+def build_dataset(labels, encoder, *, update=None, arm=None):
+    """Export ONLY eligible imitation targets, retaining ALL original labels for audit/checks.
+
+    Pass update/arm to bind and attach T2C's per-update accuracy/filter receipt. Omission is
+    supported for standalone datasets, with explicit null update/arm fields.
+    """
+    if (update is None) != (arm is None):
+        raise ValueError('supply both update and arm for a learning-monitor dataset')
+    receipt = None if update is None else update_receipt(labels, update, arm)
     targets, histogram = [], {}
     counts = dict(n=len(labels), moves=0, none=0, wm=0, random=0, verified=0, replicated=0,
-                  selected=0, incomplete=0)
+                  selected=0, incomplete=0, eligible=0, filtered=0)
     for lb in labels:
         t = lb['target']
         histogram[t['action_class']] = histogram.get(t['action_class'], 0)+1
         counts['moves'] += int(lb['move'] is not None)
         counts['none'] += int(lb['move'] is None)
         counts[lb['source']] += 1
-        counts['verified'] += int(bool(lb.get('verified')))
+        completed = _completed(lb)
+        counts['verified'] += int(completed)
         counts['replicated'] += int(bool(lb.get('verified_replicated')))
         counts['selected'] += int(bool(lb.get('selected_for_verification')))
         counts['incomplete'] += int(bool(lb.get('selected_for_verification'))
-                                    and not lb.get('verified'))
+                                    and not completed)
+        eligibility = imitation_eligibility(lb)
+        counts['eligible'] += int(eligibility['eligible'])
+        counts['filtered'] += int(not eligibility['eligible'])
+        if not eligibility['eligible']:
+            continue
         targets.append(dict(id=lb['id'], episode=lb['episode'], step=lb['step'], t_s=lb['t_s'],
                             cav=lb['cav'], source=lb['source'], action_class=t['action_class'],
                             family_index=t['family_index'], buckets=t['buckets'],
@@ -923,12 +1142,14 @@ def build_dataset(labels, encoder):
                             candidates=copy.deepcopy(lb['candidates']),
                             candidate_class=lb['candidate_class'],
                             n_candidate_classes=lb['n_candidate_classes'],
+                            update=lb.get('update'), arm=lb.get('arm'), eligibility=eligibility,
                             weight=1.0, verified=bool(lb.get('verified')),
                             verified_replicated=bool(lb.get('verified_replicated')),
                             selected_for_verification=bool(lb.get('selected_for_verification'))))
     return dict(schema=SCHEMA, spec=dict(encoder.spec(),
                 candidate_target='candidate_class: 0=none, i+1=candidates[i]; exact members/params',
                 action_target='action_class: family/parameter buckets; members is an auxiliary target'),
+                update=update, arm=arm, update_receipt=receipt,
                 counts=counts, labels=copy.deepcopy(labels),
                  histogram={str(k): v for k, v in sorted(histogram.items())}, targets=targets)
 

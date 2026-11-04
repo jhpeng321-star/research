@@ -46,9 +46,8 @@ def teacher(random=False, **kwargs):
     cfg = dict(dense_teacher=True, dense_teacher_random=random, dense_teacher_candidates=3,
                dense_teacher_fraction=0.)
     cfg.update(kwargs.pop('cfg', {}))
-    if not random:
-        kwargs.setdefault('scorer', lambda obs, c: [dict(p_better=.9, gain=i+1.)
-                                                  for i in range(len(c))])
+    kwargs.setdefault('scorer', lambda obs, c: [dict(p_better=.9, gain=i+1.)
+                                              for i in range(len(c))])
     return dt.make_teacher(cfg, moves_mod=Moves, **kwargs)
 
 
@@ -56,16 +55,16 @@ def label(t=None, step=0):
     return (t or teacher()).label_state('episode_B_1', step, 600+step, 'a', observation())
 
 
-def bank_label(none=False, arm='B'):
+def bank_label(none=False, arm='B', k=2):
     obs = observation()
     obs['ego_id'] = 'c1'
     obs['rows'][0]['vid'], obs['rows'][1]['vid'] = 'c1', 'c2'
     stub = SimpleNamespace(FAMILIES=Moves.FAMILIES, candidates=lambda obs, rng, n:
                            [move(depth=.6, members=('c1', 'c2')) for _ in range(n)])
-    t = dt.WMDenseTeacher(stub, scorer=lambda obs, c:
-                         [dict(p_better=.1 if none else .9, gain=1)]*len(c))
+    scorer = lambda obs, c: [dict(p_better=.1 if none else .9, gain=1)]*len(c)
+    t = dt.WMDenseTeacher(stub, scorer=scorer, cfg=dict(dense_teacher_candidates=k))
     if arm == 'R':
-        t = dt.RandomTeacher(stub)
+        t = dt.RandomTeacher(stub, scorer=scorer, cfg=dict(dense_teacher_candidates=k))
         t.choice_rng = np.random.default_rng(7)
     return t.label_state(f'warm_u005_{arm}_7', 0, 600, 'c1', obs)
 
@@ -73,7 +72,7 @@ def bank_label(none=False, arm='B'):
 def dense_setup(tmp_path, gains, k=2, arm='B'):
     """Real all8 fixture, with plans built BEFORE dispatch from an independent base schedule."""
     from tools.coopmwm import test_verify_perseed_cpu as fixture
-    lb = bank_label(arm=arm)
+    lb = bank_label(arm=arm, k=k)
     snap = fixture.snapshot(600)
     snap['episode'] = dict(snap['episode'], id=lb['episode'], arm=arm)
     def plan(pid, gain):
@@ -83,6 +82,11 @@ def dense_setup(tmp_path, gains, k=2, arm='B'):
         patch.setattr(fixture, 'plan', plan)
         result = fixture.setup(tmp_path, gains, k=k, arm=arm)
     return (*result, lb)
+
+
+def prepare_none(lb, snap, plans):
+    return dt.prepare_verification_plan(lb, snap, moves_mod=Moves, candidate_plans=plans,
+                                       candidate_base_profiles=[[[.3]*120]*2 for _ in plans])
 
 
 def test_config_off_removes_all_teacher_keys():
@@ -99,7 +103,7 @@ def test_config_off_removes_all_teacher_keys():
     ('dense_teacher_typo', 1), ('dense_teacher', 'false'), ('dense_teacher_random', 1),
     ('dense_teacher_fraction', -.1), ('dense_teacher_fraction', float('nan')),
     ('dense_teacher_candidates', 0), ('dense_teacher_candidates', 2.5),
-    ('dense_teacher_buckets', 1), ('dense_teacher_p_star', 1.1),
+    ('dense_teacher_buckets', 1), ('dense_teacher_p_star', 1.1), ('dense_teacher_p_star', .1),
     ('dense_teacher_cadence_s', 0), ('dense_teacher_cadence_s', float('inf')),
     ('dense_teacher_extra_seeds', -1), ('dense_teacher_seed', -1)])
 def test_invalid_config_refused_even_off(key, value):
@@ -109,12 +113,12 @@ def test_invalid_config_refused_even_off(key, value):
         dt.make_teacher({key: value}, moves_mod=Moves)
 
 
-def test_factory_off_and_random_scorer_refused():
+def test_factory_off_and_random_requires_calibration():
     with pytest.raises(ValueError, match='OFF'):
         dt.make_teacher({}, moves_mod=Moves)
-    with pytest.raises(ValueError, match='random teacher'):
+    with pytest.raises((ValueError, ImportError)):
         dt.make_teacher(dict(dense_teacher=True, dense_teacher_random=True),
-                        moves_mod=Moves, scorer=lambda *_: [])
+                        moves_mod=Moves).label_state('ep', 0, 600, 'a', observation())
 
 
 def test_wm_gate_then_gain_and_candidate_order():
@@ -300,7 +304,7 @@ def test_all8_first_seed_rejected_second_seed_wins_and_none_label(tmp_path):
     dt.select_for_verification([lb], 1.)
     dt.bind_receipt(lb, receipt, 1, plans[1])
     none = bank_label(none=True)
-    dt.prepare_verification_plan(none, snap)
+    prepare_none(none, snap, plans)
     dt.select_for_verification([none], 1.)
     dt.bind_receipt(none, receipt, None)
     verifier = dt.All8Verifier(root, 'B', runner_for, str(root), 'bank_verification_ext')
@@ -309,6 +313,9 @@ def test_all8_first_seed_rejected_second_seed_wins_and_none_label(tmp_path):
     assert out['sealed'] == 2
     assert lb['verified_admitted_seeds'] == [2] and not lb['verified_replicated']
     assert none['verified'] and none['verified_flip'] and not none['verified_replicated']
+    accuracy = dt.update_receipt([lb, none], 5, 'B')
+    assert accuracy['accuracy_denominator'] == 2 and accuracy['accuracy_numerator'] == 0
+    assert accuracy['label_accuracy'] == 0.
 
 
 def test_binding_rejects_unselected_wrong_identity_and_wrong_move(tmp_path):
@@ -427,7 +434,7 @@ def test_failed_measurements_never_certify_move_or_none(tmp_path, monkeypatch, f
     root, snap, plans, receipt, runner_for, _, lb = dense_setup(tmp_path, {})
     assert receipt['status'] == 'rejected'  # other candidate completed despite p1 failure
     none = bank_label(none=True)
-    dt.prepare_verification_plan(none, snap)
+    prepare_none(none, snap, plans)
     for row in (lb, none):
         dt.select_for_verification([row], 1.)
     dt.bind_receipt(lb, receipt, 0, plans[0])
@@ -449,6 +456,8 @@ def test_failed_measurements_never_certify_move_or_none(tmp_path, monkeypatch, f
                                       verifier)['verified']
     counts = dt.build_dataset([lb, none], teacher().encoder)['counts']
     assert counts['selected'] == counts['incomplete'] == 2 and counts['verified'] == 0
+    accuracy = dt.update_receipt([lb, none], 5, 'B')
+    assert accuracy['accuracy_denominator'] == 0 and accuracy['label_accuracy'] is None
 
 
 def test_measured_rejections_are_completed_verification(tmp_path):
@@ -456,7 +465,7 @@ def test_measured_rejections_are_completed_verification(tmp_path):
     _budget(tmp_path)
     root, snap, plans, receipt, runner_for, _, lb = dense_setup(tmp_path, {})
     none = bank_label(none=True)
-    dt.prepare_verification_plan(none, snap)
+    prepare_none(none, snap, plans)
     dt.select_for_verification([lb, none], 1.)
     dt.bind_receipt(lb, receipt, 0, plans[0])
     dt.bind_receipt(none, receipt, None)
@@ -466,6 +475,12 @@ def test_measured_rejections_are_completed_verification(tmp_path):
     assert out['verified'] == out['sealed'] == 2 and out['incomplete'] == out['missing'] == 0
     assert all(r['verified'] and not r['verified_replicated'] for r in (lb, none))
     assert all(s['measured'] for r in (lb, none) for s in r['verification_seed_status'].values())
+    assert lb['label_correct'] is False and none['label_correct'] is True
+    accuracy = dt.update_receipt([lb, none], 5, 'B')
+    assert accuracy['accuracy_numerator'] == 1 and accuracy['accuracy_denominator'] == 2
+    assert accuracy['label_accuracy'] == .5
+    assert accuracy['labels'][0]['original_teacher_target'] == lb['target']
+    assert accuracy['labels'][0]['paired_evidence']['2']['examples'][0]['advantage_veh_s'] < 0
 
 
 @pytest.mark.parametrize('defect', ['absent_example', 'no_advantage', 'nonfinite_advantage',
@@ -476,7 +491,7 @@ def test_incomplete_seed2_record_cannot_certify_or_retain_stale_success(tmp_path
     _budget(tmp_path)
     root, snap, plans, receipt, runner_for, _, lb = dense_setup(tmp_path, {})
     none = bank_label(none=True)
-    dt.prepare_verification_plan(none, snap)
+    prepare_none(none, snap, plans)
     dt.select_for_verification([lb, none], 1.)
     dt.bind_receipt(lb, receipt, 0, plans[0])
     dt.bind_receipt(none, receipt, None)
@@ -644,3 +659,287 @@ def test_execution_contract_full_offsets_base_identity_and_preparation(tmp_path)
     missing.pop('verification_execution')
     with pytest.raises(ValueError, match='before dispatch'):
         dt.bind_receipt(missing, receipt, 0, plans[0])
+
+
+def trigger_batch(lb):
+    table = [None, *lb['candidates']]
+    return SimpleNamespace(context=dict(members=[lb['cav']]), tables=(table,),
+                           mask=np.ones((1, len(table)), dtype=bool))
+
+
+@pytest.mark.parametrize('random', [False, True])
+@pytest.mark.parametrize('probability', [.2, .799999, .8, .95])
+def test_shared_imitation_boundary_below_and_at_owner_threshold(random, probability):
+    t = teacher(random=random, scorer=lambda obs, c:
+                [dict(p_better=probability, gain=1)]*len(c))
+    t.choice_rng = SimpleNamespace(integers=lambda *_: 1)
+    lb = label(t)
+    allowed = probability >= .8
+    ds = dt.build_dataset([lb], t.encoder, update=4, arm='R' if random else 'B')
+    assert ds['counts']['eligible'] == int(allowed)
+    assert ds['counts']['filtered'] == int(not allowed)
+    assert bool(ds['targets']) == allowed
+    assert ds['labels'][0]['candidate_scores'][0]['p_better'] == probability
+    assert ds['update_receipt']['filtered_share'] == float(not allowed)
+    if allowed:
+        assert dt.trigger_targets([lb], trigger_batch(lb)) == [1]
+    else:
+        with pytest.raises(ValueError, match='filtered'):
+            dt.trigger_targets([lb], trigger_batch(lb))
+        if not random:
+            assert lb['abstained'] and lb['move'] is None
+        else:
+            assert lb['draw'] == 1 and lb['move'] is not None
+    # Filtering never removes a label from the deterministic verification sampler.
+    assert dt.select_for_verification([lb], 1) == [lb]
+
+
+@pytest.mark.parametrize('random', [False, True])
+@pytest.mark.parametrize('missing', ['confidence', 'provenance', 'wrong_support', 'wrong_state'])
+def test_missing_or_unbound_calibration_fails_closed_at_both_consumers(random, missing):
+    t = teacher(random=random)
+    t.choice_rng = SimpleNamespace(integers=lambda *_: 1)
+    lb = label(t)
+    if missing == 'confidence':
+        lb.pop('confidence')
+    elif missing == 'provenance':
+        lb['confidence'].pop('provenance')
+    elif missing == 'wrong_support':
+        lb['candidates'][0]['depth'] += .01
+    else:
+        lb['obs_state']['rows'][0]['v_mps'] += 1
+    lb['verified'] = True  # an unbound completion flag cannot bypass the filter
+    assert not dt.build_dataset([lb], t.encoder)['targets']
+    with pytest.raises(ValueError, match='filtered'):
+        dt.trigger_targets([lb], trigger_batch(lb))
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_completed_verification_bypasses_confidence_but_cannot_be_retargeted(tmp_path, arm):
+    from tools.coopmwm.test_verify_perseed_cpu import _budget
+    _budget(tmp_path)
+    gains = {('p1', 1): .6, ('p1', 2): .6}
+    root, _, plans, receipt, runner_for, _, lb = dense_setup(tmp_path, gains, arm=arm)
+    lb['confidence'] = None
+    verifier = dt.All8Verifier(root, arm, runner_for, str(root), 'bank_verification_ext')
+    dt.verify_selected([lb], 1., lambda _: (receipt, 0, plans[0]), verifier)
+    assert dt.imitation_eligibility(lb)['verified_bypass']
+    assert dt.trigger_targets([lb], trigger_batch(lb)) == [lb['candidate_class']]
+    ds = dt.build_dataset([lb], teacher().encoder, update=5, arm=arm)
+    assert ds['targets'][0]['eligibility']['provenance'] == 'all8_both_seeds'
+    assert ds['update_receipt']['label_accuracy'] == 1.
+    changed_state = copy.deepcopy(lb)
+    changed_state['obs_state']['rows'][0]['v_mps'] += 1
+    assert not dt.build_dataset([changed_state], teacher().encoder)['targets']
+    lb['move']['depth'] = .99
+    assert not dt.build_dataset([lb], teacher().encoder)['targets']
+
+
+@pytest.mark.parametrize('defect', ['different_support', 'omitted', 'substituted', 'wrong_base'])
+def test_none_freezes_exact_support_before_dispatch_and_rejects_other_support(tmp_path, defect):
+    from tools.coopmwm.exact_grade import _seal
+    _, snap, plans, receipt, _, _, _ = dense_setup(tmp_path, {}, k=2)
+    none = bank_label(none=True)
+    if defect == 'different_support':
+        for c in none['candidates']:
+            c['depth'] = .9
+        with pytest.raises(ValueError, match='candidate support'):
+            prepare_none(none, snap, plans)
+        return
+    if defect == 'wrong_base':
+        with pytest.raises(ValueError, match='candidate support'):
+            dt.prepare_verification_plan(none, snap, moves_mod=Moves, candidate_plans=plans,
+                                         candidate_base_profiles=[[[.4]*120]*2]*2)
+        return
+    prepare_none(none, snap, plans)
+    dt.select_for_verification([none], 1)
+    hashes = receipt['candidate_plan_sha256'][:]
+    if defect == 'omitted':
+        hashes.pop()
+    else:
+        hashes[1] = 'substituted-plan'
+    changed = _seal(dict(receipt, k=len(hashes), candidate_plan_sha256=hashes), 'receipt_sha256')
+    with pytest.raises(ValueError, match='none candidate support'):
+        dt.bind_receipt(none, changed, None)
+    assert not none['verified']
+
+
+def test_none_matching_support_frozen_before_real_all8_dispatch(tmp_path, monkeypatch):
+    from tools.coopmwm import test_verify_perseed_cpu as fixture, verify_perseed as vp
+    fixture._budget(tmp_path)
+    none = bank_label(none=True)
+    snap = fixture.snapshot(600)
+    snap['episode'] = dict(snap['episode'], id=none['episode'], arm='B')
+    alternatives = []
+    for i, m in enumerate(none['candidates']):
+        probe = dict(id=none['id'], episode=none['episode'], t_s=none['t_s'], move=m)
+        alternatives.append(dt.prepare_verification_plan(probe, snap, [[.3]*120]*2,
+                                                        moves_mod=Moves, plan_id=f'p{i+1}'))
+    prepare_none(none, snap, alternatives)  # BEFORE any branch is dispatched
+    monkeypatch.setattr(fixture, 'plan', lambda pid, gain: alternatives[int(pid[1:])-1])
+    root, _, plans, receipt, runner_for, _ = fixture.setup(tmp_path, {}, k=2)
+    verifier = dt.All8Verifier(root, 'B', runner_for, str(root), 'bank_verification_ext')
+    dt.verify_selected([none], 1., lambda _: (receipt, None, None), verifier)
+    assert none['verified'] and none['label_correct'] and not none['verified_flip']
+    assert dt.trigger_targets([none], trigger_batch(none)) == [0]
+    receipt_update = dt.update_receipt([none], 5, 'B')
+    assert receipt_update['accuracy_numerator'] == receipt_update['accuracy_denominator'] == 1
+    assert receipt_update['filtered_share'] == 0
+    records = copy.deepcopy(vp.records(root, 'B'))
+    next(iter(records.values()))['per_seed_v1']['examples'][0]['plan']['profile'][0][0] += .01
+    monkeypatch.setattr(vp, 'records', lambda *_: records)
+    with pytest.raises(ValueError, match='frozen support'):
+        verifier.consume([none])
+    assert not dt.imitation_eligibility(none)['eligible']
+
+
+@pytest.fixture
+def real_planner(monkeypatch):
+    """Run committed T1B/T1A sources, in memory, from THIS worktree's Git object store.
+
+    No sibling worktree/module copies and no production planner stub. Pin the dependency
+    revisions used by the independent review so drift cannot silently weaken this regression.
+    """
+    import subprocess
+    import sys
+    import types
+    from pathlib import Path
+    from tools import coopmwm
+    root = Path(__file__).resolve().parents[2]
+    revisions = dict(planner_policy='3a960efc156166002bf79946d7bca2888b437bd7',
+                     planner_online='3a960efc156166002bf79946d7bca2888b437bd7',
+                     moves='7a76b8697512889530e544628fc86b1682cd2e41')
+    modules = {}
+    for name, revision in revisions.items():
+        source = subprocess.check_output(['git', 'show',
+                                          f'{revision}:tools/coopmwm/{name}.py'], cwd=root)
+        fullname = 'tools.coopmwm.'+name
+        module = types.ModuleType(fullname)
+        monkeypatch.setitem(sys.modules, fullname, module)
+        monkeypatch.setattr(coopmwm, name, module, raising=False)
+        exec(compile(source, f'<git:{revision}:{name}>', 'exec'), module.__dict__)
+        modules[name] = module
+    return SimpleNamespace(**modules)
+
+
+def radio_observation(intent=False):
+    import torch
+    from tools.coopmwm.v2v_obs import V2V_DIM, v2v_intent_dim
+    rows = [dict(vid=v, s_m=s, v_mps=8., lane=1, is_cav=True, length_m=5.)
+            for v, s in [('a', 100.), ('b', 90.)]]
+    extra = v2v_intent_dim(horizon=1) if intent else V2V_DIM
+    radio = dict(frame=dict(time_s=600, vehicles=[dict(r, issued_acceleration_mps2=.1)
+                                                  for r in rows]),
+                 previous_commands=dict(a=.1, b=.1), noise=dict(a=0., b=0.),
+                 deterministic=True, generator_state=torch.Generator().get_state().tolist(),
+                 log_std=[0.], intent=None)
+    if intent:
+        radio['intent'] = dict(horizon=1, board=dict(b=[599, [.1]]),
+                               weight=[[0.]*64], bias=[0.], bounds=[-1., 1.])
+    return dict(ego_id='a', group=['a', 'b'], rows=rows, time_s=600,
+                commands=dict(a=.1, b=.1), policy_residuals=dict(a=0., b=0.),
+                policy_state={'actor.0.weight': [[0.]*(33+extra)]}, policy_radio=radio,
+                history=[dict(time_s=600, rows=copy.deepcopy(rows), entrance_counts=None)])
+
+
+@pytest.mark.parametrize('random', [False, True])
+@pytest.mark.parametrize('intent', [False, True])
+def test_actual_t1b_v2v_scoring_capture_and_recorded_replay(real_planner, random, intent):
+    obs = radio_observation(intent)
+    real_planner.planner_online.validate_observation(obs)
+    seen = []
+    def rollout(record, actions, K, H):
+        assert K == 8 and H == 600 and len(actions) == 3
+        assert all(len(a['offset_profile']) == 600 for a in actions[1:])
+        assert record['policy_radio'] == obs['policy_radio']
+        seen.append(record)
+        return {a['id']: [10. if a['id'] == 'policy' else 9.]*K for a in actions}
+    table = [None, real_planner.moves.Move('gap_open', ('a', 'b'), 5, 40, .4),
+             real_planner.moves.Move('gap_open', ('a', 'b'), 6, 40, .5)]
+    cfg = dict(dense_teacher=True, dense_teacher_random=random, dense_teacher_candidates=2)
+    t = dt.make_teacher(cfg, moves_mod=real_planner.moves, planner_kwargs=dict(
+        rollout=rollout, calibration={'fitted': True}, calibrate=lambda p, fitted: .8,
+        move_api=real_planner.moves))
+    t.choice_rng = SimpleNamespace(integers=lambda *_: 1)
+    buf = dt.DAggerBuffer(60)
+    buf.add('ep', 0, 600, 'a', obs, candidates=table)
+    lb = buf.label(t)[0]
+    assert seen and lb['obs_state']['policy_radio'] == obs['policy_radio']
+    assert dt.trigger_targets([lb], trigger_batch(lb)) == [1]
+    assert lb['confidence']['provenance'] == 'planner_calibration/T1C'
+    replay = t.label_state('ep', 0, 600, 'a', lb['obs_state'], candidates=table)
+    assert replay == lb
+    assert dt.build_dataset([lb], t.encoder)['targets'][0]['obs_state']['policy_radio'] == obs['policy_radio']
+
+
+@pytest.mark.parametrize('defect', ['future_frame', 'global_rows', 'outside_sensing', 'global_commands',
+                                  'global_noise', 'global_intent', 'noncausal_intent', 'extra_field'])
+def test_radio_capture_rejects_nonlocal_noncausal_and_extra_payload(real_planner, defect):
+    obs = radio_observation(intent=True)
+    radio = obs['policy_radio']
+    if defect == 'future_frame':
+        radio['frame']['time_s'] += 1
+    elif defect == 'global_rows':
+        radio['frame']['vehicles'].append(dict(radio['frame']['vehicles'][0], vid='far'))
+    elif defect == 'outside_sensing':
+        obs['rows'][1]['s_m'] += 1000
+        radio['frame']['vehicles'][1]['s_m'] += 1000
+    elif defect in ('global_commands', 'global_noise'):
+        radio['previous_commands' if defect == 'global_commands' else 'noise']['far'] = 0.
+    elif defect == 'global_intent':
+        radio['intent']['board']['far'] = [599, [0.]]
+    elif defect == 'noncausal_intent':
+        radio['intent']['board']['b'][0] = 600
+    else:
+        radio['unobservable'] = 'sentinel'
+    with pytest.raises(ValueError):
+        dt.DAggerBuffer(60).add('ep', 0, 600, 'a', obs)
+    with pytest.raises(ValueError):
+        dt.make_teacher(dict(dense_teacher=True), moves_mod=real_planner.moves,
+                        scorer=lambda *_: pytest.fail('bad radio reached scoring')).label_state(
+                            'ep', 0, 600, 'a', obs)
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_update_receipt_mixed_confidence_incomplete_and_empty_accuracy(arm):
+    t = teacher(random=arm == 'R')
+    t.choice_rng = SimpleNamespace(integers=lambda *_: 1)
+    high = label(t)
+    low = label(t, step=1)
+    low['confidence']['p_calibrated'] = .2
+    missing = label(t, step=2)
+    missing.pop('confidence')
+    dt.select_for_verification([low], 1)
+    receipt = dt.update_receipt([high, low, missing], 4, arm)
+    assert receipt['counts'] == dict(attempted=3, selected=1, measured=0, incomplete=1,
+                                     eligible=1, filtered=2, accuracy_correct=0, accuracy_measured=0)
+    assert receipt['filtered_share'] == pytest.approx(2/3)
+    assert receipt['label_accuracy'] is None and receipt['accuracy_denominator'] == 0
+    assert receipt['labels'][1]['correct'] is None
+    with pytest.raises(ValueError, match='another update'):
+        dt.update_receipt([high], 5, arm)
+    with pytest.raises(ValueError, match='source'):
+        dt.update_receipt([high], 4, 'R' if arm == 'B' else 'B')
+    assert dt.update_receipt([], 5, arm)['label_accuracy'] is None
+    assert dt.update_receipt([], 5, arm)['filtered_share'] is None
+
+
+def test_random_none_is_not_an_unverified_supervised_comparator():
+    t = teacher(random=True)
+    t.choice_rng = SimpleNamespace(integers=lambda *_: 0)
+    lb = label(t)
+    assert lb['draw'] == 0 and lb['abstained'] and lb['candidate_scores']
+    ds = dt.build_dataset([lb], t.encoder, update=2, arm='R')
+    assert not ds['targets'] and ds['counts']['filtered'] == 1
+    with pytest.raises(ValueError, match='filtered'):
+        dt.trigger_targets([lb], trigger_batch(lb))
+
+
+def test_none_verification_requires_independent_complete_preparation(tmp_path):
+    _, snap, plans, _, _, _, _ = dense_setup(tmp_path, {})
+    none = bank_label(none=True)
+    with pytest.raises(ValueError, match='independent base'):
+        dt.prepare_verification_plan(none, snap, candidate_plans=plans)
+    with pytest.raises(ValueError, match='candidate support'):
+        prepare_none(none, snap, plans[:1])
+    assert not none.get('verification_execution')
