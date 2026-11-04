@@ -181,5 +181,15 @@
     "inspection": "Read git status/log, shared task spec, readiness receipt, both independent reviews and acceptance receipt. Confirmed the branch is c4/planner-calib, tracked files are unchanged and no matching calibration/verifier pytest process is active.",
     "action": "Refreshed this receipt to reflect the completed independent PASS and acceptance. Preserved implementation, regression tests, historical receipts and untracked artifacts.",
     "test_execution": "Reused the completed implementation, resume and independent-review test evidence above; no duplicate pytest run, simulation job or dispatch was started."
+  },
+  "latest_resume_reconciliation": {
+    "preserved_head": "472db6c0",
+    "reviewed_implementation_head": "bb054d240698b7946147e72792ad080c3d7cf553",
+    "inspection": "Read status/log, shared task spec, readiness receipt, original blocking review, independent PASS re-review and acceptance receipt before making changes. Tracked working tree was clean; existing untracked reviews, acceptance and fixture directories were preserved.",
+    "implementation_verification": "git diff --stat bb054d240698b7946147e72792ad080c3d7cf553 -- tools/coopmwm/planner_calibration.py tools/coopmwm/test_planner_calibration_cpu.py tools/coopmwm/planner_calibration_cpu_env.py T1C_READY.blocked0.json returned no differences. All reviewed blocker fixes and regression tests remain unchanged.",
+    "active_job_check": "No matching Python/pytest process for this worktree or the three calibration/verifier test modules was active.",
+    "test_execution": "Reused the independently verified 107-pass result and prior resume verification; no duplicate completed test run or dispatch was started.",
+    "validation": "git diff --check c4/track-base passed before the receipt refresh; JSON and final diff are validated before committing.",
+    "action": "Refreshed T1C_READY.json only; independent PASS, zero remaining review blockers and production_gate_available=false remain accurate."
   }
 }
