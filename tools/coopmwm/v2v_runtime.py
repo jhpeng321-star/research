@@ -188,7 +188,8 @@ def controller_class(base):
                 audit = getattr(self, 'audit', None)
                 if audit is not None and (self.events[-1].get('sample') or {}).get('lane_requests'):
                     rec = audit.setdefault('lane_actions', dict(requests=0, issued=0, blocked=0, executed=0))
-                    for key in ('requested', 'issued', 'blocked', 'executed'):
+                    rec['requests'] += int(outcome.get('requested', 0))
+                    for key in ('issued', 'blocked', 'executed'):
                         rec[key] += int(outcome.get(key, 0))
 
     return Controller
