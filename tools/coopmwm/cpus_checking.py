@@ -24,7 +24,8 @@ owns state is replicated:
     backfill guard); otherwise the sealed decision waits on cpuS (its charges are already on cpuQ).
 Scheduling: B and R alternate (started counts differ by <= 1; R stops when B's queue is empty - matched
 pace), newest policy version first after the registered tier-0 no_solos decisions; a new decision starts
-only if min(delegate cap, phase cap) headroom covers (running+1) x worst_case_sim_s.
+only if min(delegate cap, phase cap minus phase_reserve_sim_s kept for launch gates) headroom covers
+(running+1) x worst_case_sim_s.
 STOP: <control>/STOP.json (in-flight decisions finish, pushes continue). Only own child PIDs are waited on.
 """
 import hashlib
@@ -371,7 +372,9 @@ def coordinator(control):
                     except RpcError as error:
                         budget = None;log(control, event='budget_rpc_error', error=repr(error))
                 if budget is not None:
-                    head = min(budget['delegate_cap']-budget['all8_used'], budget['phase_cap']-budget['phase_used'],
+                    # phase_reserve_sim_s: bank_verification_ext kept free for registered launch gates
+                    head = min(budget['delegate_cap']-budget['all8_used'],
+                               budget['phase_cap']-budget['phase_used']-int(cfg.get('phase_reserve_sim_s', 0)),
                                budget['total_cap']-budget['total_used'])
                     if head < (len(running)+1)*worst:
                         if not running:
