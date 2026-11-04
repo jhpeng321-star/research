@@ -7,7 +7,8 @@
   "base": "13f184b5",
   "commits": [
     {"sha": "3ad844f6", "subject": "coopmwm T2H: record resumed inspection and weighting contract"},
-    {"sha": "ec1828ae", "subject": "coopmwm T2H: opt-in weighted practice starts with own augmented states"}
+    {"sha": "ec1828ae", "subject": "coopmwm T2H: opt-in weighted practice starts with own augmented states"},
+    {"sha": "ee3af837", "subject": "coopmwm T2H: READY receipt with CPU checks and integration API"}
   ],
   "receipt_commit": "The final commit containing T2H_READY.json records verification and readiness.",
   "api": {
@@ -75,6 +76,16 @@
       "Only weighted plans and episodes gain weighting metadata; frozen plans reused without rereading growing augmentation inputs"
     ],
     "provenance": "The minimum executable source inventory now includes practice_weighting.py so deployed code qualification covers the new dependency"
+  },
+  "independent_review": {
+    "verdict": "PASS",
+    "report": "REVIEW_T2H_r0.md",
+    "acceptance_receipt": "T2H_ACCEPTED.json",
+    "reviewed_head": "ee3af8371e69a99f12657bf735ac5a9d3a1b5b8f",
+    "required_fixes": [],
+    "tests": {"passed": 209, "failed": 0, "skipped": 1, "deselected": 1},
+    "test_count_note": "The review deselected one synthetic restricted-path fixture; its 209 passes are independent of the original 210-pass readiness result.",
+    "resume": "Existing implementation, verification, and acceptance preserved; this resume records the completed independent review without rerunning tests or dispatching jobs."
   },
   "open_issues": [],
   "integration_notes": [
