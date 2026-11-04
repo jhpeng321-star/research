@@ -423,15 +423,22 @@ def collect(root, cfg, arm, stop, episodes_per_round=2, rounds=None, verify_work
         raise ValueError(f'unknown arm {arm}')
     root = Path(root)
     refuse_local_ledger(root)
+    phase_registered(cfg, WINDOW_PHASE)          # every charge phase validated BEFORE anything runs
+    phase_registered(cfg, CONFIRM_PHASE)
+    phase_registered(cfg, cfg['episode_phase'])
+    if arm == 'B' and cfg.get('broker') is None:
+        raise ValueError('arm B searches the WM through the broker: stage a single-slot '
+                         'broker config (stage_broker) first')
     reserve = route_charges(cfg)                       # refuses when the route is unavailable
     shared = Path(cfg['charge_route']['run_root'])
-    phase_registered(cfg, WINDOW_PHASE)
-    phase_registered(cfg, CONFIRM_PHASE)
     policy, pin = pinned_policy(cfg, arm)              # refuses wrong k/sha BEFORE any charge
-    if cfg.get('broker') is not None and arm == 'B':
-        stage_broker(cfg, root)
+    if arm == 'B':
+        stage_broker(cfg, root)                        # CONFIG ONLY artifacts (validated above)
     bank = rb.bank_root(root, arm)
     bank.mkdir(parents=True, exist_ok=True)
+    for n in ('jobs', 'requests', 'responses', 'centre_requests', 'centre_responses',
+              'quota_admissions'):
+        (root/n).mkdir(parents=True, exist_ok=True)
     runner = sv.SubprocessBranchRunner(bank/'sumo_verification'/'branches',
                                        workers=int(cfg['workers']), timeout_s=float(cfg['timeout_s']))
     charge = sv.accel_charge(str(shared), WINDOW_PHASE)
