@@ -1,5 +1,15 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+## Fresh resume — 2026-11-04 15:52 +08:00
+- Read git status/log, task registrations and completion receipts first. Fresh local
+  hashes of design, final handoff, peer status and existing14:02 remote evidence MATCH.
+- Fleet169updates/7,728gradient episodes/6,998,400charged and peer16world fleet evaluation
+  remain COMPLETE. Full paired comparison remains incomplete and C1SWITCH2-owned.
+- Exact local observer3668/publisher44716 query returns neither process; supervision
+  deadlines are complete. Existing remote evidence reused; no fleet continuation required.
+- Receipt: `docs/paper_results/selmappo/RESUME_20261104_1552.json`. Prior CPU PASS and peer
+  notices preserved; no new dispatch, simulation, GPU allocation or process signal.
+
 ## Fresh resume — 2026-11-04 15:45 +08:00
 - Git status/log and task registrations reconciled before action. Fresh local design,
   final-handoff, remote-evidence and peer-status hashes match completion bindings.
