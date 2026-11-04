@@ -77,7 +77,7 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
 def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sha256,
                    imitation_bank_filter='cooperative_only', imitation_step_mode=None,
                    v2v_intent_bank_term=True, practice_starts=False,
-                   practice_fraction=None, practice_repeat_cap=None):
+                   practice_fraction=None, practice_repeat_cap=None, budget_transfer=None):
     """Audit I4: the registered producer of the intent-ON A/B/R runtime config (prospective
     binding only, like prepare). Identical for every arm: v2v_dim=48 (K4 x (6+5+1)),
     v2v_intent=True, horizon 5, loss weight 1.0, detach_trunk=True; bank labels
@@ -117,8 +117,14 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
         from .v2v_launch3 import V2V_PHASES, practice_reference_quote
         budget = dict(cfg.get('budget') or {})
         phases = dict(budget.get('phases') or {})
-        phases['v2v_train'] = (V2V_PHASES['v2v_train']
-                               + practice_reference_quote(cfg['practice_fraction']))
+        target = V2V_PHASES['v2v_train'] + practice_reference_quote(cfg['practice_fraction'])
+        increase = target - int(phases.get('v2v_train', 0))
+        phases['v2v_train'] = target
+        if budget_transfer is not None:
+            budget = apply_transfer(budget, phases, budget_transfer, increase)
+        elif 'total' in budget and sum(phases.values()) > budget['total']:
+            raise ValueError('practice_starts needs a registered budget_transfer into v2v_train: '
+                             'the phase allocations would exceed the registered total')
         cfg['budget'] = dict(budget, phases=phases)
     if cfg['imitation_epochs'] < 5:
         raise ValueError('full-pass separate imitation requires at least five epochs')
@@ -128,6 +134,34 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
             raise ValueError(f'intent runtime key {key} differs from the launcher: {cfg.get(key)!r}')
     practice_options_for(cfg, 'B'), practice_options_for(cfg, 'R')
     return cfg
+
+
+NON_DONOR_PHASES = ('superseded', 'v2v_train')   # 'superseded' = SUPERSEDED_CHARGE, consumed off-ledger
+
+
+def apply_transfer(budget, phases, transfer, increase):
+    """A MAIN-registered phase transfer that funds a raised v2v_train allocation: exactly
+    ``increase`` sim-s move from ``transfer['source']`` (a real ledger phase with that much
+    allocation) into v2v_train; the registered total is unchanged and the phase sum never
+    exceeds it. 'superseded' is never a donor (its allocation is the off-ledger SUPERSEDED_CHARGE
+    that accel_storage.charged() already counts as spent). Mutates ``phases``; returns budget
+    with the transfer recorded."""
+    source, amount = transfer.get('source'), transfer.get('amount')
+    amendment = transfer.get('amendment_sha256')
+    if source in NON_DONOR_PHASES or source not in phases:
+        raise ValueError('unregistered budget transfer source: '+repr(source))
+    if type(amount) is not int or amount != increase or amount <= 0:
+        raise ValueError('budget transfer must equal the registered increase exactly: '+repr(amount))
+    if not isinstance(amendment, str) or len(amendment) != 64:
+        raise ValueError('budget transfer needs its registered amendment SHA256')
+    if phases[source] < amount:
+        raise ValueError('budget transfer source allocation too small: '+source)
+    phases[source] -= amount
+    if 'total' in budget and sum(phases.values()) > budget['total']:
+        raise ValueError('phase allocations exceed the registered total after the transfer')
+    record = dict(source=source, target='v2v_train', amount=amount, amendment_sha256=amendment,
+                  rule='practice_starts matched A references; total unchanged')
+    return dict(budget, transfers=list(budget.get('transfers') or ()) + [record])
 
 
 def admit(cfg, release, hooks):

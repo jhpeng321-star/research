@@ -1119,3 +1119,31 @@ def test_guided_replayed_plan_start_tick_with_no_proposal_is_guarded(tmp_path):
     result = run_episode_job(job)
     assert result['id'] == 'jobg' and result['practice']['t0'] == 417
     assert not (tmp_path/'guided_starts').exists()                       # proposal None: nothing queued
+
+
+def test_practice_on_against_the_real_full_budget_needs_a_registered_transfer(tmp_path):
+    """The deployed budget allocates every sim-s of 17,471,840: practice ON must move exactly the
+    quoted increase from a real donor phase (MAIN-registered), never from 'superseded'."""
+    full = dict(launch.V2V_PHASES, paired_branch=1297400, interim_u8_test=900000, superseded=811640)
+    full['train'] = launch.CEILING_SIM_S - sum(full.values())
+    base = dict(budget=dict(total=launch.CEILING_SIM_S, phases=full))
+    kw = dict(root=tmp_path/'v2v', legacy_root=tmp_path/'legacy', source_root=tmp_path/'src',
+              common_checkpoint_sha256='a'*64, practice_starts=True)
+    with pytest.raises(ValueError, match='registered budget_transfer'):
+        v2v_runner.prepare_intent(base, **kw)
+    q = launch.practice_reference_quote(0.25)
+    for bad in (dict(source='superseded', amount=q, amendment_sha256='a'*64),
+                dict(source='interim_u8_test', amount=q-1, amendment_sha256='a'*64),
+                dict(source='interim_u8_test', amount=q),
+                dict(source='nope', amount=q, amendment_sha256='a'*64)):
+        with pytest.raises(ValueError):
+            v2v_runner.prepare_intent(base, budget_transfer=bad, **kw)
+    cfg = v2v_runner.prepare_intent(base, budget_transfer=dict(source='interim_u8_test', amount=q,
+                                    amendment_sha256='b'*64), **kw)
+    phases = cfg['budget']['phases']
+    assert phases['v2v_train'] == launch.V2V_PHASES['v2v_train'] + q == 2419200
+    assert phases['interim_u8_test'] == 900000 - q and sum(phases.values()) == launch.CEILING_SIM_S
+    assert cfg['budget']['transfers'] == [dict(source='interim_u8_test', target='v2v_train', amount=q,
+        amendment_sha256='b'*64, rule='practice_starts matched A references; total unchanged')]
+    live = dict(cfg, launch_authorized=True, phase_funding_authorized=True)
+    assert launch.bind_runtime(dict(config=live), root=tmp_path/'v2v', source_root=tmp_path/'src') is live
