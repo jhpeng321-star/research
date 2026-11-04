@@ -86,6 +86,7 @@
     "isolated": true
   },
   "configuration_note": "The run registration must bind wm_samples, verification fraction and full horizon identically for B/R. This fix adds no numerical horizon default or behavioural threshold.",
+  "launch_profile_status": "The latest shared specification (MAIN 02:30 owner-approved redesign) keeps WM counterfactual group credit OFF in the clean-run launch profile. This accepted CPU/API module remains available as default-off code; production cooperation reward is owned by track2_reward/T2C.",
   "integration": [
     "T2C/T2D inject the registered full-horizon belief-only scorer, passing horizon_s or declaring scorer.horizon_s, and route layer_advantage.per_member only to the cooperation-layer PPO loss with base MAPPO frozen.",
     "Use the same verification fraction and dedicated reproducible selection streams for B/R, with existing orchestration persisting selected draw_ids and claims.",
@@ -145,9 +146,9 @@
   "unresolved_review_blockers": [],
   "fresh_session_resume": {
     "date": "2026-11-05",
-    "starting_head": "56bbaf7ccb20c272f4b4bc90166e59a373e0cbd2",
+    "starting_head": "e01c08d0086399ffe0f88aa5e62c7efbd37da2a6",
     "tracked_worktree_changes_at_start": false,
-    "action": "Read status/log, shared specification, both reviews and current, acceptance and historical blocked task receipts first. The previous resume already recorded independent acceptance; preserve all completed fixes, tests and untracked receipts, and refresh only this readiness receipt for the latest resume.",
+    "action": "Read status/log, shared specification, r0 review and current readiness receipt first, followed by the independent r1 PASS, acceptance and historical blocked receipts. Both fixes and their completed regression tests are already accepted. Preserve that work and all four untracked receipts; refresh only this readiness receipt and record the latest specification's launch-profile OFF decision.",
     "verification": "Confirmed branch c4/group-credit and no tracked starting changes. git diff --exit-code 75c804e96b71c318e298788ad40bc2f069f2fb75 -- tools/coopmwm/group_credit.py tools/coopmwm/test_group_credit_cpu.py passed, confirming both files are identical to the independently accepted version. git diff --check c4/track-base -- tools/coopmwm/group_credit.py tools/coopmwm/test_group_credit_cpu.py T2E_READY.json passed. Existing completed test results retained; no tests, jobs or dispatches restarted."
   },
   "execution": {
