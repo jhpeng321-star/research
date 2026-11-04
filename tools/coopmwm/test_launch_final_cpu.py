@@ -303,7 +303,8 @@ def test_gate_config_is_the_deployed_runtime_and_refuses_mismatch(tmp_path):
     cfg, _, _ = _runtime_cfg(tmp_path)
     runtime_sha = _write_runtime(tmp_path/'run', cfg)
     sha, loaded = ceg.load_runtime(tmp_path/'run')
-    assert sha == runtime_sha and ceg.runtime_gate_config(loaded) == {k: cfg[k] for k in ceg.RUNTIME_KEYS}
+    # the lane keys (c4/lane-policy) ride the same identity; an intent-only runtime has none
+    assert sha == runtime_sha and ceg.runtime_gate_config(loaded) == {k: cfg[k] for k in ceg.RUNTIME_KEYS if k in cfg}
     for bad, kw in ((dict(v2v_intent_loss_weight=.1), {}), (dict(v2v_intent_detach_trunk=False), {}),
                     (dict(bank_statistics='boot_v2'), {}), ({}, dict(intent='off')), ({}, dict(v2v=False))):
         with pytest.raises(ceg.GateIdentityError):
