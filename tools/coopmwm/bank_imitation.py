@@ -113,6 +113,7 @@ def install(step_mode='fixed',intent_bank_term=True,kl_limit=None):
     if step_mode not in STEP_MODES:raise ValueError('unknown imitation_step_mode '+repr(step_mode))
     if not isinstance(intent_bank_term,bool):raise ValueError('v2v_intent_bank_term must be a bool')
     if kl_limit is None:kl_limit=RUNTIME_KL_LIMIT
+    if type(kl_limit) not in (int,float):raise ValueError('unknown imitation_kl_limit '+repr(kl_limit))
     kl_limit=float(kl_limit)
     if kl_limit not in KL_LIMITS:raise ValueError('unknown imitation_kl_limit '+repr(kl_limit))
     RUNTIME_STEP_MODE,RUNTIME_INTENT_BANK_TERM,RUNTIME_KL_LIMIT=step_mode,bool(intent_bank_term),kl_limit
@@ -205,8 +206,10 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     if int(passes)!=passes or passes<5:raise ValueError('at least five requested passes')
     step_mode=RUNTIME_STEP_MODE if step_mode is None else str(step_mode)
     if step_mode not in STEP_MODES:raise ValueError('unknown imitation_step_mode '+repr(step_mode))
-    kl_limit=RUNTIME_KL_LIMIT if kl_limit is None else float(kl_limit)
-    if kl_limit not in KL_LIMITS:raise ValueError('unknown imitation_kl_limit '+repr(kl_limit))
+    kl_limit=RUNTIME_KL_LIMIT if kl_limit is None else kl_limit
+    if type(kl_limit) not in (int,float) or float(kl_limit) not in KL_LIMITS:
+        raise ValueError('unknown imitation_kl_limit '+repr(kl_limit))
+    kl_limit=float(kl_limit)
     if intent_bank_term is None:intent_bank_term=RUNTIME_INTENT_BANK_TERM
     intent_bank_term=bool(intent_bank_term)
     targeted=step_mode=='kl_targeted'
