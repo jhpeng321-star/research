@@ -7,6 +7,7 @@ workers and exact diagnostic branches. No non-V2V policy is modified.
 import torch
 
 from .acceleration import Policy as BasePolicy
+from .v2v_lane import lane_intent_model
 from .v2v_obs import V2V_DIM
 from .v2v_model import extend_for_v2v, forward_with_v2v
 from .v2v_integrate import widen_context
@@ -36,10 +37,20 @@ class Policy(BasePolicy):
 
 def from_weights(weights, *, enabled=False):
     if 'intent_head.weight' in weights:  # v2v_intent ON (tools/coopmwm/v2v_intent.py)
+        if 'lane_head.weight' in weights:  # lane_actions ON (tools/coopmwm/v2v_lane.py)
+            if not enabled:
+                raise ValueError('widened policy without explicit V2V job/branch flag')
+            from .v2v_lane import from_weights as lane_weights
+            return lane_weights(weights, enabled=True)
         from .v2v_intent import from_weights as intent_weights
         return intent_weights(weights, enabled=enabled)
     width = int(weights['actor.0.weight'].shape[1])
-    if width == 33+V2V_DIM:
+    if 'lane_head.weight' in weights:  # lane_actions ON without the command intent head
+        if not enabled:
+            raise ValueError('widened policy without explicit V2V job/branch flag')
+        from .v2v_lane import LaneV2VPolicy
+        model = LaneV2VPolicy()
+    elif width == 33+V2V_DIM:
         if not enabled:
             raise ValueError('widened policy without explicit V2V job/branch flag')
         model = Policy()
@@ -53,9 +64,13 @@ def from_weights(weights, *, enabled=False):
 
 
 def load_checkpoint(path, config=None):
-    if config and config.get('v2v') and config.get('v2v_intent'):
-        from .v2v_intent import load_checkpoint as intent_load
-        return intent_load(path, config)
+    if config and config.get('v2v'):
+        if config.get('lane_actions'):
+            from .v2v_lane import load_checkpoint as lane_load
+            return lane_load(path, config)
+        if config.get('v2v_intent'):
+            from .v2v_intent import load_checkpoint as intent_load
+            return intent_load(path, config)
     from .v2v_model import load_checkpoint as load
     model, optimizer, generator, payload = load(path, config=config)
     if config and config.get('v2v'):
@@ -69,8 +84,8 @@ def controller_class(base):
     from .bank_v2v import _features, DEFAULT_CFG
 
     class Proxy:
-        def __init__(self, real, blocks, intent=None):
-            self.real, self.blocks, self.intent = real, blocks, intent
+        def __init__(self, real, blocks, intent=None, lane=None):
+            self.real, self.blocks, self.intent, self.lane = real, blocks, intent, lane
 
         def sample(self, context, *args, **kwargs):
             context = dict(context, v2v={v: self.blocks(v) for v in context['members']})
@@ -80,6 +95,8 @@ def controller_class(base):
                 sample = out[0] if isinstance(out, tuple) else out
                 if 'published_intent' not in sample:  # replayed samples keep their record
                     sample['published_intent'] = self.intent.publish(context)
+                if self.lane is not None and 'published_lane_intent' not in sample:
+                    sample['published_lane_intent'] = self.lane.publish_lane(context)
             return out
 
         def __getattr__(self, key):
@@ -90,6 +107,9 @@ def controller_class(base):
             super().__init__(*args, **kwargs)
             self.previous_frame = None
             self.intent_board = {}  # v2v_intent ON: vid -> (published second, H commands)
+            self.lane_board = {}    # lane_actions ON: vid -> (published second, H signed deltas)
+            self.lane_targets = {}  # lane_actions ON: this second's non-keep WM targets
+            self.lane_runtime = True  # the base acceleration.Controller refuses lane heads without it
 
         def observe_issued(self, frame):
             self.previous_frame = frame
@@ -109,23 +129,47 @@ def controller_class(base):
             saved = self.policy
             from .v2v_intent import intent_model
             intent = intent_model(saved)
+            lane = lane_intent_model(saved)
             if intent is None:
                 self.policy = Proxy(saved, lambda vid: _features(frame, vid, previous, DEFAULT_CFG))
             else:
                 from .bank_v2v import _intent_features
                 spec = dict(horizon=intent.intent_horizon, board=dict(self.intent_board))
+                if lane is not None:
+                    # lane_actions ON: the partner lane intents ride the same t-1 board rule.
+                    spec['lane_board'] = dict(self.lane_board)
                 self.policy = Proxy(saved, lambda vid: _intent_features(frame, vid, previous, DEFAULT_CFG, spec),
-                                    intent)
+                                    intent, lane)
             try:
                 desired = super().apply(rows, commands, now)
             finally:
                 self.policy = saved
+            if self.events:
+                # lane_actions ON: this second's non-keep WM targets; the tick passes them
+                # through env.step (SUMO's own lane-change safety model) and reports the
+                # outcome back through observe_lane.  Every-keep ticks stay fully native.
+                from .v2v_lane import lane_targets
+                self.lane_targets = lane_targets(self.events[-1]['sample'], rows)
             if intent is not None:
                 # Publish this second's intents (also from replayed samples); despawned or
                 # silent CAVs simply have no fresh entry and read as invalid next second.
                 published = (self.events[-1]['sample'].get('published_intent') or {}) if self.events else {}
                 self.intent_board = {vid: (int(now), list(values)) for vid, values in published.items()}
+            if lane is not None:
+                published_lane = (self.events[-1]['sample'].get('published_lane_intent') or {}) if self.events else {}
+                self.lane_board = {vid: (int(now), list(values)) for vid, values in published_lane.items()}
             return desired
+
+        def lane_request(self, env):
+            """``[1, K]`` lanes tensor for the tick's actuator, or None when every member keeps."""
+            from .v2v_lane import lanes_tensor
+            return lanes_tensor(self.lane_targets, env)
+
+        def observe_lane(self, info):
+            """Record the per-step lane outcome (requested/issued/blocked/executed) on the event."""
+            if self.events:
+                from .v2v_lane import lane_outcome
+                self.events[-1]['lane_outcome'] = lane_outcome(info.get('lane_commands'))
 
     return Controller
 

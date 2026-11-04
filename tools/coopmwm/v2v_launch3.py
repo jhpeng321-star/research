@@ -39,6 +39,11 @@ HOLD_NAME = 'V2V_LAUNCH3_HOLD.json'
 ARMS = ('A', 'B', 'R')
 INTENT_OPTIONS = dict(v2v=True, v2v_dim=48, v2v_intent=True,
     v2v_intent_horizon=5, v2v_intent_loss_weight=1.0,v2v_intent_detach_trunk=True)
+# c4/lane-policy (prepared, OFF): owner 2026-11-04 "build the case where the mappo can set the
+# lane change so it can get more cooperations". Pinned lane_actions runtime keys, identical for
+# A/B/R; v2v_dim becomes the lane intent block width (v2v_obs.lane_intent_dim(4, 5) = 72).
+LANE_OPTIONS = dict(lane_actions=True, lane_actions_entropy_weight=0.01,
+    lane_intent_loss_weight=1.0, lane_intent_detach_trunk=True)
 BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
     bank_statistics='per_seed_v1',   # owner 2026-11-03 21:45 + audit: per_seed_v1 only (B and R)
     # owner 2026-11-04 00:55: B and R imitate ONLY within-seed cooperative examples (A has no bank)
@@ -309,7 +314,20 @@ def bind_runtime(value, *, root, source_root):
     cfg = value.get('config')
     if not isinstance(cfg, dict):
         raise Refused('V2V_RUNTIME config object required')
-    for key, want in dict(INTENT_OPTIONS, **BANK_OPTIONS).items():
+    # c4/lane-policy: lane keys are all-or-nothing. With lane_actions ON the runtime must pin
+    # every LANE_OPTIONS key and carry the 72-wide lane intent block; without it, any lane key
+    # present is refused (no half-bound lane runtime).
+    lane = dict(LANE_OPTIONS)
+    from .v2v_obs import lane_intent_dim
+    lane_dim = lane_intent_dim(4, INTENT_OPTIONS['v2v_intent_horizon'])
+    expected = dict(INTENT_OPTIONS, **BANK_OPTIONS)
+    if cfg.get('lane_actions'):
+        expected.update(lane)
+        expected['v2v_dim'] = lane_dim
+    elif any(key in cfg for key in lane):
+        raise Refused('runtime lane options present with lane_actions off: '
+                      + ','.join(sorted(key for key in lane if key in cfg)))
+    for key, want in expected.items():
         have = cfg.get(key)
         if have != want or isinstance(have, bool) != isinstance(want, bool):
             raise Refused('runtime option ' + key + ' differs: ' + repr(have))

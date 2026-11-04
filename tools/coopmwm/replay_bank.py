@@ -536,6 +536,8 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                 s = vi.settings(v2v_intent)
                 entry_pairs = vi.attach_bank_targets(entry_pairs, tape, entry, s['horizon'], s['bounds'])
                 intent = dict(horizon=s['horizon'], entry=intent_key)
+                if v2v_intent.get('lane_actions'):  # c4/lane-policy: partner LANE intent slots
+                    intent['lane_board'] = {}       # (empty here; exact_update refreshes them)
             if v2v:
                 entry_pairs, entry_counts = bank_v2v.attach_pairs(
                     entry_pairs, Path(branches_dir)/tape_vid/branch['branch']/'observable.jsonl.gz',
@@ -974,7 +976,9 @@ def _action_error(policy, r, best):
         # Audit I5: an intent policy needs the K*(6+H+1) blocks plus refreshed partner intents
         # (current head on the partners' own t-1 contexts, never recorded commands).
         intent = dict(horizon=horizon, entry=f"{r['verification_id']}/{branch['branch']}") if horizon else None
-        pairs, _ = attach_pairs(pairs, Path(r['_branches'])/r['verification_id']/branch['branch']/'observable.jsonl.gz',
+        if intent is not None and getattr(policy, 'lane_intent_head', None) is not None:
+            intent['lane_board'] = {}   # lane_actions ON: K*(6+2H+2) blocks, refreshed below
+        pairs, _ = attach_pairs(pairs, Path(r['_branches'])/r['verification_id']/branch['branch']/ 'observable.jsonl.gz',
                                 r['t0'], **({'intent': intent} if intent else {}))
         if horizon:
             from .v2v_intent import refresh_bank_intents
