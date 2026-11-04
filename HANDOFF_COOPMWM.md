@@ -1,5 +1,18 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 ~10:30 +08 — rejected-tape remote migration DISPATCHED
+- MAIN10:12read+registered08a2f42e BEFOREactualmove/commit76088fbc. Immutable
+  slim_migration1/source4:23LinuxPASS/6localPASS. RealDRY447rejectedbranches/
+  894files/936070977bytes/zeroerrors. Actualdispatch2600682at1793759355.57;
+  nextstatusforrootowner/proofs. ADOPT/no parallelmigration or repeateddryrun.
+- Direct64MiBbatchedCPU->gpuA/liveforwardedagent/noCPUstage; remoteSHA+
+  marker/payload/canonicaldigestproofBEFORElocalSLIM/unlink; freshseal/eligibility/
+  FD/sourcechecks; partialkeepsremotecopies+remaininglocalandSTOPS; gpuAfloor8GiB.
+- Dryfree7198322688bytes; evengrosspoolleaves2603024575bytesshort10GiB BEFORE
+  overhead/writes. Keep9GiBbackfillguard/MAINcollectorSTOP. Bothmoversunpaused.
+- See coopmwm/SLIM_MIGRATION_MAIN1012_V4_RUNNING.md. TailarchiveCOMPLETEalready;
+  B/Rmechanicsreleaseoperatorstillblocked/notattemptedhere. NoSUMO/inference.
+
 ## CURRENT Nov4 ~10:25 +08 — tail COMPLETE; MAIN10:12 slim qualification PASS
 - legacy_tail_archive1000 COMPLETE476840470bytes/240files/4SHAcertificates;
   workerexitednormally/NEVERredispatch. CompletioncpuQ6549172224bytes;
