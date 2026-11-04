@@ -11,7 +11,7 @@
     "initial_head": "4716599fadc496dfabe60ae3049fbc1970e5dcbd",
     "initial_status": "Existing uncommitted module/test fixes, deleted readiness receipt, independent review and archived T2G_READY.blocked0.json were preserved.",
     "recovered_changes": "Inspected and tested rather than regenerated; committed in d13c4f27.",
-    "concurrent_session": "Detected peer writer; peer explicitly paused edits and tests in T2G_RESUME_COORDINATION.json. Completion owner PID 29152 acknowledged and preserved peer candidate-ID fixes/tests.",
+    "concurrent_session": "Detected peer writer; resume PID 32376 paused edits/tests while PID 29152 completed required suites and receipt commit 8c3c47ec. After PID 29152 exited, resume session reproduced and fixed the remaining replicated-source cache collision, ran the augmentation suite and finalized this receipt. All prior changes preserved.",
     "jobs_or_dispatches_started": 0
   },
   "commits": [
@@ -34,6 +34,14 @@
     {
       "sha": "330ab363e3fee22046146de3b8b81bb0a1d675a6",
       "step": "Candidate-ID and completed own-arm decision checks; own-seed-only acceptance regressions; 106 augmentation CPU tests passed"
+    },
+    {
+      "sha": "8c3c47ec",
+      "step": "Initial fix-round readiness receipt with 173 passing CPU tests, superseded by the additional source-seed cache regression"
+    },
+    {
+      "sha": "518a5d18",
+      "step": "Bind executable candidate IDs to source confirmation/seed identity; replicated own-seed all8 cache-collision regression; 107 augmentation CPU tests passed"
     }
   ],
   "receipt_commit": "The subsequent commit updating this file; find with git log -1 -- T2G_READY.json",
@@ -53,8 +61,8 @@
     {
       "review_blocker": 3,
       "status": "FIXED",
-      "fix": "Bind source confirmation to its sealed original first-seed receipt and snapshot identity. Derive the source example's own CRN snapshot with existing replication rules. Check full snapshot identity before dispatch and require matching confirmation/first-receipt time, episode, policy, world, RNG, prefix, candidate ID/hash and source-confirmation hash before admission. Validate own-seed tape metadata and replicated seed derivation; retain each accepted example's own tape and labels.",
-      "regressions": "Reject digest-valid wrong time and same-time foreign episode/seed/actor/CRN/prefix, wrong source hash/candidate/receipt/replication/tape; reject incomplete or wrong-proposer first receipts; accept seed-2-only, extra-seed-only and multiple own-seed labels. Adapter tests use mocked verifiers/runners."
+      "fix": "Bind source confirmation to its sealed original first-seed receipt and snapshot identity. Derive the source example's own CRN snapshot with existing replication rules. Check full snapshot identity before dispatch and require matching confirmation/first-receipt time, episode, policy, world, RNG, prefix, candidate ID/hash and source-confirmation hash before admission. Validate own-seed tape metadata and replicated seed derivation; retain each accepted example's own tape and labels. Namespace executable candidate IDs by physical plan plus source confirmation and seed so all8 caches cannot collide across distinct source CRNs.",
+      "regressions": "Reject digest-valid wrong time and same-time foreign episode/seed/actor/CRN/prefix, wrong source hash/candidate/receipt/replication/tape; reject incomplete or wrong-proposer first receipts; accept seed-2-only, extra-seed-only and multiple own-seed labels. Identical perturbations from source seeds 1/2/3 resolve with separate verification cache keys and own-source labels. Adapter tests use mocked verifiers/runners."
     }
   ],
   "owned_files": [
@@ -70,9 +78,9 @@
     "traffic_context": "Whitelisted local sensing/V2V observations retain both CAVs and HDVs; all rows timestamp-validated; separate CAV command eligibility",
     "execution": "Recipient's own base trajectory plus effective residual through existing centre_feasibility/build_plan bounds and allowed-speed clamp",
     "wm_gate": "Strictly positive expected base-minus-group gain and best-solo-minus-group synergy using paired finite samples and full registered release horizon",
-    "fairness": "Same augmentation/screening/selection implementation and registered settings for B/R, each using its own bank",
+    "fairness": "Same augmentation/screening/selection implementation and registered settings for B/R, each using its own bank; identical physical perturbations for identical local inputs, with verification IDs binding each arm's own provenance",
     "spot_checks": "ceil(registered fraction * WM-kept examples); independent RNG; pending examples withheld, failed checks dropped, successful own-seed examples preserved",
-    "idempotency": "Completed resolution never checks again; existing all8 machinery owns dispatch caching/charging",
+    "idempotency": "Completed resolution never checks again; existing all8 machinery owns dispatch caching/charging; executable candidate IDs include source/seed identity to separate differing CRN snapshots",
     "provenance_is_not_model_input": true
   },
   "api": {
@@ -121,7 +129,7 @@
     "Supply observable-only source contexts and paired belief-only scorer; preserve the full run look-ahead and inherited release horizon.",
     "Consume examples as augmented targets/states; pending spot_checks are excluded from training.",
     "For later physics, quote/register the all8 budget at source_t_s, bind the actual runtime snapshot to verification_provenance.snapshot_sha256 and use the existing single ledger, health and runner admission.",
-    "Consume the v2 evidence envelope through resolve_spot_checks; retain verified_example's own-seed tape/plan/labels. WM-only rows stay explicitly unverified.",
+    "Consume the v2 evidence envelope through resolve_spot_checks; retain verified_example's own-seed tape/plan/labels. Preserve augmentation-generated candidate IDs: they namespace existing verification caches by source/seed. WM-only rows stay explicitly unverified.",
     "Persist the returned batch as the augmented-examples smoke receipt. Shared rerun integration is owned by T2C."
   ],
   "tests": {
@@ -138,16 +146,17 @@
       "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -o cache_dir=_out/.pytest_cache_t2g_fix --basetemp=_out/t2g_fix_mppi tools/coopmwm/test_mppi_search_cpu.py"
     ],
     "results": {
-      "test_plan_augment_cpu.py": "106 passed in 25.43s",
+      "test_plan_augment_cpu.py": "107 passed in 16.72s at 518a5d18",
       "test_verify_perseed_cpu.py": "21 passed in 42.94s",
       "test_variety_cpu.py": "31 passed in 33.57s",
       "test_mppi_search_cpu.py": "15 passed in 28.37s",
-      "total": "173 passed, 0 failed, no warnings in final required suite runs"
+      "total": "174 passed, 0 failed, no warnings in final required suite runs"
     },
     "iteration_notes": [
       "Recovered implementation first passed 98 augmentation tests; that run used cache_dir=NUL and emitted a Windows cache-path warning. Final runs use an in-worktree cache and pass without warnings.",
       "Three newly added semantic provenance negatives first failed because incomplete/wrong-proposer first receipts were accepted; after enforcing completed own-arm decisions, all pass.",
-      "Peer candidate-ID regression work was preserved; a duplicate newly written local candidate-ID test was removed rather than duplicating peer coverage."
+      "Peer candidate-ID regression work was preserved; a duplicate newly written local candidate-ID test was removed rather than duplicating peer coverage.",
+      "The additional source-seed cache regression failed before the fix with a foreign CRN cache collision, then passed after candidate-ID namespacing. The full augmentation suite passed 107 tests. The completed 21/31/15 dependency-suite results were reused: this final patch changes only plan_augment and its CPU tests, not any dependency module."
     ],
     "physics": "None; in-memory synthetic digest-protected records, CPU WM stubs and mocked T2G all8 bridge. Existing per-seed suite uses a deterministic CPU fake plant."
   },
