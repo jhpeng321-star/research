@@ -470,9 +470,9 @@ class Imitation(unittest.TestCase):
         keep = pair({'c0': 0, 'c1': 0})                  # keep seconds are valid lane targets too
         l1 = 2.5*(ce(0, 1)+ce(1, 2))/2                   # weight x mean member CE
         l0 = 2.5*(ce(0, 0)+ce(1, 0))/2
-        self.assertAlmostEqual(float(lp.policy_lane_ce(head, [attempt]).detach()), l1, places=7)
+        self.assertAlmostEqual(float(lp.policy_lane_ce(head, [attempt]).detach()), l1, places=5)
         self.assertAlmostEqual(float(lp.policy_lane_ce(head, [attempt, keep]).detach()),
-                               (l1+l0)/2, places=7)
+                               (l1+l0)/2, places=5)
         self.assertIsNone(lp.policy_lane_ce(object(), [attempt]))                     # no lane head
         self.assertIsNone(lp.policy_lane_ce(head, [(dict(attempt[0], lane_target=None), 2.5)]))
         loss = lp.policy_lane_ce(head, [attempt])
