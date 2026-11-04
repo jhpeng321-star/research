@@ -9,13 +9,23 @@
   "base": "13f184b5 (c4/track-base)",
   "review": "REVIEW_T2A_r1.md",
   "reviewed_head": "1ff32700e84c1636b1ceabd9b73309b95db16d4d",
+  "independent_acceptance": {
+    "review": "REVIEW_T2A_r2.md",
+    "verdict": "PASS",
+    "reviewed_head": "b9d0ff163751f63a13796d726f40e8cb9749bbb4",
+    "blockers": [],
+    "acceptance_receipt": "T2A_ACCEPTED.json",
+    "test_result": "69 passed, 0 failed, 0 skipped, 2 warnings in 23.24s; 38 T2A cases and 31 existing V2V cases",
+    "scope": "Independent CPU verification of the five named suites and T2A contracts; integration limits below still apply"
+  },
   "commits": [
     {"commit": "56a93c87", "step": "Original per-CAV move trigger, PPO, imitation and bounded executor"},
     {"commit": "0448485e", "step": "Original CPU trigger contracts"},
     {"commit": "09b19263", "step": "Original readiness receipt"},
     {"commit": "c7f771af", "step": "Prior fix: remove direct RSU trigger input and expose explicit intent wrapper discovery"},
     {"commit": "1ff32700", "step": "Prior readiness receipt, superseded by independent r1 review"},
-    {"commit": "84323019", "step": "Fix r1 blocker: independent local-only trigger intent board, fail-closed collection/replay, six new CPU regressions"}
+    {"commit": "84323019", "step": "Fix r1 blocker: independent local-only trigger intent board, fail-closed collection/replay, six new CPU regressions"},
+    {"commit": "b9d0ff16", "step": "Regenerated readiness receipt for the r1 fix; subsequently independently reviewed PASS"}
   ],
   "receipt_commit_note": "This regenerated receipt is committed separately after the tested fix commit; its own SHA is available in git log.",
   "changed_files_this_round": [
@@ -80,6 +90,15 @@
     "shared_modules_modified_this_round": ["tools/coopmwm/v2v_runtime.py: additive explicit local-trigger publication/board hook"],
     "prohibited_seed_or_truth_files_opened": false,
     "reset_clean_stashdrop_push_rebase_used": false,
-    "review_artifacts": "Existing REVIEW_T2A_r0.md, REVIEW_T2A_r1.md, T2A_READY.blocked0.json and T2A_READY.blocked1.json preserved unmodified and unstaged"
+    "review_artifacts": "Existing REVIEW_T2A_r0.md, REVIEW_T2A_r1.md, REVIEW_T2A_r2.md, T2A_ACCEPTED.json, T2A_READY.blocked0.json and T2A_READY.blocked1.json preserved unmodified and unstaged"
+  },
+  "resume_verification": {
+    "head_before_receipt_refresh": "b9d0ff163751f63a13796d726f40e8cb9749bbb4",
+    "branch": "c4/trigger-policy",
+    "tracked_state_before_refresh": "Clean; existing fix and regression tests already committed",
+    "diff_check": "git diff --check c4/track-base passed",
+    "action": "Receipt-only refresh to record the existing independent PASS and acceptance; finished implementation and test runs retained",
+    "new_test_runs": 0,
+    "new_dispatches_or_reservations": 0
   }
 }
