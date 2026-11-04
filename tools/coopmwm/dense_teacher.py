@@ -546,7 +546,93 @@ def select_for_verification(labels, fraction):
     return out
 
 
-def bind_receipt(label, receipt, candidate_index, plan=None, moves_mod=None):
+def prepare_verification_plan(label, snapshot, base_profile=None, *, moves_mod=None, plan_id=None):
+    """Freeze the execution contract BEFORE dispatch; return an all8 absolute-profile plan.
+
+    ``base_profile`` is the caller's independently recorded base-policy command schedule,
+    member x second, from this exact snapshot (never inferred from the submitted plan).
+    The existing branch executor consumes absolute profiles: every command here is exactly
+    base + moves.offsets, before its ordinary feasibility/ownership clamp. This certifies
+    that explicit base schedule, not an unrecorded future feedback-policy trajectory.
+    None uses the branch executor's actual policy-continues comparator instead.
+    """
+    from . import sumo_verify as sv
+    from .protocol import digest
+    if (snapshot['episode']['id'] != label['episode'] or snapshot['t0'] != label['t_s']
+            or snapshot['episode'].get('role') != 'train'):
+        raise ValueError('execution snapshot belongs to another training decision')
+    if snapshot.get('truncate_on_accept'):
+        raise ValueError('dense verification cannot truncate existing commitments')
+    execution = dict(schema='coopmwm/dense-execution/v1', label_id=label['id'],
+                     snapshot_sha256=sv.snapshot_sha(snapshot),
+                     policy_sha256=digest(snapshot['policy']), start_s=label['t_s'],
+                     control_dt_s=1, mode='policy_continues' if label['move'] is None
+                     else 'absolute_profile_from_base_plus_offsets')
+    if label['move'] is None:
+        if base_profile is not None:
+            raise ValueError('none verification uses policy-continues, not a base profile')
+        plan = None
+    else:
+        api = default_moves() if moves_mod is None else moves_mod
+        family, members, onset, hold, depth = _move_fields(label['move'])
+        # Concrete T1A offsets requires its actual Move, not the JSON label dict.
+        selected = api.Move(family, tuple(members), int(onset), int(hold), depth)
+        if onset != int(onset) or hold != int(hold):
+            raise ValueError('execution requires integer move seconds')
+        base = np.asarray(base_profile, float)
+        if (base.ndim != 2 or base.shape[0] != len(members) or not np.isfinite(base).all()
+                or base.shape[1] < math.ceil(onset+hold)
+                or snapshot['t0']+base.shape[1] > snapshot.get('end_s', sv.EPISODE_END_S)):
+            raise ValueError('base profile must cover the full labelled move, members x seconds')
+        duration = base.shape[1]
+        offsets = []
+        for second in range(duration):
+            row = api.offsets(selected, second)
+            if set(row) != set(members) or not all(math.isfinite(float(v)) for v in row.values()):
+                raise ValueError('move offsets must resolve every member and be finite')
+            offsets.append([float(row[v]) for v in members])
+        offsets = np.asarray(offsets, float).T
+        execution.update(move=copy.deepcopy(label['move']), members=members, duration_s=duration,
+                         base_profile=base.tolist(), offset_profile=offsets.tolist(),
+                         profile=(base+offsets).tolist())
+        plan = dict(members=members, duration_s=duration, profile=execution['profile'],
+                    policy_profile=execution['base_profile'],
+                    perturbation_profile=execution['offset_profile'], family=family,
+                    variety_family=family, dense_execution=copy.deepcopy(execution))
+        plan['id'] = plan_id or 'dense_'+digest(execution)[:24]
+    if label.get('verification_execution_sha256', digest(execution)) != digest(execution):
+        raise ValueError('execution contract is already frozen to this base schedule/snapshot')
+    label['verification_execution'] = copy.deepcopy(execution)
+    label['verification_execution_sha256'] = digest(execution)
+    return copy.deepcopy(plan)
+
+
+def _finite_number(value):
+    return (isinstance(value, (int, float)) and not isinstance(value, bool)
+            and math.isfinite(value))
+
+
+def _receipt_measurements(receipt, candidate_index):
+    """A decision can be rejected/accepted while a particular branch has failed."""
+    branches = receipt.get('branches') or []
+    indices = [0] + ([candidate_index+1] if candidate_index is not None
+                     else list(range(1, receipt['k']+1)))
+    outcomes = []
+    for i in indices:
+        branch = branches[i] if i < len(branches) else {}
+        measured = branch.get('status') == 'graded' and _finite_number(branch.get('J_veh_s'))
+        values = receipt.get('J_candidates_veh_s') or []
+        total = receipt.get('J_policy_veh_s') if i == 0 else (
+            values[i-1] if i <= len(values) else None)
+        measured = measured and _finite_number(total) and total == branch.get('J_veh_s')
+        outcomes.append(dict(branch=branch.get('branch', 'policy' if i == 0 else f'cand{i}'),
+                             status=branch.get('status', 'missing'), measured=measured,
+                             reason=branch.get('reason')))
+    return dict(measured=all(b['measured'] for b in outcomes), branches=outcomes)
+
+
+def bind_receipt(label, receipt, candidate_index, plan=None, moves_mod=None, *,
+                 replace_incomplete=False):
     """Bind a label to the completed first-seed verification receipt its move was executed in
     (the T2C branch runner produces it through the existing sv.verify machinery); the 0-based
     candidate index identifies the labelled move inside that decision."""
@@ -561,6 +647,11 @@ def bind_receipt(label, receipt, candidate_index, plan=None, moves_mod=None):
         raise ValueError('receipt belongs to another decision state')
     if receipt['episode'].get('role') != 'train':
         raise ValueError('dense teacher verification requires training episodes')
+    execution = label.get('verification_execution')
+    if execution is None or digest(execution) != label.get('verification_execution_sha256'):
+        raise ValueError('prepare the exact execution contract before dispatch')
+    if execution['snapshot_sha256'] != receipt['snapshot_sha256']:
+        raise ValueError('receipt differs from the execution snapshot/base policy')
     if label['move'] is None:
         if candidate_index is not None or plan is not None:
             raise ValueError('none label binds to policy-continues, not a move')
@@ -571,44 +662,76 @@ def bind_receipt(label, receipt, candidate_index, plan=None, moves_mod=None):
         candidate_index = int(candidate_index)
         if plan is None or digest(plan) != receipt['candidate_plan_sha256'][candidate_index]:
             raise ValueError('candidate plan differs from sealed receipt')
-        if list(plan['members']) != label['move']['members']:
-            raise ValueError('candidate plan members differ from labelled move')
-        moves_mod = default_moves() if moves_mod is None else moves_mod
-        mapped, wanted = _move_fields(moves_mod.from_plan(plan)), _move_fields(label['move'])
-        if (mapped[:2] != wanted[:2]
-                or not all(math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-9)
-                           for a, b in zip(mapped[2:], wanted[2:]))):
-            raise ValueError('candidate plan does not map to the labelled move')
+        wanted = dict(members=execution['members'], duration_s=execution['duration_s'],
+                      profile=execution['profile'], policy_profile=execution['base_profile'],
+                      perturbation_profile=execution['offset_profile'],
+                      family=label['move']['family'], variety_family=label['move']['family'],
+                      dense_execution=execution)
+        if (execution.get('move') != label['move']
+                or any(plan.get(k) != v for k, v in wanted.items())
+                or plan.get('overlap_truncated_plan_ids')):
+            raise ValueError('candidate execution differs from the exact labelled move')
     vid = receipt['verification_id']
     if label.get('verification_id', vid) != vid:
-        raise ValueError('label is already bound to another verification')
+        if not replace_incomplete or label.get('verified'):
+            raise ValueError('label is already bound to another verification')
+    elif replace_incomplete:
+        raise ValueError('recovery requires a fresh verification id; receipts are immutable')
     label['verification_id'] = vid
     label['receipt_status'] = receipt['status']
     label['verification_candidate_index'] = candidate_index
     label['verification_receipt_sha256'] = receipt['receipt_sha256']
     label['verification_plan_sha256'] = None if plan is None else digest(plan)
+    label['verification_k'] = receipt['k']
+    label['verification_first_seed'] = _receipt_measurements(receipt, candidate_index)
+    label.update(verified=False, verified_replicated=False, verified_cooperative=False,
+                 verified_flip=False, verified_admitted_seeds=[], verification_status='incomplete',
+                 verification_seed_status={'1': copy.deepcopy(label['verification_first_seed']),
+                                           '2': dict(measured=False, status='pending')})
     return label
 
 
-def verify_selected(labels, fraction, submit_first_seed, verifier, moves_mod=None):
+def verify_selected(labels, fraction, submit_first_seed, verifier, moves_mod=None, *,
+                    recover_incomplete=None):
     """T2C hook: select -> first-seed dispatch -> existing all8 confirmation -> consume.
 
     ``submit_first_seed(label)`` returns ``(sealed_receipt, index, plan)`` and must persist
     the decision/snapshot through the existing bank runner, with its usual ledger/health
     hooks. For 'none', index/plan are None: all8 still measures the candidate support against
-    policy-continues. Already bound labels are never dispatched again. Existing all8 pending
-    detection handles completed confirmations. The caller must serialize this with its bank
+    policy-continues. Dispatch must first call prepare_verification_plan with an independent
+    base schedule/snapshot. Bound labels are not automatically redispatched: all8 seals even
+    incomplete outcomes. Optional recover_incomplete(label) explicitly submits a fresh,
+    budgeted decision (new plan/verification id), returning the same tuple. Its old binding
+    and per-seed failures are retained in verification_history. The caller must serialize with its bank
     dispatcher (as for varcollect); this module starts no background jobs.
     """
     selected = select_for_verification(labels, fraction)
+    bound = [lb for lb in selected if lb.get('verification_id')]
+    if bound:
+        verifier.consume(bound)
     for lb in selected:
         if not lb.get('verification_id'):
             receipt, index, plan = submit_first_seed(lb)
             bind_receipt(lb, receipt, index, plan, moves_mod=moves_mod)
+        elif not lb.get('verified') and recover_incomplete is not None:
+            previous = copy.deepcopy(lb)
+            try:
+                receipt, index, plan = recover_incomplete(lb)
+                if lb.get('verification_execution_sha256') != previous['verification_execution_sha256']:
+                    raise ValueError('recovery must retain the same execution/base snapshot')
+                bind_receipt(lb, receipt, index, plan, moves_mod=moves_mod, replace_incomplete=True)
+            except Exception:
+                lb.clear()
+                lb.update(previous)
+                raise
+            lb.setdefault('verification_history', []).append(
+                {k: v for k, v in previous.items() if (k.startswith('verification_')
+                 and k != 'verification_history') or k.startswith('verified')})
     if any(not lb.get('verified') for lb in selected):
         verifier.flush()
     return verifier.consume(selected) if selected else dict(
-        labels=0, unbound=0, missing=0, sealed=0, replicated=0, flipped=0)
+        labels=0, unbound=0, missing=0, sealed=0, verified=0, incomplete=0,
+        missing_seed_measurements=0, replicated=0, flipped=0)
 
 
 class All8Verifier:
@@ -631,40 +754,95 @@ class All8Verifier:
                                        health=self.health, extra_seeds=self.extra_seeds)
 
     def consume(self, labels):
-        """Read the sealed records onto the bound labels: verified flag, per-seed admission
+        """Read MEASURED paired outcomes, not merely sealed records, onto bound labels.
+        Missing/failed seed outcomes remain incomplete and eligible for explicit recovery.
+        A measured statistical/safety rejection is completed verification, not admission.
+        Also attach per-seed admission
         (``verified_replicated`` = admitted on BOTH seeds 1/2), and ``verified_flip`` when the
         labelled candidate lost to another admitted candidate."""
         from . import verify_perseed as vp
+        from .protocol import digest
         recs = vp.records(self.root, self.arm)
-        summary = dict(labels=len(labels), unbound=0, missing=0, sealed=0, replicated=0, flipped=0)
+        summary = dict(labels=len(labels), unbound=0, missing=0, sealed=0, verified=0,
+                       incomplete=0, missing_seed_measurements=0, replicated=0, flipped=0)
         for lb in labels:
+            # Recompute on every consume, including resumed labels with stale success flags.
+            lb.update(verified=False, verified_replicated=False, verified_cooperative=False,
+                      verified_flip=False, verified_admitted_seeds=[], verification_status='incomplete')
             vid = lb.get('verification_id')
             if vid is None:
                 summary['unbound'] += 1
+                summary['incomplete'] += 1
                 continue
+            execution = lb.get('verification_execution')
+            if (not execution or digest(execution) != lb.get('verification_execution_sha256')
+                    or 'verification_first_seed' not in lb):
+                raise ValueError('bound label lacks an exact execution/measurement contract')
             rec = recs.get(vid)
             if rec is None:
                 summary['missing'] += 1
+                summary['incomplete'] += 1
+                lb['verification_seed_status'] = {
+                    '1': copy.deepcopy(lb['verification_first_seed']),
+                    '2': dict(measured=False, status='record_missing')}
                 continue
             summary['sealed'] += 1
             if rec['first_seed']['receipt_sha256'] != lb['verification_receipt_sha256']:
                 raise ValueError('all8 record differs from bound first-seed receipt')
             cand = lb.get('verification_candidate_index')
-            mine = [e for e in rec['per_seed_v1']['examples'] if e['candidate_index'] == cand]
-            if cand is not None and ({1, 2} - {e['seed_index'] for e in mine}):
-                raise ValueError('all8 record is missing candidate seed examples')
-            from .protocol import digest
+            examples = rec['per_seed_v1']['examples']
+            mine = [e for e in examples if e['candidate_index'] == cand]
             if any(digest(e['plan']) != lb['verification_plan_sha256'] for e in mine):
                 raise ValueError('all8 candidate differs from bound plan')
+            # None needs the complete paired support, not a vacuous empty `mine` list.
+            needed = [cand] if cand is not None else list(range(lb['verification_k']))
+            statuses = {}
+            for seed in (1, 2):
+                rows = []
+                for index in needed:
+                    found = [e for e in examples
+                             if e['seed_index'] == seed and e['candidate_index'] == index]
+                    if len(found) != 1:
+                        rows.append(dict(candidate_index=index, measured=False,
+                                         status='missing' if not found else 'duplicate'))
+                    else:
+                        e = found[0]
+                        branch = e.get('tape', {}).get('branch', {})
+                        measured = (e.get('status') in ('admitted', 'rejected')
+                                    and _finite_number(e.get('advantage_veh_s'))
+                                    and _finite_number(e.get('lower95_one_sided_veh_s'))
+                                    and _finite_number(e.get('n_units')) and e['n_units'] > 0
+                                    and branch.get('status') == 'graded'
+                                    and _finite_number(branch.get('J_veh_s'))
+                                    and not e.get('later_harm_missing')
+                                    and (e['lower95_one_sided_veh_s'] <= 0
+                                         or e.get('later_harm') in ('pass', 'fail')))
+                        rows.append(dict(candidate_index=index, measured=bool(measured),
+                                         status=e.get('status', 'missing'), reason=e.get('reason'),
+                                         later_harm=e.get('later_harm')))
+                comparator = (lb['verification_first_seed']['measured'] if seed == 1 else
+                              rec['seed2'].get('status') in ('accepted', 'rejected')
+                              and _finite_number(rec['seed2'].get('J_policy_veh_s')))
+                statuses[str(seed)] = dict(measured=bool(comparator and rows
+                                                        and all(r['measured'] for r in rows)),
+                                           comparator_measured=bool(comparator), examples=rows)
+            lb['verification_seed_status'] = statuses
+            missing_seeds = sum(not s['measured'] for s in statuses.values())
+            if missing_seeds:
+                summary['incomplete'] += 1
+                summary['missing'] += 1
+                summary['missing_seed_measurements'] += missing_seeds
+                continue
             admitted = sorted(e['seed_index'] for e in mine if e.get('admitted'))
             replicated = {1, 2} <= set(admitted)
             others = any(e.get('admitted') for e in rec['per_seed_v1']['examples']
                          if e['candidate_index'] != cand)
-            lb.update(verified=True, verified_admitted_seeds=admitted,
+            lb.update(verified=True, verification_status='measured', verified_admitted_seeds=admitted,
                       verified_replicated=replicated,
                       verified_cooperative=bool(any(e.get('cooperative') is True
                                                     for e in mine if e.get('admitted'))),
                       verified_flip=bool((not replicated) and others))
+            summary['verified'] += 1
             summary['replicated'] += int(replicated)
             summary['flipped'] += int(lb['verified_flip'])
         return summary
@@ -726,7 +904,7 @@ def build_dataset(labels, encoder):
     decoded fields, weight 1.0), the head spec and the label provenance counts."""
     targets, histogram = [], {}
     counts = dict(n=len(labels), moves=0, none=0, wm=0, random=0, verified=0, replicated=0,
-                  selected=0)
+                  selected=0, incomplete=0)
     for lb in labels:
         t = lb['target']
         histogram[t['action_class']] = histogram.get(t['action_class'], 0)+1
@@ -736,6 +914,8 @@ def build_dataset(labels, encoder):
         counts['verified'] += int(bool(lb.get('verified')))
         counts['replicated'] += int(bool(lb.get('verified_replicated')))
         counts['selected'] += int(bool(lb.get('selected_for_verification')))
+        counts['incomplete'] += int(bool(lb.get('selected_for_verification'))
+                                    and not lb.get('verified'))
         targets.append(dict(id=lb['id'], episode=lb['episode'], step=lb['step'], t_s=lb['t_s'],
                             cav=lb['cav'], source=lb['source'], action_class=t['action_class'],
                             family_index=t['family_index'], buckets=t['buckets'],
