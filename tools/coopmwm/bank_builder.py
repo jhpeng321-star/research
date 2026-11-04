@@ -43,13 +43,70 @@ def all8_charge(original, entries):
     return charge_for
 
 
+def extras_charge(seed2_hook, snapshot, vid, extra_seeds):
+    """BUILD option extra_seeds: every extra seed's GROUP verification (the cooperative
+    candidates + policy) is pre-reserved in ONE transaction at the first extra-seed charge.
+
+    The cooperative candidates are only known after the seeds-1/2 solos, so unlike the seed-2
+    branches this cannot happen at claim time; reserving ALL extra seeds' groups together means
+    a mid-decision budget shortfall raises BudgetBlocked before ANY extra physics (all-or-nothing
+    instead of partial extras) and the later extra-seed group charges then only VALIDATE their
+    precharged rows, exactly like the seed-2 precharge. Extended/solo verifications stay
+    conditional and live through the wrapped hook, exactly like seed 2. Every other kind
+    delegates unchanged (extra_seeds=0 never installs this hook)."""
+    from . import replay_bank as rb
+    from .accel_storage import reserve
+    from .sumo_verify import BudgetBlocked, build_branches
+    from .verify_perseed import extra_seed_indices, extra_seed_salt
+    seeds = sorted(extra_seed_indices(extra_seeds))
+    state = {}
+
+    def charge_for(run_root, phase, kind):
+        k = None
+        if kind.startswith('confirm_seed') and kind.endswith('_all8'):
+            try:
+                k = int(kind[len('confirm_seed'):-len('_all8')])
+            except ValueError:
+                k = None
+        if k not in seeds:
+            return seed2_hook(run_root, phase, kind)
+
+        def charge(kvid, specs):
+            if not state:
+                coop = [s['plan'] for s in specs if s['branch'] != 'policy']
+                jobs = [dict(id=f'confirm_seed{k2}_all8_{s["verification_id"]}_{s["branch"]}',
+                             sim_s=s['sim_s'], phase=phase)
+                        for k2 in seeds
+                        for s in build_branches(rb.replicate(snapshot, extra_seed_salt(vid, k2)), coop)]
+                assert len({j['id'] for j in jobs}) == len(jobs)
+                from .warm_protocol import install_accounting
+                install_accounting(run_root)
+                try:
+                    reserve(Path(run_root), jobs, phase)
+                except ValueError as error:
+                    raise BudgetBlocked(str(error)) from error
+                state['entries'] = {j['id']: j for j in jobs}
+            precharged_charge(state['entries'], kind)(kvid, specs)
+        return charge
+    charge_for.extras_state = state
+    return charge_for
+
+
 def run_all8_round(root, control, config, immutable, phase=PHASE):
-    """One builder pass under verify_mode=all8_both_seeds (accepted AND rejected decisions)."""
+    """One builder pass under verify_mode=all8_both_seeds (accepted AND rejected decisions).
+
+    BUILD option extra_seeds (config key, DEFAULT 0 = unchanged): the extra-seed group
+    verifications are pre-reserved in ONE transaction at the first extra-seed charge (the
+    cooperative candidates are only known after the seeds-1/2 solos), so a budget shortfall
+    blocks every extra seed before any extra physics instead of leaving partial extras; the
+    extended/solo verifications are conditional on the per-seed admission and stay charged
+    LIVE through rb._confirm_charge (the seed-2 all-K branches are precharged at claim time)."""
     import traceback
     from . import replay_bank as rb, sumo_verify as sv, verify_perseed as vp
     from . import accel_storage
     from .storage import ledger
     original_charge = rb._confirm_charge
+    extra_seeds = int(config.get('extra_seeds') or 0)
     for r in vp.pending(root, 'B', sources=config['sources']):
         vid = r['verification_id']
         attempt = control/'attempts_all8'/(vid+'.json')
@@ -72,19 +129,29 @@ def run_all8_round(root, control, config, immutable, phase=PHASE):
             break
         immutable(claim, dict(unix=time.time(), verification_id=vid, jobs=jobs, verify_mode=vp.ALL8,
             precharged_sim_s=sum(j['sim_s'] for j in jobs),
-            conditional_live_charges='extended/solo verifications via rb._confirm_charge'))
+            conditional_live_charges=('extended/solo verifications via rb._confirm_charge' if not extra_seeds else
+                                       'extended/solo verifications live via rb._confirm_charge; every extra-seed '
+                                       'group verification pre-reserved at the first extra charge')))
         charges = {j['id']: j for j in ledger(root)}
-        rb._confirm_charge = all8_charge(original_charge, charges)
+        hook = all8_charge(original_charge, charges)
+        if extra_seeds:
+            hook = extras_charge(hook, snapshot, vid, extra_seeds)
+        rb._confirm_charge = hook
         try:
             receipt = {k: v for k, v in r.items() if not k.startswith('_')}
             def runner_for(work):
                 return sv.SubprocessBranchRunner(Path(work)/'branches', workers=2,
                     timeout_s=config['branch_timeout_s'])
             out = vp.confirm_all8(root, 'B', receipt, snapshot, runner_for, str(root), phase, workers=2,
-                version=r['_policy_version'], candidates=candidates, branches_dir=r['_branches'])
+                version=r['_policy_version'], candidates=candidates, branches_dir=r['_branches'],
+                extra_seeds=extra_seeds)
             result = dict(unix=time.time(), verification_id=vid, status='complete', verify_mode=vp.ALL8,
                 admitted=out['admitted'], winners=out['winners'], record_sha256=out['confirmation_sha256'],
-                precharged_sim_s=sum(j['sim_s'] for j in jobs), charged_sim_s=out['charged_sim_s'])
+                precharged_sim_s=sum(j['sim_s'] for j in jobs), charged_sim_s=out['charged_sim_s'],
+                **({'extra_seeds': extra_seeds,
+                    'extra_group_precharged_sim_s': sum(j['sim_s']
+                                                        for j in hook.extras_state.get('entries', {}).values())}
+                   if extra_seeds else {}))
         except Exception as error:
             result = dict(unix=time.time(), verification_id=vid, status='failed', verify_mode=vp.ALL8,
                 error=repr(error), traceback=traceback.format_exc(),
