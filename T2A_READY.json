@@ -1,0 +1,98 @@
+{
+  "schema": "coopmwm.trigger_policy_ready.v1",
+  "task": "T2A",
+  "status": "READY: CPU implementation and stubbed move contracts verified; live integration belongs to T2C",
+  "branch": "c4/trigger-policy",
+  "worktree": "E:/agent-work/c4-trigger-policy",
+  "base": "13f184b5 (c4/track-base)",
+  "resume_inspection": {
+    "initial_status": "clean; HEAD at shared base",
+    "prior_t2a_module_tests_or_receipt": "none present",
+    "existing_receipt_read": "RERUNCPUS_READY.json",
+    "jobs_or_dispatches_started": 0
+  },
+  "commits": [
+    {
+      "commit": "56a93c87",
+      "step": "per-CAV V2V move trigger, PPO update, imitation loss and bounded move execution"
+    },
+    {
+      "commit": "0448485e",
+      "step": "27 CPU contract tests; final T2A plus V2V verification: 58 passed"
+    }
+  ],
+  "receipt_commit_note": "This receipt is committed separately on top of the listed implementation/test commits; its own SHA is available in git log.",
+  "owned_files": [
+    "tools/coopmwm/trigger_policy.py",
+    "tools/coopmwm/test_trigger_policy_cpu.py",
+    "T2A_READY.json"
+  ],
+  "api": {
+    "construction": "TriggerPolicy(loaded_v2v_policy, v2v_dim=48, n_candidates=<registered budget>, partner_slots=5, freeze_base=True, moves_api=None). Also supports existing V2V-only width 24. Width must exactly match loaded actor. moves_api=None lazily imports tools.coopmwm.moves.",
+    "base_policy": "forward(context), sample(...), score(sample) delegate unchanged to the existing V2V/intent actor. Construction preserves global torch RNG state. Frozen trigger updates leave all base state_dict tensors and sampled actions/noise/logp byte-identical.",
+    "decide": "policy.decide(context, obs_states={ego: local_observable_state}, observable_cavs={ego: ordered_local_CAV_ids_including_ego}, rng=numpy_rng, generator=torch_cpu_generator, deterministic=False) -> TriggerBatch. Caller owns decision cadence. Each ego gets moves.candidates(obs_states[ego], rng, n_candidates) once.",
+    "discrete_actions": "0=none; 1..N=joint family/partners/parameters candidate bucket. Candidate scoring uses the existing per-CAV 64-wide actor trunk plus family one-hot, observable member-slot mask and onset/hold/depth normalized by VARIETY_REGISTERED. Unused action slots are masked. No new behavioural ranges or family names are invented.",
+    "move_contract": "moves.FAMILIES includes none; moves.candidates(obs_state, rng, n) -> moves; each non-none Move exposes family, members, onset_s, hold_s, depth as attributes or mapping fields. moves.offsets(move, elapsed_s) -> {cav_id: accel_offset}. Candidates require 1..4 unique observable CAV members including ego and registered variety parameter ranges.",
+    "rollout": "TriggerBatch stores deep-copied context and move tables, descriptors, availability mask, per-CAV actions, detached old logp and detached values. batch.selected() -> {ego: selected_Move_or_None}. evaluate(batch) -> per-CAV (logp, value, entropy); scoring never resamples candidates.",
+    "optimizer": "policy.optimizer(lr=<registered learning rate>) owns exactly learning_parameters(). Frozen mode: trigger score/value heads only. Explicit freeze_base=False: also actor+broadcast; base critic, intent head and Gaussian log_std remain outside this optimizer.",
+    "ppo_update": "ppo_update(policy, optimizer, batch, per_cav_advantages, per_cav_returns, clip_ratio=..., value_weight=..., entropy_weight=..., max_grad_norm=...) -> scalar loss/policy_loss/value_loss/entropy/approx_kl/clip_fraction/grad_norm/cav_count. One clipped minibatch step, no silent advantage normalization; caller owns GAE, epochs and any registered KL stopping budget. Rejects wrong optimizer ownership, empty batches, nonfinite or mismatched vectors and masked actions.",
+    "imitation": "policy.imitation_loss(batch, target_action_indices) -> masked-table cross entropy for T2B/T2D. Targets must refer to the recorded table, not a fresh draw.",
+    "checkpoint": "Standard policy.state_dict()/load_state_dict(strict=True) plus trigger optimizer.state_dict() and generator.get_state(). Reconstruct with the SAME constructor settings, moves family ordering and variety registration. CPU roundtrip and exact next-step optimizer parity tested.",
+    "execution_start": "MoveExecutor(moves_api=None).start(move, ego=..., observable_cav_ids=..., now=..., until=...) -> accepted bool. until is explicit caller-registered commitment expiry. None abstains. Overlapping committed member sets are rejected atomically; callers can use stable ego order. No assumptions about a release tail beyond moves.offsets.",
+    "execution_requests": "executor.requests(base_actions, native_commands, now=..., eligible_cav_ids=..., feasible_bounds={vid: (lo,hi)}) -> {vid: {requested_raw, acceleration_residual}}. base_actions are ABSOLUTE native+MAPPO commands. Offset is added to that base, clamped to per-tick feasibility and the shared 1.2 m/s^2 CAV cap. Departed/ineligible/non-CAV members are skipped. Unaffected base requests are not rewritten.",
+    "controller_integration": "Merge executor requests into the existing acceleration/controller request dictionary BEFORE the existing feasibility and CommandOwnership single-writer stage. Retain existing speedMode 27 safe-speed handling. This module neither writes TraCI nor changes controller configuration. T2C supplies causal local obs/V2V identities, cadence, eligibility, bounds and commitment expiry. T2D can use frozen trigger features/heads and its own registered layer optimizer/KL budget."
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "new_suite_command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_trigger_policy_cpu.py",
+    "new_suite_result": "27 passed in 29.18s",
+    "final_command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_trigger_policy_cpu.py tools/coopmwm/test_v2v_model_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_v2v_intent_cpu.py tools/coopmwm/test_v2v_int_e2e_cpu.py",
+    "final_result": "58 passed, 1 existing warning in 46.35s",
+    "warning": "Existing test_v2v_int_e2e_cpu.py:107 converts a requires_grad tensor to scalar.",
+    "coverage": [
+      "V2V-24 and intent-48 base actions, Gaussian scores, exploration memory and frozen base state unchanged after trigger updates",
+      "construction preserves RNG; wrong actor width and missing recorded V2V payload refused",
+      "per-CAV tables, none and padding masks, local partner validation, registered ranges, candidate-order equivariance and rollout snapshot replay",
+      "deterministic and seeded stochastic choices, none-only masks and empty roads",
+      "positive PPO advantage increases selected probability; value head learns; both PPO clipping signs checked against old logp",
+      "explicit fine-tuning reaches V2V actor columns and broadcast without changing base critic/intent/log_std",
+      "masked imitation targets and optimizer-ownership/target-vector refusal",
+      "CPU checkpoint, Adam state and RNG roundtrip with exact next optimizer-step parity",
+      "offset composition on MAPPO rather than native command; feasibility and 1.2 cap; abstention identity; local eligibility/departures; onset/release; nonoverlap; expiry; monotonic clock and corrupt API refusals"
+    ],
+    "broader_legacy_attempt": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_v2v_model_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_v2v_intent_cpu.py tools/coopmwm/test_v2v_int_e2e_cpu.py tools/coopmwm/test_acceleration_cpu.py",
+      "result": "45 passed, 8 failed, 1 warning in 91.29s; all failures in legacy test_acceleration_cpu.py",
+      "failures": {
+        "test_control_observes_same_eligible_windows_without_queries_or_rng_change": "KeyError: behaviour (legacy guide/mock behaviour)",
+        "test_diagnostic_pairing_uses_actual_profile_and_mappo_background": "legacy patch does not intercept evaluator; SimpleNamespace lacks model",
+        "test_duplicate_cem_profiles_keep_complete_separate_k8_futures": "missing optional tools.wmteach module",
+        "test_one_second_episode_orchestration_and_sumo_only_reward": "missing optional tools.leverprobe module",
+        "test_plan_is_committed_and_replay_is_immutable": "missing optional tools.leverprobe module",
+        "test_random_guide_returns_to_policy_route_when_matched_quota_is_exhausted": "KeyError: behaviour (legacy guide/mock behaviour)",
+        "test_real_frozen_mappo_acceleration_executor_parity": "COOPMWM_MAPPO environment checkpoint not configured",
+        "test_viability_runner_pauses_all_arms_without_touching_final_panel": "Windows os.nice unavailable, followed by locked-temp-file cleanup error"
+      },
+      "base_comparison": "git diff c4/track-base -- acceleration.py/test_acceleration_cpu.py/plan_client.py/plans.py/plan_wm.py/accel_runner.py was empty (using full tools/coopmwm paths). This attempt does not import trigger_policy.py. No legacy files changed."
+    },
+    "initial_watchdog": "First new-suite attempt exceeded a 20s tool timeout. Confirmed no matching python process remained before retrying with sufficient timeout.",
+    "diff_check": "git diff --check passed before the implementation commit; git diff --cached --check passed before the test commit"
+  },
+  "open_issues": [
+    "Track T1A moves.py is absent on this branch; tested against the required API with a local test-only stub. Validate concrete Move field names/API after that module is merged.",
+    "T2C must wire decision cadence, caller registration values, causal observable states, command eligibility/bounds and request merging. No training or runtime launch performed.",
+    "Caller must retain/reconstruct identical family ordering, constructor settings and variety registration when resuming the standard state_dict checkpoint.",
+    "The eight broader legacy acceleration-suite failures above remain; T2A plus all four V2V suites pass."
+  ],
+  "execution_scope": {
+    "cpu_only": true,
+    "new_sim_s": 0,
+    "sumo_runs": 0,
+    "gpu_operations": 0,
+    "ssh_or_remote_operations": 0,
+    "dispatches_or_reservations": 0,
+    "shared_modules_modified": false,
+    "prohibited_seed_or_truth_files_opened": false,
+    "reset_clean_stashdrop_push_rebase_used": false
+  }
+}
