@@ -1,5 +1,18 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## UPDATE Nov4 12:20 +08 — five missing u6 lessons COMPLETE+VERIFIED
+- Worker2854683 exited normally12:17:04; NEVERredispatch. Additive
+  LESSON_CHECK_u006_B_MAIN1202_REPAIRED.json now12of12graded/8positive/mean
+  +161.928970CI[-335.496512,580.650928]veh-s. Original7J/branch/error values
+  unchanged; originalfileSHA2aaf1579/checkpointbfe29812/runtime06e88ecd unchanged.
+- Exact5ledgerrows/3480sim-s/v2v_lessons independentlyVERIFIED. Source/stats/
+  training unchanged; no new search. 710inputpaths+665bankfiles protected.
+- U6_LESSON_REPAIR_COMPLETE_MAIN1202.md+VERIFIED_MAIN1202.json and additive
+  report committed. The incomplete7of12 in older sections is historical.
+- Existing isolatedu6 sevenstates still show no established positive learned
+  cooperation; no cooperation-based pause authorized. Continue r2+monitor4,
+  preserve CPU-Sdelegatechecking and both live movers. Next monitor u7/u8.
+
 ## CURRENT Nov4 12:15 +08 — A13/B6/R5; u6 evidence + five-input repair
 - Full brief through NEW MAIN12:02 read; original warm-memory/slim work already
   complete and never redispatched. Existing r2 supervisor2636865/B2636963/R2636968

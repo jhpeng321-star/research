@@ -1,5 +1,16 @@
 # S-COOPMWM — live checks
 
+### Nov4 12:20 UTC+8 — B-u6 frozen lessons repaired, 12/12 graded
+The additive `LESSON_CHECK_u006_B_MAIN1202_REPAIRED.json` completes all five
+previously missing entries and adopts the original seven unchanged. **Mean
+delay improvement+161.929veh-s,95%CI[-335.497,+580.651],8/12positive**; the
+interval includes zero. Exactly3,480sim-s in five shared-ledger rows verified.
+Original incomplete report, checkpoint and runtime hashes are unchanged.
+Worker2854683 completed normally; never redispatch. This supersedes the
+incomplete7/12 lesson summary below, while preserving that original receipt.
+The isolated-group result remains as reported below: positive learned
+cooperation is not established. Proof:`coopmwm/U6_LESSON_REPAIR_COMPLETE_MAIN1202.md`.
+
 ## Nov4 12:15 UTC+8 — B-u6 complete; isolated check does not show learned cooperation
 - **A13/B6/R5 complete**, with the existing r2 training supervisors and bound
   monitor4 running. B6 completed **3 full imitation passes of 5 requested**,
