@@ -7,9 +7,10 @@
     {"sha": "f3fe6ccb", "title": "coopmwm: practice_starts option (B/R practice PPO starts from own cooperative bank snapshots)"},
     {"sha": "c8fcfaee", "title": "coopmwm: practice_starts CPU tests + practice_wave role fix"},
     {"sha": "ff57ccd0", "title": "coopmwm: drop unused import in practice_starts.plan_for_update"},
-    {"sha": "0785bab8", "title": "coopmwm: practice fix round 1 (wave_call/job keywords, one batch wave, B realised count, coop capacity, extra seeds, matched A references, proposal-None guard)"}
+    {"sha": "0785bab8", "title": "coopmwm: practice fix round 1 (wave_call/job keywords, one batch wave, B realised count, coop capacity, extra seeds, matched A references, proposal-None guard)"},
+    {"sha": "40a434a2", "title": "coopmwm: practice fix round 2 (wave precharged recomputation, defensive pairs id lookup, batch replacement test)"}
   ],
-  "head": "0785bab8",
+  "head": "40a434a2",
   "status": "READY",
   "fix_round": {
     "trigger": "independent review found 6 BLOCKING defects; all fixed with tests on the real paths",
