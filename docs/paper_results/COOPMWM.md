@@ -1,5 +1,31 @@
 # S-COOPMWM — live checks
 
+### Nov4 12:57 UTC+8 — B-u8 complete; A14/B8/R7
+- **B8 learning mechanics and composite safety pass.** Four full imitation
+  passes of five requested, KL0.039161<0.045, eight within-seed cooperative
+  examples, no imitation failure; raw action MAE1.242276->1.223864m/s².
+  First-pass loss-change95%CI[-0.061287,-0.039790]; first-minibatch PPO KL0.
+  Bank intent loss1.954416->2.249387 increased (report-only).
+- On24paired TRAIN worlds, collisions/teleports0; critical-total B-A=-24.854
+  CI[-43.938,-5.688], hard-brake=-1.688CI[-5.146,1.667]. R7 also passes:
+  five full passes, KL0.042762, three cooperative examples; critical-total
+  R-A=-18.417CI[-44.854,7.354], collisions/teleports0. R raw action error
+  rose slightly despite lower AWR loss. These are conditional TRAIN checks;
+  positive learned cooperation remains unestablished by the u6 isolated test.
+- Existing training owners and both archive movers are live. Practice operator
+  has prepared registered runtime2d73ce02/src8; current r2 children retain their
+  prior source. Monitor4 actively covers B8/R7 but still binds06e88ecd; the
+  operator was notified to include monitoring in the boundary handover.
+- Charged13,670,900/cap17,471,840, including811,640retained exactly once;
+  live-bank phases nonnegative. Bank-verification and practice transfers are
+  separately registered in bank-binding/runtime authorities; both must survive
+  reconciliation. Future lesson-phase gap13,200remains reported; u12 fits.
+- cpuQ~6.54GiBfree, MemAvailable~9.63GiB; extension mover3.127GBcertified.
+  One SSH connection timeout recovered on a bounded read-only retry. Existing
+  CPU-S checking/landing and practice/effective-imitation work remain delegated.
+  Evidence:`coopmwm/B8_R7_HEALTH_20261104_1257.md` and
+  `coopmwm/PUBLIC_PROGRESS_1793768209687489000.json`.
+
 ### Nov4 12:41 UTC+8 — A14/B7/R6; live phase authority reconciled
 - **B7 learning mechanics and composite safety pass.** Three full imitation
   passes of five requested, KL0.044938<0.045, eight within-seed cooperative
