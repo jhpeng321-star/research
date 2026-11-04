@@ -1,0 +1,156 @@
+{
+  "task": "T1C",
+  "status": "READY",
+  "scope": "CPU calibration tooling and fix-round regression tests ready for independent re-review",
+  "planner_gate_available": false,
+  "production_artifact": "UNAVAILABLE: no production development records fitted; missing or incompatible evidence fails closed",
+  "branch": "c4/planner-calib",
+  "worktree": "E:/agent-work/c4-planner-calib",
+  "base": "13f184b5",
+  "review": "REVIEW_T1C_r0.md",
+  "supersedes": "T1C_READY.blocked0.json (preserved verbatim as historical, superseded receipt)",
+  "resumed_from": "ca9884fb plus the previous frozen session's uncommitted implementation and test edits",
+  "commits": [
+    {
+      "commit": "f1668849",
+      "step": "Complete preserved fix work: typed paired WM probability API, full-horizon and baseline contracts, primary-panel selection provenance, 66 passing calibration tests"
+    },
+    {
+      "commit": "1e0b7efd",
+      "step": "Explicit pytest-only selection dependency restoration and observable boundary test; full 107-test regression passes"
+    }
+  ],
+  "receipt_commit": "Resolve with git log -1 -- T1C_READY.json; this receipt is committed separately after verification",
+  "files": [
+    "tools/coopmwm/planner_calibration.py",
+    "tools/coopmwm/test_planner_calibration_cpu.py",
+    "tools/coopmwm/planner_calibration_cpu_env.py",
+    "T1C_READY.blocked0.json",
+    "T1C_READY.json"
+  ],
+  "blocker_fixes": [
+    {
+      "review_blocker": 1,
+      "status": "FIXED",
+      "change": "Operational isotonic input is WM P(better), never mean gain or p_best. Require identity-linked paired-sample probability evidence embedded in the candidate before verification, with its own digest and the existing plan/spec/receipt hash chain. Typed inference requires consuming candidate/snapshot/start identity and planner contract. Scalar gains and scalar probabilities are rejected. Legacy gains are available only through a diagnostic that cannot emit a planner artifact.",
+      "regression_tests": [
+        "test_equal_mean_gains_different_paired_win_probabilities",
+        "test_invalid_probability_evidence_refused",
+        "test_recorded_probability_without_samples_requires_paired_provenance",
+        "test_old_gain_only_receipts_are_unavailable_for_gate",
+        "test_identity_linked_evidence_refused_on_different_candidate"
+      ]
+    },
+    {
+      "review_blocker": 2,
+      "status": "FIXED",
+      "change": "GateContract binds full horizon, objective, MAPPO-only baseline and producer-attested policy state hash. Evidence must meet mppi_search.final_horizon(duration_s), fit the controlled episode, and exactly match the realised window and consuming planner. Candidate specs must show no committed moves in the realised policy baseline. Fit, artifact load and prediction each refuse incompatible contracts; the registered horizon is never shortened.",
+      "regression_tests": [
+        "test_short_window_win_full_window_loss_never_fits",
+        "test_consumer_contract_mismatch_refused_at_fit_load_and_use",
+        "test_wrong_objective_or_baseline_refused",
+        "test_realised_baseline_with_committed_moves_is_not_mappo_only",
+        "test_hashed_incompatible_artifact_cannot_load"
+      ]
+    },
+    {
+      "review_blocker": 3,
+      "status": "FIXED",
+      "change": "Only linked first_seed/seed2 all-candidate panels enter operational fitting and validation. Outcome-selected all8 extra links are recorded as excluded provenance without opening them. Preflight excludes their hashes even when selected receipts are also passed directly, independent of argument order. Standalone receipts without panel-selection proof cannot fit a gate. Conflicting primary/selected provenance is refused.",
+      "regression_tests": [
+        "test_real_all8_winner_only_extras_cannot_change_primary_population",
+        "test_all8_links_full_receipts_not_admitted_examples"
+      ],
+      "real_selection_probe": "The real confirm_all8 function with a deterministic CPU SeedPlant verifies two candidates on seeds 1/2 and selects only the winner for four extras. Loading with/without those real extra links yields the same four primary rows and 0.50 observed win rate. Direct duplicate inputs cannot restore the selected rows; extra-only inputs cannot produce an operational model."
+    }
+  ],
+  "source_contract": {
+    "artifact_schema": "coopmwm/planner-calibration/v2",
+    "evidence_schema": "coopmwm/wm-p-better/v1",
+    "verified_schema": "coopmwm/sumo_verify/v1",
+    "all8_schema": "coopmwm/verify-perseed/v1 with verify_mode all8_both_seeds",
+    "evidence_location": "plan.wm_probability_evidence; must exist before verification, never retrofitted into old receipts",
+    "required_evidence_fields": [
+      "schema",
+      "paired=true",
+      "n_samples (integer >= 2)",
+      "p_better (finite probability in [0,1])",
+      "candidate_id",
+      "snapshot_sha256",
+      "start_s",
+      "duration_s",
+      "contract",
+      "evidence_sha256"
+    ],
+    "optional_samples": "List of [unique_sample_id, MAPPO-only J, candidate J] on paired belief/noise draws. When present, count/identities/cost finiteness and p_better == fraction(baseline J > candidate J) are checked. Recorded P(better) without samples still requires paired=true and multiple-sample provenance.",
+    "contract": "GateContract(horizon_s, objective='team_delay_vs', baseline='MAPPO-only', policy_state_sha256)",
+    "provenance_limit": "Baseline/objective/policy identity in the WM evidence is a producer attestation bound to the verifier snapshot identity, not reconstructed by opening snapshots, model weights or truth files. Candidate specs separately prove the realised reference has no committed moves.",
+    "realised_label": "Same-receipt J_policy_veh_s - J_candidates_veh_s[i] > 0; ties/losses are non-wins",
+    "population": "all-candidates-before-outcome-selection/v1; first/second panels only; all graded candidates from accepted and rejected WM decisions",
+    "unusable_rows": "Failed/ungraded branches and missing explicit own-policy gain diagnostics are counted and not imputed. Missing/mismatched probability or horizon evidence refuses operational fitting; it is not silently repaired or dropped to create a favourable model.",
+    "split": "Deterministic development split by episode.world.seed; all CRN replicas/candidates/updates/arms for an original world remain together",
+    "data_access": "Explicit local JSON receipts and linked candidate specs only; lexical/resolved path guards, explicit development allowlist, development-role check and inherited excluded evaluation seed ranges"
+  },
+  "api": {
+    "GateContract": "Full consuming-planner horizon, objective, baseline and policy state identity",
+    "WMProbability.from_dict(evidence)": "Validate digest, paired probability semantics, sample evidence, prediction identity and registered minimum horizon; return typed prediction",
+    "load_verified_records(paths, dev_seeds)": "Return examples and provenance; standalone rows are diagnostic-only, primary panels are annotated, selected extra replicas are excluded",
+    "fit_calibration(examples, dev_seeds, validation_fraction=0.25, split_seed=20261104, n_bins=10, *, planner_contract)": "Validate all operational evidence; fit isotonic on WM probabilities using fit worlds only; emit raw/calibrated reliability, ECE, MCE, Brier, independent validation, seed split, windows and dataset digest",
+    "load_calibrator(path, *, planner_contract)": "Validate v2 artifact hash, seed partition, score semantics, primary population and full-window contract; return Calibrator",
+    "Calibrator.predict_probability(prediction, *, planner_contract, candidate_id, snapshot_sha256, start_s)": "Typed probability and explicit consuming decision identity/contract required; mismatch raises ValueError and planner must retain MAPPO control",
+    "gain_diagnostic(examples)": "Mean-gain and observed-win-rate summary only; diagnostic_only=true, planner_gate_available=false; cannot be loaded as an operational model",
+    "reliability / reliability_svg": "Equal-width reliability metrics and standalone validation SVG"
+  },
+  "cli": {
+    "entrypoint": "python -m tools.coopmwm.planner_calibration",
+    "required": "--records <explicit verified/all8 JSON paths...> --dev-seeds <development seeds...> --planner-contract <GateContract JSON> --output <new model JSON> --reliability-svg <new SVG>",
+    "optional": "--validation-fraction 0.25 --split-seed 20261104 --n-bins 10",
+    "writes": "New output files in existing permitted directories only; refuses overwrite; invalid evidence emits no model",
+    "T1B_boundary": "T1B's planner_online.py is absent in this worktree. Exported typed boundary is directly tested; no end-to-end T1B integration is claimed. T1B must supply its unchanged horizon, objective, MAPPO baseline and current candidate/snapshot/start identity, handle refusal by retaining MAPPO, and apply its registered p_star=0.8 gate."
+  },
+  "tests": {
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "-1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+      "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe"
+    },
+    "targeted": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider tools/coopmwm/test_planner_calibration_cpu.py --basetemp=E:/agent-work/c4-planner-calib/.t1c-fix-cpu-r2",
+      "result": "66 passed in 58.39s before adding the CPU dependency boundary test"
+    },
+    "final_regression": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider -p tools.coopmwm.planner_calibration_cpu_env tools/coopmwm/test_planner_calibration_cpu.py tools/coopmwm/test_sumo_verify_cpu.py tools/coopmwm/test_verify_perseed_cpu.py --basetemp=E:/agent-work/c4-planner-calib/_out/t1c_fix_regression_r1",
+      "result": "107 passed, 0 failed, 0 skipped, 0 deselected in 72.45s",
+      "calibration_tests": 67,
+      "adjacent_regression_tests": 40,
+      "warnings": "One inherited pytest config warning: cache_dir is unknown because the cache provider was explicitly disabled",
+      "dependency_restoration": "Explicit pytest-only plugin AST-loads ONLY the verbatim _SELECTION_FEATURES implementation already recorded in rehearsal_cpu.py when tools.leverprobe.selection is absent. Real installed dependency takes precedence. No backend is replaced, no controller assertion is bypassed, and no test is suppressed. Boundary test checks real observable filtering, counts, density, ramp status, queue count, speed and partner ordering.",
+      "previous_failure": "test_real_controller_never_draws_trust_again_for_verified_plan now passes with the selection dependency restored in the CPU test process"
+    },
+    "diff_check": "git diff --check passed before both implementation commits; final receipt diff is checked before committing"
+  },
+  "open_issues": [
+    "Production planner calibration is unavailable. No explicit production dev receipt list/allowlist was supplied or opened; only generated CPU fixtures were fitted.",
+    "Existing gain-only or shorter-window receipts cannot establish operational full-horizon WM P(better). The current all8 producer also reuses candidate plans across replicas; probability evidence tied to another snapshot is refused. Compatible pre-verification evidence is required; this task does not launch new collection or retrofit records.",
+    "T1B integration must adopt the exported typed contract in its own worktree; that module is not present here.",
+    "Bank-candidate selection may differ from online move distribution. Development-seed reliability is not a deployment performance claim.",
+    "Independent re-review of these fixes has not been performed in this session. REVIEW_T1C_r0.md is preserved as the original blocking review."
+  ],
+  "preserved_local_artifacts": [
+    "REVIEW_T1C_r0.md (original independent review, unmodified)",
+    ".t1c-resume-cpu/ (previous session's generated CPU fixture data, unmodified)",
+    ".t1c-fix-cpu-r1/ and .t1c-fix-cpu-r2/ (this session's generated CPU fixtures; local ignores prevent accidental staging)",
+    "_out/t1c_fix_regression_r1/ (final CPU regression fixtures)"
+  ],
+  "hard_rules": {
+    "cpu_only": true,
+    "sumo_gpu_ssh_remote_runs": 0,
+    "simulation_jobs_or_dispatches_started": 0,
+    "sealed_or_forbidden_data_opened": false,
+    "truth_or_hidden_driver_inputs": false,
+    "other_worktrees_modified": false,
+    "shared_runtime_modules_modified": false,
+    "reset_clean_stash_drop_push_rebase": false
+  }
+}
