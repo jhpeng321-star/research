@@ -8,6 +8,8 @@ radius, verification fraction, WM sample count or shortened look-ahead.
 Source contract::
 
     {"confirmation": <sealed all8 confirmation>, "example_index": int,
+     "verification": {"first_seed_receipt": <sealed original sv receipt>,
+                      "snapshot_identity": <original sv.snapshot_sha projection>},
      "parameters": {"onset_s": float, "hold_s": float, "depth": float},
      "context": {"ego_id": str, "t_s": float, "rows": [...],
                  "policy_traj": {cav_id: [base_accel, ...]}}}
@@ -28,7 +30,13 @@ nonfinite or unpaired samples fail closed. These are WM labels, not SUMO labels.
 
 Selected spot checks are pending and excluded from training until resolved.
 ``verify_all8`` is the explicit later-run bridge to existing charged machinery;
-``resolve_spot_checks`` validates its sealed results. Neither is called by
+``resolve_spot_checks`` validates its evidence envelope (confirmation, sealed
+first_seed_receipt and source_confirmation_sha256). Provenance is never a WM
+input. The original snapshot identity is checked against the source receipt;
+seed 2 uses replicate(snapshot, original verification_id), extra seeds use
+verify_perseed.extra_seed_salt. Augmentation verification then starts on that
+source example's OWN seed, and its second seed uses the NEW decision id.
+Neither is called by
 ``augment``. There is no CLI that could accidentally launch a job.
 """
 import copy
@@ -41,7 +49,7 @@ from . import variety
 from .protocol import digest
 
 
-SCHEMA = 'coopmwm/plan-augment/v1'
+SCHEMA = 'coopmwm/plan-augment/v2'
 ALL8 = 'all8_both_seeds'
 WINDOWS = dict(onset_s='variety_onset_window_s', hold_s='variety_hold_window_s',
                depth='variety_depth_window')
@@ -49,6 +57,10 @@ SETTINGS = {'enabled', 'seed', 'attempts_per_plan', 'parameter_fraction',
             'partner_swap_probability', 'spot_check_fraction', 'wm_samples',
             'horizon_s', 'bounds', 'variety'}
 OBS_FIELDS = ('vid', 'is_cav', 's_m', 'v_mps', 'lane', 'allowed_speed_mps', 'observed_at_s')
+# The exact sv.snapshot_sha identity projection, not a simulator/global state or
+# tensor payload. It is verification metadata only, never part of context.
+SNAPSHOT_FIELDS = ('episode', 'policy', 'sumo', 't0', 'prefixes', 'samples', 'rng',
+                   'committed_plans', 'end_s', 'truncate_on_accept')
 
 
 def _integer(value, name, minimum=0):
@@ -103,7 +115,69 @@ def _sealed(record):
         raise ValueError('a sealed all8 per_seed_v1 confirmation is required')
 
 
+def _decision_identity(record, first, snapshot, arm):
+    """Bind ordinary all8 metadata to its authoritative sealed first receipt."""
+    from . import sumo_verify as sv
+    from .exact_grade import verify_sealed
+    _sealed(record)
+    verify_sealed(first, 'receipt_sha256')
+    if record.get('arm') != arm or snapshot['episode'].get('arm') != arm:
+        raise ValueError('spot-check arm mismatch')
+    if record.get('t0') != snapshot['t0'] or first.get('t0') != snapshot['t0']:
+        raise ValueError('verification decision time mismatch')
+    if first.get('episode') != snapshot['episode'] or first.get('snapshot_sha256') != sv.snapshot_sha(snapshot):
+        raise ValueError('verification snapshot identity mismatch')
+    ids, hashes = first['candidate_ids'], first['candidate_plan_sha256']
+    vid = sv.verification_id(snapshot['episode']['id'], snapshot['t0'], [dict(id=x) for x in ids])
+    if (not ids or len(ids) != len(hashes) or len(set(ids)) != len(ids)
+            or first.get('verification_id') != vid or record.get('verification_id') != vid
+            or record.get('first_seed', {}).get('verification_id') != vid
+            or record['first_seed'].get('receipt_sha256') != first['receipt_sha256']):
+        raise ValueError('verification decision identity mismatch')
+    summaries = record['candidates']
+    if (len(summaries) != len(ids) or any(
+            p.get('index') != i or p.get('plan_id') != ids[i] or p.get('plan_sha256') != hashes[i]
+            for i, p in enumerate(summaries))):
+        raise ValueError('verification candidate identity mismatch')
+
+
+def _seed_identity(record, first, snapshot, k):
+    """Reproduce the existing all8 CRN derivation, without opening any tapes."""
+    from . import replay_bank as rb
+    from . import sumo_verify as sv
+    from . import verify_perseed as vp
+    k = _integer(k, 'seed_index', 1)
+    if k == 1:
+        return copy.deepcopy(snapshot), first['verification_id'], list(range(len(record['candidates'])))
+    meta = record['seed2'] if k == 2 else record['extra'][str(k)]
+    salt = record['verification_id'] if k == 2 else vp.extra_seed_salt(record['verification_id'], k)
+    snap = rb.replicate(snapshot, salt)
+    indices = list(range(len(record['candidates']))) if k == 2 else meta['candidates']
+    vid = sv.verification_id(snap['episode']['id'], snap['t0'],
+                             [dict(id=record['candidates'][i]['plan_id']) for i in indices])
+    if (meta.get('salt') != salt or meta.get('snapshot_sha256') != sv.snapshot_sha(snap)
+            or meta.get('verification_id') != vid):
+        raise ValueError('replicated seed snapshot identity mismatch')
+    return snap, vid, indices
+
+
+def _example_identity(ex, record, first, snapshot):
+    i = _integer(ex['candidate_index'], 'candidate_index')
+    if (i >= len(first['candidate_plan_sha256']) or digest(ex['plan']) != first['candidate_plan_sha256'][i]
+            or ex.get('plan_sha256') != digest(ex['plan']) or ex.get('plan_id') != ex['plan']['id']):
+        raise ValueError('example candidate identity mismatch')
+    snap, vid, indices = _seed_identity(record, first, snapshot, ex['seed_index'])
+    tape = ex['tape']
+    if (i not in indices or tape.get('seed_index') != ex['seed_index']
+            or tape.get('verification_id') != vid or tape['window'].get('start_s') != snapshot['t0']
+            or tape['branch'].get('branch') != f'cand{indices.index(i)+1}'
+            or not tape['branch'].get('result_sha256')):
+        raise ValueError('example own-seed tape identity mismatch')
+    return snap
+
+
 def _source(source, arm, c):
+    from . import sumo_verify as sv
     record = source['confirmation']
     _sealed(record)
     if record.get('arm') != arm:
@@ -117,8 +191,13 @@ def _source(source, arm, c):
     if not 2 <= len(members) <= 4 or len(set(members)) != len(members):
         raise ValueError('cooperative moves require 2..4 distinct CAVs')
     D = _integer(plan['duration_s'], 'duration_s', 1)
-    if c['horizon_s'] < D:
-        raise ValueError('registered full look-ahead cannot be shorter than the plan')
+    if c['horizon_s'] < max(D, ms.final_horizon(D)):
+        raise ValueError('registered full look-ahead must include the planner release window')
+    provenance = source['verification']
+    original = {k: copy.deepcopy(provenance['snapshot_identity'].get(k)) for k in SNAPSHOT_FIELDS}
+    first = provenance['first_seed_receipt']
+    _decision_identity(record, first, original, arm)
+    own_snapshot = _example_identity(ex, record, first, original)
     params = {k: _finite(source['parameters'][k], k) for k in WINDOWS}
     for key, window in WINDOWS.items():
         lo, hi = c['variety'][window]
@@ -133,8 +212,8 @@ def _source(source, arm, c):
     rows = []
     for r in raw['rows']:
         row = {k: r[k] for k in OBS_FIELDS}
-        if row['is_cav'] is not True:
-            continue  # HDVs can never become a commanded member
+        if not isinstance(row['is_cav'], bool):
+            raise ValueError('observable is_cav must be boolean')
         for k in ('s_m', 'v_mps', 'allowed_speed_mps', 'observed_at_s'):
             row[k] = _finite(row[k], k)
         if row['observed_at_s'] > now-1:
@@ -142,8 +221,8 @@ def _source(source, arm, c):
         if row['v_mps'] < 0 or row['allowed_speed_mps'] <= 0:
             raise ValueError('invalid observable speed')
         rows.append(row)
-    by = {r['vid']: r for r in rows}
-    if len(by) != len(rows) or ego not in members or not set(members) <= set(by):
+    by = {r['vid']: r for r in rows if r['is_cav']}
+    if len({r['vid'] for r in rows}) != len(rows) or ego not in members or not set(members) <= set(by):
         raise ValueError('ego and every source member must be distinct visible CAVs')
     policies = {}
     for vid in by:
@@ -162,7 +241,10 @@ def _source(source, arm, c):
     if not np.allclose(profile-residual, base, rtol=0, atol=1e-8):
         raise ValueError('source context does not match the verified plan policy centre')
     context = dict(ego_id=ego, t_s=now, rows=rows, policy_traj=policies)
-    return ex, plan, params, context
+    return ex, plan, params, context, dict(
+        snapshot_identity={k: copy.deepcopy(own_snapshot.get(k)) for k in SNAPSHOT_FIELDS},
+        snapshot_sha256=sv.snapshot_sha(own_snapshot),
+        source_first_receipt_sha256=first['receipt_sha256'])
 
 
 def _build(context, members, profile, source_plan, c, tag):
@@ -188,7 +270,7 @@ def _perturb(plan, params, context, c, rng):
     if new['hold_s'] <= 0:
         return None
     old_members, members = list(plan['members']), list(plan['members'])
-    by = {r['vid']: r for r in context['rows']}
+    by = {r['vid']: r for r in context['rows'] if r['is_cav']}
     if rng.random() < c['partner_swap_probability']:
         swaps = [(i, v) for i, old in enumerate(members) if old != context['ego_id']
                  for v in sorted(by) if v not in members and by[v]['lane'] == by[old]['lane']]
@@ -260,7 +342,7 @@ def augment(sources, *, arm, registration=None, score=None):
     rng, spot_rng = np.random.default_rng(rng_seed), np.random.default_rng(spot_seed)
     seen, retained = set(), []
     for source in sources:
-        ex, plan, params, context = _source(source, arm, c)
+        ex, plan, params, context, provenance = _source(source, arm, c)
         out['counts']['sources'] += 1
         for _ in range(c['attempts_per_plan']):
             out['counts']['proposed'] += 1
@@ -280,8 +362,9 @@ def augment(sources, *, arm, registration=None, score=None):
                 continue
             retained.append(dict(id='AUG'+identity[:24], arm=arm, plan=candidate, parameters=new,
                                  source_plan_id=plan['id'], source_seed_index=ex['seed_index'],
-                                 source_t_s=context['t_s'],
-                                 source_confirmation_sha256=source['confirmation']['confirmation_sha256'],
+                                  source_t_s=context['t_s'],
+                                  source_confirmation_sha256=source['confirmation']['confirmation_sha256'],
+                                  verification_provenance=copy.deepcopy(provenance),
                                  source_example_index=source['example_index'], wm=wm,
                                  verification='wm_only', sumo_verified=False))
     n = int(math.ceil(c['spot_check_fraction']*len(retained)))
@@ -301,7 +384,8 @@ def resolve_spot_checks(batch, checker):
     """Run an explicitly supplied checker; accept only matching sealed all8 examples.
 
     The callback receives an immutable-by-copy request and returns an ordinary
-    all8 confirmation. Existing all8 caching/charging owns dispatch idempotency.
+    evidence envelope with confirmation, first_seed_receipt and the requested
+    source_confirmation_sha256. Existing all8 caching/charging owns dispatch idempotency.
     Return a new batch; do not relabel WM-only examples as SUMO-verified.
     """
     if batch.get('receipt_sha256') != digest({k: v for k, v in batch.items() if k != 'receipt_sha256'}):
@@ -312,10 +396,18 @@ def resolve_spot_checks(batch, checker):
     out.pop('receipt_sha256')
     out['spot_check_results'] = []
     for request in out['spot_checks']:
-        record = checker(copy.deepcopy(request))
-        _sealed(record)
-        if record.get('arm') != out['arm']:
-            raise ValueError('spot-check arm mismatch')
+        snapshot = request['verification_provenance']['snapshot_identity']
+        _check_snapshot(request, snapshot)
+        evidence = checker(copy.deepcopy(request))
+        record, first = evidence['confirmation'], evidence['first_seed_receipt']
+        if evidence.get('source_confirmation_sha256') != request['source_confirmation_sha256']:
+            raise ValueError('spot-check source confirmation identity mismatch')
+        _decision_identity(record, first, snapshot, out['arm'])
+        if first['candidate_plan_sha256'] != [digest(request['plan'])]:
+            raise ValueError('spot-check candidate identity mismatch')
+        for ex in record['per_seed_v1']['examples']:
+            if ex.get('admitted') is True and ex.get('cooperative') is True:
+                _example_identity(ex, record, first, snapshot)
         examples = [ex for ex in record['per_seed_v1']['examples']
                     if ex.get('admitted') is True and ex.get('cooperative') is True
                     and ex.get('plan') == request['plan']]
@@ -333,6 +425,16 @@ def resolve_spot_checks(batch, checker):
     out['counts']['sumo_verified_examples'] = sum(x['sumo_verified'] for x in out['examples'])
     out['receipt_sha256'] = digest(out)
     return out
+
+
+def _check_snapshot(request, snapshot):
+    from . import sumo_verify as sv
+    if snapshot['t0'] != request['source_t_s']:
+        raise ValueError('spot-check snapshot time does not match the source')
+    expected = request['verification_provenance']
+    if (sv.snapshot_sha(snapshot) != expected['snapshot_sha256']
+            or sv.snapshot_sha(expected['snapshot_identity']) != expected['snapshot_sha256']):
+        raise ValueError('spot-check snapshot identity does not match the source')
 
 
 def spot_check_quote(request, t0):
@@ -356,13 +458,14 @@ def verify_all8(request, *, snapshot, root, run_root, runner_for, phase,
     arm = request['arm']
     if arm not in ('B', 'R') or request['verification'] != 'pending_all8':
         raise ValueError('expected a pending B/R augmentation request')
-    if snapshot['t0'] != request['source_t_s']:
-        raise ValueError('spot-check snapshot time does not match the source')
+    _check_snapshot(request, snapshot)
     plans = [request['plan']]
     first_dir = Path(rb.bank_root(root, arm))/'augment_first_all8'
     receipt = vp._verify('augment_first_all8', snapshot, plans, first_dir, runner_for,
                          run_root, phase, 'wm' if arm == 'B' else 'random', workers,
                          rb.sv.TAIL_S, [], root, arm, health)
-    return vp.confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase,
-                          workers=workers, candidates=plans, branches_dir=first_dir/'branches',
-                          health=health, later_harm_seed1=True, later_harm_seed2=True)
+    confirmed = vp.confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase,
+                               workers=workers, candidates=plans, branches_dir=first_dir/'branches',
+                               health=health, later_harm_seed1=True, later_harm_seed2=True)
+    return dict(confirmation=confirmed, first_seed_receipt=receipt,
+                source_confirmation_sha256=request['source_confirmation_sha256'])

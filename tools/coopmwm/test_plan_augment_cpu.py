@@ -13,6 +13,8 @@ from . import exact_grade as xg
 from . import mppi_search as ms
 from . import plan_augment as pa
 from . import verify_perseed as vp
+from . import replay_bank as rb
+from . import sumo_verify as sv
 from .protocol import digest
 
 
@@ -25,29 +27,75 @@ def registration(**changes):
     return c
 
 
-def seal(plan, arm='B', admitted=True, cooperative=True):
-    ex = dict(plan=copy.deepcopy(plan), plan_id=plan['id'], seed_index=1,
-              admitted=admitted, cooperative=cooperative)
-    return xg._seal(dict(arm=arm, t0=420, verify_mode=pa.ALL8, bank_rule='per_seed_v1',
-                         per_seed_v1=dict(examples=[ex])), 'confirmation_sha256')
+def snapshot(arm='B'):
+    # Identity projection only: no simulator, checkpoint or traffic truth is loaded.
+    return dict(episode=dict(id=f'train_{arm}_7', arm=arm, world=dict(seed=7)),
+                policy=dict(state_dict_sha256='actor-7'), sumo=dict(noise_seed=11),
+                t0=420, end_s=1200, rng=dict(generator_state_sha256='rng-7'),
+                prefixes={}, samples={}, committed_plans=[])
 
 
-def source(arm='B'):
+def first_receipt(plan, snap):
+    specs = sv.build_branches(snap, [plan], 'wm' if snap['episode']['arm'] == 'B' else 'random')
+    return xg._seal(dict(verification_id=specs[0]['verification_id'],
+                         snapshot_sha256=sv.snapshot_sha(snap), episode=snap['episode'],
+                         t0=snap['t0'], candidate_ids=[plan['id']], candidate_plan_sha256=[digest(plan)],
+                         proposer=specs[0]['proposer'], status='accepted'), 'receipt_sha256')
+
+
+def seal(plan, arm='B', admitted=True, cooperative=True, snap=None, seeds=(1,)):
+    snap = snap or snapshot(arm)
+    first = first_receipt(plan, snap)
+    vid = first['verification_id']
+    examples = []
+    for k in seeds:
+        examples.append(dict(plan=copy.deepcopy(plan), plan_id=plan['id'], plan_sha256=digest(plan),
+            seed_index=k, candidate_index=0, admitted=admitted, cooperative=cooperative,
+            advantage_veh_s=10.*k, synergy=dict(lower95_one_sided_veh_s=float(k)),
+            tape=dict(branches_dir=f'synthetic/seed{k}/branches', verification_id=vid,
+                      seed_index=k, branch=dict(branch='cand1', result_sha256=digest(dict(seed=k))),
+                      window=dict(start_s=snap['t0'], end_s=snap['t0']+plan['duration_s']+120))))
+    record = dict(arm=arm, t0=snap['t0'], verification_id=vid,
+                         verify_mode=pa.ALL8, bank_rule='per_seed_v1',
+                         first_seed=dict(verification_id=vid, receipt_sha256=first['receipt_sha256']),
+                         seed2=dict(verification_id=vid, salt=vid,
+                                    snapshot_sha256=sv.snapshot_sha(rb.replicate(snap, vid))),
+                         candidates=[dict(index=0, plan_id=plan['id'], plan_sha256=digest(plan))],
+                         per_seed_v1=dict(examples=examples))
+    extras = {str(k): dict(seed_index=k, salt=vp.extra_seed_salt(vid, k), candidates=[0],
+                          verification_id=vid,
+                          snapshot_sha256=sv.snapshot_sha(rb.replicate(snap, vp.extra_seed_salt(vid, k))))
+              for k in seeds if k >= 3}
+    if extras:
+        record.update(extra=extras, extra_seeds=max(seeds)-2)
+    return xg._seal(record, 'confirmation_sha256')
+
+
+def evidence(request, *, snap=None, **kwargs):
+    snap = snap or request['verification_provenance']['snapshot_identity']
+    arm = kwargs.pop('arm', request['arm'])
+    return dict(confirmation=seal(request['plan'], arm=arm, snap=snap, **kwargs),
+                first_seed_receipt=first_receipt(request['plan'], snap),
+                source_confirmation_sha256=request['source_confirmation_sha256'])
+
+
+def source(arm='B', duration=120):
     rows = [dict(vid=v, is_cav=True, s_m=-40.-i*5, v_mps=20., lane=lane,
                  allowed_speed_mps=30., observed_at_s=419.)
             for i, (v, lane) in enumerate([('a', 0), ('b', 1), ('c', 1)])]
     rows.append(dict(rows[-1], vid='human', is_cav=False))
-    P = np.zeros((2, 120))
+    P = np.zeros((2, duration))
     profile = P.copy()
     profile[:, 10:50] = -.4
     profile[:, 50:55] = .2
-    plan = ms.build_plan(dict(id='g', members=['a', 'b']), P, None, 120,
+    plan = ms.build_plan(dict(id='g', members=['a', 'b']), P, None, duration,
                          (-1.2, 1.2), 'sampled', 'test', 'SOURCE', absolute=profile)
     plan['variety_family'] = 'wall'
     return dict(confirmation=seal(plan, arm), example_index=0,
+                verification=dict(snapshot_identity=snapshot(arm), first_seed_receipt=first_receipt(plan, snapshot(arm))),
                 parameters=dict(onset_s=10., hold_s=40., depth=.6),
                 context=dict(ego_id='a', t_s=420., rows=rows,
-                             policy_traj={v: [0.]*120 for v in ('a', 'b', 'c')}))
+                             policy_traj={v: [0.]*duration for v in ('a', 'b', 'c')}))
 
 
 class WM:
@@ -207,9 +255,21 @@ def test_observable_and_source_contract_enforced(mutation):
         run(src)
 
 
-def test_never_shorten_registered_lookahead():
+@pytest.mark.parametrize('duration,horizon', [(120, 119), (120, 120), (120, 299), (300, 300), (300, 419)])
+def test_never_shorten_registered_lookahead(duration, horizon):
     with pytest.raises(ValueError, match='look-ahead'):
-        run(horizon_s=119)
+        run(source(duration=duration), horizon_s=horizon)
+
+
+@pytest.mark.parametrize('duration,horizon', [(120, 300), (300, 420), (300, 600)])
+def test_authoritative_release_horizon_shared_by_base_group_and_all_solos(duration, horizon):
+    wm = WM()
+    batch = run(source(duration=duration), wm=wm, horizon_s=horizon, attempts_per_plan=1)
+    call, = wm.calls
+    assert horizon >= ms.final_horizon(duration)
+    assert call['horizon_s'] == batch['examples'][0]['wm']['horizon_s'] == horizon
+    assert len(call['plans']) == 4  # one paired call covers base, group and both solos
+    assert all(p['duration_s'] == duration for p in call['plans'])
 
 
 def test_extra_fields_not_forwarded_and_hdv_not_commanded():
@@ -222,6 +282,27 @@ def test_extra_fields_not_forwarded_and_hdv_not_commanded():
     for call in wm.calls:
         assert 'private_unobservable_extra' not in call['context']
         assert all('private_unobservable_extra' not in r for r in call['context']['rows'])
+
+
+def test_visible_hdv_queue_position_and_speed_reach_scorer_without_command_eligibility():
+    src, before, after = source(), WM(), WM()
+    run(src, wm=before, attempts_per_plan=1)
+    src['context']['rows'][-1].update(s_m=-41., v_mps=0., lane=1)
+    run(src, wm=after, attempts_per_plan=1)
+    assert before.calls[0]['context'] != after.calls[0]['context']
+    human, = [r for r in after.calls[0]['context']['rows'] if not r['is_cav']]
+    assert human['s_m'] == -41. and human['v_mps'] == 0. and human['lane'] == 1
+    assert 'human' not in after.calls[0]['context']['policy_traj']
+    for call in before.calls+after.calls:
+        assert all('human' not in p['members'] for p in call['plans'])
+
+
+@pytest.mark.parametrize('time', [420., 421., float('nan')])
+def test_hdv_observation_timestamps_are_validated(time):
+    src = source()
+    src['context']['rows'][-1]['observed_at_s'] = time
+    with pytest.raises(ValueError):
+        run(src)
 
 
 def test_no_partner_swap_keeps_ego_and_members():
@@ -252,7 +333,7 @@ def test_spot_fraction_uses_separate_rng_and_pending_not_trainable():
 def test_resolve_accepts_only_actual_admitted_cooperative_matching_plan():
     batch = run(attempts_per_plan=1, spot_check_fraction=1.)
     original = copy.deepcopy(batch)
-    checker = Mock(side_effect=lambda request: seal(request['plan']))
+    checker = Mock(side_effect=evidence)
     result = pa.resolve_spot_checks(batch, checker)
     assert batch == original
     checker.assert_called_once()
@@ -264,14 +345,11 @@ def test_resolve_accepts_only_actual_admitted_cooperative_matching_plan():
     assert_sealed(result)
 
 
-@pytest.mark.parametrize('kind', ['not_cooperative', 'not_admitted', 'wrong_plan'])
+@pytest.mark.parametrize('kind', ['not_cooperative', 'not_admitted'])
 def test_failed_spot_check_is_dropped(kind):
     batch = run(attempts_per_plan=1, spot_check_fraction=1.)
     def checker(request):
-        p = copy.deepcopy(request['plan'])
-        if kind == 'wrong_plan':
-            p['id'] = 'another plan'
-        return seal(p, admitted=kind != 'not_admitted', cooperative=kind != 'not_cooperative')
+        return evidence(request, admitted=kind != 'not_admitted', cooperative=kind != 'not_cooperative')
     result = pa.resolve_spot_checks(batch, checker)
     assert result['examples'] == [] and result['spot_checks'] == []
     assert result['spot_check_results'][0]['accepted_examples'] == 0
@@ -280,11 +358,11 @@ def test_failed_spot_check_is_dropped(kind):
 def test_spot_check_cross_arm_and_tampered_confirmation_refused():
     batch = run(attempts_per_plan=1, spot_check_fraction=1.)
     with pytest.raises(ValueError, match='arm mismatch'):
-        pa.resolve_spot_checks(batch, lambda req: seal(req['plan'], arm='R'))
+        pa.resolve_spot_checks(batch, lambda req: evidence(req, arm='R'))
     def tampered(req):
-        rec = seal(req['plan'])
-        rec['arm'] = 'R'
-        return rec
+        result = evidence(req)
+        result['confirmation']['arm'] = 'R'
+        return result
     with pytest.raises(ValueError, match='mismatch'):
         pa.resolve_spot_checks(batch, tampered)
     batch['spot_checks'][0]['plan']['id'] = 'edited'
@@ -304,14 +382,16 @@ def test_spot_check_quote_includes_both_seeds_later_harm_and_solos():
 @pytest.mark.parametrize('arm,proposer', [('B', 'wm'), ('R', 'random')])
 def test_explicit_adapter_delegates_to_existing_charged_all8_machinery(arm, proposer):
     req = run(arm=arm, attempts_per_plan=1, spot_check_fraction=1.)['spot_checks'][0]
-    snap = {'t0': 420}
+    snap = req['verification_provenance']['snapshot_identity']
     runner, health = Mock(), Mock()
-    first, confirmed = {'first': 'receipt'}, {'confirmed': 'receipt'}
+    first = first_receipt(req['plan'], snap)
+    confirmed = seal(req['plan'], arm=arm, snap=snap)
     with patch.object(vp, '_verify', return_value=first) as verify, \
          patch.object(vp, 'confirm_all8', return_value=confirmed) as confirm:
         result = pa.verify_all8(req, snapshot=snap, root='synthetic-root', run_root='single-ledger',
                                 runner_for=runner, phase='registered-augment', health=health)
-    assert result == confirmed
+    assert result == dict(confirmation=confirmed, first_seed_receipt=first,
+                          source_confirmation_sha256=req['source_confirmation_sha256'])
     args = verify.call_args.args
     assert args[0] == 'augment_first_all8' and args[2] == [req['plan']]
     assert args[5:8] == ('single-ledger', 'registered-augment', proposer)
@@ -352,6 +432,7 @@ def test_feasibility_erased_perturbation_never_reaches_scorer():
     plan = ms.build_plan(dict(id='g', members=['a', 'b']), np.zeros((2, 120)), None,
                          120, (-1.2, 1.2), 'sampled', 'test', absolute=profile)
     src['confirmation'] = seal(plan)
+    src['verification']['first_seed_receipt'] = first_receipt(plan, snapshot())
     wm = Mock(side_effect=AssertionError('erased perturbation must not be scored'))
     batch = run(src, wm=wm)
     assert not batch['examples'] and batch['counts']['wm_scored'] == 0
@@ -371,7 +452,7 @@ def test_partner_uses_its_own_base_policy_not_replaced_members_base():
 
 def test_resolved_batch_is_idempotent_and_never_checks_twice():
     batch = run(attempts_per_plan=1, spot_check_fraction=1.)
-    result = pa.resolve_spot_checks(batch, lambda req: seal(req['plan']))
+    result = pa.resolve_spot_checks(batch, evidence)
     checker = Mock(side_effect=AssertionError('no repeated checks'))
     assert pa.resolve_spot_checks(result, checker) == result
     assert result['sumo_dispatched']
@@ -381,7 +462,7 @@ def test_resolved_batch_is_idempotent_and_never_checks_twice():
 def test_unchecked_examples_are_not_relabelled_when_spot_checks_complete():
     batch = run(spot_check_fraction=.25)
     wm_only = copy.deepcopy(batch['examples'])
-    result = pa.resolve_spot_checks(batch, lambda req: seal(req['plan']))
+    result = pa.resolve_spot_checks(batch, evidence)
     assert result['examples'][:len(wm_only)] == wm_only
     assert result['counts']['sumo_verified_examples'] == 2
     assert len(result['examples']) == 6
@@ -399,3 +480,156 @@ def test_scorer_mutation_cannot_rewrite_plan_or_source():
     batch = run(src, wm=mutating, attempts_per_plan=1)
     assert src == before
     assert batch['examples'][0]['plan']['profile'][0][0] != 999
+
+
+@pytest.mark.parametrize('field', ['t0', 'episode', 'seed', 'actor', 'crn', 'prefix'])
+def test_foreign_decision_evidence_rejected_even_with_same_arm_and_plan(field):
+    batch = run(attempts_per_plan=1, spot_check_fraction=1.)
+    def checker(req):
+        snap = copy.deepcopy(req['verification_provenance']['snapshot_identity'])
+        mutate_snapshot(snap, field)
+        return evidence(req, snap=snap)
+    with pytest.raises(ValueError, match='(time|identity|snapshot|decision)'):
+        pa.resolve_spot_checks(batch, checker)
+
+
+def mutate_snapshot(snap, field):
+    if field == 't0':
+        snap['t0'] = 900
+    elif field == 'episode':
+        snap['episode']['id'] = 'foreign-episode'
+    elif field == 'seed':
+        snap['episode']['world']['seed'] = 8
+    elif field == 'actor':
+        snap['policy']['state_dict_sha256'] = 'foreign-actor'
+    elif field == 'crn':
+        snap['rng']['generator_state_sha256'] = 'foreign-crn'
+    else:
+        snap['prefixes']['419'] = 'foreign-state'
+
+
+@pytest.mark.parametrize('field', ['t0', 'episode', 'seed', 'actor', 'crn', 'prefix'])
+def test_adapter_checks_full_bound_snapshot_before_dispatch(field):
+    req = run(attempts_per_plan=1, spot_check_fraction=1.)['spot_checks'][0]
+    snap = copy.deepcopy(req['verification_provenance']['snapshot_identity'])
+    mutate_snapshot(snap, field)
+    with patch.object(vp, '_verify') as verify, patch.object(vp, 'confirm_all8') as confirm:
+        with pytest.raises(ValueError, match='snapshot'):
+            pa.verify_all8(req, snapshot=snap, root='synthetic-root', run_root='single-ledger',
+                          runner_for=Mock(), phase='registered-augment')
+    verify.assert_not_called()
+    confirm.assert_not_called()
+
+
+@pytest.mark.parametrize('field', ['snapshot', 'receipt', 'source_hash', 'plan', 'seed2_salt', 'seed2_snapshot', 'tape'])
+def test_provenance_and_own_seed_evidence_fail_closed(field):
+    batch = run(attempts_per_plan=1, spot_check_fraction=1.)
+    def checker(req):
+        result = evidence(req, seeds=(1, 2))
+        rec, first = result['confirmation'], result['first_seed_receipt']
+        if field == 'snapshot':
+            first['snapshot_sha256'] = 'foreign-snapshot'
+        elif field == 'receipt':
+            rec['first_seed']['receipt_sha256'] = 'foreign-receipt'
+        elif field == 'source_hash':
+            result['source_confirmation_sha256'] = 'foreign-source'
+        elif field == 'plan':
+            rec['per_seed_v1']['examples'][0]['plan']['profile'][0][0] = 1.
+        elif field == 'seed2_salt':
+            rec['seed2']['salt'] = 'foreign-salt'
+        elif field == 'seed2_snapshot':
+            rec['seed2']['snapshot_sha256'] = 'foreign-snapshot'
+        else:
+            rec['per_seed_v1']['examples'][1]['tape'] = copy.deepcopy(rec['per_seed_v1']['examples'][0]['tape'])
+        first.pop('receipt_sha256')
+        result['first_seed_receipt'] = xg._seal(first, 'receipt_sha256')
+        rec.pop('confirmation_sha256')
+        result['confirmation'] = xg._seal(rec, 'confirmation_sha256')
+        return result
+    with pytest.raises(ValueError):
+        pa.resolve_spot_checks(batch, checker)
+
+
+@pytest.mark.parametrize('seed', [1, 2, 3])
+def test_source_seed_snapshot_is_bound_and_not_forwarded_to_wm(seed):
+    src, wm = source(), WM()
+    p = src['confirmation']['per_seed_v1']['examples'][0]['plan']
+    src['confirmation'] = seal(p, seeds=(seed,))
+    batch = run(src, wm=wm, attempts_per_plan=1, spot_check_fraction=1.)
+    req, = batch['spot_checks']
+    vid = src['confirmation']['verification_id']
+    expected = snapshot() if seed == 1 else rb.replicate(snapshot(), vid if seed == 2 else vp.extra_seed_salt(vid, seed))
+    assert sv.snapshot_sha(req['verification_provenance']['snapshot_identity']) == sv.snapshot_sha(expected)
+    assert set(wm.calls[0]['context']) == {'ego_id', 't_s', 'rows', 'policy_traj'}
+    result = pa.resolve_spot_checks(batch, lambda r: evidence(r, seeds=(1, 2)))
+    assert [e['seed_index'] for e in result['examples']] == [1, 2]
+    for ex in result['examples']:
+        k = ex['seed_index']
+        verified = ex['verified_example']
+        assert verified['tape']['seed_index'] == k
+        assert verified['tape']['branch']['result_sha256'] == digest(dict(seed=k))
+        assert verified['advantage_veh_s'] == 10.*k
+        assert verified['synergy']['lower95_one_sided_veh_s'] == float(k)
+
+
+@pytest.mark.parametrize('field', ['actor', 'seed', 'crn', 'prefix'])
+def test_source_identity_must_match_authoritative_sealed_first_receipt(field):
+    src = source()
+    mutate_snapshot(src['verification']['snapshot_identity'], field)
+    wm = Mock()
+    with pytest.raises(ValueError, match='(snapshot|identity)'):
+        run(src, wm=wm)
+    wm.assert_not_called()
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_adapter_evidence_resolves_on_own_source_seed_with_mocked_runners(arm):
+    src = source(arm)
+    plan = src['confirmation']['per_seed_v1']['examples'][0]['plan']
+    src['confirmation'] = seal(plan, arm=arm, seeds=(2,))
+    batch = run(src, arm=arm, attempts_per_plan=1, spot_check_fraction=1.)
+    req, = batch['spot_checks']
+    snap = rb.replicate(snapshot(arm), src['confirmation']['verification_id'])
+    runner = Mock(side_effect=AssertionError('CPU contract must not dispatch physics'))
+    first = first_receipt(req['plan'], snap)
+    confirmed = seal(req['plan'], arm=arm, snap=snap, seeds=(1, 2))
+    with patch.object(vp, '_verify', return_value=first), patch.object(vp, 'confirm_all8', return_value=confirmed):
+        result = pa.resolve_spot_checks(batch, lambda request: pa.verify_all8(
+            request, snapshot=snap, root='synthetic-root', run_root='single-ledger',
+            runner_for=runner, phase='registered-augment'))
+    assert [e['verified_example'] for e in result['examples']] == confirmed['per_seed_v1']['examples']
+    runner.assert_not_called()
+
+
+def test_source_confirmation_must_reference_supplied_authoritative_receipt():
+    src = source()
+    record = src['confirmation']
+    record['first_seed']['receipt_sha256'] = 'foreign-first-receipt'
+    record.pop('confirmation_sha256')
+    src['confirmation'] = xg._seal(record, 'confirmation_sha256')
+    with pytest.raises(ValueError, match='decision identity'):
+        run(src)
+
+
+def test_wrong_confirmation_time_rejected_even_if_first_receipt_matches_source():
+    batch = run(attempts_per_plan=1, spot_check_fraction=1.)
+    def checker(req):
+        result = evidence(req)
+        record = result['confirmation']
+        record['t0'] = 900
+        record.pop('confirmation_sha256')
+        result['confirmation'] = xg._seal(record, 'confirmation_sha256')
+        return result
+    with pytest.raises(ValueError, match='decision time'):
+        pa.resolve_spot_checks(batch, checker)
+
+
+def test_corrupt_bound_snapshot_rejected_before_checker_dispatch():
+    batch = run(attempts_per_plan=1, spot_check_fraction=1.)
+    batch['spot_checks'][0]['verification_provenance']['snapshot_sha256'] = 'wrong-snapshot'
+    batch.pop('receipt_sha256')
+    batch['receipt_sha256'] = digest(batch)
+    checker = Mock()
+    with pytest.raises(ValueError, match='snapshot identity'):
+        pa.resolve_spot_checks(batch, checker)
+    checker.assert_not_called()
