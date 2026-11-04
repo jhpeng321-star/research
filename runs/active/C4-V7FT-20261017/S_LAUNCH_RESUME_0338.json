@@ -1,0 +1,29 @@
+{
+  "schema": "coopmwm.s_launch.resume.v1",
+  "timestamp": "2026-11-05T03:38:57+08:00",
+  "status": "WAITING_P1_ACCEPTANCE",
+  "s0": "REUSED_PASS_READ_ONLY_RECHECK",
+  "host": "cpuV",
+  "remote_unix": 1793820975.3871095,
+  "pip_freeze_sha256": "7c1858dba9279feb798ab7d790db7dda44ac987580a1726c1e75613efcfe8a8e",
+  "shim_sha256": "505bcbd243e89cd49b451ae5fe6e7d3e0d5a8a62f43a36943a7809e601a71f79",
+  "parity_pass": true,
+  "parity_previously_charged_sim_s": 960,
+  "new_sim_s": 0,
+  "clean_root_exists": false,
+  "remote_research_processes": [],
+  "integration_worktree_exists": false,
+  "acceptances_present": ["T2C_OWNER_HANDOFF", "P2", "P3", "P4"],
+  "acceptances_missing": ["P1"],
+  "p1_fix_worker": {"pid": 14864, "created_unix_ms": 1793820833772, "review": "REVIEW_P1_r1.md"},
+  "existing_t2c_worker": {"pid": 6864, "created_unix_ms": 1793818697493},
+  "worker_action": "No worker created, adopted or signalled; no duplicate tests or dispatches.",
+  "authority": "REGISTRATION.md 03:33 owner hands T2C completion to S-LAUNCH; final smoke and safety gate mandatory",
+  "budget_ceiling_authority": "REGISTRATION.md 01:39 owner approves 5,000,000 including smoke; quote and parity must fit",
+  "integration_findings": [
+    "T2C native component-factory protocol differs from P1 build_arm_runtime API; finish explicit production wiring after gate.",
+    "P1 consumer expects per-CAV reward_update envelope; accepted P2 exports training_episodes/layer_records; bridge must preserve real per-CAV outcome provenance.",
+    "P3 must be the single scheduled diagnostic owner; preserve full windows and immutable update checkpoints.",
+    "P4 closure must be invoked on real reader-selected inventory before final approval."
+  ]
+}
