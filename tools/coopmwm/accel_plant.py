@@ -34,6 +34,21 @@ def episode(job):
     if job.get('v2v'):
         from .v2v_runtime import controller_class
         controller_type=controller_class(controller_type)
+    if job.get('practice'):
+        # practice_starts (owner 2026-11-04 proposal, default absent = untouched code path):
+        # restart from a bank example's decision snapshot through the REGISTERED VerifyController
+        # ('policy continues': prefix replay, snapshot t0 sample, CRN generator restore, committed
+        # snapshot plans continue) with the CURRENT training policy weights the job already
+        # carries; v2v jobs get the same v2v observation wrapper as every other v2v controller.
+        from .sumo_verify import verify_controller_class as _practice_base
+        _cls = _practice_base()
+        if job.get('v2v'):
+            from .v2v_runtime import controller_class as _practice_v2v_class
+            _cls = _practice_v2v_class(_cls)
+        _snapshot = job['practice']['snapshot']
+        _plan = job['practice'].get('plan')
+        def controller_type(*args, **kwargs):
+            return _cls(args[0], args[1], _snapshot, _plan)
     controller=controller_type(policy,generator,job['deterministic'],
         guide=guide(job,generator) if not job['deterministic'] and not job.get('b_replay') else None,beta=job.get('beta',1.),
         replay=job.get('samples'),branch=job.get('branch'))
@@ -74,9 +89,12 @@ def episode(job):
                     live_safety(Path(job['queue_root']),job['arm'],b.totals,job['world']['seed'],job['safety_reference'])
                 if len(controller.events)!=n+1:raise ValueError('expected one acceleration action per1s')
                 event=controller.events[-1]
-                if job.get('guided') and job['arm']=='B' and event['sample'].get('behaviour',{}).get('plan_start'):
-                    # Recorded only AFTER the real SUMO step succeeded. This
-                    # controls queue backpressure, not the final closed-job gate.
+                if (job.get('guided') and job['arm']=='B' and event['sample'].get('behaviour',{}).get('plan_start')
+                        and event.get('proposal') is not None):
+                    # Replayed snapshot ticks (practice/replay) record plan_start behaviour with
+                    # proposal None - there is no new proposal record to queue; only a real
+                    # executed proposal controls backpressure. Recorded only AFTER the real SUMO
+                    # step succeeded.
                     write(Path(job['queue_root'])/'guided_starts'/f'u{job["update"]:03}'/(event['proposal']['record_sha256']+'.json'),
                         dict(job=job['id'],time_s=t,behaviour=event['sample']['behaviour']))
                 steps.append(dict(controller.events[-1],reward=before-b.totals['team_delay_vs']))
@@ -86,6 +104,9 @@ def episode(job):
         result=dict(id=job['id'],world=job['world'],arm=job['arm'],steps=steps,metrics=metrics,
             prefixes=prefixes,final=b.fingerprint(),totals=dict(b.totals),horizon_totals=horizon_totals,
             actual_sim_s=b.actual,charged_sim_s=job['sim_s'],requests=requested,overrides=overrides)
+        if job.get('practice'):
+            # practice receipt flag (never the snapshot itself)
+            result['practice']={k:v for k,v in job['practice'].items() if k!='snapshot'}
         if job.get('sumo_verify'):
             result['sumo_verification_root']=job['sumo_verify']['root']
         write(path/'RESULT.json',result);return result

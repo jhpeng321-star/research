@@ -47,19 +47,43 @@ BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
     # boundary, for B-v2v and R-v2v together. OWNER 2026-11-04 08:52 ("yes, switch on stronger
     # imitation now"): the pinned value is 'kl_targeted' (KL limit .045 and every check unchanged).
     # The bank intent term switch defaults True = current behaviour.
-    imitation_step_mode='kl_targeted', v2v_intent_bank_term=True)
+    imitation_step_mode='kl_targeted', v2v_intent_bank_term=True,
+    # owner 2026-11-04 proposal practice_starts: DEFAULT OFF (byte-identical); the launch default
+    # is OFF, and bind_runtime validates - never pins - the B/R-equal registered values, so a
+    # later runtime may enable it at an update boundary. One key set serves B and R (A unchanged).
+    practice_starts=False, practice_fraction=0.25, practice_repeat_cap=2)
 IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
 IMITATION_STEP_MODES = ('fixed', 'kl_targeted')
+PRACTICE_KEYS = ('practice_starts', 'practice_fraction', 'practice_repeat_cap')
+PRACTICE_FRACTIONS = (0.25,)     # registered values of practice_fraction (proposal 0.25 => 6 of 24)
+PRACTICE_REPEAT_CAPS = (1, 2)    # registered per-example repeat caps per update
+
+
+def practice_reference_quote(fraction, *, updates=24, arms=('B', 'R')):
+    """Registered full-run upper bound of the matched A-policy practice safety references (one
+    per practice episode, 1200 sim-s each, charged to the arm's practice cost in v2v_train);
+    a practice-ON runtime's v2v_train allocation must cover the base phase cost plus this."""
+    from .practice_starts import CHARGED_SIM_S, practice_count
+    return len(tuple(arms))*int(updates)*practice_count(24, float(fraction))*CHARGED_SIM_S
+PRACTICE_RULE = ('owner 2026-11-04 proposal: a fraction of each B/R update PPO episodes start from '
+                 'the arm\'s own admitted within-seed cooperative bank examples (same snapshot and '
+                 'CRN seed as the example, current policy from t0, normal horizon/reward/charge); '
+                 'R falls back to its other admitted examples when it has fewer cooperative ones '
+                 '(same count as B); empty bank -> normal starts; A unchanged; default OFF is '
+                 'byte-identical and OFF is the launch default')
 DIAGNOSTIC_SCHEDULE = dict(A=dict(lessons=[], isolated=[]),
     B=dict(lessons=[6, 12, 18, 24], isolated=[6, 12, 18, 24]),
     R=dict(lessons=[], isolated=[12, 24]))
 V2V_PHASES = dict(v2v_train=2073600, v2v_interim=345600, v2v_final=345600,
     v2v_lessons=21840, v2v_isolated=185200)
 # Minimum executable coverage, not a replacement for qualification's full inventory.
+# Fix round 2 (d): the practice runtime executes practice_starts, accel_runner and accel_plant
+# (the practice/reference waves and their episode machinery) - they are hashed sources too.
 REQUIRED_SOURCES = tuple('tools/coopmwm/' + name + '.py' for name in (
     'v2v_launch3', 'v2v_live', 'v2v_runner', 'v2v_runtime', 'v2v_model',
     'v2v_obs', 'v2v_integrate', 'bank_v2v', 'bank_imitation', 'bank_statistics',
-    'accel_storage', 'accel_protocol', 'storage'))
+    'accel_storage', 'accel_protocol', 'storage', 'practice_starts', 'accel_runner',
+    'accel_plant'))
 
 
 class Refused(ValueError):
@@ -304,18 +328,47 @@ def intent_bank_term_for(cfg, arm):
     return have
 
 
+def practice_options_for(cfg, arm):
+    """Registered practice_starts options of arm B or R (owner 2026-11-04 proposal).
+
+    Unlike the pinned BANK_OPTIONS entries, practice_starts is a runtime TOGGLE: bind_runtime
+    accepts the OFF default and the registered ON values, always identical for B and R (an
+    optional cfg['practice_starts_by_arm'] mapping is accepted only when B == R == the values).
+    Only arms B and R may carry the keys; A-v2v is unchanged."""
+    starts = cfg.get('practice_starts', False)
+    fraction = cfg.get('practice_fraction', BANK_OPTIONS['practice_fraction'])
+    cap = cfg.get('practice_repeat_cap', BANK_OPTIONS['practice_repeat_cap'])
+    values = dict(practice_starts=starts, practice_fraction=fraction, practice_repeat_cap=cap)
+    if not isinstance(starts, bool):
+        raise Refused('practice_starts must be a bool, not ' + repr(starts))
+    if not isinstance(fraction, float) or not math.isfinite(fraction) or fraction not in PRACTICE_FRACTIONS:
+        raise Refused('registered practice_fraction required: ' + repr(fraction))
+    if type(cap) is not int or cap not in PRACTICE_REPEAT_CAPS:
+        raise Refused('registered practice_repeat_cap required: ' + repr(cap))
+    by_arm = cfg.get('practice_starts_by_arm')
+    if by_arm is not None:
+        if (not isinstance(by_arm, dict) or set(by_arm) != {'B', 'R'}
+                or by_arm['B'] != values or by_arm['R'] != values):
+            raise Refused('practice_starts options must be identical for B and R: ' + repr(by_arm))
+    if arm not in ('B', 'R'):
+        raise Refused('only arms B and R have practice starts (A-v2v is unchanged)')
+    return values
+
+
 def bind_runtime(value, *, root, source_root):
     """Validate deployed values, not newly manufactured desired arm configs."""
     cfg = value.get('config')
     if not isinstance(cfg, dict):
         raise Refused('V2V_RUNTIME config object required')
-    for key, want in dict(INTENT_OPTIONS, **BANK_OPTIONS).items():
+    for key, want in dict(INTENT_OPTIONS, **{k: v for k, v in BANK_OPTIONS.items()
+                                             if k not in PRACTICE_KEYS}).items():
         have = cfg.get(key)
         if have != want or isinstance(have, bool) != isinstance(want, bool):
             raise Refused('runtime option ' + key + ' differs: ' + repr(have))
     imitation_filter_for(cfg, 'B'), imitation_filter_for(cfg, 'R')   # refuses B != R
     imitation_step_mode_for(cfg, 'B'), imitation_step_mode_for(cfg, 'R')   # refuses B != R
     intent_bank_term_for(cfg, 'B'), intent_bank_term_for(cfg, 'R')   # refuses B != R
+    practice_options_for(cfg, 'B'), practice_options_for(cfg, 'R')   # B == R; OFF or registered ON
     if 'v2v_intent_weight' in cfg:
         raise Refused('obsolete runtime v2v_intent_weight is not an intent loss binding')
     passes = cfg.get('imitation_epochs')

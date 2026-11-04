@@ -76,16 +76,20 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
 
 def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sha256,
                    imitation_bank_filter='cooperative_only', imitation_step_mode=None,
-                   v2v_intent_bank_term=True):
+                   v2v_intent_bank_term=True, practice_starts=False,
+                   practice_fraction=None, practice_repeat_cap=None, budget_transfer=None):
     """Audit I4: the registered producer of the intent-ON A/B/R runtime config (prospective
     binding only, like prepare). Identical for every arm: v2v_dim=48 (K4 x (6+5+1)),
     v2v_intent=True, horizon 5, loss weight 1.0, detach_trunk=True; bank labels
     bank_imitation='separate_full_pass', imitation_kl_cap=.045, bank_statistics='per_seed_v1'
-    (B and R; A has no bank) and imitation_bank_filter='cooperative_only' (B and R).
-    c4/imit-strength (prepared): imitation_step_mode='fixed' (byte-identical; 'kl_targeted' only
-    at a registered update boundary, B and R together) and v2v_intent_bank_term=True (the bank
-    intent term trains; False drops it). Exactly the keys v2v_launch3.bind_runtime pins."""
-    from .v2v_launch3 import BANK_OPTIONS, INTENT_OPTIONS
+    (B and R; A has no bank), imitation_bank_filter='cooperative_only' (B and R), the
+    c4/imit-strength keys imitation_step_mode='fixed' (byte-identical; 'kl_targeted' only at a
+    registered update boundary, B and R together) and v2v_intent_bank_term=True (the bank intent
+    term trains; False drops it), and the practice_starts options (owner 2026-11-04 proposal;
+    DEFAULT OFF = the launch default; ON is a B/R-equal registered runtime toggle enableable at
+    an update boundary). Exactly the keys v2v_launch3.bind_runtime pins (practice keys are
+    validated, never pinned, so ON passes)."""
+    from .v2v_launch3 import BANK_OPTIONS, INTENT_OPTIONS, PRACTICE_KEYS, practice_options_for
     cfg = prepare(base, root=root, legacy_root=legacy_root, source_root=source_root,
                   common_checkpoint_sha256=common_checkpoint_sha256,
                   v2v_dim=int(INTENT_OPTIONS['v2v_dim']), v2v_intent=True,
@@ -100,12 +104,64 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
     cfg['imitation_step_mode'] = (BANK_OPTIONS['imitation_step_mode'] if imitation_step_mode is None
                                   else imitation_step_mode)
     cfg['v2v_intent_bank_term'] = bool(v2v_intent_bank_term)
+    # owner 2026-11-04 proposal: registered practice_starts options, identical for B and R.
+    cfg['practice_starts'] = bool(practice_starts)
+    cfg['practice_fraction'] = (BANK_OPTIONS['practice_fraction'] if practice_fraction is None
+                                else float(practice_fraction))
+    cfg['practice_repeat_cap'] = (BANK_OPTIONS['practice_repeat_cap'] if practice_repeat_cap is None
+                                  else int(practice_repeat_cap))
+    if cfg['practice_starts']:
+        # Each practice episode also gets ONE matched A-policy safety reference from the same
+        # snapshot and CRN seed, charged to the arm's practice cost (v2v_live.safety): the
+        # runtime's shared v2v_train allocation covers the registered full-run upper bound.
+        from .v2v_launch3 import V2V_PHASES, practice_reference_quote
+        budget = dict(cfg.get('budget') or {})
+        phases = dict(budget.get('phases') or {})
+        target = V2V_PHASES['v2v_train'] + practice_reference_quote(cfg['practice_fraction'])
+        increase = target - int(phases.get('v2v_train', 0))
+        phases['v2v_train'] = target
+        if budget_transfer is not None:
+            budget = apply_transfer(budget, phases, budget_transfer, increase)
+        elif 'total' in budget and sum(phases.values()) > budget['total']:
+            raise ValueError('practice_starts needs a registered budget_transfer into v2v_train: '
+                             'the phase allocations would exceed the registered total')
+        cfg['budget'] = dict(budget, phases=phases)
     if cfg['imitation_epochs'] < 5:
         raise ValueError('full-pass separate imitation requires at least five epochs')
-    for key, want in dict(INTENT_OPTIONS, **BANK_OPTIONS).items():
+    for key, want in dict(INTENT_OPTIONS, **{k: v for k, v in BANK_OPTIONS.items()
+                                             if k not in PRACTICE_KEYS}).items():
         if cfg.get(key) != want or isinstance(cfg.get(key), bool) != isinstance(want, bool):
             raise ValueError(f'intent runtime key {key} differs from the launcher: {cfg.get(key)!r}')
+    practice_options_for(cfg, 'B'), practice_options_for(cfg, 'R')
     return cfg
+
+
+NON_DONOR_PHASES = ('superseded', 'v2v_train')   # 'superseded' = SUPERSEDED_CHARGE, consumed off-ledger
+
+
+def apply_transfer(budget, phases, transfer, increase):
+    """A MAIN-registered phase transfer that funds a raised v2v_train allocation: exactly
+    ``increase`` sim-s move from ``transfer['source']`` (a real ledger phase with that much
+    allocation) into v2v_train; the registered total is unchanged and the phase sum never
+    exceeds it. 'superseded' is never a donor (its allocation is the off-ledger SUPERSEDED_CHARGE
+    that accel_storage.charged() already counts as spent). Mutates ``phases``; returns budget
+    with the transfer recorded."""
+    source, amount = transfer.get('source'), transfer.get('amount')
+    amendment = transfer.get('amendment_sha256')
+    if source in NON_DONOR_PHASES or source not in phases:
+        raise ValueError('unregistered budget transfer source: '+repr(source))
+    if type(amount) is not int or amount != increase or amount <= 0:
+        raise ValueError('budget transfer must equal the registered increase exactly: '+repr(amount))
+    if not isinstance(amendment, str) or len(amendment) != 64:
+        raise ValueError('budget transfer needs its registered amendment SHA256')
+    if phases[source] < amount:
+        raise ValueError('budget transfer source allocation too small: '+source)
+    phases[source] -= amount
+    if 'total' in budget and sum(phases.values()) > budget['total']:
+        raise ValueError('phase allocations exceed the registered total after the transfer')
+    record = dict(source=source, target='v2v_train', amount=amount, amendment_sha256=amendment,
+                  rule='practice_starts matched A references; total unchanged')
+    return dict(budget, transfers=list(budget.get('transfers') or ()) + [record])
 
 
 def admit(cfg, release, hooks):
@@ -177,6 +233,58 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
     not_before=cfg.get('next_not_before_s',{}).get(arm)
     last_start = [None if not_before is None else not_before-cfg['pace_s']]
 
+    def practice_wave(r, b, policies, ws, ident, phase, extra, u, deterministic, role):
+        """practice_starts scheduling (owner 2026-11-04 proposal, B/R only): the registered
+        fraction of the update's PPO episodes are snapshot-restart episodes built by
+        practice_starts.wave_call and dispatched as ONE batch wave through the SAME original_wave
+        path (reserve, admission, episode, failure replacement) — one failure therefore counts
+        against the WHOLE practice batch exactly as for the normal wave (never a 1-job wave,
+        which would trip the >20% escalation on its first failure); the remaining episodes keep
+        the registered batch_worlds(u) order (the last practice-count worlds of the list are
+        replaced). R's plan count is B's REALISED practice count of the same update (B_UPDATE
+        receipt), never the requested count: fix round 2, R WAITS for that receipt exactly like
+        the fairness wait instead of crashing while it is absent. Matched A-policy safety
+        references for the practice episodes are scheduled by v2v_live.safety from the same
+        snapshots (charged to the arm's practice cost). Fix round 2: the update's normal worlds
+        travel into the practice wave's replacement ``used`` set, so a failed practice episode's
+        fresh replacement never duplicates a world the update's normal wave already ran."""
+        from . import practice_starts
+        from .warm_protocol import SEED
+        ns_ident = cfg['job_namespace']+'_'+ident
+        phase_name = cfg['phase_map'].get(phase, phase)
+        if arm == 'R':
+            # B/R symmetry: realised, not requested. WAIT for B's sealed update receipt (same
+            # pattern as the R fairness wait) instead of failing on its absence.
+            receipt = root/f'B_UPDATE_{u:03}.json'
+            while not receipt.exists():
+                wr.assert_running(root, arm)
+                if clock() > cfg['gpu_deadline']:
+                    raise ValueError('registered resource deadline')
+                sleep(10)
+            want = practice_starts.realised_count(root, 'B', u)   # B/R symmetry: realised, not requested
+        else:
+            want = practice_starts.practice_count(len(ws), cfg['practice_fraction'])
+        plan = practice_starts.plan_for_update(root, arm, u, fraction=cfg['practice_fraction'],
+            repeat_cap=cfg['practice_repeat_cap'], count=want, training_seed=SEED)
+        rows = plan['rows']
+        results = (original_wave(r, b, policies, ws[:len(ws)-len(rows)], role, ns_ident, phase_name,
+                                 deterministic, extra) if len(rows) < len(ws) else [])
+        if rows:
+            # Fix round 2 (c): the practice wave's failure replacements must not duplicate any
+            # of the update's normal worlds (TRAIN worlds repeat, and the practice snapshot
+            # worlds can collide with them) - every world the normal wave closed is 'used'.
+            normal_seeds = {e['world']['seed'] for e in results}
+            calls = [practice_starts.wave_call(root, arm, ns_ident, phase_name, row, i, extra)
+                     for i, row in enumerate(rows)]
+            results.extend(original_wave(r, b, policies, [c['worlds'][0] for c in calls], role,
+                                         ns_ident+'_practice', phase_name, deterministic,
+                                         dict(extra, practice_batch=[
+                                             dict(practice=c['extras']['practice'],
+                                                  branch=c['extras']['branch']) for c in calls]),
+                                         used_seeds=normal_seeds))
+        return sorted((practice_starts.strip_steps(e) if e.get('practice') else e for e in results),
+                      key=lambda e: (e['world']['seed'], e['arm']))
+
     def wave(r, b, policies, ws, role, ident, phase, deterministic=True, extras=None):
         extra = dict(extras or {}, v2v=True, v2v_dim=cfg['v2v_dim'])
         if role == 'train':
@@ -189,6 +297,9 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
                     wr.assert_running(root, arm);sleep(10)
             last_start[0] = clock()
             extra['b_replay'] = arm in ('B', 'R')  # A remains plain PPO, no bank capture
+            from . import practice_starts
+            if practice_starts.enabled(cfg, arm):  # owner 2026-11-04 proposal (default OFF)
+                return practice_wave(r, b, policies, ws, ident, phase, extra, u, deterministic, role)
         return original_wave(r, b, policies, ws, role, cfg['job_namespace']+'_'+ident,
                              cfg['phase_map'].get(phase,phase), deterministic, extra)
 
