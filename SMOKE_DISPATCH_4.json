@@ -1,0 +1,23 @@
+{
+  "schema": "coopmwm.clean1.qualification_dispatch.v1",
+  "action": "resume frozen full-bank all8 slate, adopt all completed evidence, then mandatory smoke",
+  "host": "cpuV",
+  "root": "/home/ubuntu/coopmwm20261105_clean1",
+  "source_root": "/home/ubuntu/coopmwm20261105_clean1_src_4e919576",
+  "runtime_commit": "4e919576eb96f8c3e7b3a9ea453760fb4bd29498",
+  "config_sha256": "ec7c19e7228313dbc8d81601bf0a8a24ee67f3031e196f63b27c7614db77ac0c",
+  "pid": 112568,
+  "start_ticks": "2444661",
+  "unix": 1793834598.100503,
+  "resume_receipt_sha256": "2f6aaa128b3ad70e12c4f5c5a8c4ab4dfd8a2bbd81eb70a77acc8b5aa334975d",
+  "fixed_slate_per_arm": 4,
+  "measured_B_prefix_preserved": 2,
+  "augmentation_total_upper_bound_sim_s": 110400,
+  "unchanged_augmentation_allocation_sim_s": 143280,
+  "unchanged_complete_allocation_including_parity_sim_s": 4357400,
+  "linux_tests": "317 passed, zero skipped/failed, 15.05s",
+  "source_parent_banks": {"B": "7bad9c634c6ea51a6e3d04b8aed1b5103b30b50b5e09217babd05f5923544396", "R": "8af2f00515d1437859c0a311a78ca68766f2c711458fd1ba7a535a1ee52c0e83"},
+  "frozen_slate_seals": {"B": "e21ad09bbfd366f60015ab21313cd36d0691af0f036ac20630f8ed38915e0482", "R": "c1035416a6ad52420c7e4e933264a1aaddb43b86c80a1e484257fefafe061e51"},
+  "training_launched": false,
+  "adoption_rule": "Inspect this exact PID/start identity and current root ledger/claim/log. Never duplicate this dispatch."
+}
