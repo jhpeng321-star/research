@@ -16,10 +16,10 @@ rsync+sha them to cpuS. The dry preflight refuses unless OWNER_APPROVAL.json bin
 request SHA, the owner quote SHA and the verdict file SHA, and every manifest file SHA matches
 the staged copies. Effective-imitation is pinned to f35b193a.
 
-Track 2 / T2C, essentials-first amendment: A stays plain MAPPO PPO; B/R use the frozen
-MAPPO cooperation layer, trigger head, group credit, observable merge features and their
-own banks. Dense WM/random teaching, augmentation, practice weighting and coop_reward
-are later config slots, OFF in this launch profile. The proposed evaluation is the
+Track 2 / T2C is explicitly opt-in (track2=True). A stays plain MAPPO PPO; B/R use the frozen
+MAPPO cooperation layer, trigger head, group credit, observable merge features, dense
+WM/random teaching, augmentation and practice weighting from their own banks. coop_reward
+stays OFF. The proposed evaluation is the
 replicated isolated cooperation test at
 u6/u12/u18/u24: N replicates per arm per update in paired worlds (same world seed across
 arms by replicate index), bootstrap CIs on the paired B-vs-A differences, and a
@@ -63,13 +63,28 @@ TRACK_SLOTS = dict(
                       verification_phase='group_credit_verify'),
     merge_features=dict(enabled=True, arms=['B', 'R'], module='tools.coopmwm.merge_features',
                         inputs='own sensing + timestamped t-1 V2V reports; missingness flags'),
-    dense_teacher=dict(enabled=False, arms=['B', 'R'], module='tools.coopmwm.dense_teacher',
-                       verify_fraction=None, verified_through='all8',
+     dense_teacher=dict(enabled=True, arms=['B', 'R'], module='tools.coopmwm.dense_teacher',
+                        verify_fraction=.1, verified_through='all8', candidates=8,
                        distribution='same move candidates and proposal distribution for B/R'),
-    plan_augment=dict(enabled=False, arms=['B', 'R'], module='tools.coopmwm.plan_augment',
+     plan_augment=dict(enabled=True, arms=['B', 'R'], module='tools.coopmwm.plan_augment',
+                       verify_fraction=.1, examples_per_update=24,
                       same_procedure=True, source='each arm own bank; moves/variety registered ranges'),
-    practice_weighting=dict(enabled=False, arms=['B', 'R'], same_procedure=True,
-                            fraction=None, sources=['own_bank', 'own_augmented_states']))
+     practice_weighting=dict(enabled=True, arms=['B', 'R'], same_procedure=True,
+                             fraction=.5, sources=['own_bank', 'own_augmented_states']))
+# Proposed component-level registrations; approval binds these exact values and costs.
+# Verification uses whole all8/isolated checks, never fractions of a truncated window.
+TRACK_SLOTS['group_credit'].update(verify_fraction=.1)
+EARLY_PROBES = dict(updates=[2, 4], states=3, arms=['A', 'B', 'R'],
+                    sim_s_per_arm=3*ISOLATED_SIM_S_MEASURED)
+LEARNING_MONITOR = dict(trigger_saturation=[0., 1.], history_updates=3,
+                        accuracy_tolerance=1e-6, layer_kl_near_zero=1e-8,
+                        action='DIAGNOSE; pause only for safety')
+SMOKE = dict(updates=1, episodes_per_arm=2, episode_sim_s=1200,
+             training_sim_s=6*1200, practice_reference_sim_s=2*1200,
+             augmented_examples_per_arm=2,
+             verification_sim_s=18*GATE_SIM_S, isolated_dry_run_sim_s=0)
+SMOKE['total_sim_s'] = sum(SMOKE[k] for k in
+    ('training_sim_s', 'practice_reference_sim_s', 'verification_sim_s', 'isolated_dry_run_sim_s'))
 ISOLATED_REPLICATES = 8               # N replicates per arm per isolated-test update
 ISOLATED_BOOTSTRAP_REPS = 10000
 ISOLATED_BOOTSTRAP_LEVEL = 0.95
@@ -100,7 +115,7 @@ CRITERION = dict(
                'are reported, never gated.'),
     safety_counters=list(ISOLATED_TEST['safety_counters']), safety_tolerance=0,
     r_arm=dict(kind='random_bank', gated=False,
-               rule='R uses its own random bank (same move distribution); dense teacher OFF; '
+                rule='R uses its own random bank (same move distribution); random dense teacher; '
                     'reported, never gated'),
     registered='proposed T2C registration; effective only after SHA-bound OWNER_APPROVAL.json')
 COOP_REWARD = dict(enabled=False, module='tools.coopmwm.coop_reward', weight=0.0,
@@ -130,16 +145,24 @@ def quote():
     test numbers. A trains plain PPO (no bank, no practice, no head); B and R each add 6
     matched A-policy practice reference episodes per update."""
     a_train = UPDATES*EPISODES_PER_UPDATE*EPISODE_SIM_S
-    br_train = 2*UPDATES*(EPISODES_PER_UPDATE+PRACTICE_REFS_PER_UPDATE)*EPISODE_SIM_S
+    practice_refs = math.ceil(EPISODES_PER_UPDATE*TRACK_SLOTS['practice_weighting']['fraction'])
+    br_train = 2*UPDATES*(EPISODES_PER_UPDATE+practice_refs)*EPISODE_SIM_S
     lessons = len(SCHEDULE['B']['lessons'])*LESSON_SIM_S_MEASURED
-    teacher_verify = 0               # deferred dense teacher is never silently charged
+    decisions = 2*UPDATES*EPISODES_PER_UPDATE*(EPISODE_SIM_S//60)
+    teacher_verify = math.ceil(decisions*TRACK_SLOTS['dense_teacher']['verify_fraction'])*GATE_SIM_S
+    augment_verify = 2*UPDATES*math.ceil(TRACK_SLOTS['plan_augment']['examples_per_update']*
+                               TRACK_SLOTS['plan_augment']['verify_fraction'])*GATE_SIM_S
+    credit_verify = math.ceil(decisions*TRACK_SLOTS['group_credit']['verify_fraction'])*GATE_SIM_S
+    probes = len(EARLY_PROBES['updates'])*len(EARLY_PROBES['arms'])*EARLY_PROBES['sim_s_per_arm']
     cells = len(ISOLATED_TEST['arms'])*len(ISOLATED_TEST['updates'])
     isolated = cells*ISOLATED_TEST['replicates']*ISOLATED_SIM_S_MEASURED
     test_per_arm = TEST_EPISODES*EPISODE_SIM_S
     out = dict(a_train_sim_s=a_train, b_train_sim_s=br_train//2, r_train_sim_s=br_train//2,
                v2v_train=a_train+br_train, v2v_lessons=lessons,
                teacher_verify_sim_s=teacher_verify,
-               group_credit_verify_sim_s=GROUP_CREDIT_VERIFY_SIM_S,
+                group_credit_verify_sim_s=credit_verify,
+                augment_verify_sim_s=augment_verify, early_probes_sim_s=probes,
+                smoke_sim_s=SMOKE['total_sim_s'], verification_decisions=decisions,
                isolated_replicated_sim_s=isolated,
                isolated_replicated=dict(arms=list(ISOLATED_TEST['arms']),
                                         updates=list(ISOLATED_TEST['updates']),
@@ -151,10 +174,13 @@ def quote():
                interim_u8=dict(per_arm=test_per_arm, arms=3, updates=8, episodes_per_arm=TEST_EPISODES),
                final_u24=dict(per_arm=test_per_arm, arms=3, updates=24, episodes_per_arm=TEST_EPISODES))
     out['total_without_tests'] = (a_train+br_train+lessons+teacher_verify+isolated+GATE_SIM_S
-                                  + GROUP_CREDIT_VERIFY_SIM_S)
+                                  + credit_verify + augment_verify + probes + SMOKE['total_sim_s'])
     out['cost_basis'] = dict(isolated='measured per-replicate estimate; actual specs must fit phase',
                              group_credit='gate-sized verification allowance; hard phase ceiling',
-                             dense_teacher='deferred/off', wm_compute='CPU only; no extra SUMO')
+                              dense_teacher='ceil(registered fraction * decision count) whole all8 checks',
+                              augmentation='ceil(fraction * proposed examples) whole all8 checks',
+                              early_probes='two updates x three arms x three full-window state checks (conservative ceiling)',
+                              wm_compute='CPU only; no extra SUMO')
     out['total'] = out['total_without_tests']+out['interim_u8_sim_s']+out['final_u24_sim_s']
     return out
 
@@ -166,7 +192,9 @@ def budget():
     v2v_isolated plan of the original rerun)."""
     q = quote()
     phases = dict(v2v_train=q['v2v_train'], v2v_lessons=21840, teacher_verify=q['teacher_verify_sim_s'],
-                  group_credit_verify=q['group_credit_verify_sim_s'],
+                   group_credit_verify=q['group_credit_verify_sim_s'],
+                   augment_verify=q['augment_verify_sim_s'], early_probes=q['early_probes_sim_s'],
+                   track2_smoke=q['smoke_sim_s'],
                   isolated_replicated=q['isolated_replicated_sim_s'],
                   gate_bank_verification_ext=GATE_SIM_S, v2v_interim=q['interim_u8_sim_s'],
                   v2v_final=q['final_u24_sim_s'])
@@ -190,10 +218,14 @@ def wall_clock(pace_s=1800, measured_update_wall_s=1800, diagnostic_extra_s=900,
     b = UPDATES*per_update+len(SCHEDULE['B']['isolated'])*diagnostic_extra_s
     r = b+per_update
     tests = 2*3*TEST_EPISODES*test_episode_wall_s/test_workers      # u8 + u24, three arms
-    isolated_s = quote()['isolated_replicated_sim_s']/20
+    q = quote()
+    isolated_s = q['isolated_replicated_sim_s']/20
+    verification_s = (q['teacher_verify_sim_s']+q['group_credit_verify_sim_s']+
+                      q['augment_verify_sim_s']+q['early_probes_sim_s']+q['smoke_sim_s'])/20
     return dict(estimate_only=True, target=deepcopy(CPU),
                 per_update_s=per_update, A_s=UPDATES*per_update, B_s=b, R_s=r, tests_s=tests,
-                isolated_s=isolated_s, total_h=round((r+isolated_s+tests)/3600, 1))
+                isolated_s=isolated_s, verification_s=verification_s,
+                total_h=round((r+isolated_s+verification_s+tests)/3600, 1))
 
 
 # ---------------------------------------------------------------- own single ledger
@@ -281,8 +313,8 @@ def charge(root, jobs, phase, *, budget):
 
 def head_teacher_config():
     """Prospective sibling bindings. Do not invent HEAD_ACTIONS/TEACHER_KINDS APIs:
-    action buckets and teacher constructors belong to T2A/T2B. Dense teaching is deferred
-    in this launch profile, with the B/R roles retained for a later registration."""
+    action buckets and teacher constructors belong to T2A/T2B. B uses WM labels and R
+    uses random labels over the same proposals, both with registered verification."""
     head = dict(enabled=True, module='tools.coopmwm.trigger_policy', arms=list(TRIGGER_ARMS), v2v_dim=48,
                 moves_module='tools.coopmwm.moves', families_source='moves.FAMILIES',
                 candidates_api='moves.candidates(obs_state, rng, n)',
@@ -294,11 +326,12 @@ def head_teacher_config():
                 update='PPO update for the discrete head only')
     teachers = dict(
         A=None,
-        B=dict(enabled=False, module='tools.coopmwm.dense_teacher', kind='wm_dense',
+        B=dict(enabled=True, module='tools.coopmwm.dense_teacher', kind='wm_dense',
                mode='DAgger: the WM planner (T1B scoring, imported) labels the best move per '
                     'state at decision points; cross-entropy imitation for the T2A head',
-               verify_fraction=None, verified_through='all8'),
-        R=dict(enabled=False, module='tools.coopmwm.dense_teacher', kind='random',
+                verify_fraction=TRACK_SLOTS['dense_teacher']['verify_fraction'], verified_through='all8'),
+        R=dict(enabled=True, module='tools.coopmwm.dense_teacher', kind='random',
+               verify_fraction=TRACK_SLOTS['dense_teacher']['verify_fraction'], verified_through='all8',
                distribution='same move distribution as the WM teacher proposals (fairness)'))
     return head, teachers
 
@@ -326,9 +359,10 @@ def track2_components(cfg, arm, *, adapters):
     check_pins(cfg)
     if arm not in cfg['active_arms']:
         raise ValueError('REFUSED: unknown Track 2 arm')
-    if arm == 'A':
+    if arm == 'A' or not cfg.get('track2'):
         return {}
-    names = ['merge_features', 'trigger_head', 'coop_layer', 'group_credit']
+    names = ['merge_features', 'trigger_head', 'coop_layer', 'group_credit',
+             'dense_teacher', 'plan_augment', 'practice_weighting']
     missing = [n for n in names if not callable(adapters.get(n))]
     if missing:
         raise ValueError('REFUSED: Track 2 adapters missing: '+', '.join(missing))
@@ -355,7 +389,7 @@ def episode_options(cfg, arm):
     check_pins(cfg)
     if arm not in cfg['active_arms']:
         raise ValueError('REFUSED: unknown Track 2 arm')
-    if arm == 'A':
+    if arm == 'A' or not cfg.get('track2'):
         return {}                     # plain MAPPO's existing extras stay byte-identical
     keys = ('trigger_head', 'coop_layer', 'group_credit', 'merge_features',
             'dense_teacher', 'plan_augment', 'practice_weighting', 'coop_reward')
@@ -363,7 +397,7 @@ def episode_options(cfg, arm):
                 track2_teacher=deepcopy(cfg['teacher'][arm]))
 
 
-def runtime_config(base, *, root, reference_root, source_root, common_checkpoint_sha256):
+def runtime_config(base, *, root, reference_root, source_root, common_checkpoint_sha256, track2=False):
     """Registered producer of the standalone runtime: v2v_runner.prepare_intent with every B/R
     fix pinned from u0 (kl_targeted, practice_starts 0.25/cap 2, imitation_target_space
     'effective'), the 24-update cap, and the standalone bindings: accounting_root = run_root =
@@ -374,6 +408,10 @@ def runtime_config(base, *, root, reference_root, source_root, common_checkpoint
     Diagnostic scheduling supersedes the v2v_runner default. The 1200 s episode horizon,
     intent horizon and caller's planner/search horizons are preserved (no speedup by truncation).
     This config requires qualified Track 2 adapters before any live run."""
+    if not track2:
+        from .rerun_cpus_compat import runtime_config as legacy_config
+        return legacy_config(base, root=root, reference_root=reference_root,
+                             source_root=source_root, common_checkpoint_sha256=common_checkpoint_sha256)
     from . import v2v_runner
     root, reference_root, source_root = (v2v_runner.remote_name(p) for p in
                                          (root, reference_root, source_root))
@@ -399,7 +437,10 @@ def runtime_config(base, *, root, reference_root, source_root, common_checkpoint
                isolated_test=deepcopy(ISOLATED_TEST),
                criterion_sha256=criterion_document()['criterion_sha256'],
                diagnostic_schedule=deepcopy(SCHEDULE), # replicated isolated test, all arms
-               diagnostic_phases=dict(lessons='v2v_lessons', isolated='isolated_replicated'),
+                diagnostic_phases=dict(lessons='v2v_lessons', isolated='isolated_replicated',
+                                       probes='early_probes'),
+                early_probes=deepcopy(EARLY_PROBES), learning_monitor=deepcopy(LEARNING_MONITOR),
+                smoke=deepcopy(SMOKE), track2=True,
                single_ledger=dict(root=root, charges='CHARGES.jsonl', lock='ACCOUNTING.claim',
                                   authority='AUTHORITY.md', foreign_refused=True),
                budget=budget(),
@@ -407,7 +448,7 @@ def runtime_config(base, *, root, reference_root, source_root, common_checkpoint
                                'same-world A references from THIS root; no remote A reads'))
     cfg.update(deepcopy(TRACK_SLOTS))
     cfg.update(target_host='cpuS', device='cpu', cpu=deepcopy(CPU), workers=CPU['workers'],
-               job_namespace='t2c', launch_profile='track2_essentials_first',
+                job_namespace='t2c', launch_profile='track2_clean_run',
                integration_required=True, additional_cap_ceiling_sim_s=budget()['total'],
                total_cap_ceiling_sim_s=budget()['total'])
     check_pins(cfg)
@@ -418,6 +459,9 @@ def check_pins(cfg):
     """Pins for all three arms (identical code; A differs only by having no head/teacher, bank
     or practice) plus the standalone single-ledger and same-root A bindings and the Track-2
     trigger-head/teacher/isolated-test/coop_reward-slot registrations."""
+    if not cfg.get('track2'):
+        from .rerun_cpus_compat import check_pins as legacy_check
+        return legacy_check(cfg)
     bad = {k: cfg.get(k) for k, v in PINS.items() if cfg.get(k) != v}
     if bad:
         raise ValueError('rerun-cpus pin mismatch: '+json.dumps(bad, sort_keys=True))
@@ -444,11 +488,11 @@ def check_pins(cfg):
     if (cfg.get('cpu') != CPU or cfg.get('target_host') != 'cpuS'
             or cfg.get('workers') != CPU['workers'] or cfg.get('device') != 'cpu'):
         raise ValueError('REFUSED: cpuS CPU-only shared 40-worker registration differs')
-    if cfg.get('launch_profile') != 'track2_essentials_first':
-        raise ValueError('REFUSED: essentials-first profile required')
+    if cfg.get('launch_profile') != 'track2_clean_run':
+        raise ValueError('REFUSED: clean-run profile required')
     for key, slot in TRACK_SLOTS.items():
         if cfg.get(key) != slot:
-            raise ValueError('REFUSED: essentials-first slot differs: '+key)
+            raise ValueError('REFUSED: clean-run slot differs: '+key)
     head = cfg.get('trigger_head') or {}
     if tuple(head.get('arms', ())) != TRIGGER_ARMS or head.get('enabled') is not True:
         raise ValueError('REFUSED: the trigger head applies to B and R only; A stays plain MAPPO PPO')
@@ -459,14 +503,18 @@ def check_pins(cfg):
     if (teachers.get('A') is not None or teachers.get('B', {}).get('kind') != 'wm_dense'
             or teachers.get('R', {}).get('kind') != 'random'):
         raise ValueError('REFUSED: teachers must be A=none, B=wm_dense (WM DAgger), R=random')
-    if teachers.get('B', {}).get('verify_fraction') is not None \
+    if teachers.get('B', {}).get('verify_fraction') != TRACK_SLOTS['dense_teacher']['verify_fraction'] \
             or teachers.get('B', {}).get('verified_through') != 'all8':
-        raise ValueError('REFUSED: deferred B dense teacher retains the all8 machinery slot')
+        raise ValueError('REFUSED: B dense teacher requires registered all8 machinery fraction')
     if not teachers.get('R', {}).get('distribution'):
         raise ValueError('REFUSED: R random teacher must reuse the SAME move distribution '
                          '(fairness)')
     if head != head_teacher_config()[0] or teachers != head_teacher_config()[1]:
-        raise ValueError('REFUSED: trigger/teacher slots differ; dense teachers stay OFF')
+        raise ValueError('REFUSED: trigger/teacher slots differ from clean-run registration')
+    for key, value in (('early_probes', EARLY_PROBES), ('learning_monitor', LEARNING_MONITOR),
+                       ('smoke', SMOKE)):
+        if cfg.get(key) != value:
+            raise ValueError('REFUSED: registration differs: '+key)
     if cfg.get('isolated_test') != ISOLATED_TEST:
         raise ValueError('REFUSED: replicated isolated-test registration differs from the '
                          'registered u6/12/18/24 N=%d paired-worlds spec' % ISOLATED_REPLICATES)
@@ -503,6 +551,7 @@ def guard_path(path):
 
 def sha(path):
     guard_path(path)
+    guard_path(Path(path).resolve())
     h = hashlib.sha256()
     with Path(path).open('rb') as f:
         for block in iter(lambda: f.read(1 << 20), b''):
@@ -513,8 +562,10 @@ def sha(path):
 class _ReadRecorder:
     """Records every file the REAL bank readers open under the staged roots (read-only)."""
 
-    def __init__(self, roots):
+    def __init__(self, roots, home=None):
         self.roots = [Path(r).resolve() for r in roots]
+        self.home = Path(home).resolve() if home is not None else None
+        self.discovered = set()
         self.paths = set()
         self._saved = []
 
@@ -529,10 +580,21 @@ class _ReadRecorder:
         return None
 
     def _record(self, path, mode=None):
+        if isinstance(path, int):
+            return path
+        guard_path(path)                         # lexical guard BEFORE resolution/open
+        resolved = Path(guard_path(Path(path).resolve()))
         mode = str(mode or 'r')
         if set(mode)-set('rb'):              # any write/create/append mode is never a read
             return path
         found = self._under(path)
+        if self.home is not None and self.home in resolved.parents:
+            found = resolved
+            target_root = self.home/resolved.relative_to(self.home).parts[0]
+            self.discovered.add(target_root)
+        elif self.home is not None and any(r == Path(path).absolute() or
+                r in Path(path).absolute().parents for r in self.roots):
+            raise ValueError('REFUSED: reader link target outside staging home: '+str(resolved))
         if found is not None:
             guard_path(found)
             self.paths.add(found)
@@ -571,10 +633,14 @@ class _ReadRecorder:
 def _local_of(remote_root):
     """The local mirror of a /home/ubuntu path: the mirror/stage directory is laid out like a
     filesystem root, so /home/ubuntu/<name> reads <mirror>/home/ubuntu/<name>."""
+    guard_path(remote_root)
     p = PurePosixPath(str(remote_root).replace('\\', '/'))
-    if not p.is_absolute() or p.parts[1:3] != ('home', 'ubuntu') or len(p.parts) < 4:
+    if not p.is_absolute() or p.parts[1:3] != ('home', 'ubuntu') or len(p.parts) < 4 or '..' in p.parts:
         raise ValueError('REFUSED: staged roots must live under '+HOME+': '+str(remote_root))
-    return _mirror[0].joinpath('home', 'ubuntu', *p.parts[3:])
+    local = _mirror[0].joinpath('home', 'ubuntu', *p.parts[3:])
+    guard_path(local)
+    guard_path(local.resolve())
+    return local
 
 
 def _rel(remote_root, resolved):
@@ -619,6 +685,8 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
             src_remote[arm].append(remote)
             src_local[remote] = _local_of(remote)
     watched = [root_local]+list(src_local.values())
+    staging_home = (_mirror[0]/'home'/'ubuntu').resolve()
+    discovered = set()
     entries, notes = {}, []
     recorded = set()
 
@@ -627,6 +695,10 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
         return resolved == base or base in resolved.parents
 
     def remote_of(resolved):
+        if staging_home in resolved.parents:
+            target = staging_home/resolved.relative_to(staging_home).parts[0]
+            discovered.add(target)
+            return '/home/ubuntu/'+target.name
         if under(root_local, resolved):
             return root_remote
         for remote, local in src_local.items():
@@ -635,11 +707,10 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
         raise ValueError('REFUSED: file outside the staged roots: '+str(resolved))
 
     def add(local_path, kind):
-        local_path = Path(local_path)
-        if local_path.is_symlink() or not local_path.is_file():
+        local_path = Path(guard_path(local_path))
+        resolved = Path(guard_path(local_path.resolve()))
+        if not local_path.is_file():
             return False
-        resolved = local_path.resolve()
-        guard_path(resolved)
         key = _rel(remote_of(resolved), resolved)
         if key in entries:
             return True
@@ -650,7 +721,7 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
     #    READ-ONLY: rb.temperature is invoked only when its sealed file already exists (the
     #    unfrozen rule is derived deterministically on cpuS from the same decisions; calling it
     #    with >=20 decisions would WRITE the file into this read-only mirror).
-    with _ReadRecorder(watched) as rec:
+    with _ReadRecorder(watched, staging_home) as rec:
         for arm in ('B', 'R'):
             srcs = tuple(src_local.get(p, Path(p)) for p in src_remote.get(arm, ()))
             decisions = rb.bank_decisions(root_local, arm, sources=srcs)
@@ -659,6 +730,7 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
             bank_statistics.confirmations_per_seed(rb.confirmations, rb, root_local, arm, srcs)
             practice_starts._links(root_local, arm)
         recorded = set(rec.paths)
+        discovered.update(rec.discovered)
 
     # 2) deterministic walk of the reader-defined bank layout (the run may read any receipt's
     #    branches and any snapshot at a later update; disclosed superset)
@@ -730,6 +802,7 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
     manifest = _seal(dict(schema='coopmwm.rerun_cpus.staging_manifest.v1', home=HOME,
         root=dict(remote=root_remote, local_mirror=str(root_local)),
         sources={arm: list(paths) for arm, paths in src_remote.items()},
+        allowed_staged_roots=sorted('/home/ubuntu/'+p.name for p in discovered),
         training_seed=training_seed, entries=dict(sorted(entries.items())),
         counts={k: sum(1 for e in entries.values() if e['kind'] == k)
                 for k in sorted({e['kind'] for e in entries.values()})},
@@ -798,6 +871,8 @@ def criterion_document():
                                 B='T2A trigger head + frozen cooperation layer + WM bank',
                                 R='T2A trigger head + frozen cooperation layer + own random bank'),
                       slots=deepcopy(TRACK_SLOTS), cpu=deepcopy(CPU),
+                      early_probes=deepcopy(EARLY_PROBES), learning_monitor=deepcopy(LEARNING_MONITOR),
+                      smoke=deepcopy(SMOKE),
                       trigger_head=head_teacher_config()[0], teacher=head_teacher_config()[1],
                       quote=quote()), 'criterion_sha256')
 
@@ -957,7 +1032,7 @@ def evaluate_isolated_test(records, *, registration):
     return dict(schema='coopmwm.rerun_cpus.isolated_eval.v1',
                 verdict='pass' if primary['pass'] else 'fail',
                 registered=CRITERION['pass_rule'],
-                r_arm='random-bank fairness control; dense teacher OFF; B-R reported, never gated',
+                r_arm='random-bank fairness control; random dense teacher; B-R reported, never gated',
                 primary=primary, safety=safety, per_update=per_update,
                 secondary_updates=list(CRITERION['secondary_updates']),
                 cells=len(index), replicates=reps, arms=arms,
