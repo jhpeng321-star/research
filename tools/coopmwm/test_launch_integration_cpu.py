@@ -330,3 +330,74 @@ def test_legacy_plan_overlay_and_t300_direct_sensing_produce_two_real_distinct_v
     oversized = dict(plan, members=['a','b','c','d','e','f'])
     assert augmentation.proposal_context(oversized, {300:frame}, 300) is None
     assert augmentation.proposal_context(plan, {301:dict(frame,time_s=301)}, 300) is None
+    before = {r['snapshot_path']:__import__('pathlib').Path(r['snapshot_path']).read_bytes() for r in result}
+    assert augmentation.proposals(cfg, arm) == result
+    assert all(__import__('pathlib').Path(path).read_bytes() == data for path,data in before.items())
+    snapshot['policy'] = dict(state_dict_sha256='changed-source')
+    __import__('torch').save(snapshot, result[0]['snapshot_path'])
+    with pytest.raises(ValueError, match='snapshot changed'):
+        augmentation.proposals(cfg, arm)
+
+
+def test_all8_charge_ids_distinguish_same_native_id_across_crns_and_windows(tmp_path):
+    from .augmentation_charges import job_id, receipt_ids
+    first = dict(t2c_artifact_root=str(tmp_path/'sumo_verification/branches'), snapshot_sha256='a'*64,
+        verification_id='same-native-proposal', branch='policy', window=dict(start_s=300,end_s=1200))
+    second = dict(first, t2c_artifact_root=str(tmp_path/'confirm_seed2_all8/branches'), snapshot_sha256='b'*64)
+    extended = dict(first, t2c_artifact_root=str(tmp_path/'confirm_extended_all8/branches'))
+    assert len({job_id(first), job_id(second), job_id(extended)}) == 3
+    receipt = dict(snapshot_sha256=first['snapshot_sha256'], window=first['window'],
+        verification_id=first['verification_id'], branches=[dict(branch='policy')])
+    path = tmp_path/'sumo_verification/verifications'/(first['verification_id']+'.json')
+    assert receipt_ids(path, receipt) == [job_id(first)]
+    assert job_id(dict(first,window=dict(start_s=300,end_s=900))) != job_id(first)
+
+
+def test_namespaced_augmented_receipt_requires_exact_directory_snapshot_and_amounts(tmp_path, per_seed_bank):
+    import json
+    from tools.coopmwm import practice_starts as ps, practice_weighting as actual_pw
+    from tools.coopmwm.augmentation_charges import receipt_ids
+    from .test_practice_weighting_cpu import augment
+    from .test_practice_starts_cpu import bank_with_snapshots
+    from .exact_grade import _seal
+    bank_with_snapshots(tmp_path, vids=('v0',))
+    row, manifest = augment(tmp_path)
+    path = tmp_path/'replay_bank/B/sumo_verification/verifications/aug1.json'
+    receipt = json.loads(path.read_text())
+    row['sumo_evidence'].update(charge_scheme='native_directory_v2',
+        receipt_sha256=receipt['receipt_sha256'], charge_ids=receipt_ids(path, receipt))
+    manifest['prelaunch']['ledger_root'] = str(tmp_path)
+    manifest = _seal(dict(manifest,rows=[row]), 'practice_augmented_sha256')
+    target = tmp_path/'replay_bank/B/PRACTICE_AUGMENTED.json'
+    target.write_text(json.dumps(manifest))
+    charges = [dict(id=i,phase=manifest['prelaunch']['phase'],sim_s=1200) for i in row['sumo_evidence']['charge_ids']]
+    (tmp_path/'CHARGES.jsonl').write_text(''.join(json.dumps(c)+'\n' for c in charges))
+    rows, _ = actual_pw.augmented_examples(tmp_path, 'B', ps.examples(tmp_path,'B'))
+    assert len(rows) == 1
+    charges[0]['sim_s'] -= 1
+    (tmp_path/'CHARGES.jsonl').write_text(''.join(json.dumps(c)+'\n' for c in charges))
+    with pytest.raises(ValueError, match='branch charges'):
+        actual_pw.augmented_examples(tmp_path,'B',ps.examples(tmp_path,'B'))
+
+
+def test_smoke_bank_aliases_read_parent_evidence_without_a_second_ledger(tmp_path, per_seed_bank):
+    import json
+    from tools.coopmwm import practice_starts as ps, practice_weighting as actual_pw
+    from .launch_preparation import readonly_bank_view
+    from .test_practice_weighting_cpu import augment
+    from .test_practice_starts_cpu import bank_with_snapshots
+    from .exact_grade import _seal
+    bank_with_snapshots(tmp_path, vids=('v0',))
+    row, manifest = augment(tmp_path)
+    manifest = _seal(dict(manifest,prelaunch=dict(manifest['prelaunch'],ledger_root=str(tmp_path))),
+                     'practice_augmented_sha256')
+    (tmp_path/'replay_bank/B/PRACTICE_AUGMENTED.json').write_text(json.dumps(manifest))
+    smoke = tmp_path/'smoke'
+    try:
+        readonly_bank_view(tmp_path/'replay_bank/B', smoke/'replay_bank/B')
+    except OSError as error:
+        if __import__('os').name == 'nt':
+            pytest.skip('file symlink privilege is exercised by the cpuV qualification')
+        raise error
+    rows, _ = actual_pw.augmented_examples(smoke,'B',ps.examples(smoke,'B'))
+    assert len(rows) == 1 and not (smoke/'CHARGES.jsonl').exists()

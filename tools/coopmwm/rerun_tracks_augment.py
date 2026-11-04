@@ -132,10 +132,19 @@ def materialise(backend, payload, cfg, record, snapshot, root):
         (bank/'snapshots').mkdir(parents=True, exist_ok=True)
         state_id = payload['id']+'_source' if cfg.get('augmentation_layout') == 'own_bank' else 'source'
         original_path = bank/'snapshots'/(state_id+'.pt')
-        if not original_path.exists():
-            torch.save(snapshot, original_path)
+        if original_path.exists():
+            if snapshot_sha(torch.load(original_path, map_location='cpu', weights_only=False)) != snapshot_sha(snapshot):
+                raise ValueError('REFUSED: completed augmentation source snapshot changed')
+        else:
+            with original_path.open('xb') as stream:
+                torch.save(snapshot, stream)
         own_path = bank/'snapshots'/f'{state_id}_seed{ex["seed_index"]}.pt'
-        torch.save(snap, own_path)
+        if own_path.exists():
+            if snapshot_sha(torch.load(own_path, map_location='cpu', weights_only=False)) != snapshot_sha(snap):
+                raise ValueError('REFUSED: completed augmentation own-seed snapshot changed')
+        else:
+            with own_path.open('xb') as stream:
+                torch.save(snap, stream)
         effective_sha = _seal(dict(sample=effective), 'sha256')['sha256']
         weight_sha = _seal(dict(weight=weight, example=ex), 'sha256')['sha256']
         e = dict(payload, id=payload['proposal_id']+f'_s{ex["seed_index"]}', plan=plan,

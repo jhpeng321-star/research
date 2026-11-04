@@ -33,8 +33,15 @@ def verify_child(root, arm, row, snapshot, prelaunch):
             or 'sealed' in [s.lower() for s in parts]):
         raise ValueError('invalid augmented child receipt path')
     bank = rb.bank_root(root, arm).resolve()
+    registration = prelaunch if isinstance(prelaunch, dict) else {}
+    ledger_root = Path(registration.get('ledger_root', root)).resolve()
+    artifact_root = Path(root).resolve()
+    if ledger_root != artifact_root and artifact_root.parent != ledger_root:
+        raise ValueError('prelaunch ledger must own these smoke artifacts')
     receipt_path = (bank/relative).resolve()
-    if not receipt_path.is_relative_to(bank):
+    parent_bank = rb.bank_root(ledger_root, arm).resolve()
+    if not (receipt_path.is_relative_to(bank) or
+            (artifact_root.parent == ledger_root and receipt_path.is_relative_to(parent_bank))):
         raise ValueError('augmented child receipt escapes own bank')
     receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
     xg.verify_sealed(receipt, 'receipt_sha256')
@@ -65,10 +72,6 @@ def verify_child(root, arm, row, snapshot, prelaunch):
             or not 0 < prelaunch['allocation_sim_s'] <= 200000
             or not isinstance(prelaunch.get('phase'), str) or not prelaunch['phase']):
         raise ValueError('augmented child prelaunch budget provenance required')
-    ledger_root = Path(prelaunch.get('ledger_root', root)).resolve()
-    artifact_root = Path(root).resolve()
-    if ledger_root != artifact_root and artifact_root.parent != ledger_root:
-        raise ValueError('prelaunch ledger must own these smoke artifacts')
     charges = [json.loads(line) for line in (ledger_root/'CHARGES.jsonl').read_text().splitlines()]
     charges = [c for c in charges if c.get('phase') == prelaunch['phase']]
     if (any(type(c.get('sim_s')) is not int or c['sim_s'] < 0 for c in charges)
@@ -79,9 +82,24 @@ def verify_child(root, arm, row, snapshot, prelaunch):
     # been charged in the parent's registered pre-launch phase.
     ids = evidence.get('charge_ids')
     by_id = {c['id']: c for c in charges}
+    scheme = evidence.get('charge_scheme', 'legacy_unqualified')
+    if scheme == 'native_directory_v2':
+        from .augmentation_charges import receipt_ids
+        expected_ids = set(receipt_ids(receipt_path, receipt))
+    elif scheme == 'legacy_unqualified':
+        expected_ids = {f'{receipt["verification_id"]}_{b["branch"]}' for b in receipt['branches']}
+        if evidence.get('adopted_ledger_binding_sha256'):
+            resume = json.loads((ledger_root/'AUGMENTATION_RESUME.json').read_text())
+            xg.verify_sealed(resume, 'receipt_sha256')
+            if (resume['receipt_sha256'] != evidence['adopted_ledger_binding_sha256'] or not any(
+                    Path(item['path']).resolve() == receipt_path and item['receipt_sha256'] == receipt['receipt_sha256']
+                    and set(item['charge_ids']) == expected_ids for item in resume['completed_receipts'])):
+                raise ValueError('completed branch adoption does not bind original charge proof')
+    else:
+        raise ValueError('unregistered augmented charge namespace scheme')
     if (not isinstance(ids, list) or not ids or len(ids) != len(set(ids))
             or any(i not in by_id for i in ids)
-            or set(ids) != {f'{receipt["verification_id"]}_{b["branch"]}' for b in receipt['branches']}
+            or set(ids) != expected_ids
             or type(receipt.get('branch_sim_s')) is not int or receipt['branch_sim_s'] <= 0
             or any(by_id[i]['sim_s'] != receipt['branch_sim_s'] for i in ids)
             or sum(by_id[i]['sim_s'] for i in ids) != receipt.get('charged_sim_s')):

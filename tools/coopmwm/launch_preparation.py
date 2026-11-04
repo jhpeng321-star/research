@@ -177,6 +177,7 @@ def prepare(source_root, *, root='/home/ubuntu/coopmwm20261105_clean1', resume=F
     cfg.update(launch_optimization=deepcopy(production.OPTIMIZATION),
         launch_contingency=deepcopy(production.CONTINGENCY),
         initial_sidecars_required=True, load_max=40, augmentation_layout='own_bank',
+        augmentation_accounting_scheme='native_directory_v2',
         training_seed=20261101,
         worlds_by_update={str(u): protocol.batch_worlds(u)[:16] for u in range(1, 25)},
         augmentation_prelaunch=dict(provenance='owner MAIN 02:30: SUMO-verified children only; before clean1 launch',

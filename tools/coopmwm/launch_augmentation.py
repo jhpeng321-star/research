@@ -80,6 +80,18 @@ def proposals(cfg, arm):
     if cfg.get('augmentation_proposals') != PROPOSAL_SETTINGS:
         raise ValueError('approval-bound common B/R augmentation settings required')
     root, native = Path(cfg['run_root']), production.backend_config(cfg)
+    cache = root/'augmentation_sources'/f'PROPOSALS_{arm}.json'
+    if cache.exists():
+        frozen = read(cache); verify_sealed(frozen, 'proposal_batch_sha256')
+        if (frozen['arm'] != arm or frozen['settings'] != PROPOSAL_SETTINGS or
+                frozen['training_seed'] != cfg['training_seed'] or len(frozen['proposals']) != 2):
+            raise ValueError('frozen augmentation proposal registration changed')
+        for item in frozen['proposals']:
+            path = Path(item['snapshot_path'])
+            rc.guard_path(path)
+            if not path.resolve().is_relative_to((root/'augmentation_sources').resolve()) or rc.sha(path) != item['snapshot_file_sha256']:
+                raise ValueError('attempted augmentation snapshot changed; never overwrite/replay')
+        return frozen['proposals']
     output, seen = [], set()
     with p1._bank_view(native):
         confirmations = rb.confirmations(root, arm)
@@ -121,10 +133,15 @@ def proposals(cfg, arm):
                     continue
                 ident = f'clean1_aug_{arm}_{len(output):02}'
                 directory = root/'augmentation_sources'/ident
-                directory.mkdir(parents=True)
+                directory.mkdir(parents=True, exist_ok=True)
                 path = directory/'SNAPSHOT.pt'
-                with path.open('xb') as stream:
-                    torch.save(snapshot, stream)
+                if path.exists():
+                    from .sumo_verify import snapshot_sha
+                    if snapshot_sha(torch.load(path, map_location='cpu', weights_only=False)) != snapshot_sha(snapshot):
+                        raise ValueError('attempted augmentation snapshot changed; never overwrite/replay')
+                else:
+                    with path.open('xb') as stream:
+                        torch.save(snapshot, stream)
                 output.append(dict(id=ident, proposal_id=ident, source_id=row['example_id'],
                     parent_example_id=row['example_id'], arm=arm, seed=snapshot['episode']['world']['seed'],
                     plan=modified, source_plan_sha256=digest(plan), parameters=perturbed,
@@ -133,6 +150,8 @@ def proposals(cfg, arm):
                 seen.add(fingerprint)
     if len(output) != 2:
         raise ValueError('two distinct observable cooperative variants from the own bank required per arm')
+    write(cache, _seal(dict(arm=arm, settings=PROPOSAL_SETTINGS, training_seed=cfg['training_seed'],
+        originating_config_sha256=digest(cfg), proposals=output), 'proposal_batch_sha256'))
     return output
 
 
@@ -175,7 +194,8 @@ def _install(root, arm, payload, result):
         target.symlink_to(source_snapshot.resolve())
     from .sumo_verify import snapshot_sha
     source_snapshot_sha = snapshot_sha(torch.load(source_snapshot, weights_only=False, map_location='cpu'))
-    write(bank/'decisions'/(record['verification_id']+'.json'), dict(
+    from .launch_preparation import stage_write
+    stage_write(bank/'decisions'/(record['verification_id']+'.json'), dict(
         verification_id=record['verification_id'], state_id=state_id, policy_update=0,
         augmentation=dict(parent_example_id=payload['parent_example_id'],
                           source_snapshot_sha256=source_snapshot_sha,
@@ -204,6 +224,11 @@ def _install(root, arm, payload, result):
         if len(candidates) != 1:
             raise ValueError('unique own-bank augmented tape receipt required')
         row['sumo_evidence']['receipt_path'] = candidates[0].relative_to(bank).as_posix()
+        from .augmentation_charges import recorded_binding
+        actual_receipt = read(candidates[0])
+        if actual_receipt['receipt_sha256'] != row['sumo_evidence']['receipt_sha256']:
+            raise ValueError('augmented own-seed receipt changed during ledger binding')
+        row['sumo_evidence'].update(recorded_binding(root, candidates[0], actual_receipt))
     return rows
 
 
@@ -211,12 +236,25 @@ def run(cfg):
     from .rerun_tracks_augment import verify
     root, native = Path(cfg['run_root']), production.backend_config(cfg)
     health(root)
+    if cfg.get('augmentation_accounting_scheme') != 'native_directory_v2':
+        raise ValueError('registered directory/CRN-qualified augmentation accounting required')
     if (root/'AUGMENTATION_READY.json').exists():
         ready = read(root/'AUGMENTATION_READY.json'); verify_sealed(ready, 'receipt_sha256')
         if ready['config_sha256'] != digest(cfg):
             raise ValueError('once-only augmentation belongs to another approved runtime')
         return ready
-    write(root/'AUGMENTATION_STARTED.json', dict(config_sha256=digest(cfg)))
+    started = root/'AUGMENTATION_STARTED.json'
+    if started.exists():
+        resume = read(root/'AUGMENTATION_RESUME.json')
+        verify_sealed(resume, 'receipt_sha256')
+        if (resume['new_config_sha256'] != digest(cfg) or
+                resume['original_start_sha256'] != rc.sha(started) or
+                ('augmentationResumeSHA'+resume['receipt_sha256']) not in (root/'AUTHORITY.md').read_text()):
+            raise ValueError('explicit registered partial augmentation recovery required')
+        write(root/('AUGMENTATION_RESUME_STARTED_'+resume['receipt_sha256'][:12]+'.json'),
+            dict(resume_sha256=resume['receipt_sha256'], config_sha256=digest(cfg)))
+    else:
+        write(started, dict(config_sha256=digest(cfg)))
     admissions, counts, receipts = {}, {}, []
     for arm in ('B', 'R'):
         runtime = p1.ArmRuntime(dict(native, update=1), arm, 1)
@@ -232,7 +270,8 @@ def run(cfg):
                     raise ValueError('full-window all8 proposal exceeds registered allowance')
                 if any(s['window']['end_s'] < payload['window']['end_s'] for s, _ in pairs):
                     raise ValueError('augmentation cannot shorten its original full window')
-                jobs = [dict(id=f'{s["verification_id"]}_{s["branch"]}', sim_s=int(s['sim_s'])) for s, _ in pairs]
+                from .augmentation_charges import job_id
+                jobs = [dict(id=job_id(s), sim_s=int(s['sim_s'])) for s, _ in pairs]
                 p1._reserve(native, jobs, 'augment_verify')
                 with ProcessPoolExecutor(max_workers=16, mp_context=multiprocessing.get_context('spawn')) as pool:
                     futures = [pool.submit(production.run_branch, s, snapshot, native,
@@ -250,7 +289,8 @@ def run(cfg):
         from .practice_weighting import SCHEMA
         record = _seal(dict(schema=SCHEMA, arm=arm, rows=rows,
             prelaunch=cfg['augmentation_prelaunch']), 'practice_augmented_sha256')
-        write(rb.bank_root(root, arm)/'PRACTICE_AUGMENTED.json', record)
+        from .launch_preparation import stage_write
+        stage_write(rb.bank_root(root, arm)/'PRACTICE_AUGMENTED.json', record)
         # Real consumer validation is mandatory before declaring readiness.
         from .practice_weighting import augmented_examples
         with p1._bank_view(native):

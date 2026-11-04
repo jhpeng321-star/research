@@ -1,0 +1,35 @@
+{
+  "schema": "coopmwm.clean1.partial_augmentation_fault.v1",
+  "owned_pid": 93448,
+  "start_ticks": "1984379",
+  "owner_exited": true,
+  "runtime_commit": "b4c399b342ab855cbd06f2fd78d3490c4a7a6e4a",
+  "root": "/home/ubuntu/coopmwm20261105_clean1",
+  "failure": "seed2 reserve refused duplicate charge/attempt before its worker creation",
+  "root_cause": "native verification_id is stable across CRN replicas and verification directories; it cannot alone identify a single-ledger charge",
+  "new_charged_sim_s": 2400,
+  "new_smoke_sim_s": 0,
+  "cumulative_including_parity_sim_s": 3360,
+  "completed_first_receipt": {
+    "path": "replay_bank/B/sumo_verification/verifications/sv_replay0735_warm_u008_B_986026_t0300_6ccc093f.json",
+    "receipt_sha256": "2483d19fe3b2ae8e574a51a95a087819d5af2e3703e41aff31bd7a17c65c8326",
+    "snapshot_sha256": "25735a41073189f3860faac45b3332be2521fef13a99301272cd1388fad8f81f",
+    "candidate_plan_sha256": "8b02bec1d4abad4b78cf3d9682d2318152bd40ed03c2ad08366637dadd1b319d",
+    "status": "rejected",
+    "full_window": [300, 1200],
+    "charged_and_actual_sim_s": 2400,
+    "collisions": 0,
+    "teleports": 0,
+    "policy_result_sha256": "83194eb6999232587cc505c5a864c322ba6401cedcef8d0291ab1287ebd22ac3",
+    "candidate_result_sha256": "2625c31d3795ee0f412753742cd603a9f920af6387397aaa994499a3c6de74c2"
+  },
+  "uncharged_seed2_claim": {
+    "path": "replay_bank/B/confirm_seed2_all8/claims/sv_replay0735_warm_u008_B_986026_t0300_6ccc093f.json",
+    "sha256": "900dbf9193255c895f2d39a19fd5b05bf93b3a19049e534c4cb164453ffc7b3d",
+    "snapshot_sha256": "d1a4584fa6bbbff06a8bb6973741b01a4108fc062284922dde66a77f1e58c834",
+    "branch_claims_or_results_exist": false
+  },
+  "fix": "directory/snapshot/full-window-qualified charge IDs, exact own-receipt namespace validation, frozen proposals and immutable completed snapshot adoption; smoke aliases retain the same parent ledger",
+  "tests": "286 passed, 1 Windows file-symlink skip; cpuV will exercise the alias case before resume",
+  "resume_rule": "Preserve/adopt both completed first-wave measurements and all charges without refunds or reruns. Archive only the proven uncharged/unattempted seed2 claim. Continue the same frozen proposals and unchanged all8/smoke/gate checks."
+}
