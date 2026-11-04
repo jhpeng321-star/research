@@ -16,6 +16,30 @@
     "jobs_dispatched_or_duplicated": false,
     "first_reads": "git status/log, shared tracks_spec.md, prior receipt, independent review"
   },
+  "fresh_session_reverification": {
+    "starting_head": "c299e09c",
+    "starting_worktree_status": "clean",
+    "prior_session_completion_observed": "ad46b5956a46768ddf620d898e1390e27a6e14d6",
+    "preserved_prior_completion": true,
+    "implementation_edits_needed": false,
+    "jobs_dispatched": false,
+    "tests": [
+      {
+        "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider tools/coopmwm/test_planner_policy_cpu.py tools/coopmwm/test_planner_online_cpu.py",
+        "result": "67 passed in 38.76s"
+      },
+      {
+        "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider --basetemp=E:/agent-work/c4-planner-online/_out/t1b_fix_r0_pytest tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_command_chain_cpu.py tools/coopmwm/test_mppi_runtime_cpu.py::LongProfileTests::test_transfer_table_exact_for_long_profiles_and_dynamic_policy tools/coopmwm/test_mppi_runtime_cpu.py::LongProfileTests::test_imagined_nonzero_actor_matches_observable_plant_actor tools/coopmwm/test_v2v_intent_cpu.py::test_partner_intent_has_one_step_latency tools/coopmwm/test_v2v_intent_cpu.py::test_runtime_reset_and_despawn tools/coopmwm/test_v2v_intent_cpu.py::test_actions_identical_to_current_v2v_policy_at_load tests/unit/test_c4_v2v_obs.py",
+        "result": "26 passed plus 9 passing subtests in 12.62s"
+      },
+      {
+        "command": "git diff --check c4/track-base",
+        "result": "passed"
+      }
+    ],
+    "result": "93 passed plus 9 passing subtests; this repeated subset is not added to final_test_total",
+    "pytest_warning": "One Unknown config option: cache_dir warning per invocation because cacheprovider was disabled"
+  },
   "implementation_commits": [
     {
       "commit": "abaada860309abdd043f7fc0d250fc77688acba3",
