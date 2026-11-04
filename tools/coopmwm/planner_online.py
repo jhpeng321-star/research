@@ -29,6 +29,8 @@ class Config:
             value = getattr(self, name)
             if type(value) is not int or value < minimum:
                 raise ValueError(f'{name} must be an integer >= {minimum}')
+        if self.horizon_s != 600:
+            raise ValueError('registered full look-ahead is 600 seconds')
         if not math.isfinite(self.p_star) or not 0 <= self.p_star <= 1:
             raise ValueError('p_star must be a probability')
 
@@ -41,7 +43,7 @@ def validate_observation(record):
     """Reject extra truth fields and observations outside the ego's radio/sensor view."""
     from .v2v_obs import V2VConfig
     allowed = {'ego_id', 'group', 'rows', 'time_s', 'world_id', 'state_id',
-               'commands', 'policy_residuals', 'policy_state', 'history'}
+               'commands', 'policy_residuals', 'policy_state', 'history', 'committed_offsets'}
     if set(record) - allowed:
         raise ValueError('planner observable record whitelist violation')
     required = {'ego_id', 'group', 'rows', 'time_s', 'commands',
@@ -79,6 +81,10 @@ def validate_observation(record):
             raise ValueError('history exceeds the ego observable view')
     if history and history[-1]['rows'] != rows:
         raise ValueError('history must end at the current observation')
+    for values in record.get('committed_offsets', []):
+        if (not set(values) <= cavs-set(group)
+                or any(not math.isfinite(v) for v in values.values())):
+            raise ValueError('committed offsets must target other observed CAVs')
     return record
 
 
@@ -131,11 +137,17 @@ def score_moves(record, rng, *, rollout, calibration, config=None, calibrate=Non
         raise ValueError('move generator exceeded candidate budget')
     # "none" continues the SAME current actor, including when it has residuals.
     actions = [dict(id='policy', residuals={}, window=0)]
+    background = record.get('committed_offsets', [])
+    if background:
+        actions[0]['offset_profile'] = copy.deepcopy(background)
     actual = []
     for move in candidates:
         if _field(move, 'family') == 'none':
             continue  # one explicit, separately rolled comparator only
         profile = _profile(move, move_api, record, config.horizon_s)
+        if background:
+            profile = [{**(background[t] if t < len(background) else {}), **values}
+                       for t, values in enumerate(profile)]
         action = dict(id=f'move:{len(actual)}', offset_profile=profile)
         actions.append(action)
         actual.append(move)
@@ -147,11 +159,13 @@ def score_moves(record, rng, *, rollout, calibration, config=None, calibrate=Non
     for move, action in zip(actual, actions[1:]):
         costs = _costs(futures[action['id']], config.wm_samples)
         gains = [a-b for a, b in zip(base, costs)]
+        if any(not math.isfinite(x) for x in gains):
+            raise ValueError('nonfinite paired WM gain')
         p_raw = sum(x > 0 for x in gains)/config.wm_samples
         p_calibrated = float(calibrate(p_raw, calibration))
         if not math.isfinite(p_calibrated) or not 0 <= p_calibrated <= 1:
             raise ValueError('calibration API returned an invalid probability')
-        gain = sum(gains)/config.wm_samples
+        gain = math.fsum(x/config.wm_samples for x in gains)
         scores.append(dict(id=action['id'], family=_field(move, 'family'),
                            members=list(_field(move, 'members')), p_raw=p_raw,
                            p_calibrated=p_calibrated, expected_gain=gain,
@@ -160,7 +174,9 @@ def score_moves(record, rng, *, rollout, calibration, config=None, calibrate=Non
     best = max(eligible, key=lambda i: (scores[i]['expected_gain'], -i)) if eligible else None
     return dict(accepted=best is not None, selected_move=actual[best] if best is not None else None,
                 selected_id=scores[best]['id'] if best is not None else 'policy',
-                offset_profile=actions[best+1]['offset_profile'] if best is not None else [],
+                # Execution owns only the new move, never the shared commitments.
+                offset_profile=_profile(actual[best], move_api, record, config.horizon_s)
+                if best is not None else [],
                 expected_gain=scores[best]['expected_gain'] if best is not None else 0.,
                 scores=scores, wm_samples=config.wm_samples, horizon_s=config.horizon_s,
                 p_star=config.p_star, comparator='current_base_policy',
@@ -181,3 +197,133 @@ class WMRollout:
         from .plan_wm import evaluate
         return evaluate(self.runtime, record, actions, K, H, trim=False,
                         chunk_actions=self.chunk_actions, memory=self.memory, final_chain=True)
+
+
+class OnlinePlanner:
+    """Per-controller planner state; returns pre-safety requests, never writes SUMO.
+
+    Attach via ``v2v_runtime.controller_class(Controller)(..., planner_online=p)``.
+    The dedicated move RNG must be separate from the base actor's torch RNG.
+    Free CAVs form disjoint ego-local groups (up to four, nearest first). A fired
+    move is committed until its last nonzero offset; busy members are not queried
+    again mid-move. Other locally visible commitments are shared by both WM arms.
+    """
+    def __init__(self, *, rollout, calibration, rng, accel_bounds, config=None,
+                 calibrate=None, move_api=None, world_id=None):
+        lo, hi = accel_bounds
+        if not all(math.isfinite(x) for x in (lo, hi)) or not lo < hi <= 1.2:
+            raise ValueError('planner bounds must respect the existing CAV 1.2 m/s^2 cap')
+        self.rollout, self.calibration, self.rng = rollout, calibration, rng
+        self.accel_bounds, self.config = (lo, hi), config or Config()
+        self.calibrate, self.move_api, self.world_id = calibrate, move_api, world_id
+        self.histories, self.active = {}, []
+        self.last_time = None
+
+    @staticmethod
+    def _local(rows, ego_id):
+        from .v2v_obs import V2VConfig
+        own = next(r for r in rows if r['vid'] == ego_id)
+        radius = V2VConfig().range_m
+        return [copy.deepcopy(r) for r in rows if abs(r['s_m']-own['s_m']) <= radius]
+
+    def _background(self, visible, now):
+        profiles = [{} for _ in range(self.config.horizon_s)]
+        for active in self.active:
+            elapsed = now-active['start_s']
+            for t in range(min(len(profiles), active['duration_s']-elapsed)):
+                profiles[t].update({v: x for v, x in active['offset_profile'][elapsed+t].items()
+                                    if v in visible})
+        return profiles if any(profiles) else []
+
+    def apply(self, rows, commands, now, *, sample, desired, policy):
+        """Called exactly once per runtime second, after base-policy sampling."""
+        from .warm_history import ObservableHistory
+        from .policy_wm import actor_state
+        from .protocol import digest
+        if (not math.isfinite(now) or now < 0 or int(now) != now
+                or self.last_time is not None and now <= self.last_time):
+            raise ValueError('online planner requires an increasing whole-second clock')
+        now = int(now)
+        rows = sensor_rows(rows)
+        self.last_time = now
+        by_id = {r['vid']: r for r in rows}
+        cavs = {r['vid'] for r in rows if r['is_cav'] and r['vid'] in commands}
+        self.histories = {v: h for v, h in self.histories.items() if v in cavs}
+        local = {}
+        for ego in sorted(cavs):
+            local[ego] = self._local(rows, ego)
+            self.histories.setdefault(ego, ObservableHistory()).push(now, local[ego])
+        # Loss of a member/radio contact ends the joint commitment, rather than
+        # commanding a departed/reused identity or a now-unobservable partner.
+        self.active = [a for a in self.active
+                       if now < a['start_s']+a['duration_s'] and a['ego_id'] in cavs
+                       and set(a['members']) <= cavs
+                       and set(a['members']) <= {r['vid'] for r in local[a['ego_id']]}]
+        decisions = []
+        if now % self.config.cadence_s == 0:
+            busy = {v for a in self.active for v in a['members']}
+            assigned = set(busy)
+            state = None
+            for ego in sorted(cavs):
+                if ego in assigned:
+                    continue
+                visible = {r['vid'] for r in local[ego]}
+                nearest = sorted((v for v in cavs & visible if v not in assigned and v != ego),
+                                 key=lambda v: (abs(by_id[v]['s_m']-by_id[ego]['s_m']), v))
+                group = [ego, *nearest[:3]]
+                assigned.update(group)
+                try:
+                    if state is None:
+                        state = actor_state(policy)
+                    residuals = {v: float(a[0]) for v, a in zip(sample['context']['members'],
+                                                              sample['own_action']) if v in visible}
+                    record = dict(ego_id=ego, group=group, rows=local[ego], time_s=now,
+                                  commands={v: commands[v] for v in cavs & visible},
+                                  policy_residuals=residuals, policy_state=state,
+                                  history=self.histories[ego].snapshot(now))
+                    if self.world_id is not None:
+                        record['world_id'] = self.world_id
+                    background = self._background(visible, now)
+                    if background:
+                        record['committed_offsets'] = background
+                    record['state_id'] = digest(record)
+                    result = score_moves(record, self.rng, rollout=self.rollout,
+                                         calibration=self.calibration, config=self.config,
+                                         calibrate=self.calibrate, move_api=self.move_api)
+                    receipt = {k: v for k, v in result.items() if k not in ('selected_move', 'offset_profile')}
+                    receipt.update(ego_id=ego, group=group, state_id=record['state_id'])
+                    decisions.append(receipt)
+                    if result['accepted']:
+                        profile = result['offset_profile']
+                        duration = max((i+1 for i, values in enumerate(profile) if values), default=0)
+                        if duration:
+                            move_members = list(_field(result['selected_move'], 'members'))
+                            self.active.append(dict(ego_id=ego, members=move_members, start_s=now,
+                                                    duration_s=duration, offset_profile=profile[:duration]))
+                except Exception as error:
+                    # Dependency/calibration/WM failure is an explicit base-policy
+                    # decision; never substitute a raw P or dispatch another job.
+                    decisions.append(dict(ego_id=ego, group=group, accepted=False,
+                                          reason='planner_unavailable', error=f'{type(error).__name__}: {error}'))
+        out = copy.deepcopy(desired)
+        executed = {}
+        lo, hi = self.accel_bounds
+        for active in self.active:
+            values = active['offset_profile'][now-active['start_s']]
+            for vid, offset in values.items():
+                if vid not in cavs or offset == 0.:
+                    continue
+                if vid in executed:
+                    raise ValueError('overlapping online command ownership')
+                base = desired.get(vid, {}).get('requested_raw', commands[vid])
+                raw = min(hi, max(lo, base+offset))
+                if not math.isfinite(base) or not math.isfinite(raw):
+                    raise ValueError('nonfinite base/online request')
+                out[vid] = dict(desired.get(vid, {}), requested_raw=raw,
+                                acceleration_residual=raw-commands[vid])
+                executed[vid] = dict(offset=offset, requested_raw=raw, start_s=active['start_s'])
+                if vid in sample['context']['members']:
+                    sample['action'][sample['context']['members'].index(vid)] = [raw-commands[vid]]
+        sample['planner_online'] = dict(decisions=decisions, executed=executed,
+                                        active_groups=len(self.active))
+        return out

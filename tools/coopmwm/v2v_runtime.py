@@ -87,7 +87,12 @@ def controller_class(base):
 
     class Controller(base):
         def __init__(self, *args, **kwargs):
+            online_planner = kwargs.pop('planner_online', None)  # T1B: default OFF
             super().__init__(*args, **kwargs)
+            if online_planner is not None:
+                if any(getattr(self, k, None) is not None for k in ('guide', 'replay', 'branch')):
+                    raise ValueError('online planner requires sole runtime request ownership')
+                self.online_planner = online_planner
             self.previous_frame = None
             self.intent_board = {}  # v2v_intent ON: vid -> (published second, H commands)
 
@@ -125,6 +130,13 @@ def controller_class(base):
                 # silent CAVs simply have no fresh entry and read as invalid next second.
                 published = (self.events[-1]['sample'].get('published_intent') or {}) if self.events else {}
                 self.intent_board = {vid: (int(now), list(values)) for vid, values in published.items()}
+            if hasattr(self, 'online_planner'):
+                # One pre-safety request map still flows to CommandOwnership;
+                # this hook never calls TraCI or creates a second writer.
+                event = self.events[-1]
+                desired = self.online_planner.apply(rows, commands, now,
+                    sample=event['sample'], desired=desired, policy=saved)
+                event['requests'] = desired
             return desired
 
     return Controller

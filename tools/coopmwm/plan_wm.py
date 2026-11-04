@@ -42,13 +42,17 @@ def profile_table(actions, ids, device, horizon=300, dynamic_policy=False):
     return raw.to(device),mask.to(device),residual.to(device)
 
 
-def profile_apply(accel,tick,table,bounds):
+def profile_apply(accel,tick,table,bounds,offset_actions=None):
     raw,mask,residual=table
     t=int(tick*.5)
     if t>=raw.shape[1]:return accel
     n=raw.shape[-1]
     out=accel.clone()
     request=torch.where(residual[:,t],accel[:,:n]+raw[:,t],raw[:,t])
+    if offset_actions is not None:
+        # Only the new offset decoder uses the registered CAV request cap.
+        # Unchanged vehicles still retain their original policy continuation.
+        request=torch.where(offset_actions,request.clamp_max(1.2),request)
     out[:,:n]=torch.where(mask[:,t],request.clamp(*bounds),accel[:,:n])
     return out
 
@@ -87,7 +91,9 @@ def plan_executor(horizon=300, policy=None, trace=None, final_chain=False):
             if tick%2==0 or held[0] is None:held[0]=residuals(policy,state,ids)
             own=torch.tensor([a['id']!='MAPPO' for a in actions],device=accel.device)[:,None]
             accel=accel+held[0]*own
-        raw=profile_apply(accel,tick,table,bounds)
+        offset_actions=(torch.tensor(['offset_profile' in a for a in actions],device=accel.device)[:,None]
+                        if any('offset_profile' in a for a in actions) else None)
+        raw=profile_apply(accel,tick,table,bounds,offset_actions=offset_actions)
         if trace is not None and tick%2==0:trace.append(raw.detach().clone())
         return raw
     ns=dict(original.__globals__,profile_table=profile_table,horizon=horizon,policy=policy,decode=decode,post_safety=post_safety)
