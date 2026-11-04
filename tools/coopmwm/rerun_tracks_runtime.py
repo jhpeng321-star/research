@@ -21,6 +21,7 @@ import threading
 from . import rerun_cpus as rc
 from .exact_grade import _seal
 from .rerun_tracks_monitor import write_monitor, SAFETY
+from .rerun_tracks_bank import training_batch, batch_receipt
 
 
 def state_sha(model):
@@ -49,8 +50,8 @@ def dense_label(label, proposals, cfg):
             not re.fullmatch('[0-9a-f]{64}', provenance.get('receipt_sha256', ''))):
         raise ValueError('REFUSED: dense label needs auditable provenance receipt')
     p = label.get('calibrated_probability')
-    if kind == 'planner_calibration' and (isinstance(p, bool) or
-            not isinstance(p, (int, float)) or not math.isfinite(p) or not 0 <= p <= 1):
+    if ((p is not None and (type(p) not in (int, float) or not math.isfinite(p) or not 0 <= p <= 1)) or
+            (kind == 'planner_calibration' and p is None)):
         raise ValueError('REFUSED: dense label requires calibrated probability')
     if kind == 'no_target' and target is not None:
         raise ValueError('REFUSED: no-target provenance carries a target')
@@ -280,6 +281,7 @@ class Runtime:
             if kind == 'teacher' and type(grade.get('label_correct')) is not bool:
                 raise ValueError('REFUSED: teacher verification needs realised label_correct')
             verified.append(dict(grade, row_id=row.get('row_id', row.get('id')),
+                                 target=repr(row.get('target')) if kind == 'teacher' else None,
                                  verification_id=ident))
         self._write(f'components/u{update:03}_{arm}_{kind}_verification.json',
                     dict(synthetic=self.synthetic, selected=count, proposals=len(rows), receipts=verified))
@@ -357,6 +359,9 @@ class Runtime:
             augmented = comp['plan_augment'].augment(bank, count=count, arm=arm)
             if len(augmented) != count or any(e['arm'] != arm for e in augmented):
                 raise ValueError('REFUSED: augmentation lost own-bank identity or registered count')
+            bank_batch = training_batch(bank, augmented, arm=arm, encoder=comp['merge_features'])
+            bank_receipt = batch_receipt(bank_batch)
+            self._write(f'components/u{update:03}_{arm}_bank_batch.json', bank_receipt)
             self._verify(arm, update, 'augment', augmented, self.cfg['plan_augment']['verify_fraction'])
             count = math.ceil(n*self.cfg['practice_weighting']['fraction'])
             selected = comp['practice_weighting'].select(bank, augmented, count=count,
@@ -393,14 +398,14 @@ class Runtime:
             mask = [r['imitation_eligible'] for r in rows]
             self._write(f'components/u{update:03}_{arm}_dense_labels.json', dict(
                 arm=arm, update=update, synthetic=self.synthetic,
-                rows=[{k: r[k] for k in ('row_id', 'calibrated_probability', 'provenance',
-                                         'imitation_eligible')} for r in rows],
+                rows=[dict({k: r[k] for k in ('row_id', 'calibrated_probability', 'provenance',
+                                             'imitation_eligible')}, target=repr(r['target'])) for r in rows],
                 checked=teacher_checks))
-            bank_targets = [moves.from_plan(e['plan']) for e in bank+augmented]
             # Group advantages enter ONLY the layer/trigger update. Reward and A's
             # PPO stream remain untouched. Base params are frozen and excluded.
             self._check_optimizer(arm)
-            losses = comp['coop_layer'].update(rows=rows, bank_targets=bank_targets,
+            losses = comp['coop_layer'].update(rows=rows, bank_batch=bank_batch,
+                      bank_options=deepcopy(self.cfg['bank_training']),
                       group_advantages=[r['group_advantage'] for r in rows],
                        dense_targets=[r['target'] for r in rows],
                        dense_mask=mask,
@@ -409,6 +414,15 @@ class Runtime:
                 raise ValueError('REFUSED: frozen MAPPO base changed after layer update')
             if losses['layer_kl'] > self.cfg['coop_layer']['kl_cap']:
                 raise ValueError('REFUSED: cooperation layer KL budget exceeded')
+            consumed = losses.get('bank_receipt', {})
+            if (consumed.get('batch_sha256') != bank_receipt['batch_sha256'] or
+                    consumed.get('move_rows') != len(bank_batch) or
+                    consumed.get('effective_rows') != len(bank_batch) or
+                    consumed.get('options') != self.cfg['bank_training'] or
+                    type(consumed.get('effective_loss')) not in (int, float) or
+                    not math.isfinite(consumed['effective_loss'])):
+                raise ValueError('REFUSED: learner did not receipt complete bank/effective supervision')
+            self._write(f'components/u{update:03}_{arm}_bank_learning.json', consumed)
             metrics.update({k: losses[k] for k in ('dense_ce', 'dense_accuracy', 'bank_move_ce', 'layer_kl')})
             metrics.update(group_credit_wm=fmean(r['group_advantage'] for r in rows),
                  dense_eligible_labels=sum(mask), dense_filtered_share=1-sum(mask)/len(rows),

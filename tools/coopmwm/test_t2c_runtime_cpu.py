@@ -16,6 +16,8 @@ from torch.nn import functional as F
 from tools.coopmwm import rerun_cpus as rc
 from tools.coopmwm.rerun_tracks_runtime import Runtime, WorkerLimit, diagnostic_identity, run, state_sha
 from tools.coopmwm.rerun_tracks_monitor import read_monitor
+from tools.coopmwm.rerun_tracks_bank import training_batch, batch_receipt, OPTIONS
+from tools.coopmwm import bank_imitation
 
 
 @dataclass(frozen=True)
@@ -40,46 +42,85 @@ def install_moves(monkeypatch):
 class Trigger(nn.Module):
     def __init__(self):
         super().__init__()
-        self.logits = nn.Parameter(torch.zeros(2))
+        self.logits = nn.Parameter(torch.zeros(2, 2))
         self.calls = 0
+
+    def forward(self, obs, features):
+        return self.logits @ torch.tensor([1., features['values'][0]-2.])
 
     def choose(self, obs, features, proposals, rng):
         self.calls += 1
-        # Both families occur before learning, then policy probabilities can learn.
-        return proposals[self.calls % 2]
+        probabilities = self(obs, features).detach().softmax(-1)
+        return proposals[int(rng.random() >= float(probabilities[0]))]
 
 
 class Layer(nn.Module):
-    def __init__(self, trigger):
+    def __init__(self, trigger, base=None):
         super().__init__()
         self.correction = nn.Parameter(torch.zeros(()))
-        self.optimizer = torch.optim.SGD([self.correction, *trigger.parameters()], lr=.03)
+        self.effective_slope = nn.Parameter(torch.zeros(()))
+        self.base = base
+        self.optimizer = torch.optim.SGD([self.correction, self.effective_slope, *trigger.parameters()], lr=.03)
 
     def residual(self, obs, features):
-        return {v: float(self.correction.detach()) for v in obs['cav_ids']}
+        value = self.correction+self.effective_slope*(features.get('values', [2.])[0]-2.)
+        return {v: float(value.detach()) for v in obs['cav_ids']}
 
-    def update(self, *, rows, bank_targets, group_advantages, dense_targets, dense_mask, trigger, kl_cap):
-        old = trigger.logits.detach().softmax(0)
+    def effective_policy(self):
+        layer = self
+        class Policy(nn.Module):
+            log_std = torch.tensor([-.7])
+            def forward(self, context):
+                value = layer.correction+layer.effective_slope*(context['features']['values'][0]-2.)
+                if layer.base is not None:
+                    with torch.no_grad():
+                        base_value = layer.base(torch.ones(1)).squeeze()
+                    value = value+base_value
+                return value.expand(len(context['members']), 1), None
+        return Policy()
+
+    def bank_losses(self, batch, trigger):
+        logits = torch.stack([trigger(r['observation'], r['features']) for r in batch])
+        labels = torch.tensor([int(r['target'].family != 'none') for r in batch])
+        weights = torch.tensor([r['weight'] for r in batch])
+        move = (F.cross_entropy(logits, labels, reduction='none')*weights).mean()
+        # Use the actual reviewed effective/Tobit objective with each source sample,
+        # binding limits and unchanged AWR weight, targeting the trainable layer.
+        effective = torch.stack([bank_imitation.pair_loss(self.effective_policy(),
+            r['effective_sample'], r['weight'], target_space='effective') for r in batch]).mean()
+        return move, effective
+
+    def update(self, *, rows, bank_batch, bank_options, group_advantages, dense_targets, dense_mask, trigger, kl_cap):
+        assert bank_options == OPTIONS
+        logits = torch.stack([trigger(r['observation'], r['features']) for r in rows])
+        old = logits.detach().softmax(-1)
         label = torch.tensor([int(m.family != 'none') for m, use in zip(dense_targets, dense_mask) if use], dtype=torch.long)
-        bank_label = torch.tensor([int(m.family != 'none') for m in bank_targets])
-        logits = trigger.logits.expand(len(rows), -1)
         selected = torch.tensor([int(r['family'] != 'none') for r in rows])
         advantage = torch.tensor(group_advantages)
         # Actual autograd/optimizer updates: group credit enters ONLY layer loss.
         ppo = -(logits.log_softmax(-1).gather(1, selected[:, None]).squeeze(1)*advantage).mean()
-        dense_loss = F.cross_entropy(trigger.logits.expand(len(label), -1), label) if len(label) else logits.sum()*0
+        dense_loss = F.cross_entropy(logits[dense_mask], label) if len(label) else logits.sum()*0
         self.last_dense_count, self.last_policy_count = len(label), len(rows)
-        loss = ppo+dense_loss+F.cross_entropy(
-            trigger.logits.expand(len(bank_label), -1), bank_label)-self.correction*advantage.mean()
+        self.last_bank_batch = deepcopy(bank_batch)
+        loss = ppo+dense_loss-self.correction*advantage.mean()
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        # Separate full bank pass, same layer-only optimizer; actual effective loss.
+        move_loss, effective_loss = self.bank_losses(bank_batch, trigger)
+        self.optimizer.zero_grad()
+        (move_loss+effective_loss).backward()
+        self.optimizer.step()
         with torch.no_grad():
-            p = trigger.logits.softmax(0)
-            return dict(dense_ce=float(F.cross_entropy(trigger.logits.expand(len(label), -1), label)) if len(label) else None,
-                dense_accuracy=float((trigger.logits.argmax() == label).float().mean()) if len(label) else None,
-                bank_move_ce=float(F.cross_entropy(trigger.logits.expand(len(bank_label), -1), bank_label)),
-                layer_kl=float((old*(old.log()-p.log())).sum()))
+            after = torch.stack([trigger(r['observation'], r['features']) for r in rows])
+            p = after.softmax(-1)
+            return dict(dense_ce=float(F.cross_entropy(after[dense_mask], label)) if len(label) else None,
+                dense_accuracy=float((after[dense_mask].argmax(-1) == label).float().mean()) if len(label) else None,
+                bank_move_ce=float(self.bank_losses(bank_batch, trigger)[0]),
+                layer_kl=float((old*(old.log()-p.log())).sum(-1).mean()),
+                bank_receipt=dict(batch_sha256=batch_receipt(bank_batch)['batch_sha256'],
+                    move_rows=len(bank_batch), effective_rows=len(bank_batch),
+                    effective_loss=float(effective_loss), options=bank_options))
 
 
 class Features:
@@ -157,7 +198,7 @@ class CPUBackend:
 
     def adapters(self, model):
         factories = dict(merge_features=lambda c: Features(), trigger_head=lambda c: Trigger(),
-            coop_layer=lambda c: Layer(c['trigger_head']), group_credit=lambda c: Credit(),
+            coop_layer=lambda c: Layer(c['trigger_head'], model), group_credit=lambda c: Credit(),
             dense_teacher=lambda c: Teacher(), plan_augment=lambda c: Augment(),
             practice_weighting=lambda c: Weighting())
         def build(name):
@@ -187,8 +228,23 @@ class CPUBackend:
         opt.step()
 
     def bank_examples(self, arm, update, *, cfg):
-        return [dict(id=f'{arm}_{i}', arm=arm, plan=dict(family='gap_open', members=['c1', 'c2'], depth=.2),
-                     window=dict(start_s=0, end_s=1200), seed=986000+i) for i in range(24)]
+        from tools.coopmwm.exact_grade import _seal
+        rows = []
+        for i in range(24):
+            obs = Plant(self, arm, i).observe()
+            obs['v2v_reports'] = [r for r in obs['v2v_reports'] if r['time_s'] < 0]
+            obs['own_sensing']['queue'] = 1.+2*(i % 2)
+            plan = dict(family='gap_open' if i % 2 else 'none', members=['c1', 'c2'], depth=.2)
+            sample = dict(context=dict(members=['c1', 'c2'], observation=deepcopy(obs),
+                                       features=Features().encode(obs)),
+                action=[.1 if i % 2 == 0 else .8]*2, binding_limits=dict(c1=.3, c2=.3),
+                behaviour=dict(executed=True, proposal_members=['c1', 'c2']),
+                plan_sha256=_seal(dict(plan=plan), 'sha256')['sha256'])
+            rows.append(dict(id=f'{arm}_{i}', source_id=f'{arm}_{i}', arm=arm, plan=plan,
+                window=dict(start_s=0, end_s=1200), seed=986000+i,
+                observation=obs, effective_sample=sample, weight=1.+i/24, statistics='per_seed_v1',
+                provenance=dict(verification_sha256='c'*64, weight_sha256='d'*64, effective_sha256='e'*64)))
+        return rows
 
     def expand_verification(self, kind, payload, *, cfg):
         return [(dict(sim_s=1200, window=payload['window'], branch=kind), dict(payload))]
@@ -226,6 +282,7 @@ class CPUBackend:
         if components:
             weights['trigger_logits'] = components['trigger_head'].logits.detach().clone()
             weights['correction'] = components['coop_layer'].correction.detach().clone()
+            weights['effective_slope'] = components['coop_layer'].effective_slope.detach().clone()
         return weights
 
     def resolve_states(self, job):

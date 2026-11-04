@@ -36,6 +36,7 @@ import math
 import re
 from copy import deepcopy
 from pathlib import Path, PurePosixPath
+from .rerun_tracks_bank import OPTIONS as BANK_TRAINING
 
 UPDATES = 24
 EPISODE_SIM_S = 1200
@@ -450,6 +451,7 @@ def runtime_config(base, *, root, reference_root, source_root, common_checkpoint
                trigger_head=head, teacher=teachers, coop_reward=dict(COOP_REWARD),
                 isolated_test=deepcopy(ISOLATED_TEST),
                 final_evaluation=deepcopy(FINAL_EVALUATION),
+                bank_training=deepcopy(BANK_TRAINING),
                criterion_sha256=criterion_document()['criterion_sha256'],
                diagnostic_schedule=deepcopy(SCHEDULE), # replicated isolated test, all arms
                 diagnostic_phases=dict(lessons='v2v_lessons', isolated='isolated_replicated',
@@ -527,7 +529,8 @@ def check_pins(cfg):
     if head != head_teacher_config()[0] or teachers != head_teacher_config()[1]:
         raise ValueError('REFUSED: trigger/teacher slots differ from clean-run registration')
     for key, value in (('early_probes', EARLY_PROBES), ('learning_monitor', LEARNING_MONITOR),
-                        ('smoke', SMOKE), ('final_evaluation', FINAL_EVALUATION)):
+                        ('smoke', SMOKE), ('final_evaluation', FINAL_EVALUATION),
+                        ('bank_training', BANK_TRAINING)):
         if cfg.get(key) != value:
             raise ValueError('REFUSED: registration differs: '+key)
     if cfg.get('isolated_test') != ISOLATED_TEST:
@@ -950,6 +953,7 @@ def criterion_document():
     return _seal(dict(schema='coopmwm.rerun_cpus.preregistered_criterion.v1',
                        criterion=deepcopy(CRITERION), isolated_test=deepcopy(ISOLATED_TEST),
                        final_evaluation=deepcopy(FINAL_EVALUATION),
+                       bank_training=deepcopy(BANK_TRAINING),
                       arms=dict(A='plain MAPPO PPO (no trigger head, no teacher)',
                                 B='T2A trigger head + frozen cooperation layer + WM bank',
                                 R='T2A trigger head + frozen cooperation layer + own random bank'),

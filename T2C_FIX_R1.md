@@ -38,3 +38,24 @@ CPU verification: focused evaluation cases **10 passed** in 53.86 s,
 15 deselected** in 118.75 s, `.t2c-r1-final-bind2`. An earlier selection had two
 stale fixture assertions (new quote fields/TTC); both were updated. The skip is the
 inherited Windows file-symlink privilege case; hard-link assertions execute.
+
+## Step 3 — state-conditioned bank and effective supervision
+
+The learner now receives a validated source-bound batch: own observation/features,
+move target, original plan, source/seed identity, unchanged per-seed weight and
+provenance, plus the complete effective sample and binding limits. Bank options
+are registration/approval-bound. Source-context/plan associations and own-arm
+identities are validated before dispatch; learner consumption gets a separate
+batch-bound receipt, refusing missing effective rows.
+
+The CPU substitute now uses a state-conditioned head for actual choices and a
+separate full bank pass with the reviewed `bank_imitation.pair_loss` effective
+Tobit objective. Swapping labels across distinct states with identical class
+frequencies reverses gradients and subsequent choices. Tests check weight/limit
+sensitivity, dead-zone invariance, layer-only effective gradients and frozen base.
+An initial new gradient test exposed an overly wide no-grad scope in the CPU
+substitute; only base inference is now detached, preserving layer gradients.
+
+CPU verification: bank + complete runtime suites **40 passed** in 163.48 s,
+`.t2c-r1-bank3` (supersedes a 39-pass run before the missing-effective-receipt case).
+This includes full smoke/monitor CLI execution and shared final-harness routing.

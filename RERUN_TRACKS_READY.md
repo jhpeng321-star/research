@@ -52,8 +52,8 @@ Backend protocol consumed by the coordinator:
 - `adapters(base)` provides the seven factories accepted by `track2_components`.
   They receive `cfg=, arm=, moves=, components=` in dependency order. Required instances:
   `merge_features.encode(obs)`; `trigger_head.choose(obs, features, proposals, rng)`;
-  `coop_layer.residual(obs, features)` and `.update(rows=, bank_targets=,
-   group_advantages=, dense_targets=, trigger=, kl_cap=)`;
+  `coop_layer.residual(obs, features)` and `.update(rows=, bank_batch=, bank_options=,
+  group_advantages=, dense_targets=, dense_mask=, trigger=, kl_cap=)`;
   `group_credit.estimate(obs, move, base)`;
   `dense_teacher.label(obs, proposals, kind=, rng=)`;
   `plan_augment.augment(bank, count=, arm=)`;
@@ -86,10 +86,35 @@ Backend protocol consumed by the coordinator:
   components)` bind the existing low-level learner and checkpoint persistence. The
   checkpoint adapter must preserve layer, trigger and optimizer state for resumption.
   B/R never enter the base PPO update; their advantages go only to the layer update.
-- `bank_examples(arm, update, cfg=)` returns own-arm verified examples with unique `id`,
-  `arm`, `plan`, full `window` and restart/seed identity. Augmentation must use the
-  registered moves/variety ranges. Both arms follow the same procedure. Practice
-  selection is checked for source membership, count, arm and repeat cap.
+- `bank_examples(arm, update, cfg=)` returns own-arm examples with unique `id`,
+  `source_id` (own bank ID, retained through augmentation), `arm`, `plan`, full `window`,
+  `seed`, own `observation`, positive `weight`, `statistics='per_seed_v1'`, and provenance
+  SHA256s for `verification_sha256, weight_sha256, effective_sha256`. Those are the
+  existing per-seed AWR weights and verified/effective-target receipts; never replace
+  them with label-frequency weights. Augmentation retains source/seed association.
+  Practice selection is checked for source membership, count, arm and repeat cap.
+- Every bank/augmented example also carries `effective_sample`: the reviewed imitation
+  `action`, `binding_limits`, `behaviour={executed:True,proposal_members:[...]}`, and
+  `context={members,observation,features}` for that exact source state. The adapter maps
+  this observable context to its low-level policy representation. `plan_sha256` is
+  `_seal({plan:example.plan}, 'sha256')['sha256']`; perturbed plans need their own
+  associated effective targets/receipt. Runtime re-encodes source features and rejects
+  changed contexts, mismatched plans/members, missing limits, invalid weights, future
+  reports and foreign/duplicate source identities **before episode dispatch**.
+- The layer receives the complete validated `bank_batch` (not just labels aligned to
+  on-policy states). Each row retains observation, features, move target, original plan,
+  effective sample, per-seed weight and provenance. `bank_options` pins separate full
+  pass, kl_targeted/.045, per_seed_v1/effective and frozen-base/separate-optimizer
+  constraints. The adapter consumes the reviewed `bank_imitation.pair_loss(...,
+  target_space='effective')` / effective Tobit path on its trainable-layer policy
+  wrapper plus state-conditioned trigger CE. Frozen base inference is detached while
+  layer gradients remain live. Existing effective-intent targets must retain their
+  recorded limits. Return `bank_receipt={batch_sha256,move_rows,effective_rows,
+  effective_loss,options}` along with losses; missing/incomplete consumption is refused.
+  `components/uNNN_<arm>_bank_batch.json` and `_bank_learning.json` bind source mapping
+  and learning receipt. Numerical tests swap equal-frequency labels across two states
+  and prove opposite gradients and subsequent state-dependent trigger choices; real
+  effective losses respond to source weights/limits and change only the layer.
 - `expand_verification(kind, payload, cfg=)` returns `(spec, snapshot)` pairs expanded
   through existing all8/isolated machinery. The coordinator checks full-window identity,
   budgets and dispatches via `run_branch(spec, snapshot)` under a permit. That call must
