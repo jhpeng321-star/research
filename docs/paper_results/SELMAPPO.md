@@ -11,6 +11,9 @@
   full paired comparison remains incomplete and C1SWITCH2-owned.
 - Evidence: `selmappo/RESUME_20261104_1716.json`. Prior CPU/integration PASS retained;
   new dispatches/simulations/GPU allocations/process signals0.
+- Independent17:17 cross-check agrees on terminal state, both checkpoint/receipt
+  hashes and exact accounting; see `selmappo/RESUME_20261104_1717.json`. Concurrent
+  completion commit8054cb4a preserved; no continuation required.
 
 ## Previous reconciliation — 2026-11-04 16:49 +08:00
 - Fresh cpuQ exact-PID/root probes confirm original645235/root absent after owner

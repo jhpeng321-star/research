@@ -11,6 +11,9 @@
   full paired comparison remains incomplete and C1SWITCH2-owned.
 - Evidence: `docs/paper_results/selmappo/RESUME_20261104_1716.json`. Prior CPU/integration
   PASS retained; new dispatches/simulations/GPU allocations/process signals0.
+- Independent17:17 cross-check agrees; cpuQ free5,854,150,656bytes, both gpuR hashes
+  match, local monitors absent, accountingPASS. Concurrent8054cb4a preserved; evidence
+  `docs/paper_results/selmappo/RESUME_20261104_1717.json`. No continuation required.
 
 ## Fresh terminal verification — 2026-11-04 16:49 +08:00
 - Read git history/status, registrations and completion receipts before action.
