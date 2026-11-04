@@ -44,7 +44,7 @@ ARMS = ('A', 'B', 'R')
 FIRST_UPDATE, LAST_UPDATE = 4, 5   # u3-like checkpoints -> exactly 2 updates each
 
 DEFAULTS = dict(k=8, N_exec=10, slots=4, workers=6, episodes_per_update=6, last_update=LAST_UPDATE,
-                latency_s=1., stall_s=900., timeout_s=9000., transport_errors=0, malformed=0, branch_crash=0,
+                latency_s=1., stall_s=900., timeout_s=14400., transport_errors=0, malformed=0, branch_crash=0,
                 die_slot=None, die_after=1, decline_withdrawn=True, parallel_groups=True,
                 fanout_factor=2, r_concurrent=True, verify_workers=6,
                 b_replay=True, collect_episodes=1, bank_warmup_rounds=2, verify_per_round=3,
@@ -635,6 +635,11 @@ _FAULTS = [
     '(BrokenProcessPool mid B-u5, native ucrtbase abort 0xc0000409 in another attempt) - the wave '
     'width is lowered to 6. Host capacity knob only: same jobs, same seeds, same recipes; '
     'episode/verification results are per-episode deterministic so receipts are unaffected',
+    'fault 14 (host capacity, resume run 2026-11-04): the 9000 s scenario cap (set for the '
+    'original parallel schedule) fired during arm R finalization under co-tenant contention - '
+    'R u5 update completed but its lesson check/PAUSE were cut (arms_ok False, everything else '
+    'green, wall_s exactly 9000.4); sequential arms need the whole A+B+R chain in one cap, so '
+    'the scenario timeout is raised to 14400 s. Knob only: no recipe or threshold change',
 ]
 
 if __name__ == '__main__':
