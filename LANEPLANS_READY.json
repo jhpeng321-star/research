@@ -27,8 +27,10 @@
    "test_bank_{amendment,boot,builder,imitation,perseed,restore_ops,safety}_cpu: 46 passed",
    "test_launch_final_cpu: 13 passed"
   ],
-  "regression": [
-   "test_niche_search_cpu + test_verify_continuation_cpu: 52 passed (goldens byte-identical: OFF output unchanged)",
+   "regression": [
+    "post-merge (7986ca54) re-run of ALL required suites in one invocation: 109 passed",
+    "post-merge lane feature + partner policy suites: test_lane_plans_cpu (30) + test_v2v_lane_cpu (16) = 46 passed",
+    "test_niche_search_cpu + test_verify_continuation_cpu: 52 passed (goldens byte-identical: OFF output unchanged)",
    "test_awr_cpu + test_imitfix2_cpu + test_imitstrength_cpu + test_bank_imitation_cpu: 36 passed (legacy imitation reports byte-identical)",
    "test_v2v_intent_cpu + test_replay_bank_v2v_cpu: 27 passed",
    "test_replay_bank_confirm_cpu + test_replay_bank_lesson_cpu: 31 passed",
@@ -59,13 +61,14 @@
   "v2v_launch3": "no safety check touched; launch_final CPU suite passes unchanged"
  },
  "integration_notes_c4_lane_policy": {
-  "status_at_writing": "c4/lane-policy HEAD 14b4bdba (no LANEPOLICY_READY.json yet at writing time); NOT merged - this branch reads it only.",
+  "status_at_writing": "MERGED: LANEPOLICY_READY appeared (c25218ca, code commit 9bfb3f2e per their receipt) and c4/lane-policy was merged INTO c4/lane-plans as merge commit 7986ca54; options still OFF by default on both sides; all post-merge verification below was re-run on 7986ca54.",
+  "merge_compat_hunks": "three additive post-merge hunks came in with the merge: acceleration.Controller refuses a lane-head policy outside the lane runtime (their part 3, my lane_executor path unaffected); replay_bank bank_pairs/_action_error build empty intent['lane_board'] slots when v2v_intent lane_actions ON / policy has lane_intent_head (their part 4 contract, refreshed by exact_update); sumo_verify VerifyController audit skips counting lane events that are all blocked='unbound' (under the c4/lane-policy runtime outcomes ride the tick via observe_lane - my exact_grade event['lane_outcome'] fallback covers imitation either way).",
   "lane_head_contract": "ALREADY ALIGNED: v2v_lane.LanePolicy.lane_logits(context) -> [N,3] (their 132e06a8) is exactly the contract lane_plans.policy_lane_ce consumes; the merged policy trains on plan lane targets unchanged (their head-bias init -104 neutral keeps keep-seconds ~0 loss, attempts carry the gradient).",
   "execution_path": "their coopfree.backend.tick passes controller.lane_request(env) -> CavSumoEnv.step(accel, lanes=...) (LC_MODE_POLICY, SUMO's own lane-change safety model) and records controller.observe_lane(info) -> v2v_lane.lane_outcome(counts) with the SAME keys as lane_plans.record_events (requested/issued/blocked/executed). At merge: v2v_lane.lane_targets(sample, rows) should UNION sample['lane_requests'] ({vid: keep/left/right from the active plans; this branch emits it per second} converted with LANE_SIGNED to target lanes) with the policy's sample['lane_choice']; a plan member with an active lane plan should follow the plan (the policy lane choice for committed-plan members is superseded) - owner to pin the exact precedence at merge.",
   "outcome_bridge": "this branch already falls back to the step-level event['lane_outcome'] (their per-tick aggregate) in exact_grade.imitation_pairs when the per-vid sample['lane_events'] is absent; lane_plans.bind_executor(fn(rows, requests, now)) stays optional for callers outside the v2v runtime (Controller(lane_executor=...) also works); unbound requests are recorded, never claimed executed.",
   "intent_lane": "representation difference to reconcile at merge: this branch's intent_lane_target uses the 3-class action encoding (0 keep/1 left/2 right, same as plan lane_actions and lane_logits); v2v_intent.lane_own_targets on c4/lane-policy uses signed deltas (-1/0/+1) of REALISED choices. Keep one convention (owner call); LANE_SIGNED maps between them.",
   "wm_lane_model": "lane_plans.lane_model tries wms.physics.lane_learnable first (the partner interface named in the owner spec; not present at 14b4bdba), then lane_v5 LaneV5Net (pre-fit path or registered head-bias prior). When physics.lane_learnable lands it is picked up automatically (module-level attr 'model(path)').",
-  "merge_order": "merge c4/lane-policy INTO c4/lane-plans when LANEPOLICY_READY.json appears (this branch touches acceleration.py/v2v_intent.py/replay_bank.py/exact_grade.py/coopfree-free files only additively; no textual conflict expected except trivial context lines)."
+  "merge_order": "DONE (7986ca54): c4/lane-policy merged INTO c4/lane-plans, no conflicts; the plan-vs-policy lane precedence union (plan member follows the active plan, policy choice superseded) remains an OWNER call for a lane training run - both mechanisms are OFF by default and additive until pinned."
  },
  "rules_respected": [
   "CPU only; no SUMO/GPU/ssh; work only in E:/agent-work/c4-lane-plans (read-only peeks at c4-lane-policy)",
