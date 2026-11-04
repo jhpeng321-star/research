@@ -13,8 +13,19 @@
   "files": [
     "tools/coopmwm/staging_closure.py",
     "tools/coopmwm/test_staging_closure_cpu.py",
-    "P4_READY.json"
+    "P4_READY.json",
+    "P4_ACCEPTED.json",
+    "REVIEW_P4_r0.md"
   ],
+  "acceptance": {
+    "receipt": "P4_ACCEPTED.json",
+    "review": "REVIEW_P4_r0.md",
+    "verdict": "PASS",
+    "reviewed_commit": "91a3d70e77a2a6b9ac5fac4936e80d9522b7cb0a",
+    "independent_verifier": "astra",
+    "tests": "33 passed, 0 failed, 0 skipped in 11.77s",
+    "resume_verification": "Implementation, tests and prior readiness receipt matched the reviewed commit exactly before this receipt-only update. Existing accepted CPU results reused; no jobs or dispatches started."
+  },
   "dependencies": {
     "component_branches_merged": [],
     "reason": "P4 requires only existing production bank-reader rules present on c4/track-base; no optional component-module dependency.",
