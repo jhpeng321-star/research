@@ -12,5 +12,7 @@
     "budget": "Use effective fraction everywhere training/reference cost is quoted; preserve normal horizon and matched A references.",
     "resume": "Reuse sealed plans without resampling or rereading growing augmentation inputs."
   },
-  "execution": "CPU tests only; no training, SUMO, remote dispatch, or background job launched."
+  "execution": "CPU tests only; no training, SUMO, remote dispatch, or background job launched.",
+  "completed": true,
+  "ready_receipt": "T2H_READY.json"
 }
