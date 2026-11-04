@@ -1,0 +1,59 @@
+{
+ "task": "slim_extend_spec.md: extend slim_rejected_tapes to FIRST-SEED rejected candidate tapes of decisions WITHOUT an all8 record (slim_first_seed_tapes)",
+ "status": "READY",
+ "branch": "c4/slim-extend",
+ "base": "c4/checking-cpus 874f67aa (reviewed slim_tapes 3a0e19c5 lineage)",
+ "commits": [
+  "830e9d61 coopmwm slim_tapes: slim_first_seed_tapes selection (first_seed_plan), protection discovery (lesson lists/CLAIMs/gate plans/QUEUE/retired registries), per-arm quote and archive migrate CLI",
+  "99486783 coopmwm slim_first_seed_tapes: first-seed selection/quote/migrate CPU tests"
+ ],
+ "files": [
+  "tools/coopmwm/slim_tapes.py (first_seed_plan / first_seed_receipts / first_seed_quote / first_seed_migrate / protection_report / protected_ids / retired_ids / first_seed_main CLI; existing slim_plan/slim_branch/_move_verified reused UNCHANGED)",
+  "tools/coopmwm/test_slim_first_seed_cpu.py (14 CPU tests, no SUMO)"
+ ],
+ "selection_rules": {
+  "eligible": "completed (accepted/rejected) first-seed receipt under replay_bank/<arm>/sumo_verification whose sealed legacy confirmation (bank/confirmations/<vid>.json) exists, or which is registered retired from all8 in an ALL8_RETIRED*.json registry (verification_ids)",
+  "kept_full_tape_when_any": [
+   "1. 'policy' branch (grading reference, _cooperation relabel, bootstrap)",
+   "2. first-seed CHOSEN branch (receipt['chosen']+1): legacy bank_pairs, lesson_check._action_error, legacy confirmations",
+   "3. decision in any LESSON_LIST_*.json (bank + run root, warm1/coop3 layouts via --protect/extra), isolated-synergy CLAIM verification_ids (policy_synergy and v2v_live.isolated controls), coopfix gate plan/report certified states (COOPFIX_EXACT_PLAN.json / COOPFIX_GATE.json, e.g. gate_coop6/7/8), BACKFILL/CPUS-CHECK QUEUE.json pending entries or not-yet-complete control attempts",
+   "4. no sealed legacy confirmation AND not registered retired (legacy confirm pending), or receipt status not accepted/rejected",
+   "5. sealed confirmations_all8 record exists (the reviewed slim_plan already covers its seed-1 rejected candidates; cpuS slim_first_seed RPC handles those)"
+  ],
+  "never_touched": "admitted/reference/solo tapes, candidate spec files (cand*.spec.json), observable.jsonl.gz traces, snapshots, receipts, every confirmation/record file; BAD-guarded paths (sealed/, holdout-like) are never opened; SLIM.json fallback (bank_statistics._read_result) keeps readers working"
+ },
+ "quote_cli": {
+  "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m tools.coopmwm.slim_tapes first-seed quote --root <RUN_ROOT> --arm B|R|all [--protect PATH]...",
+  "output": "per-arm JSON: decisions, eligible_decisions, branches, bytes_removed_total, slim_bytes_total, kept_decisions (keep-reason counts), per_decision {vid: {status, branches, bytes_removed, kept_reasons}}, protection {file: ids}",
+  "read_only": true
+ },
+ "run_command": {
+  "quote_first": "python -m tools.coopmwm.slim_tapes first-seed quote --root /home/ubuntu/coopmwm20261102_warm1 --arm all",
+  "dry_run": "python -m tools.coopmwm.slim_tapes first-seed migrate --root /home/ubuntu/coopmwm20261102_warm1 --arm all --archive <local staging dir> --dry-run",
+  "migrate": "python -m tools.coopmwm.slim_tapes first-seed migrate --root /home/ubuntu/coopmwm20261102_warm1 --arm all --archive <local staging dir>",
+  "notes": [
+   "Archive layout is bank-relative (<archive>/<arm>/replay_bank/<arm>/<rel>) and restores 1:1; moves are sha256-verified both sides via the reviewed _move_verified (copy -> verify -> SLIM.json -> unlink); a PARTIAL failure keeps BOTH sides, records PARTIAL.json and STOPS the run.",
+   "cpuS destination binding per spec: rsync the local staging dir to /home/ubuntu/coopmwm20261104_cpus_checking/archive_cpuq_first_seed/ (internal VPC, cpuQ boxsync key, pinned known_hosts_cpus) - operator step, out of scope of this CPU-only build (no ssh/remote here).",
+   "Pass coop3/other run-root lesson lists explicitly: --protect /home/ubuntu/<coop3_root>/LESSON_LIST_B.json or env C4NM_SLIM_FIRST_SEED_PROTECT (os.pathsep-separated).",
+   "Default OFF: nothing in the runtime is wired to this selection; it runs only via this explicit CLI. The option key of the reviewed slim_rejected_tapes (C4NM_SLIM_REJECTED_TAPES) is untouched."
+  ]
+ },
+ "tests": {
+  "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+  "results": {
+   "tools/coopmwm/test_slim_first_seed_cpu.py": "14 passed (new: selection excludes protected/admitted/referenced/all8-sealed/pending; OFF read-only identity + dry-run; SLIM fallback series bit-identical for every eligible branch; policy/chosen/spec files/traces kept; bank_pairs + lesson_check._action_error + report_per_seed + certified_candidates + relabel unchanged after slimming; PARTIAL failure keeps both sides and stops; copy failure keeps source; quote bytes per decision; CLI quote/migrate/--arm all/--protect)",
+   "tools/coopmwm/test_slim_tapes_cpu.py": "11 passed",
+   "tools/coopmwm/test_verify_perseed_cpu.py": "21 passed",
+   "tools/coopmwm/test_bank_amendment_cpu.py + test_bank_boot_cpu.py + test_bank_builder_cpu.py + test_bank_imitation_cpu.py + test_bank_restore_ops_cpu.py + test_bank_safety_cpu.py": "31 passed",
+   "tools/coopmwm/test_bank_perseed_cpu.py": "16 passed",
+   "tools/coopmwm/test_launch_final_cpu.py": "13 passed"
+  }
+ },
+ "hard_rules_respected": {
+  "cpu_only": "no SUMO, no GPU, no ssh/remote calls anywhere in the build or tests",
+  "worktree": "all work in E:/agent-work/c4-slim-extend on branch c4/slim-extend",
+  "git": "no reset/clean/stash-drop/push; incremental commits",
+  "protected_paths": "no sealed/ or holdout/heldout/cal_split/chunk5/j4b/inc1 paths opened (archive_move.BAD enforced in code and exercised by a test)",
+  "truth_files": "hetdata_truth and vType/driver/vehicle_params truth files never read"
+ }
+}
