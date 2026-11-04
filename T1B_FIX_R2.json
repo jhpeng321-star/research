@@ -1,0 +1,67 @@
+{
+  "task": "T1B",
+  "round": "fix_after_REVIEW_T1B_r2",
+  "status": "CPU_VERIFIED",
+  "branch": "c4/planner-online",
+  "worktree": "E:/agent-work/c4-planner-online",
+  "review": "REVIEW_T1B_r2.md",
+  "reviewed_head": "c22ae7432144aaab91ad46d732a223a4cca63839",
+  "review_preservation_commit": "fc92dce9",
+  "implementation_commit": "cb765ba5bf5f55e85560fdeceed4800926ef6cae",
+  "resume": {
+    "previous_uncommitted_implementation_and_tests_preserved": true,
+    "prior_readiness_preserved_at": "T1B_READY.blocked2.json",
+    "active_task_test_or_dispatch_jobs_found": false,
+    "jobs_duplicated": false,
+    "additional_work": "Inspected preserved joint-lifetime implementation and numeric regressions; extended the real WMRollout/evaluate full-horizon chunk/sample test to use metadata-aware offset_commitments; completed CPU verification and commits."
+  },
+  "blockers_total": 1,
+  "blockers_addressed": [
+    {
+      "id": 1,
+      "defect": "Forecasts flattened candidate and background offsets, so joint commands survived imagined member departure or ego contact loss despite live cancellation.",
+      "resolution": "Scoring preserves ego_id, members and offset_profile for every commitment. The live controller and WM decoder share the observable in_contact predicate. Each imagined action has independent cancellation state, checked at the live whole-second cadence and reset only at a new future's tick zero. A lost member, lost CAV membership, or out-of-range partner permanently releases the entire commitment in that branch; later recontact cannot revive it. Background commitments retain independent lifetimes in both scoring arms. Partially observed backgrounds fail closed without exposing unseen member metadata. Base-policy continuation and the full 600-second rollout remain active after cancellation.",
+      "numeric_regression": "test_live_and_real_decoder_joint_cancellation_recontact_and_full_horizon: 16 cases = candidate/background x range/member departure/ego departure/CAV membership x immediate/delayed onset. Captures actual scoring actions from the V2V-wrapped controller; compares numeric live and real-decoder requests, staggers branch contact loss, checks an unaffected branch, independent background/candidate survival, half-step cadence, expiry, all 600 seconds, and reset for a new future.",
+      "additional_regressions": "Nine metadata/privacy/refusal cases, updated shared-background assertions, and metadata-aware real-adapter chunk/sample invariance for plain stochastic and intent policies."
+    }
+  ],
+  "unresolved_review_blockers": [],
+  "verification_environment": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "CUDA_VISIBLE_DEVICES": "",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "fixtures": "Synthetic CPU policies, observations and dynamics; fake vehicle/external executor interfaces; pytest temporary roots inside this worktree's _out.",
+    "warning": "Each completed invocation emitted one Unknown config option: cache_dir warning because cacheprovider was disabled."
+  },
+  "tests": [
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider --basetemp=E:/agent-work/c4-planner-online/_out/t1b-r2-resume-focus tools/coopmwm/test_planner_policy_cpu.py tools/coopmwm/test_planner_online_cpu.py",
+      "result": "114 passed, 1 warning in 226.13s",
+      "coverage": "r2 cancellation blocker, prior r0/r1 policy sampling and calibrated gate fixes, full horizon, single writer and default-off byte/RNG identity"
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider --basetemp=E:/agent-work/c4-planner-online/_out/t1b-r2-resume-compat tools/coopmwm/test_varcollect_cpu.py",
+      "result": "48 passed, 1 warning in 25.30s",
+      "coverage": "Variety-collection and legacy forecasting compatibility"
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider --basetemp=E:/agent-work/c4-planner-online/_out/t1b-r2-resume-regression tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_command_chain_cpu.py tools/coopmwm/test_mppi_runtime_cpu.py::LongProfileTests::test_transfer_table_exact_for_long_profiles_and_dynamic_policy tools/coopmwm/test_mppi_runtime_cpu.py::LongProfileTests::test_imagined_nonzero_actor_matches_observable_plant_actor tools/coopmwm/test_v2v_intent_cpu.py::test_partner_intent_has_one_step_latency tools/coopmwm/test_v2v_intent_cpu.py::test_runtime_reset_and_despawn tools/coopmwm/test_v2v_intent_cpu.py::test_actions_identical_to_current_v2v_policy_at_load tests/unit/test_c4_v2v_obs.py",
+      "result": "26 passed, 1 warning, 9 subtests passed in 11.92s",
+      "coverage": "Runtime, ownership, long profiles, dynamic policy, causal intent and V2V observations"
+    },
+    {"command": "git diff --check c4/track-base", "result": "passed"}
+  ],
+  "interrupted_attempt": "The first focused invocation hit the shell's 120-second timeout after progress dots without reported failures. Its process was confirmed exited before the completed 600-second-timeout rerun. No interrupted-attempt tests are counted.",
+  "final_test_total": "188 passed plus 9 passing subtests; no failures or skips; completed runs counted once",
+  "independent_rereview_after_fix": "pending",
+  "constraints": {
+    "cpu_only": true,
+    "sumo_launched": false,
+    "gpu_used": false,
+    "remote_or_ssh_used": false,
+    "writes_only_in_task_worktree": true,
+    "restricted_seed_or_truth_paths_opened": false,
+    "hidden_driver_or_global_state_as_planner_input": false,
+    "reset_clean_stash_drop_push_rebase_used": false
+  }
+}

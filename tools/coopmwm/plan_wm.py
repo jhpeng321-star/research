@@ -25,7 +25,10 @@ def profile_table(actions, ids, device, horizon=300, dynamic_policy=False):
             for v,x in background.items():
                 if v in slots:
                     raw[b,t,slots[v]]=x;mask[b,t,slots[v]]=True;residual[b,t,slots[v]]=True
-            if 'knots' in a or 'profile' in a:
+            if 'offset_profile' in a:
+                # T1B opt-in: relative to the dynamically continued base actor.
+                values=a['offset_profile'][t] if t<len(a['offset_profile']) else {};is_residual=True
+            elif 'knots' in a or 'profile' in a:
                 values=acceleration_at(a,t);is_residual=False
             else:
                 values=a.get('residuals',{}) if t<a.get('window',0) and not dynamic_policy else {};is_residual=True
@@ -36,22 +39,32 @@ def profile_table(actions, ids, device, horizon=300, dynamic_policy=False):
             for v,x in committed_background(a.get('committed_plans',[]),t).items():
                 if v in slots:
                     raw[b,t,slots[v]]=x;mask[b,t,slots[v]]=True;residual[b,t,slots[v]]=False
+            for commitment in a.get('offset_commitments',[]):
+                profile=commitment['offset_profile']
+                for v,x in (profile[t] if t<len(profile) else {}).items():
+                    if v in slots:
+                        raw[b,t,slots[v]]=x;mask[b,t,slots[v]]=True;residual[b,t,slots[v]]=True
     return raw.to(device),mask.to(device),residual.to(device)
 
 
-def profile_apply(accel,tick,table,bounds):
+def profile_apply(accel,tick,table,bounds,offset_actions=None,commitment_mask=None):
     raw,mask,residual=table
     t=int(tick*.5)
     if t>=raw.shape[1]:return accel
     n=raw.shape[-1]
     out=accel.clone()
     request=torch.where(residual[:,t],accel[:,:n]+raw[:,t],raw[:,t])
-    out[:,:n]=torch.where(mask[:,t],request.clamp(*bounds),accel[:,:n])
+    if offset_actions is not None:
+        # Only the new offset decoder uses the registered CAV request cap.
+        # Unchanged vehicles still retain their original policy continuation.
+        request=torch.where(offset_actions,request.clamp_max(1.2),request)
+    active=mask[:,t] if commitment_mask is None else mask[:,t]&commitment_mask
+    out[:,:n]=torch.where(active,request.clamp(*bounds),accel[:,:n])
     return out
 
 
 @contextmanager
-def plan_executor(horizon=300, policy=None, trace=None, final_chain=False):
+def plan_executor(horizon=300, policy=None, trace=None, final_chain=False, policy_radio=None):
     """Keep original bridge, memory, lane mask, cap, and safe_accel implementation."""
     from tools.wmteach import runtime
     original=runtime.option_controller
@@ -68,23 +81,38 @@ def plan_executor(horizon=300, policy=None, trace=None, final_chain=False):
     if matches!=1:raise ValueError('inherited pre-safety ABI changed')
     ast.fix_missing_locations(tree)
     held=[None]
+    from .planner_commitments import Lifetimes
+    lifetimes=Lifetimes()
     from .command_chain import SlowDown
     chain=SlowDown() if final_chain else None
     def post_safety(state,raw,tick,safety,kw):
-        if chain is None:return safety(state,raw,**kw)
+        if chain is None:
+            safe=safety(state,raw,**kw)
+            if policy_radio is not None:policy_radio.observe_issued(state,safe,tick)
+            return safe
         from wms.control.sumo_idm import allowed_speed
         from wms.control.alwayscmd import inferred_cap
         # SUMO computes safe_accel/CommandOwnership once per control decision,
         # then executes the slowDown timeline under speedMode27 every half-step.
         safe=safety(state,raw,**kw) if tick%2==0 else raw
+        if policy_radio is not None and tick%2==0:
+            from .command_chain import ownership_target
+            issued,_,_=ownership_target(state['v_mps'],safe,allowed_speed(state['lane'],state['s_m']))
+            policy_radio.observe_issued(state,issued,tick)
         return chain.apply(state,safe,tick,allowed_speed(state['lane'],state['s_m']),inferred_cap(state))
     def decode(state,accel,tick,table,bounds,actions,ids):
         if policy is not None:
             from .policy_wm import residuals
-            if tick%2==0 or held[0] is None:held[0]=residuals(policy,state,ids)
+            if tick%2==0 or held[0] is None:
+                held[0]=(policy_radio.residuals(state,ids,tick) if policy_radio is not None
+                         else residuals(policy,state,ids))
             own=torch.tensor([a['id']!='MAPPO' for a in actions],device=accel.device)[:,None]
             accel=accel+held[0]*own
-        raw=profile_apply(accel,tick,table,bounds)
+        offset_actions=(torch.tensor(['offset_profile' in a or 'offset_commitments' in a for a in actions],device=accel.device)[:,None]
+                         if any('offset_profile' in a or 'offset_commitments' in a for a in actions) else None)
+        live=(lifetimes.mask(state,ids,tick,actions)
+              if any('offset_commitments' in a for a in actions) else None)
+        raw=profile_apply(accel,tick,table,bounds,offset_actions=offset_actions,commitment_mask=live)
         if trace is not None and tick%2==0:trace.append(raw.detach().clone())
         return raw
     ns=dict(original.__globals__,profile_table=profile_table,horizon=horizon,policy=policy,decode=decode,post_safety=post_safety)
@@ -94,12 +122,15 @@ def plan_executor(horizon=300, policy=None, trace=None, final_chain=False):
     finally:runtime.option_controller=original
 
 
-def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,horizons=None,speed2=False,memory=None,trace=None,transfers=False,final_chain=False):
+def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,horizons=None,speed2=False,memory=None,trace=None,transfers=False,final_chain=False,require_policy_radio=False):
     """Same source draws, CRN keys, insertions, departure loop and J reducer.
 
     A single compact-forward proxy retains full virgin-slot controller memory.
     Candidate chunks bound memory without changing future IDs or source capacity.
     """
+    if require_policy_radio:
+        from .planner_policy import validate
+        validate(record)
     hs=tuple(horizons or (H,))
     output={str(h):{a['id']:[] for a in actions} for h in hs}
     proxy=FusedModel(rt.model,1,trim_absent=trim or speed2);proxy.local.index=0
@@ -110,8 +141,13 @@ def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,h
     policy=None
     if record.get('policy_state') is not None:
         from .policy_wm import load_actor
-        policy=load_actor(record['policy_state'],next(rt.mp.policy.parameters()).device)
-    with (memory.context(rt,record) if memory is not None else warm_adapter(rt,record)),(compact_geometry(proxy) if speed2 else nullcontext()),(fast_transfers() if transfers else nullcontext()),executor_adapter(),plan_executor(H,policy,trace,final_chain=final_chain):
+        with (torch.random.fork_rng(devices=[]) if record.get('policy_radio') is not None else nullcontext()):
+            policy=load_actor(record['policy_state'],next(rt.mp.policy.parameters()).device)
+    radio=None
+    if record.get('policy_radio') is not None:
+        from .planner_policy import Continuation
+        radio=Continuation(record,policy)
+    with (memory.context(rt,record) if memory is not None else warm_adapter(rt,record)),(compact_geometry(proxy) if speed2 else nullcontext()),(fast_transfers() if transfers else nullcontext()),executor_adapter(),plan_executor(H,policy,trace,final_chain=final_chain,policy_radio=radio):
         for start in range(0,len(actions),chunk_actions):
             subset=actions[start:start+chunk_actions]
             subset=[dict(a,background_residuals=record['policy_residuals']) if ('knots' in a or 'profile' in a) else a for a in subset]

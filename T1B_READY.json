@@ -1,0 +1,109 @@
+{
+  "task": "T1B",
+  "status": "READY_FOR_INTEGRATION",
+  "round": "fix_after_REVIEW_T1B_r2",
+  "scope": "CPU build and synthetic contract tests; online execution is opt-in",
+  "branch": "c4/planner-online",
+  "base": "c4/track-base",
+  "base_commit": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
+  "worktree": "E:/agent-work/c4-planner-online",
+  "resume": {
+    "starting_head": "c22ae7432144aaab91ad46d732a223a4cca63839",
+    "starting_worktree_status": "T1B_READY.json deleted; four implementation/test files modified; REVIEW_T1B_r2.md, T1B_READY.blocked2.json and planner_commitments.py untracked",
+    "previous_session_implementation_preserved": true,
+    "prior_receipt_preserved_at": "T1B_READY.blocked2.json",
+    "prior_receipt_is_superseded": true,
+    "active_task_test_jobs_found": false,
+    "jobs_dispatched_or_duplicated": false,
+    "first_reads": "git status/log, shared tracks_spec.md, independent r2 review and prior receipt"
+  },
+  "commits": [
+    {"commit": "abaada860309abdd043f7fc0d250fc77688acba3", "step": "Calibrated paired-WM scoring and additive residual-profile decoding"},
+    {"commit": "fcb0a2dcc6f7dfc9c368e8f03a1d26fab1584b00", "step": "Default-off V2V single-writer runtime hook"},
+    {"commit": "925a44eeaca2f8f23f1e6ecbce117af2a5c47a97", "step": "Cadence replanning and default-off event/RNG identity"},
+    {"commit": "c299e09c", "step": "r0 fix: observable branch-local V2V/intent continuation"},
+    {"commit": "6a116d767f07bd62efd0d76adfd50f524fe906f8", "step": "r1 fixes: plain MAPPO sampling continuation and enforced confidence 0.8"},
+    {"commit": "fc92dce9", "step": "Preserve independent r2 review and superseded readiness"},
+    {"commit": "cb765ba5bf5f55e85560fdeceed4800926ef6cae", "step": "r2 fix: shared observable joint-commitment lifetime, metadata-aware decoder and numeric regressions"},
+    {"commit": "ef6f9676", "step": "r2 CPU verification checkpoint: 188 tests plus 9 passing subtests"}
+  ],
+  "receipt_commit": "The commit containing this T1B_READY.json; resolve with git log -1 --format=%H -- T1B_READY.json",
+  "review": {
+    "report": "REVIEW_T1B_r2.md",
+    "reviewed_head": "c22ae7432144aaab91ad46d732a223a4cca63839",
+    "original_verdict": "BLOCK",
+    "blockers_total": 1,
+    "blockers_addressed": [
+      {
+        "id": 1,
+        "defect": "Forecast offsets survived joint-commitment cancellation that live execution correctly applied on contact/member loss.",
+        "resolution": "Preserve ego/member metadata for candidates and background commitments. Live execution and imagined decoding share the observable contact predicate. Each forecast action independently cancels the whole affected commitment on a missing member/ego, lost CAV membership, or range loss, checked at the live whole-second cadence. Cancellation persists through recontact and is reset only for a new indexed future. Background lifetimes are independent in both scoring arms. Incomplete background visibility fails closed. Base policy still rolls through the complete 600-second horizon.",
+        "tests": "16 numeric captured-action live-versus-real-decoder cases spanning candidate/background, range/member/ego/CAV loss, immediate/delayed onset, branch-local loss, recontact, half-step decisions, expiry and future reset. Nine background metadata/privacy/refusal cases. Metadata-aware real-adapter full-horizon chunk/multiple-sample invariance."
+      }
+    ],
+    "verification_checkpoint": "T1B_FIX_R2.json",
+    "unresolved_blockers": [],
+    "independent_rereview_after_fix": "not yet performed"
+  },
+  "defaults": {
+    "runtime_enabled": false,
+    "cadence_s": 60,
+    "n_candidates": 32,
+    "wm_samples": 8,
+    "horizon_s": 600,
+    "p_star": 0.8,
+    "maximum_group_members": 4,
+    "maximum_cav_acceleration_mps2": 1.2,
+    "observable_range": "Inherited v2v_obs.V2VConfig.range_m"
+  },
+  "api": {
+    "Config": "Config(cadence_s=60, n_candidates=32, wm_samples=8, horizon_s=600, p_star=0.8). Samples >=2; horizon must equal 600; p_star must equal 0.8.",
+    "score_moves": "score_moves(record, rng, *, rollout, calibration, config=None, calibrate=None, move_api=None) -> dict. Simulator-independent scoring boundary shared with dense teachers.",
+    "observation": "ego_id, group, rows, time_s, commands, policy_residuals, policy_state, policy_radio; optional history, world_id, state_id, committed_moves. Rows/history are whitelisted, causal and ego-local. Group includes ego and 1..4 observed CAVs.",
+    "commitments": "record['committed_moves'] is a list of {ego_id, members, offset_profile}, disjoint from the candidate group and each other, with complete observed CAV membership/contact. action['offset_commitments'] preserves these plus the new candidate's metadata. Profiles are relative per-second offsets. Metadata-free committed_offsets records are refused.",
+    "joint_lifetime": "planner_commitments.in_contact(commitment, rows, cavs) is shared by live execution and Lifetimes.mask(state, ids, tick, actions). Imagined cancellation is independent per action and commitment, permanent through recontact, checked each whole second and reset at future tick zero. After release, the full-horizon base-policy continuation remains active.",
+    "policy_radio": "Required for all online actors, including plain MAPPO. Contains current frame, previous_commands, deterministic, observed-CAV noise, generator_state, log_std and intent. intent is null unless supported; otherwise contains horizon, prior timestamped board, learned head and bounds. Missing sampling state or current residuals fails closed.",
+    "Continuation": "planner_policy.Continuation(record, policy=None). residuals(state, ids, tick) resets each future at tick zero and reuses current live samples, then advances branch-local actor/noise/RNG/radio/intent each whole second. observe_issued(state, command, tick) receives post-safety issued commands.",
+    "moves_dependency": "Lazy tools.coopmwm.moves: FAMILIES, candidates(obs_state, rng, n), offsets(move, t). Members restricted to record['group']; no production stub.",
+    "calibration_dependency": "Lazy tools.coopmwm.planner_calibration.calibrate_probability(p_raw, calibration), or explicit calibrate adapter. Mandatory finite probability in [0,1]; no raw fallback.",
+    "rollout": "Callable(record, actions, K, H) -> {action_id: K paired costs or team_delay dictionaries}; lower cost is better; common future indices.",
+    "WMRollout": "WMRollout(runtime, memory=None, chunk_actions=4) requires CPU WM/policy parameters and calls plan_wm.evaluate with trim=False, final_chain=True, require_policy_radio=True and full H.",
+    "legacy_compatibility": "plan_wm.evaluate defaults require_policy_radio=False; plan_executor defaults policy_radio=None. Legacy absolute/static offset_profile and non-online callers retain their prior decoding. The new lifetime path is enabled only by offset_commitments. policy_wm.py is unchanged.",
+    "selection": "Explicit none id='policy' continues the base actor and shared background commitments. p_raw counts strictly positive paired gains. Calibration is mandatory. Select greatest positive expected gain with calibrated P >=0.8, stable ties.",
+    "OnlinePlanner": "OnlinePlanner(*, rollout, calibration, rng, accel_bounds, config=None, calibrate=None, move_api=None, world_id=None). Separate move RNG. apply(..., sample, desired, policy, policy_radio=None) returns pre-safety requests.",
+    "runtime_hook": "v2v_runtime.controller_class(acceleration.Controller)(policy, generator, deterministic, planner_online=planner); omission/None is OFF. Captures plain/V2V/intent sampling state. Competing guide/replay/branch producers are refused.",
+    "execution": "Cadence replanning replaces ongoing moves; failures/rejections return to base. Offset expiry or member/contact loss releases the whole affected commitment. Shared observable backgrounds appear in both scoring arms. Look-ahead remains 600 seconds.",
+    "single_writer": "Only modifies pre-safety requests and sample action record; own_action remains sampled base. Existing CommandOwnership is sole plant writer, speedMode 27; no HDV commands.",
+    "events": "Enabled planner_online events contain decisions, paired scores, calibrated probabilities, failures and offsets. Default-off serialized events and policy RNG match track-base. Actor loading preserves global torch RNG."
+  },
+  "verification_environment": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "CUDA_VISIBLE_DEVICES": "",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "fixtures": "Synthetic CPU policies, observations, dynamics and fake vehicle API; temporary fixtures confined to worktree _out",
+    "pytest_warning": "Each completed invocation emitted one Unknown config option: cache_dir warning because cacheprovider was disabled"
+  },
+  "tests": [
+    {"suite": "tools/coopmwm/test_planner_policy_cpu.py tools/coopmwm/test_planner_online_cpu.py", "result": "114 passed, 1 warning in 226.13s"},
+    {"suite": "tools/coopmwm/test_varcollect_cpu.py", "result": "48 passed, 1 warning in 25.30s"},
+    {"suite": "Runtime/ownership/dynamic-policy/intent/V2V observation regression selection", "result": "26 passed, 1 warning, 9 subtests passed in 11.92s"},
+    {"command": "git diff --check c4/track-base", "result": "passed"}
+  ],
+  "test_commands_and_interrupted_attempt": "T1B_FIX_R2.json contains exact commands and the excluded initial timeout; no active T1B job was duplicated.",
+  "final_test_total": "188 passed plus 9 passing subtests; no failures or skips; completed runs counted once",
+  "open_issues": [
+    "T1A moves.py and T1C planner_calibration.py are absent in this worktree. Tests use permitted test-local dependencies. Actual cross-track API/artifact integration remains unverified.",
+    "No trained-WM or plant rollout was run. Full-horizon tests use synthetic dynamics. This receipt establishes CPU build/contract readiness, not evaluation performance.",
+    "Independent rereview of the r2 fix is pending."
+  ],
+  "constraints": {
+    "cpu_only": true,
+    "sumo_launched": false,
+    "gpu_used": false,
+    "remote_or_ssh_used": false,
+    "writes_only_in_task_worktree": true,
+    "restricted_seed_or_truth_paths_opened": false,
+    "hidden_driver_or_global_state_as_planner_input": false,
+    "reset_clean_stash_drop_push_rebase_used": false
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "task": "T1C",
+  "status": "READY",
+  "scope": "CPU calibration tooling and tests ready; production calibration artifact not fitted",
+  "branch": "c4/planner-calib",
+  "worktree": "E:/agent-work/c4-planner-calib",
+  "base": "13f184b5 (c4/track-base)",
+  "commits": [
+    {
+      "commit": "91506b18",
+      "step": "Trace verified gain, comparator, horizon and CRN seed contracts"
+    },
+    {
+      "commit": "142261b8",
+      "step": "Implement isotonic calibration, strict record ingestion, metrics, SVG, CLI and 40 CPU tests"
+    }
+  ],
+  "receipt_commit": "The commit adding this file; resolve with git log -1 -- T1C_READY.json",
+  "files": [
+    "tools/coopmwm/planner_calibration.py",
+    "tools/coopmwm/test_planner_calibration_cpu.py",
+    "T1C_READY.json"
+  ],
+  "source_contract": {
+    "verified_schema": "coopmwm/sumo_verify/v1",
+    "wm_gain": "sumo_verify.verify stores predicted_saving[i] from candidate saving_vs_policy (legacy fallback: saving_vs_mappo)",
+    "comparator_proof": "Require cand<i>.spec.json, verify branch_sha256 and plan identity against receipt, require explicit saving_vs_policy equal to predicted_saving[i]; skip missing own-policy scores rather than mix comparators",
+    "sumo_gain": "J_policy_veh_s - J_candidates_veh_s[i], checked against the graded branch's J_veh_s",
+    "target": "SUMO gain > 0; ties and losses are non-wins",
+    "selection": "All graded candidates from accepted AND rejected WM decisions, not chosen_plan/grade_veh_s or admitted-only examples; failed/ungraded branches not imputed; random proposer excluded",
+    "wm_score_origin": "mppi_runtime.label_list8_search / mppi_search final scoring: WM mean policy cost minus WM mean candidate cost",
+    "probability_semantics": "Existing verified formats contain mean gains, not raw WM P(better). Isotonic PAVA fits WM mean own-policy gain (veh-s) -> empirical P(SUMO gain > 0). p_best is not used as P(better).",
+    "all8_schema": "coopmwm/verify-perseed/v1, verify_mode all8_both_seeds",
+    "all8_reader": "Follow identity-linked first_seed, seed2 and optional extra group receipts; validate confirmation_sha256 and linked receipt_sha256. Do not read per_seed_v1 admitted-only outcomes, extended/solo results, tapes or snapshots.",
+    "seed_group": "episode.world.seed; replay_bank.replicate changes post-t0 RNG only, so all CRN replicas/candidates/updates/arms of a world stay together",
+    "code_references": [
+      "tools/coopmwm/sumo_verify.py: build_branches, verify, run_branch",
+      "tools/coopmwm/mppi_runtime.py: label_list8_search",
+      "tools/coopmwm/mppi_search.py: final saving_vs_policy scoring",
+      "tools/coopmwm/verify_perseed.py: confirm_all8 receipt links and build_example",
+      "tools/coopmwm/replay_bank.py: replicate",
+      "tools/coopmwm/viability_report.py: WM/SUMO horizon comparison caveat"
+    ]
+  },
+  "api": {
+    "load_verified_records(paths, dev_seeds)": "Explicit verified/all8 JSON file paths and explicit development seed allowlist -> (list[Example], provenance including skipped counts and source hashes). Requires candidate branch specs next to each verification root. No directory scanning.",
+    "examples_from_receipt(receipt, specs, dev_seeds)": "Identity-checked in-memory reader -> (list[Example], skipped counts)",
+    "split_by_seed(examples, dev_seeds, validation_fraction=0.25, split_seed=20261104)": "Deterministic original-world split; at least two worlds; no candidate-level or CRN-level leakage",
+    "fit_calibration(examples, dev_seeds, validation_fraction=0.25, split_seed=20261104, n_bins=10)": "Fit only fit partition; require fit wins and non-wins. Return model, independent dev-world validation, fit metrics, seeds, dataset digest, window provenance and limitations.",
+    "Calibrator.predict_probability(wm_gain_veh_s)": "Scalar calibrated P(realised gain > 0); input MUST be WM mean own-policy gain in veh-s, not an uncalibrated probability. PAVA monotone step function, out-of-domain scores clamp to boundary blocks.",
+    "Calibrator.to_dict / Calibrator.from_dict": "JSON model serialization; validate method, input score, monotonicity, probability range and finite values",
+    "load_calibrator(path)": "Load CLI artifact after artifact hash/schema and disjoint non-eval fit/validation seed checks; return Calibrator",
+    "reliability(probabilities, labels, n_bins=10)": "Equal-width bins with count, mean_probability, observed_frequency; weighted ECE, MCE and Brier score; empty bins represented explicitly",
+    "reliability_svg(metrics)": "Standalone SVG reliability diagram, including identity line and per-bin count tooltips"
+  },
+  "cli": {
+    "entrypoint": "python -m tools.coopmwm.planner_calibration",
+    "required": "--records <explicit verified/all8 JSON paths...> --dev-seeds <allowed dev world seeds...> --output <new model JSON> --reliability-svg <new diagram SVG>",
+    "optional": "--validation-fraction 0.25 --split-seed 20261104 --n-bins 10",
+    "outputs": "Model JSON with hash, fit/validation metrics, seed split, source receipt hashes, dataset hash, recorded SUMO windows and limitations; validation reliability SVG. Existing output files refused; parent directories must already exist.",
+    "online_use": "cal = load_calibrator(artifact_path); p = cal.predict_probability(expected_gain_vs_policy_veh_s). T1B owns the registered p_star=0.8 decision gate and full-look-ahead scoring."
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "targeted": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_planner_calibration_cpu.py",
+      "result": "40 passed in 8.70s"
+    },
+    "regression": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_planner_calibration_cpu.py tools/coopmwm/test_sumo_verify_cpu.py tools/coopmwm/test_verify_perseed_cpu.py",
+      "result": "79 passed, 1 failed in 64.49s",
+      "existing_failure": "test_sumo_verify_cpu.py::test_real_controller_never_draws_trust_again_for_verified_plan: ModuleNotFoundError tools.leverprobe in exploration.regime; same existing environment failure documented in VERIFY_PERSEED_READY.json; T1C does not modify these modules"
+    },
+    "coverage": [
+      "Actual sumo_verify.verify receipts and build_branches specs via an existing fake deterministic CPU plant",
+      "All candidates, rejected decisions, incorrect WM predictions, exact ties, failed branches, wrong-comparator fallback exclusion",
+      "Every forbidden seed-range endpoint, adjacent valid boundaries, explicit development allowlist and non-development role refusals",
+      "Forbidden input paths refused before reads; receipt/spec tampering and all8 linked hash mismatch refused",
+      "All8 full group receipt ingestion including losses and direct/all8 duplicate suppression",
+      "Exact PAVA pooling/ties, monotonicity, finite inputs, JSON roundtrip and boundary clamping",
+      "Hand-computed weighted ECE/Brier, probability 0/1 bins and empty bins, parseable SVG",
+      "Seed/replica grouping, input-order determinism, validation outcome changes cannot affect fit model",
+      "Single-world/single-class refusals, CLI JSON/SVG, no overwrite, artifact integrity and seed leakage refusals"
+    ],
+    "diff_check": "git diff --check passed before implementation commit"
+  },
+  "open_issues": [
+    "No production model fitted: no explicit local dev receipt file list or seed allowlist was provided. Tests fit generated verified-format receipts with a fake CPU plant only.",
+    "Existing records provide WM mean gain, not raw WM P(better); online integration must pass mean own-policy gain to this API.",
+    "Existing SUMO verification windows can differ from WM horizons. Calibration targets the stored window and does not establish full-look-ahead probability validity. Recorded windows are preserved; online look-ahead must not be shortened.",
+    "Bank candidate selection differs from the entire online move distribution; independent dev-seed reliability is reported, not a deployment-performance claim.",
+    "All8 absolute links must point to already-local files with candidate specs. Missing/stale links or missing specs fail closed; there is no remote fetch or silent data substitution.",
+    "One pre-existing regression dependency failure: tools.leverprobe is missing."
+  ],
+  "hard_rules": {
+    "cpu_only": true,
+    "sumo_gpu_ssh_remote_runs": 0,
+    "jobs_or_dispatches_started": 0,
+    "sealed_or_forbidden_data_opened": false,
+    "truth_or_hidden_driver_inputs": false,
+    "other_worktrees_modified": false,
+    "shared_runtime_modules_modified": false,
+    "reset_clean_stash_drop_push_rebase": false
+  }
+}

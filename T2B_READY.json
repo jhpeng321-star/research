@@ -1,0 +1,128 @@
+{
+  "task": "T2B",
+  "status": "READY_CPU",
+  "fix_round": "REVIEW_T2B_r2",
+  "branch": "c4/dense-teacher",
+  "worktree": "E:/agent-work/c4-dense-teacher",
+  "base_commit": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
+  "spec_read_first": "E:/agent-work/_sol/tracks_spec.md",
+  "implementation_commit": "0dd17663170cd76abe7529643e1e26c4dc3c111a",
+  "commits": [
+    {
+      "sha": "0dd17663170cd76abe7529643e1e26c4dc3c111a",
+      "subject": "coopmwm dense teacher: bind observations and filter disproven targets"
+    }
+  ],
+  "receipt_commit": "The separate commit updating T2B_READY.json follows the implementation commit; inspect git log on c4/dense-teacher.",
+  "independent_review": {
+    "file": "REVIEW_T2B_r2.md",
+    "reviewed_head": "6d88b55d5460f46b210142b768c4f820c107ad1b",
+    "original_verdict": "BLOCK",
+    "blockers_addressed": [
+      {
+        "id": 1,
+        "fix": "Completion, teacher accuracy and imitation eligibility remain separate. The shared imitation_eligibility boundary grants the all8 confidence bypass only when a valid completed measurement supports the original target (label_correct is true). Measured-incorrect moves and none predictions return measured_incorrect_target, remain filtered at both trigger_targets and build_dataset, and cannot fall back to high WM confidence. Original predictions and measured evidence remain available for accuracy/audit; no replacement target is fabricated. Identical behavior applies to B and R.",
+        "regressions": [
+          "test_measured_incorrect_move_is_filtered_at_both_consumers: B/R, missing and high confidence, real first-seed/all8 measured rejection; both consumers reject, original target preserved, accuracy zero, filtered share one, repeated consume stays filtered",
+          "test_measured_none_eligibility_matches_outcome_at_both_consumers: B/R, complete frozen support prepared before dispatch; alternative wins only on seed 2 versus no alternative winning; both consumers filter incorrect none and admit correct none without confidence",
+          "test_completed_verification_bypasses_confidence_but_cannot_be_retargeted: genuinely admitted move controls in B/R retain confidence bypass, trigger target, exported dataset and accuracy one"
+        ]
+      },
+      {
+        "id": 2,
+        "fix": "The dense-execution/v2 contract freezes decision_sha256 BEFORE dispatch, committing the canonical observable state plus id, episode, step, time, acting CAV and teacher source. The digest is part of the execution hash and each submitted move plan. None alternatives are independently reconstructed with the same decision identity. bind_receipt and every bound consume reject mismatched decision commitments before issuing or renewing completion evidence. _completed and imitation_eligibility also require the immutable binding, so receipt reuse cannot bless changed learner input. Completion payload now includes step. Legacy execution contracts without the commitment fail closed rather than establishing a new binding from old evidence.",
+        "regressions": [
+          "test_first_receipt_binding_refuses_changed_observable_decision: B/R x observation, step, id, CAV and teacher source; initial receipt binding rejects changed input, and prepare cannot overwrite the frozen commitment",
+          "test_completed_verification_bypasses_confidence_but_cannot_be_retargeted: B/R x the same five mutations on correctly admitted moves; immediate exports filter, direct consume and verify_selected reject, and both imitation boundaries remain filtered afterwards",
+          "The completed-move regression JSON-round-trips unchanged labels, resumes via verify_selected without redispatch, and asserts an identical completion seal and retained bypass",
+          "test_measured_none_eligibility_matches_outcome_at_both_consumers also rejects changed observable state on receipt re-consumption for correct and incorrect none outcomes in both arms"
+        ]
+      }
+    ],
+    "remaining_r2_blockers": [],
+    "independent_rereview": "Not run in this fix session"
+  },
+  "owned_files": [
+    "tools/coopmwm/dense_teacher.py",
+    "tools/coopmwm/test_dense_teacher_cpu.py",
+    "T2B_READY.json"
+  ],
+  "config_defaults": {
+    "dense_teacher": false,
+    "dense_teacher_random": false,
+    "dense_teacher_fraction": 0.25,
+    "dense_teacher_candidates": 8,
+    "dense_teacher_p_star": 0.8,
+    "dense_teacher_buckets": 4,
+    "dense_teacher_cadence_s": 60,
+    "dense_teacher_seed": 20261104,
+    "dense_teacher_extra_seeds": 0
+  },
+  "api": {
+    "module": "tools.coopmwm.dense_teacher",
+    "config": "split_config / plan_config validate options and remove teacher keys while default-off; make_teacher refuses OFF. Minimum imitation confidence is 0.8.",
+    "factory": "make_teacher(cfg, planner_kwargs={'rollout': cpu_rollout, 'calibration': fitted, ...}); dense_teacher_random selects R. Both arms require calibrated scoring. planner_scorer preserves exact recorded support, the full 600-second T1B look-ahead and paired sample count.",
+    "capture": "DAggerBuffer(cadence_s).add(episode, step, t_s, cav, obs_state, candidates=recorded_table), then buffer.label(teacher); label_state also accepts the recorded table directly. Observable policy_radio is retained and validated through T1B.",
+    "eligibility": "imitation_eligibility(label) -> eligible, reason, p_calibrated, provenance, verified_bypass. Unverified none is an abstention. Completed all8 bypass requires a decision-bound, measured-correct original target. Measured-incorrect predictions cannot fall back to confidence. Invalid or stale completion evidence fails closed.",
+    "CE": "trigger_targets(labels, batch) validates exact recorded support and masks and raises for filtered labels; T2C must subset the learner batch to eligible labels first.",
+    "dataset": "build_dataset(labels, encoder, *, update=None, arm=None) exports only eligible targets, retains all original labels and evidence, and optionally attaches the per-update learning receipt. save_dataset / load_dataset use canonical JSON content seals.",
+    "verification_preparation": "prepare_verification_plan(label, snapshot, base_profile, *, moves_mod=None, plan_id=None) freezes dense-execution/v2 with canonical observable/decision commitment, simulator snapshot and independent base-plus-offset schedule before dispatch. The label must carry id, episode, step, t_s, cav, source and obs_state. Candidate execution probes must carry that same decision identity.",
+    "none_preparation": "prepare_verification_plan(none_label, snapshot, moves_mod=api, candidate_plans=ordered_plans, candidate_base_profiles=independent_bases) requires the full ordered support, including duplicates, with independently supplied base schedules. Every plan is rebuilt with the same decision identity and checked by digest before dispatch. Returns None for policy-continues.",
+    "verification_dispatch": "select_for_verification samples independently of imitation eligibility. verify_selected(labels, fraction, submit_first_seed, verifier, *, recover_incomplete=None) dispatches prepared first-seed tuples (receipt, candidate index, plan), then uses existing all8. None returns (receipt, None, None). Explicit recovery requires a fresh verification id and the same execution snapshot; failure history is retained.",
+    "verification_consumption": "All8Verifier.flush delegates to existing confirm_pending_all8. bind_receipt and consume enforce the original decision commitment. consume distinguishes complete paired measurements from correctness and admission, preserving safety/later-harm rules. Reusing an unchanged receipt cannot establish a new observation binding.",
+    "legacy_bindings": "dense-execution/v1 evidence lacks the original observable commitment and cannot be upgraded by consuming an old receipt. New verification must be prepared before a new dispatch.",
+    "learning_monitor": "update_receipt(labels, update, arm) reports attempted/selected/measured/incomplete/eligible/filtered counts, explicit filtered share and accuracy denominators, original targets and paired evidence. Measured-incorrect labels still count in measured accuracy, but never in eligible imitation. Empty-subset accuracy is null.",
+    "budget": "verification_quote uses existing quote_decision upper-bound arithmetic for required seeds, all candidates, solos and registered extra seeds."
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "-1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+      "TEMP_and_TMP": "E:/agent-work/c4-dense-teacher/_out"
+    },
+    "pre_fix_reproduction": "The targeted pre-fix regression run reproduced measured-incorrect promotion and changed-state re-certification in both arms; 28 targeted cases failed before the implementation fix. Source-mutation cases were subsequently refined to switch between valid wm/random source values.",
+    "suites": [
+      {
+        "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_dense_teacher_cpu.py tools/coopmwm/test_verify_perseed_cpu.py -p no:cacheprovider --basetemp=E:/agent-work/c4-dense-teacher/_out/t2b_fix_r2_core",
+        "result": "157 passed, 1 warning in 144.03s",
+        "breakdown": "136 dense-teacher cases (26 additional cases versus reviewed HEAD), 21 existing all8 cases"
+      },
+      {
+        "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_rerun_cpus_cpu.py tools/coopmwm/test_variety_cpu.py -k \"not test_staging_manifest_refuses_forbidden_and_missing_inputs\" -p no:cacheprovider --basetemp=E:/agent-work/c4-dense-teacher/_out/t2b_fix_r2_regression",
+        "result": "44 passed, 1 skipped, 1 deselected, 1 warning in 97.89s",
+        "skip": "Existing Windows symlink-privilege case; preceding hard-link assertions ran",
+        "deselection": "Excluded case creates/opens a synthetic pathname prohibited by the user; its fixture was not invoked"
+      }
+    ],
+    "summary": "201 distinct passed, 0 final failures, 1 existing platform skip, 1 intentional deselection",
+    "warnings": "Expected Unknown config option: cache_dir because cacheprovider was disabled",
+    "diff_check": "git diff --check passed; git diff --check c4/track-base -- tools/coopmwm/dense_teacher.py tools/coopmwm/test_dense_teacher_cpu.py passed",
+    "outputs": "Synthetic CPU artifacts are in ignored task-specific _out/t2b_fix_r2_* directories inside this worktree. No simulator was launched.",
+    "dependency_validation": "Existing real-planner regressions load named T1B 3a960efc156166002bf79946d7bca2888b437bd7 and T1A 7a76b8697512889530e544628fc86b1682cd2e41 source objects from this worktree's Git database. Actual observation validation/scoring runs with deterministic injected CPU rollout/calibration callbacks, eight paired samples and full 600-second horizon."
+  },
+  "open_issues": [
+    {
+      "owner": "T2C runtime integration",
+      "issue": "Wire calibrated scoring for both arms, subset filtered trigger batches, prepare v2 execution contracts and full none support before dispatch, and write update_receipt each update/arm. Live fitted WM/calibration, simulator execution and the full training chain were not exercised in this CPU-only session."
+    },
+    {
+      "owner": "T1A/T2A integration",
+      "issue": "Previously disclosed onset/hold versus onset_s/hold_s parameter-name alignment remains outside T2B ownership. T2B accepts both forms; production trigger-policy training is not certified by these CPU checks."
+    }
+  ],
+  "compliance": {
+    "CPU_only": true,
+    "SUMO_processes_started": 0,
+    "ssh_or_remote_jobs_started": 0,
+    "GPU_jobs_started": 0,
+    "protected_or_truth_data_opened": false,
+    "shared_runtime_files_changed": false,
+    "other_worktrees_changed": false,
+    "destructive_git_or_push": false,
+    "preexisting_reviews_and_blocked_receipts_preserved": true
+  }
+}

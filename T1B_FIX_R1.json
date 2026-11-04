@@ -1,0 +1,46 @@
+{
+  "task": "T1B",
+  "step": "r1 blocker fixes and focused CPU verification",
+  "status": "FOCUSED_CHECKS_PASSED",
+  "review": "REVIEW_T1B_r1.md",
+  "reviewed_head": "3a960efc156166002bf79946d7bca2888b437bd7",
+  "fix_commit": "6a116d767f07bd62efd0d76adfd50f524fe906f8",
+  "resume": {
+    "existing_committed_fixes_preserved": true,
+    "additional_implementation_changes_needed": false,
+    "active_task_test_jobs_found": false,
+    "jobs_dispatched_or_duplicated": false,
+    "prior_receipt_preserved": "T1B_READY.blocked1.json"
+  },
+  "blockers": [
+    {
+      "id": 1,
+      "resolution": "Capture sampling state for plain and radio actors. Reuse the actual current residual at tick zero; advance independent AR(1) noise and generator state at subsequent whole-second decisions, including deterministic-mode sampling-state advancement. Build radio/intent features only for actors with the corresponding input width. Require complete current samples and sampling state. Legacy callers without policy_radio retain their existing decoder path.",
+      "regressions": [
+        "test_review_plain_stochastic_current_sample_through_real_decoder",
+        "test_live_imagined_policy_offset_release_and_causal_radio: plain/V2V/intent, stochastic/deterministic, four whole-second decisions, offset release and exact noise/RNG parity",
+        "test_plain_actor_missing_sampling_state_fails_closed: five missing fields in stochastic/deterministic modes",
+        "test_production_adapter_full_horizon_chunks_and_multiple_samples: plain stochastic and intent actors, full 600 seconds, multiple samples and chunk invariance"
+      ]
+    },
+    {
+      "id": 2,
+      "resolution": "Config refuses every p_star other than the registered 0.8. Calibrated probabilities below 0.8 cannot authorize a move, even with unanimous raw gains.",
+      "regressions": [
+        "test_unregistered_confidence_threshold_refused: 0.0, 0.1, 0.79, 0.9, 1.0",
+        "test_registered_gate_cannot_authorize_low_calibrated_probability: 0.1, just below 0.8, exactly 0.8"
+      ]
+    }
+  ],
+  "verification": {
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider --basetemp=E:/agent-work/c4-planner-online/_out/t1b-r1-resume-focus tools/coopmwm/test_planner_policy_cpu.py tools/coopmwm/test_planner_online_cpu.py",
+    "result": "89 passed, 1 warning in 63.37s",
+    "warning": "Unknown config option: cache_dir because cacheprovider was disabled",
+    "CUDA_VISIBLE_DEVICES": "",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "scope": "Synthetic CPU policies and dynamics; real controller, online scorer, adapter and profile decoder; no trained-WM or simulator execution"
+  },
+  "unresolved_review_blockers": [],
+  "independent_rereview_after_fix": "not yet performed",
+  "next_step": "Run variety-collection compatibility and runtime/ownership/observation regressions, then restore T1B_READY.json."
+}

@@ -1,0 +1,37 @@
+VERDICT: BLOCK
+
+1. **Blocking: the WM comparator does not continue the live V2V base policy.** `tools/coopmwm/planner_online.py:284-287` records actor weights and scalar residuals but omits the live V2V observation/radio state; `tools/coopmwm/planner_online.py:196-199` routes this record to the existing evaluator without an adapter for that state. The evaluator loads the actor at `tools/coopmwm/plan_wm.py:120-123` and continues it at `tools/coopmwm/plan_wm.py:89-93`. That continuation explicitly substitutes zeros for **every V2V input** at `tools/coopmwm/policy_wm.py:62-66`. In contrast, the live controller supplies actual observable partner features and, when enabled, causal partner intents at `tools/coopmwm/v2v_runtime.py:111-123`. Once those input columns have learned nonzero weights, both the none comparator and candidate continuations are a different policy from the one executing the moves. Consequently the calibrated probability is not the specified probability of beating the actual MAPPO/base-policy continuation.
+
+   **Independent CPU reproduction:** use two observed CAVs `a` and `b` at positions 0 and 20 m, both at 15 m/s in lane 1. Create `v2v_runtime.Policy()`, zero all its parameters, then set `actor[0].weight[0,29]`, `actor[2].weight[0,0]`, and `actor[4].weight[0,0]` to 1. Run the actual V2V-wrapped acceleration controller deterministically with zero native commands. Its sampled own residuals are `[[0.1948515772819519], [-0.1948515772819519]]`. On the identical observable tensor state, `policy_wm.residuals(policy_wm.load_actor(policy_wm.actor_state(policy), 'cpu'), state, ['a', 'b'])` returns `[[0.0, 0.0]]`. This probe executed successfully and asserted a discrepancy greater than 0.1; it needed no trained checkpoint, simulator, or dataset. Deterministic execution isolates the V2V-input error from exploration noise.
+
+   **Required fix:** supply and advance the same observable V2V inputs/state in the WM continuation as in the live controller, including causal previous-issued-command/acceleration features and timestamped intent state where enabled. Preserve the same base-policy semantics in every candidate and the none arm for the entire registered horizon, without introducing global observations or truth. Add a CPU regression with nonzero learned V2V input weights that compares live and imagined base actions, then covers candidate-offset decoding and release back to that base. Include the enabled intent variant. Do not silently treat absent V2V state as equivalent to the live actor. The current plain-actor parity regression at `tools/coopmwm/test_mppi_runtime_cpu.py:58-70` does not cover this failure, and the new adapter test at `tools/coopmwm/test_planner_online_cpu.py:218-226` replaces the evaluator entirely.
+
+## Test counts
+
+- T1B focused suite: **54 passed, 0 failed, 0 skipped**, 10.92 s.
+- Reported regression selection: **26 passed, 0 failed, 0 skipped; 9 subtests passed**, 13.67 s.
+- Combined pytest result: **80 passed, plus 9 passing subtests**. The READY manifest's counts reproduced.
+- Additional independent synthetic CPU probe: **1 confirmed correctness defect**, described in blocker 1; not included in pytest counts.
+- `git diff --check c4/track-base`: passed.
+- Each pytest invocation emitted one `Unknown config option: cache_dir` warning because the cache provider was deliberately disabled for this read-only review.
+
+Executed with `CUDA_VISIBLE_DEVICES=''` and `PYTHONDONTWRITEBYTECODE=1`:
+
+```text
+C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider tools/coopmwm/test_planner_online_cpu.py
+
+C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider --basetemp=E:/Temp/opencode/t1b-r0-pytest tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_command_chain_cpu.py tools/coopmwm/test_mppi_runtime_cpu.py::LongProfileTests::test_transfer_table_exact_for_long_profiles_and_dynamic_policy tools/coopmwm/test_mppi_runtime_cpu.py::LongProfileTests::test_imagined_nonzero_actor_matches_observable_plant_actor tools/coopmwm/test_v2v_intent_cpu.py::test_partner_intent_has_one_step_latency tools/coopmwm/test_v2v_intent_cpu.py::test_runtime_reset_and_despawn tools/coopmwm/test_v2v_intent_cpu.py::test_actions_identical_to_current_v2v_policy_at_load tests/unit/test_c4_v2v_obs.py
+```
+
+## Review scope and rule checks
+
+- Verifier: astra. Reviewed branch `c4/planner-online`, HEAD `49960a2ed81088a75821116b89dec55c9ab9c3a4`, against `c4/track-base` at `13f184b5a7e12be04aebf246ef8e4dbb81555545`. Read `E:/agent-work/_sol/tracks_spec.md`, `T1B_READY.json`, all five changed files, and relevant permitted dependencies. The initial worktree was clean.
+- **Observables / hidden truth:** the added runtime record uses whitelisted sensor rows, ego-local range filtering, causal history, CAV membership checks, and actor weights. No new truth-file reader was found in the changed code. Blocker 1 concerns missing observable policy state, not a demonstrated truth-file read.
+- **Look-ahead:** configuration enforces exactly 600 seconds, scoring builds full-length profiles, and the adapter passes full H with `trim=False`. Execution cadence and move duration do not shorten the scoring horizon. The full trained-WM forecast itself was not exercised by these suites.
+- **Calibrated gate:** paired strict-positive gains, calibrated probabilities, the default 0.8 gate, finite-result checks, and rejection/failure fallback have substantive synthetic assertions. Calibration is mandatory. T1A/T1C are absent here as disclosed; test-local dependency stubs are allowed by the shared spec. Actual cross-track calibration compatibility remains an integration check.
+- **Single writer / HDVs:** the hook modifies the existing pre-safety request map, rejects competing configured request producers, and does not write TraCI. Tests exercise actual `CommandOwnership` with a fake vehicle API and verify CAV-only writes and the acceleration cap.
+- **Default off:** the test executes the base revision's controller source and compares serialized event bytes and RNG state for deterministic and stochastic policies. It passed. Existing absolute/static-residual decoding and long-profile regression checks also passed.
+- **B/R fairness:** this diff adds no arm-specific sampling, bank access, augmentation, or training allocation. The shared scoring boundary has no B/R branch. End-to-end B/R teacher/evaluation fairness belongs to its callers and is not established by this standalone T1B suite.
+- **Behavioral constants:** the new defaults use the specified cadence, horizon, confidence gate, group-size limit and CAV cap; sensing range is inherited, and candidate/sample defaults reference the existing MPPI registration. No additional hand-set behavioral threshold was found in this diff.
+- **Test substance:** these are real component tests with numeric assertions, failure cases, controller execution, source-based off-identity checks, and a real ownership implementation behind a fake plant API. Most scoring tests intentionally supply synthetic costs. They do not establish production V2V-WM continuation correctness; blocker 1 demonstrates that gap.
+- Review remained CPU-only. No SSH, remote execution, SUMO, GPU execution, forbidden-path contents, or prohibited truth files were accessed. No commits or implementation edits were made. The only review-authored worktree file is this report; pytest checkpoint fixtures were confined to the temporary test directory.
