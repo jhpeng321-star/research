@@ -33,14 +33,18 @@
     {
       "sha": "70a79af7d3dc1ff08ea9804fa10271fc7963e93a",
       "step": "Previous session verified unchanged reviewed source and refreshed resume receipt"
+    },
+    {
+      "sha": "599e0931c43d63aec184c03f43acfdcb65ea9b3d",
+      "step": "Previous fresh session preserved accepted fix and recorded source verification"
     }
   ],
   "commit_note": "This receipt refresh records the completed independent review; its own hash is intentionally not self-referential.",
   "resume": {
-    "initial_head": "70a79af7d3dc1ff08ea9804fa10271fc7963e93a",
+    "initial_head": "599e0931c43d63aec184c03f43acfdcb65ea9b3d",
     "initial_status": "Tracked files clean; existing r0/r1 reviews, acceptance marker and blocked0 receipt untracked and preserved.",
     "completed_work_preserved": "The r0 fix, eight regression cases, passing implementation suite and independent r1 rerun were already complete on disk.",
-    "action": "Read git status/history, shared spec, r0/r1 reviews, READY/blocked0 receipts and acceptance first; inspected fix commit 18c1fec2, the RNG isolation and all eight regression cases. git diff --exit-code f79fe7d6ca053a3fe5836a4c2a0d5c82d12bc4bf -- tools/coopmwm/coop_layer.py tools/coopmwm/test_coop_layer_cpu.py passed with no output. The reviewed implementation and passing tests are unchanged. Refreshed this receipt with the completed commit history; no duplicate test/job dispatches.",
+    "action": "Read git status/history, shared spec, r0/r1 reviews, READY/blocked0 receipts and acceptance before proceeding; inspected the residual RNG isolation and all eight constructor regression cases. git diff --exit-code f79fe7d6ca053a3fe5836a4c2a0d5c82d12bc4bf -- tools/coopmwm/coop_layer.py tools/coopmwm/test_coop_layer_cpu.py passed with no output. HEAD 599e0931 changed only the receipt. The independently reviewed source and passing tests remain unchanged. Refreshed this receipt, preserving completed work and all existing untracked review/acceptance files; no duplicate test/job dispatches.",
     "jobs_dispatched": 0
   },
   "files": [
@@ -114,7 +118,7 @@
     "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider tools/coopmwm/test_coop_layer_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_v2v_model_cpu.py tools/coopmwm/test_acceleration_cpu.py::AccelerationCPU::test_zero_update_is_exact_mappo_before_unchanged_safety tools/coopmwm/test_acceleration_cpu.py::AccelerationCPU::test_conditional_ar_density_and_no_leakage tools/coopmwm/test_v2v_intent_cpu.py::test_actions_identical_to_current_v2v_policy_at_load tools/coopmwm/test_v2v_intent_cpu.py::test_partner_intent_has_one_step_latency",
     "result": "49 passed, 2 warnings in 16.73s; no failures or skips",
     "independent_r1_result": "49 passed, 0 failed, 0 skipped, 2 warnings in 53.59s; same command and environment, independently executed by astra.",
-    "resume_verification": "Existing passing implementation and independent review runs retained. At resume HEAD 70a79af7d3dc1ff08ea9804fa10271fc7963e93a, git diff --exit-code f79fe7d6ca053a3fe5836a4c2a0d5c82d12bc4bf -- tools/coopmwm/coop_layer.py tools/coopmwm/test_coop_layer_cpu.py passed with no output, including working-tree source and tests. No tests rerun in this receipt-only session, preserving the instruction not to redo finished work.",
+    "resume_verification": "Existing passing implementation and independent review runs retained. At resume HEAD 599e0931c43d63aec184c03f43acfdcb65ea9b3d, git diff --exit-code f79fe7d6ca053a3fe5836a4c2a0d5c82d12bc4bf -- tools/coopmwm/coop_layer.py tools/coopmwm/test_coop_layer_cpu.py passed with no output, including working-tree source and tests. No tests rerun in this receipt-only session, preserving the instruction not to redo finished work.",
     "t2d_cases": 33,
     "new_constructor_rng_cases": 8,
     "regression_cases": 16,
