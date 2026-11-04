@@ -25,9 +25,7 @@ unsourced ranges the structured plan generators sample), the member arity cap
 is ``v2v_obs.V2V_K`` (the K nearest V2V partner slots plus self) and the
 sensing radius is ``v2v_obs.V2V_RANGE_M``; the CAV cap is the shared spec's
 explicit 1.2 m/s^2 bound (no population/truth-file lookup).
-No new hand-set behavioural threshold
-is introduced; the only numeric cut in this module is the float-noise level
-that separates a recorded plan offset from zero.
+No new hand-set behavioural threshold is introduced.
 
 The move vocabulary shares ONE (onset, hold, depth) across members: a move's
 offsets are ``-depth`` m/s^2 for its actors during ``[onset, onset+hold)``
@@ -50,12 +48,15 @@ V2V partner set, and membership is further restricted to ``V2V_RANGE_M``).
 ``from_plan`` accepts the verified bank plan dicts exactly as
 ``replay_bank``/``sumo_verify`` receipts carry them (``chosen_plan`` and the
 per_seed_v1 ``ex['plan']``): mppi_search/variety profile plans (with
-``perturbation_profile`` or bare ``profile``) and legacy knots plans
-(``plans.validate`` format). Untagged plans are family-classified from their
-own offset structure; a ``variety_family`` tag wins when present.
+``perturbation_profile``) and absolute profile / legacy knots plans with an
+explicit recorded ``policy_profile`` (member x second, in plan member order).
+Missing policy references are rejected. Projection minimises full-duration
+squared policy-relative offset distance over all permitted family/member
+choices and registered windows/depth; tags break equal-distance ties only.
 """
 import math
 from dataclasses import dataclass
+from itertools import combinations
 
 import numpy as np
 
@@ -67,9 +68,6 @@ CAV_ACCEL_CAP_MPS2 = 1.2   # tracks_spec.md, Move library feasibility bound
 FAMILIES = ('none', 'ease_off', 'wall', 'gap_open', 'ramp_assist')
 STRUCTURED = FAMILIES[1:]          # candidates() rotates these; 'none' is the caller's baseline
 MOVE_MAX_MEMBERS = int(V2V_K)      # 1..4 nearby CAVs incl. self (the V2V partner-slot arity)
-#: A recorded plan offset counts as active above float noise only (numerical,
-#: not a behavioural threshold; same spirit as feasible.GATE_EPS_MPS).
-ACTIVE_EPS = 1e-6
 
 # Registered sampling windows / distances (variety.VARIETY_REGISTERED; the SAME
 # ranges the structured plan generators sample -- no new hand-set values here).
@@ -381,11 +379,11 @@ def _plan_offsets(plan):
     Profile plans (mppi_search.build_plan / variety generators, as carried in
     sumo_verify receipts' ``chosen_plan`` and replay_bank per_seed_v1
     ``ex['plan']``) use ``perturbation_profile`` -- the recorded per-second
-    command offsets vs the policy -- and fall back to the bare ``profile``
-    minus its per-member median when the perturbation is absent. Legacy knots
-    plans (``plans.validate`` format) are resampled per second at their knot
-    stride (``plans.acceleration_at`` semantics) and taken relative to their
-    per-member median baseline.
+    command offsets vs the policy. Otherwise an explicit ``policy_profile``
+    must record the policy's command for every member/second in the SAME order
+    and time frame as the absolute plan. Legacy knots (``plans.validate``
+    format) are interpolated with ``plans.acceleration_at`` semantics before
+    subtracting that reference. Never infer a policy from the plan itself.
     """
     members = list(plan.get('members') or [])
     duration = plan.get('duration_s')
@@ -396,33 +394,33 @@ def _plan_offsets(plan):
         m = np.asarray(plan['perturbation_profile'], float)
     elif 'profile' in plan:
         m = np.asarray(plan['profile'], float)
-        if m.ndim != 2:
-            raise ValueError('plan profile must be a member x second matrix')
-        m = m-np.median(m, axis=1, keepdims=True)
     elif 'knots' in plan:
         knots = np.asarray(plan['knots'], float)
         stride = float(plan.get('knot_s', 10.))
         if knots.ndim != 2 or knots.shape[0] != len(members) or knots.shape[1] < 2 \
                 or not np.isfinite(knots).all() or not math.isfinite(stride) or stride <= 0:
             raise ValueError('invalid legacy knots or knot_s')
-        times = np.arange(knots.shape[1], dtype=float)*stride
         seconds = np.arange(duration, dtype=float)
-        m = np.stack([np.interp(seconds, times, row) for row in knots])
-        m = m-np.median(m, axis=1, keepdims=True)
+        # Match acceleration_at even when the duration exceeds the last knot:
+        # it extrapolates the final segment instead of clamping to its endpoint.
+        j = np.minimum(knots.shape[1]-2, (seconds//stride).astype(int))
+        f = (seconds-stride*j)/stride
+        m = (1-f)*knots[:, j]+f*knots[:, j+1]
     else:
         raise ValueError('unsupported verified plan format (profile/perturbation_profile/knots)')
     if m.ndim != 2 or m.shape != (len(members), duration) or not np.isfinite(m).all():
         raise ValueError('plan offset matrix does not match members x duration_s')
+    if 'perturbation_profile' not in plan:
+        if 'policy_profile' not in plan:
+            raise ValueError('absolute profile/knots require a recorded policy_profile '
+                             'or stored policy-relative perturbation_profile')
+        base = np.asarray(plan['policy_profile'], float)
+        if base.shape != m.shape or not np.isfinite(base).all():
+            raise ValueError('policy_profile must be finite and aligned members x duration_s')
+        m = m-base
+        if not np.isfinite(m).all():
+            raise ValueError('non-finite policy-relative offsets')
     return members, m
-
-
-def _member_windows(active):
-    """Per-member (onset, hold) of the active seconds ([0, 0) when inactive)."""
-    windows = []
-    for row in active:
-        cols = np.nonzero(row)[0]
-        windows.append((int(cols[0]), int(cols[-1])+1-int(cols[0])) if len(cols) else (0, 0))
-    return windows
 
 
 def _project_window(m, actors):
@@ -430,22 +428,20 @@ def _project_window(m, actors):
 
     Zero padding charges for a move extending past the recorded plan, rather
     than silently shortening its hold. Depth is optimised analytically for
-    each window; return None when continuing the policy is at least as close.
+    each window; return parameters and improvement over the zero move.
     """
     horizon = max(m.shape[1], int(_ONSET_HI+_HOLD_HI))
     total = np.zeros(horizon)
     total[:m.shape[1]] = -m[actors].sum(axis=0)
     prefix = np.r_[0., np.cumsum(total)]
-    best, gain = None, 0.0
-    for onset in range(int(_ONSET_LO), int(_ONSET_HI)+1):
-        for hold in range(int(_HOLD_LO), int(_HOLD_HI)+1):
-            summed = prefix[onset+hold]-prefix[onset]
-            size = len(actors)*hold
-            depth = float(np.clip(summed/size, _DEPTH_LO, _DEPTH_HI))
-            improvement = 2*depth*summed-size*depth*depth
-            if improvement > gain:
-                best, gain = (onset, hold, depth), improvement
-    return best
+    onsets, holds = np.meshgrid(np.arange(int(_ONSET_LO), int(_ONSET_HI)+1),
+                               np.arange(int(_HOLD_LO), int(_HOLD_HI)+1), indexing='ij')
+    summed = prefix[onsets+holds]-prefix[onsets]
+    size = len(actors)*holds
+    depth = np.clip(summed/size, _DEPTH_LO, _DEPTH_HI)
+    improvement = 2*depth*summed-size*depth*depth
+    i = np.unravel_index(np.argmax(improvement), improvement.shape)
+    return (int(onsets[i]), int(holds[i]), float(depth[i])), float(improvement[i])
 
 
 def from_plan(plan):
@@ -453,17 +449,23 @@ def from_plan(plan):
 
     Accept a bare plan, a sumo_verification receipt (``chosen_plan``), or an
     all8/per_seed_v1 example (its OWN ``plan``); certification is the caller's
-    responsibility. Structured variety tags supply the family. Untagged
-    negative offsets use one actor -> ease_off, aligned windows -> wall,
-    otherwise ramp_assist. Up to four largest-braking-energy members survive.
-    Gap-opening puts its actual easing actor first, regardless of plan order.
+    responsibility. Require stored ``perturbation_profile`` offsets or an
+    explicit aligned ``policy_profile`` for absolute profiles/legacy knots.
 
-    Within that family/member projection, minimise squared command-offset
-    error over registered integer onset/hold and continuous depth. Include
-    zero padding beyond the recorded duration, and choose 'none' if no box
-    improves on the policy. Positive offsets therefore never become braking.
-    Bare profiles/legacy knots lack the policy reference: their per-member
-    median is an explicit approximate reference (not recovered policy truth).
+    Minimise sum_{original member, second} (recorded_offset - move_offset)^2,
+    including ALL recorded seconds and zero padding through the latest allowed
+    release. Omitted members have zero move offsets. Enumerate every actor
+    subset of size 1..4 and all registered integer onset/hold windows; optimise
+    continuous depth analytically, clipped to the registered range. This covers
+    every valid family's offset shape: ease_off/gap_open share a one-actor box;
+    wall/ramp_assist share a multi-actor box. Gap_open's zero-offset partners
+    cannot affect distance, so use the first other recorded member. No geometry
+    or hidden state is inferred; online observability remains the caller's job.
+
+    'none' wins if no box strictly improves on zero. Among equal positive
+    improvements prefer the variety_family tag, then FAMILIES order, smaller
+    membership, plan member order, earliest onset and shortest hold. Metadata
+    (including policy_duplicate) cannot override a strictly closer offset fit.
     """
     if not isinstance(plan, dict):
         raise ValueError('from_plan needs a verified plan dict')
@@ -472,31 +474,23 @@ def from_plan(plan):
     elif isinstance(plan.get('chosen_plan'), dict):
         plan = plan['chosen_plan']
     members, m = _plan_offsets(plan)
-    if plan.get('policy_duplicate'):
-        return none_move(members[0])
-    active = m < -ACTIVE_EPS
-    if not active.any():
-        return none_move(members[0])
-    energy = np.square(np.minimum(m, 0.)).sum(axis=1)
-    used_indices = np.flatnonzero(active.any(axis=1)).tolist()
     tag = plan.get('variety_family')
-    if tag in ('wall', 'gap_open', 'ramp_assist') and len(members) >= 2:
-        family = tag
-    else:
-        windows = _member_windows(active)
-        used = [w for w, keep in zip(windows, active.any(axis=1)) if keep]
-        aligned = len(used) >= 2 and len(set(used)) == 1
-        family = 'wall' if aligned else ('ease_off' if len(used) == 1 else 'ramp_assist')
-    if family == 'ease_off':
-        keep = [max(used_indices, key=lambda i: (float(energy[i]), -i))]
-    elif family == 'gap_open':
-        actor = max(used_indices, key=lambda i: (float(energy[i]), -i))
-        keep = [actor]+[i for i in range(len(members)) if i != actor][:MOVE_MAX_MEMBERS-1]
-    else:
-        pool = list(range(len(members))) if tag in ('wall', 'ramp_assist') else used_indices
-        keep = sorted(sorted(pool, key=lambda i: (-float(energy[i]), i))[:MOVE_MAX_MEMBERS])
-    actors = keep[:1] if family in ('ease_off', 'gap_open') else keep
-    params = _project_window(m, actors)
-    if params is None:
-        return none_move(members[0])
-    return Move(family, tuple(members[i] for i in keep), *params)
+    best, best_gain, best_key = none_move(members[0]), 0.0, None
+    for count in range(1, min(len(members), MOVE_MAX_MEMBERS)+1):
+        for actors in combinations(range(len(members)), count):
+            params, gain = _project_window(m, list(actors))
+            if gain <= 0.0 or gain < best_gain:
+                continue
+            if count == 1:
+                choices = [('ease_off', actors)]
+                if len(members) >= 2:
+                    partner = next(i for i in range(len(members)) if i != actors[0])
+                    choices.append(('gap_open', actors+(partner,)))
+            else:
+                choices = [('wall', actors), ('ramp_assist', actors)]
+            for family, keep in choices:
+                key = (family != tag, FAMILIES.index(family), len(keep), keep)
+                if gain > best_gain or best_key is None or key < best_key:
+                    best = Move(family, tuple(members[i] for i in keep), *params)
+                    best_gain, best_key = gain, key
+    return best

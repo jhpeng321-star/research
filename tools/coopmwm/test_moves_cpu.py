@@ -10,6 +10,7 @@ direct_target with the shared spec's explicit CAV cap.
 import copy
 import json
 import unittest
+from itertools import combinations
 
 import numpy as np
 
@@ -52,6 +53,17 @@ def block_plan(members_rows, blocks, duration=60, P_value=0.):
         absolute[i, start:end] = value
     return ms.build_plan(group, P, None, duration, BOUNDS, 'sampled', 'free', 'T',
                          absolute=absolute, feasibility=None)
+
+
+def offset_error(plan, move):
+    """Independent full-record metric, including omitted members and release padding."""
+    recorded = np.asarray(plan['perturbation_profile'], float)
+    horizon = max(plan['duration_s'], int(ONSET_HI+HOLD_HI))
+    target = np.zeros((len(plan['members']), horizon))
+    target[:, :plan['duration_s']] = recorded
+    predicted = np.array([[mv.offsets(move, t).get(vid, 0.) for t in range(horizon)]
+                          for vid in plan['members']])
+    return float(np.square(target-predicted).sum())
 
 
 class Families(unittest.TestCase):
@@ -360,17 +372,21 @@ class FromPlan(unittest.TestCase):
         self.assertEqual((move.onset, move.hold), (10, 30))
         self.assertAlmostEqual(move.depth, 0.5)
 
-    def test_variety_family_tag_wins(self):
+    def test_variety_family_tag_only_breaks_equal_distance_ties(self):
         plan = block_plan([row('a', -50., 1), row('b', -60., 1)], {0: (10, 40, -0.5)})
         self.assertEqual(mv.from_plan(dict(plan, variety_family='gap_open')).family, 'gap_open')
-        self.assertEqual(mv.from_plan(dict(plan, variety_family='wall')).family, 'wall')
+        self.assertEqual(mv.from_plan(dict(plan, variety_family='wall')).family, 'ease_off')
+        aligned = block_plan([row('a', -50., 1), row('b', -60., 1)],
+                             {0: (10, 40, -0.5), 1: (10, 40, -0.5)})
+        self.assertEqual(mv.from_plan(dict(aligned, variety_family='ramp_assist')).family,
+                         'ramp_assist')
 
-    def test_untagged_structural_classification(self):
+    def test_untagged_equal_multi_actor_shapes_use_canonical_wall_family(self):
         two = [row('a', -50., 1), row('b', -60., 1)]
         aligned = block_plan(two, {0: (10, 40, -0.5), 1: (10, 40, -0.5)})
         self.assertEqual(mv.from_plan(aligned).family, 'wall')
         staggered = block_plan(two, {0: (10, 40, -0.5), 1: (20, 50, -0.5)})
-        self.assertEqual(mv.from_plan(staggered).family, 'ramp_assist')
+        self.assertEqual(mv.from_plan(staggered).family, 'wall')
 
     def test_variety_generated_wall_plan(self):
         vcfg = va.split_config(dict(variety_families=True))
@@ -402,7 +418,8 @@ class FromPlan(unittest.TestCase):
         self.assertIsNotNone(plan)
         move = mv.from_plan(plan)
         self.assertEqual(move.family, 'gap_open')
-        self.assertEqual(set(move.members), set(group['members']))
+        self.assertEqual(len(move.members), 2)  # zero-offset partners do not change distance
+        self.assertTrue(set(move.members) <= set(group['members']))
         # Seed 4 eases m0, which is NOT the first member in the bank plan.
         self.assertEqual(move.actors, ('m0',))
         self.assertLess(np.asarray(plan['perturbation_profile'])[group['members'].index('m0')].sum(), 0.)
@@ -415,12 +432,14 @@ class FromPlan(unittest.TestCase):
         self.assertIsNotNone(plan)
         move = mv.from_plan(plan)
         self.assertEqual(move.family, 'ramp_assist')
-        self.assertEqual(move.members, tuple(group['members']))
+        self.assertTrue(set(move.members) <= set(group['members']))
+        self.assertEqual(set(move.members), {'m1', 'r0'})
 
     def test_legacy_knots_plan(self):
         plan = pl.validate(dict(id='X', members=['a', 'b'], duration_s=30,
                                 knots=[[0, 0, -1, 0, 0, 0, 0], [0.5]*7],
                                 family='O1', origin='inherited'), BOUNDS)
+        plan['policy_profile'] = [[0.]*30, [0.5]*30]
         move = mv.from_plan(plan)
         self.assertEqual(move.family, 'ease_off')       # member a deviates, b is constant
         self.assertEqual(move.members, ('a',))          # the single active member
@@ -429,14 +448,14 @@ class FromPlan(unittest.TestCase):
         self.assertTrue(DEPTH_LO <= move.depth <= DEPTH_HI)
         self.assertNotIn(move.family, ('O1',))          # legacy family labels are not move families
 
-    def test_zero_perturbation_and_policy_duplicate_are_none(self):
+    def test_zero_perturbation_is_none_and_metadata_cannot_override_offsets(self):
         group = block_group([row('a', -50., 1), row('b', -60., 1)])
         P = np.zeros((2, T))
         plan = ms.build_plan(group, P, None, 60, BOUNDS, 'centre', 'free', 'T',
                              absolute=P, feasibility=None)
         self.assertEqual(mv.from_plan(plan), mv.none_move('a'))
         tagged = block_plan([row('a', -50., 1), row('b', -60., 1)], {0: (10, 40, -0.5)})
-        self.assertEqual(mv.from_plan(dict(tagged, policy_duplicate=True)), mv.none_move('a'))
+        self.assertEqual(mv.from_plan(dict(tagged, policy_duplicate=True)), mv.from_plan(tagged))
 
     def test_six_member_plan_truncates_to_the_move_arity(self):
         rows = [row(f'v{i}', -10.-50*i, 1) for i in range(6)]
@@ -465,7 +484,7 @@ class FromPlan(unittest.TestCase):
         plan['variety_family'] = 'wall'
         receipt = dict(chosen_plan=copy.deepcopy(plan))
         self.assertEqual(mv.from_plan(receipt), mv.from_plan(plan))
-        self.assertEqual(mv.from_plan(receipt['chosen_plan']).family, 'wall')
+        self.assertEqual(mv.from_plan(receipt['chosen_plan']).family, 'ease_off')
         self.assertIsInstance(json.dumps(mv.from_plan(receipt['chosen_plan']).to_dict()), str)
 
     def test_all8_per_seed_example_uses_its_own_candidate(self):
@@ -498,12 +517,135 @@ class FromPlan(unittest.TestCase):
         self.assertEqual((move.onset, move.hold), (5, 30))
         self.assertAlmostEqual(move.depth, (10.+20*0.4)/30)
 
-    def test_bare_profile_fallback_and_invalid_knots(self):
-        plan = dict(members=['a'], duration_s=60, profile=[[0.]*10+[-0.5]*20+[0.]*30])
+    def test_absolute_profile_with_recorded_policy_and_invalid_knots(self):
+        plan = dict(members=['a'], duration_s=60, profile=[[0.]*10+[-0.5]*20+[0.]*30],
+                    policy_profile=[[0.]*60])
         self.assertEqual(mv.from_plan(plan), mv.Move('ease_off', ('a',), 10, 20, 0.5))
         for knots, stride in (([0., 1.], 10), ([[0., 1.]], 0), ([[0., float('nan')]], 10)):
             with self.assertRaises(ValueError):
                 mv.from_plan(dict(members=['a'], duration_s=30, knots=knots, knot_s=stride))
+
+    def test_tagged_wall_subset_has_same_family_exact_match(self):
+        rows = [row(v, -50.-i*10, 1) for i, v in enumerate('abcd')]
+        plan = dict(block_plan(rows, {0: (0, 20, -0.5), 1: (0, 20, -0.5)}, duration=120),
+                    variety_family='wall')
+        oracle = mv.Move('wall', ('a', 'b'), 0, 20, 0.5)
+        self.assertEqual(offset_error(plan, oracle), 0.)
+        self.assertEqual(mv.from_plan(plan), oracle)
+        self.assertEqual(offset_error(plan, mv.from_plan(plan)), 0.)
+
+    def test_staggered_weak_partner_does_not_exclude_closer_single_actor(self):
+        plan = block_plan([row('a', -50., 1), row('b', -60., 1)],
+                          {0: (0, 20, -0.8), 1: (100, 120, -0.3)}, duration=120)
+        oracle = mv.Move('ease_off', ('a',), 0, 20, 0.8)
+        move = mv.from_plan(plan)
+        self.assertEqual((move.family, move.members, move.onset, move.hold),
+                         ('ease_off', ('a',), 0, 20))
+        self.assertAlmostEqual(move.depth, oracle.depth)
+        self.assertAlmostEqual(offset_error(plan, move), offset_error(plan, oracle))
+        self.assertAlmostEqual(offset_error(plan, move), 1.8)
+
+    def test_tagged_wall_with_one_active_member_is_exact_ease_off(self):
+        rows = [row(v, -50.-i*10, 1) for i, v in enumerate('abcd')]
+        plan = dict(block_plan(rows, {0: (0, 20, -0.5)}, duration=120), variety_family='wall')
+        self.assertEqual(mv.from_plan(plan), mv.Move('ease_off', ('a',), 0, 20, 0.5))
+        self.assertEqual(offset_error(plan, mv.from_plan(plan)), 0.)
+
+    def test_member_selection_depends_on_window_fit_not_total_braking_energy(self):
+        rows = [row(v, -50.-i*10, 1) for i, v in enumerate('abcdef')]
+        # f has the highest braking energy but poor overlap with the best box.
+        plan = block_plan(rows, {**{i: (0, 20, -0.8) for i in range(5)},
+                                 5: (100, 120, -1.)}, duration=120)
+        move = mv.from_plan(plan)
+        self.assertEqual((move.family, move.members, move.onset, move.hold),
+                         ('wall', tuple('abcd'), 0, 20))
+        self.assertAlmostEqual(move.depth, 0.8)
+
+    def test_projection_matches_exhaustive_distance_oracle(self):
+        # Independent direct-distance oracle enumerates all actor shapes,
+        # integer windows, and each window's constrained optimal depth. Gap
+        # and ramp families have identical offset shapes to ease_off and wall.
+        rng = np.random.default_rng(743)
+        recorded = rng.uniform(-0.8, 0.3, (3, 135))
+        recorded[1:, 7:48] -= 0.4
+        plan = dict(members=list('abc'), duration_s=135,
+                    perturbation_profile=recorded.tolist(), variety_family='gap_open')
+        best_error = float(np.square(recorded).sum())  # none
+        for count in range(1, 4):
+            for actors in combinations(range(3), count):
+                for onset in range(int(ONSET_LO), int(ONSET_HI)+1):
+                    for hold in range(int(HOLD_LO), int(HOLD_HI)+1):
+                        mask = np.zeros_like(recorded)
+                        mask[list(actors), onset:onset+hold] = -1.
+                        depth = float(np.clip((recorded*mask).sum()/np.square(mask).sum(),
+                                              DEPTH_LO, DEPTH_HI))
+                        error = float(np.square(recorded-depth*mask).sum())
+                        best_error = min(best_error, error)
+        self.assertAlmostEqual(offset_error(plan, mv.from_plan(plan)), best_error, places=10)
+
+    def test_projection_charges_for_release_beyond_short_record(self):
+        plan = dict(members=['a'], duration_s=10, perturbation_profile=[[-0.5]*10])
+        # A 20-second hold is not truncated to the 10-second record. The
+        # unconstrained depth 0.25 clips to the registered lower bound 0.3.
+        move = mv.from_plan(plan)
+        self.assertEqual(move, mv.Move('ease_off', ('a',), 0, 20, 0.3))
+        self.assertAlmostEqual(offset_error(plan, move), 1.3)
+
+    def test_identical_absolute_profiles_require_different_labels_under_recorded_policies(self):
+        absolute = dict(members=['a', 'b'], duration_s=60, profile=[[-0.5]*60, [0.]*60])
+        zero_policy = dict(absolute, policy_profile=[[0.]*60, [0.]*60])
+        same_policy = dict(absolute, policy_profile=copy.deepcopy(absolute['profile']))
+        self.assertEqual(mv.from_plan(zero_policy), mv.Move('ease_off', ('a',), 0, 60, 0.5))
+        self.assertEqual(mv.from_plan(same_policy), mv.none_move('a'))
+        self.assertEqual(mv.from_plan(dict(absolute, perturbation_profile=absolute['profile'])),
+                         mv.from_plan(zero_policy))
+        with self.assertRaisesRegex(ValueError, 'require a recorded policy_profile'):
+            mv.from_plan(absolute)
+
+    def test_validated_constant_legacy_knots_require_recorded_policy(self):
+        plan = pl.validate(dict(id='X', members=['a', 'b'], duration_s=60,
+                                knots=[[-0.5]*7, [0.]*7], family='O1', origin='inherited'), BOUNDS)
+        with self.assertRaisesRegex(ValueError, 'require a recorded policy_profile'):
+            mv.from_plan(plan)
+        zero_policy = dict(plan, policy_profile=[[0.]*60, [0.]*60])
+        same_policy = dict(plan, policy_profile=[[-0.5]*60, [0.]*60])
+        self.assertEqual(mv.from_plan(zero_policy), mv.Move('ease_off', ('a',), 0, 60, 0.5))
+        self.assertEqual(mv.from_plan(same_policy), mv.none_move('a'))
+
+    def test_recorded_policy_is_time_aligned_not_a_constant_summary(self):
+        base = np.stack([np.linspace(-0.2, 0.7, 60), np.linspace(0.5, -0.6, 60)])
+        absolute = base.copy()
+        absolute[1, 8:43] -= 0.6
+        plan = dict(members=['a', 'b'], duration_s=60,
+                    profile=absolute.tolist(), policy_profile=base.tolist())
+        move = mv.from_plan(plan)
+        self.assertEqual((move.family, move.members, move.onset, move.hold),
+                         ('ease_off', ('b',), 8, 35))
+        self.assertAlmostEqual(move.depth, 0.6)
+
+    def test_legacy_reference_matches_actual_knot_interpolation(self):
+        plan = pl.validate(dict(id='X', members=['a', 'b'], duration_s=60, knot_s=5,
+                                knots=[[0., 0.1, -0.2, 0.3, -0.4, 0.5, -0.5], [0.]*7],
+                                family='O1', origin='inherited'), BOUNDS)
+        # Match the recorded baseline even after the final knot (the legacy
+        # executor extrapolates its final segment at this explicit stride).
+        plan['policy_profile'] = [[pl.acceleration_at(plan, t)[vid] for t in range(60)]
+                                  for vid in plan['members']]
+        self.assertEqual(mv.from_plan(plan), mv.none_move('a'))
+
+    def test_recorded_policy_shape_finiteness_and_missing_reference_wrappers(self):
+        plan = dict(members=['a', 'b'], duration_s=60, profile=[[-0.5]*60, [0.]*60])
+        for policy in ([[0.]*60], [[0.]*59, [0.]*59], [0., 0.],
+                       [[float('nan')]*60, [0.]*60], [[float('inf')]*60, [0.]*60]):
+            with self.subTest(policy_shape=np.shape(policy)):
+                with self.assertRaisesRegex(ValueError, 'policy_profile must be finite and aligned'):
+                    mv.from_plan(dict(plan, policy_profile=policy))
+        for wrapper in ({'plan': plan}, {'chosen_plan': plan}, dict(plan, policy_duplicate=True)):
+            with self.assertRaisesRegex(ValueError, 'require a recorded policy_profile'):
+                mv.from_plan(wrapper)
+        plan['policy_profile'] = [[0.]*60, [0.]*60]
+        for wrapper in ({'plan': plan}, {'chosen_plan': plan}):
+            self.assertEqual(mv.from_plan(wrapper), mv.Move('ease_off', ('a',), 0, 60, 0.5))
 
     def test_invalid_plans(self):
         with self.assertRaises(ValueError):
