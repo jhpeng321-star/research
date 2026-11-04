@@ -2,6 +2,27 @@
   "task": "P3",
   "status": "READY_FOR_INTEGRATION",
   "fix_round": "REVIEW_P3_r0",
+  "independent_review": {
+    "file": "REVIEW_P3_r1.md",
+    "verdict": "PASS",
+    "reviewed_commit": "037048c2273f416cf3afc257e65c14a40096f14c",
+    "acceptance_receipt": "P3_ACCEPTED.json",
+    "blockers_remaining": 0,
+    "tests": "118 executed: 112 passed, 6 baseline Windows dependency failures; all 97 P3 tests passed in the independent review."
+  },
+  "resume_verification": {
+    "date": "2026-11-05",
+    "starting_commit": "037048c2273f416cf3afc257e65c14a40096f14c",
+    "tracked_files_match_accepted_commit": true,
+    "checks": [
+      "git diff --exit-code 037048c2273f416cf3afc257e65c14a40096f14c -- tools/coopmwm/track2_monitor.py tools/coopmwm/test_track2_monitor_cpu.py P3_READY.json: PASS before this receipt refresh",
+      "git diff --exit-code c4/track-base -- tools/coopmwm/replay_start.py tools/coopmwm/policy_synergy.py tools/coopmwm/test_policy_synergy_cpu.py tools/coopmwm/test_policy_synergy_isolated_cpu.py: PASS",
+      "git diff --check c4/track-base: PASS"
+    ],
+    "test_rerun": false,
+    "test_evidence": "Preserved completed implementation and independent-review runs; accepted source and tests are unchanged, so no duplicate test or diagnostic wave was started.",
+    "preserved_untracked_files": ["P3_ACCEPTED.json", "P3_READY.blocked0.json", "REVIEW_P3_r0.md", "REVIEW_P3_r1.md"]
+  },
   "worktree": "E:/agent-work/c4-track2-monitor",
   "branch": "c4/track2-monitor",
   "base_commit": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
@@ -10,7 +31,8 @@
     {"sha": "14a38b6f2a51db3388ebd56e8b6296553c80e229", "subject": "coopmwm P3: add learning monitor and budgeted isolated diagnostics"},
     {"sha": "f33ca4d08dfecafe1de9869f68122fe7289b59ec", "subject": "coopmwm P3: retain failed waves and bind accounting and checkpoints"},
     {"sha": "eba1df2d4f1cbf0e21fbecc58ae142e9ead6bb2c", "subject": "coopmwm P3: record CPU readiness and integration contract"},
-    {"sha": "5046be9ae3f3a0ac13ea00059dee3f59027b0cc4", "subject": "coopmwm P3: fix redesigned reward monitoring and trained A probes"}
+    {"sha": "5046be9ae3f3a0ac13ea00059dee3f59027b0cc4", "subject": "coopmwm P3: fix redesigned reward monitoring and trained A probes"},
+    {"sha": "037048c2273f416cf3afc257e65c14a40096f14c", "subject": "coopmwm P3: refresh readiness after review blocker fixes"}
   ],
   "owned_files": [
     "tools/coopmwm/track2_monitor.py",
