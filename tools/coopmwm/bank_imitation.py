@@ -4,6 +4,7 @@ import copy
 import torch
 from .acceleration import PHI,RHO
 from .accel_learner import imitation
+from .effective_imitation import TARGET_SPACES   # c4/effective-imitation target spaces
 
 
 def indices(sample):
@@ -97,18 +98,23 @@ KL_LIMIT=.045       # the registered separate-imitation bound (report kl_limit; 
 
 RUNTIME_STEP_MODE='fixed'       # bound from the deployed runtime by v2v_live.hooks (B and R alike)
 RUNTIME_INTENT_BANK_TERM=True   # bound likewise; False drops the bank intent term from the loss
+RUNTIME_TARGET_SPACE='raw'      # bound likewise; 'effective' trains the censored likelihood
 
 
-def install(step_mode='fixed',intent_bank_term=True):
+def install(step_mode='fixed',intent_bank_term=True,imitation_target_space='raw'):
     """Bind the runtime's registered imitation-strength keys process-wide (v2v_live.hooks).
 
     One key serves B and R (v2v_launch3 refuses any B/R mismatch before this is called); explicit
-    run_separate arguments still win, and the process default stays 'fixed'/True (byte-identical).
+    run_separate arguments still win, and the process default stays 'fixed'/True/'raw'
+    (byte-identical).
     """
-    global RUNTIME_STEP_MODE,RUNTIME_INTENT_BANK_TERM
+    global RUNTIME_STEP_MODE,RUNTIME_INTENT_BANK_TERM,RUNTIME_TARGET_SPACE
     if step_mode not in STEP_MODES:raise ValueError('unknown imitation_step_mode '+repr(step_mode))
     if not isinstance(intent_bank_term,bool):raise ValueError('v2v_intent_bank_term must be a bool')
+    if imitation_target_space not in TARGET_SPACES:
+        raise ValueError('unknown imitation_target_space '+repr(imitation_target_space))
     RUNTIME_STEP_MODE,RUNTIME_INTENT_BANK_TERM=step_mode,bool(intent_bank_term)
+    RUNTIME_TARGET_SPACE=imitation_target_space
 
 
 def trainable(sample,weight):
@@ -116,11 +122,32 @@ def trainable(sample,weight):
     return weight>0 and bool(sample.get('behaviour',{}).get('executed')) and bool(indices(sample))
 
 
+def pair_loss(policy,sample,weight,target_space='raw'):
+    """The one imitation term: raw Gaussian log-density at the plan command, or the censored
+    (Tobit) likelihood in the effective target space (limits attached by bank_pairs)."""
+    if target_space=='raw':
+        return imitation(policy,sample,weight)
+    if target_space=='effective':
+        from .effective_imitation import pair_imitation
+        return pair_imitation(policy,sample,weight)
+    raise ValueError('unknown imitation_target_space '+repr(target_space))
+
+
+def report_error(policy,pairs,target_space='raw'):
+    """The action-error report: raw-space L1, or effective-space min(command, u_t) L1."""
+    if target_space=='raw':
+        return action_error(policy,pairs)
+    if target_space=='effective':
+        from .effective_imitation import effective_action_error
+        return effective_action_error(policy,pairs)
+    raise ValueError('unknown imitation_target_space '+repr(target_space))
+
+
 @torch.no_grad()
-def awr_loss(policy,pairs,coefficient=1.):
+def awr_loss(policy,pairs,coefficient=1.,target_space='raw'):
     """Full-bank AWR imitation loss (same per-pair term as the minibatch objective)."""
     if not pairs:return None
-    return float(torch.stack([imitation(policy,s,w) for s,w in pairs]).mean()*coefficient)
+    return float(torch.stack([pair_loss(policy,s,w,target_space) for s,w in pairs]).mean()*coefficient)
 
 
 def _finite(x):
@@ -132,9 +159,9 @@ PASS1_BOOTSTRAP_SEED=20261101
 
 
 @torch.no_grad()
-def pair_losses(policy,pairs,coefficient=1.):
+def pair_losses(policy,pairs,coefficient=1.,target_space='raw'):
     """Per-pair AWR imitation loss (the same term awr_loss averages)."""
-    return [float(imitation(policy,s,w))*coefficient for s,w in pairs]
+    return [float(pair_loss(policy,s,w,target_space))*coefficient for s,w in pairs]
 
 
 def pass1_loss_change(before,after,resamples=PASS1_BOOTSTRAP,seed=PASS1_BOOTSTRAP_SEED):
@@ -153,7 +180,7 @@ def pass1_loss_change(before,after,resamples=PASS1_BOOTSTRAP,seed=PASS1_BOOTSTRA
 
 
 def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passes=5,
-                 step_mode=None,intent_bank_term=None):
+                 step_mode=None,intent_bank_term=None,imitation_target_space=None):
     """MAIN17:27 transactional full passes, KL relative to post-PPO policy.
 
     Backtracking changes only the optimizer step size, never targets or AWR
@@ -182,6 +209,22 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     v2v_intent bank term from the imitation loss; the TRAINED-subset (w>0,
     trainable pairs) bank intent loss is reported by exact_update's v2v_intent
     block as before_trained/after_trained alongside the all-pairs values.
+
+    c4/effective-imitation: imitation_target_space 'raw' (default, byte-identical)
+    keeps the plain Gaussian log-density at the plan command. 'effective' trains
+    the censored (Tobit) likelihood of the same AR(1)-correlated Gaussian instead:
+    where the plan command reached its recorded binding limit u_t (dead zone:
+    above min(cav_typical vType cap 1.2, leader-allowed acceleration) every command
+    has identical effect) the pair contributes log P(policy >= u_t), so the
+    likelihood never pulls the policy into the dead zone; pairs carry their limits
+    as sample['binding_limits'] attached by bank_pairs. AWR weights, the KL trust
+    region and the intent term are unchanged; the action-error report and the
+    report keys action_error_before/after_mps2 and l1_action_error_before/after
+    move to the effective space min(command, u_t), and the report carries
+    imitation_target_space='effective' plus an 'effective' diagnostics block
+    (binding share of target steps, effective action error on binding steps, mean
+    policy command vs mean limit on them). A None target space falls back to the
+    runtime binding installed by v2v_live.hooks (identical for B and R).
     """
     if int(passes)!=passes or passes<5:raise ValueError('at least five requested passes')
     step_mode=RUNTIME_STEP_MODE if step_mode is None else str(step_mode)
@@ -189,11 +232,15 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     if intent_bank_term is None:intent_bank_term=RUNTIME_INTENT_BANK_TERM
     intent_bank_term=bool(intent_bank_term)
     targeted=step_mode=='kl_targeted'
+    imitation_target_space=RUNTIME_TARGET_SPACE if imitation_target_space is None else str(imitation_target_space)
+    if imitation_target_space not in TARGET_SPACES:
+        raise ValueError('unknown imitation_target_space '+repr(imitation_target_space))
+    effective=imitation_target_space=='effective'
     offered=[(s,float(w)) for s,w in pairs]
     unexecuted=sum(1 for s,w in offered if w>0 and not s.get('behaviour',{}).get('executed'))
     pairs=[(s,w) for s,w in offered if trainable(s,w)]
     centre=copy.deepcopy(policy).eval()
-    before=action_error(policy,pairs)
+    before=report_error(policy,pairs,imitation_target_space)
     report=dict(requested_epochs=int(passes),epochs_completed=0,epochs_started=0,
         pairs_total=len(pairs),pairs_filtered_unexecuted=unexecuted,pairs_seen=0,member_actions_seen=0,
         optimizer_steps=0,rejected_optimizer_steps=0,
@@ -207,7 +254,9 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     if targeted:report.update(step_mode=step_mode,step_scale_cap=STEP_SCALE_CAP,steps_cap=STEPS_CAP)
     if not intent_bank_term:report['intent_bank_term']=False
     if not pairs:
-        return dict(report,stop_reason='empty statistically qualified bank',kl=0.,action_error_after_mps2=None)
+        out=dict(report,stop_reason='empty statistically qualified bank',kl=0.,action_error_after_mps2=None)
+        if effective:out['imitation_target_space']=imitation_target_space
+        return out
     samples=[s for s,_ in pairs]
     original_lrs=[g['lr'] for g in optimizer.param_groups]
 
@@ -218,7 +267,7 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
         steps=0;last_loss=last_norm=None;shares.clear()
         for ids in order:
             batch=[pairs[int(i)] for i in ids]
-            loss=torch.stack([imitation(policy,s,w) for s,w in batch]).mean()*coefficient
+            loss=torch.stack([pair_loss(policy,s,w,imitation_target_space) for s,w in batch]).mean()*coefficient
             if intent_on and intent_bank_term:  # v2v_intent ON only: plan intent targets
                 from .v2v_intent import bank_term;loss=loss+bank_term(policy,batch)
             if not bool(torch.isfinite(loss)):return 'nonfinite_loss',None,steps,last_loss,last_norm
@@ -240,8 +289,9 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
             order=torch.randperm(len(pairs),generator=generator).split(
                 max(1,128//(steps_mult if targeted else 1)))
             state=copy.deepcopy(policy.state_dict());adam=copy.deepcopy(optimizer.state_dict())
-            loss_before=awr_loss(policy,pairs,coefficient);error_before=action_error(policy,pairs)
-            if epoch==0 and targeted:pass1_before=pair_losses(policy,pairs,coefficient)   # report only (no RNG, no grad)
+            loss_before=awr_loss(policy,pairs,coefficient,imitation_target_space)
+            error_before=report_error(policy,pairs,imitation_target_space)
+            if epoch==0 and targeted:pass1_before=pair_losses(policy,pairs,coefficient,imitation_target_space)   # report only (no RNG, no grad)
             # pass 1 keeps the guaranteed 25 halvings; later passes stop at scale 1/64 (attempt 6)
             max_attempts=MAX_ATTEMPTS if epoch==0 else round(-math.log2(MIN_ADDITIONAL_PASS_SCALE))+1
             accepted=False;statuses=[];rejected=0;kl=None
@@ -276,7 +326,8 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                 report['stop_reason']=(f'pass {epoch+1} not accepted at any step scale >= '
                     f'{MIN_ADDITIONAL_PASS_SCALE:g} of base (statuses {statuses}); additional passes stopped')
                 break
-            row.update(awr_loss_after=awr_loss(policy,pairs,coefficient),l1_action_error_after=action_error(policy,pairs))
+            row.update(awr_loss_after=awr_loss(policy,pairs,coefficient,imitation_target_space),
+                       l1_action_error_after=report_error(policy,pairs,imitation_target_space))
             if intent_on:row['intent_grad_shares']=list(shares)
             report['epochs'].append(row)
             report['epochs_completed']+=1;report['pairs_seen']+=len(pairs)
@@ -291,7 +342,8 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
                               pass1_effective=bool(drop is not None and drop>0))
                 # statistical pass-1 report (MAIN 09:00) in kl_targeted mode only: the 'fixed'
                 # report stays byte-identical to its branch point (test_option_off_...)
-                if targeted:report['pass1_loss_change']=pass1_loss_change(pass1_before,pair_losses(policy,pairs,coefficient))
+                if targeted:report['pass1_loss_change']=pass1_loss_change(pass1_before,
+                    pair_losses(policy,pairs,coefficient,imitation_target_space))
             # kl_targeted: an accepted pass that ended below half the registered bound lets the
             # next pass push harder (step scale x2 capped 16, optimizer steps x2 capped 4).
             if targeted and epoch+1<int(passes) and kl is not None and kl<KL_LIMIT/2:
@@ -303,8 +355,12 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
         else:report['stop_reason']='all registered imitation epochs complete'
     finally:
         for g,lr in zip(optimizer.param_groups,original_lrs):g['lr']=lr
-    report.update(kl=joint_kl(policy,centre,samples),action_error_after_mps2=action_error(policy,pairs))
+    report.update(kl=joint_kl(policy,centre,samples),action_error_after_mps2=report_error(policy,pairs,imitation_target_space))
     after=report['action_error_after_mps2']
     if after is not None and before is not None and after>=before:
         report['error_not_decreased_explanation']='AWR likelihood and unweighted L1 differ; full-pass coverage and separate KL recorded'
+    if effective:
+        from .effective_imitation import effective_diagnostics
+        report['imitation_target_space']=imitation_target_space
+        report['effective']=effective_diagnostics(policy,pairs)
     return report

@@ -24,7 +24,7 @@ from tools.coopmwm.test_bank_imitation_cpu import Policy, pairs
 
 @pytest.fixture(autouse=True)
 def restore_imitation_runtime():
-    old = (bi.RUNTIME_STEP_MODE, bi.RUNTIME_INTENT_BANK_TERM)
+    old = (bi.RUNTIME_STEP_MODE, bi.RUNTIME_INTENT_BANK_TERM, bi.RUNTIME_TARGET_SPACE)
     yield
     bi.install(*old)
 
@@ -261,7 +261,8 @@ def test_registered_flip_to_kl_targeted_binds_prepares_and_installs_for_b_and_r(
                         dict(launch.BANK_OPTIONS, imitation_step_mode='kl_targeted'))
     installed = []
     monkeypatch.setattr(bi, 'install',
-                        lambda *, step_mode, intent_bank_term: installed.append((step_mode, intent_bank_term)))
+                        lambda *, step_mode, intent_bank_term, imitation_target_space:
+                        installed.append((step_mode, intent_bank_term, imitation_target_space)))
     monkeypatch.setattr(bs, 'install', lambda rb_, bank_rule='boot_v2', sources=None: None)
     cfg = v2v_runner.prepare_intent(dict(budget={}), root=tmp_path/'v2v', legacy_root=tmp_path/'legacy',
                                     source_root=tmp_path/'src', common_checkpoint_sha256='a'*64,
@@ -272,7 +273,8 @@ def test_registered_flip_to_kl_targeted_binds_prepares_and_installs_for_b_and_r(
     assert launch.bind_runtime(dict(config=live), root=tmp_path/'v2v', source_root=tmp_path/'src') is live
     from tools.coopmwm import v2v_live
     h = v2v_live.hooks(tmp_path, cfg)
-    assert installed == [('kl_targeted', True)]
+    assert installed == [(launch.BANK_OPTIONS['imitation_step_mode'], True,
+                          launch.BANK_OPTIONS['imitation_target_space'])]
     assert h['bank_pairs'] is not None
     installed.clear()
     with pytest.raises(launch.Refused):
@@ -286,7 +288,8 @@ def test_hooks_default_install_is_fixed_and_true_for_b_and_r(tmp_path, monkeypat
     from tools.coopmwm import v2v_live
     installed = []
     monkeypatch.setattr(bi, 'install',
-                        lambda *, step_mode, intent_bank_term: installed.append((step_mode, intent_bank_term)))
+                        lambda *, step_mode, intent_bank_term, imitation_target_space:
+                        installed.append((step_mode, intent_bank_term, imitation_target_space)))
     monkeypatch.setattr(bs, 'install', lambda rb_, bank_rule='boot_v2', sources=None: None)
     v2v_live.hooks(tmp_path, dict(bank_statistics='per_seed_v1'))
-    assert installed == [('fixed', True)]
+    assert installed == [('fixed', True, 'raw')]

@@ -306,8 +306,12 @@ def commands_by_time(steps, bounds=ACCEL_BOUNDS):
     return {int(s['time_s']): step_commands(s, bounds) for s in steps}
 
 
-def own_targets(members, t, by_time, horizon, allowed=None, end_s=None):
-    """(targets, mask) lists [n][H]: own command at t+k, k=1..H; masked when unavailable."""
+def own_targets(members, t, by_time, horizon, allowed=None, end_s=None, limits=None):
+    """(targets, mask) lists [n][H]: own command at t+k, k=1..H; masked when unavailable.
+
+    ``limits`` (c4/effective-imitation; DEFAULT None = unchanged): {second: {vid: u_t}}
+    binding upper limits; each target is clipped to min(command, u_t) so intent targets
+    share the effective command space (limits themselves are already within bounds)."""
     targets = [[0.]*horizon for _ in members]
     mask = [[0.]*horizon for _ in members]
     for k in range(1, horizon+1):
@@ -316,9 +320,13 @@ def own_targets(members, t, by_time, horizon, allowed=None, end_s=None):
         later = by_time.get(int(t)+k)
         if later is None:
             continue
+        bound = (limits or {}).get(int(t)+k) or {}
         for j, vid in enumerate(members):
             if (allowed is None or vid in allowed) and vid in later:
-                targets[j][k-1] = later[vid]
+                value = later[vid]
+                if vid in bound:
+                    value = min(value, bound[vid])
+                targets[j][k-1] = value
                 mask[j][k-1] = 1.
     return targets, mask
 
@@ -386,10 +394,12 @@ def refresh_bank_intents(policy, pairs):
     return report
 
 
-def attach_bank_targets(pairs, tape, entry, horizon, bounds=ACCEL_BOUNDS):
+def attach_bank_targets(pairs, tape, entry, horizon, bounds=ACCEL_BOUNDS, limits=None):
     """Plan members' own future plan commands as intent targets (pair i = second t0+i).
 
     Targets stop at the plan end (``t0 + duration_s``); non-plan members are masked.
+    ``limits`` (c4/effective-imitation; DEFAULT None = unchanged): {second: {vid: u_t}}
+    binding limits - plan commands are clipped to min(command, u_t) (effective space).
     Mutates the (already deep-copied) pair samples and returns ``pairs``.
     """
     by_time = commands_by_time(tape['steps'], bounds)
@@ -398,7 +408,7 @@ def attach_bank_targets(pairs, tape, entry, horizon, bounds=ACCEL_BOUNDS):
         members = list(sample['context'].get('members') or sample['behaviour']['proposal_members'])
         allowed = set(sample.get('behaviour', {}).get('proposal_members') or ())
         sample['intent_target'], sample['intent_mask'] = own_targets(
-            members, t0+i, by_time, horizon, allowed=allowed, end_s=end)
+            members, t0+i, by_time, horizon, allowed=allowed, end_s=end, limits=limits)
     return pairs
 
 
