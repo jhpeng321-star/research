@@ -1,4 +1,4 @@
-# S-COOPMWM — A22/B12/R11; interim SHA archive COMPLETE; r4 resource-wait/effective FIRSTu14
+# S-COOPMWM — A23/B12/R11; monitor-only migration handover; r4 resource-wait/effective FIRSTu14
 1. MAIN14:06 V2Vcap17471840 registered67320dae supersedes14.5M/fresh6M; exact+2971840 onlynewV2Vphases,oldphaseallocationsunchanged. HistoricalMAIN07:06 checks->train144000/b6c1b8bf retained. Allcharges retained/sharedledger+lock. CurrentnonV2V sourcebindingsretainconservative14.5M in-memory, neverimplicitlymutated; newV2Vready/Linux/rehearsal/resourcegatesbeforephysics.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.

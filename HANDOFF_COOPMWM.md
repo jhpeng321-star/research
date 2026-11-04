@@ -1,5 +1,21 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 17:25 +08 — MONITOR ONLY; A23/B12/R11; resource/migration handover pending
+- Full 1,140-line brief, git status/log, current receipts and canonical registration
+  through7,278 read. MAIN16:03/16:25 keeps recovery/migration with the existing
+  operator. No dispatch/gate/STOP clearing/coop3 or warm1 writes/ledger access.
+- A23 sealed17:10:15; owner2049830 live. B12/R11 unchanged; old r3 owners absent.
+  Existing r4 waiter3483043/start79591723 live; no B/R training observed on cpuQ.
+- cpuQ5,844,094,976bytes/~5.44GiB:598,355,968below6GiB floor and1,135,226,880
+  below r4's6.5GiB threshold. Both movers live/latest zero eligible; guards kept.
+- Six-tree copy preparation remains verified11,026files/4,511,278,304bytes/0bad;
+  cpuS live training/mount/ledger handover NOT confirmed. Await MAIN addendum.
+- Operator u14 chain is registered: raw throughu13, gate13, BOTH effective fromu14.
+  No activation claimed. Monitor4 still06e88ecd vs prepared53ae93af; operator owns
+  handover. B12 missing PPO/imitation remains null/disclosed, not mechanics PASS.
+- u8 interim COMPLETE288/288/outcomes closed; all finished work adopted/never repeat.
+  Proof `coopmwm/RESUME_MONITOR_20261104_1725.md` and its three raw receipts.
+
 ## CURRENT Nov4 17:02 +08 — MONITOR ONLY; A22/B12/R11; migration not yet live
 - Full1140-linebrief/log/status/currentreceipts+canonicalregistrationthrough7274
   READ; dirtyworkpreserved. MAIN16:03/16:25 givesrecovery+migrationtoexisting

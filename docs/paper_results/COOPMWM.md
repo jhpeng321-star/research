@@ -1,5 +1,23 @@
 # S-COOPMWM — live checks
 
+### Nov4 17:25 UTC+8 — A23/B12/R11; read-only migration/resource monitoring
+- **A23 is sealed and A owner2049830 is live.** B12/R11 remain unchanged; the old
+  r3 owners are absent. Existing r4 waiter3483043 is live, but no B/R training
+  process was observed on cpuQ. MAIN16:03/16:25 leaves recovery/migration with
+  the existing operator; this session remains monitor/report only.
+- Latest cpuQ free space **5,844,094,976bytes (~5.44GiB)** is598,355,968bytes below
+  the6GiB dispatch floor and1,135,226,880bytes below r4's6.5GiB threshold. Both
+  movers are live and report zero eligible files. No guard or protection changed.
+- Six-tree copy preparation remains SHA-verified11,026files/4,511,278,304bytes,
+  zero mismatches. This is not confirmation of a mounted bank or live cpuS training;
+  the operator's ledger/mount handover and MAIN cpuS-live addendum remain pending.
+- The u14 switch chain is now registered, not claimed active. Monitor4 still binds
+  06e88ecd versus prepared53ae93af. B12's lost PPO/imitation fields remain explicitly
+  null, not a mechanics PASS inferred from monitor health.
+- u8 interim remains COMPLETE288/288/outcomes closed. No completed work repeated,
+  new SUMO/inference, remote writes, signals, moves, deletions or ledger access.
+- Evidence:`coopmwm/RESUME_MONITOR_20261104_1725.md` and its three raw receipts.
+
 ### Nov4 17:02 UTC+8 — read-only adoption; A22/B12/R11; cpuS migration pending
 - The full1,140-line brief and canonical registration through7,274 were read.
   MAIN16:03/16:25 leaves recovery and migration with the existing launch operator;
