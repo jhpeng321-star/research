@@ -9,6 +9,29 @@
   "spec": "E:/agent-work/_sol/tracks_spec.md",
   "review": "REVIEW_T1D_r0.md",
   "fix_round": 1,
+  "independent_review": {
+    "report": "REVIEW_T1D_r1.md",
+    "verdict": "PASS",
+    "reviewed_commit": "0ba5e75a6dea0da703e38f234de1ffc4ade36fa8",
+    "acceptance_receipt": "T1D_ACCEPTED.json",
+    "remaining_blockers": 0,
+    "tests": {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0,
+      "deselected": 0,
+      "seconds": 21.31,
+      "exit_code": 0,
+      "warnings_as_errors": true,
+      "source": "Independent r1 review; full declared selection reproduced without exclusions"
+    }
+  },
+  "resume": {
+    "starting_commit": "0ba5e75a6dea0da703e38f234de1ffc4ade36fa8",
+    "completed_fix_work_preserved": true,
+    "action": "Refreshed readiness metadata with the existing independent PASS and acceptance receipts; completed implementation, tests and dry run were not repeated.",
+    "new_jobs_or_dispatches": 0
+  },
   "implementation_commits": [
     {
       "sha": "eb0c2763c7760232552cd0ec5a6a6cfe6c9d697f",
