@@ -3,7 +3,7 @@ from copy import deepcopy
 import math
 import re
 
-from .exact_grade import _seal
+from .exact_grade import _seal, verify_sealed
 
 
 OPTIONS = dict(statistics='per_seed_v1', target_space='effective',
@@ -12,10 +12,35 @@ OPTIONS = dict(statistics='per_seed_v1', target_space='effective',
                base_frozen=True, separate_layer_optimizer=True)
 
 
+def validate_augmented(e):
+    """A source receipt is never proof of a modified plan's execution."""
+    admission = e.get('augmentation_admission', {})
+    record = admission.get('confirmation', {})
+    try:
+        verify_sealed(record, 'confirmation_sha256')
+    except (KeyError, ValueError):
+        raise ValueError('REFUSED: augmented example requires a sealed all8 admission')
+    examples = record.get('per_seed_v1', {}).get('examples', [])
+    ex = next((x for x in examples if x['example_id'] == admission.get('example_id')), {})
+    if (record.get('verify_mode') != 'all8_both_seeds' or record.get('arm') != e['arm'] or
+            ex.get('admitted') is not True or ex.get('cooperative') is not True or
+            ex.get('advantage_veh_s', 0) <= 0 or ex.get('later_harm') != 'pass' or
+            ex.get('plan') != e['plan'] or admission.get('seed') != e['seed'] or
+            admission.get('snapshot_file_sha256') != e.get('snapshot_file_sha256') or
+            not e.get('snapshot_file_sha256') or
+            admission.get('effective_sha256') != _seal(dict(sample=e['effective_sample']), 'sha256')['sha256'] or
+            admission.get('weight_sha256') != _seal(dict(weight=e['weight'], example=ex), 'sha256')['sha256'] or
+            e['provenance']['verification_sha256'] != record['confirmation_sha256']):
+        raise ValueError('REFUSED: augmented all8 admission lost successful plan/state/seed/execution binding')
+    return e
+
+
 def training_batch(bank, augmented, *, arm, encoder):
     from . import moves
     rows, ids = [], set()
     sources = {e['id']: e for e in bank}
+    for e in augmented:
+        validate_augmented(e)
     for example in bank+augmented:
         e = deepcopy(example)
         ident, source = e.get('id'), e.get('source_id')

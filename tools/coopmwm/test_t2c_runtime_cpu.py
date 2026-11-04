@@ -155,7 +155,14 @@ class Teacher:
 
 class Augment:
     def augment(self, bank, *, count, arm):
-        return [dict(deepcopy(bank[i % len(bank)]), id=f'{arm}_aug_{i}') for i in range(count)]
+        out = []
+        for i in range(count):
+            e = dict(deepcopy(bank[i % len(bank)]), id=f'{arm}_aug_{i}')
+            e['plan']['depth'] += .01
+            # Proposals deliberately retain source evidence. Only verification
+            # may replace it with the modified execution's evidence.
+            out.append(e)
+        return out
 
 
 class Weighting:
@@ -271,6 +278,28 @@ class CPUBackend:
 
     def grade_verification(self, kind, payload, results):
         return dict(status='graded', advantage=.4, label_correct=payload.get('episode', 0) == 0)
+
+    def verify_augmentation(self, payload, *, cfg, execute):
+        from tools.coopmwm.exact_grade import _seal
+        execute([(dict(sim_s=1200, window=payload['window'], branch='augment'), payload)], 'all8')
+        e = deepcopy(payload)
+        e['id'] = payload['proposal_id']+'_s1'
+        e['effective_sample']['plan_sha256'] = _seal(dict(plan=e['plan']), 'sha256')['sha256']
+        e['effective_sample']['action'] = [.4, .4]  # newly realised modified-plan commands
+        e['weight'] = 1.4  # newly realised advantage, not source weight
+        e['snapshot_file_sha256'] = 'f'*64
+        ex = dict(example_id=e['id'], admitted=True, cooperative=True, advantage_veh_s=.4,
+                  later_harm='pass', plan=e['plan'])
+        record = _seal(dict(verify_mode='all8_both_seeds', arm=e['arm'],
+                            per_seed_v1=dict(examples=[ex])), 'confirmation_sha256')
+        eff = _seal(dict(sample=e['effective_sample']), 'sha256')['sha256']
+        weight = _seal(dict(weight=e['weight'], example=ex), 'sha256')['sha256']
+        e['provenance'] = dict(verification_sha256=record['confirmation_sha256'],
+                               weight_sha256=weight, effective_sha256=eff)
+        e['augmentation_admission'] = dict(confirmation=record, example_id=ex['example_id'],
+            seed=e['seed'], snapshot_file_sha256=e['snapshot_file_sha256'],
+            effective_sha256=eff, weight_sha256=weight)
+        return dict(examples=[e], receipt=record)
 
     def practice_reference(self, start, *, common_weights):
         return dict(sim_s=1200, window=start['window'], branch='reference'), dict(start)

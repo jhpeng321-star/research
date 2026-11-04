@@ -346,7 +346,7 @@ class Backend:
         ident = f't2c_u{update:03}_{arm}_episode_{index:03}'
         if start is not None:
             from .practice_starts import wave_call
-            call = wave_call(cfg['run_root'], arm, ident, 'v2v_train', start['practice_row'], index, extras)
+            call = wave_call(start.get('practice_root', cfg['run_root']), arm, ident, 'v2v_train', start['practice_row'], index, extras)
             world, extras = call['worlds'][0], call['extras']
         raw_id = f'{ident}_{arm}_{world["seed"]}'
         if start is not None:
@@ -510,6 +510,10 @@ class Backend:
                 out['label_correct'] = expected == min(range(len(costs)), key=lambda i: (costs[i], i))
         return _seal(out, 'verification_sha256')
 
+    def verify_augmentation(self, payload, *, cfg, execute):
+        from .rerun_tracks_augment import verify
+        return verify(self, payload, cfg, execute)
+
     def practice_reference(self, start, *, common_weights):
         from . import replay_bank as rb
         path = Path(rc.guard_path(start['snapshot_path']))
@@ -528,7 +532,7 @@ class Backend:
     def run_reserved_branch(self, spec, snapshot, *, ident, phase):
         self._gate_reserved(ident, spec['sim_s'], phase)
         return self._dispatch(branch_worker, spec, snapshot, self.cfg,
-                              str(Path(self.cfg['run_root'])/'branches'/ident))
+                              spec.get('t2c_artifact_root', str(Path(self.cfg['run_root'])/'branches'/ident)))
 
     def expand_scheduled(self, kind, *, arm, update, cfg):
         if kind == 'fixed_test':
@@ -620,7 +624,8 @@ def branch_worker(spec, snapshot, cfg, work):
         from .replay_bank import ttc_events
         result['safety'] = dict(collisions=int(w['collisions']), teleports=int(w['teleports']),
             hard_brakes=int(w['hard_brake']),
-            ttc_events=int(ttc_events(trace, spec['window']['start_s'], spec['window']['end_s'])))
+             ttc_events=int(ttc_events(trace, spec['window']['start_s'], spec['window']['end_s'])))
+        result['result_path'] = str(trace.parent/'RESULT.json')
     return result
 
 

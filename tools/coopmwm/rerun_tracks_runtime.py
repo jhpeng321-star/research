@@ -21,7 +21,7 @@ import threading
 from . import rerun_cpus as rc
 from .exact_grade import _seal
 from .rerun_tracks_monitor import write_monitor, SAFETY
-from .rerun_tracks_bank import training_batch, batch_receipt
+from .rerun_tracks_bank import training_batch, batch_receipt, validate_augmented
 
 
 def state_sha(model):
@@ -381,7 +381,47 @@ class Runtime:
         if arm != 'A' and state_sha(model) != self.base_sha[arm]:
             raise ValueError('REFUSED: frozen base changed during episode')
         return dict(rows=rows, missing=missing, reward=result['reward'], safety=result['safety'],
-                    training=result['training'], safety_stop=result['safety_stop'])
+                     training=result['training'], safety_stop=result['safety_stop'])
+
+    def prepare_augmentation(self, arm, bank):
+        if arm in self.augmented:
+            return self.augmented[arm]
+        count = self.cfg['plan_augment']['examples_per_update']
+        proposals = self.components[arm]['plan_augment'].augment(bank, count=count, arm=arm)
+        if len(proposals) != count or any(e['arm'] != arm for e in proposals):
+            raise ValueError('REFUSED: augmentation lost own-bank identity or proposal count')
+        limit = self.cfg['verification']['augmentation_samples_per_arm']
+        selected = random.Random(20261104).sample(proposals, min(limit, len(proposals)))
+        admitted, receipts = [], []
+        for i, proposal in enumerate(selected):
+            ident = f't2c_u000_{arm}_augment_{i:05}'
+            payload = dict(proposal, id=ident, proposal_id=proposal['id'])
+            spent = 0
+            def execute(pairs, suffix):
+                nonlocal spent
+                amount = sum(s['sim_s'] for s, _ in pairs)
+                if spent+amount > rc.GATE_SIM_S:
+                    raise ValueError('REFUSED: all8 augmentation allowance exhausted')
+                if any(s['window']['start_s'] != proposal['window']['start_s'] or
+                       s['window']['end_s'] < proposal['window']['end_s'] for s, _ in pairs):
+                    raise ValueError('REFUSED: augmentation shortened/changed the full window')
+                result = self._branches(pairs, 'augment_verify', ident+'_'+suffix)
+                spent += amount
+                return result
+            checked = self.backend.verify_augmentation(payload, cfg=deepcopy(self.cfg), execute=execute)
+            for e in checked.get('examples', []):
+                validate_augmented(e)
+                if e['source_id'] != proposal['source_id'] or e['plan'] != proposal['plan']:
+                    raise ValueError('REFUSED: all8 verification changed augmented proposal identity')
+                admitted.append(e)
+            receipts.append(dict(proposal_id=proposal['id'], sim_s=spent,
+                                 admitted=len(checked.get('examples', [])), receipt=checked.get('receipt')))
+        # Empty/partial admission is a valid outcome; original own-bank practice remains.
+        training_batch(bank, admitted, arm=arm, encoder=self.components[arm]['merge_features'])
+        self._write(f'components/u000_{arm}_augment_admission.json', dict(
+            proposals=len(proposals), sampled=len(selected), admitted=len(admitted), receipts=receipts))
+        self.augmented[arm] = admitted
+        return admitted
 
     def update(self, arm, update, *, episodes=None):
         from . import moves
@@ -392,13 +432,7 @@ class Runtime:
             bank = self.backend.bank_examples(arm, update, cfg=deepcopy(self.cfg))
             if not bank or any(e['arm'] != arm for e in bank):
                 raise ValueError('REFUSED: B/R must consume their own nonempty banks')
-            count = self.cfg['smoke']['augmented_examples_per_arm'] if self.smoke else self.cfg['plan_augment']['examples_per_update']
-            if arm not in self.augmented:
-                self.augmented[arm] = comp['plan_augment'].augment(bank, count=count, arm=arm)
-                self._verify(arm, 0, 'augment', self.augmented[arm], 0)
-            augmented = self.augmented[arm]
-            if len(augmented) != count or any(e['arm'] != arm for e in augmented):
-                raise ValueError('REFUSED: augmentation lost own-bank identity or registered count')
+            augmented = self.prepare_augmentation(arm, bank)
             bank_batch = training_batch(bank, augmented, arm=arm, encoder=comp['merge_features'])
             bank_receipt = batch_receipt(bank_batch)
             self._write(f'components/u{update:03}_{arm}_bank_batch.json', bank_receipt)
@@ -642,10 +676,7 @@ class Runtime:
         for arm in rc.TRIGGER_ARMS:
             comp = self.components[arm]
             bank = self.backend.bank_examples(arm, 0, cfg=deepcopy(self.cfg))
-            count = self.cfg['smoke']['augmented_examples_per_arm'] if self.smoke else self.cfg['plan_augment']['examples_per_update']
-            self.augmented[arm] = comp['plan_augment'].augment(bank, count=count, arm=arm)
-            training_batch(bank, self.augmented[arm], arm=arm, encoder=comp['merge_features'])
-            self._verify(arm, 0, 'augment', self.augmented[arm], 0)
+            self.prepare_augmentation(arm, bank)
         with ThreadPoolExecutor(max_workers=2) as diagnostics_pool:
             for update in range(1, 2 if self.smoke else rc.UPDATES+1):
                 for future in pending:
