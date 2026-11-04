@@ -112,3 +112,9 @@ Free disk is 162,010,009,600 bytes. This verification spent **zero new sim-s**.
 T2C fix worker PID25084 is active locally; acceptance remains absent. Existing
 uncommitted T2C fixes are preserved. See `S_LAUNCH_RESUME_20261105.json` for the
 durable resume checkpoint and remaining prerequisites.
+
+The later owner amendment at REGISTRATION.md 01:39 ("approve the cut") supersedes
+the original research allowance: **5,000,000 sim-s including smoke**. Parity960
+still counts inside that total. With the launch instruction's20,000 smoke cap
+reserved, remaining research is4,979,040. The active T2C worker owns the revised
+quote and production backend; acceptance remains the explicit integration gate.

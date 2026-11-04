@@ -1,0 +1,37 @@
+{
+  "schema": "coopmwm.s_launch.prerequisites.v1",
+  "timestamp": "2026-11-05T01:42:58+08:00",
+  "status": "AWAITING_T2C_ACCEPTANCE",
+  "s0": "PASS_REUSED",
+  "s0_receipts_commit": "684d433c",
+  "previous_resume_receipt": "S_LAUNCH_RESUME_20261105.json",
+  "owner_amendment": {
+    "source": "REGISTRATION.md:7365-7366",
+    "timestamp": "2026-11-05T01:39:00+08:00",
+    "quote": "approve the cut",
+    "total_cap_including_smoke_sim_s": 5000000,
+    "dense_verification_cap_sim_s": 300000,
+    "group_verification_cap_sim_s": 300000,
+    "augmentation_once_prelaunch_cap_sim_s": 200000,
+    "replicated_updates": [6, 12, 24],
+    "replicates": 5,
+    "production_backend_required": true,
+    "host": "cpuV"
+  },
+  "parity_spent_sim_s": 960,
+  "total_remaining_sim_s": 4999040,
+  "smoke_cap_from_launch_instruction_sim_s": 20000,
+  "remaining_research_if_full_smoke_reserved_sim_s": 4979040,
+  "t2c_last_observed_commit": "4e7dc2f8",
+  "existing_t2c_worker": {"pid": 24448, "started": "2026-11-05T01:39:38+08:00", "title": "G-T2C-W3-sol"},
+  "t2c_accepted": false,
+  "integration_started": false,
+  "training_launched": false,
+  "new_sim_s_this_resume": 0,
+  "blockers": [
+    "T2C acceptance receipt absent",
+    "Cap-compliant quote and production backend fixes still assigned to active T2C worker",
+    "Final-runtime staging dependency closure and cpuV qualification pending"
+  ],
+  "next_action": "Observe existing T2C worker and acceptance receipt; start integration only after acceptance"
+}
