@@ -134,6 +134,11 @@ def hooks(root, cfg):
     # Owner 2026-11-04 proposal: practice_starts options validated at hook time (B == R, OFF or
     # registered ON); the scheduling itself lives in v2v_runner.run_arm's train wave.
     practice_options_for(cfg,'B'),practice_options_for(cfg,'R')
+    # c4/coop-reward: registered cooperation (team) reward option validated at hook time
+    # (default OFF = no key; ON refuses a missing w/provenance and pins B == R before the
+    # runner binds; A only by explicit coop_reward_arms inclusion).
+    from .coop_reward import settings as coop_settings
+    coop_settings(cfg)
     # c4/effective-imitation: imitation_target_space is ONE key for B and R (A has no bank);
     # the runtime default 'raw' adds no kwarg (byte-identical).
     target_spaces={a:imitation_target_space_for(cfg,a) for a in ('B','R')}

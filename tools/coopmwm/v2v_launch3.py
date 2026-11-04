@@ -394,6 +394,13 @@ def bind_runtime(value, *, root, source_root):
     intent_bank_term_for(cfg, 'B'), intent_bank_term_for(cfg, 'R')   # refuses B != R
     imitation_target_space_for(cfg, 'B'), imitation_target_space_for(cfg, 'R')   # refuses B != R
     practice_options_for(cfg, 'B'), practice_options_for(cfg, 'R')   # B == R; OFF or registered ON
+    # c4/coop-reward: registered cooperation (team) reward option; absent keys stay OFF
+    # (unchanged), present keys must be the registered values with B/R pinned identical.
+    try:
+        from .coop_reward import settings as coop_settings
+        coop_settings(cfg)
+    except ValueError as error:
+        raise Refused('coop_reward registration invalid: ' + str(error)) from error
     if 'v2v_intent_weight' in cfg:
         raise Refused('obsolete runtime v2v_intent_weight is not an intent loss binding')
     passes = cfg.get('imitation_epochs')

@@ -78,7 +78,8 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
                    imitation_bank_filter='cooperative_only', imitation_step_mode=None,
                    v2v_intent_bank_term=True, practice_starts=False,
                    practice_fraction=None, practice_repeat_cap=None, budget_transfer=None,
-                   imitation_target_space=None):
+                   imitation_target_space=None, coop_reward=False, coop_reward_weight=None,
+                   coop_reward_provenance=None, coop_reward_arms=None):
     """Audit I4: the registered producer of the intent-ON A/B/R runtime config (prospective
     binding only, like prepare). Identical for every arm: v2v_dim=48 (K4 x (6+5+1)),
     v2v_intent=True, horizon 5, loss weight 1.0, detach_trunk=True; bank labels
@@ -90,8 +91,12 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
     DEFAULT OFF = the launch default; ON is a B/R-equal registered runtime toggle enableable at
     an update boundary). c4/effective-imitation: imitation_target_space pinned in BANK_OPTIONS
     ('raw' byte-identical; 'effective' = the censored likelihood against each plan command's
-    recorded binding limit, B and R together at a registered update boundary). Exactly the keys
-    v2v_launch3.bind_runtime pins (practice keys are validated, never pinned, so ON passes)."""
+    recorded binding limit, B and R together at a registered update boundary). c4/coop-reward:
+    coop_reward=False (the launch default) writes NO coop keys (byte-identical producer output);
+    enabled=True is the registered COOPERATION (team) reward option and REQUIRES the positive
+    finite coop_reward_weight w (no default tuning) and its non-empty coop_reward_provenance;
+    coop_reward_arms defaults to B+R together (A only by explicit inclusion). Exactly the keys
+    v2v_launch3.bind_runtime pins (practice/coop keys are validated, never pinned, so ON passes)."""
     from .v2v_launch3 import BANK_OPTIONS, INTENT_OPTIONS, PRACTICE_KEYS, practice_options_for
     cfg = prepare(base, root=root, legacy_root=legacy_root, source_root=source_root,
                   common_checkpoint_sha256=common_checkpoint_sha256,
@@ -134,6 +139,16 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
         cfg['budget'] = dict(budget, phases=phases)
     if cfg['imitation_epochs'] < 5:
         raise ValueError('full-pass separate imitation requires at least five epochs')
+    # c4/coop-reward: OFF (default) adds no keys; ON writes the registered keys and validates
+    # them here (missing w or provenance, or a B/R-split arms pin, refuses the producer).
+    if coop_reward:
+        cfg['coop_reward'] = True
+        cfg['coop_reward_weight'] = coop_reward_weight
+        cfg['coop_reward_provenance'] = coop_reward_provenance
+        if coop_reward_arms is not None:
+            cfg['coop_reward_arms'] = list(coop_reward_arms)
+        from .coop_reward import settings as coop_settings
+        coop_settings(cfg)
     for key, want in dict(INTENT_OPTIONS, **{k: v for k, v in BANK_OPTIONS.items()
                                              if k not in PRACTICE_KEYS}).items():
         if cfg.get(key) != want or isinstance(cfg.get(key), bool) != isinstance(want, bool):

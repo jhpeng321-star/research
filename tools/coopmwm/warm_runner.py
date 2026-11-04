@@ -206,13 +206,18 @@ def run_arm(root,arm,hooks=None):
                 exact_trust=tr,routing=routes))
             # Snapshot the rollout policy BEFORE the optimizer for exact twins.
             state={k:v.detach().clone() for k,v in policy.state_dict().items()}
+            # coop_reward (c4/coop-reward, default OFF): registered cooperation (team) term on the
+            # PPO-update rewards only; every other consumer of eps and the receipts keep the raw
+            # source-inclusive team-J rewards, so OFF returns the SAME episode object (byte-identical).
+            from . import coop_reward
+            coop_eps,coop=coop_reward.training_episodes(b,arm,eps)
             if arm in ('B','R'):
                 from .exact_grade import exact_update,lag_report
-                metrics=exact_update(policy,opt,eps,rng,pairs,b['awr']['coefficient'],
+                metrics=exact_update(policy,opt,coop_eps,rng,pairs,b['awr']['coefficient'],
                     imitation_epochs=b.get('imitation_epochs',5) if replay else 0)
                 grade_lag=None if replay else lag_report(xr.queue(root),u)
             else:
-                metrics=update(policy,opt,eps,rng,**({'awr':b['awr']} if 'awr' in b else {}));grade_lag=None
+                metrics=update(policy,opt,coop_eps,rng,**({'awr':b['awr']} if 'awr' in b else {}));grade_lag=None
             save(root/f'{arm}_checkpoint_{u:03}.pt',policy,opt,rng,u,charged(root))
             lesson=None
             if replay:
@@ -258,8 +263,9 @@ def run_arm(root,arm,hooks=None):
                 concurrently_active_plans=max(s.get('simultaneously_active_plans',0) for e in eps for s in e['steps']),
                 overlap_rechecks=[s['proposal']['overlap_recheck'] for e in eps for s in e['steps']
                     if s.get('proposal') and s['proposal'].get('overlap_recheck')],
-                charged_sim_s=charged(root),reward_source='SUMO source-inclusive team J only',
-                **({'practice':practice} if practice is not None else {})))
+                 charged_sim_s=charged(root),reward_source='SUMO source-inclusive team J only',
+                 **({'practice':practice} if practice is not None else {}),
+                 **({'coop_reward':coop} if coop is not None else {})))
             beta=tr
             if arm=='B':
                 write(root/f'B_RANDOM_QUOTA_{u:03}.json',dict(sampling=routes['sampling'],
