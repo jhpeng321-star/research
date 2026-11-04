@@ -1,5 +1,19 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## UPDATE Nov4 12:36 +08 — accounting authority/reporting reconciled
+- MAIN12:45/12:50CPUStransfer is live inB_REPLAY_BINDINGa91884b6: bankext+840000/
+  sumoverification-840000/capunchanged. FrozenV2Vruntime06e88ecdhasoldcaps;
+  rawruntime-basedbanknegativeisNOTactualphaseoverspend. Read-onlypublichelper
+  nowverifiesliveamendmentinAUTHORITY/recordsSHA+delta/counts811640once.
+- LivePUBLIC_PROGRESS_1793766958836422500:13080120charged/cap17471840,
+  actualphasesnonnegative/A13B7R6/monitorhealthy. Noallocation/runtimechanged.
+- IMPORTANTsentMAIN/practiceoperator: REGISTRATION12:35calls811640superseded
+  unspentbutitisfullyspentoutsideledger/globalCAPsubtractsconstant. DoNOTfund
+  practicebyrefundingretainedexpense; delegate/MAINmustreconcilebeforedeploy.
+  ProofACCOUNTING_COHERENCE_20261104_1235.md/_solmatchingMAINnote.
+- CPU-Scontinuationdelegateowned; doNOTduplicate. Futurelesson13200gapstillopen.
+  Bothmoversretained/extension2707739145bytescertified/zeroeligiblelastscan.
+
 ## CURRENT Nov4 12:29 +08 — fresh adoption A13/B7/R6
 - Full1131-linebrief/log/status/latestreceiptsREAD; dirtyworkkept. Existing
   A2049830/r2supervisor2636865/B2636963/R2636968/monitor2635161LIVE; runtime

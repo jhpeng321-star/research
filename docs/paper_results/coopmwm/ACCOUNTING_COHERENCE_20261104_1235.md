@@ -17,3 +17,13 @@ allocation. Any practice funding reconciliation remains with MAIN/the delegate.
 
 No allocation/runtime change, worker dispatch, new simulation or signal by this
 check. The future frozen-lesson phase gap remains13,200sim-s (u12 still fits).
+
+## Reporting repair verified
+The existing `_sol/coopmwm_public_progress.py` read-only helper now takes phase
+allocations from the registered live bank binding, verifies its amendment against
+AUTHORITY.md, records the binding SHA and runtime phase delta, and explicitly
+counts the fixed811,640retained expense once. It refuses an underfunded retained
+allocation or cap mismatch. It does not install an accounting function or mutate
+the production runtime. Live verification:
+`PUBLIC_PROGRESS_1793766958836422500.json` reports13,080,120charged and **no
+negative live phases**, with amendment276799ab recorded. Monitor4 remains healthy.
