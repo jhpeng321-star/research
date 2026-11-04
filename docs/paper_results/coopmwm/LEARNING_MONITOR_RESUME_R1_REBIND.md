@@ -19,3 +19,10 @@ Original binding, owner and every report remain preserved.
 
 This qualification/registration commit precedes monitor handover; no generation3
 dispatch is claimed until the subsequent DISPATCH/OWNER evidence exists.
+
+## Handover complete
+Monitor2 owner2200255 acknowledged its own STOP and exited gracefully at
+unix1793753388; generation3 then launched once at1793753400. Owner2371588 /
+start76767792 is live, current runtime bound, and reportsA6/B3/R2 healthy with
+no partial-publication reads or pause. Source code, learning and safety rules are
+unchanged. Old reports and authority remain in learningwatch2.

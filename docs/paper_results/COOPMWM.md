@@ -1,5 +1,21 @@
 # S-COOPMWM — live checks
 
+## Nov4 ~08:50 UTC+8 — B recovery progresses; protected diagnostic archive complete
+- **A6/B3/R2**; replacement B/R supervisors observed live under the delegated
+  launch3 resume. B's u3 reused24closed/precharged episodes, without replay.
+- B3: five full imitation passes, effective pass1, KL0.001632, eight cooperative
+  examples; action MAE1.33136->1.32716m/s². Bank intent loss2.2652->2.3780
+  again increased and remains report-only. Composite safety passes: no
+  collisions/teleports; critical-event delta-29.77CI[-54.21,-9.85] vs A.
+- Identical learning monitor3 is qualified, registered and live on the new
+  runtime authority. Previous monitor exited gracefully; rules are unchanged.
+- Additional **289,878,263bytes/255files/3SHA-certified batches** archived from
+  superseded diagnostic branches. cpuQ6.28GiB at completion;9GiB backfill target
+  remains unmet. Existing rolling movers continue.
+- B-u6 lesson/isolated-synergy evidence is pending. The resumed u3's309s duration
+  reused episodes and is not a fresh-update throughput estimate.
+- Evidence: `coopmwm/V2V_RECOVERY_ADOPTED_0850.md`.
+
 ## Nov4 ~08:15 UTC+8 — fresh-session adoption, delegated recovery retained
 - Direct live check: **A5/B2/R2**. A continues; B/R checkpoint003 recovery
   remains with MAIN's separate operator. Existing work and owners adopted.

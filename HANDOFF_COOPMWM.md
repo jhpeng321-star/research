@@ -1,5 +1,24 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 ~08:50 +08 — delegated recovery RUNNING; archive complete
+- A6/B3/R2. Delegateadopt_r1supervisor2339490/start76680313, B2339496/76680408,
+  R2339499/76680450 LIVE; A2049830kept. Src4/runtime4a8890cd. NOduplicate
+  repair/watcher/wave. B3adopts24closedprechargedepisodes/critic-logprob0diff;
+  R3collecting. OriginalengineeringSTOPretired bydelegate.
+- B3fivepasses/pass1effective/KL.00163246/8coopexamples/error1.33136->1.32716;
+  compositesafetyPASS/0collisionteleport/critical-29.77CI[-54.21,-9.85]. Bank
+  intent2.2652->2.378rose/reportonly. 309sresumeETAisNOTfreshupdateforecast.
+- learningmonitor3LIVE2371588/start76767792/currentruntimebound; identicalsource
+  6LinuxPASS/reg82351e1e. Prior2200255gracefullyretired; reportskept. Opshelper
+  statusrequires`status 3`; no duplicate monitor. B6lesson/isolatedstillpending.
+- CLOSEDGATEARCHIVE0830 COMPLETE1793753061:289878263bytes/255files/3certified
+  batches/workerexitednormally. FulloriginalsongpuA; zeroeligible. CPUfree6.28GiB
+  atcompletion/laterwritesconsumeheadroom; backfill9GiBguardkept. Regular1237127
+  +V2Vscope2213098retained. NEVERrestartcompletedclosedgateworker.
+- See coopmwm/V2V_RECOVERY_ADOPTED_0850.md. FreshV2Vsearchcapture/WMintentactor
+  qualificationblockunchanged; no unqualified/cosmeticrestart. Code69b1e264deployed
+  bydelegate; localmergeawaitsitsfinalpublishedhandoff, no learnereditsbySol.
+
 ## Fresh adoption Nov4 ~08:15 +08
 - NEWdisjointclosedgatearchiveLIVE2343561/start76692010/controlclosedgate_archive0830;
   registered953232ff/commitd4d4376d,5local+5LinuxPASS. Onlygate_coop2/4/5terminal

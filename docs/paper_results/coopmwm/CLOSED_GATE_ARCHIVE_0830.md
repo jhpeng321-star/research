@@ -36,3 +36,11 @@ At unix1793752763 worker identity matches and first batch is in progress;
 **zero certified source removals** at that probe. Free6548140032bytes (~6.10GiB).
 Original movers are untouched. Adopt `CLOSED_GATE_ARCHIVE_0830_DISPATCH.json`
 and the named control; do not start another worker.
+
+## Complete
+At unix1793753061 the worker completed and exited normally: **289878263bytes /
+255files /3 SHA-certified batches**; zero eligible files remain. Every removed
+source has a durable remote SHA proof. cpuQ free6745554944bytes (~6.28GiB) at
+completion; later writes reduced it to6672384000bytes at1793753150. This restores
+some headroom but does not meet the9GiB backfill target. No worker restart is
+needed; full original payloads remain in the registered gpuA namespace.
