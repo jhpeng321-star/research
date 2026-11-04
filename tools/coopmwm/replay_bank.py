@@ -64,6 +64,31 @@ def bank_root(root, arm):
     return Path(root)/BANK/arm
 
 
+def variety_config(meta):
+    """The registered search_families config stored on a decision snapshot's meta (None =
+    option off: R keeps the exact legacy draws). Validated against the registered keys."""
+    cfg = meta.get('variety_config') if isinstance(meta, dict) else None
+    if not cfg:
+        return None
+    from .variety import split_config
+    probe = dict(cfg)
+    return split_config(probe)   # registered keys only; raises on unknown keys
+
+
+def preflight_binding(binding):
+    """Startup check for the collector: with coop_objective's novelty on in the binding's
+    search_config, the bank file must exist on THIS host and match its digest BEFORE any
+    work is admitted (the same check as ``coop_search.preflight`` / ls_collection.preflight_coop).
+    Returns the descriptors; raises when the bank is missing or mismatched. No coop novelty
+    config: no-op."""
+    cfg = (binding or {}).get('search_config') or {}
+    sha = cfg.get('coop_novelty_bank_sha256')
+    if cfg.get('coop_objective') and cfg.get('coop_novelty') and sha:
+        from .coop_search import preflight
+        return preflight(sha)
+    return None
+
+
 def latest_checkpoint(root, arm):
     found = sorted(Path(root).glob(f'{arm}_checkpoint_*.pt'))
     if not found:
@@ -90,12 +115,13 @@ def collector_guide(job, generator, controller, prefixes):
     No generator draw is consumed, so the collector episode is the plain policy episode.
     """
     from .warm_history import ObservableHistory
-    from .mppi_search import group_components
     from .exploration import regime
     from .storage import write
+    from .variety import decision_groups
     history = ObservableHistory()
     root = Path(job['queue_root']);cfg = job['collect'];arm = job['arm']
     bank = bank_root(root, arm);(bank/'snapshots').mkdir(parents=True, exist_ok=True)
+    vcfg = variety_config(cfg)   # ADDITIVE group kinds when search_families is registered
 
     from .mppi_search import REGISTERED, final_horizon
     # MAIN: the WM arrival model is fitted only up to the observed demand phase end
@@ -108,7 +134,7 @@ def collector_guide(job, generator, controller, prefixes):
     def call(rows, commands, now, sample):
         if int(now) % 10 or now > cfg.get('last_window_s', 900):
             return None
-        groups = group_components(rows)
+        groups = decision_groups(rows, vcfg)
         if not groups:
             return None
         if now+max_h > phase_end:
@@ -162,6 +188,8 @@ def collector_guide(job, generator, controller, prefixes):
             meta = dict(state_id=r['state_id'], arm=arm, job=job['id'], world=job['world'], t0=int(now),
                         group=group, regime=traffic, policy_update=job['collector_policy_update'],
                         record_sha256=digest(r), unix=time.time())
+            if cfg.get('variety'):   # additive meta key; R candidates reuse the same family mix
+                meta['variety_config'] = dict(cfg['variety'])
             torch.save(snap, bank/'snapshots'/(r['state_id']+'.pt'))
             write(bank/'snapshots'/(r['state_id']+'.json'), meta)
             from .warm_spool import immutable
@@ -237,7 +265,10 @@ def candidates_for(root, arm, meta, bounds, k=K):
     if v.get('unavailable') or v.get('query_error') or v.get('worker_unavailable') or v.get('policy_traj') is None:
         return [], 'centre unavailable'
     seed = int(digest(dict(state=key, arm='R'))[:8], 16)
-    return sv.random_candidates(meta['group'], v['policy_traj'], tuple(bounds), meta['regime'], seed, k), 'random'
+    # search_families: R draws from the same structured-family mix when the collector
+    # registered the variety config on the snapshot meta (identical registered keys).
+    return sv.random_candidates(meta['group'], v['policy_traj'], tuple(bounds), meta['regime'], seed, k,
+                                variety_config(meta)), 'random'
 
 
 def verify_pending(root, arm, bounds, runner, charge, workers, decided, limit=None):
@@ -312,6 +343,7 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
     from .accel_storage import reserve
     from .accel_learner import load
     from .policy_wm import actor_state
+    preflight_binding(binding)   # coop novelty bank must resolve before any work is admitted
     root = Path(root);bank = bank_root(root, arm);bank.mkdir(parents=True, exist_ok=True)
     cfg = binding['sumo_verify'];vroot = bank/'sumo_verification'
     runner = sv.SubprocessBranchRunner(vroot/'branches', workers=cfg.get('workers', K+1),
@@ -339,7 +371,8 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
                              policy_state=actor_state(policy), warm_history=binding.get('warm_history', False),
                              collector_policy_update=u, b_replay=True,
                              collect=dict(slots=binding['slots'], fanout_factor=binding.get('parallel_fanout_factor', 2),
-                                          demand_phase_end_s=binding.get('demand_phase_end_s', 1200.))))
+                                          demand_phase_end_s=binding.get('demand_phase_end_s', 1200.),
+                                          **(dict(variety=dict(binding['variety'])) if binding.get('variety') else {}))))
         reserve(root, jobs, binding.get('collect_phase', 'train'))
         with ProcessPoolExecutor(max_workers=len(jobs), mp_context=multiprocessing.get_context('spawn')) as pool:
             list(pool.map(episode, jobs))

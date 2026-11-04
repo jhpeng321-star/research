@@ -75,7 +75,16 @@ def label_list8_search(run):
 def plan(rt,record,memory,binding):
     from .plan_service import batch_width
     from .committed import members
-    groups=search.group_components(record['rows'],exclude=members(record.get('committed_plans',[])))
+    config=dict(binding.get('search_config') or {})
+    if 'search_config' in record:
+        from .niche_collect import validate
+        config.update(validate(record['search_config']))
+    from .variety import decision_groups, plan_config
+    # search_families: the same additive decision-group kinds the collector used are
+    # re-derived here so an additional group resolves to its registered component
+    # (plan_config = None without variety keys: exactly the legacy lookup).
+    groups=decision_groups(record['rows'],plan_config(config),
+                           exclude=members(record.get('committed_plans',[])))
     group=next((g for g in groups if g['members']==record['group']),None)
     if group is None:raise ValueError('group does not match registered observable components')
     policy,mappo,receipt=imagined_centres(rt,record,memory,speed2=binding.get('speed2',False),transfers=binding.get('speed2_transfers',False))
@@ -90,10 +99,6 @@ def plan(rt,record,memory,binding):
     from .plan_proposer import RecordingEvaluator
     recording=RecordingEvaluator(score)
     run=label_list8_search(search.search) if binding.get('label_list8') else search.search
-    config=dict(binding.get('search_config') or {})
-    if 'search_config' in record:
-        from .niche_collect import validate
-        config.update(validate(record['search_config']))
     result=run(record,group,policy,bounds,recording,regime(record['rows']),
         mappo_traj=mappo,covariance=covariance,library=library,
         seed=int(digest(record)[:15],16),config=config)
