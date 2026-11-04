@@ -1,5 +1,28 @@
 # S-COOPMWM — live checks
 
+### Nov4 16:46 UTC+8 — archive COMPLETE+verified; A22/B12/R11; disk still blocks r4
+- **Completed and independently verified:**288V2V-u8observable tapes,
+  531,435,666bytes, eight SHA-certified batches preserved on gpuA. Fresh remote
+  hashes of every file, complete manifest/source-absence checks, original public
+  fingerprints and retained RESULT/public receipt files all pass. Six local+
+  six Linux tests pass. Both original movers stayed running; no outcomes opened.
+- **B12 is now sealed** from the already-completed checkpoint/receipts; PPO was
+  not repeated. Lost in-memory PPO/imitation fields are explicitly null, not a
+  verified mechanics pass. Authorised isolated recovery COMPLETE7/7; original
+  lesson receipt still0/12, with additive repair requested from the operator.
+- A22 is sealed/Aowner live; R remains11. Existing operator r4waiter3483043 is
+  live, awaiting disk. B/R training restart is not claimed. Effective-command
+  imitation FIRSTu14 for BOTH arms is the latest registered switch decision.
+- cpuQfree6,085,599,232bytes (~5.67GiB):356,851,712below unchanged6GiBfloor and
+  893,722,624below r4's6.5GiB threshold. Further resource relief remains
+  operator-owned; no guard/protection change or duplicate migration/launch.
+- Latest accounting14,675,360charged/cap17,471,840, retained811,640once,
+  nonnegative phases; pending environment voids not silently refunded. Future
+  lesson-phase13,200gap remains. u8interim COMPLETE288/288/outcomesclosed.
+- Evidence:`coopmwm/INTERIM_OBSERVABLE_ARCHIVE_1605_COMPLETE.md`,
+  `coopmwm/INTERIM_OBSERVABLE_ARCHIVE_1605_VERIFIED_COMPLETE.json`, and
+  `coopmwm/CONTINUATION_1440_1793781955992776500.json`.
+
 ### Nov4 16:25 UTC+8 — A21; operator-owned u12 recovery; disjoint interim archive draining
 - **A21 is sealed and its owner is live.** B/R remain sealed11/11; their training
   owners are absent. The existing operator is running the authorised u12 isolated

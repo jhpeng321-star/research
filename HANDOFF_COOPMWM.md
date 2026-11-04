@@ -1,5 +1,30 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 16:46 +08 — interim archive COMPLETE; A22/B12/R11; r4 waiting on disk
+- COMPLETE+INDEPENDENTLYVERIFIED:288tapes/531435666bytes/eightSHA-certified
+  batches preservedGPUA. Worker3436981exitednormally/NEVERredispatch.
+  ProofINTERIM_OBSERVABLE_ARCHIVE_1605_VERIFIED_COMPLETE.json/eabf7a8b;
+  remoteall288freshSHAchecked/sourceabsence+retainedRESULT/publicreceiptPASS.
+  BothoriginalmoversNEVERpaused; nonewSUMO/inference/phasechange/outcomeread.
+- LiveRESUME_LIVE_0815_1793781927002675100+CONTINUATION_1440_1793781955992776500:
+  A22/A2049830LIVE, B12SEALED16:28:27/sha1af407ea, R11. Operatorr4waiter
+  3483043/start79591723LIVE; noB/Rtrainingrestart. Nooursparallelcoordinator.
+- B12sealadoptscompletedPPO/checkpoint/episodes; missingin-memoryPPO/imitation
+  metadataNULL/disclosed, NOTamechanicsPASS. U12isolatedCOMPLETE7/7/neverrepeat.
+  OriginalB12lessonSTILL0/12; operatornotifiedforadditiverepair/8760quote
+  fitscurrent13080remaining. Futurelesson13200gapremains.
+- LatestcpuQ6085599232bytes(~5.67GiB):356851712below6GiBfloor/893722624
+  belowoperatorwaiter's6.5GiB. ArchiveDONEdoesNOTmeandisksolved. MAINCPU-S
+  storage/migrationoperator-owned; noadditionalcleanup/install/signalbyours.
+- MAINlatestcanonical: effectiveFIRSTu14BOTHarms/rawthroughu13; gate13+
+  handoverstilloperator-owned. Currentruntime53ae93af/monitorold06e88ecd
+  mismatchreported; rebindrequestedwithrecovery. BothmoversLIVE/eligible0.
+- Latestaccounting14675360charged/cap17471840/811640countonce/phasesnonnegative;
+  environmentalvoidsnotdeductedbyours. InterimCOMPLETE288/288/outcomesclosed.
+- Completebrief+canonicalthrough7270READ; preservedalldirtywork. Sixlocal+
+  sixLinuxarchivetestsPASS. DetailsINTERIM_OBSERVABLE_ARCHIVE_1605_COMPLETE.md.
+  Nextadoptexistingr4whenresourcegatepasses; neverreapplyB12orstartcompetitor.
+
 ## CURRENT Nov4 16:25 +08 — A21; B12 recovery operator active; interim SHA archive draining
 - Full1134-linebrief/log/status/receipts+canonicalregistrythrough7254READ;
   allpreviousdirtyworkpreserved. Adoption970e18e6. Warmqualification/restores/
