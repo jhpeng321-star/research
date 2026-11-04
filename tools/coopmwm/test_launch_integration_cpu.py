@@ -244,3 +244,25 @@ def test_production_entrypoint_imports_do_not_construct_or_dispatch_workers(monk
     assert callable(launch_preparation.prepare)
     assert callable(launch_augmentation.run)
     assert callable(launch_evaluation.scheduled)
+
+
+@pytest.mark.parametrize('completed', ['charged', 'approved', 'prepared'])
+def test_unfinished_preparation_recovery_refuses_live_or_approved_roots(tmp_path, monkeypatch, completed):
+    from . import launch_preparation as preparation
+    root = tmp_path/'clean1'
+    rc.init_root(root, track2=True)
+    if completed == 'charged':
+        (root/'CHARGES.jsonl').write_text('{"id":"already_spent","sim_s":1}\n')
+    else:
+        marker = 'OWNER_APPROVAL.json' if completed == 'approved' else 'PREPARED.json'
+        (root/marker).write_text('{}')
+    original = preparation.read
+    def receipts(path):
+        if str(path).endswith('S0_READY.json'):
+            return dict(pass_=True)
+        if str(path).endswith('PARITY_PASS.json'):
+            return dict(pass_=True, charged_sim_s=960)
+        return original(path)
+    monkeypatch.setattr(preparation, 'read', receipts)
+    with pytest.raises(ValueError, match='unapproved zero-charge'):
+        preparation.prepare(tmp_path/'source', root=root, resume=True)

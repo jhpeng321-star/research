@@ -133,10 +133,11 @@ def main():
     parser.add_argument('action', choices=['prepare', 'smoke', 'gate'])
     parser.add_argument('--source-root')
     parser.add_argument('--config')
+    parser.add_argument('--resume-preparation', action='store_true')
     args = parser.parse_args()
     if args.action == 'prepare':
         from .launch_preparation import prepare
-        result = prepare(args.source_root)
+        result = prepare(args.source_root, resume=args.resume_preparation)
         print(digest(result))
     else:
         cfg = training.checked_config(args.config)

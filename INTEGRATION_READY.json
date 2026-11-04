@@ -44,7 +44,9 @@
     "fix": "infer the innermost home/ubuntu mirror; preserve already-local absolute envelope paths instead of mapping them twice",
     "local_regression": "57 passed initial scoped checks; 35 passed final P4 suite including local/remote nested-home envelope regressions",
     "second_linux_run": "303 passed, 3 failed: already-local Linux mirror envelopes were mapped twice; fixed with local-root containment check",
-    "live_source_requalification": "pending fresh committed source"
+    "live_source_requalification": "cpuV commit22c23edb: 307 passed, zero failed/skipped, 14.56s; foreign symlink-ledger case passed",
+    "preparation_followup": "zero-physics stage stopped on absent legacy training_seed; explicitly register inherited seed20261101 and resume only the unapproved empty-ledger staging root",
+    "preparation_fix_tests": "50 passed (launch integration and P4), including refusal to resume charged/approved/completed roots"
   },
   "new_sim_s": 0,
   "smoke_pass": false,

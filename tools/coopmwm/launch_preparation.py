@@ -19,16 +19,16 @@ from .protocol import digest
 LEGACY = Path('/home/ubuntu/coopmwm20261104_v2v_coop3')
 
 
-def readonly_bank_view(source, target):
+def readonly_bank_view(source, target, *, resume=False):
     """New writable metadata directories; existing evidence linked read-only.
 
     Never symlink an entire bank (practice plans and new admissions belong to
     this experiment). Original evidence paths/hashes remain authoritative.
     """
     source, target = Path(source), Path(target)
-    if target.exists():
+    if target.exists() and not resume:
         raise ValueError('bank view already exists')
-    target.mkdir(parents=True)
+    target.mkdir(parents=True, exist_ok=resume)
     for current, dirs, files in os.walk(source, followlinks=True):
         relative = Path(current).relative_to(source)
         directory = target/relative
@@ -54,7 +54,12 @@ def readonly_bank_view(source, target):
                 continue
             if not path.is_file():
                 continue
-            (directory/name).symlink_to(path.resolve())
+            destination = directory/name
+            if destination.exists() or destination.is_symlink():
+                if not resume or destination.resolve() != path.resolve():
+                    raise ValueError('unfinished bank view differs from original source')
+            else:
+                destination.symlink_to(path.resolve())
 
 
 def _snapshot_registration(root, cfg):
@@ -90,12 +95,17 @@ def _snapshot_registration(root, cfg):
         for number, (snapshot, receipt, inputs) in enumerate(entries):
             selected_inputs.update(inputs)
             directory = root/'registered_states'/f'r{index:02}_s{number:02}'
-            directory.mkdir(parents=True)
+            directory.mkdir(parents=True, exist_ok=True)
             path = directory/'SNAPSHOT.pt'
-            with path.open('xb') as stream:
-                torch.save(snapshot, stream)
+            if path.exists():
+                from .sumo_verify import snapshot_sha
+                if snapshot_sha(torch.load(path, weights_only=False)) != snapshot_sha(snapshot):
+                    raise ValueError('unfinished registered snapshot differs')
+            else:
+                with path.open('xb') as stream:
+                    torch.save(snapshot, stream)
             receipt_path = directory/'RECEIPT.json'
-            write(receipt_path, receipt)
+            stage_write(receipt_path, receipt)
             files.append(dict(snapshot_path=str(path), snapshot_file_sha256=rc.sha(path),
                 receipt_path=str(receipt_path), receipt_file_sha256=rc.sha(receipt_path)))
             states.append((snapshot, receipt))
@@ -109,14 +119,37 @@ def _snapshot_registration(root, cfg):
     return registration, selected_inputs
 
 
-def prepare(source_root, *, root='/home/ubuntu/coopmwm20261105_clean1'):
+def stage_write(path, value):
+    if Path(path).exists():
+        if read(path) != value:
+            raise ValueError('unfinished preparation receipt differs: '+str(path))
+    else:
+        write(path, value)
+
+
+def copy_equal(source, destination):
+    if Path(destination).exists():
+        if rc.sha(source) != rc.sha(destination):
+            raise ValueError('unfinished staged copy differs: '+str(destination))
+    else:
+        shutil.copyfile(source, destination)
+
+
+def prepare(source_root, *, root='/home/ubuntu/coopmwm20261105_clean1', resume=False):
     root, source = Path(rc.guard_path(root)), Path(rc.guard_path(source_root))
     setup = read('/home/ubuntu/cpuv_setup_20261105/S0_READY.json')
     parity = read('/home/ubuntu/cpuv_parity_20261105/PARITY_PASS.json')
     if not setup['pass_'] or not parity['pass_'] or parity['charged_sim_s'] != 960:
         raise ValueError('reuse qualified cpuV environment and exact parity before staging')
-    if root.exists():
+    if root.exists() and not resume:
         raise ValueError('new clean1 root required; never repeat preparation')
+    if resume:
+        rc.own_ledger(root, track2=True)
+        if ((root/'PREPARED.json').exists() or (root/'OWNER_APPROVAL.json').exists()
+                or (root/'CHARGES.jsonl').read_text().strip() or (root/'updates').exists()):
+            raise ValueError('only an unapproved zero-charge unfinished preparation may resume')
+        write(root/f'PREPARATION_RECOVERY_{datetime.now().strftime("%H%M%S")}.json',
+            dict(source_root=str(source), reason='explicit zero-physics preparation recovery', new_sim_s=0))
     base = read(LEGACY/'V2V_RUNTIME.json')['config']
     common = LEGACY/'B_checkpoint_000.pt'
     cfg = rc.runtime_config(base, root=root, reference_root=LEGACY,
@@ -124,6 +157,7 @@ def prepare(source_root, *, root='/home/ubuntu/coopmwm20261105_clean1'):
     cfg.update(launch_optimization=deepcopy(production.OPTIMIZATION),
         launch_contingency=deepcopy(production.CONTINGENCY),
         initial_sidecars_required=True, load_max=40, augmentation_layout='own_bank',
+        training_seed=20261101,
         worlds_by_update={str(u): protocol.batch_worlds(u)[:16] for u in range(1, 25)},
         augmentation_prelaunch=dict(provenance='owner MAIN 02:30: SUMO-verified children only; before clean1 launch',
             allocation_sim_s=rc.VERIFICATION['augmentation_total_sim_s'], phase='augment_verify', ledger_root=str(root)))
@@ -135,14 +169,15 @@ def prepare(source_root, *, root='/home/ubuntu/coopmwm20261105_clean1'):
             raise ValueError('deployed source SHA mismatch')
     cfg['source_manifest_sha256'] = digest(source_manifest)
     rule = read(LEGACY/rc.RULE_FILE)
-    rc.init_root(root, amendment_shas=[rule['amendment_sha256']], track2=True)
+    if not resume:
+        rc.init_root(root, amendment_shas=[rule['amendment_sha256']], track2=True)
     for arm in ('B', 'R'):
-        readonly_bank_view(rb.bank_root(LEGACY, arm), rb.bank_root(root, arm))
+        readonly_bank_view(rb.bank_root(LEGACY, arm), rb.bank_root(root, arm), resume=resume)
     for arm in ('A', 'B', 'R'):
-        shutil.copyfile(common, root/f'{arm}_checkpoint_000.pt')
+        copy_equal(common, root/f'{arm}_checkpoint_000.pt')
         if rc.sha(root/f'{arm}_checkpoint_000.pt') != cfg['common_checkpoint_sha256']:
             raise ValueError('common MAPPO u0 SHA mismatch')
-    shutil.copyfile(LEGACY/rc.RULE_FILE, root/rc.RULE_FILE)
+    copy_equal(LEGACY/rc.RULE_FILE, root/rc.RULE_FILE)
     native = production.backend_config(cfg)
     for arm in ('B', 'R'):
         torch.manual_seed(cfg['training_seed'])
@@ -152,8 +187,15 @@ def prepare(source_root, *, root='/home/ubuntu/coopmwm20261105_clean1'):
         state = dict(arm=arm, update=0, worker=runtime.policy.worker_state(),
             layer_optimizer=runtime.policy.layer.optimizer.state_dict(),
             trigger_optimizer=runtime.policy.trigger_optimizer.state_dict())
-        with (root/f'{arm}_track2_000.pt').open('xb') as stream:
-            torch.save(state, stream)
+        path = root/f'{arm}_track2_000.pt'
+        if path.exists():
+            old = torch.load(path, weights_only=False)
+            if old['arm'] != arm or old['update'] != 0:
+                raise ValueError('unfinished initial sidecar identity mismatch')
+            runtime.policy.restore_worker(old['worker'])
+        else:
+            with path.open('xb') as stream:
+                torch.save(state, stream)
     with rc._ReadRecorder([root, LEGACY], Path('/home/ubuntu')) as recorder:
         summaries = {}
         for arm in ('B', 'R'):
