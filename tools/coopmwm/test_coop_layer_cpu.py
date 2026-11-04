@@ -102,6 +102,52 @@ def test_zero_init_preserves_action_bytes_rng_and_ar_memory(trigger, determinist
     assert_tree_equal(base(context()), layer(context()))
 
 
+@pytest.mark.parametrize('config_mode', ['no_config', 'default_off', 'explicit_off', 'enabled'])
+@pytest.mark.parametrize('trigger', [False, True])
+def test_construction_preserves_default_cpu_rng_and_base_action_bytes(config_mode, trigger):
+    torch.manual_seed(123)
+    base = Policy()
+    head = TriggerStub() if trigger else None
+    if config_mode == 'no_config':
+        cfg = None
+    else:
+        fields = vars(registration()).copy()
+        if config_mode == 'default_off':
+            del fields['enabled']
+        else:
+            fields['enabled'] = config_mode == 'enabled'
+        cfg = LayerConfig(**fields)
+    ctx = context(n=1)
+    initial_rng = torch.get_rng_state().clone()
+    memory = {'cav0': .2}
+    reference = []
+    for _ in range(4):
+        result = base.sample(ctx, torch.default_generator, memory=memory)
+        reference.append(result)
+        memory = result[1]
+    final_rng = torch.get_rng_state().clone()
+
+    torch.set_rng_state(initial_rng)
+    layer = CooperationLayer(base, cfg, trigger_head=head)
+    assert torch.equal(initial_rng, torch.get_rng_state())
+    assert layer.enabled == (config_mode == 'enabled')
+    assert (layer.optimizer is None) == (not layer.enabled)
+    trigger_rng = torch.Generator().manual_seed(91)
+    memory = {'cav0': .2}
+    for expected, expected_memory in reference:
+        actual, memory = layer.sample(ctx, torch.default_generator, memory=memory,
+            layer_generator=trigger_rng, move_offsets=[[0., -.2, .1]] if trigger else None)
+        assert (torch.tensor(expected['action']).numpy().tobytes()
+                == torch.tensor(actual['action']).numpy().tobytes())
+        assert expected['own_action'] == actual['own_action']
+        assert expected['previous_noise'] == actual['previous_noise']
+        assert expected['value'] == actual['value']
+        assert expected_memory == memory
+        if not layer.enabled:
+            assert expected == actual
+    assert torch.equal(final_rng, torch.get_rng_state())
+
+
 def test_off_is_complete_base_sample_identity_even_with_nonzero_heads():
     base, layer = build()
     layer.enabled = False

@@ -75,10 +75,14 @@ class CooperationLayer(nn.Module):
         self.enabled = bool(config and config.enabled)
         self.trigger_head = trigger_head
         if config is not None:
-            self.residual = nn.Sequential(nn.Linear(config.feature_dim, config.hidden_dim),
-                                          nn.Tanh(), nn.Linear(config.hidden_dim, 1))
-            nn.init.zeros_(self.residual[-1].weight)
-            nn.init.zeros_(self.residual[-1].bias)
+            # Keep initialization reproducible without advancing the caller's
+            # CPU RNG (including when MAPPO samples via the default generator).
+            # No device generators are touched by this CPU-only layer.
+            with torch.random.fork_rng(devices=[]):
+                self.residual = nn.Sequential(nn.Linear(config.feature_dim, config.hidden_dim),
+                                              nn.Tanh(), nn.Linear(config.hidden_dim, 1))
+                nn.init.zeros_(self.residual[-1].weight)
+                nn.init.zeros_(self.residual[-1].bias)
         else:
             self.residual = None
         self.trigger_gain = nn.Parameter(torch.zeros(()), requires_grad=trigger_head is not None)
