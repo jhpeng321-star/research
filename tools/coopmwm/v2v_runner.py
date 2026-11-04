@@ -208,14 +208,25 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
         which would trip the >20% escalation on its first failure); the remaining episodes keep
         the registered batch_worlds(u) order (the last practice-count worlds of the list are
         replaced). R's plan count is B's REALISED practice count of the same update (B_UPDATE
-        receipt), never the requested count. Matched A-policy safety references for the practice
-        episodes are scheduled by v2v_live.safety from the same snapshots (charged to the arm's
-        practice cost)."""
+        receipt), never the requested count: fix round 2, R WAITS for that receipt exactly like
+        the fairness wait instead of crashing while it is absent. Matched A-policy safety
+        references for the practice episodes are scheduled by v2v_live.safety from the same
+        snapshots (charged to the arm's practice cost). Fix round 2: the update's normal worlds
+        travel into the practice wave's replacement ``used`` set, so a failed practice episode's
+        fresh replacement never duplicates a world the update's normal wave already ran."""
         from . import practice_starts
         from .warm_protocol import SEED
         ns_ident = cfg['job_namespace']+'_'+ident
         phase_name = cfg['phase_map'].get(phase, phase)
         if arm == 'R':
+            # B/R symmetry: realised, not requested. WAIT for B's sealed update receipt (same
+            # pattern as the R fairness wait) instead of failing on its absence.
+            receipt = root/f'B_UPDATE_{u:03}.json'
+            while not receipt.exists():
+                wr.assert_running(root, arm)
+                if clock() > cfg['gpu_deadline']:
+                    raise ValueError('registered resource deadline')
+                sleep(10)
             want = practice_starts.realised_count(root, 'B', u)   # B/R symmetry: realised, not requested
         else:
             want = practice_starts.practice_count(len(ws), cfg['practice_fraction'])
@@ -225,13 +236,18 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
         results = (original_wave(r, b, policies, ws[:len(ws)-len(rows)], role, ns_ident, phase_name,
                                  deterministic, extra) if len(rows) < len(ws) else [])
         if rows:
+            # Fix round 2 (c): the practice wave's failure replacements must not duplicate any
+            # of the update's normal worlds (TRAIN worlds repeat, and the practice snapshot
+            # worlds can collide with them) - every world the normal wave closed is 'used'.
+            normal_seeds = {e['world']['seed'] for e in results}
             calls = [practice_starts.wave_call(root, arm, ns_ident, phase_name, row, i, extra)
                      for i, row in enumerate(rows)]
             results.extend(original_wave(r, b, policies, [c['worlds'][0] for c in calls], role,
                                          ns_ident+'_practice', phase_name, deterministic,
                                          dict(extra, practice_batch=[
                                              dict(practice=c['extras']['practice'],
-                                                  branch=c['extras']['branch']) for c in calls])))
+                                                  branch=c['extras']['branch']) for c in calls]),
+                                         used_seeds=normal_seeds))
         return sorted((practice_starts.strip_steps(e) if e.get('practice') else e for e in results),
                       key=lambda e: (e['world']['seed'], e['arm']))
 

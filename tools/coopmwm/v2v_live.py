@@ -61,18 +61,33 @@ def hooks(root, cfg):
             if not p.exists():raise ValueError('missing same-world V2V A safety reference')
             refs.append(read(p))
         if practice:
-            refs.extend(practice_references(r,arm,u,practice,pairs))
+            # Fix round 2 (review BLOCKING): the matched practice A references NEVER join
+            # ``refs``. Both guards key the same-world fallback records by WORLD SEED (last
+            # wins), and TRAIN worlds repeat across updates - a practice snapshot world can
+            # equal a normal episode's seed, so an appended practice reference would silently
+            # REPLACE that seed's true same-world normal reference in the paired composite
+            # comparison and the hard-brake bootstrap. Practice episodes and their references
+            # travel ONLY through their own pairs, keyed by the practice episode's frozen id.
+            practice_references(r,arm,u,practice,pairs)
         health.braking(r,arm,u,episodes,refs,pairs)
 
     def practice_references(r, arm, u, practice, pairs):
         """One matched A-policy reference episode per practice episode (owner 2026-11-04 review
-        fix): the SAME snapshot and CRN seed as the practice episode, A's update-u policy from
-        t0, normal 1200 s horizon and team-J reward, charged 1200 sim-s to the arm's practice
-        phase (v2v_train) through the SAME wave hooks as ONE batch wave (whole-batch failure
-        accounting). Fills pairs (practice episode id -> its matched reference record) for the
-        composite safety comparison; hard safety (collisions/teleports) and the paired hard-brake
-        guard apply to practice episodes exactly as to every other episode - no check is skipped
-        or weakened, and a missing reference fails closed."""
+        fix): the SAME snapshot and CRN seed as the practice episode, A policy from t0, normal
+        1200 s horizon and team-J reward, charged 1200 sim-s to the arm's practice phase
+        (v2v_train) through the SAME wave hooks as ONE batch wave (whole-batch failure
+        accounting). Fix round 2 (a): the reference runs the PRE-UPDATE checkpoint
+        ``A_checkpoint_{u-1}.pt`` - the exact policy version A's own update-u reference episodes
+        ran (a checkpoint file u is only written after A's update-u PPO step, while A_UPDATE_u
+        exists from that same step onward; loading post-update u would compare B against a
+        policy A never used at update u). Fills pairs (practice episode id -> its matched
+        reference record) for the composite safety comparison; hard safety (collisions/
+        teleports) and the paired hard-brake guard apply to practice episodes exactly as to
+        every other episode - no check is skipped or weakened, and a missing reference fails
+        closed. Fix round 2: the reference slot family carries the SERVING arm
+        (``..._{arm}_practiceref_paNN``) - B and R reference episodes would otherwise share
+        identical job ids (the dispatched arm is always A), silently reusing the other arm's
+        snapshot reference, and the resume accounting could not attribute reference charges."""
         from . import practice_starts, accel_runner
         from .v2v_runtime import load_checkpoint
         from .warm_protocol import SEED
@@ -80,7 +95,7 @@ def hooks(root, cfg):
             repeat_cap=cfg['practice_repeat_cap'],count=len(practice),training_seed=SEED)
         rows=plan['rows']
         base=dict(update=u,v2v=True,v2v_dim=cfg['v2v_dim'],b_replay=True)
-        policy,opt,rng,payload=load_checkpoint(Path(r)/f'A_checkpoint_{u:03}.pt',config=cfg)
+        policy,opt,rng,payload=load_checkpoint(Path(r)/f'A_checkpoint_{u-1:03}.pt',config=cfg)
         worlds=[];batch=[];idents=[]
         for e in practice:
             slot=e['practice'].get('slot')
@@ -89,7 +104,8 @@ def hooks(root, cfg):
             i=int(slot.rsplit('_p',1)[1])-1
             if not 0<=i<len(rows) or rows[i]['example_id']!=e['practice']['example_id']:
                 raise ValueError('practice receipt does not match the frozen plan row')
-            call=practice_starts.a_reference_call(r,arm,slot.rsplit('_p',1)[0]+'_practiceref',
+            call=practice_starts.a_reference_call(r,arm,
+                                                  slot.rsplit('_p',1)[0]+f'_{arm}_practiceref',
                                                   rows[i],i,base)
             worlds.append(call['worlds'][0]);idents.append(call['ident'])
             batch.append(dict(practice=call['extras']['practice'],branch=call['extras']['branch']))

@@ -79,5 +79,33 @@ class HealthCPU(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(h.HealthPause):h.braking(Path(tmp),'B',1,eps(10),eps(0))
 
+    def test_practice_pairs_never_replace_the_same_world_normal_reference(self):
+        """Fix round 2 BLOCKING: the matched practice reference of a snapshot world S travels
+        ONLY through ``pairs`` (keyed by the practice episode id). It must never enter
+        ``a_records`` - that dict keys by world seed with last-wins, so a practice reference on
+        a colliding seed would replace the true same-world normal reference and flip the
+        normal episodes' paired deltas in the hard-brake bootstrap."""
+        with tempfile.TemporaryDirectory() as tmp:
+            r=Path(tmp)
+            def rec(ident,seed,brake):return dict(id=ident,world=dict(seed=seed),
+                metrics={'900':dict(hard_brake=brake)})
+            pairs={'v2v1_warm_u001_p01_B_7':rec('v2v1_warm_u001_B_practiceref_pa01_A_7',7,0.),
+                   'v2v1_warm_u001_p02_B_9':rec('v2v1_warm_u001_B_practiceref_pa02_A_9',9,0.)}
+            practice=[dict(rec('v2v1_warm_u001_p01_B_7',7,0.),practice=dict(t0=400)),
+                      dict(rec('v2v1_warm_u001_p02_B_9',9,0.),practice=dict(t0=400))]
+            normals=[rec('v2v1_warm_u001_B_7',7,10.),rec('v2v1_warm_u001_B_9',9,4.)]
+            a_records=[rec('v2v1_warm_u001_A_7',7,10.),rec('v2v1_warm_u001_A_9',9,4.)]
+            # the fixed behaviour: practice episodes pair EXACTLY (via pairs), the normal
+            # episodes keep their own same-world references - zero deltas, no pause
+            h.braking(r,'B',1,practice+normals,a_records,pairs)
+            self.assertFalse(list(r.glob('PAUSE_*.json')))
+            # the OLD refs.extend behaviour: the practice references land in a_records and
+            # REPLACE the same-world normal references of the colliding seeds -> deltas
+            # [10., 4.] instead of [0., 0.] -> registered pause
+            with self.assertRaises(h.HealthPause):
+                h.braking(r,'B',1,normals,a_records+[pairs['v2v1_warm_u001_p01_B_7'],
+                                                      pairs['v2v1_warm_u001_p02_B_9']],{})
+            self.assertTrue((r/'PAUSE_SAFETY.json').exists())
+
 
 if __name__=='__main__':unittest.main()

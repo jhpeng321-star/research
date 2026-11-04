@@ -90,7 +90,11 @@ def wave_jobs(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None
     return jobs,results
 
 
-def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
+def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None,used_seeds=None):
+    """``used_seeds`` (practice_starts, fix round 2): train-wave failure replacements must also
+    avoid these world seeds - the second wave of one update (the practice batch) passes the
+    seeds its update's normal wave already closed, so a replacement never duplicates one of
+    the update's normal worlds."""
     jobs,results=wave_jobs(root,b,policies,ws,role,ident,phase,deterministic,extras)
     if jobs:
         precharged={x['id'] for x in ledger(root)}
@@ -103,6 +107,7 @@ def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
             if role!='train':results.extend(pool.map(episode,jobs))
             else:
                 used={j['world']['seed'] for j in jobs}|{r['world']['seed'] for r in results}
+                if used_seeds:used |= set(used_seeds)
                 results.extend(run_train_jobs(root,jobs,phase,ident,used,precharged,pool.submit,episode))
     return sorted(results,key=lambda e:(e['world']['seed'],e['arm']))
 

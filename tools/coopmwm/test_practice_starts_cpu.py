@@ -110,6 +110,31 @@ def test_default_off_matches_launch_defaults_and_on_differs_only_in_the_flag(tmp
                                root=tmp_path/'v2v', source_root=tmp_path/'src')['practice_starts'] is True
 
 
+def test_practice_on_phase_allocation_stays_within_the_registered_ceiling(tmp_path):
+    """Fix round 2 (e): with practice ON the v2v_train allocation carries the matched practice
+    A-reference quote and the phase sum stays within the registered 17,471,840 sim-s cap -
+    bind_runtime/accounting accept it and refuse a single sim-s above the ceiling."""
+    from tools.coopmwm import v2v_live
+    _, live = _cfg(tmp_path, practice_starts=True)
+    phases = dict(launch.V2V_PHASES)
+    phases['v2v_train'] = launch.V2V_PHASES['v2v_train'] + launch.practice_reference_quote(0.25)
+    live = dict(live, budget=dict(total=launch.CEILING_SIM_S, phases=phases))
+    assert sum(phases.values()) <= launch.CEILING_SIM_S
+    assert launch.bind_runtime(dict(config=live), root=tmp_path/'v2v',
+                               source_root=tmp_path/'src') is live
+    root = tmp_path/'run';root.mkdir()
+    (root/'CHARGES.jsonl').write_text('')
+    (root/'ACCOUNTING.claim').touch()
+    v2v_live.accounting(root, dict(live, accounting_root=str(root)))     # practice-ON allocation binds
+    others = sum(v for k, v in phases.items() if k != 'v2v_train')
+    over = json.loads(json.dumps(live))
+    over['budget']['phases']['v2v_train'] = launch.CEILING_SIM_S - others + 1   # one sim-s over
+    with pytest.raises(ValueError, match='cap/allocation'):
+        v2v_live.accounting(root, dict(over, accounting_root=str(root)))
+    with pytest.raises(launch.Refused, match='exceed total cap'):
+        launch.bind_runtime(dict(config=over), root=tmp_path/'v2v', source_root=tmp_path/'src')
+
+
 def test_br_key_equality_and_registered_values(tmp_path):
     _, live = _cfg(tmp_path)
     ok = dict(live, practice_starts=True, practice_starts_by_arm=dict(
@@ -451,9 +476,11 @@ def fake_step(t, value=0.):
 
 
 def run_one_update(tmp_path, monkeypatch, *, arm='B', practice, vids=(), snap=None, t0=400,
-                   b_practice=None):
+                   b_practice=None, b_receipt_late=False):
     """One smoke update of v2v_runner.run_arm with a recorded wave; returns (calls, receipt).
-    ``b_practice`` seeds B's realised practice count in B_UPDATE_001.json (R reads it)."""
+    ``b_practice`` seeds B's realised practice count in B_UPDATE_001.json (R reads it);
+    ``b_receipt_late`` instead withholds that receipt until R's first wait tick - R must WAIT
+    for it (fix round 2), never crash on its absence."""
     from tools.coopmwm.accel_learner import save
     from tools.coopmwm.acceleration import Policy
     for name, value in (('nice', lambda inc: 0), ('getpriority', lambda which, who: 0),
@@ -465,7 +492,8 @@ def run_one_update(tmp_path, monkeypatch, *, arm='B', practice, vids=(), snap=No
     ck = root/f'{arm}_checkpoint_000.pt'
     if not ck.exists():                                                  # u0 is write-once
         save(ck, policy, opt, rng, 0, 0)
-    if arm == 'R' and b_practice is not None:
+    waited = []
+    if arm == 'R' and b_practice is not None and not b_receipt_late:
         (root/'B_UPDATE_001.json').write_text(json.dumps(dict(
             update=1, arm='B', practice=dict(practice=int(b_practice), normal=24-int(b_practice)))))
     if vids:
@@ -490,9 +518,11 @@ def run_one_update(tmp_path, monkeypatch, *, arm='B', practice, vids=(), snap=No
     hooks['bank_quality'].return_value = {}
     calls = []
 
-    def fake_wave(r, b, policies, ws, role, ident, phase, deterministic=True, extras=None):
+    def fake_wave(r, b, policies, ws, role, ident, phase, deterministic=True, extras=None,
+                  used_seeds=None):
         calls.append(dict(ident=ident, role=role, phase=phase, worlds=list(ws),
-                          extras=dict(extras or {})))
+                          extras=dict(extras or {}), used_seeds=None if used_seeds is None
+                          else set(used_seeds)))
         batch = (extras or {}).get('practice_batch')
         out = []
         for wi, w in enumerate(ws):
@@ -516,7 +546,18 @@ def run_one_update(tmp_path, monkeypatch, *, arm='B', practice, vids=(), snap=No
     monkeypatch.setattr(search_learning, 'exact_update', lambda *a, **k: None)
     monkeypatch.setattr(bs, '_CACHE', {})
     bs.install(rb, bank_rule='per_seed_v1')
-    v2v_runner.run_arm(root, arm, live, release, hooks)
+    kwargs = {}
+    if b_receipt_late:
+        def late_sleep(_seconds):
+            waited.append(_seconds)
+            (root/'B_UPDATE_001.json').write_text(json.dumps(dict(
+                update=1, arm='B', practice=dict(practice=int(b_practice),
+                                                 normal=24-int(b_practice)))))
+        kwargs['sleep'] = late_sleep
+    v2v_runner.run_arm(root, arm, live, release, hooks, **kwargs)
+    if waited:
+        calls.append(dict(ident='__waited__', worlds=[], extras={}, role='wait',
+                          phase='wait', used_seeds=None, ticks=len(waited)))
     receipt = json.loads((root/f'{arm}_UPDATE_001.json').read_text())
     return calls, receipt
 
@@ -542,6 +583,10 @@ def test_fraction_honoured_six_practice_starts_of_twenty_four(tmp_path, monkeypa
     assert normal['worlds'] == batch_worlds(1)[:18]                      # the last 6 worlds replaced
     assert batch['ident'] == 'v2v1_warm_u001_practice'                   # ONE wave for the update
     assert batch['role'] == 'train' and batch['phase'] == 'v2v_train'
+    # fix round 2 (c): the practice wave's failure replacements receive the update's closed
+    # normal worlds as 'used' seeds (a replacement never duplicates a normal world)
+    assert normal['used_seeds'] is None
+    assert batch['used_seeds'] == {w['seed'] for w in normal['worlds']}
     assert len(batch['worlds']) == 6 and len(batch['extras']['practice_batch']) == 6
     rows = json.loads(practice_starts.plan_path(tmp_path/'v2v', 'B', 1).read_text())['rows']
     from tools.coopmwm.accel_protocol import worlds as reg_worlds
@@ -579,6 +624,19 @@ def test_r_plans_bs_realised_practice_count_not_the_requested_count(tmp_path, mo
     (tmp_path/'v2v'/'B_UPDATE_001.json').unlink()
     with pytest.raises(ValueError, match='practice count is unbound'):
         practice_starts.realised_count(tmp_path/'v2v', 'B', 1)
+
+
+def test_r_practice_count_waits_for_bs_receipt_instead_of_crashing(tmp_path, monkeypatch, ps):
+    """Fix round 2 (b): R's realised practice count WAITS for B's sealed update receipt (like the
+    fairness wait) - a receipt that only appears after a wait tick must never crash the wave."""
+    calls, receipt = run_one_update(tmp_path, monkeypatch, arm='R', practice=True,
+                                    vids=('v0', 'v1'), b_practice=4, b_receipt_late=True)
+    waited, = [c for c in calls if c['ident'] == '__waited__']
+    assert waited['ticks'] >= 1                                          # R genuinely waited
+    batch = calls[1]
+    assert batch['ident'] == 'v2v1_warm_u001_practice'
+    assert len(batch['worlds']) == 4                                     # B's realised count
+    assert receipt['practice']['practice'] == 4                          # from the late receipt
 
 
 def test_practice_worlds_are_the_example_snapshots_and_ids_are_frozen(tmp_path, monkeypatch, ps):
@@ -631,6 +689,7 @@ def _safety_root(tmp_path, monkeypatch, *, vids=('v0', 'v1'), collisions=()):
                                     training_seed=1)
     policy = Policy();opt = torch.optim.Adam(policy.parameters(), lr=3e-4)
     rng = torch.Generator().manual_seed(1)
+    save(root/'A_checkpoint_000.pt', policy, opt, rng, 0, 0)
     save(root/'A_checkpoint_001.pt', policy, opt, rng, 1, 0)
     (root/'A_UPDATE_001.json').write_text(json.dumps(dict(update=1, arm='A')))
     base = dict(budget=dict(total=launch.CEILING_SIM_S, phases=dict(launch.V2V_PHASES)),
@@ -682,7 +741,8 @@ def _capture_reference_wave(root, monkeypatch):
     the reference receipts the composite guard reads from disk."""
     seen = {}
 
-    def fake_wave(r, b, policies, ws, role, ident, phase, deterministic=True, extras=None):
+    def fake_wave(r, b, policies, ws, role, ident, phase, deterministic=True, extras=None,
+                  used_seeds=None):
         seen.update(arms=sorted(policies), worlds=list(ws), role=role, ident=ident, phase=phase,
                     deterministic=deterministic, b=dict(b), batch=list(extras['practice_batch']),
                     extra_keys=sorted(extras))
@@ -712,16 +772,17 @@ def test_safety_runs_one_matched_a_reference_per_practice_episode(tmp_path, monk
     with pytest.raises(Exception) as raised:                             # hard safety: collision delta
         hooks['safety'](root, 'B', 1, practice, [])
     assert type(raised.value).__name__ == 'HealthPause'
-    # ONE batch reference wave: arm A, same executor role, frozen pa slots, the same snapshots
+    # ONE batch reference wave: arm A, same executor role, frozen pa slots (serving arm in the
+    # family), the same snapshots
     assert seen['arms'] == ['A'] and seen['role'] == 'train'
-    assert seen['ident'] == 'v2v1_warm_u001_practiceref'
+    assert seen['ident'] == 'v2v1_warm_u001_B_practiceref'
     assert seen['phase'] == 'v2v_train' and seen['deterministic'] is False
     assert seen['b']['v2v'] is True
     assert {'update', 'v2v_dim', 'b_replay', 'practice_batch'} <= set(seen['extra_keys'])
     assert len(seen['worlds']) == 6 and len(seen['batch']) == 6
     for i, (w, item) in enumerate(zip(seen['worlds'], seen['batch'])):
         assert item['practice']['a_reference'] is True
-        assert item['practice']['slot'] == f'v2v1_warm_u001_practiceref_pa{i+1:02d}'
+        assert item['practice']['slot'] == f'v2v1_warm_u001_B_practiceref_pa{i+1:02d}'
         assert item['practice']['charged_sim_s'] == 1200                 # arm's practice cost
         assert item['branch']['time_s'] == 400
         assert 'A policy from t0' in item['practice']['policy']
@@ -759,6 +820,52 @@ def test_safety_still_requires_same_world_a_references_for_normal_episodes(tmp_p
                                                                teleports=0.)})
     with pytest.raises(ValueError, match='missing same-world V2V A safety reference'):
         hooks['safety'](root, 'B', 1, practice+[normal], [])
+
+
+def test_seed_collision_with_a_practice_snapshot_never_changes_the_normal_pairing(
+        tmp_path, monkeypatch, ps):
+    """Fix round 2 BLOCKING: a practice snapshot world that EQUALS a normal episode's TRAIN seed
+    (TRAIN worlds repeat across updates; here the v0 snapshot world is exactly the registered
+    update-1 world 986000) must never put the practice A reference into the same-world records.
+    The normal episode keeps its own pairing - 1 collision vs its own same-world A with
+    1 collision is a zero delta and must NOT pause (the polluted a_records would have paired it
+    with the clean practice reference and tripped the hard collision constraint)."""
+    from tools.coopmwm.test_composite_health_cpu import fixture as composite_fixture
+    root, cfg, hooks = _safety_root(tmp_path, monkeypatch, vids=('v0',))   # worlds: {986000}
+    composite_fixture(root)                                              # registered composite rule
+    practice, calls = _practice_episodes(root)                           # clean practice pairs
+    assert {c['worlds'][0]['seed'] for c in calls} == {986000}
+    normal = _store(root, 'v2v1_warm_u001_B_986000',
+                    dict(hard_brake=0., collisions=1., teleports=0.), 986000)
+    _store(root, 'v2v1_warm_u001_A_986000',
+           dict(hard_brake=0., collisions=1., teleports=0.), 986000)     # its OWN same-world A
+    _capture_reference_wave(root, monkeypatch)
+    hooks['safety'](root, 'B', 1, practice+[normal], [])                 # NO pause
+    assert not (root/'PAUSE_SAFETY_COMPOSITE_B_u001.json').exists()
+    out = json.loads((root/'B_SAFETY_COMPOSITE_001.json').read_text())
+    assert out['n'] == 5 and out['release'] is True                       # 4 practice + 1 normal
+    assert out['collision_teleport_hard_constraints'] is True
+    assert out['metrics']['collisions']['mean_right'] == out['metrics']['collisions']['mean_A']
+    assert out['worlds'].count(986000) == 5                               # collision is harmless
+
+
+def test_matched_reference_uses_the_pre_update_a_checkpoint(tmp_path, monkeypatch, ps):
+    """Fix round 2 (a): the matched practice reference must run the SAME policy version A's own
+    update-u episodes ran - the PRE-update checkpoint u-1 (A_checkpoint_u is only written after
+    A's update-u PPO step; A_UPDATE_u exists from that same step onward, so u-1 is always the
+    checkpoint behind A's update-u reference episodes)."""
+    from tools.coopmwm import v2v_runtime
+    root, cfg, hooks = _safety_root(tmp_path, monkeypatch)
+    practice, _ = _practice_episodes(root)
+    loaded = []
+    real = v2v_runtime.load_checkpoint
+    def spy(path, config=None):
+        loaded.append(Path(path).name)
+        return real(path, config=config)
+    monkeypatch.setattr(v2v_runtime, 'load_checkpoint', spy)
+    _capture_reference_wave(root, monkeypatch)
+    hooks['safety'](root, 'B', 1, practice, [])                          # no pause
+    assert loaded == ['A_checkpoint_000.pt']                             # pre-update, not 001
 
 
 # ---------------------------------------------------------------- episode machinery (fake plant, no SUMO)
@@ -938,6 +1045,62 @@ def test_one_failed_practice_episode_in_the_batch_wave_is_replaced_not_escalated
     assert receipt['excluded_from_update'] is True
     assert reserved == [replacement['id']]
     assert not (tmp_path/'STOP.json').exists()                           # batch accounting, no STOP
+
+
+def test_practice_replacement_never_duplicates_a_normal_world_of_the_update(tmp_path, monkeypatch):
+    """Fix round 2 (c): the update's normal worlds are 'used' for the practice wave - a failed
+    practice episode's fresh replacement skips the world the normal wave already closed
+    (986001) and takes the next unused world of the cell instead."""
+    from concurrent.futures import ThreadPoolExecutor
+    from tools.coopmwm.accel_protocol import worlds
+    ws = [dict(worlds('train')[0], seed=986000) for _ in range(5)]       # one batch practice wave
+    jobs = [dict(id=f'v2v1_warm_u001_p{i+1:02d}_B_986000', arm='B', world=w,
+                 practice=dict(t0=400), path=str(tmp_path/'jobs'/f'p{i+1:02d}'))
+            for i, w in enumerate(ws)]
+    def failing(job):
+        if job['id'] == 'v2v1_warm_u001_p01_B_986000':
+            raise ValueError('snapshot episode failed')
+        return dict(id=job['id'], world=job['world'], arm=job['arm'])
+    normal_world = 986001                                                # closed by the normal wave
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = accel_runner.run_train_jobs(tmp_path, jobs, 'v2v_train',
+                                              'v2v1_warm_u001_practice',
+                                              {986000, normal_world}, set(), pool.submit, failing)
+    replacement, = [r for r in results if r['id'].startswith('v2v1_warm_u001_practice_B_')]
+    assert replacement['world']['seed'] == 986002                        # skips the normal world
+    # control: without the normal seed in 'used' the replacement WOULD have duplicated it
+    (tmp_path/'jobs'/'v2v1_warm_u001_p01_B_986000'/'EPISODE_FAILED.json').unlink()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = accel_runner.run_train_jobs(tmp_path, jobs, 'v2v_train',
+                                              'v2v1_warm_u001_practice', {986000}, set(),
+                                              pool.submit, failing)
+    duplicate, = [r for r in results if r['id'].startswith('v2v1_warm_u001_practice_B_')]
+    assert duplicate['world']['seed'] == normal_world
+
+
+def test_wave_unions_passed_seeds_into_the_train_replacement_used_set(tmp_path, monkeypatch):
+    """Fix round 2 (c) seam: accel_runner.wave unions ``used_seeds`` into the train wave's
+    replacement 'used' set (the practice wave passes its update's closed normal worlds)."""
+    from tools.coopmwm.acceleration import Policy
+    from tools.coopmwm.accel_protocol import worlds
+    (tmp_path/'CHARGES.jsonl').write_text('');(tmp_path/'ACCOUNTING.claim').touch()
+    import tools.coopmwm.runner as runner_mod
+    captured = {}
+    def fake_run_train_jobs(root_, jobs, phase, ident, used, precharged, submit, episode):
+        captured['used'] = set(used);return []
+    monkeypatch.setattr(accel_runner, 'run_train_jobs', fake_run_train_jobs)
+    monkeypatch.setattr(accel_runner, 'reserve', lambda root_, jobs, phase: None)
+    monkeypatch.setattr(runner_mod, 'admission', lambda cfg: None)
+    b = dict(workers=1, gpu_deadline=1e12, runtime='rt', checkpoint='ck',
+             accel_bounds=[-3., 2.6])
+    ws = [dict(worlds('train')[0], seed=986000)]
+    accel_runner.wave(tmp_path, b, {'B': Policy()}, ws, 'train', 'ident', 'v2v_train', False,
+                      None, used_seeds={986001, 986002})
+    assert captured['used'] == {986000, 986001, 986002}
+    accel_runner.wave(tmp_path, b, {'B': Policy()}, ws, 'train', 'ident', 'v2v_train', False, None)
+    assert captured['used'] == {986000}                                  # unchanged without the kwarg
+    b = dict(workers=1, gpu_deadline=1e12, runtime='rt', checkpoint='ck',
+             accel_bounds=[-3., 2.6])
 
 
 def test_guided_replayed_plan_start_tick_with_no_proposal_is_guarded(tmp_path):
