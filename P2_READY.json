@@ -10,12 +10,14 @@
     "merge_features_merge": "8eeb55773722a9cb0ed59b4886efbe744a211b7f",
     "merged_coop_layer_tip": "70a79af7d3dc1ff08ea9804fa10271fc7963e93a",
     "merged_merge_features_tip": "0a2221558143b56c6042f2f469e5d01915a25d5b",
-    "receipt_commit": "The commit adding this P2_READY.json; resolve with git log -1 -- P2_READY.json"
+    "receipt_commit": "22d902d68d1c20628d265d5eae96150ca94a6791"
   },
   "files": [
     "tools/coopmwm/track2_reward.py",
     "tests/unit/test_track2_reward.py",
-    "P2_READY.json"
+    "P2_READY.json",
+    "REVIEW_P2_r0.md",
+    "P2_ACCEPTED.json"
   ],
   "dependencies": {
     "c4/coop-layer": "Merged for real CooperationLayer.update integration verification",
@@ -85,6 +87,19 @@
       "result": "PASS before implementation commit"
     }
   ],
+  "accepted_resume": {
+    "date": "2026-11-05",
+    "review": "REVIEW_P2_r0.md",
+    "acceptance": "P2_ACCEPTED.json",
+    "reviewed_head": "22d902d68d1c20628d265d5eae96150ca94a6791",
+    "verdict": "PASS",
+    "required_P2_fixes": 0,
+    "independent_verification": "118 passed, 0 failed, 0 skipped in 18.43s; P2 Ruff and git diff --check c4/track-base passed (astra review)",
+    "resume_action": "Preserved existing implementation, tests, dependency merges and original review/acceptance files; recorded accepted handoff only",
+    "tests_repeated": false,
+    "jobs_or_dispatches_started": 0,
+    "handoff_commit": "Resolve with git log -1 -- P2_READY.json"
+  },
   "open_issues": [
     {
       "owner": "Launch registration / T2C",
