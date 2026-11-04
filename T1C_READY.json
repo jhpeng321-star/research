@@ -152,5 +152,16 @@
     "other_worktrees_modified": false,
     "shared_runtime_modules_modified": false,
     "reset_clean_stash_drop_push_rebase": false
+  },
+  "resume_reverification": {
+    "prior_receipt_commit_preserved": "87cdff350dc0aef05d491e29e32e11b6ee59e894",
+    "implementation_head_verified": "1e0b7efdbf19479cdcfad0742552d7164c0b81fd",
+    "inspection": "Read status/log, task spec, independent review, historical receipt and committed fixes before verification. No matching calibration pytest job was active. The prior receipt commit appeared during this session and is preserved; this section adds the fresh verification evidence.",
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider -p tools.coopmwm.planner_calibration_cpu_env --basetemp E:/agent-work/c4-planner-calib/.t1c-fix-cpu-r1 tools/coopmwm/test_planner_calibration_cpu.py tools/coopmwm/test_sumo_verify_cpu.py tools/coopmwm/test_verify_perseed_cpu.py",
+    "environment": "CUDA_VISIBLE_DEVICES=-1; PYTHONDONTWRITEBYTECODE=1; PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+    "result": "107 passed, 0 failed, 0 skipped, 1 warning in 49.68s",
+    "warning": "Inherited PytestConfigWarning: Unknown config option: cache_dir with cacheprovider disabled",
+    "validation": "Read all three blocker fixes and their regression tests; git diff --check c4/track-base and JSON syntax validation passed. No implementation changes were needed after the preserved fixes.",
+    "production_gate_available": false
   }
 }
