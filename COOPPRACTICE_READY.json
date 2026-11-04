@@ -3,14 +3,20 @@
   "workspace": "E:/agent-work/c4-coop-practice",
   "branch": "c4/coop-practice",
   "base": "c4/launch-coop (f9bd9cad merge lineage, includes c4/coop-only 7a43e91a as the wiring template)",
+  "merged_base": {"branch": "c4/v2v-resume", "head": "a7ae6d9a", "merge_commit": "b20226ef",
+    "content": "resume/adopt path (resume_prepare/adopt/resume, arm_remaining/resume_phase_costs/remaining_phase_costs exact quotes), kl_targeted imitation pin (owner 08:52) + v2v_intent_bank_term, statistical pass-1 monitor and learning-pause release (MAIN 09:00), v2v1_lesson charge ids; 3 additive conflicts resolved: v2v_launch3 BANK_OPTIONS/helpers/bind_runtime union (kl_targeted+v2v_intent_bank_term PINNED, practice keys validated-not-pinned), v2v_live launch3_check cost block union (smoke/train practice quote + resume stage arm_remaining quote + watch restart quote), v2v_runner prepare_intent full signature/keys union (imitation_step_mode/v2v_intent_bank_term/practice_*); practice A-reference cost added to the resume path's arm_remaining quote; REQUIRED_SOURCES extended with practice_starts/accel_runner/accel_plant (the launcher hashes sources)"},
   "commits": [
     {"sha": "f3fe6ccb", "title": "coopmwm: practice_starts option (B/R practice PPO starts from own cooperative bank snapshots)"},
     {"sha": "c8fcfaee", "title": "coopmwm: practice_starts CPU tests + practice_wave role fix"},
     {"sha": "ff57ccd0", "title": "coopmwm: drop unused import in practice_starts.plan_for_update"},
     {"sha": "0785bab8", "title": "coopmwm: practice fix round 1 (wave_call/job keywords, one batch wave, B realised count, coop capacity, extra seeds, matched A references, proposal-None guard)"},
-    {"sha": "40a434a2", "title": "coopmwm: practice fix round 2 (wave precharged recomputation, defensive pairs id lookup, batch replacement test)"}
+    {"sha": "40a434a2", "title": "coopmwm: practice fix round 2 (wave precharged recomputation, defensive pairs id lookup, batch replacement test)"},
+    {"sha": "b20226ef", "title": "merge c4/v2v-resume (a7ae6d9a): resume/adopt path, kl_targeted pin, statistical pass-1 monitor, learning release, v2v1_lesson charge ids; union with practice_starts"},
+    {"sha": "50689432", "title": "coopmwm practice fix round 2 (BLOCKING + a,b,c,e): practice A refs only via pairs; pre-update A_checkpoint_{u-1}; R waits; replacements avoid normal worlds; practice-ON phase sum test"},
+    {"sha": "e4425700", "title": "coopmwm practice fix round 2 (d, resume accounting): _train_rows practice/reference ids; arm_remaining practice reference quote; practice-aware resume/watch ceilings; REQUIRED_SOURCES"},
+    {"sha": "c1c90ea2", "title": "coopmwm tests: repair the pre-existing dual-import leak; combined-run failures of the new practice tests and verify_continuation gone"}
   ],
-  "head": "40a434a2",
+  "head": "c1c90ea2",
   "status": "READY",
   "fix_round": {
     "trigger": "independent review found 6 BLOCKING defects; all fixed with tests on the real paths",
@@ -22,6 +28,19 @@
       {"id": 5, "was": "load_snapshot raised ValueError for seed_index >= 3 (extra_seeds examples)", "now": "seed_index >= 3 restarts from replicate(snapshot, 'salt#sN') - the same deterministic per-seed CRN derivation, an independent generator per extra seed; unknown seed_index (< 1) still refuses. Test asserts seed-3/seed-4 independence and reproducibility."},
       {"id": 6, "was": "accel_plant.py ~92 crashed with TypeError on replayed plan_start ticks whose event['proposal'] is None (practice/replay episodes never propose a new plan)", "now": "the guided_starts backpressure write is guarded on event.get('proposal') is not None - a replayed plan_start tick records no queue record, real executed proposals still write exactly as before. Test drives the real VerifyController replay path with a plan_start t0 sample."}
     ]
+  },
+  "fix_round_2_independent_rereview": {
+    "trigger": "independent re-review of the round-1 fix (head 40a434a2): previous 6 blockers confirmed fixed; ONE new BLOCKING + issues (a)-(e); all fixed with tests on the REAL paths",
+    "blocking": {"was": "v2v_live.safety extended refs with the practice A references; composite_health.braking and warm_health.braking build a={world seed: record} (last wins) and TRAIN worlds repeat across updates (u1/u3 share 12/24 seeds) - a practice snapshot world could equal a normal episode's seed and its practice reference silently REPLACED the true same-world normal reference in the paired composite comparison and the hard-brake bootstrap",
+      "now": "practice_references fills ONLY pairs (practice episode id -> its exact matched reference, keyed by practice id, never by world seed); a_records passed to both guards contains ONLY the normal episodes' same-world A references. Tests: test_seed_collision_with_a_practice_snapshot_never_changes_the_normal_pairing (real v2v_live.safety path: normal B with 1 collision vs its own same-world A with 1 collision does NOT pause; the polluted pairing would), test_practice_pairs_never_replace_the_same_world_normal_reference (hard-brake bootstrap level: clean a_records -> no pause, polluted a_records -> registered pause)"},
+    "issues": [
+      {"id": "a", "was": "practice_references loaded A_checkpoint_{u} (post-update)", "now": "loads A_checkpoint_{u-1} - the same policy version A's own update-u reference episodes ran (checkpoint u is only written after A's update-u PPO step); documented in the hook. Test: test_matched_reference_uses_the_pre_update_a_checkpoint (spy asserts exactly A_checkpoint_000.pt for u=1)"},
+      {"id": "b", "was": "v2v_runner.practice_wave called realised_count which raises if B_UPDATE_u is absent", "now": "R WAITS for B's sealed receipt first (same pattern as the fairness wait: assert_running + gpu_deadline + sleep) and only then reads the realised count. Test: test_r_practice_count_waits_for_bs_receipt_instead_of_crashing (receipt appears on the first wait tick; the batch runs with B's realised count)"},
+      {"id": "c", "was": "a failed practice episode's replacement was chosen per-wave and could duplicate a world the update's normal wave already ran", "now": "accel_runner.wave takes used_seeds (unioned into the train wave's replacement 'used' set); practice_wave passes the normal wave's closed seeds to the practice batch wave. Tests: test_practice_replacement_never_duplicates_a_normal_world_of_the_update (REAL run_train_jobs: replacement skips the normal world 986001, control shows it would have duplicated it) and test_wave_unions_passed_seeds_into_the_train_replacement_used_set (wave seam) + the fraction test asserts the recorded pass-through"},
+      {"id": "d", "was": "the resume path (c4/v2v-resume a7ae6d9a) was not integrated and the resume accounting ignored practice charges", "now": "merged with the 3 additive conflicts resolved (see merged_base); _train_rows matches practice episode ids (_pNN_ slots and _practice_ replacements) and the matched practice reference ids (..._<arm>_practiceref_paNN_A_<seed> - the serving arm is now part of the frozen slot family, which also removes a latent B/R reference job-id collision); arm_remaining quotes the arm's remaining practice A-reference cost ((24-k) x practice_count x 1200 minus the closed k+1 reference charges credited; unclosed references refuse a resume exactly like unclosed episodes, charges beyond k+1 refuse); resume_phase_costs' ceiling is the runtime's practice-aware v2v_train allocation; the watch-restart quote (remaining_phase_costs) is practice-aware and credits closed practice/reference smoke work; REQUIRED_SOURCES += practice_starts/accel_runner/accel_plant. Tests: test_resume_quote_counts_practice_and_reference_charges + test_watch_restart_quote_is_practice_aware (both in test_v2v_live_cpu.py)"},
+      {"id": "e", "was": "sum(phases) with practice ON unchecked", "now": "verified: V2V_PHASES (2,971,840) + practice reference quote (345,600) = 3,317,440 <= 17,471,840 registered ceiling; bind_runtime and accounting accept it and refuse a single sim-s above. Test: test_practice_on_phase_allocation_stays_within_the_registered_ceiling"}
+    ],
+    "platform_only_note": "Full-suite failures compared against f9bd9cad in a detached worktree: HEAD's failure set is a strict subset of f9bd9cad's (see tests.platform_only_classification); the pre-existing pytest dual-import leak (coopmwm.* vs tools.coopmwm.*) that contaminated combined runs was repaired in c1c90ea2."
   },
   "what_it_does": {
     "summary": "DEFAULT OFF. For B-v2v and R-v2v a registered fraction (practice_fraction, proposal 0.25 => 6 of the 24 PPO episodes of one update) of each update's PPO episodes start from snapshots of the arm's OWN admitted within-seed cooperative bank examples instead of fresh t=300 starts. A-v2v is unchanged (A keeps its 24 normal episodes; it only supplies the matched safety references).",
@@ -54,7 +73,7 @@
   },
   "tests": {
     "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/<test>.py  (from the worktree root)",
-    "practice": {"file": "tools/coopmwm/test_practice_starts_cpu.py", "passed": 28, "failed": 0,
+    "practice": {"file": "tools/coopmwm/test_practice_starts_cpu.py", "passed": 34, "failed": 0,
                  "covers": ["off identical (receipts/waves)", "fraction honoured (6 of 24) as ONE batch wave", "correct snapshot+seed (seed2 = replicate, seed>=3 = replicate(salt#sN))",
                             "R fallback only beyond the cooperative examples x cap capacity (B never falls back)", "R plans B's REALISED count", "empty-bank fallback", "charges via existing reserve hooks + quoted A-reference upper bound",
                             "B/R key equality and registered values; ON raises v2v_train by the quote", "frozen plan + frozen per-episode slot ids on restart",
@@ -62,12 +81,18 @@
                             "REAL run_train_jobs on a failed practice batch episode (replacement, no escalation, receipt)",
                             "episode smoke (prefix replay, CRN restore, receipt flag, prefix/CRN tamper refusals)",
                             "v2v_live.safety: matched A references (one batch wave, same snapshot+CRN, arm's practice cost), composite comparison on exact pairs, hard collision safety bites, normal episodes still require same-world A references",
-                            "replacement of a failed practice job", "guided replayed plan_start tick with proposal None guarded"]},
+                            "replacement of a failed practice job", "guided replayed plan_start tick with proposal None guarded",
+                            "fix round 2: seed collision (normal episode vs practice snapshot world) never changes the normal pairing (1 collision vs its own 1-collision A does not pause)",
+                            "fix round 2: matched reference loads the PRE-update A_checkpoint_{u-1} (not post-update u)",
+                            "fix round 2: R's practice count WAITS for B's receipt instead of crashing",
+                            "fix round 2: practice replacement never duplicates a normal world of the same update (wave used_seeds seam + run_train_jobs)",
+                            "fix round 2 (e): practice-ON phase sum stays within the registered 17,471,840 ceiling in bind_runtime and accounting"]},
     "required_suites": [
+      {"suite": "test_practice_starts_cpu.py", "passed": 34, "failed": 0},
       {"suite": "test_launch_final_cpu.py + test_coop_only_cpu.py", "passed": 22, "failed": 0},
-      {"suite": "test_composite_health_cpu.py + test_warm_health_cpu.py", "passed": 12, "failed": 0},
-      {"suite": "test_harden2_main_cpu.py + test_harden2_resume_cpu.py", "passed": 42, "failed": 0},
-      {"suite": "test_v2v_*_cpu (budget_quote, intent, int_e2e, launch3, launch_quote, launch_wiring, live, model, resource_watch, runner, runtime)", "passed": 133, "failed": 0}
+      {"suite": "test_composite_health_cpu.py + test_warm_health_cpu.py", "passed": 13, "failed": 0},
+      {"suite": "test_v2v_live_cpu.py + test_v2v_runner_cpu.py + test_v2v_launch3_cpu.py", "passed": 90, "failed": 0},
+      {"suite": "REQUIRED RUN AT HEAD (practice, launch_final, coop_only, all 12 other test_v2v_*_cpu files incl. learning_watch, imitstrength, composite_health, warm_health - one pytest invocation)", "passed": 236, "failed": 0, "subtests": 9}
     ],
     "additional_adjacent_suites": [
       {"suite": "test_verify_perseed_cpu.py + test_imitfix2_cpu.py", "passed": 26, "failed": 0},
@@ -76,7 +101,9 @@
       {"suite": "test_exact_grade_cpu + test_sumo_verify_cpu", "passed": 39, "failed": 3, "note": "the 3 failures are ModuleNotFoundError: tools.leverprobe (package absent from this checkout; pre-existing)"},
       {"suite": "test_acceleration_cpu", "passed": 14, "failed": 8, "note": "all 8 failures are ModuleNotFoundError: tools.leverprobe / tools.wmteach (pre-existing, identical to the pre-fix-round baseline; the OFF episode path itself is only unreachable because of the missing package)"}
     ],
-    "pre_existing_failures_note": "Every failure outside tools/coopmwm/test_practice_starts_cpu.py is a ModuleNotFoundError for packages absent from this checkout (tools.leverprobe, tools.wmteach) or a CWD-relative evidence file; none touch practice_starts code paths (the OFF path is byte-identical by construction and the ON path is fully tested)."
+    "full_suite_at_head": {"failed": 76, "passed": 1024, "collection_error": "test_interim_u8_analysis_cpu.py (pre-existing top-level import; identical at f9bd9cad)"},
+    "full_suite_at_f9bd9cad": {"failed": 77, "passed": 952, "collection_error": "same interim_u8_analysis collection error"},
+    "platform_only_classification": "HEAD's full-suite failure set is a STRICT SUBSET of f9bd9cad's: every remaining failure also fails on f9bd9cad (platform-only: ModuleNotFoundError tools.leverprobe / tools.wmteach absent from this checkout, CWD-relative evidence files, interim_u8_analysis collection error). HEAD additionally FIXES one f9bd9cad failure (test_verify_continuation_cpu [verified-beta1-zero-trust]) via the dual-import leak repair commit c1c90ea2. Zero failures introduced by this branch."
   },
   "byte_identical_when_off": {
     "claim": true,
@@ -97,7 +124,7 @@
     "2. Produce the new runtime config: v2v_runner.prepare_intent(base, root=..., legacy_root=..., source_root=..., common_checkpoint_sha256=..., practice_starts=True) - practice_fraction/practice_repeat_cap default to the registered 0.25/2; B and R keys are identical by construction; the runtime's v2v_train allocation covers the quoted matched A-reference upper bound (V2V_PHASES v2v_train + 345600 sim-s).",
     "3. Re-register the launch identity for the new V2V_RUNTIME.json: the launch3 gate/binding flow (gate PASS for the exact deployed commit, runtime_sha256 in a new additive LAUNCH3 binding, check_hold) exactly as at first launch; v2v_launch3.bind_runtime validates the ON values (B == R, registered fraction/cap) instead of pinning them.",
     "4. Re-run the launch3 preflight and re-dispatch the train children with resume_update=k (v2v_live.spawn('train', arm)); the launch3 quote for each B/R child adds the matched A-reference cost (practice_count*1200 per remaining update). The first update each B/R child trains is update k+1; its practice plan freezes at that boundary (replay_bank/<ARM>/PRACTICE_PLAN_<ARM>_<k+1:03>.json).",
-    "5. Verify per update in <ARM>_UPDATE_<UUU>.json['practice'] (practice/normal counts, examples, returns vs normal) and the per-episode receipt flags in jobs/<id>/RESULT.json['practice']; the matched A references appear as jobs/<...>_pa<NN>_A_<seed>/RESULT.json with a_reference=true and feed <ARM>_SAFETY_COMPOSITE_<UUU>.json. Turning it OFF again repeats the same steps with practice_starts=False; plans already frozen stay on disk as history.",
+    "5. Verify per update in <ARM>_UPDATE_<UUU>.json['practice'] (practice/normal counts, examples, returns vs normal) and the per-episode receipt flags in jobs/<id>/RESULT.json['practice']; the matched A references appear as jobs/<ns>_warm_u<UUU>_<ARM>_practiceref_pa<NN>_A_<seed>/RESULT.json with a_reference=true and feed <ARM>_SAFETY_COMPOSITE_<UUU>.json. Turning it OFF again repeats the same steps with practice_starts=False; plans already frozen stay on disk as history.",
     "Charge note: per B/R update the practice episodes replace 6 normal episodes (delta 0) and the matched A references add practice_count*1200 = 7200 sim-s (quoted above; upper bound over the full run 345600 sim-s)."
   ],
   "hard_rules_compliance": {
