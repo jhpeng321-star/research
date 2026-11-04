@@ -1,5 +1,21 @@
 # HANDOFF: c4/harden-int (worktree E:/agent-work/c4-harden-int), 2026-11-03 (INTEGRATION COMPLETE)
 
+RESUME RECEIPT 2026-11-04 (fresh session, W10): STILL NOTHING OUTSTANDING on this branch. Tree clean at
+0f18f4d1 (docs-only since READY d51051a9). Re-verified on disk: HARDEN_INT_READY.json (ready=true,
+commit d51051a9), HARDEN_INT_REPORT.md (12,973 bytes), rp4 results for the 6 HEAD-vintage scenarios
+(a_clean, b_slow_search, c2_worker_dies_on_centre, d_transport_3, e_malformed, f_branch_crash;
+c_worker_dies latest at rp6 as documented), h3int2 roots with exactly 8 BANK_QUALITY.json + 16
+LESSON_CHECK files, rp3 kept. MAIN addenda re-checked: coopmwm_prompt.md still ends at 2026-11-04
+16:25 (cpuQ->cpuS migration, live operator, monitor/report only; 16:03 B-u12 recovery likewise
+owned by the launch operator) - no new addendum since the W9 check. No tests or rehearsals rerun
+this session: instantaneous CPU was low (2%) but foreign jobs are live and not signalled - TWO
+other rehearsal_cpu a_clean runs (PIDs 6928 G-V2V-REH + 10580, E:/Temp workdirs), a
+rehearsal_v2v_cpu (PID 39736, _v2v_reh_run9) with its sumo_verify branch workers, and three other
+agents' pytest suites (PIDs 26008/34700/38324) - running our suite concurrently risks temp-dir
+collisions and the false stalls documented on this host. The documented 443/62/1 counts stand;
+cpuQ (Linux) remains the deployment gate. Remaining work stays LIVE ONLY (operator gates at the
+bottom of this handoff).
+
 RESUME RECEIPT 2026-11-04 (fresh session, W9): STILL NOTHING OUTSTANDING on this branch. Tree clean at
 6682295f (docs-only since READY d51051a9). Re-verified on disk: HARDEN_INT_READY.json (ready=true,
 commit d51051a9), HARDEN_INT_REPORT.md, rp4 results for all 7 scenarios, h3int2 roots with exactly
