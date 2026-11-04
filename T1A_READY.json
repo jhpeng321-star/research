@@ -8,6 +8,29 @@
   "base_commit": "13f184b5",
   "spec": "E:/agent-work/_sol/tracks_spec.md, Move library and task rules",
   "review": "REVIEW_T1A_r0.md",
+  "independent_review": {
+    "review": "REVIEW_T1A_r1.md",
+    "verdict": "PASS",
+    "reviewed_commit": "7a76b8697512889530e544628fc86b1682cd2e41",
+    "acceptance_receipt": "T1A_ACCEPTED.json",
+    "blockers": []
+  },
+  "fresh_session_confirmation": {
+    "date": "2026-11-05",
+    "head_at_resume": "7a76b8697512889530e544628fc86b1682cd2e41",
+    "tracked_modifications_at_resume": false,
+    "preserved_untracked_artifacts": [
+      "REVIEW_T1A_r0.md",
+      "REVIEW_T1A_r1.md",
+      "T1A_ACCEPTED.json",
+      "T1A_READY.blocked0.json"
+    ],
+    "verification": "Read status/log, task receipts, shared spec, both reviews, committed fix summary, and the current projection/reference implementation and regressions. Both r0 blockers were already fixed and independently accepted.",
+    "test_jobs_launched": 0,
+    "dispatches_launched": 0,
+    "test_evidence": "Retained completed implementation and independent-review runs; no duplicate execution.",
+    "changes": ["T1A_READY.json"]
+  },
   "resume": {
     "implementation_already_committed": "df383ab7fc5508faea3d49e8709ca559d0f69326",
     "preserved": [
@@ -33,9 +56,14 @@
       "sha": "df383ab7fc5508faea3d49e8709ca559d0f69326",
       "subject": "coopmwm moves: fix nearest projection and require recorded policy references (T1A)",
       "files": ["tools/coopmwm/moves.py", "tools/coopmwm/test_moves_cpu.py"]
+    },
+    {
+      "sha": "7a76b8697512889530e544628fc86b1682cd2e41",
+      "subject": "coopmwm moves: restore fix-round readiness and CPU verification (T1A)",
+      "files": ["T1A_READY.json"]
     }
   ],
-  "receipt_commit": "The separate commit updating this receipt follows df383ab7; see git log on c4/moves.",
+  "receipt_commit": "The separate commit refreshing this receipt follows 7a76b869; see git log on c4/moves.",
   "blocker_resolutions": [
     {
       "review_blocker": 1,
@@ -99,6 +127,7 @@
       "TMP": "E:/Temp/opencode"
     },
     "result": "PASS: 107 passed, 1 warning, 5 subtests passed in 156.47s",
+    "independent_review_result": "PASS: 107 passed, 0 failed, 0 skipped, 5 subtests passed, 1 warning in 58.29s; REVIEW_T1A_r1.md at 7a76b869.",
     "warning": "PytestConfigWarning: Unknown config option cache_dir (cache provider intentionally disabled)",
     "verification": "Real mppi_search.build_plan, variety generators and plans.validate exercised on synthetic inputs; exhaustive independent offset-distance oracle and all review counterexamples pass. Existing CPU variety/search regressions pass.",
     "diff_check": "git diff --check c4/track-base -- tools/coopmwm/moves.py tools/coopmwm/test_moves_cpu.py passed"
