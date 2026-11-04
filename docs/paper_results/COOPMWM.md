@@ -1,5 +1,25 @@
 # S-COOPMWM — live checks
 
+### Nov4 17:46 UTC+8 — A24 complete; B12/R11 waiting; six read-only mounts observed
+- **A24 sealed17:40:19** and its former owner has exited. B12/R11 remain unchanged;
+  no B/R training owner was observed on cpuQ. The existing operator's replacement
+  waiter3587899 and u14chain3539220 are live. Recovery/migration remains operator-
+  owned under MAIN16:03/16:25; this session remains monitor/report only.
+- All six legacy confirmation paths appear as read-only fuse.sshfs mounts from
+  the staged cpuS archive. Prior SHA-copy proof is11,026files/4,511,278,304bytes/
+  zero mismatches. Live cpuS training/ledger handover is not established. The old
+  reader file reports0restore/68pre-existing unresolved but predates the mounts;
+  it does not establish a fresh post-mount check.
+- Latest cpuQfree**5,632,045,056bytes (~5.25GiB)** remains810,405,888bytes below
+  the6GiB dispatch floor and1,347,276,800bytes below the6.5GiB waiter threshold.
+  Both movers are live, last eligible count zero. Guards/protections are kept.
+- Monitor4 remains06e88ecd-bound versus prepared53ae93af. B12's missing PPO/
+  imitation fields stay null/disclosed. Effective-command imitation FIRSTu14 for
+  BOTH arms is registered intent; activation is not claimed.
+- u8 interim remains COMPLETE288/288/outcomes closed. Zero new simulation,
+  inference, remote writes, process signals, moves, deletions or ledger access.
+- Evidence:`coopmwm/RESUME_MONITOR_20261104_1746.md` and its five raw receipts.
+
 ### Nov4 17:25 UTC+8 — A23/B12/R11; read-only migration/resource monitoring
 - **A23 is sealed and A owner2049830 is live.** B12/R11 remain unchanged; the old
   r3 owners are absent. Existing r4 waiter3483043 is live, but no B/R training

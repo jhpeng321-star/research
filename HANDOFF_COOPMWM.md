@@ -1,5 +1,24 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 17:46 +08 — MONITOR ONLY; A24/B12/R11; six read-only mounts observed
+- Full1,140-linebrief/gitstatus+log/currentreceipts/canonicalthrough7,285READ;
+  dirtyworkpreserved. MAIN16:03/16:25 retains recovery/migration with operator.
+- A24SEALED17:40:19/formerA2049830absent; B12/R11unchanged/noB/Rtrainingobserved.
+  Existingwaiter3587899/start79872793+u14chain3539220/start79741377LIVE;
+  oldwaiter3483043absent. DoNOTdispatchcompetingrecovery/gate/coordinator.
+- SixlegacyconfirmpathsNOWread-onlyfuse.sshfsmountedfromcpuS; priorSHAcopyproof
+  11,026files/4,511,278,304bytes/0badkept. NotcpuSlivetraining/ledgerhandover.
+  Readerfile0restore/68preexistingunresolvedhasPRE-mountmtime; freshpostmount
+  scanstillunverified. Advertisedr4/chainLOG.jsonlpathsabsent.
+- cpuQ5,632,045,056bytes/~5.25GiB:810,405,888below6GiBfloor/1,347,276,800
+  below6.5GiBwaiterthreshold. BothmoversLIVE/lastzeroeligible; guardskept.
+- Monitor4old06e88ecd/currentprepared53ae93af; handoveroperatorowned. B12lost
+  PPO/imitationNULL/disclosed/notmechanicsPASS. EffectiveFIRSTu14registeredonly.
+- u8interimCOMPLETE288/288/outcomesclosed; nooursSUMO/inference/remotewrites/
+  signals/moves/deletions/ledgeraccess. SSHbannerretryrecovered/nojobretry.
+- Proof `coopmwm/RESUME_MONITOR_20261104_1746.md` + five linked raw receipts.
+  Awaitoperatorresource/postmountcheckandMAINcpuSliveaddendum.
+
 ## CURRENT Nov4 17:25 +08 — MONITOR ONLY; A23/B12/R11; resource/migration handover pending
 - Full 1,140-line brief, git status/log, current receipts and canonical registration
   through7,278 read. MAIN16:03/16:25 keeps recovery/migration with the existing
