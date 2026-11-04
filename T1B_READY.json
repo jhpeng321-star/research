@@ -1,0 +1,130 @@
+{
+  "task": "T1B",
+  "status": "READY_FOR_INTEGRATION",
+  "round": "fix_after_REVIEW_T1B_r0",
+  "scope": "CPU build and synthetic contract tests; online execution is explicitly opt-in",
+  "branch": "c4/planner-online",
+  "base": "c4/track-base",
+  "base_commit": "13f184b5",
+  "worktree": "E:/agent-work/c4-planner-online",
+  "resume": {
+    "starting_head": "49960a2e",
+    "existing_uncommitted_fix_preserved_and_completed": true,
+    "previous_receipt_preserved_at": "T1B_READY.blocked0.json",
+    "previous_receipt_is_superseded": true,
+    "active_task_jobs_found": false,
+    "jobs_dispatched_or_duplicated": false,
+    "first_reads": "git status/log, shared tracks_spec.md, prior receipt, independent review"
+  },
+  "implementation_commits": [
+    {
+      "commit": "abaada860309abdd043f7fc0d250fc77688acba3",
+      "step": "Calibrated paired-WM move scoring and additive residual-profile decoding"
+    },
+    {
+      "commit": "fcb0a2dcc6f7dfc9c368e8f03a1d26fab1584b00",
+      "step": "Default-off V2V single-writer runtime hook, observable scoping, commitments and execution tests"
+    },
+    {
+      "commit": "925a44eeaca2f8f23f1e6ecbce117af2a5c47a97",
+      "step": "Re-evaluate ongoing moves every decision cadence and compare disabled event bytes/RNG with track-base source"
+    },
+    {
+      "commit": "c299e09c",
+      "step": "Fix review blocker 1: branch-local observable V2V/intent continuation, mandatory online radio state, learned-radio live/imagined parity regressions, and preservation of legacy bank forecast behavior"
+    }
+  ],
+  "review": {
+    "report": "REVIEW_T1B_r0.md",
+    "reviewed_head": "49960a2e",
+    "original_verdict": "BLOCK",
+    "blockers_total": 1,
+    "blockers_addressed": [
+      {
+        "id": 1,
+        "defect": "WM none and candidate arms zero-filled the live actor's learned V2V inputs",
+        "resolution": "Capture ego-local causal radio inputs before the decision, then advance independent per-branch radio frames, actual issued commands, AR(1) policy noise, and timestamped intent publications for every whole second of the full forecast. All arms use the same base actor and initial sampled action. The online adapter rejects a V2V actor without its required radio state.",
+        "tests": "test_planner_policy_cpu.py reproduces the review's nonzero gap-column actions (+/-0.19485158), compares subsequent live/imagined actions, exercises candidate offset decoding and release, deterministic/stochastic policies, enabled intent publication and t-1 visibility, post-safety command feedback, missing/nonlocal/noncausal state rejection, chunk invariance and 600-second multi-sample forecasts"
+      }
+    ],
+    "unresolved_blockers": [],
+    "independent_rereview_after_fix": "not yet performed"
+  },
+  "files": [
+    "tools/coopmwm/planner_online.py",
+    "tools/coopmwm/planner_policy.py",
+    "tools/coopmwm/test_planner_online_cpu.py",
+    "tools/coopmwm/test_planner_policy_cpu.py",
+    "tools/coopmwm/plan_wm.py (small additive offset-profile/radio hooks)",
+    "tools/coopmwm/v2v_runtime.py (small default-off controller hook)",
+    "REVIEW_T1B_r0.md",
+    "T1B_READY.blocked0.json",
+    "T1B_READY.json"
+  ],
+  "defaults": {
+    "runtime_enabled": false,
+    "cadence_s": 60,
+    "n_candidates": 32,
+    "wm_samples": 8,
+    "horizon_s": 600,
+    "p_star": 0.8,
+    "maximum_group_members": 4,
+    "maximum_cav_acceleration_mps2": 1.2,
+    "observable_range": "Inherited v2v_obs.V2VConfig.range_m; no new sensing threshold"
+  },
+  "api": {
+    "Config": "Config(cadence_s=60, n_candidates=32, wm_samples=8, horizon_s=600, p_star=0.8). Samples must be >=2; unregistered or shortened horizons are refused.",
+    "score_moves": "score_moves(record, rng, *, rollout, calibration, config=None, calibrate=None, move_api=None) -> dict. Shared simulator-independent scoring API for dense teachers.",
+    "observation": "record has ego_id, group, rows, time_s, commands, policy_residuals, policy_state; optional history, world_id, state_id, committed_offsets, policy_radio. Sensor rows/history are whitelisted, causal and ego-local. Group includes ego and 1..4 observed CAVs.",
+    "policy_radio": "Required for V2V actors: frame (time_s and whitelisted observable rows plus causally sensed acceleration), previous_commands, deterministic, noise, generator_state, log_std, intent. Runtime snapshots retain only already-observed rows/CAV histories. intent is null or includes horizon, prior timestamped board, learned head weight/bias and bounds. Missing V2V/intent state, noncausal publications, extra fields or out-of-view identities fail closed.",
+    "moves_dependency": "Lazy import tools.coopmwm.moves; calls candidates(obs_state, rng, n), offsets(move, t) and FAMILIES. Members must be drawn from record['group']. No production stub.",
+    "calibration_dependency": "Lazy import tools.coopmwm.planner_calibration.calibrate_probability(p_raw, calibration) -> probability in [0,1], or explicit calibrate adapter. Calibration is mandatory; no identity/raw fallback.",
+    "rollout": "Callable(record, actions, K, H) -> {action_id: K paired scalar costs or dicts containing team_delay}. Uses common future indices; lower cost is better.",
+    "WMRollout": "WMRollout(runtime, memory=None, chunk_actions=4) checks CPU model/policy parameters and calls plan_wm.evaluate with trim=False, final_chain=True, require_policy_radio=True and full H. Reuses existing WM/source/safety/ownership machinery.",
+    "Continuation": "planner_policy.Continuation(record, policy=None). residuals(state, ids, tick) uses the live encode/widen/V2V feature builders and learned actor. At tick zero each branch resets to the captured state and reuses the live sampled residual; later whole-second decisions advance that branch's policy/noise/intent state. observe_issued(state, command, tick) receives post-safety ownership-issued commands. All none/candidate branches retain their own causal history after offsets end.",
+    "legacy_compatibility": "plan_wm.evaluate adds require_policy_radio=False and plan_executor adds policy_radio=None. Existing callers retain their prior behavior when these are absent. policy_wm.py is unchanged; the online planner explicitly bypasses its legacy zero-filled-partner approximation.",
+    "selection": "Explicit none id='policy' continues the current base actor. p_raw is the fraction of strictly positive paired gains; ties do not win. Apply calibration, then select greatest positive expected gain meeting calibrated P >= p_star, with stable ties. Returns selected_move/id, execution offset_profile, scores, paired gains, full horizon and gate receipt.",
+    "OnlinePlanner": "OnlinePlanner(*, rollout, calibration, rng, accel_bounds, config=None, calibrate=None, move_api=None, world_id=None). Dedicated move RNG; inherited acceleration bounds with upper bound <=1.2. apply(..., sample, desired, policy, policy_radio=None) returns the single pre-safety request map.",
+    "runtime_hook": "v2v_runtime.controller_class(acceleration.Controller)(policy, generator, deterministic, planner_online=planner). None/omission is OFF. Concurrent guide/replay/branch producers are refused. Enabled runtime captures pre-step observable radio/intent state automatically.",
+    "execution": "Every cadence re-evaluates disjoint ego-local groups and replaces old moves. Failed/rejected gates return that group to base immediately. Between decisions offsets run to their end; lost members/radio contact release the joint move. Every forecast remains 600 seconds. Other locally visible commitments are the same background in both arms.",
+    "single_writer": "Only modifies the pre-safety request map and sample action record; own_action remains the sampled base action. Never writes TraCI. Existing CommandOwnership remains the sole plant writer with safe speedMode 27. No HDV command recipients.",
+    "events": "Enabled sample['planner_online'] records decisions, paired scores, calibrated probabilities, failures, executed offsets and active group count. event['requests'] is final. Disabled events and policy RNG remain identical to track-base. Actor loading for radio forecasts also preserves global torch RNG."
+  },
+  "verification_environment": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "CUDA_VISIBLE_DEVICES": "",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "fixtures": "Synthetic CPU policies, observations, dynamics and fake vehicle API; temporary pytest files confined to this worktree's _out"
+  },
+  "tests": [
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_planner_policy_cpu.py tools/coopmwm/test_planner_online_cpu.py tools/coopmwm/test_varcollect_cpu.py --basetemp=E:/agent-work/c4-planner-online/_out/t1b-fix-compat-pytest",
+      "result": "115 passed in 49.01s",
+      "coverage": "13 new learned-V2V/intent blocker regressions, 54 existing online planner tests, and 48 existing variety-collection compatibility tests including legacy V2V WM actor behavior"
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_command_chain_cpu.py tools/coopmwm/test_mppi_runtime_cpu.py::LongProfileTests::test_transfer_table_exact_for_long_profiles_and_dynamic_policy tools/coopmwm/test_mppi_runtime_cpu.py::LongProfileTests::test_imagined_nonzero_actor_matches_observable_plant_actor tools/coopmwm/test_v2v_intent_cpu.py::test_partner_intent_has_one_step_latency tools/coopmwm/test_v2v_intent_cpu.py::test_runtime_reset_and_despawn tools/coopmwm/test_v2v_intent_cpu.py::test_actions_identical_to_current_v2v_policy_at_load tests/unit/test_c4_v2v_obs.py --basetemp=E:/agent-work/c4-planner-online/_out/t1b-fix-regression-pytest",
+      "result": "26 passed, 9 subtests passed in 18.25s",
+      "coverage": "Existing V2V runtime/observations, causal intent latency/reset/action identity, plain WM actor parity, long-profile transfer parity and ownership-chain contracts"
+    },
+    {
+      "command": "git diff --check c4/track-base",
+      "result": "passed"
+    }
+  ],
+  "final_test_total": "141 passed plus 9 passing subtests; earlier resumed-session 67-test run is not double-counted",
+  "open_issues": [
+    "Cross-track integration dependency: T1A moves.py and T1C planner_calibration.py are absent from this worktree/base. Tests use local dependency stubs only. Land those modules and bind the documented observation/calibration contract, or pass the explicit T1C adapter, before enabling the planner.",
+    "No trained-WM forecast or plant rollout was run. Full-horizon continuation tests use synthetic observable dynamics. The caller must supply its qualified CPU WM/belief memory and calibration artifact. This is build/test readiness, not an evaluation or performance claim."
+  ],
+  "constraints": {
+    "cpu_only": true,
+    "sumo_launched": false,
+    "gpu_used": false,
+    "remote_or_ssh_used": false,
+    "writes_only_in_task_worktree": true,
+    "restricted_seed_or_truth_paths_opened": false,
+    "hidden_driver_or_global_state_as_planner_input": false,
+    "reset_clean_stash_drop_push_rebase_used": false
+  }
+}
