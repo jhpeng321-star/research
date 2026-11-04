@@ -1,114 +1,133 @@
 {
   "task": "P3",
   "status": "READY_FOR_INTEGRATION",
+  "fix_round": "REVIEW_P3_r0",
   "worktree": "E:/agent-work/c4-track2-monitor",
   "branch": "c4/track2-monitor",
   "base_commit": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
-  "implementation_commit": "f33ca4d08dfecafe1de9869f68122fe7289b59ec",
+  "implementation_commit": "5046be9ae3f3a0ac13ea00059dee3f59027b0cc4",
   "commits": [
-    {
-      "sha": "14a38b6f2a51db3388ebd56e8b6296553c80e229",
-      "subject": "coopmwm P3: add learning monitor and budgeted isolated diagnostics"
-    },
-    {
-      "sha": "f33ca4d08dfecafe1de9869f68122fe7289b59ec",
-      "subject": "coopmwm P3: retain failed waves and bind accounting and checkpoints"
-    }
+    {"sha": "14a38b6f2a51db3388ebd56e8b6296553c80e229", "subject": "coopmwm P3: add learning monitor and budgeted isolated diagnostics"},
+    {"sha": "f33ca4d08dfecafe1de9869f68122fe7289b59ec", "subject": "coopmwm P3: retain failed waves and bind accounting and checkpoints"},
+    {"sha": "eba1df2d4f1cbf0e21fbecc58ae142e9ead6bb2c", "subject": "coopmwm P3: record CPU readiness and integration contract"},
+    {"sha": "5046be9ae3f3a0ac13ea00059dee3f59027b0cc4", "subject": "coopmwm P3: fix redesigned reward monitoring and trained A probes"}
   ],
   "owned_files": [
     "tools/coopmwm/track2_monitor.py",
     "tools/coopmwm/test_track2_monitor_cpu.py",
     "P3_READY.json"
   ],
-  "dependency_merges": [],
-  "dependency_reason": "P3 consumes canonical metrics and injected diagnostic hooks, not learner components. All imported runtime dependencies (protocol, policy_synergy, exact_grade, sumo_verify) already exist in c4/track-base; no accepted component branch is required by this module.",
-  "api": {
-    "monitor_update(cfg, arm, u, receipts)": "Validate and persist immutable per-arm update u1..u24; receipts is the canonical T2C metrics mapping or {metrics: mapping, sources: JSON provenance}. Exact duplicate delivery is idempotent; gaps/conflicts/edited history refuse.",
-    "probe(cfg, u)": "u2/u4: one isolated run on exactly the first three pre-registered states of replicate 0, per configured early_probes arm (default A/B/R). Other updates return not_scheduled with zero work.",
-    "replicated(cfg, u)": "u6/u12/u24: exactly five paired TRAIN worlds for B/R, using the same registered state/group/window sets. Other updates including u18 return not_scheduled.",
-    "read_monitor(root)": "Read and verify all-arm monitor histories plus scheduled diagnostic summaries; no writes.",
-    "diagnostic_identity(states)": "Compatible T2C state_set_sha256/window_set_sha256 over [(snapshot, receipt)] using real snapshot_sha and original windows.",
-    "isolated_expansion(job, states, current_weights, common_weights)": "Pure expansion using policy_synergy.specs_for: group-new, every solo-new, fresh common-u0 reference, background common-u0, original full windows, captured t0/CRN. Distinct P3 state/replicate/arm/update/branch IDs.",
-    "status_command": "python -m tools.coopmwm.track2_monitor status --root <clean1-root>"
-  },
-  "canonical_metrics": {
-    "scalars": [
-      "group_credit_wm", "group_credit_checked", "dense_ce", "dense_accuracy",
-      "dense_filtered_share", "dense_checked_accuracy", "bank_move_ce",
-      "layer_kl", "merge_missing_share", "reward"
-    ],
-    "counts": [
-      "decisions", "credit_rows", "credit_checked_rows", "dense_labels",
-      "dense_eligible_labels", "dense_checked_labels", "augmented_examples", "weighted_starts"
-    ],
-    "other": ["families", "trigger_counts", "safety", "safety_stop"],
-    "safety_counters": ["collisions", "teleports", "hard_brakes", "ttc_events"],
-    "missingness": "A cooperation metrics are None. Zero SUMO-checked rows require None checked metrics. All-filtered dense targets permit None CE/accuracy. Missing components, nonfinite values and inconsistent shares/counts refuse. No zero imputation."
-  },
-  "configuration": {
-    "run_root": "Required existing standalone experiment root.",
-    "learning_monitor": "Optional registered settings, defaults match current T2C: history_updates=3, saturation=[0,1], accuracy_tolerance=1e-6, layer_kl_near_zero=1e-8.",
-    "isolated_registration": "Required in-memory explicit registration: role=train, metric=policy_cooperation_gain_veh_s, five replicates indexed 0..4, distinct world_seed in existing isolated machinery's TRAIN range 986000..986071, SHA256 state/window identities.",
-    "monitor_dry_run": "Default true. Dry calls expand/quote but reserve and dispatch zero jobs. Set false only through the owning qualified runtime.",
-    "monitor_backend.resolve_states(job)": "Return [(snapshot, receipt)] for the registered world/state/window set; no seed-file discovery.",
-    "monitor_backend.weights(arm, update)": "Return (current complete policy state dict, common frozen u0 state dict). Common state must match across all cells; current state fixed per arm/update; A probe state must equal common u0.",
-    "monitor_backend.reserve(jobs, phase)": "Atomically reserve whole wave against coordinator's OWN cumulative ledger and return {reserved: true, phase: phase, sim_s: sum(j.sim_s), job_ids: ordered list(j.id)}; additional provenance fields allowed.",
-    "monitor_backend.run_branch(spec, snapshot)": "Execute through owning coordinator worker permit, full-layer intervention controller, original window and CRN. Return {status: graded, J_veh_s: finite number, safety: all four nonnegative integer counters}. P3 never constructs a process/runner or reads a checkpoint.",
-    "budget.phases": "Required early_probes and isolated_replicated phase caps; full expanded wave must fit. Optional early_probes.sim_s_per_arm / isolated_test.sim_s_per_replicate bound each cell. Global 5M cap, parity960 and smoke accounting remain with G-T2C's existing ledger.",
-    "isolated_test": "N=5; bootstrap fixed at 10000 percentile world resamples, level=.95, seed=20261104; per-cell seed=seed*10000+100*update+pair_index.",
-    "criterion_sha256": "If provided by coordinator, binds diagnostic receipts to the pre-registered criterion document. Live owner-approval/preflight remains the coordinator's responsibility."
-  },
-  "outputs": [
-    "learning_monitor/<A|B|R>/uNNN.json (hash-chained monitor_sha256)",
-    "CLEAN1_STATUS.md (plain all-arm and scheduled diagnostic summary)",
-    "track2_diagnostics/<probe|replicated>_uNNN_<dry|live>.json (receipt_sha256)",
-    "track2_diagnostics/claims/<probe|replicated>_uNNN.json (immutable whole-wave claim and full-spec manifest)",
-    "track2_diagnostics/accounting/<first-cell-id>.json (durable whole-wave accounting receipt)",
-    "track2_diagnostics/branches/<branch-id>.json (durable branch spec and returned result/error, including failures)"
-  ],
-  "diagnose": [
-    "trigger_saturated at exact active trigger rates 0 or 1",
-    "group_credit_not_rising_3_updates",
-    "dense_accuracy_flat_3_updates when measured",
-    "layer_kl_near_zero",
-    "no_eligible_dense_labels",
-    "Learning diagnostics return DIAGNOSE, never PAUSE. Explicit safety_stop alone returns PAUSE_SAFETY."
-  ],
-  "replicated_criterion": {
-    "metric": "delta(all group new, background common u0) - max delta(one member new, background common u0)",
-    "aggregation": "Mean over registered states inside each WORLD, then paired bootstrap over exactly five WORLD replicates; never treat branches or states as independent replicates.",
-    "comparisons": ["B-common_base", "R-common_base", "B-R"],
-    "common_base": "Algebraically zero cooperation gain; fresh all-base reference branch per state supplies matched safety counters. No separate A replicated simulation.",
-    "primary": "u24 pass iff B-common_base two-sided 95% CI low > 0 AND B safety counters do not exceed matched all-base reference (reference multiplied by same branch count).",
-    "secondary": "u6/u12 and B-R are descriptive; final paired episode evaluation remains T1D/G-T2C owned."
-  },
-  "tests": [
+  "review_blockers": [
     {
-      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_track2_monitor_cpu.py --basetemp=E:/agent-work/c4-track2-monitor/_out/p3_final",
-      "environment": {"CUDA_VISIBLE_DEVICES": "-1", "PYTHONDONTWRITEBYTECODE": "1"},
-      "result": "56 passed in 30.93s",
-      "scope": "Final P3 implementation; CPU tensors, real isolated spec expansion, fake accountant/runner; no physics."
+      "id": 1,
+      "status": "FIXED",
+      "change": "WM credit and dense teaching default OFF and use explicit registered enablement. Disabled components require zero counts and explicit None scalars; their diagnoses are suppressed. Enabled components remain strictly validated. V2 rows bind component registration and reconstruct history without an external cfg; original v1 histories remain readable. Native P2 real observable team-reward receipts are validated, persisted and exposed in status summaries without replacing base/evaluation reward.",
+      "regressions": "B and R each persist three consecutive redesigned-profile updates, re-read hash chains and CLI status, preserve native real-reward evidence and null measurements, and emit no stale WM/dense diagnosis. Additional cases cover independently enabled components, malformed registration, fabricated disabled measurements, invalid/missing reward evidence, registration changes and original v1 history."
     },
     {
-      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_track2_monitor_cpu.py tools/coopmwm/test_policy_synergy_cpu.py tools/coopmwm/test_policy_synergy_isolated_cpu.py --basetemp=E:/agent-work/c4-track2-monitor/_out/p3_verify",
-      "result": "69 passed, 6 failed in 25.20s",
-      "scope": "Expanded run before the final two checkpoint-consistency tests; all then-existing 54 P3 cases passed.",
-      "failure_reason": "Six pre-existing legacy run_update tests call replay_start.owner(), which reads /proc/<pid>/stat. Windows has no /proc. No P3 test failed; shared modules and legacy tests were not modified."
-    },
-    {
-      "command": "git diff --check",
-      "result": "PASS"
+      "id": 2,
+      "status": "FIXED",
+      "change": "A current checkpoint may differ from common frozen u0. Common reference consistency and per-arm current checkpoint consistency across diagnostic cells remain enforced. Group/solo branches receive the current A policy; reference branches and background retain common u0.",
+      "regressions": "Default A/B/R probes at BOTH u2 and u4 use genuinely different A-current and u0 CPU tensors. Fake backend assertions inspect actual branch snapshot weight hashes, selected group/solo members, reference weights and background routing; A produces its distinct fake trained-policy cooperation result. Existing checkpoint-change refusal tests remain passing."
     }
   ],
+  "dependency_merges": [],
+  "reward_contract_source": "Committed c4/track2-reward tools/coopmwm/track2_reward.py, training_episodes/layer_records API, inspected through this repository's git objects; branch resolved to 22d902d68d1c20628d265d5eae96150ca94a6791. No sibling worktree was accessed or changed and no reward module is imported by P3.",
+  "api": {
+    "monitor_update(cfg, arm, u, receipts)": "Validate/persist immutable per-arm u1..u24 metrics or {metrics, sources}. Exact duplicates are idempotent; gaps/conflicts/edited history and component-registration changes refuse. New rows use coopmwm.track2.learning_monitor.v2 with a hashed components registration.",
+    "probe(cfg, u)": "u2/u4: one isolated run on the first three registered states of replicate 0 per early_probes arm, default A/B/R. Current A is its trained checkpoint, independent of the common-u0 reference. Other updates return not_scheduled with zero work.",
+    "replicated(cfg, u)": "u6/u12/u24 only: five paired TRAIN worlds, B/R, same registered states/groups/windows. Other updates including u18 return not_scheduled.",
+    "read_monitor(root)": "Read and validate all-arm v1/v2 histories and diagnostic summaries without writing or requiring external component cfg.",
+    "diagnostic_identity(states)": "SHA256 state/window registration over [(snapshot, bank_receipt)], using real snapshot_sha and original full windows.",
+    "isolated_expansion(job, states, current_weights, common_weights)": "Pure expansion through existing policy_synergy.specs_for: group-current, each solo-current and fresh common-u0 reference, common-u0 backgrounds, captured t0/CRN, unchanged original full windows.",
+    "status_command": "python -m tools.coopmwm.track2_monitor status --root <clean1-root>"
+  },
+  "configuration": {
+    "run_root": "Required existing experiment root owned by the coordinator.",
+    "group_credit": "Mapping with explicit boolean enabled; default false. True retains strict numeric WM measurements and positive credit_rows for B/R.",
+    "dense_teacher": "Mapping with explicit boolean enabled; default false. True retains strict label counts, CE/accuracy, calibrated filtered share and sampled-accuracy checks for B/R.",
+    "track2_reward": "P2 boolean switch, default false. For redesigned launch use true, group_credit.enabled=false and dense_teacher.enabled=false.",
+    "track2_reward_weight": "Required positive finite registered weight when reward is enabled; no monitor-chosen default.",
+    "track2_reward_provenance": "Required nonempty weight-registration authority reference when reward is enabled; preserved and checked against P2 receipts.",
+    "track2_reward_arms": "P2 contract: exactly B and R, defaults to B/R. A cannot report a cooperation reward receipt.",
+    "learning_monitor": "Defaults: history_updates=3, trigger_saturation=[0,1], accuracy_tolerance=1e-6, layer_kl_near_zero=1e-8. Learning diagnoses never pause; explicit safety_stop alone requests PAUSE_SAFETY.",
+    "isolated_registration": "Explicit in-memory TRAIN registration: metric=policy_cooperation_gain_veh_s, five replicates indexed 0..4, distinct existing TRAIN seeds 986000..986071 and SHA256 state/window identities.",
+    "monitor_dry_run": "Default true: expand/quote full windows, reserve/dispatch zero jobs. Live execution only through coordinator-supplied hooks.",
+    "monitor_backend.resolve_states(job)": "Return [(snapshot, bank_receipt)] for registered world/state/window set.",
+    "monitor_backend.weights(arm, update)": "Return (actual current complete policy state dict, common frozen u0 state dict). Common must match across all cells; current must stay fixed per arm/update. A-current is allowed and expected to change from u0 after PPO training.",
+    "monitor_backend.reserve(jobs, phase)": "Atomically precharge WHOLE wave against coordinator's own ledger, returning {reserved:true, phase, sim_s, job_ids}; sim_s and ordered IDs must match expanded specs.",
+    "monitor_backend.run_branch(spec, snapshot)": "Owning coordinator supplies worker permit and qualified full-layer policy controller. Return {status:graded, J_veh_s:finite, safety:all four nonnegative integer counters}. No runner/process/checkpoint reader is constructed by P3.",
+    "budget.phases": "Required early_probes/isolated_replicated phase caps; optional early_probes.sim_s_per_arm and isolated_test.sim_s_per_replicate cell caps. Whole expanded windows must fit; cumulative <=5M ledger remains coordinator-owned.",
+    "isolated_test": "Exactly five replicates; bootstrap 10000 percentile WORLD resamples, level .95, seed 20261104.",
+    "criterion_sha256": "Optional binding to coordinator's registered criterion; live owner approval/preflight remains coordinator-owned."
+  },
+  "canonical_metrics": {
+    "scalars": ["group_credit_wm", "group_credit_checked", "dense_ce", "dense_accuracy", "dense_filtered_share", "dense_checked_accuracy", "bank_move_ce", "layer_kl", "merge_missing_share", "reward"],
+    "counts": ["decisions", "credit_rows", "credit_checked_rows", "dense_labels", "dense_eligible_labels", "dense_checked_labels", "augmented_examples", "weighted_starts"],
+    "other": ["families", "trigger_counts", "safety", "safety_stop"],
+    "safety_counters": ["collisions", "teleports", "hard_brakes", "ttc_events"],
+    "disabled_wm": "group_credit_wm/group_credit_checked must be None; credit_rows/credit_checked_rows must be zero.",
+    "disabled_dense": "dense_ce/dense_accuracy/dense_filtered_share/dense_checked_accuracy must be None; dense_labels/dense_eligible_labels/dense_checked_labels must be zero.",
+    "enabled_subsets": "Zero checked rows require None subset measurements. All-filtered dense targets permit None CE/accuracy and diagnose no eligible labels only when dense teaching is enabled.",
+    "track2_reward": {
+      "shape": "Native P2 training_episodes or layer_records receipt nested at metrics.track2_reward. Required for B/R when cfg.track2_reward=true; absent/None when disabled or A. Additional native provenance fields are preserved.",
+      "binding": ["arm", "weight", "provenance", "arms", "scope", "wm_used", "global_reward_used", "terminal_fallback_steps"],
+      "counts": ["steps", "cav_outcomes", "empty_cav_steps", "empty_neighbourhoods", "neighbour_outcomes", "partner_reports", "unavailable_partner_reports"],
+      "sums": ["own_reward_sum", "neighbourhood_reward_sum", "team_addition_sum", "reward_sum"],
+      "semantics": "P2 sums of per-step equal-acting-CAV means, not global SUMO reward or WM counterfactual credit. Counts/sums are exposed verbatim; sums must be finite and consistent with registered weight. Scope is cooperation layer only; WM/global reward use and terminal fallback refuse. Existing metrics.reward retains base/evaluation meaning."
+    }
+  },
+  "diagnose": [
+    "trigger_saturated at exact active rates 0 or 1 (B/R)",
+    "layer_kl_near_zero (B/R)",
+    "group_credit_not_rising_3_updates only when WM credit enabled",
+    "dense_accuracy_flat_3_updates only when dense teaching enabled and measured",
+    "no_eligible_dense_labels only when dense teaching enabled",
+    "Learning diagnoses return DIAGNOSE; explicit safety_stop alone returns PAUSE_SAFETY."
+  ],
+  "outputs": [
+    "learning_monitor/<A|B|R>/uNNN.json: immutable hash-chained v2 rows, component registration and native reward evidence",
+    "CLEAN1_STATUS.md: all-arm plain summary, explicit disabled/N-A components, real observable reward counts/sums and diagnostic status",
+    "track2_diagnostics/<probe|replicated>_uNNN_<dry|live>.json: immutable receipt and full-window branch manifest",
+    "track2_diagnostics/claims/<probe|replicated>_uNNN.json: whole-wave nonreplayable claim",
+    "track2_diagnostics/accounting/<first-cell-id>.json: durable reservation receipt",
+    "track2_diagnostics/branches/<branch-id>.json: durable branch spec and grade/error, including failures"
+  ],
+  "replicated_criterion": {
+    "metric": "delta(all group current, background common u0) - max delta(one member current, background common u0)",
+    "aggregation": "Mean over registered states inside each WORLD; paired bootstrap over five WORLD replicates, never branches/states as independent replicates.",
+    "comparisons": ["B-common_base", "R-common_base", "B-R"],
+    "common_base": "Algebraically zero cooperation gain; fresh all-base reference supplies matched safety counters.",
+    "primary": "u24 B-common_base CI95 low > 0 and no safety regression against matched reference with equal branch-count scaling.",
+    "secondary": "u6/u12 and B-R descriptive; final shared paired evaluation is T1D/T2C-owned."
+  },
+  "test_environment": {"CUDA_VISIBLE_DEVICES": "-1", "PYTHONDONTWRITEBYTECODE": "1", "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1"},
+  "tests": [
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_track2_monitor_cpu.py --basetemp=E:/agent-work/c4-track2-monitor/_out/p3_fix_final_r0 -o cache_dir=E:/agent-work/c4-track2-monitor/_out/p3_pytest_cache",
+      "result": "97 passed in 20.82s",
+      "scope": "Final P3 source and tests; 41 additional cases relative to reviewed 56, plus strengthened existing u2/u4 current-A probes. CPU tensors, real isolated-spec expansion, fake accountant/branch executor."
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_track2_monitor_cpu.py tools/coopmwm/test_policy_synergy_cpu.py tools/coopmwm/test_policy_synergy_isolated_cpu.py --basetemp=E:/agent-work/c4-track2-monitor/_out/p3_fix_full_r0 -o cache_dir=E:/agent-work/c4-track2-monitor/_out/p3_pytest_cache",
+      "result": "112 passed, 6 failed in 20.25s",
+      "failure_reason": "Same six pre-existing Windows failures documented in REVIEW_P3_r0: two complete_branch_set_precharged parametrizations and four isolated_complete_precharge parametrizations reach unchanged replay_start.owner() at line 35, which requires Linux /proc/<pid>/stat. All 97 P3 cases passed. Final focused run also strengthened the legacy v1 fixture independently of row generation."
+    },
+    {
+      "command": "git diff --exit-code c4/track-base -- tools/coopmwm/replay_start.py tools/coopmwm/policy_synergy.py tools/coopmwm/test_policy_synergy_cpu.py tools/coopmwm/test_policy_synergy_isolated_cpu.py",
+      "result": "PASS: legacy failing implementations and dependency tests byte-unchanged against base"
+    },
+    {"command": "git diff --check", "result": "PASS"}
+  ],
   "integration_actions": [
-    "G-T2C imports monitor_update/probe/replicated from tools.coopmwm.track2_monitor and passes the existing canonical metrics mapping after each update.",
-    "Inject isolated_registration and the accounting/worker/full-layer-policy monitor_backend hooks into a runtime-local cfg; keep serializable launch config unchanged.",
-    "Use P3 scheduled diagnostics as the owning scheduled path so each diagnostic wave is reserved/executed once.",
-    "Include the documented status command in G-T2C's RERUN_TRACKS_READY documentation."
+    "T2C passes registered group_credit/dense_teacher enablement and P2 track2_reward/weight/provenance/arms in cfg. Redesigned profile disables WM/dense and enables real reward for B/R.",
+    "Pass P2's native reward receipt at metrics.track2_reward; aggregate native counts/sums over the update if collecting per-episode receipts. Preserve one common registration and scope; do not impute disabled WM/dense measurements.",
+    "Inject explicit isolated_registration and coordinator-owned accounting/worker/full-policy monitor_backend hooks. Return actual current A weights for A learning probes, with the shared frozen-u0 second return value.",
+    "Use P3 as the single scheduled diagnostic owner, and document the status command in RERUN_TRACKS_READY."
   ],
   "open_issues": [
-    "The six Linux-specific legacy owner tests require a Linux CPU test environment; P3's final 56-test suite passes on Windows.",
-    "Qualified cpuV coordinator/backend integration is owned by G-T2C/P1. It must supply the complete layer+trigger diagnostic policy runner and its own accounting/worker hooks. Live smoke was not run in this CPU-only task."
+    "Six unchanged Linux-specific legacy dependency cases fail on Windows because /proc/<pid>/stat is unavailable; P3's final 97-test CPU suite passes.",
+    "Qualified cpuV coordinator/backend integration and real SUMO execution are owned by T2C/P1/P2. CPU fake grades establish contracts, not realised learning or production-controller qualification."
   ],
   "execution": {
     "new_sim_s": 0,
