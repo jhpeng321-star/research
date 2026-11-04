@@ -1,0 +1,94 @@
+{
+  "schema": "coopmwm.t2d_ready.v1",
+  "task": "T2D",
+  "status": "READY: CPU implementation and contract tests; default off",
+  "branch": "c4/coop-layer",
+  "base": "c4/track-base @ 13f184b5",
+  "worktree": "E:/agent-work/c4-coop-layer",
+  "resume": {
+    "spec_read_first": "E:/agent-work/_sol/tracks_spec.md, including Track 2 additions",
+    "initial_head": "13f184b5",
+    "initial_status": "clean; no existing coop_layer module, tests, or T2D receipt found",
+    "jobs_dispatched": 0
+  },
+  "commits": [
+    {
+      "sha": "5a7a803fe5ca097cdcee35e2ce83ffedad6d9caa",
+      "step": "Frozen MAPPO cooperation layer, residual head, trigger adapter, separate Adam and exact joint KL budget"
+    },
+    {
+      "sha": "6e41bc520738e19996a8386b010e80f1c8ba6895",
+      "step": "CPU identity, frozen-base, PPO, KL, rollback, and checkpoint contract tests"
+    }
+  ],
+  "commit_note": "This receipt is committed on top of the implementation and test commits; its own hash is intentionally not self-referential.",
+  "files": [
+    "tools/coopmwm/coop_layer.py",
+    "tools/coopmwm/test_coop_layer_cpu.py",
+    "T2D_READY.json"
+  ],
+  "api": {
+    "LayerConfig": {
+      "required_registration_fields": [
+        "feature_dim",
+        "hidden_dim",
+        "learning_rate",
+        "kl_budget",
+        "clip_ratio",
+        "max_grad_norm"
+      ],
+      "enabled": "boolean, default false; no live-run hyperparameters invented",
+      "feature_dim": "Recorded per-CAV x width; 29+48 for the existing five-second V2V intent configuration. Separate recorded context.v2v blocks are widened with the existing widen_context helper."
+    },
+    "CooperationLayer(base, config=None, trigger_head=None)": "Owns a deep-copied, eval-mode, requires_grad=False MAPPO base, including actor, critic, intent, log_std and buffers. An external optimizer retaining the original base cannot mutate the owned frozen copy. No config means OFF.",
+    "trigger_head": "Injected T2A nn.Module or adapter: forward(per_cav_features) -> finite [CAV, K] logits. Candidate index 0 is none. The test-only TriggerStub is not a production replacement for T2A.",
+    "forward(context)": "Returns frozen base mean plus residual, and frozen base value. Discrete move sampling is exposed through sample, not forward.",
+    "sample(context, generator, deterministic=False, memory=None, layer_generator=None, move_offsets=None)": "Returns (sample, unchanged-base-noise next_memory). Additional arguments are keyword-only. move_offsets is [CAV, K], with a zero none column, supplied from observable/feasible T1A candidates for the acting CAV. Stochastic triggers require a separate CPU layer_generator. Enabled samples retain rollout logits, residual, amplitude, choices, offsets and features under sample.coop_layer.",
+    "score(sample)": "Differentiable joint categorical plus correlated Gaussian score, and detached base value. Frozen AR(1) parameters and covariance are preserved.",
+    "layer_parameters()": "Only residual-head, supplied trigger-head, and trigger-amplitude trainable parameters; no base parameters.",
+    "optimizer": "Separate Adam created only when explicitly enabled; optimizer ownership checked before updates.",
+    "joint_kl(sample)": "Exact KL(old rollout || current), integrating all categorical choices and the shared-noise Gaussian analytically. The budget is mean joint KL per group across the supplied rollout records.",
+    "update(records, epochs=registered_integer)": "Layer-only clipped PPO. Each record is {sample, group_advantage}, intended for T2E counterfactual group credit. No per-CAV reward substitution or critic update. Proposals exceeding the registered KL budget, or becoming nonfinite, restore layer weights and Adam state. Deterministic, empty, and executed-plan records are refused.",
+    "checkpoint": "Save state_dict(), optimizer.state_dict(), LayerConfig and both caller-owned RNG states. Construct with the same trigger adapter/config and load both state dicts on resume; exact optimizer/model continuation is tested."
+  },
+  "identity_contract": {
+    "layer_off": "Complete base sample and score delegation, including action bytes, values and noise memory, even with nonzero learned layer weights.",
+    "zero_init": "Residual output layer and tanh trigger amplitude start at zero. Both deterministic and stochastic triggers preserve base action bytes, AR(1) noise memory and base generator state over multiple steps.",
+    "frozen_after_updates": "Actual accepted updates change residual/trigger parameters while the entire base state_dict, gradients, forward outputs and published intent remain unchanged.",
+    "safety_boundary": "Produces pre-safety acceleration offsets only. Does not issue commands or alter the existing feasibility cap, safe-speed mode, HDV handling or single-writer controller. Candidate eligibility and partner commitments remain with T1A/T2A and the runtime integration."
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_coop_layer_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_v2v_model_cpu.py tools/coopmwm/test_acceleration_cpu.py::AccelerationCPU::test_zero_update_is_exact_mappo_before_unchanged_safety tools/coopmwm/test_acceleration_cpu.py::AccelerationCPU::test_conditional_ar_density_and_no_leakage tools/coopmwm/test_v2v_intent_cpu.py::test_actions_identical_to_current_v2v_policy_at_load tools/coopmwm/test_v2v_intent_cpu.py::test_partner_intent_has_one_step_latency",
+    "result": "41 passed in 58.15s; no failures or skips",
+    "t2d_cases": 25,
+    "regression_cases": 16,
+    "warning": "One pre-existing tensor-to-scalar warning in test_acceleration_cpu.py:214; no T2D warnings in the final run.",
+    "independent_numerical_checks": [
+      "Exact analytic joint KL agrees with exhaustive categorical enumeration plus torch.distributions.MultivariateNormal KL, including shared Gaussian covariance.",
+      "Nonzero residual plus selected-move composition agrees with independently computed action corrections and joint action density."
+    ],
+    "additional_contracts": [
+      "Complete V2V-intent base state and intent_bounds buffer frozen after real layer updates, for both widened x and separate V2V blocks.",
+      "Accepted PPO updates train both cooperation heads and trigger amplitude, with no base optimizer ownership or gradients.",
+      "Over-budget rejection restores populated Adam moments and parameters; nonfinite proposals also roll back.",
+      "Model and optimizer state_dict resume yields identical samples and subsequent updates.",
+      "Invalid registration, optimizer contamination, base unfreezing, stale over-budget rollout, bad features/candidates and shared trigger RNG are refused.",
+      "Non-CPU model refused with a meta-device fixture; no GPU allocation."
+    ]
+  },
+  "open_issues": [
+    "T2A trigger_policy.py and T1A moves.py were absent from this base worktree. Their real adapter/candidate integration remains for the cross-task merge; tests use only a local trigger stub as permitted by the shared spec.",
+    "T2C must register the actual layer hyperparameters, wire T2E group_advantage records, persist both RNG states/config, supply observable feasible move offsets and retain the existing command-ownership/safety path. This task does not edit shared runtime modules. The live V2V runtime's intent-model discovery also needs an integration adapter for the nn.Module wrapper; the frozen intent model is available as layer.base."
+  ],
+  "hard_rules": {
+    "cpu_only": true,
+    "new_sim_s": 0,
+    "sumo_gpu_ssh_remote_used": false,
+    "dispatch_reservation_or_charge_created": false,
+    "sealed_or_forbidden_data_paths_opened": false,
+    "hidden_truth_files_read": false,
+    "only_owned_worktree_files_changed": true,
+    "reset_clean_stashdrop_push_rebase_used": false
+  }
+}
