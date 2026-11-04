@@ -1,6 +1,18 @@
 # Fleet PPO controller-selector training status
 
-## Latest reconciliation — resume using 2026-11-04 19:44 +08:00 evidence
+## Latest reconciliation — 2026-11-05 01:35 +08:00
+- Fresh cpuQ exact-PID/root probes find original645235 and original training root
+  absent after registered owner cleanup; disk2,185,539,584bytes free/96%used.
+- Fresh nice19 gpuR checkpoint AND frozen-receipt hashes match final169 bindings.
+  Exact local observer3668/publisher44716 queries find neither process present.
+- Completed169updates/7,728gradient episodes/6,998,400charged remain unchanged;
+  local14,400evaluation UNSTARTED, cap7,012,800. Supervision is complete.
+- Reread unchanged Nov3 peer status: fleet16worlds/480decisions/79,800sim-s COMPLETE;
+  full paired comparison remains incomplete and C1SWITCH2-owned.
+- Evidence: `selmappo/RESUME_20261105_0135.json`. Prior CPU40/40/integration PASS
+  retained; no continuation required. New dispatches/simulations/GPU/signals0.
+
+## Previous reconciliation — resume using 2026-11-04 19:44 +08:00 evidence
 - Existing19:44 receipt records cpuQ original645235/root absent after owner cleanup;
   disk7,655,567,360bytes free/85%used, and matching gpuR checkpoint/frozen-receipt
   hashes. Remote evidence is reused; no additional SSH or inference probe this resume.
