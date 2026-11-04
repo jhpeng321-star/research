@@ -1,5 +1,20 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 10:54 +08 — qualified r2 ADOPTED; TRAINING RUNNING
+- Qualifiedsrc7/a7ae6d9a mergedas6dd5cd1bpreservingallstorage/dirtywork. Two
+  monitoradd/addconflictsresolvedEXACTLYtoqualifieddeployedfiles (gitdiffzero);
+  17localintegrationtestsPASS. Linux262PASS+gate8PASSactualreceiptread,notrerun.
+- DirectlatestA10/B3/R3; supervisor2636865/B2636963/R2636968LIVE/Bu4learneractive,
+  Rregisteredlag1. r2start1793760330.939=10:45:30+08. Monitor4LIVE2635161/binding
+  matches06e88ecd. ReadonlyresumehelperNOWselectsmonitor4,notretiredmonitor3.
+- Slim COMPLETE+independentlyVERIFIED447branches/894files/14proofs/931861558net;
+  tail476840470bytesCOMPLETE. NEVERredispatcheither. Bothregularmoversretained.
+- cpuQ7577538560bytes/7.06GiB at1793760834; 10GiBtargetstillshort3159879680bytes.
+  Backfill9GiBguard+MAINcollectorSTOPkept. Canonical10:58CPU-Ssetup/parityseparately
+  delegated; doNOTduplicateoruseforphysicsbeforequalification.
+- NextmonitorB4/5mechanics+safetyandB6lesson/isolatedsynergy; no B6resultyet.
+  See updatedCOOPMWM.md/design70lines+proofCOMPLETE. NooursSUMO/inference/charges.
+
 ## CURRENT Nov4 10:48 +08 — slim COMPLETE+VERIFIED; delegated B/R r2 LIVE
 - MAIN10:12slim COMPLETE447branches/894files/14remoteproofs:936070977gross,
   4209419localSLIM,931861558netbytes. Independentread-onlyVERIFYpassedsourceSHAs,

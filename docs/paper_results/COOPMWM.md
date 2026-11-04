@@ -1,5 +1,30 @@
 # S-COOPMWM — live checks
 
+## Nov4 10:54 UTC+8 — TRAINING RUNNING r2; approved storage work complete
+- **A10/B3/R3 completed.** The delegated r2 supervisor and B/R runners are live;
+  B u4 episodes have run and its learner is active. R retains its registered
+  lag-1 schedule. Resume receipt timestamp is10:45:30+08. Monitor4 is live and
+  bound to runtime06e88ecd; the old monitor3 is retired.
+- Owner10:40 approved the learning-pause release. The source7/a7ae6d9a gate8
+  actually **PASSes**, all six offline checks true and no reasons; Linux262/262
+  PASS was independently read. Qualified recovery code is adopted in merge
+  `6dd5cd1b`, preserving storage work; both monitor conflicts match the deployed
+  source exactly. **17local integration checks PASS**. No duplicate job dispatched.
+- MAIN10:12 slim migration is **complete and independently verified**:
+  **447branches/894files/14remote SHA proofs;936,070,977gross bytes archived,
+  4,209,419local SLIM bytes,931,861,558net bytes recovered**. Zero errors/partials.
+  Full originals remain on gpuA; retained SLIM seals, result/payload identities,
+  current rejected-only eligibility and window totals all verify. Earlier legacy
+  tail move separately completed476,840,470bytes. Never redispatch either worker.
+- cpuQ had7.22GiB free at the10:47 verification,7.06GiB at10:54 as training writes
+  continue. **The10GiB target remains unmet**; no broader source scope or lower
+  guard was used. Backfill's9GiB guard and MAIN's collector STOP stay in place.
+  The new CPU-S setup/parity is separately delegated.
+- B-u6 lesson/isolated-synergy evidence remains pending. Sources and proofs:
+  `coopmwm/SLIM_MIGRATION_MAIN1012_V4_COMPLETE.md`,
+  `coopmwm/SLIM_MIGRATION_MAIN1012_V4_VERIFIED_COMPLETE.json`, and
+  `coopmwm/RESUME_LIVE_0815_1793760835619768600.json`.
+
 ## Nov4 10:31 UTC+8 — A9/B3/R3; approved storage moves progress
 - Direct public-receipt/process probe shows **A9/B3/R3**, with A's u10 episodes
   running. B/R remain at the mechanics pause. The recovery operator reports
