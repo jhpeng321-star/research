@@ -83,3 +83,28 @@ All tracked modifications and untracked successor work are preserved. Explicit
 MAIN reactivation and allocation reconciliation remain the blocking decision;
 the required dense/ordinary start mixture and observable checks remain pending.
 No new SUMO, tests, worker, dispatcher, monitor, registry entry or PID action.
+
+## Fresh-session adoption — arrival HEAD `f0f71307`
+
+Read git status/log and native task receipts first. Current canonical registry
+search retains MAIN16:05 approval at5877, DESIGN READY at5878 and explicit
+MAIN16:22 native-start supersession at5879; no native reactivation was found.
+The incoming addendum repeats the earlier approval rather than resolving that
+later scope decision. Former native TRAIN/check seeds remain exposed by the
+successor; the original audit cannot authorize their reuse.
+
+`git diff 8368ce1a -- tools/coopnative docs/paper_results/COOPNATIVE_DESIGN.md`
+is empty. The retained CPU5 receipt still records pass_=true/skips0/sim_s0;
+the historical 15-test suite was not redundantly rerun. Design remains61lines,
+quote4,664,400total sim-s below6M, with the historical throughput/ETA above.
+The dense/ordinary start mixture and explicit informative-observable coverage
+checks remain unfinished; current native launch readiness is not claimed.
+
+Latest saved successor handoff is Nov4 17:25, monitor-only with A23/B12/R11,
+an existing operator recovery waiter and pending resource/migration handover.
+The completed 288-tape interim archive must not be repeated. This session made
+no fresh remote liveness measurement. Preserve unrelated tracked/untracked work.
+MAIN must explicitly reconcile native reactivation, separate budget/hosts and
+fresh seed allocation before an amended registration and physical canary.
+This session starts no job, consumes zero sim-s, sends no signal and adds no
+duplicate DESIGN READY entry. Only this recovery receipt is committed.
