@@ -5,7 +5,8 @@
   "commits": [
     "b59c6895 coop-reward: COOPREWARD_DESIGN.md documents the V2V runtime reward path (accel_plant team-J delta per 1 s step, accel_learner GAE UNIT=1e4, joint observable-state critic) and the registered coop_reward option design",
     "5a7ddc71 coop-reward: registered coop_reward option (default OFF byte-identical) - coop_reward.py settings/neighbourhood/transform, warm_runner applies it to the PPO-update rewards only + per-update own/team report, prepare_intent producer keys, v2v_live hooks + launch3 bind_runtime validation",
-    "c841d0c7 coop-reward: CPU tests (test_coop_reward_cpu.py, 13 passed)"
+    "c841d0c7 coop-reward: CPU tests (test_coop_reward_cpu.py, 13 passed)",
+    "d92707c3 coop-reward: settings tolerates a None config (fail-closed OFF), covered by the off-identity test's None-cfg case"
   ],
   "tests": {
     "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q",
