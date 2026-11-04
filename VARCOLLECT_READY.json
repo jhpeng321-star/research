@@ -11,7 +11,7 @@
     "4b179d94 + bc5889c9: all-eight-gate broker admission and registered single-ledger modes",
     "47ccb8ac: fresh worker only, no adoption or process takeover; all8 both-seed confirmations",
     "e4d8b68d: coop3 V2V policy/episode/branch/search wiring",
-    "THIS commit: fresh-process qualification lifecycle through plan_service, explicit host environment pins, real-service eight-gate CPU regression"
+    "32dc301995bc2fa8bf45f8249a78d96d5f6f6115: fresh-process qualification lifecycle through plan_service, explicit host environment pins, real-service eight-gate CPU regression"
   ],
   "modules": [
     "tools/coopmwm/varcollect.py",
@@ -93,6 +93,19 @@
     "test_hotadd_cpu": "4 passed separately using canonical unittest module tools.coopmwm.test_hotadd_cpu (0.037s). Pytest's unqualified coopmwm import duplicates the tools.coopmwm package and misses an existing string-based mock in this optional suite.",
     "fixture_portability": "test_v2v_launch3_cpu.deployed models package isolation by hiding only .git markers outside its temporary fixture tree. This supports the required in-worktree basetemp; identity tests' own and enclosing Git markers remain visible. Production provenance validation is unchanged.",
     "warnings": "Two existing non-fatal pytest warnings: cache_dir when disabling cacheprovider, and tensor-to-scalar conversion in test_v2v_int_e2e_cpu."
+  },
+  "resume_reconciliation": {
+    "date": "2026-11-04",
+    "implementation_commit": "32dc301995bc2fa8bf45f8249a78d96d5f6f6115",
+    "finding": "Round 4 implementation and required CPU suites were already completed and committed by the previous session. Reviewed the fresh qualification lifecycle, host pins, generated staging path, and end-to-end CPU test; no implementation follow-up was needed.",
+    "retained_e2e_evidence": "_out/pytest_varcollect_round4_verified/test_fresh_binding_through_rea0/worker/FRESH_QUALIFICATION.json: pass_ true; all eight startup receipts pass with zero max_cost_error and the same fresh test-process PID 40744; explicit CPU test environment recorded.",
+    "jobs": "Checked local Python/pytest process command lines; no matching Round 4 test job was running. No job or dispatch was started by the resumed session.",
+    "tests": "Preserved the completed test results above; did not rerun finished suites.",
+    "preserved_untracked_receipts": [
+      "VARCOLLECT_READY.blocked3.json",
+      "VARCOLLECT_READY.blocked4.json"
+    ],
+    "verification": "Tracked worktree and index were clean at resume; git diff --check passed before this receipt-only update."
   },
   "hard_rules_compliance": {
     "cpu_only": true,
