@@ -633,3 +633,77 @@ def test_corrupt_bound_snapshot_rejected_before_checker_dispatch():
     with pytest.raises(ValueError, match='snapshot identity'):
         pa.resolve_spot_checks(batch, checker)
     checker.assert_not_called()
+
+
+def reseal_evidence(result):
+    """Keep the receipt chain digest-valid while testing semantic mismatches."""
+    first, rec = result['first_seed_receipt'], result['confirmation']
+    first.pop('receipt_sha256')
+    result['first_seed_receipt'] = xg._seal(first, 'receipt_sha256')
+    rec['first_seed']['receipt_sha256'] = result['first_seed_receipt']['receipt_sha256']
+    rec.pop('confirmation_sha256')
+    result['confirmation'] = xg._seal(rec, 'confirmation_sha256')
+    return result
+
+
+@pytest.mark.parametrize('changes', [dict(status='failed'), dict(status='budget_blocked'),
+                                     dict(proposer='random')])
+def test_all8_examples_cannot_override_incomplete_or_wrong_arm_first_decision(changes):
+    batch = run(attempts_per_plan=1, spot_check_fraction=1.)
+    def checker(req):
+        result = evidence(req)
+        result['first_seed_receipt'].update(changes)
+        return reseal_evidence(result)
+    with pytest.raises(ValueError, match='first-seed decision'):
+        pa.resolve_spot_checks(batch, checker)
+
+
+@pytest.mark.parametrize('accepted_seeds', [(2,), (3,), (1, 2, 3)])
+def test_only_each_accepted_seeds_own_tape_and_labels_survive(accepted_seeds):
+    batch = run(attempts_per_plan=1, spot_check_fraction=1.)
+    returned = []
+    def checker(req):
+        result = evidence(req, seeds=(1, 2, 3))
+        for ex in result['confirmation']['per_seed_v1']['examples']:
+            ex['admitted'] = ex['cooperative'] = ex['seed_index'] in accepted_seeds
+        returned.extend(copy.deepcopy(result['confirmation']['per_seed_v1']['examples']))
+        return reseal_evidence(result)
+    resolved = pa.resolve_spot_checks(batch, checker)
+    assert [ex['seed_index'] for ex in resolved['examples']] == list(accepted_seeds)
+    assert [ex['verified_example'] for ex in resolved['examples']] == [
+        ex for ex in returned if ex['seed_index'] in accepted_seeds]
+    assert resolved['counts']['sumo_verified_examples'] == len(accepted_seeds)
+    assert_sealed(resolved)
+
+
+@pytest.mark.parametrize('where', ['source', 'spot_check'])
+def test_candidate_id_must_match_plan_even_when_plan_hash_matches(where):
+    def foreign_candidate(record, first, snap):
+        first['candidate_ids'] = ['foreign-candidate']
+        vid = sv.verification_id(snap['episode']['id'], snap['t0'], [dict(id='foreign-candidate')])
+        first['verification_id'] = vid
+        first.pop('receipt_sha256')
+        first = xg._seal(first, 'receipt_sha256')
+        record['verification_id'] = vid
+        record['first_seed'].update(verification_id=vid, receipt_sha256=first['receipt_sha256'])
+        record['candidates'][0]['plan_id'] = 'foreign-candidate'
+        record['per_seed_v1']['examples'][0]['tape']['verification_id'] = vid
+        record.pop('confirmation_sha256')
+        return xg._seal(record, 'confirmation_sha256'), first
+
+    src = source()
+    if where == 'source':
+        src['confirmation'], src['verification']['first_seed_receipt'] = foreign_candidate(
+            src['confirmation'], src['verification']['first_seed_receipt'], snapshot())
+        with pytest.raises(ValueError, match='candidate identity'):
+            run(src)
+    else:
+        batch = run(src, attempts_per_plan=1, spot_check_fraction=1.)
+        def checker(req):
+            result = evidence(req)
+            result['confirmation'], result['first_seed_receipt'] = foreign_candidate(
+                result['confirmation'], result['first_seed_receipt'],
+                req['verification_provenance']['snapshot_identity'])
+            return result
+        with pytest.raises(ValueError, match='candidate identity'):
+            pa.resolve_spot_checks(batch, checker)

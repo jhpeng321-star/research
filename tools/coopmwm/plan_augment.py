@@ -36,8 +36,7 @@ input. The original snapshot identity is checked against the source receipt;
 seed 2 uses replicate(snapshot, original verification_id), extra seeds use
 verify_perseed.extra_seed_salt. Augmentation verification then starts on that
 source example's OWN seed, and its second seed uses the NEW decision id.
-Neither is called by
-``augment``. There is no CLI that could accidentally launch a job.
+Neither is called by ``augment``. There is no CLI that could accidentally launch a job.
 """
 import copy
 import math
@@ -121,6 +120,9 @@ def _decision_identity(record, first, snapshot, arm):
     from .exact_grade import verify_sealed
     _sealed(record)
     verify_sealed(first, 'receipt_sha256')
+    if (first.get('status') not in ('accepted', 'rejected')
+            or first.get('proposer') != ('wm' if arm == 'B' else 'random')):
+        raise ValueError('completed own-arm first-seed decision required')
     if record.get('arm') != arm or snapshot['episode'].get('arm') != arm:
         raise ValueError('spot-check arm mismatch')
     if record.get('t0') != snapshot['t0'] or first.get('t0') != snapshot['t0']:
@@ -163,7 +165,8 @@ def _seed_identity(record, first, snapshot, k):
 
 def _example_identity(ex, record, first, snapshot):
     i = _integer(ex['candidate_index'], 'candidate_index')
-    if (i >= len(first['candidate_plan_sha256']) or digest(ex['plan']) != first['candidate_plan_sha256'][i]
+    if (i >= len(first['candidate_plan_sha256']) or ex.get('plan_id') != first['candidate_ids'][i]
+            or digest(ex['plan']) != first['candidate_plan_sha256'][i]
             or ex.get('plan_sha256') != digest(ex['plan']) or ex.get('plan_id') != ex['plan']['id']):
         raise ValueError('example candidate identity mismatch')
     snap, vid, indices = _seed_identity(record, first, snapshot, ex['seed_index'])
@@ -362,9 +365,9 @@ def augment(sources, *, arm, registration=None, score=None):
                 continue
             retained.append(dict(id='AUG'+identity[:24], arm=arm, plan=candidate, parameters=new,
                                  source_plan_id=plan['id'], source_seed_index=ex['seed_index'],
-                                  source_t_s=context['t_s'],
-                                  source_confirmation_sha256=source['confirmation']['confirmation_sha256'],
-                                  verification_provenance=copy.deepcopy(provenance),
+                                 source_t_s=context['t_s'],
+                                 source_confirmation_sha256=source['confirmation']['confirmation_sha256'],
+                                 verification_provenance=copy.deepcopy(provenance),
                                  source_example_index=source['example_index'], wm=wm,
                                  verification='wm_only', sumo_verified=False))
     n = int(math.ceil(c['spot_check_fraction']*len(retained)))
@@ -403,7 +406,8 @@ def resolve_spot_checks(batch, checker):
         if evidence.get('source_confirmation_sha256') != request['source_confirmation_sha256']:
             raise ValueError('spot-check source confirmation identity mismatch')
         _decision_identity(record, first, snapshot, out['arm'])
-        if first['candidate_plan_sha256'] != [digest(request['plan'])]:
+        if (first['candidate_ids'] != [request['plan']['id']]
+                or first['candidate_plan_sha256'] != [digest(request['plan'])]):
             raise ValueError('spot-check candidate identity mismatch')
         for ex in record['per_seed_v1']['examples']:
             if ex.get('admitted') is True and ex.get('cooperative') is True:
