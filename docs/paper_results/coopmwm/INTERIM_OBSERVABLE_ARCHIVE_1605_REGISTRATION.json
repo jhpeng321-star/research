@@ -1,0 +1,11 @@
+{
+  "authority": "MAIN 2026-11-03 16:47 completed interim/fixedfinal job observables; Nov4 disk continuation",
+  "control": "/home/ubuntu/coopmwm20261104_interim_archive1605",
+  "worker_sha256": "6d93e0cffc48e90c2b0607612c5ffb7ecf943c4b03cd99fe25906560bf6db476",
+  "eligible_files": 288,
+  "eligible_bytes": 531435666,
+  "source_scope": "/home/ubuntu/coopmwm20261104_v2v_coop3/jobs/v2vtest008_{A,B,R}_{989600..989635,990600..990659}/observable.jsonl.gz only",
+  "destination": "gpuA:/root/cpuq_archive_20261103/v2v_u8_observable1605",
+  "new_sim_s": 0,
+  "line": "\nS-COOPMWM Nov4 16:15 disjoint completed V2V-u8 observable SHA-archive registered under MAINNov3 16:47 authority: control coopmwm20261104_interim_archive1605; 288 files/531435666 bytes, only jobs/v2vtest008_*/observable.jsonl.gz; 6 local+6 Linux tests PASS/zero SUMO, original public-completion tape SHA matched, test8 complete and aged30min; qualified unchanged rolling_archive/archive_move transfer via live gpuA transport, destination /root/cpuq_archive_20261103/v2v_u8_observable1605, gpuA floor8GiB. Per64MiB batch manifest/remote sha256sum proof before fresh eligibility+FD+bank/pending-reference+identity+sourceSHA recheck/unlink. Retain RESULTs/publicreceipts/checkpoints/alltrainingtapes; outcomes stay closed; exact registered cohort; both existing movers unpaused/disjoint; bounded transport retry uses fresh namespace only. Capacity pool may not clear6GiB after concurrent writes; no guard relaxation/physics/allocation change. "
+}
