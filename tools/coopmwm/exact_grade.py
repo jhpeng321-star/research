@@ -835,6 +835,8 @@ def imitation_pairs(original, entry):
                 if events:
                     sample['lane_target_outcome'] = {v: dict(e) for v, e in events.items()
                                                      if v in sample['lane_target']}
+                elif s.get('lane_outcome') is not None:   # c4/lane-policy runtime tick outcome
+                    sample['lane_target_outcome_summary'] = dict(s['lane_outcome'])
             pairs.append((sample, entry['weight']))
     if len(pairs) != D:
         raise ValueError('committed plan extends past the recorded tape')

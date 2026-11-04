@@ -1,0 +1,78 @@
+{
+ "status": "READY",
+ "branch": "c4/lane-plans",
+ "base": "a7ae6d9a",
+ "code_commit": "5547158b",
+ "files": [
+  "tools/coopmwm/lane_plans.py (new: envelope, lane model adapter, sampling, validation, execution records, lane CE)",
+  "tools/coopmwm/mppi_search.py (lane_actions config option: search/_niche_search/sample_unscored/validate_plan/PlanLibrary; OFF byte-identical)",
+  "tools/coopmwm/coop_search.py (solo_plan carries the member lane row, additive)",
+  "tools/coopmwm/replay_bank.py (solo_candidate lane envelope filter; bank_pairs entry lane_actions)",
+  "tools/coopmwm/sumo_verify.py (build_branches lane validation; random_candidates lane_config/record (R symmetry); VerifyController audit lane counts)",
+  "tools/coopmwm/acceleration.py (Controller lane_executor + per-second sample['lane_requests'] / sample['lane_events'])",
+  "tools/coopmwm/exact_grade.py (imitation_pairs lane_target + outcomes; event-level lane_outcome fallback for the c4/lane-policy runtime)",
+  "tools/coopmwm/v2v_intent.py (attach_bank_targets intent lane targets when the entry has lane_actions)",
+  "tools/coopmwm/bank_imitation.py (AWR-weighted lane-head CE in run/run_separate; report lane_targets only when lane data present)",
+  "tools/coopmwm/niche_collect.py (validate accepts registered lane_* keys)",
+  "tools/coopmwm/plan_client.py (arm R: lane_actions_config + record rows into sample_unscored/verify_context)",
+  "tools/coopmwm/test_lane_plans_cpu.py (new)",
+  "MPPI_SEARCH_README.md (lane-actions section)"
+ ],
+ "tests": {
+  "new": "tools/coopmwm/test_lane_plans_cpu.py: 30 passed (envelope = lane_feasibility incl. ramp-zone-only merge and blocked-target-lane gap rule; unresolvable state degrades to None; lane_v5 outcome predictions; sampling inside the envelope; attach/validate structural errors; search OFF byte-identity markers; search/niche ON scored+tagged+envelope-checked; library lane reseeds; solos keep the member row; plan_distance lane-blind; Controller lane requests + executor outcomes + unbound recording; VerifyController branch audit counts; build_branches lane validation; R random_candidates same lane rule + determinism; pair lane targets + executed/blocked outcomes; intent lane channel; AWR-weighted lane-head CE with grad; bank_imitation report keys)",
+  "required_suites": [
+   "test_mppi_search_cpu: 15 passed",
+   "test_coop_search_cpu: 23 passed",
+   "test_verify_perseed_cpu: 12 passed",
+   "test_bank_{amendment,boot,builder,imitation,perseed,restore_ops,safety}_cpu: 46 passed",
+   "test_launch_final_cpu: 13 passed"
+  ],
+  "regression": [
+   "test_niche_search_cpu + test_verify_continuation_cpu: 52 passed (goldens byte-identical: OFF output unchanged)",
+   "test_awr_cpu + test_imitfix2_cpu + test_imitstrength_cpu + test_bank_imitation_cpu: 36 passed (legacy imitation reports byte-identical)",
+   "test_v2v_intent_cpu + test_replay_bank_v2v_cpu: 27 passed",
+   "test_replay_bank_confirm_cpu + test_replay_bank_lesson_cpu: 31 passed",
+   "test_sumo_verify_cpu: 18/19 (1 pre-existing env failure, present on base a7ae6d9a too: tools.leverprobe missing on Windows)",
+   "test_mppi_runtime_cpu: 18/22 (4 pre-existing env failures on base too: os.nice POSIX-only)",
+   "test_acceleration_cpu: 31/39 (8 pre-existing env failures on base too, per MPPI_SEARCH_README)"
+  ]
+ },
+ "config_keys": {
+  "lane_actions": "bool, default False. Search config key (search_config binding / record['search_config'] via niche_collect.validate). When absent or false: no lane key exists anywhere, no lane_plans import, byte-identical output.",
+  "lane_rate": "float 0..1, default 0.25. Exploration rate: probability one member of a sampled plan carries one lane-change attempt (search hyperparameter, NOT a safety rule; the acceleration analogue is the registered sigma=0.5).",
+  "lane_model": "str|None, default None. lane_v5 pre-fit checkpoint path; else $COOPMWM_LANE_MODEL; else the registered head-bias prior. The merged wms.physics.lane_learnable interface wins when present.",
+  "where": [
+   "arm B: binding search_config -> mppi_runtime.plan -> search(config=...)",
+   "arm R: job['lane_actions_config'] (plan_client R draw + sumo_verify.install random proposer)",
+   "record['search_config']: niche_collect.validate accepts registered lane_* keys"
+  ]
+ },
+ "outputs": {
+  "plan": "lane_actions (members x duration_s ints 0 keep/1 left/2 right), lane_envelope ({vid: lane/left/right from lane_feasibility at t0}), lane_predictions (per attempt: member, second_s, action, head, model_logit, model_prob), uses_lane_actions tag; plan id re-digests (lane fields are identity).",
+  "search": "out['lane_actions']=True marker + per-finalist uses_lane_actions; topk plans carry their lane fields.",
+  "verification": "branch receipt audit['lane_actions'] = {requests, issued, blocked, executed} (additive, only when a plan carries lane actions); per-second sample['lane_requests'] and sample['lane_events'] ({vid: requested/issued/blocked/executed}) on the tape; unbound executor records blocked='unbound' and is never counted as executed.",
+  "bank": "imitation pairs carry lane_target {vid: action} (+ lane_target_outcome per vid, or lane_target_outcome_summary from the runtime tick outcome); v2v_intent pairs carry intent_lane_target/intent_lane_mask (plan-relative future lane actions, action encoding 0/1/2); bank_imitation adds the AWR-weighted lane-head CE and reports lane_targets {pairs, head} only when lane data is present."
+ },
+ "safety": {
+  "envelope": "decision_envelope = wms.control.lanes.lane_feasibility on the recorded t0 state (all sensed vehicles): mainline 0<->1 only, ramp 2->1 inside [MERGE_S0_M, MERGE_S1_M] only, 1->2 never, SUMO-calibrated target-lane gap rule, dwell (unresolvable = allowed, as a fresh CAV), edge guard. NO hand-set thresholds anywhere; an unresolvable state makes the feature inert (never guesses).",
+  "execution": "lane actions are only SAMPLED inside the envelope; they are always re-judged at execution by the same model (WM lane machinery / SUMO lane-change safety model). Sampling rate 0.25 is exploration, not safety.",
+  "v2v_launch3": "no safety check touched; launch_final CPU suite passes unchanged"
+ },
+ "integration_notes_c4_lane_policy": {
+  "status_at_writing": "c4/lane-policy HEAD 14b4bdba (no LANEPOLICY_READY.json yet at writing time); NOT merged - this branch reads it only.",
+  "lane_head_contract": "ALREADY ALIGNED: v2v_lane.LanePolicy.lane_logits(context) -> [N,3] (their 132e06a8) is exactly the contract lane_plans.policy_lane_ce consumes; the merged policy trains on plan lane targets unchanged (their head-bias init -104 neutral keeps keep-seconds ~0 loss, attempts carry the gradient).",
+  "execution_path": "their coopfree.backend.tick passes controller.lane_request(env) -> CavSumoEnv.step(accel, lanes=...) (LC_MODE_POLICY, SUMO's own lane-change safety model) and records controller.observe_lane(info) -> v2v_lane.lane_outcome(counts) with the SAME keys as lane_plans.record_events (requested/issued/blocked/executed). At merge: v2v_lane.lane_targets(sample, rows) should UNION sample['lane_requests'] ({vid: keep/left/right from the active plans; this branch emits it per second} converted with LANE_SIGNED to target lanes) with the policy's sample['lane_choice']; a plan member with an active lane plan should follow the plan (the policy lane choice for committed-plan members is superseded) - owner to pin the exact precedence at merge.",
+  "outcome_bridge": "this branch already falls back to the step-level event['lane_outcome'] (their per-tick aggregate) in exact_grade.imitation_pairs when the per-vid sample['lane_events'] is absent; lane_plans.bind_executor(fn(rows, requests, now)) stays optional for callers outside the v2v runtime (Controller(lane_executor=...) also works); unbound requests are recorded, never claimed executed.",
+  "intent_lane": "representation difference to reconcile at merge: this branch's intent_lane_target uses the 3-class action encoding (0 keep/1 left/2 right, same as plan lane_actions and lane_logits); v2v_intent.lane_own_targets on c4/lane-policy uses signed deltas (-1/0/+1) of REALISED choices. Keep one convention (owner call); LANE_SIGNED maps between them.",
+  "wm_lane_model": "lane_plans.lane_model tries wms.physics.lane_learnable first (the partner interface named in the owner spec; not present at 14b4bdba), then lane_v5 LaneV5Net (pre-fit path or registered head-bias prior). When physics.lane_learnable lands it is picked up automatically (module-level attr 'model(path)').",
+  "merge_order": "merge c4/lane-policy INTO c4/lane-plans when LANEPOLICY_READY.json appears (this branch touches acceleration.py/v2v_intent.py/replay_bank.py/exact_grade.py/coopfree-free files only additively; no textual conflict expected except trivial context lines)."
+ },
+ "rules_respected": [
+  "CPU only; no SUMO/GPU/ssh; work only in E:/agent-work/c4-lane-plans (read-only peeks at c4-lane-policy)",
+  "no git reset/clean/stash-drop/push",
+  "no sealed/, holdout/heldout/cal_split/chunk5/j4b/inc1, no truth files (hetdata_truth, vType/driver/vehicle_params)",
+  "lane-change safety uses only the existing models (wms.control.lanes.LaneRules calibrated on SUMO changeLane acceptance; SUMO's own LC model at execution); no invented thresholds",
+  "new options default OFF and byte-identical when off (goldens: test_niche_search_cpu fixture, coop goldens, imitation reports all pass unchanged)",
+  "v2v_launch3 safety checks untouched (test_launch_final_cpu 13/13)"
+ ]
+}
