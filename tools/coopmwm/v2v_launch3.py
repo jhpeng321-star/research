@@ -43,11 +43,17 @@ BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
     bank_statistics='per_seed_v1',   # owner 2026-11-03 21:45 + audit: per_seed_v1 only (B and R)
     # owner 2026-11-04 00:55: B and R imitate ONLY within-seed cooperative examples (A has no bank)
     imitation_bank_filter='cooperative_only',
+    # c4/imit-strength: 'fixed' stays byte-identical; 'kl_targeted' only at a registered update
+    # boundary, for B-v2v and R-v2v together. OWNER 2026-11-04 08:52 ("yes, switch on stronger
+    # imitation now"): the pinned value is 'kl_targeted' (KL limit .045 and every check unchanged).
+    # The bank intent term switch defaults True = current behaviour.
+    imitation_step_mode='kl_targeted', v2v_intent_bank_term=True,
     # owner 2026-11-04 proposal practice_starts: DEFAULT OFF (byte-identical); the launch default
     # is OFF, and bind_runtime validates - never pins - the B/R-equal registered values, so a
     # later runtime may enable it at an update boundary. One key set serves B and R (A unchanged).
     practice_starts=False, practice_fraction=0.25, practice_repeat_cap=2)
 IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
+IMITATION_STEP_MODES = ('fixed', 'kl_targeted')
 PRACTICE_KEYS = ('practice_starts', 'practice_fraction', 'practice_repeat_cap')
 PRACTICE_FRACTIONS = (0.25,)     # registered values of practice_fraction (proposal 0.25 => 6 of 24)
 PRACTICE_REPEAT_CAPS = (1, 2)    # registered per-example repeat caps per update
@@ -286,6 +292,39 @@ def imitation_filter_for(cfg, arm):
     return have
 
 
+def imitation_step_mode_for(cfg, arm):
+    """The imitation step mode of arm B or R (c4/imit-strength; 'kl_targeted' only ever at a
+    registered update boundary, for B and R together). One key serves both arms; an optional
+    per-arm mapping cfg['imitation_step_mode_by_arm'] is accepted only when B == R == the key."""
+    have = cfg.get('imitation_step_mode', 'fixed')
+    if have not in IMITATION_STEP_MODES:
+        raise Refused('unknown imitation_step_mode ' + repr(have))
+    by_arm = cfg.get('imitation_step_mode_by_arm')
+    if by_arm is not None:
+        if not isinstance(by_arm, dict) or by_arm.get('B') != by_arm.get('R') or by_arm.get('B') != have:
+            raise Refused('imitation_step_mode must be identical for B and R: ' + repr(by_arm))
+    if arm not in ('B', 'R'):
+        raise Refused('only arms B and R have an imitation bank')
+    return have
+
+
+def intent_bank_term_for(cfg, arm):
+    """Whether the bank intent term trains arm B or R (default True = current behaviour). One key
+    serves both arms; an optional per-arm mapping cfg['v2v_intent_bank_term_by_arm'] is accepted
+    only when B == R == the key."""
+    have = cfg.get('v2v_intent_bank_term', True)
+    if not isinstance(have, bool):
+        raise Refused('v2v_intent_bank_term must be a bool: ' + repr(have))
+    by_arm = cfg.get('v2v_intent_bank_term_by_arm')
+    if by_arm is not None:
+        if (not isinstance(by_arm, dict) or not all(isinstance(by_arm.get(a), bool) for a in ('B', 'R'))
+                or by_arm.get('B') is not by_arm.get('R') or by_arm.get('B') is not have):
+            raise Refused('v2v_intent_bank_term must be identical for B and R: ' + repr(by_arm))
+    if arm not in ('B', 'R'):
+        raise Refused('only arms B and R have an imitation bank')
+    return have
+
+
 def practice_options_for(cfg, arm):
     """Registered practice_starts options of arm B or R (owner 2026-11-04 proposal).
 
@@ -324,6 +363,8 @@ def bind_runtime(value, *, root, source_root):
         if have != want or isinstance(have, bool) != isinstance(want, bool):
             raise Refused('runtime option ' + key + ' differs: ' + repr(have))
     imitation_filter_for(cfg, 'B'), imitation_filter_for(cfg, 'R')   # refuses B != R
+    imitation_step_mode_for(cfg, 'B'), imitation_step_mode_for(cfg, 'R')   # refuses B != R
+    intent_bank_term_for(cfg, 'B'), intent_bank_term_for(cfg, 'R')   # refuses B != R
     practice_options_for(cfg, 'B'), practice_options_for(cfg, 'R')   # B == R; OFF or registered ON
     if 'v2v_intent_weight' in cfg:
         raise Refused('obsolete runtime v2v_intent_weight is not an intent loss binding')
