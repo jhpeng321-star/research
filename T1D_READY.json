@@ -4,17 +4,11 @@
   "status": "READY_DRY_ONLY",
   "branch": "c4/planner-eval",
   "base_branch": "c4/track-base",
-  "base_commit": "13f184b5",
+  "base_commit": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
   "worktree": "E:/agent-work/c4-planner-eval",
   "spec": "E:/agent-work/_sol/tracks_spec.md",
-  "resume": {
-    "preserved_previous_uncommitted_files": [
-      "tools/coopmwm/planner_eval.py",
-      "tools/coopmwm/test_planner_eval_cpu.py"
-    ],
-    "previous_T1D_ready_receipt_present": false,
-    "running_T1D_jobs_found_before_testing": false
-  },
+  "review": "REVIEW_T1D_r0.md",
+  "fix_round": 1,
   "implementation_commits": [
     {
       "sha": "eb0c2763c7760232552cd0ec5a6a6cfe6c9d697f",
@@ -23,6 +17,10 @@
     {
       "sha": "68962e3ee05ed9dfe54f589baa5768d67d83b130",
       "subject": "coopmwm planner-eval: group/sample budgets, paired RNG and JSON-safe CIs"
+    },
+    {
+      "sha": "eb7a70452d33d8c084ea0f4e799ab9d06d21391d",
+      "subject": "coopmwm planner-eval: fix shared families, configurable cadence and compliant path tests"
     }
   ],
   "tracked_deliverables": [
@@ -30,48 +28,85 @@
     "tools/coopmwm/test_planner_eval_cpu.py",
     "T1D_READY.json"
   ],
+  "review_blockers": [
+    {
+      "number": 1,
+      "status": "FIXED",
+      "fix": "Canonical shared families include ease_off; legacy free and smoothing normalize to ease_off before receipt sealing. Unknown families remain refused. The T1A module is not present on this branch, so the vocabulary follows the supplied shared API specification without a runtime dependency.",
+      "regression_tests": [
+        "test_shared_move_family_receipt_round_trip (all five canonical families plus both aliases)",
+        "test_unknown_move_family_rejected_at_creation_and_validation"
+      ]
+    },
+    {
+      "number": 2,
+      "status": "FIXED",
+      "fix": "Cadence defaults to 60 seconds and preserves an explicitly registered positive integer divisor of the full 1200-second episode. Plans, jobs, budget arithmetic and job-bound trace validation use that cadence. Plan-free receipt checks validate structure without imposing the default cadence. The 300-second horizon and 0.8 probability threshold stay pinned.",
+      "regression_tests": [
+        "test_registration_cadence_defaults_to_sixty",
+        "test_registration_invalid_cadence_refused (8 cases)",
+        "test_registered_cadence_end_to_end (30, 120 and 75 seconds; dry artifacts, jobs, quote, receipt round-trip, pairing, analysis and off-cadence rejection)"
+      ]
+    },
+    {
+      "number": 3,
+      "status": "FIXED",
+      "fix": "Synthetic registrations use safe case_N.json filenames. Restricted references occur only as in-memory strings serialized inside safe registrations. A guarded write wrapper prevents restricted fixture filenames from being opened. Read spies prove nested references are refused after reading only the safe outer file; direct nonexistent restricted paths are rejected before file existence checks or reads.",
+      "regression_tests": [
+        "test_registration_guard_refuses_forbidden_and_truth_paths (all guarded tokens, safe writes and nested-reference read spy)",
+        "test_direct_restricted_paths_rejected_before_file_access"
+      ]
+    }
+  ],
   "tests": {
-    "command": "& \"C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe\" -m pytest -q tools/coopmwm/test_planner_eval_cpu.py tools/coopmwm/test_branch_eval_cpu.py::AnalysisTests -W error --basetemp _out/t1d_final_pytest",
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1"
+    },
+    "command": "& \"C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe\" -m pytest -q tools/coopmwm/test_planner_eval_cpu.py tools/coopmwm/test_branch_eval_cpu.py::AnalysisTests -W error -o cache_dir=_out/t1d_fix_r1_cache --basetemp \"_out/t1d_fix_r1_pytest\"",
     "exit_code": 0,
-    "passed": 81,
-    "planner_eval_tests": 78,
+    "passed": 101,
+    "planner_eval_tests": 98,
     "existing_bootstrap_dependency_tests": 3,
+    "failed": 0,
+    "skipped": 0,
+    "deselected": 0,
     "warnings": 0,
-    "seconds": 26.29,
-    "coverage": [
-      "Strict registration, unique seeds, normalized hashes, planner and analysis settings",
-      "Identical world and auxiliary noise seeds in both arms; complete job pairing",
-      "Full-episode SUMO quote and separately qualified multi-group/multi-sample WM quote",
-      "Signed receipt schema, complete safety counters, finite values, registered job binding",
-      "Multi-group decision traces, calibrated probability threshold, 1..4 unique members, full horizon",
-      "Per-world collision/teleport constraints and combined TTC/hard-braking gate",
-      "Paired whole-world bootstrap confidence intervals, known effects and null effects",
-      "Missing/duplicate/foreign receipts and rehashed-but-inconsistent metadata refused",
-      "Zero-delay outcomes use JSON null for undefined percentages; safety CIs have no divide-by-zero warnings",
-      "Forbidden input/output paths and resolved aliases refused before reading",
-      "Dry output overwrite refusal, one registration read, zero simulation charge"
-    ]
+    "seconds": 29.47,
+    "regression_before_fix": {
+      "command": "& \"C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe\" -m pytest -q tools/coopmwm/test_planner_eval_cpu.py -k \"shared_move_family or registered_cadence_end_to_end or cadence_defaults or registration_guard_refuses or direct_restricted_paths\" -W error -o cache_dir=_out/t1d_fix_r1_cache --basetemp \"_out/t1d_fix_r1_regression_before\"",
+      "expected_failures": 11,
+      "passed": 2,
+      "deselected": 85,
+      "exit_code": 1,
+      "note": "New family/cadence regressions failed against the pre-fix implementation; the repaired compliant path tests passed. Full final selection above passes without exclusions."
+    },
+    "diff_check": "git diff --check c4/track-base -- tools/coopmwm/planner_eval.py tools/coopmwm/test_planner_eval_cpu.py passed"
   },
   "dry_run": {
-    "command": "& \"C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe\" -m tools.coopmwm.planner_eval dry_run --registration _out/t1d_registration_smoke.json --out _out/t1d_final_dry_run",
+    "command": "& \"C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe\" -m tools.coopmwm.planner_eval dry_run --registration \"_out/t1d_fix_r1_registration.json\" --out \"_out/t1d_fix_r1_dry_run\"",
     "exit_code": 0,
-    "fixture_kind": "Synthetic CPU smoke registration; no evaluation seed registry was read",
-    "registration_file": "_out/t1d_registration_smoke.json",
+    "fixture_kind": "Synthetic CPU-only smoke registration; no evaluation seed registry read",
+    "registration_file": "_out/t1d_fix_r1_registration.json",
     "worlds": 2,
     "jobs": 4,
-    "plan_file": "_out/t1d_final_dry_run/PLANNER_EVAL_PLAN.json",
-    "jobs_file": "_out/t1d_final_dry_run/PLANNER_EVAL_JOBS.jsonl",
-    "plan_sha256": "f325963fe9be9951d64c59d25eeb61008fba33724475421192ac9792769b3f41",
+    "decision_interval_s": 120,
+    "decisions_per_episode": 10,
+    "lookahead_s": 300,
+    "p_star": 0.8,
+    "plan_file": "_out/t1d_fix_r1_dry_run/PLANNER_EVAL_PLAN.json",
+    "jobs_file": "_out/t1d_fix_r1_dry_run/PLANNER_EVAL_JOBS.jsonl",
+    "plan_sha256": "aeeb3e089602b54734b6977377bba57c781467ec20ee522a8821b476aaae6c9d",
     "quoted_future_sumo_sim_s": 4800,
-    "quoted_wm_rollout_s_per_group_per_sample": 108000,
+    "quoted_wm_rollout_s_per_group_per_sample": 54000,
     "registered_wm_samples": 5,
     "registered_groups_per_decision_upper_bound": 3,
-    "quoted_total_wm_rollout_s": 1620000,
+    "quoted_total_wm_rollout_s": 810000,
     "new_sim_s": 0,
     "sim_s_charged": 0,
     "calibration_pinned": false,
-    "dispatch_supported": false,
-    "artifact_note": "Smoke inputs and generated artifacts are local worktree outputs; implementation and this receipt are tracked."
+    "dispatch_supported": false
   },
   "api": {
     "module": "tools.coopmwm.planner_eval",
@@ -87,9 +122,9 @@
       "budget_quote(n_worlds, k_candidates=None, episode_end_s=1200, decision_interval_s=60, lookahead_s=300, wm_samples=None, groups_per_decision=None) -> quote"
     ],
     "receipts": [
-      "make_receipt(job, outcome) -> signed receipt",
-      "validate_receipt(record, job=None) -> True or ValueError",
-      "pair_receipts(records, plan) -> seed-to-(PLANNER, MAPPO) pairs"
+      "make_receipt(job, outcome) -> signed receipt with canonical move families",
+      "validate_receipt(record, job=None) -> True or ValueError; job required for cadence/group-bound validation",
+      "pair_receipts(records, plan) -> seed-to-(PLANNER, MAPPO) pairs, always job-bound"
     ],
     "analysis": [
       "safety_delta(treatment, comparator) -> counter deltas",
@@ -111,15 +146,21 @@
     "schema": "coopmwm/planner_eval/registration/v1",
     "required_keys": ["schema", "worlds", "planner", "episode", "analysis"],
     "worlds": "At least two unique positive integer seed objects. Optional demand/penetration metadata must be present on every world if used.",
-    "planner": {"decision_interval_s": 60, "p_star": 0.8, "lookahead_s": 300},
+    "planner": {
+      "decision_interval_s": "Optional; default 60. Positive integer divisor of 1200, preserved when explicitly supplied.",
+      "p_star": 0.8,
+      "lookahead_s": 300
+    },
     "optional_planner_keys": {
       "k_candidates": "Positive integer; quoted rollouts also include the none comparator",
       "wm_samples": "Integer >= 2",
       "groups_per_decision": "Positive integer group-count upper bound"
     },
+    "move_families": ["ease_off", "wall", "gap_open", "ramp_assist", "none"],
+    "move_family_aliases": {"free": "ease_off", "smoothing": "ease_off"},
     "episode": {"end_s": 1200},
     "analysis": {"n_boot": 10000, "boot_seed": 20261101, "alpha": 0.05},
-    "optional_calibration": "Object with path and lowercase 64-character sha256. Reference only: no calibration artifact is opened by this harness.",
+    "optional_calibration": "Path plus lowercase 64-character sha256, reference only; never opened here",
     "optional_note": "String",
     "unknown_keys": "Refused",
     "seed_source": "Only the registration file explicitly passed by the caller"
@@ -129,9 +170,9 @@
     "primary_metric": "team_delay_vs",
     "contrast": "PLANNER minus MAPPO; negative means improved delay",
     "bootstrap": "10000 paired whole-world resamples, numpy default_rng(20261101), percentile 95% CI and two-sided CI-inversion p",
-    "completeness": "Every registered world x arm exactly once, with signed receipts bound to the generated jobs",
+    "completeness": "Every registered world x arm exactly once, with signed receipts bound to generated jobs",
     "safety_counters": ["collisions", "teleports", "ttc_below_3_vs", "ttc_below_1p5_events", "hard_brake"],
-    "safety_gate": "Per world: collisions and teleports must not increase; hard_brake plus ttc_below_1p5_events must not increase. Each counter also receives a descriptive paired CI.",
+    "safety_gate": "Per world: collisions/teleports must not increase; hard_brake plus ttc_below_1p5_events must not increase. Descriptive paired CIs for every counter.",
     "receipt_schema": "coopmwm/planner_eval/receipt/v1",
     "analysis_schema": "coopmwm/planner_eval/analysis/v1",
     "hash_interoperability": "Canonical SHA-256 sealing interoperates with exact_grade.verify_sealed"
@@ -144,13 +185,14 @@
     "ssh_or_remote_used": false,
     "gpu_used": false,
     "restricted_seed_or_truth_files_opened": false,
+    "all_fix_round_writes_inside_worktree": true,
     "shared_modules_modified": false
   },
   "open_issues": [],
   "later_operator_inputs": [
-    "Supply the actual registration file; the included local smoke fixture is synthetic.",
+    "Supply the actual registration file; this smoke fixture is synthetic.",
     "Pin the T1C calibration path and sha256 for the planned PLANNER arm.",
-    "Register candidate/sample/group counts for a complete WM rollout quote. Without all three, the total WM quote is explicitly unknown.",
-    "Execution belongs to a later separately authorized executor; this module only builds, quotes, validates receipts and analyzes them."
+    "Register candidate/sample/group counts for a complete WM quote; missing counts report unknown total.",
+    "A later separately authorized executor is required for live evaluation."
   ]
 }
