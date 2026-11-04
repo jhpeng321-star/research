@@ -25,7 +25,10 @@ def profile_table(actions, ids, device, horizon=300, dynamic_policy=False):
             for v,x in background.items():
                 if v in slots:
                     raw[b,t,slots[v]]=x;mask[b,t,slots[v]]=True;residual[b,t,slots[v]]=True
-            if 'knots' in a or 'profile' in a:
+            if 'offset_profile' in a:
+                # T1B opt-in: relative to the dynamically continued base actor.
+                values=a['offset_profile'][t] if t<len(a['offset_profile']) else {};is_residual=True
+            elif 'knots' in a or 'profile' in a:
                 values=acceleration_at(a,t);is_residual=False
             else:
                 values=a.get('residuals',{}) if t<a.get('window',0) and not dynamic_policy else {};is_residual=True
