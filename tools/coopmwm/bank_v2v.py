@@ -224,8 +224,12 @@ def attach_pairs(pairs, trace_path, t0, cfg=None, intent=None):
             continue
         context = sample.setdefault('context', {})
         members = list(context.get('members') or sample['behaviour']['proposal_members'])
-        block, missing = pair_v2v_block(frame, prev, members, cfg, None if intent is None else
-                                        dict(horizon=intent['horizon'], board={}))
+        block_intent = None
+        if intent is not None:
+            block_intent = dict(horizon=intent['horizon'], board={})
+            if 'lane_board' in intent:      # lane_actions ON: partner LANE intent slots ride along
+                block_intent['lane_board'] = intent['lane_board']
+        block, missing = pair_v2v_block(frame, prev, members, cfg, block_intent)
         if missing:
             counts['excluded_missing_partner_command'] += 1
             continue

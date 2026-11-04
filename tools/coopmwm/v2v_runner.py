@@ -22,11 +22,14 @@ def remote_name(path):
 
 def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v2v_dim,
             active_arms=ARMS, v2v_intent=False, v2v_intent_horizon=5, v2v_intent_loss_weight=1.,
-            v2v_intent_detach_trunk=True):
+            v2v_intent_detach_trunk=True, lane_actions=False):
     """Prospective binding only: no directory, checkpoint, ledger or job mutation.
 
     ``v2v_intent`` (default False = unchanged binding) adds the planned-command intent keys,
     identical for every arm; ``v2v_dim`` must then be the intent block width K*(6+H+1).
+    ``lane_actions`` (c4/lane-policy, default False) requires v2v_intent and additionally pins
+    the launcher's LANE_OPTIONS (identical for every arm); ``v2v_dim`` must then be the lane
+    block width K*(6+2H+2).
     """
     root, legacy_root = remote_name(root), remote_name(legacy_root)
     if root == legacy_root:
@@ -67,10 +70,15 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
         cfg.pop(key, None)
     if v2v_intent:
         from .v2v_intent import settings
+        if lane_actions:
+            from .v2v_launch3 import LANE_OPTIONS
+            cfg.update(LANE_OPTIONS)
         cfg.update(v2v_intent=True, v2v_intent_horizon=int(v2v_intent_horizon),
                    v2v_intent_loss_weight=float(v2v_intent_loss_weight),
                    v2v_intent_detach_trunk=bool(v2v_intent_detach_trunk))
-        settings(cfg)  # validates v2v_dim against the intent block width
+        settings(cfg)  # validates v2v_dim against the intent/lane block width
+    elif lane_actions:
+        raise ValueError('lane_actions requires the v2v_intent runtime (shared intent board)')
     return cfg
 
 
@@ -97,10 +105,9 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
                   v2v_dim=dim, v2v_intent=True,
                   v2v_intent_horizon=INTENT_OPTIONS['v2v_intent_horizon'],
                   v2v_intent_loss_weight=INTENT_OPTIONS['v2v_intent_loss_weight'],
-                  v2v_intent_detach_trunk=INTENT_OPTIONS['v2v_intent_detach_trunk'])
+                  v2v_intent_detach_trunk=INTENT_OPTIONS['v2v_intent_detach_trunk'],
+                  lane_actions=lane)
     cfg.update(BANK_OPTIONS)
-    if lane:
-        cfg.update(LANE_OPTIONS)
     # owner 2026-11-04 00:55: identical for B and R; the V2V runtime pins 'cooperative_only'
     cfg['imitation_bank_filter'] = imitation_bank_filter
     # c4/imit-strength: identical for B and R; a non-pinned value refuses (registered flip only)

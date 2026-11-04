@@ -354,11 +354,16 @@ def load_checkpoint(path, config):
         optimizer.load_state_dict(saved['optimizer'])
         return policy, optimizer, _rng_payload(saved), saved
     if lane['intent'] is not None:
+        # The lane-aware intent loader lands u0/v2v-only/intent checkpoints on the lane block
+        # (command intent head attached, Adam kept/re-gridded/fresh per MAIN decision I1).
         from .v2v_intent import load_checkpoint as intent_load
         policy, optimizer, generator, payload = intent_load(path, config)
-    else:
-        from .v2v_model import load_checkpoint as widened
-        policy, optimizer, generator, payload = widened(path, v2v_dim=V2V_DIM)
+        if not isinstance(policy, LaneIntentPolicy):
+            convert(policy, lane)
+            optimizer = with_head(policy, optimizer)
+        return policy, optimizer, generator, payload
+    from .v2v_model import load_checkpoint as widened
+    policy, optimizer, generator, payload = widened(path, v2v_dim=V2V_DIM)
     convert(policy, lane)
     return policy, with_head(policy, optimizer), generator, payload
 

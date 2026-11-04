@@ -178,13 +178,19 @@ def intent_model(policy, depth=4):
 
 
 def convert(policy, horizon, loss_weight=DEFAULT_LOSS_WEIGHT, bounds=ACCEL_BOUNDS,
-            detach_trunk=DEFAULT_DETACH_TRUNK):
-    """Turn an already v2v-widened (block width K*(6+H+1)) base policy into an IntentPolicy in place."""
+            detach_trunk=DEFAULT_DETACH_TRUNK, lane=False):
+    """Turn an already v2v-widened base policy into an IntentPolicy in place.
+
+    ``lane=True`` (``lane_actions`` ON) expects the lane block width K*(6+2H+2); the lane heads
+    themselves are attached afterwards by ``v2v_lane.convert``."""
     width = int(policy.actor[0].weight.shape[1])-FEATURES-4
-    if width != v2v_intent_dim(V2V_K, horizon):
-        raise ValueError(f'widened width {width} != intent block width {v2v_intent_dim(V2V_K, horizon)}')
+    expected = lane_intent_dim(V2V_K, horizon) if lane else v2v_intent_dim(V2V_K, horizon)
+    if width != expected:
+        raise ValueError(f'widened width {width} != intent block width {expected}')
     policy.__class__ = IntentPolicy
     policy._attach_intent(horizon, loss_weight, bounds, detach_trunk)
+    if lane:
+        policy.v2v_width = expected
     return policy
 
 
@@ -202,38 +208,66 @@ def with_head(policy, optimizer):
     return rebuilt
 
 
-def _regrid(tensor, horizon):
-    """v2v-only (6 per partner) input columns -> intent layout (6 + H + 1 per partner), zero gaps."""
+def _regrid(tensor, horizon, lane=False):
+    """v2v-only (6 per partner) input columns -> intent layout (6 + H + 1 per partner), zero gaps.
+
+    ``lane=True`` re-grids to the lane layout (6 + 2H + 2 per partner; the lane columns start
+    zero)."""
     width = len(V2V_PARTNER_FEATURES)
-    old, new = V2V_K*width, v2v_intent_dim(V2V_K, horizon)
+    stride = width+(2*horizon+2 if lane else horizon+1)
+    old, new = V2V_K*width, V2V_K*stride
     out = torch.zeros(*tensor.shape[:-1], tensor.shape[-1]-old+new, dtype=tensor.dtype)
     out[..., :FEATURES] = tensor[..., :FEATURES]
     for slot in range(V2V_K):
-        dst = FEATURES+slot*(width+horizon+1)
+        dst = FEATURES+slot*stride
         out[..., dst:dst+width] = tensor[..., FEATURES+slot*width:FEATURES+(slot+1)*width]
     out[..., FEATURES+new:] = tensor[..., FEATURES+old:]
     return out
 
 
-def _from_v2v_only(policy, optimizer, horizon):
-    """Re-grid a v2v-only (block 24) policy and its Adam moments to the intent block width."""
+def _fresh_regrid(policy, optimizer, horizon, lane=False):
+    """Re-grid an intent-family policy's widened inputs (+ Adam moments) to ``horizon``'s layout.
+
+    ``lane=True`` targets the lane block (K*(6+2H+2)) and starts the LANE input columns from a
+    fresh Adam state (MAIN decision I1)."""
     index = {id(p): i for i, p in enumerate(policy.parameters())}
     state = optimizer.state_dict()
     for head in ('actor', 'critic'):
         layer = getattr(policy, head)[0]
         i = index[id(layer.weight)]
-        layer.weight = nn.Parameter(_regrid(layer.weight.detach(), horizon))
+        layer.weight = nn.Parameter(_regrid(layer.weight.detach(), horizon, lane))
         for key, value in state['state'].get(i, {}).items():
             if torch.is_tensor(value) and value.dim() == 2:
-                state['state'][i][key] = _regrid(value, horizon)
+                state['state'][i][key] = _regrid(value, horizon, lane)
             elif key == 'v2v_column_offset' and torch.is_tensor(value) and value.dim() == 1:
-                state['state'][i][key] = _regrid(value, horizon)   # fresh-column bookkeeping (I1)
+                state['state'][i][key] = _regrid(value, horizon, lane)   # fresh-column bookkeeping (I1)
     from .v2v_model import install_fresh_columns, mark_fresh_columns
     rebuilt = install_fresh_columns(torch.optim.Adam(policy.parameters(), lr=3e-4))
     rebuilt.load_state_dict(state)
     # MAIN decision I1: the new partner-intent columns start from a fresh Adam state (step 0).
-    cols = [FEATURES+c for c in intent_columns(V2V_K, horizon)]
+    columns = lane_intent_columns if lane else intent_columns
+    cols = [FEATURES+c for c in columns(V2V_K, horizon)]
     return mark_fresh_columns(rebuilt, policy, dict(actor=cols, critic=cols))
+
+
+def _from_v2v_only(policy, optimizer, horizon, lane=False):
+    """Re-grid a v2v-only (block 24) policy and its Adam moments to the intent(-lane) width."""
+    return _fresh_regrid(policy, optimizer, horizon, lane)
+
+
+def _intent_checkpoint_to_lane(saved, s, lane):
+    """A saved 48-wide intent checkpoint under a lane_actions-ON config: re-grid the widened
+    inputs to the lane block (K*(6+2H+2)), keep the command intent head, attach the lane heads."""
+    import random
+    policy = IntentPolicy(s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'])
+    policy.load_state_dict(saved['policy'])
+    from .v2v_model import install_fresh_columns
+    optimizer = install_fresh_columns(torch.optim.Adam(policy.parameters(), lr=3e-4))
+    optimizer.load_state_dict(saved['optimizer'])
+    optimizer = _fresh_regrid(policy, optimizer, s['horizon'], lane=True)
+    from .v2v_lane import convert
+    convert(policy, lane)
+    return policy, optimizer
 
 
 def load_checkpoint(path, config):
@@ -241,15 +275,26 @@ def load_checkpoint(path, config):
 
     u0 and v2v-only checkpoints are widened with ZERO intent input columns and a zero head,
     so the executed actions equal the current v2v policy; Adam moments are kept/re-gridded.
-    """
+    With ``lane_actions`` ON (config) everything lands on the lane block width and the lane
+    heads are attached with their neutral init (``v2v_lane.convert``)."""
     import random
     s = settings(config)
     if s is None:
         raise ValueError('v2v_intent loader requires v2v_intent=True')
+    lane = bool(config.get('lane_actions'))
     saved = torch.load(path, map_location='cpu', weights_only=False)
     if 'intent_head.weight' in saved['policy']:
         if int(saved['policy']['intent_head.weight'].shape[0]) != s['horizon']:
             raise ValueError('intent checkpoint horizon differs from v2v_intent_horizon')
+        if lane:
+            lane_settings = _lane_settings(config)
+            policy, optimizer = _intent_checkpoint_to_lane(saved, s, lane_settings)
+            generator = torch.Generator()
+            generator.set_state(saved['generator'])
+            torch.set_rng_state(saved['torch_rng'])
+            np.random.set_state(saved['numpy_rng'])
+            random.setstate(saved['python_rng'])
+            return policy, optimizer, generator, saved
         policy = IntentPolicy(s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'])
         policy.load_state_dict(saved['policy'])
         from .v2v_model import install_fresh_columns
@@ -265,11 +310,20 @@ def load_checkpoint(path, config):
     width = int(saved['policy']['actor.0.weight'].shape[1])-BASE_INPUT['actor']
     if width == V2V_K*len(V2V_PARTNER_FEATURES):
         policy, optimizer, generator, payload = widened(path, v2v_dim=width)
-        optimizer = _from_v2v_only(policy, optimizer, s['horizon'])
+        optimizer = _from_v2v_only(policy, optimizer, s['horizon'], lane)
     else:
         policy, optimizer, generator, payload = widened(path, v2v_dim=s['dim'])
-    convert(policy, s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'])
+    convert(policy, s['horizon'], s['loss_weight'], s['bounds'], s['detach_trunk'], lane=lane)
+    if lane:
+        from .v2v_lane import convert as lane_convert
+        lane_convert(policy, _lane_settings(config))
     return policy, with_head(policy, optimizer), generator, payload
+
+
+def _lane_settings(config):
+    """Resolved lane settings for the lane-aware loader paths (None when lane_actions off)."""
+    from .v2v_lane import settings as lane_settings
+    return lane_settings(config)
 
 
 def from_weights(weights, *, enabled=False):

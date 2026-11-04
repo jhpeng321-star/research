@@ -102,6 +102,9 @@ def update(policy,optimizer,episodes,generator,epochs=4,awr=None):
     intent=ppo_setup(policy,episodes)  # None unless an IntentPolicy (v2v_intent ON)
     from .v2v_lane import ppo_setup as lane_ppo_setup
     lane=lane_ppo_setup(policy,episodes)  # None unless a lane-head policy (lane_actions ON)
+    def close(metrics):
+        if lane is not None and metrics:metrics[-1]['lane']=lane.stats()
+        return metrics if intent is None else intent.close(metrics)
     metrics=[]
     for _ in range(epochs):
         for idx in torch.randperm(len(records),generator=generator).split(128):
@@ -133,9 +136,8 @@ def update(policy,optimizer,episodes,generator,epochs=4,awr=None):
                 own_policy_steps=len(own_indices),critic_steps=len(samples),awr_positive_steps=sum(w>0 for w in weights),
                 loss_rule='MAIN0201 own PPO; positive completed-plan AWR; all-step critic'))
             if lane is not None:metrics[-1]['lane_entropy']=lane.last_entropy
-            if kl>.045:return metrics if intent is None else intent.close(metrics)
-    if lane is not None and metrics:metrics[-1]['lane']=lane.stats()
-    return metrics if intent is None else intent.close(metrics)
+            if kl>.045:return close(metrics)
+    return close(metrics)
 
 
 def evidence(episodes):
