@@ -238,7 +238,7 @@ def test_observable_sumo_rewards_update_layer_and_trigger_freeze_base(cfg, monke
     layer_targets = []
     layer_update = p.layer.update_rewards
     def capture_layer(records, **kwargs):
-        layer_targets.extend(r['rewards'] for r in records)
+        layer_targets.extend(r['returns'] for r in records)
         return layer_update(records, **kwargs)
     monkeypatch.setattr(p.layer, 'update_rewards', capture_layer)
     update = tb.ppo_update
@@ -249,13 +249,189 @@ def test_observable_sumo_rewards_update_layer_and_trigger_freeze_base(cfg, monke
     result = hooks['train_update'](episodes, rewards=reward_result(cfg, s, arm))
     assert result['layer'][0]['accepted']
     assert result['trigger'][0]['cav_count'] == 2
-    assert targets == [([1.25, -1.], [1.25, -1.])]
-    assert layer_targets == [[1.25, -1.]]
+    expected_returns = [1.25/tb.UNIT, -1./tb.UNIT]
+    expected_advantages = [r-v for r, v in zip(expected_returns, s['track2_trigger']['values'])]
+    assert targets == [(expected_advantages, expected_returns)]
+    assert layer_targets == [expected_returns]
     assert result['dense'] == result['wm_credit'] == dict(enabled=False)
     assert result['reward']['registration'] == cfg['track2_reward']
     assert any(not torch.equal(weights[k], v) for k, v in p.layer.residual.state_dict().items())
     assert all(torch.equal(before[k], v) for k, v in p.layer.base.state_dict().items())
     assert all(v.grad is None and not v.requires_grad for v in p.layer.base.parameters())
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_production_delayed_onset_full_hold_outcomes_train_originating_trigger(cfg, monkeypatch, arm):
+    """Same real rollout/actions, opposite later outcomes must teach both heads."""
+    fake_load(monkeypatch)
+    cfg['trigger_ppo']['entropy_weight'] = 0.  # isolate the reward-dependent update
+    def candidates(state, rng, n):
+        # Only the candidate boundary is fake: T1A legal registered parameters.
+        return [tb.TriggerMove(tb.moves.Move('ease_off', (state['self'],), 2, 20, .3))
+                for _ in range(n)]
+    monkeypatch.setattr(tb.MoveAPI, 'candidates', staticmethod(candidates))
+    snapshots, tapes, learning_targets = [], [], []
+    for sign in (-1., 1.):
+        runtime = tb.build_arm_runtime(cfg, arm)['runtime']
+        runtime.safety_checked = True
+        p = runtime.policy
+        with torch.no_grad():
+            p.layer.trigger_gain.fill_(.5)
+            p.trigger.trigger_value.weight.zero_()
+            p.trigger.trigger_value.bias.zero_()
+        frozen = deepcopy(p.layer.base.state_dict())
+        job = dict(track2_backend=True, track2_config=cfg, arm=arm,
+                   track2_state=p.worker_state(), noise_seed=123)
+        worker, factory = tb.episode_components(job, p.layer.base, controller_class(Controller))
+        controller = factory(worker, torch.Generator().manual_seed(9), False)
+        steps, reward_rows = [], []
+        for t in range(300, 364):  # includes onset, complete hold, and next decision
+            controller.apply(rows(), {'c1': 0., 'c2': 0.}, t)
+            s = controller.events[-1]['sample']
+            steps.append(dict(time_s=t, sample=s))
+            outcome = sign if 302 <= t < 322 or t == 363 else 0.
+            envelope = reward_result(cfg, s, arm,
+                outcomes={v: outcome for v in ('c1', 'c2', 'h1')})
+            for row in envelope['rows']:
+                row['time_s'] = t
+            reward_rows.extend(envelope['rows'])
+        first = steps[0]['sample']['track2_trigger']
+        assert all(action > 0 for action in first['actions'])
+        assert all(first['accepted'].values())
+        assert steps[0]['sample']['context']['move_offsets'] == dict(c1=0., c2=0.)
+        assert steps[1]['sample']['context']['move_offsets'] == dict(c1=0., c2=0.)
+        for step in steps[2:22]:
+            assert step['sample']['context']['move_offsets'] == dict(c1=-.3, c2=-.3)
+        assert steps[22]['sample']['context']['move_offsets'] == dict(c1=0., c2=0.)
+        assert 'track2_trigger' in steps[60]['sample']
+        tapes.append(json.dumps(steps, sort_keys=True))
+        monkeypatch.setattr(runtime, 'bank_pairs', lambda: ([], {}))
+        captured = []
+        update = tb.ppo_update
+        def capture(model, optimizer, batch, advantages, returns, **kw):
+            captured.append((list(advantages), list(returns)))
+            return update(model, optimizer, batch, advantages, returns, **kw)
+        with monkeypatch.context() as patch:
+            patch.setattr(tb, 'ppo_update', capture)
+            report = runtime.train([dict(id='ep1', arm=arm, steps=steps, actual_sim_s=364)],
+                rewards=dict(schema=tb.REWARD_SCHEMA, arm=arm, update=1, rows=reward_rows))
+        expected = sign*1.5/tb.UNIT*(sum(tb.GAMMA**j for j in range(2, 22))+tb.GAMMA**63)
+        assert captured[0][0] == pytest.approx([expected]*2)
+        assert captured[0][1] == pytest.approx([expected]*2)
+        assert all(metric['accepted'] for metric in report['trigger'])
+        assert report['layer'][0]['accepted']
+        assert report['reward']['temporal']['gamma'] == tb.GAMMA
+        assert all(torch.equal(v, p.layer.base.state_dict()[k]) for k, v in frozen.items())
+        assert all(v.grad is None and not v.requires_grad for v in p.layer.base.parameters())
+        learning_targets.append(captured)
+        snapshots.append((deepcopy(p.trigger.trigger_head.state_dict()),
+                          deepcopy(p.trigger.trigger_value.state_dict()),
+                          deepcopy(p.layer.residual.state_dict())))
+    assert tapes[0] == tapes[1]
+    assert learning_targets[0] != learning_targets[1]
+    for minus, plus in zip(snapshots[0], snapshots[1]):
+        assert any(not torch.equal(v, plus[k]) for k, v in minus.items())
+
+
+def test_temporal_targets_preserve_cav_lifetimes_order_terminals_and_episode_boundaries(cfg, monkeypatch):
+    fake_load(monkeypatch)
+    runtime = tb.build_arm_runtime(cfg, 'B')['runtime']
+    def step(t, members, *, terminal=False, values=None):
+        s = dict(context=dict(members=members))
+        if values is not None:
+            s['track2_trigger'] = dict(values=values)
+        return dict(time_s=t, sample=s, terminated=terminal)
+    episodes = [dict(id='one', steps=[
+        step(300, ['c1', 'c2'], values=[.1, -.2]),
+        step(301, ['c2', 'c1']),  # changing order must not swap identity
+        step(302, ['c2']),        # c1 departs
+        step(303, ['c1', 'c2'], terminal=True),  # a new c1 lifetime
+        step(304, ['c1', 'c2'])]), dict(id='two', steps=[step(300, ['c1', 'c2'])])]
+    rewards = {('one', 300): [1., 10.], ('one', 301): [20., 2.],
+        ('one', 302): [30.], ('one', 303): [100., 40.], ('one', 304): [1000., 1000.],
+        ('two', 300): [-500., -500.]}
+    returns, advantages = runtime._temporal_targets(episodes, rewards)
+    assert returns['one', 300] == pytest.approx([
+        (1+tb.GAMMA*2)/tb.UNIT,
+        (10+tb.GAMMA*20+tb.GAMMA**2*30+tb.GAMMA**3*40)/tb.UNIT])
+    assert returns['one', 301][1] == 2/tb.UNIT
+    assert returns['one', 303] == [100/tb.UNIT, 40/tb.UNIT]
+    assert returns['two', 300] == [-500/tb.UNIT]*2
+    assert advantages['one', 300] == pytest.approx([
+        returns['one', 300][0]-.1, returns['one', 300][1]+.2])
+
+
+@pytest.mark.parametrize('boundary', ['executed', 'all_departed'])
+def test_nonoptimizable_tick_outcomes_and_departure_boundaries(cfg, monkeypatch, boundary):
+    fake_load(monkeypatch)
+    runtime = tb.build_arm_runtime(cfg, 'B')['runtime']
+    runtime.safety_checked = True
+    _, s, _ = sample(cfg)
+    later = deepcopy(s)
+    later.pop('track2_trigger')
+    if boundary == 'executed':
+        later['behaviour'] = dict(executed=True)
+    else:
+        later['context']['members'] = []
+    episode = dict(id='ep1', arm='B', steps=[dict(time_s=300, sample=s), dict(time_s=301, sample=later)])
+    envelope = reward_result(cfg, s, outcomes=dict(c1=0., c2=0., h1=0.))
+    delayed = reward_result(cfg, later, outcomes=dict(c1=2., c2=2., h1=2.))
+    for row in delayed['rows']:
+        row['time_s'] = 301
+    envelope['rows'] += delayed['rows']
+    captures = []
+    update = runtime.policy.layer.update_rewards
+    def capture(records, **kwargs):
+        captures.extend(records)
+        return update(records, **kwargs)
+    monkeypatch.setattr(runtime.policy.layer, 'update_rewards', capture)
+    monkeypatch.setattr(runtime, 'bank_pairs', lambda: ([], {}))
+    result = runtime.train([episode], rewards=envelope)
+    assert len(captures) == 1
+    assert captures[0]['returns'] == pytest.approx([
+        tb.GAMMA*3/tb.UNIT if boundary == 'executed' else 0.]*2)
+    assert result['reward']['cav_rows'] == (4 if boundary == 'executed' else 2)
+
+
+@pytest.mark.parametrize('failure', ['gap', 'suffix', 'truncated_episode', 'truncated_step',
+    'value_count', 'value_nonfinite', 'duplicate_members', 'duplicate_episode', 'missing_later_reward'])
+def test_invalid_temporal_tapes_refuse_before_optimizer(cfg, monkeypatch, failure):
+    fake_load(monkeypatch)
+    runtime = tb.build_arm_runtime(cfg, 'B')['runtime']
+    runtime.safety_checked = True
+    _, s, _ = sample(cfg)
+    episode = dict(id='ep1', arm='B', steps=[dict(time_s=300, sample=s)])
+    envelope = reward_result(cfg, s)
+    if failure == 'gap':
+        later = deepcopy(episode['steps'][0])
+        later['time_s'] = 302
+        episode['steps'].append(later)
+        extra = deepcopy(envelope['rows'])
+        for row in extra:
+            row['time_s'] = 302
+        envelope['rows'] += extra
+    elif failure == 'suffix':
+        episode['actual_sim_s'] = 1200
+    elif failure == 'truncated_episode':
+        episode['truncated'] = True
+    elif failure == 'truncated_step':
+        episode['steps'][0]['truncated'] = True
+    elif failure == 'value_count':
+        s['track2_trigger']['values'].pop()
+    elif failure == 'value_nonfinite':
+        s['track2_trigger']['values'][0] = float('nan')
+    elif failure == 'missing_later_reward':
+        later = deepcopy(episode['steps'][0])
+        later['time_s'] = 301
+        later['sample']['behaviour'] = dict(executed=True)
+        episode['steps'].append(later)
+    elif failure == 'duplicate_episode':
+        pass  # checked below at the train boundary
+    else:
+        s['context']['members'].append('c1')
+    monkeypatch.setattr(runtime.policy.layer, 'update_rewards', lambda *a, **k: pytest.fail('optimized'))
+    with pytest.raises(ValueError):
+        runtime.train([episode]* (2 if failure == 'duplicate_episode' else 1), rewards=envelope)
 
 
 @pytest.mark.parametrize('kwargs', [dict(labels=[dict(calibrated_probability=1.)]),
@@ -649,6 +825,14 @@ def test_real_accel_plant_full_episode_with_fake_physics(cfg, monkeypatch):
     assert set(result['metrics']) == {'600', '900'}
     assert calls == ['fake_setup', 'closed']
     assert (tb._path(job['path'])/'RESULT.json.gz').is_file()
+    # A last-tick outcome must reach the first decision across the full existing
+    # 900-tick production receipt, rather than a shortened move/decision horizon.
+    fake_load(monkeypatch)
+    runtime = tb.build_arm_runtime(cfg, 'B')['runtime']
+    outcomes = {(result['id'], s['time_s']): [1. if s['time_s'] == 1199 else 0.]*2
+                for s in result['steps']}
+    returns, _ = runtime._temporal_targets([result], outcomes)
+    assert returns[result['id'], 300] == pytest.approx([tb.GAMMA**899/tb.UNIT]*2)
 
 
 def test_a_uses_real_ppo_without_bank_or_coop_layer(cfg, monkeypatch):

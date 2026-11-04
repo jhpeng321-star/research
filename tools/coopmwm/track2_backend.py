@@ -31,6 +31,7 @@ import torch
 
 from . import moves
 from .acceleration import PHI
+from .accel_learner import GAMMA, UNIT
 from .coop_layer import CooperationLayer, LayerConfig
 from .merge_features import (MERGE_DIM, MERGE_FEATURES, MergeFeaturesConfig,
                              ObservedVehicle, SENSOR_RANGE_M, SensorReport,
@@ -181,7 +182,7 @@ class ProductionLayer(CooperationLayer):
         return torch.distributions.Normal(mean, sigma).log_prob(action)
 
     def update_rewards(self, records, *, epochs):
-        """Layer-only per-CAV reward PPO; transactional inherited joint KL cap."""
+        """Layer-only per-CAV return PPO; transactional inherited joint KL cap."""
         self._check_frozen()
         self._check_optimizer()
         if type(epochs) is not int or epochs < 1 or not records:
@@ -202,7 +203,7 @@ class ProductionLayer(CooperationLayer):
                 sample = record['sample']
                 scores = self.member_scores(sample)
                 old_scores = self.member_scores(sample, old=True).detach()
-                advantage = scores.new_tensor(record['rewards'])
+                advantage = scores.new_tensor(record['returns'])
                 if advantage.shape != scores.shape or not bool(torch.isfinite(advantage).all()):
                     raise ValueError('per-CAV reward alignment/nonfinite target')
                 ratio = (scores-old_scores).exp()
@@ -232,7 +233,7 @@ class ProductionLayer(CooperationLayer):
                 self.optimizer.load_state_dict(optimizer)
             self.optimizer.zero_grad(set_to_none=True)
             metrics.append(dict(loss=float(loss.detach()), kl=current, accepted=accepted,
-                                gradient_norm=float(norm), target='per_cav_observable_sumo_reward'))
+                                gradient_norm=float(norm), target='per_cav_observable_sumo_return'))
             if not accepted:
                 break
         self._check_frozen()
@@ -613,6 +614,9 @@ class ArmRuntime:
         Rows carry episode_id,time_s,cav_id,source='sumo',own_reward,
         neighbour_rewards (ID -> real reward), reward, weight, weight_provenance.
         Neighbour IDs must match the recorded authorized observation exactly.
+        Outcomes cover EVERY control tick, including non-optimizable actions;
+        only own stochastic actions get PPO ratios. Returns use the entire
+        received complete episode, never only decision/onset/hold ticks.
         Callers may pass the envelope explicitly; otherwise import P2 lazily.
         P2 is an external integration dependency, never a production stub.
         """
@@ -628,13 +632,18 @@ class ArmRuntime:
         if not getattr(self, 'safety_checked', False):
             raise ValueError('paired safety hook must complete before B/R optimization')
         by_key = {}
+        episode_ids = set()
         for episode in episodes:
+            if episode['id'] in episode_ids:
+                raise ValueError('duplicate episode identity for temporal credit')
+            episode_ids.add(episode['id'])
             for step in episode['steps']:
                 key = (episode['id'], step['time_s'])
                 if key in by_key:
                     raise ValueError('duplicate episode/time sample')
                 by_key[key] = step['sample']
-        eligible = {k for k, s in by_key.items() if 'coop_layer' in s and not s.get('deterministic')
+        eligible = {k for k, s in by_key.items() if 'coop_layer' in s and s['context']['members']
+                    and not s.get('deterministic')
                     and not s.get('behaviour', {}).get('executed')}
         if not eligible:
             raise ValueError('B/R layer update requires stochastic own-action samples')
@@ -644,8 +653,9 @@ class ArmRuntime:
             except ImportError as error:
                 raise RuntimeError('P2 track2_reward.reward_update integration dependency unavailable') from error
             rewards = reward_update(cfg, arm, self.update, episodes)
-        targets = self._reward_targets(rewards, by_key, eligible)
-        records = [dict(sample=by_key[k], rewards=targets[k]) for k in sorted(eligible)]
+        targets = self._reward_targets(rewards, by_key, set(by_key))
+        returns, advantages = self._temporal_targets(episodes, targets)
+        records = [dict(sample=by_key[k], returns=returns[k]) for k in sorted(eligible)]
         layer = self.policy.layer.update_rewards(records, epochs=cfg['layer_epochs'])
         reference = []
         for key in sorted(eligible):
@@ -663,7 +673,7 @@ class ArmRuntime:
             before = deepcopy(self.policy.trigger.state_dict())
             optimizer = deepcopy(self.policy.trigger_optimizer.state_dict())
             metrics = ppo_update(self.policy.trigger, self.policy.trigger_optimizer, batch,
-                targets[key], targets[key], **cfg['trigger_ppo'])
+                advantages[key], returns[key], **cfg['trigger_ppo'])
             kl = self._trigger_kl(reference)
             accepted = math.isfinite(kl) and kl <= self.policy.layer.config.kl_budget
             if not accepted:
@@ -685,7 +695,11 @@ class ArmRuntime:
         self.policy.trigger_optimizer.zero_grad(set_to_none=True)
         return dict(layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),
             wm_credit=dict(enabled=False), reward=dict(schema=REWARD_SCHEMA,
-                registration=deepcopy(cfg['track2_reward']), cav_rows=sum(map(len, targets.values()))),
+                registration=deepcopy(cfg['track2_reward']), cav_rows=sum(map(len, targets.values())),
+                temporal=dict(method='full_rollout_discounted_return', gamma=GAMMA,
+                    reward_unit=UNIT, registration='tools.coopmwm.accel_learner.GAMMA,UNIT',
+                    trigger_advantage='return minus recorded per-CAV trigger value',
+                    terminal='zero at episode end, terminal tick or CAV departure')),
             bank=bank, bank_summary=bank_summary)
 
     def _reward_targets(self, envelope, by_key, eligible):
@@ -723,6 +737,60 @@ class ArmRuntime:
                 raise ValueError('trigger/reward per-CAV member alignment mismatch')
         return {key: [values[(*key, vid)] for vid in by_key[key]['context']['members']]
                 for key in sorted(eligible)}
+
+    def _temporal_targets(self, episodes, rewards):
+        """Full finite-episode Monte Carlo returns, in inherited MAPPO units.
+
+        GAMMA/UNIT are the existing acceleration learner registration, applied
+        once per physical control second. This is return-to-go (not GAE), so
+        there is no lambda decay or new credit horizon. The residual has no
+        per-CAV critic and uses the return with a zero baseline. Trigger PPO
+        uses its own *recorded* value, never the global frozen MAPPO critic.
+
+        accel_plant receipts end at the registered finite episode horizon and
+        therefore bootstrap to zero, just like accel_learner. Explicit terminal
+        ticks also stop credit. Absence from the next tick's member IDs is a
+        departure; later reuse of the ID starts a new lifetime. A partial tape
+        cannot silently become a shorter learning horizon: truncated receipts,
+        missing ticks and a suffix inconsistent with actual_sim_s refuse.
+        """
+        returns, advantages = {}, {}
+        for episode in episodes:
+            steps = sorted(episode['steps'], key=lambda step: step['time_s'])
+            if episode.get('truncated') or any(step.get('truncated') for step in steps):
+                raise ValueError('truncated rollout requires terminal outcomes; no shortened credit horizon')
+            if not steps:
+                continue
+            times = [step['time_s'] for step in steps]
+            if (any(type(t) is not int for t in times)
+                    or any(b-a != 1 for a, b in zip(times, times[1:]))):
+                raise ValueError('temporal credit requires every consecutive control second')
+            if ('actual_sim_s' in episode and times[-1]+1 != episode['actual_sim_s']):
+                raise ValueError('incomplete rollout suffix for temporal credit')
+            future = {}
+            for step in reversed(steps):
+                if step.get('terminated') or step.get('done'):
+                    future = {}
+                key = (episode['id'], step['time_s'])
+                sample = step['sample']
+                members = sample['context']['members']
+                if len(set(members)) != len(members):
+                    raise ValueError('duplicate per-CAV temporal member identity')
+                current = {vid: reward/UNIT + GAMMA*future.get(vid, 0.)
+                           for vid, reward in zip(members, rewards[key])}
+                returns[key] = [current[vid] for vid in members]
+                if not all(math.isfinite(value) for value in returns[key]):
+                    raise ValueError('nonfinite per-CAV temporal return')
+                if 'track2_trigger' in sample:
+                    values = sample['track2_trigger']['values']
+                    if (len(values) != len(members) or any(type(v) not in (int, float)
+                            or not math.isfinite(v) for v in values)):
+                        raise ValueError('invalid recorded per-CAV trigger values')
+                    advantages[key] = [current[vid]-value for vid, value in zip(members, values)]
+                    if not all(math.isfinite(value) for value in advantages[key]):
+                        raise ValueError('nonfinite per-CAV temporal advantage')
+                future = current  # drop departed IDs; never carry across episodes
+        return returns, advantages
 
     @torch.no_grad()
     def _trigger_kl(self, reference):
