@@ -26,7 +26,7 @@ from tools.coopmwm import v2v_learning_watch as lw
 from tools.coopmwm import v2v_runner
 from tools.coopmwm.test_bank_imitation_cpu import Policy, pairs
 
-SAFETY_NOTE_KEYS = ('total_kl_vs_pre_update', 'total_kl_reference')
+SAFETY_NOTE_KEYS = ('total_kl_vs_pre_update', 'total_kl_reference', 'safety_note')
 
 # Branch-point default-mode reports (pre-change module, identical seeds/banks/interpreter).
 GOLDEN = {
@@ -57,8 +57,11 @@ def test_default_report_is_the_branch_point_plus_only_the_safety_note(name):
     assert out['kl_limit'] == .045
     stripped = {k: v for k, v in out.items() if k not in SAFETY_NOTE_KEYS}
     assert json.dumps(stripped, sort_keys=True) == GOLDEN[name]
-    assert math.isfinite(out['total_kl_vs_pre_update'])
-    assert out['total_kl_reference'] == 'frozen pre-update policy (PPO + imitation combined)'
+    if name == 'targeted_default':   # kl_targeted carries the per-update safety note
+        assert math.isfinite(out['total_kl_vs_pre_update'])
+        assert out['safety_note'].startswith('total_kl_vs_pre_update is the exact joint KL')
+    else:                            # fixed/.045 default: the report equals the branch point EXACTLY
+        assert json.dumps(out, sort_keys=True) == GOLDEN[name]
 
 
 def test_default_matches_explicit_registered_limit_byte_for_byte():
@@ -73,15 +76,23 @@ def test_default_matches_explicit_registered_limit_byte_for_byte():
 
 
 def test_safety_note_reports_total_kl_vs_the_frozen_pre_update_policy():
+    # the safety note is carried whenever an imitation option deviates from its default
+    bi.install(step_mode='kl_targeted')
     old = Policy();p = copy.deepcopy(old)
     out = bi.run_separate(p, torch.optim.Adam(p.parameters(), lr=1e-3), pairs(20),
                           torch.Generator().manual_seed(7), old, passes=5)
     samples = [s for s, _ in pairs(20)]
     assert out['total_kl_vs_pre_update'] == bi.joint_kl(p, old, samples)
     assert out['total_kl_vs_pre_update'] >= out['kl'] >= 0.
+    assert out['safety_note'].startswith('total_kl_vs_pre_update is the exact joint KL')
     empty = bi.run_separate(Policy(), torch.optim.Adam(Policy().parameters()), [],
                             torch.Generator().manual_seed(7), copy.deepcopy(Policy()), passes=5)
     assert empty['total_kl_vs_pre_update'] == 0.
+    plain = Policy()                                     # explicit fixed/.045: no note, golden bytes
+    plain = bi.run_separate(plain, torch.optim.Adam(plain.parameters(), lr=1e-3), pairs(40),
+                            torch.Generator().manual_seed(7), copy.deepcopy(plain), passes=5,
+                            step_mode='fixed')
+    assert 'total_kl_vs_pre_update' not in plain and 'safety_note' not in plain
 
 
 # ------------------------------------------------------- the limit is read from the runtime
@@ -259,6 +270,7 @@ def test_monitor_checks_against_the_runtime_limit_from_the_receipt():
 
 def test_exact_update_receipt_embeds_the_safety_note(tmp_path, monkeypatch):
     from tools.coopmwm import exact_grade as xg
+    bi.install(step_mode='kl_targeted')                      # the deployed V2V runtime (owner 08:52)
     monkeypatch.setattr(bi, 'run', bi.run_separate)          # the deployed V2V binding (hooks)
     step = dict(sample=dict(context={'members': ['a', 'b']}, value=0., behaviour=dict(executed=True)), reward=0.)
     episodes = [dict(steps=[copy.deepcopy(step) for _ in range(3)])]

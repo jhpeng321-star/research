@@ -198,10 +198,13 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
     explicit argument wins and only registered alternatives (KL_LIMITS) are
     accepted. The limit bounds every acceptance check here and the kl_targeted
     growth threshold (limit/2); the report records it as kl_limit. Per-update
-    safety note: the report adds total_kl_vs_pre_update, the exact joint KL of
-    the published (post-PPO + imitation) policy vs the FROZEN PRE-UPDATE policy
-    (the caller's reference snapshot) over the same bank samples, i.e. the PPO +
-    imitation total drift; report-only, no separate threshold.
+    safety note: when an imitation option deviates from its registered default
+    (kl_targeted or a non-default limit), the report adds
+    total_kl_vs_pre_update, the exact joint KL of the published (post-PPO +
+    imitation) policy vs the FROZEN PRE-UPDATE policy (the caller's reference
+    snapshot) over the same bank samples, i.e. the PPO + imitation total drift;
+    report-only, no separate threshold. The 'fixed'/.045 report stays
+    byte-identical to the branch point.
     """
     if int(passes)!=passes or passes<5:raise ValueError('at least five requested passes')
     step_mode=RUNTIME_STEP_MODE if step_mode is None else str(step_mode)
@@ -230,9 +233,17 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
         rule='full-bank transactional passes; separate imitation KL; AWR weights unchanged')
     if targeted:report.update(step_mode=step_mode,step_scale_cap=STEP_SCALE_CAP,steps_cap=STEPS_CAP)
     if not intent_bank_term:report['intent_bank_term']=False
+    # c4/imit-kl-option: the per-update safety note (PPO + imitation total KL vs the frozen
+    # PRE-UPDATE policy) is carried only when an imitation option deviates from its registered
+    # default, keeping the 'fixed'/.045 report byte-identical to the branch point.
+    if targeted or kl_limit != KL_LIMIT:
+        report['safety_note']='total_kl_vs_pre_update is the exact joint KL of the published policy vs the frozen pre-update policy (PPO + imitation combined); report-only'
     if not pairs:
+        extra = dict(total_kl_vs_pre_update=0.,
+                     total_kl_reference='frozen pre-update policy (PPO + imitation combined)') \
+            if (targeted or kl_limit != KL_LIMIT) else {}
         return dict(report,stop_reason='empty statistically qualified bank',kl=0.,
-                    total_kl_vs_pre_update=0.,action_error_after_mps2=None)
+                    action_error_after_mps2=None,**extra)
     samples=[s for s,_ in pairs]
     original_lrs=[g['lr'] for g in optimizer.param_groups]
 
@@ -328,12 +339,10 @@ def run_separate(policy,optimizer,pairs,generator,reference,coefficient=1.,passe
         else:report['stop_reason']='all registered imitation epochs complete'
     finally:
         for g,lr in zip(optimizer.param_groups,original_lrs):g['lr']=lr
-    # Per-update safety note (c4/imit-kl-option): the published policy's exact joint KL vs the
-    # frozen PRE-UPDATE policy (the caller's reference, before PPO and imitation) = the PPO +
-    # imitation total drift over the same bank samples. Report-only; no separate threshold.
-    report.update(kl=joint_kl(policy,centre,samples),total_kl_vs_pre_update=joint_kl(policy,reference,samples),
-        total_kl_reference='frozen pre-update policy (PPO + imitation combined)',
-        action_error_after_mps2=action_error(policy,pairs))
+    report.update(kl=joint_kl(policy,centre,samples),action_error_after_mps2=action_error(policy,pairs))
+    if targeted or kl_limit != KL_LIMIT:   # see the safety-note comment above (byte-identical default)
+        report['total_kl_vs_pre_update']=joint_kl(policy,reference,samples)
+        report['total_kl_reference']='frozen pre-update policy (PPO + imitation combined)'
     after=report['action_error_after_mps2']
     if after is not None and before is not None and after>=before:
         report['error_not_decreased_explanation']='AWR likelihood and unweighted L1 differ; full-pass coverage and separate KL recorded'
