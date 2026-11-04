@@ -1,5 +1,28 @@
 # S-COOPMWM — live checks
 
+### Nov4 15:22 UTC+8 — u12 input archive fault corrected; checkpoint-safe recovery pending
+- **B/R r3 stopped at15:00 during B-u12 diagnostics.** B's u12 checkpoint and
+  all24ordinary episodes completed; its composite safety passes (zero collisions/
+  teleports, critical-total B-A+3.583CI[-14.75,23.1875]). No B_UPDATE_012 was
+  sealed. R stopped on the shared engineering guard. A19, monitor4 and both
+  movers remain live. This supersedes earlier r3-liveness observations.
+- **Cause:** the MAIN14:35 warm1/jobs archive moved episode RESULT inputs still
+  reached transitively through LS pending envelopes. All12u12lessons reported
+  snapshot_error; isolated-synergy failed on the first such missing input.
+- **Restoration COMPLETE:**26files/51,960,259bytes from cpuS to original paths,
+  remote and local SHA verified against the original manifest. No overwritten
+  inputs/deletions/newSUMO/inference. Functional deployed-src8 loads17/17distinct
+  frozen lesson/isolated statesPASS. New additive binding is verified by the
+  actual live mover's protection function for all26paths. Both movers retained.
+- cpuQ6,769,057,792bytes(~6.30GiB)free afterrestore; unchanged6GiBdispatchfloor
+  and9GiBCPU-Slandingguard. Existing launch operator notified to adopt the
+  already-written B12 checkpoint without repeating PPO/closedepisodes, complete
+  diagnostics additively and handle the interrupted claim. No restart claimed.
+- u8interim remains COMPLETE288/288/outcomesclosed, neverredispatched. Prior
+  u6 isolated test still does not establish positive learned cooperation.
+- Evidence:`coopmwm/U12_INPUT_RESTORATION_COMPLETE_20261104_1522.md` and
+  `coopmwm/U12_INPUT_VERIFIED_1793776957235172100.json`.
+
 ### Nov4 14:57 UTC+8 — u8 interim COMPLETE288/288; A18/B11/R11
 - Registered V2V interim has288/288public completion receipts, completion marker
   and no failure. Its original owned process exited after completion. Only

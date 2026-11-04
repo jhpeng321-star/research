@@ -1,5 +1,20 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 15:22 +08 — u12 input restoration COMPLETE; r3 recovery pending
+- ROOTCAUSECONFIRMED MAIN1435movejobs_1441 movedtransitiveLSepisode_pathRESULTs.
+  Registeredplan ddf68738/commit7eaf1c84 BEFORE26file/51960259byteSHArestore.
+- COMPLETEU12_RESTORE_RESTORE_1793776857639598100: remote+localSHAverified,
+  cpuSoriginalsretained/nooverwrite/deletion/SUMO/inference; free6769057792bytes.
+- DEPLOYEDsrc8functional17of17distinctsnapshotsPASS/all12lessons+7isolated;
+  actuallivemoverprotected()all26pathsPASS via warm1/
+  FROZEN_EPISODE_DEPENDENCY_BINDING_U12_1518.json. Bothmoversneverpaused.
+- B12checkpoint/24closedepisodes/safetyPASSkept; B_UPDATE_012absent;
+  r3BR+supervisorstillstopped/A19continues. Operator/MAINnotified_sol/
+  COOPMWM_U12_ARCHIVE_STOP_1512_MAIN.md forcheckpoint-safeadoption/additive
+  lessoncompletion/interruptedclaimhandling. NEVERrepeatB12PPOorcompletedphysics.
+- CompleteproofU12_INPUT_RESTORATION_COMPLETE_20261104_1522.md+
+  U12_INPUT_VERIFIED_1793776957235172100.json. Nooursrestart/guardchange.
+
 ## CURRENT Nov4 15:12 +08 — NEW u12 diagnostic archive-dependency STOP
 - r3B/R/supervisorABSENTat1512; Bfailed150038readingwarm1/jobs/
   lscollect1_B3_986052/RESULT.json via_ls_snapshotepisode_path. RguardSTOP;
