@@ -1,0 +1,119 @@
+{
+  "task": "T2G",
+  "status": "READY_DRY_CPU",
+  "date": "2026-11-04",
+  "branch": "c4/plan-augment",
+  "base": "c4/track-base (13f184b5)",
+  "worktree": "E:/agent-work/c4-plan-augment",
+  "resume_inspection": {
+    "initial_status": "clean",
+    "initial_head": "13f184b5",
+    "prior_T2G_receipt_or_implementation": false,
+    "jobs_or_dispatches_started": 0
+  },
+  "commits": [
+    {
+      "sha": "ed7c88bffd16b7d15899ea157ce96c26068ba624",
+      "step": "registered local perturbations, WM cooperation gate, explicit charged all8 bridge"
+    },
+    {
+      "sha": "6cba83b281e84c94953ab25b651fe3f32e343279",
+      "step": "57 CPU contracts and idempotent completed spot-check resolution"
+    }
+  ],
+  "receipt_commit": "The subsequent commit adding this file; find with git log -1 -- T2G_READY.json",
+  "owned_files": [
+    "tools/coopmwm/plan_augment.py",
+    "tools/coopmwm/test_plan_augment_cpu.py",
+    "T2G_READY.json"
+  ],
+  "implementation": {
+    "default": "OFF: no source iteration, model calls, file reads/writes or physics dispatch",
+    "source": "Identity-checked in-memory all8/per_seed_v1 confirmation; only admitted cooperative examples from the requested arm's own bank",
+    "parameters": "Caller supplies source-plan onset_s, hold_s and depth labels, e.g. from moves.from_plan; source labels and perturbations must lie within registered variety windows",
+    "perturbation": "Uniform local onset/hold/depth draws within parameter_fraction times each registered range, intersected with that range; time-warp and depth-scale the verified effective residual; retain full source plan duration",
+    "partners": "At most one non-ego partner replaced by a visible same-lane CAV; 2..4 members including ego; t-1 timestamps required; HDVs excluded",
+    "execution": "Recipient's own MAPPO trajectory plus residual, through existing centre_feasibility/build_plan bounds and allowed-speed clamp; policy duplicates and zero residuals discarded",
+    "wm_gate": "Paired full registered horizon costs for base, group and every member-only solo; retain strictly positive expected base-minus-group gain and best-solo-minus-group synergy; missing/nonfinite/wrong-size sample arrays rejected",
+    "fairness": "Identical function, configuration, sampling, WM screening and spot-check selection for B and R; each arm must provide its own confirmation records",
+    "spot_checks": "ceil(registered fraction * WM-kept examples), selected without replacement using an independent RNG stream; pending checks withheld from training; failed checks dropped; accepted results preserve each own-seed plan/tape label",
+    "deduplication": "Deterministic physical-profile/member/source/seed identity within a batch; repeated completed receipt resolution does not call the checker again",
+    "provenance": "Serializable digest-protected batch receipt, source confirmation hash, source example/seed/plan, perturbed labels, WM gain/synergy and verification status"
+  },
+  "api": {
+    "config(raw=None)": "Resolve and validate explicitly registered settings; returns None when off",
+    "augment(sources, *, arm, registration=None, score=None)": "Pure CPU preparation returning examples, pending spot_checks, counts, resolved registration and receipt_sha256",
+    "resolve_spot_checks(batch, checker)": "Explicit callback resolution; accepts only matching-plan admitted cooperative examples from sealed same-arm all8 records; returns a new batch",
+    "spot_check_quote(request, t0)": "Existing verify_perseed.quote_decision conservative quote including both seeds, later-harm windows and all solos",
+    "verify_all8(request, *, snapshot, root, run_root, runner_for, phase, workers=2, health=None)": "Explicit later-run adapter to verify_perseed._verify and confirm_all8; existing health/admission/charge hooks and measured later harm on both seeds; never invoked by augment"
+  },
+  "source_contract": {
+    "confirmation": "In-memory record with confirmation_sha256, verify_mode=all8_both_seeds, bank_rule=per_seed_v1, arm, t0 and per_seed_v1.examples",
+    "example_index": "Index of admitted/cooperative example with plan, seed_index and existing verified profile/perturbation_profile",
+    "parameters": ["onset_s", "hold_s", "depth"],
+    "context": {
+      "ego_id": "Acting CAV, included in source members",
+      "t_s": "Verified decision t0",
+      "rows": "Only own sensing/V2V view; whitelist vid, is_cav, s_m, v_mps, lane, allowed_speed_mps, observed_at_s; observed_at_s <= t_s - 1",
+      "policy_traj": "Mapping of each visible CAV to its own finite source-policy acceleration trajectory, at least source duration; source-member centre identity checked"
+    }
+  },
+  "registered_config_keys": {
+    "enabled": "Boolean; absent/false is OFF",
+    "seed": "Nonnegative integer",
+    "attempts_per_plan": "Positive integer",
+    "parameter_fraction": "Explicit positive fraction <= 1 of registered window widths; register a small radius for the run",
+    "partner_swap_probability": "Explicit probability in [0, 1]",
+    "spot_check_fraction": "Explicit probability in [0, 1]",
+    "wm_samples": "Integer >= 2 paired belief-world samples",
+    "horizon_s": "Full registered look-ahead; passed unchanged to scorer; must cover source duration",
+    "bounds": "Existing ordered plant acceleration bounds, upper cap <= 1.2 m/s^2",
+    "variety": "Existing variety.VARIETY_REGISTERED keys only; inherits its onset/hold/depth windows"
+  },
+  "scorer_contract": {
+    "signature": "score(context, plans, *, samples, horizon_s) -> {plan_id: paired_cost_samples}",
+    "direction": "Lower cost is better",
+    "coupling": "Same local belief state, sample worlds, full look-ahead and MAPPO continuation for base/group/solos",
+    "inputs": "Sanitized local observable context and executable plans only; source verification outcomes and unrelated context/row fields are not forwarded"
+  },
+  "integration_requirements_for_T2C": [
+    "Call augment for B and R under identical registered settings, each with its own sealed in-memory bank confirmations and observable source contexts.",
+    "Provide source onset/hold/depth labels and a belief-only WM cost callback preserving paired worlds and the full registered look-ahead.",
+    "Consume examples as augmented plan targets/states; do not consume pending spot_checks as training examples.",
+    "Before later physics, quote and register the all8 budget, bind each request to its source's OWN snapshot/seed/actor and the single ledger, then explicitly call resolve_spot_checks with verify_all8 bound to those runtime arguments.",
+    "For all8-accepted examples use verified_example's OWN per-seed tape/plan rather than inheriting another seed's labels. WM-only examples remain explicitly unverified.",
+    "Persist the returned batch as the augmented-examples component receipt in the end-to-end smoke. This task does not modify the shared rerun integration module."
+  ],
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "commands": [
+      "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_plan_augment_cpu.py",
+      "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_verify_perseed_cpu.py",
+      "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_variety_cpu.py",
+      "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_mppi_search_cpu.py"
+    ],
+    "results": {
+      "test_plan_augment_cpu.py": "57 passed in 29.58s",
+      "test_verify_perseed_cpu.py": "21 passed in 45.32s",
+      "test_variety_cpu.py": "31 passed in 40.48s",
+      "test_mppi_search_cpu.py": "15 passed in 43.96s",
+      "total": "124 passed across the four completed suites"
+    },
+    "iteration_notes": [
+      "Two combined-suite attempts exceeded the 120-second terminal timeout; process inspection confirmed no matching test process remained before retrying individually.",
+      "An added partner-policy assertion initially ignored the inherited allowed-speed clamp; corrected the test to assert own-policy acceleration until the ceiling and zero afterward. All final suites pass."
+    ],
+    "physics": "None; synthetic sealed records and CPU WM stubs; all8 dispatch patched in adapter contract tests"
+  },
+  "hard_rules": {
+    "cpu_only": true,
+    "worktree_only_changes": true,
+    "sumo_or_remote_or_gpu_jobs_started": 0,
+    "forbidden_data_paths_opened": false,
+    "hidden_truth_inputs_used": false,
+    "shared_modules_changed": false,
+    "destructive_git_commands_or_push": false
+  },
+  "open_issues": [],
+  "readiness_scope": "Dry CPU implementation and integration API ready; real WM checkpoint scoring, charged SUMO spot checks and the cross-track end-to-end smoke are later registered runtime work."
+}
