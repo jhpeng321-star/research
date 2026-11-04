@@ -1,0 +1,72 @@
+{
+  "feature": "plan variety (search_families): soft-guided cooperative plan variety (walls, gap opening, ramp assist)",
+  "branch": "c4/plan-variety",
+  "based_on": "c4/v2v-resume (a7ae6d9a)",
+  "owner_direction": "2026-11-04: more variety of cooperative plans (wall + merge help / gap opening), never forced - search in the direction; the WM score and exact SUMO verification decide.",
+  "commits": [
+    "107f83ba coopmwm search_families option (default OFF, byte-identical): variety module, search/niche injection, R same-family mix, collector/binding wiring",
+    "4b80b69d coopmwm search_families: split_config always-validate, list-policy-traj generators, replay_bank config split; CPU tests (31)"
+  ],
+  "option": {
+    "name": "search_families",
+    "default": "OFF",
+    "byte_identical_when_off": true,
+    "module": "tools/coopmwm/variety.py"
+  },
+  "config_keys": {
+    "variety_families": "false (default) | true - master switch",
+    "variety_structured_share": 0.25,
+    "variety_wall_span_m": 75.0,
+    "variety_wall_min_lanes": 2,
+    "variety_merge_zone_m": [-100.0, 75.44],
+    "variety_gap_link_m": 100.0,
+    "variety_ramp_lane": 2,
+    "variety_mainline_lane": 1,
+    "variety_onset_window_s": [0.0, 30.0],
+    "variety_hold_window_s": [20.0, 90.0],
+    "variety_depth_window": [0.3, 1.0]
+  },
+  "distance_provenance": {
+    "variety_wall_span_m": "wall v2.1 executor MAX_WALL_SPAN_M (src/wms/physics/wall_exec.py)",
+    "variety_merge_zone_m": "TRAIN observable merge-zone projection (tools/coopfree/selection.py features zone)",
+    "variety_gap_link_m": "inherited observable mainline association window (tools/coopbandit/protocol.py group)",
+    "variety_ramp_lane": "merge_lane observable convention (lane 2 = ramp, RAMP_LANE in coop_search)",
+    "variety_mainline_lane": "merge_target_lane observable convention (lane 1)"
+  },
+  "what_it_does": {
+    "groups": "decision_groups() ADDS groups (registered chain groups stay first and unchanged): (a) wall = registered chaining/window rules re-run with chain_m = variety_wall_span_m, keeping components spanning >= variety_wall_min_lanes distinct lanes; (b) gap_open = ramp CAVs inside the observable merge zone + the mainline CAVs within variety_gap_link_m they would merge into. Duplicate member sets dropped; committed-plan exclusion applies as before. Wired at ls_collection.install, replay_bank.collector_guide and mppi_runtime.plan (the GPU side re-derives the same kinds from the record's search_config variety keys).",
+    "generators": "Structured candidates take ordinary population slots (total N, batch widths and WM cost unchanged): WALL = abreast members synchronise to the group mean observable speed, decelerate together at a sampled depth for a sampled hold, then release (open-loop profile of the wall v2.1 pace law clip((target-v)/dt, lo, hi), integrated from observable v0 like centre_feasibility); GAP_OPEN = a mainline member eases ahead of the ramp partner's geometric predicted arrival, then recovers; RAMP_ASSIST = the mainline CAV ahead eases and the ramp CAV synchronises to the eased speed in a sampled offset window. onset/hold/depth/duration/members sampled per candidate from a dedicated child stream of the search seed; every profile goes through the SAME build_plan bounds+feasibility clamp (policy_duplicate rule intact).",
+    "cap": "at most floor(variety_structured_share * population) structured slots per search (per niche in niche mode); free search keeps the majority; nothing guarantees a structured candidate in the finalists or top-8 - the WM score and SUMO decide.",
+    "r_fairness": "sample_unscored draws from the SAME family mix under the SAME registered keys (share honoured by the same draw, dedicated stream, byte-identical fallback when the config is absent); random_candidates passes the snapshot meta's variety_config (collector writes it for arm R).",
+    "tags": "every searched candidate carries variety_family in (free, wall, gap_open, ramp_assist) - additive key only when the option is on. It rides inside plan dicts into SUMO branch specs and receipts; variety.family_counts() counts verified/admitted per family from receipt directories.",
+    "novelty": "coop_search novelty enabling from config was ALREADY possible: c4/coop-search-fix2 IS merged into c4/v2v-resume (verified: both branches contain a68174f4/74f8ae81). Enabling = LS_COOP_SEARCH_CONFIG.json (or the replay binding search_config) with coop_objective/coop_novelty/coop_novelty_bank_sha256; the bank-descriptor file is handled by the existing preflight: coop_search preflight CLI + ls_collection.preflight_coop at supervisor startup, and this feature adds the same preflight to the replay-bank collector (replay_bank.preflight_binding, called at collect() startup). GPU hosts resolve the bank from $COOPMWM_COOP_BANK_DIR or BANK_DIRS."
+  },
+  "how_to_enable": {
+    "ls_collection_batch": "write LS_VARIETY_CONFIG.json into the collection root: {\"variety\": {<registered variety_* keys, variety_families: true>}}. The supervisor reads it after LS_COOP_SEARCH_CONFIG.json, attaches it to collection jobs (install-time decision groups) and to every admitted search_config (search_config(ordinal, coop, alternate, variety)); without niche alternation it attaches the registered it2_K2 config plus the variety keys so the GPU side re-derives the same groups.",
+    "replay_bank_batch": "add \"variety\": {<registered keys, variety_families: true>} to the collector binding: collect() copies it into job['collect'] (collector_guide decision groups + snapshot meta variety_config for arm R). For the B arm search, put the same variety_* keys into binding['search_config'] (or the record's search_config) - validated by niche_collect.validate.",
+    "gpu_side": "no extra step: the record's search_config variety keys drive both the additive group lookup (mppi_runtime.plan) and the structured injection (mppi_search.search/_niche_search).",
+    "bank_reports": "variety.family_counts(<bank>/sumo_verification) counts verified/admitted candidates per family from the sealed receipts (legacy receipts without the tag are not counted)."
+  },
+  "tests": {
+    "new": "tools/coopmwm/test_variety_cpu.py (31 tests, all passing, CPU only): off-identical vs the committed coop golden fixture (incl. families-False variants with stray registered keys), unregistered-key rejection, share cap == floor(share*population) with free dominance and unchanged totals/WM cost, family tags on every candidate, WM-parity screen calls, structured candidates reach finalists/topk under a family-scoring WM stub and never under the joint-trap stub, niche per-niche cap with unchanged niche_sizes, R byte-identical fallback (config None / families False / share 0) and same-family mix at share 1/mixed, matched duration respected, family_counts on synthetic receipts, ls_collection/replay_bank config helpers, install envelopes include wall+gap_open groups, collector meta carries variety_config, binding novelty preflight, niche_collect search_config/validate carry+validate variety keys on every ordinal.",
+    "required_suites": {
+      "test_mppi_search_cpu.py": "PASS",
+      "test_niche_collect_cpu.py + test_niche_drain_cpu.py + test_niche_ops_cpu.py + test_niche_roll_cpu.py + test_niche_search_cpu.py + test_niche_worker_cpu.py": "PASS",
+      "test_coop_search_cpu.py": "PASS (incl. byte-identical-to-base golden)",
+      "test_variety_cpu.py": "PASS (31)",
+      "test_ls_*_cpu.py + test_launch_final_cpu.py": "PASS except 4 pre-existing environmental failures, verified byte-identical at base a7ae6d9a in a throwaway worktree: test_ls_collection test_snapshot_guide (Windows patch-target/namespace quirk), 3 x test_ls_label_runtime (fcntl//proc/leverprobe Linux-only paths)",
+      "test_sumo_verify_cpu/test_committed_cpu/test_overlap_cpu": "3 pre-existing leverprobe failures, identical at base",
+      "test_quota_admission_cpu": "2 pre-existing process-identity failures, identical at base",
+      "test_mppi_runtime_cpu": "4 pre-existing leverprobe failures, identical at base"
+    }
+  },
+  "hard_rules_compliance": {
+    "cpu_only": true,
+    "worktree_only": true,
+    "no_reset_clean_stashdrop_push": true,
+    "no_sealed_or_forbidden_paths": true,
+    "no_hand_set_thresholds": "all distances/ranges are registered config values with documented provenance",
+    "default_off_byte_identical": "tested against the committed golden fixture (coop_off_golden.json digests) including families-False variants",
+    "v2v_launch3_safety": "untouched; v2v_launch3 checks and the verification budget/charge paths unchanged"
+  }
+}
