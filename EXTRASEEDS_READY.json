@@ -50,7 +50,8 @@
   "reverification": {
     "session": "fresh resume after frozen session; no code changes needed, work of 3c63f74d kept as-is",
     "command": "cpuQ split in 2 chunks (see cpuq_run_command): 55 passed (verify_perseed/bank_boot/bank_perseed/bank_imitation/bank_builder, 395.66s) + 35 passed (bank_amendment/bank_safety/bank_restore_ops/launch_final/coop_only, 609.05s)",
-    "result": "90/90 passed, 0 failed, 2 unrelated pre-existing UserWarnings"
+    "result": "90/90 passed, 0 failed, 2 unrelated pre-existing UserWarnings",
+    "second_resume_spot_check": "later fresh session verified the fix round without redoing it: code inspection confirms verify_perseed.py:563-564 (extras loop sets cooperative=False/cooperative_status='not_admitted') and bank_builder.extras_charge (one-transaction pre-reservation of all extra-seed group branches); the 3 fix-round tests passed (9.56s) and the two touched modules passed in full (test_verify_perseed_cpu.py + test_bank_builder_cpu.py: 23/23, 60.00s); no code changes, work of 3c63f74d kept as-is"
   },
   "cpuq_run_command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_verify_perseed_cpu.py tools/coopmwm/test_bank_boot_cpu.py tools/coopmwm/test_bank_perseed_cpu.py tools/coopmwm/test_bank_imitation_cpu.py tools/coopmwm/test_bank_builder_cpu.py tools/coopmwm/test_bank_amendment_cpu.py tools/coopmwm/test_bank_safety_cpu.py tools/coopmwm/test_bank_restore_ops_cpu.py tools/coopmwm/test_launch_final_cpu.py tools/coopmwm/test_coop_only_cpu.py   # run from the worktree root E:/agent-work/c4-extra-seeds; CPU only (no SUMO, no GPU, no ssh)",
   "changed_files": [
