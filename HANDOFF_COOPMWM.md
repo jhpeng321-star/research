@@ -1,5 +1,15 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## Fresh adoption Nov4 ~08:15 +08
+- Full1119-linebriefREAD; A5/B2/R2 at1793751120. A2049830LIVE; B/R/watch
+  originalownersabsent/knowncheckpoint003STOPretained. RecoveryDELEGATED;
+  c4/v2v-resumehasactiveedits. NOparallelrepair/gate/watcher/physicsdispatch.
+- Learning2200255LIVE/healthyA5B2R2; Bintentrisereport-only. Botharchiveworkers
+  LIVE: original1237127S +extension2213098. Certified499403300bytes/216files,
+  zeroeligible. CPUfree6966906880bytes/~6.49GiB;2696769536bytesbelow9GiB.
+- Backfill1132856resourcepaused; collect900006/7retained/currentV2Vcapture
+  wiringblockunchanged. See coopmwm/RESUME_ADOPTION_20261104_0815.md.
+
 ## CURRENT Nov4 ~07:45 +08 — disk extension LIVE; checkpoint fault DELEGATED
 - COMPLETEinitialV2Vpool1793750112:499403300bytes/216files/4certifiedbatches,
   workerLIVE/eligible0/free7084539904bytes(~6.60GiB),2579136512bytesshortof9GiB.

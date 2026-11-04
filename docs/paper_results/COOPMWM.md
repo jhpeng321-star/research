@@ -1,5 +1,16 @@
 # S-COOPMWM — live checks
 
+## Nov4 ~08:15 UTC+8 — fresh-session adoption, delegated recovery retained
+- Direct live check: **A5/B2/R2**. A continues; B/R checkpoint003 recovery
+  remains with MAIN's separate operator. Existing work and owners adopted.
+- Learning monitor remains healthy; last B/R updates completed five full passes
+  and passed composite safety. B's increasing bank intent loss remains reported.
+- Protected V2V archive has certified **499,403,300bytes /216files**; no more
+  currently eligible files. Both archive workers remain live. cpuQ has6.49GiB
+  free, about2.70GB below the9GiB backfill-resume target before new writes.
+- Evidence: `coopmwm/RESUME_ADOPTION_20261104_0815.md`. No new physics or
+  duplicate recovery dispatched by this adoption.
+
 ## Nov4 ~07:45 UTC+8 — V2V u3 namespace fault delegated; disk scope extension live
 - **07:55 update:** the entire eligible initial pool is archived: **499,403,300
   bytes /216 files /4 SHA-certified batches**. Worker remains live; zero eligible
