@@ -1,0 +1,127 @@
+{
+  "receipt": "T2F_READY",
+  "task": "T2F",
+  "status": "ready",
+  "date": "2026-11-04",
+  "workspace": "E:/agent-work/c4-merge-features",
+  "branch": "c4/merge-features",
+  "base": "c4/track-base@13f184b5",
+  "spec": "E:/agent-work/_sol/tracks_spec.md, Track 2 additions, T2F",
+  "resume_check": {
+    "initial_status": "clean at shared base; no existing T2F module, tests or receipt",
+    "matching_existing_python_jobs": 0,
+    "reference_receipt": "V2V_OBS_READY.json"
+  },
+  "commits": [
+    {
+      "sha": "a4597f2b812981d48932cc9312c3d005318959e0",
+      "step": "observable-only opt-in merge feature implementation"
+    },
+    {
+      "sha": "0f3d738a15bf60b58383c5b265f6600be21e4793",
+      "step": "CPU contract tests and observation regression verification"
+    }
+  ],
+  "receipt_commit_lookup": "git log -1 --format=%H -- T2F_READY.json",
+  "files": [
+    "tools/coopmwm/merge_features.py",
+    "tests/unit/test_merge_features.py",
+    "T2F_READY.json"
+  ],
+  "api": {
+    "module": "tools.coopmwm.merge_features",
+    "configuration": "MergeFeaturesConfig(merge_features=False)",
+    "vehicle": "ObservedVehicle(vehicle_id, s_m, lane, v_mps, length_m)",
+    "sensor_packet": "SensorReport(timestamp_s, source, observed_lanes, vehicles=())",
+    "feature_function": "merge_features(own, cav_id, partner_reports=None, *, now_s, partner_ids=(), cfg=None) -> np.ndarray",
+    "additive_hook": "with_merge_features(observation, own, cav_id, partner_reports=None, *, now_s, partner_ids=(), cfg=None) -> Mapping",
+    "dimension": 29,
+    "dtype": "float32",
+    "units": "physical SI, queue length and approaching counts in vehicles",
+    "lane_order": [0, 1, 2],
+    "lane_meanings": ["left mainline", "right mainline", "ramp/acceleration lane"],
+    "per_lane_features": [
+      "queue_length_veh",
+      "approaching_count",
+      "approaching_mean_speed_mps",
+      "rear_gap_m",
+      "rear_speed_mps",
+      "lane_missing",
+      "approaching_speed_missing",
+      "rear_missing"
+    ],
+    "source_features": [
+      "own_missing",
+      "partner_reports_missing",
+      "partner_report_count",
+      "partner_report_age_s",
+      "visible_vehicle_count"
+    ],
+    "exported_layout": "MERGE_FEATURES, MERGE_LANE_FEATURES, MERGE_SOURCE_FEATURES, MERGE_DIM",
+    "default_off": "feature function returns zeros without reading inputs; additive hook returns the exact original mapping",
+    "enabled": "additive hook shallow-copies the mapping and adds only the merge_features block; existing observation values retain object identity and bytes"
+  },
+  "observable_contract": {
+    "own_packet": "current timestamp must equal now_s; source must be cav_id",
+    "partner_packets": "only explicitly selected partner_ids; source ID must match report key; exact now_s - 1.0 timestamp; source within 100 m of ego; nearest four valid publishers, ties by ID",
+    "sensor_rows": "direct observations only, within 100 m of their publisher and in that packet's explicitly observed_lanes; packet source is also observable",
+    "timestamps": "apply to all rows in the atomic packet; fractional seconds supported without integer truncation; no position extrapolation or cross-step cache",
+    "queue_length": "visible unique vehicles with speed < 5 m/s and s_m <= 75.44; local lower bound, includes ego when applicable",
+    "approaching": "visible unique vehicles with s_m < 0, including stopped vehicles; arithmetic mean of observed speeds",
+    "rear_gap": "nearest visible rear vehicle in each lane relative to ego longitudinal position; max(0, ego_s - rear_s - measured_ego_length)",
+    "deduplication": "own sensing wins, then nearest publisher, then publisher ID; reduction and rear-vehicle ties are deterministic by vehicle ID",
+    "missingness": "explicit lane coverage, absent approaching-speed/rear data, own packet and partner packet flags; invalid atomic packets treated as missing",
+    "threshold_sources": [
+      "src/wms/control/contract.py: SENSOR_RANGE_M, CONTROL_DT_S, MERGE_S0_M, MERGE_S1_M, N_LANES",
+      "tools/coopmwm/v2v_obs.py: V2V_K, V2V_RANGE_M",
+      "src/wms/control/rsu_field.py: QUEUE_SPEED_MPS"
+    ],
+    "global_state": "not an accepted input; no global report iteration, truth features or RSU aggregate inputs"
+  },
+  "integration": {
+    "consumer": "T2C/T2D cooperation layer",
+    "recipe": "Construct timestamped SensorReport packets from actual local sensing, explicitly declare sensed lanes, retain each partner's original t-1 packet, supply selected V2V partner IDs, and stack returned per-CAV blocks for the cooperation layer.",
+    "base_actor": "Keep the frozen MAPPO input unchanged; consume the separate merge_features key only in the cooperation layer.",
+    "coverage_requirement": "Only declare lanes that the actual local sensor observes; same-lane-only sensors declare just their own lane. Vehicle length must be observable geometry."
+  },
+  "verification": [
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m py_compile tools/coopmwm/merge_features.py",
+      "result": "passed"
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tests/unit/test_merge_features.py tests/unit/test_c4_v2v_obs.py",
+      "result": "50 passed in 6.04s",
+      "t2f_contract_cases": 39,
+      "existing_v2v_observation_cases": 11,
+      "coverage": [
+        "layout, physical units and equality to registered constants",
+        "default-off no-read and byte identity; enabled additive mapping identity",
+        "queue counts, approaching mean speeds and bumper rear gaps",
+        "observed empty lane versus missing lane and source data",
+        "strict t-1 visibility, fractional timestamps, stale/current/future refusals",
+        "explicit partner selection, source identity, radio and local sensor range boundaries",
+        "deduplication, nearest-four cap and deterministic source/vehicle tie-breaking",
+        "malformed atomic packets and finite decision time",
+        "no global scan or access to unselected data and no cached reports across steps"
+      ]
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m ruff check tools/coopmwm/merge_features.py tests/unit/test_merge_features.py",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --cached --check",
+      "result": "passed for implementation and test commits"
+    }
+  ],
+  "execution": {
+    "cpu_only": true,
+    "sumo_runs": 0,
+    "gpu_runs": 0,
+    "remote_operations": 0,
+    "jobs_or_dispatches_started": 0,
+    "restricted_data_opened": false
+  },
+  "open_issues": []
+}
