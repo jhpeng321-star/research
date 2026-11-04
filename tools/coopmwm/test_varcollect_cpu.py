@@ -983,3 +983,228 @@ def test_extra_seeds_config_validation(tmp_path):
         vc.split_config(base_config(tmp_path, extra_seeds=True))
     assert vc.split_config(base_config(tmp_path, checkpoints=pin_checkpoints(tmp_path/'coop3'),
                                        extra_seeds=4))['extra_seeds'] == 4
+
+
+# ------------------------------------------------- V2V coop3 path (deploy fix round 3)
+
+def v2v_checkpoints(root, update=3, arms=('B', 'R'), seed=11):
+    """coop3-shaped V2V intent checkpoints saved by the REAL builder chain the live runtime
+    uses: a base MAPPO checkpoint widened through v2v_runtime.load_checkpoint with the
+    registered launch3 INTENT_OPTIONS, then the runtime's own accel_learner.save."""
+    from tools.coopmwm import v2v_launch3 as v3
+    from tools.coopmwm import v2v_runtime as vr
+    root = Path(root)
+    root.mkdir(parents=True, exist_ok=True)
+    out = {}
+    for arm in arms:
+        path = root/f'{arm}_checkpoint_{update:03d}.pt'
+        if not path.exists():
+            torch.manual_seed(seed)
+            base = Policy()
+            opt = torch.optim.Adam(base.parameters(), lr=3e-4)
+            base_path = root/f'_{arm}_base_u000.pt'
+            save(base_path, base, opt, torch.Generator(), 0, 0)
+            policy, optimizer, generator, _ = vr.load_checkpoint(base_path,
+                                                                 config=dict(v3.INTENT_OPTIONS))
+            save(path, policy, optimizer, generator, update, 0)
+            base_path.unlink()
+        out[arm] = dict(path=path, sha256=vc.file_sha256(path))
+    return out
+
+
+def coop3_intent_binding():
+    """The live coop3 runtime config exactly as its registered launcher produces it
+    (v2v_runner.prepare_intent - the intent launch3 binding v2v_launch3 pins)."""
+    from tools.coopmwm import v2v_runner
+    return v2v_runner.prepare_intent(dict(runtime='rt', accel_bounds=[-3., 2.], gpu_deadline=1.),
+                                     root='/coop3run', legacy_root='/coop3legacy',
+                                     source_root='/coop3src', common_checkpoint_sha256='0'*64)
+
+
+def test_pinned_policy_loads_coop3_v2v_checkpoints_with_the_live_runtime_builder(tmp_path):
+    """Deploy BLOCK: pinned_policy used the plain accel_learner.load, which fails on coop3
+    V2V checkpoints (intent-head keys + v2v_dim 48 input shape). It now loads through the
+    SAME builder the live coop3 runtime uses (v2v_runtime.load_checkpoint with the
+    registered launch3 INTENT_OPTIONS: v2v_dim=48, K=4 partner slots, intent head,
+    detach_trunk)."""
+    from tools.coopmwm import v2v_launch3 as v3
+    from tools.coopmwm import v2v_runtime as vr
+    from tools.coopmwm.v2v_intent import IntentPolicy
+    pins = v2v_checkpoints(tmp_path/'coop3')
+    cfg = vc.split_config(base_config(tmp_path, checkpoints=pins))
+    for arm in ('B', 'R'):
+        policy, pin = vc.pinned_policy(cfg, arm)
+        assert isinstance(policy, IntentPolicy) and pin['k'] == 3
+        assert policy.v2v_width == int(v3.INTENT_OPTIONS['v2v_dim']) == 48
+        assert policy.intent_horizon == v3.INTENT_OPTIONS['v2v_intent_horizon']
+        assert policy.intent_detach_trunk == v3.INTENT_OPTIONS['v2v_intent_detach_trunk']
+        assert int(policy.actor[0].weight.shape[1]) == 33+48     # widened coop3 input shape
+        assert vc.policy_v2v(policy) is True
+        assert vc.v2v_job_keys(policy) == dict(v2v=True, v2v_dim=48)
+        # the SAME class the live episode-side builder rebuilds from these very weights:
+        assert type(policy) is type(vr.from_weights(policy.state_dict(), enabled=True))
+    # a plain checkpoint keeps the plain loader (and its bytes)
+    plain_home = tmp_path/'plain_home'
+    plain_cfg = vc.split_config(base_config(plain_home,
+                                            checkpoints=pin_checkpoints(plain_home/'coop3')))
+    plain, _ = vc.pinned_policy(plain_cfg, 'B')
+    assert not isinstance(plain, IntentPolicy) and vc.policy_v2v(plain) is False
+    assert vc.v2v_job_keys(plain) == {}
+
+
+def test_pinned_v2v_load_is_strict_no_missing_or_unexpected_keys(tmp_path):
+    """The coop3 builder's state-dict load is STRICT: a checkpoint with an unexpected or a
+    missing key refuses at load (never silently accepted)."""
+    root = tmp_path/'coop3'
+    pins = v2v_checkpoints(root)
+    saved = torch.load(pins['B']['path'], weights_only=False)
+    extra = dict(saved, policy=dict(saved['policy'],
+                                    **{'bogus_head.weight': torch.zeros(1, 2)}))
+    torch.save(extra, pins['B']['path'])
+    cfg = vc.split_config(base_config(tmp_path, checkpoints=dict(
+        B=dict(path=str(pins['B']['path']), sha256=vc.file_sha256(pins['B']['path'])),
+        R=pins['R'])))
+    with pytest.raises(RuntimeError):          # unexpected key
+        vc.pinned_policy(cfg, 'B')
+    missing = dict(saved, policy={k: v for k, v in saved['policy'].items()
+                                  if k != 'actor.2.weight'})
+    torch.save(missing, pins['B']['path'])
+    cfg = vc.split_config(base_config(tmp_path, checkpoints=dict(
+        B=dict(path=str(pins['B']['path']), sha256=vc.file_sha256(pins['B']['path'])),
+        R=pins['R'])))
+    with pytest.raises(RuntimeError):          # missing key
+        vc.pinned_policy(cfg, 'B')
+
+
+def test_pinned_v2v_refuses_swapped_payload_update_before_building(tmp_path):
+    root = tmp_path/'coop3'
+    pins = v2v_checkpoints(root)
+    saved = torch.load(pins['B']['path'], weights_only=False)
+    torch.save(dict(saved, update=7), pins['B']['path'])
+    cfg = vc.split_config(base_config(tmp_path, checkpoints=dict(
+        B=dict(path=str(pins['B']['path']), sha256=vc.file_sha256(pins['B']['path'])),
+        R=pins['R'])))
+    with pytest.raises(ValueError, match='payload update'):
+        vc.pinned_policy(cfg, 'B')
+
+
+def test_collect_episode_jobs_equal_a_coop3_training_job_v2v_settings(tmp_path):
+    """A varcollect episode job carries EXACTLY the V2V settings the live coop3 training wave
+    adds to every train job (v2v_runner.run_arm wave extras), and accel_plant's builder
+    (v2v_runtime.from_weights) rebuilds the SAME intent policy class from the job weights."""
+    from tools.coopmwm.v2v_intent import IntentPolicy
+    from tools.coopmwm.v2v_runtime import from_weights
+    coop3 = coop3_intent_binding()
+    assert coop3['v2v'] is True and coop3['v2v_intent'] is True and coop3['v2v_dim'] == 48
+    pins = v2v_checkpoints(tmp_path/'coop3')
+    cfg = vc.split_config(base_config(tmp_path, checkpoints=pins))
+    root = tmp_path/'collect_root'
+    seen = []
+
+    def recorder(jobs):
+        seen.extend(jobs)
+        return fake_episodes(jobs)
+    charges, ctx = routed(tmp_path, cfg)
+    with ctx, patch.object(vc, 'run_episodes', recorder):
+        vc.collect(root, cfg, 'R', stop=lambda: False, rounds=1, episodes_per_round=1)
+    assert len(seen) == 1
+    job = seen[0]
+    coop3_wave = dict(v2v=True, v2v_dim=coop3['v2v_dim'])   # the wave extras of coop3 train jobs
+    assert {k: job[k] for k in coop3_wave} == coop3_wave
+    assert job['v2v_dim'] == int(vc.v2v_job_keys(vc.pinned_policy(cfg, 'R')[0])['v2v_dim'])
+    assert isinstance(from_weights(job['weights'], enabled=True), IntentPolicy)
+    assert charges['calls'] == [(cfg['episode_phase'], f'{PREFIX}_R_k003_e00000_{SEED}', 1200)]
+
+
+def test_plain_pinned_checkpoint_keeps_the_legacy_job_and_branch_bytes(tmp_path):
+    import os
+    from tools.coopmwm import bank_v2v
+    import tools.coopmwm.verify_perseed as vp
+    pins = pin_checkpoints(tmp_path/'coop3')
+    cfg = vc.split_config(base_config(tmp_path, checkpoints=pins))
+    jobs = vc.round_jobs(cfg, 'R', vc.pinned_policy(cfg, 'R')[0],
+                         vc.pinned_checkpoints(cfg)['R'], tmp_path/'root', 0, cfg['worlds'], 1)
+    assert 'v2v' not in jobs[0] and 'v2v_dim' not in jobs[0]   # legacy job bytes
+    seen = {}
+
+    def verify_recorder(*args, **kwargs):
+        seen['verify'] = os.environ.get(bank_v2v.ENV)
+        return []
+
+    def confirm_recorder(*args, **kwargs):
+        seen['confirm'] = os.environ.get(bank_v2v.ENV)
+        return []
+    charges, ctx = routed(tmp_path, cfg)
+    with ctx, patch.object(vc, 'run_episodes', fake_episodes), \
+            patch.object(rb, 'verify_pending', verify_recorder), \
+            patch.object(vp, 'confirm_pending_all8', confirm_recorder):
+        vc.collect(tmp_path/'collect_root', cfg, 'R', stop=lambda: False, rounds=1,
+                   episodes_per_round=1)
+    assert seen == {'verify': None, 'confirm': None}           # C4NM_V2V never set
+    assert os.environ.get(bank_v2v.ENV) is None
+
+
+def test_branch_replays_and_confirmations_run_the_v2v_observation_path(tmp_path):
+    """A coop3 V2V pinned policy runs every SUMO branch replay (window verifications AND the
+    all8 confirmations) under the coop3 branch flag C4NM_V2V=1 - the branch runner then uses
+    the V2V observation controller exactly as coop3 training branches do."""
+    import os
+    from tools.coopmwm import bank_v2v
+    import tools.coopmwm.verify_perseed as vp
+    pins = v2v_checkpoints(tmp_path/'coop3')
+    cfg = vc.split_config(base_config(tmp_path, checkpoints=pins))
+    seen = {}
+
+    def verify_recorder(*args, **kwargs):
+        seen['verify'] = os.environ.get(bank_v2v.ENV)
+        return []
+
+    def confirm_recorder(*args, **kwargs):
+        seen['confirm'] = os.environ.get(bank_v2v.ENV)
+        return []
+    charges, ctx = routed(tmp_path, cfg)
+    with ctx, patch.object(vc, 'run_episodes', fake_episodes), \
+            patch.object(rb, 'verify_pending', verify_recorder), \
+            patch.object(vp, 'confirm_pending_all8', confirm_recorder):
+        vc.collect(tmp_path/'collect_root', cfg, 'R', stop=lambda: False, rounds=1,
+                   episodes_per_round=1)
+    assert seen == {'verify': '1', 'confirm': '1'}   # branch subprocesses inherit the flag
+    assert os.environ.get(bank_v2v.ENV) is None      # restored after every call
+    with bank_v2v.enabled(True):                     # the coop3 branch-runner switch it drives
+        cls = bank_v2v.branch_controller_class()
+    assert cls is not None and any(k.__name__ == 'VerifyController' for k in cls.__mro__)
+    assert os.environ.get(bank_v2v.ENV) is None
+
+
+def test_b_gpu_search_path_evaluates_the_v2v_policy_class(tmp_path):
+    """Deploy BLOCK: the B WM search must evaluate the V2V policy. The worker overlay's
+    policy builder (policy_wm.load_actor - pinned in warm_service.NUMERICAL) rebuilds the
+    SAME widened coop3 layer class from the job's policy_state, the search forward runs with
+    matching shapes, and the absent-partner v2v columns are exactly neutral (the residual
+    equals the base 33-column actor)."""
+    from tools.coopmwm import policy_wm, v2v_model
+    from tools.coopmwm.v2v_intent import IntentPolicy
+    pins = v2v_checkpoints(tmp_path/'coop3', seed=5)
+    policy, _ = vc.pinned_policy(vc.split_config(base_config(tmp_path, checkpoints=pins)), 'B')
+    assert isinstance(policy, IntentPolicy)
+    state = policy_wm.actor_state(policy)          # exactly what round_jobs queues on the request
+    actor = policy_wm.load_actor(state, 'cpu')
+    assert int(actor.actor[0].weight.shape[1]) == 33+48      # coop3 v2v_dim 48 input shape
+    assert isinstance(actor.actor[0], v2v_model.V2VInputLinear)   # the SAME widened layer class
+    rows = [dict(vid='a', s_m=-20., v_mps=10., lane=1, is_cav=True, length_m=5.),
+            dict(vid='b', s_m=-40., v_mps=8., lane=2, is_cav=True, length_m=5.)]
+    wm_state = {k: torch.tensor([[r[k] for r in rows]]) for k in ('s_m', 'v_mps', 'lane', 'is_cav')}
+    wm_state['present'] = torch.ones_like(wm_state['is_cav'], dtype=torch.bool)
+    out = policy_wm.residuals(actor, wm_state, ['a', 'b'])
+    assert out.shape == wm_state['s_m'].shape and bool(torch.isfinite(out).all())
+    trunc = dict(state)
+    trunc['actor.0.weight'] = [row[:33] for row in state['actor.0.weight']]
+    base_actor = policy_wm.load_actor(trunc, 'cpu')
+    assert int(base_actor.actor[0].weight.shape[1]) == 33      # plain path unchanged
+    assert torch.allclose(out, policy_wm.residuals(base_actor, wm_state, ['a', 'b']),
+                          atol=1e-6, rtol=0)                   # zeros == exactly neutral
+    # and the plain caller bytes are unchanged (the existing WM-search parity shape)
+    plain = Policy()
+    plain_state = policy_wm.actor_state(plain)
+    plain_actor = policy_wm.load_actor(plain_state, 'cpu')
+    assert int(plain_actor.actor[0].weight.shape[1]) == 33 and not hasattr(plain_actor, 'intent_head')

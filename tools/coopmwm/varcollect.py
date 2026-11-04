@@ -6,7 +6,11 @@ c4/plan-variety: a collection root that is SEPARATE from the ledger.
 1. PINNED read-only policies: B_checkpoint_k / R_checkpoint_k are loaded from ANOTHER root
    (``policies_root``, the coop3 run root), sha256-checked against the staged config, with ONE
    k for both arms (``checkpoint_k_B``/``checkpoint_k_R`` must agree; a mismatch refuses and
-   nothing runs). The collection root never stores or updates a policy.
+   nothing runs). The collection root never stores or updates a policy. A coop3 V2V
+   checkpoint loads through the SAME builder the live coop3 runtime uses (strict state-dict
+   load; v2v_launch3.INTENT_OPTIONS), and its episodes/branch replays/confirmations run the
+   V2V observation path exactly as coop3 training episodes do (t-1 visibility, partner
+   intents from the policy head).
 2. Split collection root from ledger: the new root (the argv; its NAME is a parameter) holds
    jobs/snapshots/bank/broker files only. EVERY sim-s charge goes to the ONE shared training
    ledger through a configurable charge route (charge_route.mode, MAIN 2026-11-04 16:2x ledger
@@ -199,16 +203,52 @@ def pinned_checkpoints(cfg):
     return out
 
 
+BASE_ACTOR_INPUT = 33          # plain policy actor input width (29 features + 4 broadcast latent)
+
+
 def pinned_policy(cfg, arm):
-    """(policy, pin) - the PINNED checkpoint of ``arm`` loaded read-only; the payload's own
-    update id must equal the pinned k (a swapped/renamed file refuses)."""
-    from .accel_learner import load
+    """(policy, pin) - the PINNED checkpoint of ``arm`` loaded read-only with the SAME builder
+    the live coop3 runtime uses. The payload's own update id must equal the pinned k (a
+    swapped/renamed file refuses BEFORE any policy is built). A coop3 V2V checkpoint (intent
+    head or widened actor input) loads through v2v_runtime.load_checkpoint with the registered
+    launch3 intent options (v2v_launch3.INTENT_OPTIONS: v2v_dim=48 = K=4 partner slots x
+    (6+H+1), horizon 5, intent head, detach_trunk) - the exact load path of the live runtime
+    (v2v_runner.run_arm -> v2v_live.hooks['load_checkpoint'](path, config=cfg)); its
+    state-dict load is STRICT (a missing or unexpected key refuses). A base-width checkpoint
+    keeps the plain accel_learner.load bytes."""
     pin = pinned_checkpoints(cfg)[arm]
-    policy, _, _, payload = load(pin['path'])
-    if int(payload.get('update', -1)) != pin['k']:
-        raise ValueError(f'pinned {arm} checkpoint payload update {payload.get("update")} != '
+    import torch
+    saved = torch.load(pin['path'], map_location='cpu', weights_only=False)
+    if int(saved.get('update', -1)) != pin['k']:
+        raise ValueError(f'pinned {arm} checkpoint payload update {saved.get("update")} != '
                          f'pinned k {pin["k"]}')
+    state = saved.get('policy') or {}
+    if 'intent_head.weight' in state or int(state['actor.0.weight'].shape[1]) != BASE_ACTOR_INPUT:
+        from .v2v_launch3 import INTENT_OPTIONS
+        from .v2v_runtime import load_checkpoint
+        policy, _, _, _ = load_checkpoint(pin['path'], config=dict(INTENT_OPTIONS))
+    else:
+        from .accel_learner import load
+        policy, _, _, _ = load(pin['path'])
     return policy, pin
+
+
+def policy_v2v(policy):
+    """True when the pinned policy is the live coop3 V2V class (intent head or widened input
+    layer); a base-width plain policy stays on the legacy non-V2V bytes."""
+    if getattr(policy, 'intent_horizon', 0):
+        return True
+    return int(policy.actor[0].weight.shape[1]) != BASE_ACTOR_INPUT
+
+
+def v2v_job_keys(policy):
+    """The coop3 training-wave V2V episode keys for the pinned policy - exactly the extras
+    v2v_runner.run_arm's wave adds to every coop3 train episode (v2v=True and the registered
+    v2v_dim=48). Empty for a plain policy: the job dict keeps its legacy bytes."""
+    if not policy_v2v(policy):
+        return {}
+    from .v2v_launch3 import INTENT_OPTIONS
+    return dict(v2v=True, v2v_dim=int(INTENT_OPTIONS['v2v_dim']))
 
 
 # ---------------------------------------------------------------- charge route (ONE ledger)
@@ -604,7 +644,11 @@ def search_config(cfg):
 
 def round_jobs(cfg, arm, policy, pin, root, start, worlds_, episodes_per_round):
     """The episode jobs of one collection round (plain policy episodes; the collector guide
-    snapshots windows and queues requests; no plan is ever executed)."""
+    snapshots windows and queues requests; no plan is ever executed). A V2V pinned policy
+    runs the coop3 training-episode shape: the job carries the same v2v keys the live
+    runtime's wave adds (v2v=True, v2v_dim=48), so accel_plant rebuilds the SAME policy class
+    from the weights and wraps the controller with the V2V observation path (t-1 visibility,
+    partner intents from the policy head)."""
     from .policy_wm import actor_state
     from .protocol import digest
     jobs = []
@@ -624,7 +668,7 @@ def round_jobs(cfg, arm, policy, pin, root, start, worlds_, episodes_per_round):
                          accel_bounds=list(cfg['accel_bounds']), gpu_deadline=float(cfg['gpu_deadline']),
                          guided=False, beta=1., policy_state=actor_state(policy),
                          warm_history=bool(cfg['warm_history']), collector_policy_update=int(pin['k']),
-                         b_replay=True, collect=collect))
+                         b_replay=True, collect=collect, **v2v_job_keys(policy)))
     return jobs
 
 
@@ -661,6 +705,7 @@ def collect(root, cfg, arm, stop, episodes_per_round=2, rounds=None, verify_work
     reserve = route_charges(cfg)                       # refuses when the route is unavailable
     shared = Path(cfg['charge_route']['run_root'])
     policy, pin = pinned_policy(cfg, arm)              # refuses wrong k/sha BEFORE any charge
+    v2v = policy_v2v(policy)                           # coop3 V2V pinned policy -> V2V observations
     if arm == 'B':
         stage_broker(cfg, root)                        # CONFIG ONLY artifacts (validated above)
     bank = rb.bank_root(root, arm)
@@ -679,17 +724,19 @@ def collect(root, cfg, arm, stop, episodes_per_round=2, rounds=None, verify_work
     n = 0
     statuses = []
     run = episodes or run_episodes
+    from . import bank_v2v
     while not stop() and (rounds is None or n < rounds):
         start = sum(1 for _ in (root/'jobs').glob(f'{cfg["collect_id_prefix"]}_{arm}_*'))
         jobs = round_jobs(cfg, arm, policy, pin, root, start, cfg['worlds'], episodes_per_round)
         reserve(jobs, cfg['episode_phase'])            # the ONLY episode charge: the shared ledger
         refuse_local_ledger(root)
         run(jobs)
-        statuses += rb.verify_pending(root, arm, cfg['accel_bounds'], runner, charge, verify_workers,
-                                      decided, verify_per_round)
-        statuses += rb.confirm_pending(root, arm, runner_for, str(shared), CONFIRM_PHASE, workers=2,
-                                       limit=verify_per_round, verify_mode='all8_both_seeds',
-                                       extra_seeds=int(cfg['extra_seeds']))
+        with bank_v2v.enabled(v2v):    # branch subprocesses inherit C4NM_V2V (coop3 branch path)
+            statuses += rb.verify_pending(root, arm, cfg['accel_bounds'], runner, charge, verify_workers,
+                                          decided, verify_per_round)
+            statuses += rb.confirm_pending(root, arm, runner_for, str(shared), CONFIRM_PHASE, workers=2,
+                                           limit=verify_per_round, verify_mode='all8_both_seeds',
+                                           extra_seeds=int(cfg['extra_seeds']))
         rb.bank_quality(root, arm)
         refuse_local_ledger(root)
         n += 1
@@ -697,8 +744,9 @@ def collect(root, cfg, arm, stop, episodes_per_round=2, rounds=None, verify_work
             break
     deadline = time.time()+float(cfg['drain_s'])
     while time.time() < deadline:
-        statuses += rb.verify_pending(root, arm, cfg['accel_bounds'], runner, charge, verify_workers,
-                                      decided, verify_per_round)
+        with bank_v2v.enabled(v2v):
+            statuses += rb.verify_pending(root, arm, cfg['accel_bounds'], runner, charge, verify_workers,
+                                          decided, verify_per_round)
         refuse_local_ledger(root)
         time.sleep(2)
     return statuses

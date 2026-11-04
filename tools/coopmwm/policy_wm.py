@@ -9,10 +9,17 @@ def actor_state(policy):
 
 
 def load_actor(state, device):
-    policy=Policy().to(device).eval()
-    own=policy.state_dict()
-    required={k for k in own if k.startswith(('actor.', 'broadcast.'))}
+    policy=Policy().eval()
+    required={k for k in policy.state_dict() if k.startswith(('actor.', 'broadcast.'))}
     if set(state)!=required:raise ValueError('residual actor state whitelist')
+    extra=len(state['actor.0.weight'][0])-int(policy.actor[0].weight.shape[1])
+    if extra:
+        # A coop3 V2V actor state: widen with the SAME v2v input layers the live runtime
+        # builds (v2v_model.extend_for_v2v; identical state-dict key names, wider inputs).
+        from .v2v_model import extend_for_v2v
+        extend_for_v2v(policy, extra)
+    policy=policy.to(device)
+    own=policy.state_dict()
     own.update({k:torch.as_tensor(v,device=device,dtype=own[k].dtype) for k,v in state.items()})
     policy.load_state_dict(own)
     policy.zero_actor=not bool(policy.actor[-1].weight.count_nonzero() or policy.actor[-1].bias.count_nonzero())
@@ -52,6 +59,11 @@ def residuals(policy,state,ids):
     out=torch.zeros_like(state['s_m'])
     if policy.zero_actor:return out
     ix,x,rsu,mask=features(state,ids)
+    extra=int(policy.actor[0].weight.shape[1])-int(x.shape[-1])-int(policy.broadcast(rsu).shape[-1])
+    if extra>0:
+        # V2V input columns: the WM rollout carries no V2V radio state, so every partner slot
+        # reads as absent (all zeros; the registered scales keep them exactly neutral).
+        x=torch.cat((x,torch.zeros(*x.shape[:-1],extra,dtype=x.dtype,device=x.device)),-1)
     latent=policy.broadcast(rsu)[:,None,:].expand(-1,x.shape[1],-1)
     delta=policy.actor(torch.cat((x,latent),-1)).squeeze(-1)
     out[:,ix]=torch.where(mask,delta,0.)
