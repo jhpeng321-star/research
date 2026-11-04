@@ -602,9 +602,12 @@ def _protection_files(bank, extra=()):
 
 
 def protection_report(bank, extra=()):
-    """{source_file: ids} of every protection list found around the bank (read-only)."""
+    """{source_file: ids} of every protection list found around the bank (read-only).
+    ALL8_RETIRED registries are eligibility sources (retired_ids), never protections."""
     out = {}
     for p in _protection_files(bank, extra):
+        if p.name.startswith(RETIRED_STEM):
+            continue
         ids = _ids_in(_open_json(p))
         if ids:
             out[str(p)] = sorted(ids)
@@ -812,7 +815,10 @@ def first_seed_migrate(bank, archive_dir, dry_run=False, extra=()):
                                           dir=str(entry[0]), error=repr(e)))
                 out['kept'] += 1
                 continue
-            out[row['status']] = out.get(row['status'], 0)+1
+            if row['status'] == 'dry_run':     # never shadow the run's own dry_run flag
+                out['dry_run_branches'] = out.get('dry_run_branches', 0)+1
+            else:
+                out[row['status']] = out.get(row['status'], 0)+1
             out['bytes_moved'] += row['bytes_moved']
             out['bytes_removed'] += row['bytes_removed']
             out['slim_bytes'] += row['slim_bytes']
