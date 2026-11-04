@@ -1,5 +1,18 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 ~10:07 +08 — protected legacy-tail archive LIVE; release blocked
+- NEWdisjointSHAarchiveLIVE2548757/start77228342/controllegacy_tail_archive1000,
+  dispatch2548756. Registration920c126b/commitd5aad13b/4local+4LinuxPASS BEFORE
+  transfer. 240closedlegacyB19..21/R19..20RESULTfiles476840470bytes/rootFD+
+  bank+metadataauditPASS. CompactmetricskeptCPU/fulloriginalsGPUA/SHA-before-unlink.
+- At1793758027ownerLIVE/noFAIL/noverifiedbatchyet/free6074892288bytes; no
+  recoveryclaimed. BothregularmoversUNPAUSED; newscopedisjoint. ADOPT/notredispatch.
+- CanonicalMAIN10:05operatorentrynowreports src7/a7ae6d9a Linux262/262PASS;
+  runtime06e88ecd/monitor3retired. ReleasewriteDENIEDbypermissionclassifier,
+  reportedtoMAIN; doNOTattemptparallelrelease/gate/learner/monitor/override.
+- See coopmwm/LEGACY_TAIL_ARCHIVE_1000_STARTED.md; ops_sol/tail_archive_ops status.
+  B6evidencestillpending. ZeroSUMO/inference/chargesbyarchive.
+
 ## CURRENT Nov4 ~09:50 +08 — A8/B3/R3; resource shortfall observed
 - Full1125-linebriefREAD; latestV2V/B-REPLAYauthorityadopted, historicalwarmworkDONE.
 - A2049830LIVE/A8; B/Ru3mechanicspause/release+practiceDELEGATED. Operatorbranch
