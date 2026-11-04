@@ -9,10 +9,21 @@
   "spec": "E:/agent-work/_sol/tracks_spec.md, Track 2 additions T2E",
   "review": "REVIEW_T2E_r0.md",
   "reviewed_head": "d54b3853735fa86de3ebd74149e3e86b67c0bbbd",
+  "independent_fix_review": {
+    "report": "REVIEW_T2E_r1.md",
+    "verdict": "PASS",
+    "reviewed_head": "75c804e96b71c318e298788ad40bc2f069f2fb75",
+    "acceptance_receipt": "T2E_ACCEPTED.json",
+    "scope": "Additive CPU-build/API deliverable; both r0 blockers resolved and no additional blocking defect found. Live training and simulator validation remain integration work."
+  },
   "commits": [
     {
       "commit": "9f48aa0c8e81d398da8fc58bdf728fb8b310ac61",
       "step": "Fix both review blockers: resolve and persist the full horizon, validate requests and every exact branch window, snapshot the scored move, and add seven CPU regression tests."
+    },
+    {
+      "commit": "75c804e96b71c318e298788ad40bc2f069f2fb75",
+      "step": "Regenerate readiness after the tested review fixes; subsequently independently reviewed PASS in REVIEW_T2E_r1.md."
     }
   ],
   "receipt_commit_note": "This regenerated receipt is committed after the tested implementation commit above; identify its commit with git log -- T2E_READY.json.",
@@ -118,14 +129,27 @@
       ],
       "result": "All four failed as expected against reviewed HEAD, zero errors; the probe exited successfully after asserting that result. All pass against the fix in both pytest runs."
     },
+    "independent_fix_review": {
+      "source": "REVIEW_T2E_r1.md",
+      "result": "89 collected; 84 passed, 5 inherited failures, 0 skipped, 1 warning in 56.59s; all 38 T2E tests passed",
+      "additional_probes": "Credit-sign-independent verification selection and four-member branch/window mapping both passed.",
+      "resume_note": "These tests and probes completed before this fresh-session resume. Results are preserved, not rerun; production and test files have no changes since the independently reviewed HEAD."
+    },
     "warning": "Disabling the cacheprovider plugin produces the existing unknown cache_dir configuration warning.",
     "git_diff_check": "passed"
   },
   "open_issues": [
     "The five inherited broader-regression failures remain; the four-suite run is not fully green on this Windows host.",
-    "Real WM rollout, SUMO verification and live cooperation-layer training integration remain runtime validation owned by T2C/T2D. This receipt establishes CPU-build readiness; independent re-review of the fixes has not yet run."
+    "Real WM rollout, SUMO verification and live cooperation-layer training integration remain runtime validation owned by T2C/T2D. This receipt establishes independently reviewed CPU-build readiness."
   ],
   "unresolved_review_blockers": [],
+  "fresh_session_resume": {
+    "date": "2026-11-05",
+    "starting_head": "75c804e96b71c318e298788ad40bc2f069f2fb75",
+    "tracked_worktree_changes_at_start": false,
+    "action": "Read status/log, shared specification, both reviews and task receipts first; preserve completed fixes, tests and untracked review/acceptance receipts; refresh only this readiness receipt.",
+    "verification": "Confirmed branch c4/group-credit, implementation/test fix commit and unchanged reviewed files; git diff --check c4/track-base passed. No tests or dispatches restarted."
+  },
   "execution": {
     "new_sim_s": 0,
     "new_dispatches": 0,
