@@ -1,6 +1,19 @@
 # Fleet PPO controller-selector training status
 
-## Latest reconciliation — 2026-11-03 05:46 +08:00
+## Latest reconciliation — 2026-11-04 14:01 +08:00
+- Historical completed training:169updates/7,728new episodes/6,998,400charged sim-s.
+  Local14,400evaluation remains UNSTARTED; exact cap7,012,800unchanged.
+- Current remote verification is unavailable: cpuQ SSH timed out; gpuR closed the
+  connection before hashes returned. Current remote process/artifact/disk state is
+  UNKNOWN; Nov3's checkpoint/root/PID checks remain historical evidence only.
+- Fresh local exact-PID query finds observer3668/noonpublisher44716 absent.
+- Unchanged peer Nov3 status1793654980.5579967 records fleet16worlds/480decisions/
+  96oraclebranches/79,800charged=actual. Full WM/BB/per-CAV paired comparison remains
+  incomplete; no primary efficacy CI. Peer retains evaluation/statistics ownership.
+- Evidence: `selmappo/RESUME_20261104_1401.json`. Training restart is unnecessary;
+  new simulation/GPU/dispatches/observers/signals:0. Prior CPU/runtime PASS retained.
+
+## Previous reconciliation — 2026-11-03 05:46 +08:00
 - Existing training remains COMPLETE:169updates/7,728new episodes,
   6,998,400charged sim-s. Local14,400evaluation remains UNSTARTED; cap7,012,800.
 - Fresh cpuQ probe: original645235/root absent after owner cleanup; free disk
