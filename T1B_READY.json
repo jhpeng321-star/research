@@ -17,6 +17,15 @@
     "jobs_dispatched_or_duplicated": false,
     "first_reads": "git status/log, shared tracks_spec.md, independent r2 review and prior receipt"
   },
+  "acceptance_resume": {
+    "starting_head": "1f15a9ef0d249bebbbafd43efccd7c3f677778e7",
+    "starting_worktree_status": "Only REVIEW_T1B_r3.md and T1B_ACCEPTED.json untracked; implementation, tests and existing receipts clean",
+    "completed_work_preserved": true,
+    "active_task_pytest_jobs_found": false,
+    "existing_task_launcher_processes_preserved": true,
+    "jobs_dispatched_or_duplicated": false,
+    "action": "Preserved independent r3 PASS and acceptance marker; refreshed readiness using completed implementation and independent verification without repeating finished tests"
+  },
   "commits": [
     {"commit": "abaada860309abdd043f7fc0d250fc77688acba3", "step": "Calibrated paired-WM scoring and additive residual-profile decoding"},
     {"commit": "fcb0a2dcc6f7dfc9c368e8f03a1d26fab1584b00", "step": "Default-off V2V single-writer runtime hook"},
@@ -25,7 +34,9 @@
     {"commit": "6a116d767f07bd62efd0d76adfd50f524fe906f8", "step": "r1 fixes: plain MAPPO sampling continuation and enforced confidence 0.8"},
     {"commit": "fc92dce9", "step": "Preserve independent r2 review and superseded readiness"},
     {"commit": "cb765ba5bf5f55e85560fdeceed4800926ef6cae", "step": "r2 fix: shared observable joint-commitment lifetime, metadata-aware decoder and numeric regressions"},
-    {"commit": "ef6f9676", "step": "r2 CPU verification checkpoint: 188 tests plus 9 passing subtests"}
+    {"commit": "ef6f9676", "step": "r2 CPU verification checkpoint: 188 tests plus 9 passing subtests"},
+    {"commit": "1f15a9ef0d249bebbbafd43efccd7c3f677778e7", "step": "r2 readiness restored after joint-lifetime verification; independently reviewed implementation HEAD"},
+    {"commit": "cd128ec9", "step": "Preserve independent r3 PASS and acceptance receipt"}
   ],
   "receipt_commit": "The commit containing this T1B_READY.json; resolve with git log -1 --format=%H -- T1B_READY.json",
   "review": {
@@ -43,7 +54,8 @@
     ],
     "verification_checkpoint": "T1B_FIX_R2.json",
     "unresolved_blockers": [],
-    "independent_rereview_after_fix": "not yet performed"
+    "independent_rereview_after_fix": "PASS; REVIEW_T1B_r3.md reviewed HEAD 1f15a9ef0d249bebbbafd43efccd7c3f677778e7 with no blockers",
+    "acceptance_receipt": "T1B_ACCEPTED.json"
   },
   "defaults": {
     "runtime_enabled": false,
@@ -91,10 +103,22 @@
   ],
   "test_commands_and_interrupted_attempt": "T1B_FIX_R2.json contains exact commands and the excluded initial timeout; no active T1B job was duplicated.",
   "final_test_total": "188 passed plus 9 passing subtests; no failures or skips; completed runs counted once",
+  "independent_verification": {
+    "report": "REVIEW_T1B_r3.md",
+    "verifier": "astra",
+    "verdict": "PASS",
+    "reviewed_head": "1f15a9ef0d249bebbbafd43efccd7c3f677778e7",
+    "unresolved_blockers": [],
+    "focused_suites": "114 passed, 0 failed, 0 skipped in 364.86s",
+    "compatibility_suite": "48 passed, 0 failed, 0 skipped in 24.79s",
+    "regression_selection": "26 passed, 0 failed, 0 skipped; 9 passing subtests in 21.97s",
+    "total": "188 passed plus 9 passing subtests; independent confirmation, not added to implementation-run totals",
+    "commands": "Exact independent commands and environment are recorded in REVIEW_T1B_r3.md",
+    "resume_check": "git diff --check c4/track-base passed; no implementation/test changes since independently reviewed HEAD"
+  },
   "open_issues": [
     "T1A moves.py and T1C planner_calibration.py are absent in this worktree. Tests use permitted test-local dependencies. Actual cross-track API/artifact integration remains unverified.",
-    "No trained-WM or plant rollout was run. Full-horizon tests use synthetic dynamics. This receipt establishes CPU build/contract readiness, not evaluation performance.",
-    "Independent rereview of the r2 fix is pending."
+    "No trained-WM or plant rollout was run. Full-horizon tests use synthetic dynamics. This receipt establishes CPU build/contract readiness, not evaluation performance."
   ],
   "constraints": {
     "cpu_only": true,
