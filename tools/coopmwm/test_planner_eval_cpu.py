@@ -2,7 +2,7 @@
 
 Covers the owner 2026-11-04 requirements:
   registration - the seed list comes ONLY from the registration file passed in: strict schema
-                 (unknown keys refused), registered values pinned (60 s cadence, p_star 0.8,
+                 (unknown keys refused), configurable cadence (60 s default), pinned p_star 0.8,
                  full 300 s look-ahead, 1200 s episode, registered bootstrap triple), seeds
                  unique positive ints, normalized deterministically; every path-like string
                  anywhere inside is guarded (sealed/holdout/heldout/cal_split/chunk5/j4b/inc1,
@@ -25,6 +25,7 @@ Covers the owner 2026-11-04 requirements:
 """
 import json
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
@@ -128,7 +129,7 @@ def load(path):
 
 
 @pytest.mark.parametrize('key,value', [
-    ('p_star', .9), ('decision_interval_s', 30), ('lookahead_s', 150),
+    ('p_star', .9), ('lookahead_s', 150),
 ])
 def test_registration_refuses_unregistered_planner_values(tmp_path, key, value):
     d = load(reg(tmp_path))
@@ -201,23 +202,104 @@ def test_registration_seed_rules(tmp_path):
         pe.validate_registration(dict(good, worlds=[good['worlds'][0]]))
 
 
-def test_registration_guard_refuses_forbidden_and_truth_paths(tmp_path):
-    with pytest.raises(ValueError, match='forbidden path token'):
-        pe.load_registration(str(tmp_path/'sealed_seeds.json'))
+def test_registration_guard_refuses_forbidden_and_truth_paths(tmp_path, monkeypatch):
     d = load(reg(tmp_path))
-    for name, cal in (('holdout_cal', dict(path='runs/holdout/calibration.pt', sha256='a'*64)),
-                      ('truth_cal', dict(path='runs/vtype_truth.pt', sha256='a'*64)),
-                      ('heldout_cal', dict(path='x/heldout/cal.json', sha256='a'*64))):
-        p = tmp_path/f'{name}.json'
+    original_read = Path.read_text
+    original_write = Path.write_text
+
+    def safe_write(p, *args, **kwargs):
+        pe.guard_path(p)  # regression guard: refuse a restricted fixture filename before opening
+        return original_write(p, *args, **kwargs)
+
+    monkeypatch.setattr(Path, 'write_text', safe_write)
+    reads = Mock(side_effect=lambda p, *a, **kw: original_read(p, *a, **kw))
+    monkeypatch.setattr(Path, 'read_text', lambda p, *a, **kw: reads(p, *a, **kw))
+    for i, token in enumerate(pe.FORBIDDEN):
+        # Only strings contain restricted names; every opened registration has a safe name.
+        p = tmp_path/f'case_{i}.json'
+        cal = dict(path=f'runs/{token}/calibration.json', sha256='a'*64)
         p.write_text(json.dumps(dict(d, calibration=cal)), encoding='utf-8')
-        with pytest.raises(ValueError, match='REFUSED'):
-            pe.load_registration(str(p))
-    hidden = json.loads(json.dumps(d))
-    hidden['note'] = 'mirrored from repo/sealed/panel.json'
-    p = tmp_path/'hidden_sealed.json'
-    p.write_text(json.dumps(hidden), encoding='utf-8')
+        reads.reset_mock()
+        with pytest.raises(ValueError, match='forbidden path token'):
+            pe.load_registration(p)
+        assert reads.call_count == 1
+        assert reads.call_args.args[0] == p  # the outer file was read; nested ref was refused
+    p = tmp_path/'hidden_reference.json'
+    p.write_text(json.dumps(dict(d, note='mirrored from repo/sealed/panel.json')),
+                 encoding='utf-8')
     with pytest.raises(ValueError, match='sealed'):
-        pe.load_registration(str(p))
+        pe.load_registration(p)
+
+
+def test_direct_restricted_paths_rejected_before_file_access(tmp_path, monkeypatch):
+    read = Mock(side_effect=AssertionError('must not read a restricted path'))
+    stat = Mock(side_effect=AssertionError('must reject before checking file existence'))
+    monkeypatch.setattr(Path, 'read_text', read)
+    monkeypatch.setattr(Path, 'is_file', stat)
+    for token in pe.FORBIDDEN:
+        with pytest.raises(ValueError, match='forbidden path token'):
+            pe.load_registration(tmp_path/token/'nonexistent.json')
+    read.assert_not_called()
+    stat.assert_not_called()
+
+
+def test_registration_cadence_defaults_to_sixty(tmp_path):
+    d = load(reg(tmp_path))
+    d['planner'].pop('decision_interval_s')
+    assert pe.validate_registration(d)['planner']['decision_interval_s'] == 60
+    assert pe.build_plan(d) == plan(tmp_path)
+
+
+@pytest.mark.parametrize('interval', [0, -60, True, 60.0, '60', None, 77, 2400])
+def test_registration_invalid_cadence_refused(tmp_path, interval):
+    d = load(reg(tmp_path))
+    d['planner']['decision_interval_s'] = interval
+    with pytest.raises(ValueError, match='positive ints|multiple'):
+        pe.validate_registration(d)
+
+
+@pytest.mark.parametrize('interval', [30, 120, 75])
+def test_registered_cadence_end_to_end(tmp_path, interval):
+    path = reg(tmp_path, planner=dict(decision_interval_s=interval, p_star=.8,
+                                    lookahead_s=300, k_candidates=8,
+                                    wm_samples=5, groups_per_decision=3))
+    summary = pe.dry_run(path, tmp_path/'dry')
+    p = load(summary['plan_file'])
+    js = [json.loads(line) for line in Path(summary['jobs_file']).read_text().splitlines()]
+    assert pe.verify_plan(p) and pe.check_paired(p, js)
+    assert p['planner']['decision_interval_s'] == interval
+    assert p['planner']['lookahead_s'] == 300 and p['planner']['p_star'] == .8
+    q = summary['budget']
+    assert q['decision_interval_s'] == interval
+    assert q['decisions_per_episode'] == 1200//interval
+    assert q['planner_wm_total_rollout_s'] == len(SEEDS)*(1200//interval)*9*300*5*3
+    assert q['total_sim_s'] == 9600 and summary['new_sim_s'] == 0
+    records = []
+    for j in js:
+        trace = [dict(TRACE[0], t_s=interval)] if j['planner_enabled'] else []
+        if j['planner_enabled']:
+            assert j['planner']['decision_interval_s'] == interval
+        r = pe.make_receipt(j, dict(J=100., safety=SAFETY, planner_trace=trace))
+        r = json.loads(pe.canonical(r))
+        assert pe.validate_receipt(r) and pe.validate_receipt(r, j)
+        records.append(r)
+    assert len(pe.pair_receipts(records, p)) == len(SEEDS)
+    assert pe.analyze(records, p)['primary']['mean_diff_vs'] == 0.
+    j = next(j for j in js if j['planner_enabled'])
+    # Plan-free checks validate trace structure; only a bound job knows the cadence.
+    r = next(r for r in records if r['planner_enabled'])
+    off = pe.seal(dict(r, planner_trace=[dict(r['planner_trace'][0], t_s=interval+1)]),
+                  'receipt_sha256')
+    assert pe.validate_receipt(off)
+    with pytest.raises(ValueError, match='decision cadence'):
+        pe.validate_receipt(off, j)
+    with pytest.raises(ValueError, match='decision cadence'):
+        pe.pair_receipts([off if x['job_id'] == off['job_id'] else x for x in records], p)
+    for change, match in ((dict(p_better=.79), 'p_star'),
+                          (dict(lookahead_s=299), 'NEVER shortened')):
+        with pytest.raises(ValueError, match=match):
+            pe.make_receipt(j, dict(J=100., safety=SAFETY,
+                                   planner_trace=[dict(r['planner_trace'][0], **change)]))
 
 
 def test_registration_calibration_sha_and_missing_file(tmp_path):
@@ -356,6 +438,31 @@ def test_receipt_signed_and_verifiable_by_exact_grade(tmp_path):
     from tools.coopmwm.exact_grade import verify_sealed
     assert verify_sealed(r, 'receipt_sha256')                    # interop with the bank machinery
     pe.validate_receipt(r, job(p, SEEDS[0], pe.TREATMENT))
+
+
+@pytest.mark.parametrize('family,canonical', [
+    ('ease_off', 'ease_off'), ('smoothing', 'ease_off'), ('free', 'ease_off'),
+    ('wall', 'wall'), ('gap_open', 'gap_open'), ('ramp_assist', 'ramp_assist'), ('none', 'none'),
+])
+def test_shared_move_family_receipt_round_trip(tmp_path, family, canonical):
+    p = plan(tmp_path)
+    trace = [dict(TRACE[0], family=family, fired=family != 'none')]
+    r = receipt(p, SEEDS[0], trace=trace)
+    restored = json.loads(pe.canonical(r))
+    assert restored['planner_trace'][0]['family'] == canonical
+    assert pe.validate_receipt(restored)
+    assert pe.validate_receipt(restored, job(p, SEEDS[0], pe.TREATMENT))
+    assert set(pe.MOVE_FAMILIES) == {'ease_off', 'wall', 'gap_open', 'ramp_assist', 'none'}
+
+
+def test_unknown_move_family_rejected_at_creation_and_validation(tmp_path):
+    p = plan(tmp_path)
+    with pytest.raises(ValueError, match='not a registered move family'):
+        receipt(p, SEEDS[0], trace=[dict(TRACE[0], family='unknown_move')])
+    r = receipt(p, SEEDS[0])
+    r['planner_trace'][0]['family'] = 'unknown_move'
+    with pytest.raises(ValueError, match='not a registered move family'):
+        pe.validate_receipt(pe.seal(r, 'receipt_sha256'))
 
 
 def test_receipt_tamper_refused(tmp_path):

@@ -7,7 +7,7 @@ new_sim_s=0 and dry_run writes plan + jobs only. The seed list comes ONLY from t
 file passed on the command line - nothing is hard-coded here and no seed registry is opened; any
 path containing sealed/holdout/heldout/cal_split/chunk5/j4b/inc1, any hetdata_truth or
 vType/driver/vehicle_params truth file is refused everywhere (guard_path). The planner values the
-plan pins are the registered T1B numbers: 60 s decision cadence, fire only when the CALIBRATED
+plan pins are the registered T1B numbers: configurable decision cadence (60 s default), fire only when the CALIBRATED
 P(move beats MAPPO over the FULL look-ahead horizon) >= p_star = 0.8 (owner rule 10-18), horizon
 never shortened. The analysis is the registered estimator reused from branch_eval (10,000
 whole-world paired resamples, numpy default_rng(20261101), percentile 95% CI, two-sided CI
@@ -36,10 +36,11 @@ TREATMENT, COMPARATOR = 'PLANNER', 'MAPPO'
 METRIC = 'team_delay_vs'          # registered comparator J (veh-s); paired d = PLANNER - MAPPO
 
 EPISODE_END_S = 1200              # registered episode length (rerun_cpus.EPISODE_SIM_S)
-DECISION_INTERVAL_S = 60          # registered planner decision cadence (Track 1 T1B)
+DECISION_INTERVAL_S = 60          # default planner decision cadence (Track 1 T1B; configurable)
 P_STAR = 0.8                      # registered confidence gate (owner rule 10-18)
 LOOKAHEAD_S = 300                 # registered full WM look-ahead horizon - NEVER shortened
-MOVE_FAMILIES = ('free', 'wall', 'gap_open', 'ramp_assist', 'none')  # variety FAMILIES + 'none'
+MOVE_FAMILIES = ('ease_off', 'wall', 'gap_open', 'ramp_assist', 'none')  # T1A shared contract
+MOVE_FAMILY_ALIASES = {'free': 'ease_off', 'smoothing': 'ease_off'}  # legacy variety/boundary tags
 SAFETY_KEYS = ('collisions', 'teleports', 'ttc_below_3_vs', 'ttc_below_1p5_events', 'hard_brake')
 COMBINED_KEYS = ('hard_brake', 'ttc_below_1p5_events')   # replay_bank MAIN 2026-11-03 04:26 total
 HARD_KEYS = ('collisions', 'teleports')
@@ -190,8 +191,9 @@ def validate_registration(reg):
     if not isinstance(planner, dict) or set(planner)-set(PLANNER_KEYS)-set(PLANNER_OPTIONAL):
         raise ValueError(f'REFUSED: planner keys must be exactly '
                          f'{sorted(PLANNER_KEYS)+sorted(PLANNER_OPTIONAL)}')
-    for k, want in (('decision_interval_s', DECISION_INTERVAL_S), ('p_star', P_STAR),
-                    ('lookahead_s', LOOKAHEAD_S)):
+    interval = planner.get('decision_interval_s', DECISION_INTERVAL_S)
+    decisions_per_episode(EPISODE_END_S, interval)
+    for k, want in (('p_star', P_STAR), ('lookahead_s', LOOKAHEAD_S)):
         _check_registered('planner.'+k, planner.get(k), want)
     optional = {}
     for k in PLANNER_OPTIONAL:
@@ -229,7 +231,7 @@ def validate_registration(reg):
         raise ValueError('REFUSED: note must be a string')
 
     out = dict(schema=REGISTRATION_SCHEMA, worlds=worlds,
-               planner=dict(decision_interval_s=DECISION_INTERVAL_S, p_star=P_STAR,
+               planner=dict(decision_interval_s=interval, p_star=P_STAR,
                             lookahead_s=LOOKAHEAD_S,
                             **optional),
                episode=dict(end_s=EPISODE_END_S),
@@ -458,7 +460,8 @@ def _check_trace(trace, arm, planner, episode_end_s):
         if bad:
             raise ValueError(f'REFUSED: unregistered trace keys {sorted(bad)}')
         t = x.get('t_s')
-        if type(t) is not int or t <= 0 or t > episode_end_s or t % interval:
+        if (type(t) is not int or t <= 0 or t > episode_end_s
+                or (interval is not None and t % interval)):
             raise ValueError(f'REFUSED: trace t_s {t!r} is off the {interval} s decision cadence')
         group = x.get('group_id', '')
         if not isinstance(group, str):
@@ -478,6 +481,8 @@ def _check_trace(trace, arm, planner, episode_end_s):
         if x['fired'] and p < p_star:
             raise ValueError(f'REFUSED: fired at t={t} with P(better)={p} < p_star={p_star}')
         family = x.get('family')
+        if isinstance(family, str):
+            family = MOVE_FAMILY_ALIASES.get(family, family)
         if family is not None and family not in MOVE_FAMILIES:
             raise ValueError(f'REFUSED: trace family {family!r} is not a registered move family')
         members = x.get('members')
@@ -492,7 +497,10 @@ def _check_trace(trace, arm, planner, episode_end_s):
                              '(the look-ahead is NEVER shortened)')
         if x['fired'] and (family in (None, 'none') or members is None or lookahead is None):
             raise ValueError('REFUSED: fired moves need a non-none family, members and full lookahead_s')
-        out.append({k: x[k] for k in TRACE_KEYS if k in x})
+        normalized = {k: x[k] for k in TRACE_KEYS if k in x}
+        if 'family' in normalized:
+            normalized['family'] = family
+        out.append(normalized)
     return out
 
 
@@ -532,6 +540,8 @@ def make_receipt(job, outcome):
 
 
 def validate_receipt(record, job=None):
+    """Validate receipt integrity and trace structure. A bound job additionally enforces its
+    registered cadence and group bound; neither can be inferred from a plan hash alone."""
     if record.get('schema') != RECEIPT_SCHEMA or record.get('experiment') != EXPERIMENT:
         raise ValueError('REFUSED: not a planner_eval receipt')
     verify_seal(record, 'receipt_sha256')
@@ -558,7 +568,7 @@ def validate_receipt(record, job=None):
         if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0:
             raise ValueError(f'REFUSED: receipt safety.{k} must be a finite non-negative count')
     planner = (job['planner'] if job is not None and job['planner'] else
-               dict(decision_interval_s=DECISION_INTERVAL_S, p_star=P_STAR, lookahead_s=LOOKAHEAD_S))
+               dict(decision_interval_s=None, p_star=P_STAR, lookahead_s=LOOKAHEAD_S))
     _check_trace(record.get('planner_trace', []), record['arm'], planner,
                  record['episode_end_s'])
     if job is not None:
