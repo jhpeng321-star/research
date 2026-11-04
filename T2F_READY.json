@@ -20,6 +20,10 @@
     {
       "sha": "0f3d738a15bf60b58383c5b265f6600be21e4793",
       "step": "CPU contract tests and observation regression verification"
+    },
+    {
+      "sha": "8bea9f638d2e475ceac4c4913aa0b304aca0c39b",
+      "step": "original T2F readiness receipt"
     }
   ],
   "receipt_commit_lookup": "git log -1 --format=%H -- T2F_READY.json",
@@ -123,5 +127,18 @@
     "jobs_or_dispatches_started": 0,
     "restricted_data_opened": false
   },
-  "open_issues": []
+  "open_issues": [],
+  "fresh_session_resume": {
+    "date": "2026-11-05",
+    "verified_head": "8bea9f638d2e475ceac4c4913aa0b304aca0c39b",
+    "tracked_changes_on_arrival": false,
+    "existing_review": "REVIEW_T2F_r0.md",
+    "existing_acceptance": "T2F_ACCEPTED.json",
+    "review_verdict": "PASS; no blockers",
+    "independent_verification": "50 passed (39 T2F contracts + 11 V2V observation regressions); Ruff and diff checks passed, as recorded by the existing reviewer",
+    "verification_provenance": "Prior completed executions retained; tests were not rerun in this resume",
+    "resume_action": "Read shared spec, git status/log, readiness and review/acceptance receipts; confirmed the base diff contains only the three T2F deliverables; preserved implementation, tests, and existing reviewer files",
+    "jobs_or_dispatches_started": 0,
+    "implementation_changes": false
+  }
 }
