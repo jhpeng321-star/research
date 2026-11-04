@@ -41,6 +41,28 @@
     },
     "new_jobs_or_dispatches": 0
   },
+  "latest_resume": {
+    "starting_commit": "1c0762385375c40cd766f9eb08e895908079f9ac",
+    "branch_verified": "c4/planner-eval",
+    "receipts_checked": [
+      "T1D_READY.json",
+      "REVIEW_T1D_r0.md",
+      "REVIEW_T1D_r1.md",
+      "T1D_ACCEPTED.json",
+      "T1D_READY.blocked0.json"
+    ],
+    "independent_review_addendum_checked": "Subsequent fresh-session verification at 1c076238: PASS, no required fixes",
+    "reviewed_revision_comparison": "git diff --name-status 0ba5e75a6dea0da703e38f234de1ffc4ade36fa8 HEAD: only T1D_READY.json modified",
+    "diff_check": "git diff --check c4/track-base: exit code 0",
+    "completed_work_preserved": true,
+    "existing_untracked_review_and_receipt_files_preserved": true,
+    "remaining_blockers": 0,
+    "tests_repeated": false,
+    "dry_run_repeated": false,
+    "test_evidence": "Preserved completed implementation run: 101 passed; independently reproduced r1 run: 101 passed, zero failures, skips or deselections, warnings as errors. Implementation and tests are unchanged from that reviewed revision.",
+    "new_jobs_or_dispatches": 0,
+    "action": "Verified completed r0 fixes and r1 acceptance before refreshing this receipt; no unfinished implementation or test step remains. Preserved prior work and avoided duplicate completed work as requested."
+  },
   "implementation_commits": [
     {
       "sha": "eb0c2763c7760232552cd0ec5a6a6cfe6c9d697f",
