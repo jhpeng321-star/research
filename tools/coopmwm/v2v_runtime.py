@@ -134,8 +134,12 @@ def controller_class(base):
                 # One pre-safety request map still flows to CommandOwnership;
                 # this hook never calls TraCI or creates a second writer.
                 event = self.events[-1]
+                from .planner_policy import snapshot
+                # board was advanced above; the policy observed the previous
+                # board captured in spec, not this second's publications.
+                radio = snapshot(self, frame, previous, spec['board'] if intent is not None else {})
                 desired = self.online_planner.apply(rows, commands, now,
-                    sample=event['sample'], desired=desired, policy=saved)
+                    sample=event['sample'], desired=desired, policy=saved, policy_radio=radio)
                 event['requests'] = desired
             return desired
 

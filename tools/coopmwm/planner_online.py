@@ -43,7 +43,8 @@ def validate_observation(record):
     """Reject extra truth fields and observations outside the ego's radio/sensor view."""
     from .v2v_obs import V2VConfig
     allowed = {'ego_id', 'group', 'rows', 'time_s', 'world_id', 'state_id',
-               'commands', 'policy_residuals', 'policy_state', 'history', 'committed_offsets'}
+               'commands', 'policy_residuals', 'policy_state', 'history', 'committed_offsets',
+               'policy_radio'}
     if set(record) - allowed:
         raise ValueError('planner observable record whitelist violation')
     required = {'ego_id', 'group', 'rows', 'time_s', 'commands',
@@ -73,6 +74,8 @@ def validate_observation(record):
         raise ValueError('group lacks base commands')
     if not isinstance(record['policy_state'], Mapping):
         raise ValueError('dynamic base-policy actor state required')
+    from .planner_policy import validate as validate_radio
+    validate_radio(record)
     history = validate_history(record.get('history', []), now)
     for frame in history:
         past = {r['vid']: r for r in frame['rows']}
@@ -196,7 +199,8 @@ class WMRollout:
     def __call__(self, record, actions, K, H):
         from .plan_wm import evaluate
         return evaluate(self.runtime, record, actions, K, H, trim=False,
-                        chunk_actions=self.chunk_actions, memory=self.memory, final_chain=True)
+                        chunk_actions=self.chunk_actions, memory=self.memory, final_chain=True,
+                        require_policy_radio=True)
 
 
 class OnlinePlanner:
@@ -237,7 +241,7 @@ class OnlinePlanner:
                                     if v in visible})
         return profiles if any(profiles) else []
 
-    def apply(self, rows, commands, now, *, sample, desired, policy):
+    def apply(self, rows, commands, now, *, sample, desired, policy, policy_radio=None):
         """Called exactly once per runtime second, after base-policy sampling."""
         from .warm_history import ObservableHistory
         from .policy_wm import actor_state
@@ -285,6 +289,9 @@ class OnlinePlanner:
                                   commands={v: commands[v] for v in cavs & visible},
                                   policy_residuals=residuals, policy_state=state,
                                   history=self.histories[ego].snapshot(now))
+                    if policy_radio is not None:
+                        from .planner_policy import local_snapshot
+                        record['policy_radio'] = local_snapshot(policy_radio, local[ego])
                     if self.world_id is not None:
                         record['world_id'] = self.world_id
                     background = self._background(visible, now)

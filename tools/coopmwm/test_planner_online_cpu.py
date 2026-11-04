@@ -223,7 +223,8 @@ def test_wm_adapter_uses_existing_evaluator_and_final_ownership_chain(monkeypatc
     adapter = po.WMRollout(runtime, memory='belief', chunk_actions=2)
     assert adapter(record(), [], 8, 600) == {'ok': True}
     assert calls[0][0][0] is runtime and calls[0][0][3:] == (8, 600)
-    assert calls[0][1] == dict(trim=False, chunk_actions=2, memory='belief', final_chain=True)
+    assert calls[0][1] == dict(trim=False, chunk_actions=2, memory='belief', final_chain=True,
+                             require_policy_radio=True)
 
 
 def test_wm_adapter_rejects_non_cpu_model_without_allocating_gpu():
