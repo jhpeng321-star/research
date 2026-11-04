@@ -1,5 +1,20 @@
 # S-COOPMWM — live checks
 
+## Nov4 11:10 UTC+8 — A11/B4/R4; recovered B/R updates pass mechanics and safety
+- Existing r2 supervisors and runtime-bound monitor4 are live. **B4 and R4 each
+  completed five imitation passes**, with KL0.042823/0.035858 below0.045 and no
+  imitation failure. B used8 within-seed cooperative examples; R used3.
+- B action MAE1.325578->1.301208m/s²; AWR41.1000->38.8359. Its first-pass
+  loss-change95%CI[-0.03473,-0.02270] is below0. R action MAE0.455657->0.451148;
+  AWR19.3963->18.5896. R first-pass CI includes0 and does not trigger a pause.
+- **Composite safety passes for both**,24 paired TRAIN worlds,0collisions and
+  teleports. Critical-total B-A+1.6875 CI[-24.5625,29.6464]; R-A-3.125
+  CI[-22.875,14.1875]. B intent loss2.2928->3.8845 increased; R0.4942->0.3818
+  decreased. Intent trends remain report-only. B6 viability checks remain pending.
+- cpuQ~7.02GiB free; both archive movers live. Backfill correctly disk-paused
+  below9GiB. Completed tail/slim migrations were adopted without redispatch.
+  Full live evidence: `coopmwm/RESUME_ADOPTION_20261104_1110.md`.
+
 ## Nov4 10:54 UTC+8 — TRAINING RUNNING r2; approved storage work complete
 - **A10/B3/R3 completed.** The delegated r2 supervisor and B/R runners are live;
   B u4 episodes have run and its learner is active. R retains its registered

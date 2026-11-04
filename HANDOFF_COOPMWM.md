@@ -1,5 +1,18 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 11:10 +08 — fresh session adopted A11/B4/R4; both safety guards PASS
+- Full1128-linebriefREAD; gitlog/status/receiptsfirst, dirtyworkpreserved.
+  r2supervisor2636865/B2636963/R2636968+monitor4LIVE/runtime06e88ecdMATCH.
+- B4/R4fivefullpasses/noimitationfailure/KL.042823/.035858<.045. BMAE
+  1.325578->1.301208/R.455657->.451148;8B/3Rcoopexamples. Bintent
+  2.292834->3.884506rose/reportonly; R.494158->.381831fell. Bothcomposite
+  safetyPASS/0collisions+teleports/24worlds. B6lesson+isolatedstillpending.
+- CPU7.02GiB/free7534977024;10GiBtargetshort3202441216bytes. BothmoversLIVE,
+  extension1311359561bytes/17batchesmoved+310586036eligible. Backfilldiskpaused,
+  38done/157queued/noactivegrades;9GiBguard+MAINcollectorSTOPkept.
+- Nojobs/release/archivesredispatched. CPU-Squalificationdelegated/notadmitted.
+  See coopmwm/RESUME_ADOPTION_20261104_1110.md and PUBLIC_PROGRESS_1793761820606610100.
+
 ## CURRENT Nov4 10:54 +08 — qualified r2 ADOPTED; TRAINING RUNNING
 - Qualifiedsrc7/a7ae6d9a mergedas6dd5cd1bpreservingallstorage/dirtywork. Two
   monitoradd/addconflictsresolvedEXACTLYtoqualifieddeployedfiles (gitdiffzero);
