@@ -28,3 +28,11 @@ reference filtering was the slow part. No physics or inference occurred.
 
 This commit precedes archive dispatch. Adopt the later DISPATCH/OWNER/status
 receipts; never duplicate the owner. No source-removal completion is claimed here.
+
+## Dispatch evidence
+Dispatched once after registration commitd4d4376d: parent2343560,
+root worker2343561/start76692010, bootb8bc1fcb-c656-4e1e-a43d-4543118c834e.
+At unix1793752763 worker identity matches and first batch is in progress;
+**zero certified source removals** at that probe. Free6548140032bytes (~6.10GiB).
+Original movers are untouched. Adopt `CLOSED_GATE_ARCHIVE_0830_DISPATCH.json`
+and the named control; do not start another worker.

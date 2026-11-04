@@ -1,6 +1,11 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
 ## Fresh adoption Nov4 ~08:15 +08
+- NEWdisjointclosedgatearchiveLIVE2343561/start76692010/controlclosedgate_archive0830;
+  registered953232ff/commitd4d4376d,5local+5LinuxPASS. Onlygate_coop2/4/5terminal
+  rawbranches255files289878263bytes afterprotection;activegate6/bank/checkpoints/
+  rootreportsexcluded. Firstbatchinflight/0certifiedat1793752763/free6548140032.
+  Neverpausestheothermovers. Ops_sol/coopmwm_closedgate_archive_ops.py status.
 - ReadonlyslimmerREADYquote: B548417713+R387653264=936070977bytes gross;
   evenallrecoveredstill1762545855bytesbelow9GiB beforewrites/SLIMoverhead.
   Branchstillchanging/reviewpending: NOmerge/activation/migration. Capacity
