@@ -13,6 +13,7 @@ import math
 from collections.abc import Mapping
 
 from .warm_history import sensor_rows, validate_history
+from .planner_commitments import in_contact
 
 
 @dataclass(frozen=True)
@@ -45,7 +46,7 @@ def validate_observation(record):
     """Reject extra truth fields and observations outside the ego's radio/sensor view."""
     from .v2v_obs import V2VConfig
     allowed = {'ego_id', 'group', 'rows', 'time_s', 'world_id', 'state_id',
-               'commands', 'policy_residuals', 'policy_state', 'history', 'committed_offsets',
+               'commands', 'policy_residuals', 'policy_state', 'history', 'committed_moves',
                'policy_radio'}
     if set(record) - allowed:
         raise ValueError('planner observable record whitelist violation')
@@ -86,10 +87,23 @@ def validate_observation(record):
             raise ValueError('history exceeds the ego observable view')
     if history and history[-1]['rows'] != rows:
         raise ValueError('history must end at the current observation')
-    for values in record.get('committed_offsets', []):
-        if (not set(values) <= cavs-set(group)
-                or any(not math.isfinite(v) for v in values.values())):
-            raise ValueError('committed offsets must target other observed CAVs')
+    owned = set(group)
+    for commitment in record.get('committed_moves', []):
+        if set(commitment) != {'ego_id', 'members', 'offset_profile'}:
+            raise ValueError('commitment metadata whitelist violation')
+        members = commitment['members']
+        if (not 1 <= len(members) <= 4 or len(set(members)) != len(members)
+                or commitment['ego_id'] not in members or not set(members) <= cavs-owned
+                or not in_contact(commitment, rows, cavs)):
+            raise ValueError('commitment requires complete disjoint observable CAV membership/contact')
+        owned.update(members)
+        profile = commitment['offset_profile']
+        if not isinstance(profile, list) or not 1 <= len(profile) <= 600:
+            raise ValueError('invalid commitment duration')
+        for values in profile:
+            if (not set(values) <= set(members)
+                    or any(not math.isfinite(v) for v in values.values())):
+                raise ValueError('invalid commitment offsets')
     return record
 
 
@@ -142,18 +156,18 @@ def score_moves(record, rng, *, rollout, calibration, config=None, calibrate=Non
         raise ValueError('move generator exceeded candidate budget')
     # "none" continues the SAME current actor, including when it has residuals.
     actions = [dict(id='policy', residuals={}, window=0)]
-    background = record.get('committed_offsets', [])
+    background = record.get('committed_moves', [])
     if background:
-        actions[0]['offset_profile'] = copy.deepcopy(background)
+        actions[0]['offset_commitments'] = copy.deepcopy(background)
     actual = []
     for move in candidates:
         if _field(move, 'family') == 'none':
             continue  # one explicit, separately rolled comparator only
         profile = _profile(move, move_api, record, config.horizon_s)
-        if background:
-            profile = [{**(background[t] if t < len(background) else {}), **values}
-                       for t, values in enumerate(profile)]
-        action = dict(id=f'move:{len(actual)}', offset_profile=profile)
+        commitment = dict(ego_id=record['ego_id'], members=list(_field(move, 'members')),
+                          offset_profile=profile)
+        action = dict(id=f'move:{len(actual)}',
+                      offset_commitments=[*copy.deepcopy(background), commitment])
         actions.append(action)
         actual.append(move)
     futures = rollout(copy.deepcopy(record), actions, config.wm_samples, config.horizon_s)
@@ -235,13 +249,19 @@ class OnlinePlanner:
         return [copy.deepcopy(r) for r in rows if abs(r['s_m']-own['s_m']) <= radius]
 
     def _background(self, visible, now):
-        profiles = [{} for _ in range(self.config.horizon_s)]
+        commitments = []
         for active in self.active:
+            members = set(active['members'])
+            if not members & visible:
+                continue
+            if not members <= visible:
+                # Never flatten a partially observed joint move or expose an
+                # unseen partner's metadata. This group's decision fails closed.
+                raise ValueError('background commitment is only partially observable')
             elapsed = now-active['start_s']
-            for t in range(min(len(profiles), active['duration_s']-elapsed)):
-                profiles[t].update({v: x for v, x in active['offset_profile'][elapsed+t].items()
-                                    if v in visible})
-        return profiles if any(profiles) else []
+            commitments.append(dict(ego_id=active['ego_id'], members=list(active['members']),
+                                    offset_profile=copy.deepcopy(active['offset_profile'][elapsed:])))
+        return commitments
 
     def apply(self, rows, commands, now, *, sample, desired, policy, policy_radio=None):
         """Called exactly once per runtime second, after base-policy sampling."""
@@ -264,9 +284,7 @@ class OnlinePlanner:
         # Loss of a member/radio contact ends the joint commitment, rather than
         # commanding a departed/reused identity or a now-unobservable partner.
         self.active = [a for a in self.active
-                       if now < a['start_s']+a['duration_s'] and a['ego_id'] in cavs
-                       and set(a['members']) <= cavs
-                       and set(a['members']) <= {r['vid'] for r in local[a['ego_id']]}]
+                       if now < a['start_s']+a['duration_s'] and in_contact(a, rows, cavs)]
         decisions = []
         if now % self.config.cadence_s == 0:
             # Receding-horizon control: no stale high-confidence decision survives
@@ -298,7 +316,7 @@ class OnlinePlanner:
                         record['world_id'] = self.world_id
                     background = self._background(visible, now)
                     if background:
-                        record['committed_offsets'] = background
+                        record['committed_moves'] = background
                     record['state_id'] = digest(record)
                     result = score_moves(record, self.rng, rollout=self.rollout,
                                          calibration=self.calibration, config=self.config,

@@ -138,9 +138,11 @@ def test_high_confidence_negative_expected_gain_does_not_fire(monkeypatch):
 def test_short_move_still_scored_on_full_requested_horizon(monkeypatch):
     result, _, seen = score(monkeypatch, {'policy': [10.]*8, 'move:0': [9.]*8})
     action = seen[0][1][1]
-    assert seen[0][3] == result['horizon_s'] == len(action['offset_profile']) == 600
-    assert action['offset_profile'][:3] == [{'a': -.5, 'b': -.5}, {'a': -.5, 'b': -.5}, {}]
-    assert not any(action['offset_profile'][2:])
+    commitment, = action['offset_commitments']
+    assert commitment['ego_id'] == 'a' and commitment['members'] == ['a', 'b']
+    assert seen[0][3] == result['horizon_s'] == len(commitment['offset_profile']) == 600
+    assert commitment['offset_profile'][:3] == [{'a': -.5, 'b': -.5}, {'a': -.5, 'b': -.5}, {}]
+    assert not any(commitment['offset_profile'][2:])
 
 
 @pytest.mark.parametrize('kwargs', [dict(horizon_s=300), dict(wm_samples=1), dict(cadence_s=0),
@@ -414,12 +416,57 @@ def test_each_disjoint_group_scored_and_previous_commitments_shared_in_both_wm_a
     assert len(calls) == 2 and len(planner.active) == 2
     assert calls[0][0]['group'] == list('abcd') and calls[1][0]['group'] == list('ef')
     assert set(desired) == set('abcdef')  # HDV excluded even when commands contains it
-    background = calls[1][0]['committed_offsets'][0]
-    assert background == {v: -.5 for v in 'abcd'}
+    background, = calls[1][0]['committed_moves']
+    assert background['ego_id'] == 'a' and background['members'] == list('abcd')
+    assert background['offset_profile'][0] == {v: -.5 for v in 'abcd'}
     baseline, move = calls[1][1]
-    assert baseline['offset_profile'][0] == background
-    assert move['offset_profile'][0] == {v: -.5 for v in 'abcdef'}
+    assert baseline['offset_commitments'] == [background]
+    assert move['offset_commitments'][0] == background
+    assert move['offset_commitments'][1]['offset_profile'][0] == {v: -.5 for v in 'ef'}
     assert planner.active[1]['offset_profile'][0] == {v: -.5 for v in 'ef'}
+
+
+def test_partial_background_view_fails_closed_without_exposing_unseen_metadata(monkeypatch):
+    c, planner, calls, _ = runtime(monkeypatch, moves=GroupMoves(hold=120))
+    rows = [row(v, s) for v, s in zip('abcdef', [-90., -80., -70., 0., 80., 90.])]
+    c.apply(rows, {v: .1 for v in 'abcdef'}, 60)
+    assert len(calls) == 1 and len(planner.active) == 1
+    assert calls[0][0]['group'] == list('abcd')
+    decisions = c.events[-1]['sample']['planner_online']['decisions']
+    assert decisions[-1]['reason'] == 'planner_unavailable'
+    assert 'partially observable' in decisions[-1]['error']
+    assert not any('committed_moves' in rec for rec, *_ in calls)
+
+
+@pytest.mark.parametrize('mutate', [
+    lambda c: c.pop('ego_id'),
+    lambda c: c.update(ego_id='unseen'),
+    lambda c: c.update(members=['c', 'unseen']),
+    lambda c: c.update(members=['a', 'c']),
+    lambda c: c.update(offset_profile=[{'h': -.5}]),
+    lambda c: c.update(offset_profile=[{'c': float('nan')}]),
+    lambda c: c.update(offset_profile=[]),
+])
+def test_background_commitment_requires_complete_observable_metadata(mutate):
+    rec = record()
+    rec['rows'].append(row('c', 30.))
+    radio = rec['policy_radio']
+    radio['frame']['vehicles'].append(dict(rec['rows'][-1], issued_acceleration_mps2=None))
+    radio['noise']['c'] = rec['policy_residuals']['c'] = 0.
+    rec['commands']['c'] = .1
+    commitment = dict(ego_id='c', members=['c'], offset_profile=[{'c': -.5}])
+    rec['committed_moves'] = [commitment]
+    po.validate_observation(rec)
+    mutate(commitment)
+    with pytest.raises(ValueError):
+        po.validate_observation(rec)
+
+
+def test_metadata_free_background_offsets_are_refused():
+    rec = record()
+    rec['committed_offsets'] = [{'a': -.5}]
+    with pytest.raises(ValueError, match='whitelist'):
+        po.validate_observation(rec)
 
 
 def test_only_ego_local_rows_commands_and_history_reach_move_generator_or_wm(monkeypatch):

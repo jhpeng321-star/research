@@ -39,10 +39,15 @@ def profile_table(actions, ids, device, horizon=300, dynamic_policy=False):
             for v,x in committed_background(a.get('committed_plans',[]),t).items():
                 if v in slots:
                     raw[b,t,slots[v]]=x;mask[b,t,slots[v]]=True;residual[b,t,slots[v]]=False
+            for commitment in a.get('offset_commitments',[]):
+                profile=commitment['offset_profile']
+                for v,x in (profile[t] if t<len(profile) else {}).items():
+                    if v in slots:
+                        raw[b,t,slots[v]]=x;mask[b,t,slots[v]]=True;residual[b,t,slots[v]]=True
     return raw.to(device),mask.to(device),residual.to(device)
 
 
-def profile_apply(accel,tick,table,bounds,offset_actions=None):
+def profile_apply(accel,tick,table,bounds,offset_actions=None,commitment_mask=None):
     raw,mask,residual=table
     t=int(tick*.5)
     if t>=raw.shape[1]:return accel
@@ -53,7 +58,8 @@ def profile_apply(accel,tick,table,bounds,offset_actions=None):
         # Only the new offset decoder uses the registered CAV request cap.
         # Unchanged vehicles still retain their original policy continuation.
         request=torch.where(offset_actions,request.clamp_max(1.2),request)
-    out[:,:n]=torch.where(mask[:,t],request.clamp(*bounds),accel[:,:n])
+    active=mask[:,t] if commitment_mask is None else mask[:,t]&commitment_mask
+    out[:,:n]=torch.where(active,request.clamp(*bounds),accel[:,:n])
     return out
 
 
@@ -75,6 +81,8 @@ def plan_executor(horizon=300, policy=None, trace=None, final_chain=False, polic
     if matches!=1:raise ValueError('inherited pre-safety ABI changed')
     ast.fix_missing_locations(tree)
     held=[None]
+    from .planner_commitments import Lifetimes
+    lifetimes=Lifetimes()
     from .command_chain import SlowDown
     chain=SlowDown() if final_chain else None
     def post_safety(state,raw,tick,safety,kw):
@@ -100,9 +108,11 @@ def plan_executor(horizon=300, policy=None, trace=None, final_chain=False, polic
                          else residuals(policy,state,ids))
             own=torch.tensor([a['id']!='MAPPO' for a in actions],device=accel.device)[:,None]
             accel=accel+held[0]*own
-        offset_actions=(torch.tensor(['offset_profile' in a for a in actions],device=accel.device)[:,None]
-                        if any('offset_profile' in a for a in actions) else None)
-        raw=profile_apply(accel,tick,table,bounds,offset_actions=offset_actions)
+        offset_actions=(torch.tensor(['offset_profile' in a or 'offset_commitments' in a for a in actions],device=accel.device)[:,None]
+                         if any('offset_profile' in a or 'offset_commitments' in a for a in actions) else None)
+        live=(lifetimes.mask(state,ids,tick,actions)
+              if any('offset_commitments' in a for a in actions) else None)
+        raw=profile_apply(accel,tick,table,bounds,offset_actions=offset_actions,commitment_mask=live)
         if trace is not None and tick%2==0:trace.append(raw.detach().clone())
         return raw
     ns=dict(original.__globals__,profile_table=profile_table,horizon=horizon,policy=policy,decode=decode,post_safety=post_safety)

@@ -10,7 +10,7 @@ import torch
 from . import plan_wm, planner_online, planner_policy
 from .acceleration import Controller, Policy as PlainPolicy
 from .policy_wm import load_actor, residuals
-from .test_planner_online_cpu import Moves, row
+from .test_planner_online_cpu import GroupMoves, Moves, row, runtime as online_runtime
 from .v2v_runtime import Policy, controller_class
 from .v2v_intent import IntentPolicy
 
@@ -291,7 +291,8 @@ def test_production_adapter_full_horizon_chunks_and_multiple_samples(monkeypatch
     base.accel_min, base.accel_max = -3., 1.2
     runtime = SimpleNamespace(model=torch.nn.Linear(1, 1), mp=SimpleNamespace(policy=base))
     memory = SimpleNamespace(context=lambda rt, record: nullcontext())
-    actions = [dict(id='policy'), dict(id='move:0', offset_profile=[{'a': -.8}])]
+    actions = [dict(id='policy'), dict(id='move:0', offset_commitments=[
+        dict(ego_id='a', members=['a', 'b'], offset_profile=[{'a': -.8}]*120)])]
     before = torch.get_rng_state().clone()
     # Actor loading in evaluate must also preserve the live global RNG.
     joint = planner_online.WMRollout(runtime, memory=memory, chunk_actions=2)(rec, actions, 2, 600)
@@ -301,3 +302,96 @@ def test_production_adapter_full_horizon_chunks_and_multiple_samples(monkeypatch
     assert len(joint['policy']) == len(joint['move:0']) == 2
     assert joint['policy'] != joint['move:0']
     assert torch.equal(before, torch.get_rng_state())
+
+
+@pytest.mark.parametrize('target', ['candidate', 'background'])
+@pytest.mark.parametrize('loss', ['range', 'member_departure', 'ego_departure', 'cav_membership'])
+@pytest.mark.parametrize('onset', [0, 3])
+def test_live_and_real_decoder_joint_cancellation_recontact_and_full_horizon(monkeypatch, target, loss, onset):
+    """Captured scoring actions, real controllers/decoder, branch-local contact.
+
+    Two disjoint commitments exercise background metadata in BOTH scoring arms.
+    Branches lose contact at different times; an untouched branch must keep its
+    offsets. Recontact (even reused member slots) cannot resurrect a cancelled
+    move, including when contact was lost before its delayed onset.
+    """
+    references = []
+    for baseline in (True, False, False):
+        c, planner, calls, _ = online_runtime(monkeypatch, moves=GroupMoves(onset=onset, hold=120))
+        if baseline:
+            planner.rollout = lambda r, actions, K, H: {
+                a['id']: [9. if a['id'] != 'policy' and r['ego_id'] == 'a' else 10.]*K
+                for a in actions}
+        references.append(c)
+    rows = [row(v, 10.*i) for i, v in enumerate('abcdef')]
+    commands = {v: .1*(i+1) for i, v in enumerate('abcdef')}
+    for c in references:
+        c.apply(rows, commands, 60)
+    rec, captured, K, H = calls[1]
+    assert rec['ego_id'] == 'e' and rec['group'] == ['e', 'f']
+    assert K == 8 and H == 600
+    actions = [captured[0], captured[1], dict(copy.deepcopy(captured[1]), id='move:copy')]
+    assert actions[0]['offset_commitments'][0]['ego_id'] == 'a'
+    assert actions[1]['offset_commitments'][1]['ego_id'] == 'e'
+    rt = executor_modules(monkeypatch)
+    policy = load_actor(rec['policy_state'], 'cpu')
+    mp = SimpleNamespace(policy=SimpleNamespace(accel_min=-3., accel_max=1.2,
+                                               parameters=policy.parameters))
+    native = torch.tensor([[commands[v] for v in 'abcdef']]*3)
+    trace = []
+    continuation = planner_policy.Continuation(rec, policy)
+    with plan_wm.plan_executor(H, policy, trace, policy_radio=continuation):
+        callback = rt.option_controller(mp, actions, list('abcdef'))
+        for second in range(600):
+            state = tensor_state(rows, 3)
+            expected = []
+            for b, c in enumerate(references):
+                branch_rows = copy.deepcopy(rows)
+                # The two affected branches lose contact at distinct seconds;
+                # branch 2 stays connected throughout this imagined future.
+                if b < 2 and second == b+1:
+                    member = ('f' if target == 'candidate' else 'd')
+                    ego = ('e' if target == 'candidate' else 'a')
+                    victim = ego if loss == 'ego_departure' else member
+                    slot = 'abcdef'.index(victim)
+                    if loss == 'range':
+                        branch_rows[slot]['s_m'] = (40. if target == 'candidate' else 0.)+101.
+                        state['s_m'][b, slot] = branch_rows[slot]['s_m']
+                    elif loss == 'cav_membership':
+                        branch_rows[slot]['is_cav'] = False
+                        state['is_cav'][b, slot] = False
+                    else:
+                        branch_rows = [r for r in branch_rows if r['vid'] != victim]
+                        state['present'][b, slot] = False
+                if second < 5:
+                    if second:
+                        request = c.apply(branch_rows, commands, 60+second)
+                    else:
+                        request = c.events[-1]['requests']
+                    expected.append([request.get(v, {}).get('requested_raw', commands[v]) for v in 'abcdef'])
+            callback(state, native, 2*second)
+            if second < 5:
+                assert torch.allclose(trace[-1], torch.tensor(expected), atol=1e-7, rtol=0)
+            if second == 4:
+                cancelled_slots = [4, 5] if target == 'candidate' else [0, 1, 2, 3]
+                assert torch.equal(trace[-1][1, cancelled_slots], native[1, cancelled_slots])
+                assert torch.allclose(trace[-1][2], native[2]-.5, atol=1e-7, rtol=0)
+                if target == 'background':
+                    assert torch.equal(trace[-1][0, :4], native[0, :4])
+                    # Candidate survives independently of cancelled background.
+                    assert torch.allclose(trace[-1][1, 4:], native[1, 4:]-.5, atol=1e-7)
+                else:
+                    assert torch.allclose(trace[-1][1, :4], native[1, :4]-.5, atol=1e-7)
+            # Half-step retains the whole-second decision, even if contact
+            # momentarily changes between command decisions.
+            state['s_m'][:, -1] = 1000.
+            callback(state, native, 2*second+1)
+        assert len(trace) == 600
+        assert torch.equal(trace[-1], native)  # base continues after expiry/cancellation
+        # A new indexed future must not inherit cancellation from the prior one.
+        callback(tensor_state(rows, 3), native, 0)
+        expected_initial = native.clone()
+        if onset == 0:
+            expected_initial[0, :4] -= .5
+            expected_initial[1:] -= .5
+        assert torch.allclose(trace[-1], expected_initial, atol=1e-7, rtol=0)
