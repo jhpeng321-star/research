@@ -1,0 +1,485 @@
+"""Variety plan-collection path for arms B and R on cpuS (ON only via a staged config).
+
+Owner direction 2026-11-04 (c4/variety-collect), on top of the reviewed c4/checking-cpus +
+c4/plan-variety: a collection root that is SEPARATE from the ledger.
+
+1. PINNED read-only policies: B_checkpoint_k / R_checkpoint_k are loaded from ANOTHER root
+   (``policies_root``, the coop3 run root), sha256-checked against the staged config, with ONE
+   k for both arms (``checkpoint_k_B``/``checkpoint_k_R`` must agree; a mismatch refuses and
+   nothing runs). The collection root never stores or updates a policy.
+2. Split collection root from ledger: the new root (the argv; its NAME is a parameter) holds
+   jobs/snapshots/bank/broker files only. EVERY sim-s charge goes to the ONE shared cpuQ ledger
+   through the EXISTING cpuS->cpuQ RPC charge route (tools/coopmwm/cpus_rpc.py ``reserve``, the
+   binding's additive ``collect`` id-prefixes/phases): window verifications in
+   ``sumo_verification``, confirmations in ``bank_verification_ext``. No second CHARGES.jsonl
+   is ever created under the collection root; the route must answer a ``budget`` probe before
+   anything runs, otherwise the path refuses.
+3. Arm B searches the WM through the broker: CONFIG ONLY - ``stage_broker`` writes the worker
+   staging script, the startup-gate list and the single-slot broker config file into the
+   collection root. Nothing here ssh'es, stages remotely or starts any process. Arm R keeps the
+   unscored random candidates with the SAME registered variety mix: B takes
+   floor(variety_structured_share*population) structured slots inside its search (mppi_search),
+   R draws each candidate as Bernoulli(share) structured/free (sample_unscored) - identical
+   registered keys on the snapshot meta.
+4. Episode ids are parameterised: ``<collect_id_prefix>_<arm>_k<k:03>_e<n:05d>_<seed>``; the
+   historical hard-coded id appears nowhere in this path.
+5. OFF/default byte-identity: no existing entry point imports this module; the only edits to
+   shared modules are the RPC binding's additive ``collect`` key (absent = unchanged bytes) and
+   ls_collection's additive ``episode_prefix`` (default = the historical id).
+"""
+import hashlib
+import json
+import re
+import time
+from pathlib import Path
+
+WINDOW_PHASE = 'sumo_verification'        # window verification charges (ls_collection convention)
+CONFIRM_PHASE = 'bank_verification_ext'   # confirmation/solo charges (MAIN 2026-11-02 22:32)
+ROUTE_PHASES = (WINDOW_PHASE, CONFIRM_PHASE)
+ARMS = ('B', 'R')
+ROUTE_KEYS = ('q_host', 'q_control', 'q_python', 'q_pythonpath', 'run_root')
+BROKER_ENDPOINT_KEYS = ('slot', 'destination', 'port', 'identity_file', 'known_hosts')
+OWNER_KEYS = ('boot_id', 'pid', 'start_ticks')
+
+REGISTERED = dict(
+    policies_root='', checkpoint_k=-1, checkpoint_k_B=None, checkpoint_k_R=None,
+    checkpoint_sha256=None, charge_route=None, collect_id_prefix='', episode_phase='',
+    runtime='', accel_bounds=None, gpu_deadline=0., worlds=None,
+    slots=1, fanout_factor=2., demand_phase_end_s=1200., warm_history=False,
+    workers=9, timeout_s=3600., drain_s=0., broker=None, variety=None,
+)
+
+
+def split_config(cfg):
+    """Validate a staged VARCOLLECT_CONFIG.json (a copy; raises ValueError on any refusal).
+    Unknown keys refuse, mirroring variety.split_config / coop_search.split_config."""
+    unknown = set(cfg)-set(REGISTERED)
+    if unknown:
+        raise ValueError(f'unregistered varcollect config keys {sorted(unknown)}')
+    v = dict(REGISTERED, **cfg)
+    if not isinstance(v['policies_root'], str) or not v['policies_root']:
+        raise ValueError('policies_root must be a non-empty path string')
+    k = v['checkpoint_k']
+    if not isinstance(k, int) or isinstance(k, bool) or k < 0:
+        raise ValueError('checkpoint_k must be a non-negative int')
+    for arm in ARMS:
+        ka = v[f'checkpoint_k_{arm}']
+        if ka is None:
+            v[f'checkpoint_k_{arm}'] = k
+        elif not isinstance(ka, int) or isinstance(ka, bool) or ka < 0:
+            raise ValueError(f'checkpoint_k_{arm} must be a non-negative int')
+    if v['checkpoint_k_B'] != v['checkpoint_k_R']:
+        raise ValueError(f'mismatched pinned checkpoint k: B {v["checkpoint_k_B"]} != '
+                         f'R {v["checkpoint_k_R"]} (the same k is required for both arms)')
+    shas = v['checkpoint_sha256']
+    if not isinstance(shas, dict) or set(shas) != set(ARMS) or \
+            not all(isinstance(s, str) and re.fullmatch(r'[0-9a-f]{64}', s) for s in shas.values()):
+        raise ValueError(f'checkpoint_sha256 must map {ARMS} to sha256 hex digests')
+    route = v['charge_route']
+    if not isinstance(route, dict) or any(not isinstance(route.get(key), str) or not route[key]
+                                          for key in ROUTE_KEYS):
+        raise ValueError(f'charge_route must carry non-empty {ROUTE_KEYS}')
+    unknown = set(route)-set(ROUTE_KEYS)-{'phases'}
+    if unknown:
+        raise ValueError(f'unregistered charge_route keys {sorted(unknown)}')
+    if not route_phases(v):
+        raise ValueError('charge_route.phases must be a non-empty list of phase names')
+    if not isinstance(v['collect_id_prefix'], str) or not re.fullmatch(r'[a-z][a-z0-9_]{1,40}',
+                                                                       v['collect_id_prefix']):
+        raise ValueError('collect_id_prefix must match [a-z][a-z0-9_]{1,40}')
+    if not isinstance(v['episode_phase'], str) or not v['episode_phase']:
+        raise ValueError('episode_phase must name the route phase episodes are charged in')
+    if not isinstance(v['runtime'], str) or not v['runtime']:
+        raise ValueError('runtime must be a non-empty string')
+    bounds = v['accel_bounds']
+    if not isinstance(bounds, (list, tuple)) or len(bounds) != 2 or \
+            not all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in bounds) or \
+            not float(bounds[0]) < float(bounds[1]):
+        raise ValueError('accel_bounds must be an ordered (min, max) pair')
+    if not isinstance(v['gpu_deadline'], (int, float)) or isinstance(v['gpu_deadline'], bool) or \
+            not float(v['gpu_deadline']) > 0:
+        raise ValueError('gpu_deadline must be a positive unix timestamp')
+    worlds_ = v['worlds']
+    if not isinstance(worlds_, list) or not worlds_ or \
+            not all(isinstance(w, dict) and isinstance(w.get('seed'), int) for w in worlds_):
+        raise ValueError('worlds must be a non-empty list of world dicts with int seeds')
+    for key, lo in (('slots', 1), ('workers', 2)):
+        if not isinstance(v[key], int) or isinstance(v[key], bool) or int(v[key]) < lo:
+            raise ValueError(f'{key} must be an int >= {lo}')
+    for key in ('fanout_factor', 'demand_phase_end_s', 'timeout_s', 'drain_s'):
+        if not isinstance(v[key], (int, float)) or isinstance(v[key], bool) or not float(v[key]) >= 0:
+            raise ValueError(f'{key} must be a non-negative number')
+    if v['broker'] is not None:
+        v['broker'] = validate_broker(v['broker'])
+    if v['variety'] is not None:
+        from .variety import split_config as variety_split
+        probe = dict(v['variety'])
+        resolved = variety_split(probe)   # registered variety keys only; raises on unknown keys
+        v['variety'] = None if resolved is None else probe
+    return v
+
+
+def load_config(root):
+    """The staged config of a collection root; refuses when the file is missing/unparsable."""
+    path = Path(root)/'VARCOLLECT_CONFIG.json'
+    if not path.is_file():
+        raise ValueError(f'no VARCOLLECT_CONFIG.json staged in {path.parent}')
+    return split_config(json.loads(path.read_text(encoding='utf-8')))
+
+
+# ---------------------------------------------------------------- pinned policies
+
+def route_phases(cfg):
+    route = cfg.get('charge_route') or {}
+    phases = route.get('phases')
+    return tuple(str(p) for p in phases) if phases else ROUTE_PHASES
+
+
+def phase_registered(cfg, phase):
+    """Every charge of this path must be in the route's registered phases; else refuse."""
+    if phase not in route_phases(cfg):
+        raise ValueError(f'phase {phase} is not registered on the collection charge route '
+                         f'{route_phases(cfg)}')
+    return True
+
+
+def route_prefixes(cfg):
+    """The id prefixes the cpuQ RPC binding must register for this path's charges."""
+    prefix = cfg['collect_id_prefix']
+    return tuple(sorted({f'{prefix}_', f'sv_{prefix}_', f'confirm_replication_sv_{prefix}_',
+                         f'confirm_extended_sv_{prefix}_', f'confirm_solo_sv_{prefix}_'}))
+
+
+def file_sha256(path):
+    h = hashlib.sha256()
+    with open(path, 'rb') as f:
+        for chunk in iter(lambda: f.read(1 << 20), b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def pinned_checkpoints(cfg):
+    """{arm: {path, k, sha256}} of the pinned read-only checkpoints in ANOTHER root.
+
+    Refuses (ValueError, before anything runs): a per-arm k mismatch, a missing checkpoint
+    file, or a sha256 that differs from the staged config."""
+    k = {arm: int(cfg[f'checkpoint_k_{arm}']) for arm in ARMS}
+    if k['B'] != k['R']:
+        raise ValueError(f'mismatched pinned checkpoint k: B {k["B"]} != R {k["R"]}')
+    root = Path(cfg['policies_root'])
+    out = {}
+    for arm in ARMS:
+        path = root/f'{arm}_checkpoint_{k[arm]:03d}.pt'
+        if not path.is_file():
+            raise ValueError(f'pinned checkpoint missing: {path}')
+        sha = file_sha256(path)
+        if sha != cfg['checkpoint_sha256'][arm]:
+            raise ValueError(f'pinned {arm} checkpoint sha256 mismatch: {sha} != '
+                             f'{cfg["checkpoint_sha256"][arm]} ({path})')
+        out[arm] = dict(path=str(path), k=k[arm], sha256=sha)
+    return out
+
+
+def pinned_policy(cfg, arm):
+    """(policy, pin) - the PINNED checkpoint of ``arm`` loaded read-only; the payload's own
+    update id must equal the pinned k (a swapped/renamed file refuses)."""
+    from .accel_learner import load
+    pin = pinned_checkpoints(cfg)[arm]
+    policy, _, _, payload = load(pin['path'])
+    if int(payload.get('update', -1)) != pin['k']:
+        raise ValueError(f'pinned {arm} checkpoint payload update {payload.get("update")} != '
+                         f'pinned k {pin["k"]}')
+    return policy, pin
+
+
+# ---------------------------------------------------------------- charge route (cpuS -> cpuQ)
+
+def route_charges(cfg):
+    """Install the EXISTING cpuS->cpuQ RPC charge route (cpus_checking.install_remote_accounting)
+    and refuse unless it answers a read-only ``budget`` probe (one attempt: an unavailable
+    route refuses the whole path, promptly). Returns the routed reserve."""
+    from .cpus_checking import install_remote_accounting, rpc
+    route = dict(cfg['charge_route'])
+    try:
+        budget = rpc(route, 'budget')
+    except Exception as error:      # transport refused/timeout/unparsable: refuse the whole path
+        raise ValueError(f'charge route unavailable: {error!r}') from error
+    if not budget.get('ok'):
+        raise ValueError(f'charge route unavailable: {budget}')
+    reserve = install_remote_accounting(route)
+
+    def charged(jobs, phase):
+        phase_registered(cfg, phase)
+        return reserve(Path(route['run_root']), jobs, phase)
+    return charged
+
+
+def refuse_local_ledger(root):
+    """A second ledger must never appear under the collection root (a file OR a directory
+    decoy named CHARGES.jsonl); the ONE shared ledger lives on cpuQ behind the RPC."""
+    p = Path(root)/'CHARGES.jsonl'
+    if p.exists() or p.is_symlink():
+        raise ValueError(f'a second ledger appeared at {p}: collection charges must only go '
+                         'through the cpuS->cpuQ RPC charge route')
+
+
+# ---------------------------------------------------------------- parameterised ids
+
+def job_id(cfg, arm, index, world):
+    """Parameterised collection episode id (the historical hard-coded id appears nowhere)."""
+    return (f'{cfg["collect_id_prefix"]}_{arm}_k{int(cfg["checkpoint_k_B"]):03d}'
+            f'_e{int(index):05d}_{world["seed"]}')
+
+
+# ---------------------------------------------------------------- arm B broker (CONFIG ONLY)
+
+def validate_broker(broker):
+    """Exactly ONE new GPU worker slot, in the LS_ENDPOINTS.json shape ls_broker.run consumes."""
+    if not isinstance(broker, dict):
+        raise ValueError('broker must be a dict')
+    unknown = set(broker)-{'amendment_sha256', 'gpu_deadline', 'workers'}
+    if unknown:
+        raise ValueError(f'unregistered broker keys {sorted(unknown)}')
+    for key in ('amendment_sha256', 'gpu_deadline'):
+        if key not in broker:
+            raise ValueError(f'broker config lacks {key}')
+    if not re.fullmatch(r'[0-9a-f]{64}', str(broker['amendment_sha256'])):
+        raise ValueError('broker amendment_sha256 must be a sha256 hex digest')
+    workers = broker['workers']
+    if not isinstance(workers, list) or len(workers) != 1:
+        raise ValueError(f'the variety collection uses exactly ONE new GPU slot, '
+                         f'got {len(workers) if isinstance(workers, list) else "?"}')
+    w = workers[0]
+    if not isinstance(w, dict) or set(w) != {'endpoint', 'owner'}:
+        raise ValueError('each broker worker carries exactly endpoint + owner')
+    endpoint, owner = w['endpoint'], w['owner']
+    if not isinstance(endpoint, dict) or any(not endpoint.get(key) for key in BROKER_ENDPOINT_KEYS):
+        raise ValueError(f'broker endpoint needs non-empty {BROKER_ENDPOINT_KEYS}')
+    if not isinstance(owner, dict) or any(owner.get(key) in (None, '') for key in OWNER_KEYS):
+        raise ValueError(f'broker owner needs {OWNER_KEYS}')
+    return broker
+
+
+def broker_readiness(broker, receipts):
+    """The single slot is admitted only when ALL registered startup gates are present and
+    pass_ true (the same rule as ls_collect_ops.collection_gpu_status)."""
+    from .warm_service import ADOPTABLE
+    gates = {}
+    for name in ADOPTABLE:
+        value = receipts.get(name)
+        if isinstance(value, dict):
+            gates[name] = bool(value.get('pass_'))
+    ready = bool(broker['workers']) and all(gates.get(name) for name in ADOPTABLE)
+    return dict(ready=ready, gates=gates, required=list(ADOPTABLE))
+
+
+STAGE_WORKER_TEMPLATE = '''"""Variety collection GPU worker staging (c4/variety-collect; CONFIG artifact).
+
+Staged by tools/coopmwm/varcollect.stage_broker; nothing ran at staging time. The OPERATOR
+copies this script to the GPU host and runs it there; this build never ssh'es or starts it.
+
+Usage (GPU host): python3 STAGE_WORKER.py <worker_root> --overlay <overlay_dir> [--check]
+Only that ONE slot is served; the broker config refuses every other slot. The four startup
+gate receipts must already be present with pass_ true under <worker_root> before any search
+is served (STARTUP_GATES.json).
+"""
+import argparse
+import json
+import sys
+from pathlib import Path
+
+CONFIG = {config}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('root')
+    ap.add_argument('--overlay', required=True)
+    ap.add_argument('--check', action='store_true', help='print readiness only, start nothing')
+    a = ap.parse_args()
+    root = Path(a.root)
+    receipts = {{}}
+    for name in CONFIG['startup_gates']:
+        p = root/name
+        if p.is_file():
+            try:
+                receipts[name] = json.loads(p.read_text()).get('pass_') is True
+            except ValueError:
+                receipts[name] = False
+    ready = bool(receipts) and all(receipts.values())
+    print(json.dumps(dict(root=str(root), overlay=a.overlay, ready=ready, receipts=receipts,
+                          slot=CONFIG['endpoint']['slot'],
+                          amendment_sha256=CONFIG['amendment_sha256'],
+                          gpu_deadline=CONFIG['gpu_deadline'])))
+    if a.check or not ready:
+        return 0 if ready else 2
+    sys.path[:0] = [a.overlay, str(root/'pytools')]
+    from tools.coopmwm import ls_gpu
+    ls_gpu.run(str(root), CONFIG['owner'], CONFIG['gpu_deadline'], CONFIG['amendment_sha256'],
+               recover=True, generation='_VARCOLLECT', overlay=a.overlay)
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
+'''
+
+
+def stage_broker(cfg, root):
+    """Write the arm-B broker artifacts into the collection root (CONFIG ONLY; no ssh, no
+    start): broker/BROKER_CONFIG.json (the single-slot config; on cpuS it becomes the root's
+    LS_ENDPOINTS.json), broker/STARTUP_GATES.json and broker/STAGE_WORKER.py."""
+    broker = validate_broker(cfg['broker'])
+    from .warm_service import ADOPTABLE
+    d = Path(root)/'broker'
+    d.mkdir(parents=True, exist_ok=True)
+    gates = dict(slot=broker['workers'][0]['endpoint']['slot'], required=list(ADOPTABLE),
+                 rule='all gate receipts present with pass_ true before the slot is served '
+                      '(ls_collect_ops.collection_gpu_status readiness); a failed/missing gate '
+                      'keeps the broker from assigning this slot any search')
+    config = dict(broker, shape='LS_ENDPOINTS.json (tools.coopmwm.ls_broker.run)',
+                  startup_gates=list(ADOPTABLE), path_shape_note='on cpuS install this file as '
+                  '<collection_root>/LS_ENDPOINTS.json next to LS_RECOVERY_CONFIG.json')
+    _write_json(d/'BROKER_CONFIG.json', config)
+    _write_json(d/'STARTUP_GATES.json', gates)
+    script = STAGE_WORKER_TEMPLATE.format(config=json.dumps(dict(
+        amendment_sha256=broker['amendment_sha256'], gpu_deadline=broker['gpu_deadline'],
+        endpoint=broker['workers'][0]['endpoint'], owner=broker['workers'][0]['owner'],
+        startup_gates=list(ADOPTABLE))))
+    _write_text(d/'STAGE_WORKER.py', script)
+    return dict(broker=d/'BROKER_CONFIG.json', gates=d/'STARTUP_GATES.json',
+                worker_script=d/'STAGE_WORKER.py')
+
+
+def _write_json(path, value):
+    tmp = Path(str(path)+'.publishing')
+    tmp.write_text(json.dumps(value, indent=1, sort_keys=True))
+    tmp.replace(path)      # durable replace; never overwrite silently
+
+
+def _write_text(path, text):
+    tmp = Path(str(path)+'.publishing')
+    tmp.write_text(text)
+    tmp.replace(path)
+
+
+# ---------------------------------------------------------------- collector (one arm)
+
+def search_config(cfg):
+    """The request search_config for arm B: the registered it2_K2 boundary config plus the
+    variety keys, so the GPU side re-derives the same additive decision groups (R never
+    receives a search_config: it draws unscored random candidates locally)."""
+    if not cfg.get('variety'):
+        return None
+    from .niche_collect import search_config as niche_search_config
+    return niche_search_config(0, variety=cfg['variety'])
+
+
+def round_jobs(cfg, arm, policy, pin, root, start, worlds_, episodes_per_round):
+    """The episode jobs of one collection round (plain policy episodes; the collector guide
+    snapshots windows and queues requests; no plan is ever executed)."""
+    from .policy_wm import actor_state
+    from .protocol import digest
+    jobs = []
+    for i in range(episodes_per_round):
+        w = worlds_[(start+i) % len(worlds_)]
+        ident = job_id(cfg, arm, start+i, w)
+        collect = dict(slots=int(cfg['slots']), fanout_factor=float(cfg['fanout_factor']),
+                       demand_phase_end_s=float(cfg['demand_phase_end_s']))
+        if cfg.get('variety'):
+            if arm == 'B':
+                collect['search_config'] = search_config(cfg)
+            collect['variety'] = dict(cfg['variety'])
+        jobs.append(dict(id=ident, path=str(Path(root)/'jobs'/ident), world=w, role='train',
+                         arm=arm, weights=policy.state_dict(), runtime=cfg['runtime'],
+                         checkpoint=pin['sha256'], noise_seed=int(digest(dict(collect=ident))[:15], 16),
+                         deterministic=False, sim_s=1200, queue_root=str(root),
+                         accel_bounds=list(cfg['accel_bounds']), gpu_deadline=float(cfg['gpu_deadline']),
+                         guided=False, beta=1., policy_state=actor_state(policy),
+                         warm_history=bool(cfg['warm_history']), collector_policy_update=int(pin['k']),
+                         b_replay=True, collect=collect))
+    return jobs
+
+
+def run_episodes(jobs):
+    """Real episode execution (accel_plant; each job is plain policy, never replayed)."""
+    from concurrent.futures import ProcessPoolExecutor
+    import multiprocessing
+    from .accel_plant import episode
+    with ProcessPoolExecutor(max_workers=len(jobs),
+                             mp_context=multiprocessing.get_context('spawn')) as pool:
+        return list(pool.map(episode, jobs))
+
+
+def collect(root, cfg, arm, stop, episodes_per_round=2, rounds=None, verify_workers=None,
+            verify_per_round=None, episodes=None):
+    """Continuous variety collection for ONE arm from the NEW root until ``stop()``.
+
+    Every charge goes through the routed reserve (window verifications: ``sumo_verification``,
+    confirmations: ``bank_verification_ext``, episodes: the registered ``episode_phase``);
+    ``episodes`` overrides the real runner (CPU tests inject a fake)."""
+    from . import replay_bank as rb, sumo_verify as sv
+    if arm not in ARMS:
+        raise ValueError(f'unknown arm {arm}')
+    root = Path(root)
+    refuse_local_ledger(root)
+    reserve = route_charges(cfg)                       # refuses when the route is unavailable
+    shared = Path(cfg['charge_route']['run_root'])
+    phase_registered(cfg, WINDOW_PHASE)
+    phase_registered(cfg, CONFIRM_PHASE)
+    policy, pin = pinned_policy(cfg, arm)              # refuses wrong k/sha BEFORE any charge
+    if cfg.get('broker') is not None and arm == 'B':
+        stage_broker(cfg, root)
+    bank = rb.bank_root(root, arm)
+    bank.mkdir(parents=True, exist_ok=True)
+    runner = sv.SubprocessBranchRunner(bank/'sumo_verification'/'branches',
+                                       workers=int(cfg['workers']), timeout_s=float(cfg['timeout_s']))
+    charge = sv.accel_charge(str(shared), WINDOW_PHASE)
+
+    def runner_for(work):
+        return sv.SubprocessBranchRunner(Path(work)/'branches', workers=2,
+                                         timeout_s=float(cfg['timeout_s']))
+    decided = set()
+    n = 0
+    statuses = []
+    run = episodes or run_episodes
+    while not stop() and (rounds is None or n < rounds):
+        start = sum(1 for _ in (root/'jobs').glob(f'{cfg["collect_id_prefix"]}_{arm}_*'))
+        jobs = round_jobs(cfg, arm, policy, pin, root, start, cfg['worlds'], episodes_per_round)
+        reserve(jobs, cfg['episode_phase'])            # the ONLY episode charge: the shared ledger
+        refuse_local_ledger(root)
+        run(jobs)
+        statuses += rb.verify_pending(root, arm, cfg['accel_bounds'], runner, charge, verify_workers,
+                                      decided, verify_per_round)
+        statuses += rb.confirm_pending(root, arm, runner_for, str(shared), CONFIRM_PHASE, workers=2,
+                                       limit=verify_per_round)
+        rb.bank_quality(root, arm)
+        refuse_local_ledger(root)
+        n += 1
+        if 'budget_blocked' in statuses:
+            break
+    deadline = time.time()+float(cfg['drain_s'])
+    while time.time() < deadline:
+        statuses += rb.verify_pending(root, arm, cfg['accel_bounds'], runner, charge, verify_workers,
+                                      decided, verify_per_round)
+        refuse_local_ledger(root)
+        time.sleep(2)
+    return statuses
+
+
+def main(argv=None):
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument('root', help='the NEW collection root (its name is a parameter)')
+    ap.add_argument('--arm', choices=ARMS, required=True)
+    ap.add_argument('--rounds', type=int, default=None)
+    ap.add_argument('--episodes', type=int, default=2)
+    a = ap.parse_args(argv)
+    cfg = load_config(a.root)
+    statuses = collect(a.root, cfg, a.arm, lambda: (Path(a.root)/'MAIN_STOP.json').exists(),
+                       episodes_per_round=a.episodes, rounds=a.rounds)
+    print(json.dumps(dict(root=str(a.root), arm=a.arm, statuses=statuses), default=str))
+
+
+if __name__ == '__main__':
+    main()

@@ -6,7 +6,11 @@ verification is written HERE, on cpuQ, by the UNCHANGED tools.coopmwm.accel_stor
 the run root's binding), after the delegate-cap check taken under the delegate lock(s) (own lock
 plus the BACKFILL0057 lock, so both backfill generations serialise on the same 1.5M transfer).
 Every other op is read-only on the run root:
-  reserve  {jobs, phase, host}      -> ledger rows of exactly these ids (after the write)
+  reserve  {jobs, phase, host}      -> ledger rows of exactly these ids (after the write);
+                                       with the additive binding key 'collect'
+                                       {"phases": [...], "id_prefixes": [...]} registered collection
+                                       ids charge the SAME ledger in those phases (no delegate cap);
+                                       without it the binding stays all8-only (unchanged bytes)
   ledger   {}                       -> all ledger rows (shared lock)
   health   {arm}                    -> warm_health.assert_running(root, arm) verdict
   budget   {}                       -> delegate/phase/total usage and caps
@@ -46,24 +50,55 @@ def all8_used(rows):
     return sum(int(r['sim_s']) for r in rows if ALL8.match(str(r['id'])))
 
 
+def collect_route(cfg):
+    """Registered collection-charge route of this binding, or None (additive key 'collect':
+    {"phases": [...], "id_prefixes": [...]}). Absent -> the binding is all8-only, exactly as
+    before this option existed."""
+    c = cfg.get('collect')
+    if not c:
+        return None
+    phases = tuple(str(p) for p in c['phases'])
+    prefixes = tuple(str(p) for p in c['id_prefixes'])
+    if not phases or not prefixes or len(set(prefixes)) != len(prefixes):
+        raise ValueError('collect route needs non-empty phases and unique id_prefixes')
+    return dict(phases=phases, id_prefixes=prefixes)
+
+
+def collect_charge_ok(route, phase, ids):
+    """True only when EVERY id starts with a registered collection prefix and the phase is one
+    of the route's registered phases (the collection path may never charge anything else)."""
+    return (route is not None and phase in route['phases']
+            and all(any(str(i).startswith(p) for p in route['id_prefixes']) for i in ids))
+
+
 def op_reserve(control, cfg, payload):
     from tools.coopmwm import accel_storage
     from tools.coopmwm.storage import ledger
     from tools.coopmwm.warm_protocol import install_accounting
     root = Path(cfg['run_root']);phase = payload['phase'];jobs = payload['jobs']
-    if phase != cfg['phase']:
+    route = collect_route(cfg)
+    all8 = all(ALL8.match(str(j['id'])) for j in jobs)
+    if not all8 and not collect_charge_ok(route, phase, [j['id'] for j in jobs]):
+        if route is None:      # unregistered option: the original refusal text, byte-identical
+            if phase != cfg['phase']:
+                return dict(ok=False, error=f'phase {phase} is not the registered {cfg["phase"]}')
+            return dict(ok=False, error='only all8-kind confirmation ids are charged through this RPC')
+        return dict(ok=False, error='only all8-kind confirmation ids or registered collection '
+                                    f'ids/phases are charged through this RPC (phase {phase})')
+    if all8 and phase != cfg['phase']:
         return dict(ok=False, error=f'phase {phase} is not the registered {cfg["phase"]}')
-    if not all(ALL8.match(str(j['id'])) for j in jobs):
-        return dict(ok=False, error='only all8-kind confirmation ids are charged through this RPC')
     need = sum(int(j['sim_s']) for j in jobs)
     locks = []
     try:
-        for name in cfg['delegate_locks']:
-            f = open(name, 'a');fcntl.flock(f, fcntl.LOCK_EX);locks.append(f)
-        used = all8_used(ledger(root))
-        if used+need > int(cfg['delegate_cap_sim_s']):
-            return dict(ok=False, error=f'delegate cap {cfg["delegate_cap_sim_s"]} sim-s (1.5M transfer): '
-                                        f'used {used} + {need}')
+        if all8:
+            for name in cfg['delegate_locks']:
+                f = open(name, 'a');fcntl.flock(f, fcntl.LOCK_EX);locks.append(f)
+            used = all8_used(ledger(root))
+            if used+need > int(cfg['delegate_cap_sim_s']):
+                return dict(ok=False, error=f'delegate cap {cfg["delegate_cap_sim_s"]} sim-s (1.5M transfer): '
+                                            f'used {used} + {need}')
+        else:
+            used = all8_used(ledger(root))   # collection charges never consume the delegate allowance
         install_accounting(root)
         try:
             accel_storage.reserve(root, jobs, phase)
@@ -73,7 +108,8 @@ def op_reserve(control, cfg, payload):
         rows = [r for r in ledger(root) if r['id'] in ids]
         with (Path(control)/'CHARGES_RPC.jsonl').open('a') as f:
             f.write(json.dumps(dict(unix=time.time(), host=payload.get('host'), phase=phase, n=len(jobs),
-                                    sim_s=need, all8_used_before=used, ids=sorted(ids)))+'\n')
+                                    sim_s=need, all8_used_before=used, route=('all8' if all8 else 'collect'),
+                                    ids=sorted(ids)))+'\n')
         return dict(ok=True, rows=rows, all8_used_after=used+need)
     finally:
         for f in locks:

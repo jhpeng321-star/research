@@ -257,9 +257,12 @@ def supervise(root):
         from .policy_wm import actor_state
         policy,_,_,progress=load(main/'B_checkpoint_003.pt')
         assert progress['update']==3
+        # Additive episode-prefix key (default = the historical hard-coded id, byte-identical;
+        # a variety collection root names its own ids instead).
+        prefix=config.get('episode_prefix','lscollect1_B3')
         jobs=[]
         for w in config['worlds']:
-            jid=f'lscollect1_B3_{w["seed"]}'
+            jid=f'{prefix}_{w["seed"]}'
             jobs.append(dict(id=jid,path=str(main/'jobs'/jid),world=w,role='train',arm='B',update=3,
                 training_seed=20261101,weights=policy.state_dict(),policy_state=actor_state(policy),
                 runtime=config['runtime'],checkpoint=config['checkpoint'],noise_seed=20261101+w['seed'],
@@ -362,7 +365,7 @@ def supervise(root):
                         snapshot_queries=len(pending),searches_requested=len(admitted),searches_finished=len(answered),
                         worlds=sorted({pending[k]['world_id'] for k in answered}),
                         admitted_worlds=sorted({pending[k]['world_id'] for k in admitted}),
-                        episode_worlds=sorted(w['seed'] for w in config['worlds'] if (main/'jobs'/f'lscollect1_B3_{w["seed"]}'/'RESULT.json').exists()),
+                        episode_worlds=sorted(w['seed'] for w in config['worlds'] if (main/'jobs'/f'{prefix}_{w["seed"]}'/'RESULT.json').exists()),
                          verified_lists=sum(x['verification']['status'] in ('accepted','rejected') for x in labels),
                          label_failures=len(list((root/'label_failures').glob('*.json'))),
                         verification_statuses=[x['verification']['status'] for x in labels],grading_inflight=len(grading),
