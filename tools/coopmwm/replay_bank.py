@@ -345,9 +345,14 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
             list(pool.map(episode, jobs))
         statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided,
                                    verify_per_round)
+        confirm_kw = {}
+        if cfg.get('verify_mode'):
+            confirm_kw['verify_mode'] = cfg['verify_mode']
+            if cfg.get('extra_seeds'):     # BUILD option extra_seeds, DEFAULT absent/0 = off
+                confirm_kw['extra_seeds'] = int(cfg['extra_seeds'])
         confirm_pending(root, arm, runner_for, str(root), confirm_phase, workers=2,
                         sources=binding.get('replay_sources', {}).get(arm, ()), limit=verify_per_round,
-                        **({'verify_mode': cfg['verify_mode']} if cfg.get('verify_mode') else {}))
+                        **confirm_kw)
         bank_quality(root, arm, binding.get('replay_sources', {}).get(arm, ()))
         n += 1
         if 'budget_blocked' in statuses:
@@ -848,16 +853,25 @@ def _decision_snapshot(root, arm, r, by_vid):
     return torch.load(bank/'snapshots'/(link['state_id']+'.pt'), weights_only=False)
 
 
-def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None, verify_mode=None):
+def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None, verify_mode=None,
+                    extra_seeds=0, slim_rejected_tapes=None):
     """Confirm every first-seed positive decision (own bank and, for B, live LS labels) once.
 
-    verify_mode='all8_both_seeds' (owner 2026-11-03 22:05, default OFF): every completed decision
-    gets all K candidates + policy on the second CRN seed, per-seed winners, per-(plan, seed)
-    solos (tools/coopmwm/verify_perseed.py); None/'legacy' keeps this function unchanged."""
+    verify_mode='all8_both_seeds' (owner 2026-11-03 22:05, default OFF = legacy): every completed
+    decision gets all K candidates + policy on the second CRN seed, per-seed winners, per-(plan, seed)
+    solos (tools/coopmwm/verify_perseed.py); None/'legacy' keeps this function unchanged.
+    extra_seeds (BUILD option, DEFAULT 0 = unchanged): with all8, the plans that carry a
+    within-seed COOPERATIVE example are additionally verified on CRN seeds 3..(2+extra_seeds)
+    (verify_perseed.extra_seed_salt salts; each (plan, extra seed) admitted on its own), arms
+    B and R alike; each extra verification is charged through the existing hooks.
+    slim_rejected_tapes (owner 2026-11-04, DEFAULT OFF, all8 only): after each decision's record is
+    sealed, rejected candidate branch tapes are slimmed to SLIM.json (tools/coopmwm/slim_tapes.py)."""
     if verify_mode is not None:
         from . import verify_perseed as vp
         if vp.mode(verify_mode) == vp.ALL8:
-            return vp.confirm_pending_all8(root, arm, runner_for, run_root, phase, workers, sources, limit)
+            return vp.confirm_pending_all8(root, arm, runner_for, run_root, phase, workers, sources, limit,
+                                           extra_seeds=extra_seeds,
+                                           slim_rejected_tapes=slim_rejected_tapes)
     bank = bank_root(root, arm);done = {p.stem for p in (bank/'confirmations').glob('*.json')}
     by_vid = {}
     for p in (bank/'decisions').glob('*.json'):
