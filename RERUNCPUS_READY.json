@@ -1,0 +1,79 @@
+{
+ "schema": "coopmwm.rerun_cpus_ready.v1",
+ "status": "READY (PREPARE ONLY - nothing launched, no dispatch/reservation/charge/SUMO)",
+ "feature": "NEW standalone A/B/R-v2v experiment on cpuS: ITS OWN root with ITS OWN single ledger (CHARGES.jsonl + ACCOUNTING.claim lock + AUTHORITY.md in the new root; root refused if it exists; any charge to another root's ledger refused), ALL THREE arms A/B/R from the common MAPPO u0 with identical code - B/R: V2V intent (dim 48, horizon 5, loss 1.0, detach), per_seed_v1 cooperative_only bank, imitation_step_mode kl_targeted (KL .045), practice_starts 0.25/cap 2, imitation_target_space='effective' - A: the same runtime minus bank/practice (as in coop3), 24 updates each; B/R safety composites read A results from the SAME new root (no remote A reads); read-only staging manifest for the operator to rsync+sha to cpuS; approval-gated zero-physics dry preflight",
+ "branch": "c4/rerun-cpus",
+ "base": {"c4/rerun-clean": "533cc13a", "c4/effective-imitation": "f35b193a",
+          "merge": "1fb5269a (already clean, no conflicts; verified: both parents ancestors of HEAD)"},
+ "commit": "1fb5269a12ac2b44247db4fc8a048965d1536e50",
+ "commit_note": "code commit tested; the READY file commits on top",
+ "effective_imitation_commit": "f35b193aa539c7ddec1bb20acaa1f6b13ffb3d31",
+ "module": "tools/coopmwm/rerun_cpus.py",
+ "tests_file": "tools/coopmwm/test_rerun_cpus_cpu.py",
+ "supersedes": "tools/coopmwm/rerun_clean.py (kept unchanged for history): the old prep kept the running coop3 A as a REMOTE control and shared the legacy ledger; the standalone experiment runs A itself in the new root and accounts in its own ledger",
+ "keys": {
+  "own_single_ledger": {
+   "init_root": "creates the NEW root only if absent (REFUSED if it exists) with empty CHARGES.jsonl, ACCOUNTING.claim (lock) and AUTHORITY.md carrying the single-ledger rule + the effective-imitation pin",
+   "own_ledger": "CHARGES.jsonl / ACCOUNTING.claim / AUTHORITY.md must be REAL files inside the root; a symlink, a path resolving outside the root, a hard-linked (shared) ledger file, or an AUTHORITY.md without the rule/commit is REFUSED",
+   "bind_ledger": "standalone accounting hook (replaces v2v_live.accounting's shared-ledger rule): binds accel_storage's reserve to the root's OWN ledger and the standalone budget (CAP/CAPS from cfg['budget']); refuses any foreign ledger first",
+   "charge": "reserve() only after own_ledger passes - every charge lands in THIS root's ledger, never another root's"
+  },
+  "three_arms": {
+   "identical_code": "v2v_runner.prepare_intent runtime (same producer, same hooks, same keys for A/B/R); active_arms [A,B,R]; all start_checkpoint_sha256 = common MAPPO u0; final_updates 24 each; stop_after_update = A_stop_after_update = 24",
+   "B_and_R": "BANK_OPTIONS pins: bank_imitation separate_full_pass, imitation_kl_cap .045, bank_statistics per_seed_v1, imitation_bank_filter cooperative_only, imitation_step_mode kl_targeted, v2v_intent_bank_term true, practice_starts true (0.25 / repeat cap 2, B/R only - practice_starts.enabled refuses A), imitation_target_space 'effective'; diagnostic schedule B lessons+isolated 6/12/18/24, R isolated 12/24 (registered)",
+   "A": "same runtime minus bank/practice (bank_arms {B,R}, b_replay B/R only, plain PPO) as in coop3",
+   "a_results_local": "control_arm = {arm: A, root: <the SAME new root>, update: 24}; cfg['a_results'] binds A_UPDATE_<u> + same-world A reference reads to THIS root - the existing v2v_live.safety hook already reads them from the run root, so with A in the root no remote A read exists; cfg['legacy_root'] holds only the staged legacy-u3 isolated reference checkpoints (B/R _checkpoint_003.pt), never an A-results root"
+  },
+  "quote_3_arms": {
+   "numbers": "A train 691,200 (24x24x1200); B train 864,000 and R train 864,000 (24x30x1200 incl. 6 matched A-policy practice refs each update); lessons 21,120 (B 4x5,280); isolated 195,660 (B 4 + R 2, x32,610); cooperative_only exact gate 35,820; u8 interim tests 345,600 and u24 final tests 345,600 (3 arms x 96 x 1200; per arm 115,200)",
+   "total_without_tests": 2671800,
+   "total": 3363000,
+   "budget": "own registered budget total 3,363,720 = phases v2v_train 2,419,200 / v2v_lessons 21,840 (registered floor) / v2v_isolated 195,660 / gate_bank_verification_ext 35,820 / v2v_interim 345,600 / v2v_final 345,600; single_ledger true",
+   "wall_clock": "paced 1,800 s/update: A 43,200 s, B 46,800 s, R 48,600 s + u8/u24 tests ~86,400 s -> ~37.5 h total"
+  },
+  "staging_manifest": {
+   "what": "read-only STAGING_MANIFEST.json: every bank/tape/snapshot/MAPPO-checkpoint file the new run reads, each with sha256+bytes, every path relative to /home/ubuntu (posix), sealed (manifest_sha256); kinds: checkpoint_u0 (B_checkpoint_000.pt -> staged as {A,B,R}_checkpoint_000.pt), checkpoint_reference_u3 (B/R _checkpoint_003.pt for the isolated synergy references), safety_rule (SAFETY_RULE_0957.json), decision_link/confirmation/confirmation_all8/bank_receipt/replication_receipt/seed2_receipt/solo_receipt/solo_link/tape/trace/snapshot/temperature/lesson_list/label",
+   "resolved_via_real_readers": "replay_bank.bank_decisions (incl. the arm B LS-COLLECT sources), bank_statistics.confirmations_per_seed (full per_seed_v1 resolution incl. replication/seed-2/solo/all8 tapes), replay_bank.temperature (only when its sealed file exists - builder never writes), practice_starts._links; plus a disclosed superset walk of the reader-defined layout (every enumerated receipt's full branch set + each arm's whole own-snapshot dir, because practice plans sample at runtime)",
+   "fail_closed_inputs": "the common u0 checkpoint, both legacy-u3 reference checkpoints and SAFETY_RULE_0957.json are REQUIRED (missing -> REFUSED, not silently skipped)",
+   "guard": "hard rules enforced on every path opened or staged: sealed/, holdout, heldout, cal_split, chunk5, j4b, inc1, hetdata_truth and vType/driver/vehicle_params truth paths are REFUSED before any read",
+   "operator_command": "python -m tools.coopmwm.rerun_cpus manifest --mirror <local mirror of the source host fs> --legacy-root /home/ubuntu/coopmwm20261102_warm1 --source-b /home/ubuntu/<ls_collection_root> --out STAGING_MANIFEST.json ; then staging_files_command() emits: cat > STAGING_FILES.txt <<'EOF' ... EOF + rsync -a --numeric-ids --files-from=STAGING_FILES.txt <original-host>:/ /home/ubuntu/ (then rsync /home/ubuntu to cpuS unchanged; verify_staged() re-shas every file on cpuS)"
+  },
+  "dry_preflight": {
+   "preflight_dry": "zero-physics; REFUSES unless: RERUNCPUS_BUDGET_REQUEST.json exists with quote.total == 3,363,000; OWNER_APPROVAL.json exists and binds budget_request_sha256 + owner_quote_sha256 (OWNER_QUOTE.txt) + verdict_file_sha256 (EVENING_VERDICT.json, verdict positive) + owner_approved true + effective_imitation_commit == f35b193aa539c7ddec1bb20acaa1f6b13ffb3d31; STAGING_MANIFEST.json exists, its seal verifies, and EVERY manifest file sha matches the staged copy (verify_staged); new_sim_s stays 0"
+  }
+ },
+ "quote": {
+  "a_train_sim_s": 691200, "b_train_sim_s": 864000, "r_train_sim_s": 864000,
+  "v2v_train": 2419200, "v2v_lessons": 21120, "v2v_isolated": 195660,
+  "gate_bank_verification_ext": 35820, "interim_u8_sim_s": 345600, "final_u24_sim_s": 345600,
+  "interim_u8": {"per_arm": 115200, "arms": 3, "updates": 8, "episodes_per_arm": 96},
+  "final_u24": {"per_arm": 115200, "arms": 3, "updates": 24, "episodes_per_arm": 96},
+  "total_without_tests": 2671800, "total": 3363000,
+  "budget_total_sim_s": 3363720
+ },
+ "staging_manifest_command": "python -m tools.coopmwm.rerun_cpus manifest --mirror <mirror-of-source-host> --legacy-root /home/ubuntu/coopmwm20261102_warm1 --source-b /home/ubuntu/<ls_collection_root> --out STAGING_MANIFEST.json  (then: rsync -a --numeric-ids --files-from=STAGING_FILES.txt <original-host>:/ /home/ubuntu/ and rsync /home/ubuntu to cpuS; the dry preflight re-shas every staged file)",
+ "tests": {
+  "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+  "scope": "CPU only (no SUMO, no GPU, no ssh/remote)",
+  "command": "python -m pytest -q tools/coopmwm/test_rerun_cpus_cpu.py tools/coopmwm/test_launch_final_cpu.py tools/coopmwm/test_effimit_cpu.py",
+  "result": "47 passed, 1 skipped (skipped = the os.symlink foreign-ledger variant on this unprivileged Windows host; the equivalent hard-linked shared-ledger refusal IS tested and runs everywhere; the symlink variant runs on Linux)",
+  "new": [
+   "quote/budget/wall clock: 3-arm arithmetic incl. gate and the written-out u8/u24 numbers (691,200 + 2x864,000 train; 21,120 lessons; 195,660 isolated; 35,820 gate; 2x345,600 tests; total 3,363,000; budget 3,363,720)",
+   "3-arm pins: identical code for A/B/R from the common MAPPO u0, B==R on filter/step-mode/target-space/practice options, A exempt from bank+practice, effective-imitation commit pinned to f35b193a, own budget bound",
+   "own ledger: init_root refuses an existing root; CHARGES.jsonl+lock+AUTHORITY.md created real; charge lands only in this root's ledger (sibling ledger stays empty); duplicate/over-allocation blocked",
+   "foreign ledger refused: hard-linked shared ledger (runs everywhere) and symlinked ledger (Linux) refused; missing files / wrong AUTHORITY.md refused",
+   "A results local: control_arm/a_results bound to the run root; legacy_root only the staged u3 references; refusals for remote A control, B/R-only rerun, accounting outside the root, changed pins",
+   "staging manifest over a REAL all8 bank built by the test verifiers (sumo_verify + verify_perseed, no SUMO): decisions/verifications/tapes/traces/all8/seed2/solos/snapshots/LS labels/checkpoints/rule listed with exact shas, /home/ubuntu-relative; forbidden-path and missing-required-input refusals; read-only (no mirror mtime/size change); verify_staged catches a tampered or missing staged file",
+   "dry preflight: passes only with the full OWNER_APPROVAL binding + byte-exact staged files; refuses missing request/quote total mismatch/missing approval/bad budget sha/not-positive approval/quote or verdict sha mismatch/negative verdict/wrong commit/missing or unsealed manifest/tampered stage"
+  ],
+  "regression": "tools/coopmwm/test_rerun_clean_cpu.py + test_v2v_runner_cpu.py: 11 passed (the superseded prep package unchanged and green)"
+ },
+ "hard_rules_respected": {
+  "cpu_only": true, "no_sumo_gpu_ssh": true, "own_worktree_only": "E:/agent-work/c4-rerun-cpus only",
+  "no_reset_clean_stashdrop_push_rebase": true,
+  "sealed_holdout_paths_never_opened": "enforced in code: rerun_cpus.guard_path refuses sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 on every path read or staged; the bank fixtures live only in pytest tmp dirs",
+  "truth_files_never_read": "guard_path refuses hetdata_truth and vType/driver/vehicle_params truth paths; no truth file was opened",
+  "prepare_only": "no dispatch, reservation, charge or SUMO; preflight is zero-physics (new_sim_s 0)"
+ },
+ "launch_left_to": "operator: stage the manifest files to cpuS, init_root the new root, bind the bank views/checkpoints/rule, write OWNER_APPROVAL.json (budget sha, owner quote, verdict file sha) + OWNER_QUOTE.txt + EVENING_VERDICT.json, then rerun_cpus preflight --prep <dir> --stage <staged /home/ubuntu mirror> must pass before any registered launch"
+}
