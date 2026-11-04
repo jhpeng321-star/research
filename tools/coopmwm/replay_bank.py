@@ -440,7 +440,7 @@ IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
 
 def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT_CLIP, sources=(),
                max_decisions=None, v2v=False, v2v_cfg=None, v2v_intent=None,
-               imitation_bank_filter='all_admitted'):
+               imitation_bank_filter='all_admitted', imitation_target_space='raw'):
     """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta.
 
     max_decisions (R fairness, MAIN): use at most this many admitted targets, oldest first;
@@ -459,9 +459,17 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     summary['imitation_filter'] and still present in the bank records/reports). The exclusion
     happens BEFORE the max_decisions (R lag-1) cap, so the cap counts post-filter examples. With
     only cooperative pairs the 50% oversampling is a no-op (non-cooperative samples = 0).
+    imitation_target_space (c4/effective-imitation; DEFAULT 'raw' = byte-identical): 'effective'
+    attaches each pair's recorded binding limits sample['binding_limits'] ({vid: u_t - native
+    command}, residual space) from the winning plan branch observable tape under the cav_typical
+    vType cap, and clips intent targets to min(command, u_t); pairs whose trace lacks a member's
+    limit are excluded and counted in summary['imitation_target_space'].
     """
+    from .effective_imitation import TARGET_SPACES as _TARGET_SPACES
     if imitation_bank_filter not in IMITATION_BANK_FILTERS:
         raise ValueError(f'unknown imitation_bank_filter {imitation_bank_filter!r}')
+    if imitation_target_space not in _TARGET_SPACES:
+        raise ValueError(f'unknown imitation_target_space {imitation_target_space!r}')
     coop_only = imitation_bank_filter == 'cooperative_only'
     filtered = dict(filter=imitation_bank_filter, excluded_examples=0, excluded_by_status={})
     everything = bank_decisions(root, arm, upto_unix, sources)
@@ -474,6 +482,8 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     from . import bank_v2v
     v2v_counts = dict(pairs=0, kept=0, excluded_missing_prev_second=0,
                       excluded_missing_partner_command=0, trace_missing=False)
+    effective = imitation_target_space == 'effective'
+    eff_counts = None
     for r in decisions:
         c = conf.get(r['verification_id'])
         if r['status'] != 'accepted' or not r['grade_veh_s'] or r['grade_veh_s'] <= 0:
@@ -530,11 +540,27 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
             w = float(beta)*xg.weight(advantage, T['temperature_veh_s'], clip)
             entry = dict(start_s=r['t0'], duration_s=int(plan['duration_s']), plan_id=plan['id'], weight=w)
             entry_pairs = xg.imitation_pairs(tape, entry)
+            limits_by_time = None
+            if effective:
+                from .effective_imitation import attach_limits
+                trace = Path(branches_dir)/tape_vid/branch['branch']/'observable.jsonl.gz'
+                entry_pairs, eff_entry, limits_by_time = attach_limits(entry_pairs, tape, trace, entry)
+                if eff_counts is None:
+                    eff_counts = dict(pairs=0, kept=0, excluded_missing_trace=False,
+                                      excluded_missing_limit=0, excluded_command_mismatch=0,
+                                      cap_mps2=eff_entry.get('cap_mps2'))
+                eff_counts['pairs'] += eff_entry['pairs']
+                eff_counts['kept'] += eff_entry['kept']
+                eff_counts['excluded_missing_limit'] += eff_entry['excluded_missing_limit']
+                eff_counts['excluded_command_mismatch'] += eff_entry['excluded_command_mismatch']
+                if eff_entry.get('excluded_missing_trace'):
+                    eff_counts['excluded_missing_trace'] = True
             intent = None
             if v2v and v2v_intent:
                 from . import v2v_intent as vi
                 s = vi.settings(v2v_intent)
-                entry_pairs = vi.attach_bank_targets(entry_pairs, tape, entry, s['horizon'], s['bounds'])
+                entry_pairs = vi.attach_bank_targets(entry_pairs, tape, entry, s['horizon'], s['bounds'],
+                                                     limits=limits_by_time)
                 intent = dict(horizon=s['horizon'], entry=intent_key)
             if v2v:
                 entry_pairs, entry_counts = bank_v2v.attach_pairs(
@@ -622,6 +648,14 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                               'previous second); pairs whose trace lacks partner commands are excluded and counted',
                           stub=bank_v2v.STUB, cfg=dict(bank_v2v.DEFAULT_CFG, **(v2v_cfg or {})),
                           counts=v2v_counts)
+    if effective:
+        out['imitation_target_space'] = dict(
+            space='effective',
+            rule='each pair carries its recorded binding limits sample["binding_limits"] ({vid: '
+                 'u_t - native command}, residual space) from the winning plan branch observable '
+                 'tape under the cav_typical vType cap; pairs whose trace lacks a member limit '
+                 'are excluded and counted; intent targets clipped to min(command, u_t)',
+            counts=eff_counts)
     return pairs, out
 
 

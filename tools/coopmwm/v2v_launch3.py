@@ -47,9 +47,16 @@ BANK_OPTIONS = dict(bank_imitation='separate_full_pass', imitation_kl_cap=.045,
     # boundary, for B-v2v and R-v2v together. OWNER 2026-11-04 08:52 ("yes, switch on stronger
     # imitation now"): the pinned value is 'kl_targeted' (KL limit .045 and every check unchanged).
     # The bank intent term switch defaults True = current behaviour.
-    imitation_step_mode='kl_targeted', v2v_intent_bank_term=True)
+    imitation_step_mode='kl_targeted', v2v_intent_bank_term=True,
+    # c4/effective-imitation: 'raw' stays byte-identical; 'effective' trains the censored
+    # (Tobit) likelihood against each plan command's recorded binding limit u_t (dead zone above
+    # min(cav_typical vType cap 1.2, leader-allowed acceleration)), only ever at a registered
+    # update boundary, for B-v2v and R-v2v together. AWR weights, the .045 separate KL limit and
+    # every other check unchanged.
+    imitation_target_space='effective')
 IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
 IMITATION_STEP_MODES = ('fixed', 'kl_targeted')
+IMITATION_TARGET_SPACES = ('raw', 'effective')
 DIAGNOSTIC_SCHEDULE = dict(A=dict(lessons=[], isolated=[]),
     B=dict(lessons=[6, 12, 18, 24], isolated=[6, 12, 18, 24]),
     R=dict(lessons=[], isolated=[12, 24]))
@@ -287,6 +294,23 @@ def imitation_step_mode_for(cfg, arm):
     return have
 
 
+def imitation_target_space_for(cfg, arm):
+    """The imitation target space of arm B or R (c4/effective-imitation; 'effective' only ever
+    at a registered update boundary, for B and R together). One key serves both arms; an
+    optional per-arm mapping cfg['imitation_target_space_by_arm'] is accepted only when
+    B == R == the key."""
+    have = cfg.get('imitation_target_space', 'raw')
+    if have not in IMITATION_TARGET_SPACES:
+        raise Refused('unknown imitation_target_space ' + repr(have))
+    by_arm = cfg.get('imitation_target_space_by_arm')
+    if by_arm is not None:
+        if not isinstance(by_arm, dict) or by_arm.get('B') != by_arm.get('R') or by_arm.get('B') != have:
+            raise Refused('imitation_target_space must be identical for B and R: ' + repr(by_arm))
+    if arm not in ('B', 'R'):
+        raise Refused('only arms B and R have an imitation bank')
+    return have
+
+
 def intent_bank_term_for(cfg, arm):
     """Whether the bank intent term trains arm B or R (default True = current behaviour). One key
     serves both arms; an optional per-arm mapping cfg['v2v_intent_bank_term_by_arm'] is accepted
@@ -316,6 +340,7 @@ def bind_runtime(value, *, root, source_root):
     imitation_filter_for(cfg, 'B'), imitation_filter_for(cfg, 'R')   # refuses B != R
     imitation_step_mode_for(cfg, 'B'), imitation_step_mode_for(cfg, 'R')   # refuses B != R
     intent_bank_term_for(cfg, 'B'), intent_bank_term_for(cfg, 'R')   # refuses B != R
+    imitation_target_space_for(cfg, 'B'), imitation_target_space_for(cfg, 'R')   # refuses B != R
     if 'v2v_intent_weight' in cfg:
         raise Refused('obsolete runtime v2v_intent_weight is not an intent loss binding')
     passes = cfg.get('imitation_epochs')

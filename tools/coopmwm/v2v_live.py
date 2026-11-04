@@ -31,12 +31,15 @@ def hooks(root, cfg):
     if rule != bank_statistics.PER_SEED:
         raise ValueError(f'V2V runtime requires bank_statistics=per_seed_v1, not {rule!r}')
     bank_statistics.install(rb, bank_rule=rule, sources=cfg.get('replay_sources'))
-    # c4/imit-strength: one registered imitation step mode and bank-intent switch for B and R
-    # alike; any B/R mismatch refuses here, before the runner is bound.
-    from .v2v_launch3 import imitation_step_mode_for, intent_bank_term_for
+    # c4/imit-strength + c4/effective-imitation: one registered imitation step mode, bank-intent
+    # switch and target space for B and R alike; any B/R mismatch refuses here, before the
+    # runner is bound.
+    from .v2v_launch3 import imitation_step_mode_for, intent_bank_term_for, imitation_target_space_for
     bank_imitation.install(step_mode=imitation_step_mode_for(cfg, 'B'),
-                           intent_bank_term=intent_bank_term_for(cfg, 'B'))
+                           intent_bank_term=intent_bank_term_for(cfg, 'B'),
+                           imitation_target_space=imitation_target_space_for(cfg, 'B'))
     imitation_step_mode_for(cfg, 'R'), intent_bank_term_for(cfg, 'R')
+    imitation_target_space_for(cfg, 'R')
     bank_imitation.run=bank_imitation.run_separate
     from .v2v_runtime import Policy, load_checkpoint
     from .accel_storage import read
@@ -67,6 +70,13 @@ def hooks(root, cfg):
     if bank_filters['B']!='all_admitted':
         def pairs(r,arm,*a,**k):
             return original_pairs(r,arm,*a,**dict(k,imitation_bank_filter=bank_filters[arm]))
+    # c4/effective-imitation: imitation_target_space is ONE key for B and R (A has no bank);
+    # the runtime default 'raw' adds no kwarg (byte-identical).
+    target_spaces={a:imitation_target_space_for(cfg,a) for a in ('B','R')}
+    if target_spaces['B']!='raw':
+        space_pairs=pairs
+        def pairs(r,arm,*a,**k):
+            return space_pairs(r,arm,*a,**dict(k,imitation_target_space=target_spaces[arm]))
     if cfg.get('v2v_intent'):
         # v2v_intent ON (identical for A/B/R): intent-head policy, intent-carrying bank pairs.
         import functools
