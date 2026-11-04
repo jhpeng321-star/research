@@ -449,3 +449,19 @@ def test_real_all8_winner_only_extras_cannot_change_primary_population(tmp_path,
     extras_only, _ = pc.load_verified_records(extra_paths, [7])
     with pytest.raises(ValueError, match='calibration population'):
         pc.fit_calibration(extras_only, [7], planner_contract=CONTRACT)
+
+
+def test_cpu_dependency_uses_registered_observable_selection():
+    from tools.coopmwm.planner_calibration_cpu_env import selection_module
+
+    features = selection_module().features
+    assert features([]) == dict(cav_count=0, density=0., cav_share=0., ramp=False,
+                                queued=0, mean_speed=0., pair=[])
+    rows = [dict(vid='left', s_m=-100., lane=0, is_cav=True, v_mps=4.),
+            dict(vid='right', s_m=-99., lane=1, is_cav=True, v_mps=10.),
+            dict(vid='ramp', s_m=75.44, lane=2, is_cav=False, v_mps=7.),
+            dict(vid='outside', s_m=75.45, lane=0, is_cav=True, v_mps=0.),
+            dict(vid='other_lane', s_m=-90., lane=3, is_cav=True, v_mps=0.)]
+    result = features(rows)
+    assert result == dict(cav_count=2, density=3/(3*175.44/1000), cav_share=2/3,
+                          ramp=True, queued=1, mean_speed=7., pair=['left', 'right'])
