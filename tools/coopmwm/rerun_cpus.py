@@ -15,9 +15,23 @@ confirmations, temperature, practice links) - relative to /home/ubuntu so an ope
 rsync+sha them to cpuS. The dry preflight refuses unless OWNER_APPROVAL.json binds the budget
 request SHA, the owner quote SHA and the verdict file SHA, and every manifest file SHA matches
 the staged copies. Effective-imitation is pinned to f35b193a.
+
+Track 2 / T2C (owner 2026-11-04, c4/rerun-tracks): the arms gain the learned move-trigger
+policy head + dense WM teacher machinery - A stays plain MAPPO PPO (no head, no teacher),
+B runs the trigger head + the WM dense DAgger teacher + the bank, R runs the trigger head +
+a RANDOM teacher sampling the SAME move distribution (fairness control). The coop_reward
+shaper is a config SLOT ONLY (built on branch c4/coop-reward; default OFF here and refused
+if enabled). The registered evaluation is the replicated isolated cooperation test at
+u6/u12/u18/u24: N replicates per arm per update in paired worlds (same world seed across
+arms by replicate index), bootstrap CIs on the paired B-vs-A differences, and a
+PRE-REGISTERED pass criterion (sealed document, bound by OWNER_APPROVAL.json and the run
+root's AUTHORITY.md; the dry preflight refuses without all three bindings). The trigger
+head/teachers code against the sibling-track APIs (tools.coopmwm.moves / trigger_policy /
+dense_teacher) and are resolved lazily at config time; tests provide local stubs.
 """
 import hashlib
 import json
+import math
 import re
 from pathlib import Path, PurePosixPath
 
@@ -27,17 +41,56 @@ EPISODES_PER_UPDATE = 24
 PRACTICE_REFS_PER_UPDATE = 6          # one matched A-policy reference per practice episode (.25 of 24)
 GATE_SIM_S = 35820                    # cooperative_only exact gate (7 states / 55 branches), measured x5
 LESSON_SIM_S_MEASURED = 5280          # B u6 V2V lesson, measured
-ISOLATED_SIM_S_MEASURED = 32610       # isolated synergy, measured
+ISOLATED_SIM_S_MEASURED = 32610       # isolated synergy, measured (one replicate run)
 TEST_EPISODES = 96                    # u8 interim + u24 final fixed episode tests, ALL THREE arms
-SCHEDULE = dict(A=dict(lessons=[], isolated=[]),
+SCHEDULE = dict(A=dict(lessons=[], isolated=[6, 12, 18, 24]),
                 B=dict(lessons=[6, 12, 18, 24], isolated=[6, 12, 18, 24]),
-                R=dict(lessons=[], isolated=[12, 24]))
+                R=dict(lessons=[], isolated=[6, 12, 18, 24]))
+# ---- Track 2 / T2C: trigger head + teachers + replicated isolated test ------------------
+TRIGGER_ARMS = ('B', 'R')             # A stays plain MAPPO PPO: no head, no teacher
+TEACHER_VERIFY_FRACTION = 0.05        # registered fraction of dense-teacher labels SUMO-verified
+TEACHER_VERIFY_STATES = 24            # all8-verified dense-teacher states (one per B update)
+ALL8_STATE_SIM_S = 1024               # GATE 35820 / (5 measured repeats x 7 states), rounded up
+ISOLATED_REPLICATES = 8               # N replicates per arm per isolated-test update
+ISOLATED_BOOTSTRAP_REPS = 10000
+ISOLATED_BOOTSTRAP_LEVEL = 0.95
+ISOLATED_BOOTSTRAP_SEED = 20261104    # fixed seed: the CIs are reproducible before any run
+ISOLATED_TEST = dict(
+    updates=[6, 12, 18, 24], arms=['A', 'B', 'R'], replicates=ISOLATED_REPLICATES,
+    sim_s_per_replicate=ISOLATED_SIM_S_MEASURED,
+    pairing='same world seed across arms (replicate index)',
+    metric='coop_score', higher_is_better=True,
+    bootstrap=dict(reps=ISOLATED_BOOTSTRAP_REPS, level=ISOLATED_BOOTSTRAP_LEVEL,
+                   seed=ISOLATED_BOOTSTRAP_SEED, method='percentile'),
+    cell_seed_rule='seed = bootstrap.seed*10000 + 100*update + pair_index (pairs sorted B-A, R-A, B-R)',
+    safety_counters=['collisions', 'teleports', 'hard_brakes'])
+CRITERION = dict(
+    schema='coopmwm.rerun_cpus.isolated_criterion.v1',
+    metric=ISOLATED_TEST['metric'], higher_is_better=True,
+    updates=list(ISOLATED_TEST['updates']), replicates=ISOLATED_REPLICATES,
+    pairing=ISOLATED_TEST['pairing'],
+    primary_update=24, secondary_updates=[6, 12, 18],
+    bootstrap=dict(ISOLATED_TEST['bootstrap']),
+    pass_rule=('PASS iff, at the primary update u24, the paired B-vs-A mean coop_score '
+               'difference has a two-sided 95% bootstrap CI lying entirely above 0 AND B has '
+               'no more total collisions/teleports/hard-brakes than A across the replicates '
+               '(tolerance 0). Secondary updates u6/u12/u18 and the B-vs-R teacher ablation '
+               'are reported, never gated.'),
+    safety_counters=list(ISOLATED_TEST['safety_counters']), safety_tolerance=0,
+    r_arm=dict(kind='random', gated=False,
+               rule='R is the random-teacher fairness control (same move distribution); '
+                    'reported, never gated'),
+    registered='2026-11-04 owner-approved Track 2 clean rerun (tracks_spec.md T2C)')
+COOP_REWARD = dict(enabled=False, module='tools.coopmwm.coop_reward', weight=0.0,
+                   built_on='c4/coop-reward', off_is_byte_identical=True,
+                   note='T2C leaves the slot only; the shaper is built on its own branch and '
+                        'must stay OFF (byte-identical reward path) in this registered run')
 PINS = dict(v2v=True, v2v_dim=48, v2v_intent=True, v2v_intent_horizon=5, v2v_intent_loss_weight=1.0,
             v2v_intent_detach_trunk=True, bank_imitation='separate_full_pass', imitation_kl_cap=.045,
             bank_statistics='per_seed_v1', imitation_bank_filter='cooperative_only',
             imitation_step_mode='kl_targeted', v2v_intent_bank_term=True, practice_starts=True,
             practice_fraction=.25, practice_repeat_cap=2, imitation_target_space='effective',
-            stop_after_update=UPDATES, A_stop_after_update=UPDATES)
+            stop_after_update=UPDATES, A_stop_after_update=UPDATES, coop_reward=COOP_REWARD)
 EFFECTIVE_IMITATION_COMMIT = 'f35b193aa539c7ddec1bb20acaa1f6b13ffb3d31'
 HOME = '/home/ubuntu'                 # every staged path is listed relative to this prefix
 CHECKPOINT_000_SOURCE = 'B_checkpoint_000.pt'      # the common MAPPO u0 in the original run
@@ -50,34 +103,51 @@ _TRUTH = re.compile(r'(vtype|driver|vehicle_params)[^/]*truth|truth[^/]*(vtype|d
 
 def quote():
     """Full-run sim-s quote for ALL THREE arms (24 updates each) including the exact gate,
-    with the u8/u24 test numbers written out. A trains plain PPO (no bank, no practice); B and R
-    each add 6 matched A-policy practice reference episodes per update."""
+    the dense-teacher all8 verification states, the REPLICATED isolated cooperation test
+    (3 arms x u6/12/18/24 x 8 replicates in paired worlds) and the u8/u24 fixed-episode
+    test numbers. A trains plain PPO (no bank, no practice, no head); B and R each add 6
+    matched A-policy practice reference episodes per update."""
     a_train = UPDATES*EPISODES_PER_UPDATE*EPISODE_SIM_S
     br_train = 2*UPDATES*(EPISODES_PER_UPDATE+PRACTICE_REFS_PER_UPDATE)*EPISODE_SIM_S
     lessons = len(SCHEDULE['B']['lessons'])*LESSON_SIM_S_MEASURED
-    isolated = (len(SCHEDULE['B']['isolated'])+len(SCHEDULE['R']['isolated']))*ISOLATED_SIM_S_MEASURED
+    teacher_verify = TEACHER_VERIFY_STATES*ALL8_STATE_SIM_S
+    cells = len(ISOLATED_TEST['arms'])*len(ISOLATED_TEST['updates'])
+    isolated = cells*ISOLATED_TEST['replicates']*ISOLATED_SIM_S_MEASURED
     test_per_arm = TEST_EPISODES*EPISODE_SIM_S
     out = dict(a_train_sim_s=a_train, b_train_sim_s=br_train//2, r_train_sim_s=br_train//2,
-               v2v_train=a_train+br_train, v2v_lessons=lessons, v2v_isolated=isolated,
+               v2v_train=a_train+br_train, v2v_lessons=lessons,
+               teacher_verify_sim_s=teacher_verify,
+               isolated_replicated_sim_s=isolated,
+               isolated_replicated=dict(arms=list(ISOLATED_TEST['arms']),
+                                        updates=list(ISOLATED_TEST['updates']),
+                                        replicates=ISOLATED_TEST['replicates'], cells=cells,
+                                        replicates_total=cells*ISOLATED_TEST['replicates'],
+                                        per_replicate_sim_s=ISOLATED_SIM_S_MEASURED),
                gate_bank_verification_ext=GATE_SIM_S,
                interim_u8_sim_s=3*test_per_arm, final_u24_sim_s=3*test_per_arm,
                interim_u8=dict(per_arm=test_per_arm, arms=3, updates=8, episodes_per_arm=TEST_EPISODES),
                final_u24=dict(per_arm=test_per_arm, arms=3, updates=24, episodes_per_arm=TEST_EPISODES))
-    out['total_without_tests'] = a_train+br_train+lessons+isolated+GATE_SIM_S
+    out['total_without_tests'] = a_train+br_train+lessons+teacher_verify+isolated+GATE_SIM_S
     out['total'] = out['total_without_tests']+out['interim_u8_sim_s']+out['final_u24_sim_s']
     return out
 
 
 def budget():
     """The standalone experiment's own registered budget (one ledger, one total): the phase
-    allocations cover the quote with the registered v2v_lessons floor (21,840) kept."""
+    allocations cover the quote with the registered v2v_lessons floor (21,840) kept and the
+    replicated isolated test carried by its own phase (it supersedes the single-run
+    v2v_isolated plan of the original rerun)."""
     q = quote()
-    phases = dict(v2v_train=q['v2v_train'], v2v_lessons=21840, v2v_isolated=q['v2v_isolated'],
+    phases = dict(v2v_train=q['v2v_train'], v2v_lessons=21840, teacher_verify=q['teacher_verify_sim_s'],
+                  isolated_replicated=q['isolated_replicated_sim_s'],
                   gate_bank_verification_ext=GATE_SIM_S, v2v_interim=q['interim_u8_sim_s'],
                   v2v_final=q['final_u24_sim_s'])
     total = sum(phases.values())
     return dict(total=total, phases=phases, allocated=total, unallocated=0, updates=UPDATES,
                 episodes_per_update=EPISODES_PER_UPDATE, arms=['A', 'B', 'R'],
+                isolated_test='replicated at u6/12/18/24, N=%d, bootstrap CIs, pre-registered '
+                              'criterion (supersedes the single-run v2v_isolated plan)'
+                              % ISOLATED_REPLICATES,
                 quote_total_sim_s=q['total'], single_ledger=True,
                 rule='rerun-cpus standalone: own root, own CHARGES.jsonl; never the coop3 ledger')
 
@@ -85,13 +155,16 @@ def budget():
 def wall_clock(pace_s=1800, measured_update_wall_s=1800, diagnostic_extra_s=900,
                test_episode_wall_s=300, test_workers=2):
     """Paced updates (measured u7-u10 walls ~1,800 s each per arm, A the cheapest); B's
-    diagnostics add ~diagnostic_extra_s each; R trails B by ~one update; tests run 3 arms."""
+    diagnostics add ~diagnostic_extra_s each; R trails B by ~one update; the fixed-episode
+    tests run 3 arms; the replicated isolated test runs at the measured update pace
+    (36,000 sim-s per 1,800 s wall => 20 sim-s per wall-s)."""
     per_update = max(pace_s, measured_update_wall_s)
     b = UPDATES*per_update+len(SCHEDULE['B']['isolated'])*diagnostic_extra_s
     r = b+per_update
     tests = 2*3*TEST_EPISODES*test_episode_wall_s/test_workers      # u8 + u24, three arms
+    isolated_s = quote()['isolated_replicated_sim_s']/20
     return dict(per_update_s=per_update, A_s=UPDATES*per_update, B_s=b, R_s=r, tests_s=tests,
-                total_h=round((r+tests)/3600, 1))
+                isolated_s=isolated_s, total_h=round((r+isolated_s+tests)/3600, 1))
 
 
 # ---------------------------------------------------------------- own single ledger
@@ -105,7 +178,9 @@ AUTHORITY_LINE = ('S-COOPMWM RERUN-CPUS 2026-11-04: NEW STANDALONE A/B/R-v2v EXP
 
 
 def init_root(root, *, amendment_shas=()):
-    """Create the NEW standalone run root with its own ledger; refuses if the root exists."""
+    """Create the NEW standalone run root with its own ledger; refuses if the root exists.
+    AUTHORITY.md binds the pre-registered isolated-test criterion SHA alongside the
+    effective-imitation commit."""
     root = Path(root)
     if root.exists() or root.is_symlink():
         raise ValueError('REFUSED: run root already exists: '+str(root))
@@ -114,6 +189,7 @@ def init_root(root, *, amendment_shas=()):
         with (root/name).open('x'):
             pass
     text = AUTHORITY_LINE+'effective-imitation commit '+EFFECTIVE_IMITATION_COMMIT+'\n'
+    text += 'isolated-test criterion '+criterion_document()['criterion_sha256']+'\n'
     for amendment in amendment_shas:
         text += 'amendmentSHA'+amendment+'\n'
     with (root/'AUTHORITY.md').open('x', encoding='utf-8') as f:
@@ -142,6 +218,10 @@ def own_ledger(root):
         raise ValueError('REFUSED: AUTHORITY.md is not the standalone single-ledger rule: '+str(root))
     if EFFECTIVE_IMITATION_COMMIT not in text:
         raise ValueError('REFUSED: AUTHORITY.md does not pin the effective-imitation commit')
+    expected = 'isolated-test criterion '+criterion_document()['criterion_sha256']
+    if expected not in text:
+        raise ValueError('REFUSED: AUTHORITY.md does not bind the pre-registered '
+                         'isolated-test criterion ('+expected+')')
     return dict(root=str(root_resolved), **files, foreign=False)
 
 
@@ -169,13 +249,60 @@ def charge(root, jobs, phase, *, budget):
 
 # ---------------------------------------------------------------- 3-arm runtime config
 
+def head_teacher_config():
+    """Resolve the T2A trigger head and the T2B teachers through the SIBLING-TRACK APIs
+    (lazy imports - those modules land on their own branches; tests stub them): the head is
+    a per-CAV discrete choice over moves.FAMILIES (+none) on top of the frozen-or-fine-tuned
+    MAPPO V2V low-level actor (same v2v_dim, registered 60 s decision cadence), B's teacher
+    is dense_teacher's WM DAgger labelling (registered all8-verified fraction), R's teacher
+    is dense_teacher's RANDOM teacher reusing the SAME move distribution (fairness)."""
+    from . import moves, trigger_policy, dense_teacher
+    families = tuple(moves.FAMILIES)
+    if 'none' not in families:
+        raise ValueError('REFUSED: the move library must offer the none family')
+    for kind in ('wm_dense', 'random'):
+        if kind not in tuple(dense_teacher.TEACHER_KINDS):
+            raise ValueError('REFUSED: dense_teacher is missing the '+kind+' teacher kind')
+    head = dict(module='tools.coopmwm.trigger_policy', arms=TRIGGER_ARMS, v2v_dim=48,
+                families=families, head_actions=int(trigger_policy.HEAD_ACTIONS),
+                decision_interval_s=60,
+                low_level='frozen-or-fine-tuned MAPPO V2V actor (same v2v_dim); executes '
+                          'moves.offsets on top of the base actions (single writer, HDVs '
+                          'never commanded)',
+                update='PPO update for the discrete head only')
+    teachers = dict(
+        A=None,
+        B=dict(module='tools.coopmwm.dense_teacher', kind='wm_dense',
+               mode='DAgger: the WM planner (T1B scoring, imported) labels the best move per '
+                    'state at decision points; cross-entropy imitation for the T2A head',
+               verify_fraction=TEACHER_VERIFY_FRACTION, verified_through='all8',
+               verify_states=TEACHER_VERIFY_STATES),
+        R=dict(module='tools.coopmwm.dense_teacher', kind='random',
+               distribution='same move distribution as the WM teacher proposals (fairness)'))
+    return head, teachers
+
+
+def trigger_head_enabled(cfg, arm):
+    """The T2A head applies to B and R only; A is plain MAPPO PPO."""
+    return arm in tuple((cfg.get('trigger_head') or {}).get('arms', ()))
+
+
+def teacher_kind(cfg, arm):
+    """'wm_dense' (B), 'random' (R) or None (A) from the teacher config slot."""
+    t = (cfg.get('teacher') or {}).get(arm)
+    return None if t is None else t.get('kind')
+
+
 def runtime_config(base, *, root, reference_root, source_root, common_checkpoint_sha256):
     """Registered producer of the standalone runtime: v2v_runner.prepare_intent with every B/R
     fix pinned from u0 (kl_targeted, practice_starts 0.25/cap 2, imitation_target_space
     'effective'), the 24-update cap, and the standalone bindings: accounting_root = run_root =
     the NEW root (its own ledger), legacy_root = the staged legacy reference dir (only the
     fresh legacy-u3 isolated reference checkpoints live there), control arm A in the SAME new
-    root (no remote A reads), own budget. Refuses while the effective-imitation pin differs."""
+    root (no remote A reads), own budget. Track 2/T2C: the trigger head + teachers config, the
+    coop_reward slot (default OFF, built on c4/coop-reward) and the replicated isolated-test
+    registration (this producer's own diagnostic schedule supersedes the v2v_runner default,
+    which has no replicated isolated test). Refuses while the effective-imitation pin differs."""
     from . import v2v_runner
     root, reference_root, source_root = (v2v_runner.remote_name(p) for p in
                                          (root, reference_root, source_root))
@@ -191,11 +318,17 @@ def runtime_config(base, *, root, reference_root, source_root, common_checkpoint
         source_root=source_root, common_checkpoint_sha256=common_checkpoint_sha256,
         imitation_step_mode='kl_targeted', practice_starts=True, practice_fraction=.25,
         practice_repeat_cap=2, imitation_target_space='effective')
+    head, teachers = head_teacher_config()
     cfg.update(run_root=root, legacy_root=reference_root, accounting_root=root,
                bank_source_root=root, source_root=source_root, standalone=True, rerun_cpus=True,
                rerun_arms=['A', 'B', 'R'],
                control_arm=dict(arm='A', root=root, update=UPDATES),
                effective_imitation_commit=EFFECTIVE_IMITATION_COMMIT,
+               trigger_head=head, teacher=teachers, coop_reward=dict(COOP_REWARD),
+               isolated_test=ISOLATED_TEST,
+               criterion_sha256=criterion_document()['criterion_sha256'],
+               diagnostic_schedule=SCHEDULE,           # replicated isolated test, all arms
+               diagnostic_phases=dict(lessons='v2v_lessons', isolated='isolated_replicated'),
                single_ledger=dict(root=root, charges='CHARGES.jsonl', lock='ACCOUNTING.claim',
                                   authority='AUTHORITY.md', foreign_refused=True),
                budget=budget(),
@@ -206,8 +339,9 @@ def runtime_config(base, *, root, reference_root, source_root, common_checkpoint
 
 
 def check_pins(cfg):
-    """Pins for all three arms (identical code; A differs only by having no bank/practice) plus
-    the standalone single-ledger and same-root A bindings."""
+    """Pins for all three arms (identical code; A differs only by having no head/teacher, bank
+    or practice) plus the standalone single-ledger and same-root A bindings and the Track-2
+    trigger-head/teacher/isolated-test/coop_reward-slot registrations."""
     bad = {k: cfg.get(k) for k, v in PINS.items() if cfg.get(k) != v}
     if bad:
         raise ValueError('rerun-cpus pin mismatch: '+json.dumps(bad, sort_keys=True))
@@ -223,6 +357,35 @@ def check_pins(cfg):
         raise ValueError('REFUSED: effective-imitation commit not pinned to '+EFFECTIVE_IMITATION_COMMIT)
     if cfg.get('budget', {}).get('total') != budget()['total']:
         raise ValueError('REFUSED: standalone budget differs from the registered 3-arm quote')
+    head = cfg.get('trigger_head') or {}
+    if tuple(head.get('arms', ())) != TRIGGER_ARMS:
+        raise ValueError('REFUSED: the trigger head applies to B and R only; A stays plain MAPPO PPO')
+    if head.get('v2v_dim') != cfg.get('v2v_dim') or head.get('decision_interval_s') != 60:
+        raise ValueError('REFUSED: the trigger head must reuse the V2V obs width and the '
+                         'registered 60 s decision cadence')
+    teachers = cfg.get('teacher') or {}
+    if (teachers.get('A') is not None or teachers.get('B', {}).get('kind') != 'wm_dense'
+            or teachers.get('R', {}).get('kind') != 'random'):
+        raise ValueError('REFUSED: teachers must be A=none, B=wm_dense (WM DAgger), R=random')
+    if teachers.get('B', {}).get('verify_fraction') != TEACHER_VERIFY_FRACTION \
+            or teachers.get('B', {}).get('verified_through') != 'all8':
+        raise ValueError('REFUSED: B dense teacher must verify its registered label fraction '
+                         'through the existing all8 machinery')
+    if not teachers.get('R', {}).get('distribution'):
+        raise ValueError('REFUSED: R random teacher must reuse the SAME move distribution '
+                         '(fairness)')
+    if cfg.get('isolated_test') != ISOLATED_TEST:
+        raise ValueError('REFUSED: replicated isolated-test registration differs from the '
+                         'registered u6/12/18/24 N=%d paired-worlds spec' % ISOLATED_REPLICATES)
+    if cfg.get('criterion_sha256') != criterion_document()['criterion_sha256']:
+        raise ValueError('REFUSED: config does not bind the current pre-registered criterion')
+    for arm in ISOLATED_TEST['arms']:
+        if list((cfg.get('diagnostic_schedule') or {}).get(arm, {}).get('isolated', ())) \
+                != list(ISOLATED_TEST['updates']):
+            raise ValueError('REFUSED: arm '+arm+' must run the replicated isolated test at '
+                             'u6/12/18/24')
+    if (cfg.get('diagnostic_phases') or {}).get('isolated') != 'isolated_replicated':
+        raise ValueError('REFUSED: isolated diagnostics must charge the isolated_replicated phase')
     from .practice_starts import enabled
     if enabled(cfg, 'A') or not (enabled(cfg, 'B') and enabled(cfg, 'R')):
         raise ValueError('REFUSED: practice_starts applies to B and R only; A stays plain PPO')
@@ -525,6 +688,122 @@ def staging_files_command(manifest):
             '<original-host>:/ /home/ubuntu/   # then rsync /home/ubuntu to cpuS unchanged')
 
 
+# ---------------------------------------------------------------- pre-registered criterion + replicated isolated test
+
+CRITERION_FILE = 'PREREGISTERED_CRITERION.json'
+
+
+def criterion_document():
+    """The PRE-REGISTERED isolated-cooperation-test criterion as a sealed (self-hash)
+    document: the registered pass rule, the replicated isolated-test spec and the full quote.
+    Any edit after registration breaks the seal; OWNER_APPROVAL.json binds the file SHA and
+    the run root's AUTHORITY.md binds the document SHA."""
+    from .exact_grade import _seal
+    return _seal(dict(schema='coopmwm.rerun_cpus.preregistered_criterion.v1',
+                      criterion=CRITERION, isolated_test=ISOLATED_TEST,
+                      arms=dict(A='plain MAPPO PPO (no trigger head, no teacher)',
+                                B='T2A trigger head + WM dense DAgger teacher (dense_teacher '
+                                  'wm_dense) + per_seed_v1 cooperative_only bank',
+                                R='T2A trigger head + RANDOM teacher (dense_teacher random, '
+                                  'same move distribution)'),
+                      quote=quote()), 'criterion_sha256')
+
+
+def bootstrap_ci(values, *, reps=ISOLATED_BOOTSTRAP_REPS, seed=ISOLATED_BOOTSTRAP_SEED,
+                 level=ISOLATED_BOOTSTRAP_LEVEL):
+    """Deterministic percentile bootstrap CI of the mean (stdlib random, fixed seed): the
+    registered analysis of the replicated isolated test - reproducible before any run."""
+    import random
+    from statistics import fmean
+    vals = [float(v) for v in values]
+    n = len(vals)
+    if n < 2:
+        raise ValueError('REFUSED: a bootstrap CI needs at least two paired replicates')
+    if reps < 1 or not 0 < level < 1:
+        raise ValueError('REFUSED: bad bootstrap parameters')
+    rng = random.Random(int(seed))
+    stats = sorted(fmean(vals[rng.randrange(n)] for _ in range(n)) for _ in range(reps))
+    return dict(mean=fmean(vals), lo=stats[int((1-level)/2*reps)],
+                hi=stats[min(reps-1, int((1-(1-level)/2)*reps))],
+                n=n, reps=int(reps), level=float(level), seed=int(seed))
+
+
+def _cell_seed(base_seed, update, pair_index):
+    """The registered per-cell bootstrap seed (documented in ISOLATED_TEST['cell_seed_rule'])."""
+    return int(base_seed)*10000 + 100*int(update) + int(pair_index)
+
+
+def evaluate_isolated_test(records):
+    """Registered analysis of the replicated isolated cooperation test: refuses any non-registered
+    arm/update/replicate, duplicates, non-finite metrics, safety counters or an INCOMPLETE
+    grid (every arm x update x replicate cell must be present), computes the paired
+    differences (same world seed across arms by replicate index) with per-cell bootstrap CIs,
+    and applies the pre-registered criterion: PASS iff at u24 the B-vs-A CI lies entirely
+    above 0 AND B's summed safety counters do not exceed A's. R (random teacher) is reported
+    (B-R ablation), never gated."""
+    spec, updates, arms, reps = ISOLATED_TEST, list(ISOLATED_TEST['updates']), \
+        list(ISOLATED_TEST['arms']), int(ISOLATED_TEST['replicates'])
+    counters = list(spec['safety_counters'])
+    index = {}
+    for rec in records:
+        arm, u, r = rec.get('arm'), rec.get('update'), rec.get('replicate')
+        if arm not in arms:
+            raise ValueError('REFUSED: isolated-test record for a non-registered arm: '+str(arm))
+        if u not in updates:
+            raise ValueError('REFUSED: isolated-test record at a non-registered update: '+str(u))
+        if not isinstance(r, int) or isinstance(r, bool) or not 0 <= r < reps:
+            raise ValueError('REFUSED: replicate index outside the registered range: '+str(r))
+        key = (arm, u, r)
+        if key in index:
+            raise ValueError('REFUSED: duplicate isolated-test record: '+str(key))
+        metric = float(rec['metric'])
+        if not math.isfinite(metric):
+            raise ValueError('REFUSED: non-finite isolated-test metric')
+        cell = dict(metric=metric)
+        for c in counters:
+            v = float(rec[c])
+            if not math.isfinite(v) or v < 0:
+                raise ValueError('REFUSED: bad isolated-test safety counter '+c+': '+str(v))
+            cell[c] = v
+        index[key] = cell
+    missing = [(a, u, r) for a in arms for u in updates for r in range(reps) if (a, u, r) not in index]
+    if missing:
+        raise ValueError('REFUSED: incomplete isolated-test grid: %d cell(s) missing, e.g. %s'
+                         % (len(missing), missing[0]))
+    pairs = (('B', 'A'), ('R', 'A'), ('B', 'R'))
+    bspec = spec['bootstrap']
+    per_update = {}
+    for u in updates:
+        entry = {}
+        for pi, (hi_arm, lo_arm) in enumerate(pairs):
+            diffs = [index[(hi_arm, u, r)]['metric'] - index[(lo_arm, u, r)]['metric']
+                     for r in range(reps)]
+            ci = bootstrap_ci(diffs, reps=bspec['reps'], seed=_cell_seed(bspec['seed'], u, pi),
+                              level=bspec['level'])
+            entry[hi_arm+'-'+lo_arm] = dict(mean=ci['mean'], ci_lo=ci['lo'], ci_hi=ci['hi'],
+                                            n=ci['n'], level=ci['level'])
+        per_update[str(u)] = entry
+    pu = CRITERION['primary_update']
+    primary = dict(per_update[str(pu)]['B-A'], update=pu, pair='B-A',
+                   ci_excludes_zero_positive=bool(per_update[str(pu)]['B-A']['ci_lo'] > 0))
+    tol = float(CRITERION['safety_tolerance'])
+    safety = {}
+    for c in counters:
+        a_sum = sum(index[('A', pu, r)][c] for r in range(reps))
+        b_sum = sum(index[('B', pu, r)][c] for r in range(reps))
+        safety[c] = dict(A=a_sum, B=b_sum, ok=bool(b_sum <= a_sum + tol))
+    primary['safety_ok'] = all(s['ok'] for s in safety.values())
+    primary['pass'] = bool(primary['ci_excludes_zero_positive'] and primary['safety_ok'])
+    return dict(schema='coopmwm.rerun_cpus.isolated_eval.v1',
+                verdict='pass' if primary['pass'] else 'fail',
+                registered=CRITERION['pass_rule'],
+                r_arm='random-teacher fairness control; reported (B-R ablation), never gated',
+                primary=primary, safety=safety, per_update=per_update,
+                secondary_updates=list(CRITERION['secondary_updates']),
+                cells=len(index), replicates=reps, arms=arms,
+                criterion_sha256=criterion_document()['criterion_sha256'])
+
+
 # ---------------------------------------------------------------- approval-gated dry preflight
 
 BUDGET_REQUEST = 'RERUNCPUS_BUDGET_REQUEST.json'
@@ -535,11 +814,14 @@ MANIFEST_FILE = 'STAGING_MANIFEST.json'
 
 
 def preflight_dry(prep_dir, *, stage_dir, budget_request=BUDGET_REQUEST, approval=APPROVAL,
-                  owner_quote=OWNER_QUOTE, verdict=VERDICT_FILE, manifest=MANIFEST_FILE):
+                  owner_quote=OWNER_QUOTE, verdict=VERDICT_FILE, manifest=MANIFEST_FILE,
+                  criterion=CRITERION_FILE):
     """Zero-physics dry preflight: refuses unless OWNER_APPROVAL.json exists and binds the exact
-    budget request SHA, the owner quote SHA and the verdict file SHA (verdict positive) with the
-    effective-imitation commit pinned, AND every staging-manifest file SHA matches the staged
-    copies. Never dispatches; new_sim_s stays 0."""
+    budget request SHA, the owner quote SHA, the verdict file SHA (verdict positive) and the
+    PRE-REGISTERED criterion file SHA (sealed, carrying the registered criterion + replicated
+    isolated-test spec) with the effective-imitation commit pinned, AND every staging-manifest
+    file SHA matches the staged copies. Never dispatches; new_sim_s stays 0."""
+    from .exact_grade import verify_sealed
     prep, stage = Path(prep_dir), Path(stage_dir)
     req = prep/budget_request
     if not req.is_file():
@@ -566,6 +848,19 @@ def preflight_dry(prep_dir, *, stage_dir, budget_request=BUDGET_REQUEST, approva
         raise SystemExit('REFUSED: post-fix evening verdict not positive')
     if a.get('effective_imitation_commit') != EFFECTIVE_IMITATION_COMMIT:
         raise SystemExit('REFUSED: effective-imitation commit not pinned to '+EFFECTIVE_IMITATION_COMMIT)
+    c = prep/criterion
+    if not c.is_file():
+        raise SystemExit('REFUSED: pre-registered criterion missing: '+str(c))
+    if a.get('criterion_sha256') != sha(c):
+        raise SystemExit('REFUSED: OWNER_APPROVAL criterion sha differs from the registered criterion')
+    doc = json.loads(c.read_text(encoding='utf-8'))
+    try:
+        verify_sealed(doc, 'criterion_sha256')
+    except ValueError as e:
+        raise SystemExit('REFUSED: pre-registered criterion seal broken: '+str(e))
+    if doc.get('criterion') != CRITERION or doc.get('isolated_test') != ISOLATED_TEST:
+        raise SystemExit('REFUSED: criterion file does not carry the registered criterion '
+                         'and isolated-test spec')
     m = prep/manifest
     if not m.is_file():
         raise SystemExit('REFUSED: staging manifest missing: '+str(m))
@@ -574,6 +869,7 @@ def preflight_dry(prep_dir, *, stage_dir, budget_request=BUDGET_REQUEST, approva
     return dict(ready_for_registered_launch=True, new_sim_s=0, budget_request_sha256=sha(req),
                 owner_quote_sha256=a.get('owner_quote_sha256'),
                 verdict_file_sha256=a.get('verdict_file_sha256'),
+                criterion_sha256=a.get('criterion_sha256'),
                 manifest_sha256=man['manifest_sha256'], staged=staged)
 
 
