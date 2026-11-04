@@ -9,15 +9,15 @@ Covers the owner 2026-11-04 requirements:
                   the full fix set (kl_targeted, per_seed_v1 cooperative_only, practice_starts
                   0.25/cap 2, imitation_target_space 'effective'), A the same runtime minus
                   bank/practice; the effective-imitation commit pinned to f35b193a;
-  Track 2 T2C   - trigger head on B/R (lazy moves/trigger_policy API), teachers A=none /
-                  B=wm_dense (dense DAgger, registered all8-verified fraction) / R=random
-                  (same move distribution), the coop_reward config slot (default OFF, built
-                  on c4/coop-reward), the replicated isolated cooperation test at
+  Track 2 T2C   - essentials-first B/R trigger + frozen layer/group credit/observable merge
+                  features; deferred WM/random teachers (same move distribution) and
+                  augmentation/practice-weighting/coop_reward slots default OFF; cpuS shared
+                  40-worker ceiling (24 episode + 16 diagnostic slots); isolated cooperation at
                   u6/12/18/24 (N=8 paired-world replicates, bootstrap CIs, sealed
                   pre-registered criterion), the full budget quote and the criterion-bound
                   approval-gated dry preflight;
   A results local - control arm A runs in the SAME new root (no remote A reads);
-  quote         - 3 arms incl. the exact gate, the teacher verification states, the
+  quote         - 3 arms incl. the exact gate, group-credit verification allowance, the
                   replicated isolated test and the u8/u24 test numbers written out;
   staging       - the read-only manifest resolves the bank through the REAL readers
                   (bank_decisions + per_seed_v1 confirmations on a real all8 bank built by the
@@ -63,9 +63,7 @@ def _t2_stub_modules():
     moves.offsets = lambda move, t: {}
     moves.from_plan = lambda verified_plan: None
     trigger_policy = types.ModuleType('tools.coopmwm.trigger_policy')
-    trigger_policy.HEAD_ACTIONS = 21          # 5 families x 4 partner choices + none
     dense_teacher = types.ModuleType('tools.coopmwm.dense_teacher')
-    dense_teacher.TEACHER_KINDS = ('wm_dense', 'random')
     return dict(moves=moves, trigger_policy=trigger_policy, dense_teacher=dense_teacher)
 
 
@@ -88,7 +86,8 @@ def test_quote_three_arms_including_gate_teacher_verify_and_replicated_isolated(
     assert q['b_train_sim_s'] == q['r_train_sim_s'] == 24*30*1200 == 864000   # 24 PPO + 6 practice refs
     assert q['v2v_train'] == 691200+2*864000 == 2419200
     assert q['v2v_lessons'] == 4*5280 == 21120
-    assert q['teacher_verify_sim_s'] == 24*1024 == 24576                  # all8-verified teacher states
+    assert q['teacher_verify_sim_s'] == 0                                # deferred in essentials launch
+    assert q['group_credit_verify_sim_s'] == 35820                       # explicit verification ceiling
     cells = 3*4
     assert q['isolated_replicated'] == dict(arms=['A', 'B', 'R'], updates=[6, 12, 18, 24],
                                             replicates=8, cells=cells, replicates_total=cells*8,
@@ -99,17 +98,18 @@ def test_quote_three_arms_including_gate_teacher_verify_and_replicated_isolated(
     assert q['interim_u8'] == dict(per_arm=96*1200, arms=3, updates=8, episodes_per_arm=96)
     assert q['final_u24'] == dict(per_arm=96*1200, arms=3, updates=24, episodes_per_arm=96)
     assert q['interim_u8_sim_s'] == q['final_u24_sim_s'] == 3*96*1200 == 345600
-    assert q['total_without_tests'] == 691200+1728000+21120+24576+3130560+35820 == 5631276
-    assert q['total'] == 5631276+345600+345600 == 6322476
+    assert q['total_without_tests'] == 691200+1728000+21120+3130560+2*35820 == 5642520
+    assert q['total'] == 5642520+345600+345600 == 6333720
 
 
 def test_budget_is_single_ledger_and_covers_the_quote():
     b = rcpu.budget()
     assert b['single_ledger'] is True and b['arms'] == ['A', 'B', 'R']
-    assert sum(b['phases'].values()) == b['total'] == 6323196            # lessons floor 21840
-    assert b['phases']['v2v_train'] == 2419200 and b['quote_total_sim_s'] == 6322476
+    assert sum(b['phases'].values()) == b['total'] == 6334440            # lessons floor 21840
+    assert b['phases']['v2v_train'] == 2419200 and b['quote_total_sim_s'] == 6333720
     assert 'replicated' in b['isolated_test'] and 'pre-registered' in b['isolated_test']
-    for phase, cost in (('v2v_train', 2419200), ('v2v_lessons', 21120), ('teacher_verify', 24576),
+    for phase, cost in (('v2v_train', 2419200), ('v2v_lessons', 21120), ('teacher_verify', 0),
+                         ('group_credit_verify', 35820),
                         ('isolated_replicated', 3130560), ('gate_bank_verification_ext', 35820),
                         ('v2v_interim', 345600), ('v2v_final', 345600)):
         assert b['phases'][phase] >= cost
@@ -119,9 +119,10 @@ def test_wall_clock_paced():
     w = rcpu.wall_clock()
     assert w['per_update_s'] == 1800
     assert w['A_s'] == 24*1800 and w['B_s'] == 24*1800+4*900 and w['R_s'] == w['B_s']+1800
-    assert w['tests_s'] == 2*3*96*300/2
+    assert w['tests_s'] == 2*3*96*300/24
     assert w['isolated_s'] == 3130560/20 == 156528.0                     # 36,000 sim-s per 1,800 s pace
-    assert w['total_h'] == round((w['R_s']+w['isolated_s']+w['tests_s'])/3600, 1) == 81.0
+    assert w['total_h'] == round((w['R_s']+w['isolated_s']+w['tests_s'])/3600, 1) == 59.0
+    assert w['estimate_only'] and w['target']['max_sumo_workers'] == 40
 
 
 # ---------------------------------------------------------------- 3-arm runtime config
@@ -161,27 +162,26 @@ def test_three_arms_from_mappo_u0_with_identical_code(tmp_path):
 
 
 def test_t2c_trigger_head_and_teachers_per_arm(tmp_path):
-    """T2C: A = plain MAPPO PPO (no head, no teacher); B = trigger head + WM dense DAgger
-    teacher; R = trigger head + random teacher on the SAME move distribution (fairness)."""
+    """A is plain PPO; B/R trigger heads are ON. WM/random teacher roles remain available
+    in deferred slots, with no teacher invoked or charged in the essentials-first profile."""
     import tools.coopmwm as pkg
     cfg = config(tmp_path)
     head, teachers = cfg['trigger_head'], cfg['teacher']
     assert head['module'] == 'tools.coopmwm.trigger_policy'
     assert tuple(head['arms']) == ('B', 'R') and head['v2v_dim'] == 48 == cfg['v2v_dim']
     assert head['decision_interval_s'] == 60                              # registered cadence
-    assert head['families'] == tuple(pkg.moves.FAMILIES)                  # resolved through the T1A API
-    assert 'none' in head['families']
-    assert head['head_actions'] == int(pkg.trigger_policy.HEAD_ACTIONS)
+    assert head['families_source'] == 'moves.FAMILIES'
+    assert head['candidates_api'] == 'moves.candidates(obs_state, rng, n)'
+    assert head['bank_label_api'] == 'moves.from_plan(verified_plan)'
     assert 'moves.offsets' in head['low_level'] and 'HDVs never commanded' in head['low_level']
     assert rcpu.trigger_head_enabled(cfg, 'B') and rcpu.trigger_head_enabled(cfg, 'R')
     assert not rcpu.trigger_head_enabled(cfg, 'A')
-    assert rcpu.teacher_kind(cfg, 'A') is None and rcpu.teacher_kind(cfg, 'B') == 'wm_dense' \
-        and rcpu.teacher_kind(cfg, 'R') == 'random'
+    assert all(rcpu.teacher_kind(cfg, a) is None for a in ('A', 'B', 'R'))  # deferred
     b = teachers['B']
     assert b['module'] == 'tools.coopmwm.dense_teacher' and b['kind'] == 'wm_dense'
     assert 'DAgger' in b['mode'] and 'cross-entropy' in b['mode'] and 'T1B' in b['mode']
-    assert b['verify_fraction'] == rcpu.TEACHER_VERIFY_FRACTION == 0.05   # registered fraction
-    assert b['verified_through'] == 'all8' and b['verify_states'] == rcpu.TEACHER_VERIFY_STATES
+    assert b['verify_fraction'] is None and b['enabled'] is False
+    assert b['verified_through'] == 'all8'
     r = teachers['R']
     assert r['kind'] == 'random' and 'same move distribution' in r['distribution']
     assert teachers['A'] is None
@@ -218,13 +218,11 @@ def test_t2c_isolated_test_registration_matches_schedule_and_quote():
 
 
 def test_t2c_stubs_expose_the_sibling_track_apis():
-    """The T1A/T2A/T2B contract rerun_cpus codes against (stubs only; real modules on their
-    own branches): moves.FAMILIES incl. none, trigger_policy.HEAD_ACTIONS, dense_teacher kinds."""
+    """Only moves has a fixed symbol API in the spec; no guessed sibling head constants."""
     import tools.coopmwm as pkg
     assert 'none' in tuple(pkg.moves.FAMILIES)
     assert set(pkg.moves.FAMILIES) >= {'ease_off', 'gap_open', 'wall', 'ramp_assist'}
-    assert isinstance(int(pkg.trigger_policy.HEAD_ACTIONS), int) and pkg.trigger_policy.HEAD_ACTIONS >= 1
-    assert set(('wm_dense', 'random')) <= set(pkg.dense_teacher.TEACHER_KINDS)
+    assert all(callable(getattr(pkg.moves, n)) for n in ('candidates', 'offsets', 'from_plan'))
 
 
 def test_standalone_own_ledger_and_local_a_bindings(tmp_path):
@@ -553,16 +551,18 @@ def test_criterion_document_is_sealed_and_stable():
     verify_sealed(d1, 'criterion_sha256')
     crit = d1['criterion']
     assert crit['primary_update'] == 24 and crit['secondary_updates'] == [6, 12, 18]
-    assert crit['metric'] == 'coop_score' and crit['higher_is_better'] is True
+    assert crit['metric'] == 'policy_cooperation_gain_veh_s' and crit['higher_is_better'] is True
     assert crit['updates'] == [6, 12, 18, 24] and crit['replicates'] == 8
     assert crit['bootstrap']['reps'] == 10000 and crit['bootstrap']['level'] == 0.95
     assert crit['safety_tolerance'] == 0
     assert crit['r_arm']['gated'] is False and 'same move distribution' in crit['r_arm']['rule']
     assert 'CI lying entirely above 0' in crit['pass_rule']
     assert d1['isolated_test'] == rcpu.ISOLATED_TEST
-    assert d1['arms']['B'].startswith('T2A trigger head + WM dense')
-    assert d1['arms']['R'].startswith('T2A trigger head + RANDOM teacher')
+    assert d1['arms']['B'].startswith('T2A trigger head + frozen cooperation layer + WM bank')
+    assert d1['arms']['R'].endswith('own random bank')
     assert d1['quote'] == rcpu.quote()
+    d2['criterion']['updates'].append(99)
+    assert rcpu.criterion_document() == d1                               # no global aliases
     tampered = dict(d1, primary_update=12)
     with pytest.raises(ValueError, match='mismatch'):
         verify_sealed(dict(tampered, **{'criterion_sha256': d1['criterion_sha256']}),
@@ -589,24 +589,26 @@ def test_bootstrap_ci_is_deterministic_percentile_with_registered_defaults():
         rcpu.bootstrap_ci([1.0, 2.0], reps=0)
 
 
+def _registration():
+    return dict(role='train', metric=rcpu.ISOLATED_TEST['metric'],
+                replicates=[dict(replicate=r, world_seed=986000+r,
+                                 state_set_sha256='a'*64, window_set_sha256='b'*64)
+                            for r in range(8)])
+
+
+def _evaluate(rows):
+    return rcpu.evaluate_isolated_test(rows, registration=_registration())
+
+
 def _isolated_grid(b_delta=0.15, r_delta=0.0, collisions_b=0.0, at_update=None):
     """A full registered grid: 3 arms x u6/12/18/24 x 8 paired-world replicates."""
-    rows = []
-    for u in (6, 12, 18, 24):
-        for r in range(8):
-            base = {a: 0.5 for a in ('A', 'B', 'R')}
-            base['B'] += b_delta
-            base['R'] += r_delta
-            for arm in ('A', 'B', 'R'):
-                rows.append(dict(arm=arm, update=u, replicate=r, metric=base[arm],
-                                 collisions=(collisions_b if arm == 'B' else 0.0)
-                                 if u == at_update else 0.0,
-                                 teleports=0.0, hard_brakes=0.0))
-    return rows
+    return [dict(j, status='graded', metric=0.5+{'A': 0., 'B': b_delta, 'R': r_delta}[j['arm']],
+                 collisions=collisions_b if j['arm'] == 'B' and j['update'] == at_update else 0,
+                 teleports=0, hard_brakes=0) for j in rcpu.isolated_jobs(_registration())]
 
 
 def test_evaluate_isolated_test_applies_the_registered_criterion():
-    out = rcpu.evaluate_isolated_test(_isolated_grid())
+    out = _evaluate(_isolated_grid())
     assert out['verdict'] == 'pass' and out['primary']['pass'] is True
     assert out['primary']['update'] == 24 and out['primary']['pair'] == 'B-A'
     assert out['primary']['mean'] == pytest.approx(0.15)
@@ -616,68 +618,65 @@ def test_evaluate_isolated_test_applies_the_registered_criterion():
     assert all(s['ok'] for s in out['safety'].values())
     assert out['per_update']['6']['B-A']['ci_lo'] > 0                      # secondary, reported
     assert out['secondary_updates'] == [6, 12, 18]
-    assert out['r_arm'].startswith('random-teacher fairness control')
+    assert out['r_arm'].startswith('random-bank fairness control')
     assert out['per_update']['24']['B-R']['mean'] == pytest.approx(0.15)   # teacher ablation reported
     assert out['criterion_sha256'] == rcpu.criterion_document()['criterion_sha256']
     # R clearly worse than A everywhere: reported, NEVER gated (B still passes).
-    out_r_bad = rcpu.evaluate_isolated_test(_isolated_grid(r_delta=-0.4))
+    out_r_bad = _evaluate(_isolated_grid(r_delta=-0.4))
     assert out_r_bad['verdict'] == 'pass' and out_r_bad['per_update']['24']['R-A']['ci_hi'] < 0
     # B loses at the primary update -> fail.
-    out_b_loses = rcpu.evaluate_isolated_test(_isolated_grid(b_delta=-0.1))
+    out_b_loses = _evaluate(_isolated_grid(b_delta=-0.1))
     assert out_b_loses['verdict'] == 'fail' and out_b_loses['primary']['ci_lo'] < 0
     assert out_b_loses['primary']['pass'] is False
     # B wins coop_score but regresses safety (collisions 8 vs 0 across replicates) -> fail.
-    out_unsafe = rcpu.evaluate_isolated_test(_isolated_grid(collisions_b=1.0, at_update=24))
+    out_unsafe = _evaluate(_isolated_grid(collisions_b=1.0, at_update=24))
     assert out_unsafe['verdict'] == 'fail'
     assert out_unsafe['primary']['ci_excludes_zero_positive'] is True
     assert out_unsafe['primary']['safety_ok'] is False
     assert out_unsafe['safety']['collisions'] == dict(A=0.0, B=8.0, ok=False)
     # safety regression at a SECONDARY update never gates the primary verdict
-    out_secondary_unsafe = rcpu.evaluate_isolated_test(_isolated_grid(collisions_b=1.0, at_update=6))
+    out_secondary_unsafe = _evaluate(_isolated_grid(collisions_b=1.0, at_update=6))
     assert out_secondary_unsafe['verdict'] == 'pass'
 
 
 def test_evaluate_isolated_test_refuses_bad_records():
     good = _isolated_grid()
     with pytest.raises(ValueError, match='non-registered arm'):
-        rcpu.evaluate_isolated_test(good+[dict(arm='C', update=24, replicate=0, metric=0.5,
+        _evaluate(good+[dict(arm='C', update=24, replicate=0, metric=0.5,
                                                collisions=0.0, teleports=0.0, hard_brakes=0.0)])
     with pytest.raises(ValueError, match='non-registered update'):
-        rcpu.evaluate_isolated_test(good+[dict(arm='A', update=8, replicate=0, metric=0.5,
+        _evaluate(good+[dict(arm='A', update=8, replicate=0, metric=0.5,
                                                collisions=0.0, teleports=0.0, hard_brakes=0.0)])
     with pytest.raises(ValueError, match='outside the registered range'):
-        rcpu.evaluate_isolated_test(good+[dict(arm='A', update=24, replicate=8, metric=0.5,
+        _evaluate(good+[dict(arm='A', update=24, replicate=8, metric=0.5,
                                                collisions=0.0, teleports=0.0, hard_brakes=0.0)])
     with pytest.raises(ValueError, match='duplicate'):
-        rcpu.evaluate_isolated_test(good+[good[0]])
+        _evaluate(good+[good[0]])
     dropped = good[:-1]
     with pytest.raises(ValueError, match='incomplete isolated-test grid'):
-        rcpu.evaluate_isolated_test(dropped)
+        _evaluate(dropped)
     with pytest.raises(ValueError, match='non-finite'):
-        rcpu.evaluate_isolated_test([dict(r, metric=float('nan')) if r['arm'] == 'B' and
+        _evaluate([dict(r, metric=float('nan')) if r['arm'] == 'B' and
                                      r['update'] == 24 and r['replicate'] == 0 else r
                                      for r in good])
     with pytest.raises(ValueError, match='safety counter'):
-        rcpu.evaluate_isolated_test([dict(r, collisions=-1.0) if r['arm'] == 'A' and
+        _evaluate([dict(r, collisions=-1.0) if r['arm'] == 'A' and
                                      r['update'] == 24 and r['replicate'] == 0 else r
                                      for r in good])
 
 
-def test_head_teacher_config_refuses_wrong_sibling_apis(monkeypatch):
+def test_component_adapters_refuse_wrong_moves_api(tmp_path, monkeypatch):
     import tools.coopmwm as pkg
-    saved = (pkg.moves, pkg.trigger_policy, pkg.dense_teacher)
-    try:
-        pkg.moves = types.SimpleNamespace(FAMILIES=('ease_off', 'gap_open'))     # no 'none'
-        pkg.trigger_policy = types.SimpleNamespace(HEAD_ACTIONS=21)
-        pkg.dense_teacher = types.SimpleNamespace(TEACHER_KINDS=('wm_dense', 'random'))
-        with pytest.raises(ValueError, match='none family'):
-            rcpu.head_teacher_config()
-        pkg.moves = types.SimpleNamespace(FAMILIES=('none', 'ease_off'))
-        pkg.dense_teacher = types.SimpleNamespace(TEACHER_KINDS=('wm_dense',))
-        with pytest.raises(ValueError, match='random teacher kind'):
-            rcpu.head_teacher_config()
-    finally:
-        pkg.moves, pkg.trigger_policy, pkg.dense_teacher = saved
+    cfg = config(tmp_path)
+    adapters = {n: lambda **kw: object() for n in
+                ('merge_features', 'trigger_head', 'coop_layer', 'group_credit')}
+    monkeypatch.setattr(pkg.moves, 'FAMILIES', ('ease_off', 'gap_open'))
+    with pytest.raises(ValueError, match='none family'):
+        rcpu.track2_components(cfg, 'B', adapters=adapters)
+    monkeypatch.setattr(pkg.moves, 'FAMILIES', ('none', 'ease_off'))
+    monkeypatch.setattr(pkg.moves, 'offsets', None)
+    with pytest.raises(ValueError, match='moves API'):
+        rcpu.track2_components(cfg, 'B', adapters=adapters)
 
 
 # ---------------------------------------------------------------- approval-gated dry preflight
@@ -688,9 +687,13 @@ def prep_dir(tmp_path, mirror, *, verdict='positive', approval_sha=True, commit=
     prep.mkdir()
     m = rcpu.staging_manifest(remote_root=LEGACY_REMOTE, sources={'B': [COLLECTION_REMOTE]})
     (prep/rcpu.MANIFEST_FILE).write_text(json.dumps(m), encoding='utf-8')
-    request = dict(quote=rcpu.quote(), budget=rcpu.budget(), new_sim_s=0)
+    cfg, registration = config(tmp_path), _registration()
+    rcpu.init_root(cfg['run_root'])
+    (prep/rcpu.CONFIG_FILE).write_text(json.dumps(cfg), encoding='utf-8')
+    (prep/rcpu.ISOLATED_REGISTRATION_FILE).write_text(json.dumps(registration), encoding='utf-8')
+    request = rcpu.budget_request_document(cfg, registration)
     (prep/rcpu.BUDGET_REQUEST).write_text(json.dumps(request), encoding='utf-8')
-    (prep/rcpu.OWNER_QUOTE).write_text('owner quote: 6,322,476 sim-s for the 3-arm standalone '
+    (prep/rcpu.OWNER_QUOTE).write_text('owner quote: 6,333,720 sim-s for the 3-arm standalone '
                                        'rerun with the replicated isolated test',
                                        encoding='utf-8')
     (prep/rcpu.VERDICT_FILE).write_text(json.dumps(dict(verdict=verdict)), encoding='utf-8')
@@ -701,6 +704,8 @@ def prep_dir(tmp_path, mirror, *, verdict='positive', approval_sha=True, commit=
         owner_approved=owner_approved, owner_quote_sha256=sha_of(prep/rcpu.OWNER_QUOTE),
         verdict_file_sha256=sha_of(prep/rcpu.VERDICT_FILE),
         criterion_sha256=sha_of(prep/rcpu.CRITERION_FILE) if criterion_sha else '0'*64,
+        config_file_sha256=sha_of(prep/rcpu.CONFIG_FILE),
+        registration_file_sha256=sha_of(prep/rcpu.ISOLATED_REGISTRATION_FILE),
         effective_imitation_commit=commit or rcpu.EFFECTIVE_IMITATION_COMMIT)), encoding='utf-8')
     stage = tmp_path/'stage'
     shutil.copytree(mirror, stage)
@@ -710,10 +715,12 @@ def prep_dir(tmp_path, mirror, *, verdict='positive', approval_sha=True, commit=
 def test_preflight_dry_passes_only_with_full_binding_and_matching_staged_shas(tmp_path, mirror):
     prep, stage = prep_dir(tmp_path, mirror)
     out = rcpu.preflight_dry(prep, stage_dir=stage)
-    assert out['ready_for_registered_launch'] is True and out['new_sim_s'] == 0
+    assert out['preflight_pass'] is True and out['new_sim_s'] == 0
+    assert out['ready_for_registered_launch'] is False and out['integration_required'] is True
     assert out['staged']['files'] == len(json.loads((prep/rcpu.MANIFEST_FILE).read_text())['entries'])
     assert out['manifest_sha256']
     assert out['criterion_sha256'] == rcpu.sha(prep/rcpu.CRITERION_FILE)
+    assert out['criterion_document_sha256'] == rcpu.criterion_document()['criterion_sha256']
     assert json.loads((prep/rcpu.CRITERION_FILE).read_text())['criterion'] == rcpu.CRITERION
 
 
@@ -724,15 +731,17 @@ def test_preflight_dry_refusals(tmp_path, mirror):
                 owner_quote_sha256=sha_of(prep/rcpu.OWNER_QUOTE),
                 verdict_file_sha256=sha_of(prep/rcpu.VERDICT_FILE),
                 criterion_sha256=sha_of(prep/rcpu.CRITERION_FILE),
+                config_file_sha256=sha_of(prep/rcpu.CONFIG_FILE),
+                registration_file_sha256=sha_of(prep/rcpu.ISOLATED_REGISTRATION_FILE),
                 effective_imitation_commit=rcpu.EFFECTIVE_IMITATION_COMMIT)
+    request = json.loads((prep/rcpu.BUDGET_REQUEST).read_text())
     (prep/rcpu.BUDGET_REQUEST).unlink()
     with pytest.raises(SystemExit, match='budget request missing'):
         rcpu.preflight_dry(prep, stage_dir=stage)
     (prep/rcpu.BUDGET_REQUEST).write_text(json.dumps(dict(quote=dict(total=1))), encoding='utf-8')
     with pytest.raises(SystemExit, match='differs from the 3-arm quote'):
         rcpu.preflight_dry(prep, stage_dir=stage)
-    (prep/rcpu.BUDGET_REQUEST).write_text(json.dumps(dict(quote=rcpu.quote(), budget=rcpu.budget(),
-                                                          new_sim_s=0)), encoding='utf-8')
+    (prep/rcpu.BUDGET_REQUEST).write_text(json.dumps(request), encoding='utf-8')
     (prep/rcpu.APPROVAL).unlink()
     with pytest.raises(SystemExit, match='OWNER_APPROVAL'):
         rcpu.preflight_dry(prep, stage_dir=stage)
@@ -797,4 +806,173 @@ def test_preflight_dry_refusals(tmp_path, mirror):
     with pytest.raises(SystemExit, match='sha differs'):
         rcpu.preflight_dry(prep, stage_dir=stage)
     victim.write_bytes(b'MAPPO-u0-common-checkpoint')
-    assert rcpu.preflight_dry(prep, stage_dir=stage)['ready_for_registered_launch'] is True
+    assert rcpu.preflight_dry(prep, stage_dir=stage)['preflight_pass'] is True
+
+
+# ----------------------- essentials-first integration and pairing/approval regression checks
+
+def test_essentials_profile_serializes_without_sibling_modules(tmp_path, monkeypatch):
+    """The preparation path works before sibling merges, and survives JSON transport."""
+    import tools.coopmwm as pkg
+    for name in ('moves', 'trigger_policy', 'dense_teacher'):
+        monkeypatch.delattr(pkg, name)
+        monkeypatch.setitem(sys.modules, 'tools.coopmwm.'+name, None)
+    cfg = json.loads(json.dumps(config(tmp_path)))
+    assert rcpu.check_pins(cfg)
+    assert cfg['cpu']['workers']+cfg['cpu']['diagnostic_workers'] == 40 < 48
+    assert cfg['job_namespace'] == 't2c' and cfg['target_host'] == 'cpuS'
+    for name in ('coop_layer', 'group_credit', 'merge_features'):
+        assert cfg[name]['enabled'] is True
+        assert cfg[name]['arms'] == ['B', 'R']
+    for name in ('dense_teacher', 'plan_augment', 'practice_weighting', 'coop_reward'):
+        assert cfg[name]['enabled'] is False
+    assert cfg['coop_layer']['frozen_base'] and cfg['coop_layer']['separate_optimizer']
+    assert cfg['group_credit']['layer_advantage_only']
+    assert rcpu.episode_options(cfg, 'A') == {}
+    assert rcpu.track2_components(cfg, 'A', adapters={}) == {}
+    # Caller mutation cannot change registrations, future configs, or criterion hashes.
+    expected = rcpu.criterion_document()
+    cfg['isolated_test']['updates'].append(99)
+    cfg['coop_layer']['arms'].append('A')
+    assert rcpu.criterion_document() == expected
+    assert rcpu.check_pins(config(tmp_path))
+
+
+def test_injected_adapters_receive_dependencies_and_off_slots_never_run(tmp_path):
+    cfg = config(tmp_path)
+    calls = []
+    tokens = {n: object() for n in ('merge_features', 'trigger_head', 'coop_layer', 'group_credit')}
+    def adapter(name):
+        def build(*, cfg, arm, moves, components):
+            assert arm == 'B'
+            assert cfg['v2v_dim'] == 48 and callable(moves.offsets)
+            assert set(components) == set(calls)
+            assert all(components[k] is tokens[k] for k in components)
+            calls.append(name)
+            cfg['coop_layer']['enabled'] = False  # adapters cannot mutate the approved config
+            return tokens[name]
+        return build
+    adapters = {n: adapter(n) for n in tokens}
+    def forbidden(**kw):
+        pytest.fail('deferred component imported/called')
+    adapters.update({n: forbidden for n in ('dense_teacher', 'coop_reward', 'plan_augment')})
+    assert rcpu.track2_components(cfg, 'B', adapters=adapters) == tokens
+    assert calls == list(tokens)
+    assert cfg['coop_layer']['enabled'] is True
+    assert rcpu.episode_options(cfg, 'B') == rcpu.episode_options(cfg, 'R') | {
+        'track2_teacher': cfg['teacher']['B']}
+    with pytest.raises(ValueError, match='adapters missing'):
+        rcpu.track2_components(cfg, 'R', adapters={})
+    with pytest.raises(ValueError, match='unknown Track 2 arm'):
+        rcpu.episode_options(cfg, 'X')
+
+
+@pytest.mark.parametrize('slot', ['coop_layer', 'group_credit', 'merge_features',
+                                  'dense_teacher', 'plan_augment', 'practice_weighting'])
+def test_essentials_slots_cannot_be_silently_disabled_or_enabled(tmp_path, slot):
+    cfg = config(tmp_path)
+    cfg[slot]['enabled'] = not cfg[slot]['enabled']
+    with pytest.raises(ValueError, match='essentials-first slot differs'):
+        rcpu.check_pins(cfg)
+
+
+def test_worker_checkpoint_and_budget_pins_refuse_drift(tmp_path):
+    cfg = config(tmp_path)
+    for bad in (dict(cfg, cpu=dict(cfg['cpu'], max_sumo_workers=48)),
+                dict(cfg, workers=40), dict(cfg, device='cuda'),
+                dict(cfg, start_checkpoint_sha256=dict(cfg['start_checkpoint_sha256'], R='b'*64)),
+                dict(cfg, final_updates=dict(A=24, B=24, R=12)),
+                dict(cfg, budget=dict(cfg['budget'], phases={})),
+                dict(cfg, teacher=dict(cfg['teacher'], B=dict(cfg['teacher']['B'], enabled=True)))):
+        with pytest.raises(ValueError, match='REFUSED'):
+            rcpu.check_pins(bad)
+
+
+def test_concurrency_does_not_shorten_planner_or_episode_horizons(tmp_path):
+    base = dict(search=dict(horizon_s=600, final_horizon_s=720),
+                planner=dict(lookahead_s=600), workers=2)
+    cfg = config(tmp_path, base=base)
+    assert cfg['search'] == base['search'] and cfg['planner'] == base['planner']
+    assert cfg['workers'] == 24 and base['workers'] == 2
+    assert rcpu.EPISODE_SIM_S == 1200 and cfg['v2v_intent_horizon'] == 5
+
+
+def test_isolated_jobs_are_dry_paired_and_match_full_budget():
+    registration = _registration()
+    jobs = rcpu.isolated_jobs(registration)
+    assert jobs == rcpu.isolated_jobs(registration)
+    assert len({j['id'] for j in jobs}) == 96
+    assert sum(j['sim_s'] for j in jobs) == rcpu.quote()['isolated_replicated_sim_s']
+    for u in (6, 12, 18, 24):
+        for r in range(8):
+            paired = [j for j in jobs if j['update'] == u and j['replicate'] == r]
+            assert {j['arm'] for j in paired} == {'A', 'B', 'R'}
+            assert len({(j['world_seed'], j['state_set_sha256'], j['window_set_sha256'])
+                        for j in paired}) == 1
+    for bad in (dict(registration, role='eval'),
+                dict(registration, replicates=registration['replicates'][:-1]),
+                dict(registration, replicates=[registration['replicates'][0]]*8)):
+        with pytest.raises(ValueError, match='REFUSED'):
+            rcpu.isolated_jobs(bad)
+
+
+@pytest.mark.parametrize('field,value', [('world_seed', 99999), ('state_set_sha256', 'c'*64),
+                                        ('window_set_sha256', 'd'*64),
+                                        ('registration_sha256', 'e'*64),
+                                        ('status', 'failed'), ('collisions', .5)])
+def test_analysis_refuses_unpaired_or_ungraded_results(field, value):
+    rows = _isolated_grid()
+    rows[0][field] = value
+    with pytest.raises(ValueError, match='REFUSED'):
+        _evaluate(rows)
+
+
+def test_existing_synergy_decomposition_adapter():
+    job = rcpu.isolated_jobs(_registration())[0]
+    row = rcpu.isolated_record(job, delta_all_new_veh_s=12.,
+                               delta_only_member_new_veh_s={'cav1': 3., 'cav2': 8.},
+                               safety=dict(collisions=0, teleports=0, hard_brakes=0))
+    assert row['metric'] == 4. and row['status'] == 'graded'
+    assert row['world_seed'] == job['world_seed']
+    with pytest.raises(ValueError, match='2..4 group members'):
+        rcpu.isolated_record(job, delta_all_new_veh_s=12.,
+                             delta_only_member_new_veh_s={'cav1': 3.}, safety={})
+
+
+def test_preflight_binds_whole_request_config_registration_and_root(tmp_path, mirror):
+    prep, stage = prep_dir(tmp_path, mirror)
+    original = {n: (prep/n).read_bytes() for n in
+                (rcpu.BUDGET_REQUEST, rcpu.APPROVAL, rcpu.CONFIG_FILE,
+                 rcpu.ISOLATED_REGISTRATION_FILE, rcpu.CRITERION_FILE)}
+    def approve_edit(field, filename):
+        app = json.loads(original[rcpu.APPROVAL])
+        app[field] = rcpu.sha(prep/filename)
+        (prep/rcpu.APPROVAL).write_text(json.dumps(app), encoding='utf-8')
+    request = json.loads(original[rcpu.BUDGET_REQUEST])
+    request['budget']['phases']['isolated_replicated'] = 1  # total unchanged
+    (prep/rcpu.BUDGET_REQUEST).write_text(json.dumps(request), encoding='utf-8')
+    approve_edit('budget_request_sha256', rcpu.BUDGET_REQUEST)
+    with pytest.raises(SystemExit, match='full budget request'):
+        rcpu.preflight_dry(prep, stage_dir=stage)
+    for n, data in original.items():
+        (prep/n).write_bytes(data)
+    cfg = json.loads(original[rcpu.CONFIG_FILE])
+    cfg['device'] = 'cuda'
+    (prep/rcpu.CONFIG_FILE).write_text(json.dumps(cfg), encoding='utf-8')
+    with pytest.raises(SystemExit, match='unbound config_file_sha256'):
+        rcpu.preflight_dry(prep, stage_dir=stage)
+    approve_edit('config_file_sha256', rcpu.CONFIG_FILE)
+    with pytest.raises(SystemExit, match='CPU-only'):
+        rcpu.preflight_dry(prep, stage_dir=stage)
+    for n, data in original.items():
+        (prep/n).write_bytes(data)
+    (prep/rcpu.ISOLATED_REGISTRATION_FILE).unlink()
+    with pytest.raises(SystemExit, match='registration_file_sha256'):
+        rcpu.preflight_dry(prep, stage_dir=stage)
+    for n, data in original.items():
+        (prep/n).write_bytes(data)
+    root = config(tmp_path)['run_root']
+    from pathlib import Path
+    (Path(root)/'AUTHORITY.md').write_text('wrong authority', encoding='utf-8')
+    with pytest.raises(SystemExit, match='single-ledger rule'):
+        rcpu.preflight_dry(prep, stage_dir=stage)
