@@ -31,14 +31,25 @@ def verify(backend, payload, cfg, execute):
         suffix = f'wave{calls:03}'
         calls += 1
         directory = Path(directory)
-        class Runner:
-            def run(self, spec, snap):
+        completed = {}
+        def build(snap, candidates, proposer='wm', tail_s=sv.TAIL_S):
+            out = []
+            for spec in sv.build_branches(snap, candidates, proposer, tail_s):
                 body = {k: v for k, v in spec.items() if k != 'branch_sha256'}
                 body['t2c_artifact_root'] = str(directory/'branches')
-                spec = _seal(body, 'branch_sha256')
-                result = execute([(spec, snap)], suffix+'_'+spec['branch'])[0]
+                out.append(_seal(body, 'branch_sha256'))
+            return out
+        def charge(vid, specs):
+            # The entire native wave is reserved before its first dispatch.
+            results = execute([(spec, snap) for spec in specs], suffix)
+            completed.update({spec['branch']: result for spec, result in zip(specs, results)})
+        class Runner:
+            def run(self, spec, snap):
+                result = completed[spec['branch']]
                 return read(Path(rc.guard_path(result['result_path'])))
-        return sv.verify(snap, candidates, Runner(), lambda *a: None, proposer,
+        native_verify = types.FunctionType(sv.verify.__code__, dict(sv.verify.__globals__, build_branches=build),
+                                          argdefs=sv.verify.__defaults__)
+        return native_verify(snap, candidates, Runner(), charge, proposer,
                          workers=1, root=directory, tail_s=max(tail_s, required_tail))
     proposer = 'random' if payload['arm'] == 'R' else 'wm'
     first_root = bank/'sumo_verification'
@@ -69,7 +80,10 @@ def materialise(backend, payload, cfg, record, snapshot, root):
     from .effective_imitation import attach_limits
     from .v2v_intent import refresh_bank_intents, attach_bank_targets, settings
     from .accel_storage import read
+    from .protocol import digest
     from .rerun_tracks_backend import observation
+    from .exact_grade import verify_sealed
+    from .sumo_verify import snapshot_sha
     from .warm_protocol import SEED
     temperature = rb.temperature(Path(cfg['run_root']), payload['arm'], SEED,
         rb.bank_decisions(cfg['run_root'], payload['arm'], sources=cfg.get('replay_sources', {}).get(payload['arm'], ())))
@@ -78,8 +92,15 @@ def materialise(backend, payload, cfg, record, snapshot, root):
         if not ex['admitted'] or ex.get('cooperative') is not True:
             continue
         tape_ref = ex['tape']
+        verification_path = Path(tape_ref['branches_dir']).parent/'verifications'/(tape_ref['verification_id']+'.json')
+        rc.guard_path(verification_path.resolve())
+        verification = json.loads(verification_path.read_text(encoding='utf-8'))
+        verify_sealed(verification, 'receipt_sha256')
         d = Path(tape_ref['branches_dir'])/tape_ref['verification_id']/tape_ref['branch']['branch']
+        rc.guard_path(d.resolve())
         tape, trace = read(d/'RESULT.json'), d/'observable.jsonl.gz'
+        if digest(tape) != tape_ref['branch'].get('result_sha256'):
+            raise ValueError('REFUSED: augmented execution tape differs from all8 receipt')
         plan = ex['plan']
         weight = xg.weight(ex['advantage_veh_s'], temperature['temperature_veh_s'], xg.WEIGHT_CLIP)
         entry = dict(start_s=snapshot['t0'], duration_s=plan['duration_s'], plan_id=plan['id'], weight=weight)
@@ -117,12 +138,14 @@ def materialise(backend, payload, cfg, record, snapshot, root):
         weight_sha = _seal(dict(weight=weight, example=ex), 'sha256')['sha256']
         e = dict(payload, id=payload['proposal_id']+f'_s{ex["seed_index"]}', plan=plan,
             weight=weight, observation=obs, effective_sample=effective, statistics='per_seed_v1',
+            snapshot_identity_sha256=snapshot_sha(snap),
             snapshot_path=str(own_path), snapshot_file_sha256=rc.sha(own_path), practice_root=str(root),
             practice_row=dict(verification_id=record['verification_id'], example_id=ex['example_id'],
                 seed_index=ex['seed_index'], salt=record['verification_id'], state_id='source', fallback=False),
             provenance=dict(verification_sha256=record['confirmation_sha256'],
                             weight_sha256=weight_sha, effective_sha256=effective_sha))
-        e['augmentation_admission'] = dict(confirmation=record, example_id=ex['example_id'], seed=e['seed'],
+        e['augmentation_admission'] = dict(confirmation=record, verification_receipt=verification,
+            example_id=ex['example_id'], seed=e['seed'],
             snapshot_file_sha256=e['snapshot_file_sha256'], effective_sha256=effective_sha, weight_sha256=weight_sha)
         out.append(e)
     return out

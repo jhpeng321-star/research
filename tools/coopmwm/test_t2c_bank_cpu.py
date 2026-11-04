@@ -24,10 +24,10 @@ def test_state_target_association_drives_gradients_and_choices_in_runtime(tmp_pa
     rt = Runtime(cfg, reg, backend, smoke=True)
     comp = rt.components['B']
     base_sha = state_sha(rt.models['B'])
-    comp['group_credit'].estimate = lambda *a: 0.
-    comp['dense_teacher'].label = lambda obs, proposals, **kw: dict(target=proposals[0],
-        calibrated_probability=.1, imitation_eligible=False,
-        provenance=dict(kind='planner_calibration', receipt_sha256='a'*64))
+    comp['track2_reward'].realised_rewards = lambda obs, after, **kw: {
+        r['vid']: 0. for r in obs['own_sensing']['vehicles']}
+    # Isolate bank gradients with a valid all-rejected augmentation outcome.
+    backend.verify_augmentation = lambda *a, **kw: dict(examples=[], receipt=dict(status='rejected'))
     batch = training_batch(examples, [], arm='B', encoder=Features())
     layer, trigger = comp['coop_layer'], comp['trigger_head']
     move_loss, effective = layer.bank_losses(batch, trigger)
@@ -48,12 +48,12 @@ def test_state_target_association_drives_gradients_and_choices_in_runtime(tmp_pa
                                [Move('none'), Move('gap_open')], Midpoint())
         assert chosen.family == e['plan']['family']
     learned = layer.last_bank_batch
-    assert [r['source_id'] for r in learned] == ['B_0', 'B_1', 'B_0', 'B_1']
-    assert [r['weight'] for r in learned] == [1.]*4
+    assert [r['source_id'] for r in learned] == ['B_0', 'B_1']
+    assert [r['weight'] for r in learned] == [1.]*2
     assert learned[0]['features']['values'] != learned[1]['features']['values']
-    receipt = json.loads((rt.root/'components/u001_B_bank_learning.json').read_text())
+    receipt = json.loads((rt.output_root/'components/u001_B_bank_learning.json').read_text())
     assert receipt['batch_sha256'] == batch_receipt(learned)['batch_sha256']
-    assert receipt['effective_rows'] == receipt['move_rows'] == 4
+    assert receipt['effective_rows'] == receipt['move_rows'] == 2
 
 
 def test_effective_limits_and_weights_reach_only_trainable_layer(tmp_path, monkeypatch):
@@ -90,7 +90,7 @@ def test_missing_effective_learning_receipt_refused(tmp_path, monkeypatch):
     layer.update = incomplete
     with pytest.raises(ValueError, match='complete bank/effective supervision'):
         rt.update('B', 1, episodes=2)
-    assert not (rt.root/'B_checkpoint_001.pt').exists()
+    assert not (rt.output_root/'B_checkpoint_001.pt').exists()
 
 
 @pytest.mark.parametrize('fault', ['observation', 'association', 'weight', 'provenance',

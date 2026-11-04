@@ -16,20 +16,32 @@ def validate_augmented(e):
     """A source receipt is never proof of a modified plan's execution."""
     admission = e.get('augmentation_admission', {})
     record = admission.get('confirmation', {})
+    verification = admission.get('verification_receipt', {})
     try:
         verify_sealed(record, 'confirmation_sha256')
+        verify_sealed(verification, 'receipt_sha256')
     except (KeyError, ValueError):
         raise ValueError('REFUSED: augmented example requires a sealed all8 admission')
     examples = record.get('per_seed_v1', {}).get('examples', [])
     ex = next((x for x in examples if x['example_id'] == admission.get('example_id')), {})
+    from .protocol import digest
+    seed_record = record.get('first_seed' if ex.get('seed_index') == 1 else 'seed2', {})
     if (record.get('verify_mode') != 'all8_both_seeds' or record.get('arm') != e['arm'] or
             ex.get('admitted') is not True or ex.get('cooperative') is not True or
             ex.get('advantage_veh_s', 0) <= 0 or ex.get('later_harm') != 'pass' or
             ex.get('plan') != e['plan'] or admission.get('seed') != e['seed'] or
             admission.get('snapshot_file_sha256') != e.get('snapshot_file_sha256') or
             not e.get('snapshot_file_sha256') or
+            verification.get('snapshot_sha256') != e.get('snapshot_identity_sha256') or
+            not e.get('snapshot_identity_sha256') or
+            verification.get('episode', {}).get('world', {}).get('seed') != e['seed'] or
+            verification.get('episode', {}).get('role') != 'train' or
+            digest(e['plan']) not in verification.get('candidate_plan_sha256', []) or
+            seed_record.get('receipt_sha256') != verification['receipt_sha256'] or
             admission.get('effective_sha256') != _seal(dict(sample=e['effective_sample']), 'sha256')['sha256'] or
             admission.get('weight_sha256') != _seal(dict(weight=e['weight'], example=ex), 'sha256')['sha256'] or
+            e['provenance']['effective_sha256'] != admission.get('effective_sha256') or
+            e['provenance']['weight_sha256'] != admission.get('weight_sha256') or
             e['provenance']['verification_sha256'] != record['confirmation_sha256']):
         raise ValueError('REFUSED: augmented all8 admission lost successful plan/state/seed/execution binding')
     return e

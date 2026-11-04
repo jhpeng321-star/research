@@ -50,3 +50,37 @@ arms, fresh u0 weights, immutable smoke checkpoints/caches, disjoint unique job
 IDs, cumulative charges, duplicate refusal, interrupted smoke refusal and a
 self-hashed receipt with a different approval binding. The inherited unknown
 `cache_dir` warning results from disabling pytest's cache provider.
+
+## Completed implementation and verification
+
+`624b0815` completed the lifecycle fix. The final validation pass also binds every
+augmented target to the native all8 receipt's plan, snapshot identity, TRAIN seed,
+actual execution-tape digest, effective sample and own-execution AWR weight. It
+reserves each complete native verification wave before dispatch and validates the
+original bank before proposing any variants. Both success and negative native
+both-seed confirmations ran against a CPU tape plant; native materialisation was
+checked independently of inherited source evidence.
+
+Final focused coverage: **161 passed, 1 skipped**, across 11 explicit T2C files.
+The Windows file-symlink privilege skip is inherited; hard-link/junction checks
+ran. Final regression coverage: **55 passed, 5 deselected**. Four inherited
+Linux `/proc` cases and the fixture that creates its own Git commit were excluded.
+There are **216 distinct passing tests**, with no failures in the final checks.
+Earlier failed intermediate runs and the timed-out reward invocation are not
+counted as passing evidence. No T2C process remained before resuming the checks.
+
+All checks used `C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q
+--tb=short -p no:cacheprovider`, CUDA hidden, bytecode disabled, OMP/MKL=1. They
+were split into short sequential calls with unique worktree-local basetemp roots.
+The exact selections and counts are recorded in `T2C_READY.json`.
+
+Current CPU smoke: `T2C_CPU_SMOKE.json`, six episodes/one update, 30 isolated dry
+cells, 9,600 virtual smoke sim-s plus 4,800 shared virtual augmentation sim-s,
+**zero new real sim-s**. The full-run lifecycle test then starts all three update-1
+arms from fresh common u0 while retaining the smoke checkpoint and caches.
+
+The approval-bound quote is **4,310,220 sim-s INCLUDING smoke**, host cpuV,
+689,780 below the 5M cap. WM dense teaching/credit have zero phase allocations;
+augmentation has one common 143,280 ceiling, below 200,000. The operator contract
+and exact monitor/smoke/run commands are in `RERUN_TRACKS_READY.md`. Qualified
+sibling exports and fresh deployment/owner bindings remain live-launch prerequisites.

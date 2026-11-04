@@ -18,9 +18,9 @@ request SHA, the owner quote SHA and the verdict file SHA, and every manifest fi
 the staged copies. Effective-imitation is pinned to f35b193a.
 
 Track 2 / T2C is explicitly opt-in (track2=True). A stays plain MAPPO PPO; B/R use the frozen
-MAPPO cooperation layer, trigger head, group credit, observable merge features, dense
-WM/random teaching, augmentation and practice weighting from their own banks. coop_reward
-stays OFF. The proposed evaluation is the
+MAPPO cooperation layer, trigger head, real observable-neighbourhood outcome reward,
+merge features, all8-admitted augmentation and practice weighting from their own banks.
+Dense WM teaching, WM credit and the old coop_reward shaper stay OFF. The proposed evaluation is the
 replicated isolated cooperation test at
 u6/u12/u24: N=5 B/R replicates per update in paired worlds (same world seed across
 arms by replicate index), bootstrap CIs against the matched common-base reference, and a

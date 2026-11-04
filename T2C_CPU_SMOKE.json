@@ -6,15 +6,18 @@
   "episodes": 6,
   "isolated_dry_cells": 30,
   "new_sim_s": 0,
-  "virtual_sim_s": 9600,
+  "virtual_sim_s": 14400,
+  "config_sha256": "eefd66eb42720a4afae8be5bb7f96b394db412dd50157ea7198dc7c1252e3079",
+  "registration_sha256": "e8d541e5b77c300094284fd77859914c12f4c622139d1c72a600a8105afac427",
+  "receipt_sha256": "d8e0621ad1eb6ac6d200f237f8008a6936585c85f11bce8602bbf9a79c508a27",
   "worker_peak": 2,
   "monitors": [
-    "95f7430bb2c19ef42de7d4944a93d2698052f903b1f8036698238791a57607e0",
-    "9e61d6dbfad5ea069e5fdea01ce28f562ed0ecbab611ca684119a9e74731ed43",
-    "e658dc36167bcb7a43af538bf2468e200bfd5ee7b8ec06219a9531fb9a815ee7"
+    "f992753c293654f0ae2e72d2fef8e5fc0aef4a8413d71d5233c50605a8274277",
+    "e1fe84cc3355d11285887263a0e790077f486590f79525852695b09e581e33d7",
+    "701a7c64f8e1a9ba357a5a7dd597743a2306be96086dcf93c8d46635206e780b"
   ],
   "spend": {
-    "augment_verify": 0,
+    "augment_verify": 4800,
     "early_probes": 0,
     "gate_bank_verification_ext": 0,
     "group_credit_verify": 0,

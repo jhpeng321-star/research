@@ -27,7 +27,8 @@ def test_partial_admission_never_uses_unchecked_or_negative_proposals(tmp_path, 
     assert len(training_batch(bank, admitted, arm='B', encoder=rt.components['B']['merge_features'])) == 25
 
 
-@pytest.mark.parametrize('fault', ['missing', 'copied', 'negative', 'state', 'seed', 'effective', 'weight'])
+@pytest.mark.parametrize('fault', ['missing', 'copied', 'negative', 'state', 'seed', 'identity',
+                                   'seed_with_claim', 'effective', 'weight'])
 def test_augmented_evidence_is_bound_to_successful_execution(tmp_path, monkeypatch, fault):
     cfg, reg, backend = prepare(tmp_path, monkeypatch)
     rt = Runtime(cfg, reg, backend)
@@ -37,6 +38,10 @@ def test_augmented_evidence_is_bound_to_successful_execution(tmp_path, monkeypat
     if fault == 'copied': e['plan'] = deepcopy(bank[0]['plan'])
     if fault == 'state': e['snapshot_file_sha256'] = '0'*64
     if fault == 'seed': e['seed'] += 1
+    if fault == 'identity': e['snapshot_identity_sha256'] = '0'*64
+    if fault == 'seed_with_claim':
+        e['seed'] += 1
+        e['augmentation_admission']['seed'] = e['seed']
     if fault == 'effective': e['effective_sample']['action'][0] += .1
     if fault == 'weight': e['weight'] *= 2
     if fault == 'negative':

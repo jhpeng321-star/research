@@ -81,12 +81,12 @@ def t2_sibling_module_stubs(monkeypatch):
 # ---------------------------------------------------------------- quote / budget / wall clock
 
 def test_quote_three_arms_including_gate_teacher_verify_and_replicated_isolated():
-    q = rcpu.quote()
+    q = rcpu.quote(track2=True)
     assert q['a_train_sim_s'] == 24*16*1200 == 460800
     assert q['b_train_sim_s'] == q['r_train_sim_s'] == 24*24*1200
     assert q['v2v_train'] == 460800+2*24*24*1200
     assert q['v2v_lessons'] == 4*5280 == 21120
-    assert q['teacher_verify_sim_s'] == q['group_credit_verify_sim_s'] == 8*35820 <= 300000
+    assert q['teacher_verify_sim_s'] == q['group_credit_verify_sim_s'] == 0
     assert q['augment_verify_sim_s'] == 4*35820 <= 200000
     assert q['early_probes_sim_s'] == 2*3*3*32610
     assert q['smoke_sim_s'] == 6*1200+2*1200
@@ -106,25 +106,25 @@ def test_quote_three_arms_including_gate_teacher_verify_and_replicated_isolated(
         'v2v_train', 'v2v_lessons', 'teacher_verify_sim_s', 'group_credit_verify_sim_s',
         'augment_verify_sim_s', 'early_probes_sim_s', 'smoke_sim_s',
         'isolated_replicated_sim_s', 'gate_bank_verification_ext'))
-    assert q['total'] == q['total_without_tests']+345600+345600+720 == 4883340
+    assert q['total'] == q['total_without_tests']+345600+345600+720 == 4310220
     assert q['includes_smoke'] and q['cap_asserted'] and q['total'] <= 5000000
 
 
 def test_budget_is_single_ledger_and_covers_the_quote():
-    b = rcpu.budget()
+    b = rcpu.budget(track2=True)
     assert b['single_ledger'] is True and b['arms'] == ['A', 'B', 'R']
-    assert sum(b['phases'].values()) == b['total'] == rcpu.quote()['total']
-    assert b['phases']['v2v_train'] == rcpu.quote()['v2v_train']
+    assert sum(b['phases'].values()) == b['total'] == rcpu.quote(track2=True)['total']
+    assert b['phases']['v2v_train'] == rcpu.quote(track2=True)['v2v_train']
     assert 'replicated' in b['isolated_test'] and 'pre-registered' in b['isolated_test']
     for phase, cost in (('v2v_train', 1843200), ('v2v_lessons', 21120), ('teacher_verify', 0),
-                         ('group_credit_verify', 35820),
+                          ('group_credit_verify', 0),
                          ('isolated_replicated', 978300), ('gate_bank_verification_ext', 35820),
                         ('v2v_interim', 345600), ('v2v_final', 345600)):
         assert b['phases'][phase] >= cost
 
 
 def test_wall_clock_paced():
-    w = rcpu.wall_clock()
+    w = rcpu.wall_clock(track2=True)
     assert w['per_update_s'] == 1800
     assert w['A_s'] == 24*1800 and w['B_s'] == 24*1800+3*900 and w['R_s'] == w['B_s']+1800
     assert w['tests_s'] == 2*3*96*300/24
@@ -167,7 +167,7 @@ def test_three_arms_from_mappo_u0_with_identical_code(tmp_path):
     with pytest.raises(ValueError, match='only arms B and R'):
         imitation_filter_for(cfg, 'A')                                    # A has no bank/filter
     assert cfg['effective_imitation_commit'] == rcpu.EFFECTIVE_IMITATION_COMMIT
-    assert cfg['budget'] == rcpu.budget()
+    assert cfg['budget'] == rcpu.budget(track2=True)
 
 
 def test_t2c_trigger_head_and_teachers_per_arm(tmp_path):
@@ -184,11 +184,11 @@ def test_t2c_trigger_head_and_teachers_per_arm(tmp_path):
     assert 'moves.offsets' in head['low_level'] and 'HDVs never commanded' in head['low_level']
     assert rcpu.trigger_head_enabled(cfg, 'B') and rcpu.trigger_head_enabled(cfg, 'R')
     assert not rcpu.trigger_head_enabled(cfg, 'A')
-    assert [rcpu.teacher_kind(cfg, a) for a in ('A', 'B', 'R')] == [None, 'wm_dense', 'random']
+    assert [rcpu.teacher_kind(cfg, a) for a in ('A', 'B', 'R')] == [None, None, None]
     b = teachers['B']
     assert b['module'] == 'tools.coopmwm.dense_teacher' and b['kind'] == 'wm_dense'
     assert 'DAgger' in b['mode'] and 'cross-entropy' in b['mode'] and 'T1B' in b['mode']
-    assert b['verify_fraction'] == .1 and b['enabled'] is True
+    assert b['verify_fraction'] == .1 and b['enabled'] is False
     assert b['verified_through'] == 'all8'
     r = teachers['R']
     assert r['kind'] == 'random' and 'same move distribution' in r['distribution']
@@ -221,7 +221,7 @@ def test_t2c_isolated_test_registration_matches_schedule_and_quote():
     assert rcpu.SCHEDULE == dict(A=dict(lessons=[], isolated=[]),
                                  B=dict(lessons=[6, 12, 18, 24], isolated=[6, 12, 24]),
                                  R=dict(lessons=[], isolated=[6, 12, 24]))
-    assert rcpu.quote()['isolated_replicated_sim_s'] == \
+    assert rcpu.quote(track2=True)['isolated_replicated_sim_s'] == \
         len(spec['arms'])*len(spec['updates'])*spec['replicates']*spec['sim_s_per_replicate']
 
 
@@ -582,7 +582,7 @@ def test_criterion_document_is_sealed_and_stable():
     assert d1['isolated_test'] == rcpu.ISOLATED_TEST
     assert d1['arms']['B'].startswith('T2A trigger head + frozen cooperation layer + WM bank')
     assert d1['arms']['R'].endswith('own random bank')
-    assert d1['quote'] == rcpu.quote()
+    assert d1['quote'] == rcpu.quote(track2=True)
     d2['criterion']['updates'].append(99)
     assert rcpu.criterion_document() == d1                               # no global aliases
     tampered = dict(d1, primary_update=12)
@@ -694,8 +694,8 @@ def test_component_adapters_refuse_wrong_moves_api(tmp_path, monkeypatch):
     import tools.coopmwm as pkg
     cfg = config(tmp_path)
     adapters = {n: lambda **kw: object() for n in
-                ('merge_features', 'trigger_head', 'coop_layer', 'group_credit',
-                 'dense_teacher', 'plan_augment', 'practice_weighting')}
+                 ('merge_features', 'trigger_head', 'coop_layer', 'track2_reward',
+                  'plan_augment', 'practice_weighting')}
     monkeypatch.setattr(pkg.moves, 'FAMILIES', ('ease_off', 'gap_open'))
     with pytest.raises(ValueError, match='none family'):
         rcpu.track2_components(cfg, 'B', adapters=adapters)
@@ -849,10 +849,10 @@ def test_essentials_profile_serializes_without_sibling_modules(tmp_path, monkeyp
     assert rcpu.check_pins(cfg)
     assert cfg['cpu']['workers']+cfg['cpu']['diagnostic_workers'] == 40 < 48
     assert cfg['job_namespace'] == 't2c' and cfg['target_host'] == 'cpuV'
-    for name in ('coop_layer', 'group_credit', 'merge_features', 'dense_teacher', 'plan_augment', 'practice_weighting'):
+    for name in ('coop_layer', 'track2_reward', 'merge_features', 'plan_augment', 'practice_weighting'):
         assert cfg[name]['enabled'] is True
         assert cfg[name]['arms'] == ['B', 'R']
-    for name in ('coop_reward',):
+    for name in ('coop_reward', 'dense_teacher', 'group_credit'):
         assert cfg[name]['enabled'] is False
     assert cfg['coop_layer']['frozen_base'] and cfg['coop_layer']['separate_optimizer']
     assert cfg['group_credit']['layer_advantage_only']
@@ -869,8 +869,8 @@ def test_essentials_profile_serializes_without_sibling_modules(tmp_path, monkeyp
 def test_injected_adapters_receive_dependencies_and_off_slots_never_run(tmp_path):
     cfg = config(tmp_path)
     calls = []
-    tokens = {n: object() for n in ('merge_features', 'trigger_head', 'coop_layer', 'group_credit',
-                                   'dense_teacher', 'plan_augment', 'practice_weighting')}
+    tokens = {n: object() for n in ('merge_features', 'trigger_head', 'coop_layer', 'track2_reward',
+                                   'plan_augment', 'practice_weighting')}
     def adapter(name):
         def build(*, cfg, arm, moves, components):
             assert arm == 'B'
@@ -884,7 +884,7 @@ def test_injected_adapters_receive_dependencies_and_off_slots_never_run(tmp_path
     adapters = {n: adapter(n) for n in tokens}
     def forbidden(**kw):
         pytest.fail('deferred component imported/called')
-    adapters.update(coop_reward=forbidden)
+    adapters.update(coop_reward=forbidden, dense_teacher=forbidden, group_credit=forbidden)
     assert rcpu.track2_components(cfg, 'B', adapters=adapters) == tokens
     assert calls == list(tokens)
     assert cfg['coop_layer']['enabled'] is True
@@ -912,7 +912,7 @@ def test_worker_checkpoint_and_budget_pins_refuse_drift(tmp_path):
                 dict(cfg, start_checkpoint_sha256=dict(cfg['start_checkpoint_sha256'], R='b'*64)),
                 dict(cfg, final_updates=dict(A=24, B=24, R=12)),
                 dict(cfg, budget=dict(cfg['budget'], phases={})),
-                dict(cfg, teacher=dict(cfg['teacher'], B=dict(cfg['teacher']['B'], enabled=False)))):
+                 dict(cfg, teacher=dict(cfg['teacher'], B=dict(cfg['teacher']['B'], enabled=True)))):
         with pytest.raises(ValueError, match='REFUSED'):
             rcpu.check_pins(bad)
 
@@ -931,7 +931,7 @@ def test_isolated_jobs_are_dry_paired_and_match_full_budget():
     jobs = rcpu.isolated_jobs(registration)
     assert jobs == rcpu.isolated_jobs(registration)
     assert len({j['id'] for j in jobs}) == 30
-    assert sum(j['sim_s'] for j in jobs) == rcpu.quote()['isolated_replicated_sim_s']
+    assert sum(j['sim_s'] for j in jobs) == rcpu.quote(track2=True)['isolated_replicated_sim_s']
     for u in (6, 12, 24):
         for r in range(rcpu.ISOLATED_REPLICATES):
             paired = [j for j in jobs if j['update'] == u and j['replicate'] == r]

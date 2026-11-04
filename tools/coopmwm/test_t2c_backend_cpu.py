@@ -285,6 +285,61 @@ def test_bank_native_callback_preserves_source_seed_weight_and_effective_targets
     assert examples[0]['practice_row']['state_id'] == 'own_state'
 
 
+def test_augmented_targets_and_weights_come_from_new_native_execution(production, tmp_path, monkeypatch):
+    from tools.coopmwm import rerun_tracks_augment as aug, replay_bank as rb, bank_v2v
+    from tools.coopmwm import exact_grade as xg, effective_imitation as eff, v2v_intent as vi, accel_storage
+    from tools.coopmwm.protocol import digest
+    from tools.coopmwm.exact_grade import _seal
+    from tools.coopmwm.rerun_tracks_bank import validate_augmented
+    from tools.coopmwm.test_replay_bank_confirm_cpu import snapshot, plan
+    cfg = production
+    backend = prod.Backend(cfg, prep_dir=tmp_path, stage_dir=tmp_path)
+    backend.models['B'] = IntentPolicy()
+    backend.components['B'] = dict(merge_features=Features())
+    snap, sensor = snapshot(600), rows()
+    group = prod.observation(sensor, None, 600, [-3., 2.6])['cav_ids']
+    p = plan('modified', .1)
+    p.update(members=group, family='gap_open', depth=.1)
+    sample = dict(context=dict(members=group), action=[[.8] for _ in group],
+        binding_limits={v: .3 for v in group}, intent_link=dict(t=600))
+    tape = dict(newly_executed=True)
+    ex = dict(example_id='modified_s1', plan=p, seed_index=1, admitted=True, cooperative=True,
+        advantage_veh_s=.4, later_harm='pass', tape=dict(branches_dir=str(tmp_path/'tapes'),
+        verification_id='new_vid', branch=dict(branch='cand1', result_sha256=digest(tape)), intent_entry='new_vid/cand1'))
+    from tools.coopmwm.sumo_verify import snapshot_sha
+    verification = _seal(dict(snapshot_sha256=snapshot_sha(snap), episode=snap['episode'],
+                              candidate_plan_sha256=[digest(p)]), 'receipt_sha256')
+    vpath = tmp_path/'verifications'/'new_vid.json'
+    vpath.parent.mkdir()
+    vpath.write_text(json.dumps(verification), encoding='utf-8')
+    record = _seal(dict(verification_id='new_vid', arm='B', verify_mode='all8_both_seeds',
+                        first_seed=dict(receipt_sha256=verification['receipt_sha256']),
+                        per_seed_v1=dict(examples=[ex])), 'confirmation_sha256')
+    payload = dict(id='candidate', proposal_id='modified', source_id='source', arm='B', seed=snap['episode']['world']['seed'],
+        plan=p, weight=99., effective_sample=dict(action=[99.]*len(group)), window=dict(start_s=600, end_s=1200))
+    monkeypatch.setattr(rb, 'bank_decisions', lambda *a, **kw: [])
+    monkeypatch.setattr(rb, 'temperature', lambda *a: dict(temperature_veh_s=10.))
+    monkeypatch.setattr(accel_storage, 'read', lambda *a: tape)
+    def pairs(result, entry):
+        assert result is tape
+        assert entry['weight'] == pytest.approx(xg.weight(.4, 10., xg.WEIGHT_CLIP))
+        return [(deepcopy(sample), entry['weight'])]
+    monkeypatch.setattr(xg, 'imitation_pairs', pairs)
+    monkeypatch.setattr(eff, 'attach_limits', lambda pairs, *a: (pairs, {}, {}))
+    monkeypatch.setattr(vi, 'attach_bank_targets', lambda pairs, *a, **kw: pairs)
+    monkeypatch.setattr(vi, 'refresh_bank_intents', lambda *a: None)
+    monkeypatch.setattr(bank_v2v, 'attach_pairs', lambda pairs, *a, **kw: (pairs, {}))
+    monkeypatch.setattr(bank_v2v, 'trace_frames', lambda *a: {t: dict(time_s=t, vehicles=sensor) for t in (599, 600)})
+    result = aug.materialise(backend, payload, cfg, record, snap, tmp_path/'augmented_bank')
+    assert len(result) == 1
+    e = validate_augmented(result[0])
+    assert e['effective_sample']['action'] == [.8]*len(group)
+    assert e['weight'] != payload['weight'] and e['snapshot_file_sha256'] == rc.sha(e['snapshot_path'])
+    ex['tape']['branch']['result_sha256'] = '0'*64
+    with pytest.raises(ValueError, match='tape differs'):
+        aug.materialise(backend, payload, cfg, record, snap, tmp_path/'bad_bank')
+
+
 def test_native_replay_branch_uses_reviewed_runner_and_mixed_policy(production, tmp_path, monkeypatch):
     from tools.coopmwm import sumo_verify as sv, replay_bank as rb
     from tools.coopmwm.policy_synergy import MixedPolicy

@@ -281,6 +281,7 @@ class CPUBackend:
 
     def verify_augmentation(self, payload, *, cfg, execute):
         from tools.coopmwm.exact_grade import _seal
+        from tools.coopmwm.protocol import digest
         execute([(dict(sim_s=1200, window=payload['window'], branch='augment'), payload)], 'all8')
         e = deepcopy(payload)
         e['id'] = payload['proposal_id']+'_s1'
@@ -288,15 +289,19 @@ class CPUBackend:
         e['effective_sample']['action'] = [.4, .4]  # newly realised modified-plan commands
         e['weight'] = 1.4  # newly realised advantage, not source weight
         e['snapshot_file_sha256'] = 'f'*64
+        e['snapshot_identity_sha256'] = 'b'*64
         ex = dict(example_id=e['id'], admitted=True, cooperative=True, advantage_veh_s=.4,
-                  later_harm='pass', plan=e['plan'])
+                  later_harm='pass', plan=e['plan'], seed_index=1)
+        verification = _seal(dict(snapshot_sha256=e['snapshot_identity_sha256'],
+            episode=dict(role='train', world=dict(seed=e['seed'])), candidate_plan_sha256=[digest(e['plan'])]), 'receipt_sha256')
         record = _seal(dict(verify_mode='all8_both_seeds', arm=e['arm'],
+                            first_seed=dict(receipt_sha256=verification['receipt_sha256']),
                             per_seed_v1=dict(examples=[ex])), 'confirmation_sha256')
         eff = _seal(dict(sample=e['effective_sample']), 'sha256')['sha256']
         weight = _seal(dict(weight=e['weight'], example=ex), 'sha256')['sha256']
         e['provenance'] = dict(verification_sha256=record['confirmation_sha256'],
                                weight_sha256=weight, effective_sha256=eff)
-        e['augmentation_admission'] = dict(confirmation=record, example_id=ex['example_id'],
+        e['augmentation_admission'] = dict(confirmation=record, verification_receipt=verification, example_id=ex['example_id'],
             seed=e['seed'], snapshot_file_sha256=e['snapshot_file_sha256'],
             effective_sha256=eff, weight_sha256=weight)
         return dict(examples=[e], receipt=record)
@@ -501,9 +506,9 @@ def test_runtime_refuses_foreign_bank_short_window_and_optimizer_overlap(tmp_pat
     with pytest.raises(ValueError, match='own nonempty banks'):
         rt.update('B', 1, episodes=2)
     backend.bank_examples = original
-    def shortened(kind, payload, **kw):
-        return [(dict(sim_s=1, window=dict(start_s=0, end_s=1)), {})]
-    backend.expand_verification = shortened
+    def shortened(payload, *, execute, **kw):
+        execute([(dict(sim_s=1, window=dict(start_s=0, end_s=1)), {})], 'short')
+    backend.verify_augmentation = shortened
     rt.smoke = False
     with pytest.raises(ValueError, match='shortened/changed'):
         rt.update('B', 1, episodes=2)
@@ -710,7 +715,7 @@ def test_admission_and_runtime_detect_frozen_base_mutation_and_kl_violation(tmp_
     layer.update = excessive
     with pytest.raises(ValueError, match='KL budget exceeded'):
         rt.update('B', 1, episodes=2)
-    assert not (rt.root/'B_checkpoint_001.pt').exists()
+    assert not (rt.output_root/'B_checkpoint_001.pt').exists()
     def mutate(**kwargs):
         with torch.no_grad():
             rt.models['R'].bias.add_(1.)
@@ -718,4 +723,4 @@ def test_admission_and_runtime_detect_frozen_base_mutation_and_kl_violation(tmp_
     rt.components['R']['coop_layer'].update = mutate
     with pytest.raises(ValueError, match='frozen MAPPO base changed'):
         rt.update('R', 1, episodes=2)
-    assert not (rt.root/'R_checkpoint_001.pt').exists()
+    assert not (rt.output_root/'R_checkpoint_001.pt').exists()

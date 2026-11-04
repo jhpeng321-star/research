@@ -417,6 +417,7 @@ class Runtime:
     def prepare_augmentation(self, arm, bank):
         if arm in self.augmented:
             return self.augmented[arm]
+        training_batch(bank, [], arm=arm, encoder=self.components[arm]['merge_features'])
         cache_path = self.root/f'T2C_AUGMENT_{arm}.json'
         if cache_path.exists():
             cached = json.loads(cache_path.read_text(encoding='utf-8'))
@@ -530,8 +531,8 @@ class Runtime:
                                               'imitation_eligible')}, target=repr(r['target'])) for r in rows
                        if 'imitation_eligible' in r],
                  checked=teacher_checks))
-            # Group advantages enter ONLY the layer/trigger update. Reward and A's
-            # PPO stream remain untouched. Base params are frozen and excluded.
+            # Realised local returns enter ONLY the layer/trigger update. A's
+            # native PPO stream remains untouched. Base params are frozen/excluded.
             self._check_optimizer(arm)
             if 'track2_reward' in comp and any(r.get('reward_steps', 0) <= 0 for r in rows):
                 raise ValueError('REFUSED: layer update needs realised local outcome rewards')
