@@ -1,5 +1,18 @@
 # HANDOFF: c4/harden-int (worktree E:/agent-work/c4-harden-int), 2026-11-03 (INTEGRATION COMPLETE)
 
+RESUME RECEIPT 2026-11-04 (fresh session, W9): STILL NOTHING OUTSTANDING on this branch. Tree clean at
+6682295f (docs-only since READY d51051a9). Re-verified on disk: HARDEN_INT_READY.json (ready=true,
+commit d51051a9), HARDEN_INT_REPORT.md, rp4 results for all 7 scenarios, h3int2 roots with exactly
+8 BANK_QUALITY.json + 16 LESSON_CHECK files, rp3 kept - all matching the prior receipts. MAIN
+addenda re-checked: coopmwm_prompt.md ends at 2026-11-04 16:25 (cpuQ->cpuS migration, live
+operator, monitor/report only) - no new addendum since the W8 check. No tests or rehearsals rerun:
+host at 91% CPU (22 logical) with foreign jobs not signalled - a live V2V rehearsal (rehearsal_cpu
+PID 6928 + its sumo_verify branch workers, E:/Temp workdir), another agent's pytest suites
+(test_varcollect fresh_worker_stages, bank/filter/replay_bank suites) and THREE other concurrent
+G-HARDENINT resume sessions (opencode PIDs 2268/18192/29384) - none duplicated. The documented
+443/62/1 counts stand; cpuQ (Linux) remains the deployment gate. Remaining work stays LIVE ONLY
+(operator gates at the bottom of this handoff).
+
 RESUME RECEIPT 2026-11-04 (fresh session, W8): STILL NOTHING OUTSTANDING on this branch. Tree clean at
 6682295f (docs-only since READY d51051a9). Re-verified on disk: HARDEN_INT_READY.json (ready=true,
 commit d51051a9), HARDEN_INT_REPORT.md, rp4 results for all 7 scenarios, h3int2 roots with exactly
