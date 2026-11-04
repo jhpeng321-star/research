@@ -24,6 +24,12 @@
     "disk_recovered": "E: now has ~186 GB free (previous session's disk-full OPERATIONAL_WARNING is historical; the --basetemp=C: workaround is still the safe default while the host is shared)",
     "no_new_work_required": "integration remains complete and current; COOPFIX_INT_READY content (merged commits, live config keys, gate CLI) unchanged"
   },
+  "resume_session_20261104_c": {
+    "action": "third resume: no rework needed - all three upstream heads re-verified as HEAD ancestors (7da322c3 / 4068b788 / 4a8ec3af); gate status re-verified live (both options ready:true via committed fallback receipts); gate suite 16/16 and e2e 2/2 re-run green on the unchanged tree",
+    "flake_note": "one transient failure of test_cli_run_writes_report in the first 16-test run (passed in isolation and on full re-run, 16/16) - first run reused the shared basetemp name C:/Users/jpeng/AppData/Local/Temp/c4int-pytest which concurrent agent suites on this host may also touch (WinError-32 tmp-lock class, see full-suite baseline); recommendation for all live runs: use a UNIQUE basetemp/out directory per run",
+    "disk_note": "the E:-disk-full incident has since resolved (E: now ~186 GB free); the unique-basetemp guidance stands regardless",
+    "no_code_changes_this_session": true
+  },
   "resume_session_20261104_b": {
     "action": "second resume: all three upstream heads re-verified still fully merged (7da322c3 / 4068b788 / 4a8ec3af are ancestors of HEAD); IMITFIX_READY.json in the c4-imit-fullpass worktree byte-identical to the merged copy (git hash d67c5cf9)",
     "INCIDENT_external_worktree_deletions": "an external disk-cleanup process (not this agent; E: went 33MB -> 29-36GB free) deleted the sibling worktrees E:/agent-work/c4-bank-stat-filter and E:/agent-work/c4-coop-gate and ALSO emptied this worktree (directory + .git link) mid-verification between the 2026-11-04 02:39 green record and this session; recovered by git worktree add from the shared object store at E:/research-dense/.git (branch HEAD 4567ccf0 intact throughout - all work was committed) plus one git checkout -- . to re-materialize 4915 index files the sweep had removed; no uncommitted state ever existed to lose",
