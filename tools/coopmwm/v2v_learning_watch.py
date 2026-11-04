@@ -1,4 +1,4 @@
-"""Receipt-only V2V learning-mechanics guard (MAIN Nov4 02:08/06:32).
+"""Receipt-only V2V learning-mechanics guard (MAIN Nov4 02:08/06:32; statistical pass-1 rule 09:00).
 
 No physics, inference, policy selection, source mutation or process signalling.
 Cooperation and intent-loss trends are reported, never health-pause criteria.
@@ -32,9 +32,18 @@ def inspect_update(value):
     if bank.get('imitation_failed'):
         failures.append('imitation_failed')
     pairs = bank.get('pairs_total', 0)
+    reported = []
+    change = bank.get('pass1_loss_change') or {}
     if pairs:
-        if bank.get('pass1_effective') is not True:
-            failures.append('ineffective_pass1')
+        # MAIN 2026-11-04 09:00 (statistical rule, B and R identically, no hand-set threshold):
+        # pass 1 pauses only when its paired per-pair loss change is significantly POSITIVE
+        # (bootstrap 95% CI over imitation pairs above 0 = imitation made the loss worse).
+        # A non-significant change (or a legacy receipt without the CI) is reported only.
+        if change.get('significantly_worse') is True:
+            failures.append('pass1_loss_significantly_worse')
+        elif bank.get('pass1_effective') is not True:
+            reported.append('pass1_not_effective_not_significant'
+                            if change.get('ci95') is not None else 'pass1_not_effective_no_ci_reported_only')
         if bank.get('epochs_completed', 0) < 1:
             failures.append('no_complete_imitation_pass')
         kl, limit = bank.get('kl'), bank.get('kl_limit')
@@ -58,6 +67,8 @@ def inspect_update(value):
         failures=failures, learning_mechanics_ok=not failures,
         epochs_completed=bank.get('epochs_completed'), requested_epochs=bank.get('requested_epochs'),
         pass1_effective=bank.get('pass1_effective'), pass1_loss_drop=bank.get('pass1_loss_drop'),
+        pass1_loss_change_mean=change.get('mean'), pass1_loss_change_ci95=change.get('ci95'),
+        pass1_loss_change_n=change.get('n'), reported_only=reported,
         imitation_failed=bank.get('imitation_failed'), kl=bank.get('kl'), kl_limit=bank.get('kl_limit'),
         action_error_before_mps2=bank.get('action_error_before_mps2'),
         action_error_after_mps2=bank.get('action_error_after_mps2'),
@@ -69,7 +80,8 @@ def inspect_update(value):
         first_minibatch_ppo_kl=own_ppo[0].get('kl') if own_ppo else None,
         ppo_kl_max=max((row.get('kl', 0.) for row in own_ppo), default=None),
         wall_s=value.get('wall_s'), eta_final_hours=value.get('eta_final_hours'),
-        rule='registered mechanics only; empty fairness-capped bank is allowed; intent/cooperation trends report-only')
+        rule='registered mechanics only; empty fairness-capped bank is allowed; intent/cooperation trends report-only; '
+             'pass 1 pauses only on a significantly worse paired loss change (bootstrap CI > 0), MAIN 2026-11-04 09:00')
 
 
 def watch(root, control):

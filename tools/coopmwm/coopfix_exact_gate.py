@@ -196,6 +196,16 @@ def gate_identity(root, v2v=True, intent='auto', source_root=None, source_manife
     return cfg, ident, runtime_cfg
 
 
+def legacy_u3(root, arm, runtime_cfg=None):
+    """Default frozen reference = the ORIGINAL non-V2V arm u3. On a V2V root the arm's own
+    {arm}_checkpoint_003.pt is the V2V arm's u3 (written by its own training), so the
+    reference is read from the runtime's explicit legacy_root, never from the run root."""
+    legacy = (runtime_cfg or {}).get('legacy_root')
+    if legacy:
+        return Path(legacy)/f'{arm}_checkpoint_003.pt'
+    return Path(root)/f'{arm}_checkpoint_003.pt'
+
+
 IDENTITY_FIELDS = ('commit', 'runtime_sha256', 'source_manifest_sha256')
 
 
@@ -629,7 +639,7 @@ def plan(root, arm, control, new_state=None, old_state=None, offline=None, train
                                      coefficient=coefficient, config=cfg)
         new_state = _new                                     # the fixed update's own weights
     if old_state is None:
-        old_state = torch.load(u3 or root/f'{arm}_checkpoint_003.pt', map_location='cpu',
+        old_state = torch.load(u3 or legacy_u3(root, arm, runtime_cfg), map_location='cpu',
                                weights_only=False)['policy']
     if not all(offline['checks'].values()):
         return _fail(control, arm, update, offline, 'offline', [], None, identity)
@@ -1046,7 +1056,8 @@ def main(argv=None):
                    help="per-arm replay sources (live cfg['replay_sources']): ARM=PATH[,PATH] "
                         'repeatable, or a JSON file')
     p.add_argument('--u0', type=Path, help='MAPPO u0 checkpoint (default {root}/{arm}_checkpoint_000.pt)')
-    p.add_argument('--u3', type=Path, help='frozen reference checkpoint (default {root}/{arm}_checkpoint_003.pt)')
+    p.add_argument('--u3', type=Path, help='frozen reference checkpoint (default: the original non-V2V arm u3 = '
+                        'V2V_RUNTIME legacy_root/{arm}_checkpoint_003.pt, else {root}/{arm}_checkpoint_003.pt)')
     p.add_argument('--pairs-file', type=Path, help='offline bank pairs json (default: the live bank)')
     p.add_argument('--training-seed', type=int, default=SEED)
     p.add_argument('--passes', type=int, default=5)

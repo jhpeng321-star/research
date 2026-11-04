@@ -75,12 +75,16 @@ def prepare(base, *, root, legacy_root, source_root, common_checkpoint_sha256, v
 
 
 def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sha256,
-                   imitation_bank_filter='cooperative_only'):
+                   imitation_bank_filter='cooperative_only', imitation_step_mode=None,
+                   v2v_intent_bank_term=True):
     """Audit I4: the registered producer of the intent-ON A/B/R runtime config (prospective
     binding only, like prepare). Identical for every arm: v2v_dim=48 (K4 x (6+5+1)),
     v2v_intent=True, horizon 5, loss weight 1.0, detach_trunk=True; bank labels
     bank_imitation='separate_full_pass', imitation_kl_cap=.045, bank_statistics='per_seed_v1'
-    (B and R; A has no bank) and imitation_bank_filter='cooperative_only' (B and R). Exactly the keys v2v_launch3.bind_runtime pins."""
+    (B and R; A has no bank) and imitation_bank_filter='cooperative_only' (B and R).
+    c4/imit-strength (prepared): imitation_step_mode='fixed' (byte-identical; 'kl_targeted' only
+    at a registered update boundary, B and R together) and v2v_intent_bank_term=True (the bank
+    intent term trains; False drops it). Exactly the keys v2v_launch3.bind_runtime pins."""
     from .v2v_launch3 import BANK_OPTIONS, INTENT_OPTIONS
     cfg = prepare(base, root=root, legacy_root=legacy_root, source_root=source_root,
                   common_checkpoint_sha256=common_checkpoint_sha256,
@@ -91,6 +95,11 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
     cfg.update(BANK_OPTIONS)
     # owner 2026-11-04 00:55: identical for B and R; the V2V runtime pins 'cooperative_only'
     cfg['imitation_bank_filter'] = imitation_bank_filter
+    # c4/imit-strength: identical for B and R; a non-pinned value refuses (registered flip only)
+    # imitation_step_mode=None = the launcher's registered pin (owner 08:52: 'kl_targeted')
+    cfg['imitation_step_mode'] = (BANK_OPTIONS['imitation_step_mode'] if imitation_step_mode is None
+                                  else imitation_step_mode)
+    cfg['v2v_intent_bank_term'] = bool(v2v_intent_bank_term)
     if cfg['imitation_epochs'] < 5:
         raise ValueError('full-pass separate imitation requires at least five epochs')
     for key, want in dict(INTENT_OPTIONS, **BANK_OPTIONS).items():
@@ -196,8 +205,12 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
     def record_lesson(r,a,policy,run_root,u,*args,**kwargs):
         if u not in cfg['diagnostic_schedule'][a]['lessons']:
             return dict(arm=a,update=u,status='not_scheduled',new_sim_s=0)
-        return hooks['record_lesson'](r,a,policy,run_root,u,*args,
-            **dict(kwargs,phase=cfg['diagnostic_phases']['lessons']))
+        # The shared ledger already holds the legacy non-V2V arms' lesson_u<k>_<vid> charges
+        # (u4..u21): V2V lesson charges and their work directory use this root's own job
+        # namespace, so the u6/u12/u18 lessons are never refused as duplicate charges.
+        kwargs=dict(kwargs,phase=cfg['diagnostic_phases']['lessons'])
+        kwargs.setdefault('attempt_kind',f"{cfg['job_namespace']}_lesson_u{int(u):03}")
+        return hooks['record_lesson'](r,a,policy,run_root,u,*args,**kwargs)
 
     def diagnostics(r,a,u,policy,b,lesson):
         schedule=cfg['diagnostic_schedule'][a]

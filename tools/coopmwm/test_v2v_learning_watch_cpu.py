@@ -44,13 +44,31 @@ class LearningWatchTests(unittest.TestCase):
 
     def test_each_registered_mechanics_failure_pauses(self):
         for change,expected in [({'imitation_failed':True},'imitation_failed'),
-            ({'pass1_effective':False},'ineffective_pass1'),
+            ({'pass1_loss_change':dict(n=226,mean=.01,ci95=[.002,.02],significantly_worse=True)},
+             'pass1_loss_significantly_worse'),
             ({'epochs_completed':0},'no_complete_imitation_pass'),
             ({'kl':float('nan')},'nonfinite_imitation_kl'),
             ({'kl':.04500001},'imitation_kl_out_of_limit')]:
             with self.subTest(change=change):
                 value=receipt();value['bank_imitation'].update(change)
                 self.assertIn(expected,inspect_update(value)['failures'])
+
+    def test_non_significant_pass1_change_is_reported_only_for_B_and_R(self):
+        # MAIN 09:00: R u3 (3 cooperative examples, loss +0.0017 of 19.35) must not pause
+        for arm in ('B','R'):
+            for change,label in [(dict(n=102,mean=.00002,ci95=[-.0004,.0005],significantly_worse=False),
+                                  'pass1_not_effective_not_significant'),
+                                 ({},'pass1_not_effective_no_ci_reported_only')]:
+                with self.subTest(arm=arm,change=change):
+                    value=receipt();value['arm']=arm
+                    value['bank_imitation'].update(pass1_effective=False,pass1_loss_drop=-.0017)
+                    if change:value['bank_imitation']['pass1_loss_change']=change
+                    report=inspect_update(value)
+                    self.assertTrue(report['learning_mechanics_ok'])
+                    self.assertEqual(report['reported_only'],[label])
+        value=receipt();value['bank_imitation']['pass1_loss_change']=dict(
+            n=226,mean=.01,ci95=[.002,.02],significantly_worse=True)
+        self.assertIn('pass1_loss_significantly_worse',inspect_update(value)['failures'])
 
     def test_nonfinite_ppo_or_intent_is_a_failure(self):
         value=receipt();value['ppo'][0]['loss']=float('inf')
