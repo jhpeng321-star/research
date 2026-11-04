@@ -1,6 +1,27 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
-## CURRENT Nov4 14:31 +08 — A17/B11/R10; r3 adopted, disk shortfall worsening
+## CURRENT Nov4 14:43 +08 — A18/B11/R10; disk recovered, R11 running
+- Existingr3supervisor3104282/B3104306/R3104318/A2049830+monitor2635161LIVE;
+  regular1237127+extension2213098LIVE/nooursdispatch/signals/physics/deployment.
+- B11fourpasses/KL.043543/noimitationfailure/8coopexamples/MAE1.197105->1.180883;
+  pass1CInotharmful/intentroseslightly/firstPPOKL0. CompositePASS24pairs/
+  0collisionteleport/criticalB-A+18.1875[-9.5625,45.7297]. R10fivepasses/
+  KL.041528/safetyPASS;bothsixpractice18normal. R11normal14claimed/12done/0failed.
+- cpuQ6829699072bytes(~6.36GiB)>6floor/MemAvailable11396156KiB; extension
+  4760428947certified. MAIN14:35cpuSdiskmovesCOMPLETEDpointersobserved;
+  doNOTduplicatecleanup/bothmoversretained. CPU-S9GiBlandingguardunchanged.
+- Reporting-onlypublic_budget.py90c59a6f/5CPU+livePASS nowreconcilescurrentbank
+  AND345600runtimepractice-transfer;latestbinding5128f4eeincludesMAIN14:35
+  bank+200000/sumo+100000fromlegacyinterim. Noauthority/ledger/runtimechanged.
+- Charged14365520/cap17471840/retained811640once/allbalancesnonnegative;
+  effectivepairedbranchremaining0/V2Vtrain1252800. Futurelesson13200gapopen/u12fits.
+- u6lesson12/12COMPLETE/NEVERrepeat;u6isolatedstillNOestablishedpositivelearned
+  cooperation. Effectiveimitation/checkingremainoperatorowned. MAIN14:39clean
+  rerunPREPAREONLY/nolaunch. NextB12lesson+isolated/R12isolatedautomaticchecks.
+- ProofPUBLIC_PROGRESS_1793774555507056100+CONTINUATION_1440_1793774517196880300+
+  RESOURCE_READINESS_1130_1793774612664174400;COOPMWM.mdhashealth+budgetdetails.
+
+## PREVIOUS Nov4 14:31 +08 — A17/B11/R10; r3 adopted, disk shortfall worsening
 - Full1134-linebrief/currentreceipts+registryREAD; allpreviousdirtyworkpreserved.
 - Existingr3supervisor3104282/B3104306/R3104318/A2049830+monitor2635161LIVE;
   regular1237127+extension2213098LIVE/transferactive; nooursdispatch/signals/SUMO.

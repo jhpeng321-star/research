@@ -1,5 +1,36 @@
 # S-COOPMWM — live checks
 
+### Nov4 14:43 UTC+8 — A18/B11/R10; disk recovered; reporting reconciled
+- Existing r3 supervisor3104282/B3104306/R3104318, A2049830, monitor2635161
+  and both archive movers are live. R11 has14normal jobs claimed/12complete,
+  zero failures at the latest probe; B12 is not yet claimed. A18 is complete.
+- **B11 mechanics/composite safety pass:** four full imitation passes of five,
+  KL0.043543<0.045, eight cooperative examples, no imitation failure; action
+  MAE1.197105->1.180883m/s². Pass1 loss-change CI[-0.003953,0.002547]
+  is not significantly harmful. First-minibatch PPO KL0; intent loss rose slightly.
+  On24paired worlds: collisions/teleports0, critical-total B-A+18.1875
+  CI[-9.5625,45.7297]. R10 also passes: five passes/KL0.041528, critical-total
+  R-A-9.1875CI[-28.8333,8.9385], collisions/teleports0. Both use six practice
+  starts/18normal episodes and their own matched A safety references.
+- **Disk recovered above6GiB dispatch floor:** latest6,829,699,072bytes
+  (~6.36GiB), MemAvailable11,396,156KiB. Existing extension mover certified
+  4,760,428,947bytes. MAIN14:35's separately owned SHA-gated cpuS moves have
+  completion/pointer receipts. Both movers retained; protection and guards kept.
+- Read-only budget reporting now reconciles BOTH the latest shared bank binding
+  and registered345,600practice-reference transfer in the V2V runtime. Five CPU
+  regression testsPASS plus live cpuQ reconciliationPASS; no allocation/ledger/
+  runtime/learner change. Latest14,365,520charged/cap17,471,840, retained811,640
+  counted once. All phases nonnegative. MAIN14:35 bank+200,000/sumo+100,000 from
+  legacy interim funding is recognised; paired_branch remaining0, V2Vtrain
+  remaining1,252,800. Future lesson shortfall13,200 remains open; u12 fits.
+- Completed u6 isolated evidence still does not establish positive learned
+  cooperation. Collection/checking and effective-imitation deployment remain
+  operator-owned. MAIN14:39 clean-rerun instruction is PREPARE ONLY/no launch.
+- Evidence:`coopmwm/PUBLIC_BUDGET_RECONCILIATION_20261104_1438.md`,
+  `coopmwm/PUBLIC_PROGRESS_1793774555507056100.json`,
+  `coopmwm/CONTINUATION_1440_1793774517196880300.json`, and
+  `coopmwm/RESOURCE_READINESS_1130_1793774612664174400.json`.
+
 ### Nov4 14:16 UTC+8 — practice r3 live; A17/B10/R9; disk below dispatch floor
 - **Practice starts switched at u10 for both B and R**, by the existing
   operator: r3supervisor3104282/B3104306/R3104318; A2049830adopted. B10 has
