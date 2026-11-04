@@ -1,5 +1,35 @@
 # S-COOPMWM — live checks
 
+### Nov4 14:16 UTC+8 — practice r3 live; A17/B10/R9; disk below dispatch floor
+- **Practice starts switched at u10 for both B and R**, by the existing
+  operator: r3supervisor3104282/B3104306/R3104318; A2049830adopted. B10 has
+  six practice/18normal episodes and six matched A safety references; R matches
+  its realised count. No duplicate training or deployment was started here.
+- Deployed sourceb918fcdb adopted locally in85b41b48. All12changed Python
+  files match the merged index, commit blobs and deployed SHA256. Actual
+  immutable Linux receipt **313/313PASS, zero skips/zero SUMO**, gate11PASS
+  independently read. Additional local tests did not pass: system Python lacks
+  torch; existing rl_driving command timed out without output. No new environment.
+- **B10 mechanics/safety pass**: five full passes, KL0.0439855<0.045,
+  eight cooperative examples, MAE1.211979->1.192851m/s². First-pass loss-change
+  CI[-0.007565,0.0000878] is not significantly harmful. Intent loss rose.
+  On24exact safety pairs: zero collisions/teleports, critical-total
+  B-A+3.167CI[-20.021,26.334]. R9 also passes, five passes/KL0.0447897,
+  criticalR-A+8.0CI[-24.229,40.0], collisions/teleports0. Monitor4 covers
+  current updates; its runtime binding handover remains operator-notified.
+- **Resource blocker:** cpuQ5,134,794,752bytes (~4.78GiB) free, below the
+  unchanged6GiB dispatch floor by1,307,656,192bytes. Extension mover has
+  certified3,787,240,983bytes; last566,675,819eligible bytes would not alone
+  clear that gap. Both movers retained, no guard relaxation or competing
+  cleanup. MAIN notified. CPU-S landing9GiB guard and collector/backfill stops
+  remain; variety collection has a separately registered budget stop.
+- Charged14,120,720/cap17,471,840, retained811,640counted once, phase balances
+  nonnegative. Future lesson-phase gap13,200remains reported/u12fits. The
+  completed u6 isolated test still does not establish positive learned cooperation.
+- Evidence:`coopmwm/PRACTICE_SOURCE_ADOPTED_20261104_1413.md`,
+  `coopmwm/PRACTICE_SOURCE_ADOPTION_1400_1793772784828720000.json`, and
+  `coopmwm/PUBLIC_PROGRESS_1793772974952110100.json`.
+
 ### Nov4 13:43 UTC+8 — A16/B9/R8; practice handover registered for u10
 - 13:49 follow-up: R-u9's24episodes are complete, zero failures, learner active;
   checkpoint/update receipt not yet sealed. cpuQ~6.006GiBfree; both movers live.

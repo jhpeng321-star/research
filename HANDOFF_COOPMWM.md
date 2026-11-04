@@ -1,5 +1,29 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 14:16 +08 — A17/B10/R9; practice r3 LIVE/adopted, disk blocker
+- PracticeFIRSTu10BOTHarmsDONEbyoperator; r3supervisor3104282/B3104306/R3104318
+  observedLIVE/A2049830adopted. B10sixpractice/18normal+sixmatchedArefs. R10
+  followsBrealised6; neverdispatchparallelr3. Nooursphysics/deployment/signals.
+- b918fcdbMERGEDas85b41b48; all12changedPythonindexbytes==deployedSHAverified.
+  ACTUALLinux313PASS/0skip/0SIM+gate11PASSreadindependently, notrerun.
+  SystemPython314missingtorch; existingrl_drivinglocaltest120stimeout/noresult;
+  notclaimedPASS. SSHproofboundedconnectionretriesPASS/sourceunchanged.
+- B10fivepasses/KL.0439855/noimitationfailure/8coopexamples/MAE1.211979->1.192851;
+  pass1CI[-.007565,.0000878]notbad; intent2.017376->2.370011rose/reportonly.
+  CompositePASS24exactpairs/0collisions+teleports/criticalB-A+3.167[-20.021,26.334].
+  R9fivepasses/KL.0447897/safetyPASS/criticalR-A+8[-24.229,40]/0collisionteleport.
+  Monitor4healthyA17B10R9butold06e88ecd-binding/operatornotified. FirstPPOKL0both.
+- DISK5134794752bytes(~4.78GiB)<6GiBfloor, gap1307656192bytes. Extension
+  3787240983bytescertified/lasteligible566675819insufficientalone(~741MBgap
+  remainsbeforewrites). Bothmoversretained; nooursnewscope/cleanup/floorchange.
+  MAINnotified_sol/COOPMWM_MAIN_STATUS_20261104_1416.md. Watchnextdispatchguard.
+- Charged14120720/cap17471840/retained811640once/nonnegativephases. Runtime
+  1d67a685mergesallregisteredtransfers; futurelesson13200gapstillopen/u12fits.
+  CPU-SvarietyBUDGET_STOP/landing9GiBguard+cpuQcollector/backfillSTOPskept.
+- Isolatedu6doesNOTestablishlearnedcooperation; repairedu6lessons12/12DONE.
+  Effective-commandimitation/CPU-Scheckingstilldelegate-owned; nocompetingjob.
+  ProofPUBLIC_PROGRESS_1793772974952110100.json+PRACTICE_SOURCE_ADOPTED_1413MD.
+
 ## CURRENT Nov4 13:43 +08 — A16/B9/R8; u10 practice handover operator-owned
 - 13:49probeRESOURCE_READINESS_1130_1793771381372796600: R9all24episodes
   COMPLETE/0failed/learnerPID2636968active/checkpointnotyetsealed. Bboundary
