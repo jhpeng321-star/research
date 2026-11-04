@@ -420,9 +420,9 @@ def test_smoke_executes_all_consumers_updates_and_full_isolated_expansion(tmp_pa
     result = rt.run()
     assert result['status'] == 'CPU_PLANT_SMOKE_PASS' and result['new_sim_s'] == 0
     assert result['episodes'] == 6 and result['isolated_dry_cells'] == 30
-    assert result['virtual_sim_s'] <= cfg['smoke']['total_sim_s']
-    assert result['spend']['track2_smoke'] == result['virtual_sim_s']
-    assert sum(v for k, v in result['spend'].items() if k != 'track2_smoke') == 0
+    assert result['virtual_sim_s'] <= cfg['smoke']['total_sim_s']+cfg['budget']['phases']['augment_verify']
+    assert result['spend']['track2_smoke'] == cfg['smoke']['total_sim_s']
+    assert sum(v for k, v in result['spend'].items() if k not in ('track2_smoke', 'augment_verify')) == 0
     assert (rt.root/'CHARGES.jsonl').read_bytes() == b''
     assert backend.ppo_calls == 1 and len(backend.plants) == 6
     assert state_sha(rt.models['A']) != initial['A']
@@ -433,7 +433,7 @@ def test_smoke_executes_all_consumers_updates_and_full_isolated_expansion(tmp_pa
         assert c['coop_layer'].correction.item() != 0
         assert c['trigger_head'].logits.abs().sum() > 0
         assert 'dense_teacher' not in c and 'group_credit' not in c
-    latest = read_monitor(rt.root)['latest']
+    latest = read_monitor(rt.output_root)['latest']
     assert all(latest[a]['metrics']['dense_labels'] == 0 for a in ('B', 'R'))
     assert all(latest[a]['metrics']['reward_rows'] == 40 for a in ('B', 'R'))
     assert latest['A']['metrics']['dense_labels'] == 0
@@ -585,7 +585,7 @@ def test_smoke_and_one_command_monitor_cli(tmp_path, monkeypatch):
     result = json.loads(completed.stdout)
     assert result['status'] == 'CPU_PLANT_SMOKE_PASS' and result['isolated_dry_cells'] == 30
     completed = subprocess.run([sys.executable, '-m', 'tools.coopmwm.rerun_cpus', 'monitor',
-        '--root', cfg['run_root']], env=env, text=True, capture_output=True, check=True, timeout=30)
+        '--root', str(__import__('pathlib').Path(cfg['run_root'])/'smoke')], env=env, text=True, capture_output=True, check=True, timeout=30)
     assert json.loads(completed.stdout)['updates'] == dict(A=1, B=1, R=1)
 
 

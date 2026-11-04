@@ -346,7 +346,7 @@ class Backend:
         from .protocol import batch_worlds
         world = batch_worlds(update)[index]
         extras = dict(update=update, episode_index=index, v2v=True, v2v_dim=48, b_replay=arm != 'A')
-        ident = f't2c_u{update:03}_{arm}_episode_{index:03}'
+        ident = cfg.get('runtime_job_id', f't2c_u{update:03}_{arm}_episode_{index:03}')
         if start is not None:
             from .practice_starts import wave_call
             call = wave_call(start.get('practice_root', cfg['run_root']), arm, ident, 'v2v_train', start['practice_row'], index, extras)

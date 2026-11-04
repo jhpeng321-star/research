@@ -19,7 +19,7 @@ from statistics import fmean
 import threading
 
 from . import rerun_cpus as rc
-from .exact_grade import _seal
+from .exact_grade import _seal, verify_sealed
 from .rerun_tracks_monitor import write_monitor, SAFETY
 from .rerun_tracks_bank import training_batch, batch_receipt, validate_augmented
 
@@ -144,6 +144,9 @@ class Runtime:
         rc.own_ledger(self.root, track2=True)
         self.smoke = smoke
         self.synthetic = backend.cpu_plant is True
+        self.output_root = self.root/'smoke' if smoke else self.root
+        self.config_sha = _seal(cfg, 'sha256')['sha256']
+        self.registration_sha = _seal(registration, 'sha256')['sha256']
         if not self.synthetic:
             # Admission binds preparation to THIS config and registration, rather
             # than accepting a stale preflight boolean from another experiment.
@@ -169,10 +172,36 @@ class Runtime:
         self.common_weights = None
         self.base_sha = {}
         self.augmented = {}
-        # Immutable claim prevents a second coordinator or duplicate smoke from
-        # dispatching into the root. Interrupted claims are investigated, never adopted.
-        with (self.root/'T2C_RUNTIME.claim').open('x', encoding='utf-8') as f:
-            f.write(json.dumps(dict(synthetic=self.synthetic, smoke=smoke))+'\n')
+        # Separate one-use claims/artifacts, one approved root and ledger. A full
+        # run may follow completed smoke, never an interrupted/attempted smoke.
+        if smoke and (self.root/'T2C_RUNTIME.claim').exists():
+            raise ValueError('REFUSED: smoke cannot follow an attempted full run')
+        if not smoke and (self.root/'T2C_SMOKE.claim').exists():
+            receipt_path = self.root/'smoke'/'T2C_SMOKE.json'
+            if not receipt_path.is_file():
+                raise ValueError('REFUSED: interrupted smoke; no replay or full-run transition')
+            receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+            verify_sealed(receipt, 'receipt_sha256')
+            if (receipt.get('config_sha256') != self.config_sha or
+                    receipt.get('registration_sha256') != self.registration_sha or
+                    receipt.get('synthetic') != self.synthetic or receipt.get('status') not in
+                    ('SMOKE_PASS', 'CPU_PLANT_SMOKE_PASS')):
+                raise ValueError('REFUSED: smoke-to-run approval/receipt mismatch')
+        claim = 'T2C_SMOKE.claim' if smoke else 'T2C_RUNTIME.claim'
+        if smoke or not (self.root/'T2C_SMOKE.claim').exists():
+            with (self.root/'T2C_START.claim').open('x', encoding='utf-8') as f:
+                f.write(claim+'\n')
+        with (self.root/claim).open('x', encoding='utf-8') as f:
+            f.write(json.dumps(dict(synthetic=self.synthetic, smoke=smoke, config_sha256=self.config_sha))+'\n')
+        self.output_root.mkdir(exist_ok=True)
+        charges = self.root/('SYNTHETIC_CHARGES.jsonl' if self.synthetic else 'CHARGES.jsonl')
+        if charges.exists():
+            for line in charges.read_text(encoding='utf-8').splitlines():
+                row = json.loads(line)
+                if row['id'] in self.seen_jobs:
+                    raise ValueError('REFUSED: duplicate existing charge')
+                self.seen_jobs.add(row['id'])
+                self.spend[row['phase']] += row['sim_s']
         for arm in ('A', 'B', 'R'):
             path = self.root/f'{arm}_checkpoint_000.pt'
             if rc.sha(path) != cfg['common_checkpoint_sha256']:
@@ -208,7 +237,7 @@ class Runtime:
             raise ValueError('REFUSED: layer optimizer must own exactly the layer and trigger parameters')
 
     def _write(self, relative, value):
-        path = self.root/relative
+        path = getattr(self, 'output_root', self.root)/relative
         rc.guard_path(path)
         rc.guard_path(path.resolve())
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -219,7 +248,7 @@ class Runtime:
         self._reserve_batch([dict(id=ident, sim_s=sim_s)], phase)
 
     def _reserve_batch(self, jobs, phase):
-        if self.smoke:
+        if self.smoke and phase != 'augment_verify':
             phase = 'track2_smoke'  # a separately quoted, hard-capped smoke allocation
         with self.reserve_lock:
             ids = [j['id'] for j in jobs]
@@ -230,7 +259,9 @@ class Runtime:
             sim_s = sum(j['sim_s'] for j in jobs)
             if self.spend[phase]+sim_s > self.cfg['budget']['phases'][phase]:
                 raise ValueError('REFUSED: runtime phase ceiling exceeded: '+phase)
-            if self.smoke and sum(self.spend.values())+sim_s > self.cfg['smoke']['total_sim_s']:
+            if sum(self.spend.values())+sim_s > self.cfg['budget']['total']:
+                raise ValueError('REFUSED: registered total budget exceeded')
+            if self.smoke and phase == 'track2_smoke' and self.spend[phase]+sim_s > self.cfg['smoke']['total_sim_s']:
                 raise ValueError('REFUSED: registered smoke budget exceeded')
             if self.synthetic:
                 # Virtual work is never presented as real charges or SUMO execution.
@@ -248,7 +279,7 @@ class Runtime:
         with self.limiter.permit('diagnostic'):
             if not self.synthetic:
                 result = self.backend.run_reserved_branch(spec, snapshot, ident=ident,
-                    phase='track2_smoke' if self.smoke else phase)
+                    phase='track2_smoke' if self.smoke and phase != 'augment_verify' else phase)
             else:
                 result = self.backend.run_branch(spec, snapshot)
         if result.get('status') != 'graded':
@@ -311,13 +342,13 @@ class Runtime:
     def episode(self, arm, update, index, start):
         from . import moves
         comp, model = self.components[arm], self.models[arm]
-        ident = f't2c_u{update:03}_{arm}_episode_{index:03}'
+        ident = f'{"t2c_smoke" if self.smoke else "t2c"}_u{update:03}_{arm}_episode_{index:03}'
         self._reserve(ident, rc.EPISODE_SIM_S, 'v2v_train')
         if not self.synthetic:
             with self.limiter.permit('episode'):
                 result = self.backend.run_episode(arm=arm, update=update, index=index,
                     start=start, model=model, components=comp,
-                    cfg=dict(deepcopy(self.cfg), runtime_smoke=self.smoke))
+                    cfg=dict(deepcopy(self.cfg), runtime_smoke=self.smoke, runtime_job_id=ident))
             if arm != 'A' and state_sha(model) != self.base_sha[arm]:
                 raise ValueError('REFUSED: frozen base changed during production episode')
             return result
@@ -386,6 +417,21 @@ class Runtime:
     def prepare_augmentation(self, arm, bank):
         if arm in self.augmented:
             return self.augmented[arm]
+        cache_path = self.root/f'T2C_AUGMENT_{arm}.json'
+        if cache_path.exists():
+            cached = json.loads(cache_path.read_text(encoding='utf-8'))
+            verify_sealed(cached, 'cache_sha256')
+            if (cached['config_sha256'] != self.config_sha or cached['synthetic'] != self.synthetic):
+                raise ValueError('REFUSED: once-only augmentation cache differs from approval')
+            for e in cached['examples']:
+                validate_augmented(e)
+                if not self.synthetic and rc.sha(e['snapshot_path']) != e['snapshot_file_sha256']:
+                    raise ValueError('REFUSED: cached augmented state changed')
+            training_batch(bank, cached['examples'], arm=arm, encoder=self.components[arm]['merge_features'])
+            self.augmented[arm] = cached['examples']
+            return self.augmented[arm]
+        with (self.root/f'T2C_AUGMENT_{arm}.claim').open('x', encoding='utf-8') as f:
+            f.write(self.config_sha+'\n')
         count = self.cfg['plan_augment']['examples_per_update']
         proposals = self.components[arm]['plan_augment'].augment(bank, count=count, arm=arm)
         if len(proposals) != count or any(e['arm'] != arm for e in proposals):
@@ -421,6 +467,10 @@ class Runtime:
         self._write(f'components/u000_{arm}_augment_admission.json', dict(
             proposals=len(proposals), sampled=len(selected), admitted=len(admitted), receipts=receipts))
         self.augmented[arm] = admitted
+        cached = _seal(dict(config_sha256=self.config_sha, synthetic=self.synthetic, examples=admitted,
+                            receipts=receipts), 'cache_sha256')
+        with cache_path.open('x', encoding='utf-8') as f:
+            f.write(json.dumps(cached, sort_keys=True, allow_nan=False)+'\n')
         return admitted
 
     def update(self, arm, update, *, episodes=None):
@@ -523,9 +573,9 @@ class Runtime:
                 spec, snap = self.backend.practice_reference(start, common_weights=self.common_weights)
                 if spec['window'] != start['window']:
                     raise ValueError('REFUSED: practice reference must use matched full window')
-                self._branch(spec, snap, 'v2v_train', f't2c_u{update:03}_{arm}_practice_ref_{i}')
-        monitor = write_monitor(self.root, arm, update, metrics)
-        self.backend.save_checkpoint(self.root/f'{arm}_checkpoint_{update:03}.pt',
+                self._branch(spec, snap, 'v2v_train', f'{"t2c_smoke" if self.smoke else "t2c"}_u{update:03}_{arm}_practice_ref_{i}')
+        monitor = write_monitor(self.output_root, arm, update, metrics)
+        self.backend.save_checkpoint(self.output_root/f'{arm}_checkpoint_{update:03}.pt',
                                      self.models[arm], comp)
         self._write(f'updates/u{update:03}_{arm}.json', dict(synthetic=self.synthetic,
             arm=arm, update=update, episodes=n, monitor_sha256=monitor['monitor_sha256'],
@@ -703,12 +753,13 @@ class Runtime:
                         or m['merge_missing_share'] >= 1
                         or sum(v for k, v in m['trigger_counts'].items() if k != 'none') == 0):
                     raise ValueError('REFUSED: smoke component produced no usable receipt')
-            result = dict(status='CPU_PLANT_SMOKE_PASS' if self.synthetic else 'SMOKE_PASS',
+            result = _seal(dict(status='CPU_PLANT_SMOKE_PASS' if self.synthetic else 'SMOKE_PASS',
+                config_sha256=self.config_sha, registration_sha256=self.registration_sha,
                 synthetic=self.synthetic, target_host='cpuV', episodes=6, updates=1,
                 monitors=[r['monitor_sha256'] for r in monitors],
                 isolated_dry_cells=sum(r['cells'] for r in dry), worker_peak=self.limiter.peak,
                 virtual_sim_s=sum(self.spend.values()) if self.synthetic else 0,
-                new_sim_s=0 if self.synthetic else sum(self.spend.values()), spend=self.spend)
+                new_sim_s=0 if self.synthetic else sum(self.spend.values()), spend=self.spend), 'receipt_sha256')
             self._write('T2C_SMOKE.json', result)
             return result
         result = rc.evaluate_isolated_test(self.isolated_records, registration=self.registration)

@@ -101,9 +101,13 @@ LEARNING_MONITOR = dict(trigger_saturation=[0., 1.], history_updates=3,
 SMOKE = dict(updates=1, episodes_per_arm=2, episode_sim_s=1200,
              training_sim_s=6*1200, practice_reference_sim_s=2*1200,
              augmented_examples_per_arm=2,
-               verification_sim_s=4*GATE_SIM_S, isolated_dry_run_sim_s=0)
+               verification_sim_s=0, isolated_dry_run_sim_s=0)
 SMOKE['total_sim_s'] = sum(SMOKE[k] for k in
     ('training_sim_s', 'practice_reference_sim_s', 'verification_sim_s', 'isolated_dry_run_sim_s'))
+LIFECYCLE = dict(smoke_artifacts='smoke', smoke_job_prefix='t2c_smoke_',
+                 run_job_prefix='t2c_', common_augmentation='once_before_smoke_or_run',
+                 common_ledger='CHARGES.jsonl', interrupted_attempts='never replay',
+                 smoke_to_run='completed matching smoke receipt; fresh common u0 models')
 ISOLATED_REPLICATES = 5
 ISOLATED_BOOTSTRAP_REPS = 10000
 ISOLATED_BOOTSTRAP_LEVEL = 0.95
@@ -502,7 +506,7 @@ def runtime_config(base, *, root, reference_root, source_root, common_checkpoint
                 diagnostic_phases=dict(lessons='v2v_lessons', isolated='isolated_replicated',
                                        probes='early_probes'),
                 early_probes=deepcopy(EARLY_PROBES), learning_monitor=deepcopy(LEARNING_MONITOR),
-                smoke=deepcopy(SMOKE), track2=True,
+                 smoke=deepcopy(SMOKE), lifecycle=deepcopy(LIFECYCLE), track2=True,
                single_ledger=dict(root=root, charges='CHARGES.jsonl', lock='ACCOUNTING.claim',
                                   authority='AUTHORITY.md', foreign_refused=True),
                 budget=budget(track2=True),
@@ -577,7 +581,7 @@ def check_pins(cfg):
     if head != head_teacher_config()[0] or teachers != head_teacher_config()[1]:
         raise ValueError('REFUSED: trigger/teacher slots differ from clean-run registration')
     for key, value in (('early_probes', EARLY_PROBES), ('learning_monitor', LEARNING_MONITOR),
-                        ('smoke', SMOKE), ('final_evaluation', FINAL_EVALUATION),
+                         ('smoke', SMOKE), ('lifecycle', LIFECYCLE), ('final_evaluation', FINAL_EVALUATION),
                         ('bank_training', BANK_TRAINING)):
         if cfg.get(key) != value:
             raise ValueError('REFUSED: registration differs: '+key)
@@ -1233,6 +1237,7 @@ def budget_request_document(cfg, registration, manifest):
     jobs = isolated_jobs(registration)
     final = final_world_registration(registration)
     return dict(quote=quote(track2=True), budget=budget(track2=True), new_sim_s=0,
+                 lifecycle=deepcopy(LIFECYCLE), reward=deepcopy(TRACK_SLOTS['track2_reward']),
                 config_sha256=_seal(cfg, 'config_sha256')['config_sha256'],
                 registration_sha256=jobs[0]['registration_sha256'],
                 criterion_sha256=criterion_document()['criterion_sha256'],
