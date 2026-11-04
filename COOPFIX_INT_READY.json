@@ -17,6 +17,13 @@
     {"sha": "d0ede911", "what": "integrate: coopfix_gate READY fallback to the committed root receipt when an option branch's sibling worktree is absent (external disk-cleanup incident, see resume_session_20261104_b)"},
     {"sha": "f74127aa", "what": "concurrent repair session on this branch: imitation-trust gate test simulates the READY receipt in tmp_path (c4-imit-fullpass sibling also removed by the cleanup); adopted and re-verified 16/16, see resume_session_20261104_b"}
   ],
+  "resume_session_20261104_c": {
+    "action": "third resume (fresh session after freeze): all three upstream heads re-verified UNCHANGED and fully merged (c4/imit-fullpass 7da322c3, c4/bank-stat-filter 4068b788, c4/coop-gate 4a8ec3af are ancestors of HEAD fb8d38ba; no new commits beyond any of them); working tree clean before this receipt refresh; no code changes needed",
+    "reverified_on_final_tree": "82 green total: test_coopfix_gate_cpu 16 passed (34s); test_coopfix_int_e2e_cpu 2 passed (3m19s); test_bank_imitation_cpu + test_bank_filter_cpu + test_replay_bank_confirm_cpu + test_replay_bank_v2v_cpu + test_replay_bank_lesson_cpu + test_exact_grade_cpu 64 passed (3m14s)",
+    "sibling_worktrees_still_absent": "none of c4-imit-fullpass / c4-bank-stat-filter / c4-coop-gate exist on this host; all three READY receipts remain available only as the committed root copies; gate CLI status re-verified live: both options ready:true via ready_file_fallback",
+    "disk_recovered": "E: now has ~186 GB free (previous session's disk-full OPERATIONAL_WARNING is historical; the --basetemp=C: workaround is still the safe default while the host is shared)",
+    "no_new_work_required": "integration remains complete and current; COOPFIX_INT_READY content (merged commits, live config keys, gate CLI) unchanged"
+  },
   "resume_session_20261104_b": {
     "action": "second resume: all three upstream heads re-verified still fully merged (7da322c3 / 4068b788 / 4a8ec3af are ancestors of HEAD); IMITFIX_READY.json in the c4-imit-fullpass worktree byte-identical to the merged copy (git hash d67c5cf9)",
     "INCIDENT_external_worktree_deletions": "an external disk-cleanup process (not this agent; E: went 33MB -> 29-36GB free) deleted the sibling worktrees E:/agent-work/c4-bank-stat-filter and E:/agent-work/c4-coop-gate and ALSO emptied this worktree (directory + .git link) mid-verification between the 2026-11-04 02:39 green record and this session; recovered by git worktree add from the shared object store at E:/research-dense/.git (branch HEAD 4567ccf0 intact throughout - all work was committed) plus one git checkout -- . to re-materialize 4915 index files the sweep had removed; no uncommitted state ever existed to lose",
