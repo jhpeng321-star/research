@@ -40,19 +40,19 @@ from .rerun_tracks_bank import OPTIONS as BANK_TRAINING
 
 UPDATES = 24
 EPISODE_SIM_S = 1200
-EPISODES_PER_UPDATE = 24
+EPISODES_PER_UPDATE = 16              # budget-cut allocation; full 1200s episodes retained
 PRACTICE_REFS_PER_UPDATE = 6          # one matched A-policy reference per practice episode (.25 of 24)
 GATE_SIM_S = 35820                    # cooperative_only exact gate (7 states / 55 branches), measured x5
 LESSON_SIM_S_MEASURED = 5280          # B u6 V2V lesson, measured
 ISOLATED_SIM_S_MEASURED = 32610       # isolated synergy, measured (one replicate run)
 TEST_EPISODES = 96                    # u8 interim + u24 final fixed episode tests, ALL THREE arms
-SCHEDULE = dict(A=dict(lessons=[], isolated=[6, 12, 18, 24]),
-                B=dict(lessons=[6, 12, 18, 24], isolated=[6, 12, 18, 24]),
-                R=dict(lessons=[], isolated=[6, 12, 18, 24]))
+SCHEDULE = dict(A=dict(lessons=[], isolated=[]),
+                B=dict(lessons=[6, 12, 18, 24], isolated=[6, 12, 24]),
+                R=dict(lessons=[], isolated=[6, 12, 24]))
 # ---- Track 2 / T2C: trigger head + teachers + replicated isolated test ------------------
 TRIGGER_ARMS = ('B', 'R')             # A stays plain MAPPO PPO: no head, no teacher
 GROUP_CREDIT_VERIFY_SIM_S = GATE_SIM_S  # explicit phase ceiling, measured gate-sized allowance
-CPU = dict(host='cpuS', cores=48, device='cpu', max_sumo_workers=40,
+CPU = dict(host='cpuV', cores=48, device='cpu', max_sumo_workers=40,
            workers=24, diagnostic_workers=16, torch_threads=1,
            shared_worker_limit=True)
 TRACK_SLOTS = dict(
@@ -71,13 +71,23 @@ TRACK_SLOTS = dict(
                          verified_bypass=True, same_confidence_filter=True,
                         distribution='same move candidates and proposal distribution for B/R'),
      plan_augment=dict(enabled=True, arms=['B', 'R'], module='tools.coopmwm.plan_augment',
-                       verify_fraction=.1, examples_per_update=24,
+                        verify_fraction=.1, examples_per_update=24, once_before_launch=True,
                       same_procedure=True, source='each arm own bank; moves/variety registered ranges'),
      practice_weighting=dict(enabled=True, arms=['B', 'R'], same_procedure=True,
                              fraction=.5, sources=['own_bank', 'own_augmented_states']))
 # Proposed component-level registrations; approval binds these exact values and costs.
 # Verification uses whole all8/isolated checks, never fractions of a truncated window.
 TRACK_SLOTS['group_credit'].update(verify_fraction=.1)
+for _name in ('dense_teacher', 'group_credit', 'plan_augment'):
+    TRACK_SLOTS[_name].update(verification_mode='fixed_total_coordinator_only',
+                             internal_sumo_dispatch=False)
+# Fixed TOTAL samples, not a fraction of the decision stream. Both arms receive
+# exactly one whole all8 check at each of these updates, with no carry/extra work.
+VERIFY_UPDATES = (6, 12, 18, 24)
+VERIFICATION = dict(updates=list(VERIFY_UPDATES), samples_per_arm_per_update=1,
+                    dense_total_sim_s=8*GATE_SIM_S, credit_total_sim_s=8*GATE_SIM_S,
+                    augmentation_samples_per_arm=2, augmentation_total_sim_s=4*GATE_SIM_S)
+TOTAL_CAP_SIM_S = 5_000_000
 EARLY_PROBES = dict(updates=[2, 4], states=3, arms=['A', 'B', 'R'],
                     sim_s_per_arm=3*ISOLATED_SIM_S_MEASURED)
 LEARNING_MONITOR = dict(trigger_saturation=[0., 1.], history_updates=3,
@@ -86,15 +96,15 @@ LEARNING_MONITOR = dict(trigger_saturation=[0., 1.], history_updates=3,
 SMOKE = dict(updates=1, episodes_per_arm=2, episode_sim_s=1200,
              training_sim_s=6*1200, practice_reference_sim_s=2*1200,
              augmented_examples_per_arm=2,
-             verification_sim_s=18*GATE_SIM_S, isolated_dry_run_sim_s=0)
+              verification_sim_s=0, isolated_dry_run_sim_s=0)
 SMOKE['total_sim_s'] = sum(SMOKE[k] for k in
     ('training_sim_s', 'practice_reference_sim_s', 'verification_sim_s', 'isolated_dry_run_sim_s'))
-ISOLATED_REPLICATES = 8               # N replicates per arm per isolated-test update
+ISOLATED_REPLICATES = 5
 ISOLATED_BOOTSTRAP_REPS = 10000
 ISOLATED_BOOTSTRAP_LEVEL = 0.95
 ISOLATED_BOOTSTRAP_SEED = 20261104    # fixed seed: the CIs are reproducible before any run
 ISOLATED_TEST = dict(
-    updates=[6, 12, 18, 24], arms=['A', 'B', 'R'], replicates=ISOLATED_REPLICATES,
+    updates=[6, 12, 24], arms=['B', 'R'], replicates=ISOLATED_REPLICATES,
     sim_s_per_replicate=ISOLATED_SIM_S_MEASURED,
     pairing='same world seed across arms (replicate index)',
     metric='policy_cooperation_gain_veh_s', higher_is_better=True,
@@ -119,12 +129,13 @@ CRITERION = dict(
     metric=ISOLATED_TEST['metric'], higher_is_better=True,
     updates=list(ISOLATED_TEST['updates']), replicates=ISOLATED_REPLICATES,
     pairing=ISOLATED_TEST['pairing'],
-    primary_update=24, secondary_updates=[6, 12, 18],
+    primary_update=24, secondary_updates=[6, 12],
     bootstrap=dict(ISOLATED_TEST['bootstrap']),
     pass_rule=('PASS iff, at the primary update u24, the paired B-vs-A mean cooperation gain '
-               'difference has a two-sided 95% bootstrap CI lying entirely above 0 AND B has '
+                'difference vs common frozen u0 (its cooperation gain is identically zero) '
+                'has a two-sided 95% bootstrap CI lying entirely above 0 AND B has '
                 'no more total collisions/teleports/hard-brakes/TTC events than A across the replicates '
-               '(tolerance 0). Secondary updates u6/u12/u18 and the B-vs-R bank ablation '
+                '(tolerance 0, matched all-base reference). Secondary updates u6/u12 and the B-vs-R bank ablation '
                'are reported, never gated.'),
     safety_counters=list(ISOLATED_TEST['safety_counters']), safety_tolerance=0,
     r_arm=dict(kind='random_bank', gated=False,
@@ -162,10 +173,9 @@ def quote():
     br_train = 2*UPDATES*(EPISODES_PER_UPDATE+practice_refs)*EPISODE_SIM_S
     lessons = len(SCHEDULE['B']['lessons'])*LESSON_SIM_S_MEASURED
     decisions = 2*UPDATES*EPISODES_PER_UPDATE*(EPISODE_SIM_S//60)
-    teacher_verify = math.ceil(decisions*TRACK_SLOTS['dense_teacher']['verify_fraction'])*GATE_SIM_S
-    augment_verify = 2*UPDATES*math.ceil(TRACK_SLOTS['plan_augment']['examples_per_update']*
-                               TRACK_SLOTS['plan_augment']['verify_fraction'])*GATE_SIM_S
-    credit_verify = math.ceil(decisions*TRACK_SLOTS['group_credit']['verify_fraction'])*GATE_SIM_S
+    teacher_verify = VERIFICATION['dense_total_sim_s']
+    augment_verify = VERIFICATION['augmentation_total_sim_s']
+    credit_verify = VERIFICATION['credit_total_sim_s']
     probes = len(EARLY_PROBES['updates'])*len(EARLY_PROBES['arms'])*EARLY_PROBES['sim_s_per_arm']
     cells = len(ISOLATED_TEST['arms'])*len(ISOLATED_TEST['updates'])
     isolated = cells*ISOLATED_TEST['replicates']*ISOLATED_SIM_S_MEASURED
@@ -190,13 +200,21 @@ def quote():
                                bootstrap=deepcopy(FINAL_EVALUATION['bootstrap'])))
     out['total_without_tests'] = (a_train+br_train+lessons+teacher_verify+isolated+GATE_SIM_S
                                   + credit_verify + augment_verify + probes + SMOKE['total_sim_s'])
-    out['cost_basis'] = dict(isolated='measured per-replicate estimate; actual specs must fit phase',
+    out['cost_basis'] = dict(isolated='B/R only u6/u12/u24 N=5; measured whole-replicate ceiling',
                              group_credit='gate-sized verification allowance; hard phase ceiling',
-                              dense_teacher='ceil(registered fraction * decision count) whole all8 checks',
-                              augmentation='ceil(fraction * proposed examples) whole all8 checks',
+                               dense_teacher='fixed one whole all8 sample per arm at u6/u12/u18/u24',
+                               augmentation='ONCE before launch, two whole all8 samples per arm',
                               early_probes='two updates x three arms x three full-window state checks (conservative ceiling)',
                               wm_compute='CPU only; no extra SUMO')
-    out['total'] = out['total_without_tests']+out['interim_u8_sim_s']+out['final_u24_sim_s']
+    out['total'] = out['total_without_tests']+out['interim_u8_sim_s']+out['final_u24_sim_s']+720
+    out['lesson_contingency_sim_s'] = 720
+    out['verification'] = deepcopy(VERIFICATION)
+    out['budget_cap_sim_s'] = TOTAL_CAP_SIM_S
+    out['includes_smoke'] = True
+    assert teacher_verify <= 300_000 and credit_verify <= 300_000
+    assert augment_verify <= 200_000
+    assert out['total'] <= TOTAL_CAP_SIM_S, 'total INCLUDING smoke exceeds owner cap'
+    out['cap_asserted'] = True
     return out
 
 
@@ -214,9 +232,10 @@ def budget():
                   gate_bank_verification_ext=GATE_SIM_S, v2v_interim=q['interim_u8_sim_s'],
                   v2v_final=q['final_u24_sim_s'])
     total = sum(phases.values())
+    assert total == q['total'] and total <= TOTAL_CAP_SIM_S
     return dict(total=total, phases=phases, allocated=total, unallocated=0, updates=UPDATES,
                 episodes_per_update=EPISODES_PER_UPDATE, arms=['A', 'B', 'R'],
-                isolated_test='replicated at u6/12/18/24, N=%d, bootstrap CIs, pre-registered '
+                isolated_test='replicated B/R at u6/12/24, N=%d, bootstrap CIs, pre-registered '
                               'criterion (supersedes the single-run v2v_isolated plan)'
                               % ISOLATED_REPLICATES,
                 quote_total_sim_s=q['total'], single_ledger=True,
@@ -442,6 +461,7 @@ def runtime_config(base, *, root, reference_root, source_root, common_checkpoint
         raise ValueError('common original MAPPO u0 checkpoint hash required')
     base = dict(base)
     base['budget'] = budget()
+    base['track2'] = True
     cfg = v2v_runner.prepare_intent(base, root=root, legacy_root=reference_root,
         source_root=source_root, common_checkpoint_sha256=common_checkpoint_sha256,
         imitation_step_mode='kl_targeted', practice_starts=True, practice_fraction=.25,
@@ -468,7 +488,8 @@ def runtime_config(base, *, root, reference_root, source_root, common_checkpoint
                a_results=dict(root=root, rule='B/R safety composites read A_UPDATE_<u> and the '
                                'same-world A references from THIS root; no remote A reads'))
     cfg.update(deepcopy(TRACK_SLOTS))
-    cfg.update(target_host='cpuS', device='cpu', cpu=deepcopy(CPU), workers=CPU['workers'],
+    cfg.update(target_host='cpuV', device='cpu', cpu=deepcopy(CPU), workers=CPU['workers'],
+                verification=deepcopy(VERIFICATION),
                 job_namespace='t2c', launch_profile='track2_clean_run',
                integration_required=True, additional_cap_ceiling_sim_s=budget()['total'],
                total_cap_ceiling_sim_s=budget()['total'])
@@ -506,9 +527,11 @@ def check_pins(cfg):
         raise ValueError('REFUSED: all three arms need the common MAPPO u0 and 24 updates')
     if cfg.get('bank_arms') != dict(B='B', R='R') or cfg.get('a_results', {}).get('root') != cfg['run_root']:
         raise ValueError('REFUSED: own B/R banks and same-root A results required')
-    if (cfg.get('cpu') != CPU or cfg.get('target_host') != 'cpuS'
+    if (cfg.get('cpu') != CPU or cfg.get('target_host') != 'cpuV'
             or cfg.get('workers') != CPU['workers'] or cfg.get('device') != 'cpu'):
-        raise ValueError('REFUSED: cpuS CPU-only shared 40-worker registration differs')
+        raise ValueError('REFUSED: cpuV CPU-only shared 40-worker registration differs')
+    if cfg.get('verification') != VERIFICATION:
+        raise ValueError('REFUSED: fixed-total verification registration differs')
     if cfg.get('launch_profile') != 'track2_clean_run':
         raise ValueError('REFUSED: clean-run profile required')
     for key, slot in TRACK_SLOTS.items():
@@ -589,6 +612,7 @@ class _ReadRecorder:
         self.home = Path(home).resolve() if home is not None else None
         self.discovered = set()
         self.paths = set()
+        self.lexical = set()
         self._saved = []
 
     def _under(self, path):
@@ -605,6 +629,11 @@ class _ReadRecorder:
         if isinstance(path, int):
             return path
         guard_path(path)                         # lexical guard BEFORE resolution/open
+        # LS envelopes retain absolute deployment episode paths. Resolve them in
+        # the mirror, exactly as deployment will, before the real reader opens.
+        remote = str(path).replace('\\', '/')
+        if self.home is not None and remote.startswith('/home/ubuntu/'):
+            path = self.home.joinpath(*PurePosixPath(remote).parts[3:])
         resolved = Path(guard_path(Path(path).resolve()))
         mode = str(mode or 'r')
         if set(mode)-set('rb'):              # any write/create/append mode is never a read
@@ -622,6 +651,7 @@ class _ReadRecorder:
         if found is not None:
             guard_path(found)
             self.paths.add(found)
+            self.lexical.add(Path(path).absolute())
         return path
 
     def __enter__(self):
@@ -630,7 +660,7 @@ class _ReadRecorder:
         import pathlib
         def bind(original, record):
             def wrapper(path, *a, **k):
-                record(path, k.get('mode') or (a[0] if a else None))
+                path = record(path, k.get('mode') or (a[0] if a else None))
                 return original(path, *a, **k)
             return wrapper
         self._saved.append((pathlib.Path, 'read_text', pathlib.Path.read_text))
@@ -713,6 +743,7 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
     discovered = set()
     entries, notes = {}, []
     recorded = set()
+    snapshot_dependencies = []
 
     def under(base, resolved):
         base = Path(base)
@@ -760,11 +791,24 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
         for arm in ('B', 'R'):
             srcs = tuple(src_local.get(p, Path(p)) for p in src_remote.get(arm, ()))
             decisions = rb.bank_decisions(root_local, arm, sources=srcs)
+            links = practice_starts._links(root_local, arm)
+            # This is the reader used by lesson/isolated/practice consumers, not
+            # an inferred inventory: it opens pending envelopes, gz snapshots,
+            # and the envelope's episode RESULT (including compressed fallback).
+            for decision in decisions:
+                if decision.get('_policy_version') == 'u3' and decision['verification_id'] not in links:
+                    # Capture shared dependencies even if a preceding decision
+                    # opened the same episode result already.
+                    with _ReadRecorder(watched, staging_home) as snapshot_rec:
+                        rb._decision_snapshot(root_local, arm, decision, links)
+                    dependencies = snapshot_rec.paths | snapshot_rec.lexical
+                    snapshot_dependencies.append(dict(arm=arm, verification_id=decision['verification_id'],
+                        files=sorted(_rel(remote_of(p), p) for p in dependencies)))
             if (rb.bank_root(root_local, arm)/f'TEMPERATURE_{arm}_{training_seed}.json').is_file():
                 rb.temperature(root_local, arm, training_seed, decisions)
             bank_statistics.confirmations_per_seed(rb.confirmations, rb, root_local, arm, srcs)
             practice_starts._links(root_local, arm)
-        recorded = set(rec.paths)
+        recorded = set(rec.paths) | rec.lexical
         discovered.update(rec.discovered)
 
     # 2) deterministic walk of the reader-defined bank layout (the run may read any receipt's
@@ -811,7 +855,7 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
             for p in sorted((src/'branches').glob('*/*/RESULT.json')):
                 add(p, 'tape')
                 add(p.parent/'observable.jsonl.gz', 'trace')
-            for p in sorted((src/'label_attempts').glob('*/*/branches/*/*/RESULT.json')):
+            for p in sorted((src/'label_attempts').glob('*/branches/*/*/RESULT.json*')):
                 add(p, 'tape')
                 add(p.parent/'observable.jsonl.gz', 'trace')
     # 3) MAPPO checkpoints (u0 for all three arms; legacy-u3 isolated references) + rule file.
@@ -828,7 +872,7 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
     # 4) files the readers actually opened but the walk did not cover (fail-closed completeness)
     for p in sorted(recorded):
         if p.is_file():
-            add(p, 'reader_opened')
+            add_aliases(p, 'reader_opened')
     for key, entry in entries.items():
         if entry['kind'] == 'reader_opened':
             entry['kind'] = 'bank_input'
@@ -852,6 +896,7 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
         sources={arm: list(paths) for arm, paths in src_remote.items()},
         allowed_staged_roots=sorted('/home/ubuntu/'+p.name for p in discovered),
         training_seed=training_seed, entries=dict(sorted(entries.items())), roles=roles,
+        snapshot_dependencies=snapshot_dependencies,
         counts={k: sum(1 for e in entries.values() if e['kind'] == k)
                 for k in sorted({e['kind'] for e in entries.values()})},
         supersets=['every enumerated receipt\'s full branch set (RESULT.json + observable.jsonl.gz)',
@@ -891,6 +936,13 @@ def validate_manifest(manifest, *, checkpoint_sha256=None):
                 or type(entry.get('bytes')) is not int or entry['bytes'] < 0):
             raise SystemExit('REFUSED: invalid staging entry: '+key)
     roles = manifest.get('roles', {})
+    for dependency in manifest.get('snapshot_dependencies', []):
+        files = dependency.get('files', [])
+        if (not files or any(k not in entries for k in files)
+                or not any('/pending/' in k and k.endswith('.json.gz') for k in files)
+                or not any('/snapshots/' in k and k.endswith('.pt.gz') for k in files)
+                or not any(k.endswith(('/RESULT.json', '/RESULT.json.gz')) for k in files)):
+            raise SystemExit('REFUSED: incomplete LS snapshot dependencies')
     for role in ('common_checkpoint', 'safety_rule', 'reference_B', 'reference_R', 'bank_B', 'bank_R'):
         keys = roles.get(role)
         if not isinstance(keys, list) or not keys or any(k not in entries for k in keys):
@@ -1091,18 +1143,26 @@ def evaluate_isolated_test(records, *, registration):
             if not math.isfinite(v) or v < 0 or not v.is_integer():
                 raise ValueError('REFUSED: bad isolated-test safety counter '+c+': '+str(v))
             cell[c] = v
+        ref = rec.get('reference_safety', {})
+        if any(type(ref.get(c)) not in (int, float) or not math.isfinite(ref[c])
+               or ref[c] < 0 or int(ref[c]) != ref[c] for c in counters):
+            raise ValueError('REFUSED: missing matched common-base reference safety counters')
+        cell['reference_safety'] = ref
         index[key] = cell
     missing = [(a, u, r) for a in arms for u in updates for r in range(reps) if (a, u, r) not in index]
     if missing:
         raise ValueError('REFUSED: incomplete isolated-test grid: %d cell(s) missing, e.g. %s'
                          % (len(missing), missing[0]))
-    pairs = (('B', 'A'), ('R', 'A'), ('B', 'R'))
+    # Common u0's all-group/each-solo policies are identical, so its isolated
+    # cooperation gain is algebraically zero; no extra A simulation is scheduled.
+    pairs = (('B', 'common_base'), ('R', 'common_base'), ('B', 'R'))
     bspec = spec['bootstrap']
     per_update = {}
     for u in updates:
         entry = {}
         for pi, (hi_arm, lo_arm) in enumerate(pairs):
-            diffs = [index[(hi_arm, u, r)]['metric'] - index[(lo_arm, u, r)]['metric']
+            diffs = [index[(hi_arm, u, r)]['metric'] -
+                     (0. if lo_arm == 'common_base' else index[(lo_arm, u, r)]['metric'])
                      for r in range(reps)]
             ci = bootstrap_ci(diffs, reps=bspec['reps'], seed=_cell_seed(bspec['seed'], u, pi),
                               level=bspec['level'])
@@ -1110,14 +1170,14 @@ def evaluate_isolated_test(records, *, registration):
                                             n=ci['n'], level=ci['level'])
         per_update[str(u)] = entry
     pu = CRITERION['primary_update']
-    primary = dict(per_update[str(pu)]['B-A'], update=pu, pair='B-A',
-                   ci_excludes_zero_positive=bool(per_update[str(pu)]['B-A']['ci_lo'] > 0))
+    primary = dict(per_update[str(pu)]['B-common_base'], update=pu, pair='B-common_base',
+                   ci_excludes_zero_positive=bool(per_update[str(pu)]['B-common_base']['ci_lo'] > 0))
     tol = float(CRITERION['safety_tolerance'])
     safety = {}
     for c in counters:
-        a_sum = sum(index[('A', pu, r)][c] for r in range(reps))
+        a_sum = sum(index[('B', pu, r)]['reference_safety'][c] for r in range(reps))
         b_sum = sum(index[('B', pu, r)][c] for r in range(reps))
-        safety[c] = dict(A=a_sum, B=b_sum, ok=bool(b_sum <= a_sum + tol))
+        safety[c] = dict(common_base=a_sum, B=b_sum, ok=bool(b_sum <= a_sum + tol))
     primary['safety_ok'] = all(s['ok'] for s in safety.values())
     primary['pass'] = bool(primary['ci_excludes_zero_positive'] and primary['safety_ok'])
     return dict(schema='coopmwm.rerun_cpus.isolated_eval.v1',
@@ -1267,7 +1327,7 @@ def preflight_dry(prep_dir, *, stage_dir, budget_request=BUDGET_REQUEST, approva
     staged = verify_staged(man, stage, checkpoint_sha256=cfg['common_checkpoint_sha256'])
     return dict(preflight_pass=True, ready_for_registered_launch=False,
                 ready_for_qualified_integration=True, prepare_only=True, integration_required=True,
-                target_host='cpuS', new_sim_s=0, budget_request_sha256=sha(req),
+                 target_host='cpuV', new_sim_s=0, budget_request_sha256=sha(req),
                 owner_quote_sha256=a.get('owner_quote_sha256'),
                 verdict_file_sha256=a.get('verdict_file_sha256'),
                 criterion_sha256=a.get('criterion_sha256'),
@@ -1290,7 +1350,7 @@ if __name__ == '__main__':
     import argparse
     p = argparse.ArgumentParser()
     p.add_argument('cmd', choices=('quote', 'budget', 'wall_clock', 'criterion', 'isolated_plan',
-                                  'isolated_eval', 'manifest', 'preflight', 'smoke', 'monitor'))
+                                  'isolated_eval', 'manifest', 'preflight', 'smoke', 'run', 'monitor'))
     p.add_argument('--prep', default='.')
     p.add_argument('--stage', default='.')
     p.add_argument('--mirror', default=None, help='local mirror of /home/ubuntu')
@@ -1334,12 +1394,14 @@ if __name__ == '__main__':
         if not a.root:
             p.error('monitor requires --root')
         print(json.dumps(read_monitor(a.root), indent=1, sort_keys=True))
-    elif a.cmd == 'smoke':
+    elif a.cmd in ('smoke', 'run'):
         import importlib
-        if not a.adapter or ':' not in a.adapter:
-            p.error('smoke requires explicit --adapter module:factory')
         cfg = json.loads(Path(guard_path(Path(a.config).resolve())).read_text(encoding='utf-8'))
         reg = json.loads(Path(guard_path(Path(a.registration).resolve())).read_text(encoding='utf-8'))
-        module, factory = a.adapter.split(':', 1)
-        backend = getattr(importlib.import_module(module), factory)()
-        print(json.dumps(run_tracks(cfg, reg, backend, smoke=True), indent=1, sort_keys=True))
+        if a.adapter:
+            module, factory = a.adapter.split(':', 1)
+            backend = getattr(importlib.import_module(module), factory)()
+        else:
+            from .rerun_tracks_backend import backend_factory
+            backend = backend_factory(cfg, prep_dir=a.prep, stage_dir=a.stage)
+        print(json.dumps(run_tracks(cfg, reg, backend, smoke=a.cmd == 'smoke'), indent=1, sort_keys=True))

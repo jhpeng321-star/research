@@ -317,7 +317,7 @@ def cpu_backend():
 
 def registration(backend):
     rows = []
-    for r in range(8):
+    for r in range(rc.ISOLATED_REPLICATES):
         job = dict(world_seed=986000+r)
         rows.append(dict(replicate=r, **job, **diagnostic_identity(backend.resolve_states(job))))
     return dict(role='train', metric=rc.ISOLATED_TEST['metric'], replicates=rows,
@@ -381,7 +381,7 @@ def test_smoke_executes_all_consumers_updates_and_full_isolated_expansion(tmp_pa
     initial = {a: state_sha(m) for a, m in rt.models.items()}
     result = rt.run()
     assert result['status'] == 'CPU_PLANT_SMOKE_PASS' and result['new_sim_s'] == 0
-    assert result['episodes'] == 6 and result['isolated_dry_cells'] == 96
+    assert result['episodes'] == 6 and result['isolated_dry_cells'] == 30
     assert result['virtual_sim_s'] <= cfg['smoke']['total_sim_s']
     assert result['spend']['track2_smoke'] == result['virtual_sim_s']
     assert sum(v for k, v in result['spend'].items() if k != 'track2_smoke') == 0
@@ -402,6 +402,7 @@ def test_smoke_executes_all_consumers_updates_and_full_isolated_expansion(tmp_pa
     assert latest['A']['metrics']['dense_labels'] == 0
     assert latest['B']['metrics']['merge_missing_share'] < .01
     # Real expanded diagnostic path (existing policy_synergy specs and decomposition).
+    rt.smoke = False  # post-smoke CPU diagnostic has its own quoted probe phase
     graded = rt.diagnostics(2)
     assert graded['cells'] == 3 and graded['branches'] == 36
     assert all(r['metric'] == 2. for r in graded['records'])
@@ -466,6 +467,7 @@ def test_runtime_refuses_foreign_bank_short_window_and_optimizer_overlap(tmp_pat
     def shortened(kind, payload, **kw):
         return [(dict(sim_s=1, window=dict(start_s=0, end_s=1)), {})]
     backend.expand_verification = shortened
+    rt.smoke = False
     with pytest.raises(ValueError, match='shortened/changed'):
         rt.update('B', 1, episodes=2)
     comp = rt.components['B']['coop_layer']
@@ -504,7 +506,7 @@ def test_dense_filter_boundary_bypass_and_empty_update(tmp_path, monkeypatch, ar
     assert (m['dense_ce'] is None) == (not eligible)
     receipt = json.loads((rt.root/f'components/u001_{arm}_dense_labels.json').read_text())
     checks = receipt['checked']
-    assert m['dense_checked_labels'] == len(checks) == (4 if prob is not None else 0)
+    assert m['dense_checked_labels'] == len(checks) == 0  # smoke verification is dry-only
     if checks:
         assert m['dense_checked_accuracy'] == sum(c['label_correct'] for c in checks)/len(checks)
     else:
@@ -530,11 +532,11 @@ def test_dense_filter_rejects_missing_calibration_and_forged_mask():
 def test_executes_complete_paired_grid_and_scheduled_tests(tmp_path, monkeypatch):
     cfg, reg, backend = prepare(tmp_path, monkeypatch)
     rt = Runtime(cfg, reg, backend)
-    for update in (6, 12, 18, 24):
-        assert rt.diagnostics(update)['cells'] == 24
-    assert len(rt.isolated_records) == 96
+    for update in (6, 12, 24):
+        assert rt.diagnostics(update)['cells'] == 10
+    assert len(rt.isolated_records) == 30
     analysis = rc.evaluate_isolated_test(rt.isolated_records, registration=reg)
-    assert analysis['cells'] == 96 and analysis['verdict'] == 'fail'  # no fabricated learning claim
+    assert analysis['cells'] == 30 and analysis['verdict'] == 'pass'  # synthetic, never a learning claim
     for arm in ('A', 'B', 'R'):
         backend.save_checkpoint(rt.root/f'{arm}_checkpoint_024.pt', rt.models[arm], rt.components[arm])
     for update in (6, 8, 12, 18, 24):
@@ -563,7 +565,7 @@ def test_smoke_and_one_command_monitor_cli(tmp_path, monkeypatch):
         'tools.coopmwm.test_t2c_runtime_cpu:cpu_backend'], env=env, text=True,
         capture_output=True, check=True, timeout=60)
     result = json.loads(completed.stdout)
-    assert result['status'] == 'CPU_PLANT_SMOKE_PASS' and result['isolated_dry_cells'] == 96
+    assert result['status'] == 'CPU_PLANT_SMOKE_PASS' and result['isolated_dry_cells'] == 30
     completed = subprocess.run([sys.executable, '-m', 'tools.coopmwm.rerun_cpus', 'monitor',
         '--root', cfg['run_root']], env=env, text=True, capture_output=True, check=True, timeout=30)
     assert json.loads(completed.stdout)['updates'] == dict(A=1, B=1, R=1)

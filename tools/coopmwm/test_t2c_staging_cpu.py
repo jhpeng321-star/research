@@ -122,3 +122,34 @@ def test_checkpoint_digest_and_containment_are_checked_before_reads(mirror):
         bad = _seal({k: v for k, v in bad.items() if k != 'manifest_sha256'}, 'manifest_sha256')
         with pytest.raises(SystemExit, match='unsafe staged destination'):
             rc.verify_staged(bad, mirror)
+
+
+def test_ls_snapshot_reader_closes_pending_snapshot_and_cross_root_episode(mirror):
+    m = rc.staging_manifest(remote_root=LEGACY_REMOTE, sources={'B': [COLLECTION_REMOTE]})
+    files = m['snapshot_dependencies'][0]['files']
+    assert any('/pending/' in p and p.endswith('.json.gz') for p in files)
+    assert any('/snapshots/' in p and p.endswith('.pt.gz') for p in files)
+    assert any('/ls_episode_source/jobs/ls_e1/RESULT.json' in p for p in files)
+    assert '/home/ubuntu/ls_episode_source' in m['allowed_staged_roots']
+    for key in files:
+        bad = deepcopy(m)
+        del bad['entries'][key]
+        bad = _seal({k: v for k, v in bad.items() if k != 'manifest_sha256'}, 'manifest_sha256')
+        with pytest.raises(SystemExit, match='LS snapshot dependencies'):
+            rc.verify_staged(bad, mirror)
+
+
+def test_missing_ls_snapshot_dependency_refuses_manifest_and_attempt_layout_is_real(mirror):
+    src = mirror/'home'/'ubuntu'/'ls_collection_u3frozen'
+    label = next((src/'labels').glob('*.json'))
+    generation = label.with_name(label.stem+'_G2.json')
+    label.rename(generation)
+    branches = src/'label_attempts'/'G2'/'branches'
+    branches.parent.mkdir(parents=True)
+    shutil.move(str(src/'branches'), str(branches))
+    m = rc.staging_manifest(remote_root=LEGACY_REMOTE, sources={'B': [COLLECTION_REMOTE]})
+    assert any('/label_attempts/G2/branches/' in p and p.endswith('RESULT.json') for p in m['entries'])
+    snapshot = src/'snapshots'/'ls_state.pt.gz'
+    snapshot.unlink()
+    with pytest.raises(FileNotFoundError):
+        rc.staging_manifest(remote_root=LEGACY_REMOTE, sources={'B': [COLLECTION_REMOTE]})

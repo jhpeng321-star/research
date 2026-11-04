@@ -124,6 +124,11 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
         budget = dict(cfg.get('budget') or {})
         phases = dict(budget.get('phases') or {})
         target = V2V_PHASES['v2v_train'] + practice_reference_quote(cfg['practice_fraction'])
+        if cfg.get('track2'):
+            from .rerun_cpus import budget as track2_budget
+            if budget != track2_budget():
+                raise ValueError('Track 2 practice requires the complete fixed-total budget')
+            target = budget['phases']['v2v_train']
         increase = target - int(phases.get('v2v_train', 0))
         phases['v2v_train'] = target
         if budget_transfer is not None:

@@ -82,19 +82,19 @@ def t2_sibling_module_stubs(monkeypatch):
 
 def test_quote_three_arms_including_gate_teacher_verify_and_replicated_isolated():
     q = rcpu.quote()
-    assert q['a_train_sim_s'] == 24*24*1200 == 691200                     # A: plain PPO, no bank/practice
-    assert q['b_train_sim_s'] == q['r_train_sim_s'] == 24*36*1200
-    assert q['v2v_train'] == 691200+2*24*36*1200
+    assert q['a_train_sim_s'] == 24*16*1200 == 460800
+    assert q['b_train_sim_s'] == q['r_train_sim_s'] == 24*24*1200
+    assert q['v2v_train'] == 460800+2*24*24*1200
     assert q['v2v_lessons'] == 4*5280 == 21120
-    assert q['teacher_verify_sim_s'] == q['group_credit_verify_sim_s'] == 2304*35820
-    assert q['augment_verify_sim_s'] == 144*35820
+    assert q['teacher_verify_sim_s'] == q['group_credit_verify_sim_s'] == 8*35820 <= 300000
+    assert q['augment_verify_sim_s'] == 4*35820 <= 200000
     assert q['early_probes_sim_s'] == 2*3*3*32610
-    assert q['smoke_sim_s'] == 6*1200+2*1200+18*35820
-    cells = 3*4
-    assert q['isolated_replicated'] == dict(arms=['A', 'B', 'R'], updates=[6, 12, 18, 24],
-                                            replicates=8, cells=cells, replicates_total=cells*8,
+    assert q['smoke_sim_s'] == 6*1200+2*1200
+    cells = 2*3
+    assert q['isolated_replicated'] == dict(arms=['B', 'R'], updates=[6, 12, 24],
+                                             replicates=5, cells=cells, replicates_total=cells*5,
                                             per_replicate_sim_s=32610)
-    assert q['isolated_replicated_sim_s'] == cells*8*32610 == 3130560     # supersedes v2v_isolated
+    assert q['isolated_replicated_sim_s'] == cells*5*32610 == 978300
     assert 'v2v_isolated' not in q
     assert q['gate_bank_verification_ext'] == 35820
     assert q['interim_u8'] == dict(per_arm=96*1200, arms=3, updates=8, episodes_per_arm=96)
@@ -106,18 +106,19 @@ def test_quote_three_arms_including_gate_teacher_verify_and_replicated_isolated(
         'v2v_train', 'v2v_lessons', 'teacher_verify_sim_s', 'group_credit_verify_sim_s',
         'augment_verify_sim_s', 'early_probes_sim_s', 'smoke_sim_s',
         'isolated_replicated_sim_s', 'gate_bank_verification_ext'))
-    assert q['total'] == q['total_without_tests']+345600+345600
+    assert q['total'] == q['total_without_tests']+345600+345600+720 == 4883340
+    assert q['includes_smoke'] and q['cap_asserted'] and q['total'] <= 5000000
 
 
 def test_budget_is_single_ledger_and_covers_the_quote():
     b = rcpu.budget()
     assert b['single_ledger'] is True and b['arms'] == ['A', 'B', 'R']
-    assert sum(b['phases'].values()) == b['total'] == rcpu.quote()['total']+720
+    assert sum(b['phases'].values()) == b['total'] == rcpu.quote()['total']
     assert b['phases']['v2v_train'] == rcpu.quote()['v2v_train']
     assert 'replicated' in b['isolated_test'] and 'pre-registered' in b['isolated_test']
-    for phase, cost in (('v2v_train', 2419200), ('v2v_lessons', 21120), ('teacher_verify', 0),
+    for phase, cost in (('v2v_train', 1843200), ('v2v_lessons', 21120), ('teacher_verify', 0),
                          ('group_credit_verify', 35820),
-                        ('isolated_replicated', 3130560), ('gate_bank_verification_ext', 35820),
+                         ('isolated_replicated', 978300), ('gate_bank_verification_ext', 35820),
                         ('v2v_interim', 345600), ('v2v_final', 345600)):
         assert b['phases'][phase] >= cost
 
@@ -125,9 +126,9 @@ def test_budget_is_single_ledger_and_covers_the_quote():
 def test_wall_clock_paced():
     w = rcpu.wall_clock()
     assert w['per_update_s'] == 1800
-    assert w['A_s'] == 24*1800 and w['B_s'] == 24*1800+4*900 and w['R_s'] == w['B_s']+1800
+    assert w['A_s'] == 24*1800 and w['B_s'] == 24*1800+3*900 and w['R_s'] == w['B_s']+1800
     assert w['tests_s'] == 2*3*96*300/24
-    assert w['isolated_s'] == 3130560/20 == 156528.0                     # 36,000 sim-s per 1,800 s pace
+    assert w['isolated_s'] == 978300/20
     assert w['total_h'] == round((w['R_s']+w['isolated_s']+w['verification_s']+w['tests_s'])/3600, 1)
     assert w['estimate_only'] and w['target']['max_sumo_workers'] == 40
 
@@ -210,16 +211,16 @@ def test_t2c_coop_reward_slot_is_off_by_default(tmp_path):
 
 def test_t2c_isolated_test_registration_matches_schedule_and_quote():
     spec = rcpu.ISOLATED_TEST
-    assert spec['updates'] == [6, 12, 18, 24] and spec['arms'] == ['A', 'B', 'R']
-    assert spec['replicates'] == 8 and spec['sim_s_per_replicate'] == 32610
+    assert spec['updates'] == [6, 12, 24] and spec['arms'] == ['B', 'R']
+    assert spec['replicates'] == 5 and spec['sim_s_per_replicate'] == 32610
     assert spec['pairing'] == 'same world seed across arms (replicate index)'
     assert spec['bootstrap'] == dict(reps=10000, level=0.95, seed=20261104, method='percentile')
     assert spec['safety_counters'] == ['collisions', 'teleports', 'hard_brakes', 'ttc_events']
-    for arm in ('A', 'B', 'R'):
+    for arm in ('B', 'R'):
         assert rcpu.SCHEDULE[arm]['isolated'] == spec['updates']          # every arm, every update
-    assert rcpu.SCHEDULE == dict(A=dict(lessons=[], isolated=[6, 12, 18, 24]),
-                                 B=dict(lessons=[6, 12, 18, 24], isolated=[6, 12, 18, 24]),
-                                 R=dict(lessons=[], isolated=[6, 12, 18, 24]))
+    assert rcpu.SCHEDULE == dict(A=dict(lessons=[], isolated=[]),
+                                 B=dict(lessons=[6, 12, 18, 24], isolated=[6, 12, 24]),
+                                 R=dict(lessons=[], isolated=[6, 12, 24]))
     assert rcpu.quote()['isolated_replicated_sim_s'] == \
         len(spec['arms'])*len(spec['updates'])*spec['replicates']*spec['sim_s_per_replicate']
 
@@ -428,6 +429,23 @@ def ls_label_source(mirror):
         awrite(d/'RESULT.json', dict(prefixes={}, final=fp(720, 5.), steps=[]))
         with gzip.open(d/'observable.jsonl.gz', 'wt', encoding='utf-8') as f:
             f.write(canonical(dict(time_s=600))+'\n')
+    # Real transitive LS snapshot completion, including an episode outside the
+    # LS root and deployment-absolute envelope paths.
+    import io
+    snap = snapshot(600)
+    snap['episode'] = dict(id='ls_e1', world=dict(seed=986000))
+    snap['current_sample'] = {}
+    episode = mirror/'ls_episode_source'/'jobs'/'ls_e1'
+    episode.mkdir(parents=True)
+    awrite(episode/'RESULT.json', dict(id='ls_e1', world=dict(seed=986000),
+        prefixes={str(t): {} for t in range(300, 601)}, steps=[]))
+    (src/'pending').mkdir()
+    (src/'snapshots').mkdir()
+    (src/'pending'/(vid+'.json.gz')).write_bytes(gzip.compress(json.dumps(dict(
+        snapshot='ls_state', episode_path='/home/ubuntu/ls_episode_source/jobs/ls_e1')).encode()))
+    stream = io.BytesIO()
+    torch.save(snap, stream)
+    (src/'snapshots'/'ls_state.pt.gz').write_bytes(gzip.compress(stream.getvalue()))
     return src
 
 
@@ -554,9 +572,9 @@ def test_criterion_document_is_sealed_and_stable():
     assert d1 == d2                                                       # reproducible pre-registration
     verify_sealed(d1, 'criterion_sha256')
     crit = d1['criterion']
-    assert crit['primary_update'] == 24 and crit['secondary_updates'] == [6, 12, 18]
+    assert crit['primary_update'] == 24 and crit['secondary_updates'] == [6, 12]
     assert crit['metric'] == 'policy_cooperation_gain_veh_s' and crit['higher_is_better'] is True
-    assert crit['updates'] == [6, 12, 18, 24] and crit['replicates'] == 8
+    assert crit['updates'] == [6, 12, 24] and crit['replicates'] == 5
     assert crit['bootstrap']['reps'] == 10000 and crit['bootstrap']['level'] == 0.95
     assert crit['safety_tolerance'] == 0
     assert crit['r_arm']['gated'] is False and 'same move distribution' in crit['r_arm']['rule']
@@ -599,7 +617,7 @@ def _registration():
                                                            for i in range(rcpu.TEST_EPISODES)]),
                 replicates=[dict(replicate=r, world_seed=986000+r,
                                  state_set_sha256='a'*64, window_set_sha256='b'*64)
-                            for r in range(8)])
+                            for r in range(rcpu.ISOLATED_REPLICATES)])
 
 
 def _evaluate(rows):
@@ -608,7 +626,8 @@ def _evaluate(rows):
 
 def _isolated_grid(b_delta=0.15, r_delta=0.0, collisions_b=0.0, at_update=None):
     """A full registered grid: 3 arms x u6/12/18/24 x 8 paired-world replicates."""
-    return [dict(j, status='graded', metric=0.5+{'A': 0., 'B': b_delta, 'R': r_delta}[j['arm']],
+    return [dict(j, status='graded', metric={'B': b_delta, 'R': r_delta}[j['arm']],
+                 reference_safety=dict(collisions=0, teleports=0, hard_brakes=0, ttc_events=0),
                  collisions=collisions_b if j['arm'] == 'B' and j['update'] == at_update else 0,
                  teleports=0, hard_brakes=0, ttc_events=0) for j in rcpu.isolated_jobs(_registration())]
 
@@ -616,20 +635,20 @@ def _isolated_grid(b_delta=0.15, r_delta=0.0, collisions_b=0.0, at_update=None):
 def test_evaluate_isolated_test_applies_the_registered_criterion():
     out = _evaluate(_isolated_grid())
     assert out['verdict'] == 'pass' and out['primary']['pass'] is True
-    assert out['primary']['update'] == 24 and out['primary']['pair'] == 'B-A'
+    assert out['primary']['update'] == 24 and out['primary']['pair'] == 'B-common_base'
     assert out['primary']['mean'] == pytest.approx(0.15)
     assert out['primary']['ci_lo'] == pytest.approx(0.15)
     assert out['primary']['ci_excludes_zero_positive'] is True and out['primary']['safety_ok'] is True
-    assert out['cells'] == 96 and out['replicates'] == 8
+    assert out['cells'] == 30 and out['replicates'] == 5
     assert all(s['ok'] for s in out['safety'].values())
-    assert out['per_update']['6']['B-A']['ci_lo'] > 0                      # secondary, reported
-    assert out['secondary_updates'] == [6, 12, 18]
+    assert out['per_update']['6']['B-common_base']['ci_lo'] > 0
+    assert out['secondary_updates'] == [6, 12]
     assert out['r_arm'].startswith('random-bank fairness control')
     assert out['per_update']['24']['B-R']['mean'] == pytest.approx(0.15)   # teacher ablation reported
     assert out['criterion_sha256'] == rcpu.criterion_document()['criterion_sha256']
     # R clearly worse than A everywhere: reported, NEVER gated (B still passes).
     out_r_bad = _evaluate(_isolated_grid(r_delta=-0.4))
-    assert out_r_bad['verdict'] == 'pass' and out_r_bad['per_update']['24']['R-A']['ci_hi'] < 0
+    assert out_r_bad['verdict'] == 'pass' and out_r_bad['per_update']['24']['R-common_base']['ci_hi'] < 0
     # B loses at the primary update -> fail.
     out_b_loses = _evaluate(_isolated_grid(b_delta=-0.1))
     assert out_b_loses['verdict'] == 'fail' and out_b_loses['primary']['ci_lo'] < 0
@@ -639,7 +658,7 @@ def test_evaluate_isolated_test_applies_the_registered_criterion():
     assert out_unsafe['verdict'] == 'fail'
     assert out_unsafe['primary']['ci_excludes_zero_positive'] is True
     assert out_unsafe['primary']['safety_ok'] is False
-    assert out_unsafe['safety']['collisions'] == dict(A=0.0, B=8.0, ok=False)
+    assert out_unsafe['safety']['collisions'] == dict(common_base=0.0, B=5.0, ok=False)
     # safety regression at a SECONDARY update never gates the primary verdict
     out_secondary_unsafe = _evaluate(_isolated_grid(collisions_b=1.0, at_update=6))
     assert out_secondary_unsafe['verdict'] == 'pass'
@@ -651,10 +670,10 @@ def test_evaluate_isolated_test_refuses_bad_records():
         _evaluate(good+[dict(arm='C', update=24, replicate=0, metric=0.5,
                                                collisions=0.0, teleports=0.0, hard_brakes=0.0)])
     with pytest.raises(ValueError, match='non-registered update'):
-        _evaluate(good+[dict(arm='A', update=8, replicate=0, metric=0.5,
+        _evaluate(good+[dict(arm='B', update=8, replicate=0, metric=0.5,
                                                collisions=0.0, teleports=0.0, hard_brakes=0.0)])
     with pytest.raises(ValueError, match='outside the registered range'):
-        _evaluate(good+[dict(arm='A', update=24, replicate=8, metric=0.5,
+        _evaluate(good+[dict(arm='B', update=24, replicate=8, metric=0.5,
                                                collisions=0.0, teleports=0.0, hard_brakes=0.0)])
     with pytest.raises(ValueError, match='duplicate'):
         _evaluate(good+[good[0]])
@@ -666,7 +685,7 @@ def test_evaluate_isolated_test_refuses_bad_records():
                                      r['update'] == 24 and r['replicate'] == 0 else r
                                      for r in good])
     with pytest.raises(ValueError, match='safety counter'):
-        _evaluate([dict(r, collisions=-1.0) if r['arm'] == 'A' and
+        _evaluate([dict(r, collisions=-1.0) if r['arm'] == 'B' and
                                      r['update'] == 24 and r['replicate'] == 0 else r
                                      for r in good])
 
@@ -829,7 +848,7 @@ def test_essentials_profile_serializes_without_sibling_modules(tmp_path, monkeyp
     cfg = json.loads(json.dumps(config(tmp_path)))
     assert rcpu.check_pins(cfg)
     assert cfg['cpu']['workers']+cfg['cpu']['diagnostic_workers'] == 40 < 48
-    assert cfg['job_namespace'] == 't2c' and cfg['target_host'] == 'cpuS'
+    assert cfg['job_namespace'] == 't2c' and cfg['target_host'] == 'cpuV'
     for name in ('coop_layer', 'group_credit', 'merge_features', 'dense_teacher', 'plan_augment', 'practice_weighting'):
         assert cfg[name]['enabled'] is True
         assert cfg[name]['arms'] == ['B', 'R']
@@ -911,12 +930,12 @@ def test_isolated_jobs_are_dry_paired_and_match_full_budget():
     registration = _registration()
     jobs = rcpu.isolated_jobs(registration)
     assert jobs == rcpu.isolated_jobs(registration)
-    assert len({j['id'] for j in jobs}) == 96
+    assert len({j['id'] for j in jobs}) == 30
     assert sum(j['sim_s'] for j in jobs) == rcpu.quote()['isolated_replicated_sim_s']
-    for u in (6, 12, 18, 24):
-        for r in range(8):
+    for u in (6, 12, 24):
+        for r in range(rcpu.ISOLATED_REPLICATES):
             paired = [j for j in jobs if j['update'] == u and j['replicate'] == r]
-            assert {j['arm'] for j in paired} == {'A', 'B', 'R'}
+            assert {j['arm'] for j in paired} == {'B', 'R'}
             assert len({(j['world_seed'], j['state_set_sha256'], j['window_set_sha256'])
                         for j in paired}) == 1
     for bad in (dict(registration, role='eval'),

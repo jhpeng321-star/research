@@ -209,6 +209,11 @@ def verify_commit(binding):
     except ValueError as error:
         raise Refused('checker is not loaded from the deployed source_root') from error
     required = set(REQUIRED_SOURCES)
+    if binding.get('track2'):
+        required.update('tools/coopmwm/'+name+'.py' for name in (
+            'rerun_cpus', 'rerun_cpus_compat', 'rerun_tracks_runtime', 'rerun_tracks_backend',
+            'rerun_tracks_bank', 'rerun_tracks_monitor', 'moves', 'planner_eval',
+            'trigger_policy', 'coop_layer', 'group_credit', 'merge_features', 'dense_teacher', 'plan_augment'))
     # Packaged releases usually have a pytools/ prefix; all tool paths share it.
     suffix = 'tools/coopmwm/v2v_launch3.py'
     if not checker.endswith(suffix):
@@ -384,6 +389,13 @@ def bind_runtime(value, *, root, source_root):
     cfg = value.get('config')
     if not isinstance(cfg, dict):
         raise Refused('V2V_RUNTIME config object required')
+    if cfg.get('track2'):
+        from . import rerun_cpus
+        rerun_cpus.check_pins(cfg)
+        for key, want in (('run_root', root), ('source_root', source_root)):
+            if _absolute(cfg.get(key), key) != Path(want).resolve():
+                raise Refused('runtime '+key+' differs from deployed binding')
+        return cfg
     for key, want in dict(INTENT_OPTIONS, **{k: v for k, v in BANK_OPTIONS.items()
                                              if k not in PRACTICE_KEYS}).items():
         have = cfg.get(key)
@@ -490,11 +502,12 @@ def requote(root, cfg, *, phase_costs=None):
     charging the entire initial run again after smokes would block continuation.
     """
     from . import accel_storage, storage
-    costs = dict(V2V_PHASES) if phase_costs is None else phase_costs
-    if not isinstance(costs, dict) or not costs or not set(costs) <= set(V2V_PHASES):
+    registered = cfg['budget']['phases'] if cfg.get('track2') else V2V_PHASES
+    costs = dict(registered) if phase_costs is None else phase_costs
+    if not isinstance(costs, dict) or not costs or not set(costs) <= set(registered):
         raise Refused('explicit nonempty registered phase_costs required')
     for phase, amount in costs.items():
-        if _amount(amount, 'planned sim_s ' + phase) <= 0:
+        if _amount(amount, 'planned sim_s ' + phase) <= 0 and not cfg.get('track2'):
             raise Refused('positive planned phase cost required: ' + phase)
     root = checked(root)
     accounting = _absolute(cfg.get('accounting_root'), 'accounting_root')
@@ -505,7 +518,8 @@ def requote(root, cfg, *, phase_costs=None):
     before = _hash(_bytes(root / 'CHARGES.jsonl'))
     try:
         entries = storage.ledger(root)
-        charged = accel_storage.charged(root)
+        charged = (sum(e['sim_s'] for e in entries) if cfg.get('track2')
+                   else accel_storage.charged(root))
     except (OSError, ValueError, KeyError, ImportError) as error:
         raise Refused('canonical budget/ledger unavailable or malformed') from error
     if before != _hash(_bytes(root / 'CHARGES.jsonl')):
@@ -543,6 +557,8 @@ def preflight(binding_path, *, binding_sha256, root, control, mover, phase_costs
     deployed = verify_commit(binding)
     runtime, runtime_hash = _json(root / 'V2V_RUNTIME.json', binding['runtime_sha256'])
     cfg = bind_runtime(runtime, root=root, source_root=binding['source_root'])
+    if bool(cfg.get('track2')) != bool(binding.get('track2')):
+        raise Refused('runtime/launch binding Track 2 opt-in differs')
     gate = read_gate(binding, deployed)
     resources = resource_gate(root, mover, binding['resource_policy'])
     check_hold(control, root)  # required AFTER a resource observation/wait

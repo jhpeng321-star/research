@@ -152,10 +152,12 @@ class Runtime:
             approved_reg = json.loads((Path(backend.prep_dir)/rc.ISOLATED_REGISTRATION_FILE).read_text())
             if approved_cfg != cfg or approved_reg != registration or not preflight['preflight_pass']:
                 raise ValueError('REFUSED: runtime differs from approved preparation')
-            if (backend.host != 'cpuS' or backend.release.get('stub', True)
+            if (backend.host != 'cpuV' or backend.release.get('stub', True)
                     or not all(backend.release.get(k) for k in ('cpu_only', 'qualified',
                         'single_writer', 'frozen_base', 'default_off_byte_identical'))):
-                raise ValueError('REFUSED: qualified cpuS CPU integration required')
+                raise ValueError('REFUSED: qualified cpuV CPU integration required')
+        if hasattr(backend, 'configure'):
+            backend.configure(deepcopy(cfg), deepcopy(registration))
         self.jobs = rc.isolated_jobs(registration)
         self.final_worlds = rc.final_world_registration(registration)
         self.limiter = WorkerLimit()
@@ -166,6 +168,7 @@ class Runtime:
         self.isolated_records = []
         self.common_weights = None
         self.base_sha = {}
+        self.augmented = {}
         # Immutable claim prevents a second coordinator or duplicate smoke from
         # dispatching into the root. Interrupted claims are investigated, never adopted.
         with (self.root/'T2C_RUNTIME.claim').open('x', encoding='utf-8') as f:
@@ -243,7 +246,11 @@ class Runtime:
         if not precharged:
             self._reserve(ident, spec['sim_s'], phase)
         with self.limiter.permit('diagnostic'):
-            result = self.backend.run_branch(spec, snapshot)
+            if not self.synthetic:
+                result = self.backend.run_reserved_branch(spec, snapshot, ident=ident,
+                    phase='track2_smoke' if self.smoke else phase)
+            else:
+                result = self.backend.run_branch(spec, snapshot)
         if result.get('status') != 'graded':
             raise ValueError('REFUSED: ungraded diagnostic; never drop/impute/retry')
         if not math.isfinite(result['J_veh_s']):
@@ -262,7 +269,15 @@ class Runtime:
             return [f.result() for f in futures]
 
     def _verify(self, arm, update, kind, rows, fraction):
-        count = math.ceil(len(rows)*fraction)
+        # Fixed whole-run sample slate; fractions never multiply the stream.
+        if self.smoke:
+            count = 0
+        elif kind == 'augment':
+            count = rc.VERIFICATION['augmentation_samples_per_arm']
+        else:
+            count = int(update in rc.VERIFY_UPDATES)
+        if len(rows) < count:
+            raise ValueError('REFUSED: insufficient rows for fixed verification sample')
         verified = []
         selected = random.Random(20261104+update).sample(rows, count)
         for i, row in enumerate(selected):
@@ -278,8 +293,11 @@ class Runtime:
             grade = self.backend.grade_verification(kind, payload, results)
             if grade.get('status') != 'graded':
                 raise ValueError('REFUSED: verification must produce graded receipt')
-            if kind == 'teacher' and type(grade.get('label_correct')) is not bool:
-                raise ValueError('REFUSED: teacher verification needs realised label_correct')
+            if kind == 'teacher':
+                if row.get('target') is not None and type(grade.get('label_correct')) is not bool:
+                    raise ValueError('REFUSED: teacher verification needs realised label_correct')
+                if row.get('target') is None and grade.get('label_correct') is not None:
+                    raise ValueError('REFUSED: absent target cannot have realised accuracy')
             verified.append(dict(grade, row_id=row.get('row_id', row.get('id')),
                                  target=repr(row.get('target')) if kind == 'teacher' else None,
                                  verification_id=ident))
@@ -292,6 +310,14 @@ class Runtime:
         comp, model = self.components[arm], self.models[arm]
         ident = f't2c_u{update:03}_{arm}_episode_{index:03}'
         self._reserve(ident, rc.EPISODE_SIM_S, 'v2v_train')
+        if not self.synthetic:
+            with self.limiter.permit('episode'):
+                result = self.backend.run_episode(arm=arm, update=update, index=index,
+                    start=start, model=model, components=comp,
+                    cfg=dict(deepcopy(self.cfg), runtime_smoke=self.smoke))
+            if arm != 'A' and state_sha(model) != self.base_sha[arm]:
+                raise ValueError('REFUSED: frozen base changed during production episode')
+            return result
         # The proposal RNG is arm-independent: same observable state -> SAME slate.
         rng = random.Random(20261104+10000*update+index)
         label_rng = random.Random(20261105+10000*update+index)
@@ -356,19 +382,21 @@ class Runtime:
             if not bank or any(e['arm'] != arm for e in bank):
                 raise ValueError('REFUSED: B/R must consume their own nonempty banks')
             count = self.cfg['smoke']['augmented_examples_per_arm'] if self.smoke else self.cfg['plan_augment']['examples_per_update']
-            augmented = comp['plan_augment'].augment(bank, count=count, arm=arm)
+            if arm not in self.augmented:
+                self.augmented[arm] = comp['plan_augment'].augment(bank, count=count, arm=arm)
+                self._verify(arm, 0, 'augment', self.augmented[arm], 0)
+            augmented = self.augmented[arm]
             if len(augmented) != count or any(e['arm'] != arm for e in augmented):
                 raise ValueError('REFUSED: augmentation lost own-bank identity or registered count')
             bank_batch = training_batch(bank, augmented, arm=arm, encoder=comp['merge_features'])
             bank_receipt = batch_receipt(bank_batch)
             self._write(f'components/u{update:03}_{arm}_bank_batch.json', bank_receipt)
-            self._verify(arm, update, 'augment', augmented, self.cfg['plan_augment']['verify_fraction'])
             count = math.ceil(n*self.cfg['practice_weighting']['fraction'])
             selected = comp['practice_weighting'].select(bank, augmented, count=count,
                                                        repeat_cap=self.cfg['practice_repeat_cap'])
             if len(selected) != count or any(e['arm'] != arm for e in selected):
                 raise ValueError('REFUSED: unequal/foreign practice-weighted starts')
-            ids = [e['id'] for e in selected]
+            ids = [(e.get('practice_row') or {}).get('example_id', e['id']) for e in selected]
             if any(ids.count(ident) > self.cfg['practice_repeat_cap'] for ident in ids):
                 raise ValueError('REFUSED: weighted start repeat cap exceeded')
             if any(e not in bank+augmented for e in selected):
@@ -394,8 +422,9 @@ class Runtime:
                 'bank_move_ce', 'layer_kl', 'merge_missing_share')})
         else:
             credit = self._verify(arm, update, 'group_credit', rows, self.cfg['group_credit']['verify_fraction'])
-            teacher_checks = self._verify(arm, update, 'teacher',
-                [r for r in rows if r['target'] is not None], self.cfg['dense_teacher']['verify_fraction'])
+            sampled_checks = self._verify(arm, update, 'teacher', rows,
+                                         self.cfg['dense_teacher']['verify_fraction'])
+            teacher_checks = [r for r in sampled_checks if r.get('label_correct') is not None]
             mask = [r['imitation_eligible'] for r in rows]
             self._write(f'components/u{update:03}_{arm}_dense_labels.json', dict(
                 arm=arm, update=update, synthetic=self.synthetic,
@@ -429,7 +458,7 @@ class Runtime:
                  dense_eligible_labels=sum(mask), dense_filtered_share=1-sum(mask)/len(rows),
                  dense_checked_labels=len(teacher_checks),
                  dense_checked_accuracy=fmean(r['label_correct'] for r in teacher_checks) if teacher_checks else None,
-                group_credit_checked=fmean(r['advantage'] for r in credit), credit_checked_rows=len(credit),
+                 group_credit_checked=fmean(r['advantage'] for r in credit) if credit else None, credit_checked_rows=len(credit),
                 merge_missing_share=fmean(v for ep in episodes_out for v in ep['missing']))
             # Each weighted start gets its matched all-base reference, same seed and
             # snapshot. The backend's expansion must retain that full restart window.
@@ -472,6 +501,7 @@ class Runtime:
             if dry:
                 continue
             gains, counters = [], {k: 0 for k in rc.ISOLATED_TEST['safety_counters']}
+            reference_safety = dict(counters)
             for i, (group, bs) in enumerate(expanded):
                 results = self._branches(bs, job['phase'], job['id']+f'_s{i}')
                 gain = synergy_metrics(results[-1]['J_veh_s'], results[:-1], group)
@@ -479,7 +509,10 @@ class Runtime:
                 for result in results:
                     for k in counters:
                         counters[k] += result['safety'][k]
-            records.append(dict(job, status='graded', metric=fmean(gains), **counters))
+                for k in counters:
+                    reference_safety[k] += len(results)*results[-1]['safety'][k]
+            records.append(dict(job, status='graded', metric=fmean(gains),
+                                reference_safety=reference_safety, **counters))
         receipt = dict(update=update, dry=dry, synthetic=self.synthetic, cells=len(jobs),
                        branches=branches, records=records, new_sim_s=0 if dry or self.synthetic else None)
         self._write(f'diagnostics/u{update:03}_{"dry" if dry else "graded"}.json', receipt)
@@ -581,6 +614,15 @@ class Runtime:
         """One coordinator owns the complete loop; every update has all-arm receipts."""
         monitors = []
         pending = []
+        # ONCE, before the first training episode of any arm. Verification is
+        # charged here too; subsequent updates reuse these exact examples.
+        for arm in rc.TRIGGER_ARMS:
+            comp = self.components[arm]
+            bank = self.backend.bank_examples(arm, 0, cfg=deepcopy(self.cfg))
+            count = self.cfg['smoke']['augmented_examples_per_arm'] if self.smoke else self.cfg['plan_augment']['examples_per_update']
+            self.augmented[arm] = comp['plan_augment'].augment(bank, count=count, arm=arm)
+            training_batch(bank, self.augmented[arm], arm=arm, encoder=comp['merge_features'])
+            self._verify(arm, 0, 'augment', self.augmented[arm], 0)
         with ThreadPoolExecutor(max_workers=2) as diagnostics_pool:
             for update in range(1, 2 if self.smoke else rc.UPDATES+1):
                 for future in pending:
@@ -608,7 +650,7 @@ class Runtime:
                         or sum(v for k, v in m['trigger_counts'].items() if k != 'none') == 0):
                     raise ValueError('REFUSED: smoke component produced no usable receipt')
             result = dict(status='CPU_PLANT_SMOKE_PASS' if self.synthetic else 'SMOKE_PASS',
-                synthetic=self.synthetic, target_host='cpuS', episodes=6, updates=1,
+                synthetic=self.synthetic, target_host='cpuV', episodes=6, updates=1,
                 monitors=[r['monitor_sha256'] for r in monitors],
                 isolated_dry_cells=sum(r['cells'] for r in dry), worker_peak=self.limiter.peak,
                 virtual_sim_s=sum(self.spend.values()) if self.synthetic else 0,
@@ -626,4 +668,8 @@ def run(cfg, registration, backend, *, smoke=False, legacy_run=None):
         if legacy_run is None:
             raise ValueError('legacy runtime callable required')
         return legacy_run(cfg)
-    return Runtime(cfg, registration, backend, smoke=smoke).run()
+    try:
+        return Runtime(cfg, registration, backend, smoke=smoke).run()
+    finally:
+        if hasattr(backend, 'close'):
+            backend.close()

@@ -8,7 +8,7 @@ from .accel_storage import write
 from .acceleration import Policy,Controller
 
 
-def episode(job):
+def episode(job, *, controller_hook=None, policy_loader=None):
     if job.get('native_reference'):
         import types
         from . import plant as original
@@ -22,7 +22,9 @@ def episode(job):
     exact.setup(job['runtime'],job['checkpoint']);install_seed_scope();guard(job['world'],job['role'])
     exact.guard=lambda w:guard(w,job['role'])
     v2v = bool(job.get('v2v')) or os.environ.get('C4NM_V2V') == '1'
-    if v2v:
+    if policy_loader is not None:
+        policy=policy_loader(job['weights'])
+    elif v2v:
         from .v2v_runtime import from_weights
         policy=from_weights(job['weights'], enabled=True)
     else:
@@ -53,6 +55,8 @@ def episode(job):
         guide=guide(job,generator) if not job['deterministic'] and not job.get('b_replay') else None,beta=job.get('beta',1.),
         replay=job.get('samples'),branch=job.get('branch'))
     steps=[];metrics={};prefixes={};horizon_totals={};requested=overrides=0
+    if controller_hook is not None:
+        controller_hook(controller, job, prefixes)
     if job.get('ls_collect'):
         from .ls_collection import install
         install(controller,job,prefixes,generator)

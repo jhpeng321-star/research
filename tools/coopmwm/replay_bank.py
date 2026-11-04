@@ -489,7 +489,7 @@ IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
 
 def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT_CLIP, sources=(),
                max_decisions=None, v2v=False, v2v_cfg=None, v2v_intent=None,
-               imitation_bank_filter='all_admitted', imitation_target_space='raw'):
+               imitation_bank_filter='all_admitted', imitation_target_space='raw', example_consumer=None):
     """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta.
 
     max_decisions (R fairness, MAIN): use at most this many admitted targets, oldest first;
@@ -617,6 +617,9 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
                     r['t0'], v2v_cfg, **({'intent': intent} if intent else {}))
                 v2v_counts = bank_v2v.merge_counts(v2v_counts, entry_counts)
             per_entry.append((entry_pairs, cooperative, gain))
+            if example_consumer is not None:
+                example_consumer(receipt=r, example=ex, plan=plan, pairs=entry_pairs,
+                                 trace=Path(branches_dir)/tape_vid/branch['branch']/'observable.jsonl.gz')
             row = dict(verification_id=r['verification_id'], grade_veh_s=r['grade_veh_s'], weight=w,
                        mean_replicated_advantage_veh_s=c['mean_replicated_advantage_veh_s'],
                        policy_version=r['_policy_version'], available_k=r.get('available_k', r['k']),
