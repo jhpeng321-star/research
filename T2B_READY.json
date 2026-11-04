@@ -1,33 +1,48 @@
 {
   "task": "T2B",
   "status": "READY_CPU",
-  "scope": "Dense DAgger teacher, calibrated T1B scoring adapter, matched-support random teacher, T2A CE targets, existing all8 verification hooks and CPU tests",
+  "fix_round": "REVIEW_T2B_r0",
+  "scope": "Dense DAgger teacher, calibrated T1B scoring adapter, matched-support random teacher, T2A CE targets and exact measured all8 verification hooks",
   "branch": "c4/dense-teacher",
   "worktree": "E:/agent-work/c4-dense-teacher",
   "base_branch": "c4/track-base",
   "base_commit": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
   "spec_read_first": "E:/agent-work/_sol/tracks_spec.md",
-  "resume": {
-    "initial_status": "One untracked tools/coopmwm/dense_teacher.py; no prior T2B receipt or test module found",
-    "preserved_work": "All 533 lines of the previous session's draft checkpointed before corrections",
-    "matching_dense_teacher_jobs_found": 0,
-    "jobs_or_remote_dispatches_started": 0
+  "independent_review": {
+    "file": "REVIEW_T2B_r0.md",
+    "reviewed_head": "d8ff99864b4242b746fc5b6729b715d5c8d35ead",
+    "original_verdict": "BLOCK",
+    "blockers_addressed": [
+      {
+        "id": 1,
+        "fix": "A sealed all8 record is not sufficient. Require finite paired candidate/reference measurements on seeds 1 and 2, graded candidate tapes, positive unit counts and completed required later-harm measurements. Preserve missing/failed per-seed status, clear stale success flags, expose incomplete counts and permit explicit fresh-decision recovery. Measured statistical rejections remain verified. None requires the complete measured paired support and reference on both seeds.",
+        "regressions": [
+          "test_failed_measurements_never_certify_move_or_none: selected branch fails on both seeds, selected branch fails only on seed 2, policy reference fails on seed 2",
+          "test_incomplete_seed2_record_cannot_certify_or_retain_stale_success: missing example, missing/nonfinite advantage, ungraded tape, missing later-harm measurement, missing reference total",
+          "test_measured_rejections_are_completed_verification",
+          "test_explicit_recovery_uses_new_receipt_and_preserves_failures"
+        ]
+      },
+      {
+        "id": 2,
+        "fix": "Freeze an independently supplied base-policy schedule and decision snapshot before dispatch. Build every member-second absolute command as base plus the concrete moves.offsets schedule. Bind the full execution metadata, profile, base profile, offset profile, member order, duration and snapshot identity to the submitted plan and sealed receipt. Nearest projection is never an equality certificate.",
+        "regressions": [
+          "test_same_nearest_move_different_executed_profile_is_rejected: least-squares projection over the registered parameter grid gives the same nearest move for distinct profiles; the altered profile is rejected",
+          "test_execution_metadata_tampering_rejected_even_with_valid_receipt_seal: base profile, offsets, execution metadata, duration, members and commitment truncation",
+          "test_execution_contract_full_offsets_base_identity_and_preparation: full schedule, independent base-plus-offset construction, snapshot mismatch, shortened schedule, frozen base/policy and missing preparation"
+        ]
+      }
+    ],
+    "independent_rereview": "Not run in this fix session"
   },
   "commits": [
-    {
-      "sha": "43cfda75",
-      "subject": "coopmwm dense teacher: preserve resumed T2B implementation"
-    },
-    {
-      "sha": "83375aa1",
-      "subject": "coopmwm dense teacher: DAgger labels, matched random support and all8 hooks"
-    },
-    {
-      "sha": "60ded47dc5de3ad2fd50d6776da6dd5f1995fd15",
-      "subject": "coopmwm dense teacher: align planner scoring and recorded trigger CE APIs"
-    }
+    {"sha": "43cfda75", "subject": "coopmwm dense teacher: preserve resumed T2B implementation"},
+    {"sha": "83375aa1", "subject": "coopmwm dense teacher: DAgger labels, matched random support and all8 hooks"},
+    {"sha": "60ded47dc5de3ad2fd50d6776da6dd5f1995fd15", "subject": "coopmwm dense teacher: align planner scoring and recorded trigger CE APIs"},
+    {"sha": "d8ff99864b4242b746fc5b6729b715d5c8d35ead", "subject": "coopmwm dense teacher: T2B readiness receipt and integration contract"},
+    {"sha": "fdbaa35aca519103b34905954616f38d2c5610a4", "subject": "coopmwm dense teacher: require measured seeds and exact execution binding"}
   ],
-  "receipt_commit": "The separate commit adding this receipt follows the implementation commits; see git log on c4/dense-teacher.",
+  "receipt_commit": "The separate commit refreshing this receipt follows fdbaa35a; see git log on c4/dense-teacher.",
   "owned_files": [
     "tools/coopmwm/dense_teacher.py",
     "tools/coopmwm/test_dense_teacher_cpu.py",
@@ -46,94 +61,83 @@
   },
   "api": {
     "module": "tools.coopmwm.dense_teacher",
-    "split_config": "split_config(cfg) removes master and dense_teacher_* keys in place; validates unknown/invalid options even while OFF; returns resolved config or None",
-    "plan_config": "plan_config(cfg=None) resolves a copy without mutating the caller",
+    "config": "split_config(cfg) removes and validates teacher keys in place; plan_config(cfg=None) resolves a copy; both return None while off. make_teacher refuses the off configuration.",
     "factory_B": "make_teacher(cfg, planner_kwargs={'rollout': cpu_rollout, 'calibration': fitted_calibration, 'config': optional_T1B_Config, 'calibrate': optional_T1C_function}) -> WMDenseTeacher",
     "factory_R": "make_teacher(cfg_with_dense_teacher_random_true) -> RandomTeacher; refuses WM scorer/planner arguments",
-    "planner_adapter": "planner_scorer(...) binds planner_online.score_moves(record, rng, rollout=..., calibration=..., config=..., calibrate=..., move_api=...). Its fixed candidate provider prevents re-sampling. It maps p_calibrated/expected_gain into the local p_better/gain seam without changing horizon or WM samples.",
-    "label": "teacher.label_state(episode, step, t_s, cav, obs_state, candidates=None) -> provenance-rich label. Pass the actual TriggerBatch.tables[i] as candidates for T2A training. None means draw from T1A for standalone labelling.",
-    "capture": "DAggerBuffer(cadence_s).add(episode, step, t_s, cav, obs_state, candidates=recorded_table) snapshots observable state/table at decision ticks; deduplicates identities. buffer.label(teacher) labels new records once and aggregates earlier labels.",
-    "CE": "trigger_targets(labels, batch) -> candidate indices in batch.context['members'] order; checks exact recorded support and masks. Feed directly into TriggerPolicy.imitation_loss(batch, targets).",
-    "target_encoding": "candidate_class 0 is none, i+1 selects candidates[i] including exact partners and parameters. TargetEncoder also exposes a fixed family/parameter-bucket action_class with explicit members as an auxiliary target. Use candidate_class, not action_class, for the concrete T2A head.",
-    "verification_selection": "select_for_verification(labels, fraction) uses a deterministic, order-independent hash Bernoulli subset over label identities",
-    "verification_driver": "verify_selected(labels, fraction, submit_first_seed, verifier, moves_mod=None); submit_first_seed(label) returns (sealed_receipt, candidate_index, plan), or (sealed_receipt, None, None) for none. Existing bound labels are never dispatched again.",
-    "verification_binding": "bind_receipt checks receipt seal, completed status, selected label, training episode/time identity, candidate plan digest, members and moves.from_plan projection; no unrelated plan can silently certify a label",
-    "all8": "All8Verifier(root, arm, runner_for, run_root, phase, workers=2, extra_seeds=0, health=None).flush() delegates to verify_perseed.confirm_pending_all8. consume(labels) verifies bound receipt/plan identities and attaches per-seed outcomes.",
-    "budget": "verification_quote(labels, k, duration_s=None, members=4, end_s=1200, extra_seeds=0) delegates to verify_perseed.quote_decision; default duration is maximum registered onset+hold; assumes all candidates admitted on both seeds, including solos/extra seeds",
-    "dataset": "build_dataset(labels, encoder) returns CE rows, observable inputs, exact supports, full resumable labels, counts and histogram. save_dataset/load_dataset use canonical JSON and a content seal."
+    "planner_adapter": "planner_scorer binds planner_online.score_moves with an exact recorded candidate provider. It maps p_calibrated/expected_gain into p_better/gain without changing horizon or WM samples.",
+    "capture_and_label": "DAggerBuffer(cadence_s).add(episode, step, t_s, cav, obs_state, candidates=recorded_table) snapshots learner decision states and tables; buffer.label(teacher) labels each once. teacher.label_state accepts the same recorded table directly.",
+    "CE": "trigger_targets(labels, batch) checks exact candidate support/masks and returns candidate indices in batch.context['members'] order for TriggerPolicy.imitation_loss. candidate_class 0 is none, i+1 selects candidates[i]; action_class is only the auxiliary family/parameter-bucket target.",
+    "verification_selection": "select_for_verification(labels, fraction) deterministically samples label ids with an order-independent Bernoulli hash",
+    "prepare_verification_plan": "prepare_verification_plan(label, snapshot, base_profile=None, *, moves_mod=None, plan_id=None) freezes the exact execution contract before dispatch and returns a normal all8 absolute-profile plan. base_profile must be an independently recorded finite member-by-second base-policy schedule covering the full move; it is never inferred from the submitted plan. Concrete T1A Move/offsets constructs the complete offset schedule. None returns None and binds the actual policy-continues comparator. Preparation cannot change a previously frozen base schedule or snapshot.",
+    "verification_binding": "bind_receipt(label, receipt, candidate_index, plan=None, moves_mod=None, *, replace_incomplete=False) validates receipt seal, training episode/time, exact prepared snapshot and execution, and candidate plan digest. Failed candidate branches are bound as incomplete, not completed measurements. moves_mod remains accepted for call compatibility; from_plan is not called.",
+    "verification_driver": "verify_selected(labels, fraction, submit_first_seed, verifier, moves_mod=None, *, recover_incomplete=None). Dispatch prepares the exact contract and returns (sealed_receipt, index, plan), with None/None for none. Bound labels are reconsumed to refresh measurement status. Recovery is explicit, budgeted by the caller, requires a fresh verification id and the identical frozen execution/base snapshot, and archives previous bindings/failures in verification_history. Automatic redispatch is disabled.",
+    "all8": "All8Verifier(...).flush delegates to existing confirm_pending_all8. consume attaches verification_seed_status and only sets verified after both required seeds are measured. Its summary separates sealed, verified, incomplete, missing and missing_seed_measurements. A missing/failed all8 example is incomplete, not a statistical rejection.",
+    "budget": "verification_quote delegates to existing quote_decision arithmetic, using the maximum registered onset-plus-hold when duration is omitted and assuming all candidates admitted for an upper bound, including solos/extra seeds",
+    "dataset": "build_dataset preserves full labels, per-seed failures, execution contracts and recovery history; counts includes selected, verified, incomplete and replicated. save_dataset/load_dataset use canonical JSON and a content seal. Legacy verification bindings without exact execution/measurement contracts are refused."
   },
   "semantics": {
-    "B_selection": "Require calibrated p_better >= p_star and strictly positive expected gain; maximize gain among eligible candidates; stable candidate-order ties; otherwise none",
-    "lookahead": "Concrete T1B adapter retains the registered full 600-second look-ahead and paired WM sample count; move duration never screens or shortens this forecast",
-    "R_fairness": "Same T1A candidate generator, budget, registered parameter windows, visible-member checks and optional recorded table as B; independent choice RNG leaves the candidate RNG stream unchanged. R draws uniformly from candidate support plus none, without WM scoring. The candidate proposal distribution, not the WM-selected label marginal, is matched.",
-    "observables": "Allowlisted sensing/V2V rows, observable length, local group/commands/residuals/history, actor-only policy state and existing commitments. Hidden row extras and unknown top-level fields are stripped before capture, candidate generation and scoring. T2C must supply the acting CAV's actual local/t-1 observable view; T1B also validates sensing range and belief completeness.",
-    "DAgger": "Capture the current learner's own rollout decision states and actual candidate tables; do not substitute bank/expert state trajectories",
-    "SUMO_fraction": "The configured fraction is a deterministic Bernoulli sampling rate, not an exact rounded count per small batch; selected and measured counts are separately visible in receipts",
-    "verified_meaning": "verified means the bound decision has a measured sealed all8 record, including rejected cases. verified_replicated requires admission on both seeds 1/2. The teacher target is retained and realised admission/cooperation/flip flags are recorded; verification is not silently represented as success.",
-    "none_verification": "None binds to the measured policy-continues comparator; no fabricated candidate admission is reported",
-    "all8_path": "Existing both-CRN candidate+reference, own-seed extended later-harm, solo/group cooperation and extra-seed machinery; existing charge-before-physics and health hooks are inherited unchanged"
+    "B_selection": "Calibrated p_better >= p_star and positive expected gain; maximize gain with stable candidate-order ties; otherwise none",
+    "lookahead": "The concrete T1B adapter retains its full registered 600-second look-ahead and paired WM sample count",
+    "R_fairness": "Same candidate generator, budget, windows, observable-member checks and recorded-table handling as B; separate random-choice RNG preserves the matched proposal stream; R labels uniformly over support plus none without WM scoring",
+    "observables": "Allowlisted sensing/V2V rows and actor-only belief/history inputs. T2C supplies actual local timestamp-aligned visibility; hidden row extras and unknown top-level fields are stripped.",
+    "verified": "Completed measured paired outcomes on both required seeds, including statistical and measured safety/later-harm rejections; distinct from admitted or cooperative",
+    "none": "Requires complete paired support and the policy comparator on both seeds; never uses an empty candidate-match list as proof of completion",
+    "execution": "The current all8 executor consumes absolute profiles. The contract certifies the supplied base schedule plus exact move offsets before the existing feasibility/ownership clamp. The caller supplies the actual base-policy schedule from the same snapshot; no unrecorded future feedback trajectory is inferred or certified.",
+    "recovery": "Existing all8 seals and receipts remain immutable. A missing or failed measurement stays incomplete until explicitly resubmitted under a fresh decision id; old failures remain in label history."
   },
-  "T2C_integration": [
-    "Resolve teacher config per arm; B uses WMDenseTeacher with explicit CPU rollout and fitted calibration; R uses RandomTeacher with the identical candidate budget/fraction and no WM arguments.",
-    "At registered learner decision ticks, capture local belief plus each CAV's recorded T2A candidate table through DAggerBuffer.add, then aggregate labels.",
-    "For each selected state, submit_first_seed must use the existing bank runner to persist the decision/snapshot and run its ordinary ledger/health guarded candidate verification. For none, still verify candidate support against policy-continues. Keep dispatch serialized with the bank supervisor.",
-    "Use verify_selected/All8Verifier to finish and consume existing all8 confirmations, with the same extra_seeds and hooks for B/R. Reuse persisted verification bindings after restart instead of starting new jobs.",
-    "Use trigger_targets on the corresponding original TriggerBatch and apply TriggerPolicy.imitation_loss; save build_dataset output as the dense-label component receipt, including counts.selected/counts.verified/counts.replicated.",
-    "T2C owns live episode wiring, actual CPU WM/calibration objects, observable belief construction, first-seed plan construction/persistence and the owner-approved end-to-end launch."
-  ],
   "tests": {
     "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
-    "environment_for_final_dense_and_regression_checks": {
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "-1",
       "OMP_NUM_THREADS": "1",
-      "MKL_NUM_THREADS": "1"
+      "MKL_NUM_THREADS": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+      "TEMP_and_TMP": "E:/agent-work/c4-dense-teacher/.t2b_fix_dense"
     },
     "suites": [
       {
-        "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_dense_teacher_cpu.py",
-        "result": "51 passed in 10.01s",
-        "coverage": "Default-off/config validation, cadence, frozen observation snapshots, deduplication/aggregation, calibrated gate/gain/ties, hidden-field exclusion, visible CAV-only membership, multi-state B/R support equality, random reproducibility, exact recorded-table targets/mask checks, both parameter-name forms, stable CE, dataset seal, budget quote, concrete T1B signature contract, and real all8 deterministic CPU plants for both B and R including no redispatch and seed-2-only wins"
+        "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_dense_teacher_cpu.py tools/coopmwm/test_verify_perseed_cpu.py -p no:cacheprovider --basetemp=.t2b_fix_core",
+        "result": "91 passed in 60.29s",
+        "breakdown": "70 dense-teacher cases, including 19 new regression cases; 21 existing all8 cases"
       },
       {
-        "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_verify_perseed_cpu.py",
-        "result": "21 passed in 56.12s"
+        "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_rerun_cpus_cpu.py tools/coopmwm/test_variety_cpu.py -k \"not test_staging_manifest_refuses_forbidden_and_missing_inputs\" -p no:cacheprovider --basetemp=.t2b_fix_regression",
+        "result": "44 passed, 1 skipped, 1 deselected in 68.38s",
+        "skip": "Existing Windows symlink privilege case; preceding hard-link checks ran",
+        "deselection": "The excluded case creates and opens a synthetic pathname prohibited by the user"
       },
       {
-        "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_rerun_cpus_cpu.py tools/coopmwm/test_variety_cpu.py --junitxml=E:/Temp/opencode/T2B_regression.xml",
-        "result": "45 passed, 1 skipped in 72.63s",
-        "skip": "Existing Windows symlink privilege skip; hard-link case covered"
+        "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_dense_teacher_cpu.py -p no:cacheprovider --basetemp=.t2b_fix_dense_final",
+        "result": "70 passed in 20.75s after adding frozen-base/snapshot assertions; repeated cases are not double-counted"
       }
     ],
-    "summary": "117 passed, 1 existing platform skip across the three suites",
-    "peer_API_smokes": [
-      "PASS: loaded committed c4/moves and c4/planner-online sources in memory through git show; actual T1A generator and T1B scoring with a deterministic CPU rollout/calibration callback produced 8 moves plus none, 8 paired samples and full 600-second horizon through the T2B adapter",
-      "PASS: loaded committed c4/trigger-policy and its CPU fixture in memory through git show; actual T2A recorded tables -> T2B labels/targets [2,1] -> actual T2A imitation_loss.backward produced nonzero trigger-head gradients"
-    ],
-    "peer_refs_observed_after_smokes": {
-      "c4/moves": "b12886051456846f0789886b259078d53c92bbd2",
-      "c4/planner-online": "49960a2ed81088a75821116b89dec55c9ab9c3a4",
-      "c4/trigger-policy": "09b19263168bef7d7a5b80fe72725354836b0afa"
-    },
-    "diff_check": "git diff --check passed before implementation commits"
+    "summary": "135 distinct passed, 0 failed, 1 existing platform skip, 1 intentional deselection",
+    "warnings": "One benign Unknown config option: cache_dir warning per invocation because the cache provider was disabled",
+    "real_T1A_smoke": "PASS: loaded only tools/coopmwm/moves.py from committed df383ab7fc5508faea3d49e8709ca559d0f69326 in memory through git show. Actual Move/offsets prepared the contract; real from_plan returned identical nearest projections for distinct profiles; exact binding rejected the altered profile. No simulator or files written.",
+    "diff_check": "git diff --check passed before the implementation commit",
+    "temporary_outputs": "Only four named CPU-test directories inside this worktree were created; all were removed after testing"
   },
   "open_issues": [
     {
       "owner": "T1A/T2A integration",
-      "issue": "Observed T1A Move exposes onset/hold, while the current concrete T2A validator/descriptors access onset_s/hold_s. T2B accepts either and its CE backward smoke uses T2A's existing local move stub. Direct real-T1A-to-T2A.decide sampling still needs an upstream alias/alignment; the full three-component production chain has not been certified here."
+      "issue": "Previously disclosed parameter-name alignment remains outside this task: observed T1A Move exposes onset/hold, while the reviewed T2A validator/descriptors use onset_s/hold_s. T2B accepts both forms. The full production training chain was not certified here."
     },
     {
       "owner": "T2C",
-      "issue": "Live training and SUMO verification remain owner-approved runtime integration work. This branch implements/test-verifies hooks and target production; no live training or SUMO has been run."
+      "issue": "Live wiring must supply actual local observable learner states, recorded T2A tables, CPU WM/calibration objects, and independently recorded base-policy schedules from the exact verification snapshots. Submit/recovery callbacks persist decisions and use existing ledger/health guarded runners. Live training and simulator execution remain runtime integration work."
     }
   ],
   "compliance": {
     "CPU_only": true,
     "SUMO_processes_started": 0,
-    "remote_or_GPU_jobs_started": 0,
-    "unrelated_jobs_modified_or_duplicated": false,
+    "ssh_or_remote_jobs_started": 0,
+    "GPU_jobs_started": 0,
     "protected_or_truth_data_opened": false,
-    "new_behavioral_thresholds": false,
     "shared_runtime_files_changed": false,
     "other_worktrees_changed": false,
-    "destructive_git_or_push": false
+    "new_behavioral_thresholds": false,
+    "destructive_git_or_push": false,
+    "preexisting_review_and_blocked_receipt_preserved": true
   }
 }
