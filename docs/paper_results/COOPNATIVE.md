@@ -1,4 +1,8 @@
-# S-COOPNATIVE — DESIGN READY; awaiting MAIN budget approval
+# S-COOPNATIVE — historical DESIGN READY; superseded before training
+
+> Recovery 2026-11-04: current registry still records the later MAIN supersession;
+> native-start requires explicit reactivation, fresh seeds and budget reconciliation.
+> [Current recovery receipt](coopnative/RESUME_20261104_NATIVE_RECHECK.md). No new simulation launched.
 
 > Recovery 2026-11-02: this heading and quote describe the historical native-start
 > build. MAIN superseded it at 2026-11-01 16:22 with S-COOPMWM; the proposed TRAIN
