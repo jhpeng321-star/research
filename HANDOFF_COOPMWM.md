@@ -1,5 +1,24 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 17:02 +08 — MONITOR ONLY; A22/B12/R11; migration not yet live
+- Full1140-linebrief/log/status/currentreceipts+canonicalregistrationthrough7274
+  READ; dirtyworkpreserved. MAIN16:03/16:25 givesrecovery+migrationtoexisting
+  Claudeoperator. DoNOTdispatch/gate/clearSTOP/writecoop3,warm1orledgeroneitherhost.
+- ReadonlyproofA22owner2049830LIVE/B12sealed/R11; oldr3ownersabsent.
+  Existingr4waiter3483043/start79591723LIVE; neverstartcompetitor.
+- cpuQ6054412288bytes/5.64GiB:388038656below6GiBfloor/924909568belowr4's6.5GiB.
+  BothmoversLIVE/statuszeroeligible; noourscleanup/signals/guardchange.
+- MountPREP_STATUS: sixlegacyconfirmtreescopied+SHAverified11026files/
+  4511278304bytes/0mismatch. PREPARATIONonly/notmountorcpuSlivetraining.
+  Canonicalmigrationledger-routingblock+mountpending; awaitMAINcpuSliveaddendum.
+- Monitor4still06e88ecd-bound/currentprepared53ae93af; operatorhandoverpending.
+  B12lostPPO/imitationNULL/disclosed; healthflagisNOTmechanicsverification.
+- u8interimCOMPLETE288/288/outcomesclosed; allcompletedrestores/archives/physics
+  adopted/neverrepeat. Originalr4LOG.jsonlpathabsent; PIDlivenessindependent.
+- Proofcoopmwm/RESUME_MONITOR_20261104_1702.md+CONTINUATION_1440_1793782821766205500+
+  RESUME_LIVE_0815_1793782863058471700+MIGRATION_MONITOR_1655_1793782944720033400.
+  NooursSUMO/inference/remotewrites/ledgeraccess/newdispatch/deletion.
+
 ## CURRENT Nov4 16:46 +08 — interim archive COMPLETE; A22/B12/R11; r4 waiting on disk
 - COMPLETE+INDEPENDENTLYVERIFIED:288tapes/531435666bytes/eightSHA-certified
   batches preservedGPUA. Worker3436981exitednormally/NEVERredispatch.

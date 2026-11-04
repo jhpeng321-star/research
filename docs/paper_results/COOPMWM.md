@@ -1,5 +1,27 @@
 # S-COOPMWM — live checks
 
+### Nov4 17:02 UTC+8 — read-only adoption; A22/B12/R11; cpuS migration pending
+- The full1,140-line brief and canonical registration through7,274 were read.
+  MAIN16:03/16:25 leaves recovery and migration with the existing launch operator;
+  this session is monitor/report only. Completed qualification, restoration,
+  diagnostics and archives are adopted without repeat dispatches.
+- **A22/B12/R11** remain the latest sealed updates. A owner2049830 and the
+  existing operator r4 waiter3483043 are live; B/R training is not running.
+  B12's missing in-memory PPO/imitation fields remain null/disclosed, not a
+  mechanics PASS inferred from monitor health.
+- cpuQfree**6,054,412,288bytes (~5.64GiB)** remains388,038,656bytes below6GiB
+  and924,909,568bytes below the r4waiter's6.5GiB threshold. Both archive workers
+  are live; latest status reports zero eligible files. Resource guards are kept.
+- Six legacy confirmation trees are copied and SHA-verified on cpuS:
+  **11,026files/4,511,278,304bytes/zero mismatches**. This is preparation only;
+  no live cpuS training or completed mount/migration is claimed. Canonical
+  ledger-routing/mount blockers remain with the operator.
+- Monitor4's06e88ecd binding differs from prepared runtime53ae93af; handover
+  remains pending. u8 interim remains complete288/288 with outcomes closed.
+- Evidence:`coopmwm/RESUME_MONITOR_20261104_1702.md` and its three linked raw
+  monitoring receipts. Zero new SUMO/inference/remote writes/signals/moves or
+  deletions; no ledger access/change or duplicate recovery.
+
 ### Nov4 16:46 UTC+8 — archive COMPLETE+verified; A22/B12/R11; disk still blocks r4
 - **Completed and independently verified:**288V2V-u8observable tapes,
   531,435,666bytes, eight SHA-certified batches preserved on gpuA. Fresh remote
