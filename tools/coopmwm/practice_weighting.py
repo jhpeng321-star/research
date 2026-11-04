@@ -65,7 +65,11 @@ def verify_child(root, arm, row, snapshot, prelaunch):
             or not 0 < prelaunch['allocation_sim_s'] <= 200000
             or not isinstance(prelaunch.get('phase'), str) or not prelaunch['phase']):
         raise ValueError('augmented child prelaunch budget provenance required')
-    charges = [json.loads(line) for line in (Path(root)/'CHARGES.jsonl').read_text().splitlines()]
+    ledger_root = Path(prelaunch.get('ledger_root', root)).resolve()
+    artifact_root = Path(root).resolve()
+    if ledger_root != artifact_root and artifact_root.parent != ledger_root:
+        raise ValueError('prelaunch ledger must own these smoke artifacts')
+    charges = [json.loads(line) for line in (ledger_root/'CHARGES.jsonl').read_text().splitlines()]
     charges = [c for c in charges if c.get('phase') == prelaunch['phase']]
     if (any(type(c.get('sim_s')) is not int or c['sim_s'] < 0 for c in charges)
             or len({c['id'] for c in charges}) != len(charges)

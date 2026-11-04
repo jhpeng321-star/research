@@ -503,6 +503,8 @@ def _run_wave(root, backend, jobs, prepared, phase):
     json.dumps(accounting, allow_nan=False)
     _write(_path(root, f'track2_diagnostics/accounting/{prepared[0][0]["id"]}.json'),
            _seal(accounting, 'accounting_sha256'))
+    if hasattr(backend, 'prepare_branches'):
+        backend.prepare_branches(prepared)
     from .policy_synergy import metrics as synergy_metrics
     records = []
     for job, expanded in prepared:

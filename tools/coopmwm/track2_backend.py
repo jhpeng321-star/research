@@ -423,7 +423,9 @@ def record_outcomes(policy, event, post_rows):
             for p, r in packet['partner_reports'].items()}, partner_ids=partners)
         neighbourhoods[vid] = outcome['neighbour_ids']
     event['reward_observations'] = packets
-    event['sample']['track2']['outcome_neighbourhoods'] = neighbourhoods
+    telemetry = event['sample'].setdefault('track2', dict(schema=SCHEMA,
+        arm=policy.arm, time_s=event['time_s'], reward_neighbourhoods=neighbourhoods))
+    telemetry['outcome_neighbourhoods'] = neighbourhoods
 
 
 @contextmanager
@@ -467,7 +469,10 @@ def _reserve(cfg, jobs, phase):
         raise ValueError('invalid phase allocation')
     if sum(budget['phases'].values()) > total:
         raise ValueError('phase allocations exceed total')
-    root = _path(cfg['run_root'])
+    root = _path(cfg.get('accounting_root', cfg['run_root']))
+    artifacts = _path(cfg['run_root']).resolve()
+    if artifacts != root.resolve() and artifacts.parent != root.resolve():
+        raise ValueError('accounting parent must own the isolated smoke artifacts')
     reserve = types.FunctionType(storage.reserve.__code__, dict(storage.reserve.__globals__,
         CAP=total-prior, CAPS=budget['phases']))
     with (root/'ACCOUNTING.claim').open('a') as lock:
@@ -478,7 +483,10 @@ def _reserve(cfg, jobs, phase):
 def _wave(cfg, policies, worlds, ident, extras, *, used_seeds=None):
     from . import accel_runner
     from .v2v_runner import patched
-    with patched(accel_runner, dict(reserve=lambda r, jobs, phase: _reserve(cfg, jobs, phase))):
+    from .storage import ledger
+    accounting_root = cfg.get('accounting_root', cfg['run_root'])
+    with patched(accel_runner, dict(reserve=lambda r, jobs, phase: _reserve(cfg, jobs, phase),
+            ledger=lambda r: ledger(accounting_root))):
         return accel_runner.wave(_path(cfg['run_root']), cfg, policies, worlds, 'train', ident,
             cfg.get('phase_map', {}).get('train', 'track2_train'), False, extras, used_seeds=used_seeds)
 
@@ -842,7 +850,8 @@ class ArmRuntime:
         if target.exists() or (self.arm != 'A' and sidecar.exists()):
             raise ValueError('checkpoint already exists')
         from .storage import ledger
-        charged = int(self.cfg.get('prior_charged_sim_s', 960))+sum(r['sim_s'] for r in ledger(root))
+        charged = int(self.cfg.get('prior_charged_sim_s', 960))+sum(r['sim_s'] for r in
+            ledger(self.cfg.get('accounting_root', root)))
         save(target, self.base, self.optimizer, self.generator, self.update, charged)
         if self.arm != 'A':
             state = dict(arm=self.arm, update=self.update, worker=self.policy.worker_state(),
