@@ -204,9 +204,11 @@ class OnlinePlanner:
 
     Attach via ``v2v_runtime.controller_class(Controller)(..., planner_online=p)``.
     The dedicated move RNG must be separate from the base actor's torch RNG.
-    Free CAVs form disjoint ego-local groups (up to four, nearest first). A fired
-    move is committed until its last nonzero offset; busy members are not queried
-    again mid-move. Other locally visible commitments are shared by both WM arms.
+    CAVs form disjoint ego-local groups (up to four, nearest first). Replanning
+    replaces ongoing moves every cadence; a rejected/unavailable decision returns
+    that group to the base policy immediately. Between decisions, offsets run to
+    their own end. Every forecast still covers the full 600 seconds, independent
+    of cadence. Earlier groups' new commitments are shared by both WM arms.
     """
     def __init__(self, *, rollout, calibration, rng, accel_bounds, config=None,
                  calibrate=None, move_api=None, world_id=None):
@@ -261,8 +263,10 @@ class OnlinePlanner:
                        and set(a['members']) <= {r['vid'] for r in local[a['ego_id']]}]
         decisions = []
         if now % self.config.cadence_s == 0:
-            busy = {v for a in self.active for v in a['members']}
-            assigned = set(busy)
+            # Receding-horizon control: no stale high-confidence decision survives
+            # a failed gate at the next cadence, even for a long-hold move.
+            self.active = []
+            assigned = set()
             state = None
             for ego in sorted(cavs):
                 if ego in assigned:

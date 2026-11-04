@@ -286,11 +286,22 @@ def test_runtime_cadence_commitment_release_and_base_action_preservation(monkeyp
     assert all(x[2:] == (8, 600) for x in calls)
 
 
-def test_registered_custom_cadence_and_no_midcommitment_duplicate_query(monkeypatch):
+def test_registered_custom_cadence_replans_long_moves_without_shortening_forecast(monkeypatch):
     c, _, calls, _ = runtime(monkeypatch, config=po.Config(cadence_s=10), moves=GroupMoves(hold=25))
     for now in (0, 10, 20, 25, 30):
         c.apply(record()['rows'], record()['commands'], now)
-    assert [x[0]['time_s'] for x in calls] == [0, 30]
+    assert [x[0]['time_s'] for x in calls] == [0, 10, 20, 30]
+    assert all(x[3] == 600 for x in calls)
+
+
+def test_next_cadence_failed_gate_cancels_ongoing_move_immediately(monkeypatch):
+    c, planner, calls, _ = runtime(monkeypatch, moves=GroupMoves(hold=300))
+    assert c.apply(record()['rows'], record()['commands'], 60)
+    assert c.apply(record()['rows'], record()['commands'], 119)
+    install_calibration(monkeypatch, .79)
+    assert c.apply(record()['rows'], record()['commands'], 120) == {}
+    assert len(calls) == 2 and not planner.active
+    assert c.events[-1]['sample']['planner_online']['decisions'][0]['reason'] == 'base_policy'
 
 
 def test_best_move_residual_clamp_and_return_to_current_policy(monkeypatch):
@@ -340,6 +351,29 @@ def test_runtime_default_off_is_byte_identical_and_does_not_load_planner_depende
     assert not hasattr(a, 'online_planner') and not hasattr(b, 'online_planner')
     assert 'planner_online' not in a.events[-1]['sample']
     assert torch.equal(a.generator.get_state(), b.generator.get_state())
+
+
+def test_default_off_event_bytes_and_rng_match_track_base_source():
+    import json
+    from pathlib import Path
+    import subprocess
+    from .acceleration import Controller
+    from .v2v_runtime import Policy, controller_class
+    source = subprocess.run(['git', 'show', '13f184b5:tools/coopmwm/v2v_runtime.py'],
+                            cwd=Path(__file__).resolve().parents[2], check=True,
+                            capture_output=True, text=True).stdout
+    namespace = {'__name__': po.__package__+'._track_base_v2v_runtime', '__package__': po.__package__}
+    exec(compile(source, '<track-base-v2v-runtime>', 'exec'), namespace)
+    for deterministic in (False, True):
+        policy = Policy()
+        current = controller_class(Controller)(policy, torch.Generator().manual_seed(5), deterministic)
+        baseline = namespace['controller_class'](Controller)(copy.deepcopy(policy),
+                                                             torch.Generator().manual_seed(5), deterministic)
+        for now in (61, 62):
+            assert current.apply(record()['rows'], record()['commands'], now) == baseline.apply(
+                record()['rows'], record()['commands'], now)
+        assert json.dumps(current.events, sort_keys=True) == json.dumps(baseline.events, sort_keys=True)
+        assert torch.equal(current.generator.get_state(), baseline.generator.get_state())
 
 
 @pytest.mark.parametrize('conflict', ['guide', 'replay', 'branch'])
