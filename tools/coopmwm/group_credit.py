@@ -84,6 +84,12 @@ def _members(members):
     return members
 
 
+def _full_horizon(horizon_s):
+    if type(horizon_s) is not int or horizon_s <= 0:
+        raise ValueError('resolved full positive integer horizon_s required')
+    return horizon_s
+
+
 def wm_estimate(scorer, belief, members, move, rng, cfg=None, draw_id=None,
                 *, horizon_s=None):
     """Score base, joint, solos and member reversions on paired WM draws.
@@ -94,20 +100,26 @@ def wm_estimate(scorer, belief, members, move, rng, cfg=None, draw_id=None,
     everyone in the group EXCEPT member. Scores must measure the SAME full group
     outcome, never just the active subset. Input and RNG copies isolate branches.
 
-    The scorer owns the full registered look-ahead. If supplied, horizon_s is
-    forwarded unchanged on EVERY branch; it is never clamped to the move's hold.
+    Bind the full registered look-ahead with horizon_s or the explicit scorer
+    contract scorer.horizon_s (a positive integer). If both are present they must
+    agree. The resolved horizon is forwarded unchanged on EVERY branch and stored
+    in the estimate; it is never clamped to the move's hold. The scorer must honor
+    this window. A detached move snapshot binds later verification to this score.
     No module-level WM state, global simulator state or truth inputs are used.
     """
     cfg = credit_config(cfg)
     assert_observable(belief)
     assert_observable(move)
+    move = copy.deepcopy(move)
     members = _members(members)
     move_members = move.get('members') if isinstance(move, Mapping) \
         else getattr(move, 'members', None)
     if move_members is not None and list(move_members) != members:
         raise ValueError('move members/order must match counterfactual group')
-    if horizon_s is not None and (type(horizon_s) is not int or horizon_s <= 0):
-        raise ValueError('full positive integer horizon_s required')
+    scorer_horizon = getattr(scorer, 'horizon_s', None)
+    horizon_s = _full_horizon(scorer_horizon if horizon_s is None else horizon_s)
+    if scorer_horizon is not None and _full_horizon(scorer_horizon) != horizon_s:
+        raise ValueError('horizon_s must match the scorer full registered look-ahead')
     interventions = [dict(kind='base', active_members=[]),
                      dict(kind='joint', active_members=members, move=move)]
     interventions += [dict(kind='alone', member=m, active_members=[m], move=move)
@@ -160,6 +172,7 @@ def verify_requests(estimates, rng, cfg=None):
     cfg = credit_config(cfg)
     out = []
     for e in estimates:
+        horizon = _full_horizon(e.get('horizon_s'))
         if not bool(rng.random() < cfg['sumo_verify_fraction']):
             continue
         assert_observable(e['move'])
@@ -167,7 +180,7 @@ def verify_requests(estimates, rng, cfg=None):
                          verify_mode=cfg['verify_mode'], isolated=cfg['isolated'],
                          draw_id=e['draw_id'], members=_members(e['members']),
                          move=copy.deepcopy(e['move']), wm=copy.deepcopy(e['credit']),
-                         horizon_s=e['horizon_s'], sample_seeds=list(e['sample_seeds']),
+                         horizon_s=horizon, sample_seeds=list(e['sample_seeds']),
                          background='base_mappo',
                          machinery=dict(all8='verify_perseed.confirm_all8',
                                         isolated='policy_synergy.specs_for')))
@@ -186,15 +199,16 @@ def verification_candidates(request, plan, snapshot):
     verification, so rejected/harmful moves can be measured too. Use a frozen base
     MAPPO snapshot with no active cooperation interventions in the background.
     The plan's full duration/profile is preserved, not shortened for solo masks.
-    Existing branch specs are built without execution, and a truncated/shorter
-    verification horizon or any mismatch with the WM window is refused before a
-    caller can dispatch it.
+    Existing branch specs are built without execution. Every branch must cover
+    the resolved full WM window, including near episode end. Incompatible plan
+    durations/windows are refused; neither the plan nor the WM horizon is changed.
     """
     if request.get('kind') != 'group_credit_verification' \
             or request.get('verify_mode') != 'all8_both_seeds' \
             or request.get('isolated') is not True \
             or request.get('background') != 'base_mappo':
         raise ValueError('isolated all8 group credit request required')
+    horizon = _full_horizon(request.get('horizon_s'))
     members = _members(request['members'])
     assert_observable(plan)
     if list(plan['members']) != members:
@@ -227,10 +241,9 @@ def verification_candidates(request, plan, snapshot):
     branches['reverted'] = [subset([x for x in members if x != m]) for m in members]
     from . import sumo_verify as sv
     specs = sv.build_branches(snapshot, candidates)
-    horizon = request.get('horizon_s')
     window = specs[0]['window']
-    if horizon is not None and (type(horizon) is not int or horizon <= 0
-                               or window['end_s'] - window['start_s'] != horizon):
+    if any(s['window'] != window or s['window']['start_s'] != snapshot['t0']
+           or s['window']['end_s'] - s['window']['start_s'] != horizon for s in specs):
         raise ValueError('existing all8 window must match full WM look-ahead')
     return dict(candidates=candidates, branch_indices=branches, specs=specs)
 

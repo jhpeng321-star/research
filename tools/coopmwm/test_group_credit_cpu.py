@@ -25,6 +25,7 @@ def stub(values, calls=None):
         if calls is not None:
             calls.append(key)
         return values[key][i % len(values[key])]
+    scorer.horizon_s = 720
     return scorer
 
 
@@ -33,6 +34,7 @@ def jitter_stub(base_values, spread=10):
     def scorer(belief, itv, rng):
         return base_values[(itv['kind'], itv.get('member'))] \
             + float(rng.integers(0, spread))
+    scorer.horizon_s = 720
     return scorer
 
 
@@ -118,7 +120,9 @@ class Estimate(unittest.TestCase):
         self.assertAlmostEqual(e['credit']['delay_delta'], -10.)
         self.assertAlmostEqual(e['credit']['improvement'], 10.)
         self.assertEqual(e['members'], list(MEMBERS))
-        self.assertIs(e['move'], MOVE)
+        self.assertEqual(e['move'], MOVE)
+        self.assertIsNot(e['move'], MOVE)
+        self.assertIsNot(e['move']['members'], MOVE['members'])
 
     def test_same_decomposition_as_isolated_synergy_algebra(self):
         e = gc.wm_estimate(stub(good_move_values()), BELIEF, MEMBERS, MOVE,
@@ -190,7 +194,7 @@ class Estimate(unittest.TestCase):
             return {0: 100., 1: 90., 2: 70., 3: 50.}[len(itv['active_members'])]
 
         e = gc.wm_estimate(scorer, BELIEF, members, dict(MOVE, members=members),
-                           np.random.default_rng(0))
+                           np.random.default_rng(0), horizon_s=720)
         self.assertEqual(e['credit']['D_i'], [20.] * 3)
         self.assertEqual(e['credit']['C_G'], -10.)
         self.assertEqual(e['isolated']['delta_only_member_new_veh_s'],
@@ -230,12 +234,83 @@ class Estimate(unittest.TestCase):
                 gc.wm_estimate(scorer, belief, MEMBERS, move, np.random.default_rng(0),
                                horizon_s=h)
 
+    def test_omitted_horizon_uses_scorer_contract_and_refuses_short_exact_window(self):
+        from .test_sumo_verify_cpu import plan, snapshot
+        horizons = []
+
+        def scorer(b, itv, rng):
+            horizons.append(itv['horizon_s'])
+            return 50. - len(itv['active_members'])
+
+        scorer.horizon_s = 600
+        e = gc.wm_estimate(scorer, BELIEF, MEMBERS, MOVE, np.random.default_rng(0))
+        self.assertEqual(e['horizon_s'], 600)
+        self.assertEqual(horizons, [600] * 24)
+        req = gc.verify_requests([e], np.random.default_rng(0),
+                                 cfg=dict(sumo_verify_fraction=1.))[0]
+        self.assertEqual(req['horizon_s'], 600)
+        with self.assertRaisesRegex(ValueError, 'match full WM look-ahead'):
+            gc.verification_candidates(req, plan('p', MEMBERS, duration=120), snapshot())
+        bundle = gc.verification_candidates(req, plan('p', MEMBERS, duration=480), snapshot())
+        self.assertTrue(all(s['window']['end_s'] - s['window']['start_s'] == 600
+                            for s in bundle['specs']))
+
+    def test_unresolved_or_conflicting_scorer_horizon_refused_before_scoring(self):
+        calls = []
+
+        def scorer(b, itv, rng):
+            calls.append(itv)
+            return 0.
+
+        for h in (None, 0, -1, True, 600., float('nan'), float('inf'), '600'):
+            scorer.horizon_s = h
+            with self.assertRaisesRegex(ValueError, 'horizon_s required'):
+                gc.wm_estimate(scorer, BELIEF, MEMBERS, MOVE, np.random.default_rng(0))
+        del scorer.horizon_s
+        with self.assertRaisesRegex(ValueError, 'horizon_s required'):
+            gc.wm_estimate(scorer, BELIEF, MEMBERS, MOVE, np.random.default_rng(0))
+        scorer.horizon_s = 600
+        with self.assertRaisesRegex(ValueError, 'match the scorer'):
+            gc.wm_estimate(scorer, BELIEF, MEMBERS, MOVE, np.random.default_rng(0),
+                           horizon_s=240)
+        self.assertEqual(calls, [])
+
+    def test_nested_move_snapshot_retains_scored_intervention_and_credit(self):
+        move = copy.deepcopy(MOVE)
+        move['params'] = dict(depths=[.3, .4], schedule=dict(onset=[0, 1]))
+        original = copy.deepcopy(move)
+        seen = []
+
+        def scorer(b, itv, rng):
+            if 'move' in itv:
+                seen.append(copy.deepcopy(itv['move']))
+            return 50. - (itv.get('move', {}).get('params', {}).get('depths', [0])[0]
+                          * len(itv['active_members']))
+
+        e = gc.wm_estimate(scorer, BELIEF, MEMBERS, move, np.random.default_rng(0),
+                           horizon_s=600)
+        credit = copy.deepcopy(e['credit'])
+        move['depth'] = 1.
+        move['members'].reverse()
+        move['params']['depths'][0] = 1.
+        move['params']['schedule']['onset'].append(99)
+        req = gc.verify_requests([e], np.random.default_rng(0),
+                                 cfg=dict(sumo_verify_fraction=1.))[0]
+        self.assertTrue(all(m == original for m in seen))
+        self.assertEqual(e['move'], original)
+        self.assertEqual(req['move'], original)
+        self.assertEqual(req['wm'], credit)
+        self.assertAlmostEqual(req['wm']['D_G'], .6)
+        self.assertIsNot(e['move']['params']['depths'], move['params']['depths'])
+        req['move']['params']['depths'][0] = 2.
+        self.assertEqual(e['move'], original)
+
     def test_noop_single_member_and_harmful_moves(self):
         for delta in (0., -10., 10.):
             def scorer(b, itv, rng):
                 return 50. + (delta if itv['active_members'] else 0.)
             e = gc.wm_estimate(scorer, BELIEF, ['cav_a'], dict(MOVE, members=['cav_a']),
-                               np.random.default_rng(0))
+                               np.random.default_rng(0), horizon_s=720)
             self.assertEqual(e['credit']['group_credit'], -delta)
             self.assertEqual(e['credit']['C_G'], 0.)
             self.assertEqual(e['isolated']['policy_cooperation_gain_veh_s'], 0.)
@@ -309,6 +384,18 @@ class VerifyRequests(unittest.TestCase):
         ids = {r['draw_id'] for r in a}
         self.assertTrue(ids.issubset({e['draw_id'] for e in es}))
 
+    def test_missing_or_invalid_horizon_refused_even_before_sampling(self):
+        for h in (None, 0, -1, True, 600., float('nan'), float('inf'), '600', 'missing'):
+            e = self.estimates()[0]
+            if h == 'missing':
+                e.pop('horizon_s')
+            else:
+                e['horizon_s'] = h
+            for fraction in (0., 1.):
+                with self.assertRaisesRegex(ValueError, 'horizon_s required'):
+                    gc.verify_requests([e], np.random.default_rng(0),
+                                       cfg=dict(sumo_verify_fraction=fraction))
+
     def test_cpu_helpers_never_execute_verification(self):
         from unittest.mock import patch
         from . import sumo_verify, verify_perseed
@@ -319,7 +406,7 @@ class VerifyRequests(unittest.TestCase):
             gc.layer_advantage(e)
             req = gc.verify_requests([e], np.random.default_rng(0),
                                      cfg=dict(sumo_verify_fraction=1.))[0]
-            gc.verification_candidates(req, plan('p', MEMBERS), snapshot())
+            gc.verification_candidates(req, plan('p', MEMBERS, duration=600), snapshot())
 
 
 class VerifiedStats(unittest.TestCase):
@@ -423,6 +510,53 @@ class VerificationAdapter(unittest.TestCase):
                          plan('p', ['a', 'b'], duration=600))):
             with self.assertRaises(ValueError):
                 gc.verification_candidates(req, p, snap)
+
+    def test_missing_or_invalid_request_horizon_refused_before_branch_construction(self):
+        from unittest.mock import patch
+        from . import sumo_verify as sv
+        from .test_sumo_verify_cpu import plan, snapshot
+        with patch.object(sv, 'build_branches', side_effect=AssertionError('branch construction')):
+            for h in (None, 0, -1, True, 600., float('nan'), float('inf'), '600', 'missing'):
+                req = self.request(['a', 'b'])
+                if h == 'missing':
+                    req.pop('horizon_s')
+                else:
+                    req['horizon_s'] = h
+                with self.assertRaisesRegex(ValueError, 'horizon_s required'):
+                    gc.verification_candidates(req, plan('p', ['a', 'b']), snapshot())
+
+    def test_episode_end_never_shortens_resolved_horizon(self):
+        from .test_sumo_verify_cpu import plan, snapshot
+        req = dict(self.request(['a', 'b']), horizon_s=600)
+        p = plan('p', ['a', 'b'], duration=480)
+        # Exactly enough room retains the full look-ahead; one second less refuses.
+        bundle = gc.verification_candidates(req, p, snapshot(t0=600))
+        self.assertTrue(all(s['window']['end_s'] == 1200 and not s['window']['truncated']
+                            for s in bundle['specs']))
+        for t0 in (601, 1000):
+            with self.assertRaisesRegex(ValueError, 'match full WM look-ahead'):
+                gc.verification_candidates(req, p, snapshot(t0=t0))
+        # A capped plan is acceptable only when the actual full WM window agrees.
+        capped = gc.verification_candidates(dict(req, horizon_s=200), p, snapshot(t0=1000))
+        self.assertTrue(all(s['window']['end_s'] - s['window']['start_s'] == 200
+                            for s in capped['specs']))
+
+    def test_nonbase_branch_window_mismatch_refused(self):
+        from unittest.mock import patch
+        from . import sumo_verify as sv
+        from .test_sumo_verify_cpu import plan, snapshot
+        build = sv.build_branches
+
+        def mismatched(*args, **kwargs):
+            specs = build(*args, **kwargs)
+            specs[-1] = copy.deepcopy(specs[-1])
+            specs[-1]['window']['end_s'] -= 1
+            return specs
+
+        with patch.object(sv, 'build_branches', side_effect=mismatched):
+            with self.assertRaisesRegex(ValueError, 'match full WM look-ahead'):
+                gc.verification_candidates(self.request(['a', 'b']),
+                                           plan('p', ['a', 'b'], duration=600), snapshot())
 
 
 class Chain(unittest.TestCase):
