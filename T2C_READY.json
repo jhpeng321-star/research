@@ -1,44 +1,57 @@
 {
-  "schema": "coopmwm.t2c_ready.v4",
+  "schema": "coopmwm.t2c_ready.v5",
   "task": "T2C",
-  "fix_round": "REVIEW_T2C_r2 plus MAIN 01:45 budget cut and S-LAUNCH staging blockers",
-  "status": "CPU_FIX_READY_FOR_REVIEW",
+  "fix_round": "current REVIEW_T2C_r1.md at 7b148d87; complete spec through MAIN 02:30",
+  "status": "CPU_FIX_READY",
   "branch": "c4/rerun-tracks",
   "worktree": "E:/agent-work/c4-rerun-tracks",
   "date": "2026-11-05",
+  "implementation_commit": "9f06f049",
   "ready_for_review": true,
   "ready_for_live_launch": false,
-  "implementation_commit": "611da4cd",
   "commits": [
-    {
-      "commit": "4e7dc2f8",
-      "summary": "Restore default-off root, authority, ledger CAP, charging and approved legacy-preflight compatibility; preserve strict ON admission."
+    {"commit": "c2a753ba", "step": "Restore opt-in public quote/budget/wall-clock/CLI preparation parity."},
+    {"commit": "21148f70", "step": "Integrate realised local team reward; construct neither disabled WM teacher nor WM credit."},
+    {"commit": "0360812b", "step": "Require successful native both-seed all8 augmented-execution admission."},
+    {"commit": "b500a3c9", "step": "Evaluate each acting CAV context, deterministic single ownership and isolated masks."},
+    {"commit": "624b0815", "step": "Separate smoke artifacts/jobs and share once-only augmentation plus accounting."},
+    {"commit": "cfd6863c", "step": "Preserved resumed-harness recovery/lifecycle verification receipt."},
+    {"commit": "9f06f049", "step": "Bind full native admission evidence, update regressions and CPU smoke receipts."}
+  ],
+  "blockers": {
+    "1": {
+      "status": "fixed",
+      "implementation": "MAIN 02:30 launch pins dense teaching and WM group credit OFF with zero verification budgets. Enabled P2 track2_reward receives only projected local before/after SUMO observations. T2C checks exact observable per-vehicle reward membership and computes own + weight * neighbour mean for each actor. Realised returns enter only the frozen-base layer learner; A retains native PPO.",
+      "registration": {"weight": 1.0, "provenance": "T2C proposed equal own/neighbour-mean weighting; MAIN 02:30; approval-bound, no tuning"},
+      "coverage": "Numerical layer updates change when realised outcomes change; base is frozen; A remains on native PPO; local HDV reward contributes; remote rewards are refused; WM modules can be absent. Monitor, smoke, source inventory, request and operator contract reflect the redesign."
     },
-    {
-      "commit": "2a5bde09",
-      "summary": "Assert the cpuV budget cut, fixed verification slate and once-only augmentation; build the native production backend and close real LS snapshot staging dependencies."
+    "2": {
+      "status": "fixed",
+      "implementation": "24 proposals per arm, at most two verified per arm, once before smoke/run. Native sumo_verify.verify and verify_perseed.confirm_all8 execute both seeds, measured later-harm and cooperation checks through coordinator-owned complete-wave reservations. Only admitted cooperative positive own-seed examples are used. New effective samples and AWR weights come from the modified execution tape.",
+      "binding": "Sealed all8 confirmation + matching seed verification receipt + plan digest + TRAIN world seed + snapshot identity/file hash + raw tape digest + effective-sample/weight hashes. Missing/copied/negative/unverified examples cannot enter either imitation or practice.",
+      "coverage": "Partial success, negative native outcomes, missing/copied receipts, changed snapshot/seed including a copied seed claim, changed effective targets/weights, exhausted allowance, complete windows, actual native materialisation and unchanged once-only caches."
     },
-    {
-      "commit": "611da4cd",
-      "summary": "Preserve dynamic-base relative commands in native all8 branches, add native-boundary regressions, and refresh operator documentation and CPU smoke evidence."
+    "3": {
+      "status": "fixed",
+      "implementation": "Independent active move/onset/RNG state for each acting CAV, stable actor iteration and locally projected sensing/causal reports. Each actuator has one deterministic context owner, followed by the existing native safety writer. Isolated all/solo branches evaluate exactly the selected members with common-base background.",
+      "coverage": "Disconnected far group, each solo mask, empty mask, all CAVs, row permutation, no double-added residual, and the real native V2V controller over the complete episode."
+    },
+    "4": {
+      "status": "fixed",
+      "implementation": "One approved config/root/ledger. Smoke uses smoke/ artifacts, T2C_SMOKE.claim and t2c_smoke_ job IDs; full run uses root artifacts, T2C_RUNTIME.claim and t2c_ IDs. A shared one-use start claim prevents first-start races. Full admission after attempted smoke requires its completed sealed matching config/registration receipt and reloads fresh common u0 models. Immutable augmentation caches are shared and charged only once.",
+      "coverage": "Complete smoke followed by full update 1 for A/B/R, disjoint job IDs, cumulative charges, retained smoke checkpoints/caches, fresh u0 weights, duplicate/interrupted invocation refusal and mismatched approval-binding refusal."
+    },
+    "5": {
+      "status": "fixed",
+      "implementation": "Public quote/budget/wall_clock and CLI preserve committed baseline output absent/false; explicit track2=True or --track2 selects the new producers, with consistent internal Track 2 consumers.",
+      "coverage": "Committed-baseline comparison, default CLI output, default quote/request/preflight flow, explicit Track 2 CLI, existing action/RNG/checkpoint/root/ledger OFF parity."
     }
-  ],
-  "inputs_read_completely": [
-    "E:/agent-work/_sol/tracks_spec.md through MAIN 01:45 BUDGET CUT",
-    "REVIEW_T2C_r2.md",
-    "E:/agent-work/_sol/S_LAUNCH_BLOCKERS_20261105.md"
-  ],
-  "blocker_fixes": {
-    "default_off": "Baseline-comparison tests cover absent/false config, root authority bytes, legacy-root admission, ledger binding/charging including the historical superseded CAP subtraction, and approved legacy preflight; ON still requires complete Track 2 bindings.",
-    "budget": "quote() asserts all three verification ceilings and total INCLUDING smoke <= 5000000; budget phase sum equals the quoted total.",
-    "host": "Track 2 config, runtime admission, preflight and smoke bind cpuV.",
-    "production_backend": "Concrete non-synthetic Backend reuses reviewed V2V/native plant, PPO, bank, practice, exact branch and launch3 paths; no synthetic fallback in production.",
-    "staging": "Real _decision_snapshot/_ls_snapshot execution inventories LS pending envelopes, compressed snapshots, and cross-root episode RESULT markers/payloads. Declared transitive dependency deletion is refused even after resealing; generation walker matches the real label_attempts layout."
   },
   "budget": {
-    "total_including_smoke_sim_s": 4883340,
+    "host": "cpuV",
+    "total_including_smoke_sim_s": 4310220,
     "cap_sim_s": 5000000,
-    "headroom_sim_s": 116660,
+    "headroom_sim_s": 689780,
     "asserted_in_quote": true,
     "updates": 24,
     "episodes_per_arm_per_update": 16,
@@ -46,8 +59,8 @@
     "phases": {
       "v2v_train": 1843200,
       "v2v_lessons": 21840,
-      "teacher_verify": 286560,
-      "group_credit_verify": 286560,
+      "teacher_verify": 0,
+      "group_credit_verify": 0,
       "augment_verify": 143280,
       "early_probes": 586980,
       "track2_smoke": 9600,
@@ -56,107 +69,37 @@
       "v2v_interim": 345600,
       "v2v_final": 345600
     },
-    "verification": {
-      "updates": [6, 12, 18, 24],
-      "samples_per_arm_at_each_sampled_update": 1,
-      "same_count_for_B_and_R": true,
-      "augmentation_once_before_first_training_episode": true,
-      "augmentation_examples_per_arm": 24,
-      "augmentation_samples_per_arm": 2,
-      "internal_component_sumo_dispatch": false
-    },
-    "isolated": {
-      "arms": ["B", "R"],
-      "updates": [6, 12, 24],
-      "replicates": 5,
-      "cells": 30,
-      "reference": "Matched common frozen u0, algebraically zero isolated cooperation gain; learned A comparison remains the shared T1D final evaluation."
-    },
-    "early_probes": {
-      "updates": [2, 4],
-      "states": 3,
-      "replicates": 1,
-      "arms": ["A", "B", "R"]
-    },
-    "criterion_document_sha256": "80b6b774b7f248e2bec8b671b809c630113ac943c48bec5fdb432bd97f8792d5",
+    "augmentation": "At most two whole all8 allowances per B/R arm; one common allowance/cache across smoke and full run; <=200000 sim-s.",
+    "isolated": {"arms": ["B", "R"], "updates": [6, 12, 24], "replicates": 5, "cells": 30},
+    "quick_probes": {"updates": [2, 4], "states": 3, "replicates": 1},
+    "shared_final_harness": "tools.coopmwm.planner_eval.prepare_track2 / analyse_track2",
     "fresh_sha_bound_owner_approval_required": true
-  },
-  "production_backend": {
-    "module": "tools.coopmwm.rerun_tracks_backend",
-    "factory": "backend_factory(cfg, prep_dir=..., stage_dir=...)",
-    "cpu_plant": false,
-    "target_host": "cpuV",
-    "native_paths": [
-      "v2v_runner.prepare_intent",
-      "v2v_live.hooks",
-      "v2v_runtime.load_checkpoint / v2v_intent",
-      "accel_runner.wave_jobs",
-      "accel_plant.episode",
-      "accel_learner.update (A only)",
-      "replay_bank.bank_pairs with per_seed_v1/cooperative_only/effective and native source callback",
-      "practice_starts.wave_call",
-      "sumo_verify.capture / build_branches / LocalBranchRunner / run_branch",
-      "policy_synergy.MixedPolicy",
-      "v2v_launch3.before_launch"
-    ],
-    "components": [
-      "merge_features",
-      "trigger_head",
-      "coop_layer",
-      "group_credit",
-      "dense_teacher",
-      "plan_augment",
-      "practice_weighting"
-    ],
-    "component_binding": "Approval-bound production.component_factories and production.move_to_plan entry points; factories receive base plus cfg/arm/moves/components. Missing or test-module entry points are refused.",
-    "commands": {
-      "smoke": "python -m tools.coopmwm.rerun_cpus smoke --config T2C_CONFIG.json --registration ISOLATED_REGISTRATION.json --prep PREP_DIR --stage STAGE_DIR",
-      "run": "python -m tools.coopmwm.rerun_cpus run --config T2C_CONFIG.json --registration ISOLATED_REGISTRATION.json --prep PREP_DIR --stage STAGE_DIR",
-      "monitor": "python -m tools.coopmwm.rerun_cpus monitor --root RUN_ROOT"
-    },
-    "shared_final_evaluation": "planner_eval.prepare_track2 / analyse_track2; complete 3 x 96 paired worlds, full 1200-second windows, complete checkpoint identities, paired CIs and all four safety counters.",
-    "documentation": "RERUN_TRACKS_READY.md"
   },
   "tests": {
     "interpreter": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
-    "environment": {
-      "CUDA_VISIBLE_DEVICES": "",
-      "PYTHONDONTWRITEBYTECODE": "1",
-      "OMP_NUM_THREADS": "1",
-      "MKL_NUM_THREADS": "1"
-    },
-    "focused": {
-      "passed": 133,
-      "skipped": 1,
-      "duration_s": 256.69,
-      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q --tb=short -p no:cacheprovider tools/coopmwm/test_rerun_cpus_cpu.py tools/coopmwm/test_t2c_compat_cpu.py tools/coopmwm/test_t2c_staging_cpu.py tools/coopmwm/test_t2c_runtime_cpu.py tools/coopmwm/test_t2c_bank_cpu.py tools/coopmwm/test_t2c_monitor_cpu.py tools/coopmwm/test_t2c_backend_cpu.py --basetemp=E:/Temp/opencode/t2c-fix-final-focused2",
-      "skip_reason": "Windows file-symlink privilege unavailable; hard-link and real cross-root junction checks executed."
-    },
-    "regression": {
-      "passed": 55,
-      "deselected": 5,
-      "duration_s": 168.63,
-      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q --tb=short -p no:cacheprovider tools/coopmwm/test_launch_final_cpu.py tools/coopmwm/test_effimit_cpu.py tools/coopmwm/test_rerun_clean_cpu.py tools/coopmwm/test_v2v_runner_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_policy_synergy_isolated_cpu.py -k \"not test_gate_seals_commit_and_runtime_and_the_launcher_reads_it and not test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson\" --basetemp=E:/Temp/opencode/t2c-fix-final-regression",
-      "deselection_reason": "Four inherited Linux /proc-only cases documented in r2, plus one test that creates a Git source repository/commit outside this worktree."
-    },
-    "distinct_completed_total": {
-      "passed": 188,
-      "failed": 0,
-      "skipped": 1,
-      "deselected": 5
-    },
-    "evidence": [
-      "Native V2V sampling and checkpoint migration with fake SUMO boundary.",
-      "Actual native own-action PPO updates and complete base/layer/trigger/optimizer checkpoint persistence.",
-      "Native all8 relative command execution responds to changing branch base commands.",
-      "Per-seed source/weight/effective-limit transport and state-conditioned layer-only learning.",
-      "Fixed sample counts remain B/R-equal despite unequal stream sizes and absent labels.",
-      "Augmentation executes once for both arms before the first arm episode.",
-      "Real LS snapshot reader closure, compressed cross-root inputs and label generation layout.",
-      "CPU smoke CLI and one-command monitoring."
+    "common_arguments": "-m pytest -q --tb=short -p no:cacheprovider",
+    "environment": {"CUDA_VISIBLE_DEVICES": "-1", "PYTHONDONTWRITEBYTECODE": "1", "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"},
+    "method": "Short sequential invocations, unique worktree-local basetemp roots, explicit CPU files only. Counts below are distinct tests, not the sum of repeated targeted invocations.",
+    "focused": {"passed": 161, "failed": 0, "skipped": 1, "collected": 162},
+    "regression": {"passed": 55, "failed": 0, "deselected": 5},
+    "distinct_total": {"passed": 216, "failed": 0, "skipped": 1, "deselected": 5},
+    "completed_invocations": [
+      {"arguments": "tools/coopmwm/test_rerun_cpus_cpu.py --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-r1-final-prep2", "passed": 43, "skipped": 1},
+      {"arguments": "tools/coopmwm/test_t2c_bank_cpu.py tools/coopmwm/test_t2c_monitor_cpu.py tools/coopmwm/test_t2c_compat_cpu.py --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-r1-final-contracts", "passed": 44},
+      {"arguments": "tools/coopmwm/test_t2c_runtime_cpu.py -k \"shared_final or full_run_reaches or executes_complete\" --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-r1-final-runtime2", "passed": 10, "deselected": 19},
+      {"arguments": "tools/coopmwm/test_t2c_staging_cpu.py tools/coopmwm/test_t2c_augmentation_cpu.py tools/coopmwm/test_t2c_multicav_cpu.py tools/coopmwm/test_t2c_redesign_cpu.py --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-r1-final-new", "passed": 30},
+      {"arguments": "tools/coopmwm/test_t2c_backend_cpu.py --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-r1-final-backend", "passed": 9},
+      {"arguments": "tools/coopmwm/test_t2c_bank_cpu.py tools/coopmwm/test_t2c_augmentation_cpu.py tools/coopmwm/test_t2c_backend_cpu.py -k \"not native_worker and not local_observation and not native_job and not track2_launch3 and not verification_native and not real_backend and not bank_native and not native_replay and not relative\" --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-r1-final-bound-admission", "passed": 25, "deselected": 9},
+      {"arguments": "tools/coopmwm/test_t2c_runtime_cpu.py tools/coopmwm/test_t2c_redesign_cpu.py -k \"not smoke and not executes_complete and not shared_final and not full_run_reaches\" --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-r1-final-bound-runtime", "passed": 19, "deselected": 12},
+      {"arguments": "tools/coopmwm/test_t2c_augmentation_cpu.py tools/coopmwm/test_t2c_bank_cpu.py tools/coopmwm/test_t2c_runtime_cpu.py -k \"identity or seed_with_claim or missing_effective or admission_and_runtime\" --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-r1-final-negative", "passed": 7, "deselected": 48},
+      {"arguments": "tools/coopmwm/test_t2c_lifecycle_cpu.py tools/coopmwm/test_t2c_runtime_cpu.py -k \"lifecycle or smoke_executes or smoke_and_one_command\" --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-r1-final-bound-smoke", "passed": 5, "deselected": 27},
+      {"arguments": "tools/coopmwm/test_launch_final_cpu.py tools/coopmwm/test_effimit_cpu.py tools/coopmwm/test_rerun_clean_cpu.py tools/coopmwm/test_v2v_runner_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py -k \"not test_gate_seals_commit_and_runtime_and_the_launcher_reads_it\" --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-r1-final-regression1", "passed": 48, "deselected": 1},
+      {"arguments": "tools/coopmwm/test_policy_synergy_isolated_cpu.py -k \"not test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson\" --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-r1-final-regression2", "passed": 7, "deselected": 4}
     ],
-    "earlier_incomplete_attempt": "An initial combined focused invocation reached the 300-second shell timeout; it is not counted as a completed run. The full rerun completed successfully with a longer timeout.",
-    "pytest_warning": "Inherited unknown cache_dir option when cacheprovider is disabled.",
+    "skip_reason": "Windows file-symlink privilege unavailable; hard-link and junction checks executed.",
+    "regression_deselection_reason": "Four inherited Linux /proc-only cases documented by the independent review, plus one fixture that creates a Git commit outside the requested task history.",
+    "warning": "Inherited unknown cache_dir option with pytest cacheprovider disabled.",
+    "incomplete_attempts": "One initial reward/runtime/compat invocation timed out at 120 seconds without a summary. No matching process remained before subsequent checks. Intermediate failed checks were corrected and are not counted as passing runs.",
     "diff_check": "git diff --check passed"
   },
   "smoke": {
@@ -164,28 +107,30 @@
     "status": "CPU_PLANT_SMOKE_PASS",
     "synthetic": true,
     "new_sim_s": 0,
-    "virtual_sim_s": 9600,
+    "virtual_sim_s": 14400,
+    "virtual_smoke_sim_s": 9600,
+    "virtual_shared_augmentation_sim_s": 4800,
     "episodes": 6,
     "updates": 1,
-    "isolated_dry_cells": 30
+    "isolated_dry_cells": 30,
+    "receipt_sha256": "d8e0621ad1eb6ac6d200f237f8008a6936585c85f11bce8602bbf9a79c508a27",
+    "source_receipt": ".t2c-r1-final-bound-smoke/test_smoke_executes_all_consum0/run/smoke/T2C_SMOKE.json"
   },
-  "deployment_requirements": [
-    "Merge the sibling Move/component implementations and expose their qualified consumed adapters; this worktree does not contain those sibling implementations. Production has no synthetic fallback.",
-    "Provide the shared T1D planner_eval adapter and explicit TRAIN state/world registration with bound snapshot/receipt file hashes.",
-    "Stage and verify the closed manifest, qualify the deployed Linux CPU source/runtime/launch3 binding, and supply fresh matching OWNER_APPROVAL.json before any live smoke/run."
-  ],
   "api": {
-    "entry": "run_tracks(cfg, registration, backend, smoke=False, legacy_run=None)",
-    "production_factory": "rerun_tracks_backend.backend_factory(cfg, prep_dir=..., stage_dir=...)",
-    "bank_batch": "rerun_tracks_bank.training_batch / batch_receipt",
-    "final_registration": "rerun_cpus.final_world_registration(registration)",
-    "preparation": "init_root / own_ledger / charge / preflight_dry accept explicit track2=True; bind_ledger selects from cfg.track2",
-    "staging": "staging_manifest emits snapshot_dependencies; validate_manifest and verify_staged enforce closure",
-    "documentation": "RERUN_TRACKS_READY.md"
+    "runtime": "run_tracks(cfg, registration, backend, smoke=False, legacy_run=None)",
+    "production": "rerun_tracks_backend.backend_factory(cfg, prep_dir=..., stage_dir=...)",
+    "reward_boundary": "P2 adapter.realised_rewards(before_local_obs, after_local_obs, elapsed_s=); T2C applies the registered local-neighbour formula",
+    "learner": "coop_layer.update(..., realised_rewards=..., group_advantages=None, dense_targets=[None,...], dense_mask=[False,...])",
+    "augmentation": "Backend.verify_augmentation(payload, cfg=..., execute=...) -> successful native all8 examples + receipt; Runtime.prepare_augmentation consumes immutable shared admission caches",
+    "preparation": "quote/budget/wall_clock default to legacy; track2=True selects Track 2; CLI --track2",
+    "documentation": "RERUN_TRACKS_READY.md",
+    "fix_receipt": "T2C_FIX_CURRENT_R1.md"
   },
   "open_code_issues": [],
-  "open_issues": [
-    "Live deployment is not qualified in this CPU-only worktree; the merged sibling adapters, native T1D adapter, bound staging/registration, Linux CPU qualification and owner approval listed under deployment_requirements remain prerequisites."
+  "deployment_requirements": [
+    "Integrate and qualify the sibling Move/trigger/layer/merge/reward/augmentation/practice adapters. P2 owns track2_reward; T2C consumes its explicit local realised-reward boundary without editing sibling-owned implementations.",
+    "Supply the native shared T1D prepare_track2/analyse_track2 adapter and explicit bound TRAIN state/world registration.",
+    "Stage the closed manifest, qualify the deployed Linux CPU/native launch3 integration, and obtain fresh matching OWNER_APPROVAL/config/request/criterion/source bindings before real smoke/run."
   ],
   "execution_constraints": {
     "cpu_only": true,
@@ -196,6 +141,6 @@
     "prohibited_path_or_truth_file_reads": false,
     "only_requested_worktree_edited": true,
     "forbidden_git_operations_used": false,
-    "preexisting_untracked_directory_preserved": ".t2c-r2-compat/"
+    "prior_commits_and_uncommitted_artifacts_preserved": true
   }
 }
