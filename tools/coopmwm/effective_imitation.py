@@ -12,7 +12,8 @@ Option ``imitation_target_space`` ('raw' = default, byte-identical; 'effective')
 - BINDING LIMIT u_t: for every imitation pair/step and proposal member, u_t (absolute
   m/s^2) is derived from the winning plan branch's recorded observable tape
   (observable.jsonl.gz): the safety-boundary issued command ``actions[].issued_safe`` and
-  the realised acceleration (v_mps difference between consecutive seconds), each counted
+  the realised acceleration (v_mps[t+1]-v_mps[t] per second: frame t is written BEFORE
+  env.step, tools/coopfree/backend.py, so the command at t acts over [t, t+1]), each counted
   ONLY where the plan's own command exceeded it, under the vType accel cap read from the
   ``cav_typical`` vType definition. Never imputed from another vehicle, second or branch.
   Residual space: the policy acts on acceleration residuals (command - native), so the
@@ -78,9 +79,10 @@ def binding_limit(plan_command, cap, issued_safe=None, realised_accel=None, eps=
 
 
 def _log_phi(x):
-    """log standard-normal CDF, computed in double precision (tails) and cast back."""
-    cdf = torch.erfc((-x.double())/math.sqrt(2))*.5
-    return torch.log(cdf.clamp_min(1e-300)).to(x.dtype)
+    """log standard-normal CDF, computed in double precision with stable tails
+    (torch.special.log_ndtr stays finite and differentiable far into the left tail,
+    where erfc would underflow to zero and its clamp would kill the gradient)."""
+    return torch.special.log_ndtr(x.double()).to(x.dtype)
 
 
 _NODES, _WEIGHTS = np.polynomial.hermite.hermgauss(GH_NODES)
@@ -241,14 +243,16 @@ def _native_command(step, vid):
     return float(commands[vid]) if vid in commands else None
 
 
-def _realised_accel(previous, frame, vid):
-    """Realised acceleration between the previous and this second (None if unavailable)."""
-    if previous is None:
+def _realised_accel(frame, next_frame, vid):
+    """Label-side realised acceleration of the command issued at this second (None if
+    unavailable): frame t is written BEFORE env.step (tools/coopfree/backend.py), so the
+    command at t acts over [t, t+1] and its outcome is (v[t+1]-v[t])/dt."""
+    if next_frame is None:
         return None
-    dt = float(frame.get('time_s', 0))-float(previous.get('time_s', 0))
+    dt = float(next_frame.get('time_s', 0))-float(frame.get('time_s', 0))
     if dt <= 0:
         return None
-    before, now = _vehicle(previous, vid), _vehicle(frame, vid)
+    before, now = _vehicle(frame, vid), _vehicle(next_frame, vid)
     if before is None or now is None:
         return None
     return (float(now['v_mps'])-float(before['v_mps']))/dt
@@ -257,7 +261,9 @@ def _realised_accel(previous, frame, vid):
 def attach_limits(pairs, tape, trace_path, entry, cap=None):
     """(kept pairs, counts, limits by second): attach ``sample['binding_limits']``
     {vid: u_t - native command} in residual space to every pair whose proposal members all
-    have a derivable recorded limit at their second of the plan branch observable tape.
+    have a derivable recorded limit at their second of the plan branch observable tape
+    (the realised observable of second t is v[t+1]-v[t]: frame t is written BEFORE env.step,
+    so the last pair without a t+1 outcome frame is EXCLUDED and counted, never imputed).
     Pairs without one are EXCLUDED and counted (never imputed). The third return maps
     absolute seconds to {vid: u_t} in ABSOLUTE space for the intent-target clipping.
     Returns ([], counts, {}) when the trace is unreadable."""
@@ -277,9 +283,9 @@ def attach_limits(pairs, tape, trace_path, entry, cap=None):
     kept = []
     for i, (sample, w) in enumerate(pairs):
         t = t0+i
-        frame, previous = frames.get(t), frames.get(t-1)
-        if frame is None:
-            counts['excluded_missing_limit'] += 1
+        frame, following = frames.get(t), frames.get(t+1)
+        if frame is None or following is None:      # no t+1 outcome: the realised observable
+            counts['excluded_missing_limit'] += 1   # of the command at t is unavailable
             continue
         members = list(sample['context'].get('members') or sample['behaviour']['proposal_members'])
         step = steps.get(t)
@@ -299,7 +305,7 @@ def attach_limits(pairs, tape, trace_path, entry, cap=None):
                 reason = 'mismatch'
                 break
             u = binding_limit(command, cap, _issued_safe(frame, vid),
-                              _realised_accel(previous, frame, vid))
+                              _realised_accel(frame, following, vid))
             residual[vid] = u-native
             absolute[vid] = u
         if reason is not None:

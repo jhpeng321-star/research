@@ -104,6 +104,22 @@ def test_gradient_pushes_toward_the_limit_only_where_the_plan_binds():
     assert grad(.5, 1.0, 1.2) == pytest.approx(float(m.grad), rel=1e-4)
 
 
+def test_log_phi_keeps_stable_tails_and_nonzero_gradient_at_40_sigma():
+    # torch.special.log_ndtr stays finite and differentiable deep in the left tail; the old
+    # erfc path underflowed to the 1e-300 clamp (value pinned at log(1e-300) ~ -690.78 and
+    # gradient dead), which silently froze binding targets far below the limit.
+    x = torch.tensor([-40.], requires_grad=True)
+    value = eff._log_phi(x)
+    value.backward()
+    assert math.isfinite(float(value.detach())) and float(value.detach()) < -750.
+    assert math.isfinite(float(x.grad)) and float(x.grad) != 0.
+    # end to end: a binding target 40 sigma above the mean still pushes the mean upward
+    m = torch.tensor([[-20.]], requires_grad=True)                # (0-(-20))/.5 = 40 sigma
+    (-eff.censored_log_prob(torch.tensor([[2.6]]), m, .5, SIGMA,
+                            torch.tensor([[0.]]))).backward()
+    assert math.isfinite(float(m.grad)) and float(m.grad) < 0.    # descent moves mu toward u
+
+
 def test_pair_imitation_requires_limits_and_fails_closed():
     p = Policy()
     sample = dict(context={'members': ['a', 'b']}, action=[[.1], [.1]],
@@ -305,8 +321,11 @@ class EffimitTapeRunner(FakeRunner):
         awrite(d/'RESULT.json', tape)
         r['result_sha256'] = digest(tape)
         self.t0 = spec['window']['start_s']
+        # frame t is written BEFORE env.step (the command at t acts over [t, t+1]), so the
+        # realised-observable tape must reach t0+duration: the LAST pair (t0+duration-1)
+        # still needs its t+1 outcome frame.
         with gzip.open(d/'observable.jsonl.gz', 'wt', encoding='utf-8') as f:
-            for t in range(self.t0-1, self.t0+p['duration_s']):
+            for t in range(self.t0-1, self.t0+p['duration_s']+1):
                 f.write(canonical(self.frame(t))+'\n')
         return r
 
@@ -383,6 +402,56 @@ def test_attach_limits_derives_cap_and_leader_limits_from_the_tape(tmp_path):
     # unreadable trace: everything excluded, disclosed
     kept, counts, _ = eff.attach_limits(pairs, dict(steps=[]), tmp_path/'absent.gz', entry)
     assert kept == [] and counts['excluded_missing_trace'] is True
+
+
+def test_realised_limit_at_t_equals_v_of_t_plus_one_minus_v_of_t_ramp(tmp_path):
+    # NON-constant-acceleration fixture (a ramp): the realised acceleration CHANGES every
+    # second and the plan command sits above the cap on some seconds and below it on others.
+    # Frame t is written BEFORE env.step (tools/coopfree/backend.py), so the command at t acts
+    # over [t, t+1] and its realised observable is v[t+1]-v[t] -- never v[t]-v[t-1] (the ramp
+    # makes the two differ, so a wrong-direction reading would produce different limits); the
+    # last pair has no t+1 outcome frame and is EXCLUDED and counted (fail-closed).
+    speeds = {419: 10., 420: 9.6, 421: 9.8, 422: 10.7, 423: 11.9}
+    # per-second outcomes v[t+1]-v[t]: 420 -> .2, 421 -> .9, 422 -> 1.2 (423: none, trace ends)
+    # backwards reading would give 420 -> -.4, 421 -> .2, 422 -> .9 -- all different.
+    trace = tmp_path/'observable.jsonl.gz'
+    with gzip.open(trace, 'wt', encoding='utf-8') as f:
+        for t in sorted(speeds):
+            f.write(canonical(dict(time_s=t, vehicles=[
+                dict(vid='c1', lane=0, is_cav=True, length_m=5.,
+                     s_m=30.+speeds[t]*float(t-419), v_mps=speeds[t])]))+'\n')
+    entry = dict(start_s=420, duration_s=4, plan_id='a', weight=1.)
+    def pair(command):
+        return (dict(context=dict(members=['c1']), action=[[command-1.]],
+                     behaviour=dict(executed=True, proposal_members=['c1'])), 1.)
+    commands = (2.6, .5, 2.6, .5)          # above the cap on 420/422, below on 421/423
+    pairs = [pair(c) for c in commands]
+    steps = [dict(time_s=t, commands={'c1': 1.}, requests={'c1': dict(requested_raw=c)})
+             for t, c in zip((420, 421, 422, 423), commands)]
+    kept, counts, by_time = eff.attach_limits(pairs, dict(steps=steps), trace, entry)
+    cap = eff.cav_accel_cap()
+    assert counts['kept'] == 3 and counts['excluded_missing_limit'] == 1   # 423 has no t+1
+    # binding seconds: u_t = min(cap, v[t+1]-v[t]); 420 binds at the OUTCOME .2 (not -.4),
+    # 422 binds at the OUTCOME 1.2 (not the backwards .9)
+    assert by_time == {420: {'c1': pytest.approx(.2)},
+                       421: {'c1': cap},
+                       422: {'c1': cap}}
+    assert kept[0][0]['binding_limits'] == {'c1': pytest.approx(.2-1.)}
+    assert kept[1][0]['binding_limits'] == {'c1': pytest.approx(cap-1.)}
+    assert kept[2][0]['binding_limits'] == {'c1': pytest.approx(cap-1.)}
+    # the free second (command .5 below its realised .9 and below the cap) is NOT spuriously
+    # censored: u stays the cap and the pair keeps the EXACT Gaussian likelihood term
+    action, mean = torch.tensor([[.5]]), torch.tensor([[.2]])
+    for limit in (float(by_time[421]['c1']), cap):
+        assert torch.equal(eff.censored_log_prob(action, mean, .5, SIGMA,
+                           torch.tensor([[limit]])), gaussian_log_prob(action, mean, .5, SIGMA))
+    # the intent-target clipping path shares the same v[t+1]-v[t]-derived limits
+    clipped = vi.attach_bank_targets([(copy.deepcopy(s), w) for s, w in kept],
+                                     dict(steps=steps), entry, 2, limits=by_time)
+    assert clipped[0][0]['intent_target'][0] == [pytest.approx(.5), pytest.approx(1.2)]
+    assert clipped[1][0]['intent_target'][0] == [pytest.approx(1.2), pytest.approx(.5)]
+    assert clipped[2][0]['intent_target'][0] == [pytest.approx(.5), 0.]
+    assert clipped[2][0]['intent_mask'][0] == [1., 0.]
 
 
 def test_bank_pairs_raw_never_attaches_limits_and_stays_byte_identical(tmp_path):
