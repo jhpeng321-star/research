@@ -1,0 +1,33 @@
+{
+  "schema": "selmappo.resume/1",
+  "observed_local": "2026-11-04T16:39:51.469664+08:00",
+  "starting_commit": "a69e1042",
+  "kind": "Local terminal-state cross-check; completed work preserved",
+  "review": "Read git status/log, task registrations, HANDOFF, design, report, prior terminal receipts and peer final handoff first.",
+  "fresh_local_hashes": {
+    "docs/paper_results/SELMAPPO_DESIGN.md": "992c05601f03d1d9caad0421b041dbeaa05fa8621ae7e3020be42e3c9f5b41d0",
+    "E:/agent-work/c4-c1switch2/SELMAPPO_FINAL.json": "2ecb0e855272e342b64002a288995f1552eceac79e740043dca5746ded607c18",
+    "docs/paper_results/selmappo/RESUME_20261104_1617.json": "2ca0dbb338642600243a2e47129e941d57bb0cbaff0f658d6ec623b88fad9480"
+  },
+  "verification": "PASS: registered design and peer handoff hashes, 169-update schedule, 7728 gradient episodes and exact cap arithmetic.",
+  "remote_evidence": "This session reused existing16:17 evidence; no new remote/process/ledger/inference probe. Concurrent session subsequently published RESUME_20261104_1639.json with its independent successful remote checks; its receipt and HANDOFF edits preserved.",
+  "training_status": "COMPLETE_FROM_EXISTING_RECEIPTS",
+  "updates": 169,
+  "schedule": "23 + 23 + 167 x 46",
+  "gradient_episodes": 7728,
+  "charged_sim_s": 6998400,
+  "actual_sim_s_bounds": [6985800, 6993000],
+  "local_evaluation_reserved_unstarted_sim_s": 14400,
+  "total_cap_sim_s": 7012800,
+  "peer_evaluation": "Existing receipts retain fleet16worlds/480decisions/96oraclebranches COMPLETE,79800charged=actual under C1SWITCH2. Full paired comparison remains incomplete in that evidence and peer-owned; no fresh peer-status verification asserted here.",
+  "prior_cpu_and_runtime_gates": "PASS retained; not repeated",
+  "preserved_untracked_peer_notices": ["SELMAPPO2_CONTINUATION.md", "SELMAPPO2_REQUEST.md", "SELMAPPO2_RUNTIME_STOP.md"],
+  "training_restart_required": false,
+  "supervision_complete": true,
+  "new_remote_probes": 0,
+  "new_dispatches": 0,
+  "new_observers": 0,
+  "new_simulation_sim_s": 0,
+  "new_gpu_s": 0,
+  "process_signals": 0
+}
