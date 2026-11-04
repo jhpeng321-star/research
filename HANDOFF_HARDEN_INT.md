@@ -1,5 +1,21 @@
 # HANDOFF: c4/harden-int (worktree E:/agent-work/c4-harden-int), 2026-11-03 (INTEGRATION COMPLETE)
 
+RESUME RECEIPT 2026-11-04 (fresh session, W8): STILL NOTHING OUTSTANDING on this branch. Tree clean at
+6682295f (docs-only since READY d51051a9). Re-verified on disk: HARDEN_INT_READY.json (ready=true,
+commit d51051a9), HARDEN_INT_REPORT.md, rp4 results for all 7 scenarios, h3int2 roots with exactly
+8 BANK_QUALITY.json + 16 LESSON_CHECK files - all matching the 11-04 morning receipt counts.
+MAIN addenda re-checked through 2026-11-04 16:25 (newer than the previous 02:45 check): 03:46
+launch/monitoring, 04:12-04:17 mover/budget, 06:32 V2V_STARTED, 07:12 disk, 07:20 checkpoint_003
+symlink fix, 09:00-09:10 monitor release + old-arm stop, 10:12 slim-tapes migration, 12:02 u6
+lesson snapshot restore, 12:40 effective-command imitation, 16:03 B u12 recovery, 16:25 cpuQ->cpuS
+migration - ALL assigned to the live operator / Claude launch delegates / other branches
+(c4/coopnative, c4/effective-imitation, c4/launch-coop, c4/slim-tapes); several carry explicit
+"Do NOT ... monitor/report only" scoping. Nothing new for c4/harden-int. No tests or rehearsals
+rerun this session: host at 100% CPU with 24 foreign python processes, including a live
+rehearsal_cpu (PID 6928, G-V2V-REH dispatch, E:/Temp workdir; not signalled, not duplicated). The
+documented 443/62/1 counts stand; cpuQ (Linux) remains the deployment gate and is run by the live
+operator. Remaining work stays LIVE ONLY (operator gates at the bottom of this handoff).
+
 RESUME RECEIPT 2026-11-04 (fresh session): STILL NOTHING OUTSTANDING on this branch. Tree clean at
 e421afaa (docs-only since READY d51051a9). Re-verified on disk: HARDEN_INT_READY.json (ready=true,
 commit d51051a9), HARDEN_INT_REPORT.md, rp4 results for all 7 scenarios
