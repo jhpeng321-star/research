@@ -1,28 +1,17 @@
-"""T1C: CPU-only calibration from existing, identity-checked verification receipts.
+"""CPU-only WM P(better) calibration from identity-checked dev receipts.
 
-Code-level source contract (c4/track-base 13f184b5):
-* sumo_verify.verify: predicted_saving[i] comes from saving_vs_policy, falling
-  back to saving_vs_mappo; realised gain is J_policy_veh_s-J_candidates_veh_s[i].
-  Read ALL graded candidates of accepted AND rejected decisions, never just
-  chosen_plan/grade_veh_s (which would select positive outcomes).
-* mppi_runtime.label_list8_search and mppi_search final scoring: saving_vs_policy
-  is WM mean policy cost minus candidate cost. It is NOT a probability; p_best
-  is also not P(candidate beats policy). Fit gain -> empirical P(gain_real > 0).
-* verify_perseed.confirm_all8: confirmations_all8 carries first_seed and seed2
-  receipt identities, optional extra receipt identities, and per_seed_v1.examples.
-  Follow group receipt identities, not admitted-only examples or solo/extended
-  outcomes. replay_bank.replicate changes post-t0 RNG, not episode.world.seed:
-  split all replicas/candidates/updates/arms by their original world seed.
-
-The fitted probability applies to the stored SUMO verification window. Existing
-WM and SUMO horizons may differ (see viability_report); report this limitation,
-preserve window provenance, and never shorten an online planner's look-ahead.
-No SUMO runner, jobs, dispatch, remote access, policy observations or truth data
-are needed. Only explicitly supplied files and linked group receipts are read.
+Operational evidence must be embedded as ``plan.wm_probability_evidence`` BEFORE
+verification, so the existing plan/spec/receipt hashes bind it to the candidate.
+Old saving_vs_policy and p_best fields are NOT P(better). Missing probability or
+full-horizon evidence is unavailable, never repaired from a mean gain or a short
+window. The producer must attest the MAPPO-only baseline and scoring objective.
+Only first/second all-candidate all8 panels enter the primary population; extra
+replicas selected on cooperative outcomes are excluded before any linked read.
+No physics, tapes, snapshots, truth files, remote access or device work is needed.
 """
 
 from bisect import bisect_left
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 import argparse
 import json
 import math
@@ -30,7 +19,9 @@ from pathlib import Path
 
 from .protocol import digest
 
-SCHEMA = 'coopmwm/planner-calibration/v1'
+SCHEMA = 'coopmwm/planner-calibration/v2'
+EVIDENCE_SCHEMA = 'coopmwm/wm-p-better/v1'
+PRIMARY_POPULATION = 'all-candidates-before-outcome-selection/v1'
 SUMO_SCHEMA = 'coopmwm/sumo_verify/v1'
 ALL8_SCHEMA = 'coopmwm/verify-perseed/v1'
 EVAL_SEED_RANGES = ((962000, 962999), (964000, 964199), (977000, 977999))
@@ -79,6 +70,82 @@ def _read(path):
 
 
 @dataclass(frozen=True)
+class GateContract:
+    """The consuming planner supplies its unchanged full horizon and baseline."""
+    horizon_s: int
+    objective: str
+    baseline: str
+    policy_state_sha256: str
+
+    def __post_init__(self):
+        if (isinstance(self.horizon_s, bool) or not isinstance(self.horizon_s, int)
+                or self.horizon_s <= 0 or self.objective != 'team_delay_vs'
+                or self.baseline != 'MAPPO-only' or not self.policy_state_sha256):
+            raise ValueError('invalid full-horizon objective/baseline contract')
+
+
+@dataclass(frozen=True)
+class WMProbability:
+    """Typed paired-sample event, never a scalar gain or p_best.
+
+Each sample is (sample_id, MAPPO-only J, candidate J), same belief/noise draw.
+Alternatively a producer may record p_better with n_samples and paired=True.
+The envelope itself is sealed and then bound into the verified candidate plan.
+"""
+    candidate_id: str
+    snapshot_sha256: str
+    start_s: int
+    contract: GateContract
+    probability: float
+    evidence_sha256: str
+    n_samples: int
+    duration_s: int
+
+    def __post_init__(self):
+        from .mppi_search import final_horizon
+        if (not isinstance(self.contract, GateContract)
+                or not isinstance(self.candidate_id, str) or not self.candidate_id
+                or not isinstance(self.snapshot_sha256, str) or not self.snapshot_sha256
+                or isinstance(self.start_s, bool) or not isinstance(self.start_s, int)
+                or isinstance(self.n_samples, bool) or not isinstance(self.n_samples, int)
+                or isinstance(self.duration_s, bool) or not isinstance(self.duration_s, int)
+                or self.duration_s <= 0 or self.contract.horizon_s < final_horizon(self.duration_s)
+                or not 300 <= self.start_s < self.start_s+self.contract.horizon_s <= 1200
+                or not 0 <= _finite(self.probability, 'WM probability') <= 1
+                or self.n_samples < 2 or not self.evidence_sha256):
+            raise ValueError('invalid/shortened full-horizon WM probability')
+
+    @classmethod
+    def from_dict(cls, evidence):
+        _verify(evidence, 'evidence_sha256')
+        if evidence.get('schema') != EVIDENCE_SCHEMA or evidence.get('paired') is not True:
+            raise ValueError('paired WM probability evidence required')
+        contract = GateContract(**evidence['contract'])
+        n = evidence['n_samples']
+        if isinstance(n, bool) or not isinstance(n, int) or n < 2:
+            raise ValueError('multiple paired WM samples required')
+        p = _finite(evidence['p_better'], 'WM P(better)')
+        if not 0 <= p <= 1:
+            raise ValueError('WM probability outside [0, 1]')
+        samples = evidence.get('samples')
+        if samples is not None:
+            if (not isinstance(samples, list) or len(samples) != n
+                    or any(not isinstance(s, (list, tuple)) or len(s) != 3
+                           or not isinstance(s[0], str) or not s[0] for s in samples)
+                    or len({s[0] for s in samples}) != n):
+                raise ValueError('unaligned/duplicate paired sample identities')
+            wins = sum(_finite(s[1], 'WM baseline J') > _finite(s[2], 'WM candidate J')
+                       for s in samples)
+            if not math.isclose(p, wins/n, rel_tol=0., abs_tol=1e-12):
+                raise ValueError('recorded probability differs from paired sample outcomes')
+        if (not evidence.get('candidate_id') or not evidence.get('snapshot_sha256')
+                or isinstance(evidence['start_s'], bool) or not isinstance(evidence['start_s'], int)):
+            raise ValueError('missing WM prediction identity')
+        return cls(evidence['candidate_id'], evidence['snapshot_sha256'], evidence['start_s'],
+                   contract, p, evidence['evidence_sha256'], n, evidence['duration_s'])
+
+
+@dataclass(frozen=True)
 class Example:
     world_seed: int
     verification_id: str
@@ -90,6 +157,11 @@ class Example:
     realised_gain_veh_s: float
     window_start_s: int
     window_end_s: int
+    wm_prediction: dict | None = None
+    population: str = 'unregistered-direct'
+    replica: str = 'direct'
+    minimum_horizon_s: int = 0
+    baseline_is_unmodified_policy: bool = False
 
     @property
     def better(self):
@@ -154,8 +226,17 @@ def examples_from_receipt(receipt, specs, dev_seeds):
         realised = policy-_finite(gains[i], 'candidate J')
         if branch['J_veh_s'] != gains[i]:
             raise ValueError('candidate outcome differs from branch')
+        if plan.get('wm_probability_evidence') is not None:
+            # Validate evidence syntax/semantics even when the row will later be
+            # unavailable because the realised verification window is too short.
+            probability = WMProbability.from_dict(plan['wm_probability_evidence'])
+            if probability.duration_s != plan['duration_s']:
+                raise ValueError('WM probability candidate duration mismatch')
+        from .mppi_search import final_horizon
         examples.append(Example(seed, receipt['verification_id'], ids[i], receipt['receipt_sha256'],
-                                receipt['snapshot_sha256'], digest(plan), predicted, realised, start, end))
+                                 receipt['snapshot_sha256'], digest(plan), predicted, realised, start, end,
+                                 plan.get('wm_probability_evidence'), minimum_horizon_s=final_horizon(plan['duration_s']),
+                                 baseline_is_unmodified_policy=spec.get('committed_plan_ids') == []))
     return examples, skipped
 
 
@@ -170,6 +251,24 @@ def load_verified_records(paths, dev_seeds):
     allowed = _allowlist(dev_seeds)
     paths = [safe_path(p) for p in paths]
     examples, seen, sources, skipped = [], set(), [], {}
+    records = [(p, _read(p)) for p in paths]
+    excluded, panels = {}, {}
+    # Preflight all manifests before direct receipts: extras cannot sneak back in
+    # via an explicitly supplied duplicate, regardless of argument order.
+    for path, record in records:
+        if record.get('schema') != ALL8_SCHEMA:
+            continue
+        _verify(record, 'confirmation_sha256')
+        if record.get('verify_mode') != 'all8_both_seeds':
+            raise ValueError('unsupported all8 verification mode')
+        for index, link in sorted(record.get('extra', {}).items()):
+            excluded[link['receipt_sha256']] = dict(replica=index, selection='outcome-selected-extra',
+                                                   receipt_sha256=link['receipt_sha256'],
+                                                   candidate_indices=link.get('candidates'))
+        for name in ('first_seed', 'seed2'):
+            panels[record[name]['receipt_sha256']] = name
+    if excluded.keys() & panels.keys():
+        raise ValueError('conflicting primary/outcome-selected replica provenance')
 
     def read_group(path, expected_sha=None):
         path = safe_path(path)
@@ -182,6 +281,8 @@ def load_verified_records(paths, dev_seeds):
         seed = development_seed(ep['world']['seed'])
         if seed not in allowed or ep.get('role') not in DEVELOPMENT_ROLES:
             raise ValueError('receipt is not an allowlisted development episode')
+        if r['receipt_sha256'] in excluded:
+            return seed
         if r['receipt_sha256'] in seen:
             return seed
         usable = r.get('status') in ('accepted', 'rejected') and r.get('proposer') == 'wm'
@@ -193,16 +294,22 @@ def load_verified_records(paths, dev_seeds):
             specs = [_read(path.parent.parent/'branches'/vid/f'cand{i+1}.spec.json')
                      for i in range(len(r['candidate_ids']))]
         rows, counts = examples_from_receipt(r, specs, allowed)
-        examples.extend(rows)
+        # Standalone receipts have no selection proof. Keep their gain diagnostics
+        # but do not permit operational fitting without an all8 primary-panel link.
+        replica = panels.get(r['receipt_sha256'], 'unregistered-direct')
+        examples.extend(replace(ex, replica=replica,
+                                population=PRIMARY_POPULATION if replica in ('first_seed', 'seed2')
+                                else 'unregistered-direct') for ex in rows)
         seen.add(r['receipt_sha256'])
         sources.append(dict(path=str(path), receipt_sha256=r['receipt_sha256'], world_seed=seed,
-                            n_examples=len(rows)))
+                            n_examples=len(rows), replica=replica,
+                            selection='all-candidate-panel' if replica != 'unregistered-direct'
+                            else 'unregistered-direct'))
         for k, v in counts.items():
             skipped[k] = skipped.get(k, 0)+v
         return seed
 
-    for path in paths:
-        record = _read(path)
+    for path, record in records:
         if record.get('schema') == SUMO_SCHEMA:
             read_group(path)
         elif record.get('schema') == ALL8_SCHEMA:
@@ -211,7 +318,6 @@ def load_verified_records(paths, dev_seeds):
                 raise ValueError('unsupported all8 verification mode')
             first, second = record['first_seed'], record['seed2']
             links = [(first, Path(first['branches_dir']).parent), (second, Path(second['root']))]
-            links.extend((x, Path(x['root'])) for _, x in sorted(record.get('extra', {}).items()))
             seeds = set()
             for link, root in links:
                 vid = link['verification_id']
@@ -223,7 +329,8 @@ def load_verified_records(paths, dev_seeds):
                 raise ValueError('all8 replicas disagree on original world seed')
         else:
             raise ValueError('only existing sumo_verify / all8 receipt schemas are accepted')
-    return examples, dict(sources=sources, skipped=skipped, n_examples=len(examples))
+    return examples, dict(sources=sources, skipped=skipped, n_examples=len(examples),
+                          excluded_replicas=sorted(excluded.values(), key=lambda x: x['receipt_sha256']))
 
 
 def split_by_seed(examples, dev_seeds, validation_fraction=.25, split_seed=20261104):
@@ -246,16 +353,12 @@ def split_by_seed(examples, dev_seeds, validation_fraction=.25, split_seed=20261
 
 
 @dataclass(frozen=True)
-class Calibrator:
-    """P(realised gain > 0 | WM mean own-policy gain); input units are veh-s.
-
-    PAVA step function; out-of-domain scores clamp to the nearest fitted block.
-    This API does not accept a raw WM probability in place of a gain.
-    """
+class IsotonicCurve:
+    """Internal numeric curve. Use Calibrator for the operational planner gate."""
     upper_bounds: tuple
     probabilities: tuple
-    min_gain_veh_s: float
-    max_gain_veh_s: float
+    min_score: float
+    max_score: float
 
     def __post_init__(self):
         if not self.upper_bounds or len(self.upper_bounds) != len(self.probabilities):
@@ -267,24 +370,24 @@ class Calibrator:
                 raise ValueError('invalid model probability')
         if (any(a >= b for a, b in zip(self.upper_bounds, self.upper_bounds[1:]))
                 or any(a > b for a, b in zip(self.probabilities, self.probabilities[1:]))
-                or _finite(self.min_gain_veh_s, 'model minimum') > self.upper_bounds[0]
-                or _finite(self.max_gain_veh_s, 'model maximum') != self.upper_bounds[-1]):
+                or _finite(self.min_score, 'model minimum') > self.upper_bounds[0]
+                or _finite(self.max_score, 'model maximum') != self.upper_bounds[-1]):
             raise ValueError('invalid monotonic model')
 
-    def predict_probability(self, wm_gain_veh_s):
-        x = _finite(wm_gain_veh_s, 'WM mean own-policy gain in veh-s')
+    def predict_probability(self, score):
+        x = _finite(score, 'isotonic score')
         i = min(bisect_left(self.upper_bounds, x), len(self.upper_bounds)-1)
         return self.probabilities[i]
 
     def to_dict(self):
-        return dict(method='isotonic', score='wm_gain_veh_s', **asdict(self))
+        return dict(method='isotonic', **asdict(self))
 
     @classmethod
     def from_dict(cls, value):
-        if value.get('method') != 'isotonic' or value.get('score') != 'wm_gain_veh_s':
-            raise ValueError('unsupported calibration input/method')
+        if value.get('method') != 'isotonic':
+            raise ValueError('unsupported calibration method')
         return cls(tuple(value['upper_bounds']), tuple(value['probabilities']),
-                   value['min_gain_veh_s'], value['max_gain_veh_s'])
+                   value['min_score'], value['max_score'])
 
 
 def fit_isotonic(scores, labels):
@@ -307,8 +410,59 @@ def fit_isotonic(scores, labels):
             b = blocks.pop()
             a = blocks.pop()
             blocks.append([b[0], a[1]+b[1], a[2]+b[2]])
-    return Calibrator(tuple(b[0] for b in blocks), tuple(b[1]/b[2] for b in blocks),
+    return IsotonicCurve(tuple(b[0] for b in blocks), tuple(b[1]/b[2] for b in blocks),
                       pairs[0][0], pairs[-1][0])
+
+
+@dataclass(frozen=True)
+class Calibrator:
+    curve: IsotonicCurve
+    contract: GateContract
+
+    def __post_init__(self):
+        if not 0 <= self.curve.min_score <= self.curve.max_score <= 1:
+            raise ValueError('calibration input must be WM probability')
+
+    def predict_probability(self, prediction, *, planner_contract, candidate_id, snapshot_sha256, start_s):
+        """T1B boundary: typed WM P(better) AND explicit unchanged planner contract.
+
+        A mismatch raises ValueError: the caller must leave MAPPO in control.
+        No scalar gain/probability overload and no horizon adaptation is provided.
+        """
+        if not isinstance(prediction, WMProbability):
+            raise ValueError('typed WMProbability required; scalar gains/probabilities refused')
+        if planner_contract != self.contract or prediction.contract != self.contract:
+            raise ValueError('planner prediction full-horizon objective/baseline mismatch')
+        if (prediction.candidate_id != candidate_id or prediction.snapshot_sha256 != snapshot_sha256
+                or prediction.start_s != start_s):
+            raise ValueError('planner prediction candidate/snapshot/start identity mismatch')
+        return self.curve.predict_probability(prediction.probability)
+
+    def to_dict(self):
+        return dict(score='wm_p_better', contract=asdict(self.contract), curve=self.curve.to_dict())
+
+    @classmethod
+    def from_dict(cls, value):
+        if value.get('score') != 'wm_p_better':
+            raise ValueError('unsupported calibration input; WM probability required')
+        return cls(IsotonicCurve.from_dict(value['curve']), GateContract(**value['contract']))
+
+
+def _prediction(ex, contract):
+    if ex.population != PRIMARY_POPULATION:
+        raise ValueError('unregistered or outcome-selected calibration population')
+    if ex.wm_prediction is None:
+        raise ValueError('planner calibration unavailable: missing paired WM probability evidence')
+    if ex.baseline_is_unmodified_policy is not True:
+        raise ValueError('realised baseline includes committed moves or lacks baseline provenance')
+    p = WMProbability.from_dict(ex.wm_prediction)
+    if (p.candidate_id != ex.candidate_id or p.snapshot_sha256 != ex.snapshot_sha256
+            or p.start_s != ex.window_start_s):
+        raise ValueError('WM probability candidate/snapshot identity mismatch')
+    if (p.contract != contract or ex.window_end_s-ex.window_start_s != contract.horizon_s
+            or ex.minimum_horizon_s <= 0 or contract.horizon_s < ex.minimum_horizon_s):
+        raise ValueError('missing/shortened/mismatched full-horizon evidence')
+    return p
 
 
 def reliability(probabilities, labels, n_bins=10):
@@ -336,37 +490,57 @@ def reliability(probabilities, labels, n_bins=10):
                 brier=sum((p-y)**2 for p, y in zip(probabilities, labels))/len(labels))
 
 
-def fit_calibration(examples, dev_seeds, validation_fraction=.25, split_seed=20261104, n_bins=10):
+def fit_calibration(examples, dev_seeds, validation_fraction=.25, split_seed=20261104, n_bins=10,
+                    *, planner_contract):
     """Fit only the fit-world partition; report independent dev-world validation."""
     examples = list(examples)
+    if not isinstance(planner_contract, GateContract):
+        raise ValueError('explicit planner GateContract required')
+    for ex in examples:
+        _prediction(ex, planner_contract)
     fit, validation = split_by_seed(examples, dev_seeds, validation_fraction, split_seed)
     if len({ex.better for ex in fit}) < 2:
         raise ValueError('fit partition needs both wins and non-wins')
-    model = fit_isotonic([ex.wm_gain_veh_s for ex in fit], [ex.better for ex in fit])
+    curve = fit_isotonic([_prediction(ex, planner_contract).probability for ex in fit],
+                         [ex.better for ex in fit])
+    model = Calibrator(curve, planner_contract)
 
     def report(rows):
-        value = reliability([model.predict_probability(ex.wm_gain_veh_s) for ex in rows],
-                            [ex.better for ex in rows], n_bins)
+        value = reliability([model.predict_probability(_prediction(ex, planner_contract),
+                              planner_contract=planner_contract, candidate_id=ex.candidate_id,
+                              snapshot_sha256=ex.snapshot_sha256, start_s=ex.window_start_s) for ex in rows],
+                             [ex.better for ex in rows], n_bins)
+        value['raw'] = reliability([_prediction(ex, planner_contract).probability for ex in rows],
+                                   [ex.better for ex in rows], n_bins)
         value.update(world_seeds=sorted({ex.world_seed for ex in rows}),
-                     out_of_domain=sum(not model.min_gain_veh_s <= ex.wm_gain_veh_s <= model.max_gain_veh_s
-                                       for ex in rows))
+                     out_of_domain=sum(not curve.min_score <= _prediction(ex, planner_contract).probability
+                                       <= curve.max_score
+                                        for ex in rows))
         return value
 
     return dict(schema=SCHEMA, model=model.to_dict(), target='realised_gain_veh_s > 0 (ties are non-wins)',
-                comparator='same-receipt policy continues; explicit saving_vs_policy required',
+                planner_contract=asdict(planner_contract), population=PRIMARY_POPULATION,
+                comparator='same-snapshot MAPPO-only policy continues, paired WM samples',
                 split=dict(unit='episode.world.seed (all CRN replicas/candidates/arms/updates together)',
                            seed=split_seed, validation_fraction=validation_fraction,
                            fit_seeds=sorted({ex.world_seed for ex in fit}),
                            validation_seeds=sorted({ex.world_seed for ex in validation})),
                 fit=report(fit), validation=report(validation),
-                dataset_sha256=digest(sorted((asdict(ex) for ex in examples), key=lambda x: digest(x))),
+                 dataset_sha256=digest(sorted((asdict(ex) for ex in examples), key=lambda x: digest(x))),
+                 minimum_horizon_s=max(ex.minimum_horizon_s for ex in examples),
                 windows=sorted({(ex.window_start_s, ex.window_end_s) for ex in examples}),
                 limitations=[
-                    'Existing receipts contain mean gains, not raw WM P(better); gain-to-probability calibration.',
-                    'Target is the recorded SUMO window; WM and SUMO horizons can differ. No full-horizon guarantee.',
                     'Selected bank candidates are not the distribution of every online move.',
                     'Isotonic probabilities are empirical; boundary predictions clamp, and 0.8 is not a safety guarantee.',
                     'Model fits fit seeds only; validation seeds are never refitted into this artifact.'])
+
+
+def gain_diagnostic(examples):
+    """Legacy mean-gain analysis only; deliberately no operational model artifact."""
+    rows = list(examples)
+    return dict(diagnostic_only=True, planner_gate_available=False, n=len(rows),
+                mean_wm_gain_veh_s=sum(ex.wm_gain_veh_s for ex in rows)/len(rows) if rows else None,
+                observed_win_rate=sum(ex.better for ex in rows)/len(rows) if rows else None)
 
 
 def reliability_svg(metrics):
@@ -391,7 +565,7 @@ def reliability_svg(metrics):
             '<text transform="translate(20 340) rotate(-90)">Observed win frequency</text></g></svg>')
 
 
-def load_calibrator(path):
+def load_calibrator(path, *, planner_contract):
     """Load a CLI artifact after verifying its hash, method and seed partition."""
     artifact = _read(path)
     _verify(artifact, 'artifact_sha256')
@@ -401,7 +575,18 @@ def load_calibrator(path):
     validation = _allowlist(artifact['split']['validation_seeds'])
     if fit & validation:
         raise ValueError('calibration fit/validation seed leakage')
-    return Calibrator.from_dict(artifact['model'])
+    model = Calibrator.from_dict(artifact['model'])
+    if (not isinstance(planner_contract, GateContract) or model.contract != planner_contract
+            or artifact.get('planner_contract') != asdict(planner_contract)
+            or artifact.get('population') != PRIMARY_POPULATION):
+        raise ValueError('artifact planner full-horizon objective/baseline/population mismatch')
+    minimum = artifact.get('minimum_horizon_s')
+    if (isinstance(minimum, bool) or not isinstance(minimum, int) or minimum <= 0
+            or planner_contract.horizon_s < minimum or not artifact.get('windows')
+            or any(not 300 <= start < end <= 1200 or end-start != planner_contract.horizon_s
+                   for start, end in artifact['windows'])):
+        raise ValueError('artifact has incompatible realised horizons')
+    return model
 
 
 def main(argv=None):
@@ -413,6 +598,7 @@ def main(argv=None):
     parser.add_argument('--validation-fraction', type=float, default=.25)
     parser.add_argument('--split-seed', type=int, default=20261104)
     parser.add_argument('--n-bins', type=int, default=10)
+    parser.add_argument('--planner-contract', required=True, help='explicit full-horizon GateContract JSON')
     args = parser.parse_args(argv)
     outputs = [safe_path(args.output), safe_path(args.reliability_svg)]
     if outputs[0].resolve() == outputs[1].resolve():
@@ -421,7 +607,8 @@ def main(argv=None):
         if path.exists() or not path.parent.is_dir():
             raise ValueError('output must be a new file in an existing directory')
     rows, provenance = load_verified_records(args.records, args.dev_seeds)
-    artifact = fit_calibration(rows, args.dev_seeds, args.validation_fraction, args.split_seed, args.n_bins)
+    artifact = fit_calibration(rows, args.dev_seeds, args.validation_fraction, args.split_seed, args.n_bins,
+                               planner_contract=GateContract(**_read(args.planner_contract)))
     artifact['provenance'] = provenance
     artifact['artifact_sha256'] = digest(artifact)
     for path, text in zip(outputs, (json.dumps(artifact, indent=2, allow_nan=False)+'\n',
