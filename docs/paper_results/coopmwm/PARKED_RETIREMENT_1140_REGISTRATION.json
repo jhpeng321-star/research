@@ -1,0 +1,20 @@
+{
+  "amendment": "PARKED_RETIREMENT_1140",
+  "authority": "MAIN 2026-11-02 02:28 stopped the superseded volume/cold-acceleration owners; engineering uptime recovery of those already-stopped processes only",
+  "control": "/home/ubuntu/coopmwm20261104_parked_retirement1140_v2",
+  "plan": "PARKED_RETIREMENT_1140_PLAN.json",
+  "source_sha256": "efc60dee27c6e899d1c44cced5d66c714fb593d76463bfc7ed7394ea1ef15488",
+  "test_sha256": "b5542690292be15ccd7169ba92f9ba2c65a3ed4bbfddb903bed6d543d405df1b",
+  "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+  "parent_pins": {"2146725": "54595438", "2477255": "55545604"},
+  "targets": [2477311, 2477314, 2477315, 2477316, 2477317, 2477318, 2477319, 2477321, 2477322, 2477323, 2477324, 2477325, 2146725, 2477255],
+  "signal": "SIGKILL; all targets already T-stopped; never SIGCONT or signal by process name",
+  "pre_signal_gate": "same boot, PID/start/UID/ancestry/argv/cwd/stopped state/CPU ticks as pinned plan; no unexpected live descendants",
+  "excluded": "current V2V supervisors/runners, monitors, all archive/backfill/collection owners, resource trackers, unattributed orphan workers",
+  "estimated_rss_kib": 4405244,
+  "qualification": {"local_tests": 5, "linux_tests": 5, "skips": 0},
+  "new_sim_s": 0,
+  "budget_change_sim_s": 0,
+  "file_deletions": 0,
+  "line": "S-COOPMWM engineering amendment 2026-11-04 11:45 +08 PARKED_RETIREMENT_1140: finish prior stop of two superseded owned runners and 12 parked cold-run children, identity-pinned T-only retirement, 5 local + 5 Linux tests PASS; no SIGCONT, no files deleted, no new physics/inference/charges or allocation changes. Retain checkpoints/receipts/charges and all current owners."
+}
