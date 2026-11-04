@@ -4,13 +4,14 @@
  "branch": "c4/coop-signal",
  "workspace": "E:/agent-work/c4-coop-signal",
  "base_commit": "9e7a5315 (9e7a5315, live head with planned-command intent sharing: v2v_intent/v2v_obs/v2v_runtime/v2v_runner/v2v_live)",
- "head_commit": "96688ea9 (96688ea9ccb0e842940e7cd768bc810747710f15)",
+ "head_commit": "0338c4df (0338c4df, head of c4/coop-signal)",
  "commits": [
   "092b0653 coopsig: coop-signal option core (obs contract, policy head, loaders, targets, losses)",
   "043882b3 coopsig: wire coop signal through bank_v2v, replay_bank, runtime controller, runner/live bindings, exact_grade report",
   "4649e704 coopsig: fix intent-checkpoint dispatch (coop off stays on the direct load path)",
   "ada05fb5 coopsig: CPU gates for the coop-signal option (off identity, t-1 latency, zero-init load, masked targets, save/load, bank wiring)",
-  "96688ea9 coopsig: hooks test restores process-global adapters on the same module identity; v2v-only -> coop loader gate"
+  "96688ea9 coopsig: hooks test restores process-global adapters on the same module identity; v2v-only -> coop loader gate",
+  "0338c4df coopsig: live hooks test restores the process-global bank adapters it installs"
  ],
  "option": {
   "name": "v2v_coop_signal",
@@ -59,8 +60,8 @@
    "registered bank wiring: coop targets only through cooperative entries (coop False -> none), 56-wide blocks, summary section; save/load roundtrip incl. from_weights and rejection paths",
    "runner/live binding keys identical for the arms; coop-without-intent and width mismatches rejected"
   ],
-  "run_command": "python -m pytest tools/coopmwm/test_v2v_intent_cpu.py tools/coopmwm/test_v2v_coopsig_cpu.py -q  -> 33 passed",
-  "family_run": "python -m pytest <all tools/coopmwm/test_v2v_*cpu.py> + test_replay_bank_v2v_cpu.py + test_replay_bank_confirm_cpu.py + test_bank_imitation_cpu.py + test_imitfix2_cpu.py + test_coopfix_exact_gate_cpu.py  -> 190 passed, 0 failed (single combined run at head 96688ea9)",
+  "run_command": "python -m pytest tools/coopmwm/test_v2v_intent_cpu.py tools/coopmwm/test_v2v_coopsig_cpu.py -q  ->  33 passed",
+  "family_run": "python -m pytest <all 11 tools/coopmwm/test_v2v_*cpu.py> + test_replay_bank_v2v_cpu.py + test_replay_bank_confirm_cpu.py + test_bank_imitation_cpu.py + test_imitfix2_cpu.py + test_coopfix_exact_gate_cpu.py  ->  190 passed, 0 failed (single combined run at head 0338c4df with test_v2v_live_cpu.py running BEFORE the bank-dependent files, i.e. order-independent; 0338c4df fixes the pre-existing process-global adapter leak: v2v_live.hooks() installs the boot_v2 rb.confirmations adapter and bank_imitation.run=run_separate for the whole process, and the live hooks test now restores both like the intent/coopsig hooks tests already did)",
   "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe (torch CPU)",
   "required_files": "test_v2v_intent_cpu.py PASSED (17 tests) and every test_v2v_*cpu.py PASSED (11 files, including the new test_v2v_coopsig_cpu.py)"
  },
