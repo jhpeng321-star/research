@@ -306,6 +306,8 @@ def resolve_spot_checks(batch, checker):
     """
     if batch.get('receipt_sha256') != digest({k: v for k, v in batch.items() if k != 'receipt_sha256'}):
         raise ValueError('augmentation receipt identity mismatch')
+    if not batch['spot_checks']:
+        return copy.deepcopy(batch)
     out = copy.deepcopy(batch)
     out.pop('receipt_sha256')
     out['spot_check_results'] = []
@@ -326,6 +328,7 @@ def resolve_spot_checks(batch, checker):
         out['spot_check_results'].append(dict(id=request['id'], accepted_examples=len(examples),
                                              confirmation_sha256=record['confirmation_sha256']))
     out['spot_checks'] = []
+    out['sumo_dispatched'] = True  # checker returned sealed all8 physics receipts (possibly cached)
     out['counts']['spot_checks_resolved'] = len(out['spot_check_results'])
     out['counts']['sumo_verified_examples'] = sum(x['sumo_verified'] for x in out['examples'])
     out['receipt_sha256'] = digest(out)
