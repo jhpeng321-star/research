@@ -2,7 +2,13 @@
  "status": "READY",
  "branch": "c4/lane-plans",
  "base": "a7ae6d9a",
- "code_commit": "e1bf4750",
+ "code_commit": "e5740395",
+ "lane_policy_merge": {
+  "merged": true,
+  "their_ready": "LANEPOLICY_READY.json at c4/lane-policy c25218ca (LANEPOLICY_READY)",
+  "merge_commit": "7986ca54 (auto-merge, no conflicts)",
+  "wiring_commit": "e5740395 (pinned integration, below)"
+ },
  "files": [
   "tools/coopmwm/lane_plans.py (new: envelope, lane model adapter, sampling, validation, execution records, lane CE)",
   "tools/coopmwm/mppi_search.py (lane_actions config option: search/_niche_search/sample_unscored/validate_plan/PlanLibrary; OFF byte-identical)",
@@ -15,11 +21,15 @@
   "tools/coopmwm/bank_imitation.py (AWR-weighted lane-head CE in run/run_separate; report lane_targets only when lane data present)",
   "tools/coopmwm/niche_collect.py (validate accepts registered lane_* keys)",
   "tools/coopmwm/plan_client.py (arm R: lane_actions_config + record rows into sample_unscored/verify_context)",
-  "tools/coopmwm/test_lane_plans_cpu.py (new)",
-  "MPPI_SEARCH_README.md (lane-actions section)"
+   "tools/coopmwm/test_lane_plans_cpu.py (new)",
+   "tools/coopmwm/test_lane_plans_merge_cpu.py (new: the c4/lane-policy merge-integration gates)",
+   "tools/coopmwm/v2v_lane.py (merged: plan_lane_targets - plan requests -> absolute targets, same clipping)",
+   "tools/coopmwm/v2v_runtime.py (merged: plan precedence in the runtime lane_targets; placeholder pop; audit fold in observe_lane)",
+   "tools/coopmwm/sumo_verify.py (merged: _count_lane skips unbound placeholders pending the tick outcome)",
+   "MPPI_SEARCH_README.md (lane-actions section)"
  ],
  "tests": {
-  "new": "tools/coopmwm/test_lane_plans_cpu.py: 30 passed (envelope = lane_feasibility incl. ramp-zone-only merge and blocked-target-lane gap rule; unresolvable state degrades to None; lane_v5 outcome predictions; sampling inside the envelope; attach/validate structural errors; search OFF byte-identity markers; search/niche ON scored+tagged+envelope-checked; library lane reseeds; solos keep the member row; plan_distance lane-blind; Controller lane requests + executor outcomes + unbound recording; VerifyController branch audit counts; build_branches lane validation; R random_candidates same lane rule + determinism; pair lane targets + executed/blocked outcomes; intent lane channel; AWR-weighted lane-head CE with grad; bank_imitation report keys)",
+  "new": "tools/coopmwm/test_lane_plans_cpu.py: 30 passed + tools/coopmwm/test_lane_plans_merge_cpu.py: 6 passed (post-merge state; merge gates: plan_lane_targets map/clip/skip-despawned; neutral-policy tick tensor carries exactly the plan targets; woken policy superseded on plan members; placeholder popped and never audit-counted, tick aggregate folded into the branch audit; plain unbound VerifyController records but never counts; imitation pairs fall back to the step-level tick outcome)",
   "required_suites": [
    "test_mppi_search_cpu: 15 passed",
    "test_coop_search_cpu: 23 passed",
@@ -28,6 +38,7 @@
    "test_launch_final_cpu: 13 passed"
   ],
    "regression": [
+    "post-wiring (e5740395) re-run, this session: test_mppi_search_cpu + test_coop_search_cpu 38 passed; test_verify_perseed_cpu 12 passed; test_bank_{amendment,boot,builder,imitation,perseed,restore_ops,safety}_cpu 46 passed; test_launch_final_cpu 13 passed; test_lane_plans_cpu + test_v2v_lane_cpu + test_lane_plans_merge_cpu 52 passed; test_v2v_intent_cpu + test_v2v_runtime_cpu + test_replay_bank_v2v_cpu 32 passed; test_niche_search_cpu + test_verify_continuation_cpu 52 passed (goldens byte-identical); test_sumo_verify_cpu 18/19 (the 1 failure is the pre-existing tools.leverprobe env failure, present on base too)",
     "post-merge (7986ca54) re-run of ALL required suites in one invocation: 109 passed",
     "post-merge lane feature + partner policy suites: test_lane_plans_cpu (30) + test_v2v_lane_cpu (16) = 46 passed",
     "test_niche_search_cpu + test_verify_continuation_cpu: 52 passed (goldens byte-identical: OFF output unchanged)",
