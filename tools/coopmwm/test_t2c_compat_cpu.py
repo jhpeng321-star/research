@@ -71,12 +71,13 @@ def test_clean_profile_has_fair_enabled_consumers_and_costs(tmp_path):
     assert cfg['launch_profile'] == 'track2_clean_run'
     assert cfg['teacher']['B']['kind'] == 'wm_dense'
     assert cfg['teacher']['R']['kind'] == 'random'
-    for name in ('dense_teacher', 'plan_augment', 'practice_weighting'):
+    for name in ('track2_reward', 'plan_augment', 'practice_weighting'):
         assert cfg[name]['enabled'] and cfg[name]['arms'] == ['B', 'R']
     assert not cfg['coop_reward']['enabled']
-    assert rc.budget()['phases']['teacher_verify'] > 0
-    assert rc.budget()['phases']['augment_verify'] > 0
-    assert rc.budget()['phases']['early_probes'] == 18*rc.ISOLATED_SIM_S_MEASURED
+    assert not cfg['dense_teacher']['enabled'] and not cfg['group_credit']['enabled']
+    assert rc.budget(track2=True)['phases']['teacher_verify'] == 0
+    assert rc.budget(track2=True)['phases']['augment_verify'] > 0
+    assert rc.budget(track2=True)['phases']['early_probes'] == 18*rc.ISOLATED_SIM_S_MEASURED
 
 
 @pytest.mark.parametrize('opt', [{}, dict(track2=False)], ids=['absent', 'false'])

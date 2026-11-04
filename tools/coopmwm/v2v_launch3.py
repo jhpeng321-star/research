@@ -213,7 +213,8 @@ def verify_commit(binding):
         required.update('tools/coopmwm/'+name+'.py' for name in (
             'rerun_cpus', 'rerun_cpus_compat', 'rerun_tracks_runtime', 'rerun_tracks_backend',
             'rerun_tracks_bank', 'rerun_tracks_monitor', 'moves', 'planner_eval',
-            'trigger_policy', 'coop_layer', 'group_credit', 'merge_features', 'dense_teacher', 'plan_augment'))
+            'trigger_policy', 'coop_layer', 'track2_reward', 'rerun_tracks_reward',
+            'merge_features', 'plan_augment'))
     # Packaged releases usually have a pytools/ prefix; all tool paths share it.
     suffix = 'tools/coopmwm/v2v_launch3.py'
     if not checker.endswith(suffix):

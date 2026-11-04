@@ -90,13 +90,14 @@ class Layer(nn.Module):
             r['effective_sample'], r['weight'], target_space='effective') for r in batch]).mean()
         return move, effective
 
-    def update(self, *, rows, bank_batch, bank_options, group_advantages, dense_targets, dense_mask, trigger, kl_cap):
+    def update(self, *, rows, bank_batch, bank_options, group_advantages=None, realised_rewards=None,
+               dense_targets, dense_mask, trigger, kl_cap):
         assert bank_options == OPTIONS
         logits = torch.stack([trigger(r['observation'], r['features']) for r in rows])
         old = logits.detach().softmax(-1)
         label = torch.tensor([int(m.family != 'none') for m, use in zip(dense_targets, dense_mask) if use], dtype=torch.long)
         selected = torch.tensor([int(r['family'] != 'none') for r in rows])
-        advantage = torch.tensor(group_advantages)
+        advantage = torch.tensor(realised_rewards if realised_rewards is not None else group_advantages)
         # Actual autograd/optimizer updates: group credit enters ONLY layer loss.
         ppo = -(logits.log_softmax(-1).gather(1, selected[:, None]).squeeze(1)*advantage).mean()
         dense_loss = F.cross_entropy(logits[dense_mask], label) if len(label) else logits.sum()*0
@@ -134,6 +135,12 @@ class Credit:
         return .2+move.depth*obs['own_sensing']['queue']
 
 
+class RealisedReward:
+    def realised_rewards(self, observation, next_observation, *, elapsed_s):
+        assert elapsed_s == 1
+        return {r['vid']: float(r['v_mps'])/1200 for r in next_observation['own_sensing']['vehicles']}
+
+
 class Teacher:
     def __init__(self):
         self.kinds, self.slates = [], []
@@ -163,7 +170,8 @@ class Plant:
         self.commands = []
 
     def observe(self):
-        return dict(time_s=self.t, own_sensing=dict(queue=2.),
+        return dict(time_s=self.t, own_sensing=dict(queue=2., ego_id='c1',
+            vehicles=[dict(vid=v, v_mps=1.+(self.commands[-1][v] if self.commands else 0.)) for v in ('c1', 'c2')]),
             v2v_reports=[dict(time_s=self.t-1), dict(time_s=self.t)],
             cav_ids=['c1', 'c2'], bounds={v: [-3., 1.2] for v in ('c1', 'c2')})
 
@@ -199,6 +207,7 @@ class CPUBackend:
     def adapters(self, model):
         factories = dict(merge_features=lambda c: Features(), trigger_head=lambda c: Trigger(),
             coop_layer=lambda c: Layer(c['trigger_head'], model), group_credit=lambda c: Credit(),
+            track2_reward=lambda c: RealisedReward(),
             dense_teacher=lambda c: Teacher(), plan_augment=lambda c: Augment(),
             practice_weighting=lambda c: Weighting())
         def build(name):
@@ -394,11 +403,10 @@ def test_smoke_executes_all_consumers_updates_and_full_isolated_expansion(tmp_pa
         c = backend.built[a]
         assert c['coop_layer'].correction.item() != 0
         assert c['trigger_head'].logits.abs().sum() > 0
-        assert set(c['dense_teacher'].kinds) == {cfg['teacher'][a]['kind']}
-    assert sorted(s[1].depth for s in backend.built['B']['dense_teacher'].slates) == sorted(
-        s[1].depth for s in backend.built['R']['dense_teacher'].slates)
+        assert 'dense_teacher' not in c and 'group_credit' not in c
     latest = read_monitor(rt.root)['latest']
-    assert all(latest[a]['metrics']['dense_labels'] == 40 for a in ('B', 'R'))
+    assert all(latest[a]['metrics']['dense_labels'] == 0 for a in ('B', 'R'))
+    assert all(latest[a]['metrics']['reward_rows'] == 40 for a in ('B', 'R'))
     assert latest['A']['metrics']['dense_labels'] == 0
     assert latest['B']['metrics']['merge_missing_share'] < .01
     # Real expanded diagnostic path (existing policy_synergy specs and decomposition).
@@ -488,33 +496,14 @@ def test_zero_initialized_layer_identity_and_credit_changes_only_layer():
 @pytest.mark.parametrize('prob,verified,eligible', [(.799999, False, False), (.8, False, True),
                                                  (.01, True, True), (None, False, False)])
 def test_dense_filter_boundary_bypass_and_empty_update(tmp_path, monkeypatch, arm, prob, verified, eligible):
-    cfg, reg, backend = prepare(tmp_path, monkeypatch)
-    rt = Runtime(cfg, reg, backend, smoke=True)
-    teacher = rt.components[arm]['dense_teacher']
-    def label(obs, proposals, **kwargs):
-        return dict(target=proposals[1] if prob is not None else None,
+    # Retain coverage of the dormant filter without constructing disabled teachers.
+    from tools.coopmwm.rerun_tracks_runtime import dense_label
+    proposals = [Move('none'), Move('gap_open')]
+    label = dict(target=proposals[1] if prob is not None else None,
                     calibrated_probability=prob, imitation_eligible=eligible,
                     provenance=dict(kind='sumo_verified' if verified else
                         ('planner_calibration' if prob is not None else 'no_target'), receipt_sha256='b'*64))
-    teacher.label = label
-    monitor = rt.update(arm, 1, episodes=2)
-    m = monitor['metrics']
-    layer = rt.components[arm]['coop_layer']
-    assert layer.last_policy_count == m['credit_rows'] == 40
-    assert layer.last_dense_count == m['dense_eligible_labels'] == (40 if eligible else 0)
-    assert m['dense_filtered_share'] == (0. if eligible else 1.)
-    assert (m['dense_ce'] is None) == (not eligible)
-    receipt = json.loads((rt.root/f'components/u001_{arm}_dense_labels.json').read_text())
-    checks = receipt['checked']
-    assert m['dense_checked_labels'] == len(checks) == 0  # smoke verification is dry-only
-    if checks:
-        assert m['dense_checked_accuracy'] == sum(c['label_correct'] for c in checks)/len(checks)
-    else:
-        assert m['dense_checked_accuracy'] is None  # no realised accuracy for absent targets
-    assert all(c['row_id'] in {r['row_id'] for r in receipt['rows']} for c in checks)
-    assert all(r['imitation_eligible'] == eligible for r in receipt['rows'])
-    assert monitor['action'] != 'PAUSE_SAFETY'
-    assert (rt.root/f'{arm}_checkpoint_001.pt').exists()
+    assert dense_label(label, proposals, dict(dense_teacher=rc.TRACK_SLOTS['dense_teacher']))['imitation_eligible'] is eligible
 
 
 def test_dense_filter_rejects_missing_calibration_and_forged_mask():
@@ -657,10 +646,10 @@ def test_fixed_sample_slate_is_equal_across_arms_and_independent_of_stream_size(
             for kind in ('teacher', 'group_credit'):
                 checked = rt._verify(arm, u, kind, rows, .999)
                 counts[arm, u, kind] = len(checked)
-                assert len(checked) == int(u in rc.VERIFY_UPDATES)
+                assert len(checked) == 0
     for kind in ('teacher', 'group_credit'):
-        assert sum(counts['B', u, kind] for u in range(1, 25)) == 4
-        assert sum(counts['R', u, kind] for u in range(1, 25)) == 4
+        assert sum(counts['B', u, kind] for u in range(1, 25)) == 0
+        assert sum(counts['R', u, kind] for u in range(1, 25)) == 0
 
 
 def test_augmentation_is_once_and_precedes_first_arm_episode(tmp_path, monkeypatch):

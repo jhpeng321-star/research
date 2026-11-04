@@ -270,6 +270,9 @@ class Runtime:
 
     def _verify(self, arm, update, kind, rows, fraction):
         # Fixed whole-run sample slate; fractions never multiply the stream.
+        slot = 'dense_teacher' if kind == 'teacher' else kind
+        if slot in ('dense_teacher', 'group_credit') and not self.cfg[slot]['enabled']:
+            return []
         if self.smoke:
             count = 0
         elif kind == 'augment':
@@ -348,15 +351,17 @@ class Runtime:
                         move = comp['trigger_head'].choose(obs, features, proposals, rng)
                         if move not in proposals or not set(move.members).issubset(obs['cav_ids']):
                             raise ValueError('REFUSED: trigger selected unobservable/non-CAV members')
-                        label = dense_label(comp['dense_teacher'].label(obs, proposals,
+                        label = (dense_label(comp['dense_teacher'].label(obs, proposals,
                                      kind=rc.teacher_kind(self.cfg, arm), rng=label_rng), proposals, self.cfg)
-                        advantage = float(comp['group_credit'].estimate(obs, move, model))
+                                 if 'dense_teacher' in comp else {})
+                        advantage = float(comp['group_credit'].estimate(obs, move, model)) if 'group_credit' in comp else 0.
                         if not math.isfinite(advantage):
                             raise ValueError('REFUSED: nonfinite group credit')
                         active = move
                         rows.append(dict(observation=obs, features=features, move=move,
                              **label, row_id=ident+f'_t{t:04}',
-                             group_advantage=advantage, family=move.family,
+                              group_advantage=advantage, family=move.family,
+                              realised_team_reward=0., reward_steps=0,
                             window=plant.full_window(), episode=index))
                     offsets = moves.offsets(active, t) if active is not None else {}
                     residual = comp['coop_layer'].residual(obs, features)
@@ -366,6 +371,12 @@ class Runtime:
                         lo, hi = obs['bounds'][vid]
                         actions[vid] = min(hi, 1.2, max(lo, value+offsets.get(vid, 0.)+residual.get(vid, 0.)))
                 plant.step(actions, speed_mode=27)  # sole command writer
+                if comp and 'track2_reward' in comp:
+                    from .rerun_tracks_reward import team_reward
+                    receipt = team_reward(comp['track2_reward'], obs, plant.observe(), self.cfg)
+                    rows[-1]['realised_team_reward'] += receipt['team_reward']
+                    rows[-1]['reward_steps'] += 1
+                    rows[-1]['reward_receipt'] = receipt
             result = plant.finish()
         if arm != 'A' and state_sha(model) != self.base_sha[arm]:
             raise ValueError('REFUSED: frozen base changed during episode')
@@ -412,7 +423,9 @@ class Runtime:
             safety_stop=any(ep['safety_stop'] for ep in episodes_out),
             families=list(moves.FAMILIES), decisions=len(rows),
             trigger_counts={f: sum(r['family'] == f for r in rows) for f in moves.FAMILIES},
-             credit_rows=len(rows), credit_checked_rows=0, dense_labels=len(rows),
+             credit_rows=len(rows) if 'group_credit' in comp else 0, credit_checked_rows=0,
+             dense_labels=len(rows) if 'dense_teacher' in comp else 0,
+             reward_rows=len(rows) if comp else 0, team_reward=None,
              dense_eligible_labels=0, dense_checked_labels=0,
             augmented_examples=len(augmented), weighted_starts=sum(s is not None for s in starts))
         if not comp:
@@ -425,19 +438,28 @@ class Runtime:
             sampled_checks = self._verify(arm, update, 'teacher', rows,
                                          self.cfg['dense_teacher']['verify_fraction'])
             teacher_checks = [r for r in sampled_checks if r.get('label_correct') is not None]
-            mask = [r['imitation_eligible'] for r in rows]
+            mask = [r.get('imitation_eligible', False) for r in rows]
             self._write(f'components/u{update:03}_{arm}_dense_labels.json', dict(
                 arm=arm, update=update, synthetic=self.synthetic,
-                rows=[dict({k: r[k] for k in ('row_id', 'calibrated_probability', 'provenance',
-                                             'imitation_eligible')}, target=repr(r['target'])) for r in rows],
-                checked=teacher_checks))
+                 enabled='dense_teacher' in comp,
+                 rows=[dict({k: r[k] for k in ('row_id', 'calibrated_probability', 'provenance',
+                                              'imitation_eligible')}, target=repr(r['target'])) for r in rows
+                       if 'imitation_eligible' in r],
+                 checked=teacher_checks))
             # Group advantages enter ONLY the layer/trigger update. Reward and A's
             # PPO stream remain untouched. Base params are frozen and excluded.
             self._check_optimizer(arm)
+            if 'track2_reward' in comp and any(r.get('reward_steps', 0) <= 0 for r in rows):
+                raise ValueError('REFUSED: layer update needs realised local outcome rewards')
+            reward_values = [r['realised_team_reward'] for r in rows] if 'track2_reward' in comp else None
+            self._write(f'components/u{update:03}_{arm}_realised_reward.json', dict(
+                registration=self.cfg['track2_reward'], rows=[dict(row_id=r['row_id'],
+                reward=r['realised_team_reward'], steps=r['reward_steps'], receipt=r['reward_receipt']) for r in rows]))
             losses = comp['coop_layer'].update(rows=rows, bank_batch=bank_batch,
-                      bank_options=deepcopy(self.cfg['bank_training']),
-                      group_advantages=[r['group_advantage'] for r in rows],
-                       dense_targets=[r['target'] for r in rows],
+                       bank_options=deepcopy(self.cfg['bank_training']),
+                       realised_rewards=reward_values,
+                       group_advantages=[r['group_advantage'] for r in rows] if 'group_credit' in comp else None,
+                        dense_targets=[r.get('target') for r in rows],
                        dense_mask=mask,
                       trigger=comp['trigger_head'], kl_cap=self.cfg['coop_layer']['kl_cap'])
             if state_sha(self.models[arm]) != self.base_sha[arm]:
@@ -454,8 +476,9 @@ class Runtime:
                 raise ValueError('REFUSED: learner did not receipt complete bank/effective supervision')
             self._write(f'components/u{update:03}_{arm}_bank_learning.json', consumed)
             metrics.update({k: losses[k] for k in ('dense_ce', 'dense_accuracy', 'bank_move_ce', 'layer_kl')})
-            metrics.update(group_credit_wm=fmean(r['group_advantage'] for r in rows),
-                 dense_eligible_labels=sum(mask), dense_filtered_share=1-sum(mask)/len(rows),
+            metrics.update(group_credit_wm=fmean(r['group_advantage'] for r in rows) if 'group_credit' in comp else None,
+                  team_reward=fmean(reward_values) if reward_values else None,
+                  dense_eligible_labels=sum(mask), dense_filtered_share=1-sum(mask)/len(rows) if 'dense_teacher' in comp else None,
                  dense_checked_labels=len(teacher_checks),
                  dense_checked_accuracy=fmean(r['label_correct'] for r in teacher_checks) if teacher_checks else None,
                  group_credit_checked=fmean(r['advantage'] for r in credit) if credit else None, credit_checked_rows=len(credit),
@@ -644,7 +667,7 @@ class Runtime:
                 if row['arm'] == 'A':
                     continue
                 m = row['metrics']
-                if (any(m[k] <= 0 for k in ('decisions', 'credit_rows', 'dense_labels',
+                if (any(m[k] <= 0 for k in ('decisions', 'reward_rows',
                                            'augmented_examples', 'weighted_starts'))
                         or m['merge_missing_share'] >= 1
                         or sum(v for k, v in m['trigger_counts'].items() if k != 'none') == 0):

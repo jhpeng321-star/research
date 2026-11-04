@@ -144,7 +144,7 @@ CRITERION = dict(
                'are reported, never gated.'),
     safety_counters=list(ISOLATED_TEST['safety_counters']), safety_tolerance=0,
     r_arm=dict(kind='random_bank', gated=False,
-                rule='R uses its own random bank (same move distribution); random dense teacher; '
+     rule='R uses its own random bank (same move distribution); real local outcome reward; '
                     'reported, never gated'),
     registered='proposed T2C registration; effective only after SHA-bound OWNER_APPROVAL.json')
 COOP_REWARD = dict(enabled=False, module='tools.coopmwm.coop_reward', weight=0.0,
@@ -209,8 +209,8 @@ def quote(*, track2=False):
     out['total_without_tests'] = (a_train+br_train+lessons+teacher_verify+isolated+GATE_SIM_S
                                   + credit_verify + augment_verify + probes + SMOKE['total_sim_s'])
     out['cost_basis'] = dict(isolated='B/R only u6/u12/u24 N=5; measured whole-replicate ceiling',
-                             group_credit='gate-sized verification allowance; hard phase ceiling',
-                               dense_teacher='fixed one whole all8 sample per arm at u6/u12/u18/u24',
+                             group_credit='OFF per MAIN 02:30; no verification work',
+                               dense_teacher='OFF per MAIN 02:30; no verification work',
                                augmentation='ONCE before launch, two whole all8 samples per arm',
                               early_probes='two updates x three arms x three full-window state checks (conservative ceiling)',
                               wm_compute='CPU only; no extra SUMO')
@@ -380,11 +380,11 @@ def head_teacher_config():
                 update='PPO update for the discrete head only')
     teachers = dict(
         A=None,
-        B=dict(enabled=True, module='tools.coopmwm.dense_teacher', kind='wm_dense',
+        B=dict(enabled=False, module='tools.coopmwm.dense_teacher', kind='wm_dense',
                mode='DAgger: the WM planner (T1B scoring, imported) labels the best move per '
                     'state at decision points; cross-entropy imitation for the T2A head',
                 verify_fraction=TRACK_SLOTS['dense_teacher']['verify_fraction'], verified_through='all8'),
-        R=dict(enabled=True, module='tools.coopmwm.dense_teacher', kind='random',
+        R=dict(enabled=False, module='tools.coopmwm.dense_teacher', kind='random',
                verify_fraction=TRACK_SLOTS['dense_teacher']['verify_fraction'], verified_through='all8',
                distribution='same move distribution as the WM teacher proposals (fairness)'))
     return head, teachers
@@ -415,8 +415,7 @@ def track2_components(cfg, arm, *, adapters):
         raise ValueError('REFUSED: unknown Track 2 arm')
     if arm == 'A' or not cfg.get('track2'):
         return {}
-    names = ['merge_features', 'trigger_head', 'coop_layer', 'group_credit',
-             'dense_teacher', 'plan_augment', 'practice_weighting']
+    names = component_names(cfg)
     missing = [n for n in names if not callable(adapters.get(n))]
     if missing:
         raise ValueError('REFUSED: Track 2 adapters missing: '+', '.join(missing))
@@ -434,6 +433,12 @@ def track2_components(cfg, arm, *, adapters):
     return components
 
 
+def component_names(cfg):
+    return [n for n in ('merge_features', 'trigger_head', 'coop_layer', 'group_credit',
+                       'dense_teacher', 'track2_reward', 'plan_augment', 'practice_weighting')
+            if cfg.get(n, {}).get('enabled') is True]
+
+
 def episode_options(cfg, arm):
     """Serializable worker extras for the qualified Track 2 episode integration.
 
@@ -446,7 +451,7 @@ def episode_options(cfg, arm):
     if arm == 'A' or not cfg.get('track2'):
         return {}                     # plain MAPPO's existing extras stay byte-identical
     keys = ('trigger_head', 'coop_layer', 'group_credit', 'merge_features',
-            'dense_teacher', 'plan_augment', 'practice_weighting', 'coop_reward')
+            'dense_teacher', 'track2_reward', 'plan_augment', 'practice_weighting', 'coop_reward')
     return dict(track2={k: deepcopy(cfg[k]) for k in keys},
                 track2_teacher=deepcopy(cfg['teacher'][arm]))
 

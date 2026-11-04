@@ -21,8 +21,8 @@ import torch
 from . import rerun_cpus as rc
 from .exact_grade import _seal
 
-COMPONENTS = ('merge_features', 'trigger_head', 'coop_layer', 'group_credit',
-              'dense_teacher', 'plan_augment', 'practice_weighting')
+COMPONENTS = ('merge_features', 'trigger_head', 'coop_layer', 'track2_reward',
+              'plan_augment', 'practice_weighting')
 
 
 def entrypoint(name):
@@ -39,12 +39,13 @@ def entrypoint(name):
 def factories(cfg, base):
     """Siblings supply the documented consumed adapter, not guessed class APIs."""
     bindings = cfg['production']['component_factories']
-    if set(bindings) != set(COMPONENTS):
-        raise ValueError('REFUSED: all seven production component factories required')
+    names = rc.component_names(cfg)
+    if set(bindings) != set(names):
+        raise ValueError('REFUSED: enabled production component factories required')
     def bind(name):
         constructor = entrypoint(bindings[name])
         return lambda **kw: constructor(base=base, **kw)
-    return {name: bind(name) for name in COMPONENTS}
+    return {name: bind(name) for name in names}
 
 
 def base_weights(weights):
@@ -196,6 +197,46 @@ class EpisodeHook:
                 # Capture through the reviewed verification API. Only the exact
                 # executor receives this private snapshot; never WM/trigger inputs.
                 if self.selected is None:  # learning/teacher work only on training episodes
+                    if 'dense_teacher' not in self.components and 'group_credit' not in self.components:
+                        self.rows.append(dict(observation=obs, features=features, move=active,
+                            row_id=job['id']+f'_t{int(now):04}', family=active.family,
+                            realised_team_reward=0., reward_steps=0))
+                        # No snapshot/WM construction on the MAIN 02:30 path.
+                    else:
+                        self._wm_row(controller, job, prefixes, now, obs, features, active, proposals, sv, dense_label)
+            offsets = moves.offsets(active, int(now)-onset)
+            residual = self.components['coop_layer'].residual(obs, features)
+            if not (set(offsets) | set(residual)).issubset(obs['cav_ids']):
+                raise ValueError('REFUSED: HDV/nonobservable production command')
+            allowed = (set(obs['cav_ids']) if self.selected is None or isinstance(self.selected, AllMembers)
+                       else set(self.selected))
+            sample = controller.events[-1]['sample']
+            for vid in allowed & set(obs['cav_ids']):
+                if vid not in commands:
+                    continue
+                raw = desired.get(vid, {}).get('requested_raw', commands[vid])
+                lo, hi = obs['bounds'][vid]
+                raw = min(hi, max(lo, raw+offsets.get(vid, 0.)+residual.get(vid, 0.)))
+                desired[vid] = dict(requested_raw=raw, acceleration_residual=raw-commands[vid])
+                sample.setdefault('absolute_accels', {})[vid] = raw
+            controller.events[-1]['requests'] = deepcopy(desired)
+            self.pending_observation = obs
+            return desired
+        controller.apply = apply
+
+    def after_step(self, now, rows):
+        if not self.components or self.selected is not None or not hasattr(self, 'pending_observation'):
+            return
+        from .rerun_tracks_reward import team_reward
+        obs = self.pending_observation
+        after = observation(rows, None, int(now)+1, (-3., 1.2), ego=obs['own_sensing']['ego_id'])
+        receipt = team_reward(self.components['track2_reward'], obs, after, self.cfg)
+        row = self.rows[-1]
+        row['realised_team_reward'] += receipt['team_reward']
+        row['reward_steps'] += 1
+        row['reward_receipt'] = receipt
+
+    def _wm_row(self, controller, job, prefixes, now, obs, features, active, proposals, sv, dense_label):
                     sample = controller.events[-1]['sample']
                     snapshot = sv.capture(controller, prefixes, job, now, sample, controller.generator)
                     torch.rand((), generator=controller.generator)  # native verification pad draw
@@ -217,24 +258,6 @@ class EpisodeHook:
                         snapshot_file_sha256=rc.sha(snapshot_path), group_advantage=advantage,
                         row_id=job['id']+f'_t{int(now):04}', family=active.family,
                         window=window, episode=job['id']))
-            offsets = moves.offsets(active, int(now)-onset)
-            residual = self.components['coop_layer'].residual(obs, features)
-            if not (set(offsets) | set(residual)).issubset(obs['cav_ids']):
-                raise ValueError('REFUSED: HDV/nonobservable production command')
-            allowed = (set(obs['cav_ids']) if self.selected is None or isinstance(self.selected, AllMembers)
-                       else set(self.selected))
-            sample = controller.events[-1]['sample']
-            for vid in allowed & set(obs['cav_ids']):
-                if vid not in commands:
-                    continue
-                raw = desired.get(vid, {}).get('requested_raw', commands[vid])
-                lo, hi = obs['bounds'][vid]
-                raw = min(hi, max(lo, raw+offsets.get(vid, 0.)+residual.get(vid, 0.)))
-                desired[vid] = dict(requested_raw=raw, acceleration_residual=raw-commands[vid])
-                sample.setdefault('absolute_accels', {})[vid] = raw
-            controller.events[-1]['requests'] = deepcopy(desired)
-            return desired
-        controller.apply = apply
 
 
 def episode_worker(job, cfg, weights):
