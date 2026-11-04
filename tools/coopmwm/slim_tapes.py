@@ -49,9 +49,43 @@ One-off migration of EXISTING sealed decisions (the operator rsyncs the archive 
 another host; archive layout is bank-relative so it restores 1:1):
   python -m tools.coopmwm.slim_tapes migrate --root R --arm B --archive /target/dir [--dry-run]
   python -m tools.coopmwm.slim_tapes quote   --root R --arm B          (bytes saved, no writes)
+
+slim_first_seed_tapes (owner 2026-11-04 13:30, spec slim_extend_spec.md; SEPARATE explicit
+migration, the runtime is never wired to it): the FIRST-SEED rejected candidate tapes of
+decisions that will never get an all8 record. slim_plan only covers decisions with a sealed
+confirmations_all8 record; the remaining sumo_verification bytes belong to decisions whose
+legacy confirmation (bank/confirmations/<vid>.json) is sealed, or which are explicitly retired
+from all8 by a registered MAIN decision (an ALL8_RETIRED*.json registry with
+'verification_ids'). first_seed_plan(bank, receipt, confirmation=None) returns the same entry
+format for the graded candidate branches under replay_bank/<arm>/sumo_verification/branches/
+<vid>/<branch> that no reader opens. NEVER kept-vs-slimmed rules, a branch's full tape is kept
+when ANY of these holds:
+  1. it is the 'policy' branch (grading reference, _cooperation relabel, bootstrap);
+  2. it is the first-seed CHOSEN branch (receipt['chosen']+1): legacy bank_pairs,
+     lesson_check._action_error, confirm_one legacy confirmations;
+  3. its decision is in any LESSON_LIST_*.json, in an isolated-synergy CLAIM verification_ids
+     list (policy_synergy / v2v_live.isolated controls), in a coopfix gate plan's certified
+     states (COOPFIX_EXACT_PLAN.json / COOPFIX_GATE.json, e.g. gate_coop6/7/8), in a
+     BACKFILL/CPUS-CHECK QUEUE.json pending entry or a not-yet-complete control attempt
+     (all8 still needs every candidate tape), or in an operator-provided --protect path;
+  4. the decision has no sealed legacy confirmation AND is not registered retired
+     (legacy confirm pending), or the receipt status is not accepted/rejected;
+  5. a sealed all8 record exists (the existing slim_plan already covers its seed-1 rejected
+     candidates; the cpuS slim_first_seed RPC handles those).
+Candidate spec files (cand*.spec.json), observable.jsonl.gz traces, snapshots, receipts and
+every confirmation/record file are untouched. The migration reuses slim_branch/_move_verified
+unchanged (copy -> sha256 -> SLIM.json -> unlink; PARTIAL keeps both sides and stops the run):
+  python -m tools.coopmwm.slim_tapes first-seed quote   --root R --arm B|all [--protect P]...
+  python -m tools.coopmwm.slim_tapes first-seed migrate --root R --arm B|all --archive DIR
+          [--dry-run] [--protect P]...
+Extra protection paths (one file or directory each; e.g. another run root's LESSON_LIST files,
+the coop3 run root) may be passed via repeatable --protect or the C4NM_SLIM_FIRST_SEED_PROTECT
+env var (os.pathsep-separated). Every candidate protection file is BAD-guarded (sealed/,
+holdout-like names are never opened) and read-only.
 """
 import hashlib
 import json
+import os
 import re
 from pathlib import Path
 
@@ -487,8 +521,324 @@ def migrate(bank, archive_dir, dry_run=False):
     return out
 
 
+# ---------------------------------------------------------- slim_first_seed_tapes (spec 13:30)
+
+SV_ROOT = 'sumo_verification'            # first-seed verification root (bank-relative)
+CONFIRMATIONS = 'confirmations'          # sealed legacy confirmations (bank-relative)
+RETIRED_STEM = 'ALL8_RETIRED'            # registered retirements from all8 (MAIN decision)
+PROTECT_ENV = 'C4NM_SLIM_FIRST_SEED_PROTECT'
+
+
+def _run_root(bank):
+    """<root> of the layout <root>/replay_bank/<arm> (the run root; None when shallower)."""
+    bank = Path(bank)
+    return bank.parent.parent if bank.parent.name == 'replay_bank' else None
+
+
+def _open_json(path):
+    """BAD-guarded JSON read of one protection/registry candidate file (None on any problem)."""
+    p = Path(path)
+    if BAD.search(str(p)):
+        return None
+    try:
+        return json.loads(p.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+
+
+def _ids_in(body):
+    """Every verification_id (string) / verification_ids (list) found anywhere in a JSON body."""
+    out = set()
+    if isinstance(body, str):
+        return out
+    if isinstance(body, list):
+        for x in body:
+            out |= _ids_in(x)
+        return out
+    if isinstance(body, dict):
+        for k, v in body.items():
+            if k == 'verification_ids' and isinstance(v, list):
+                out |= {str(x) for x in v if isinstance(x, str)}
+            elif k == 'verification_id' and isinstance(v, str):
+                out.add(v)
+            else:
+                out |= _ids_in(v)
+    return out
+
+
+def _protection_files(bank, extra=()):
+    """Candidate protection/registry files around one bank: lesson lists (bank + run root),
+    isolated-synergy CLAIMs, coopfix gate plans/reports, cpus/backfill QUEUE + attempts and
+    ALL8_RETIRED registries, plus every --protect path (file, or dir two levels deep)."""
+    bank, root = Path(bank), _run_root(bank)
+    globs = [(bank, 'LESSON_LIST_*.json'), (bank, f'{RETIRED_STEM}*.json')]
+    if root is not None:
+        globs += [(root, 'LESSON_LIST_*.json'), (root, f'{RETIRED_STEM}*.json'),
+                  (root, '*/LESSON_LIST_*.json'), (root, '*/u*/CLAIM.json'),
+                  (root, 'isolated/*/CLAIM.json'), (root, '*/COOPFIX_EXACT_PLAN.json'),
+                  (root, '*/COOPFIX_GATE.json'), (root, 'QUEUE.json'), (root, '*/QUEUE.json'),
+                  (root, '*/attempts/*.json'), (root, f'*/{RETIRED_STEM}*.json')]
+    out = []
+    for base, pattern in globs:
+        try:
+            out += [p for p in sorted(base.glob(pattern)) if p.is_file()]
+        except OSError:
+            continue
+    for x in list(extra)+[p for p in os.environ.get(PROTECT_ENV, '').split(os.pathsep) if p]:
+        p = Path(x)
+        if p.is_file():
+            out.append(p)
+        elif p.is_dir():
+            try:
+                out += [q for q in sorted(p.glob('*.json')) if q.is_file()]
+                out += [q for q in sorted(p.glob('*/CLAIM.json')) if q.is_file()]
+            except OSError:
+                continue
+    seen, uniq = set(), []
+    for p in out:
+        if str(p) not in seen:
+            seen.add(str(p));uniq.append(p)
+    return uniq
+
+
+def protection_report(bank, extra=()):
+    """{source_file: ids} of every protection list found around the bank (read-only)."""
+    out = {}
+    for p in _protection_files(bank, extra):
+        ids = _ids_in(_open_json(p))
+        if ids:
+            out[str(p)] = sorted(ids)
+    return out
+
+
+def protected_ids(bank, extra=()):
+    """Union of the protected verification ids (rule 3: keep EVERY branch of these decisions)."""
+    out = set()
+    for ids in protection_report(bank, extra).values():
+        out |= set(ids)
+    return out
+
+
+def retired_ids(bank, extra=()):
+    """verification_ids registered as retired from all8 (ALL8_RETIRED*.json registries)."""
+    out = set()
+    for p in _protection_files(bank, extra):
+        if not p.name.startswith(RETIRED_STEM) or BAD.search(str(p)):
+            continue
+        body = _open_json(p)
+        if isinstance(body, dict) and isinstance(body.get('verification_ids'), list):
+            out |= {str(x) for x in body['verification_ids'] if isinstance(x, str)}
+    return out
+
+
+def _first_seed_confirmation(bank, vid):
+    """The sealed legacy confirmation of one decision (bank/confirmations/<vid>.json) or None.
+    An unreadable or UNSEALED file raises SlimError: nothing is slimmed on doubt."""
+    p = Path(bank)/CONFIRMATIONS/f'{vid}.json'
+    if not p.exists():
+        return None
+    from .exact_grade import verify_sealed
+    body = _open_json(p)
+    if not isinstance(body, dict):
+        raise SlimError(f'{vid}: unreadable legacy confirmation {p}')
+    try:
+        verify_sealed(body, 'confirmation_sha256')
+    except ValueError as e:
+        raise SlimError(f'{vid}: legacy confirmation {p} is not sealed ({e})') from e
+    if body.get('verification_id') not in (None, vid):
+        raise SlimError(f'{vid}: legacy confirmation {p} names {body.get("verification_id")}')
+    return body
+
+
+def first_seed_receipts(bank):
+    """[(vid, receipt)] of every sealed first-seed receipt under <bank>/sumo_verification
+    (read-only; a receipt that fails its seal raises - the caller keeps everything)."""
+    from .exact_grade import verify_sealed
+    out = []
+    for p in sorted((Path(bank)/SV_ROOT/'verifications').glob('*.json')):
+        body = _open_json(p)
+        if not isinstance(body, dict):
+            raise SlimError(f'{p}: unreadable first-seed receipt')
+        verify_sealed(body, 'receipt_sha256')
+        out.append((body['verification_id'], body))
+    return out
+
+
+def first_seed_plan(bank, receipt, confirmation=None, protected=None, retired=None):
+    """Branch entries ONE completed first-seed decision slims (same entry format as slim_plan):
+    every graded candidate branch except the 'policy' reference and the first-seed CHOSEN
+    branch, of decisions whose legacy confirmation is sealed or which are registered retired
+    from all8 - and that are in NO protection list (rule 3), have no sealed all8 record
+    (rule 5: slim_plan already covers those) and whose receipt status is accepted/rejected
+    (rule 4). Everything else returns []: the decision keeps every tape. LS-source decisions
+    (receipt tapes outside the bank) raise SlimError like slim_plan."""
+    from .bank_statistics import ALL8_RECORDS
+    bank = _guard(bank)
+    vid = receipt['verification_id']
+    if receipt.get('status') not in ('accepted', 'rejected'):
+        return []
+    if (bank/ALL8_RECORDS/f'{vid}.json').exists():
+        return []                      # rule 5: the existing slim_plan covers seed 1
+    if protected is None:
+        protected = protected_ids(bank)
+    if vid in protected:
+        return []                      # rule 3: lesson lists / claims / gates / queue / runtime
+    if confirmation is None:
+        confirmation = _first_seed_confirmation(bank, vid)
+    if retired is None:
+        retired = retired_ids(bank)
+    if confirmation is None and vid not in retired:
+        return []                      # rule 4: legacy confirm pending / not retired
+    if confirmation is not None:       # never slim on doubt: the seal is re-checked
+        body = _first_seed_confirmation(bank, vid)
+        if body is None:               # passed in without a file: verify the record itself
+            from .exact_grade import verify_sealed
+            try:
+                verify_sealed(confirmation, 'confirmation_sha256')
+            except ValueError as e:
+                raise SlimError(f'{vid}: passed legacy confirmation is not sealed ({e})') from e
+            if confirmation.get('verification_id') not in (None, vid):
+                raise SlimError(f'{vid}: passed legacy confirmation names '
+                                f'{confirmation.get("verification_id")}')
+    branches_dir = Path(receipt['_branches']) if receipt.get('_branches') else \
+        bank/SV_ROOT/'branches'
+    if bank not in branches_dir.parents and branches_dir != bank:
+        raise SlimError(f'{vid}: first-seed tapes live outside the bank ({branches_dir}); '
+                        'keeping every tape')
+    chosen = receipt.get('chosen')
+    idxs = {int(b['index']) for b in receipt['branches']
+            if b['branch'] != 'policy' and b.get('status') == 'graded'}
+    if chosen is not None:
+        idxs.discard(int(chosen)+1)    # rule 2: the legacy chosen branch tape stays
+    return _verification_plan(branches_dir.parent, vid, idxs, receipt.get('receipt_sha256'))
+
+
+def _first_seed_rows(bank, extra=()):
+    """[(vid, receipt, plan-or-None, keep_reasons)] for quote/migrate: first_seed_plan per
+    decision with the keep reason(s) resolved (plan=None means every tape is kept)."""
+    bank = Path(bank)
+    from .bank_statistics import ALL8_RECORDS
+    protected, retired = protected_ids(bank, extra), retired_ids(bank, extra)
+    rows = []
+    for vid, receipt in first_seed_receipts(bank):
+        reasons = []
+        if receipt.get('status') not in ('accepted', 'rejected'):
+            reasons.append('receipt_not_completed')
+        if (bank/ALL8_RECORDS/f'{vid}.json').exists():
+            reasons.append('all8_sealed_slim_plan_covers_seed1')
+        if vid in protected:
+            reasons.append('protected_reference')
+        confirmation = None
+        try:
+            confirmation = _first_seed_confirmation(bank, vid)
+        except SlimError as e:
+            reasons.append('unsealed_legacy_confirmation')
+            confirmation = 'invalid'
+        if confirmation is None and vid not in retired:
+            reasons.append('confirm_pending_or_not_retired')
+        plan = None
+        if not reasons:
+            try:
+                plan = first_seed_plan(bank, receipt, confirmation, protected, retired)
+            except Exception as e:     # any planning failure keeps every tape
+                reasons.append('plan_error')
+                plan = None
+                rows.append((vid, receipt, [], reasons+[repr(e)]))
+                continue
+        rows.append((vid, receipt, plan or [], reasons))
+    return rows
+
+
+def first_seed_quote(bank, extra=()):
+    """Bytes the first-seed migration WOULD move, per decision and in total (read-only).
+    Reasons for keeping are counted per decision; SLIM.json bytes of already-slimmed
+    first-seed branches are reported separately."""
+    bank = Path(bank)
+    per, kept, total, slim_total, branches, eligible = {}, {}, 0, 0, 0, 0
+    for vid, receipt, plan, reasons in _first_seed_rows(bank, extra):
+        removed, n = 0, 0
+        for bdir, _, _ in plan:
+            marker, payload, slim = bdir/MARKER, bdir/PAYLOAD, bdir/SLIM
+            if slim.exists() and not marker.exists() and not payload.exists():
+                slim_total += slim.stat().st_size
+                continue
+            if not marker.exists():
+                continue
+            removed += marker.stat().st_size + (payload.stat().st_size if payload.exists() else 0)
+            n += 1
+        per[vid] = dict(status=receipt.get('status'), branches=n, bytes_removed=removed,
+                        kept_reasons=reasons)
+        total += removed
+        branches += n
+        eligible += bool(plan and n)
+        for r in reasons:
+            kept[r] = kept.get(r, 0)+1
+    return dict(bank=str(bank), scope='first_seed', protect_env=PROTECT_ENV, default_off=True,
+                decisions=len(per), eligible_decisions=eligible, branches=branches,
+                bytes_removed_total=total, slim_bytes_total=slim_total, kept_decisions=kept,
+                per_decision=per, protection=protection_report(bank, extra))
+
+
+def first_seed_migrate(bank, archive_dir, dry_run=False, extra=()):
+    """One-off first-seed migration: move every eligible non-admitted first-seed candidate's
+    full RESULT.json(.gz) into archive_dir (bank-relative layout, sha256-verified both sides,
+    slim_branch/_move_verified PARTIAL semantics unchanged). Never touches admitted/reference/
+    solo tapes, candidate spec files, observable traces, snapshots, receipts or the sealed
+    records; a SlimPartial (source file already unlinked, both sides kept) STOPS the run."""
+    bank, archive_dir = Path(bank), Path(archive_dir)
+    a, b = archive_dir.resolve(), bank.resolve()
+    if a == b or a in b.parents or b in a.parents:
+        raise SlimError('archive dir must be outside the bank')
+    out = dict(bank=str(bank), archive=str(archive_dir), dry_run=bool(dry_run), scope='first_seed',
+               decisions=0, eligible_decisions=0, bytes_moved=0, bytes_removed=0, slim_bytes=0,
+               moved=0, kept=0, already_slim=0, partial=None, errors=[])
+    for vid, receipt, plan, reasons in _first_seed_rows(bank, extra):
+        out['decisions'] += 1
+        if reasons:
+            out['kept'] += 1
+            continue
+        out['eligible_decisions'] += 1
+        for entry in plan:
+            try:
+                row = slim_branch(entry, bank=bank, archive_dir=archive_dir, dry_run=dry_run)
+            except SlimPartial as e:
+                out['errors'].append(dict(verification_id=vid, branch=entry[1]['branch'],
+                                          dir=str(entry[0]), error=str(e), partial=True))
+                out['kept'] += 1
+                out['partial'] = vid
+                break                     # STOP this decision; the caller stops the run
+            except Exception as e:   # ANY failure keeps the tape and is recorded
+                out['errors'].append(dict(verification_id=vid, branch=entry[1]['branch'],
+                                          dir=str(entry[0]), error=repr(e)))
+                out['kept'] += 1
+                continue
+            out[row['status']] = out.get(row['status'], 0)+1
+            out['bytes_moved'] += row['bytes_moved']
+            out['bytes_removed'] += row['bytes_removed']
+            out['slim_bytes'] += row['slim_bytes']
+        if out.get('partial'):
+            break                     # STOP the whole migration after a partial move
+    return out
+
+
+def first_seed_main(a):
+    """first-seed quote|migrate CLI (namespace from main): bytes per arm; the quote is
+    read-only, the migration moves into <archive>/<arm> (bank-relative layout inside)."""
+    arms = ('B', 'R') if a.arm == 'all' else (a.arm,)
+    out = {}
+    for arm in arms:
+        bank = _guard(Path(a.root)/'replay_bank'/arm)
+        if a.fs_cmd == 'quote':
+            out[arm] = first_seed_quote(bank, extra=a.protect)
+        else:
+            out[arm] = first_seed_migrate(bank, Path(a.archive)/arm, dry_run=a.dry_run,
+                                          extra=a.protect)
+    print(json.dumps(out if a.arm == 'all' else out[a.arm], indent=1))
+    return 0
+
+
 def main(argv=None):
-    """python -m tools.coopmwm.slim_tapes quote|migrate --root R --arm B [--archive DIR] [--dry-run]"""
+    """python -m tools.coopmwm.slim_tapes quote|migrate|first-seed --root R --arm B [...]"""
     import argparse
     ap = argparse.ArgumentParser(prog='slim_tapes')
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -500,8 +850,21 @@ def main(argv=None):
     m.add_argument('--arm', required=True)
     m.add_argument('--archive', required=True)
     m.add_argument('--dry-run', action='store_true')
+    f = sub.add_parser('first-seed', help='slim_first_seed_tapes: quote|migrate (spec 13:30)')
+    fs = f.add_subparsers(dest='fs_cmd', required=True)
+    fq = fs.add_parser('quote', help='bytes per arm the first-seed migration would move (no writes)')
+    fm = fs.add_parser('migrate', help='move eligible first-seed tapes to --archive (SLIM.json stays)')
+    for x in (fq, fm):
+        x.add_argument('--root', required=True)
+        x.add_argument('--arm', required=True, choices=('B', 'R', 'all'))
+        x.add_argument('--protect', action='append', default=[],
+                       help='extra protection file or directory (repeatable)')
+    fm.add_argument('--archive', required=True)
+    fm.add_argument('--dry-run', action='store_true')
     a = ap.parse_args(argv)
     from .replay_bank import bank_root
+    if a.cmd == 'first-seed':
+        return first_seed_main(a)
     bank = bank_root(a.root, a.arm)
     if a.cmd == 'quote':
         print(json.dumps(quote(bank), indent=1))
