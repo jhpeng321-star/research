@@ -1,0 +1,71 @@
+{
+  "schema": "coopmwm-imit-kl-option-ready-v1",
+  "branch": "c4/imit-kl-option",
+  "based_on": "c4/v2v-resume",
+  "commit": "8b086c2b45cfb77473d120cef124023472801b07",
+  "unix": 1799116800,
+  "option": {
+    "key": "imitation_kl_limit",
+    "default": 0.045,
+    "default_is_byte_identical": true,
+    "registered_alternatives": [0.045, 0.06, 0.09],
+    "registered_constant": "v2v_launch3.IMITATION_KL_LIMITS == bank_imitation.KL_LIMITS",
+    "arm_rule": "one key serves B and R (imitation_kl_limit_by_arm accepted only when B == R == the key); A is refused (only arms B and R have an imitation bank); a pre-option runtime without the key keeps the .045 default"
+  },
+  "keys": {
+    "v2v_launch3.BANK_OPTIONS['imitation_kl_limit']": 0.045,
+    "v2v_launch3.IMITATION_KL_LIMITS": [0.045, 0.06, 0.09],
+    "bank_imitation.KL_LIMIT": 0.045,
+    "bank_imitation.KL_LIMITS": [0.045, 0.06, 0.09],
+    "bank_imitation.RUNTIME_KL_LIMIT": 0.045,
+    "bank_imitation.install(kl_limit=...)": "v2v_live.hooks binds the runtime value process-wide for B and R; explicit run_separate(kl_limit=...) still wins; None keeps the current binding",
+    "v2v_runner.prepare_intent(imitation_kl_limit=...)": "runtime producer; None pins the launcher default .045, otherwise a registered alternative only",
+    "v2v_launch3.imitation_kl_limit_for(cfg, arm)": "per-arm reader; refuses unregistered values, B != R and arm A",
+    "v2v_learning_watch.registered_kl_limits()": "registered set used to fail closed on an unregistered receipt limit"
+  },
+  "where_the_limit_is_enforced": [
+    "bank_imitation.run_separate: report kl_limit, per-attempt acceptance (kl <= limit), halving backtracking, kl_targeted growth threshold (limit/2), final full-bank KL bound",
+    "v2v_learning_watch.inspect_update: KL-breach check reads the RUNTIME limit recorded in the receipt (bank_imitation.kl_limit); an unregistered limit fails closed ('unregistered_imitation_kl_limit')",
+    "v2v_launch3.bind_runtime + imitation_kl_limit_for: registered values only, B == R enforced, unregistered/mismatched values refused before any dispatch"
+  ],
+  "per_update_safety_note": {
+    "report_keys": ["total_kl_vs_pre_update", "total_kl_reference", "safety_note"],
+    "meaning": "exact joint KL of the published (post-PPO + imitation) policy vs the frozen PRE-UPDATE policy over the same bank samples = PPO + imitation total drift",
+    "gating": "carried only when an imitation option deviates from its registered default (step_mode='kl_targeted' or kl_limit != .045); the fixed/.045 report stays byte-identical to the branch point",
+    "enforcement": "report-only; no separate threshold (the registered per-region limits remain the only pause criteria)"
+  },
+  "byte_identity_evidence": {
+    "method": "golden reports captured from the pre-change module at the branch point (fixed/targeted/backtracking cases, same seeds/banks/interpreter), embedded in test_bank_imitkl_cpu.GOLDEN",
+    "default_fixed": "report equals the branch-point golden EXACTLY (json byte-for-byte)",
+    "default_targeted": "equals the golden plus only the safety-note keys",
+    "cross_branch_test": "tools/coopmwm/test_v2v_intent_cpu.py::test_option_off_is_byte_identical_to_branch_point passes (compares exact_update metrics JSON against git blob modules of the branch point)"
+  },
+  "tests": {
+    "new": "tools/coopmwm/test_bank_imitkl_cpu.py (16 tests: golden byte-identity, default == explicit .045, runtime binding + explicit wins, unregistered refusals, bound never exceeded incl. refusal above .06, kl_targeted growth threshold reads the runtime limit, launch3 registered alternatives + B!=R/A/unregistered refusals, pre-option runtime default, prepare_intent refusals, hooks binding, monitor uses the runtime limit, receipt safety note)",
+    "run_results": {
+      "test_imitfix2_cpu.py + test_launch_final_cpu.py + test_coop_only_cpu.py": "36 passed",
+      "test_v2v_*_cpu.py (13 files)": "153 passed, 9 subtests",
+      "test_bank_*_cpu.py (8 files)": "62 passed",
+      "test_imitstrength_cpu.py + test_v2v_learning_watch_cpu.py": "19 passed, 9 subtests",
+      "interpreter": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/<test>.py (CPU only, run from the worktree root)"
+    }
+  },
+  "how_to_switch_at_an_update_boundary": [
+    "1. Pick a REGISTERED alternative only: 0.045 (current), 0.06 or 0.09. Anything else is refused by prepare_intent, bind_runtime and the monitor (fail closed).",
+    "2. Re-prepare the runtime at an update boundary k -> k+1: v2v_runner.prepare_intent(..., imitation_kl_limit=0.06) writes config['imitation_kl_limit']=0.06 (B and R together; prepare refuses non-registered values).",
+    "3. Re-bind the deployment: reissue the additive launch3 authority (LAUNCH3_AUTHORITY.json + qualified binding + SHA) pinning the NEW runtime hash; v2v_launch3.bind_runtime accepts any registered value with B == R and refuses the rest.",
+    "4. On child start, v2v_live.hooks reads imitation_kl_limit_for(cfg, 'B'/'R') and bank_imitation.install(kl_limit=...) binds it process-wide; every bank_imitation.run_separate call then reports kl_limit=0.06 and bounds all acceptance checks and the kl_targeted growth threshold (limit/2) by it.",
+    "5. learningwatch needs no change: its KL-breach check reads the runtime limit from each sealed update receipt and fails closed on an unregistered limit. The per-update safety note (total_kl_vs_pre_update) appears in every receipt of a non-default runtime.",
+    "6. The bank step mode (imitation_step_mode) is unchanged by this option; both keys stay one-value-for-B-and-R and are only flipped at a registered update boundary via the same re-bind procedure."
+  ],
+  "hard_rules_respected": {
+    "cpu_only": true,
+    "worktree_only": "E:/agent-work/c4-imit-kl-option (branch c4/imit-kl-option)",
+    "no_git_reset_clean_stash_push": true,
+    "no_sealed_or_holdout_paths_opened": true,
+    "no_hand_set_thresholds": "every bound is a registered config value (IMITATION_KL_LIMITS); the safety note adds no threshold",
+    "default_off_byte_identical": true,
+    "launch3_safety_checks_not_weakened": "bind_runtime still exact-pins every other key; imitation_kl_limit accepts only registered values with B == R; missing key (pre-option runtime) keeps .045",
+    "tests_exercise_real_code_paths": "run_separate / hooks / bind_runtime / prepare_intent / inspect_update executed for real; only module seams (bi.joint_kl for the growth-threshold script, bi.run dispatch, bi.install/bs.install capture) are substituted, never the function under test"
+  }
+}
