@@ -1,0 +1,113 @@
+{
+  "task": "P2 (REDESIGNED)",
+  "status": "READY_CPU",
+  "specification": "tracks_spec.md, read completely; MAIN 02:30 owner-approved REDESIGN",
+  "worktree": "E:/agent-work/c4-track2-reward",
+  "branch": "c4/track2-reward",
+  "base": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
+  "commits": {
+    "implementation_and_tests": "f1529c147406bad707f4cf25a33a89a98d7e81b5",
+    "merge_features_merge": "8eeb55773722a9cb0ed59b4886efbe744a211b7f",
+    "merged_coop_layer_tip": "70a79af7d3dc1ff08ea9804fa10271fc7963e93a",
+    "merged_merge_features_tip": "0a2221558143b56c6042f2f469e5d01915a25d5b",
+    "receipt_commit": "The commit adding this P2_READY.json; resolve with git log -1 -- P2_READY.json"
+  },
+  "files": [
+    "tools/coopmwm/track2_reward.py",
+    "tests/unit/test_track2_reward.py",
+    "P2_READY.json"
+  ],
+  "dependencies": {
+    "c4/coop-layer": "Merged for real CooperationLayer.update integration verification",
+    "c4/merge-features": "Merged; reuse SensorReport, ObservedVehicle, atomic-packet validation and local-row filtering",
+    "c4/coop-reward": "Inspected specific source/design via git show; no commits imported. Its positive delay addition and global own-reward semantics were not reused."
+  },
+  "reward_contract": {
+    "per_vehicle_outcome": "r_j = -CONTROL_DT_S * max(0, 1 - observed_v_j / SPEED_LIMIT_MPS)",
+    "per_CAV": "r_i_prime = r_i + registered_weight * mean(r_j for j in observable N_i)",
+    "joint_layer_reward": "Equal mean of per-CAV r_i_prime over the acting sample.context.members; empty-CAV steps contribute zero and no actor evidence",
+    "measurement_semantics": "Actual measured SUMO speeds, not WM scores. This observable control-tick speed-deficit outcome does not claim to reconstruct substep-integrated SUMO global J or source-queue delay.",
+    "sign": "Negative delay: slowing neighbours cannot increase the cooperation reward",
+    "neighbourhood": "Other sensed vehicles, CAVs and HDVs alike; no vehicle-type field is required",
+    "sensing": "Current own SensorReport; publisher-local rows within existing 100 m sensor range and explicitly covered lanes",
+    "V2V": "Only explicitly selected publishers, within existing 100 m radio range, exactly t-1, nearest four with ID tie-breaks. One-hop direct sensor observations only. Remote measurement timestamps retained, never extrapolated.",
+    "deduplication": "Self excluded; own sensing wins; then nearest publisher and publisher ID; each neighbour counted once",
+    "empty_neighbourhood": "Team term zero; own outcome retained; empty count logged",
+    "missing_evidence": "Missing or malformed current own outcome fails closed. Invalid/stale/future/unselected remote evidence is excluded and missing selected reports counted.",
+    "base_reward": "Original global reward retained untouched in raw episodes and copied as base_reward for audit; never used in the new reward calculation",
+    "off_and_A": "training_episodes returns the original episodes object and None receipt, without inspecting episode data",
+    "fairness": "One shared weight/provenance for B and R; optional arm declaration must be exactly B and R; A cannot be opted in"
+  },
+  "configuration": {
+    "track2_reward": "Boolean, default false",
+    "track2_reward_weight": "Required positive finite numeric value when enabled; no production default or tuned value",
+    "track2_reward_provenance": "Required nonempty authority/registration reference for that weight",
+    "track2_reward_arms": "Optional list/tuple containing exactly B and R",
+    "legacy_options": "Does not activate legacy coop_reward, dense WM teaching, or WM counterfactual group-credit paths"
+  },
+  "api": {
+    "settings(cfg)": "None when off; validated shared registration when on",
+    "enabled(cfg, arm)": "True only for explicitly enabled B/R; unconditionally false for A",
+    "neighbourhood_reward(own, cav_id, partner_reports=None, *, now_s, partner_ids=(), weight)": "Per-CAV own reward, neighbour mean, weighted addition, augmented reward, neighbour IDs/timestamps and evidence counts; packets use merge_features.SensorReport",
+    "training_episodes(cfg, arm, episodes)": "Returns (new cooperation-only training episodes, aggregate receipt); raw receipts never mutated; repeated shaping refused",
+    "layer_records(cfg, arm, episodes)": "Returns (CooperationLayer.update-compatible records, aggregate receipt), using existing GAE UNIT/GAMMA/LAMBDA with frozen rollout values as baseline. Historical group_advantage key carries real-outcome GAE, not WM counterfactual credit."
+  },
+  "backend_integration": {
+    "preferred_call": "records, receipt = track2_reward.layer_records(cfg, arm, raw_episodes); layer.update(records, epochs=registered_epochs)",
+    "alternative": "training_episodes provides shaped copies to a cooperation-only learner. Do not pass those copies to the base optimizer or evaluation. Do not shape twice.",
+    "required_step_fields": "time_s, reward, sample.context.members; layer_records additionally uses existing sample.value and stochastic coop_layer sample evidence",
+    "direct_sensing_receipts": "Uses the following step's observable rows only at time_s + CONTROL_DT_S. Explicit step.post_rows plus step.post_time_s takes precedence and is required at the terminal tick.",
+    "V2V_receipts": "Attach step.reward_observations[cav_id] = {own: SensorReport, partner_reports: publisher-to-SensorReport mapping, partner_ids: selected IDs}. own timestamp is charged step time_s + CONTROL_DT_S; partner timestamps are exactly one control tick older.",
+    "PPO_eligibility": "Executed-plan, deterministic, empty-group and non-layer samples excluded from layer PPO records; their measured rewards remain in the full episode return",
+    "receipts": "Registration, source, scope, own/team/augmented sums, CAV and neighbour counts, empty/missing evidence counts, no-WM/no-global assertions, zero terminal fallback count; layer_records also reports eligible record count and advantage source"
+  },
+  "verification": [
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tests/unit/test_track2_reward.py tests/unit/test_merge_features.py tools/coopmwm/test_coop_layer_cpu.py",
+      "result": "118 passed in 18.24s",
+      "coverage": [
+        "Reward formula/sign, empty neighbourhoods and speed-limit clipping",
+        "Registered finite weight/provenance, B/R symmetry and A/off identity",
+        "Sensor/radio boundaries, explicit lane coverage, selected publisher membership and identity",
+        "Exact t-1 visibility including fractional timestamps, missing reports, partner cap and deterministic deduplication",
+        "No report-board scans; unrelated traffic/global reward cannot change layer reward",
+        "Post-action temporal alignment, terminal and missing-ego fail-closed behaviour",
+        "No mutation, no repeated shaping, equal-CAV joint aggregation",
+        "Existing GAE and PPO eligibility; actual CPU layer update changes layer parameters with frozen MAPPO byte-identical"
+      ]
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m ruff check tools/coopmwm/track2_reward.py tests/unit/test_track2_reward.py",
+      "result": "PASS, exit 0"
+    },
+    {
+      "command": "git diff --cached --check",
+      "result": "PASS before implementation commit"
+    }
+  ],
+  "open_issues": [
+    {
+      "owner": "Launch registration / T2C",
+      "requirement": "Supply the owner-registered numerical weight and provenance identically for B/R. The spec supplies no numerical value; P2 deliberately selects none."
+    },
+    {
+      "owner": "P1 production backend / T2C wiring",
+      "requirement": "Capture real terminal post-action sensing and outcome evidence for departing acting egos; existing bare episode tapes lack a final post frame. Missing outcomes are refused, not silently reconstructed. Attach timestamped per-CAV packets to include remote sensor reports."
+    },
+    {
+      "owner": "T2C launch profile",
+      "requirement": "Wire this API into cooperation-layer-only learning and keep dense WM teaching, WM group credit and legacy coop_reward off as specified in MAIN 02:30."
+    }
+  ],
+  "execution": {
+    "CPU_only": true,
+    "SUMO_runs": 0,
+    "GPU_runs": 0,
+    "ssh_or_remote_operations": 0,
+    "additional_sim_seconds": 0,
+    "runtime_launch_performed": false,
+    "worktree_scope": "Only E:/agent-work/c4-track2-reward modified; requested specification read from E:/agent-work/_sol/tracks_spec.md",
+    "restricted_data_access": "No restricted directories or truth-data files opened",
+    "git_operations": "Dependency merges, status/diff/log inspection, intended-file staging and local commits only"
+  }
+}
