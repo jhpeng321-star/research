@@ -90,7 +90,10 @@ def closure(paths, *, mirror=None):
         raise ValueError('REFUSED: staging inventory is empty')
     mirrors = set()
     for p in initial:
-        for i in range(len(p.parts)-1):
+        # A Linux operator's fixture/mirror can itself live below /home/ubuntu.
+        # The innermost home-relative layout is the staged filesystem root;
+        # choosing the host prefix would read unrelated live-host paths.
+        for i in reversed(range(len(p.parts)-1)):
             if p.parts[i:i+2] == ('home', 'ubuntu'):
                 mirrors.add(Path(*p.parts[:i]))
                 break

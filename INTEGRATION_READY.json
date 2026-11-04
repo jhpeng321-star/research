@@ -39,6 +39,12 @@
     "total_smoke_cap_sim_s": 20000,
     "no_shortened_horizons": true
   },
+  "linux_followup": {
+    "first_run": "304 passed, 1 failed: P4 nested home-prefix mirror resolution",
+    "fix": "infer the innermost home/ubuntu filesystem mirror; never fall through to host paths",
+    "local_regression": "57 passed (P4, T2C staging, launch integration)",
+    "live_source_requalification": "pending fresh committed source"
+  },
   "new_sim_s": 0,
   "smoke_pass": false,
   "safety_gate_pass": false,

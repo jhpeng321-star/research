@@ -98,6 +98,15 @@ def test_filesystem_root_mirror_maps_remote_episode_without_accessing_host(tmp_p
     assert closure([label], mirror=tmp_path) == (files, manifest)
 
 
+def test_nested_home_prefix_uses_innermost_mirror_on_every_platform(tmp_path):
+    mirror = tmp_path/'home/ubuntu/operator/mirror'
+    src, label, pending, snapshot, episode = ls_source(mirror, remote_episode=True)
+    files, manifest = closure([label])
+    assert episode/'RESULT.json.gz' in files
+    assert all(mirror in p.parents for p in files)
+    assert closure([label], mirror=mirror) == (files, manifest)
+
+
 def test_own_decision_link_matches_real_snapshot_reader_and_never_unpickles(tmp_path, monkeypatch):
     bank = rb.bank_root(tmp_path, 'B')
     link = dict(verification_id='sv_own', state_id='state1')
