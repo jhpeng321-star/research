@@ -38,6 +38,33 @@ def test_absent_and_false_opt_in_match_track_base_without_component_imports(tmp_
         assert rc.run_tracks(actual, None, object(), legacy_run=lambda c: c) is actual
 
 
+def test_public_preparation_and_cli_match_committed_baseline(baseline):
+    import sys
+    for opt in ({}, dict(track2=False)):
+        assert rc.quote(**opt) == baseline.quote()
+        assert rc.budget(**opt) == baseline.budget()
+        assert rc.wall_clock(**opt) == baseline.wall_clock()
+    for args in ([], ['--track2']):
+        value = json.loads(subprocess.check_output(
+            [sys.executable, '-B', '-m', 'tools.coopmwm.rerun_cpus', 'quote', *args], text=True))
+        module = rc if args else baseline
+        opt = dict(track2=True) if args else {}
+        assert value == dict(quote=module.quote(**opt), budget=module.budget(**opt),
+                             wall_clock=module.wall_clock(**opt))
+    assert rc.quote(track2=True) != baseline.quote()
+
+
+def test_default_producer_request_and_preflight_flow(tmp_path, baseline):
+    prep, stage, _ = legacy_preparation(tmp_path, baseline)
+    request = prep/rc.BUDGET_REQUEST
+    request.write_text(json.dumps(dict(quote=rc.quote(), budget=rc.budget())), encoding='utf-8')
+    app_path = prep/rc.APPROVAL
+    app = json.loads(app_path.read_text(encoding='utf-8'))
+    app['budget_request_sha256'] = rc.sha(request)
+    app_path.write_text(json.dumps(app), encoding='utf-8')
+    assert rc.preflight_dry(prep, stage_dir=stage)['ready_for_registered_launch']
+
+
 def test_clean_profile_has_fair_enabled_consumers_and_costs(tmp_path):
     cfg = rc.runtime_config({}, root=str(tmp_path/'run'), reference_root=str(tmp_path/'refs'),
         source_root=str(tmp_path/'src'), common_checkpoint_sha256='a'*64, track2=True)

@@ -35,6 +35,16 @@ def budget():
                 rule='rerun-cpus standalone: own root, own CHARGES.jsonl; never the coop3 ledger')
 
 
+def wall_clock(pace_s=1800, measured_update_wall_s=1800, diagnostic_extra_s=900,
+               test_episode_wall_s=300, test_workers=2):
+    per_update = max(pace_s, measured_update_wall_s)
+    b = 24*per_update+len(SCHEDULE['B']['isolated'])*diagnostic_extra_s
+    r = b+per_update
+    tests = 2*3*96*test_episode_wall_s/test_workers
+    return dict(per_update_s=per_update, A_s=24*per_update, B_s=b, R_s=r, tests_s=tests,
+                total_h=round((r+tests)/3600, 1))
+
+
 def runtime_config(base, *, root, reference_root, source_root, common_checkpoint_sha256):
     from . import v2v_runner
     from .rerun_cpus import EFFECTIVE_IMITATION_COMMIT

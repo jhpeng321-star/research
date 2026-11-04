@@ -60,13 +60,13 @@ TRACK_SLOTS = dict(
     coop_layer=dict(enabled=True, arms=['B', 'R'], module='tools.coopmwm.coop_layer',
                     frozen_base=True, zero_init=True, separate_optimizer=True,
                     kl_cap=.045, base_actions='byte-identical MAPPO before residual offsets'),
-    group_credit=dict(enabled=True, arms=['B', 'R'], module='tools.coopmwm.group_credit',
+    group_credit=dict(enabled=False, arms=['B', 'R'], module='tools.coopmwm.group_credit',
                       layer_advantage_only=True, inputs='belief/observables only',
                       verification='existing all8/isolated machinery; sibling registered fraction',
                       verification_phase='group_credit_verify'),
     merge_features=dict(enabled=True, arms=['B', 'R'], module='tools.coopmwm.merge_features',
                         inputs='own sensing + timestamped t-1 V2V reports; missingness flags'),
-      dense_teacher=dict(enabled=True, arms=['B', 'R'], module='tools.coopmwm.dense_teacher',
+      dense_teacher=dict(enabled=False, arms=['B', 'R'], module='tools.coopmwm.dense_teacher',
                          verify_fraction=.1, verified_through='all8', candidates=8,
                          calibrated_p_min=.8, calibration_module='tools.coopmwm.planner_calibration',
                          verified_bypass=True, same_confidence_filter=True,
@@ -75,7 +75,11 @@ TRACK_SLOTS = dict(
                         verify_fraction=.1, examples_per_update=24, once_before_launch=True,
                       same_procedure=True, source='each arm own bank; moves/variety registered ranges'),
      practice_weighting=dict(enabled=True, arms=['B', 'R'], same_procedure=True,
-                             fraction=.5, sources=['own_bank', 'own_augmented_states']))
+                              fraction=.5, sources=['own_bank', 'own_augmented_states']),
+    track2_reward=dict(enabled=True, arms=['B', 'R'], module='tools.coopmwm.track2_reward',
+        weight=1.0, provenance='T2C proposed equal own/neighbour-mean weighting; MAIN 02:30; approval-bound, no tuning',
+        formula='r_i + weight * mean(observable neighbour realised rewards)',
+        inputs='real SUMO outcomes; own sensing and causal V2V only'))
 # Proposed component-level registrations; approval binds these exact values and costs.
 # Verification uses whole all8/isolated checks, never fractions of a truncated window.
 TRACK_SLOTS['group_credit'].update(verify_fraction=.1)
@@ -86,7 +90,7 @@ for _name in ('dense_teacher', 'group_credit', 'plan_augment'):
 # exactly one whole all8 check at each of these updates, with no carry/extra work.
 VERIFY_UPDATES = (6, 12, 18, 24)
 VERIFICATION = dict(updates=list(VERIFY_UPDATES), samples_per_arm_per_update=1,
-                    dense_total_sim_s=8*GATE_SIM_S, credit_total_sim_s=8*GATE_SIM_S,
+                    dense_total_sim_s=0, credit_total_sim_s=0,
                     augmentation_samples_per_arm=2, augmentation_total_sim_s=4*GATE_SIM_S)
 TOTAL_CAP_SIM_S = 5_000_000
 EARLY_PROBES = dict(updates=[2, 4], states=3, arms=['A', 'B', 'R'],
@@ -97,7 +101,7 @@ LEARNING_MONITOR = dict(trigger_saturation=[0., 1.], history_updates=3,
 SMOKE = dict(updates=1, episodes_per_arm=2, episode_sim_s=1200,
              training_sim_s=6*1200, practice_reference_sim_s=2*1200,
              augmented_examples_per_arm=2,
-              verification_sim_s=0, isolated_dry_run_sim_s=0)
+               verification_sim_s=4*GATE_SIM_S, isolated_dry_run_sim_s=0)
 SMOKE['total_sim_s'] = sum(SMOKE[k] for k in
     ('training_sim_s', 'practice_reference_sim_s', 'verification_sim_s', 'isolated_dry_run_sim_s'))
 ISOLATED_REPLICATES = 5
@@ -163,12 +167,15 @@ _TRUTH = re.compile(r'(vtype|driver|vehicle_params)[^/]*truth|truth[^/]*(vtype|d
                     re.IGNORECASE)
 
 
-def quote():
+def quote(*, track2=False):
     """Assert the complete budget-cut quote, including smoke and all phase ceilings.
 
     A/B/R retain full 1200s episodes; B/R verification is a fixed whole-run sample
     slate, augmentation is once, and isolated checks are B/R u6/u12/u24 N=5.
     """
+    if not track2:
+        from .rerun_cpus_compat import quote as legacy_quote
+        return legacy_quote()
     a_train = UPDATES*EPISODES_PER_UPDATE*EPISODE_SIM_S
     practice_refs = math.ceil(EPISODES_PER_UPDATE*TRACK_SLOTS['practice_weighting']['fraction'])
     br_train = 2*UPDATES*(EPISODES_PER_UPDATE+practice_refs)*EPISODE_SIM_S
@@ -219,12 +226,15 @@ def quote():
     return out
 
 
-def budget():
+def budget(*, track2=False):
     """The standalone experiment's own registered budget (one ledger, one total): the phase
     allocations cover the quote with the registered v2v_lessons floor (21,840) kept and the
     replicated isolated test carried by its own phase (it supersedes the single-run
     v2v_isolated plan of the original rerun)."""
-    q = quote()
+    if not track2:
+        from .rerun_cpus_compat import budget as legacy_budget
+        return legacy_budget()
+    q = quote(track2=True)
     phases = dict(v2v_train=q['v2v_train'], v2v_lessons=21840, teacher_verify=q['teacher_verify_sim_s'],
                    group_credit_verify=q['group_credit_verify_sim_s'],
                    augment_verify=q['augment_verify_sim_s'], early_probes=q['early_probes_sim_s'],
@@ -244,16 +254,21 @@ def budget():
 
 
 def wall_clock(pace_s=1800, measured_update_wall_s=1800, diagnostic_extra_s=900,
-               test_episode_wall_s=300, test_workers=CPU['workers']):
+               test_episode_wall_s=300, test_workers=None, *, track2=False):
     """Paced updates (measured u7-u10 walls ~1,800 s each per arm, A the cheapest); B's
     diagnostics add ~diagnostic_extra_s each; R trails B by ~one update; the fixed-episode
     tests run 3 arms; the replicated isolated test runs at the measured update pace
     (36,000 sim-s per 1,800 s wall => 20 sim-s per wall-s)."""
+    if not track2:
+        from .rerun_cpus_compat import wall_clock as legacy_wall
+        return legacy_wall(pace_s, measured_update_wall_s, diagnostic_extra_s,
+                           test_episode_wall_s, 2 if test_workers is None else test_workers)
+    test_workers = CPU['workers'] if test_workers is None else test_workers
     per_update = max(pace_s, measured_update_wall_s)
     b = UPDATES*per_update+len(SCHEDULE['B']['isolated'])*diagnostic_extra_s
     r = b+per_update
     tests = 2*3*TEST_EPISODES*test_episode_wall_s/test_workers      # u8 + u24, three arms
-    q = quote()
+    q = quote(track2=True)
     isolated_s = q['isolated_replicated_sim_s']/20
     verification_s = (q['teacher_verify_sim_s']+q['group_credit_verify_sim_s']+
                       q['augment_verify_sim_s']+q['early_probes_sim_s']+q['smoke_sim_s'])/20
@@ -461,7 +476,7 @@ def runtime_config(base, *, root, reference_root, source_root, common_checkpoint
     if not re.fullmatch('[0-9a-f]{64}', common_checkpoint_sha256):
         raise ValueError('common original MAPPO u0 checkpoint hash required')
     base = dict(base)
-    base['budget'] = budget()
+    base['budget'] = budget(track2=True)
     base['track2'] = True
     cfg = v2v_runner.prepare_intent(base, root=root, legacy_root=reference_root,
         source_root=source_root, common_checkpoint_sha256=common_checkpoint_sha256,
@@ -485,15 +500,15 @@ def runtime_config(base, *, root, reference_root, source_root, common_checkpoint
                 smoke=deepcopy(SMOKE), track2=True,
                single_ledger=dict(root=root, charges='CHARGES.jsonl', lock='ACCOUNTING.claim',
                                   authority='AUTHORITY.md', foreign_refused=True),
-               budget=budget(),
+                budget=budget(track2=True),
                a_results=dict(root=root, rule='B/R safety composites read A_UPDATE_<u> and the '
                                'same-world A references from THIS root; no remote A reads'))
     cfg.update(deepcopy(TRACK_SLOTS))
     cfg.update(target_host='cpuV', device='cpu', cpu=deepcopy(CPU), workers=CPU['workers'],
                 verification=deepcopy(VERIFICATION),
                 job_namespace='t2c', launch_profile='track2_clean_run',
-               integration_required=True, additional_cap_ceiling_sim_s=budget()['total'],
-               total_cap_ceiling_sim_s=budget()['total'])
+                integration_required=True, additional_cap_ceiling_sim_s=budget(track2=True)['total'],
+                total_cap_ceiling_sim_s=budget(track2=True)['total'])
     check_pins(cfg)
     return cfg
 
@@ -518,7 +533,7 @@ def check_pins(cfg):
         raise ValueError('REFUSED: all three arms A/B/R rerun from MAPPO u0')
     if cfg.get('effective_imitation_commit') != EFFECTIVE_IMITATION_COMMIT:
         raise ValueError('REFUSED: effective-imitation commit not pinned to '+EFFECTIVE_IMITATION_COMMIT)
-    if cfg.get('budget') != budget():
+    if cfg.get('budget') != budget(track2=True):
         raise ValueError('REFUSED: standalone budget differs from the registered 3-arm quote')
     if (cfg.get('active_arms') != ['A', 'B', 'R']
             or cfg.get('final_updates') != dict(A=24, B=24, R=24)
@@ -1019,7 +1034,7 @@ def criterion_document():
                       early_probes=deepcopy(EARLY_PROBES), learning_monitor=deepcopy(LEARNING_MONITOR),
                       smoke=deepcopy(SMOKE),
                       trigger_head=head_teacher_config()[0], teacher=head_teacher_config()[1],
-                      quote=quote()), 'criterion_sha256')
+                       quote=quote(track2=True)), 'criterion_sha256')
 
 
 def isolated_jobs(registration):
@@ -1212,7 +1227,7 @@ def budget_request_document(cfg, registration, manifest):
     validate_manifest(manifest, checkpoint_sha256=cfg['common_checkpoint_sha256'])
     jobs = isolated_jobs(registration)
     final = final_world_registration(registration)
-    return dict(quote=quote(), budget=budget(), new_sim_s=0,
+    return dict(quote=quote(track2=True), budget=budget(track2=True), new_sim_s=0,
                 config_sha256=_seal(cfg, 'config_sha256')['config_sha256'],
                 registration_sha256=jobs[0]['registration_sha256'],
                 criterion_sha256=criterion_document()['criterion_sha256'],
@@ -1270,7 +1285,7 @@ def preflight_dry(prep_dir, *, stage_dir, budget_request=BUDGET_REQUEST, approva
     if not req.is_file():
         raise SystemExit('REFUSED: budget request missing: '+str(req))
     request = json.loads(req.read_text(encoding='utf-8'))
-    if request.get('quote', {}).get('total') != quote()['total']:
+    if request.get('quote', {}).get('total') != quote(track2=True)['total']:
         raise SystemExit('REFUSED: budget request total differs from the 3-arm quote')
     app = Path(guard_path((prep/approval).resolve()))
     if not app.is_file():
@@ -1367,9 +1382,11 @@ if __name__ == '__main__':
     p.add_argument('--track2', action='store_true', help='opt into strict Track 2 preflight')
     a = p.parse_args()
     if a.cmd == 'quote':
-        print(json.dumps(dict(quote=quote(), wall_clock=wall_clock(), budget=budget())))
+        print(json.dumps(dict(quote=quote(track2=a.track2), wall_clock=wall_clock(track2=a.track2),
+                              budget=budget(track2=a.track2))))
     elif a.cmd in ('budget', 'wall_clock', 'criterion'):
-        value = {'budget': budget, 'wall_clock': wall_clock, 'criterion': criterion_document}[a.cmd]()
+        value = (criterion_document() if a.cmd == 'criterion' else
+                 {'budget': budget, 'wall_clock': wall_clock}[a.cmd](track2=a.track2))
         print(json.dumps(value, indent=1, sort_keys=True))
     elif a.cmd in ('isolated_plan', 'isolated_eval'):
         reg = json.loads(Path(guard_path(Path(a.registration).resolve())).read_text(encoding='utf-8'))
