@@ -1,0 +1,92 @@
+{
+  "task": "T1B",
+  "status": "READY_FOR_INTEGRATION",
+  "scope": "CPU build and synthetic contract tests; online execution is explicitly opt-in",
+  "branch": "c4/planner-online",
+  "base": "c4/track-base",
+  "base_commit": "13f184b5",
+  "worktree": "E:/agent-work/c4-planner-online",
+  "resume": {
+    "initial_status": "clean",
+    "prior_t1b_commits_or_receipts": false,
+    "running_jobs_dispatched_or_duplicated": false
+  },
+  "implementation_commits": [
+    {
+      "commit": "abaada860309abdd043f7fc0d250fc77688acba3",
+      "step": "Calibrated paired-WM move scoring and additive residual-profile decoding"
+    },
+    {
+      "commit": "fcb0a2dcc6f7dfc9c368e8f03a1d26fab1584b00",
+      "step": "Default-off V2V single-writer runtime hook, observable scoping, commitments and execution tests"
+    },
+    {
+      "commit": "925a44eeaca2f8f23f1e6ecbce117af2a5c47a97",
+      "step": "Re-evaluate ongoing moves every decision cadence and compare disabled event bytes/RNG with track-base source"
+    }
+  ],
+  "files": [
+    "tools/coopmwm/planner_online.py",
+    "tools/coopmwm/test_planner_online_cpu.py",
+    "tools/coopmwm/plan_wm.py (small additive offset_profile decoder)",
+    "tools/coopmwm/v2v_runtime.py (small default-off controller hook)",
+    "T1B_READY.json"
+  ],
+  "defaults": {
+    "runtime_enabled": false,
+    "cadence_s": 60,
+    "n_candidates": 32,
+    "wm_samples": 8,
+    "horizon_s": 600,
+    "p_star": 0.8,
+    "maximum_group_members": 4,
+    "maximum_cav_acceleration_mps2": 1.2,
+    "observable_range": "Inherited v2v_obs.V2VConfig.range_m; no new sensing threshold"
+  },
+  "api": {
+    "Config": "Config(cadence_s=60, n_candidates=32, wm_samples=8, horizon_s=600, p_star=0.8). Cadence/candidate/sample counts and gate are configurable; samples must be >=2. Unregistered or shortened horizons are refused.",
+    "score_moves": "score_moves(record, rng, *, rollout, calibration, config=None, calibrate=None, move_api=None) -> dict. Shared scoring API for T2B/dense teachers, independent of a simulator.",
+    "observation": "record has ego_id, group, rows, time_s, commands, policy_residuals, policy_state; optional history, world_id, state_id, committed_offsets. Sensor rows use the existing warm_history whitelist and must be ego-local. Group contains ego and 1..4 observed CAVs. History is causal, ego-local, and ends at the current observation.",
+    "moves_dependency": "Default lazy import tools.coopmwm.moves; calls candidates(obs_state, rng, n) and offsets(move, t), validates family against FAMILIES. Move supports members/family attributes or mapping keys. Generator must honor record['group']; no production move stub is installed.",
+    "calibration_dependency": "Default lazy import tools.coopmwm.planner_calibration.calibrate_probability(p_raw, calibration) -> scalar in [0,1]. An explicit calibrate callable may adapt the T1C API. No raw/identity fallback exists; calibration=None, invalid probabilities, unavailable dependencies or bad WM output cannot open the gate.",
+    "rollout": "Callable(record, actions, K, H) -> {action_id: K paired scalar costs or dicts containing team_delay}, using common future indices across all actions. Lower cost is better.",
+    "WMRollout": "WMRollout(runtime, memory=None, chunk_actions=4) validates CPU model/policy parameters and calls existing plan_wm.evaluate with trim=False, final_chain=True and full H. Existing policy_wm actor continuation, WM samples, source priors, safety and command-chain machinery are reused.",
+    "selection": "Explicit none comparator id='policy' continues the current MAPPO/base actor. p_raw is fraction of paired gains strictly >0 (ties do not win); expected_gain is the paired mean. Apply calibration, then choose greatest positive expected gain among candidates with calibrated P >= p_star, with stable ties. Output includes selected_move, selected_id, offset_profile, per-candidate scores, paired_gains, horizon_s and gate receipt.",
+    "OnlinePlanner": "OnlinePlanner(*, rollout, calibration, rng, accel_bounds, config=None, calibrate=None, move_api=None, world_id=None). Supply a dedicated move RNG and inherited acceleration bounds with upper bound <=1.2; supply the caller's observable world identifier when required by the qualified WM runtime.",
+    "runtime_hook": "v2v_runtime.controller_class(acceleration.Controller)(policy, generator, deterministic, planner_online=planner). Omitting planner_online, or passing None, is OFF. A concurrent guide, replay or branch request producer is refused.",
+    "execution": "Every registered decision cadence re-evaluates all disjoint ego-local groups, replacing prior moves. A failed/rejected gate returns that group to base policy immediately. Between decisions, per-second offsets run to their own end; missing members or radio contact release the joint move. Full 600-second forecasts are never shortened to cadence, move duration or remaining execution time. Earlier groups' locally visible new offsets are identical background in both WM arms.",
+    "single_writer": "Planner modifies only the existing pre-safety request map and sample action record; own_action remains the sampled base action. It never writes TraCI. Existing CommandOwnership remains the sole plant writer, with its safe speedMode 27 chain. HDVs cannot be move members or planner command recipients.",
+    "events": "When enabled, sample['planner_online'] records decisions, paired scores, calibrated probabilities, failures, executed offsets and active group count. event['requests'] is the final request map. No planner event key is added when disabled."
+  },
+  "tests": [
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_planner_online_cpu.py",
+      "result": "54 passed in 15.16s",
+      "coverage": "Paired P(better), expected gain, calibrated gate opening/closing, candidate selection, full horizon, invalid/incomplete/overflow costs, mandatory calibration, local-only observation/history, HDV exclusion, residual request cap, default-off identity against track-base source, RNG preservation, cadence/replanning, release, disjoint groups, common commitment background, dependency failure fallback, CPU adapter and actual CommandOwnership with a fake vehicle API"
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_command_chain_cpu.py tools/coopmwm/test_mppi_runtime_cpu.py::LongProfileTests::test_transfer_table_exact_for_long_profiles_and_dynamic_policy tools/coopmwm/test_mppi_runtime_cpu.py::LongProfileTests::test_imagined_nonzero_actor_matches_observable_plant_actor tools/coopmwm/test_v2v_intent_cpu.py::test_partner_intent_has_one_step_latency tools/coopmwm/test_v2v_intent_cpu.py::test_runtime_reset_and_despawn tools/coopmwm/test_v2v_intent_cpu.py::test_actions_identical_to_current_v2v_policy_at_load tests/unit/test_c4_v2v_obs.py",
+      "result": "26 passed, 9 subtests passed in 49.83s",
+      "coverage": "Existing V2V runtime, observed partner features, intent latency/reset/action identity, WM policy continuation, legacy profile/transfer parity and real ownership-chain regression contracts"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed; only repository LF-to-CRLF informational warnings"
+    }
+  ],
+  "final_test_total": "80 passed plus 9 subtests across the final focused and regression commands",
+  "open_issues": [
+    "Cross-track integration dependency: T1A moves.py and T1C planner_calibration.py are absent from this worktree/base. Tests provide local stubs only. Land those modules and bind the documented observation/calibration contract (or pass the T1C adapter callable) before enabling the planner.",
+    "No full trained-WM forecast or plant rollout was run. The caller must supply its existing qualified CPU WM runtime/belief memory and calibration artifact. This is a build/test readiness receipt, not an evaluation or performance claim."
+  ],
+  "constraints": {
+    "cpu_only": true,
+    "sumo_launched": false,
+    "gpu_used": false,
+    "remote_or_ssh_used": false,
+    "writes_only_in_task_worktree": true,
+    "restricted_seed_or_truth_paths_opened": false,
+    "hidden_driver_or_global_state_as_planner_input": false,
+    "reset_clean_stash_drop_push_rebase_used": false
+  }
+}
