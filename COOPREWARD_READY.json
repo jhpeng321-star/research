@@ -1,0 +1,39 @@
+{
+  "task": "c4/coop-reward: explicit COOPERATION (team) reward option for the V2V PPO runtime (arms B and R identically; A only by explicit inclusion); default OFF byte-identical; CPU only",
+  "branch": "c4/coop-reward",
+  "base": "c4/rerun-cpus (4352b04a)",
+  "commits": [
+    "b59c6895 coop-reward: COOPREWARD_DESIGN.md documents the V2V runtime reward path (accel_plant team-J delta per 1 s step, accel_learner GAE UNIT=1e4, joint observable-state critic) and the registered coop_reward option design",
+    "5a7ddc71 coop-reward: registered coop_reward option (default OFF byte-identical) - coop_reward.py settings/neighbourhood/transform, warm_runner applies it to the PPO-update rewards only + per-update own/team report, prepare_intent producer keys, v2v_live hooks + launch3 bind_runtime validation",
+    "c841d0c7 coop-reward: CPU tests (test_coop_reward_cpu.py, 13 passed)"
+  ],
+  "tests": {
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q",
+    "suites": [
+      {"files": "tools/coopmwm/test_coop_reward_cpu.py", "result": "13 passed"},
+      {"files": "tools/coopmwm/test_launch_final_cpu.py", "result": "13 passed"},
+      {"files": "tools/coopmwm/test_effimit_cpu.py", "result": "20 passed"},
+      {"files": "tools/coopmwm/test_v2v_runner_cpu.py test_v2v_live_cpu.py test_v2v_intent_cpu.py test_v2v_model_cpu.py test_v2v_runtime_cpu.py test_v2v_launch3_cpu.py", "result": "120 passed"},
+      {"files": "tools/coopmwm/test_v2v_budget_quote_cpu.py test_v2v_learning_watch_cpu.py test_v2v_launch_wiring_cpu.py test_v2v_launch_quote_cpu.py test_v2v_int_e2e_cpu.py test_v2v_resource_watch_cpu.py", "result": "36 passed, 9 subtests passed (1 pre-existing gradient warning)"}
+    ],
+    "total": "202 passed (+9 subtests), 0 failed"
+  },
+  "config_keys": {
+    "coop_reward": "truthy = enabled; absent/False = OFF (byte-identical run, no coop keys written anywhere)",
+    "coop_reward_weight": "w, positive finite float, REQUIRED when enabled; no default, no tuning default (config refuses a missing/invalid w)",
+    "coop_reward_provenance": "non-empty string naming the registering authority, REQUIRED when enabled",
+    "coop_reward_arms": "optional; default ('B','R'); must contain B and R together, A only by explicit inclusion; one key set serves every arm"
+  },
+  "design_summary": {
+    "current_reward": "Per-step r_t = -(increment of the cumulative source-inclusive team delay J) per 1 s tick, computed in accel_plant.episode (before/after one cf.tick around b.totals['team_delay_vs']) in vehicle-seconds per second; one global scalar per step shared by every CAV; no shaping, no per-CAV decomposition; GAE in accel_learner.advantages (UNIT=1e4, GAMMA=exp(-1/600), LAMBDA=exp(-1/1200)); identical entry for A (accel_learner.update) and B/R (exact_grade._ppo_exact_update).",
+    "critic_centralized": "Yes: one joint observable-state critic (tools/coopnative/policy.Policy) - single MLP over the pooled observable frame (all sensed vehicles, CAV and HDV, whitelist rows) plus RSU per-lane aggregates; one scalar value per control step shared across the step's CAVs; V2V widens the input with partner blocks, value stays one scalar (CTDE over observable state, no hidden/global truth).",
+    "formula": "r'_t = r_t + w * mean_{i in CAVs} mean_{j in N_i(t)} outcome_j (the per-CAV r_i' = r_i + w*mean_{j in N_i} r_j collapses onto the shared scalar reward of the joint policy/critic); outcome_j = max(0, 1 - v_j/SPEED_LIMIT_MPS) vehicle-seconds from the POST-step observable frame row of neighbour j (charged second's final step falls back to its own frame; counted in the report).",
+    "neighbourhood": "N_i = ONLY the observable receipt-frame rows (CAV and HDV alike, no driver-type oracle) within the SAME 100 m range the CAV already senses via V2V (v2v_obs.V2V_RANGE_M == wms.control.contract.SENSOR_RANGE_M == 100.0, radio range, no lane filter); background-traffic term NOT added (no per-vehicle background decomposition exists in the receipts and r_t already carries the whole-world team outcome - double-count otherwise; background_rule recorded in the per-update report).",
+    "where_applied": "warm_runner.run_arm once per arm-update: coop_reward.training_episodes returns NEW episode dicts (per-step shallow copies, receipts untouched) passed ONLY to the PPO/imitation update call; every other consumer (viability/evidence critic diagnostics, health/safety, practice, bank grading) keeps the raw team-J rewards.",
+    "logging": "{arm}_UPDATE_{u:03}.json gains a coop_reward block only when ON: weight/provenance/arms, own_reward_sum/mean_veh_s vs team_addition_sum/mean_veh_s and team_neighbourhood_mean_veh_s, egos/steps/empty_neighbourhood_egos/own_frame_team_steps, pinned range+speed limit.",
+    "off_identity": "OFF (or arm not enabled): training_episodes returns the SAME episode list object and None report; prepare_intent writes NO coop keys; producer output, PPO inputs, GAE and receipts are byte-identical to the branch point (test: same-object assertion + no receipt key).",
+    "registration_points": "v2v_runner.prepare_intent (registered producer, validates + writes keys only when enabled), v2v_live.hooks (hook-time re-validation, B/R pin), v2v_launch3.bind_runtime (refuses malformed/B!=R deployed runtimes), coop_reward.settings fail-closed at use time in warm_runner."
+  },
+  "hard_rules_respected": "CPU only (no SUMO/GPU/ssh); only this worktree; no git reset/clean/stash drop/push/rebase; sealed/ and holdout/heldout/cal_split/chunk5/j4b/inc1 paths never opened; hetdata_truth and vType/driver/vehicle_params truth files never read",
+  "status": "READY"
+}
