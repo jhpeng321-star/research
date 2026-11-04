@@ -143,8 +143,140 @@ def op_note(control, cfg, payload):
     return dict(ok=True)
 
 
+def _checking_modules(cfg):
+    """Checking-source modules (verify_perseed/slim_tapes/... of c4/checking-cpus) take precedence over
+    the src7 package; the reviewed slim_remote_archive adapter comes from slim_migration1/source4."""
+    import tools.coopmwm
+    for d in reversed(cfg['checking_module_dirs']):
+        if d not in tools.coopmwm.__path__:
+            tools.coopmwm.__path__.insert(0, d)
+
+
+def _file_sha(p):
+    h = hashlib.sha256()
+    with open(p, 'rb') as f:
+        for chunk in iter(lambda: f.read(1 << 20), b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def op_view(control, cfg, payload):
+    """cpuQ reader view of a STAGED (not yet published) record against the cpuQ bank."""
+    _checking_modules(cfg)
+    from tools.coopmwm.cpus_checking import reader_view
+    arm, vid = payload['arm'], payload['verification_id']
+    if arm not in ('B', 'R') or not re.fullmatch(r'[A-Za-z0-9_]+', vid):
+        return dict(ok=False, error='bad arm/vid')
+    staged = Path(control)/'staged_records'/f'{arm}_{vid}.json'
+    if _file_sha(staged) != payload['record_sha256']:
+        return dict(ok=False, error='staged record sha differs')
+    record = json.loads(staged.read_text())
+    view = reader_view(Path(cfg['run_root'])/'replay_bank'/arm, record)
+    return dict(ok=True, view=json.loads(json.dumps(view, default=str)))
+
+
+def _open_paths():
+    out = set()
+    for fd_dir in Path('/proc').glob('[0-9]*/fd'):
+        try:
+            for fd in fd_dir.iterdir():
+                try:
+                    out.add(os.readlink(fd))
+                except OSError:
+                    pass
+        except OSError:
+            pass
+    return out
+
+
+def _cpus_proof(cfg, relatives, slim_rels):
+    import subprocess
+    code = ('import hashlib,json,shutil,sys\nfrom pathlib import Path\nA=Path(%r);B=Path(%r)\nq=json.loads(sys.stdin.read())\n'
+            'h=lambda p: hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() and not p.is_symlink() else None\n'
+            'print(json.dumps(dict(hashes={r:h(A/r) for r in q["files"]}, slim={r:h(B/r) for r in q["slim"]},'
+            'free=shutil.disk_usage(str(A)).free)))\n') % (cfg['cpus_archive'], cfg['cpus_bank_root'])
+    ssh = list(cfg['cpus_ssh'])
+    subprocess.run(ssh+['cat > /tmp/cpus_first_seed_proof.py'], input=code, text=True, timeout=120, check=True)
+    p = subprocess.run(ssh+['python3 /tmp/cpus_first_seed_proof.py'], input=json.dumps(dict(files=relatives, slim=slim_rels)),
+                       capture_output=True, text=True, timeout=600)
+    if p.returncode:
+        raise RuntimeError('cpuS proof transport %s: %s' % (p.returncode, p.stderr[-800:]))
+    return json.loads(p.stdout)
+
+
+def op_slim_first_seed(control, cfg, payload):
+    """MAIN 13:05 item 3: after a decision landed, slim its FIRST-SEED rejected candidate tapes on cpuQ with
+    the reviewed slim_tapes (slim_plan/build_slim/slim_branch) and the reviewed slim_remote_archive.commit_branch
+    boundary. Remote proof = sha256 of the byte-identical copies already in the cpuS archive (moved there by the
+    cpuS seal step), re-hashed now; a missing/different copy keeps the cpuQ source untouched."""
+    _checking_modules(cfg)
+    from tools.coopmwm import slim_tapes as slim, slim_remote_archive as sra
+    from tools.coopmwm.accel_storage import read
+    from tools.coopmwm.exact_grade import _write_new
+    from tools.coopmwm.protocol import digest
+    arm, vid = payload['arm'], payload['verification_id']
+    bank = Path(cfg['run_root'])/'replay_bank'/arm
+    record = slim.records(bank)[vid]
+    first = bank/'sumo_verification'/'branches'/vid
+    plans, rows = [], []
+    for entry in slim.slim_plan(bank, record):
+        bdir, branch, _ = entry
+        bdir = Path(bdir)
+        if bdir.parent != first:
+            continue
+        if (bdir/slim.SLIM).exists() or not (bdir/slim.MARKER).exists():
+            rows.append(dict(dir=str(bdir), status='skip_already_slim_or_no_tape'));continue
+        payload_p = bdir/slim.PAYLOAD
+        tape = read(bdir/slim.MARKER)
+        body = slim.build_slim(branch, tape, _file_sha(payload_p) if payload_p.exists() else None)
+        rel_dir = bdir.relative_to(bank)
+        files = [dict(source=str(bdir/n), relative=str(rel_dir/n), **sra.file_identity(bdir/n))
+                 for n in (slim.PAYLOAD, slim.MARKER) if (bdir/n).exists()]
+        plans.append((entry, bdir, body, files, rel_dir))
+    if not plans:
+        return dict(ok=True, verification_id=vid, slimmed=0, bytes_freed=0, rows=rows)
+    proof_all = _cpus_proof(cfg, [f['relative'] for _, _, _, fs, _ in plans for f in fs],
+                            [str(Path('replay_bank')/arm/rd/slim.SLIM) for *_, rd in plans])
+    freed = 0;moved = 0;slim_equal = 0
+    original = slim._move_verified
+    try:
+        for entry, bdir, body, files, rel_dir in plans:
+            proof = dict(free=proof_all['free'], hashes={f['relative']: proof_all['hashes'].get(f['relative']) for f in files})
+            prepared = dict(entries=files, body_sha256=digest(body), archive=cfg['cpus_archive']+'/'+str(rel_dir))
+
+            def revalidate(entry=entry):
+                cur = slim.records(bank)[vid]
+                if cur['confirmation_sha256'] != record['confirmation_sha256'] or entry not in slim.slim_plan(bank, cur):
+                    raise ValueError('sealed rejected-candidate eligibility changed')
+
+            def move(b, dest, bd, prepared=prepared, proof=proof, revalidate=revalidate):
+                sra.commit_branch(slim, b, bd, prepared, proof, opened=_open_paths, revalidate=revalidate,
+                                  write=_write_new)
+            slim._move_verified = move
+            try:
+                row = slim.slim_branch(entry, bank=bank, archive_dir=Path(cfg['cpus_archive']))
+            except Exception as error:      # proof missing/different or source changed: source kept
+                rows.append(dict(dir=str(bdir), status='kept', error=repr(error)))
+                if isinstance(error, slim.SlimPartial):
+                    break
+                continue
+            cpus_slim = proof_all['slim'].get(str(Path('replay_bank')/arm/rel_dir/slim.SLIM))
+            same = cpus_slim is not None and cpus_slim == _file_sha(bdir/slim.SLIM)
+            slim_equal += bool(same)
+            rows.append(dict(row, slim_json_equals_cpus=same))
+            moved += row['status'] == 'moved'
+            freed += row['bytes_moved']-row['slim_bytes']
+    finally:
+        slim._move_verified = original
+    out = dict(ok=True, verification_id=vid, arm=arm, planned=len(plans), slimmed=moved, bytes_freed=freed,
+               slim_json_equal=slim_equal, rows=rows, unix=time.time())
+    d = Path(control)/'first_seed_slim';d.mkdir(exist_ok=True)
+    (d/f'{arm}_{vid}.json').write_text(json.dumps(out, default=str))
+    return out
+
+
 OPS = dict(reserve=op_reserve, ledger=op_ledger, health=op_health, budget=op_budget, disk=op_disk,
-           absent=op_absent, verify=op_verify, note=op_note)
+           absent=op_absent, verify=op_verify, note=op_note, view=op_view, slim_first_seed=op_slim_first_seed)
 
 
 def main(argv=None):

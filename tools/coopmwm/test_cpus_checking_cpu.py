@@ -114,3 +114,45 @@ def test_rpc_server_read_ops_and_path_guard(tmp_path, monkeypatch):
     assert v['ok'] is False and 'all8-kind' in v['error']
     v = call('reserve', dict(jobs=[dict(id='confirm_seed2_all8_x', sim_s=1)], phase='train'))
     assert v['ok'] is False and 'registered' in v['error']
+
+
+def test_minimal_plan_lands_only_training_read_files(tmp_path):
+    bank = tmp_path/'replay_bank'/'B'
+    s2 = bank/'confirm_seed2_all8'
+    (s2/'verifications').mkdir(parents=True)
+    (s2/'verifications'/'v2.json').write_text(json.dumps(dict(branches=[dict(branch='policy'), dict(branch='cand1'),
+                                                                     dict(branch='cand2')])))
+    for b in ('policy', 'cand1', 'cand2'):
+        for n in ('RESULT.json', 'RESULT.json.gz', 'observable.jsonl.gz', 'CLAIM.json'):
+            _touch(s2/'branches'/'v2'/b/n)
+    _touch(s2/'branches'/'v2'/'cand2'/'SLIM.json')
+    (s2/'branches'/'v2'/'cand2'/'RESULT.json').unlink();(s2/'branches'/'v2'/'cand2'/'RESULT.json.gz').unlink()
+    _touch(s2/'branches'/'v2'/'cand1.result.json');_touch(s2/'branches'/'v2'/'SNAPSHOT.pt')
+    _touch(s2/'claims'/'v2.json')
+    solo = bank/'confirm_solo_all8_s2'
+    _touch(solo/'verifications'/'vs.json')
+    for b in ('policy', 'cand1'):
+        for n in ('RESULT.json', 'RESULT.json.gz', 'observable.jsonl.gz'):
+            _touch(solo/'branches'/'vs'/b/n)
+    rec = dict(verification_id='sv_x', charges=[dict(kind='confirm_seed2_all8', verification_id='v2'),
+                                               dict(kind='confirm_solo_all8_s2', verification_id='vs')],
+               per_seed_v1=dict(examples=[
+                   dict(admitted=True, seed_index=2, solo_verification_id='vs',
+                        tape=dict(branches_dir=str(s2/'branches'), verification_id='v2', branch=dict(branch='cand1'))),
+                   dict(admitted=False, seed_index=2, status='rejected')]))
+    land, keep, record = cc.minimal_plan(bank, rec)
+    rel = sorted(p.relative_to(bank).as_posix() for p in land)
+    assert rel == sorted([
+        'confirm_seed2_all8/verifications/v2.json', 'confirm_solo_all8_s2/verifications/vs.json',
+        'confirm_seed2_all8/branches/v2/cand1/RESULT.json', 'confirm_seed2_all8/branches/v2/cand1/RESULT.json.gz',
+        'confirm_seed2_all8/branches/v2/cand1/observable.jsonl.gz',
+        'confirm_seed2_all8/branches/v2/policy/RESULT.json', 'confirm_seed2_all8/branches/v2/policy/RESULT.json.gz',
+        'confirm_seed2_all8/branches/v2/cand2/SLIM.json',
+        'confirm_solo_all8_s2/branches/vs/policy/RESULT.json', 'confirm_solo_all8_s2/branches/vs/policy/RESULT.json.gz',
+        'confirm_solo_all8_s2/branches/vs/cand1/RESULT.json', 'confirm_solo_all8_s2/branches/vs/cand1/RESULT.json.gz'])
+    kept = {p.relative_to(bank).as_posix() for p in keep}
+    assert 'confirm_seed2_all8/branches/v2/cand2/observable.jsonl.gz' in kept
+    assert 'confirm_seed2_all8/branches/v2/policy/observable.jsonl.gz' in kept
+    assert 'confirm_seed2_all8/branches/v2/cand1.result.json' in kept and 'confirm_seed2_all8/claims/v2.json' in kept
+    assert not set(land) & set(keep)
+    assert record == bank/'confirmations_all8'/'sv_x.json'

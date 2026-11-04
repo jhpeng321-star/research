@@ -162,17 +162,98 @@ def push_plan(bank, record):
     return files, bank/'confirmations_all8'/(record['verification_id']+'.json')
 
 
+def _tape_files(bdir):
+    return [Path(bdir)/n for n in ('RESULT.json', 'RESULT.json.gz') if (Path(bdir)/n).is_file()]
+
+
+def minimal_plan(bank, record):
+    """(land, keep, record_path) - MAIN 13:05 minimal training-read set.
+
+    Reader trace (checking source): rb.bank_pairs per_seed_v1 / vp.imitation_entry read each ADMITTED
+    example's plan-branch RESULT.json(.gz); bank_v2v.attach_pairs reads that branch's observable.jsonl.gz;
+    vp.records -> relabel_reference_mismatch reads the verification receipt (bs._receipt), the plan and
+    policy-reference tapes of that verification and the solo verification's receipt + branch tapes
+    (_cooperation); bank_statistics/_best_solo read solo receipts + tapes; certified_candidates, lesson
+    lists, isolated synergy and learningwatch read records / first-seed data / decision snapshots only
+    (already on cpuQ). Land = every charged verification's receipt + those tapes/observables + SLIM.json
+    (tiny reviewed fallback); keep (cpuS only, sha-indexed) = everything else of push_plan."""
+    from tools.coopmwm import verify_perseed as vp
+    bank = Path(bank);want = set()
+    for c in record['charges']:
+        want.add(bank/c['kind']/'verifications'/f"{c['verification_id']}.json")
+    for e in record['per_seed_v1']['examples']:
+        if not e.get('admitted'):
+            continue
+        t = e['tape'];vdir = Path(t['branches_dir'])/t['verification_id']
+        bd = vdir/t['branch']['branch']
+        want.update(_tape_files(bd));want.add(bd/'observable.jsonl.gz')
+        receipt = json.loads((Path(t['branches_dir']).parent/'verifications'/f"{t['verification_id']}.json").read_text())
+        want.update(_tape_files(vdir/receipt['branches'][0]['branch']))
+        if e.get('solo_verification_id'):
+            k = int(e['seed_index'])
+            sdir = bank/(vp.SOLO_ROOTS.get(k) or vp.seed_kinds(k)[2])/'branches'/e['solo_verification_id']
+            if sdir.is_dir():
+                for b in sorted(sdir.iterdir()):
+                    if b.is_dir():
+                        want.update(_tape_files(b))
+    files, rec_path = push_plan(bank, record)
+    land = [p for p in files if p in want or p.name == 'SLIM.json']
+    landed = set(land)
+    keep = [p for p in files if p not in landed]
+    return land, keep, rec_path
+
+
+def _jsonable(x):
+    return x.tolist() if hasattr(x, 'tolist') else repr(x)
+
+
+def reader_view(bank, record):
+    """Digest of what the training readers see for ONE sealed decision (same code on cpuS and cpuQ):
+    relabelled record (vp.records semantics), every admitted imitation_entry (tape digest + entry) and
+    its v2v attach_pairs output from the observable trace."""
+    from tools.coopmwm import verify_perseed as vp, bank_v2v, exact_grade as xg
+    from tools.coopmwm.protocol import digest
+    xg.verify_sealed(record, 'confirmation_sha256')
+    view = vp.relabel_reference_mismatch(record, Path(bank))
+    out = dict(verification_id=record['verification_id'], record=digest(view), examples=[])
+    for e in view['per_seed_v1']['examples']:
+        if not e.get('admitted'):
+            continue
+        tape, entry = vp.imitation_entry(e, record['t0'], 1.0)
+        pairs = xg.imitation_pairs(tape, entry)
+        t = e['tape']
+        obs = Path(t['branches_dir'])/t['verification_id']/t['branch']['branch']/'observable.jsonl.gz'
+        kept, counts = bank_v2v.attach_pairs(pairs, obs, record['t0'])
+        out['examples'].append(dict(example_id=e['example_id'], seed_index=e['seed_index'],
+                                    cooperative=e.get('cooperative') is True, tape=digest(tape), entry=entry,
+                                    pairs=len(pairs), v2v_counts=counts,
+                                    v2v_sha256=hashlib.sha256(json.dumps(kept, default=_jsonable, sort_keys=True)
+                                                              .encode()).hexdigest()))
+    out['view_sha256'] = hashlib.sha256(json.dumps(out, sort_keys=True, default=str).encode()).hexdigest()
+    return out
+
+
 def push_decision(cfg, arm, vid, log):
-    """Land one sealed decision on cpuQ (no overwrite, sha256-verified, record last). Returns a receipt."""
+    """Land one sealed decision on cpuQ: MINIMAL training-read set only (minimal_plan), no overwrite,
+    sha256-verified; the record is first staged OUTSIDE the bank and the cpuQ reader view (same code)
+    must equal the cpuS view before the record enters confirmations_all8; then the first-seed
+    rejected tapes of that record are slimmed on cpuQ (reviewed slim code, cpuS archive proof).
+    Everything not landed stays on cpuS, sha-indexed in kept_manifests/. Returns a receipt."""
     from tools.coopmwm import replay_bank as rb
     from tools.coopmwm.exact_grade import verify_sealed
     bank = Path(rb.bank_root(Path(cfg['run_root']), arm))
     rec_path = bank/'confirmations_all8'/(vid+'.json')
     record = json.loads(rec_path.read_text());verify_sealed(record, 'confirmation_sha256')
-    files, rec_path = push_plan(bank, record)
+    files, keep, rec_path = minimal_plan(bank, record)
     rows = [dict(path=str(p), sha256=_sha(p), size=p.stat().st_size) for p in files]
     rec_row = dict(path=str(rec_path), sha256=_sha(rec_path), size=rec_path.stat().st_size)
     total = sum(r['size'] for r in rows)+rec_row['size']
+    kept_dir = Path(cfg['control'])/'kept_manifests';kept_dir.mkdir(exist_ok=True)
+    kept_rows = [dict(path=str(p), sha256=_sha(p), size=p.stat().st_size) for p in keep]
+    kept_file = kept_dir/f'{arm}_{vid}.json'
+    if not kept_file.exists():
+        kept_file.write_text(json.dumps(dict(arm=arm, verification_id=vid, host='cpuS', store='same path on cpuS',
+                                             archive_rejected_full=cfg['archive_dir'], files=kept_rows), indent=0))
     free = rpc_retry(cfg, 'disk')['free']
     if free-total < int(cfg['push_min_free_after_bytes']):
         return dict(status='held_disk', cpuq_free=free, bytes=total)
@@ -194,14 +275,35 @@ def push_decision(cfg, arm, vid, log):
     bad = rpc_retry(cfg, 'verify', dict(files=rows))['bad']
     if bad:
         return dict(status='verify_failed_files', bad=bad[:20], n_bad=len(bad))
+    # stage the record OUTSIDE the bank, compare reader views, only then publish it into the bank
+    staged = f"{cfg['q_control']}/staged_records/{arm}_{vid}.json"
+    p = subprocess.run(['rsync', '-a', '-e', 'ssh -o BatchMode=yes -o ConnectTimeout=20', str(rec_path),
+                        f'{cfg["q_host"]}:{staged}'], capture_output=True, text=True, timeout=600)
+    if p.returncode != 0:
+        raise RpcError(f'rsync staged record exit {p.returncode}: {p.stderr[-500:]}')
+    mine = reader_view(bank, record)
+    theirs = rpc_retry(cfg, 'view', dict(arm=arm, verification_id=vid, record_sha256=rec_row['sha256']))
+    if not theirs.get('ok') or json.loads(json.dumps(mine, default=str)) != theirs['view']:
+        return dict(status='view_mismatch', cpus_view=mine['view_sha256'],
+                    cpuq=(theirs.get('view') or {}).get('view_sha256') if theirs.get('ok') else theirs)
     send([rec_path], 'record')
     bad = rpc_retry(cfg, 'verify', dict(files=[rec_row]))['bad']
     if bad:
         return dict(status='verify_failed_record', bad=bad)
+    slim = rpc_retry(cfg, 'slim_first_seed', dict(arm=arm, verification_id=vid))
+    ex = [e for e in record['per_seed_v1']['examples'] if e.get('admitted')]
+    seeds = sorted({e['seed_index'] for e in ex})
     receipt = dict(status='pushed', arm=arm, verification_id=vid, files=len(rows)+1, bytes=total,
+                   kept_on_cpus_files=len(kept_rows), kept_on_cpus_bytes=sum(r['size'] for r in kept_rows),
                    record_sha256=rec_row['sha256'], confirmation_sha256=record['confirmation_sha256'],
+                   view_sha256=mine['view_sha256'], view_equal=True,
+                   admitted_by_seed={str(k): sum(e['seed_index'] == k for e in ex) for k in seeds},
+                   cooperative_by_seed={str(k): sum(e['seed_index'] == k and e.get('cooperative') is True for e in ex)
+                                        for k in seeds},
+                   first_seed_slim={k: v for k, v in slim.items() if k != 'rows'},
                    cpuq_free_before=free, wall_s=time.time()-started,
-                   manifest_sha256=hashlib.sha256(json.dumps(rows+[rec_row], sort_keys=True).encode()).hexdigest())
+                   manifest_sha256=hashlib.sha256(json.dumps(rows+[rec_row], sort_keys=True).encode()).hexdigest(),
+                   kept_manifest_sha256=_sha(kept_file))
     rpc_retry(cfg, 'note', dict(name='PUSHED', row=receipt))
     return receipt
 
