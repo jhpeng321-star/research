@@ -1,12 +1,18 @@
 # S-SELMAPPO fleet-picker integration handoff
 
 ## Fresh resume — 2026-11-04 14:01 +08:00
+- Concurrent-session follow-up: `docs/paper_results/selmappo/RESUME_20261104_1402.json`
+  appeared during this reconciliation and independently records SUCCESSFUL metadata/
+  hash probes: originalcpuQ645235/root absent, free6,051,713,024bytes, gpuR checkpoint
+  and frozenreceipt expected hashes MATCH. That receipt supersedes the remote-unknown
+  limitation below using the other session's evidence; this session's failed probes
+  remain recorded accurately in1401. Its independent receipt/work is preserved.
 - Existing design/build/CPU gates/training and fleet evaluation remain COMPLETE in
   committed receipts:169updates/7,728new production episodes/6,998,400charged sim-s.
   Local14,400evaluation reservation remains UNSTARTED; exact cap7,012,800unchanged.
-- Current remote verification unavailable: cpuQ read-only metadata probe timed out;
-  gpuR closed SSH before checkpoint hashes returned. Current remote process/artifact/
-  disk state is UNKNOWN. Nov3's successful checks below are historical, not fresh.
+- This session's remote verification failed: cpuQ metadata probe timed out; gpuR
+  closed SSH before hashes returned. Its own probes left remote state UNKNOWN;
+  see the successful concurrent-session follow-up above for newer verification.
 - Historical final169 checkpoint remains identified by gpuR path below and expected
   SHA256be0bb66d...457ddc; no new hash, CPU-load or inference PASS is asserted.
 - Fresh local exact-PID query: observer3668/noonpublisher44716 absent. Existing peer
