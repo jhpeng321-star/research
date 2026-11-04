@@ -52,7 +52,6 @@ another host; archive layout is bank-relative so it restores 1:1):
 """
 import hashlib
 import json
-import re
 from pathlib import Path
 
 from .archive_move import BAD

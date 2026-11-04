@@ -190,8 +190,8 @@ def test_first_seed_chosen_branch_kept_when_seed1_rejected_it(tmp_path):
         verification_id=vid, receipt_sha256=receipt['receipt_sha256'], branches_dir=str(first/'branches')),
         per_seed_v1=dict(examples=[dict(row, candidate_index=0), dict(row, candidate_index=2)]),
         seed2={}, extended=None, extended_seed2=None), 'confirmation_sha256')
-    plan = st.slim_plan(bank, rec)
-    assert [b['branch'] for _, b, _ in plan] == ['cand1']      # cand3 IS the chosen branch
+    planned = st.slim_plan(bank, rec)
+    assert [b['branch'] for _, b, _ in planned] == ['cand1']      # cand3 IS the chosen branch
     out = st.slim_record(bank, rec)
     assert out['slimmed'] == 1 and not out['errors']
     assert (first/'branches'/vid/'cand3'/'RESULT.json').exists()
@@ -272,17 +272,17 @@ def test_migration_moves_with_sha256_and_is_idempotent(tmp_path, monkeypatch):
     monkeypatch.setattr(time, 'time', lambda: 1700000000.0)
     root, rec = build_bank(tmp_path/'off', slim=False)
     bank = rb.bank_root(root, 'B')
-    plan = slimmed_dirs(bank, rec)
+    dirs = slimmed_dirs(bank, rec)
     before = {str(d): {n: sha(d/n) for n in ('RESULT.json', 'RESULT.json.gz') if (d/n).exists()}
-              for d, _ in plan}
+              for d, _ in dirs}
     archive = tmp_path/'archive_target'
     dry = st.migrate(bank, archive, dry_run=True)                # dry run: nothing moves
     assert dry['dry_run'] and dry['bytes_moved'] > 0 and not archive.exists()
-    assert all((d/'RESULT.json').exists() for d, _ in plan)
+    assert all((d/'RESULT.json').exists() for d, _ in dirs)
     out = st.migrate(bank, archive)
     assert out['moved'] == N_SLIM and out['bytes_moved'] == dry['bytes_moved']
     assert out['errors'] == [] and out['bytes_removed'] == 0     # migration never deletes
-    for d, _ in plan:
+    for d, _ in dirs:
         rel = d.relative_to(bank)
         assert (archive/rel/st.MARKER).exists()
         for n, want in before[str(d)].items():

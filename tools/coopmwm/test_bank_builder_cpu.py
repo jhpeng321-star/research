@@ -50,14 +50,16 @@ def test_run_all8_round_passes_slim_and_extra_seeds_from_config(tmp_path, monkey
     seen = {}
     def fake_confirm_all8(root, arm, receipt, snapshot, runner_for, run_root, phase,
                           workers=2, **kw):
-        seen.update(kw);seen['vid'] = receipt['verification_id']
+        seen.update(kw)
+        seen['vid'] = receipt['verification_id']
         return dict(admitted=[], winners={}, confirmation_sha256='ab'*32, charged_sim_s=0)
     monkeypatch.setattr(vp, 'confirm_all8', fake_confirm_all8)
 
     def round(config, name):
         control = tmp_path/name/'control'
         (control/'attempts_all8').mkdir(parents=True)
-        immutable = lambda p, d: p.write_text(json.dumps(d))
+        def immutable(p, d):
+            p.write_text(json.dumps(d))
         run_all8_round(tmp_path/name/'root', control, config, immutable)
         return control
 
