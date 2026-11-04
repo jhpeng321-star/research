@@ -1,5 +1,31 @@
 # S-COOPMWM — live checks
 
+## Nov4 10:31 UTC+8 — A9/B3/R3; approved storage moves progress
+- Direct public-receipt/process probe shows **A9/B3/R3**, with A's u10 episodes
+  running. B/R remain at the mechanics pause. The recovery operator reports
+  src7/a7ae6d9a Linux262/262PASS and prospective runtime06e88ecd, but its release
+  write was denied and referred to MAIN. Monitor3 was gracefully retired during
+  that handover; no competing release, gate or monitor was dispatched here.
+- The approved legacy-tail SHA archive is **complete:476,840,470bytes/240files/
+  4certified batches**. Full originals remain on gpuA, compact metrics locally;
+  both regular movers stayed running. Completed work is not redispatched.
+- MAIN10:12's rejected-tape migration is qualified (**23Linux checks**, six local
+  proof-boundary tests), registered and dispatched once. The real dry-run admits
+  **447explicitly rejected branches/894files/936,070,977bytes**, zero errors.
+  Payloads go directly to gpuA over the live mover transport, with remote byte,
+  payload and canonical result-digest proof before local SLIM/source removal.
+  First progress proof:57branches/128,702,937gross bytes moved,512,456bytes of
+  local SLIM summaries; two batches remotely verified. Owner2600683 is live.
+- cpuQ free7,229,759,488bytes (~6.73GiB). The complete eligible gross slim pool
+  cannot reach10GiB: the dry-run's optimistic remaining gap is2,603,024,575bytes,
+  before SLIM overhead/new writes. The9GiB backfill guard and MAIN's collector
+  STOP stay in place. Fresh-V2V collection wiring remains previously reported.
+- Actual B-u6 lesson/isolated-synergy evidence is still pending. No new SUMO,
+  inference, budget charge or training recipe change by this storage work.
+  Receipts: `coopmwm/LEGACY_TAIL_ARCHIVE_1000_COMPLETE.md`,
+  `coopmwm/SLIM_MIGRATION_MAIN1012_V4_RUNNING.md`, and
+  `coopmwm/RESUME_LIVE_0815_1793759473150996300.json`.
+
 ## Nov4 ~09:30 UTC+8 — legacy stop sealed; delegated recovery not yet qualified
 - **A7/B3/R3.** B/R mechanics recovery remains delegated. Candidate src5/
   9ddb8d48 has a non-PASS Linux receipt (262 tests, zero simulation), so the
