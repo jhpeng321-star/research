@@ -264,6 +264,7 @@ def own_ledger(root):
     """The OWN single-ledger binding: CHARGES.jsonl, ACCOUNTING.claim and AUTHORITY.md must be
     REAL files inside this root (a symlink or a path resolving elsewhere is another root's
     ledger and is refused), and AUTHORITY.md must carry the standalone rule."""
+    guard_path(root)
     root_resolved = Path(guard_path(Path(root).resolve()))
     files = {}
     for name in ('CHARGES.jsonl', 'ACCOUNTING.claim', 'AUTHORITY.md'):
@@ -595,6 +596,8 @@ class _ReadRecorder:
         elif self.home is not None and any(r == Path(path).absolute() or
                 r in Path(path).absolute().parents for r in self.roots):
             raise ValueError('REFUSED: reader link target outside staging home: '+str(resolved))
+        elif self.home is not None and resolved.suffix.lower() in ('.json', '.jsonl', '.gz', '.pt'):
+            raise ValueError('REFUSED: reader data outside staging home: '+str(resolved))
         if found is not None:
             guard_path(found)
             self.paths.add(found)
@@ -840,7 +843,8 @@ def staging_manifest(*, remote_root, sources=(), training_seed=20261101):
 
 def manifest_source(mirror):
     """Register the local mirror directory whose layout equals /home/ubuntu (read-only)."""
-    _mirror[0] = Path(mirror).resolve()
+    guard_path(mirror)
+    _mirror[0] = Path(guard_path(Path(mirror).resolve()))
     return _mirror[0]
 
 
@@ -872,7 +876,8 @@ def validate_manifest(manifest, *, checkpoint_sha256=None):
             raise SystemExit('REFUSED: missing required staging role: '+role)
         kinds = {entries[k]['kind'] for k in keys}
         if role.startswith('bank_'):
-            if not {'decision_link', 'snapshot', 'tape', 'trace'}.issubset(kinds):
+            if not {'decision_link', 'snapshot', 'tape', 'trace', 'confirmation_all8',
+                    'bank_receipt'}.issubset(kinds):
                 raise SystemExit('REFUSED: incomplete required staging role: '+role)
         else:
             kind = {'common_checkpoint': 'checkpoint_u0', 'safety_rule': 'safety_rule',
@@ -900,6 +905,8 @@ def verify_staged(manifest, stage_dir, *, checkpoint_sha256=None):
             bad.append(key+': missing')
         elif sha(staged) != entry['sha256']:
             bad.append(key+': sha differs')
+        elif staged.stat().st_size != entry['bytes']:
+            bad.append(key+': bytes differ')
     if bad:
         raise SystemExit('REFUSED: %d staged file(s) do not match the manifest: %s'
                          % (len(bad), '; '.join(bad[:5])))
@@ -1142,6 +1149,8 @@ def preflight_dry(prep_dir, *, stage_dir, budget_request=BUDGET_REQUEST, approva
     use the DOCUMENT self-hash (separate digests, both returned in the receipt).
     """
     from .exact_grade import verify_sealed
+    guard_path(prep_dir)
+    guard_path(stage_dir)
     prep, stage = (Path(guard_path(Path(p).resolve())) for p in (prep_dir, stage_dir))
     req = Path(guard_path((prep/budget_request).resolve()))
     if not req.is_file():

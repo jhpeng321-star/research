@@ -276,6 +276,8 @@ def test_smoke_executes_all_consumers_updates_and_full_isolated_expansion(tmp_pa
     assert result['status'] == 'CPU_PLANT_SMOKE_PASS' and result['new_sim_s'] == 0
     assert result['episodes'] == 6 and result['isolated_dry_cells'] == 96
     assert result['virtual_sim_s'] <= cfg['smoke']['total_sim_s']
+    assert result['spend']['track2_smoke'] == result['virtual_sim_s']
+    assert sum(v for k, v in result['spend'].items() if k != 'track2_smoke') == 0
     assert (rt.root/'CHARGES.jsonl').read_bytes() == b''
     assert backend.ppo_calls == 1 and len(backend.plants) == 6
     assert state_sha(rt.models['A']) != initial['A']

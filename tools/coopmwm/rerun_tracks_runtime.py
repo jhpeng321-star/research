@@ -103,6 +103,8 @@ class Runtime:
         rc.check_pins(cfg)
         if not cfg.get('track2'):
             raise ValueError('REFUSED: Runtime requires explicit Track 2 opt-in')
+        import torch
+        torch.set_num_threads(cfg['cpu']['torch_threads'])
         self.cfg, self.registration, self.backend = deepcopy(cfg), deepcopy(registration), backend
         self.root = Path(rc.guard_path(cfg['run_root']))
         rc.guard_path(self.root.resolve())
@@ -149,6 +151,7 @@ class Runtime:
                 raise ValueError('REFUSED: common checkpoint loaded into different base states')
             if arm != 'A':
                 model.requires_grad_(False)
+                model.eval()
             self.components[arm] = rc.track2_components(cfg, arm, adapters=backend.adapters(model))
             if arm != 'A':
                 self._check_optimizer(arm)
@@ -161,6 +164,9 @@ class Runtime:
             raise ValueError('REFUSED: cooperation layer needs separate optimizer; frozen base excluded')
         trainable = {id(p) for name in ('coop_layer', 'trigger_head')
                      for p in comp[name].parameters() if p.requires_grad}
+        if any(p.device.type != 'cpu' for name in ('coop_layer', 'trigger_head')
+               for p in comp[name].parameters()):
+            raise ValueError('REFUSED: CPU layer/trigger only')
         if params != trainable:
             raise ValueError('REFUSED: layer optimizer must own exactly the layer and trigger parameters')
 
@@ -176,6 +182,8 @@ class Runtime:
         self._reserve_batch([dict(id=ident, sim_s=sim_s)], phase)
 
     def _reserve_batch(self, jobs, phase):
+        if self.smoke:
+            phase = 'track2_smoke'  # a separately quoted, hard-capped smoke allocation
         with self.reserve_lock:
             ids = [j['id'] for j in jobs]
             if len(set(ids)) != len(ids) or set(ids) & self.seen_jobs:

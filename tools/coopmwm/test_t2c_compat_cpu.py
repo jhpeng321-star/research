@@ -29,6 +29,7 @@ def test_absent_and_false_opt_in_match_track_base_without_component_imports(tmp_
         assert rc.check_pins(actual)
         assert rc.track2_components(actual, 'B', adapters={}) == {}
         assert rc.episode_options(actual, 'B') == {}
+        assert rc.run_tracks(actual, None, object(), legacy_run=lambda c: c) is actual
 
 
 def test_clean_profile_has_fair_enabled_consumers_and_costs(tmp_path):

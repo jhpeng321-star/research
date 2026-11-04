@@ -9,9 +9,9 @@ Covers the owner 2026-11-04 requirements:
                   the full fix set (kl_targeted, per_seed_v1 cooperative_only, practice_starts
                   0.25/cap 2, imitation_target_space 'effective'), A the same runtime minus
                   bank/practice; the effective-imitation commit pinned to f35b193a;
-  Track 2 T2C   - essentials-first B/R trigger + frozen layer/group credit/observable merge
-                  features; deferred WM/random teachers (same move distribution) and
-                  augmentation/practice-weighting/coop_reward slots default OFF; cpuS shared
+  Track 2 T2C   - explicitly selected clean B/R profile: trigger + frozen layer/credit/features,
+                  WM/random teachers, own-bank augmentation and equal practice weighting;
+                  extra coop_reward OFF; cpuS shared
                   40-worker ceiling (24 episode + 16 diagnostic slots); isolated cooperation at
                   u6/12/18/24 (N=8 paired-world replicates, bootstrap CIs, sealed
                   pre-registered criterion), the full budget quote and the criterion-bound
@@ -168,8 +168,7 @@ def test_three_arms_from_mappo_u0_with_identical_code(tmp_path):
 
 
 def test_t2c_trigger_head_and_teachers_per_arm(tmp_path):
-    """A is plain PPO; B/R trigger heads are ON. WM/random teacher roles remain available
-    in deferred slots, with no teacher invoked or charged in the essentials-first profile."""
+    """A is plain PPO; B/R heads and WM/random teachers are enabled in the opted-in profile."""
     import tools.coopmwm as pkg
     cfg = config(tmp_path)
     head, teachers = cfg['trigger_head'], cfg['teacher']

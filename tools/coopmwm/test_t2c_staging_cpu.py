@@ -71,6 +71,16 @@ def test_guards_run_before_lexical_or_resolved_read(tmp_path, monkeypatch):
     assert not opened
 
 
+def test_already_resolved_reader_data_outside_staging_home_is_refused(tmp_path):
+    home = tmp_path/'home'
+    home.mkdir()
+    outside = tmp_path/'outside.json'
+    outside.write_text('{}')
+    with rc._ReadRecorder([home], home):
+        with pytest.raises(ValueError, match='outside staging home'):
+            outside.read_text()
+
+
 def test_preflight_rejects_substituted_inventory(tmp_path, mirror):
     prep, stage = prep_dir(tmp_path, mirror)
     path = prep/rc.MANIFEST_FILE
