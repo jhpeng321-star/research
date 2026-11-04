@@ -196,8 +196,12 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
     def record_lesson(r,a,policy,run_root,u,*args,**kwargs):
         if u not in cfg['diagnostic_schedule'][a]['lessons']:
             return dict(arm=a,update=u,status='not_scheduled',new_sim_s=0)
-        return hooks['record_lesson'](r,a,policy,run_root,u,*args,
-            **dict(kwargs,phase=cfg['diagnostic_phases']['lessons']))
+        # The shared ledger already holds the legacy non-V2V arms' lesson_u<k>_<vid> charges
+        # (u4..u21): V2V lesson charges and their work directory use this root's own job
+        # namespace, so the u6/u12/u18 lessons are never refused as duplicate charges.
+        kwargs=dict(kwargs,phase=cfg['diagnostic_phases']['lessons'])
+        kwargs.setdefault('attempt_kind',f"{cfg['job_namespace']}_lesson_u{int(u):03}")
+        return hooks['record_lesson'](r,a,policy,run_root,u,*args,**kwargs)
 
     def diagnostics(r,a,u,policy,b,lesson):
         schedule=cfg['diagnostic_schedule'][a]
