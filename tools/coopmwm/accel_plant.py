@@ -108,6 +108,9 @@ def episode(job, *, controller_hook=None, policy_loader=None):
                         dict(job=job['id'],time_s=t,behaviour=event['sample']['behaviour']))
                 if controller_hook is not None and hasattr(controller_hook, 'after_step'):
                     controller_hook.after_step(t, cf.observations(b))
+                if job.get('track2_backend') and job['arm'] != 'A':
+                    from .track2_backend import record_outcomes
+                    record_outcomes(policy, event, cf.observations(b))
                 steps.append(dict(controller.events[-1],reward=before-b.totals['team_delay_vs']))
                 if t+1 in (900,1200):metrics[str(t+1-300)]=dict(b.totals)
                 if branch and t+1-branch['time_s'] in (60,120,300,600):

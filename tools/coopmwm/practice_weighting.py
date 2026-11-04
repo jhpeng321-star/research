@@ -87,6 +87,13 @@ def verify_child(root, arm, row, snapshot, prelaunch):
 def options(cfg):
     on = cfg.get('practice_weighting', False)
     fraction = cfg.get('practice_weighted_fraction', FRACTIONS[0])
+    if cfg.get('track2') is True and isinstance(on, dict):
+        # T2C's approved launch profile uses a structured registration; legacy
+        # callers retain the original strict boolean API.
+        from .rerun_cpus import TRACK_SLOTS
+        if on != TRACK_SLOTS['practice_weighting']:
+            raise ValueError('Track 2 practice registration differs')
+        fraction, on = float(on['fraction']), on['enabled']
     if type(on) is not bool:
         raise ValueError('practice_weighting must be a bool')
     if (type(fraction) is not float or not math.isfinite(fraction)

@@ -399,6 +399,33 @@ def episode_components(job, base, controller_type):
     return policy.eval(), controller
 
 
+def record_outcomes(policy, event, post_rows):
+    """Record P2's actual t+1 observations, never pre-action reward fallbacks.
+
+    Own sensing is clipped before any outcome is read. Selected V2V packets
+    remain t-1 relative to the outcome timestamp. Recording is offline telemetry;
+    it does not advance the policy's sensing/intent boards or its random streams.
+    """
+    from .track2_reward import _sensor_packet, neighbourhood_reward
+    now = event['time_s'] + CONTROL_DT_S
+    packets, neighbourhoods = {}, {}
+    for vid in event['sample']['context']['members']:
+        own = _sensor_packet(post_rows, vid, now)
+        partners = [p for p in policy.visible.get(vid, ()) if p != vid]
+        packet = dict(own=own, partner_reports={p: policy.reports[p] for p in partners
+            if p in policy.reports}, partner_ids=partners)
+        outcome = neighbourhood_reward(**packet, cav_id=vid, now_s=now,
+                                       weight=policy.cfg['track2_reward']['weight'])
+        # Dataclasses are encoded by accel_storage's serializer only if flattened;
+        # keep explicit primitive packets for immutable JSON episode receipts.
+        from dataclasses import asdict
+        packets[vid] = dict(own=asdict(own), partner_reports={p: asdict(r)
+            for p, r in packet['partner_reports'].items()}, partner_ids=partners)
+        neighbourhoods[vid] = outcome['neighbour_ids']
+    event['reward_observations'] = packets
+    event['sample']['track2']['outcome_neighbourhoods'] = neighbourhoods
+
+
 @contextmanager
 def _bank_view(cfg):
     from . import bank_statistics, replay_bank, effective_imitation
@@ -716,6 +743,11 @@ class ArmRuntime:
                 raise ValueError('duplicate/unmatched per-CAV reward')
             neighbours = row['neighbour_rewards']
             observed = by_key[key[:2]]['track2']['reward_neighbourhoods'][key[2]]
+            # Production workers bind the exact post-action sensor domain.
+            # Legacy/fixture envelopes retain their pre-recorded strict domain.
+            outcome_ids = by_key[key[:2]]['track2'].get('outcome_neighbourhoods')
+            if outcome_ids is not None:
+                observed = outcome_ids[key[2]]
             if (row.get('source') != 'sumo' or row.get('weight') != registration['weight']
                     or row.get('weight_provenance') != registration['provenance']
                     or set(neighbours) != set(observed)):

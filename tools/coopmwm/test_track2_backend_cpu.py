@@ -808,6 +808,7 @@ def test_real_accel_plant_full_episode_with_fake_physics(cfg, monkeypatch):
         backend.actual += 1
         return [dict(clamped=False) for v in requests]
     free.tick = tick
+    free.observations = lambda backend: rows()
     monkeypatch.setitem(sys.modules, 'tools.leverprobe', leverprobe)
     monkeypatch.setitem(sys.modules, 'tools.leverprobe.backend', exact)
     monkeypatch.setitem(sys.modules, 'tools.coopfree.backend', free)

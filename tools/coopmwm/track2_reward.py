@@ -123,6 +123,7 @@ def neighbourhood_reward(own, cav_id, partner_reports=None, *, now_s,
         raise ValueError("nonfinite augmented cooperation reward")
     return dict(own_reward=own_reward, neighbourhood_reward=team,
                 team_addition=addition, reward=reward,
+                neighbour_rewards={vid: _outcome(visible[vid][0]) for vid in neighbours},
                 neighbour_ids=neighbours,
                 neighbour_timestamps_s={vid: visible[vid][1] for vid in neighbours},
                 neighbours=len(neighbours), empty_neighbourhood=not neighbours,
@@ -153,6 +154,15 @@ def _sensor_packet(rows, cav_id, now_s):
             local.append(vehicle(row))
     lanes = tuple(sorted({source.lane, *(row.lane for row in local)}))
     return mf.SensorReport(now_s, source, lanes, tuple(local))
+
+
+def _decode_packet(value):
+    if isinstance(value, mf.SensorReport):
+        return value
+    if not isinstance(value, dict) or set(value) != {'timestamp_s', 'source', 'observed_lanes', 'vehicles'}:
+        raise ValueError('invalid serialized SUMO sensor packet')
+    return mf.SensorReport(value['timestamp_s'], mf.ObservedVehicle(**value['source']),
+        tuple(value['observed_lanes']), tuple(mf.ObservedVehicle(**v) for v in value['vehicles']))
 
 
 def training_episodes(cfg, arm, episodes):
@@ -204,8 +214,8 @@ def training_episodes(cfg, arm, episodes):
             for vid in members:
                 if packets is not None:
                     packet = packets[vid]
-                    own = packet["own"]
-                    reports = packet.get("partner_reports")
+                    own = _decode_packet(packet["own"])
+                    reports = {p: _decode_packet(r) for p, r in packet.get("partner_reports", {}).items()}
                     partners = packet.get("partner_ids", ())
                 else:
                     own = _sensor_packet(rows, vid, now)
@@ -233,6 +243,34 @@ def training_episodes(cfg, arm, episodes):
                    wm_used=False, global_reward_used=False, terminal_fallback_steps=0,
                    outcome_rule="negative measured speed deficit, vehicle-seconds per control tick")
     return transformed, receipt
+
+
+def reward_update(cfg, arm, u, episodes):
+    """P1 envelope backed by this module's real post-action sensor extraction.
+
+    The parent keeps its SHA-bound structured registration. P1 has a narrow
+    weight/provenance mapping; convert it only at this explicit integration edge.
+    Every recorded control tick is retained, including non-PPO/prefix ticks.
+    """
+    registration = cfg['track2_reward']
+    if not isinstance(registration, dict) or set(registration) != {'weight', 'provenance'}:
+        raise ValueError('P1 reward registration must contain weight and provenance')
+    native = dict(cfg, track2_reward=True,
+                  track2_reward_weight=registration['weight'],
+                  track2_reward_provenance=registration['provenance'],
+                  track2_reward_arms=['B', 'R'])
+    transformed, receipt = training_episodes(native, arm, episodes)
+    rows = []
+    if arm in ARMS:
+        for episode in transformed:
+            for step in episode['steps']:
+                for vid, outcome in step['track2_reward']['per_cav'].items():
+                    rows.append(dict(episode_id=episode['id'], time_s=step['time_s'],
+                        cav_id=vid, source='sumo', own_reward=outcome['own_reward'],
+                        neighbour_rewards=outcome['neighbour_rewards'], reward=outcome['reward'],
+                        weight=registration['weight'], weight_provenance=registration['provenance']))
+    return dict(schema='coopmwm-track2-reward-v1', arm=arm, update=u,
+                rows=rows, receipt=receipt)
 
 
 def layer_records(cfg, arm, episodes):
