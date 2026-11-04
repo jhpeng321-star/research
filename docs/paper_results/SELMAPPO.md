@@ -1,6 +1,18 @@
 # Fleet PPO controller-selector training status
 
-## Latest reconciliation — 2026-11-04 14:01 +08:00
+## Latest reconciliation — 2026-11-04 16:06 +08:00
+- Fresh cpuQ metadata: original645235 and original training root absent after owner
+  cleanup; uptime9days4:30, disk6,022,180,864bytes free/89%used. No active fleet job.
+- Fresh nice19 gpuR SHA256 checks MATCH final169 checkpoint and frozen receipt below;
+  both SSH probes exited successfully. Historical local3668/44716 also absent.
+- Historical169updates/7,728gradient episodes/6,998,400charged remain COMPLETE;
+  14,400local evaluation UNSTARTED, cap7,012,800. Fresh local binding/arithmeticPASS.
+- Unchanged Nov3 peer status retains fleet16worlds/480decisions/96oraclebranches/
+  79,800charged=actual COMPLETE. Full paired comparison remains incomplete and peer-owned.
+- Evidence: `selmappo/RESUME_20261104_1606.json`. Supervision complete; prior CPU/runtime
+  PASS retained. No new simulation, GPU allocation, dispatch, observer or process signal.
+
+## Previous reconciliation — 2026-11-04 14:01 +08:00
 - Concurrent-session follow-up `selmappo/RESUME_20261104_1402.json` independently
   records originalcpuQ645235/root absent/free6,051,713,024bytes and MATCHING gpuR
   finalcheckpoint/frozenreceipt hashes. It supersedes the remote-unknown limitation

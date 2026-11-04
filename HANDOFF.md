@@ -1,5 +1,18 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+## Fresh remote verification — 2026-11-04 16:06 +08:00
+- Read git status/log, registration and existing completion receipts before action.
+- Fresh cpuQ exact-PID probe: original645235 absent; original training root absent
+  after registered owner cleanup. Uptime9days4:30; disk6,022,180,864bytes free/89%used.
+- Fresh gpuR checkpoint and frozen-receipt SHA256 both MATCH expected final169 bindings;
+  SSH probes exited successfully. Historical local observer3668/publisher44716 absent.
+- Existing169updates/7,728gradient episodes/6,998,400charged remain COMPLETE. Local
+  14,400evaluation remains UNSTARTED; exact cap7,012,800unchanged. Arithmetic/bindingsPASS.
+- Unchanged Nov3 peer status retains fleet16worlds/480decisions/96oraclebranches/
+  79,800charged=actual COMPLETE; full paired comparison remains incomplete and peer-owned.
+- Evidence: `docs/paper_results/selmappo/RESUME_20261104_1606.json`. Fleet supervision
+  is complete; no continuation required. Prior CPU/runtime PASS and peer work retained.
+
 ## Fresh resume — 2026-11-04 16:01 +08:00
 - Read git status/log, registration and completion receipts first; fresh local hashes
   match the design, final handoff, peer status and existing14:02 remote evidence.
