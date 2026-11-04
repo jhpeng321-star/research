@@ -1,6 +1,10 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
 ## Fresh adoption Nov4 ~08:15 +08
+- ReadonlyslimmerREADYquote: B548417713+R387653264=936070977bytes gross;
+  evenallrecoveredstill1762545855bytesbelow9GiB beforewrites/SLIMoverhead.
+  Branchstillchanging/reviewpending: NOmerge/activation/migration. Capacity
+  receipt STORAGE_CAPACITY_QUOTE_20261104_0820.md; MAINnotified.
 - Full1119-linebriefREAD; A5/B2/R2 at1793751120. A2049830LIVE; B/R/watch
   originalownersabsent/knowncheckpoint003STOPretained. RecoveryDELEGATED;
   c4/v2v-resumehasactiveedits. NOparallelrepair/gate/watcher/physicsdispatch.
