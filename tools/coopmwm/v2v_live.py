@@ -92,10 +92,12 @@ def hooks(root, cfg):
         identical job ids (the dispatched arm is always A), silently reusing the other arm's
         snapshot reference, and the resume accounting could not attribute reference charges."""
         from . import practice_starts, accel_runner
+        from .practice_weighting import effective_fraction
         from .v2v_runtime import load_checkpoint
         from .warm_protocol import SEED
-        plan=practice_starts.plan_for_update(r,arm,u,fraction=cfg['practice_fraction'],
-            repeat_cap=cfg['practice_repeat_cap'],count=len(practice),training_seed=SEED)
+        plan=practice_starts.plan_for_update(r,arm,u,fraction=effective_fraction(cfg),
+            repeat_cap=cfg['practice_repeat_cap'],count=len(practice),training_seed=SEED,
+            **(dict(weighting=True) if cfg.get('practice_weighting') else {}))
         rows=plan['rows']
         base=dict(update=u,v2v=True,v2v_dim=cfg['v2v_dim'],b_replay=True)
         policy,opt,rng,payload=load_checkpoint(Path(r)/f'A_checkpoint_{u-1:03}.pt',config=cfg)
@@ -387,9 +389,10 @@ def remaining_phase_costs(root, cfg):
         # practice ON: the full remaining quote covers the registered practice A-reference
         # allocation (the smokes charged part of it; the credit below removes only closed work)
         from .practice_starts import practice_count
+        from .practice_weighting import effective_fraction
         costs['v2v_train']+=practice_count(SMOKE_EPISODES_PER_ARM,
-            cfg['practice_fraction'])*2*TRAIN_FINAL_UPDATE*SMOKE_EPISODE_SIM_S
-        if any(n>practice_count(SMOKE_EPISODES_PER_ARM,cfg['practice_fraction'])
+            effective_fraction(cfg))*2*TRAIN_FINAL_UPDATE*SMOKE_EPISODE_SIM_S
+        if any(n>practice_count(SMOKE_EPISODES_PER_ARM,effective_fraction(cfg))
                for n in per_arm_refs.values()):
             raise ValueError('more reusable update-1 practice references than one registered smoke per arm')
     costs['v2v_train']-=SMOKE_EPISODE_SIM_S*len(credited)
@@ -444,7 +447,8 @@ def launch3_check(root, cfg, stage=None, arm=None, phase_costs=None):
             # episode from the same snapshot and CRN seed, charged to the arm's practice cost;
             # the dispatch quote covers the registered per-update upper bound.
             from .practice_starts import CHARGED_SIM_S,practice_count
-            costs['v2v_train']+=practice_count(24,cfg['practice_fraction'])*CHARGED_SIM_S*updates
+            from .practice_weighting import effective_fraction
+            costs['v2v_train']+=practice_count(24,effective_fraction(cfg))*CHARGED_SIM_S*updates
     elif stage=='resume':
         # Exact remaining registered episodes of THIS resumed arm (closed reusable
         # episodes of its in-progress update credited); never a caller-supplied amount.
@@ -458,6 +462,10 @@ def launch3_check(root, cfg, stage=None, arm=None, phase_costs=None):
         costs={'v2v_interim' if stage=='test8' else 'v2v_final':3*96*1200}
     elif stage is None:
         costs=phase_costs
+        if costs is None and cfg.get('practice_weighting'):
+            from .practice_weighting import effective_fraction
+            costs=dict(launch3.V2V_PHASES)
+            costs['v2v_train']+=launch3.practice_reference_quote(effective_fraction(cfg))
     else:
         raise ValueError('unregistered launch3 stage: '+str(stage))
     result=launch3.wait_for_preflight(authority['binding_path'],
@@ -684,7 +692,8 @@ def arm_remaining(root, cfg, arm, live, rows=None):
             if closed:credited_references+=1
         if cfg.get('practice_starts') and k<TRAIN_FINAL_UPDATE:
             from .practice_starts import CHARGED_SIM_S,practice_count
-            per_update=practice_count(EPISODES_PER_UPDATE,cfg['practice_fraction'])
+            from .practice_weighting import effective_fraction
+            per_update=practice_count(EPISODES_PER_UPDATE,effective_fraction(cfg))
             reference_sim_s=max(0,(TRAIN_FINAL_UPDATE-k)*per_update-credited_references)*CHARGED_SIM_S
     remaining_sim_s=remaining*EPISODE_SIM_S+reference_sim_s
     return dict(arm=arm,live=bool(live),sealed_update=k,resume_update=min(k+1,TRAIN_FINAL_UPDATE),

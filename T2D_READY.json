@@ -1,0 +1,151 @@
+{
+  "schema": "coopmwm.t2d_ready.v1",
+  "task": "T2D",
+  "status": "READY: r0 blocker fixed; independent r1 PASS and acceptance recorded; default off",
+  "branch": "c4/coop-layer",
+  "base": "c4/track-base @ 13f184b5",
+  "worktree": "E:/agent-work/c4-coop-layer",
+  "commits": [
+    {
+      "sha": "5a7a803fe5ca097cdcee35e2ce83ffedad6d9caa",
+      "step": "Frozen MAPPO cooperation layer, residual head, trigger adapter, separate Adam and exact joint KL budget"
+    },
+    {
+      "sha": "6e41bc520738e19996a8386b010e80f1c8ba6895",
+      "step": "CPU identity, frozen-base, PPO, KL, rollback, and checkpoint contract tests"
+    },
+    {
+      "sha": "a22cb868e54b193c031d5d22accaa87ce006533f",
+      "step": "Initial readiness receipt; superseded by this fix-round receipt"
+    },
+    {
+      "sha": "18c1fec263cfc9695b172be4cc116c71b266d1cf",
+      "step": "Fix r0 blocker 1: isolate residual initialization from the global CPU RNG; eight constructor/default-generator regression cases"
+    },
+    {
+      "sha": "f79fe7d6ca053a3fe5836a4c2a0d5c82d12bc4bf",
+      "step": "Committed fix-round READY receipt; independently reviewed and passed in r1"
+    },
+    {
+      "sha": "bd4b23d69ecfbd29bdb5d3d112c73fee5158951c",
+      "step": "Recorded independent r1 PASS and acceptance in READY receipt"
+    }
+  ],
+  "commit_note": "This receipt refresh records the completed independent review; its own hash is intentionally not self-referential.",
+  "resume": {
+    "initial_head": "bd4b23d69ecfbd29bdb5d3d112c73fee5158951c",
+    "initial_status": "Tracked files clean; existing r0/r1 reviews, acceptance marker and blocked0 receipt untracked and preserved.",
+    "completed_work_preserved": "The r0 fix, eight regression cases, passing implementation suite and independent r1 rerun were already complete on disk.",
+    "action": "Read git status/history, shared spec, r0/r1 reviews and acceptance; inspected the committed RNG fix and eight regression cases. Confirmed source and tests are unchanged from independently reviewed head f79fe7d6. Refreshed this receipt with the existing completed commit history; no duplicate test/job dispatches.",
+    "jobs_dispatched": 0
+  },
+  "files": [
+    "tools/coopmwm/coop_layer.py",
+    "tools/coopmwm/test_coop_layer_cpu.py",
+    "T2D_READY.json"
+  ],
+  "review_resolution": {
+    "review": "REVIEW_T2D_r0.md",
+    "reviewed_head": "a22cb868e54b193c031d5d22accaa87ce006533f",
+    "blockers_total": 1,
+    "blockers_fixed": [
+      {
+        "id": 1,
+        "issue": "Configured construction advanced the global CPU RNG, changing subsequent MAPPO action bytes even when enabled defaults to false.",
+        "fix": "Construct and zero-initialize the residual network inside torch.random.fork_rng(devices=[]), restoring the caller's CPU RNG without touching device generators. The layer structure and checkpoint keys are preserved.",
+        "regression": "test_construction_preserves_default_cpu_rng_and_base_action_bytes: no config, omitted enabled, explicit enabled=False, and enabled=True; each with and without a trigger adapter. Snapshots exact RNG state across construction, then checks four steps of action bytes, own actions, previous noise, values, noise memory and final default-generator state against the unwrapped real Policy. Disabled samples also match completely.",
+        "before_fix": "6 failed, 2 passed, 25 deselected in 14.37s; all configured cases failed the constructor CPU RNG assertion.",
+        "after_fix": "All 8 new cases pass in the complete 49-case CPU suite. Existing separate-generator identity tests remain passing."
+      }
+    ],
+    "unresolved_blockers": [],
+    "independent_re_review": {
+      "review": "REVIEW_T2D_r1.md",
+      "verdict": "PASS",
+      "reviewer": "astra",
+      "reviewed_head": "f79fe7d6ca053a3fe5836a4c2a0d5c82d12bc4bf",
+      "blockers": [],
+      "result": "49 passed, 0 failed, 0 skipped, 2 warnings in 53.59s",
+      "acceptance_receipt": "T2D_ACCEPTED.json"
+    }
+  },
+  "api": {
+    "LayerConfig": {
+      "required_registration_fields": [
+        "feature_dim",
+        "hidden_dim",
+        "learning_rate",
+        "kl_budget",
+        "clip_ratio",
+        "max_grad_norm"
+      ],
+      "enabled": "boolean, default false; no live-run hyperparameters invented",
+      "feature_dim": "Recorded per-CAV x width; 29+48 for the existing five-second V2V intent configuration. Separate recorded context.v2v blocks are widened with the existing widen_context helper."
+    },
+    "CooperationLayer(base, config=None, trigger_head=None)": "Owns a deep-copied, eval-mode, requires_grad=False MAPPO base including actor, critic, intent, log_std and buffers. No config means OFF. Residual initialization preserves the caller's global CPU RNG for both enabled and disabled configurations.",
+    "trigger_head": "Injected T2A nn.Module or adapter: forward(per_cav_features) -> finite [CAV, K] logits. Candidate index 0 is none. The test-only TriggerStub is not a production replacement for T2A. Caller construction of the supplied adapter precedes this wrapper's RNG-preservation boundary.",
+    "forward(context)": "Returns frozen base mean plus residual, and frozen base value. Discrete move sampling is exposed through sample, not forward.",
+    "sample(context, generator, deterministic=False, memory=None, layer_generator=None, move_offsets=None)": "Returns (sample, unchanged-base-noise next_memory). Additional arguments are keyword-only. move_offsets is [CAV, K], with a zero none column, supplied from observable/feasible T1A candidates for the acting CAV. Stochastic triggers require a separate CPU layer_generator. Enabled samples retain rollout logits, residual, amplitude, choices, offsets and features under sample.coop_layer.",
+    "score(sample)": "Differentiable joint categorical plus correlated Gaussian score, and detached base value. Frozen AR(1) parameters and covariance are preserved.",
+    "layer_parameters()": "Only residual-head, supplied trigger-head, and trigger-amplitude trainable parameters; no base parameters.",
+    "optimizer": "Separate Adam created only when explicitly enabled; optimizer ownership checked before updates.",
+    "joint_kl(sample)": "Exact KL(old rollout || current), integrating all categorical choices and the shared-noise Gaussian analytically. The budget is mean joint KL per group across the supplied rollout records.",
+    "update(records, epochs=registered_integer)": "Layer-only clipped PPO. Each record is {sample, group_advantage}, intended for T2E counterfactual group credit. No per-CAV reward substitution or critic update. Proposals exceeding the registered KL budget, or becoming nonfinite, restore layer weights and Adam state. Deterministic, empty, and executed-plan records are refused.",
+    "checkpoint": "Save state_dict(), optimizer.state_dict(), LayerConfig and both caller-owned RNG states. Construct with the same trigger adapter/config and load both state dicts on resume; exact optimizer/model continuation is tested."
+  },
+  "identity_contract": {
+    "construction": "Exact global CPU RNG preservation with no config, default enabled=False, explicit enabled=False, and enabled=True, with and without an injected trigger adapter.",
+    "layer_off": "Complete base sample and score delegation, including action bytes, values and noise memory, even with nonzero learned layer weights. Construction plus sampling with torch.default_generator matches the unwrapped base from the same starting state.",
+    "zero_init": "Residual output layer and tanh trigger amplitude start at zero. Deterministic and stochastic triggers preserve base action bytes, AR(1) noise memory and base generator state over multiple steps. Both separately seeded generators and the default CPU generator are covered.",
+    "frozen_after_updates": "Actual accepted updates change residual/trigger parameters while the entire base state_dict, gradients, forward outputs and published intent remain unchanged.",
+    "safety_boundary": "Produces pre-safety acceleration offsets only. Does not issue commands or alter existing feasibility bounds. Candidate eligibility and partner commitments remain with T1A/T2A and the runtime integration."
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "environment": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "CUDA_VISIBLE_DEVICES": "-1",
+      "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1"
+    },
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider tools/coopmwm/test_coop_layer_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_v2v_model_cpu.py tools/coopmwm/test_acceleration_cpu.py::AccelerationCPU::test_zero_update_is_exact_mappo_before_unchanged_safety tools/coopmwm/test_acceleration_cpu.py::AccelerationCPU::test_conditional_ar_density_and_no_leakage tools/coopmwm/test_v2v_intent_cpu.py::test_actions_identical_to_current_v2v_policy_at_load tools/coopmwm/test_v2v_intent_cpu.py::test_partner_intent_has_one_step_latency",
+    "result": "49 passed, 2 warnings in 16.73s; no failures or skips",
+    "independent_r1_result": "49 passed, 0 failed, 0 skipped, 2 warnings in 53.59s; same command and environment, independently executed by astra.",
+    "resume_verification": "Existing passing implementation and independent review runs retained. git diff --stat f79fe7d6ca053a3fe5836a4c2a0d5c82d12bc4bf HEAD -- tools/coopmwm/coop_layer.py tools/coopmwm/test_coop_layer_cpu.py produced no changes; the passing reviewed implementation is still current. No repeat needed for this receipt-only refresh.",
+    "t2d_cases": 33,
+    "new_constructor_rng_cases": 8,
+    "regression_cases": 16,
+    "warnings": [
+      "Existing tensor-to-scalar warning in test_acceleration_cpu.py:214.",
+      "Unknown cache_dir configuration option because pytest's cache provider was disabled."
+    ],
+    "diff_checks": [
+      "git diff --check passed",
+      "git diff --check c4/track-base passed"
+    ],
+    "additional_contracts": [
+      "Existing separate-generator action/noise identity and disabled nonzero-head delegation remain passing.",
+      "Complete V2V-intent base state and intent_bounds buffer frozen after real layer updates, for widened x and separate V2V blocks.",
+      "Accepted PPO updates train both cooperation heads and trigger amplitude, with no base optimizer ownership or gradients.",
+      "Exact analytic joint KL agrees with exhaustive categorical enumeration and MultivariateNormal KL.",
+      "Nonzero residual plus selected-move action composition and joint density agree with independent calculations.",
+      "Over-budget rejection restores populated Adam moments and parameters; nonfinite proposals also roll back.",
+      "Model and optimizer state_dict resume yields identical samples and subsequent updates.",
+      "Invalid registrations, optimizer contamination, base unfreezing, stale rollouts, invalid features/candidates and shared trigger RNG are refused.",
+      "Non-CPU model refused with a meta-device fixture; no GPU allocation."
+    ]
+  },
+  "open_issues": [
+    "T2A trigger_policy.py and T1A moves.py were absent from this base worktree. Their real adapter/candidate integration remains for the cross-task merge; tests use only a local trigger stub as permitted by the shared spec.",
+    "T2C must register actual layer hyperparameters, wire T2E group_advantage records, persist RNG states/config, supply observable feasible move offsets and retain the command-ownership/safety path. The live V2V runtime's intent-model discovery needs an integration adapter for the nn.Module wrapper; the frozen intent model is available as layer.base."
+  ],
+  "hard_rules": {
+    "cpu_only": true,
+    "new_sim_s": 0,
+    "sumo_gpu_ssh_remote_used": false,
+    "dispatch_reservation_or_charge_created": false,
+    "sealed_or_forbidden_data_paths_opened": false,
+    "hidden_truth_files_read": false,
+    "only_owned_worktree_files_changed": true,
+    "reset_clean_stashdrop_push_rebase_used": false
+  }
+}

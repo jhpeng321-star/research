@@ -155,12 +155,20 @@ class IntentPolicy(BasePolicy):
 
 
 def intent_model(policy, depth=4):
-    """The IntentPolicy behind runtime wrappers (Proxy, _OneShot, MixedPolicy), or None."""
+    """Find the IntentPolicy behind runtime wrappers, or None.
+
+    nn.Module wrappers opt in with ``intent_base_policy()``; arbitrary modules
+    are still not traversed. Existing non-module wrappers retain their lookup.
+    """
     for _ in range(depth):
         if policy is None:
             return None
         if isinstance(policy, IntentPolicy):
             return policy
+        if isinstance(policy, nn.Module):
+            adapter = getattr(policy, 'intent_base_policy', None)
+            policy = adapter() if callable(adapter) else None
+            continue
         nxt = None
         for name in ('real', 'policy', 'base_policy', 'new', 'model'):
             value = getattr(policy, name, None) if not isinstance(policy, nn.Module) else None

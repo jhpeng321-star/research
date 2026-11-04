@@ -1,0 +1,104 @@
+{
+  "schema": "coopmwm.trigger_policy_ready.v1",
+  "task": "T2A",
+  "status": "READY",
+  "scope": "CPU implementation and controller contracts verified; training/runtime orchestration remains T2C integration work",
+  "fix_round": "r2",
+  "branch": "c4/trigger-policy",
+  "worktree": "E:/agent-work/c4-trigger-policy",
+  "base": "13f184b5 (c4/track-base)",
+  "review": "REVIEW_T2A_r1.md",
+  "reviewed_head": "1ff32700e84c1636b1ceabd9b73309b95db16d4d",
+  "independent_acceptance": {
+    "review": "REVIEW_T2A_r2.md",
+    "verdict": "PASS",
+    "reviewed_head": "b9d0ff163751f63a13796d726f40e8cb9749bbb4",
+    "blockers": [],
+    "acceptance_receipt": "T2A_ACCEPTED.json",
+    "test_result": "69 passed, 0 failed, 0 skipped, 2 warnings in 23.24s; 38 T2A cases and 31 existing V2V cases",
+    "scope": "Independent CPU verification of the five named suites and T2A contracts; integration limits below still apply"
+  },
+  "commits": [
+    {"commit": "56a93c87", "step": "Original per-CAV move trigger, PPO, imitation and bounded executor"},
+    {"commit": "0448485e", "step": "Original CPU trigger contracts"},
+    {"commit": "09b19263", "step": "Original readiness receipt"},
+    {"commit": "c7f771af", "step": "Prior fix: remove direct RSU trigger input and expose explicit intent wrapper discovery"},
+    {"commit": "1ff32700", "step": "Prior readiness receipt, superseded by independent r1 review"},
+    {"commit": "84323019", "step": "Fix r1 blocker: independent local-only trigger intent board, fail-closed collection/replay, six new CPU regressions"},
+    {"commit": "b9d0ff16", "step": "Regenerated readiness receipt for the r1 fix; subsequently independently reviewed PASS"}
+  ],
+  "receipt_commit_note": "This regenerated receipt is committed separately after the tested fix commit; its own SHA is available in git log.",
+  "changed_files_this_round": [
+    "tools/coopmwm/trigger_policy.py",
+    "tools/coopmwm/test_trigger_policy_cpu.py",
+    "tools/coopmwm/v2v_runtime.py",
+    "T2A_READY.json"
+  ],
+  "shared_hook": "v2v_runtime.controller_class explicitly opts in only when an intent-enabled wrapper supplies callable publish_trigger_intent. A separate trigger_intent_board produces trigger_v2v and published_trigger_intent records after unchanged base action/publication operations. Ordinary V2V/intent policies retain their existing sampled payloads and outputs. The prior explicit intent_base_policy discovery hook is retained.",
+  "blockers_fixed": [
+    {
+      "number": 1,
+      "issue": "Globally conditioned base IntentPolicy publications indirectly reached the trigger through partner-intent inputs",
+      "fix": "Keep the base intent board/publication separate. Generate trigger-facing intents using each reporting CAV's own sensor row, range-filtered V2V block and previously published local-only trigger intents, with a constant zero broadcast latent. Store this independent trigger_v2v in the sample context. Trigger distribution, value, PPO evaluation and imitation require and consume that recorded block, including for pre-widened x; they never fall back to base intents. Missing/incomplete local payloads refuse. Both frozen and fine-tuned modes use this path.",
+      "regression": "Actual controller at ticks 301, 302, 303 and 305 with nonzero broadcast, intent-head and receiving-column weights. Changing only HDV speed at 0 m from 5 to 25, outside ego/peer sensing at -400/-380 m, changes RSU and received base intents but leaves trigger blocks, logits, values, sampled actions/logp and subsequent PPO update metrics/parameters exactly equal. Independent peer-only local HDV perturbation outside ego sensing changes the reporting peer's local publication and the ego trigger; replacing only that local partner report restores exact ego logits/value. Both modes covered. Replay also ignores corrupted base V2V and appended widened intent columns, supports no rsu, preserves snapshots, and refuses missing local payloads for PPO and CE. Existing deterministic/stochastic actual-controller tests retain exact low-level requests, action/noise/logp/value fields, generator state and base publication/board parity, excluding only the new trigger metadata. First-tick and skipped-tick local intent invalidation are covered."
+    }
+  ],
+  "api": {
+    "construction": "TriggerPolicy(loaded_v2v_policy, v2v_dim=48, n_candidates=<registered budget>, partner_slots=5, freeze_base=True, moves_api=None). Also supports V2V-only width 24; width must match actor. moves_api=None lazily imports tools.coopmwm.moves. CPU only; attachment preserves global torch RNG.",
+    "base_policy": "forward(context), sample(...), score(sample) delegate unchanged. Frozen trigger updates preserve all base tensors and sampled actions/noise. Low-level MAPPO continues using its existing inputs and base intent publications independently.",
+    "trigger_features": "Per-member 29-wide sensor row, configured V2V block, constant four-wide zero latent, loaded per-CAV actor trunk, candidate descriptors. Intent-enabled actors require context.trigger_v2v, even if x is already widened. The raw context.v2v and any appended base intent columns are ignored by the trigger. No RSU, broadcast or pooled critic input. Caller-supplied sensor rows, candidate states, identities and non-intent V2V fields must have causal local observable provenance.",
+    "intent_adapter": "intent_base_policy() -> base_policy retains discovery. publish_trigger_intent(context) -> {CAV id: clipped H-wide local-only planned commands} uses the loaded intent head on the zero-broadcast local trunk. controller_class(Controller) supports TriggerPolicy(IntentPolicy(...)) directly; maintains separate base and trigger boards, each visible only at t-1, with first/missing/stale publications invalid. Sample context records trigger_v2v; sample records published_trigger_intent. Base publication remains sample.published_intent.",
+    "decide": "decide(context, obs_states={ego: local_observable_state}, observable_cavs={ego: ordered_local_CAV_ids_including_ego}, rng=numpy_rng, generator=torch_cpu_generator, deterministic=False) -> TriggerBatch. Caller owns registered cadence; candidates drawn once per ego.",
+    "discrete_actions": "0=none; 1..N=family/partners/parameter candidate bucket. Family one-hot, observable partner membership and onset/hold/depth normalized using VARIETY_REGISTERED; unavailable slots masked.",
+    "move_contract": "moves.FAMILIES includes none; candidates(obs_state, rng, n) returns objects/mappings with family, members, onset_s, hold_s, depth; offsets(move, elapsed_s) returns member acceleration offsets. Non-none moves require 1..4 unique observable CAV members including ego and registered parameter ranges.",
+    "rollout": "TriggerBatch deep-copies context including local trigger_v2v, tables, descriptors/mask, actions and detached old logp/values. selected() -> {ego: Move_or_None}; evaluate(batch) -> per-CAV logp, value, entropy. PPO replay uses recorded local messages and never draws new candidates or refreshes old intents from a live board/current publisher.",
+    "optimizer": "optimizer(lr=...) owns exactly learning_parameters(). Frozen: trigger score/value heads only. freeze_base=False: also actor parameters, never broadcast/critic/intent_head/log_std. Local trigger publication is no-grad; it changes no optimizer ownership. Old globally conditioned intent-enabled trigger rollouts must be recollected under the corrected local-only path; they are refused if trigger_v2v is absent. Pre-r1 optimizer states containing broadcast parameters still require rebuilding.",
+    "ppo_update": "ppo_update(policy, optimizer, batch, advantages, returns, clip_ratio=..., value_weight=..., entropy_weight=..., max_grad_norm=...) -> loss, policy_loss, value_loss, entropy, approx_kl, clip_fraction, grad_norm, cav_count. One clipped minibatch step; caller owns GAE/epochs/KL budget. No silent advantage normalization.",
+    "imitation": "imitation_loss(batch, target_action_indices) -> masked-table cross entropy using the same local-only recorded input path; targets index the recorded table.",
+    "checkpoint": "Standard state_dict/load_state_dict(strict=True), optimizer state_dict and CPU generator state. No new learned parameters. Reconstruct identical constructor settings, family ordering and variety registration. Runtime continuation must retain/replay both timestamped boards separately; never seed the trigger board from base publications.",
+    "execution_start": "MoveExecutor(moves_api=None).start(move, ego=..., observable_cav_ids=..., now=..., until=...) -> bool. Explicit commitment expiry; none abstains; overlapping member sets rejected atomically.",
+    "execution_requests": "requests(base_actions, native_commands, now=..., eligible_cav_ids=..., feasible_bounds=...) -> overlay with requested_raw and acceleration_residual. Offsets compose on absolute MAPPO actions, clamp to observable feasibility bounds and the 1.2 m/s^2 CAV cap. No HDV/departed/ineligible command; unaffected requests unchanged.",
+    "integration": "Merge overlay before existing feasibility/CommandOwnership single-writer routing and retain speedMode 27. T2C supplies causal local states, identities, cadence, bounds, eligibility and expiry; use the supported controller or generate/record an equivalent independent local-only trigger_v2v path for bank/dense-label contexts. No TraCI calls, horizon changes or B/R-specific behavior."
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "environment": {"CUDA_VISIBLE_DEVICES": "", "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "PYTHONDONTWRITEBYTECODE": "1", "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1", "PYTEST_ADDOPTS": "", "COOPMWM_INTENT_BASELINE_DIR": "unset", "final_TEMP_TMP": "E:/agent-work/c4-trigger-policy"},
+    "red_before_fix": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider tools/coopmwm/test_trigger_policy_cpu.py -k actual_controller_remote_state",
+      "result": "2 failed, 34 deselected in 10.19s: learned partner-intent remote-state perturbation changes trigger logits in both frozen and fine-tuned modes before implementation changes"
+    },
+    "trigger_after_fix": "38 passed, 1 cache-disabled configuration warning in 17.94s",
+    "final_command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider --basetemp=E:/agent-work/c4-trigger-policy/tmp-t2a-r2-cpu tools/coopmwm/test_trigger_policy_cpu.py tools/coopmwm/test_v2v_model_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_v2v_intent_cpu.py tools/coopmwm/test_v2v_int_e2e_cpu.py",
+    "final_result": "69 passed, 0 failed, 0 skipped, 2 warnings in 49.43s",
+    "breakdown": {"trigger_cases": 38, "existing_v2v_cases": 31, "new_regression_cases": 6},
+    "warnings": ["Disabling cacheprovider makes existing cache_dir configuration unrecognized", "Existing test_v2v_int_e2e_cpu.py:107 requires-grad tensor-to-scalar conversion"],
+    "diff_checks": "git diff --check and git diff --cached --check passed before the fix commit",
+    "legacy_suite": "Prior receipt disclosed eight unrelated legacy test_acceleration_cpu.py failures; that broader suite was not rerun in this round. This receipt certifies the five named CPU suites."
+  },
+  "open_issues": [
+    "Track T1A moves.py is absent on this branch; tests use a local test-only stub. Validate the concrete move API after integration.",
+    "T2C must wire registered cadence, local observation/candidate provenance, independent local trigger messages for non-controller datasets, eligibility/bounds/expiry and command ownership. No training or simulator launch performed.",
+    "Prior broader legacy acceleration-suite failures remain outside this verification scope."
+  ],
+  "execution_scope": {
+    "cpu_only": true,
+    "sumo_runs": 0,
+    "gpu_operations": 0,
+    "ssh_or_remote_operations": 0,
+    "dispatches_or_reservations": 0,
+    "final_test_artifacts": "Final-suite temporary fixtures inside tmp-t2a-r2-cpu in this worktree; pytest cache disabled",
+    "shared_modules_modified_this_round": ["tools/coopmwm/v2v_runtime.py: additive explicit local-trigger publication/board hook"],
+    "prohibited_seed_or_truth_files_opened": false,
+    "reset_clean_stashdrop_push_rebase_used": false,
+    "review_artifacts": "Existing REVIEW_T2A_r0.md, REVIEW_T2A_r1.md, REVIEW_T2A_r2.md, T2A_ACCEPTED.json, T2A_READY.blocked0.json and T2A_READY.blocked1.json preserved unmodified and unstaged"
+  },
+  "resume_verification": {
+    "head_before_receipt_refresh": "b9d0ff163751f63a13796d726f40e8cb9749bbb4",
+    "branch": "c4/trigger-policy",
+    "tracked_state_before_refresh": "Clean; existing fix and regression tests already committed",
+    "diff_check": "git diff --check c4/track-base passed",
+    "action": "Receipt-only refresh to record the existing independent PASS and acceptance; finished implementation and test runs retained",
+    "new_test_runs": 0,
+    "new_dispatches_or_reservations": 0
+  }
+}
