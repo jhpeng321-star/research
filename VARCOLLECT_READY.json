@@ -121,7 +121,10 @@
     "resumed_head": "3602bd2c",
     "concurrent_receipt_commit": "5adfcaec9c0aed3f9429f8f49c5febb2f72f8e94",
     "finding": "Independently confirmed the implementation, host pins, real-service CPU regression and retained eight-gate receipt described in fresh_session_verification. That verification was committed concurrently during this session and is preserved in full.",
-    "execution": "No matching Round 4 job found; no tests or dispatches started. Completed suite results and both untracked blocked receipts retained. CPU-only local inspection; no SSH, SUMO or GPU execution."
+    "execution": "No matching Round 4 job found; no tests or dispatches started. Completed suite results and both untracked blocked receipts retained. CPU-only local inspection; no SSH, SUMO or GPU execution.",
+    "latest_resume_head": "3286c2b1",
+    "latest_resume_review": "Confirmed the committed pending qualification contract, same-process four-gate handoff and eight-gate completion before READY, legacy warm/ls_gpu qualification format, host-specific binding geometry and environment enforcement, and generated-staging-to-real-service CPU regression including gate failures. No implementation follow-up identified.",
+    "latest_resume_evidence": "Re-opened the retained FRESH_QUALIFICATION.json at _out/pytest_varcollect_round4_verified/test_fresh_binding_through_rea0/worker: all eight receipts pass exactly with PID 40744, Python 3.10 / torch 2.12.1+cpu, and zero new SUMO sim-s. Preserved the completed required-suite results; local process inspection found no matching Round 4 test job. No completed work rerun."
   },
   "hard_rules_compliance": {
     "cpu_only": true,
