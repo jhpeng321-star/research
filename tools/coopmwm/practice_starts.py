@@ -134,8 +134,9 @@ def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_
     coop = examples(root, arm, cooperative_only=True)
     pool = [dict(r) for r in coop]
     fallback = False
-    if arm == 'R' and len(pool) < count:
-        # R only (documented): fill from R's other admitted examples, same count as B.
+    if arm == 'R' and len(pool)*cap < count:
+        # R only (documented): the cooperative pool first counts examples x repeat-cap; only a
+        # count beyond that capacity is filled from R's other admitted examples, same count as B.
         extra = examples(root, arm, cooperative_only=False)
         have = {r['example_id'] for r in pool}
         additions = [dict(r, fallback=True) for r in extra if r['example_id'] not in have
@@ -157,7 +158,8 @@ def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_
     import time
     record = dict(arm=arm, update=int(update), training_seed=int(training_seed),
                   fraction=float(fraction), repeat_cap=cap, requested=count, rows=rows,
-                  registry=dict(cooperative_examples=len(coop), pool_examples=len(pool),
+                  registry=dict(cooperative_examples=len(coop),
+                                cooperative_capacity=len(coop)*cap, pool_examples=len(pool),
                                 fallback_used=fallback, empty_bank=not pool),
                   sampling=('uniform over eligible examples, per-example repeat cap %d, '
                             'RNG digest(practice=plan|arm|update|training_seed|fraction|cap)' % cap),
@@ -172,43 +174,90 @@ def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_
 def load_snapshot(root, arm, row):
     """The example's decision snapshot with the example's CRN seed: seed-1 examples restart from
     the stored snapshot state; seed-2 examples from replicate(snapshot, vid) - the same
-    independent seed-2 generator the example's own seed-2 branches ran with."""
+    independent seed-2 generator the example's own seed-2 branches ran with; extra-seed examples
+    (seed_index >= 3, the extra_seeds extension) from replicate(snapshot, 'vid#sN') - the same
+    deterministic per-seed CRN derivation, an independent generator per extra seed."""
     from . import replay_bank as rb
     snap = torch.load(rb.bank_root(root, arm)/'snapshots'/(row['state_id']+'.pt'), weights_only=False)
-    if int(row['seed_index']) == 2:
+    seed_index = int(row['seed_index'])
+    if seed_index == 2:
         snap = rb.replicate(snap, row['salt'])
-    elif int(row['seed_index']) != 1:
+    elif seed_index >= 3:
+        snap = rb.replicate(snap, f'{row["salt"]}#s{seed_index}')
+    elif seed_index != 1:
         raise ValueError(f'unknown practice seed_index {row["seed_index"]!r}')
     return snap
 
 
-def wave_call(root, arm, ident, phase, row, index, base_extra):
-    """(ident, worlds, extras) of ONE practice episode for original_wave: the snapshot's world,
-    the exact prefix branch (CRN check), the snapshot's recorded runtime/checkpoint/noise and the
-    practice meta. Charging stays with the caller (original_wave reserves sim_s=1200 like every
-    training episode)."""
+def _crn_seed_text(seed_index):
+    """Where the practice generator state at t0 comes from (receipt provenance text)."""
+    if seed_index == 1:
+        return 'example seed-1 decision snapshot generator state'
+    if seed_index == 2:
+        return 'example seed-2 CRN: replicate(snapshot, vid) generator state'
+    return f'extra-seed example CRN: replicate(snapshot, salt#s{seed_index}) generator state'
+
+
+def _snapshot_call(root, arm, ident, row, index, base_extra, *, a_reference):
+    """(ident, worlds, extras) of ONE snapshot-restart episode: the snapshot's world, the exact
+    prefix branch (CRN check) and the practice meta with the RECORDED snapshot
+    runtime/checkpoint/noise/warm_history/accel_bounds and the frozen per-episode slot id.
+    The snapshot sumo values travel INSIDE extras['practice']['snapshot']: accel_runner.wave_jobs
+    passes them as its own explicit keywords exactly once (duplicates in extras would be a
+    TypeError 'multiple values for keyword argument' at the wave call). sim_s/charging stay with
+    wave (1200, like every training episode; the caller reserves the whole wave)."""
     snap = load_snapshot(root, arm, row)
     t0 = int(snap['t0'])
-    sumo = snap['sumo']
-    meta = dict(practice=True, verification_id=row['verification_id'], example_id=row['example_id'],
-                seed_index=int(row['seed_index']), t0=t0, world=snap['episode']['world'],
-                snapshot_sha256=sv.snapshot_sha(snap),
-                crn_seed=('example seed-1 decision snapshot generator state' if int(row['seed_index']) == 1
-                          else 'example seed-2 CRN: replicate(snapshot, vid) generator state'),
+    slot = f'{ident}_{"pa" if a_reference else "p"}{int(index)+1:02d}'
+    meta = dict(practice=True, a_reference=a_reference,
+                verification_id=row['verification_id'], example_id=row['example_id'],
+                seed_index=int(row['seed_index']), t0=t0, slot=slot,
+                world=snap['episode']['world'], snapshot_sha256=sv.snapshot_sha(snap),
+                crn_seed=_crn_seed_text(int(row['seed_index'])),
                 fallback=bool(row.get('fallback')),
                 horizon_end_s=int(snap.get('end_s', sv.EPISODE_END_S)), charged_sim_s=CHARGED_SIM_S,
-                policy='current training policy from t0; snapshot prefix replayed; committed snapshot '
-                       'plans continue; no new plan (plain-PPO b_replay episode)',
+                policy=('A policy from t0 (matched safety reference); same snapshot prefix replay '
+                        'and CRN generator restore as the practice episode; no guide'
+                        if a_reference else
+                        'current training policy from t0; snapshot prefix replayed; committed snapshot '
+                        'plans continue; no new plan (plain-PPO b_replay episode)'),
                 rule=PRACTICE_RULE)
     extras = dict(base_extra,
                   practice=dict(meta, snapshot=snap),
                   branch=dict(time_s=t0, takeover_s=t0, revert=[],
-                              prefixes={str(t): snap['prefixes'][str(t)] for t in range(sv.WARMUP_S, t0+1)}),
-                  noise_seed=int(sumo.get('noise_seed') or 0),
-                  runtime=sumo['runtime'], checkpoint=sumo['checkpoint'],
-                  warm_history=bool(sumo['warm_history']), accel_bounds=sumo['accel_bounds'],
-                  sim_s=CHARGED_SIM_S, deterministic=False)
-    return dict(ident=f'{ident}_p{int(index)+1:02d}', worlds=[snap['episode']['world']], extras=extras)
+                              prefixes={str(t): snap['prefixes'][str(t)] for t in range(sv.WARMUP_S, t0+1)}))
+    return dict(ident=slot, worlds=[snap['episode']['world']], extras=extras)
+
+
+def wave_call(root, arm, ident, phase, row, index, base_extra):
+    """(ident, worlds, extras) of ONE practice episode for original_wave (owner 2026-11-04
+    proposal). Charging stays with the caller (the wave reserves sim_s=1200 like every training
+    episode)."""
+    return _snapshot_call(root, arm, ident, row, index, base_extra, a_reference=False)
+
+
+def a_reference_call(root, arm, ident, row, index, base_extra):
+    """(ident, worlds, extras) of the matched A-policy safety reference of ONE practice episode:
+    the SAME snapshot and CRN seed (frozen 'pa' slot family), A policy from t0, same horizon and
+    charge; dispatched by v2v_live.safety as one batch wave charged to the arm's practice cost."""
+    return _snapshot_call(root, arm, ident, row, index, base_extra, a_reference=True)
+
+
+def realised_count(root, arm, update):
+    """A completed arm's REALISED practice count of one update (its UPDATE receipt's practice
+    block): R's plan count must equal B's realised count for that update (B/R symmetry), never
+    B's requested count."""
+    from .storage import read
+    path = Path(root)/f'{arm}_UPDATE_{int(update):03}.json'
+    try:
+        receipt = read(path)
+    except OSError as error:
+        raise ValueError(f'{path.name} absent; the other arm\'s practice count is unbound') from error
+    report = receipt.get('practice')
+    if not isinstance(report, dict) or 'practice' not in report:
+        raise ValueError(f'{path.name} lacks the practice block; the other arm\'s practice '
+                         'count is unbound')
+    return int(report['practice'])
 
 
 # ---------------------------------------------------------------- training-side consumers

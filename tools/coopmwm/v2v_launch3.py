@@ -51,6 +51,14 @@ IMITATION_BANK_FILTERS = ('all_admitted', 'cooperative_only')
 PRACTICE_KEYS = ('practice_starts', 'practice_fraction', 'practice_repeat_cap')
 PRACTICE_FRACTIONS = (0.25,)     # registered values of practice_fraction (proposal 0.25 => 6 of 24)
 PRACTICE_REPEAT_CAPS = (1, 2)    # registered per-example repeat caps per update
+
+
+def practice_reference_quote(fraction, *, updates=24, arms=('B', 'R')):
+    """Registered full-run upper bound of the matched A-policy practice safety references (one
+    per practice episode, 1200 sim-s each, charged to the arm's practice cost in v2v_train);
+    a practice-ON runtime's v2v_train allocation must cover the base phase cost plus this."""
+    from .practice_starts import CHARGED_SIM_S, practice_count
+    return len(tuple(arms))*int(updates)*practice_count(24, float(fraction))*CHARGED_SIM_S
 PRACTICE_RULE = ('owner 2026-11-04 proposal: a fraction of each B/R update PPO episodes start from '
                  'the arm\'s own admitted within-seed cooperative bank examples (same snapshot and '
                  'CRN seed as the example, current policy from t0, normal horizon/reward/charge); '

@@ -48,23 +48,50 @@ def diagnostic_task(root,b,state,ep,step,index):
             diagnostic_only=True,physics_retry=False))
 
 
-def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
+def wave_jobs(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
+    """wave()'s job construction (real path, extracted verbatim so tests can call it).
+
+    Every explicit keyword below is passed EXACTLY ONCE; callers' extras must never duplicate
+    them. practice_starts jobs (extras['practice'] dict, or extras['practice_batch'] aligned
+    with ws) take the RECORDED snapshot runtime/checkpoint/noise_seed/warm_history/accel_bounds
+    (the exact CRN the example's branches ran with) and carry a per-episode frozen slot id
+    (practice['slot']) so repeated snapshot worlds keep distinct one-use job ids."""
     jobs=[];results=[];precharged={x['id'] for x in ledger(root)}
     from .policy_wm import actor_state
-    for w in ws:
+    for wi,w in enumerate(ws):
         for arm,policy in policies.items():
-            key=f'{ident}_{arm}_{w["seed"]}'
+            x=dict(extras or {})
+            batch=x.pop('practice_batch',None)
+            if batch is not None:x.update(batch[wi])
+            duplicate=set(x)&EXPLICIT_JOB_KEYS
+            if duplicate:raise TypeError('wave extras duplicate explicit job keywords: '
+                                         +','.join(sorted(duplicate)))
+            practice=x.get('practice')
+            sumo=practice['snapshot']['sumo'] if practice else None
+            key=(f'{practice["slot"]}_{arm}_{w["seed"]}' if practice and practice.get('slot')
+                 else f'{ident}_{arm}_{w["seed"]}')
             key=b.get('job_id_overrides',{}).get(key,key);path=root/'jobs'/key
             if (path/'RESULT.json').exists():results.append(read(path/'RESULT.json'));continue
             if key in precharged:
                 if key not in b.get('precharged_unattempted',[]) or (path/'CLAIM.json').exists():
                     raise ValueError('attempted job cannot be retried '+key)
             jobs.append(dict(id=key,path=str(path),world=w,role=role,arm=arm,
-                weights=policy.state_dict(),runtime=b['runtime'],checkpoint=b['checkpoint'],
-                noise_seed=int(digest(dict(seed=SEED,world=w['seed'],wave=ident))[:15],16),
-                deterministic=deterministic,sim_s=1200,queue_root=str(root),accel_bounds=b['accel_bounds'],
+                weights=policy.state_dict(),
+                runtime=sumo['runtime'] if sumo else b['runtime'],
+                checkpoint=sumo['checkpoint'] if sumo else b['checkpoint'],
+                noise_seed=(sumo.get('noise_seed') or 0) if sumo
+                    else int(digest(dict(seed=SEED,world=w['seed'],wave=ident))[:15],16),
+                deterministic=deterministic,sim_s=1200,queue_root=str(root),
+                accel_bounds=sumo['accel_bounds'] if sumo else b['accel_bounds'],
                 gpu_deadline=b['gpu_deadline'],guided=not deterministic and arm in ('B','R'),
-                beta=b.get('beta',1.),N_exec=b.get('N_exec'),policy_state=actor_state(policy),warm_history=b.get('warm_history',False),**(extras or {})))
+                beta=b.get('beta',1.),N_exec=b.get('N_exec'),policy_state=actor_state(policy),
+                warm_history=bool(sumo['warm_history']) if sumo else b.get('warm_history',False),
+                **x))
+    return jobs,results
+
+
+def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
+    jobs,results=wave_jobs(root,b,policies,ws,role,ident,phase,deterministic,extras)
     if jobs:
         fresh=[j for j in jobs if j['id'] not in precharged]
         if fresh:reserve(root,fresh,phase)
@@ -85,6 +112,9 @@ def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
 # more than 20% of the wave. Global STOP/pause/deadline signals still propagate.
 MAX_CONSECUTIVE_EPISODE_FAILURES=3
 MAX_EPISODE_FAILURE_SHARE=.2
+EXPLICIT_JOB_KEYS=frozenset(('id','path','world','role','arm','weights','runtime','checkpoint',
+    'noise_seed','deterministic','sim_s','queue_root','accel_bounds','gpu_deadline','guided',
+    'beta','N_exec','policy_state','warm_history'))
 
 
 class EpisodeFailureEscalation(RuntimeError):

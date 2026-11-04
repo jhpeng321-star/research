@@ -47,12 +47,57 @@ def hooks(root, cfg):
             health.assert_running(r,arm)
             if time.time()>cfg['gpu_deadline']:raise ValueError('registered resource deadline')
             time.sleep(5)
-        refs=[]
+        refs=[];pairs={};practice=[]
         for e in episodes:
+            if e.get('practice'):
+                practice.append(e);continue
             p=Path(r)/'jobs'/f'v2v1_warm_u{u:03}_A_{e["world"]["seed"]}'/'RESULT.json'
             if not p.exists():raise ValueError('missing same-world V2V A safety reference')
             refs.append(read(p))
-        health.braking(r,arm,u,episodes,refs)
+        if practice:
+            refs.extend(practice_references(r,arm,u,practice,pairs))
+        health.braking(r,arm,u,episodes,refs,pairs)
+
+    def practice_references(r, arm, u, practice, pairs):
+        """One matched A-policy reference episode per practice episode (owner 2026-11-04 review
+        fix): the SAME snapshot and CRN seed as the practice episode, A's update-u policy from
+        t0, normal 1200 s horizon and team-J reward, charged 1200 sim-s to the arm's practice
+        phase (v2v_train) through the SAME wave hooks as ONE batch wave (whole-batch failure
+        accounting). Fills pairs (practice episode id -> its matched reference record) for the
+        composite safety comparison; hard safety (collisions/teleports) and the paired hard-brake
+        guard apply to practice episodes exactly as to every other episode - no check is skipped
+        or weakened, and a missing reference fails closed."""
+        from . import practice_starts, accel_runner
+        from .v2v_runtime import load_checkpoint
+        from .warm_protocol import SEED
+        plan=practice_starts.plan_for_update(r,arm,u,fraction=cfg['practice_fraction'],
+            repeat_cap=cfg['practice_repeat_cap'],count=len(practice),training_seed=SEED)
+        rows=plan['rows']
+        base=dict(update=u,v2v=True,v2v_dim=cfg['v2v_dim'],b_replay=True)
+        policy,opt,rng,payload=load_checkpoint(Path(r)/f'A_checkpoint_{u:03}.pt',config=cfg)
+        worlds=[];batch=[];idents=[]
+        for e in practice:
+            slot=e['practice'].get('slot')
+            if not slot or '_p' not in slot:
+                raise ValueError('practice episode lacks its frozen slot id')
+            i=int(slot.rsplit('_p',1)[1])-1
+            if not 0<=i<len(rows) or rows[i]['example_id']!=e['practice']['example_id']:
+                raise ValueError('practice receipt does not match the frozen plan row')
+            call=practice_starts.a_reference_call(r,arm,slot.rsplit('_p',1)[0]+'_practiceref',
+                                                  rows[i],i,base)
+            worlds.append(call['worlds'][0]);idents.append(call['ident'])
+            batch.append(dict(practice=call['extras']['practice'],branch=call['extras']['branch']))
+        records=accel_runner.wave(Path(r),dict(cfg,beta=1.),{'A':policy},worlds,'train',
+            idents[0].rsplit('_pa',1)[0],cfg['phase_map'].get('train','train'),False,
+            extras=dict(base,practice_batch=batch))
+        by_id={rec['id']:rec for rec in records}
+        matched=[]
+        for e,ident,world in zip(practice,idents,worlds):
+            rec=by_id.get(f'{ident}_A_{world["seed"]}')
+            if rec is None or rec['world']['seed']!=world['seed']:
+                raise ValueError('matched V2V practice A safety reference incomplete')
+            pairs[e['id']]=rec;matched.append(rec)
+        return matched
 
     policy_factory,pairs=Policy,original_pairs
     # Owner 2026-11-04 00:55: imitation_bank_filter is ONE key for B and R (A has no bank).
@@ -266,7 +311,14 @@ def launch3_check(root, cfg, stage=None, arm=None):
     costs=None
     if stage in ('smoke','train'):
         if arm not in ('A','B','R'):raise ValueError('launch3 training arm required')
-        costs={'v2v_train':24*1200*(1 if stage=='smoke' else 23)}
+        updates=1 if stage=='smoke' else 23
+        costs={'v2v_train':24*1200*updates}
+        if arm in ('B','R') and cfg.get('practice_starts'):
+            # practice_starts: each practice episode also gets ONE matched A-policy reference
+            # episode from the same snapshot and CRN seed, charged to the arm's practice cost;
+            # the dispatch quote covers the registered per-update upper bound.
+            from .practice_starts import CHARGED_SIM_S,practice_count
+            costs['v2v_train']+=practice_count(24,cfg['practice_fraction'])*CHARGED_SIM_S*updates
     elif stage in ('test8','test24'):
         costs={'v2v_interim' if stage=='test8' else 'v2v_final':3*96*1200}
     elif stage is not None:

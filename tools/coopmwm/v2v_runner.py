@@ -101,6 +101,16 @@ def prepare_intent(base, *, root, legacy_root, source_root, common_checkpoint_sh
                                 else float(practice_fraction))
     cfg['practice_repeat_cap'] = (BANK_OPTIONS['practice_repeat_cap'] if practice_repeat_cap is None
                                   else int(practice_repeat_cap))
+    if cfg['practice_starts']:
+        # Each practice episode also gets ONE matched A-policy safety reference from the same
+        # snapshot and CRN seed, charged to the arm's practice cost (v2v_live.safety): the
+        # runtime's shared v2v_train allocation covers the registered full-run upper bound.
+        from .v2v_launch3 import V2V_PHASES, practice_reference_quote
+        budget = dict(cfg.get('budget') or {})
+        phases = dict(budget.get('phases') or {})
+        phases['v2v_train'] = (V2V_PHASES['v2v_train']
+                               + practice_reference_quote(cfg['practice_fraction']))
+        cfg['budget'] = dict(budget, phases=phases)
     if cfg['imitation_epochs'] < 5:
         raise ValueError('full-pass separate imitation requires at least five epochs')
     for key, want in dict(INTENT_OPTIONS, **{k: v for k, v in BANK_OPTIONS.items()
@@ -183,24 +193,36 @@ def run_arm(root, arm, cfg, release, hooks, *, clock=time.time, sleep=time.sleep
     def practice_wave(r, b, policies, ws, ident, phase, extra, u, deterministic, role):
         """practice_starts scheduling (owner 2026-11-04 proposal, B/R only): the registered
         fraction of the update's PPO episodes are snapshot-restart episodes built by
-        practice_starts.wave_call and dispatched through the SAME original_wave path (reserve,
-        admission, episode, failure replacement), so charging and receipts are the existing
-        episode hooks; the remaining episodes keep the registered batch_worlds(u) order (the
-        last practice-count worlds of the list are replaced)."""
+        practice_starts.wave_call and dispatched as ONE batch wave through the SAME original_wave
+        path (reserve, admission, episode, failure replacement) — one failure therefore counts
+        against the WHOLE practice batch exactly as for the normal wave (never a 1-job wave,
+        which would trip the >20% escalation on its first failure); the remaining episodes keep
+        the registered batch_worlds(u) order (the last practice-count worlds of the list are
+        replaced). R's plan count is B's REALISED practice count of the same update (B_UPDATE
+        receipt), never the requested count. Matched A-policy safety references for the practice
+        episodes are scheduled by v2v_live.safety from the same snapshots (charged to the arm's
+        practice cost)."""
         from . import practice_starts
         from .warm_protocol import SEED
         ns_ident = cfg['job_namespace']+'_'+ident
         phase_name = cfg['phase_map'].get(phase, phase)
-        want = practice_starts.practice_count(len(ws), cfg['practice_fraction'])
+        if arm == 'R':
+            want = practice_starts.realised_count(root, 'B', u)   # B/R symmetry: realised, not requested
+        else:
+            want = practice_starts.practice_count(len(ws), cfg['practice_fraction'])
         plan = practice_starts.plan_for_update(root, arm, u, fraction=cfg['practice_fraction'],
             repeat_cap=cfg['practice_repeat_cap'], count=want, training_seed=SEED)
         rows = plan['rows']
         results = (original_wave(r, b, policies, ws[:len(ws)-len(rows)], role, ns_ident, phase_name,
                                  deterministic, extra) if len(rows) < len(ws) else [])
-        for i, row in enumerate(rows):
-            call = practice_starts.wave_call(root, arm, ns_ident, phase_name, row, i, extra)
-            results.extend(original_wave(r, b, policies, call['worlds'], role, call['ident'],
-                                         phase_name, deterministic, call['extras']))
+        if rows:
+            calls = [practice_starts.wave_call(root, arm, ns_ident, phase_name, row, i, extra)
+                     for i, row in enumerate(rows)]
+            results.extend(original_wave(r, b, policies, [c['worlds'][0] for c in calls], role,
+                                         ns_ident+'_practice', phase_name, deterministic,
+                                         dict(extra, practice_batch=[
+                                             dict(practice=c['extras']['practice'],
+                                                  branch=c['extras']['branch']) for c in calls])))
         return sorted((practice_starts.strip_steps(e) if e.get('practice') else e for e in results),
                       key=lambda e: (e['world']['seed'], e['arm']))
 

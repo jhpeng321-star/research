@@ -43,16 +43,21 @@ def released(root,pause):
     return bool(_released(str(root),stamps))
 
 
-def braking(root,arm,u,episodes,a_records,pause):
+def braking(root,arm,u,episodes,a_records,pause,pairs=None):
+    """Composite MAIN09:57 guard. ``pairs`` optionally maps an episode id to its EXACT matched
+    reference record (practice_starts: same-snapshot/same-CRN A-policy reference); every other
+    episode keeps the same-world pairing - the rule is never weakened."""
     root=Path(root)
     if rule(root) is None:return False
     from .safety_diagnosis import episode,comparison
-    a={e['world']['seed']:e for e in a_records};common=[e for e in episodes if e['world']['seed'] in a]
+    a={e['world']['seed']:e for e in a_records}
+    ref=lambda e:(pairs or {}).get(e['id']) or a.get(e['world']['seed'])
+    common=[e for e in episodes if ref(e) is not None]
     if len(common)<2:return True  # inherited guard has no estimable paired CI in this case
     cache=root/'safety_diagnosis_0957/ttc_cache';cache.mkdir(parents=True,exist_ok=True)
     rows=[]
     for e in common:
-        A=episode(root,a[e['world']['seed']]['id'],True,cache);B=episode(root,e['id'],True,cache)
+        A=episode(root,ref(e)['id'],True,cache);B=episode(root,e['id'],True,cache)
         if A is None or B is None or A['world']!=B['world']:raise ValueError('composite safety pair incomplete')
         rows.append(dict(seed=e['world']['seed'],world=e['world'],A=A,right=B))
     out=comparison(rows)

@@ -89,9 +89,12 @@ def episode(job):
                     live_safety(Path(job['queue_root']),job['arm'],b.totals,job['world']['seed'],job['safety_reference'])
                 if len(controller.events)!=n+1:raise ValueError('expected one acceleration action per1s')
                 event=controller.events[-1]
-                if job.get('guided') and job['arm']=='B' and event['sample'].get('behaviour',{}).get('plan_start'):
-                    # Recorded only AFTER the real SUMO step succeeded. This
-                    # controls queue backpressure, not the final closed-job gate.
+                if (job.get('guided') and job['arm']=='B' and event['sample'].get('behaviour',{}).get('plan_start')
+                        and event.get('proposal') is not None):
+                    # Replayed snapshot ticks (practice/replay) record plan_start behaviour with
+                    # proposal None - there is no new proposal record to queue; only a real
+                    # executed proposal controls backpressure. Recorded only AFTER the real SUMO
+                    # step succeeded.
                     write(Path(job['queue_root'])/'guided_starts'/f'u{job["update"]:03}'/(event['proposal']['record_sha256']+'.json'),
                         dict(job=job['id'],time_s=t,behaviour=event['sample']['behaviour']))
                 steps.append(dict(controller.events[-1],reward=before-b.totals['team_delay_vs']))
