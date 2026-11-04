@@ -1,5 +1,36 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 16:25 +08 — A21; B12 recovery operator active; interim SHA archive draining
+- Full1134-linebrief/log/status/receipts+canonicalregistrythrough7254READ;
+  allpreviousdirtyworkpreserved. Adoption970e18e6. Warmqualification/restores/
+  interimphysicsALREADYDONE; norepeat. ExistinglaunchoperatorownsB12recovery.
+- MAINrecoverydecision: effectiveimitationFIRSTu14BOTHarms, rawthroughu13;
+  u12isolatedenvironmentfailure32610VOID+oneimport-precheckedrerunapproved.
+  Gate12pre-SUMO35820voidreceipte19a9648; gate13/switchNOTclaimed.
+- DirectRESUME_LIVE_0815_1793780628038625800: A21/A2049830LIVE; B/Rsealed11/11,
+  noB/Rtrainowners. OriginalSTOParchived; operatorisolatedu12branch+SUMOLIVE.
+  B12checkpoint+closedepisodes+safetyPASSmustNEVERreapply. Operatorrestored10
+  additionalreferencedfiles; our26fileSHArestore/protectionkept.
+- NEWdisjointcompletedV2Vu8OBSERVABLEarchive: cf3f1548/6local+6LinuxPASS,
+  rega30799eb/controlcoopmwm20261104_interim_archive1605/dispatch3436980,
+  actualworker3436981/start79471897/bootb8bc1fcbLIVE. Only288agedtapes/
+  531435666bytes, publicSHAverified, unchangedqualifiedSHA-before-unlink engine,
+  gpuAfloor8GiB. RESULTs/publicreceipts/checkpoints/allTRAIN+bankinputsKEPT;
+  nooutcomesdecoded. BothoriginalmoversNEVERpaused. ADOPTvia_sol/
+  coopmwm_interim_archive_ops.py status; neverdispatchparallelarchive.
+- Firstproofbatch000000:40files/67861872bytesCERTIFIED. Remainingpoolstill
+  draining; completionNOTclaimed. Latestfree5778153472bytes(~5.38GiB),
+  stillbelow6GiBdispatchfloor; poolalonecannotreach9GiB. MAINnotified.
+- Monitor4LIVEbutold06e88ecd-binding; currentpreparedruntime53ae93af.
+  Operatorhandoverrequested. HealthysealedB11/R11isNOTlivetraining.
+- Latestverifiedaccounting14552540/cap17471840/811640countonce/nonnegative
+  phases; environmentalvoidsnotdeductedbyours. Futurelesson13200gapopen.
+  u8interimCOMPLETE288/288/outcomesclosed; NEVERredispatch.
+- NooursSUMO/inference/learnerdeployment/allocation/guardchange/signals.
+  Archive-onlyregistration+SHA-gatedsourceunlinkusesapprovedscope. Proof
+  INTERIM_OBSERVABLE_ARCHIVE_1605_STARTED.md; nextadoptarchivecompletion+
+  operatorcheckpoint-saferecovery, verifydiskratherthanclaimingheadroom.
+
 ## CURRENT Nov4 15:48 +08 — A20; B12 recovery pending; disk below dispatch floor
 - Complete1134-linebrief/log/status/receipts+canonicalregistrythrough7221READ;
   existingdirtyworkkept. Adoptiond02a616c; nofinishedqualification/restartredo.

@@ -1,5 +1,31 @@
 # S-COOPMWM — live checks
 
+### Nov4 16:25 UTC+8 — A21; operator-owned u12 recovery; disjoint interim archive draining
+- **A21 is sealed and its owner is live.** B/R remain sealed11/11; their training
+  owners are absent. The existing operator is running the authorised u12 isolated
+  diagnostic recovery, with a real branch/SUMO observed. B12's completed checkpoint,
+  PPO and episodes must be adopted without reapplying the update.
+- Latest canonical decision puts effective-command imitation FIRST at **u14 for
+  BOTH B and R**, with raw continuation through u13. The operator owns the u12
+  environment void/re-run, receipt-based seal and gated source handover. Runtime9
+  is prepared; no effective switch or B/R training restart is claimed here.
+- **Storage relief:** registered and dispatched an approved, disjoint SHA-gated
+  move of288completed V2V-u8 observable tapes (531,435,666bytes) to gpuA. Local6/6
+  and Linux6/6tests pass. Original public tape hashes match; RESULTs, receipts,
+  checkpoints, TRAIN tapes and bank inputs stay on cpuQ; outcomes stay closed.
+  Both original movers remain running. First durable remote certificate confirms
+  **40files/67,861,872bytes moved**; the remaining pool is still draining.
+- Latest cpuQfree5,778,153,472bytes (~5.38GiB) remains below the unchanged6GiB
+  dispatch floor. Even the full pool cannot restore9GiB headroom. MAIN/operator
+  notified; no protection/resource-floor change or competing cleanup.
+- Latest verified accounting14,552,540charged/cap17,471,840, retained811,640once,
+  nonnegative phase balances. Pending environment voids were not silently refunded.
+  Future lesson-phase13,200gap remains reported. u8interim COMPLETE288/288;
+  no evaluation repeated or outcomes opened.
+- Evidence:`coopmwm/INTERIM_OBSERVABLE_ARCHIVE_1605_STARTED.md`,
+  `coopmwm/INTERIM_OBSERVABLE_ARCHIVE_1605_STATUS_1793780691794808100.json`,
+  `coopmwm/RESUME_LIVE_0815_1793780628038625800.json`.
+
 ### Nov4 15:48 UTC+8 — A20; B/R recovery pending; disk below dispatch floor
 - Fresh-session adoption confirms **A20 sealed and its training owner live**.
   B/R remain sealed at11/11; their old r3 supervisor and children are absent,
