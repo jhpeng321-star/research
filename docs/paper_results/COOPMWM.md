@@ -1,5 +1,41 @@
 # S-COOPMWM — live checks
 
+### Nov4 13:43 UTC+8 — A16/B9/R8; practice handover registered for u10
+- 13:49 follow-up: R-u9's24episodes are complete, zero failures, learner active;
+  checkpoint/update receipt not yet sealed. cpuQ~6.006GiBfree; both movers live.
+  A single cpuQ SSH timeout recovered on a read-only retry; no job restarted.
+- **B9 and R8 learning mechanics/composite safety pass.** Both completed five
+  full imitation passes. B9 KL0.0449162<0.045, eight cooperative examples,
+  action MAE1.229555->1.210766m/s²; first-pass loss-change95%CI
+  [-0.060318,-0.039057]. Intent loss2.000171->1.843499 fell this update.
+  R8 KL0.0402559, three cooperative examples; its first-pass CI includes0
+  without significant harm. First-minibatch PPO KL0 for both.
+- On24paired TRAIN worlds, collisions/teleports0 for both. Critical-total
+  B9-A9=-16.604CI[-41.418,8.459]; R8-A8=-30.875CI[-56.458,-5.519].
+  These checks do not establish learned cooperation; the completed u6
+  isolated-group diagnostic remains the current cooperation evidence.
+- The existing operator registered practice starts FIRST at **u10 for both
+  B and R** (fraction0.25, repeat cap2). Source8b918fcdb/Linux313PASS,
+  runtime1d67a685/gate11PASS/launch3preflightREADY are registered. B r2 has
+  exited at the intended u9 boundary; R9 SUMO is running. Monitor4 still
+  actively covers current updates but binds the older runtime; the operator
+  was notified to hand it over with r3. r3 adoption/u8 test dispatch remain
+  operator-owned and are not claimed complete here.
+- Independent authority reconciliation verifies all registered transfers in
+  runtime1d67a685: bank+840,000 from sumo verification, bank+100,000 from
+  legacy train, practice+345,600 from paired_branch to v2v_train. Phase sum
+  and cap17,471,840; charged13,847,120 including811,640retained once. All
+  balances nonnegative at the probe. Future lesson shortfall13,200 remains
+  reported; u12 fits. No allocation changed by this continuation.
+- Archive batch37 failed with SSH connection-closed255, retained sources,
+  and recovered naturally in fresh batch38. Extension total3,509,309,275
+  bytes certified; batch39 transferring. cpuQ6,457,327,616bytes free
+  (~6.01GiB), only14,876,672bytes above6GiB floor; both movers remain live.
+  CPU-S landing9GiB guard and cpuQ collector/backfill stops remain intact.
+- Evidence:`coopmwm/RESUME_ADOPTION_20261104_1330.md`,
+  `coopmwm/PRACTICE_HANDOVER_READINESS_20261104_1340.md`, and
+  `coopmwm/HANDOVER_READINESS_1335_1793770985476960500.json`.
+
 ### Nov4 12:57 UTC+8 — B-u8 complete; A14/B8/R7
 - **B8 learning mechanics and composite safety pass.** Four full imitation
   passes of five requested, KL0.039161<0.045, eight within-seed cooperative

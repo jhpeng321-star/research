@@ -1,5 +1,40 @@
 # S-COOPMWM continuation — V2V running; MAIN06:32 adopted
 
+## CURRENT Nov4 13:43 +08 — A16/B9/R8; u10 practice handover operator-owned
+- 13:49probeRESOURCE_READINESS_1130_1793771381372796600: R9all24episodes
+  COMPLETE/0failed/learnerPID2636968active/checkpointnotyetsealed. Bboundary
+  ownerabsent/Acontinues/bothmoverslive. CPU6448377856bytes(~6.006GiB), memory
+  available15021212KiB. OnecpuQSSHtimeoutrecoveredonread-onlyretry/norestart.
+- Full1134-linebrief/log/status/latestreceipts+canonicalregistrythroughu10switch
+  READ; dirtyworkpreserved. Adoption1ede5d44/accounting+transport55d4dcd3.
+- B9fivefullpasses/KL.0449162/noimitationfailure/8coopexamples/MAE1.229555->
+  1.210766/pass1CI[-.060318,-.039057]; intent2.000171->1.843499fell.
+  CompositePASS24worlds/0collision+teleport/criticalB-A-16.604[-41.418,8.459].
+- R8fivepasses/KL.0402559/noimitationfailure/3coopexamples/pass1CIincludes0;
+  compositePASS0collision+teleport/criticalR-A-30.875[-56.458,-5.519].
+  FirstminibatchPPOKL0both. Isolatedu6stilldoesNOTestablishlearnedcooperation.
+- PracticeoperatorregisteredFIRSTu10BOTHB/R:src8b918fcdb/Linux313PASS/
+  runtime1d67a685/gate11PASS/launch3preflightREADY. B2636963r2NOWABSENT
+  consistentregisteredu9stop; R2636968LIVE/u9SUMOobserved; A2049830continues.
+  NoV2V_u10B/Rchargesinlatestprobe. Nooursgate/launch/signal/SUMO/inference.
+- Monitor4PID2635161activelycoversA16/B9/R8/noerrorsbutstillbinds06e88ecd.
+  Operatornotified_sol/COOPMWM_PRACTICE_HANDOVER_MONITOR_NOTE_1335.md;
+  monitorrebind+r3adopt+u8testdispatchremainOPERATOR-OWNED/PENDING.
+- AccountingVERIFIEDruntime1d67a685vsbinding30e41ba1:runtimeincludesBOTHbank
+  transfers(+840000sumo/+100000legacytrain)ANDpractice345600paired_branch->
+  v2v_train. Runtimephasesum17471840; retained811640fullyspent/countonce.
+  Charged13847120; bank82180/v2v_train1468800remainingat1793770427.
+  Sharedbanktablealoneexcludespractice; doNOToverwriteeitherregisteredhistory.
+  Futurelesson13200phasegapstillopen/u12fits; noallocationchangedhere.
+- Archivebatch37connectionclosed255retainedsources/recoveredNATURALLYfresh38:
+  extension3509309275bytescertified(+140525875),batch39transferring. Bothmovers
+  live/NEVERpaused; currentfree6457327616bytes(~6.01GiB),only14876672above6GiB.
+  Keepallguards/protection; CPU-Slanding9GiB+MAINcollector/backfillSTOPsretained.
+- u6repair12/12/slim/tail/warmqualALREADYCOMPLETE/NEVERredispatch. Current
+  V2VcollectionqualificationandCPU-Schecking/effective-imitationdelegated;
+  doNOTstartparallelcollection/backfill/gate/cleanup/deployment. Latestproof
+  HANDOVER_READINESS_1335_1793770985476960500.json; resume13:30/readiness13:40MD.
+
 ## CURRENT Nov4 12:57 +08 — A14/B8/R7; practice handover delegate-owned
 - Full1134-linebrief/log/status/currentreceipts+canonicalregistryREAD; dirtywork
   preserved. ExistingA2049830/r2supervisor2636865/B2636963/R2636968LIVE.
