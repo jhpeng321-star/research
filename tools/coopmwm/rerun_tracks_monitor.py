@@ -26,6 +26,8 @@ def checked_metrics(arm, metrics):
             continue
         if value is None and name in ('dense_ce', 'dense_accuracy') and metrics['dense_eligible_labels'] == 0:
             continue
+        if value is None and name == 'dense_checked_accuracy' and metrics['dense_checked_labels'] == 0:
+            continue
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
             raise ValueError('REFUSED: invalid monitor metric: '+name)
         if name in ('dense_accuracy', 'dense_filtered_share', 'dense_checked_accuracy', 'merge_missing_share') and not 0 <= value <= 1:
@@ -43,7 +45,7 @@ def checked_metrics(arm, metrics):
             or sum(triggers.values()) != metrics['decisions']):
         raise ValueError('REFUSED: inconsistent monitor trigger counts')
     if arm != 'A' and any(metrics[k] <= 0 for k in
-                          ('decisions', 'credit_rows', 'credit_checked_rows', 'dense_labels', 'dense_checked_labels')):
+                          ('decisions', 'credit_rows', 'credit_checked_rows', 'dense_labels')):
         raise ValueError('REFUSED: missing learning component observations')
     if (metrics['dense_eligible_labels'] > metrics['dense_labels'] or
             metrics['dense_checked_labels'] > metrics['dense_labels']):

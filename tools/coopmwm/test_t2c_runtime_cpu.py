@@ -504,8 +504,11 @@ def test_dense_filter_boundary_bypass_and_empty_update(tmp_path, monkeypatch, ar
     assert (m['dense_ce'] is None) == (not eligible)
     receipt = json.loads((rt.root/f'components/u001_{arm}_dense_labels.json').read_text())
     checks = receipt['checked']
-    assert m['dense_checked_labels'] == len(checks) == 4
-    assert m['dense_checked_accuracy'] == sum(c['label_correct'] for c in checks)/len(checks)
+    assert m['dense_checked_labels'] == len(checks) == (4 if prob is not None else 0)
+    if checks:
+        assert m['dense_checked_accuracy'] == sum(c['label_correct'] for c in checks)/len(checks)
+    else:
+        assert m['dense_checked_accuracy'] is None  # no realised accuracy for absent targets
     assert all(c['row_id'] in {r['row_id'] for r in receipt['rows']} for c in checks)
     assert all(r['imitation_eligible'] == eligible for r in receipt['rows'])
     assert monitor['action'] != 'PAUSE_SAFETY'

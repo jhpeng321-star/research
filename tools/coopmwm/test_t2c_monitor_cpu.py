@@ -54,3 +54,15 @@ def test_improving_history_clears_trends_and_bad_history_is_refused():
         monitor_row('R', 4, metrics(), altered)
     with pytest.raises(ValueError, match='invalid monitor metric'):
         monitor_row('B', 1, metrics() | dict(dense_ce=float('nan')))
+
+
+def test_all_null_targets_keep_three_update_history_diagnostic_only():
+    history = []
+    for update in range(1, 4):
+        m = metrics() | dict(dense_eligible_labels=0, dense_checked_labels=0,
+            dense_filtered_share=1., dense_checked_accuracy=None, dense_ce=None, dense_accuracy=None)
+        row = monitor_row('B', update, m, history)
+        assert row['action'] == 'DIAGNOSE'
+        assert 'no_eligible_dense_labels' in row['diagnose']
+        assert 'dense_accuracy_flat_3_updates' not in row['diagnose']
+        history.append(row)

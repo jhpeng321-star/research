@@ -199,6 +199,10 @@ layer metrics, with zero component counts. History is contiguous and self-hashed
 Dense reporting separates imitation accuracy from realised `dense_checked_accuracy`;
 `dense_filtered_share`, `dense_eligible_labels` and `dense_checked_labels` expose the
 denominators. No eligible dense targets adds a DIAGNOSE, never a learning pause.
+Spot checks sample the registered fraction of actual targets, including filtered
+targets. Absent targets cannot have realised correctness: an all-null-target update
+reports zero checked labels and null checked accuracy, retaining policy/credit/bank
+updates and the auditable zero-selection verification receipt.
 
 Pre-registered DIAGNOSE rules: total non-none trigger rate 0 or 1, credit not rising
 over three updates, dense accuracy flat within 1e-6 over three updates, layer KL <=1e-8.

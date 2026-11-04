@@ -59,3 +59,41 @@ substitute; only base inference is now detached, preserving layer gradients.
 CPU verification: bank + complete runtime suites **40 passed** in 163.48 s,
 `.t2c-r1-bank3` (supersedes a 39-pass run before the missing-effective-receipt case).
 This includes full smoke/monitor CLI execution and shared final-harness routing.
+
+## Final verification and receipts
+
+Final hardening distinguishes absent targets from rejected existing targets: only
+actual targets enter spot-check sampling; all-null-target updates write zero checked
+labels/null realised accuracy and remain diagnostic-only across a three-update
+history. No realised correctness is fabricated for a missing target.
+
+Completed final selections (requested Python, CPU-only environment):
+
+- Config/compatibility/staging/monitor: **68 passed, 1 skipped**, 237.86 s,
+  `.t2c-r1-reg-focused`.
+- Launch/effective-imitation/legacy runner/isolated regressions: **50 passed,
+  5 deselected**, 107.32 s, `.t2c-r1-reg-legacy`. Four inherited Linux `/proc`
+  cases are excluded as documented by the independent review; one legacy fixture
+  that makes an unrelated nested Git commit is excluded.
+- Complete runtime (including final null-target semantics): **27 passed**, 193.46 s,
+  `.t2c-r1-final-runtime2`.
+- Bank and monitor (including three null-target updates): **29 passed**, 31.82 s,
+  `.t2c-r1-final-bank-monitor`.
+
+Distinct final total: **159 passed, 1 skipped, 5 deselected**. The first selection's
+15 monitor cases are repeated in the final selection and counted once. Earlier
+step tests are not added again. All completed commands used `-m pytest -q
+-p no:cacheprovider`, explicit file lists and a fresh worktree-local basetemp.
+The inherited cache_dir warning occurs because cacheprovider is disabled.
+
+An attempted combined final runtime/bank/monitor invocation returned only progress
+dots without a final result; it is not counted. Confirmed no matching process
+remained before the successful separate final runs above. No duplicate dispatch.
+
+`T2C_CPU_SMOKE.json` is refreshed from the actual CLI regression's smoke receipt
+in `.t2c-r1-final-runtime2/test_smoke_and_one_command_mon0/run/T2C_SMOKE.json`.
+Current criterion SHA: `46d250d1769f70f6b2a22bbf9f6d3837781cc7b6060c457d56ef38d13b2acbfd`.
+Full quote/budget remain 178,101,480 / 178,102,200 sim-s. Changed registration,
+filter/bank/evaluation semantics require a fresh bound owner approval.
+Only this session's explicitly named `.t2c-r1-*` synthetic test directories were
+removed after recording these results and refreshing the committed smoke receipt.

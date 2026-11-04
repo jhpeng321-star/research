@@ -394,7 +394,8 @@ class Runtime:
                 'bank_move_ce', 'layer_kl', 'merge_missing_share')})
         else:
             credit = self._verify(arm, update, 'group_credit', rows, self.cfg['group_credit']['verify_fraction'])
-            teacher_checks = self._verify(arm, update, 'teacher', rows, self.cfg['dense_teacher']['verify_fraction'])
+            teacher_checks = self._verify(arm, update, 'teacher',
+                [r for r in rows if r['target'] is not None], self.cfg['dense_teacher']['verify_fraction'])
             mask = [r['imitation_eligible'] for r in rows]
             self._write(f'components/u{update:03}_{arm}_dense_labels.json', dict(
                 arm=arm, update=update, synthetic=self.synthetic,
@@ -427,7 +428,7 @@ class Runtime:
             metrics.update(group_credit_wm=fmean(r['group_advantage'] for r in rows),
                  dense_eligible_labels=sum(mask), dense_filtered_share=1-sum(mask)/len(rows),
                  dense_checked_labels=len(teacher_checks),
-                 dense_checked_accuracy=fmean(r['label_correct'] for r in teacher_checks),
+                 dense_checked_accuracy=fmean(r['label_correct'] for r in teacher_checks) if teacher_checks else None,
                 group_credit_checked=fmean(r['advantage'] for r in credit), credit_checked_rows=len(credit),
                 merge_missing_share=fmean(v for ep in episodes_out for v in ep['missing']))
             # Each weighted start gets its matched all-base reference, same seed and
