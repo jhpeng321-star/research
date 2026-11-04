@@ -17,3 +17,8 @@ def _bank_imitation_runtime_binding():
     saved = (bi.RUNTIME_STEP_MODE, bi.RUNTIME_INTENT_BANK_TERM, bi.RUNTIME_TARGET_SPACE)
     yield
     bi.RUNTIME_STEP_MODE, bi.RUNTIME_INTENT_BANK_TERM, bi.RUNTIME_TARGET_SPACE = saved
+    from tools.coopmwm import replay_bank as rb
+    c = rb.confirmations
+    while hasattr(c, 'original'):                        # bank_statistics.install wraps process-wide
+        c = c.original                                   # (boot_v2/per_seed_v1; t1727 keeps no .original
+    rb.confirmations = c                                 #  and self-restores inside its own tests)

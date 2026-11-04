@@ -276,7 +276,9 @@ def run_one_update(tmp_path, monkeypatch, *, arm='B', coop=None, subroot='v2v'):
     from tools.coopmwm import search_learning
     monkeypatch.setattr(search_learning, 'exact_update', lambda *a, **k: None)
     monkeypatch.setattr(bs, '_CACHE', {})
+    unwrapped = getattr(rb.confirmations, 'original', rb.confirmations)
     bs.install(rb, bank_rule='per_seed_v1')
+    monkeypatch.setattr(rb, 'confirmations', unwrapped)   # install is process-wide: undo at teardown
     v2v_runner.run_arm(root, arm, live, release, hooks)
     receipt = json.loads((root/f'{arm}_UPDATE_001.json').read_text())
     return raw_wave, captured, receipt
