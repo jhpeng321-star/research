@@ -1,96 +1,117 @@
 {
   "task": "T1A",
   "status": "READY",
-  "scope": "CPU-only move library and bank-plan labelling API",
+  "round": "fix round after REVIEW_T1A_r0.md",
+  "scope": "CPU-only shared move library and bank-plan labelling API",
   "branch": "c4/moves",
   "base_branch": "c4/track-base",
   "base_commit": "13f184b5",
   "spec": "E:/agent-work/_sol/tracks_spec.md, Move library and task rules",
+  "review": "REVIEW_T1A_r0.md",
   "resume": {
+    "implementation_already_committed": "df383ab7fc5508faea3d49e8709ca559d0f69326",
     "preserved": [
-      "tools/coopmwm/moves.py (previous session's untracked draft)",
-      "tools/coopmwm/test_moves_cpu.py (previous session's untracked draft)"
+      "All existing implementation and regression-test commits",
+      "REVIEW_T1A_r0.md",
+      "T1A_READY.blocked0.json"
     ],
-    "prior_T1A_receipt": "absent",
-    "matching_python_jobs_at_resume": 0,
-    "jobs_or_dispatches_launched": 0
+    "initial_status": "T1A_READY.json deleted; review and blocked receipt untracked",
+    "matching_T1A_python_jobs_at_resume": 0,
+    "test_jobs_launched_this_resume": 1,
+    "dispatches_launched": 0
   },
   "commits": [
     {
       "sha": "99ed4f48f0869ea794ddbdda14a30526a52c77e2",
-      "subject": "coopmwm moves: shared observable move library and bank-plan labels (T1A)",
-      "files": [
-        "tools/coopmwm/moves.py",
-        "tools/coopmwm/test_moves_cpu.py"
+      "subject": "coopmwm moves: shared observable move library and bank-plan labels (T1A)"
+    },
+    {
+      "sha": "b1288605",
+      "subject": "coopmwm moves: T1A readiness receipt and CPU verification"
+    },
+    {
+      "sha": "df383ab7fc5508faea3d49e8709ca559d0f69326",
+      "subject": "coopmwm moves: fix nearest projection and require recorded policy references (T1A)",
+      "files": ["tools/coopmwm/moves.py", "tools/coopmwm/test_moves_cpu.py"]
+    }
+  ],
+  "receipt_commit": "The separate commit updating this receipt follows df383ab7; see git log on c4/moves.",
+  "blocker_resolutions": [
+    {
+      "review_blocker": 1,
+      "status": "FIXED",
+      "implementation": "Minimise full-duration squared policy-relative offset distance over all recorded-member actor subsets of size 1..4, all registered integer onset/hold windows, and analytically optimised continuous depth. Compare every shape with none. Include omitted members and zero padding through the latest allowed release. Family tags only break equal-distance ties.",
+      "regressions": [
+        "test_tagged_wall_subset_has_same_family_exact_match",
+        "test_staggered_weak_partner_does_not_exclude_closer_single_actor",
+        "test_tagged_wall_with_one_active_member_is_exact_ease_off",
+        "test_variety_family_tag_only_breaks_equal_distance_ties",
+        "test_member_selection_depends_on_window_fit_not_total_braking_energy",
+        "test_projection_matches_exhaustive_distance_oracle",
+        "test_projection_charges_for_release_beyond_short_record"
+      ]
+    },
+    {
+      "review_blocker": 2,
+      "status": "FIXED",
+      "implementation": "Use stored perturbation_profile offsets, or subtract a finite, aligned, explicit policy_profile from absolute profile/legacy-knot commands. Reject missing references; never infer a baseline from the plan median. Preserve receipt/example wrappers and legacy executor interpolation/extrapolation semantics.",
+      "regressions": [
+        "test_identical_absolute_profiles_require_different_labels_under_recorded_policies",
+        "test_validated_constant_legacy_knots_require_recorded_policy",
+        "test_recorded_policy_is_time_aligned_not_a_constant_summary",
+        "test_legacy_reference_matches_actual_knot_interpolation",
+        "test_recorded_policy_shape_finiteness_and_missing_reference_wrappers"
       ]
     }
   ],
-  "receipt_commit": "The separate commit adding this receipt follows the implementation commit; see git log on c4/moves.",
   "api": {
     "module": "tools.coopmwm.moves",
     "FAMILIES": ["none", "ease_off", "wall", "gap_open", "ramp_assist"],
-    "Move": "frozen dataclass: Move(family, members, onset, hold, depth); actors property; to_dict()/from_dict()",
+    "Move": "Frozen Move(family, members, onset, hold, depth); actors property; to_dict()/from_dict()",
     "none_move": "none_move(cav_id) -> Move; exactly zero offsets",
-    "candidates": "candidates(obs_state, numpy.random.Generator, n) -> list[Move]; exactly n non-baseline candidates",
-    "obs_state": {
-      "self": "acting CAV id",
-      "rows": "only that CAV's observable sensing/V2V rows: vid, s_m, v_mps, lane, is_cav"
-    },
-    "offsets": "offsets(move, t, state=None) -> {cav_id: acceleration offset in m/s^2}; t is an integer elapsed second",
-    "offset_state": {
-      "base": "optional {cav_id: absolute base acceleration}",
-      "v_mps": "optional {cav_id: current observed speed}",
-      "allowed": "optional {cav_id: observable allowed speed}",
-      "accel_bounds": "optional existing executor (lower, upper) acceleration bounds",
-      "s_m": "optional {cav_id: observable longitudinal position}; used for immediate wall release at the merge-zone boundary"
-    },
-    "from_plan": "from_plan(verified_plan) -> Move; accepts a bare plan, receipt with chosen_plan, or individual per_seed_v1/all8 example with plan"
+    "candidates": "candidates(obs_state, numpy.random.Generator, n) -> exactly n non-baseline Move objects",
+    "obs_state": "self plus local observable sensing/V2V rows: vid, s_m, v_mps, lane, is_cav",
+    "offsets": "offsets(move, t, state=None) -> {cav_id: acceleration_offset}; t is an integer elapsed second",
+    "offset_state": "Optional original base commands, observable v_mps/allowed speeds, executor accel_bounds, and observable s_m for wall release",
+    "from_plan": "from_plan(verified_plan) -> nearest Move; accepts bare plans, chosen_plan receipts, or own-plan examples",
+    "policy_reference": "Stored perturbation_profile takes precedence. Absolute profile or legacy knots require policy_profile, a finite members x duration_s recorded policy-command matrix in the same member order and time frame. Missing or misaligned references raise ValueError."
   },
   "semantics": {
-    "members": "1..4 distinct CAV ids; candidates always include self, exclude HDVs, and restrict partners to the registered 100m observable/V2V range",
+    "members": "1..4 distinct CAV ids; online candidates include self, exclude HDVs, and restrict partners to the registered observable/V2V range",
     "ranges_source": "variety.VARIETY_REGISTERED: onset 0..30s, hold 20..90s, depth 0.3..1.0; integer-second windows",
-    "offset_shape": "ease_off and gap_open ease members[0]; wall and ramp_assist ease all members; -depth during [onset,onset+hold), zero outside",
-    "wall": "upstream multi-lane members inside registered wall span; sampled window releases by constant-speed observable arrival; current s_m state releases all members at the merge boundary",
-    "clamp": "with resolved state, active base+offset is clipped to [max(accel_min,-v/dt), min(accel_max,1.2,(allowed-v)/dt)]; correction is relative to the ORIGINAL base command",
-    "executor_contract": "Pass current observable state for online feasibility and wall-release guards. Without resolved state offsets are nominal; existing single-writer runtime feasibility clamp and speedMode 27 remain authoritative. Infeasible seconds get zero move correction. none/release preserve base identity.",
-    "baseline": "none is explicit via none_move; planner adds it separately to candidates",
-    "labelling": "structured variety tags supply family; untagged negative-offset structure supplies fallback family; largest-braking-energy members limit arity; gap_open reorders its easing actor first; integer onset/hold and continuous depth minimise squared offset error within that family/member projection, zero-padded beyond plan duration; choose none if no registered braking box improves on zero"
+    "offset_shape": "ease_off/gap_open ease members[0]; wall/ramp_assist ease all members; -depth during [onset,onset+hold), zero outside",
+    "projection_distance": "Sum of squared offset errors over every original member and every recorded second, zero-padded through max(duration_s, maximum registered release); omitted members receive zero predicted offsets",
+    "projection_search": "Enumerate actor subsets of size 1..4 and registered integer windows; continuous depth optimum clipped to the registered range. Equivalent single-actor shapes cover ease_off/gap_open; multi-actor shapes cover wall/ramp_assist. Gap_open uses the first other recorded member as its zero-offset partner.",
+    "projection_ties": "none wins unless strictly improved; otherwise prefer matching variety_family, then FAMILIES order, smaller membership, plan member order, earliest onset and shortest hold",
+    "wall": "Online candidates hold upstream within registered span and release by constant-speed observable arrival; current s_m state releases the wall at the merge boundary",
+    "clamp": "With complete observable state, clip base+offset to existing acceleration/speed bounds and the 1.2 m/s^2 cap; return correction relative to original base. Infeasible seconds receive zero correction; none/release preserve base identity.",
+    "executor_contract": "Without complete state offsets are nominal. The consuming single-writer executor must enforce feasibility and speedMode 27."
   },
-  "bank_format_source_reads": [
-    "replay_bank.py: bank_pairs selects each admitted ex['plan'], falling back to receipt chosen_plan",
-    "verify_perseed.py: build_example persists its own plan, candidate_index, seed_index and example_id",
-    "mppi_search.py: build_plan emits profile and perturbation_profile relative to policy_traj",
-    "plans.py: validate and acceleration_at define legacy knots and knot_s interpolation",
-    "variety.py: wall_candidate, gap_open_candidate, ramp_assist_candidate and VARIETY_REGISTERED"
-  ],
   "tests": {
     "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
-    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_moves_cpu.py tools/coopmwm/test_variety_cpu.py tools/coopmwm/test_mppi_search_cpu.py",
-    "result": "PASS: 96 passed in 102.02s",
-    "new_test_module": "tools/coopmwm/test_moves_cpu.py",
-    "coverage": [
-      "Move validation, immutable members and JSON round-trip",
-      "none identity, per-family actor roles and onset/hold boundary seconds",
-      "original-base feasibility correction, explicit 1.2 cap, speed/acceleration bounds and infeasible seconds",
-      "observable membership, self inclusion, HDV/range exclusion, RNG reproducibility and unavailable geometry",
-      "upstream wall sampling, registered window feasibility and current-observation merge release",
-      "real mppi_search.build_plan and sample_unscored output formats",
-      "real variety wall/gap_open/ramp_assist generator formats, including non-first gap actor",
-      "legacy plans.validate knots format and bare-profile fallback",
-      "receipt chosen_plan and per_seed_v1/all8 own-plan precedence",
-      "positive offsets and weak short impulses prefer none; least-squares depth; six-member projection; malformed inputs"
-    ],
-    "diff_check": "git diff --cached --check passed before implementation commit"
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider tools/coopmwm/test_moves_cpu.py tools/coopmwm/test_variety_cpu.py tools/coopmwm/test_mppi_search_cpu.py",
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "-1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+      "COOPMWM_COOP_BASELINE": "",
+      "TEMP": "E:/Temp/opencode",
+      "TMP": "E:/Temp/opencode"
+    },
+    "result": "PASS: 107 passed, 1 warning, 5 subtests passed in 156.47s",
+    "warning": "PytestConfigWarning: Unknown config option cache_dir (cache provider intentionally disabled)",
+    "verification": "Real mppi_search.build_plan, variety generators and plans.validate exercised on synthetic inputs; exhaustive independent offset-distance oracle and all review counterexamples pass. Existing CPU variety/search regressions pass.",
+    "diff_check": "git diff --check c4/track-base -- tools/coopmwm/moves.py tools/coopmwm/test_moves_cpu.py passed"
   },
   "limitations": [
-    "Legacy knots and bare absolute profiles have no recorded policy reference; labelling uses a documented per-member median approximation. Modern perturbation_profile records use their exact stored policy-relative offsets.",
-    "The shared one-window move vocabulary is a projection of richer variety profiles, including staggered ramp assistance; family/member selection is tag/structure-based, not a global combinatorial nearest-family search.",
-    "Offline labels do not certify current observability or authorise execution; online candidates use the acting CAV's observable view. SUMO/WM efficacy and runtime integration belong to the consuming tracks."
+    "Absolute/legacy bank records without stored policy-relative offsets or an explicit aligned recorded policy reference are unsupported and rejected.",
+    "The single-window vocabulary is a nearest offset projection of richer multi-window profiles; offline labels do not establish online geometry, observability, certification or efficacy.",
+    "Online runtime integration and SUMO/WM efficacy verification belong to consuming tracks."
   ],
   "open_issues": [],
   "compliance": {
     "CPU_only": true,
-    "SUMO_GPU_remote_runs": 0,
+    "SUMO_GPU_remote_runs_launched": 0,
     "bank_data_files_read": 0,
     "forbidden_data_paths_opened": false,
     "population_or_driver_truth_lookup": false,
