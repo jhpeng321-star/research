@@ -33,6 +33,8 @@ class Config:
             raise ValueError('registered full look-ahead is 600 seconds')
         if not math.isfinite(self.p_star) or not 0 <= self.p_star <= 1:
             raise ValueError('p_star must be a probability')
+        if self.p_star != .8:
+            raise ValueError('registered calibrated-confidence p_star must be 0.8')
 
 
 def _field(move, key):

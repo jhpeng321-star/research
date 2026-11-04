@@ -39,9 +39,14 @@ def row(vid='a', s=0., cav=True):
 
 
 def record():
-    return dict(ego_id='a', group=['a', 'b'], rows=[row(), row('b', 20.), row('h', 10., False)],
+    rows = [row(), row('b', 20.), row('h', 10., False)]
+    radio = dict(frame=dict(time_s=60, vehicles=[dict(r, issued_acceleration_mps2=None) for r in rows]),
+                 previous_commands={}, deterministic=True, noise={'a': 0., 'b': 0.},
+                 generator_state=torch.Generator().manual_seed(7).get_state().tolist(),
+                 log_std=[0.], intent=None)
+    return dict(ego_id='a', group=['a', 'b'], rows=rows,
                 time_s=60, commands={'a': .1, 'b': .2}, policy_residuals={'a': 0., 'b': 0.},
-                policy_state={}, history=[])
+                policy_state={}, policy_radio=radio, history=[])
 
 
 def install_calibration(monkeypatch, probability):
@@ -87,6 +92,23 @@ def test_calibration_can_close_raw_unanimous_gate(monkeypatch):
     result, calls, _ = score(monkeypatch, {'policy': [10.]*8, 'move:0': [5.]*8}, probability=.79)
     assert calls[0][0] == 1.
     assert not result['accepted'] and result['selected_id'] == 'policy'
+
+
+@pytest.mark.parametrize('p_star', [0., .1, .79, .9, 1.])
+def test_unregistered_confidence_threshold_refused(p_star):
+    with pytest.raises(ValueError, match='registered.*0.8'):
+        po.Config(p_star=p_star)
+
+
+@pytest.mark.parametrize('probability', [.1, .7999999999999999, .8])
+def test_registered_gate_cannot_authorize_low_calibrated_probability(monkeypatch, probability):
+    result, calls, _ = score(monkeypatch, {'policy': [10.]*8, 'move:0': [9.]*8},
+                              probability=probability, p_star=.8)
+    assert calls == [(1., {'dev': True})]
+    assert result['p_star'] == .8
+    assert result['scores'][0]['p_calibrated'] == probability
+    assert result['accepted'] is (probability >= .8)
+    assert result['selected_id'] == ('move:0' if probability >= .8 else 'policy')
 
 
 def test_choose_best_expected_gain_among_calibrated_eligible_candidates(monkeypatch):

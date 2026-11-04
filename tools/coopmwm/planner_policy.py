@@ -1,4 +1,4 @@
-"""CPU observable V2V continuation for the opt-in online planner.
+"""CPU observable base-policy continuation for the opt-in online planner.
 
 Each imagined branch owns its radio history. Features use the live bank/runtime
 builders; commands are fed back only AFTER safety/ownership, and publications
@@ -15,10 +15,8 @@ from .warm_history import sensor_rows
 
 
 def snapshot(controller, frame, previous, board):
-    """Capture pre-step radio inputs (not this second's newly published intents)."""
+    """Capture current sampling state and pre-step observable radio inputs."""
     from .v2v_intent import intent_model
-    if int(controller.policy.actor[0].weight.shape[1]) == 33:
-        return None
     intent = intent_model(controller.policy)
     state = dict(frame=copy.deepcopy(frame), previous_commands=dict(previous),
                  deterministic=controller.deterministic,
@@ -47,13 +45,11 @@ def local_snapshot(state, rows):
 
 
 def validate(record):
-    """Fail closed on missing/inconsistent radio state, including a zero actor."""
+    """Require continuation state for every online actor, including plain MAPPO."""
     width = len(record['policy_state'].get('actor.0.weight', [[0.]*33])[0])-33
     radio = record.get('policy_radio')
     if radio is None:
-        if width:
-            raise ValueError('V2V actor requires observable policy_radio state')
-        return
+        raise ValueError('base actor requires observable policy_radio sampling state')
     required = {'frame', 'previous_commands', 'deterministic', 'noise',
                 'generator_state', 'log_std', 'intent'}
     if set(radio) != required:
@@ -77,6 +73,8 @@ def validate(record):
     for key in ('previous_commands', 'noise'):
         if not set(radio[key]) <= cavs or any(not math.isfinite(x) for x in radio[key].values()):
             raise ValueError('radio history must contain only finite observed CAV values')
+    if set(radio['noise']) != cavs:
+        raise ValueError('policy sampling noise required for every observed CAV')
     if type(radio['deterministic']) is not bool:
         raise ValueError('radio deterministic flag required')
     generator = torch.Generator()
@@ -153,10 +151,12 @@ class Continuation:
                 frame = causal_frame(dict(time_s=now, vehicles=rows), radio['frame'])
             context = encode(rows)
             intent = radio['intent']
-            blocks = {v: (_intent_features(frame, v, radio['previous_commands'], DEFAULT_CFG, intent)
-                          if intent else _features(frame, v, radio['previous_commands'], DEFAULT_CFG))
-                      for v in context['members']}
-            wide = widen_context(context, blocks)
+            wide = context
+            if int(self.policy.actor[0].weight.shape[1]) != 33:
+                blocks = {v: (_intent_features(frame, v, radio['previous_commands'], DEFAULT_CFG, intent)
+                              if intent else _features(frame, v, radio['previous_commands'], DEFAULT_CFG))
+                          for v in context['members']}
+                wide = widen_context(context, blocks)
             x = torch.tensor(wide['x'], dtype=torch.float32).reshape(
                 -1, int(self.policy.actor[0].weight.shape[1])-4)
             latent = self.policy.broadcast(torch.tensor(context['rsu'])).expand(len(x), -1)
@@ -165,16 +165,14 @@ class Continuation:
             if tick == 0:
                 # The decision follows this second's real sample. Reuse it in
                 # every arm, including stochastic policies, without resampling.
-                action = [self.record['policy_residuals'].get(v, float(mean[j, 0]))
-                          for j, v in enumerate(context['members'])]
-            elif radio['deterministic']:
-                action = mean.flatten().tolist()
+                action = [self.record['policy_residuals'][v] for v in context['members']]
             else:
                 innovation = math.sqrt(RHO)*torch.randn((1, 1), generator=radio['generator'])
                 innovation = innovation+math.sqrt(1-RHO)*torch.randn(mean.shape, generator=radio['generator'])
                 previous = torch.tensor([[radio['noise'].get(v, 0.)] for v in context['members']]).reshape(-1, 1)
                 noise = previous*PHI+torch.tensor(radio['log_std']).exp()*math.sqrt(1-PHI**2)*innovation
-                action = (mean+noise).flatten().tolist()
+                # The live sampler advances noise/RNG even in deterministic mode.
+                action = (mean if radio['deterministic'] else mean+noise).flatten().tolist()
                 radio['noise'] = dict(zip(context['members'], noise.flatten().tolist()))
             for vid, value in zip(context['members'], action):
                 out[b, names.index(vid)] = value
