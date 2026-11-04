@@ -108,3 +108,25 @@ MAIN must explicitly reconcile native reactivation, separate budget/hosts and
 fresh seed allocation before an amended registration and physical canary.
 This session starts no job, consumes zero sim-s, sends no signal and adds no
 duplicate DESIGN READY entry. Only this recovery receipt is committed.
+
+## Fresh-session reconciliation — arrival HEAD `8c8d11ba`
+
+Read status/log and task receipts before action; branch remains `c4/coopnative`.
+Canonical registry search restricted to `REGISTRATION.md` confirms approval5877,
+readiness5878 and later explicit supersession5879, with no native reactivation.
+Successor allocation5893/5897 and completed-episode adoption6402/6413 confirm
+the old986000–986083 TRAIN/check allocation is unsuitable for a fresh native run.
+Latest saved successor handoff remains Nov4 17:25, A23/B12/R11, monitor-only and
+operator-owned migration/recovery. No fresh remote liveness measurement made.
+
+Native sources/design still have an empty diff against `8368ce1a`; retained CPU5
+records pass_=true/skips0/sim_s0. Preserve the completed historical15-test result
+and61-line design without rerunning. Historical4,664,400total-sim-s quote fits6M;
+it is not a reconciled allocation alongside the successor. Firstcheck/dev2–3h
+after admission and final28–36h cpuQ-only remain historical estimates, not live ETAs.
+
+Explicit MAIN native-start reactivation and budget/host reconciliation remain the
+blocking scope decision. Then fresh seeds/audits, dense/ordinary start mixture,
+informative-observable coverage and amended pre-SUMO registration are required.
+All unrelated tracked/untracked work retained. This reconciliation starts no job,
+uses zero sim-s, sends no signal and adds no duplicate DESIGN READY registration.
