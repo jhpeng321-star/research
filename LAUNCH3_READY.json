@@ -1,5 +1,12 @@
 {
  "ready": true,
+ "status": {
+  "resume_verify_20261104": "fresh-session resume verified the committed deliverable unchanged: launcher/tests sha256 match the hashes below, pytest test_v2v_launch3_cpu.py re-run 9 passed (52.53s), tree clean at 8870c8e6; no work redone",
+  "superseded_by_live_launch": true,
+  "supersede_note": "the live side never consumed this registration: ff5d70e9 is not an ancestor of c4/coopnative and exists only on c4/v2v-launch3; c4/coopnative evolved its own launch3 gate (1621f6cb coopmwm: add launch3 gate, its copy of v2v_launch3.py sha256 92bbdb638ff7505734d2a98e57be5b5ad5b97caad245e88f9d76dbb8ead8fff3) on the launch-final/launch-coop line and ALREADY STARTED V2V training: receipts docs/paper_results/coopmwm/LAUNCHCOOP_GATE_PASS_LAUNCH_0335.json (gate_coop5, commit efa9c39b) and LAUNCHCOOP_OPTION1_REBIND_LAUNCH_0629.json (gate_coop6 PASS, fix_commit 7e832acc, re-bound runtime f73298f0, root /home/ubuntu/coopmwm20261104_v2v_coop3, v2v_started_unix 1793744972.2211275, train_pids A/B/R live, watcher_pid 2013844) plus follow-ups a3cfc63b/763f7d30 (adopt running V2V); intent sharing is inside the gated runtime (coop5/coop6 offline checks report partner_intent_weights_moved)",
+  "dispatch_policy": "NO pending dispatch from this worktree: A/B/R training is a running live job - do not re-launch, do not re-run the start CLI, do not dispatch a watcher; this READY remains the CPU verification artifact for the ff5d70e9 intent-int merge only",
+  "verify_unix": 1793752173
+ },
  "workspace": "E:/agent-work/c4-v2v-launch3",
  "branch": "c4/v2v-launch3",
  "commit": {
