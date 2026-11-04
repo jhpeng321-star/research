@@ -39,7 +39,8 @@ calibrated P >= ``dense_teacher_p_star`` (owner rule 10-18); maximize expected g
 eligible moves, then break ties by candidate order; if none clear the gate label 'none'.
 That firing fallback is an ABSTENTION for imitation, not a supervised comparator target.
 Both CE/export boundaries require calibrated P >= 0.8 (the minimum cannot be lowered).
-Only correctly bound, completed all8 verification bypasses that confidence requirement.
+Only correctly bound, completed all8 verification SUPPORTING the original target bypasses
+that confidence requirement. Measured-incorrect predictions are never imitation targets.
 DAgger: the labelled states are decision points of the CURRENT policy's OWN training rollouts
 (collected by the T2C loop into ``DAggerBuffer``), never expert states.
 """
@@ -563,6 +564,27 @@ class DAggerBuffer:
 
 # ---------------------------------------------------------------- SUMO verification (all8)
 
+DECISION_KEYS = ('id', 'episode', 'step', 't_s', 'cav', 'source', 'obs_state')
+
+
+def _decision_payload(label):
+    """Canonical observable/decision identity, frozen BEFORE simulator dispatch.
+
+    Candidate execution probes must carry the same identity as the labelled decision; a
+    snapshot digest alone cannot bind the locally observed input used by the learner.
+    """
+    return {k: copy.deepcopy(label[k]) for k in DECISION_KEYS}
+
+
+def _decision_bound(label):
+    from .protocol import digest
+    execution = label.get('verification_execution') or {}
+    return bool(all(k in label for k in DECISION_KEYS)
+                and digest(execution) == label.get('verification_execution_sha256')
+                and execution.get('label_id') == label['id']
+                and execution.get('decision_sha256') == digest(_decision_payload(label)))
+
+
 def select_for_verification(labels, fraction):
     """Deterministically pick the REGISTERED fraction for SUMO verification: a pure function of
     the label id (same labels -> same subset; order-independent), annotated on every label."""
@@ -600,7 +622,8 @@ def prepare_verification_plan(label, snapshot, base_profile=None, *, moves_mod=N
         raise ValueError('execution snapshot belongs to another training decision')
     if snapshot.get('truncate_on_accept'):
         raise ValueError('dense verification cannot truncate existing commitments')
-    execution = dict(schema='coopmwm/dense-execution/v1', label_id=label['id'],
+    execution = dict(schema='coopmwm/dense-execution/v2', label_id=label['id'],
+                      decision_sha256=digest(_decision_payload(label)),
                      snapshot_sha256=sv.snapshot_sha(snapshot),
                      policy_sha256=digest(snapshot['policy']), start_s=label['t_s'],
                      control_dt_s=1, mode='policy_continues' if label['move'] is None
@@ -617,8 +640,7 @@ def prepare_verification_plan(label, snapshot, base_profile=None, *, moves_mod=N
         for i, (move, submitted, base) in enumerate(zip(
                 support, candidate_plans, candidate_base_profiles)):
             # Rebuild from the independent base, never infer it from submitted policy_profile.
-            probe = dict(id=submitted.get('dense_execution', {}).get('label_id', label['id']),
-                         episode=label['episode'], t_s=label['t_s'], move=copy.deepcopy(move))
+            probe = dict(_decision_payload(label), move=copy.deepcopy(move))
             expected = prepare_verification_plan(probe, snapshot, base, moves_mod=moves_mod,
                                                  plan_id=submitted.get('id'))
             if digest(submitted) != digest(expected):
@@ -706,6 +728,8 @@ def bind_receipt(label, receipt, candidate_index, plan=None, moves_mod=None, *,
     execution = label.get('verification_execution')
     if execution is None or digest(execution) != label.get('verification_execution_sha256'):
         raise ValueError('prepare the exact execution contract before dispatch')
+    if not _decision_bound(label):
+        raise ValueError('observable decision differs from the frozen execution contract')
     if execution['snapshot_sha256'] != receipt['snapshot_sha256']:
         raise ValueError('receipt differs from the execution snapshot/base policy')
     if not _target_bound(label):
@@ -845,6 +869,8 @@ class All8Verifier:
             if (not execution or digest(execution) != lb.get('verification_execution_sha256')
                     or 'verification_first_seed' not in lb):
                 raise ValueError('bound label lacks an exact execution/measurement contract')
+            if not _decision_bound(lb):
+                raise ValueError('observable decision differs from the frozen execution contract')
             if not _target_bound(lb):
                 raise ValueError('candidate support/target differs from the exact labelled move')
             rec = recs.get(vid)
@@ -975,7 +1001,7 @@ def verification_quote(labels, k, duration_s=None, members=4, end_s=1200, extra_
 
 def _completion_payload(lb):
     """A bare verified=True is never a ground-truth bypass."""
-    keys = ('id', 'episode', 't_s', 'cav', 'source', 'obs_state',
+    keys = (*DECISION_KEYS,
             'move', 'target', 'candidates', 'candidate_class',
             'original_teacher_target', 'verification_id', 'verification_execution',
             'verification_execution_sha256', 'verification_receipt_sha256',
@@ -997,7 +1023,8 @@ def _target_bound(lb):
 def _completed(lb):
     from .protocol import digest
     statuses = lb.get('verification_seed_status', {})
-    return bool(_target_bound(lb) and lb.get('verified') and lb.get('verification_status') == 'measured'
+    return bool(_decision_bound(lb) and _target_bound(lb)
+                and lb.get('verified') and lb.get('verification_status') == 'measured'
                 and all(statuses.get(str(s), {}).get('measured') is True for s in (1, 2))
                 and lb.get('verification_completion_sha256') == digest(_completion_payload(lb)))
 
@@ -1007,12 +1034,19 @@ def imitation_eligibility(lb):
 
     Scores supplied through the injectable scorer ABI must already be T1C-calibrated; the
     production factory's planner adapter requires fitted calibration and marks provenance.
-    Only a bound, measured all8 completion may bypass confidence, for either arm.
+    Only a bound, measured all8 outcome SUPPORTING the original target may bypass confidence,
+    for either arm. Contradicted predictions cannot fall back to their WM confidence.
     """
     from .protocol import digest
     if _completed(lb):
-        return dict(eligible=True, reason='completed_all8', p_calibrated=None,
-                    provenance='all8_both_seeds', verified_bypass=True)
+        correct = lb.get('label_correct') is True
+        return dict(eligible=correct, reason='completed_all8' if correct
+                    else 'measured_incorrect_target', p_calibrated=None,
+                    provenance='all8_both_seeds', verified_bypass=correct)
+    if ((lb.get('verification_id') and not _decision_bound(lb))
+            or lb.get('verified') or lb.get('verification_completion_sha256')):
+        return dict(eligible=False, reason='invalid_all8_completion', p_calibrated=None,
+                    provenance=None, verified_bypass=False)
     confidence = lb.get('confidence') or {}
     reason = 'missing_calibration'
     p = confidence.get('p_calibrated')

@@ -65,7 +65,8 @@ def bank_label(none=False, arm='B', k=2):
     t = dt.WMDenseTeacher(stub, scorer=scorer, cfg=dict(dense_teacher_candidates=k))
     if arm == 'R':
         t = dt.RandomTeacher(stub, scorer=scorer, cfg=dict(dense_teacher_candidates=k))
-        t.choice_rng = np.random.default_rng(7)
+        t.choice_rng = (SimpleNamespace(integers=lambda *_: 0) if none
+                        else np.random.default_rng(7))
     return t.label_state(f'warm_u005_{arm}_7', 0, 600, 'c1', obs)
 
 
@@ -715,7 +716,8 @@ def test_missing_or_unbound_calibration_fails_closed_at_both_consumers(random, m
 
 
 @pytest.mark.parametrize('arm', ['B', 'R'])
-def test_completed_verification_bypasses_confidence_but_cannot_be_retargeted(tmp_path, arm):
+@pytest.mark.parametrize('field', ['observation', 'step', 'id', 'cav', 'source'])
+def test_completed_verification_bypasses_confidence_but_cannot_be_retargeted(tmp_path, arm, field):
     from tools.coopmwm.test_verify_perseed_cpu import _budget
     _budget(tmp_path)
     gains = {('p1', 1): .6, ('p1', 2): .6}
@@ -723,16 +725,127 @@ def test_completed_verification_bypasses_confidence_but_cannot_be_retargeted(tmp
     lb['confidence'] = None
     verifier = dt.All8Verifier(root, arm, runner_for, str(root), 'bank_verification_ext')
     dt.verify_selected([lb], 1., lambda _: (receipt, 0, plans[0]), verifier)
+    assert lb['label_correct'] is True
     assert dt.imitation_eligibility(lb)['verified_bypass']
     assert dt.trigger_targets([lb], trigger_batch(lb)) == [lb['candidate_class']]
     ds = dt.build_dataset([lb], teacher().encoder, update=5, arm=arm)
     assert ds['targets'][0]['eligibility']['provenance'] == 'all8_both_seeds'
     assert ds['update_receipt']['label_accuracy'] == 1.
     changed_state = copy.deepcopy(lb)
-    changed_state['obs_state']['rows'][0]['v_mps'] += 1
+    mutate_decision(changed_state, field)
     assert not dt.build_dataset([changed_state], teacher().encoder)['targets']
+    for consume in (lambda row: verifier.consume([row]),
+                    lambda row: dt.verify_selected([row], 1.,
+                        lambda _: pytest.fail('changed state redispatched'), verifier)):
+        changed = copy.deepcopy(changed_state)
+        with pytest.raises(ValueError, match='observable decision'):
+            consume(changed)
+        assert not dt.imitation_eligibility(changed)['eligible']
+        assert not dt.build_dataset([changed], teacher().encoder)['targets']
+        with pytest.raises(ValueError, match='filtered'):
+            dt.trigger_targets([changed], trigger_batch(changed))
+    # An unchanged persisted label reuses exactly the same evidence, without dispatch.
+    resumed = json.loads(json.dumps(lb))
+    seal = resumed['verification_completion_sha256']
+    dt.verify_selected([resumed], 1., lambda _: pytest.fail('resume redispatched'), verifier)
+    assert resumed['verification_completion_sha256'] == seal
+    assert dt.imitation_eligibility(resumed)['verified_bypass']
     lb['move']['depth'] = .99
     assert not dt.build_dataset([lb], teacher().encoder)['targets']
+
+
+def mutate_decision(lb, field):
+    if field == 'observation':
+        lb['obs_state']['rows'][0]['v_mps'] = 28.
+    elif field in ('step', 't_s'):
+        lb[field] += 1
+    elif field == 'source':
+        lb[field] = 'random' if lb[field] == 'wm' else 'wm'
+    else:
+        lb[field] += '_changed'
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('field', ['observation', 'step', 'id', 'cav', 'source'])
+def test_first_receipt_binding_refuses_changed_observable_decision(tmp_path, arm, field):
+    _, snap, plans, receipt, _, _, lb = dense_setup(tmp_path, {}, k=1, arm=arm)
+    dt.select_for_verification([lb], 1.)
+    mutate_decision(lb, field)
+    with pytest.raises(ValueError, match='observable decision'):
+        dt.bind_receipt(lb, receipt, 0, plans[0])
+    with pytest.raises(ValueError, match='already frozen'):
+        dt.prepare_verification_plan(lb, snap, [[.3]*120]*2, moves_mod=Moves)
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('confidence', ['missing', 'high'])
+def test_measured_incorrect_move_is_filtered_at_both_consumers(tmp_path, arm, confidence):
+    from tools.coopmwm.test_verify_perseed_cpu import _budget
+    _budget(tmp_path)
+    root, _, plans, receipt, runner_for, _, lb = dense_setup(tmp_path, {}, arm=arm)
+    original = copy.deepcopy(lb['target'])
+    if confidence == 'missing':
+        lb['confidence'] = None
+    assert dt.imitation_eligibility(lb)['eligible'] == (confidence == 'high')
+    verifier = dt.All8Verifier(root, arm, runner_for, str(root), 'bank_verification_ext')
+    dt.verify_selected([lb], 1., lambda _: (receipt, 0, plans[0]), verifier)
+    assert lb['verified'] and lb['label_correct'] is False
+    assert lb['verified_admitted_seeds'] == []
+    eligibility = dt.imitation_eligibility(lb)
+    assert not eligibility['eligible'] and not eligibility['verified_bypass']
+    assert eligibility['reason'] == 'measured_incorrect_target'
+    with pytest.raises(ValueError, match='filtered'):
+        dt.trigger_targets([lb], trigger_batch(lb))
+    ds = dt.build_dataset([lb], teacher().encoder, update=5, arm=arm)
+    assert not ds['targets'] and ds['counts']['verified'] == ds['counts']['filtered'] == 1
+    assert ds['update_receipt']['label_accuracy'] == 0.
+    assert ds['update_receipt']['filtered_share'] == 1.
+    assert ds['labels'][0]['original_teacher_target'] == original == lb['target']
+    verifier.consume([lb])
+    assert not dt.imitation_eligibility(lb)['eligible']
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('correct', [False, True])
+def test_measured_none_eligibility_matches_outcome_at_both_consumers(tmp_path, monkeypatch, arm, correct):
+    from tools.coopmwm import test_verify_perseed_cpu as fixture
+    fixture._budget(tmp_path)
+    none = bank_label(none=True, arm=arm)
+    snap = fixture.snapshot(600)
+    snap['episode'] = dict(snap['episode'], id=none['episode'], arm=arm)
+    alternatives = []
+    for i, m in enumerate(none['candidates']):
+        probe = dict(copy.deepcopy(none), move=m)
+        alternatives.append(dt.prepare_verification_plan(probe, snap, [[.3]*120]*2,
+                                                        moves_mod=Moves, plan_id=f'p{i+1}'))
+    prepare_none(none, snap, alternatives)
+    monkeypatch.setattr(fixture, 'plan', lambda pid, gain: alternatives[int(pid[1:])-1])
+    gains = {} if correct else {('p2', 2): .7}
+    root, _, _, receipt, runner_for, _ = fixture.setup(tmp_path, gains, k=2, arm=arm)
+    none['confidence'] = None
+    assert not dt.imitation_eligibility(none)['eligible']
+    verifier = dt.All8Verifier(root, arm, runner_for, str(root), 'bank_verification_ext')
+    dt.verify_selected([none], 1., lambda _: (receipt, None, None), verifier)
+    assert none['verified'] and none['label_correct'] is correct
+    assert none['verified_flip'] is not correct
+    eligibility = dt.imitation_eligibility(none)
+    assert eligibility['eligible'] is correct and eligibility['verified_bypass'] is correct
+    ds = dt.build_dataset([none], teacher().encoder, update=5, arm=arm)
+    assert bool(ds['targets']) is correct
+    assert ds['update_receipt']['label_accuracy'] == float(correct)
+    assert ds['labels'][0]['original_teacher_target']['action_class'] == 0
+    if correct:
+        assert dt.trigger_targets([none], trigger_batch(none)) == [0]
+        assert ds['targets'][0]['action_class'] == 0 and ds['targets'][0]['weight'] == 1.
+    else:
+        assert eligibility['reason'] == 'measured_incorrect_target'
+        with pytest.raises(ValueError, match='filtered'):
+            dt.trigger_targets([none], trigger_batch(none))
+    changed = copy.deepcopy(none)
+    mutate_decision(changed, 'observation')
+    with pytest.raises(ValueError, match='observable decision'):
+        verifier.consume([changed])
+    assert not dt.build_dataset([changed], teacher().encoder)['targets']
 
 
 @pytest.mark.parametrize('defect', ['different_support', 'omitted', 'substituted', 'wrong_base'])
@@ -772,7 +885,7 @@ def test_none_matching_support_frozen_before_real_all8_dispatch(tmp_path, monkey
     snap['episode'] = dict(snap['episode'], id=none['episode'], arm='B')
     alternatives = []
     for i, m in enumerate(none['candidates']):
-        probe = dict(id=none['id'], episode=none['episode'], t_s=none['t_s'], move=m)
+        probe = dict(copy.deepcopy(none), move=m)
         alternatives.append(dt.prepare_verification_plan(probe, snap, [[.3]*120]*2,
                                                         moves_mod=Moves, plan_id=f'p{i+1}'))
     prepare_none(none, snap, alternatives)  # BEFORE any branch is dispatched
