@@ -130,3 +130,26 @@ blocking scope decision. Then fresh seeds/audits, dense/ordinary start mixture,
 informative-observable coverage and amended pre-SUMO registration are required.
 All unrelated tracked/untracked work retained. This reconciliation starts no job,
 uses zero sim-s, sends no signal and adds no duplicate DESIGN READY registration.
+
+## Fresh-session reconciliation — arrival HEAD `496cb393`
+
+Read git status/log and native receipts first. Canonical REGISTRATION.md still
+records approval5877/readiness5878 followed by MAIN16:22 supersession5879;
+the targeted native-task search finds no later reactivation. Entries5893/5897
+and6402/6413 retain successor allocation/use of986000–986083. These are exposed
+seeds, not an admissible fresh native-training allocation.
+
+Native implementation/design diff against8368ce1a is empty; CPU5 retains
+pass_=true/skips0/sim_s0. Historical15PASS and61-line design are adopted without
+redundant tests. The4,664,400-total-sim-s quote fits6M; its2–3h firstcheck/dev
+and28–36h cpuQ-only final estimates remain conditional historical estimates.
+
+Latest saved successor handoff is Nov4 18:14: A24/B13/R11 completed boundaries,
+R12 reported active and u14 operator-owned. This is saved handoff evidence,
+not fresh remote liveness verification. No successor operation was duplicated.
+
+Explicit MAIN native-start reactivation plus separate budget/host reconciliation
+remain required. Then allocate fresh seeds/audits, finish dense/ordinary start
+mixing and informative-observable checks, and amend registration before physics.
+Preserve all unrelated tracked/untracked work. This recovery uses zero new sim-s,
+starts no worker/dispatcher/monitor, sends no signals and adds no registry entry.
