@@ -72,5 +72,42 @@ reward rows while verifying that the base model remains frozen.
 
 Environment: CUDA hidden, bytecode disabled, OMP/MKL=1. The only warning is the
 inherited unknown `cache_dir` option with the pytest cache provider disabled.
-No SUMO/GPU/SSH/dispatch or real sim-seconds were used. Affected integration
-checks and regenerated readiness are the next step.
+No SUMO/GPU/SSH/dispatch or real sim-seconds were used. Implementation and these
+tests were committed in `94b58dfc` after the recovery checkpoint `7b66877e`.
+
+## Affected integration checks and final readiness
+
+Two additional short sequential invocations completed at `94b58dfc`, with the
+same interpreter, arguments and environment above:
+
+```text
+tools/coopmwm/test_t2c_runtime_cpu.py tools/coopmwm/test_t2c_redesign_cpu.py --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-membership-runtime-final
+```
+
+**31 passed**, exit 0, 54.13 s. Includes runtime smoke, shared-final orchestration,
+realised-reward learning and disabled WM-path boundaries.
+
+```text
+tools/coopmwm/test_t2c_compat_cpu.py tools/coopmwm/test_v2v_runner_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-membership-compat-final
+```
+
+**26 passed**, exit 0, 15.97 s. Checks default-off compatibility and native
+V2V runner/controller boundaries. Thus this round has **100 distinct passing
+tests**, including 27 added regressions, with no failures in the final checks.
+The preceding round's 216 passes/1 skip/5 exclusions remain historical evidence;
+they are preserved separately in readiness rather than claimed as fresh runs.
+
+`T2C_READY.json` v7 binds implementation `94b58dfc`, the replacement review and
+these exact invocations. `T2C_CPU_SMOKE.json` now matches the completed runtime
+test's smoke receipt: 6 episodes, 1 update, 30 isolated dry cells, 14,400 virtual
+sim-s (9,600 smoke + 4,800 once-only augmentation), **zero real sim-s**. This is
+a CPU test backend result; the full-window native-hook B/R tests above provide
+the dynamic-membership evidence. Deployment integration, owner bindings, the
+real end-to-end smoke and safety gate remain required as already documented.
+
+The production lifecycle is documented in `RERUN_TRACKS_READY.md`. The independent
+review is preserved unchanged; its blocker is addressed by this implementation,
+not by rewriting its verdict. CPU fix status: **READY FOR REVIEW**.
+
+Final scoped `git diff --check c4/track-base` passed for the implementation,
+tests, review, operator documentation and readiness/smoke/fix receipts.

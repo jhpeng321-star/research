@@ -1,12 +1,12 @@
 {
-  "schema": "coopmwm.t2c_ready.v6",
+  "schema": "coopmwm.t2c_ready.v7",
   "task": "T2C",
-  "fix_round": "current REVIEW_T2C_r1.md at 7b148d87; complete spec through MAIN 02:30",
+  "fix_round": "replacement REVIEW_T2C_r1.md reviewing 70911f7a; dynamic-membership blocker; complete spec through MAIN 02:30",
   "status": "CPU_FIX_READY",
   "branch": "c4/rerun-tracks",
   "worktree": "E:/agent-work/c4-rerun-tracks",
   "date": "2026-11-05",
-  "implementation_commit": "9f06f049",
+  "implementation_commit": "94b58dfc",
   "ready_for_review": true,
   "ready_for_live_launch": false,
   "commits": [
@@ -16,9 +16,24 @@
     {"commit": "b500a3c9", "step": "Evaluate each acting CAV context, deterministic single ownership and isolated masks."},
     {"commit": "624b0815", "step": "Separate smoke artifacts/jobs and share once-only augmentation plus accounting."},
     {"commit": "cfd6863c", "step": "Preserved resumed-harness recovery/lifecycle verification receipt."},
-    {"commit": "9f06f049", "step": "Bind full native admission evidence, update regressions and CPU smoke receipts."}
+    {"commit": "9f06f049", "step": "Bind full native admission evidence, update regressions and CPU smoke receipts."},
+    {"commit": "70911f7a", "step": "Preserve completed earlier fix/readiness and recovery verification."},
+    {"commit": "7b66877e", "step": "Preserve replacement independent membership review and resume scope."},
+    {"commit": "94b58dfc", "step": "Cancel unavailable retained move groups, preserve cadence/base ownership, add 27 dynamic-membership regressions."}
   ],
   "blockers": {
+    "1": {
+      "status": "fixed",
+      "reviewed_revision": "70911f7aad20e5b4674d7dc7efb162064260737e",
+      "review": "REVIEW_T2C_r1.md, preserved unchanged in 7b66877e",
+      "implementation": "Cancel the complete retained move when any member leaves the current observable/commandable set. Do not partially execute or resurrect it, and do not resample until the registered decision tick. Preserve native base and valid residuals with deterministic own-context ownership, including the zero-correction fallback. Actor exit/reappearance discards/reinitialises its context. Invalid fresh proposals and residuals still refuse.",
+      "learning_receipts": "Retain sampled move/onset and reward attribution, recording move_cancelled_at_s and move_unavailable_members on the original decision row; no invented decision or off-cadence label.",
+      "coverage": "18 complete-window overlapping-group cases spanning range loss, exit/reappearance and missing actuator across training/all/group/solo/empty masks; non-resurrection and valid residual continuity; six invalid fresh proposal/residual cases; two native V2V B/R complete-window workers, including empty-CAV frames, then real layer autograd updates from actual turnover reward rows with frozen-base checks.",
+      "red_before_fix": "New range-loss test reproduced the exact reviewed nonobservable-command exception before implementation.",
+      "fix_receipt": "T2C_FIX_MEMBERSHIP_R1.md"
+    }
+  },
+  "prior_review_blockers": {
     "1": {
       "status": "fixed",
       "implementation": "MAIN 02:30 launch pins dense teaching and WM group credit OFF with zero verification budgets. Enabled P2 track2_reward receives only projected local before/after SUMO observations. T2C checks exact observable per-vehicle reward membership and computes own + weight * neighbour mean for each actor. Realised returns enter only the frozen-base layer learner; A retains native PPO.",
@@ -79,6 +94,23 @@
     "interpreter": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
     "common_arguments": "-m pytest -q --tb=short -p no:cacheprovider",
     "environment": {"CUDA_VISIBLE_DEVICES": "-1", "PYTHONDONTWRITEBYTECODE": "1", "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"},
+    "method": "Short sequential explicit CPU selections after implementation changes; unique worktree-local roots. Fresh totals below cover only this membership fix round. Completed prior evidence is preserved separately, not claimed as newly executed.",
+    "fresh_distinct_total": {"passed": 100, "failed": 0, "skipped": 0},
+    "added_regressions": 27,
+    "completed_invocations": [
+      {"arguments": "tools/coopmwm/test_t2c_multicav_cpu.py tools/coopmwm/test_t2c_backend_cpu.py --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-membership-hooks-final", "passed": 43, "elapsed_s": 46.29, "exit_code": 0},
+      {"arguments": "tools/coopmwm/test_t2c_runtime_cpu.py tools/coopmwm/test_t2c_redesign_cpu.py --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-membership-runtime-final", "passed": 31, "elapsed_s": 54.13, "exit_code": 0},
+      {"arguments": "tools/coopmwm/test_t2c_compat_cpu.py tools/coopmwm/test_v2v_runner_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-membership-compat-final", "passed": 26, "elapsed_s": 15.97, "exit_code": 0}
+    ],
+    "red_before_fix": {"arguments": "tools/coopmwm/test_t2c_multicav_cpu.py -k partner_turnover -x --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-membership-red", "failed_as_expected": 1, "exception": "REFUSED: HDV/nonobservable production command"},
+    "intermediate_runs": "An intermediate ownership/test-expectation run and a native bank-encoder fixture run failed before correction; excluded from passing evidence. Full affected files subsequently passed.",
+    "warning": "Inherited unknown cache_dir option with pytest cacheprovider disabled.",
+    "diff_check": "git diff --check passed"
+  },
+  "previous_fix_round_tests": {
+    "interpreter": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "common_arguments": "-m pytest -q --tb=short -p no:cacheprovider",
+    "environment": {"CUDA_VISIBLE_DEVICES": "-1", "PYTHONDONTWRITEBYTECODE": "1", "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"},
     "method": "Short sequential invocations, unique worktree-local basetemp roots, explicit CPU files only. Counts below are distinct tests, not the sum of repeated targeted invocations.",
     "focused": {"passed": 161, "failed": 0, "skipped": 1, "collected": 162},
     "regression": {"passed": 55, "failed": 0, "deselected": 5},
@@ -113,8 +145,8 @@
     "episodes": 6,
     "updates": 1,
     "isolated_dry_cells": 30,
-    "receipt_sha256": "d8e0621ad1eb6ac6d200f237f8008a6936585c85f11bce8602bbf9a79c508a27",
-    "source_receipt": ".t2c-r1-final-bound-smoke/test_smoke_executes_all_consum0/run/smoke/T2C_SMOKE.json"
+    "receipt_sha256": "1a053c25aa8c665b8451531fdf92002e100008c3a142df9b4dd1fc72c5780267",
+    "source_receipt": ".t2c-membership-runtime-final/test_smoke_executes_all_consum0/run/smoke/T2C_SMOKE.json"
   },
   "api": {
     "runtime": "run_tracks(cfg, registration, backend, smoke=False, legacy_run=None)",
@@ -124,9 +156,21 @@
     "augmentation": "Backend.verify_augmentation(payload, cfg=..., execute=...) -> successful native all8 examples + receipt; Runtime.prepare_augmentation consumes immutable shared admission caches",
     "preparation": "quote/budget/wall_clock default to legacy; track2=True selects Track 2; CLI --track2",
     "documentation": "RERUN_TRACKS_READY.md",
-    "fix_receipt": "T2C_FIX_CURRENT_R1.md"
+    "fix_receipt": "T2C_FIX_MEMBERSHIP_R1.md",
+    "prior_fix_receipt": "T2C_FIX_CURRENT_R1.md",
+    "episode_hook": "EpisodeHook cancels unavailable retained groups, keeps the registered cadence and own-context base fallback, and adds cancellation metadata to original training rows. Same lifecycle for training/isolated/shared-final."
   },
   "resume_verification": {
+    "date": "2026-11-05",
+    "recovered_head": "70911f7aad20e5b4674d7dc7efb162064260737e",
+    "inputs_read_first": ["git status", "git log", "tracks_spec.md through MAIN 02:30", "REVIEW_T2C_r1.md", "T2C_READY.json", "T2C_FIX_CURRENT_R1.md", "T2C_ACCEPTED.json"],
+    "preserved_uncommitted_review": true,
+    "preserved_prior_commits_and_untracked_artifacts": true,
+    "active_process_check": "No active pytest invocation observed; all existing processes left untouched, no dispatch duplicated.",
+    "prior_completed_work_reused": "The replacement independent review confirms the prior five fixes. Only the new membership blocker was changed, with affected post-change tests.",
+    "new_sim_s": 0
+  },
+  "previous_resume_verification": {
     "date": "2026-11-05",
     "recovered_head": "31b9a11e",
     "implementation_commit": "9f06f049",

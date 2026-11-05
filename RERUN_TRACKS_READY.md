@@ -158,6 +158,23 @@ adapters, as permitted by the shared spec. Deployment needs those merged exports
 its existing Linux qualification, staged artifacts and bound owner approval.
 No live SUMO/GPU/SSH qualification occurred in this fix round.
 
+### Changing membership during a move
+
+Before executing a retained move, each actor checks that all its members remain
+locally observable and commandable. Loss of any member cancels that entire
+commitment until the next registered decision tick; visibility return alone does
+not restart it or draw a new trigger decision. The native base and valid residual
+continue. The actor owns its own zero-correction fallback even when another
+overlapping context requests it. Actor exit discards its context; reappearance
+initialises a new context, as for any newly entering CAV. Fresh invalid proposals
+and nonobservable/uncommandable residual outputs still refuse.
+
+Training keeps the original sampled move/onset and reward row, with additive
+`move_cancelled_at_s` and `move_unavailable_members` fields when it is cancelled.
+No cancellation fabricates a new decision/label. The same lifecycle and ownership
+apply to isolated all/solo and shared-final hooks; evaluation produces no learning
+rows. CPU turnover evidence and exact test commands: `T2C_FIX_MEMBERSHIP_R1.md`.
+
 ## Shared T1D final evaluation and state registration
 
 The final path imports `tools.coopmwm.planner_eval` and requires
