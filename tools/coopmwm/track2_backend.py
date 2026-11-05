@@ -29,7 +29,7 @@ import types
 import numpy as np
 import torch
 
-from . import moves
+from . import moves, feasible_proposals
 from .acceleration import PHI
 from .accel_learner import GAMMA, UNIT
 from .coop_layer import CooperationLayer, LayerConfig
@@ -70,7 +70,7 @@ class MoveAPI:
 
     @staticmethod
     def candidates(obs_state, rng, n):
-        return [TriggerMove(m) for m in moves.candidates(obs_state, rng, n)]
+        return [TriggerMove(m) for m in feasible_proposals.candidates(obs_state, rng, n)]
 
     @staticmethod
     def offsets(move, t):
@@ -274,6 +274,7 @@ class EpisodePolicy(torch.nn.Module):
         self.executor = MoveExecutor(moves_api=MoveAPI())
         self.now, self.last_decision = None, None
         self.local_states, self.visible, self.blocks = {}, {}, {}
+        self.command_reservations = {}
         self.reports, self.trigger_board = {}, {}
 
     @property
@@ -289,7 +290,7 @@ class EpisodePolicy(torch.nn.Module):
     def score(self, sample):
         return self.layer.score(sample)
 
-    def observe(self, rows, now):
+    def observe(self, rows, now, *, command_commitments=()):
         """Whitelist local geometry before passing anything to move/merge APIs."""
         from .bank_v2v import _intent_features, DEFAULT_CFG
         table = {r['vid']: {k: r[k] for k in ('vid', 's_m', 'v_mps', 'lane', 'is_cav', 'length_m')}
@@ -334,6 +335,17 @@ class EpisodePolicy(torch.nn.Module):
         self.local_states, self.visible, self.blocks = states, visible, blocks
         self.local_intents = local_contexts
         self.execution_positions, self.neighbourhoods = execution_positions, neighbourhoods
+        # Controller.active_plans is the authoritative ledger for live guide,
+        # candidate and restored practice plans. Copy only local CAV ids/expiry,
+        # never the plan, its commands, or any nonlocal traffic information.
+        reservations = {}
+        for entry in command_commitments:
+            until = entry['start_s'] + entry['plan']['duration_s']
+            if now < until:
+                for vid in entry['plan']['members']:
+                    reservations[vid] = max(until, reservations.get(vid, until))
+        self.command_reservations = {ego: {v: reservations[v] for v in ids if v in reservations}
+                                     for ego, ids in visible.items()}
 
     @torch.no_grad()
     def sample(self, context, generator, deterministic=False, memory=None):
@@ -345,13 +357,11 @@ class EpisodePolicy(torch.nn.Module):
         decision = None
         if (context['members'] and (self.last_decision is None
                 or self.now-self.last_decision >= self.cfg['decision_interval_s'])):
-            decision = self.trigger.decide(context, obs_states=self.local_states,
-                observable_cavs=self.visible, rng=self.candidate_rng, generator=self.layer_rng,
-                deterministic=deterministic)
-            accepted = {}
-            for vid, move in sorted(decision.selected().items()):
-                accepted[vid] = self.executor.start(move, ego=vid, observable_cav_ids=self.visible[vid],
-                    now=self.now, until=self.now+move.onset+move.hold) if move is not None else False
+            decision, accepted, proposal_stats = feasible_proposals.decide_and_start(
+                self.trigger, context, obs_states=self.local_states,
+                observable_cavs=self.visible, executor=self.executor, now=self.now,
+                rng=self.candidate_rng, generator=self.layer_rng, deterministic=deterministic,
+                command_reservations=self.command_reservations)
             self.last_decision = self.now
         self.executor._advance(self.now)
         offsets = {}
@@ -370,7 +380,8 @@ class EpisodePolicy(torch.nn.Module):
             published = self.trigger.publish_trigger_intent(context)
             self.trigger_board = {v: (int(self.now), values) for v, values in published.items()}
         if decision is not None:
-            sample['track2_trigger'] = dict(_batch_dict(decision), accepted=accepted)
+            sample['track2_trigger'] = dict(_batch_dict(decision), accepted=accepted,
+                                          proposals=proposal_stats)
         sample['track2'] = dict(schema=SCHEMA, arm=self.arm, time_s=self.now,
             active_moves=[dict(move=e['move'].to_dict(), start=e['start'], until=e['until'])
                           for e in self.executor.active], merge_features=context['merge_features'],
@@ -407,7 +418,10 @@ def episode_components(job, base, controller_type):
         original = real.apply
 
         def apply(this, rows, commands, now):
-            policy.observe(rows, now)
+            # Refresh on every call, not at factory construction: VerifyController
+            # restores active_plans at t0 (a cached sample); live sampling begins
+            # on the next tick, with all restored reservations now present.
+            policy.observe(rows, now, command_commitments=this.active_plans)
             return original(rows, commands, now)
 
         real.apply = types.MethodType(apply, real)

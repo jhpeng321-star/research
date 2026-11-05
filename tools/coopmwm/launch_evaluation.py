@@ -33,7 +33,7 @@ def episode(spec, cfg, work):
         if isinstance(policy, p1.EpisodePolicy):
             original = controller.apply
             def apply(rows, commands, now):
-                policy.observe(rows, now)
+                policy.observe(rows, now, command_commitments=controller.active_plans)
                 return original(rows, commands, now)
             controller.apply = apply
     job = dict(id=Path(work).name, path=str(work), world=world, role='train', arm=spec['arm'],

@@ -1,0 +1,107 @@
+{
+  "task": "F2",
+  "status": "READY",
+  "date": "2026-11-05",
+  "fix_round": 2,
+  "review": "REVIEW_F2_r1.md",
+  "worktree": "E:/agent-work/c4-fix-proposals",
+  "branch": "c4/fix-proposals",
+  "base_branch": "c4/rerun-launch",
+  "base_commit": "8bf7f53395c7a53a3e8d847c5a7f3229b79ab102",
+  "reviewed_commit": "f8582425af160c98cb11bd7e4a32594b4ce6c954",
+  "tested_code_commit": "486c006fc54d1ec3cd72b7e9a4580af524ea1b5b",
+  "commits": [
+    {
+      "sha": "45915c47fe00288c9e67544386f0b13b4ca8231f",
+      "subject": "C4 launch: balance feasible ownership-aware move proposals"
+    },
+    {
+      "sha": "2bbe4bbc9ace749ba682352c24942d11d41316b1",
+      "subject": "C4 launch: record F2 CPU readiness"
+    },
+    {
+      "sha": "37ddeda2a1bc5f8d965c09a3412d4cd30757d1db",
+      "subject": "C4 launch: exclude controller-owned CAVs from F2 proposals"
+    },
+    {
+      "sha": "f8582425af160c98cb11bd7e4a32594b4ce6c954",
+      "subject": "C4 launch: record F2 fix-round CPU readiness"
+    },
+    {
+      "sha": "486c006fc54d1ec3cd72b7e9a4580af524ea1b5b",
+      "subject": "C4 launch: preserve F2 ownership in diagnostic hooks"
+    }
+  ],
+  "review_resolution": [
+    {
+      "item": "Blocker 1: diagnostic hooks omit live controller ownership",
+      "status": "FIXED",
+      "fix": "launch_production.run_branch now supplies controller.active_plans to EpisodePolicy.observe before each apply, including the MixedPolicy isolated path. Audited and fixed launch_evaluation.episode identically. Both use the existing local visible-CAV/original-expiry projection, just like training/practice. Controller commands, ledger, t0 replay, CRN, serial acquisition and full diagnostic windows retain their existing contracts.",
+      "regression": "test_diagnostic_hooks_refresh_live_controller_ownership: nine A/B/R x lesson/isolated_all/paired cases through actual diagnostic hooks and production policy loaders. Real CPU policies, V2V-wrapped controllers, VerifyController snapshot/CRN restoration, MixedPolicy, balanced candidates, masks and executor; only outer physics/grading replaced. Checks owned ego, free ego with owned partner, newly added live plans, local-only projection, original authoritative commands/expiry, exact-expiry availability, serial same-tick exclusion and exact ownership/family counters.",
+      "red_evidence": "Before the source fix all six B/R cases failed on empty command_reservations; all three A cases passed. Confirmed red run: 6 failed, 3 passed, 22 deselected. After the fix: 9 passed, 22 deselected.",
+      "red_junit": "_out/f2_fix_r2_red_confirmed.xml",
+      "green_junit": "_out/f2_fix_r2_green.xml"
+    }
+  ],
+  "registration": {
+    "rule": "f2-feasible-balanced-v1",
+    "provenance": "tracks_spec.md MAIN 15:15 2026-11-05 owner item F2",
+    "allocation": "One slot per feasible non-none family per randomly permuted cycle; family counts differ by at most one; none is the separate baseline slot.",
+    "acquisition": "Original controller expiry plus executor commitments, stable ego ID order, acquire before the next slate, original context ordering for PPO replay.",
+    "eligibility": "Every member including ego must be locally observable, in registered range, currently controlled and unowned by controller or executor.",
+    "arms": "Common B/R proposal and ownership logic; A/default-off compatibility covered by the passing suites."
+  },
+  "fix_round_files": [
+    "tools/coopmwm/launch_production.py",
+    "tools/coopmwm/launch_evaluation.py",
+    "tools/coopmwm/test_feasible_proposals_cpu.py",
+    "docs/F2_FEASIBLE_PROPOSALS.md",
+    "F2_READY.json"
+  ],
+  "api": {
+    "candidates": "feasible_proposals.candidates(obs_state, rng, n) -> list[moves.Move]",
+    "live_decision": "feasible_proposals.decide_and_start(trigger, context, *, obs_states, observable_cavs, executor, now, rng, generator, deterministic=False, command_reservations=None) -> (TriggerBatch, accepted_by_ego, stats)",
+    "observation_bridge": "EpisodePolicy.observe(rows, now, *, command_commitments=()) projects only each ego's visible CAV IDs and original start_s + duration_s expiry. Training/practice, branch diagnostics and paired evaluation supply the current controller.active_plans every apply.",
+    "command_reservations": "ego -> locally visible CAV ID -> original authoritative expiry; available when now == expiry",
+    "aggregation": "feasible_proposals.aggregate(receipts) -> update stats or None if unmeasured",
+    "episode_telemetry": "sample.track2_trigger.proposals",
+    "update_telemetry": "metrics.move_proposals in per-arm per-update learning-monitor JSON",
+    "infeasible_rate": "sum(rejected_non_none) / sum(selected_non_none), or null without selections",
+    "family_infeasible_rate": "sum(infeasible_family_checks) / sum(family_checks), or null without checks",
+    "ownership_counters": "owned_cav_checks counts local controlled occupied CAV slots across serial egos, including same-tick executor acquisitions; controller_owned_cav_checks measures its controller-owned subset. Legacy receipts missing these counters aggregate to null.",
+    "ppo": "Recorded conditional tables, masks, old log probabilities and original context ordering are replayed without regenerating proposals"
+  },
+  "verification": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "-1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "TEMP": "E:/agent-work/c4-fix-proposals/_out",
+      "TMP": "E:/agent-work/c4-fix-proposals/_out"
+    },
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_feasible_proposals_cpu.py tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_trigger_policy_cpu.py tools/coopmwm/test_moves_cpu.py tools/coopmwm/test_launch_integration_cpu.py tools/coopmwm/test_track2_monitor_cpu.py tools/coopmwm/test_t2c_compat_cpu.py -p no:cacheprovider --basetemp=E:/agent-work/c4-fix-proposals/_out/f2_fix_r2_release --junitxml=E:/agent-work/c4-fix-proposals/_out/f2_fix_r2_release.xml",
+    "exit_code": 0,
+    "passed": 348,
+    "failed": 0,
+    "skipped": 1,
+    "subtests_passed": 5,
+    "duration_seconds": 210.24,
+    "junit": "_out/f2_fix_r2_release.xml",
+    "skip_reason": "Existing test_launch_integration_cpu.py:526 Windows file-symlink privilege check; no remote qualification performed in this fix round.",
+    "warning": "Disabling pytest's cache plugin produces the existing unknown cache_dir config-option warning.",
+    "git_diff_check": "passed"
+  },
+  "execution_scope": {
+    "cpu_only": true,
+    "new_sim_s": 0,
+    "ssh_calls": 0,
+    "sumo_launches": 0,
+    "gpu_jobs": 0,
+    "source_changes_limited_to_designated_worktree": true,
+    "test_artifacts_limited_to_worktree": true,
+    "restricted_data_opened": false
+  },
+  "open_issues": []
+}
