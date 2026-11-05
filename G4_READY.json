@@ -23,6 +23,22 @@
     "running_worktree_python_jobs_before_verification": 0,
     "production_dispatches": 0
   },
+  "latest_resume_verification": {
+    "date": "2026-11-06",
+    "starting_head": "27ec6220a92ce1c89b8f794e98bd64e47fb40f75",
+    "reviewed_commit": "6db78a33366af80f2438c470b7b1065c889e0778",
+    "tracked_delta_since_review": ["G4_READY.json"],
+    "implementation_and_tests_unchanged_since_pass": true,
+    "remaining_blockers": 0,
+    "implementation_changes_required": false,
+    "matching_worktree_python_processes": 0,
+    "tests_rerun": false,
+    "reason_tests_not_rerun": "Completed CPU regression and independent review results are preserved below; implementation and tests are identical to the PASS-reviewed commit. Resume instructions prohibit redoing finished work.",
+    "prior_completed_regression_result": "309 passed, 1 skipped",
+    "prior_independent_review_result": "309 passed, 0 failed, 1 skipped; 7 additional CPU assertion cases passed",
+    "production_dispatches": 0,
+    "preexisting_untracked_review_and_receipt_files_preserved": true
+  },
   "commits": [
     {
       "sha": "5cc2827224aba8d02897a40e9e66dc72734aafee",
@@ -39,6 +55,10 @@
     {
       "sha": "6db78a33366af80f2438c470b7b1065c889e0778",
       "subject": "C4 G4: refresh readiness after production orchestration fix"
+    },
+    {
+      "sha": "27ec6220a92ce1c89b8f794e98bd64e47fb40f75",
+      "subject": "C4 G4: record accepted review and resumed CPU verification"
     }
   ],
   "ready_receipt_commit": "The subsequent commit updating this file; discover with git log --oneline -- G4_READY.json",
