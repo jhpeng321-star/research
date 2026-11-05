@@ -1,5 +1,32 @@
 # CLEAN3 prospective launch blockers — 2026-11-05 23:46 +08
 
+## Current recovery — 2026-11-06 01:25 +08
+
+`CLEAN3_CONTINUATION_SESSION4.md` supersedes all live-state/budget statements
+below. Clean2 is now **durably stopped at sealed A18/B18/R18** after the monitor's
+scheduled lesson-u18 reservation failed at01:06:45. All original A/B/R/P3 owners
+and the resident chain are exited. Read-only audit01:16:24 (`dbffaa78`) verifies
+all54 update/checkpoint bindings and combinedu1..u18 monitors: zero collisions or
+teleports, CONTINUE/no DIAGNOSE. STOP/FAULT remain intact.
+
+The actual native 12-entry lesson list costs8760 per wave, not the legacy5280
+estimate. The21840 allocation had17520 spent afteru6/u12, leaving4320 for an8760
+u18 wave; the guard correctly refused. Commit `48c54cd3` fixes prospective
+clean3 quoting to require complete native lesson manifests foru6/u12/u18/u24,
+allocate35040, and reject missing/truncated/suffix-underpriced evidence. It
+shares the exact runtime bank/window expansion. Windows72passed/1existing
+platform skip; zero-physics actual cpuV native quote qualification PASS.
+
+Stopped-ledger quote01:23:09 (`87df6d4e`): prior3098640 + protected
+plan_fix566400 + corrected full clean3 allocation3254640 = **6919680**,
+**919680 over the clean3-scope6M**. Separate mining is0charged/500000reserved;
+overall bound **7419680 vs6500000**, same919680 shortfall. No reservation is
+reassigned. Final accepted G adapters/full smoke expansion remain unqualified
+and may require further budget. G1/G2 accepted, G4 independent round1 acceptance
+still absent; its existing review workflow remains owner. No clean3 integration,
+owner-stop marker, chain or physics has been dispatched, and clean2 was not
+resumed or amended. MAIN/owner budget resolution remains necessary.
+
 ## Current recovery — 2026-11-06 00:38 +08
 
 `CLEAN3_CONTINUATION_SESSION3.md` supersedes the historical snapshots below.

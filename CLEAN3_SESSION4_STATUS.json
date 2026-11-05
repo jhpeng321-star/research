@@ -1,0 +1,40 @@
+{
+  "schema": "coopmwm.s_launch.recovery.v1",
+  "timestamp": "2026-11-06T01:25:00+08:00",
+  "status": "BLOCKED_G4_ACCEPTANCE_AND_CUMULATIVE_BUDGET",
+  "clean2_state": "STOPPED_LESSON_PHASE_UNDERQUOTE",
+  "sealed_updates": {"A": 18, "B": 18, "R": 18},
+  "all_original_remote_owners_and_chain_exited": true,
+  "completed_monitor_collisions": 0,
+  "completed_monitor_teleports": 0,
+  "stop_cleared": false,
+  "fault_audit": "CLEAN2_FAULT_AUDIT_SESSION4.json",
+  "fault_evidence_commit": "dbffaa78",
+  "prospective_fix_commit": "48c54cd3",
+  "linux_native_quote_receipt_commit": "87df6d4e",
+  "quote": "CLEAN3_QUOTE_STOPPED_SESSION4.json",
+  "clean3_scope_cap_sim_s": 6000000,
+  "global_cap_with_separate_mining_sim_s": 6500000,
+  "prior_charged_sim_s": 3098640,
+  "protected_plan_fix_unspent_sim_s": 566400,
+  "protected_mining_allocation_sim_s": 500000,
+  "corrected_clean3_allocation_sim_s": 3254640,
+  "overall_prospective_bound_sim_s": 7419680,
+  "shortfall_sim_s": 919680,
+  "final_g_adapter_smoke_quote_still_required": true,
+  "accepted_levers": {"G1": true, "G2": true, "G4": false},
+  "verification": {
+    "cpu_tests": "72 passed, 1 existing Windows file-symlink skip in 37.85s",
+    "cpuv_native_quote": "PASS, operator-only sources compiled in memory; original CONFIG/source deployment retained",
+    "integrated_g_linux_qualification": "NOT RUN: G4 acceptance absent",
+    "new_sim_s": 0,
+    "launch_authorized": false
+  },
+  "handoff": "CLEAN3_CONTINUATION_SESSION4.md",
+  "main_notifications": [
+    "E:/agent-work/_sol/CLEAN2_STOP_U018_LESSON_BUDGET.md",
+    "E:/agent-work/_sol/CLEAN3_BUDGET_BLOCKED.md",
+    "E:/agent-work/_sol/S_LAUNCH_CURRENT.json"
+  ],
+  "registration_and_five_line_status_appended": true
+}
