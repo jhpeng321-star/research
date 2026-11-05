@@ -216,15 +216,17 @@ def _bound_training_parent(root, arm, example_id, prelaunch):
     owner = Path(registration.get('ledger_root', root)).resolve()
     if owner != artifact and artifact.parent != owner:
         raise ValueError('training parent must belong to this experiment ledger')
-    path = owner/f'AUGMENTATION_PARENTS_{arm}.json'
-    if not path.is_file():
-        return None
-    binding = json.loads(path.read_text())
-    xg.verify_sealed(binding, 'parent_bank_sha256')
-    if (binding.get('arm') != arm or binding.get('reader') != 'replay_bank.bank_pairs:cooperative_only:effective' or
-            'augmentationParentBankSHA'+binding['parent_bank_sha256'] not in (owner/'AUTHORITY.md').read_text()):
-        raise ValueError('unregistered/foreign training parent bank')
-    entry = next((e for e in binding['parents'] if e['row']['example_id'] == example_id), None)
+    entry = None
+    for suffix in ('_v3', ''):
+        path = owner/f'AUGMENTATION_PARENTS_{arm}{suffix}.json'
+        if not path.is_file():continue
+        binding = json.loads(path.read_text())
+        xg.verify_sealed(binding, 'parent_bank_sha256')
+        if (binding.get('arm') != arm or binding.get('reader') != 'replay_bank.bank_pairs:cooperative_only:effective' or
+                'augmentationParentBankSHA'+binding['parent_bank_sha256'] not in (owner/'AUTHORITY.md').read_text()):
+            raise ValueError('unregistered/foreign training parent bank')
+        entry = next((e for e in binding['parents'] if e['row']['example_id'] == example_id), None)
+        if entry is not None:break
     if entry is None:
         return None
     row = entry['row']

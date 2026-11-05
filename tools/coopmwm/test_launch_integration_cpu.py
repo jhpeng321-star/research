@@ -178,6 +178,22 @@ def test_training_release_refuses_mismatched_or_unsafe_final_gate(tmp_path):
         training.release(cfg)
 
 
+def test_cross_process_receipts_are_not_visible_during_serialization_and_never_overwrite(tmp_path, monkeypatch):
+    import json
+    from . import launch_training as training
+    target=tmp_path/'A_UPDATE_001.json'
+    original=json.dump
+    def serialise(value,stream,**kwargs):
+        assert not target.exists(), 'consumer must never observe a partial receipt'
+        return original(value,stream,**kwargs)
+    monkeypatch.setattr(training.json,'dump',serialise)
+    training.write(target,dict(complete=True))
+    assert json.loads(target.read_text())==dict(complete=True)
+    monkeypatch.setattr(training.json,'dump',original)
+    with pytest.raises(FileExistsError):training.write(target,dict(complete=False))
+    assert json.loads(target.read_text())==dict(complete=True)
+
+
 def test_native_all8_seed_renumbering_requires_real_parent_snapshot_mapping(tmp_path, monkeypatch, per_seed_bank):
     from tools.coopmwm import practice_starts as ps, sumo_verify as sv, practice_weighting as actual_pw
     from .test_practice_weighting_cpu import augment
@@ -345,6 +361,11 @@ def test_legacy_plan_overlay_and_t300_direct_sensing_produce_two_real_distinct_v
         previous_proposal_batches={arm:dict(file_sha256=rc.sha(previous))}),'receipt_sha256'))
     extended=augmentation.proposals(dict(cfg,augmentation_recipe_version=2),arm)
     assert len(extended)==4 and extended[:2]==result
+    prefix=__import__('pathlib').Path(cfg['run_root'])/'augmentation_sources'/f'PROPOSALS_{arm}_v2.json'
+    (__import__('pathlib').Path(cfg['run_root'])/'AUGMENTATION_RESUME.json').write_text(__import__('json').dumps(_seal(dict(
+        previous_proposal_batches={arm:dict(path=str(prefix),file_sha256=rc.sha(prefix))}),'receipt_sha256')))
+    continued=augmentation.proposals(dict(cfg,augmentation_recipe_version=3),arm)
+    assert len(continued)==6 and continued[:4]==extended
     assert all(__import__('pathlib').Path(path).read_bytes()==data for path,data in before.items())
     snapshot['policy'] = dict(state_dict_sha256='changed-source')
     __import__('torch').save(snapshot, result[0]['snapshot_path'])
@@ -472,3 +493,41 @@ def test_full_training_bank_sources_are_bound_but_not_promoted_to_direct_practic
     with (root/'AUTHORITY.md').open('a') as stream:stream.write('augmentationParentBankSHA'+wrong['parent_bank_sha256'])
     with pytest.raises(ValueError,match='foreign'):
         pw_local._bound_training_parent(root,'B',examples['B']['example_id'],cfg['augmentation_prelaunch'])
+
+
+def test_none_move_label_does_not_discard_a_nonzero_positive_native_template():
+    import numpy as np
+    from . import launch_augmentation as aug
+    from .test_plan_augment_cpu import source
+    raw=source();plan=raw['confirmation']['per_seed_v1']['examples'][0]['plan']
+    plan=dict(plan,duration_s=30,profile=[[.1]*30,[.1]*30],perturbation_profile=[[.1]*30,[.1]*30])
+    assert aug.moves.from_plan(plan).family=='none'
+    parameters=aug.template_parameters(plan)
+    assert .3<=parameters['depth']<=1. and 20<=parameters['hold_s']<=90
+    context=dict(ego_id='a',t_s=300,rows=raw['context']['rows'],policy_traj={'a':[0.]*30,'b':[0.]*30})
+    settings=dict(parameter_fraction=.01,partner_swap_probability=0.,variety=dict(aug.plan_augment.variety.VARIETY_REGISTERED),bounds=(-3.,1.2))
+    changed,_=aug.plan_augment._perturb(plan,parameters,context,settings,np.random.default_rng(7))
+    assert changed['duration_s']==30 and np.asarray(changed['profile']).min()>=0
+    assert np.asarray(changed['profile']).max()>0
+
+
+def test_qualified_augmentation_adoption_requires_registered_exact_input_binding(tmp_path):
+    from copy import deepcopy
+    from . import launch_training as training, launch_augmentation as aug, launch_production as production
+    from .exact_grade import _seal
+    from .protocol import digest
+    root=tmp_path/'run';rc.init_root(root,track2=True)
+    cfg=rc.runtime_config({},root=root,reference_root=tmp_path/'old',source_root=tmp_path/'source',
+        common_checkpoint_sha256='a'*64,track2=True)
+    cfg.update(launch_optimization=deepcopy(production.OPTIMIZATION),augmentation_accounting_scheme='native_directory_v2')
+    ready=_seal(dict(config_sha256='earlier-source',admitted=dict(B=1,R=1)),'receipt_sha256')
+    training.write(root/'AUGMENTATION_READY.json',ready)
+    proof=root/'immutable_measurement.json';training.write(proof,dict(measured='unchanged'))
+    adoption=_seal(dict(new_config_sha256=digest(cfg),augmentation_file_sha256=rc.sha(root/'AUGMENTATION_READY.json'),
+        immutable_inputs={str(proof):rc.sha(proof)}),'receipt_sha256')
+    training.write(root/'AUGMENTATION_REBIND.json',adoption)
+    with pytest.raises(ValueError,match='another approved runtime'):aug.run(cfg)
+    with (root/'AUTHORITY.md').open('a') as stream:stream.write('augmentationRebindSHA'+adoption['receipt_sha256'])
+    assert aug.run(cfg)==ready
+    proof.write_text('{"measured":"changed"}')
+    with pytest.raises(ValueError,match='another approved runtime'):aug.run(cfg)

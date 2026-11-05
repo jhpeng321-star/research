@@ -1,0 +1,29 @@
+{
+  "schema": "coopmwm.clean1.native_template_correction.v1",
+  "owned_pid": 112568,
+  "start_ticks": "2444661",
+  "owner_exited": true,
+  "measured_candidates_per_arm": 4,
+  "B_admitted_cooperative_augmented_examples": 2,
+  "R_admitted_cooperative_augmented_examples": 0,
+  "charged_augmentation_sim_s": 50400,
+  "ledger_rows": 42,
+  "smoke_sim_s": 0,
+  "cumulative_with_parity_sim_s": 51360,
+  "root_cause": "nearest negative-box Move label none was incorrectly treated as an empty native plan; verified native plans can have nonzero positive/oscillating stored offsets and remain valid continuous-layer supervision",
+  "correction": "fit signed template normalization coordinates on original stored offsets in existing registered windows; preserve the original signed waveform, duration and full verification window. Online move families/decoder are unchanged.",
+  "fixed_continuation": {
+    "candidates_per_arm": 6,
+    "immutable_measured_prefix_per_arm": 4,
+    "additional_per_arm": 2,
+    "maximum_additional_all8_sim_s": 67200,
+    "maximum_complete_augmentation_sim_s": 117600,
+    "unchanged_phase_cap_sim_s": 143280,
+    "owner_augmentation_cap_sim_s": 200000,
+    "unchanged_complete_experiment_allocation_sim_s": 4357400
+  },
+  "criteria_retained": "same0.01 radius, same0 partner swaps, same2..4 members and100m direct sensing, no recursive augmentation, same full1200s/native all8/child evidence/smoke/gate rules; every earlier outcome stays measured and immutable",
+  "production_io_fix": "publish complete fsynced receipts atomically without overwriting targets, so detached arm barriers cannot consume partially serialized JSON; numeric controllers/rewards/optimizers unchanged",
+  "tests": "195 affected CPU tests passed, 1 Windows file-symlink skip; signed-positive-template, exact 2-to-4-to-6 prefix reuse, atomic publication and registered immutable evidence-adoption regressions",
+  "training_launched": false
+}

@@ -51,8 +51,11 @@ def backend_config(cfg, *, root=None, smoke=False):
     out['workers'] = cfg['cpu']['workers']//3  # 3 x 8 episodes + 16 diagnostics <= 40
     out['owner_approval_path'] = str(Path(cfg['run_root'])/'OWNER_APPROVAL.json')
     if smoke:
+        attempt = cfg.get('smoke_attempt', 1)
+        if type(attempt) is not int or attempt not in (1, 2):
+            raise ValueError('at most two budgeted qualification smoke attempts')
         out['phase_map'] = dict(train='track2_smoke')
-        out['job_namespace'] = 'clean1_smoke'
+        out['job_namespace'] = f'clean1_smoke{attempt}'
         out['worlds_by_update'] = {'1': cfg['worlds_by_update']['1'][:2]}
     return out
 

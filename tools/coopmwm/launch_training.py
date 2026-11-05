@@ -25,9 +25,16 @@ from .protocol import digest
 def write(path, value):
     path = Path(rc.guard_path(path))
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open('x', encoding='utf-8') as stream:
+    # Detached arms consume each other's receipts. Publish only after complete
+    # serialization/fsync, while retaining the original no-overwrite contract.
+    temporary = path.with_name('.'+path.name+f'.writer{os.getpid()}.tmp')
+    with temporary.open('x', encoding='utf-8') as stream:
         json.dump(value, stream, sort_keys=True, allow_nan=False)
         stream.write('\n')
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.link(temporary, path)  # atomic publication, refuses an existing target
+    temporary.unlink()       # the published hard link retains these exact bytes
 
 
 def read(path):

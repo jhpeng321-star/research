@@ -22,10 +22,31 @@ from .protocol import digest
 
 
 PROPOSAL_SETTINGS = dict(parameter_fraction=.01, partner_swap_probability=0., attempts_per_plan=2,
-    target_variants_per_arm=4, parent_cycles=2,
+    target_variants_per_arm=4, continuation_variants_per_arm=6, parent_cycles=3,
     source_reader='complete same-arm verified effective training bank, not practice-only subset',
     observation='decision-second direct sensing clipped to 100m; no relayed/global inputs',
-    provenance='clean1 proposed small-perturbation radius; same B/R, four fixed distinct variants, parent may repeat; full reader coverage; no WM admission, SHA-bound before outcomes')
+    provenance='clean1 proposed small-perturbation radius; same B/R, fixed count by registered recipe, measured prefix retained; full nonzero native-plan bank including none-labelled templates; no WM admission')
+
+
+def template_parameters(plan):
+    """Fit source-template coordinates without inventing an online move label.
+
+    A nearest Move of none does NOT mean the verified native plan has zero
+    offsets: the move library only has negative boxes, while native plans can
+    accelerate or oscillate. Fit either signed box as an offline normalization
+    coordinate and preserve the original signed waveform in T2G perturbation.
+    The online move vocabulary/decoder and every SUMO admission gate stay fixed.
+    """
+    label = moves.from_plan(plan)
+    if label.family != 'none':
+        return dict(onset_s=label.onset, hold_s=label.hold, depth=label.depth)
+    residual = np.asarray(plan['perturbation_profile'], float)
+    if not np.isfinite(residual).all() or not np.any(residual):
+        return None
+    actors = tuple(range(len(plan['members'])))
+    fits = [moves._project_window(sign*residual, actors) for sign in (1., -1.)]
+    parameters, _ = max(fits, key=lambda value:value[1])
+    return dict(zip(('onset_s','hold_s','depth'), parameters))
 
 
 def full_bank_sources(cfg, arm):
@@ -33,7 +54,8 @@ def full_bank_sources(cfg, arm):
     from .sumo_verify import snapshot_sha
     from .launch_preparation import stage_write
     root, native = Path(cfg['run_root']), production.backend_config(cfg)
-    path = root/f'AUGMENTATION_PARENTS_{arm}.json'
+    suffix = '_v3' if cfg.get('augmentation_recipe_version') == 3 else ''
+    path = root/f'AUGMENTATION_PARENTS_{arm}{suffix}.json'
     if path.exists():
         binding = read(path);verify_sealed(binding, 'parent_bank_sha256')
         if (binding['arm'] != arm or 'augmentationParentBankSHA'+binding['parent_bank_sha256']
@@ -51,16 +73,19 @@ def full_bank_sources(cfg, arm):
             if not pairs or example is None:
                 return
             coverage.append(dict(example_id=example['example_id'], members=len(plan['members'])))
+            if links.get(receipt['verification_id'], {}).get('augmentation'):
+                return  # once-only augmentation never recursively augments its own children
             if not 2 <= len(plan['members']) <= 4:
                 return
-            label = moves.from_plan(plan)
-            if label.family == 'none':
+            parameters = template_parameters(plan)
+            if parameters is None:
                 return
             base = rb._decision_snapshot(root, arm, receipt, links)
             seed_index = int(example['seed_index'])
             snapshot = (rb.replicate(base, receipt['verification_id']) if seed_index == 2 else
                 rb.replicate(base, receipt['verification_id']+f'#s{seed_index}') if seed_index > 2 else base)
-            if snapshot['episode'].get('role') != 'train' or snapshot['episode'].get('arm') != arm:
+            if (snapshot['episode'].get('role') != 'train' or snapshot['episode'].get('arm') != arm or
+                    not 986000 <= snapshot['episode']['world']['seed'] <= 986071):
                 raise ValueError('same-arm registered TRAIN source required')
             frames = bank_v2v.trace_frames(trace)
             context = proposal_context(plan, frames, snapshot['t0'])
@@ -85,7 +110,7 @@ def full_bank_sources(cfg, arm):
             entries.append(dict(row=parent, base_snapshot_file_sha256=rc.sha(base_path),
                 snapshot_sha256=snapshot_sha(snapshot), source_receipt={k:v for k,v in receipt.items() if not k.startswith('_')},
                 source_plan_sha256=digest(plan), plan=deepcopy(plan), context=context,
-                snapshot_path=str(base_path), parameters=dict(onset_s=label.onset, hold_s=label.hold, depth=label.depth)))
+                snapshot_path=str(base_path), parameters=parameters))
         bank.bank_pairs(root, arm, cfg['training_seed'], sources=cfg.get('replay_sources', {}).get(arm, ()),
             v2v=True, v2v_intent=cfg, imitation_bank_filter='cooperative_only',
             imitation_target_space='effective', example_consumer=consume)
@@ -150,7 +175,7 @@ class MergeEncoder:
 
 
 def proposals(cfg, arm):
-    if cfg.get('augmentation_recipe_version') == 2:
+    if cfg.get('augmentation_recipe_version') in (2, 3):
         return full_bank_proposals(cfg, arm)
     if cfg.get('augmentation_proposals') != PROPOSAL_SETTINGS:
         raise ValueError('approval-bound common B/R augmentation settings required')
@@ -234,8 +259,9 @@ def full_bank_proposals(cfg, arm):
     """Fixed symmetric four-candidate slate; preserve any registered prefix."""
     from .sumo_verify import snapshot_sha
     root = Path(cfg['run_root'])
-    cache = root/'augmentation_sources'/f'PROPOSALS_{arm}_v2.json'
-    target = PROPOSAL_SETTINGS['target_variants_per_arm']
+    version = cfg.get('augmentation_recipe_version')
+    cache = root/'augmentation_sources'/f'PROPOSALS_{arm}_v{version}.json'
+    target = PROPOSAL_SETTINGS['continuation_variants_per_arm'] if version == 3 else PROPOSAL_SETTINGS['target_variants_per_arm']
     if cfg.get('augmentation_proposals') != PROPOSAL_SETTINGS:
         raise ValueError('full-bank augmentation registration required')
     if cache.exists():
@@ -245,14 +271,18 @@ def full_bank_proposals(cfg, arm):
         output = frozen['proposals']
     else:
         output = []
-        previous = root/'augmentation_sources'/f'PROPOSALS_{arm}.json'
+        resume_path = root/'AUGMENTATION_RESUME.json'
+        resume = read(resume_path) if resume_path.exists() else {}
+        authorized = resume.get('previous_proposal_batches', {}).get(arm, {})
+        previous = Path(authorized.get('path', root/'augmentation_sources'/f'PROPOSALS_{arm}.json'))
         if previous.exists():
-            resume = read(root/'AUGMENTATION_RESUME.json');verify_sealed(resume, 'receipt_sha256')
-            authorized = resume.get('previous_proposal_batches', {}).get(arm, {})
+            verify_sealed(resume, 'receipt_sha256')
             if authorized.get('file_sha256') != rc.sha(previous):
                 raise ValueError('previous measured proposal prefix needs explicit adoption binding')
             old = read(previous);verify_sealed(old, 'proposal_batch_sha256')
             output = deepcopy(old['proposals'])
+        if version == 3 and len(output) != 4:
+            raise ValueError('six-candidate continuation requires the four measured candidates per arm as immutable prefix')
         parents = full_bank_sources(cfg, arm)
         seen = {digest(p['plan']) for p in output}
         for cycle in range(PROPOSAL_SETTINGS['parent_cycles']):
@@ -291,7 +321,7 @@ def full_bank_proposals(cfg, arm):
                 if len(output) == target:break
             if len(output) == target:break
         if len(output) != target:
-            raise ValueError('four fixed distinct observable variants per arm required')
+            raise ValueError('complete fixed distinct observable variant slate required per arm')
         write(cache, _seal(dict(arm=arm, settings=PROPOSAL_SETTINGS, training_seed=cfg['training_seed'],
             proposals=output), 'proposal_batch_sha256'))
     if len(output) != target or any(p['arm'] != arm or not 2 <= len(p['plan']['members']) <= 4 or
@@ -306,8 +336,10 @@ def slate_quote(cfg, slates):
     from .storage import ledger
     from . import sumo_verify as sv
     root = Path(cfg['run_root'])
-    if set(slates) != {'B','R'} or any(len(entries) != 4 for entries in slates.values()):
-        raise ValueError('matched fixed four-candidate B/R all8 slate required')
+    count = (PROPOSAL_SETTINGS['continuation_variants_per_arm'] if cfg.get('augmentation_recipe_version') == 3
+             else PROPOSAL_SETTINGS['target_variants_per_arm'])
+    if set(slates) != {'B','R'} or any(len(entries) != count for entries in slates.values()):
+        raise ValueError('matched fixed B/R all8 slate required')
     spent = sum(r['sim_s'] for r in ledger(root) if r['phase'] == 'augment_verify')
     pending, completed = 0, []
     for arm, entries in slates.items():
@@ -327,7 +359,7 @@ def slate_quote(cfg, slates):
     ceiling = cfg['augmentation_prelaunch']['allocation_sim_s']
     if spent+pending > ceiling or ceiling > 200000:
         raise ValueError('complete fixed all8 slate exceeds unchanged prelaunch allocation')
-    return dict(per_arm=4, already_charged_sim_s=spent, additional_upper_bound_sim_s=pending,
+    return dict(per_arm=count, already_charged_sim_s=spent, additional_upper_bound_sim_s=pending,
         total_upper_bound_sim_s=spent+pending, allocation_sim_s=ceiling, completed_receipts=completed)
 
 
@@ -417,7 +449,12 @@ def run(cfg):
     if (root/'AUGMENTATION_READY.json').exists():
         ready = read(root/'AUGMENTATION_READY.json'); verify_sealed(ready, 'receipt_sha256')
         if ready['config_sha256'] != digest(cfg):
-            raise ValueError('once-only augmentation belongs to another approved runtime')
+            adoption = read(root/'AUGMENTATION_REBIND.json');verify_sealed(adoption, 'receipt_sha256')
+            if (adoption['new_config_sha256'] != digest(cfg) or
+                    adoption['augmentation_file_sha256'] != rc.sha(root/'AUGMENTATION_READY.json') or
+                    'augmentationRebindSHA'+adoption['receipt_sha256'] not in (root/'AUTHORITY.md').read_text() or
+                    any(rc.sha(path) != sha for path,sha in adoption['immutable_inputs'].items())):
+                raise ValueError('once-only augmentation belongs to another approved runtime')
         return ready
     started = root/'AUGMENTATION_STARTED.json'
     if started.exists():
@@ -431,7 +468,7 @@ def run(cfg):
             dict(resume_sha256=resume['receipt_sha256'], config_sha256=digest(cfg)))
     else:
         write(started, dict(config_sha256=digest(cfg)))
-    if cfg.get('augmentation_recipe_version') != 2:
+    if cfg.get('augmentation_recipe_version') not in (2, 3):
         raise ValueError('complete same-arm bank augmentation recipe required')
     slates = {arm:proposals(cfg, arm) for arm in ('B','R')}
     quote = slate_quote(cfg, slates)
@@ -470,8 +507,15 @@ def run(cfg):
         from .practice_weighting import SCHEMA
         record = _seal(dict(schema=SCHEMA, arm=arm, rows=rows,
             prelaunch=cfg['augmentation_prelaunch']), 'practice_augmented_sha256')
+        target = rb.bank_root(root, arm)/'PRACTICE_AUGMENTED.json'
+        if target.exists() and read(target) != record:
+            previous = read(target);verify_sealed(previous,'practice_augmented_sha256')
+            if previous['prelaunch'] != record['prelaunch'] or any(row not in rows for row in previous['rows']):
+                raise ValueError('completed augmentation evidence may only be extended additively')
+            history = target.parent/'augmentation_history';history.mkdir(exist_ok=True)
+            target.rename(history/(previous['practice_augmented_sha256']+'.json'))
         from .launch_preparation import stage_write
-        stage_write(rb.bank_root(root, arm)/'PRACTICE_AUGMENTED.json', record)
+        stage_write(target, record)
         # Real consumer validation is mandatory before declaring readiness.
         from .practice_weighting import augmented_examples
         with p1._bank_view(native):
