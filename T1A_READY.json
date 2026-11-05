@@ -31,6 +31,25 @@
     "test_evidence": "Retained completed implementation and independent-review runs; no duplicate execution.",
     "changes": ["T1A_READY.json"]
   },
+  "latest_resume_confirmation": {
+    "date": "2026-11-05",
+    "head_at_resume": "0d5463d9ccd18d44c7755eb45008decdd296f817",
+    "tracked_modifications_at_resume": false,
+    "accepted_code_revision": "7a76b8697512889530e544628fc86b1682cd2e41",
+    "code_and_tests_unchanged_since_acceptance": true,
+    "evidence": "Read status/log and existing task receipts first, then the shared spec, r0/r1 reviews, current projection/reference implementation and blocker regressions. Git comparison with the independently tested revision reports only a readiness-receipt change. Both r0 blockers remain resolved; r1 PASS and acceptance are preserved.",
+    "diff_check": "git diff --check c4/track-base -- T1A_READY.json tools/coopmwm/moves.py tools/coopmwm/test_moves_cpu.py passed",
+    "test_jobs_launched": 0,
+    "dispatches_launched": 0,
+    "test_evidence": "Retained completed implementation and independent-review runs: 107 passed, 5 subtests passed. No new execution is claimed; unchanged accepted work was not rerun.",
+    "changes": ["T1A_READY.json"],
+    "preserved_untracked_artifacts": [
+      "REVIEW_T1A_r0.md",
+      "REVIEW_T1A_r1.md",
+      "T1A_ACCEPTED.json",
+      "T1A_READY.blocked0.json"
+    ]
+  },
   "resume": {
     "implementation_already_committed": "df383ab7fc5508faea3d49e8709ca559d0f69326",
     "preserved": [
@@ -61,9 +80,14 @@
       "sha": "7a76b8697512889530e544628fc86b1682cd2e41",
       "subject": "coopmwm moves: restore fix-round readiness and CPU verification (T1A)",
       "files": ["T1A_READY.json"]
+    },
+    {
+      "sha": "0d5463d9ccd18d44c7755eb45008decdd296f817",
+      "subject": "coopmwm moves: confirm accepted fix-round readiness on resume (T1A)",
+      "files": ["T1A_READY.json"]
     }
   ],
-  "receipt_commit": "The separate commit refreshing this receipt follows 7a76b869; see git log on c4/moves.",
+  "receipt_commit": "The separate commit refreshing this receipt follows 0d5463d9; see git log on c4/moves.",
   "blocker_resolutions": [
     {
       "review_blocker": 1,
