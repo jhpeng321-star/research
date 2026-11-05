@@ -4,7 +4,7 @@ from pathlib import Path
 from planfix_ops import remote
 
 CODE = r'''
-import json,time
+import hashlib,json,time
 from pathlib import Path
 r=Path('/home/ubuntu/coopmwm20261105_clean1'); w=r/'plan_fix'
 for name in ('BANK_DISPATCH_v6.json','BANK_RESULTS.json'):
@@ -22,9 +22,11 @@ c=Path('/home/ubuntu/coopmwm20261105_clean2')
 print('CLEAN2_EXISTS',c.exists())
 if c.exists():
  print('CLEAN2_CONTROL_NAMES',json.dumps([p.name for p in c.iterdir() if p.is_file() and (p.suffix=='.json' or p.name=='AUTHORITY.md')]))
- for name in ('LAUNCHED.json','STOP.json','FAULT.json','CONFIG.json'):
+ for name in ('LAUNCHED.json','STOP.json','FAULT.json','CHAIN_STATUS.json'):
   p=c/name
   if p.exists():print('CLEAN2_'+name,p.read_text()[:24000],flush=True)
+ p=c/'CONFIG.json'
+ if p.exists():print('CLEAN2_CONFIG_SHA',hashlib.sha256(p.read_bytes()).hexdigest(),flush=True)
 print('READ_UNIX',time.time(),flush=True)
 previous=w/'cpu_prepare_95441ec4a7c4'
 print('CPU_FIRST_STAGE',json.dumps(dict(root=str(previous),exists=previous.exists(),prepared=(previous/'PREPARED.json').exists())),flush=True)
