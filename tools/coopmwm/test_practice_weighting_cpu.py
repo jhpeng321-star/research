@@ -320,13 +320,19 @@ def test_weighted_resume_quote_and_smoke_credit(tmp_path, charges_ledger):
 def test_default_bytes_against_shared_base(tmp_path, monkeypatch, ps, practice):
     """Differential regression oracle, independent of the new sampling implementation."""
     import subprocess
+    import hashlib
+    import os
     import time
     import types
     from pathlib import Path
     root = Path(__file__).resolve().parents[2]
     def original(name):
-        source = subprocess.check_output(['git', 'show',
-            f'13f184b5:tools/coopmwm/{name}.py'], cwd=root)
+        frozen = os.environ.get('COOPMWM_TRACK_BASELINE_DIR')
+        source = ((Path(frozen)/(name+'.py')).read_bytes() if frozen else
+            subprocess.check_output(['git', 'show', f'13f184b5:tools/coopmwm/{name}.py'], cwd=root))
+        assert hashlib.sha256(source).hexdigest() == {
+            'practice_starts':'4ef3128efe5be338f8654398bd0eb74db63beeb0cac5749248ed6266657b3cb3',
+            'v2v_runner':'ed3b610723b66022250f667498cfd06065aa2d77e1c5382f021bd638941d7a98'}[name]
         module = types.ModuleType('tools.coopmwm._base_'+name)
         module.__package__ = 'tools.coopmwm'
         exec(compile(source, '<shared-base-'+name+'>', 'exec'), module.__dict__)
