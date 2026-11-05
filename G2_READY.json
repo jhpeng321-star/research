@@ -1,0 +1,114 @@
+{
+  "task": "G2",
+  "status": "READY",
+  "scope": "G2 coordination opportunities build and CPU tests only",
+  "date": "2026-11-05",
+  "worktree": "E:/agent-work/c4-grp-opportunity",
+  "branch": "c4/grp-opportunity",
+  "base_branch": "c4/rerun-launch",
+  "base_commit": "6dc0520c99f0bccd71669e66d2c4124197db990d",
+  "specification_source_commit": "285663a1",
+  "implementation_commit": "8e0ce364c1abae75df1223f2a66a2c2a6071b098",
+  "commits": [
+    {
+      "sha": "8e0ce364c1abae75df1223f2a66a2c2a6071b098",
+      "subject": "C4 G2: prioritize observable disjoint merge-pair opportunities"
+    }
+  ],
+  "requirements_read": [
+    "E:/agent-work/_sol/tracks_spec.md: MAIN 23:15 owner GROUP-COOPERATION LEVERS, item G2",
+    "E:/research-dense/runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md: all 485 lines"
+  ],
+  "files": [
+    "tools/coopmwm/coordination_opportunities.py",
+    "tools/coopmwm/feasible_proposals.py",
+    "tools/coopmwm/track2_backend.py",
+    "tools/coopmwm/test_coordination_opportunities_cpu.py",
+    "docs/G2_COORDINATION_OPPORTUNITIES.md",
+    "G2_READY.json"
+  ],
+  "registration": {
+    "rule": "g2-observable-disjoint-merge-pairs-v1",
+    "provenance": "tracks_spec.md MAIN 23:15 owner item G2; CLEAN2_GROUP_COOP_RESEARCH rank 2",
+    "opt_in": {
+      "coordination_opportunities": {
+        "enabled": true,
+        "rule": "g2-observable-disjoint-merge-pairs-v1",
+        "provenance": "tracks_spec.md MAIN 23:15 owner item G2; CLEAN2_GROUP_COOP_RESEARCH rank 2"
+      }
+    },
+    "default": "Absent or false: legacy acquisition, proposal draws, actions, cadence and receipts",
+    "arms": "Common B/R code, settings, sampling and effort; A original objects unchanged",
+    "parameters": "Existing variety merge zone, lanes, gap association, sensing radius and move windows; minimum two candidate slots",
+    "ordering": "Observable ramp remaining time, separation, stable IDs; deterministic greedy disjoint matching; all matched mainline proposers before singleton-order egos",
+    "slate": "Pair-bound ramp_assist and singleton ease_off guaranteed, gap_open and balanced cycles fill remaining slots; separate none retained",
+    "event": "One extra approach event per ordered role pair per episode; ownership respected; unrelated rows none-only; periodic clock and full look-ahead unchanged",
+    "precision": "Exact registered endpoints and exact float32 endpoint encodings canonicalized on copied local rows; next float32 outside excluded",
+    "checkpoint": "No new actor/head tensor shapes or optimizer parameters; strict existing sidecar restore tested",
+    "recipe_boundary": "Explicit successor opt-in required; no launch configuration or running registration switched"
+  },
+  "api": {
+    "settings": "coordination_opportunities.settings(cfg) -> registration or None",
+    "graph": "coordination_opportunities.graph(obs_states, observable_cavs, eligible, *, occupied=(), command_reservations=None, now) -> tuple[Opportunity]",
+    "matching": "coordination_opportunities.disjoint(edges) -> tuple[Opportunity]",
+    "roles": "Opportunity(yielder, merger, remaining_s, separation_m), members property, to_dict() with roles and JSON-null infinite ETA",
+    "events": "ApproachEvents.pending(edges), ApproachEvents.record(pairs)",
+    "pair_candidates": "feasible_proposals.candidates consumes internal coordination_partner hint only on the opt-in path; registered moves returned",
+    "acquisition": "feasible_proposals.decide_and_start adds coordination=None, opportunity_pairs=None, event=False; return remains TriggerBatch, accepted_by_ego, stats",
+    "ownership": "Controller reservations use original expiry; executor advanced and ownership rechecked before each conditional slate; supplied pair plans must be current and disjoint",
+    "ppo": "Original context member ordering and exact recorded tables/descriptors/masks/actions/logps/values replayed; no graph or candidate regeneration during PPO",
+    "episode_receipt": "sample.track2_trigger.proposals.coordination_opportunities",
+    "update_receipt": "learning_monitor/<arm>/uNNN.json: metrics.move_proposals.coordination_opportunities",
+    "offered_joint_rate": "Sum of trigger rows offering at least one >=2-actor move divided by all trigger rows, including forced none; gap_open is not counted as two-actor",
+    "counters": "decisions, offered_joint, graph_edges, disjoint_pairs, event_decisions; per-call pair roles and decision_order; sum aggregation with common provenance"
+  },
+  "verification": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "-1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "TEMP": "E:/agent-work/c4-grp-opportunity/_out",
+      "TMP": "E:/agent-work/c4-grp-opportunity/_out"
+    },
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_coordination_opportunities_cpu.py tools/coopmwm/test_feasible_proposals_cpu.py tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_trigger_policy_cpu.py tools/coopmwm/test_moves_cpu.py tools/coopmwm/test_track2_monitor_cpu.py -k \"not forbidden_paths_refused_before_open\" -p no:cacheprovider --basetemp=E:/agent-work/c4-grp-opportunity/_out/g2_final_pass --junitxml=E:/agent-work/c4-grp-opportunity/_out/g2_final_pass.xml",
+    "exit_code": 0,
+    "passed": 330,
+    "g2_cases": 29,
+    "subtests_passed": 5,
+    "failed": 0,
+    "deselected": 11,
+    "deselection_reason": "Existing synthetic restricted-name path guard cases excluded to keep verification within the requested path constraints",
+    "duration_seconds": 71.13,
+    "junit": "_out/g2_final_pass.xml",
+    "warning": "Existing unknown cache_dir config-option warning because pytest cache plugin is disabled",
+    "git_diff_check": "passed",
+    "contracts": [
+      "Observable role graph; unauthorized, distant, downstream, HDV and owned partners excluded",
+      "No cross-ego sensor union; deterministic disjoint matching and context-order invariance",
+      "Float32 endpoint agreement, next-outside exclusion and stopped-endpoint immediate joint onset",
+      "Pair-first acquisition, later owned-follower masks and zero rejected selected moves",
+      "None and singleton choices retained with balanced bounded candidate slots",
+      "Exact conditional slate/logp replay and actual trigger PPO without candidate regeneration; frozen base unchanged",
+      "Approach event latch, no reappearance churn, original periodic clock, exact controller/executor expiry",
+      "Production episode/controller hook: controller-owned ramp blocked before expiry, then pair acquired and both raw commands changed by library offsets",
+      "Actual offered-joint telemetry retained by production update metrics and learning monitor",
+      "B/R equality, default-off equality, unchanged A objects and strict checkpoint compatibility",
+      "Invalid registration, insufficient candidate budget, duplicate or stale supplied pairs fail closed"
+    ]
+  },
+  "execution_scope": {
+    "cpu_only": true,
+    "new_sim_s": 0,
+    "ssh_calls": 0,
+    "sumo_launches": 0,
+    "gpu_jobs": 0,
+    "source_and_test_artifacts_only_in_worktree": true,
+    "restricted_paths_or_truth_files_opened": false,
+    "launch_configuration_changed": false
+  },
+  "qualification_status": "CPU contracts verified; traffic-level offered-rate changes, safety and synergy remain unmeasured by this build",
+  "action_semantics": "Existing ramp_assist uses shared easing across both roles; gap_open acts only on its mainline actor. No new complementary per-role acceleration profiles, G1 admission or G4 credit implemented.",
+  "open_issues": []
+}
