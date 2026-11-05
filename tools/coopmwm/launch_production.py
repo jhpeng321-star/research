@@ -43,9 +43,18 @@ def backend_config(cfg, *, root=None, smoke=False):
             raise ValueError('unregistered smoke/gate contingency')
         out['budget']['phases']['track2_smoke'] += CONTINGENCY['smoke_sim_s']
         out['budget']['phases']['gate_bank_verification_ext'] += CONTINGENCY['environment_gate_rerun_sim_s']
-    if sum(out['budget']['phases'].values())+960 > rc.TOTAL_CAP_SIM_S:
+    if 'clean2_budget' in cfg:
+        from .clean2_budget import checked
+        restart = checked(cfg)
+        # P1's native reserve subtracts prior_charged_sim_s from this GLOBAL
+        # total. The registration's budget.total is the disjoint NEW-ledger cap.
+        out['budget'] = dict(restart['budget'], total=restart['owner_cap_sim_s'],
+                             remaining_cap_sim_s=restart['budget']['total'])
+        out['prior_charged_sim_s'] = restart['protected_prior_sim_s']
+    prior = out['prior_charged_sim_s']
+    if sum(out['budget']['phases'].values())+prior > rc.TOTAL_CAP_SIM_S:
         raise ValueError('complete production allocations plus prior parity exceed owner cap')
-    if cfg['budget']['total']+960 > out['budget']['total']:
+    if 'clean2_budget' not in cfg and cfg['budget']['total']+960 > out['budget']['total']:
         raise ValueError('production quote plus prior parity exceeds owner cap')
     out['run_root'] = str(root or cfg['run_root'])
     out['workers'] = cfg['cpu']['workers']//3  # 3 x 8 episodes + 16 diagnostics <= 40
