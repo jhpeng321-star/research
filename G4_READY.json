@@ -1,12 +1,28 @@
 {
   "task": "G4",
-  "status": "READY_FOR_REVIEW_CPU_VERIFIED",
+  "status": "READY_CPU_VERIFIED_REVIEW_ACCEPTED",
   "fix_round": 1,
   "worktree": "E:/agent-work/c4-grp-credit",
   "branch": "c4/grp-credit",
   "base_branch": "c4/rerun-launch",
   "starting_commit": "ddc790cd51fd8ec644ba448718a6122d7abec429",
   "review": "REVIEW_G4_r0.md",
+  "independent_review": {
+    "report": "REVIEW_G4_r1.md",
+    "verdict": "PASS",
+    "reviewed_commit": "6db78a33366af80f2438c470b7b1065c889e0778",
+    "remaining_blockers": 0,
+    "acceptance_receipt": "G4_ACCEPTED.json"
+  },
+  "resume": {
+    "date": "2026-11-06",
+    "preserved_fix_commit": "989e0422d6717a191a17e9655d863c109d652d19",
+    "preserved_ready_commit": "6db78a33366af80f2438c470b7b1065c889e0778",
+    "implementation_changes_required": false,
+    "reason": "The prior session completed the r0 blocker fix, regression coverage and commits; the subsequent independent r1 review passed and an acceptance receipt is present.",
+    "running_worktree_python_jobs_before_verification": 0,
+    "production_dispatches": 0
+  },
   "commits": [
     {
       "sha": "5cc2827224aba8d02897a40e9e66dc72734aafee",
@@ -19,6 +35,10 @@
     {
       "sha": "989e0422d6717a191a17e9655d863c109d652d19",
       "subject": "C4 G4: wire durable paired synergy measurement into production"
+    },
+    {
+      "sha": "6db78a33366af80f2438c470b7b1065c889e0778",
+      "subject": "C4 G4: refresh readiness after production orchestration fix"
     }
   ],
   "ready_receipt_commit": "The subsequent commit updating this file; discover with git log --oneline -- G4_READY.json",
@@ -85,6 +105,13 @@
     "active_launch_profile_modified": false
   },
   "tests": [
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -o cache_dir=.pytest_cache --basetemp=E:/agent-work/c4-grp-credit/_out/g4_resume_20261106_retry tools/coopmwm/test_g4_runtime_cpu.py tools/coopmwm/test_sparse_synergy_credit_cpu.py tools/coopmwm/test_track2_backend_cpu.py tests/unit/test_track2_reward.py tools/coopmwm/test_f4_safety_reward_cpu.py tools/coopmwm/test_launch_integration_cpu.py tools/coopmwm/test_launch_clean2_cpu.py tools/coopmwm/test_clean2_safety_guard_cpu.py",
+      "result": "309 passed, 1 skipped in 171.00s",
+      "date": "2026-11-06",
+      "skip": "Existing test_launch_integration_cpu.py:526 Windows file-symlink privilege check; production cpuV qualification covers that platform capability",
+      "retry_context": "Initial fresh run reached 118 tests without reported failure before the 240-second command timeout. Confirmed that process had stopped before this complete rerun with a 900-second timeout."
+    },
     {
       "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -o cache_dir=.pytest_cache --basetemp=E:/agent-work/c4-grp-credit/_out/g4_fix_verified tools/coopmwm/test_g4_runtime_cpu.py tools/coopmwm/test_sparse_synergy_credit_cpu.py tools/coopmwm/test_track2_backend_cpu.py tests/unit/test_track2_reward.py tools/coopmwm/test_f4_safety_reward_cpu.py tools/coopmwm/test_launch_integration_cpu.py tools/coopmwm/test_launch_clean2_cpu.py tools/coopmwm/test_clean2_safety_guard_cpu.py",
       "result": "309 passed, 1 skipped in 200.29s",
