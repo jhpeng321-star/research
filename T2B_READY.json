@@ -64,6 +64,20 @@
     "preexisting_untracked_receipts_preserved": true,
     "receipt_refresh": "Only T2B_READY.json refreshed in this resumed session; committed separately after validation."
   },
+  "latest_resume_verification": {
+    "starting_head": "0138fb0dc6527f643644fa09c60f9418b04ec1de",
+    "branch_confirmed": "c4/dense-teacher",
+    "starting_tracked_changes": false,
+    "receipts_read": ["T2B_READY.json", "T2B_ACCEPTED.json", "REVIEW_T2B_r2.md", "REVIEW_T2B_r3.md"],
+    "implementation_identity_check": "git diff --exit-code 066ef083ccfa68b5f95df44c089e961efcbed277 -- tools/coopmwm/dense_teacher.py tools/coopmwm/test_dense_teacher_cpu.py passed; no source or test differences from the independently accepted head",
+    "history_check": "Only T2B_READY.json changed in the two commits after the independently reviewed head",
+    "regressions_inspected": "Confirmed both-arm measured-incorrect move/none rejection at both imitation consumers, correct verified bypass controls, initial decision binding, direct consume and verify_selected mutation rejection, and unchanged persisted-label reuse without redispatch",
+    "diff_hygiene": "git diff --check c4/track-base -- tools/coopmwm/dense_teacher.py tools/coopmwm/test_dense_teacher_cpu.py T2B_READY.json passed",
+    "tests": "Preserved the completed implementation and independent r3 CPU results: 201 distinct passed, 0 failed, 1 existing platform skip, 1 intentional deselection. No test rerun or verification dispatch was needed because source and tests are unchanged",
+    "remaining_r2_blockers": [],
+    "preexisting_untracked_receipts_preserved": true,
+    "changes": "Receipt-only refresh, committed separately; all completed fixes and test work retained"
+  },
   "owned_files": [
     "tools/coopmwm/dense_teacher.py",
     "tools/coopmwm/test_dense_teacher_cpu.py",
