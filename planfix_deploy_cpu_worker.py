@@ -150,6 +150,12 @@ import inspect
 scope={};source=chr(10).join(['def prepare_batch(rt, source):',"    return with_entry_slots(source,300,960,device='cuda')",''])
 execute_tree(cpu_tree(source,{'cuda':'cpu'}),'<cpu-port-source-qualification>',scope)
 assert 'cpu' in inspect.getsource(scope['prepare_batch'])
+scale=original.with_name('scale.py');raw=scale.read_bytes()
+assert hashlib.sha256(raw).hexdigest()=='98c63848a054cf2ec99f57acd3cdbb6975217317e80e0ec142827007741f698c'
+scale_tree=cpu_tree(raw.decode(),{'cuda':'cpu'})
+for f in scale_tree.body:
+ if isinstance(f,ast.FunctionDef) and f.name in ('futures','policy_trajectory'):
+  assert not any(isinstance(n,ast.Constant) and n.value=='cuda' for n in ast.walk(f))
 assert not any(isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute) and n.func.attr=='cuda' for n in ast.walk(tree))
 for name in ('planfix_cpu_runtime.py','planfix_cpu_worker.py'):
  compile((root/name).read_text(),name,'exec')

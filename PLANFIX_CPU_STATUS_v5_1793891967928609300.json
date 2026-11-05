@@ -1,0 +1,90 @@
+{
+  "BOOTSTRAP_PASS.json": {
+    "new_sim_s": 0,
+    "physical_sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca",
+    "pid": 362612,
+    "wall_s": 6.321796482006903,
+    "wm_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436"
+  },
+  "CPU_FAILED.json": {
+    "error": "AssertionError('Torch not compiled with CUDA enabled')",
+    "new_sim_s": 0,
+    "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5/planfix_cpu_worker.py\", line 132, in <module>\n    try:main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5/planfix_cpu_worker.py\", line 87, in main\n    try:warm_service.main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5/runtime/tools/coopmwm/warm_service.py\", line 72, in main\n    q=dict(qualify(rt,context,acts,k,h,width,memory=memory,transfers=True),\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5/runtime/tools/coopmwm/speed2_runtime.py\", line 49, in qualify\n    old = evaluate(rt,record,actions,K,H,chunk_actions=width,trim=False,pad_actions=width,memory=memory)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5/planfix_cpu_worker.py\", line 71, in guarded_evaluate\n    return original_evaluate(*args,**kwargs)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5/runtime/tools/coopmwm/plan_wm.py\", line 130, in evaluate\n    result=ns['futures'](runtime,dict(record,setting=0),indices=tuple(range(K)))\n  File \"<coopmwm-frozen-batched-multihorizon>\", line 25, in futures\n  File \"/home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/cuda/__init__.py\", line 484, in _lazy_init\n    raise AssertionError(\"Torch not compiled with CUDA enabled\")\nAssertionError: Torch not compiled with CUDA enabled\n",
+    "unix": 1793891921.5254467
+  },
+  "CPU_OWNER.json": {
+    "affinity": [
+      47
+    ],
+    "alive_same_identity": false,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 362612,
+    "start_ticks": "8176071",
+    "unix": 1793891912.2276046
+  },
+  "DISPATCH.json": {
+    "alive_same_identity": false,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "max_cpu_cores": 1,
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 362612,
+    "procedure": "eight same-process gates then ONE WM search; no SUMO; no expansion",
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5",
+    "start_ticks": "8176071",
+    "unix": 1793891912.1979094
+  },
+  "DISPATCH_STARTED.json": {
+    "new_sim_s": 0,
+    "unix": 1793891912.195003
+  },
+  "STAGE_ENV.json": {
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "CPU_BINDING 6388115f0914ef24361095c520ea87ccde3b3c99e99bfb07f61319a6192ffd9b 666\n"
+  },
+  "STAGE_PASS.json": {
+    "binding_file_sha256": "df06d4dd9d7be92523f0d7e33f659f4c048fe8f8831813577f53d885e13f19fe",
+    "dispatch_started": false,
+    "launch_file_sha256": "d036a7d311694c102182f2bebe17c890c7e5e67cd593b248fab2ca176cd815f9",
+    "new_sim_s": 0,
+    "pace": {
+      "A": {
+        "ceiling_s": 1179.1483981609344,
+        "intervals_s": [
+          1164.5672767162323,
+          1170.51988863945,
+          1179.1483981609344
+        ],
+        "last_update": 13
+      },
+      "B": {
+        "ceiling_s": 1173.205691576004,
+        "intervals_s": [
+          1149.266884803772,
+          1168.5544457435608,
+          1173.205691576004
+        ],
+        "last_update": 12
+      },
+      "R": {
+        "ceiling_s": 1167.4601202011108,
+        "intervals_s": [
+          1157.6539821624756,
+          1167.4601202011108,
+          1164.3921592235565
+        ],
+        "last_update": 12
+      }
+    },
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5",
+    "source_files": 656
+  },
+  "exists": true,
+  "gates": {},
+  "log_tail": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5/planfix_cpu_worker.py\", line 132, in <module>\n    try:main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5/planfix_cpu_worker.py\", line 87, in main\n    try:warm_service.main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5/runtime/tools/coopmwm/warm_service.py\", line 72, in main\n    q=dict(qualify(rt,context,acts,k,h,width,memory=memory,transfers=True),\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5/runtime/tools/coopmwm/speed2_runtime.py\", line 49, in qualify\n    old = evaluate(rt,record,actions,K,H,chunk_actions=width,trim=False,pad_actions=width,memory=memory)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5/planfix_cpu_worker.py\", line 71, in guarded_evaluate\n    return original_evaluate(*args,**kwargs)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5/runtime/tools/coopmwm/plan_wm.py\", line 130, in evaluate\n    result=ns['futures'](runtime,dict(record,setting=0),indices=tuple(range(K)))\n  File \"<coopmwm-frozen-batched-multihorizon>\", line 25, in futures\n  File \"/home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/cuda/__init__.py\", line 484, in _lazy_init\n    raise AssertionError(\"Torch not compiled with CUDA enabled\")\nAssertionError: Torch not compiled with CUDA enabled\n",
+  "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v5",
+  "unix": 1793891967.4124746
+}

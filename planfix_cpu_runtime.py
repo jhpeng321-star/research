@@ -81,4 +81,10 @@ def install(worker):
     runtime.RECOVERED_CONFIG=values['config']
     tree=cpu_tree(text,mapping,recovered_config=True)
     execute_tree(tree,'<planfix-cpu-original-wmteach>',runtime.__dict__)
+    # plan_wm introspects scale.futures to construct its batched evaluator.
+    # Its two merge-stream tensor allocations must follow the same CPU device.
+    from tools.wmteach import scale
+    raw=Path(scale.__file__).read_bytes()
+    assert hashlib.sha256(raw).hexdigest()=='98c63848a054cf2ec99f57acd3cdbb6975217317e80e0ec142827007741f698c'
+    execute_tree(cpu_tree(raw.decode(),{'cuda':'cpu'}),'<planfix-cpu-original-wmteach-scale>',scale.__dict__)
     return runtime
