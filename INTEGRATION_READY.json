@@ -1,6 +1,6 @@
 {
   "schema": "coopmwm.clean1.integration.v1",
-  "status": "CPU_INTEGRATED_LIVE_QUALIFICATION_PENDING",
+  "status": "LAUNCHED_FINAL_SMOKE_AND_SAFETY_GATE_PASS_MONITORING_ACTIVE",
   "branch": "c4/rerun-launch",
   "base": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
   "accepted_branches": ["c4/moves", "c4/trigger-policy", "c4/coop-layer", "c4/group-credit", "c4/merge-features", "c4/practice-weight", "c4/plan-augment", "c4/track2-backend", "c4/track2-reward", "c4/track2-monitor", "c4/staging-closure", "c4/rerun-tracks", "c4/planner-eval"],
@@ -25,7 +25,7 @@
     "dense_teacher": false,
     "wm_group_credit": false,
     "bank": "own per_seed_v1 cooperative-only effective/Tobit full passes plus verified-plan state-conditioned trigger CE",
-    "augmentation": "accepted T2G perturbation operator; only native full-window SUMO all8 admissions enter bank/practice",
+    "augmentation": "OFF BOTH B/R per MAIN08:30; prior accepted T2G/all8 measurements retained as diagnostics only, excluded from imitation and practice",
     "initial_identity": "explicit immutable B/R u0 sidecars reused by gate, smoke and training",
     "shared_worker_ceiling": "3 arm owners x 8 episode workers + 16 diagnostic workers = 40"
   },
@@ -66,8 +66,23 @@
     "fixed_final_continuation": "six per arm, four measured candidates per arm retained exactly; 50400 spent+67200 bound=117600 <=unchanged143280 augmentation allocation",
     "latest_local_tests": "195 passed/1 file-symlink platform skip; atomic cross-process receipt publication and immutable evidence-adoption checks included"
   },
+  "launch_verification": {
+    "runtime_commit": "7cc6edaa994641a6d71a4816c0dd8b707fda2e32",
+    "runtime_sha256": "cc009d490c6876ec9e6ec98072617ac6f76b20fc7501fcc83bb7905f19a7ac4a",
+    "cpuV_tests": "325 passed, zero skipped/failed; actual A/B/R u0 intent-loader dry checks PASS",
+    "augmentation": "OFF for BOTH B/R per MAIN08:30; original bank metadata restored; all diagnostic results and charges retained",
+    "smoke_receipt": "9e30518c4ef469946e49672e062ce74c359d2b70406967d56c3695d6591d20f6",
+    "smoke_aggregate_sim_s": 19200,
+    "safety_gate_receipt": "1f7af6aff13b250baaa8150c4225e58b197fec5172062788d28e591156079d16",
+    "safety_gate": "26/26 original full-window branches graded, zero collisions/teleports, sole authorized environment rerun after tested native-u0 loader correction",
+    "launched": "2026-11-05T09:16:23+08:00; deadline missed16m23s; mandatory checks never waived",
+    "launch_receipt": "LAUNCHED.json",
+    "monitoring_receipt": "MONITORING_ACTIVE.json",
+    "cumulative_charged_sim_s_at_dispatch": 120080
+  },
   "new_sim_s": 0,
-  "smoke_pass": false,
-  "safety_gate_pass": false,
-  "training_launched": false
+  "new_sim_s_scope": "original dry CPU integration only; live cumulative charges are separately recorded above and in the own CHARGES ledger",
+  "smoke_pass": true,
+  "safety_gate_pass": true,
+  "training_launched": true
 }
