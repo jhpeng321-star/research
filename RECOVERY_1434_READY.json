@@ -1,0 +1,21 @@
+{
+  "status": "REGISTERED_AND_CPU_QUALIFIED_STOPS_NOT_YET_CLEARED",
+  "runtime_commit": "d81d4faecfb77d54ac93e47d8c7a314613948db8",
+  "source_root": "/home/ubuntu/coopmwm20261105_clean1_src_d81d4fae",
+  "source_files_sha_verified": 481,
+  "packaged_tar_sha256": "c0300bac43c21eede0354e9fa84d2ee683e483897c65f5ea7c4cf10cf1f87d3f",
+  "source_manifest_sha256": "51113dda97cc53cef888c3b514a0103d59d6981d3deb977c9562d564eb724f1d",
+  "transport": "source reconstructed from verified prior source plus exact delta; full packaged manifest equality verified before qualification",
+  "original_config_sha256": "cc009d490c6876ec9e6ec98072617ac6f76b20fc7501fcc83bb7905f19a7ac4a",
+  "rule_receipt_sha256": "cba2642d13a627cc537432dd80b1f2046ea4341d8c93bcc7cd4a39dacbf44abb",
+  "amendment_sha256": "47f734e4e88edb941efceb58dcec5fd113c3cfccc6be0a33d585dd9ceac8b5f0",
+  "rule": "B composite report-only; ANY B collision/teleport pauses; R retains12:30 rule; A full original rule",
+  "authority": "clean1 AUTHORITY.md quotes owner14:34 REGISTRATION entry verbatim and binds exact no-replay recovery procedure",
+  "tests": {"windows_passed": 222, "windows_platform_skips": 1, "linux_passed": 223, "linux_skips": 0, "failures": 0},
+  "control": "/home/ubuntu/coopmwm20261105_clean1/recovery_1434",
+  "preserved_B_u009_training_episodes": 16,
+  "preserved_B_u009_practice_A_references": 6,
+  "sealed_updates": {"A": 9, "B": 8, "R": 8},
+  "new_sim_s": 0,
+  "dispatches": 0
+}
