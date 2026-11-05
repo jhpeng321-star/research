@@ -10,7 +10,7 @@ from planfix_ops import remote,note
 CODE=r'''
 import json,os,subprocess
 from pathlib import Path
-worker=Path('/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v6')
+worker=Path('/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7')
 if not (worker/'SPEED_SEARCH_RESULT.json').exists():
  print('VERIFY_PREPARE_PENDING',json.dumps(dict(reason='original8gates and measured WM speed search not complete',worker=str(worker),new_sim_s=0)),flush=True)
 else:
@@ -21,7 +21,7 @@ from planfix_library_runtime import library_plan,locally_executable
 from tools.coopmwm.moves import Move
 from tools.coopmwm.protocol import digest
 from tools.coopmwm.bank_v2v import trace_frames
-worker=Path('/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v6');w=worker.parent;root=w.parent
+worker=Path('/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7');w=worker.parent;root=w.parent
 read=lambda p:json.loads(Path(p).read_text())
 sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
 q=read(worker/'FRESH_QUALIFICATION.json');speed=read(worker/'SPEED_SEARCH_RESULT.json');query=read(worker/'SPEED_QUERY.json')
