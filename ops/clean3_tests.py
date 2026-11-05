@@ -15,11 +15,15 @@ control.mkdir()
 paths = json.loads((repo/'CLEAN2_TEST_SELECTION.json').read_text())['paths']
 paths += ['tools/coopmwm/'+name for name in (
     'test_executable_labels_cpu.py', 'test_coordination_opportunities_cpu.py',
-    'test_sparse_synergy_credit_cpu.py', 'test_g4_runtime_cpu.py', 'test_clean3_budget_cpu.py')]
+    'test_sparse_synergy_credit_cpu.py', 'test_g4_runtime_cpu.py', 'test_clean3_budget_cpu.py',
+    'test_group_lane_cpu.py', 'test_g1_certification_cpu.py', 'test_bank_perseed_cpu.py',
+    'test_bank_imitation_cpu.py', 'test_replay_bank_v2v_cpu.py')]
+paths += ['tests/unit/test_c4_evalv5.py', 'tests/unit/test_c4_policy2.py']
 paths = list(dict.fromkeys(paths))
 assert all((repo/path).is_file() for path in paths)
 command = [sys.executable, '-B', '-m', 'pytest', '-q', '--import-mode=importlib',
     '-o', 'consider_namespace_packages=true', *paths, '--tb=short',
+    '--deselect=tests/unit/test_c4_policy2.py::test_env_executes_lane_commands_in_sumo',
     '--basetemp='+str(control/'tmp'), '--junitxml='+str(control/'results.xml')]
 env = dict(os.environ, CUDA_VISIBLE_DEVICES='', PYTHONDONTWRITEBYTECODE='1',
     OMP_NUM_THREADS='1', MKL_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1')

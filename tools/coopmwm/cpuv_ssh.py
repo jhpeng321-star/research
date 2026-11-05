@@ -84,9 +84,11 @@ class Gate:
         self.directory = Path(directory)
         self.clock, self.wall, self.sleep = clock, wall, sleep
         self.check_owner = check_owner
+        self.admitted_in_claim = False
 
     @contextmanager
     def claim(self, *, deadline=None):
+        self.admitted_in_claim = False
         _directory(self.directory)
         flags = os.O_CREAT | os.O_RDWR | getattr(os, 'O_NOFOLLOW', 0)
         with os.fdopen(os.open(self.directory / 'gate.lock', flags, 0o600), 'r+b') as lock:
@@ -131,7 +133,23 @@ class Gate:
                 _remaining(deadline, self.clock)
                 yield self
             finally:
-                release()
+                try:
+                    if self.admitted_in_claim:
+                        # The durable pre-attempt stamp precedes fsync/spawn.
+                        # A slow fsync can otherwise make actual attempts from
+                        # consecutive clients closer than MIN_INTERVAL_S. Keep
+                        # the lock through a conservative command-END stamp;
+                        # the next client waits from here, including failures.
+                        now = self.wall()
+                        last = float(json.loads((self.directory / 'last_attempt.json').read_text())['unix'])
+                        if not math.isfinite(now) or not math.isfinite(last) or now < last:
+                            raise ValueError('invalid cpuV SSH completion clock')
+                        with (self.directory / 'last_completed.json').open('w', encoding='utf-8') as stream:
+                            json.dump(dict(unix=now), stream)
+                            stream.flush()
+                            os.fsync(stream.fileno())
+                finally:
+                    release()
 
     def admit(self, *, deadline=None):
         """Call only under claim(), immediately before an SSH network attempt."""
@@ -139,6 +157,14 @@ class Gate:
         path = self.directory / 'last_attempt.json'
         if path.exists():
             last = float(json.loads(path.read_text(encoding='utf-8'))['unix'])
+            if not math.isfinite(last):
+                raise ValueError('invalid cpuV SSH admission clock; refusing connection')
+            completed = self.directory / 'last_completed.json'
+            if completed.exists():
+                end = float(json.loads(completed.read_text(encoding='utf-8'))['unix'])
+                if not math.isfinite(end):
+                    raise ValueError('invalid cpuV SSH completion clock; refusing connection')
+                last = max(last, end)
             now = self.wall()
             if not math.isfinite(last) or not math.isfinite(now) or now < last:
                 raise ValueError('invalid/backwards cpuV SSH admission clock; refusing connection')
@@ -166,6 +192,7 @@ class Gate:
             json.dump(dict(unix=now), stream)
             stream.flush()
             os.fsync(stream.fileno())
+        self.admitted_in_claim = True
 
 
 def _deadline(timeout, clock=time.monotonic):

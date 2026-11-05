@@ -297,6 +297,28 @@ with gate.claim():
         assert current[0] - previous[0] >= 0.14
 
 
+def test_completion_stamp_preserves_spacing_after_slow_pre_attempt_fsync(tmp_path, monkeypatch):
+    clock = Clock()
+    directory = tmp_path / 'slow_fsync'
+    first = ssh.Gate(directory, clock=clock.time, wall=clock.time, sleep=clock.sleep)
+    second = ssh.Gate(directory, clock=clock.time, wall=clock.time, sleep=clock.sleep)
+    real_fsync = ssh.os.fsync
+    calls = []
+    def fsync(fd):
+        real_fsync(fd)
+        if not calls:
+            clock.sleep(.8)
+        calls.append(fd)
+    monkeypatch.setattr(ssh.os, 'fsync', fsync)
+    with first.claim():
+        first.admit()
+        begin = clock.time()
+        clock.sleep(.05)
+    with second.claim():
+        second.admit()
+        assert clock.time()-begin >= ssh.MIN_INTERVAL_S
+
+
 LOCAL_WRAPPER = r'''
 import json,os,sys,time
 from pathlib import Path
