@@ -103,6 +103,8 @@ def _check(cfg, arm):
         raise ValueError('clean run requires dense teaching and WM credit OFF')
     _path(cfg['run_root'])
     if arm != 'A':
+        from .sparse_synergy_credit import settings as synergy_settings
+        synergy_settings(cfg)
         from .track2_safety_reward import settings as close_call_settings
         close_call_settings(cfg)
         if not cfg.get('merge_features', False):
@@ -690,7 +692,7 @@ class ArmRuntime:
         return dict(status='checked', normal_references=len(normal), practice_references=len(pairs),
                     new_reference_sim_s=1200*len(pairs))
 
-    def train(self, episodes, *, rewards=None, credit=(), labels=()):
+    def train(self, episodes, *, rewards=None, credit=(), labels=(), synergy=None):
         """Consume P2 reward_update(cfg, arm, update, episodes) output.
 
         The integration envelope is {schema=REWARD_SCHEMA, arm, update, rows}.
@@ -710,6 +712,8 @@ class ArmRuntime:
             raise ValueError('clean run requires dense labels and WM credit OFF')
         if any(e['arm'] != arm for e in episodes):
             raise ValueError('episode arm mismatch')
+        from .sparse_synergy_credit import trigger_terms
+        synergy_terms, synergy_receipt = trigger_terms(cfg, arm, self.update, episodes, synergy)
         if arm == 'A':
             from .accel_learner import update
             return dict(ppo=update(self.base, self.optimizer, episodes, self.generator),
@@ -732,6 +736,11 @@ class ArmRuntime:
                     and not s.get('behaviour', {}).get('executed')}
         if not eligible:
             raise ValueError('B/R layer update requires stochastic own-action samples')
+        if synergy_terms:
+            trigger_rows = {(*key, vid) for key in eligible if 'track2_trigger' in by_key[key]
+                            for vid in by_key[key]['context']['members']}
+            if not set(synergy_terms) <= trigger_rows:
+                raise ValueError('G4 initiating macro has no eligible on-policy PPO row')
         if rewards is None:
             try:
                 from .track2_reward import reward_update
@@ -757,8 +766,12 @@ class ArmRuntime:
             batch = _batch(sample['track2_trigger'])
             before = deepcopy(self.policy.trigger.state_dict())
             optimizer = deepcopy(self.policy.trigger_optimizer.state_dict())
+            trigger_advantage = advantages[key]
+            if synergy_receipt is not None:
+                trigger_advantage = [value + synergy_terms.get((*key, vid), 0.)
+                    for vid, value in zip(sample['context']['members'], advantages[key])]
             metrics = ppo_update(self.policy.trigger, self.policy.trigger_optimizer, batch,
-                advantages[key], returns[key], **cfg['trigger_ppo'])
+                trigger_advantage, returns[key], **cfg['trigger_ppo'])
             kl = self._trigger_kl(reference)
             accepted = math.isfinite(kl) and kl <= self.policy.layer.config.kl_budget
             if not accepted:
@@ -780,7 +793,8 @@ class ArmRuntime:
         self.policy.trigger_optimizer.zero_grad(set_to_none=True)
         from .track2_safety_reward import settings as close_call_settings
         close_call = close_call_settings(cfg)
-        return dict(layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),
+        return dict(**(dict(g4_synergy_credit=synergy_receipt) if synergy_receipt is not None else {}),
+            layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),
             wm_credit=dict(enabled=False), reward=dict(schema=REWARD_SCHEMA,
                 registration=deepcopy(cfg['track2_reward']),
                 **(dict(close_call=close_call) if close_call is not None else {}),
