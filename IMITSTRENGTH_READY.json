@@ -47,7 +47,7 @@
       {"files": ["test_v2v_budget_quote_cpu.py", "test_v2v_intent_cpu.py", "test_v2v_int_e2e_cpu.py", "test_v2v_launch3_cpu.py", "test_v2v_launch_quote_cpu.py", "test_v2v_launch_wiring_cpu.py", "test_v2v_live_cpu.py", "test_v2v_model_cpu.py", "test_v2v_resource_watch_cpu.py", "test_v2v_runner_cpu.py", "test_v2v_runtime_cpu.py"], "result": "136 passed"}
     ],
     "total": "233 passed, 0 failed",
-    "reverified": "fresh session (after the freeze): 97 passed, 0 failed on the required suites only (imitstrength 15 + imitfix2 14 + bank_* 46 + launch_final 13 + coop_only 9) on tree 38e3d738 and again on the current head 18d94f39"
+    "reverified": "fresh session (after the freeze): 97 passed, 0 failed on the required suites only (imitstrength 15 + imitfix2 14 + bank_* 46 + launch_final 13 + coop_only 9) on tree 38e3d738, on 18d94f39, and again on the current head 263838e3 (code unchanged since 0318f865; only receipt notes after)"
   },
   "hard_rules_respected": {"cpu_only": true, "own_worktree_only": true, "no_reset_clean_stashdrop_push": true, "sealed_and_holdout_paths_never_opened": true, "truth_files_never_read": true}
 }
