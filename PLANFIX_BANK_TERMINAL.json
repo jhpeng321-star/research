@@ -1,0 +1,30 @@
+{
+  "status": "TERMINAL_ZERO_SURVIVORS_TWO_UNVERIFIED_STARTUP_EXCLUSIONS",
+  "verified_at_local": "2026-11-05T17:36:30+08:00",
+  "source_commit": "f631ce90cfd2f23213f7c57a828c848e2db10ecd",
+  "runtime": "clean1 qualified frozen MAPPO u0; full 1200s windows; unchanged native all8/per_seed_v1",
+  "coordinator": {"pid": 274411, "start_ticks": "6066509", "exited": true},
+  "phase_charged_sim_s": 33600,
+  "measured_sim_s": 28800,
+  "retained_startup_charges_sim_s": 4800,
+  "cumulative_including_parity_sim_s": 1249440,
+  "phase_remaining_reserved_sim_s": 566400,
+  "survivors_by_family": {"none": 0, "ease_off": 0, "gap_open": 0, "wall": 0, "ramp_assist": 0},
+  "measured_sources": [
+    {"world_seed": 986066, "source_crn": 2, "family": "wall", "original_gain_veh_s": 1066.8085821550412, "translated_gain_veh_s_by_verification_crn": [0, 0], "lower95_by_verification_crn": [0, 0], "keep": false, "confirmation_sha256": "4a61aa3cc02b6be65bfba6285385c196ad32d29f29dba5bb00adc1bdb9f8e2bb"},
+    {"world_seed": 986068, "source_crn": 1, "family": "wall", "original_gain_veh_s": 3216.944237807562, "translated_gain_veh_s_by_verification_crn": [0, 0], "lower95_by_verification_crn": [0, 0], "keep": false, "confirmation_sha256": "735d41140e532ebd4e18c0092f49d7f04ed6cc8454ecf8a3c44a313b680ac29a"},
+    {"world_seed": 986003, "source_crn": 1, "family": "wall", "original_gain_veh_s": 2909.829893602271, "translated_gain_veh_s_by_verification_crn": [0, 0], "lower95_by_verification_crn": [0, 0], "keep": false, "confirmation_sha256": "e8e57640595c52879189452ff842424b95b46efb6e7891033c9f969e50b4d088"},
+    {"world_seed": 986026, "source_crn": 1, "family": "wall", "original_gain_veh_s": 626.5987840405014, "translated_gain_veh_s_by_verification_crn": [0, 0], "lower95_by_verification_crn": [0, 0], "keep": false, "confirmation_sha256": "f070ceee921443e3f2995dd67ab9752fc722aeb3caafcdce885af22f3c0e35b9"},
+    {"world_seed": 986036, "source_crn": 1, "family": "wall", "original_gain_veh_s": 270.85763912331004, "translated_gain_veh_s_by_verification_crn": [0, 0], "lower95_by_verification_crn": [0, 0], "keep": false, "confirmation_sha256": "cde1cf3af0e223e1fe8cf5bade79193f5c85a65770da5755ccf4864398ebdd1a"},
+    {"world_seed": 986047, "source_crn": 1, "family": "wall", "original_gain_veh_s": 595.8200177477538, "translated_gain_veh_s_by_verification_crn": [0, 0], "lower95_by_verification_crn": [0, 0], "keep": false, "confirmation_sha256": "bfc4fbee3f42a7129f6b1010e055dc55ab2a5abfe2a8db1cc95af897af4eeed8"}
+  ],
+  "startup_excluded_sources": [
+    {"world_seed": 986052, "source_crn": 1, "family": "none", "original_gain_veh_s": 0.013822659471770748, "translated_gain_veh_s": null, "keep": false, "charged_sim_s": 2400},
+    {"world_seed": 986066, "source_crn": 1, "family": "wall", "original_gain_veh_s": 5580.842392459883, "translated_gain_veh_s": null, "keep": false, "charged_sim_s": 2400}
+  ],
+  "original_receipts": "cpuV:/home/ubuntu/coopmwm20261105_clean1/plan_fix/BANK_RESULTS.json and bank_verification_v5/",
+  "local_receipts": "E:/research-dense/runs/active/C4-V7FT-20261017/PLAN_FIX_BANK_RESULTS.json",
+  "switch_ready": false,
+  "switch_applied": false,
+  "remaining_work": "WM-only variety via existing bounded GPU transfer owner42852, fresh eight gates, native SUMO verification, active R family-fairness handoff and MAIN update-boundary registration"
+}

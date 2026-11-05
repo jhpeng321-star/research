@@ -25,6 +25,7 @@ try:
  import torch
  snap_path=Path('/home/ubuntu/coopmwm20261105_clean1/plan_fix/bank_verification_v4/bank_02713af428706f46/FROZEN_SNAPSHOT.pt')
  snap=torch.load(snap_path,weights_only=False,map_location='cpu')
+ print('SNAPSHOT_SUMO_BINDING',snap['sumo'],flush=True)
  import time
  sys.path.insert(0,'/home/ubuntu/coopmwm20261105_clean1/plan_fix/ops_v4_ownerstopped')
  from planfix_library_runtime import library_plan,relative_hook
