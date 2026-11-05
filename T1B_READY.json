@@ -43,7 +43,7 @@
   },
   "latest_resume_verification": {
     "date": "2026-11-05",
-    "starting_head": "e682a355d1ba3502e63bc04ecf2aacb92d4a7747",
+    "starting_head": "2a221ed0443f5cba14a0932e84ce0e34ea37a114",
     "starting_worktree_status": "clean on c4/planner-online",
     "receipts_read": ["T1B_READY.json", "T1B_FIX_R2.json", "REVIEW_T1B_r2.md", "REVIEW_T1B_r3.md", "T1B_ACCEPTED.json"],
     "accepted_implementation_head": "1f15a9ef0d249bebbbafd43efccd7c3f677778e7",
@@ -56,7 +56,7 @@
     "new_test_runs_or_dispatches": 0,
     "completed_test_runs_preserved": "Implementation and independent review each recorded 188 passed plus 9 passing subtests; completed tests were not repeated or counted again.",
     "unresolved_review_blockers": [],
-    "action": "Preserved the committed r2 fix, regression tests and independent r3 acceptance; refreshed only this readiness receipt."
+    "action": "Reconfirmed the accepted implementation is unchanged at this fresh-session HEAD, read the shared lifetime code and 16-case numeric regression, and preserved completed CPU verification and r3 acceptance; refreshed only this readiness receipt."
   },
   "commits": [
     {"commit": "abaada860309abdd043f7fc0d250fc77688acba3", "step": "Calibrated paired-WM scoring and additive residual-profile decoding"},
