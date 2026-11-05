@@ -11,7 +11,10 @@ to B and R; it is not fitted to outcome receipts.
   registered radio range, presently controlled, and unowned. The ego must also
   be unowned. Reserve **all** members, including gap_open's non-actuating
   partner. An occupied ego receives only `none` until commitment expiry.
-- The production episode hook refreshes controller ownership on every tick
+- The training/practice episode hook and both diagnostic observation hooks
+  (`launch_production.run_branch` for lessons/probes/replicated tests, including
+  `MixedPolicy`, and `launch_evaluation.episode` for paired evaluation) refresh
+  controller ownership on every tick
   from `Controller.active_plans`, including the real `VerifyController`'s
   restored practice/snapshot plans and candidate plans. Only each ego's visible
   CAV IDs and original `start_s + duration_s` expiry enter its reservation map;
@@ -78,3 +81,13 @@ its absent-component check covers opt-in-only modules. `practice_weighting` is
 a current shared legacy practice-config validator even when weighting is off,
 and is therefore not an absent-module requirement. Absent/false Track 2 config
 still must match the historical runtime config exactly.
+
+The second fix-round regression calls the actual lesson, isolated-all
+`MixedPolicy`, and paired-evaluation observation hooks and production policy
+loader for A/B/R, replacing only outer physics/grading. It checks t0 cached
+replay and CRN restoration, a free ego's owned-partner exclusion, owned-ego
+`none` slates, newly added live commitments, local-only projection, unchanged
+authoritative commands/expiry, exact-expiry availability, serial same-tick
+acquisition, truthful exclusion counters, and full diagnostic window contracts.
+All six B/R cases failed on the missing reservation map before the hook fix;
+the three A cases passed before and after it.

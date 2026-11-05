@@ -230,6 +230,155 @@ def test_production_hook_honours_practice_and_controller_ownership(cfg, arm, sou
     assert record['proposals']['rejected_non_none'] == 0
 
 
+@pytest.mark.parametrize('arm', ['A', 'B', 'R'])
+@pytest.mark.parametrize('path', ['lesson', 'isolated_all', 'paired'])
+def test_diagnostic_hooks_refresh_live_controller_ownership(cfg, monkeypatch, tmp_path, arm, path):
+    from . import accel_plant, launch_evaluation as evaluation, launch_production as launch
+    from . import protocol, rerun_tracks_backend, sumo_verify as sv
+    from .policy_synergy import MixedPolicy
+    from tools.coopnative.policy import encode
+
+    cfg = dict(cfg, **deepcopy(launch.OPTIMIZATION), evaluation_update=24, warm_history=1)
+    initial = policy(cfg)
+    weights = deepcopy(initial.layer.base.state_dict())
+    if arm != 'A':
+        weights['p1.arm'] = torch.tensor(1 if arm == 'B' else 2)
+        for name, state in initial.worker_state().items():
+            if name in ('layer', 'trigger'):
+                weights.update({f'p1.{name}.{k}': v for k, v in state.items()})
+    geometry = [row('c0', -195, 0, speed=2.)] + rows() + [row('c3', -190, 0, speed=2.)]
+    commands = {r['vid']: 0. for r in geometry if r['is_cav']}
+    plan = dict(id='diagnostic-owned', family='wall', members=['c1', 'c2'],
+                duration_s=60, knots=[[-.4]*7, [-.4]*7])
+    commitments = [dict(plan=plan, start_s=300)]
+    generator = torch.Generator().manual_seed(19)
+    context = encode(geometry)
+    context['v2v'] = {v: [0.]*48 for v in context['members']}
+    cached, memory = initial.layer.base.sample(context, torch.Generator().manual_seed(19), True, {})
+    snapshot = dict(t0=300, samples={'300': cached}, generator_state=generator.get_state(),
+        rng=dict(generator_state_sha256=hashlib.sha256(generator.get_state().numpy().tobytes()).hexdigest(),
+                 memory_after_t0=memory), committed_plans=deepcopy(commitments),
+        sumo=dict(noise_seed=81), weights=weights)
+    if path == 'isolated_all':
+        snapshot.update(u3_weights=deepcopy(initial.layer.base.state_dict()),
+            policy_synergy=dict(group=['c0', 'c3'], new_members=['c0', 'c3'], background_old=True))
+    window = dict(start_s=0 if path == 'paired' else 300, end_s=1200, truncated=False)
+    spec = dict(arm=arm, world_id='train-world', world=protocol.worlds('train', 0)[0],
+        checkpoint=dict(file_sha256='a'*64), window=window, final_worlds_sha256='b'*64)
+    exercised = []
+
+    def exercise(controller, new, *, replay):
+        assert isinstance(new, tb.EpisodePolicy) == (arm != 'A')
+        if arm != 'A':
+            force_family(new, 'wall')  # real slates, masks, serial acquisition and executor
+        if replay:
+            requested = controller.apply(geometry, commands, 300)
+            assert controller.audit['crn_verified_t0'] is True
+            replayed = controller.events[-1]['sample']
+            expected_actions = deepcopy(cached['action'])
+            for v in plan['members']:
+                expected_actions[context['members'].index(v)] = [-.4]
+            assert replayed['action'] == expected_actions  # inherited authoritative overlay
+            assert replayed['own_action'] == cached['own_action']
+            assert snapshot['samples']['300'] == cached
+            assert 'track2_trigger' not in replayed  # t0 stays the cached base sample
+            expected_rng = torch.Generator().set_state(snapshot['generator_state'])
+            torch.rand((), generator=expected_rng)
+            assert torch.equal(controller.generator.get_state(), expected_rng.get_state())
+        else:
+            # Paired evaluations may acquire commitments after hook installation.
+            controller.active_plans = deepcopy(commitments)
+        controller.deterministic = True
+        for now in (301, 359, 360):
+            if arm != 'A':
+                new.last_decision = None  # inspect eligibility on both sides of exact expiry
+            if now == 359:
+                # Refresh the live ledger, rather than caching the restored list.
+                extra = dict(plan=dict(plan, id='late-owned', members=['c3'], duration_s=40,
+                                      knots=[[-.2]*7]), start_s=320)
+                remote = dict(plan=dict(plan, id='remote-owned', members=['remote'], knots=[[0.]*7]),
+                              start_s=300)
+                controller.active_plans = deepcopy(commitments) + [extra, remote]
+            before = deepcopy(controller.active_plans)
+            requested = controller.apply(geometry, commands, now)
+            sample = controller.events[-1]['sample']
+            if now < 360:
+                assert controller.active_plans == before
+                assert {v: requested[v]['requested_raw'] for v in plan['members']} == {'c1': -.4, 'c2': -.4}
+                if now == 359:
+                    assert requested['c3']['requested_raw'] == -.2
+            else:
+                assert controller.active_plans == []
+            if arm == 'A':
+                assert 'track2_trigger' not in sample and 'track2' not in sample
+                continue
+            record = sample['track2_trigger']
+            tables = dict(zip(sample['context']['members'], record['tables']))
+            stats = record['proposals']
+            assert stats['rejected_non_none'] == 0
+            if now < 360:
+                owned = ['c1', 'c2'] + (['c3'] if now == 359 else [])
+                assert new.command_reservations == {v: dict.fromkeys(owned, 360) for v in commands}
+                for ego in owned:
+                    assert all(m is None for m in tables[ego])
+                    assert record['accepted'][ego] is False
+                for ego in set(commands)-set(owned):
+                    assert {v for m in tables[ego] if m for v in m['members']} == {ego}
+                assert not new.executor.active
+                assert stats['controller_owned_cav_checks'] == stats['owned_cav_checks'] == 4*len(owned)
+                assert stats['infeasible_family_checks'] == 12+len(owned)
+                assert stats['proposed_by_family'] == dict(
+                    ease_off=8*(4-len(owned)), gap_open=0, wall=0, ramp_assist=0)
+            else:
+                assert new.command_reservations == {v: {} for v in commands}
+                assert stats['controller_owned_cav_checks'] == 0
+                assert record['accepted']['c0'] is True
+                acquired = set()
+                for entry in new.executor.active:
+                    members = set(entry['move'].members)
+                    assert not members & acquired
+                    acquired.update(members)
+                first = new.executor.active[0]['move']
+                assert first.family == 'wall' and set(first.members) & {'c1', 'c2'}
+                # First acquisition is visible to every later ego in the same tick.
+                assert all(all(m is None for m in tables[v]) for v in first.members if v != 'c0')
+                assert stats['owned_cav_checks'] > 0
+        exercised.append(True)
+
+    if path == 'paired':
+        monkeypatch.setattr(evaluation.rc, 'sha', lambda path: 'a'*64)
+        monkeypatch.setattr(launch, 'checkpoint_weights', lambda *args: weights)
+        monkeypatch.setattr(rerun_tracks_backend, 'safety', lambda *args: dict(collisions=0))
+
+        def fake_episode(job, *, controller_hook, policy_loader):
+            assert job['sim_s'] == 1200 and job['guided'] is False
+            new = policy_loader(job['weights'])  # actual production loader
+            controller = controller_class(Controller)(new, generator, True)
+            controller_hook(controller, job, {})
+            exercise(controller, new, replay=False)
+            return dict(totals=dict(team_delay_vs=0.))
+
+        monkeypatch.setattr(accel_plant, 'episode', fake_episode)
+        assert evaluation.episode(spec, cfg, tmp_path)['window'] == window
+    else:
+        def fake_branch(given_spec, given_snapshot, runner):
+            assert given_spec['window'] == dict(start_s=300, end_s=1200, truncated=False)
+            assert given_snapshot is snapshot
+            new = runner.policy_loader(snapshot['weights'])  # actual production loader
+            controller = controller_class(sv.verify_controller_class())(new, generator, snapshot, None)
+            runner.controller_hook(controller, dict(accel_bounds=cfg['accel_bounds']), {})
+            if path == 'isolated_all':
+                assert isinstance(controller.policy, MixedPolicy)
+                assert controller.policy.new is new
+                assert controller.policy.new_members_only == {'c0', 'c3'}
+            exercise(controller, new, replay=True)
+            return dict(status='cpu-exercised', window=given_spec['window'])
+
+        monkeypatch.setattr(sv, 'run_branch', fake_branch)  # replace physics/grading only
+        assert launch.run_branch(spec, snapshot, cfg, tmp_path)['window'] == window
+    assert exercised == [True]
+
+
 def test_current_control_eligibility_excludes_visible_nonacting_partner(cfg):
     from tools.coopnative.policy import encode
     p = policy(cfg)
