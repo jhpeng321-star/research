@@ -7,6 +7,20 @@
   "base_branch": "c4/rerun-launch",
   "base_commit": "8bf7f53395c7a53a3e8d847c5a7f3229b79ab102",
   "scope": "F5 reporting correction and synthetic CPU regression tests only",
+  "commits": {
+    "implementation_tests_and_acceptance": "254c3ba06f6263eab9e27c739f8d1e7122383c22",
+    "preserved_resume_review": "23872757"
+  },
+  "api": {
+    "entrypoints": "monitor_update(cfg, arm, u, receipts), probe(cfg, u), replicated(cfg, u) retain their existing signatures",
+    "reports": "metric_reports contains delta_all_new_veh_s and policy_cooperation_gain_veh_s with labelled definitions, arm means and replicated paired-world comparisons",
+    "compatibility": "metric and top-level comparisons remain synergy aliases; criterion_metric explicitly identifies the unchanged registered endpoint"
+  },
+  "open_issues": [
+    "No F5 blockers; independent review verdict PASS and F5_ACCEPTED.json preserved.",
+    "Additional inherited compatibility suite recorded 13 passed and 1 failed: baseline construction disables practice_weighting but unchanged v2v_runner imports it unconditionally. Integration-owner follow-up is documented in REVIEW_F5_r0.md; this is not an F5 regression.",
+    "Six unchanged legacy policy-synergy cases require Linux /proc and remain deselected on Windows; they are not counted as passing."
+  ],
   "owned_files": [
     "tools/coopmwm/track2_monitor.py",
     "tools/coopmwm/test_track2_monitor_cpu.py",
@@ -107,6 +121,19 @@
     "gpu_used": false,
     "restricted_data_opened": false,
     "writes_outside_worktree": false,
-    "committed": false
+    "committed": true
+  },
+  "resume_verification": {
+    "date": "2026-11-06",
+    "initial_head": "254c3ba06f6263eab9e27c739f8d1e7122383c22",
+    "initial_uncommitted_work": "Only REVIEW_F5_r0.md resume provenance notes; preserved and committed in 23872757.",
+    "spec_and_diagnosis": "Read MAIN 15:15 F5 and the diagnosis, including the exact statistic definitions and equal-world weighting in section 1.",
+    "implementation": "Inspected the committed F5 monitor/test patch against the fixed launch base; no implementation changes needed.",
+    "scope_check": "git diff --exit-code 8bf7f53395c7a53a3e8d847c5a7f3229b79ab102 -- tools/coopmwm/rerun_cpus.py tools/coopmwm/policy_synergy.py tools/coopmwm/track2_backend.py tools/coopmwm/track2_reward.py tools/coopmwm/launch_training.py tools/coopmwm/launch_production.py: PASS",
+    "prior_test_evidence": "Completed CPU tests and independent review retained; all execution counts above describe prior sessions.",
+    "additional_pytest_executions": 0,
+    "new_jobs_or_dispatches": 0,
+    "new_sim_s": 0,
+    "receipt_validation": "F5_READY.json parsed successfully; git diff --check passed."
   }
 }
