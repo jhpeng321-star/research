@@ -2,11 +2,11 @@ VERDICT: PASS
 
 ## Numbered blockers (current review)
 
-None. Prior blocker 1 is resolved by `3be81d33`; no required T2H fixes remain at reviewed HEAD `a5a9bc22`.
+None. Prior blocker 1 is resolved by `3be81d33`; no required T2H fixes remain at current HEAD `d45d2a2a`, whose implementation and tests are identical to independently tested HEAD `a5a9bc22`.
 
 ## Test counts (current review)
 
-- Fresh independent CPU run at `a5a9bc22`: **96 passed, 0 failed, 0 skipped, 0 deselected**, in **45.92 seconds**: 61 T2H cases and 35 practice-start regression cases.
+- Preserved completed independent CPU run at `a5a9bc22`: **96 passed, 0 failed, 0 skipped, 0 deselected**, in **45.92 seconds**: 61 T2H cases and 35 practice-start regression cases. This run was completed in the preceding review session, not repeated in this resume.
 - One configuration warning: `Unknown config option: cache_dir`, caused by disabling pytest's cache provider.
 - Preserved prior independent broader run: **209 passed, 0 failed, 1 skipped, 1 deselected**, in 275.76 seconds. This is historical on-disk evidence, not a fresh run at this HEAD. The affected suites were rerun above; the unchanged broader suites were not duplicated. These counts overlap and must not be added.
 - The prior skip was the Windows symlink-privilege case; the prior deselection avoided a synthetic fixture that opens a prohibited path. Neither is part of the fresh 96-case run.
@@ -18,7 +18,17 @@ Working directory: `E:/agent-work/c4-practice-weight`. Environment: `CUDA_VISIBL
 C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider --basetemp=E:/Temp/opencode/t2h-astra-r0-a5a9bc22-20261105 tools/coopmwm/test_practice_weighting_cpu.py tools/coopmwm/test_practice_starts_cpu.py --tb=short
 ```
 
-## Current independent review (astra, 2026-11-05)
+## Latest resume reconciliation (astra, 2026-11-05)
+
+Started with a clean worktree on `c4/practice-weight`, HEAD `d45d2a2a`. Read git status/log and task receipts first, then the current `E:/agent-work/_sol/tracks_spec.md` and all implementation, test and documentation changes against `c4/track-base`. The existing PASS report and completed test evidence were already committed and have been preserved.
+
+The only changes from independently tested HEAD `a5a9bc22` are this report and `T2H_READY.json`, `T2H_ACCEPTED.json`, and `T2H_PROGRESS.json`. An explicit `git diff --exit-code a5a9bc22 HEAD` excluding those four files passed with no output. The current spec still requires the own all8 admission implemented in `3be81d33`. The findings below remain applicable: observable-only inputs, unchanged look-ahead/horizon, shared B/R options and sampling procedure, default-off byte identity, registered sampling share, and substantive CPU contract tests. No new blocker was found.
+
+No pytest run or dispatch was started in this resume, following the instruction not to duplicate completed work. The 96-case independent result above remains the relevant completed run for the unchanged implementation/tests; broader historical counts overlap and are not added. `git diff --check c4/track-base` passed again. Only this review file was edited; no implementation or receipt edits, commits, SSH, SUMO, GPU work, restricted-path access, or truth-file reads occurred.
+
+READY and ACCEPTED now agree with PASS. Their reconciliation supersedes the earlier receipt-status paragraph below; the prior review narrative is retained as historical evidence. T2G/T2C production and end-to-end integration remain the separate scope described below.
+
+## Preserved independent review (astra, 2026-11-05)
 
 Started with a clean worktree on `c4/practice-weight`, HEAD `a5a9bc22`. Read git status/log and `T2H_READY.json` first, then the current shared spec, existing review, PROGRESS/ACCEPTED receipts, and the changes against `c4/track-base` (`13f184b5`). Preserved the existing implementation and completed review evidence. Checked local process command lines before testing: no matching pytest/T2H review job was running.
 
