@@ -916,10 +916,9 @@ def run_episode_job(job):
     fake = types.ModuleType('tools.leverprobe.backend')
     fake.setup = lambda runtime, checkpoint: None
     fake.Backend = FakeBackend
-    sys.modules['tools.leverprobe'] = pkg
-    sys.modules['tools.leverprobe.backend'] = fake
     pkg.backend = fake
-    with patch('tools.coopfree.backend.tick', fake_tick), \
+    with patch.dict(sys.modules, {'tools.leverprobe':pkg, 'tools.leverprobe.backend':fake}), \
+         patch('tools.coopfree.backend.tick', fake_tick), \
          patch('tools.coopmwm.accel_plant.install_seed_scope'), \
          patch('tools.coopmwm.accel_plant.guard'):
         from tools.coopmwm.accel_plant import episode

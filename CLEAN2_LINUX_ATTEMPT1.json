@@ -1,0 +1,18 @@
+{
+  "status": "FAILED_ZERO_PHYSICS_QUALIFICATION_ENVIRONMENT",
+  "source_commit": "94bac461a6b2668fbfca0f6f39a947e68880a480",
+  "control": "/home/ubuntu/cpuv_setup_20261105/clean2_tests_94bac461",
+  "pid": 287695,
+  "start_ticks": "6415310",
+  "result": {"passed":1546,"failed":22,"subtests_passed":14,"seconds":176.68},
+  "causes": [
+    "19 staging tests: qualification basetemp nested below /home/ubuntu ambiguously aliases synthetic deployment roots; use isolated /tmp fixtures as native pytest normally does",
+    "F4 recipe was packaged at source root but the unchanged test expects its repo-relative pytools copy too",
+    "Two acceleration tests: legacy practice fake-plant helper left tools.leverprobe entries in sys.modules; make its injection scoped and restore actual runtime imports"
+  ],
+  "no_deselections_or_assertion_relaxations":true,
+  "runtime_source_changes":false,
+  "clean2_root_exists":false,
+  "new_sim_s":0,
+  "ssh_recovery":"Shared F6 stale active reservation belonged to an interrupted independent PLAN_FIX staging call. Under exclusive gate, verified no wrapper/supervisor/session remained, archived reservation as active_stale_preserved_1793874718216598530.json. Retained shared master/socket/last_attempt; no signal or remote mutation replay."
+}
