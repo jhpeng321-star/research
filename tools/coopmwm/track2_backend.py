@@ -148,19 +148,33 @@ def _features(context):
 
 
 class ProductionLayer(CooperationLayer):
-    """Use T2D's transactional joint KL with a causal committed-move gain.
+    """Full-strength committed moves plus a zero-initialized learned residual.
 
-    The last feature records the already selected move's offset. Its trainable
-    gain is zero initially, preserving exact base action bytes, and its gradient
-    is part of the same conditional Gaussian score and exact KL as the residual.
+    F1: the last feature records moves.offsets for the already selected move.
+    That offset is added with fixed coefficient 1 from update 0; it is never
+    gated by the legacy trigger_gain checkpoint slot. Only the additive residual
+    is learned. Sampling, forward/imitation, scores and KL use the same mean.
     T2A's categorical PPO is updated separately on decision samples only.
     """
     def _features(self, context):
         return _features(context)
 
     def _distribution(self, features, move_offsets=None):
-        residual, logits, gain, offsets = super()._distribution(features, move_offsets)
-        return residual + gain * features[:, -1], logits, gain, offsets
+        residual, logits, _, offsets = super()._distribution(features, move_offsets)
+        return residual + features[:, -1], logits, residual.new_ones(()), offsets
+
+    def forward(self, context):
+        """The same committed-offset + residual mean used by live sampling."""
+        self._check_frozen()
+        with torch.no_grad():
+            mean, value = self.base(context)
+        if not self.enabled:
+            return mean, value
+        correction = self._distribution(self._features(context))[0][:, None]
+        # Addition must keep derivative 1 at zero initialization and exact
+        # residual/offset cancellation. Byte-preserving identity selection is
+        # confined to the inherited no-gradient sampling path.
+        return mean + correction, value
 
     def member_scores(self, sample, *, old=False):
         """Marginal Gaussian scores, retaining each CAV's own learning target.
@@ -247,6 +261,8 @@ class EpisodePolicy(torch.nn.Module):
         config = LayerConfig(**dict(cfg['layer_config'], feature_dim=FEATURE_DIM, enabled=True))
         self.layer = ProductionLayer(base, config)
         self.layer.actuation_receipts = 'clean2_budget' in cfg
+        # Retain the legacy slot/optimizer layout for existing sidecars. It is
+        # unused by ProductionLayer, gets no gradient and cannot gate actuation.
         self.layer.trigger_gain.requires_grad_(True)
         self.layer.optimizer = torch.optim.Adam(self.layer.layer_parameters(), lr=config.learning_rate)
         self.trigger = TriggerPolicy(self.layer.base, v2v_dim=cfg['v2v_dim'],
@@ -733,7 +749,7 @@ class ArmRuntime:
             from .v2v_intent import refresh_bank_intents
             refresh_bank_intents(self.base, pairs)
         # Frozen base: existing full-pass/effective likelihood updates ONLY the
-        # cooperation residual/gain, with the existing independent .045 KL cap.
+        # cooperation residual, with the existing independent .045 KL cap.
         bank = bi.run_separate(self.policy, self.policy.layer.optimizer, pairs, self.generator,
             deepcopy(self.policy).eval(), passes=cfg.get('imitation_epochs', 5),
             step_mode=cfg.get('imitation_step_mode', 'kl_targeted'), intent_bank_term=False,
