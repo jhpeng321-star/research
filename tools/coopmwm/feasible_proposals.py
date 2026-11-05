@@ -43,22 +43,28 @@ def candidates(obs_state, rng, n):
     available = set(obs_state.get('acquirable_cav_ids', by_vid))
     partners = moves._nearby([r for r in rows if r['is_cav'] and r['vid'] != ego
                              and r['vid'] in available], float(own['s_m']))
+    from . import group_lane
+    structured = group_lane.families(obs_state)[1:]
+    def propose(family, group):
+        if family in moves.LANE_FAMILIES:
+            return group_lane.candidate(family, obs_state, own, group, rng)
+        return moves._candidate(family, own, group, rng)
     pools = {}
     if n and ego in available:
-        for family in moves.STRUCTURED:
+        for family in structured:
             # Enumerate bounded local member sets. The nearest three alone may
             # miss an otherwise feasible wall in a different lane.
             subsets = ([partners] if family != 'wall' else
                 (group for size in range(1, moves.MOVE_MAX_MEMBERS)
                  for group in combinations(partners, size)))
             options = [move for group in subsets
-                       if (move := moves._candidate(family, own, group, rng)) is not None]
+                       if (move := propose(family, group)) is not None]
             if options:
                 pools[family] = options
     stats = obs_state.get('proposal_stats')
     if stats is not None:
-        stats.update(family_checks=len(moves.STRUCTURED) if n else 0,
-                     infeasible_family_checks=len(moves.STRUCTURED)-len(pools) if n else 0)
+        stats.update(family_checks=len(structured) if n else 0,
+                     infeasible_family_checks=len(structured)-len(pools) if n else 0)
     out = []
     while pools and len(out) < n:
         for family in rng.permutation(list(pools)):
@@ -68,7 +74,7 @@ def candidates(obs_state, rng, n):
             # ahead-most mainline role); only walls enumerate member subsets.
             group = ([by_vid[v] for v in template.members if v != ego]
                      if family == 'wall' else partners)
-            out.append(moves._candidate(family, own, group, rng))
+            out.append(propose(family, group))
             if len(out) == n:
                 break
     return out
@@ -91,7 +97,7 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
     stats = dict(rule=RULE, provenance=PROVENANCE, decisions=len(members),
                  family_checks=0, infeasible_family_checks=0,
                  owned_cav_checks=0, controller_owned_cav_checks=0,
-                 proposed_by_family=dict.fromkeys(moves.STRUCTURED, 0),
+                 proposed_by_family=dict.fromkeys(trigger.families[1:], 0),
                  selected_non_none=0, rejected_non_none=0)
     for ego in sorted(members):
         index = members.index(ego)
@@ -143,8 +149,8 @@ def aggregate(receipts):
         **{key: sum(row[key] for row in receipts) for key in
            ('decisions', 'family_checks', 'infeasible_family_checks',
             'selected_non_none', 'rejected_non_none')},
-        proposed_by_family={f: sum(row['proposed_by_family'][f] for row in receipts)
-                             for f in moves.STRUCTURED})
+        proposed_by_family={f: sum(row['proposed_by_family'].get(f, 0) for row in receipts)
+                              for f in dict.fromkeys(f for row in receipts for f in row['proposed_by_family'])})
     # Older F2 receipts predate the controller bridge: don't invent measured
     # zeros when mixing those episodes into an update.
     for key in ('owned_cav_checks', 'controller_owned_cav_checks'):

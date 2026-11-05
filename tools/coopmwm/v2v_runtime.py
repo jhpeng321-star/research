@@ -99,6 +99,8 @@ def controller_class(base):
             self.previous_frame = None
             self.intent_board = {}  # v2v_intent ON: vid -> (published second, H commands)
             self.trigger_intent_board = {}  # explicit wrapper opt-in; never the base publication
+            self.g5_lane_targets = {}
+            self.g5_lane_runtime = True
 
         def observe_issued(self, frame):
             self.previous_frame = frame
@@ -133,6 +135,8 @@ def controller_class(base):
                 desired = super().apply(rows, commands, now)
             finally:
                 self.policy = saved
+            from .group_lane import controller_targets
+            self.g5_lane_targets = controller_targets(self, saved, rows, now)
             if intent is not None:
                 # Publish this second's intents (also from replayed samples); despawned or
                 # silent CAVs simply have no fresh entry and read as invalid next second.
@@ -143,6 +147,15 @@ def controller_class(base):
                                  if self.events else {})
                     self.trigger_intent_board = {vid: (int(now), list(values)) for vid, values in published.items()}
             return desired
+
+        def lane_request(self, env):
+            from .group_lane import lanes_tensor
+            return lanes_tensor(self.g5_lane_targets, env)
+
+        def observe_lane(self, info):
+            if self.g5_lane_targets and self.events:
+                from .group_lane import lane_outcome
+                self.events[-1]['g5_lane_outcome'] = lane_outcome(info.get('lane_commands'))
 
     return Controller
 

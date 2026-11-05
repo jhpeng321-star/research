@@ -68,6 +68,10 @@ class TriggerMove:
 class MoveAPI:
     FAMILIES = moves.FAMILIES
 
+    def __init__(self, cfg=None):
+        from .group_lane import families
+        self.FAMILIES = families(cfg)
+
     @staticmethod
     def candidates(obs_state, rng, n):
         return [TriggerMove(m) for m in feasible_proposals.candidates(obs_state, rng, n)]
@@ -269,11 +273,11 @@ class EpisodePolicy(torch.nn.Module):
         self.layer.optimizer = torch.optim.Adam(self.layer.layer_parameters(), lr=config.learning_rate)
         self.trigger = TriggerPolicy(self.layer.base, v2v_dim=cfg['v2v_dim'],
             n_candidates=cfg['trigger_candidates'], partner_slots=cfg['trigger_partner_slots'],
-            freeze_base=True, moves_api=MoveAPI())
+            freeze_base=True, moves_api=MoveAPI(cfg))
         self.trigger_optimizer = self.trigger.optimizer(lr=cfg['trigger_lr'])
         self.layer_rng = torch.Generator().manual_seed(int(cfg['training_seed']))
         self.candidate_rng = np.random.default_rng(int(cfg['training_seed']))
-        self.executor = MoveExecutor(moves_api=MoveAPI())
+        self.executor = MoveExecutor(moves_api=MoveAPI(cfg))
         self.now, self.last_decision = None, None
         self.local_states, self.visible, self.blocks = {}, {}, {}
         self.command_reservations = {}
@@ -308,6 +312,11 @@ class EpisodePolicy(torch.nn.Module):
             # Only selected CAVs enter candidates; sensed HDVs are geometry only.
             local = [r for r in sensed if not r['is_cav'] or r['vid'] in [vid]+partners]
             states[vid], visible[vid] = dict(self=vid, rows=local), [vid]+partners
+            if self.cfg.get('group_lane_moves'):
+                # Coverage comes from this own sensor packet, not an absent row.
+                # Include sensed CAVs as gap obstacles even outside partner slots.
+                states[vid].update(group_lane_moves=True, observed_lanes=(0, 1, 2),
+                                   rows=sensed)
             vehicle = lambda r: ObservedVehicle(r['vid'], r['s_m'], int(r['lane']), r['v_mps'], r['length_m'])
             reports[vid] = SensorReport(float(now), vehicle(ego), (0, 1, 2),
                                        tuple(vehicle(r) for r in sensed if r['vid'] != vid))
@@ -378,6 +387,13 @@ class EpisodePolicy(torch.nn.Module):
                     offsets[vid] = local[vid]
         context['move_offsets'] = {v: offsets.get(v, 0.) for v in context['members']}
         sample, memory = self.layer.sample(context, generator, deterministic, memory)
+        if self.cfg.get('group_lane_moves'):
+            from .group_lane import targets
+            lane_requests = {}
+            for entry in self.executor.active:
+                lane_requests.update(targets(entry['move'], self.now-entry['start']))
+            if lane_requests:
+                sample['g5_lane_requests'] = lane_requests
         if getattr(self.layer.base, 'intent_horizon', 0) and context['members']:
             published = self.trigger.publish_trigger_intent(context)
             self.trigger_board = {v: (int(self.now), values) for v, values in published.items()}
