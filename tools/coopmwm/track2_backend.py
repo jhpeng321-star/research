@@ -658,7 +658,8 @@ class ArmRuntime:
 
         The integration envelope is {schema=REWARD_SCHEMA, arm, update, rows}.
         Rows carry episode_id,time_s,cav_id,source='sumo',own_reward,
-        neighbour_rewards (ID -> real reward), reward, weight, weight_provenance.
+        neighbour_rewards (ID -> real reward), reward, weight, weight_provenance,
+        and F4 close_call (fixed registration, attribution and atomic pair evidence).
         Neighbour IDs must match the recorded authorized observation exactly.
         Outcomes cover EVERY control tick, including non-optimizable actions;
         only own stochastic actions get PPO ratios. Returns use the entire
@@ -739,9 +740,11 @@ class ArmRuntime:
             imitation_target_space='effective')
         self.policy.layer._check_frozen()
         self.policy.trigger_optimizer.zero_grad(set_to_none=True)
+        from .track2_safety_reward import registration as close_call_registration
         return dict(layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),
             wm_credit=dict(enabled=False), reward=dict(schema=REWARD_SCHEMA,
-                registration=deepcopy(cfg['track2_reward']), cav_rows=sum(map(len, targets.values())),
+                registration=deepcopy(cfg['track2_reward']), close_call=close_call_registration(),
+                cav_rows=sum(map(len, targets.values())),
                 temporal=dict(method='full_rollout_discounted_return', gamma=GAMMA,
                     reward_unit=UNIT, registration='tools.coopmwm.accel_learner.GAMMA,UNIT',
                     trigger_advantage='return minus recorded per-CAV trigger value',
@@ -749,12 +752,17 @@ class ArmRuntime:
             bank=bank, bank_summary=bank_summary)
 
     def _reward_targets(self, envelope, by_key, eligible):
+        from . import track2_safety_reward as safety
         if (envelope.get('schema') != REWARD_SCHEMA or envelope.get('arm') != self.arm
                 or envelope.get('update') != self.update):
             raise ValueError('P2 reward schema/arm/update mismatch')
         expected = {(key[0], key[1], vid) for key in eligible
                     for vid in by_key[key]['context']['members']}
         values = {}
+        histories, attribution = {}, {}
+        for key in sorted(by_key):
+            attribution[key] = safety.move_attribution(by_key[key], key[1],
+                                                       histories.setdefault(key[0], {}))
         registration = self.cfg['track2_reward']
         for row in envelope['rows']:
             key = (row['episode_id'], row['time_s'], row['cav_id'])
@@ -776,6 +784,9 @@ class ArmRuntime:
                 raise ValueError('nonfinite per-CAV SUMO reward')
             target = row['own_reward'] + registration['weight'] * (
                 sum(neighbours.values())/len(neighbours) if neighbours else 0.)
+            target += safety.validate(row.get('close_call'), cav_id=key[2],
+                neighbour_ids=observed, time_s=key[1],
+                first_actuation_s=attribution[key[:2]].get(key[2]))
             if not math.isclose(row['reward'], target, rel_tol=1e-12, abs_tol=1e-12):
                 raise ValueError('observable SUMO reward formula mismatch')
             values[key] = float(row['reward'])

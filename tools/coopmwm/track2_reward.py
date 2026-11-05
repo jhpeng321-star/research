@@ -1,7 +1,9 @@
 """P2, MAIN 02:30: realised, observable-only cooperation-layer rewards.
 
 For each acting CAV, r_i = -dt * max(0, 1 - observed_speed_i / speed_limit)
-and r_i' = r_i + registered_weight * mean(r_j for j in N_i). N_i excludes
+and r_i' = r_i + registered_weight * mean(r_j for j in N_i) - w_close * E_i.
+F4 E_i counts post-move observable TTC<1.5s pair-events; its fixed registration
+and temporal attribution are in track2_safety_reward. N_i excludes
 self and includes sensed vehicles of either automation status, plus vehicles
 directly sensed by selected, in-range V2V publishers at t-1. This is a measured
 speed-deficit outcome, NOT an estimate of the simulator's substep-integrated
@@ -31,12 +33,13 @@ import math
 from numbers import Real
 
 from . import merge_features as mf
+from . import track2_safety_reward as safety
 
 # Public road/control constants; no simulator import (including at worker startup).
 SPEED_LIMIT_MPS = 31.29
 CONTROL_DT_S = mf.CONTROL_DT_S
 ARMS = ("B", "R")
-REWARD_SOURCE = "SUMO observed speed deficit; local sensing + timestamped V2V only"
+REWARD_SOURCE = "SUMO observed speed deficit and post-move closing TTC; local sensing + timestamped V2V only"
 
 
 def _finite(value, name, *, positive=False):
@@ -69,7 +72,7 @@ def settings(cfg):
         raise ValueError("track2_reward_arms must be exactly B and R; A is unaffected")
     return dict(weight=weight, provenance=provenance, arms=list(ARMS),
                 reward_source=REWARD_SOURCE, speed_limit_mps=SPEED_LIMIT_MPS,
-                control_dt_s=CONTROL_DT_S)
+                control_dt_s=CONTROL_DT_S, close_call=safety.registration())
 
 
 def enabled(cfg, arm):
@@ -82,7 +85,7 @@ def _outcome(row):
 
 
 def neighbourhood_reward(own, cav_id, partner_reports=None, *, now_s,
-                         partner_ids=(), weight):
+                         partner_ids=(), weight, first_actuation_s=None):
     """Return per-CAV own/team components and observable evidence counts.
 
     ``own`` and partner entries are merge_features.SensorReport instances.
@@ -92,6 +95,7 @@ def neighbourhood_reward(own, cav_id, partner_reports=None, *, now_s,
     are counted. Remote outcomes retain their exact t-1 measurement time; they
     are not extrapolated to now. Own sensing wins, then nearest publisher/ID.
     No vehicle type field is needed: all directly observed neighbours count.
+    F4 pairs use atomic packets only, strictly after first_actuation_s (if any).
     """
     now_s = _finite(now_s, "now_s")
     weight = _finite(weight, "weight", positive=True)
@@ -110,7 +114,8 @@ def neighbourhood_reward(own, cav_id, partner_reports=None, *, now_s,
     partners.sort(key=lambda item: (item[0], item[1]))
     accepted = partners[:mf.V2V_K]
     visible = {}
-    for report in [own] + [item[2] for item in accepted]:
+    reports = [own] + [item[2] for item in accepted]
+    for report in reports:
         for row in mf._local_rows(report):
             visible.setdefault(row.vehicle_id, (row, report.timestamp_s))
     neighbours = sorted(vid for vid in visible if vid != cav_id)
@@ -118,11 +123,13 @@ def neighbourhood_reward(own, cav_id, partner_reports=None, *, now_s,
     team = (math.fsum(_outcome(visible[vid][0]) for vid in neighbours) / len(neighbours)
             if neighbours else 0.0)
     addition = weight * team
-    reward = own_reward + addition
+    close_call = safety.close_calls(reports, visible, first_actuation_s=first_actuation_s)
+    reward = own_reward + addition + close_call['penalty']
     if not math.isfinite(reward):
         raise ValueError("nonfinite augmented cooperation reward")
     return dict(own_reward=own_reward, neighbourhood_reward=team,
-                team_addition=addition, reward=reward,
+                team_addition=addition, reward=reward, close_call=close_call,
+                close_call_penalty=close_call['penalty'],
                 neighbour_rewards={vid: _outcome(visible[vid][0]) for vid in neighbours},
                 neighbour_ids=neighbours,
                 neighbour_timestamps_s={vid: visible[vid][1] for vid in neighbours},
@@ -188,10 +195,14 @@ def training_episodes(cfg, arm, episodes):
                   empty_neighbourhoods=0, neighbour_outcomes=0,
                   partner_reports=0, unavailable_partner_reports=0,
                   own_reward_sum=0.0, neighbourhood_reward_sum=0.0,
-                  team_addition_sum=0.0, reward_sum=0.0)
+                  team_addition_sum=0.0, reward_sum=0.0,
+                  close_call_penalty_sum=0.0, close_call_events=0, move_exposed_cav_ticks=0)
     for episode in episodes:
+        move_history = {}
         new_steps = []
         steps = episode["steps"]
+        if any(b['time_s'] <= a['time_s'] for a, b in zip(steps, steps[1:])):
+            raise ValueError('F4 post-move attribution requires chronological episode steps')
         for index, step in enumerate(steps):
             if "track2_reward" in step or "base_reward" in step:
                 raise ValueError("track2 reward already applied")
@@ -212,6 +223,7 @@ def training_episodes(cfg, arm, episodes):
                 if _finite(timestamp, "post_time_s") != now:
                     raise ValueError("post-action sensing must be exactly one control tick later")
             components = {}
+            attribution = safety.move_attribution(step['sample'], step['time_s'], move_history)
             for vid in members:
                 if packets is not None:
                     packet = packets[vid]
@@ -224,7 +236,9 @@ def training_episodes(cfg, arm, episodes):
                         components[vid] = dict(own_reward=0., neighbourhood_reward=0.,
                             team_addition=0., reward=0., neighbour_ids=[], neighbour_rewards={},
                             neighbour_timestamps_s={}, neighbours=0, empty_neighbourhood=True,
-                            partner_reports=0, unavailable_partner_reports=0, terminal_exit=True)
+                            partner_reports=0, unavailable_partner_reports=0, terminal_exit=True,
+                            close_call=safety.close_calls([], {}, first_actuation_s=attribution.get(vid)),
+                            close_call_penalty=0.)
                         totals['terminal_exits'] += 1
                         continue
                     own = _decode_packet(packet["own"])
@@ -234,14 +248,18 @@ def training_episodes(cfg, arm, episodes):
                     own = _sensor_packet(rows, vid, now)
                     reports, partners = None, ()
                 components[vid] = neighbourhood_reward(
-                    own, vid, reports, now_s=now, partner_ids=partners, weight=have["weight"])
+                    own, vid, reports, now_s=now, partner_ids=partners, weight=have["weight"],
+                    first_actuation_s=attribution.get(vid))
             count = len(components)
             means = {key: math.fsum(c[key] for c in components.values()) / max(count, 1)
-                     for key in ("own_reward", "neighbourhood_reward", "team_addition", "reward")}
+                     for key in ("own_reward", "neighbourhood_reward", "team_addition", "reward",
+                                 "close_call_penalty")}
             totals["steps"] += 1
             totals["cav_outcomes"] += count
             totals["empty_cav_steps"] += not count
             for c in components.values():
+                totals['close_call_events'] += c['close_call']['event_count']
+                totals['move_exposed_cav_ticks'] += c['close_call']['first_actuation_s'] is not None
                 totals["empty_neighbourhoods"] += c["empty_neighbourhood"]
                 totals["neighbour_outcomes"] += c["neighbours"]
                 for key in ("partner_reports", "unavailable_partner_reports"):
@@ -254,7 +272,7 @@ def training_episodes(cfg, arm, episodes):
     receipt = dict(have, **totals, arm=arm, scope="cooperation layer only",
                    aggregation="equal acting-CAV mean; empty neighbourhood = 0",
                    wm_used=False, global_reward_used=False, terminal_fallback_steps=0,
-                   outcome_rule="negative measured speed deficit, vehicle-seconds per control tick")
+                   outcome_rule="negative measured speed deficit minus registered post-move observable close-call penalty")
     return transformed, receipt
 
 
@@ -265,6 +283,8 @@ def reward_update(cfg, arm, u, episodes):
     weight/provenance mapping; convert it only at this explicit integration edge.
     Every recorded control tick is retained, including non-PPO/prefix ticks.
     """
+    if arm not in ARMS:
+        return dict(schema='coopmwm-track2-reward-v1', arm=arm, update=u, rows=[], receipt=None)
     registration = cfg['track2_reward']
     if not isinstance(registration, dict) or set(registration) != {'weight', 'provenance'}:
         raise ValueError('P1 reward registration must contain weight and provenance')
@@ -281,7 +301,8 @@ def reward_update(cfg, arm, u, episodes):
                     rows.append(dict(episode_id=episode['id'], time_s=step['time_s'],
                         cav_id=vid, source='sumo', own_reward=outcome['own_reward'],
                         neighbour_rewards=outcome['neighbour_rewards'], reward=outcome['reward'],
-                        weight=registration['weight'], weight_provenance=registration['provenance']))
+                        weight=registration['weight'], weight_provenance=registration['provenance'],
+                        close_call=outcome['close_call']))
     return dict(schema='coopmwm-track2-reward-v1', arm=arm, update=u,
                 rows=rows, receipt=receipt)
 
