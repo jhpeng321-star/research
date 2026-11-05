@@ -179,6 +179,19 @@ def job_spec(lesson, seeds):
             or len({s['snapshot_sha256'] for s in seeds}) != 2):
         raise ValueError('G1 exactly two distinct verification seeds required')
     macro = moves.Move.from_dict(lesson['macro'])
+    t0 = _integer(lesson['t0'], 't0')
+    decision = _integer(lesson['decision_s'], 'decision_s')
+    end = _integer(lesson['window']['end_s'], 'window end', 1)
+    if (lesson['arm'] not in ('B', 'R') or lesson['episode']['role'] != 'train'
+            or lesson['episode']['arm'] != lesson['arm']
+            or type(lesson['episode']['world']['seed']) is not int
+            or not 986000 <= lesson['episode']['world']['seed'] <= 986071
+            or lesson['window']['start_s'] != t0 or not t0 < decision < end or end > 1200
+            or (macro.family != 'none' and decision+macro.onset+macro.hold > end)):
+        raise ValueError('G1 lesson requires ordinary TRAIN context and full executable window')
+    for key in ('source_receipt_sha256', 'source_example_sha256', 'source_plan_sha256',
+                'snapshot_sha256', 'prefix_sha256', 'base_policy_sha256', 'runtime_sha256'):
+        _sha(lesson[key])
     roles = _local(macro, lesson['local'], lesson['decision_s'])
     if lesson['schema'] != SCHEMA or lesson['engine'] != ENGINE or lesson['roles'] != roles or lesson['actors'] != list(macro.actors):
         raise ValueError('G1 lesson execution semantics differ')
@@ -404,6 +417,8 @@ def bank_certificate(value, *, arm, receipt, example, plan, snapshot_sha256,
         lesson = entry['job']['lesson']
         if (lesson['arm'] == arm and lesson['verification_id'] == receipt['verification_id']
                 and lesson['source_receipt_sha256'] == receipt['receipt_sha256']
+                and lesson['episode'] == receipt['episode'] and lesson['t0'] == receipt['t0']
+                and lesson['window'] == receipt['window']
                 and lesson['source_example_sha256'] == digest(example)
                 and lesson['source_plan_sha256'] == digest(plan)
                 and lesson['snapshot_sha256'] == snapshot_sha256

@@ -113,6 +113,8 @@ def test_post_t0_full_horizon_and_immutable_source_required():
     receipt['t0'] = 299
     with pytest.raises(ValueError, match='receipt_sha256'):
         lesson(receipt=receipt)
+    with pytest.raises(ValueError, match='full registered window'):
+        lesson(receipt=source()[0], window=dict(start_s=300, end_s=400))
 
 
 def test_job_binds_group_base_and_every_member_solo_same_full_window_crn():
@@ -231,6 +233,29 @@ def test_quote_exact_cap_prefix_cost_symmetry_and_no_duplicate_contexts():
         el.budget_quote([b, long_r])
 
 
+def test_four_actor_full_episode_batch_hits_cap_and_requires_all_four_solos():
+    batch = []
+    for arm in ('B', 'R'):
+        for identity in range(8):
+            macro = moves.Move('wall', ('a', 'b', 'c', 'd'), 0, 40, .5)
+            receipt, example, plan = source(arm)
+            plan = dict(plan, members=list(macro.members), perturbation_profile=plan['perturbation_profile']*2)
+            receipt = el.seal(dict(receipt, window=dict(start_s=300, end_s=1200), chosen_plan=plan), 'receipt_sha256')
+            local = lesson()['local']
+            local['rows'].extend([dict(vid=v, s_m=-1520.-i*10, v_mps=10., lane=i%2, is_cav=True)
+                                  for i, v in enumerate(('c', 'd'))])
+            local.update(acquirable_cav_ids=list(macro.members), offered_moves=[macro.to_dict()])
+            bound = lesson(arm, macro, identity=identity, receipt=receipt, example=example, plan=plan,
+                local=local, window=receipt['window'])
+            batch.append(el.job_spec(bound, seeds()))
+    quote = el.budget_quote(batch)
+    assert quote['planned_sim_s'] == quote['cap_sim_s'] == 230400
+    assert quote['branches'] == 192
+    assert [b['branch'] for b in batch[0]['branches'][:6]] == ['group', 'base', 'solo0', 'solo1', 'solo2', 'solo3']
+    with pytest.raises(ValueError, match='at most eight'):
+        el.budget_quote(batch+[job('B', identity=9), job('R', identity=9)])
+
+
 def manifest_value(negative_r=False):
     b, r = job('B'), job('R')
     return el.manifest([dict(job=b, results=results(b)), dict(job=r, results=results(r, clipped=negative_r))])
@@ -247,6 +272,12 @@ def test_manifest_keeps_negatives_recomputes_and_binds_source_not_boolean(tmp_pa
     assert chosen == lesson()
     changed_plan = dict(plan, duration_s=42)
     assert el.bank_certificate(value, arm='B', receipt=receipt, example=example, plan=changed_plan,
+        snapshot_sha256=lesson()['snapshot_sha256']) is None
+    for key in ('prefix_sha256', 'base_policy_sha256', 'runtime_sha256'):
+        assert el.bank_certificate(value, arm='B', receipt=receipt, example=example, plan=plan,
+            snapshot_sha256=lesson()['snapshot_sha256'], **{key: sha('wrong binding')}) is None
+    short_receipt = dict(receipt, window=dict(start_s=300, end_s=400))
+    assert el.bank_certificate(value, arm='B', receipt=short_receipt, example=example, plan=plan,
         snapshot_sha256=lesson()['snapshot_sha256']) is None
     value['entries'][1]['admission']['admitted'] = True
     path.write_text(json.dumps(el.seal(value, 'manifest_sha256')), encoding='utf-8')
