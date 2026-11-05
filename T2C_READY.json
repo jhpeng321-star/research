@@ -1,13 +1,14 @@
 {
-  "schema": "coopmwm.t2c_ready.v7",
+  "schema": "coopmwm.t2c_ready.v8",
   "task": "T2C",
-  "fix_round": "replacement REVIEW_T2C_r1.md reviewing 70911f7a; dynamic-membership blocker; complete spec through MAIN 02:30",
+  "fix_round": "dynamic-membership blocker fixed at 94b58dfc; independent REVIEW_T2C_r1.md PASS at 27eac808; review scope through MAIN 02:30",
   "status": "CPU_FIX_READY",
   "branch": "c4/rerun-tracks",
   "worktree": "E:/agent-work/c4-rerun-tracks",
   "date": "2026-11-05",
   "implementation_commit": "94b58dfc",
   "ready_for_review": true,
+  "independently_reviewed": true,
   "ready_for_live_launch": false,
   "commits": [
     {"commit": "c2a753ba", "step": "Restore opt-in public quote/budget/wall-clock/CLI preparation parity."},
@@ -19,13 +20,15 @@
     {"commit": "9f06f049", "step": "Bind full native admission evidence, update regressions and CPU smoke receipts."},
     {"commit": "70911f7a", "step": "Preserve completed earlier fix/readiness and recovery verification."},
     {"commit": "7b66877e", "step": "Preserve replacement independent membership review and resume scope."},
-    {"commit": "94b58dfc", "step": "Cancel unavailable retained move groups, preserve cadence/base ownership, add 27 dynamic-membership regressions."}
+    {"commit": "94b58dfc", "step": "Cancel unavailable retained move groups, preserve cadence/base ownership, add 27 dynamic-membership regressions."},
+    {"commit": "27eac808", "step": "Refresh membership fix readiness with 100 completed CPU passes."},
+    {"commit": "70d309e570229b588c5f9bfd16b16a8dd89a235d", "step": "Preserve completed independent PASS review and its execution evidence."}
   ],
   "blockers": {
     "1": {
       "status": "fixed",
       "reviewed_revision": "70911f7aad20e5b4674d7dc7efb162064260737e",
-      "review": "REVIEW_T2C_r1.md, preserved unchanged in 7b66877e",
+      "review": "Historical blocker preserved in 7b66877e; current independent PASS at 27eac808 preserved unchanged in 70d309e5",
       "implementation": "Cancel the complete retained move when any member leaves the current observable/commandable set. Do not partially execute or resurrect it, and do not resample until the registered decision tick. Preserve native base and valid residuals with deterministic own-context ownership, including the zero-correction fallback. Actor exit/reappearance discards/reinitialises its context. Invalid fresh proposals and residuals still refuse.",
       "learning_receipts": "Retain sampled move/onset and reward attribution, recording move_cancelled_at_s and move_unavailable_members on the original decision row; no invented decision or off-cadence label.",
       "coverage": "18 complete-window overlapping-group cases spanning range loss, exit/reappearance and missing actuator across training/all/group/solo/empty masks; non-resurrection and valid residual continuity; six invalid fresh proposal/residual cases; two native V2V B/R complete-window workers, including empty-CAV frames, then real layer autograd updates from actual turnover reward rows with frozen-base checks.",
@@ -160,7 +163,40 @@
     "prior_fix_receipt": "T2C_FIX_CURRENT_R1.md",
     "episode_hook": "EpisodeHook cancels unavailable retained groups, keeps the registered cadence and own-context base fallback, and adds cancellation metadata to original training rows. Same lifecycle for training/isolated/shared-final."
   },
+  "independent_review": {
+    "artifact": "REVIEW_T2C_r1.md",
+    "reviewer": "astra",
+    "verdict": "PASS",
+    "reviewed_head": "27eac808c1e4e818ab0f6ea25132b7991c4bfd35",
+    "implementation_commit": "94b58dfc",
+    "preserved_in_commit": "70d309e570229b588c5f9bfd16b16a8dd89a235d",
+    "report_git_blob": "f4bd5d9f94ab2f85c510f17d94b3294712b5a4e8",
+    "remaining_blockers": [],
+    "scope": "T2C implementation and CPU verification against the shared specification through MAIN 02:30",
+    "completed_tests": {"passed": 100, "failed": 0, "skipped": 0, "deselected": 0},
+    "added_membership_regressions": 27,
+    "evidence": "Three independently executed sequential invocations, exact commands and results in the report. These overlap author and historical suites; do not add their totals.",
+    "completed_suites_repeated_in_this_resume": false
+  },
   "resume_verification": {
+    "date": "2026-11-05",
+    "recovered_head": "27eac808c1e4e818ab0f6ea25132b7991c4bfd35",
+    "inputs_read_first": ["git status", "git log", "E:/agent-work/_sol/tracks_spec.md (complete, 68 lines)", "REVIEW_T2C_r1.md", "T2C_READY.json", "T2C_FIX_MEMBERSHIP_R1.md", "T2C_ACCEPTED.json", "T2C_FIX_CURRENT_R1.md"],
+    "preserved_uncommitted_review": true,
+    "preserved_prior_commits_and_untracked_artifacts": true,
+    "implementation_matches_reviewed_head": true,
+    "implementation_comparison": "git diff --exit-code 27eac808c1e4e818ab0f6ea25132b7991c4bfd35 -- tools/coopmwm RERUN_TRACKS_READY.md T2C_READY.json T2C_CPU_SMOKE.json T2C_FIX_MEMBERSHIP_R1.md T2C_FIX_CURRENT_R1.md (exit 0 before receipt refresh)",
+    "active_process_check": "No active pytest invocation observed in the Python/pytest process inventory. Existing unrelated processes were left untouched; no runtime or dispatch was launched or duplicated.",
+    "prior_completed_work_reused": "Current independent PASS confirms all reviewed blockers are resolved. Existing implementation, 27 added membership regressions and completed author/independent CPU suites are preserved.",
+    "new_pytest_executions": 0,
+    "passing_counts_carried_from_completed_runs": true,
+    "completed_suites_repeated": false,
+    "receipt_validation": "PASS: JSON parsing, committed independent-review blob/verdict binding, all blocker statuses, budget phase sum/cap and zero repeated pytest executions.",
+    "final_implementation_comparison": "PASS: implementation, tests, operator documentation, CPU smoke and fix receipts still match independent-reviewed 27eac808 after readiness refresh.",
+    "diff_check": "git diff --check -- T2C_READY.json REVIEW_T2C_r1.md passed",
+    "new_sim_s": 0
+  },
+  "membership_fix_resume_verification": {
     "date": "2026-11-05",
     "recovered_head": "70911f7aad20e5b4674d7dc7efb162064260737e",
     "inputs_read_first": ["git status", "git log", "tracks_spec.md through MAIN 02:30", "REVIEW_T2C_r1.md", "T2C_READY.json", "T2C_FIX_CURRENT_R1.md", "T2C_ACCEPTED.json"],
