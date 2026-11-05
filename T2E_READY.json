@@ -153,7 +153,7 @@
   },
   "latest_resume_confirmation": {
     "date": "2026-11-05",
-    "starting_head": "a6b2ed513ff3d1e8fd21cc3090ebd8187acb486c",
+    "starting_head": "5666d488400dc2b083ca5f55e20b3a5ab718ff5c",
     "tracked_worktree_changes_at_start": false,
     "receipts_checked": [
       "T2E_READY.json",
@@ -164,7 +164,7 @@
     ],
     "result": "Both r0 blockers were already fixed, regression-tested and independently accepted before this session. No implementation changes are required; preserve the existing fixes and completed test evidence.",
     "verification": "Confirmed branch c4/group-credit at the starting HEAD. git diff --exit-code 75c804e96b71c318e298788ad40bc2f069f2fb75 -- tools/coopmwm/group_credit.py tools/coopmwm/test_group_credit_cpu.py passed. The complete tracked-tree diff from that independently tested commit contains only T2E_READY.json, so implementation, tests and tracked dependencies are unchanged. git diff --check c4/track-base -- tools/coopmwm/group_credit.py tools/coopmwm/test_group_credit_cpu.py T2E_READY.json passed.",
-    "independent_resume_confirmation": "REVIEW_T2E_r1.md independently reconfirms PASS at this same starting HEAD, retaining 38 passing T2E tests and the five disclosed inherited broader-suite failures.",
+    "independent_resume_confirmation": "REVIEW_T2E_r1.md includes subsequent fresh-session confirmation at 5666d488 and independently retains PASS, 38 passing T2E tests and the five disclosed inherited broader-suite failures. This session confirmed the full tracked-tree diff since the tested commit is still only T2E_READY.json (43 insertions, 1 deletion before this refresh).",
     "tests": "Retained completed results above; no test jobs or dispatches restarted, honoring the resume instruction not to redo finished work.",
     "launch_profile": "Latest shared specification still requires WM group credit OFF; retain the accepted additive CPU/API deliverable."
   },
