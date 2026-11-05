@@ -1,0 +1,16 @@
+{
+  "status": "FRESH_REMOTE_AUDIT_SAFETY_PAUSED",
+  "unix": 1793860979.5614734,
+  "owner_authority": "REGISTRATION.md 2026-11-05 14:34; verbatim 1",
+  "original_config_file_sha256": "0527ab594f3b9c5b3440e488e9633d38e6eb586bde05f871c999dd562cf8c31b",
+  "sealed_updates": {"A": 9, "B": 8, "R": 8},
+  "prior_owners": {"A": 197777, "B": 197778, "R": 197779, "monitor": 197780},
+  "all_prior_owners_exited": true,
+  "pause_file_sha256": "5ab3abec6cebf9e14406b5c06f8a47a256809716d76a802e0a461ce0eea72268",
+  "stop_fault_file_sha256": "065af2b4f558680d002ae364105d1019b39cf74495c1f4e7a7a15bb7291a7814",
+  "B_u009_composite": {"critical_mean_delta": 19.46875, "critical_ci95": [0.71875, 38.65625], "TTC_mean_delta": 18.125, "collisions": 0, "teleports": 0},
+  "ledger": {"rows": 1086, "cumulative_sim_s_including_parity": 1189440, "file_sha256": "1caaec89a369632074ca0bdf9ce6e51d768db5764ffcda85d83b4596ccb292c5"},
+  "existing_1434_dispatch_or_receipts": [],
+  "clearance_performed": false,
+  "new_sim_s": 0
+}
