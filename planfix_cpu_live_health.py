@@ -41,8 +41,15 @@ print('CPU_LIVE_HEALTH',json.dumps(out),flush=True)
 '''
 
 if __name__=='__main__':
-    import time
-    text=remote('cpuV',CODE,timeout=25)
+    import time,argparse
+    parser=argparse.ArgumentParser();parser.add_argument('--generation',type=int,default=7);args=parser.parse_args()
+    assert args.generation in (6,7)
+    code=CODE
+    if args.generation==7:
+        code=code.replace('cpu_wm_v6','cpu_wm_v7').replace(
+            '452e7ae008aa9a92bdc68a2f4ecda4251a0ad0c4b6946fddbc549c9ab0eb8621',
+            '1148e8c723f5e9c43685977b901221b52025b6d61da89845ce20228d7a382f76')
+    text=remote('cpuV',code,timeout=25)
     value=json.loads(next(x[len('CPU_LIVE_HEALTH '):] for x in text.splitlines() if x.startswith('CPU_LIVE_HEALTH ')))
     path=Path(__file__).with_name(f'PLANFIX_CPU_LIVE_HEALTH_{time.time_ns()}.json')
     with path.open('x') as out:json.dump(value,out,indent=2,sort_keys=True)

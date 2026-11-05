@@ -1,0 +1,333 @@
+{
+  "BOOTSTRAP_PASS.json": {
+    "new_sim_s": 0,
+    "physical_sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca",
+    "pid": 381108,
+    "wall_s": 6.3142762490024325,
+    "wm_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436"
+  },
+  "CPU_OWNER.json": {
+    "affinity": [
+      47
+    ],
+    "alive_same_identity": true,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "cpu_seconds": 397.46,
+    "elapsed_s": 397.54241704940796,
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 381108,
+    "process_state": "R",
+    "resources": {
+      "Cpus_allowed_list": "47",
+      "Threads": "1",
+      "VmRSS": "1338976 kB"
+    },
+    "start_ticks": "8612088",
+    "unix": 1793896272.4049025
+  },
+  "DISPATCH.json": {
+    "alive_same_identity": true,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "coordinator": {
+      "affinity": [
+        47
+      ],
+      "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+      "new_sim_s": 0,
+      "pid": 381105,
+      "start_ticks": "8612061",
+      "unix": 1793896272.1353323
+    },
+    "cpu_seconds": 397.46,
+    "elapsed_s": 397.57218074798584,
+    "max_cpu_cores": 1,
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 381108,
+    "procedure": "original8gates then ONE speed search, no SUMO or expansion",
+    "process_state": "R",
+    "resources": {
+      "Cpus_allowed_list": "47",
+      "Threads": "1",
+      "VmRSS": "1336928 kB"
+    },
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7",
+    "start_ticks": "8612088",
+    "unix": 1793896272.3752468
+  },
+  "DISPATCH_STARTED.json": {
+    "new_sim_s": 0,
+    "retired_old": {
+      "exited": true,
+      "files_and_prior_measurements_preserved": true,
+      "new_sim_s": 0,
+      "owner": {
+        "affinity": [
+          47
+        ],
+        "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+        "new_sim_s": 0,
+        "nice": 19,
+        "pid": 364064,
+        "start_ticks": "8210497",
+        "unix": 1793892256.4876962
+      },
+      "pidfd_sigterm_then_sigcont": true,
+      "reason": "pre-search export ABI correction, no completed gate or search",
+      "unix": 1793896272.36193
+    },
+    "unix": 1793896272.372386
+  },
+  "GATED_COORDINATOR_OWNER.json": {
+    "affinity": [
+      47
+    ],
+    "alive_same_identity": false,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "new_sim_s": 0,
+    "pid": 379532,
+    "start_ticks": "8575344",
+    "unix": 1793895904.9638505
+  },
+  "GATED_COORDINATOR_TERMINAL.json": {
+    "model": null,
+    "new_sim_s": 0,
+    "owner": {
+      "affinity": [
+        47
+      ],
+      "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+      "new_sim_s": 0,
+      "pid": 379532,
+      "start_ticks": "8575344",
+      "unix": 1793895904.9638505
+    },
+    "reason": "controller_error_no_retry:AttributeError(\"module 'os' has no attribute 'pidfd_open'\")",
+    "unix": 1793895904.987795
+  },
+  "GATED_PHASE.json": {
+    "kind": "retire_exact_old_query_abi_worker",
+    "new_sim_s": 0,
+    "target": {
+      "affinity": [
+        47
+      ],
+      "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+      "new_sim_s": 0,
+      "nice": 19,
+      "pid": 364064,
+      "start_ticks": "8210497",
+      "unix": 1793892256.4876962
+    },
+    "unix": 1793895904.9834132
+  },
+  "GATED_POLL_LATEST.json": {
+    "health": {
+      "blocked": false,
+      "pace": {
+        "A": {
+          "interval_s": 1162.5676834583282,
+          "limit_s": 1179.1483981609344,
+          "over": false,
+          "update": 16
+        },
+        "B": {
+          "interval_s": 1153.70521235466,
+          "limit_s": 1173.205691576004,
+          "over": false,
+          "update": 16
+        },
+        "R": {
+          "interval_s": 1162.3879494667053,
+          "limit_s": 1167.4601202011108,
+          "over": false,
+          "update": 15
+        }
+      },
+      "reason": "active_training_in_bounds"
+    },
+    "model": null,
+    "new_sim_s": 0,
+    "unix": 1793895904.979531
+  },
+  "STAGE_ENV.json": {
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "CPU_BINDING d6bb1c271c3299f328cae6ed1651f8c2d0ab28fb96b8eea9e21f79df1aaadfcc 666\n"
+  },
+  "STAGE_PASS.json": {
+    "binding_file_sha256": "1148e8c723f5e9c43685977b901221b52025b6d61da89845ce20228d7a382f76",
+    "dispatch_started": false,
+    "launch_file_sha256": "d036a7d311694c102182f2bebe17c890c7e5e67cd593b248fab2ca176cd815f9",
+    "new_sim_s": 0,
+    "pace": {
+      "A": {
+        "ceiling_s": 1179.1483981609344,
+        "intervals_s": [
+          1164.5672767162323,
+          1170.51988863945,
+          1179.1483981609344
+        ],
+        "last_update": 13
+      },
+      "B": {
+        "ceiling_s": 1173.205691576004,
+        "intervals_s": [
+          1149.266884803772,
+          1168.5544457435608,
+          1173.205691576004
+        ],
+        "last_update": 12
+      },
+      "R": {
+        "ceiling_s": 1167.4601202011108,
+        "intervals_s": [
+          1157.6539821624756,
+          1167.4601202011108,
+          1164.3921592235565
+        ],
+        "last_update": 12
+      }
+    },
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7",
+    "source_files": 656
+  },
+  "exists": true,
+  "gated_control_v2": {
+    "GATED_COORDINATOR_DISPATCH.json": {
+      "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+      "control": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7/gated_control_v2",
+      "may_dispatch_one_model_only_after_unchanged_resource_gate": true,
+      "new_sim_s": 0,
+      "pid": 381105,
+      "registration": {
+        "config": {
+          "binding_file_sha256": "1148e8c723f5e9c43685977b901221b52025b6d61da89845ce20228d7a382f76",
+          "expected_program_sha256": "b8bea12a351e5ba0b7ab3d7ced44871b84c9e92d7b2cd64babe198352bec8597",
+          "maximum_controller_wall_s": 86400,
+          "no_sumo": true,
+          "worker_root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7"
+        },
+        "control": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7/gated_control_v2",
+        "model_python": "/home/ubuntu/miniconda3/bin/python",
+        "new_sim_s": 0,
+        "program_sha256": "b8bea12a351e5ba0b7ab3d7ced44871b84c9e92d7b2cd64babe198352bec8597",
+        "resource_python": "/usr/bin/python3",
+        "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7",
+        "rule": "Preserve stopped old364064 until unchanged pace/health or sealed-clean2-idle permits exact own retirement and ONE correctedv7; same-process8gates+ONE speed search, no SUMO/retry/expansion/bank switch"
+      },
+      "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7",
+      "start_ticks": "8612061",
+      "unix": 1793896272.1037946
+    },
+    "GATED_COORDINATOR_OWNER.json": {
+      "affinity": [
+        47
+      ],
+      "alive_same_identity": true,
+      "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+      "cpu_seconds": 0.09,
+      "new_sim_s": 0,
+      "pid": 381105,
+      "process_state": "S",
+      "start_ticks": "8612061",
+      "unix": 1793896272.1353323
+    },
+    "GATED_PHASE.json": {
+      "kind": "corrected_model_dispatched_once",
+      "new_sim_s": 0,
+      "target": {
+        "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+        "coordinator": {
+          "affinity": [
+            47
+          ],
+          "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+          "new_sim_s": 0,
+          "pid": 381105,
+          "start_ticks": "8612061",
+          "unix": 1793896272.1353323
+        },
+        "max_cpu_cores": 1,
+        "new_sim_s": 0,
+        "nice": 19,
+        "pid": 381108,
+        "procedure": "original8gates then ONE speed search, no SUMO or expansion",
+        "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7",
+        "start_ticks": "8612088",
+        "unix": 1793896272.3752468
+      },
+      "unix": 1793896272.3848727
+    },
+    "GATED_POLL_LATEST.json": {
+      "health": {
+        "blocked": false,
+        "pace": {
+          "A": {
+            "interval_s": 1162.4703028202057,
+            "limit_s": 1179.1483981609344,
+            "over": false,
+            "update": 17
+          },
+          "B": {
+            "interval_s": 1153.70521235466,
+            "limit_s": 1173.205691576004,
+            "over": false,
+            "update": 16
+          },
+          "R": {
+            "interval_s": 1164.601241827011,
+            "limit_s": 1167.4601202011108,
+            "over": false,
+            "update": 16
+          }
+        },
+        "reason": "active_training_in_bounds"
+      },
+      "model": {
+        "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+        "coordinator": {
+          "affinity": [
+            47
+          ],
+          "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+          "new_sim_s": 0,
+          "pid": 381105,
+          "start_ticks": "8612061",
+          "unix": 1793896272.1353323
+        },
+        "max_cpu_cores": 1,
+        "new_sim_s": 0,
+        "nice": 19,
+        "pid": 381108,
+        "procedure": "original8gates then ONE speed search, no SUMO or expansion",
+        "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7",
+        "start_ticks": "8612088",
+        "unix": 1793896272.3752468
+      },
+      "new_sim_s": 0,
+      "unix": 1793896633.1366987
+    },
+    "log_tail": "GATED_EVENT {\"kind\": \"retire_exact_old_query_abi_worker\", \"unix\": 1793896272.154132, \"new_sim_s\": 0, \"target\": {\"affinity\": [47], \"boot_id\": \"2c19986e-dd5e-4de9-95ca-3212b1ea0568\", \"new_sim_s\": 0, \"nice\": 19, \"pid\": 364064, \"start_ticks\": \"8210497\", \"unix\": 1793892256.4876962}}\nGATED_EVENT {\"kind\": \"corrected_model_dispatched_once\", \"unix\": 1793896272.3848727, \"new_sim_s\": 0, \"target\": {\"pid\": 381108, \"start_ticks\": \"8612088\", \"boot_id\": \"2c19986e-dd5e-4de9-95ca-3212b1ea0568\", \"unix\": 1793896272.3752468, \"root\": \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7\", \"max_cpu_cores\": 1, \"nice\": 19, \"new_sim_s\": 0, \"procedure\": \"original8gates then ONE speed search, no SUMO or expansion\", \"coordinator\": {\"pid\": 381105, \"start_ticks\": \"8612061\", \"boot_id\": \"2c19986e-dd5e-4de9-95ca-3212b1ea0568\", \"unix\": 1793896272.1353323, \"affinity\": [47], \"new_sim_s\": 0}}}\n"
+  },
+  "gated_log_tail": "GATED_EVENT {\"kind\": \"retire_exact_old_query_abi_worker\", \"unix\": 1793895904.9834132, \"new_sim_s\": 0, \"target\": {\"affinity\": [47], \"boot_id\": \"2c19986e-dd5e-4de9-95ca-3212b1ea0568\", \"new_sim_s\": 0, \"nice\": 19, \"pid\": 364064, \"start_ticks\": \"8210497\", \"unix\": 1793892256.4876962}}\nTraceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7/GATED_COORDINATOR.py\", line 88, in <module>\n    else:model=launch()\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7/GATED_COORDINATOR.py\", line 64, in launch\n    old=retire_known_old()\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7/GATED_COORDINATOR.py\", line 47, in retire_known_old\n    signal_owned(target,old/'planfix_cpu_worker.py',signal.SIGTERM)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7/GATED_COORDINATOR.py\", line 35, in signal_owned\n    fd=os.pidfd_open(target['pid']);assert fields_for(target)\nAttributeError: module 'os' has no attribute 'pidfd_open'\n",
+  "gates": {},
+  "log_tail": "",
+  "query_preflight": {
+    "group": [
+      "ramp.24",
+      "mainline.108",
+      "mainline.111"
+    ],
+    "new_sim_s": 0,
+    "observable_rows": 11,
+    "prepared": true,
+    "prepared_before_gates_without_wm_search": true,
+    "snapshot_sha256": "68b8081147330295c30686c45c80a4c8d53e072eeff3c7cc79bb6609795f942a",
+    "time_s": 300,
+    "world_id": 986026
+  },
+  "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7",
+  "unix": 1793896669.9466195
+}

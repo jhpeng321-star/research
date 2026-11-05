@@ -1,5 +1,79 @@
 # PLANFIX CPU continuation — 2026-11-05 18:36 +08
 
+## CURRENT: 2026-11-06 00:37 — corrected CPUv7 running, preserve both identities
+
+**Adopt, never duplicate, the actual live pair on cpuV:**
+
+- WM **381108/start8612088**, boot2c19986e-dd5e-4de9-95ca-3212b1ea0568;
+  `/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7`.
+- Resource coordinator **381105/start8612061**, same boot;
+  `cpu_wm_v7/gated_control_v2` (the root-level first controller is a retained
+  failed attempt, not the active one).
+
+Independent00:37:51 capture: WM alive/R,397.46CPU-s/397.54elapsed-s, Threads1,
+affinity47/nice19/RSS~1.34GB; coordinator alive/S,0.09CPU-s. Original WM2 /
+physical MAPPO / original32prior bootstrap PASS6.314276s. Actual frozen-u0
+query/base-export ABI preflight PASS BEFORE expensive gates: TRAIN986026/t300,
+11observable rows, one-ego100m, group[ramp.24,mainline.108,mainline.111]. This is
+not a WM search or an admitted example. First full original startup comparison
+is genuinely computing; **0/8 completed gate receipts, no failure, no speed
+result, no new SUMO or admission**.
+
+CPUv7 exact binding1148e8c7 and registration80b4a7cc;9local CPU contract tests
+and Linux666file/AST/config/recipe/introspection/export/collector checks PASS.
+Frozen301-test/9-subtest collector and11executor qualifications are reused.
+The new paired native-export API and query construction are checked BEFORE
+gates, with actual frozen actor weight identity/output, memory/RNG restored.
+Original numerical sources, scorer/K/populations/horizons and all8gate criteria
+are unchanged. Prospective24h operator clock permits CPU waiting; no extra
+search, simulator route or physical budget is added.
+
+The resource gate CLEARED WITHOUT RESETTING LIMITS.00:35:03 read-only audit:
+original clean2 owners/config/smoke/gate healthy, A17/B16/R16 intervals
+1162.470303/1153.705212/1164.601242s, all below originalv6 limits
+1179.148398/1173.205692/1167.460120s. Phase33,600/600,000/protected566,400;
+actual global2,973,840/5M and full disjoint allocation bound5M.
+
+Only after that same gate was acceptable did coordinator2 retire exact own
+stopped oldv6 PID364064/start8210497 via pidfd SIGTERM+SIGCONT, independently
+verify exited, and launch ONE correctedv7. All old disk evidence retained;
+oldv6 had0completed gates/searches/physics. Its incomplete engineering gate
+could not safely continue into a known bad immutable query ABI. No completed
+scientific work or completed gate was replayed, no model overlapped. The old
+resource controller370289 is obsolete and stops on target exit. Do not resume
+oldv6 or follow its older instructions below.
+
+First guarded-controller attempt379532 exited with no model/signal because
+miniconda's os lacks pidfd_open. Keep its files. Active control2 uses the
+proved system `/usr/bin/python3` for ONLY resource control; WM still uses the
+qualified miniconda/Torch environment. Source/config/interpreter SHAs were
+appended to clean1 AUTHORITY before controller2 dispatch. Proof:
+`PLANFIX_CPU_V7_GATED_DISPATCH_v2.json`, latest `PLANFIX_CPU_STATUS_v7_*.json`.
+
+Coordinator2 watches unchanged pace/health every60s, pidfd-stops/resumes ONLY
+its own same model when necessary, preserves RAM/partial same-process gates,
+and never changes a limit, signals training or retries/replaces a failed model.
+At evaluation boundaries the model also waits rather than discarding work on a
+resource hold. After genuine clean2 completion, continuation requires ALL four
+original owners exited plus exact sealed A/B/Ru24 receipts/matching final
+checkpoint SHAs/noSTOP/FAULT; mere process loss is not idle proof. Thus it can
+continue the authorized CPU-only task without competing after training ends.
+At controller deadline/error unfinished own model is left stopped in RAM.
+
+**Next read:** `python -B planfix_deploy_cpu_worker.py status --generation 7`.
+Never rerun dispatcher/coordinator. The chain will complete the original8fresh
+same-process gates then exactly ONE measured collector search, reporting active
+CPU and pause-inclusive walltime. It does not expand, simulate, admit plans or
+publish an active bank hook. After actual receipts, data-only
+`python -B planfix_cpu_prepare_verify.py` now targets v7; pending path is tested,
+post-result preparation still needs qualification. Test/register an exact CPU
+native-library all8 executor/ledger/resource amendment BEFORE any SUMO. Reuse
+qualified own `ops_v6_receipt_adoption` executor/charge-source bytes, not bank
+dispatches. Final counts remain all0/empty seed coverage; actual switch index
+UNSET, u12 passed. MAIN/owner applies a later registered boundary/R fairness
+only after genuine admissions. Nonempty ready manifests belong in
+`prepared_switch/`, never the active F3 hook path before MAIN applies.
+
 ## 23:49 resident controller verified — no laptop dependency
 
 Adopt BOTH existing own identities, never duplicate:

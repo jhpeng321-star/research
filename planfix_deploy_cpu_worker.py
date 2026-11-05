@@ -240,6 +240,12 @@ if root.exists():
     status=Path('/proc',str(d['pid']),'status').read_text().splitlines()
     d['resources']={line.split(':',1)[0]:line.split(':',1)[1].strip() for line in status if line.split(':',1)[0] in ('VmRSS','Threads','Cpus_allowed_list')}
  result['gates']={p.name:json.loads(p.read_text()) for p in sorted(root.glob('STARTUP_*.json'))}
+ p=root/'SPEED_QUERY.json'
+ if p.exists():
+  q=json.loads(p.read_text());record=q['record']
+  result['query_preflight']=dict(prepared=True,prepared_before_gates_without_wm_search=q.get('prepared_before_gates_without_wm_search',False),
+   world_id=record['world_id'],time_s=record['time_s'],group=record['group'],observable_rows=len(record['rows']),
+   snapshot_sha256=q['snapshot_sha256'],new_sim_s=q['new_sim_s'])
  p=root/'CPU_WORKER.log'
  if p.exists():result['log_tail']=p.read_bytes()[-14000:].decode(errors='replace')
  p=root/'PACE_SUPERVISOR.log'
