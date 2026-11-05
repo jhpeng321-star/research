@@ -1,0 +1,40 @@
+{
+  "clean1_preserved_stopped": true,
+  "config_file_sha256": "827d24dd9708adc7cba649b24b48fa74e65a7f9255766f40a67c49038c091bb6",
+  "gate_sha256": "92e3722f0fdcaf3701fd91fe367102a431887487b73d8fd06e57cd41a42fa910",
+  "owner_quote": "restart",
+  "owners": {
+    "A": {
+      "pid": 301793,
+      "start_ticks": "6682640"
+    },
+    "B": {
+      "pid": 301794,
+      "start_ticks": "6682640"
+    },
+    "R": {
+      "pid": 301795,
+      "start_ticks": "6682640"
+    },
+    "monitor": {
+      "pid": 301796,
+      "start_ticks": "6682640"
+    }
+  },
+  "remaining_cap_sim_s": 3184160,
+  "root": "/home/ubuntu/coopmwm20261105_clean2",
+  "runtime_commit": "285663a103d18fd33e9137db14fba33b62423a23",
+  "runtime_sha256": "f6489716c060f0a647148bcf247bdd6051635b712396a0eda1eb3d75b9af563d",
+  "schema": "coopmwm.clean2.launched.v1",
+  "smoke_sha256": "3a1842b1605579daed7e7f31aa65e66bf456c142f4d10bee89827d6ff0711e2d",
+  "source_manifest_sha256": "6540f37204e89880467c4a70f93dc03b6db12261418b67bd4148f32b154a7545",
+  "source_root": "/home/ubuntu/coopmwm20261105_clean2_src_285663a1",
+  "start_updates": {
+    "A": 0,
+    "B": 0,
+    "R": 0
+  },
+  "timestamp": "2026-11-05T11:09:40.913231+00:00",
+  "unix": 1793876980.9132497,
+  "updates": 24
+}
