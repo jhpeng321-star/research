@@ -1,0 +1,22 @@
+{
+  "schema": "coopmwm.clean1.monitor_verified.v1",
+  "update": 1,
+  "monitor_unix": 1793842587.3983135,
+  "receipt_sha256": "9292cc0b05e2dc57dac7c5ac376cfb4908ae9daee838331170e2563949435ffa",
+  "runtime_commit": "7cc6edaa994641a6d71a4816c0dd8b707fda2e32",
+  "actions": {"A": "CONTINUE", "B": "CONTINUE", "R": "CONTINUE"},
+  "diagnose": {"A": [], "B": [], "R": []},
+  "safety": {"collisions": 0, "teleports": 0},
+  "trigger_rates_non_none": {"B": 0.8893893893893894, "R": 0.8974732750242954},
+  "bank_move_ce": {"B": 2.063004970550537, "R": 2.127864122390747},
+  "layer_kl": {"B": 0.025360949337482452, "R": 0.012814201414585114},
+  "weighted_starts": {"B": 6, "R": 6},
+  "augmented_examples_used": {"B": 0, "R": 0},
+  "merge_missing_share": {"B": 0.0, "R": 0.0},
+  "owners_alive": true,
+  "faults": [],
+  "next_update_started": 2,
+  "cumulative_charged_sim_s_at_verification": 211280,
+  "status_summary_automatically_appended": "2026-11-05T09:36:52.632252+08:00, five lines in CLEAN1_STATUS.md",
+  "next_checks": "u2/u4 probes and u6 replicated test pending; monitoring continues, no cooperation verdict claimed"
+}
