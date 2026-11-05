@@ -155,7 +155,7 @@ def test_verified_bank_move_ce_actually_updates_trigger_with_frozen_base(backend
     def pairs(*args, example_consumer, **kwargs):
         assert kwargs['imitation_target_space'] == 'effective'
         assert kwargs['imitation_bank_filter'] == 'cooperative_only'
-        example_consumer(receipt={}, example=dict(admitted=True, cooperative=True),
+        example_consumer(receipt=dict(verification_id='cpu', t0=300), example=dict(admitted=True, cooperative=True),
             plan=plan, pairs=[pair], trace='fixture')
         return [pair], {}
     @contextmanager

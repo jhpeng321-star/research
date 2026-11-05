@@ -1,0 +1,241 @@
+"""F3: one verified, observable context pool for practice and trigger teaching.
+
+PLAN_FIX_READY.json is a handoff, not verification evidence. Its optional
+``outputs`` list names bank run roots and their B/R replay_sources. Every entry
+still goes through the existing per_seed_v1, safety, tape-hash and effective
+target readers. No WM-only proposal or arbitrary move label is admitted here.
+"""
+from collections import Counter
+from copy import deepcopy
+import json
+from pathlib import Path
+
+from .protocol import digest
+
+SCHEMA = 'coopmwm-plan-fix-banks-v1'
+RULE = ('F3 owner 2026-11-05 15:15: all usable admitted verified bank contexts; '
+        'distinct contexts before repeats; least-used contexts across updates; '
+        'uniform supported-family mass, identical B/R family distribution')
+
+
+def inputs(cfg):
+    """Current bank plus optional PLAN_FIX/S-VARIETY bank outputs (CPU reads).
+
+    Contract: {schema: SCHEMA, outputs: [{run_root: ..., replay_sources:
+    {B: [...], R: [...]}}]}. Paths are relative to the handoff's directory or
+    absolute. Missing handoff / empty outputs means the current bank only.
+    Both arms use the same handoff, with their own verified guidance and CRN.
+    """
+    from .track2_backend import _path
+    root = _path(cfg['run_root']).resolve()
+    ready = _path(cfg.get('plan_fix_ready', root/'PLAN_FIX_READY.json'))
+    raw = [dict(run_root=str(root), replay_sources=cfg.get('replay_sources', {}))]
+    if ready.exists():
+        record = json.loads(ready.read_text(encoding='utf-8'))
+        if record.get('schema') != SCHEMA or not isinstance(record.get('outputs'), list):
+            raise ValueError('PLAN_FIX_READY requires the F3 bank-output contract')
+        for item in record['outputs']:
+            if not isinstance(item, dict) or 'run_root' not in item:
+                raise ValueError('PLAN_FIX output must name a verified bank run_root')
+            base = _path(item['run_root'])
+            base = base if base.is_absolute() else ready.parent/base
+            sources = item.get('replay_sources', {})
+            if not isinstance(sources, dict) or set(sources)-{'B', 'R'}:
+                raise ValueError('PLAN_FIX replay_sources must be common B/R bank inputs')
+            converted = {}
+            for arm, paths in sources.items():
+                if not isinstance(paths, list):
+                    raise ValueError('PLAN_FIX replay_sources must contain path lists')
+                converted[arm] = [str(_path(p if Path(p).is_absolute() else ready.parent/p).resolve())
+                                  for p in paths]
+            raw.append(dict(run_root=str(_path(base).resolve()), replay_sources=converted))
+    seen, out = set(), []
+    for item in raw:
+        for paths in item['replay_sources'].values():
+            for path in paths:
+                _path(path)
+        key = digest(item)
+        if key not in seen:
+            seen.add(key)
+            out.append(item)
+    return out
+
+
+def visit(cfg, arm, consumer):
+    """Visit ALL usable verified examples, including legacy and imported banks.
+
+    The callback also receives the bank configuration that resolves its snapshot.
+    Deduplication is by verification/seed/plan, not a path or policy-version tag.
+    """
+    if arm not in ('B', 'R'):
+        return
+    from . import track2_backend as p1
+    seen = set()
+    for source in inputs(cfg):
+        local = dict(cfg, **source)
+        def consume(*, receipt, example, plan, pairs, trace):
+            # bank_pairs has already checked legacy admission/cooperation too.
+            if not pairs:
+                return
+            key = (receipt['verification_id'], int((example or {}).get('seed_index', 1)), digest(plan))
+            if key in seen:
+                return
+            seen.add(key)
+            p1._path(trace)
+            consumer(cfg=local, receipt=receipt, example=example, plan=plan, pairs=pairs, trace=trace)
+        with p1._bank_view(local) as rb:
+            rb.bank_pairs(Path(local['run_root']), arm, local['training_seed'],
+                sources=local.get('replay_sources', {}).get(arm, ()), v2v=True,
+                v2v_intent=local if local.get('v2v_intent') else None,
+                imitation_bank_filter='cooperative_only',
+                imitation_target_space='effective', example_consumer=consume)
+
+
+def observable_contexts(policy, plan, pairs, frames, *, t0):
+    """Earliest usable frame per acting member, rather than pairs[0] only.
+
+    Each member is supervised once per example. A later frame gets the remaining
+    onset/hold, never a fresh full-duration move. Frames with less than the
+    registered minimum hold remaining are not representable. Own/partner packets are
+    reconstructed with the same causal policy observer as online execution.
+    """
+    from . import moves
+    label = moves.from_plan(plan)
+    remaining = set(label.members)
+    reader = deepcopy(policy)
+    observed = set()
+    for sample, weight in sorted(pairs, key=lambda pair: int(pair[0]['intent_link']['t'])):
+        time = int(sample['intent_link']['t'])
+        elapsed = time-int(t0)
+        active = max(0, elapsed-label.onset)
+        if elapsed < 0 or (label.family != 'none' and label.hold-active < moves._HOLD_LO):
+            continue
+        if time not in frames:
+            continue
+        for t in (time-1, time):
+            if t in frames and t not in observed:
+                reader.observe(frames[t]['vehicles'], t)
+                observed.add(t)
+        source = sample['context']
+        keep = [v for v in source['members'] if v in remaining
+                and set(label.members) <= set(reader.visible.get(v, ()))
+                and v in reader.local_intents]
+        if not keep:
+            continue
+        # Remaining onset is relative to this observed context, not original t0.
+        from dataclasses import replace
+        target = (replace(label, onset=max(0, label.onset-elapsed), hold=label.hold-active)
+                  if label.family != 'none' else label)
+        context = dict(source, members=keep,
+            x=[source['x'][source['members'].index(v)] for v in keep],
+            trigger_v2v={v: reader.local_intents[v] for v in keep})
+        yield context, target, reader, float(weight), time
+        remaining.difference_update(keep)
+        if not remaining:
+            break
+
+
+def practice_pool(cfg, arm):
+    """Verified restarts including imported contexts; preserve exact seed salts."""
+    from . import replay_bank as rb, practice_starts as ps, moves, sumo_verify as sv
+    rows = []
+    def consume(*, cfg, receipt, example, plan, pairs, trace):
+        root = cfg['run_root']
+        links = ps._links(root, arm)
+        snap = rb._decision_snapshot(root, arm, receipt, links)
+        world = snap['episode']['world']
+        if (snap['episode'].get('role') != 'train' or snap['episode'].get('arm') != arm
+                or not 986000 <= int(world['seed']) <= 986071):
+            raise ValueError('F3 practice requires ordinary TRAIN snapshots')
+        seed = int((example or {}).get('seed_index', 1))
+        vid = receipt['verification_id']
+        if seed > 1:
+            snap = rb.replicate(snap, vid if seed == 2 else f'{vid}#s{seed}')
+        lookup = {k: receipt[k] for k in ('verification_id', '_source', '_branches', '_policy_version')
+                  if k in receipt}
+        rows.append(dict(verification_id=vid,
+            example_id=(example or {}).get('example_id', f'{vid}#s1'), seed_index=seed, salt=vid,
+            state_id=links.get(vid, {}).get('state_id', f'imported_{vid}'), fallback=False,
+            source='verified_breadth', family=moves.from_plan(plan).family,
+            snapshot_lookup=dict(run_root=str(root), receipt=lookup),
+            snapshot_sha256=sv.snapshot_sha(snap),
+            context_id=digest(dict(snapshot=sv.snapshot_sha(snap), family=moves.from_plan(plan).family))))
+    visit(cfg, arm, consume)
+    # Multiple verified plans/links can describe the very same restart context.
+    unique = {}
+    for row in rows:
+        unique.setdefault(row['context_id'], row)
+    return sorted(unique.values(), key=lambda row: row['context_id'])
+
+
+def matched_pools(cfg):
+    pools = {arm: practice_pool(cfg, arm) for arm in ('B', 'R')}
+    supports = {arm: {r['family'] for r in pool} for arm, pool in pools.items()}
+    if supports['B'] != supports['R']:
+        raise ValueError(f'F3 B/R verified family support differs: {supports}; add verified guidance')
+    return pools
+
+
+def practice_plan(root, arm, update, *, cfg, fraction, repeat_cap, count, training_seed):
+    """Matched family quotas, least-used distinct restarts, frozen by the caller."""
+    from . import practice_starts as ps
+    pools = matched_pools(cfg)
+    cap = int(repeat_cap)
+    families = sorted({r['family'] for r in pools[arm]})
+    capacities = {f: min(sum(r['family'] == f for r in p) for p in pools.values())*cap
+                  for f in families}
+    # Identical rotating family sequence for B/R, independent of arm RNGs.
+    if families:
+        shift = (int(update)-1) % len(families)
+        families = families[shift:]+families[:shift]
+    schedule, totals = [], Counter()
+    while len(schedule) < int(count):
+        available = [f for f in families if totals[f] < capacities[f]]
+        if not available:
+            break
+        family = min(available, key=lambda f: totals[f])
+        schedule.append(family)
+        totals[family] += 1
+    # R follows B's frozen/realized family sequence even if new contexts have
+    # arrived since B collected. A replacement normal episode is not practice.
+    b_path = ps.plan_path(root, 'B', update)
+    if arm == 'R' and b_path.exists():
+        from . import exact_grade as xg
+        b_plan = json.loads(b_path.read_text(encoding='utf-8'))
+        xg.verify_sealed(b_plan, 'practice_plan_sha256')
+        if 'breadth' not in b_plan:
+            raise ValueError('F3 R requires a breadth-aware B practice plan')
+        sequence = [r['family'] for r in b_plan['rows']]
+        b_update = Path(root)/f'B_UPDATE_{int(update):03}.json'
+        if b_update.exists():
+            from .accel_storage import read
+            report = read(b_update)['practice']
+            sequence = [r['breadth']['family'] for r in report['episodes']]
+        if len(sequence) != int(count):
+            raise ValueError('F3 R practice family count must match B realized practice')
+        schedule = sequence
+        totals = Counter(schedule)
+        own_capacity = Counter(r['family'] for r in pools[arm])
+        if any(n > own_capacity[f]*cap for f, n in totals.items()):
+            raise ValueError('F3 R verified family capacity cannot match B practice')
+    prior, used = Counter(), Counter()
+    for path in sorted(ps.plan_path(root, arm, 0).parent.glob(f'PRACTICE_PLAN_{arm}_*.json')):
+        old = json.loads(path.read_text(encoding='utf-8'))
+        from . import exact_grade as xg
+        xg.verify_sealed(old, 'practice_plan_sha256')
+        if int(old['update']) < int(update):
+            prior.update(r.get('context_id', r['example_id']) for r in old['rows'])
+    selected = []
+    for family in schedule:
+        eligible = [r for r in pools[arm] if r['family'] == family and used[r['context_id']] < cap]
+        row = min(eligible, key=lambda r: (used[r['context_id']], prior[r['context_id']],
+            digest(dict(context=r['context_id'], seed=int(training_seed)))))
+        selected.append(dict(row))
+        used[row['context_id']] += 1
+    return dict(arm=arm, update=int(update), training_seed=int(training_seed),
+        fraction=float(fraction), repeat_cap=cap, requested=int(count), rows=selected,
+        registry=dict(pool_examples=len(pools[arm]), cooperative_examples=len(pools[arm]),
+            cooperative_capacity=len(pools[arm])*cap, empty_bank=not pools[arm], fallback_used=False),
+        breadth=dict(rule=RULE, family_counts=dict(totals),
+            eligible_contexts=[r['context_id'] for r in pools[arm]],
+            unique_selected=len(used), inputs_sha256=digest(inputs(cfg))), rule=RULE)
