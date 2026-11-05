@@ -56,6 +56,27 @@ def test_launch_admission_allows_only_budgeted_plan_fix_appends(args, tmp_path, 
         clean2.verify_previous(cfg)
 
 
+def test_restart_does_not_wait_for_optional_handoff_but_reads_it_when_published(tmp_path):
+    import json
+    from . import bank_breadth
+    previous=tmp_path/'clean1';root=tmp_path/'clean2'
+    old=rc.runtime_config({},root=str(previous),reference_root=str(tmp_path/'legacy'),
+        source_root=str(tmp_path/'oldsource'),common_checkpoint_sha256='a'*64,track2=True)
+    old['augmentation_prelaunch']=dict(ledger_root=str(previous))
+    old['plan_augment']['enabled']=False
+    old['launch_augmentation_decision']=rc.AUGMENTATION_OFF_DECISION
+    cfg=clean2.restart_config(old,root,tmp_path/'newsource',dict(commit='new',files={}))
+    expected=previous/'plan_fix/PLAN_FIX_READY.json'
+    assert cfg['plan_fix_ready']==str(expected) and not expected.exists()
+    assert len(bank_breadth.inputs(cfg))==1
+    expected.parent.mkdir(parents=True)
+    output=tmp_path/'verified_new_bank'
+    expected.write_text(json.dumps(dict(schema=bank_breadth.SCHEMA,
+        outputs=[dict(run_root=str(output),replay_sources={})])))
+    assert [p['run_root'] for p in bank_breadth.inputs(cfg)]==[str(root.resolve()),str(output.resolve())]
+    assert cfg['plan_fix_ready']==str(expected)
+
+
 def test_smoke_uses_exact_inherited_owner_safety_rules_and_never_changes_A(tmp_path):
     from . import composite_health as safety, launch_qualification as qualification
     from .exact_grade import _seal

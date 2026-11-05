@@ -31,6 +31,10 @@ def restart_config(original, root, source, source_manifest):
     cfg['a_results']['root'] = str(root)
     cfg['single_ledger']['root'] = str(root)
     cfg['augmentation_prelaunch']['ledger_root'] = str(root)
+    # Bind the optional handoff location even before its producer publishes it.
+    # F3 treats a missing handoff as the current bank; later native-verified
+    # outputs become visible without waiting or rebinding the approved config.
+    cfg['plan_fix_ready'] = str(Path(original['run_root'])/'plan_fix/PLAN_FIX_READY.json')
     if cfg['plan_augment']['enabled'] or cfg.get('launch_augmentation_decision') != rc.AUGMENTATION_OFF_DECISION:
         raise ValueError('owner symmetric augmentation-OFF design required')
     rc.check_pins(cfg)
@@ -163,8 +167,7 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1):
         raise ValueError('accepted fixed F4 continuation recipe required')
     cfg.update(deepcopy(recipe['config_patch']))
     handoff = clean1/'plan_fix/PLAN_FIX_READY.json'
-    if handoff.is_file():
-        cfg['plan_fix_ready'] = str(handoff)
+    cfg['plan_fix_ready'] = str(handoff)
     preflight = preflight_banks(cfg,clean1)
     rule = training.read(clean1/rc.RULE_FILE)
     rc.init_root(root, amendment_shas=[rule['amendment_sha256']], track2=True)
