@@ -33,6 +33,14 @@ No existing launch registration is changed by this build.
   to the normal full-duration verified profile plan. `moves.from_plan` checks
   exact role order, lane timing and policy-relative offsets; it never silently
   turns a lane-bearing plan into an acceleration-only label.
+- r0 fix (executable binding): a G5 plan must also carry
+  `group_lane.executable_fields(move, duration, policy_profile)`: the executable
+  `profile` (what `plans.acceleration_at` runs in native verification/practice),
+  the immutable `policy_profile` reference and `perturbation_profile`. All are
+  strict finite member x second matrices with `profile - policy_profile ==
+  perturbation_profile == macro offsets`; knot fields are rejected as conflicting.
+  `verify_tape` also requires every tape second in the window to have executed
+  exactly `profile` (`sample.absolute_accels`).
 
 The execution adapter reuses `c4/lane-policy` / `c4/lane-plans` integration
 `e5740395`: `controller.lane_request(env)` -> the existing
@@ -41,6 +49,12 @@ The new module contains the adapted tensor/outcome helpers and the observable
 version of the existing `lane_feasibility(..., LaneRules())` envelope. It loads
 no lane model or policy lane head. The environment remains the only TraCI
 writer and retains laneChangeMode 513, edge/junction guards and SUMO safety.
+r0 fix (ownership): the backend passes `controller.lane_actors()` (this tick's
+gate-passed actors) as `CavSumoEnv.step(accel, lanes=..., lane_actors=...)`; only
+those finite-command CAVs get laneChangeMode 513 and are restored to their
+original mode when released. Nonmembers, released counterfactual members and
+HDVs are never touched. Without `lane_actors` the legacy semantics are
+byte-identical (CPU comparison against 6d8046e7).
 
 Each commanded actor's own sensor packet is checked again at execution. Missing
 target-lane coverage, HDV identity, changed source lane, unsafe front/rear gap,
@@ -58,6 +72,11 @@ Telemetry:
 - `sample.g5_lane_gate`: safe targets and per-CAV refusal reasons;
 - `event.g5_lane_outcome`: actual tick requested / issued / blocked / executed
   aggregate and raw environment counters. Issuance is not reported as execution.
+- `event.g5_lane_outcome.vehicles`: per-vehicle `{target, status, completed}`
+  from the env (`info["lane_vehicles"]`, G5 contract only). Bank admission
+  (`verify_tape`) requires the expected actor/target in `g5_lane_gate.safe`, not
+  blocked, `status == "issued"`, `completed`, and the actor's next-frame lane
+  transition; aggregate counts never certify an actor.
 
 ## Verified mined-example input
 

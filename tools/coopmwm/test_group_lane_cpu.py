@@ -459,9 +459,10 @@ class _FakeTraci:
         self.time += .5
 
 
-def _real_env(monkeypatch, blocked=()):
+def _real_env(monkeypatch, blocked=(), env_module=None):
     """Slots: main (WM 1), ramp (WM 2), unrelated CAV (WM 1), hdv (WM 0)."""
-    from traffic_shepherd.c4 import env as env_module
+    if env_module is None:
+        from traffic_shepherd.c4 import env as env_module
     ids = ['main', 'ramp', 'unrelated', 'hdv']
     env = object.__new__(env_module.CavSumoEnv)
     env.api = _FakeTraci(ids)
@@ -491,7 +492,7 @@ def _real_env(monkeypatch, blocked=()):
         # Post-physics frame: every issued changeLane completes unless the actor is blocked.
         for vid, idx, _ in env.api.changes:
             if vid not in blocked:
-                env.frame.lane[ids.index(vid)] = dict(main=0, ramp=1)[vid]
+                env.frame.lane[ids.index(vid)] = dict(main=0, ramp=1, unrelated=0)[vid]
         return Counter(source_wait_vehicle_seconds=0.)
     env._after_physics = physics
     env.state = lambda: {}
@@ -714,3 +715,39 @@ def test_g5_runtime_records_per_actor_telemetry_from_env_info(cfg):
                         lane_vehicles=dict(main=dict(target=0, status='issued', completed=True))))
     assert c.events[-1]['g5_lane_outcome']['vehicles'] == dict(
         main=dict(target=0, status='issued', completed=True))
+
+
+@pytest.mark.parametrize('script', ['no_lanes', 'legacy_lanes', 'alias_lane', 'mixed_nan_and_hdv'])
+def test_g5_env_default_off_matches_pre_g5_env_byte_identically(monkeypatch, script):
+    """Without lane_actors the fixed writer equals the pre-G5 (6d8046e7) env exactly."""
+    import importlib.util
+    import subprocess
+    from pathlib import Path
+    from traffic_shepherd.c4 import env as current
+    root = Path(current.__file__).resolve().parents[2]
+    src = subprocess.run(['git', '-C', str(root), 'show', '6d8046e7:traffic_shepherd/c4/env.py'],
+                         capture_output=True, text=True, check=True).stdout
+    old = importlib.util.module_from_spec(importlib.util.spec_from_loader('traffic_shepherd.c4._pre_g5', None))
+    old.__package__ = 'traffic_shepherd.c4'
+    exec(compile(src, 'pre_g5_env.py', 'exec'), old.__dict__)
+    nan = float('nan')
+    ticks = dict(
+        no_lanes=[dict(accel=[0., 0., 0., nan])]*3,
+        legacy_lanes=[dict(accel=[0., 0., 0., nan], lanes=[0., 1., -1., -1.]),
+                      dict(accel=[0., nan, 0., nan], lanes=[-1., -1., 0., -1.]),
+                      dict(accel=[0., 0., 0., nan])],
+        alias_lane=[dict(accel=[0., 0., 0., nan], lane=[0., -1., -1., -1.]),
+                    dict(accel=[0., 0., 0., nan], lane=[-1., -1., -1., -1.])],
+        mixed_nan_and_hdv=[dict(accel=[nan, 0., 0., nan], lanes=[0., 1., 0., 1.]),
+                           dict(accel=[0., 0., nan, nan], lanes=[0., -1., -1., 0.])])[script]
+    traces = []
+    for module in (old, current):
+        env = _real_env(monkeypatch, env_module=module)
+        trace = []
+        for tick in ticks:
+            kw = {k: np.array([v]) for k, v in tick.items() if k != 'accel'}
+            _, info = env.step(np.array([tick['accel']]), **kw)
+            trace.append((json.dumps(info, sort_keys=True, default=str), dict(env._lc_original),
+                          dict(env.lane_command_counts)))
+        traces.append((trace, list(env.api.changes), list(env.api.mode_writes), dict(env.api.modes)))
+    assert traces[0] == traces[1]
