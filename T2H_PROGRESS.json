@@ -16,5 +16,6 @@
   "completed": true,
   "resume_20261105": "Preserved existing implementation and review evidence. Fixed revised-spec blocker in 3be81d33: augmented examples now require their own bound all8 admission, including replay of frozen plans. Final relevant CPU run: 96 passed (61 T2H + 35 practice-start regressions). No jobs dispatched.",
   "acceptance_resume_20261105": "Found independent PASS review at a5a9bc22 already on disk, reporting a separate 96-pass CPU rereview. Preserved it unchanged in 844a3894 and reconciled READY/ACCEPTED receipts. No implementation changes, repeated tests or dispatches were needed.",
-  "ready_receipt": "T2H_READY.json"
+  "ready_receipt": "T2H_READY.json",
+  "final_resume": "Read shared spec first, then status/log and task receipts. Preserved pending review unchanged in 9a48f20d. Confirmed implementation/tests identical to independently tested a5a9bc22 and diff whitespace checks pass. Refreshed READY commit inventory; no tests or jobs repeated. T2H remains READY with no open fixes."
 }

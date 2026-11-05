@@ -13,7 +13,9 @@
     {"sha": "1161550d", "subject": "coopmwm T2H: preserve revised review blocker on resume"},
     {"sha": "3be81d33", "subject": "coopmwm T2H: require own all8 admission for augmented practice"},
     {"sha": "a5a9bc22", "subject": "coopmwm T2H: refresh readiness after all8 admission fix"},
-    {"sha": "844a3894", "subject": "coopmwm T2H: preserve independent all8 fix acceptance"}
+    {"sha": "844a3894", "subject": "coopmwm T2H: preserve independent all8 fix acceptance"},
+    {"sha": "d45d2a2a", "subject": "coopmwm T2H: reconcile readiness with independent PASS"},
+    {"sha": "9a48f20d", "subject": "coopmwm T2H: preserve resumed PASS review"}
   ],
   "receipt_commit": "The final commit containing T2H_READY.json records verification and readiness.",
   "api": {
@@ -117,6 +119,14 @@
     "prior_broad_tests": {"passed": 209, "failed": 0, "skipped": 1, "deselected": 1},
     "test_count_note": "The current 96-case independent run covers 61 T2H cases and 35 practice-start regressions. Prior broad results overlap and must not be added; their deselection avoided a synthetic restricted-path fixture. One cache_dir warning arose from disabling cacheprovider.",
     "resume": "The independent PASS report was already present as uncommitted work on resume and was preserved unchanged in 844a3894. Readiness, acceptance and progress receipts reconciled with that completed review. No completed tests or dispatches duplicated."
+  },
+  "final_resume": {
+    "starting_head": "d45d2a2a",
+    "preserved_review_commit": "9a48f20d",
+    "implementation_unchanged_since_tested_head": "a5a9bc22",
+    "verification": "git diff --exit-code a5a9bc22 HEAD excluding the four review/readiness/acceptance/progress files passed; git diff --check c4/track-base passed",
+    "tests": "Preserved completed 96-pass independent CPU result; no tests or dispatches repeated",
+    "result": "READY and ACCEPTED remain consistent with PASS; no implementation changes or open T2H fixes"
   },
   "open_issues": [],
   "integration_notes": [
