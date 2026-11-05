@@ -139,6 +139,15 @@
     "latest_resume_review": "Confirmed no changes since implementation commit 32dc3019 to the fresh binding, fresh_worker, warm_service, plan_service, warm_spool, hotadd, ls_gpu or requested CPU test modules. Re-read the pending qualification contract, same-process four-gate handoff, eight-gate completion before READY, legacy admission flow, explicit GPU environment pins and host selection, and generated-staging-to-real-service CPU regression. No implementation follow-up identified.",
     "latest_resume_evidence": "Re-opened the retained FRESH_QUALIFICATION.json: all eight receipts pass with zero max_cost_error and PID 40744, explicit Python 3.10 / torch 2.12.1+cpu test environment, and zero new SUMO sim-s. Preserved the completed required-suite results above; local process inspection found no matching Round 4 Python/pytest job. No tests or dispatches started; existing PLANFIX edits and all untracked receipts retained."
   },
+  "resume_verification_2026_11_06": {
+    "resumed_head": "4a62b35a",
+    "implementation_commit": "32dc301995bc2fa8bf45f8249a78d96d5f6f6115",
+    "finding": "Round 4 is already committed and is an ancestor of HEAD. No changes since that implementation to varcollect, fresh_worker, warm_service, plan_service, warm_spool, hotadd, ls_gpu or the requested CPU test modules. Reviewed the pending qualification contract, same-process four-gate handoff, exact eight-gate completion before READY, legacy admission format, host environment pins, --gpu-host selection and generated-staging-to-real-service CPU regression; no implementation follow-up identified.",
+    "retained_evidence": "Re-opened _out/pytest_varcollect_round4_verified/test_fresh_binding_through_rea0/worker/FRESH_QUALIFICATION.json: pass_ true, all eight receipts pass with zero max_cost_error and PID 40744, explicit Python 3.10 / torch 2.12.1+cpu test environment, and zero new SUMO sim-s.",
+    "tests": "Preserved the completed required-suite results above: 301 passed, 9 subtests passed including additional suites. No completed test suite rerun.",
+    "jobs": "Local Python/pytest process inspection found no job matching this worktree or the requested suites. No job or dispatch started.",
+    "preservation": "Tracked files and index were clean on entry; both untracked blocked receipts and all existing PLANFIX work are preserved. This resume changes only VARCOLLECT_READY.json using local CPU-only inspection."
+  },
   "hard_rules_compliance": {
     "cpu_only": true,
     "no_ssh_sumo_gpu_execution": true,
