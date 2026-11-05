@@ -2,13 +2,42 @@
 
 Scope: MAIN 2026-11-05 15:15, item F4. Implementation is confined to the
 cooperation-layer reward and its CPU contracts. The reward implementation and
-registration are common to B and R. A bypasses this reward path.
+registration are common to B and R. A bypasses this reward path. F4 is an
+**explicit, default-off addition** to the existing team reward.
+
+## Opt-in and continuation recipe
+
+The common production configuration slot is `f4_close_call`. Absent or `false`
+means OFF even when the existing `track2_reward` is enabled. OFF preserves the
+launch-parent reward, serialized episodes/envelopes/receipts, accepted historical
+move evidence, monitor hashes and learning behavior. It does not add F4 fields or
+parse/validate move attribution. Turning off the entire team reward is unnecessary.
+
+`F4_CONTINUATION_RECIPE.json` explicitly enables this addition via `config_patch`:
+
+```python
+from tools.coopmwm import track2_safety_reward
+cfg['f4_close_call'] = {
+    'enabled': True,
+    'registration': track2_safety_reward.registration(),
+}
+```
+
+The checked-in JSON patch binds the full fixed registration, including weight
+**1.0**, provenance, threshold and B/R arms. Apply it to the common continuation
+configuration before the existing configuration/source bindings are generated.
+`launch_production.backend_config` and `monitor_config` validate and carry this
+same slot unchanged. Neither arm can override the weight or provenance.
+Monitor registration remains immutable within a history: a changed objective
+belongs to a separately registered monitor sequence, with the old history retained.
 
 ## Fixed registration
 
 `tools/coopmwm/track2_safety_reward.py:REGISTRATION` is the executable registration;
-`registration()` returns an independent copy. It is included in P2 reward receipts,
-per-CAV reward evidence and the production learning receipt.
+`registration()` returns an independent copy. `settings(cfg)` returns that copy
+only for the exact enabled registration, and `None` when absent/false. When ON,
+the registration is included in P2 reward receipts, per-CAV reward evidence and
+the production learning receipt.
 
 - Threshold: **strict TTC < 1.5 seconds**, prescribed by F4 and matching the
   existing replay-bank event counter.
@@ -51,10 +80,11 @@ terminal pair coverage is not replaced with global outcomes.
 
 ## APIs and receipts
 
-- `track2_reward.neighbourhood_reward(..., first_actuation_s=None)` adds
-  `close_call` evidence and `close_call_penalty`. No attribution means zero penalty.
+- `track2_reward.neighbourhood_reward(..., close_call_enabled=True,
+  first_actuation_s=None)` adds `close_call` evidence and `close_call_penalty`.
+  No attribution means zero penalty; default calls retain the pre-F4 output.
 - `training_episodes` and `reward_update` derive attribution from episode samples
-  automatically. The production launch already calls this path.
+  only when the explicit F4 slot is enabled. The production launch calls this path.
 - `close_call` includes fixed registration, first exposure time, pair IDs,
   observation time, bumper gap, closing speed, TTC, count and negative penalty.
 - Aggregate receipts include `close_call_events`, `move_exposed_cav_ticks`, and
@@ -63,15 +93,21 @@ terminal pair coverage is not replaced with global outcomes.
   different CAV reward domains.
 - `ArmRuntime._reward_targets` checks the fixed registration, episode-derived
   attribution, observable IDs, timestamps, TTC arithmetic, count, penalty, and
-  augmented reward formula. An actuated move cannot use an old envelope missing
-  F4 evidence. Non-move historical CPU envelopes remain compatible.
+  augmented reward formula when enabled. Enabled envelopes must supply F4 evidence.
+  With F4 absent/false, historical envelopes remain compatible for active moves too.
+- `track2_monitor` binds the enabled registration into its component contract and
+  checks finite nonpositive penalty sums, integer event/exposure counts and
+  observation consistency. It validates
+  `reward_sum = own_reward_sum + team_addition_sum + close_call_penalty_sum`.
+  The raw event count is **not** equated to the equal-CAV-mean penalty aggregate.
+  Publication, history reload and status reporting use this same contract.
 - Existing full-rollout discount, reward unit, return horizon, trigger advantage,
   optimizer settings and base-policy update path are reused.
 
 The fixed F4 registration is additive to the existing neighbour-weight
-registration; there is no arm-specific weight or tuning switch. An integrator
-should record this module's registration/source commit when identifying the
-F4 continuation recipe; the original CLEAN1 recipe did not contain this term.
+registration; there is no arm-specific weight or tuning switch. The explicit
+opt-in is bound in `F4_CONTINUATION_RECIPE.json`; the original CLEAN1 recipe did
+not contain this term.
 
 ## CPU verification
 
@@ -81,8 +117,15 @@ Use `C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q` with:
 - `tools/coopmwm/test_track2_backend_cpu.py`
 - `tools/coopmwm/test_launch_integration_cpu.py`
 - `tools/coopmwm/test_track2_monitor_cpu.py`
+- `tests/unit/test_track2_reward.py`
 
 These exercise the production reward envelope, trainer validation, delayed
 trigger return credit, real layer optimization and frozen base, A bypass, B/R
 parity, strict TTC boundary, rear/own/neighbour events, expiry, empty/terminal
 observations, packet priority, duplicate handling and delayed V2V timestamps.
+The fix-round regressions also publish real nonzero B/R envelopes through
+`launch_production.update_metrics` and `launch_training.monitor_update`, reload
+their history, reject malformed safety aggregates, and compare absent/false
+behavior against the actual `8bf7f533` launch-parent implementations. Differential
+checks include JSON bytes, active/idle/terminal/empty/historical inputs, monitor
+hashes, real CPU optimizer state, policy tensors and learning receipts.

@@ -1,0 +1,22 @@
+{
+  "schema": "coopmwm-f4-continuation-recipe-v1",
+  "task": "F4",
+  "config_patch": {
+    "f4_close_call": {
+      "enabled": true,
+      "registration": {
+        "schema": "coopmwm-f4-close-call-v1",
+        "threshold_s": 1.5,
+        "weight": 1.0,
+        "provenance": "MAIN 2026-11-05 15:15 F4; implementation registration: 1.0 speed-deficit reward-second per pair-event; fixed before tests, no tuning",
+        "threshold_provenance": "MAIN 15:15 F4 TTC<1.5s; replay_bank.TTC_EVENT_S",
+        "arms": ["B", "R"],
+        "event_rule": "adjacent same-lane closing pair per 1s control tick; strict TTC<1.5s",
+        "attribution": "measurement strictly after first nonzero library offset of a currently active move containing the acting CAV; through commitment expiry; temporal, not counterfactual",
+        "aggregation": "deduplicated observable pair count (own and neighbours), no global outcomes"
+      }
+    }
+  },
+  "application": "Apply config_patch to the common B/R production configuration before its existing config/source bindings are generated. The slot is passed unchanged through backend_config and monitor_config. A bypasses cooperation reward.",
+  "monitor_history": "Start an F4 monitor history for this changed registration; existing pre-F4 histories retain their original registration and hashes."
+}

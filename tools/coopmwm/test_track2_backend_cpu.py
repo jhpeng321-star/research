@@ -74,8 +74,9 @@ def fake_load(monkeypatch):
 def reward_result(cfg, sample, arm='B', *, outcomes=None, move_history=None):
     """Test-only P2 output from real-outcome inputs, never WM estimates."""
     from . import track2_safety_reward as safety
-    attribution = safety.move_attribution(sample, sample['track2']['time_s'],
+    attribution = (safety.move_attribution(sample, sample['track2']['time_s'],
                                           {} if move_history is None else move_history)
+                   if safety.settings(cfg) is not None else {})
     outcomes = outcomes or dict(c1=1., c2=-2., h1=3.)
     registration = cfg['track2_reward']
     rows = []
@@ -86,7 +87,8 @@ def reward_result(cfg, sample, arm='B', *, outcomes=None, move_history=None):
         rows.append(dict(episode_id='ep1', time_s=300, cav_id=vid, source='sumo',
             own_reward=outcomes[vid], neighbour_rewards=neighbours, reward=reward,
             weight=registration['weight'], weight_provenance=registration['provenance'],
-            close_call=safety.close_calls([], {}, first_actuation_s=attribution.get(vid))))
+            **(dict(close_call=safety.close_calls([], {}, first_actuation_s=attribution.get(vid)))
+               if safety.settings(cfg) is not None else {})))
     return dict(schema=tb.REWARD_SCHEMA, arm=arm, update=1, rows=rows)
 
 

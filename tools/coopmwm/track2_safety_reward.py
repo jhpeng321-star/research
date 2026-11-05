@@ -27,6 +27,22 @@ def registration():
     return deepcopy(REGISTRATION)
 
 
+def settings(cfg):
+    """Common B/R opt-in; absent/False retains the pre-F4 reward contract.
+
+    Enabled recipes explicitly bind the fixed weight/provenance and event rule;
+    there are no arm-specific or tuneable overrides.
+    """
+    slot = cfg.get('f4_close_call', False)
+    if slot is False:
+        return None
+    if (not isinstance(slot, dict) or set(slot) != {'enabled', 'registration'}
+            or slot['enabled'] is not True or slot['registration'] != REGISTRATION
+            or type(slot['registration']['weight']) not in (int, float)):
+        raise ValueError('F4 f4_close_call requires enabled=True and the fixed common registration')
+    return registration()
+
+
 def move_attribution(sample, time_s, history):
     """Per-episode history of first recorded library offsets, keyed by commitment.
 
