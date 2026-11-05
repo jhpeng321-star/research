@@ -1,0 +1,92 @@
+{
+  "task": "F2",
+  "status": "READY",
+  "date": "2026-11-05",
+  "worktree": "E:/agent-work/c4-fix-proposals",
+  "branch": "c4/fix-proposals",
+  "base_branch": "c4/rerun-launch",
+  "base_commit": "8bf7f53395c7a53a3e8d847c5a7f3229b79ab102",
+  "commits": [
+    {
+      "sha": "45915c47fe00288c9e67544386f0b13b4ca8231f",
+      "subject": "C4 launch: balance feasible ownership-aware move proposals"
+    }
+  ],
+  "registration": {
+    "rule": "f2-feasible-balanced-v1",
+    "provenance": "tracks_spec.md MAIN 15:15 2026-11-05 owner item F2",
+    "allocation": "One slot per feasible non-none family per randomly permuted cycle; family counts differ by at most one; none remains the separate baseline slot.",
+    "acquisition": "Expire commitments, process acting CAVs in stable id order, acquire the selected move before constructing the next slate, retain original context order for PPO.",
+    "eligibility": "Every member must be locally observable, a CAV, in registered range, presently controlled and unowned; this includes ego and gap_open's non-actuating partner.",
+    "geometry_and_parameters": "Reuse moves.py and VARIETY_REGISTERED; enumerate bounded wall member subsets while preserving full-local-pool gap/ramp role checks.",
+    "arms": "Identical proposal, acquisition and telemetry code for B and R, with no arm argument or outcome-conditioned tuning. Shared MoveAPI also defines the slate for uniform random teaching; dense teaching remains disabled in the current launch."
+  },
+  "files": [
+    "tools/coopmwm/feasible_proposals.py",
+    "tools/coopmwm/track2_backend.py",
+    "tools/coopmwm/launch_production.py",
+    "tools/coopmwm/test_feasible_proposals_cpu.py",
+    "docs/F2_FEASIBLE_PROPOSALS.md"
+  ],
+  "api": {
+    "candidates": "feasible_proposals.candidates(obs_state, rng, n) -> list[moves.Move]; local self/rows plus optional acquirable_cav_ids and proposal_stats output dict",
+    "live_decision": "feasible_proposals.decide_and_start(trigger, context, *, obs_states, observable_cavs, executor, now, rng, generator, deterministic=False) -> (TriggerBatch, accepted_by_ego, stats)",
+    "aggregation": "feasible_proposals.aggregate(receipts) -> update stats or None when unmeasured",
+    "production_bridge": "track2_backend.MoveAPI.candidates uses the shared F2 candidate generator",
+    "episode_telemetry": "sample.track2_trigger.proposals",
+    "update_telemetry": "metrics.move_proposals in per-arm per-update learning-monitor JSON",
+    "infeasible_rate": "sum(rejected_non_none) / sum(selected_non_none), or null without selections",
+    "family_infeasible_rate": "sum(infeasible_family_checks) / sum(family_checks), or null without checks",
+    "raw_counters": [
+      "decisions",
+      "family_checks",
+      "infeasible_family_checks",
+      "proposed_by_family",
+      "selected_non_none",
+      "rejected_non_none"
+    ],
+    "ppo": "Replay uses recorded conditional tables, masks, old log probabilities and original context ordering; proposals are not redrawn."
+  },
+  "verification": {
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_feasible_proposals_cpu.py tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_trigger_policy_cpu.py tools/coopmwm/test_moves_cpu.py tools/coopmwm/test_launch_integration_cpu.py tools/coopmwm/test_track2_monitor_cpu.py --basetemp=E:/agent-work/c4-fix-proposals/_out/f2_cpu_release",
+    "exit_code": 0,
+    "passed": 318,
+    "skipped": 1,
+    "subtests_passed": 5,
+    "duration_seconds": 141.10,
+    "skip_reason": "Existing launch-integration file-symlink privilege test is deferred to cpuV qualification by that test.",
+    "f2_test_cases": 16,
+    "covered_contracts": [
+      "Balanced feasible-family counts and unbiased short-slate family ordering",
+      "Owned ego and partner exclusion, HDV exclusion and registered range",
+      "Cross-lane wall discovery beyond nearest same-lane neighbours",
+      "Full local mainline-pool ramp-role eligibility",
+      "Invariance to unavailable and remote extra geometry",
+      "Same-tick joint acquisition prevents later conflicting proposals",
+      "Existing commitments block all members until exact expiry",
+      "Visible but not currently controlled partners excluded",
+      "Real-trigger conditional log-probability/value replay and context-order invariance",
+      "B/R stochastic and deterministic slate, acquisition, action and RNG parity",
+      "A retains original policy/controller objects, parameters and RNG",
+      "Ratio-of-sums update telemetry and persistence through learning monitor"
+    ],
+    "git_diff_check": "passed",
+    "optional_lint": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m ruff check tools/coopmwm/feasible_proposals.py tools/coopmwm/test_feasible_proposals_cpu.py tools/coopmwm/track2_backend.py tools/coopmwm/launch_production.py",
+      "exit_code": 1,
+      "output": "No diagnostics emitted by the local Ruff invocation; no lint-pass claim."
+    }
+  },
+  "execution_scope": {
+    "cpu_only": true,
+    "new_sim_s": 0,
+    "ssh_calls": 0,
+    "sumo_launches": 0,
+    "gpu_jobs": 0,
+    "changes_limited_to_designated_worktree": true,
+    "restricted_data_opened": false
+  },
+  "open_issues": [
+    "Optional Ruff invocation exited 1 without diagnostics; required CPU tests and git diff checks passed."
+  ]
+}
