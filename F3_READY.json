@@ -1,73 +1,74 @@
 {
   "task": "F3",
   "status": "ready",
+  "round": "fix-r1",
   "date": "2026-11-05",
   "worktree": "E:/agent-work/c4-fix-breadth",
   "branch": "c4/fix-breadth",
   "base_branch": "c4/rerun-launch",
   "base_commit": "8bf7f533",
+  "review_addressed": "REVIEW_F3_r0.md",
   "commits": [
     {
       "commit": "79ea306f",
       "subject": "C4 F3: broaden verified practice and trigger contexts"
+    },
+    {
+      "commit": "8b9ce822",
+      "subject": "C4 F3: record CPU readiness and bank handoff contract"
+    },
+    {
+      "commit": "96a88137",
+      "subject": "C4 F3: bind breadth restarts to verified budgeted evidence"
     }
   ],
-  "scope": "F3 practice/bank breadth and CPU tests only",
-  "implementation": [
-    "One native verified-example visitor for current, imported LS and optional PLAN_FIX banks; no first-three limit.",
-    "Practice includes all usable admitted cooperative contexts, preserves each original snapshot and per-seed CRN, deduplicates restart contexts and rotates through less-used contexts before repetition.",
-    "Trigger supervision scans retained observable frames for each acting member, adjusts remaining onset/hold, and includes legacy and newly supplied verified plans.",
-    "Practice B/R family quotas match; R follows B realized family sequence after normal replacements. Trigger CE uses equal supported-family mass and equal within-family context mass in both arms.",
-    "Explicit mismatch refusal prevents unverified labels or silent B/R family-distribution drift.",
-    "Frozen plans, snapshot hashes, context identities, family counts and normalized CE family mass provide auditable breadth receipts.",
-    "A bypasses bank/PLAN_FIX readers and practice selection; frozen low-level parameters remain untouched in actual CPU trigger updates."
+  "blockers": [
+    {
+      "review_item": 1,
+      "status": "fixed",
+      "summary": "The shared breadth visitor now performs existing augmented-example/evidence/charge validation before practice selection or trigger teaching, including PLAN_FIX/variety roots. It requires the configured prelaunch registration and preserves child identity, parent, SUMO evidence, manifest hash and allocation/ledger provenance in frozen rows. Dispatch revalidates charges and evidence against the original source root. Native augmentation links without a verified manifest refuse admission.",
+      "regressions": "Both B/R and current/PLAN_FIX sources, with weighting=True and breadth_cfg together: absent or empty ledger, wrong phase, wrong charge namespace, undercharging, allocation overrun, changed evidence and unregistered allocation; frozen plans preserve provenance and reject corrupted charges/evidence at wave construction."
+    },
+    {
+      "review_item": 2,
+      "status": "fixed",
+      "summary": "Restart eligibility is checked against the original sealed first-seed receipt snapshot hash, episode/world, arm and decision time before context identity is computed. Actual generator tensors must match verified RNG metadata. Native all8 seed metadata and own-seed receipt/tape/plan evidence bind CRN reconstruction; extra seeds use verify_perseed.extra_seed_salt. Frozen rows retain immutable first/own receipt, confirmation and example bindings, re-read and compared at dispatch. Legacy/imported contexts without an immutable snapshot binding are explicitly excluded and reported.",
+      "regressions": "Native/imported LS/PLAN_FIX pre-selection and resumed snapshot substitution, world, episode, time and generator changes; augmented contexts cannot be certified by a new current hash; unbound legacy exclusions; native all8 first/own-seed receipt, salt, hash and tape mismatches; exact seed-3 restoration and receipt text; own-seed receipt plus confirmation replacement cannot alter frozen evidence; old reduced F3 lookups refuse dispatch."
+    }
   ],
   "api": {
-    "bank_breadth.inputs": "inputs(cfg) -> current and PLAN_FIX bank run_root/replay_sources entries",
-    "bank_breadth.visit": "visit(cfg, arm, consumer) -> callback for every usable verified example; A is a no-op",
-    "bank_breadth.practice_pool": "practice_pool(cfg, arm) -> distinct verified restart contexts with snapshot lookup/hash, family and seed provenance",
-    "bank_breadth.observable_contexts": "observable_contexts(policy, plan, pairs, frames, t0=...) -> earliest usable context/remaining library target per acting member",
-    "practice_starts.plan_for_update": "Added breadth_cfg=cfg; wired in production collection and matched-A safety-reference plan lookup",
-    "practice_starts.load_snapshot": "Supports native imported LS and external verified-bank snapshot_lookup, exact CRN replication and frozen snapshot hash verification",
-    "launch_production.bank_move_supervision": "All usable verified contexts; normalized common family distribution and context-identity receipts",
-    "handoff": {
-      "default_path": "<run_root>/PLAN_FIX_READY.json",
-      "override": "cfg.plan_fix_ready",
-      "schema": "coopmwm-plan-fix-banks-v1",
-      "outputs": "[{run_root: <verified bank run root>, replay_sources: {B: [<LS source>], R: [<LS source>]}}]",
-      "empty_or_missing": "Use the current bank and configured replay_sources",
-      "verification": "Handoff is not admission evidence: existing native confirmation, confidence/safety, branch tape hash and effective/observable target checks still apply"
-    }
+    "bank_breadth.inputs": "inputs(cfg) -> current and optional PLAN_FIX bank run_root/replay_sources entries; handoff schema remains coopmwm-plan-fix-banks-v1",
+    "bank_breadth.visit": "visit(cfg, arm, consumer) -> all usable verified examples after augmented-child prelaunch validation; A is a no-op",
+    "bank_breadth.practice_pool": "practice_pool(cfg, arm) -> distinct originally verified restart contexts with full frozen lookup/evidence, native CRN salt, family and retained child provenance",
+    "bank_breadth.verified_restart": "verified_restart(root, arm, receipt, example, plan) -> (snapshot, immutable verification binding)",
+    "bank_breadth.load_verified_restart": "load_verified_restart(arm, lookup) -> snapshot after original source and frozen evidence revalidation",
+    "practice_weighting.augmented_examples": "Added keyword-only deduplicate=True; breadth uses False to retain every validated child's provenance before restart-context deduplication; default callers retain existing behavior",
+    "practice_starts.plan_for_update": "Existing breadth_cfg and weighting parameters retained; both enabled together enforce registered augmentation admission before a new plan is frozen",
+    "practice_starts.load_snapshot": "Breadth lookups require binding_version=1, re-read original/own-seed evidence, preserve native CRN and recheck child evidence/charges at the source root before wave dispatch",
+    "launch_production.bank_move_supervision": "Existing broad observable-context/family-normalized CE path now shares augmented-child admission checks"
   },
   "tests": {
     "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
     "device": "cpu",
-    "verified_unique_total": {
-      "passed": 213,
-      "skipped": 1,
-      "unresolved_failures": 0
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "-1",
+      "PYTHONDONTWRITEBYTECODE": "1"
     },
     "final_suite": {
-      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_bank_breadth_cpu.py tools/coopmwm/test_launch_integration_cpu.py tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_practice_starts_cpu.py tools/coopmwm/test_practice_weighting_cpu.py --basetemp E:/agent-work/c4-fix-breadth/_out/f3-final-tests",
-      "result": "212 passed, 1 skipped, 1 failed; the only failure was the new wiring test comparing against cfg without the existing runtime update=1 field",
-      "resolution": "Corrected that test expectation to dict(cfg, update=1); production code unchanged"
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_bank_breadth_cpu.py tools/coopmwm/test_launch_integration_cpu.py tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_practice_starts_cpu.py tools/coopmwm/test_practice_weighting_cpu.py --basetemp E:/agent-work/c4-fix-breadth/_out/f3-fix-final-suite",
+      "passed": 321,
+      "skipped": 1,
+      "failed": 0,
+      "duration_seconds": 283.73
     },
-    "resolved_test": {
-      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_track2_backend_cpu.py -k weighted_practice_uses_existing_frozen_plan_and_batch --basetemp E:/agent-work/c4-fix-breadth/_out/f3-wiring-check",
-      "result": "1 passed, 76 deselected"
-    },
-    "earlier_complete_regression": "211 passed, 1 skipped before the final realized-family/report tests and wiring assertion were added",
-    "skip_reason": "Existing file-symlink privilege test skips on Windows; exercised by cpuV qualification",
-    "coverage": [
-      "Native on-disk confidence/safety admission rejects non-admitted examples and changed branch tapes",
-      "Six distinct verified plans times two admitted seeds enter the pool, including LS-imported and PLAN_FIX library/variety fixture banks",
-      "Native LS pending/snapshot/episode reconstruction and exact seed-2 generator restoration",
-      "Rotation across all 11 available synthetic contexts, deterministic frozen-plan reuse, repeat caps and unequal B/R bank sizes",
-      "R matches realized B family sequence after a failed practice slot becomes normal",
-      "Actual trigger CE decreases over eight contexts with equal family mass despite seven-to-one example/legacy-weight skew",
-      "Missing first frame is recovered through later observable context; hidden partner remains ineligible",
-      "Frozen base weights/gradients and A bank-reader isolation",
-      "Realized context identity, distinct-count and family histograms"
+    "new_regression_cases": 108,
+    "skip_reason": "Existing test_launch_integration_cpu.py:526 requires Windows file-symlink privilege. No remote qualification was run in this fix round.",
+    "fixtures": "Native on-disk sealed bank receipts, confirmations, per-seed admission, branch tape hashes, LS reconstruction and restart loading. Only observable-feature attachment is mocked for the new bank regressions; no physics execution or production data is used.",
+    "retained_coverage": [
+      "Default-off/shared-base byte parity and A guidance isolation",
+      "Full-pool rotation, repeat caps and matched B/R family distribution",
+      "Actual trigger CE learning with frozen base weights and gradients",
+      "Production backend wiring, practice waves and realized practice reporting"
     ],
     "git_diff_check": "passed"
   },
@@ -80,13 +81,14 @@
     "production_data_validation": false
   },
   "integration_requirements": [
-    "Publish and stage PLAN_FIX/S-VARIETY outputs using the documented verified-bank handoff contract when those outputs exist.",
-    "Apply at a new update boundary: pre-F3 frozen plans are preserved and refused for same-update F3 reuse.",
-    "Provide verified family support in both B and R; runtime explicitly rejects unequal support instead of weakening verification or fairness."
+    "Apply at a new update boundary. Existing frozen plans are not overwritten; pre-fix F3 lookups lacking original verification bindings refuse dispatch.",
+    "Stage PLAN_FIX/S-VARIETY banks with original immutable snapshot and per-seed evidence, observable tapes, and source-reader dependencies.",
+    "Augmented children require a verified native manifest plus the same augmentation_prelaunch registration as the runtime, with complete branch charges within the registered <=200000 sim-s allocation.",
+    "B/R verified family support must match; no unverified context is substituted to fill a family quota."
   ],
   "open_issues": [
-    "Real PLAN_FIX/S-VARIETY outputs and current production B/R usable family support were not inspected in this CPU-only worktree task; the hook is validated with native-format CPU fixture banks.",
-    "Legacy native-plan projection remains approximate; only a separately re-verified library plan certifies the library action's realized outcome."
+    "Real production/PLAN_FIX/S-VARIETY artifacts and current B/R family support were not inspected; validation in this CPU-only round used native-format fixture banks.",
+    "Legacy native-plan projection remains approximate; only a separately re-verified library plan certifies the projected action's realized outcome."
   ],
   "documentation": "F3_BREADTH.md"
 }
