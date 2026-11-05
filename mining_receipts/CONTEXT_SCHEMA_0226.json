@@ -1,0 +1,10 @@
+{
+  "command": "/home/ubuntu/miniconda3/bin/python -B -",
+  "host": "gpuA",
+  "returncode": 1,
+  "stderr": "  File \"<stdin>\", line 13\n    sample=snap['samples'][str(snap['t0'])]\nIndentationError: unexpected indent\n",
+  "stdout": "",
+  "timestamp": "2026-11-05T18:25:35.149574+00:00",
+  "unix": 1793903133.9219615,
+  "wall_s": 1.227653980255127
+}
