@@ -12,7 +12,7 @@
   "tests": {
     "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_coop_reward_cpu.py tools/coopmwm/test_launch_final_cpu.py tools/coopmwm/test_effimit_cpu.py tools/coopmwm/test_v2v_runner_cpu.py tools/coopmwm/test_v2v_live_cpu.py tools/coopmwm/test_v2v_intent_cpu.py tools/coopmwm/test_v2v_model_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_v2v_launch3_cpu.py tools/coopmwm/test_v2v_budget_quote_cpu.py tools/coopmwm/test_v2v_learning_watch_cpu.py tools/coopmwm/test_v2v_launch_wiring_cpu.py tools/coopmwm/test_v2v_launch_quote_cpu.py tools/coopmwm/test_v2v_int_e2e_cpu.py tools/coopmwm/test_v2v_resource_watch_cpu.py",
     "suites": [
-      {"files": "test_coop_reward_cpu.py + test_launch_final_cpu.py + test_effimit_cpu.py + 12 test_v2v_*cpu.py files, ONE process (combined command above)", "result": "202 passed, 9 subtests passed, 1 pre-existing gradient warning; re-verified 2026-11-05 after 832d3734"},
+      {"files": "test_coop_reward_cpu.py + test_launch_final_cpu.py + test_effimit_cpu.py + 12 test_v2v_*cpu.py files, ONE process (combined command above)", "result": "202 passed, 9 subtests passed, 1 pre-existing gradient warning; re-verified 2026-11-05 after 832d3734; re-verified again 2026-11-06 (resumed session after freeze) at HEAD 6f24deea: 202 passed, 9 subtests passed, same 1 warning, 0 failed in 251.90s"},
       {"files": "cross-check: test_bank_perseed_cpu + test_bank_boot_cpu + test_coopfix_exact_gate_cpu + test_bank_safety_cpu + test_practice_starts_cpu (conftest safety net must not disturb other bank-rule tests)", "result": "96 passed"}
     ],
     "total": "202 passed (+9 subtests), 0 failed (combined one-process run); 96 passed cross-check"
