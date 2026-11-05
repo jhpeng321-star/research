@@ -93,6 +93,7 @@ VERIFICATION = dict(updates=list(VERIFY_UPDATES), samples_per_arm_per_update=1,
                     dense_total_sim_s=0, credit_total_sim_s=0,
                     augmentation_samples_per_arm=2, augmentation_total_sim_s=4*GATE_SIM_S)
 TOTAL_CAP_SIM_S = 5_000_000
+AUGMENTATION_OFF_DECISION = 'MAIN 2026-11-05 08:30: augmentation OFF for BOTH B and R; diagnostics only'
 EARLY_PROBES = dict(updates=[2, 4], states=3, arms=['A', 'B', 'R'],
                     sim_s_per_arm=3*ISOLATED_SIM_S_MEASURED)
 LEARNING_MONITOR = dict(trigger_saturation=[0., 1.], history_updates=3,
@@ -560,7 +561,8 @@ def check_pins(cfg):
     if cfg.get('launch_profile') != 'track2_clean_run':
         raise ValueError('REFUSED: clean-run profile required')
     for key, slot in TRACK_SLOTS.items():
-        if cfg.get(key) != slot:
+        expected = dict(slot, enabled=False) if key == 'plan_augment' and cfg.get('launch_augmentation_decision') == AUGMENTATION_OFF_DECISION else slot
+        if cfg.get(key) != expected:
             raise ValueError('REFUSED: clean-run slot differs: '+key)
     head = cfg.get('trigger_head') or {}
     if tuple(head.get('arms', ())) != TRIGGER_ARMS or head.get('enabled') is not True:

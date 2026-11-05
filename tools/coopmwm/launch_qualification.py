@@ -28,7 +28,7 @@ def smoke(cfg):
     root = Path(cfg['run_root'])
     training.health(root)
     verify_inputs(cfg)
-    augmentation = augment(cfg)
+    augmentation = augment(cfg) if cfg['plan_augment']['enabled'] else training.augmentation_receipt(cfg)
     # Augmentation is once-only and has its own prelaunch phase. Smoke charges
     # only the six complete episodes and two matched practice A references.
     training.write(root/'SMOKE_STARTED.json', dict(config_sha256=digest(cfg), unix=time.time()))
@@ -50,7 +50,9 @@ def smoke(cfg):
         m, learning = update['metrics'], update['learning']
         if (update['execution']['accepted_moves'] <= 0 or m['decisions'] <= 0
                 or m['merge_missing_share'] >= 1 or m['weighted_starts'] <= 0
-                or m['augmented_examples'] <= 0 or m['track2_reward']['cav_outcomes'] <= 0
+                or (cfg['plan_augment']['enabled'] and m['augmented_examples'] <= 0)
+                or (not cfg['plan_augment']['enabled'] and m['augmented_examples'] != 0)
+                or m['track2_reward']['cav_outcomes'] <= 0
                 or learning['bank']['pairs_total'] <= 0 or learning['bank']['optimizer_steps'] <= 0
                 or learning['bank']['imitation_failed'] or learning['bank_trigger']['examples'] <= 0):
             raise ValueError('smoke component missing actual usable receipt; fix and requalify')
@@ -67,6 +69,8 @@ def smoke(cfg):
         replicated_dry=[r['receipt_sha256'] for r in dry],
         dense_teacher=dict(enabled=False, reason='owner 02:28 redesign'),
         wm_group_credit=dict(enabled=False, reason='owner 02:28 redesign'),
+        plan_augmentation=dict(enabled=cfg['plan_augment']['enabled'],
+            reason=cfg.get('launch_augmentation_decision', 'registered native all8 admission')),
         replacement_reward='native P2 real observable neighbourhood SUMO reward'), 'receipt_sha256')
     training.write(root/'SMOKE_PASS.json', receipt)
     return receipt

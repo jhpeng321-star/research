@@ -94,8 +94,31 @@ def release(cfg):
         raise ValueError('gate requires zero collisions and teleports')
 
 
+def augmentation_receipt(cfg):
+    root = Path(cfg['run_root'])
+    if cfg['plan_augment']['enabled']:
+        return read(root/'AUGMENTATION_READY.json')
+    if cfg.get('launch_augmentation_decision') != rc.AUGMENTATION_OFF_DECISION:
+        raise ValueError('symmetric owner augmentation-off decision required')
+    receipt = read(root/'AUGMENTATION_DISABLED.json')
+    verify_sealed(receipt, 'receipt_sha256')
+    if receipt['config_sha256'] != digest(cfg) or receipt['admitted'] != dict(B=0, R=0):
+        raise ValueError('augmentation-off receipt/config mismatch')
+    # All experimental children stay in the archived diagnostic bank. The live
+    # bank retains original-path read-only evidence only, for both arms.
+    for arm in ('B', 'R'):
+        bank = root/'replay_bank'/arm
+        if (bank/'PRACTICE_AUGMENTED.json').exists():
+            raise ValueError('disabled augmented practice must not enter either arm')
+        for folder in ('decisions', 'confirmations_all8'):
+            if any(not p.is_symlink() for p in (bank/folder).glob('*.json')):
+                raise ValueError('diagnostic augmented bank evidence entered live bank')
+    return receipt
+
+
 def update(cfg, arm, u, *, smoke=False):
     root = Path(cfg['run_root'])
+    augmentation = augmentation_receipt(cfg)
     artifacts = root/'smoke' if smoke else root
     native = production.backend_config(cfg, root=artifacts, smoke=smoke)
     native['update'] = u
@@ -125,7 +148,6 @@ def update(cfg, arm, u, *, smoke=False):
         learning.update(bank_move_ce=bank['final_ce'], bank_trigger=bank)
     checkpoint = hooks['save_checkpoint']()
     from .practice_starts import update_report
-    augmentation = read(root/'AUGMENTATION_READY.json')
     metrics = production.update_metrics(arm, episodes, learning, envelope,
         augmented_examples=0 if arm == 'A' else augmentation['admitted'][arm])
     value = _seal(dict(**started, finished_unix=time.time(), checkpoint=checkpoint,

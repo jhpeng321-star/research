@@ -178,6 +178,40 @@ def test_training_release_refuses_mismatched_or_unsafe_final_gate(tmp_path):
         training.release(cfg)
 
 
+def test_owner_symmetric_augmentation_off_preserves_every_other_pin():
+    from copy import deepcopy
+    cfg = rc.runtime_config({}, root='/home/ubuntu/test_clean1',
+        reference_root='/home/ubuntu/reference', source_root='/home/ubuntu/source',
+        common_checkpoint_sha256='a'*64, track2=True)
+    cfg['launch_augmentation_decision'] = rc.AUGMENTATION_OFF_DECISION
+    cfg['plan_augment']['enabled'] = False
+    assert rc.check_pins(cfg)
+    bad = deepcopy(cfg)
+    bad['plan_augment']['arms'] = ['R']
+    with pytest.raises(ValueError, match='plan_augment'): rc.check_pins(bad)
+    bad = deepcopy(cfg)
+    bad['merge_features']['enabled'] = False
+    with pytest.raises(ValueError, match='merge_features'): rc.check_pins(bad)
+
+
+def test_disabled_augmentation_refuses_children_in_either_live_bank(tmp_path):
+    from . import launch_training as training
+    from .exact_grade import _seal
+    from .protocol import digest
+    cfg = dict(run_root=str(tmp_path), plan_augment=dict(enabled=False),
+        launch_augmentation_decision=rc.AUGMENTATION_OFF_DECISION)
+    training.write(tmp_path/'AUGMENTATION_DISABLED.json', _seal(dict(
+        config_sha256=digest(cfg), admitted=dict(B=0, R=0)), 'receipt_sha256'))
+    assert training.augmentation_receipt(cfg)['admitted'] == dict(B=0, R=0)
+    for arm in ('B', 'R'):
+        target=tmp_path/'replay_bank'/arm/'decisions'/'child.json'
+        target.parent.mkdir(parents=True)
+        target.write_text('{}')
+        with pytest.raises(ValueError, match='diagnostic augmented'):
+            training.augmentation_receipt(cfg)
+        target.unlink()
+
+
 def test_cross_process_receipts_are_not_visible_during_serialization_and_never_overwrite(tmp_path, monkeypatch):
     import json
     from . import launch_training as training

@@ -1,5 +1,11 @@
 # Clean1 launch integration
 
+MAIN 08:30 decision: plan augmentation is OFF for BOTH B and R. All prior
+augmentation measurements and charges are retained as diagnostics. The live
+banks are restored from the original read-only banks, excluding experimental
+children from imitation and practice. Smoke requires zero augmented examples
+in both arms; every other smoke, safety, budget and full-window check is retained.
+
 Owner authority is the Nov 5 registration amendments: 01:39 cap **5,000,000 sim-s including smoke**, 02:28 real observable-neighbourhood reward redesign, 03:33 S-LAUNCH finishes T2C. S0 and its 960 parity sim-s are reused.
 
 ## Integrated production path
