@@ -1,0 +1,44 @@
+{
+  "task": "S-LAUNCH clean2 restart recovery",
+  "status": "CLEAN1_DURABLE_STOP_APPLIED_AWAITING_FIX_ACCEPTANCE",
+  "owner_decision": "MAIN 15:23 owner verbatim restart; clean2 from MAPPO u0 after F1-F6 accepted, integration, smoke and gate",
+  "preserved_launch_head": "96ccd79d",
+  "prior_recovery_dispatch": {
+    "timestamp": "2026-11-05T07:20:40.928885+00:00",
+    "receipt": "RESUMED_1434.json",
+    "note": "This dispatch preceded the 15:21 owner override. Its recorded owners were still alive at the successful stop audit; no replacement dispatched."
+  },
+  "remote_audit_unix": 1793863981.2798305,
+  "clean1_root": "/home/ubuntu/coopmwm20261105_clean1",
+  "durable_stop_unix": 1793863981.275035,
+  "stop_sha256": "0f02b9ef9f84135be8dfc14b75ddaf8b133f8072db0b0fe0e697ca81df5b95b2",
+  "owner_note": "STOPPED_BY_OWNER_CLEAN2_RESTART.json",
+  "sealed_at_first_stop_audit": {"A": 9, "B": 9, "R": 8},
+  "ledger_at_first_stop_audit": {
+    "rows": 1110,
+    "sha256": "9433df1e4f71c6c463c2a6124d458d4b43be447dd75c9773d2fc8b2ea8534f12",
+    "sim_s": 1217280,
+    "plan_fix_included_sim_s": 2400,
+    "prior_parity_outside_ledger_sim_s": 960,
+    "remaining_global_sim_s": 3781760,
+    "note": "Preliminary only: plan_fix remains a live independently owned phase in this ledger. Never subtract its existing rows twice; reserve its remaining approved allocation before assigning clean2 a disjoint fixed budget."
+  },
+  "cpuv_access": {
+    "client": "WSL Ubuntu-22.04 OpenSSH_8.9p1",
+    "ControlMaster": "auto",
+    "ControlPersist": 600,
+    "ControlPath": "/tmp/sol-cpuv-%C",
+    "host_key": "existing Windows known_hosts pin",
+    "wsl_keeper_windows_pid": 22988,
+    "attempt_policy": "short sequential bounded attempts; no automatic command replay",
+    "native_windows_mux": "OpenSSH_for_Windows_10.0p2 failed getsockname: Not a socket; Linux client used"
+  },
+  "existing_workers": {
+    "F1": 28600, "F2": 15888, "F3": 11664, "F4": 30784,
+    "F5": 37696, "F6": 16284, "review": 30716, "plan_fix": 46180
+  },
+  "fix_acceptance_at_initial_inventory": "F1-F6 acceptance absent; existing workers/reviewer adopted, no duplicates",
+  "clean2_exists": false,
+  "new_simulation_dispatched_by_this_session": false,
+  "next": "Verify clean1 owners exit under durable STOP; await all accepted fixes, integrate and qualify clean2"
+}
