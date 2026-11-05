@@ -7,7 +7,19 @@
   "branch": "c4/fix-safety-reward",
   "base_branch": "c4/rerun-launch",
   "base_commit": "8bf7f533",
-  "reviewed_commit": "d36c596df8f11505440d0c9c4e174512722a60bb",
+  "r0_reviewed_commit": "d36c596df8f11505440d0c9c4e174512722a60bb",
+  "reviewed_commit": "3b486f202198f3b7720cceba1f0df0b580da2962",
+  "independent_review": {
+    "file": "REVIEW_F4_r1.md",
+    "verdict": "PASS",
+    "reviewer": "astra",
+    "acceptance_receipt": "F4_ACCEPTED.json",
+    "resolved_r0_blockers": [1, 2],
+    "open_blockers": [],
+    "test_result": "333 passed, 1 skipped, 0 failed",
+    "duration_s": 109.88,
+    "resume_note": "Existing implementation, completed CPU checks, renewed readiness commit and independent acceptance reconciled on resume; no implementation changes or repeated test jobs were needed"
+  },
   "commits": [
     {
       "sha": "b734b151f8f05050374f995ad9a04e04c62bd574",
@@ -20,6 +32,10 @@
     {
       "sha": "cc7ae2db794a297c10155ca935c89f12b3b00879",
       "subject": "C4 F4: gate safety reward and validate penalized monitor receipts"
+    },
+    {
+      "sha": "3b486f202198f3b7720cceba1f0df0b580da2962",
+      "subject": "C4 F4: renew readiness after blocker fixes and CPU regression checks"
     }
   ],
   "resolved_blockers": [
