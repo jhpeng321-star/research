@@ -33,11 +33,11 @@
   },
   "latest_resume_confirmation": {
     "date": "2026-11-05",
-    "head_at_resume": "0d5463d9ccd18d44c7755eb45008decdd296f817",
+    "head_at_resume": "c2ae5fe21d81f9e75df9f973221a566483cab6a6",
     "tracked_modifications_at_resume": false,
     "accepted_code_revision": "7a76b8697512889530e544628fc86b1682cd2e41",
     "code_and_tests_unchanged_since_acceptance": true,
-    "evidence": "Read status/log and existing task receipts first, then the shared spec, r0/r1 reviews, current projection/reference implementation and blocker regressions. Git comparison with the independently tested revision reports only a readiness-receipt change. Both r0 blockers remain resolved; r1 PASS and acceptance are preserved.",
+    "evidence": "Read status/log, shared spec, r0/r1 reviews and all task receipts, then checked the current projection/reference implementation and blocker regressions. git diff --name-only 7a76b869 reports only T1A_READY.json; code and tests match the independently tested revision. Both r0 blockers remain resolved; r1 PASS and acceptance at c2ae5fe2 are preserved.",
     "diff_check": "git diff --check c4/track-base -- T1A_READY.json tools/coopmwm/moves.py tools/coopmwm/test_moves_cpu.py passed",
     "test_jobs_launched": 0,
     "dispatches_launched": 0,
@@ -85,9 +85,14 @@
       "sha": "0d5463d9ccd18d44c7755eb45008decdd296f817",
       "subject": "coopmwm moves: confirm accepted fix-round readiness on resume (T1A)",
       "files": ["T1A_READY.json"]
+    },
+    {
+      "sha": "c2ae5fe21d81f9e75df9f973221a566483cab6a6",
+      "subject": "coopmwm moves: refresh accepted T1A resume receipt",
+      "files": ["T1A_READY.json"]
     }
   ],
-  "receipt_commit": "The separate commit refreshing this receipt follows 0d5463d9; see git log on c4/moves.",
+  "receipt_commit": "The separate commit refreshing this receipt follows c2ae5fe2; see git log on c4/moves.",
   "blocker_resolutions": [
     {
       "review_blocker": 1,
