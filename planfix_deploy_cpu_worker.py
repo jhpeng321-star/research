@@ -141,11 +141,15 @@ code="""
 import ast,hashlib,json,sys,tomllib
 from pathlib import Path
 root=Path(__QUALIFY_ROOT__);sys.path.insert(0,str(root))
-from planfix_cpu_runtime import cpu_tree,RUNTIME_SHA
+from planfix_cpu_runtime import cpu_tree,RUNTIME_SHA,execute_tree
 original=Path('/home/ubuntu/coopmwm20261105_clean1_src_7cc6edaa/pytools/tools/wmteach/runtime.py')
 assert hashlib.sha256(original.read_bytes()).hexdigest()==RUNTIME_SHA
 tree=cpu_tree(original.read_text(),{'cuda':'cpu'},recovered_config=True)
 compile(tree,'<cpu-port-abi-qualification>','exec')
+import inspect
+scope={};source=chr(10).join(['def prepare_batch(rt, source):',"    return with_entry_slots(source,300,960,device='cuda')",''])
+execute_tree(cpu_tree(source,{'cuda':'cpu'}),'<cpu-port-source-qualification>',scope)
+assert 'cpu' in inspect.getsource(scope['prepare_batch'])
 assert not any(isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute) and n.func.attr=='cuda' for n in ast.walk(tree))
 for name in ('planfix_cpu_runtime.py','planfix_cpu_worker.py'):
  compile((root/name).read_text(),name,'exec')

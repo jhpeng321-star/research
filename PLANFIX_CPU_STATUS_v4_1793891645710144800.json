@@ -1,0 +1,90 @@
+{
+  "BOOTSTRAP_PASS.json": {
+    "new_sim_s": 0,
+    "physical_sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca",
+    "pid": 361389,
+    "wall_s": 6.345269484008895,
+    "wm_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436"
+  },
+  "CPU_FAILED.json": {
+    "error": "OSError('could not get source code')",
+    "new_sim_s": 0,
+    "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/planfix_cpu_worker.py\", line 132, in <module>\n    try:main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/planfix_cpu_worker.py\", line 87, in main\n    try:warm_service.main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/runtime/tools/coopmwm/warm_service.py\", line 72, in main\n    q=dict(qualify(rt,context,acts,k,h,width,memory=memory,transfers=True),\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/runtime/tools/coopmwm/speed2_runtime.py\", line 49, in qualify\n    old = evaluate(rt,record,actions,K,H,chunk_actions=width,trim=False,pad_actions=width,memory=memory)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/planfix_cpu_worker.py\", line 71, in guarded_evaluate\n    return original_evaluate(*args,**kwargs)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/runtime/tools/coopmwm/plan_wm.py\", line 114, in evaluate\n    with (memory.context(rt,record) if memory is not None else warm_adapter(rt,record)),(compact_geometry(proxy) if speed2 else nullcontext()),(fast_transfers() if transfers else nullcontext()),executor_adapter(),plan_executor(H,policy,trace,final_chain=final_chain):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/contextlib.py\", line 135, in __enter__\n    return next(self.gen)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/runtime/tools/coopmwm/wm.py\", line 48, in executor_adapter\n    tree=ast.parse(inspect.getsource(old_prepare));counts={300:0,960:0}\n  File \"/home/ubuntu/miniconda3/lib/python3.10/inspect.py\", line 1139, in getsource\n    lines, lnum = getsourcelines(object)\n  File \"/home/ubuntu/miniconda3/lib/python3.10/inspect.py\", line 1121, in getsourcelines\n    lines, lnum = findsource(object)\n  File \"/home/ubuntu/miniconda3/lib/python3.10/inspect.py\", line 958, in findsource\n    raise OSError('could not get source code')\nOSError: could not get source code\n",
+    "unix": 1793891625.8067853
+  },
+  "CPU_OWNER.json": {
+    "affinity": [
+      47
+    ],
+    "alive_same_identity": false,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 361389,
+    "start_ticks": "8146500",
+    "unix": 1793891616.5169835
+  },
+  "DISPATCH.json": {
+    "alive_same_identity": false,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "max_cpu_cores": 1,
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 361389,
+    "procedure": "eight same-process gates then ONE WM search; no SUMO; no expansion",
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4",
+    "start_ticks": "8146500",
+    "unix": 1793891616.4882
+  },
+  "DISPATCH_STARTED.json": {
+    "new_sim_s": 0,
+    "unix": 1793891616.4849167
+  },
+  "STAGE_ENV.json": {
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "CPU_BINDING 4a3d94ab911f0dbb2a6018c15b47572d3212e030df87de1535cbbd5412b9d5fc 666\n"
+  },
+  "STAGE_PASS.json": {
+    "binding_file_sha256": "7382cc42e31107b02d9f2dc072e2df529e955ddd5792b81eaa8330666cf6047f",
+    "dispatch_started": false,
+    "launch_file_sha256": "d036a7d311694c102182f2bebe17c890c7e5e67cd593b248fab2ca176cd815f9",
+    "new_sim_s": 0,
+    "pace": {
+      "A": {
+        "ceiling_s": 1194.2428486347198,
+        "intervals_s": [
+          1194.2428486347198,
+          1164.5672767162323,
+          1170.51988863945
+        ],
+        "last_update": 12
+      },
+      "B": {
+        "ceiling_s": 1173.205691576004,
+        "intervals_s": [
+          1149.266884803772,
+          1168.5544457435608,
+          1173.205691576004
+        ],
+        "last_update": 12
+      },
+      "R": {
+        "ceiling_s": 1167.4601202011108,
+        "intervals_s": [
+          1157.6539821624756,
+          1167.4601202011108,
+          1164.3921592235565
+        ],
+        "last_update": 12
+      }
+    },
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4",
+    "source_files": 656
+  },
+  "exists": true,
+  "gates": {},
+  "log_tail": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/planfix_cpu_worker.py\", line 132, in <module>\n    try:main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/planfix_cpu_worker.py\", line 87, in main\n    try:warm_service.main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/runtime/tools/coopmwm/warm_service.py\", line 72, in main\n    q=dict(qualify(rt,context,acts,k,h,width,memory=memory,transfers=True),\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/runtime/tools/coopmwm/speed2_runtime.py\", line 49, in qualify\n    old = evaluate(rt,record,actions,K,H,chunk_actions=width,trim=False,pad_actions=width,memory=memory)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/planfix_cpu_worker.py\", line 71, in guarded_evaluate\n    return original_evaluate(*args,**kwargs)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/runtime/tools/coopmwm/plan_wm.py\", line 114, in evaluate\n    with (memory.context(rt,record) if memory is not None else warm_adapter(rt,record)),(compact_geometry(proxy) if speed2 else nullcontext()),(fast_transfers() if transfers else nullcontext()),executor_adapter(),plan_executor(H,policy,trace,final_chain=final_chain):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/contextlib.py\", line 135, in __enter__\n    return next(self.gen)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4/runtime/tools/coopmwm/wm.py\", line 48, in executor_adapter\n    tree=ast.parse(inspect.getsource(old_prepare));counts={300:0,960:0}\n  File \"/home/ubuntu/miniconda3/lib/python3.10/inspect.py\", line 1139, in getsource\n    lines, lnum = getsourcelines(object)\n  File \"/home/ubuntu/miniconda3/lib/python3.10/inspect.py\", line 1121, in getsourcelines\n    lines, lnum = findsource(object)\n  File \"/home/ubuntu/miniconda3/lib/python3.10/inspect.py\", line 958, in findsource\n    raise OSError('could not get source code')\nOSError: could not get source code\n",
+  "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v4",
+  "unix": 1793891645.1621146
+}

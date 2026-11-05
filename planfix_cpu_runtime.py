@@ -11,6 +11,13 @@ from pathlib import Path
 
 RUNTIME_SHA='2893e762741a61a791ce467493e0a35290e6ad4c893e2909b70bfa0fe1df50d8'
 
+def execute_tree(tree, filename, namespace):
+    """Keep source available to the original inspect.getsource-based adapters."""
+    import linecache
+    source=ast.unparse(tree)+'\n'
+    linecache.cache[filename]=(len(source),None,source.splitlines(keepends=True),filename)
+    exec(compile(source,filename,'exec'),namespace)
+
 def cpu_tree(text, mapping, *, recovered_config=False):
     tree=ast.parse(text)
     class Port(ast.NodeTransformer):
@@ -52,7 +59,7 @@ def install(worker):
     paths={'/root/wmcalib':str(priors),'/root/wmcalib/data':str(priors/'data'),
            '/root/wmcalib/data/jobs':str(priors/'data/jobs')}
     source=Path(observations.__file__).read_text()
-    exec(compile(cpu_tree(source,paths),'<planfix-cpu-observable-paths>','exec'),observations.__dict__)
+    execute_tree(cpu_tree(source,paths),'<planfix-cpu-observable-paths>',observations.__dict__)
     from tools.wmteach import runtime
     text=Path(runtime.__file__).read_text()
     assert hashlib.sha256(Path(runtime.__file__).read_bytes()).hexdigest()==RUNTIME_SHA
@@ -73,5 +80,5 @@ def install(worker):
     })
     runtime.RECOVERED_CONFIG=values['config']
     tree=cpu_tree(text,mapping,recovered_config=True)
-    exec(compile(tree,'<planfix-cpu-original-wmteach>','exec'),runtime.__dict__)
+    execute_tree(tree,'<planfix-cpu-original-wmteach>',runtime.__dict__)
     return runtime
