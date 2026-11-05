@@ -60,7 +60,12 @@ def tick(b, controller=None, trace=None):
     # SUMO laneChangeMode=513 safety; no direct TraCI command is added here.
     request = getattr(controller, 'lane_request', None)
     lanes = request(b.env) if request is not None else None
-    _, info = b.env.step(cmd,lanes=lanes)  # The only actuator path: CommandOwnership.
+    actors = getattr(controller, 'lane_actors', None)
+    if lanes is not None and actors is not None:
+        # G5 additive ownership contract: lane mode changes only for authorized actors.
+        _, info = b.env.step(cmd,lanes=lanes,lane_actors=actors())
+    else:
+        _, info = b.env.step(cmd,lanes=lanes)  # The only actuator path: CommandOwnership.
     record = getattr(controller, 'observe_lane', None)
     if record is not None:
         record(info)

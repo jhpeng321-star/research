@@ -136,13 +136,24 @@ def lanes_tensor(targets_by_id, env):
     return tensor if placed else None
 
 
-def lane_outcome(counts):
-    """Reused lane-policy tick aggregate; issued is never claimed executed."""
+def lane_outcome(counts, vehicles=None):
+    """Reused lane-policy tick aggregate; issued is never claimed executed.
+
+    ``vehicles`` is the env's per-vehicle actuator telemetry (``info['lane_vehicles']``,
+    G5 ownership contract): ``{vid: {target, status, completed}}``. It is recorded on the
+    event (hence bound by the verified tape's sha256) and is the ONLY evidence that a
+    particular actor was issued and completed its change; aggregate counts never are.
+    """
     counts = dict(counts or {})
     requested = sum(int(counts.get(k, 0)) for k in OUTCOME_KEYS)
     issued = int(counts.get('issued', 0))
-    return dict(requested=requested, issued=issued, blocked=requested-issued,
-                executed=int(counts.get('completed', 0)), counts=counts)
+    out = dict(requested=requested, issued=issued, blocked=requested-issued,
+               executed=int(counts.get('completed', 0)), counts=counts)
+    if vehicles is not None:
+        out['vehicles'] = {str(v): dict(target=int(r['target']), status=str(r['status']),
+                                        completed=bool(r['completed']))
+                           for v, r in sorted(dict(vehicles).items())}
+    return out
 
 
 def controller_targets(controller, policy, rows, now):
@@ -202,20 +213,82 @@ def plan_fields(move, duration):
     return dict(g5_move=move.to_dict(), lane_actions=actions, uses_lane_actions=True)
 
 
+def macro_offsets(move, duration):
+    """Policy-relative per-member per-second longitudinal macro offsets."""
+    return np.array([[moves.offsets(move, t)[v] for t in range(duration)] for v in move.members], float)
+
+
+def _matrix(value, shape, name):
+    """Strict finite numeric members x seconds matrix (no bools, ragged rows or NaN)."""
+    if not isinstance(value, (list, tuple)) or len(value) != shape[0] or any(
+            not isinstance(row, (list, tuple)) or len(row) != shape[1]
+            or any(isinstance(x, bool) or not isinstance(x, (int, float)) or not math.isfinite(x)
+                   for x in row) for row in value):
+        raise ValueError(f'G5 {name} must be a finite members x duration_s matrix')
+    return np.asarray(value, float)
+
+
+def executable_fields(move, duration, policy_profile):
+    """Executable longitudinal fields bound to an immutable policy reference.
+
+    ``profile`` is what native verification/practice executes (plans.acceleration_at);
+    it equals the recorded ``policy_profile`` plus the macro offsets exactly, and the
+    stored ``perturbation_profile`` is that same difference.
+    """
+    base = _matrix(policy_profile, (len(move.members), duration), 'policy_profile')
+    offsets = macro_offsets(move, duration)
+    return dict(policy_profile=base.tolist(), profile=(base+offsets).tolist(),
+                perturbation_profile=offsets.tolist())
+
+
+# A second absolute/relative representation could disagree with the executable profile.
+_FORBIDDEN_REPRESENTATIONS = ('knots', 'knot_s', 'perturbation_knots', 'perturbation_canonical')
+
+
 def from_plan(plan):
-    """Exact executable macro binding; never project away a lane command."""
+    """Exact executable macro binding; never project away a lane command.
+
+    The bound longitudinal macro is the one ACTUALLY executed by native
+    verification/practice: ``profile`` (plans.acceleration_at prefers it over every
+    other field). It must equal the immutable ``policy_profile`` reference plus the
+    macro offsets, and ``perturbation_profile`` (what moves._plan_offsets reads) must be
+    present and equal to the same difference. Conflicting or incomplete
+    representations are rejected.
+    """
     if not isinstance(plan.get('g5_move'), dict):
         raise ValueError('lane-bearing plan requires an explicit executable g5_move')
     move = moves.Move.from_dict(plan.get('g5_move') or {})
     if move.family not in FAMILIES or list(move.members) != plan.get('members'):
         raise ValueError('G5 plan member/role binding mismatch')
-    expected = plan_fields(move, plan['duration_s'])
+    duration = plan.get('duration_s')
+    if type(duration) is not int or duration <= 0:
+        raise ValueError('G5 plan needs an integer duration_s')
+    expected = plan_fields(move, duration)
     if plan.get('lane_actions') != expected['lane_actions'] or plan.get('uses_lane_actions') is not True:
         raise ValueError('G5 plan lane actions do not match executable macro')
-    members, offsets = moves._plan_offsets(plan)
-    wanted = np.array([[moves.offsets(move, t)[v] for t in range(plan['duration_s'])] for v in members])
-    if not np.allclose(offsets, wanted, atol=1e-8, rtol=0):
+    for key in ('profile', 'policy_profile', 'perturbation_profile'):
+        if key not in plan:
+            raise ValueError(f'G5 plan requires {key} (incomplete executable representation)')
+    if any(key in plan for key in _FORBIDDEN_REPRESENTATIONS):
+        raise ValueError('G5 plan carries a conflicting knot representation')
+    shape = (len(move.members), duration)
+    profile = _matrix(plan['profile'], shape, 'profile')
+    base = _matrix(plan['policy_profile'], shape, 'policy_profile')
+    stored = _matrix(plan['perturbation_profile'], shape, 'perturbation_profile')
+    wanted = macro_offsets(move, duration)
+    if not np.allclose(profile-base, wanted, atol=1e-8, rtol=0):
+        raise ValueError('G5 executable profile does not equal policy reference plus macro offsets')
+    if not np.allclose(stored, wanted, atol=1e-8, rtol=0):
         raise ValueError('G5 plan offsets do not match executable macro')
+    members, offsets = moves._plan_offsets(plan)
+    if members != list(move.members) or not np.allclose(offsets, wanted, atol=1e-8, rtol=0):
+        raise ValueError('G5 plan offsets do not match executable macro')
+    from .plans import acceleration_at
+    for t in range(duration):
+        executed = acceleration_at(plan, t)
+        if set(executed) != set(move.members) or any(
+                abs(executed[v]-profile[i, t]) > 1e-8 for i, v in enumerate(move.members)):
+            raise ValueError('G5 executor does not run the bound executable profile')
     return move
 
 
@@ -233,12 +306,35 @@ def verify_tape(plan, tape, t0):
     before, after = steps.get(int(t0)+elapsed), steps.get(int(t0)+elapsed+1)
     if before is None or after is None:
         raise ValueError('G5 verified tape missing lane-effect transition')
-    request = before['sample'].get('g5_lane_requests') or {}
+    sample = before.get('sample') or {}
+    request = sample.get('g5_lane_requests') or {}
+    gate = sample.get('g5_lane_gate') or {}
+    safe, blocked = gate.get('safe') or {}, gate.get('blocked') or {}
     outcome = before.get('g5_lane_outcome') or {}
+    vehicles = outcome.get('vehicles')
     pre = {r['vid']: r for r in before.get('rows', ())}
     post = {r['vid']: r for r in after.get('rows', ())}
     for vid, target in expected.items():
-        if (request.get(vid) != target or outcome.get('issued', 0) < 1 or outcome.get('executed', 0) < 1
+        # Per-actor evidence only: an aggregate count from another (concurrent) actor
+        # never certifies this one, and a blocked actor's native merge is not a G5 execution.
+        own = vehicles.get(vid) if isinstance(vehicles, dict) else None
+        if (request.get(vid) != target or safe.get(vid) != target or vid in blocked
+                or own != dict(target=target, status='issued', completed=True)
                 or not pre.get(vid, {}).get('is_cav') or not post.get(vid, {}).get('is_cav')
                 or pre[vid]['lane'] != target+1 or post[vid]['lane'] != target):
             raise ValueError('G5 verified tape lacks the actual commanded CAV lane effect')
+    # Executed longitudinal macro on the same hash-bound tape: every member-second the
+    # tape covers inside the plan window ran exactly the bound executable profile.
+    profile = dict(zip(move.members, plan['profile']))
+    covered = 0
+    for t in range(plan['duration_s']):
+        step = steps.get(int(t0)+t)
+        if step is None:
+            continue
+        executed = (step.get('sample') or {}).get('absolute_accels') or {}
+        for vid in move.members:
+            if vid not in executed or abs(float(executed[vid])-profile[vid][t]) > 1e-8:
+                raise ValueError('G5 verified tape did not execute the bound executable profile')
+        covered += 1
+    if covered < min(plan['duration_s'], move.onset+move.hold):
+        raise ValueError('G5 verified tape does not cover the executed macro window')

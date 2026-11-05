@@ -152,10 +152,16 @@ def controller_class(base):
             from .group_lane import lanes_tensor
             return lanes_tensor(self.g5_lane_targets, env)
 
+        def lane_actors(self):
+            # G5 ownership contract: only this tick's gate-passed lane actors may be put
+            # under policy lane control by the sole env writer; nonmembers stay native.
+            return frozenset(self.g5_lane_targets)
+
         def observe_lane(self, info):
             if self.g5_lane_targets and self.events:
                 from .group_lane import lane_outcome
-                self.events[-1]['g5_lane_outcome'] = lane_outcome(info.get('lane_commands'))
+                self.events[-1]['g5_lane_outcome'] = lane_outcome(info.get('lane_commands'),
+                                                                  info.get('lane_vehicles'))
 
     return Controller
 
