@@ -1,0 +1,16 @@
+{
+  "schema": "coopmwm.clean1.qualification_dispatch.v1",
+  "host": "cpuV",
+  "root": "/home/ubuntu/coopmwm20261105_clean1",
+  "runtime_commit": "085f8ba0e2e104dd1ea380748205d32518a63d60",
+  "config_sha256": "bc204f71f55610b493158bca59df9ca743fc76aab22bcfe805ff5028649d379d",
+  "source_root": "/home/ubuntu/coopmwm20261105_clean1_src_085f8ba0",
+  "pid": 133006,
+  "start_ticks": "2932389",
+  "unix": 1793839475.3849583,
+  "action": "mandatory smoke, augmentation OFF for both arms",
+  "zero_physics_scope_recovery_receipt": "3205f21907817442f328522231fdc0670f7055558338aa494ab9f5034bd1dad1",
+  "cpuV_tests": "323 passed, zero skipped/failed",
+  "adoption_rule": "inspect exact PID/start, ledger and receipts; never duplicate running/completed work",
+  "training_launched": false
+}
