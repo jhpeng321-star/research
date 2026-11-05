@@ -204,11 +204,11 @@ print('CPU_REGISTERED',json.dumps(receipt),flush=True)
 '''
 
 STATUS=r'''
-import json,time
+import json,time,os
 from pathlib import Path
 root=Path(__ROOT__);result=dict(root=str(root),exists=root.exists(),unix=time.time())
 if root.exists():
- for name in ('STAGE_PASS.json','STAGE_ENV.json','DISPATCH_STARTED.json','DISPATCH.json','CPU_OWNER.json','BOOTSTRAP_PASS.json','CPU_FAILED.json','FRESH_QUALIFICATION.json','SPEED_SEARCH_STARTED.json','SPEED_SEARCH_RESULT.json'):
+ for name in ('STAGE_PASS.json','STAGE_ENV.json','DISPATCH_STARTED.json','DISPATCH.json','CPU_OWNER.json','BOOTSTRAP_PASS.json','CPU_FAILED.json','FRESH_QUALIFICATION.json','SPEED_SEARCH_STARTED.json','SPEED_SEARCH_RESULT.json','PACE_CONTROL_STATE.json','PACE_SUPERVISOR_OWNER.json','PACE_SUPERVISOR_TERMINAL.json'):
   p=root/name
   if p.exists():
    d=json.loads(p.read_text())
@@ -220,6 +220,12 @@ if root.exists():
   if name in result:
    d=result[name];p=Path('/proc',str(d['pid']),'stat');f=p.read_text().split() if p.exists() else None
    d['alive_same_identity']=bool(f and f[21]==d['start_ticks'] and f[2]!='Z')
+   if d['alive_same_identity']:
+    d['process_state']=f[2]
+    d['cpu_seconds']=(int(f[13])+int(f[14]))/os.sysconf('SC_CLK_TCK')
+    d['elapsed_s']=time.time()-d['unix']
+    status=Path('/proc',str(d['pid']),'status').read_text().splitlines()
+    d['resources']={line.split(':',1)[0]:line.split(':',1)[1].strip() for line in status if line.split(':',1)[0] in ('VmRSS','Threads','Cpus_allowed_list')}
  result['gates']={p.name:json.loads(p.read_text()) for p in sorted(root.glob('STARTUP_*.json'))}
  p=root/'CPU_WORKER.log'
  if p.exists():result['log_tail']=p.read_bytes()[-14000:].decode(errors='replace')
@@ -262,6 +268,9 @@ if __name__=='__main__':
         import time
         value=json.loads(next(x[len('CPU_STATUS '):] for x in text.splitlines() if x.startswith('CPU_STATUS ')))
         with (HERE/f'PLANFIX_CPU_STATUS_v{a.generation}_{time.time_ns()}.json').open('x') as out:json.dump(value,out,indent=2,sort_keys=True)
+        owner=value.get('CPU_OWNER.json',value.get('DISPATCH.json',{}))
+        complete=sum(g.get('pass_') is True for g in value.get('gates',{}).values())
+        note('cpuV',f"CPU v{a.generation} pid={owner.get('pid')} alive={owner.get('alive_same_identity',False)} state={owner.get('process_state')} bootstrap_pass={'BOOTSTRAP_PASS.json' in value} gates_pass={complete}/8 speed_complete={'SPEED_SEARCH_RESULT.json' in value} failure={value.get('CPU_FAILED.json',{}).get('error')} new_sim_s=0")
         raise SystemExit(0)
     prefix='CPU_STAGE_PASS ' if a.action=='stage' else 'CPU_PORT_QUALIFICATION ' if a.action=='qualify' else 'CPU_REGISTERED ' if a.action=='register' else 'CPU_DISPATCH '
     receipt=json.loads(next(x[len(prefix):] for x in text.splitlines() if x.startswith(prefix)))

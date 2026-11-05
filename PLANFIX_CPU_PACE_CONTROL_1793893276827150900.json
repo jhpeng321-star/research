@@ -1,0 +1,37 @@
+{
+  "action": "paused",
+  "new_sim_s": 0,
+  "owner": {
+    "affinity": [
+      47
+    ],
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 364064,
+    "start_ticks": "8210497",
+    "unix": 1793892256.4876962
+  },
+  "pace": {
+    "A": {
+      "interval_s": 1168.173236131668,
+      "limit_s": 1179.1483981609344,
+      "over": false,
+      "update": 14
+    },
+    "B": {
+      "interval_s": 1169.5693485736847,
+      "limit_s": 1173.205691576004,
+      "over": false,
+      "update": 13
+    },
+    "R": {
+      "interval_s": 1184.0095150470734,
+      "limit_s": 1167.4601202011108,
+      "over": true,
+      "update": 13
+    }
+  },
+  "process_state": "T",
+  "unix": 1793893276.2576938
+}

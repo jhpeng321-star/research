@@ -1,5 +1,77 @@
 # PLANFIX CPU continuation — 2026-11-05 18:36 +08
 
+## 23:41 pace hold — preserve SAME in-flight model/gate process
+
+At23:38 clean2 A14/B13 intervals were within the original bounds; R13 was
+1184.009515s vs1167.460120s bound. This is not a causal claim about the one-core
+worker. At23:41:16 exact own364064/start8210497/boot/UID/argv/source was checked
+and SIGSTOPped through pidfd; process stateT verified. RAM/model/RNG/partial gate
+work is preserved. Do not kill/restart/duplicate it. No training signal/change.
+Read-only ledger audit: phase33,600/protected566,400, actual global2,765,040/5M,
+full disjoint allocation bound5M. Gate/speed results still pending.
+
+`PLANFIX_CPU_PACE_SUPERVISOR_REGISTRATION.md` prospectively binds ONE small
+resource-only supervisor: same affinity47/nice19,60s public-receipt polling,
+pidfd signals ONLY this exact owned WM, never a new model. It can resume only
+after a NEW good completed interval for every previously over-limit arm, with
+all unchanged limits/current intervals/original clean2 owners/config/health
+satisfied. It may pause the same PID again, preserving work; no limit reset,
+gate adoption, new WM/SUMO dispatch, expansion or bank switch. Check its dispatch
+receipt/owner before assuming it exists or creating any controller.
+
+## 23:33 live continuation — CPU WM is actually evaluating
+
+**Adopt, do not duplicate, CPUv6 PID364064/start8210497**, boot
+`2c19986e-dd5e-4de9-95ca-3212b1ea0568`, at
+`/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v6`.
+Dispatch23:24:16+08; independent23:32:42 read verifies exact identity alive,
+505.76CPU-s/505.92elapsed-s, ONE thread, CPU affinity47, nice19, RSS~1.72GB.
+Original WM2/MAPPO/32prior bootstrap PASS6.269343s. The first full-window
+startup comparison is computing; **0/8 completed gate receipts**, no failure
+receipt, no speed query/search/result yet. No new SUMO or admission.
+
+This is a CPU-resident detached chain: original8same-process gates/exact seals,
+then ONE full WM speed search, no automatic expansion or SUMO route. The source
+and original collector ordinal0 (it2/screenK2/niches1, all8 finalK8 candidates)
+are bound in binding file
+`452e7ae008aa9a92bdc68a2f4ecda4251a0ad0c4b6946fddbc549c9ab0eb8621`.
+Qualification/registration receipts and actual source live in this directory;
+CPU execution registration SHA89fe94a9 is in clean1 AUTHORITY and central
+REGISTRATION before dispatch. Local5CPU-port regressions and Linux666file/
+AST/config/recipe/introspection/collector checks PASS; frozen collector301tests/
+9subtests and11executor tests reused.
+
+All v1..v5 owners were independently verified exited before fresh replacements.
+Their source/binding/claims/logs/failures remain intact: omitted original JSON
+initializers, missing design-root mapping, missing original pure-motion source,
+virtual-source introspection, residual scale CUDA allocation. All corrections
+are original-input closure or CPU path/device/source-cache compatibility. No
+scientific arithmetic/assertion/tolerance/K/horizon was relaxed. No completed
+gate, speed search, SUMO measurement or bank pass was repeated.
+
+Watch with `python -B planfix_deploy_cpu_worker.py status --generation 6`
+(F6 pooled; bounded attempt, logged). This records an immutable local status
+receipt and a meaningful PLANFIX progress line. Never rerun `dispatch`.
+When all8gates and the one speed result exist, data-only
+`python -B planfix_cpu_prepare_verify.py` prepares a SHA-bound translated slate
+and conservative native1200s quote, with no-op/infeasible/duplicate forms
+excluded and no admission claimed. Its pending path has been exercised; the
+post-result path is not yet qualified. Before any actual SUMO, implement/test
+and prospectively register the exact CPU native-verification source/resource/
+sole-ledger amendment; existing ops_v6_receipt_adoption contains the qualified
+full-window native library executor and charge adapter to reuse. No such new
+SUMO dispatcher has been started.
+
+Bank result still terminal/zero survivors. Phase33,600/600,000sim-s, protected
+remaining566,400 last independently rechecked23:23:52. Current variety admitted
+counts remain ease_off0/gap_open0/wall0/ramp_assist0, seed coverage empty.
+Clean2 reached A13/B12/R12 at the23:22 stage check; u12 target has passed.
+Actual switch index UNSET and MAIN/owner-only. **Do not publish nonempty outputs
+at active `clean1/plan_fix/PLAN_FIX_READY.json`**: clean2's accepted F3 hook can
+consume that file automatically. Prepare future ready manifests under a
+separate `prepared_switch/` path for MAIN to register/apply, with active R's
+family distribution matched to B's actual admitted counts.
+
 ## 22:33 continuation — bootstrap input availability resolved
 
 Clean2's final CONFIG/smoke/gate seals and all four original live owner identities

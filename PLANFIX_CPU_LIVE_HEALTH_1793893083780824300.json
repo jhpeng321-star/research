@@ -1,0 +1,68 @@
+{
+  "clean2_fault": false,
+  "clean2_stop": false,
+  "completed_gates": 0,
+  "cpu_worker": {
+    "affinity": [
+      47
+    ],
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 364064,
+    "start_ticks": "8210497",
+    "unix": 1793892256.4876962
+  },
+  "global_allocation_bound_sim_s": 5000000,
+  "global_charged_sim_s": 2765040,
+  "new_sim_s_by_audit": 0,
+  "note": "Inter-update intervals are telemetry, not a causal attribution to this one-core worker; baseline is not changed.",
+  "own_next_evaluation_will_hold": true,
+  "owners": {
+    "A": {
+      "alive_same_identity": true,
+      "pid": 301793,
+      "start_ticks": "6682640"
+    },
+    "B": {
+      "alive_same_identity": true,
+      "pid": 301794,
+      "start_ticks": "6682640"
+    },
+    "R": {
+      "alive_same_identity": true,
+      "pid": 301795,
+      "start_ticks": "6682640"
+    },
+    "monitor": {
+      "alive_same_identity": true,
+      "pid": 301796,
+      "start_ticks": "6682640"
+    }
+  },
+  "pace": {
+    "A": {
+      "baseline_max_s": 1179.1483981609344,
+      "last_interval_s": 1168.173236131668,
+      "last_update": 14,
+      "new_interval_over_baseline": false
+    },
+    "B": {
+      "baseline_max_s": 1173.205691576004,
+      "last_interval_s": 1169.5693485736847,
+      "last_update": 13,
+      "new_interval_over_baseline": false
+    },
+    "R": {
+      "baseline_max_s": 1167.4601202011108,
+      "last_interval_s": 1184.0095150470734,
+      "last_update": 13,
+      "new_interval_over_baseline": true
+    }
+  },
+  "phase_reserved_remaining_sim_s": 566400,
+  "phase_spent_sim_s": 33600,
+  "speed_completed": false,
+  "unix": 1793893083.2378237,
+  "worker_failure": false
+}
