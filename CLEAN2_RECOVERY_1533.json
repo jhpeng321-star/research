@@ -40,5 +40,10 @@
   "fix_acceptance_at_initial_inventory": "F1-F6 acceptance absent; existing workers/reviewer adopted, no duplicates",
   "clean2_exists": false,
   "new_simulation_dispatched_by_this_session": false,
-  "next": "Verify clean1 owners exit under durable STOP; await all accepted fixes, integrate and qualify clean2"
+  "exit_verified_unix": 1793864160.082192,
+  "all_recorded_clean1_owners_exited": true,
+  "final_sealed_states": {"A": 9, "B": 9, "R": 9},
+  "final_sealed_note": "R completed its existing in-flight update before honoring durable STOP; preserve it unchanged, no new dispatch or replay",
+  "local_clean1_watcher_retirement": "CLEAN1_WATCH_STOP.json; existing watcher32128 exits gracefully, state/logs retained; no replacement while clean2 is unlaunched",
+  "next": "Await all accepted fixes, integrate and qualify clean2"
 }
