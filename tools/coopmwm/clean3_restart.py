@@ -295,7 +295,7 @@ def go_nogo(manifest, *, work, runtime_sha256, charged, branches):
 # ---------------------------------------------------------------- mined moves
 
 MINED_RULE = ('owner 2026-11-06 ~07:2x walls-only launch ("yes."), amending ~04:35: launch when '
-    '/home/ubuntu/mined/MINED_MOVES.jsonl yields >=3 per-seed SUMO-verified JOINT examples (natively admitted '
+    '/home/ubuntu/mined/MINED_MOVES.jsonl yields >=3 per-seed SUMO-verified JOINT examples for B (natively admitted '
     'plan with >=2 executing CAVs; that seed synergy CI95 lower bound > 0); no family-count requirement; '
     'families must exist in both B and R verified pools (R same family distribution from its own bank); '
     'hard deadline 14:00 local -> stop and report; owner approval replaces the MAIN confirmation file.')
@@ -405,7 +405,9 @@ def admit_mined(path, cfg, out_path):
     kept = [r for r in usable if set(r['_families']) <= common]
     dropped = [dict(row=r, reason='family not verified in both B and R (same-distribution rule)')
                for r in usable if not set(r['_families']) <= common]
-    joint = [r for r in kept if r['_members'] >= 2 and r['_seeds'] and (r['verified_synergy'] or {}).get('veh_s')]
+    # B is the arm that must receive (and be smoke-checked on) the mined examples.
+    joint = [r for r in kept if r['arm'] == 'B' and r['_members'] >= 2 and r['_seeds']
+             and (r['verified_synergy'] or {}).get('veh_s')]
     joint_examples = sorted({(r['arm'], r['verification_id'], r['plan_sha256'], s) for r in joint for s in r['_seeds']})
     joint_moves = {e[:3] for e in joint_examples}
     joint_families = sorted({f for r in joint for f in r['_families']})

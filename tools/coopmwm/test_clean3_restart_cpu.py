@@ -370,3 +370,9 @@ def test_mined_move_binds_acceleration_wall_plans_unpatched(monkeypatch):
     assert bank_breadth.mined_move(plan) == 'wall-move' and seen == [plan]
     with pytest.raises(ValueError, match='members'):
         bank_breadth.mined_move(dict(plan, members=[]))
+
+
+def test_walls_only_rule_counts_b_examples_only(tmp_path, monkeypatch):
+    rows = [mrow('R', 'r1', 'wall', 4, {'1': .5, '2': .1, '3': .2})]
+    out = c3.admit_mined(mined_fixture(tmp_path, monkeypatch, rows, base=dict(B=['wall'])), {}, tmp_path/'a.jsonl')
+    assert out['admitted'] == 1 and not out['ready'] and out['joint_verified_examples'] == 0
