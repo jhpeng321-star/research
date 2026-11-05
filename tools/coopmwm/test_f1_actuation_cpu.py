@@ -166,6 +166,92 @@ def test_b_r_actuation_and_worker_restore_identical_even_with_legacy_gain(cfg):
     assert results[0] == results[1]
 
 
+def bank_context(cfg, offset_mode):
+    """Observable two-CAV fixture, including legacy banks without move offsets."""
+    from tools.coopnative.policy import encode
+    context = encode(rows())
+    context['v2v'] = {v: [0.]*cfg['v2v_dim'] for v in context['members']}
+    if offset_mode != 'absent':
+        offset = -.5 if offset_mode == 'cancellation' else 0.
+        context['move_offsets'] = {v: offset for v in context['members']}
+    return context
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('offset_mode', ['absent', 'explicit_zero', 'cancellation'])
+def test_zero_combined_correction_keeps_forward_and_effective_loss_gradients(cfg, arm, offset_mode):
+    from .effective_imitation import pair_imitation
+    p = tb.EpisodePolicy(policy(cfg).layer.base, cfg, arm)
+    context = bank_context(cfg, offset_mode)
+    with torch.no_grad():
+        p.layer.base.actor[-1].weight.zero_()
+        p.layer.base.actor[-1].bias.zero_()
+        if offset_mode == 'cancellation':
+            p.layer.residual[-1].bias.fill_(.5)
+    frozen = deepcopy(p.layer.base.state_dict())
+    mean, value = p(context)
+    base_mean, base_value = p.layer.base(context)
+    assert torch.equal(mean, base_mean)
+    assert torch.equal(value, base_value)
+    # Each member must retain derivative 1, including at exact cancellation.
+    bias = p.layer.residual[-1].bias
+    for member_mean in mean:
+        derivative, = torch.autograd.grad(member_mean.sum(), bias, retain_graph=True)
+        assert derivative.item() == 1.
+    mean.sum().backward()
+    assert bias.grad.item() == len(context['members'])
+    p.zero_grad(set_to_none=True)
+    bank = dict(context=context, action=[[.5], [.5]],
+        behaviour=dict(executed=True, proposal_members=context['members']),
+        binding_limits=dict(c1=.3, c2=.3))
+    pair_imitation(p, bank, 1.).backward()
+    assert bias.grad.item() < 0.  # censored targets must pull the residual up
+    assert p.layer.trigger_gain.grad is None
+    assert all(not v.requires_grad and v.grad is None for v in p.layer.base.parameters())
+    assert all(torch.equal(v, p.layer.base.state_dict()[k]) for k, v in frozen.items())
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('offset_mode', ['absent', 'explicit_zero'])
+def test_effective_bank_learns_from_fresh_zero_residual_without_ppo(cfg, arm, offset_mode):
+    from . import bank_imitation as bi
+    p = tb.EpisodePolicy(policy(cfg).layer.base, cfg, arm)
+    with torch.no_grad():
+        p.layer.base.actor[-1].weight.zero_()
+        p.layer.base.actor[-1].bias.zero_()
+    assert torch.count_nonzero(p.layer.residual[-1].weight) == 0
+    assert torch.count_nonzero(p.layer.residual[-1].bias) == 0
+    assert not p.layer.optimizer.state  # no preceding optimizer/PPO update
+    frozen = deepcopy(p.layer.base.state_dict())
+    gain = p.layer.trigger_gain.detach().clone()
+    before = deepcopy(p.layer.residual.state_dict())
+    bank = dict(context=bank_context(cfg, offset_mode), action=[[.5], [.5]],
+        behaviour=dict(executed=True, proposal_members=['c1', 'c2']),
+        binding_limits=dict(c1=.3, c2=.3))
+    pairs = [(bank, 1.)]
+    loss_before = bi.awr_loss(p, pairs, target_space='effective')
+    report = bi.run_separate(p, p.layer.optimizer, pairs, torch.Generator().manual_seed(9),
+        deepcopy(p).eval(), passes=5, step_mode='kl_targeted', intent_bank_term=False,
+        imitation_target_space='effective')
+    assert report['epochs_completed'] == 5
+    assert report['optimizer_steps'] >= 5
+    assert not report['imitation_failed']
+    assert report['last_gradient_norm'] > 0.
+    assert report['pass1_loss_drop'] > 0.
+    assert bi.awr_loss(p, pairs, target_space='effective') < loss_before
+    assert report['action_error_before_mps2'] == pytest.approx(.3)
+    assert report['action_error_after_mps2'] < report['action_error_before_mps2']
+    assert 0. < report['kl'] <= report['kl_limit']
+    assert report['effective']['binding_share'] == 1.
+    assert any(not torch.equal(v, p.layer.residual.state_dict()[k]) for k, v in before.items())
+    assert p.layer.residual[-1].bias.item() > 0.
+    assert torch.equal(p.layer.trigger_gain, gain)
+    assert p.layer.trigger_gain.grad is None
+    assert p.layer.trigger_gain not in p.layer.optimizer.state
+    assert all(not v.requires_grad and v.grad is None for v in p.layer.base.parameters())
+    assert all(torch.equal(v, p.layer.base.state_dict()[k]) for k, v in frozen.items())
+
+
 def test_a_episode_hook_and_commands_unaffected(cfg):
     base = policy(cfg).layer.base
     out, factory = tb.episode_components(dict(track2_backend=True, track2_config=cfg, arm='A'),

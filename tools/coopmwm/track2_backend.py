@@ -171,7 +171,10 @@ class ProductionLayer(CooperationLayer):
         if not self.enabled:
             return mean, value
         correction = self._distribution(self._features(context))[0][:, None]
-        return torch.where(correction == 0, mean, mean + correction), value
+        # Addition must keep derivative 1 at zero initialization and exact
+        # residual/offset cancellation. Byte-preserving identity selection is
+        # confined to the inherited no-gradient sampling path.
+        return mean + correction, value
 
     def member_scores(self, sample, *, old=False):
         """Marginal Gaussian scores, retaining each CAV's own learning target.
