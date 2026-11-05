@@ -1,0 +1,43 @@
+{
+ "budget": {
+  "available_for_clean3_sim_s": 3701360,
+  "mining_reserved_sim_s": 500000,
+  "owner_cap_sim_s": 7300000,
+  "plan_fix": "released (owner 03:00)",
+  "prior_clean1_clean2_parity_sim_s": 3098640
+ },
+ "chain": "G1 batch -> CLEAN3_GO_NOGO (continue regardless) -> mined wait (cutoff 06:30 local) -> prepare root/ledger -> smoke (all levers+fixes) -> gate once (0 collisions/teleports) -> u1-u24 phase coverage -> launch A/B/R u0 x24 + monitor",
+ "created": "2026-11-06T03:47+08:00",
+ "criterion": "registered u24 criterion unchanged: pooled B group-over-best-single synergy CI95 lower > 0 and original no-safety-regression criterion; total benefit vs common base reported descriptively",
+ "extra_final_baseline": "lane-on MAPPO aecd7d70, frozen, descriptive only (primary comparator speed-only MAPPO)",
+ "operator": "Claude launch operator (replaces S-LAUNCH)",
+ "owner_quotes": {
+  "2026-11-05 23:39": "when the lever finishes, just stop the current run and rerun it",
+  "2026-11-06 01:16": "keep it as the baseline for now. if the our version does while, we can train a new baseline that matches everything",
+  "2026-11-06 02:13": "yes, do that",
+  "2026-11-06 02:44": "use your own usage from now on. and 1",
+  "2026-11-06 03:00": "approve"
+ },
+ "quote": {
+  "file": "E:/agent-work/c4-rerun-launch/CLEAN3_QUOTE.json",
+  "phases": {
+   "early_probes": 52800,
+   "g1_certification": 230400,
+   "g4_synergy_credit": 230400,
+   "gate_bank_verification_ext": 18000,
+   "isolated_replicated": 165600,
+   "track2_smoke": 24000,
+   "v2v_final": 398400,
+   "v2v_final_laneon_mappo_aecd7d70": 133200,
+   "v2v_interim": 398400,
+   "v2v_lessons": 40800,
+   "v2v_practice_refs": 398400,
+   "v2v_train_waves": 1590000
+  },
+  "sha256": "e42d5636a034aab31b16ad976b8b688c9641c1c142a4a2f87758d1e573b6e3fe",
+  "total_sim_s": 3680400
+ },
+ "safety_rule": "A: full original rule. B and R: composite TTC/critical comparison reported each update, no pause. Any collision or teleport in any arm pauses.",
+ "schema": "coopmwm.clean3.chain_authority.v1",
+ "seeds": "registered TRAIN worlds only (986000-986071 family); never 964000-964199, 962xxx, 977xxx"
+}
