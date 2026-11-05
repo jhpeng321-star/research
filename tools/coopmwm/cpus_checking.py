@@ -68,7 +68,8 @@ def rpc(cfg, op, payload=None, timeout=600):
               f"{cfg['q_control']} {op}")
     try:
         p = subprocess.run(ssh_command(cfg['q_host'], remote, timeout=timeout),
-                           input=json.dumps(payload or {}), capture_output=True, text=True, timeout=timeout)
+                           input=json.dumps(payload or {}), capture_output=True, text=True,
+                           timeout=None if str(cfg['q_host']).lower() == 'cpuv' else timeout)
     except subprocess.TimeoutExpired as error:
         raise RpcError(f'rpc {op} timeout') from error
     if p.returncode != 0:

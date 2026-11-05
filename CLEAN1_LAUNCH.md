@@ -78,6 +78,16 @@ failed attempts also consume the interval. There is one connection attempt per
 SSH process, a 20-second connect timeout, and no wrapper retries. Concurrent
 clients must share this directory; do not create separate pools by arm, run, or PID.
 
+Each operation publishes a durable `active.json` reservation **before** starting
+a local session supervisor. That supervisor starts the actual SSH/SCP process,
+watches the wrapper's lifetime, and terminates/reaps the owned session on wrapper
+cancellation, wrapper death, or deadline expiry. On POSIX, cancellation targets
+the session's separate process group (including SCP's SSH child); the shared
+persistent master is outside that group. The reservation clears only after
+cleanup. A second caller checks it even if a dead wrapper has released its OS
+lock, so killing the wrapper PID cannot admit an overlapping session. Streams
+and rsync use this same supervision without imposing a new session duration.
+
 Each session checks the existing master under the lock and uses
 `ControlMaster=no`, the same `ControlPath`, and `ProxyCommand=false`. If the master
 dies between check and dispatch, the session fails instead of silently opening
@@ -108,10 +118,16 @@ rsync -a -e 'python -B -m tools.coopmwm.cpuv_ssh rsh' ./release/ cpuV:/absolute/
 `run -- '...'` passes one remote-shell command unchanged and inherits binary-safe
 stdin/stdout/stderr. When passed multiple words, the wrapper shell-quotes each
 word. Both `put` and `get` take **local path first, absolute remote path second**.
-The CLI defaults to a 180-second command timeout; `--timeout 0` inherits the
-caller's lifetime for long-running streams/rsync. Admission/connect timeouts and
-the rate bound still apply. Existing RPC callers forward their command timeout;
-Popen streams and rsync retain their external owner's lifetime limits.
+The CLI defaults to a 180-second **end-to-end** timeout, including admission,
+master checks/creation, rate spacing and the session. `command(..., timeout=...)`
+also carries an absolute monotonic deadline across wrapper startup. `--timeout 0`
+inherits the caller's lifetime for long-running streams/rsync; the admission and
+connect bounds still apply. Existing cpuV RPC callers forward their deadline to
+the wrapper and wait for supervised cleanup instead of running a competing outer
+timeout. Cleanup may extend return time beyond the execution deadline (normally
+up to one second of termination grace plus process reaping). An external owner
+can still terminate the wrapper; its supervisor independently cleans up before
+releasing admission. Popen streams and rsync retain their owner's lifetime limits.
 The Python API is `Transport.run(command, ...)` / `Transport.copy(local, remote,
 upload=..., ...)`; `command(host, command)` provides a gated argv for existing
 subprocess/Popen clients. The shared `tools.coopbandit.ops.remote` used by
@@ -129,7 +145,19 @@ lock/rate limit. Do not remove live sockets, force-close shared masters, or shor
 poll/retry intervals to recover from flapping. In idle periods the master expires
 itself after 600 seconds.
 
+If the supervisor itself is killed, or startup is interrupted after reservation
+publication, `active.json` deliberately remains and future admission times out
+with an operator-recovery diagnostic. **Do not delete it based on age or on the
+wrapper PID being gone.** The authorized operator must inspect the local process
+tree and confirm the supervisor and its entire owned SSH/SCP session group have
+exited (terminate/reap only those owned processes if necessary), then remove only
+that stale reservation while all clients are stopped. Preserve `last_attempt.json`
+and the shared master/socket. Reconcile any remote mutation from its authoritative
+receipt before making another request; recovery never replays the command.
+
 This infrastructure is arm-independent: it does not inspect/change arm A policy,
 reward, RNG, bank or training configuration, and B/R use the same transport rules.
-F6 qualification is local CPU testing with fake SSH plus real local-process lock
-contention; live Linux/WSL connection qualification is still required before use.
+F6 qualification includes real local-process wrapper cancellation, abrupt death,
+RPC deadline/cleanup, transfer and stream lifetime, and lock contention, with all
+network commands replaced by local Python children. Live Linux/WSL connection
+qualification is still required before use.
