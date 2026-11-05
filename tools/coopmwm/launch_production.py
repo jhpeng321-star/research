@@ -53,11 +53,15 @@ def backend_config(cfg, *, root=None, smoke=False):
         out['budget'] = dict(restart['budget'], total=restart['owner_cap_sim_s'],
                              remaining_cap_sim_s=restart['budget']['total'])
         out['prior_charged_sim_s'] = restart['protected_prior_sim_s']
+    if 'clean3_budget' in cfg:
+        from .clean3_restart import native_budget
+        out['budget'], out['prior_charged_sim_s'] = native_budget(cfg)
     if cfg.get('g4_synergy_credit') and not smoke:
         from .g4_runtime import allocate_budget
         allocate_budget(out)
     prior = out['prior_charged_sim_s']
-    if sum(out['budget']['phases'].values())+prior > rc.TOTAL_CAP_SIM_S:
+    cap = out['budget']['total'] if 'clean3_budget' in cfg else rc.TOTAL_CAP_SIM_S
+    if sum(out['budget']['phases'].values())+prior > cap:
         raise ValueError('complete production allocations plus prior parity exceed owner cap')
     if 'clean2_budget' not in cfg and cfg['budget']['total']+960 > out['budget']['total']:
         raise ValueError('production quote plus prior parity exceeds owner cap')

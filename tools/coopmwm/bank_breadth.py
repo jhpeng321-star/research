@@ -121,7 +121,10 @@ def visit(cfg, arm, consumer):
             seen.add(key)
             p1._path(trace)
             bound = local
-            if certified is not None:
+            # MINED_MOVES rows are admitted by the mining operator's own full-window
+            # group/base/each-solo CRN verification (group>best-solo CI95 low>0); the
+            # G1 manifest certifies the existing bank lessons only.
+            if certified is not None and '_g5_mined' not in local:
                 try:
                     snap, _ = verified_restart(local['run_root'], arm, receipt, example, plan)
                 except UnboundContext:

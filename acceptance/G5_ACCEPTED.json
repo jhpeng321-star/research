@@ -1,0 +1,115 @@
+{
+  "task": "G5",
+  "status": "ACCEPTED",
+  "branch": "c4/grp-lane",
+  "worktree": "E:/agent-work/c4-grp-lane",
+  "commit": "9222d3b1",
+  "fix_commits": [
+    "9fd32b4e",
+    "9222d3b1"
+  ],
+  "reviewed_head": "1fee83d4",
+  "review": "REVIEW_G5_r0.md (VERDICT: BLOCK, 3 blockers)",
+  "tests": {
+    "review_full_command": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_group_lane_cpu.py tools/coopmwm/test_moves_cpu.py tools/coopmwm/test_feasible_proposals_cpu.py tools/coopmwm/test_f1_actuation_cpu.py tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_bank_breadth_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_trigger_policy_cpu.py tools/coopmwm/test_bank_perseed_cpu.py tools/coopmwm/test_bank_imitation_cpu.py tools/coopmwm/test_replay_bank_v2v_cpu.py tools/coopmwm/test_v2v_intent_cpu.py tools/coopmwm/test_launch_final_cpu.py -k \"not test_gate_seals_commit_and_runtime_and_the_launcher_reads_it\" -p no:cacheprovider",
+      "passed": 506,
+      "failed": 0,
+      "deselected": 1,
+      "subtests_passed": 5,
+      "warnings": 2,
+      "duration_s": 185.02,
+      "env": "CUDA_VISIBLE_DEVICES='' OMP/MKL/OPENBLAS_NUM_THREADS=1"
+    },
+    "deselected_test_run_separately": {
+      "test": "test_gate_seals_commit_and_runtime_and_the_launcher_reads_it",
+      "passed": 1,
+      "note": "commits only inside its own temporary repository"
+    },
+    "feature_file": {
+      "file": "tools/coopmwm/test_group_lane_cpu.py",
+      "passed": 82,
+      "previous": 43,
+      "added": 39
+    },
+    "default_off_comparisons": {
+      "tests": [
+        "test_g5_env_default_off_matches_pre_g5_env_byte_identically[no_lanes|legacy_lanes|alias_lane|mixed_nan_and_hdv] (vs env.py at 6d8046e7 loaded from git)",
+        "test_g5_default_off_preserves_vocab_slate_and_worker_shapes",
+        "test_real_tick_reuses_one_env_step_and_records_only_actual_outcome[False] (legacy env.step call, no lane_actors)"
+      ],
+      "passed": "all (included in the 82 / 506 counts)"
+    },
+    "env_unit_tests": {
+      "command": "pytest -q tests/unit/test_c4_evalv5.py tests/unit/test_c4_policy2.py -k 'not test_env_executes_lane_commands_in_sumo'",
+      "passed": 25,
+      "deselected": 1
+    }
+  },
+  "blockers": {
+    "1_lane_ownership_leak": {
+      "fix": "Additive CavSumoEnv.step/_control_tick lane_actors contract (traffic_shepherd/c4/env.py): policy lane control = finite-command CAVs AND authorized actors; others keep/restore their original laneChangeMode via the existing _lane_control. v2v_runtime Controller.lane_actors() = this tick's gate-passed targets; tools/coopfree/backend.tick passes it whenever a lanes tensor is sent (the sole lane call path). lane_actors=None keeps legacy semantics.",
+      "tests": [
+        "test_g5_env_lane_ownership_is_restricted_to_authorized_actors (real env.step; nonmember, released counterfactual member with finite command, HDV; original mode restored)",
+        "test_g5_backend_passes_controller_lane_actors_to_the_sole_writer",
+        "test_real_tick_reuses_one_env_step_and_records_only_actual_outcome (lane_actors reaches env.step)",
+        "test_g5_env_default_off_matches_pre_g5_env_byte_identically x4"
+      ],
+      "failed_before_fix": true,
+      "r0_probe_rerun": {
+        "legacy_lanes_only_call": [
+          "main",
+          "ramp",
+          "unrelated"
+        ],
+        "g5_contract_lane_actors_main": [
+          "main"
+        ],
+        "g5_contract_released_member": [],
+        "verdict": "contained: G5 runtime always uses the contract; legacy lane-policy semantics preserved byte-identically"
+      }
+    },
+    "2_wrong_profile_validated": {
+      "fix": "group_lane.from_plan requires profile, policy_profile and perturbation_profile as strict finite members x duration_s matrices with profile - policy_profile == perturbation_profile == macro offsets, rejects knot representations, and checks plans.acceleration_at == profile every second; verify_tape requires each covered window second of the hash-bound tape to have executed exactly profile (sample.absolute_accels) and the macro window to be covered. Helper group_lane.executable_fields builds the bound fields.",
+      "tests": [
+        "test_g5_binding_rejects_profile_not_equal_to_executed_macro x10 (r0 repro, profile-only, policy-only, missing fields, knots, NaN, ragged, bool)",
+        "test_g5_nonzero_base_execution_parity x2 (incl. native verification controller absolute_accels)",
+        "test_g5_verify_tape_requires_per_actor_issue_completion_and_executed_profile[profile_drift|window_missing]"
+      ],
+      "failed_before_fix": true,
+      "r0_probe_rerun": {
+        "executed_at_t2": {
+          "main": 1.0,
+          "ramp": 1.0
+        },
+        "group_lane.from_plan": "rejected: G5 executable profile does not equal policy reference plus macro offsets",
+        "moves.from_plan": "rejected: G5 executable profile does not equal policy reference plus macro offsets"
+      }
+    },
+    "3_blocked_actor_certified": {
+      "fix": "env records per-vehicle {target,status,completed} (info lane_vehicles, G5 contract only, same actuator); observe_lane stores it in event.g5_lane_outcome.vehicles (inside the tape bound by result_sha256 in replay_bank); verify_tape requires the expected actor/target in g5_lane_gate.safe, not blocked, per-vehicle status issued and completed, and its own next-frame transition; aggregate counts never certify.",
+      "tests": [
+        "test_g5_r0_repro_blocked_actor_with_concurrent_success_is_rejected",
+        "test_g5_verify_tape_requires_per_actor_issue_completion_and_executed_profile x18 (incl. concurrent_ok accept)",
+        "test_g5_env_records_per_vehicle_issued_and_completed_telemetry",
+        "test_g5_runtime_records_per_actor_telemetry_from_env_info",
+        "test_native_statistical_bank_admits_only_hash_bound_actual_lane_effects x3 (updated to per-actor evidence)"
+      ],
+      "failed_before_fix": true,
+      "r0_probe_rerun": {
+        "aggregate_only": "rejected: G5 verified tape lacks the actual commanded CAV lane effect",
+        "per_vehicle_other_only": "rejected: G5 verified tape lacks the actual commanded CAV lane effect"
+      }
+    }
+  },
+  "disclosure": "Rule deviation: running tests/unit/test_c4_policy2.py without a deselect (twice, incl. a -k lane run) let the inherited test_env_executes_lane_commands_in_sumo execute, because SUMO is on PATH (its skipif only checks shutil.which). It ran a tiny legacy-path 10 s episode in temp dirs E:/Temp/opencode/g5-claude-unit*; nothing from it is used as evidence and all counted runs deselect it. No SSH/GPU.",
+  "constraints": {
+    "evidence_cpu_only": true,
+    "sumo_started": "yes, inadvertently via one inherited unit test (see disclosure)",
+    "ssh_gpu_used": false,
+    "restricted_paths_opened": false,
+    "forbidden_git_operations_used": false,
+    "hdvs_commanded": false
+  },
+  "accepted_by": "Claude subagent (owner 2026-11-06 01:5x: blocked rounds go to Claude subagents)"
+}

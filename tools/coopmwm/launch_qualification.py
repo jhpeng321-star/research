@@ -25,8 +25,9 @@ def copy_safety_authority(cfg, output):
     root = Path(cfg['run_root'])
     shutil.copyfile(root/rc.RULE_FILE, output/rc.RULE_FILE)
     shutil.copyfile(root/'AUTHORITY.md', output/'AUTHORITY.md')
-    if 'clean2_budget' in cfg:
-        for name, expected in cfg['clean2_restart']['inherited_safety_receipts'].items():
+    if 'clean2_budget' in cfg or 'clean3_budget' in cfg:
+        restart = cfg['clean2_restart'] if 'clean2_budget' in cfg else cfg['clean3_restart']
+        for name, expected in restart['inherited_safety_receipts'].items():
             if rc.sha(root/name) != expected:
                 raise ValueError('inherited owner safety authority changed before smoke')
             shutil.copyfile(root/name, output/name)
@@ -69,12 +70,17 @@ def smoke(cfg):
     dry = [training.diagnostic(cfg, u, dry=True, artifacts=output) for u in (6, 12, 24)]
     if any(r['cells'] != 10 or r['status'] != 'dry_run' or r['branches'] <= 0 for r in dry):
         raise ValueError('complete replicated-test dry grid required')
-    fixes = None
-    if 'clean2_budget' in cfg:
+    fixes = levers = None
+    if 'clean2_budget' in cfg or 'clean3_budget' in cfg:
         from .clean2_receipts import reporting, validate_smoke
         validate_smoke(cfg, updates)
+        if 'clean3_budget' in cfg:
+            from .clean3_receipts import validate_levers
+            validate_levers(cfg, updates)  # precheck before the extra reporting branches
         measured = reporting(cfg)
         fixes = validate_smoke(cfg, updates, measured)
+        if 'clean3_budget' in cfg:
+            levers = validate_levers(cfg, updates, fixes)
     charged = sum(r['sim_s'] for r in ledger(root) if r['phase'] == 'track2_smoke')
     if charged > 20000:
         raise ValueError('owner total smoke cap exceeded')
@@ -88,6 +94,7 @@ def smoke(cfg):
         plan_augmentation=dict(enabled=cfg['plan_augment']['enabled'],
             reason=cfg.get('launch_augmentation_decision', 'registered native all8 admission')),
         **({'clean2_fix_receipts_sha256':fixes['receipt_sha256']} if fixes else {}),
+        **({'clean3_lever_receipts_sha256':levers['receipt_sha256']} if levers else {}),
         replacement_reward='native P2 real observable neighbourhood SUMO reward'), 'receipt_sha256')
     training.write(root/'SMOKE_PASS.json', receipt)
     return receipt

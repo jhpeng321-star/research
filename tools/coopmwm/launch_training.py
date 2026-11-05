@@ -87,6 +87,9 @@ def release(cfg):
     if 'clean2_budget' in cfg:
         from .launch_clean2 import verify_previous
         verify_previous(cfg)
+    if 'clean3_budget' in cfg:
+        from .clean3_restart import verify_previous
+        verify_previous(cfg)
     for name, status in (('SMOKE_PASS.json', 'SMOKE_PASS'), ('GATE_PASS.json', 'PASS')):
         receipt = read(root/name)
         verify_sealed(receipt, 'receipt_sha256')
@@ -165,7 +168,7 @@ def update(cfg, arm, u, *, smoke=False):
     metrics = production.update_metrics(arm, episodes, learning, envelope,
         augmented_examples=0 if arm == 'A' else augmentation['admitted'][arm])
     extra = {}
-    if 'clean2_budget' in cfg:
+    if 'clean2_budget' in cfg or 'clean3_budget' in cfg:
         from .clean2_receipts import update_evidence
         extra['clean2_fix_receipts'] = update_evidence(arm, episodes, learning, envelope, metrics)
     value = _seal(dict(**started, finished_unix=time.time(), checkpoint=checkpoint,
