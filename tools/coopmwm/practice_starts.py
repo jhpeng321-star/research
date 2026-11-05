@@ -213,15 +213,14 @@ def load_snapshot(root, arm, row):
         from .track2_backend import _path
         lookup = row['snapshot_lookup']
         source_root = _path(lookup['run_root'])
-        receipt = lookup['receipt']
-        for key in ('_source', '_branches'):
-            if key in receipt:
-                _path(receipt[key])
-        snap = rb._decision_snapshot(source_root, arm, receipt, _links(source_root, arm))
+        from .bank_breadth import load_verified_restart
+        snap = load_verified_restart(arm, lookup)
     else:
         snap = torch.load(rb.bank_root(root, arm)/'snapshots'/(row['state_id']+'.pt'), weights_only=False)
     seed_index = int(row['seed_index'])
-    if seed_index == 2:
+    if row.get('snapshot_lookup'):
+        pass  # Original receipt and native per-seed CRN already validated above.
+    elif seed_index == 2:
         snap = rb.replicate(snap, row['salt'])
     elif seed_index >= 3:
         snap = rb.replicate(snap, f'{row["salt"]}#s{seed_index}')
@@ -231,16 +230,23 @@ def load_snapshot(root, arm, row):
         raise ValueError('practice augmentation snapshot_sha256 mismatch')
     if row.get('source') == 'augmented' or row.get('parent_example_id'):
         from .practice_weighting import verify_child
-        verify_child(root, arm, row, snap, row.get('prelaunch'))
+        if row.get('snapshot_lookup'):
+            from .track2_backend import _bank_view
+            with _bank_view(lookup['bank_cfg']):
+                verify_child(source_root, arm, row, snap, row.get('prelaunch'))
+        else:
+            verify_child(root, arm, row, snap, row.get('prelaunch'))
     return snap
 
 
-def _crn_seed_text(seed_index):
+def _crn_seed_text(seed_index, replication_salt=None):
     """Where the practice generator state at t0 comes from (receipt provenance text)."""
     if seed_index == 1:
         return 'example seed-1 decision snapshot generator state'
     if seed_index == 2:
         return 'example seed-2 CRN: replicate(snapshot, vid) generator state'
+    if replication_salt is not None:
+        return f'extra-seed example CRN: replicate(snapshot, {replication_salt}) generator state'
     return f'extra-seed example CRN: replicate(snapshot, salt#s{seed_index}) generator state'
 
 
@@ -259,7 +265,7 @@ def _snapshot_call(root, arm, ident, row, index, base_extra, *, a_reference):
                 verification_id=row['verification_id'], example_id=row['example_id'],
                 seed_index=int(row['seed_index']), t0=t0, slot=slot,
                 world=snap['episode']['world'], snapshot_sha256=sv.snapshot_sha(snap),
-                crn_seed=_crn_seed_text(int(row['seed_index'])),
+                 crn_seed=_crn_seed_text(int(row['seed_index']), row.get('replication_salt')),
                 fallback=bool(row.get('fallback')),
                 horizon_end_s=int(snap.get('end_s', sv.EPISODE_END_S)), charged_sim_s=CHARGED_SIM_S,
                 policy=('A policy from t0 (matched safety reference); same snapshot prefix replay '

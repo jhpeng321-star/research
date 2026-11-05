@@ -9,6 +9,7 @@ from collections import Counter
 from copy import deepcopy
 import json
 from pathlib import Path
+import warnings
 
 from .protocol import digest
 
@@ -73,10 +74,26 @@ def visit(cfg, arm, consumer):
     seen = set()
     for source in inputs(cfg):
         local = dict(cfg, **source)
+        # Breadth and trigger teaching must not bypass the prelaunch admission
+        # that weighted practice uses. Validate ALL children before any callback.
+        from . import practice_starts as ps, practice_weighting as pw
+        with p1._bank_view(local):
+            augmented, manifest_sha = pw.augmented_examples(local['run_root'], arm,
+                ps.examples(local['run_root'], arm), deduplicate=False)
+        if any(not local.get('augmentation_prelaunch') or
+               r['prelaunch'] != local['augmentation_prelaunch'] for r in augmented):
+            raise ValueError('augmented breadth needs parent registered prelaunch provenance')
+        local['_breadth_augmented'] = {r['example_id']: dict(r,
+            augmentation_sha256=manifest_sha) for r in augmented}
+        links = ps._links(local['run_root'], arm)
         def consume(*, receipt, example, plan, pairs, trace):
             # bank_pairs has already checked legacy admission/cooperation too.
             if not pairs:
                 return
+            ident = (example or {}).get('example_id', receipt['verification_id']+'#s1')
+            if (links.get(receipt['verification_id'], {}).get('augmentation')
+                    and ident not in local['_breadth_augmented']):
+                raise ValueError('augmented breadth child missing verified prelaunch manifest')
             key = (receipt['verification_id'], int((example or {}).get('seed_index', 1)), digest(plan))
             if key in seen:
                 return
@@ -89,6 +106,123 @@ def visit(cfg, arm, consumer):
                 v2v_intent=local if local.get('v2v_intent') else None,
                 imitation_bank_filter='cooperative_only',
                 imitation_target_space='effective', example_consumer=consume)
+
+
+class UnboundContext(ValueError):
+    """An old source has no immutable snapshot binding; never certify its current file."""
+
+
+def verified_restart(root, arm, receipt, example, plan):
+    """Restore ONLY a context bound by original sealed first/own-seed evidence.
+
+    Called at pool construction and dispatch. No freshly measured hash can stand
+    in for a missing receipt hash, including for legacy and imported LS sources.
+    """
+    import hashlib
+    from . import replay_bank as rb, practice_starts as ps, sumo_verify as sv
+    from . import exact_grade as xg, verify_perseed as vp
+    from .track2_backend import _path
+    first = {k: v for k, v in receipt.items() if not k.startswith('_')}
+    xg.verify_sealed(first, 'receipt_sha256')
+    if not first.get('snapshot_sha256'):
+        raise UnboundContext('original verification has no immutable snapshot_sha256')
+    snap = rb._decision_snapshot(root, arm, receipt, ps._links(root, arm))
+
+    def check_snapshot(evidence, snapshot):
+        if (evidence.get('snapshot_sha256') != sv.snapshot_sha(snapshot)
+                or evidence.get('episode') != snapshot['episode']
+                or evidence.get('t0') != snapshot['t0']):
+            raise ValueError('verification snapshot identity/world/decision time mismatch')
+        # snapshot_sha projects the RNG metadata. Also bind the actual tensor
+        # that the runner will restore to that verified metadata.
+        if hashlib.sha256(snapshot['generator_state'].numpy().tobytes()).hexdigest() != (
+                snapshot['rng'].get('generator_state_sha256')):
+            raise ValueError('verification snapshot generator state mismatch')
+
+    check_snapshot(first, snap)
+    episode = snap['episode']
+    if (episode.get('role') != 'train' or episode.get('arm') != arm
+            or not 986000 <= int(episode['world']['seed']) <= 986071):
+        raise ValueError('F3 practice requires ordinary TRAIN snapshots')
+    vid = first['verification_id']
+    confirmation = rb.confirmations(root, arm).get(vid, {})
+    if confirmation.get('t0') != snap['t0']:
+        raise ValueError('verification confirmation decision time mismatch')
+    if not confirmation.get('admitted') or (example is None and
+            (confirmation.get('cooperation') or {}).get('cooperative') is not True):
+        raise ValueError('verified restart confirmation no longer admitted/cooperative')
+    seed = int((example or {}).get('seed_index', 1))
+    if seed < 1:
+        raise ValueError('invalid verified restart seed index')
+    salt = None if seed == 1 else vid if seed == 2 else vp.extra_seed_salt(vid, seed)
+    if salt is not None:
+        snap = rb.replicate(snap, salt)
+    own = first
+    if example is not None:
+        current = next((e for e in (confirmation.get('per_seed_v1') or {}).get('examples', [])
+                        if e['example_id'] == example['example_id']), None)
+        if current != example or not example.get('admitted') or example.get('cooperative') is not True:
+            raise ValueError('verified restart example evidence changed/not admitted')
+        tape = example['tape']
+        if seed > 1:
+            path = _path(Path(tape['branches_dir']).parent/'verifications'/
+                         (tape['verification_id']+'.json'))
+            own = json.loads(path.read_text(encoding='utf-8'))
+            xg.verify_sealed(own, 'receipt_sha256')
+            if not own.get('snapshot_sha256'):
+                raise UnboundContext('own-seed verification has no immutable snapshot_sha256')
+        if (own['verification_id'] != tape['verification_id']
+                or tape['window'] != own['window'] or tape['window']['start_s'] != snap['t0']
+                or tape['branch'] not in own['branches']):
+            raise ValueError('verified restart own-seed tape binding mismatch')
+        branch_index = own['branches'].index(tape['branch'])-1
+        hashes = own.get('candidate_plan_sha256')
+        if branch_index < 0 or (hashes and hashes[branch_index] != digest(plan)) or (
+                branch_index == own['chosen'] and digest(own['chosen_plan']) != digest(plan)):
+            raise ValueError('verified restart own-seed plan binding mismatch')
+    if confirmation.get('verify_mode') == vp.ALL8:
+        meta = (confirmation.get('first_seed') if seed == 1 else confirmation.get('seed2')
+                if seed == 2 else (confirmation.get('extra') or {}).get(str(seed))) or {}
+        first_meta = confirmation.get('first_seed') or {}
+        if (first_meta.get('receipt_sha256') != first['receipt_sha256']
+                or first_meta.get('verification_id') != vid
+                or meta.get('receipt_sha256') != own['receipt_sha256']
+                or meta.get('verification_id') != own['verification_id']
+                or (seed > 1 and (meta.get('salt') != salt
+                    or meta.get('snapshot_sha256') != sv.snapshot_sha(snap)))):
+            raise ValueError('verified restart native per-seed CRN evidence mismatch')
+    elif seed > 1:
+        if seed != 2 or (confirmation.get('replication') or {}).get('receipt_sha256') != own['receipt_sha256']:
+            raise ValueError('verified restart legacy replication evidence mismatch')
+    check_snapshot(own, snap)
+    binding = dict(first_receipt_sha256=first['receipt_sha256'], own_receipt_sha256=own['receipt_sha256'],
+        confirmation_sha256=confirmation.get('confirmation_sha256'), example_sha256=digest(example),
+        seed_index=seed, replication_salt=salt)
+    return snap, binding
+
+
+def load_verified_restart(arm, lookup):
+    """Re-read the original source and compare immutable evidence on resume."""
+    from . import replay_bank as rb
+    from .track2_backend import _path, _bank_view
+    root = _path(lookup['run_root'])
+    expected = lookup['receipt']
+    for key in ('_source', '_branches'):
+        if key in expected:
+            _path(expected[key])
+    if lookup.get('binding_version') != 1:
+        raise ValueError('F3 practice plan predates original verification binding; use a new update')
+    sources = [expected['_source']] if expected.get('_source') else []
+    with _bank_view(lookup['bank_cfg']):
+        current = next((r for r in rb.bank_decisions(root, arm, sources=sources)
+                        if r['verification_id'] == expected['verification_id']
+                        and r['receipt_sha256'] == expected['receipt_sha256']), None)
+        if current is None:
+            raise ValueError('verified restart original receipt evidence changed/missing')
+        snapshot, binding = verified_restart(root, arm, current, lookup['example'], lookup['plan'])
+        if binding != lookup.get('verification_binding'):
+            raise ValueError('verified restart immutable verification evidence changed')
+    return snapshot
 
 
 def observable_contexts(policy, plan, pairs, frames, *, t0):
@@ -137,29 +271,34 @@ def observable_contexts(policy, plan, pairs, frames, *, t0):
 
 def practice_pool(cfg, arm):
     """Verified restarts including imported contexts; preserve exact seed salts."""
-    from . import replay_bank as rb, practice_starts as ps, moves, sumo_verify as sv
+    from . import practice_starts as ps, moves, sumo_verify as sv
     rows = []
     def consume(*, cfg, receipt, example, plan, pairs, trace):
         root = cfg['run_root']
         links = ps._links(root, arm)
-        snap = rb._decision_snapshot(root, arm, receipt, links)
-        world = snap['episode']['world']
-        if (snap['episode'].get('role') != 'train' or snap['episode'].get('arm') != arm
-                or not 986000 <= int(world['seed']) <= 986071):
-            raise ValueError('F3 practice requires ordinary TRAIN snapshots')
+        try:
+            snap, binding = verified_restart(root, arm, receipt, example, plan)
+        except UnboundContext as error:
+            warnings.warn(f'F3 excludes {arm}/{receipt["verification_id"]}: {error}', RuntimeWarning)
+            return
         seed = int((example or {}).get('seed_index', 1))
         vid = receipt['verification_id']
-        if seed > 1:
-            snap = rb.replicate(snap, vid if seed == 2 else f'{vid}#s{seed}')
-        lookup = {k: receipt[k] for k in ('verification_id', '_source', '_branches', '_policy_version')
-                  if k in receipt}
-        rows.append(dict(verification_id=vid,
+        bank_cfg = {k: cfg[k] for k in ('run_root', 'training_seed', 'replay_sources', 'bank_rule') if k in cfg}
+        row = dict(verification_id=vid,
             example_id=(example or {}).get('example_id', f'{vid}#s1'), seed_index=seed, salt=vid,
             state_id=links.get(vid, {}).get('state_id', f'imported_{vid}'), fallback=False,
             source='verified_breadth', family=moves.from_plan(plan).family,
-            snapshot_lookup=dict(run_root=str(root), receipt=lookup),
+            replication_salt=binding['replication_salt'],
+            snapshot_lookup=dict(binding_version=1, run_root=str(root), bank_cfg=bank_cfg,
+                receipt=receipt, example=example, plan=plan, verification_binding=binding),
             snapshot_sha256=sv.snapshot_sha(snap),
-            context_id=digest(dict(snapshot=sv.snapshot_sha(snap), family=moves.from_plan(plan).family))))
+            context_id=digest(dict(snapshot=sv.snapshot_sha(snap), family=moves.from_plan(plan).family)))
+        child = cfg.get('_breadth_augmented', {}).get(row['example_id'])
+        if child is not None:
+            if child['snapshot_sha256'] != row['snapshot_sha256']:
+                raise ValueError('augmented breadth verified snapshot_sha256 mismatch')
+            row.update(child)
+        rows.append(row)
     visit(cfg, arm, consume)
     # Multiple verified plans/links can describe the very same restart context.
     unique = {}

@@ -143,11 +143,13 @@ def _state_key(row):
             row['salt'] if int(row['seed_index']) > 1 else '')
 
 
-def augmented_examples(root, arm, parents):
+def augmented_examples(root, arm, parents, *, deduplicate=True):
     """Return (distinct own-bank SUMO-verified restart rows, manifest hash).
 
     Missing manifest means no augmentation yet. Present invalid manifests refuse
     before dispatch; no foreign bank, arbitrary file path, or imported label is read.
+    Breadth visitors use deduplicate=False to retain every validated child's
+    provenance; restart-context deduplication happens only after that binding.
     """
     from . import exact_grade as xg, practice_starts as ps
     path = Path(root)/'replay_bank'/arm/'PRACTICE_AUGMENTED.json'
@@ -196,7 +198,7 @@ def augmented_examples(root, arm, parents):
         ps.load_snapshot(root, arm, row)
         seen_ids.add(ident)
         key = _state_key(row)
-        if key not in seen_states:
+        if not deduplicate or key not in seen_states:
             seen_states.add(key)
             out.append(row)
     return out, record['practice_augmented_sha256']

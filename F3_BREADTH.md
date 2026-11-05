@@ -14,10 +14,32 @@ safety, tape-integrity, observable-command availability and effective-target
 checks still determine usability. No new simulation is dispatched by this code.
 
 Practice loads each example's original decision snapshot through the native
-own-bank or LS reader. Seed 2 and extra seeds retain the native replication salt;
-the frozen plan binds the resulting snapshot hash. Only ordinary TRAIN snapshots
+own-bank or LS reader. Before assigning a context identity, it compares the
+snapshot with the **original sealed verification** hash, episode/world, arm and
+decision time, including the actual generator tensor. Seed 2 and extra seeds use
+the native verifier's replication salt (`vid` and `extra_seed_salt(vid, k)`), and
+each restored seed is checked against its own receipt/tape and native all8 seed
+metadata. Legacy/imported records without an immutable source snapshot binding
+are excluded with an explicit `F3 excludes <arm>/<vid>` warning; a hash of the
+currently loaded file is never a substitute. Only ordinary TRAIN snapshots
 from the corresponding arm are eligible. Distinct snapshots/CRNs are deduplicated
 within a family, rather than counting duplicate bank links as breadth.
+
+The shared visitor validates every supplied augmentation manifest using
+`practice_weighting.augmented_examples(..., deduplicate=False)`, including when
+both `weighting=True` and `breadth_cfg` are supplied. This also applies to
+PLAN_FIX/variety roots and trigger supervision. Children retain `source=augmented`,
+parent identity, manifest hash, SUMO evidence and registered prelaunch allocation/
+ledger binding. Missing, wrong-phase, wrong-namespace, undercharged or over-budget
+branch charges are rejected before selection. Native augmentation links cannot
+omit the manifest. The configuration's `augmentation_prelaunch` must equal the
+child's registration, including for additional bank roots.
+
+Frozen rows carry full immutable original/own-seed evidence and the source bank
+configuration. Dispatch re-reads the source receipts and example evidence,
+rechecks snapshot and CRN bindings, and revalidates child charges at the source
+root (not the caller's root). Appending a new handoff does not resample a frozen
+plan. Changed evidence or charges fail before the snapshot reaches a wave.
 
 Selection assigns equal mass to supported families, subject to the smaller
 B/R family's verified capacity and the existing repeat cap. Both arms get the
@@ -48,7 +70,8 @@ each new supported family. An empty PLAN_FIX output list uses the current banks;
 two empty practice pools produce normal starts.
 
 An existing frozen practice plan is never overwritten. F3 refuses a pre-F3 plan
-for the same update; apply the amendment at a new update boundary. New frozen
+for the same update; pre-fix F3 lookups without original verification bindings
+also refuse dispatch. Apply the amendment at a new update boundary. New frozen
 plans resume exactly, even if a later handoff arrives; later updates read the
 new handoff. A does not call the bank reader or practice selection.
 
@@ -96,3 +119,7 @@ Tests use the registered Python interpreter and CPU fakes. The F3 suite exercise
 native per-seed admission/tape integrity, imported LS restart reconstruction,
 PLAN_FIX expansion, seed restoration, broad rotation, B/R family matching,
 visibility, actual trigger learning and frozen-base/A isolation.
+Fix-round regressions cover the production weighting-plus-breadth path for both
+arms/current and additional roots, pre-selection and resumed evidence/ledger
+changes, native/imported/PLAN_FIX snapshot substitution and world/time mismatches,
+unbound legacy exclusions, and native all8 seed-2/extra-seed evidence.

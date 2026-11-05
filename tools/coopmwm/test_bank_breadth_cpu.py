@@ -17,6 +17,51 @@ def write(path, value):
     path.write_text(json.dumps(value), encoding='utf-8')
 
 
+def bind_fixture_snapshots(root, arm):
+    """Give the old statistical fixtures original collector-grade evidence.
+
+    The fixtures predate snapshot provenance and intentionally do not model it.
+    Stamp receipts once during setup, never when a pool reads the bank.
+    """
+    from . import sumo_verify as sv, bank_statistics
+    for vid, link in ps._links(root, arm).items():
+        snap_path = rb.bank_root(root, arm)/'snapshots'/(link['state_id']+'.pt')
+        snap = torch.load(snap_path, weights_only=False)
+        snap['episode']['arm'] = arm
+        torch.save(snap, snap_path)
+        for kind, own in (('sumo_verification', snap), ('confirm_replication', rb.replicate(snap, vid))):
+            path = rb.bank_root(root, arm)/kind/'verifications'/(vid+'.json')
+            receipt = json.loads(path.read_text())
+            receipt.update(snapshot_sha256=sv.snapshot_sha(own), episode=own['episode'], t0=own['t0'])
+            receipt['chosen_plan']['perturbation_profile'] = [[-.3]*20]*2
+            receipt = xg._seal(receipt, 'receipt_sha256')
+            write(path, receipt)
+            if kind == 'confirm_replication':
+                cpath = rb.bank_root(root, arm)/'confirmations'/(vid+'.json')
+                confirmation = json.loads(cpath.read_text())
+                confirmation['replication']['receipt_sha256'] = receipt['receipt_sha256']
+                write(cpath, xg._seal(confirmation, 'confirmation_sha256'))
+    bank_statistics._CACHE.clear()
+
+
+@pytest.fixture
+def observable_bank(monkeypatch):
+    """Only observation attachment is fake; admission/evidence/tapes are native."""
+    from . import effective_imitation as effective, bank_v2v, bank_statistics
+    bank_statistics._CACHE.clear()
+    def limits(pairs, tape, trace, entry, cap):
+        assert cap == 1.2
+        return pairs, dict(pairs=len(pairs), kept=len(pairs), cap_mps2=cap,
+            excluded_missing_limit=0, excluded_command_mismatch=0), {}
+    def attach(pairs, trace, t0, cfg=None, intent=None):
+        for i, (sample, _) in enumerate(pairs):
+            sample['intent_link'] = dict(t=t0+i, entry='cpu', slots={})
+        return pairs, dict(pairs=len(pairs), kept=len(pairs),
+            excluded_missing_prev_second=0, excluded_missing_partner_command=0, trace_missing=False)
+    monkeypatch.setattr(effective, 'attach_limits', limits)
+    monkeypatch.setattr(bank_v2v, 'attach_pairs', attach)
+
+
 def test_plan_fix_missing_empty_and_explicit_verified_output_contract(tmp_path):
     config = dict(run_root=str(tmp_path), training_seed=1)
     original = breadth.inputs(config)
@@ -76,6 +121,7 @@ def test_native_admission_all_examples_plus_plan_fix_and_snapshot_integrity(tmp_
                 receipt = json.loads(path.read_text())
                 receipt['chosen_plan']['perturbation_profile'] = [[-.3]*20]*2
                 write(path, xg._seal(receipt, 'receipt_sha256'))
+            bind_fixture_snapshots(root, arm)
     write(tmp_path/'PLAN_FIX_READY.json', dict(schema=breadth.SCHEMA,
         outputs=[dict(run_root='verified_library')]))
     # Also exercise the existing LS import format, formerly forbidden for
@@ -251,3 +297,346 @@ def test_all_context_ce_and_family_mass_not_legacy_weight_concentration(cfg, mon
     assert result['final_ce'] < result['initial_ce']
     assert all(torch.equal(v, policy.layer.base.state_dict()[k]) for k, v in before.items())
     assert all(p.grad is None for p in policy.layer.base.parameters())
+
+
+def augmented_breadth_bank(tmp_path, arm, location):
+    from .test_practice_starts_cpu import bank_with_snapshots
+    from .test_practice_weighting_cpu import augment
+    from .protocol import digest
+    root = tmp_path if location == 'current' else tmp_path/'library_variety'
+    for own_arm in ('B', 'R'):
+        bank_with_snapshots(root, own_arm, vids=('v0',))
+    _, manifest = augment(root, arm)
+    for own_arm in ('B', 'R'):
+        bind_fixture_snapshots(root, own_arm)
+    bank = rb.bank_root(root, arm)
+    receipt = json.loads((bank/'sumo_verification'/'verifications'/'aug1.json').read_text())
+    manifest['rows'][0]['sumo_evidence'].update(receipt_sha256=receipt['receipt_sha256'],
+        plan_sha256=digest(receipt['chosen_plan']))
+    write(bank/'PRACTICE_AUGMENTED.json', xg._seal(manifest, 'practice_augmented_sha256'))
+    config = dict(run_root=str(tmp_path), training_seed=4,
+        augmentation_prelaunch=manifest['prelaunch'])
+    if location != 'current':
+        write(tmp_path/'PLAN_FIX_READY.json', dict(schema=breadth.SCHEMA,
+            outputs=[dict(run_root='library_variety')]))
+    return root, config
+
+
+def corrupt_augmentation(root, arm, failure):
+    bank = rb.bank_root(root, arm)
+    path = root/'CHARGES.jsonl'
+    charges = [json.loads(line) for line in path.read_text().splitlines()]
+    if failure == 'absent_ledger':
+        path.unlink()
+    elif failure == 'empty_ledger':
+        path.write_text('')
+    elif failure in ('wrong_phase', 'wrong_namespace', 'undercharged', 'over_budget'):
+        if failure == 'wrong_phase':
+            charges[0]['phase'] = 'other_phase'
+        elif failure == 'wrong_namespace':
+            charges[0]['id'] = 'unrelated_branch'
+        elif failure == 'undercharged':
+            charges[0]['sim_s'] = 1
+        else:
+            charges.append(dict(id='other_work', phase=charges[0]['phase'], sim_s=200000))
+        path.write_text(''.join(json.dumps(c)+'\n' for c in charges))
+    elif failure == 'changed_evidence':
+        path = bank/'sumo_verification'/'verifications'/'aug1.json'
+        receipt = json.loads(path.read_text())
+        receipt['snapshot_sha256'] = '0'*64
+        write(path, xg._seal(receipt, 'receipt_sha256'))
+    elif failure == 'unregistered':
+        path = bank/'PRACTICE_AUGMENTED.json'
+        manifest = json.loads(path.read_text())
+        manifest['prelaunch']['allocation_sim_s'] -= 1
+        write(path, xg._seal(manifest, 'practice_augmented_sha256'))
+    else:
+        raise AssertionError(failure)
+
+
+PLAN_ARGS = dict(fraction=.5, repeat_cap=2, count=20, training_seed=4, weighting=True)
+AUGMENT_FAILURES = ['absent_ledger', 'empty_ledger', 'wrong_phase', 'wrong_namespace',
+                    'undercharged', 'over_budget', 'changed_evidence', 'unregistered']
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('location', ['current', 'plan_fix'])
+@pytest.mark.parametrize('failure', AUGMENT_FAILURES)
+def test_production_weighting_plus_breadth_rejects_invalid_children_before_selection(
+        tmp_path, observable_bank, arm, location, failure):
+    root, config = augmented_breadth_bank(tmp_path, arm, location)
+    corrupt_augmentation(root, arm, failure)
+    with pytest.raises((ValueError, FileNotFoundError)):
+        ps.plan_for_update(tmp_path, arm, 1, breadth_cfg=config, **PLAN_ARGS)
+    assert not ps.plan_path(tmp_path, arm, 1).exists()
+    # Trigger teaching shares admission, including PLAN_FIX sources.
+    with pytest.raises((ValueError, FileNotFoundError)):
+        breadth.visit(config, arm, lambda **row: None)
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('location', ['current', 'plan_fix'])
+@pytest.mark.parametrize('failure', AUGMENT_FAILURES[:-1])
+def test_frozen_breadth_preserves_child_provenance_and_revalidates_before_dispatch(
+        tmp_path, observable_bank, arm, location, failure):
+    root, config = augmented_breadth_bank(tmp_path, arm, location)
+    plan = ps.plan_for_update(tmp_path, arm, 1, breadth_cfg=config, **PLAN_ARGS)
+    child = next(r for r in plan['rows'] if r['example_id'] == 'aug1#s1')
+    assert child['source'] == 'augmented' and child['parent_example_id'] == 'v0#s1'
+    assert child['prelaunch'] == config['augmentation_prelaunch']
+    assert child['augmentation_sha256'] and child['sumo_evidence']['charge_ids']
+    assert child['snapshot_lookup']['run_root'] == str(root.resolve())
+    assert ps.load_snapshot(tmp_path, arm, child)['episode']['world']['seed'] == 986020
+    frozen = ps.plan_path(tmp_path, arm, 1).read_bytes()
+    corrupt_augmentation(root, arm, failure)
+    resumed = ps.plan_for_update(tmp_path, arm, 1, breadth_cfg=config, **PLAN_ARGS)
+    assert resumed == plan and ps.plan_path(tmp_path, arm, 1).read_bytes() == frozen
+    with pytest.raises((ValueError, FileNotFoundError)):
+        ps.wave_call(tmp_path, arm, 'training', 'train', child, 0, {})
+
+
+def import_ls_context(root, arm, vid='v0'):
+    import gzip
+    import io
+    import shutil
+    bank = rb.bank_root(root, arm)
+    external = root/'ls_labels'/arm
+    path = bank/'sumo_verification'/'verifications'/(vid+'.json')
+    receipt = json.loads(path.read_text()); path.unlink()
+    shutil.copytree(bank/'sumo_verification'/'branches'/vid, external/'branches'/vid)
+    write(external/'labels'/'search.json', dict(search_id='search', verification=receipt))
+    link = ps._links(root, arm)[vid]
+    (bank/'decisions'/(link['state_id']+'.json')).unlink()
+    snap = torch.load(bank/'snapshots'/(link['state_id']+'.pt'), weights_only=False)
+    episode = root/'episodes'/arm
+    write(episode/'RESULT.json', dict(id=snap['episode']['id'], world=snap['episode']['world'],
+        prefixes=snap['prefixes'], steps=[dict(time_s=int(t), sample=s) for t, s in snap['samples'].items()]))
+    snap['current_sample'] = snap['samples'][str(snap['t0'])]
+    payload = io.BytesIO(); torch.save(snap, payload)
+    snapshot_path = external/'snapshots'/'state.pt.gz'
+    snapshot_path.parent.mkdir(parents=True)
+    snapshot_path.write_bytes(gzip.compress(payload.getvalue()))
+    (external/'pending').mkdir()
+    (external/'pending'/'search.json.gz').write_bytes(gzip.compress(json.dumps(
+        dict(snapshot='state', episode_path=str(episode))).encode()))
+    return external, snapshot_path, episode
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('source', ['native', 'imported', 'plan_fix'])
+@pytest.mark.parametrize('change', ['world', 'episode', 'time', 'substitution', 'generator'])
+def test_original_snapshot_binding_rejects_preselection_and_resume_changes(
+        tmp_path, observable_bank, arm, source, change):
+    import gzip
+    import io
+    from .test_practice_starts_cpu import bank_with_snapshots, snapshot
+    root = tmp_path/'library' if source == 'plan_fix' else tmp_path
+    bank_with_snapshots(root, arm, vids=('v0',))
+    bind_fixture_snapshots(root, arm)
+    config = dict(run_root=str(tmp_path), training_seed=4)
+    episode = None
+    if source == 'imported':
+        external, snapshot_path, episode = import_ls_context(root, arm)
+        config['replay_sources'] = {arm: [str(external)]}
+    else:
+        snapshot_path = rb.bank_root(root, arm)/'snapshots'/f'state_{arm}_v0.pt'
+    if source == 'plan_fix':
+        write(tmp_path/'PLAN_FIX_READY.json', dict(schema=breadth.SCHEMA,
+            outputs=[dict(run_root='library')]))
+    pool = breadth.practice_pool(config, arm)
+    assert {r['seed_index'] for r in pool} == {1, 2}
+    assert all(ps.load_snapshot(tmp_path, arm, r)['t0'] == 400 for r in pool)
+    if source == 'imported':
+        snap = torch.load(io.BytesIO(gzip.decompress(snapshot_path.read_bytes())), weights_only=False)
+    else:
+        snap = torch.load(snapshot_path, weights_only=False)
+    if change == 'world':
+        snap['episode']['world']['seed'] += 1  # still an ordinary TRAIN seed
+    elif change == 'episode':
+        snap['episode']['id'] = 'other_training_episode'
+    elif change == 'time':
+        snap['t0'] -= 1
+    elif change == 'substitution':
+        snap = snapshot(world_seed=986021, gen_seed=37)
+        snap['episode']['arm'] = arm
+        if source == 'imported':
+            snap['current_sample'] = snap['samples'][str(snap['t0'])]
+    else:
+        snap['generator_state'] = torch.Generator().manual_seed(99).get_state()
+    if source == 'imported':
+        payload = io.BytesIO(); torch.save(snap, payload)
+        snapshot_path.write_bytes(gzip.compress(payload.getvalue()))
+        record = json.loads((episode/'RESULT.json').read_text())
+        record.update(id=snap['episode']['id'], world=snap['episode']['world'])
+        write(episode/'RESULT.json', record)
+    else:
+        torch.save(snap, snapshot_path)
+    with pytest.raises(ValueError, match='verification snapshot'):
+        breadth.practice_pool(config, arm)
+    for frozen_row in pool:
+        with pytest.raises(ValueError, match='verification snapshot'):
+            ps.load_snapshot(tmp_path, arm, frozen_row)
+
+
+@pytest.mark.parametrize('source', ['native', 'imported', 'plan_fix'])
+def test_unbound_old_contexts_are_excluded_with_an_explicit_report(tmp_path, observable_bank, source):
+    from .test_practice_starts_cpu import bank_with_snapshots
+    root = tmp_path/'library' if source == 'plan_fix' else tmp_path
+    bank_with_snapshots(root, 'B', vids=('v0',))
+    bind_fixture_snapshots(root, 'B')
+    path = rb.bank_root(root, 'B')/'sumo_verification'/'verifications'/'v0.json'
+    receipt = json.loads(path.read_text()); receipt.pop('snapshot_sha256')
+    write(path, xg._seal(receipt, 'receipt_sha256'))
+    config = dict(run_root=str(tmp_path), training_seed=4)
+    if source == 'imported':
+        external, _, _ = import_ls_context(root, 'B')
+        config['replay_sources'] = {'B': [str(external)]}
+    if source == 'plan_fix':
+        write(tmp_path/'PLAN_FIX_READY.json', dict(schema=breadth.SCHEMA,
+            outputs=[dict(run_root='library')]))
+    with pytest.warns(RuntimeWarning, match='F3 excludes B/v0: original verification has no immutable'):
+        assert breadth.practice_pool(config, 'B') == []
+
+
+def all8_breadth_bank(root, arm):
+    from .test_practice_starts_cpu import bank_with_snapshots
+    from . import verify_perseed as vp, sumo_verify as sv
+    import shutil
+    bank_with_snapshots(root, arm, vids=('v0',))
+    bind_fixture_snapshots(root, arm)
+    bank = rb.bank_root(root, arm)
+    with p1._bank_view(dict(run_root=str(root), training_seed=4)):
+        record = deepcopy(rb.confirmations(root, arm)['v0'])
+    first = json.loads((bank/'sumo_verification'/'verifications'/'v0.json').read_text())
+    second = json.loads((bank/'confirm_replication'/'verifications'/'v0.json').read_text())
+    base = torch.load(bank/'snapshots'/f'state_{arm}_v0.pt', weights_only=False)
+    extra_root = bank/'confirm_seed3_all8'
+    shutil.copytree(bank/'confirm_replication', extra_root)
+    salt = vp.extra_seed_salt('v0', 3)
+    third = xg._seal(dict(second, snapshot_sha256=sv.snapshot_sha(rb.replicate(base, salt))), 'receipt_sha256')
+    write(extra_root/'verifications'/'v0.json', third)
+    record.update(verify_mode=vp.ALL8, arm=arm,
+        first_seed=dict(verification_id='v0', receipt_sha256=first['receipt_sha256']),
+        seed2=dict(verification_id='v0', receipt_sha256=second['receipt_sha256'],
+                   snapshot_sha256=second['snapshot_sha256'], salt='v0'),
+        extra={'3': dict(verification_id='v0', receipt_sha256=third['receipt_sha256'],
+                         snapshot_sha256=third['snapshot_sha256'], salt=salt)})
+    ex = deepcopy(record['per_seed_v1']['examples'][1])
+    ex.update(seed_index=3, example_id='v0#s3')
+    ex['tape']['branches_dir'] = str(extra_root/'branches')
+    record['per_seed_v1']['examples'].append(ex)
+    write(bank/vp.RECORDS/'v0.json', xg._seal(record, 'confirmation_sha256'))
+    return dict(run_root=str(root), training_seed=4), record
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_native_all8_seed_evidence_and_extra_seed_salt_restore_exactly(tmp_path, observable_bank, arm):
+    from . import verify_perseed as vp, sumo_verify as sv
+    config, _ = all8_breadth_bank(tmp_path, arm)
+    pool = breadth.practice_pool(config, arm)
+    assert {r['seed_index'] for r in pool} == {1, 2, 3}
+    row = next(r for r in pool if r['seed_index'] == 3)
+    base = torch.load(rb.bank_root(tmp_path, arm)/'snapshots'/f'state_{arm}_v0.pt', weights_only=False)
+    expected = rb.replicate(base, vp.extra_seed_salt('v0', 3))
+    actual = ps.load_snapshot(tmp_path, arm, row)
+    assert row['replication_salt'] == 'v0#seed3'
+    assert sv.snapshot_sha(actual) == sv.snapshot_sha(expected) == row['snapshot_sha256']
+    assert torch.equal(actual['generator_state'], expected['generator_state'])
+    call = ps.wave_call(tmp_path, arm, 'training', 'train', row, 0, {})
+    assert 'replicate(snapshot, v0#seed3)' in call['extras']['practice']['crn_seed']
+
+
+@pytest.mark.parametrize('failure', ['first_receipt', 'seed_salt', 'seed_hash', 'seed_receipt_world',
+                                     'seed_receipt_time', 'tape_branch'])
+def test_native_all8_rejects_mismatched_original_per_seed_evidence(tmp_path, observable_bank, failure):
+    from . import verify_perseed as vp
+    config, record = all8_breadth_bank(tmp_path, 'B')
+    frozen = breadth.practice_pool(config, 'B')
+    bank = rb.bank_root(tmp_path, 'B')
+    if failure == 'first_receipt':
+        record['first_seed']['receipt_sha256'] = '0'*64
+    elif failure == 'seed_salt':
+        record['seed2']['salt'] = 'wrong'
+    elif failure == 'seed_hash':
+        record['seed2']['snapshot_sha256'] = '0'*64
+    elif failure == 'tape_branch':
+        record['per_seed_v1']['examples'][1]['tape']['branch']['result_sha256'] = '0'*64
+    else:
+        path = bank/'confirm_replication'/'verifications'/'v0.json'
+        receipt = json.loads(path.read_text())
+        if failure == 'seed_receipt_world':
+            receipt['episode']['world']['seed'] += 1
+        else:
+            receipt['t0'] -= 1
+        receipt = xg._seal(receipt, 'receipt_sha256')
+        record['seed2']['receipt_sha256'] = receipt['receipt_sha256']
+        write(path, receipt)
+    write(bank/vp.RECORDS/'v0.json', xg._seal(record, 'confirmation_sha256'))
+    with pytest.raises(ValueError):
+        breadth.practice_pool(config, 'B')
+    row = next(r for r in frozen if r['seed_index'] == 2)
+    with pytest.raises(ValueError):
+        ps.load_snapshot(tmp_path, 'B', row)
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('location', ['current', 'plan_fix'])
+def test_augmented_snapshot_cannot_be_certified_by_refreezing_current_hash(
+        tmp_path, observable_bank, arm, location):
+    from . import sumo_verify as sv
+    root, config = augmented_breadth_bank(tmp_path, arm, location)
+    bank = rb.bank_root(root, arm)
+    path = bank/'snapshots'/f'aug_state_{arm}.pt'
+    snapshot = torch.load(path, weights_only=False)
+    snapshot['episode']['world']['seed'] += 1  # ordinary TRAIN, wrong verified context
+    torch.save(snapshot, path)
+    # Even a freshly sealed manifest/current hash cannot change original evidence.
+    manifest_path = bank/'PRACTICE_AUGMENTED.json'
+    manifest = json.loads(manifest_path.read_text())
+    manifest['rows'][0]['snapshot_sha256'] = sv.snapshot_sha(snapshot)
+    write(manifest_path, xg._seal(manifest, 'practice_augmented_sha256'))
+    with pytest.raises(ValueError, match='SUMO receipt binding|verification snapshot'):
+        ps.plan_for_update(tmp_path, arm, 1, breadth_cfg=config, **PLAN_ARGS)
+    assert not ps.plan_path(tmp_path, arm, 1).exists()
+
+
+def test_old_f3_frozen_lookup_requires_a_new_update(tmp_path):
+    row = dict(seed_index=1, snapshot_lookup=dict(run_root=str(tmp_path),
+        receipt=dict(verification_id='old', _policy_version='unknown')))
+    with pytest.raises(ValueError, match='predates original verification binding'):
+        ps.load_snapshot(tmp_path, 'B', row)
+
+
+def test_augmented_native_link_cannot_omit_prelaunch_manifest(tmp_path, observable_bank):
+    root, config = augmented_breadth_bank(tmp_path, 'B', 'current')
+    bank = rb.bank_root(root, 'B')
+    path = bank/'decisions'/'aug_state_B.json'
+    link = json.loads(path.read_text())
+    link['augmentation'] = dict(parent_example_id='v0#s1')
+    write(path, link)
+    (bank/'PRACTICE_AUGMENTED.json').unlink()
+    with pytest.raises(ValueError, match='missing verified prelaunch manifest'):
+        ps.plan_for_update(tmp_path, 'B', 1, breadth_cfg=config, **PLAN_ARGS)
+
+
+def test_resume_binds_original_own_seed_receipt_even_if_confirmation_is_replaced(tmp_path, observable_bank):
+    from . import verify_perseed as vp
+    config, record = all8_breadth_bank(tmp_path, 'B')
+    pool = breadth.practice_pool(config, 'B')
+    frozen = next(r for r in pool if r['seed_index'] == 2)
+    bank = rb.bank_root(tmp_path, 'B')
+    path = bank/'confirm_replication'/'verifications'/'v0.json'
+    receipt = json.loads(path.read_text())
+    old_hash = receipt['receipt_sha256']
+    receipt['timing']['finished_unix'] += 1
+    receipt = xg._seal(receipt, 'receipt_sha256')
+    write(path, receipt)
+    record['seed2']['receipt_sha256'] = receipt['receipt_sha256']
+    write(bank/vp.RECORDS/'v0.json', xg._seal(record, 'confirmation_sha256'))
+    # This is a self-consistent *new* bank. It cannot replace frozen evidence.
+    updated = next(r for r in breadth.practice_pool(config, 'B') if r['seed_index'] == 2)
+    assert updated['snapshot_sha256'] == frozen['snapshot_sha256']
+    assert frozen['snapshot_lookup']['verification_binding']['own_receipt_sha256'] == old_hash
+    assert updated['snapshot_lookup']['verification_binding']['own_receipt_sha256'] != old_hash
+    with pytest.raises(ValueError, match='immutable verification evidence changed'):
+        ps.load_snapshot(tmp_path, 'B', frozen)
