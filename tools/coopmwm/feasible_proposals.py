@@ -75,13 +75,14 @@ def candidates(obs_state, rng, n):
 
 
 def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
-                     now, rng, generator, deterministic=False):
+                     now, rng, generator, deterministic=False, command_reservations=None):
     """Acquire in stable id order, preserving recorded PPO rows in context order.
 
     Each slate is conditional on earlier acquisitions. PPO reuses these exact
     slates/masks/logps; it never regenerates an unconditional proposal table.
-    Ownership is executor bookkeeping, not hidden traffic state. Only locally
-    visible, presently controlled CAV ids reach candidate generation.
+    command_reservations maps ego -> observable CAV id -> authoritative expiry.
+    It includes the controller's live/practice plans; executor commitments are
+    checked again after each acquisition. Neither source is traffic truth.
     """
     executor._advance(now)
     members = context['members']
@@ -89,11 +90,17 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
     batches, accepted = {}, {}
     stats = dict(rule=RULE, provenance=PROVENANCE, decisions=len(members),
                  family_checks=0, infeasible_family_checks=0,
+                 owned_cav_checks=0, controller_owned_cav_checks=0,
                  proposed_by_family=dict.fromkeys(moves.STRUCTURED, 0),
                  selected_non_none=0, rejected_non_none=0)
     for ego in sorted(members):
         index = members.index(ego)
-        occupied = {v for entry in executor.active for v in entry['move'].members}
+        local_cavs = set(observable_cavs[ego]) & eligible
+        controller_owned = {v for v, until in (command_reservations or {}).get(ego, {}).items()
+                            if v in local_cavs and now < until}
+        occupied = controller_owned | {v for entry in executor.active for v in entry['move'].members}
+        stats['controller_owned_cav_checks'] += len(controller_owned)
+        stats['owned_cav_checks'] += len(local_cavs & occupied)
         local_stats = {}
         state = dict(obs_states[ego], acquirable_cav_ids=[v for v in observable_cavs[ego]
                      if v in eligible and v not in occupied], proposal_stats=local_stats)
@@ -137,7 +144,11 @@ def aggregate(receipts):
            ('decisions', 'family_checks', 'infeasible_family_checks',
             'selected_non_none', 'rejected_non_none')},
         proposed_by_family={f: sum(row['proposed_by_family'][f] for row in receipts)
-                            for f in moves.STRUCTURED})
+                             for f in moves.STRUCTURED})
+    # Older F2 receipts predate the controller bridge: don't invent measured
+    # zeros when mixing those episodes into an update.
+    for key in ('owned_cav_checks', 'controller_owned_cav_checks'):
+        out[key] = sum(row[key] for row in receipts) if all(key in row for row in receipts) else None
     for rate, num, den in (('infeasible_rate', 'rejected_non_none', 'selected_non_none'),
                           ('family_infeasible_rate', 'infeasible_family_checks', 'family_checks')):
         out[rate] = out[num]/out[den] if out[den] else None

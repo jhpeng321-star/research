@@ -1,6 +1,7 @@
 """F2 synthetic observable geometry and real CPU policy/controller contracts."""
 from collections import Counter
 from copy import deepcopy
+import hashlib
 import json
 
 import numpy as np
@@ -151,6 +152,84 @@ def test_existing_commitment_blocks_every_member_until_exact_expiry(cfg):
     assert later['actions'][0] > 0
 
 
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('source', ['snapshot', 'candidate', 'live_controller'])
+def test_production_hook_honours_practice_and_controller_ownership(cfg, arm, source):
+    from .launch_production import OPTIMIZATION
+    from .sumo_verify import verify_controller_class
+    from tools.coopnative.policy import encode
+
+    cfg = dict(cfg, **deepcopy(OPTIMIZATION))
+    initial = policy(cfg)
+    geometry = [row('c0', -195, 0)] + rows() + [row('remote', 10000, 0)]
+    commands = {r['vid']: 0. for r in geometry if r['is_cav']}
+    plan = dict(id='practice-owned', family='wall', members=['c1', 'c2'],
+                duration_s=60, knots=[[-.4]*7, [-.4]*7])
+    # Include nonlocal and non-CAV reservations: neither may enter local F2
+    # bookkeeping. The zero command still reserves its declared member.
+    extra = dict(id='other-owned', family='wall', members=['remote', 'h1'],
+                 duration_s=60, knots=[[0.]*7, [0.]*7])
+    commitments = [dict(plan=p, start_s=300) for p in (plan, extra)]
+    generator = torch.Generator().manual_seed(19)
+    context = encode(geometry)
+    context['v2v'] = {v: [0.]*48 for v in context['members']}
+    cached, memory = initial.layer.base.sample(context, torch.Generator().manual_seed(19), True, {})
+    snapshot = dict(t0=300, samples={'300': cached}, generator_state=generator.get_state(),
+        rng=dict(generator_state_sha256=hashlib.sha256(generator.get_state().numpy().tobytes()).hexdigest(),
+                 memory_after_t0=memory),
+        committed_plans=commitments if source == 'snapshot' else [])
+    verify = controller_class(verify_controller_class())
+
+    def practice_factory(p, g, *args, **kwargs):
+        return verify(p, g, snapshot, plan if source == 'candidate' else None)
+
+    job = dict(track2_backend=True, track2_config=cfg, arm=arm,
+               track2_state=initial.worker_state(), noise_seed=81)
+    out, factory = tb.episode_components(job, initial.layer.base, practice_factory)
+    force_family(out, 'wall')
+    controller = factory(out, generator)
+    controller.apply(geometry, commands, 300)  # real snapshot/CRN restoration
+    controller.deterministic = True  # keep free egos at none unless wall is feasible
+    if source == 'live_controller':
+        # Live plans can be added after construction, not just from snapshots.
+        controller.active_plans = deepcopy(commitments)
+    original = deepcopy(controller.active_plans)
+    for now in (301, 359):
+        out.last_decision = None  # probe eligibility immediately before expiry
+        requested = controller.apply(geometry, commands, now)
+        record = controller.events[-1]['sample']['track2_trigger']
+        table = dict(zip(controller.events[-1]['sample']['context']['members'], record['tables']))
+        for ego in ('c1', 'c2'):
+            assert all(m is None for m in table[ego])
+            assert record['accepted'][ego] is False
+        assert {v for m in table['c0'] if m is not None for v in m['members']} == {'c0'}
+        assert not out.executor.active
+        assert {v: requested[v]['requested_raw'] for v in plan['members']} == {'c1': -.4, 'c2': -.4}
+        assert controller.active_plans == original  # original expiry is untouched
+        assert out.command_reservations['c0'] == {'c1': 360, 'c2': 360}
+        assert out.command_reservations['remote'] == ({} if source == 'candidate' else {'remote': 360})
+        assert record['proposals']['controller_owned_cav_checks'] == (7 if source != 'candidate' else 6)
+        assert record['proposals']['owned_cav_checks'] == record['proposals']['controller_owned_cav_checks']
+        assert record['proposals']['infeasible_family_checks'] == (15 if source != 'candidate' else 14)
+        assert record['proposals']['proposed_by_family'] == dict(
+            ease_off=8 if source != 'candidate' else 16, gap_open=0, wall=0, ramp_assist=0)
+        assert record['proposals']['rejected_non_none'] == 0
+
+    out.last_decision = None
+    controller.apply(geometry, commands, 360)  # now == start + duration is free
+    record = controller.events[-1]['sample']['track2_trigger']
+    assert controller.active_plans == []
+    assert record['proposals']['controller_owned_cav_checks'] == 0
+    assert record['accepted']['c0'] is True
+    move = out.executor.active[0]['move']
+    assert move.family == 'wall' and 'c0' in move.members
+    assert set(move.members) & {'c1', 'c2'}
+    tables = dict(zip(controller.events[-1]['sample']['context']['members'], record['tables']))
+    acquired = {v for entry in out.executor.active for v in entry['move'].members}
+    assert all(v in acquired or any(m is not None for m in tables[v]) for v in ('c1', 'c2'))
+    assert record['proposals']['rejected_non_none'] == 0
+
+
 def test_current_control_eligibility_excludes_visible_nonacting_partner(cfg):
     from tools.coopnative.policy import encode
     p = policy(cfg)
@@ -204,6 +283,8 @@ def test_update_metrics_log_weighted_rates_and_monitor_retains_them(cfg, tmp_pat
     receipt = result['move_proposals']
     assert receipt['infeasible_rate'] == .25  # ratio of sums, not mean of rates
     assert receipt['family_checks'] == 16
+    assert receipt['controller_owned_cav_checks'] == 0
+    assert receipt['owned_cav_checks'] == 4  # same-tick joint acquisition, twice
     assert receipt['proposed_by_family'] == {f: 2*stats['proposed_by_family'][f]
                                              for f in moves.STRUCTURED}
     m = metrics(move_proposals=receipt)
@@ -214,3 +295,8 @@ def test_update_metrics_log_weighted_rates_and_monitor_retains_them(cfg, tmp_pat
     assert fp.aggregate([]) is None
     stats.update(selected_non_none=0, rejected_non_none=0)
     assert fp.aggregate([stats])['infeasible_rate'] is None
+    old = deepcopy(stats)
+    for key in ('owned_cav_checks', 'controller_owned_cav_checks'):
+        old.pop(key)
+    assert fp.aggregate([old, stats])['controller_owned_cav_checks'] is None
+    assert fp.aggregate([old, stats])['owned_cav_checks'] is None

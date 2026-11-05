@@ -11,6 +11,14 @@ to B and R; it is not fitted to outcome receipts.
   registered radio range, presently controlled, and unowned. The ego must also
   be unowned. Reserve **all** members, including gap_open's non-actuating
   partner. An occupied ego receives only `none` until commitment expiry.
+- The production episode hook refreshes controller ownership on every tick
+  from `Controller.active_plans`, including the real `VerifyController`'s
+  restored practice/snapshot plans and candidate plans. Only each ego's visible
+  CAV IDs and original `start_s + duration_s` expiry enter its reservation map;
+  plan commands and nonlocal members do not enter the trigger inputs. A plan
+  remains reserved for `now < expiry` and is available at exact expiry. This
+  does not mutate the controller ledger or extend commitments. Executor
+  ownership is unioned with this map before **each** serial slate.
 - Discover feasible families before assigning slots. Reuse the registered
   library geometry, onset/hold/depth windows, and wall arrival/release rule.
   Enumerate the bounded observable wall member sets so nearby same-lane CAVs
@@ -33,6 +41,10 @@ to B and R; it is not fitted to outcome receipts.
 slates without commitments default to their supplied observable CAV rows.
 
 `decide_and_start(...)` returns `(TriggerBatch, accepted_by_ego, stats)`.
+Its optional `command_reservations` input maps ego to local CAV ID to original
+controller expiry. `EpisodePolicy.observe(..., command_commitments=...)`
+projects the authoritative controller ledger into that local map. The default
+empty input supports offline/test policies without a controller ledger.
 Every live decision stores `stats` at `sample.track2_trigger.proposals`.
 `aggregate(receipts)` computes update-level counters/rates, stored by
 `launch_production.update_metrics` at `metrics.move_proposals` in the arm's
@@ -46,6 +58,23 @@ per-update learning-monitor JSON:
 - Raw denominators, decision count and `proposed_by_family` accompany the rates.
   Update rates are ratios of summed counts, not averages of decision rates.
   Legacy episodes without F2 receipts are unmeasured (`null`), not fake zeros.
+- `owned_cav_checks` counts occupied locally observable, currently controlled
+  CAV slots across egos, including earlier same-tick executor acquisitions.
+  `controller_owned_cav_checks` counts the controller-owned subset. These are
+  slot counts, not unique-vehicle counts. Their update sums are `null` if any
+  contributing receipt predates the ownership bridge, rather than fabricated
+  zeros. Thus a zero post-selection rejection rate still exposes exclusions.
 
 CPU tests use synthetic observable rows and real CPU model/controller paths.
 No simulation or remote access is needed.
+
+The fix-round regression uses production `OPTIMIZATION`, the actual V2V-wrapped
+practice `VerifyController`, snapshot/CRN restoration and the episode hook for
+both B and R. It checks owned-ego `none` slates, owned-partner exclusion from a
+free ego, local-only reservation projection, original commands and expiry,
+exact-expiry acquisition and exclusion receipts. The compatibility suite loads
+historical V2V producer/pin dependencies alongside the historical rerun module;
+its absent-component check covers opt-in-only modules. `practice_weighting` is
+a current shared legacy practice-config validator even when weighting is off,
+and is therefore not an absent-module requirement. Absent/false Track 2 config
+still must match the historical runtime config exactly.

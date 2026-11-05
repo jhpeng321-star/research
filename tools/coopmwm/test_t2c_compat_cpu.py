@@ -1,6 +1,7 @@
 """Opt-in parity against the committed track-base, loaded in memory only."""
 import json
 import subprocess
+import sys
 import types
 
 import pytest
@@ -10,18 +11,35 @@ from tools.coopmwm import rerun_cpus as rc
 
 
 @pytest.fixture
-def baseline():
-    code = subprocess.check_output(
-        ['git', 'show', '13f184b5:tools/coopmwm/rerun_cpus.py'], text=True)
-    module = types.ModuleType('tools.coopmwm._t2c_baseline')
-    exec(compile(code, '<committed-track-base>', 'exec'), module.__dict__)
+def baseline(monkeypatch):
+    import tools.coopmwm as package
+    modules = {}
+    for name in ('rerun_cpus', 'v2v_runner', 'v2v_launch3'):
+        code = subprocess.check_output(
+            ['git', 'show', f'13f184b5:tools/coopmwm/{name}.py'], text=True, encoding='utf-8')
+        module = types.ModuleType('tools.coopmwm._t2c_baseline_'+name)
+        module.__package__ = 'tools.coopmwm'
+        exec(compile(code, '<committed-track-base:'+name+'>', 'exec'), module.__dict__)
+        modules[name] = module
+    module = modules['rerun_cpus']
+    original = module.runtime_config
+    def runtime_config(*args, **kwargs):
+        # The historical producer must also use its historical V2V producer
+        # and pins. Restore current imports before testing the current runtime.
+        with monkeypatch.context() as patch:
+            for name in ('v2v_runner', 'v2v_launch3'):
+                patch.setattr(package, name, modules[name], raising=False)
+                patch.setitem(sys.modules, 'tools.coopmwm.'+name, modules[name])
+            return original(*args, **kwargs)
+    module.runtime_config = runtime_config
     return module
 
 
-def test_absent_and_false_opt_in_match_track_base_without_component_imports(tmp_path, monkeypatch, baseline):
-    import sys
+def test_absent_and_false_opt_in_match_track_base_without_opt_in_only_imports(tmp_path, monkeypatch, baseline):
+    # practice_weighting is now a shared legacy practice-config dependency;
+    # the absent contract covers opt-in-only components, not that validator.
     for name in ('moves', 'trigger_policy', 'coop_layer', 'group_credit', 'merge_features',
-                 'dense_teacher', 'plan_augment', 'practice_weighting', 'coop_reward'):
+                 'dense_teacher', 'plan_augment', 'coop_reward'):
         monkeypatch.setitem(sys.modules, 'tools.coopmwm.'+name, None)
     kwargs = dict(root=str(tmp_path/'run'), reference_root=str(tmp_path/'refs'),
                   source_root=str(tmp_path/'src'), common_checkpoint_sha256='a'*64)
@@ -52,6 +70,17 @@ def test_public_preparation_and_cli_match_committed_baseline(baseline):
         assert value == dict(quote=module.quote(**opt), budget=module.budget(**opt),
                              wall_clock=module.wall_clock(**opt))
     assert rc.quote(track2=True) != baseline.quote()
+
+
+def test_baseline_runtime_isolates_historical_preparation_dependencies(tmp_path, monkeypatch, baseline):
+    from tools.coopmwm import v2v_runner
+    def unexpected(*args, **kwargs):
+        pytest.fail('historical baseline must not use current V2V preparation')
+    monkeypatch.setattr(v2v_runner, 'prepare_intent', unexpected)
+    cfg = baseline.runtime_config({}, root=str(tmp_path/'run'), reference_root=str(tmp_path/'refs'),
+                                  source_root=str(tmp_path/'src'), common_checkpoint_sha256='a'*64)
+    assert cfg['practice_starts'] is True
+    assert 'practice_weighting' not in cfg
 
 
 def test_default_producer_request_and_preflight_flow(tmp_path, baseline):
