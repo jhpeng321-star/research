@@ -6,6 +6,7 @@ import shlex
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -160,6 +161,13 @@ def test_rpc_and_rsync_are_routed_only_for_cpuv():
     assert shlex.split(cpus_checking.rsync_shell('cpuV')) == [
         sys.executable, '-B', str(Path(ssh.__file__).resolve()), '--timeout', '0', 'rsh']
     assert cpus_checking.rsync_shell('cpuQ') == 'ssh -o BatchMode=yes -o ConnectTimeout=20'
+    for timeout in (600, 1800):
+        before = time.monotonic()
+        shell = shlex.split(cpus_checking.rsync_shell('cpuV', timeout=timeout))
+        assert shell[3:6] == ['--timeout', str(timeout), '--deadline']
+        assert before + timeout <= float(shell[6]) <= time.monotonic() + timeout
+        assert shell[7:] == ['rsh']
+        assert cpus_checking.rsync_shell('cpuQ', timeout=timeout) == 'ssh -o BatchMode=yes -o ConnectTimeout=20'
 
 
 @pytest.mark.parametrize('words, expected', [
@@ -178,10 +186,17 @@ def test_cli_command_boundaries_and_exit_status(monkeypatch, words, expected):
 def test_streaming_and_rsync_preserve_external_lifetime(monkeypatch):
     client = Mock()
     client.run.return_value.returncode = 0
-    monkeypatch.setattr(ssh, 'Transport', Mock(return_value=client))
+    constructor = Mock(return_value=client)
+    dead, close = Mock(return_value=False), Mock()
+    watcher = Mock(return_value=(dead, close))
+    monkeypatch.setattr(ssh, 'Transport', constructor)
+    monkeypatch.setattr(ssh, '_parent_watch', watcher)
     assert ssh.command('cpuV', 'stream')[3:7] == ['--timeout', '0', 'run', '--']
     assert ssh.main(['--timeout', '0', 'rsh', 'cpuV', 'rsync', '--server']) == 0
     client.run.assert_called_once_with('rsync --server', timeout=None)
+    watcher.assert_called_once_with(os.getppid())
+    constructor.assert_called_once_with(owner_dead=dead)
+    close.assert_called_once_with()
 
 
 @pytest.mark.parametrize('words', [['run'], ['rsh', 'cpuQ', 'rsync'],
@@ -297,6 +312,16 @@ def local(argv, **kwargs):
                   sys.argv[5]], **kwargs)
 client._owned_run = local
 timeout = None if sys.argv[2] == 'none' else float(sys.argv[2])
+if sys.argv[3] == 'rsh':
+    # Exercise real CLI parent-watch wiring, Transport, Gate and supervisor.
+    # Only master/network argv are substituted; no SSH executable is started.
+    def factory(**kwargs):
+        client.owner_dead = kwargs['owner_dead']
+        return client
+    s.Transport = factory
+    sys.exit(s.main(['--timeout', str(timeout or 0),
+                     *(['--deadline', sys.argv[6]] if len(sys.argv) > 6 else []),
+                     'rsh', 'cpuV', 'rsync', '--server']))
 try:
     if sys.argv[3] == 'copy':
         client.copy('local', '/remote', upload=True, timeout=timeout)
@@ -455,6 +480,128 @@ def test_actual_subprocess_outer_timeout_reaps_owned_local_session(tmp_path, mon
         close()
 
 
+LOCAL_TRANSFER_OWNER = r'''
+import json,os,subprocess,sys
+from pathlib import Path
+argv=json.loads(sys.argv[1])
+wrapper=subprocess.Popen(argv, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
+Path('owner.json').write_text(json.dumps(dict(owner=os.getpid(), wrapper=wrapper.pid)))
+sys.exit(wrapper.wait())
+'''
+
+
+def transfer_owner_argv(timeout='none'):
+    # The extra owner is a real local process in rsync's position in the tree.
+    argv = local_argv(timeout=timeout, mode='rsh')
+    if timeout != 'none':
+        shell = shlex.split(ssh.rsync_shell('cpuV', timeout=float(timeout)))
+        argv.append(shell[shell.index('--deadline') + 1])
+    return [sys.executable, '-B', '-c', LOCAL_TRANSFER_OWNER, json.dumps(argv)]
+
+
+@pytest.mark.parametrize('cancellation', ['terminate', 'kill', 'outer_timeout', 'inner_deadline'])
+def test_real_rsync_owner_hop_cancels_wrapper_and_session(tmp_path, monkeypatch, cancellation):
+    owner = None
+    info = None
+    session_pid = None
+    watches = []
+    executor = ThreadPoolExecutor(max_workers=1)
+    try:
+        argv = transfer_owner_argv(timeout=4 if cancellation == 'inner_deadline' else 'none')
+        if cancellation == 'outer_timeout':
+            # subprocess.run really kills the owner, not the rsh wrapper. Its
+            # communicate() also waits for the inherited output pipes to close.
+            future = executor.submit(subprocess.run, argv, cwd=tmp_path,
+                                     capture_output=True, timeout=4)
+            owner_view = SimpleNamespace(poll=lambda: 0 if future.done() else None,
+                                         communicate=lambda: future.result())
+        else:
+            owner = subprocess.Popen(argv, cwd=tmp_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            owner_view = owner
+        session_pid = wait_for_child(tmp_path, owner_view)
+        info = json.loads((tmp_path / 'owner.json').read_text())
+        session_dead, close = child_watch(session_pid)
+        watches.append((session_dead, close))
+        wrapper_dead, close = child_watch(info['wrapper'])
+        watches.append((wrapper_dead, close))
+        assert not session_dead() and not wrapper_dead()
+        monkeypatch.setattr(ssh, 'GATE_TIMEOUT_S', .03)
+        with pytest.raises(TimeoutError):
+            with ssh.Gate(tmp_path / 'pool').claim():
+                pytest.fail('transfer overlapped a live session')
+        start = time.monotonic()
+        if cancellation in ('terminate', 'kill'):
+            getattr(owner, cancellation)()
+            owner.wait(timeout=5)
+        # Verify exclusion throughout cleanup, not just after run() returns.
+        assert_exclusion_until_reaped(tmp_path, session_dead, monkeypatch)
+        if cancellation == 'outer_timeout':
+            with pytest.raises(subprocess.TimeoutExpired):
+                future.result(timeout=10)
+        else:
+            stdout, stderr = owner.communicate(timeout=8)
+            if cancellation == 'inner_deadline':
+                assert owner.returncode == 255, (stdout, stderr)
+        limit = time.monotonic() + 5
+        while not wrapper_dead() and time.monotonic() < limit:
+            time.sleep(.02)
+        assert wrapper_dead(), 'rsh wrapper survived its transfer owner/deadline'
+        assert session_dead()
+        assert time.monotonic() - start < 10
+        assert not (tmp_path / 'pool' / 'active.json').exists()
+        with ssh.Gate(tmp_path / 'pool').claim():
+            pass
+        assert len((tmp_path / 'events.jsonl').read_text().splitlines()) == 1
+    finally:
+        if owner is not None and owner.poll() is None:
+            owner.kill()
+            owner.communicate(timeout=10)
+        executor.shutdown(wait=True)
+        # Keep a failing regression from leaving its local fake processes alive.
+        if len(watches) == 2 and not watches[1][0]():
+            os.kill(info['wrapper'], 9)
+        if watches:
+            limit = time.monotonic() + 5
+            while not watches[0][0]() and time.monotonic() < limit:
+                time.sleep(.02)
+            if not watches[0][0]():
+                os.kill(session_pid, 9)
+        for _, close in watches:
+            close()
+
+
+@pytest.mark.parametrize('phase', ['lock', 'reservation', 'rate'])
+def test_rsync_owner_checked_during_admission(tmp_path, phase):
+    clock = Clock()
+    alive = True
+    def check_owner():
+        if not alive:
+            raise RuntimeError('transfer owner exited')
+    def sleep(seconds):
+        nonlocal alive
+        alive = False
+        clock.sleep(seconds)
+    directory = tmp_path / 'pool'
+    gate = ssh.Gate(directory, clock=clock.time, wall=clock.time, sleep=sleep,
+                    check_owner=check_owner)
+    if phase == 'lock':
+        with ssh.Gate(directory).claim(), pytest.raises(RuntimeError, match='owner exited'):
+            with gate.claim():
+                pytest.fail('dead owner admitted')
+    elif phase == 'reservation':
+        directory.mkdir(mode=0o700)
+        (directory / 'active.json').write_text('reserved')
+        with pytest.raises(RuntimeError, match='owner exited'):
+            with gate.claim():
+                pytest.fail('dead owner admitted')
+    else:
+        with gate.claim():
+            gate.admit()
+            with pytest.raises(RuntimeError, match='owner exited'):
+                gate.admit()
+        assert json.loads((directory / 'last_attempt.json').read_text())['unix'] == 100
+
+
 def test_supervisor_spawn_interruption_keeps_reservation(tmp_path, monkeypatch):
     monkeypatch.setattr(ssh, '_require_posix', lambda: None)
     monkeypatch.chdir(tmp_path)
@@ -505,10 +652,11 @@ def test_deadline_includes_gate_master_and_rate_waits(tmp_path, monkeypatch):
     assert calls == []
 
 
-def test_expired_wrapper_startup_deadline_never_constructs_transport(monkeypatch):
+@pytest.mark.parametrize('command', [['run', '--', 'mutation'], ['rsh', 'cpuV', 'rsync', '--server']])
+def test_expired_wrapper_startup_deadline_never_constructs_transport(monkeypatch, command):
     constructor = Mock()
     monkeypatch.setattr(ssh, 'Transport', constructor)
-    assert ssh.main(['--deadline', str(time.monotonic() - 1), 'run', '--', 'mutation']) == 255
+    assert ssh.main(['--deadline', str(time.monotonic() - 1), *command]) == 255
     constructor.assert_not_called()
 
 

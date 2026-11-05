@@ -44,9 +44,13 @@ def command(host, remote_command, *, timeout=None, legacy=None):
     return legacy if legacy is not None else ['ssh', '-o', 'BatchMode=yes', host, remote_command]
 
 
-def rsync_shell(host):
+def rsync_shell(host, *, timeout=None):
+    """Rsync rsh argv: bind to the rsync parent and carry its optional deadline."""
     if is_cpuv(host):
-        return shlex.join([sys.executable, '-B', str(Path(__file__).resolve()), '--timeout', '0', 'rsh'])
+        deadline = _deadline(timeout)
+        return shlex.join([sys.executable, '-B', str(Path(__file__).resolve()),
+                           '--timeout', str(timeout if timeout is not None else 0),
+                           *(['--deadline', str(deadline)] if deadline is not None else []), 'rsh'])
     return 'ssh -o BatchMode=yes -o ConnectTimeout=20'
 
 
@@ -75,9 +79,11 @@ class Gate:
     actual session. An interrupted supervisor fails closed (operator recovery).
     The Windows lock implementation is for CPU tests; network use is POSIX-only.
     """
-    def __init__(self, directory, *, clock=time.monotonic, wall=time.time, sleep=time.sleep):
+    def __init__(self, directory, *, clock=time.monotonic, wall=time.time, sleep=time.sleep,
+                 check_owner=lambda: None):
         self.directory = Path(directory)
         self.clock, self.wall, self.sleep = clock, wall, sleep
+        self.check_owner = check_owner
 
     @contextmanager
     def claim(self, *, deadline=None):
@@ -105,6 +111,7 @@ class Gate:
             if deadline is not None:
                 limit = min(limit, deadline)
             while True:
+                self.check_owner()
                 try:
                     acquire()
                     break
@@ -116,9 +123,11 @@ class Gate:
                     self.sleep(0.05)
             try:
                 while (self.directory / 'active.json').exists():
+                    self.check_owner()
                     if self.clock() >= limit:
                         raise TimeoutError('cpuV SSH active session still owns admission; operator recovery may be required')
                     self.sleep(0.05)
+                self.check_owner()
                 _remaining(deadline, self.clock)
                 yield self
             finally:
@@ -126,6 +135,7 @@ class Gate:
 
     def admit(self, *, deadline=None):
         """Call only under claim(), immediately before an SSH network attempt."""
+        self.check_owner()
         path = self.directory / 'last_attempt.json'
         if path.exists():
             last = float(json.loads(path.read_text(encoding='utf-8'))['unix'])
@@ -137,14 +147,16 @@ class Gate:
             if deadline is not None:
                 limit = min(limit, deadline)
             while remaining > 0:
+                self.check_owner()
                 if self.clock() >= limit:
                     raise TimeoutError('cpuV SSH rate admission timed out')
-                self.sleep(min(remaining, max(0, limit - self.clock())))
+                self.sleep(min(remaining, max(0, limit - self.clock()), 0.05))
                 current = self.wall()
                 if not math.isfinite(current) or current < now:
                     raise ValueError('invalid/backwards cpuV SSH admission clock')
                 now = current
                 remaining = last + MIN_INTERVAL_S - now
+        self.check_owner()
         _remaining(deadline, self.clock)
         now = self.wall()
         if not math.isfinite(now):
@@ -259,14 +271,19 @@ def _session_supervisor(active):
 
 
 class Transport:
-    def __init__(self, directory=None):
+    def __init__(self, directory=None, *, owner_dead=None):
         _require_posix()
         # Shared by all worktrees/agents for this OS user, never by arm/run/PID.
         self.directory = Path(directory) if directory is not None else Path('/tmp') / f'c4-cpuv-{os.getuid()}'
         self.socket = self.directory / 'master.sock'
         if len(os.fsencode(self.socket)) > 100:
             raise ValueError('cpuV ControlPath exceeds portable Unix socket length')
-        self.gate = Gate(self.directory)
+        self.owner_dead = owner_dead
+        self.gate = Gate(self.directory, check_owner=self._check_owner)
+
+    def _check_owner(self):
+        if self.owner_dead is not None and self.owner_dead():
+            raise RuntimeError('cpuV rsync owner exited; cancelling owned session')
 
     def _options(self, *, master=False):
         values = [f'ControlMaster={"yes" if master else "no"}',
@@ -286,8 +303,11 @@ class Transport:
 
         communicate() has no competing outer timeout. Cancellation requests
         cleanup; abrupt wrapper death is detected independently by the supervisor.
+        An rsh wrapper also watches its rsync parent, including while communicate
+        is waiting on inherited pipes. Owner death requests the same reaped cleanup.
         """
         directory = self.directory.resolve()
+        self._check_owner()
         token = uuid.uuid4().hex
         result_path, cancel_path = directory / (token + '.result'), directory / (token + '.cancel')
         active = directory / 'active.json'
@@ -319,7 +339,15 @@ class Transport:
                                     '_session', str(active)], **kwargs)
         try:
             try:
-                stdout, stderr = process.communicate(input_data)
+                while True:
+                    self._check_owner()
+                    try:
+                        stdout, stderr = process.communicate(
+                            input_data, timeout=0.05 if self.owner_dead is not None else None)
+                        break
+                    except subprocess.TimeoutExpired:
+                        # communicate retains partial output and pending input.
+                        input_data = None
             except BaseException:
                 cancel_path.touch()
                 process.communicate()  # supervisor terminates/reaps before returning
@@ -386,7 +414,7 @@ class Transport:
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--timeout', type=float, default=180, help='end-to-end seconds; 0 inherits caller lifetime')
+    parser.add_argument('--timeout', type=float, default=180, help='end-to-end seconds; 0 has no duration limit')
     parser.add_argument('--deadline', type=float, help=argparse.SUPPRESS)
     sub = parser.add_subparsers(dest='mode', required=True)
     sub.add_parser('run').add_argument('command', nargs=argparse.REMAINDER)
@@ -408,12 +436,20 @@ def main(argv=None):
         if not words:
             parser.error('run requires a remote command')
         remote = words[0] if len(words) == 1 else shlex.join(words)
+    close_owner = lambda: None
     try:
         if args.deadline is not None:
             if not math.isfinite(args.deadline):
                 raise ValueError('deadline must be finite')
             timeout = _remaining(args.deadline, cap=timeout)
-        transport = Transport()
+        if args.mode == 'rsh':
+            parent = os.getppid()
+            if parent <= 1:
+                raise RuntimeError('rsync owner already exited')
+            owner_dead, close_owner = _parent_watch(parent)
+            transport = Transport(owner_dead=owner_dead)
+        else:
+            transport = Transport()
         result = (transport.run(remote, timeout=timeout) if args.mode in ('run', 'rsh') else
                   transport.copy(args.local, args.remote, upload=args.mode == 'put', timeout=timeout))
         return result.returncode
@@ -422,6 +458,8 @@ def main(argv=None):
         if isinstance(error, subprocess.CalledProcessError) and error.stderr:
             print(error.stderr.decode(errors='replace'), file=sys.stderr)
         return 255
+    finally:
+        close_owner()
 
 
 if __name__ == '__main__':

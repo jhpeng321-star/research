@@ -49,10 +49,10 @@ def ssh_command(host, remote, *, timeout=600):
     return legacy
 
 
-def rsync_shell(host):
+def rsync_shell(host, *, timeout=None):
     if str(host).lower() == 'cpuv':
         from tools.coopmwm.cpuv_ssh import rsync_shell as multiplexed
-        return multiplexed(host)
+        return multiplexed(host, timeout=timeout)
     return 'ssh -o BatchMode=yes -o ConnectTimeout=20'
 
 
@@ -282,7 +282,7 @@ def push_decision(cfg, arm, vid, log):
     def send(paths, name):
         lst.with_suffix(f'.{name}.txt').write_text(''.join(str(p).lstrip('/')+'\n' for p in paths))
         cmd = ['rsync', '-a', '--ignore-existing', '--files-from', str(lst.with_suffix(f'.{name}.txt')),
-               '-e', rsync_shell(cfg['q_host']), '/', f'{cfg["q_host"]}:/']
+               '-e', rsync_shell(cfg['q_host'], timeout=1800), '/', f'{cfg["q_host"]}:/']
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
         if p.returncode != 0:
             raise RpcError(f'rsync {name} exit {p.returncode}: {p.stderr[-500:]}')
@@ -293,7 +293,7 @@ def push_decision(cfg, arm, vid, log):
         return dict(status='verify_failed_files', bad=bad[:20], n_bad=len(bad))
     # stage the record OUTSIDE the bank, compare reader views, only then publish it into the bank
     staged = f"{cfg['q_control']}/staged_records/{arm}_{vid}.json"
-    p = subprocess.run(['rsync', '-a', '-e', rsync_shell(cfg['q_host']), str(rec_path),
+    p = subprocess.run(['rsync', '-a', '-e', rsync_shell(cfg['q_host'], timeout=600), str(rec_path),
                         f'{cfg["q_host"]}:{staged}'], capture_output=True, text=True, timeout=600)
     if p.returncode != 0:
         raise RpcError(f'rsync staged record exit {p.returncode}: {p.stderr[-500:]}')
