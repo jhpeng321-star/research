@@ -1,0 +1,51 @@
+{
+  "schema": "coopmwm.clean1.operator_monitor_checkpoint.v1",
+  "timestamp": "2026-11-05T09:55:32+08:00",
+  "status": "U2_AND_REGISTERED_PROBE_COMPLETE_CONTINUE",
+  "runtime_commit": "7cc6edaa994641a6d71a4816c0dd8b707fda2e32",
+  "runtime_sha256": "cc009d490c6876ec9e6ec98072617ac6f76b20fc7501fcc83bb7905f19a7ac4a",
+  "remote_audit_unix": 1793843706.485801,
+  "monitor_receipt_sha256": "acc8a88de1bc72e1fb1fc9c1442f63f3ddb45b99bb2d387fa4dc86d1bc59800f",
+  "updates": {
+    "A": {"completed": 2, "sha256": "39788966a589b04ea4db9ab2ba862508c54316400755931d3ca54e6ab54b30ea", "action": "CONTINUE", "reward": -90766.48655250556},
+    "B": {"completed": 2, "sha256": "0ed4b454b377a6ebd7a35363775c97cc2efefc12f4607548b88b3de2d1918df5", "action": "CONTINUE", "reward": -84398.04261051585, "non_none_trigger_rate": 0.8987531172069826, "bank_ce_u1": 2.063004970550537, "bank_ce_u2": 1.8493678569793701, "layer_kl": 0.005405492149293423, "weighted_starts": 6, "merge_missing_share": 0.0, "accepted_moves": 1295, "augmented_examples": 0, "paired_safety": "checked before optimization"},
+    "R": {"completed": 2, "sha256": "19943b202d1833bc4d14f9b1167991394f883582408bcab339e300abb757bc48", "action": "CONTINUE", "reward": -69701.96425435811, "non_none_trigger_rate": 0.8998998998998999, "bank_ce_u1": 2.127864122390747, "bank_ce_u2": 1.9307045936584473, "layer_kl": 0.00027518390561454, "weighted_starts": 6, "merge_missing_share": 0.0, "accepted_moves": 1280, "augmented_examples": 0, "paired_safety": "checked before optimization"}
+  },
+  "diagnose": [],
+  "training_cumulative_safety_through_u2": {"collisions": 0, "teleports": 0},
+  "probe": {
+    "status": "complete",
+    "receipt_sha256": "e7c135577508c7f53db23774126e2e64cb2ea090e7fac9cd854a8f907108244e",
+    "world_seed": 986040,
+    "cells": 3,
+    "branches": 39,
+    "charged_sim_s": 22740,
+    "arms": {
+      "A": {"status": "graded", "mean_policy_cooperation_gain_veh_s": -0.5223541672076711, "per_state_gains": [-0.0000010563799150986597, 0.0, -1.5670614452430982]},
+      "B": {"status": "graded", "mean_policy_cooperation_gain_veh_s": -0.30719252330883745, "per_state_gains": [-0.000001501269707659958, 0.0, -0.9215760686568046]},
+      "R": {"status": "graded", "mean_policy_cooperation_gain_veh_s": -0.027950306421113662, "per_state_gains": [-0.0000010563799150986597, 0.0, -0.08384986288342589]}
+    },
+    "all_branches_graded": true,
+    "collisions": 0,
+    "teleports": 0,
+    "each_arm_safety": {"hard_brakes": 48, "ttc_events": 17},
+    "each_common_reference_safety": {"hard_brakes": 48, "ttc_events": 17},
+    "full_registered_windows": true,
+    "interpretation": "Descriptive single-run probe: no positive absolute cooperation gain; bank CE improvement is not proof of cooperation. No criterion or runtime change. u4 probe and u6 replicated test pending."
+  },
+  "owners": {"A": 142318, "B": 142319, "R": 142320, "monitor": 142321},
+  "owner_start_ticks": "3123166",
+  "all_owners_alive": true,
+  "mandatory_shim_and_cpu_single_thread_environment_verified": true,
+  "faults": {},
+  "ledger_rows": 301,
+  "cumulative_charged_including_parity_sim_s": 306020,
+  "owner_cap_sim_s": 5000000,
+  "all_phase_caps_verified": true,
+  "smoke_cumulative_sim_s": 19200,
+  "smoke_cap_sim_s": 20000,
+  "disk_free_bytes": 159574413312,
+  "five_line_status_appended_by_existing_watcher": "2026-11-05T09:54:21.726998+08:00",
+  "status_file": "E:/research-dense/runs/active/C4-V7FT-20261017/CLEAN1_STATUS.md",
+  "next": "Continue existing owners, read every update, review u4 probe and u6 replicated test; diagnose faults with tests, safety pauses remain effective. No new dispatch or process signal."
+}
