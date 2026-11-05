@@ -103,6 +103,8 @@ def _check(cfg, arm):
         raise ValueError('clean run requires dense teaching and WM credit OFF')
     _path(cfg['run_root'])
     if arm != 'A':
+        from .coordination_opportunities import settings as opportunity_settings
+        opportunity_settings(cfg)
         from .track2_safety_reward import settings as close_call_settings
         close_call_settings(cfg)
         if not cfg.get('merge_features', False):
@@ -278,6 +280,9 @@ class EpisodePolicy(torch.nn.Module):
         self.local_states, self.visible, self.blocks = {}, {}, {}
         self.command_reservations = {}
         self.reports, self.trigger_board = {}, {}
+        from .coordination_opportunities import ApproachEvents, settings as opportunity_settings
+        self.coordination = opportunity_settings(cfg)
+        self.approach_events = ApproachEvents()
 
     @property
     def log_std(self):
@@ -357,14 +362,29 @@ class EpisodePolicy(torch.nn.Module):
         if getattr(self.layer.base, 'intent_horizon', 0):
             context['trigger_v2v'] = {v: self.local_intents[v] for v in context['members']}
         decision = None
-        if (context['members'] and (self.last_decision is None
-                or self.now-self.last_decision >= self.cfg['decision_interval_s'])):
+        periodic = (self.last_decision is None
+                    or self.now-self.last_decision >= self.cfg['decision_interval_s'])
+        opportunity_kwargs = {}
+        pairs = ()
+        if self.coordination is not None and context['members']:
+            from .coordination_opportunities import graph, disjoint
+            self.executor._advance(self.now)
+            edges = graph(self.local_states, self.visible, context['members'], now=self.now,
+                occupied={v for entry in self.executor.active for v in entry['move'].members},
+                command_reservations=self.command_reservations)
+            pairs = disjoint(edges if periodic else self.approach_events.pending(edges))
+            opportunity_kwargs = dict(coordination=self.coordination, opportunity_pairs=pairs,
+                                      event=not periodic)
+        if context['members'] and (periodic or pairs):
             decision, accepted, proposal_stats = feasible_proposals.decide_and_start(
                 self.trigger, context, obs_states=self.local_states,
                 observable_cavs=self.visible, executor=self.executor, now=self.now,
                 rng=self.candidate_rng, generator=self.layer_rng, deterministic=deterministic,
-                command_reservations=self.command_reservations)
-            self.last_decision = self.now
+                command_reservations=self.command_reservations, **opportunity_kwargs)
+            if periodic:
+                self.last_decision = self.now
+            if self.coordination is not None:
+                self.approach_events.record(pairs)
         self.executor._advance(self.now)
         offsets = {}
         for entry in self.executor.active:
