@@ -1,0 +1,25 @@
+{
+  "schema": "coopmwm.clean1.launched.v1",
+  "host": "cpuV",
+  "commit": "7cc6edaa994641a6d71a4816c0dd8b707fda2e32",
+  "runtime_sha256": "cc009d490c6876ec9e6ec98072617ac6f76b20fc7501fcc83bb7905f19a7ac4a",
+  "runtime_config_file_sha256": "0527ab594f3b9c5b3440e488e9633d38e6eb586bde05f871c999dd562cf8c31b",
+  "source_manifest_sha256": "0dc2960185410eb7865284fdd13424d8e6fcc3a98573fe9d0b8e481a1af7983f",
+  "root": "/home/ubuntu/coopmwm20261105_clean1",
+  "source_root": "/home/ubuntu/coopmwm20261105_clean1_src_7cc6edaa",
+  "arm_pids": {"A": 142318, "B": 142319, "R": 142320},
+  "monitor_pid": 142321,
+  "owners": {
+    "A": {"pid": 142318, "start_ticks": "3123166"},
+    "B": {"pid": 142319, "start_ticks": "3123166"},
+    "R": {"pid": 142320, "start_ticks": "3123166"},
+    "monitor": {"pid": 142321, "start_ticks": "3123166"}
+  },
+  "start_time": "2026-11-05T01:16:23.151883+00:00",
+  "unix": 1793841383.1519086,
+  "updates": 24,
+  "budget_ceiling_sim_s": 5000000,
+  "cumulative_charged_sim_s": 120080,
+  "safety_gate_sha256": "1f7af6aff13b250baaa8150c4225e58b197fec5172062788d28e591156079d16",
+  "smoke_sha256": "9e30518c4ef469946e49672e062ce74c359d2b70406967d56c3695d6591d20f6"
+}
