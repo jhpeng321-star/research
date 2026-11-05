@@ -12,7 +12,7 @@
   },
   "resume_verification": {
     "date": "2026-11-05",
-    "starting_commit": "bfc8650e23d4e3e2199620077f1b66c6ff1042f6",
+    "starting_commit": "bd5db3770233b2eaf2de07f65fe123b0bfdac0a8",
     "accepted_source_commit": "037048c2273f416cf3afc257e65c14a40096f14c",
     "starting_tracked_changes": false,
     "source_and_tests_match_accepted_commit": true,
@@ -23,7 +23,7 @@
       "git diff --check c4/track-base: PASS"
     ],
     "test_rerun": false,
-    "test_evidence": "Read git status/log, the shared spec, both reviews and all P3 readiness/acceptance receipts before resuming. Verified source and tests byte-match the independently accepted commit and inspected component-aware validation/history/status, B/R three-update real-reward regressions, and trained-A checkpoint routing at u2/u4. The independent review's fresh-session addendum also confirms PASS at this session's starting HEAD. Preserved the completed 97-test P3 run and independent 118-case review run; this session ran no pytest cases, reservations or diagnostic dispatches and changed no implementation or tests. This refresh records verification from resume commit bfc8650e.",
+    "test_evidence": "Read git status/log, the shared spec, both reviews and all P3 readiness/acceptance receipts before resuming. Verified source and tests byte-match the independently accepted commit and inspected component-aware validation/history/status, B/R three-update real-reward regressions, and trained-A checkpoint routing at u2/u4. The independent review's fresh-session addendum confirms PASS at bfc8650e; the current starting HEAD bd5db377 still differs from the accepted revision only in P3_READY.json. Preserved the completed 97-test P3 run and independent 118-case review run; following the instruction not to redo finished work, this session ran no pytest cases, reservations or diagnostic dispatches and changed no implementation or tests. This refresh records verification from resume commit bd5db377.",
     "preserved_untracked_files": ["P3_ACCEPTED.json", "P3_READY.blocked0.json", "REVIEW_P3_r0.md", "REVIEW_P3_r1.md"]
   },
   "worktree": "E:/agent-work/c4-track2-monitor",
@@ -38,7 +38,8 @@
     {"sha": "037048c2273f416cf3afc257e65c14a40096f14c", "subject": "coopmwm P3: refresh readiness after review blocker fixes"},
     {"sha": "6bc484ef42b20d4fa58a5f41231fd6aea75ddf47", "subject": "coopmwm P3: record accepted review and resume verification"},
     {"sha": "5e299a679ad90951e2e7473705f3dd03b5482f52", "subject": "coopmwm P3: refresh verified accepted resume receipt"},
-    {"sha": "bfc8650e23d4e3e2199620077f1b66c6ff1042f6", "subject": "coopmwm P3: verify accepted fixes on fresh resume"}
+    {"sha": "bfc8650e23d4e3e2199620077f1b66c6ff1042f6", "subject": "coopmwm P3: verify accepted fixes on fresh resume"},
+    {"sha": "bd5db3770233b2eaf2de07f65fe123b0bfdac0a8", "subject": "coopmwm P3: refresh accepted fix-round verification"}
   ],
   "owned_files": [
     "tools/coopmwm/track2_monitor.py",
