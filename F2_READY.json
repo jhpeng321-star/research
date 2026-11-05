@@ -30,8 +30,43 @@
     {
       "sha": "486c006fc54d1ec3cd72b7e9a4580af524ea1b5b",
       "subject": "C4 launch: preserve F2 ownership in diagnostic hooks"
+    },
+    {
+      "sha": "97a63b3ee1025927c2cedec63cb31d9e66291d4b",
+      "subject": "C4 launch: record F2 diagnostic fix CPU readiness"
     }
   ],
+  "independent_review": {
+    "review": "REVIEW_F2_r2.md",
+    "verdict": "PASS",
+    "reviewer": "astra",
+    "reviewed_commit": "97a63b3ee1025927c2cedec63cb31d9e66291d4b",
+    "acceptance_receipt": "F2_ACCEPTED.json",
+    "blockers": [],
+    "verification": {
+      "exit_code": 0,
+      "passed": 348,
+      "failed": 0,
+      "skipped": 1,
+      "subtests_passed": 5,
+      "duration_seconds": 164.84,
+      "artifacts": "_out/f2_astra_r2"
+    }
+  },
+  "resume_verification": {
+    "date": "2026-11-05",
+    "head_before_receipt_refresh": "97a63b3ee1025927c2cedec63cb31d9e66291d4b",
+    "tracked_worktree_clean_before_refresh": true,
+    "saved_release_junit": "_out/f2_fix_r2_release.xml",
+    "saved_release_junit_summary": {
+      "tests_including_subtests": 354,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    "git_diff_check_against_track_base": "passed",
+    "action": "Verified committed blocker fix, diagnostic regressions, saved release JUnit and independent PASS/acceptance receipts. Refreshed readiness without repeating completed tests or dispatching jobs."
+  },
   "review_resolution": [
     {
       "item": "Blocker 1: diagnostic hooks omit live controller ownership",
