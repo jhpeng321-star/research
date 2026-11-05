@@ -536,6 +536,7 @@
   "fault 14 (host capacity, resume run 2026-11-04): the 9000 s scenario cap (set for the original parallel schedule) fired during arm R finalization under co-tenant contention - R u5 update completed but its lesson check/PAUSE were cut (arms_ok False, everything else green, wall_s exactly 9000.4); sequential arms need the whole A+B+R chain in one cap, so the scenario timeout is raised to 14400 s. Knob only: no recipe or threshold change"
  ],
  "faults_open": [],
+ "resume_verification": "fresh-session resume (2026-11-05, post-freeze recovery): clean tree at HEAD cdcf5855; int branch c4/v2v-int fully merged (c4/v2v-rehearsal..c4/v2v-int = 0 commits; int HEAD dfb8a9d5 covered by the cdcf5855 receipt refresh); the int delta since the run9 code state f017db5d is receipts-only (git diff f017db5d..dfb8a9d5 touches 0 files under tools/ and tests/; 3 *.json receipts only) - no rerun required, run9 receipt stands (ready=true, arms 2/2 updates, no STOP); no duplicate or running rehearsal jobs found (the only rehearsal_cpu process on the host belongs to a foreign session in E:/Temp, scenario a_clean); re-ran the 4 targeted v2v test files at HEAD: 30 passed / 0 failed in 16.7 s (miniconda3/envs/rl_driving, torch 2.12.1+cpu); constraints re-checked: CPU only, no other worktree edited, no reset/clean/stash-drop/push, no sealed/holdout paths opened, no truth files read, no behavioural thresholds set.",
  "ready": true,
  "checks": {
   "arms_complete_two_updates": {
