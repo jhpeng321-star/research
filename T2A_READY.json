@@ -27,7 +27,8 @@
     {"commit": "84323019", "step": "Fix r1 blocker: independent local-only trigger intent board, fail-closed collection/replay, six new CPU regressions"},
     {"commit": "b9d0ff16", "step": "Regenerated readiness receipt for the r1 fix; subsequently independently reviewed PASS"},
     {"commit": "1d21e39d", "step": "Recorded independent r2 acceptance and prior resume verification"},
-    {"commit": "56e6588a", "step": "Refreshed accepted readiness after confirming code and tests match the independently tested revision"}
+    {"commit": "56e6588a", "step": "Refreshed accepted readiness after confirming code and tests match the independently tested revision"},
+    {"commit": "854943b3", "step": "Reconfirmed accepted T2A fix on the previous resume; implementation and tests unchanged"}
   ],
   "receipt_commit_note": "This regenerated receipt is committed separately after the tested fix commit; its own SHA is available in git log.",
   "changed_files_this_round": [
@@ -105,7 +106,7 @@
   },
   "latest_resume_verification": {
     "date": "2026-11-05",
-    "head_before_receipt_refresh": "56e6588a",
+    "head_before_receipt_refresh": "854943b3eb4ba226b3b0b5ef32e77a7c0c3878e5",
     "branch": "c4/trigger-policy",
     "tracked_state_before_refresh": "Clean; six existing untracked review/receipt artifacts preserved",
     "comparison_revision": "b9d0ff163751f63a13796d726f40e8cb9749bbb4",
@@ -113,7 +114,7 @@
     "diff_check": "git diff --check c4/track-base passed",
     "review_result": "REVIEW_T2A_r2.md and T2A_ACCEPTED.json retain PASS with no blockers",
     "retained_test_result": "69 passed, 0 failed, 0 skipped, 2 warnings; prior completed independent CPU run, not a new execution",
-    "action": "Read status/log and existing receipts, confirmed the r1 fix and six regression cases in commit 84323019, and regenerated readiness metadata. Code/tests still match independently accepted b9d0ff16; retained completed test results without a duplicate run.",
+    "action": "Read status/log, shared specification, r1 blocker and existing readiness/acceptance/r2 review receipts. Inspected commit 84323019's local-only board fix and six regression cases, confirmed the current tracked diff from independently tested b9d0ff16 contains only this receipt, and passed the base diff whitespace check. Regenerated readiness metadata while retaining the completed passing CPU tests; no duplicate execution or dispatch.",
     "new_test_runs": 0,
     "new_dispatches_or_reservations": 0
   }
