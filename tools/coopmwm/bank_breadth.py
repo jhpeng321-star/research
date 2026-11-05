@@ -249,6 +249,57 @@ def load_verified_restart(arm, lookup):
     return snapshot
 
 
+def _certified_contexts(policy, pairs, frames, certification):
+    """Replay a decision at t from its actual bound t-1 local observation.
+
+    Keep the observer at t-1: observing t would overwrite both geometry and
+    local-intent features. The recorded pair's x is also from t, so reconstruct
+    sensor features from the validated local rows instead. The t frame/pair is
+    used only to establish that all macro members can act at this decision.
+    """
+    from tools.coopnative.policy import encode
+    from . import executable_labels as el, moves
+    label = moves.Move.from_dict(certification['macro'])
+    local = certification['local']
+    time, observed_at = certification['decision_s'], local['observed_at_s']
+    if observed_at != time-1 or any(t not in frames or frames[t].get('time_s', t) != t
+                                   for t in (observed_at, time)):
+        return
+    for sample, weight in sorted(pairs, key=lambda pair: int(pair[0]['intent_link']['t'])):
+        if int(sample['intent_link']['t']) != time:
+            continue
+        present = {r['vid'] for r in frames[time]['vehicles'] if r['is_cav']}
+        eligible = present & set(sample['context']['members'])
+        if not set(label.members) <= eligible:
+            continue
+        reader = deepcopy(policy)
+        reader.observe(frames[observed_at]['vehicles'], observed_at)
+        ego = local['self']
+        if (ego not in reader.local_intents or ego not in reader.local_states
+                or not set(local['acquirable_cav_ids']) <= set(reader.visible.get(ego, ()))):
+            continue
+        def observed_rows(rows):
+            return sorted(({k: r[k] for k in moves._ROW_KEYS} for r in rows), key=lambda r: r['vid'])
+        state = reader.local_states[ego]
+        if observed_rows(state['rows']) != observed_rows(local['rows']):
+            continue
+        try:
+            el._local(label, local, time)
+        except ValueError:
+            continue
+        # Availability belongs to the certified decision, not the training
+        # policy's current episode or all visible CAVs by default.
+        state['acquirable_cav_ids'] = [v for v in local['acquirable_cav_ids'] if v in eligible]
+        encoded = encode(state['rows'])
+        index = encoded['members'].index(ego)
+        context = dict(encoded, members=[ego], x=[encoded['x'][index]],
+            anchors=[encoded['anchors'][index]], rsu=[0.]*len(encoded['rsu']),
+            trigger_v2v={ego: reader.local_intents[ego]},
+            observed_at_s=observed_at, decision_s=time)
+        yield context, label, reader, float(weight), time
+        return  # only this exact proposer/decision is certified
+
+
 def observable_contexts(policy, plan, pairs, frames, *, t0, certification=None):
     """Earliest usable frame per acting member, rather than pairs[0] only.
 
@@ -256,19 +307,20 @@ def observable_contexts(policy, plan, pairs, frames, *, t0, certification=None):
     onset/hold, never a fresh full-duration move. Frames with less than the
     registered minimum hold remaining are not representable. Own/partner packets are
     reconstructed with the same causal policy observer as online execution.
+    Certified lessons use their explicit t-1 observation for BOTH binding and
+    teacher inputs; they never reuse a current-time pair's sensor features.
     """
+    if certification is not None:
+        yield from _certified_contexts(policy, pairs, frames, certification)
+        return
     from . import moves
-    label = moves.from_plan(plan) if certification is None else moves.Move.from_dict(certification['macro'])
+    label = moves.from_plan(plan)
     remaining = set(label.members)
     reader = deepcopy(policy)
     observed = set()
     for sample, weight in sorted(pairs, key=lambda pair: int(pair[0]['intent_link']['t'])):
         time = int(sample['intent_link']['t'])
         elapsed = time-int(t0)
-        if certification is not None:
-            if time != certification['decision_s']:
-                continue
-            elapsed = 0  # The certificate binds this EXACT decision's target.
         active = max(0, elapsed-label.onset)
         if elapsed < 0 or (label.family != 'none' and label.hold-active < moves._HOLD_LO):
             continue
@@ -282,13 +334,6 @@ def observable_contexts(policy, plan, pairs, frames, *, t0, certification=None):
         keep = [v for v in source['members'] if v in remaining
                 and set(label.members) <= set(reader.visible.get(v, ()))
                 and v in reader.local_intents]
-        if certification is not None:
-            keep = [v for v in keep if v == certification['local']['self']]
-            # Re-observed rows must agree with the certificate's causal local view.
-            def observed_rows(rows):
-                return sorted(({k: r[k] for k in moves._ROW_KEYS} for r in rows), key=lambda r: r['vid'])
-            if keep and observed_rows(reader.local_states[keep[0]]['rows']) != observed_rows(certification['local']['rows']):
-                continue
         if not keep:
             continue
         # Remaining onset is relative to this observed context, not original t0.

@@ -67,6 +67,8 @@ def _local(move, local, decision_s):
     """Validate local availability and exact library geometry, without sampling.
 
     local rows are the proposer's causal sensing/V2V view, never global rows.
+    Replay binding and teacher sensor/partner inputs use this SAME t-1 view;
+    decision_s remains the execution time, not an observation timestamp.
     Offered labels are checked geometrically even if bank CE inserted the label.
     """
     if _integer(local['observed_at_s'], 'observation time') != decision_s-1:

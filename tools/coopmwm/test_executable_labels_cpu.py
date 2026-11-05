@@ -4,6 +4,7 @@ import json
 import pytest
 
 from . import executable_labels as el, moves, bank_breadth as breadth
+from .test_track2_backend_cpu import cfg, cpu_threads  # noqa: F401
 
 
 def sha(value):
@@ -321,20 +322,148 @@ def test_f3_visit_gate_shared_by_practice_and_trigger_and_a_bypasses(monkeypatch
     assert len(got) == 2 and all('_executable_lesson' not in row['cfg'] for row in got)
 
 
-def test_exact_time_proposer_and_macro_no_uncertified_later_label(monkeypatch):
-    bound = lesson()
-    class Reader:
-        visible = dict(a=['a', 'b'], b=['a', 'b'])
-        local_intents = dict(a=[], b=[])
-        local_states = dict(a=dict(rows=bound['local']['rows']), b=dict(rows=bound['local']['rows']))
-        def observe(self, vehicles, t): pass
-    pairs = [(dict(intent_link=dict(t=t), context=dict(members=['a', 'b'], x=[[0], [1]])), 1.) for t in (300, 301, 302)]
-    frames = {t: dict(vehicles=[]) for t in (299, 300, 301, 302)}
-    got = list(breadth.observable_contexts(Reader(), source()[2], pairs, frames, t0=300, certification=bound))
+def causal_replay(cfg, arm, moving=True):
+    from tools.coopnative.policy import encode
+    from .track2_backend import EpisodePolicy
+    from .v2v_intent import IntentPolicy
+    bound = lesson(arm)
+    rows = [dict(row, length_m=5.) for row in bound['local']['rows']]
+    frames = {300: dict(time_s=300, vehicles=rows)}
+    for t in (301, 302):
+        frames[t] = dict(time_s=t, vehicles=[dict(row,
+            s_m=row['s_m']+(t-300)*10. if moving else row['s_m'],
+            v_mps=row['v_mps']+(t-300) if moving else row['v_mps']) for row in rows])
+    pairs = [(dict(intent_link=dict(t=t), context=encode(frames[t]['vehicles'])), 1.) for t in frames]
+    return EpisodePolicy(IntentPolicy(), cfg, arm), bound, pairs, frames
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('moving', [False, True])
+def test_real_observer_certified_time_proposer_features_and_macro(cfg, arm, moving):
+    from tools.coopnative.policy import encode
+    policy, bound, pairs, frames = causal_replay(cfg, arm, moving)
+    before = deepcopy(frames)
+    got = list(breadth.observable_contexts(policy, source(arm)[2], pairs, frames,
+        t0=300, certification=bound))
     assert len(got) == 1
-    context, label, _, _, time = got[0]
+    context, label, reader, _, time = got[0]
     assert time == 301 and context['members'] == ['a'] and label.to_dict() == bound['macro']
-    assert list(breadth.observable_contexts(Reader(), source()[2], pairs[2:], frames, t0=300, certification=bound)) == []
+    assert reader.now == bound['local']['observed_at_s'] == 300
+    assert reader.local_states['a']['rows'] == frames[300]['vehicles']
+    assert reader.local_states['a']['acquirable_cav_ids'] == ['a', 'b']
+    expected = encode(frames[300]['vehicles'])
+    assert context['x'] == [expected['x'][expected['members'].index('a')]]
+    assert context['trigger_v2v']['a'] == reader.local_intents['a']
+    # Both local sensor and partner speed/position inputs must use the bound view.
+    assert context['trigger_v2v']['a'][0] == -10.
+    assert context['trigger_v2v']['a'][2] == 10.
+    if moving:
+        assert context['x'] != [pairs[1][0]['context']['x'][0]]
+    assert frames == before and policy.now is None  # no trace/policy mutation
+    assert list(breadth.observable_contexts(policy, source(arm)[2], pairs[2:], frames,
+        t0=300, certification=bound)) == []
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('case', ['position', 'speed', 'missing_previous', 'stale_frame',
+    'stale_certificate', 'missing_actor', 'inactive_actor', 'unavailable'])
+def test_real_observer_rejects_mismatched_or_stale_certified_evidence(cfg, arm, case):
+    policy, bound, pairs, frames = causal_replay(cfg, arm)
+    if case == 'position':
+        # Current geometry must not pass as the actual t-1 evidence.
+        frames[300]['vehicles'] = deepcopy(frames[301]['vehicles'])
+    elif case == 'speed':
+        frames[300]['vehicles'][1]['v_mps'] += 1.
+    elif case == 'missing_previous':
+        del frames[300]
+    elif case == 'stale_frame':
+        frames[300]['time_s'] = 299
+    elif case == 'stale_certificate':
+        bound = el.seal(dict(bound, local=dict(bound['local'], observed_at_s=299)), 'lesson_sha256')
+    elif case == 'missing_actor':
+        frames[301]['vehicles'].pop()
+    elif case == 'inactive_actor':
+        pairs[1][0]['context']['members'] = ['a']
+    elif case == 'unavailable':
+        bound = el.seal(dict(bound, local=dict(bound['local'], acquirable_cav_ids=['a'])), 'lesson_sha256')
+    assert list(breadth.observable_contexts(policy, source(arm)[2], pairs, frames,
+        t0=300, certification=bound)) == []
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_certified_candidate_availability_does_not_expand_to_all_visible_cavs(cfg, arm):
+    import numpy as np
+    from tools.coopnative.policy import encode
+    from . import feasible_proposals
+    policy, bound, pairs, frames = causal_replay(cfg, arm)
+    extra = dict(vid='c', s_m=-1520., v_mps=10., lane=1, is_cav=True)
+    local = dict(bound['local'], rows=bound['local']['rows']+[extra])
+    bound = lesson(arm, local=local)  # c is visible, but reserved by another macro
+    frames[300]['vehicles'].append(dict(extra, length_m=5.))
+    frames[301]['vehicles'].append(dict(extra, length_m=5., s_m=-1510., v_mps=11.))
+    pairs[1][0]['context'] = encode(frames[301]['vehicles'])
+    got = list(breadth.observable_contexts(policy, source(arm)[2], pairs, frames,
+        t0=300, certification=bound))
+    assert len(got) == 1
+    _, _, reader, _, _ = got[0]
+    assert 'c' in reader.visible['a']
+    state = reader.local_states['a']
+    assert state['acquirable_cav_ids'] == ['a', 'b']
+    proposals = feasible_proposals.candidates(state, np.random.default_rng(123), 32)
+    assert proposals and all('c' not in move.members for move in proposals)
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('evidence', ['matched', 'mismatched', 'stale'])
+def test_enabled_moving_certificates_reach_real_trigger_learning(cfg, monkeypatch, arm, tmp_path, evidence):
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+    import torch
+    from . import track2_backend as p1, practice_starts as ps, practice_weighting as pw
+    from . import bank_v2v, launch_production as launch
+    path = tmp_path/'G1_MANIFEST.json'
+    path.write_text(json.dumps(manifest_value()), encoding='utf-8')
+    config = dict(cfg, executable_label_manifest=str(path), executable_label_runtime_sha256=sha('runtime'))
+    policy, _, _, _ = causal_replay(config, arm)
+    monkeypatch.setattr(breadth, 'inputs', lambda config: [dict(run_root=str(tmp_path))])
+    monkeypatch.setattr(ps, 'examples', lambda *args: [])
+    monkeypatch.setattr(ps, '_links', lambda *args: {})
+    monkeypatch.setattr(pw, 'augmented_examples', lambda *a, **k: ([], None))
+    monkeypatch.setattr(breadth, 'verified_restart', lambda root, arm, *args: (dict(arm=arm), {}))
+    monkeypatch.setattr(el, 'restart_binding', lambda snapshot: dict(
+        snapshot_sha256=lesson(snapshot['arm'])['snapshot_sha256'],
+        prefix_sha256=sha('prefix'), base_policy_sha256=sha('base')))
+    class Bank:
+        def bank_pairs(self, root, requested_arm, seed, **kwargs):
+            receipt, example, plan = source(requested_arm)
+            _, _, pairs, _ = causal_replay(config, requested_arm)
+            kwargs['example_consumer'](receipt=receipt, example=example, plan=plan,
+                pairs=pairs, trace=tmp_path/(requested_arm+'_TRACE.json'))
+    @contextmanager
+    def bank_view(config):
+        yield Bank()
+    monkeypatch.setattr(p1, '_bank_view', bank_view)
+    frames = causal_replay(config, arm)[3]
+    if evidence == 'mismatched':
+        frames[300]['vehicles'] = deepcopy(frames[301]['vehicles'])
+    elif evidence == 'stale':
+        frames[300]['time_s'] = 299
+    monkeypatch.setattr(bank_v2v, 'trace_frames', lambda path: frames)
+    base_before = deepcopy(policy.layer.base.state_dict())
+    head_before = deepcopy(policy.trigger.trigger_head.state_dict())
+    runtime = SimpleNamespace(cfg=config, policy=policy, arm=arm)
+    if evidence != 'matched':
+        with pytest.raises(ValueError, match='nonempty observable verified-plan trigger supervision required'):
+            launch.bank_move_supervision(runtime)
+        assert all(torch.equal(v, policy.trigger.trigger_head.state_dict()[k]) for k, v in head_before.items())
+        return
+    report = launch.bank_move_supervision(runtime)
+    assert report['examples'] == 1 and report['family_counts'] == {'wall': 1}
+    assert report['contexts'][0]['time_s'] == 301 and report['contexts'][0]['members'] == ['a']
+    assert report['final_ce'] < report['initial_ce'] and any(p['accepted'] for p in report['passes'])
+    assert any(not torch.equal(v, policy.trigger.trigger_head.state_dict()[k]) for k, v in head_before.items())
+    assert all(torch.equal(v, policy.layer.base.state_dict()[k]) for k, v in base_before.items())
+    assert all(p.grad is None for p in policy.layer.base.parameters())
 
 
 def test_frozen_restart_rechecks_certificate(monkeypatch):

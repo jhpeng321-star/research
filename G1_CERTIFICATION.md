@@ -130,7 +130,18 @@ consumer. Imported PLAN_FIX banks go through the same gate. The manifest path
 should be absolute so additional bank roots and resumed plans use the same file.
 
 Trigger supervision uses only the certificate's exact proposer, decision time,
-observable local rows and macro. It does not certify an onset-adjusted later
+observable local rows and macro. The observation timestamp is explicitly
+`decision_s - 1`: replay retains the real observer at that timestamp and compares
+its actual local rows (including positions and speeds) with the certificate.
+Teacher sensor features are rebuilt with the existing observable encoder from
+those validated local rows; local-only partner features come from that same
+observer view. Recorded current-time `pair.context.x` is not reused. Candidate
+availability uses the certificate's acquirable ids, restricted to members present
+as CAVs in both the decision frame and the acting pair; visible reserved CAVs
+are not made available. The decision-time frame never replaces or relabels the
+certified geometry. Missing/stale t-1 evidence, mismatched local rows, absent
+actors and invalid availability fail closed. Yielded teacher contexts record
+both `observed_at_s` and `decision_s`. It does not certify an onset-adjusted later
 target or an alternative proposer by association. Practice uses the certified
 macro's family; frozen lookups bind the lesson hash and re-read/recompute the
 certificate at resume. B/R supported-family matching remains enforced by F3.
@@ -163,3 +174,18 @@ zero, negative and uncertain synergy, all-solo reselection, missing/misaligned
 evidence, safety, clipping/physical simultaneity, visibility/roles/geometry,
 budget fairness, manifest integrity, F3 gate, exact-time trigger targets and
 frozen restart revalidation.
+
+## Independent review r0 fix
+
+`REVIEW_G1_r0.md` blocker 1 identified that a second observation at the decision
+time overwrote the t-1 rows before certificate matching. Ordinary moving contexts
+were therefore discarded and could leave B/R with no trigger teaching records.
+The opt-in replay path now retains and reconstructs the causal view as described
+above. The default-off replay path retains its original observation/feature flow.
+CPU regressions use real `EpisodePolicy` / `IntentPolicy` observers with changing
+positions AND speeds for both B and R, plus stationary controls. They check exact
+time/proposer/macro and sensor/partner features, missing/stale/mismatched evidence,
+decision-time actor presence, and reserved-visible candidate exclusions. Enabled
+manifest-to-F3-to-trigger-optimizer tests demonstrate successful teaching with a
+frozen base, and reject mismatched/stale replay evidence before any head update.
+The moving replay and enabled B/R teaching regressions failed before the fix.
