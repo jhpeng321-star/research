@@ -1,0 +1,45 @@
+{
+  "status": "AWAITING_ALL_F1_F6_ACCEPTANCES_BEFORE_INTEGRATION",
+  "clean1": {
+    "durable_owner_stop": true,
+    "all_recorded_owners_exited": true,
+    "actual_final_sealed": {"A": 9, "B": 9, "R": 9},
+    "prior_dispatch": "15:20:40 recovery, before15:21 override; no new dispatch by this continuation"
+  },
+  "committed_clean2_work": {
+    "remaining_cap_accounting": "ae872f0f",
+    "new_root_preparation_and_old_ledger_audit": "e77b4a60",
+    "mandatory_measured_fix_smoke_receipts": "0a8aefcb",
+    "actual_bank_breadth_preflight_before_physics": "8a0ab247",
+    "actual_safety_filter_receipt_identity_test": "ce00819a"
+  },
+  "budget_design": {
+    "owner_cap_sim_s": 5000000,
+    "prior_parity_sim_s": 960,
+    "plan_fix_cap_reserved_sim_s": 600000,
+    "formula": "clean2 cap = 5000000 - clean1_non_plan_fix_spend - 960 - 600000; existing plan_fix rows are included once",
+    "previous_snapshot_new_ledger_ceiling_sim_s": 3184160,
+    "note": "Final clean1 prefix and quote must be freshly registered. Scheduled probes/replication use exact full native dry branch manifests, all original arms/states/windows/schedules preserved. Augmentation and WM teacher/credit stay OFF."
+  },
+  "smoke_design": {
+    "total_cap_sim_s": 20000,
+    "episodes": "one update, two full episodes per A/B/R plus matched practice A references",
+    "actuation": "capture exact base draw and correction; measure issued safe command with/without library offset at the same pure safety boundary; actual commands/physics untouched",
+    "fix_receipts": "F1 actual nonzero issued-command changes, F2 proposal infeasible-rate, F3 all usable practice-pool and trigger-context identities/family mass, F4 observed post-move safety-term rows",
+    "reporting": "extra prospectively first registered state for B/R, group/solos/common base, full windows; native F5 reports actual total benefit and synergy, descriptive only; full quote must fit remaining smoke cap",
+    "gate": "unchanged first-three-state final-runtime gate, zero collisions/teleports, once with only one environment-void rerun"
+  },
+  "verification": [
+    {"selection":"clean2 actuation receipts + coop layer + restart configuration + remaining-budget tests", "result":"48 passed in45.71s"},
+    {"selection":"final actuation receipt suite including real registered safety filter", "result":"3 passed in9.04s"},
+    {"selection":"restart and remaining-budget suite after zero-physics bank preflight wiring", "result":"13 passed in15.07s"}
+  ],
+  "additional_legacy_test_attempt": {
+    "selection": "test_acceleration_cpu alongside initial two actuation receipt cases and coop layer",
+    "result": "48 passed,9 failed; the one new numerical-tolerance assertion was corrected and reverified",
+    "remaining_legacy_environment_failures": "8 legacy acceleration cases require missing local runtime/model dependencies, Linux process APIs and/or consistent tools namespace imports; include their appropriate Linux/native checks in final qualification; do not claim the full legacy suite is green"
+  },
+  "cpuv_source_or_clean2_root_staged": false,
+  "new_simulation_dispatched": false,
+  "next": "All six fix acceptances -> additive branch integration -> complete required CPU tests -> source SHA staging/Linux qualification -> real-bank preflight -> prospective registration -> smoke -> gate -> clean2 launch"
+}
