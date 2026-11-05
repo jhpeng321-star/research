@@ -41,14 +41,18 @@
     {
       "sha": "6c447c2df8a06f8031b4af6aa524be68a61e5f4a",
       "step": "Previous resume preserved the accepted source and refreshed its verification receipt"
+    },
+    {
+      "sha": "c4e8c48c6ac733430baef45d8c94310d04ca0c6b",
+      "step": "Previous resume verified unchanged accepted source and committed the READY receipt"
     }
   ],
   "commit_note": "This receipt refresh records the completed independent review; its own hash is intentionally not self-referential.",
   "resume": {
-    "initial_head": "6c447c2df8a06f8031b4af6aa524be68a61e5f4a",
+    "initial_head": "c4e8c48c6ac733430baef45d8c94310d04ca0c6b",
     "initial_status": "Tracked files clean; existing r0/r1 reviews, acceptance marker and blocked0 receipt untracked and preserved.",
     "completed_work_preserved": "The r0 fix, eight regression cases, passing implementation suite and independent r1 rerun were already complete on disk.",
-    "action": "Read git status/history and task receipts first, then the shared spec and r0/r1 reviews; confirmed acceptance and inspected the residual RNG isolation and all eight constructor regression cases. git diff --exit-code f79fe7d6ca053a3fe5836a4c2a0d5c82d12bc4bf -- . ':(exclude)T2D_READY.json' passed with no output: all tracked source, tests and configuration still match the independently accepted revision. HEAD 6c447c2d changed only the receipt. Refreshed this receipt, preserving completed work and all existing untracked review/acceptance files; no duplicate test/job dispatches.",
+    "action": "Read git status/history, the shared spec, r0 review and existing READY/acceptance/r1 receipts; confirmed independent acceptance, including the fresh-session r1 verification at this initial HEAD. Reinspected residual RNG isolation and all eight constructor regression cases. git diff --exit-code f79fe7d6ca053a3fe5836a4c2a0d5c82d12bc4bf -- . ':(exclude)T2D_READY.json' passed with no output: all tracked source, tests and configuration still match the independently accepted revision. git diff --check c4/track-base also passed. Refreshed this receipt and clarified the revised production-advantage integration requirement, preserving completed work and all existing untracked review/acceptance files; no duplicate test/job dispatches.",
     "jobs_dispatched": 0
   },
   "files": [
@@ -102,7 +106,7 @@
     "layer_parameters()": "Only residual-head, supplied trigger-head, and trigger-amplitude trainable parameters; no base parameters.",
     "optimizer": "Separate Adam created only when explicitly enabled; optimizer ownership checked before updates.",
     "joint_kl(sample)": "Exact KL(old rollout || current), integrating all categorical choices and the shared-noise Gaussian analytically. The budget is mean joint KL per group across the supplied rollout records.",
-    "update(records, epochs=registered_integer)": "Layer-only clipped PPO. Each record is {sample, group_advantage}, intended for T2E counterfactual group credit. No per-CAV reward substitution or critic update. Proposals exceeding the registered KL budget, or becoming nonfinite, restore layer weights and Adam state. Deterministic, empty, and executed-plan records are refused.",
+    "update(records, epochs=registered_integer)": "Layer-only clipped PPO. Each record is {sample, group_advantage}; the scalar advantage is supplied externally. Under the shared spec's 02:30 redesign, production integration must derive it from real observable-neighbourhood team reward, with WM counterfactual credit OFF. The layer performs no reward computation or critic update. Proposals exceeding the registered KL budget, or becoming nonfinite, restore layer weights and Adam state. Deterministic, empty, and executed-plan records are refused.",
     "checkpoint": "Save state_dict(), optimizer.state_dict(), LayerConfig and both caller-owned RNG states. Construct with the same trigger adapter/config and load both state dicts on resume; exact optimizer/model continuation is tested."
   },
   "identity_contract": {
@@ -122,7 +126,7 @@
     "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider tools/coopmwm/test_coop_layer_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_v2v_model_cpu.py tools/coopmwm/test_acceleration_cpu.py::AccelerationCPU::test_zero_update_is_exact_mappo_before_unchanged_safety tools/coopmwm/test_acceleration_cpu.py::AccelerationCPU::test_conditional_ar_density_and_no_leakage tools/coopmwm/test_v2v_intent_cpu.py::test_actions_identical_to_current_v2v_policy_at_load tools/coopmwm/test_v2v_intent_cpu.py::test_partner_intent_has_one_step_latency",
     "result": "49 passed, 2 warnings in 16.73s; no failures or skips",
     "independent_r1_result": "49 passed, 0 failed, 0 skipped, 2 warnings in 53.59s; same command and environment, independently executed by astra.",
-    "resume_verification": "Existing passing implementation and independent review runs retained. At resume HEAD 6c447c2df8a06f8031b4af6aa524be68a61e5f4a, git diff --exit-code f79fe7d6ca053a3fe5836a4c2a0d5c82d12bc4bf -- . ':(exclude)T2D_READY.json' passed with no output, including all tracked working-tree source, tests and configuration. No tests rerun in this receipt-only session, preserving the instruction not to redo finished work.",
+    "resume_verification": "Existing passing implementation and independent review runs retained. At resume HEAD c4e8c48c6ac733430baef45d8c94310d04ca0c6b, git diff --exit-code f79fe7d6ca053a3fe5836a4c2a0d5c82d12bc4bf -- . ':(exclude)T2D_READY.json' passed with no output, including all tracked working-tree source, tests and configuration. No tests rerun in this receipt-only session, preserving the instruction not to redo finished work.",
     "t2d_cases": 33,
     "new_constructor_rng_cases": 8,
     "regression_cases": 16,
@@ -148,7 +152,7 @@
   },
   "open_issues": [
     "T2A trigger_policy.py and T1A moves.py were absent from this base worktree. Their real adapter/candidate integration remains for the cross-task merge; tests use only a local trigger stub as permitted by the shared spec.",
-    "T2C must register actual layer hyperparameters, wire T2E group_advantage records, persist RNG states/config, supply observable feasible move offsets and retain the command-ownership/safety path. The live V2V runtime's intent-model discovery needs an integration adapter for the nn.Module wrapper; the frozen intent model is available as layer.base."
+    "T2C must register actual layer hyperparameters, supply group_advantage records from real observable-neighbourhood team reward per the 02:30 redesign (WM counterfactual credit OFF), persist RNG states/config, supply observable feasible move offsets and retain the command-ownership/safety path. The live V2V runtime's intent-model discovery needs an integration adapter for the nn.Module wrapper; the frozen intent model is available as layer.base."
   ],
   "hard_rules": {
     "cpu_only": true,
