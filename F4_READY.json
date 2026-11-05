@@ -22,7 +22,7 @@
   },
   "resume_verification": {
     "date": "2026-11-06",
-    "starting_head": "0e8108df2b0a1851810822e53ff7a423fc1bb47b",
+    "starting_head": "219f0499dbf76ca9f466d2731e4e09565a95d43b",
     "accepted_implementation_commit": "3b486f202198f3b7720cceba1f0df0b580da2962",
     "changes_since_accepted_commit": ["F4_READY.json"],
     "tracked_worktree_changes_on_resume": [],
@@ -30,7 +30,8 @@
     "diff_check": "git diff --check c4/track-base: passed",
     "test_disposition": "Reused completed implementation and independent-review CPU results; accepted implementation and tests are unchanged",
     "receipt_validation": "Reviewed readiness, continuation and acceptance JSON; confirmed READY, both resolved blockers, no open issues, common enabled B/R registration and r1 acceptance binding",
-    "fresh_session_confirmation": "Read git status/log first, then the shared task spec, readiness/acceptance receipts, r0/r1 reviews and continuation recipe. Confirmed the tracked worktree was clean and only F4_READY.json differs between accepted revision 3b486f20 and starting HEAD 0e8108df. Inspected the existing blocker-fix commit cc7ae2db. No matching task Python/pytest process was running. Reused the completed implementation and independently passing regression suite without duplicate jobs; git diff --check c4/track-base passed again.",
+    "fresh_session_confirmation": "Read git status/log first, then the shared task spec, readiness/acceptance receipts, r0/r1 reviews and continuation recipe. Confirmed branch c4/fix-safety-reward, a clean tracked worktree and only F4_READY.json differing between accepted revision 3b486f20 and starting HEAD 219f0499. Inspected the existing blocker-fix commit cc7ae2db and its substantive production-monitor, absent/off differential, registration/parity and real CPU optimizer regression tests. The r1 review independently reconfirms acceptance at this starting HEAD. No matching task Python/pytest process was running. Reused completed implementation and independently passing regression results without duplicate jobs; git diff --check c4/track-base passed again.",
+    "new_pytest_invocations": 0,
     "preserved_untracked_receipts": [
       "F4_ACCEPTED.json",
       "F4_READY.blocked0_1793864883.json",
@@ -70,6 +71,10 @@
     {
       "sha": "0e8108df2b0a1851810822e53ff7a423fc1bb47b",
       "subject": "C4 F4: reconcile readiness with preserved accepted implementation"
+    },
+    {
+      "sha": "219f0499dbf76ca9f466d2731e4e09565a95d43b",
+      "subject": "C4 F4: refresh accepted readiness after resume verification"
     }
   ],
   "resolved_blockers": [
