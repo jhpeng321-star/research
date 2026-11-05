@@ -23,9 +23,18 @@ None. No required fixes identified in the P4 diff.
 - **Default-off byte identity and ownership:** no existing tracked source file is modified, and no existing runtime entry point imports the new module in this diff. Existing default-off paths therefore retain their original code. The new API and integration handoff conform to P4's separately owned helper-module scope; T2C integration is outside this P4 verdict.
 - **Execution constraints:** review and tests were local and CPU-only. No SSH, simulator execution, GPU calls, commits, or implementation edits were performed. Pytest used synthetic fixtures in a new worktree-local temporary directory; bytecode and pytest cache writes were disabled.
 
+## Fresh-session resume verification
+
+- Resumed at HEAD `25b089964560dce283ea8ac15c6d20154cad3521` on `c4/staging-closure`, with an initially clean worktree and the same base `13f184b5a7e12be04aebf246ef8e4dbb81555545`.
+- Read git status/log, `P4_READY.json`, `P4_ACCEPTED.json`, this accepted review, and the current shared spec before examining the implementation diff.
+- Confirmed that the complete difference from the previously reviewed revision `91a3d70e77a2a6b9ac5fac4936e80d9522b7cb0a` consists only of `P4_READY.json`, `P4_ACCEPTED.json`, and this review. The implementation, tests, and production readers are unchanged.
+- Re-read the full implementation/test diff against `c4/track-base` and checked the relevant production receipt, snapshot, compressed-result, practice-start, and link readers. The PASS verdict and absence of required fixes remain valid.
+- Reused the completed, accepted pytest execution recorded below, following the resume instruction not to redo finished work. No new pytest execution, job, or dispatch was started in this session. `git diff --check c4/track-base` passed again.
+- This session changed only this review file; no commit, remote command, simulator/GPU execution, or prohibited-path/truth-file read was performed.
+
 ## Tests and counts
 
-Executed from the worktree with `CUDA_VISIBLE_DEVICES=''`, `PYTHONDONTWRITEBYTECODE=1`, and `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`:
+Previously executed and accepted from the worktree with `CUDA_VISIBLE_DEVICES=''`, `PYTHONDONTWRITEBYTECODE=1`, and `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` (result preserved on resume):
 
 ```text
 C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_staging_closure_cpu.py -p no:cacheprovider --basetemp E:/agent-work/c4-staging-closure/runs/p4_astra_r0_pytest
