@@ -91,11 +91,12 @@ def test_default_off_exact_objects():
     assert tb.episode_components({}, base, Controller) == (base, Controller)
 
 
-def test_live_zero_init_identity_rng_and_local_receipts(cfg):
+def test_live_zero_init_adds_library_offsets_preserves_rng_and_local_receipts(cfg):
     p, s, controller = sample(cfg)
     context = s['context']
     expected, _ = p.layer.base.sample(context, torch.Generator().manual_seed(9), False, {})
-    assert s['action'] == expected['action']
+    offsets = torch.tensor([context['move_offsets'][v] for v in context['members']])[:, None]
+    assert torch.tensor(s['action']) == pytest.approx(torch.tensor(expected['action']) + offsets)
     assert torch.equal(controller.generator.get_state(), torch.Generator().manual_seed(9).get_state()) is False
     # Same generator advancement, including stochastic trigger draws on a separate stream.
     g = torch.Generator().manual_seed(9)
@@ -139,11 +140,10 @@ def test_real_move_commitment_hold_release_and_no_hdv(cfg):
     context = encode(rows())
     context['v2v'] = {v: [0.]*48 for v in context['members']}
     p.last_decision = 300
-    p.layer.trigger_gain.data.fill_(.5)
     p.observe(rows(), 301)
     s, _ = p.sample(context, torch.Generator().manual_seed(1), True)
     assert s['context']['move_offsets'] == dict(c1=-.3, c2=-.3)
-    assert np.asarray(s['action']).ravel().tolist() == pytest.approx([-.3*np.tanh(.5)]*2)
+    assert np.asarray(s['action']).ravel().tolist() == pytest.approx([-.3]*2)
     p.observe(rows(), 320)
     s, _ = p.sample(context, torch.Generator().manual_seed(1), True)
     assert s['context']['move_offsets'] == dict(c1=0., c2=0.)
