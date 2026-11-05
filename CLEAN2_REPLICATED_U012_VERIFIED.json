@@ -1,0 +1,108 @@
+{
+  "analysis_recomputed": true,
+  "branches": 64,
+  "cells": 10,
+  "config_sha256": "f6489716c060f0a647148bcf247bdd6051635b712396a0eda1eb3d75b9af563d",
+  "criterion_metric": "policy_cooperation_gain_veh_s",
+  "metric_reports": {
+    "delta_all_new_veh_s": {
+      "aggregation": "equal state mean within world; equal world mean across replicates",
+      "arm_means": {
+        "B": 40.76728859534716,
+        "R": 75.5636912219739
+      },
+      "comparisons": {
+        "B-R": {
+          "ci_hi": 0.13290814221695654,
+          "ci_lo": -104.54857960699883,
+          "level": 0.95,
+          "mean": -34.796402626626744,
+          "n": 5,
+          "reps": 10000,
+          "seed": 202611041202
+        },
+        "B-common_base": {
+          "ci_hi": 122.21358817531083,
+          "ci_lo": -0.014320549578405917,
+          "level": 0.95,
+          "mean": 40.76728859534716,
+          "n": 5,
+          "reps": 10000,
+          "seed": 202611041200
+        },
+        "R-common_base": {
+          "ci_hi": 226.7348743723429,
+          "ci_lo": -0.04895847962437377,
+          "level": 0.95,
+          "mean": 75.5636912219739,
+          "n": 5,
+          "reps": 10000,
+          "seed": 202611041201
+        }
+      },
+      "formula": "J_reference - J_all",
+      "higher_is_better": true,
+      "inference": "descriptive means only; CIs, when present, resample paired worlds",
+      "label": "Total benefit vs common base",
+      "registered_u24_metric": false,
+      "unit": "veh-s"
+    },
+    "policy_cooperation_gain_veh_s": {
+      "aggregation": "equal state mean within world; equal world mean across replicates",
+      "arm_means": {
+        "B": -0.016066391946803073,
+        "R": 0.12045937646629075
+      },
+      "comparisons": {
+        "B-R": {
+          "ci_hi": 0.04724978668405129,
+          "ci_lo": -0.4707273763488047,
+          "level": 0.95,
+          "mean": -0.13652576841309383,
+          "n": 5,
+          "reps": 10000,
+          "seed": 202611041202
+        },
+        "B-zero_synergy": {
+          "ci_hi": 0.011292774768086626,
+          "ci_lo": -0.04342555866169277,
+          "level": 0.95,
+          "mean": -0.016066391946803073,
+          "n": 5,
+          "reps": 10000,
+          "seed": 202611041200
+        },
+        "R-zero_synergy": {
+          "ci_hi": 0.4333173406820909,
+          "ci_lo": -0.06170431057968623,
+          "level": 0.95,
+          "mean": 0.12045937646629075,
+          "n": 5,
+          "reps": 10000,
+          "seed": 202611041201
+        }
+      },
+      "formula": "(J_reference - J_all) - max_i(J_reference - J_solo_i)",
+      "higher_is_better": true,
+      "inference": "descriptive means only; CIs, when present, resample paired worlds",
+      "label": "Group-over-best-single synergy",
+      "registered_u24_metric": true,
+      "solo_zero_floor": false,
+      "unit": "veh-s"
+    }
+  },
+  "monitor_sha256": "4f53315251752f43f5ba8096d92f33a56599a834e578f2d3363f400970117e48",
+  "quoted_sim_s": 47920,
+  "read_only": true,
+  "receipt_sha256": "b03a0081a981871d42559b669a8140ac50977943b3adcbc33ed995226a525545",
+  "safety": {
+    "collisions": 0,
+    "hard_brakes": 467,
+    "teleports": 0,
+    "ttc_events": 1594
+  },
+  "schema": "coopmwm.clean2.diagnostic_audit.v1",
+  "timestamp": "2026-11-05T15:13:13.117085+00:00",
+  "update": 12,
+  "verdict": "descriptive"
+}
