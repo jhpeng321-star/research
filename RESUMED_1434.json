@@ -1,0 +1,23 @@
+{
+  "schema": "coopmwm.clean1.resumed.v1",
+  "timestamp": "2026-11-05T07:20:40.928885+00:00",
+  "unix": 1793863240.9289181,
+  "source_root": "/home/ubuntu/coopmwm20261105_clean1_src_d81d4fae",
+  "runtime_commit": "d81d4faecfb77d54ac93e47d8c7a314613948db8",
+  "original_config_sha256": "cc009d490c6876ec9e6ec98072617ac6f76b20fc7501fcc83bb7905f19a7ac4a",
+  "owners": {
+    "A": {"pid": 243577, "start_ticks": "5308942"},
+    "B": {"pid": 243578, "start_ticks": "5308942"},
+    "R": {"pid": 243579, "start_ticks": "5308943"},
+    "monitor": {"pid": 243580, "start_ticks": "5308943"}
+  },
+  "resumed_from": {"A": 9, "B": 8, "R": 8},
+  "B_u009_adopted_training_episodes_expected": 16,
+  "B_u009_adopted_practice_A_references_expected": 6,
+  "original_launch_retained": true,
+  "rule_receipt_sha256": "cba2642d13a627cc537432dd80b1f2046ea4341d8c93bcc7cd4a39dacbf44abb",
+  "cumulative_at_dispatch_sim_s": 1191840,
+  "full_lookahead_unchanged": true,
+  "source_config_checker": "RECOVERY_SOURCE_CONFIG_VERIFIED",
+  "ledger_preservation": "SHA-identical registered prefix; only independently registered plan_fix rows may append before clearance"
+}
