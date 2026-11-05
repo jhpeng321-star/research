@@ -49,7 +49,8 @@ def install(worker):
     # observations has two frozen absolute path literals, neither changes any
     # identities, fit windows, posterior construction or allowed-world checks.
     observations=importlib.import_module('tools.rbint.observations')
-    paths={'/root/wmcalib':str(priors),'/root/wmcalib/data/jobs':str(priors/'data/jobs')}
+    paths={'/root/wmcalib':str(priors),'/root/wmcalib/data':str(priors/'data'),
+           '/root/wmcalib/data/jobs':str(priors/'data/jobs')}
     source=Path(observations.__file__).read_text()
     exec(compile(cpu_tree(source,paths),'<planfix-cpu-observable-paths>','exec'),observations.__dict__)
     from tools.wmteach import runtime

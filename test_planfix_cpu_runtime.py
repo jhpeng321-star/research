@@ -25,3 +25,9 @@ def test_path_device_port_preserves_scientific_literals_and_operations():
 def test_unknown_checkpoint_load_abi_refuses_instead_of_substituting():
     with pytest.raises(AssertionError):
         cpu_tree('candidate = torch.load(other_path)',{},recovered_config=True)
+
+def test_cpu_install_maps_start_design_root_and_history_root():
+    tree=ast.parse(Path(__file__).with_name('planfix_cpu_runtime.py').read_text())
+    install=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='install')
+    paths=next(n.value for n in ast.walk(install) if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='paths' for t in n.targets))
+    assert {k.value for k in paths.keys}=={'/root/wmcalib','/root/wmcalib/data','/root/wmcalib/data/jobs'}

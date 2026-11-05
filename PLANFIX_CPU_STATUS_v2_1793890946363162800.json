@@ -1,0 +1,83 @@
+{
+  "CPU_FAILED.json": {
+    "error": "PermissionError(13, 'Permission denied')",
+    "new_sim_s": 0,
+    "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v2/planfix_cpu_worker.py\", line 132, in <module>\n    try:main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v2/planfix_cpu_worker.py\", line 87, in main\n    try:warm_service.main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v2/runtime/tools/coopmwm/warm_service.py\", line 52, in main\n    rt=configured_runtime(runtime.bootstrap,binding.get('memory_fraction',.65))\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v2/planfix_cpu_worker.py\", line 77, in cpu_configured\n    start=time.monotonic();cached.append(bootstrap())\n  File \"<planfix-cpu-original-wmteach>\", line 79, in bootstrap\n  File \"<wmteach-FIT-only-starts>\", line 6, in make_starts_wmdata\n  File \"/home/ubuntu/miniconda3/lib/python3.10/pathlib.py\", line 1134, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n  File \"/home/ubuntu/miniconda3/lib/python3.10/pathlib.py\", line 1119, in open\n    return self._accessor.open(self, mode, buffering, encoding, errors,\nPermissionError: [Errno 13] Permission denied: '/root/wmcalib/data/design.json'\n",
+    "unix": 1793890927.3131864
+  },
+  "CPU_OWNER.json": {
+    "affinity": [
+      47
+    ],
+    "alive_same_identity": false,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 358285,
+    "start_ticks": "8076944",
+    "unix": 1793890920.9615161
+  },
+  "DISPATCH.json": {
+    "alive_same_identity": false,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "max_cpu_cores": 1,
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 358285,
+    "procedure": "eight same-process gates then ONE WM search; no SUMO; no expansion",
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v2",
+    "start_ticks": "8076944",
+    "unix": 1793890920.9322653
+  },
+  "DISPATCH_STARTED.json": {
+    "new_sim_s": 0,
+    "unix": 1793890920.9292397
+  },
+  "STAGE_ENV.json": {
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "CPU_BINDING 3468a6a8755772bb1e068eaa5d325e8f71267a2d8e0b8b7aa3a588cbbf63819e 665\n"
+  },
+  "STAGE_PASS.json": {
+    "binding_file_sha256": "23da3ae5c544e4a6803172aca58940dc97ce7b9fcde3703d3f1f8f194b7c0c2e",
+    "dispatch_started": false,
+    "launch_file_sha256": "d036a7d311694c102182f2bebe17c890c7e5e67cd593b248fab2ca176cd815f9",
+    "new_sim_s": 0,
+    "pace": {
+      "A": {
+        "ceiling_s": 1194.2428486347198,
+        "intervals_s": [
+          1194.2428486347198,
+          1164.5672767162323,
+          1170.51988863945
+        ],
+        "last_update": 12
+      },
+      "B": {
+        "ceiling_s": 1243.3992671966553,
+        "intervals_s": [
+          1243.3992671966553,
+          1149.266884803772,
+          1168.5544457435608
+        ],
+        "last_update": 11
+      },
+      "R": {
+        "ceiling_s": 1244.576462984085,
+        "intervals_s": [
+          1244.576462984085,
+          1157.6539821624756,
+          1167.4601202011108
+        ],
+        "last_update": 11
+      }
+    },
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v2",
+    "source_files": 656
+  },
+  "exists": true,
+  "gates": {},
+  "log_tail": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v2/planfix_cpu_worker.py\", line 132, in <module>\n    try:main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v2/planfix_cpu_worker.py\", line 87, in main\n    try:warm_service.main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v2/runtime/tools/coopmwm/warm_service.py\", line 52, in main\n    rt=configured_runtime(runtime.bootstrap,binding.get('memory_fraction',.65))\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v2/planfix_cpu_worker.py\", line 77, in cpu_configured\n    start=time.monotonic();cached.append(bootstrap())\n  File \"<planfix-cpu-original-wmteach>\", line 79, in bootstrap\n  File \"<wmteach-FIT-only-starts>\", line 6, in make_starts_wmdata\n  File \"/home/ubuntu/miniconda3/lib/python3.10/pathlib.py\", line 1134, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n  File \"/home/ubuntu/miniconda3/lib/python3.10/pathlib.py\", line 1119, in open\n    return self._accessor.open(self, mode, buffering, encoding, errors,\nPermissionError: [Errno 13] Permission denied: '/root/wmcalib/data/design.json'\n",
+  "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v2",
+  "unix": 1793890945.8560941
+}
