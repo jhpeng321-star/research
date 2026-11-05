@@ -1,5 +1,21 @@
 # CLEAN3 prospective launch blockers — 2026-11-05 23:46 +08
 
+## Current recovery — 2026-11-06 00:38 +08
+
+`CLEAN3_CONTINUATION_SESSION3.md` supersedes the historical snapshots below.
+Fresh full audit00:31:38 (`76306ebd`) passes all source/config/receipt/ownership/
+accounting checks; combinedu16 safe/CONTINUE/no DIAGNOSE. Existing remote
+chain/P3 and follower9504 remain active. G1 and G2 are accepted; G4 round1 fix
+READY is published but independent acceptance is absent. All-three acceptance
+and integrated qualification remain prerequisites for the clean2 boundary stop.
+
+Full-manifest quote00:35:23 (`e8bd3c8f`): prior2,981,040 + protected
+plan_fix566,400 + clean3 allocation3,241,440 = **6,788,880**, **788,880 over6M**.
+The00:27 overall6.5M approval adds500,000 for separate mining; protecting that
+allocation gives **7,288,880**, the same788,880 shortfall against6.5M. No reserve
+is cancelled or reassigned. MAIN/owner budget resolution remains required before
+any clean3 charge; final accepted G smoke and stopped ledgers require re-quote.
+
 ## Latest recovery — 2026-11-06 00:26 +08
 
 `CLEAN3_CONTINUATION_SESSION2.md` records fresh full ownership/source/receipt/
