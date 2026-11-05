@@ -2,80 +2,93 @@
   "task": "F2",
   "status": "READY",
   "date": "2026-11-05",
+  "fix_round": 1,
+  "review": "REVIEW_F2_r0.md",
   "worktree": "E:/agent-work/c4-fix-proposals",
   "branch": "c4/fix-proposals",
   "base_branch": "c4/rerun-launch",
   "base_commit": "8bf7f53395c7a53a3e8d847c5a7f3229b79ab102",
+  "tested_code_commit": "37ddeda2a1bc5f8d965c09a3412d4cd30757d1db",
   "commits": [
     {
       "sha": "45915c47fe00288c9e67544386f0b13b4ca8231f",
       "subject": "C4 launch: balance feasible ownership-aware move proposals"
+    },
+    {
+      "sha": "2bbe4bbc9ace749ba682352c24942d11d41316b1",
+      "subject": "C4 launch: record F2 CPU readiness"
+    },
+    {
+      "sha": "37ddeda2a1bc5f8d965c09a3412d4cd30757d1db",
+      "subject": "C4 launch: exclude controller-owned CAVs from F2 proposals"
+    }
+  ],
+  "review_resolution": [
+    {
+      "item": "Blocker 1: restored/controller commitments missing from acquisition eligibility",
+      "status": "FIXED",
+      "fix": "The production episode hook refreshes ownership from Controller.active_plans every apply. EpisodePolicy projects only each ego's observable CAV IDs and original start_s + duration_s expiry. Each serial slate excludes the union of live controller reservations and current executor commitments. Exact expiry is available; the controller ledger and authoritative commands are not modified.",
+      "regression": "test_production_hook_honours_practice_and_controller_ownership: six B/R x snapshot/candidate/live-controller cases using production OPTIMIZATION, the actual V2V-wrapped VerifyController, real snapshot/CRN restoration and episode_components. Checks owned-ego none-only slates, free-ego owned-partner exclusion, local-only bookkeeping, unchanged plan commands/expiry, exact-expiry acquisition and exclusion receipts. All six failed against the pre-fix implementation."
+    },
+    {
+      "item": "Additional inherited standalone compatibility-test/setup failure",
+      "status": "FIXED",
+      "fix": "The historical baseline runtime now loads historical v2v_runner and v2v_launch3 in memory for config construction. The absent-component contract explicitly covers opt-in-only modules; practice_weighting is a shared legacy practice-config validator and is no longer incorrectly declared absent. Absent/false Track 2 configs still compare exactly against the historical config.",
+      "regression": "test_baseline_runtime_isolates_historical_preparation_dependencies fails if the historical baseline calls the current V2V producer. It failed before the fixture fix. The full 15-case compatibility suite now passes."
     }
   ],
   "registration": {
     "rule": "f2-feasible-balanced-v1",
     "provenance": "tracks_spec.md MAIN 15:15 2026-11-05 owner item F2",
-    "allocation": "One slot per feasible non-none family per randomly permuted cycle; family counts differ by at most one; none remains the separate baseline slot.",
-    "acquisition": "Expire commitments, process acting CAVs in stable id order, acquire the selected move before constructing the next slate, retain original context order for PPO.",
-    "eligibility": "Every member must be locally observable, a CAV, in registered range, presently controlled and unowned; this includes ego and gap_open's non-actuating partner.",
-    "geometry_and_parameters": "Reuse moves.py and VARIETY_REGISTERED; enumerate bounded wall member subsets while preserving full-local-pool gap/ramp role checks.",
-    "arms": "Identical proposal, acquisition and telemetry code for B and R, with no arm argument or outcome-conditioned tuning. Shared MoveAPI also defines the slate for uniform random teaching; dense teaching remains disabled in the current launch."
+    "allocation": "One slot per feasible non-none family per randomly permuted cycle; family counts differ by at most one; none is the separate baseline slot.",
+    "acquisition": "Use original controller expiry, expire executor commitments, process egos in stable ID order, acquire before constructing the next slate, preserve original context order for PPO.",
+    "eligibility": "Every member, including ego and non-actuating partners, must be observable, in registered range, currently controlled and unowned by either controller plans or executor moves.",
+    "arms": "Common B/R proposal, ownership and receipt code; A and absent opt-in return original policy/controller objects."
   },
-  "files": [
+  "fix_round_files": [
     "tools/coopmwm/feasible_proposals.py",
     "tools/coopmwm/track2_backend.py",
-    "tools/coopmwm/launch_production.py",
     "tools/coopmwm/test_feasible_proposals_cpu.py",
-    "docs/F2_FEASIBLE_PROPOSALS.md"
+    "tools/coopmwm/test_t2c_compat_cpu.py",
+    "docs/F2_FEASIBLE_PROPOSALS.md",
+    "F2_READY.json"
   ],
   "api": {
-    "candidates": "feasible_proposals.candidates(obs_state, rng, n) -> list[moves.Move]; local self/rows plus optional acquirable_cav_ids and proposal_stats output dict",
-    "live_decision": "feasible_proposals.decide_and_start(trigger, context, *, obs_states, observable_cavs, executor, now, rng, generator, deterministic=False) -> (TriggerBatch, accepted_by_ego, stats)",
-    "aggregation": "feasible_proposals.aggregate(receipts) -> update stats or None when unmeasured",
-    "production_bridge": "track2_backend.MoveAPI.candidates uses the shared F2 candidate generator",
+    "candidates": "feasible_proposals.candidates(obs_state, rng, n) -> list[moves.Move]; self/rows plus optional acquirable_cav_ids and proposal_stats",
+    "live_decision": "feasible_proposals.decide_and_start(trigger, context, *, obs_states, observable_cavs, executor, now, rng, generator, deterministic=False, command_reservations=None) -> (TriggerBatch, accepted_by_ego, stats)",
+    "command_reservations": "ego -> observable CAV ID -> original authoritative expiry; optional empty map supports offline/test callers",
+    "observation_bridge": "EpisodePolicy.observe(rows, now, *, command_commitments=()) projects Controller.active_plans to local command_reservations; episode_components supplies the current controller ledger every tick",
+    "aggregation": "feasible_proposals.aggregate(receipts) -> update stats or None if unmeasured",
     "episode_telemetry": "sample.track2_trigger.proposals",
     "update_telemetry": "metrics.move_proposals in per-arm per-update learning-monitor JSON",
     "infeasible_rate": "sum(rejected_non_none) / sum(selected_non_none), or null without selections",
     "family_infeasible_rate": "sum(infeasible_family_checks) / sum(family_checks), or null without checks",
-    "raw_counters": [
-      "decisions",
-      "family_checks",
-      "infeasible_family_checks",
-      "proposed_by_family",
-      "selected_non_none",
-      "rejected_non_none"
-    ],
-    "ppo": "Replay uses recorded conditional tables, masks, old log probabilities and original context ordering; proposals are not redrawn."
+    "owned_cav_checks": "Sum of locally observable/currently controlled occupied CAV slots checked across serial egos; union of controller and executor ownership, including same-tick acquisitions",
+    "controller_owned_cav_checks": "Controller-owned subset of checked local CAV slots; exposes pre-selection exclusions even with zero selection rejections",
+    "legacy_ownership_telemetry": "New ownership counters aggregate to null if any contributing F2 receipt lacks them, rather than inventing zero measurements",
+    "ppo": "Recorded conditional tables, masks, old log probabilities and original context ordering are replayed without regenerating proposals"
   },
   "verification": {
-    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_feasible_proposals_cpu.py tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_trigger_policy_cpu.py tools/coopmwm/test_moves_cpu.py tools/coopmwm/test_launch_integration_cpu.py tools/coopmwm/test_track2_monitor_cpu.py --basetemp=E:/agent-work/c4-fix-proposals/_out/f2_cpu_release",
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "-1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "TEMP": "E:/agent-work/c4-fix-proposals/_out",
+      "TMP": "E:/agent-work/c4-fix-proposals/_out"
+    },
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_feasible_proposals_cpu.py tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_trigger_policy_cpu.py tools/coopmwm/test_moves_cpu.py tools/coopmwm/test_launch_integration_cpu.py tools/coopmwm/test_track2_monitor_cpu.py tools/coopmwm/test_t2c_compat_cpu.py -p no:cacheprovider --basetemp=E:/agent-work/c4-fix-proposals/_out/f2_fix_r1_release --junitxml=E:/agent-work/c4-fix-proposals/_out/f2_fix_r1_release.xml",
     "exit_code": 0,
-    "passed": 318,
+    "passed": 339,
+    "failed": 0,
     "skipped": 1,
     "subtests_passed": 5,
-    "duration_seconds": 141.10,
-    "skip_reason": "Existing launch-integration file-symlink privilege test is deferred to cpuV qualification by that test.",
-    "f2_test_cases": 16,
-    "covered_contracts": [
-      "Balanced feasible-family counts and unbiased short-slate family ordering",
-      "Owned ego and partner exclusion, HDV exclusion and registered range",
-      "Cross-lane wall discovery beyond nearest same-lane neighbours",
-      "Full local mainline-pool ramp-role eligibility",
-      "Invariance to unavailable and remote extra geometry",
-      "Same-tick joint acquisition prevents later conflicting proposals",
-      "Existing commitments block all members until exact expiry",
-      "Visible but not currently controlled partners excluded",
-      "Real-trigger conditional log-probability/value replay and context-order invariance",
-      "B/R stochastic and deterministic slate, acquisition, action and RNG parity",
-      "A retains original policy/controller objects, parameters and RNG",
-      "Ratio-of-sums update telemetry and persistence through learning monitor"
-    ],
+    "duration_seconds": 100.53,
+    "skip_reason": "Existing test_launch_integration_cpu.py:526 Windows file-symlink privilege check is exercised by cpuV qualification.",
+    "warning": "Disabling pytest's cache plugin produces the existing unknown cache_dir config-option warning.",
     "git_diff_check": "passed",
-    "optional_lint": {
-      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m ruff check tools/coopmwm/feasible_proposals.py tools/coopmwm/test_feasible_proposals_cpu.py tools/coopmwm/track2_backend.py tools/coopmwm/launch_production.py",
-      "exit_code": 1,
-      "output": "No diagnostics emitted by the local Ruff invocation; no lint-pass claim."
-    }
+    "initial_red_test_temp_note": "The initial seven-case pre-fix regression reproduction used pytest's default E:/Temp/pytest-of-jpeng/pytest-2474 temporary directory. All subsequent test runs explicitly pinned TEMP, TMP and basetemp to this worktree."
   },
   "execution_scope": {
     "cpu_only": true,
@@ -83,10 +96,8 @@
     "ssh_calls": 0,
     "sumo_launches": 0,
     "gpu_jobs": 0,
-    "changes_limited_to_designated_worktree": true,
+    "source_changes_limited_to_designated_worktree": true,
     "restricted_data_opened": false
   },
-  "open_issues": [
-    "Optional Ruff invocation exited 1 without diagnostics; required CPU tests and git diff checks passed."
-  ]
+  "open_issues": []
 }
