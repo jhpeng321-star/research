@@ -11,7 +11,9 @@
     {"sha": "ee3af837", "subject": "coopmwm T2H: READY receipt with CPU checks and integration API"},
     {"sha": "93da75f6", "subject": "coopmwm T2H: preserve independent acceptance on resume"},
     {"sha": "1161550d", "subject": "coopmwm T2H: preserve revised review blocker on resume"},
-    {"sha": "3be81d33", "subject": "coopmwm T2H: require own all8 admission for augmented practice"}
+    {"sha": "3be81d33", "subject": "coopmwm T2H: require own all8 admission for augmented practice"},
+    {"sha": "a5a9bc22", "subject": "coopmwm T2H: refresh readiness after all8 admission fix"},
+    {"sha": "844a3894", "subject": "coopmwm T2H: preserve independent all8 fix acceptance"}
   ],
   "receipt_commit": "The final commit containing T2H_READY.json records verification and readiness.",
   "api": {
@@ -103,15 +105,18 @@
     "provenance": "The minimum executable source inventory now includes practice_weighting.py so deployed code qualification covers the new dependency"
   },
   "independent_review": {
-    "verdict": "BLOCK_AT_PRIOR_HEAD; FIX_IMPLEMENTED_AND_CPU_VERIFIED",
+    "verdict": "PASS",
     "report": "REVIEW_T2H_r0.md",
     "acceptance_receipt": "T2H_ACCEPTED.json",
-    "reviewed_head": "93da75f6",
-    "required_fixes": ["Blocker 1: require each augmented example's own accepted all8 admission"],
-    "resolution": "Addressed in 3be81d33 with 96 final relevant CPU passes. The independent BLOCK report is preserved as historical evidence; independent rereview of the fix has not been performed.",
-    "tests": {"passed": 209, "failed": 0, "skipped": 1, "deselected": 1},
-    "test_count_note": "The review deselected one synthetic restricted-path fixture; its 209 passes are independent of the original 210-pass readiness result.",
-    "resume": "Existing implementation and completed prior tests preserved. Uncommitted revised-spec BLOCK report committed unchanged; fix and new verification recorded separately. Historical acceptance explicitly superseded in T2H_ACCEPTED.json. No jobs dispatched."
+    "reviewed_head": "a5a9bc22",
+    "review_commit": "844a3894",
+    "required_fixes": [],
+    "resolution": "Prior blocker 1 was addressed in 3be81d33. Independent rereview at a5a9bc22 accepted the own all8 validation and default-byte-identity contracts; no required T2H fixes remain. Historical BLOCK evidence is preserved in the review report.",
+    "tests": {"passed": 96, "failed": 0, "skipped": 0, "deselected": 0, "duration_s": 45.92},
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider --basetemp=E:/Temp/opencode/t2h-astra-r0-a5a9bc22-20261105 tools/coopmwm/test_practice_weighting_cpu.py tools/coopmwm/test_practice_starts_cpu.py --tb=short",
+    "prior_broad_tests": {"passed": 209, "failed": 0, "skipped": 1, "deselected": 1},
+    "test_count_note": "The current 96-case independent run covers 61 T2H cases and 35 practice-start regressions. Prior broad results overlap and must not be added; their deselection avoided a synthetic restricted-path fixture. One cache_dir warning arose from disabling cacheprovider.",
+    "resume": "The independent PASS report was already present as uncommitted work on resume and was preserved unchanged in 844a3894. Readiness, acceptance and progress receipts reconciled with that completed review. No completed tests or dispatches duplicated."
   },
   "open_issues": [],
   "integration_notes": [

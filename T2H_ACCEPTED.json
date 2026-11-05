@@ -1,8 +1,13 @@
 {
   "review": "REVIEW_T2H_r0.md",
   "unix": 1793803782.142656,
-  "status": "HISTORICAL_ACCEPTANCE_SUPERSEDED",
-  "latest_independent_verdict": "BLOCK at 93da75f6; preserved in REVIEW_T2H_r0.md",
-  "implementation_followup": "3be81d33 addresses blocker 1 with own all8/plan/seed/SUMO receipt/snapshot validation, including frozen replay. 96 relevant CPU tests passed; independent rereview has not been performed.",
+  "unix_note": "Timestamp preserved from the original historical acceptance; current rereview is identified by reviewed_head and review_commit.",
+  "status": "ACCEPTED",
+  "latest_independent_verdict": "PASS at a5a9bc22; preserved in REVIEW_T2H_r0.md",
+  "reviewed_head": "a5a9bc22",
+  "review_commit": "844a3894",
+  "implementation_followup": "3be81d33 addresses prior blocker 1 with own all8/plan/seed/SUMO receipt/snapshot validation, including frozen replay. Independent rereview passed with 96 CPU tests, 0 failures and no required T2H fixes remaining.",
+  "tests": {"passed": 96, "failed": 0, "skipped": 0, "deselected": 0, "duration_s": 45.92},
+  "scope": "T2H adapter, runtime hooks and CPU contracts; production augmentation and end-to-end rerun integration remain T2G/T2C deliverables.",
   "current_readiness": "T2H_READY.json"
 }
