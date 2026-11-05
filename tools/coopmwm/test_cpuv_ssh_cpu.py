@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -19,7 +20,9 @@ from . import cpuv_ssh as ssh
 def no_network(monkeypatch):
     original = subprocess.Popen
     def guarded(argv, *args, **kwargs):
-        assert Path(argv[0]).stem.lower() not in ('ssh', 'scp', 'sftp', 'rsync', 'sumo', 'sumo-gui')
+        executable = Path(argv[0]).stem.lower()
+        config_only = executable == 'ssh' and '-G' in argv
+        assert config_only or executable not in ('ssh', 'scp', 'sftp', 'rsync', 'sumo', 'sumo-gui')
         return original(argv, *args, **kwargs)
     monkeypatch.setattr(subprocess, 'Popen', guarded)
 
@@ -78,7 +81,7 @@ def test_first_use_creates_master_and_reuses_socket(tmp_path, monkeypatch):
         assert option(argv, 'BatchMode') == 'yes'
         assert option(argv, 'StrictHostKeyChecking') == 'yes'
         assert argv[-1] == 'cpuV' or argv[-2] == 'cpuV'
-    assert option(masters[0][0], 'ControlMaster') == 'yes'
+    assert option(masters[0][0], 'ControlMaster') == 'auto'
     master_kwargs = next(kwargs for argv, kwargs, _ in calls if '-M' in argv)
     assert master_kwargs['stdout'] == subprocess.DEVNULL
     assert master_kwargs['stderr'] != subprocess.PIPE
@@ -87,6 +90,25 @@ def test_first_use_creates_master_and_reuses_socket(tmp_path, monkeypatch):
         assert option(argv, 'ProxyCommand') == 'false'
     assert sessions[0][1]['input'] == b'input'
     assert sessions[0][1]['capture_output'] is True
+
+
+@pytest.mark.skipif(os.name != 'posix' or not shutil.which('ssh'), reason='Linux OpenSSH option parser')
+def test_master_effective_mode_never_requires_interactive_confirmation(tmp_path, monkeypatch):
+    calls = []
+    checks = iter([1, 0])
+    def runner(argv, **kwargs):
+        calls.append(argv)
+        return subprocess.CompletedProcess(argv, next(checks) if '-O' in argv else 0)
+    client, _ = transport(tmp_path, monkeypatch, runner)
+    with client.gate.claim():
+        client._master(None)
+    master = next(argv for argv in calls if '-M' in argv)
+    # -G parses the actual constructed argv without connecting or reading a
+    # user config. Regression: ControlMaster=yes plus -M resolves to "ask".
+    result = subprocess.run([master[0], '-F', 'none', '-G', *master[1:-1],
+                             'cpuv-option-test.invalid'], capture_output=True, text=True, check=True)
+    settings = dict(line.split(None, 1) for line in result.stdout.splitlines())
+    assert settings['controlmaster'] == 'true'
 
 
 @pytest.mark.parametrize('failure', ['master_exit', 'master_timeout', 'missing_socket', 'lost_session'])

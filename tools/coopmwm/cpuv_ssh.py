@@ -286,7 +286,10 @@ class Transport:
             raise RuntimeError('cpuV rsync owner exited; cancelling owned session')
 
     def _options(self, *, master=False):
-        values = [f'ControlMaster={"yes" if master else "no"}',
+        # The master argv also supplies -M. OpenSSH interprets yes followed by
+        # -M as a SECOND master request and enables interactive "ask" mode.
+        # Start from auto so the single -M selects noninteractive yes instead.
+        values = [f'ControlMaster={"auto" if master else "no"}',
                   f'ControlPersist={CONTROL_PERSIST_S}', f'ControlPath={self.socket}',
                   'BatchMode=yes', f'ConnectTimeout={CONNECT_TIMEOUT_S}',
                   'ConnectionAttempts=1', 'ServerAliveInterval=15', 'ServerAliveCountMax=3',
