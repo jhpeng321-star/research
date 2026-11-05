@@ -11,3 +11,22 @@
 ## 01:49 +08 — exact gpuA parity PASS
 
 33,618 environment/source/input files SHA-verified. Isolated physics Python3.10.16 and all cpuV SUMO/physics pins match; frozen backend setup PASS. Both P3/P4 ran once and matched complete uncompressed payload bytes, branch receipt, result seal, steps, prefixes, totals and final. P3 payload90d82a9b..., P4ca85ea6d...; no tolerance, window change or reference replay. Mining ledger charged960/actual960; remaining499040. Existing allocations protected at5.5M bound within6.5M. Canonical small receipts fetched to mining_receipts; remote root /root/mining20261106.
+
+## 02:17 +08 — fresh-session running-owner recovery
+
+Read own git status/history and receipts before action. Original GPU coordinator
+3230/start928158286/boota81555d7-176e-4ed8-bc7d-896fc89cc914 is alive with exact
+argv; adopted without dispatch. Five original startup receipts now exist; four
+completed comparisons observed PASS, next gate computing. Real RTX4090D utilization
+94%, memory19778MiB; no input query/result yet. Frozen u0 already staged. gpuA
+ledger remains960 sim-s; no new physics. Preserved uncommitted lane adapter,
+schedule/tests, u0 staging and status modules.
+
+Actual cpuV STOPPED_BY_OWNER.json now exists, original owners exited and sealed
+A/B/R18; prior budget fault and every protected hash remain intact. clean3 root
+CONFIG/LAUNCHED absent. cpuV second-host admission can now be prepared with G1
+certification priority, initially one nice19/single-thread worker, own ceiling14/48.
+No cpuV verification dispatch yet. Capture receipts in
+E:/Temp/opencode/MINING_RESUME_INVENTORY_GPU_0218.json and
+MINING_RESUME_INVENTORY_CPU_0219.json. Earlier cpuV inventory failed read-only on
+an unprivileged /root probe; fixed host detection, no remote write or simulation.
