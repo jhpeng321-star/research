@@ -98,6 +98,8 @@ import hashlib,json,os,subprocess,time
 from pathlib import Path
 root=Path(__ROOT__);assert (root/'STAGE_PASS.json').is_file()
 assert (root/'CPU_PORT_QUALIFIED.json').is_file()
+reg=root/'CPU_EXECUTION_REGISTRATION.md';assert reg.is_file()
+assert 'PLANFIX CPU execution registration SHA '+hashlib.sha256(reg.read_bytes()).hexdigest() in (root.parent.parent/'AUTHORITY.md').read_text()
 assert not (root/'DISPATCH_STARTED.json').exists() and not (root/'CPU_OWNER.json').exists()
 with (root/'DISPATCH_STARTED.json').open('x') as out:json.dump(dict(unix=time.time(),new_sim_s=0),out);out.flush();os.fsync(out.fileno())
 env=json.loads((root/'STAGE_ENV.json').read_text())['env'];env['PYTHONPATH']=str(root/'compat')+':'+str(root)+':'+env['PYTHONPATH']
@@ -150,6 +152,26 @@ assert r.returncode==0
 with (root/'CPU_PORT_QUALIFIED.json').open('x') as out:json.dump(receipt,out,sort_keys=True)
 '''
 
+REGISTER=r'''
+import base64,fcntl,hashlib,json,os,time
+from pathlib import Path
+root=Path(__ROOT__);assert (root/'CPU_PORT_QUALIFIED.json').is_file()
+raw=base64.b64decode(__REG__);sha=hashlib.sha256(raw).hexdigest()
+p=root/'CPU_EXECUTION_REGISTRATION.md'
+if p.exists():assert p.read_bytes()==raw
+else:
+ with p.open('xb') as out:out.write(raw);out.flush();os.fsync(out.fileno())
+ledger=root.parent.parent;marker='PLANFIX CPU execution registration SHA '+sha
+with (ledger/'ACCOUNTING.claim').open('a') as lock:
+ fcntl.flock(lock,fcntl.LOCK_EX)
+ if marker not in (ledger/'AUTHORITY.md').read_text():
+  with (ledger/'AUTHORITY.md').open('a') as out:out.write('\n'+marker+'\n'+raw.decode()+'\n');out.flush();os.fsync(out.fileno())
+rows=[json.loads(x) for x in (ledger/'CHARGES.jsonl').read_text().splitlines()]
+spent=sum(x['sim_s'] for x in rows if x['phase']=='plan_fix');assert spent==33600
+receipt=dict(root=str(root),registration_sha256=sha,authority=str(ledger/'AUTHORITY.md'),phase_charged_sim_s=spent,new_sim_s=0,unix=time.time())
+print('CPU_REGISTERED',json.dumps(receipt),flush=True)
+'''
+
 STATUS=r'''
 import json,time
 from pathlib import Path
@@ -174,13 +196,14 @@ print('CPU_STATUS',json.dumps(result),flush=True)
 '''
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('stage','qualify','dispatch','status'));a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('stage','qualify','register','dispatch','status'));a=p.parse_args()
     files={n:base64.b64encode((HERE/n).read_bytes()).decode() for n in ('planfix_cpu_runtime.py','planfix_cpu_worker.py')}
-    code=(STAGE.replace('__FILES__',repr(files)) if a.action=='stage' else STATUS if a.action=='status' else QUALIFY if a.action=='qualify' else DISPATCH).replace('__ROOT__',repr(ROOT))
+    code=(STAGE.replace('__FILES__',repr(files)) if a.action=='stage' else STATUS if a.action=='status' else QUALIFY if a.action=='qualify' else REGISTER if a.action=='register' else DISPATCH).replace('__ROOT__',repr(ROOT))
+    if a.action=='register':code=code.replace('__REG__',repr(base64.b64encode((HERE/'PLANFIX_CPU_EXECUTION_REGISTRATION.md').read_bytes()).decode()))
     text=remote('cpuV',code,timeout=50)
     if a.action=='status':raise SystemExit(0)
-    prefix='CPU_STAGE_PASS ' if a.action=='stage' else 'CPU_PORT_QUALIFICATION ' if a.action=='qualify' else 'CPU_DISPATCH '
+    prefix='CPU_STAGE_PASS ' if a.action=='stage' else 'CPU_PORT_QUALIFICATION ' if a.action=='qualify' else 'CPU_REGISTERED ' if a.action=='register' else 'CPU_DISPATCH '
     receipt=json.loads(next(x[len(prefix):] for x in text.splitlines() if x.startswith(prefix)))
-    path=HERE/('PLANFIX_CPU_STAGE_PASS.json' if a.action=='stage' else 'PLANFIX_CPU_PORT_QUALIFIED.json' if a.action=='qualify' else 'PLANFIX_CPU_DISPATCH.json')
+    path=HERE/('PLANFIX_CPU_STAGE_PASS.json' if a.action=='stage' else 'PLANFIX_CPU_PORT_QUALIFIED.json' if a.action=='qualify' else 'PLANFIX_CPU_EXECUTION_REGISTERED.json' if a.action=='register' else 'PLANFIX_CPU_DISPATCH.json')
     with path.open('x') as out:json.dump(receipt,out,indent=2,sort_keys=True)
     note('cpuV',f'CPU {a.action} receipt verified; original WM/scoring, eight fresh gates then one speed search, no SUMO or bank switch')
