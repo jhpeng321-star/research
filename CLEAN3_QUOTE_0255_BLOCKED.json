@@ -1,0 +1,115 @@
+{
+  "schema": "coopmwm.clean3.quote_margin.v1",
+  "created": "2026-11-06T02:55+08:00",
+  "rule": "MAIN 02:43: every phase sized for full u1-u24 with >=15% margin; total <= cap - prior - mining - plan_fix reservation",
+  "budget_sha256": "b86feb40b8c44fbd524705f55015313b994e7613ced060e98ba684c733912085",
+  "native_quote_sha256": "47609c6bca57f2eab97568f6513d322583ce090b4194290ca1bd1d32c494b043",
+  "updates": 24,
+  "arms": [
+    "A",
+    "B",
+    "R"
+  ],
+  "margin_min": 0.15,
+  "phases": {
+    "v2v_train_waves": {
+      "schedule": "u1-u24 A/B/R",
+      "base_sim_s": 1382400,
+      "allocated_sim_s": 1590000,
+      "margin_fraction": 0.1502,
+      "basis": "clean2 measured 57600/update (A+B+R training episodes), u1..u18 constant"
+    },
+    "v2v_practice_refs": {
+      "schedule": "u1-u24 B/R practice references",
+      "base_sim_s": 345600,
+      "allocated_sim_s": 398400,
+      "margin_fraction": 0.1528,
+      "basis": "clean2 measured 14400/update practiceref rows"
+    },
+    "v2v_lessons": {
+      "schedule": "u6,u12,u18,u24",
+      "base_sim_s": 35040,
+      "allocated_sim_s": 40800,
+      "margin_fraction": 0.1644,
+      "basis": "cpuV native manifests 4 x 8760 (CLEAN3_QUOTE_STOPPED_SESSION4)"
+    },
+    "early_probes": {
+      "schedule": "u2,u4",
+      "base_sim_s": 45480,
+      "allocated_sim_s": 52800,
+      "margin_fraction": 0.1609,
+      "basis": "native manifests 2 x 22740"
+    },
+    "isolated_replicated": {
+      "schedule": "u6,u12,u24 (N=5)",
+      "base_sim_s": 143760,
+      "allocated_sim_s": 165600,
+      "margin_fraction": 0.1519,
+      "basis": "native manifests 3 x 47920"
+    },
+    "v2v_interim": {
+      "schedule": "u8 paired evaluation",
+      "base_sim_s": 345600,
+      "allocated_sim_s": 398400,
+      "margin_fraction": 0.1528,
+      "basis": "3 arms x 96 test episodes x 1200 (clean2 measured 345600)"
+    },
+    "v2v_final": {
+      "schedule": "u24 paired evaluation A/B/R",
+      "base_sim_s": 345600,
+      "allocated_sim_s": 398400,
+      "margin_fraction": 0.1528,
+      "basis": "3 arms x 96 test episodes x 1200"
+    },
+    "v2v_final_laneon_mappo_aecd7d70": {
+      "schedule": "u24 extra frozen baseline (descriptive)",
+      "base_sim_s": 115200,
+      "allocated_sim_s": 133200,
+      "margin_fraction": 0.1562,
+      "basis": "owner 01:16: lane-on MAPPO aecd7d70 on the same 96 paired worlds"
+    },
+    "g4_synergy_credit": {
+      "schedule": "u1-u24 sparse joint-macro counterfactuals B=R",
+      "base_sim_s": 153600,
+      "allocated_sim_s": 230400,
+      "margin_fraction": 0.5,
+      "basis": "G4 two-actor full quote 153600; registered hard cap 230400 covers worst case"
+    },
+    "g1_certification": {
+      "schedule": "pre-launch, 8 ctx/arm x 2 arms x 2 seeds",
+      "base_sim_s": 153600,
+      "allocated_sim_s": 230400,
+      "margin_fraction": 0.5,
+      "basis": "G1_BUDGET preferred two-actor 153600; registered cap 230400 = worst case (4 solos)"
+    },
+    "gate_bank_verification_ext": {
+      "schedule": "pre-launch, run once, no retry",
+      "base_sim_s": 15160,
+      "allocated_sim_s": 18000,
+      "margin_fraction": 0.1873,
+      "basis": "native gate manifest 26 branches"
+    },
+    "track2_smoke": {
+      "schedule": "pre-launch, all levers ON",
+      "base_sim_s": 20000,
+      "allocated_sim_s": 24000,
+      "margin_fraction": 0.2,
+      "basis": "registered smoke cap 20000 (clean2 actual 14400)"
+    }
+  },
+  "total_allocated_sim_s": 3680400,
+  "cap_sim_s": 6500000,
+  "prior_charged_sim_s": 3098640,
+  "plan_fix_reserved_unspent_sim_s": 566400,
+  "mining_phase_sim_s": 500000,
+  "available_for_clean3_sim_s": 2334960,
+  "fits": false,
+  "shortfall_sim_s": 1345440,
+  "alt_if_full_600000_plan_fix_reserved": {
+    "available_sim_s": 2301360,
+    "shortfall_sim_s": 1379040
+  },
+  "status": "BLOCKED_BUDGET",
+  "launch_authorized": false,
+  "new_sim_s": 0
+}

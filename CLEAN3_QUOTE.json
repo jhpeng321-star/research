@@ -1,8 +1,8 @@
 {
   "schema": "coopmwm.clean3.quote_margin.v1",
-  "created": "2026-11-06T02:55+08:00",
+  "created": "2026-11-06T03:03:50+08:00",
   "rule": "MAIN 02:43: every phase sized for full u1-u24 with >=15% margin; total <= cap - prior - mining - plan_fix reservation",
-  "budget_sha256": "b86feb40b8c44fbd524705f55015313b994e7613ced060e98ba684c733912085",
+  "budget_sha256": "abd7704284ec3698bdeefb8d86415f61daccb157f79ddb820b1444b13e6ae9e3",
   "native_quote_sha256": "47609c6bca57f2eab97568f6513d322583ce090b4194290ca1bd1d32c494b043",
   "updates": 24,
   "arms": [
@@ -98,18 +98,18 @@
     }
   },
   "total_allocated_sim_s": 3680400,
-  "cap_sim_s": 6500000,
+  "cap_sim_s": 7300000,
   "prior_charged_sim_s": 3098640,
-  "plan_fix_reserved_unspent_sim_s": 566400,
+  "plan_fix_reserved_unspent_sim_s": 0,
   "mining_phase_sim_s": 500000,
-  "available_for_clean3_sim_s": 2334960,
-  "fits": false,
-  "shortfall_sim_s": 1345440,
+  "available_for_clean3_sim_s": 3701360,
+  "fits": true,
+  "shortfall_sim_s": 0,
   "alt_if_full_600000_plan_fix_reserved": {
-    "available_sim_s": 2301360,
-    "shortfall_sim_s": 1379040
+    "available_sim_s": 3101360,
+    "shortfall_sim_s": 579040
   },
-  "status": "BLOCKED_BUDGET",
-  "launch_authorized": false,
+  "status": "PASS",
+  "launch_authorized": true,
   "new_sim_s": 0
 }

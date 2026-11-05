@@ -53,12 +53,12 @@ phase('track2_smoke', 'pre-launch, all levers ON', 20000, basis='registered smok
 
 total = sum(p['allocated_sim_s'] for p in phases.values())
 prior = 3098640           # clean1 1248480 (incl. plan_fix 33600) + clean2 1849200 + parity 960, cpuV ledgers 02:47
-plan_fix_reserved = 566400 # 600000 plan_fix phase minus 33600 already spent inside clean1
+plan_fix_reserved = 0 if budget.get('plan_fix_reservation_released') else 566400  # owner 03:0x 'approve' released it
 mining = 500000
 cap = budget['total_cap_sim_s']
 available = cap - prior - plan_fix_reserved - mining
 fits = total <= available
-quote = dict(schema='coopmwm.clean3.quote_margin.v1', created='2026-11-06T02:55+08:00',
+quote = dict(schema='coopmwm.clean3.quote_margin.v1', created=__import__('datetime').datetime.now().astimezone().isoformat(timespec='seconds'),
     rule='MAIN 02:43: every phase sized for full u1-u24 with >=15% margin; total <= cap - prior - mining - plan_fix reservation',
     budget_sha256=hashlib.sha256((repo/'BUDGET_CLEAN3.json').read_bytes()).hexdigest(),
     native_quote_sha256=hashlib.sha256((repo/'CLEAN3_QUOTE_STOPPED_SESSION4.json').read_bytes()).hexdigest(),
