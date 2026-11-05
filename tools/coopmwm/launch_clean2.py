@@ -223,6 +223,12 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1):
         clean1_ledger_prefix_sha256=prefix, source_commit=source_manifest['commit'],
         inherited_safety_receipts=safety_receipts,
         inherited_safety='A full original; B/R composite report-only; any collision/teleport pauses')
+    cfg['clean2_reporting_definition'] = dict(primary_metric='policy_cooperation_gain_veh_s',
+        primary_quantity='group-over-best-single synergy',
+        primary_formula='min_i(J_solo_i) - J_all',
+        primary_rule='u24 pooled B synergy CI95 lower > 0 and original no-safety-regression criterion',
+        descriptive_metric='delta_all_new_veh_s',descriptive_quantity='total benefit vs common base',
+        descriptive_formula='J_reference - J_all',criterion_definition_unchanged=True)
     # Run the actual final reader paths, including accepted breadth hooks. Every
     # selected input must exist and be covered by the new root's own manifest.
     actual = set()
@@ -279,6 +285,7 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1):
             owner_registration_quote='2026-11-05 15:23 Owner (chat, verbatim): "restart"; new root clean2 after F1-F6 + smoke + gate; budget = remaining within the 5M cap.',
             budget=budget, design='A plain MAPPO; B/R same accepted F1-F6 execution/reward/breadth, guidance differs; dense WM and WM credit OFF; augmentation OFF both',
             criterion=rc.criterion_document(), monitor=cfg['learning_monitor'],
+            reporting=cfg['clean2_reporting_definition'],
             seeds='original registered TRAIN worlds only; full windows, u2/u4 probes; N5 u6/u12/u24; paired u8/u24',
             safety=cfg['clean2_restart']['inherited_safety'], clean1_preserved=True), sort_keys=True)+'\n')
     stopped_clean1(clean1)
