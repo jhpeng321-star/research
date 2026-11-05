@@ -1,0 +1,20 @@
+{
+  "schema": "coopmwm.clean3.recovery_qualification.v1",
+  "adopted_commit": "b98d7f56e0bfc9d7722f747fad73e0ea802d3e14",
+  "adopted_dispatch_pid": 18780,
+  "qualification": {
+    "returncode": 1,
+    "passed": 1722,
+    "failed": 1,
+    "skipped": 4,
+    "subtests_passed": 14,
+    "unchanged_source_head": true,
+    "failure": "test_cpuv_ssh_cpu.py::test_real_processes_share_gate_and_attempt_spacing: measured 0.1199305 seconds versus required >=0.14",
+    "raw_log": "_out/clean3_cpu_b98d7f56/pytest.log"
+  },
+  "g1_adapter_focused_tests": {"passed": 7, "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -B -m pytest -q tools/coopmwm/test_g1_certification_cpu.py --tb=short"},
+  "remote_owner_stop_receipt": "CLEAN3_RESUME_OWNER_STOP_VERIFIED.json",
+  "read_only_bank_inventory": "CLEAN3_BANK_INVENTORY_RESULT.json",
+  "new_sim_s": 0,
+  "launch_authorized": false
+}
