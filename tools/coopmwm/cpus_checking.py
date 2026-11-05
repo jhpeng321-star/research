@@ -41,6 +41,21 @@ from pathlib import Path
 SHIM = 'libmkl_intel_shim.so'
 
 
+def ssh_command(host, remote, *, timeout=600):
+    legacy = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=20', host, remote]
+    if str(host).lower() == 'cpuv':
+        from tools.coopmwm.cpuv_ssh import command
+        return command(host, remote, timeout=timeout)
+    return legacy
+
+
+def rsync_shell(host, *, timeout=None):
+    if str(host).lower() == 'cpuv':
+        from tools.coopmwm.cpuv_ssh import rsync_shell as multiplexed
+        return multiplexed(host, timeout=timeout)
+    return 'ssh -o BatchMode=yes -o ConnectTimeout=20'
+
+
 # ---------------------------------------------------------------- RPC client (cpuS -> cpuQ)
 
 class RpcError(RuntimeError):
@@ -52,8 +67,9 @@ def rpc(cfg, op, payload=None, timeout=600):
               f"MKL_NUM_THREADS=1 nice -n 19 {cfg['q_python']} -B {cfg['q_control']}/cpus_rpc.py "
               f"{cfg['q_control']} {op}")
     try:
-        p = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=20', cfg['q_host'], remote],
-                           input=json.dumps(payload or {}), capture_output=True, text=True, timeout=timeout)
+        p = subprocess.run(ssh_command(cfg['q_host'], remote, timeout=timeout),
+                           input=json.dumps(payload or {}), capture_output=True, text=True,
+                           timeout=None if str(cfg['q_host']).lower() == 'cpuv' else timeout)
     except subprocess.TimeoutExpired as error:
         raise RpcError(f'rpc {op} timeout') from error
     if p.returncode != 0:
@@ -266,7 +282,7 @@ def push_decision(cfg, arm, vid, log):
     def send(paths, name):
         lst.with_suffix(f'.{name}.txt').write_text(''.join(str(p).lstrip('/')+'\n' for p in paths))
         cmd = ['rsync', '-a', '--ignore-existing', '--files-from', str(lst.with_suffix(f'.{name}.txt')),
-               '-e', 'ssh -o BatchMode=yes -o ConnectTimeout=20', '/', f'{cfg["q_host"]}:/']
+               '-e', rsync_shell(cfg['q_host'], timeout=1800), '/', f'{cfg["q_host"]}:/']
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
         if p.returncode != 0:
             raise RpcError(f'rsync {name} exit {p.returncode}: {p.stderr[-500:]}')
@@ -277,7 +293,7 @@ def push_decision(cfg, arm, vid, log):
         return dict(status='verify_failed_files', bad=bad[:20], n_bad=len(bad))
     # stage the record OUTSIDE the bank, compare reader views, only then publish it into the bank
     staged = f"{cfg['q_control']}/staged_records/{arm}_{vid}.json"
-    p = subprocess.run(['rsync', '-a', '-e', 'ssh -o BatchMode=yes -o ConnectTimeout=20', str(rec_path),
+    p = subprocess.run(['rsync', '-a', '-e', rsync_shell(cfg['q_host'], timeout=600), str(rec_path),
                         f'{cfg["q_host"]}:{staged}'], capture_output=True, text=True, timeout=600)
     if p.returncode != 0:
         raise RpcError(f'rsync staged record exit {p.returncode}: {p.stderr[-500:]}')

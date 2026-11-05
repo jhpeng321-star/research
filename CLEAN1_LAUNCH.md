@@ -57,3 +57,123 @@ entry and exact clearance procedure in AUTHORITY before publishing that receipt.
 Preserve completed episodes, checkpoints, original stops/owners and charges;
 resume only after fresh no-live-owner checks. Reuse collected B u9 episodes
 before its still-unperformed optimization, with no replay or recharge.
+
+## F6: cpuV SSH connection discipline (all agents and runtime clients)
+
+Use `tools.coopmwm.cpuv_ssh` for **every cpuV command, status read, staging copy,
+and download**. All callers use the existing `cpuV` SSH alias, the same OS user,
+and the same Linux/WSL client environment. Direct `ssh cpuV`, `scp cpuV:...`,
+direct-address connections, alternate aliases, and per-agent retry/poll loops
+bypass admission and must be replaced by this wrapper. Clean1 arm/monitor workers
+already run locally on cpuV; monitoring should read a combined receipt per call,
+not open an SSH connection per arm or per file.
+
+The wrapper shares `/tmp/c4-cpuv-<uid>/master.sock` across all worktrees and agents
+on that client. The directory must be a real, user-owned mode-0700 directory.
+It creates one `ControlMaster=yes` connection with `ControlPersist=600` seconds.
+A cross-process OS lock permits **one active command/transfer at a time** and
+times out waiting callers after 60 seconds. Every potential network attempt
+(master creation and command/transfer) is separated by **at least 2 seconds**;
+failed attempts also consume the interval. There is one connection attempt per
+SSH process, a 20-second connect timeout, and no wrapper retries. Concurrent
+clients must share this directory; do not create separate pools by arm, run, or PID.
+
+Each operation publishes a durable `active.json` reservation **before** starting
+a local session supervisor. That supervisor starts the actual SSH/SCP process,
+watches the wrapper's lifetime, and terminates/reaps the owned session on wrapper
+cancellation, wrapper death, or deadline expiry. On POSIX, cancellation targets
+the session's separate process group (including SCP's SSH child); the shared
+persistent master is outside that group. The reservation clears only after
+cleanup. A second caller checks it even if a dead wrapper has released its OS
+lock, so killing the wrapper PID cannot admit an overlapping session. Streams
+and rsync use this same session supervision. An rsync `rsh` wrapper additionally
+watches its actual rsync parent: parent exit (including an outer transfer timeout)
+requests session cleanup and the wrapper then exits. Owner checks also cover
+gate/reservation/rate waits and master setup, rather than relying on pipe closure.
+
+Each session checks the existing master under the lock and uses
+`ControlMaster=no`, the same `ControlPath`, and `ProxyCommand=false`. If the master
+dies between check and dispatch, the session fails instead of silently opening
+another TCP connection. Upload/download and rsync use the same gate/socket.
+Host-key verification stays strict; existing identity/hostname/port settings are
+read from the client's existing SSH configuration. The wrapper does not modify
+local SSH configuration or any remote configuration. **No sshd/MaxStartups change
+is authorized by F6; any such change requires explicit owner approval.**
+
+### Client setup and commands (for the later authorized operator)
+
+Run from the staged checkout root with Linux/WSL Python and Linux/WSL OpenSSH,
+where the existing `cpuV` alias, identity and known-host record are already
+available. Native Windows OpenSSH does not implement the required multiplexing;
+the wrapper refuses it before starting SSH. A Windows agent must run the entire
+wrapper in the shared WSL environment, rather than call Windows `ssh.exe`.
+For this worktree its WSL checkout path is `/mnt/e/agent-work/c4-fix-ssh`.
+
+```bash
+# Examples only; run only when remote operation is authorized.
+python -B -m tools.coopmwm.cpuv_ssh run -- 'printf "cpuV mux ready\n"'
+python -B -m tools.coopmwm.cpuv_ssh --timeout 60 run -- 'cat /path/to/CLEAN1_STATUS.md'
+python -B -m tools.coopmwm.cpuv_ssh put ./release.tgz /absolute/staging/release.tgz
+python -B -m tools.coopmwm.cpuv_ssh get ./status-copy.md /absolute/run/CLEAN1_STATUS.md
+rsync -a -e 'python -B -m tools.coopmwm.cpuv_ssh --timeout 1800 rsh' ./release/ cpuV:/absolute/staging/
+```
+
+`run -- '...'` passes one remote-shell command unchanged and inherits binary-safe
+stdin/stdout/stderr. When passed multiple words, the wrapper shell-quotes each
+word. Both `put` and `get` take **local path first, absolute remote path second**.
+The CLI defaults to a 180-second **end-to-end** timeout, including admission,
+master checks/creation, rate spacing and the session. `command(..., timeout=...)`
+also carries an absolute monotonic deadline across wrapper startup.
+`rsync_shell(host, timeout=...)` does the same before starting the local rsync
+owner. Both checker transfers pass their existing budgets (1800 seconds for files,
+600 for the staged record), retaining the outer rsync timeout as well.
+`--timeout 0` removes the session duration limit; an `rsh` wrapper still watches
+its rsync parent's lifetime. The admission and connect bounds still apply.
+Existing cpuV RPC callers forward their deadline to
+the wrapper and wait for supervised cleanup instead of running a competing outer
+timeout. Cleanup may extend return time beyond the execution deadline (normally
+up to one second of termination grace plus process reaping). An external owner
+can still terminate the wrapper; its supervisor independently cleans up before
+releasing admission. If an outer timeout kills only rsync, the surviving rsh
+wrapper detects owner death while polling (50 ms), requests cleanup, waits for
+the supervisor to reap the session, and exits. The outer caller may return before
+that cleanup completes; `active.json` continues excluding new sessions until
+reaping is confirmed. There is no operation replay. This owner-death path and the
+inner deadline both preserve the separate persistent master.
+The Python API is `Transport.run(command, ...)` / `Transport.copy(local, remote,
+upload=..., ...)`; `command(host, command)` provides a gated argv for existing
+subprocess/Popen clients. The shared `tools.coopbandit.ops.remote` used by
+`tools.coopmwm.ops.ssh` automatically routes cpuV through that argv; Python-script
+callers must bind `PYTHON['cpuV']` to the qualified remote interpreter first.
+The configurable RPC/rsync checker and host-parameterized stream bridges use the
+same routing. Other hosts retain their existing command lines.
+
+Transport failure is **not** evidence that a remote command did not execute.
+Do not automatically replay launches, reservations or other mutations. Read the
+existing authoritative receipt/owner first through a later gated call. A failed
+command returns its exit status; wrapper/master/timeouts return 255 with a stderr
+diagnostic. A later explicit call may recreate a dead master, under the same
+lock/rate limit. Do not remove live sockets, force-close shared masters, or shorten
+poll/retry intervals to recover from flapping. In idle periods the master expires
+itself after 600 seconds.
+
+If the supervisor itself is killed, or startup is interrupted after reservation
+publication, `active.json` deliberately remains and future admission times out
+with an operator-recovery diagnostic. **Do not delete it based on age or on the
+wrapper PID being gone.** The authorized operator must inspect the local process
+tree and confirm the supervisor and its entire owned SSH/SCP session group have
+exited (terminate/reap only those owned processes if necessary), then remove only
+that stale reservation while all clients are stopped. Preserve `last_attempt.json`
+and the shared master/socket. Reconcile any remote mutation from its authoritative
+receipt before making another request; recovery never replays the command.
+
+This infrastructure is arm-independent: it does not inspect/change arm A policy,
+reward, RNG, bank or training configuration, and B/R use the same transport rules.
+F6 qualification includes real local-process wrapper cancellation, abrupt death,
+RPC deadline/cleanup, transfer and stream lifetime, and lock contention. Rsync
+regressions include an extra live owner above the rsh wrapper, owner termination
+and kill, actual `subprocess.run` outer timeout, and the inner transfer deadline;
+they assert exclusion through session reaping, wrapper exit, gate reuse and one
+dispatch only. All network commands are replaced by local Python children.
+Live Linux/WSL connection
+qualification is still required before use.

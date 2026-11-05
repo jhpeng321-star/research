@@ -90,7 +90,7 @@ assert h.hexdigest()==h2.hexdigest()
 print(json.dumps(dict(path=str(p),sha256=h2.hexdigest(),bytes=n)))'''
     def command(host,code):
         payload=base64.b64encode(code.encode()).decode()
-        return ['ssh','-o','BatchMode=yes',host,ops.ssh.PYTHON[host]+f' -c "import base64;exec(base64.b64decode(\'{payload}\'))"']
+        return ops.ssh.command(host,ops.ssh.PYTHON[host]+f' -c "import base64;exec(base64.b64decode(\'{payload}\'))"')
     a=subprocess.Popen(command('cpuQ',source),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     b=subprocess.Popen(command('gpuA',destination),stdin=a.stdout,stdout=subprocess.PIPE,stderr=subprocess.PIPE);a.stdout.close()
     out,err=b.communicate();aerr=a.stderr.read();arc=a.wait()

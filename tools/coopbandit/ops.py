@@ -12,10 +12,18 @@ ROOT = '/home/ubuntu/coopbandit20261031_v1'
 PYTHON = dict(cpuQ='/home/ubuntu/miniconda3/bin/python', gpuR='/root/miniconda3/bin/python')
 
 
+def command(host, remote_command, *, timeout=None):
+    if str(host).lower() == 'cpuv':
+        from tools.coopmwm.cpuv_ssh import command as multiplexed
+        return multiplexed(host, remote_command, timeout=timeout)
+    return ['ssh', '-o', 'BatchMode=yes', host, remote_command]
+
+
 def remote(host, source, timeout=180):
     code = 'import sys;exec(compile(sys.stdin.read(),\'<coopbandit-remote>\',\'exec\'))'
-    r = subprocess.run(['ssh', '-o', 'BatchMode=yes', host, PYTHON[host]+' -c "'+code+'"'],
-                       input=source, capture_output=True, text=True, timeout=timeout)
+    r = subprocess.run(command(host, PYTHON[host]+' -c "'+code+'"', timeout=timeout),
+                       input=source, capture_output=True, text=True,
+                       timeout=None if str(host).lower() == 'cpuv' else timeout)
     if r.returncode:
         raise RuntimeError(r.stdout+r.stderr)
     return r.stdout

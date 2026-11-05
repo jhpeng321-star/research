@@ -47,7 +47,7 @@ class Service:
         command=('/root/miniconda3/bin/python -B -u -c '
             '"import sys;sys.path.insert(0,\''+GPU_ROOT+'/pytools\');'
             'from pathlib import Path;from tools.coopmwm.service import main;main(Path(\''+GPU_ROOT+'\'))"')
-        self.process=subprocess.Popen(['ssh','-o','BatchMode=yes',host,command],stdin=subprocess.PIPE,
+        self.process=subprocess.Popen(ops.ssh.command(host,command),stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,stderr=log,text=True,encoding='utf-8',bufsize=1)
         write(EVIDENCE/f'GPU_{host}_{TAG}_SSH_OWNER.json',dict(pid=self.process.pid,host=host,root=GPU_ROOT,unix=time.time()))
         ready=self.receive('READY');write(EVIDENCE/f'GPU_{host}_{TAG}_READY.json',ready)
