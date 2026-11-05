@@ -20,6 +20,22 @@
     "duration_s": 109.88,
     "resume_note": "Existing implementation, completed CPU checks, renewed readiness commit and independent acceptance reconciled on resume; no implementation changes or repeated test jobs were needed"
   },
+  "resume_verification": {
+    "date": "2026-11-05",
+    "starting_head": "df248b24d1e3fa1cf9612581d402c496f958fdad",
+    "accepted_implementation_commit": "3b486f202198f3b7720cceba1f0df0b580da2962",
+    "changes_since_accepted_commit": ["F4_READY.json"],
+    "tracked_worktree_changes_on_resume": [],
+    "task_python_process_check": "No python.exe, pythonw.exe or pytest.exe process with this worktree in its command line",
+    "diff_check": "git diff --check c4/track-base: passed",
+    "test_disposition": "Reused completed implementation and independent-review CPU results; accepted implementation and tests are unchanged",
+    "preserved_untracked_receipts": [
+      "F4_ACCEPTED.json",
+      "F4_READY.blocked0_1793864883.json",
+      "REVIEW_F4_r0.md",
+      "REVIEW_F4_r1.md"
+    ]
+  },
   "commits": [
     {
       "sha": "b734b151f8f05050374f995ad9a04e04c62bd574",
@@ -36,6 +52,10 @@
     {
       "sha": "3b486f202198f3b7720cceba1f0df0b580da2962",
       "subject": "C4 F4: renew readiness after blocker fixes and CPU regression checks"
+    },
+    {
+      "sha": "df248b24d1e3fa1cf9612581d402c496f958fdad",
+      "subject": "C4 F4: record independent acceptance in readiness receipt"
     }
   ],
   "resolved_blockers": [
