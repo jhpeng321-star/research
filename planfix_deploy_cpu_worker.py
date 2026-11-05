@@ -4,16 +4,18 @@ import base64
 import hashlib
 import json
 from pathlib import Path
-from planfix_ops import remote,note
+from planfix_ops import remote,note,TEMP
 from planfix_cpu_prepare import blob
 
 HERE=Path(__file__).parent
 ROOT='/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1'
 
 STAGE=r'''
-import base64,hashlib,json,os,shutil,subprocess,sys,time
+import base64,hashlib,json,os,shutil,subprocess,sys,time,zlib
 from pathlib import Path
 w=Path('/home/ubuntu/coopmwm20261105_clean1/plan_fix');root=Path(__ROOT__)
+packed=Path(__ARCHIVE__).read_bytes();assert hashlib.sha256(packed).hexdigest()==__ARCHIVE_SHA__
+files=json.loads(zlib.decompress(packed))
 assert not root.exists(),'fresh stage only; inspect existing receipt, never overwrite'
 if root.name!='cpu_wm_v1':
  previous=w/('cpu_wm_v'+str(int(root.name.rsplit('v',1)[1])-1))
@@ -46,7 +48,7 @@ legacy=Path('/home/ubuntu/coopmwm20261104_launchcoop_src7')
 for name in ('FROZEN_COSTS.json','FROZEN_MOTION_SOURCE.py'):shutil.copyfile(legacy/name,root/name)
 fix=root/'fix/configs';fix.mkdir(parents=True)
 shutil.copyfile(w/'cpu_bootstrap_recovered/execparity_cav_idm_v1.json',fix/'execparity_cav_idm_v1.json')
-for name,value in __FILES__.items():
+for name,value in files.items():
  target=root/name;target.parent.mkdir(parents=True,exist_ok=True)
  with target.open('xb') as out:out.write(base64.b64decode(value));out.flush();os.fsync(out.fileno())
 pace={}
@@ -224,7 +226,24 @@ if __name__=='__main__':
             relative='src/wms/model/'+name
             files['runtime/'+relative]=base64.b64encode(blob('22cc32f6',relative)).decode()
         files['runtime/tools/rbfit/idm_fit.py']=base64.b64encode(blob('22cc32f6','tools/rbfit/idm_fit.py')).decode()
-    code=(STAGE.replace('__FILES__',repr(files)) if a.action=='stage' else STATUS if a.action=='status' else QUALIFY if a.action=='qualify' else REGISTER if a.action=='register' else DISPATCH).replace('__ROOT__',repr(ROOT))
+    code=(STAGE if a.action=='stage' else STATUS if a.action=='status' else QUALIFY if a.action=='qualify' else REGISTER if a.action=='register' else DISPATCH).replace('__ROOT__',repr(ROOT))
+    if a.action=='stage':
+        import zlib,subprocess
+        packed=zlib.compress(json.dumps(files,sort_keys=True).encode(),9);digest=hashlib.sha256(packed).hexdigest()
+        package=TEMP/f'planfix_cpu_worker_{digest[:12]}.z';assert TEMP.is_dir()
+        if package.exists():assert package.read_bytes()==packed
+        else:
+            with package.open('xb') as out:out.write(packed)
+        destination='/home/ubuntu/coopmwm20261105_clean1/plan_fix/'+package.name
+        checked=remote('cpuV',f"from pathlib import Path;import hashlib;p=Path({destination!r});print('PACKAGE',p.exists(),hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else '')",timeout=25)
+        if 'PACKAGE True '+digest not in checked:
+            assert 'PACKAGE False' in checked
+            result=subprocess.run(['wsl','-d','Ubuntu-22.04','--','python3','-B',
+                '/mnt/e/agent-work/c4-variety-collect/planfix_cpuv_transport.py','--timeout','35',
+                '--put','/mnt/e/Temp/opencode/'+package.name,destination],capture_output=True,timeout=95)
+            print(result.stdout.decode(errors='replace'),result.stderr.decode(errors='replace'),flush=True)
+            assert result.returncode==0,'inspect package SHA before any repeat'
+        code=code.replace('__ARCHIVE__',repr(destination)).replace('__ARCHIVE_SHA__',repr(digest))
     if a.action=='register':
         name='PLANFIX_CPU_EXECUTION_REGISTRATION.md' if a.generation==1 else f'PLANFIX_CPU_V{a.generation}_REGISTRATION.md'
         code=code.replace('__REG__',repr(base64.b64encode((HERE/name).read_bytes()).decode()))
