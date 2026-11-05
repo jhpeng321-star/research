@@ -71,6 +71,11 @@ def visit(cfg, arm, consumer):
     if arm not in ('B', 'R'):
         return
     from . import track2_backend as p1
+    certified = None
+    if cfg.get('executable_label_manifest'):
+        from . import executable_labels as el
+        el._sha(cfg.get('executable_label_runtime_sha256'))
+        certified = el.read_manifest(cfg['executable_label_manifest'])
     seen = set()
     for source in inputs(cfg):
         local = dict(cfg, **source)
@@ -99,7 +104,18 @@ def visit(cfg, arm, consumer):
                 return
             seen.add(key)
             p1._path(trace)
-            consumer(cfg=local, receipt=receipt, example=example, plan=plan, pairs=pairs, trace=trace)
+            bound = local
+            if certified is not None:
+                try:
+                    snap, _ = verified_restart(local['run_root'], arm, receipt, example, plan)
+                except UnboundContext:
+                    return
+                lesson = el.bank_certificate(certified, arm=arm, receipt=receipt, example=example,
+                    plan=plan, **el.restart_binding(snap), runtime_sha256=cfg['executable_label_runtime_sha256'])
+                if lesson is None:
+                    return
+                bound = dict(local, _executable_lesson=lesson)
+            consumer(cfg=bound, receipt=receipt, example=example, plan=plan, pairs=pairs, trace=trace)
         with p1._bank_view(local) as rb:
             rb.bank_pairs(Path(local['run_root']), arm, local['training_seed'],
                 sources=local.get('replay_sources', {}).get(arm, ()), v2v=True,
@@ -222,10 +238,18 @@ def load_verified_restart(arm, lookup):
         snapshot, binding = verified_restart(root, arm, current, lookup['example'], lookup['plan'])
         if binding != lookup.get('verification_binding'):
             raise ValueError('verified restart immutable verification evidence changed')
+        if lookup['bank_cfg'].get('executable_label_manifest'):
+            from . import executable_labels as el
+            value = el.read_manifest(lookup['bank_cfg']['executable_label_manifest'])
+            lesson = el.bank_certificate(value, arm=arm, receipt=current, example=lookup['example'],
+                plan=lookup['plan'], **el.restart_binding(snapshot),
+                runtime_sha256=lookup['bank_cfg']['executable_label_runtime_sha256'])
+            if lesson is None or lesson['lesson_sha256'] != lookup.get('executable_lesson_sha256'):
+                raise ValueError('G1 frozen practice executable certificate changed/missing')
     return snapshot
 
 
-def observable_contexts(policy, plan, pairs, frames, *, t0):
+def observable_contexts(policy, plan, pairs, frames, *, t0, certification=None):
     """Earliest usable frame per acting member, rather than pairs[0] only.
 
     Each member is supervised once per example. A later frame gets the remaining
@@ -234,13 +258,17 @@ def observable_contexts(policy, plan, pairs, frames, *, t0):
     reconstructed with the same causal policy observer as online execution.
     """
     from . import moves
-    label = moves.from_plan(plan)
+    label = moves.from_plan(plan) if certification is None else moves.Move.from_dict(certification['macro'])
     remaining = set(label.members)
     reader = deepcopy(policy)
     observed = set()
     for sample, weight in sorted(pairs, key=lambda pair: int(pair[0]['intent_link']['t'])):
         time = int(sample['intent_link']['t'])
         elapsed = time-int(t0)
+        if certification is not None:
+            if time != certification['decision_s']:
+                continue
+            elapsed = 0  # The certificate binds this EXACT decision's target.
         active = max(0, elapsed-label.onset)
         if elapsed < 0 or (label.family != 'none' and label.hold-active < moves._HOLD_LO):
             continue
@@ -254,6 +282,13 @@ def observable_contexts(policy, plan, pairs, frames, *, t0):
         keep = [v for v in source['members'] if v in remaining
                 and set(label.members) <= set(reader.visible.get(v, ()))
                 and v in reader.local_intents]
+        if certification is not None:
+            keep = [v for v in keep if v == certification['local']['self']]
+            # Re-observed rows must agree with the certificate's causal local view.
+            def observed_rows(rows):
+                return sorted(({k: r[k] for k in moves._ROW_KEYS} for r in rows), key=lambda r: r['vid'])
+            if keep and observed_rows(reader.local_states[keep[0]]['rows']) != observed_rows(certification['local']['rows']):
+                continue
         if not keep:
             continue
         # Remaining onset is relative to this observed context, not original t0.
@@ -283,16 +318,22 @@ def practice_pool(cfg, arm):
             return
         seed = int((example or {}).get('seed_index', 1))
         vid = receipt['verification_id']
-        bank_cfg = {k: cfg[k] for k in ('run_root', 'training_seed', 'replay_sources', 'bank_rule') if k in cfg}
+        bank_cfg = {k: cfg[k] for k in ('run_root', 'training_seed', 'replay_sources', 'bank_rule',
+            'executable_label_manifest', 'executable_label_runtime_sha256') if k in cfg}
+        lesson = cfg.get('_executable_lesson')
+        family = lesson['macro']['family'] if lesson else moves.from_plan(plan).family
         row = dict(verification_id=vid,
             example_id=(example or {}).get('example_id', f'{vid}#s1'), seed_index=seed, salt=vid,
             state_id=links.get(vid, {}).get('state_id', f'imported_{vid}'), fallback=False,
-            source='verified_breadth', family=moves.from_plan(plan).family,
+            source='verified_breadth', family=family,
             replication_salt=binding['replication_salt'],
             snapshot_lookup=dict(binding_version=1, run_root=str(root), bank_cfg=bank_cfg,
                 receipt=receipt, example=example, plan=plan, verification_binding=binding),
             snapshot_sha256=sv.snapshot_sha(snap),
-            context_id=digest(dict(snapshot=sv.snapshot_sha(snap), family=moves.from_plan(plan).family)))
+            context_id=digest(dict(snapshot=sv.snapshot_sha(snap), family=family)))
+        if lesson is not None:
+            row['snapshot_lookup']['executable_lesson_sha256'] = lesson['lesson_sha256']
+            row['executable_lesson_sha256'] = lesson['lesson_sha256']
         child = cfg.get('_breadth_augmented', {}).get(row['example_id'])
         if child is not None:
             if child['snapshot_sha256'] != row['snapshot_sha256']:
