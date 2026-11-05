@@ -32,12 +32,12 @@
     "changes": ["T1A_READY.json"]
   },
   "latest_resume_confirmation": {
-    "date": "2026-11-05",
-    "head_at_resume": "c2ae5fe21d81f9e75df9f973221a566483cab6a6",
+    "date": "2026-11-06",
+    "head_at_resume": "0295657a8ce506ac14d5880fbf23caa6cdc8875b",
     "tracked_modifications_at_resume": false,
     "accepted_code_revision": "7a76b8697512889530e544628fc86b1682cd2e41",
     "code_and_tests_unchanged_since_acceptance": true,
-    "evidence": "Read status/log, shared spec, r0/r1 reviews and all task receipts, then checked the current projection/reference implementation and blocker regressions. git diff --name-only 7a76b869 reports only T1A_READY.json; code and tests match the independently tested revision. Both r0 blockers remain resolved; r1 PASS and acceptance at c2ae5fe2 are preserved.",
+    "evidence": "Read status/log first, then shared spec, r0/r1 reviews and all task receipts. Inspected current projection/reference implementation and blocker regressions. git diff --name-only 7a76b8697512889530e544628fc86b1682cd2e41 reports only T1A_READY.json; all tracked implementation, tests and dependencies match the independently tested revision. Both r0 blockers remain resolved; r1 PASS, its 2026-11-06 confirmation at this HEAD, and T1A_ACCEPTED.json are preserved.",
     "diff_check": "git diff --check c4/track-base -- T1A_READY.json tools/coopmwm/moves.py tools/coopmwm/test_moves_cpu.py passed",
     "test_jobs_launched": 0,
     "dispatches_launched": 0,
@@ -90,9 +90,14 @@
       "sha": "c2ae5fe21d81f9e75df9f973221a566483cab6a6",
       "subject": "coopmwm moves: refresh accepted T1A resume receipt",
       "files": ["T1A_READY.json"]
+    },
+    {
+      "sha": "0295657a8ce506ac14d5880fbf23caa6cdc8875b",
+      "subject": "coopmwm moves: confirm preserved T1A acceptance on resume",
+      "files": ["T1A_READY.json"]
     }
   ],
-  "receipt_commit": "The separate commit refreshing this receipt follows c2ae5fe2; see git log on c4/moves.",
+  "receipt_commit": "The separate commit refreshing this receipt follows 0295657a; see git log on c4/moves.",
   "blocker_resolutions": [
     {
       "review_blocker": 1,
