@@ -6,10 +6,14 @@
   "plan_fix": "released (owner 03:00)",
   "prior_clean1_clean2_parity_sim_s": 3098640
  },
- "chain": "G1 batch -> CLEAN3_GO_NOGO (continue regardless) -> mined wait (cutoff 06:30 local) -> prepare root/ledger -> smoke (all levers+fixes) -> gate once (0 collisions/teleports) -> u1-u24 phase coverage -> launch A/B/R u0 x24 + monitor",
- "created": "2026-11-06T04:10+08:00",
+ "chain": "G1 batch -> CLEAN3_GO_NOGO (continue regardless) -> mined wait (>=3 verified joint moves in >=2 families; deadline 12:00 local) -> CONFIRM_WAIT (MAIN LAUNCH_CONFIRMED.json; deadline 12:00) -> prepare root/ledger -> smoke (all levers+fixes) -> gate once (0 collisions/teleports) -> u1-u24 phase coverage -> launch A/B/R u0 x24 + monitor",
+ "created": "2026-11-06T06:35+08:00",
  "criterion": "registered u24 criterion unchanged: pooled B group-over-best-single synergy CI95 lower > 0 and original no-safety-regression criterion; total benefit vs common base reported descriptively",
  "extra_final_baseline": "lane-on MAPPO aecd7d70, frozen, descriptive only (primary comparator speed-only MAPPO)",
+ "g5_runtime": "MAIN 05:30 blocker fixed: accepted G5 env change bound onto the frozen e3final env that every episode imports (tools/coopmwm/g5_runtime.py, overlay SHA 5aac1769..., base SHA 59aecd0b...; COOPMWM_G5_RUNTIME=1 set by the chain); Linux test exercises the real frozen runtime path with lane_actors and byte-identity when absent; smoke requires a real G5 lane move",
+ "launch_hold": "MAIN 05:30: HOLD - after MINED_WAIT the chain waits in CONFIRM_WAIT for control/LAUNCH_CONFIRMED.json {confirmed: true, authority: <MAIN/owner quote>}; deadline 12:00 local -> stop, nothing launched",
+ "mined_exposure_rule": "owner ~05:05 \"make sure the policy is actually SHOWN what the mined plans can do\": smoke (a) executable imitation targets, (b) practice from mined seed situations (smoke: mined families first), (c) tape-verified execution of the mined plan in a demonstration practice episode, (d) G4-format measured synergy rows; R same counts/families with its own examples; per-update mined usage/fit/trigger-rate reports",
+ "mined_launch_rule": "owner ~04:35 \"make sure we actually have good plans to start the training\": launch only when MINED_MOVES.jsonl yields >=3 natively admitted SUMO-verified joint moves (>=2 CAVs, synergy CI95 low>0) covering >=2 families (B and R); hard deadline 12:00 local -> stop and report, no launch without owner confirmation",
  "operator": "Claude launch operator (replaces S-LAUNCH)",
  "owner_quotes": {
   "2026-11-05 23:39": "when the lever finishes, just stop the current run and rerun it",
@@ -18,7 +22,7 @@
   "2026-11-06 02:44": "use your own usage from now on. and 1",
   "2026-11-06 03:00": "approve"
  },
- "previous_chain": "r1 /home/ubuntu/cpuv_setup_20261105/clean3_chain_b7b74545 (pid 428197) stopped by operator in MINED_WAIT before any clean3 physics; its G1 batch ran (0 candidates, 0 sim-s, NO-GO) in /home/ubuntu/coopmwm20261106_clean3_g1cert; reason: smoke lever check bug fixed in a0f9401d",
+ "previous_chain": "r1 /home/ubuntu/cpuv_setup_20261105/clean3_chain_b7b74545 (pid 428197) stopped by operator in MINED_WAIT before any clean3 physics; its G1 batch ran (0 candidates, 0 sim-s, NO-GO) in /home/ubuntu/coopmwm20261106_clean3_g1cert; reason: smoke lever check bug fixed in a0f9401d; r2 /home/ubuntu/cpuv_setup_20261105/clean3_chain_a0f9401d (pid 434007) stopped by operator in MINED_WAIT before any clean3 physics to apply the owner mined-launch rule; its G1 (0 sim-s, NO-GO) in g1cert_r2; r3 /home/ubuntu/cpuv_setup_20261105/clean3_chain_bf3f1d68 (pid 446254) stopped by operator mid-G1 before any clean3 physics (0 rows) to add the owner mined-plan exposure checks; r4 clean3_chain_d27b3d00 (pid 451163) stopped pre-physics mid-G1 for the G5 runtime blocker",
  "quote": {
   "file": "E:/agent-work/c4-rerun-launch/CLEAN3_QUOTE.json",
   "phases": {
