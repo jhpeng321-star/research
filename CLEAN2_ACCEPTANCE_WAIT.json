@@ -1,0 +1,18 @@
+{
+  "status": "F3_INDEPENDENT_REVIEW_PENDING",
+  "accepted": ["F1", "F2", "F4", "F5", "F6"],
+  "F3_branch_head": "fd214af7",
+  "F3_old_reviewer_pid": 31984,
+  "F3_old_reviewer_exited_without_verdict": true,
+  "missing_verdict": "E:/agent-work/c4-fix-breadth/REVIEW_F3_r1.md",
+  "review_driver_gap": "autoreview review phase only handles an existing verdict; it does not restart a dead reviewer with no verdict",
+  "restarted_existing_role": "A-REV-F3",
+  "restart_command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe watchdog.py launch A-REV-F3 resume",
+  "replacement_reviewer_pid": 42408,
+  "model": "openai/gpt-6-astra",
+  "duplicate_running_review": false,
+  "no_process_signals": true,
+  "all_six_acceptance_gate_retained": true,
+  "clean2_physics_dispatched": false,
+  "next": "Adopt F3 verdict/acceptance from the existing reviewer and driver, then integrate all six accepted branches"
+}
