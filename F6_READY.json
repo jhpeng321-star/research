@@ -12,9 +12,10 @@
     "ec7060383b19043ff3263611e172a26775f872f5",
     "4f8bab9fec3b07aa979792eaa0f423eba4b2a5c6",
     "9372e666d021afd363cd3bdf6426105197960015",
-    "dad4d394e9e3ec0501f76a00e48c340c7715817a"
+    "dad4d394e9e3ec0501f76a00e48c340c7715817a",
+    "32350e73ad30a583d7538b083731a20bd324ef17"
   ],
-  "commit_scope": "The r1 review blocker fix, new CPU regressions and revised launch runbook are committed in dad4d394. This regenerated readiness record is committed separately.",
+  "commit_scope": "The r1 review blocker fix, new CPU regressions and revised launch runbook are committed in dad4d394; readiness was renewed in 32350e73. This resumed-session receipt update records the subsequent independent PASS and is committed separately.",
   "review_remediation": {
     "source": "REVIEW_F6_r1.md",
     "original_verdict": "BLOCK",
@@ -37,7 +38,25 @@
       }
     ],
     "remaining_review_blockers": [],
-    "independent_review_of_this_fix": "not yet performed"
+    "independent_review_of_this_fix": {
+      "source": "REVIEW_F6_r2.md",
+      "reviewer": "astra",
+      "verdict": "PASS",
+      "reviewed_head": "32350e73ad30a583d7538b083731a20bd324ef17",
+      "remaining_blockers": [],
+      "acceptance_receipt": "F6_ACCEPTED.json",
+      "tests": {
+        "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider --basetemp E:/Temp/opencode/f6-astra-r2-32350 tools/coopmwm/test_cpuv_ssh_cpu.py tools/coopmwm/test_cpus_checking_cpu.py tools/coopmwm/test_warm_transport_cpu.py",
+        "collected": 59,
+        "passed": 58,
+        "skipped": 1,
+        "failed": 0,
+        "elapsed_seconds": 41.61,
+        "skip_reason": "Unix private-directory permissions/symlink checks require POSIX; test host is Windows",
+        "git_diff_check_c4_track_base": "passed"
+      },
+      "qualification": "Source review and CPU/local-process tests only; live Linux/WSL OpenSSH/rsync interoperability remains pending"
+    }
   },
   "implementation": {
     "module": "tools/coopmwm/cpuv_ssh.py",
@@ -97,6 +116,15 @@
     "skip_reason": "Existing Unix private-directory permissions/symlink check requires POSIX; test host is Windows",
     "coverage": "New real rsync owner-hop lifecycle/deadline cases and admission-owner checks, plus prior direct-wrapper cancellation, RPC cleanup, cross-process gate/rate spacing, binary streams, master/session options, no fallback/replay, fail-closed reservations and legacy routing regressions",
     "git_diff_check": "passed"
+  },
+  "resume_reconciliation": {
+    "starting_head": "32350e73ad30a583d7538b083731a20bd324ef17",
+    "finding": "The previous session completed and committed the requested r1 fix, regression tests, test run and readiness; subsequent independent r2 review passed and acceptance was recorded on disk",
+    "action": "Preserved completed implementation and existing review/acceptance files; refreshed this receipt to include independent verification",
+    "implementation_changes": false,
+    "tests_rerun": false,
+    "reason_tests_not_rerun": "No implementation changes since the independently tested HEAD; resume instructions prohibit redoing finished work",
+    "jobs_or_dispatches_started": 0
   },
   "execution": {
     "cpu_only": true,
