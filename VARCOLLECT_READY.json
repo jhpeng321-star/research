@@ -146,7 +146,10 @@
     "retained_evidence": "Re-opened _out/pytest_varcollect_round4_verified/test_fresh_binding_through_rea0/worker/FRESH_QUALIFICATION.json: pass_ true, all eight receipts pass with zero max_cost_error and PID 40744, explicit Python 3.10 / torch 2.12.1+cpu test environment, and zero new SUMO sim-s.",
     "tests": "Preserved the completed required-suite results above: 301 passed, 9 subtests passed including additional suites. No completed test suite rerun.",
     "jobs": "Local Python/pytest process inspection found no job matching this worktree or the requested suites. No job or dispatch started.",
-    "preservation": "Tracked files and index were clean on entry; both untracked blocked receipts and all existing PLANFIX work are preserved. This resume changes only VARCOLLECT_READY.json using local CPU-only inspection."
+    "preservation": "Tracked files and index were clean on entry; both untracked blocked receipts and all existing PLANFIX work are preserved. This resume changes only VARCOLLECT_READY.json using local CPU-only inspection.",
+    "latest_resume_head": "5f15675a",
+    "latest_resume_review": "Confirmed implementation commit 32dc3019 remains an ancestor and the fresh binding, fresh_worker, warm_service, plan_service, warm_spool, hotadd, ls_gpu and all requested CPU test modules are unchanged since it. Re-read the pending qualification contract, same-process handoff and eight-gate completion before READY, legacy staging format, gpuA/gpuR environment pins, --gpu-host regression and generated-staging-to-real-service CPU test. No implementation follow-up identified.",
+    "latest_resume_evidence": "Re-opened the retained real-service FRESH_QUALIFICATION.json: pass_ true, all eight receipts pass with zero max_cost_error and PID 40744, explicit CPU test environment, zero new SUMO sim-s. Preserved the completed suite results above; no completed suite rerun. Local process inspection found no matching Python/pytest job; no job or dispatch started. git diff --check passed before this receipt-only update."
   },
   "hard_rules_compliance": {
     "cpu_only": true,
