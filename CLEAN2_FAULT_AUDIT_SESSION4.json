@@ -1,0 +1,1607 @@
+{
+  "clean2_charged_sim_s": 1849200,
+  "config_sha256": "f6489716c060f0a647148bcf247bdd6051635b712396a0eda1eb3d75b9af563d",
+  "controls": {
+    "CHAIN_STATUS.json": {
+      "sha256": "be132e50b244643eb713fdb0cb0400ac6690ee707cc70b0b34a08927a497c112",
+      "value": {
+        "detail": {
+          "error": "ValueError('durable clean1 fault/safety pause; diagnose before continuation')",
+          "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/ops/clean2_chain.py\", line 39, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/ops/clean2_chain.py\", line 194, in monitor\n    t.health(ROOT)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_training.py\", line 69, in health\n    raise ValueError('durable clean1 fault/safety pause; diagnose before continuation')\nValueError: durable clean1 fault/safety pause; diagnose before continuation\n"
+        },
+        "pid": 296173,
+        "root": "/home/ubuntu/coopmwm20261105_clean2",
+        "schema": "coopmwm.clean2.chain.v1",
+        "sequence": 12,
+        "source_commit": "285663a103d18fd33e9137db14fba33b62423a23",
+        "status": "FAILED",
+        "step": "MONITOR",
+        "timestamp": "2026-11-05T17:07:12.885768+00:00",
+        "unix": 1793898432.8857653
+      }
+    },
+    "FAULT.json": {
+      "sha256": "3aedfd34d122a48c5149f5e92b11a301487dda00fe68630928707bede45e68c2",
+      "value": {
+        "arm": null,
+        "error": "ValueError('whole-wave budget blocked')",
+        "pid": 301796,
+        "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_training.py\", line 307, in main\n    run_monitor(cfg)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_training.py\", line 292, in run_monitor\n    scheduled(cfg, u)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_evaluation.py\", line 91, in scheduled\n    results = _wave(cfg, pairs, 'v2v_lessons', f'lesson_u{update:03}')\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_evaluation.py\", line 59, in _wave\n    p1._reserve(production.backend_config(cfg), jobs, phase)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/track2_backend.py\", line 523, in _reserve\n    return reserve(root, jobs, phase)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopnative/storage.py\", line 33, in reserve\n    raise ValueError('whole-wave budget blocked')\nValueError: whole-wave budget blocked\n",
+        "unix": 1793898405.0734286
+      }
+    },
+    "STOP.json": {
+      "sha256": "3aedfd34d122a48c5149f5e92b11a301487dda00fe68630928707bede45e68c2",
+      "value": {
+        "arm": null,
+        "error": "ValueError('whole-wave budget blocked')",
+        "pid": 301796,
+        "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_training.py\", line 307, in main\n    run_monitor(cfg)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_training.py\", line 292, in run_monitor\n    scheduled(cfg, u)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_evaluation.py\", line 91, in scheduled\n    results = _wave(cfg, pairs, 'v2v_lessons', f'lesson_u{update:03}')\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_evaluation.py\", line 59, in _wave\n    p1._reserve(production.backend_config(cfg), jobs, phase)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/track2_backend.py\", line 523, in _reserve\n    return reserve(root, jobs, phase)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopnative/storage.py\", line 33, in reserve\n    raise ValueError('whole-wave budget blocked')\nValueError: whole-wave budget blocked\n",
+        "unix": 1793898405.0734286
+      }
+    }
+  },
+  "global_charged_sim_s": 3098640,
+  "ledger_sha256": "9c0a557a686b39c1095f736ed92db92c5aae4162bbf93ab791fb82bae936ff09",
+  "lesson_phase_cap_sim_s": 21840,
+  "lesson_schedule": {
+    "12": {
+      "branches": 12,
+      "completed": true,
+      "manifest": [
+        {
+          "id": "lesson_u012_0000",
+          "sim_s": 480,
+          "window": {
+            "end_s": 480,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u012_0001",
+          "sim_s": 660,
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u012_0002",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u012_0003",
+          "sim_s": 600,
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u012_0004",
+          "sim_s": 600,
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u012_0005",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u012_0006",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u012_0007",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u012_0008",
+          "sim_s": 1020,
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u012_0009",
+          "sim_s": 900,
+          "window": {
+            "end_s": 900,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u012_0010",
+          "sim_s": 960,
+          "window": {
+            "end_s": 960,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u012_0011",
+          "sim_s": 660,
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        }
+      ],
+      "quoted_sim_s": 8760,
+      "receipt_sha256": "3c3f661d332cbfeb65c441ff975cdc42991e5ebfe294a9c0813ba16574abe48d"
+    },
+    "18": {
+      "branches": 12,
+      "completed": false,
+      "manifest": [
+        {
+          "id": "lesson_u018_0000",
+          "sim_s": 480,
+          "window": {
+            "end_s": 480,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u018_0001",
+          "sim_s": 660,
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u018_0002",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u018_0003",
+          "sim_s": 600,
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u018_0004",
+          "sim_s": 600,
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u018_0005",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u018_0006",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u018_0007",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u018_0008",
+          "sim_s": 1020,
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u018_0009",
+          "sim_s": 900,
+          "window": {
+            "end_s": 900,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u018_0010",
+          "sim_s": 960,
+          "window": {
+            "end_s": 960,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u018_0011",
+          "sim_s": 660,
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        }
+      ],
+      "quoted_sim_s": 8760,
+      "receipt_sha256": null
+    },
+    "24": {
+      "branches": 12,
+      "completed": false,
+      "manifest": [
+        {
+          "id": "lesson_u024_0000",
+          "sim_s": 480,
+          "window": {
+            "end_s": 480,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u024_0001",
+          "sim_s": 660,
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u024_0002",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u024_0003",
+          "sim_s": 600,
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u024_0004",
+          "sim_s": 600,
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u024_0005",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u024_0006",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u024_0007",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u024_0008",
+          "sim_s": 1020,
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u024_0009",
+          "sim_s": 900,
+          "window": {
+            "end_s": 900,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u024_0010",
+          "sim_s": 960,
+          "window": {
+            "end_s": 960,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u024_0011",
+          "sim_s": 660,
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        }
+      ],
+      "quoted_sim_s": 8760,
+      "receipt_sha256": null
+    },
+    "6": {
+      "branches": 12,
+      "completed": true,
+      "manifest": [
+        {
+          "id": "lesson_u006_0000",
+          "sim_s": 480,
+          "window": {
+            "end_s": 480,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u006_0001",
+          "sim_s": 660,
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u006_0002",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u006_0003",
+          "sim_s": 600,
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u006_0004",
+          "sim_s": 600,
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u006_0005",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u006_0006",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u006_0007",
+          "sim_s": 720,
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u006_0008",
+          "sim_s": 1020,
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u006_0009",
+          "sim_s": 900,
+          "window": {
+            "end_s": 900,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u006_0010",
+          "sim_s": 960,
+          "window": {
+            "end_s": 960,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "id": "lesson_u006_0011",
+          "sim_s": 660,
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        }
+      ],
+      "quoted_sim_s": 8760,
+      "receipt_sha256": "eaaa8282c058ede907c9fdd5dc092e9db22db6882654d46f4c680a312be29ee7"
+    }
+  },
+  "monitors": {
+    "1": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 376,
+            "teleports": 0,
+            "ttc_events": 2407
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 333,
+            "teleports": 0,
+            "ttc_events": 2251
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 317,
+            "teleports": 0,
+            "ttc_events": 1938
+          }
+        }
+      ],
+      "receipt_sha256": "8a284b6c884ca836d32a98a30e41f181cb3de347d322cb977509b57f7447655a"
+    },
+    "10": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 355,
+            "teleports": 0,
+            "ttc_events": 1980
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 341,
+            "teleports": 0,
+            "ttc_events": 2005
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 343,
+            "teleports": 0,
+            "ttc_events": 2414
+          }
+        }
+      ],
+      "receipt_sha256": "3164b245d301d250f7bba5718e462b12c920f71d66714632835615ce0ae5ae8f"
+    },
+    "11": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 338,
+            "teleports": 0,
+            "ttc_events": 1615
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 391,
+            "teleports": 0,
+            "ttc_events": 1879
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 302,
+            "teleports": 0,
+            "ttc_events": 1845
+          }
+        }
+      ],
+      "receipt_sha256": "b299515c968c7bf64cc94e9a58ce8537fc2a7245e210f05ac51d11f165d6026e"
+    },
+    "12": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 302,
+            "teleports": 0,
+            "ttc_events": 1458
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 316,
+            "teleports": 0,
+            "ttc_events": 1327
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 314,
+            "teleports": 0,
+            "ttc_events": 1569
+          }
+        }
+      ],
+      "receipt_sha256": "4f53315251752f43f5ba8096d92f33a56599a834e578f2d3363f400970117e48"
+    },
+    "13": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 310,
+            "teleports": 0,
+            "ttc_events": 2323
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 434,
+            "teleports": 0,
+            "ttc_events": 2251
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 294,
+            "teleports": 0,
+            "ttc_events": 2064
+          }
+        }
+      ],
+      "receipt_sha256": "7e3bf9af8de03b457f11853e79e3214e85e2fd59ca4f2616e341851ba36acd4f"
+    },
+    "14": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 384,
+            "teleports": 0,
+            "ttc_events": 1731
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 421,
+            "teleports": 0,
+            "ttc_events": 2209
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 350,
+            "teleports": 0,
+            "ttc_events": 1913
+          }
+        }
+      ],
+      "receipt_sha256": "cc6cc6b84ec6a42d2a1a96abf5d5ef6014eb1621f745cbfa57842c3a0df04e0f"
+    },
+    "15": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 333,
+            "teleports": 0,
+            "ttc_events": 1610
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 346,
+            "teleports": 0,
+            "ttc_events": 1407
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 268,
+            "teleports": 0,
+            "ttc_events": 1251
+          }
+        }
+      ],
+      "receipt_sha256": "14ce1cbab99e29c08d6c1e57a16f49c15372bcda40255a2b7e212c88207f6706"
+    },
+    "16": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 399,
+            "teleports": 0,
+            "ttc_events": 2561
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 348,
+            "teleports": 0,
+            "ttc_events": 2168
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 345,
+            "teleports": 0,
+            "ttc_events": 2038
+          }
+        }
+      ],
+      "receipt_sha256": "45777bd924a15f8e6b9f5a26360f41bd084ecbebd893a96a52eef04895e50227"
+    },
+    "17": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 366,
+            "teleports": 0,
+            "ttc_events": 1925
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 329,
+            "teleports": 0,
+            "ttc_events": 2075
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 347,
+            "teleports": 0,
+            "ttc_events": 1781
+          }
+        }
+      ],
+      "receipt_sha256": "6d53eb497637d8f23421844dcc895b254be79743ca1bd584c11200640dd5b350"
+    },
+    "18": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 332,
+            "teleports": 0,
+            "ttc_events": 1640
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 352,
+            "teleports": 0,
+            "ttc_events": 1300
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 311,
+            "teleports": 0,
+            "ttc_events": 1324
+          }
+        }
+      ],
+      "receipt_sha256": "64aaf0cd70dacab7de2784b8c345894ff5b6e0dfc4e9dffd7c943105fb6da03c"
+    },
+    "2": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 382,
+            "teleports": 0,
+            "ttc_events": 1880
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 406,
+            "teleports": 0,
+            "ttc_events": 2077
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 309,
+            "teleports": 0,
+            "ttc_events": 2112
+          }
+        }
+      ],
+      "receipt_sha256": "78766d373103983dfe5807b22fd7a93f8dd5391b4e7b2ab4f86c8b4fdc666386"
+    },
+    "3": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 330,
+            "teleports": 0,
+            "ttc_events": 1841
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 339,
+            "teleports": 0,
+            "ttc_events": 1185
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 291,
+            "teleports": 0,
+            "ttc_events": 1515
+          }
+        }
+      ],
+      "receipt_sha256": "33afa46d90a8a233a22feafcd03732b712f0870d1e64eaaaac5a6cf057f23060"
+    },
+    "4": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 398,
+            "teleports": 0,
+            "ttc_events": 1867
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 395,
+            "teleports": 0,
+            "ttc_events": 2139
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 327,
+            "teleports": 0,
+            "ttc_events": 2272
+          }
+        }
+      ],
+      "receipt_sha256": "4d7eddc951a1876bc29a16ac07053e79fadaaa1dbbf8c49b0eaa66e8d128e075"
+    },
+    "5": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 362,
+            "teleports": 0,
+            "ttc_events": 1659
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 377,
+            "teleports": 0,
+            "ttc_events": 1996
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 306,
+            "teleports": 0,
+            "ttc_events": 1780
+          }
+        }
+      ],
+      "receipt_sha256": "c47563a162d104f423d1e69dd9ccf01480213ebba5cfb6c0a8768ce2ab38a5a0"
+    },
+    "6": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 307,
+            "teleports": 0,
+            "ttc_events": 1464
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 404,
+            "teleports": 0,
+            "ttc_events": 1287
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 316,
+            "teleports": 0,
+            "ttc_events": 1112
+          }
+        }
+      ],
+      "receipt_sha256": "60c0bea00cf5c6b6a3524fd1f9a1b46105090fb2cbb7545590fe5178808e97cc"
+    },
+    "7": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 359,
+            "teleports": 0,
+            "ttc_events": 2254
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 396,
+            "teleports": 0,
+            "ttc_events": 2385
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 313,
+            "teleports": 0,
+            "ttc_events": 2188
+          }
+        }
+      ],
+      "receipt_sha256": "db6bf5c090878fa3b79ee86089f0da049ff990dbdc380b44b0367b8033867838"
+    },
+    "8": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 333,
+            "teleports": 0,
+            "ttc_events": 1591
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 377,
+            "teleports": 0,
+            "ttc_events": 1978
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 351,
+            "teleports": 0,
+            "ttc_events": 1824
+          }
+        }
+      ],
+      "receipt_sha256": "1d7321d78dbf1510a16d9df5e983cff85c5442aa782d90d5f4776ae607b8dbb2"
+    },
+    "9": {
+      "arms": [
+        {
+          "action": "CONTINUE",
+          "arm": "A",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 343,
+            "teleports": 0,
+            "ttc_events": 1384
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "B",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 381,
+            "teleports": 0,
+            "ttc_events": 1309
+          }
+        },
+        {
+          "action": "CONTINUE",
+          "arm": "R",
+          "diagnose": [],
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 326,
+            "teleports": 0,
+            "ttc_events": 1638
+          }
+        }
+      ],
+      "receipt_sha256": "6b74a4473b95e130bd26f7d9beeaf0a3f57a212396e79ad887329a3498aaff0b"
+    }
+  },
+  "owners": {
+    "A": {
+      "alive": false,
+      "pid": 301793,
+      "start_ticks": "6682640"
+    },
+    "B": {
+      "alive": false,
+      "pid": 301794,
+      "start_ticks": "6682640"
+    },
+    "R": {
+      "alive": false,
+      "pid": 301795,
+      "start_ticks": "6682640"
+    },
+    "monitor": {
+      "alive": false,
+      "pid": 301796,
+      "start_ticks": "6682640"
+    }
+  },
+  "phases": {
+    "early_probes": 45480,
+    "gate_bank_verification_ext": 15160,
+    "isolated_replicated": 95840,
+    "track2_smoke": 14400,
+    "v2v_interim": 345600,
+    "v2v_lessons": 17520,
+    "v2v_train": 1315200
+  },
+  "read_only": true,
+  "schema": "coopmwm.clean2.fault_audit.v1",
+  "sealed_updates": {
+    "A": [
+      {
+        "checkpoint_sha256": "d0f77f3fdc93e0a4c1c2994c31964155a7ca645d805874e850e3832be5ab40e2",
+        "update": 1,
+        "update_sha256": "9ad80e1fc22af30731e5c337c6f825a5099c2a70e3f7a40b7dabbca9350ed7d2"
+      },
+      {
+        "checkpoint_sha256": "8190933cb7b02169b622208ee4248d2787c352c9a2085de4c4f07d281d1b7fbf",
+        "update": 2,
+        "update_sha256": "3226081147377e028831e86a4a27b47afda84062604597f7aa0eec4a60eabbc7"
+      },
+      {
+        "checkpoint_sha256": "f412fc0d60be1336e2c04eefce73e17b584995e89d7c34896d8ff857de7fde5c",
+        "update": 3,
+        "update_sha256": "d6aecdab90d498dd204203517e976cb255214972e8b7dd86ed82307dbc3aed1e"
+      },
+      {
+        "checkpoint_sha256": "8bca4f8ddb408fea660b3aad09249fab10c2f013a25dd2480260c0bbf493e949",
+        "update": 4,
+        "update_sha256": "df27d5cc70e5415223865634588d244dfd82911a01bd0c9c64c3167cc705da35"
+      },
+      {
+        "checkpoint_sha256": "80c104653363c0869f86ee132af49d6f02df5398ee592d5d4f7a39d60f23375e",
+        "update": 5,
+        "update_sha256": "b7061d6775a7e7b7d55084270e159ec3c50f4e52a48f8c1e7945b19b5cf6de45"
+      },
+      {
+        "checkpoint_sha256": "c656023adc843382180d4fd5f2b0c407cc045bab4ada58c426591f001dd7517f",
+        "update": 6,
+        "update_sha256": "4c1543480f217af216cdba72a4ea07a908b5f5a4e7eba370ed7aea21b30e5e51"
+      },
+      {
+        "checkpoint_sha256": "212fc7c694d738231ccaf0f9045ac03f0a71e51c0508fa01384a1b23e187b382",
+        "update": 7,
+        "update_sha256": "adfcfa95341a7a545d0ccd1cc634a49b89665af5487ca1bd754ca98c885d8f1e"
+      },
+      {
+        "checkpoint_sha256": "f6b9c181336bf5caf9b353560ee8d83d21b9744612541265a2527c6795b24ecb",
+        "update": 8,
+        "update_sha256": "a80854c5f4d48e00d0e9294b8119bede727f9f0c71865bb203ad4cc974e0dbc6"
+      },
+      {
+        "checkpoint_sha256": "a8b1e504d37f4ef7806e79d2877ccca32bb269fb26ea727677d4dc30cf4640dc",
+        "update": 9,
+        "update_sha256": "e0d9131afeeb5818b5cb73a3d11646c19bf7c139a8fdfb62bc10351ff021203a"
+      },
+      {
+        "checkpoint_sha256": "45f85430251774d8f647873d0e96231172fecff3e19c97c92c4441a253d22475",
+        "update": 10,
+        "update_sha256": "518591845c493e83f7c60fb0448c090e67b32ee29791592faf1e38738cd5abdf"
+      },
+      {
+        "checkpoint_sha256": "c2d9e9e9abf4b42cdbf1f2a405b41772310d7862c97266817fba438872a29677",
+        "update": 11,
+        "update_sha256": "9533d5893768437b05d6adea41538ce34cbca5f2baa3ac600f44fd8fc93295a4"
+      },
+      {
+        "checkpoint_sha256": "737faf43fc47a9ab111a4bf00977c586f57e1d4cecd0176e2acd27015b1fb17e",
+        "update": 12,
+        "update_sha256": "4dfa3ee768e0b32a2dab76d972f2978b4baa28f11783490dac65e21851e0afa3"
+      },
+      {
+        "checkpoint_sha256": "1c6c442550368b39808f025bf0816d548cc68a22d3eab1dc65098ed8ba9e004c",
+        "update": 13,
+        "update_sha256": "2066dd88cd59f921fb184b3b3c78bbbb9ce5ea197df339575c175ecab0e9c59c"
+      },
+      {
+        "checkpoint_sha256": "f1711dff441214ef2835937af445298542b6cfe588dd1724a4f431280edf5ce9",
+        "update": 14,
+        "update_sha256": "2a51200ba0d1d8e85396a34c54de29460d74f07360bec1fc0413c8410c90b57a"
+      },
+      {
+        "checkpoint_sha256": "007b1bc0958515b24834ddd261e6ba69f3e800c1bdfe93cfb023f9b15073840c",
+        "update": 15,
+        "update_sha256": "7904650b338d33002bc2ae85668ef7c730da651f4a44f03c840d082848357b38"
+      },
+      {
+        "checkpoint_sha256": "55c7b9189c768d6310a1ab85876396d05161b5ad3fe25b9d36323effa5345913",
+        "update": 16,
+        "update_sha256": "b42be8f68f1a4d81d462a34c22eeda89984f7a06bf3516001e5a8354565d7a3c"
+      },
+      {
+        "checkpoint_sha256": "8db02f86b30a317ccc83e9b8123f70c9a59b13133e1799233316350d0badff79",
+        "update": 17,
+        "update_sha256": "4a96b64fbe0680e3e9b9f0d418237929a80b5489c91ec281e85a45a100ddc556"
+      },
+      {
+        "checkpoint_sha256": "6f295c844734fbfa85bece58be20e1656199edf723e905a8b9d4e7f2f916afe1",
+        "update": 18,
+        "update_sha256": "37f6c1fc6b5e55c06d199fd7abd1a085a9d80afb2d9cfb5aa2306f20fdfd0f19"
+      }
+    ],
+    "B": [
+      {
+        "checkpoint_sha256": "4e9347979b3181358490f44b8f232c9db6cc92eac78f3880023988614f349cb2",
+        "update": 1,
+        "update_sha256": "6b12128f3b21ea06ac608c8e104cdd14983d5f3f42ed9328da36815caf8833a6"
+      },
+      {
+        "checkpoint_sha256": "50ed38da615e6044963f38bd5834d8463d360ed98788eee3d2c88dba5eb1c1e4",
+        "update": 2,
+        "update_sha256": "c0088245c4b4070c870726c89b230cebc112f0a032fd1454a595498361ccbf7b"
+      },
+      {
+        "checkpoint_sha256": "0c3929af1c951cc0b1fe60222989637e9aeb85ae5a93d8eb4b688d5dade14fde",
+        "update": 3,
+        "update_sha256": "7de7056a29588f800f220f2e7c865e69daf31e73474bb44194dcd641fb4f1315"
+      },
+      {
+        "checkpoint_sha256": "d53b28b79445a5114a646b727b039cbf074f446b219ff95abfc97b413a37fe9f",
+        "update": 4,
+        "update_sha256": "aa33439fc02eae6839bb5d210e82d8ec2d95f850ac0548ba2289cb048e5d4eb4"
+      },
+      {
+        "checkpoint_sha256": "b25e8209a37d4aaa12383a69de77b5ce98b61f679419d8a9ad04bb1688ef2b42",
+        "update": 5,
+        "update_sha256": "3c5255f1d50cc7ea1d7aa0a7be245b95baa510b8ddbc20ca205a7a2968634a84"
+      },
+      {
+        "checkpoint_sha256": "f1fd742e334c8783ed050554ef81d1e914de4600cf3a3721754ab04710c17d5d",
+        "update": 6,
+        "update_sha256": "da02ead3ff68dba3e37ac0b9de03eede214a13621f3ce4f69ebb26c2ec296902"
+      },
+      {
+        "checkpoint_sha256": "333a6d4ad24edc882b7fec0cddf234a5139eeac54b5bfb502057ab6f02fd3ae0",
+        "update": 7,
+        "update_sha256": "716fba60bad1423be36902ba2d59b6e4ef4b16210c581f4b07d2fc93e8448c24"
+      },
+      {
+        "checkpoint_sha256": "c2302f91e91a31f5414277aac062531df2bee651504b78d14c16d9a4ecba45e5",
+        "update": 8,
+        "update_sha256": "8e7ac5bb175090465cd64baff3da9a59a75440dfab2997d90343e9beab8375de"
+      },
+      {
+        "checkpoint_sha256": "291e46a4611f24bde32e8d0c763858d22b9c7b090c498875da4635c1a327e395",
+        "update": 9,
+        "update_sha256": "dac83860f582a87dfc97c84c5180b08a1e7c5564602e21f77701e22235e6b000"
+      },
+      {
+        "checkpoint_sha256": "5d1e361a10d5b8ee426de69a42684f2d61677c75abbd13dbbe0ce75badc828e8",
+        "update": 10,
+        "update_sha256": "50ceb143e02e12fc598a3ef7cc15348948a1e58af4164e98a0f4dae7a1240382"
+      },
+      {
+        "checkpoint_sha256": "7f2312593efc625176f2257a2dbbc5507a32004d9e6adf1da008e7da6ca8e3ef",
+        "update": 11,
+        "update_sha256": "e63a59da2ac2ff16fe7270a9c57ed84b1c0cf350ca5f4294a16c419565286ef5"
+      },
+      {
+        "checkpoint_sha256": "4f0346accfdf8440d6e0b8bff22378b2d4ed0121e599487ba84f307474d3df21",
+        "update": 12,
+        "update_sha256": "0c3b882667fbb6d889780e999625661f2f94cf0d9782785951d4b916708d12f0"
+      },
+      {
+        "checkpoint_sha256": "92f12275dfcc65d1e6b9f51279696a6d0c143c2f981ce2d4b72250613daf1466",
+        "update": 13,
+        "update_sha256": "2812286bbd7ce33c81d05c49c3c3bfb412c4805a412001c1fff0fbc5dccd3114"
+      },
+      {
+        "checkpoint_sha256": "0c06424bdc1f99fc4d0e685f998bb3f5ed1bd5c26d5ffb25c34d77f65ce76c81",
+        "update": 14,
+        "update_sha256": "361b3a159f8a2e5ac23c108f16f5d1b04875128570e461ceb167180755d16139"
+      },
+      {
+        "checkpoint_sha256": "f0997b6a2457f03f71fb3094ec277512fdd4584d98b57d7436fe40e61c067baf",
+        "update": 15,
+        "update_sha256": "f41974a90bc8ad1be4b713ce124a10d8d886f13b04f952985bbb80042773f26b"
+      },
+      {
+        "checkpoint_sha256": "9ce79ac20ac36e4d148c3a68f46c90682254de41b93f1d5c7151efa7fe4c78c7",
+        "update": 16,
+        "update_sha256": "43ff0af1bdc0f361b07a6f085daf25b5c25335927d1de462cb9ff2968aafd2e6"
+      },
+      {
+        "checkpoint_sha256": "21d648a2b876a58876bda9422f66b6c9f2c4e254e5289ae97aed02855b4eb77f",
+        "update": 17,
+        "update_sha256": "22f627905efc53cae43b3c98d9914490bebdcf3075c5e451184391b8ab0c0845"
+      },
+      {
+        "checkpoint_sha256": "16a8d870e2bd517fe58c0868f79cd236388f09ab04ebbe906dbcafee4e1f7be3",
+        "update": 18,
+        "update_sha256": "09962bae37635c8cb2dc3e1fd94815ab71668eba50a67e5f85660db8fa72eb8b"
+      }
+    ],
+    "R": [
+      {
+        "checkpoint_sha256": "e413e4dd344680c3280ab511f6a72a226742979699695a933b9ed11df0beb917",
+        "update": 1,
+        "update_sha256": "9d4f408f5bf48381a29a614ed4936678b01560259842cbce768d13c375e90291"
+      },
+      {
+        "checkpoint_sha256": "0a84a1de3f8847f67ac99bcf381a6a0f7fe99a512046c9d6f944c277005c20ee",
+        "update": 2,
+        "update_sha256": "9b94567952757b3f7f8f8fcc56b4b18c70193837ae32e7d3e5e01293e08910ab"
+      },
+      {
+        "checkpoint_sha256": "a388d416614e8b49bcf3aeacb5b61da5cc1951fd5ee8fd8d05c386d244604489",
+        "update": 3,
+        "update_sha256": "0572506a40bda17c2bb8a20f4a233f45a25b2b0c4a6bbe6a251b23000844dd92"
+      },
+      {
+        "checkpoint_sha256": "7cf6f95fa677357a94476f01fe05c6d497514b22c477fab67f3ece3e6f9bb3b7",
+        "update": 4,
+        "update_sha256": "367ed31353ef7ee29c4714e1241a129daf221c2dfb763d50e845396d2b407354"
+      },
+      {
+        "checkpoint_sha256": "30efcefbe972674a180ededf10e5bff127f9a3cd29634ce401863b2ea079c076",
+        "update": 5,
+        "update_sha256": "f951802b8572fd62bb35178b4cd059502977fe2e6a1bfe27aff5e14f8dd92563"
+      },
+      {
+        "checkpoint_sha256": "361054a578a43da4e4f68afc511d7e216e96cc010a3326c2ec0b57880abf68a1",
+        "update": 6,
+        "update_sha256": "e2bc230468c47cb914d2c9d34dfe4b718abc1a13e859665b9b75ad9ea85801c1"
+      },
+      {
+        "checkpoint_sha256": "3ff4d601bcb669dbb4bbd5b5ea8362cb3898f0420c918d4fcd6f2a3fe3d8725b",
+        "update": 7,
+        "update_sha256": "642ba0e6cad9db1d97ef2e9eb9bf483587f06725612f146b8d03494c01492c60"
+      },
+      {
+        "checkpoint_sha256": "5bd58438d90b093d4d672828ad2af498af5fd046c6729a045eed1985dad49cc9",
+        "update": 8,
+        "update_sha256": "6647144ac0a12b6939041fa684746c2748e7162c8f81d6690b124f21ba4f7684"
+      },
+      {
+        "checkpoint_sha256": "197f8439b8a18586cce629aeafe07e8409378b1d5adcf5856d4933847fcb26c9",
+        "update": 9,
+        "update_sha256": "516c41adcab7463a1bdbcdc11b8a1118f21afe0876f42c45102ce55581394ade"
+      },
+      {
+        "checkpoint_sha256": "93248fa30bcb287123be3b1565a065ce599b3367cb9cfe83bb77f22f945c5ac7",
+        "update": 10,
+        "update_sha256": "484469221ffdb8bb21ed88103d992572da3d43f220db79ac6b55a62f0bfb0a2c"
+      },
+      {
+        "checkpoint_sha256": "1210ea70a0c5afbd530e2bfec690721341ce3835267a4a66a9fdffb60c9c4815",
+        "update": 11,
+        "update_sha256": "4657c71c37e2c1f61e63818180c43ee5aca32e9e2b55966dab4082ed72e5c9b2"
+      },
+      {
+        "checkpoint_sha256": "d62b68a8909f8f5775dd86c20cfa0954456a324d1e97482f610dc9b33c4d64e8",
+        "update": 12,
+        "update_sha256": "4142ca543c4c9f2f44639f6f274bacc0016fe68ec28c813f527d1dd781b185b8"
+      },
+      {
+        "checkpoint_sha256": "46c5b7d7d8f13a0e185af43bfdde279df42eff410af9e0051bcac8c7f77c14b9",
+        "update": 13,
+        "update_sha256": "ef0537610afd2a36f9a5f1a0bd965b6043e2e4e883272b5e20938ad76ddb2c1b"
+      },
+      {
+        "checkpoint_sha256": "aec675a3aee73b32799ba45944daf97c938cca635f83a50291cb9747148fcbc9",
+        "update": 14,
+        "update_sha256": "aa1adb288cccad576ca763af12987dc350c86f7b8ce63eb1c71ecfd3ab6d9916"
+      },
+      {
+        "checkpoint_sha256": "60756b393793ed7239ecfae5a6ec45156506c8855fac2a365797e2810bd4fafc",
+        "update": 15,
+        "update_sha256": "1539e4a1be9f59cb67e61b5ac408f965a7b499302907fe786bb908cd467ce8ca"
+      },
+      {
+        "checkpoint_sha256": "7906f4918529ca2aa275ea88a1a72005da6a92d24b766a3fd0e1792fd84c76a0",
+        "update": 16,
+        "update_sha256": "503149b9d2f45aeec9a00019158e02dddae415d3b26583af0015e7008237583d"
+      },
+      {
+        "checkpoint_sha256": "c487438d598184b715f0efcef576e222715c99af6efdf451520a57f394e0df1b",
+        "update": 17,
+        "update_sha256": "fef2623c5cdf9c61718cdef6608cb76ac09405c470594bc0b601093a8befec93"
+      },
+      {
+        "checkpoint_sha256": "ca553150e094e75c4675567f65b7825ecf58c1c9bdaf93b2a28e702f59f6cba6",
+        "update": 18,
+        "update_sha256": "a0831a6431f51c71e69d6ed4a7611fda9e5114d389d12dbd3501c9983e847f63"
+      }
+    ]
+  },
+  "timestamp": "2026-11-05T17:16:24.641041+00:00"
+}

@@ -1,0 +1,179 @@
+{
+  "budget": {
+    "budget": {
+      "allocated": 2795800,
+      "phases": {
+        "augment_verify": 0,
+        "early_probes": 45480,
+        "gate_bank_verification_ext": 30320,
+        "group_credit_verify": 0,
+        "isolated_replicated": 143760,
+        "teacher_verify": 0,
+        "track2_smoke": 20000,
+        "v2v_final": 345600,
+        "v2v_interim": 345600,
+        "v2v_lessons": 21840,
+        "v2v_train": 1843200
+      },
+      "total": 3184160,
+      "unallocated": 388360
+    },
+    "clean1_spent_sim_s": 1248480,
+    "cumulative_upper_bound_sim_s": 4611640,
+    "plan_fix_spent_in_clean1_sim_s": 33600,
+    "plan_fix_unspent_reserved_sim_s": 566400
+  },
+  "chain": {
+    "log_tail": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/ops/clean2_chain.py\", line 248, in <module>\n    main()\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/ops/clean2_chain.py\", line 244, in main\n    Chain(args.source,control).run()\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/ops/clean2_chain.py\", line 184, in run\n    sequence([('MONITOR',self.monitor)],self.status)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/ops/clean2_chain.py\", line 39, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/ops/clean2_chain.py\", line 194, in monitor\n    t.health(ROOT)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_training.py\", line 69, in health\n    raise ValueError('durable clean1 fault/safety pause; diagnose before continuation')\nValueError: durable clean1 fault/safety pause; diagnose before continuation\n",
+    "owner": {
+      "alive": false,
+      "control": "/home/ubuntu/cpuv_setup_20261105/clean2_chain_285663a1",
+      "cpu_ticks": null,
+      "pid": 296173,
+      "process_state": null,
+      "qualification": {
+        "returncode": 0,
+        "seconds": 178.83583188056946,
+        "source_commit": "285663a103d18fd33e9137db14fba33b62423a23"
+      },
+      "root": "/home/ubuntu/coopmwm20261105_clean2",
+      "rss_pages": null,
+      "source_commit": "285663a103d18fd33e9137db14fba33b62423a23",
+      "source_root": "/home/ubuntu/coopmwm20261105_clean2_src_285663a1",
+      "start_ticks": "6536748",
+      "status": "CHAIN_STARTED",
+      "unix": 1793875518.9672954
+    },
+    "status": {
+      "detail": {
+        "error": "ValueError('durable clean1 fault/safety pause; diagnose before continuation')",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/ops/clean2_chain.py\", line 39, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/ops/clean2_chain.py\", line 194, in monitor\n    t.health(ROOT)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_training.py\", line 69, in health\n    raise ValueError('durable clean1 fault/safety pause; diagnose before continuation')\nValueError: durable clean1 fault/safety pause; diagnose before continuation\n"
+      },
+      "pid": 296173,
+      "root": "/home/ubuntu/coopmwm20261105_clean2",
+      "schema": "coopmwm.clean2.chain.v1",
+      "sequence": 12,
+      "source_commit": "285663a103d18fd33e9137db14fba33b62423a23",
+      "status": "FAILED",
+      "step": "MONITOR",
+      "timestamp": "2026-11-05T17:07:12.885768+00:00",
+      "unix": 1793898432.8857653
+    }
+  },
+  "charges": {
+    "phases": {
+      "early_probes": 45480,
+      "gate_bank_verification_ext": 15160,
+      "isolated_replicated": 95840,
+      "track2_smoke": 14400,
+      "v2v_interim": 345600,
+      "v2v_lessons": 17520,
+      "v2v_train": 1315200
+    },
+    "rows": 1656,
+    "sim_s": 1849200
+  },
+  "gate_log_tail": "pj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n92e3722f0fdcaf3701fd91fe367102a431887487b73d8fd06e57cd41a42fa910\n",
+  "qualification": {
+    "log_tail": "........................................................................ [  4%]\n................................................................... [  8%]\n........................................................................ [ 13%]\n........................................................................ [ 17%]\n........................................................................ [ 22%]\n........................................................................ [ 27%]\n........................................................................ [ 31%]\n........................................................................ [ 36%]\n........................................................................ [ 40%]\n........................................................................ [ 45%]\n........................................................................ [ 49%]\n........................................................................ [ 54%]\n........................................................................ [ 59%]\n........................................................................ [ 63%]\n........................................................................ [ 68%]\n........................................................................ [ 72%]\n........................................................................ [ 77%]\n........................................................................ [ 81%]\n........................................................................ [ 86%]\n........................................................................ [ 91%]\n............................................................... [ 95%]\n........................................................................ [ 99%]\n......                                                                   [100%]\n=============================== warnings summary ===============================\npytools/tools/coopmwm/test_v2v_int_e2e_cpu.py::test_one_imitation_step_on_synthetic_bank_pair_changes_v2v_weights\n  /home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/test_v2v_int_e2e_cpu.py:107: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.\n  Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:838.)\n    assert float((new_after-new_before).abs().sum()) > 0.\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n1576 passed, 1 warning, 14 subtests passed in 177.42s (0:02:57)\n",
+    "owner": {
+      "alive": false,
+      "control": "/home/ubuntu/cpuv_setup_20261105/clean2_tests_285663a1",
+      "cpu_ticks": null,
+      "new_sim_s": 0,
+      "pid": 294225,
+      "process_state": null,
+      "rss_pages": null,
+      "source_commit": "285663a103d18fd33e9137db14fba33b62423a23",
+      "start_ticks": "6517698",
+      "unix": 1793875328.4725008
+    },
+    "result": {
+      "returncode": 0,
+      "seconds": 178.83583188056946,
+      "source_commit": "285663a103d18fd33e9137db14fba33b62423a23"
+    }
+  },
+  "receipts": {
+    "CHAIN_STATUS.json": {
+      "detail": {
+        "error": "ValueError('durable clean1 fault/safety pause; diagnose before continuation')",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/ops/clean2_chain.py\", line 39, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/ops/clean2_chain.py\", line 194, in monitor\n    t.health(ROOT)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_training.py\", line 69, in health\n    raise ValueError('durable clean1 fault/safety pause; diagnose before continuation')\nValueError: durable clean1 fault/safety pause; diagnose before continuation\n"
+      },
+      "pid": 296173,
+      "root": "/home/ubuntu/coopmwm20261105_clean2",
+      "schema": "coopmwm.clean2.chain.v1",
+      "sequence": 12,
+      "source_commit": "285663a103d18fd33e9137db14fba33b62423a23",
+      "status": "FAILED",
+      "step": "MONITOR",
+      "timestamp": "2026-11-05T17:07:12.885768+00:00",
+      "unix": 1793898432.8857653
+    },
+    "FAULT.json": {
+      "arm": null,
+      "error": "ValueError('whole-wave budget blocked')",
+      "pid": 301796,
+      "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_training.py\", line 307, in main\n    run_monitor(cfg)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_training.py\", line 292, in run_monitor\n    scheduled(cfg, u)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_evaluation.py\", line 91, in scheduled\n    results = _wave(cfg, pairs, 'v2v_lessons', f'lesson_u{update:03}')\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_evaluation.py\", line 59, in _wave\n    p1._reserve(production.backend_config(cfg), jobs, phase)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/track2_backend.py\", line 523, in _reserve\n    return reserve(root, jobs, phase)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopnative/storage.py\", line 33, in reserve\n    raise ValueError('whole-wave budget blocked')\nValueError: whole-wave budget blocked\n",
+      "unix": 1793898405.0734286
+    },
+    "LAUNCHED.json": {
+      "clean1_preserved_stopped": true,
+      "config_file_sha256": "827d24dd9708adc7cba649b24b48fa74e65a7f9255766f40a67c49038c091bb6",
+      "gate_sha256": "92e3722f0fdcaf3701fd91fe367102a431887487b73d8fd06e57cd41a42fa910",
+      "owner_quote": "restart",
+      "owners": {
+        "A": {
+          "pid": 301793,
+          "start_ticks": "6682640"
+        },
+        "B": {
+          "pid": 301794,
+          "start_ticks": "6682640"
+        },
+        "R": {
+          "pid": 301795,
+          "start_ticks": "6682640"
+        },
+        "monitor": {
+          "pid": 301796,
+          "start_ticks": "6682640"
+        }
+      },
+      "remaining_cap_sim_s": 3184160,
+      "root": "/home/ubuntu/coopmwm20261105_clean2",
+      "runtime_commit": "285663a103d18fd33e9137db14fba33b62423a23",
+      "runtime_sha256": "f6489716c060f0a647148bcf247bdd6051635b712396a0eda1eb3d75b9af563d",
+      "schema": "coopmwm.clean2.launched.v1",
+      "smoke_sha256": "3a1842b1605579daed7e7f31aa65e66bf456c142f4d10bee89827d6ff0711e2d",
+      "source_manifest_sha256": "6540f37204e89880467c4a70f93dc03b6db12261418b67bd4148f32b154a7545",
+      "source_root": "/home/ubuntu/coopmwm20261105_clean2_src_285663a1",
+      "start_updates": {
+        "A": 0,
+        "B": 0,
+        "R": 0
+      },
+      "timestamp": "2026-11-05T11:09:40.913231+00:00",
+      "unix": 1793876980.9132497,
+      "updates": 24
+    },
+    "PREPARED.json": {
+      "complete_allocation_sim_s": 2795800,
+      "config_sha256": "f6489716c060f0a647148bcf247bdd6051635b712396a0eda1eb3d75b9af563d",
+      "files": 7446,
+      "new_sim_s": 0,
+      "remaining_cap_sim_s": 3184160,
+      "status": "STAGED_NOT_LAUNCHED"
+    },
+    "STOP.json": {
+      "arm": null,
+      "error": "ValueError('whole-wave budget blocked')",
+      "pid": 301796,
+      "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_training.py\", line 307, in main\n    run_monitor(cfg)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_training.py\", line 292, in run_monitor\n    scheduled(cfg, u)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_evaluation.py\", line 91, in scheduled\n    results = _wave(cfg, pairs, 'v2v_lessons', f'lesson_u{update:03}')\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/launch_evaluation.py\", line 59, in _wave\n    p1._reserve(production.backend_config(cfg), jobs, phase)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopmwm/track2_backend.py\", line 523, in _reserve\n    return reserve(root, jobs, phase)\n  File \"/home/ubuntu/coopmwm20261105_clean2_src_285663a1/pytools/tools/coopnative/storage.py\", line 33, in reserve\n    raise ValueError('whole-wave budget blocked')\nValueError: whole-wave budget blocked\n",
+      "unix": 1793898405.0734286
+    }
+  },
+  "root_exists": true,
+  "smoke_log_tail": "pj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n3a1842b1605579daed7e7f31aa65e66bf456c142f4d10bee89827d6ff0711e2d\n",
+  "unix": 1793898840.5261269
+}
