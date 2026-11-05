@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-11-05T13:38:16.637430+08:00",
+  "status": "ALL_ARMS_U005_CONTINUE_U004_PROBE_COMPLETE",
+  "last_successful_foreground_remote_probe": "2026-11-05T13:38:16.637430+08:00",
+  "all_recovery_owners_alive": {"A":197777,"B":197778,"R":197779,"monitor":197780},
+  "all_monitor_actions": "CONTINUE",
+  "diagnose_triggers": [],
+  "active_faults_at_successful_probe": [],
+  "u005": {
+    "A": {"reward":-89232.62854145255,"collisions":0,"teleports":0},
+    "B": {"reward":-81252.45621489837,"bank_CE":1.1707919836044312,"layer_KL":0.01176302507519722,"collisions":0,"teleports":0},
+    "R": {"reward":-70622.70280144544,"bank_CE":1.3239922523498535,"layer_KL":0.003485019551590085,"collisions":0,"teleports":0}
+  },
+  "u004_probe": {"status":"complete","source":"Seal-verified actual P3 diagnostic in watcher snapshot; five-line status appended 13:37:38.955279", "descriptive_mean_gains_rounded_veh_s":{"A":-0.33505,"B":-0.34938,"R":0.16221},"interpretation":"Single-run descriptive check, not evidence of positive B cooperation"},
+  "R_composite_reported_u004_u005": true,
+  "A_B_full_original_rule_retained": true,
+  "cumulative_charged_sim_s": 597560,
+  "cap_sim_s": 5000000,
+  "local_watcher": {"pid":32128,"previous_pid":29752,"previous_exited_gracefully":true,"fault_dedup":"filename plus content SHA; cleared old STOP/FAULT names cannot suppress later faults"},
+  "five_line_summaries_appended": [3,4,5],
+  "u006_replicated_test": "pending at last successful probe; unchanged schedule",
+  "transport": "SSH intermittently closes after the successful13:38:16 read; no duplicate remote job or signal; local read-only watcher retries"
+}
