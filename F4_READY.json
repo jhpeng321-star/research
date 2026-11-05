@@ -22,15 +22,15 @@
   },
   "resume_verification": {
     "date": "2026-11-05",
-    "starting_head": "b99d4b3f041f4f46884e440533b88a1eb587da05",
+    "starting_head": "c508e89c990952edc818bb8eb037554edb968b67",
     "accepted_implementation_commit": "3b486f202198f3b7720cceba1f0df0b580da2962",
     "changes_since_accepted_commit": ["F4_READY.json"],
-    "tracked_worktree_changes_on_resume": ["F4_READY.json"],
+    "tracked_worktree_changes_on_resume": [],
     "task_python_process_check": "No python.exe, pythonw.exe or pytest.exe process with this worktree in its command line",
     "diff_check": "git diff --check c4/track-base: passed",
     "test_disposition": "Reused completed implementation and independent-review CPU results; accepted implementation and tests are unchanged",
-    "receipt_validation": "Parsed readiness, continuation and acceptance JSON; confirmed READY, both resolved blockers, no open issues, common enabled B/R registration and r1 acceptance binding",
-    "fresh_session_confirmation": "Rechecked git status/log and the pending readiness diff, read r0/r1 and acceptance receipts, confirmed only F4_READY.json differs from the accepted revision, inspected both blocker regression groups and the fixed monitor/opt-in contracts, and preserved the completed CPU results without duplicate jobs",
+    "receipt_validation": "Reviewed readiness, continuation and acceptance JSON; confirmed READY, both resolved blockers, no open issues, common enabled B/R registration and r1 acceptance binding",
+    "fresh_session_confirmation": "Read git status/log first, then the shared task spec, r0/r1 reviews, readiness/acceptance receipts and continuation recipe. Confirmed the tracked worktree was clean and only F4_READY.json differs between accepted revision 3b486f20 and starting HEAD c508e89c. No matching task Python/pytest process was running. Reused the completed implementation and independently passing regression suite without duplicate jobs; git diff --check c4/track-base passed again.",
     "preserved_untracked_receipts": [
       "F4_ACCEPTED.json",
       "F4_READY.blocked0_1793864883.json",
@@ -62,6 +62,10 @@
     {
       "sha": "b99d4b3f041f4f46884e440533b88a1eb587da05",
       "subject": "C4 F4: refresh readiness after accepted-state resume check"
+    },
+    {
+      "sha": "c508e89c990952edc818bb8eb037554edb968b67",
+      "subject": "C4 F4: finalize preserved readiness after fresh-session verification"
     }
   ],
   "resolved_blockers": [
