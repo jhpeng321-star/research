@@ -74,5 +74,6 @@
   "live: set slim_rejected_tapes in the builder BINDING/config (or C4NM_SLIM_REJECTED_TAPES=1, or pass slim_rejected_tapes=True) for the trainer/confirm_pending process running verify_mode=all8_both_seeds",
   "existing sealed decisions: run the quote CLI, rsync the archive target to the other host, then run migrate WITHOUT --dry-run (idempotent; full_restored dirs are reported and skipped; a PARTIAL.json branch keeps both sides and stops the run until reconciled)"
  ],
- "hard_rules": "CPU only (no SUMO/GPU/ssh/remote); only the c4-slim-tapes worktree touched; no reset/clean/stash/push; no sealed/, holdout/heldout/cal_split/chunk5/j4b/inc1 paths opened (slim_tapes refuses them via the repo-wide archive_move.BAD rule); no hetdata_truth/vType/driver/vehicle_params truth files read"
+ "hard_rules": "CPU only (no SUMO/GPU/ssh/remote); only the c4-slim-tapes worktree touched; no reset/clean/stash/push; no sealed/, holdout/heldout/cal_split/chunk5/j4b/inc1 paths opened (slim_tapes refuses them via the repo-wide archive_move.BAD rule); no hetdata_truth/vType/driver/vehicle_params truth files read",
+ "fresh_session_spot_check": "frozen-session resume at head 35b09f54: code spot-checked against all 4 review items (partial-move guard _move_verified, any-seed rejected_candidates + extra-seed roots, BINDING slim_rejected_tapes in run_all8_round, quote/slim_record catch Exception), full review test matrix re-run at this head: 99 passed, 0 failed, 0 skipped in 152.96s (rl_driving env); no code changes needed"
 }
