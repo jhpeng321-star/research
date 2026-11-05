@@ -1,0 +1,32 @@
+{
+  "schema": "coopmwm.clean1.monitor_resume.v1",
+  "timestamp": "2026-11-05T09:42:01+08:00",
+  "previous_commit": "944dbf1e",
+  "worktree_clean_at_resume": true,
+  "status": "ADOPT_EXISTING_LAUNCH_AND_MONITORS",
+  "instructions_read": "tracks_spec.md complete; REGISTRATION.md last 300 lines complete",
+  "launch_receipt": "LAUNCHED.json",
+  "runtime_commit": "7cc6edaa994641a6d71a4816c0dd8b707fda2e32",
+  "runtime_sha256": "cc009d490c6876ec9e6ec98072617ac6f76b20fc7501fcc83bb7905f19a7ac4a",
+  "remote_read_only_probe_unix": 1793842869.8935714,
+  "verified_live_owners": {
+    "A": {"pid": 142318, "start_ticks": "3123166"},
+    "B": {"pid": 142319, "start_ticks": "3123166"},
+    "R": {"pid": 142320, "start_ticks": "3123166"},
+    "monitor": {"pid": 142321, "start_ticks": "3123166"}
+  },
+  "local_watcher": {"pid": 15116, "created": "2026-11-05T09:17:38+08:00", "command": "C:\\Python314\\python.exe -u E:\\agent-work\\_sol\\clean1_learning_watch.py", "alive": true},
+  "completed_combined_update": 1,
+  "monitor_receipt_sha256": "9292cc0b05e2dc57dac7c5ac376cfb4908ae9daee838331170e2563949435ffa",
+  "learning_actions": {"A": "CONTINUE", "B": "CONTINUE", "R": "CONTINUE"},
+  "collisions": 0,
+  "teleports": 0,
+  "faults": {},
+  "cumulative_charged_including_parity_sim_s": 223280,
+  "owner_cap_sim_s": 5000000,
+  "plan_augmentation": "OFF BOTH B/R; preserved diagnostic receipts only",
+  "next": "Read every new learning/safety receipt; inspect u2/u4 probes and u6 replicated test. Existing watcher appends five-line status. Diagnose faults with tests; safety failure pauses.",
+  "new_dispatches": 0,
+  "new_process_signals": 0,
+  "verification": "Read-only live /proc PID/start identity, sealed monitor receipt digest, own ledger, and fault/pause checks; no source changes requiring tests"
+}
