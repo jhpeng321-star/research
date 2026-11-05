@@ -499,10 +499,8 @@ def _load_base(cfg, arm, update):
     return load_checkpoint(path, config=cfg)
 
 
-def _reserve(cfg, jobs, phase):
-    """The clean run's OWN ledger, with the parent's <=5M phase allocations."""
-    import fcntl
-    from tools.coopnative import storage
+def reservation_limits(cfg):
+    """Shared limits for native waves and the atomic G4 paired transaction."""
     budget = cfg['budget']
     total = budget['total']
     if type(total) is not int or total > 5000000 or total <= 0:
@@ -518,8 +516,16 @@ def _reserve(cfg, jobs, phase):
     artifacts = _path(cfg['run_root']).resolve()
     if artifacts != root.resolve() and artifacts.parent != root.resolve():
         raise ValueError('accounting parent must own the isolated smoke artifacts')
+    return root, total-prior, budget['phases']
+
+
+def _reserve(cfg, jobs, phase):
+    """The clean run's OWN ledger, with the parent's <=5M phase allocations."""
+    import fcntl
+    from tools.coopnative import storage
+    root, cap, phases = reservation_limits(cfg)
     reserve = types.FunctionType(storage.reserve.__code__, dict(storage.reserve.__globals__,
-        CAP=total-prior, CAPS=budget['phases']))
+        CAP=cap, CAPS=phases))
     with (root/'ACCOUNTING.claim').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         return reserve(root, jobs, phase)
@@ -612,8 +618,12 @@ class ArmRuntime:
                     if not getattr(practice_weighting, 'VERIFIED_CHILDREN', False):
                         raise ValueError('SUMO-verified augmentation dependency required before collection')
                 fraction = effective_fraction(cfg)
-                want = (ps.realised_count(cfg['run_root'], 'B', u) if arm == 'R'
-                        else ps.practice_count(len(worlds), fraction))
+                if arm == 'R':
+                    from .g4_runtime import enabled, paired_practice_count
+                    want = (paired_practice_count(cfg, u) if enabled(cfg, u)
+                            else ps.realised_count(cfg['run_root'], 'B', u))
+                else:
+                    want = ps.practice_count(len(worlds), fraction)
                 plan = ps.plan_for_update(cfg['run_root'], arm, u, fraction=fraction,
                     repeat_cap=cfg['practice_repeat_cap'], count=want, training_seed=cfg['training_seed'],
                     breadth_cfg=cfg,

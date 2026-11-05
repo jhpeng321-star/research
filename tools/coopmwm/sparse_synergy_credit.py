@@ -1,8 +1,7 @@
-"""G4: prospective sparse SUMO macro credit; pure CPU contracts, no dispatch.
+"""G4: prospective sparse SUMO macro credit contracts.
 
-The owner of collection supplies pre-action captures and persists the returned
-reservation state BEFORE dispatch. An authorized executor must implement the
-job's exact fixed-macro intervention, not a whole-policy/diagnostic ablation.
+Production capture, atomic accounting and the fixed-macro executor live in
+g4_runtime. This module remains pure and independently validates their results.
 Only complete measured base/group/ALL-solo bundles enter the initiating trigger
 advantage. Global measured delay is an offline target, never a policy input.
 """
@@ -343,6 +342,8 @@ def trigger_terms(cfg, arm, update, episodes, envelope):
     Validation happens before any optimizer is changed.
     """
     binding = None if arm == 'A' else settings(cfg)
+    if binding is not None and update < binding['first_update']:
+        binding = None
     if binding is None:
         if envelope is not None:
             raise ValueError('G4 envelope supplied to disabled/reference arm')

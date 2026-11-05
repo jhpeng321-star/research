@@ -1,7 +1,8 @@
 # G4 — sparse measured macro synergy credit
 
-Implementation: `tools/coopmwm/sparse_synergy_credit.py`, with a narrow
-`ArmRuntime.train(..., synergy=envelope)` integration in `track2_backend.py`.
+Implementation: `tools/coopmwm/sparse_synergy_credit.py` (contracts),
+`g4_runtime.py` (production capture/coordinator/worker), with additive hooks in
+`accel_plant.py`, `launch_training.py`, `launch_production.py` and `track2_backend.py`.
 This is an explicit, default-off successor-phase recipe. Its configuration is
 common to B and R. The existing u24 synergy criterion is not redefined.
 
@@ -15,6 +16,9 @@ from tools.coopmwm import sparse_synergy_credit as g4
 cfg['g4_synergy_credit'] = dict(
     enabled=True, registration=g4.registration(),
     phase_id='prospectively-bound-successor-id', first_update=first_update)
+cfg['g4_budget'] = dict(
+    phase_id='prospectively-bound-successor-id', allocation_sim_s=230400,
+    debits={}, provenance='owner-bound successor allocation from available slack')
 ```
 
 The registration samples accepted stochastic joint macro starts by an
@@ -38,6 +42,16 @@ For two actors the full quote is `8 * 2 arms * 2 seeds * 4 branches * 1200 =
 G4 cap. This is a reservation within the broader run budget, not extra allowance.
 Failed/unused reservations are not recycled or retried.
 
+The production translator validates the canonical parent quote first, then
+derives the fixed G4 phase from available slack and any **explicitly approved**
+`g4_budget.debits` (phase-to-sim-s mapping). It never raises the total or reduces
+protected prior spend. An insufficient allocation, already-spent debit, or
+remaining owner-budget shortfall refuses the entire paired transaction before
+any branch. The full successor configuration, including these fields, is bound
+by the existing `OWNER_APPROVAL.json` configuration hash. Reallocated workloads
+must fit their remaining allocations; there is no automatic workload reduction.
+Smoke excludes G4; updates before `first_update` retain the original learner path.
+
 For each verification seed, with delay costs lower-is-better:
 
 ```text
@@ -55,61 +69,62 @@ is retained, with this term added only to the initiating proposer's action.
 Critic returns, continuous residual targets and F4 remain on their existing path.
 Unsampled starts get exactly zero additional credit. No WM substitute exists.
 
-## Coordinator / authorized worker API
+## Production orchestration and recovery
 
-1. Collect complete ordinary TRAIN episodes for both arms. Collection provenance
-   must mark these tapes `g4_source='ordinary_training'`; their world seeds must
-   be in the same update's registered `worlds_by_update`. Practice rows are
-   excluded. Diagnostic tapes are not valid credit sources.
-2. Use `opportunities(episodes)` to identify accepted joint boundaries. Capture
-   the state **before that decision's physical command**, not the cached
-   post-action `t0` used by historical whole-policy diagnostics. Supply
-   `captures[arm][opportunity_id]` with `stage='pre_action'`, `time_s`, and the
-   immutable SHA256 fields in `CAPTURE_KEYS`: snapshot, prefix, CRN, current
-   policy and common base policy. Captures are worker-produced metadata; this
-   module never opens snapshot payloads or hidden vehicle parameters.
-3. Initialize the phase once with `state = initial_state(cfg)`; call
-   `plan, next_state = plan_update(cfg, u, {'B': B, 'R': R}, captures, state)`.
-   Persist the returned state rather than reinitializing it each update. Plans
-   bind the phase, update, exact trigger record, captures, jobs and quote by hash.
-4. `execute_plan(plan, reserve=..., run_branch=...)` is the explicit executor seam.
-   `reserve(plan)` must atomically compare/persist the prospective state, reject
-   duplicate plan IDs and precharge **all** paired jobs in the existing run
-   ledger before the first dispatch. The broader budget's remaining allocation
-   must also allow the quote. An exception aborts without a partial label/retry.
-   The G4 module has no simulator import or implicit dispatch.
-5. The later authorized SUMO adapter implements each fixed-macro job on the
-   existing replay/safety/command-ownership path. Group retains all original
-   actors; solo retains exactly its named actor; base retains none. Use
-   `command_offsets(job, elapsed_s, observable_state=...)` after evaluating the
-   **original full move** for release/role semantics, then mask offsets. Do not
-   rebuild a singleton wall, remove vehicles, or run a whole-policy ablation.
-   All other commands and subsequent decisions follow the same bound common
-   base. Prefix/CRN replay, physical feasibility and safety checks belong to the
-   existing worker, and must complete before it issues a graded receipt.
-6. `measured_envelope(plan, results)` can also consume independently executed
-   receipts. It requires the exact group/base/all-solo/two-seed job set, measured
-   SUMO source, matched window/captures/CRN/masks, finite delay, full replay cost,
-   and safety counters for every branch. It rejects partial, duplicate, stale,
-   ungraded and WM receipts. Exact G1 reuse is possible only if **all** these
-   immutable job bindings match; native-ancestor verification is not sufficient.
-7. After the existing safety hook, call each runtime's
-   `train(episodes, rewards=existing_reward_envelope, synergy=envelope)`. Both arms
-   consume the same paired envelope, each applying only its own proposer rows.
-   Enabled updates with zero sampled starts still pass an empty measured plan.
-   Validation precedes any optimizer update. Return field `g4_synergy_credit`
-   contains registration, plan SHA, measured/unsampled counts, per-seed total,
-   best-solo and synergy values, normalized advantages and cumulative reservation.
+1. The existing ordinary-training `accel_plant.episode` installs `BoundaryCapture`
+   only for enabled B/R jobs. Before sampling a decision, it captures the native
+   prefix fingerprint/tape, generator state, AR memory, previous issued frame,
+   causal intent boards, local report history and immutable policy weights.
+   Only outcome-blind sampled, accepted joint boundaries publish immutable
+   `jobs/<episode>/g4_captures/<opportunity>.pt` files. Completed ordinary episodes
+   carry `g4_source` and the hash index. Practice is excluded.
+2. The detached launcher waits for A's existing reference, then collects B. B
+   publishes `g4/B_INPUT_u.json` after its safety/reward hooks and before training.
+   R uses that receipt's **realized** practice count, collects, and publishes its
+   own input. B waits for R's input rather than R waiting for B's optimizer.
+   Thus both arm inputs are fixed before either optimizer runs.
+3. `Coordinator(cfg).measure(u, episodes_by_arm)` acquires the same
+   `ACCOUNTING.claim` lock as native training/diagnostic reservations. It derives
+   cumulative G4 state from prior journaled plans, validates the complete paired
+   quote against phase and remaining owner limits, then fsyncs and atomically
+   replaces `CHARGES.jsonl` with **all branch charges and the full paired plan**.
+   The plan and reservation state cannot be torn across independent files.
+   Even zero-sample updates have a zero-cost journal/completion marker.
+4. The production `run_branch(job, cfg)` adapter uses `accel_plant.episode`, the
+   original V2V controller and its requests/safety/CommandOwnership writer.
+   It replays all prefix commands and checks every fingerprint through t0.
+   At t0 it restores causal boards/AR memory; seed 1 restores the captured
+   generator exactly, seed 2 derives a fixed suffix seed from capture CRN hash
+   and the registered seed ID. Every group/base/solo mask uses the same stream
+   for that seed. Worlds and prefix are never reseeded.
+5. The suffix runs only the bound frozen MAPPO base plus the selected **original
+   full macro**, masked to the retained actors. There are no future triggers,
+   guide proposals, learned residuals, vehicle removal or singleton-wall
+   reconstruction. Each actor's wall release uses its own sensing/t-1 V2V report
+   view via the production locality builder. Missing partner visibility keeps
+   the original commitment until observable release or expiry. The native
+   feasibility and single-writer safety chain remains authoritative.
+6. All branches run through 1200, including the charged prefix. Graded receipts
+   contain full-window source-inclusive delay and measured safety counters;
+   `measured_envelope` validates the complete bundle. The same immutable
+   `g4/ENVELOPE_u.json` is delivered to both `train_update(..., synergy=...)`
+   calls after their existing safety hooks. Empty samples give an empty envelope,
+   never a WM substitute. PPO uses the actual full-rollout temporal targets.
+7. Restart reconstructs state from the existing ledger. A complete envelope can
+   be adopted only with identical collected inputs and plan. A reserved attempt
+   without its envelope **refuses redispatch**, including worker/startup failures
+   or interruption between reservation and publication. Its charges and starts
+   remain spent in later updates. Branch artifacts use the native
+   `jobs/g4_<hash>/RESULT.json` layout, preserving ledger reconciliation.
 
-The launcher/collector must bind the successor phase, worker capture adapter,
-ledger reservation and executor explicitly. This implementation does not modify
-the active launch profile or run counterfactual physics. These external adapters
-are injected production interfaces; the CPU tests use clearly marked fakes.
+These adapters are installed and default off. The active launch profile is
+unchanged. This fix round executes only toy CPU physics; deployment still uses
+the existing owner-approved production entry point.
 
 ## CPU checks
 
 ```powershell
-& "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe" -m pytest -q tools/coopmwm/test_sparse_synergy_credit_cpu.py tools/coopmwm/test_track2_backend_cpu.py
+& "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe" -m pytest -q tools/coopmwm/test_g4_runtime_cpu.py tools/coopmwm/test_sparse_synergy_credit_cpu.py tools/coopmwm/test_track2_backend_cpu.py
 ```
 
 Tests cover complete branch enumeration, full-prefix cap, signed seedwise
@@ -117,3 +132,9 @@ best-solo arithmetic, bounded normalization, prospective sampling, matched B/R
 effort, stale/malformed/partial/WM rejection, reservation ordering/failure,
 original-move solo masking/release, and the real trigger PPO edge with an
 untouched frozen base and unchanged critic returns.
+The orchestration suite enters through `launch_training.update` for both arms,
+uses real collection/capture/worker adapters and real PPO/temporal targets, and
+replaces only simulator physics plus unrelated admission/bank/safety fixtures.
+It covers measured and no-sample paths, reservation/worker failures, restart and
+next-update accounting, changed capture bytes, actor-local release, atomic write
+interruption, remaining-owner budget and already-spent phase debits.

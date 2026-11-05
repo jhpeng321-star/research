@@ -53,6 +53,9 @@ def backend_config(cfg, *, root=None, smoke=False):
         out['budget'] = dict(restart['budget'], total=restart['owner_cap_sim_s'],
                              remaining_cap_sim_s=restart['budget']['total'])
         out['prior_charged_sim_s'] = restart['protected_prior_sim_s']
+    if cfg.get('g4_synergy_credit') and not smoke:
+        from .g4_runtime import allocate_budget
+        allocate_budget(out)
     prior = out['prior_charged_sim_s']
     if sum(out['budget']['phases'].values())+prior > rc.TOTAL_CAP_SIM_S:
         raise ValueError('complete production allocations plus prior parity exceed owner cap')
@@ -62,6 +65,9 @@ def backend_config(cfg, *, root=None, smoke=False):
     out['workers'] = cfg['cpu']['workers']//3  # 3 x 8 episodes + 16 diagnostics <= 40
     out['owner_approval_path'] = str(Path(cfg['run_root'])/'OWNER_APPROVAL.json')
     if smoke:
+        if cfg.get('g4_synergy_credit'):
+            # The fixed G4 registration samples ordinary TRAIN only.
+            out['g4_synergy_credit'] = False
         attempt = cfg.get('smoke_attempt', 1)
         if type(attempt) is not int or attempt not in (1, 2):
             raise ValueError('at most two budgeted qualification smoke attempts')

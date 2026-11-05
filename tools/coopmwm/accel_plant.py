@@ -90,8 +90,12 @@ def episode(job, *, controller_hook=None, policy_loader=None):
     if job.get('sumo_verify') and not job.get('b_replay'):  # owner option 1: blocking exact top-k verification (default off)
         from .sumo_verify import install
         install(controller,job,prefixes,generator)
+    g4_capture = None
     branch=job.get('branch')
     try:
+        if job.get('track2_backend') and job['arm'] != 'A':
+            from .g4_runtime import BoundaryCapture
+            g4_capture = BoundaryCapture.for_job(job, controller, prefixes)
         with gzip.open(path/'observable.jsonl.gz','xt',encoding='utf-8') as trace:
             if v2v and hasattr(controller,'observe_issued'):
                 from .v2v_runtime import ObservedTrace
@@ -104,6 +108,8 @@ def episode(job, *, controller_hook=None, policy_loader=None):
                 if branch and t<=branch['time_s'] and prefixes[str(t)]!=branch['prefixes'][str(t)]:
                     raise ValueError('exact full-prefix mismatch before acceleration intervention')
                 before=b.totals['team_delay_vs'];n=len(controller.events)
+                if g4_capture is not None:
+                    g4_capture.before_tick(t, cf.observations(b))
                 try:
                     audit=cf.tick(b,controller,trace)
                 except Exception:
@@ -119,6 +125,8 @@ def episode(job, *, controller_hook=None, policy_loader=None):
                     live_safety(Path(job['queue_root']),job['arm'],b.totals,job['world']['seed'],job['safety_reference'])
                 if len(controller.events)!=n+1:raise ValueError('expected one acceleration action per1s')
                 event=controller.events[-1]
+                if g4_capture is not None:
+                    g4_capture.after_tick(event)
                 if any('library_issued_delta_mps2' in row for row in audit):
                     event['library_actuation_audit'] = audit
                 if (job.get('guided') and job['arm']=='B' and event['sample'].get('behaviour',{}).get('plan_start')
@@ -146,5 +154,7 @@ def episode(job, *, controller_hook=None, policy_loader=None):
             result['practice']={k:v for k,v in job['practice'].items() if k!='snapshot'}
         if job.get('sumo_verify'):
             result['sumo_verification_root']=job['sumo_verify']['root']
+        if g4_capture is not None:
+            result.update(g4_source='ordinary_training', g4_captures=g4_capture.captures)
         write(path/'RESULT.json',result);return result
     finally:b.close()
