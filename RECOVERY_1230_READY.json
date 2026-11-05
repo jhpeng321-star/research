@@ -1,0 +1,22 @@
+{
+  "status": "REGISTERED_AND_CPU_QUALIFIED_STOPS_NOT_YET_CLEARED",
+  "runtime_commit": "94d90e84d17513e4f0cf7d2ddbb9cc625c1ed7a0",
+  "source_root": "/home/ubuntu/coopmwm20261105_clean1_src_94d90e84",
+  "source_files_sha_verified": 481,
+  "tar_sha256": "dd248628b15c269e2dc37fb9446dc325750f2acfcb3dbb6063071d314089e35c",
+  "source_manifest_sha256": "8dbf25b3d273df41d68963967b7471553dbbe1ac3a44f9fb0151e4f0c9fd13a3",
+  "original_config_sha256": "cc009d490c6876ec9e6ec98072617ac6f76b20fc7501fcc83bb7905f19a7ac4a",
+  "rule_receipt_sha256": "51e924d1f417bc76f8068dd750e9abe7819108fa58c9b92d78ac802de4e89180",
+  "amendment_sha256": "c7ae9000c2ad164a2babba4e006101003ab12e9ecf2b89299e542b13b1982d0e",
+  "rule": "R-only TTC/critical composite report-only; ANY R collision/teleport pauses; A/B full original rule",
+  "authority": "clean1 AUTHORITY.md quotes REGISTRATION.md owner12:30 verbatim yes and registers SHA-bound exact recovery procedure",
+  "tests": {"windows_passed": 216, "windows_platform_skips": 1, "linux_passed": 217, "linux_skips": 0, "failures": 0},
+  "live_source_config_check": "RECOVERY_SOURCE_CONFIG_VERIFIED",
+  "control": "/home/ubuntu/coopmwm20261105_clean1/recovery_1230",
+  "preserved_R_u003_training_episodes": 16,
+  "preserved_R_u003_practice_A_references": 6,
+  "preservation": "PRESERVED_INPUTS.json SHA-binds all 22 RESULT markers, compressed results and observable tapes, latest checkpoint/update seals, original owners/STARTED/stops/ledger/config",
+  "new_sim_s": 0,
+  "cumulative_sim_s": 358820,
+  "dispatches": 0
+}
