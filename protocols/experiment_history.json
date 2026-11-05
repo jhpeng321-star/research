@@ -27,6 +27,32 @@
   },
   "entries": [
     {
+      "id": "S-DIAG-CLEAN1-20261105",
+      "date": "2026-11-06",
+      "family": "PL",
+      "name": "Clean1 B cooperation learning diagnosis through final update9",
+      "status": "completed_with_causal_and_CE_identity_limits",
+      "question": "Why does B show almost zero replicated group cooperation and what mechanisms or follow-up levers could help?",
+      "changed_vars": "Read-only receipt/checkpoint analysis; preserve original u1-u8 work, add missing u9 and offset-only forward sensitivity. No run change.",
+      "comparators": "Matched A physical total team delay, same-snapshot all/solo/reference synergy, observed accepted-start versus none rewards (associational). Synergy=min(J_solo)-J_group; physical delay delta=B-A, positive worse.",
+      "matching_reuse": "Reuse completed128 B episode analyses and48 A practice references, replicated-u6 branches, bank/source checks and merge sensitivity. Add16 B episodes and six exact A practice references; final A9/B9/R9 checkpoints and durable owner STOP supersede u8 cutoff.",
+      "budget_registered": "Owner S-DIAG: read-only cpuV, no SUMO, charges or process interaction; prohibited evaluation and hidden-population paths excluded; <=75min resumed session.",
+      "budget_actual": "Zero new simulation seconds, optimizer steps, training/simulation dispatches, charges or process inspections/signals. Receipt/source/tensor reads and CPU arithmetic only.",
+      "criteria_verdict": "B none near11%, wall3%->8.37%; CE2.063->0.401653 on three contexts. PPO u6KL0.013933/u9KL0.008320 under0.045, while separate bank imitation binds. u6 offset-only forward check raises predicted acceleration in all1263 active rows (mean+0.008456m/s2). Replicated+0.042733veh-s measures extra-over-best-solo, not total base-relative benefit. Matched u8 delay-1.31%, u9+1.73%; no established cooperation/generalization.",
+      "limitations": "Selection/acceptance is not immediate actuation; reward comparisons are confounded; no same-state isolated-move causal reward estimate. Exact three post-visibility CE identities uncaptured; one bounded bank reconstruction timed out without result and was not duplicated. Dated accounting snapshots are not free follow-up budget.",
+      "answers": "Main learning/execution bottlenecks evidenced; causal efficacy of proposed follow-up fixes remains open. Preserve clean1 durable owner STOP and inspect independently owned follow-up receipts before action.",
+      "paths": ["runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md", "runs/active/C4-V7FT-20261017/S_DIAG_RESUME_RECEIPT_20261106.json"],
+      "structured": {
+        "record_kind": "analysis",
+        "execution_status": "completed",
+        "evidence_validity": "Existing training/dev receipts, exact physical pairing and forward-only checkpoint sensitivity; no physical ablation or independent generalization finding",
+        "scientific_verdict": "B is not inert/none-collapsed; named moves have weak/reversed sampled instantaneous leverage, restricted feasible exposure, concentrated imitation and noisy/misaligned credit. Prioritize actuation/credit consistency and diverse feasible opportunities over blanket KL/imitation increases.",
+        "evidence_status": "integrity_receipt_verified",
+        "review_status": "Episode/receipt counts, prefix-adjusted reward sums, matched physical arithmetic, source/receipt hashes and3060-row offset sensitivity verified; zero new ledger errors versus174 pre-existing missing-path errors; scoped source identity zero mismatches. Metadata tests and generated-summary check recorded in task checks receipt.",
+        "outcomes": []
+      }
+    },
+    {
       "id": "S-WMCHECK",
       "date": "2026-11-05",
       "family": "PL",
@@ -46146,6 +46172,13 @@
   "source_verification": {
     "purpose": "Registered allowed sources for the separate source-verification mode. Consistency validation (validate) never reads these contents; verify-sources reads ONLY these registered paths, compares stored costs/differences/verdicts to the source fields, and writes protocols/source_verification_report.json with path, sha256, field locations and verification time. Sealed outcomes are never traversed.",
     "allowed_sources": [
+      {
+        "source_id": "SRC-SDIAG-CLEAN1-RESUME",
+        "path": "runs/active/C4-V7FT-20261017/S_DIAG_RESUME_RECEIPT_20261106.json",
+        "entries": ["S-DIAG-CLEAN1-20261105"],
+        "field_map": "Integrity/report binding only; physical and sensitivity arithmetic checked by the task-specific verification scripts, not generic outcome-field mapping",
+        "sha256_registered": "48e963ae6c28a3834fb73dc8b57c735308904042b41886f801edb73d6b0c759f"
+      },
       {
         "source_id": "SRC-NAT",
         "path": "output/escalation_execution/natural_final_decision.json",

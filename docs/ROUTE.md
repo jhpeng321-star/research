@@ -1,5 +1,9 @@
 # Current route — WM-S readiness (2026-10-09)
 
+<!-- S-DIAG-closeout -->
+**2026-11-06, S-DIAG:** [Clean1 evidence through final A9/B9/R9](../runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md) prioritizes production-consistent move actuation/credit, feasible joint opportunities and broader usable practice over blanket KL/imitation increases. Clean1's durable owner STOP remains authoritative. Consult existing clean2/plan-fix receipts before overlapping follow-up work; this zero-simulation analysis authorizes no dispatch.
+<!-- /S-DIAG-closeout -->
+
 <!-- S-WMCHECK-closeout -->
 **2026-11-05, S-WMCHECK:** [WM error audit](../runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md) measures disagreement on 542 recovered selected training pairs. Positive predictions win 40.7%; logged gain ranking is weak and error signs depend on seed. Raw/calibrated >=80% reliability remains unresolved because genuine paired probabilities are absent. Mixed horizons prevent an isolated matched-horizon WM-error claim. Zero new SUMO or charges; no calibration artifact fitted.
 <!-- /S-WMCHECK-closeout -->

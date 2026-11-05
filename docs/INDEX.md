@@ -1,5 +1,9 @@
 # INDEX — current documents and superseded pointers
 
+<!-- S-DIAG-closeout -->
+**2026-11-06, S-DIAG completed:** [Clean1 diagnosis](../runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md), [resume/evidence receipt](../runs/active/C4-V7FT-20261017/S_DIAG_RESUME_RECEIPT_20261106.json). All seven requested topics, u1–u9 history, matched physical outcomes and ranked levers; zero new simulation/charges. Final clean1 owner STOP supersedes the recovered u8 draft's continuation advice.
+<!-- /S-DIAG-closeout -->
+
 <!-- S-WMCHECK-closeout -->
 **2026-11-05, S-WMCHECK:** [WM error report](../runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md), [resume/verification receipt](../runs/active/C4-V7FT-20261017/S_WMCHECK_RESUME_RECEIPT_20261105.json). Existing selected training-plan pairs only; high-confidence probability evidence unavailable; zero new SUMO or charges.
 <!-- /S-WMCHECK-closeout -->

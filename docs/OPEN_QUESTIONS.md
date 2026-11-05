@@ -1,4 +1,8 @@
 <!-- WM-S-open-questions-20261009 -->
+<!-- S-DIAG-closeout -->
+**2026-11-06, S-DIAG (partially answered):** [Clean1 diagnosis](../runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md) rules out none-collapse/dead residual and identifies weak, reversed instantaneous move actuation, concentrated supervision, feasibility limits and local-credit mismatch. Still open: causal move-versus-none physical benefit, exact identities of three usable CE contexts, and whether production-consistent actuation plus feasible diverse practice produces group-over-best-solo benefit. Final clean1 owner STOP retained; existing clean2/plan-fix/mining work must be consulted before any follow-up.
+<!-- /S-DIAG-closeout -->
+
 <!-- S-WMCHECK-closeout -->
 **2026-11-05, S-WMCHECK (partially answered):** [Gain-disagreement audit](../runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md) finds 90/221 positive predictions win on recovered selected training pairs. How wrong is the WM at raw/calibrated P>=0.8 remains **open**: no genuine candidate-bound probability evidence exists in these records. Matched original prediction-horizon provenance is also missing. No confidence inferred from gains and no new runs authorized by this analysis.
 <!-- /S-WMCHECK-closeout -->

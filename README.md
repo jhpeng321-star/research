@@ -1,3 +1,7 @@
+<!-- S-DIAG-closeout -->
+**2026-11-06, S-DIAG:** [Clean1 diagnosis through final u9](runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md): B is not stuck at none; sampled named braking offsets have weak, reversed instantaneous actuation. Bank/practice concentration and credit mismatch constrain cooperation. Clean1 owner STOP preserved; zero new SUMO, training or charges.
+<!-- /S-DIAG-closeout -->
+
 <!-- S-WMCHECK-closeout -->
 **2026-11-05, S-WMCHECK:** [Existing-plan WM error audit](runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md): positive WM gain wins 90/221 on 542 recovered training pairs. The >=80%-confidence question remains unresolved because paired probabilities were not recorded; mixed horizons and selection bias limit interpretation. Zero new SUMO or charges.
 <!-- /S-WMCHECK-closeout -->
