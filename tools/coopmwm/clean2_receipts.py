@@ -103,7 +103,7 @@ def reporting(cfg):
     return receipt
 
 
-def validate_smoke(cfg, updates, reporting_receipt):
+def validate_smoke(cfg, updates, reporting_receipt=None):
     from . import bank_breadth
     root=Path(cfg['run_root']);arms={u['arm']:u for u in updates};pools={}
     for arm in ('B','R'):
@@ -133,6 +133,10 @@ def validate_smoke(cfg, updates, reporting_receipt):
             raise ValueError('F4 measured exposed safety-term rows required')
     if arms['B']['clean2_fix_receipts']['trigger_breadth']['family_mass']!=arms['R']['clean2_fix_receipts']['trigger_breadth']['family_mass']:
         raise ValueError('F3 B/R guidance family distribution differs')
+    if reporting_receipt is None:
+        # Precheck before spending the extra reporting branches. This is never
+        # a published pass and cannot satisfy launch/release admission.
+        return dict(status='COMPONENT_PRECHECK_ONLY',practice_pools=pools)
     receipt=_seal(dict(status='FIX_RECEIPTS_PASS',arms={a:arms[a]['clean2_fix_receipts'] for a in ('B','R')},
         practice_pools=pools,reporting_receipt_sha256=reporting_receipt['receipt_sha256'],
         metric_reports=reporting_receipt['metric_reports']), 'receipt_sha256')

@@ -54,3 +54,31 @@ def test_launch_admission_allows_only_budgeted_plan_fix_appends(args, tmp_path, 
     rows[0]['sim_s'] += 1
     with pytest.raises(ValueError, match='prefix changed'):
         clean2.verify_previous(cfg)
+
+
+def test_smoke_uses_exact_inherited_owner_safety_rules_and_never_changes_A(tmp_path):
+    from . import composite_health as safety, launch_qualification as qualification
+    from .exact_grade import _seal
+    from .launch_training import write
+    root=tmp_path/'run';root.mkdir();output=root/'smoke';output.mkdir()
+    write(root/rc.RULE_FILE,dict(original_rule=True))
+    amendment='a'*64
+    (root/'AUTHORITY.md').write_text('amendmentSHA'+amendment)
+    names=[]
+    for arm,name,pause,authority in [('B',safety.B_RULE,safety.B_PAUSE,safety.B_AUTHORITY),
+                                    ('R',safety.R_RULE,safety.R_PAUSE,safety.R_AUTHORITY)]:
+        write(root/pause,dict(arm=arm,original_clean1_evidence=True))
+        write(root/name,_seal(dict(authority=authority,arm=arm,composite_action='report_only',
+            collision_teleport_action='pause_on_any',original_pause_sha256=rc.sha(root/pause),
+            amendment_sha256=amendment),'receipt_sha256'))
+        names += [name,pause]
+    cfg=dict(run_root=str(root),clean2_budget={},clean2_restart=dict(
+        inherited_safety_receipts={n:rc.sha(root/n) for n in names}))
+    qualification.copy_safety_authority(cfg,output)
+    assert safety.report_only(output,'B') is True
+    assert safety.report_only(output,'R') is True
+    assert safety.report_only(output,'A') is False
+    assert all((output/n).read_bytes()==(root/n).read_bytes() for n in names)
+    (root/safety.B_RULE).write_text('{}')
+    with pytest.raises(ValueError,match='changed before smoke'):
+        qualification.copy_safety_authority(cfg,output)

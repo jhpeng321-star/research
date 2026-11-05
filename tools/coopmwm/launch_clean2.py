@@ -172,12 +172,14 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1):
     training.write(root/'BANK_PREFLIGHT.json', preflight)
     stage.copy_equal(clean1/rc.RULE_FILE, root/rc.RULE_FILE)
     # These are inherited owner authorities, not new clean2 safety failures.
+    safety_receipts = {}
     for arm, rule_name, pause_name in (('B', composite_health.B_RULE, composite_health.B_PAUSE),
                                        ('R', composite_health.R_RULE, composite_health.R_PAUSE)):
         if not composite_health.report_only(clean1, arm):
             raise ValueError('existing registered owner safety rule missing: '+arm)
         for name in (rule_name, pause_name):
             stage.copy_equal(clean1/name, root/name)
+            safety_receipts[name] = rc.sha(root/name)
         amendment = training.read(clean1/rule_name)['amendment_sha256']
         with (root/'AUTHORITY.md').open('a', encoding='utf-8') as f:
             f.write('\nInherited exact owner '+arm+' composite report-only authority amendmentSHA'+amendment+
@@ -219,10 +221,12 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1):
     cfg['clean2_budget'] = budget
     cfg['clean2_restart'] = dict(owner_quote='restart', clean1_root=str(clean1),
         clean1_ledger_prefix_sha256=prefix, source_commit=source_manifest['commit'],
+        inherited_safety_receipts=safety_receipts,
         inherited_safety='A full original; B/R composite report-only; any collision/teleport pauses')
     # Run the actual final reader paths, including accepted breadth hooks. Every
     # selected input must exist and be covered by the new root's own manifest.
     actual = set()
+    actual.update(root/name for name in safety_receipts)
     summaries = {}
     with rc._ReadRecorder([root, clean1, stage.LEGACY], Path('/home/ubuntu')) as recorder:
         native = production.backend_config(cfg)

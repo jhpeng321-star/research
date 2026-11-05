@@ -21,6 +21,17 @@ def verify_inputs(cfg):
             raise ValueError('required staged reader input changed: '+name)
 
 
+def copy_safety_authority(cfg, output):
+    root = Path(cfg['run_root'])
+    shutil.copyfile(root/rc.RULE_FILE, output/rc.RULE_FILE)
+    shutil.copyfile(root/'AUTHORITY.md', output/'AUTHORITY.md')
+    if 'clean2_budget' in cfg:
+        for name, expected in cfg['clean2_restart']['inherited_safety_receipts'].items():
+            if rc.sha(root/name) != expected:
+                raise ValueError('inherited owner safety authority changed before smoke')
+            shutil.copyfile(root/name, output/name)
+
+
 def smoke(cfg):
     from .launch_preparation import readonly_bank_view
     from .launch_augmentation import run as augment
@@ -40,8 +51,7 @@ def smoke(cfg):
         shutil.copyfile(root/f'{arm}_checkpoint_000.pt', output/f'{arm}_checkpoint_000.pt')
         if arm != 'A':
             shutil.copyfile(root/f'{arm}_track2_000.pt', output/f'{arm}_track2_000.pt')
-    shutil.copyfile(root/rc.RULE_FILE, output/rc.RULE_FILE)
-    shutil.copyfile(root/'AUTHORITY.md', output/'AUTHORITY.md')
+    copy_safety_authority(cfg, output)
     updates = [training.update(cfg, arm, 1, smoke=True) for arm in ('A', 'B', 'R')]
     monitor = training.monitor_update(cfg, 1, smoke=True)
     for update in updates:
@@ -62,6 +72,7 @@ def smoke(cfg):
     fixes = None
     if 'clean2_budget' in cfg:
         from .clean2_receipts import reporting, validate_smoke
+        validate_smoke(cfg, updates)
         measured = reporting(cfg)
         fixes = validate_smoke(cfg, updates, measured)
     charged = sum(r['sim_s'] for r in ledger(root) if r['phase'] == 'track2_smoke')
