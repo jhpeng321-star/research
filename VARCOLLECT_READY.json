@@ -126,6 +126,16 @@
     "latest_resume_review": "Confirmed the committed pending qualification contract, same-process four-gate handoff and eight-gate completion before READY, legacy warm/ls_gpu qualification format, host-specific binding geometry and environment enforcement, and generated-staging-to-real-service CPU regression including gate failures. No implementation follow-up identified.",
     "latest_resume_evidence": "Re-opened the retained FRESH_QUALIFICATION.json at _out/pytest_varcollect_round4_verified/test_fresh_binding_through_rea0/worker: all eight receipts pass exactly with PID 40744, Python 3.10 / torch 2.12.1+cpu, and zero new SUMO sim-s. Preserved the completed required-suite results; local process inspection found no matching Round 4 test job. No completed work rerun."
   },
+  "resume_verification_at_67d8408f": {
+    "date": "2026-11-05",
+    "resumed_head": "67d8408f",
+    "implementation_commit": "32dc301995bc2fa8bf45f8249a78d96d5f6f6115",
+    "finding": "The requested Round 4 implementation is already an ancestor of HEAD. Git history shows no subsequent changes to varcollect, fresh_worker, warm_service, plan_service, test_varcollect_cpu or the requested CPU test modules. Re-read the pending fresh-binding contract, same-process qualification handoff, eight-gate completion before READY, legacy warm/ls_gpu format, host pins and real-service CPU regression; no implementation gap identified.",
+    "evidence": "Re-opened _out/pytest_varcollect_round4_verified/test_fresh_binding_through_rea0/worker/FRESH_QUALIFICATION.json: all eight worker-owned receipts pass with zero max_cost_error and PID 40744; explicit CPU environment and zero new SUMO sim-s are recorded.",
+    "tests": "Preserved the completed required-suite results recorded above (301 passed, 9 subtests passed including additional suites); no completed tests rerun.",
+    "jobs": "Local Python/pytest process inspection found no matching Round 4 test job. No job or dispatch started.",
+    "preservation": "Existing PLANFIX tracked edits and untracked probe/blocked-receipt files are retained. This resume updates only VARCOLLECT_READY.json using local CPU-only inspection."
+  },
   "hard_rules_compliance": {
     "cpu_only": true,
     "no_ssh_sumo_gpu_execution": true,
