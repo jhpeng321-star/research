@@ -134,7 +134,10 @@
     "evidence": "Re-opened _out/pytest_varcollect_round4_verified/test_fresh_binding_through_rea0/worker/FRESH_QUALIFICATION.json: all eight worker-owned receipts pass with zero max_cost_error and PID 40744; explicit CPU environment and zero new SUMO sim-s are recorded.",
     "tests": "Preserved the completed required-suite results recorded above (301 passed, 9 subtests passed including additional suites); no completed tests rerun.",
     "jobs": "Local Python/pytest process inspection found no matching Round 4 test job. No job or dispatch started.",
-    "preservation": "Existing PLANFIX tracked edits and untracked probe/blocked-receipt files are retained. This resume updates only VARCOLLECT_READY.json using local CPU-only inspection."
+    "preservation": "Existing PLANFIX tracked edits and untracked probe/blocked-receipt files are retained. This resume updates only VARCOLLECT_READY.json using local CPU-only inspection.",
+    "latest_resume_head": "db0d3169",
+    "latest_resume_review": "Confirmed no changes since implementation commit 32dc3019 to the fresh binding, fresh_worker, warm_service, plan_service, warm_spool, hotadd, ls_gpu or requested CPU test modules. Re-read the pending qualification contract, same-process four-gate handoff, eight-gate completion before READY, legacy admission flow, explicit GPU environment pins and host selection, and generated-staging-to-real-service CPU regression. No implementation follow-up identified.",
+    "latest_resume_evidence": "Re-opened the retained FRESH_QUALIFICATION.json: all eight receipts pass with zero max_cost_error and PID 40744, explicit Python 3.10 / torch 2.12.1+cpu test environment, and zero new SUMO sim-s. Preserved the completed required-suite results above; local process inspection found no matching Round 4 Python/pytest job. No tests or dispatches started; existing PLANFIX edits and all untracked receipts retained."
   },
   "hard_rules_compliance": {
     "cpu_only": true,
