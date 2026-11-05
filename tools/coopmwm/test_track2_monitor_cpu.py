@@ -393,6 +393,9 @@ def test_replication_dry_real_specs_full_windows_and_no_charge(tmp_path):
     assert row['dry'] and row['cells'] == 10 and row['branches'] == 160
     assert row['quoted_sim_s'] == 10*4*4*840
     assert row['new_sim_s'] == 0 and not backend.calls
+    assert all(report['arm_means'] == {} for report in row['metric_reports'].values())
+    assert all('comparisons' not in report for report in row['metric_reports'].values())
+    assert row['criterion_metric'] == monitor.SYNERGY
     assert {a for a, _ in backend.weight_calls} == {'B', 'R'}
     assert len(backend.resolve_calls) == 10
     assert monitor.replicated(cfg, 6) == row
@@ -412,8 +415,20 @@ def test_quick_probes_one_run_three_states_per_arm(tmp_path, u):
     assert all(j['replicate'] == 0 for j in backend.resolve_calls)
     assert all(len(r['entries']) == 3 for r in row['records'])
     assert [r['metric'] for r in row['records']] == [10., 15., 5.]
+    assert [r[monitor.TOTAL_BENEFIT] for r in row['records']] == [25., 30., 20.]
+    assert [r[monitor.SYNERGY] for r in row['records']] == [10., 15., 5.]
+    assert all(r['metric_name'] == monitor.SYNERGY for r in row['records'])
+    assert row['metric_reports'][monitor.TOTAL_BENEFIT]['arm_means'] == dict(A=25., B=30., R=20.)
+    assert row['metric_reports'][monitor.SYNERGY]['arm_means'] == dict(A=10., B=15., R=5.)
+    assert all('comparisons' not in report for report in row['metric_reports'].values())
+    assert row['criterion_metric'] == monitor.SYNERGY
     assert 'comparisons' not in row
     assert backend.calls[0][2] == 'early_probes'
+    summary = (tmp_path/'CLEAN1_STATUS.md').read_text()
+    assert 'Total benefit vs common base (veh-s): A=25, B=30, R=20.' in summary
+    assert 'Group-over-best-single synergy (veh-s): A=10, B=15, R=5.' in summary
+    assert 'Registered criterion (unchanged): u24 group-over-best-single synergy' in summary
+    assert 'CI95=' not in summary  # A single three-state probe has no inferential CI.
     # Both scheduled probes must evaluate trained A, including when arms are omitted.
     from .sumo_verify import _state_sha
     current_sha = _state_sha(backend.current['A'])
@@ -439,6 +454,15 @@ def test_live_replication_paired_world_bootstrap_correct_and_immutable(tmp_path)
     assert row['comparisons']['R-common_base']['mean'] == 5.
     assert row['comparisons']['B-R']['mean'] == 10.
     assert row['comparisons']['B-R']['ci_lo'] == row['comparisons']['B-R']['ci_hi'] == 10.
+    total = row['metric_reports'][monitor.TOTAL_BENEFIT]
+    synergy = row['metric_reports'][monitor.SYNERGY]
+    assert total['comparisons']['B-common_base']['mean'] == 30.
+    assert total['comparisons']['R-common_base']['mean'] == 20.
+    assert total['comparisons']['B-R']['mean'] == 10.
+    assert synergy['comparisons']['B-zero_synergy'] == row['comparisons']['B-common_base']
+    assert synergy['comparisons']['R-zero_synergy'] == row['comparisons']['R-common_base']
+    assert row['comparisons_metric'] == row['criterion_metric'] == monitor.SYNERGY
+    assert 'not total benefit' in row['comparisons_note']
     assert row['safety_ok']
     ids = [c[1]['verification_id'] for c in backend.calls if c[0] == 'branch']
     assert len(ids) == len(set(ids)) == 160
@@ -450,6 +474,10 @@ def test_live_replication_paired_world_bootstrap_correct_and_immutable(tmp_path)
     assert monitor.replicated(cfg, 24) == row and len(backend.calls) == before
     verify_sealed(row, 'receipt_sha256')
     assert 'verdict=pass' in (tmp_path/'CLEAN1_STATUS.md').read_text()
+    summary = (tmp_path/'CLEAN1_STATUS.md').read_text()
+    assert 'Total benefit vs common base (veh-s): B=30, R=20.' in summary
+    assert 'Group-over-best-single synergy (veh-s): B=15, R=5.' in summary
+    assert 'B-zero_synergy: mean=15; CI95=[15, 15]; n=5 world replicates.' in summary
 
 
 def test_replicated_safety_regression_fails_primary_not_secondary(tmp_path):
@@ -586,12 +614,112 @@ def test_bootstrap_pairs_worlds_and_not_individual_states():
         for arm in ('B', 'R'):
             rows.append(dict(arm=arm, replicate=i, world_seed=986048+i,
                 state_set_sha256=str(i), window_set_sha256=str(i), metric=100*i+(3 if arm == 'B' else 0),
+                delta_all_new_veh_s=200*i+(7 if arm == 'B' else 0),
                 safety=dict.fromkeys(monitor.SAFETY, 0), reference_safety=dict.fromkeys(monitor.SAFETY, 0)))
     row = monitor._analyse(rows, 24, monitor.BOOTSTRAP)
     assert row['comparisons']['B-R']['ci_lo'] == row['comparisons']['B-R']['ci_hi'] == 3
     assert row['comparisons']['B-R']['n'] == 5
+    assert row['metric_reports'][monitor.TOTAL_BENEFIT]['comparisons']['B-R']['ci_lo'] == 7
+    assert row['metric_reports'][monitor.TOTAL_BENEFIT]['comparisons']['B-R']['ci_hi'] == 7
     with pytest.raises(ValueError, match='incomplete'):
         monitor._analyse(rows[:-1], 24, monitor.BOOTSTRAP)
     rows[-1]['world_seed'] += 1
     with pytest.raises(ValueError, match='unpaired'):
         monitor._analyse(rows, 24, monitor.BOOTSTRAP)
+
+
+@pytest.mark.parametrize('costs,total,synergy,verdict', [
+    # One member achieves the whole group benefit: positive benefit, zero synergy.
+    ([80., 80., 90., 100.], 20., 0., 'fail'),
+    # The best solo can be harmful: the registered synergy has NO zero floor.
+    ([110., 120., 130., 100.], -10., 10., 'pass'),
+    ([90., 80., 95., 100.], 10., -10., 'fail'),
+])
+def test_u24_criterion_uses_synergy_not_total_and_br_symmetry(
+        tmp_path, monkeypatch, costs, total, synergy, verdict):
+    cfg, backend = diagnostic_config(tmp_path)
+    cfg['monitor_dry_run'] = False
+    original = backend.run_branch
+    def same_grades(spec, snapshot):
+        result = original(spec, snapshot)  # Still validate real A/B/R checkpoint/mask routing.
+        result['J_veh_s'] = dict(zip(('all', 'solo0', 'solo1', 'reference'), costs))[spec['branch']]
+        return result
+    monkeypatch.setattr(backend, 'run_branch', same_grades)
+    row = monitor.replicated(cfg, 24)
+    assert row['verdict'] == verdict and row['safety_ok']
+    for arm in ('B', 'R'):
+        cells = [r for r in row['records'] if r['arm'] == arm]
+        assert all(r[monitor.TOTAL_BENEFIT] == total for r in cells)
+        assert all(r[monitor.SYNERGY] == r['metric'] == synergy for r in cells)
+        for r in cells:
+            for e in r['entries']:
+                assert e[monitor.TOTAL_BENEFIT] == total and e[monitor.SYNERGY] == synergy
+        assert row['metric_reports'][monitor.TOTAL_BENEFIT]['arm_means'][arm] == total
+        assert row['metric_reports'][monitor.SYNERGY]['arm_means'][arm] == synergy
+    for name in monitor.REPORT_METRICS:
+        estimate = row['metric_reports'][name]['comparisons']['B-R']
+        assert estimate['mean'] == estimate['ci_lo'] == estimate['ci_hi'] == 0
+    assert row['metric_reports'][monitor.TOTAL_BENEFIT]['registered_u24_metric'] is False
+    assert row['metric_reports'][monitor.SYNERGY]['registered_u24_metric'] is True
+    assert row['metric_reports'][monitor.SYNERGY]['solo_zero_floor'] is False
+    verify_sealed(row, 'receipt_sha256')
+
+
+def test_both_metrics_average_states_before_world_bootstrap_and_preserve_registered_ci(tmp_path, monkeypatch):
+    cfg, backend = diagnostic_config(tmp_path)
+    cfg['monitor_dry_run'] = False
+    for i in range(5):
+        backend.states[i] = backend.states[i][:3 if i == 0 else 1]
+        cfg['isolated_registration']['replicates'][i].update(monitor.diagnostic_identity(backend.states[i]))
+    original = backend.run_branch
+    def unequal_states(spec, snapshot):
+        result = original(spec, snapshot)
+        rep = int(spec['verification_id'].rsplit('_r', 1)[1][:3])
+        state = int(spec['verification_id'].split('_s')[1][:3])
+        total = [0., 0., 900.][state] if rep == 0 else 10.*rep
+        synergy = total/100. if rep == 0 else float(rep)
+        result['J_veh_s'] = dict(all=1000.-total, solo0=1000.-total+synergy,
+            solo1=1001.-total+synergy, reference=1000.)[spec['branch']]
+        return result
+    monkeypatch.setattr(backend, 'run_branch', unequal_states)
+    row = monitor.replicated(cfg, 24)
+    assert row['metric_reports'][monitor.TOTAL_BENEFIT]['arm_means'] == dict(B=80., R=80.)
+    assert row['metric_reports'][monitor.SYNERGY]['arm_means'] == dict(B=2.6, R=2.6)
+    # Independently reconstruct the original single-metric comparison inputs/order.
+    cells = {(r['arm'], r['replicate']): r for r in row['records']}
+    for pi, (a, b) in enumerate((('B', 'common_base'), ('R', 'common_base'), ('B', 'R'))):
+        values = [cells[a, i]['metric']-(0 if b == 'common_base' else cells[b, i]['metric'])
+                  for i in range(5)]
+        assert row['comparisons'][a+'-'+b] == monitor._bootstrap(values, 24, pi, monitor.BOOTSTRAP)
+    assert row['metric_reports'][monitor.TOTAL_BENEFIT]['comparisons']['B-common_base'] == (
+        monitor._bootstrap([300., 10., 20., 30., 40.], 24, 0, monitor.BOOTSTRAP))
+
+
+def test_legacy_diagnostic_status_labels_both_quantities_without_rewriting_receipt(tmp_path):
+    cfg, _ = diagnostic_config(tmp_path)
+    cfg['monitor_dry_run'] = False
+    row = monitor.replicated(cfg, 24)
+    for key in ('metric_reports', 'comparisons_metric', 'comparisons_note', 'criterion_metric'):
+        row.pop(key)
+    row['criterion'] = 'u24 B-common_base CI95 low > 0 and no safety regression; B-R descriptive'
+    for r in row['records']:
+        for key in ('metric_name', monitor.TOTAL_BENEFIT, monitor.SYNERGY):
+            r.pop(key)
+    row = monitor._seal(row, 'receipt_sha256')
+    path = tmp_path/'track2_diagnostics/replicated_u024_live.json'
+    path.write_text(json.dumps(row))
+    before = path.read_bytes()
+    monitor._write_status(tmp_path)
+    assert path.read_bytes() == before
+    assert monitor.replicated(cfg, 24) == row  # No replay, rehash or migration of old receipts.
+    summary = (tmp_path/'CLEAN1_STATUS.md').read_text()
+    assert 'Total benefit vs common base (veh-s): B=30, R=20.' in summary
+    assert 'Group-over-best-single synergy (veh-s): B=15, R=5.' in summary
+    assert 'B-zero_synergy: mean=15; CI95=[15, 15]' in summary
+    assert 'B-common_base: mean=15' not in summary
+
+
+def test_missing_legacy_total_benefit_is_unmeasured_never_zero_imputed():
+    reports = monitor._metric_reports([dict(arm='B', metric=0.)])
+    assert reports[monitor.TOTAL_BENEFIT]['arm_means'] == {}
+    assert reports[monitor.SYNERGY]['arm_means'] == dict(B=0.)

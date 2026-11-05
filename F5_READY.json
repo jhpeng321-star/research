@@ -1,0 +1,112 @@
+{
+  "task": "F5",
+  "status": "READY_FOR_INTEGRATION",
+  "date": "2026-11-05",
+  "worktree": "E:/agent-work/c4-fix-reporting",
+  "branch": "c4/fix-reporting",
+  "base_branch": "c4/rerun-launch",
+  "base_commit": "8bf7f53395c7a53a3e8d847c5a7f3229b79ab102",
+  "scope": "F5 reporting correction and synthetic CPU regression tests only",
+  "owned_files": [
+    "tools/coopmwm/track2_monitor.py",
+    "tools/coopmwm/test_track2_monitor_cpu.py",
+    "F5_READY.json"
+  ],
+  "authority": [
+    "E:/agent-work/_sol/tracks_spec.md: MAIN 15:15 owner, item F5",
+    "E:/research-dense/runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md: section 1, What the reported statistic actually means"
+  ],
+  "changes": [
+    "Replicated and probe receipts contain labelled metric_reports for BOTH total benefit versus common base and group-over-best-single synergy, with formulas, units, higher-is-better direction and registered-u24-metric flags.",
+    "Each graded record exposes delta_all_new_veh_s and policy_cooperation_gain_veh_s as equal-state cell means. Original metric remains a synergy compatibility alias, now explicitly labelled by metric_name.",
+    "Replicated reports bootstrap BOTH quantities across the same five paired WORLD replicates, after averaging states inside each world. Total-benefit comparisons use B-common_base/R-common_base/B-R; canonical synergy comparisons use B-zero_synergy/R-zero_synergy/B-R.",
+    "Original top-level comparisons remain numerically identical synergy aliases. comparisons_metric and comparisons_note explicitly disambiguate their historical common_base keys.",
+    "Probe reports expose descriptive means for their three registered states and do not manufacture confidence intervals. Dry runs expose definitions without measurements or confidence intervals.",
+    "CLEAN1_STATUS.md displays both quantities, any available replicated CIs and the unchanged registered criterion. Old immutable receipts are readable and reusable; status derives legacy total-benefit means from their original state entries without rewriting receipts or inventing total-benefit CIs. Missing legacy evidence is unmeasured, never zero-imputed."
+  ],
+  "metrics": {
+    "total_benefit": {
+      "key": "delta_all_new_veh_s",
+      "label": "Total benefit vs common base",
+      "formula": "J_reference - J_all",
+      "unit": "veh-s",
+      "role": "descriptive; not the registered u24 endpoint"
+    },
+    "synergy": {
+      "key": "policy_cooperation_gain_veh_s",
+      "label": "Group-over-best-single synergy",
+      "formula": "(J_reference - J_all) - max_i(J_reference - J_solo_i)",
+      "equivalent_formula": "min_i(J_solo_i) - J_all",
+      "solo_zero_floor": false,
+      "unit": "veh-s",
+      "role": "unchanged registered u24 endpoint"
+    }
+  },
+  "registered_criterion": {
+    "definition_unchanged": true,
+    "metric": "policy_cooperation_gain_veh_s",
+    "primary_update": 24,
+    "pass_rule": "B synergy versus zero: percentile CI95 lower bound strictly above zero AND the existing no-safety-regression check",
+    "replicates": 5,
+    "bootstrap": {
+      "reps": 10000,
+      "level": 0.95,
+      "seed": 20261104,
+      "method": "percentile",
+      "cell_seed_rule": "seed*10000 + 100*update + pair_index",
+      "pair_order": ["B versus baseline", "R versus baseline", "B-R"]
+    },
+    "secondary": "u6/u12, total benefit and B-R remain descriptive",
+    "registration_module": "tools/coopmwm/rerun_cpus.py unchanged from base",
+    "safety_logic": "Unchanged B versus matched common-base counters, with original branch-count scaling"
+  },
+  "invariants": {
+    "A": "No policy, reward, checkpoint, control-command or branch-expansion changes. Both u2/u4 probes retain trained-A-current group/solo branches with common-u0 reference/background; existing real CPU tensor/hash/mask assertions pass.",
+    "B_R": "One shared reporting/aggregation/bootstrap implementation for both arms. Identical synthetic branch outcomes produce identical canonical total/synergy records and means and exact-zero B-R contrasts for both quantities.",
+    "registered_synergy_results": "Exact bootstrap dictionaries match the original single-metric comparison inputs, pair ordering and seeds, including an unequal-state-count world panel.",
+    "other_items": "F1/F2/F3/F4/F6 implementation and remote configuration untouched"
+  },
+  "verification": {
+    "environment": {
+      "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe (3.10.20)",
+      "CUDA_VISIBLE_DEVICES": "-1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1"
+    },
+    "cpu_tests": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_track2_monitor_cpu.py tools/coopmwm/test_policy_synergy_cpu.py tools/coopmwm/test_policy_synergy_isolated_cpu.py tools/coopmwm/test_launch_integration_cpu.py::test_production_config_keeps_canonical_registration_and_prior_budget tools/coopmwm/test_launch_integration_cpu.py::test_production_entrypoint_imports_do_not_construct_or_dispatch_workers -k \"not complete_branch_set_precharged and not isolated_complete_precharge\" --basetemp=E:/agent-work/c4-fix-reporting/_out/f5_cpu_final -o cache_dir=E:/agent-work/c4-fix-reporting/_out/f5_pytest_cache",
+      "result": "120 passed, 6 deselected in 52.82s",
+      "full_monitor_suite": "All 103 monitor tests included and passed",
+      "deselection_reason": "Six unchanged legacy policy-synergy dependency cases require Linux /proc/<pid>/stat through replay_start.owner(); their Windows incompatibility is already documented in P3_READY.json.",
+      "F5_regressions": [
+        "Both scheduled probes show total benefit and synergy while retaining trained A checkpoint routing",
+        "Both replicated quantities have separately labelled means and paired-world CIs",
+        "Positive total benefit with zero or negative synergy still fails u24",
+        "Negative total benefit with positive synergy preserves the registered pass result and absence of a best-solo zero floor",
+        "B/R-identical synthetic outcomes produce identical reports and zero contrasts",
+        "Unequal state counts are averaged within world before equal-world means and bootstrap",
+        "Original synergy bootstrap dictionaries, seed schedule and safety verdicts are preserved",
+        "Legacy receipt/status compatibility, immutability and no missing-data zero imputation",
+        "Dry diagnostics report no fabricated measurements"
+      ]
+    },
+    "lint": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m ruff check tools/coopmwm/track2_monitor.py tools/coopmwm/test_track2_monitor_cpu.py",
+      "result": "PASS"
+    },
+    "scope_check": {
+      "command": "git diff --exit-code c4/rerun-launch -- tools/coopmwm/rerun_cpus.py tools/coopmwm/policy_synergy.py tools/coopmwm/track2_backend.py tools/coopmwm/track2_reward.py tools/coopmwm/launch_training.py tools/coopmwm/launch_production.py",
+      "result": "PASS: registered criterion, metric algebra, policy/reward and launch implementations unchanged"
+    },
+    "diff_check": "git diff --check: PASS"
+  },
+  "execution": {
+    "new_sim_s": 0,
+    "sumo_executed": false,
+    "ssh_or_remote_used": false,
+    "gpu_used": false,
+    "restricted_data_opened": false,
+    "writes_outside_worktree": false,
+    "committed": false
+  }
+}
