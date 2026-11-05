@@ -15,7 +15,9 @@
     {"sha": "a5a9bc22", "subject": "coopmwm T2H: refresh readiness after all8 admission fix"},
     {"sha": "844a3894", "subject": "coopmwm T2H: preserve independent all8 fix acceptance"},
     {"sha": "d45d2a2a", "subject": "coopmwm T2H: reconcile readiness with independent PASS"},
-    {"sha": "9a48f20d", "subject": "coopmwm T2H: preserve resumed PASS review"}
+    {"sha": "9a48f20d", "subject": "coopmwm T2H: preserve resumed PASS review"},
+    {"sha": "b94eaefa", "subject": "coopmwm T2H: finalize resumed readiness receipt"},
+    {"sha": "91c20dab", "subject": "coopmwm T2H: preserve final independent PASS reconciliation"}
   ],
   "receipt_commit": "The final commit containing T2H_READY.json records verification and readiness.",
   "api": {
@@ -121,8 +123,8 @@
     "resume": "The independent PASS report was already present as uncommitted work on resume and was preserved unchanged in 844a3894. Readiness, acceptance and progress receipts reconciled with that completed review. No completed tests or dispatches duplicated."
   },
   "final_resume": {
-    "starting_head": "d45d2a2a",
-    "preserved_review_commit": "9a48f20d",
+    "starting_head": "b94eaefa",
+    "preserved_review_commit": "91c20dab",
     "implementation_unchanged_since_tested_head": "a5a9bc22",
     "verification": "git diff --exit-code a5a9bc22 HEAD excluding the four review/readiness/acceptance/progress files passed; git diff --check c4/track-base passed",
     "tests": "Preserved completed 96-pass independent CPU result; no tests or dispatches repeated",
