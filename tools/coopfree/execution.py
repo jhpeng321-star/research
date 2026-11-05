@@ -54,11 +54,26 @@ def inject(executor, env, rows, controller, now, audit):
                 raw[0,i] = min(executor.accel_max,max(executor.accel_min,desired[vid]['requested_raw']))
         safe = original(state,raw,**kwargs)
         baseline = original(state,accel,**kwargs) if desired else safe
+        # Receipt-only same-state counterfactual at the existing safety boundary.
+        # It does not command vehicles or advance physics. Absent metadata keeps
+        # the original command path and number of safety calls unchanged.
+        move_rows = {v:r for v,r in desired.items() if 'without_library_raw' in r}
+        without_move = None
+        if move_rows:
+            counterfactual = raw.clone()
+            for i,vid in enumerate(ids):
+                if vid in move_rows:
+                    counterfactual[0,i] = min(executor.accel_max,max(executor.accel_min,
+                        move_rows[vid]['without_library_raw']))
+            without_move = original(state,counterfactual,**kwargs)
         for i,vid in enumerate(ids):
             if vid in desired:
                 audit.append(dict(vid=vid,**desired[vid],mappo_raw=float(accel[0,i]),
                     mappo_safe=float(baseline[0,i]),issued_raw=float(raw[0,i]),
                     issued_safe=float(safe[0,i]),clamped=bool(raw[0,i] != safe[0,i])))
+                if vid in move_rows:
+                    audit[-1].update(without_library_issued_safe=float(without_move[0,i]),
+                        library_issued_delta_mps2=float(safe[0,i]-without_move[0,i]))
         calls.append(True)
         return safe
     safety.safe_accel = apply

@@ -59,6 +59,11 @@ def smoke(cfg):
     dry = [training.diagnostic(cfg, u, dry=True, artifacts=output) for u in (6, 12, 24)]
     if any(r['cells'] != 10 or r['status'] != 'dry_run' or r['branches'] <= 0 for r in dry):
         raise ValueError('complete replicated-test dry grid required')
+    fixes = None
+    if 'clean2_budget' in cfg:
+        from .clean2_receipts import reporting, validate_smoke
+        measured = reporting(cfg)
+        fixes = validate_smoke(cfg, updates, measured)
     charged = sum(r['sim_s'] for r in ledger(root) if r['phase'] == 'track2_smoke')
     if charged > 20000:
         raise ValueError('owner total smoke cap exceeded')
@@ -71,6 +76,7 @@ def smoke(cfg):
         wm_group_credit=dict(enabled=False, reason='owner 02:28 redesign'),
         plan_augmentation=dict(enabled=cfg['plan_augment']['enabled'],
             reason=cfg.get('launch_augmentation_decision', 'registered native all8 admission')),
+        **({'clean2_fix_receipts_sha256':fixes['receipt_sha256']} if fixes else {}),
         replacement_reward='native P2 real observable neighbourhood SUMO reward'), 'receipt_sha256')
     training.write(root/'SMOKE_PASS.json', receipt)
     return receipt

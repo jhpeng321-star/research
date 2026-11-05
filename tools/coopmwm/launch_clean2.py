@@ -124,6 +124,13 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1):
             raise ValueError('fix acceptance SHA differs: '+task)
         accepted_shas[task] = entry['sha256']
     cfg = restart_config(training.read(clean1/'CONFIG.json'), root, source, source_manifest)
+    recipe = training.read(source/'F4_CONTINUATION_RECIPE.json')
+    if recipe.get('schema') != 'coopmwm-f4-continuation-recipe-v1' or set(recipe['config_patch']) != {'f4_close_call'}:
+        raise ValueError('accepted fixed F4 continuation recipe required')
+    cfg.update(deepcopy(recipe['config_patch']))
+    handoff = clean1/'plan_fix/PLAN_FIX_READY.json'
+    if handoff.is_file():
+        cfg['plan_fix_ready'] = str(handoff)
     rule = training.read(clean1/rc.RULE_FILE)
     rc.init_root(root, amendment_shas=[rule['amendment_sha256']], track2=True)
     training.write(root/'PREPARATION_STARTED.json', dict(unix=time.time(),
@@ -161,6 +168,12 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1):
     gate_pairs = qualification.gate_pairs(cfg)
     gate_manifest = [dict(id=s['verification_id'], sim_s=s['sim_s'], window=s['window'],
         snapshot_sha256=s['snapshot_sha256']) for s, _ in gate_pairs]
+    reporting = [s for s in gate_manifest if '_s000_' in s['id']]
+    if not reporting or cfg['smoke']['total_sim_s']+sum(s['sim_s'] for s in reporting) > 20000:
+        raise ValueError('full first-state B/R smoke reporting plus episodes exceeds smoke cap')
+    cfg['clean2_smoke_reporting_quote'] = dict(selection='first prospectively registered state, B/R group/solos/common-base; full windows; descriptive only',
+        branches=reporting, sim_s=sum(s['sim_s'] for s in reporting),
+        complete_smoke_sim_s=cfg['smoke']['total_sim_s']+sum(s['sim_s'] for s in reporting))
     from .storage import ledger
     rows = ledger(clean1)
     # Lock-consistent prefix SHA: a concurrent plan-fix append may occur between

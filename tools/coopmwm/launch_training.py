@@ -153,13 +153,17 @@ def update(cfg, arm, u, *, smoke=False):
     from .practice_starts import update_report
     metrics = production.update_metrics(arm, episodes, learning, envelope,
         augmented_examples=0 if arm == 'A' else augmentation['admitted'][arm])
+    extra = {}
+    if 'clean2_budget' in cfg:
+        from .clean2_receipts import update_evidence
+        extra['clean2_fix_receipts'] = update_evidence(arm, episodes, learning, envelope, metrics)
     value = _seal(dict(**started, finished_unix=time.time(), checkpoint=checkpoint,
         checkpoint_sha256=rc.sha(checkpoint), practice=update_report(episodes),
         safety=safety, learning=learning, metrics=metrics,
         execution=dict(accepted_moves=sum(sum(bool(v) for v in s['sample'].get(
             'track2_trigger', {}).get('accepted', {}).values()) for e in episodes for s in e['steps'])),
         physical=[dict(id=e['id'], world=e['world'], totals=e['totals'],
-                       ttc_events=e['ttc_events']) for e in episodes]), 'update_sha256')
+                        ttc_events=e['ttc_events']) for e in episodes], **extra), 'update_sha256')
     write(artifacts/f'{arm}_UPDATE_{u:03}.json', value)
     return value
 

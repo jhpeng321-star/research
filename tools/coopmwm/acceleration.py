@@ -54,6 +54,10 @@ def requests(sample, commands, *, ignore_departed=False):
             raise ValueError('nonfinite acceleration residual')
         if delta != 0.:
             out[vid] = dict(requested_raw=commands[vid]+delta, acceleration_residual=delta)
+            if 'base_action' in sample.get('coop_layer', {}):
+                offset = sample['context'].get('move_offsets', {}).get(vid, 0.)
+                out[vid].update(library_move_offset_mps2=offset,
+                    without_library_raw=commands[vid]+delta-offset)
     for vid,raw in sample.get('absolute_accels',{}).items():
         if vid in commands:out[vid]=dict(requested_raw=raw,acceleration_residual=raw-commands[vid])
     return out

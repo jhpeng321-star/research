@@ -246,6 +246,7 @@ class EpisodePolicy(torch.nn.Module):
         self.cfg, self.arm = deepcopy(cfg), arm
         config = LayerConfig(**dict(cfg['layer_config'], feature_dim=FEATURE_DIM, enabled=True))
         self.layer = ProductionLayer(base, config)
+        self.layer.actuation_receipts = 'clean2_budget' in cfg
         self.layer.trigger_gain.requires_grad_(True)
         self.layer.optimizer = torch.optim.Adam(self.layer.layer_parameters(), lr=config.learning_rate)
         self.trigger = TriggerPolicy(self.layer.base, v2v_dim=cfg['v2v_dim'],

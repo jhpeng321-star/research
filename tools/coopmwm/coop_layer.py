@@ -184,6 +184,9 @@ class CooperationLayer(nn.Module):
         sample['coop_layer'] = dict(features=features.tolist(), offsets=offsets.tolist(),
             choices=choices.tolist(), old_residual=residual.tolist(), old_logits=logits.tolist(),
             old_gain=float(gain), base_logp=sample['logp'])
+        if getattr(self, 'actuation_receipts', False):
+            sample['coop_layer'].update(base_action=base_action.tolist(),
+                                       applied_correction=correction.tolist())
         # This is the joint trigger/acceleration score, not base MAPPO's score.
         sample['logp'] = float(self.score(sample)[0])
         return sample, next_memory
