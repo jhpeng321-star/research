@@ -43,20 +43,21 @@
   },
   "latest_resume_verification": {
     "date": "2026-11-05",
-    "starting_head": "2a221ed0443f5cba14a0932e84ce0e34ea37a114",
+    "starting_head": "2dd42ebea7cbaf51119adab739f824d4dabba7a7",
     "starting_worktree_status": "clean on c4/planner-online",
     "receipts_read": ["T1B_READY.json", "T1B_FIX_R2.json", "REVIEW_T1B_r2.md", "REVIEW_T1B_r3.md", "T1B_ACCEPTED.json"],
     "accepted_implementation_head": "1f15a9ef0d249bebbbafd43efccd7c3f677778e7",
     "changes_since_accepted_head": ["REVIEW_T1B_r3.md", "T1B_ACCEPTED.json", "T1B_READY.json"],
     "implementation_and_tests_unchanged": true,
-    "source_spot_check": "Read shared planner_commitments lifetime implementation and all 16 numeric live-versus-real-decoder cancellation/recontact/full-horizon regression cases.",
+    "source_verification": "git diff --name-only 1f15a9ef0d249bebbbafd43efccd7c3f677778e7 HEAD lists only the three review/receipt files; accepted implementation and regression tests remain unchanged.",
     "base_commit_verified": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
     "diff_check": "git diff --check c4/track-base -- passed",
     "matching_local_python_test_processes_found": false,
+    "process_check": "No T1B pytest process found; unrelated F1 pytest process preserved.",
     "new_test_runs_or_dispatches": 0,
     "completed_test_runs_preserved": "Implementation and independent review each recorded 188 passed plus 9 passing subtests; completed tests were not repeated or counted again.",
     "unresolved_review_blockers": [],
-    "action": "Reconfirmed the accepted implementation is unchanged at this fresh-session HEAD, read the shared lifetime code and 16-case numeric regression, and preserved completed CPU verification and r3 acceptance; refreshed only this readiness receipt."
+    "action": "Read task specification, r2/r3 reviews and fix/acceptance/readiness receipts; verified unchanged accepted implementation, clean starting status and base diff check. Preserved completed CPU verification and r3 acceptance without repeating finished tests or dispatching jobs; refreshed this readiness receipt."
   },
   "commits": [
     {"commit": "abaada860309abdd043f7fc0d250fc77688acba3", "step": "Calibrated paired-WM scoring and additive residual-profile decoding"},
