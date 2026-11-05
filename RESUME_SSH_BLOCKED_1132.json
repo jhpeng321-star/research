@@ -1,0 +1,39 @@
+{
+  "schema": "coopmwm.clean1.resume_connectivity_blocked.v1",
+  "observed_at": "2026-11-05T11:32:11.2600220+08:00",
+  "status": "REMOTE_VERIFICATION_BLOCKED_SSH_CONNECTION_CLOSED",
+  "adopted_operator_commit": "eaad3010",
+  "host": "cpuV",
+  "public_ip": "101.35.160.72",
+  "checks": [
+    {
+      "command": "ssh -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=1 cpuV true",
+      "result": "Connection closed by 101.35.160.72 port 22; remote assertions did not run"
+    }
+  ],
+  "local_read_only_watcher": {
+    "pid": 15116,
+    "creation_time_local": "2026-11-05T09:17:38+08:00",
+    "command": "C:\\Python314\\python.exe -u E:\\agent-work\\_sol\\clean1_learning_watch.py",
+    "identity_verified_alive": true,
+    "replacement_started": false,
+    "last_successful_probe_unix_from_state": 1793848787.408906
+  },
+  "last_verified_remote_state": {
+    "receipt": "RESUME_SAFETY_PAUSED_1116_VERIFIED.json",
+    "timestamp": "2026-11-05T11:16:59.091272+08:00",
+    "status": "SAFETY_PAUSED_UNCHANGED",
+    "sealed_updates": {"A": 3, "B": 3, "R": 2},
+    "R_u003_checkpoint_exists": false,
+    "original_remote_owners_exited": true,
+    "ledger_rows": 345,
+    "cumulative_charged_sim_s": 358820,
+    "ledger_file_sha256": "ef35a12da2b5b0963eb413be0649df688e7f1bc46655e8ecf20a8379f37ed0ec",
+    "augmentation_enabled": false,
+    "freshly_reverified_this_session": false
+  },
+  "safety_diagnosis_reused": "SAFETY_PAUSE_U003_VERIFIED.json: real R-minus-A critical-event regression; no counting/pairing/guard fault found; 117 focused tests passed previously",
+  "completed_work_reused": "S0 setup/parity/copy, integration, symmetric augmentation-OFF decision, final-source smoke, final safety gate, launch, u1/u2 monitoring and u2 probe, public-tape safety diagnosis",
+  "session_actions": {"new_sim_s": 0, "new_dispatches": 0, "signals": 0, "runtime_changes": 0, "cpuQ_actions": 0, "pause_release": false},
+  "next": "Restore cpuV SSH access for read-only verification. Retain the confirmed safety pause pending an authorized safety-recovery decision. Preserve completed episodes, checkpoints, charges and diagnostics; R3 must not be sealed as trained."
+}
