@@ -787,7 +787,8 @@ def test_reservation_own_cap_prior_charge_phase_and_no_double_charge(cfg, monkey
         tb._reserve(cfg, [dict(id='ep3', sim_s=1200)], 'track2_train')
 
 
-def test_real_accel_plant_full_episode_with_fake_physics(cfg, monkeypatch):
+@pytest.mark.parametrize('hard_event',[None,'collisions','teleports'])
+def test_real_accel_plant_full_episode_with_fake_physics(cfg, monkeypatch, hard_event):
     """Run the actual 900-tick worker, V2V, layer, receipts and compression path."""
     from . import accel_plant
     p = policy(cfg)
@@ -806,6 +807,9 @@ def test_real_accel_plant_full_episode_with_fake_physics(cfg, monkeypatch):
     exact.Backend = Backend
     exact.setup = lambda *a: calls.append('fake_setup')
     def tick(backend, controller, trace):
+        if hard_event:
+            backend.totals[hard_event] = 1
+            raise ValueError('early termination/safety/slot/lane anomaly')
         t = backend.actual
         sensed = rows()
         commands = dict(c1=0., c2=0.)
@@ -829,7 +833,19 @@ def test_real_accel_plant_full_episode_with_fake_physics(cfg, monkeypatch):
     job = dict(id='fake-full-episode', path=str(tb._path(cfg['run_root'])/'episode'),
         runtime='unused', checkpoint='unused', arm='B', world=dict(seed=1), role='train', sim_s=1200,
         weights=p.layer.base.state_dict(), noise_seed=81, deterministic=False, v2v=True,
-        b_replay=True, track2_backend=True, track2_config=cfg, track2_state=p.worker_state())
+        b_replay=True, track2_backend=True, track2_config=cfg, track2_state=p.worker_state(),
+        clean2_safety_guard=True, queue_root=cfg['run_root'])
+    if hard_event:
+        from .warm_health import HealthPause
+        from .accel_runner import episode_local
+        with pytest.raises(HealthPause) as error:
+            accel_plant.episode(job)
+        assert not episode_local(error.value)
+        receipt=json.loads((tb._path(cfg['run_root'])/'PAUSE_SAFETY.json').read_text())
+        assert receipt['evidence']['totals'][hard_event]==1
+        assert not (tb._path(job['path'])/'RESULT.json').exists()
+        assert calls==['fake_setup','closed']
+        return
     result = accel_plant.episode(job)
     assert len(result['steps']) == 900
     assert result['actual_sim_s'] == 1200 and result['charged_sim_s'] == 1200

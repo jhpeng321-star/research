@@ -82,3 +82,22 @@ def test_smoke_uses_exact_inherited_owner_safety_rules_and_never_changes_A(tmp_p
     (root/safety.B_RULE).write_text('{}')
     with pytest.raises(ValueError,match='changed before smoke'):
         qualification.copy_safety_authority(cfg,output)
+
+
+def test_prospective_quotes_create_artifacts_and_expand_all_full_native_grids(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from .test_track2_monitor_cpu import diagnostic_config
+    cfg, backend = diagnostic_config(tmp_path)
+    backend_adapter = SimpleNamespace(registration=cfg['isolated_registration'],
+        resolve_states=backend.resolve_states,weights=backend.weights,
+        reserve=backend.reserve,run_branch=backend.run_branch,close=lambda:None)
+    monkeypatch.setattr(clean2,'QuoteBackend',lambda cfg,dry:backend_adapter)
+    monkeypatch.setattr(production,'monitor_config',lambda cfg,root:dict(cfg,run_root=str(root)))
+    quotes=clean2.full_diagnostic_quotes(cfg)
+    assert set(quotes)=={'probe_u002','probe_u004','replicated_u006','replicated_u012','replicated_u024'}
+    assert (tmp_path/'prospective_quotes').is_dir()
+    assert not backend.calls
+    for name,row in quotes.items():
+        assert row['status']=='dry_run' and row['new_sim_s']==0
+        assert row['cells']==(3 if name.startswith('probe') else 10)
+        assert all(not b['window'].get('truncated') for b in row['branch_manifest'])

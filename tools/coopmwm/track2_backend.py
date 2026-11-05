@@ -587,6 +587,8 @@ class ArmRuntime:
         for world in worlds:
             guard(world, 'train')
         extras = dict(update=u, v2v=True, v2v_dim=cfg['v2v_dim'], b_replay=arm != 'A', health_guards=True)
+        if 'clean2_budget' in cfg:
+            extras['clean2_safety_guard'] = True
         if arm != 'A':
             extras.update(track2_backend=True, track2_config=cfg, track2_state=self.policy.worker_state())
         ident = cfg.get('job_namespace', 'clean1')+f'_warm_u{u:03}'

@@ -5,7 +5,7 @@ import pytest
 from . import policy_synergy as ps, replay_start, warm_health
 from .exact_grade import _seal
 from .protocol import sha
-from .test_policy_synergy_cpu import DrawPolicy, fixture
+from .test_policy_synergy_cpu import DrawPolicy, fixture, diagnostic_owner
 
 
 @pytest.mark.parametrize('selected', [['a','b'], ['a'], []])
@@ -47,7 +47,7 @@ def test_isolated_specs_bind_masks_original_window_and_distinct_ids():
 
 @pytest.mark.parametrize('later_source',[False,True])
 @pytest.mark.parametrize('suffix',['_ISOLATED','_ISOLATED_V2'])
-def test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson(tmp_path,monkeypatch,later_source,suffix):
+def test_isolated_complete_precharge_adopts_old_reference_not_all_new_lesson(tmp_path,monkeypatch,later_source,suffix,diagnostic_owner):
     s,r,new,old=fixture();s['weights']={'w':torch.full((2,),2.)} if later_source else old
     r.update(status='accepted',branches=[dict(J_veh_s=999.)])
     bank=ps.rb.bank_root(tmp_path,'B');(bank/'decisions').mkdir(parents=True)

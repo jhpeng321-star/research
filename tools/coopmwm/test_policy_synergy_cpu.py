@@ -8,6 +8,17 @@ from .exact_grade import _seal
 from .test_replay_bank_confirm_cpu import snapshot, plan
 
 
+@pytest.fixture
+def diagnostic_owner(monkeypatch):
+    import os
+    if os.name == 'nt':
+        from . import replay_start
+        # These tests fake the branch runner and accounting. Linux still uses
+        # the real /proc ownership proof during deployment qualification.
+        monkeypatch.setattr(replay_start, 'owner', lambda: dict(pid=os.getpid(),
+            start_ticks='windows_cpu_fixture', unix=0.))
+
+
 class DrawPolicy:
     def __init__(self, mean, scale):self.mean,self.scale=mean,scale
     def sample(self, context, generator, deterministic=False, memory=None):
@@ -131,7 +142,7 @@ def test_real_controller_keeps_prefix_t0_then_member_specific_current_policy():
 
 
 @pytest.mark.parametrize('later_source',[False,True])
-def test_complete_branch_set_precharged_once_and_later_snapshot_gets_u3_reference(tmp_path,monkeypatch,later_source):
+def test_complete_branch_set_precharged_once_and_later_snapshot_gets_u3_reference(tmp_path,monkeypatch,later_source,diagnostic_owner):
     from . import replay_start, warm_health
     monkeypatch.setattr(warm_health,'assert_running',lambda *a:None)
     s,r,new,old=fixture();s['weights']={'w':torch.full((2,),2.)} if later_source else old

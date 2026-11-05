@@ -342,11 +342,20 @@ def pre_f4_modules():
     """Differential oracle: the declared launch parent's actual implementations."""
     from pathlib import Path
     import subprocess
+    import os
+    import hashlib
     import types
     modules = {}
     for name in ('track2_reward', 'track2_backend', 'track2_monitor', 'launch_production'):
-        source = subprocess.check_output(['git', 'show', f'8bf7f533:tools/coopmwm/{name}.py'],
-            cwd=Path(__file__).resolve().parents[2], text=True, encoding='utf-8')
+        frozen = os.environ.get('COOPMWM_PRE_F4_BASELINE_DIR')
+        raw = ((Path(frozen)/(name+'.py')).read_bytes() if frozen else subprocess.check_output(
+            ['git', 'show', f'8bf7f533:tools/coopmwm/{name}.py'], cwd=Path(__file__).resolve().parents[2]))
+        assert hashlib.sha256(raw).hexdigest() == {
+            'launch_production':'abf898930f31b84a8ff7880308e6ff08c7dc11c83985f9d8800250981f341586',
+            'track2_backend':'c819aab35014c156f864522224300f36a85596953a74896218f06621c9cd1eed',
+            'track2_monitor':'5ac1b22bf951e2097089be4d97d2bea7b98ccf659d954ad0639667ae7404a055',
+            'track2_reward':'6aeca5065b0bbc43e4736c3ce6f014621176524131d57c6f7022cf934b39b48b'}[name]
+        source = raw.decode('utf-8')
         module = types.ModuleType('tools.coopmwm._pre_f4_'+name)
         module.__package__ = 'tools.coopmwm'
         exec(compile(source, f'<pre-F4 {name}>', 'exec'), module.__dict__)
@@ -475,12 +484,16 @@ def test_default_off_real_optimizer_and_learning_receipt_match_parent(
     fake_load(monkeypatch)
     parent = pre_f4_modules['track2_backend']
     monkeypatch.setattr(parent, '_load_base', backend._load_base)
+    # F1/F2 intentionally change execution/proposals independently of F4.
+    # Hold the actual integrated policy class common while differentially
+    # exercising the parent's and current F4-off reward/optimizer code paths.
+    monkeypatch.setattr(parent, 'EpisodePolicy', backend.EpisodePolicy)
     runtimes, learnings = [], []
     for module in (parent, backend):
         runtime = module.build_arm_runtime(cfg, arm)['runtime']
         runtime.safety_checked = True
         p = runtime.policy
-        move = module.TriggerMove(module.moves.Move('ease_off', ('c1',), 0, 20, .3))
+        move = backend.TriggerMove(backend.moves.Move('ease_off', ('c1',), 0, 20, .3))
         assert p.executor.start(move, ego='c1', observable_cav_ids=['c1'], now=300, until=320)
         p.last_decision = 300
         p.observe(rows(), 300)

@@ -8,6 +8,18 @@ from .accel_storage import write
 from .acceleration import Policy,Controller
 
 
+def clean2_safety_failure(job, totals):
+    """An observed hard event is never an environment/replacement failure."""
+    if not job.get('clean2_safety_guard'):
+        return
+    events = {k:float(totals.get(k, 0.)) for k in ('collisions','teleports')}
+    if any(events.values()):
+        from .warm_health import pause
+        pause(Path(job['queue_root']), 'SAFETY', dict(arm=job['arm'], job=job['id'],
+            world=job['world']['seed'], totals=events,
+            source='clean2 absolute hard-event guard; never eligible for TRAIN replacement'))
+
+
 def episode(job, *, controller_hook=None, policy_loader=None):
     if job.get('native_reference'):
         import types
@@ -92,7 +104,16 @@ def episode(job, *, controller_hook=None, policy_loader=None):
                 if branch and t<=branch['time_s'] and prefixes[str(t)]!=branch['prefixes'][str(t)]:
                     raise ValueError('exact full-prefix mismatch before acceleration intervention')
                 before=b.totals['team_delay_vs'];n=len(controller.events)
-                audit=cf.tick(b,controller,trace);requested+=len(audit);overrides+=sum(x['clamped'] for x in audit)
+                try:
+                    audit=cf.tick(b,controller,trace)
+                except Exception:
+                    # cf.tick updates observed totals before raising its generic
+                    # early-termination/safety error. Keep a real hard event out
+                    # of the inherited episode-local replacement route.
+                    clean2_safety_failure(job,b.totals)
+                    raise
+                clean2_safety_failure(job,b.totals)
+                requested+=len(audit);overrides+=sum(x['clamped'] for x in audit)
                 if job.get('health_guards') and job.get('guided'):
                     from .warm_health import live_safety
                     live_safety(Path(job['queue_root']),job['arm'],b.totals,job['world']['seed'],job['safety_reference'])

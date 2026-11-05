@@ -86,9 +86,11 @@ class QuoteBackend(training.MonitorBackend):
 
 def full_diagnostic_quotes(cfg):
     quotes = {}
+    output = Path(cfg['run_root'])/'prospective_quotes'
+    output.mkdir()
     for u in (2, 4, 6, 12, 24):
         backend = QuoteBackend(cfg, dry=True)
-        options = production.monitor_config(cfg, root=Path(cfg['run_root'])/'prospective_quotes')
+        options = production.monitor_config(cfg, root=output)
         options.update(isolated_registration=backend.registration, monitor_backend=backend,
                        monitor_dry_run=True)
         try:

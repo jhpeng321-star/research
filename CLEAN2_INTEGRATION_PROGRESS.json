@@ -1,0 +1,29 @@
+{
+  "status": "INTEGRATED_AWAITING_FINAL_LINUX_QUALIFICATION",
+  "branches": ["c4/fix-actuation", "c4/fix-proposals", "c4/fix-breadth", "c4/fix-safety-reward", "c4/fix-reporting", "c4/fix-ssh"],
+  "all_six_acceptance_files_verified": true,
+  "F5_preservation": "Accepted F5 code/tests/READY were uncommitted in its original worktree. Inspected the exact accepted delta, preserved it in commit254c3ba0, then merged that branch without source edits.",
+  "conflict_resolution": "Additive F1 actuation receipt flag plus accepted legacy-slot comment; F2 fully historical compatibility producer/dependencies plus exact frozen-baseline SHA support. Other four merges automatic.",
+  "first_complete_windows_selection": {
+    "head": "810db1c51cd0dc38a3737232f6fb2c21a689459c",
+    "files": 54,
+    "passed": 1523,
+    "failed": 10,
+    "skipped": 3,
+    "subtests_passed": 14,
+    "seconds": 2269.24,
+    "log": "_out/clean2_cpu_810db1c5/pytest.log",
+    "failures": "Six Linux-/proc-only fixture calls; four F4-off comparisons inadvertently compared old zero-gain actuation to intended integrated F1 actuation. No tests deselected."
+  },
+  "fixes": [
+    "F4 off comparison now holds the integrated policy common while comparing actual parent/current reward and optimizer paths, including exact worker and optimizer state checks.",
+    "Six synthetic branch/accounting tests use a test-only owner on Windows; Linux still exercises the actual /proc owner proof.",
+    "All pre-change compatibility sources are deployed as exact SHA-pinned Git blobs so Linux qualification does not require a .git checkout or skip missing baselines.",
+    "Prospective dry quote artifact directory is created before the real P3 native expansion; full u2/u4/u6/u12/u24 grids remain required.",
+    "Observed clean2 collisions or teleports now durably pause before generic failed-episode replacement. This guard is explicit clean2-only and leaves legacy/off paths and normal commands unchanged."
+  ],
+  "focused_verification": "21 passed/174 deselected in36.88s, covering all ten former failures, real native-plant exception path for collision/teleport, A/B/R absolute-event pauses, and prospective complete dry grids. Other1523 previously passing cases are retained; fresh entire Linux selection is mandatory before physics.",
+  "new_physics_dispatched": false,
+  "clean1": "durably stopped at A9/B9/R9; preserved",
+  "next": "Freeze exact source, SHA-stage, run full native Linux CPU selection, actual-bank preflight, register remaining-cap budget, smoke<=20000, unchanged zero-event gate, launch clean2u0"
+}
