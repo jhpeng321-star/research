@@ -38,3 +38,10 @@ V6 owner has exited and BANK_RESULTS.json is complete. Six source examples on wo
 Phase total33,600 =28,800 measured full-branch sim-s +4,800 retained startup charges. Cumulative including parity1,249,440/5M. Unspent plan_fix reservation566,400 must remain protected; global remainder3,750,560 leaves3,184,160 disjoint from that reservation for MAIN's clean2 planning (arithmetic only, no new launch authority).
 
 GPU transfer owner42852 remains the only staging work. Its successful remote4KiB SHA receipts—not rsync sender progress—define coverage. No library example has been released for feed-in. F3's accepted handoff schema is `coopmwm-plan-fix-banks-v1`; until verified variety and the effective R teacher change are ready, `outputs` must be empty. F3 also requires matching verified B/R family support, which MAIN must reconcile with the requested R random-teacher distribution without substituting B's WM guidance into R.
+
+## 18:07 latest owner override and fresh recovery
+
+- MAIN18:03 supersedes GPU continuation: no further gpuA transfer attempts. Windows42852 is absent; durable `E:/Temp/opencode/PLANFIX_GPU_RESUME_STOP.json` now prevents accidental helper restart. All transferred chunks are preserved. No gpuA command was sent during this recovery.
+- Read-only F6-multiplexed cpuV receipt at unix1793873244.6085885 confirms v6 exited, BANK_RESULTS terminal, plan_fix33,600 and clean1 including parity1,249,440. No bank job is redispatched.
+- **clean2 root is absent at18:07.** Owner requires its launch before even one CPU WM search. Preparing code/zero-physics checks is allowed; actual search and SUMO remain gated.
+- CPU WM search must use the same pinned f631ce90 WM/scoring, frozen MAPPOu0, at most19/48 CPU cores (<=40%), nice19/one-thread workers, and yield if clean2 update pace worsens. No non-WM proposals or automatic feed-in switch.
