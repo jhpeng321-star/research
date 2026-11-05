@@ -94,6 +94,49 @@ def test_isolated_loader_reconstructs_p1_layer_trigger_not_base_only(tmp_path):
         launch.checkpoint_weights(cfg, 'B', 1)
 
 
+def test_raw_mappo_u0_diagnostic_matches_actual_intent_episode_loader(tmp_path):
+    from copy import deepcopy
+    import torch
+    from . import launch_production as launch, track2_backend as p1, v2v_intent
+    from .acceleration import Policy
+    from .accel_learner import save
+    cfg=dict(run_root=str(tmp_path),training_seed=20261101,
+        **v2v_intent.config_keys(),**deepcopy(launch.OPTIMIZATION))
+    base=Policy()
+    save(tmp_path/'B_checkpoint_000.pt',base,torch.optim.Adam(base.parameters(),lr=.0003),
+        torch.Generator().manual_seed(11),0,0)
+    native,_,_,_=p1._load_base(cfg,'B',0)
+    policy=p1.EpisodePolicy(native,cfg,'B')
+    torch.save(dict(arm='B',update=0,worker=policy.worker_state()),tmp_path/'B_track2_000.pt')
+    packed=launch.checkpoint_weights(cfg,'B',0)
+    restored=launch.load_policy(packed,cfg)
+    assert restored.layer.base.v2v_width == 48
+    for name,value in native.state_dict().items():
+        assert torch.equal(restored.layer.base.state_dict()[name],value)
+    for name,value in policy.trigger.state_dict().items():
+        assert torch.equal(restored.trigger.state_dict()[name],value)
+
+
+def test_gate_environment_rerun_needs_bound_void_and_distinct_charge_ids(tmp_path):
+    from .launch_qualification import gate_job_manifest
+    from .launch_training import write
+    from .exact_grade import _seal
+    from .protocol import digest
+    cfg=dict(run_root=str(tmp_path))
+    pairs=[(dict(verification_id='same_full_window',sim_s=720),None)]
+    first=gate_job_manifest(cfg,pairs)
+    cfg['gate_attempt']=2
+    with pytest.raises(FileNotFoundError):gate_job_manifest(cfg,pairs)
+    write(tmp_path/'GATE_VOID.json',_seal(dict(reason_class='environment_failure',
+        new_config_sha256=digest(cfg)),'receipt_sha256'))
+    second=gate_job_manifest(cfg,pairs)
+    assert first[0]['id']!=second[0]['id'] and first[0]['sim_s']==second[0]['sim_s']==720
+    with pytest.raises(ValueError,match='bind'):
+        gate_job_manifest(dict(cfg,another_runtime=True),pairs)
+    with pytest.raises(ValueError,match='at most one'):
+        gate_job_manifest(dict(cfg,gate_attempt=3),pairs)
+
+
 @pytest.mark.parametrize('arm', ['B', 'R'])
 def test_verified_bank_move_ce_actually_updates_trigger_with_frozen_base(backend_cfg, monkeypatch, arm):
     from contextlib import contextmanager

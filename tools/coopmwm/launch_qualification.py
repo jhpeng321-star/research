@@ -98,6 +98,20 @@ def gate_pairs(cfg):
     return pairs
 
 
+def gate_job_manifest(cfg, pairs):
+    root = Path(cfg['run_root'])
+    attempt = cfg.get('gate_attempt', 1)
+    if type(attempt) is not int or attempt not in (1, 2):
+        raise ValueError('at most one environment-void gate rerun')
+    if attempt == 2:
+        void = training.read(root/'GATE_VOID.json')
+        verify_sealed(void, 'receipt_sha256')
+        if void['reason_class'] != 'environment_failure' or void['new_config_sha256'] != digest(cfg):
+            raise ValueError('registered environment void must bind this sole gate rerun')
+    prefix = 'gate_' if attempt == 1 else 'gate_environment_rerun2_'
+    return [dict(id=prefix+s['verification_id'], sim_s=int(s['sim_s'])) for s, _ in pairs]
+
+
 def gate(cfg):
     root, native = Path(cfg['run_root']), production.backend_config(cfg)
     training.health(root)
@@ -107,7 +121,7 @@ def gate(cfg):
         raise ValueError('mandatory smoke does not bind this final runtime')
     verify_inputs(cfg)
     pairs = gate_pairs(cfg)
-    jobs = [dict(id='gate_'+s['verification_id'], sim_s=int(s['sim_s'])) for s, _ in pairs]
+    jobs = gate_job_manifest(cfg, pairs)
     training.write(root/'GATE_STARTED.json', dict(config_sha256=digest(cfg),
         unix=time.time(), job_manifest=jobs, specs=[s for s, _ in pairs]))
     p1._reserve(native, jobs, 'gate_bank_verification_ext')

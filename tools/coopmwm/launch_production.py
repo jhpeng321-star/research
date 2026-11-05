@@ -223,6 +223,13 @@ def checkpoint_weights(cfg, arm, update):
     if saved['update'] != update:
         raise ValueError('diagnostic checkpoint update mismatch')
     weights = deepcopy(saved['policy'])
+    if cfg.get('v2v_intent') and 'intent_head.weight' not in weights:
+        # Common u0 is stored as raw MAPPO. Diagnostics must reconstruct it
+        # through the SAME registered widening/intent loader as live episodes.
+        base, _, _, payload = p1._load_base(cfg, arm, update)
+        if payload['update'] != update:
+            raise ValueError('diagnostic native-loader update mismatch')
+        weights = deepcopy(base.state_dict())
     if arm != 'A':
         side = Path(cfg['run_root'])/f'{arm}_track2_{update:03}.pt'
         state = torch.load(side, map_location='cpu', weights_only=False)
