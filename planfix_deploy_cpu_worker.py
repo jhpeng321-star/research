@@ -68,6 +68,7 @@ import tools;tools.__path__.insert(0,str(physical/'tools'))
 from tools.coopmwm.protocol import digest
 from tools.coopmwm.fresh_worker import pending
 from tools.coopmwm.storage import write
+from tools.coopmwm.varcollect import search_config
 p=prior/'data/jobs/s969420_ctrl0/start.pt';st=torch.load(p,map_location='cpu',weights_only=False)
 with np.load(p.with_name('start_history.npz'),allow_pickle=False) as raw:ids=torch.as_tensor(raw['vid_index'][-1])[st['state']['present'][0].bool()].long().tolist()
 selected=st['state']['present'][0].bool();state=st['state']
@@ -86,6 +87,10 @@ binding=dict(hashes=hashes,qualification=pending(hashes),worker_env=pin,memory_m
  speed2=True,speed2_transfers=True,concurrent_plans=True,batch_widths={'4':4,'8':2},
  memory_fraction=.65,deadline_unix=time.time()+21600,search_config={'variety_families':True},
  device='cpu',phase='plan_fix',sumo_allowed=False,source_commit='f631ce90cfd2f23213f7c57a828c848e2db10ecd')
+# The original collector uses its registered it2/K2 niche boundary and retains
+# all eight final K8 candidates, including negatives, for all8 verification.
+binding.update(search_config=search_config({'variety':{'variety_families':True}}),
+               label_list8=True,niche_comparison=True)
 write(root/'GPU_BINDING.json',binding)
 print('CPU_BINDING',digest(binding),len(hashes),flush=True)
 """.replace('__FIXTURE_ROOT__',repr(str(root)))
@@ -149,6 +154,12 @@ assert recovered['independent_config_observations']==4 and len(recovered['config
 assert recovered['config']['cav_exec_cap']=='idm'
 binding=json.loads((root/'GPU_BINDING.json').read_text())
 for name,sha in binding['hashes'].items():assert hashlib.sha256((root/name).read_bytes()).hexdigest()==sha
+if (root/'runtime/tools/rbfit/idm_fit.py').exists():
+ sys.path[:0]=[str(root/'runtime'),'/home/ubuntu/coopmwm20261105_clean1_src_7cc6edaa/pytools']
+ import tools;tools.__path__.insert(0,str(root/'runtime/tools'))
+ from tools.coopmwm.varcollect import search_config
+ assert binding['search_config']==search_config({'variety':{'variety_families':True}})
+ assert binding['label_list8'] and binding['niche_comparison']
 print('CPU_PORT_AST_PATHS_CONFIG_SOURCE_PASS',len(binding['hashes']),flush=True)
 """.replace('__QUALIFY_ROOT__',repr(str(root)))
 env=json.loads((root/'STAGE_ENV.json').read_text())['env'];env['PYTHONPATH']=str(compat)+':'+env['PYTHONPATH']
@@ -212,6 +223,7 @@ if __name__=='__main__':
         for name in ('entry_learned.json','merge_core_init.json','ramp_speed_adapt_init.json'):
             relative='src/wms/model/'+name
             files['runtime/'+relative]=base64.b64encode(blob('22cc32f6',relative)).decode()
+        files['runtime/tools/rbfit/idm_fit.py']=base64.b64encode(blob('22cc32f6','tools/rbfit/idm_fit.py')).decode()
     code=(STAGE.replace('__FILES__',repr(files)) if a.action=='stage' else STATUS if a.action=='status' else QUALIFY if a.action=='qualify' else REGISTER if a.action=='register' else DISPATCH).replace('__ROOT__',repr(ROOT))
     if a.action=='register':
         name='PLANFIX_CPU_EXECUTION_REGISTRATION.md' if a.generation==1 else f'PLANFIX_CPU_V{a.generation}_REGISTRATION.md'

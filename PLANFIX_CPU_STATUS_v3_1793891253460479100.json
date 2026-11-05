@@ -1,0 +1,90 @@
+{
+  "BOOTSTRAP_PASS.json": {
+    "new_sim_s": 0,
+    "physical_sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca",
+    "pid": 359496,
+    "wall_s": 6.382772063996526,
+    "wm_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436"
+  },
+  "CPU_FAILED.json": {
+    "error": "FileNotFoundError(2, 'No such file or directory')",
+    "new_sim_s": 0,
+    "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/planfix_cpu_worker.py\", line 132, in <module>\n    try:main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/planfix_cpu_worker.py\", line 87, in main\n    try:warm_service.main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/runtime/tools/coopmwm/warm_service.py\", line 56, in main\n    record,memory=native_fixture(rt)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/runtime/tools/coopmwm/speed2_memory.py\", line 127, in native_fixture\n    fitted,native_receipt=fitted_state_at_start(rt.model,seed)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/runtime/tools/rbint/recipe.py\", line 125, in fitted_state_at_start\n    model._wmphys_conditioned_cache[int(seed)] = condition_population(\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/runtime/tools/rbint/motion_posterior.py\", line 89, in condition_population\n    extract, predict, source_sha = fit_kernels() if kernels is None else kernels\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/runtime/tools/rbint/motion_posterior.py\", line 38, in fit_kernels\n    raw = source.read_bytes()\n  File \"/home/ubuntu/miniconda3/lib/python3.10/pathlib.py\", line 1126, in read_bytes\n    with self.open(mode='rb') as f:\n  File \"/home/ubuntu/miniconda3/lib/python3.10/pathlib.py\", line 1119, in open\n    return self._accessor.open(self, mode, buffering, encoding, errors,\nFileNotFoundError: [Errno 2] No such file or directory: '/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/runtime/tools/rbfit/idm_fit.py'\n",
+    "unix": 1793891186.8672483
+  },
+  "CPU_OWNER.json": {
+    "affinity": [
+      47
+    ],
+    "alive_same_identity": false,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 359496,
+    "start_ticks": "8102668",
+    "unix": 1793891178.1946635
+  },
+  "DISPATCH.json": {
+    "alive_same_identity": false,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "max_cpu_cores": 1,
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 359496,
+    "procedure": "eight same-process gates then ONE WM search; no SUMO; no expansion",
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3",
+    "start_ticks": "8102668",
+    "unix": 1793891178.165817
+  },
+  "DISPATCH_STARTED.json": {
+    "new_sim_s": 0,
+    "unix": 1793891178.160506
+  },
+  "STAGE_ENV.json": {
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "CPU_BINDING 4caac13dda3984dea29c8a22d4d3aa20d927264d10a772f9eb3eab1e4b13a413 665\n"
+  },
+  "STAGE_PASS.json": {
+    "binding_file_sha256": "49756e8bc14e217c9249dce2bc4252c898771d7a1c499ab6e44e517c0ac3c02a",
+    "dispatch_started": false,
+    "launch_file_sha256": "d036a7d311694c102182f2bebe17c890c7e5e67cd593b248fab2ca176cd815f9",
+    "new_sim_s": 0,
+    "pace": {
+      "A": {
+        "ceiling_s": 1194.2428486347198,
+        "intervals_s": [
+          1194.2428486347198,
+          1164.5672767162323,
+          1170.51988863945
+        ],
+        "last_update": 12
+      },
+      "B": {
+        "ceiling_s": 1173.205691576004,
+        "intervals_s": [
+          1149.266884803772,
+          1168.5544457435608,
+          1173.205691576004
+        ],
+        "last_update": 12
+      },
+      "R": {
+        "ceiling_s": 1244.576462984085,
+        "intervals_s": [
+          1244.576462984085,
+          1157.6539821624756,
+          1167.4601202011108
+        ],
+        "last_update": 11
+      }
+    },
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3",
+    "source_files": 656
+  },
+  "exists": true,
+  "gates": {},
+  "log_tail": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/planfix_cpu_worker.py\", line 132, in <module>\n    try:main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/planfix_cpu_worker.py\", line 87, in main\n    try:warm_service.main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/runtime/tools/coopmwm/warm_service.py\", line 56, in main\n    record,memory=native_fixture(rt)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/runtime/tools/coopmwm/speed2_memory.py\", line 127, in native_fixture\n    fitted,native_receipt=fitted_state_at_start(rt.model,seed)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/runtime/tools/rbint/recipe.py\", line 125, in fitted_state_at_start\n    model._wmphys_conditioned_cache[int(seed)] = condition_population(\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/runtime/tools/rbint/motion_posterior.py\", line 89, in condition_population\n    extract, predict, source_sha = fit_kernels() if kernels is None else kernels\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/runtime/tools/rbint/motion_posterior.py\", line 38, in fit_kernels\n    raw = source.read_bytes()\n  File \"/home/ubuntu/miniconda3/lib/python3.10/pathlib.py\", line 1126, in read_bytes\n    with self.open(mode='rb') as f:\n  File \"/home/ubuntu/miniconda3/lib/python3.10/pathlib.py\", line 1119, in open\n    return self._accessor.open(self, mode, buffering, encoding, errors,\nFileNotFoundError: [Errno 2] No such file or directory: '/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3/runtime/tools/rbfit/idm_fit.py'\n",
+  "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v3",
+  "unix": 1793891252.8491297
+}
