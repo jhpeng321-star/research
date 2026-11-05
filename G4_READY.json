@@ -1,0 +1,101 @@
+{
+  "task": "G4",
+  "status": "READY_FOR_INTEGRATION_CPU_VERIFIED",
+  "worktree": "E:/agent-work/c4-grp-credit",
+  "branch": "c4/grp-credit",
+  "base_branch": "c4/rerun-launch",
+  "starting_commit": "6dc0520c",
+  "commits": [
+    {
+      "sha": "5cc2827224aba8d02897a40e9e66dc72734aafee",
+      "subject": "C4 G4: add sparse measured macro synergy credit"
+    }
+  ],
+  "ready_receipt_commit": "The subsequent commit adding this file; discover with git log --oneline -- G4_READY.json",
+  "files": [
+    "tools/coopmwm/sparse_synergy_credit.py",
+    "tools/coopmwm/test_sparse_synergy_credit_cpu.py",
+    "tools/coopmwm/track2_backend.py",
+    "G4_SPARSE_SYNERGY_CREDIT.md",
+    "G4_READY.json"
+  ],
+  "scope": "G4 only: sparse measured synergy contracts, paired counterfactual job planning/executor seam, proposer-only trigger PPO integration, CPU tests and handoff documentation",
+  "api": {
+    "module": "tools.coopmwm.sparse_synergy_credit",
+    "registration()": "Deep copy of the fixed common B/R registration, including weight/normalization/clipping/sampling/budget provenance",
+    "settings(cfg)": "Validate explicit g4_synergy_credit successor-phase binding; absent/False disables",
+    "initial_state(cfg)": "Create phase reservation state once; persist returned successor states across updates",
+    "opportunities(episodes)": "Extract exact accepted stochastic joint boundaries from recorded trigger slates; excludes practice/replay/deterministic/rejected/single-actuator rows",
+    "plan_update(cfg, update, episodes_by_arm, captures, state)": "Return immutable-hash-bound paired full group/base/all-member-solo/two-seed job plan and next reservation state",
+    "execute_plan(plan, reserve=..., run_branch=...)": "Validate plan, atomically reserve all paired work via caller adapter, execute explicit worker callbacks, reject failures/partial labels without retry",
+    "command_offsets(job, elapsed_s, observable_state=...)": "Evaluate original complete move semantics and then mask commands to group/base/solo actors",
+    "measured_envelope(plan, results)": "Require complete measured SUMO branch set with exact window/capture/CRN/intervention/cost/safety bindings and compute signed seedwise synergy",
+    "trigger_terms(cfg, arm, update, episodes, envelope)": "Validate measured labels against current exact on-policy trigger records before any optimizer update; return proposer-only terms and monitoring receipt",
+    "ArmRuntime.train(episodes, rewards=..., synergy=envelope)": "Add G4 term only to the initiating macro's trigger advantage; retain local-return advantage, critic returns, continuous residual targets, frozen base and F4"
+  },
+  "registration": {
+    "config_key": "g4_synergy_credit",
+    "default": false,
+    "required_phase_fields": ["phase_id", "first_update"],
+    "arms": ["B", "R"],
+    "sampling": "Outcome-blind 1-in-16 hash of training seed/world/start/proposer; paired per-update counts matched by actor arity",
+    "max_starts_per_arm_over_phase": 8,
+    "verification_seeds": [1, 2],
+    "branches_per_start_per_seed": "group + base + every member solo",
+    "window": "macro start through 1200s; identical pre-action state/prefix/CRN and full common horizon",
+    "charged_sim_s_per_branch_including_prefix": 1200,
+    "two_actor_full_quote_sim_s": 153600,
+    "four_actor_worst_case_and_hard_cap_sim_s": 230400,
+    "synergy": "mean_seed(min_member J_solo - J_group); no zero floor on solo gains",
+    "macro_advantage_addition": "clip(synergy_veh_s / accel_learner.UNIT, -1, +1) * 1.0",
+    "normalization_veh_s": 10000.0,
+    "weight": 1.0,
+    "unsampled_credit": 0.0,
+    "wm_fallback": false,
+    "negative_and_zero_labels_retained": true,
+    "unchanged_u24_criterion": true
+  },
+  "tests": [
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -o cache_dir=.pytest_cache --basetemp=E:/agent-work/c4-grp-credit/_out/g4_pytest tools/coopmwm/test_sparse_synergy_credit_cpu.py tools/coopmwm/test_track2_backend_cpu.py tests/unit/test_track2_reward.py",
+      "result": "171 passed in 57.09s"
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -o cache_dir=.pytest_cache --basetemp=E:/agent-work/c4-grp-credit/_out/g4_f4_pytest tools/coopmwm/test_f4_safety_reward_cpu.py",
+      "result": "84 passed in 15.56s"
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m ruff check tools/coopmwm/sparse_synergy_credit.py tools/coopmwm/test_sparse_synergy_credit_cpu.py tools/coopmwm/track2_backend.py",
+      "result": "passed, exit 0"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "verification_coverage": [
+    "Complete all-member solo and both-seed enumeration; 153600/192000/230400 full-prefix quotes",
+    "Identical B/R count and branch effort, arity matching, scarcity, global sample limit and no retry/recycling",
+    "Outcome-blind deterministic sampling, exclusion of diagnostic/practice/replay/deterministic/single-actuator starts",
+    "Positive, negative, zero and all-harmful-solo cases; best solo inside each seed; bounded inherited-unit normalization",
+    "Missing, duplicate, stale, WM, ungraded, nonfinite, mismatched-window/prefix/CRN/mask/cost/safety receipt rejection",
+    "Reservation before any worker execution; budget refusal and worker failure produce no partial label",
+    "Exact original-move group/solo/base offset masks and observable wall release semantics",
+    "Real B/R PPO edge changes only proposer advantage, preserves critic returns and frozen base; invalid credit fails before optimization",
+    "Existing backend, observable reward and F4 safety regression suites"
+  ],
+  "execution": {
+    "cpu_only": true,
+    "sumo_runs": 0,
+    "ssh_calls": 0,
+    "gpu_runs": 0,
+    "simulation_charge_sim_s": 0,
+    "active_launch_profile_modified": false
+  },
+  "open_issues": [
+    "Later integration must provide immutable pre-action captures for sampled ordinary TRAIN macro boundaries and bind the successor phase; historical cached post-action diagnostic captures are not interchangeable.",
+    "The coordinator must persist reservation state, reject duplicate plan IDs and reserve the complete paired quote in the existing overall run ledger before dispatch. The G4 cap is not additional owner budget.",
+    "An authorized production worker must implement the fixed-macro jobs on the existing replay/CRN/single-writer safety path and emit measured receipts. This task supplies job specs, exact offset masking, executor callback seam and PPO consumption; it does not install a collector/launcher or execute SUMO.",
+    "CPU verification uses explicit synthetic counterfactual receipt doubles. No measured physics or learning-effectiveness claim is made."
+  ]
+}
