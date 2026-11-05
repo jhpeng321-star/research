@@ -99,6 +99,38 @@ def full_diagnostic_quotes(cfg):
     return quotes
 
 
+def preflight_banks(cfg, clean1):
+    """Real new-code readers/CE on disposable in-memory u0 models, no physics.
+
+    This discovers unsupported B/R family support and evidence gaps before a new
+    root or simulation attempt. Existing u0 bytes and clean1 policy state stay
+    untouched; no optimization result from this engineering check is deployed.
+    """
+    from . import bank_breadth
+    borrowed = deepcopy(cfg)
+    for key in ('run_root','accounting_root','bank_source_root'):
+        borrowed[key] = str(clean1)
+    borrowed['control_arm']['root'] = str(clean1)
+    borrowed['a_results']['root'] = str(clean1)
+    borrowed['single_ledger']['root'] = str(clean1)
+    borrowed['augmentation_prelaunch']['ledger_root'] = str(clean1)
+    native = production.backend_config(borrowed)
+    files = [clean1/f'{a}_{kind}_000.pt' for a in ('B','R') for kind in ('checkpoint','track2')]
+    before = {str(p):rc.sha(p) for p in files}
+    result = {}
+    for arm in ('B','R'):
+        runtime = p1.ArmRuntime(native,arm,1)
+        supervision = production.bank_move_supervision(runtime)
+        pool = bank_breadth.practice_pool(native,arm)
+        if not pool or not supervision['contexts']:
+            raise ValueError('nonempty verified breadth and trigger contexts required before physics')
+        result[arm] = dict(trigger=supervision,practice_contexts=[dict(context_id=r['context_id'],
+            family=r['family']) for r in pool])
+    if before != {str(p):rc.sha(p) for p in files}:
+        raise ValueError('read-only preflight changed preserved u0 state')
+    return dict(arms=result,models_deployed=False,new_sim_s=0,preserved_u0_files=before)
+
+
 def prepare(source, *, root=ROOT, clean1=CLEAN1):
     root, source, clean1 = map(Path, (root, source, clean1))
     for path in (root, source, clean1):
@@ -131,11 +163,13 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1):
     handoff = clean1/'plan_fix/PLAN_FIX_READY.json'
     if handoff.is_file():
         cfg['plan_fix_ready'] = str(handoff)
+    preflight = preflight_banks(cfg,clean1)
     rule = training.read(clean1/rc.RULE_FILE)
     rc.init_root(root, amendment_shas=[rule['amendment_sha256']], track2=True)
     training.write(root/'PREPARATION_STARTED.json', dict(unix=time.time(),
         owner_quote='restart', source_root=str(source), accepted_fixes=accepted_shas,
         clean1_stop_sha256=stop_sha, new_sim_s=0))
+    training.write(root/'BANK_PREFLIGHT.json', preflight)
     stage.copy_equal(clean1/rc.RULE_FILE, root/rc.RULE_FILE)
     # These are inherited owner authorities, not new clean2 safety failures.
     for arm, rule_name, pause_name in (('B', composite_health.B_RULE, composite_health.B_PAUSE),
