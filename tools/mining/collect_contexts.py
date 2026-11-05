@@ -71,13 +71,14 @@ def main(root):
           boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(), unix=time.time()))
     summary = []
     for world in worlds_:
-        ident = 'mining_train_' + str(world['seed'])
+        ident = root.name + '_train_' + str(world['seed'])
         work = root / ident; work.mkdir()
         job = dict(id=ident, path=str(work), world=world, role='train', arm='B', update=0,
                    training_seed=20261101, weights=weights,
                    runtime='/home/ubuntu/e3final',
                    checkpoint='/home/ubuntu/mappospeed/production2/policy_00169.pt',
                    noise_seed=20261106 + world['seed'], deterministic=False, guided=False,
+                   b_replay=True, v2v=True,
                    health_guards=False, sim_s=1200, stop=1200, warm_history=True,
                    accel_bounds=[-3., 2.6])
         selected = []

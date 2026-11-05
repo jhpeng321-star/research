@@ -5,10 +5,13 @@ import json
 from pathlib import Path
 import subprocess
 import zlib
+import sys
 from .remote import run
 
 
 def main():
+    generation = int(sys.argv[1]) if len(sys.argv) > 1 else 1
+    assert generation in (1, 2)
     files = {}
     names = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', 'b903c6c2',
                                     'tools/coopmwm', 'tools/coopfree', 'traffic_shepherd'], text=True).splitlines()
@@ -25,8 +28,13 @@ def main():
     code = r'''
 import base64,hashlib,json,os,subprocess,time,zlib
 from pathlib import Path
-parent=Path('/root/mining20261106');root=parent/'executor_b903c6c2'
+parent=Path('/root/mining20261106');root=parent/('executor_b903c6c2' + ('_v2' if GENERATION==2 else ''))
 assert parent.is_dir() and not root.exists(), 'adopt existing dispatch; never duplicate'
+if GENERATION==2:
+ prior=parent/'executor_b903c6c2'
+ owner=json.loads((prior/'COLLECTION_DISPATCH.json').read_bytes())
+ assert not Path('/proc/'+str(owner['pid'])).exists(), 'original collector must have exited'
+ assert not list(prior.glob('*/RESULT.json')), 'do not replay completed physics'
 root.mkdir();source=root/'source';source.mkdir()
 files=json.loads(zlib.decompress(base64.b64decode(PAYLOAD)))
 for name,encoded in files.items():
@@ -60,9 +68,9 @@ record=dict(pid=p.pid,start_ticks=Path('/proc/'+str(p.pid)+'/stat').read_text().
 (root/'COLLECTION_DISPATCH.json').write_text(json.dumps(record,sort_keys=True))
 print(json.dumps(dict(dispatch=record,authority=authority,qualification=r.stdout)),flush=True)
 '''
-    result = run('gpuA', 'PAYLOAD=' + repr(payload) + '\n' + code,
+    result = run('gpuA', 'PAYLOAD=' + repr(payload) + '\nGENERATION=' + str(generation) + '\n' + code,
                  '/root/miniconda3/bin/python -B -', timeout=110)
-    receipt = Path('mining_receipts/EXECUTOR_STAGE_01.json')
+    receipt = Path('mining_receipts/EXECUTOR_STAGE_%02d.json' % generation)
     assert not receipt.exists()
     receipt.write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps(result), flush=True)
