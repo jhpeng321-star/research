@@ -89,8 +89,17 @@ def test_reservation_limit_allows_clean3_cap_only_with_registration(tmp_path):
     assert cap == c3.CAP-3_686_000 and phases == c3.PHASES
 
 
+def chain_path():
+    # Repository layout: <repo>/ops; deployed source layout: <src>/pytools/tools/... and <src>/ops.
+    here = Path(__file__).resolve()
+    for parent in (here.parents[2], here.parents[3]):
+        if (parent/'ops'/'clean3_chain.py').is_file():
+            return parent/'ops'/'clean3_chain.py'
+    raise FileNotFoundError('ops/clean3_chain.py')
+
+
 def chain_module():
-    path = Path(__file__).resolve().parents[2]/'ops'/'clean3_chain.py'
+    path = chain_path()
     spec = importlib.util.spec_from_file_location('clean3_chain', path)
     module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
     return module
@@ -134,7 +143,7 @@ def test_chain_sequence_fails_closed_and_orders_steps():
 
 
 def test_chain_step_order_is_registered():
-    text = (Path(__file__).resolve().parents[2]/'ops'/'clean3_chain.py').read_text()
+    text = chain_path().read_text()
     order = ['QUALIFIED', 'G1_CERTIFY', 'MINED_WAIT', 'PREPARE', 'SMOKE', 'GATE', 'PHASE_COVERAGE', 'LAUNCH']
     positions = [text.index(f"('{step}'") for step in order]
     assert positions == sorted(positions)
