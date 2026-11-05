@@ -59,7 +59,7 @@ def production(tmp_path, monkeypatch):
     return cfg
 
 
-def fake_episode(job, *, controller_hook=None, policy_loader=None):
+def fake_episode(job, *, controller_hook=None, policy_loader=None, sensor_at=None):
     """Drive the real native controller at every native tick; replace SUMO only."""
     from tools.coopmwm.acceleration import Controller
     from tools.coopmwm.v2v_runtime import controller_class
@@ -73,6 +73,9 @@ def fake_episode(job, *, controller_hook=None, policy_loader=None):
     sensor = rows()
     commands = {r['vid']: .2 for r in sensor if r['is_cav']}
     for t in range(300, 1200):
+        if sensor_at is not None:
+            sensor = sensor_at(t)
+            commands = {r['vid']: .2 for r in sensor if r['is_cav']}
         prefixes[str(t)] = dict(t_s=t)
         desired = controller.apply(sensor, commands, t)
         assert set(desired).issubset(commands)
@@ -81,7 +84,7 @@ def fake_episode(job, *, controller_hook=None, policy_loader=None):
             assert all(desired[v]['requested_raw'] <= 1.2 for v in scoped if v in desired)
         steps.append(dict(controller.events[-1], reward=1.))
         if controller_hook and hasattr(controller_hook, 'after_step'):
-            controller_hook.after_step(t, sensor)
+            controller_hook.after_step(t, sensor if sensor_at is None else sensor_at(t+1))
         controller.observe_issued(dict(time_s=t, vehicles=[dict(r, issued_acceleration_mps2=.2) for r in sensor]))
     return dict(id=job['id'], world=job['world'], arm=job['arm'], steps=steps, prefixes=prefixes,
         totals=dict(team_delay_vs=900., collisions=0, teleports=0, hard_brake=0))
@@ -133,6 +136,65 @@ def test_native_worker_runs_full_window_components_and_A_native_ppo(production, 
     assert backend.checkpoint_components(tmp_path/'B.pt') == ['base', 'layer', 'trigger', 'optimizer']
     restored = prod.restore_components(cfg, 'B', base, backend.diagnostic_weights(base, comp))
     assert torch.equal(restored['coop_layer'].correction, comp['coop_layer'].correction)
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_native_worker_turnover_full_window_and_layer_learning(production, tmp_path, monkeypatch, arm):
+    from tools.coopmwm import accel_plant, exploration
+    from tools.coopmwm.test_t2c_multicav_cpu import TurnoverReward
+    from tools.coopmwm.test_t2c_runtime_cpu import CPUBackend, Features as BankFeatures
+    from tools.coopmwm.rerun_tracks_bank import training_batch, OPTIONS
+    monkeypatch.setattr(exploration, 'regime', lambda rows: 'ordinary')
+    monkeypatch.setattr(Trigger, 'choose', lambda self, obs, features, proposals, rng: proposals[-1])
+    monkeypatch.setattr(RealisedReward, 'realised_rewards', TurnoverReward.realised_rewards)
+    initial = rows()
+    cavs = sorted(r['vid'] for r in initial if r['is_cav'])
+    partner = cavs[-1]
+    def sensor_at(t):
+        sensor = deepcopy(initial)
+        if t in (301, 302):
+            next(r for r in sensor if r['vid'] == partner)['s_m'] = 100000.
+        if t in (304, 305):
+            sensor = [r for r in sensor if r['vid'] != partner]
+        if t == 307:
+            sensor = [r for r in sensor if not r['is_cav']]
+        return sensor
+    hooks = []
+    def plant(job, *, controller_hook):
+        hooks.append(controller_hook)
+        return fake_episode(job, controller_hook=controller_hook, sensor_at=sensor_at)
+    monkeypatch.setattr(accel_plant, 'episode', plant)
+    monkeypatch.setattr(prod, 'safety', lambda *a, **kw: dict(collisions=0, teleports=0, hard_brakes=0, ttc_events=0))
+    cfg = production
+    base = IntentPolicy().requires_grad_(False)
+    comp = rc.track2_components(cfg, arm, adapters=prod.factories(cfg, base))
+    job = dict(id='turnover_'+arm, path=str(tmp_path/('turnover_'+arm)), world=dict(seed=986000),
+        role='train', arm=arm, weights=base.state_dict(), runtime='fake', checkpoint='fake', noise_seed=17,
+        update=1, episode_index=0, deterministic=False, accel_bounds=[-3., 2.6])
+    out = prod.episode_worker(job, cfg, prod.component_weights(comp))
+    hook = hooks[0]
+    assert len(out['training']['steps']) == 900 and not out['safety_stop']
+    assert sum(r['reward_steps'] for r in out['rows']) == 899*len(cavs)-2
+    assert all(r['reward_steps'] > 0 and r['realised_team_reward'] > 0 for r in out['rows'])
+    assert any(r.get('move_cancelled_at_s') == 301 for r in out['rows'])
+    for t in (304, 305):
+        assert partner not in out['training']['steps'][t-300]['requests']
+    assert not out['training']['steps'][7]['requests']  # no CAVs on the road at t=307
+    for row in out['rows']:
+        assert set(row['move'].members) <= set(row['observation']['cav_ids'])
+        assert row['ego_id'] == row['observation']['own_sensing']['ego_id']
+    # Feed actual turnover rows/returns through the consumed layer learning API.
+    components = hook.components
+    bank = training_batch(CPUBackend().bank_examples(arm, 1, cfg=cfg), [], arm=arm, encoder=BankFeatures())
+    before_base, before_layer = state_sha(hook.model), state_sha(components['coop_layer'])
+    result = components['coop_layer'].update(rows=out['rows'], bank_batch=bank, bank_options=OPTIONS,
+        realised_rewards=[r['realised_team_reward'] for r in out['rows']], group_advantages=None,
+        dense_targets=[None]*len(out['rows']), dense_mask=[False]*len(out['rows']),
+        trigger=components['trigger_head'], kl_cap=cfg['coop_layer']['kl_cap'])
+    assert state_sha(hook.model) == before_base
+    assert state_sha(components['coop_layer']) != before_layer
+    assert components['coop_layer'].last_policy_count == len(out['rows'])
+    assert result['bank_receipt']['move_rows'] == len(bank)
 
 
 def test_local_observation_excludes_remote_truth_and_current_partner_reports():

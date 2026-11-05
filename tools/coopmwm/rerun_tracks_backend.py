@@ -190,26 +190,40 @@ class EpisodeHook:
                 self.missing.append(float(features['missing_share']))
                 if ego not in self.actors:
                     salt = int(hashlib.sha256((str(job.get('noise_seed', 20261104))+':'+ego).encode()).hexdigest()[:16], 16)
-                    self.actors[ego] = dict(move=None, onset=None, rng=random.Random(salt))
+                    self.actors[ego] = dict(move=None, onset=None, cancelled=False, rng=random.Random(salt))
                 state = self.actors[ego]
+                available = set(obs['cav_ids']) & cavs
                 if state['move'] is None or int(now) % self.cfg['trigger_head']['decision_interval_s'] == 0:
                     proposals = moves.candidates(obs, state['rng'], self.cfg['dense_teacher']['candidates'])
                     if not proposals or not any(m.family == 'none' for m in proposals):
                         raise ValueError('REFUSED: production move slate requires none')
                     active = self.components['trigger_head'].choose(obs, features, proposals, state['rng'])
-                    if active not in proposals or not set(active.members).issubset(obs['cav_ids']):
+                    if active not in proposals or not set(active.members).issubset(available):
                         raise ValueError('REFUSED: production trigger selected nonobservable CAV')
-                    state.update(move=active, onset=int(now))
+                    state.update(move=active, onset=int(now), cancelled=False)
                     if self.selected is None:
                         self.reward_rows[ego] = len(self.rows)
                         self.rows.append(dict(observation=obs, features=features, move=active,
                             ego_id=ego, row_id=job['id']+f'_t{int(now):04}_{ego}', family=active.family,
                             realised_team_reward=0., reward_steps=0))
-                offsets = moves.offsets(state['move'], int(now)-state['onset'])
+                unavailable = set(state['move'].members) - available
+                if unavailable and not state['cancelled']:
+                    # A coordinated move is one commitment: do not run a partial
+                    # group or resurrect it when visibility returns. Keep the
+                    # sampled action/onset for reward attribution and wait for
+                    # the registered decision tick before choosing again.
+                    state['cancelled'] = True
+                    if self.selected is None:
+                        row = self.rows[self.reward_rows[ego]]
+                        row.update(move_cancelled_at_s=int(now), move_unavailable_members=sorted(unavailable))
+                offsets = {} if state['cancelled'] else moves.offsets(state['move'], int(now)-state['onset'])
                 residual = self.components['coop_layer'].residual(obs, features)
-                if not (set(offsets) | set(residual)).issubset(obs['cav_ids']):
+                if not (set(offsets) | set(residual)).issubset(available):
                     raise ValueError('REFUSED: HDV/nonobservable production command')
-                for vid in (set(offsets) | set(residual)) & acting & set(obs['cav_ids']):
+                # An actor also owns its zero-correction/base fallback. Otherwise
+                # a returning partner's context could restart its cancelled move
+                # indirectly through an overlapping group.
+                for vid in (set(offsets) | set(residual) | {ego}) & acting & available:
                     # Deterministic single ownership: a CAV's own policy context
                     # wins its actuator; remaining ties use the stable actor ID.
                     priority = (vid != ego, ego)

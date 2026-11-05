@@ -30,4 +30,47 @@ departures, actor exit/reappearance, overlapping contexts, isolated all/solo
 masks, decision cadence and reward/learning receipt attribution. Exercise the
 native V2V controller over the complete controlled episode with changing frames.
 
-Status: inspection complete; implementation and verification pending.
+## Implementation and production-hook verification
+
+The hook cancels the complete retained commitment as soon as any member is
+outside the actor's current observable/commandable set. Its sampled move/onset
+remain available for learning attribution; cancellation does not select a new
+move or consume trigger RNG. Visibility return does not resurrect the move. The
+next registered decision tick can select normally. Departed actors are still
+discarded, and returning actors start a fresh context.
+
+Cancelled actors retain deterministic ownership of their own zero-correction
+base fallback. This prevents a returning partner's overlapping group from
+indirectly reapplying a move to an actor whose own commitment was cancelled.
+Independently valid residuals still run. Fresh proposals and residual outputs
+remain checked against the observable/commandable set, including zero-valued
+invalid residual entries. Training rows record `move_cancelled_at_s` and
+`move_unavailable_members`; reward accumulation remains attached to the original
+decision row, with no invented decision or off-cadence label.
+
+Before implementation, the new range-turnover regression failed at the exact
+reviewed `HDV/nonobservable production command` exception (1 expected failing
+test, stopped at first failure). Intermediate runs exposed a zero-fallback
+ownership case and two test-fixture expectations; those were corrected and are
+not counted as passing evidence.
+
+Completed CPU check (exit 0, 46.29 s):
+
+```text
+C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q --tb=short -p no:cacheprovider tools/coopmwm/test_t2c_multicav_cpu.py tools/coopmwm/test_t2c_backend_cpu.py --basetemp=E:/agent-work/c4-rerun-tracks/.t2c-membership-hooks-final
+```
+
+**43 passed**, including **27 added regressions**. Eighteen cases drive every
+controlled second (t=300..1199) with three overlapping actors, range loss,
+departure/reappearance or missing actuator, and training/all/group/solo/empty
+masks. They check exact cadence, single-owner commands, base fallback,
+non-resurrection, row identity, cancellation records and conserved reward steps.
+Negative cases retain refusal for invalid fresh proposals/residuals. Two native
+V2V worker cases (B/R) run the entire controlled window with dynamic sensor
+frames, including an empty-CAV frame, then update the layer from the actual
+reward rows while verifying that the base model remains frozen.
+
+Environment: CUDA hidden, bytecode disabled, OMP/MKL=1. The only warning is the
+inherited unknown `cache_dir` option with the pytest cache provider disabled.
+No SUMO/GPU/SSH/dispatch or real sim-seconds were used. Affected integration
+checks and regenerated readiness are the next step.
