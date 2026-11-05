@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 from planfix_ops import remote,note
+from planfix_cpu_prepare import blob
 
 HERE=Path(__file__).parent
 ROOT='/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1'
@@ -14,6 +15,12 @@ import base64,hashlib,json,os,shutil,subprocess,sys,time
 from pathlib import Path
 w=Path('/home/ubuntu/coopmwm20261105_clean1/plan_fix');root=Path(__ROOT__)
 assert not root.exists(),'fresh stage only; inspect existing receipt, never overwrite'
+if root.name!='cpu_wm_v1':
+ previous=w/('cpu_wm_v'+str(int(root.name.rsplit('v',1)[1])-1))
+ assert (previous/'CPU_FAILED.json').is_file()
+ owner=json.loads((previous/'CPU_OWNER.json').read_text());p=Path('/proc',str(owner['pid']),'stat')
+ f=p.read_text().split() if p.exists() else None
+ assert not (f and f[21]==owner['start_ticks'] and f[2]!='Z'),'previous own worker still alive'
 c=Path('/home/ubuntu/coopmwm20261105_clean2');launch=json.loads((c/'LAUNCHED.json').read_text())
 sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
 assert sha(c/'CONFIG.json')==launch['config_file_sha256']
@@ -40,7 +47,8 @@ for name in ('FROZEN_COSTS.json','FROZEN_MOTION_SOURCE.py'):shutil.copyfile(lega
 fix=root/'fix/configs';fix.mkdir(parents=True)
 shutil.copyfile(w/'cpu_bootstrap_recovered/execparity_cav_idm_v1.json',fix/'execparity_cav_idm_v1.json')
 for name,value in __FILES__.items():
- with (root/name).open('xb') as out:out.write(base64.b64decode(value));out.flush();os.fsync(out.fileno())
+ target=root/name;target.parent.mkdir(parents=True,exist_ok=True)
+ with target.open('xb') as out:out.write(base64.b64decode(value));out.flush();os.fsync(out.fileno())
 pace={}
 for role in ('A','B','R'):
  values=[json.loads(p.read_text()) for p in sorted(c.glob(role+'_UPDATE_*.json'))[-4:]]
@@ -196,14 +204,27 @@ print('CPU_STATUS',json.dumps(result),flush=True)
 '''
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('stage','qualify','register','dispatch','status'));a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('stage','qualify','register','dispatch','status'))
+    p.add_argument('--generation',type=int,default=1);a=p.parse_args();assert 1<=a.generation<=8
+    ROOT=ROOT.rsplit('v',1)[0]+'v'+str(a.generation)
     files={n:base64.b64encode((HERE/n).read_bytes()).decode() for n in ('planfix_cpu_runtime.py','planfix_cpu_worker.py')}
+    if a.action=='stage':
+        for name in ('entry_learned.json','merge_core_init.json','ramp_speed_adapt_init.json'):
+            relative='src/wms/model/'+name
+            files['runtime/'+relative]=base64.b64encode(blob('22cc32f6',relative)).decode()
     code=(STAGE.replace('__FILES__',repr(files)) if a.action=='stage' else STATUS if a.action=='status' else QUALIFY if a.action=='qualify' else REGISTER if a.action=='register' else DISPATCH).replace('__ROOT__',repr(ROOT))
-    if a.action=='register':code=code.replace('__REG__',repr(base64.b64encode((HERE/'PLANFIX_CPU_EXECUTION_REGISTRATION.md').read_bytes()).decode()))
+    if a.action=='register':
+        name='PLANFIX_CPU_EXECUTION_REGISTRATION.md' if a.generation==1 else f'PLANFIX_CPU_V{a.generation}_REGISTRATION.md'
+        code=code.replace('__REG__',repr(base64.b64encode((HERE/name).read_bytes()).decode()))
     text=remote('cpuV',code,timeout=50)
-    if a.action=='status':raise SystemExit(0)
+    if a.action=='status':
+        import time
+        value=json.loads(next(x[len('CPU_STATUS '):] for x in text.splitlines() if x.startswith('CPU_STATUS ')))
+        with (HERE/f'PLANFIX_CPU_STATUS_v{a.generation}_{time.time_ns()}.json').open('x') as out:json.dump(value,out,indent=2,sort_keys=True)
+        raise SystemExit(0)
     prefix='CPU_STAGE_PASS ' if a.action=='stage' else 'CPU_PORT_QUALIFICATION ' if a.action=='qualify' else 'CPU_REGISTERED ' if a.action=='register' else 'CPU_DISPATCH '
     receipt=json.loads(next(x[len(prefix):] for x in text.splitlines() if x.startswith(prefix)))
     path=HERE/('PLANFIX_CPU_STAGE_PASS.json' if a.action=='stage' else 'PLANFIX_CPU_PORT_QUALIFIED.json' if a.action=='qualify' else 'PLANFIX_CPU_EXECUTION_REGISTERED.json' if a.action=='register' else 'PLANFIX_CPU_DISPATCH.json')
+    if a.generation!=1:path=path.with_name(path.stem+f'_v{a.generation}'+path.suffix)
     with path.open('x') as out:json.dump(receipt,out,indent=2,sort_keys=True)
     note('cpuV',f'CPU {a.action} receipt verified; original WM/scoring, eight fresh gates then one speed search, no SUMO or bank switch')

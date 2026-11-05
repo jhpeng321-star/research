@@ -1,0 +1,83 @@
+{
+  "CPU_FAILED.json": {
+    "error": "FileNotFoundError(2, 'No such file or directory')",
+    "new_sim_s": 0,
+    "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/planfix_cpu_worker.py\", line 132, in <module>\n    try:main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/planfix_cpu_worker.py\", line 87, in main\n    try:warm_service.main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/tools/coopmwm/warm_service.py\", line 52, in main\n    rt=configured_runtime(runtime.bootstrap,binding.get('memory_fraction',.65))\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/planfix_cpu_worker.py\", line 77, in cpu_configured\n    start=time.monotonic();cached.append(bootstrap())\n  File \"<planfix-cpu-original-wmteach>\", line 72, in bootstrap\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/tools/rbint/recipe.py\", line 43, in load_candidate\n    originals, source = load_members(checkpoints, [recipe['source']['config']], device)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/control/policy14_cli.py\", line 57, in load_members\n    backend = load_backend(checkpoint, device=device, model_config=flat, physics=physics)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/eval/backend.py\", line 106, in load_backend\n    loaded = load_checkpoint(checkpoint, device=device, strict=True, physics=physics,\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/checkpoint.py\", line 251, in load_checkpoint\n    model = build_model(_model_spec(config, model_kind), _physics_config(path, config, physics),\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/factory.py\", line 27, in build_model\n    return WmSModel(spec, physics=physics, hdv=hdv)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/wms.py\", line 301, in __init__\n    self.enable_ramp_speed_adapt_learnable()\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/wms.py\", line 519, in enable_ramp_speed_adapt_learnable\n    self.ramp_speed_adapt = LearnedRampSpeedAdapt(init).to(device=like.device, dtype=like.dtype)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/ramp_speed_adapt.py\", line 84, in __init__\n    values = {**load_init(), **({} if init is None else dict(init))}\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/ramp_speed_adapt.py\", line 44, in load_init\n    doc = json.loads(Path(path or INIT_PATH).read_text(encoding=\"utf-8\"))\n  File \"/home/ubuntu/miniconda3/lib/python3.10/pathlib.py\", line 1134, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n  File \"/home/ubuntu/miniconda3/lib/python3.10/pathlib.py\", line 1119, in open\n    return self._accessor.open(self, mode, buffering, encoding, errors,\nFileNotFoundError: [Errno 2] No such file or directory: '/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/ramp_speed_adapt_init.json'\n",
+    "unix": 1793890519.6706235
+  },
+  "CPU_OWNER.json": {
+    "affinity": [
+      47
+    ],
+    "alive_same_identity": false,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 356604,
+    "start_ticks": "8036540",
+    "unix": 1793890516.9226716
+  },
+  "DISPATCH.json": {
+    "alive_same_identity": false,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "max_cpu_cores": 1,
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 356604,
+    "procedure": "eight same-process gates then ONE WM search; no SUMO; no expansion",
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1",
+    "start_ticks": "8036540",
+    "unix": 1793890516.8935518
+  },
+  "DISPATCH_STARTED.json": {
+    "new_sim_s": 0,
+    "unix": 1793890516.8885407
+  },
+  "STAGE_ENV.json": {
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "CPU_BINDING 37b6eb93f0b6e3b26f12a584ef748e7bab3149bd662865bc2a266501004ee037 662\n"
+  },
+  "STAGE_PASS.json": {
+    "binding_file_sha256": "0f90c693685cfa7936aee5748c5e47c3899404e4fc58b1c7d2e7943434ae9df1",
+    "dispatch_started": false,
+    "launch_file_sha256": "d036a7d311694c102182f2bebe17c890c7e5e67cd593b248fab2ca176cd815f9",
+    "new_sim_s": 0,
+    "pace": {
+      "A": {
+        "ceiling_s": 1202.4208419322968,
+        "intervals_s": [
+          1202.4208419322968,
+          1194.2428486347198,
+          1164.5672767162323
+        ],
+        "last_update": 11
+      },
+      "B": {
+        "ceiling_s": 1243.3992671966553,
+        "intervals_s": [
+          1243.3992671966553,
+          1149.266884803772,
+          1168.5544457435608
+        ],
+        "last_update": 11
+      },
+      "R": {
+        "ceiling_s": 1244.576462984085,
+        "intervals_s": [
+          1159.058126449585,
+          1244.576462984085,
+          1157.6539821624756
+        ],
+        "last_update": 10
+      }
+    },
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1",
+    "source_files": 656
+  },
+  "exists": true,
+  "gates": {},
+  "log_tail": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/planfix_cpu_worker.py\", line 132, in <module>\n    try:main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/planfix_cpu_worker.py\", line 87, in main\n    try:warm_service.main(worker)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/tools/coopmwm/warm_service.py\", line 52, in main\n    rt=configured_runtime(runtime.bootstrap,binding.get('memory_fraction',.65))\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/planfix_cpu_worker.py\", line 77, in cpu_configured\n    start=time.monotonic();cached.append(bootstrap())\n  File \"<planfix-cpu-original-wmteach>\", line 72, in bootstrap\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/tools/rbint/recipe.py\", line 43, in load_candidate\n    originals, source = load_members(checkpoints, [recipe['source']['config']], device)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/control/policy14_cli.py\", line 57, in load_members\n    backend = load_backend(checkpoint, device=device, model_config=flat, physics=physics)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/eval/backend.py\", line 106, in load_backend\n    loaded = load_checkpoint(checkpoint, device=device, strict=True, physics=physics,\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/checkpoint.py\", line 251, in load_checkpoint\n    model = build_model(_model_spec(config, model_kind), _physics_config(path, config, physics),\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/factory.py\", line 27, in build_model\n    return WmSModel(spec, physics=physics, hdv=hdv)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/wms.py\", line 301, in __init__\n    self.enable_ramp_speed_adapt_learnable()\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/wms.py\", line 519, in enable_ramp_speed_adapt_learnable\n    self.ramp_speed_adapt = LearnedRampSpeedAdapt(init).to(device=like.device, dtype=like.dtype)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/ramp_speed_adapt.py\", line 84, in __init__\n    values = {**load_init(), **({} if init is None else dict(init))}\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/ramp_speed_adapt.py\", line 44, in load_init\n    doc = json.loads(Path(path or INIT_PATH).read_text(encoding=\"utf-8\"))\n  File \"/home/ubuntu/miniconda3/lib/python3.10/pathlib.py\", line 1134, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n  File \"/home/ubuntu/miniconda3/lib/python3.10/pathlib.py\", line 1119, in open\n    return self._accessor.open(self, mode, buffering, encoding, errors,\nFileNotFoundError: [Errno 2] No such file or directory: '/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1/runtime/src/wms/model/ramp_speed_adapt_init.json'\n",
+  "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v1",
+  "unix": 1793890634.5257196
+}
