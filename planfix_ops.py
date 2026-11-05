@@ -13,6 +13,7 @@ import shlex
 import subprocess
 import sys
 import time
+import zlib
 
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 sys.stderr.reconfigure(encoding='utf-8', errors='replace')
@@ -36,7 +37,9 @@ def remote(host, code, *, timeout=40, attempts=1, backoff=60, stdin_data=None):
     assert host in ('cpuV', 'gpuA') and 1 <= attempts <= 6
     # Pass one shell-quoted command to WSL, preserving Python source via stdin.
     interpreter = 'python3' if host == 'cpuV' else '/root/miniconda3/bin/python'
-    target_command = interpreter + ' -B ' + ('-' if stdin_data is None else '-c ' + shlex.quote(code))
+    packed=base64.b64encode(zlib.compress(code.encode(),9)).decode()
+    executable_code=('import base64,zlib;exec(zlib.decompress(base64.b64decode('+repr(packed)+')))' if stdin_data is None else code)
+    target_command = interpreter + ' -B -c ' + shlex.quote(executable_code)
     if host == 'cpuV':
         command = ('python3 -B /mnt/e/agent-work/c4-variety-collect/planfix_cpuv_transport.py --timeout '
                    + str(timeout) + ' ' + shlex.quote(target_command))
@@ -52,7 +55,7 @@ def remote(host, code, *, timeout=40, attempts=1, backoff=60, stdin_data=None):
         note(host, 'transport attempt ' + str(attempt) + '/' + str(attempts))
         try:
             result = subprocess.run(['wsl', '-d', 'Ubuntu-22.04', '--', 'bash', '-c', command],
-                input=code.encode() if stdin_data is None else stdin_data,
+                input=b'' if stdin_data is None else stdin_data,
                 capture_output=True, timeout=timeout+65)
             output = result.stdout.decode(errors='replace').replace('\x00', '')
             error = result.stderr.decode(errors='replace').replace('\x00', '')
@@ -137,7 +140,7 @@ def rsync_gpu():
         '-o','BatchMode=yes','-o','ConnectTimeout=15','-o','ConnectionAttempts=1'])
     command = shlex.join(['timeout','35','rsync','--partial','--append-verify','--timeout=25',
         '--info=progress2','-e',shell,'/mnt/e/Temp/opencode/'+ARCHIVE.name,
-        'gpuA:'+REMOTE_ARCHIVE+'.partial'])
+        'gpuA:'+REMOTE_ARCHIVE])
     note('gpuA','rsync --partial --append-verify bounded35s attempt')
     result = subprocess.run(['wsl','-d','Ubuntu-22.04','--','bash','-c',command],capture_output=True,timeout=45)
     receipt = dict(returncode=result.returncode,stdout=result.stdout.decode(errors='replace'),
@@ -151,7 +154,7 @@ def rsync_gpu():
     hashes=[hashlib.sha256(data[i:i+16384]).hexdigest() for i in range(0,len(data),16384)]
     code='''from pathlib import Path
 import hashlib,json,os
-p=Path(__PATH__+'.partial');data=p.read_bytes();hashes=__HASHES__
+p=Path(__PATH__);data=p.read_bytes();hashes=__HASHES__
 assert len(data)==__BYTES__ and hashlib.sha256(data).hexdigest()==__SHA__
 for i,sha in enumerate(hashes):assert hashlib.sha256(data[i*16384:(i+1)*16384]).hexdigest()==sha
 target=Path(__PATH__)

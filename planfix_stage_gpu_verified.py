@@ -5,6 +5,7 @@ from pathlib import Path
 from planfix_ops import ARCHIVE, HOME, REMOTE_ARCHIVE, TEMP, remote
 
 data=ARCHIVE.read_bytes();sha=hashlib.sha256(data).hexdigest()
+REMOTE_ARCHIVE=REMOTE_ARCHIVE+'.verified'
 hashes=[hashlib.sha256(data[i:i+16384]).hexdigest() for i in range(0,len(data),16384)]
 public=(TEMP/'id_ed25519_planfix_20261105.pub').read_text().strip()
 assert public.startswith('ssh-ed25519 ') and public.endswith('planfix-gpua-20261105')
