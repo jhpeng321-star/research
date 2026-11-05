@@ -84,6 +84,9 @@ def wait_for(path, root, *, timeout=86400):
 
 def release(cfg):
     root = Path(cfg['run_root'])
+    if 'clean2_budget' in cfg:
+        from .launch_clean2 import verify_previous
+        verify_previous(cfg)
     for name, status in (('SMOKE_PASS.json', 'SMOKE_PASS'), ('GATE_PASS.json', 'PASS')):
         receipt = read(root/name)
         verify_sealed(receipt, 'receipt_sha256')
