@@ -1,0 +1,21 @@
+{
+  "schema": "coopmwm.clean1.gate_environment_void_summary.v1",
+  "timestamp": "2026-11-05T09:02:40+08:00",
+  "receipt_sha256": "df6c882589e96cb7798ac20d97c5ee424e348e4d9b565aaaac36e8a0f759a274",
+  "runtime_commit": "7cc6edaa994641a6d71a4816c0dd8b707fda2e32",
+  "config_sha256": "cc009d490c6876ec9e6ec98072617ac6f76b20fc7501fcc83bb7905f19a7ac4a",
+  "cause": "diagnostic raw-u0 packing bypassed the actual registered native V2V-intent loader",
+  "graded_reference_branches": 6,
+  "failed_before_policy_execution": 20,
+  "reference_actual_sim_s": 3560,
+  "gate_precharge_retained_sim_s": 15160,
+  "cumulative_charged_including_parity_sim_s": 95320,
+  "cpuV_tests": "325 passed, 0 skipped/failed; actual A/B/R u0 native-loader dry checks PASS",
+  "next": "fresh full final-source smoke, then sole authorized environment gate rerun",
+  "smoke_dispatch": {"pid": 138615, "start_ticks": "3045209", "unix": 1793840603.582938},
+  "aggregate_smoke_upper_bound_sim_s": 19200,
+  "smoke_cap_sim_s": 20000,
+  "deadline_missed": true,
+  "training_launched": false,
+  "checks_waived": false
+}
