@@ -1,33 +1,33 @@
 # CLEAN1 diagnosis — why B has not demonstrated cooperation yet
-**Plain-language summary (2026-11-05; read-only snapshot through completed u8):**
-- B is learning and acting; it is not mostly choosing `none`: training `none` stays near 11%, while `ease_off` falls from 83% to 78% and wall rises from 3% to 8%.
+**Plain-language summary (2026-11-05; resumed 2026-11-06 through final completed u9):**
+- B is learning and acting; it is not mostly choosing `none`: training `none` stays near 11%, while `ease_off` falls from 83% to 77% and wall rises from 3% to 8.4%.
 - The quoted +0.043 veh-s measures the group’s extra benefit over its best single member, not B’s total benefit over the common base; the receipt’s `B-common_base` label is misleading.
 - Exact-zero scores do not mean no move or zero residual: both zero-score B states had accepted moves and nonzero residuals.
-- The clearest bottleneck is weak connection between selecting a cooperative move and executing its intended braking: the explicit move gain starts at zero and is still tiny and negative at u6.
+- The clearest bottleneck is weak, reversed move actuation: at u6, adding the recorded braking offset raises predicted acceleration by only 0.0085 m/s² on average in 1,263 sampled active contexts.
 - B accepted 1,285 moves at u1, but all 16 matched total-delay outcomes equaled A; move selection initially had no physical effect.
 - Training opportunities are also skewed: roughly seven of eight proposed moves are usually individual easing, and many selected joint moves cannot acquire their members.
 - Bank learning is substantial, but concentrated: eight admitted seed examples, seven plans, only three usable trigger-supervision contexts, and the same three practice contexts repeated twice per update.
-- Wall selections have negative mean PPO advantage at u1–u6 and u8; gap/ramp selections are usually positive after u1 but rare. These are associations, not matched move-versus-none causal effects.
+- Wall selections have negative mean PPO advantage at u1–u6 and u8–u9; gap/ramp selections are usually positive after u1 but rare. These are associations, not matched move-versus-none causal effects.
 - The continuous PPO step is not hitting its KL cap; bank imitation is. Raising the common KL budget indiscriminately would mainly strengthen already-dominant imitation.
 - Merge inputs reach the layer and affect its output; missing=0 only means own packets were present, not that all useful merge information was available.
-- Comparable physical B–A outcomes remain mixed; u8 is about 1.3% better on the exact paired training mixture, which is not proof of group cooperation.
-- Best next work: preserve the registered u24 result, then test move actuation/credit alignment, feasible joint proposals, and broader usable practice before simply increasing imitation or KL. No run changes were made.
+- Comparable physical B–A outcomes remain mixed: u8 is 1.3% better, u9 is 1.7% worse on exact paired training mixtures; neither establishes group cooperation.
+- Clean1 was owner-stopped at final A9/B9/R9. Preserve that evidence; prioritize actuation/credit alignment, feasible joint proposals and diverse practice in a follow-up. No run changes were made.
 
 ## 0. Scope, provenance, and what was actually inspected
 
 **Analysis ID: S-DIAG-CLEAN1-20261105.** Zero simulation, zero training, zero new charges. Remote work consisted of SSH receipt/source reads, CPU arithmetic, checkpoint tensor inspection and forward-only residual sensitivity calculations. No process discovery, inspection, signaling, restart, or run modification was performed. No remote output files were intentionally created; Python bytecode writing was disabled for environment-backed analysis. Local scratch products are under `E:/Temp/opencode/sdiag_*`; this document is the requested deliverable.
 
-All paths below are relative to `/home/ubuntu/coopmwm20261105_clean1` unless explicitly qualified. Source references are relative to `/home/ubuntu/coopmwm20261105_clean1_src_94d90e84/pytools/tools/coopmwm/`, the newest source tree found. Relevant implementation modules were also checked against the locally preserved original `clean1_release_7cc6edaa.tgz`; the cited learning modules are unchanged between these releases. The environment `/home/ubuntu/cpus_env/env.sh` was used when reading tensors. Only permitted receipt, checkpoint, observable-tape and implementation paths were used; excluded evaluation partitions and population/driver truth were not consulted.
+All paths below are relative to `/home/ubuntu/coopmwm20261105_clean1` unless explicitly qualified. Source references are relative to `/home/ubuntu/coopmwm20261105_clean1_src_d81d4fae/pytools/tools/coopmwm/`, the newest source tree found on resume and the source named by `RESUMED_1434.json`. SHA comparisons establish that `track2_backend.py`, `launch_production.py`, `coop_layer.py`, `trigger_policy.py`, `track2_reward.py`, and `moves.py` are byte-identical in original `7cc6edaa`, previously inspected `94d90e84`, and final `d81d4fae` trees. Thus the original source-based diagnosis and line references still apply. The environment `/home/ubuntu/cpus_env/env.sh` was used when reading tensors. Only permitted receipt, checkpoint, observable-tape and implementation paths were used; excluded evaluation partitions and population/driver truth were not consulted.
 
-**Cutoff:** A/B/R u8 was the latest completed update in the final successful status/receipt capture. u9 practice-plan existence is not evidence of a completed u9 update. Intermittent SSH closures were worked around with bounded read-only retries; the report does not infer live process health. Last captured ledger total was **1,189,440 / 5,000,000 sim-s, including parity960**. The approximately 0.5M number in the question is an earlier snapshot, not current unspent-budget evidence.
+**Final cutoff, verified on resume:** the root contains completed `A_UPDATE_009.json`, `B_UPDATE_009.json`, and `R_UPDATE_009.json`, each with a checkpoint identity. The remote `CLEAN1_STATUS.md` lags R at u8; completed update receipts take precedence. `STOPPED_BY_OWNER_CLEAN2_RESTART.json` and `STOP.json` record the owner's durable stop and restart decision; local `CLEAN1_STATUS.md` at 16:21 confirms final A9/B9/R9. No u10 update receipt was found in the root receipt inventory. The original draft's u8-only cutoff and recommendation to continue clean1 are superseded by this paragraph. No process health was inspected or inferred. The last captured original-session ledger total was **1,189,440 / 5,000,000 sim-s**; the local stop-era status reports **1,218,240**, including parity960 and plan-fix2400. These are dated accounting snapshots, not a fresh total for subsequently owned work. The approximately0.5M in the question is older still.
 
 Primary evidence:
 
-1. `CLEAN1_STATUS.md`, captured `LEARNING_MONITOR_u001.json` / `LEARNING_MONITOR_u006.json`, the per-arm monitor inventory, and full `A_UPDATE_001..008.json`, `B_UPDATE_001..008.json`, `R_UPDATE_001..008.json` receipts.
-2. All **128 B training episode receipts**, u1–u8, under `jobs/t2c_warm_uUUU_B_<world>/RESULT.json.gz` and `jobs/t2c_warm_uUUU_pNN_B_<world>/RESULT.json.gz`. These contain actual trigger tables/selections, accepted flags, move offsets, residuals, post-action sensor packets and recorded trigger values.
+1. `CLEAN1_STATUS.md`, captured `LEARNING_MONITOR_u001.json` / `LEARNING_MONITOR_u006.json`, the per-arm monitor inventory, and full `A_UPDATE_001..009.json`, `B_UPDATE_001..009.json`, `R_UPDATE_001..009.json` receipts.
+2. All **144 B training episode receipts**, u1–u9, under `jobs/t2c_warm_uUUU_B_<world>/RESULT.json.gz` and `jobs/t2c_warm_uUUU_pNN_B_<world>/RESULT.json.gz`. These contain actual trigger tables/selections, accepted flags, move offsets, residuals, post-action sensor packets and recorded trigger values. The resumed session reused all completed u1–u8 arithmetic and added only the missing u9 analysis.
 3. `track2_diagnostics/replicated_u006_live.json`, its branch receipts, and all seven B all-group continuations and their reference continuations. Post-snapshot samples were inspected, rather than treating the replayed first sample as current-policy telemetry.
-4. `track2_diagnostics/probe_u002_live.json`, `probe_u004_live.json`; `replay_bank/B/BANK_QUALITY.json`, `PRACTICE_PLAN_B_006.json`, update-bound bank summaries; matching legacy plan receipts; `B_track2_000..008.pt`.
-5. Exact same-world A training outcomes and **48 matched A practice-reference episode receipts**, six per update, for physical B–A comparisons.
+4. `track2_diagnostics/probe_u002_live.json`, `probe_u004_live.json`; `replay_bank/B/BANK_QUALITY.json`, `PRACTICE_PLAN_B_006.json`, update-bound bank summaries; matching legacy plan receipts; `B_track2_000..009.pt`.
+5. Exact same-world A training outcomes and **54 matched A practice-reference episode receipts**, six per update, for physical B–A comparisons.
 
 Selected identities:
 
@@ -35,11 +35,13 @@ Selected identities:
 - u6 replicated diagnostic receipt SHA: `d6b47e6a908f8d6d264098d4ff74c5ae9817f0e5a612e0b4d776d18d3eaa6b76`.
 - B u6 update receipt SHA: `783d8457a38b2c0ec85448e96c0677c06e50692002c83a14d7e79f414e63f4ec`.
 - B u8 update receipt SHA: `37193a0b1d908d0dbcd64f968ea5cc4541b75d64acdde4e65426e6bc8a092caa`.
+- B u9 update receipt file SHA256: `7e015cf284d63e0bd34adef1d25597d890eb7f03b7974d934a98de8c806412f1`; A u9: `dd50f415f604e637948b9d7fa62d77c86b298616613aa775118952a94e6d85c8`; R u9: `b72150a8bfdb649359e8d266bb13d8c584716b478c8645cb856968f8f70ee6fd`.
+- Durable owner stop receipt file SHA256: `0f02b9ef9f84135be8dfc14b75ddaf8b133f8072db0b0fe0e697ca81df5b95b2`.
 - B u6 base-checkpoint SHA: `a7cf1772203be36a1ee5bbb5f64f8317db02903355dc94a6998c4453fa7f7e87`. B’s learned cooperation parameters live in the separate `B_track2_006.pt` sidecar; inspecting the base checkpoint alone would miss learning.
 
 ### Recalculation checks
 
-Trigger counts recomputed from the episode samples match the update receipts. Reward arithmetic was reconstructed from actual post-action own/authorized-neighbour packets. Raw practice RESULTs retain replayed prefix seconds that the trainer strips: **126 seconds/update**, own reward sum **−31.472830327994**, team sum **−59.2794787101584**. Removing these reproduces all eight reported own/team sums to floating-point rounding. Those prefix seconds contain **zero current trigger decisions**, so the family and decision-advantage results below are unaffected. See `practice_starts.strip_steps`, lines 293–298, and `track2_backend._temporal_targets`, lines 792–844.
+Trigger counts and accepted starts recomputed from episode samples match all nine update receipts. Reward arithmetic was reconstructed from actual post-action own/authorized-neighbour packets. Raw practice RESULTs retain replayed prefix seconds that the trainer strips: **126 seconds/update**, own reward sum **−31.472830327994**, team sum **−59.2794787101584**. Removing these reproduces all nine reported own/team sums to floating-point rounding. Those prefix seconds contain **zero current trigger decisions**, so the family and decision-advantage results below are unaffected. See `practice_starts.strip_steps`, lines 293–298, and `track2_backend._temporal_targets`, lines 792–844.
 
 ## 1. Trigger history, actual execution, and the exact-zero test entries
 
@@ -57,8 +59,9 @@ Rates below are percentages of **per-CAV trigger selections**, not per-second ac
 | u6 | 1,927 | 11.31% (218) | 80.54% | 5.66% | 1.92% | 0.57% | 1,225 |
 | u7 | 2,041 | 11.07% (226) | 79.03% | 6.81% | 2.35% | 0.73% | 1,298 |
 | u8 | 1,927 | 10.74% (207) | 77.94% | 7.84% | 2.02% | 1.45% | 1,245 |
+| u9 | 1,912 | 11.35% (217) | 77.04% | 8.37% | 2.04% | 1.20% | 1,215 |
 
-**Important denominator:** `trigger_counts` counts selected proposals, including ones refused because of overlapping commitments. For example, u6 selected 109 walls but accepted only **37**; gap opening selected 37/accepted **14**, ramp assistance selected 11/accepted **2**, easing selected 1,552/accepted **1,172**. u8 walls selected 151/accepted **56**. Several simultaneous members can propose the same group; these are not independent wall executions.
+**Important denominator:** `trigger_counts` counts selected proposals, including ones refused because of overlapping commitments. For example, u6 selected 109 walls but accepted only **37**; gap opening selected 37/accepted **14**, ramp assistance selected 11/accepted **2**, easing selected 1,552/accepted **1,172**. u8 walls selected151/accepted56; u9 walls160/accepted61, gaps39/accepted14, ramps23/accepted5 and easing1,473/accepted1,135. Several simultaneous members can propose the same group; these are not independent wall executions.
 
 **The proposal generator heavily sets the prior.** Across u6’s actual tables there were 14,374 easing candidates, 712 wall, 214 gap, 116 ramp, and 1,927 none entries: easing was **82.9% of all 17,343 candidate slots**. u8 easing occupied 14,291/17,343 = **82.4%** of slots. Uniform selection over the nine slots already predicts approximately 11.1% none and approximately 82–83% easing. The observed u8 wall share, 7.84%, exceeds its approximately 4.01% slot share. Thus the history shows some increased preference for walls, not a collapsed no-op policy. Candidate feasibility and duplicated easing options materially constrain exploration. Sources: raw `track2_trigger.tables`; `moves.candidates`, lines 331–370; `trigger_policy.decide`, lines 214–255.
 
@@ -126,8 +129,9 @@ These are per-CAV means of real **t+1** reward at a trigger decision. A move acc
 | u6 | −0.2903 | −0.3148 | −0.5018 | −0.5909 |
 | u7 | −0.3141 | −0.3685 | −0.5606 | −0.6616 |
 | u8 | −0.2967 | −0.3042 | −0.5138 | −0.5616 |
+| u9 | −0.2807 | −0.3234 | −0.4839 | −0.5757 |
 
-**There is no evidence of a universal penalty for any move firing.** Accepted starts have less-negative immediate rewards in seven of eight updates, but this is confounded by which states offer/accept which moves. It is not a same-state estimate of the move’s causal value. Whole episodes usually contain both move and none decisions, so “move episode versus none episode” would not be a valid clean split.
+**There is no evidence of a universal penalty for any move firing.** Accepted starts have less-negative immediate rewards in eight of nine updates, but this is confounded by which states offer/accept which moves. It is not a same-state estimate of the move’s causal value. Whole episodes usually contain both move and none decisions, so “move episode versus none episode” would not be a valid clean split.
 
 ### Actual trigger advantage by selected family
 
@@ -143,6 +147,7 @@ Means below use the trainer’s discounted, scaled target and **recorded per-CAV
 | u6 | −0.002504 | −0.003248 | **−0.004011** | +0.001203 | +0.001023 |
 | u7 | +0.002877 | +0.002550 | +0.002516 | +0.000269 | +0.007993 |
 | u8 | +0.000290 | +0.000038 | **−0.001697** | +0.002620 | +0.003590 |
+| u9 | −0.002797 | −0.002932 | **−0.004007** | −0.004059 | +0.000277 |
 
 At u6, wall advantage is positive for only **29.4%** of 109 selections, versus gap **56.8%** of 37 and ramp **45.5%** of 11. At u8 those shares are wall **47.7%**, gap **71.8%**, ramp **67.9%**. Wall is the consistently disadvantaged family by mean, but the gap/ramp samples are very small and arise in slower states: u6 own/team reward for gap is **−0.9503/−1.7484**, compared with easing **−0.2653/−0.4750**. Raw cross-family reward would conflate congestion with action quality.
 
@@ -156,11 +161,11 @@ The strongest existing matched observation is u1: **all 16 B versus exact A-refe
 
 ### CE genuinely decreases, but on three usable contexts
 
-`bank_move_ce`, u1→u8:
+`bank_move_ce`, u1→u9:
 
-**2.063005 → 1.849368 → 1.633644 → 1.404474 → 1.170792 → 0.940977 → 0.727508 → 0.546412.**
+**2.063005 → 1.849368 → 1.633644 → 1.404474 → 1.170792 → 0.940977 → 0.727508 → 0.546412 → 0.401653.**
 
-Every update reports **three** trigger-supervision examples and five accepted CE passes. At u6 those passes move CE **1.010137 → 0.940977**; at u8 **0.601897 → 0.546412**. The decreasing trend is real fitting of a tiny fixed training set, not an independent generalization score. The exact projected label is inserted into the bank candidate slate at slot 1; online slates must generate their own feasible approximations. Source: `launch_production.bank_move_supervision`, lines 63–151.
+Every update reports **three** trigger-supervision examples and five accepted CE passes. At u6 those passes move CE **1.010137 → 0.940977**; at u8 **0.601897 → 0.546412**; at u9 **0.445908 → 0.401653**, final CE KL0.004526. The decreasing trend is real fitting of a tiny fixed training set, not an independent generalization score. The exact projected label is inserted into the bank candidate slate at slot1; online slates must generate their own feasible approximations. Source: `launch_production.bank_move_supervision`, lines63–151.
 
 The update-bound effective bank has **eight admitted/cooperative seed examples from seven plans**, **226 continuous imitation pairs**, **750 target member-actions per full pass**, and no augmented examples. Five seed examples are tagged source policy **u3**; their sum of example-level AWR weights is **92.47%** of all eight example weights. This is an example-level concentration measure, not a claim about exact gradient share or pair-weighted exposure. Two examples hit weight20, one is weight16.3663; the three practice examples have weights only **1.8256, 1.2972, 1.7724**. Source policy-version tags describe the legacy producers, not clean1’s update number.
 
@@ -211,8 +216,9 @@ Architecture: **59 inputs → 64 tanh units → one linear residual**, plus a le
 | u6 | 0.013933 | 0.000461 | 0.042246 | 3/5 |
 | u7 | 0.014651 | 0.000485 | 0.043730 | 2/5 |
 | u8 | 0.008633 | 0.000660 | 0.042143 | 2/5 |
+| u9 | 0.008320 | 0.000373 | 0.043582 | 2/5 |
 
-**All 32 residual PPO epochs are accepted.** Their gradient norms are far below0.5, and u6’s KL rises **0.000964 → 0.003712 → 0.008082 → 0.013933**. The PPO leg is limited by its LR/four-step schedule and weak/scaled objective, not KL rejection or gradient clipping. Raising only the KL cap would change none of these accepted PPO steps.
+**All 36 residual PPO epochs are accepted.** Their gradient norms are far below0.5, and u6’s KL rises **0.000964 → 0.003712 → 0.008082 → 0.013933**. The PPO leg is limited by its LR/four-step schedule and weak/scaled objective, not KL rejection or gradient clipping. Raising only the KL cap would change none of these accepted PPO steps.
 
 **Bank imitation is trust-region constrained.** Its last recorded raw gradient norms span approximately23–69, its KL stays near0.045, and u6 reports14 backtracks and refuses pass4 even at scale1/64. u7/u8 refuse pass3; u8’s bank AWR loss still falls **12.453961 → 11.885571**. Full-pass AWR scales steps upward, up to registered multipliers, then rolls back over-budget attempts. A larger bank cap would plausibly increase imitation movement, but may intensify the concentrated supervision. Its KL reference is the **post-PPO policy**, not the rollout policy; stage-specific KLs must not be treated as one end-to-end bound.
 
@@ -230,14 +236,26 @@ Training rollout residuals below are the **combined learned mean corrections**, 
 | u6 | 0.1285 | +0.0859 | −0.2479…+0.3501 |
 | u7 | 0.1571 | +0.1094 | −0.3146…+0.4266 |
 | u8 | 0.1728 | +0.1099 | −0.3733…+0.4939 |
+| u9 | 0.1737 | +0.0981 | −0.4450…+0.5015 |
 
 At u6, **80.35%** of these residuals are positive. This is a small, changing longitudinal controller, not a dead layer. These are distribution summaries of policy output, not measured acceleration changes or beneficial traffic effects.
 
-Checkpoint `tanh(trigger_gain)`, u0→u8:
+The u9 absolute-residual distribution is p05 **0.01206**, median **0.13970**, p95 **0.39191 m/s²**, with **zero exact zeros among114,879** member-actions. Signed residual p05/median/p95 is **−0.36400/+0.09873/+0.36775 m/s²**.
 
-**0, −0.001193, −0.002374, −0.003519, −0.004602, −0.005715, −0.006875, −0.007676, −0.007765.**
+Checkpoint `tanh(trigger_gain)`, u0→u9:
 
-At u6 a nominal move offset of −0.3…−1.0 m/s² contributes only **+0.00206…+0.00687 m/s²** through this explicit term: tiny and opposite to intended easing. The residual network also receives the active-offset feature, so this does **not** bound the move’s total influence; an offset-zeroing sensitivity would be needed to measure that second pathway separately.
+**0, −0.001193, −0.002374, −0.003519, −0.004602, −0.005715, −0.006875, −0.007676, −0.007765, −0.007867.**
+
+At u6 a nominal move offset of −0.3…−1.0 m/s² contributes only **+0.00206…+0.00687 m/s²** through this explicit term: tiny and opposite to intended easing. The residual network also receives the active-offset feature, so the scalar gain alone does **not** bound the move’s total influence.
+
+**New forward-only check resolves that second pathway.** Using checkpointu6 on the same3,060 recorded feature rows used in §5, **1,263 rows have a nonzero active offset**, mean−0.67986 m/s². Holding all58 other inputs fixed and replacing only the offset by zero gives:
+
+- Network-only active-offset effect: mean **+0.003782 m/s²**.
+- Explicit gain contribution: mean **+0.004674 m/s²**.
+- Combined effect: mean **+0.008456**, median **+0.007363**, p95 **+0.015942**, range **+0.000867…+0.027118 m/s²**.
+- **All1,263 combined changes are positive; none adds braking in this sample.**
+
+This is direct evidence that the named braking offset has a weak, reversed *instantaneous mean-action pathway* at u6, even accounting for its network input. It is not a traffic ablation, does not hold future trigger history fixed, and does not establish universal behavior outside these rows. It strengthens, rather than merely assumes, the actuation diagnosis.
 
 There is an important training-interface mismatch: production sampling adds `gain * active_offset`, while bank `forward()` omits this explicit gain term and ordinary bank contexts default the offset feature to zero. Continuous bank imitation therefore teaches a generic residual but does **not directly train the named-move gain**. Source: `track2_backend._distribution`, lines 161–163; `_features`, lines 139–143; inherited `coop_layer.forward`, lines 152–159. This is stronger evidence for an actuation/credit bottleneck than the single scalar KL0.014.
 
@@ -272,20 +290,21 @@ Two views are supplied:
 | u6 | 77,343.16 | 78,999.18 | +1,656.03 | +1,613.21 | +1,727.39 |
 | u7 | 83,776.08 | 83,719.55 | −56.53 | −860.84 | +1,283.99 |
 | u8 | 81,983.93 | 80,913.31 | **−1,070.62** | **−868.57** | **−1,407.38** |
+| u9 | 77,122.12 | 78,456.34 | **+1,334.22** | **+1,316.86** | **+1,363.15** |
 
-Positive differences are worse for B. u8 all16 is **1.31% lower** delay than its matched A mixture; normal10 is **0.99% lower**. Results are mixed and not a monotonic learning curve. Worlds rotate across updates, A also learns, and uN collection precedes optimization of checkpoint uN. Practice uses three duplicated contexts, not six independent draws. No significance claim is made from these training means.
+Positive differences are worse for B. u8 all16 is **1.31% lower** delay than its matched A mixture; normal10 is **0.99% lower**. At finalu9, all16 delay is **1.73% higher**, with both normal and practice subsets worse. Results are mixed and not a monotonic learning curve. Worlds rotate across updates, A also learns, and uN collection precedes optimization of checkpointuN. Practice uses three duplicated contexts, not six independent draws. No significance claim is made from these training means.
 
-The early isolated probes likewise do not show emerging synergy: A/B mean synergy at u2 is **−0.522354/−0.307193**, at u4 **−0.335052/−0.349375**. These are small diagnostic synergy scores, not overall delays. The separate registered fixed-panel physical evaluation is the appropriate later generalization check. Existing safety telemetry also matters: u6 B’s critical-event excess against A is **+29.1875/episode**, CI **[−1.875, +61.3445]**, despite zero collisions/teleports; aggressive changes cannot be justified by delay alone.
+The early isolated probes likewise do not show emerging synergy: A/B mean synergy at u2 is **−0.522354/−0.307193**, at u4 **−0.335052/−0.349375**. These are small diagnostic synergy scores, not overall delays. Existing safety telemetry also matters: u6 B’s critical-event excess against A is **+29.1875/episode**, CI **[−1.875,+61.3445]**. At u9 the paired composite excess is **+19.46875/episode**, CI **[+0.71875,+38.65625]**, despite zero collisions/teleports. That comparison originally paused B; `B_SAFETY_REPORT_ONLY_1434.json` records an explicit owner amendment admitting optimization with composite reporting only. Later durable owner STOP supersedes that recovery. The monitor's `CONTINUE` label is not evidence of passing the original composite test or authorization to restart.
 
 ## 7. Ranked causes and concrete remaining levers
 
-The ranking separates established mechanisms from hypotheses. Expected directions are mechanistic expectations, not promised effect sizes. **No lever below was applied.** The current configuration declares `no_outcome_conditioned_changes`; continuing the registered schedule is the immediately compatible option. Hyperparameter/action-space changes belong in an explicitly amended continuation or a short separately labelled follow-up, not a silent alteration of the existing u24 comparison.
+The ranking separates established mechanisms from hypotheses. Expected directions are mechanistic expectations, not promised effect sizes. **No lever below was applied.** Clean1 is owner-stopped at u9; none is an instruction to resume it. Hyperparameter/action-space changes belong in an explicitly authorized continuation or separately labelled follow-up. Other workers' later clean2/plan-fix work is recorded in the shared status log and was not dispatched or audited by this analysis; check its existing receipts before undertaking any overlapping work.
 
 ### 1 — Weak and partly misaligned move-to-acceleration coupling / credit (highest confidence)
 
-**Evidence:** zero physical move effect at u1; tiny negative explicit gain through u8; bank sampling/forward interface mismatch; credit for rejected proposals; nonzero generic residual learning without demonstrated extra-over-solo benefit.
+**Evidence:** zero physical move effect at u1; tiny negative explicit gain through u9; the complete u6 active-offset pathway raises rather than lowers acceleration in all1,263 sampled active contexts; bank sampling/forward interface mismatch; credit for rejected proposals; nonzero generic residual learning without demonstrated extra-over-solo benefit.
 
-**Concrete lever:** in a short follow-up, give named moves a calibrated, positive, bounded execution pathway, or train imitation through the exact production distribution with recorded active offsets. First perform a no-simulation forward check separating `residual(z, offset)`, `residual(z, 0)` and the explicit gain term on existing contexts. Then compare a positive-gain/production-consistent version against the current coupling using the same ordinary training recipe. Record selected, accepted, active-offset and effective-action changes separately. Do not simply force full-strength walls without such separation.
+**Concrete lever:** in a short follow-up, give named moves a calibrated, positive, bounded execution pathway, or train imitation through the exact production distribution with recorded active offsets. The no-simulation separation of `residual(z,offset)`, `residual(z,0)` and the explicit gain term is now complete above. Compare a positive-gain/production-consistent version against the current coupling using the same ordinary training recipe. Record selected, accepted, active-offset and effective-action changes separately. Do not simply force full-strength walls without such separation.
 
 **Expected effect:** make move-family choices affect the intended longitudinal behavior and give trigger PPO a more learnable consequence. **Risk:** a formerly weak intervention becomes strong; adverse braking/TTC and reversal of an adapted residual are plausible. Fixing production-consistent imitation can expose that the projected move is a poor substitute for the original native plan.
 
@@ -323,11 +342,11 @@ The ranking separates established mechanisms from hypotheses. Expected direction
 
 ### 6 — Too early / too few distinct experiences, rather than exhausted budget (moderate confidence)
 
-**Evidence:** only eight completed updates; CE and residuals still change; the primary criterion is u24; the u6 estimate has five replicates and is dominated by one opportunity. Current spend is1.189M, but much of the remaining budget is already allocated to future training and fixed evaluations.
+**Evidence:** only nine completed updates before owner STOP; CE and residuals still change; the original primary criterion was u24; the u6 estimate has five replicates and is dominated by one opportunity. The stop-era accounting snapshot is1.218M, not0.5M; reservations and subsequent work prevent treating its apparent remainder as freely available.
 
-**Concrete lever for THIS run:** continue the unchanged registered schedule through u24 and use its already scheduled u12/u24 diagnostics and physical evaluations, preserving checkpoint identities and all outcomes. Do not select a “best” checkpoint on this descriptive u6 score. Consider >24 updates only as a predeclared extension with reserved evaluation funding and distinct training opportunities.
+**Concrete lever:** preserve clean1's finalu9 evidence. More updates could help an explicitly authorized continuation or a new follow-up, but the durable owner STOP means there is **no current instruction to continue this run to u24**. Do not select a “best” checkpoint on this descriptive u6 score. Consider >24 updates only as a predeclared extension with reserved evaluation funding and distinct training opportunities; first account for already-owned clean2/plan-fix allocations.
 
-**Expected effect:** more opportunity for the slowly changing wall preference/residual to improve, without conflating a new recipe. **Risk:** repeated weak-credit training and three-context practice may simply converge to a generic acceleration tweak. Additional A/B/R training at16×1200s each plus six matched A references for B and R is approximately **72,000 sim-s per extra full update**; this is an estimate, not a quote or dispatch. The canonical4.31022M plan and5M ceiling do not authorize arbitrary extra updates or make all3.81M remaining sim-s unallocated.
+**Expected effect:** more opportunity for the slowly changing wall preference/residual to improve if the signal and exposure are useful. **Risk:** repeated weak-credit training and three-context practice may simply converge to a generic acceleration tweak. Additional A/B/R training at16×1200s each plus six matched A references for B and R is approximately **72,000 sim-s per extra full update**; this is an estimate, not a quote or dispatch. The original canonical4.31022M plan and5M ceiling do not authorize arbitrary extra updates or make the dated accounting remainder unallocated.
 
 ### 7 — Imitation strength, layer width, and lane-changing (lower-priority or larger follow-up)
 
@@ -338,4 +357,4 @@ The ranking separates established mechanisms from hypotheses. Expected direction
 
 ## Bottom line for the owner
 
-**B is not stuck at none and is not inert. It is learning a small, merge-dependent residual and a slowly more wall-preferring trigger, but the named cooperative moves have weak execution leverage, sparse feasible joint exposure, concentrated supervision, and noisy/misaligned credit.** The diagnostic additionally subtracts the best solo benefit, so large useful individual improvements can coexist with almost zero cooperation score. Preserve the current u24 result; prioritize actuation/credit consistency and feasible diverse practice in a clearly labelled follow-up. A blanket increase in KL or imitation weight is not the evidence-led first move.
+**B is not stuck at none and is not inert. It is learning a small, merge-dependent residual and a slowly more wall-preferring trigger, but the named cooperative moves have weak, reversed instantaneous actuation, sparse feasible joint exposure, concentrated supervision, and noisy/misaligned credit.** The diagnostic additionally subtracts the best solo benefit, so large useful individual improvements can coexist with almost zero cooperation score. Preserve clean1's owner-stopped finalu9 evidence; prioritize actuation/credit consistency and feasible diverse practice in a clearly labelled follow-up. A blanket increase in KL or imitation weight is not the evidence-led first move.

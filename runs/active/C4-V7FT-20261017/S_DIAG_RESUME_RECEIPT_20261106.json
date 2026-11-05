@@ -1,0 +1,97 @@
+{
+  "schema": "clean1.sdiag.resume.v1",
+  "analysis_id": "S-DIAG-CLEAN1-20261105",
+  "resume_date": "2026-11-06",
+  "status": "analysis_complete_with_causal_and_CE_identity_limits",
+  "report": "runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md",
+  "report_sha256": "abaa4c125f805d8890030fdaedb15ab3b242531e48f03e8e213091f69fb4153b",
+  "preserved_draft_commit": "5b43fc61",
+  "remote_root": "/home/ubuntu/coopmwm20261105_clean1",
+  "latest_source": "/home/ubuntu/coopmwm20261105_clean1_src_d81d4fae/pytools/tools/coopmwm",
+  "new_sim_s": 0,
+  "new_charges": 0,
+  "optimizer_steps": 0,
+  "simulation_or_training_dispatches": 0,
+  "process_inspections_or_signals": 0,
+  "remote_run_modifications": 0,
+  "restrictions": "Only permitted receipts, checkpoints, observable tapes and implementation sources. No prohibited evaluation-partition or hidden population/driver-parameter paths. Bytecode disabled for tensor/import analysis. Remote writes outside /tmp forbidden in the bank-reader attempt.",
+  "reused_work": "Original u1-u8 calculations, 128 B episodes, 48 matched A practice references, replicated-u6 branch analysis, merge-input sensitivity and source diagnosis retained; not rerun.",
+  "new_work": "Read root lifecycle/u9 receipts; add 16 B episodes and six matched A practice references; inspect B u9 gain; compare six implementation hashes across three source trees; perform missing offset-only forward sensitivity on existing u6 rows.",
+  "final_completed_updates": {"A": 9, "B": 9, "R": 9},
+  "status_lag": "Remote status reports R8, but R_UPDATE_009.json and its checkpoint identity establish completed R9. Root receipt inventory contains no u10 update.",
+  "durable_stop": {
+    "receipt": "STOPPED_BY_OWNER_CLEAN2_RESTART.json",
+    "file_sha256": "0f02b9ef9f84135be8dfc14b75ddaf8b133f8072db0b0fe0e697ca81df5b95b2",
+    "reason": "MAIN 15:21 fix all problems before training; MAIN 15:23 owner restart from u0 in clean2",
+    "clean1_resume_held": true
+  },
+  "u9_update_file_sha256": {
+    "A": "dd50f415f604e637948b9d7fa62d77c86b298616613aa775118952a94e6d85c8",
+    "B": "7e015cf284d63e0bd34adef1d25597d890eb7f03b7974d934a98de8c806412f1",
+    "R": "b72150a8bfdb649359e8d266bb13d8c584716b478c8645cb856968f8f70ee6fd"
+  },
+  "u9_B": {
+    "training_episodes": 16,
+    "decisions": 1912,
+    "selected": {"none": 217, "ease_off": 1473, "wall": 160, "gap_open": 39, "ramp_assist": 23},
+    "accepted": {"ease_off": 1135, "wall": 61, "gap_open": 14, "ramp_assist": 5},
+    "mean_trigger_advantage": {"none": -0.0027974796472768847, "ease_off": -0.0029321896754495756, "wall": -0.004007089781269075, "gap_open": -0.0040585310741141425, "ramp_assist": 0.00027693291419219446},
+    "decision_tick_reward": {
+      "accepted_own": -0.2806794005683582,
+      "none_own": -0.3234347054252484,
+      "accepted_team": -0.4839480969040172,
+      "none_team": -0.5756531946705071,
+      "causal": false
+    },
+    "bank_CE": 0.4016534090042114,
+    "CE_contexts": 3,
+    "PPO_final_KL": 0.008319703862071037,
+    "PPO_final_gradient_norm": 0.0003731231845449656,
+    "bank_KL": 0.04358167719689354,
+    "bank_passes_completed": 2,
+    "bank_passes_requested": 5,
+    "gain_tanh": -0.007867174223065376,
+    "rollout_mean_abs_residual_mps2": 0.17369751442121972,
+    "rollout_residual_count": 114879,
+    "rollout_exact_zero_residuals": 0,
+    "matched_A_team_delay_mean_veh_s": 77122.11943057181,
+    "B_team_delay_mean_veh_s": 78456.33981453792,
+    "B_minus_A_team_delay_mean_veh_s": 1334.2203839661088,
+    "B_minus_A_normal_mean_veh_s": 1316.8614094578963,
+    "B_minus_A_practice_mean_veh_s": 1363.1520081464441
+  },
+  "u6_offset_only_forward_check": {
+    "checkpoint": "B_track2_006.pt",
+    "worlds": [986004, 986016, 986028],
+    "sampling": "Every fifth recorded tick, all member feature rows; zero only column58 (active offset), preserve the other58 columns and weights.",
+    "rows": 3060,
+    "nonzero_offset_rows": 1263,
+    "network_only_change_mean_mps2": 0.0037822690397878536,
+    "explicit_gain_change_mean_mps2": 0.004673944920395823,
+    "combined_change_mean_mps2": 0.008456213966267138,
+    "combined_change_median_mps2": 0.007363296579569578,
+    "combined_change_p95_mps2": 0.01594175212085247,
+    "combined_change_min_mps2": 0.0008666801732033491,
+    "combined_change_max_mps2": 0.027118420228362083,
+    "negative_combined_changes": 0,
+    "interpretation": "All sampled active braking offsets weakly increase instantaneous predicted acceleration; sensitivity only, not a traffic-performance or future-history ablation."
+  },
+  "byte_identical_source_modules_across_7cc6edaa_94d90e84_d81d4fae": ["track2_backend.py", "launch_production.py", "coop_layer.py", "trigger_policy.py", "track2_reward.py", "moves.py"],
+  "verification": [
+    "PASS original u1-u8 checker: trigger/accepted counts and prefix-adjusted own/team sums match128 episodes/eight updates; all residual PPO epochs accepted; three CE contexts each; seven report sections; summary<=15 lines.",
+    "PASS resume checker:16 additional episodes,1912 trigger selections,1215 accepted starts; u9 own/team sums match to1e-8; four PPO epochs accepted; three CE contexts; matched physical arithmetic; eight captured receipt file hashes;3060-row offset arithmetic; durable STOP respected."
+  ],
+  "remaining_limits": [
+    "Accepted starts are not necessarily immediate nonzero actuation; observational move-versus-none rewards do not identify causal action benefit.",
+    "The eight admitted seed examples project to seven wall labels and one none label; exact identities/family histogram of the three post-visibility CE contexts remain uncaptured.",
+    "One synchronous read-only bank-context reconstruction exceeded the120s tool timeout without a captured result. No rerun or replacement was dispatched, and no success or failure of that reconstruction is inferred.",
+    "No fresh accounting total for later independently owned plan-fix/clean2 work; dated stop-era clean1 accounting is not free budget."
+  ],
+  "local_scratch_evidence_sha256": {
+    "sdiag_parsed.json": "3362c003423e743af04e7d82855ad5dc8a5234756a8b54d132aed867eacf087e",
+    "sdiag_episodes.txt": "eab578d4fe7fd24747e6db703d0d0f8875164fb20f129f2c059d057971be92b6",
+    "sdiag_resume_u9.txt": "d2b63a48ad4b287705522657916d67959eb738cde576e294114a8d99e6afcf7a",
+    "sdiag_resume_receipts.txt": "eab5d65c6a8f4cdc855d0f0bc7736278f984ba4ba517ee600c071e99ee9970ba",
+    "sdiag_resume_tensors.txt": "8a600a24e71050a8044c6500b48c825b97ee70a01c62438548eaf8920ecfe9eb"
+  }
+}
