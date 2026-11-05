@@ -1,5 +1,8 @@
 """Opt-in parity against the committed track-base, loaded in memory only."""
 import json
+import hashlib
+import os
+from pathlib import Path
 import subprocess
 import types
 
@@ -11,8 +14,11 @@ from tools.coopmwm import rerun_cpus as rc
 
 @pytest.fixture
 def baseline():
-    code = subprocess.check_output(
-        ['git', 'show', '13f184b5:tools/coopmwm/rerun_cpus.py'], text=True)
+    frozen = os.environ.get('T2C_TRACK_BASE_SOURCE')
+    raw = (Path(frozen).read_bytes() if frozen else subprocess.check_output(
+        ['git', 'show', '13f184b5:tools/coopmwm/rerun_cpus.py']))
+    assert hashlib.sha256(raw).hexdigest() == '75d6970dc9bd1aa8b94caab22b0c40507e3c302b39142b76b340ad9a7c8deb05'
+    code = raw.decode('utf-8')
     module = types.ModuleType('tools.coopmwm._t2c_baseline')
     exec(compile(code, '<committed-track-base>', 'exec'), module.__dict__)
     return module
@@ -20,13 +26,16 @@ def baseline():
 
 def test_absent_and_false_opt_in_match_track_base_without_component_imports(tmp_path, monkeypatch, baseline):
     import sys
-    for name in ('moves', 'trigger_policy', 'coop_layer', 'group_credit', 'merge_features',
-                 'dense_teacher', 'plan_augment', 'practice_weighting', 'coop_reward'):
-        monkeypatch.setitem(sys.modules, 'tools.coopmwm.'+name, None)
     kwargs = dict(root=str(tmp_path/'run'), reference_root=str(tmp_path/'refs'),
                   source_root=str(tmp_path/'src'), common_checkpoint_sha256='a'*64)
     base = dict(workers=2, planner=dict(lookahead_s=720))
+    # The committed producer uses the current shared v2v_runner dependency.
+    # Construct its expected result before poisoning optional module imports;
+    # otherwise the fixture fails in the baseline before testing current code.
     expected = baseline.runtime_config(base, **kwargs)
+    for name in ('moves', 'trigger_policy', 'coop_layer', 'group_credit', 'merge_features',
+                 'dense_teacher', 'plan_augment', 'practice_weighting', 'coop_reward'):
+        monkeypatch.setitem(sys.modules, 'tools.coopmwm.'+name, None)
     for opt in ({}, dict(track2=False)):
         before = torch.get_rng_state().clone()
         actual = rc.runtime_config(base, **kwargs, **opt)
