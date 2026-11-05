@@ -1,0 +1,121 @@
+{
+  "GATED_COORDINATOR_OWNER.json": {
+    "affinity": [
+      47
+    ],
+    "alive_same_identity": false,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "new_sim_s": 0,
+    "pid": 379532,
+    "start_ticks": "8575344",
+    "unix": 1793895904.9638505
+  },
+  "GATED_COORDINATOR_TERMINAL.json": {
+    "model": null,
+    "new_sim_s": 0,
+    "owner": {
+      "affinity": [
+        47
+      ],
+      "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+      "new_sim_s": 0,
+      "pid": 379532,
+      "start_ticks": "8575344",
+      "unix": 1793895904.9638505
+    },
+    "reason": "controller_error_no_retry:AttributeError(\"module 'os' has no attribute 'pidfd_open'\")",
+    "unix": 1793895904.987795
+  },
+  "GATED_PHASE.json": {
+    "kind": "retire_exact_old_query_abi_worker",
+    "new_sim_s": 0,
+    "target": {
+      "affinity": [
+        47
+      ],
+      "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+      "new_sim_s": 0,
+      "nice": 19,
+      "pid": 364064,
+      "start_ticks": "8210497",
+      "unix": 1793892256.4876962
+    },
+    "unix": 1793895904.9834132
+  },
+  "GATED_POLL_LATEST.json": {
+    "health": {
+      "blocked": false,
+      "pace": {
+        "A": {
+          "interval_s": 1162.5676834583282,
+          "limit_s": 1179.1483981609344,
+          "over": false,
+          "update": 16
+        },
+        "B": {
+          "interval_s": 1153.70521235466,
+          "limit_s": 1173.205691576004,
+          "over": false,
+          "update": 16
+        },
+        "R": {
+          "interval_s": 1162.3879494667053,
+          "limit_s": 1167.4601202011108,
+          "over": false,
+          "update": 15
+        }
+      },
+      "reason": "active_training_in_bounds"
+    },
+    "model": null,
+    "new_sim_s": 0,
+    "unix": 1793895904.979531
+  },
+  "STAGE_ENV.json": {
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "CPU_BINDING d6bb1c271c3299f328cae6ed1651f8c2d0ab28fb96b8eea9e21f79df1aaadfcc 666\n"
+  },
+  "STAGE_PASS.json": {
+    "binding_file_sha256": "1148e8c723f5e9c43685977b901221b52025b6d61da89845ce20228d7a382f76",
+    "dispatch_started": false,
+    "launch_file_sha256": "d036a7d311694c102182f2bebe17c890c7e5e67cd593b248fab2ca176cd815f9",
+    "new_sim_s": 0,
+    "pace": {
+      "A": {
+        "ceiling_s": 1179.1483981609344,
+        "intervals_s": [
+          1164.5672767162323,
+          1170.51988863945,
+          1179.1483981609344
+        ],
+        "last_update": 13
+      },
+      "B": {
+        "ceiling_s": 1173.205691576004,
+        "intervals_s": [
+          1149.266884803772,
+          1168.5544457435608,
+          1173.205691576004
+        ],
+        "last_update": 12
+      },
+      "R": {
+        "ceiling_s": 1167.4601202011108,
+        "intervals_s": [
+          1157.6539821624756,
+          1167.4601202011108,
+          1164.3921592235565
+        ],
+        "last_update": 12
+      }
+    },
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7",
+    "source_files": 656
+  },
+  "exists": true,
+  "gated_log_tail": "GATED_EVENT {\"kind\": \"retire_exact_old_query_abi_worker\", \"unix\": 1793895904.9834132, \"new_sim_s\": 0, \"target\": {\"affinity\": [47], \"boot_id\": \"2c19986e-dd5e-4de9-95ca-3212b1ea0568\", \"new_sim_s\": 0, \"nice\": 19, \"pid\": 364064, \"start_ticks\": \"8210497\", \"unix\": 1793892256.4876962}}\nTraceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7/GATED_COORDINATOR.py\", line 88, in <module>\n    else:model=launch()\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7/GATED_COORDINATOR.py\", line 64, in launch\n    old=retire_known_old()\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7/GATED_COORDINATOR.py\", line 47, in retire_known_old\n    signal_owned(target,old/'planfix_cpu_worker.py',signal.SIGTERM)\n  File \"/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7/GATED_COORDINATOR.py\", line 35, in signal_owned\n    fd=os.pidfd_open(target['pid']);assert fields_for(target)\nAttributeError: module 'os' has no attribute 'pidfd_open'\n",
+  "gates": {},
+  "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7",
+  "unix": 1793895967.76349
+}

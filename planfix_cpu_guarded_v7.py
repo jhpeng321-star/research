@@ -12,26 +12,26 @@ from planfix_ops import remote,note
 PROGRAM=r'''
 import fcntl,hashlib,json,os,signal,subprocess,time,traceback
 from pathlib import Path
-root=Path(__file__).parent;config=json.loads((root/'GATED_CONFIG.json').read_text())
+control=Path(__file__).parent;config=json.loads((control/'GATED_CONFIG.json').read_text());root=Path(config.get('worker_root',str(control)))
 read=lambda p:json.loads(Path(p).read_text())
 sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
 assert sha(Path(__file__))==config['expected_program_sha256']
-lock=(root/'GATED_COORDINATOR.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+lock=(control/'GATED_COORDINATOR.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
 os.nice(19);os.sched_setaffinity(0,{47})
 owner=dict(pid=os.getpid(),start_ticks=Path('/proc/self/stat').read_text().split()[21],
  boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),affinity=[47],new_sim_s=0)
 def write(path,value):
  with path.open('x') as out:json.dump(value,out,sort_keys=True);out.flush();os.fsync(out.fileno())
-write(root/'GATED_COORDINATOR_OWNER.json',owner)
+write(control/'GATED_COORDINATOR_OWNER.json',owner)
 assert sha(root/'GPU_BINDING.json')==config['binding_file_sha256']
 from planfix_cpu_worker import probe_health
 model=None;last=None
 def event(kind,**values):
  global last
  row=dict(kind=kind,unix=time.time(),new_sim_s=0,**values)
- with (root/'GATED_EVENTS.jsonl').open('a') as out:out.write(json.dumps(row,sort_keys=True)+chr(10));out.flush();os.fsync(out.fileno())
- temporary=root/('GATED_PHASE.'+str(time.time_ns())+'.json')
- write(temporary,row);os.replace(temporary,root/'GATED_PHASE.json')
+ with (control/'GATED_EVENTS.jsonl').open('a') as out:out.write(json.dumps(row,sort_keys=True)+chr(10));out.flush();os.fsync(out.fileno())
+ temporary=control/('GATED_PHASE.'+str(time.time_ns())+'.json')
+ write(temporary,row);os.replace(temporary,control/'GATED_PHASE.json')
  print('GATED_EVENT '+json.dumps(row),flush=True);last=kind
 def fields_for(target):
  p=Path('/proc',str(target['pid']),'stat');f=p.read_text().split() if p.exists() else None
@@ -90,9 +90,9 @@ try:
   if (root/'SPEED_SEARCH_RESULT.json').exists():reason='speed_complete_no_expansion';break
   if (root/'CPU_FAILED.json').exists():reason='worker_failed_no_retry';break
   health=probe_health(root)
-  latest=root/('GATED_POLL.'+str(time.time_ns())+'.json')
+  latest=control/('GATED_POLL.'+str(time.time_ns())+'.json')
   write(latest,dict(unix=time.time(),health={k:v for k,v in health.items() if k!='launch'},model=model,new_sim_s=0))
-  os.replace(latest,root/'GATED_POLL_LATEST.json')
+  os.replace(latest,control/'GATED_POLL_LATEST.json')
   if model is None:
    if health['blocked']:
     if last!='wait_unchanged_pace_before_model':event('wait_unchanged_pace_before_model',health={k:v for k,v in health.items() if k!='launch'})
@@ -120,36 +120,41 @@ finally:
   if f and f[2]!='T' and not (root/'SPEED_SEARCH_RESULT.json').exists():
    signal_owned(model,root/'planfix_cpu_worker.py',signal.SIGSTOP)
    event('unfinished_own_model_preserved_stopped_at_controller_exit',target=model)
- write(root/'GATED_COORDINATOR_TERMINAL.json',dict(owner=owner,model=model,reason=reason,unix=time.time(),new_sim_s=0))
+ write(control/'GATED_COORDINATOR_TERMINAL.json',dict(owner=owner,model=model,reason=reason,unix=time.time(),new_sim_s=0))
 '''
 
 DEPLOY=r'''
-import base64,fcntl,hashlib,json,os,subprocess,time
+import base64,fcntl,hashlib,json,os,subprocess,time,signal,sys
 from pathlib import Path
 root=Path('/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7')
 assert (root/'CPU_PORT_QUALIFIED.json').is_file() and (root/'CPU_EXECUTION_REGISTRATION.md').is_file()
-assert not (root/'GATED_COORDINATOR_STARTED.json').exists() and not (root/'DISPATCH_STARTED.json').exists()
+assert not (root/'DISPATCH_STARTED.json').exists() and not (root/'CPU_OWNER.json').exists()
+prior=json.loads((root/'GATED_COORDINATOR_TERMINAL.json').read_text());assert "pidfd_open" in prior['reason'] and prior['model'] is None
+old=json.loads((root/'GATED_COORDINATOR_OWNER.json').read_text());p=Path('/proc',str(old['pid']),'stat');f=p.read_text().split() if p.exists() else None
+assert not (f and f[21]==old['start_ticks'] and f[2]!='Z'),'prior resource coordinator still live'
+assert hasattr(os,'pidfd_open') and hasattr(signal,'pidfd_send_signal'),'resource interpreter must support tested pidfd API'
+control=root/'gated_control_v2';assert not control.exists();control.mkdir()
 reg=root/'CPU_EXECUTION_REGISTRATION.md';r=root.parent.parent
 assert 'PLANFIX CPU execution registration SHA '+hashlib.sha256(reg.read_bytes()).hexdigest() in (r/'AUTHORITY.md').read_text()
-program=base64.b64decode(__PROGRAM__);p=root/'GATED_COORDINATOR.py'
+program=base64.b64decode(__PROGRAM__);p=control/'GATED_COORDINATOR.py'
 with p.open('xb') as out:out.write(program);out.flush();os.fsync(out.fileno())
 config=dict(binding_file_sha256=hashlib.sha256((root/'GPU_BINDING.json').read_bytes()).hexdigest(),
- expected_program_sha256=hashlib.sha256(program).hexdigest(),no_sumo=True,maximum_controller_wall_s=86400)
-with (root/'GATED_CONFIG.json').open('x') as out:json.dump(config,out,sort_keys=True);out.flush();os.fsync(out.fileno())
-registration=dict(root=str(root),program_sha256=config['expected_program_sha256'],config=config,
+ expected_program_sha256=hashlib.sha256(program).hexdigest(),worker_root=str(root),no_sumo=True,maximum_controller_wall_s=86400)
+with (control/'GATED_CONFIG.json').open('x') as out:json.dump(config,out,sort_keys=True);out.flush();os.fsync(out.fileno())
+registration=dict(root=str(root),control=str(control),resource_python=sys.executable,model_python='/home/ubuntu/miniconda3/bin/python',program_sha256=config['expected_program_sha256'],config=config,
  rule='Preserve stopped old364064 until unchanged pace/health or sealed-clean2-idle permits exact own retirement and ONE correctedv7; same-process8gates+ONE speed search, no SUMO/retry/expansion/bank switch',new_sim_s=0)
 with (r/'ACCOUNTING.claim').open('a') as lock:
  fcntl.flock(lock,fcntl.LOCK_EX)
  with (r/'AUTHORITY.md').open('a') as out:out.write(chr(10)+'PLANFIX guarded CPUv7 '+json.dumps(registration,sort_keys=True)+chr(10));out.flush();os.fsync(out.fileno())
-with (root/'GATED_COORDINATOR_STARTED.json').open('x') as out:json.dump(registration,out,sort_keys=True);out.flush();os.fsync(out.fileno())
+with (control/'GATED_COORDINATOR_STARTED.json').open('x') as out:json.dump(registration,out,sort_keys=True);out.flush();os.fsync(out.fileno())
 env=json.loads((root/'STAGE_ENV.json').read_text())['env'];env['PYTHONPATH']=str(root/'compat')+':'+str(root)+':'+env['PYTHONPATH']
-with (root/'GATED_COORDINATOR.log').open('xb') as log:
- p=subprocess.Popen(['/home/ubuntu/miniconda3/bin/python','-B','-u',str(root/'GATED_COORDINATOR.py')],cwd=root,env=env,
+with (control/'GATED_COORDINATOR.log').open('xb') as log:
+ p=subprocess.Popen([sys.executable,'-B','-u',str(control/'GATED_COORDINATOR.py')],cwd=root,env=env,
   stdin=subprocess.DEVNULL,stdout=log,stderr=log,start_new_session=True)
 f=Path('/proc',str(p.pid),'stat').read_text().split()
 receipt=dict(pid=p.pid,start_ticks=f[21],boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),
- root=str(root),registration=registration,new_sim_s=0,may_dispatch_one_model_only_after_unchanged_resource_gate=True)
-with (root/'GATED_COORDINATOR_DISPATCH.json').open('x') as out:json.dump(receipt,out,sort_keys=True);out.flush();os.fsync(out.fileno())
+ root=str(root),control=str(control),registration=registration,new_sim_s=0,may_dispatch_one_model_only_after_unchanged_resource_gate=True)
+with (control/'GATED_COORDINATOR_DISPATCH.json').open('x') as out:json.dump(receipt,out,sort_keys=True);out.flush();os.fsync(out.fileno())
 print('GATED_COORDINATOR_DISPATCH',json.dumps(receipt),flush=True)
 '''
 
@@ -157,5 +162,5 @@ if __name__=='__main__':
     compile(PROGRAM,'<guarded-cpu-v7-preflight>','exec')
     text=remote('cpuV',DEPLOY.replace('__PROGRAM__',repr(base64.b64encode(PROGRAM.encode()).decode())),timeout=30)
     value=json.loads(next(x[len('GATED_COORDINATOR_DISPATCH '):] for x in text.splitlines() if x.startswith('GATED_COORDINATOR_DISPATCH ')))
-    with Path(__file__).with_name('PLANFIX_CPU_V7_GATED_DISPATCH.json').open('x') as out:json.dump(value,out,indent=2,sort_keys=True)
+    with Path(__file__).with_name('PLANFIX_CPU_V7_GATED_DISPATCH_v2.json').open('x') as out:json.dump(value,out,indent=2,sort_keys=True)
     note('cpuV',f"guarded coordinator {value['pid']}/{value['start_ticks']} waits unchanged resource gate before exact own retirement/ONE corrected model; no duplicate model, training signal, SUMO or expansion")

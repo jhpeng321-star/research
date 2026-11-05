@@ -1,0 +1,21 @@
+{
+  "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+  "may_dispatch_one_model_only_after_unchanged_resource_gate": true,
+  "new_sim_s": 0,
+  "pid": 379532,
+  "registration": {
+    "config": {
+      "binding_file_sha256": "1148e8c723f5e9c43685977b901221b52025b6d61da89845ce20228d7a382f76",
+      "expected_program_sha256": "d5b19bd9a6e4ed23555257ac1003f54356f8822e18e11733925e9d8c1c6f7b68",
+      "maximum_controller_wall_s": 86400,
+      "no_sumo": true
+    },
+    "new_sim_s": 0,
+    "program_sha256": "d5b19bd9a6e4ed23555257ac1003f54356f8822e18e11733925e9d8c1c6f7b68",
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7",
+    "rule": "Preserve stopped old364064 until unchanged pace/health or sealed-clean2-idle permits exact own retirement and ONE correctedv7; same-process8gates+ONE speed search, no SUMO/retry/expansion/bank switch"
+  },
+  "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v7",
+  "start_ticks": "8575344",
+  "unix": 1793895904.9326134
+}

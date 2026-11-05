@@ -221,7 +221,7 @@ import json,time,os
 from pathlib import Path
 root=Path(__ROOT__);result=dict(root=str(root),exists=root.exists(),unix=time.time())
 if root.exists():
- for name in ('STAGE_PASS.json','STAGE_ENV.json','DISPATCH_STARTED.json','DISPATCH.json','CPU_OWNER.json','BOOTSTRAP_PASS.json','CPU_FAILED.json','FRESH_QUALIFICATION.json','SPEED_SEARCH_STARTED.json','SPEED_SEARCH_RESULT.json','PACE_CONTROL_STATE.json','PACE_SUPERVISOR_OWNER.json','PACE_SUPERVISOR_TERMINAL.json'):
+ for name in ('STAGE_PASS.json','STAGE_ENV.json','DISPATCH_STARTED.json','DISPATCH.json','CPU_OWNER.json','BOOTSTRAP_PASS.json','CPU_FAILED.json','FRESH_QUALIFICATION.json','SPEED_SEARCH_STARTED.json','SPEED_SEARCH_RESULT.json','PACE_CONTROL_STATE.json','PACE_SUPERVISOR_OWNER.json','PACE_SUPERVISOR_TERMINAL.json','CPU_OPERATOR_RETIRED.json','GATED_COORDINATOR_OWNER.json','GATED_COORDINATOR_TERMINAL.json','GATED_PHASE.json','GATED_POLL_LATEST.json'):
   p=root/name
   if p.exists():
    d=json.loads(p.read_text())
@@ -229,7 +229,7 @@ if root.exists():
    if name=='BOOTSTRAP_PASS.json':d={k:v for k,v in d.items() if k!='source_receipt'}
    if name=='SPEED_SEARCH_RESULT.json':d={k:v for k,v in d.items() if k!='result'}
    result[name]=d
- for name in ('CPU_OWNER.json','DISPATCH.json','PACE_SUPERVISOR_OWNER.json'):
+ for name in ('CPU_OWNER.json','DISPATCH.json','PACE_SUPERVISOR_OWNER.json','GATED_COORDINATOR_OWNER.json'):
   if name in result:
    d=result[name];p=Path('/proc',str(d['pid']),'stat');f=p.read_text().split() if p.exists() else None
    d['alive_same_identity']=bool(f and f[21]==d['start_ticks'] and f[2]!='Z')
@@ -244,6 +244,21 @@ if root.exists():
  if p.exists():result['log_tail']=p.read_bytes()[-14000:].decode(errors='replace')
  p=root/'PACE_SUPERVISOR.log'
  if p.exists():result['pace_supervisor_log_tail']=p.read_bytes()[-6000:].decode(errors='replace')
+ p=root/'GATED_COORDINATOR.log'
+ if p.exists():result['gated_log_tail']=p.read_bytes()[-10000:].decode(errors='replace')
+ control=root/'gated_control_v2'
+ if control.exists():
+  attempt={}
+  for name in ('GATED_COORDINATOR_OWNER.json','GATED_COORDINATOR_TERMINAL.json','GATED_PHASE.json','GATED_POLL_LATEST.json','GATED_COORDINATOR_DISPATCH.json'):
+   p=control/name
+   if p.exists():attempt[name]=json.loads(p.read_text())
+  if 'GATED_COORDINATOR_OWNER.json' in attempt:
+   d=attempt['GATED_COORDINATOR_OWNER.json'];p=Path('/proc',str(d['pid']),'stat');f=p.read_text().split() if p.exists() else None
+   d['alive_same_identity']=bool(f and f[21]==d['start_ticks'] and f[2]!='Z')
+   if d['alive_same_identity']:d['process_state']=f[2];d['cpu_seconds']=(int(f[13])+int(f[14]))/os.sysconf('SC_CLK_TCK')
+  p=control/'GATED_COORDINATOR.log'
+  if p.exists():attempt['log_tail']=p.read_bytes()[-10000:].decode(errors='replace')
+  result['gated_control_v2']=attempt
 print('CPU_STATUS',json.dumps(result),flush=True)
 '''
 
@@ -283,9 +298,11 @@ if __name__=='__main__':
         import time
         value=json.loads(next(x[len('CPU_STATUS '):] for x in text.splitlines() if x.startswith('CPU_STATUS ')))
         with (HERE/f'PLANFIX_CPU_STATUS_v{a.generation}_{time.time_ns()}.json').open('x') as out:json.dump(value,out,indent=2,sort_keys=True)
-        owner=value.get('CPU_OWNER.json',value.get('DISPATCH.json',{}))
+        resource_owner=value.get('gated_control_v2',{}).get('GATED_COORDINATOR_OWNER.json',value.get('GATED_COORDINATOR_OWNER.json',{}))
+        owner=value.get('CPU_OWNER.json',value.get('DISPATCH.json',resource_owner))
+        component='WM' if 'CPU_OWNER.json' in value else 'guarded coordinator'
         complete=sum(g.get('pass_') is True for g in value.get('gates',{}).values())
-        note('cpuV',f"CPU v{a.generation} pid={owner.get('pid')} alive={owner.get('alive_same_identity',False)} state={owner.get('process_state')} bootstrap_pass={'BOOTSTRAP_PASS.json' in value} gates_pass={complete}/8 speed_complete={'SPEED_SEARCH_RESULT.json' in value} failure={value.get('CPU_FAILED.json',{}).get('error')} new_sim_s=0")
+        note('cpuV',f"CPU v{a.generation} {component} pid={owner.get('pid')} alive={owner.get('alive_same_identity',False)} state={owner.get('process_state')} bootstrap_pass={'BOOTSTRAP_PASS.json' in value} gates_pass={complete}/8 speed_complete={'SPEED_SEARCH_RESULT.json' in value} failure={value.get('CPU_FAILED.json',{}).get('error')} new_sim_s=0")
         raise SystemExit(0)
     prefix='CPU_STAGE_PASS ' if a.action=='stage' else 'CPU_PORT_QUALIFICATION ' if a.action=='qualify' else 'CPU_REGISTERED ' if a.action=='register' else 'CPU_DISPATCH '
     receipt=json.loads(next(x[len(prefix):] for x in text.splitlines() if x.startswith(prefix)))
