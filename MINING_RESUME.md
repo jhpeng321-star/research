@@ -30,3 +30,17 @@ No cpuV verification dispatch yet. Capture receipts in
 E:/Temp/opencode/MINING_RESUME_INVENTORY_GPU_0218.json and
 MINING_RESUME_INVENTORY_CPU_0219.json. Earlier cpuV inventory failed read-only on
 an unprivileged /root probe; fixed host detection, no remote write or simulation.
+
+## 02:24 +08 — second recovery, accepted G5 source bound
+
+Rebased the five mining-only commits onto accepted G5 b903c6c2 as requested;
+preserved all six uncommitted adapter/inventory files and prior receipts. The
+inherited sparse checkout was expanded for mining sources after rebase.
+Read-only gpuA inventory confirms original GPU owner3230/start928158286 and
+boot a81555d7 alive, seven startup receipt filenames, no query/result/fault.
+No second model was dispatched. The first status command used an absent generic
+python3 and exited127 before executing code; corrected to the existing absolute
+/root/miniconda3/bin/python. Both transport outcomes are retained.
+cpuV again confirms STOPPED_BY_OWNER with original owners exited, sealed A/B/R18,
+mining ledger empty and clean3 CONFIG/LAUNCHED absent. gpuA mining charge remains
+960sim-s; no new physics. Receipts RECOVERY_GPU_0222.json and RECOVERY_CPU_0223.json.
