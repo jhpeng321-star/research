@@ -69,25 +69,51 @@ def _wave(cfg, pairs, phase, prefix, *, fixed=False):
     return results
 
 
+def lesson_pairs(cfg, update=None):
+    """Expand the same frozen bank/windows for dry costing and actual execution.
+
+    Omitting update loads no current policy and never reserves or runs a branch.
+    """
+    from . import replay_bank as rb, sumo_verify as sv, practice_starts as ps
+    root = Path(cfg['run_root'])
+    native = production.backend_config(cfg)
+    with p1._bank_view(native):
+        frozen = rb.lesson_list(root, 'B', cfg.get('replay_sources', {}).get('B', ()))
+        decisions = {r['verification_id']: r for r in rb.bank_decisions(root, 'B',
+            sources=cfg.get('replay_sources', {}).get('B', ()))}
+        links, pairs = ps._links(root, 'B'), []
+        weights = production.checkpoint_weights(native, 'B', update) if update is not None else None
+        for vid in frozen['verification_ids']:
+            receipt = decisions[vid]
+            snap = rb._decision_snapshot(root, 'B', receipt, links)
+            if weights is not None:
+                snap.update(weights=weights, policy=dict(state_dict_sha256=sv._state_sha(weights)))
+            pairs.append((rb.lesson_policy_spec(snap, receipt['chosen_plan'], receipt), snap))
+    return pairs
+
+
+def lesson_quotes(cfg):
+    """Zero-physics full native lesson schedule, rather than the legacy floor."""
+    from .protocol import digest
+    pairs = lesson_pairs(cfg)
+    quotes = {}
+    for update in rc.SCHEDULE['B']['lessons']:
+        manifest = [dict(id=f'lesson_u{update:03}_{i:04}', sim_s=int(spec['sim_s']),
+            window=deepcopy(spec['window'])) for i, (spec, _) in enumerate(pairs)]
+        quotes[f'lesson_u{update:03}'] = _seal(dict(kind='lesson', status='dry_run',
+            update=update, new_sim_s=0, branches=len(manifest), branch_manifest=manifest,
+            quote_sha256=digest(manifest), quoted_sim_s=sum(b['sim_s'] for b in manifest)),
+            'receipt_sha256')
+    return quotes
+
+
 def scheduled(cfg, update):
     from .launch_training import write, read
-    from . import replay_bank as rb, sumo_verify as sv, practice_starts as ps
     root = Path(cfg['run_root'])
     if update in rc.SCHEDULE['B']['lessons']:
         target = root/f'evaluation/LESSON_u{update:03}.json'
         if not target.exists():
-            native = production.backend_config(cfg)
-            with p1._bank_view(native):
-                frozen = rb.lesson_list(root, 'B', cfg.get('replay_sources', {}).get('B', ()))
-                decisions = {r['verification_id']: r for r in rb.bank_decisions(root, 'B',
-                    sources=cfg.get('replay_sources', {}).get('B', ()))}
-                links, pairs = ps._links(root, 'B'), []
-                weights = production.checkpoint_weights(native, 'B', update)
-                for vid in frozen['verification_ids']:
-                    receipt = decisions[vid]
-                    snap = rb._decision_snapshot(root, 'B', receipt, links)
-                    snap.update(weights=weights, policy=dict(state_dict_sha256=sv._state_sha(weights)))
-                    pairs.append((rb.lesson_policy_spec(snap, receipt['chosen_plan'], receipt), snap))
+            pairs = lesson_pairs(cfg, update)
             results = _wave(cfg, pairs, 'v2v_lessons', f'lesson_u{update:03}')
             write(target, _seal(dict(status='graded', update=update, results=results), 'receipt_sha256'))
     if update not in (8, 24):

@@ -13,7 +13,7 @@ from .protocol import digest
 CAP = 6_000_000
 G_LEVER_CAP = 230_400
 OWNER_SCOPE = 'clean1+clean2+plan_fix+clean3 (incl. G1 certification)'
-SCHEMA = 'coopmwm.clean3.cumulative_quote.v1'
+SCHEMA = 'coopmwm.clean3.cumulative_quote.v2'
 
 
 def _approval(value):
@@ -41,8 +41,38 @@ def _prior(rows, name):
                 charged_sim_s=spent, plan_fix_sim_s=plan)
 
 
+def _lesson_costs(quotes):
+    expected = {f'lesson_u{u:03}': u for u in rerun_cpus.SCHEDULE['B']['lessons']}
+    if set(quotes) != set(expected):
+        raise ValueError('complete native lesson schedule quote required')
+    costs = {}
+    for name, update in expected.items():
+        row = quotes[name]
+        verify_sealed(row, 'receipt_sha256')
+        if (row.get('kind') != 'lesson' or row.get('status') != 'dry_run'
+                or row.get('update') != update or row.get('new_sim_s') != 0):
+            raise ValueError('zero-physics native lesson quote required')
+        manifest = row['branch_manifest']
+        if (not manifest or len(manifest) != row['branches']
+                or digest(manifest) != row['quote_sha256']):
+            raise ValueError('complete native lesson manifest required')
+        for i, branch in enumerate(manifest):
+            window = branch['window']
+            if (branch['id'] != f'{name}_{i:04}' or window.get('truncated') is not False
+                    or not 0 <= window['start_s'] < window['end_s'] <= 1200):
+                raise ValueError('full original lesson window and unique branch id required')
+            # Native replay includes its entire prefix, not just the suffix.
+            from .sumo_verify import branch_sim_s
+            if clean2_budget._count(branch['sim_s'], 'lesson sim_s') != branch_sim_s(window['end_s']):
+                raise ValueError('full-prefix native lesson cost required')
+        costs[name] = sum(b['sim_s'] for b in manifest)
+        if costs[name] != row['quoted_sim_s']:
+            raise ValueError('native lesson quote sum mismatch')
+    return costs
+
+
 def prospective(*, clean1_rows, clean2_rows, owner_budget, diagnostic_quotes,
-                gate_manifest):
+                gate_manifest, lesson_quotes):
     """Quote the unchanged full design, retaining overbudget results as evidence.
 
     The G allocations use the complete registered bounds, without an unqualified
@@ -56,6 +86,7 @@ def prospective(*, clean1_rows, clean2_rows, owner_budget, diagnostic_quotes,
     if plan > clean2_budget.PLAN_FIX_CAP:
         raise ValueError('plan_fix exceeds its registered phase cap')
     costs = clean2_budget._diagnostic_costs(diagnostic_quotes)
+    lessons = _lesson_costs(lesson_quotes)
     if not gate_manifest:
         raise ValueError('complete final-runtime gate manifest required')
     seen, gate = set(), 0
@@ -75,6 +106,7 @@ def prospective(*, clean1_rows, clean2_rows, owner_budget, diagnostic_quotes,
         track2_smoke=20_000, gate_bank_verification_ext=gate,
         early_probes=costs['probe_u002']+costs['probe_u004'],
         isolated_replicated=sum(costs[f'replicated_u{u:03}'] for u in (6, 12, 24)),
+        v2v_lessons=max(phases['v2v_lessons'], sum(lessons.values())),
         g1_certification=G_LEVER_CAP, g4_synergy_credit=G_LEVER_CAP)
     for name, amount in phases.items():
         clean2_budget._count(amount, name)
@@ -87,6 +119,7 @@ def prospective(*, clean1_rows, clean2_rows, owner_budget, diagnostic_quotes,
         prior_parity_sim_s=clean2_budget.PARITY, prior_charged_sim_s=prior,
         plan_fix_unspent_reserved_sim_s=reserved, phases=phases,
         allocated_sim_s=allocation, diagnostic_costs=costs,
+        lesson_costs=lessons, lesson_quotes=deepcopy(lesson_quotes),
         diagnostic_quotes=deepcopy(diagnostic_quotes), gate_manifest=deepcopy(gate_manifest),
         cumulative_upper_bound_sim_s=bound, margin_sim_s=CAP-bound,
         fits_current_prefix=bound <= CAP,
@@ -115,7 +148,7 @@ def admit(quote, *, clean1_rows, clean2_rows, owner_budget, accepted_levers,
         raise ValueError('actual sealed A/B/R boundary required')
     rebuilt = prospective(clean1_rows=clean1_rows, clean2_rows=clean2_rows,
         owner_budget=owner_budget, diagnostic_quotes=quote['diagnostic_quotes'],
-        gate_manifest=quote['gate_manifest'])
+        gate_manifest=quote['gate_manifest'], lesson_quotes=quote['lesson_quotes'])
     if quote != rebuilt:
         raise ValueError('clean3 quote differs from current ledgers or full registered design')
     if not rebuilt['fits_current_prefix']:

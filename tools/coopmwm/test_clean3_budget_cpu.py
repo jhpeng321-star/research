@@ -19,8 +19,23 @@ def inputs():
         clean2_rows=[dict(id='prior', phase='v2v_train', sim_s=900000)],
         owner_budget=dict(owner_approval='yes, approve.', total_cap_sim_s=6000000,
                           scope=cb.OWNER_SCOPE, registered='2026-11-05 23:39'),
-        diagnostic_quotes=diagnostics,
+        diagnostic_quotes=diagnostics, lesson_quotes=lesson_quotes(),
         gate_manifest=[dict(id='gate', sim_s=15160, window=dict(truncated=False))])
+
+
+def lesson_quotes():
+    # Actual clean2 native frozen bank: 12 branches, 8760 sim-s per wave.
+    ends = [480, 660, 720, 600, 600, 720, 720, 720, 1020, 900, 960, 660]
+    result = {}
+    for u in (6, 12, 18, 24):
+        name = f'lesson_u{u:03}'
+        manifest = [dict(id=f'{name}_{i:04}', sim_s=end,
+            window=dict(start_s=300 if end <= 720 else 600, end_s=end, truncated=False))
+            for i, end in enumerate(ends)]
+        result[name] = _seal(dict(kind='lesson', status='dry_run', update=u, new_sim_s=0,
+            branches=len(manifest), branch_manifest=manifest, quote_sha256=digest(manifest),
+            quoted_sim_s=sum(ends)), 'receipt_sha256')
+    return result
 
 
 def admission_args(inputs):
@@ -31,18 +46,19 @@ def admission_args(inputs):
 
 def test_full_quote_keeps_every_schedule_cap_and_plan_fix_once(inputs):
     first = cb.prospective(**inputs)
-    assert first['allocated_sim_s'] == 3241440
+    assert first['allocated_sim_s'] == 3254640
+    assert first['phases']['v2v_lessons'] == 35040
     assert first['prior_charged_sim_s'] == 2149440
     assert first['plan_fix_unspent_reserved_sim_s'] == 566400
-    assert first['cumulative_upper_bound_sim_s'] == 5957280
-    assert first['margin_sim_s'] == 42720
+    assert first['cumulative_upper_bound_sim_s'] == 5970480
+    assert first['margin_sim_s'] == 29520
     assert first['launch_authorized'] is False
     inputs['clean1_rows'].append(dict(id='plan2', phase='plan_fix', sim_s=200000))
     later = cb.prospective(**inputs)
     assert later['cumulative_upper_bound_sim_s'] == first['cumulative_upper_bound_sim_s']
     assert later['plan_fix_unspent_reserved_sim_s'] == 366400
     admitted = cb.admit(later, **admission_args(inputs))
-    assert admitted['budget']['allocated'] == 3241440
+    assert admitted['budget']['allocated'] == 3254640
     assert admitted['smoke_and_gate_required'] and not admitted['launch_authorized']
 
 
@@ -50,8 +66,8 @@ def test_real_observed_prefix_is_blocked_even_without_protected_reserve(inputs):
     inputs['clean2_rows'][0]['sim_s'] = 1614000
     value = cb.prospective(**inputs)
     assert value['prior_charged_sim_s'] == 2863440
-    assert value['cumulative_upper_bound_sim_s'] == 6671280
-    assert value['margin_sim_s'] == -671280 and value['status'] == 'BLOCKED_BUDGET'
+    assert value['cumulative_upper_bound_sim_s'] == 6684480
+    assert value['margin_sim_s'] == -684480 and value['status'] == 'BLOCKED_BUDGET'
     assert value['allocated_sim_s']+value['prior_charged_sim_s'] > cb.CAP
     with pytest.raises(ValueError, match='exceeds cumulative'):
         cb.admit(value, **admission_args(inputs))
@@ -123,3 +139,36 @@ def test_native_diagnostic_manifest_cannot_be_shortened_and_resealed(inputs):
         {key: val for key, val in row.items() if key != 'receipt_sha256'}, 'receipt_sha256')
     with pytest.raises(ValueError, match='truncated'):
         cb.prospective(**inputs)
+
+
+@pytest.mark.parametrize('fault', ['missing', 'truncated', 'prefix', 'sum', 'duplicate', 'measured'])
+def test_lesson_quote_refuses_missing_or_underpriced_native_evidence(inputs, fault):
+    if fault == 'missing':
+        del inputs['lesson_quotes']['lesson_u018']
+    else:
+        row = inputs['lesson_quotes']['lesson_u018']
+        if fault == 'truncated':
+            row['branch_manifest'][0]['window']['truncated'] = True
+        elif fault == 'prefix':
+            row['branch_manifest'][0]['sim_s'] = 180
+            row['quoted_sim_s'] -= 300
+        elif fault == 'sum':
+            row['quoted_sim_s'] -= 1
+        elif fault == 'duplicate':
+            row['branch_manifest'][1]['id'] = row['branch_manifest'][0]['id']
+        else:
+            row['new_sim_s'] = 8760
+        row['quote_sha256'] = digest(row['branch_manifest'])
+        inputs['lesson_quotes']['lesson_u018'] = _seal(
+            {key: val for key, val in row.items() if key != 'receipt_sha256'}, 'receipt_sha256')
+    with pytest.raises(ValueError):
+        cb.prospective(**inputs)
+
+
+def test_actual_u18_stop_is_prevented_by_complete_phase_quote(inputs):
+    # The observed u18 wave exceeds the old remaining 4320; both outstanding
+    # waves fit the corrected allocation without dropping any branch or prefix.
+    value = cb.prospective(**inputs)
+    assert 21840-17520 < 8760
+    assert value['lesson_costs'] == {f'lesson_u{u:03}': 8760 for u in (6, 12, 18, 24)}
+    assert value['phases']['v2v_lessons']-17520 >= 2*8760
