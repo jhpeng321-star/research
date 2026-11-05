@@ -41,6 +41,23 @@
     "completed_test_runs_preserved": "Implementation and independent review each recorded 188 passed plus 9 passing subtests; no reruns or additional tests counted in this session.",
     "action": "Preserved completed r2 fix, numeric regression tests and independent r3 PASS; refreshed readiness after verifying unchanged implementation."
   },
+  "latest_resume_verification": {
+    "date": "2026-11-05",
+    "starting_head": "e682a355d1ba3502e63bc04ecf2aacb92d4a7747",
+    "starting_worktree_status": "clean on c4/planner-online",
+    "receipts_read": ["T1B_READY.json", "T1B_FIX_R2.json", "REVIEW_T1B_r2.md", "REVIEW_T1B_r3.md", "T1B_ACCEPTED.json"],
+    "accepted_implementation_head": "1f15a9ef0d249bebbbafd43efccd7c3f677778e7",
+    "changes_since_accepted_head": ["REVIEW_T1B_r3.md", "T1B_ACCEPTED.json", "T1B_READY.json"],
+    "implementation_and_tests_unchanged": true,
+    "source_spot_check": "Read shared planner_commitments lifetime implementation and all 16 numeric live-versus-real-decoder cancellation/recontact/full-horizon regression cases.",
+    "base_commit_verified": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
+    "diff_check": "git diff --check c4/track-base -- passed",
+    "matching_local_python_test_processes_found": false,
+    "new_test_runs_or_dispatches": 0,
+    "completed_test_runs_preserved": "Implementation and independent review each recorded 188 passed plus 9 passing subtests; completed tests were not repeated or counted again.",
+    "unresolved_review_blockers": [],
+    "action": "Preserved the committed r2 fix, regression tests and independent r3 acceptance; refreshed only this readiness receipt."
+  },
   "commits": [
     {"commit": "abaada860309abdd043f7fc0d250fc77688acba3", "step": "Calibrated paired-WM scoring and additive residual-profile decoding"},
     {"commit": "fcb0a2dcc6f7dfc9c368e8f03a1d26fab1584b00", "step": "Default-off V2V single-writer runtime hook"},
