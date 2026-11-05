@@ -50,6 +50,8 @@ def inputs(cfg):
                 converted[arm] = [str(_path(p if Path(p).is_absolute() else ready.parent/p).resolve())
                                   for p in paths]
             raw.append(dict(run_root=str(_path(base).resolve()), replay_sources=converted))
+    from . import group_lane_bank
+    raw.extend(group_lane_bank.inputs(cfg))
     seen, out = set(), []
     for item in raw:
         for paths in item['replay_sources'].values():
@@ -91,9 +93,23 @@ def visit(cfg, arm, consumer):
         local['_breadth_augmented'] = {r['example_id']: dict(r,
             augmentation_sha256=manifest_sha) for r in augmented}
         links = ps._links(local['run_root'], arm)
+        mined = {(r['verification_id'], r['plan_sha256'])
+                 for r in local.get('_g5_mined', ()) if r['arm'] == arm}
+        matched_mined = set()
         def consume(*, receipt, example, plan, pairs, trace):
             # bank_pairs has already checked legacy admission/cooperation too.
             if not pairs:
+                return
+            if '_g5_mined' in local:
+                mined_key = (receipt['verification_id'], digest(plan))
+                # per_seed_v1 may admit DIFFERENT plans on different seeds of
+                # one verification. Import only the explicitly mined bindings.
+                if mined_key not in mined:
+                    return
+                from .group_lane import from_plan
+                from_plan(plan)  # exact lane + acceleration macro, never a lossy label
+                matched_mined.add(mined_key)
+            if plan.get('g5_move') and not local.get('group_lane_moves'):
                 return
             ident = (example or {}).get('example_id', receipt['verification_id']+'#s1')
             if (links.get(receipt['verification_id'], {}).get('augmentation')
@@ -122,6 +138,8 @@ def visit(cfg, arm, consumer):
                 v2v_intent=local if local.get('v2v_intent') else None,
                 imitation_bank_filter='cooperative_only',
                 imitation_target_space='effective', example_consumer=consume)
+        if set(mined)-matched_mined:
+            raise ValueError('MINED_MOVES reference has no usable native verified example')
 
 
 class UnboundContext(ValueError):
@@ -321,6 +339,10 @@ def observable_contexts(policy, plan, pairs, frames, *, t0, certification=None):
     for sample, weight in sorted(pairs, key=lambda pair: int(pair[0]['intent_link']['t'])):
         time = int(sample['intent_link']['t'])
         elapsed = time-int(t0)
+        # A macro already under way cannot be relabelled with a fresh yield /
+        # gap-then-merge sequence at onset=0 in a later context.
+        if label.family in moves.LANE_FAMILIES and elapsed > label.onset:
+            continue
         active = max(0, elapsed-label.onset)
         if elapsed < 0 or (label.family != 'none' and label.hold-active < moves._HOLD_LO):
             continue

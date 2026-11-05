@@ -56,7 +56,19 @@ def tick(b, controller=None, trace=None):
         vehicles.append(v)
     if trace is not None:
         trace.write(canonical(dict(time_s=now,vehicles=vehicles,actions=audit))+'\n')
-    _, info = b.env.step(cmd,lanes=None)  # The only actuator path: CommandOwnership.
+    # Reuse c4/lane-policy's single-writer lane hook (e5740395). The env keeps
+    # SUMO laneChangeMode=513 safety; no direct TraCI command is added here.
+    request = getattr(controller, 'lane_request', None)
+    lanes = request(b.env) if request is not None else None
+    actors = getattr(controller, 'lane_actors', None)
+    if lanes is not None and actors is not None:
+        # G5 additive ownership contract: lane mode changes only for authorized actors.
+        _, info = b.env.step(cmd,lanes=lanes,lane_actors=actors())
+    else:
+        _, info = b.env.step(cmd,lanes=lanes)  # The only actuator path: CommandOwnership.
+    record = getattr(controller, 'observe_lane', None)
+    if record is not None:
+        record(info)
     interval = info['interval']
     road, source = interval['speed_deficit_vehicle_seconds'], interval['source_wait_vehicle_seconds']
     b.totals['road_delay_vs'] += road
@@ -66,7 +78,7 @@ def tick(b, controller=None, trace=None):
                       ('ttc_below_3_vs','ttc_below_3_vehicle_seconds'),('hard_brake','braking_vehicle_seconds')):
         b.totals[key] += interval.get(field,0.)
     b.observe(b.env)
-    if info['done'] or any(info['lane_commands'].values()) or any(interval.get(k,0) for k in
+    if info['done'] or (any(info['lane_commands'].values()) and lanes is None) or any(interval.get(k,0) for k in
                 ('collision_involvements','starting_teleports','dropped_vehicle_steps')):
         raise ValueError('early termination/safety/slot/lane anomaly')
     return audit

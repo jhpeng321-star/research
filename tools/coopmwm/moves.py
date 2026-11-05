@@ -66,6 +66,8 @@ from .v2v_obs import V2V_K, V2V_RANGE_M
 CONTROL_DT_S = 1.0   # one-second MAPPO control interval (the plant's decision tick)
 CAV_ACCEL_CAP_MPS2 = 1.2   # tracks_spec.md, Move library feasibility bound
 FAMILIES = ('none', 'ease_off', 'wall', 'gap_open', 'ramp_assist')
+LANE_FAMILIES = ('yield_lane', 'open_gap_merge')  # G5 opt-in; legacy head width stays stable
+ALL_FAMILIES = FAMILIES + LANE_FAMILIES
 STRUCTURED = FAMILIES[1:]          # candidates() rotates these; 'none' is the caller's baseline
 MOVE_MAX_MEMBERS = int(V2V_K)      # 1..4 nearby CAVs incl. self (the V2V partner-slot arity)
 
@@ -101,7 +103,7 @@ class Move:
     depth: float
 
     def __post_init__(self):
-        if self.family not in FAMILIES:
+        if self.family not in ALL_FAMILIES:
             raise ValueError(f'unknown move family {self.family!r}')
         members = tuple(self.members)
         object.__setattr__(self, 'members', members)
@@ -116,6 +118,8 @@ class Move:
             return
         if self.family == 'ease_off' and len(members) != 1:
             raise ValueError('ease_off acts through the single acting CAV')
+        if self.family in LANE_FAMILIES and len(members) != 2:
+            raise ValueError('G5 requires exactly (mainline yielder, ramp CAV)')
         if self.family in ('wall', 'gap_open', 'ramp_assist') and len(members) < 2:
             raise ValueError(f'{self.family} is a cooperative move (at least two members)')
         if not _is_second(self.onset) or not _is_second(self.hold) \
@@ -129,9 +133,9 @@ class Move:
     @property
     def actors(self):
         """Members the move commands away from the policy during the hold window."""
-        if self.family in ('ease_off', 'gap_open'):
+        if self.family in ('ease_off', 'gap_open', 'open_gap_merge'):
             return (self.members[0],)   # the acting CAV; gap_open stores the easing mainline CAV first
-        if self.family == 'none':
+        if self.family in ('none', 'yield_lane'):
             return ()
         return tuple(self.members)      # wall / ramp_assist: the members ease together
 
@@ -342,6 +346,9 @@ def candidates(obs_state, rng, n):
     merge-zone arrival. The 'none' baseline is NOT included: callers roll it
     out separately (T1B). Exactly ``n`` moves (ease_off is always available).
     """
+    if obs_state.get('group_lane_moves'):
+        from .feasible_proposals import candidates as feasible_candidates
+        return feasible_candidates(obs_state, rng, n)
     if not isinstance(n, int) or isinstance(n, bool) or n < 0:
         raise ValueError('n must be a non-negative integer')
     if not isinstance(rng, np.random.Generator):
@@ -473,6 +480,10 @@ def from_plan(plan):
         plan = plan['plan']
     elif isinstance(plan.get('chosen_plan'), dict):
         plan = plan['chosen_plan']
+    if plan.get('g5_move') or plan.get('uses_lane_actions') or any(
+            any(row) for row in plan.get('lane_actions', ())):
+        from .group_lane import from_plan as lane_move
+        return lane_move(plan)
     members, m = _plan_offsets(plan)
     tag = plan.get('variety_family')
     best, best_gain, best_key = none_move(members[0]), 0.0, None

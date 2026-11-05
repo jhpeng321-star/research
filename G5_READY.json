@@ -1,0 +1,118 @@
+{
+  "task": "G5",
+  "status": "READY",
+  "scope": "G5 implementation and CPU contract tests only",
+  "branch": "c4/grp-lane",
+  "worktree": "E:/agent-work/c4-grp-lane",
+  "base_commit": "6d8046e7",
+  "code_commit": "9fd32b4e",
+  "commits": [
+    {
+      "sha": "ddffa5484d2b761dec925b7e7394fc8b1940d588",
+      "subject": "C4 clean3: add safe G5 joint lane macros and verified mined-bank hook"
+    },
+    {
+      "sha": "9fd32b4e",
+      "subject": "C4 G5 r0 fix: actor-scoped lane ownership, executable-profile binding, per-actor lane telemetry"
+    },
+    {
+      "sha": "9222d3b1",
+      "subject": "C4 G5 r0 fix: pre-G5 env byte-identity test for legacy lane calls; document fixed contracts"
+    }
+  ],
+  "spec": "tracks_spec.md MAIN 00:30 owner: G5 LANE-CHANGE GROUP MOVES",
+  "reused_work": {
+    "branches_read": [
+      "c4/lane-policy",
+      "c4/lane-plans"
+    ],
+    "integration_reference": "e5740395",
+    "lane_policy_tip_read": "9e36b0bc",
+    "lane_plans_tip_read": "fa1876c8",
+    "adaptations": [
+      "lane-policy lanes_tensor/lane_outcome helpers and controller.lane_request/observe_lane ABI",
+      "lane-policy coopfree.backend.tick single env.step lane actuator hook",
+      "lane-plans decision_envelope through existing lane_feasibility and LaneRules",
+      "lane-plans member-by-second 0 keep / 1 left / 2 right plan field convention",
+      "committed-plan precedence and actual tick outcome as the execution record"
+    ]
+  },
+  "api": {
+    "enable": "common B/R backend cfg group_lane_moves=true; default false; A episode path unchanged",
+    "families": "moves.LANE_FAMILIES=('yield_lane','open_gap_merge'); moves.ALL_FAMILIES has 7 entries; group_lane.families(cfg) resolves the configured vocabulary",
+    "legacy_compatibility": "moves.FAMILIES and default trigger checkpoint width remain the original five-family layout",
+    "move": "moves.Move(family, (mainline_yielder_cav, ramp_cav), onset, hold, depth)",
+    "yield_lane": "mainline CAV attempts WM 1->0 at onset; acceleration offsets zero",
+    "open_gap_merge": "mainline CAV behind ramp CAV receives -depth during registered hold; ramp attempts WM 2->1 one existing control tick after onset",
+    "parameters": "existing variety onset/hold/depth windows; original global look-ahead unchanged",
+    "proposals": "moves.candidates(obs_state,rng,n) / feasible_proposals.candidates; local group_lane_moves=true and observed_lanes required; same balanced feasible-family slate and conditional ownership masks for B/R",
+    "executor": "group_lane.targets(move,elapsed) -> absolute WM targets; group_lane.safe_targets rechecks each actor's own sensed gap; V2V controller.lane_request(env) -> one existing env.step(accel,lanes=...)",
+    "plans": "group_lane.plan_fields(move,duration) + group_lane.executable_fields(move,duration,policy_profile) -> g5_move, lane_actions, uses_lane_actions, profile, policy_profile, perturbation_profile; from_plan binds the executed profile = policy_profile + macro offsets",
+    "native_verification": "bound G5 plans and recorded G5 prefix samples use the same safe V2V adapter with local sensing; plain acceleration controllers reject unsupported G5 execution",
+    "bank_hook": "bank_breadth.inputs/visit adds group_lane_bank.inputs; default <run_root>/MINED_MOVES.jsonl or explicit cfg mined_moves",
+    "mined_schema": "coopmwm-mined-move-v1",
+    "mined_record": {
+      "schema": "coopmwm-mined-move-v1",
+      "arm": "B or R",
+      "run_root": "native verified bank root, relative to JSONL or absolute",
+      "verification_id": "native verification id",
+      "plan_sha256": "protocol.digest of the exact verified G5 plan, lowercase hex64",
+      "replay_sources": "optional {B:[paths],R:[paths]}, relative to JSONL or absolute"
+    },
+    "bank_admission": "hash-bound tape must show the expected actor in g5_lane_gate.safe, per-vehicle issued+completed telemetry, its next-frame lane transition, and executed absolute_accels == profile over the macro window",
+    "telemetry": [
+      "sample.g5_lane_requests",
+      "sample.g5_lane_gate",
+      "event.g5_lane_outcome (incl. vehicles)"
+    ],
+    "env_contract": "CavSumoEnv.step(accel, lanes=..., lane_actors=...) G5-only: lane-mode changes restricted to authorized finite-command actors, originals restored; info lane_vehicles = per-vehicle {target,status,completed}; lane_actors=None legacy byte-identical"
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "feature": {
+      "passed": 82,
+      "file": "tools/coopmwm/test_group_lane_cpu.py"
+    },
+    "final": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_group_lane_cpu.py tools/coopmwm/test_moves_cpu.py tools/coopmwm/test_feasible_proposals_cpu.py tools/coopmwm/test_f1_actuation_cpu.py tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_bank_breadth_cpu.py tools/coopmwm/test_v2v_runtime_cpu.py tools/coopmwm/test_trigger_policy_cpu.py tools/coopmwm/test_bank_perseed_cpu.py tools/coopmwm/test_bank_imitation_cpu.py tools/coopmwm/test_replay_bank_v2v_cpu.py tools/coopmwm/test_v2v_intent_cpu.py tools/coopmwm/test_launch_final_cpu.py -k \"not test_gate_seals_commit_and_runtime_and_the_launcher_reads_it\" -p no:cacheprovider",
+      "passed": 506,
+      "failed": 0,
+      "deselected": 1,
+      "subtests_passed": 5,
+      "warnings": 2,
+      "duration_s": 185.02,
+      "env": "CUDA_VISIBLE_DEVICES='' OMP/MKL/OPENBLAS_NUM_THREADS=1"
+    },
+    "env_unit": {
+      "command": "pytest -q tests/unit/test_c4_evalv5.py tests/unit/test_c4_policy2.py -k 'not test_env_executes_lane_commands_in_sumo'",
+      "passed": 25,
+      "deselected": 1
+    },
+    "deselected_run_separately": {
+      "test": "test_gate_seals_commit_and_runtime_and_the_launcher_reads_it",
+      "passed": 1,
+      "note": "commits only inside its own temporary repository"
+    }
+  },
+  "documentation": "G5_LANE_MOVES.md",
+  "open_issues": [],
+  "integration_requirements": [
+    "Enable group_lane_moves in the common B/R configuration and initialize a matching seven-family trigger sidecar; an existing five-family trigger sidecar is not shape-compatible with G5 enabled.",
+    "Mining producers must supply the documented native verification pointers and exact g5_move plan fields; unverified or acceleration-only examples are rejected.",
+    "Live physics validation and collection of verified lane examples remain a subsequent authorized integration step; this task consumed zero simulation seconds.",
+    "Mining/verification producers must emit executable_fields (profile, policy_profile, perturbation_profile) and the env per-vehicle lane telemetry; older G5 records without them are rejected."
+  ],
+  "constraints": {
+    "cpu_only": true,
+    "simulation_seconds": 0,
+    "ssh_sumo_gpu_used": false,
+    "changes_only_in_assigned_worktree": true,
+    "restricted_paths_or_truth_files_opened": false,
+    "forbidden_git_operations_used": false,
+    "sumo_lane_safety": "existing environment remains sole writer, retaining laneChangeMode 513 and SUMO safety/edge/junction guards; HDVs never commanded",
+    "sumo_started": "inadvertently once via an inherited unit test; see G5_ACCEPTED.json disclosure"
+  },
+  "fix_round": "r0 blockers fixed by Claude subagent",
+  "acceptance": "G5_ACCEPTED.json",
+  "previous_ready": "G5_READY.claude_fixed.json"
+}

@@ -586,6 +586,11 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
             tape = read(result_path)
             if branch.get('result_sha256') and digest(tape) != branch['result_sha256']:
                 raise ValueError('bank branch tape differs from its sealed verification receipt')
+            if plan.get('g5_move'):
+                from .group_lane import verify_tape
+                if not branch.get('result_sha256'):
+                    raise ValueError('G5 bank requires an immutable verified lane-effect tape')
+                verify_tape(plan, tape, r['t0'])
             w = float(beta)*xg.weight(advantage, T['temperature_veh_s'], clip)
             entry = dict(start_s=r['t0'], duration_s=int(plan['duration_s']), plan_id=plan['id'], weight=w)
             entry_pairs = xg.imitation_pairs(tape, entry)

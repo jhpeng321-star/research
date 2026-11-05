@@ -139,6 +139,9 @@ class Controller:
                      sample['action'][context['members'].index(vid)] = [raw-commands[vid]]
         elif self.replay is None:
             self.plan=self.plan_start=None
+        if (sample.get('g5_lane_requests') or any(c['plan'].get('g5_move') for c in self.active_plans)) \
+                and not getattr(self, 'g5_lane_runtime', False):
+            raise ValueError('G5 lane moves require the single-writer V2V lane runtime')
         desired = requests(sample, commands,ignore_departed=bool(self.replay is not None
             and self.branch and now>=self.branch['time_s']))
         # Exact twins release only the selected group's whole committed plan;
