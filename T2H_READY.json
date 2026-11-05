@@ -1,6 +1,6 @@
 {
   "task": "T2H",
-  "status": "BLOCKED_PENDING_VERIFIED_AUGMENTATION_FIX",
+  "status": "READY",
   "scope": "CPU implementation and tests; prospective opt-in runtime configuration",
   "worktree": "E:/agent-work/c4-practice-weight",
   "branch": "c4/practice-weight",
@@ -8,7 +8,10 @@
   "commits": [
     {"sha": "3ad844f6", "subject": "coopmwm T2H: record resumed inspection and weighting contract"},
     {"sha": "ec1828ae", "subject": "coopmwm T2H: opt-in weighted practice starts with own augmented states"},
-    {"sha": "ee3af837", "subject": "coopmwm T2H: READY receipt with CPU checks and integration API"}
+    {"sha": "ee3af837", "subject": "coopmwm T2H: READY receipt with CPU checks and integration API"},
+    {"sha": "93da75f6", "subject": "coopmwm T2H: preserve independent acceptance on resume"},
+    {"sha": "1161550d", "subject": "coopmwm T2H: preserve revised review blocker on resume"},
+    {"sha": "3be81d33", "subject": "coopmwm T2H: require own all8 admission for augmented practice"}
   ],
   "receipt_commit": "The final commit containing T2H_READY.json records verification and readiness.",
   "api": {
@@ -21,15 +24,16 @@
     "producer": "v2v_runner.prepare_intent(..., practice_starts=True, practice_weighting=True, practice_weighted_fraction=0.50)",
     "validation": "v2v_launch3.practice_options_for(cfg, arm), including bind_runtime and B/R equality",
     "effective_fraction": "practice_weighting.effective_fraction(cfg): 0.50 when enabled, existing practice_fraction otherwise",
-    "planning": "practice_starts.plan_for_update(..., weighting=False): existing default; weighting=True includes own WM-cooperative augmented restart rows and prioritises cooperative capacity before R fallback",
+    "planning": "practice_starts.plan_for_update(..., weighting=False): existing default; weighting=True includes own SUMO all8-admitted cooperative augmented restart rows and prioritises cooperative capacity before R fallback",
     "augmentation": {
       "path": "replay_bank/<ARM>/PRACTICE_AUGMENTED.json",
       "schema": "coopmwm-practice-augmented-v1",
       "seal": "exact_grade._seal(record, 'practice_augmented_sha256')",
       "record_keys": ["schema", "arm", "rows", "practice_augmented_sha256"],
-      "row_keys": ["example_id", "parent_example_id", "verification_id", "state_id", "seed_index", "snapshot_sha256", "wm_cooperative"],
-      "validation": "Parent is an own admitted cooperative bank example; verification/state link is own-arm; seed_index matches parent; wm_cooperative is true; snapshot hash matches after existing CRN replication; no arbitrary paths",
-      "capacity": "Deduplicate restart state/seed/CRN against bank and augmentation rows so multiple perturbed plans at one state cannot inflate repeat capacity",
+      "row_keys": ["example_id", "parent_example_id", "verification_id", "state_id", "seed_index", "snapshot_sha256", "wm_cooperative", "plan_sha256", "confirmation_sha256"],
+      "validation": "Parent is an own admitted cooperative bank example; augmentation has its OWN sealed all8 confirmation with matching schema/mode/arm, exact admitted cooperative example/seed and plan digest. Manifest confirmation digest and candidate inventory match. Own sealed SUMO receipt matches confirmation/arm/plan/original snapshot; own decision link matches state. Restart snapshot hash matches after existing CRN replication. wm_cooperative is proposal provenance only. No arbitrary paths.",
+      "verification_paths": ["replay_bank/<ARM>/confirmations_all8/<verification_id>.json", "replay_bank/<ARM>/sumo_verification/verifications/<verification_id>.json"],
+      "capacity": "Deduplicate restart state/seed/CRN against bank and augmentation rows, including admitted augmentations already visible through the bank reader, so multiple perturbed plans at one state cannot inflate repeat capacity",
       "missing": "Bank-only sampling; present invalid manifest refuses before plan seal/dispatch",
       "runtime": "No teacher, simulator, augmentation job, or verification dispatch invoked by this adapter"
     },
@@ -54,6 +58,7 @@
     "existing_budget_transfer_and_ceiling_checks_retained": true
   },
   "tests": {
+    "scope": "Preserved original implementation verification; current revised-spec checks are in resume_verification below",
     "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
     "unique_passed": 210,
     "failed": 0,
@@ -67,6 +72,26 @@
     ],
     "diff_check": "git diff --cached --check passed before implementation commit"
   },
+  "resume_verification": {
+    "implementation_commit": "3be81d33",
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider --basetemp=E:/Temp/opencode/t2h-all8-final-20261105 tools/coopmwm/test_practice_weighting_cpu.py tools/coopmwm/test_practice_starts_cpu.py --tb=short",
+    "environment": {"CUDA_VISIBLE_DEVICES": "-1", "PYTHONDONTWRITEBYTECODE": "1", "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1"},
+    "passed": 96,
+    "failed": 0,
+    "skipped": 0,
+    "duration_s": 84.54,
+    "coverage": [
+      "61 T2H tests: revised own all8 validation, missing/rejected/foreign/mismatched proofs in both arms, verified seed-2 CRN, manifest/dedup/resume/fairness/wave/update/budget paths",
+      "Actual verify_perseed.confirm_all8 producer exercised for B and R with CPU SeedPlant replacing SUMO; emitted sealed records accepted through real bank readers",
+      "Frozen weighted replay rejects obsolete WM-only rows or missing own confirmation, and valid replay needs no augmentation manifest",
+      "Differential default config and sealed plan bytes against 13f184b5",
+      "35 existing practice-start regressions"
+    ],
+    "warning": "One existing pytest unknown cache_dir warning because cacheprovider is disabled",
+    "development_failures_resolved": "Initial synthetic receipts lacked reader timing metadata; the new producer integration test initially lacked its fixture budget binding. Both fixtures corrected before the final 96-pass run.",
+    "prior_broad_runs": "Preserved on-disk results; no unchanged launch/runtime/rerun suite or background dispatch duplicated",
+    "diff_check": "git diff --cached --check passed before 3be81d33"
+  },
   "default_byte_identity": {
     "verified_against": "13f184b5",
     "evidence": [
@@ -78,21 +103,22 @@
     "provenance": "The minimum executable source inventory now includes practice_weighting.py so deployed code qualification covers the new dependency"
   },
   "independent_review": {
-    "verdict": "PASS",
+    "verdict": "BLOCK_AT_PRIOR_HEAD; FIX_IMPLEMENTED_AND_CPU_VERIFIED",
     "report": "REVIEW_T2H_r0.md",
     "acceptance_receipt": "T2H_ACCEPTED.json",
-    "reviewed_head": "ee3af8371e69a99f12657bf735ac5a9d3a1b5b8f",
-    "required_fixes": [],
+    "reviewed_head": "93da75f6",
+    "required_fixes": ["Blocker 1: require each augmented example's own accepted all8 admission"],
+    "resolution": "Addressed in 3be81d33 with 96 final relevant CPU passes. The independent BLOCK report is preserved as historical evidence; independent rereview of the fix has not been performed.",
     "tests": {"passed": 209, "failed": 0, "skipped": 1, "deselected": 1},
     "test_count_note": "The review deselected one synthetic restricted-path fixture; its 209 passes are independent of the original 210-pass readiness result.",
-    "resume": "Existing implementation, verification, and acceptance preserved; this resume records the completed independent review without rerunning tests or dispatching jobs."
+    "resume": "Existing implementation and completed prior tests preserved. Uncommitted revised-spec BLOCK report committed unchanged; fix and new verification recorded separately. Historical acceptance explicitly superseded in T2H_ACCEPTED.json. No jobs dispatched."
   },
   "open_issues": [],
   "integration_notes": [
-    "T2G is absent from the shared base. T2G/T2C must publish its WM-retained augmented restart states through the documented manifest contract; it is tested with CPU fixtures, not a real T2G producer.",
-    "T2C owns rerun_cpus integration and its end-to-end cpuS smoke. Pass the additive keys to prepare_intent and use effective_fraction for T2C's own quotes; no rerun_cpus.py ownership overlap in this task.",
+    "T2G is absent from the shared base. T2G/T2C must publish only SUMO all8-admitted cooperative augmentations through the documented manifest contract, within its <=200000 sim-s pre-launch budget. Adapter tests consume real all8 producer records generated with a CPU fake plant; no real T2G/SUMO run was launched.",
+    "T2C owns rerun_cpus integration, its end-to-end cpuV smoke, and the total <=5000000 sim-s budget assertion. Pass the additive keys to prepare_intent and use effective_fraction for T2C's own quotes; no rerun_cpus.py ownership overlap in this task.",
     "0.50 is the prospective T2H registered alternative implemented here, not an execution approval. Eligible capacity may reduce realised starts; same-state plan perturbations alone do not add restart capacity.",
-    "Apply config changes at a fresh update boundary; already frozen plans remain frozen."
+    "Apply config changes at a fresh update boundary; already frozen plans remain frozen. Augmented replay revalidates the bound own all8 proof without rereading the manifest; obsolete WM-only frozen rows refuse before replay."
   ],
   "hard_rules": {
     "cpu_only": true,

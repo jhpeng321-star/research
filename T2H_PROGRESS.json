@@ -7,13 +7,13 @@
   "design": {
     "practice_weighting": "Additive bool, absent/false preserves existing bytes.",
     "practice_weighted_fraction": "Registered opt-in value 0.50 (12 of 24); existing practice_fraction remains 0.25.",
-    "augmentation": "Own-arm sealed PRACTICE_AUGMENTED.json manifest of WM-cooperative restart rows, bound to own admitted parent examples and own decision snapshots. No T2G module exists at this base; document and test this integration contract.",
+    "augmentation": "Own-arm sealed PRACTICE_AUGMENTED.json manifest of SUMO all8-admitted cooperative restart rows, bound to own admitted parents, the augmentation's own plan/seed confirmation, and own SUMO receipt/snapshot. WM is proposal provenance only. No T2G module exists at this base; the producer contract is documented and tested.",
     "fairness": "Same configuration and selection procedure for B/R; R still matches B's realised count.",
     "budget": "Use effective fraction everywhere training/reference cost is quoted; preserve normal horizon and matched A references.",
     "resume": "Reuse sealed plans without resampling or rereading growing augmentation inputs."
   },
   "execution": "CPU tests only; no training, SUMO, remote dispatch, or background job launched.",
-  "completed": false,
-  "resume_20261105": "Preserved existing implementation and review evidence. Latest spec requires each augmented example's own accepted all8 admission; correcting the adapter and producer contract before refreshing readiness. No jobs dispatched.",
+  "completed": true,
+  "resume_20261105": "Preserved existing implementation and review evidence. Fixed revised-spec blocker in 3be81d33: augmented examples now require their own bound all8 admission, including replay of frozen plans. Final relevant CPU run: 96 passed (61 T2H + 35 practice-start regressions). No jobs dispatched.",
   "ready_receipt": "T2H_READY.json"
 }
