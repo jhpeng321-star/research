@@ -25,16 +25,19 @@ def rows(cfg):
 def examples(native, arm):
     """Every admitted mined (move, seed) example the arm's native bank reader yields."""
     from . import bank_breadth
-    from .group_lane import from_plan
     wanted = {(r['verification_id'], r['plan_sha256']) for r in rows(native) if r['arm'] == arm}
     out = []
     def consume(*, cfg, receipt, example, plan, pairs, trace):
         key = (receipt['verification_id'], digest(plan))
         if '_g5_mined' not in cfg or key not in wanted:
             return
-        move = from_plan(plan)
-        missing = [k for k in EXECUTABLE_G5 if k not in plan] if plan.get('g5_move') else \
-            [k for k in ('profile',) if k not in plan]
+        try:
+            move = bank_breadth.mined_move(plan)
+            missing = [k for k in EXECUTABLE_G5 if k not in plan] if plan.get('g5_move') else []
+        except ValueError as error:
+            out.append(dict(verification_id=key[0], plan_sha256=key[1], executable=False,
+                missing_fields=[str(error)], example_id=(example or {}).get('example_id', key[0]+'#s1')))
+            return
         out.append(dict(verification_id=key[0], plan_sha256=key[1], family=move.family,
             members=len(move.members), example_id=(example or {}).get('example_id', key[0]+'#s1'),
             seed_index=int((example or {}).get('seed_index', 1)), executable=not missing,
@@ -49,7 +52,7 @@ def tape_check(plan, tape, t0):
     if plan.get('g5_move'):
         verify_tape(plan, tape, t0)
         return dict(kind='g5_lane_and_profile', passed=True)
-    members = list(plan['members'])
+    from .plans import acceleration_at
     steps = {int(s['time_s']): s for s in tape['steps']}
     covered = 0
     for t in range(int(plan['duration_s'])):
@@ -57,8 +60,8 @@ def tape_check(plan, tape, t0):
         if step is None:
             continue
         executed = (step.get('sample') or {}).get('absolute_accels') or {}
-        for i, vid in enumerate(members):
-            if vid not in executed or abs(float(executed[vid])-float(plan['profile'][i][t])) > 1e-8:
+        for vid, value in acceleration_at(plan, t).items():
+            if vid not in executed or abs(float(executed[vid])-float(value)) > 1e-8:
                 raise ValueError('demonstration did not execute the verified profile')
         covered += 1
     if covered == 0:
@@ -164,45 +167,54 @@ def usage(native, arm, episodes, learning, artifacts):
 
 
 def smoke_check(cfg, updates, artifacts):
-    """Owner (a)-(d) for B, plus fairness for R; raises on any failure."""
+    """Owner (a)-(d) for B's mined examples; R exposed symmetrically on its own examples."""
     from . import bank_breadth, launch_production as production
     native = production.backend_config(cfg, root=artifacts, smoke=True)
     arms = {u['arm']: u for u in updates}
+    demo_families = set(native.get('demonstrate_families') or ())
+    g5_admitted = {r['arm'] for r in rows(native) if r.get('g5_move')}
     out = {}
     for arm in ('B', 'R'):
         found, wanted = examples(native, arm)
-        if not wanted:
-            raise ValueError('owner rule: admitted mined rows required for '+arm)
-        bad = [e for e in found if not e['executable']]
-        if bad or {(e['verification_id'], e['plan_sha256']) for e in found} != wanted:
-            raise ValueError('(a) every admitted mined move must load as an executable bank example: '+arm)
-        contexts = {(c['verification_id'], c['example_id']) for c in
-                    arms[arm]['learning']['bank_trigger'].get('contexts', [])}
-        targets = {(e['verification_id'], e['example_id']) for e in found}
-        if not targets <= contexts:
-            raise ValueError('(a) mined (move, seed) examples missing as imitation targets: '+arm)
+        if arm == 'B' and not wanted:
+            raise ValueError('owner rule: admitted mined rows required for B')
         pool = bank_breadth.practice_pool(native, arm)
-        mined_ctx = {r['context_id']: r for r in pool if r.get('mined')}
-        pool_examples = {(r['verification_id'], r['example_id']) for r in mined_ctx.values()}
-        if not targets <= pool_examples:
-            raise ValueError('(b) mined seed situations missing from the practice pool: '+arm)
+        demo_ctx = {r['context_id']: r for r in pool if r.get('demonstrate')}
+        info = dict(examples=len(found))
+        if wanted:
+            bad = [e for e in found if not e['executable']]
+            if bad or {(e['verification_id'], e['plan_sha256']) for e in found} != wanted:
+                raise ValueError('(a) every admitted mined move must load as an executable bank example: '+arm)
+            contexts = {(c['verification_id'], c['example_id']) for c in
+                        arms[arm]['learning']['bank_trigger'].get('contexts', [])}
+            targets = {(e['verification_id'], e['example_id']) for e in found}
+            if not targets <= contexts:
+                raise ValueError('(a) mined (move, seed) examples missing as imitation targets: '+arm)
+            pool_examples = {(r['verification_id'], r['example_id']) for r in pool if r.get('mined')}
+            if not targets <= pool_examples:
+                raise ValueError('(b) mined seed situations missing from the practice pool: '+arm)
+            info['imitation_targets'] = len(targets)
         started = [e for e in arms[arm]['practice']['episodes']
-                   if (e.get('breadth') or {}).get('context_id') in mined_ctx]
+                   if (e.get('breadth') or {}).get('context_id') in demo_ctx
+                   and (arm != 'B' or demo_ctx[e['breadth']['context_id']].get('mined'))]
         if not started:
-            raise ValueError('(b) smoke practice did not start from a mined seed situation: '+arm)
+            raise ValueError('(b) smoke practice did not start from a '+('mined' if arm == 'B' else
+                             'mined-family') + ' seed situation: '+arm)
         demos = arms[arm]['clean3_mined_usage']['demonstrations']
-        if not any(d['executed'].get('passed') for d in demos):
-            raise ValueError('(c) no demonstrated mined joint move executed its verified profile: '+arm)
-        if not any(d['executed'].get('passed') and d['executed'].get('kind') == 'g5_lane_and_profile' for d in demos):
+        passed = [d for d in demos if d['executed'].get('passed')]
+        if not passed:
+            raise ValueError('(c) no demonstrated joint move executed its verified profile: '+arm)
+        if arm in g5_admitted and not any(d['executed'].get('kind') == 'g5_lane_and_profile' for d in passed):
             raise ValueError('(c) smoke must run a real G5 lane move through the bound runtime env: '+arm)
         credit = arms[arm]['clean3_mined_usage']['g4_credit']
-        if not credit:
+        if wanted and not credit:
             raise ValueError('(d) G4-format measured synergy rows missing for demonstrated moves: '+arm)
-        out[arm] = dict(examples=len(found), imitation_targets=len(targets), mined_practice_starts=len(started),
-                        demonstrations=[{k: d[k] for k in ('id', 'family', 'executed')} for d in demos],
-                        g4_credit=len(credit))
+        if demo_families and not {d['family'] for d in passed} & demo_families:
+            raise ValueError('(c) demonstrated family must be a mined family: '+arm)
+        info.update(practice_starts=len(started), demonstrations=[{k: d[k] for k in ('id', 'family', 'executed')}
+                    for d in demos], g4_credit=len(credit))
+        out[arm] = info
     b, r = arms['B']['practice'], arms['R']['practice']
-    if b['practice'] != r['practice'] or [e['breadth']['family'] for e in b['episodes'] if e.get('breadth')] != \
-            [e['breadth']['family'] for e in r['episodes'] if e.get('breadth')]:
+    if b['practice'] != r['practice'] or [e['breadth']['family'] for e in b['episodes'] if e.get('breadth')] !=             [e['breadth']['family'] for e in r['episodes'] if e.get('breadth')]:
         raise ValueError('fairness: R practice counts/families must equal B')
     return out

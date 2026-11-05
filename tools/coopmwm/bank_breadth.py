@@ -106,8 +106,7 @@ def visit(cfg, arm, consumer):
                 # one verification. Import only the explicitly mined bindings.
                 if mined_key not in mined:
                     return
-                from .group_lane import from_plan
-                from_plan(plan)  # exact lane + acceleration macro, never a lossy label
+                mined_move(plan)  # exact G5 macro, or an executable verified acceleration plan
                 matched_mined.add(mined_key)
             if plan.get('g5_move') and not local.get('group_lane_moves'):
                 return
@@ -143,6 +142,27 @@ def visit(cfg, arm, consumer):
                 imitation_target_space='effective', example_consumer=consume)
         if set(mined)-matched_mined:
             raise ValueError('MINED_MOVES reference has no usable native verified example')
+
+
+def mined_move(plan):
+    """Executable binding of a MINED_MOVES plan: G5 exact macro, else verified accel plan.
+
+    Owner ~07:2x walls-only clean3: mined wall examples are ordinary verified acceleration
+    plans (no lane actions). They must be executable by plans.acceleration_at over their
+    whole duration; the move label is the shared-vocabulary projection.
+    """
+    if plan.get('g5_move') or plan.get('uses_lane_actions'):
+        from .group_lane import from_plan as g5
+        return g5(plan)
+    from .plans import acceleration_at
+    duration = plan.get('duration_s')
+    if not plan.get('members') or type(duration) is not int or duration <= 0:
+        raise ValueError('mined acceleration plan needs members and an integer duration_s')
+    for t in range(duration):
+        accels = acceleration_at(plan, t)
+        if set(accels) - set(plan['members']):
+            raise ValueError('mined acceleration plan commands a non-member')
+    return moves.from_plan(plan)
 
 
 class UnboundContext(ValueError):
@@ -405,6 +425,10 @@ def practice_pool(cfg, arm):
             # Owner 05:05: mined (move, seed) situations are shown, not only imitated.
             row['mined'] = True
             row['mined_plan_sha256'] = digest(plan)
+        if row.get('mined') or family in set(cfg.get('demonstrate_families') or ()):
+            # Same rule for B and R: practice starts of a mined family (each arm's own
+            # verified examples) execute their own verified plan from t0.
+            row['demonstrate'] = True
         if lesson is not None:
             row['snapshot_lookup']['executable_lesson_sha256'] = lesson['lesson_sha256']
             row['executable_lesson_sha256'] = lesson['lesson_sha256']
@@ -487,7 +511,8 @@ def practice_plan(root, arm, update, *, cfg, fraction, repeat_cap, count, traini
     selected = []
     for family in schedule:
         eligible = [r for r in pools[arm] if r['family'] == family and used[r['context_id']] < cap]
-        row = min(eligible, key=lambda r: (used[r['context_id']], prior[r['context_id']],
+        first = bool(cfg.get('practice_priority_mined'))  # registered smoke rule only
+        row = min(eligible, key=lambda r: (first and not r.get('mined'), used[r['context_id']], prior[r['context_id']],
             digest(dict(context=r['context_id'], seed=int(training_seed)))))
         selected.append(dict(row))
         used[row['context_id']] += 1

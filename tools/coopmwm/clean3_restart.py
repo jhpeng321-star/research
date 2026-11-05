@@ -21,10 +21,11 @@ CLEAN2 = '/home/ubuntu/coopmwm20261105_clean2'
 CLEAN1 = '/home/ubuntu/coopmwm20261105_clean1'
 # r1 (b7b74545), r2 (a0f9401d) and r3 (bf3f1d68) chains were stopped by the operator before any clean3
 # physics; each ran the same G1 selection: 0 candidates, 0 sim-s, NO-GO. Ledgers stay counted.
-G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r5'
+G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r6'
 G1_PRIOR_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3_g1cert', '/home/ubuntu/coopmwm20261106_clean3_g1cert_r2',
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r3',
-                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r4')  # r3/r4 stopped mid-G1: 0 rows
+                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r4',  # r3/r4 stopped mid-G1: 0 rows
+                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r5')  # r5 NO-GO, 0 rows
 MINING_ROOT = '/home/ubuntu/coopmwm20261106_s_mining'
 SCHEMA = 'coopmwm.clean3.restart_budget.v1'
 
@@ -292,11 +293,11 @@ def go_nogo(manifest, *, work, runtime_sha256, charged, branches):
 
 # ---------------------------------------------------------------- mined moves
 
-MINED_RULE = ('owner 2026-11-06 ~04:35 "make sure we actually have good plans to start the training": '
-    'launch only when MINED_MOVES.jsonl yields >=3 natively admitted SUMO-verified JOINT moves (>=2 CAV '
-    'members; mining synergy CI95 lower bound > 0 on every reported seed) covering >=2 distinct families '
-    '(families verified in both B and R); hard deadline 12:00 local -> stop and report, no launch '
-    'without owner confirmation.')
+MINED_RULE = ('owner 2026-11-06 ~07:2x walls-only launch ("yes."), amending ~04:35: launch when '
+    '/home/ubuntu/mined/MINED_MOVES.jsonl yields >=3 per-seed SUMO-verified JOINT examples (natively admitted '
+    'plan with >=2 executing CAVs; that seed synergy CI95 lower bound > 0); no family-count requirement; '
+    'families must exist in both B and R verified pools (R same family distribution from its own bank); '
+    'hard deadline 14:00 local -> stop and report; owner approval replaces the MAIN confirmation file.')
 MINED_EXPOSURE_RULE = ('owner 2026-11-06 ~05:05 "make sure the policy is actually SHOWN what the mined plans '
     'can do". Smoke hard checks (B, and R on its own mined examples): (a) every admitted mined (move, seed) '
     'example loads into the bank as an executable imitation target (G5 executable fields) and is a trigger '
@@ -308,8 +309,7 @@ MINED_EXPOSURE_RULE = ('owner 2026-11-06 ~05:05 "make sure the policy is actuall
     'joint moves (recorded, not an extra PPO term). Fairness: R practice counts and family sequence equal B. '
     'Per update: imitation counts, practice starts, executed joint moves per family/seed, mined imitation fit '
     '(CE), trigger rates per family, G4-format rows (UPDATE receipts clean3_mined_usage; CLEAN3 Mined status line).')
-MIN_JOINT_MOVES = 3
-MIN_FAMILIES = 2
+MIN_JOINT_EXAMPLES = 3
 
 
 def _ci_evidence(path):
@@ -324,6 +324,21 @@ def _ci_evidence(path):
                     out[(r.get('arm'), r.get('verification_id'), r.get('plan_sha256'))] = dict(
                         lower95=r.get('_synergy_lower95'), veh_s=r.get('_synergy_veh_s'))
     return out
+
+
+def _positive_seeds(row, evidence):
+    value = row.get('synergy_lower95', row.get('_synergy_lower95'))
+    if value is None:
+        value = (evidence.get((row.get('arm'), row.get('verification_id'), row.get('plan_sha256'))) or {}).get('lower95')
+    items = value.items() if isinstance(value, dict) else [('1', value)]
+    out = []
+    for seed, v in items:
+        try:
+            if v is not None and math.isfinite(float(v)) and float(v) > 0:
+                out.append(str(seed))
+        except (TypeError, ValueError):
+            pass
+    return sorted(out)
 
 
 def _ci_ok(row, evidence):
@@ -363,10 +378,9 @@ def admit_mined(path, cfg, out_path):
             group_lane_bank.inputs(local)
             found = []
             def consume(*, cfg, receipt, example, plan, pairs, trace):
-                from .group_lane import from_plan
                 if receipt['verification_id'] == row['verification_id'] and digest(plan) == row['plan_sha256']:
-                    move = from_plan(plan)
-                    found.append((move.family, len(move.members)))
+                    move = bank_breadth.mined_move(plan)
+                    found.append((move.family, len(move.actors)))
             bank_breadth.visit(local, row['arm'], consume)
             if not found:
                 raise ValueError('no admitted native example')
@@ -374,28 +388,35 @@ def admit_mined(path, cfg, out_path):
             synergy = dict(lower95=row.get('synergy_lower95', side.get('lower95')),
                            veh_s=row.get('synergy_veh_s', side.get('veh_s')))
             usable.append(dict(row, verified_synergy=synergy, _families=sorted({f for f, _ in found}),
-                               _members=max(n for _, n in found), _ci_ok=_ci_ok(row, evidence)))
+                               _members=max(n for _, n in found), _ci_ok=_ci_ok(row, evidence),
+                               _seeds=_positive_seeds(row, evidence)))
         except (ValueError, KeyError, TypeError, OSError) as error:
             rejected.append(dict(row=row, reason=str(error)))
         finally:
             if single.exists():
                 single.unlink()
-    support = {a: {f for r in usable if r['arm'] == a for f in r['_families']} for a in ('B', 'R')}
+    # R gets the same family distribution from its OWN verified bank: a mined family is
+    # admissible when both arms' verified pools (base bank + mined) support it.
+    base = {k: v for k, v in cfg.items() if k != 'mined_moves'}
+    support = {a: {f for r in usable if r['arm'] == a for f in r['_families']}
+               | {r['family'] for r in bank_breadth.practice_pool(base, a)} for a in ('B', 'R')}
     common = support['B'] & support['R']
     kept = [r for r in usable if set(r['_families']) <= common]
     dropped = [dict(row=r, reason='family not verified in both B and R (same-distribution rule)')
                for r in usable if not set(r['_families']) <= common]
-    joint = [r for r in kept if r['_members'] >= 2 and r['_ci_ok']]
-    joint_moves = {(r['arm'], r['verification_id'], r['plan_sha256']) for r in joint}
+    joint = [r for r in kept if r['_members'] >= 2 and r['_seeds'] and (r['verified_synergy'] or {}).get('veh_s')]
+    joint_examples = sorted({(r['arm'], r['verification_id'], r['plan_sha256'], s) for r in joint for s in r['_seeds']})
+    joint_moves = {e[:3] for e in joint_examples}
     joint_families = sorted({f for r in joint for f in r['_families']})
-    ready = len(joint_moves) >= MIN_JOINT_MOVES and len(joint_families) >= MIN_FAMILIES
+    ready = len(joint_examples) >= MIN_JOINT_EXAMPLES
     if kept:
         with Path(out_path).open('x', encoding='utf-8') as f:
             for r in kept:
                 f.write(json.dumps({k: v for k, v in r.items() if not k.startswith('_')}, sort_keys=True)+'\n')
     return dict(source=str(path), source_sha256=sha(path) if path.is_file() else None,
         rows=len(rows), admitted=len(kept), admitted_path=str(out_path) if kept else None,
-        families=sorted(common), joint_verified_moves=len(joint_moves), joint_families=joint_families,
+        families=sorted({f for r in kept for f in r['_families']}), joint_verified_examples=len(joint_examples),
+        joint_verified_moves=len(joint_moves), joint_families=joint_families,
         ready=ready, rule=MINED_RULE, rejected=rejected+dropped, unix=time.time())
 
 
@@ -449,6 +470,8 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1, clean2=CLEAN2, g1_root=G1_ROOT,
         cfg['executable_label_runtime_sha256'] = go['runtime_sha256']
     if mined and mined.get('admitted'):
         cfg['mined_moves'] = mined['admitted_path']
+        # Symmetric exposure: practice starts of the mined families execute their own verified plan.
+        cfg['demonstrate_families'] = sorted(mined['families'])
     cfg['extra_final_baselines'] = [dict(LANE_ON_BASELINE, **(laneon or {}))]
     from . import g5_runtime
     cfg['g5_runtime'] = dict(flag=g5_runtime.FLAG, base=str(g5_runtime.BASE_REL),

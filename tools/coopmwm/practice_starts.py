@@ -284,17 +284,18 @@ def _snapshot_call(root, arm, ident, row, index, base_extra, *, a_reference):
                                  parent_example_id=row.get('parent_example_id'))
     if row.get('context_id'):
         meta['breadth'] = {k: row[k] for k in ('context_id', 'family', 'source')}
-    if row.get('mined') and not a_reference:
+    if (row.get('mined') or row.get('demonstrate')) and not a_reference:
         plan = row['snapshot_lookup']['plan']
         from .protocol import digest as _digest
-        if _digest(plan) != row['mined_plan_sha256']:
+        if row.get('mined') and _digest(plan) != row['mined_plan_sha256']:
             raise ValueError('mined demonstration plan differs from the admitted MINED_MOVES binding')
         # Owner 2026-11-06 05:05: the policy is SHOWN the mined move in its own state:
         # the registered VerifyController starts the exact verified plan at t0 (as the
         # verification group branch did); the current policy controls everything else.
         meta['plan'] = plan
-        meta['demonstration'] = dict(plan_sha256=row['mined_plan_sha256'], rule=DEMONSTRATION_RULE)
-        meta['breadth']['mined'] = True
+        meta['demonstration'] = dict(plan_sha256=_digest(plan), mined=bool(row.get('mined')),
+                                     rule=DEMONSTRATION_RULE)
+        meta['breadth']['mined'] = bool(row.get('mined'))
         meta['policy'] = ('current training policy from t0 with the mined verified plan started at t0 '
                           '(demonstration); snapshot prefix replayed; committed snapshot plans continue')
     extras = dict(base_extra,

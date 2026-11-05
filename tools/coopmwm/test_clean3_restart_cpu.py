@@ -200,7 +200,8 @@ def test_lever_receipts_use_native_registration_and_hard_checks(tmp_path, monkey
         receipts.validate_levers(bound, updates[:2]+[dict(updates[1], arm='R')])
 
 
-def mined_fixture(tmp_path, monkeypatch, rows, annotated=None):
+def mined_fixture(tmp_path, monkeypatch, rows, annotated=None, base=None):
+    base = base or {}
     import json as _json
     from types import SimpleNamespace
     from tools.coopmwm import bank_breadth, group_lane_bank, group_lane
@@ -223,48 +224,47 @@ def mined_fixture(tmp_path, monkeypatch, rows, annotated=None):
             consumer(cfg=cfg, receipt=dict(verification_id=row['verification_id']), example=None,
                      plan=plan, pairs=[1], trace=None)
     monkeypatch.setattr(bank_breadth, 'visit', visit)
-    monkeypatch.setattr(group_lane, 'from_plan', lambda plan: SimpleNamespace(
-        family=plan['family'], members=tuple(range(plan['members']))))
+    monkeypatch.setattr(bank_breadth, 'mined_move', lambda plan: SimpleNamespace(
+        family=plan['family'], members=tuple(range(plan['members'])), actors=tuple(range(plan['members']))))
+    monkeypatch.setattr(bank_breadth, 'practice_pool', lambda cfg, arm: [dict(family=f) for f in base.get(arm, ())])
     return path
 
 
-def mrow(arm, vid, family, members, ci=None):
+def mrow(arm, vid, family, members, ci=None, veh=True):
     r = dict(schema='coopmwm-mined-move-v1', arm=arm, run_root='/abs/root', verification_id=vid,
              _family=family, _members=members)
     if ci is not None:
         r['synergy_lower95'] = ci
+        if veh:
+            r['synergy_veh_s'] = {k: 10. for k in ci}
     return r
 
 
-def test_mined_launch_rule_requires_three_verified_joint_moves_in_two_families(tmp_path, monkeypatch):
-    rows = [mrow('B', 'v1', 'yield_lane', 2, {'1': .5, '2': .1}), mrow('B', 'v2', 'open_gap_merge', 2, {'1': .2}),
-            mrow('R', 'v3', 'yield_lane', 2, {'1': .3}), mrow('R', 'v4', 'open_gap_merge', 2, {'1': .4})]
-    path = mined_fixture(tmp_path, monkeypatch, rows)
+def test_walls_only_rule_counts_per_seed_verified_joint_examples(tmp_path, monkeypatch):
+    # One 4-CAV wall with real synergy on seeds 1 and 3, plus one more seed -> 3 per-seed examples.
+    rows = [mrow('B', 'w1', 'wall', 4, {'1': .5, '2': -.1, '3': .2}), mrow('B', 'w2', 'wall', 3, {'1': .4})]
+    path = mined_fixture(tmp_path, monkeypatch, rows, base=dict(R=['wall', 'gap_open'], B=['gap_open']))
     out = c3.admit_mined(path, dict(run_root=str(tmp_path)), tmp_path/'adm.jsonl')
-    assert out['ready'] and out['joint_verified_moves'] == 4 and out['joint_families'] == ['open_gap_merge', 'yield_lane']
+    assert out['ready'] and out['joint_verified_examples'] == 3 and out['families'] == ['wall']
 
 
-def test_mined_launch_rule_refuses_single_family_missing_ci_and_unmatched_r(tmp_path, monkeypatch):
-    rows = [mrow('B', 'v1', 'yield_lane', 2, {'1': .5}), mrow('B', 'v2', 'yield_lane', 2, {'1': .2}),
-            mrow('R', 'v3', 'yield_lane', 2, {'1': .3})]
-    out = c3.admit_mined(mined_fixture(tmp_path, monkeypatch, rows), {}, tmp_path/'a.jsonl')
-    assert not out['ready'] and out['joint_families'] == ['yield_lane']
+def test_walls_only_rule_refuses_insufficient_or_unsupported_examples(tmp_path, monkeypatch):
+    rows = [mrow('B', 'w1', 'wall', 4, {'1': .5, '3': .2}), mrow('B', 'w2', 'wall', 1, {'1': .4})]
+    out = c3.admit_mined(mined_fixture(tmp_path, monkeypatch, rows, base=dict(R=['wall'])), {}, tmp_path/'a.jsonl')
+    assert not out['ready'] and out['joint_verified_examples'] == 2          # single-actor row is not joint
     (tmp_path/'b').mkdir()
-    rows = [mrow('B', 'v1', 'yield_lane', 2), mrow('B', 'v2', 'open_gap_merge', 2),
-            mrow('R', 'v3', 'yield_lane', 2), mrow('R', 'v4', 'open_gap_merge', 2, {'1': -0.1})]
-    out = c3.admit_mined(mined_fixture(tmp_path/'b', monkeypatch, rows), {}, tmp_path/'b'/'a.jsonl')
-    assert not out['ready'] and out['joint_verified_moves'] == 0 and out['admitted'] == 4
+    rows = [mrow('B', 'w1', 'wall', 4, {'1': .5, '2': .1, '3': .2})]
+    out = c3.admit_mined(mined_fixture(tmp_path/'b', monkeypatch, rows, base=dict(R=['gap_open'])), {}, tmp_path/'b'/'a.jsonl')
+    assert not out['ready'] and out['admitted'] == 0                           # R has no wall support
     (tmp_path/'c').mkdir()
-    rows = [mrow('B', 'v1', 'yield_lane', 2), mrow('B', 'v2', 'open_gap_merge', 2),
-            mrow('R', 'v3', 'yield_lane', 2), mrow('R', 'v4', 'open_gap_merge', 2)]
-    out = c3.admit_mined(mined_fixture(tmp_path/'c', monkeypatch, rows, annotated=lambda r: {'1': .2, '2': .3}),
-                         {}, tmp_path/'c'/'a.jsonl')
-    assert out['ready'] and out['joint_verified_moves'] == 4
+    rows = [mrow('B', 'w1', 'wall', 4, {'1': .5, '2': .1, '3': .2}, veh=False)]
+    out = c3.admit_mined(mined_fixture(tmp_path/'c', monkeypatch, rows, base=dict(R=['wall'])), {}, tmp_path/'c'/'a.jsonl')
+    assert not out['ready'] and out['joint_verified_examples'] == 0           # no measured synergy -> no G4 row
     (tmp_path/'d').mkdir()
-    rows = [mrow('B', 'v1', 'yield_lane', 2, {'1': 1}), mrow('B', 'v2', 'open_gap_merge', 2, {'1': 1}),
-            mrow('B', 'v5', 'wall', 3, {'1': 1}), mrow('R', 'v3', 'yield_lane', 2, {'1': 1})]
-    out = c3.admit_mined(mined_fixture(tmp_path/'d', monkeypatch, rows), {}, tmp_path/'d'/'a.jsonl')
-    assert not out['ready'] and out['families'] == ['yield_lane'] and out['admitted'] == 2
+    rows = [mrow('B', 'w1', 'wall', 4), mrow('B', 'w2', 'wall', 4), mrow('B', 'w3', 'wall', 4)]
+    out = c3.admit_mined(mined_fixture(tmp_path/'d', monkeypatch, rows, base=dict(R=['wall']),
+                         annotated=lambda r: {'1': .2}), {}, tmp_path/'d'/'a.jsonl')
+    assert not out['ready']                                                    # annotated CI but no veh_s
 
 
 def test_lever_receipts_refuse_launch_without_admitted_mined_moves(tmp_path, monkeypatch):
@@ -339,20 +339,23 @@ def test_mined_smoke_check_a_to_d_and_fairness(monkeypatch):
                       family='yield_lane')] for a in 'BR'}
     monkeypatch.setattr(cm, 'examples', lambda native, arm: (found[arm], {(f'v{arm}', 's')}))
     monkeypatch.setattr(bank_breadth, 'practice_pool', lambda native, arm: [dict(context_id=f'c{arm}',
-        verification_id=f'v{arm}', example_id=f'v{arm}#s1', mined=True, family='yield_lane')])
+        verification_id=f'v{arm}', example_id=f'v{arm}#s1', mined=True, demonstrate=True, family='yield_lane')])
     def update(a, passed=True, credit=1, ctx=None):
         return dict(arm=a, learning=dict(bank_trigger=dict(contexts=[dict(verification_id=f'v{a}', example_id=f'v{a}#s1')])),
             practice=dict(practice=1, episodes=[dict(breadth=dict(context_id=ctx or f'c{a}', family='yield_lane'))]),
             clean3_mined_usage=dict(demonstrations=[dict(id='e', family='yield_lane', executed=dict(passed=passed, kind='g5_lane_and_profile'))],
                                     g4_credit=[{}]*credit))
     out = cm.smoke_check({}, [update('B'), update('R')], 'x')
-    assert out['B']['mined_practice_starts'] == 1 and out['R']['g4_credit'] == 1
+    assert out['B']['practice_starts'] == 1 and out['R']['g4_credit'] == 1
     with pytest.raises(ValueError, match=r'\(c\)'):
         cm.smoke_check({}, [update('B', passed=False), update('R')], 'x')
     with pytest.raises(ValueError, match=r'\(d\)'):
         cm.smoke_check({}, [update('B', credit=0), update('R')], 'x')
     with pytest.raises(ValueError, match=r'\(b\)'):
         cm.smoke_check({}, [update('B', ctx='other'), update('R')], 'x')
+    found['R'] = []  # walls-only: R exposed on its own (non-mined) verified examples
+    monkeypatch.setattr(cm, 'examples', lambda native, arm: (found[arm], {(f'v{arm}', 's')} if arm == 'B' else set()))
+    assert cm.smoke_check({}, [update('B'), update('R', credit=0)], 'x')['R']['g4_credit'] == 0
     found['B'][0]['executable'] = False
     with pytest.raises(ValueError, match=r'\(a\)'):
         cm.smoke_check({}, [update('B'), update('R')], 'x')

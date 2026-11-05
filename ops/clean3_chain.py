@@ -19,7 +19,7 @@ import traceback
 
 ROOT = Path('/home/ubuntu/coopmwm20261106_clean3')
 PYTHON = '/home/ubuntu/miniconda3/bin/python'
-MINED_DEFAULT = '/home/ubuntu/coopmwm20261106_s_mining/MINED_MOVES.jsonl'
+MINED_DEFAULT = '/home/ubuntu/mined/MINED_MOVES.jsonl'
 UPDATES = 24
 
 
@@ -194,18 +194,20 @@ class Chain:
                 publish(self.control/f'MINED_ADMISSION_{attempt:03}.json', receipt)
                 if receipt['ready'] is True and receipt['admitted'] > 0:
                     self.mined = receipt
-                    return {k: receipt[k] for k in ('admitted', 'joint_verified_moves', 'joint_families',
-                                                     'families', 'rows', 'admitted_path', 'rule')}
+                    return {k: receipt[k] for k in ('admitted', 'joint_verified_examples', 'joint_verified_moves',
+                                                     'joint_families', 'families', 'rows', 'admitted_path', 'rule')}
             if final:
-                value = dict(reason='MINED deadline '+self.cutoff_text+' reached without >=3 verified joint '
-                    'moves covering >=2 families; chain stops; no launch without owner confirmation',
+                value = dict(reason='MINED deadline '+self.cutoff_text+' reached without >=3 per-seed verified joint '
+                    'examples; chain stops; no launch without owner confirmation',
                     attempts=attempt, rule=c3.MINED_RULE, unix=time.time())
                 publish(self.control/'MINED_DEADLINE_STOP.json', value)
                 raise ValueError(value['reason'])
             time.sleep(60)
 
     def wait_confirmation(self):
-        """MAIN 05:30: hold until MAIN/owner confirms launch (LAUNCH_CONFIRMED.json in control)."""
+        """Owner ~07:2x walls-only "yes." pre-approves launch once MINED_RULE holds (no file needed)."""
+        return dict(confirmed=True, authority='owner ~07:2x walls-only clean3 launch "yes." (REGISTRATION.md); '
+                    'launch when the amended mined rule holds; no LAUNCH_CONFIRMED file required')
         path = self.control/'LAUNCH_CONFIRMED.json'
         while True:
             if path.is_file():
@@ -222,7 +224,7 @@ class Chain:
     def prepare(self):
         from tools.coopmwm import clean3_restart as c3, launch_training as t, g5_runtime
         if not (self.mined and self.mined.get('ready') is True):
-            raise ValueError('owner rule: no launch without >=3 verified joint moves in >=2 families')
+            raise ValueError('owner rule: no launch without >=3 per-seed verified joint examples')
         if not g5_runtime.enabled():
             raise ValueError('clean3 requires the bound G5 runtime env (COOPMWM_G5_RUNTIME=1)')
         cfg = c3.prepare(self.source, mined=self.mined)
@@ -231,7 +233,7 @@ class Chain:
         with (ROOT/'AUTHORITY.md').open('a', encoding='utf-8') as f:
             f.write('\nMINED launch condition (registered in REGISTRATION.md and chain AUTHORITY.json before '
                     'applying): '+c3.MINED_RULE+' Satisfied: '+json.dumps({k: self.mined[k] for k in
-                    ('joint_verified_moves', 'joint_families', 'admitted', 'source_sha256')}, sort_keys=True)+'\n')
+                    ('joint_verified_examples', 'joint_families', 'admitted', 'source_sha256')}, sort_keys=True)+'\n')
             f.write('\nclean3 chain: G1 batch (go/no-go recorded, continue regardless) -> mined wait '
                     '(deadline '+self.cutoff_text+') -> root/ledger -> smoke (all levers/fixes, hard-coded '
                     'receipts) -> one 0-collision/0-teleport gate -> u1-u24 phase coverage assertion -> '
@@ -403,7 +405,7 @@ class Chain:
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--source', required=True); p.add_argument('--control', required=True)
-    p.add_argument('--mined', default=MINED_DEFAULT); p.add_argument('--cutoff', default='12:00')
+    p.add_argument('--mined', default=MINED_DEFAULT); p.add_argument('--cutoff', default='14:00')
     args = p.parse_args()
     import fcntl
     # Bound G5 env on the frozen runtime for every child (G1, smoke, gate, training owners).
