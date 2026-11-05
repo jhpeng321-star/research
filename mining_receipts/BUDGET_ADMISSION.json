@@ -1,0 +1,49 @@
+{
+  "bound_sim_s": 5500000,
+  "historical_parity_sim_s": 960,
+  "ledgers": {
+    "coopmwm20261105_clean1": {
+      "phases": {
+        "augment_verify": 69600,
+        "early_probes": 45480,
+        "gate_bank_verification_ext": 30320,
+        "isolated_replicated": 47920,
+        "plan_fix": 33600,
+        "track2_smoke": 19200,
+        "v2v_interim": 345600,
+        "v2v_lessons": 8760,
+        "v2v_train": 648000
+      },
+      "rows": 1136,
+      "sha256": "bf5f98cc671c740d26f455c3c6827bd0bfccadb17c7bafa321fd5116d46f53e7",
+      "sim_s": 1248480
+    },
+    "coopmwm20261105_clean2": {
+      "phases": {
+        "early_probes": 45480,
+        "gate_bank_verification_ext": 15160,
+        "isolated_replicated": 95840,
+        "track2_smoke": 14400,
+        "v2v_interim": 345600,
+        "v2v_lessons": 17520,
+        "v2v_train": 1315200
+      },
+      "rows": 1656,
+      "sha256": "9c0a557a686b39c1095f736ed92db92c5aae4162bbf93ab791fb82bae936ff09",
+      "sim_s": 1849200
+    },
+    "coopmwm20261106_s_mining": {
+      "phases": {},
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sim_s": 0
+    }
+  },
+  "mining_cap_sim_s": 500000,
+  "note": "Protect complete clean2 cap and remaining plan_fix. No clean3 ledger/allocation exists; prior full clean3 proposal was BLOCKED_BUDGET, not a reservation. Mining approved separately. No reservation cancelled.",
+  "other_ledgers": [],
+  "protected_clean2_cap_sim_s": 3184160,
+  "protected_plan_fix_remaining_sim_s": 566400,
+  "total_cap_sim_s": 6500000,
+  "unix": 1793900848.39454
+}

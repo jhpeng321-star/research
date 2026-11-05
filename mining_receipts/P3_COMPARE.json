@@ -1,0 +1,30 @@
+{
+  "actual_sim_s": 510.0,
+  "checks": {
+    "branch_receipt": true,
+    "final": true,
+    "full_result": true,
+    "payload_bytes": true,
+    "payload_sha256": true,
+    "prefixes": true,
+    "result_sha256": true,
+    "steps": true,
+    "totals": true
+  },
+  "name": "P3",
+  "pass_": true,
+  "payload_sha256": "90d82a9b398d60c2fa532da6c369033d0699ab2ce3045f826a949ac903f16cf2",
+  "result_sha256": "57a9bc83d7d18ce8be270a8b464b5fda1133d379210c14943844475cd833c2c7",
+  "sim_s": 510,
+  "totals": {
+    "collisions": 0.0,
+    "hard_brake": 4.5,
+    "road_delay_vs": 6390.272943889694,
+    "source_wait_vs": 2331.650444000001,
+    "team_delay_vs": 8721.923387889701,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 130.0
+  },
+  "unix": 1793900950.4928632,
+  "wall_s": 13.893166065216064
+}

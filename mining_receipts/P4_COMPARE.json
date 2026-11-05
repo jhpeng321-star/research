@@ -1,0 +1,30 @@
+{
+  "actual_sim_s": 450.0,
+  "checks": {
+    "branch_receipt": true,
+    "final": true,
+    "full_result": true,
+    "payload_bytes": true,
+    "payload_sha256": true,
+    "prefixes": true,
+    "result_sha256": true,
+    "steps": true,
+    "totals": true
+  },
+  "name": "P4",
+  "pass_": true,
+  "payload_sha256": "ca85ea6d0682d734309f90f9eb30ab1a4fc9604fd6a7eecbfcf81a70de118d2b",
+  "result_sha256": "d85a91e8ceadd0940a3ccce2f5913bafd4b1b661c25882985e7b7e231d896fb6",
+  "sim_s": 450,
+  "totals": {
+    "collisions": 0.0,
+    "hard_brake": 4.0,
+    "road_delay_vs": 2976.825985400233,
+    "source_wait_vs": 2739.5274150000023,
+    "team_delay_vs": 5716.353400400236,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 29.0
+  },
+  "unix": 1793900962.0566175,
+  "wall_s": 11.5446035861969
+}
