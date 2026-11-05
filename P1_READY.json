@@ -8,6 +8,15 @@
   "review": "REVIEW_P1_r1.md",
   "reviewed_head": "2b925ee8ef0b9fb9e2226c57000c9f91d29473a0",
   "implementation_commit": "6f660574f86b1dc98bd457bca70bcfbc4df5c20e",
+  "independent_review": {
+    "report": "REVIEW_P1_r2.md",
+    "verdict": "PASS",
+    "reviewer": "astra",
+    "reviewed_head": "2fcf3865c7b7770d4c33cc9fc2948398e50dc27f",
+    "acceptance_receipt": "P1_ACCEPTED.json",
+    "remaining_blockers": [],
+    "result": "452 passed, 5 subtests passed, 1 warning in 134.67s; exit 0; no failures, skips or deselections"
+  },
   "commits": [
     {"commit": "297b6911", "purpose": "Production backend and conditional worker hook"},
     {"commit": "d84a9078", "purpose": "Whole-update trigger KL and checkpoint identity"},
@@ -95,7 +104,18 @@
       "Real checkpoint round trips and 900-tick fake-physics production worker"
     ],
     "static_checks": ["git diff --check c4/track-base"],
-    "review_status": "r1 blocker implemented and CPU-verified; independent re-review pending"
+    "review_status": "r1 blocker implemented and CPU-verified; independent r2 review PASS and acceptance receipt present",
+    "resume_verification": {
+      "head_before_receipt_refresh": "2fcf3865c7b7770d4c33cc9fc2948398e50dc27f",
+      "reviewed_implementation_unchanged": true,
+      "existing_junit": "457 cases including 5 subtests; zero errors, failures or skips",
+      "matching_running_python_or_pytest_jobs": 0,
+      "checks": [
+        "git diff --exit-code 2fcf3865c7b7770d4c33cc9fc2948398e50dc27f -- tools/coopmwm tests/unit/test_merge_features.py",
+        "git diff --check c4/track-base"
+      ],
+      "test_evidence": "Preserved completed implementation and independent regression runs; no duplicate test run or dispatch launched."
+    }
   },
   "open_issues": [
     "Parent integration must provide P2 real SUMO reward extraction matching the documented envelope, including outcomes at every recorded tick and the common registered reward weight/provenance.",
