@@ -1,5 +1,6 @@
 {
   "task": "F6",
+  "round": "fix-r1",
   "status": "READY_CPU_ONLY",
   "ready": true,
   "worktree": "E:/agent-work/c4-fix-ssh",
@@ -7,9 +8,34 @@
   "base_branch_at_worktree_creation": "c4/rerun-launch",
   "base_commit": "96ccd79ddb89e7a14ee6978ae9ff3e71b06557c3",
   "commits": [
-    "42fcfeb7aad958e6928f9ab3dba2342f457d2d84"
+    "42fcfeb7aad958e6928f9ab3dba2342f457d2d84",
+    "ec7060383b19043ff3263611e172a26775f872f5",
+    "4f8bab9fec3b07aa979792eaa0f423eba4b2a5c6"
   ],
-  "commit_scope": "Implementation, CPU tests and launch runbook. This receipt is committed separately.",
+  "commit_scope": "Implementation, CPU regressions and launch runbook are in 4f8bab9f. This regenerated readiness record is committed separately.",
+  "review_remediation": {
+    "source": "REVIEW_F6_r0.md",
+    "original_verdict": "BLOCK",
+    "blockers_addressed": [
+      {
+        "id": 1,
+        "summary": "Wrapper cancellation released admission while its actual SSH/SCP child remained alive",
+        "fix": "Publish a durable active reservation before creating a local session supervisor. The supervisor watches the wrapper, terminates/reaps the owned session on cancellation, wrapper death or deadline expiry, and only then clears the reservation. Gate.claim checks this reservation even after the wrapper OS lock is gone. POSIX session process groups isolate cancellation from the shared persistent master.",
+        "timeout_fix": "Use one end-to-end execution deadline across wrapper startup, gate admission, master setup, rate spacing and command execution. cpuV RPC callers wait for supervised cleanup instead of racing it with an equal outer timeout.",
+        "regressions": [
+          "test_real_wrapper_cancellation_keeps_gate_until_session_reaped: terminate, kill and timeout cancellation, each for commands and transfers, with real local children",
+          "test_actual_subprocess_outer_timeout_reaps_owned_local_session: actual subprocess.run outer timeout and kill/communicate behavior",
+          "test_real_rpc_deadline_allows_inner_cleanup_and_never_replays: both ops.remote and cpus_checking.rpc with real local wrapper/supervisor/session processes",
+          "test_supervisor_spawn_interruption_keeps_reservation and test_unfinished_reservation_fails_closed_even_without_wrapper_lock",
+          "test_deadline_includes_gate_master_and_rate_waits and test_expired_wrapper_startup_deadline_never_constructs_transport",
+          "test_supervised_binary_input_output_and_exit_status"
+        ],
+        "status": "addressed_and_cpu_verified"
+      }
+    ],
+    "remaining_review_blockers": [],
+    "independent_r1_review": "not yet performed"
+  },
   "implementation": {
     "module": "tools/coopmwm/cpuv_ssh.py",
     "control_master": "yes for the persistent master, no for sessions",
@@ -25,17 +51,21 @@
     "missing_master_fallback": "ProxyCommand=false prevents a session from silently opening a direct connection",
     "failed_attempts_consume_rate_allowance": true,
     "strict_host_key_checking": true,
-    "platform": "Linux/WSL OpenSSH; native Windows fails before starting SSH",
+    "session_cleanup": "Independent local supervisor monitors wrapper lifetime and execution deadline; terminates the owned session/group, waits up to one second before escalation on POSIX, and reaps before clearing admission",
+    "abrupt_supervisor_or_launch_failure": "Durable active.json remains; subsequent callers fail closed with bounded admission wait. Documented operator recovery requires verifying all owned session processes have exited; no age/PID-only automatic clearing.",
+    "platform": "Linux/WSL OpenSSH; native Windows fails before starting SSH. Windows process supervision is exercised with local Python children only.",
     "remote_config_changes": false,
     "sshd_changes": false
   },
   "api": {
     "Transport.run": "Transport().run(remote_command, timeout=180, **subprocess_kwargs) -> CompletedProcess",
     "Transport.copy": "Transport().copy(local, absolute_remote, upload=True|False, timeout=180, **subprocess_kwargs) -> CompletedProcess",
-    "command": "command(host, remote_command, timeout=None, legacy=None) -> gated subprocess argv for cpuV; original argv for other hosts",
-    "rsync_shell": "rsync_shell(host) -> remote-shell command string using the same pool for cpuV",
+    "command": "command(host, remote_command, timeout=None, legacy=None) -> supervised/gated subprocess argv for cpuV, including an absolute monotonic deadline for finite budgets; original argv for other hosts",
+    "rsync_shell": "rsync_shell(host) -> remote-shell command string using the same supervised pool for cpuV",
+    "Gate.claim": "Gate(directory).claim(deadline=None) -> context manager; OS lock plus durable active-session exclusion",
+    "Gate.admit": "gate.admit(deadline=None), under claim; persisted attempt spacing and bounded waiting",
     "cli": "python -B -m tools.coopmwm.cpuv_ssh [--timeout SECONDS] run -- 'COMMAND' | put LOCAL ABSOLUTE_REMOTE | get LOCAL ABSOLUTE_REMOTE | rsh cpuV COMMAND...",
-    "timeouts": "CLI default 180 seconds; 0 inherits caller lifetime. Existing RPC timeout is forwarded, while Popen streams and rsync retain their external owner limits.",
+    "timeouts": "CLI default 180 end-to-end execution seconds; 0 inherits caller lifetime. Cleanup can extend return beyond the execution deadline. cpuV RPC outer timeouts are disabled because the supervised inner deadline includes setup/admission and must finish cleanup; external wrapper termination is independently supervised.",
     "python_script_remote_calls": "tools.coopbandit.ops.remote automatically routes cpuV; caller binds PYTHON['cpuV'] to the qualified interpreter",
     "integrations": [
       "tools/coopbandit/ops.py shared remote operations used by tools.coopmwm.ops.ssh",
@@ -49,34 +79,37 @@
     "runbook": "CLEAN1_LAUNCH.md section F6: cpuV SSH connection discipline"
   },
   "arm_invariants": {
-    "A": "No policy, learning, reward, observation, RNG, bank or training configuration files changed; infrastructure admission only.",
-    "B_R": "One identical arm-independent transport, pool, rate and timeout policy; guidance sources and learning semantics untouched.",
-    "other_hosts": "Existing argv retained, with regression coverage for cpuQ."
+    "A": "Infrastructure-only changes; no policy, reward, observation, RNG, bank or training configuration changes",
+    "B_R": "Same arm-independent transport, admission, cancellation and deadline policy",
+    "other_hosts": "Existing argv and outer timeout behavior retained; cpuQ routing regression passes",
+    "look_ahead": "Unchanged"
   },
   "tests": {
-    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -B -m pytest -q -o cache_dir=.pytest_cache --basetemp _out/f6-pytest tools/coopmwm/test_cpuv_ssh_cpu.py tools/coopmwm/test_cpus_checking_cpu.py tools/coopmwm/test_warm_transport_cpu.py",
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -o cache_dir=.pytest_cache --basetemp _out/f6-fix-r1-final tools/coopmwm/test_cpuv_ssh_cpu.py tools/coopmwm/test_cpus_checking_cpu.py tools/coopmwm/test_warm_transport_cpu.py",
     "environment": {
       "CUDA_VISIBLE_DEVICES": "",
       "PYTHONDONTWRITEBYTECODE": "1",
       "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
       "TMP": "E:/agent-work/c4-fix-ssh/_out",
       "TEMP": "E:/agent-work/c4-fix-ssh/_out"
     },
-    "passed": 36,
+    "collected": 51,
+    "passed": 50,
     "skipped": 1,
     "failed": 0,
-    "elapsed_seconds": 25.51,
-    "skip_reason": "Unix permission and symlink checks require POSIX; host is Windows.",
+    "elapsed_seconds": 55.63,
+    "skip_reason": "Existing Unix private-directory permissions/symlink check requires POSIX; test host is Windows",
     "coverage": [
-      "Master creation once, persistent socket reuse across client instances, no inherited-pipe wait on background master",
-      "Two-second admission spacing including failed connections, commands and transfers",
-      "No automatic replay after master failure, timeout, missing control socket or lost command stream",
-      "SCP and RPC/rsync routing, binary input/output preservation, command quoting and exit status",
-      "External lifetime preservation for streaming clients and rsync",
-      "Native Windows rejection before subprocess execution",
-      "Corrupt/backwards admission state fails closed",
-      "Gate timeout, release on exception and real three-process serialization with persisted rate state",
-      "Existing checker and bounded read-only transport retry regressions"
+      "Real local child cleanup and gate exclusion after streaming wrapper termination, abrupt kill and outer timeout, for run and copy",
+      "Both real RPC integration deadline paths wait for cleanup and do not replay",
+      "Actual subprocess.run outer-timeout kill/communicate path",
+      "Binary-safe stdin/stdout through both supervisor hops",
+      "Fail-closed launch interruption, incomplete reservation and supervisor failure state",
+      "Gate/master/rate spacing consumes execution budget; expired wrapper startup deadline prevents dispatch",
+      "Existing persistent master/socket, failed attempt spacing, no replay, RPC/rsync routing and legacy-host regressions",
+      "Existing real three-process gate serialization and transport checker regressions"
     ],
     "git_diff_check": "passed"
   },
@@ -88,10 +121,11 @@
     "new_sim_seconds": 0,
     "remote_reads": 0,
     "remote_writes": 0,
-    "restricted_data_opened": false
+    "restricted_data_opened": false,
+    "test_artifacts": "Only under this worktree's _out and pytest cache"
   },
   "open_issues": [
-    "Live Linux/WSL master/socket/transfer qualification remains pending because this task forbids SSH. All network subprocesses in the new CPU tests were faked or blocked.",
-    "All operating agents must use the documented shared Linux/WSL client, cpuV alias and wrapper; native Windows SSH and alternate direct-access paths do not satisfy F6. Existing alias/identity/known-host setup is an operator prerequisite."
+    "Live Linux/WSL OpenSSH master/socket/session/transfer qualification remains pending because remote/SSH execution is prohibited in this task; network commands were faked or blocked in CPU tests.",
+    "All agents must use the documented shared Linux/WSL client, cpuV alias and supervised wrapper. Existing alias, identity and known-host setup remains an operator prerequisite."
   ]
 }
