@@ -1,5 +1,36 @@
 # CLEAN3 prospective launch blockers — 2026-11-05 23:46 +08
 
+## Latest continuation — 2026-11-06 00:17 +08
+
+`CLEAN3_QUOTE_20261106_0015.json` preserves the zero-physics native-manifest
+quote captured at cpuV00:15:44. Prior charged2,901,840 + remaining protected
+plan_fix566,400 + unchanged complete clean3 allocation3,241,440 = **6,709,680**,
+**709,680 sim-s over** the registered6M cumulative cap. Even excluding the
+protected reservation leaves143,280 deficit. No reservation has been cancelled;
+the running prefix is not a final stopped ledger. Accepted G adapters and smoke
+expansion still require qualification before final affordability can be asserted.
+
+G2 remains accepted. G1's corrected READY is now published and its independent
+round1 review is in progress. G4's production fixes remain owned by the existing
+worker; G1/G4 acceptance receipts are still absent at00:17. Existing follower9504
+appended safe/CONTINUE u15. The fresh full operator audit
+`CLEAN3_RESUME_LIVE_0010.json` (commit `f37f6a6c`) independently passed the
+original source/config/qualification/owner/phase-cap checks through u14.
+
+Preparation commit `f049763e` adds `tools/coopmwm/clean3_budget.py` with pure
+prospective quotation and fail-closed final accounting admission. It keeps all
+prior/void charges, the plan_fix remainder once, canonical24update workloads,
+full diagnostic schedule, one gate and complete conservative G caps. Final
+admission recomputes against the stopped ledger snapshots and requires all three
+acceptance hashes plus the owner STOP and actual sealed boundary. A quote or
+accounting admission never claims smoke/gate/launch permission. Focused clean3
+and existing clean2 budget suites: **30 passed**,38.29s; no deployment or physics.
+
+MAIN budget blocker refreshed. All-three acceptance/integrated qualification
+remain gates before the clean2 boundary stop, and a fitting complete registered
+budget remains required before clean3 charges. Existing resident supervision
+continues under the original clean2 runtime.
+
 ## Latest recovery — 2026-11-06 00:00 +08
 
 Recovery commit `e4db4995` preserves the fresh live audit and acceptance-owner
