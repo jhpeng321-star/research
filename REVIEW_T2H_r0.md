@@ -1,18 +1,29 @@
-VERDICT: PASS
+VERDICT: BLOCK
 
 ## Numbered blockers
 
-1. None found in the T2H implementation diff. No required fixes.
+1. **Augmented practice states bypass the current SUMO-verification requirement.** `tools/coopmwm/practice_weighting.py:70-95` checks that the *parent* is admitted, that the augmentation has an own-arm decision link and snapshot hash, and that its manifest says `wm_cooperative=True`. It never requires the augmented example itself to have an accepted all8 verification/admission record. `tools/coopmwm/practice_starts.py:137-140` adds these rows directly to the cooperative sampling pool. A decision link is only a JSON mapping (`practice_starts.py:66-72`), not proof of verification. The current spec, `E:/agent-work/_sol/tracks_spec.md:54-57`, supersedes WM-only retention: augmented plans may enter the bank only after SUMO verification (all8), with WM used only to propose variants. The documented adapter contract still explicitly accepts WM-retained augmentations (`tools/coopmwm/PRACTICE_WEIGHTING.md:33-48`). **Required fix:** require a validated, accepted own-arm all8/admission record for each augmented example, bound to its augmentation/plan, state and seed; do not treat its parent's verification or a manifest boolean as sufficient. Consume already verified producer records without launching verification from this adapter. Update the producer contract and CPU tests to reject missing, rejected, foreign-arm or mismatched augmented verification records before sealing/dispatch, and accept correctly bound verified augmentations for both B and R. Existing tests currently assert the obsolete behavior: `tools/coopmwm/test_practice_weighting_cpu.py:23-36` creates an augmented snapshot/link/WM flag with no augmented verification receipt; lines 90-105 and 150-157 successfully select it and carry it into the training-wave/update path. The three focused cases passed again on resume, confirming the acceptance gap rather than satisfying the revised requirement.
 
 ## Test counts
 
-- Independent completed run: **209 passed, 0 failed, 1 skipped, 1 deselected** (211 collected), in 275.76 seconds.
+- Preserved prior independent completed run: **209 passed, 0 failed, 1 skipped, 1 deselected** (211 collected), in 275.76 seconds. This is the on-disk evidence from the prior session; the completed full run was not duplicated.
+- Preserved prior-resume focused spec recheck: **3 passed, 0 failed, 0 skipped**, in 31.66 seconds. These are three of the previously counted cases, not three additional unique tests. They demonstrate acceptance of unverified augmentations; passing the old assertions does not resolve blocker 1.
 - This includes all **28 T2H tests**, all **35 existing practice-start tests**, and the permitted launch, budget, runtime, safety, and rerun regression cases listed below.
 - Skipped: `tools/coopmwm/test_rerun_cpus_cpu.py:192`, Windows symlink privilege unavailable; the hard-link case passed.
 - Deliberately deselected: `tools/coopmwm/test_rerun_cpus_cpu.py::test_staging_manifest_refuses_forbidden_and_missing_inputs`. Its lines 340–341 open a temporary filename containing a prohibited token. The review's hard rule applies even to synthetic fixtures. This accounts for the one-pass difference from the readiness receipt's 210 passed; that case was not independently executed.
 - One pytest configuration warning: disabling the cache provider makes the repository's `cache_dir` option unknown. No test failures resulted.
 - An initial attempt timed out after 120 seconds without a final summary. Its progress is not counted; the complete rerun above is the result used for this verdict.
 - `git diff --check c4/track-base` passed.
+
+### Preserved prior-resume focused command
+
+Environment: `CUDA_VISIBLE_DEVICES=-1`, `PYTHONDONTWRITEBYTECODE=1`, `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`. No matching T2H review test process was running before this invocation; unrelated jobs were left untouched.
+
+```text
+C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider --basetemp=E:/Temp/opencode/t2h-r0-spec-recheck-20261105 tools/coopmwm/test_practice_weighting_cpu.py::test_bank_plus_augmented_distinct_states_and_frozen_resume tools/coopmwm/test_practice_weighting_cpu.py::test_augmented_state_reaches_real_wave_and_update_receipt
+```
+
+The focused run emitted the same single `cache_dir` configuration warning. Tests used synthetic on-disk receipts and a fake episode wave; no simulator was launched.
 
 ### Reproduction command
 
@@ -22,7 +33,17 @@ Working directory: `E:/agent-work/c4-practice-weight`. Environment: `CUDA_VISIBL
 C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider --basetemp=E:/Temp/opencode/t2h-r0-verified tools/coopmwm/test_practice_weighting_cpu.py tools/coopmwm/test_practice_starts_cpu.py tools/coopmwm/test_v2v_launch3_cpu.py tools/coopmwm/test_v2v_launch_wiring_cpu.py tools/coopmwm/test_v2v_launch_quote_cpu.py tools/coopmwm/test_v2v_budget_quote_cpu.py tools/coopmwm/test_v2v_live_cpu.py tools/coopmwm/test_v2v_runner_cpu.py tools/coopmwm/test_composite_health_cpu.py tools/coopmwm/test_warm_health_cpu.py tools/coopmwm/test_rerun_cpus_cpu.py tools/coopmwm/test_rerun_clean_cpu.py --deselect=tools/coopmwm/test_rerun_cpus_cpu.py::test_staging_manifest_refuses_forbidden_and_missing_inputs
 ```
 
-## Reviewed scope and evidence
+## Resume reconciliation (2026-11-05)
+
+Latest fresh-session verification (astra): reread status/log, READY/ACCEPTED/PROGRESS receipts, this uncommitted report, the current shared spec, and all implementation/test/documentation changes against `c4/track-base`. HEAD remains `93da75f6`; blocker 1 is still directly present in the adapter and its tests. The completed pytest results above are preserved prior-session evidence, not newly executed results. No additional test run or dispatch was needed because neither the implementation nor the identified requirement changed.
+
+Fresh-session continuation (astra): initial status was `M REVIEW_T2H_r0.md` on `c4/practice-weight`, HEAD `93da75f6`; the BLOCK review and focused-test evidence below were already on disk as uncommitted work. Read status/log and task receipts first, then the current spec and the implementation/test diff against `c4/track-base`. Confirmed blocker 1 remains present: the augmentation adapter validates a parent, decision link, WM flag and snapshot hash, but no augmented all8 admission. Preserved the existing review and completed test results. No tests or dispatches were started again, consistent with the resume instruction not to duplicate finished work. The clean-start and focused-run descriptions below refer to the preceding review session. Only this review file was updated; no commit was made.
+
+Independent verifier: astra. Started with a clean worktree on `c4/practice-weight`, HEAD `93da75f6`. Read git status/log, `T2H_READY.json`, `T2H_PROGRESS.json`, `T2H_ACCEPTED.json`, this existing report, and the current shared spec before reviewing the diff against `c4/track-base`. HEAD only preserved the earlier review/acceptance and updated readiness metadata; the implementation remains the one reviewed at `ee3af837`. The prior PASS and test evidence are preserved below as historical evidence, but the current verdict supersedes that PASS because the latest spec requires verified augmentations. The existing READY/ACCEPTED receipts were not modified and still describe the earlier acceptance; they must not be interpreted as clearing blocker 1.
+
+The current diff adds no policy/planner observable features or truth readers, changes no look-ahead/horizon, retains the shared B/R option validation and realized-count scheduling, and preserves absent-key default configuration/plan behavior as covered by the existing differential tests. The added 0.50 share is declared as the prospective registered alternative; no new driving-behavior thresholds were found. The unresolved issue is augmentation eligibility under the revised spec. The full-run 5,000,000 sim-s cap and production rerun wiring remain T2C integration responsibilities; the T2H reference quote is not evidence of that end-to-end budget check.
+
+## Preserved prior review scope and evidence
 
 Independent verifier: astra. Reviewed `E:/agent-work/_sol/tracks_spec.md`, `T2H_READY.json`, and the complete ten-file diff from `c4/track-base` (`13f184b5a7e12be04aebf246ef8e4dbb81555545`) to branch `c4/practice-weight`, HEAD `ee3af8371e69a99f12657bf735ac5a9d3a1b5b8f`. Supporting runtime and test code was inspected where necessary.
 
@@ -38,8 +59,8 @@ Independent verifier: astra. Reviewed `E:/agent-work/_sol/tracks_spec.md`, `T2H_
 
 ## Integration boundary
 
-The base has no T2G producer. `PRACTICE_WEIGHTING.md:24–48` supplies the manifest contract; its producer is represented by CPU fixtures here. T2G/T2C must publish that contract and wire the additive options into their end-to-end rerun. The readiness receipt explicitly identifies this dependency, and the shared spec assigns rerun integration and the all-components smoke to T2C. This PASS covers T2H's implementation and CPU tests, not completion of that separate integration or permission to launch training.
+The base has no T2G producer. `PRACTICE_WEIGHTING.md:24–48` supplies the manifest contract; its producer is represented by CPU fixtures here. T2G/T2C must wire the additive options into their end-to-end rerun, using an updated contract that requires verified augmentations. The readiness receipt identifies the producer dependency, and the shared spec assigns rerun integration and the all-components smoke to T2C. That separate ownership does not make the current WM-only adapter contract compliant with the revised spec.
 
 ## Review constraints
 
-No implementation edits or commits were made. No SSH, remote execution, SUMO process, or GPU work was run. No prohibited data/truth paths were opened. The worktree was clean after testing and before this review file was added; this report is the only review-authored worktree change.
+No implementation edits or commits were made. No SSH, remote execution, SUMO process, or GPU work was run. No prohibited data/truth paths were opened. The latest session began with this report already modified; it remains the only review-authored worktree change. The clean-worktree and focused-testing statements above describe earlier sessions. Existing implementation, receipts, prior regression evidence and unrelated running jobs were preserved.

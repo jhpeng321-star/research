@@ -13,6 +13,7 @@
     "resume": "Reuse sealed plans without resampling or rereading growing augmentation inputs."
   },
   "execution": "CPU tests only; no training, SUMO, remote dispatch, or background job launched.",
-  "completed": true,
+  "completed": false,
+  "resume_20261105": "Preserved existing implementation and review evidence. Latest spec requires each augmented example's own accepted all8 admission; correcting the adapter and producer contract before refreshing readiness. No jobs dispatched.",
   "ready_receipt": "T2H_READY.json"
 }
