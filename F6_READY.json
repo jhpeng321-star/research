@@ -1,0 +1,97 @@
+{
+  "task": "F6",
+  "status": "READY_CPU_ONLY",
+  "ready": true,
+  "worktree": "E:/agent-work/c4-fix-ssh",
+  "branch": "c4/fix-ssh",
+  "base_branch_at_worktree_creation": "c4/rerun-launch",
+  "base_commit": "96ccd79ddb89e7a14ee6978ae9ff3e71b06557c3",
+  "commits": [
+    "42fcfeb7aad958e6928f9ab3dba2342f457d2d84"
+  ],
+  "commit_scope": "Implementation, CPU tests and launch runbook. This receipt is committed separately.",
+  "implementation": {
+    "module": "tools/coopmwm/cpuv_ssh.py",
+    "control_master": "yes for the persistent master, no for sessions",
+    "control_persist_seconds": 600,
+    "control_path": "/tmp/c4-cpuv-<uid>/master.sock",
+    "shared_pool_scope": "All agents/worktrees using the same Linux/WSL client and OS user; independent of arm, run and PID",
+    "minimum_attempt_interval_seconds": 2,
+    "maximum_admitted_sessions": 1,
+    "gate_wait_timeout_seconds": 60,
+    "connect_timeout_seconds": 20,
+    "ssh_connection_attempts": 1,
+    "automatic_command_retries": 0,
+    "missing_master_fallback": "ProxyCommand=false prevents a session from silently opening a direct connection",
+    "failed_attempts_consume_rate_allowance": true,
+    "strict_host_key_checking": true,
+    "platform": "Linux/WSL OpenSSH; native Windows fails before starting SSH",
+    "remote_config_changes": false,
+    "sshd_changes": false
+  },
+  "api": {
+    "Transport.run": "Transport().run(remote_command, timeout=180, **subprocess_kwargs) -> CompletedProcess",
+    "Transport.copy": "Transport().copy(local, absolute_remote, upload=True|False, timeout=180, **subprocess_kwargs) -> CompletedProcess",
+    "command": "command(host, remote_command, timeout=None, legacy=None) -> gated subprocess argv for cpuV; original argv for other hosts",
+    "rsync_shell": "rsync_shell(host) -> remote-shell command string using the same pool for cpuV",
+    "cli": "python -B -m tools.coopmwm.cpuv_ssh [--timeout SECONDS] run -- 'COMMAND' | put LOCAL ABSOLUTE_REMOTE | get LOCAL ABSOLUTE_REMOTE | rsh cpuV COMMAND...",
+    "timeouts": "CLI default 180 seconds; 0 inherits caller lifetime. Existing RPC timeout is forwarded, while Popen streams and rsync retain their external owner limits.",
+    "python_script_remote_calls": "tools.coopbandit.ops.remote automatically routes cpuV; caller binds PYTHON['cpuV'] to the qualified interpreter",
+    "integrations": [
+      "tools/coopbandit/ops.py shared remote operations used by tools.coopmwm.ops.ssh",
+      "tools/coopmwm/cpus_checking.py configurable RPC and both rsync transfers",
+      "tools/coopmwm/dual.py host-parameterized stream",
+      "tools/coopmwm/plan_bridge.py host-parameterized stream",
+      "tools/coopmwm/volume_bridge.py host-parameterized stream",
+      "tools/coopmwm/warm_bridge.py host-parameterized stream",
+      "tools/coopmwm/warm_storage.py transfer command builder"
+    ],
+    "runbook": "CLEAN1_LAUNCH.md section F6: cpuV SSH connection discipline"
+  },
+  "arm_invariants": {
+    "A": "No policy, learning, reward, observation, RNG, bank or training configuration files changed; infrastructure admission only.",
+    "B_R": "One identical arm-independent transport, pool, rate and timeout policy; guidance sources and learning semantics untouched.",
+    "other_hosts": "Existing argv retained, with regression coverage for cpuQ."
+  },
+  "tests": {
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -B -m pytest -q -o cache_dir=.pytest_cache --basetemp _out/f6-pytest tools/coopmwm/test_cpuv_ssh_cpu.py tools/coopmwm/test_cpus_checking_cpu.py tools/coopmwm/test_warm_transport_cpu.py",
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TMP": "E:/agent-work/c4-fix-ssh/_out",
+      "TEMP": "E:/agent-work/c4-fix-ssh/_out"
+    },
+    "passed": 36,
+    "skipped": 1,
+    "failed": 0,
+    "elapsed_seconds": 25.51,
+    "skip_reason": "Unix permission and symlink checks require POSIX; host is Windows.",
+    "coverage": [
+      "Master creation once, persistent socket reuse across client instances, no inherited-pipe wait on background master",
+      "Two-second admission spacing including failed connections, commands and transfers",
+      "No automatic replay after master failure, timeout, missing control socket or lost command stream",
+      "SCP and RPC/rsync routing, binary input/output preservation, command quoting and exit status",
+      "External lifetime preservation for streaming clients and rsync",
+      "Native Windows rejection before subprocess execution",
+      "Corrupt/backwards admission state fails closed",
+      "Gate timeout, release on exception and real three-process serialization with persisted rate state",
+      "Existing checker and bounded read-only transport retry regressions"
+    ],
+    "git_diff_check": "passed"
+  },
+  "execution": {
+    "cpu_only": true,
+    "ssh_connections": 0,
+    "sumo_runs": 0,
+    "gpu_jobs": 0,
+    "new_sim_seconds": 0,
+    "remote_reads": 0,
+    "remote_writes": 0,
+    "restricted_data_opened": false
+  },
+  "open_issues": [
+    "Live Linux/WSL master/socket/transfer qualification remains pending because this task forbids SSH. All network subprocesses in the new CPU tests were faked or blocked.",
+    "All operating agents must use the documented shared Linux/WSL client, cpuV alias and wrapper; native Windows SSH and alternate direct-access paths do not satisfy F6. Existing alias/identity/known-host setup is an operator prerequisite."
+  ]
+}
