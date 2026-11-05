@@ -8,6 +8,8 @@ import torch
 from tools.coopmwm import exact_grade as xg, practice_starts as starts
 from tools.coopmwm import practice_weighting as pw, replay_bank as rb
 from tools.coopmwm import sumo_verify as sv, v2v_launch3 as launch, v2v_runner
+from tools.coopmwm import verify_perseed as vp
+from tools.coopmwm.protocol import digest
 from tools.coopmwm.test_bank_perseed_cpu import ps as bank_fixture  # noqa: F401
 from tools.coopmwm.test_practice_starts_cpu import (
     _cfg, bank_with_snapshots, run_one_update, snapshot)
@@ -19,16 +21,37 @@ def per_seed(bank_fixture):
     return bank_fixture
 
 
-def augment(root, arm='B', *, rows=None):
+def augment(root, arm='B', *, rows=None, vid='aug1', state=None, seed_index=1):
     bank = rb.bank_root(root, arm)
-    state = f'aug_state_{arm}'
+    state = state or f'aug_state_{arm}'
     snap = snapshot(world_seed=986020, gen_seed=21)
     torch.save(snap, bank/'snapshots'/(state+'.pt'))
-    (bank/'decisions'/(state+'.json')).write_text(json.dumps(
-        dict(verification_id='aug1', state_id=state)))
-    row = dict(example_id='aug1#s1', parent_example_id='v0#s1',
-               verification_id='aug1', state_id=state, seed_index=1,
-               wm_cooperative=True, snapshot_sha256=sv.snapshot_sha(snap))
+    (bank/'decisions'/(vid+'.json')).write_text(json.dumps(
+        dict(verification_id=vid, state_id=state)))
+    plan = dict(id='aug_plan', members=['c1', 'c2'], duration_s=20)
+    plan_sha = digest(plan)
+    first = xg._seal(dict(verification_id=vid, status='accepted',
+        episode=dict(arm=arm), candidate_plan_sha256=[plan_sha],
+        timing=dict(finished_unix=2.),
+        snapshot_sha256=sv.snapshot_sha(snap)), 'receipt_sha256')
+    first_dir = bank/'sumo_verification'/'verifications'
+    first_dir.mkdir(parents=True, exist_ok=True)
+    (first_dir/(vid+'.json')).write_text(json.dumps(first))
+    ex = dict(example_id=f'{vid}#c1#s{seed_index}', seed_index=seed_index,
+        candidate_index=0, plan=plan, plan_sha256=plan_sha,
+        admitted=True, status='admitted', cooperative=True)
+    confirmation = xg._seal(dict(schema=vp.SCHEMA, verify_mode=vp.ALL8,
+        bank_rule='per_seed_v1', arm=arm, verification_id=vid, admitted=True,
+        first_seed=dict(verification_id=vid, receipt_sha256=first['receipt_sha256']),
+        candidates=[dict(index=0, plan_sha256=plan_sha)],
+        per_seed_v1=dict(examples=[ex])), 'confirmation_sha256')
+    (bank/vp.RECORDS).mkdir(exist_ok=True)
+    (bank/vp.RECORDS/(vid+'.json')).write_text(json.dumps(confirmation))
+    restarted = rb.replicate(snap, vid) if seed_index == 2 else snap
+    row = dict(example_id=ex['example_id'], parent_example_id=f'v0#s{seed_index}',
+               verification_id=vid, state_id=state, seed_index=seed_index,
+               wm_cooperative=True, snapshot_sha256=sv.snapshot_sha(restarted),
+               plan_sha256=plan_sha, confirmation_sha256=confirmation['confirmation_sha256'])
     record = xg._seal(dict(schema=pw.SCHEMA, arm=arm, rows=rows if rows is not None else [row]),
                       'practice_augmented_sha256')
     (bank/'PRACTICE_AUGMENTED.json').write_text(json.dumps(record))
@@ -94,7 +117,7 @@ def test_bank_plus_augmented_distinct_states_and_frozen_resume(tmp_path, monkeyp
         count=12, training_seed=4, weighting=True)
     assert len(plan['rows']) == 6  # two bank seed states + one new augmented state, cap 2
     counts = Counter(r['example_id'] for r in plan['rows'])
-    assert counts == {'v0#s1': 2, 'v0#s2': 2, 'aug1#s1': 2}
+    assert counts == {'v0#s1': 2, 'v0#s2': 2, 'aug1#c1#s1': 2}
     assert plan['weighting']['augmented_selected'] == 2
     assert plan['weighting']['augmentation_sha256'] == manifest['practice_augmented_sha256']
     loaded = starts.load_snapshot(tmp_path, arm, next(
@@ -127,9 +150,123 @@ def test_manifest_integrity_arm_and_duplicate_state(tmp_path, ps):
     with pytest.raises(ValueError, match='mismatch'):
         pw.augmented_examples(tmp_path, 'B', starts.examples(tmp_path, 'B'))
     # Multiple perturbed plans at one restart state cannot bypass the repeat cap.
-    augment(tmp_path, rows=[row, dict(row, example_id='aug2#s1')])
+    row2, _ = augment(tmp_path, vid='aug2')
+    augment(tmp_path, rows=[row, row2])
     rows, _ = pw.augmented_examples(tmp_path, 'B', starts.examples(tmp_path, 'B'))
     assert len(rows) == 1
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('defect', ['missing', 'rejected', 'foreign_arm', 'bad_seal',
+    'wrong_plan', 'wrong_seed', 'wrong_example', 'not_cooperative', 'legacy',
+    'missing_receipt', 'foreign_receipt', 'wrong_state', 'wrong_receipt_plan',
+    'wrong_confirmation_hash'])
+def test_augmented_own_all8_admission_required_before_seal(tmp_path, ps, arm, defect):
+    bank_with_snapshots(tmp_path, arm, vids=('v0',))
+    row, manifest = augment(tmp_path, arm)
+    bank = rb.bank_root(tmp_path, arm)
+    cpath = bank/vp.RECORDS/'aug1.json'
+    rpath = bank/'sumo_verification'/'verifications'/'aug1.json'
+    c = json.loads(cpath.read_text())
+    receipt = json.loads(rpath.read_text())
+    if defect == 'missing':
+        cpath.unlink()
+    elif defect == 'missing_receipt':
+        rpath.unlink()
+    else:
+        ex = c['per_seed_v1']['examples'][0]
+        if defect == 'rejected':
+            ex.update(admitted=False, status='rejected')
+        elif defect == 'foreign_arm':
+            c['arm'] = 'R' if arm == 'B' else 'B'
+        elif defect == 'wrong_plan':
+            ex['plan']['duration_s'] = 99
+        elif defect == 'wrong_seed':
+            ex['seed_index'] = 2
+        elif defect == 'wrong_example':
+            ex['example_id'] = 'unrelated#c1#s1'
+        elif defect == 'not_cooperative':
+            ex['cooperative'] = False
+        elif defect == 'legacy':
+            c['verify_mode'] = 'legacy'
+        elif defect == 'foreign_receipt':
+            receipt['episode']['arm'] = 'R' if arm == 'B' else 'B'
+        elif defect == 'wrong_state':
+            receipt['snapshot_sha256'] = '0'*64
+        elif defect == 'wrong_receipt_plan':
+            receipt['candidate_plan_sha256'] = ['0'*64]
+        receipt = xg._seal(receipt, 'receipt_sha256')
+        rpath.write_text(json.dumps(receipt))
+        c['first_seed']['receipt_sha256'] = receipt['receipt_sha256']
+        c = xg._seal(c, 'confirmation_sha256')
+        row['confirmation_sha256'] = c['confirmation_sha256']
+        if defect == 'bad_seal':
+            c['arm'] = 'tampered'
+        if defect == 'wrong_confirmation_hash':
+            row['confirmation_sha256'] = '0'*64
+        cpath.write_text(json.dumps(c))
+        manifest['rows'] = [row]
+        (bank/'PRACTICE_AUGMENTED.json').write_text(json.dumps(
+            xg._seal(manifest, 'practice_augmented_sha256')))
+    with pytest.raises(ValueError):
+        starts.plan_for_update(tmp_path, arm, 1, fraction=.5, repeat_cap=2,
+            count=12, training_seed=4, weighting=True)
+    assert not starts.plan_path(tmp_path, arm, 1).exists()
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_verified_seed2_augmentation_uses_own_crn(tmp_path, ps, arm):
+    bank_with_snapshots(tmp_path, arm, vids=('v0',))
+    row, _ = augment(tmp_path, arm, seed_index=2)
+    plan = starts.plan_for_update(tmp_path, arm, 1, fraction=.5, repeat_cap=2,
+        count=12, training_seed=4, weighting=True)
+    selected = [r for r in plan['rows'] if r['source'] == 'augmented']
+    assert len(selected) == 2
+    assert all(r['confirmation_sha256'] == row['confirmation_sha256'] for r in selected)
+    assert sv.snapshot_sha(starts.load_snapshot(tmp_path, arm, selected[0])) == row['snapshot_sha256']
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_actual_all8_producer_record_is_accepted(tmp_path, ps, arm):
+    """Real all8 producer and bank readers, with CPU SeedPlant replacing SUMO."""
+    from tools.coopmwm.test_verify_perseed_cpu import setup, _budget
+    _budget(tmp_path)
+    bank_with_snapshots(tmp_path, arm, vids=('v0',))
+    root, snap, plans, receipt, runner_for, _ = setup(tmp_path,
+        {('p1', 1): .6, ('p1', 2): .6}, k=1, arm=arm)
+    bank = rb.bank_root(root, arm)
+    c = vp.confirm_all8(root, arm, receipt, snap, runner_for, str(root),
+        'bank_verification_ext', candidates=plans, branches_dir=bank/'sumo_verification'/'branches')
+    ex = next(e for e in c['per_seed_v1']['examples'] if e['seed_index'] == 1)
+    assert ex['admitted'] and ex['cooperative']
+    row = dict(example_id=ex['example_id'], parent_example_id='v0#s1',
+        verification_id=c['verification_id'], state_id='s1', seed_index=1,
+        wm_cooperative=True, snapshot_sha256=sv.snapshot_sha(snap),
+        plan_sha256=ex['plan_sha256'], confirmation_sha256=c['confirmation_sha256'])
+    (bank/'PRACTICE_AUGMENTED.json').write_text(json.dumps(xg._seal(
+        dict(schema=pw.SCHEMA, arm=arm, rows=[row]), 'practice_augmented_sha256')))
+    plan = starts.plan_for_update(root, arm, 1, fraction=.5, repeat_cap=2,
+        count=12, training_seed=4, weighting=True)
+    assert plan['weighting']['augmented_selected'] == 2
+    assert Counter(r['example_id'] for r in plan['rows'])[ex['example_id']] == 2
+
+
+def test_frozen_augmented_replay_requires_own_verification(tmp_path, ps):
+    bank_with_snapshots(tmp_path, vids=('v0',))
+    augment(tmp_path)
+    plan = starts.plan_for_update(tmp_path, 'B', 1, fraction=.5, repeat_cap=2,
+        count=12, training_seed=4, weighting=True)
+    row = next(r for r in plan['rows'] if r['source'] == 'augmented')
+    # Old plans missing their own proof must not replay, even though sampling
+    # remains frozen. The manifest can disappear without affecting valid replay.
+    (rb.bank_root(tmp_path, 'B')/'PRACTICE_AUGMENTED.json').unlink()
+    starts.load_snapshot(tmp_path, 'B', row)
+    old = {k: v for k, v in row.items() if k not in ('plan_sha256', 'confirmation_sha256')}
+    with pytest.raises(ValueError, match='all8'):
+        starts.wave_call(tmp_path, 'B', 'warm_u001_B', 'train', old, 0, {})
+    (rb.bank_root(tmp_path, 'B')/vp.RECORDS/'aug1.json').unlink()
+    with pytest.raises(ValueError, match='all8'):
+        starts.wave_call(tmp_path, 'B', 'warm_u001_B', 'train', row, 0, {})
 
 
 def test_real_wave_receipt_twelve_of_twenty_four_and_r_matches_realised(tmp_path, monkeypatch, ps):

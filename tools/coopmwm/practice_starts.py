@@ -135,9 +135,14 @@ def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_
     coop = examples(root, arm, cooperative_only=True)
     augmented, augmentation_sha = [], None
     if weighting:
-        from .practice_weighting import augmented_examples
+        from .practice_weighting import augmented_examples, _state_key
         augmented, augmentation_sha = augmented_examples(root, arm, coop)
-        coop = [dict(r, source='bank') for r in coop] + augmented
+        # all8-admitted augmentations also enter the bank reader. Count each
+        # restart once, retaining augmentation provenance when present.
+        distinct = {}
+        for row in augmented + [dict(r, source='bank') for r in coop]:
+            distinct.setdefault(_state_key(row), row)
+        coop = list(distinct.values())
     pool = [dict(r) for r in coop]
     fallback = False
     if arm == 'R' and len(pool)*cap < count:
@@ -181,7 +186,7 @@ def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_
             augmented_examples=len(augmented), augmentation_sha256=augmentation_sha,
             cooperative_selected=sum(not r['fallback'] for r in rows),
             augmented_selected=sum(r['source'] == 'augmented' for r in rows if not r['fallback']),
-            rule='T2H: increased practice share; own bank + WM-cooperative augmented states; '
+            rule='T2H: increased practice share; own bank + all8-verified cooperative augmented states; '
                  'cooperative capacity first; identical B/R procedure')
     sealed = xg._seal(record, 'practice_plan_sha256')
     xg._write_new(path, sealed)
@@ -197,6 +202,11 @@ def load_snapshot(root, arm, row):
     (seed_index >= 3, the extra_seeds extension) from replicate(snapshot, 'vid#sN') - the same
     deterministic per-seed CRN derivation, an independent generator per extra seed."""
     from . import replay_bank as rb
+    if row.get('source') == 'augmented':
+        # Also reject obsolete WM-only rows in an already-frozen weighted plan;
+        # resume still never rereads/resamples the augmentation manifest.
+        from .practice_weighting import _verified_augmentation
+        _verified_augmentation(root, arm, row)
     snap = torch.load(rb.bank_root(root, arm)/'snapshots'/(row['state_id']+'.pt'), weights_only=False)
     seed_index = int(row['seed_index'])
     if seed_index == 2:
