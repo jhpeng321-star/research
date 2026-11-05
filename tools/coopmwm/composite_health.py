@@ -8,6 +8,9 @@ AUTHORITY='MAIN2026-11-03 09:57'
 R_AUTHORITY='MAIN2026-11-05 12:30'
 R_RULE='R_SAFETY_REPORT_ONLY_1230.json'
 R_PAUSE='PAUSE_SAFETY_COMPOSITE_R_u003.json'
+B_AUTHORITY='MAIN2026-11-05 14:34'
+B_RULE='B_SAFETY_REPORT_ONLY_1434.json'
+B_PAUSE='PAUSE_SAFETY_COMPOSITE_B_u009.json'
 
 
 def r_report_only(root,arm):
@@ -23,6 +26,22 @@ def r_report_only(root,arm):
             and v.get('original_pause_sha256')==sha(root/R_PAUSE)
             and v.get('amendment_sha256','UNREGISTERED') in (root/'AUTHORITY.md').read_text()):
         raise ValueError('unregistered R-only safety amendment')
+    return True
+
+
+def report_only(root,arm):
+    """Independent, exact owner releases; A retains the original rule."""
+    if arm!='B':return r_report_only(root,arm)
+    root=Path(root);path=root/B_RULE
+    if not path.exists():return False
+    from .exact_grade import verify_sealed
+    v=read(path);verify_sealed(v,'receipt_sha256')
+    if not (v.get('authority')==B_AUTHORITY and v.get('arm')=='B'
+            and v.get('composite_action')=='report_only'
+            and v.get('collision_teleport_action')=='pause_on_any'
+            and v.get('original_pause_sha256')==sha(root/B_PAUSE)
+            and v.get('amendment_sha256','UNREGISTERED') in (root/'AUTHORITY.md').read_text()):
+        raise ValueError('unregistered B-only safety amendment')
     return True
 
 
@@ -73,6 +92,8 @@ def _learning_released(root,stamps):
 
 def released(root,pause):
     root=Path(root);pause=Path(pause)
+    if pause.name==B_PAUSE:
+        return report_only(root,'B')
     if pause.name==R_PAUSE:
         return r_report_only(root,'R')
     if pause.name==LEARNING_PAUSE:
@@ -107,12 +128,12 @@ def braking(root,arm,u,episodes,a_records,pause,pairs=None):
         if A is None or B is None or A['world']!=B['world']:raise ValueError('composite safety pair incomplete')
         rows.append(dict(seed=e['world']['seed'],world=e['world'],A=A,right=B))
     out=comparison(rows)
-    report_only=r_report_only(root,arm)
-    hard_failure=report_only and any(r['right'][k]>0 for r in rows for k in ('collisions','teleports'))
-    if hard_failure or (not report_only and not out['release']):
+    reporting=report_only(root,arm)
+    hard_failure=reporting and any(r['right'][k]>0 for r in rows for k in ('collisions','teleports'))
+    if hard_failure or (not reporting and not out['release']):
         pause(root,f'SAFETY_COMPOSITE_{arm}_u{u:03}',dict(update=u,arm=arm,comparison=out))
-    if report_only:
-        out.update(owner_authority=R_AUTHORITY,composite_action='report_only',
+    if reporting:
+        out.update(owner_authority=B_AUTHORITY if arm=='B' else R_AUTHORITY,composite_action='report_only',
             collision_teleport_action='pause_on_any',optimization_admitted=not hard_failure)
     path=root/f'{arm}_SAFETY_COMPOSITE_{u:03}.json'
     if path.exists():

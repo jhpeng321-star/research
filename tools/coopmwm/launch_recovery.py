@@ -1,6 +1,6 @@
-"""SHA-bound owner12:30 recovery over the unchanged qualified launch config.
+"""SHA-bound owner safety recovery over the unchanged qualified launch config.
 
-The only numerical-runtime patch is R's explicit safety action. Original smoke,
+The only numerical-runtime patches are the explicit B/R safety actions. Original smoke,
 gate, config, models, completed updates and physics retain their exact bindings.
 """
 import argparse
@@ -21,10 +21,13 @@ def checked_recovery(config_path):
     cfg=training.checked_config(config_path)
     training.release(cfg)
     root=Path(cfg['run_root'])
-    authorization=training.read(root/composite_health.R_RULE)
+    b_amended=(root/composite_health.B_RULE).exists()
+    authorization=training.read(root/(composite_health.B_RULE if b_amended else composite_health.R_RULE))
     verify_sealed(authorization,'receipt_sha256')
     if not composite_health.r_report_only(root,'R'):
         raise ValueError('owner R-only amendment required')
+    if b_amended and not composite_health.report_only(root,'B'):
+        raise ValueError('owner B-only amendment required')
     source=Path(__file__).resolve().parents[3]
     manifest=training.read(source/'SOURCE_MANIFEST.json')
     if (authorization.get('config_sha256')!=digest(cfg)

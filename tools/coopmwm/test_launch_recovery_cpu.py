@@ -86,3 +86,50 @@ def test_native_wave_adopts_closed_episodes_before_any_reservation(tmp_path,monk
     monkeypatch.setattr(runner,'reserve',lambda *args:pytest.fail('completed physics recharged'))
     assert runner.wave(tmp_path,{},dict(R=Policy()),[dict(seed=986000)],
         'train','clean1_warm_u003','v2v_train',False)==[saved]
+
+
+def setup_b(root):
+    setup(root)
+    with (root/'AUTHORITY.md').open('a') as stream:stream.write(' authorized-1434')
+    put(root/c.B_PAUSE,dict(rule='SAFETY_COMPOSITE_B_u009',evidence=dict(arm='B')))
+    put(root/c.B_RULE,_seal(dict(authority=c.B_AUTHORITY,arm='B',composite_action='report_only',
+        collision_teleport_action='pause_on_any',original_pause_sha256=sha(root/c.B_PAUSE),
+        amendment_sha256='authorized-1434'),'receipt_sha256'))
+
+
+def test_b_reports_failed_composite_r_release_retained_a_original(tmp_path,monkeypatch):
+    setup_b(tmp_path)
+    episodes,references=records(monkeypatch)
+    assert c.braking(tmp_path,'B',9,episodes,references,h.pause)
+    out=json.loads((tmp_path/'B_SAFETY_COMPOSITE_009.json').read_text())
+    assert out['release'] is False and out['metrics']['critical_total']['ci95']==[50,50]
+    assert out['optimization_admitted'] and out['owner_authority']==c.B_AUTHORITY
+    assert c.released(tmp_path,tmp_path/c.B_PAUSE)
+    assert c.released(tmp_path,tmp_path/c.R_PAUSE)
+    for name in ('PAUSE_SAFETY_COMPOSITE_B_u010.json','PAUSE_SAFETY.json',
+                 'PAUSE_SAFETY_COMPOSITE_A_u009.json'):
+        assert not c.released(tmp_path,tmp_path/name)
+    assert not c.report_only(tmp_path,'A')
+    with pytest.raises(h.HealthPause):c.braking(tmp_path,'A',9,episodes,references,h.pause)
+
+
+@pytest.mark.parametrize('metric',['collisions','teleports'])
+def test_any_b_event_pauses_in_both_guards_even_if_a_has_same_event(tmp_path,monkeypatch,metric):
+    setup_b(tmp_path)
+    episodes,references=records(monkeypatch,**{metric:1})
+    with pytest.raises(h.HealthPause):c.braking(tmp_path,'B',10,episodes,references,h.pause)
+    monkeypatch.setattr(h,'assert_running',lambda *args:None)
+    totals=dict(collisions=0,teleports=0);totals[metric]=1
+    with pytest.raises(h.HealthPause):
+        h.live_safety(tmp_path,'B',totals,986000,
+            dict(by_world={'986000':totals},unmatched_zero_event_benchmark=False,source='test'))
+
+
+@pytest.mark.parametrize('change',['pause','authority','seal'])
+def test_b_release_fails_closed_on_changed_binding(tmp_path,change):
+    setup_b(tmp_path)
+    if change=='pause':put(tmp_path/c.B_PAUSE,dict(changed=True))
+    elif change=='authority':(tmp_path/'AUTHORITY.md').write_text('authorized-1230')
+    else:
+        value=json.loads((tmp_path/c.B_RULE).read_text());value['arm']='R';put(tmp_path/c.B_RULE,value)
+    with pytest.raises((ValueError,AssertionError)):c.report_only(tmp_path,'B')

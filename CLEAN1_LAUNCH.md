@@ -44,3 +44,16 @@ Native completed-wave adoption reuses all R3 physics and practice references;
 sealed A/B updates are adopted, never optimized again. One lock per detached role,
 one P3 monitor, unchanged u4/u6 schedules. Local focused selection:216 passed,
 1 Windows platform skip; Linux qualification is required before resume.
+
+# Owner 14:34 B safety recovery
+
+The registered owner decision `"1"` extends report-only paired TTC/critical-event
+comparison to B. R retains its 12:30 amendment; A retains the full original rule.
+Any B/R collision or teleport still pauses. `B_SAFETY_REPORT_ONLY_1434.json`
+SHA-binds only the original `PAUSE_SAFETY_COMPOSITE_B_u009.json`; other pauses
+remain active. The latest sealed safety authorization binds the immutable
+recovery source and original launch config. Register the verbatim REGISTRATION
+entry and exact clearance procedure in AUTHORITY before publishing that receipt.
+Preserve completed episodes, checkpoints, original stops/owners and charges;
+resume only after fresh no-live-owner checks. Reuse collected B u9 episodes
+before its still-unperformed optimization, with no replay or recharge.
