@@ -44,3 +44,19 @@ python3 and exited127 before executing code; corrected to the existing absolute
 cpuV again confirms STOPPED_BY_OWNER with original owners exited, sealed A/B/R18,
 mining ledger empty and clean3 CONFIG/LAUNCHED absent. gpuA mining charge remains
 960sim-s; no new physics. Receipts RECOVERY_GPU_0222.json and RECOVERY_CPU_0223.json.
+
+## 04:31 +08 — fresh-session recovery of later on-disk work
+
+Read own history/status, required registration tail and receipts before dispatch.
+Exact parity already PASS; no replay. Adopt existing gpuA WM owners6512/start928642562
+and6514/start928642563, same boota81555d7. Two completed K8/H300 rank receipts;
+current GPU75%, no replacement worker. Prior SUMO operator batches are stopped
+with zero current verification owners. Preserve all uncommitted operator sources.
+gpuA ledger123rows/305551sim-s (SHA96c2a440c3df47836737091cd4572e3f92905cd621ec9fd98b8a90d93d51cb95),
+remaining194449/500000. Both prior MINED files empty. Bank-v2 lane examples report
+data_missing and require diagnosis before further spend; no survivor implied by
+generic first-stage 'admitted'. cpuV own ledger still empty; owner-stop confirmed,
+clean3 chain434007 waiting, LAUNCHED absent. Failed guessed interpreter invocation
+retained; successful system-python F6 read follows. No new physics or signal.
+Registration now includes owner7.3M overall cap/released plan_fix reservation and
+04:20 wider2..6-CAV WM search; mining allowance remains500000.
