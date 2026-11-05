@@ -151,6 +151,22 @@
     "action": "Read status/log, shared specification, r0 review and current readiness receipt first, followed by the independent r1 PASS, acceptance and historical blocked receipts. Both fixes and their completed regression tests are already accepted. Preserve that work and all four untracked receipts; refresh only this readiness receipt and record the latest specification's launch-profile OFF decision.",
     "verification": "Confirmed branch c4/group-credit and no tracked starting changes. git diff --exit-code 75c804e96b71c318e298788ad40bc2f069f2fb75 -- tools/coopmwm/group_credit.py tools/coopmwm/test_group_credit_cpu.py passed, confirming both files are identical to the independently accepted version. git diff --check c4/track-base -- tools/coopmwm/group_credit.py tools/coopmwm/test_group_credit_cpu.py T2E_READY.json passed. Existing completed test results retained; no tests, jobs or dispatches restarted."
   },
+  "latest_resume_confirmation": {
+    "date": "2026-11-05",
+    "starting_head": "be7a01001aedfcf17c6bc68405c79a5a6319a14e",
+    "tracked_worktree_changes_at_start": false,
+    "receipts_checked": [
+      "T2E_READY.json",
+      "REVIEW_T2E_r0.md",
+      "REVIEW_T2E_r1.md",
+      "T2E_ACCEPTED.json",
+      "T2E_READY.blocked0.json"
+    ],
+    "result": "Both r0 blockers were already fixed, regression-tested and independently accepted before this session. No implementation changes are required; preserve the existing fixes and completed test evidence.",
+    "verification": "git diff --exit-code 75c804e96b71c318e298788ad40bc2f069f2fb75 -- tools/coopmwm/group_credit.py tools/coopmwm/test_group_credit_cpu.py passed. git diff --check c4/track-base -- tools/coopmwm/group_credit.py tools/coopmwm/test_group_credit_cpu.py T2E_READY.json passed.",
+    "tests": "Retained completed results above; no test jobs or dispatches restarted, honoring the resume instruction not to redo finished work.",
+    "launch_profile": "Latest shared specification still requires WM group credit OFF; retain the accepted additive CPU/API deliverable."
+  },
   "execution": {
     "new_sim_s": 0,
     "new_dispatches": 0,
