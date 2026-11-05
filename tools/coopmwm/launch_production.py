@@ -12,6 +12,7 @@ from statistics import fmean
 import torch
 
 from . import rerun_cpus as rc, track2_backend as p1, track2_monitor as p3
+from . import track2_safety_reward as safety_reward
 
 
 # Proposed architecture/optimizer settings, bound by the final owner-approval
@@ -28,6 +29,7 @@ CONTINGENCY = dict(smoke_sim_s=10400, environment_gate_rerun_sim_s=35820)
 def backend_config(cfg, *, root=None, smoke=False):
     """Translate T2C's structured slots to P1 without changing default-off APIs."""
     rc.check_pins(cfg)
+    safety_reward.settings(cfg)
     if cfg.get('launch_optimization') != OPTIMIZATION:
         raise ValueError('explicit approval-bound production optimization required')
     out = deepcopy(cfg)
@@ -165,6 +167,7 @@ def bank_move_supervision(runtime):
 
 def monitor_config(cfg, *, root=None):
     """P2/P3 use the same boolean reward switch and registered scalar fields."""
+    safety_reward.settings(cfg)
     out = deepcopy(cfg)
     reward = cfg['track2_reward']
     out.update(run_root=str(root or cfg['run_root']), track2_reward=reward['enabled'],

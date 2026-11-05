@@ -7,6 +7,8 @@ Component registration uses cfg.group_credit.enabled / dense_teacher.enabled (bo
 default OFF) and P2's cfg.track2_reward + track2_reward_weight/provenance/arms.
 Enabled real reward consumes metrics.track2_reward, the native P2 training_episodes
 or layer_records receipt (step-mean reward sums and observable evidence counts).
+Optional f4_close_call binds its enabled registration and step-mean penalty sums;
+absent/False retains the original receipt and history contract.
 Disabled WM/dense components require explicit None scalars and zero counts. Each
 v2 row binds this registration; v1 histories retain their original WM/dense contract.
 Read everything with::
@@ -55,6 +57,7 @@ from statistics import fmean
 import threading
 
 from .protocol import digest
+from . import track2_safety_reward as safety_reward
 
 METRICS = ('group_credit_wm', 'group_credit_checked', 'dense_ce', 'dense_accuracy',
            'dense_filtered_share', 'dense_checked_accuracy', 'bank_move_ce',
@@ -69,6 +72,7 @@ COMPONENT_COUNTS = dict(group_credit=('credit_rows', 'credit_checked_rows'),
 REWARD_COUNTS = ('steps', 'cav_outcomes', 'empty_cav_steps', 'empty_neighbourhoods',
     'neighbour_outcomes', 'partner_reports', 'unavailable_partner_reports')
 REWARD_SUMS = ('own_reward_sum', 'neighbourhood_reward_sum', 'team_addition_sum', 'reward_sum')
+F4_COUNTS = ('close_call_events', 'move_exposed_cav_ticks')
 MONITOR_DEFAULTS = dict(trigger_saturation=[0., 1.], history_updates=3,
                         accuracy_tolerance=1e-6, layer_kl_near_zero=1e-8,
                         action='DIAGNOSE; pause only for safety')
@@ -163,6 +167,9 @@ def _components(cfg):
             raise ValueError('REFUSED: registered P2 reward weight/provenance/B-R arms required')
         out.update(track2_reward_weight=float(weight), track2_reward_provenance=provenance,
                    track2_reward_arms=['B', 'R'])
+        close_call = safety_reward.settings(cfg)
+        if close_call is not None:
+            out['f4_close_call'] = dict(enabled=True, registration=close_call)
     return out
 
 
@@ -188,10 +195,28 @@ def _checked_reward(arm, metrics, components):
             or receipt['empty_cav_steps'] > receipt['steps']
             or receipt['empty_neighbourhoods'] > receipt['cav_outcomes']):
         raise ValueError('REFUSED: inconsistent track2_reward observations')
+    penalty = 0.
+    close_call = safety_reward.settings(components)
+    if close_call is not None:
+        if receipt.get('close_call') != close_call:
+            raise ValueError('REFUSED: track2_reward F4 registration mismatch')
+        for key in F4_COUNTS:
+            _count(receipt.get(key), 'track2_reward.F4.'+key)
+        penalty = _number(receipt.get('close_call_penalty_sum'),
+                          'track2_reward.F4.close_call_penalty_sum', high=0)
+        events, exposed = (receipt[k] for k in F4_COUNTS)
+        # Event counts sum local domains; penalties sum equal-CAV means per
+        # step. They are NOT -weight * raw event count for multi-CAV steps.
+        if (exposed > receipt['cav_outcomes'] or (events and not exposed)
+                or (events == 0 and penalty != 0) or (events > 0 and penalty >= 0)
+                or -penalty > close_call['weight'] * events + 1e-10
+                or (events and -penalty < close_call['weight'] * events /
+                    receipt['cav_outcomes'] - 1e-10)):
+            raise ValueError('REFUSED: inconsistent track2_reward F4 event/exposure/penalty counts')
     if (not math.isclose(receipt['team_addition_sum'],
                          receipt['weight']*receipt['neighbourhood_reward_sum'], abs_tol=1e-10)
             or not math.isclose(receipt['reward_sum'],
-                receipt['own_reward_sum']+receipt['team_addition_sum'], abs_tol=1e-10)):
+                receipt['own_reward_sum']+receipt['team_addition_sum']+penalty, abs_tol=1e-10)):
         raise ValueError('REFUSED: inconsistent track2_reward sums')
 
 
@@ -386,6 +411,9 @@ def _write_status(root):
         if reward is not None:
             lines.append('  Real observable team reward: '+', '.join(
                 f'{k}={reward[k]}' for k in ('weight', 'provenance')+REWARD_COUNTS+REWARD_SUMS)+'.')
+            if 'f4_close_call' in components:
+                lines.append('  F4 observable post-move close calls: '+', '.join(
+                    f'{k}={reward[k]}' for k in F4_COUNTS+('close_call_penalty_sum',))+'.')
     for row in status['diagnostics']:
         lines.append(f"- {row['kind']} u{row['update']}: {row['status']}; dry={row['dry']}; "
                      f"quoted={row['quoted_sim_s']} sim-s; verdict={row.get('verdict', 'descriptive')}.")

@@ -71,8 +71,12 @@ def fake_load(monkeypatch):
     monkeypatch.setattr(tb, '_load_base', load)
 
 
-def reward_result(cfg, sample, arm='B', *, outcomes=None):
+def reward_result(cfg, sample, arm='B', *, outcomes=None, move_history=None):
     """Test-only P2 output from real-outcome inputs, never WM estimates."""
+    from . import track2_safety_reward as safety
+    attribution = (safety.move_attribution(sample, sample['track2']['time_s'],
+                                          {} if move_history is None else move_history)
+                   if safety.settings(cfg) is not None else {})
     outcomes = outcomes or dict(c1=1., c2=-2., h1=3.)
     registration = cfg['track2_reward']
     rows = []
@@ -82,7 +86,9 @@ def reward_result(cfg, sample, arm='B', *, outcomes=None):
                                                        if neighbours else 0.)
         rows.append(dict(episode_id='ep1', time_s=300, cav_id=vid, source='sumo',
             own_reward=outcomes[vid], neighbour_rewards=neighbours, reward=reward,
-            weight=registration['weight'], weight_provenance=registration['provenance']))
+            weight=registration['weight'], weight_provenance=registration['provenance'],
+            **(dict(close_call=safety.close_calls([], {}, first_actuation_s=attribution.get(vid)))
+               if safety.settings(cfg) is not None else {})))
     return dict(schema=tb.REWARD_SCHEMA, arm=arm, update=1, rows=rows)
 
 
@@ -284,14 +290,14 @@ def test_production_delayed_onset_full_hold_outcomes_train_originating_trigger(c
                    track2_state=p.worker_state(), noise_seed=123)
         worker, factory = tb.episode_components(job, p.layer.base, controller_class(Controller))
         controller = factory(worker, torch.Generator().manual_seed(9), False)
-        steps, reward_rows = [], []
+        steps, reward_rows, move_history = [], [], {}
         for t in range(300, 364):  # includes onset, complete hold, and next decision
             controller.apply(rows(), {'c1': 0., 'c2': 0.}, t)
             s = controller.events[-1]['sample']
             steps.append(dict(time_s=t, sample=s))
             outcome = sign if 302 <= t < 322 or t == 363 else 0.
             envelope = reward_result(cfg, s, arm,
-                outcomes={v: outcome for v in ('c1', 'c2', 'h1')})
+                outcomes={v: outcome for v in ('c1', 'c2', 'h1')}, move_history=move_history)
             for row in envelope['rows']:
                 row['time_s'] = t
             reward_rows.extend(envelope['rows'])

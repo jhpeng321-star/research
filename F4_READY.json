@@ -1,0 +1,141 @@
+{
+  "task": "F4",
+  "status": "READY",
+  "round": "fix after REVIEW_F4_r0.md",
+  "date": "2026-11-05",
+  "worktree": "E:/agent-work/c4-fix-safety-reward",
+  "branch": "c4/fix-safety-reward",
+  "base_branch": "c4/rerun-launch",
+  "base_commit": "8bf7f533",
+  "r0_reviewed_commit": "d36c596df8f11505440d0c9c4e174512722a60bb",
+  "reviewed_commit": "3b486f202198f3b7720cceba1f0df0b580da2962",
+  "independent_review": {
+    "file": "REVIEW_F4_r1.md",
+    "verdict": "PASS",
+    "reviewer": "astra",
+    "acceptance_receipt": "F4_ACCEPTED.json",
+    "resolved_r0_blockers": [1, 2],
+    "open_blockers": [],
+    "test_result": "333 passed, 1 skipped, 0 failed",
+    "duration_s": 109.88,
+    "resume_note": "Existing implementation, completed CPU checks, renewed readiness commit and independent acceptance reconciled on resume; no implementation changes or repeated test jobs were needed"
+  },
+  "commits": [
+    {
+      "sha": "b734b151f8f05050374f995ad9a04e04c62bd574",
+      "subject": "C4 F4: penalize observable post-move close calls in layer reward"
+    },
+    {
+      "sha": "d36c596df8f11505440d0c9c4e174512722a60bb",
+      "subject": "C4 F4: record CPU readiness and reward registration"
+    },
+    {
+      "sha": "cc7ae2db794a297c10155ca935c89f12b3b00879",
+      "subject": "C4 F4: gate safety reward and validate penalized monitor receipts"
+    },
+    {
+      "sha": "3b486f202198f3b7720cceba1f0df0b580da2962",
+      "subject": "C4 F4: renew readiness after blocker fixes and CPU regression checks"
+    }
+  ],
+  "resolved_blockers": [
+    {
+      "review_item": 1,
+      "problem": "Nonzero F4 penalties failed mandatory production monitor validation",
+      "fix": "Enabled monitor registration binds the fixed F4 contract, validates integer event/exposure counts and a finite nonpositive equal-CAV-mean penalty, and checks reward_sum = own_reward_sum + team_addition_sum + close_call_penalty_sum. Raw summed local event counts are not equated to the mean penalty aggregate.",
+      "regression_tests": [
+        "Real nonzero B/R envelopes flow through backend_config, update_metrics, launch_training.monitor_update, immutable publication, status reporting, and two-update history reload",
+        "A two-CAV step with one event produces penalty -0.5, not -1.0",
+        "Malformed registration, counts, exposures, nonfinite/positive/inconsistent penalty aggregates, and reward sums are rejected before publication"
+      ]
+    },
+    {
+      "review_item": 2,
+      "problem": "Existing team-reward configurations implicitly enabled F4",
+      "fix": "Common f4_close_call slot defaults off when absent or false. Attribution, penalty additions, fields, and trainer/monitor validation are gated consistently. Production adapters carry and validate the explicit registration. F4_CONTINUATION_RECIPE.json opts in and binds fixed weight/provenance for B and R; A bypasses cooperation reward.",
+      "regression_tests": [
+        "Differential tests load the actual 8bf7f533 reward, trainer, monitor, and production-adapter implementations from local git objects",
+        "Absent and false preserve JSON bytes for shaped episodes/envelopes/receipts across B/R active, idle, terminal, empty, historically unparsed move evidence, and historically unordered input cases",
+        "Historical reward targets, monitor hashes and history reload match the launch parent",
+        "Real CPU B/R updates preserve exact policy tensors, optimizer states and serialized learning receipts against the launch parent with F4 absent or false",
+        "Enabled B/R reward/evidence parity, explicit continuation recipe binding, invalid registration rejection, and A bypass are exercised"
+      ]
+    }
+  ],
+  "registration": {
+    "api": "tools.coopmwm.track2_safety_reward.registration()",
+    "settings_api": "tools.coopmwm.track2_safety_reward.settings(cfg)",
+    "enable_slot": "f4_close_call",
+    "default": false,
+    "enabled_value": "{enabled: true, registration: track2_safety_reward.registration()}",
+    "continuation_recipe": "F4_CONTINUATION_RECIPE.json config_patch",
+    "schema": "coopmwm-f4-close-call-v1",
+    "threshold_s": 1.5,
+    "comparison": "strict TTC < threshold",
+    "weight": 1.0,
+    "weight_units": "reward-seconds per observed pair-event per 1-second control tick",
+    "provenance": "MAIN 2026-11-05 15:15 F4; implementation registration: 1.0 speed-deficit reward-second per pair-event; fixed before tests, no tuning",
+    "weight_authority_note": "The task specified TTC<1.5s but no numerical weight; unit weight is explicitly implementation-supplied, fixed and untuned",
+    "arms": ["B", "R"],
+    "attribution": "Temporal exposure after the first nonzero library offset of a currently active accepted commitment; episode-local history and exclusive expiry",
+    "aggregation": "Local per-CAV event/exposure counts are summed; penalty aggregates retain equal-acting-CAV mean per step"
+  },
+  "api": {
+    "settings": "None for absent/false; independent fixed registration copy for exact enabled slot; invalid or arm-specific registrations rejected",
+    "neighbourhood_reward": "Default output is the legacy reward contract; explicit close_call_enabled=True adds close_call evidence and penalty using first_actuation_s",
+    "training_episodes_and_reward_update": "Only enabled F4 derives move attribution and adds safety cost/fields; original episode objects and base rewards are preserved",
+    "production_trainer": "Only enabled F4 validates registered atomic pair evidence and penalty before unchanged full-rollout returns and PPO",
+    "production_adapters": "backend_config and monitor_config validate and preserve the common explicit slot",
+    "monitor": "Enabled registration and penalty arithmetic are checked on publication and history reload; absent/false preserves legacy component hashes and validation"
+  },
+  "tests": [
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_f4_safety_reward_cpu.py tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_launch_integration_cpu.py tools/coopmwm/test_track2_monitor_cpu.py tests/unit/test_track2_reward.py -o cache_dir=_out/f4-fix-cache --basetemp=E:/agent-work/c4-fix-safety-reward/_out/f4-fix-suite",
+      "environment": {"CUDA_VISIBLE_DEVICES": "", "PYTHONDONTWRITEBYTECODE": "1"},
+      "result": "333 passed, 1 skipped",
+      "duration_s": 116.54,
+      "skip_reason": "Existing Windows file-symlink privilege check at test_launch_integration_cpu.py:526",
+      "new_fix_round_cases": 57
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m ruff check tools/coopmwm/track2_safety_reward.py tools/coopmwm/test_f4_safety_reward_cpu.py",
+      "result": "passed, exit 0"
+    },
+    {
+      "command": "git diff --cached --check",
+      "result": "passed before implementation commit"
+    }
+  ],
+  "files": [
+    "tools/coopmwm/track2_safety_reward.py",
+    "tools/coopmwm/track2_reward.py",
+    "tools/coopmwm/track2_backend.py",
+    "tools/coopmwm/track2_monitor.py",
+    "tools/coopmwm/launch_production.py",
+    "tools/coopmwm/test_f4_safety_reward_cpu.py",
+    "tools/coopmwm/test_track2_backend_cpu.py",
+    "F4_SAFETY_REWARD.md",
+    "F4_CONTINUATION_RECIPE.json",
+    "F4_READY.json"
+  ],
+  "execution": {
+    "cpu_only": true,
+    "new_sim_seconds": 0,
+    "ssh_used": false,
+    "SUMO_run": false,
+    "GPU_used": false,
+    "remote_config_changed": false,
+    "restricted_data_read": false
+  },
+  "integration_notes": [
+    "F4 is explicitly enabled only by the common continuation recipe; original team-reward configurations remain default-off for this addition",
+    "Existing production configuration/source bindings must include the continuation slot and amended source revision",
+    "Monitor registration remains immutable within each history; retain pre-F4 history and use a separately registered monitor sequence for the changed objective"
+  ],
+  "limitations": [
+    "Post-move attribution is temporal and does not establish a move-versus-none causal effect",
+    "Only authorized observable pairs count; terminal CAV exits preserve the measured-zero rule without fabricated coverage",
+    "The aggregate monitor checks consistency bounds; exact per-CAV TTC/count/penalty evidence is validated at the trainer edge"
+  ],
+  "open_issues": []
+}
