@@ -15,7 +15,10 @@
     "unresolved_blockers": [],
     "fix": "Retain the real t-1 observer view for certificate geometry and reconstructed teacher sensor/partner features. Use t only for actor presence/eligibility, and carry certified decision availability into candidate generation.",
     "regressions": "Real EpisodePolicy/IntentPolicy observers with changing positions and speeds, stationary controls, exact proposer/time/macro, stale/missing/mismatched evidence, absent/inactive actors, reserved-visible CAVs, and enabled manifest-to-F3-to-trigger learning/rejection for both B and R.",
-    "independent_rereview": "pending"
+    "independent_rereview": "PASS",
+    "independent_rereview_artifact": "REVIEW_G1_r1.md",
+    "independent_rereview_head": "4718f00041d71b9f81310c3c87d772975105d941",
+    "acceptance_receipt": "G1_ACCEPTED.json"
   },
   "commits": [
     {
@@ -33,6 +36,10 @@
     {
       "sha": "6a3e3d67fe1ad980d529d0e41e298e3bfb20b0ef",
       "subject": "C4 G1: preserve causal certified replay for moving lessons"
+    },
+    {
+      "sha": "4718f00041d71b9f81310c3c87d772975105d941",
+      "subject": "C4 G1: renew CPU readiness after review r0 fix"
     }
   ],
   "files": [
@@ -116,11 +123,31 @@
     "targeted_intermediate_run": "57 passed before adding the final availability and enabled rejection cases",
     "incomplete_attempt": "An initial five-file invocation returned partial progress without a final summary; it is not counted as passing. The recorded full rerun with explicit exit code and JUnit artifact completed successfully.",
     "quote_cli": "passed; printed 153600 preferred and 230400 maximum sim-s, with zero execution",
-    "git_diff_check": "passed"
+    "git_diff_check": "passed",
+    "independent_rereview": {
+      "artifact": "REVIEW_G1_r1.md",
+      "suite_passed": 249,
+      "suite_skipped": 1,
+      "suite_failed": 0,
+      "suite_duration_s": 162.44,
+      "default_off_identity_passed": 2,
+      "default_off_identity_duration_s": 10.56,
+      "total_passed": 251,
+      "total_skipped": 1,
+      "total_failed": 0,
+      "identity_checks": "B/R receipts, model and optimizer tensors, and RNG states match pre-G1 revision 6dc0520c99f0bccd71669e66d2c4124197db990d"
+    }
+  },
+  "resume_reconciliation": {
+    "initial_head": "4718f00041d71b9f81310c3c87d772975105d941",
+    "implementation_changes_required": false,
+    "evidence": "Committed r0 fix and B/R real-observer regressions match the independent r1 PASS for the exact resumed HEAD; original full-suite JUnit receipt confirms 249 passed, 1 skipped, zero failures/errors",
+    "completed_tests_repeated": false,
+    "new_jobs_or_dispatches": false,
+    "preserved_prior_readiness": "G1_READY.blocked0_1793894069.json"
   },
   "open_issues": [],
   "later_authorized_handoff": [
-    "Independent re-review of this fix round is pending",
     "Collect ordinary TRAIN contexts and exact two-seed restart/CRN bindings prospectively; CPU tests do not provide real certified lessons",
     "A later authorized SUMO adapter must execute the explicit G1 engine contract, including common base/background, full CRN alignment and issued-command audit; no legacy native-plan job is automatically treated as executable certification",
     "Publish a balanced recomputable manifest and stage it with the runtime source/config binding at the registered update boundary"
