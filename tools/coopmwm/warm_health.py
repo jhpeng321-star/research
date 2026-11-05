@@ -95,6 +95,11 @@ def safety_reference(records):
 def live_safety(root,arm,totals,world,reference):
     if arm not in ('B','R'):return
     assert_running(root,arm)
+    from .composite_health import r_report_only
+    if r_report_only(root,arm) and any(totals[k]>0 for k in ('collisions','teleports')):
+        pause(root,'SAFETY',dict(world=world,arm=arm,
+            totals={k:totals[k] for k in ('collisions','teleports')},
+            source='MAIN2026-11-05 12:30; R any collision/teleport still pauses'))
     baseline=reference['by_world'].get(str(world))
     if baseline is None:
         if not reference['unmatched_zero_event_benchmark']:

@@ -29,3 +29,18 @@ Coverage correction before further qualification: use the complete same-arm veri
 Native-template correction: a nearest negative-box move label of `none` does not imply a verified native plan has zero offsets. Signed positive/oscillating source waveforms remain eligible for offline augmentation through fitted coordinates in the existing windows; online move vocabulary and all8 admission do not change. The bounded continuation retains all four measured candidates per arm and adds exactly two per arm, for six total each. 50,400 spent +67,200 conservative remaining =117,600 within the unchanged143,280 phase. The final runtime also publishes complete fsynced JSON receipts atomically for detached-arm barriers.
 
 Windows full integration selection: **1090 passed, 1 platform skip, 14 subtests passed**, 430.38s. All required accepted component, launch/effective-imitation and V2V suites were included. The skipped symlink-ledger case is scheduled on cpuV before physics. Live smoke and safety gate remain mandatory; this document is not a launch receipt.
+
+## Owner12:30 safety recovery
+
+`launch_recovery` runs over the unchanged qualified CONFIG/smoke/gate and validates
+a separate SHA-bound immutable recovery source manifest. Only `composite_health`
+and `warm_health` change executable behaviour: R's full paired comparison is
+reported, preserving `release=false` when statistically worse, but permits the
+update; ANY R collision/teleport still pauses. A/B retain their original rules.
+The exact original R u3 pause remains on disk and is SHA-released by the registered
+owner amendment. Exact STOP/FAULT, original owner receipts and unoptimized R3
+STARTED receipt are preserved in the recovery control before continuation.
+Native completed-wave adoption reuses all R3 physics and practice references;
+sealed A/B updates are adopted, never optimized again. One lock per detached role,
+one P3 monitor, unchanged u4/u6 schedules. Local focused selection:216 passed,
+1 Windows platform skip; Linux qualification is required before resume.
