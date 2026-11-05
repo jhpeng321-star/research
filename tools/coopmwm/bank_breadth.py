@@ -154,6 +154,7 @@ def mined_move(plan):
     if plan.get('g5_move') or plan.get('uses_lane_actions'):
         from .group_lane import from_plan as g5
         return g5(plan)
+    from . import moves
     from .plans import acceleration_at
     duration = plan.get('duration_s')
     if not plan.get('members') or type(duration) is not int or duration <= 0:

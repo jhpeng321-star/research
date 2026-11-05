@@ -359,3 +359,14 @@ def test_mined_smoke_check_a_to_d_and_fairness(monkeypatch):
     found['B'][0]['executable'] = False
     with pytest.raises(ValueError, match=r'\(a\)'):
         cm.smoke_check({}, [update('B'), update('R')], 'x')
+
+
+def test_mined_move_binds_acceleration_wall_plans_unpatched(monkeypatch):
+    from tools.coopmwm import bank_breadth, moves
+    plan = dict(id='w', members=['a', 'b', 'c', 'd'], duration_s=3,
+                profile=[[0.1]*3, [0.2]*3, [0.3]*3, [0.4]*3])
+    seen = []
+    monkeypatch.setattr(moves, 'from_plan', lambda p: seen.append(p) or 'wall-move')
+    assert bank_breadth.mined_move(plan) == 'wall-move' and seen == [plan]
+    with pytest.raises(ValueError, match='members'):
+        bank_breadth.mined_move(dict(plan, members=[]))
