@@ -105,6 +105,8 @@ def _check(cfg, arm):
     if arm != 'A':
         from .coordination_opportunities import settings as opportunity_settings
         opportunity_settings(cfg)
+        from .sparse_synergy_credit import settings as synergy_settings
+        synergy_settings(cfg)
         from .track2_safety_reward import settings as close_call_settings
         close_call_settings(cfg)
         if not cfg.get('merge_features', False):
@@ -517,10 +519,8 @@ def _load_base(cfg, arm, update):
     return load_checkpoint(path, config=cfg)
 
 
-def _reserve(cfg, jobs, phase):
-    """The clean run's OWN ledger, with the parent's <=5M phase allocations."""
-    import fcntl
-    from tools.coopnative import storage
+def reservation_limits(cfg):
+    """Shared limits for native waves and the atomic G4 paired transaction."""
     budget = cfg['budget']
     total = budget['total']
     if type(total) is not int or total > 5000000 or total <= 0:
@@ -536,8 +536,16 @@ def _reserve(cfg, jobs, phase):
     artifacts = _path(cfg['run_root']).resolve()
     if artifacts != root.resolve() and artifacts.parent != root.resolve():
         raise ValueError('accounting parent must own the isolated smoke artifacts')
+    return root, total-prior, budget['phases']
+
+
+def _reserve(cfg, jobs, phase):
+    """The clean run's OWN ledger, with the parent's <=5M phase allocations."""
+    import fcntl
+    from tools.coopnative import storage
+    root, cap, phases = reservation_limits(cfg)
     reserve = types.FunctionType(storage.reserve.__code__, dict(storage.reserve.__globals__,
-        CAP=total-prior, CAPS=budget['phases']))
+        CAP=cap, CAPS=phases))
     with (root/'ACCOUNTING.claim').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         return reserve(root, jobs, phase)
@@ -630,8 +638,12 @@ class ArmRuntime:
                     if not getattr(practice_weighting, 'VERIFIED_CHILDREN', False):
                         raise ValueError('SUMO-verified augmentation dependency required before collection')
                 fraction = effective_fraction(cfg)
-                want = (ps.realised_count(cfg['run_root'], 'B', u) if arm == 'R'
-                        else ps.practice_count(len(worlds), fraction))
+                if arm == 'R':
+                    from .g4_runtime import enabled, paired_practice_count
+                    want = (paired_practice_count(cfg, u) if enabled(cfg, u)
+                            else ps.realised_count(cfg['run_root'], 'B', u))
+                else:
+                    want = ps.practice_count(len(worlds), fraction)
                 plan = ps.plan_for_update(cfg['run_root'], arm, u, fraction=fraction,
                     repeat_cap=cfg['practice_repeat_cap'], count=want, training_seed=cfg['training_seed'],
                     breadth_cfg=cfg,
@@ -710,7 +722,7 @@ class ArmRuntime:
         return dict(status='checked', normal_references=len(normal), practice_references=len(pairs),
                     new_reference_sim_s=1200*len(pairs))
 
-    def train(self, episodes, *, rewards=None, credit=(), labels=()):
+    def train(self, episodes, *, rewards=None, credit=(), labels=(), synergy=None):
         """Consume P2 reward_update(cfg, arm, update, episodes) output.
 
         The integration envelope is {schema=REWARD_SCHEMA, arm, update, rows}.
@@ -730,6 +742,8 @@ class ArmRuntime:
             raise ValueError('clean run requires dense labels and WM credit OFF')
         if any(e['arm'] != arm for e in episodes):
             raise ValueError('episode arm mismatch')
+        from .sparse_synergy_credit import trigger_terms
+        synergy_terms, synergy_receipt = trigger_terms(cfg, arm, self.update, episodes, synergy)
         if arm == 'A':
             from .accel_learner import update
             return dict(ppo=update(self.base, self.optimizer, episodes, self.generator),
@@ -752,6 +766,11 @@ class ArmRuntime:
                     and not s.get('behaviour', {}).get('executed')}
         if not eligible:
             raise ValueError('B/R layer update requires stochastic own-action samples')
+        if synergy_terms:
+            trigger_rows = {(*key, vid) for key in eligible if 'track2_trigger' in by_key[key]
+                            for vid in by_key[key]['context']['members']}
+            if not set(synergy_terms) <= trigger_rows:
+                raise ValueError('G4 initiating macro has no eligible on-policy PPO row')
         if rewards is None:
             try:
                 from .track2_reward import reward_update
@@ -777,8 +796,12 @@ class ArmRuntime:
             batch = _batch(sample['track2_trigger'])
             before = deepcopy(self.policy.trigger.state_dict())
             optimizer = deepcopy(self.policy.trigger_optimizer.state_dict())
+            trigger_advantage = advantages[key]
+            if synergy_receipt is not None:
+                trigger_advantage = [value + synergy_terms.get((*key, vid), 0.)
+                    for vid, value in zip(sample['context']['members'], advantages[key])]
             metrics = ppo_update(self.policy.trigger, self.policy.trigger_optimizer, batch,
-                advantages[key], returns[key], **cfg['trigger_ppo'])
+                trigger_advantage, returns[key], **cfg['trigger_ppo'])
             kl = self._trigger_kl(reference)
             accepted = math.isfinite(kl) and kl <= self.policy.layer.config.kl_budget
             if not accepted:
@@ -800,7 +823,8 @@ class ArmRuntime:
         self.policy.trigger_optimizer.zero_grad(set_to_none=True)
         from .track2_safety_reward import settings as close_call_settings
         close_call = close_call_settings(cfg)
-        return dict(layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),
+        return dict(**(dict(g4_synergy_credit=synergy_receipt) if synergy_receipt is not None else {}),
+            layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),
             wm_credit=dict(enabled=False), reward=dict(schema=REWARD_SCHEMA,
                 registration=deepcopy(cfg['track2_reward']),
                 **(dict(close_call=close_call) if close_call is not None else {}),

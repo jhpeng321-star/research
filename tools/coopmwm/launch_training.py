@@ -125,13 +125,19 @@ def update(cfg, arm, u, *, smoke=False):
     artifacts = root/'smoke' if smoke else root
     native = production.backend_config(cfg, root=artifacts, smoke=smoke)
     native['update'] = u
+    from . import g4_runtime as g4
+    paired_credit = arm != 'A' and g4.enabled(native, u, smoke=smoke)
     health(root)
     if not smoke and u > 1:
         wait_for(root/f'LEARNING_MONITOR_u{u-1:03}.json', root)
     if arm != 'A':
         wait_for(artifacts/f'A_UPDATE_{u:03}.json', root)
-    if arm == 'R':
+    if arm == 'R' and not paired_credit:
         wait_for(artifacts/f'B_UPDATE_{u:03}.json', root)
+    if arm == 'R' and paired_credit:
+        # B has frozen its practice plan/count before R starts; neither arm
+        # optimizes until both complete ordinary-training inputs are published.
+        wait_for(g4.input_path(native, 'B', u), root)
     started = dict(arm=arm, update=u, pid=os.getpid(), unix=time.time(),
                    config_sha256=digest(cfg), smoke=smoke)
     write(artifacts/f'updates/{arm}_{u:03}_STARTED.json', started)
@@ -145,7 +151,12 @@ def update(cfg, arm, u, *, smoke=False):
     safety = hooks['safety'](episodes)  # unchanged paired A composite BEFORE optimization
     health(root)
     envelope = p2.reward_update(native, arm, u, episodes) if arm != 'A' else None
-    learning = hooks['train_update'](episodes, rewards=envelope)
+    if paired_credit:
+        synergy = g4.paired_envelope(native, arm, u, episodes,
+            wait=lambda path: wait_for(path, root))
+        learning = hooks['train_update'](episodes, rewards=envelope, synergy=synergy)
+    else:
+        learning = hooks['train_update'](episodes, rewards=envelope)
     if arm != 'A':
         bank = production.bank_move_supervision(hooks['runtime'])
         learning.update(bank_move_ce=bank['final_ce'], bank_trigger=bank)

@@ -1,0 +1,131 @@
+{
+  "task": "G4",
+  "status": "READY_FOR_REVIEW_CPU_VERIFIED",
+  "fix_round": 1,
+  "worktree": "E:/agent-work/c4-grp-credit",
+  "branch": "c4/grp-credit",
+  "base_branch": "c4/rerun-launch",
+  "starting_commit": "ddc790cd51fd8ec644ba448718a6122d7abec429",
+  "review": "REVIEW_G4_r0.md",
+  "commits": [
+    {
+      "sha": "5cc2827224aba8d02897a40e9e66dc72734aafee",
+      "subject": "C4 G4: add sparse measured macro synergy credit"
+    },
+    {
+      "sha": "ddc790cd51fd8ec644ba448718a6122d7abec429",
+      "subject": "C4 G4: record CPU verification and integration handoff"
+    },
+    {
+      "sha": "989e0422d6717a191a17e9655d863c109d652d19",
+      "subject": "C4 G4: wire durable paired synergy measurement into production"
+    }
+  ],
+  "ready_receipt_commit": "The subsequent commit updating this file; discover with git log --oneline -- G4_READY.json",
+  "blockers_addressed": [
+    {
+      "review_item": 1,
+      "priority": "P1",
+      "summary": "Executable default-off production path from ordinary joint boundaries to measured proposer-only macro credit",
+      "implementation": [
+        "accel_plant installs BoundaryCapture before policy observation/sampling; publishes immutable pre-action prefix, causal controller/RNG state, policy bindings and ordinary-training provenance",
+        "launch_training collects B and R before either optimizer, using B's pre-optimization input for R's realized practice count; both runtimes receive the same paired envelope",
+        "launch_production derives the fixed 230400 sim-s G4 phase from owner-bound existing slack or explicit phase debits without increasing the global cap or protected prior allowance",
+        "Coordinator atomically commits the complete paired plan, cumulative state and every branch charge under the existing ACCOUNTING.claim lock in CHARGES.jsonl; preserves all prior ledger bytes",
+        "Production worker runs the native accel_plant/V2V/request/safety ownership path for group/base/every-member-solo with matched seedwise CRN, exact prefix checks and full 1200-second replay/window",
+        "Original macro roles, expiry and actor-local sensing/t-1 V2V release semantics are preserved; suffix background/future decisions use the frozen common base",
+        "Complete measured receipts are validated before PPO; no-sample envelopes are explicit and no WM fallback exists",
+        "Restart adopts only identical completed inputs/envelopes; incomplete reserved attempts cannot be redispatched or recycled and remain charged in subsequent updates",
+        "Native jobs/g4_<hash>/RESULT.json artifacts and zero-cost empty-update completion markers preserve ledger reconciliation"
+      ],
+      "regression_tests": "tools/coopmwm/test_g4_runtime_cpu.py"
+    }
+  ],
+  "files": [
+    "tools/coopmwm/g4_runtime.py",
+    "tools/coopmwm/test_g4_runtime_cpu.py",
+    "tools/coopmwm/sparse_synergy_credit.py",
+    "tools/coopmwm/track2_backend.py",
+    "tools/coopmwm/accel_plant.py",
+    "tools/coopmwm/launch_training.py",
+    "tools/coopmwm/launch_production.py",
+    "G4_SPARSE_SYNERGY_CREDIT.md",
+    "G4_READY.json"
+  ],
+  "api": {
+    "g4_runtime.enabled(cfg, update, smoke=False)": "Default-off prospective ordinary-training activation",
+    "g4_runtime.allocate_budget(cfg)": "Owner-bound fixed-cap native budget allocation, after canonical parent validation",
+    "g4_runtime.BoundaryCapture.for_job(job, controller, prefixes)": "Production pre-action capture hook; returns None for disabled/practice/deterministic/reference jobs",
+    "g4_runtime.paired_practice_count(cfg, update)": "Read B's bound realized practice count before its optimizer",
+    "g4_runtime.paired_envelope(cfg, arm, update, episodes, wait=...)": "Production detached-owner collection barrier and common-envelope delivery",
+    "g4_runtime.Coordinator(cfg).measure(update, episodes_by_arm)": "Durable all-or-nothing paired reservation, dispatch, validation and restart adoption",
+    "g4_runtime.run_branch(job, cfg)": "Native full-prefix/full-window fixed-macro worker adapter",
+    "g4_runtime.load_capture(job, cfg)": "Verify immutable capture bytes and prefix/CRN/policy bindings before replay",
+    "sparse_synergy_credit.registration/plan_update/measured_envelope/trigger_terms": "Existing pure planning, arithmetic and PPO-edge validation contracts",
+    "ArmRuntime.train(episodes, rewards=..., synergy=envelope)": "Real temporal-return PPO with the signed measured term added only to each initiating trigger advantage"
+  },
+  "registration": {
+    "default": false,
+    "arms": ["B", "R"],
+    "sampling": "Outcome-blind 1-in-16 hash; paired per-update counts matched by actor arity",
+    "max_starts_per_arm_over_phase": 8,
+    "verification_seeds": [1, 2],
+    "seed_rule": "Seed 1 restores captured generator state; seed 2 uses a deterministic capture-CRN-hash/registered-seed suffix stream; all masks share each stream and the exact world/prefix",
+    "branches": "group + base + every original member solo",
+    "window": "macro boundary through 1200 seconds; every replay includes the complete prefix",
+    "charged_sim_s_per_branch": 1200,
+    "two_actor_full_quote_sim_s": 153600,
+    "hard_cap_sim_s": 230400,
+    "synergy": "mean_seed(min_member J_solo - J_group), retaining negative and zero values",
+    "advantage": "clip(synergy_veh_s / accel_learner.UNIT, -1, +1) * 1.0",
+    "normalization_veh_s": 10000.0,
+    "unsampled_credit": 0.0,
+    "wm_fallback": false,
+    "u24_criterion_changed": false,
+    "active_launch_profile_modified": false
+  },
+  "tests": [
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -o cache_dir=.pytest_cache --basetemp=E:/agent-work/c4-grp-credit/_out/g4_fix_verified tools/coopmwm/test_g4_runtime_cpu.py tools/coopmwm/test_sparse_synergy_credit_cpu.py tools/coopmwm/test_track2_backend_cpu.py tests/unit/test_track2_reward.py tools/coopmwm/test_f4_safety_reward_cpu.py tools/coopmwm/test_launch_integration_cpu.py tools/coopmwm/test_launch_clean2_cpu.py tools/coopmwm/test_clean2_safety_guard_cpu.py",
+      "result": "309 passed, 1 skipped in 200.29s",
+      "skip": "Existing test_launch_integration_cpu.py Windows file-symlink privilege check; production cpuV qualification covers that platform capability"
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m ruff check --no-cache tools/coopmwm/g4_runtime.py tools/coopmwm/test_g4_runtime_cpu.py tools/coopmwm/sparse_synergy_credit.py tools/coopmwm/track2_backend.py tools/coopmwm/accel_plant.py tools/coopmwm/launch_training.py tools/coopmwm/launch_production.py",
+      "result": "passed, exit 0"
+    },
+    {
+      "command": "git diff --check; git diff --cached --check",
+      "result": "passed"
+    }
+  ],
+  "test_environment": {
+    "CUDA_VISIBLE_DEVICES": "-1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "temporary_artifacts": "Only this worktree's _out/ directory"
+  },
+  "new_verification_coverage": [
+    "Actual launch_training.update for B/R through real capture/coordinator/worker/PPO with explicit toy physics",
+    "No manufactured G4 captures or envelopes and no replacement of _temporal_targets in the end-to-end cases",
+    "Measured joint, no-sample, reservation-failure and worker-failure paths",
+    "Both inputs published before optimization; same paired plan delivered to B/R; actual optimizer state and frozen-base checks",
+    "Completed and failed restart behavior, cumulative state across subsequent updates and no redispatch",
+    "Immutable capture tampering, exact pre-action prefix/sample bounds and actor-local wall release",
+    "Canonical production config translation, fixed-cap allocation and smoke exclusion",
+    "Remaining-owner-budget refusal, already-spent debit refusal and interrupted atomic writes",
+    "Full paired precharge before first worker and byte-identical preservation of existing ledger prefix",
+    "Absent/False default-off worker compatibility without new required job fields"
+  ],
+  "execution": {
+    "cpu_only": true,
+    "sumo_runs": 0,
+    "ssh_calls": 0,
+    "gpu_runs": 0,
+    "simulation_charge_sim_s": 0,
+    "physics_verification_scope": "Explicit CPU toy physics; production adapters implemented but no simulator/deployment or effectiveness run performed"
+  },
+  "open_issues": []
+}
