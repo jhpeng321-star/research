@@ -1,0 +1,4387 @@
+{
+  "allocated_sim_s": 3241440,
+  "arms": [
+    "A",
+    "B",
+    "R"
+  ],
+  "available_after_prior_and_plan_fix_sim_s": 2505360,
+  "cumulative_upper_bound_at_observed_prefix_sim_s": 6736080,
+  "diagnostic_costs": {
+    "probe_u002": 22740,
+    "probe_u004": 22740,
+    "replicated_u006": 47920,
+    "replicated_u012": 47920,
+    "replicated_u024": 47920
+  },
+  "diagnostic_quotes": {
+    "probe_u002": {
+      "accounting": null,
+      "binding": {
+        "arms": [
+          "A",
+          "B",
+          "R"
+        ],
+        "bootstrap": {
+          "level": 0.95,
+          "method": "percentile",
+          "reps": 10000,
+          "seed": 20261104
+        },
+        "cell_cap": 97830,
+        "criterion_sha256": "caead1bd73c5cd571b3a8263c69c0be5402ad8605c19eb55acd5e336cf46285b",
+        "phase": "early_probes",
+        "phase_cap": 586980,
+        "registration_sha256": "c0a6c035aeb815d76eedfecb8527632e68ceef48aa297bc4eb5718dc63512fc7"
+      },
+      "branch_manifest": [
+        {
+          "branch_sha256": "d302e89a69cb9f86bd20a623b8923c8fa6be8a780093b2a61f872e5be3cd7562",
+          "id": "p3_probe_u002_A_r000_s000_b00",
+          "sim_s": 600,
+          "snapshot_sha256": "f25b7ca639fe3de8a0eba14bdea5066878710ab08e87c9a74e3b4669dcb37564",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "4f63979fb05cfee7e1d07aa3d3116a0a01b9a147480dc10730f12aeca2d0b1f8",
+          "id": "p3_probe_u002_A_r000_s000_b01",
+          "sim_s": 600,
+          "snapshot_sha256": "2bbc7dfe122b964753e649f78290a562820bc82f31220fc5b6b3d89a3775329e",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "ba2fa5a579978a3da0facfe09b643d828692aadcc1a37b85e9df7cff89558ee7",
+          "id": "p3_probe_u002_A_r000_s000_b02",
+          "sim_s": 600,
+          "snapshot_sha256": "64dcb65d3fcd90c9c7230d984bea8254b3ebeaeff09a29df57af4fc41efc4688",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "4e2edbc5b78f64709d7fb0081003b08cf8b935fe9d8e028bed15d5e20dbf7d5d",
+          "id": "p3_probe_u002_A_r000_s000_b03",
+          "sim_s": 600,
+          "snapshot_sha256": "f25b7ca639fe3de8a0eba14bdea5066878710ab08e87c9a74e3b4669dcb37564",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "f498b82609f9aa35b94ae43da679301ecfdb7e652cb73a3283bcc083e8274428",
+          "id": "p3_probe_u002_A_r000_s001_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "2a6818cb90d8f073cd0a2f5bb1c371672c1500fe3cdfa92c35cd86f363cdddd8",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "f50040f29ef7aeb763607ae7f15bfa1af631e9dea13fdcb1ac32cbd850ddd9a6",
+          "id": "p3_probe_u002_A_r000_s001_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "4be83a8c237a30ae38ef6f9844617d8c5c9f37184b91c2cc05cd37aa9576ac28",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "c903d62de7a2e55f6c86e1488386159c786e928826e4c989da20d6d3177e17c7",
+          "id": "p3_probe_u002_A_r000_s001_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "89d2027605d6a8d785f325d80106a9d5eba544d3c00fefda2b4d1b378fa9c6be",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "1d17b234b244b959d99fc4ca6c9c2528f4a281804f830784841b3ead8d42efa1",
+          "id": "p3_probe_u002_A_r000_s001_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "2a6818cb90d8f073cd0a2f5bb1c371672c1500fe3cdfa92c35cd86f363cdddd8",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "fd384350284640df1677d5d6209e875fdc882075c18c3dcbcba324712373af37",
+          "id": "p3_probe_u002_A_r000_s002_b00",
+          "sim_s": 460,
+          "snapshot_sha256": "654b65069e48df942cd4eee94e740b2127ce3bb11a8247ef4e891987d0d01e68",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "5ce4a49d49a627503d9fb474c2d68181952b30cd630dfd3e0fb9a78e223fca9f",
+          "id": "p3_probe_u002_A_r000_s002_b01",
+          "sim_s": 460,
+          "snapshot_sha256": "9464cb4ab629f0b17ba0bf810f384c337fb03f8fbef3546c85afb9d0c79be404",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "63a9b3c521980f286171e313ed2160ea622bbe069a49ababb621dace0e740471",
+          "id": "p3_probe_u002_A_r000_s002_b02",
+          "sim_s": 460,
+          "snapshot_sha256": "f233fc0b8e6994228196e8fe798d317a2bb89805f463d105e8e9be262516baa8",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "a157bab8e45e61f0066a1d40cf1c01a76ad633892c5157f8375027b3a8c7b14e",
+          "id": "p3_probe_u002_A_r000_s002_b03",
+          "sim_s": 460,
+          "snapshot_sha256": "b256a50715ddeee5304063600e8f6fe21b0d7ff73e41179bcf6fb722753d4c0b",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "c1926d61672e73c1b0749817aee6bf1eca895b3313fa142b76cdb7dbbffcdd7f",
+          "id": "p3_probe_u002_A_r000_s002_b04",
+          "sim_s": 460,
+          "snapshot_sha256": "654b65069e48df942cd4eee94e740b2127ce3bb11a8247ef4e891987d0d01e68",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "766f79145c8da9453d61611463f6797677f7b17bdc0706a954a3c5ebfe97113e",
+          "id": "p3_probe_u002_B_r000_s000_b00",
+          "sim_s": 600,
+          "snapshot_sha256": "28ed20f81bea9d27b570b8405eba1ee7f4c8d6ea76294ff3e04989b02328f270",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "a3c1dc275c0d8da59d17865df85bc8efeef66d21245b3a15244f52fbe210fec1",
+          "id": "p3_probe_u002_B_r000_s000_b01",
+          "sim_s": 600,
+          "snapshot_sha256": "54edf865895e5731d74147d16ca4aa9691dc18f402b4f04a17ec1e85c31fcee3",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3f4ef257c23f32c22afc5807d8197e8980841134673d6c8a16eac501dab59585",
+          "id": "p3_probe_u002_B_r000_s000_b02",
+          "sim_s": 600,
+          "snapshot_sha256": "8f6116d9f1a4975084317d885d4f6baa23d69fcf68821eaa739777fc3e6010d6",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "06056206f6d288df03c159d3f038f0ba7ab8523e7c2944690b498ab18db38b1a",
+          "id": "p3_probe_u002_B_r000_s000_b03",
+          "sim_s": 600,
+          "snapshot_sha256": "b27ec751af0b1a81dbb0a144b8cfa63e04910e31c1b7e9298313e0f905708e33",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "a39c367dcd5e746b4983d0554c4a309ac5949029bc2d647f214ae6c86b54bea7",
+          "id": "p3_probe_u002_B_r000_s001_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "26217176ca31b7b618f96a08acf91d9a7346a74420702d0dbd8bd87f03c8478f",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "9199890f1df4c4821f15c06b666fe6238c5136f1dd2f55408ad052e30534136a",
+          "id": "p3_probe_u002_B_r000_s001_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "10e07273805789e645778971e9a50b6b3ecd4b8c732e915c1c886aa349dca02b",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "8aa92acbffc3efbfb2286775dab836a06eb492c269d7a3017959586ea6d27328",
+          "id": "p3_probe_u002_B_r000_s001_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "0b9030e6c73f239a6f475f520b5b0ad7c6f09f326eed3e146052e1d4e07c8757",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "7c675a016f9b8131d16a0b12bc92b72388086d13cdde2c01f62660531a7e96c6",
+          "id": "p3_probe_u002_B_r000_s001_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "608941115d7846aa8397d1a2d1b95f42e7aae053a353dae37aada34281a410cf",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "88993e0f159ac4e06def11dcf746da78f0cd04ccc19b313643a1c83a454422bf",
+          "id": "p3_probe_u002_B_r000_s002_b00",
+          "sim_s": 460,
+          "snapshot_sha256": "ae6aeaa3136d9f10d6e5a2d0476fec48253bc3a0f5cfc9387841b4ade76dc313",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "41245399b458dbc162969f7d4f6e1d6ad00ffee989a19595367d19496fe23d50",
+          "id": "p3_probe_u002_B_r000_s002_b01",
+          "sim_s": 460,
+          "snapshot_sha256": "2315616c39179e4f9fe2cd358b46445029e73d0138481c7e35b0996901fc4ec5",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "09d84fc0d774f18bcca48bc7c12f28920c39a1700af7fa5e54be1b9912fb8d8a",
+          "id": "p3_probe_u002_B_r000_s002_b02",
+          "sim_s": 460,
+          "snapshot_sha256": "19794a7c2719c432c2d562cb5bf82faa3fbe87d774be6299940b4d6ae6627f8a",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3712607f939f9d338a0eb6f1a0bcd6c92f44a057b394ab30143672bed5172771",
+          "id": "p3_probe_u002_B_r000_s002_b03",
+          "sim_s": 460,
+          "snapshot_sha256": "2314be9f22631af2b45ee7ee99eb66314ea3897515b7d3e44599596691a426df",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "c546f3da3ebec5070039f986a8bfbe4b592cca0948a39ed40da381702d4e673b",
+          "id": "p3_probe_u002_B_r000_s002_b04",
+          "sim_s": 460,
+          "snapshot_sha256": "7536d65da8e342dd429ac94c17297f725d1bc58857ef31290d6f8b9921e499ee",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3f3f38799ce5abfefd10c89ba4f6c3c2fbf2c63c11765ffbbb9eabbcba6020d8",
+          "id": "p3_probe_u002_R_r000_s000_b00",
+          "sim_s": 600,
+          "snapshot_sha256": "6758aa84a0c4cf985904f4ed86a485fcc3f91cedb79811a29db5d8c8f7da93ff",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "c1884cfd806271e24ea0a0d7da5387a382c5c704164d2fedb9e09a1894e38da0",
+          "id": "p3_probe_u002_R_r000_s000_b01",
+          "sim_s": 600,
+          "snapshot_sha256": "43ca995e4528bdd5d2d82a944c09cfaa6d94a589535f23192256d5d985e4f806",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "a0979613b495fccaa3772cc332fb5f32117e56cb4004dc396985d4cc61b1517c",
+          "id": "p3_probe_u002_R_r000_s000_b02",
+          "sim_s": 600,
+          "snapshot_sha256": "068e1775795dc84eb2c74fcacbe0e43d331cd568b30f857280617a772d6119f6",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "19f53679df245a65742b456ddb11eb43e3e2f666191ab4085d71c2ddcc90f1bb",
+          "id": "p3_probe_u002_R_r000_s000_b03",
+          "sim_s": 600,
+          "snapshot_sha256": "0064abf4f986ea93fb9aad8e05cd24480b9a6d226f7f164fb68aa0b148c52330",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3e2a9d59d0e540c47463471a9a62941eb867b1276fa893db2dffa2beb75bfeb5",
+          "id": "p3_probe_u002_R_r000_s001_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "e348d600aab8620c8f38493ec40ae5090500d924d17ccfaaba0beed180023fb8",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "add58974557ea7e1a5ccb66e0b1f6e67a81c8027e88f4e3d2fac0671cd170540",
+          "id": "p3_probe_u002_R_r000_s001_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "b11ba33692df9f38d0a195ba4277b0314496c7240e8278953d174b7c3e4f69df",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "91f620415799459cec6854d01bf430caa7067751a1c315d588bd23ce49adaffb",
+          "id": "p3_probe_u002_R_r000_s001_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "1f57ad333a84b2640a9d4592053500414325e41c1668702ac25b0cbfb37e59aa",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3b62cc476f4b524594184bf6d5c49659d9d4ce70dd54dcb93e04cef9950d6b60",
+          "id": "p3_probe_u002_R_r000_s001_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "7b20f6ce6c22815f3606726df85c0d3b96bb4b2b3da6bbb65c72b2e1b6709d50",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3a4af0e5fa54f1b025548afabc91704f81740b3d5272b406abf06ec777fbc6d4",
+          "id": "p3_probe_u002_R_r000_s002_b00",
+          "sim_s": 460,
+          "snapshot_sha256": "5e2120684b7b87aa850d992f047e5a9c0311495c605e2bdec00e9153aea4e212",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "b5d917b950a8b300251501f773ebc82f4763aae13c2333799fe7895e1ea588a1",
+          "id": "p3_probe_u002_R_r000_s002_b01",
+          "sim_s": 460,
+          "snapshot_sha256": "8714bb5f54b1dd9a1ffb87dd02f09c75871a5f94715cd457a637f29a97a7ac8f",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "116c0aa1a63e81272f43ec2b8d95e2592126e41ca255ed4bfef560040f1a7e96",
+          "id": "p3_probe_u002_R_r000_s002_b02",
+          "sim_s": 460,
+          "snapshot_sha256": "51cefd9323f210a43dd08ac9352c2b4ac972f081e0d4883fdf624d6af5322bc2",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "d51b222e134944244d9c54780a5ebd4b2301cecf41dc39f8e2a42f10acfbca33",
+          "id": "p3_probe_u002_R_r000_s002_b03",
+          "sim_s": 460,
+          "snapshot_sha256": "7f96838bc254a0875f43aab132e5c940f584879e12957f8dc9e20ad27bd874a3",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "c1f7222dca26291bec4a3e0bb3558a4a79fa71e7dedf3b5e2ca8421189fc6d1d",
+          "id": "p3_probe_u002_R_r000_s002_b04",
+          "sim_s": 460,
+          "snapshot_sha256": "a65b117c0cd015ad37f8ef5e5d0b8f1191039eb99ac5015468d2040bfbf06e1e",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        }
+      ],
+      "branches": 39,
+      "cells": 3,
+      "criterion": "u24 group-over-best-single synergy (policy_cooperation_gain_veh_s) B-vs-zero CI95 low > 0 and no safety regression; total benefit and B-R descriptive",
+      "criterion_metric": "policy_cooperation_gain_veh_s",
+      "dry": true,
+      "kind": "probe",
+      "metric_reports": {
+        "delta_all_new_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {},
+          "formula": "J_reference - J_all",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Total benefit vs common base",
+          "registered_u24_metric": false,
+          "unit": "veh-s"
+        },
+        "policy_cooperation_gain_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {},
+          "formula": "(J_reference - J_all) - max_i(J_reference - J_solo_i)",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Group-over-best-single synergy",
+          "registered_u24_metric": true,
+          "solo_zero_floor": false,
+          "unit": "veh-s"
+        }
+      },
+      "new_sim_s": 0,
+      "quote_sha256": "ac7d1df7a419256d70848614791080cc4b8841446441a6eebe256bb1c1b8d898",
+      "quoted_sim_s": 22740,
+      "receipt_sha256": "c9537ec1351ef632b1a59dc422d55257aac8361ed4b8e8de30f02f76e9a4340a",
+      "records": [],
+      "schema": "coopmwm.track2.isolated_diagnostic.v1",
+      "status": "dry_run",
+      "update": 2
+    },
+    "probe_u004": {
+      "accounting": null,
+      "binding": {
+        "arms": [
+          "A",
+          "B",
+          "R"
+        ],
+        "bootstrap": {
+          "level": 0.95,
+          "method": "percentile",
+          "reps": 10000,
+          "seed": 20261104
+        },
+        "cell_cap": 97830,
+        "criterion_sha256": "caead1bd73c5cd571b3a8263c69c0be5402ad8605c19eb55acd5e336cf46285b",
+        "phase": "early_probes",
+        "phase_cap": 586980,
+        "registration_sha256": "c0a6c035aeb815d76eedfecb8527632e68ceef48aa297bc4eb5718dc63512fc7"
+      },
+      "branch_manifest": [
+        {
+          "branch_sha256": "f7e6c457d6f9480b6b0581e0eabf263ae803cad87322c8424382eba3f927b415",
+          "id": "p3_probe_u004_A_r000_s000_b00",
+          "sim_s": 600,
+          "snapshot_sha256": "5802b280e84f912123094fcfa8559dafc6df572780bfcf510d52683db2e65190",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "26410e2d70ee9cbc2c429c769a8a320d39ca89e8a8c83d385748fd2ae6176813",
+          "id": "p3_probe_u004_A_r000_s000_b01",
+          "sim_s": 600,
+          "snapshot_sha256": "2e03aaef2efc28c31fce7e852e03e2095bf9a75c371914bf8fffe548bfa17681",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "142be4e889f2c0a6ca87605ecca2ef796e083ede4bd4c66f6dc2d9ec81f4f865",
+          "id": "p3_probe_u004_A_r000_s000_b02",
+          "sim_s": 600,
+          "snapshot_sha256": "dbcfd1e5d8c9c541ce72067a3f658b9b50e698b6ff0089bfd53542a8ce5d5d3a",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3e9be66d553ea93c00374f010629509f5b802c4442161b5ff234491148c0c558",
+          "id": "p3_probe_u004_A_r000_s000_b03",
+          "sim_s": 600,
+          "snapshot_sha256": "5802b280e84f912123094fcfa8559dafc6df572780bfcf510d52683db2e65190",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "13a63b02e6e1e0f2e4621f93ac58e38a05ab540686fbe85842477980906689bd",
+          "id": "p3_probe_u004_A_r000_s001_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "b8fcb2103b7525d106e2332e5ca582b304f659f3faf896a2e1931a720f70336b",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "9b7de1a02b5a26cb1b31f8bff1b864e5cbb4af7e1c4e79e985b380d499c6e8c4",
+          "id": "p3_probe_u004_A_r000_s001_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "a6e0a16e8d258a36a7882300a24c1efbcc25d389c88261199074a09510bb45de",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "e49a861f4b3c8b7fdbef7bf52f16e3a86c0a4a2eba8cb75bf5714f4ac4c27c0f",
+          "id": "p3_probe_u004_A_r000_s001_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "56c5f896f7cb1958cd1c9f29ad57d9733f06aed89e0bfde91356ca2f130286c1",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "5b5c8bb278742a3f91db9a6e50812bc920f7b7e547678861da195772dd37af8f",
+          "id": "p3_probe_u004_A_r000_s001_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "b8fcb2103b7525d106e2332e5ca582b304f659f3faf896a2e1931a720f70336b",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "10baf1b2f5ecb9ffbbe20be353924be6ce25adb3c6ab388a5a02662a23c4efbe",
+          "id": "p3_probe_u004_A_r000_s002_b00",
+          "sim_s": 460,
+          "snapshot_sha256": "c7b38f40bd04e71d56dd7d5d1293db3c8953db1bb2837839011b74041fa3325a",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "e33db1decc100a9a678ec39ab358a8eadde3c018e780f08e53e7c128d0484247",
+          "id": "p3_probe_u004_A_r000_s002_b01",
+          "sim_s": 460,
+          "snapshot_sha256": "68c8258c04d1153be3c39b0c3bf16c690c0f1776201428fa483af8901607c752",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "89e05f9a732426e05d12e33a728a0a7010f921c0df74b9fc2eea50916bbf2974",
+          "id": "p3_probe_u004_A_r000_s002_b02",
+          "sim_s": 460,
+          "snapshot_sha256": "5b47792106d3ec4313eac349640b9a61c1ebc70cb0c97f8528aad2861a117532",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "faa1cde33cb6d1f269ee22371c323e936d8ecf04b67807d3dc6030e173eedddb",
+          "id": "p3_probe_u004_A_r000_s002_b03",
+          "sim_s": 460,
+          "snapshot_sha256": "db5a9c2a5ad434f21a6d0c61b04d7b6385cd0fbbe1a80ab7559ec38d9ab2daa4",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "8698e060e411d9b1c3715e50de7a5c229c83a265dcb5b44853b81e9197fd7631",
+          "id": "p3_probe_u004_A_r000_s002_b04",
+          "sim_s": 460,
+          "snapshot_sha256": "c7b38f40bd04e71d56dd7d5d1293db3c8953db1bb2837839011b74041fa3325a",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "da0896eece5fee0fb8ff582b414db347103809abec091f3a1fd34563dfeafa71",
+          "id": "p3_probe_u004_B_r000_s000_b00",
+          "sim_s": 600,
+          "snapshot_sha256": "74d1a94c670765c104195ce2007990aeaa747ea53a8820ba20e9662363025a85",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "9e291fea220b40275b65efeec95d506c6b44a101d646ff29588a2ab85eff444f",
+          "id": "p3_probe_u004_B_r000_s000_b01",
+          "sim_s": 600,
+          "snapshot_sha256": "e0cb181ba674a572f2b79d0427b6eabe1df41f69c68a326178d79678eb8b623a",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "249ccf9821531dddf1df579ac1a0a76b744d10ad5e44e8922c4a635f34fde399",
+          "id": "p3_probe_u004_B_r000_s000_b02",
+          "sim_s": 600,
+          "snapshot_sha256": "8e8ffa3e685ba1ef71d1ecda7ee34116cddcfbd1a4b546b2094072646537afe6",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "d5a994ea2ce27b253e54c670b1a893fafb97148a73e5b904c3c5d18dd61590fc",
+          "id": "p3_probe_u004_B_r000_s000_b03",
+          "sim_s": 600,
+          "snapshot_sha256": "9b33ab0145f9f9df20bf256a0c4cb16cd72458129f427fd557863dd866ceadc6",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "fddd0fe3e31552c2feffd6a30b30e3631bbe7a327a1fe683edb9e11fc94f064a",
+          "id": "p3_probe_u004_B_r000_s001_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "e079599625e030f9366da288fee40318caa330d735e904b09433cf429631ab7b",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "bdbf620562b83026ecb585b8f3f1a30fcde9bc05c5fdda29b4cddef4c9cbba7d",
+          "id": "p3_probe_u004_B_r000_s001_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "7b1bf7d09a67ed0b585351d484f59b79b622426620423111f36a103739369b2a",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "26632cab16d2243f7b01508ed6865fc067a5c9a3572f45098d9240772e2259e2",
+          "id": "p3_probe_u004_B_r000_s001_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "b0abd3589f8a713ff6b04d9cea92a5505497a9711e99e107933ee6c23198d055",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "e00a7cb6ccd8d02883d285c2310a1d6ba31c886827aa0b13128ccb08b366a9d9",
+          "id": "p3_probe_u004_B_r000_s001_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "4a146d6923453dd1433b8c987ee5bbda780f3f18a420b3a8c89cf1a2d0487967",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "35680074c93d5db22a3c7d17492628c7048d9e3233be5a6682ef648c49e67e4c",
+          "id": "p3_probe_u004_B_r000_s002_b00",
+          "sim_s": 460,
+          "snapshot_sha256": "36115dc12528d9ebe2e8b29b0c92fc7aaec941b1f23450b83dce0090e09ae6af",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "24ca474a02b697c369a76295efe6ed58eb4a9262935365031259ee0572abb617",
+          "id": "p3_probe_u004_B_r000_s002_b01",
+          "sim_s": 460,
+          "snapshot_sha256": "0cc55bf8410bcdd8b2c3d6322db0cd9d090b5527c5bef50ed9403de75b601db7",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "28bab2b5fa7e81b126c698d1dc44e9ddb88f23f830b3e56e73a70e3909fb9f3a",
+          "id": "p3_probe_u004_B_r000_s002_b02",
+          "sim_s": 460,
+          "snapshot_sha256": "9f2c15b44c5ae09a6980000d4cd4ceca5ccec974195ced7c37ad05537e106bdb",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "b62278f87aae06cc48677a2addf29bb604be1afc551f5089593553d549cc542f",
+          "id": "p3_probe_u004_B_r000_s002_b03",
+          "sim_s": 460,
+          "snapshot_sha256": "ea9c9fe76b822b60183496846354c805d4da04627b07a80dcee4500146e966c3",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3a7642b3e6847eaa3bc7be26a4766ec7bf113c33fb452cbe0dda2b2c7febd5a9",
+          "id": "p3_probe_u004_B_r000_s002_b04",
+          "sim_s": 460,
+          "snapshot_sha256": "234db9896d2b882951ce805a1c54da82363eb47989c234c1b6fbc14d3b6726cf",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "693dfcd5669d5aa0f3872a604a90983b315fd978e06a97cf5930ff4a7a396390",
+          "id": "p3_probe_u004_R_r000_s000_b00",
+          "sim_s": 600,
+          "snapshot_sha256": "7aebd35b730ce6c8bf379bf0430601cdc2890962fa4ddf8ad159f65b04cbed63",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "56a20501223ca0e070c7528c2bbe0f5c65233463c67e7410bc7c4aa24f96805c",
+          "id": "p3_probe_u004_R_r000_s000_b01",
+          "sim_s": 600,
+          "snapshot_sha256": "438334c904612fc5eff5481c67a54800606485f639f989417cd72c5ff4bdadcf",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3b8eb071d3efb29d4ffa756463d311ce8e6a7ef6f80462f89f87d0b50399cc77",
+          "id": "p3_probe_u004_R_r000_s000_b02",
+          "sim_s": 600,
+          "snapshot_sha256": "4f7b0d97150cbf1e58b7e09cce28a3b4b63229d46ea36d659e549237c28b232a",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "dd471f7c6710d637bf9d045c46cf317360a4241437410ab7631c36b3cd72a51e",
+          "id": "p3_probe_u004_R_r000_s000_b03",
+          "sim_s": 600,
+          "snapshot_sha256": "fccf87dc59ae9067b287ef8f2312fd484f68c4a5c2f1e9f59eb83f578455e42b",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "c59e25e7c6c53ac152a77251298e89af22af2875eff54de5e121f9d840d2b548",
+          "id": "p3_probe_u004_R_r000_s001_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "498e9de4bf054d0ffee3cb5d840d4b23a2a30f7a750dbf954a2d1932e58c262c",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "ffb5e528808c6044b509d51e4f96371bef185cb7c503a708acb859bbba7414a2",
+          "id": "p3_probe_u004_R_r000_s001_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "5df4fefddee7804f8bb322ae67b19a102f9e6b7a7540fcad46d5ebbc80efc8d7",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "c06be2d20a4300be4d1e900149a908f5dd9817df7405c706648520b03c33ab43",
+          "id": "p3_probe_u004_R_r000_s001_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "d872c83c375056395a54e3c7ad57b19529cadaccce2f95a4ab95d24a32342cf5",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "bab41f4ddfc3dab19bd9d9a11b5540e09157ecb9060121aeab34c8be18699b0f",
+          "id": "p3_probe_u004_R_r000_s001_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "bcaa65e95363e6ebae64187d33ce0457682ef41981841d525cb43221dc3a1f89",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "82fa4c560ae29561a0c75f61d48d7b85f5c7f6ae9ae76baba3d6de4e454b12b9",
+          "id": "p3_probe_u004_R_r000_s002_b00",
+          "sim_s": 460,
+          "snapshot_sha256": "bbb2f5d27fe34a22cb4eb9897482cb5de9a0ce9c4d0ac6d4de88cb94926f45ca",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "9b3ae12b6be177cc0a29505728fb0ec5e7b22b56a479d509c40a7bdc04e79b61",
+          "id": "p3_probe_u004_R_r000_s002_b01",
+          "sim_s": 460,
+          "snapshot_sha256": "cac036ac75e19c0428d70f82244c7bea7ff1aa250f79dbc8c0a65fb921da0b27",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "d0ee072faa7d63809421a6eda8f33ddc84b92ea0143e4dc77b6c7c5a5bd23323",
+          "id": "p3_probe_u004_R_r000_s002_b02",
+          "sim_s": 460,
+          "snapshot_sha256": "70923cb81cb6ad1b850e3d8b1056334f7ad3486ae5fe70e76912c53c5e8b3167",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "ed9b79d9ebde921fd6fc66c5d317f649d4ab6c7bdb766f6fb25d854e4819fdd0",
+          "id": "p3_probe_u004_R_r000_s002_b03",
+          "sim_s": 460,
+          "snapshot_sha256": "61db3a5fb75525efda07c1cbbb08abd3df4ca90209519f68d8d0110cf6c63f32",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "54b71c24aec84a508f019f08f894455f1762c848e3f3bd07c2c15c43ff1e7393",
+          "id": "p3_probe_u004_R_r000_s002_b04",
+          "sim_s": 460,
+          "snapshot_sha256": "0a87f068d2ae2ef6af83e9baba0d096fc3dde1409495b320c0f6c8950ce3a7fc",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        }
+      ],
+      "branches": 39,
+      "cells": 3,
+      "criterion": "u24 group-over-best-single synergy (policy_cooperation_gain_veh_s) B-vs-zero CI95 low > 0 and no safety regression; total benefit and B-R descriptive",
+      "criterion_metric": "policy_cooperation_gain_veh_s",
+      "dry": true,
+      "kind": "probe",
+      "metric_reports": {
+        "delta_all_new_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {},
+          "formula": "J_reference - J_all",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Total benefit vs common base",
+          "registered_u24_metric": false,
+          "unit": "veh-s"
+        },
+        "policy_cooperation_gain_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {},
+          "formula": "(J_reference - J_all) - max_i(J_reference - J_solo_i)",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Group-over-best-single synergy",
+          "registered_u24_metric": true,
+          "solo_zero_floor": false,
+          "unit": "veh-s"
+        }
+      },
+      "new_sim_s": 0,
+      "quote_sha256": "ff3966d27242f444267ce7e16197abafc872eb021b668a20f57534398936f3a1",
+      "quoted_sim_s": 22740,
+      "receipt_sha256": "d95745063b0a00b61f0c381e4b166a8dd189fc2b9a7cda5f0ef1d8d55b0b5db9",
+      "records": [],
+      "schema": "coopmwm.track2.isolated_diagnostic.v1",
+      "status": "dry_run",
+      "update": 4
+    },
+    "replicated_u006": {
+      "accounting": null,
+      "binding": {
+        "arms": [
+          "B",
+          "R"
+        ],
+        "bootstrap": {
+          "level": 0.95,
+          "method": "percentile",
+          "reps": 10000,
+          "seed": 20261104
+        },
+        "cell_cap": 32610,
+        "criterion_sha256": "caead1bd73c5cd571b3a8263c69c0be5402ad8605c19eb55acd5e336cf46285b",
+        "phase": "isolated_replicated",
+        "phase_cap": 978300,
+        "registration_sha256": "c0a6c035aeb815d76eedfecb8527632e68ceef48aa297bc4eb5718dc63512fc7"
+      },
+      "branch_manifest": [
+        {
+          "branch_sha256": "f6431fa18fdaa287b47b8ce3d3471fcd7a4f8375873f5127dd8cfc6392ce780f",
+          "id": "p3_replicated_u006_B_r000_s000_b00",
+          "sim_s": 600,
+          "snapshot_sha256": "edee81aa2c35d74b7f1e097f248dee45910853437de24139aedfb94a7ab668a0",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "add7a5549c11865ac5da2b76633926d444447f29f27bd0ca9d5c7cbac0e7e0b2",
+          "id": "p3_replicated_u006_B_r000_s000_b01",
+          "sim_s": 600,
+          "snapshot_sha256": "ede6150e33d8d9d13964735a440992c46a2296f5d9bb4ca6ada1e4ced0e3356c",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "31a58f84ca59ff387aec8dab5896f536528784340719b941517c50596fc91438",
+          "id": "p3_replicated_u006_B_r000_s000_b02",
+          "sim_s": 600,
+          "snapshot_sha256": "567b23f55c4d933b76eebf4fb558bf30385aa0782a1a0d09d4acc438549ab26c",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3b707cb48ec116d1273e0079c0a2b51da3878b7b7f7ed599cbc35c532203da2f",
+          "id": "p3_replicated_u006_B_r000_s000_b03",
+          "sim_s": 600,
+          "snapshot_sha256": "a0c486fa2908e611dc71399ad35879d75b42c435f8210e66814b3da66904055b",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "89707974bffefb6e83a7c325104497b9f3fab992811747b3168d97a5b45095c1",
+          "id": "p3_replicated_u006_B_r000_s001_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "f4abf0122889a7a5741535ffe0820e2a3e673dbe6e67809df48cf538aa5713ce",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "fab4d104349173161f0bbc8a67bf9e78786466d6d85024323c00493ccb765806",
+          "id": "p3_replicated_u006_B_r000_s001_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "13b79454439ad03cfcd58054b0631c039148b69469c6a6290cd035751e472bed",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "46e4e06fe26155926d519613a5dab4dcccf6b35b6d7ecd9d8251333b10c9decf",
+          "id": "p3_replicated_u006_B_r000_s001_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "dec56e2a0a132d151a5f466393cc7bcb4200364961d9b5956c1534add8ebfaf8",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "5b750d335f521d11408d6ad23c8382998112a2a4b0f62b8720383a180ba603bd",
+          "id": "p3_replicated_u006_B_r000_s001_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "239fb4e309276af1bd1463a81a5366c963a99298e9e63ae26064074297325af2",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "2c68d2231a918f17daf94e477016e1e1810a773c6afea23b1deb21f786bf89d7",
+          "id": "p3_replicated_u006_B_r000_s002_b00",
+          "sim_s": 460,
+          "snapshot_sha256": "04c10eb78998da86728d1be988ac88c2f5cd1fbc73f5e91a863b210550bd8529",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "b251f77d8ad9a6060f2ed9df3aaf8eebb9b23e92d41d64d5aeb890082d063ece",
+          "id": "p3_replicated_u006_B_r000_s002_b01",
+          "sim_s": 460,
+          "snapshot_sha256": "70f1dfc7aca5e1d669857ddc793e635f12c7b61304c15d1114c2a8f57c30d42e",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "4d422614cc8f7278ab967c21a5d917cdf6544fbbad480bb3d3cb9d48578496e6",
+          "id": "p3_replicated_u006_B_r000_s002_b02",
+          "sim_s": 460,
+          "snapshot_sha256": "34b5be1290e110d63dd35be9d338bf732a26f0a3ff691f9305749126ed546ebc",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "5b058e88233ff3df3e1fba146c020c6fedc7e6c9c564089cd882af74300f43b5",
+          "id": "p3_replicated_u006_B_r000_s002_b03",
+          "sim_s": 460,
+          "snapshot_sha256": "209820b61e7b05879368a9f3afc7d64fce9b4e262cb7ee53a49f9909e22c9671",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "ddf8cf86e7eaebbd26106d003a4e3a04a9245fa9fa37169415d0f970e9d62719",
+          "id": "p3_replicated_u006_B_r000_s002_b04",
+          "sim_s": 460,
+          "snapshot_sha256": "0081380190d4af5237c363e8391c86fac92a78d06a2c9743dc8655555707b301",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3d9e48ee2531576c44d0f7e6f73e80d53d9059f8e04dc25bc15f25158c7a30d9",
+          "id": "p3_replicated_u006_B_r001_s000_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "22989a9e3013895d56be4f219684c8dd131086c50ac1f8569beede78013f1a9e",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "db067c828c6ac4dc3ab622b8d64c254ce32d64cd1224c641d8be0c95dc189ca8",
+          "id": "p3_replicated_u006_B_r001_s000_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "15b3971dc5e7ab5e7c1ee4b7360721538c7930452c2fa45b1cf1d039245f35d5",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "e896feafa53306fb36aa4f6feb7044e70fbcc5cbddc7de2e14f780655049158e",
+          "id": "p3_replicated_u006_B_r001_s000_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "e75bda30324f972c6f82f0c340a88a808f9e66791434747900c63a7d8ca03992",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "61350ac4f80c52f98edbd3110cef20bcdaf442025a7dfb89e1869ed805a92e18",
+          "id": "p3_replicated_u006_B_r001_s000_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "0cffe000cfbdf4c7db85664487bd106f20260c26bc781326585b13278992ac6a",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "ff4de175321ba5373d55b9015dc6360fedb8920578570798b169d7d46bea204e",
+          "id": "p3_replicated_u006_B_r002_s000_b00",
+          "sim_s": 1020,
+          "snapshot_sha256": "2a3a003b8a0a8544ac815f1763f6a35bf31fc5f2d626e4aa390fd44fdda88fa8",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "a7fd82b616d8527123c150dad89598b73a989773851b02931940c2df9931ff21",
+          "id": "p3_replicated_u006_B_r002_s000_b01",
+          "sim_s": 1020,
+          "snapshot_sha256": "9b78bd65a2df468dbff1657466f25b9488a38b9d379f1c1e4633294a7b5554cf",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "4a65525dca108737e896e5b1b1d92cbe7050f5070b557dca57ee7c68808d1ac3",
+          "id": "p3_replicated_u006_B_r002_s000_b02",
+          "sim_s": 1020,
+          "snapshot_sha256": "4867205b03b0c6514b4c31349e5c21ee55a008798a7e1bb3d19a1fed241df5dd",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "30fea95c45153e108a949717bee999a1bedb60e0a246b5ffd4f3de29f9214908",
+          "id": "p3_replicated_u006_B_r002_s000_b03",
+          "sim_s": 1020,
+          "snapshot_sha256": "70e6294504c71cf6a26a7bd7deaca38a49aa6ec3d6711777f15a72b82639477d",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "003a954af2390503e06b1ffe4b5b5aa3a81f1faceb375f90a72ad0feee762d6f",
+          "id": "p3_replicated_u006_B_r003_s000_b00",
+          "sim_s": 660,
+          "snapshot_sha256": "674ef7da4c797e21a7a5d66513fd63639cc04689fac3db242b3d387d028a0f22",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "6f6cfd49e9115680b53f46d81cd31e39c48b7b6bdf4478d6b630597fdc80665f",
+          "id": "p3_replicated_u006_B_r003_s000_b01",
+          "sim_s": 660,
+          "snapshot_sha256": "ee0d50ffbe6ec1d286911ff65a46ca8ddcd77d07efde4a11e8b86cfd6ce51c2e",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "457eeee8e9f2c00503391d9ddb527c7cffdee0ae5a88688537a1b1682279e204",
+          "id": "p3_replicated_u006_B_r003_s000_b02",
+          "sim_s": 660,
+          "snapshot_sha256": "366466dd7ad6844a06997648f379cb929c3df65ec278553fb41647cbc6d1d616",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3db22c5ded60dd12745b06d8b5599b960d58f16af957783b663d53878521d178",
+          "id": "p3_replicated_u006_B_r003_s000_b03",
+          "sim_s": 660,
+          "snapshot_sha256": "dfb074d7975eb5bccb323435843a98282e0680dcb49343e9bd5f1dfc2b2f1501",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "cc3630b56f21de3041bde0eca51c88af23ff637ea7085c4a75a98ed40e50c3a5",
+          "id": "p3_replicated_u006_B_r003_s000_b04",
+          "sim_s": 660,
+          "snapshot_sha256": "aa7bbd1613e6d5c381a45570996c2ba79219a1c9b4dd410af7c30b5251d28078",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "0654e7c2ae2afde333063da95d178f322464693c3d7ecaa80687d6e939867259",
+          "id": "p3_replicated_u006_B_r004_s000_b00",
+          "sim_s": 1020,
+          "snapshot_sha256": "fac3388857cfb267ef76e48d2edb42348de6e4be35a78ae6d24bb5a15efe2ad0",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "82b28d9158489882a74b94f4607083d6ea24263f87890126b16494f3b09939f4",
+          "id": "p3_replicated_u006_B_r004_s000_b01",
+          "sim_s": 1020,
+          "snapshot_sha256": "dd58f7f97d643ee4d344fa1ec485412d1c02b7a5da9d98290e7cf375d2f05266",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "87d28b60df1edf112e3cd94b896199846392c7f538a485fed720507fcf291632",
+          "id": "p3_replicated_u006_B_r004_s000_b02",
+          "sim_s": 1020,
+          "snapshot_sha256": "f9faba377325c9314c3fbc6807f49cdedac46dd6d4099222afa3f5a0707a6b62",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "38f2034925857aadab8852acfdd33fd009bd62aa7381d90ba981ad87cb977060",
+          "id": "p3_replicated_u006_B_r004_s000_b03",
+          "sim_s": 1020,
+          "snapshot_sha256": "6ae1b8651d5b0cca8423648fb63df5858dec392658c1243f8472b7185368904b",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "a69b2ec4957994269b6c055ee297649d91258bc2086d3922f43caa9db8657a1c",
+          "id": "p3_replicated_u006_B_r004_s000_b04",
+          "sim_s": 1020,
+          "snapshot_sha256": "783a8cee28d57f9e4f20b14273d8928227f18ad5a3af7820052c3b0579d021d1",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "f720ab6cd7b8caa0b6618d9fd9c391f350b69ca1ba3aab87629de54f4cb952d3",
+          "id": "p3_replicated_u006_B_r004_s000_b05",
+          "sim_s": 1020,
+          "snapshot_sha256": "779f992b17709b8e11df7429b9257456c1496661b8e9d4a5b927fac1aee57033",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "72f38c8049baebdb6523a45caa246ca041a52b94e2e522e5d4560d38471c938e",
+          "id": "p3_replicated_u006_R_r000_s000_b00",
+          "sim_s": 600,
+          "snapshot_sha256": "7029b34c4eea2dfb446cd619617166e215e4fb12b39286dfd616de701ad60e42",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "346d8d9a8ff3b554c9413694d35af68086532466d64ac1dc0fd76bbc14eefaf7",
+          "id": "p3_replicated_u006_R_r000_s000_b01",
+          "sim_s": 600,
+          "snapshot_sha256": "a34a7295980f48aa6171341e211875526cf208eab676341f887111140a6c8a30",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "7ccf6677307941200aff2ddd4d67853bae62fee70484aa3ee5a2f8b73f248eb3",
+          "id": "p3_replicated_u006_R_r000_s000_b02",
+          "sim_s": 600,
+          "snapshot_sha256": "6e6480573968fac876abb44bbb3192d07227689ccb18929fc24630b65231157e",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "e431b163e67b47f8ec442a3f52a3ef44be3c63138483b74554e8f4913cebf621",
+          "id": "p3_replicated_u006_R_r000_s000_b03",
+          "sim_s": 600,
+          "snapshot_sha256": "d3ed2c511d669159e1c897b9d81abfb1348cfe284beaa7799d813165ef33a517",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "e3445ecfb64efd681d1ba33f1ea4e445ee461ee610fa9890d8fac0f32732a6a4",
+          "id": "p3_replicated_u006_R_r000_s001_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "a86b01e289a1ac13ba7b3ad375b4665caf10a4e9ab74e5c74b0e9ced143595ef",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "7ce38eff8e81deec3ab66290f3350c4003c21128007640bca73e41aa60b46ce9",
+          "id": "p3_replicated_u006_R_r000_s001_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "6c5616d825cad8b479b47cb70d7d4e96c94a4a17bbe28b4a5fc9da457b7f3f2c",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "da247872b7126630faf965fbd33b661a4532e9c9648ef5802bf4b58df5eec879",
+          "id": "p3_replicated_u006_R_r000_s001_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "6add140bab5942d70e3267a250b91774b86b8db29875ff0e62e21e9ec77297d4",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "9e9a95cdb0e7bfbc1c3b9db9e82163f49a54d2d5990f1379fe308d9d14f684cd",
+          "id": "p3_replicated_u006_R_r000_s001_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "d2804fad56b2423852406416fe03acda457b2015ba25d4d1c6e3ffd54501795f",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "87b1023145ad6eae824535953f5acb26f9fc1e052f8dd0412d5207a20d30cd0e",
+          "id": "p3_replicated_u006_R_r000_s002_b00",
+          "sim_s": 460,
+          "snapshot_sha256": "3bb490d9fe1413ebda02c03c2d89896638a9b3399f676e00c26ae161a5cae505",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "ff90eecbcdab1c8fed7e79180939925173b68834b6edaec6913e79e463110bb7",
+          "id": "p3_replicated_u006_R_r000_s002_b01",
+          "sim_s": 460,
+          "snapshot_sha256": "f0718dd12c46ee957badf9988e137cf526b0fe17a02a16bdd5337487742642c2",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "9c365ee096af4726e00240b55780b2c30a74b20fb43f81323489283473db302f",
+          "id": "p3_replicated_u006_R_r000_s002_b02",
+          "sim_s": 460,
+          "snapshot_sha256": "7389d9b10be6945e76a8971e15eb358537524314291166625e96ae0c57d05a54",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "1ef10c71f867f2ce9eef95ebbe4996db26b70cbc9ce332cb28ca40f5065bb7c6",
+          "id": "p3_replicated_u006_R_r000_s002_b03",
+          "sim_s": 460,
+          "snapshot_sha256": "bc6d7f04d9041885f9c92dc934382a43beeac542572a7a457f3a2ec1f88e4d9d",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "41f199fa337ba5b02a682fbdf82dba5d373ee4bc2db17a0756c6cf74afa699c9",
+          "id": "p3_replicated_u006_R_r000_s002_b04",
+          "sim_s": 460,
+          "snapshot_sha256": "9ca562cccbfe0d2fe52bf4f7b5e0ec69f612a16004befdbdc59d16981686446a",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "9ffaca697258f104306f22d94b7365eb6dc009d8283c4cf05e70bd53d0f00808",
+          "id": "p3_replicated_u006_R_r001_s000_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "bfe86a51b8431a7cdf539856e677b3c603d93250845f626a207db228cbe91dd4",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "c29059eda9a290aa1864bf183b43abe9bc0bd0e7c7827ab690bfa392db4b72ca",
+          "id": "p3_replicated_u006_R_r001_s000_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "ec99bf3bfff63e4375f0ac19224797ef54550290835356c4a4ec65d89db776d2",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "d00865a565f49e79420735045763b247fc210fd8e2a13bc3d496ddd281d2120a",
+          "id": "p3_replicated_u006_R_r001_s000_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "8e2bb7acc61f8c828c0cb614bfe43d068985fd9efdbf3a59061fbb9dad8b2a80",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "a93e365ca0d707d50a331f6155b88cbf0c77dd2d1c3843c67ef4c53be2e52944",
+          "id": "p3_replicated_u006_R_r001_s000_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "e272ead14b3ba8eef33e9b8ed2509cd7013764613acbdc12ecbda274cb64b59d",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "750381cad0359ac20354eb3f36bbd5eed89b026725c279bd85d30b737b97f67e",
+          "id": "p3_replicated_u006_R_r002_s000_b00",
+          "sim_s": 1020,
+          "snapshot_sha256": "d39cff2019ac79d7a539fbbddae063fea7ff75375893ed6888e2d8d9e5bf63dd",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "49556677b4d33e7961244e9449a8b750fbbdf1d011f919080090f2aab5217c4a",
+          "id": "p3_replicated_u006_R_r002_s000_b01",
+          "sim_s": 1020,
+          "snapshot_sha256": "3d52cf1c00605ac2e6ebb62b1c5282dc5dc0a833095282d2419bdf7eae0d7e79",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "bb703e5d4ac1553785a64ae744ea3f514214f077f41cba915b92fba4f4613005",
+          "id": "p3_replicated_u006_R_r002_s000_b02",
+          "sim_s": 1020,
+          "snapshot_sha256": "654350c577e8a6bb59d4ad3633246d1f5160055b0bb16824c881652ee19efff8",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3190fbd2b72df0e7ba787cdf5d12e42bec6a132ec04f4a063b1305967428efab",
+          "id": "p3_replicated_u006_R_r002_s000_b03",
+          "sim_s": 1020,
+          "snapshot_sha256": "531bd14f87325d3ed5b5af800e1cc4baa180fbd2c8be00bec8c2ef7632083b00",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "f71205b5ab655c21e51d2d10021de8ddc12f452a05d164664f9690aee46f4195",
+          "id": "p3_replicated_u006_R_r003_s000_b00",
+          "sim_s": 660,
+          "snapshot_sha256": "fe457f395b5ca5e042f7417e60e3c07d9256738d272ee1c2aa2d0cf977f0b60f",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "9b728cab2d3066aaad10c645698091812935a55ad1233faa61758e06e425e40c",
+          "id": "p3_replicated_u006_R_r003_s000_b01",
+          "sim_s": 660,
+          "snapshot_sha256": "3110cfada40d67d2e4ca9ebde4c88b5a40de7dc2a1739d34a06181a69e52e373",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "a039ad67a3804ad37b66658e5897fbe229a364e69ba5af3bd6fcd509b1c25f03",
+          "id": "p3_replicated_u006_R_r003_s000_b02",
+          "sim_s": 660,
+          "snapshot_sha256": "26b960219cd8390c165e2d03ced911bc5dbd94ee44e8591075aed103c3295d01",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "4e3491882bae9b3ca9e8046fb3bcef2cba6cb70ce46ba3a88bf924b0e8d0c7a4",
+          "id": "p3_replicated_u006_R_r003_s000_b03",
+          "sim_s": 660,
+          "snapshot_sha256": "6b0abf0b6d94639fb2da27fe173a2e1296f69dae7b5f1d8a266abe65e05d2bd2",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "198f02bf7b5b599e20cb2016e784fcaca0455358baadc9a61ca687d3c1f82888",
+          "id": "p3_replicated_u006_R_r003_s000_b04",
+          "sim_s": 660,
+          "snapshot_sha256": "47c2d40eaaee0dc72d4e93c7c242e7b8205412a3c17cdcda0326bb4fe3b6c0e9",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "06c09c4ba2ffcdd1a23652a898bc3da0e7813d96c9d0d7b683726a016d8ffae3",
+          "id": "p3_replicated_u006_R_r004_s000_b00",
+          "sim_s": 1020,
+          "snapshot_sha256": "199bb8c977fa86f50a72457b7a441b44de42e1a792705a2353804f5c748b0ec2",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "83acd04b09d9a4d27fa78364d665f87a1a5d83b60d87324fda92b6454d3055d4",
+          "id": "p3_replicated_u006_R_r004_s000_b01",
+          "sim_s": 1020,
+          "snapshot_sha256": "ca5e5b04b8546f5ca26733b24faa8e7e7556ea7debfee43a0f19e415a4e99d55",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "e47c2b989b52c00d7ce1c73b2cbb4da2ed02d0d63d047230cdb4ac0c0b86c860",
+          "id": "p3_replicated_u006_R_r004_s000_b02",
+          "sim_s": 1020,
+          "snapshot_sha256": "4a2c95a9d82616b23fd6996a674c5275b58076057498884f60b73db59bd3dfcb",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "e4352bc7330276bd0521b04b56f4765624716c55e6f768583cd61eccdc1b195c",
+          "id": "p3_replicated_u006_R_r004_s000_b03",
+          "sim_s": 1020,
+          "snapshot_sha256": "6b32879eed26c9b8b8011f05a7b0e66c965d4afa7071def82cec05bee65ab814",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "aeec0d7b94a4286c9125667d93d9ac239d62304622fc7a8e5597239f11d979cf",
+          "id": "p3_replicated_u006_R_r004_s000_b04",
+          "sim_s": 1020,
+          "snapshot_sha256": "f480fa4c13a4e19dbf4a460498105784b80d96af0dce578e0ef67636f6b55374",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "710b0f11d9cae235c18895b3771c7c5603dd028284b8b9b614598cdd88129d33",
+          "id": "p3_replicated_u006_R_r004_s000_b05",
+          "sim_s": 1020,
+          "snapshot_sha256": "e48f21ad9a5de57fefbe391c25410e1855d3ea769b1f690495ba43e23c920972",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        }
+      ],
+      "branches": 64,
+      "cells": 10,
+      "criterion": "u24 group-over-best-single synergy (policy_cooperation_gain_veh_s) B-vs-zero CI95 low > 0 and no safety regression; total benefit and B-R descriptive",
+      "criterion_metric": "policy_cooperation_gain_veh_s",
+      "dry": true,
+      "kind": "replicated",
+      "metric_reports": {
+        "delta_all_new_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {},
+          "formula": "J_reference - J_all",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Total benefit vs common base",
+          "registered_u24_metric": false,
+          "unit": "veh-s"
+        },
+        "policy_cooperation_gain_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {},
+          "formula": "(J_reference - J_all) - max_i(J_reference - J_solo_i)",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Group-over-best-single synergy",
+          "registered_u24_metric": true,
+          "solo_zero_floor": false,
+          "unit": "veh-s"
+        }
+      },
+      "new_sim_s": 0,
+      "quote_sha256": "70e3f602ef3c8874965833901635ef337139b7b459ca3d5ca3319e14615d13f5",
+      "quoted_sim_s": 47920,
+      "receipt_sha256": "4c236e880cc671db65d268f25c68f0ddb29b88babcb87d0fb695b08b3d91d8af",
+      "records": [],
+      "schema": "coopmwm.track2.isolated_diagnostic.v1",
+      "status": "dry_run",
+      "update": 6
+    },
+    "replicated_u012": {
+      "accounting": null,
+      "binding": {
+        "arms": [
+          "B",
+          "R"
+        ],
+        "bootstrap": {
+          "level": 0.95,
+          "method": "percentile",
+          "reps": 10000,
+          "seed": 20261104
+        },
+        "cell_cap": 32610,
+        "criterion_sha256": "caead1bd73c5cd571b3a8263c69c0be5402ad8605c19eb55acd5e336cf46285b",
+        "phase": "isolated_replicated",
+        "phase_cap": 978300,
+        "registration_sha256": "c0a6c035aeb815d76eedfecb8527632e68ceef48aa297bc4eb5718dc63512fc7"
+      },
+      "branch_manifest": [
+        {
+          "branch_sha256": "a3ad30abf5011d6815aa44fdbc61ff9cd4290dda15b0e9aca36fbd6a9f529abd",
+          "id": "p3_replicated_u012_B_r000_s000_b00",
+          "sim_s": 600,
+          "snapshot_sha256": "ac2db0355f240cef85beddf84b6aba997d9c81316062bd8d508e6d452f87f851",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "c9870f963481ef311bf610a0c59486674c357833be5ea1f4a8e9c15ec0d28cb2",
+          "id": "p3_replicated_u012_B_r000_s000_b01",
+          "sim_s": 600,
+          "snapshot_sha256": "20197d0f0f594dc68f29c9bf53259891b5a6bd30715e97bc971d9cdc3b06c340",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "b91a7f79c00ceb3aa9aa0b4047f19841199cfa4a7a3fc5c7c1385d69136af39b",
+          "id": "p3_replicated_u012_B_r000_s000_b02",
+          "sim_s": 600,
+          "snapshot_sha256": "10c2c88604a22b443a6789c2baf73bd680ea52faabff75fb13ba6c0fd4dceb24",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "55e74599aa1605ca99ae88c65af8b51772ab0e0fdadd7f3f2c4a7b740d0fff9d",
+          "id": "p3_replicated_u012_B_r000_s000_b03",
+          "sim_s": 600,
+          "snapshot_sha256": "b4841b5bf7f53f38ed2530c158a6567d308657cf282690edcbc2891b042e3d86",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "d91cec3dd34b76b22b88aea47861abc1b09d2020c3b98ff6a06d6f90b40e9bb2",
+          "id": "p3_replicated_u012_B_r000_s001_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "6f7fd6087d8f861fe39ffc875e74e1d5efb5a402172658db29ddae3c0885f6cb",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "c693b939d8bd64476fd01427aa95f5de0d377fb3a8f23849fe028dde4a0c7d33",
+          "id": "p3_replicated_u012_B_r000_s001_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "74688c443491b8ee69b668dd32888f72a10f334a69590de56a03eb48ad1309e3",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "46cd3d85443dfe5eb3ca626c88e1a5ad64ac5fe7c575bb449ba6bc310fb37b40",
+          "id": "p3_replicated_u012_B_r000_s001_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "ffae32ed7445489b364d2fe0c17090cbbd32be77e3e07d254284b3ad0c4e132c",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "a5ee1dc13711017c39da7bf12dda179228ab069b8e7406cdd2fdaab362913f6a",
+          "id": "p3_replicated_u012_B_r000_s001_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "4c894f6f4a3e4d4cf43a69355b92ba16fe16715dd98b62fda0e289f49f85e6c2",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "47e4338571d4f3a9f5480712373f87a166cac96064d6bd138ef0921b5f908985",
+          "id": "p3_replicated_u012_B_r000_s002_b00",
+          "sim_s": 460,
+          "snapshot_sha256": "1f0ed041ae1a7cf7dce573c24f81d79328e356c7eac32b1e2bc5374004a4d8c0",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "4b8e0aec816a17c3f198b3b2b0f58cc8cca81c0c71fabdf143a1091436c7fb0d",
+          "id": "p3_replicated_u012_B_r000_s002_b01",
+          "sim_s": 460,
+          "snapshot_sha256": "415ad45bd595ceed52986ae04fee4b22965b6bd41b659b30a8b757695296b795",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "bae4f220b5fc7855bb2c0d4568294644268635c07e07d1d241e27d7df717c024",
+          "id": "p3_replicated_u012_B_r000_s002_b02",
+          "sim_s": 460,
+          "snapshot_sha256": "41423c17654d9d15a34f025d1498f6ba00658588ad07137b65aea370badf0cd4",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "bc22eae328c429db22413dff4768476a51fff63f071aa41cd7dea24d74de22ce",
+          "id": "p3_replicated_u012_B_r000_s002_b03",
+          "sim_s": 460,
+          "snapshot_sha256": "311476b75f1cd646af72b59a72b819636385ca42e13bf3dc73973bfe1191245a",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "2f3a14a211870a710f25763df60d1a3eeee8ffc166b2f44f66d48dafce43e935",
+          "id": "p3_replicated_u012_B_r000_s002_b04",
+          "sim_s": 460,
+          "snapshot_sha256": "888ecc26d9bbd377e51db235d85168089dbe275599cbe909dbd24608e0385ac0",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "b52f7ea7426339de0bbb6370ef754efe938adad00f47f693bb5b51c6f607508d",
+          "id": "p3_replicated_u012_B_r001_s000_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "69ddd2074b623417c3ba651cbdf50182ddff1edad2e279700cb5ed9f6f2c050a",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "24e9d126e04a63a6be64eb34951984442016b178eaf5ded12436a4178e2adc57",
+          "id": "p3_replicated_u012_B_r001_s000_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "7cd315280bcbf255b7a7abe3430ee1deacabac15fdf688344f9fe2aef296bf47",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "dcfb4533b0a168ef42f42ec951a4787bbe232984f95c4b874fcd36d72f79661d",
+          "id": "p3_replicated_u012_B_r001_s000_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "bd4a3392d702892f8d1c3896d02c0a2018dd8f82ed3d1dc9b3731ba1f52c179c",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "a2c97155e6fba54880100961530c07330436abeed501277deb6f853453a5601a",
+          "id": "p3_replicated_u012_B_r001_s000_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "f129fd21c0e2caf546f09da44e5d14ca40b4581180ed6e6fcb6130add16c22b6",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "31680fe642aff7087889ec5e0677a5fce84eb1d097cd13424522e555513db87e",
+          "id": "p3_replicated_u012_B_r002_s000_b00",
+          "sim_s": 1020,
+          "snapshot_sha256": "a59962f10cfff0fbe532d2b3826dbc250bc8b2e7ad6152407c6e9b8b9f94a3de",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "08b95168248ef25b0b09f44192c6bddab0009c414934889760c07aed0cb1b757",
+          "id": "p3_replicated_u012_B_r002_s000_b01",
+          "sim_s": 1020,
+          "snapshot_sha256": "5b73363c006e19905f14b1fb13729dda198ec36e06d1328a42cc207c8d2fafe3",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "ace0de7b53f9e318ea80a16892da6d0e021dcc11b8488fa77a2191702f638b1d",
+          "id": "p3_replicated_u012_B_r002_s000_b02",
+          "sim_s": 1020,
+          "snapshot_sha256": "b1797895db1724473b13bf636233192aeb86020d7a9cb8960346dd3f7de718ef",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "5d41f59f29183972c3239c98b59c060ae163d6094b89a6b5d4e79866b74c9a84",
+          "id": "p3_replicated_u012_B_r002_s000_b03",
+          "sim_s": 1020,
+          "snapshot_sha256": "7c192eff8a9f22964bebe2fb6d6385def40347245582c291007698c482c08579",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "bc1e88acacb2956102cee89dd06a3ef5129d5eeeed3d4b4984c800a74708db91",
+          "id": "p3_replicated_u012_B_r003_s000_b00",
+          "sim_s": 660,
+          "snapshot_sha256": "2804c801ec7cd587b4587f084f03f89789976a844f960b894beab310a590d065",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "4e7cd6ad4a71204a950916237cbbe9c68837fe698edf2795393aab43d2697bfc",
+          "id": "p3_replicated_u012_B_r003_s000_b01",
+          "sim_s": 660,
+          "snapshot_sha256": "4500f67bc89f8916d4e9a816c8c9fee61881dbfbf298c1c008e32e532cfb44cf",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "17ebfd0c10ff307961d7bc7e5ca4fb98bac79edc30560cc0392dad3f89095876",
+          "id": "p3_replicated_u012_B_r003_s000_b02",
+          "sim_s": 660,
+          "snapshot_sha256": "a8529e3ce3e73757bb6f57965071eab73b2fad2cc98b2021f7403a6e7b8e7469",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "ea995cad9c26a0be8ea119efef555c7cebfacf968ceff150618975074a5bdcb2",
+          "id": "p3_replicated_u012_B_r003_s000_b03",
+          "sim_s": 660,
+          "snapshot_sha256": "69645d3a747cedf612673e1eaf9f431b355f681bdb77bade890e07acbe871ca9",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "f558391e8e93f67abbcd39f18b76af4217d641f55a55f5d620f8cdaa6a8db22d",
+          "id": "p3_replicated_u012_B_r003_s000_b04",
+          "sim_s": 660,
+          "snapshot_sha256": "d932fd0a228b89e65887fee87c30c31b65cc04e4cbdee11b41974011f3500560",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "de691c6da0b21453fde5be431f3057db2cecb2a88caeeb481cdee1b47d1c2f65",
+          "id": "p3_replicated_u012_B_r004_s000_b00",
+          "sim_s": 1020,
+          "snapshot_sha256": "969f00e141d8d3fef6b44a73a1877d230ea3e2b5213cd6c0100efed364b55dd7",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "6c74dfcdff0c6748a3a520a8eac97f832f440bb9d8f2d22a263ac8f7bb91b39d",
+          "id": "p3_replicated_u012_B_r004_s000_b01",
+          "sim_s": 1020,
+          "snapshot_sha256": "523404c72867f311b5793645726e2b7e82556bcedd10b388f33a6287b9d5c7df",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "5e3c1c3c18c7ca08ea9c61c5dcc927ff2cdade0ed11dfec74523caa8cd426ad7",
+          "id": "p3_replicated_u012_B_r004_s000_b02",
+          "sim_s": 1020,
+          "snapshot_sha256": "345e837cdce16c6754118ab61841232781bdf039e39bb04b7fecf144b1708e85",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "bd192334a68c151965e637e26742ccce2bc8dccfc73f54a478b2c590f9b7e2ad",
+          "id": "p3_replicated_u012_B_r004_s000_b03",
+          "sim_s": 1020,
+          "snapshot_sha256": "28675e93ae8c0532f6f26e1a99e6e2bd8aab38daa9c5c942566e0d059d97f459",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "5d7ad106c85a9f9a7d9dfeeea69ff4ce785909927423ee3e7e59a9b7646f0c15",
+          "id": "p3_replicated_u012_B_r004_s000_b04",
+          "sim_s": 1020,
+          "snapshot_sha256": "d7a9a1a25f2633123b1bae0a5ce3f12bd1e7682f5eebc67641e3c9c71fc4013b",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "e3c0681183873d24fc4539a374ff2964dd505a4ff11ccf5fcca82af993396ba4",
+          "id": "p3_replicated_u012_B_r004_s000_b05",
+          "sim_s": 1020,
+          "snapshot_sha256": "9dbd14e7fae25a3fd8c8a3fd56f5e9684b2908c3d8c93036e49dfb14fee42d32",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "11df015e442427cea0ea93fdcd9d727b96c2666429eff9131a6ab6e1e2127e52",
+          "id": "p3_replicated_u012_R_r000_s000_b00",
+          "sim_s": 600,
+          "snapshot_sha256": "b2b710ff87418326e6f4b1b3f4459abd3a1e7547c1f2e2b1b823cae141c184df",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "87a34e9bf588956da51ddd8411576e776e95d883ee7a8d5887557fa8c53037f1",
+          "id": "p3_replicated_u012_R_r000_s000_b01",
+          "sim_s": 600,
+          "snapshot_sha256": "08b62d7326b2202bfb3e586932f596f080a7f39fc77cf3f8f9425740410e4254",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "1251ab5ec6466f93ee610aa85ffe83138cf50946ac1d1420b254bab697f1a9e4",
+          "id": "p3_replicated_u012_R_r000_s000_b02",
+          "sim_s": 600,
+          "snapshot_sha256": "bdeb876be5c28c9fdd9ba7dec546de4e1c0f5bb783d4d6ff642780e35bbd1296",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "5fa999646e399a87cbb1f343b34d2bf1bedb7b9a5ae67becfd221ddf29452601",
+          "id": "p3_replicated_u012_R_r000_s000_b03",
+          "sim_s": 600,
+          "snapshot_sha256": "0f4e03b229bef045fffbccf64a43093f8d3b5939d99014836dd4a932362cd082",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "a0a2858eaf9f398c5c6d42899d66439a52d3c717ed5a0f1a3bc82839f38073dd",
+          "id": "p3_replicated_u012_R_r000_s001_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "5e4500b1e3715c71dcbcda612f364e94f327e18bf5e6caf95cdd82447dcba540",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "08546cb91f769cf4a66a93d232503c568633978c1b3b2a6082ace14ee29fbdd4",
+          "id": "p3_replicated_u012_R_r000_s001_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "ca9a5322b3bc756a5054ad684afd822da8c097d8c8f1070ec7156d185296eb19",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "d5bdb983b4f3b3c9af167aca4cab67e78e589956d4c2cd0c0bfee8d1af2d9eaf",
+          "id": "p3_replicated_u012_R_r000_s001_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "98b1e49091e37cb10edad9fa2a17cc2d9b8441bdc5ab65fc13d63bc31ce680ea",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "416756ddb3c57a4be531ba05f08c53c7a215f78f477f02408e4125f4ca84fcbb",
+          "id": "p3_replicated_u012_R_r000_s001_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "728fb8bd52df5fa108e0b5f3960f3a0fc8ac2a10e5746d0d9ed233ba816afe2a",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "e430b707e70ccaccbfe8dd05974763908ad1438fca9c4d3ed1ed8c740fc961b6",
+          "id": "p3_replicated_u012_R_r000_s002_b00",
+          "sim_s": 460,
+          "snapshot_sha256": "9ce536f6ce547f17349a3d6d04f27c7dbc238e5c368f58462fe12d76a6a1031f",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "195c35795e1164d3c634904f29720cdcbcf4e14edbb10e1125acf42d45781e17",
+          "id": "p3_replicated_u012_R_r000_s002_b01",
+          "sim_s": 460,
+          "snapshot_sha256": "bd865858b84037081f3b92f7244034175c8c69f40f2d8569466c8c71a08104ff",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "993460df89306118778a628227b01c1918dd9d9d4de5ec0dd912101cb17c1902",
+          "id": "p3_replicated_u012_R_r000_s002_b02",
+          "sim_s": 460,
+          "snapshot_sha256": "1f39164ffca58b187614324061684d516b0780684ff6354306b8f354778797c4",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "560dd5dbc4ae6afaa717eebdf06c8530ec7b425be0c7c2c41e1bd0743b6b7f55",
+          "id": "p3_replicated_u012_R_r000_s002_b03",
+          "sim_s": 460,
+          "snapshot_sha256": "a49d5479f2ae6c5750ce7aba9c9c3c05bb3ef1dc75b9fa8af5441283514fd0f9",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "6716929722c00a325b3b6b4fa83e4067013cfe7ad6981eb8716cf2b697383e16",
+          "id": "p3_replicated_u012_R_r000_s002_b04",
+          "sim_s": 460,
+          "snapshot_sha256": "492f66aed9bfb07b2dc7907c13d512c8a4464e970ed6b4b275d834fc43aff5ee",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "7ae264d704f8180c6da3ca8a5a92cfdaa95f1d3654ab39b0a652c8d42c971f91",
+          "id": "p3_replicated_u012_R_r001_s000_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "735053be604250ae35244add6957106b3eb906d4b21c2cf80c1f1c203f7ea713",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "72892eae3c1008c7f971744fed8de9d1de5637c5651e71b95b16dae7a21b6b0b",
+          "id": "p3_replicated_u012_R_r001_s000_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "480ac398e5491b1ff0c135d136d6595bb5713739224e0cac13531df24ee9f4e2",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "8a9e91849d8c420f849eef76072dabe33b717594735c8a91fc93ff338cb8649c",
+          "id": "p3_replicated_u012_R_r001_s000_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "ca892efec328afe6a3653105a4b5ce9cd1f16a2227dbc88968eadb95c7854147",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "971124283df357eb5f21c2d555208f10081a55f31e2ce71a77fa8be1cccd80ad",
+          "id": "p3_replicated_u012_R_r001_s000_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "4bfabb77ffa1c6d2627c365dd4ea388ce49ea45480bc6319d0355e02be143432",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "e6060aeb256bc065b446368370db8fcdd0d6f64be138e63778a3c3c34a991f1b",
+          "id": "p3_replicated_u012_R_r002_s000_b00",
+          "sim_s": 1020,
+          "snapshot_sha256": "00ce531fda3fbaf2265286f51cfe666415bd1f2ecf954af3f1e952b359fc687c",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "ff244f557178a799c7db783d04650eebad2af2549a667fd6f20956fc6fe67fe6",
+          "id": "p3_replicated_u012_R_r002_s000_b01",
+          "sim_s": 1020,
+          "snapshot_sha256": "418e604af2122e094261ebb726b20825dc0e297ee79f5ea714923b6e2f5093c0",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "c4a5b9471154c094211744d41ed9792fc1dafd950590c99de489d094683c0c1e",
+          "id": "p3_replicated_u012_R_r002_s000_b02",
+          "sim_s": 1020,
+          "snapshot_sha256": "975ed30f9ff36074b82d3fabcaaa21923c9466668b616d828bad36edd349ae19",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "ca0a149d4a1049816a202a42cb7ce679fa7d5f3706a888ca49eaf21d9a42012d",
+          "id": "p3_replicated_u012_R_r002_s000_b03",
+          "sim_s": 1020,
+          "snapshot_sha256": "65a53d57ce2b3fc2b9b925971bbac67a702c934af80895a64370ea90aa52e6cc",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "e9e9a72778f30415a738899609d704273e9808b0aae63523f3c6ab99f6f79e1e",
+          "id": "p3_replicated_u012_R_r003_s000_b00",
+          "sim_s": 660,
+          "snapshot_sha256": "b2ab0a9aabbccbeb6d36a936e24232c123e13403ee890d0d02a919e74a611684",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "f3a6aa4cb113b2f1e36f74b2f77806ac6897b7a433d46ca9ad73ae82dd0c06d6",
+          "id": "p3_replicated_u012_R_r003_s000_b01",
+          "sim_s": 660,
+          "snapshot_sha256": "8949b5b0e93645c1ca565d3db3e08a06f3aa434d7a801ae8f22bed3f4eeb0438",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "268b1994365443c579454186ce0dc5d7bf78c2f660830a7ae3462206dbbad949",
+          "id": "p3_replicated_u012_R_r003_s000_b02",
+          "sim_s": 660,
+          "snapshot_sha256": "e3c20cea07f4650d79ea912320cdce4ca038a178c0816cc03ff1fed8abeca3ca",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "873ca53df5c61b309b19d161699c6d4d768edf8608e0d5839b747709c26e3304",
+          "id": "p3_replicated_u012_R_r003_s000_b03",
+          "sim_s": 660,
+          "snapshot_sha256": "08a73c0f3345e5ef4328721902984682f867cb925d161c0efa286020d5a7d1cb",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "0125ac86cea2117b2ec8b307004aa1e6c6d5c5c2fe856baa058966198f794e95",
+          "id": "p3_replicated_u012_R_r003_s000_b04",
+          "sim_s": 660,
+          "snapshot_sha256": "f79b7360132ba1e174dfd999fd5df26ec2f80b3b02c796c667610e0789c5b4c9",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "9449f4480ab231afce867a3098c55a1a4a93fbc388a181d1eb68e45fe590ca09",
+          "id": "p3_replicated_u012_R_r004_s000_b00",
+          "sim_s": 1020,
+          "snapshot_sha256": "be9b5fbd126a9162cc8f912d15ba916fc3f98fa953dbe964ebf1e3d26bcb05e9",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "9babcebb7b43f242d9a8bda4da3f5c620b026d9503cd633bc7214fdbc93cc31f",
+          "id": "p3_replicated_u012_R_r004_s000_b01",
+          "sim_s": 1020,
+          "snapshot_sha256": "87419706a1c9bd9653468d399000ff96e7a8a45151713a9933f1b9e942260917",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "14076861c43ea738a6e5faf5c43d5100e8db93335c17d554f9a62413d3f086e8",
+          "id": "p3_replicated_u012_R_r004_s000_b02",
+          "sim_s": 1020,
+          "snapshot_sha256": "52e5c52b50302b9e95d6c76bd19a6595d41173b4cb0a0351e3287b234ba2692a",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "8d42bb0708fadb564d31aa05a026fad8e5850f78ee7e1e182e4d1b19e82e5645",
+          "id": "p3_replicated_u012_R_r004_s000_b03",
+          "sim_s": 1020,
+          "snapshot_sha256": "8b99acedef4bfd8f079e7c4a489017a95cee024cf3fe06e4ab7c532c13d96c5c",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "6015dcffc6c45360ca9b6ed6bc4d79d845bdb2b97fd0d19726ebdcf22385bf95",
+          "id": "p3_replicated_u012_R_r004_s000_b04",
+          "sim_s": 1020,
+          "snapshot_sha256": "7d80f498b63e1a8fd9dcff4b37306139a72925e4aecbc33d9a7765c34b6d84bf",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "28273500829a68d78d4f9940580c3b43dfbfebcc572afcc83c30e7b08923697b",
+          "id": "p3_replicated_u012_R_r004_s000_b05",
+          "sim_s": 1020,
+          "snapshot_sha256": "05d0aed89d78cea5f675f1a798d16ec78da67d14dec6348806485102eb8886a1",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        }
+      ],
+      "branches": 64,
+      "cells": 10,
+      "criterion": "u24 group-over-best-single synergy (policy_cooperation_gain_veh_s) B-vs-zero CI95 low > 0 and no safety regression; total benefit and B-R descriptive",
+      "criterion_metric": "policy_cooperation_gain_veh_s",
+      "dry": true,
+      "kind": "replicated",
+      "metric_reports": {
+        "delta_all_new_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {},
+          "formula": "J_reference - J_all",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Total benefit vs common base",
+          "registered_u24_metric": false,
+          "unit": "veh-s"
+        },
+        "policy_cooperation_gain_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {},
+          "formula": "(J_reference - J_all) - max_i(J_reference - J_solo_i)",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Group-over-best-single synergy",
+          "registered_u24_metric": true,
+          "solo_zero_floor": false,
+          "unit": "veh-s"
+        }
+      },
+      "new_sim_s": 0,
+      "quote_sha256": "f7c2b6a678bbcc492e82cd37d30588b9f5e43328244678fa6521c64dbb34ecf1",
+      "quoted_sim_s": 47920,
+      "receipt_sha256": "026c1b2ce6ec3154db3b6e5b5cd54eb8176371da1f4b1dd14f47cbc253a0bb60",
+      "records": [],
+      "schema": "coopmwm.track2.isolated_diagnostic.v1",
+      "status": "dry_run",
+      "update": 12
+    },
+    "replicated_u024": {
+      "accounting": null,
+      "binding": {
+        "arms": [
+          "B",
+          "R"
+        ],
+        "bootstrap": {
+          "level": 0.95,
+          "method": "percentile",
+          "reps": 10000,
+          "seed": 20261104
+        },
+        "cell_cap": 32610,
+        "criterion_sha256": "caead1bd73c5cd571b3a8263c69c0be5402ad8605c19eb55acd5e336cf46285b",
+        "phase": "isolated_replicated",
+        "phase_cap": 978300,
+        "registration_sha256": "c0a6c035aeb815d76eedfecb8527632e68ceef48aa297bc4eb5718dc63512fc7"
+      },
+      "branch_manifest": [
+        {
+          "branch_sha256": "067784991b45e0204eaa665fa7ede00839945a92ca8d8c6fe2c56284f3fa9a78",
+          "id": "p3_replicated_u024_B_r000_s000_b00",
+          "sim_s": 600,
+          "snapshot_sha256": "dcef9d376ea27b5c57f81049de032244f928ddd6f295ce062f9f176d84557d3d",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "66bedbe315144716428985bb58d5e552f811ebbf345cfc46600170aa15dbec6e",
+          "id": "p3_replicated_u024_B_r000_s000_b01",
+          "sim_s": 600,
+          "snapshot_sha256": "7c497ea93328ef6e51aa7f1c4ce670328b8e58501f2524b27c87fab0b85cdfb6",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "fad5c7f0c55dfd14196428271d4a7196b17d2f439eecf1ad7ab73ae6dff2f554",
+          "id": "p3_replicated_u024_B_r000_s000_b02",
+          "sim_s": 600,
+          "snapshot_sha256": "1ad66a784f87cdcf4f052879308bbb9bc3ccd09abf15656f8463278c6fb76177",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "ac4afaa1caf7dc6ba6f0a1c3807bc6f610f98213e0cfe2f5e7a2e7e555ecaa45",
+          "id": "p3_replicated_u024_B_r000_s000_b03",
+          "sim_s": 600,
+          "snapshot_sha256": "773531b1f1f68e2c8c1a0cbf60a747e04e0832c17e07198c222a95171ec78497",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "0d7773f14d20460df61d58bb65f9827c436ffee1c2e20f5b5b6316f1cabf8470",
+          "id": "p3_replicated_u024_B_r000_s001_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "e5d41f0312081b2dff53d70dbad9e3ba0f61c0e207cc8808038db2535420559e",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "0b08cd9c7e03da0a9836dc3e987086cf35b0bc50c309b16df73d7f6864460812",
+          "id": "p3_replicated_u024_B_r000_s001_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "9a43eecfaf6607a55ae21bbf90190edaa023ba1217c10665e19ff0f29f0ed472",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "1108010cd620eb8a66f58f68f67f44f756bf38dbf63b7662bc1f8281d3223945",
+          "id": "p3_replicated_u024_B_r000_s001_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "013fba9267f7fa67e5df8afdabfe0f807916747e48d0fe553686fed7afa4cbc6",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "afa5ccf1d531cd0c578c45e0c609fff1c64da3540a6e7cb417a86f6a5c9d2614",
+          "id": "p3_replicated_u024_B_r000_s001_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "5a8aebcdb4feaf61bebc6dafb12950c97e48fb6a85e432dfda1a18e8bfaf5a4d",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "a670d6762b8444b6cc43bbd45dcf65c675ccf72b6e377ff22745f7ade8627c60",
+          "id": "p3_replicated_u024_B_r000_s002_b00",
+          "sim_s": 460,
+          "snapshot_sha256": "1f33e7e6ac30d7af3a721d982a8a5dbcb7114e9486015e0a14f470f86d1523f4",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "00cd4e51cb22fbd1d8eb9a038378b038a21cb1e3c9cf40c7f677b4511d7580a3",
+          "id": "p3_replicated_u024_B_r000_s002_b01",
+          "sim_s": 460,
+          "snapshot_sha256": "786d8d65ab52eda8c3838942216cd70bcfac7705d0d383a3c385a37672b504fb",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "e82ecdcaf4d462a83a250701d73291e2c11955fdce54ec7baa80e132b600c08d",
+          "id": "p3_replicated_u024_B_r000_s002_b02",
+          "sim_s": 460,
+          "snapshot_sha256": "7d48e06f855ca5bbe222da6c58dd96f2e9509b3e8b307a8d5f62077fe188a1b3",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "7691f8d1a369580371164c614088a081292fb3d35c4d778594ed5d64b64a5c8f",
+          "id": "p3_replicated_u024_B_r000_s002_b03",
+          "sim_s": 460,
+          "snapshot_sha256": "322f40e2455459b96286f1eb8bf025b3d88404ddd2b06f5e49d7d7463956dc0f",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "29db1ff40b6654c98fa5168feaf7347938763d573ac41e7e02ebc2ec43c74305",
+          "id": "p3_replicated_u024_B_r000_s002_b04",
+          "sim_s": 460,
+          "snapshot_sha256": "8dee1de1f5f1d756522add95ab472db0fb58ace796606f8dc376594b0411d55b",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "2b1fcb2cfc93334e042372beccac4da5028b7a1a054acbd56abe8dbfb530d9b3",
+          "id": "p3_replicated_u024_B_r001_s000_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "862661909a35dcdc0266ea653772105eea7b2c51dab34e4e1405cb58401df240",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "54f5dc0e2d8c054b89cbf834f637f7bd3c0606e47d7a48e008a3a453356d2297",
+          "id": "p3_replicated_u024_B_r001_s000_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "b0638b94d1ae0d393ce94da0d9faafc9c924d5071f4d17ced5acdf72677998bf",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "80c1e3cb12e8ffe1dd26b442b5e4cc65007eb6926d8bd6adefbb9507106ff697",
+          "id": "p3_replicated_u024_B_r001_s000_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "95bf9fd2e3d52fa5de60c9cab4bb028645c6c1311a4f67a1d5592e7e0b0bde4a",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "8466f3803e72087c801fa611005bf192e93d86689bc62a2a5335a356be5df38e",
+          "id": "p3_replicated_u024_B_r001_s000_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "33f540f070cdc1a1698c94b79648080eb360e1ba4059ffe21007a275807ca474",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "96e5c30fa90f79c39497803b10f079dbc9a434ecb3e48975b04780de97c12a26",
+          "id": "p3_replicated_u024_B_r002_s000_b00",
+          "sim_s": 1020,
+          "snapshot_sha256": "2e134650bc751f528cd9050171035bf2376a98b0380f64a13efb8620dc5546da",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "025e505806b6544af8658d1fa4b03d689d905b17cc6f9b1696250743074a889d",
+          "id": "p3_replicated_u024_B_r002_s000_b01",
+          "sim_s": 1020,
+          "snapshot_sha256": "8d885930b82ff94f9202c92dd5b55a741b0254d8efb4f8ba803324b4d872e386",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "954c8b51b576569a9a160bc265004f55105aef5a18a97253d3be5281dba82be3",
+          "id": "p3_replicated_u024_B_r002_s000_b02",
+          "sim_s": 1020,
+          "snapshot_sha256": "d23d7edc5c483f113b25bced925eac65ee87fc9af2f54080bb270874c409d067",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "b0db69100379f0e89155fdb26c3d879ae64511756e28922c75b62f4a4c0768ac",
+          "id": "p3_replicated_u024_B_r002_s000_b03",
+          "sim_s": 1020,
+          "snapshot_sha256": "1c58d9216d77454b941ce7495f0b82717ceec6041b702cea41bd626f245aea52",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "9ad76d29293fa46103afaadf4c89b17281e59ed844efcddc30098e433432f07e",
+          "id": "p3_replicated_u024_B_r003_s000_b00",
+          "sim_s": 660,
+          "snapshot_sha256": "acd8e87313b1bf011235c8c50501a6497fcb0bdaf4799b91c23ebd4224f07105",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "188509abfbbaa64bd8c93cdcf4344f9c3a178a4df113606a7ac86ef8303682b5",
+          "id": "p3_replicated_u024_B_r003_s000_b01",
+          "sim_s": 660,
+          "snapshot_sha256": "882a2e4564a4d700bbbe68539115b61a28fc13be524e9a997ea91c3539c8c770",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "31b05205a617a373386f1dc9f181df1078d31418a504dc0eb3f17f39c663dc6a",
+          "id": "p3_replicated_u024_B_r003_s000_b02",
+          "sim_s": 660,
+          "snapshot_sha256": "c62019b98f0c3e76f40c382d11d377f1e4904cb8a3b957f888713b3503b32ddd",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "22652d2db203da8c84fce1f55bc57f4de0d749796f3ded3eed4562429dbe8e5b",
+          "id": "p3_replicated_u024_B_r003_s000_b03",
+          "sim_s": 660,
+          "snapshot_sha256": "7b28dbdd8297f6147b07eddb6e40cde3484143511d6bab31f5eada9003303c24",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "940ab58b677eb91c2e51ad45112cedac2475c139bec1d203e8e95d16b7ad3e9d",
+          "id": "p3_replicated_u024_B_r003_s000_b04",
+          "sim_s": 660,
+          "snapshot_sha256": "c90c9967f9d1fa27584c113f5314ba9b1b0bc947e1817c69832655b8ad7fc701",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "fb1ca9c4b2503c5534840711efd984ad3b3350c840538565b163dbbe1de080c4",
+          "id": "p3_replicated_u024_B_r004_s000_b00",
+          "sim_s": 1020,
+          "snapshot_sha256": "943d738c06e29ca76a6021f43205e4802826f2fd998ac64fbe5414a462206641",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "49eafd2ca2cc00a9f6b7f3af327a11bda5bd926ab1caa5123df5951e29ee9bb0",
+          "id": "p3_replicated_u024_B_r004_s000_b01",
+          "sim_s": 1020,
+          "snapshot_sha256": "663a748442b93c9ac9597770d82b80d5bbb24e28db0ce9f95dfa9034002ea32e",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "7a177b6168990760a454078d7fb40e75d4e436d5e439a905541667bee650b824",
+          "id": "p3_replicated_u024_B_r004_s000_b02",
+          "sim_s": 1020,
+          "snapshot_sha256": "ac21baa5e4cef69b61472a65eae00aba12df5953cf886e46718a8bcf798936a0",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "bfc93a7ac64aaf30e6d02499831c9e2a3e0633caa393976120d167193700a8c2",
+          "id": "p3_replicated_u024_B_r004_s000_b03",
+          "sim_s": 1020,
+          "snapshot_sha256": "4c153d458dd715042eb17efa0de5ddb31c5a9022ea7426dbe158afdbb0f74bbe",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "35911d7704a86e453102fabacf15a52443b34cb2e06d1a661ac1ec7825a6974a",
+          "id": "p3_replicated_u024_B_r004_s000_b04",
+          "sim_s": 1020,
+          "snapshot_sha256": "4003f6149f0c307ecb0ddf0d215882b5ffeed0a4e4540519c774ec86c9e16116",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "226c8394a0b77d929e8c78d9b150498a27895d624c0a0d7f783bd17f804c7665",
+          "id": "p3_replicated_u024_B_r004_s000_b05",
+          "sim_s": 1020,
+          "snapshot_sha256": "e7d3284bab91821cf21c85d2c834ba99eae05657ce5d3b16e331c4f3f61a6756",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "86ca1bd4bd0a4202650f8c53e7414a9700eb122a4121f1ea0c3d45c48b2dae2d",
+          "id": "p3_replicated_u024_R_r000_s000_b00",
+          "sim_s": 600,
+          "snapshot_sha256": "6b256245a4735199eadb29e6c2da9f44068b51d3f596218a9dc2897028b8ae06",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "bfc2dc1bb66aa97a8a68e7b2e868425c0807333087e03a67a02e79ef52a1eeaf",
+          "id": "p3_replicated_u024_R_r000_s000_b01",
+          "sim_s": 600,
+          "snapshot_sha256": "8d4049c9d4300d6e6972a1a31c4efae965e6392bfe203e54cbe9b7439a3b579a",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "63f7b521d17dfb7c4e1fe43ac435ccfbb807f272b83f5207611b53ef8db31a4f",
+          "id": "p3_replicated_u024_R_r000_s000_b02",
+          "sim_s": 600,
+          "snapshot_sha256": "6951dd6dcab4a45127320b87c42829f696c0decf63f9407a40ba6190365fc5cb",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "b1afc5ac75fd1d612a72068c445e0840cba170e4787900be3fc85c3a8927d23c",
+          "id": "p3_replicated_u024_R_r000_s000_b03",
+          "sim_s": 600,
+          "snapshot_sha256": "23290631634c63d68191dad8cc089261a302c924841e4e2dc13c418187bf1961",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "c25c05338a25bdb541edd2be33c201fd289cbc2266104e1853ceae0435567869",
+          "id": "p3_replicated_u024_R_r000_s001_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "712be922c109d46faeb02203d1f119ef2412296aa7cd41fd568ea18efc599daa",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "de6bcd1f24dd9a4da074f7a047cf12ea55ff771ad9edca2e27a2c2d762fbc7c6",
+          "id": "p3_replicated_u024_R_r000_s001_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "f9202844be19b4eeb492a37ed5def61c60c22d55c9a2c7b6bedecc68cf7f58d2",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "305c9ca20d34ebcc0afe2e99968ff0f759b59584a98bb4750d4b88627130dc5c",
+          "id": "p3_replicated_u024_R_r000_s001_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "751f824941f4a38cffc7b3f71c23077114ac50bfc735d86e37c73e8776d01f44",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "196849427814af2d93f4143dfcaf4b66e1997d4b79d153b3e491ce4c972be306",
+          "id": "p3_replicated_u024_R_r000_s001_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "18d8ca4b0d0b12c89ddcb1e04a605aadda41e3accc2879f17f5243095482bdc4",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "0ade6a5c37dc13442b8d3cf98040f8543ce31b5a51c334ff2a924e5b69c3a190",
+          "id": "p3_replicated_u024_R_r000_s002_b00",
+          "sim_s": 460,
+          "snapshot_sha256": "3caa5617aefe18a219aaf42eb00b45adae1587518503025929376450955fd3ee",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "2d239825175f775128a0179d6dd748818fa48d7ca3cafef747b8c356306f3b06",
+          "id": "p3_replicated_u024_R_r000_s002_b01",
+          "sim_s": 460,
+          "snapshot_sha256": "939ce184c3c33d1a944d1a15f87f7762e01f3f7726732d30158b25a5e2439576",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "5844733696b7e14fa742b0540444a8aa258ecdea3b029613bdb5d06f66bb8b64",
+          "id": "p3_replicated_u024_R_r000_s002_b02",
+          "sim_s": 460,
+          "snapshot_sha256": "400848e26d2e01d8b87fe15cb5227815fb3a8ee46671c47b67366befa987be55",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "b8f678a6c337c6e5de48e4bb299cbc587c1d53287b0928b0b4de5b7fc79c0c79",
+          "id": "p3_replicated_u024_R_r000_s002_b03",
+          "sim_s": 460,
+          "snapshot_sha256": "41ad2ca30a09e3c9e3e012df23093b1b6c0374ffefc53264448efc1bb0a0fb90",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "01c02655368cdf88e3af32dd68bda3360101eb5b74ffbd341e45fad178644f2c",
+          "id": "p3_replicated_u024_R_r000_s002_b04",
+          "sim_s": 460,
+          "snapshot_sha256": "ecaaa4da067f08e6f5f372d7633630f076ba7d81339d3c37b381e74a7ad96eac",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "9a9487edd9ad03e1b12ae9afc9a889345aa35b0e05c9aae530b3e145db776f92",
+          "id": "p3_replicated_u024_R_r001_s000_b00",
+          "sim_s": 720,
+          "snapshot_sha256": "4ca8a42fae18c49114bd18e6b7005d4def22a3e89a2b4ac9e5bfff5cba3133d3",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "413c35a64cdba233018eb2247a678bb54cca21766dda52a64c11cd5899f159d7",
+          "id": "p3_replicated_u024_R_r001_s000_b01",
+          "sim_s": 720,
+          "snapshot_sha256": "9997e78db3dcd06d4019a1f7b4eb78a2ccc87397dc7f4cac0c9019088efe4c55",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "3d4fa8b1479ea7433137ae8150b347c34523954109b66e61664a0e644a5e84b3",
+          "id": "p3_replicated_u024_R_r001_s000_b02",
+          "sim_s": 720,
+          "snapshot_sha256": "a4f6c347009aab04218367f2b40b612a5563e51bebded1f47ca422f581dc9b35",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "d83a7cd0b7582fce09384ed0d03fe7f4c96e1d712305f5a30c4f4ba4e40db7d7",
+          "id": "p3_replicated_u024_R_r001_s000_b03",
+          "sim_s": 720,
+          "snapshot_sha256": "cdc9c89a4c06b494efd2f462d8d9a8b8b1a037688e89b59bc58e4df6252667d4",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "bbb6b81b4e496b37f01cf5cd18dd4b71ffb4130db7166b8fd835624ac8be1a12",
+          "id": "p3_replicated_u024_R_r002_s000_b00",
+          "sim_s": 1020,
+          "snapshot_sha256": "ba9cfe1acccc48964503504e2dfd1b56bf3b28a7aee23b4b7188b3761aefbebb",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "bae62d7e7accfff747d13e2fb67c46dd954a7ba873ea739dc69ae22b703be7b0",
+          "id": "p3_replicated_u024_R_r002_s000_b01",
+          "sim_s": 1020,
+          "snapshot_sha256": "3cbb954055b166130b17c2602d30d1e481246d90245178def3b7f91f34c7b4c3",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "eb048243a4dcaf8d5cb2da9938972e43190d00cbd21067bb74865a54fc24142e",
+          "id": "p3_replicated_u024_R_r002_s000_b02",
+          "sim_s": 1020,
+          "snapshot_sha256": "cbd8b6bfbb0ff41528ac31f10e9174785c0e511d374350f29b9b8647884dd9a8",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "b4f19c2f10ba15742b72028339347bddd1bde67f8f01082ee9a8a451836bd8e8",
+          "id": "p3_replicated_u024_R_r002_s000_b03",
+          "sim_s": 1020,
+          "snapshot_sha256": "afe29541b448ab990deb705bdeb5f0d31cb4bb0d40dbfe1021bf90511d0b8192",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "c5bdd0d316d9b4d216d34e4ff7373b5e5e48419afea1cec62def70481d63c9d6",
+          "id": "p3_replicated_u024_R_r003_s000_b00",
+          "sim_s": 660,
+          "snapshot_sha256": "2cade1ab4e77078e481373f13c4d02536d27e56792fa78be4a8f1d9a8bca28da",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "47ccd80b2145e560694535d3123a2612283159488ce8a00249b93d09c006b47a",
+          "id": "p3_replicated_u024_R_r003_s000_b01",
+          "sim_s": 660,
+          "snapshot_sha256": "0a1248c776a137c8bec124ff31b21201935d960fb0a51275bf88e13ee87acef2",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "b7e897c0c6d14b08859b71b68578ed482dba6f659457bd7b3a26a70104dd383e",
+          "id": "p3_replicated_u024_R_r003_s000_b02",
+          "sim_s": 660,
+          "snapshot_sha256": "93a48cc133f3b78b6fc83c2ab2c3acdba88dbbc40feba18956b2f6cac64c475a",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "1f39b312a992c97f4a7efe3f1e0d508f45a14267f8fa9c32fb92c096ce0810bd",
+          "id": "p3_replicated_u024_R_r003_s000_b03",
+          "sim_s": 660,
+          "snapshot_sha256": "d833c60d8980cb6fef19d127e9a781f2a1fee4edca7ffc372014bb7d57b6cd38",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "79fae1815ebe5038eddae5a3377eeb967e37d59ef8973cc66f6955d466427342",
+          "id": "p3_replicated_u024_R_r003_s000_b04",
+          "sim_s": 660,
+          "snapshot_sha256": "07fcd7a325f76890d50f80d42526a0e57320b6683caea1e75f6965d7452af0e9",
+          "window": {
+            "end_s": 660,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "4e1c437050a3db21addad54f6bae0bddb51f492660082e3e979a515a29781a9f",
+          "id": "p3_replicated_u024_R_r004_s000_b00",
+          "sim_s": 1020,
+          "snapshot_sha256": "3d960ab1358703f74bb3393166f0ff2b46bd207b458cbdbddcadd67c74969a8b",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "cfaa3f6f4cbdd66cb85fa33b1644b93fb5d08104cf082dffd74f4b2588162403",
+          "id": "p3_replicated_u024_R_r004_s000_b01",
+          "sim_s": 1020,
+          "snapshot_sha256": "8667911102f20e9ff12d25423637d717cc92424e2e7086f19a232a3bce2ca91a",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "06bf826ed641afd52173d52f3cc41f66cda9d5dbe5aae95372f2dfb0b826c8ba",
+          "id": "p3_replicated_u024_R_r004_s000_b02",
+          "sim_s": 1020,
+          "snapshot_sha256": "7b6b3733c87fc1dfa3ebdc8c39d58c591c79edd7e69f52e3f630e8b9dd166720",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "4a95fbe4a95f20d50ddca04ec3b138fe68d02ec3357ac2e30c32d4d633f8a89a",
+          "id": "p3_replicated_u024_R_r004_s000_b03",
+          "sim_s": 1020,
+          "snapshot_sha256": "b6188a83905b0875bf71e8cf54d6d685d84ecedf04ca3b89ff70619edafb0258",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "06c61ec8c25fb6e1c4db1e138084e045d8ac7586257596ea0798b5579c191ab3",
+          "id": "p3_replicated_u024_R_r004_s000_b04",
+          "sim_s": 1020,
+          "snapshot_sha256": "17e664f2c249f2f32459577bd92d1e483a7107e4156706bd828c85ce0b275d7c",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch_sha256": "57287db28339250ef6700885d3564a67c1311ac28fd8a31888b23b3c12510c28",
+          "id": "p3_replicated_u024_R_r004_s000_b05",
+          "sim_s": 1020,
+          "snapshot_sha256": "ed2c02043856c721fa9ca113fc05305f37d7cd9fbe21092e028ede108a081831",
+          "window": {
+            "end_s": 1020,
+            "metric": "team_delay_vs",
+            "start_s": 600,
+            "tail_s": 120,
+            "truncated": false
+          }
+        }
+      ],
+      "branches": 64,
+      "cells": 10,
+      "criterion": "u24 group-over-best-single synergy (policy_cooperation_gain_veh_s) B-vs-zero CI95 low > 0 and no safety regression; total benefit and B-R descriptive",
+      "criterion_metric": "policy_cooperation_gain_veh_s",
+      "dry": true,
+      "kind": "replicated",
+      "metric_reports": {
+        "delta_all_new_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {},
+          "formula": "J_reference - J_all",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Total benefit vs common base",
+          "registered_u24_metric": false,
+          "unit": "veh-s"
+        },
+        "policy_cooperation_gain_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {},
+          "formula": "(J_reference - J_all) - max_i(J_reference - J_solo_i)",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Group-over-best-single synergy",
+          "registered_u24_metric": true,
+          "solo_zero_floor": false,
+          "unit": "veh-s"
+        }
+      },
+      "new_sim_s": 0,
+      "quote_sha256": "99cd7536336c92dc46606cdde352cf87fef3043c233d7c4921d7591a068a9811",
+      "quoted_sim_s": 47920,
+      "receipt_sha256": "2bae545d5b0b73416c229a47e67544095096a91ce6a2862a2bfa1c3bbc05a07d",
+      "records": [],
+      "schema": "coopmwm.track2.isolated_diagnostic.v1",
+      "status": "dry_run",
+      "update": 24
+    }
+  },
+  "finalization_requirements": [
+    "G1/G2/G4 acceptance and integrated qualification",
+    "Recompute against final stopped clean2 ledger; current running prefix is not final",
+    "Assert complete quote plus prior charges plus protected plan_fix <= registered cap",
+    "Qualify production G1/G4 adapters and all fix/G receipt checks before any physics",
+    "One detached chain only; preserve clean1 and clean2; no retry or weakened check"
+  ],
+  "fits_current_prefix": false,
+  "g1": {
+    "arms": [
+      "B",
+      "R"
+    ],
+    "contexts_per_arm": 8,
+    "preferred_two_actor_sim_s": 153600,
+    "reuse_discount_sim_s": 0,
+    "seeds": 2,
+    "worst_case_sim_s": 230400
+  },
+  "g4": {
+    "arms": [
+      "B",
+      "R"
+    ],
+    "max_starts_per_arm": 8,
+    "preferred_two_actor_sim_s": 153600,
+    "reuse_discount_sim_s": 0,
+    "seeds": 2,
+    "worst_case_sim_s": 230400
+  },
+  "gate_attempts": 1,
+  "gate_environment_retries": 0,
+  "gate_manifest": [
+    {
+      "id": "clean1_gate_B_s000_b00",
+      "sim_s": 600,
+      "snapshot_sha256": "907b1d5a266eeb2d1e875dcb3dec5a6cb603ecd2da0853e5c137c738a4382aee",
+      "window": {
+        "end_s": 600,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_B_s000_b01",
+      "sim_s": 600,
+      "snapshot_sha256": "7acb1e811af40d2b2160d8891161a2c2e86bd24081ae7a2fc691aef2d96cc634",
+      "window": {
+        "end_s": 600,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_B_s000_b02",
+      "sim_s": 600,
+      "snapshot_sha256": "0b46456451449bf78d2c70ce357b89f73f83a9f02c421ce550991029c8175b36",
+      "window": {
+        "end_s": 600,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_B_s000_b03",
+      "sim_s": 600,
+      "snapshot_sha256": "5393538b62e278ff174c7f56b0665b9fe7826747ad0892a374e53bdeaa13ed9c",
+      "window": {
+        "end_s": 600,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_B_s001_b00",
+      "sim_s": 720,
+      "snapshot_sha256": "ad5b29b2aa1df68cada65cc4cbc7d2375e8271e79d9ae5c117554c066cfc4439",
+      "window": {
+        "end_s": 720,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_B_s001_b01",
+      "sim_s": 720,
+      "snapshot_sha256": "86f641c90a34645504b11baa0510ba58d108f6e0946674b3a6228f579ad4155b",
+      "window": {
+        "end_s": 720,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_B_s001_b02",
+      "sim_s": 720,
+      "snapshot_sha256": "10b5449b2ac970dc45ebcdd88cce358459f1c88b5fce4bfdf4017e70e14ef6be",
+      "window": {
+        "end_s": 720,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_B_s001_b03",
+      "sim_s": 720,
+      "snapshot_sha256": "01e3158dbf4c0a7d358cc8615b4195bd2e0c368a72cd6cf615ca4a039d322dbf",
+      "window": {
+        "end_s": 720,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_B_s002_b00",
+      "sim_s": 460,
+      "snapshot_sha256": "ea0b75c8f172a82dda5e9ce2a8320a083583627f33ca567a6b2e40875d6db62b",
+      "window": {
+        "end_s": 460,
+        "metric": "team_delay_vs",
+        "start_s": 310,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_B_s002_b01",
+      "sim_s": 460,
+      "snapshot_sha256": "5247a2d6046806b3d7db4f57ef2055e60b714b9503542ef1279d81361b2b1f4d",
+      "window": {
+        "end_s": 460,
+        "metric": "team_delay_vs",
+        "start_s": 310,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_B_s002_b02",
+      "sim_s": 460,
+      "snapshot_sha256": "6caf3919dd4579f54673da300497da9a74ec5f6b3977e1f8de4ee2606520c250",
+      "window": {
+        "end_s": 460,
+        "metric": "team_delay_vs",
+        "start_s": 310,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_B_s002_b03",
+      "sim_s": 460,
+      "snapshot_sha256": "b76e4baed9466d883fb31e16c3ab57d752cf978e4f62b3793125c6c5c506b1ce",
+      "window": {
+        "end_s": 460,
+        "metric": "team_delay_vs",
+        "start_s": 310,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_B_s002_b04",
+      "sim_s": 460,
+      "snapshot_sha256": "16c17823daa5ae866c156df9728acef39a52a8a5d610a684ec0e20982c5fdb16",
+      "window": {
+        "end_s": 460,
+        "metric": "team_delay_vs",
+        "start_s": 310,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_R_s000_b00",
+      "sim_s": 600,
+      "snapshot_sha256": "8fa0fef17ce4545905dcbc0bc6201119f11fa765b539f75111666be72e8d6f1a",
+      "window": {
+        "end_s": 600,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_R_s000_b01",
+      "sim_s": 600,
+      "snapshot_sha256": "a94b3a55b04ab6024556035a4caaf7d9df19db41d00993f4a53ca8a403949a3b",
+      "window": {
+        "end_s": 600,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_R_s000_b02",
+      "sim_s": 600,
+      "snapshot_sha256": "72f74546c1def855b137df33522b2561d29e7c6f061dea3c80db6f970099aaba",
+      "window": {
+        "end_s": 600,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_R_s000_b03",
+      "sim_s": 600,
+      "snapshot_sha256": "b37ed0d17876ecadf7025f53094e47d924cd0641b1d1121dd6671e13db5af95f",
+      "window": {
+        "end_s": 600,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_R_s001_b00",
+      "sim_s": 720,
+      "snapshot_sha256": "44a163f01c20bd8ae03c4031e857434af57bc0fd6050e9b43d0b1ae64205b1c4",
+      "window": {
+        "end_s": 720,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_R_s001_b01",
+      "sim_s": 720,
+      "snapshot_sha256": "cc8fdc0c24420a7ed47f607a85c052158a321179f673585becfc235d8f0058f7",
+      "window": {
+        "end_s": 720,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_R_s001_b02",
+      "sim_s": 720,
+      "snapshot_sha256": "93349805aa39adfa6a38c898e2a98e8d3c598ffd1058f1e90b4d4b065f73f45c",
+      "window": {
+        "end_s": 720,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_R_s001_b03",
+      "sim_s": 720,
+      "snapshot_sha256": "d8792a19e13678b11fe14f28219eb05a35fb07456af4204360a7cd8e3eee865e",
+      "window": {
+        "end_s": 720,
+        "metric": "team_delay_vs",
+        "start_s": 300,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_R_s002_b00",
+      "sim_s": 460,
+      "snapshot_sha256": "3ace5c30aa8bdec07ed8569bec057ba74d01f678ae0a02fd1e79a5480ec5d9f1",
+      "window": {
+        "end_s": 460,
+        "metric": "team_delay_vs",
+        "start_s": 310,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_R_s002_b01",
+      "sim_s": 460,
+      "snapshot_sha256": "7fadd0639614d906419fa3b56dd43bedb7aed118ea4ec31ce9d09b21b4b3ffcf",
+      "window": {
+        "end_s": 460,
+        "metric": "team_delay_vs",
+        "start_s": 310,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_R_s002_b02",
+      "sim_s": 460,
+      "snapshot_sha256": "d9a96a775b943b9ae0125ae5e9536d2698eadb2d83526482f3ba0fad3031ade5",
+      "window": {
+        "end_s": 460,
+        "metric": "team_delay_vs",
+        "start_s": 310,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_R_s002_b03",
+      "sim_s": 460,
+      "snapshot_sha256": "889f44ca266105f90ef31705539814e80cbc2658813a1de168fcc9a204bad176",
+      "window": {
+        "end_s": 460,
+        "metric": "team_delay_vs",
+        "start_s": 310,
+        "tail_s": 120,
+        "truncated": false
+      }
+    },
+    {
+      "id": "clean1_gate_R_s002_b04",
+      "sim_s": 460,
+      "snapshot_sha256": "882c3382892dc63a5d5663421c1a338a53cf6c9a509295b58cebe370503a2806",
+      "window": {
+        "end_s": 460,
+        "metric": "team_delay_vs",
+        "start_s": 310,
+        "tail_s": 120,
+        "truncated": false
+      }
+    }
+  ],
+  "inherited_config_file_sha256": "827d24dd9708adc7cba649b24b48fa74e65a7f9255766f40a67c49038c091bb6",
+  "observed_monitors": [
+    {
+      "receipt_sha256": "8a284b6c884ca836d32a98a30e41f181cb3de347d322cb977509b57f7447655a",
+      "update": 1
+    },
+    {
+      "receipt_sha256": "78766d373103983dfe5807b22fd7a93f8dd5391b4e7b2ab4f86c8b4fdc666386",
+      "update": 2
+    },
+    {
+      "receipt_sha256": "33afa46d90a8a233a22feafcd03732b712f0870d1e64eaaaac5a6cf057f23060",
+      "update": 3
+    },
+    {
+      "receipt_sha256": "4d7eddc951a1876bc29a16ac07053e79fadaaa1dbbf8c49b0eaa66e8d128e075",
+      "update": 4
+    },
+    {
+      "receipt_sha256": "c47563a162d104f423d1e69dd9ccf01480213ebba5cfb6c0a8768ce2ab38a5a0",
+      "update": 5
+    },
+    {
+      "receipt_sha256": "60c0bea00cf5c6b6a3524fd1f9a1b46105090fb2cbb7545590fe5178808e97cc",
+      "update": 6
+    },
+    {
+      "receipt_sha256": "db6bf5c090878fa3b79ee86089f0da049ff990dbdc380b44b0367b8033867838",
+      "update": 7
+    },
+    {
+      "receipt_sha256": "1d7321d78dbf1510a16d9df5e983cff85c5442aa782d90d5f4776ae607b8dbb2",
+      "update": 8
+    },
+    {
+      "receipt_sha256": "6b74a4473b95e130bd26f7d9beeaf0a3f57a212396e79ad887329a3498aaff0b",
+      "update": 9
+    },
+    {
+      "receipt_sha256": "3164b245d301d250f7bba5718e462b12c920f71d66714632835615ce0ae5ae8f",
+      "update": 10
+    },
+    {
+      "receipt_sha256": "b299515c968c7bf64cc94e9a58ce8537fc2a7245e210f05ac51d11f165d6026e",
+      "update": 11
+    },
+    {
+      "receipt_sha256": "4f53315251752f43f5ba8096d92f33a56599a834e578f2d3363f400970117e48",
+      "update": 12
+    },
+    {
+      "receipt_sha256": "7e3bf9af8de03b457f11853e79e3214e85e2fd59ca4f2616e341851ba36acd4f",
+      "update": 13
+    },
+    {
+      "receipt_sha256": "cc6cc6b84ec6a42d2a1a96abf5d5ef6014eb1621f745cbfa57842c3a0df04e0f",
+      "update": 14
+    },
+    {
+      "receipt_sha256": "14ce1cbab99e29c08d6c1e57a16f49c15372bcda40255a2b7e212c88207f6706",
+      "update": 15
+    }
+  ],
+  "owner_budget": {
+    "owner_approval": "yes, approve.",
+    "scope": "clean1+clean2+plan_fix+clean3 (incl. G1 certification)",
+    "total_cap_sim_s": 6000000
+  },
+  "phases": {
+    "augment_verify": 0,
+    "early_probes": 45480,
+    "g1_certification": 230400,
+    "g4_synergy_credit": 230400,
+    "gate_bank_verification_ext": 15160,
+    "group_credit_verify": 0,
+    "isolated_replicated": 143760,
+    "teacher_verify": 0,
+    "track2_smoke": 20000,
+    "v2v_final": 345600,
+    "v2v_interim": 345600,
+    "v2v_lessons": 21840,
+    "v2v_train": 1843200
+  },
+  "plan_fix_unspent_reserved_sim_s": 566400,
+  "prior_charged_sim_s": 2928240,
+  "prior_ledgers": {
+    "clean1": {
+      "canonical_prefix_sha256": "cf0b0dd434f808486c64aec7a0ee63e14f26d4d7007a3c6c8ab8adbb411bed48",
+      "charged_sim_s": 1248480,
+      "plan_fix_sim_s": 33600,
+      "rows": 1136
+    },
+    "clean2": {
+      "canonical_prefix_sha256": "56be347a7fbb4e194c20e4a6f64abd1074508fc5dd0985640a6af20bde518c00",
+      "charged_sim_s": 1678800,
+      "plan_fix_sim_s": 0,
+      "rows": 1514
+    }
+  },
+  "prior_parity_sim_s": 960,
+  "qualification_and_launch_authorized": false,
+  "read_only": true,
+  "remaining_margin_at_observed_prefix_sim_s": -736080,
+  "schema": "coopmwm.clean3.prospective_quote.v1",
+  "smoke_actual_existing_quote": {
+    "branches": [
+      {
+        "id": "clean1_gate_B_s000_b00",
+        "sim_s": 600,
+        "snapshot_sha256": "907b1d5a266eeb2d1e875dcb3dec5a6cb603ecd2da0853e5c137c738a4382aee",
+        "window": {
+          "end_s": 600,
+          "metric": "team_delay_vs",
+          "start_s": 300,
+          "tail_s": 120,
+          "truncated": false
+        }
+      },
+      {
+        "id": "clean1_gate_B_s000_b01",
+        "sim_s": 600,
+        "snapshot_sha256": "7acb1e811af40d2b2160d8891161a2c2e86bd24081ae7a2fc691aef2d96cc634",
+        "window": {
+          "end_s": 600,
+          "metric": "team_delay_vs",
+          "start_s": 300,
+          "tail_s": 120,
+          "truncated": false
+        }
+      },
+      {
+        "id": "clean1_gate_B_s000_b02",
+        "sim_s": 600,
+        "snapshot_sha256": "0b46456451449bf78d2c70ce357b89f73f83a9f02c421ce550991029c8175b36",
+        "window": {
+          "end_s": 600,
+          "metric": "team_delay_vs",
+          "start_s": 300,
+          "tail_s": 120,
+          "truncated": false
+        }
+      },
+      {
+        "id": "clean1_gate_B_s000_b03",
+        "sim_s": 600,
+        "snapshot_sha256": "5393538b62e278ff174c7f56b0665b9fe7826747ad0892a374e53bdeaa13ed9c",
+        "window": {
+          "end_s": 600,
+          "metric": "team_delay_vs",
+          "start_s": 300,
+          "tail_s": 120,
+          "truncated": false
+        }
+      },
+      {
+        "id": "clean1_gate_R_s000_b00",
+        "sim_s": 600,
+        "snapshot_sha256": "8fa0fef17ce4545905dcbc0bc6201119f11fa765b539f75111666be72e8d6f1a",
+        "window": {
+          "end_s": 600,
+          "metric": "team_delay_vs",
+          "start_s": 300,
+          "tail_s": 120,
+          "truncated": false
+        }
+      },
+      {
+        "id": "clean1_gate_R_s000_b01",
+        "sim_s": 600,
+        "snapshot_sha256": "a94b3a55b04ab6024556035a4caaf7d9df19db41d00993f4a53ca8a403949a3b",
+        "window": {
+          "end_s": 600,
+          "metric": "team_delay_vs",
+          "start_s": 300,
+          "tail_s": 120,
+          "truncated": false
+        }
+      },
+      {
+        "id": "clean1_gate_R_s000_b02",
+        "sim_s": 600,
+        "snapshot_sha256": "72f74546c1def855b137df33522b2561d29e7c6f061dea3c80db6f970099aaba",
+        "window": {
+          "end_s": 600,
+          "metric": "team_delay_vs",
+          "start_s": 300,
+          "tail_s": 120,
+          "truncated": false
+        }
+      },
+      {
+        "id": "clean1_gate_R_s000_b03",
+        "sim_s": 600,
+        "snapshot_sha256": "b37ed0d17876ecadf7025f53094e47d924cd0641b1d1121dd6671e13db5af95f",
+        "window": {
+          "end_s": 600,
+          "metric": "team_delay_vs",
+          "start_s": 300,
+          "tail_s": 120,
+          "truncated": false
+        }
+      }
+    ],
+    "complete_smoke_sim_s": 14400,
+    "selection": "first prospectively registered state, B/R group/solos/common-base; full windows; descriptive only",
+    "sim_s": 4800
+  },
+  "start_updates": {
+    "A": 0,
+    "B": 0,
+    "R": 0
+  },
+  "status": "BLOCKED_BUDGET",
+  "timestamp": "2026-11-05T16:23:47.666073+00:00",
+  "training_updates": 24
+}
