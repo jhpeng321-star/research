@@ -1,0 +1,92 @@
+{
+  "task": "F3",
+  "status": "ready",
+  "date": "2026-11-05",
+  "worktree": "E:/agent-work/c4-fix-breadth",
+  "branch": "c4/fix-breadth",
+  "base_branch": "c4/rerun-launch",
+  "base_commit": "8bf7f533",
+  "commits": [
+    {
+      "commit": "79ea306f",
+      "subject": "C4 F3: broaden verified practice and trigger contexts"
+    }
+  ],
+  "scope": "F3 practice/bank breadth and CPU tests only",
+  "implementation": [
+    "One native verified-example visitor for current, imported LS and optional PLAN_FIX banks; no first-three limit.",
+    "Practice includes all usable admitted cooperative contexts, preserves each original snapshot and per-seed CRN, deduplicates restart contexts and rotates through less-used contexts before repetition.",
+    "Trigger supervision scans retained observable frames for each acting member, adjusts remaining onset/hold, and includes legacy and newly supplied verified plans.",
+    "Practice B/R family quotas match; R follows B realized family sequence after normal replacements. Trigger CE uses equal supported-family mass and equal within-family context mass in both arms.",
+    "Explicit mismatch refusal prevents unverified labels or silent B/R family-distribution drift.",
+    "Frozen plans, snapshot hashes, context identities, family counts and normalized CE family mass provide auditable breadth receipts.",
+    "A bypasses bank/PLAN_FIX readers and practice selection; frozen low-level parameters remain untouched in actual CPU trigger updates."
+  ],
+  "api": {
+    "bank_breadth.inputs": "inputs(cfg) -> current and PLAN_FIX bank run_root/replay_sources entries",
+    "bank_breadth.visit": "visit(cfg, arm, consumer) -> callback for every usable verified example; A is a no-op",
+    "bank_breadth.practice_pool": "practice_pool(cfg, arm) -> distinct verified restart contexts with snapshot lookup/hash, family and seed provenance",
+    "bank_breadth.observable_contexts": "observable_contexts(policy, plan, pairs, frames, t0=...) -> earliest usable context/remaining library target per acting member",
+    "practice_starts.plan_for_update": "Added breadth_cfg=cfg; wired in production collection and matched-A safety-reference plan lookup",
+    "practice_starts.load_snapshot": "Supports native imported LS and external verified-bank snapshot_lookup, exact CRN replication and frozen snapshot hash verification",
+    "launch_production.bank_move_supervision": "All usable verified contexts; normalized common family distribution and context-identity receipts",
+    "handoff": {
+      "default_path": "<run_root>/PLAN_FIX_READY.json",
+      "override": "cfg.plan_fix_ready",
+      "schema": "coopmwm-plan-fix-banks-v1",
+      "outputs": "[{run_root: <verified bank run root>, replay_sources: {B: [<LS source>], R: [<LS source>]}}]",
+      "empty_or_missing": "Use the current bank and configured replay_sources",
+      "verification": "Handoff is not admission evidence: existing native confirmation, confidence/safety, branch tape hash and effective/observable target checks still apply"
+    }
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "device": "cpu",
+    "verified_unique_total": {
+      "passed": 213,
+      "skipped": 1,
+      "unresolved_failures": 0
+    },
+    "final_suite": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_bank_breadth_cpu.py tools/coopmwm/test_launch_integration_cpu.py tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_practice_starts_cpu.py tools/coopmwm/test_practice_weighting_cpu.py --basetemp E:/agent-work/c4-fix-breadth/_out/f3-final-tests",
+      "result": "212 passed, 1 skipped, 1 failed; the only failure was the new wiring test comparing against cfg without the existing runtime update=1 field",
+      "resolution": "Corrected that test expectation to dict(cfg, update=1); production code unchanged"
+    },
+    "resolved_test": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_track2_backend_cpu.py -k weighted_practice_uses_existing_frozen_plan_and_batch --basetemp E:/agent-work/c4-fix-breadth/_out/f3-wiring-check",
+      "result": "1 passed, 76 deselected"
+    },
+    "earlier_complete_regression": "211 passed, 1 skipped before the final realized-family/report tests and wiring assertion were added",
+    "skip_reason": "Existing file-symlink privilege test skips on Windows; exercised by cpuV qualification",
+    "coverage": [
+      "Native on-disk confidence/safety admission rejects non-admitted examples and changed branch tapes",
+      "Six distinct verified plans times two admitted seeds enter the pool, including LS-imported and PLAN_FIX library/variety fixture banks",
+      "Native LS pending/snapshot/episode reconstruction and exact seed-2 generator restoration",
+      "Rotation across all 11 available synthetic contexts, deterministic frozen-plan reuse, repeat caps and unequal B/R bank sizes",
+      "R matches realized B family sequence after a failed practice slot becomes normal",
+      "Actual trigger CE decreases over eight contexts with equal family mass despite seven-to-one example/legacy-weight skew",
+      "Missing first frame is recovered through later observable context; hidden partner remains ineligible",
+      "Frozen base weights/gradients and A bank-reader isolation",
+      "Realized context identity, distinct-count and family histograms"
+    ],
+    "git_diff_check": "passed"
+  },
+  "execution": {
+    "simulation_seconds": 0,
+    "ssh_calls": 0,
+    "sumo_runs": 0,
+    "gpu_runs": 0,
+    "remote_config_changes": 0,
+    "production_data_validation": false
+  },
+  "integration_requirements": [
+    "Publish and stage PLAN_FIX/S-VARIETY outputs using the documented verified-bank handoff contract when those outputs exist.",
+    "Apply at a new update boundary: pre-F3 frozen plans are preserved and refused for same-update F3 reuse.",
+    "Provide verified family support in both B and R; runtime explicitly rejects unequal support instead of weakening verification or fairness."
+  ],
+  "open_issues": [
+    "Real PLAN_FIX/S-VARIETY outputs and current production B/R usable family support were not inspected in this CPU-only worktree task; the hook is validated with native-format CPU fixture banks.",
+    "Legacy native-plan projection remains approximate; only a separately re-verified library plan certifies the library action's realized outcome."
+  ],
+  "documentation": "F3_BREADTH.md"
+}
