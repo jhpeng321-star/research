@@ -135,7 +135,7 @@ def test_default_off_never_consumes_source_or_calls_scorer(cfg):
     score = Mock(side_effect=AssertionError('off must not score'))
     batch = pa.augment(forbidden_sources(), arm='B', registration=cfg, score=score)
     assert not batch['enabled'] and not batch['sumo_dispatched']
-    assert batch['examples'] == batch['spot_checks'] == []
+    assert batch['examples'] == batch['proposals'] == batch['spot_checks'] == []
     score.assert_not_called()
     assert_sealed(batch)
 
@@ -166,8 +166,9 @@ def test_small_registered_perturbations_are_executable_and_source_is_untouched()
     before = copy.deepcopy(src)
     batch = run(src, wm=wm)
     assert src == before
-    assert len(batch['examples']) == 6
-    for ex in batch['examples']:
+    assert len(batch['proposals']) == 6
+    assert batch['examples'] == []
+    for ex in batch['proposals']:
         p = ex['plan']
         assert p['members'] == ['a', 'c']  # one same-lane visible partner swap
         assert p['duration_s'] == 120 and p['variety_family'] == 'wall'
@@ -181,9 +182,9 @@ def test_small_registered_perturbations_are_executable_and_source_is_untouched()
         assert ex['wm']['horizon_s'] == 300
         assert not ex['sumo_verified'] and ex['verification'] == 'wm_only'
         assert p['profile'] != src['confirmation']['per_seed_v1']['examples'][0]['plan']['profile']
-    assert len({e['id'] for e in batch['examples']}) == len(batch['examples'])
+    assert len({e['id'] for e in batch['proposals']}) == len(batch['proposals'])
     assert_sealed(batch)
-    assert json.loads(json.dumps(batch))['examples'] == batch['examples']
+    assert json.loads(json.dumps(batch))['proposals'] == batch['proposals']
 
 
 def test_scorer_receives_real_base_group_and_each_solo_on_full_horizon():
@@ -202,13 +203,14 @@ def test_scorer_receives_real_base_group_and_each_solo_on_full_horizon():
 @pytest.mark.parametrize('group,solo', [(100., 110.), (101., 120.), (80., 80.), (80., 70.)])
 def test_no_gain_or_no_synergy_is_rejected(group, solo):
     batch = run(wm=WM(group, solo))
-    assert batch['examples'] == [] and batch['counts']['wm_kept'] == 0
+    assert batch['examples'] == batch['proposals'] == [] and batch['counts']['wm_kept'] == 0
     assert batch['counts']['wm_scored'] > 0
 
 
 @pytest.mark.parametrize('bad', ['missing', 'nan', 'short'])
 def test_incomplete_or_nonfinite_wm_predictions_fail_closed(bad):
-    assert not run(wm=WM(bad=bad))['examples']
+    batch = run(wm=WM(bad=bad))
+    assert batch['examples'] == batch['proposals'] == batch['spot_checks'] == []
 
 
 def test_best_solo_is_by_expected_cost_not_samplewise_or_first_solo():
@@ -216,8 +218,8 @@ def test_best_solo_is_by_expected_cost_not_samplewise_or_first_solo():
         return {p['id']: values for p, values in zip(plans, [
             [100]*4, [80]*4, [90]*4, [60, 60, 110, 110]])}
     batch = run(wm=score)
-    assert batch['examples'][0]['wm']['synergy'] == 5.
-    assert batch['examples'][0]['wm']['best_solo_gain'] == 15.
+    assert batch['proposals'][0]['wm']['synergy'] == 5.
+    assert batch['proposals'][0]['wm']['best_solo_gain'] == 15.
 
 
 @pytest.mark.parametrize('admitted,cooperative', [(False, True), (True, False)])
@@ -267,7 +269,7 @@ def test_authoritative_release_horizon_shared_by_base_group_and_all_solos(durati
     batch = run(source(duration=duration), wm=wm, horizon_s=horizon, attempts_per_plan=1)
     call, = wm.calls
     assert horizon >= ms.final_horizon(duration)
-    assert call['horizon_s'] == batch['examples'][0]['wm']['horizon_s'] == horizon
+    assert call['horizon_s'] == batch['proposals'][0]['wm']['horizon_s'] == horizon
     assert len(call['plans']) == 4  # one paired call covers base, group and both solos
     assert all(p['duration_s'] == duration for p in call['plans'])
 
@@ -277,7 +279,7 @@ def test_extra_fields_not_forwarded_and_hdv_not_commanded():
     src['context']['private_unobservable_extra'] = 'not a model input'
     src['context']['rows'][0]['private_unobservable_extra'] = 'not a model input'
     batch = run(src, wm=wm)
-    for ex in batch['examples']:
+    for ex in batch['proposals']:
         assert 'human' not in ex['plan']['members']
     for call in wm.calls:
         assert 'private_unobservable_extra' not in call['context']
@@ -307,27 +309,30 @@ def test_hdv_observation_timestamps_are_validated(time):
 
 def test_no_partner_swap_keeps_ego_and_members():
     batch = run(partner_swap_probability=0.)
-    assert all(ex['plan']['members'] == ['a', 'b'] for ex in batch['examples'])
+    assert batch['proposals']
+    assert all(ex['plan']['members'] == ['a', 'b'] for ex in batch['proposals'])
 
 
 def test_B_R_identical_procedure_own_banks_and_repeatable():
     b, r = run(), run(arm='R')
     # Verification IDs bind own-arm provenance; physical plans remain identical.
     physical = lambda batch: [{k: v for k, v in x['plan'].items() if k != 'id'}
-                              for x in batch['examples']]
+                              for x in batch['proposals']]
+    assert len(physical(b)) == len(physical(r)) == 6
     assert physical(b) == physical(r)
-    assert [x['parameters'] for x in b['examples']] == [x['parameters'] for x in r['examples']]
+    assert [x['parameters'] for x in b['proposals']] == [x['parameters'] for x in r['proposals']]
     assert b['counts'] == r['counts']
     assert run() == b
-    assert all(x['arm'] == 'R' for x in r['examples'])
+    assert all(x['arm'] == 'R' for x in r['proposals'])
 
 
 def test_spot_fraction_uses_separate_rng_and_pending_not_trainable():
     base = run()
     batch = run(spot_check_fraction=.25)
     assert len(batch['spot_checks']) == 2  # ceil(.25 * 6)
-    assert len(batch['examples']) == 4
-    assert {x['id'] for x in batch['examples']+batch['spot_checks']} == {x['id'] for x in base['examples']}
+    assert batch['examples'] == []
+    assert len(batch['proposals']) == 4
+    assert {x['id'] for x in batch['proposals']+batch['spot_checks']} == {x['id'] for x in base['proposals']}
     assert all(x['verification'] == 'pending_all8' for x in batch['spot_checks'])
     assert not batch['sumo_dispatched']
     assert batch == run(spot_check_fraction=.25)
@@ -421,7 +426,7 @@ def test_duplicate_source_does_not_double_exposure_for_fixed_parameter_windows()
         'variety_onset_window_s': (10., 10.), 'variety_hold_window_s': (40., 40.),
         'variety_depth_window': (.6, .6)})
     batch = pa.augment([src, copy.deepcopy(src)], arm='B', registration=c, score=WM())
-    assert len(batch['examples']) == 1  # same physical partner replacement every time
+    assert len(batch['proposals']) == 1  # same physical partner replacement every time
     assert batch['counts']['wm_scored'] == 1
 
 
@@ -438,7 +443,7 @@ def test_feasibility_erased_perturbation_never_reaches_scorer():
     src['verification']['first_seed_receipt'] = first_receipt(plan, snapshot())
     wm = Mock(side_effect=AssertionError('erased perturbation must not be scored'))
     batch = run(src, wm=wm)
-    assert not batch['examples'] and batch['counts']['wm_scored'] == 0
+    assert batch['examples'] == batch['proposals'] == [] and batch['counts']['wm_scored'] == 0
 
 
 def test_partner_uses_its_own_base_policy_not_replaced_members_base():
@@ -462,13 +467,14 @@ def test_resolved_batch_is_idempotent_and_never_checks_twice():
     checker.assert_not_called()
 
 
-def test_unchecked_examples_are_not_relabelled_when_spot_checks_complete():
+def test_unchecked_proposals_stay_outside_bank_when_spot_checks_complete():
     batch = run(spot_check_fraction=.25)
-    wm_only = copy.deepcopy(batch['examples'])
+    wm_only = copy.deepcopy(batch['proposals'])
     result = pa.resolve_spot_checks(batch, evidence)
-    assert result['examples'][:len(wm_only)] == wm_only
+    assert len(wm_only) == 4 and result['proposals'] == wm_only
+    assert all(ex['sumo_verified'] for ex in result['examples'])
     assert result['counts']['sumo_verified_examples'] == 2
-    assert len(result['examples']) == 6
+    assert len(result['examples']) == 2
 
 
 def test_scorer_mutation_cannot_rewrite_plan_or_source():
@@ -482,7 +488,7 @@ def test_scorer_mutation_cannot_rewrite_plan_or_source():
         return result
     batch = run(src, wm=mutating, attempts_per_plan=1)
     assert src == before
-    assert batch['examples'][0]['plan']['profile'][0][0] != 999
+    assert batch['proposals'][0]['plan']['profile'][0][0] != 999
 
 
 @pytest.mark.parametrize('field', ['t0', 'episode', 'seed', 'actor', 'crn', 'prefix'])
@@ -747,3 +753,50 @@ def test_identical_perturbations_on_distinct_source_seeds_do_not_collide_in_all8
             assert all(ex['source_seed_index'] == req['source_seed_index'] for ex in result['examples'])
     assert len(cache) == 3
     runner.assert_not_called()
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('fraction,selected', [(0., 0), (.25, 2), (1., 6)])
+def test_bank_admission_requires_all8_without_expanding_registered_sample(arm, fraction, selected):
+    batch = run(arm=arm, spot_check_fraction=fraction)
+    # Even positive WM gain/synergy is proposal evidence only (02:30 redesign).
+    assert batch['counts']['wm_kept'] == 6
+    assert batch['examples'] == []
+    assert len(batch['spot_checks']) == selected
+    assert len(batch['proposals']) == 6-selected
+    assert all(not ex['sumo_verified'] for ex in batch['proposals'])
+    checker = Mock(side_effect=evidence)
+    result = pa.resolve_spot_checks(batch, checker)
+    assert checker.call_count == selected
+    assert len(result['examples']) == selected
+    assert all(ex['sumo_verified'] and ex['verification'] == 'all8'
+               and ex['verified_example']['admitted'] and ex['verified_example']['cooperative']
+               for ex in result['examples'])
+    assert result['proposals'] == batch['proposals']
+    assert not result['spot_checks']
+    assert_sealed(result)
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_failed_all8_never_falls_back_to_wm_proposal_as_bank_example(arm):
+    batch = run(arm=arm, spot_check_fraction=.25)
+    result = pa.resolve_spot_checks(batch, lambda req: evidence(req, cooperative=False))
+    assert result['counts']['wm_kept'] == 6
+    assert result['examples'] == []
+    assert len(result['proposals']) == 4
+    assert result['counts']['sumo_verified_examples'] == 0
+    checker = Mock(side_effect=AssertionError('completed batch must not repeat verification'))
+    assert pa.resolve_spot_checks(result, checker) == result
+    checker.assert_not_called()
+
+
+def test_legacy_batch_cannot_bypass_all8_only_admission_on_resume():
+    batch = run()
+    batch['schema'] = 'coopmwm/plan-augment/v2'
+    batch['examples'] = batch.pop('proposals')  # the pre-redesign wire contract
+    batch.pop('receipt_sha256')
+    batch['receipt_sha256'] = digest(batch)
+    checker = Mock()
+    with pytest.raises(ValueError, match='all8-only contract'):
+        pa.resolve_spot_checks(batch, checker)
+    checker.assert_not_called()

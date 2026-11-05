@@ -28,7 +28,10 @@ sample worlds for every plan. Plans contain an explicit base and every solo.
 Keep iff mean(base - group) > 0 AND mean(best-solo - group) > 0. Missing,
 nonfinite or unpaired samples fail closed. These are WM labels, not SUMO labels.
 
-Selected spot checks are pending and excluded from training until resolved.
+WM-kept variants are proposals only. Per the 02:30 redesign, ``examples`` is
+reserved for SUMO-verified all8 admissions. Selected checks stay in ``spot_checks``
+until resolved; unselected WM-only variants stay in ``proposals``, never the bank.
+The registered fraction limits verification work; it does not waive admission.
 ``verify_all8`` is the explicit later-run bridge to existing charged machinery;
 ``resolve_spot_checks`` validates its evidence envelope (confirmation, sealed
 first_seed_receipt and source_confirmation_sha256). Provenance is never a WM
@@ -48,7 +51,7 @@ from . import variety
 from .protocol import digest
 
 
-SCHEMA = 'coopmwm/plan-augment/v2'
+SCHEMA = 'coopmwm/plan-augment/v3'
 ALL8 = 'all8_both_seeds'
 WINDOWS = dict(onset_s='variety_onset_window_s', hold_s='variety_hold_window_s',
                depth='variety_depth_window')
@@ -325,7 +328,7 @@ def _screen(context, plan, c, score):
 
 
 def augment(sources, *, arm, registration=None, score=None):
-    """Return serializable examples, pending all8 requests and a CPU receipt.
+    """Return proposals, pending all8 requests, empty bank examples and a CPU receipt.
 
     Off never consumes ``sources`` or calls a callback. This function is pure:
     no writes, subprocesses, SUMO, remote dispatch or model loading.
@@ -333,7 +336,7 @@ def augment(sources, *, arm, registration=None, score=None):
     if arm not in ('B', 'R'):
         raise ValueError('plan augmentation is for B and R only')
     c = config(registration)
-    out = dict(schema=SCHEMA, arm=arm, enabled=c is not None, examples=[], spot_checks=[],
+    out = dict(schema=SCHEMA, arm=arm, enabled=c is not None, examples=[], proposals=[], spot_checks=[],
                counts=dict(sources=0, proposed=0, wm_scored=0, wm_kept=0, spot_checks=0),
                registration=copy.deepcopy(c), sumo_dispatched=False)
     if c is None:
@@ -381,7 +384,7 @@ def augment(sources, *, arm, registration=None, score=None):
             example['verification'] = 'pending_all8'
             out['spot_checks'].append(example)
         else:
-            out['examples'].append(example)
+            out['proposals'].append(example)
     out['counts'].update(wm_kept=len(retained), spot_checks=n)
     out['receipt_sha256'] = digest(out)
     return out
@@ -393,10 +396,13 @@ def resolve_spot_checks(batch, checker):
     The callback receives an immutable-by-copy request and returns an ordinary
     evidence envelope with confirmation, first_seed_receipt and the requested
     source_confirmation_sha256. Existing all8 caching/charging owns dispatch idempotency.
-    Return a new batch; do not relabel WM-only examples as SUMO-verified.
+    Return a new batch; only validated all8 admissions enter ``examples``.
+    Unchecked proposals remain outside the bank, including after failed checks.
     """
     if batch.get('receipt_sha256') != digest({k: v for k, v in batch.items() if k != 'receipt_sha256'}):
         raise ValueError('augmentation receipt identity mismatch')
+    if batch.get('schema') != SCHEMA:
+        raise ValueError('augmentation schema requires re-preparation under the all8-only contract')
     if not batch['spot_checks']:
         return copy.deepcopy(batch)
     out = copy.deepcopy(batch)
