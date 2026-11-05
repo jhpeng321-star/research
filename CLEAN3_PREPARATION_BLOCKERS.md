@@ -1,5 +1,20 @@
 # CLEAN3 prospective launch blockers — 2026-11-05 23:46 +08
 
+## Latest recovery — 2026-11-06 00:26 +08
+
+`CLEAN3_CONTINUATION_SESSION2.md` records fresh full ownership/source/receipt/
+accounting verification through u15 (`f3b5cb42`) and the complete native-manifest
+quote at00:23:47 (`f27da813`). Original remote owners and local follower9504 are
+alive; combined monitors CONTINUE/no DIAGNOSE/zero collisions and teleports.
+G2 accepted; G1 independent rereview and G4 production fix remain pending
+acceptance with their existing owners. All-three gate remains effective.
+
+Prior2,928,240 + protected plan_fix566,400 + full clean3 allocation3,241,440 =
+**6,736,080**, **736,080 sim-s over** the registered6M cumulative cap. Even
+excluding the protected reserve leaves169,680 deficit. This is a running-prefix
+bound; final stopped ledgers/accepted adapters require re-quote. MAIN/owner budget
+resolution remains necessary before clean3 charges. Resident monitoring continues.
+
 ## Latest continuation — 2026-11-06 00:17 +08
 
 `CLEAN3_QUOTE_20261106_0015.json` preserves the zero-physics native-manifest
