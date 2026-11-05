@@ -1,0 +1,42 @@
+{
+  "schema": "coopmwm.clean1.resume_paused_verification.v1",
+  "timestamp": "2026-11-05T11:01:12.376202+08:00",
+  "status": "SAFETY_PAUSED_UNCHANGED",
+  "adopted_operator_commit": "71013b52",
+  "runtime_commit": "7cc6edaa994641a6d71a4816c0dd8b707fda2e32",
+  "runtime_sha256": "cc009d490c6876ec9e6ec98072617ac6f76b20fc7501fcc83bb7905f19a7ac4a",
+  "verification_command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe E:/agent-work/_sol/clean1_release_ops.py remote-file E:/agent-work/_sol/clean1_resume_paused_probe_remote.py",
+  "verification": {
+    "config_matches_launch_and_approval": true,
+    "config_file_matches_launch_sha256": true,
+    "pause_fault_stop_match_prior_sha256": true,
+    "pause_release": false,
+    "sealed_updates": {"A": 3, "B": 3, "R": 2},
+    "R_u003_checkpoint_exists": false,
+    "original_owners": {
+      "A": {"pid": 142318, "start_ticks": "3123166", "alive": false},
+      "B": {"pid": 142319, "start_ticks": "3123166", "alive": false},
+      "R": {"pid": 142320, "start_ticks": "3123166", "alive": false},
+      "monitor": {"pid": 142321, "start_ticks": "3123166", "alive": false}
+    },
+    "local_read_only_watcher": {
+      "pid": 15116,
+      "creation_time_local": "2026-11-05T09:17:38+08:00",
+      "command": "C:\\Python314\\python.exe -u E:\\agent-work\\_sol\\clean1_learning_watch.py",
+      "alive": true,
+      "replacement_started": false
+    },
+    "pause_sha256": "af0254374625bc2fb1728e69a7d9ecd13bc46502284b532c1ef4c7ec7b1efb24",
+    "fault_and_stop_sha256": "95a4d3ffa4bce926afd93e7d88b63753a53ad29a61fa68a84fa737f0bef6fa55",
+    "ledger_rows": 345,
+    "ledger_file_sha256": "ef35a12da2b5b0963eb413be0649df688e7f1bc46655e8ecf20a8379f37ed0ec",
+    "phase_spend": {"augment_verify": 69600, "early_probes": 22740, "gate_bank_verification_ext": 30320, "track2_smoke": 19200, "v2v_train": 216000},
+    "new_ledger_charged_sim_s": 357860,
+    "prior_parity_sim_s": 960,
+    "cumulative_charged_sim_s": 358820,
+    "augmentation_enabled": false
+  },
+  "existing_diagnosis": "SAFETY_PAUSE_U003_VERIFIED.json: completed public-tape diagnosis and 117 passing focused tests reused; no counting/pairing/guard fault found",
+  "resume_actions": {"new_sim_s": 0, "new_dispatches": 0, "signals": 0, "runtime_changes": 0, "cpuQ_actions": 0},
+  "next": "Preserve confirmed safety pause pending an authorized safety-recovery decision; do not replay completed work or seal R3 as trained."
+}
