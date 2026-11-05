@@ -108,6 +108,30 @@
     "restricted_paths_or_truth_files_opened": false,
     "launch_configuration_changed": false
   },
+  "independent_review": {
+    "reviewer": "astra",
+    "review": "REVIEW_G2_r0.md",
+    "acceptance": "G2_ACCEPTED.json",
+    "verdict": "PASS",
+    "blockers": 0,
+    "reviewed_commit": "c8ca54f5450a890eb7a4f229e557c69fce359736",
+    "passed": 330,
+    "subtests_passed": 5,
+    "deselected": 11,
+    "additional_parity_probes_passed": 4
+  },
+  "resume_verification": {
+    "date": "2026-11-06",
+    "requirements_reread": true,
+    "existing_implementation_preserved": true,
+    "existing_junit": "_out/g2_final_pass.xml",
+    "junit_successful_cases_including_subtests": 335,
+    "junit_failures": 0,
+    "junit_errors": 0,
+    "incremental_git_diff_check": "passed",
+    "tests_rerun": false,
+    "reason": "Completed implementation, passing CPU evidence and independent acceptance already present; no source changes or duplicate jobs required"
+  },
   "qualification_status": "CPU contracts verified; traffic-level offered-rate changes, safety and synergy remain unmeasured by this build",
   "action_semantics": "Existing ramp_assist uses shared easing across both roles; gap_open acts only on its mainline actor. No new complementary per-role acceleration profiles, G1 admission or G4 credit implemented.",
   "open_issues": []
