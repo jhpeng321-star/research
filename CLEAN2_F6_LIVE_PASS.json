@@ -1,0 +1,11 @@
+{
+  "status": "F6_LIVE_PASS",
+  "unix": 1793869042.4695828,
+  "new_sim_s": 0,
+  "binary_echo_sha256": "333ff59e263a8087a5da62d02a82f23a3822ee257e5a3b24cd6a7533d93078cc",
+  "remote": {"uid": 1000, "unix": 1793869042.2931533},
+  "reused_same_master": true,
+  "shared_master": "Master running (pid=2097)",
+  "module_source": "accepted c4/fix-ssh via WSL Ubuntu-22.04",
+  "note": "Actual two-session live qualification passed. Local receipt was recovered from the captured successful JSON after Windows GBK console encoding failed while printing WSL stderr; stdout/stderr handling fixed, no qualification rerun."
+}

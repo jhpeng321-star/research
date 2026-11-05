@@ -1,0 +1,56 @@
+{
+  "clean1_ledger_sim_s": 1219680,
+  "clean2_exists": false,
+  "ledger_rows": 1112,
+  "ledger_sha256": "cec436ed1e737e7cb22a153a619f56e3aea1dc447348cc1cddaabab47a9c74ae",
+  "owners": {
+    "A": {
+      "alive": false,
+      "pid": 243577,
+      "start_ticks": "5308942"
+    },
+    "B": {
+      "alive": false,
+      "pid": 243578,
+      "start_ticks": "5308942"
+    },
+    "R": {
+      "alive": false,
+      "pid": 243579,
+      "start_ticks": "5308943"
+    },
+    "monitor": {
+      "alive": false,
+      "pid": 243580,
+      "start_ticks": "5308943"
+    }
+  },
+  "phases": {
+    "augment_verify": 69600,
+    "early_probes": 45480,
+    "gate_bank_verification_ext": 30320,
+    "isolated_replicated": 47920,
+    "plan_fix": 4800,
+    "track2_smoke": 19200,
+    "v2v_interim": 345600,
+    "v2v_lessons": 8760,
+    "v2v_train": 648000
+  },
+  "plan_fix_already_in_clean1_ledger": 4800,
+  "prior_parity_sim_s": 960,
+  "remaining_global_sim_s": 3779360,
+  "stop": {
+    "clean1_resume_held": true,
+    "owner_verbatim": "restart",
+    "preserve_all_research_evidence": true,
+    "reason": "MAIN 15:21 fix all problems before training; MAIN 15:23 owner restart from u0 in clean2",
+    "unix": 1793863981.275035
+  },
+  "stop_sha256": "0f02b9ef9f84135be8dfc14b75ddaf8b133f8072db0b0fe0e697ca81df5b95b2",
+  "unix": 1793869115.456927,
+  "updates": {
+    "A": 9,
+    "B": 9,
+    "R": 9
+  }
+}
