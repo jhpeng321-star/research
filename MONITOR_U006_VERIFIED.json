@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-11-05T13:48:27.254823+08:00",
+  "status": "U006_MONITOR_AND_REPLICATED_TEST_COMPLETE_CONTINUING",
+  "recovery_runtime_commit": "94d90e84d17513e4f0cf7d2ddbb9cc625c1ed7a0",
+  "original_config_sha256": "cc009d490c6876ec9e6ec98072617ac6f76b20fc7501fcc83bb7905f19a7ac4a",
+  "monitor_sha256": {
+    "u004": "9859407c256382228f86289328d8c5de545619343963af986d54c128723f0f37",
+    "u005": "26c3c2c589f820579c43f7a39151c49514be78bdb71ad263c7231129f45f64d8",
+    "u006": "046245a009da2197d1a498b6c9e715708345beaf1dbeb2655281dc1a9337ad94"
+  },
+  "probe_u004": {
+    "receipt_sha256": "9e38d91ab9d1f57e1c263a01e82556f535482ccdddc33e8a08c936a12a08d281",
+    "status": "complete", "cells": 3, "branches": 39, "sim_s": 22740,
+    "mean_gains_veh_s": {"A":-0.33505247247990155,"B":-0.34937527480057423,"R":0.1622095760233151},
+    "collisions": 0, "teleports": 0
+  },
+  "replicated_u006": {
+    "receipt_sha256": "d6b47e6a908f8d6d264098d4ff74c5ae9817f0e5a612e0b4d776d18d3eaa6b76",
+    "status": "complete", "verdict": "descriptive", "replicates_per_arm": 5,
+    "cells": 10, "branches": 64, "all_cells_graded": true, "sim_s": 47920,
+    "full_registered_windows_and_states_unchanged": true,
+    "collisions": 0, "teleports": 0,
+    "B_common_base": {"mean":0.04273292049298713,"ci95":[-0.14146480106198092,0.29279615477571497]},
+    "R_common_base": {"mean":-110.82316481926348,"ci95":[-332.434344071698,-0.00026510574971325693]},
+    "B_R": {"mean":110.86589773975645,"ci95":[-0.09343932067645255,332.7099780632023]},
+    "interpretation": "No statistically positive B cooperation demonstrated at u6; B-common and B-R intervals cross zero. R negative mean is dominated by replicate3 (-554.028416). u6 is descriptive; registered primary criterion remains u24."
+  },
+  "u006_learning": {
+    "all_actions": "CONTINUE", "diagnose": [],
+    "B": {"bank_CE":0.9409769177436829,"layer_KL":0.013933231122791767,"weighted_starts":6,"augmented_examples":0,"collisions":0,"teleports":0},
+    "R": {"bank_CE":1.113118052482605,"layer_KL":0.0014679854502901435,"weighted_starts":6,"augmented_examples":0,"collisions":0,"teleports":0},
+    "B_composite": {"action":"original_guard","release":true,"critical_mean_delta":29.1875,"ci95":[-1.875,61.34453124999999]},
+    "R_composite": {"action":"report_only","critical_mean_delta":9.0625,"ci95":[-13.50078125,35.59453124999999]}
+  },
+  "latest_sealed_updates": {"A":7,"B":6,"R":6},
+  "all_original_recovery_owners_alive_shim_and_threads_verified": true,
+  "active_faults": [],
+  "R_u003_all_22_completed_job_files_still_SHA_unchanged": true,
+  "R_u003_original_charge_count": 22,
+  "ledger_rows": 678,
+  "phase_spend": {"augment_verify":69600,"early_probes":45480,"gate_bank_verification_ext":30320,"isolated_replicated":47920,"track2_smoke":19200,"v2v_lessons":8760,"v2v_train":477600},
+  "cumulative_charged_sim_s_including_parity": 699840,
+  "all_registered_effective_phase_caps_and_5M_global_cap_verified": true,
+  "disk_free_bytes": 118738280448,
+  "status_u006_appended_at": "2026-11-05T13:43:43.349331+08:00",
+  "local_read_only_watcher_pid": 32128,
+  "transport": "Intermittent SSH closures/timeouts; recovered for successful13:47:58 capture and13:48:27 independent audit; no remote redispatch or signals",
+  "next": "Continue monitoring each update; native P3 u8 paired evaluation and u12/u24 replicated tests remain scheduled; pause on any original A/B safety failure or any R collision/teleport."
+}
