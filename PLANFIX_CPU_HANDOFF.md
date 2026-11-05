@@ -1,5 +1,43 @@
 # PLANFIX CPU continuation — 2026-11-05 18:36 +08
 
+## 22:33 continuation — bootstrap input availability resolved
+
+Clean2's final CONFIG/smoke/gate seals and all four original live owner identities
+were independently checked at22:08, through update9. Proof:
+`PLANFIX_CLEAN2_LAUNCH_VERIFIED.json` (commit5d8cd44e). No plan-fix search or new
+simulation has run yet; the earlier absence-of-clean2 observation below is historical.
+
+The original32 FIT donors969400..969431 were found in the preserved local
+`c4-wmcalib/tools/wmcalib/data/starts` corpus. All96 selected start/history/result
+bytes match the original `gpuR_expected_hashes.json`; no tensor was deserialized
+for packaging. The original design and frozen Git22cc32f6 inferred-posterior
+loader asset are included. All39 resumable chunks, whole package and100 unpacked
+files verified on cpuV at `clean1/plan_fix/cpu_priors_97fa5403964f`.
+Package SHA `97fa5403964f49c485d5544ff2063136b443b623b9be98994d22621cb9de6ae0`.
+Receipts: `PLANFIX_CPU_PRIOR_INVENTORY.json`, `PLANFIX_CPU_PRIORS_VERIFIED.json`.
+
+The original candidate `de235a78...` CONFIG (75fields) was recovered from FOUR
+identical original checkpoint inspections in preserved setupaudit logs. This
+recovers recorded values rather than constructing defaults; the legacy candidate
+policy/optimizer tensors are not consumed by WMTEACH bootstrap. The original
+speedhead export binding was recovered from its historical receipt; cpuV's
+`/home/ubuntu/mappospeed/production2/policy_latest.pt` independently matches its
+original `d9042cc5...` SHA. Full config/export/source-log SHAs are in
+`PLANFIX_BOOTSTRAP_CONFIG_RECOVERED.json`; staged exact recovery and original
+execution-driver config are in `clean1/plan_fix/cpu_bootstrap_recovered`, receipt
+`PLANFIX_CPU_BOOTSTRAP_ASSETS_VERIFIED.json`.
+
+Read-only original-path checks on cpuQ found the named historical wmdata paths
+absent; two spaced gpuR metadata checks closed before execution. No gpuA command,
+process inspection/signal or new key operation occurred. F6 briefly refused/timed
+out on its shared master; later bounded attempts recovered without retiring or
+altering it. Existing source package/priors/chunks and all bank failures retained.
+
+Next: qualify a path/device-only CPU port with these recovered original inputs,
+eight real same-process startup gates, then ONE measured WM speed search. New
+SUMO still requires its prospective CPU amendment; sole clean1 plan_fix phase
+remains33,600/600,000 with566,400 reserved. No prepared switch is actionable yet.
+
 ## Current state
 
 **No CPU WM search has started.** MAIN18:03 requires clean2 to have launched

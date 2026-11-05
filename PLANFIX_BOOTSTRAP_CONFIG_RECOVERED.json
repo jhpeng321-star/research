@@ -1,0 +1,182 @@
+{
+  "config": {
+    "actor_gradient_audit": true,
+    "actor_lr": 5e-05,
+    "alpha_lr": 0.0003,
+    "alpha_min": 0.0,
+    "batch_size": 1,
+    "cav_exec_cap": "idm",
+    "checkpoint_every": 1,
+    "checkpoint_imagination": true,
+    "credit_profile_every": 0,
+    "critic_entry_backlog": true,
+    "critic_lr": 0.0003,
+    "deterministic_crn": true,
+    "dual_lr": 0.01,
+    "entrance_zone_main_m": 25.0,
+    "entrance_zone_native": false,
+    "entrance_zone_ramp_m": 25.0,
+    "entrant_control": true,
+    "entropy_target": null,
+    "entropy_weight": 0.001,
+    "entry_insert_rule": "sumo_like_v2",
+    "entry_pad_max": 32,
+    "entry_queue_state": true,
+    "exploit_disable_direct_credit": true,
+    "exploit_ensemble_pessimism": false,
+    "exploit_head_rmse_mps2": 0.0,
+    "exploit_monitor": true,
+    "exploit_stop_on_conflict": false,
+    "future_accel_noise": false,
+    "future_accel_scale": 1.0,
+    "future_accel_sigma_max": 1.0,
+    "future_driver_scale": 1.0,
+    "future_embedding_std": 0.05,
+    "future_samples": 8,
+    "future_seed": 0,
+    "gamma": 1.0,
+    "grad_clip": 100.0,
+    "horizon": 10,
+    "imagination_checkpoint_segment": 2,
+    "imagination_grad_decay": 1.0,
+    "imagination_microbatch": 1,
+    "imagination_offload_futures": true,
+    "imagination_offload_saved_tensors": true,
+    "imagination_replay_dense_prefix": true,
+    "imagination_skip_zero_vjp": true,
+    "imagine_entries": true,
+    "lagrange_decay": 0.0,
+    "lagrange_init": 0.1,
+    "lagrange_max": 2.0,
+    "lagrange_scaled": true,
+    "lambda_": 1.0,
+    "lane_entropy_target": null,
+    "lane_entropy_weight": 0.001,
+    "lane_pg_weight": 1.0,
+    "long_grad_balance": true,
+    "long_grad_reset_actor_adam": true,
+    "low_penetration_horizon_cap": true,
+    "native_anchor": false,
+    "native_anchor_calibration": "",
+    "native_residual_train_group": true,
+    "native_residual_train_trunk": true,
+    "pessimistic_credit": true,
+    "policy_lane_actions": true,
+    "real_credit_individual_floor": true,
+    "real_return_mix": 0.3,
+    "real_return_scale": 10000.0,
+    "return_ema": 0.99,
+    "source_wait_grad": true,
+    "target_tau": 0.02,
+    "ttc_budget": 3.6,
+    "ttc_budget_mode": "native_relative",
+    "ttc_native_margin": 0.0,
+    "uncertainty_weight": 0.0,
+    "validation_every": 100,
+    "wm_physics_overrides": {},
+    "wm_safety_report_only": true
+  },
+  "config_recovered_not_substituted": true,
+  "independent_config_observations": 4,
+  "new_sim_s": 0,
+  "original_candidate_sha256": "de235a787024bb0f79d43937132eefcea69267b38205bc020f95bc98d4e8c7d1",
+  "original_export": {
+    "accel_bounds": [
+      -3.0,
+      2.6
+    ],
+    "action_audit": {
+      "acting_cav_slots": 4,
+      "all_acting_finite": true,
+      "off_cav_nan_slots": 188,
+      "sentinel_contract": "frozen PolicyExecutor: NaN off-CAV"
+    },
+    "cpuQ_final_status": {
+      "env_steps": 4664400,
+      "episodes": 7774,
+      "failed_episodes": 0,
+      "files": {
+        "RUN_SUMMARY.json": {
+          "bytes": 6258,
+          "mtime": 1793376510.8649673
+        },
+        "log.jsonl": {
+          "bytes": 6402753,
+          "mtime": 1793376510.8009667
+        },
+        "policy_latest.pt": {
+          "bytes": 416744,
+          "mtime": 1793376510.824967
+        }
+      },
+      "init_from": {
+        "critic": "fresh",
+        "iteration_counter": 0,
+        "kind": "exported_actor",
+        "lagrange": "carry",
+        "lagrange_alpha_fresh": 0.0,
+        "lagrange_alpha_source": null,
+        "lagrange_alpha_used": 0.0,
+        "lagrange_note": "exported actor has no multiplier: fresh",
+        "lane_head_removed_keys": [
+          "lane_head.0.bias",
+          "lane_head.0.weight",
+          "lane_head.2.bias",
+          "lane_head.2.weight"
+        ],
+        "optimizers": "fresh",
+        "path": "/home/ubuntu/e3final/inputs/mappo_v5_final.pt",
+        "return_scaler": "fresh",
+        "sha256": "aecd7d70ccce2995a10d03d9400f587040b1d3b435eebeab2561768ba57c3564",
+        "source_iteration": 170
+      },
+      "iteration": 169,
+      "last_checkpoint": {
+        "bytes": 2160523,
+        "file": "checkpoints/ckpt_00169.pt",
+        "iteration": 169,
+        "sha256": "58103d4a06e17b97a5aadbe69435cf9c47b9d39f6a4ec445345c1a075b14bb97"
+      },
+      "mean_episode_return": -984.9432200556216,
+      "status": "completed",
+      "stopped": false,
+      "sumo_seconds_charged": 4664400.0,
+      "sumo_seconds_simulated": 6996600.0,
+      "updated_utc": "2026-10-30T16:08:30Z",
+      "wall_s_total": 28152.899671842635
+    },
+    "iteration": 169,
+    "lane_control": "native",
+    "lane_head": false,
+    "lanes_is_none": true,
+    "loader": "/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/src/wms/control/policy.py",
+    "path": "/root/autodl-tmp/c4/speedhead20261030/mappospeed_final169.pt",
+    "preflight_contract_sha256": "f82ab5ab9ab6c500d93d7bd2db83fac96704ec718ceaafae614f923da8231da9",
+    "sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca",
+    "source": "/home/ubuntu/mappospeed/production2/policy_latest.pt",
+    "sumo_invocations": 0
+  },
+  "source_receipts": [
+    {
+      "config_lines": [
+        255,
+        337
+      ],
+      "path": "E:\\agent-work\\_sol\\setupaudit.log",
+      "sha256": "9557c951e11797fac3209560a4bf6cf8b40a1214d6bb38c624bf73aa1c69505a"
+    },
+    {
+      "config_lines": [
+        1030,
+        1358
+      ],
+      "path": "E:\\agent-work\\_sol\\setupaudit2.log",
+      "sha256": "cd7750b49be0ad99ba99dbdd5086a04eaba65be9f4582c5ed4331b243b7cc8aa"
+    },
+    {
+      "path": "E:\\agent-work\\_sol\\speedhead.log",
+      "record": "S-SPEEDHEAD FINAL EXPORT BOUND",
+      "sha256": "eadb18b9d7ff6fe5845a7ac729804a439d999e7d3263743d773267006666018b"
+    }
+  ]
+}
