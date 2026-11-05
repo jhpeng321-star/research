@@ -1,6 +1,6 @@
 {
   "schema": "coopmwm.clean1.integration.v1",
-  "status": "LAUNCHED_FINAL_SMOKE_AND_SAFETY_GATE_PASS_MONITORING_ACTIVE",
+  "status": "LAUNCHED_FINAL_SMOKE_AND_GATE_PASS_NOW_SAFETY_PAUSED_R_U003",
   "branch": "c4/rerun-launch",
   "base": "13f184b5a7e12be04aebf246ef8e4dbb81555545",
   "accepted_branches": ["c4/moves", "c4/trigger-policy", "c4/coop-layer", "c4/group-credit", "c4/merge-features", "c4/practice-weight", "c4/plan-augment", "c4/track2-backend", "c4/track2-reward", "c4/track2-monitor", "c4/staging-closure", "c4/rerun-tracks", "c4/planner-eval"],
@@ -84,5 +84,7 @@
   "new_sim_s_scope": "original dry CPU integration only; live cumulative charges are separately recorded above and in the own CHARGES ledger",
   "smoke_pass": true,
   "safety_gate_pass": true,
-  "training_launched": true
+  "training_launched": true,
+  "current_safety_status": "SAFETY_PAUSED; R u3 critical-event paired95% CI [6.74921875,40.28125] >0; fresh public-tape recomputation confirms; all original remote launch owners exited",
+  "current_safety_receipt": "SAFETY_PAUSE_U003_VERIFIED.json"
 }
