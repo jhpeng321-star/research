@@ -1,0 +1,32 @@
+{
+  "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+  "new_sim_s": 0,
+  "pid": 370289,
+  "registration": {
+    "interval_s": 60,
+    "maximum_controller_wall_s": 21600,
+    "new_sim_s": 0,
+    "rule": "Never signal training or change limits. pidfd own364064/start8210497 only; pause on any fresh interval over original limits; resume only NEW completed good intervals, health/config/original owners unchanged. No model or SUMO dispatch/retry.",
+    "schema": "planfix.cpu.own-resource-controller.v1",
+    "source_sha256": {
+      "PACE_CONTROL_REMOTE.py": "7dec694635a91ad6958e80bcb1d2a43e95acc4a2f7536a2c064bde7fb4a25fc3",
+      "PACE_SUPERVISOR.py": "cec88e7c9d9690836f8a8a7fca1384cdf8c2b8884f9f8c3c15a7b6277b814790"
+    },
+    "target": {
+      "affinity": [
+        47
+      ],
+      "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+      "new_sim_s": 0,
+      "nice": 19,
+      "pid": 364064,
+      "start_ticks": "8210497",
+      "unix": 1793892256.4876962
+    }
+  },
+  "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v6",
+  "start_ticks": "8359277",
+  "target_pid": 364064,
+  "target_start_ticks": "8210497",
+  "unix": 1793893744.2584467
+}

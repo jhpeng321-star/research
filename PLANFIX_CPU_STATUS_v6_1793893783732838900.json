@@ -1,0 +1,159 @@
+{
+  "BOOTSTRAP_PASS.json": {
+    "new_sim_s": 0,
+    "physical_sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca",
+    "pid": 364064,
+    "wall_s": 6.269343410007423,
+    "wm_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436"
+  },
+  "CPU_OWNER.json": {
+    "affinity": [
+      47
+    ],
+    "alive_same_identity": true,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "cpu_seconds": 1019.45,
+    "elapsed_s": 1526.6495015621185,
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 364064,
+    "process_state": "T",
+    "resources": {
+      "Cpus_allowed_list": "47",
+      "Threads": "1",
+      "VmRSS": "1358700 kB"
+    },
+    "start_ticks": "8210497",
+    "unix": 1793892256.4876962
+  },
+  "DISPATCH.json": {
+    "alive_same_identity": true,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "cpu_seconds": 1019.45,
+    "elapsed_s": 1526.6776959896088,
+    "max_cpu_cores": 1,
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 364064,
+    "procedure": "eight same-process gates then ONE WM search; no SUMO; no expansion",
+    "process_state": "T",
+    "resources": {
+      "Cpus_allowed_list": "47",
+      "Threads": "1",
+      "VmRSS": "1358700 kB"
+    },
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v6",
+    "start_ticks": "8210497",
+    "unix": 1793892256.4596057
+  },
+  "DISPATCH_STARTED.json": {
+    "new_sim_s": 0,
+    "unix": 1793892256.453584
+  },
+  "PACE_CONTROL_STATE.json": {
+    "action": "paused",
+    "new_sim_s": 0,
+    "owner": {
+      "affinity": [
+        47
+      ],
+      "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+      "new_sim_s": 0,
+      "nice": 19,
+      "pid": 364064,
+      "start_ticks": "8210497",
+      "unix": 1793892256.4876962
+    },
+    "pace": {
+      "A": {
+        "interval_s": 1168.173236131668,
+        "limit_s": 1179.1483981609344,
+        "over": false,
+        "update": 14
+      },
+      "B": {
+        "interval_s": 1169.5693485736847,
+        "limit_s": 1173.205691576004,
+        "over": false,
+        "update": 13
+      },
+      "R": {
+        "interval_s": 1184.0095150470734,
+        "limit_s": 1167.4601202011108,
+        "over": true,
+        "update": 13
+      }
+    },
+    "process_state": "T",
+    "unix": 1793893276.2576938
+  },
+  "PACE_SUPERVISOR_OWNER.json": {
+    "affinity": [
+      47
+    ],
+    "alive_same_identity": true,
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "cpu_seconds": 0.03,
+    "elapsed_s": 38.855769634246826,
+    "new_sim_s": 0,
+    "pid": 370289,
+    "process_state": "S",
+    "resources": {
+      "Cpus_allowed_list": "47",
+      "Threads": "1",
+      "VmRSS": "15912 kB"
+    },
+    "start_ticks": "8359277",
+    "target_pid": 364064,
+    "target_start_ticks": "8210497",
+    "unix": 1793893744.2816234
+  },
+  "STAGE_ENV.json": {
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "CPU_BINDING 5382ec24f5d9fc802b14782a05b657d4b3b2896102e204ae303619258cad5a38 666\n"
+  },
+  "STAGE_PASS.json": {
+    "binding_file_sha256": "452e7ae008aa9a92bdc68a2f4ecda4251a0ad0c4b6946fddbc549c9ab0eb8621",
+    "dispatch_started": false,
+    "launch_file_sha256": "d036a7d311694c102182f2bebe17c890c7e5e67cd593b248fab2ca176cd815f9",
+    "new_sim_s": 0,
+    "pace": {
+      "A": {
+        "ceiling_s": 1179.1483981609344,
+        "intervals_s": [
+          1164.5672767162323,
+          1170.51988863945,
+          1179.1483981609344
+        ],
+        "last_update": 13
+      },
+      "B": {
+        "ceiling_s": 1173.205691576004,
+        "intervals_s": [
+          1149.266884803772,
+          1168.5544457435608,
+          1173.205691576004
+        ],
+        "last_update": 12
+      },
+      "R": {
+        "ceiling_s": 1167.4601202011108,
+        "intervals_s": [
+          1157.6539821624756,
+          1167.4601202011108,
+          1164.3921592235565
+        ],
+        "last_update": 12
+      }
+    },
+    "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v6",
+    "source_files": 656
+  },
+  "exists": true,
+  "gates": {},
+  "log_tail": "",
+  "pace_supervisor_log_tail": "PACE_CONTROL {\"action\": \"remain_paused\", \"pace\": {\"A\": {\"update\": 14, \"interval_s\": 1168.173236131668, \"limit_s\": 1179.1483981609344, \"over\": false}, \"B\": {\"update\": 14, \"interval_s\": 1184.6997375488281, \"limit_s\": 1173.205691576004, \"over\": true}, \"R\": {\"update\": 13, \"interval_s\": 1184.0095150470734, \"limit_s\": 1167.4601202011108, \"over\": true}}, \"owner\": {\"affinity\": [47], \"boot_id\": \"2c19986e-dd5e-4de9-95ca-3212b1ea0568\", \"new_sim_s\": 0, \"nice\": 19, \"pid\": 364064, \"start_ticks\": \"8210497\", \"unix\": 1793892256.4876962}, \"new_sim_s\": 0}\n",
+  "root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_wm_v6",
+  "unix": 1793893783.1365893
+}

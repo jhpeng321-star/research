@@ -1,0 +1,20 @@
+{
+  "completed_gates": 0,
+  "model_paused_preserved": true,
+  "new_sim_s": 0,
+  "next": "stage corrected query ABI and cheap preflight in freshv7; wait unchanged pace; retire only exactownv6 before any replacement model dispatch",
+  "owner": {
+    "affinity": [
+      47
+    ],
+    "boot_id": "2c19986e-dd5e-4de9-95ca-3212b1ea0568",
+    "new_sim_s": 0,
+    "nice": 19,
+    "pid": 364064,
+    "start_ticks": "8210497",
+    "unix": 1793892256.4876962
+  },
+  "reason": "bare PolicyExecutor call returns acceleration array, not pair; use original act_with_lane API",
+  "source_contract": "frozen22cc32f6 src/wms/control/mappo/eval_bridge.py: exe(state)->accel; exe.act_with_lane(state)->(accel,lane)",
+  "unix": 1793894638.6093783
+}

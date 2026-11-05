@@ -19,10 +19,12 @@ files=json.loads(zlib.decompress(packed))
 assert not root.exists(),'fresh stage only; inspect existing receipt, never overwrite'
 if root.name!='cpu_wm_v1':
  previous=w/('cpu_wm_v'+str(int(root.name.rsplit('v',1)[1])-1))
- assert (previous/'CPU_FAILED.json').is_file()
+ assert (previous/'CPU_FAILED.json').is_file() or (previous/'CPU_OPERATOR_RETIRED.json').is_file() or (previous/'QUERY_ABI_CORRECTION.json').is_file()
  owner=json.loads((previous/'CPU_OWNER.json').read_text());p=Path('/proc',str(owner['pid']),'stat')
  f=p.read_text().split() if p.exists() else None
- assert not (f and f[21]==owner['start_ticks'] and f[2]!='Z'),'previous own worker still alive'
+ active=bool(f and f[21]==owner['start_ticks'] and f[2]!='Z')
+ if active:
+  assert root.name=='cpu_wm_v7' and f[2]=='T' and (previous/'QUERY_ABI_CORRECTION.json').is_file() and (previous/'STOP.json').is_file(),'previous own worker still alive'
 c=Path('/home/ubuntu/coopmwm20261105_clean2');launch=json.loads((c/'LAUNCHED.json').read_text())
 sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
 assert sha(c/'CONFIG.json')==launch['config_file_sha256']
@@ -58,6 +60,10 @@ for role in ('A','B','R'):
  intervals=[b['finished_unix']-a['finished_unix'] for a,b in zip(values,values[1:])]
  assert all(t>0 for t in intervals)
  pace[role]=dict(last_update=values[-1]['update'],intervals_s=intervals,ceiling_s=max(intervals))
+if int(root.name.rsplit('v',1)[1])>=7:
+ inherited=json.loads((w/'cpu_wm_v6/CLEAN2_BASELINE.json').read_text())
+ assert inherited['launch_file_sha256']==sha(c/'LAUNCHED.json')
+ pace=inherited['pace']  # preserve the original limits; never reset after a hold
 with (root/'CLEAN2_BASELINE.json').open('x') as out:json.dump(dict(unix=time.time(),launch_file_sha256=sha(c/'LAUNCHED.json'),pace=pace),out)
 # Model-free fixture extraction in the qualified existing CPU environment.
 code="""
@@ -87,7 +93,7 @@ pin=dict(host='cpuV',python_executable=sys.executable,python_version='.'.join(ma
  variables={k:os.environ[k] for k in ('CUDA_VISIBLE_DEVICES','OMP_NUM_THREADS','MKL_NUM_THREADS','OPENBLAS_NUM_THREADS')})
 binding=dict(hashes=hashes,qualification=pending(hashes),worker_env=pin,memory_mode='warm',startup_qualification=True,
  speed2=True,speed2_transfers=True,concurrent_plans=True,batch_widths={'4':4,'8':2},
- memory_fraction=.65,deadline_unix=time.time()+21600,search_config={'variety_families':True},
+ memory_fraction=.65,deadline_unix=time.time()+(86400 if int(root.name.rsplit('v',1)[1])>=7 else 21600),search_config={'variety_families':True},
  device='cpu',phase='plan_fix',sumo_allowed=False,source_commit='f631ce90cfd2f23213f7c57a828c848e2db10ecd')
 # The original collector uses its registered it2/K2 niche boundary and retains
 # all eight final K8 candidates, including negatives, for all8 verification.
@@ -159,6 +165,13 @@ for f in scale_tree.body:
 assert not any(isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute) and n.func.attr=='cuda' for n in ast.walk(tree))
 for name in ('planfix_cpu_runtime.py','planfix_cpu_worker.py'):
  compile((root/name).read_text(),name,'exec')
+from planfix_cpu_worker import native_requests
+if hasattr(__import__('planfix_cpu_worker'),'prepare_query'):
+ import numpy as np
+ class Export:
+  def __call__(self,state):raise AssertionError('bare export returns acceleration only')
+  def act_with_lane(self,state):return np.array([[1.2,np.nan]]),None
+ assert native_requests(Export(),{},[dict(vid='c',is_cav=True),dict(vid='h',is_cav=False)])=={'c':1.2}
 old=tomllib.loads((root.parent/'cpu_prepare_ea559c952ff0/configs/wm_phys.toml').read_text())
 new=tomllib.loads((root/'runtime/configs/wm_phys.toml').read_text());old['source']['config']=new['source']['config'];assert old==new
 recovered=json.loads((root.parent/'cpu_bootstrap_recovered/RECOVERED.json').read_text())
@@ -216,7 +229,7 @@ if root.exists():
    if name=='BOOTSTRAP_PASS.json':d={k:v for k,v in d.items() if k!='source_receipt'}
    if name=='SPEED_SEARCH_RESULT.json':d={k:v for k,v in d.items() if k!='result'}
    result[name]=d
- for name in ('CPU_OWNER.json','DISPATCH.json'):
+ for name in ('CPU_OWNER.json','DISPATCH.json','PACE_SUPERVISOR_OWNER.json'):
   if name in result:
    d=result[name];p=Path('/proc',str(d['pid']),'stat');f=p.read_text().split() if p.exists() else None
    d['alive_same_identity']=bool(f and f[21]==d['start_ticks'] and f[2]!='Z')
@@ -229,6 +242,8 @@ if root.exists():
  result['gates']={p.name:json.loads(p.read_text()) for p in sorted(root.glob('STARTUP_*.json'))}
  p=root/'CPU_WORKER.log'
  if p.exists():result['log_tail']=p.read_bytes()[-14000:].decode(errors='replace')
+ p=root/'PACE_SUPERVISOR.log'
+ if p.exists():result['pace_supervisor_log_tail']=p.read_bytes()[-6000:].decode(errors='replace')
 print('CPU_STATUS',json.dumps(result),flush=True)
 '''
 

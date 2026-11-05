@@ -1,5 +1,33 @@
 # PLANFIX CPU continuation — 2026-11-05 18:36 +08
 
+## 23:49 resident controller verified — no laptop dependency
+
+Adopt BOTH existing own identities, never duplicate:
+
+- WM364064/start8210497, same boot2c19986e, stateT at23:49:43;1019.45CPU-s
+  already invested, original model/RNG/partial gate preserved, Threads1,
+  affinity47/RSS~1.36GB, no failure,0/8completed gates, no speed result.
+- Resource-only supervisor370289/start8359277, same boot, alive/S at23:49:43,
+  Threads1/affinity47/RSS~16MB,0.03CPU-s in38.86wall-s. It runs locally on cpuV,
+ 60s polling, never spawns a model or simulator. Its first real poll kept WM
+ paused: B14 interval1184.699738s vs1173.205692s, R13 still1184.009515s vs
+ 1167.460120s; A14 in bounds. No baseline was changed and no resume is claimed.
+
+Proof `PLANFIX_CPU_PACE_SUPERVISOR_DISPATCH.json` binds both exact source SHAs
+and the sole supervisor identity; root AUTHORITY append was fsynced before its
+dispatch. Its full registration is in the central REGISTRATION and
+`PLANFIX_CPU_PACE_SUPERVISOR_REGISTRATION.md`. It can resume the SAME in-memory
+WM only after the unchanged fresh-interval/health predicate clears, and pause
+that same PID again if needed. It stops on worker failure/exit/speed completion;
+it never retries a model/gate/search or releases a native SUMO job. A finished
+speed result is still a prerequisite for actual collection/verification work.
+
+Status command below now checks both owned identities and reads control state /
+controller terminal/log receipts. Do not run a second controller or manual
+dispatch. Main/owner training processes, sources, CONFIG, banks and ledgers were
+not controlled by this task. All physical plan-fix work remains the earlier
+33,600sim-s bank pass; this continuation spends zero new simulation.
+
 ## 23:41 pace hold — preserve SAME in-flight model/gate process
 
 At23:38 clean2 A14/B13 intervals were within the original bounds; R13 was
