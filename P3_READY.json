@@ -12,17 +12,18 @@
   },
   "resume_verification": {
     "date": "2026-11-05",
-    "starting_commit": "5e299a679ad90951e2e7473705f3dd03b5482f52",
+    "starting_commit": "bfc8650e23d4e3e2199620077f1b66c6ff1042f6",
     "accepted_source_commit": "037048c2273f416cf3afc257e65c14a40096f14c",
     "starting_tracked_changes": false,
     "source_and_tests_match_accepted_commit": true,
     "checks": [
       "git diff --exit-code 037048c2273f416cf3afc257e65c14a40096f14c -- tools/coopmwm/track2_monitor.py tools/coopmwm/test_track2_monitor_cpu.py: PASS",
+      "git diff --name-only 037048c2273f416cf3afc257e65c14a40096f14c: only P3_READY.json differs; branch c4/track2-monitor confirmed",
       "git diff --exit-code c4/track-base -- tools/coopmwm/replay_start.py tools/coopmwm/policy_synergy.py tools/coopmwm/test_policy_synergy_cpu.py tools/coopmwm/test_policy_synergy_isolated_cpu.py: PASS",
       "git diff --check c4/track-base: PASS"
     ],
     "test_rerun": false,
-    "test_evidence": "Read git status/log, the shared spec, both reviews and all P3 readiness/acceptance receipts before resuming. Verified source and tests byte-match the independently accepted commit and inspected the existing B/R three-update reward/history/status regressions and both trained-A checkpoint-routing probe cases. Preserved the completed 97-test P3 run and independent 118-case review run; no source changes, duplicate tests, reservations or diagnostic dispatches were needed. This refresh records verification from resume commit 5e299a67.",
+    "test_evidence": "Read git status/log, the shared spec, both reviews and all P3 readiness/acceptance receipts before resuming. Verified source and tests byte-match the independently accepted commit and inspected component-aware validation/history/status, B/R three-update real-reward regressions, and trained-A checkpoint routing at u2/u4. The independent review's fresh-session addendum also confirms PASS at this session's starting HEAD. Preserved the completed 97-test P3 run and independent 118-case review run; this session ran no pytest cases, reservations or diagnostic dispatches and changed no implementation or tests. This refresh records verification from resume commit bfc8650e.",
     "preserved_untracked_files": ["P3_ACCEPTED.json", "P3_READY.blocked0.json", "REVIEW_P3_r0.md", "REVIEW_P3_r1.md"]
   },
   "worktree": "E:/agent-work/c4-track2-monitor",
@@ -36,7 +37,8 @@
     {"sha": "5046be9ae3f3a0ac13ea00059dee3f59027b0cc4", "subject": "coopmwm P3: fix redesigned reward monitoring and trained A probes"},
     {"sha": "037048c2273f416cf3afc257e65c14a40096f14c", "subject": "coopmwm P3: refresh readiness after review blocker fixes"},
     {"sha": "6bc484ef42b20d4fa58a5f41231fd6aea75ddf47", "subject": "coopmwm P3: record accepted review and resume verification"},
-    {"sha": "5e299a679ad90951e2e7473705f3dd03b5482f52", "subject": "coopmwm P3: refresh verified accepted resume receipt"}
+    {"sha": "5e299a679ad90951e2e7473705f3dd03b5482f52", "subject": "coopmwm P3: refresh verified accepted resume receipt"},
+    {"sha": "bfc8650e23d4e3e2199620077f1b66c6ff1042f6", "subject": "coopmwm P3: verify accepted fixes on fresh resume"}
   ],
   "owned_files": [
     "tools/coopmwm/track2_monitor.py",
