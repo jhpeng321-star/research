@@ -12,7 +12,7 @@
   },
   "resume_verification": {
     "date": "2026-11-05",
-    "starting_commit": "6bc484ef42b20d4fa58a5f41231fd6aea75ddf47",
+    "starting_commit": "5e299a679ad90951e2e7473705f3dd03b5482f52",
     "accepted_source_commit": "037048c2273f416cf3afc257e65c14a40096f14c",
     "starting_tracked_changes": false,
     "source_and_tests_match_accepted_commit": true,
@@ -22,7 +22,7 @@
       "git diff --check c4/track-base: PASS"
     ],
     "test_rerun": false,
-    "test_evidence": "Read both reviews and all P3 readiness/acceptance receipts. Preserved completed implementation and independent-review runs; accepted source and tests are unchanged, so no duplicate test or diagnostic wave was started. Prior resume commit 6bc484ef already recorded acceptance; this refresh records verification from that resumed state.",
+    "test_evidence": "Read git status/log, the shared spec, both reviews and all P3 readiness/acceptance receipts before resuming. Verified source and tests byte-match the independently accepted commit and inspected the existing B/R three-update reward/history/status regressions and both trained-A checkpoint-routing probe cases. Preserved the completed 97-test P3 run and independent 118-case review run; no source changes, duplicate tests, reservations or diagnostic dispatches were needed. This refresh records verification from resume commit 5e299a67.",
     "preserved_untracked_files": ["P3_ACCEPTED.json", "P3_READY.blocked0.json", "REVIEW_P3_r0.md", "REVIEW_P3_r1.md"]
   },
   "worktree": "E:/agent-work/c4-track2-monitor",
@@ -35,7 +35,8 @@
     {"sha": "eba1df2d4f1cbf0e21fbecc58ae142e9ead6bb2c", "subject": "coopmwm P3: record CPU readiness and integration contract"},
     {"sha": "5046be9ae3f3a0ac13ea00059dee3f59027b0cc4", "subject": "coopmwm P3: fix redesigned reward monitoring and trained A probes"},
     {"sha": "037048c2273f416cf3afc257e65c14a40096f14c", "subject": "coopmwm P3: refresh readiness after review blocker fixes"},
-    {"sha": "6bc484ef42b20d4fa58a5f41231fd6aea75ddf47", "subject": "coopmwm P3: record accepted review and resume verification"}
+    {"sha": "6bc484ef42b20d4fa58a5f41231fd6aea75ddf47", "subject": "coopmwm P3: record accepted review and resume verification"},
+    {"sha": "5e299a679ad90951e2e7473705f3dd03b5482f52", "subject": "coopmwm P3: refresh verified accepted resume receipt"}
   ],
   "owned_files": [
     "tools/coopmwm/track2_monitor.py",
