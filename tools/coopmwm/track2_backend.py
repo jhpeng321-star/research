@@ -610,6 +610,7 @@ class ArmRuntime:
                         else ps.practice_count(len(worlds), fraction))
                 plan = ps.plan_for_update(cfg['run_root'], arm, u, fraction=fraction,
                     repeat_cap=cfg['practice_repeat_cap'], count=want, training_seed=cfg['training_seed'],
+                    breadth_cfg=cfg,
                     **(dict(weighting=True) if cfg.get('practice_weighting') else {}))
                 rows = plan['rows']
                 for row in rows:
@@ -655,6 +656,7 @@ class ArmRuntime:
                 plan = ps.plan_for_update(root, arm, u, fraction=effective_fraction(cfg),
                     repeat_cap=cfg['practice_repeat_cap'], count=len(practice),
                     training_seed=cfg['training_seed'],
+                    breadth_cfg=cfg,
                     **(dict(weighting=True) if cfg.get('practice_weighting') else {}))
                 calls = []
                 for episode in practice:

@@ -665,6 +665,7 @@ def test_weighted_practice_uses_existing_frozen_plan_and_batch(cfg, monkeypatch)
     monkeypatch.setattr(tb, '_wave', wave)
     episodes = tb.collect_update(cfg, 'B', 1)
     assert requests[0][1]['weighting'] is True
+    assert requests[0][1]['breadth_cfg'] == dict(cfg, update=1)
     assert requests[0][1]['fraction'] == .5
     assert calls[0][0][2] == [cfg['worlds_by_update']['1'][0]]
     assert calls[1][1]['used_seeds'] == {1}

@@ -77,52 +77,53 @@ def bank_move_supervision(runtime):
     is never an executable instruction or a substitute for online sensing.
     """
     import numpy as np
-    from . import bank_v2v, moves
+    from . import bank_v2v, bank_breadth
     from .trigger_policy import TriggerBatch
+    if runtime.arm == 'A':
+        return dict(examples=0, source='A_no_bank')
     cfg, policy, records = runtime.cfg, runtime.policy, []
-    def consume(*, receipt, example, plan, pairs, trace):
-        if not pairs or example is None or not example['admitted'] or not example['cooperative']:
-            return
-        label = moves.from_plan(plan)
+    contexts = []
+    def consume(*, cfg, receipt, example, plan, pairs, trace):
         frames = bank_v2v.trace_frames(trace)
-        sample, weight = pairs[0]
-        time = int(sample['intent_link']['t'])
-        # A fresh policy copy keeps training episode boards/RNGs untouched.
-        reader = deepcopy(policy)
-        if time-1 in frames:
-            reader.observe(frames[time-1]['vehicles'], time-1)
-        reader.observe(frames[time]['vehicles'], time)
-        keep = [v for v in label.members if v in sample['context']['members']
-                and set(label.members) <= set(reader.visible.get(v, ())) ]
-        if not keep:
-            return
-        source = sample['context']
-        context = dict(source, members=keep,
-            x=[source['x'][source['members'].index(v)] for v in keep],
-            trigger_v2v={v: reader.local_intents[v] for v in keep})
-        batch = policy.trigger.decide(context, obs_states=reader.local_states,
-            observable_cavs=reader.visible, rng=np.random.default_rng(cfg['training_seed']),
-            generator=torch.Generator().manual_seed(cfg['training_seed']), deterministic=True)
-        tables, descriptors, mask = list(batch.tables), batch.descriptors.clone(), batch.mask.clone()
-        targets = []
-        for i, vid in enumerate(keep):
-            index = 0 if label.family == 'none' else 1
-            if index:
-                table = list(tables[i]); table[index] = label; tables[i] = tuple(table)
-                descriptors[i, index] = torch.tensor(policy.trigger._descriptor(
-                    p1.TriggerMove(label), reader.visible[vid]))
-                mask[i, index] = True
-            targets.append(index)
-        batch = TriggerBatch(context, tuple(tables), descriptors, mask,
-            torch.tensor(targets), batch.logp, batch.values)
-        records.append((batch, float(weight)))
-    with p1._bank_view(cfg) as rb:
-        rb.bank_pairs(Path(cfg['run_root']), runtime.arm, cfg['training_seed'],
-            sources=cfg.get('replay_sources', {}).get(runtime.arm, ()), v2v=True,
-            v2v_intent=cfg, imitation_bank_filter='cooperative_only',
-            imitation_target_space='effective', example_consumer=consume)
+        for context, label, reader, weight, time in bank_breadth.observable_contexts(
+                policy, plan, pairs, frames, t0=receipt['t0']):
+            batch = policy.trigger.decide(context, obs_states=reader.local_states,
+                observable_cavs=reader.visible, rng=np.random.default_rng(cfg['training_seed']),
+                generator=torch.Generator().manual_seed(cfg['training_seed']), deterministic=True)
+            tables, descriptors, mask = list(batch.tables), batch.descriptors.clone(), batch.mask.clone()
+            targets = []
+            for i, vid in enumerate(context['members']):
+                index = 0 if label.family == 'none' else 1
+                if index:
+                    target = p1.TriggerMove(label)
+                    table = list(tables[i]); table[index] = target; tables[i] = tuple(table)
+                    descriptors[i, index] = torch.tensor(policy.trigger._descriptor(target, reader.visible[vid]))
+                    mask[i, index] = True
+                targets.append(index)
+            batch = TriggerBatch(context, tuple(tables), descriptors, mask,
+                torch.tensor(targets), batch.logp, batch.values)
+            records.append((batch, weight))
+            contexts.append(dict(verification_id=receipt['verification_id'],
+                example_id=(example or {}).get('example_id', receipt['verification_id']+'#s1'),
+                family=label.family, time_s=time, members=list(context['members'])))
+    bank_breadth.visit(cfg, runtime.arm, consume)
     if not records:
         raise ValueError('nonempty observable verified-plan trigger supervision required')
+    # Equal mass per supported family, then per context (not legacy AWR weight).
+    # This uses every usable context without letting a few high-weight old plans
+    # dominate. R uses precisely the same distribution over its verified families.
+    from collections import Counter
+    families = Counter(c['family'] for c in contexts)
+    other_families = set()
+    def other_support(*, cfg, receipt, example, plan, pairs, trace):
+        frames = bank_v2v.trace_frames(trace)
+        other_families.update(label.family for _, label, _, _, _ in bank_breadth.observable_contexts(
+            policy, plan, pairs, frames, t0=receipt['t0']))
+    bank_breadth.visit(cfg, 'R' if runtime.arm == 'B' else 'B', other_support)
+    if set(families) != other_families:
+        raise ValueError('F3 B/R observable trigger family support differs; add verified guidance')
+    weights = [1./families[c['family']] for c in contexts]
+    records = [(b, w) for (b, _), w in zip(records, weights)]
     reference = []
     for batch, weight in records:
         with torch.no_grad():
@@ -157,7 +158,9 @@ def bank_move_supervision(runtime):
     policy.trigger_optimizer.zero_grad(set_to_none=True)
     policy.layer._check_frozen()
     return dict(initial_ce=initial, final_ce=float(loss().detach()),
-        examples=len(records), passes=passes, source='own verified per_seed_v1 plans and observable traces')
+        examples=len(records), passes=passes, contexts=contexts, family_counts=dict(families),
+        family_mass={f: 1./len(families) for f in families}, rule=bank_breadth.RULE,
+        source='all usable verified bank plans and observable traces, including PLAN_FIX outputs')
 
 
 def monitor_config(cfg, *, root=None):

@@ -117,7 +117,7 @@ def plan_path(root, arm, update):
 
 
 def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_seed,
-                    weighting=False):
+                    weighting=False, breadth_cfg=None):
     """The frozen practice plan of one (arm, update): uniformly sampled examples with a
     per-example repeat cap; sealed once, never re-sampled (restarts reuse the same job ids)."""
     from . import exact_grade as xg
@@ -131,7 +131,18 @@ def plan_for_update(root, arm, update, *, fraction, repeat_cap, count, training_
         xg.verify_sealed(record, 'practice_plan_sha256')
         if record['arm'] != arm or record['update'] != int(update):
             raise ValueError('practice plan belongs to another arm/update')
+        if breadth_cfg is not None and 'breadth' not in record:
+            raise ValueError('F3 requires a new update: existing practice plan predates breadth')
         return record
+    if breadth_cfg is not None:
+        if arm not in ('B', 'R'):
+            raise ValueError('F3 practice applies only to B/R')
+        from .bank_breadth import practice_plan
+        record = practice_plan(root, arm, update, cfg=breadth_cfg, fraction=fraction,
+            repeat_cap=cap, count=count, training_seed=training_seed)
+        sealed = xg._seal(record, 'practice_plan_sha256')
+        xg._write_new(path, sealed)
+        return sealed
     coop = examples(root, arm, cooperative_only=True)
     augmented, augmentation_sha = [], None
     if weighting:
@@ -198,9 +209,18 @@ def load_snapshot(root, arm, row):
     (seed_index >= 3, the extra_seeds extension) from replicate(snapshot, 'vid#sN') - the same
     deterministic per-seed CRN derivation, an independent generator per extra seed."""
     from . import replay_bank as rb
-    snap = torch.load(rb.bank_root(root, arm)/'snapshots'/(row['state_id']+'.pt'), weights_only=False)
+    if row.get('snapshot_lookup'):
+        from .track2_backend import _path
+        lookup = row['snapshot_lookup']
+        source_root = _path(lookup['run_root'])
+        from .bank_breadth import load_verified_restart
+        snap = load_verified_restart(arm, lookup)
+    else:
+        snap = torch.load(rb.bank_root(root, arm)/'snapshots'/(row['state_id']+'.pt'), weights_only=False)
     seed_index = int(row['seed_index'])
-    if seed_index == 2:
+    if row.get('snapshot_lookup'):
+        pass  # Original receipt and native per-seed CRN already validated above.
+    elif seed_index == 2:
         snap = rb.replicate(snap, row['salt'])
     elif seed_index >= 3:
         snap = rb.replicate(snap, f'{row["salt"]}#s{seed_index}')
@@ -210,16 +230,23 @@ def load_snapshot(root, arm, row):
         raise ValueError('practice augmentation snapshot_sha256 mismatch')
     if row.get('source') == 'augmented' or row.get('parent_example_id'):
         from .practice_weighting import verify_child
-        verify_child(root, arm, row, snap, row.get('prelaunch'))
+        if row.get('snapshot_lookup'):
+            from .track2_backend import _bank_view
+            with _bank_view(lookup['bank_cfg']):
+                verify_child(source_root, arm, row, snap, row.get('prelaunch'))
+        else:
+            verify_child(root, arm, row, snap, row.get('prelaunch'))
     return snap
 
 
-def _crn_seed_text(seed_index):
+def _crn_seed_text(seed_index, replication_salt=None):
     """Where the practice generator state at t0 comes from (receipt provenance text)."""
     if seed_index == 1:
         return 'example seed-1 decision snapshot generator state'
     if seed_index == 2:
         return 'example seed-2 CRN: replicate(snapshot, vid) generator state'
+    if replication_salt is not None:
+        return f'extra-seed example CRN: replicate(snapshot, {replication_salt}) generator state'
     return f'extra-seed example CRN: replicate(snapshot, salt#s{seed_index}) generator state'
 
 
@@ -238,7 +265,7 @@ def _snapshot_call(root, arm, ident, row, index, base_extra, *, a_reference):
                 verification_id=row['verification_id'], example_id=row['example_id'],
                 seed_index=int(row['seed_index']), t0=t0, slot=slot,
                 world=snap['episode']['world'], snapshot_sha256=sv.snapshot_sha(snap),
-                crn_seed=_crn_seed_text(int(row['seed_index'])),
+                 crn_seed=_crn_seed_text(int(row['seed_index']), row.get('replication_salt')),
                 fallback=bool(row.get('fallback')),
                 horizon_end_s=int(snap.get('end_s', sv.EPISODE_END_S)), charged_sim_s=CHARGED_SIM_S,
                 policy=('A policy from t0 (matched safety reference); same snapshot prefix replay '
@@ -250,6 +277,8 @@ def _snapshot_call(root, arm, ident, row, index, base_extra, *, a_reference):
     if row.get('source'):
         meta['weighting'] = dict(enabled=True, source=row['source'],
                                  parent_example_id=row.get('parent_example_id'))
+    if row.get('context_id'):
+        meta['breadth'] = {k: row[k] for k in ('context_id', 'family', 'source')}
     extras = dict(base_extra,
                   practice=dict(meta, snapshot=snap),
                   branch=dict(time_s=t0, takeover_s=t0, revert=[],
@@ -310,6 +339,9 @@ def update_report(eps):
                  example_id=e['practice']['example_id'], seed_index=int(e['practice']['seed_index']),
                  t0=int(e['practice']['t0']), world=e['world']['seed'], steps=len(e['steps']),
                  fallback=bool(e['practice'].get('fallback')), return_veh_s=ret(e)) for e in practice]
+    for row, episode in zip(rows, practice):
+        if episode['practice'].get('breadth'):
+            row['breadth'] = episode['practice']['breadth']
     used = {}
     for r in rows:
         used[r['example_id']] = used.get(r['example_id'], 0)+1
@@ -327,4 +359,11 @@ def update_report(eps):
         report['weighting'] = dict(enabled=True, practice=len(weighted),
             cooperative=sum(not e['practice'].get('fallback') for e in weighted),
             augmented=sum(e['practice']['weighting']['source'] == 'augmented' for e in weighted))
+    broad = [r['breadth'] for r in rows if r.get('breadth')]
+    if broad:
+        from collections import Counter
+        report['breadth'] = dict(practice=len(broad),
+            unique_contexts=len({r['context_id'] for r in broad}),
+            context_counts=dict(Counter(r['context_id'] for r in broad)),
+            family_counts=dict(Counter(r['family'] for r in broad)))
     return report
