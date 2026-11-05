@@ -2,6 +2,7 @@
   "task": "F1",
   "status": "READY",
   "date": "2026-11-05",
+  "fix_round": 1,
   "branch": "c4/fix-actuation",
   "worktree": "E:/agent-work/c4-fix-actuation",
   "base_branch": "c4/rerun-launch",
@@ -10,17 +11,37 @@
     {
       "sha": "7aa029dc61a344172fda27c42bc2ac42125cd60f",
       "subject": "C4 F1: execute selected moves at full library strength"
+    },
+    {
+      "sha": "0b840f4987f5721af44e602903357a70ed26bfe6",
+      "subject": "C4 F1: record CPU validation and readiness"
+    },
+    {
+      "sha": "6501c2a6149be17b79221807b7a5025654a12b43",
+      "subject": "C4 F1: retain residual gradients at zero correction"
     }
   ],
   "specification": {
     "path": "E:/agent-work/_sol/tracks_spec.md",
     "section": "MAIN 15:15 owner: FIX ALL DIAGNOSED PROBLEMS BEFORE TRAINING RESUMES",
-    "item": "F1 actuation",
-    "diagnosis": "E:/research-dense/runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md"
+    "item": "F1 actuation"
+  },
+  "review_resolution": {
+    "review": "REVIEW_F1_r0.md",
+    "reviewed_commit": "0b840f4987f5721af44e602903357a70ed26bfe6",
+    "blockers_addressed": [1],
+    "fix": "ProductionLayer.forward uses mean + correction unconditionally when enabled, retaining derivative 1 at zero initialization and exact residual/offset cancellation.",
+    "new_regressions": "10 parameterized cases across B/R: unit forward derivative and nonzero effective-loss gradient with absent offsets, explicit zero offsets, and exact cancellation; five-pass effective-bank parameter/loss/action-error improvement from fresh zero initialization with absent or zero offsets and no preceding PPO update.",
+    "pre_fix_reproduction": {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_f1_actuation_cpu.py -k \"zero_combined_correction or effective_bank_learns\" -o cache_dir=_out/f1_fix_pytest_cache --basetemp=_out/f1_fix_red_cpu",
+      "failed": 10,
+      "deselected": 21,
+      "duration_seconds": 45.97,
+      "failure_evidence": "Six derivative assertions observed 0 instead of 1; four real bank-update assertions observed gradient norm 0 despite completing five passes."
+    }
   },
   "files": [
     "tools/coopmwm/track2_backend.py",
-    "tools/coopmwm/test_track2_backend_cpu.py",
     "tools/coopmwm/test_f1_actuation_cpu.py",
     "F1_READY.json"
   ],
@@ -29,20 +50,17 @@
     "effective_from_update": 0,
     "conditional_action_mean": "frozen MAPPO mean + committed moves.offsets + learned residual(features)",
     "initial_learned_residual": 0.0,
-    "sampling_forward_scoring_alignment": "ProductionLayer._distribution and forward use the same fixed move offset plus additive residual; inherited score and exact joint KL, member_scores, and bank imitation share this mean.",
-    "legacy_checkpoint_compatibility": "trigger_gain and its optimizer slot are retained for strict sidecar loading, but are unused by production actuation. No gradient reaches the slot; legacy values and Adam moments cannot scale, reverse or suppress move execution.",
-    "execution_constraints": "Existing MoveExecutor ownership, onset/hold/expiry, observable wall release, CAV-only requests, acceleration bounds and safety target clipping remain in the command path.",
-    "arm_A": "Exact episode_components passthrough and existing MAPPO PPO path; CPU command/sample equality verified.",
-    "arms_B_R": "One shared actuation and residual update implementation; identical restored worker states, CRN and observations yield identical commands, samples and update metrics apart from the arm label."
+    "forward_derivative_wrt_residual": 1.0,
+    "sampling_identity": "Inherited no-gradient sampling retains byte-preserving identity selection; enabled forward uses differentiable addition.",
+    "legacy_checkpoint_compatibility": "trigger_gain and optimizer layout retained; production does not use the gain and gives it no gradient.",
+    "arm_A": "Original episode_components passthrough; command/sample equality tests pass.",
+    "arms_B_R": "Shared actuation and residual update; both arms covered by all new regressions."
   },
   "api": {
-    "changed_behavior": [
-      "ProductionLayer._distribution(features, move_offsets=None): combined correction is residual + features[:, -1]; fixed execution coefficient is 1.",
-      "ProductionLayer.forward(context): includes context.move_offsets through the same production correction used in sampling/scoring."
-    ],
+    "changed_behavior": "ProductionLayer.forward(context) is differentiably additive even when the combined correction is zero.",
     "public_signatures": "Unchanged: build_arm_runtime, collect_update, episode_components, EpisodePolicy, worker_state and restore_worker.",
-    "receipt_fields": "Existing coop_layer.old_residual records the combined committed offset plus learned residual; coop_layer.old_gain is now 1.0 for production samples.",
-    "new_configuration": "None; F1 applies to the explicitly opted-in production B/R backend."
+    "receipt_fields": "Unchanged: coop_layer.old_residual is combined committed offset plus residual; production old_gain is 1.0.",
+    "new_configuration": "None."
   },
   "tests": {
     "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
@@ -50,22 +68,20 @@
       "CUDA_VISIBLE_DEVICES": "",
       "PYTHONDONTWRITEBYTECODE": "1"
     },
-    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_f1_actuation_cpu.py tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_coop_layer_cpu.py tools/coopmwm/test_launch_integration_cpu.py --basetemp=_out/f1_pytest_verified_cpu",
-    "passed": 160,
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_f1_actuation_cpu.py tools/coopmwm/test_track2_backend_cpu.py tools/coopmwm/test_coop_layer_cpu.py tools/coopmwm/test_launch_integration_cpu.py -o cache_dir=_out/f1_fix_pytest_cache --basetemp=_out/f1_fix_verified_cpu",
+    "passed": 170,
     "skipped": 1,
     "failed": 0,
-    "duration_seconds": 129.09,
-    "skip_reason": "Existing Windows file-symlink privilege check in test_launch_integration_cpu.py:526.",
-    "f1_regression_cases": 21,
+    "duration_seconds": 61.85,
+    "skip_reason": "Existing test_launch_integration_cpu.py:526 file-symlink privilege check; exercised by cpuV qualification.",
+    "f1_regression_cases": 31,
+    "new_fix_round_cases": 10,
     "verified": [
-      "Selected ease_off, wall, gap_open and ramp_assist commands differ from the paired base by exactly moves.offsets within floating-point tolerance, for both B/R and stochastic/deterministic actions.",
-      "Fresh zero gain and zero residual still execute full-strength moves; onset, full hold, release and ownership are respected.",
-      "Within existing feasibility limits, one-second issued-target differences equal the library offsets using CPU actuator arithmetic.",
-      "Learned residual is additive; negative, zero and positive legacy gain values cannot gate it or the move.",
-      "Forward/imitation mean, production/member scores and exact KL agree; residual gradients are nonzero while frozen base and legacy gain receive no gradients.",
-      "Strict worker/optimizer restoration accepts nonempty legacy gain Adam moments; subsequent PPO leaves the gain and its moments unchanged.",
-      "B/R commands, CRN memory, samples and PPO metrics match under identical inputs; A commands and samples are unchanged.",
-      "Existing production backend, generic cooperation layer and launch integration regression suites pass."
+      "Full library offsets execute from update 0 across all structured families, B/R, deterministic/stochastic commands, onset/hold/expiry and ownership.",
+      "Forward derivative is 1 per member at absent/zero offsets and exact cancellation; effective censored imitation has a nonzero gradient in all three cases.",
+      "Without prior PPO, five real effective-bank passes change residual parameters, reduce censored loss and effective action error, and retain KL within the existing bound.",
+      "Base parameters remain frozen and unchanged; legacy gain receives no gradient or new Adam state during imitation.",
+      "Existing score/KL alignment, legacy gain restoration, B/R fairness, A passthrough, generic layer and launch integration tests pass."
     ],
     "git_diff_check": "PASS"
   },
@@ -74,8 +90,7 @@
     "simulation_seconds": 0,
     "ssh_connections": 0,
     "sumo_runs": 0,
-    "gpu_jobs": 0,
-    "remote_configuration_changes": 0
+    "gpu_jobs": 0
   },
   "open_issues": []
 }
