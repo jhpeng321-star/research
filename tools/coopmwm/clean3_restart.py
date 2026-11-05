@@ -19,10 +19,10 @@ from .protocol import digest
 ROOT = '/home/ubuntu/coopmwm20261106_clean3'
 CLEAN2 = '/home/ubuntu/coopmwm20261105_clean2'
 CLEAN1 = '/home/ubuntu/coopmwm20261105_clean1'
-# r1 (source b7b74545, chain stopped by operator before any clean3 physics) ran the
-# same G1 selection: 0 candidates, 0 sim-s, NO-GO. Its ledger stays counted.
-G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r2'
-G1_PRIOR_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3_g1cert',)
+# r1 (b7b74545) and r2 (a0f9401d) chains were stopped by the operator before any clean3
+# physics; each ran the same G1 selection: 0 candidates, 0 sim-s, NO-GO. Ledgers stay counted.
+G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r3'
+G1_PRIOR_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3_g1cert', '/home/ubuntu/coopmwm20261106_clean3_g1cert_r2')
 MINING_ROOT = '/home/ubuntu/coopmwm20261106_s_mining'
 SCHEMA = 'coopmwm.clean3.restart_budget.v1'
 
@@ -290,36 +290,74 @@ def go_nogo(manifest, *, work, runtime_sha256, charged, branches):
 
 # ---------------------------------------------------------------- mined moves
 
+MINED_RULE = ('owner 2026-11-06 ~04:35 "make sure we actually have good plans to start the training": '
+    'launch only when MINED_MOVES.jsonl yields >=3 natively admitted SUMO-verified JOINT moves (>=2 CAV '
+    'members; mining synergy CI95 lower bound > 0 on every reported seed) covering >=2 distinct families '
+    '(families verified in both B and R); hard deadline 12:00 local -> stop and report, no launch '
+    'without owner confirmation.')
+MIN_JOINT_MOVES = 3
+MIN_FAMILIES = 2
+
+
+def _ci_evidence(path):
+    """Per-move synergy lower bounds from the producer's annotated sibling, if any."""
+    out = {}
+    for name in ('MINED_MOVES_ANNOTATED.jsonl',):
+        side = Path(path).parent/name
+        if side.is_file():
+            for line in side.read_text(encoding='utf-8').splitlines():
+                if line.strip():
+                    r = json.loads(line)
+                    out[(r.get('arm'), r.get('verification_id'), r.get('plan_sha256'))] = r.get('_synergy_lower95')
+    return out
+
+
+def _ci_ok(row, evidence):
+    value = row.get('synergy_lower95', row.get('_synergy_lower95'))
+    if value is None:
+        value = evidence.get((row.get('arm'), row.get('verification_id'), row.get('plan_sha256')))
+    values = list(value.values()) if isinstance(value, dict) else [value]
+    try:
+        return bool(values) and all(v is not None and math.isfinite(float(v)) and float(v) > 0 for v in values)
+    except (TypeError, ValueError):
+        return False
+
+
 def admit_mined(path, cfg, out_path):
     """Keep only rows that pass native F3/G5 admission, families common to B and R.
 
     Writes the admitted subset to out_path (never edits the producer's file).
-    Returns a receipt; an empty admission means the current bank only.
+    Returns a receipt incl. the launch-readiness verdict of MINED_RULE.
     """
-    from . import bank_breadth, group_lane_bank, launch_training as training
+    from . import bank_breadth, group_lane_bank
     from .rerun_cpus import sha
     path = Path(path)
     rows = [json.loads(l) for l in path.read_text(encoding='utf-8').splitlines() if l.strip()] \
         if path.is_file() else []
+    evidence = _ci_evidence(path)
     usable, rejected = [], []
     for row in rows:
         single = Path(str(out_path)+'.probe')
         try:
-            single.write_text(json.dumps(row)+'\n', encoding='utf-8')
-            local = dict(cfg, mined_moves=str(single))
             if row.get('run_root') and not Path(row['run_root']).is_absolute():
                 row = dict(row, run_root=str((path.parent/row['run_root']).resolve()))
-                single.write_text(json.dumps(row)+'\n', encoding='utf-8')
+            if isinstance(row.get('replay_sources'), dict):
+                row = dict(row, replay_sources={a: [str((path.parent/q).resolve()) if not Path(q).is_absolute() else q
+                    for q in v] for a, v in row['replay_sources'].items()})
+            single.write_text(json.dumps(row)+'\n', encoding='utf-8')
+            local = dict(cfg, mined_moves=str(single))
             group_lane_bank.inputs(local)
-            families = set()
+            found = []
             def consume(*, cfg, receipt, example, plan, pairs, trace):
                 from .group_lane import from_plan
                 if receipt['verification_id'] == row['verification_id'] and digest(plan) == row['plan_sha256']:
-                    families.add(from_plan(plan).family)
+                    move = from_plan(plan)
+                    found.append((move.family, len(move.members)))
             bank_breadth.visit(local, row['arm'], consume)
-            if not families:
+            if not found:
                 raise ValueError('no admitted native example')
-            usable.append(dict(row, _families=sorted(families)))
+            usable.append(dict(row, _families=sorted({f for f, _ in found}),
+                               _members=max(n for _, n in found), _ci_ok=_ci_ok(row, evidence)))
         except (ValueError, KeyError, TypeError, OSError) as error:
             rejected.append(dict(row=row, reason=str(error)))
         finally:
@@ -330,13 +368,18 @@ def admit_mined(path, cfg, out_path):
     kept = [r for r in usable if set(r['_families']) <= common]
     dropped = [dict(row=r, reason='family not verified in both B and R (same-distribution rule)')
                for r in usable if not set(r['_families']) <= common]
+    joint = [r for r in kept if r['_members'] >= 2 and r['_ci_ok']]
+    joint_moves = {(r['arm'], r['verification_id'], r['plan_sha256']) for r in joint}
+    joint_families = sorted({f for r in joint for f in r['_families']})
+    ready = len(joint_moves) >= MIN_JOINT_MOVES and len(joint_families) >= MIN_FAMILIES
     if kept:
         with Path(out_path).open('x', encoding='utf-8') as f:
             for r in kept:
-                f.write(json.dumps({k: v for k, v in r.items() if k != '_families'}, sort_keys=True)+'\n')
+                f.write(json.dumps({k: v for k, v in r.items() if not k.startswith('_')}, sort_keys=True)+'\n')
     return dict(source=str(path), source_sha256=sha(path) if path.is_file() else None,
         rows=len(rows), admitted=len(kept), admitted_path=str(out_path) if kept else None,
-        families=sorted(common), rejected=rejected+dropped, unix=time.time())
+        families=sorted(common), joint_verified_moves=len(joint_moves), joint_families=joint_families,
+        ready=ready, rule=MINED_RULE, rejected=rejected+dropped, unix=time.time())
 
 
 # ---------------------------------------------------------------- preparation
@@ -542,7 +585,7 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1, clean2=CLEAN2, g1_root=G1_ROOT,
             design='A plain MAPPO; B/R identical code (F1-F6 + G1 certified lessons when GO, G2 opportunities, '
                    'G4 sparse measured synergy credit, G5 lane moves, verified mined moves); only guidance source differs',
             g1=dict(decision=go['decision'], rule=G1_GO_RULE, receipt_sha256=go['receipt_sha256']),
-            mined_moves=mined, extra_final_baselines=cfg['extra_final_baselines'],
+            mined_moves=mined, mined_launch_rule=MINED_RULE, extra_final_baselines=cfg['extra_final_baselines'],
             criterion=rc.criterion_document(), reporting=cfg['clean2_reporting_definition'],
             seeds='original registered TRAIN worlds only; full windows; u2/u4 probes; N5 u6/u12/u24; paired u8/u24',
             safety=SAFETY_RULE, clean1_clean2_preserved=True), sort_keys=True)+'\n')

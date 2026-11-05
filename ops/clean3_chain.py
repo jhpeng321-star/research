@@ -1,8 +1,8 @@
 """One-use cpuV clean3 chain. No SSH, retries, receipt adoption or stop clearance.
 
 Order (owner/MAIN 2026-11-06): G1 certification batch -> CLEAN3_GO_NOGO.json
-(continue regardless) -> wait for first verified MINED_MOVES batch (cutoff
-06:30 local) -> prepare clean3 root/ledger/AUTHORITY -> end-to-end smoke with
+(continue regardless) -> wait for first verified MINED_MOVES batch (deadline
+12:00 local) -> prepare clean3 root/ledger/AUTHORITY -> end-to-end smoke with
 every lever/fix ON -> one zero-collision/zero-teleport gate -> full u1-u24
 phase-coverage assertion -> launch A/B/R u0 24 updates + monitor -> supervise.
 Every pass/fail criterion is encoded here or in the called library checks.
@@ -158,7 +158,7 @@ class Chain:
                                              'admitted_by_arm', 'charged_sim_s', 'error')}
 
     def wait_mined(self):
-        """First verified mined batch, or whatever is verified at the cutoff."""
+        """Owner ~04:35: launch only on >=3 verified joint moves in >=2 families; 12:00 hard stop."""
         from tools.coopmwm import clean3_restart as c3
         cfg, _ = c3.g1_config(str(self.source), c3.G1_ROOT)
         cfg['run_root'] = c3.G1_ROOT
@@ -168,28 +168,39 @@ class Chain:
             signature = None
             if self.mined_path.is_file():
                 st = self.mined_path.stat(); signature = (st.st_size, st.st_mtime_ns)
-            if signature and signature[0] > 0 and (signature != last or final):
+                side = self.mined_path.parent/'MINED_MOVES_ANNOTATED.jsonl'
+                if side.is_file():
+                    st = side.stat(); signature += (st.st_size, st.st_mtime_ns)
+            if signature and signature[0] > 0 and signature != last:
                 last, attempt = signature, attempt+1
                 out = self.control/f'MINED_MOVES_ADMITTED_{attempt:03}.jsonl'
                 receipt = c3.admit_mined(self.mined_path, cfg, out)
                 publish(self.control/f'MINED_ADMISSION_{attempt:03}.json', receipt)
-                if receipt['admitted'] > 0:
+                if receipt['ready'] is True and receipt['admitted'] > 0:
                     self.mined = receipt
-                    return dict(receipt, reason='first verified batch')
+                    return {k: receipt[k] for k in ('admitted', 'joint_verified_moves', 'joint_families',
+                                                     'families', 'rows', 'admitted_path', 'rule')}
             if final:
-                self.mined = dict(admitted=0, source=str(self.mined_path), reason='cutoff '+self.cutoff_text+
-                                  ' reached without verified mined moves; current bank only')
-                return self.mined
+                value = dict(reason='MINED deadline '+self.cutoff_text+' reached without >=3 verified joint '
+                    'moves covering >=2 families; chain stops; no launch without owner confirmation',
+                    attempts=attempt, rule=c3.MINED_RULE, unix=time.time())
+                publish(self.control/'MINED_DEADLINE_STOP.json', value)
+                raise ValueError(value['reason'])
             time.sleep(60)
 
     def prepare(self):
         from tools.coopmwm import clean3_restart as c3, launch_training as t
+        if not (self.mined and self.mined.get('ready') is True):
+            raise ValueError('owner rule: no launch without >=3 verified joint moves in >=2 families')
         cfg = c3.prepare(self.source, mined=self.mined)
         (ROOT/'chain').symlink_to(self.control, target_is_directory=True)
         publish(ROOT/'CHAIN_AUTHORITY.json', read(self.control/'AUTHORITY.json'))
         with (ROOT/'AUTHORITY.md').open('a', encoding='utf-8') as f:
+            f.write('\nMINED launch condition (registered in REGISTRATION.md and chain AUTHORITY.json before '
+                    'applying): '+c3.MINED_RULE+' Satisfied: '+json.dumps({k: self.mined[k] for k in
+                    ('joint_verified_moves', 'joint_families', 'admitted', 'source_sha256')}, sort_keys=True)+'\n')
             f.write('\nclean3 chain: G1 batch (go/no-go recorded, continue regardless) -> mined wait '
-                    '(cutoff '+self.cutoff_text+') -> root/ledger -> smoke (all levers/fixes, hard-coded '
+                    '(deadline '+self.cutoff_text+') -> root/ledger -> smoke (all levers/fixes, hard-coded '
                     'receipts) -> one 0-collision/0-teleport gate -> u1-u24 phase coverage assertion -> '
                     'A/B/R u0 24 updates + monitor. Any failure stops; no automatic retry.\n')
         t.health(ROOT)
@@ -358,7 +369,7 @@ class Chain:
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--source', required=True); p.add_argument('--control', required=True)
-    p.add_argument('--mined', default=MINED_DEFAULT); p.add_argument('--cutoff', default='06:30')
+    p.add_argument('--mined', default=MINED_DEFAULT); p.add_argument('--cutoff', default='12:00')
     args = p.parse_args()
     import fcntl
     control = Path(args.control)
