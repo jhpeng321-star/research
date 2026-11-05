@@ -40,7 +40,18 @@
       }
     ],
     "remaining_r2_blockers": [],
-    "independent_rereview": "Not run in this fix session"
+    "independent_rereview": {
+      "file": "REVIEW_T2B_r3.md",
+      "reviewer": "astra",
+      "reviewed_head": "066ef083ccfa68b5f95df44c089e961efcbed277",
+      "verdict": "PASS",
+      "remaining_blockers": [],
+      "acceptance_receipt": "T2B_ACCEPTED.json",
+      "tests": "201 distinct passed, 0 failed, 1 existing platform skip, 1 intentional deselection",
+      "core_result": "157 passed, 1 warning in 152.62s",
+      "regression_result": "44 passed, 1 skipped, 1 deselected, 1 warning in 118.99s",
+      "resume_note": "Fresh session confirmed the committed r2 fixes and subsequent independent r3 acceptance. Completed implementation and test work was preserved without repeating jobs or dispatches. This receipt-only refresh records the existing independent evidence."
+    }
   },
   "owned_files": [
     "tools/coopmwm/dense_teacher.py",
