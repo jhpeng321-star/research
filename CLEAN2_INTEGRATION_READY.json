@@ -1,0 +1,16 @@
+{
+  "status":"INTEGRATION_AND_LINUX_QUALIFICATION_PASS_CHAIN_STARTED",
+  "runtime_commit":"285663a103d18fd33e9137db14fba33b62423a23",
+  "source_root":"/home/ubuntu/coopmwm20261105_clean2_src_285663a1",
+  "source_files":538,
+  "all_six_acceptances_sha_bound":true,
+  "branches_merged":["c4/fix-actuation","c4/fix-proposals","c4/fix-breadth","c4/fix-safety-reward","c4/fix-reporting","c4/fix-ssh"],
+  "linux":{"passed":1576,"failed":0,"skipped":0,"subtests_passed":14,"seconds":177.42,"control":"/home/ubuntu/cpuv_setup_20261105/clean2_tests_285663a1"},
+  "selection":"CLEAN2_TEST_SELECTION.json plus test_acceleration_cpu.py and ops/test_clean2_chain.py; every original accepted/t2c/v2v/F1-F6/clean2 suite; no deselections",
+  "default_off_compatibility":"exact SHA-pinned historical source differential tests included and passed natively",
+  "chain":{"pid":296173,"start_ticks":"6536748","control":"/home/ubuntu/cpuv_setup_20261105/clean2_chain_285663a1","policy":"actual smoke -> one zero-collision/teleport gate -> one A/B/R/monitor dispatch; any failure stops, no retry"},
+  "clean1":"durably stopped A9/B9/R9, intact",
+  "new_physics_at_verified_chain_start":0,
+  "training_launch_not_yet_claimed":true,
+  "runbook":"CLEAN2_CHAIN_RUNBOOK.md"
+}
