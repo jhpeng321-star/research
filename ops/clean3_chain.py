@@ -204,10 +204,27 @@ class Chain:
                 raise ValueError(value['reason'])
             time.sleep(60)
 
+    def wait_confirmation(self):
+        """MAIN 05:30: hold until MAIN/owner confirms launch (LAUNCH_CONFIRMED.json in control)."""
+        path = self.control/'LAUNCH_CONFIRMED.json'
+        while True:
+            if path.is_file():
+                value = read(path)
+                if value.get('confirmed') is not True or not str(value.get('authority', '')).strip():
+                    raise ValueError('LAUNCH_CONFIRMED.json must carry confirmed=true and the authority quote')
+                return value
+            if time.time() >= self.cutoff:
+                publish(self.control/'CONFIRM_DEADLINE_STOP.json', dict(reason='no MAIN launch confirmation by '
+                    +self.cutoff_text+'; chain stops; nothing launched', unix=time.time()))
+                raise ValueError('no MAIN launch confirmation by deadline')
+            time.sleep(60)
+
     def prepare(self):
-        from tools.coopmwm import clean3_restart as c3, launch_training as t
+        from tools.coopmwm import clean3_restart as c3, launch_training as t, g5_runtime
         if not (self.mined and self.mined.get('ready') is True):
             raise ValueError('owner rule: no launch without >=3 verified joint moves in >=2 families')
+        if not g5_runtime.enabled():
+            raise ValueError('clean3 requires the bound G5 runtime env (COOPMWM_G5_RUNTIME=1)')
         cfg = c3.prepare(self.source, mined=self.mined)
         (ROOT/'chain').symlink_to(self.control, target_is_directory=True)
         publish(ROOT/'CHAIN_AUTHORITY.json', read(self.control/'AUTHORITY.json'))
@@ -377,7 +394,7 @@ class Chain:
 
     def run(self):
         sequence([('QUALIFIED', self.qualified), ('G1_CERTIFY', self.certify),
-            ('MINED_WAIT', self.wait_mined), ('PREPARE', self.prepare),
+            ('MINED_WAIT', self.wait_mined), ('CONFIRM_WAIT', self.wait_confirmation), ('PREPARE', self.prepare),
             ('SMOKE', lambda: self.command('smoke')), ('GATE', lambda: self.command('gate')),
             ('PHASE_COVERAGE', self.assert_coverage), ('LAUNCH', self.launch)], self.status)
         sequence([('MONITOR', self.monitor)], self.status)
@@ -389,6 +406,8 @@ def main():
     p.add_argument('--mined', default=MINED_DEFAULT); p.add_argument('--cutoff', default='12:00')
     args = p.parse_args()
     import fcntl
+    # Bound G5 env on the frozen runtime for every child (G1, smoke, gate, training owners).
+    os.environ['COOPMWM_G5_RUNTIME'] = '1'
     control = Path(args.control)
     with (control/'OWNER.lock').open('x') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)

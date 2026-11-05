@@ -17,7 +17,7 @@ paths += ['tools/coopmwm/'+name for name in (
     'test_executable_labels_cpu.py', 'test_coordination_opportunities_cpu.py',
     'test_sparse_synergy_credit_cpu.py', 'test_g4_runtime_cpu.py', 'test_clean3_budget_cpu.py',
     'test_group_lane_cpu.py', 'test_g1_certification_cpu.py', 'test_bank_perseed_cpu.py',
-    'test_bank_imitation_cpu.py', 'test_replay_bank_v2v_cpu.py', 'test_clean3_restart_cpu.py')]
+    'test_bank_imitation_cpu.py', 'test_replay_bank_v2v_cpu.py', 'test_clean3_restart_cpu.py', 'test_g5_runtime_cpu.py')]
 paths += ['tests/unit/test_c4_evalv5.py', 'tests/unit/test_c4_policy2.py']
 paths = list(dict.fromkeys(paths))
 assert all((repo/path).is_file() for path in paths)

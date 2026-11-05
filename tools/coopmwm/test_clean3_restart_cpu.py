@@ -144,7 +144,7 @@ def test_chain_sequence_fails_closed_and_orders_steps():
 
 def test_chain_step_order_is_registered():
     text = chain_path().read_text()
-    order = ['QUALIFIED', 'G1_CERTIFY', 'MINED_WAIT', 'PREPARE', 'SMOKE', 'GATE', 'PHASE_COVERAGE', 'LAUNCH']
+    order = ['QUALIFIED', 'G1_CERTIFY', 'MINED_WAIT', 'CONFIRM_WAIT', 'PREPARE', 'SMOKE', 'GATE', 'PHASE_COVERAGE', 'LAUNCH']
     positions = [text.index(f"('{step}'") for step in order]
     assert positions == sorted(positions)
 
@@ -343,7 +343,7 @@ def test_mined_smoke_check_a_to_d_and_fairness(monkeypatch):
     def update(a, passed=True, credit=1, ctx=None):
         return dict(arm=a, learning=dict(bank_trigger=dict(contexts=[dict(verification_id=f'v{a}', example_id=f'v{a}#s1')])),
             practice=dict(practice=1, episodes=[dict(breadth=dict(context_id=ctx or f'c{a}', family='yield_lane'))]),
-            clean3_mined_usage=dict(demonstrations=[dict(id='e', family='yield_lane', executed=dict(passed=passed))],
+            clean3_mined_usage=dict(demonstrations=[dict(id='e', family='yield_lane', executed=dict(passed=passed, kind='g5_lane_and_profile'))],
                                     g4_credit=[{}]*credit))
     out = cm.smoke_check({}, [update('B'), update('R')], 'x')
     assert out['B']['mined_practice_starts'] == 1 and out['R']['g4_credit'] == 1

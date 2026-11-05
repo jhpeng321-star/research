@@ -32,6 +32,8 @@ def episode(job, *, controller_hook=None, policy_loader=None):
     from tools.leverprobe import backend as exact
     from tools.coopfree import backend as cf
     exact.setup(job['runtime'],job['checkpoint']);install_seed_scope();guard(job['world'],job['role'])
+    from .g5_runtime import install as _g5_runtime
+    _g5_runtime(job['runtime'])  # clean3 opt-in (COOPMWM_G5_RUNTIME=1): bound G5 env on the frozen runtime
     exact.guard=lambda w:guard(w,job['role'])
     v2v = bool(job.get('v2v')) or os.environ.get('C4NM_V2V') == '1'
     if policy_loader is not None:

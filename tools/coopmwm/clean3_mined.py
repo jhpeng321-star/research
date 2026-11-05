@@ -193,6 +193,8 @@ def smoke_check(cfg, updates, artifacts):
         demos = arms[arm]['clean3_mined_usage']['demonstrations']
         if not any(d['executed'].get('passed') for d in demos):
             raise ValueError('(c) no demonstrated mined joint move executed its verified profile: '+arm)
+        if not any(d['executed'].get('passed') and d['executed'].get('kind') == 'g5_lane_and_profile' for d in demos):
+            raise ValueError('(c) smoke must run a real G5 lane move through the bound runtime env: '+arm)
         credit = arms[arm]['clean3_mined_usage']['g4_credit']
         if not credit:
             raise ValueError('(d) G4-format measured synergy rows missing for demonstrated moves: '+arm)

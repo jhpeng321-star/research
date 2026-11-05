@@ -21,9 +21,10 @@ CLEAN2 = '/home/ubuntu/coopmwm20261105_clean2'
 CLEAN1 = '/home/ubuntu/coopmwm20261105_clean1'
 # r1 (b7b74545), r2 (a0f9401d) and r3 (bf3f1d68) chains were stopped by the operator before any clean3
 # physics; each ran the same G1 selection: 0 candidates, 0 sim-s, NO-GO. Ledgers stay counted.
-G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r4'
+G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r5'
 G1_PRIOR_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3_g1cert', '/home/ubuntu/coopmwm20261106_clean3_g1cert_r2',
-                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r3')  # r3 stopped mid-G1: 0 rows
+                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r3',
+                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r4')  # r3/r4 stopped mid-G1: 0 rows
 MINING_ROOT = '/home/ubuntu/coopmwm20261106_s_mining'
 SCHEMA = 'coopmwm.clean3.restart_budget.v1'
 
@@ -449,6 +450,10 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1, clean2=CLEAN2, g1_root=G1_ROOT,
     if mined and mined.get('admitted'):
         cfg['mined_moves'] = mined['admitted_path']
     cfg['extra_final_baselines'] = [dict(LANE_ON_BASELINE, **(laneon or {}))]
+    from . import g5_runtime
+    cfg['g5_runtime'] = dict(flag=g5_runtime.FLAG, base=str(g5_runtime.BASE_REL),
+        base_sha256=g5_runtime.BASE_SHA256, overlay_sha256=g5_runtime.OVERLAY_SHA256,
+        rule='accepted G5 env change (9fd32b4e) bound onto the frozen e3final env every episode imports')
     if cfg['plan_augment']['enabled'] or cfg.get('launch_augmentation_decision') != rc.AUGMENTATION_OFF_DECISION:
         raise ValueError('owner symmetric augmentation-OFF design required')
     rc.check_pins(cfg)
