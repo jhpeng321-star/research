@@ -1,0 +1,17 @@
+{
+  "schema": "coopmwm.clean1.gate_summary.v1",
+  "status": "PASS",
+  "unix": 1793841322.1705415,
+  "runtime_commit": "7cc6edaa994641a6d71a4816c0dd8b707fda2e32",
+  "config_sha256": "cc009d490c6876ec9e6ec98072617ac6f76b20fc7501fcc83bb7905f19a7ac4a",
+  "receipt_sha256": "1f7af6aff13b250baaa8150c4225e58b197fec5172062788d28e591156079d16",
+  "smoke_receipt_sha256": "9e30518c4ef469946e49672e062ce74c359d2b70406967d56c3695d6591d20f6",
+  "branches": 26,
+  "charged_sim_s": 15160,
+  "safety": {"collisions": 0, "teleports": 0, "hard_brakes": 96, "ttc_events": 34},
+  "rule": "original full windows, same three registered states, both arms group/solo/base; exactly zero collisions and teleports",
+  "sole_environment_rerun": true,
+  "all_charges_retained": true,
+  "cumulative_sim_s_including_parity": 120080,
+  "training_launched": false
+}
