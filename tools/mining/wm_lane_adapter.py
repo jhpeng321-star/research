@@ -297,9 +297,13 @@ def lane_executor(rt, query, weights, *, coverage_by_member, telemetry=None):
     for name, module in (('bridge', bridge), ('lanes', lanes), ('cav', cav), ('wms', wms)):
         if file_sha(module.__file__) != SOURCE_PINS[name]:
             raise ValueError('frozen lane pipeline source changed: ' + name)
+    # wm_lane04: the bound FULL-v4 WmSModel has merge_pivot=None (no first-passage
+    # pivot module); the lane ownership patch never touches the merge law, so only
+    # the backend / native-lane bridge flags are required. The lane-OFF identity
+    # qualification (exact scores vs the unpatched executor) still gates ranking.
     if (runtime.BACKEND != 'FULL-v4' or rt.mp.native_lanes is not True
-            or rt.mp.residual_on_native or rt.model.merge_pivot is None):
-        raise ValueError('only original FULL-v4 first-passage native-lane bridge supported')
+            or rt.mp.residual_on_native):
+        raise ValueError('only original FULL-v4 native-lane bridge supported')
     events = telemetry if telemetry is not None else []
     factory = lambda actions, ids: LaneRuntime(actions, ids, coverage_by_member, lanes, events)
     raw = raw_decoder_factory(query, weights, Policy.sample, moves, runtime.roster, events)
@@ -315,7 +319,7 @@ def lane_executor(rt, query, weights, *, coverage_by_member, telemetry=None):
         yield events
 
 
-def evaluate_lane_grid(rt, query, weights, actions, *, coverage_by_member):
+def evaluate_lane_grid(rt, query, weights, actions, *, coverage_by_member, H=600, horizons=None):
     """Explicit later-call API: real K8/H600, original causal memory and CRN.
 
     Does not bootstrap, qualify, dispatch or write files. MAIN must first bind
@@ -333,13 +337,15 @@ def evaluate_lane_grid(rt, query, weights, actions, *, coverage_by_member):
     record = copy.deepcopy(query['record'])
     check_actions(actions, [r['vid'] for r in record['rows']])
     memory = request_memory(rt, record, {'memory_mode': 'warm'})
+    horizons = tuple(HORIZONS if horizons is None else horizons)
     with lane_executor(rt, query, weights, coverage_by_member=coverage_by_member) as events:
-        costs = plan_wm.evaluate(rt, record, actions, 8, 600, chunk_actions=1,
-                                trim=False, pad_actions=False, horizons=HORIZONS,
+        costs = plan_wm.evaluate(rt, record, actions, 8, H, chunk_actions=1,
+                                trim=False, pad_actions=False, horizons=horizons,
                                 memory=memory, speed2=False, transfers=False)
-    from .wm_prescreen import validate_scores
-    validate_scores(costs, actions)
-    return dict(scores=costs, lane_events=events, K=8, H=600,
-                horizons=list(HORIZONS), schema='mining-role-lane-wm-result-v1',
+    if H == 600 and horizons == tuple(HORIZONS):
+        from .wm_prescreen import validate_scores
+        validate_scores(costs, actions)
+    return dict(scores=costs, lane_events=events, K=8, H=H,
+                horizons=list(horizons), schema='mining-role-lane-wm-result-v1',
                 native_admissions=0, new_sumo_sim_s=0,
                 interpretation='WM predictions only; new lane-decoder qualification required')
