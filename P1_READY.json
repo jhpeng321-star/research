@@ -106,20 +106,21 @@
     "static_checks": ["git diff --check c4/track-base"],
     "review_status": "r1 blocker implemented and CPU-verified; independent r2 review PASS and acceptance receipt present",
     "resume_verification": {
-      "head_before_receipt_refresh": "1610007437c2ec9bb56029ecb90888dd77668f15",
+      "head_before_receipt_refresh": "64a7714fdee55cd2fa0857e00f8b5493de80d135",
       "accepted_review_head": "2fcf3865c7b7770d4c33cc9fc2948398e50dc27f",
       "reviewed_implementation_unchanged": true,
       "tracked_changes_since_accepted_review": "P1_READY.json only; no implementation or test changes",
       "existing_junit": "457 cases including 5 subtests; zero errors, failures or skips",
       "existing_junit_suite": {"tests": 457, "errors": 0, "failures": 0, "skipped": 0, "time_s": 195.474},
-      "matching_running_python_or_pytest_jobs": 0,
+      "matching_running_python_or_pytest_jobs": 1,
       "running_job_match": "c4-track2-backend|test_track2_backend_cpu|_p1_r1_|_review_p1_",
+      "running_job_observation": "PID 30140 runs a selected pytest suite with --basetemp E:/agent-work/c4-fix-breadth/_out/f3-fix-final-suite. It matches the shared test filename but belongs to another worktree; left untouched. No matching job explicitly targets this worktree, and no job was launched on resume.",
       "checks": [
         "git diff --exit-code 2fcf3865c7b7770d4c33cc9fc2948398e50dc27f -- tools/coopmwm tests/unit/test_merge_features.py",
         "git diff --stat 2fcf3865c7b7770d4c33cc9fc2948398e50dc27f",
         "git diff --check c4/track-base"
       ],
-      "test_evidence": "Fresh-session recheck at 16100074: read git status/log, the specification, r1 blocker, readiness/acceptance receipts and r2 PASS; confirmed P1_r1_tests.xml suite totals (457 cases, zero errors/failures/skips), unchanged reviewed implementation/tests, clean diff check and no matching active Python/pytest jobs. The entire tracked delta since accepted review remains P1_READY.json only. Preserved completed regression runs; no duplicate test run or dispatch launched.",
+      "test_evidence": "Fresh-session recheck at 64a7714f: read git status/log, the specification, r1 blocker, readiness/acceptance receipts and r2 PASS; confirmed P1_r1_tests.xml suite totals (457 cases, zero errors/failures/skips), unchanged reviewed implementation/tests and clean diff check. One matching active pytest process explicitly targets c4-fix-breadth rather than this worktree and was left untouched. The entire tracked delta since accepted review remains P1_READY.json only. Preserved completed regression runs; no duplicate test run or dispatch launched.",
       "completion": "All REVIEW_P1_r1.md blockers were already fixed, regression-tested, committed and independently accepted before this fresh resume. Readiness refreshed after verifying the saved evidence."
     }
   },
