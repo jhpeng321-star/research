@@ -1,0 +1,33 @@
+{
+  "authority_sha256": "67f897ad333c6ce3f67fcc7dd68ed68835b5c54cf209ca40e692d85282f6e6c4",
+  "clean2_charged_sim_s": 1849200,
+  "decision": {
+    "fault_is_not_relabelled_as_owner_stop": true,
+    "original_owners_exited": true,
+    "owner_verbatim": "yes, do that",
+    "preserve_all_research_evidence": true,
+    "prior_fault_preserved": true,
+    "protected_sha256": {
+      "CHARGES.jsonl": "9c0a557a686b39c1095f736ed92db92c5aae4162bbf93ab791fb82bae936ff09",
+      "CONFIG.json": "827d24dd9708adc7cba649b24b48fa74e65a7f9255766f40a67c49038c091bb6",
+      "FAULT.json": "3aedfd34d122a48c5149f5e92b11a301487dda00fe68630928707bede45e68c2",
+      "STOP.json": "3aedfd34d122a48c5149f5e92b11a301487dda00fe68630928707bede45e68c2"
+    },
+    "reason": "Owner stops clean2 at its next sealed boundary for G1 certification and mining before clean3",
+    "registration": "2026-11-06 02:13 - Owner: stop clean2 now; cpuV joins mining",
+    "schema": "coopmwm.clean2.owner_stop_clean3.v1",
+    "sealed_updates": {
+      "A": 18,
+      "B": 18,
+      "R": 18
+    },
+    "timestamp": "2026-11-05T18:16:53.419887+00:00",
+    "training_resume_authorized": false
+  },
+  "mining_charged_sim_s": 0,
+  "mining_control": {},
+  "owner_stop_sha256": "f934495dcf3514ab070ab038bb6a5fd6ee8becda7c1c97a52909c1df691b2fbb",
+  "root": "/home/ubuntu/coopmwm20261105_clean2",
+  "status": "STOPPED_BY_OWNER_REGISTERED",
+  "timestamp": "2026-11-05T18:16:53.419887+00:00"
+}
