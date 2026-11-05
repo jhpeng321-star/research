@@ -53,6 +53,17 @@
       "resume_note": "Fresh session confirmed the committed r2 fixes and subsequent independent r3 acceptance. Completed implementation and test work was preserved without repeating jobs or dispatches. This receipt-only refresh records the existing independent evidence."
     }
   },
+  "resume_verification": {
+    "starting_head": "c2be55c2211b854942046e56aeb1e761b28c1985",
+    "starting_tracked_changes": false,
+    "implementation_matches_independently_reviewed_head": "git diff --exit-code 066ef083ccfa68b5f95df44c089e961efcbed277 -- tools/coopmwm/dense_teacher.py tools/coopmwm/test_dense_teacher_cpu.py passed with no differences",
+    "source_and_regressions_checked": "Confirmed the measured-correct-only bypass, immutable pre-dispatch decision binding, and B/R regression assertions at both imitation consumers, first binding, direct consume and verify_selected reuse.",
+    "diff_hygiene": "git diff --check c4/track-base -- tools/coopmwm/dense_teacher.py tools/coopmwm/test_dense_teacher_cpu.py T2B_READY.json passed",
+    "test_evidence": "Retained the completed implementation and independent r3 CPU runs recorded above (201 distinct passed). No implementation/test changes since the independently reviewed head; completed test jobs and verification dispatches were not repeated.",
+    "remaining_blockers": [],
+    "preexisting_untracked_receipts_preserved": true,
+    "receipt_refresh": "Only T2B_READY.json refreshed in this resumed session; committed separately after validation."
+  },
   "owned_files": [
     "tools/coopmwm/dense_teacher.py",
     "tools/coopmwm/test_dense_teacher_cpu.py",
