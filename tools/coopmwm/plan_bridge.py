@@ -35,7 +35,7 @@ class Service:
         self.host=host
         log=(ops.EVIDENCE/f'ACCEL_GPU_{slot}.log').open('x',encoding='utf-8')
         command=f'nice -n 19 /root/miniconda3/bin/python -B -u -c "import sys;sys.path.insert(0,\'{GPU_ROOT}/pytools\');from pathlib import Path;from tools.coopmwm.plan_service import main;main(Path(\'{root}\'))"'
-        self.process=subprocess.Popen(['ssh','-o','BatchMode=yes',host,command],stdin=subprocess.PIPE,
+        self.process=subprocess.Popen(ops.ssh.command(host,command),stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,stderr=log,text=True,encoding='utf-8',bufsize=1)
         write(ops.EVIDENCE/f'ACCEL_GPU_{slot}_SSH.json',dict(pid=self.process.pid,unix=time.time(),host=host,slot=slot))
         write(ops.EVIDENCE/f'ACCEL_GPU_{slot}_READY.json',self.receive('READY'))

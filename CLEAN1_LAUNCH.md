@@ -57,3 +57,79 @@ entry and exact clearance procedure in AUTHORITY before publishing that receipt.
 Preserve completed episodes, checkpoints, original stops/owners and charges;
 resume only after fresh no-live-owner checks. Reuse collected B u9 episodes
 before its still-unperformed optimization, with no replay or recharge.
+
+## F6: cpuV SSH connection discipline (all agents and runtime clients)
+
+Use `tools.coopmwm.cpuv_ssh` for **every cpuV command, status read, staging copy,
+and download**. All callers use the existing `cpuV` SSH alias, the same OS user,
+and the same Linux/WSL client environment. Direct `ssh cpuV`, `scp cpuV:...`,
+direct-address connections, alternate aliases, and per-agent retry/poll loops
+bypass admission and must be replaced by this wrapper. Clean1 arm/monitor workers
+already run locally on cpuV; monitoring should read a combined receipt per call,
+not open an SSH connection per arm or per file.
+
+The wrapper shares `/tmp/c4-cpuv-<uid>/master.sock` across all worktrees and agents
+on that client. The directory must be a real, user-owned mode-0700 directory.
+It creates one `ControlMaster=yes` connection with `ControlPersist=600` seconds.
+A cross-process OS lock permits **one active command/transfer at a time** and
+times out waiting callers after 60 seconds. Every potential network attempt
+(master creation and command/transfer) is separated by **at least 2 seconds**;
+failed attempts also consume the interval. There is one connection attempt per
+SSH process, a 20-second connect timeout, and no wrapper retries. Concurrent
+clients must share this directory; do not create separate pools by arm, run, or PID.
+
+Each session checks the existing master under the lock and uses
+`ControlMaster=no`, the same `ControlPath`, and `ProxyCommand=false`. If the master
+dies between check and dispatch, the session fails instead of silently opening
+another TCP connection. Upload/download and rsync use the same gate/socket.
+Host-key verification stays strict; existing identity/hostname/port settings are
+read from the client's existing SSH configuration. The wrapper does not modify
+local SSH configuration or any remote configuration. **No sshd/MaxStartups change
+is authorized by F6; any such change requires explicit owner approval.**
+
+### Client setup and commands (for the later authorized operator)
+
+Run from the staged checkout root with Linux/WSL Python and Linux/WSL OpenSSH,
+where the existing `cpuV` alias, identity and known-host record are already
+available. Native Windows OpenSSH does not implement the required multiplexing;
+the wrapper refuses it before starting SSH. A Windows agent must run the entire
+wrapper in the shared WSL environment, rather than call Windows `ssh.exe`.
+For this worktree its WSL checkout path is `/mnt/e/agent-work/c4-fix-ssh`.
+
+```bash
+# Examples only; run only when remote operation is authorized.
+python -B -m tools.coopmwm.cpuv_ssh run -- 'printf "cpuV mux ready\n"'
+python -B -m tools.coopmwm.cpuv_ssh --timeout 60 run -- 'cat /path/to/CLEAN1_STATUS.md'
+python -B -m tools.coopmwm.cpuv_ssh put ./release.tgz /absolute/staging/release.tgz
+python -B -m tools.coopmwm.cpuv_ssh get ./status-copy.md /absolute/run/CLEAN1_STATUS.md
+rsync -a -e 'python -B -m tools.coopmwm.cpuv_ssh rsh' ./release/ cpuV:/absolute/staging/
+```
+
+`run -- '...'` passes one remote-shell command unchanged and inherits binary-safe
+stdin/stdout/stderr. When passed multiple words, the wrapper shell-quotes each
+word. Both `put` and `get` take **local path first, absolute remote path second**.
+The CLI defaults to a 180-second command timeout; `--timeout 0` inherits the
+caller's lifetime for long-running streams/rsync. Admission/connect timeouts and
+the rate bound still apply. Existing RPC callers forward their command timeout;
+Popen streams and rsync retain their external owner's lifetime limits.
+The Python API is `Transport.run(command, ...)` / `Transport.copy(local, remote,
+upload=..., ...)`; `command(host, command)` provides a gated argv for existing
+subprocess/Popen clients. The shared `tools.coopbandit.ops.remote` used by
+`tools.coopmwm.ops.ssh` automatically routes cpuV through that argv; Python-script
+callers must bind `PYTHON['cpuV']` to the qualified remote interpreter first.
+The configurable RPC/rsync checker and host-parameterized stream bridges use the
+same routing. Other hosts retain their existing command lines.
+
+Transport failure is **not** evidence that a remote command did not execute.
+Do not automatically replay launches, reservations or other mutations. Read the
+existing authoritative receipt/owner first through a later gated call. A failed
+command returns its exit status; wrapper/master/timeouts return 255 with a stderr
+diagnostic. A later explicit call may recreate a dead master, under the same
+lock/rate limit. Do not remove live sockets, force-close shared masters, or shorten
+poll/retry intervals to recover from flapping. In idle periods the master expires
+itself after 600 seconds.
+
+This infrastructure is arm-independent: it does not inspect/change arm A policy,
+reward, RNG, bank or training configuration, and B/R use the same transport rules.
+F6 qualification is local CPU testing with fake SSH plus real local-process lock
+contention; live Linux/WSL connection qualification is still required before use.
