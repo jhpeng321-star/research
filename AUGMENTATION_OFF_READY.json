@@ -1,0 +1,15 @@
+{
+  "schema": "coopmwm.clean1.augmentation_off_ready.v1",
+  "timestamp": "2026-11-05T08:39:07+08:00",
+  "runtime_commit": "d17530b9ec837221e8a07be0deec0d77cbf65c3a",
+  "config_sha256": "d29e3618d18a807d187065553e89301b313f8f28d4cd13d824d33a21cfce7e13",
+  "receipt_sha256": "d70f27296f25572009d348f42e8f19407e56e44fbc3c18e2705e5ec88779b2be",
+  "enabled": {"B": false, "R": false},
+  "augmented_plans_used": {"B": 0, "R": 0},
+  "charged_augmentation_sim_s_retained": 69600,
+  "cumulative_charged_including_parity_sim_s": 70560,
+  "local_tests": "243 passed, 2 Windows platform skips",
+  "cpuV_tests": "322 passed, 0 skips/failures",
+  "bank_rule": "original read-only metadata for both arms; experimental metadata archived; native tapes retained",
+  "training_launched": false
+}
