@@ -22,13 +22,15 @@
   },
   "resume_verification": {
     "date": "2026-11-05",
-    "starting_head": "df248b24d1e3fa1cf9612581d402c496f958fdad",
+    "starting_head": "b99d4b3f041f4f46884e440533b88a1eb587da05",
     "accepted_implementation_commit": "3b486f202198f3b7720cceba1f0df0b580da2962",
     "changes_since_accepted_commit": ["F4_READY.json"],
-    "tracked_worktree_changes_on_resume": [],
+    "tracked_worktree_changes_on_resume": ["F4_READY.json"],
     "task_python_process_check": "No python.exe, pythonw.exe or pytest.exe process with this worktree in its command line",
     "diff_check": "git diff --check c4/track-base: passed",
     "test_disposition": "Reused completed implementation and independent-review CPU results; accepted implementation and tests are unchanged",
+    "receipt_validation": "Parsed readiness, continuation and acceptance JSON; confirmed READY, both resolved blockers, no open issues, common enabled B/R registration and r1 acceptance binding",
+    "fresh_session_confirmation": "Rechecked git status/log and the pending readiness diff, read r0/r1 and acceptance receipts, confirmed only F4_READY.json differs from the accepted revision, inspected both blocker regression groups and the fixed monitor/opt-in contracts, and preserved the completed CPU results without duplicate jobs",
     "preserved_untracked_receipts": [
       "F4_ACCEPTED.json",
       "F4_READY.blocked0_1793864883.json",
@@ -56,6 +58,10 @@
     {
       "sha": "df248b24d1e3fa1cf9612581d402c496f958fdad",
       "subject": "C4 F4: record independent acceptance in readiness receipt"
+    },
+    {
+      "sha": "b99d4b3f041f4f46884e440533b88a1eb587da05",
+      "subject": "C4 F4: refresh readiness after accepted-state resume check"
     }
   ],
   "resolved_blockers": [
