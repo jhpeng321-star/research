@@ -88,7 +88,8 @@ def bank_move_supervision(runtime):
     def consume(*, cfg, receipt, example, plan, pairs, trace):
         frames = bank_v2v.trace_frames(trace)
         for context, label, reader, weight, time in bank_breadth.observable_contexts(
-                policy, plan, pairs, frames, t0=receipt['t0']):
+                policy, plan, pairs, frames, t0=receipt['t0'],
+                certification=cfg.get('_executable_lesson')):
             batch = policy.trigger.decide(context, obs_states=reader.local_states,
                 observable_cavs=reader.visible, rng=np.random.default_rng(cfg['training_seed']),
                 generator=torch.Generator().manual_seed(cfg['training_seed']), deterministic=True)
@@ -120,7 +121,7 @@ def bank_move_supervision(runtime):
     def other_support(*, cfg, receipt, example, plan, pairs, trace):
         frames = bank_v2v.trace_frames(trace)
         other_families.update(label.family for _, label, _, _, _ in bank_breadth.observable_contexts(
-            policy, plan, pairs, frames, t0=receipt['t0']))
+            policy, plan, pairs, frames, t0=receipt['t0'], certification=cfg.get('_executable_lesson')))
     bank_breadth.visit(cfg, 'R' if runtime.arm == 'B' else 'B', other_support)
     if set(families) != other_families:
         raise ValueError('F3 B/R observable trigger family support differs; add verified guidance')

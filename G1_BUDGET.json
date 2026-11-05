@@ -1,0 +1,16 @@
+{
+  "schema": "coopmwm/executable-labels/g1-v1",
+  "provenance": "tracks_spec.md MAIN 23:15 2026-11-05 item G1",
+  "contexts_per_arm": 8,
+  "arms": ["B", "R"],
+  "verification_seeds": 2,
+  "max_member_solos": 4,
+  "full_episode_sim_s": 1200,
+  "preferred_two_actor_sim_s": 153600,
+  "worst_case_sim_s": 230400,
+  "cap_sim_s": 230400,
+  "includes_prefix_replay": true,
+  "branch_reuse_discount_sim_s": 0,
+  "dispatched": false,
+  "executed_sim_s": 0
+}

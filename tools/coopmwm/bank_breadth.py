@@ -71,6 +71,11 @@ def visit(cfg, arm, consumer):
     if arm not in ('B', 'R'):
         return
     from . import track2_backend as p1
+    certified = None
+    if cfg.get('executable_label_manifest'):
+        from . import executable_labels as el
+        el._sha(cfg.get('executable_label_runtime_sha256'))
+        certified = el.read_manifest(cfg['executable_label_manifest'])
     seen = set()
     for source in inputs(cfg):
         local = dict(cfg, **source)
@@ -99,7 +104,18 @@ def visit(cfg, arm, consumer):
                 return
             seen.add(key)
             p1._path(trace)
-            consumer(cfg=local, receipt=receipt, example=example, plan=plan, pairs=pairs, trace=trace)
+            bound = local
+            if certified is not None:
+                try:
+                    snap, _ = verified_restart(local['run_root'], arm, receipt, example, plan)
+                except UnboundContext:
+                    return
+                lesson = el.bank_certificate(certified, arm=arm, receipt=receipt, example=example,
+                    plan=plan, **el.restart_binding(snap), runtime_sha256=cfg['executable_label_runtime_sha256'])
+                if lesson is None:
+                    return
+                bound = dict(local, _executable_lesson=lesson)
+            consumer(cfg=bound, receipt=receipt, example=example, plan=plan, pairs=pairs, trace=trace)
         with p1._bank_view(local) as rb:
             rb.bank_pairs(Path(local['run_root']), arm, local['training_seed'],
                 sources=local.get('replay_sources', {}).get(arm, ()), v2v=True,
@@ -222,17 +238,81 @@ def load_verified_restart(arm, lookup):
         snapshot, binding = verified_restart(root, arm, current, lookup['example'], lookup['plan'])
         if binding != lookup.get('verification_binding'):
             raise ValueError('verified restart immutable verification evidence changed')
+        if lookup['bank_cfg'].get('executable_label_manifest'):
+            from . import executable_labels as el
+            value = el.read_manifest(lookup['bank_cfg']['executable_label_manifest'])
+            lesson = el.bank_certificate(value, arm=arm, receipt=current, example=lookup['example'],
+                plan=lookup['plan'], **el.restart_binding(snapshot),
+                runtime_sha256=lookup['bank_cfg']['executable_label_runtime_sha256'])
+            if lesson is None or lesson['lesson_sha256'] != lookup.get('executable_lesson_sha256'):
+                raise ValueError('G1 frozen practice executable certificate changed/missing')
     return snapshot
 
 
-def observable_contexts(policy, plan, pairs, frames, *, t0):
+def _certified_contexts(policy, pairs, frames, certification):
+    """Replay a decision at t from its actual bound t-1 local observation.
+
+    Keep the observer at t-1: observing t would overwrite both geometry and
+    local-intent features. The recorded pair's x is also from t, so reconstruct
+    sensor features from the validated local rows instead. The t frame/pair is
+    used only to establish that all macro members can act at this decision.
+    """
+    from tools.coopnative.policy import encode
+    from . import executable_labels as el, moves
+    label = moves.Move.from_dict(certification['macro'])
+    local = certification['local']
+    time, observed_at = certification['decision_s'], local['observed_at_s']
+    if observed_at != time-1 or any(t not in frames or frames[t].get('time_s', t) != t
+                                   for t in (observed_at, time)):
+        return
+    for sample, weight in sorted(pairs, key=lambda pair: int(pair[0]['intent_link']['t'])):
+        if int(sample['intent_link']['t']) != time:
+            continue
+        present = {r['vid'] for r in frames[time]['vehicles'] if r['is_cav']}
+        eligible = present & set(sample['context']['members'])
+        if not set(label.members) <= eligible:
+            continue
+        reader = deepcopy(policy)
+        reader.observe(frames[observed_at]['vehicles'], observed_at)
+        ego = local['self']
+        if (ego not in reader.local_intents or ego not in reader.local_states
+                or not set(local['acquirable_cav_ids']) <= set(reader.visible.get(ego, ()))):
+            continue
+        def observed_rows(rows):
+            return sorted(({k: r[k] for k in moves._ROW_KEYS} for r in rows), key=lambda r: r['vid'])
+        state = reader.local_states[ego]
+        if observed_rows(state['rows']) != observed_rows(local['rows']):
+            continue
+        try:
+            el._local(label, local, time)
+        except ValueError:
+            continue
+        # Availability belongs to the certified decision, not the training
+        # policy's current episode or all visible CAVs by default.
+        state['acquirable_cav_ids'] = [v for v in local['acquirable_cav_ids'] if v in eligible]
+        encoded = encode(state['rows'])
+        index = encoded['members'].index(ego)
+        context = dict(encoded, members=[ego], x=[encoded['x'][index]],
+            anchors=[encoded['anchors'][index]], rsu=[0.]*len(encoded['rsu']),
+            trigger_v2v={ego: reader.local_intents[ego]},
+            observed_at_s=observed_at, decision_s=time)
+        yield context, label, reader, float(weight), time
+        return  # only this exact proposer/decision is certified
+
+
+def observable_contexts(policy, plan, pairs, frames, *, t0, certification=None):
     """Earliest usable frame per acting member, rather than pairs[0] only.
 
     Each member is supervised once per example. A later frame gets the remaining
     onset/hold, never a fresh full-duration move. Frames with less than the
     registered minimum hold remaining are not representable. Own/partner packets are
     reconstructed with the same causal policy observer as online execution.
+    Certified lessons use their explicit t-1 observation for BOTH binding and
+    teacher inputs; they never reuse a current-time pair's sensor features.
     """
+    if certification is not None:
+        yield from _certified_contexts(policy, pairs, frames, certification)
+        return
     from . import moves
     label = moves.from_plan(plan)
     remaining = set(label.members)
@@ -283,16 +363,22 @@ def practice_pool(cfg, arm):
             return
         seed = int((example or {}).get('seed_index', 1))
         vid = receipt['verification_id']
-        bank_cfg = {k: cfg[k] for k in ('run_root', 'training_seed', 'replay_sources', 'bank_rule') if k in cfg}
+        bank_cfg = {k: cfg[k] for k in ('run_root', 'training_seed', 'replay_sources', 'bank_rule',
+            'executable_label_manifest', 'executable_label_runtime_sha256') if k in cfg}
+        lesson = cfg.get('_executable_lesson')
+        family = lesson['macro']['family'] if lesson else moves.from_plan(plan).family
         row = dict(verification_id=vid,
             example_id=(example or {}).get('example_id', f'{vid}#s1'), seed_index=seed, salt=vid,
             state_id=links.get(vid, {}).get('state_id', f'imported_{vid}'), fallback=False,
-            source='verified_breadth', family=moves.from_plan(plan).family,
+            source='verified_breadth', family=family,
             replication_salt=binding['replication_salt'],
             snapshot_lookup=dict(binding_version=1, run_root=str(root), bank_cfg=bank_cfg,
                 receipt=receipt, example=example, plan=plan, verification_binding=binding),
             snapshot_sha256=sv.snapshot_sha(snap),
-            context_id=digest(dict(snapshot=sv.snapshot_sha(snap), family=moves.from_plan(plan).family)))
+            context_id=digest(dict(snapshot=sv.snapshot_sha(snap), family=family)))
+        if lesson is not None:
+            row['snapshot_lookup']['executable_lesson_sha256'] = lesson['lesson_sha256']
+            row['executable_lesson_sha256'] = lesson['lesson_sha256']
         child = cfg.get('_breadth_augmented', {}).get(row['example_id'])
         if child is not None:
             if child['snapshot_sha256'] != row['snapshot_sha256']:
