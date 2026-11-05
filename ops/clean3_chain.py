@@ -59,6 +59,22 @@ def deadline_unix(text, now=None):
     return target.timestamp()
 
 
+def mined_summary(u, root=None):
+    """Owner 05:05 per-update mined usage (B and R) from the sealed arm update receipts."""
+    out = {}
+    for arm in ('B', 'R'):
+        path = (root or ROOT)/f'{arm}_UPDATE_{u:03}.json'
+        usage = read(path).get('clean3_mined_usage') if path.is_file() else None
+        if not usage:
+            out[arm] = None
+            continue
+        out[arm] = dict(imitation=sum(usage['imitation'].values()), practice=sum(usage['practice_starts'].values()),
+            executed=sum(usage['executed_joint_moves'].values()), fit_ce=usage['imitation_fit_ce'],
+            by_family={k: v for k, v in usage['executed_joint_moves'].items()},
+            trigger=usage['trigger_rate_by_family'], g4_rows=len(usage['g4_credit']))
+    return out
+
+
 def coverage(cfg, clean2_rows, *, gate_sim_s, diagnostic_quotes, lesson_quotes):
     """Assert every phase covers its full u1-u24 schedule; refuse otherwise."""
     import re
@@ -340,7 +356,8 @@ class Chain:
                         bank_ce=a['metrics'].get('bank_move_ce'), layer_kl=a['metrics'].get('layer_kl')) for a in row['arms']}, sort_keys=True),
                     'CLEAN3 Safety '+json.dumps(safety, sort_keys=True)+'; A full rule; B/R composite report-only; any collision/teleport pauses.',
                     'CLEAN3 Check '+json.dumps({k: diagnostic[k] for k in ('metric_reports', 'verdict') if k in diagnostic}, sort_keys=True) if diagnostic else 'CLEAN3 Check not scheduled at this update.',
-                    f'CLEAN3 Budget total={total}/{c3.CAP} sim-s (incl. mining actual); clean3={spent}; u24 synergy criterion unchanged.']
+                    f'CLEAN3 Budget total={total}/{c3.CAP} sim-s (incl. mining actual); clean3={spent}; u24 synergy criterion unchanged.',
+                    'CLEAN3 Mined '+json.dumps(mined_summary(u), sort_keys=True)]
                 with (ROOT/'CLEAN3_STATUS.md').open('a', encoding='utf-8') as f:
                     f.write('\n'.join(lines)+'\n\n'); f.flush(); os.fsync(f.fileno())
                 publish(self.control/f'MONITORED_u{u:03}.json', dict(update=u, unix=time.time(),

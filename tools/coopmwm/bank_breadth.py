@@ -401,6 +401,10 @@ def practice_pool(cfg, arm):
                 receipt=receipt, example=example, plan=plan, verification_binding=binding),
             snapshot_sha256=sv.snapshot_sha(snap),
             context_id=digest(dict(snapshot=sv.snapshot_sha(snap), family=family)))
+        if '_g5_mined' in cfg:
+            # Owner 05:05: mined (move, seed) situations are shown, not only imitated.
+            row['mined'] = True
+            row['mined_plan_sha256'] = digest(plan)
         if lesson is not None:
             row['snapshot_lookup']['executable_lesson_sha256'] = lesson['lesson_sha256']
             row['executable_lesson_sha256'] = lesson['lesson_sha256']
@@ -438,6 +442,11 @@ def practice_plan(root, arm, update, *, cfg, fraction, repeat_cap, count, traini
     if families:
         shift = (int(update)-1) % len(families)
         families = families[shift:]+families[:shift]
+    if cfg.get('practice_priority_mined'):
+        # Registered clean3 smoke rule: mined families first so the end-to-end smoke
+        # actually starts from a mined seed situation; identical for B and R.
+        mined = sorted({r['family'] for r in pools[arm] if r.get('mined')})
+        families = [f for f in families if f in mined]+[f for f in families if f not in mined]
     schedule, totals = [], Counter()
     while len(schedule) < int(count):
         available = [f for f in families if totals[f] < capacities[f]]

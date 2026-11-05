@@ -171,6 +171,9 @@ def update(cfg, arm, u, *, smoke=False):
     if 'clean2_budget' in cfg or 'clean3_budget' in cfg:
         from .clean2_receipts import update_evidence
         extra['clean2_fix_receipts'] = update_evidence(arm, episodes, learning, envelope, metrics)
+    if 'clean3_budget' in cfg and cfg.get('mined_moves') and arm != 'A':
+        from .clean3_mined import usage
+        extra['clean3_mined_usage'] = usage(native, arm, episodes, learning, artifacts)
     value = _seal(dict(**started, finished_unix=time.time(), checkpoint=checkpoint,
         checkpoint_sha256=rc.sha(checkpoint), practice=update_report(episodes),
         safety=safety, learning=learning, metrics=metrics,

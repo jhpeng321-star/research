@@ -60,18 +60,11 @@ def validate_levers(cfg, updates, fixes=None):
         if not {'yield_lane', 'open_gap_merge'} <= set(proposed):
             raise ValueError('G5 lane families missing from actual proposals: '+arm)
         out['G5'][arm] = {f: proposed[f] for f in ('yield_lane', 'open_gap_merge')}
-    # Mined moves: every admitted arm source appears in that arm's live practice pool.
-    out['mined'] = None
-    if cfg.get('mined_moves'):
-        rows = [json.loads(l) for l in Path(cfg['mined_moves']).read_text().splitlines() if l.strip()]
-        smoke = production.backend_config(cfg, root=root/'smoke', smoke=True)
-        out['mined'] = {}
-        for arm in ('B', 'R'):
-            wanted = {r['verification_id'] for r in rows if r['arm'] == arm}
-            pool = {r['verification_id'] for r in bank_breadth.practice_pool(smoke, arm)}
-            if wanted and not wanted & pool:
-                raise ValueError('admitted mined moves absent from live practice pool: '+arm)
-            out['mined'][arm] = dict(rows=len(wanted), in_pool=len(wanted & pool))
+    # Owner 05:05 mined-plan exposure (a)-(d) for B (and R with its own examples) + fairness.
+    if not cfg.get('mined_moves'):
+        raise ValueError('owner rule: clean3 launches only with admitted mined moves')
+    from .clean3_mined import smoke_check
+    out['mined'] = smoke_check(cfg, updates, root/'smoke')
     if fixes is None:
         return dict(status='LEVER_PRECHECK_ONLY', **out)
     receipt = _seal(dict(status='LEVER_RECEIPTS_PASS', levers=out,

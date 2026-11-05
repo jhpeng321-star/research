@@ -165,8 +165,10 @@ def test_lever_receipts_use_native_registration_and_hard_checks(tmp_path, monkey
     (tmp_path/'g1').mkdir()
     (tmp_path/'g1'/'CLEAN3_GO_NOGO.json').write_text(__import__('json').dumps(go))
     raw = c3.levers(dict(trigger_head=True))
-    raw.update(run_root=str(tmp_path), clean3_restart=dict(g1_root=str(tmp_path/'g1'),
-               g1_go_nogo_sha256=go['receipt_sha256']))
+    raw.update(run_root=str(tmp_path), mined_moves=str(tmp_path/'mined.jsonl'),
+               clean3_restart=dict(g1_root=str(tmp_path/'g1'), g1_go_nogo_sha256=go['receipt_sha256']))
+    from tools.coopmwm import clean3_mined
+    monkeypatch.setattr(clean3_mined, 'smoke_check', lambda cfg, updates, artifacts: dict(B={}, R={}))
     assert 'trigger_candidates' not in raw
     def native(cfg, *, root=None, smoke=False):
         out = deepcopy(cfg); out.update(trigger_candidates=8)
@@ -263,3 +265,94 @@ def test_mined_launch_rule_refuses_single_family_missing_ci_and_unmatched_r(tmp_
             mrow('B', 'v5', 'wall', 3, {'1': 1}), mrow('R', 'v3', 'yield_lane', 2, {'1': 1})]
     out = c3.admit_mined(mined_fixture(tmp_path/'d', monkeypatch, rows), {}, tmp_path/'d'/'a.jsonl')
     assert not out['ready'] and out['families'] == ['yield_lane'] and out['admitted'] == 2
+
+
+def test_lever_receipts_refuse_launch_without_admitted_mined_moves(tmp_path, monkeypatch):
+    from tools.coopmwm import clean3_receipts as receipts, composite_health, launch_production as production
+    from tools.coopmwm import coordination_opportunities as co, launch_training as training
+    from tools.coopmwm.exact_grade import _seal
+    from copy import deepcopy
+    go = _seal(dict(decision='NO-GO', runtime_sha256='e'*64, executable_joint_labels_ci95_low_positive=0), 'receipt_sha256')
+    (tmp_path/'g1').mkdir(); (tmp_path/'g1'/'CLEAN3_GO_NOGO.json').write_text(__import__('json').dumps(go))
+    raw = c3.levers(dict(trigger_head=True))
+    raw.update(run_root=str(tmp_path), clean3_restart=dict(g1_root=str(tmp_path/'g1'), g1_go_nogo_sha256=go['receipt_sha256']))
+    def native(cfg, *, root=None, smoke=False):
+        out = deepcopy(cfg); out.update(trigger_candidates=8); out['budget'] = dict(phases=dict(g4_synergy_credit=230400))
+        if smoke: out['g4_synergy_credit'] = False
+        return out
+    monkeypatch.setattr(production, 'backend_config', native)
+    monkeypatch.setattr(composite_health, 'report_only', lambda root, arm: True)
+    proposals = dict(coordination_opportunities=dict(rule=co.RULE, decisions=1, offered_joint=1, offered_joint_rate=1.,
+        graph_edges=1, disjoint_pairs=1, event_decisions=0), proposed_by_family=dict(yield_lane=0, open_gap_merge=0))
+    ups = [dict(arm=a, metrics=dict(move_proposals=proposals), update_sha256=a) for a in 'BR']
+    with pytest.raises(ValueError, match='mined'):
+        receipts.validate_levers(raw, ups)
+
+
+def test_practice_plan_smoke_priority_puts_mined_families_first(tmp_path, monkeypatch):
+    from tools.coopmwm import bank_breadth
+    pools = {a: [dict(context_id=f'{a}{f}{i}', family=f, example_id=f'{a}{f}{i}', mined=f in ('yield_lane',))
+                 for f in ('gap_open', 'wall', 'yield_lane') for i in range(2)] for a in 'BR'}
+    monkeypatch.setattr(bank_breadth, 'matched_pools', lambda cfg: pools)
+    monkeypatch.setattr(bank_breadth, 'inputs', lambda cfg: [])
+    plain = bank_breadth.practice_plan(tmp_path, 'B', 1, cfg={}, fraction=.2, repeat_cap=2, count=1, training_seed=1)
+    assert plain['rows'][0]['family'] == 'gap_open'
+    smoke = bank_breadth.practice_plan(tmp_path, 'B', 1, cfg=dict(practice_priority_mined=True), fraction=.2,
+                                       repeat_cap=2, count=1, training_seed=1)
+    assert smoke['rows'][0]['family'] == 'yield_lane' and smoke['rows'][0]['mined']
+
+
+def test_mined_demonstration_tape_and_credit_rows(tmp_path, monkeypatch):
+    from tools.coopmwm import clean3_mined as cm
+    from tools.coopmwm.protocol import digest
+    import json as _json
+    plan = dict(id='p', members=['c1', 'c2'], duration_s=3, profile=[[0.1, 0.2, 0.3], [-0.1, -0.2, -0.3]])
+    tape = dict(steps=[dict(time_s=100+t, sample=dict(absolute_accels=dict(c1=plan['profile'][0][t],
+                c2=plan['profile'][1][t]))) for t in range(3)])
+    assert cm.tape_check(plan, tape, 100)['passed']
+    bad = _json.loads(_json.dumps(tape)); bad['steps'][1]['sample']['absolute_accels']['c2'] = 0.
+    with pytest.raises(ValueError, match='verified profile'):
+        cm.tape_check(plan, bad, 100)
+    job = tmp_path/'jobs'/'ep1'; job.mkdir(parents=True)
+    from tools.coopmwm import accel_storage
+    monkeypatch.setattr(accel_storage, 'read', lambda path: tape)
+    episodes = [dict(id='ep1', steps=[], practice=dict(verification_id='v1', example_id='v1#s1', seed_index=1, t0=100,
+        plan=plan, breadth=dict(family='wall', context_id='x'), demonstration=dict(plan_sha256=digest(plan))))]
+    demos = cm.demonstrations(episodes, tmp_path)
+    assert demos[0]['executed']['passed']
+    mined = tmp_path/'m.jsonl'
+    mined.write_text(_json.dumps(dict(arm='B', verification_id='v1', plan_sha256=digest(plan),
+        verified_synergy=dict(veh_s={'1': 50.0, '2': 30.0}, lower95={'1': 5.0, '2': 1.0})))+chr(10))
+    rows = cm.credit_rows(dict(mined_moves=str(mined)), 'B', demos)
+    assert len(rows) == 1 and rows[0]['measured_synergy_veh_s'] == 40.0 and rows[0]['used_in_ppo'] is False
+    assert rows[0]['normalized_advantage'] == pytest.approx(40.0/10000.)
+    usage = cm.usage(dict(mined_moves=str(mined)), 'B', episodes, dict(bank_trigger=dict(
+        contexts=[dict(verification_id='v1', example_id='v1#s1', family='wall')], context_final_ce=[0.25])), tmp_path)
+    assert usage['imitation'] == {'wall|v1#s1': 1} and usage['practice_starts'] == {'wall|v1#s1': 1}
+    assert usage['executed_joint_moves'] == {'wall|v1#s1': 1} and usage['imitation_fit_ce'] == 0.25
+
+
+def test_mined_smoke_check_a_to_d_and_fairness(monkeypatch):
+    from tools.coopmwm import clean3_mined as cm, bank_breadth, launch_production as production
+    monkeypatch.setattr(production, 'backend_config', lambda cfg, **k: dict(cfg))
+    found = {a: [dict(verification_id=f'v{a}', plan_sha256='s', example_id=f'v{a}#s1', executable=True,
+                      family='yield_lane')] for a in 'BR'}
+    monkeypatch.setattr(cm, 'examples', lambda native, arm: (found[arm], {(f'v{arm}', 's')}))
+    monkeypatch.setattr(bank_breadth, 'practice_pool', lambda native, arm: [dict(context_id=f'c{arm}',
+        verification_id=f'v{arm}', example_id=f'v{arm}#s1', mined=True, family='yield_lane')])
+    def update(a, passed=True, credit=1, ctx=None):
+        return dict(arm=a, learning=dict(bank_trigger=dict(contexts=[dict(verification_id=f'v{a}', example_id=f'v{a}#s1')])),
+            practice=dict(practice=1, episodes=[dict(breadth=dict(context_id=ctx or f'c{a}', family='yield_lane'))]),
+            clean3_mined_usage=dict(demonstrations=[dict(id='e', family='yield_lane', executed=dict(passed=passed))],
+                                    g4_credit=[{}]*credit))
+    out = cm.smoke_check({}, [update('B'), update('R')], 'x')
+    assert out['B']['mined_practice_starts'] == 1 and out['R']['g4_credit'] == 1
+    with pytest.raises(ValueError, match=r'\(c\)'):
+        cm.smoke_check({}, [update('B', passed=False), update('R')], 'x')
+    with pytest.raises(ValueError, match=r'\(d\)'):
+        cm.smoke_check({}, [update('B', credit=0), update('R')], 'x')
+    with pytest.raises(ValueError, match=r'\(b\)'):
+        cm.smoke_check({}, [update('B', ctx='other'), update('R')], 'x')
+    found['B'][0]['executable'] = False
+    with pytest.raises(ValueError, match=r'\(a\)'):
+        cm.smoke_check({}, [update('B'), update('R')], 'x')

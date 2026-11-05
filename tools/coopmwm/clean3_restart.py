@@ -295,6 +295,17 @@ MINED_RULE = ('owner 2026-11-06 ~04:35 "make sure we actually have good plans to
     'members; mining synergy CI95 lower bound > 0 on every reported seed) covering >=2 distinct families '
     '(families verified in both B and R); hard deadline 12:00 local -> stop and report, no launch '
     'without owner confirmation.')
+MINED_EXPOSURE_RULE = ('owner 2026-11-06 ~05:05 "make sure the policy is actually SHOWN what the mined plans '
+    'can do". Smoke hard checks (B, and R on its own mined examples): (a) every admitted mined (move, seed) '
+    'example loads into the bank as an executable imitation target (G5 executable fields) and is a trigger '
+    'imitation context; (b) the practice pool holds those exact seed situations and the smoke practice starts '
+    'from one (registered smoke rule: mined families first); (c) in >=1 smoke practice episode the mined plan, '
+    'started at t0 by the registered VerifyController (demonstration practice: mined practice starts execute '
+    'their own verified plan), actually executes - G5 lane telemetry and bound profile checked on the tape; '
+    '(d) G4-format measured synergy rows (mining verification, G4 target/UNIT/clip) exist for the demonstrated '
+    'joint moves (recorded, not an extra PPO term). Fairness: R practice counts and family sequence equal B. '
+    'Per update: imitation counts, practice starts, executed joint moves per family/seed, mined imitation fit '
+    '(CE), trigger rates per family, G4-format rows (UPDATE receipts clean3_mined_usage; CLEAN3 Mined status line).')
 MIN_JOINT_MOVES = 3
 MIN_FAMILIES = 2
 
@@ -308,14 +319,15 @@ def _ci_evidence(path):
             for line in side.read_text(encoding='utf-8').splitlines():
                 if line.strip():
                     r = json.loads(line)
-                    out[(r.get('arm'), r.get('verification_id'), r.get('plan_sha256'))] = r.get('_synergy_lower95')
+                    out[(r.get('arm'), r.get('verification_id'), r.get('plan_sha256'))] = dict(
+                        lower95=r.get('_synergy_lower95'), veh_s=r.get('_synergy_veh_s'))
     return out
 
 
 def _ci_ok(row, evidence):
     value = row.get('synergy_lower95', row.get('_synergy_lower95'))
     if value is None:
-        value = evidence.get((row.get('arm'), row.get('verification_id'), row.get('plan_sha256')))
+        value = (evidence.get((row.get('arm'), row.get('verification_id'), row.get('plan_sha256'))) or {}).get('lower95')
     values = list(value.values()) if isinstance(value, dict) else [value]
     try:
         return bool(values) and all(v is not None and math.isfinite(float(v)) and float(v) > 0 for v in values)
@@ -356,7 +368,10 @@ def admit_mined(path, cfg, out_path):
             bank_breadth.visit(local, row['arm'], consume)
             if not found:
                 raise ValueError('no admitted native example')
-            usable.append(dict(row, _families=sorted({f for f, _ in found}),
+            side = evidence.get((row.get('arm'), row.get('verification_id'), row.get('plan_sha256'))) or {}
+            synergy = dict(lower95=row.get('synergy_lower95', side.get('lower95')),
+                           veh_s=row.get('synergy_veh_s', side.get('veh_s')))
+            usable.append(dict(row, verified_synergy=synergy, _families=sorted({f for f, _ in found}),
                                _members=max(n for _, n in found), _ci_ok=_ci_ok(row, evidence)))
         except (ValueError, KeyError, TypeError, OSError) as error:
             rejected.append(dict(row=row, reason=str(error)))
@@ -585,7 +600,8 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1, clean2=CLEAN2, g1_root=G1_ROOT,
             design='A plain MAPPO; B/R identical code (F1-F6 + G1 certified lessons when GO, G2 opportunities, '
                    'G4 sparse measured synergy credit, G5 lane moves, verified mined moves); only guidance source differs',
             g1=dict(decision=go['decision'], rule=G1_GO_RULE, receipt_sha256=go['receipt_sha256']),
-            mined_moves=mined, mined_launch_rule=MINED_RULE, extra_final_baselines=cfg['extra_final_baselines'],
+            mined_moves=mined, mined_launch_rule=MINED_RULE, mined_exposure_rule=MINED_EXPOSURE_RULE,
+            extra_final_baselines=cfg['extra_final_baselines'],
             criterion=rc.criterion_document(), reporting=cfg['clean2_reporting_definition'],
             seeds='original registered TRAIN worlds only; full windows; u2/u4 probes; N5 u6/u12/u24; paired u8/u24',
             safety=SAFETY_RULE, clean1_clean2_preserved=True), sort_keys=True)+'\n')

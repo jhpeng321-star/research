@@ -78,6 +78,8 @@ def backend_config(cfg, *, root=None, smoke=False):
         out['phase_map'] = dict(train='track2_smoke')
         out['job_namespace'] = f'clean1_smoke{attempt}'
         out['worlds_by_update'] = {'1': cfg['worlds_by_update']['1'][:2]}
+        if 'clean3_budget' in cfg and cfg.get('mined_moves'):
+            out['practice_priority_mined'] = True  # registered clean3 smoke rule (B=R)
     return out
 
 
@@ -170,7 +172,11 @@ def bank_move_supervision(runtime):
             break
     policy.trigger_optimizer.zero_grad(set_to_none=True)
     policy.layer._check_frozen()
-    return dict(initial_ce=initial, final_ce=float(loss().detach()),
+    with torch.no_grad():
+        # Per-context fit, aligned with `contexts` (reporting only; e.g. mined-example fit).
+        context_ce = [float(torch.nn.functional.cross_entropy(
+            policy.trigger.distribution(b.context, b.descriptors, b.mask)[0], b.actions)) for b, _ in records]
+    return dict(initial_ce=initial, final_ce=float(loss().detach()), context_final_ce=context_ce,
         examples=len(records), passes=passes, contexts=contexts, family_counts=dict(families),
         family_mass={f: 1./len(families) for f in families}, rule=bank_breadth.RULE,
         source='all usable verified bank plans and observable traces, including PLAN_FIX outputs')
