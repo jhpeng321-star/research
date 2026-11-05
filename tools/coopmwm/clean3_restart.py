@@ -19,10 +19,11 @@ from .protocol import digest
 ROOT = '/home/ubuntu/coopmwm20261106_clean3'
 CLEAN2 = '/home/ubuntu/coopmwm20261105_clean2'
 CLEAN1 = '/home/ubuntu/coopmwm20261105_clean1'
-# r1 (b7b74545) and r2 (a0f9401d) chains were stopped by the operator before any clean3
+# r1 (b7b74545), r2 (a0f9401d) and r3 (bf3f1d68) chains were stopped by the operator before any clean3
 # physics; each ran the same G1 selection: 0 candidates, 0 sim-s, NO-GO. Ledgers stay counted.
-G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r3'
-G1_PRIOR_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3_g1cert', '/home/ubuntu/coopmwm20261106_clean3_g1cert_r2')
+G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r4'
+G1_PRIOR_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3_g1cert', '/home/ubuntu/coopmwm20261106_clean3_g1cert_r2',
+                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r3')  # r3 stopped mid-G1: 0 rows
 MINING_ROOT = '/home/ubuntu/coopmwm20261106_s_mining'
 SCHEMA = 'coopmwm.clean3.restart_budget.v1'
 
