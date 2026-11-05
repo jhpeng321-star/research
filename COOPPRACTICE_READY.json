@@ -16,9 +16,10 @@
     {"sha": "e4425700", "title": "coopmwm practice fix round 2 (d, resume accounting): _train_rows practice/reference ids; arm_remaining practice reference quote; practice-aware resume/watch ceilings; REQUIRED_SOURCES"},
     {"sha": "c1c90ea2", "title": "coopmwm tests: repair the pre-existing dual-import leak; combined-run failures of the new practice tests and verify_continuation gone"}
   ],
-  "head": "c1c90ea2",
+  "head": "fdc28f37",
   "status": "READY",
-  "reverified": {"session": "fresh-session resume after the previous session froze; no redo needed",
+  "reverified": {"session": "fresh-session resume #2: required suites re-run green at fdc28f37 (236 passed + 9 subtests, 388s; same one-invocation 18-file set); code spot-checks re-confirmed (practice refs travel only via pairs keyed by practice id, a_records normal-only, A_checkpoint_{u-1}, R receipt wait, used_seeds seam, _train_rows practice ids, REQUIRED_SOURCES); receipt-only commit",
+    "previous_session": "fresh-session resume after the previous session froze; no redo needed",
     "code_checks": ["v2v_live.practice_references fills pairs only, a_records = normal refs only, A_checkpoint_{u-1}", "composite_health/warm_health braking pairs=None default keeps legacy a={seed:record}", "v2v_runner R waits for B_UPDATE receipt (fairness pattern) before realised_count", "accel_runner.wave used_seeds unioned into train-wave replacement 'used'; v2v_runner passes the normal wave's seeds", "_train_rows matches _pNN_/_practice_/practiceref ids; REQUIRED_SOURCES includes practice_starts/accel_runner/accel_plant"],
     "required_suites_rerun_at_7a82810d": {"practice_starts": "34 passed", "launch_final+coop_only+composite_health+warm_health": "35 passed", "v2v_live+runner+launch3": "90 passed", "full required run (18 files, one pytest invocation)": "236 passed, 9 subtests passed in 173s"}, "result": "all green; no code changes; receipt-only commit"},
   "fix_round": {
