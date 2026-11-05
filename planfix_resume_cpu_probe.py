@@ -26,6 +26,12 @@ if c.exists():
   p=c/name
   if p.exists():print('CLEAN2_'+name,p.read_text()[:24000],flush=True)
 print('READ_UNIX',time.time(),flush=True)
+previous=w/'cpu_prepare_95441ec4a7c4'
+print('CPU_FIRST_STAGE',json.dumps(dict(root=str(previous),exists=previous.exists(),prepared=(previous/'PREPARED.json').exists())),flush=True)
+for p in w.glob('cpu_prepare_*'):
+ print('CPU_PREPARE_STAGE',str(p),[(n,(p/n).exists()) for n in ('SOURCE_MANIFEST.json','PREPARED.json')],flush=True)
+p=w/'planfix_cpu_source_ea559c952ff0.z'
+print('CPU_SOURCE_ARCHIVE',json.dumps(dict(exists=p.exists(),bytes=p.stat().st_size if p.exists() else None)),flush=True)
 '''
 
 if __name__ == '__main__':

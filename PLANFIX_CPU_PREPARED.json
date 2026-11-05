@@ -1,0 +1,43 @@
+{
+  "clean2_exists": false,
+  "collector_commit": "f631ce90cfd2f23213f7c57a828c848e2db10ecd",
+  "cpu_search_started": false,
+  "inherited_wmteach_hashes": {
+    "/home/ubuntu/coopmwm20261105_clean1_src_7cc6edaa/pytools/tools/wmteach/marginal.py": "e012d03092cb9813068b4c086f8115ea1df1c9a183ab3634424b54bbc849a9eb",
+    "/home/ubuntu/coopmwm20261105_clean1_src_7cc6edaa/pytools/tools/wmteach/runtime.py": "2893e762741a61a791ce467493e0a35290e6ad4c893e2909b70bfa0fe1df50d8",
+    "/home/ubuntu/coopmwm20261105_clean1_src_7cc6edaa/pytools/tools/wmteach/scale.py": "98c63848a054cf2ec99f57acd3cdbb6975217317e80e0ec142827007741f698c"
+  },
+  "new_sim_s": 0,
+  "note": "Preparation only. No startup gates, model bootstrap, search, SUMO or bank switch. CPU <=19/48 cores after clean2 launch; one speed search before any expansion.",
+  "package_sha256": "ea559c952ff0bb85637d7cbd7b424e63fabbb8b2b180f8930ef7c405bb2feff5",
+  "phase_charged_sim_s": 33600,
+  "physical_commit": "22cc32f6",
+  "source_bytes": 8065516,
+  "source_files": 656,
+  "source_root": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_prepare_ea559c952ff0",
+  "status": "SOURCE_PREPARED_BOOTSTRAP_INPUTS_MISSING",
+  "unavailable_original_bootstrap_inputs": {
+    "dreamer_config_checkpoint": {
+      "path": "/root/autodl-tmp/c4/setupaudit20261030/policy_000190.pt",
+      "reason": "inaccessible legacy GPU-only path; cpuV mapping required"
+    },
+    "fit_start_design": {
+      "path": "/root/wmcalib/data/design.json",
+      "reason": "inaccessible legacy GPU-only path; cpuV mapping required"
+    },
+    "fit_start_priors": {
+      "path": "/root/wmcalib/expected_hashes.json",
+      "reason": "inaccessible legacy GPU-only path; cpuV mapping required"
+    },
+    "fitted_posterior_artifact": {
+      "path": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/cpu_prepare_ea559c952ff0/artifacts/rbfit/shrinkage_v1/idm_posteriors.json.gz",
+      "reason": "absent"
+    },
+    "physical_export_binding": {
+      "path": "/root/autodl-tmp/c4/speedhead20261030/EXPORT_BOUND.json",
+      "reason": "inaccessible legacy GPU-only path; cpuV mapping required"
+    }
+  },
+  "wm_checkpoint": "/home/ubuntu/c4/main14/restart20261026/work/w968195/C4-LOOP14-COOPON-20261026/c03.a2/inputs/wm/wm_s.pt",
+  "wm_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436"
+}

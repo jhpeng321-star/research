@@ -45,3 +45,14 @@ GPU transfer owner42852 remains the only staging work. Its successful remote4KiB
 - Read-only F6-multiplexed cpuV receipt at unix1793873244.6085885 confirms v6 exited, BANK_RESULTS terminal, plan_fix33,600 and clean1 including parity1,249,440. No bank job is redispatched.
 - **clean2 root is absent at18:07.** Owner requires its launch before even one CPU WM search. Preparing code/zero-physics checks is allowed; actual search and SUMO remain gated.
 - CPU WM search must use the same pinned f631ce90 WM/scoring, frozen MAPPOu0, at most19/48 CPU cores (<=40%), nice19/one-thread workers, and yield if clean2 update pace worsens. No non-WM proposals or automatic feed-in switch.
+
+## 18:36 CPU source preparation checkpoint
+
+656 immutable dependency files/8,065,516bytes are SHA-staged on cpuV under
+`plan_fix/cpu_prepare_ea559c952ff0`; original WM2 checkpoint b8797242 is already
+present and reverified. `PLANFIX_CPU_PREPARED.json` / `PLANFIX_CPU_HANDOFF.md`
+record exact source hashes and missing/unmapped bootstrap dependencies. No
+runtime bootstrap, startup gate, search or SUMO ran. clean2 remains absent.
+The same-scoring port needs original32 frozen source-prior donors/config/export
+mapping; do not fabricate substitutes or resume GPU transfers. Remaining
+plan_fix566,400 remains reserved. See handoff for exact next authorized sequence.

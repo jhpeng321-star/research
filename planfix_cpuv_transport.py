@@ -24,6 +24,12 @@ class OperatorTransport(Transport):
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('--timeout', type=float, default=40)
-    p.add_argument('command')
+    p.add_argument('--put', nargs=2, metavar=('LOCAL', 'REMOTE'))
+    p.add_argument('command', nargs='?')
     a = p.parse_args()
-    sys.exit(OperatorTransport().run(a.command, timeout=a.timeout).returncode)
+    if bool(a.put) == bool(a.command):
+        p.error('supply one command or --put LOCAL REMOTE')
+    transport = OperatorTransport()
+    result = (transport.copy(*a.put, upload=True, timeout=a.timeout) if a.put else
+              transport.run(a.command, timeout=a.timeout))
+    sys.exit(result.returncode)
