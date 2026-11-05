@@ -19,7 +19,10 @@ from .protocol import digest
 ROOT = '/home/ubuntu/coopmwm20261106_clean3'
 CLEAN2 = '/home/ubuntu/coopmwm20261105_clean2'
 CLEAN1 = '/home/ubuntu/coopmwm20261105_clean1'
-G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert'
+# r1 (source b7b74545, chain stopped by operator before any clean3 physics) ran the
+# same G1 selection: 0 candidates, 0 sim-s, NO-GO. Its ledger stays counted.
+G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r2'
+G1_PRIOR_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3_g1cert',)
 MINING_ROOT = '/home/ubuntu/coopmwm20261106_s_mining'
 SCHEMA = 'coopmwm.clean3.restart_budget.v1'
 
@@ -147,7 +150,11 @@ def ledgers():
 
 def g1_rows(root=G1_ROOT):
     from .storage import ledger
-    return ledger(Path(root)) if (Path(root)/'CHARGES.jsonl').is_file() else []
+    rows = []
+    for item in (*G1_PRIOR_ROOTS, root):
+        if (Path(item)/'CHARGES.jsonl').is_file():
+            rows += [dict(r, id=f'{Path(item).name}:{r["id"]}') for r in ledger(Path(item))]
+    return rows
 
 
 def verify_previous(cfg):

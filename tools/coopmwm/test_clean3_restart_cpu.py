@@ -153,3 +153,46 @@ def test_cutoff_is_local_wall_clock():
     chain = chain_module()
     now = datetime(2026, 11, 6, 4, 0).astimezone()
     assert chain.deadline_unix('06:30', now) - now.timestamp() == 2.5*3600
+
+
+def test_lever_receipts_use_native_registration_and_hard_checks(tmp_path, monkeypatch):
+    """Raw CONFIG lacks trigger_candidates; G2 registration is checked on the native config."""
+    from copy import deepcopy
+    from tools.coopmwm import clean3_receipts as receipts, composite_health, launch_production as production
+    from tools.coopmwm import coordination_opportunities as co, launch_training as training
+    from tools.coopmwm.exact_grade import _seal
+    go = _seal(dict(decision='NO-GO', runtime_sha256='e'*64, executable_joint_labels_ci95_low_positive=0), 'receipt_sha256')
+    (tmp_path/'g1').mkdir()
+    (tmp_path/'g1'/'CLEAN3_GO_NOGO.json').write_text(__import__('json').dumps(go))
+    raw = c3.levers(dict(trigger_head=True))
+    raw.update(run_root=str(tmp_path), clean3_restart=dict(g1_root=str(tmp_path/'g1'),
+               g1_go_nogo_sha256=go['receipt_sha256']))
+    assert 'trigger_candidates' not in raw
+    def native(cfg, *, root=None, smoke=False):
+        out = deepcopy(cfg); out.update(trigger_candidates=8)
+        out['budget'] = dict(phases=dict(g4_synergy_credit=230400))
+        if smoke:
+            out['g4_synergy_credit'] = False
+        return out
+    monkeypatch.setattr(production, 'backend_config', native)
+    monkeypatch.setattr(composite_health, 'report_only', lambda root, arm: True)
+    monkeypatch.setattr(training, 'write', lambda path, value: None)
+    proposals = dict(coordination_opportunities=dict(rule=co.RULE, decisions=10, offered_joint=4,
+        offered_joint_rate=.4, graph_edges=3, disjoint_pairs=1, event_decisions=1),
+        proposed_by_family=dict(yield_lane=0, open_gap_merge=2, wall=3))
+    updates = [dict(arm='A', metrics={}, update_sha256='a'),
+               dict(arm='B', metrics=dict(move_proposals=proposals), update_sha256='b'),
+               dict(arm='R', metrics=dict(move_proposals=deepcopy(proposals)), update_sha256='r')]
+    pre = receipts.validate_levers(raw, updates)
+    assert pre['status'] == 'LEVER_PRECHECK_ONLY' and pre['G1']['decision'] == 'NO-GO'
+    done = receipts.validate_levers(raw, updates, dict(receipt_sha256='f'*64))
+    assert done['status'] == 'LEVER_RECEIPTS_PASS'
+    updates[2]['metrics']['move_proposals']['proposed_by_family'].pop('yield_lane')
+    with pytest.raises(ValueError, match='G5'):
+        receipts.validate_levers(raw, updates)
+    updates[2]['metrics']['move_proposals'] = dict(proposals, coordination_opportunities=None)
+    with pytest.raises(ValueError, match='G2'):
+        receipts.validate_levers(raw, updates)
+    bound = dict(raw, executable_label_manifest=str(tmp_path/'m.json'))
+    with pytest.raises(ValueError, match='NO-GO'):
+        receipts.validate_levers(bound, updates[:2]+[dict(updates[1], arm='R')])

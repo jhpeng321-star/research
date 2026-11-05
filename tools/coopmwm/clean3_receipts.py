@@ -30,8 +30,10 @@ def validate_levers(cfg, updates, fixes=None):
         raise ValueError('G1 NO-GO must not bind a certificate manifest')
     out['G1'] = dict(decision=go['decision'], admitted=go['executable_joint_labels_ci95_low_positive'],
                      bound=bool(cfg.get('executable_label_manifest')))
-    # G2: actual opportunity-graph receipts from smoke trigger decisions.
-    if co.settings(cfg) is None:
+    # G2: actual opportunity-graph receipts from smoke trigger decisions. The
+    # registration is validated on the native config (it owns trigger_candidates).
+    native = production.backend_config(cfg)
+    if co.settings(native) is None:
         raise ValueError('G2 coordination opportunities must be enabled')
     out['G2'] = {}
     for arm in ('B', 'R'):
@@ -43,7 +45,6 @@ def validate_levers(cfg, updates, fixes=None):
         out['G2'][arm] = {k: row[k] for k in ('decisions', 'offered_joint', 'offered_joint_rate',
                                               'graph_edges', 'disjoint_pairs', 'event_decisions')}
     # G4: TRAIN-only by accepted design; binding and full phase must be live from u1.
-    native = production.backend_config(cfg)
     if not g4.enabled(native, 1) or native['budget']['phases'].get('g4_synergy_credit') != 230400:
         raise ValueError('G4 sparse synergy credit must be bound from u1 with its 230400 phase')
     if g4.enabled(production.backend_config(cfg, root=root/'smoke', smoke=True), 1, smoke=True):
