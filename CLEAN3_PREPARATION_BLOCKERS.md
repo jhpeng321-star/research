@@ -1,5 +1,35 @@
 # CLEAN3 prospective launch blockers — 2026-11-05 23:46 +08
 
+## Latest recovery — 2026-11-06 00:00 +08
+
+Recovery commit `e4db4995` preserves the fresh live audit and acceptance-owner
+inventory. Existing full-manifest quote refreshed read-only on cpuV at
+2026-11-05T15:59:02.246019+00:00, retained as `CLEAN3_QUOTE_RECOVERY.json`;
+the original `CLEAN3_QUOTE.json` below remains historical evidence.
+
+- Prior charged **2,837,040** = clean1 **1,248,480** + clean2 **1,587,600**
+  + parity **960**; plan_fix **33,600** is counted once within clean1.
+- Protected unspent plan_fix **566,400**; unchanged full clean3 allocation
+  **3,241,440**; cumulative bound **6,644,880**, deficit **644,880** sim-s
+  against the registered **6,000,000** cap. Without the protected reservation,
+  this unchanged quote still exceeds the cap by **78,480** sim-s.
+- G2 is now accepted (`G2_ACCEPTED.json`, `REVIEW_G2_r0.md`). G1 and G4 remain
+  unaccepted, with active fix owners13596/35672 independently verified. G1's
+  review blocks the inconsistent causal observation timestamp in certified
+  teaching; G4's review blocks missing production execution/orchestration.
+- Live audit23:57:33 verifies the original A/B/R/P3/chain, all538source hashes,
+  launch/config/smoke/fix/reporting/gate bindings, phase caps and preserved clean1.
+  Combined u1..u14 monitors are safe/CONTINUE/no DIAGNOSE. Existing follower9504
+  is alive and has already appended u14's required five-line status.
+
+All-three acceptance plus integrated qualification are still required before the
+owner-authorized boundary stop. Final clean3 affordability cannot be asserted at
+this running prefix; MAIN/owner budget resolution and final accepted adapters
+are required. No reservation cancellation, schedule/window/check reduction,
+replacement job, physics, process signal or cpuQ action occurred in recovery.
+
+## Original prospective quote
+
 Recovered clean `c4/rerun-launch` at `dd620c50`; completed setup, integration,
 qualification, smoke, gate, launch and u13 monitoring are retained. No replacement
 research job has been dispatched. Recovery/cap receipt commit: `ac2ceabb`.
