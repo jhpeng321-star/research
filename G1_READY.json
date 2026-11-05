@@ -1,0 +1,109 @@
+{
+  "task": "G1",
+  "status": "READY_CPU_ONLY",
+  "date": "2026-11-05",
+  "worktree": "E:/agent-work/c4-grp-certify",
+  "branch": "c4/grp-certify",
+  "base_branch": "c4/rerun-launch",
+  "initial_head": "6dc0520c99f0bccd71669e66d2c4124197db990d",
+  "specification": "tracks_spec.md MAIN 23:15 owner: GROUP-COOPERATION LEVERS, item G1",
+  "research_read_fully": "E:/research-dense/runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md",
+  "commits": [
+    {
+      "sha": "10c606571cb071afb2188156c7219dbab4175e1e",
+      "subject": "C4 G1: certify executable joint labels on the F3 bank path"
+    },
+    {
+      "sha": "63f78390adaab430de04c38b5025e4f813f3b71a",
+      "subject": "C4 G1: pin source horizons and test the full certification cap"
+    }
+  ],
+  "files": [
+    "tools/coopmwm/executable_labels.py",
+    "tools/coopmwm/test_executable_labels_cpu.py",
+    "tools/coopmwm/bank_breadth.py",
+    "tools/coopmwm/launch_production.py",
+    "G1_CERTIFICATION.md",
+    "G1_BUDGET.json",
+    "G1_READY.json"
+  ],
+  "api": {
+    "module": "tools.coopmwm.executable_labels",
+    "schema": "coopmwm/executable-labels/g1-v1",
+    "restart_binding": "restart_binding(snapshot) -> snapshot/prefix/base-policy hashes from verified F3 restart",
+    "bind_lesson": "bind_lesson(*, arm, receipt, example, plan, snapshot_sha256, prefix_sha256, base_policy_sha256, runtime_sha256, local, decision_s, window, move=None) -> immutable exact executable lesson",
+    "job_spec": "job_spec(lesson, seeds) -> common-window group/base/all-member-solo specs on exactly two distinct bound CRN seeds",
+    "admit": "admit(job, results) -> recomputed admission or diagnostic-only receipt with statistics, safety, issued-command effect and reasons",
+    "budget_quote": "budget_quote(jobs=None) -> conservative full-prefix quote; concrete batches enforce equal B/R effort and cap",
+    "prioritize": "prioritize(lessons) -> prospective two-actor/native-profile preference, without outcome ranking",
+    "manifest": "manifest(entries) -> complete positive/negative/missing-evidence dataset plus admissions and quote",
+    "read_manifest": "read_manifest(path) -> guarded JSON read with job reconstruction and admission recomputation",
+    "bank_certificate": "bank_certificate(validated_manifest, *, arm, receipt, example, plan, snapshot_sha256, prefix_sha256=None, base_policy_sha256=None, runtime_sha256=None) -> matching admitted exact-source lesson or None",
+    "cli_quote": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m tools.coopmwm.executable_labels quote",
+    "cli_certify": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m tools.coopmwm.executable_labels certify --input <entries.json>"
+  },
+  "integration": {
+    "opt_in_keys": ["executable_label_manifest", "executable_label_runtime_sha256"],
+    "default": "off",
+    "bank_path": "F3 bank_breadth.visit gates current/imported PLAN_FIX sources after existing native admission and own-seed restart validation",
+    "trigger": "Only exact certified macro, decision time, proposer and reconstructed local observable rows are taught; no uncertified later onset-adjusted labels",
+    "practice": "Certified family and lesson hash frozen in lookup; source and certificate revalidated on resume",
+    "symmetry": "Common B/R code, configuration, family matching, prospective selection and verification-effort rule",
+    "A": "bypasses bank/certificate reads",
+    "continuous_native_AWR": "existing admission reader retained; this task certifies F3 executable trigger lessons and practice eligibility"
+  },
+  "admission_rule": {
+    "metric": "min over ALL executable member solo full-window J values minus group J; no zero floor",
+    "window": "original source group receipt window on every branch, with preserved t0 action and strictly post-t0 intervention",
+    "uncertainty": "2000 paired circular block draws, 30-second blocks, RNG 20261103; best full-window solo reselected each draw",
+    "CI": "two-sided percentile CI95; pooled equal-seed mean and each seed lower bound must be strictly > 0",
+    "physical_effect": "at least two actual actors simultaneously change issued safe commands by more than 1e-6 m/s^2 on each seed; raw/library/safe deltas cross-checked",
+    "safety": "existing MAIN04:26 group-minus-base composite rule plus zero collisions/teleports on all branches; missing counters fail closed",
+    "diagnostics": "negative, zero, uncertain, unsafe, non-executing, incomplete and mismatched receipts retained as diagnostic-only",
+    "reporting": "total benefit and group-over-best-solo synergy reported separately; within-context bounds are not generalization intervals"
+  },
+  "budget": {
+    "artifact": "G1_BUDGET.json",
+    "contexts_per_arm": 8,
+    "arms": ["B", "R"],
+    "verification_seeds": 2,
+    "preferred_two_actor_sim_s": 153600,
+    "worst_case_sim_s": 230400,
+    "cap_sim_s": 230400,
+    "full_prefix_replay_included": true,
+    "reuse_discount_sim_s": 0,
+    "executed_sim_s": 0,
+    "dispatched": false
+  },
+  "tests": {
+    "interpreter": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "environment": {"CUDA_VISIBLE_DEVICES": "-1"},
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_executable_labels_cpu.py tools/coopmwm/test_bank_breadth_cpu.py tools/coopmwm/test_launch_integration_cpu.py tools/coopmwm/test_f1_actuation_cpu.py tools/coopmwm/test_clean2_actuation_receipts_cpu.py --basetemp=E:/agent-work/c4-grp-certify/_out/g1_final_pytest",
+    "passed": 222,
+    "skipped": 1,
+    "failed": 0,
+    "duration_s": 114.99,
+    "skip_reason": "Existing test_launch_integration_cpu.py:526 file-symlink privilege check is deferred by that CPU test to later qualification",
+    "new_G1_tests": 38,
+    "quote_cli": "passed; printed 153600 preferred and 230400 maximum sim-s, with zero execution",
+    "git_diff_check": "passed",
+    "earlier_attempts": [
+      "Initial combined run timed out at 120 seconds; isolated a nonfinite test-fixture sealing error and fixed it",
+      "A regression command referenced a nonexistent test_launch_production_cpu.py; corrected to test_launch_integration_cpu.py before the passing regression/final runs"
+    ]
+  },
+  "open_issues": [],
+  "later_authorized_handoff": [
+    "Collect ordinary TRAIN contexts and exact two-seed restart/CRN bindings prospectively; CPU tests do not provide real certified lessons",
+    "A later authorized SUMO adapter must execute the explicit G1 engine contract, including common base/background, full CRN alignment and issued-command audit; no legacy native-plan job is automatically treated as executable certification",
+    "Publish a balanced recomputable manifest and stage it with the runtime source/config binding at the registered update boundary"
+  ],
+  "constraints_observed": {
+    "CPU_only": true,
+    "ssh_or_remote_operations": false,
+    "SUMO_or_GPU_execution": false,
+    "writes_outside_worktree": false,
+    "prohibited_paths_or_truth_files_opened": false,
+    "forbidden_git_operations": false
+  }
+}
