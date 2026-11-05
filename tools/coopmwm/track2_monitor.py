@@ -41,9 +41,11 @@ look-ahead. Probes at u2/u4 are one run on exactly three registered states per a
 (A/B/R by default, configurable via early_probes.arms).
 The A group/solo branches use its actual current PPO checkpoint, independently of
 the frozen common-u0 reference/background used by every arm. Bootstrap over WORLD
-replicates, never over branches/states; u24 B-vs-common-base positive 95% CI and
-no safety regression is the criterion, B-R descriptive. Final paired episode
-evaluation belongs to T1D/T2C, not this isolated diagnostic.
+replicates, never over branches/states. Reports distinguish total benefit against
+common u0 from group-over-best-single synergy. The registered u24 criterion uses
+the SYNERGY positive 95% CI against zero and no safety regression, not total
+benefit; B-R is descriptive. Final paired episode evaluation belongs to T1D/T2C,
+not this isolated diagnostic.
 """
 from copy import deepcopy
 import argparse
@@ -77,6 +79,16 @@ MONITOR_DEFAULTS = dict(trigger_saturation=[0., 1.], history_updates=3,
                         accuracy_tolerance=1e-6, layer_kl_near_zero=1e-8,
                         action='DIAGNOSE; pause only for safety')
 BOOTSTRAP = dict(reps=10000, level=.95, seed=20261104, method='percentile')
+TOTAL_BENEFIT = 'delta_all_new_veh_s'
+SYNERGY = 'policy_cooperation_gain_veh_s'
+REPORT_METRICS = {
+    TOTAL_BENEFIT: dict(label='Total benefit vs common base', unit='veh-s',
+        formula='J_reference - J_all', higher_is_better=True, registered_u24_metric=False),
+    SYNERGY: dict(label='Group-over-best-single synergy', unit='veh-s',
+        formula='(J_reference - J_all) - max_i(J_reference - J_solo_i)',
+        solo_zero_floor=False, higher_is_better=True, registered_u24_metric=True)}
+CRITERION = ('u24 group-over-best-single synergy (policy_cooperation_gain_veh_s) '
+    'B-vs-zero CI95 low > 0 and no safety regression; total benefit and B-R descriptive')
 _LOCK = threading.RLock()
 _FORBIDDEN = ('sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1', 'hetdata_truth')
 _TRUTH = re.compile(r'(vtype|driver|vehicle_params)[^/]*truth|truth[^/]*(vtype|driver|vehicle_params)')
@@ -417,6 +429,21 @@ def _write_status(root):
     for row in status['diagnostics']:
         lines.append(f"- {row['kind']} u{row['update']}: {row['status']}; dry={row['dry']}; "
                      f"quoted={row['quoted_sim_s']} sim-s; verdict={row.get('verdict', 'descriptive')}.")
+        reports = row.get('metric_reports') or _metric_reports(row.get('records', []))
+        for name, report in reports.items():
+            means = ', '.join(f'{a}={v:.9g}' for a, v in report['arm_means'].items())
+            lines.append(f"  {report['label']} ({report['unit']}): "
+                         +(means or 'not measured')+'.')
+            comparisons = report.get('comparisons', {})
+            # Old immutable receipts used common_base to mean zero synergy.
+            if name == SYNERGY and not comparisons:
+                comparisons = {k.replace('-common_base', '-zero_synergy'): v
+                               for k, v in row.get('comparisons', {}).items()}
+            for pair, estimate in comparisons.items():
+                lines.append(f"    {pair}: mean={estimate['mean']:.9g}; "
+                    f"CI95=[{estimate['ci_lo']:.9g}, {estimate['ci_hi']:.9g}]; "
+                    f"n={estimate['n']} world replicates.")
+        lines.append('  Registered criterion (unchanged): '+CRITERION+'.')
     lines += ['', 'Read full receipts: python -m tools.coopmwm.track2_monitor status --root <clean1-root>', '']
     # The single coordinator may call from training and diagnostic threads.
     temp = _path(root, 'CLEAN1_STATUS.md.tmp')
@@ -499,6 +526,33 @@ def _bootstrap(values, update, pair_index, settings):
         reps=reps, seed=seed)
 
 
+def _metric_value(record, name):
+    """Canonical cell mean, with read-only support for original v1 receipts."""
+    if name in record:
+        return _number(record[name], name)
+    if name == SYNERGY:
+        return _number(record['metric'], SYNERGY)
+    entries = record.get('entries', [])
+    if entries and all(name in e for e in entries):
+        return fmean(_number(e[name], name) for e in entries)
+    return None  # Legacy data without total-benefit evidence is never zero-imputed.
+
+
+def _metric_reports(records):
+    """Equal-state means within a cell; equal-world means across replicated cells."""
+    reports = {}
+    for name, definition in REPORT_METRICS.items():
+        means = {}
+        for arm in ('A', 'B', 'R'):
+            values = [_metric_value(r, name) for r in records if r['arm'] == arm]
+            if values and all(v is not None for v in values):
+                means[arm] = fmean(values)
+        reports[name] = dict(definition, arm_means=means,
+            aggregation='equal state mean within world; equal world mean across replicates',
+            inference='descriptive means only; CIs, when present, resample paired worlds')
+    return reports
+
+
 def _analyse(records, update, settings):
     cells = {(r['arm'], r['replicate']): r for r in records}
     if len(cells) != 10 or len(records) != 10 or set(cells) != {(a, i) for a in ('B', 'R') for i in range(5)}:
@@ -507,16 +561,27 @@ def _analyse(records, update, settings):
         for k in ('world_seed', 'state_set_sha256', 'window_set_sha256'):
             if cells['B', i][k] != cells['R', i][k]:
                 raise ValueError('REFUSED: unpaired replicated '+k)
-    comparisons = {}
-    for pi, (a, b) in enumerate((('B', 'common_base'), ('R', 'common_base'), ('B', 'R'))):
-        values = [cells[a, i]['metric']-(0 if b == 'common_base' else cells[b, i]['metric']) for i in range(5)]
-        comparisons[a+'-'+b] = _bootstrap(values, update, pi, settings)
+    reports = _metric_reports(records)
+    for name, report in reports.items():
+        baseline = 'common_base' if name == TOTAL_BENEFIT else 'zero_synergy'
+        comparisons = {}
+        for pi, (a, b) in enumerate((('B', baseline), ('R', baseline), ('B', 'R'))):
+            values = [_number(_metric_value(cells[a, i], name), name)
+                -(0 if b == baseline else _number(_metric_value(cells[b, i], name), name))
+                for i in range(5)]
+            # Preserve the registered synergy seed/order; both metrics use the same resamples.
+            comparisons[a+'-'+b] = _bootstrap(values, update, pi, settings)
+        report['comparisons'] = comparisons
+    # Compatibility alias only: these original keys have ALWAYS measured synergy.
+    comparisons = {k.replace('-zero_synergy', '-common_base'): v
+                   for k, v in reports[SYNERGY]['comparisons'].items()}
     safety = {k: dict(B=sum(cells['B', i]['safety'][k] for i in range(5)),
         common_base=sum(cells['B', i]['reference_safety'][k] for i in range(5))) for k in SAFETY}
     safety_ok = all(v['B'] <= v['common_base'] for v in safety.values())
     positive = comparisons['B-common_base']['ci_lo'] > 0
-    return dict(comparisons=comparisons, safety=safety, safety_ok=safety_ok,
-        criterion='u24 B-common_base CI95 low > 0 and no safety regression; B-R descriptive',
+    return dict(metric_reports=reports, comparisons=comparisons, comparisons_metric=SYNERGY,
+        comparisons_note='Legacy common_base comparison keys mean zero synergy, not total benefit',
+        safety=safety, safety_ok=safety_ok, criterion_metric=SYNERGY, criterion=CRITERION,
         verdict=('pass' if positive and safety_ok else 'fail') if update == 24 else 'descriptive')
 
 
@@ -560,7 +625,8 @@ def _run_wave(root, backend, jobs, prepared, phase):
             for k in SAFETY:
                 safety[k] += sum(r['safety'][k] for r in results)
                 reference_safety[k] += len(results)*ref['safety'][k]
-        records.append(dict(job, metric=fmean(e['policy_cooperation_gain_veh_s'] for e in entries),
+        means = {name: fmean(_number(e[name], name) for e in entries) for name in REPORT_METRICS}
+        records.append(dict(job, metric=means[SYNERGY], metric_name=SYNERGY, **means,
             status='graded', safety=safety, reference_safety=reference_safety, entries=entries))
     return accounting, records
 
@@ -662,7 +728,9 @@ def _diagnostic(cfg, u, kind):
                 _write(result_path, failed)
                 _write_status(root)
             raise
-    analysis = _analyse(records, u, bs) if not dry and kind == 'replicated' else {}
+    analysis = (_analyse(records, u, bs) if not dry and kind == 'replicated' else
+                dict(metric_reports=_metric_reports(records), criterion_metric=SYNERGY,
+                     criterion=CRITERION))
     output = _seal(dict(schema='coopmwm.track2.isolated_diagnostic.v1', kind=kind, update=u,
         status='dry_run' if dry else 'complete', dry=dry, binding=binding,
         cells=len(prepared), branches=len(jobs), quoted_sim_s=quoted, quote_sha256=quote_sha,
