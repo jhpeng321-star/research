@@ -53,7 +53,8 @@ def validate_query(query):
     at t0, plus that decision's own residuals. It contains no future samples.
     source_sha256 binds the original captured observable query/snapshot bytes.
     """
-    if set(query) != {'record', 'ego', 'source_sha256', 'base_continuation'}:
+    if set(query) not in ({'record', 'ego', 'source_sha256', 'base_continuation'},
+                          {'record', 'ego', 'source_sha256', 'base_continuation', 'sensing_packets'}):
         raise ValueError('query envelope whitelist')
     r = query['record']
     required = {'state_id', 'world_id', 'time_s', 'rows', 'group', 'commands',
@@ -71,13 +72,35 @@ def validate_query(query):
     if len(by) != len(rows) or query['ego'] not in by or not by[query['ego']]['is_cav']:
         raise ValueError('distinct identities and an observed CAV ego required')
     origin = by[query['ego']]['s_m']
+    packets = query.get('sensing_packets')
+    authorized = {query['ego']}
+    if packets is not None:
+        if set(packets) != set(r['group']):
+            raise ValueError('each lane actor must supply its own causal sensor packet')
+        union = {}
+        for actor, packet in packets.items():
+            if (set(packet) != {'time_s', 'rows', 'observed_lanes'}
+                    or packet['time_s'] != r['time_s'] or packet['observed_lanes'] != [0, 1, 2]):
+                raise ValueError('fresh, explicitly covered actor sensing required')
+            table = {x['vid']: x for x in packet['rows']}
+            if actor not in table or len(table) != len(packet['rows']):
+                raise ValueError('sensor packet lacks its actor or has duplicate IDs')
+            for row in packet['rows']:
+                if set(row) != FIELDS or abs(row['s_m'] - table[actor]['s_m']) > 100:
+                    raise ValueError('nonlocal actor sensor packet')
+                if row['vid'] in union and union[row['vid']] != row:
+                    raise ValueError('inconsistent shared sensing')
+                union[row['vid']] = row
+        if union != by:
+            raise ValueError('roster must equal the authorized packet union')
+        authorized = set(packets)
     for row in rows:
         if (not isinstance(row['vid'], str) or type(row['is_cav']) is not bool
                 or type(row['lane']) is not int or row['lane'] not in (0, 1, 2)
                 or any(type(row[k]) not in (int, float) or not math.isfinite(row[k])
                        for k in ('s_m', 'v_mps', 'length_m'))
                 or row['v_mps'] < 0 or row['length_m'] <= 0
-                or abs(row['s_m'] - origin) > 100):
+                or not any(abs(row['s_m'] - by[v]['s_m']) <= 100 for v in authorized)):
             raise ValueError('invalid or nonlocal sensor row')
     group = r['group']
     if len(group) != 2 or len(set(group)) != 2 or not all(by.get(v, {}).get('is_cav') for v in group):
@@ -122,7 +145,8 @@ def validate_query(query):
         if len(past) != len(frame['rows']) or query['ego'] not in past:
             raise ValueError('history lacks its actual sensor ego')
         s = past[query['ego']]['s_m']
-        if any(abs(row['s_m'] - s) > 100 for row in frame['rows']):
+        origins = [past[v]['s_m'] for v in authorized if v in past]
+        if any(not any(abs(row['s_m'] - point) <= 100 for point in origins) for row in frame['rows']):
             raise ValueError('nonlocal history')
     if r['history'] and (r['history'][-1]['time_s'] != r['time_s']
                          or r['history'][-1]['rows'] != rows):

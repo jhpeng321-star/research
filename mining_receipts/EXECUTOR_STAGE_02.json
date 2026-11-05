@@ -1,0 +1,10 @@
+{
+  "host": "gpuA",
+  "command": "/root/miniconda3/bin/python -B -",
+  "unix": 1793903749.2075505,
+  "timestamp": "2026-11-05T18:35:53.931295+00:00",
+  "wall_s": 4.723788738250732,
+  "returncode": 0,
+  "stdout": "{\"dispatch\": {\"pid\": 4788, \"start_ticks\": \"928396742\", \"argv\": [\"/home/ubuntu/miniconda3/bin/python\", \"-B\", \"-u\", \"-m\", \"tools.mining.collect_contexts\", \"/root/mining20261106/executor_b903c6c2_v2\"], \"unix\": 1793903753.269064, \"root\": \"/root/mining20261106/executor_b903c6c2_v2\"}, \"authority\": {\"g5_commit\": \"b903c6c2\", \"gpu_cap_sim_s\": 300000, \"cpuv_cap_sim_s\": 200000, \"total_mining_cap_sim_s\": 500000, \"phase\": \"mining\", \"full_collection_worlds\": 4, \"full_sim_s_per_world\": 1200, \"selection\": \"max local ramp count, mainline occupancy, inverse ramp speed, proximity; no outcome input\", \"verification\": \"K8 H600 WM ranking only; native group/base/each solo both CRN seeds common H600; G5 exact fields/tape\", \"clean3\": \"periodic current B/R training contexts after launch; same procedure and effort; registered boundaries only\", \"source_sha256\": \"49431b6534101c6e46d2f65bbacd61130055c64761e0612143613ad7d62233a5\", \"unix\": 1793903750.655458}, \"qualification\": \"/root/mining20261106/executor_b903c6c2_v2/source/tools/coopmwm/group_lane.py /root/mining20261106/executor_b903c6c2_v2/source/traffic_shepherd/c4/env.py\\n\"}\n",
+  "stderr": ""
+}
