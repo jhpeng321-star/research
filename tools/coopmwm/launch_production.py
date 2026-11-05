@@ -171,6 +171,7 @@ def update_metrics(arm, episodes, learning, reward_envelope, *, augmented_exampl
         trigger_counts=dict.fromkeys(moves.FAMILIES, 0), safety_stop=False,
         safety=dict.fromkeys(p3.SAFETY, 0), track2_reward=None)
     missing, kls = [], []
+    proposal_receipts = []
     rewards = []
     for episode in episodes:
         total = episode['totals']
@@ -190,6 +191,8 @@ def update_metrics(arm, episodes, learning, reward_envelope, *, augmented_exampl
             sample = step['sample']
             trigger = sample.get('track2_trigger')
             if trigger is not None:
+                if arm != 'A' and 'proposals' in trigger:
+                    proposal_receipts.append(trigger['proposals'])
                 for table, selected in zip(trigger['tables'], trigger['actions']):
                     move = table[selected]
                     family = 'none' if move is None else move['family']
@@ -200,6 +203,7 @@ def update_metrics(arm, episodes, learning, reward_envelope, *, augmented_exampl
     metrics['reward'] = fmean(rewards)
     metrics['safety_stop'] = any(metrics['safety'][k] for k in ('collisions', 'teleports'))
     if arm != 'A':
+        metrics['move_proposals'] = p1.feasible_proposals.aggregate(proposal_receipts)
         if reward_envelope is None:
             raise ValueError('native P2 envelope required for B/R monitor')
         metrics['track2_reward'] = reward_envelope['receipt']
