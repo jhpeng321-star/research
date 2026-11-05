@@ -34,6 +34,9 @@ def candidates(obs_state, rng, n):
     """
     if type(n) is not int or n < 0 or not isinstance(rng, np.random.Generator):
         raise ValueError('nonnegative integer budget and numpy Generator required')
+    if 'coordination_partner' in obs_state:
+        from .coordination_opportunities import candidates as pair_candidates
+        return pair_candidates(obs_state, rng, n)
     rows = [moves._row_checked(r) for r in obs_state.get('rows', ())]
     by_vid = {r['vid']: r for r in rows}
     ego = obs_state.get('self')
@@ -75,14 +78,16 @@ def candidates(obs_state, rng, n):
 
 
 def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
-                     now, rng, generator, deterministic=False, command_reservations=None):
-    """Acquire in stable id order, preserving recorded PPO rows in context order.
+                     now, rng, generator, deterministic=False, command_reservations=None,
+                     coordination=None, opportunity_pairs=None, event=False):
+    """Acquire in stable id order (opt-in G2: role pairs first).
 
     Each slate is conditional on earlier acquisitions. PPO reuses these exact
     slates/masks/logps; it never regenerates an unconditional proposal table.
     command_reservations maps ego -> observable CAV id -> authoritative expiry.
     It includes the controller's live/practice plans; executor commitments are
     checked again after each acquisition. Neither source is traffic truth.
+    G2 retains original context ordering and the same conditional PPO contract.
     """
     executor._advance(now)
     members = context['members']
@@ -93,7 +98,27 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
                  owned_cav_checks=0, controller_owned_cav_checks=0,
                  proposed_by_family=dict.fromkeys(moves.STRUCTURED, 0),
                  selected_non_none=0, rejected_non_none=0)
-    for ego in sorted(members):
+    order = sorted(members)
+    pairs = ()
+    if coordination is not None:
+        from . import coordination_opportunities as opportunities
+        edges = opportunities.graph(obs_states, observable_cavs, eligible,
+            occupied={v for entry in executor.active for v in entry['move'].members},
+            command_reservations=command_reservations, now=now)
+        pairs = (opportunities.disjoint(edges)
+            if opportunity_pairs is None else tuple(opportunity_pairs))
+        pair_members = [v for pair in pairs for v in pair.members]
+        if any(pair not in edges for pair in pairs) or len(set(pair_members)) != len(pair_members):
+            raise ValueError('G2 requires disjoint currently observable/acquirable pairs')
+        priority = [pair.yielder for pair in pairs]
+        order = priority + [v for v in order if v not in priority]
+        stats['coordination_opportunities'] = dict(rule=opportunities.RULE,
+            provenance=coordination['provenance'], decisions=len(members), offered_joint=0,
+            graph_edges=len(edges), disjoint_pairs=len(pairs), event_decisions=int(event),
+            decision_order=order, pairs=[pair.to_dict() for pair in pairs])
+    pair_by_ego = {pair.yielder: pair for pair in pairs}
+    event_members = {v for pair in pairs for v in pair.members}
+    for ego in order:
         index = members.index(ego)
         local_cavs = set(observable_cavs[ego]) & eligible
         controller_owned = {v for v, until in (command_reservations or {}).get(ego, {}).items()
@@ -104,6 +129,17 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
         local_stats = {}
         state = dict(obs_states[ego], acquirable_cav_ids=[v for v in observable_cavs[ego]
                      if v in eligible and v not in occupied], proposal_stats=local_stats)
+        if coordination is not None:
+            state['rows'] = opportunities.canonical_rows(state)
+            if event:
+                # Preserve full context/return alignment; unrelated egos have
+                # no action-choice gradient and cannot churn on pair events.
+                allowed = (set(pair_by_ego[ego].members) if ego in pair_by_ego else
+                           ({ego} if ego in event_members else set()))
+                state['acquirable_cav_ids'] = [v for v in state['acquirable_cav_ids'] if v in allowed]
+            pair = pair_by_ego.get(ego)
+            if pair is not None and set(pair.members) <= set(state['acquirable_cav_ids']):
+                state['coordination_partner'] = pair.merger
         local_context = dict(context, members=[ego], x=[context['x'][index]])
         batch = trigger.decide(local_context, obs_states={ego: state},
             observable_cavs={ego: observable_cavs[ego]}, rng=rng, generator=generator,
@@ -114,6 +150,9 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
         for move in batch.tables[0]:
             if move is not None:
                 stats['proposed_by_family'][move.family] += 1
+        if coordination is not None:
+            stats['coordination_opportunities']['offered_joint'] += int(any(
+                m is not None and len(m.actors) >= 2 for m in batch.tables[0]))
         move = batch.selected()[ego]
         selected = move is not None and move.family != 'none'
         accepted[ego] = executor.start(move, ego=ego, observable_cav_ids=observable_cavs[ego],
@@ -152,4 +191,8 @@ def aggregate(receipts):
     for rate, num, den in (('infeasible_rate', 'rejected_non_none', 'selected_non_none'),
                           ('family_infeasible_rate', 'infeasible_family_checks', 'family_checks')):
         out[rate] = out[num]/out[den] if out[den] else None
+    from .coordination_opportunities import aggregate as aggregate_opportunities
+    coordination = aggregate_opportunities(receipts)
+    if coordination is not None:
+        out['coordination_opportunities'] = coordination
     return out
