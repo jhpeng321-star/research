@@ -106,11 +106,12 @@
     "static_checks": ["git diff --check c4/track-base"],
     "review_status": "r1 blocker implemented and CPU-verified; independent r2 review PASS and acceptance receipt present",
     "resume_verification": {
-      "head_before_receipt_refresh": "4aef5ac3367461189606bfc9f2b863c5ad6ea8c5",
+      "head_before_receipt_refresh": "3e298a6d669f22f60d5a1aa8c9cbe8643bbd7a20",
       "accepted_review_head": "2fcf3865c7b7770d4c33cc9fc2948398e50dc27f",
       "reviewed_implementation_unchanged": true,
       "tracked_changes_since_accepted_review": "P1_READY.json only; no implementation or test changes",
       "existing_junit": "457 cases including 5 subtests; zero errors, failures or skips",
+      "existing_junit_suite": {"tests": 457, "errors": 0, "failures": 0, "skipped": 0, "time_s": 195.474},
       "matching_running_python_or_pytest_jobs": 0,
       "running_job_match": "c4-track2-backend|test_track2_backend_cpu|_p1_r1_|_review_p1_",
       "checks": [
@@ -118,7 +119,7 @@
         "git diff --stat 2fcf3865c7b7770d4c33cc9fc2948398e50dc27f",
         "git diff --check c4/track-base"
       ],
-      "test_evidence": "Rechecked P1_r1_tests.xml suite totals and independent REVIEW_P1_r2.md PASS against unchanged reviewed implementation. Preserved completed regression runs; no duplicate test run or dispatch launched.",
+      "test_evidence": "Fresh-session recheck at 3e298a6d: read the specification, r1 blocker, readiness/acceptance receipts and r2 PASS; confirmed P1_r1_tests.xml suite totals, unchanged reviewed implementation/tests, clean diff check and no matching active Python/pytest jobs. Preserved completed regression runs; no duplicate test run or dispatch launched.",
       "completion": "All REVIEW_P1_r1.md blockers were already fixed, regression-tested, committed and independently accepted before this fresh resume. Readiness refreshed after verifying the saved evidence."
     }
   },
