@@ -1,0 +1,23 @@
+{
+  "schema": "coopmwm.clean1.smoke_summary.v1",
+  "status": "SMOKE_PASS",
+  "runtime_commit": "085f8ba0e2e104dd1ea380748205d32518a63d60",
+  "config_sha256": "bc204f71f55610b493158bca59df9ca743fc76aab22bcfe805ff5028649d379d",
+  "receipt_sha256": "8d687cc40876302612408ed07346ef30eba88f963d981ab01c5d3612f7dceb49",
+  "unix": 1793840121.3158953,
+  "smoke_sim_s": 9600,
+  "cumulative_sim_s_including_parity": 80160,
+  "accepted_moves": {"B": 182, "R": 220},
+  "merge_missing_share": {"B": 0.0, "R": 0.0},
+  "weighted_starts": {"B": 1, "R": 1},
+  "augmented_examples_used": {"B": 0, "R": 0},
+  "bank_optimizer_steps": {"B": 18, "R": 15},
+  "trigger_bank_ce_initial": {"B": 2.1742770671844482, "R": 2.1942179203033447},
+  "trigger_bank_ce_final": {"B": 2.1462111473083496, "R": 2.165616750717163},
+  "layer_kl": {"B": 0.022715691477060318, "R": 0.036656562238931656},
+  "reward_cav_outcomes": {"B": 16505, "R": 20145},
+  "safety": {"collisions": 0, "teleports": 0},
+  "replicated_dry_grids": "complete u6/u12/u24, 10 cells each, full windows",
+  "gate_dispatch": {"pid": 136376, "start_ticks": "2999903", "unix": 1793840150.518147},
+  "training_launched": false
+}
