@@ -212,6 +212,21 @@ def test_disabled_augmentation_refuses_children_in_either_live_bank(tmp_path):
         target.unlink()
 
 
+def test_production_collection_installs_registered_scope_before_guard(monkeypatch):
+    from types import SimpleNamespace
+    from . import track2_backend as p1, accel_protocol
+    monkeypatch.setattr(p1, '_approved', lambda cfg: None)
+    installed=[]
+    monkeypatch.setattr(accel_protocol, 'install_seed_scope', lambda: installed.append(True))
+    def guard(world, role):
+        assert installed == [True] and role == 'train'
+        raise RuntimeError('guard reached after scope setup')
+    monkeypatch.setattr(accel_protocol, 'guard', guard)
+    runtime=SimpleNamespace(cfg=dict(worlds_by_update={'1':[dict(seed=986000)]}),arm='A',update=1)
+    with pytest.raises(RuntimeError, match='after scope setup'):
+        p1.ArmRuntime.collect(runtime)
+
+
 def test_cross_process_receipts_are_not_visible_during_serialization_and_never_overwrite(tmp_path, monkeypatch):
     import json
     from . import launch_training as training

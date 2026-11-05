@@ -549,7 +549,8 @@ class ArmRuntime:
         worlds = cfg['worlds_by_update'][str(u)]
         if not worlds:
             raise ValueError('registered TRAIN worlds required')
-        from .accel_protocol import guard
+        from .accel_protocol import guard, install_seed_scope
+        install_seed_scope()  # same registered-world setup used by native episode workers
         for world in worlds:
             guard(world, 'train')
         extras = dict(update=u, v2v=True, v2v_dim=cfg['v2v_dim'], b_replay=arm != 'A', health_guards=True)
