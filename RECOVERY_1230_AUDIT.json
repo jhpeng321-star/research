@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-11-05T12:31:43.939512+08:00",
+  "status": "SSH_RESTORED_PAUSE_VERIFIED_OWNER_RELEASE_AUTHORIZED",
+  "prior_head": "59a67f37",
+  "registration": "REGISTRATION.md 2026-11-05 12:30; owner verbatim yes",
+  "sealed_updates": {"A": 3, "B": 3, "R": 2},
+  "original_owners_exited": true,
+  "R_u003_checkpoint_exists": false,
+  "ledger_rows": 345,
+  "ledger_sha256": "ef35a12da2b5b0963eb413be0649df688e7f1bc46655e8ecf20a8379f37ed0ec",
+  "cumulative_sim_s_including_parity": 358820,
+  "config_sha256": "cc009d490c6876ec9e6ec98072617ac6f76b20fc7501fcc83bb7905f19a7ac4a",
+  "new_sim_s": 0,
+  "new_dispatches": 0,
+  "next": "Register SHA-bound R-only composite report-only rule, preserve collision/teleport pauses and full A/B rules, then resume without replaying completed physics."
+}
