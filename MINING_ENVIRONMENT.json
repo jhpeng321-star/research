@@ -1,0 +1,19 @@
+{
+  "experiment_id": "S-MINING-20261106",
+  "gpuA_root": "/root/mining20261106",
+  "physics_home_alias": "/home/ubuntu -> /root/mining20261106/cpuv_home",
+  "status": "EXACT_ENVIRONMENT_QUALIFIED_BEFORE_PHYSICS",
+  "files_verified": 33618,
+  "archive_bytes": 767203965,
+  "archive_sha256": "212737b1a2c63ead99632db15c40e5fdba8be40281b44e105a3716a1b64cfa4e",
+  "manifest_sha256": "f02fe78453c96be4d314dfbdaf0e05c7d40b6ab926b4c8f2ad2ac62168a45dd5",
+  "pins": {"python": "3.10.16", "eclipse-sumo": "1.27.1", "traci": "1.27.1", "sumolib": "1.27.1", "libsumo": "1.27.1", "numpy": "2.2.6", "scipy": "1.15.3", "pandas": "2.3.3", "torch": "2.12.1+cpu"},
+  "sumo_binary_sha256": "118bd81749f3fc0e4bd8c5840053ebe65a29770c940cb4e43e9eb561b06b7591",
+  "backend_setup": "PASS: exact frozen runtime manifest/checkpoint; no simulation",
+  "parity": "Registered P3 510 sim-s then P4 450 sim-s only if P3 PASS; one attempt per branch; both phase=mining",
+  "accounting_admission": {"bound_sim_s": 5500000, "owner_cap_sim_s": 6500000, "mining_cap_sim_s": 500000, "clean1_actual_sim_s": 1248480, "historical_parity_sim_s": 960, "clean2_protected_cap_sim_s": 3184160, "remaining_plan_fix_protected_sim_s": 566400, "other_ledgers": []},
+  "gpu_wm": "Separate existing Python3.12.3/Torch2.8cu128 environment; ranking only, not physics",
+  "transfer": "64MiB resumable cpuV F6 reads, local full SHA, laptop SFTP reput, gpuA full SHA and per-file SHA verification",
+  "receipts": ["E:/Temp/opencode/MINING_PARITY_PACKAGE_0128.json", "E:/Temp/opencode/MINING_CLONE_QUALIFICATION_0136.json", "E:/Temp/opencode/MINING_BUDGET_0150.json"],
+  "new_sim_s": 0
+}
