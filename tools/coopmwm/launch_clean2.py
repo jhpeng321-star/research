@@ -235,6 +235,7 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1):
     actual.update(root/name for name in safety_receipts)
     summaries = {}
     with rc._ReadRecorder([root, clean1, stage.LEGACY], Path('/home/ubuntu')) as recorder:
+        from . import bank_breadth
         native = production.backend_config(cfg)
         for arm in ('B', 'R'):
             with p1._bank_view(native) as bank:
@@ -245,7 +246,10 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1):
                 if not pairs:
                     raise ValueError('nonempty verified effective bank required')
                 summaries[arm] = summary
-                for row in practice.examples(root, arm):
+                # This is the accepted F3 sampler's real pool, including usable
+                # imported and PLAN_FIX contexts, rather than the old three-only
+                # practice reader. Loading every pool row closes its dependencies.
+                for row in bank_breadth.practice_pool(native, arm):
                     practice.load_snapshot(root, arm, row)
     actual.update(recorder.paths); actual.update(recorder.lexical)
     for row in registration['replicates']:
@@ -254,6 +258,17 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1):
     prior_staging = training.read(clean1/'STAGING_MANIFEST.json')
     verify_sealed(prior_staging, 'manifest_sha256')
     actual.update(Path(p) for p in prior_staging['entries'])
+    known_unavailable = {Path(p) for p in prior_staging.get('unresolved_nonselected_snapshot_attempts', [])}
+    known_unavailable.update(root/p.relative_to(clean1) for p in tuple(known_unavailable)
+                             if p.is_relative_to(clean1))
+    # Only the original explicitly disclosed nonselected missing attempts may
+    # be excluded. A required practice/diagnostic read has already failed above;
+    # no newly missing dependency or selected input is excused here.
+    unavailable = {p for p in actual if p in known_unavailable and not p.is_file()}
+    actual.difference_update(unavailable)
+    expanded, closure = production.staging_closure([p for p in actual if
+        p.parent.name in ('pending','decisions') or p.name=='RESULT.json' or p.suffix=='.pt'])
+    actual.update(expanded)
     entries = {}
     for path in sorted(actual):
         rc.guard_path(path); rc.guard_path(path.resolve())
@@ -266,6 +281,7 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1):
             raise ValueError('preserved staged evidence changed: '+name)
     manifest = _seal(dict(schema='coopmwm.clean2.reader_staging.v1', entries=entries,
         bank_summaries=summaries, inherited_staging_sha256=prior_staging['manifest_sha256'],
+        closure=closure, unresolved_nonselected_snapshot_attempts=sorted(map(str, unavailable)),
         s0_manifest_sha256=setup['inventory_sha256']), 'manifest_sha256')
     training.write(root/'STAGING_MANIFEST.json', manifest)
     cfg.update(staging_manifest_sha256=rc.sha(root/'STAGING_MANIFEST.json'),
