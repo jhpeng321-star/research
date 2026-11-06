@@ -49,9 +49,41 @@ def descriptor(name: str) -> dict:
             "k_slots": desc.k_slots, "install_record": record}
 
 
-def make_env(map_name: str = "wz3to2", **kwargs):
+#: LCEXEC lane writer (lane MAPPO, S-MAPPOWZL): same signature as CavSumoEnv._issue_lane_commands
+#: ``writer(env, targets {vid: WM lane}, policy_cavs, statuses) -> (issued, Counter)``; it may
+#: target the closing lane (the frozen writer refuses WM 2).  Confirm the export when LCEXEC lands.
+LCEXEC_WRITER = "tools.coopmwm.lc_runtime:mappo_lane_writer"
+
+
+def lane_writer_class(base, writer):
+    class LaneWriterEnv(base):
+        LANE_WRITER = getattr(writer, "__qualname__", str(writer))
+
+        def _issue_lane_commands(self, targets, policy_cavs, statuses=None):
+            return writer(self, targets, policy_cavs, statuses)
+
+    LaneWriterEnv.__qualname__ = base.__qualname__
+    return LaneWriterEnv
+
+
+def resolve_writer(name: str = LCEXEC_WRITER):
+    import importlib
+    module_name, _, attr = name.partition(":")
+    try:
+        return getattr(importlib.import_module(module_name), attr)
+    except (ImportError, AttributeError) as exc:
+        raise RuntimeError(f"LCEXEC lane writer {name!r} not available ({exc})") from exc
+
+
+def make_env(map_name: str = "wz3to2", lane_writer: str | None = None, **kwargs):
+    """Map env; ``lane_writer="lcexec"`` executes policy lane targets with LCEXEC's writer
+    (closing-lane entries allowed); None keeps the frozen writer (speed-only runs pass no lanes)."""
     install(map_name)
     from traffic_shepherd.c4 import env as E
     if getattr(E.CavSumoEnv, "MAP_NAME", None) != map_name:
         raise RuntimeError("N1 map env class not bound")
-    return E.CavSumoEnv(**kwargs)
+    if lane_writer is None:
+        return E.CavSumoEnv(**kwargs)
+    if lane_writer != "lcexec":
+        raise ValueError(f"unknown lane_writer {lane_writer!r}")
+    return lane_writer_class(E.CavSumoEnv, resolve_writer())(**kwargs)

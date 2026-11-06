@@ -73,15 +73,15 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def check(local: Path, milestones: dict) -> int | None:
-    prod = local / "run2" / "production"
+def check(local: Path, milestones: dict, *, run: str = "run2", lane_on: bool = False) -> int | None:
+    prod = local / run / "production"
     status = json.loads((prod / "status.json").read_text()) if (prod / "status.json").exists() else {}
     rows = []
     if (prod / "log.jsonl").exists():
         rows = [json.loads(x) for x in (prod / "log.jsonl").read_text().splitlines() if x.strip()]
     iters = [r for r in rows if r.get("type") == "iter"]
     bad = [r for r in iters if (r.get("collisions") or 0) or (r.get("teleports") or 0)
-           or (r.get("lane_commands_issued") or 0) or (r.get("failed_episodes") or 0)]
+           or (not lane_on and (r.get("lane_commands_issued") or 0)) or (r.get("failed_episodes") or 0)]
     if any(prod.glob("GUARD_STOP_*.json")) or bad or [r for r in rows if r.get("type") == "failure"]:
         if not milestones.get("anomaly_reported"):
             milestones["anomaly_reported"] = True
@@ -110,6 +110,8 @@ def main(argv=None) -> int:
     ap.add_argument("--remote", default="/home/ubuntu/mappo_wz20261106")
     ap.add_argument("--local", required=True)
     ap.add_argument("--every-s", type=int, default=600)
+    ap.add_argument("--run", default="run2", help="run dir name under --remote (production inside)")
+    ap.add_argument("--lane-on", action="store_true", help="lane-capable MAPPO: lane commands expected")
     a = ap.parse_args(argv)
     local = Path(a.local)
     (local / "_sync").mkdir(parents=True, exist_ok=True)
@@ -129,7 +131,7 @@ def main(argv=None) -> int:
             state["last_sync_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             state["fetched_last_round"] = len(got)
             state_path.write_text(json.dumps(state, indent=1))
-            code = check(local, milestones)
+            code = check(local, milestones, run=a.run, lane_on=a.lane_on)
             ms_path.write_text(json.dumps(milestones, indent=1))
             print(f"{state['last_sync_utc']} synced {len(got)}/{len(changed)} files; milestone {code}",
                   flush=True)

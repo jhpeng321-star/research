@@ -1,0 +1,96 @@
+# N7 S-MAPPOWZL: LANE-CAPABLE MAPPO comparator on wz3to2 (owner 2026-11-06 18:02 "option 1 to ensure
+# fairness"; phase mappo_wz_lane <= 7,000,000 sim-s).  IDENTICAL to configs/c4_mappo_speed_wz3to2.toml
+# (S-MAPPOWZ) except, asserted by tests/unit/test_nm_mappo_lane.py:
+#   - [policy] lane_control "learned": the three-way lane head (stay / left / right) is ON; the lane
+#     head starts FRESH (seeded; --init-lane-head fresh) on top of MAPPO u0 d9042cc5 (all other weights
+#     load strictly); joint accel + lane likelihood and lane entropy 0.01 as the original lane-on MAPPO;
+#   - [policy] lane_actions: the clean5 lane action set through LCEXEC (tools/nm_mappo/lane_actions.py:
+#     adjacent lanes incl. entries into the closing lane, LCEXEC lane gate on each CAV's own sensing);
+#   - [env] kwargs lane_writer "lcexec": LCEXEC's lane writer executes the targets (lcMode 513).
+# Option (reported, NOT chosen): warm start from the lane-on v5 MAPPO aecd7d70 (trained lane head,
+# merge-map lane semantics) instead of u0 + fresh lane head.
+#
+[map]
+name = "wz3to2"
+api = "tools.nm_mappo.n1_adapter:descriptor"   # N1 map API (c4/nm-abstract b2f30091); "" = refusing stub
+
+[policy]
+lane_control = "learned"                 # lane head ON (stay/left/right), fresh head on u0
+lane_actions = "tools.nm_mappo.lane_actions:lcexec"   # clean5 lane action set (LCEXEC gate)
+accel_max_mps2 = 2.6                     # = stored bound of MAPPO u0 (d9042cc5) and v5 (aecd7d70)
+
+[mappo]                                  # PPO hyperparameters (identical to the original)
+gamma = 0.99
+gae_lambda = 0.95
+clip_eps = 0.2
+clip_value_eps = 0.2
+epochs = 4
+minibatch_frames = 1024
+lr_actor = 3.0e-4
+lr_critic = 1.0e-3
+entropy_coef = 0.01
+lane_entropy_coef = 0.01                 # lane head entropy (= the original lane-on MAPPO v5)
+value_coef = 0.5
+max_grad_norm = 0.5
+target_kl = 0.03
+cost_limit_per_step = 3.6
+lagrange_lr = 0.01
+lagrange_max = 50.0
+return_norm = true
+grad_noise_every = 5
+eval_chunk_frames = 512
+
+[rollout]
+seed = 1
+iterations = 168                         # original production2: --iterations 169 (phase cap, see header)
+episodes_per_iteration = 46
+horizon_s = 600.0
+warmup_s = 300.0
+warmup_choices_s = []
+penetrations = [0.6]                     # canonical clean4 cell D3200_p60 (N1 registered cell)
+penetration_mode = "discrete"
+demands_vph = [3200]                     # canonical clean4 cell D3200_p60 (N1 registered cell)
+seeds = "989200-989599"                  # registered wz3to2 TRAIN block
+max_sumo_seconds = 4636800.0             # controlled s = 168 x 46 x 600 (warmup uncharged, as original)
+max_env_steps = 0
+charge_warmup = false
+retries = 1
+episode_timeout_s = 3600.0
+keep_last = 3
+keep_every = 6                           # exports/checkpoints 6..168 incl. snapshots 24/42/84 (cpuQ disk)
+update_threads = 16
+
+[lanes]                                  # identical (= configs/c4_policy.toml [lanes])
+gap_base_m = 1.0
+gap_time_s = 1.2
+closing_time_s = 4.5
+rear_gap_base_m = 3.0
+rear_gap_time_s = 1.25
+rear_closing_time_s = 6.0
+dwell_s = 3.0
+edge_guard_m = 10.0
+
+[env]
+name = "map"                             # env class + map kwargs from the N1 descriptor
+cleanup_scenarios = true
+kwargs = { ttc = false, physics_log = false, population = "textbook", lane_writer = "lcexec" }
+
+[reward_weights]                         # identical
+delay = 1.0
+throughput = 0.5
+smooth = 0.05
+hard_brake = 1.0
+fairness = 1.0
+ttc_limit_s = 3.0
+
+[smoke]                                  # --smoke: CPU fake env, no SUMO (identical to the original)
+env_name = "fake"
+env_kwargs = {}
+iterations = 2
+episodes_per_iteration = 2
+horizon_s = 6.0
+warmup_s = 0.0
+max_sumo_seconds = 64.0
+epochs = 2
+minibatch_frames = 4
+target_kl = 0.0

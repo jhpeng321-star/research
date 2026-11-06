@@ -57,6 +57,10 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--init-lagrange", choices=("carry", "reset"), default="carry",
                         help="with --init-from: carry the checkpoint's Lagrange multiplier "
                              "(default) or reset it to the configured initial value")
+    parser.add_argument("--init-lane-head", choices=("fresh",), default=None,
+                        help="with --init-from a speed-only actor into a lane-on config: start the "
+                             "lane head fresh (seeded; all other weights still load strictly)")
+    parser.add_argument("--init-lane-head-seed", type=int, default=20261106)
     parser.add_argument("--init-accel-max", type=float, default=None, metavar="MPS2",
                         help="with --init-from: explicitly RE-DECODE the loaded actor with this accel cap "
                              "(e.g. 2.6; the checkpoint's own bound otherwise wins). Same weights, new action "
@@ -90,7 +94,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"--init-from needs a fresh --out; {trainer.ckpt_dir} has checkpoints",
                   file=sys.stderr)
             return 2
-        record = trainer.init_from_checkpoint(args.init_from, args.init_lagrange)
+        record = trainer.init_from_checkpoint(args.init_from, args.init_lagrange,
+                                              lane_head_init=args.init_lane_head,
+                                              lane_head_seed=args.init_lane_head_seed)
         if args.init_accel_max is not None:
             before = float(trainer.policy.accel_max)
             trainer.policy.set_accel_bounds(float(trainer.policy.accel_min), float(args.init_accel_max))

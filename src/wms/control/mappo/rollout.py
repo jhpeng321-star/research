@@ -244,6 +244,14 @@ def _remove_own_dirs(paths) -> None:
             pass
 
 
+def load_lane_actions(name):
+    """``"module:function"`` -> lane-action provider (called with no arguments); None -> C4 rules."""
+    if not name:
+        return None
+    module_name, _, attr = str(name).partition(":")
+    return getattr(importlib.import_module(module_name), attr)()
+
+
 def build_env(spec: Mapping):
     kwargs = dict(spec.get("env_kwargs", {}))
     root = spec.get("scenario_root")
@@ -265,7 +273,8 @@ def _worker_deps(spec: Mapping) -> dict:
         policy, encoder, _ = build_networks(lane_control=spec.get("lane_control", "learned"))
         policy.eval()
         encoder.eval()
-        _WORKER["actor"] = ActorStep(policy, encoder, LaneRules(**spec.get("lane_rules", {})))
+        _WORKER["actor"] = ActorStep(policy, encoder, LaneRules(**spec.get("lane_rules", {})),
+                                     lane_actions=load_lane_actions(spec.get("lane_actions")))
         _WORKER["weights"] = RewardWeights(**spec.get("reward_weights", {}))
     if _WORKER.get("env") is None:
         _WORKER["env"] = build_env(spec)

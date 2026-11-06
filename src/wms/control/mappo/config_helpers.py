@@ -88,7 +88,7 @@ def build_trainer(cfg: Mapping, *, workers: int, out_dir: Path | str, config_pat
     # Actor action cap (ACCELCAP_NOTES.md): LEGACY 1.5 unless ``[policy] accel_max_mps2`` is set
     # (a resumed / --init-from checkpoint brings its own stored bound).
     policy_section = dict(cfg.get("policy", {}))
-    unknown = set(policy_section) - {"accel_max_mps2", "lane_control"}
+    unknown = set(policy_section) - {"accel_max_mps2", "lane_control", "lane_actions"}
     if unknown:
         raise ValueError(f"unknown [policy] keys: {sorted(unknown)}")
     accel_max = float(policy_section.get("accel_max_mps2", LEGACY_ACCEL_MAX_MPS2))
@@ -98,6 +98,7 @@ def build_trainer(cfg: Mapping, *, workers: int, out_dir: Path | str, config_pat
             "config_path": config_path, "smoke": smoke,
             "actor": f"wms.control.policy.CavPolicy(lane_head={policy.has_lane_head}, accel_max={accel_max})",
             "lane_control": lane_control,
+            "lane_actions": policy_section.get("lane_actions") or None,
             "accel_max_mps2": accel_max,
             "group_encoder": "wms.control.policy.RsuGroupEncoder",
             "critic": "wms.control.policy.TeamCritic",

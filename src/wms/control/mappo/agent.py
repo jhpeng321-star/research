@@ -119,9 +119,13 @@ class ActorStep:
     """One deployment-identical decision per call (per episode: ``reset()``)."""
 
     def __init__(self, policy: CavPolicy, group_encoder: RsuGroupEncoder,
-                 lane_rules: LaneRules | None = None):
+                 lane_rules: LaneRules | None = None, lane_actions=None):
         self.policy, self.group_encoder = policy, group_encoder
         self.lane_rules = lane_rules if lane_rules is not None else LaneRules()
+        # Optional lane-action provider (N7 lane MAPPO on wz3to2: the clean5 / LCEXEC action set):
+        # ``feasibility(state, ages, rules) -> [B,K,3]`` and ``apply(state, choice, mask, rules,
+        # cav) -> (new_lane, changed)``.  None = the C4 rules (wms.control.lanes), unchanged.
+        self.lane_actions = lane_actions
         self.dwell = LaneDwell(self.lane_rules.dwell_s, CONTROL_DT_S)
         self.memory = CommandMemory()
 
@@ -137,7 +141,8 @@ class ActorStep:
         augmented = self.memory.augment(state)
         obs = build_observations(augmented)
         signal = self.group_encoder(obs, state["s_m"], build_rsu_field(state))
-        mask = lane_feasibility(state, ages, rules)
+        mask = (lane_feasibility(state, ages, rules) if self.lane_actions is None
+                else self.lane_actions.feasibility(state, ages, rules))
         cav = obs.cav_mask
         noise = None if deterministic else draw_policy_noise(tuple(cav.shape), generator=generator)
         kwargs = {} if noise is None else {"noise": noise}
@@ -147,7 +152,9 @@ class ActorStep:
         latent = mean if deterministic else mean + log_std.clamp(-5.0, 1.0).exp() * noise.accel
         latent = torch.where(cav, latent, torch.zeros_like(latent))
         accel = out.accel
-        new_lane, changed = apply_lane_choices(state, out.lane_choice, mask, rules, cav)
+        new_lane, changed = (apply_lane_choices(state, out.lane_choice, mask, rules, cav)
+                             if self.lane_actions is None
+                             else self.lane_actions.apply(state, out.lane_choice, mask, rules, cav))
         intent = torch.tensor(LANE_DELTA, device=accel.device)[out.lane_choice].to(accel.dtype)
         accel = accel.float()
         bound = float(getattr(self.policy, "accel_max", LEGACY_ACCEL_MAX_MPS2))

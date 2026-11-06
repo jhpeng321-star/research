@@ -104,13 +104,19 @@ def resolve_binding(config: Path):
     return _resolve(cfg["map"]), cfg
 
 
+LANE_HEAD_SEED = 20261106
+
+
 def train_argv(python: str, config: Path, out: Path, *, init: str | None, workers: int,
                iterations: int, episodes: int, max_sumo_seconds: float,
-               horizon_s: float | None = None, update_threads: int = 16) -> list[str]:
+               horizon_s: float | None = None, update_threads: int = 16,
+               lane_head: str | None = None) -> list[str]:
     argv = [python, "-u", "-m", "wms.control.mappo.train", "--config", str(config),
             "--out", str(out)]
     if init:
         argv += ["--init-from", str(init)]
+        if lane_head:
+            argv += ["--init-lane-head", lane_head, "--init-lane-head-seed", str(LANE_HEAD_SEED)]
     argv += ["--update-threads", str(update_threads), "--workers", str(workers),
              "--iterations", str(iterations), "--episodes-per-iteration", str(episodes)]
     if horizon_s is not None:
@@ -147,19 +153,27 @@ def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python
     wall_cap_s = int((wall_cap_h if wall_cap_h else max(2.0, 1.5 * high_h)) * 3600)
     if phase_cap_sim_s is not None and q["planned_sim_s"] + q["smoke_sim_s"] + other_charges_sim_s > phase_cap_sim_s:
         raise SystemExit("planned production + smoke + other charges exceed the registered phase cap")
+    lane_control = cfg.get("policy", {}).get("lane_control", "learned")
+    lane_head = q.get("lane_head")
+    if (lane_head is not None) != (lane_control == "learned"):
+        raise SystemExit(f"option {option!r} (lane_head={lane_head}) does not match the config "
+                         f"lane_control={lane_control!r}")
     production = train_argv(python, config, run_dir / "production", init=init, workers=workers,
                             iterations=q["iterations"], episodes=Q.EPISODES,
                             max_sumo_seconds=q["controlled_s"],
-                            update_threads=int(rollout.get("update_threads", 16)))
+                            update_threads=int(rollout.get("update_threads", 16)), lane_head=lane_head)
     smoke = train_argv(python, config, run_dir / "smoke", init=init, workers=SMOKE["workers"],
                        iterations=SMOKE["iterations"], episodes=SMOKE["episodes"],
                        max_sumo_seconds=SMOKE["max_sumo_seconds"], horizon_s=SMOKE["horizon_s"],
-                       update_threads=int(rollout.get("update_threads", 16)))
+                       update_threads=int(rollout.get("update_threads", 16)), lane_head=lane_head)
     return {
         "schema": "nm_mappo.plan.v1", "task": "N7", "option": option, "host": host,
         "run_dir": str(run_dir), "code_root": str(CODE), "source_commit": git_head(),
         "config": {"path": str(config), "sha256_lf": sha256_text_lf(config)},
-        "init": init_record, "binding": binding.record(), "sumo_allowed": not binding.is_stub,
+        "init": {**init_record, "lane_head": lane_head,
+                 "lane_head_seed": LANE_HEAD_SEED if lane_head else None},
+        "lane_control": lane_control, "lane_actions": cfg.get("policy", {}).get("lane_actions"),
+        "binding": binding.record(), "sumo_allowed": not binding.is_stub,
         "seeds": rollout["seeds"], "workers": workers,
         "iterations": q["iterations"], "episodes_per_iteration": Q.EPISODES,
         "max_sumo_seconds_controlled": q["controlled_s"],
@@ -213,6 +227,9 @@ def verify_plan(run_dir: Path, *, check_init: bool = True, plan_name: str = "PLA
 
 def smoke_passed(run_dir: Path) -> tuple[bool, str]:
     smoke = run_dir / "smoke"
+    lane_on = False
+    if (run_dir / "PLAN.json").exists():
+        lane_on = json.loads((run_dir / "PLAN.json").read_text()).get("lane_control") == "learned"
     try:
         summary = json.loads((smoke / "RUN_SUMMARY.json").read_text())
         rows = [json.loads(s) for s in (smoke / "log.jsonl").read_text().splitlines() if s.strip()]
@@ -224,8 +241,10 @@ def smoke_passed(run_dir: Path) -> tuple[bool, str]:
     if len(its) != SMOKE["iterations"] or its[0].get("episodes") != SMOKE["episodes"]:
         return False, "smoke must have exactly 1 iteration of 2 episodes"
     it = its[0]
-    for key in ("failed_episodes", "collisions", "teleports", "lane_commands_issued",
-                "policy_lane_change_rate"):
+    keys = ("failed_episodes", "collisions", "teleports")
+    if not lane_on:              # speed-only: no lane command at all; lane-on: commands expected
+        keys += ("lane_commands_issued", "policy_lane_change_rate")
+    for key in keys:
         if (it.get(key) or 0) != 0:
             return False, f"smoke {key} = {it.get(key)}"
     if any(r.get("type") == "failure" for r in rows):
@@ -272,7 +291,7 @@ def cmd_plan(a) -> int:
     run_dir.mkdir(parents=True, exist_ok=True)
     plan = make_plan(option=a.option, host=a.host, run_dir=run_dir, init=a.init,
                      python=a.python, sumo_home=a.sumo_home, workers=a.workers,
-                     allow_stub=a.allow_stub, wall_cap_h=a.wall_cap_h,
+                     allow_stub=a.allow_stub, wall_cap_h=a.wall_cap_h, config=Path(a.config),
                      phase_cap_sim_s=a.phase_cap_sim_s, other_charges_sim_s=a.other_charges_sim_s,
                      ledger=a.ledger)
     write_json_new(run_dir / "PLAN.json", plan)
@@ -295,6 +314,9 @@ def cmd_check(a) -> int:
         if sha256_file(plan["init"]["path"]) != plan["init"]["sha256"]:
             raise SystemExit("init checkpoint sha256 != MAPPO u0 d9042cc5...")
         argv += ["--init-from", plan["init"]["path"]]
+        if plan["init"].get("lane_head"):
+            argv += ["--init-lane-head", plan["init"]["lane_head"],
+                     "--init-lane-head-seed", str(plan["init"]["lane_head_seed"])]
     env = dict(os.environ, PYTHONPATH=os.pathsep.join([str(CODE / "src"), str(CODE)]))
     rc = subprocess.call(argv, cwd=CODE, env=env)
     print(json.dumps({"check": str(out), "rc": rc, "sim_s": 0}))
@@ -461,6 +483,7 @@ def parse(argv=None):
     p.add_argument("--sumo-home", default=os.environ.get("SUMO_HOME"))
     p.add_argument("--workers", type=int, default=None)
     p.add_argument("--allow-stub", action="store_true")
+    p.add_argument("--config", default=str(CONFIG))
     p.add_argument("--wall-cap-h", type=float, default=None)
     p.add_argument("--phase-cap-sim-s", type=float, default=None)
     p.add_argument("--other-charges-sim-s", type=float, default=0.0,

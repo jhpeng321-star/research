@@ -60,6 +60,9 @@ OPTIONS = {
     "mappowz167_u0": dict(iterations=167, init="u0",
                           purpose="S-MAPPOWZ production after the failed attempt-1 precharge (22,260) is kept "
                                   "charged: 167 iterations keep the phase <= 7,000,000"),
+    "mappowzl168_u0fresh": dict(iterations=168, init="u0", lane_head="fresh", lane_factor=(1.05, 1.5),
+                                purpose="S-MAPPOWZL lane-capable comparator (owner 18:02 'option 1'): the S-MAPPOWZ "
+                                        "recipe with the lane head ON (fresh on u0) and the LCEXEC lane action set"),
     "full169_scratch": dict(iterations=169, init="scratch",
                             purpose="same budget from a fresh actor (weaker: the original actor had ~14M sim-s "
                                     "of merge-map MAPPO history before its 169 speed-only iterations)"),
@@ -94,9 +97,12 @@ def option_quote(name: str, *, factor_low: float = 1.0, factor_high: float = 1.3
     it = int(opt["iterations"])
     controlled = it * EPISODES * HORIZON_S
     planned = it * EPISODES * EPISODE_SIM_S
-    walls = {host: [round(it * iteration_wall_s(host, f) / 3600.0, 2) for f in (factor_low, factor_high)]
+    lf = opt.get("lane_factor", (1.0, 1.0))
+    walls = {host: [round(it * iteration_wall_s(host, f) * g / 3600.0, 2)
+                    for f, g in ((factor_low, lf[0]), (factor_high, lf[1]))]
              for host in HOSTS}
-    return {"option": name, "init": opt["init"], "iterations": it, "episodes": it * EPISODES,
+    return {"option": name, "init": opt["init"], "lane_head": opt.get("lane_head"),
+            "iterations": it, "episodes": it * EPISODES,
             "controlled_s": controlled, "max_sumo_seconds_flag": controlled,
             "planned_sim_s": planned, "smoke_sim_s": SMOKE_SIM_S,
             "planned_total_sim_s": planned + SMOKE_SIM_S,

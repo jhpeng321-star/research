@@ -100,7 +100,23 @@ def panel_sha256(panel) -> str:
     return hashlib.sha256(json.dumps(panel, sort_keys=True).encode()).hexdigest()
 
 
-def load_actor(path, lanes_cfg=None):
+class LaneActor:
+    """Deterministic lane-on MAPPO actor = the TRAINING execution path (``ActorStep``) with the
+    configured lane-action provider; returns (command [1,K] NaN off-CAV, lane targets [1,K])."""
+
+    def __init__(self, policy, encoder, rules, provider):
+        from wms.control.mappo.agent import ActorStep
+        self.step = ActorStep(policy, encoder, rules, lane_actions=provider)
+
+    def reset(self):
+        self.step.reset()
+
+    def __call__(self, state, *, with_lanes: bool = True):
+        out = self.step(state, deterministic=True)
+        return out["command"], out["lanes"]
+
+
+def load_actor(path, lanes_cfg=None, lane_actions=None):
     """``PolicyExecutor`` (deterministic) from a MAPPO export or trainer checkpoint.
 
     Lane rules come from the run config ``[lanes]`` (= the original MAPPO rules; a speed-only
@@ -127,7 +143,11 @@ def load_actor(path, lanes_cfg=None):
     clash = sorted(k for k in stored if k in mine and stored[k] != mine[k])
     if clash and lane_control != "native":
         raise ValueError(f"payload lane rules differ from the config on {clash}")
-    exe = PolicyExecutor(policy, encoder, lane_rules=rules, deterministic=True)
+    if lane_control == "learned" and lane_actions:
+        from wms.control.mappo.rollout import load_lane_actions
+        exe = LaneActor(policy, encoder, rules, load_lane_actions(lane_actions))
+    else:
+        exe = PolicyExecutor(policy, encoder, lane_rules=rules, deterministic=True)
     exe.payload_lane_rules_extra = sorted(set(stored) - set(mine))
     return exe, lane_control
 
@@ -144,7 +164,8 @@ def run_arm(job: dict) -> dict:
     try:
         env = build_env(job["spec"])
         exe, lane_control = ((None, "native") if arm == "native"
-                             else load_actor(job["policy"], job.get("lanes")))
+                             else load_actor(job["policy"], job.get("lanes"), job.get("lane_actions")))
+        row["lane_control"] = lane_control
         state = env.reset(seed=world["seed"], demand_vph=world["demand_vph"],
                           penetration=world["penetration"], warmup_s=world["warmup_s"],
                           horizon_s=world["horizon_s"])
@@ -206,7 +227,7 @@ def summarize(rows: list[dict], arms: list[str]) -> dict:
     for treat, ref in pairs:
         paired[f"{treat}-{ref}"] = {m: bootstrap_ci([by[(w, treat)][m] - by[(w, ref)][m] for w in complete])
                                     for m in ("total_wait", "delay", "source_wait", "hard_brake")}
-    speed_only = [r for r in ok if r["arm"] != "native"]
+    speed_only = [r for r in ok if r.get("lane_control", "native") == "native"]
     s1 = (all((r.get("collisions") or 0) == 0 and (r.get("teleports") or 0) == 0
               and (r.get("dropped_vehicle_steps") or 0) == 0 for r in ok)
           and all(r.get("lane_commands_issued", 0) == 0 for r in speed_only))
@@ -267,6 +288,7 @@ def main(argv=None) -> int:
     weights = dict(cfg.get("reward_weights", {}))
     jobs = [{"world": w, "arm": arm, "spec": spec, "reward_weights": weights,
              "lanes": dict(cfg.get("lanes", {})),
+             "lane_actions": cfg.get("policy", {}).get("lane_actions"),
              "policy": policies.get(arm), "policy_sha256": hashes.get(arm)}
             for w in panel for arm in arms]
     if a.workers > 1:

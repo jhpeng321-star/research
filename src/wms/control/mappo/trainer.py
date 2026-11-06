@@ -228,6 +228,7 @@ class MappoTrainer:
     def _spec(self) -> dict:
         return {**self.env_spec, "lane_rules": asdict(self.cfg.lane_rules),
                 "lane_control": getattr(self.policy, "lane_control", "learned"),
+                **({"lane_actions": self.meta["lane_actions"]} if self.meta.get("lane_actions") else {}),
                 "reward_weights": asdict(self.weights)}
 
     def _checkpoint(self) -> dict:
@@ -383,7 +384,8 @@ class MappoTrainer:
                             "log": self._truncate_log(int(state.get("log_offset", 0)))}
         return True
 
-    def init_from_checkpoint(self, path: Path | str, lagrange: str = "carry") -> dict:
+    def init_from_checkpoint(self, path: Path | str, lagrange: str = "carry", *,
+                             lane_head_init: str | None = None, lane_head_seed: int = 0) -> dict:
         """Warm start a FRESH run from existing weights (``--init-from``).
 
         ``path`` is a trainer checkpoint (``checkpoints/ckpt_XXXXX.pt``: policy, group_encoder
@@ -396,6 +398,8 @@ class MappoTrainer:
         log row, RUN_SUMMARY, checkpoints) and is returned."""
         if lagrange not in ("carry", "reset"):
             raise ValueError("lagrange must be 'carry' or 'reset'")
+        if lane_head_init not in (None, "fresh"):
+            raise ValueError("lane_head_init must be None or 'fresh'")
         if self._checkpoints() or (self.ckpt_dir / "LATEST").exists():
             raise RuntimeError(f"--init-from needs a fresh run directory; {self.ckpt_dir} "
                                "already has checkpoints")
@@ -410,7 +414,24 @@ class MappoTrainer:
         if getattr(self.policy, "lane_control", "learned") == "native":
             removed = sorted(k for k in policy_state if k.startswith("lane_head."))
             policy_state = {k: v for k, v in policy_state.items() if k not in removed}
-        # Only the independent lane branch may be removed; all retained weights
+        fresh = {}
+        if getattr(self.policy, "has_lane_head", False) and not any(
+                k.startswith("lane_head.") for k in policy_state):
+            # Speed-only source (e.g. MAPPO u0) into a lane-on actor: ONLY the independent lane
+            # branch is new.  Explicit opt-in; seeded constructor-equivalent init (first layer
+            # default init, last layer zero = uniform over the feasible choices).
+            if lane_head_init != "fresh":
+                raise ValueError(f"{path}: source has no lane head; pass lane_head_init='fresh' "
+                                 "(--init-lane-head fresh) to start the lane head fresh")
+            with torch.random.fork_rng(devices=[]):
+                torch.manual_seed(int(lane_head_seed))
+                self.policy.lane_head[0].reset_parameters()
+            torch.nn.init.zeros_(self.policy.lane_head[-1].weight)
+            torch.nn.init.zeros_(self.policy.lane_head[-1].bias)
+            fresh = {k: v.detach().clone() for k, v in self.policy.state_dict().items()
+                     if k.startswith("lane_head.")}
+            policy_state = {**policy_state, **fresh}
+        # Only the independent lane branch may be removed / freshly added; all retained weights
         # still load strictly (no silent architecture/observation mismatch).
         self.policy.load_state_dict(policy_state, strict=True)
         _warn_accel_override(path, configured, getattr(self.policy, "accel_max", None))
@@ -427,6 +448,10 @@ class MappoTrainer:
             alpha_note = "reset to fresh"
         record = {"path": str(path), "sha256": sha256_file(path),
                   "lane_head_removed_keys": removed,
+                  "lane_head_fresh": ({"seed": int(lane_head_seed), "keys": sorted(fresh),
+                                       "sha256": hashlib.sha256(b"".join(
+                                           fresh[k].numpy().tobytes() for k in sorted(fresh))).hexdigest()}
+                                      if fresh else None),
                   "kind": "trainer_checkpoint" if is_trainer else "exported_actor",
                   "source_iteration": state.get("iteration"),
                   "critic": "loaded" if is_trainer else "fresh",
