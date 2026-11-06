@@ -176,7 +176,8 @@ def init(root, cap=CAP):
     return value
 
 
-def plan(root, *, config, u0, u0_sha256=None, seeds=SEEDS, arms=ARMS):
+def plan(root, *, config, u0, u0_sha256=None, cells=((CELL[0], CELL[1], SEEDS),), arms=ARMS, identity=True):
+    """cells: [(demand, penetration, seeds)] in run order (seed-major inside a cell)."""
     import shutil
     root = ir.guard_path(root)
     reg = ir.registration(root)
@@ -189,12 +190,17 @@ def plan(root, *, config, u0, u0_sha256=None, seeds=SEEDS, arms=ARMS):
         files[name] = dict(source=str(src), sha256=ir.sha_file(root/'inputs'/name))
     if u0_sha256 and files['u0.pt']['sha256'] != u0_sha256:
         raise ValueError('MAPPO u0 identity differs')
-    groups = [dict(stage='identity', jobs=[dict(id=f'identity_s{IDENTITY["seed"]}_u0', arm='u0', strategy=None,
-                                              world=world_of(IDENTITY['seed']), sim_s=EPISODE_S)])]
-    for s in seeds:
-        w = world_of(int(s))
-        groups.append(dict(stage='paired', jobs=[dict(id=f's{s}_{a}', arm=a, strategy=None if a == 'u0' else a,
-                                                      world=w, sim_s=EPISODE_S) for a in arms]))
+    groups = []
+    if identity:
+        groups.append(dict(stage='identity', jobs=[dict(id=f'identity_s{IDENTITY["seed"]}_u0', arm='u0', strategy=None,
+                                                        world=world_of(IDENTITY['seed']), sim_s=EPISODE_S)]))
+    for demand, pen, seeds in cells:
+        for s in seeds:
+            w = world_of(int(s), int(demand), float(pen))
+            prefix = '' if (int(demand), float(pen)) == CELL else f'{w["cell_key"]}_'
+            groups.append(dict(stage='paired', cell=w['cell_key'], jobs=[
+                dict(id=f'{prefix}s{s}_{a}', arm=a, strategy=None if a == 'u0' else a, world=w, sim_s=EPISODE_S)
+                for a in arms]))
     body = dict(schema=SCHEMA+'.plan', stable_id=STABLE_ID, phase=PHASE, cap_sim_s=reg['cap_sim_s'], inputs=files,
                 groups=groups, planned_sim_s=sum(j['sim_s'] for g in groups for j in g['jobs']),
                 module_sha256=ir.sha_file(__file__), unix=time.time())
@@ -269,11 +275,12 @@ def worker(root, ident):
     return summary
 
 
-def run(root, *, workers=16, load_high=44.0, low_workers=8, poll_s=5.0, python=None):
+def run(root, *, workers=16, load_high=44.0, low_workers=8, poll_s=5.0, python=None, normal_priority=False):
     root = Path(root)
     body = ir._read(root/'PLAN.json')
-    if os.name != 'nt' and (os.getpriority(os.PRIO_PROCESS, 0) != 19 or os.environ.get('CUDA_VISIBLE_DEVICES') != ''):
-        raise ValueError('run under nice 19 with CUDA_VISIBLE_DEVICES=')
+    if os.name != 'nt' and ((not normal_priority and os.getpriority(os.PRIO_PROCESS, 0) != 19)
+                            or os.environ.get('CUDA_VISIBLE_DEVICES') != ''):
+        raise ValueError('run under nice 19 (unless MAIN allowed normal priority) with CUDA_VISIBLE_DEVICES=')
     python = python or sys.executable
     log = (root/'DISPATCH.jsonl').open('a', encoding='utf-8')
 
@@ -335,84 +342,85 @@ def boot_ci(diffs, *, n=BOOT, seed=BOOT_SEED):
     return means[int(.025*n)], means[int(.975*n)-1]
 
 
-def analyze(root):
-    root = Path(root)
-    body = ir._read(root/'PLAN.json')
+def analyze(roots):
+    """Merge the paired groups of one or more roots (any host copy); statistics per cell."""
+    roots = [Path(r) for r in ([roots] if isinstance(roots, (str, Path)) else roots)]
+    rep = dict(schema=SCHEMA+'.analysis', roots=[str(r) for r in roots], spent=sum(ir.spent(r) for r in roots),
+               plan_sha256=[ir._read(r/'PLAN.json')['plan_sha256'] for r in roots], cells={}, seeds=[])
+    for root in roots:
+        body = ir._read(root/'PLAN.json')
 
-    def load(ident):
-        p = root/'jobs'/ident/'SUMMARY.json.gz'
-        return ir._read(p) if p.exists() else None
+        def load(ident):
+            p = root/'jobs'/ident/'SUMMARY.json.gz'
+            return ir._read(p) if p.exists() else None
 
-    rep = dict(schema=SCHEMA+'.analysis', plan_sha256=body['plan_sha256'], spent=ir.spent(root), arms={}, seeds=[])
-    ident = load(body['groups'][0]['jobs'][0]['id'])
-    if ident is not None:
-        tot = (ident.get('totals') or {}).get('team_delay_vs')
-        rep['identity'] = dict(team_delay_vs=tot, expected=IDENTITY['expected_team_delay_vs'],
-                               equal=tot is not None and abs(tot-IDENTITY['expected_team_delay_vs']) < 1e-6,
-                               error=(ident.get('error') or {}).get('error'))
-    per = {}
-    for g in body['groups']:
-        if g['stage'] != 'paired':
-            continue
-        sums = {j['arm']: load(j['id']) for j in g['jobs']}
-        seed = g['jobs'][0]['world']['seed']
-        base = sums.get('u0')
-        row = dict(seed=seed, arms={})
-        for arm, s in sums.items():
-            if s is None:
-                row['arms'][arm] = dict(status='not_run')
+        for g in body['groups']:
+            if g['stage'] == 'identity':
+                s = load(g['jobs'][0]['id'])
+                if s is not None:
+                    tot = (s.get('totals') or {}).get('team_delay_vs')
+                    rep['identity'] = dict(team_delay_vs=tot, expected=IDENTITY['expected_team_delay_vs'],
+                                           equal=tot is not None and abs(tot-IDENTITY['expected_team_delay_vs']) < 1e-6,
+                                           error=(s.get('error') or {}).get('error'))
                 continue
-            if s.get('error'):
-                row['arms'][arm] = dict(status='failed', error=s['error']['error'][:200])
-                continue
-            j = control_j(s)
-            safety = ir.safety(s)
-            rec = dict(status='ok', J=j, totals=s.get('totals'), safety=safety,
-                       activations=len(s.get('activations') or ()), lane_held_steps=s.get('lane_held_steps'),
-                       lane_outcome=s.get('lane_outcome'))
-            if arm != 'u0' and base is not None and not base.get('error'):
-                rec['diff'] = j-control_j(base)
-                rec['first_divergence_s'] = ir.first_divergence(base, s)
-                first_act = min((a['t'] for a in s.get('activations') or ()), default=None)
-                rec['first_activation_s'] = first_act
-                rec['crn_ok'] = rec['first_divergence_s'] is None or (first_act is not None
-                                                                       and rec['first_divergence_s'] >= first_act)
-            row['arms'][arm] = rec
-            per.setdefault(arm, []).append(rec)
-        rep['seeds'].append(row)
-    for arm in ARMS:
-        recs = [r for r in per.get(arm, ()) if r.get('status') == 'ok']
-        out = dict(n=len(recs), mean_J=(sum(r['J'] for r in recs)/len(recs)) if recs else None)
-        if arm != 'u0':
-            diffs = [r['diff'] for r in recs if r.get('diff') is not None]
-            if diffs:
+            sums = {j['arm']: load(j['id']) for j in g['jobs']}
+            w = g['jobs'][0]['world']
+            base = sums.get('u0')
+            row = dict(seed=w['seed'], cell=w['cell_key'], root=str(root), arms={})
+            for arm, s in sums.items():
+                if s is None:
+                    row['arms'][arm] = dict(status='not_run')
+                    continue
+                if s.get('error'):
+                    row['arms'][arm] = dict(status='failed', error=s['error']['error'][:200])
+                    continue
+                rec = dict(status='ok', J=control_j(s), totals=s.get('totals'), safety=ir.safety(s),
+                           activations=len(s.get('activations') or ()), lane_held_steps=s.get('lane_held_steps'))
+                if arm != 'u0' and base is not None and not base.get('error'):
+                    rec['diff'] = rec['J']-control_j(base)
+                    rec['first_divergence_s'] = ir.first_divergence(base, s)
+                    first_act = min((a['t'] for a in s.get('activations') or ()), default=None)
+                    rec['first_activation_s'] = first_act
+                    rec['crn_ok'] = rec['first_divergence_s'] is None or (
+                        first_act is not None and rec['first_divergence_s'] >= first_act)
+                row['arms'][arm] = rec
+            rep['seeds'].append(row)
+    for cell in sorted({r['cell'] for r in rep['seeds']}):
+        rows = [r for r in rep['seeds'] if r['cell'] == cell]
+        out = {}
+        for arm in ARMS:
+            recs = [r['arms'][arm] for r in rows if r['arms'].get(arm, {}).get('status') == 'ok']
+            a = dict(n=len(recs), mean_J=(sum(x['J'] for x in recs)/len(recs)) if recs else None,
+                     failed=sum(r['arms'].get(arm, {}).get('status') == 'failed' for r in rows))
+            diffs = [x['diff'] for x in recs if x.get('diff') is not None]
+            if arm != 'u0' and diffs:
                 lo, hi = boot_ci(diffs)
-                out.update(n_paired=len(diffs), mean_diff=sum(diffs)/len(diffs), ci95=[lo, hi],
-                           harm_rate=sum(d > 0 for d in diffs)/len(diffs),
-                           rel_diff=(sum(diffs)/len(diffs))/out['mean_J'] if False else None,
-                           crn_ok=sum(bool(r.get('crn_ok')) for r in recs), mean_activations=sum(
-                               r['activations'] for r in recs)/len(recs))
-        for k in ('collisions', 'teleports', 'ttc_below_3_vs', 'hard_brake'):
-            vals = [r['safety'].get(k) for r in recs if r['safety'].get(k) is not None]
-            out[k] = sum(vals) if vals else None
-        rep['arms'][arm] = out
-    base_mean = rep['arms'].get('u0', {}).get('mean_J')
-    for arm, out in rep['arms'].items():
-        if arm != 'u0' and out.get('mean_diff') is not None and base_mean:
-            out['rel_diff'] = out['mean_diff']/base_mean
-    # group vs best solo strategy (best solo re-chosen inside every resample, S-REGIME rule)
-    ok = [r for r in rep['seeds'] if all(r['arms'].get(a, {}).get('status') == 'ok' for a in ARMS)]
-    if ok:
-        rng = random.Random(BOOT_SEED)
-        solos = [a for a in ARMS if 'solo' in a]
+                a.update(n_paired=len(diffs), mean_diff=sum(diffs)/len(diffs), ci95=[lo, hi],
+                         benefit_rate=sum(d < 0 for d in diffs)/len(diffs), harm_rate=sum(d > 0 for d in diffs)/len(diffs),
+                         crn_ok=sum(bool(x.get('crn_ok')) for x in recs),
+                         mean_activations=sum(x['activations'] for x in recs)/len(recs))
+            for k in ('collisions', 'teleports', 'ttc_below_3_vs', 'hard_brake'):
+                vals = [x['safety'].get(k) for x in recs if x['safety'].get(k) is not None]
+                a[k] = sum(vals) if vals else None
+                a[k+'_mean'] = (sum(vals)/len(vals)) if vals else None
+            out[arm] = a
+        base_mean = out.get('u0', {}).get('mean_J')
+        for arm, a in out.items():
+            if arm != 'u0' and a.get('mean_diff') is not None and base_mean:
+                a['rel_diff'] = a['mean_diff']/base_mean
+                a['rel_ci95'] = [a['ci95'][0]/base_mean, a['ci95'][1]/base_mean]
+        ok = [r for r in rows if all(r['arms'].get(x, {}).get('status') == 'ok' for x in ARMS)]
+        if ok:
+            rng = random.Random(BOOT_SEED)
+            solos = [x for x in ARMS if 'solo' in x]
 
-        def stat(rows):
-            mean = {a: sum(r['arms'][a]['J'] for r in rows)/len(rows) for a in ('wall_h', *solos)}
-            return mean['wall_h']-min(mean[a] for a in solos)
-        point = stat(ok)
-        draws = sorted(stat([ok[rng.randrange(len(ok))] for _ in ok]) for _ in range(BOOT))
-        rep['group_minus_best_solo'] = dict(point=point, ci95=[draws[int(.025*BOOT)], draws[int(.975*BOOT)-1]],
-                                            n=len(ok), solos=solos)
+            def stat(rs):
+                mean = {x: sum(r['arms'][x]['J'] for r in rs)/len(rs) for x in ('wall_h', *solos)}
+                return mean['wall_h']-min(mean[x] for x in solos)
+            draws = sorted(stat([ok[rng.randrange(len(ok))] for _ in ok]) for _ in range(BOOT))
+            out['group_minus_best_solo'] = dict(point=stat(ok), ci95=[draws[int(.025*BOOT)], draws[int(.975*BOOT)-1]],
+                                                n=len(ok), solos=solos)
+        rep['cells'][cell] = out
     return rep
 
 
@@ -427,7 +435,10 @@ def main(argv=None):
     a.add_argument('--config', required=True)
     a.add_argument('--u0', required=True)
     a.add_argument('--u0-sha256')
+    a.add_argument('--cells', nargs='*', help='demand:share:first-last, e.g. 3200:0.6:989866-989873')
+    a.add_argument('--no-identity', action='store_true')
     a = sub.add_parser('run')
+    a.add_argument('--normal-priority', action='store_true', help='MAIN 19:4x: cpuV free, normal priority allowed')
     a.add_argument('--root', required=True)
     a.add_argument('--workers', type=int, default=16)
     a.add_argument('--low-workers', type=int, default=8)
@@ -436,16 +447,25 @@ def main(argv=None):
     a.add_argument('--root', required=True)
     a.add_argument('--job', required=True)
     a = sub.add_parser('analyze')
-    a.add_argument('--root', required=True)
+    a.add_argument('--root', required=True, nargs='+')
     a.add_argument('--out')
     args = p.parse_args(argv)
     if args.cmd == 'init':
         print(json.dumps(init(args.root, args.cap), indent=1))
     elif args.cmd == 'plan':
-        body = plan(args.root, config=args.config, u0=args.u0, u0_sha256=args.u0_sha256)
+        cells = ((CELL[0], CELL[1], SEEDS),)
+        if args.cells:
+            cells = []
+            for c in args.cells:
+                d, sh, span = c.split(':')
+                lo, hi = (int(x) for x in span.split('-'))
+                cells.append((int(d), float(sh), tuple(range(lo, hi+1))))
+        body = plan(args.root, config=args.config, u0=args.u0, u0_sha256=args.u0_sha256, cells=cells,
+                    identity=not args.no_identity)
         print(json.dumps(dict(plan_sha256=body['plan_sha256'], planned_sim_s=body['planned_sim_s']), indent=1))
     elif args.cmd == 'run':
-        print(run(args.root, workers=args.workers, load_high=args.load_high, low_workers=args.low_workers))
+        print(run(args.root, workers=args.workers, load_high=args.load_high, low_workers=args.low_workers,
+                  normal_priority=args.normal_priority))
     elif args.cmd == 'worker':
         s = worker(args.root, args.job)
         print(json.dumps(dict(id=s['id'], error=bool(s['error']), totals=s['totals'], acts=len(s['activations']))))
@@ -454,8 +474,11 @@ def main(argv=None):
         text = json.dumps(rep, indent=1, sort_keys=True, default=str)
         if args.out:
             Path(args.out).write_text(text+'\n', encoding='utf-8')
-        print(json.dumps(dict(identity=rep.get('identity'), arms=rep['arms'],
-                              group_minus_best_solo=rep.get('group_minus_best_solo')), indent=1, default=str))
+        keys = ('n', 'mean_J', 'mean_diff', 'ci95', 'rel_diff', 'harm_rate', 'benefit_rate', 'collisions',
+                'teleports', 'crn_ok', 'failed')
+        brief = {c: {arm: ({k: v[k] for k in keys if k in v} if arm != 'group_minus_best_solo' else v)
+                     for arm, v in arms.items()} for c, arms in rep['cells'].items()}
+        print(json.dumps(dict(identity=rep.get('identity'), cells=brief), indent=1, default=str))
 
 
 if __name__ == '__main__':

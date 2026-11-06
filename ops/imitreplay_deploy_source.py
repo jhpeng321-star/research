@@ -51,6 +51,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('worktree')
     ap.add_argument('commit')
+    ap.add_argument('--host', default='cpuV')
     a = ap.parse_args()
     commit = subprocess.check_output(['git', '-C', a.worktree, 'rev-parse', a.commit], text=True).strip()
     name = f'src_{commit[:8]}'
@@ -63,10 +64,10 @@ def main():
     local.write_bytes(blob)
     remote_tar = f'/home/ubuntu/imitreplay_20261106/{name}.tar.gz'
     subprocess.check_call(['scp', '-q', '-C', '-o', 'BatchMode=yes', '-o', 'ServerAliveInterval=15', str(local),
-                           f'cpuV:{remote_tar}'])
+                           f'{a.host}:{remote_tar}'])
     script = REMOTE.format(target=target, base=BASE, tarball=remote_tar, linked=' '.join(LINKED), commit=commit)
     # bytes, not text: Windows text-mode stdin would turn LF into CRLF inside the bash script
-    out = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ServerAliveInterval=15', 'cpuV', 'bash -s'],
+    out = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ServerAliveInterval=15', a.host, 'bash -s'],
                          input=script.replace(chr(13), '').encode(), capture_output=True)
     sys.stdout.write(out.stdout.decode(errors='replace'))
     sys.stderr.write(out.stderr.decode(errors='replace'))
