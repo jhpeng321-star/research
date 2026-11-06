@@ -74,13 +74,14 @@ def solo_key(spec):
 
 
 def evaluate_batch(wm, state, moves, K, H, seed, cavs, z, ledger, solos=True):
-    """One WM call: base + groups (+ every member's solo); returns per-move stats (CRN-paired)."""
+    """One WM call: base + groups (+ every member's solo); returns per-move stats (CRN-paired).
+    solos: True (all moves), False (none) or a set of move keys that get solos (S/M only for those)."""
     acts = [W.action('base', 'base', None, 'base', [], H)]
     gid, sid = {}, {}
     for i, mv in enumerate(moves):
         gid[mv['key']] = f'g{i}'
         acts.append(W.action(f'g{i}', 'group', mv['family'], mv['key'], mv['members'], H, cavs))
-        if solos:
+        if solos is True or (solos and mv['key'] in solos):
             for spec in mv['members']:
                 sk = solo_key(spec)
                 if sk not in sid:
@@ -94,7 +95,7 @@ def evaluate_batch(wm, state, moves, K, H, seed, cavs, z, ledger, solos=True):
     for mv in moves:
         g = np.asarray(out[gid[mv['key']]])
         rec = dict(move=mv, K=int(K), T=stat(base - g, z))
-        if solos:
+        if solos is True or (solos and mv['key'] in solos):
             so = np.stack([np.asarray(out[sid[solo_key(s)]]) for s in mv['members']])
             best = so.min(0)
             rec.update(S=stat(best - g, z), M=stat(np.minimum(base, best) - g, z),
@@ -292,7 +293,18 @@ def variant_move(vid, v):
                 params=v['params'], knob=None, vid=vid)
 
 
-def score_moments(wm, moments_path, out_path, *, K=8, H=300, z=1.645, source_root=None, sids=None):
+def labelled_solo_variants(summaries):
+    """(sid, variant) pairs whose solos SUMO ran (verdict S_r0 present): the S-labelled candidates."""
+    out = set()
+    for p in summaries:
+        for vd in json.loads(G.check_path(p).read_text())['verdicts']:
+            if vd.get('S_r0') is not None:
+                out.add((vd['sid'], vd['variant']))
+    return out
+
+
+def score_moments(wm, moments_path, out_path, *, K=8, H=300, z=1.645, source_root=None, sids=None,
+                  solo_variants=None):
     """WM predictions (T, S, M per CRN-paired draw) for every variant already in a MOMENTS.json, zero SUMO.
     Feeds the zero-SUMO WM ranking check (compare.rank_check) and the W3 labels (labels --wm-scores)."""
     moments_path, out_path = G.check_path(moments_path), G.check_path(out_path)
@@ -310,7 +322,10 @@ def score_moments(wm, moments_path, out_path, *, K=8, H=300, z=1.645, source_roo
             ledger = dict(calls=0, rollouts=0)
             try:
                 state = wm.observe(mi)
-                recs = evaluate_batch(wm, state, moves, K, H, mi['crn_seed'], mi['cavs'], z, ledger) if moves else []
+                solos = True if solo_variants is None else {mv['key'] for mv in moves
+                                                             if (m['sid'], mv['vid']) in solo_variants}
+                recs = evaluate_batch(wm, state, moves, K, H, mi['crn_seed'], mi['cavs'], z, ledger,
+                                      solos=solos) if moves else []
             except Exception as exc:          # receipted per moment, never silently dropped or retried
                 errors.append(dict(sid=m['sid'], error=repr(exc)[:500]))
                 fh.write(json.dumps(dict(schema='wmc-variant-scores-error-v1', sid=m['sid'],
@@ -320,11 +335,13 @@ def score_moments(wm, moments_path, out_path, *, K=8, H=300, z=1.645, source_roo
             for r in recs:
                 fh.write(json.dumps(dict(schema='wmc-variant-scores-v1', sid=m['sid'], variant=r['move']['vid'],
                                          family=r['move']['family'], members=r['move']['member_ids'],
-                                         wm=dict(T=r['T'], S=r['S'], M=r['M'], K=int(K), H=int(H),
-                                                 best_solo=r['best_solo'], solo_adv=r['solo_adv'], backend=wm.name)),
+                                         wm=dict(T=r['T'], S=r.get('S'), M=r.get('M'), K=int(K), H=int(H),
+                                                 best_solo=r.get('best_solo'), solo_adv=r.get('solo_adv'),
+                                                 backend=wm.name)),
                                     sort_keys=True) + '\n')
             fh.flush()
             n += len(recs)
             rollouts += ledger['rollouts']
     return dict(scores=str(out_path), n_variants=n, n_moments=len(moments), errors=errors, wm_rollouts=rollouts,
+                solos='all' if solo_variants is None else 'S-labelled only',
                 backend=wm.meta, wall_s=round(time.time() - t0, 2), new_sumo_sim_s=0)

@@ -143,6 +143,8 @@ def m_admitted_hit(rows, k, key='M_lcb'):
     for xs in by_moment([x for x in rows if not x['stranded']]).values():
         if not any(x['admitted'] for x in xs):
             continue
+        if key == 'M_lcb' and any(x['pM_lcb'] is None for x in xs):
+            continue                                   # M needs every candidate's solos (score --solos all)
         top = sorted(xs, key=lambda x: _score(x, key), reverse=True)[:k]
         hits.append(any(x['admitted'] for x in top))
     return (float(np.mean(hits)) if hits else None), len(hits)

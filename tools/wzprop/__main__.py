@@ -80,9 +80,12 @@ def score(argv):
     ap.add_argument('--H', type=int, default=300)
     ap.add_argument('--source-root')
     ap.add_argument('--sids')
+    ap.add_argument('--solos-labelled-by', action='append', help='summary JSON: solos only for its S-labelled variants')
     a = ap.parse_args(argv)
+    sv = PR.labelled_solo_variants(a.solos_labelled_by) if a.solos_labelled_by else None
     print(json.dumps(PR.score_moments(_backend(a), a.moments, a.out, K=a.K, H=a.H, source_root=a.source_root,
-                                      sids=a.sids.split(',') if a.sids else None), indent=1, default=str))
+                                      sids=a.sids.split(',') if a.sids else None, solo_variants=sv),
+                     indent=1, default=str))
 
 
 def wmrank(argv):
@@ -107,6 +110,8 @@ def wmrank(argv):
     ap.add_argument('--K', type=int, default=8)
     ap.add_argument('--H', type=int, default=300)
     ap.add_argument('--sids')
+    ap.add_argument('--solos', choices=('all', 'labelled'), default='all',
+                    help="'labelled': solos only for the summaries' S-labelled variants (cheaper)")
     ap.add_argument('--out', required=True, help='NEW directory')
     a = ap.parse_args(argv)
     out = G.check_path(a.out)
@@ -121,8 +126,9 @@ def wmrank(argv):
                         max_rows=a.max_rows)
     if a.checkpoint and not getattr(wm.handle, 'meta', {}).get('trained', True):
         raise SystemExit('loaded an untrained model')
+    sv = PR.labelled_solo_variants(a.summary) if a.solos == 'labelled' else None
     rec = PR.score_moments(wm, a.moments, out / 'SCORES.jsonl', K=a.K, H=a.H,
-                           sids=a.sids.split(',') if a.sids else None)
+                           sids=a.sids.split(',') if a.sids else None, solo_variants=sv)
     rec.update(handle_meta=getattr(wm.handle, 'meta', None), label=a.label, wall_s_total=round(time.time() - t0, 1),
                device=a.device, max_rows=a.max_rows,
                cuda_peak_gb=(round(torch.cuda.max_memory_allocated() / 2**30, 2) if a.device.startswith('cuda')
