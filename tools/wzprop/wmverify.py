@@ -436,9 +436,9 @@ def worker(root, ident):
     return summary
 
 
-def run(root, **kw):
+def run(root, phase=PHASE, **kw):
     """regimeu0.run (precharged ledger, cap, STOP file, load-aware dispatch); workers = this module; ledger phase
-    label wm_verify."""
+    label ``phase`` (wm_verify; hold_pin_check for tools.wzprop.holdpin)."""
     ir, R = _harness()
     import subprocess
     if _read(Path(root) / 'PLAN.json').get('dry_run'):
@@ -450,7 +450,7 @@ def run(root, **kw):
             cmd = [c if c != 'tools.coopmwm.regimeu0' else 'tools.wzprop.wmverify' for c in cmd]
         return real(cmd, *a, **k2)
     R.subprocess.Popen = popen
-    ir.PHASE = PHASE
+    ir.PHASE = phase
     try:
         return R.run(root, **kw)
     finally:

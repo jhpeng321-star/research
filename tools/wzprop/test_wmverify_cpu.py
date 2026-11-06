@@ -414,3 +414,57 @@ def test_n2_parity_hold_strategies():
     b = F.run_episode(VH.make_hook(solo2(), executor='n2'), seed=989950, seconds=SECONDS, record=True)
     assert [x['desired'] for x in a['trace']] == [x['desired'] for x in b['trace']]   # fake plant ignores lcMode
     assert any(x['g5'] for x in a['trace']) and not any(x['g5'] for x in b['trace'])
+
+
+def test_holdpin_plan_and_analysis(tmp_path):
+    """S-HOLDPIN: plan = identity + 72 unpinned solo2 episodes on the S-REGIMEU0 worlds (87,600 sim-s, executor n2);
+    analysis pairs them with REUSED regimeu0-format u0 / pinned summaries (CRN, diffs, lane leaving)."""
+    from tools.wzprop import holdpin as HP
+    reg_root = tmp_path / 'regimeu0'
+    (reg_root / 'inputs').mkdir(parents=True)
+    (reg_root / 'inputs' / 'CONFIG.json').write_text('{}')
+    (reg_root / 'inputs' / 'u0.pt').write_bytes(b'u0')
+    (reg_root / 'PLAN.json').write_text(json.dumps(dict(inputs={'u0.pt': dict(sha256=ir.sha_file(
+        reg_root / 'inputs' / 'u0.pt'))})))
+    text, planned = HP.registration_text('x')
+    reg = tmp_path / 'REGISTRATION.md'
+    reg.write_text(text, encoding='utf-8')
+    root = tmp_path / 'hp'
+    body = HP.plan(root, regimeu0_root=reg_root, registration_md=reg)
+    jobs = [j for g in body['groups'] for j in g['jobs']]
+    assert body['planned_sim_s'] == planned == 87_600 and len(jobs) == 73
+    assert {j['executor'] for j in jobs[1:]} == {'n2'} and jobs[0]['id'] == V.IDENTITY_JOB
+    assert {(j['world']['cell_key'], j['world']['seed']) for j in jobs[1:]} == {
+        (c, s) for c, _d, _p, seeds in HP.CELLS for s in seeds}
+    # fake summaries: reused comparators (regimeu0 format) + treatment with the n2 hook's lane receipts
+    ref = tmp_path / 'ref'
+    (ref / 'jobs').mkdir(parents=True)
+    groups = []
+    for seed in (989850, 989851):
+        w = R.world_of(seed)
+        js = [dict(id=f's{seed}_{a}', arm=a, strategy=None if a == 'u0' else a, world=w, sim_s=1200)
+              for a in ('u0', 'wall_h_solo2')]
+        groups.append(dict(stage='paired', cell=w['cell_key'], jobs=js))
+        for j in js:
+            hook = R.RuleHook(j['strategy'])
+            res = F.run_episode(hook, seed=seed, seconds=SECONDS)
+            (ref / 'jobs' / j['id']).mkdir()
+            with gzip.open(ref / 'jobs' / j['id'] / 'SUMMARY.json.gz', 'wt', encoding='utf-8') as f:
+                json.dump(_summary(hook, res, j), f)
+        tj = next(j for j in jobs if j['world']['seed'] == seed and j['world']['cell_key'] == 'D3200_p60')
+        hook = VH.make_hook(tj['strategy_spec'], executor='n2')
+        res = F.run_episode(hook, seed=seed, seconds=SECONDS)
+        (root / 'jobs' / tj['id']).mkdir(parents=True)
+        with gzip.open(root / 'jobs' / tj['id'] / 'SUMMARY.json.gz', 'wt', encoding='utf-8') as f:
+            json.dump(_summary(hook, res, tj), f)
+        (root / 'jobs' / tj['id'] / 'WMVERIFY.json').write_text(json.dumps(dict(receipts=hook.receipts())))
+    (ref / 'PLAN.json').write_text(json.dumps(dict(groups=groups)))
+    out = HP.analyze([root], [ref])
+    c = out['cells']['D3200_p60']
+    assert c['n'] == 2 and not c['crn_violations'] and c['same_first_activation_as_pinned'] == 2
+    # the fake plant ignores laneChangeMode: unpinned == pinned exactly, so the diff is 0 and the vs-u0 diff equals
+    # the pinned effect
+    assert c['unpinned_minus_pinned']['mean_diff'] == 0.0
+    assert c['unpinned_minus_u0']['mean_diff'] == pytest.approx(c['pinned_minus_u0_same_seeds']['mean_diff'])
+    assert c['lane_leaving']['holds'] > 0 and c['lane_leaving']['held_seconds'] > 0
+    assert out['integrity']['crn_ok'] and out['cells']['D2400_p60']['n'] == 0

@@ -224,6 +224,7 @@ def make_hook(strategy, warmup_s=300, executor=None):
             self.lc_vehicles = Counter()         # status counts of info['lc_lane_vehicles']
             self.lc_completed = 0
             self.cav_guard = 0
+            self.lane_track = {}                 # plant/n2: (act t, vid) -> own WM lane record during the hold
 
         @property
         def needs_lc_runtime(self):
@@ -244,7 +245,11 @@ def make_hook(strategy, warmup_s=300, executor=None):
             return 0 if self.core is None else self.core.lane_held
 
         def receipts(self):
+            tracks = list(self.lane_track.values())
             out = dict(executor=self.executor, lc_ticks=self.lc_ticks, lc_counts=dict(self.lc_counts),
+                       lane_track=dict(members=len(tracks), left_lane=sum(1 for x in tracks if x['off_ticks']),
+                                       held_ticks=sum(x['ticks'] for x in tracks),
+                                       off_ticks=sum(x['off_ticks'] for x in tracks), records=tracks[:60]),
                        lc_vehicle_status=dict(self.lc_vehicles), lc_completed=self.lc_completed,
                        activations=len(self.acts), cav_guard_checks=self.cav_guard,
                        refused_activations=sum(1 for a in self.acts if a.get('executor_refused')))
@@ -267,6 +272,21 @@ def make_hook(strategy, warmup_s=300, executor=None):
                     self.pending = self.exe.step(rows, commands, t)
                     return desired
                 accel, lanes = self.core.step(rows, commands, t)          # WM-C strategy_hook path, unchanged
+                by = {r['vid']: r for r in rows if r.get('is_cav')}
+                for vid, m in self.core.active.items():                    # observability only (no command)
+                    row = by.get(vid)
+                    if row is None:
+                        continue
+                    rec = self.lane_track.setdefault((m['start'], vid), dict(
+                        t=int(m['start']), vid=vid, lane0=int(row['lane']), ticks=0, off_ticks=0,
+                        first_off_el=None, lanes=[]))
+                    rec['ticks'] += 1
+                    if int(row['lane']) != rec['lane0']:
+                        rec['off_ticks'] += 1
+                        if rec['first_off_el'] is None:
+                            rec['first_off_el'] = t - int(m['start'])
+                    if not rec['lanes'] or rec['lanes'][-1] != int(row['lane']):
+                        rec['lanes'].append(int(row['lane']))
                 bad = (set(accel) | set(lanes)) - cav
                 if bad:
                     raise RuntimeError(f'S-WMVERIFY: request for non-CAV rows {sorted(bad)} (HDVs never commanded)')
