@@ -115,6 +115,36 @@ def normalize(raw, actions, K, H):
     return out
 
 
+GROUPS = ('lane0', 'lane1', 'lane2', 'hdv', 'cav', 'all')
+FAIR_GROUPS = ('lane0', 'lane1', 'lane2', 'hdv', 'cav')     # registered fairness groups: SUMO origin lane, class
+
+
+class FairnessUnavailable(WMContractError):
+    """The WM cannot report per-group predicted delay (no trace masks / group_delay)."""
+
+
+def groups_from_trace(trace, actions, K, dt=0.5, v_lim=G.SPEED_LIMIT):
+    """{aid: {group: [J_k]}} from a planapi trace (rows, speeds, masks, is_cav, origin_lane per chunk)."""
+    import numpy as np
+    need = ('rows', 'speeds', 'masks', 'is_cav', 'origin_lane')
+    if any(k not in trace for k in need):
+        raise FairnessUnavailable(f'trace lacks {[k for k in need if k not in trace]}')
+    aids = [a['id'] for a in actions]
+    out = {aid: {g: [None] * int(K) for g in GROUPS} for aid in aids}
+    rows = list(trace['rows'])
+    speeds = np.concatenate([np.asarray(x) for x in trace['speeds']], 0)
+    masks = np.concatenate([np.asarray(x) for x in trace['masks']], 0).astype(bool)
+    cav = np.concatenate([np.asarray(x) for x in trace['is_cav']], 0).astype(bool)
+    lane = 2 - np.concatenate([np.asarray(x) for x in trace['origin_lane']], 0).astype(int)   # WM -> SUMO lane
+    per = dt * (np.clip(1.0 - speeds / v_lim, 0.0, None) * masks).sum(1)                       # [b, n]
+    for i, (a, k) in enumerate(rows):
+        sel = dict(lane0=lane[i] == 0, lane1=lane[i] == 1, lane2=lane[i] == 2, hdv=~cav[i], cav=cav[i],
+                   all=np.ones_like(cav[i]))
+        for g, msk in sel.items():
+            out[aids[a]][g][k] = float(per[i][msk].sum())
+    return out
+
+
 class StubWM:
     """CPU stand-in until WMA_READY.json exists: truth = fakes.PlantedWorld, plus a CRN-common draw
     term, an action-specific draw term (prediction uncertainty) and an optional systematic bias.
@@ -148,6 +178,39 @@ class StubWM:
                 own = fakes._rng('stub_own', state['moment_id'], seed, k, akey).gauss(0.0, self.noise_sd) if a['members'] else 0.0
                 draws.append(self.base_level * scale + common - eff + own)
             out[a['id']] = draws
+        return out
+
+    def evaluate_groups(self, state, actions, K, H, seed):
+        """Planted per-group split (tests / dry runs): the total J of evaluate() is split over the origin-lane and
+        class groups of the observed vehicles; the group effect goes to the closing lane (lane0) except the cost of a
+        slow hold, which falls on the member's own lane group."""
+        tot = self.evaluate(state, actions, K, H, seed)
+        rows = [r for r in (state.get('wm_rows') or []) if r is not None]
+        nl = {L: sum(1 for r in rows if 2 - int(r['lane']) == L) for L in (0, 1, 2)}
+        n = max(1, sum(nl.values()))
+        ncav = sum(1 for r in rows if r.get('is_cav'))
+        out = {}
+        base = tot[next(a['id'] for a in actions if a['kind'] == 'base')] if any(a['kind'] == 'base'
+                                                                                  for a in actions) else None
+        for a in actions:
+            draws = tot[a['id']]
+            g = {}
+            for k, j in enumerate(draws):
+                ref = base[k] if base is not None else j
+                delta = ref - j                                           # total gain of this action at draw k
+                cost = {L: 0.0 for L in (0, 1, 2)}
+                for mm in a['members']:
+                    lane, q = fakes.PlantedWorld.normalize(mm)
+                    if lane != 0:
+                        cost[lane] += self.world.through_cost * max(0.0, G.SPEED_LIMIT - float(q['v_w'])) / 10.0
+                share = {L: ref * nl[L] / n for L in (0, 1, 2)}
+                gain = {L: (delta + sum(cost.values())) * (1.0 if L == 0 else 0.0) - cost[L] for L in (0, 1, 2)}
+                for L in (0, 1, 2):
+                    g.setdefault(f'lane{L}', []).append(share[L] - gain[L])
+                g.setdefault('cav', []).append(ref * ncav / n - 0.3 * delta)
+                g.setdefault('hdv', []).append(ref * (n - ncav) / n - 0.7 * delta)
+                g.setdefault('all', []).append(j)
+            out[a['id']] = g
         return out
 
 
@@ -198,6 +261,22 @@ class WMABackend:
     def evaluate(self, state, actions, K, H, seed):
         return self._evaluate(self.handle, state, actions, K=int(K), H=int(H), seed=int(seed))
 
+    def evaluate_groups(self, state, actions, K, H, seed):
+        """Per-group predicted delay: planapi group_delay=True if supported, else from the trace; raises
+        FairnessUnavailable when neither is available."""
+        try:
+            raw = self._evaluate(self.handle, state, actions, K=int(K), H=int(H), seed=int(seed), group_delay=True)
+            if all(isinstance(raw.get(a['id']), dict) for a in actions):
+                return raw
+        except TypeError:
+            pass
+        trace = {}
+        try:
+            self._evaluate(self.handle, state, actions, K=int(K), H=int(H), seed=int(seed), trace=trace)
+        except TypeError as exc:
+            raise FairnessUnavailable(f'evaluate has no trace/group_delay: {exc}')
+        return groups_from_trace(trace, actions, K)
+
 
 class _Factory:
     def __init__(self, obj):
@@ -245,6 +324,10 @@ def _child_eval(state, actions, K, H, seed):
     return _CHILD['wm'].evaluate(state, actions, K, H, seed)
 
 
+def _child_eval_groups(state, actions, K, H, seed):
+    return _CHILD['wm'].evaluate_groups(state, actions, K, H, seed)
+
+
 class ParallelWM:
     """N worker processes, each holding its own backend (the real WM rollout is CPU-bound per process, so N small
     workers fill the GPU); observe() runs on a local backend (pass a CPU device for it). evaluate() is unchanged;
@@ -268,6 +351,13 @@ class ParallelWM:
 
     def map(self, calls):
         futs = [self.pool.submit(_child_eval, *c) for c in calls]
+        return [f.result() for f in futs]
+
+    def evaluate_groups(self, state, actions, K, H, seed):
+        return self.pool.submit(_child_eval_groups, state, actions, K, H, seed).result()
+
+    def map_groups(self, calls):
+        futs = [self.pool.submit(_child_eval_groups, *c) for c in calls]
         return [f.result() for f in futs]
 
     def close(self):

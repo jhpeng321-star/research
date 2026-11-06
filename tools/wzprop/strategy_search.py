@@ -46,7 +46,7 @@ FIELD_X = (G.X_B - 454.10, G.X_B)
 SOLO2 = dict(name='solo2', trigger='wall', zone='full', spread_m=200.0, cooldown_s=90, slots=1, gate=None,
              roles=[dict(lane=2, rank=0, v_w=15.0, dmax=1.5, hold_s=90, onset_s=0, lc_target=None)])
 DEFAULTS = dict(H=300, K_screen=4, K_final=8, n_init=40, generations=3, n_elite=6, n_children=24, p_mutate=0.35,
-                n_screen_states=12, finalists=12, lam=0.5, max_roles=6, seed=20261107)
+                n_screen_states=12, finalists=12, lam=0.5, max_roles=6, seed=20261107, fairness=True, fair_tol=0.0)
 
 
 def grids():
@@ -248,9 +248,11 @@ def mutate(rng, s, p):
 
 
 # ------------------------------------------------------------------------------------------ WM evaluation
-def evaluate(wm, states, strategies, K, H, z=1.645):
-    """Per strategy per state the CRN-paired WM draws -> gains vs base and vs solo2 (see module docstring)."""
-    per = defaultdict(list)                  # key -> [(world, mean gain_base, mean gain_inc, sd_inc, feasible)]
+def evaluate(wm, states, strategies, K, H, z=1.645, groups=False):
+    """Per strategy per state the CRN-paired WM draws -> gains vs base and vs solo2 (see module docstring).
+    groups=True (and a backend with evaluate_groups) adds per-group gains vs base for the registered fairness
+    groups (SUMO origin lane 0/1/2, HDV / CAV); otherwise fairness is reported as unavailable."""
+    per = defaultdict(list)
     rollouts = 0
     prepared = []
     for m in states:
@@ -276,103 +278,148 @@ def evaluate(wm, states, strategies, K, H, z=1.645):
             aid_of[strategy_key(s)] = specs_seen[sk]
         prepared.append((m, state, acts, aid_of, inc, mi['crn_seed']))
     calls = [(state, acts, K, H, seed) for _m, state, acts, _a, _i, seed in prepared]
-    raws = wm.map(calls) if hasattr(wm, 'map') else [wm.evaluate(*c) for c in calls]
-    for (m, state, acts, aid_of, inc, _seed), raw in zip(prepared, raws):
+    use_groups = bool(groups) and hasattr(wm, 'evaluate_groups')
+    graws = None
+    if use_groups:
+        try:
+            graws = wm.map_groups(calls) if hasattr(wm, 'map_groups') else [wm.evaluate_groups(*c) for c in calls]
+            raws = [{aid: g['all'] for aid, g in r.items()} for r in graws]
+        except W.FairnessUnavailable:
+            graws, use_groups = None, False
+    if graws is None:
+        raws = wm.map(calls) if hasattr(wm, 'map') else [wm.evaluate(*c) for c in calls]
+    for i, ((m, state, acts, aid_of, inc, _seed), raw) in enumerate(zip(prepared, raws)):
         out = W.normalize(raw, acts, K, H)
         rollouts += len(acts) * K
         base = np.asarray(out['base'])
         ref = np.asarray(out['inc']) if inc else base
         for s in strategies:
             key = strategy_key(s)
-            j = np.asarray(out[aid_of[key]]) if key in aid_of else base
+            aid = aid_of.get(key)
+            j = np.asarray(out[aid]) if aid else base
             gi = ref - j
-            per[key].append((int(m['seed']), float((base - j).mean()), float(gi.mean()), float(gi.std(ddof=1)) if K > 1
-                             else 0.0, key in aid_of))
+            row = dict(world=int(m['seed']), gain_base=float((base - j).mean()), gain_inc=float(gi.mean()),
+                       sd=float(gi.std(ddof=1)) if K > 1 else 0.0, feasible=aid is not None)
+            if use_groups:
+                gb = graws[i]['base']
+                gc = graws[i][aid] if aid else gb
+                row['groups'] = {g: float(np.mean(np.asarray(gb[g]) - np.asarray(gc[g]))) for g in W.FAIR_GROUPS}
+            per[key].append(row)
     return per, rollouts
 
 
-def summarize(rows, lam, b=1000, seed=20261107):
-    worlds = defaultdict(list)
-    for w, gb, gi, sd, ok in rows:
-        worlds[w].append((gb, gi, sd, ok))
-    keys = sorted(worlds)
-    mean_b = float(np.mean([r[1] for r in rows]))
-    mean_i = float(np.mean([r[2] for r in rows]))
-    dis = float(np.mean([r[3] for r in rows]))
-    rng = np.random.default_rng(seed)
-    bi, bb = [], []
+def _boot_lcb(by_world, field, b, rng, group=None):
+    keys = sorted(by_world)
+    vals = []
     for _ in range(b):
         pick = rng.integers(0, len(keys), len(keys))
-        vals = [x for j in pick for x in worlds[keys[j]]]
-        bi.append(np.mean([v[1] for v in vals]))
-        bb.append(np.mean([v[0] for v in vals]))
-    lcb_i, lcb_b = float(np.quantile(bi, 0.05)), float(np.quantile(bb, 0.05))
-    return dict(n_states=len(rows), feasible=float(np.mean([r[4] for r in rows])), gain_vs_base=round(mean_b, 2),
-                gain_vs_base_lcb=round(lcb_b, 2), gain_vs_solo2=round(mean_i, 2), gain_vs_solo2_lcb=round(lcb_i, 2),
-                disagreement=round(dis, 2), score=round(lcb_i - lam * dis / math.sqrt(max(1, len(rows))), 2))
+        xs = [(r['groups'][group] if group else r[field]) for j in pick for r in by_world[keys[j]]]
+        vals.append(float(np.mean(xs)))
+    return float(np.quantile(vals, 0.05))
+
+
+def summarize(rows, lam, b=1000, seed=20261107, fair_tol=0.0):
+    """Per-cell expected gains (vs base, vs solo2) with world-cluster LCBs; per-group gains vs base and the FAIR flag
+    (registered: lower total delay vs the base AND no origin-lane group / class predicted worse: every group's
+    gain LCB >= -fair_tol)."""
+    worlds = defaultdict(list)
+    for r in rows:
+        worlds[r['world']].append(r)
+    rng = np.random.default_rng(seed)
+    mean_b = float(np.mean([r['gain_base'] for r in rows]))
+    mean_i = float(np.mean([r['gain_inc'] for r in rows]))
+    dis = float(np.mean([r['sd'] for r in rows]))
+    lcb_b = _boot_lcb(worlds, 'gain_base', b, rng)
+    lcb_i = _boot_lcb(worlds, 'gain_inc', b, rng)
+    out = dict(n_states=len(rows), feasible=float(np.mean([r['feasible'] for r in rows])), gain_vs_base=round(mean_b, 2),
+               gain_vs_base_lcb=round(lcb_b, 2), gain_vs_solo2=round(mean_i, 2), gain_vs_solo2_lcb=round(lcb_i, 2),
+               disagreement=round(dis, 2), score=round(lcb_i - lam * dis / math.sqrt(max(1, len(rows))), 2))
+    if rows and all('groups' in r for r in rows):
+        gm = {g: round(float(np.mean([r['groups'][g] for r in rows])), 2) for g in W.FAIR_GROUPS}
+        gl = {g: round(_boot_lcb(worlds, None, b, rng, group=g), 2) for g in W.FAIR_GROUPS}
+        worst = min(gl, key=gl.get)
+        out.update(group_gain_vs_base=gm, group_gain_vs_base_lcb=gl, worst_group=worst,
+                   worst_group_lcb=gl[worst], fair=bool(lcb_b > 0 and all(v >= -fair_tol for v in gl.values())))
+    else:
+        out.update(fair=None)
+    return out
 
 
 def search_cell(wm, states, cfg=None, log=None):
-    """MAP-Elites + evolution over strategies for ONE demand cell's start states."""
+    """MAP-Elites + evolution over strategies for ONE demand cell's start states. Two archives: delay (score) and
+    FAIR (score among fair candidates); both feed the finals."""
     cfg = dict(DEFAULTS, **(cfg or {}))
     rng = random.Random(cfg['seed'])
-    lam = float(cfg['lam'])
+    lam, tol, groups = float(cfg['lam']), float(cfg['fair_tol']), bool(cfg['fairness'])
     screen = rng.sample(states, min(len(states), int(cfg['n_screen_states'])))
     pop = seeds() + [random_strategy(rng, cfg['max_roles']) for _ in range(int(cfg['n_init']))]
-    evaluated, archive, total = {}, {}, 0
+    evaluated, archive, fair_archive, total = {}, {}, {}, 0
 
     def run(cands, sts, K):
         nonlocal total
         cands = [c for c in cands if c is not None and strategy_key(c) not in evaluated]
         if not cands:
             return
-        per, n = evaluate(wm, sts, cands, K, cfg['H'])
+        per, n = evaluate(wm, sts, cands, K, cfg['H'], groups=groups)
         total += n
         for c in cands:
             k = strategy_key(c)
-            res = dict(strategy=c, key=k, descriptor=list(descriptor(c)), **summarize(per[k], lam))
+            res = dict(strategy=c, key=k, descriptor=list(descriptor(c)), **summarize(per[k], lam, fair_tol=tol))
             evaluated[k] = res
             d = descriptor(c)
             if d not in archive or res['score'] > archive[d]['score']:
                 archive[d] = res
+            if res.get('fair') and (d not in fair_archive or res['score'] > fair_archive[d]['score']):
+                fair_archive[d] = res
         if log:
-            log(dict(evaluated=len(evaluated), archive=len(archive), rollouts=total))
+            log(dict(evaluated=len(evaluated), archive=len(archive), fair_archive=len(fair_archive), rollouts=total))
+
+    def top(arch, n):
+        return sorted(arch.values(), key=lambda r: r['score'], reverse=True)[:n]
 
     run(pop, screen, cfg['K_screen'])
     for _ in range(int(cfg['generations'])):
         ranked = sorted(evaluated.values(), key=lambda r: r['score'], reverse=True)
-        parents = [r['strategy'] for r in ranked[:int(cfg['n_elite'])]] + \
-            [r['strategy'] for r in sorted(archive.values(), key=lambda r: r['score'], reverse=True)[:int(cfg['n_elite'])]]
-        kids = []
-        for _j in range(int(cfg['n_children'])):
-            kids.append(mutate(rng, rng.choice(parents), cfg['p_mutate']))
+        parents = [r['strategy'] for r in ranked[:int(cfg['n_elite'])] + top(archive, int(cfg['n_elite']))
+                   + top(fair_archive, int(cfg['n_elite']) // 2)]
+        kids = [mutate(rng, rng.choice(parents), cfg['p_mutate']) for _j in range(int(cfg['n_children']))]
         run(kids, screen, cfg['K_screen'])
     fin = sorted(evaluated.values(), key=lambda r: r['score'], reverse=True)[:int(cfg['finalists'])]
-    for r in sorted(archive.values(), key=lambda r: r['score'], reverse=True):
+    for r in top(archive, 10 ** 6) + top(fair_archive, 10 ** 6):
         if r['key'] not in {f['key'] for f in fin} and len(fin) < 2 * int(cfg['finalists']):
             fin.append(r)
     finals = [dict(f['strategy']) for f in fin]
     if not any(strategy_key(f) == strategy_key(SOLO2) for f in finals):
         finals.append(dict(SOLO2))
-    per, n = evaluate(wm, states, finals, cfg['K_final'], cfg['H'])
+    per, n = evaluate(wm, states, finals, cfg['K_final'], cfg['H'], groups=groups)
     total += n
     final = []
     for f in finals:
         k = strategy_key(f)
-        final.append(dict(strategy=f, key=k, descriptor=list(descriptor(f)), **summarize(per[k], lam)))
+        final.append(dict(strategy=f, key=k, descriptor=list(descriptor(f)), **summarize(per[k], lam, fair_tol=tol)))
     final.sort(key=lambda r: r['score'], reverse=True)
-    beats = [r for r in final if r['gain_vs_solo2_lcb'] > 0 and r['key'] != strategy_key(SOLO2)]
-    return dict(schema='wmc-strategy-search-v1', config=cfg, n_states=len(states), n_screen_states=len(screen),
-                evaluated=len(evaluated), archive_cells=len(archive), wm_rollouts=total, final=final,
-                best_beating_solo2=beats[0] if beats else None,
+    inc = strategy_key(SOLO2)
+    beats = [r for r in final if r['gain_vs_solo2_lcb'] > 0 and r['key'] != inc]
+    fair = [r for r in final if r.get('fair') and r['key'] != inc]
+    fairness = 'available' if final and final[0].get('fair') is not None else 'unavailable (WM has no per-group delay)'
+    return dict(schema='wmc-strategy-search-v2', config=cfg, n_states=len(states), n_screen_states=len(screen),
+                evaluated=len(evaluated), archive_cells=len(archive), fair_archive_cells=len(fair_archive),
+                wm_rollouts=total, fairness=fairness, final=final,
+                best_beating_solo2=beats[0] if beats else None, best_fair=fair[0] if fair else None,
+                best_fair_beating_solo2=next((r for r in fair if r['gain_vs_solo2_lcb'] > 0), None),
                 archive=[dict(descriptor=list(d), key=r['key'], score=r['score'], name=r['strategy']['name'])
-                         for d, r in sorted(archive.items(), key=lambda kv: -kv[1]['score'])])
+                         for d, r in sorted(archive.items(), key=lambda kv: -kv[1]['score'])],
+                fair_archive=[dict(descriptor=list(d), key=r['key'], score=r['score'], name=r['strategy']['name'],
+                                   worst_group=r.get('worst_group'), worst_group_lcb=r.get('worst_group_lcb'))
+                              for d, r in sorted(fair_archive.items(), key=lambda kv: -kv[1]['score'])])
 
 
-def select_for_sumo(result, k=4):
-    """WM arm: top LCB strategies from distinct descriptor cells, the incumbent excluded."""
+def select_for_sumo(result, k=4, fair=False):
+    """WM arm: top LCB strategies from distinct descriptor cells, the incumbent excluded (fair=True: fair only)."""
     out, cells = [], set()
     for r in result['final']:
+        if fair and not r.get('fair'):
+            continue
         if r['key'] == strategy_key(SOLO2) or tuple(r['descriptor']) in cells:
             continue
         out.append(r['strategy'])

@@ -29,16 +29,25 @@ PHASE = 'wm_search'
 CAP = 280_000
 EPISODE_S = 1200
 BOOT, BOOT_SEED = 10_000, 20261107
-ARM_PREFIX = dict(wm='wm', structured='str', random='rnd')
+ARM_PREFIX = dict(wm='wm', structured='str', random='rnd', wm_fair='fair')
 
 
-def arm_specs(arms_doc, cell, k=4):
-    """{arm id: strategy spec or None (u0)} in a fixed order: u0, solo2, wm_*, str_*, rnd_*."""
+def arm_specs(arms_doc, cell, k=4, k_fair=0):
+    """{arm id: strategy spec or None (u0)} in a fixed order: u0, solo2, wm_*, str_*, rnd_*[, fair_*].
+    fair_* (top FAIR WM candidates) only when k_fair > 0 and they are not already WM arms."""
     d = arms_doc[cell]
     out = dict(u0=None, solo2=SS.validate(dict(d['incumbent'])))
     for group, prefix in ARM_PREFIX.items():
-        for i, s in enumerate((d.get(group) or [])[:k]):
+        kk = k_fair if group == 'wm_fair' else k
+        have = {SS.strategy_key(x) for x in out.values() if x}
+        i = 0
+        for s in (d.get(group) or []):
+            if i >= kk:
+                break
+            if group == 'wm_fair' and SS.strategy_key(s) in have:
+                continue
             out[f'{prefix}_{i}'] = SS.validate(dict(s))
+            i += 1
     return out
 
 
@@ -96,7 +105,7 @@ def _harness():
     return ir, R
 
 
-def plan(root, *, regimeu0_root, arms_path, cell, seeds, k=4, cap=CAP):
+def plan(root, *, regimeu0_root, arms_path, cell, seeds, k=4, cap=CAP, k_fair=0):
     ir, R = _harness()
     root = ir.guard_path(root)
     root.mkdir(parents=True, exist_ok=True)
@@ -112,7 +121,7 @@ def plan(root, *, regimeu0_root, arms_path, cell, seeds, k=4, cap=CAP):
     ref = ir._read(Path(regimeu0_root) / 'PLAN.json')['inputs']['u0.pt']['sha256']
     if files['u0.pt']['sha256'] != ref:
         raise ValueError('MAPPO u0 differs from the S-REGIMEU0 base')
-    specs = arm_specs(json.loads(G.check_path(arms_path).read_text()), cell, k)
+    specs = arm_specs(json.loads(G.check_path(arms_path).read_text()), cell, k, k_fair)
     groups = plan_jobs(cell, seeds, specs, R.world_of)
     ir._write_new(root / 'REGISTRATION.json', dict(schema=SCHEMA, stable_id=STABLE_ID, phase=PHASE, cap_sim_s=int(cap),
                                                    module_sha256=ir.sha_file(__file__), seeds=list(seeds),
@@ -194,6 +203,7 @@ def main(argv=None):
     a.add_argument('--cell', default='D3200_p60')
     a.add_argument('--seeds', required=True, help='first-last')
     a.add_argument('--k', type=int, default=4)
+    a.add_argument('--k-fair', type=int, default=0, help='extra FAIR WM arms (budget: +19,200 sim-s each)')
     a = sub.add_parser('run')
     a.add_argument('--root', required=True)
     a.add_argument('--workers', type=int, default=16)
@@ -210,7 +220,7 @@ def main(argv=None):
     if x.cmd == 'plan':
         lo, hi = (int(v) for v in x.seeds.split('-'))
         body = plan(x.root, regimeu0_root=x.regimeu0_root, arms_path=x.arms, cell=x.cell, seeds=range(lo, hi + 1),
-                    k=x.k)
+                    k=x.k, k_fair=x.k_fair)
         print(json.dumps(dict(planned_sim_s=body['planned_sim_s'], arms=list(body['specs']),
                               plan_sha256=body['plan_sha256'])))
     elif x.cmd == 'run':

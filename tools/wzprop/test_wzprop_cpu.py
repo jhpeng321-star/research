@@ -940,3 +940,36 @@ def test_condition_gate_is_observable_and_shared_by_wm_and_sumo():
             dict(vid='h_lane', s_m=-40.0, v_mps=3.0, lane=0, is_cav=False)]
     ids = {r['id'] for r in SH.observed_rows(rows)}
     assert ids == {'c', 'h_near', 'h_lane'}
+
+
+def test_fairness_groups_archives_and_trace():
+    from tools.wzprop import strategy_search as SS
+    states = _strategy_states(4)
+    wm = W.StubWM()
+    mi = W.moment_input(states[0])
+    st = wm.observe(mi)
+    acts = [W.action('base', 'base', None, 'base', [], 300)] + [
+        W.action(f'c{i}', 'group', 's', f'k{i}', SS.activation(s, states[0]['all_cavs_t0']), 300)
+        for i, s in enumerate(SS.seeds()[:3]) if SS.activation(s, states[0]['all_cavs_t0'])]
+    g = wm.evaluate_groups(st, acts, 2, 300, 1)
+    for aid, gg in g.items():
+        for k in range(2):
+            assert sum(gg[f'lane{L}'][k] for L in (0, 1, 2)) == pytest.approx(gg['all'][k])
+            assert gg['hdv'][k] + gg['cav'][k] == pytest.approx(gg['all'][k])
+    res = SS.search_cell(wm, states, dict(n_init=6, generations=1, n_children=6, n_screen_states=3, finalists=5,
+                                          K_final=2, K_screen=2))
+    assert res['fairness'] == 'available' and all(r['fair'] is not None for r in res['final'])
+    for r in res['final']:
+        if r['fair']:
+            assert r['gain_vs_base_lcb'] > 0 and min(r['group_gain_vs_base_lcb'].values()) >= 0
+    assert all(f['worst_group_lcb'] >= 0 for f in res['fair_archive'])
+    # planapi-style trace -> per-group delays
+    import numpy as np
+    tr = dict(rows=[(0, 0), (1, 0)], speeds=[np.array([[[31.29, 0.0], [15.645, 0.0]], [[0.0, 31.29], [0.0, 31.29]]])],
+              masks=[np.array([[[1, 1], [1, 1]], [[1, 1], [1, 0]]])], is_cav=[np.array([[1, 0], [1, 0]])],
+              origin_lane=[np.array([[0, 2], [0, 2]])])
+    out = W.groups_from_trace(tr, [dict(id='a'), dict(id='b')], 1)
+    assert out['a']['lane2'][0] == pytest.approx(0.25) and out['a']['lane0'][0] == pytest.approx(1.0)
+    assert out['b']['cav'][0] == pytest.approx(1.0) and out['b']['hdv'][0] == pytest.approx(0.0)
+    with pytest.raises(W.FairnessUnavailable):
+        W.groups_from_trace(dict(rows=[], speeds=[]), [], 1)
