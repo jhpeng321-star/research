@@ -28,7 +28,7 @@ paths = list(sel['paths']) if isinstance(sel, dict) and 'paths' in sel else list
 paths += ['tools/coopmwm/'+n for n in ('test_executable_labels_cpu.py','test_coordination_opportunities_cpu.py',
   'test_sparse_synergy_credit_cpu.py','test_g4_runtime_cpu.py','test_clean3_budget_cpu.py','test_group_lane_cpu.py',
   'test_g1_certification_cpu.py','test_bank_perseed_cpu.py','test_bank_imitation_cpu.py','test_replay_bank_v2v_cpu.py',
-  'test_clean3_restart_cpu.py','test_g5_runtime_cpu.py','test_mined_link_cpu.py')]
+  'test_clean3_restart_cpu.py','test_g5_runtime_cpu.py','test_mined_link_cpu.py','test_g4_worker_binding_cpu.py')]
 paths = [p for p in dict.fromkeys(paths) if (src/'pytools'/p).is_file()]
 (src/'TEST_SELECTION.json').write_text(json.dumps(dict(paths=paths), indent=1))
 files = {}
