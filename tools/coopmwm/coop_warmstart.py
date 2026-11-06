@@ -86,6 +86,22 @@ TRAINING = dict(steps=800, batch_size=32, learning_rate=1e-3, max_grad_norm=.5,
 TRAINING_KEYS = frozenset(TRAINING)
 
 
+def map_label_family(family):
+    """True for wz3to2 runtime labels (N2 lane-drop joint/protocol, N9 family options).
+
+    Bank labels projected onto the legacy merge vocabulary (moves.ALL_FAMILIES: wall,
+    ease_off, gap_open, ramp_assist, yield_lane, open_gap_merge, or W1 wall_initiate/join)
+    are NOT wz3to2 examples (MAIN 2026-11-06: pending N2 mined-row converter) and are refused.
+    """
+    if family in LANE_DROP_JOINT or family in ('lane_drop_initiate', 'lane_drop_join'):
+        return True
+    try:
+        from . import nm_families
+    except ImportError:
+        return False
+    return family in nm_families.OPTION_FAMILIES
+
+
 class Unrepresentable(ValueError):
     """The row's move has no registered runtime representation (excluded and counted)."""
 
@@ -353,9 +369,9 @@ def _attach_extensions(context, reader, members):
 
 
 def _wrap(move):
-    from . import moves
+    """Exactly as launch_production.bank_move_supervision / W2 negatives: TriggerMove(label)."""
     from .track2_backend import TriggerMove
-    return TriggerMove(move) if isinstance(move, moves.Move) else move
+    return move if isinstance(move, TriggerMove) else TriggerMove(move)
 
 
 def _slate(policy, context, states, visible, move, target, seed):
@@ -538,6 +554,9 @@ def bank_records(cfg, arm, policy, mined_rows, *, slate_seed, frame_index=None):
                           if 'acquirable_cav_ids' not in reader.local_states[v] else reader.local_states[v])
                       for v in context['members']}
             none = getattr(label, 'family', None) == 'none'
+            if not none and not map_label_family(getattr(label, 'family', None)):
+                reasons['legacy_merge_family_projection:'+str(getattr(label, 'family', None))] += 1
+                continue
             batch = _slate(policy, context, states, reader.visible, None if none else label, 0 if none else 1,
                            slate_seed)
             records.append(dict(batch=batch, kind='positive', family=FAMILY_ALIASES.get(label.family, label.family),

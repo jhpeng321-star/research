@@ -44,7 +44,8 @@ def clean4_like_config(desc, *, training_seed=20261101):
     """
     from . import lane_drop
     cfg = cw.dry_config()
-    cfg.update(training_seed=int(training_seed), v2v_intent_horizon=5, group_lane_moves=True)
+    cfg.update(training_seed=int(training_seed), v2v_intent_horizon=5, v2v_intent_detach_trunk=True,
+               v2v_intent_loss_weight=1.0, group_lane_moves=True)
     cfg.update(lane_drop.config_keys(provenance='BOOST-PRE learnability readout (clean4-like)',
                                      descriptor=desc, features=True, moves_on=True, v2v=True))
     return cfg

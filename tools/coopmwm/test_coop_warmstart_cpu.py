@@ -382,8 +382,21 @@ def test_bank_mode_uses_the_registered_reader_own_rows_and_shared_frames(cfg, tm
             reader.observe(frames_by_t[t]['vehicles'], t)
         ego = sorted(row['members'])[0]
         context = cw._ego_context(reader, ego, t0)
+        # A label projected onto the legacy merge vocabulary is refused (counted) ...
         yield context, moves.Move('wall', tuple(row['members']), 0, 60, .8), reader, 1., t0
+        # ... a wz3to2 runtime label is used.
+        yield context, LaneDropLike(tuple(row['members'])), reader, 1., t0
 
+    class LaneDropLike:
+        family = 'closing_pair'
+
+        def __init__(self, members):
+            self.members, self.onset, self.hold, self.depth = members, 0, 60, .8
+            self.onset_s, self.hold_s = 0, 60
+
+    real_wrap = cw._wrap
+    monkeypatch.setattr(cw, '_wrap', lambda move: real_wrap(moves.Move('wall', move.members, 0, 60, .8)
+                        if isinstance(move, LaneDropLike) else move))
     monkeypatch.setattr(bank_breadth, 'visit', visit)
     monkeypatch.setattr(bank_breadth, 'observable_contexts', observable_contexts)
     monkeypatch.setattr(bank_v2v, 'trace_frames', trace_frames)
@@ -394,7 +407,8 @@ def test_bank_mode_uses_the_registered_reader_own_rows_and_shared_frames(cfg, tm
     assert not report['dry'] and report['effort_equal']
     for arm in 'BR':
         assert report['arms'][arm]['positive_records'] == len(seeds)
-        assert report['arms'][arm]['positive_exclusions'] == {'not_an_admitted_own_arm_row': 1}
+        assert report['arms'][arm]['positive_exclusions'] == {'not_an_admitted_own_arm_row': 1,
+                                                              'legacy_merge_family_projection:wall': len(seeds)}
         assert report['arms'][arm]['negative_records'] == 2   # one record per observing member
     assert report['negatives']['reasons'] == {'no_observable_frame': 1}
     assert {a for a, _ in visited} == {'B', 'R'}
