@@ -220,7 +220,8 @@ def prepare(args) -> dict:
                                           'model.init_from="INIT.pt"' for s in sets])
         mapping = cfg_mapping(cfg)
         guard.check_config(mapping)
-        if road.get("road_end_m") is not None and abs(cfg.loss.agg_delay.road_end_m - road["road_end_m"]) > 1e-6:
+        if (road.get("name") == args.map_name and road.get("road_end_m") is not None
+                and abs(cfg.loss.agg_delay.road_end_m - road["road_end_m"]) > 1e-6):
             raise RuntimeError(f"phase {ph}: loss.agg_delay.road_end_m {cfg.loss.agg_delay.road_end_m} "
                                f"!= road {road['road_end_m']}")
         phases[ph] = {"config": plan.CONFIGS[ph], "config_sha256": sha(REPO / plan.CONFIGS[ph]),

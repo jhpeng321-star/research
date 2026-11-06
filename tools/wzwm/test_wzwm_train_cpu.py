@@ -360,3 +360,90 @@ def test_estimate_and_manifest(tmp_path):
     assert body["train_seeds"] == [989101] and body["val_seeds"] == [989102]
     assert body["reserved_qualification_overlap"] == []
     assert json.loads((root / "CHECKPOINT_MANIFEST.json").read_text())["val_worlds"] == ["w989102m3200p60t300"]
+
+
+# ------------------------------------------------------------------ prepare end to end (fake sources) ---
+def _fake_sources(tmp_path, extra_world=None):
+    out = []
+    for arm in ("native", "mappo_u0"):
+        d = tmp_path / f"src_{arm}"
+        d.mkdir()
+        eps = [(f"w{989101 + i}m3200p60t300", "val" if i in (0, 5) else "train", arm) for i in range(8)]
+        if extra_world:
+            eps.append((extra_world, "train", arm))
+        (d / run.MANIFEST_NAME).write_text(json.dumps(_manifest(eps)))
+        out.append(f"wz_{arm}={d}")
+    return out
+
+
+def _fake_wm2(tmp_path):
+    sets = plan.phase_overrides("A", init_from="x.pt", sources=[plan.Source("wz_native", "/a", 0.5),
+                                plan.Source("wz_mappo_u0", "/b", 0.5)], base="wz_native")
+    state = reinit.fresh_state_from_config(plan.CONFIGS["A"], sets, seed=7, repo=REPO)
+    state = {k: (v + 0.05 if v.is_floating_point() else v) for k, v in state.items()}
+    p = tmp_path / "wm2.pt"
+    torch.save({"format": "wm_s/1", "model": state, "config": {}}, p)
+    return p
+
+
+def _prepare_args(root, wm2, sources, **kw):
+    a = ["prepare", "--root", str(root), "--init", str(wm2), "--init-sha", reinit.sha256_file(wm2),
+         "--allow-no-road", "--device", "cpu", "--python", sys.executable]
+    for s in sources:
+        a += ["--source", s]
+    for k, v in kw.items():
+        a += [f"--{k.replace('_', '-')}", str(v)]
+    return a, None
+
+
+def test_prepare_end_to_end_fake_sources(tmp_path):
+    wm2 = _fake_wm2(tmp_path)
+    root = tmp_path / "root"
+    argv, _ = _prepare_args(root, wm2, _fake_sources(tmp_path))
+    assert run.main(argv) == 0
+    p = json.loads((root / "PLAN.json").read_text())
+    assert p["n_train_worlds"] == 6 and p["n_val_worlds"] == 2 and p["base_source"] == "wz_native"
+    assert [s["mix_ratio"] for s in p["sources"]] == [0.5, 0.5]
+    assert p["init"]["n_reinit"] == 35 and p["init"]["wm2_sha256"] == reinit.sha256_file(wm2)
+    assert p["phases"]["A"]["steps"] == 30 and p["phases"]["B"]["curriculum"]["stage_steps"] == [40, 24]
+    assert any(s.startswith("model.init_from=") and "INIT_WZ.pt" in s for s in p["phases"]["A"]["overrides"])
+    wm = json.loads((root / "WORLDS.json").read_text())
+    assert wm["val_seeds"] == [989101, 989106] and worlds.overlap(wm) == []
+    with pytest.raises(FileExistsError):
+        run.main(argv)                                              # PLAN.json is write-once
+
+
+def test_prepare_refuses_reserved_world_before_any_init(tmp_path):
+    wm2 = _fake_wm2(tmp_path)
+    root = tmp_path / "root"
+    argv, _ = _prepare_args(root, wm2, _fake_sources(tmp_path, extra_world="w989210m3200p60t300"))
+    with pytest.raises(worlds.WorldError):
+        run.main(argv)
+    assert not (root / "INIT_WZ.pt").exists() and not (root / "PLAN.json").exists()
+
+
+def test_prepare_refuses_wrong_init_sha(tmp_path):
+    wm2 = _fake_wm2(tmp_path)
+    argv, _ = _prepare_args(tmp_path / "root", wm2, _fake_sources(tmp_path))
+    argv[argv.index("--init-sha") + 1] = "0" * 64
+    with pytest.raises(reinit.ReinitError):
+        run.main(argv)
+
+
+def test_prepare_with_wz_road_binding(tmp_path, monkeypatch):
+    """With a wz3to2 MAP_SPEC the road is bound (stub/N1 descriptor) and its through-lane exit must
+    equal the configs' loss.agg_delay.road_end_m (1379.44)."""
+    from wms.core import road as road_mod
+    spec = tmp_path / "MAP_SPEC.json"
+    spec.write_text(json.dumps({"name": "wz3to2"}))
+    monkeypatch.setenv("WMS_MAP_SPEC", str(spec))
+    try:
+        wm2 = _fake_wm2(tmp_path)
+        argv, _ = _prepare_args(tmp_path / "root", wm2, _fake_sources(tmp_path))
+        argv = [a for a in argv if a != "--allow-no-road"] + ["--map-spec", str(spec)]
+        assert run.main(argv) == 0
+        p = json.loads((tmp_path / "root" / "PLAN.json").read_text())
+        assert p["road"]["name"] == "wz3to2" and p["road"]["road_end_m"] == 1379.44
+        assert p["env"]["WMS_MAP_SPEC"] == str(spec)
+    finally:
+        road_mod._reset_for_tests()
