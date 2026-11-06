@@ -1,0 +1,65 @@
+{
+  "task": "c4/laneon-eval: implement the registered EXTRA frozen final-evaluation baseline 'lane-on MAPPO aecd7d70' in the clean3 u24 paired final evaluation (descriptive only; the primary comparator stays speed-only MAPPO per the Oct30 owner decision), closing the W4 gap (CLEAN3_FINAL_BASELINE_WIRING_W4.md: quoted but never executed)",
+  "commit": "9d23e5b9",
+  "branch": "c4/laneon-eval",
+  "base": "3e5bc9f9",
+  "worktree": "E:/agent-work/c4-laneon-eval",
+  "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q",
+  "cpu_only": true,
+  "authority": [
+    "CLEAN3_QUOTE.json phase v2v_final_laneon_mappo_aecd7d70 (96 x 1200 base, 133200 allocated with >=15% margin; basis 'owner 01:16: lane-on MAPPO aecd7d70 on the same 96 paired worlds')",
+    "LANE_MAPPO_FEASIBILITY.md section 8: 'extra frozen evaluation baseline now; no base switch within the existing recipe'; primary comparator remains speed-only MAPPO",
+    "clean3_restart.LANE_ON_BASELINE (owner 2026-11-06 01:16 'keep it as the baseline for now...'; MAIN 01:16)"
+  ],
+  "what_changed": {
+    "tools/coopmwm/laneon_baseline.py": [
+      "new module: registration constants (NAME mappo_laneon_aecd7d70, CHECKPOINT_SHA256 aecd7d70ccce2995a10d03d9400f587040b1d3b435eebeab2561768ba57c3564, PHASE v2v_final_laneon_mappo_aecd7d70, LANE_CHANGE_MODE 513, ROLE/AUTHORITY shared with clean3_restart)",
+      "registered_entry(cfg): fail-closed validation of cfg['extra_final_baselines'] - exact quoted role/phase/SHA/mode/episodes and a staged checkpoint path; a quoted-but-unbound slot is refused, never silently skipped (W4)",
+      "staged_checkpoint(entry): SHA-verifies the staged aecd7d70 export BEFORE any charge/reservation",
+      "load_executor(path, expected_sha256=CHECKPOINT_SHA256): loads the exact C4 export through the original wms.control.policy loader (CavPolicy accel head + masked 3-way lane head + its own group encoder/lane rules, deterministic argmax); refuses wrong SHA, lane-stripped (speed-only), foreign trainer/format",
+      "LaneOnController: per-tick adapter - executor.act_with_lane(env.state()) then env.step(accel, lanes=lanes); lane targets flow ONLY through the env's existing lane command path (CavSumoEnv LC_MODE_POLICY=513 on every commanded CAV every tick, changeLane with SUMO's own gap/braking safety - the checkpoint's original E3 registration regime); hard refusal on any lane target on a non-CAV/uncommanded slot or off-grid {-1,0,1,2} value; accumulates env lane-command counters",
+      "specs(registration, entry): SAME paired worlds/world ids/world dicts, full 1200 s windows and panel SHA as the A/B/R planner_eval.prepare_track2 specs, with the SHA-bound checkpoint in place of an arm checkpoint",
+      "make_receipt/validate_receipt: sealed coopmwm/laneon_baseline/receipt/v1 schema (world/seed/checkpoint/mode/J_veh_s/4 safety counters/lane-command counters/panel binding); tamper/unknown-key/forged-key refusal",
+      "analyse(*, registration, records, arm_records, contract): exact-completeness descriptive paired whole-world bootstrap CIs of LANEON-A/LANEON-B/LANEON-R reusing the registered T1D planner_eval._paired_ci estimator and the u24 contract bootstrap (10000 reps, seed 20261104, 95%); per-arm safety sums; sealed analysis; never a gate, never the primary contrast",
+      "episode(spec, cfg, work): real cpuV SUMO worker - binds the SAME hash-verified frozen e3final runtime (+ clean3 G5 overlay when COOPMWM_G5_RUNTIME=1) the A/B/R final episodes import, registered TRAIN-world guard, native 300 s warmup + 900 controlled ticks at the 1 s cadence, precharge guard at exactly spec['sim_s'], harness grading (cumulative team_delay_vs J, collisions/teleports/hard-brake totals, ttc_events from the observable tape), CLAIM/CLOSE/RESULT.json + observable.jsonl.gz artifacts; CPU tests never execute it"
+    ],
+    "tools/coopmwm/launch_evaluation.py": [
+      "_wave(..., fixed='laneon'): dispatches the SHA-bound laneon_baseline.episode worker (spawn pool) and charges the wave to the phase passed in - the lane-on phase, never v2v_final",
+      "scheduled(cfg, 24): after the A/B/R PAIRED_u024 receipt exists (unchanged primary analysis), runs laneon_final; u8 interim and unregistered configurations keep the byte-identical old contract",
+      "laneon_final(cfg, paired): requires the completed same-panel u24 paired receipt, SHA-verifies the staged checkpoint before any charge, builds same-world specs, waves them under v2v_final_laneon_mappo_aecd7d70, seals 96 per-world receipts + the descriptive paired-CI analysis into evaluation/LANEON_u024.json; idempotent (durable receipt read back); refuses a lane-on receipt without its registration"
+    ],
+    "tools/coopmwm/clean3_restart.py": [
+      "PHASES split to match CLEAN3_QUOTE.json exactly: v2v_final 531600 -> 398400 (A/B/R) + v2v_final_laneon_mappo_aecd7d70 133200 (lane-on baseline; total and the build() quote assertion unchanged at 3680400)",
+      "LANE_ON_BASELINE now binds sha256/phase/lane_change_mode from tools.coopmwm.laneon_baseline (single source of registration constants)"
+    ],
+    "ops/clean3_chain.py": [
+      "coverage(): v2v_final needs 3*96*1200 (A/B/R) and the lane-on phase needs 96*1200 separately - the merged 4*96*1200 expectation is gone"
+    ]
+  },
+  "tests_added": [
+    "test_load_executor_accepts_sha_bound_export_and_refuses_wrong_sha: real c4_dreamer/3 mappo export loads with has_lane_head/dwell/bounds meta; wrong expected SHA, byte-tampered file and staged_checkpoint against the aecd7d70 pin refuse; the production pin equals the S-LANEMAPPO-verified SHA",
+    "test_load_executor_refuses_lane_stripped_or_foreign_exports: lane_head=False, trainer!=mappo and format!=c4_dreamer/3 exports refuse",
+    "test_specs_use_the_same_paired_worlds_windows_and_panel_as_the_arms: 96 specs share IDENTICAL world/world_id/sim_s/window/final_worlds_sha256 with the A/B/R planner_eval specs; SHA-bound checkpoint; 513 mode; short panels refuse",
+    "test_lane_targets_flow_through_the_env_lane_path_for_cavs_only: biased 3-way head on a real executor - CAV slots get targets [[1,0,-1,-1]], HDV/absent slots NaN accel and -1 lanes, lanes tensor supplied EVERY tick (stay-only tick included, dwell holds), env lane-command counters recorded",
+    "test_controller_refuses_lane_commands_on_non_cav_slots_or_off_grid_targets: corrupted executors returning a lane target on a non-CAV slot or an off-grid value refuse",
+    "test_receipt_schema_seals_and_refuses_tampering_or_unknown_keys: sealed receipt roundtrip + bound-spec identity; tampered J, unknown outcome keys, missing/bool/negative safety, non-int lane counters, forged extra receipt key and wrong world refuse",
+    "test_analysis_pairs_descriptively_against_every_arm_and_refuses_incomplete_panels: LANEON-A/B/R CIs (n=96, correct means) via the registered estimator; safety sums; sealed; incomplete lane-on panel, incomplete arm panel, wrong mode and foreign checkpoint SHA refuse",
+    "test_registered_entry_binds_the_quoted_baseline_and_its_own_phase: phase split (398400 + 133200, total 3680400), clean3 budget rebuild with the split, entry roundtrip and all registration-mismatch refusals",
+    "test_scheduled_u24_consumes_the_baseline_on_the_same_worlds_and_own_phase: real scheduled() consumer - waves (v2v_final, paired_u024, 288) then (v2v_final_laneon_mappo_aecd7d70, laneon_u024, 96); sealed LANEON_u024 receipt with 96 validated receipts and 3 descriptive CIs; idempotent; u8 interim never runs it; unregistered configs keep the old contract",
+    "test_laneon_final_requires_the_registered_checkpoint_before_any_charge: wrong-SHA staged file refuses BEFORE the lane-on reservation (only the A/B/R wave charged)",
+    "test_wave_dispatches_the_laneon_worker_and_reserves_its_own_phase: _wave fixed='laneon' submits the laneon worker (never the A/B/R episode worker) with per-job work paths and reserves 96 x 1200 jobs laneon_u024_0000..0095 under the lane-on phase only"
+  ],
+  "tests_run": {
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q",
+    "touched_suites_plus_launch_final": "182 passed, 2 skipped (Windows symlink privilege; pre-existing cpuV-only skips) in 173.67s - test_laneon_baseline_cpu, test_clean3_restart_cpu, test_lesson_quote_cpu, test_feasible_proposals_cpu, test_launch_integration_cpu, test_launch_final_cpu, test_t2c_runtime_cpu, test_rerun_cpus_cpu",
+    "test_launch_final_cpu": "13 passed in 59.57s",
+    "new_suite": "tools/coopmwm/test_laneon_baseline_cpu.py: 11 passed",
+    "sumo_tests": "not run (CPU only; SUMO tests excluded per task rules)"
+  },
+  "not_done_by_design": [
+    "no physical SUMO execution/qualification/dispatch here: the episode worker runs only on the qualified cpuV host with the frozen e3final runtime binding; separately quoted and charged",
+    "no change to the primary A/B/R u24 analysis, the T1D planner_eval harness itself, the u8 interim, the speed-only primary comparator or the u24 synergy criterion",
+    "the running clean3 chain still needs the launcher to pass laneon=dict(checkpoint=<staged aecd7d70 path>) so the registration carries the executable binding before u24"
+  ],
+  "new_sim_s": 0
+}
