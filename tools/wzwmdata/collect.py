@@ -45,7 +45,7 @@ MAPPO_ARMS = ('mappo_u0', 'coop_mappo_u0', 'mappo', 'coop_mappo')   # canary use
 DEFAULT_RUNTIME = '/home/ubuntu/e3final'
 DEFAULT_CHECKPOINT = '/home/ubuntu/mappospeed/production2/policy_00169.pt'
 LOAD_MAX = 42.0              # cpuV 48 cores: start a job only below this 1-min load (clean4 first)
-MAX_WORKERS = {'cpuV': 12, 'gpuA': 16}
+MAX_WORKERS = {'cpuV': 24, 'gpuA': 20}     # MAIN 16:4x: gpuA all 20 cores, cpuV <=24
 MIN_FREE_GB = 25.0
 FORBIDDEN = ('holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1', 'sealed')
 
@@ -422,6 +422,9 @@ def run(root, *, workers=12, only=None, ids=None, load_max=LOAD_MAX):
     if int(workers) > MAX_WORKERS.get(host, 12):
         raise ValueError(f'{host} WM-B limit: at most {MAX_WORKERS.get(host, 12)} workers')
     jobs = [j for j in all_jobs(root) if (only is None or j['wave'] == only) and (ids is None or j['id'] in ids)]
+    if ids is not None:                        # an ids file also fixes the dispatch order
+        pos = {x: i for i, x in enumerate(ids)}
+        jobs.sort(key=lambda j: pos[j['id']])
     stamp = time.strftime('%Y%m%dT%H%M%S')
     _write(root / f'RUN_START_{stamp}.json', dict(pid=os.getpid(), workers=workers, only=only, load_max=load_max,
                                                  n_jobs=len(jobs), unix=time.time()))
@@ -510,7 +513,7 @@ def main(argv=None):
                    skip=skip, prior_charged_sim_s=a.prior_charged, prior_note=a.prior_note, host=a.host)
         print(json.dumps(dict(plan_sha256=out['plan_sha256'], **out['budget'])))
     elif a.cmd == 'run':
-        ids = None if not a.ids_file else set(Path(a.ids_file).read_text().split())
+        ids = None if not a.ids_file else list(dict.fromkeys(Path(a.ids_file).read_text().split()))
         out = run(a.root, workers=a.workers, only=a.only, ids=ids, load_max=a.load_max)
         print(json.dumps(dict(done=out['jobs_done'], failures=len(out['failures']), ledger=out['ledger'])))
     elif a.cmd == 'amend':

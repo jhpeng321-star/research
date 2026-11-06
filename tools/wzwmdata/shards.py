@@ -81,24 +81,30 @@ def plan_root(plan):
     raise ValueError('cannot locate the plan data root')
 
 
-def publish(run_root, out, *, min_worlds=24, final=False, canary_root=None):
+def publish(run_root, out, *, min_worlds=24, final=False, canary_root=None, arms=None):
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     index_path = out / 'SHARDS_INDEX.json'
     index = json.loads(index_path.read_text(encoding='utf-8')) if index_path.exists() else dict(shards=[])
-    taken = {s for sh in index['shards'] for s in sh['seeds']}
+    req = tuple(arms or ('native', 'mappo', 'coop_mappo', 'coop_native'))
+    taken = {(int(x[0]), x[1]) for sh in index['shards'] for x in sh.get('episodes_keys', [])}
     worlds = _worlds(run_root, canary_root)
-    complete = sorted(s for s, arms in worlds.items()
-                      if len(arms) == ARMS_NEEDED and all(e['safe'] for e in arms.values()) and s not in taken)
+    new = {}
+    for s, got in worlds.items():
+        if all(a in got and got[a]['safe'] for a in req):
+            fresh = [a for a in req if (s, a) not in taken]
+            if fresh:
+                new[s] = fresh
+    complete = sorted(new)
     if not complete or (len(complete) < min_worlds and not final):
         return dict(published=None, complete_new=len(complete), taken=len(taken))
     k = len(index['shards']) + 1
     episodes = []
     for s in complete:
-        for arm, e in sorted(worlds[s].items()):
-            episodes.append(dict(e, split=split_of(s)))
+        for arm in sorted(new[s]):
+            episodes.append(dict(worlds[s][arm], arm=arm, split=split_of(s)))
     body = dict(schema='wzwmdata.shard.v1', shard=k, created_unix=time.time(), map=reg.MAP,
-                seeds=complete, n_worlds=len(complete), n_episodes=len(episodes),
+                seeds=complete, arms=list(req), n_worlds=len(complete), n_episodes=len(episodes),
                 n_train_worlds=sum(split_of(s) == 'train' for s in complete),
                 n_val_worlds=sum(split_of(s) == 'val' for s in complete),
                 split_rule=f"world-grouped by seed: VAL = per cell min sha256('{VAL_KEY}:<seed>') "
@@ -112,7 +118,8 @@ def publish(run_root, out, *, min_worlds=24, final=False, canary_root=None):
         f.write(json.dumps(body, indent=1, sort_keys=True))
         f.flush()
         os.fsync(f.fileno())
-    index['shards'].append(dict(shard=k, path=str(path), seeds=complete, n_episodes=len(episodes),
+    index['shards'].append(dict(shard=k, path=str(path), seeds=complete, n_episodes=len(episodes), arms=list(req),
+                                episodes_keys=[[e['seed'], e['arm']] for e in episodes],
                                 sha256=body['shard_sha256'], unix=body['created_unix']))
     tmp = index_path.with_suffix('.tmp')
     tmp.write_text(json.dumps(index, indent=1, sort_keys=True), encoding='utf-8')
@@ -129,9 +136,10 @@ def main(argv=None):
     p.add_argument('--min-worlds', type=int, default=24)
     p.add_argument('--final', action='store_true')
     p.add_argument('--canary-root')
+    p.add_argument('--arms', help='comma list of required arms (default all four)')
     a = ap.parse_args(argv)
     print(json.dumps(publish(a.run_root, a.out, min_worlds=a.min_worlds, final=a.final,
-                             canary_root=a.canary_root)))
+                             canary_root=a.canary_root, arms=a.arms.split(',') if a.arms else None)))
 
 
 if __name__ == '__main__':
