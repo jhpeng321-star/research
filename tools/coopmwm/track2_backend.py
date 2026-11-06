@@ -29,7 +29,7 @@ import types
 import numpy as np
 import torch
 
-from . import moves, feasible_proposals
+from . import moves, feasible_proposals, v2v_wall
 from .acceleration import PHI
 from .accel_learner import GAMMA, UNIT
 from .coop_layer import CooperationLayer, LayerConfig
@@ -71,6 +71,9 @@ class MoveAPI:
     def __init__(self, cfg=None):
         from .group_lane import families
         self.FAMILIES = families(cfg)
+        # W1 protocol options are executable commitments, not trigger one-hot families.
+        self.EXECUTABLE_FAMILIES = self.FAMILIES+(
+            v2v_wall.FAMILIES if v2v_wall.settings(cfg) is not None else ())
 
     @staticmethod
     def candidates(obs_state, rng, n):
@@ -78,6 +81,10 @@ class MoveAPI:
 
     @staticmethod
     def offsets(move, t):
+        if isinstance(move.move, v2v_wall.WallOption):
+            option = move.move
+            return {v: -float(option.depth) if option.onset <= t < option.onset+option.hold else 0.
+                    for v in option.members}
         return moves.offsets(move.move, t)
 
 
@@ -109,6 +116,8 @@ def _check(cfg, arm):
     if arm != 'A':
         from .coordination_opportunities import settings as opportunity_settings
         opportunity_settings(cfg)
+        v2v_wall.settings(cfg)            # W1 options: common B/R registration, default off
+        v2v_wall.awareness_settings(cfg)
         from .sparse_synergy_credit import settings as synergy_settings
         synergy_settings(cfg)
         from .track2_safety_reward import settings as close_call_settings
@@ -133,7 +142,7 @@ def _batch_dict(batch):
 
 
 def _batch(record):
-    return TriggerBatch(record['context'], tuple(tuple(None if m is None else moves.Move.from_dict(m)
+    return TriggerBatch(record['context'], tuple(tuple(None if m is None else v2v_wall.option_from_dict(m)
         for m in table) for table in record['tables']),
         torch.tensor(record['descriptors'], dtype=torch.float32),
         torch.tensor(record['mask'], dtype=torch.bool),
@@ -142,16 +151,27 @@ def _batch(record):
         torch.tensor(record['values'], dtype=torch.float32))
 
 
-def _features(context):
-    """No RSU/broadcast or globally conditioned base intent enters the layer."""
+def _features(context, aware=None):
+    """No RSU/broadcast or globally conditioned base intent enters the layer.
+
+    ``aware`` (W1 coop_awareness settings; default None) inserts the awareness
+    block before the committed-offset column (zero-initialised layer columns)."""
     rows = []
+    width = v2v_wall.awareness_width(aware)
     for vid, x in zip(context['members'], context['x']):
         block = context.get('merge_features', {}).get(vid)
         if block is None:
             # Bank records without sensor packets remain explicitly missing.
             block = merge_features(None, vid, now_s=0, cfg=MergeFeaturesConfig(True)).tolist()
-        rows.append(list(x[:29]) + list(block) + [context.get('move_offsets', {}).get(vid, 0.)])
-    result = torch.tensor(rows, dtype=torch.float32).reshape(len(rows), FEATURE_DIM)
+        extra = []
+        if width:
+            extra = (context.get('coop_awareness') or {}).get(vid)
+            if extra is None:
+                extra = v2v_wall.missing_awareness(aware)
+            if len(extra) != width:
+                raise ValueError('coop awareness block width mismatch')
+        rows.append(list(x[:29]) + list(block) + list(extra) + [context.get('move_offsets', {}).get(vid, 0.)])
+    result = torch.tensor(rows, dtype=torch.float32).reshape(len(rows), FEATURE_DIM+width)
     if not bool(torch.isfinite(result).all()):
         raise ValueError('nonfinite local cooperation features')
     return result
@@ -167,7 +187,7 @@ class ProductionLayer(CooperationLayer):
     T2A's categorical PPO is updated separately on decision samples only.
     """
     def _features(self, context):
-        return _features(context)
+        return _features(context, getattr(self, 'awareness', None))
 
     def _distribution(self, features, move_offsets=None):
         residual, logits, _, offsets = super()._distribution(features, move_offsets)
@@ -270,6 +290,15 @@ class EpisodePolicy(torch.nn.Module):
         self.cfg, self.arm = deepcopy(cfg), arm
         config = LayerConfig(**dict(cfg['layer_config'], feature_dim=FEATURE_DIM, enabled=True))
         self.layer = ProductionLayer(base, config)
+        # W1 options (default off): zero-initialised awareness columns on top of the
+        # unchanged default initialisation; V2V wall protocol runtime state.
+        self.awareness = v2v_wall.awareness_settings(cfg)
+        if self.awareness is not None:
+            v2v_wall.widen_layer(self.layer, self.awareness)
+            self.layer.awareness = self.awareness
+        wall_settings = v2v_wall.settings(cfg)
+        self.wall = None if wall_settings is None else v2v_wall.Protocol(wall_settings)
+        self.awareness_blocks = {}
         self.layer.actuation_receipts = 'clean2_budget' in cfg or 'clean3_budget' in cfg
         # Retain the legacy slot/optimizer layout for existing sidecars. It is
         # unused by ProductionLayer, gets no gradient and cannot gate actuation.
@@ -277,7 +306,7 @@ class EpisodePolicy(torch.nn.Module):
         self.layer.optimizer = torch.optim.Adam(self.layer.layer_parameters(), lr=config.learning_rate)
         self.trigger = TriggerPolicy(self.layer.base, v2v_dim=cfg['v2v_dim'],
             n_candidates=cfg['trigger_candidates'], partner_slots=cfg['trigger_partner_slots'],
-            freeze_base=True, moves_api=MoveAPI(cfg))
+            freeze_base=True, moves_api=MoveAPI(cfg), extension=v2v_wall.extension(cfg))
         self.trigger_optimizer = self.trigger.optimizer(lr=cfg['trigger_lr'])
         self.layer_rng = torch.Generator().manual_seed(int(cfg['training_seed']))
         self.candidate_rng = np.random.default_rng(int(cfg['training_seed']))
@@ -349,6 +378,14 @@ class EpisodePolicy(torch.nn.Module):
                 # Local-only, t-1 intent board, distinct from base's RSU-conditioned board.
                 local_contexts[vid] = _intent_features(dict(time_s=now, vehicles=local), vid, {},
                     DEFAULT_CFG, dict(horizon=self.layer.base.intent_horizon, board=self.trigger_board))
+        if self.awareness is not None:
+            # Own packet at t plus other CAVs' own t-1 packets within the registered range.
+            self.awareness_blocks = {vid: v2v_wall.awareness_block(reports[vid], vid, self.reports,
+                                                                   now, self.awareness) for vid in cavs}
+        if self.wall is not None:
+            self.wall.receive(now, {vid: table[vid] for vid in cavs})
+            for vid in cavs:
+                states[vid]['v2v_wall'] = self.wall.state(vid, now)
         self.now, self.reports = now, reports
         self.local_states, self.visible, self.blocks = states, visible, blocks
         self.local_intents = local_contexts
@@ -372,11 +409,23 @@ class EpisodePolicy(torch.nn.Module):
         context = dict(context, merge_features={v: self.blocks[v] for v in context['members']})
         if getattr(self.layer.base, 'intent_horizon', 0):
             context['trigger_v2v'] = {v: self.local_intents[v] for v in context['members']}
+        if self.awareness is not None:
+            context['coop_awareness'] = {v: self.awareness_blocks[v] for v in context['members']}
         decision = None
         periodic = (self.last_decision is None
                     or self.now-self.last_decision >= self.cfg['decision_interval_s'])
         opportunity_kwargs = {}
         pairs = ()
+        wall_events = None
+        if self.wall is not None and context['members']:
+            self.executor._advance(self.now)
+            occupied = {v for entry in self.executor.active for v in entry['move'].members}
+            free = {v for v in context['members'] if v not in occupied
+                    and self.now >= self.command_reservations.get(v, {}).get(v, -math.inf)}
+            pending = self.wall.events(context['members'], free)
+            if pending and not periodic:
+                wall_events = frozenset(pending)
+            opportunity_kwargs = dict(wall=self.wall, wall_events=wall_events)
         if self.coordination is not None and context['members']:
             from .coordination_opportunities import graph, disjoint
             self.executor._advance(self.now)
@@ -384,9 +433,9 @@ class EpisodePolicy(torch.nn.Module):
                 occupied={v for entry in self.executor.active for v in entry['move'].members},
                 command_reservations=self.command_reservations)
             pairs = disjoint(edges if periodic else self.approach_events.pending(edges))
-            opportunity_kwargs = dict(coordination=self.coordination, opportunity_pairs=pairs,
+            opportunity_kwargs.update(coordination=self.coordination, opportunity_pairs=pairs,
                                       event=not periodic)
-        if context['members'] and (periodic or pairs):
+        if context['members'] and (periodic or pairs or wall_events):
             decision, accepted, proposal_stats = feasible_proposals.decide_and_start(
                 self.trigger, context, obs_states=self.local_states,
                 observable_cavs=self.visible, executor=self.executor, now=self.now,
@@ -404,8 +453,12 @@ class EpisodePolicy(torch.nn.Module):
                     # Missing partner evidence does not trigger early release:
                     # keep the registered commitment until locally witnessed
                     # release or its original expiry; never extrapolate.
-                    local = moves.offsets(entry['move'].move, self.now-entry['start'],
-                        state={'s_m': self.execution_positions[vid]})
+                    if self.wall is not None and isinstance(entry['move'].move, v2v_wall.WallOption):
+                        local = self.wall.offsets(entry['move'].move, self.now-entry['start'],
+                                                  self.execution_positions[vid], vid)
+                    else:
+                        local = moves.offsets(entry['move'].move, self.now-entry['start'],
+                            state={'s_m': self.execution_positions[vid]})
                     offsets[vid] = local[vid]
         context['move_offsets'] = {v: offsets.get(v, 0.) for v in context['members']}
         sample, memory = self.layer.sample(context, generator, deterministic, memory)
@@ -426,6 +479,10 @@ class EpisodePolicy(torch.nn.Module):
             active_moves=[dict(move=e['move'].to_dict(), start=e['start'], until=e['until'])
                           for e in self.executor.active], merge_features=context['merge_features'],
             reward_neighbourhoods={v: self.neighbourhoods[v] for v in context['members']})
+        if self.wall is not None:
+            # Initiators broadcast AFTER this step's decisions; receivers see it at t+1.
+            self.wall.publish(self.now, {v: r.source for v, r in self.reports.items()})
+            sample['track2']['v2v_wall'] = self.wall.receipt()
         return sample, memory
 
     def worker_state(self):
