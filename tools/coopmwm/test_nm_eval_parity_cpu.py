@@ -170,3 +170,67 @@ def test_n9_families_identical_when_enabled(cfg, monkeypatch, tmp_path):
     statuses = [json.loads(x)['event']['sample']['track2']['nm_families']['commands'].get('p2', {}).get('status')
                 for x in train]
     assert 'cacc' in statuses                                   # the N9 law actually executed
+
+
+# ---------------------------------------------------------------- clean5b: LCEXEC programs and hold_lane_pin
+
+def _pair(c, arm, base_state, worker, native, head, deterministic):
+    """training/evaluation controllers with the same determinism flag (eval runs deterministic=True)."""
+    base = from_weights(deepcopy(base_state), enabled=True)
+    base.eval()
+    job = dict(track2_backend=True, track2_config=c, arm=arm, track2_state=deepcopy(worker), noise_seed=SEED)
+    pt, factory = tb.episode_components(job, base, controller_class(Controller))
+    pt.trigger.trigger_head = head(pt.trigger)
+    ct = factory(pt, torch.Generator().manual_seed(SEED), deterministic)
+    pe = runner.eval_policy(native, arm, UPDATE, SEED)
+    pe.trigger.trigger_head = head(pe.trigger)
+    ce = runner.wrap_controller(controller_class(Controller)(pe, torch.Generator().manual_seed(SEED), deterministic), pe)
+    return (pt, ct), (pe, ce)
+
+
+@pytest.mark.parametrize('arm', ['B', 'R'])
+def test_lcexec_program_commands_identical_when_enabled(cfg, monkeypatch, tmp_path, arm):
+    pytest.importorskip(f'{__package__}.lc_families', reason='LCEXEC (clean5b) not merged into this tree')
+    tlf = importlib.import_module(f'{__package__}.test_lc_families_cpu')
+    from . import map_descriptor as md
+    monkeypatch.delenv(md.ENV, raising=False)
+    md._reset_for_tests()
+    md.bind(md.load(tlf.MAP_DIR))
+    try:
+        c5 = tlf.lc_cfg(cfg, cap=3)
+        root, base_state, worker = write_root(tmp_path, c5, arm)
+        native = dict(c5, run_root=str(root))
+        (pt, ct), (pe, ce) = _pair(c5, arm, base_state, worker, native, tlf.Prefer, True)
+        assert pe.lc_families is not None
+        logs = ([], [])
+        for t in range(300, 306):
+            rows = tlf.e2e_rows(t)
+            for log, c in zip(logs, (ct, ce)):
+                env = tlf.Capture()
+                requests = c.apply(rows, {r['vid']: 0. for r in rows if r['is_cav']}, t)
+                c.lane_request(env)                               # LCEXEC: the env.lc_tick stash of this tick
+                log.append(canon(dict(requests=requests, event=c.events[-1], lc_tick=env.ticks)))
+        assert logs[1] == logs[0]                                 # identical program commands every second
+        assert '"free_program' in logs[0][-1] and any('lc_tick' in x and '"accel"' in x for x in logs[0])
+    finally:
+        md._reset_for_tests()
+
+
+def test_hold_lane_pins_identical_when_enabled(cfg, tmp_path):
+    fe_ = pytest.importorskip(f'{__package__}.fullpol_ev', reason='clean5 EV not merged into this tree')
+    if 'hold_lane_pin' not in fe_.config_keys.__code__.co_varnames:
+        pytest.skip('hold_lane_pin (clean5b) not in this tree')
+    tfe = importlib.import_module(f'{__package__}.test_fullpol_ev_cpu')
+    base_cfg = tfe.ev_cfg(cfg)
+    c5 = dict(base_cfg, clean5_ev=dict(base_cfg['clean5_ev'], hold_lane_pin=True))
+    root, base_state, worker = write_root(tmp_path, c5, 'B')
+    native = dict(c5, run_root=str(root))
+    (pt, ct), (pe, ce) = _pair(c5, 'B', base_state, worker, native, lambda trig: trig.trigger_head, False)
+    logs, pinned = ([], []), 0
+    for t in range(300, 340):
+        vehicles = [dict(r, v_mps=2.) for r in advance(tfe.scene(), t-300, speed=2.)]
+        for log, c in zip(logs, (ct, ce)):
+            requests = c.apply(vehicles, {r['vid']: 0. for r in vehicles if r['is_cav']}, t)
+            log.append(canon(dict(requests=requests, event=c.events[-1], g5=dict(c.g5_lane_targets))))
+        pinned += bool(ct.events[-1]['sample'].get('hold_lane_pins'))
+    assert logs[1] == logs[0] and pinned > 0                     # the same pins enter the same single lane writer

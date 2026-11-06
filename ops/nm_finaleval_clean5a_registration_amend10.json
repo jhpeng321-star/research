@@ -1,0 +1,34 @@
+{
+ "amendment": 10,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend9.json",
+  "registration_sha256": "d0a3f7de46c48badaac35e71121df970d8e85a5b301b269f05548e4a21a6ab43"
+ },
+ "authority": [
+  "MAIN 2026-11-07 ~02:3x: check zero-SUMO that the clean5b plant (deploy b58daad8, COOPMWM_LC_RUNTIME=1, hold_lane_pin ON) is byte-identical for NATIVE/U0/RULE episodes vs the pre-run (4fee5920); run the training-parity test on b58daad8 incl. LCEXEC programs and hold pins"
+ ],
+ "plant_identity": {
+  "diff": "4fee5920..b58daad8 plant files: traffic_shepherd/, tools/coopfree, tools/coopnative, tools/leverprobe, map_runtime, g5_runtime, frozen_trunk, protocol, rerun_tracks_backend, replay_bank unchanged; changed: accel_plant (+lc_runtime.install when COOPMWM_LC_RUNTIME=1), acceleration (+fail-closed checks for nm/hold/lc sample keys), v2v_runtime (N9 observe_native only with policy.nm_families; lc_requests only when a sample carries lc_tick), group_lane (N9 / hold-pin targets only when the sample carries them), launch_production (wave_workers: worker count only)",
+  "hold_lane_pin": "clean5_ev (FULLPOL head) on B/R only; never in A/U0/RULE samples",
+  "native": "the native plant never calls bind_runtime -> no LCEXEC env, no change",
+  "u0_rule": "A-policy samples (from_weights) carry no lc_tick / nm_lane_requests / hold_lane_pins and have no nm_families; with COOPMWM_LC_RUNTIME=1 the LCEXEC env subclass without a stash steps byte-identically (b58daad8 test_lc_runtime_cpu::test_no_stash_step_is_byte_identical_to_the_base_env PASS)",
+  "verdict": "IDENTICAL for NATIVE/U0/RULE (the pre-run baselines stay valid under the clean5b plant)"
+ },
+ "registered_utc": "2026-11-06T18:28:33.280054+00:00",
+ "registration_sha256": "e0ab843706bc7686c1c5cb306e8f9265524baa8b9055c703fb8eed5e3bd9b602",
+ "runtime": "Runtime.run sets COOPMWM_LC_RUNTIME=1 when the run CONFIG enables lc_families (clean5b), as the training chain requires; inert without requests",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: zero-SUMO check, no result opened",
+ "training_parity": {
+  "result": "8 passed (parity) + 138 incl. test_lc_runtime_cpu",
+  "tests": [
+   "A plain",
+   "B/R lane-drop (native_commands)",
+   "RSU head",
+   "N9 families (now merged, not skipped)",
+   "LCEXEC programs B and R (env.lc_tick stash identical)",
+   "hold_lane_pin ON (pins + G5 targets identical)"
+  ],
+  "tree": "b58daad8 + N6 overlay"
+ }
+}

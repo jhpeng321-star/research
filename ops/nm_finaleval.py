@@ -1166,6 +1166,10 @@ class Runtime:
         from concurrent.futures import ProcessPoolExecutor
         import multiprocessing
         os.environ['COOPMWM_G5_RUNTIME'] = '1'   # same bound runtime env as the clean3/clean4 owners
+        if cfg.get('lc_families'):
+            # clean5b (LCEXEC): the training chain requires COOPMWM_LC_RUNTIME=1; B/R lane programs need the env
+            # knobs, and without a request the LCEXEC env step is byte-identical (lc_runtime golden test)
+            os.environ['COOPMWM_LC_RUNTIME'] = '1'
         results = [None]*len(items)
         for group in process_groups(items):
             with ProcessPoolExecutor(max_workers=min(workers, len(group)),
