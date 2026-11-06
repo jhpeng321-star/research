@@ -38,10 +38,17 @@ registered ``lc_program.REGISTRY['tau']`` grid. The stash is consumed (and clear
   LANE_REQUEST_S, edge-end deferral with ``v*duration + LANE_EDGE_GUARD_M``). On a lane-drop map
   the frozen "never into WM lane 2" refusal is lifted for the CLOSING lane iff that lane exists
   on the CAV's current edge and its remaining length ahead of the CAV exceeds
-  ``v*duration + LANE_EDGE_GUARD_M`` (else ``deferred_edge_end``). G5/N2/N9 ``lanes`` tensor
-  targets still go through the frozen method unchanged; a vid with both an LCEXEC lateral request
-  and a G5 target raises (single lateral writer). Per-vehicle telemetry: ``info['lc_lane_vehicles']
-  = {vid: {target, status, completed}}`` (completion evidence of the frozen G5 telemetry) and the
+  ``v*duration + LANE_EDGE_GUARD_M`` (else ``deferred_edge_end``). A request for the CAV's
+  CURRENT lane is a persistent lane HOLD (LCMOVES: changeLane(target, 2 s) every second, also after
+  reaching it; lane changes into the closing lane only worked with it): issued as
+  ``changeLane(vid, current SUMO index, duration)`` with status ``held`` under the same junction /
+  edge-end / closing-lane rules (a hold in a merge-map ramp lane is refused). G5/N2/N9 ``lanes``
+  tensor targets still go through the frozen method unchanged (target == current stays ``noop``);
+  a vid with both an LCEXEC lateral request and a G5 target raises (single lateral writer).
+  Per-vehicle telemetry for EVERY requested vid: ``info['lc_lane_vehicles'] = {vid: {target,
+  status, completed}}`` with status ``issued`` / ``held`` / ``deferred_edge_end`` / ``refused_*``
+  (executor receipts, e.g. merge-request timeouts), ``completed`` = post-physics WM lane == target
+  (completion evidence of the frozen G5 telemetry; for ``held``: still in the lane), and the
   counts in ``info['lc_lane_commands']`` (never mixed into the frozen ``info['lane_commands']``).
 * ``tau``: ``setTau(vid, x)`` when first requested (``getTau`` saved once), re-set when the value
   changes, ``setTau(saved)`` when the vid is no longer requested; a vid that left the network
@@ -55,12 +62,13 @@ Known differences from the probe ``Arm`` (test_lc_runtime_cpu documents each):
 * accel -> native WITHOUT a release: the owner issues ``setSpeed(vid, -1)`` (owned -> native); the
   probe issued nothing, so its last ``slowDown(target, 1 s)`` still pinned one more 0.5 s step;
 * the probe's release ``setSpeed(vid, -1)`` for a member it never slowed is not issued (SUMO
-  no-op: empty speed timeline); slowDown targets agree to float rounding (|a| <= 3, v <= allowed+3;
-  above that direct_target clips / releases to native);
-* a lane request for the CURRENT lane is a no-op (frozen rule); the probe's LCMOVES ``prog``
-  re-issued ``changeLane(target, 2 s)`` every second after reaching it ("lane hold");
-* the edge-end deferral also defers changes OUT of the closing lane within ``v*duration + 10 m``
-  of the drop, where the probe kept requesting until its fallback position.
+  no-op: empty speed timeline); slowDown targets agree to float rounding for |a| <= 3;
+* very fast vehicle (v > allowed + 3 m/s): direct_target's bounds are infeasible
+  (max(-3, -v) > allowed - v), so CommandOwnership releases the CAV to native (``setSpeed(vid, -1)``
+  if owned) where the probe issued ``slowDown(vid, allowed, 1 s)``; |a| > 3 is clipped to [-3, 3];
+* the edge-end deferral (status ``deferred_edge_end``) also defers changes OUT of the closing lane
+  and holds within ``v*duration + 10 m`` of the drop, where the probe kept requesting until its
+  fallback / give-up position.
 """
 from __future__ import annotations
 
@@ -280,7 +288,8 @@ def lc_env_class(base, desc):
             vehicles, counts = {}, Counter()
             for vid, status in sorted(self._lc_lane_status.items()):
                 target = int(stash['lanes'][vid][0])
-                done = bool(status == 'issued' and vid in self._lc_lane_issued and completed(vid, target))
+                done = bool(status in ('issued', 'held') and vid in self._lc_lane_issued
+                            and completed(vid, target))
                 vehicles[vid] = dict(target=target, status=status, completed=done)
                 counts[status] += 1
                 if status == 'issued':
@@ -368,12 +377,11 @@ def lc_env_class(base, desc):
                     note[vid] = 'refused_junction'
                     continue
                 current, s_now = G['lane_and_s'](row['lane_id'], row['lane_position_m'])
-                if target == current:
-                    note[vid] = 'noop'
-                    continue
+                hold = target == current                  # LCEXEC: persistent lane hold, not a noop
                 closing_target = closing is not None and target == closing
-                if target not in (0, 1, 2) or abs(target - current) != 1 or (target == 2 and not closing_target):
-                    note[vid] = 'refused_not_allowed'     # adjacent only; never into a ramp lane
+                if (target not in (0, 1, 2) or (not hold and abs(target - current) != 1)
+                        or (target == 2 and not closing_target)):
+                    note[vid] = 'refused_not_allowed'     # adjacent only; never into / held in a ramp lane
                     continue
                 edge = row['road_id']
                 index = next((i for (e, i), (lane, _) in G['LANE_TABLE'].items()
@@ -393,7 +401,7 @@ def lc_env_class(base, desc):
                         continue
                 api.vehicle.changeLane(vid, int(index), float(duration))
                 issued[vid] = (int(target), int(index), float(duration))
-                note[vid] = 'issued'
+                note[vid] = 'held' if hold else 'issued'
 
     CavSumoEnv.__module__ = base.__module__
     CavSumoEnv.__qualname__ = base.__qualname__
