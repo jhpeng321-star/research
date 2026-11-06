@@ -47,9 +47,8 @@ FORBIDDEN_SEED_RANGES = ((964000, 964199), (962000, 962999), (977000, 977999))
 WZ3TO2_TRAIN = (989200, 989599)
 WZ3TO2_HELDOUT = (989600, 989699)
 
-#: Stub placeholders (CPU tests only).  N1's registered cells are authoritative; the stub
-#: demand cells bracket the probe's chosen 2800 veh/h (DEMAND_CHOSEN.json), the penetration
-#: cells are the original MAPPO's training mix.
+#: Stub placeholders (CPU tests only; refuses SUMO).  Mirrors N1's registered wz3to2 cells
+#: (tools/coopmwm/map_scenarios.py: demand 2400/2800/3200 x CAV share 0.2/0.4/0.6).
 _STUBS = {
     "wz3to2": {
         "name": "wz3to2",
@@ -57,8 +56,8 @@ _STUBS = {
         "env_kwargs": {"map_name": "wz3to2"},
         "train_seeds": WZ3TO2_TRAIN,
         "heldout_seeds": WZ3TO2_HELDOUT,
-        "demands_vph": (2400, 2600, 2800),
-        "penetrations": (0.05, 0.1, 0.2, 0.4),
+        "demands_vph": (2400, 2800, 3200),
+        "penetrations": (0.2, 0.4, 0.6),
         "spec_sha256": None,
     },
 }
@@ -73,6 +72,10 @@ _ALIASES = {
     "penetrations": ("penetrations", "train_penetrations", "penetration_cells"),
     "spec_sha256": ("spec_sha256", "sha256"),
 }
+
+
+#: descriptor fields recorded verbatim (identity / install receipts), never interpreted here
+_EXTRA = ("network_file_sha256", "k_slots", "install_record")
 
 
 class MapBindingError(ValueError):
@@ -142,13 +145,15 @@ class MapBinding:
     is_stub: bool = True
     api: str = ""
     spec_sha256: str | None = None
+    extra: dict = field(default_factory=dict)
 
     def record(self) -> dict:
         return {"name": self.name, "env_name": self.env_name, "env_kwargs": dict(self.env_kwargs),
                 "train_seeds": compress(self.train_seeds),
                 "heldout_seeds": compress(self.heldout_seeds),
                 "demands_vph": list(self.demands_vph), "penetrations": list(self.penetrations),
-                "is_stub": self.is_stub, "api": self.api or "stub", "spec_sha256": self.spec_sha256}
+                "is_stub": self.is_stub, "api": self.api or "stub", "spec_sha256": self.spec_sha256,
+                **({"extra": dict(self.extra)} if self.extra else {})}
 
     def check_seeds(self, seeds) -> tuple[int, ...]:
         seeds = seed_tuple(seeds)
@@ -198,7 +203,8 @@ def binding_from_descriptor(desc, *, name: str, api: str = "", is_stub: bool = F
         heldout_seeds=seed_tuple(_get(desc, "heldout_seeds")),
         demands_vph=tuple(int(d) for d in (_get(desc, "demands_vph") or ())),
         penetrations=tuple(float(p) for p in (_get(desc, "penetrations") or ())),
-        is_stub=bool(is_stub), api=api, spec_sha256=_get(desc, "spec_sha256"))
+        is_stub=bool(is_stub), api=api, spec_sha256=_get(desc, "spec_sha256"),
+        extra={k: desc[k] for k in _EXTRA if isinstance(desc, Mapping) and k in desc})
     if not binding.train_seeds:
         raise MapBindingError(f"{name}: descriptor has no TRAIN seed range")
     if set(binding.train_seeds) & set(binding.heldout_seeds):
@@ -246,6 +252,12 @@ def apply_map(cfg: Mapping) -> tuple[dict, MapBinding]:
         rollout["demands_vph"] = list(binding.demands_vph)
     if rollout.get("penetrations", MAP_SENTINEL) == MAP_SENTINEL:
         rollout["penetrations"] = list(binding.penetrations)
+    bad_d = sorted(set(int(d) for d in rollout["demands_vph"]) - set(binding.demands_vph))
+    bad_p = sorted(set(float(p) for p in rollout["penetrations"]) - set(binding.penetrations))
+    if bad_d or bad_p:
+        raise MapBindingError(f"{binding.name}: unregistered cells demands={bad_d} penetrations={bad_p}")
+    if rollout.get("penetration_mode", "discrete") != "discrete":
+        raise MapBindingError("a [map] run samples registered cells: penetration_mode must be 'discrete'")
     if "seeds" not in rollout:
         raise MapBindingError("[rollout] seeds must be explicit in a [map] run")
     binding.check_seeds(rollout["seeds"])

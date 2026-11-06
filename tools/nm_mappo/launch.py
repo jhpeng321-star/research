@@ -121,7 +121,9 @@ def train_argv(python: str, config: Path, out: Path, *, init: str | None, worker
 
 def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python: str,
               sumo_home: str | None, workers: int | None = None, config: Path = CONFIG,
-              allow_stub: bool = False) -> dict:
+              allow_stub: bool = False, wall_cap_h: float | None = None,
+              phase_cap_sim_s: float | None = None, other_charges_sim_s: float = 0.0,
+              ledger: str | None = None) -> dict:
     if option not in Q.OPTIONS:
         raise SystemExit(f"unknown option {option!r}; choose from {sorted(Q.OPTIONS)}")
     if host not in Q.HOSTS:
@@ -142,7 +144,9 @@ def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python
     wall_h = (q["wall_h"][host] if workers == Q.HOSTS[host]["workers"]
               else Q.wall_h_for_workers(q["iterations"], workers))
     high_h = wall_h[1]
-    wall_cap_s = int(max(2.0, 1.5 * high_h) * 3600)
+    wall_cap_s = int((wall_cap_h if wall_cap_h else max(2.0, 1.5 * high_h)) * 3600)
+    if phase_cap_sim_s is not None and q["planned_sim_s"] + q["smoke_sim_s"] + other_charges_sim_s > phase_cap_sim_s:
+        raise SystemExit("planned production + smoke + other charges exceed the registered phase cap")
     production = train_argv(python, config, run_dir / "production", init=init, workers=workers,
                             iterations=q["iterations"], episodes=Q.EPISODES,
                             max_sumo_seconds=q["controlled_s"],
@@ -163,6 +167,9 @@ def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python
                          "planned_total": q["planned_total_sim_s"], "hard_cap": q["hard_cap_sim_s"]},
         "quote_wall_h": wall_h, "wall_cap_s": wall_cap_s,
         "snapshots_preregistered": [s for s in SNAPSHOTS if s <= q["iterations"]],
+        "phase_cap_sim_s": phase_cap_sim_s, "other_charges_sim_s": other_charges_sim_s,
+        "per_iteration_sim_s": Q.EPISODES * Q.EPISODE_SIM_S, "ledger": ledger,
+        "disk_floor_bytes": 1_000_000_000,
         "python": python, "sumo_home": sumo_home,
         "argv": {"smoke": smoke, "production": production},
         "env": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1",
@@ -221,12 +228,45 @@ def smoke_passed(run_dir: Path) -> tuple[bool, str]:
     return True, "PASS"
 
 
+def _stage_used_sim_s(stage_dir: Path, episode_sim_s: float) -> float:
+    """Simulated seconds of a trainer stage from its status.json (+ failed episodes, upper bound)."""
+    path = stage_dir / "status.json"
+    if not path.exists():
+        return 0.0
+    st = json.loads(path.read_text())
+    return float(st.get("sumo_seconds_simulated", 0.0)) + float(st.get("failed_episodes", 0)) * episode_sim_s
+
+
+def phase_guard(plan: dict, run_dir: Path) -> list[str]:
+    """Reasons to stop production now: disk below the floor, or the registered phase cap would be
+    exceeded by (smoke + other charges + production so far + the remaining planned iterations)."""
+    reasons = []
+    free = shutil.disk_usage(run_dir).free
+    if free < int(plan.get("disk_floor_bytes") or 0):
+        reasons.append(f"disk free {free} B < floor {plan['disk_floor_bytes']} B")
+    cap = plan.get("phase_cap_sim_s")
+    if cap:
+        episode = float(plan["per_iteration_sim_s"]) / float(plan["episodes_per_iteration"])
+        prod = run_dir / "production"
+        done = 0
+        if (prod / "status.json").exists():
+            done = int(json.loads((prod / "status.json").read_text()).get("iteration", 0))
+        smoke = _stage_used_sim_s(run_dir / "smoke", episode) if (run_dir / "smoke").exists() else 0.0
+        used = smoke + float(plan.get("other_charges_sim_s") or 0.0) + _stage_used_sim_s(prod, episode)
+        remaining = max(0, int(plan["iterations"]) - done) * float(plan["per_iteration_sim_s"])
+        if used + remaining > float(cap):
+            reasons.append(f"phase cap: used {used:.0f} + remaining planned {remaining:.0f} > cap {cap:.0f}")
+    return reasons
+
+
 def cmd_plan(a) -> int:
     run_dir = Path(a.run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
     plan = make_plan(option=a.option, host=a.host, run_dir=run_dir, init=a.init,
                      python=a.python, sumo_home=a.sumo_home, workers=a.workers,
-                     allow_stub=a.allow_stub)
+                     allow_stub=a.allow_stub, wall_cap_h=a.wall_cap_h,
+                     phase_cap_sim_s=a.phase_cap_sim_s, other_charges_sim_s=a.other_charges_sim_s,
+                     ledger=a.ledger)
     write_json_new(run_dir / "PLAN.json", plan)
     print(json.dumps({"plan": str(run_dir / "PLAN.json"),
                       "plan_sha256": sha256_file(run_dir / "PLAN.json"),
@@ -391,6 +431,11 @@ def parse(argv=None):
     p.add_argument("--sumo-home", default=os.environ.get("SUMO_HOME"))
     p.add_argument("--workers", type=int, default=None)
     p.add_argument("--allow-stub", action="store_true")
+    p.add_argument("--wall-cap-h", type=float, default=None)
+    p.add_argument("--phase-cap-sim-s", type=float, default=None)
+    p.add_argument("--other-charges-sim-s", type=float, default=0.0,
+                   help="sim-s of the same phase charged outside production (smoke excluded)")
+    p.add_argument("--ledger", default=None, help="phase charge ledger (JSONL) on the box")
     for name in ("check", "status", "stop"):
         sub.add_parser(name).add_argument("--run-dir", required=True)
     p = sub.add_parser("ack")

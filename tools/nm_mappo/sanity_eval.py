@@ -10,9 +10,11 @@ Arms per world (identical seed / demand / penetration / 300 s native warmup / 60
 ``native`` (all CAVs released to SUMO: all-NaN command), ``u0`` (frozen MAPPO u0 transferred
 as-is) and ``wz`` (the wz3to2-trained MAPPO), plus optional extra ``name=path`` arms.  Policy
 arms run the DEPLOYMENT executor (``PolicyExecutor``, deterministic mean action, ``lanes=None``
-asserted for speed-only actors).  Panel: one world per registered TRAIN cell (penetration x
-demand of the map binding) on the LAST TRAIN seeds (989588-989599 for 12 cells); never a
-HELD-OUT seed (those are reserved for the final paired evaluation, N4).
+asserted for speed-only actors).  Panel: the TRAINING cells of the config (penetrations x
+demands after map resolution; canonical D3200_p60 for S-MAPPOWZ) x the LAST
+``ceil(12 / n_cells)`` TRAIN seeds (989588-989599 for one cell); never a HELD-OUT seed (those
+are reserved for the final paired evaluation).  ``--skip-native`` + ``--prior-rows`` run a
+later arm (the trained actor) on the same panel and summarise it with the earlier rows.
 
 Metrics per arm-world: window sums of the trainer's per-step team-reward components
 (``delay``, ``source_wait``, ``total_wait`` = delay + source wait, ``hard_brake``,
@@ -66,7 +68,7 @@ def load_cfg(path):
 
 
 def resolve(cfg: dict, *, fake: bool):
-    """(env spec, binding) for the eval env; the stub binding is refused unless ``fake``."""
+    """(env spec, binding, training cells) for the eval env; the stub is refused unless ``fake``."""
     from wms.control.mappo.mapbind import apply_map
     cfg = json.loads(json.dumps(cfg))
     if fake:
@@ -75,16 +77,20 @@ def resolve(cfg: dict, *, fake: bool):
     resolved, binding = apply_map(cfg)
     env = resolved["env"]
     spec = {"env_name": env["name"], "env_kwargs": dict(env.get("kwargs", {}))}
-    return spec, binding
+    roll = resolved["rollout"]
+    cells = [(float(p), int(d)) for p in roll["penetrations"] for d in roll["demands_vph"]]
+    return spec, binding, cells
 
 
-def make_panel(binding, *, warmup_s: float = WARMUP_S, horizon_s: float = HORIZON_S) -> list[dict]:
-    cells = [(float(p), int(d)) for p in binding.penetrations for d in binding.demands_vph]
-    seeds = sorted(binding.train_seeds)[-len(cells):]
+def make_panel(binding, cells=None, *, min_worlds: int = 12, warmup_s: float = WARMUP_S,
+               horizon_s: float = HORIZON_S) -> list[dict]:
+    cells = cells or [(float(p), int(d)) for p in binding.penetrations for d in binding.demands_vph]
+    per_cell = max(1, math.ceil(min_worlds / len(cells)))
+    seeds = sorted(binding.train_seeds)[-per_cell:]
     held = set(binding.heldout_seeds)
-    panel = [{"world": i, "seed": int(s), "demand_vph": d, "penetration": p,
+    panel = [{"world": i, "seed": int(s), "demand_vph": d, "penetration": p, "map": binding.name,
               "warmup_s": float(warmup_s), "horizon_s": float(horizon_s)}
-             for i, ((p, d), s) in enumerate(zip(cells, seeds))]
+             for i, ((p, d), s) in enumerate((c, s) for c in cells for s in seeds)]
     assert not any(w["seed"] in held for w in panel)
     binding.check_seeds([w["seed"] for w in panel])
     return panel
@@ -213,12 +219,16 @@ def main(argv=None) -> int:
     ap.add_argument("--warmup-s", type=float, default=WARMUP_S)
     ap.add_argument("--print-panel", action="store_true")
     ap.add_argument("--allow-any-u0", action="store_true", help="tests only: skip the u0 sha check")
+    ap.add_argument("--skip-native", action="store_true", help="native arm already run (--prior-rows)")
+    ap.add_argument("--prior-rows", default=None, help="rows.jsonl of an earlier run on the same panel")
+    ap.add_argument("--min-worlds", type=int, default=12)
     a = ap.parse_args(argv)
     cfg = load_cfg(a.config)
-    spec, binding = resolve(cfg, fake=a.fake)
-    panel = make_panel(binding, warmup_s=a.warmup_s, horizon_s=a.horizon_s)
+    spec, binding, cells = resolve(cfg, fake=a.fake)
+    panel = make_panel(binding, cells, min_worlds=a.min_worlds, warmup_s=a.warmup_s,
+                       horizon_s=a.horizon_s)
     policies = dict(p.split("=", 1) for p in a.policy)
-    arms = ["native", *policies]
+    arms = ([] if a.skip_native else ["native"]) + list(policies)
     plan = {"panel": panel, "panel_sha256": panel_sha256(panel), "arms": arms,
             "binding": binding.record(), "fake": a.fake,
             "planned_sim_s": len(panel) * len(arms) * (a.warmup_s + a.horizon_s)}
@@ -254,7 +264,16 @@ def main(argv=None) -> int:
     with (out / "rows.jsonl").open("w") as fh:
         for row in rows:
             fh.write(json.dumps(row) + "\n")
-    summary = summarize(rows, arms)
+    all_rows, all_arms = list(rows), list(arms)
+    if a.prior_rows:
+        prior = [json.loads(x) for x in Path(a.prior_rows).read_text().splitlines() if x.strip()]
+        keys = {(w["world"], w["seed"], w["demand_vph"], w["penetration"]) for w in panel}
+        if {(r["world"], r["seed"], r["demand_vph"], r["penetration"]) for r in prior} - keys:
+            raise SystemExit("prior rows are not on this panel")
+        all_rows = prior + rows
+        names = list(dict.fromkeys([r["arm"] for r in prior] + arms))
+        all_arms = (["native"] if "native" in names else []) + [x for x in names if x != "native"]
+    summary = summarize(all_rows, all_arms)
     (out / "SUMMARY.json").write_text(json.dumps(summary, indent=1))
     print(json.dumps({"flags": summary["flags"], "complete_worlds": summary["complete_worlds"],
                       "failed_rows": summary["failed_rows"], "sim_s": summary["sim_s"]}))

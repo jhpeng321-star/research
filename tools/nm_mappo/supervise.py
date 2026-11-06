@@ -183,7 +183,7 @@ def main() -> int:
             "registration_sha256": checked["registered"].get("registration_sha256"),
             "bundle_files_verified": files, "nice": 19, "nofile_limits": fd_limits})
         known = {(owner["pid"], owner["start_ticks"]): owner}
-        stop_sent = False
+        stop_sent, last_guard = False, 0.0
         with (out / f"OWN_PIDS_{stage}_{owner['pid']}.jsonl").open("x") as pidlog:
             while trainer.poll() is None:
                 for child in descendants(trainer.pid):
@@ -197,6 +197,15 @@ def main() -> int:
                     with (out / "STOP_REQUESTED").open("a") as fh:
                         fh.write("supervisor: STOP or registered wall cap\n")
                     stop_sent = True
+                if not stop_sent and time.time() - last_guard >= 30:
+                    last_guard = time.time()
+                    reasons = L.phase_guard(plan, run_dir) if target == "production" else []
+                    if reasons:      # disk floor / phase cap: clean resumable stop, then report
+                        L.write_json_new(out / f"GUARD_STOP_{int(time.time())}.json",
+                                         {"utc": utc(), "reasons": reasons})
+                        with (out / "STOP_REQUESTED").open("a") as fh:
+                            fh.write("supervisor guard: " + "; ".join(reasons) + "\n")
+                        stop_sent = True
                 if time.time() >= deadline:
                     for child in reversed(list(known.values())):
                         exact_signal(child, signal.SIGKILL)

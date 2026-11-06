@@ -6,9 +6,14 @@
 #   - [map] table + [env] name = "map": the env and its map-selecting kwargs come from the N1 descriptor;
 #   - [rollout] seeds = registered wz3to2 TRAIN block 989200-989599 (never HELD-OUT 989600-989699,
 #     never 964000-964199 / 962xxx / 977xxx; checked by wms.control.mappo.mapbind);
-#   - [rollout] demands_vph / penetrations = "map": the registered wz3to2 TRAIN cells of the descriptor;
-#   - [rollout] iterations = 169 and max_sumo_seconds = 4,664,400 written into the file (the original
-#     passed them on the command line: --iterations 169 --max-sumo-seconds 4664400);
+#   - [rollout] demands_vph = [3200], penetrations = [0.6]: the canonical clean4 cell D3200_p60 (MAIN
+#     2026-11-06 15:43; the cell our method trains and is evaluated on), so MAPPO trains on exactly the
+#     evaluation traffic condition (validated against the N1 registered cells);
+#   - [rollout] iterations = 168 and max_sumo_seconds = 4,636,800 written into the file (the original
+#     passed --iterations 169 --max-sumo-seconds 4664400 on the command line; 168 because the registered
+#     phase mappo_wz <= 7,000,000 sim-s also funds the 660 smoke and the 32,400 sanity panel);
+#   - [rollout] keep_every = 6 (infra only, cpuQ disk: keeps iterations 6..168 incl. the pre-registered
+#     fallback snapshots 24/42/84 and the final 168; the original kept every iteration);
 #   - [policy] accel_max_mps2 = 2.6 explicit (= the stored bound of the u0 / v5 actors; the original got it
 #     from the --init-from checkpoint; a from-scratch run needs it explicitly);
 #   - [env] cleanup_scenarios = true (infra only: each worker deletes its own regenerable scenario dirs;
@@ -22,7 +27,7 @@
 
 [map]
 name = "wz3to2"
-api = ""                                 # "" = STUB descriptor (CPU/fake only); set to the N1 loader "module:function"
+api = "tools.nm_mappo.n1_adapter:descriptor"   # N1 map API (c4/nm-abstract b2f30091); "" = refusing stub
 
 [policy]
 lane_control = "native"                  # speed-only: no lane head; lanes=None -> SUMO-native lane changes
@@ -51,22 +56,22 @@ eval_chunk_frames = 512
 
 [rollout]
 seed = 1
-iterations = 169                         # original production2: --iterations 169
+iterations = 168                         # original production2: --iterations 169 (phase cap, see header)
 episodes_per_iteration = 46
 horizon_s = 600.0
 warmup_s = 300.0
 warmup_choices_s = []
-penetrations = "map"                     # registered wz3to2 TRAIN penetration cells (N1 descriptor)
+penetrations = [0.6]                     # canonical clean4 cell D3200_p60 (N1 registered cell)
 penetration_mode = "discrete"
-demands_vph = "map"                      # registered wz3to2 TRAIN demand cells (N1 descriptor)
+demands_vph = [3200]                     # canonical clean4 cell D3200_p60 (N1 registered cell)
 seeds = "989200-989599"                  # registered wz3to2 TRAIN block
-max_sumo_seconds = 4664400.0             # controlled s = 169 x 46 x 600 (warmup uncharged, as original)
+max_sumo_seconds = 4636800.0             # controlled s = 168 x 46 x 600 (warmup uncharged, as original)
 max_env_steps = 0
 charge_warmup = false
 retries = 1
 episode_timeout_s = 3600.0
 keep_last = 3
-keep_every = 1                           # every iteration exported (nested reduced-cost snapshots)
+keep_every = 6                           # exports/checkpoints 6..168 incl. snapshots 24/42/84 (cpuQ disk)
 update_threads = 16
 
 [lanes]                                  # identical (= configs/c4_policy.toml [lanes])
