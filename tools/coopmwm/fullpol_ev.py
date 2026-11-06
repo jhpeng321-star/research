@@ -27,7 +27,8 @@ KEY = 'clean5_ev'
 RULE = 'fullpol-clean5a-ev-n2-v1'
 PROVENANCE = ('MAIN 2026-11-06 ~19:3x clean5a (speed-only EV mode on N2 families, no LCEXEC dependency); '
               'owner framing "learn WHEN to cooperate"; S-REGIME solo strategies (REGISTRATION.md 18:45)')
-FAMILIES = ('abreast_wall', 'group_hold', 'closing_pair')
+FAMILIES = ('abreast_wall', 'group_hold', 'closing_pair', 'free_program')   # free_program = clean5b (LCEXEC)
+PROGRAM_KEYS = ('free_program_initiate', 'free_program_join')
 SLOTS = ('group_hold:solo', 'group_hold:pair')       # one F2 slot per group size (like N2 initiate kinds)
 SOLO_VARIANTS = ('wall_g', 'wall_h')                  # S-REGIME solo strategies hold these variants
 SOLO_GEOMETRY = ('zone', 'wall')
@@ -194,8 +195,10 @@ def families(structured, ev, event):
             keep.append(key)
         elif key == 'lane_drop_join' and allowed & {'abreast_wall', 'closing_pair'}:
             keep.append(key)
+        elif key in PROGRAM_KEYS and 'free_program' in allowed:
+            keep.append(key)               # clean5b: LCEXEC per-CAV program initiate / join slots
     if event:
-        return tuple(k for k in keep if k == 'lane_drop_join')
+        return tuple(k for k in keep if k in ('lane_drop_join', 'free_program_join'))
     if 'group_hold' in allowed:
         keep += [s for s, k in zip(SLOTS, (1, 2)) if k in ev['group_sizes']]
     return tuple(keep)
@@ -274,3 +277,24 @@ def recommended(*, provenance, regime_guidance, learn=None):
                        ev_bc_steps=EV_BC_STEPS, ppo_kl='row_mean',
                        learn=learn or dict(ev_bc=True, ev_credit=False, report_kl_unlabelled=True,
                                            report_valsplit_auc=True))
+
+
+GENERATOR = 'tools.coopmwm.fullpol_programs:propose'
+DESCRIPTOR_HOOK = 'tools.coopmwm.fullpol_head:program_descriptor'
+
+
+def recommended_5b(*, provenance, regime_guidance, cap, range_m=None, templates=(), classes=None, structured=None,
+                   learn=None):
+    """clean5b recipe = clean5a recipe + LCEXEC per-CAV free_program slots with FULLPOL's template
+    generator and descriptor. ``templates`` = THIS arm's own verified slot templates (B: converted
+    verified rows; R: none - the only B/R difference). EV-BC targets stay the registered solo labels
+    unless MAIN registers program families with LCEXEC parity (parity_families)."""
+    from . import fullpol_head, fullpol_templates, lc_families
+    out = recommended(provenance=provenance, regime_guidance=regime_guidance, learn=learn)
+    out[KEY]['families'] = ['abreast_wall', 'group_hold', 'free_program']
+    args = dict(classes=list(classes or fullpol_templates.CLASSES),
+                structured=list(structured or fullpol_templates.STRUCTURED), templates=list(templates))
+    out.update(lc_families.config_keys(provenance=provenance, cap=cap, range_m=range_m, generator=GENERATOR,
+                                       generator_args=args, descriptor=DESCRIPTOR_HOOK,
+                                       descriptor_width=fullpol_head.PROGRAM_DESCRIPTOR_WIDTH))
+    return out

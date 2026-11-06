@@ -160,6 +160,10 @@ def option_labels(entry, cfg=None):
     if entry.get('family') == fp.FAMILY:
         src = entry.get('source') or {}
         return tuple(x for x in (src.get('variant'), src.get('family')) if x)
+    if entry.get('family') in ('free_program_initiate', 'free_program_join'):
+        # clean5b (LCEXEC ProgramOption): the template's own strategy labels (fullpol_templates)
+        src = (entry.get('template') or {}).get('source') or {}
+        return tuple(x for x in (src.get('variant'), src.get('family')) if x)
     from . import fullpol_ev, lane_drop
     ld = lane_drop.settings(cfg) if cfg is not None else None
     if ld is not None and entry.get('family') in lane_drop.JOINT_FAMILIES+lane_drop.PROTOCOL_FAMILIES:
@@ -347,6 +351,8 @@ def shift(prog, elapsed):
         p['lon']['from_el'] = max(0, int(p['lon']['from_el'])-e)
         if p.get('lane') is not None:
             p['lane']['from_el'] = max(0, int(p['lane']['from_el'])-e)
+        if p.get('tau_from_el') is not None:                 # LCEXEC MemberProgram (LCMOVES tau_from)
+            p['tau_from_el'] = max(0, int(p['tau_from_el'])-e)
     out['duration_s'] = max(1, int(prog['duration_s'])-e)
     return out
 
@@ -399,6 +405,62 @@ def program_contexts(policy, plan, pairs, frames, *, t0, labels=None):
             break
 
 
+def program_protocol_contexts(policy, plan, pairs, frames, *, t0):
+    """clean5b (LCEXEC lc_families): initiate/join BC contexts for one verified free_program example.
+
+    ``plan['free_program']`` = lc_convert.from_mined_row output (concrete vids, initiator first).
+    Same rule as the N2/W1 protocol BC: the initiator imitates ``free_program_initiate`` (its
+    template = lc_families.template_from_program at its own decision second) from its own causal
+    observation; every other member imitates ``free_program_join`` at the earliest second its OWN
+    receive step offers the reconstructed session at its TRUE slot (exactness: an offer for another
+    slot is not a label). Yields (context, option, reader, weight, time)."""
+    from . import lc_families as lf, lc_program as lp
+    if getattr(policy, 'lc_families', None) is None:
+        raise ValueError('clean5b program BC needs the lc_families protocol')
+    prog = lp.FreeProgram.from_dict(plan['free_program'])
+    members = list(prog.members)
+    by_t = {}
+    for sample, weight in sorted(pairs, key=lambda pair: int(pair[0]['intent_link']['t'])):
+        by_t.setdefault(int(sample['intent_link']['t']), (sample, weight))
+    reader = deepcopy(policy)
+    reader.lc_families.reset()
+    t0, initiator, sid, remaining = int(t0), members[0], None, set(members[1:])
+    window = first_activation_el(plan['free_program'], plan.get('free_program_labels'))
+    for t in range(t0-1, t0+int(prog.duration_s)):
+        if t not in frames:
+            continue
+        reader.observe(frames[t]['vehicles'], t)
+        if t < t0:
+            continue
+        pair = by_t.get(t)
+        if sid is None:
+            if pair is None or t-t0 > window or initiator not in pair[0]['context']['members']                     or initiator not in reader.local_intents:
+                continue
+            rows = {r['vid']: r for r in frames[t]['vehicles']}
+            shifted = lp.FreeProgram.from_dict(shift(plan['free_program'], t-t0))
+            template = lf.template_from_program(shifted, reader.lc_families.frame, rows)
+            sid = f'{lf.NAME}:{initiator}@{t}'
+            option = lf.ProgramOption(f'{lf.NAME}_initiate', (initiator,), sid, initiator, 0, template.to_dict(), 0,
+                                      int(template.duration_s), 0., 1, reader.lc_families.cap, 0.,
+                                      reader.lc_families.range_m, int(rows[initiator]['lane']))
+            yield _context(reader, pair[0]['context'], [initiator]), option, reader, float(pair[1]), t
+            reader.lc_families.open_offline(option, t)
+        elif pair is not None and remaining:
+            for vid in sorted(remaining):
+                slot = members.index(vid)
+                offer = next((o for o in reader.lc_families.offers.get(vid, ())
+                              if o.session_id == sid and o.slot == slot), None)
+                if (offer is None or vid not in pair[0]['context']['members'] or vid not in reader.local_intents
+                        or not reader.lc_families.admit_offline(offer, t)):
+                    continue
+                remaining.discard(vid)
+                yield _context(reader, pair[0]['context'], [vid]), offer, reader, float(pair[1]), t
+        if sid is not None:
+            reader.lc_families.publish(t, {v: r.source for v, r in reader.reports.items()})
+            if not remaining:
+                break
+
+
 def supervised_batch(policy, cfg, context, option, reader, *, target_none=False):
     """The acting CAV's own (deterministic) slate with ``option`` in slot 1; target 1 or 0."""
     from .trigger_policy import TriggerBatch
@@ -448,12 +510,17 @@ def bank_records(policy, cfg, arm):
             return
         frames = bank_v2v.trace_frames(trace)
         found = 0
-        for context, option, reader, weight, time in program_contexts(
-                policy, plan, pairs, frames, t0=receipt['t0'], labels=plan.get('free_program_labels')):
+        if getattr(policy, 'lc_families', None) is not None:      # clean5b: LCEXEC initiate/join
+            contexts = program_protocol_contexts(policy, plan, pairs, frames, t0=receipt['t0'])
+        else:                                                     # FULLPOL group option (superseded)
+            contexts = program_contexts(policy, plan, pairs, frames, t0=receipt['t0'],
+                                        labels=plan.get('free_program_labels'))
+        for context, option, reader, weight, time in contexts:
             batch, same = supervised_batch(policy, cfg, context, option, reader, target_none=negative)
             hdv = sum(1 for r in reader.local_states[context['members'][0]]['rows'] if not r['is_cav'])
             records.append(dict(batch=batch, weight=float(weight), equivalent=same, meta=dict(
                 kind='negative' if negative else 'program', verification_id=receipt['verification_id'],
+                option_family=getattr(option, 'family', None),
                 seed=int((receipt.get('world') or plan.get('world') or {}).get('seed', -1)),
                 time_s=time, members=list(option.members), hdv_rows=hdv)))
             found += 1
@@ -711,11 +778,88 @@ def register_g4_adapter():
     return True
 
 
+# ---------------------------------------------------------------- G4 for clean5b program sessions
+
+PROGRAM_INITIATE, PROGRAM_JOIN = 'free_program_initiate', 'free_program_join'
+
+
+def _program_session_joins(steps, index, option):
+    """Accepted joins of ONE LCEXEC program session from the recorded slates, in decision order."""
+    end = steps[index]['time_s']+int(option['hold'])
+    out = []
+    for step in steps[index+1:]:
+        if step['time_s'] >= end:
+            break
+        trigger = step['sample'].get('track2_trigger')
+        if trigger is None:
+            continue
+        for i, vid in enumerate(trigger['context']['members']):
+            sel = trigger['tables'][i][trigger['actions'][i]]
+            if (sel is None or sel.get('family') != PROGRAM_JOIN or sel.get('session_id') != option['session_id']
+                    or not trigger.get('accepted', {}).get(vid, False)):
+                continue
+            if sel['members'] != [vid] or vid in [m['vid'] for m in out] or vid == option['initiator']:
+                raise ValueError('FULLPOL G4 recorded program join does not match its session')
+            out.append(dict(vid=vid, start_s=step['time_s'], option=sel, slot=int(sel['slot']),
+                            eligible=not step['sample'].get('deterministic')
+                            and not step['sample'].get('behaviour', {}).get('executed')))
+    return out
+
+
+def _g4_program_row(episode, steps, index, ego, selected, trigger, members, pending):
+    """G4LD adapter row for an accepted LCEXEC free_program_initiate (session of >= 2 members)."""
+    from .sparse_synergy_credit import digest
+    start = steps[index]['time_s']
+    if (selected.get('family') != PROGRAM_INITIATE or selected['members'] != [ego] or selected['initiator'] != ego
+            or selected['session_id'] != f'free_program:{ego}@{start}'):
+        raise ValueError('FULLPOL G4 program initiation mismatch')
+    joins = [] if pending else _program_session_joins(steps, index, selected)
+    schedule = [dict(vid=ego, start_s=start, slot=0)]+[dict(vid=j['vid'], start_s=j['start_s'], slot=j['slot'])
+                                                       for j in joins]
+    if not pending and len(schedule) < 2:
+        return None              # nobody joined: a single-actor program, not a joint start
+    row = dict(episode_id=episode['id'], time_s=start, proposer=ego, move=selected, trigger_sha256=digest(trigger))
+    row['opportunity_id'] = digest(row)
+    row['g4ld'] = dict(kind='fp_session', family=PROGRAM_INITIATE, members=[s['vid'] for s in schedule],
+                       schedule=schedule, credit=[dict(vid=ego, time_s=start)]+[
+                           dict(vid=j['vid'], time_s=j['start_s']) for j in joins if j['eligible']])
+    return row
+
+
+def _g4_program_check(start):
+    g = start['g4ld']
+    members, schedule = g['members'], g['schedule']
+    if (g['kind'] != 'fp_session' or g['family'] != PROGRAM_INITIATE or len(members) < 2
+            or members != [s['vid'] for s in schedule] or len(set(members)) != len(members)
+            or schedule[0] != dict(vid=start['proposer'], start_s=start['time_s'], slot=0)
+            or len({s['slot'] for s in schedule}) != len(schedule)
+            or any(s['start_s'] < start['time_s'] for s in schedule)
+            or not g['credit'] or g['credit'][0] != dict(vid=start['proposer'], time_s=start['time_s'])):
+        raise ValueError('FULLPOL G4 program session schedule/credit mismatch')
+
+
+def _g4_program_macro(job, observer):
+    raise NotImplementedError(
+        'G4 branch execution of LCEXEC program sessions needs the program executor + lc_tick lane writer '
+        'in g4_runtime (LCEXEC/G4LD); keep free_program_initiate out of g4_extension.families until it lands')
+
+
+def register_g4_program_adapter():
+    """Register the clean5b session adapter (rows/check; macro fails closed until G4 branches exist)."""
+    from . import sparse_synergy_credit as g4
+    adapters = getattr(g4, 'ADAPTERS', None)
+    if adapters is None:
+        return False
+    adapters[PROGRAM_INITIATE] = dict(row=_g4_program_row, check=_g4_program_check, macro=_g4_program_macro)
+    return True
+
+
 # ---------------------------------------------------------------- reproduction receipt
 
 def reproduction(verified_labels, executed_labels):
     """Per-second agreement of executed primitives with the verified LCEXEC tick labels."""
-    key = lambda r: (r['vid'], int(r['el']))
+    def key(r):
+        return r['vid'], int(r['el'])
     ref, got = {key(r): r for r in verified_labels}, {key(r): r for r in executed_labels}
     common = sorted(set(ref) & set(got))
     if not common:

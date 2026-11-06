@@ -86,7 +86,10 @@ REGISTERED = dict(
     accel_pulse=dict(values=(dict(a=-1.0, hold_s=2),), source=_NM2+' dither pulse -1.0 m/s^2 for 2 s '
                      '(LCEXEC REGISTRY accel)'),
     track_off_m=dict(values=(-35., -25., -15.), source=_CK+' zipper gap {15,25,35} (LCEXEC REGISTRY track_off_m)'),
-    sensing_m=dict(values=(100.,), source='merge_features.SENSOR_RANGE_M (own sensing radius)'))
+    sensing_m=dict(values=(100.,), source='merge_features.SENSOR_RANGE_M (own sensing radius)'),
+    rolling_rear_m=dict(values=(200., 500.), source=_LCM+' rolling_wall rear R 200-500 m behind the front mean'),
+    rolling_hold=dict(values=(dict(v_w=15., hold_s=120, dmax=1.5),), source=_LCM+' rolling_wall front hold 15 m/s '
+                      'dmax 1.5 for 120 s; rear settles within 25 m then holds 15'))
 
 
 def registered(key):
@@ -309,7 +312,7 @@ def _to_drop(view, row):
 
 def lanes_at(view, s_m):
     """Existing lanes at road position s (the closing lane ends at the drop)."""
-    return tuple(l for l in view.lane_ids if l != view.dropped_lane or float(s_m) < _drop(view))
+    return tuple(ln for ln in view.lane_ids if ln != view.dropped_lane or float(s_m) < _drop(view))
 
 
 def adjacent_targets(view, row):
@@ -371,12 +374,12 @@ def _structured_groups(family, view, own, partners, by_vid):
             if max(s)-min(s) > spread:
                 continue
             lanes = [int(r['lane']) for r in group]
-            doubled = [l for l in set(lanes) if lanes.count(l) == 2]
+            doubled = [ln for ln in set(lanes) if lanes.count(ln) == 2]
             if len(set(lanes)) != 2 or not doubled:
                 continue
-            empty = [l for l in view.lane_ids if l not in lanes]
+            empty = [ln for ln in view.lane_ids if ln not in lanes]
             for filler in (r for r in group if int(r['lane']) == doubled[0]):
-                targets = [l for l in adjacent_targets(view, filler) if l in empty]
+                targets = [ln for ln in adjacent_targets(view, filler) if ln in empty]
                 # the empty lane must hold no other acquirable CAV that already makes a static wall
                 rest = [r for r in partners if r not in group and int(r['lane']) in targets
                         and abs(float(r['s_m'])-sum(s)/3.) <= spread]
@@ -409,17 +412,17 @@ def _structured_groups(family, view, own, partners, by_vid):
                 if max(s)-min(s) > registered('r_spread_m')[0]:
                     continue
                 centre, radius = sum(s)/len(s), registered('sensing_m')[0]
-                load = {l: sum(1 for r in sensed if int(r['lane']) == l and abs(float(r['s_m'])-centre) <= radius)
-                        for l in lanes_at(view, centre)}
+                load = {ln: sum(1 for r in sensed if int(r['lane']) == ln and abs(float(r['s_m'])-centre) <= radius)
+                        for ln in lanes_at(view, centre)}
                 lane = int(group[0]['lane'])
                 if load.get(lane) != max(load.values()):
                     continue   # the group must be in the locally most loaded lane
-                targets = [l for l in adjacent_targets(view, group[0]) if all(
-                    l in adjacent_targets(view, r) for r in group)]
+                targets = [ln for ln in adjacent_targets(view, group[0]) if all(
+                    ln in adjacent_targets(view, r) for r in group)]
                 if not targets:
                     continue
-                least = min(load[l] for l in targets)
-                out.append((group, min(l for l in targets if load[l] == least)))
+                least = min(load[ln] for ln in targets)
+                out.append((group, min(ln for ln in targets if load[ln] == least)))
         return out
     raise ValueError(f'unregistered structured family {family!r}')
 
@@ -588,7 +591,7 @@ def check_template(t):
         raise ValueError('fullpol template needs schema fullpol-template-v1 and an lcexec program')
     members = t['program']['members']
     if (len(t['member_lanes']) != len(members) or len(t['member_s']) != len(members)
-            or any(type(l) is not int for l in t['member_lanes'])
+            or any(type(ln) is not int for ln in t['member_lanes'])
             or any(not math.isfinite(float(s)) for s in t['member_s'])):
         raise ValueError('template roles need one WM lane and one WM s per member')
     if not isinstance(t.get('source'), dict) or not t['source'].get('verification_id'):
@@ -715,3 +718,12 @@ __all__ = ['FAMILY', 'RULE', 'CLASSES', 'SLOTS', 'STRUCTURED', 'REGISTERED', 'se
            'runtime_state', 'FreeProgramOption', 'is_free_program', 'option_from_dict', 'program', 'member',
            'lon', 'lane_req', 'template', 'adapt', 'structured', 'random_program', 'families', 'owns', 'pool',
            'redraw', 'offered', 'adjacent_targets', 'lanes_at', 'rebind', 'lc_checked']
+
+
+def propose(state, own, rng):
+    """LCEXEC lc_families generator hook (config ``lc_families.generator =
+    'tools.coopmwm.fullpol_programs:propose'``): clean5b slot templates, see fullpol_templates."""
+    from .fullpol_templates import propose as templates
+    # dicts (FreeProgram.to_dict): the contract accepts dicts or objects; dicts never depend on which
+    # import path loaded lc_program in the calling process.
+    return [t.to_dict() for t in templates(state, own, rng)]

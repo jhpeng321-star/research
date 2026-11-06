@@ -4,6 +4,7 @@ Real EpisodePolicy / TriggerPolicy / feasible_proposals / N2 executor / PPO / BC
 fakes: the N1 map stub of test_lane_drop_cpu (drop at s = 0, WM lanes 0..2, closing lane 2) and
 synthetic observation rows / S-REGIME-format episode rows.
 """
+# ruff: noqa: F811, E731 (imported pytest fixtures are test parameters; small test lambdas)
 from copy import deepcopy
 import json
 from pathlib import Path

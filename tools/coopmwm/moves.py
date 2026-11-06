@@ -68,6 +68,9 @@ CAV_ACCEL_CAP_MPS2 = 1.2   # tracks_spec.md, Move library feasibility bound
 FAMILIES = ('none', 'ease_off', 'wall', 'gap_open', 'ramp_assist')
 LANE_FAMILIES = ('yield_lane', 'open_gap_merge')  # G5 opt-in; legacy head width stays stable
 ALL_FAMILIES = FAMILIES + LANE_FAMILIES
+#: COOPKINDS/PLANGEN2 probe families that must never be projected onto this vocabulary (N9/N5).
+PROBE_LANE_FAMILIES = ('lane_balance', 'early_merge', 'zipper', 'zipper_order', 'discharge', 'platoon',
+                       'vsl_rows')
 STRUCTURED = FAMILIES[1:]          # candidates() rotates these; 'none' is the caller's baseline
 MOVE_MAX_MEMBERS = int(V2V_K)      # 1..4 nearby CAVs incl. self (the V2V partner-slot arity)
 
@@ -508,6 +511,14 @@ def from_plan(plan):
         plan = plan['plan']
     elif isinstance(plan.get('chosen_plan'), dict):
         plan = plan['chosen_plan']
+    if plan.get('nm_move') is not None:
+        # N9 closed-loop family plans are not shared-vocabulary boxes; never project them.
+        raise ValueError('N9 nm_move plans bind through nm_families.from_plan, not the move vocabulary')
+    if plan.get('schema') == 'coopmwm-mined-move-v1' and (
+            plan.get('r_kind') if plan.get('family') == 'R_random' else plan.get('family')) in PROBE_LANE_FAMILIES:
+        # N5 REVIEW_N9_1 blocker 1: verified COOPKINDS/PLANGEN2 lane-family rows (persistent lane
+        # requests, setTau room-makers, zipper slot law) are not shared-vocabulary boxes.
+        raise ValueError('COOPKINDS/PLANGEN2 lane-family rows bind only through their exact converter')
     if plan.get('lane_drop_macro') is not None:
         # N2 lane-drop macro (closed-loop speed law): exact executable binding.
         from .lane_drop import from_plan as lane_drop_move

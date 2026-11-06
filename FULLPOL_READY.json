@@ -1,0 +1,62 @@
+{
+  "schema": "fullpol-ready-v1",
+  "agent": "FULLPOL (clean5 policy-learning side)",
+  "branches": {
+    "c4/fullpol-5a": {"head": "e36ece92", "content": "clean5a only (no LCEXEC/N9); merged by N4 into c4/nm-train"},
+    "c4/fullpol": {"head": "SEE_COMMIT_OF_THIS_FILE", "content": "clean5a + clean5b (merges c4/nm-train 62955c86, c4/g4ld 40789b61, c4/lcexec 831d6c3f)"}
+  },
+  "clean5a_sha_history": ["643174fa", "80a4c664 lane-specific solo labels", "6cb498c4 ANALYSIS loader",
+    "602184cd production-path E2E", "3fdaad0a final S-REGIMEU0 inputs", "205ad0b8 solo-only EV targets",
+    "24080ea2 per-row BC KL (CRITICAL: row-sum would revert every EV-BC step)", "c91e00c7 N11 F10 G2 bypass",
+    "e36ece92 trigger-PPO per-CAV-row KL + ev_bc_steps"],
+  "files": {
+    "new": ["tools/coopmwm/fullpol_ev.py", "tools/coopmwm/fullpol_learn.py", "tools/coopmwm/fullpol_templates.py",
+            "tools/coopmwm/fullpol_head.py", "tools/coopmwm/fullpol_programs.py", "tools/coopmwm/fullpol_audit.py",
+            "tools/coopmwm/fullpol_pace_fixture.py", "tools/coopmwm/test_fullpol_cpu.py",
+            "tools/coopmwm/test_fullpol_ev_cpu.py", "tools/coopmwm/test_fullpol_templates_cpu.py",
+            "tools/coopmwm/test_fullpol_clean5b_cpu.py", "FULLPOL_DESIGN.md", "FULLPOL_READY.json"],
+    "hooks_in_shared_files (additive, default OFF)": {
+      "feasible_proposals.py": "clean5_ev N2-only slate filter + solo/pair slots; G2 pair path bypassed under clean5_ev (F10); FULLPOL group-option slots (superseded)",
+      "track2_backend.py": "_option_from_dict (SoloHold / programs); clean5_ev candidate state; EV-credit additive term; _trigger_kl row-mean under clean5_ev.ppo_kl; fullpol_ppo_kl receipt; fullpol_head.extension wrapper",
+      "trigger_policy.py": "relative-descriptor extension hook",
+      "launch_training.py": "fullpol_learn.supervise after bank_move_supervision -> learning['fullpol']",
+      "launch_production.py": "bank_move_supervision skips plans carrying free_program (never projected)"}
+  },
+  "flags": {
+    "clean5_ev": "fullpol_ev.recommended(provenance, regime_guidance) for clean5a; recommended_5b(..., cap, templates) for clean5b. Keys: families, group_sizes, solo_geometry, learn{ev_bc, ev_credit, report_kl_unlabelled, report_valsplit_auc, bc, negatives}, regime_guidance, parity_families, ev_bc_steps (60), ppo_kl ('row_mean')",
+    "lc_families (LCEXEC)": "generator='tools.coopmwm.fullpol_programs:propose', generator_args={classes, structured, templates (per arm)}, descriptor='tools.coopmwm.fullpol_head:program_descriptor', descriptor_width=fullpol_head.PROGRAM_DESCRIPTOR_WIDTH",
+    "fullpol": "earlier group-level free_program option (superseded by LCEXEC per-CAV protocol; default OFF)",
+    "guidance_builder": "python -m tools.coopmwm.fullpol_learn guidance --native REGIME_RESULTS.jsonl --mappo regimeu0/REGIMEU0_RESULTS.jsonl --provenance ... --out CLEAN5A_GUIDANCE.json"
+  },
+  "tests": {
+    "fullpol suites": "test_fullpol_cpu, test_fullpol_ev_cpu, test_fullpol_templates_cpu, test_fullpol_clean5b_cpu",
+    "regression_final": "707 passed, 0 failed (fullpol + track2_backend + feasible_proposals + trigger_policy + lane_drop + g4ld + nm_families + lc_* + bank_breadth + coordination + clean4_fairness + g4_runtime)",
+    "5a_export_run": "128 passed (fullpol_ev, track2_backend, fullpol) on git archive of c4/fullpol-5a e36ece92",
+    "required_E2E": "test_fullpol_clean5b_cpu::test_e2e_group_chooses_lane_change_into_closing_lane_and_learns (real LCEXEC protocol/executors on the N1 wz3to2 descriptor: CAV group picks a FULLPOL wall_fill program, initiator requests the CLOSING lane, joiners run speed laws, PPO replay+update) + ::test_bank_bc_initiate_and_join_contexts_from_a_verified_program (BC) + ::test_g4_program_session_rows_and_fail_closed_macro (G4 rows); clean5a: test_fullpol_ev_cpu::test_production_path_clean5a_episode_ppo_ev_bc_metrics_and_g4",
+    "default_off": "test_fullpol_cpu::test_off_is_byte_identical_to_the_pre_fullpol_sources[lane_drop on/off] (subprocess golden vs 12c80d49 sources); clean5_ev/fullpol absent==False tests",
+    "hdvs_never_commanded": "E2E asserts no HDV in any lc_tick knob / runtime command; generators never make HDV members",
+    "observables_only": "no regime/demand/penetration label reaches slates, contexts, local states or logits (test_no_regime_label_*); hidden row fields change no proposal",
+    "lint": "ruff clean on all FULLPOL modules/tests"
+  },
+  "design_summary": "Keep the slot-choice trigger (pointer over a sampled action set). clean5a: N2-only slate (solo hold / 2-member hold / abreast_wall); EV-BC per recorded decision row to the best OFFERED lb95>0 lane-specific solo strategy of the episode's cell (S-REGIMEU0 u0-relative, native fallback per cell), else none; PPO + G4LD unchanged; KL cap 0.045 as a per-CAV-row mean for EV-BC and (clean5_ev.ppo_kl) trigger PPO; EV-BC 60 steps. clean5b: + LCEXEC per-CAV free_program initiate/join with FULLPOL slot templates (verified/structured/lcm_R_v1/primitive) and template descriptor; exact initiate/join BC from converted verified rows; G4 rows for sessions. B/R identical except guidance source (R: no rows, no templates).",
+  "learning_budget_estimate": {
+    "kl_geometry": "uniform(9 slots)->0.8: 1.11 nats, Fisher-Rao 1.53; >= 6 capped updates (straight-line bound)",
+    "ev_bc_pace_fixture": {"20 steps lr 3e-4": "P(target) 0.32@u6, 0.52@u12, 0.80@u24 (cap ~10% used)",
+                           "60 steps lr 3e-4": "0.62@u6, 0.91@u12; >=0.8 by u9 (cap ~90% used)",
+                           "20 steps lr 1e-3": "0.61@u6, 0.92@u12 (cap binding)"},
+    "ppo": "always-on solo2 effect at D3200_p60 (u0): ~8 paired episodes at episode level; per-decision credit is far more diluted -> EV-BC carries WHEN, PPO/G4 refine; with the inherited row-SUM PPO KL guard (~150 CAV rows/step) PPO admitted only ~3e-4 nats/CAV/update",
+    "g4": "8-12 starts/arm/run (registered caps) is too sparse to teach group moves alone; >= ~50 starts/arm would be needed",
+    "generalisation": "per-moment WHEN unlearnable (LEARNABILITY); EV targets depend only on cell regime (observable traffic level) + own lane -> report_valsplit_auc each update is the check"
+  },
+  "open_issues": [
+    "G4 branch execution of LCEXEC program sessions (macro) does not exist: keep free_program_initiate out of g4_extension.families (adapter macro fails closed)",
+    "clean5b EV parity list: program families (wall_fill, lane_redistribute, ...) need LCEXEC parity PASS + MAIN registration before they can be EV targets; recipe keeps solo labels only",
+    "S-REGIME solo estimates come from wall-geometry triggers; clean5a offers solos zone-wide (solo_geometry='zone'; 'wall' available)",
+    "regime = cell only; a per-window observable tercile labeller is not built (REGIME found gating loses gain)",
+    "EV-credit is implemented but OFF in the recipes (MAIN clean5a spec: EV-BC + PPO + G4)",
+    "earlier FULLPOL group-level free_program option + free_program_runtime hook is superseded by LCEXEC lc_families (default OFF; can be deleted)",
+    "rolling_wall template needs range_m >= 200 m (rear window 200-500 m); with the registered 100 m V2V range it is never proposed",
+    "pace numbers are from a small CPU fixture; production rows are more diverse"
+  ],
+  "rules_kept": "CPU only; no ssh/SUMO/GPU/training; only my worktree (+ c4/fullpol-5a via plumbing commits); no reset/clean/stash drop/push/rebase; no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 paths; no truth files; 0 sim-s"
+}
