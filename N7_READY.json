@@ -1,0 +1,66 @@
+{
+ "task": "N7 fair speed-only MAPPO comparator on wz3to2 (prepare run + cost quote only)",
+ "branch": "c4/nm-mappo",
+ "worktree": "E:/agent-work/c4-nm-mappo",
+ "base": "3e5bc9f9",
+ "commits": {
+  "464b69cd": "cherry-pick -x cf97e6fd (S-MAPPOSPEED speed-only lane_control=native trainer mode + its tests), verbatim",
+  "d276eef6": "port speed-only deploy support to this base: PolicyExecutor.native_lanes (with_lanes -> lanes=None) and load_policy_components lane_control='native' (from candA-int V7POL); default unchanged",
+  "89701d59": "config, map binding, launcher, supervisor, quote, sanity eval, tests, MAPPO_WZ_PLAN.md"
+ },
+ "plan": "MAPPO_WZ_PLAN.md",
+ "sim_s_spent": 0,
+ "sumo_runs": 0,
+ "ssh_used": false,
+ "tests": {
+  "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tests/unit/test_nm_mappo.py tests/unit/test_c4_mappospeed.py tests/unit/test_c4_mappo.py tests/unit/test_c4_srcwait_mappo.py tests/unit/test_c4_accelcap.py tests/unit/test_c4_evalv5.py tests/unit/test_c4_policy2.py",
+  "result": "82 passed (989.8 s); tests/unit/test_nm_mappo.py re-run after the final edit: 13 passed",
+  "ruff": "ruff check src/wms/control/mappo src/wms/control/policy.py tools/nm_mappo tests/unit/test_nm_mappo.py: all checks passed",
+  "not_run": "full repository suite; Linux-only supervisor paths (pidfd, /proc, setsid)"
+ },
+ "original_comparator": {
+  "id": "S-MAPPOSPEED (REGISTRATION.md 2026-10-30)",
+  "u0_sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca",
+  "u0_copies": ["cpuQ ~/mappospeed/production2/policy_00169.pt", "gpuA /root/autodl-tmp/c4/speedhead20261030/mappospeed_final169.pt"],
+  "recipe": "init aecd7d70 (lane head stripped) + 169 it x 46 ep x (300+600) s, 30 workers cpuQ, 16 update threads",
+  "original_config_record": "tools/nm_mappo/ORIGINAL_SPEED_CONFIG.json (from c4/mappospeed PREFLIGHT.json, speed.toml sha a7fc8e09...)"
+ },
+ "config": {
+  "path": "configs/c4_mappo_speed_wz3to2.toml",
+  "sha256_lf": "55f3aee846e3835b445c8be9d0c7bb7695a190dff91db2f0309bbaa020d58755",
+  "declared_deltas_vs_original": ["[map]", "env.name=map", "env.cleanup_scenarios=true", "policy.accel_max_mps2=2.6 (=u0 stored bound)", "rollout.seeds=989200-989599", "rollout.demands_vph=map", "rollout.penetrations=map", "rollout.iterations=169 (original CLI)", "rollout.max_sumo_seconds=4664400 (original CLI)"]
+ },
+ "cost_quote": {
+  "full169_u0": {"planned_sim_s": 6996600, "controlled_s": 4664400, "hard_cap_sim_s": 13994520, "wall_h_cpuV_46w": [6.48, 8.43], "wall_h_cpuQ_30w": [7.83, 10.18], "wall_h_cpuV_12core": [11.3, 14.7]},
+  "ft42_u0": {"planned_sim_s": 1738800, "controlled_s": 1159200, "wall_h_cpuV_46w": [1.61, 2.09], "wall_h_cpuQ_30w": [1.95, 2.53], "wall_h_cpuV_12core": [2.81, 3.65]},
+  "ft24_u0": {"planned_sim_s": 993600, "wall_h_cpuV_46w": [0.92, 1.2], "wall_h_cpuQ_30w": [1.11, 1.45]},
+  "ft84_u0": {"planned_sim_s": 3477600, "wall_h_cpuV_46w": [3.22, 4.19], "wall_h_cpuQ_30w": [3.89, 5.06]},
+  "smoke_sim_s": 660,
+  "sanity_panel_sim_s": 32400,
+  "model": "iteration wall = ceil(46/workers) x 31.86 s x contention + 103.1 s update (calibrated on S-MAPPOSPEED cpuQ: it1-2 collect 64.1/63.3 s, update 103.9/117.0 s; 169 it <= 7.83 h); wz3to2 factor 1.0-1.3",
+  "tool": "python tools/nm_mappo/quote.py [--json]"
+ },
+ "recommendation": "one full169_u0 run on a second 32-core machine (cpuQ-class) as soon as N1 lands + check + registration + smoke; nested snapshots 24/42/84 are the pre-registered reduced-cost fallbacks; comparator bound outcome-blind at N4 final-eval dispatch (169 else latest of 84/42/24). If only cpuV: --workers 12 after N4 smoke/gate, or ft42_u0 standalone.",
+ "interfaces": {
+  "train_cli": "python -m wms.control.mappo.train --config configs/c4_mappo_speed_wz3to2.toml --out RUN/production --init-from U0 --update-threads 16 --workers W --iterations 169 --episodes-per-iteration 46 --max-sumo-seconds 4664400",
+  "launcher": "python tools/nm_mappo/launch.py {plan|check|ack|smoke|run|resume|status|stop|bind} --run-dir RUN ...",
+  "map_binding": "wms.control.mappo.mapbind.apply_map(cfg) / resolve_binding({'name','api'}); config [map] api = 'module:function' -> N1 descriptor",
+  "n1_descriptor_expected": {"name": "str", "env_name": "dotted CavEnv class (default traffic_shepherd.c4.env.CavSumoEnv)", "env_kwargs": "map-selecting env kwargs (default {'map_name': name})", "train_seeds": "iterable | (lo,hi) | 'lo-hi' (aliases seeds_train, train_seed_range)", "heldout_seeds": "same forms (aliases eval_seeds, heldout_seed_range)", "demands_vph": "registered TRAIN demand cells (aliases train_demands_vph, demand_cells_vph)", "penetrations": "registered TRAIN penetration cells (aliases train_penetrations, penetration_cells)", "spec_sha256": "optional"},
+  "comparator_receipt": "RUN/BOUND_<it>.json {path, sha256, iteration, lane_control=native, plan_sha256} for nm-finaleval",
+  "sanity_eval": "python tools/nm_mappo/sanity_eval.py --policy u0=U0 --policy wz=RUN/production/policy_<it>.pt --out DIR --registered RECEIPT [--workers 12]"
+ },
+ "dependencies_and_blockers": [
+  "N1 (c4/nm-abstract, no commits yet when this was written): set [map] api in the config to the N1 loader; until then the stub refuses SUMO (plan --allow-stub only)",
+  "N1 env must accept the map kwargs and admit seeds 989200-989599 (traffic_shepherd/c4/seeds.check_case refuses them on this base)",
+  "N1 must keep the actor observation layout for the strict u0 warm-start load (launch.py check verifies)",
+  "K=192 slot overflow on wz3to2 (4 km, 2400-2800 veh/h) is checked by the smoke gate (dropped_vehicle_steps == 0)",
+  "nm-finaleval: replace the hard-coded MAPPO_SHA d9042cc5 comparator binding with the bound MAPPO-wz sha (keep u0-as-is as its own arm); budget for that arm belongs to N4",
+  "registration: MAIN appends the block in MAPPO_WZ_PLAN.md s7 (with the box PLAN sha) before any SUMO; owner budget approval for 6,996,600 sim-s (cap 13,994,520) or the reduced option"
+ ],
+ "caveats": [
+  "fairness: MAPPO-wz gets the base actor observations; N2 lane-drop features / V2V reaching only the coop layer must be stated in the paper",
+  "wall-time band assumes cpuV per-core speed = cpuQ and a wz3to2 slowdown of 1.0-1.3x; the first two production iterations re-quote the ETA",
+  "experiment_history ledger / OPEN_QUESTIONS not updated (no experiment run); integrator owns registration and close-out"
+ ],
+ "rules_kept": "worked only in this worktree; no ssh, SUMO or GPU; no git reset/clean/stash drop/push/rebase; no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 path opened; no hetdata_truth or vType/driver/vehicle truth file read"
+}
