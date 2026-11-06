@@ -55,6 +55,16 @@ def candidates(obs_state, rng, n):
         from . import v2v_wall
         structured = (('wall_join',) if wall.get('only_join')
                       else tuple(structured)+v2v_wall.FAMILIES)
+    # N9 (opt-in): lane-drop family options; an event decision (either protocol)
+    # offers only the joins of the protocol(s) whose first receipt raised it.
+    families = obs_state.get('nm_families')
+    if families is not None:
+        from . import nm_families
+        if (wall is not None and wall.get('only_join')) or families.get('only_join'):
+            structured = ((('wall_join',) if wall is not None and wall.get('only_join') else ())
+                          + (nm_families.join_families(families) if families.get('only_join') else ()))
+        else:
+            structured = tuple(structured)+nm_families.slate_families(families)
     def propose(family, group):
         if family in moves.LANE_FAMILIES:
             return group_lane.candidate(family, obs_state, own, group, rng)
@@ -64,6 +74,11 @@ def candidates(obs_state, rng, n):
         for family in structured:
             if wall is not None and family in v2v_wall.FAMILIES:
                 options = v2v_wall.pool(family, wall, own, rng)
+                if options:
+                    pools[family] = options
+                continue
+            if families is not None and nm_families.is_family(family):
+                options = nm_families.pool(family, families, own, rng)
                 if options:
                     pools[family] = options
                 continue
@@ -90,6 +105,11 @@ def candidates(obs_state, rng, n):
                 if len(out) == n:
                     break
                 continue
+            if families is not None and nm_families.is_family(family):
+                out.append(nm_families.redraw(template, families, own, rng))
+                if len(out) == n:
+                    break
+                continue
             # Gap/ramp eligibility depends on the full local pool (notably the
             # ahead-most mainline role); only walls enumerate member subsets.
             group = ([by_vid[v] for v in template.members if v != ego]
@@ -103,13 +123,14 @@ def candidates(obs_state, rng, n):
 def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
                      now, rng, generator, deterministic=False, command_reservations=None,
                      coordination=None, opportunity_pairs=None, event=False,
-                     wall=None, wall_events=None):
+                     wall=None, wall_events=None, families=None, family_events=None):
     """Acquire in stable id order (opt-in G2: role pairs first).
 
     W1 (opt-in ``wall``): protocol options start through ``wall.start`` (atomic
     session ownership/cap + executor commitment). ``wall_events`` marks a
     non-periodic first-receipt tick: those egos get join-only slates, all others
-    (outside G2 pairs) only ``none``.
+    (outside G2 pairs) only ``none``. N9 (opt-in ``families``/``family_events``)
+    follows the identical start/event contract through ``families.start``.
 
     Each slate is conditional on earlier acquisitions. PPO reuses these exact
     slates/masks/logps; it never regenerates an unconditional proposal table.
@@ -130,6 +151,10 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
     if wall is not None:
         stats['v2v_wall'] = dict(rule=wall.settings['rule'], event=wall_events is not None,
             event_cavs=sorted(wall_events or ()), offered_join=0, selected_initiate=0,
+            accepted_initiate=0, selected_join=0, accepted_join=0)
+    if families is not None:
+        stats['nm_families'] = dict(rule=families.settings['rule'], event=family_events is not None,
+            event_cavs=sorted(family_events or ()), offered_join=0, selected_initiate=0,
             accepted_initiate=0, selected_join=0, accepted_join=0)
     order = sorted(members)
     pairs = ()
@@ -174,10 +199,19 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
             pair = pair_by_ego.get(ego)
             if pair is not None and set(pair.members) <= set(state['acquirable_cav_ids']):
                 state['coordination_partner'] = pair.merger
-        if wall is not None and wall_events is not None:
-            if ego in wall_events and ego not in event_members and 'v2v_wall' in state:
-                state['acquirable_cav_ids'] = [ego] if free else []
+        if (wall is not None and wall_events is not None) or (
+                families is not None and family_events is not None):
+            joining = False
+            if (wall is not None and wall_events is not None and ego in wall_events
+                    and ego not in event_members and 'v2v_wall' in state):
                 state['v2v_wall'] = dict(state['v2v_wall'], only_join=True)
+                joining = True
+            if (families is not None and family_events is not None and ego in family_events
+                    and ego not in event_members and 'nm_families' in state):
+                state['nm_families'] = dict(state['nm_families'], only_join=True)
+                joining = True
+            if joining:
+                state['acquirable_cav_ids'] = [ego] if free else []
             elif coordination is None:
                 state['acquirable_cav_ids'] = []
         local_context = dict(context, members=[ego], x=[context['x'][index]])
@@ -199,12 +233,23 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
             wall.mark_offered(ego, batch.tables[0])
             stats['v2v_wall']['offered_join'] += sum(m is not None and m.family == 'wall_join'
                                                      for m in batch.tables[0])
+        if families is not None:
+            families.mark_offered(ego, batch.tables[0])
+            stats['nm_families']['offered_join'] += sum(
+                m is not None and m.family in families.FAMILIES and m.family.endswith('_join')
+                for m in batch.tables[0])
         if selected and wall is not None and move.family in wall.FAMILIES:
             accepted[ego] = wall.start(move, ego=ego, executor=executor,
                                        observable_cav_ids=observable_cavs[ego], now=now)
             kind = 'initiate' if move.family == 'wall_initiate' else 'join'
             stats['v2v_wall']['selected_'+kind] += 1
             stats['v2v_wall']['accepted_'+kind] += int(accepted[ego])
+        elif selected and families is not None and move.family in families.FAMILIES:
+            accepted[ego] = families.start(move, ego=ego, executor=executor,
+                                           observable_cav_ids=observable_cavs[ego], now=now)
+            kind = 'join' if move.family.endswith('_join') else 'initiate'
+            stats['nm_families']['selected_'+kind] += 1
+            stats['nm_families']['accepted_'+kind] += int(accepted[ego])
         else:
             accepted[ego] = executor.start(move, ego=ego, observable_cav_ids=observable_cavs[ego],
                 now=now, until=now+move.onset_s+move.hold_s) if selected else False

@@ -29,7 +29,7 @@ import types
 import numpy as np
 import torch
 
-from . import moves, feasible_proposals, v2v_wall
+from . import moves, feasible_proposals, nm_families, v2v_wall
 from .acceleration import PHI
 from .accel_learner import GAMMA, UNIT
 from .coop_layer import CooperationLayer, LayerConfig
@@ -74,6 +74,11 @@ class MoveAPI:
         # W1 protocol options are executable commitments, not trigger one-hot families.
         self.EXECUTABLE_FAMILIES = self.FAMILIES+(
             v2v_wall.FAMILIES if v2v_wall.settings(cfg) is not None else ())
+        # N9 lane-drop families (opt-in): per-CAV protocol options, same executor.
+        family_settings = nm_families.settings(cfg)
+        if family_settings is not None:
+            self.EXECUTABLE_FAMILIES += tuple(f'{n}_{k}' for n in family_settings['families']
+                                              for k in nm_families.KINDS)
 
     @staticmethod
     def candidates(obs_state, rng, n):
@@ -85,6 +90,8 @@ class MoveAPI:
             option = move.move
             return {v: -float(option.depth) if option.onset <= t < option.onset+option.hold else 0.
                     for v in option.members}
+        if isinstance(move.move, nm_families.FamilyOption):
+            return nm_families.nominal_offsets(move.move, t)   # state-dependent: EpisodePolicy path
         return moves.offsets(move.move, t)
 
 
@@ -118,6 +125,7 @@ def _check(cfg, arm):
         opportunity_settings(cfg)
         v2v_wall.settings(cfg)            # W1 options: common B/R registration, default off
         v2v_wall.awareness_settings(cfg)
+        nm_families.settings(cfg)         # N9 families: common B/R registration, default off
         from .sparse_synergy_credit import settings as synergy_settings
         synergy_settings(cfg)
         from .track2_safety_reward import settings as close_call_settings
@@ -142,7 +150,7 @@ def _batch_dict(batch):
 
 
 def _batch(record):
-    return TriggerBatch(record['context'], tuple(tuple(None if m is None else v2v_wall.option_from_dict(m)
+    return TriggerBatch(record['context'], tuple(tuple(None if m is None else nm_families.option_from_dict(m)
         for m in table) for table in record['tables']),
         torch.tensor(record['descriptors'], dtype=torch.float32),
         torch.tensor(record['mask'], dtype=torch.bool),
@@ -299,6 +307,9 @@ class EpisodePolicy(torch.nn.Module):
         wall_settings = v2v_wall.settings(cfg)
         self.wall = None if wall_settings is None else v2v_wall.Protocol(wall_settings)
         self.awareness_blocks = {}
+        # N9 lane-drop move families (default off): protocol + executor profiles.
+        family_settings = nm_families.settings(cfg)
+        self.nm_families = None if family_settings is None else nm_families.Protocol(family_settings)
         self.layer.actuation_receipts = 'clean2_budget' in cfg or 'clean3_budget' in cfg
         # Retain the legacy slot/optimizer layout for existing sidecars. It is
         # unused by ProductionLayer, gets no gradient and cannot gate actuation.
@@ -306,7 +317,8 @@ class EpisodePolicy(torch.nn.Module):
         self.layer.optimizer = torch.optim.Adam(self.layer.layer_parameters(), lr=config.learning_rate)
         self.trigger = TriggerPolicy(self.layer.base, v2v_dim=cfg['v2v_dim'],
             n_candidates=cfg['trigger_candidates'], partner_slots=cfg['trigger_partner_slots'],
-            freeze_base=True, moves_api=MoveAPI(cfg), extension=v2v_wall.extension(cfg))
+            freeze_base=True, moves_api=MoveAPI(cfg),
+            extension=nm_families.compose(v2v_wall.extension(cfg), nm_families.extension(cfg)))
         self.trigger_optimizer = self.trigger.optimizer(lr=cfg['trigger_lr'])
         self.layer_rng = torch.Generator().manual_seed(int(cfg['training_seed']))
         self.candidate_rng = np.random.default_rng(int(cfg['training_seed']))
@@ -339,10 +351,13 @@ class EpisodePolicy(torch.nn.Module):
                  for r in rows}
         cavs = sorted(v for v, r in table.items() if r['is_cav'])
         reports, states, visible, blocks, local_contexts = {}, {}, {}, {}, {}
+        own_sensing = {}
         execution_positions, neighbourhoods = {}, {}
         for vid in cavs:
             ego = table[vid]
             sensed = [r for r in table.values() if abs(r['s_m']-ego['s_m']) <= SENSOR_RANGE_M]
+            if self.nm_families is not None:
+                own_sensing[vid] = sensed
             partners = sorted((r['vid'] for r in sensed if r['is_cav'] and r['vid'] != vid),
                 key=lambda v: (abs(table[v]['s_m']-ego['s_m']), v))[:self.trigger.partner_slots-1]
             # Only selected CAVs enter candidates; sensed HDVs are geometry only.
@@ -386,6 +401,11 @@ class EpisodePolicy(torch.nn.Module):
             self.wall.receive(now, {vid: table[vid] for vid in cavs})
             for vid in cavs:
                 states[vid]['v2v_wall'] = self.wall.state(vid, now)
+        if self.nm_families is not None:
+            # Own row/sensing at t, initiators' t-1 messages, teammates' own t-1 packets.
+            self.nm_families.receive(now, {vid: table[vid] for vid in cavs}, own_sensing, self.reports)
+            for vid in cavs:
+                states[vid]['nm_families'] = self.nm_families.state(vid, now)
         self.now, self.reports = now, reports
         self.local_states, self.visible, self.blocks = states, visible, blocks
         self.local_intents = local_contexts
@@ -426,6 +446,16 @@ class EpisodePolicy(torch.nn.Module):
             if pending and not periodic:
                 wall_events = frozenset(pending)
             opportunity_kwargs = dict(wall=self.wall, wall_events=wall_events)
+        family_events = None
+        if self.nm_families is not None and context['members']:
+            self.executor._advance(self.now)
+            occupied = {v for entry in self.executor.active for v in entry['move'].members}
+            free = {v for v in context['members'] if v not in occupied
+                    and self.now >= self.command_reservations.get(v, {}).get(v, -math.inf)}
+            pending = self.nm_families.events(context['members'], free)
+            if pending and not periodic:
+                family_events = frozenset(pending)
+            opportunity_kwargs.update(families=self.nm_families, family_events=family_events)
         if self.coordination is not None and context['members']:
             from .coordination_opportunities import graph, disjoint
             self.executor._advance(self.now)
@@ -435,7 +465,7 @@ class EpisodePolicy(torch.nn.Module):
             pairs = disjoint(edges if periodic else self.approach_events.pending(edges))
             opportunity_kwargs.update(coordination=self.coordination, opportunity_pairs=pairs,
                                       event=not periodic)
-        if context['members'] and (periodic or pairs or wall_events):
+        if context['members'] and (periodic or pairs or wall_events or family_events):
             decision, accepted, proposal_stats = feasible_proposals.decide_and_start(
                 self.trigger, context, obs_states=self.local_states,
                 observable_cavs=self.visible, executor=self.executor, now=self.now,
@@ -447,7 +477,23 @@ class EpisodePolicy(torch.nn.Module):
                 self.approach_events.record(pairs)
         self.executor._advance(self.now)
         offsets = {}
+        family_lanes = {}
+        if self.nm_families is not None:
+            # N9 executor profiles: committed offsets (absolute laws relative to the
+            # member's own native command + frozen base mean) and G5 lane requests.
+            def base_mean():
+                mean = self.layer.base(context)[0].reshape(len(context['members']), -1)[:, 0]
+                return {v: float(m) for v, m in zip(context['members'], mean)}
+            active = [(vid, entry['move'].move) for entry in self.executor.active
+                      if isinstance(entry['move'].move, nm_families.FamilyOption)
+                      for vid in entry['move'].members if vid in context['members']]
+            reserved = {v for v in context['members']
+                        if self.now < self.command_reservations.get(v, {}).get(v, -math.inf)}
+            offsets, family_lanes = self.nm_families.commands(self.now, active, base_mean=base_mean,
+                                                              reserved=reserved)
         for entry in self.executor.active:
+            if self.nm_families is not None and isinstance(entry['move'].move, nm_families.FamilyOption):
+                continue
             for vid in entry['move'].members:
                 if vid in context['members']:
                     # Missing partner evidence does not trigger early release:
@@ -469,6 +515,9 @@ class EpisodePolicy(torch.nn.Module):
                 lane_requests.update(targets(entry['move'], self.now-entry['start']))
             if lane_requests:
                 sample['g5_lane_requests'] = lane_requests
+        if family_lanes:
+            # N9 lane changes enter the SAME G5 request/gate/actuator path (CAV members only).
+            sample['g5_lane_requests'] = dict(sample.get('g5_lane_requests') or {}, **family_lanes)
         if getattr(self.layer.base, 'intent_horizon', 0) and context['members']:
             published = self.trigger.publish_trigger_intent(context)
             self.trigger_board = {v: (int(self.now), values) for v, values in published.items()}
@@ -483,6 +532,9 @@ class EpisodePolicy(torch.nn.Module):
             # Initiators broadcast AFTER this step's decisions; receivers see it at t+1.
             self.wall.publish(self.now, {v: r.source for v, r in self.reports.items()})
             sample['track2']['v2v_wall'] = self.wall.receipt()
+        if self.nm_families is not None:
+            self.nm_families.publish(self.now, {v: r.source for v, r in self.reports.items()})
+            sample['track2']['nm_families'] = self.nm_families.receipt()
         return sample, memory
 
     def worker_state(self):
