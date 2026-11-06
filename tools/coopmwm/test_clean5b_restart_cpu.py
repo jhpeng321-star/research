@@ -97,12 +97,12 @@ def _quote(total=3_850_000):
 
 def test_clean5b_budget_envelope_is_3_9m_and_clean5a_default_unchanged():
     q = _quote()
-    approval = dict(owner_approval='run clean5b alongside clean5a', approved_sim_s=3_900_000,
+    approval = dict(owner_approval='run clean5b alongside clean5a', approved_sim_s=3_930_000,
                     total_cap_sim_s=34_318_000, quote_sha256=q['receipt_sha256'])
     rec = c4.budget(quote_doc=q, approval=approval, prior_runtime_sim_s=0, approved=c5b.APPROVED, rule='x')
-    assert rec['approved_sim_s'] == 3_900_000 and rec['remaining_sim_s'] == 3_900_000 and rec['rule'] == 'x'
+    assert rec['approved_sim_s'] == 3_930_000 and rec['remaining_sim_s'] == 3_930_000 and rec['rule'] == 'x'
     sealed = _seal(dict({k: v for k, v in rec.items() if k != 'receipt_sha256'}, run='clean5b'), 'receipt_sha256')
-    assert c4.checked(dict(clean4_budget=sealed))['approved_sim_s'] == 3_900_000
+    assert c4.checked(dict(clean4_budget=sealed))['approved_sim_s'] == 3_930_000
     as5a = _seal(dict({k: v for k, v in rec.items() if k != 'receipt_sha256'}, run='clean5a'), 'receipt_sha256')
     with pytest.raises(ValueError):
         c4.checked(dict(clean4_budget=as5a))                  # 3.9M record cannot pass as a 4M clean5a record
@@ -140,7 +140,23 @@ def test_wave_workers_override_is_registered():
     """clean5b binds one 16-worker wave per (sequential) arm update; the backend_config override is bounded and
     absent elsewhere (clean5a byte-identical). The live value is checked by the cpuV dry prepare."""
     from . import launch_production as production
-    assert c5b.VARIANT['cfg_overrides'] == dict(load_max=120, wave_workers=16)
+    assert c5b.VARIANT['cfg_overrides'] == dict(load_max=120, wave_workers=16, mem_available_min_gb=30)
     assert c5.VARIANT['cfg_overrides'] == {}
     src = open(production.__file__, encoding='utf-8').read()
     assert "not 1 <= cfg['wave_workers'] <= 32" in src and "out['workers'] = cfg['wave_workers']" in src
+
+
+def test_wave_admission_memory_floor(monkeypatch):
+    from . import runner
+    import tools.coopnative.runner as prior
+    monkeypatch.setattr(prior, 'admission', lambda b: None)
+    free = iter([10*1024**3, 31*1024**3])
+    monkeypatch.setattr(runner, '_mem_available_bytes', lambda: next(free))
+    slept = []
+    monkeypatch.setattr(runner.time, 'sleep', lambda s: slept.append(s))
+    runner.admission(dict(load_max=120, mem_available_min_gb=30))
+    assert slept == [30]                                   # waited once below the 30 GB floor
+    runner.admission(dict(load_max=40))                    # absent key: inherited guard only
+    for bad in (7, 161, 30.0):
+        with pytest.raises(ValueError):
+            runner.admission(dict(load_max=40, mem_available_min_gb=bad))

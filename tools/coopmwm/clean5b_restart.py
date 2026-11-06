@@ -31,6 +31,9 @@ LOAD_MAX = 120
 # clean5a ran at load 2-4 (u1 ~55 min): arms are sequential and each wave had cpu.workers//3 = 8 workers.
 # One arm's 16-episode update now runs as ONE wave of 16 (+16 diagnostic workers at u2/u4/u6/u12/u24 = 32 cores).
 WAVE_WORKERS = 16
+# r2 (cpuV, 92 GB): the B wave's 16 workers (~5-6 GB RSS each) OOM-killed the arm owner -> every wave waits for
+# MemAvailable >= 30 GB (MAIN 2026-11-07); clean5b runs on cpuZ (184 GB).
+MEM_MIN_GB = 30
 DESIGN = ('A = frozen u0 base evaluated as an arm (no PPO); B/R identical code (clean5a: FULLPOL clean5_ev N2 '
           'slate, lane_drop features/moves/V2V 100 m, G2, G4 + G4LD extension, G5 vocabulary, practice offer) + LCEXEC '
           'per-CAV free_program slots (lc_families cap 6, FULLPOL generator/descriptor, no templates, program moves '
@@ -41,8 +44,9 @@ AUTHORITY = ('MAIN 2026-11-06 23:40 phase clean5b <= 3,900,000 (owner: run clean
 HOLD_LANE_PIN_NOTE = ('active N2 hold members get their own current lane as a G5 lane target every tick '
                       '(single writer; laneChangeMode 513 like the verified S-REGIMEU0 plant path); WMVERIFY found '
                       'unpinned N2 solo holders may leave lane 2')
-BUDGET_RULE = ('MAIN 23:40 "phase clean5b <= 3,900,000 sim-s registered" (owner: run clean5b alongside clean5a); '
-               'separate envelope, prior 0; smoke+gate inside the quote smoke_gate phase')
+BUDGET_RULE = ('MAIN 23:40 "phase clean5b <= 3,900,000 sim-s registered" (owner: run clean5b alongside clean5a), amended '
+               '2026-11-07 ~03:5x to 3,930,000 after the failed r1/r2 spend (78,172); '
+               'separate envelope; prior = the failed-root spend; smoke+gate inside the quote smoke_gate phase')
 
 
 def keys(*, desc, guidance_doc, provenance):
@@ -56,7 +60,7 @@ def keys(*, desc, guidance_doc, provenance):
 
 
 VARIANT = dict(run=RUN, quote_file=QUOTE_FILE, approval_file=APPROVAL_FILE, budget_file=BUDGET_FILE, design=DESIGN,
-               approved=APPROVED, budget_rule=BUDGET_RULE, keys=keys, cfg_overrides=dict(load_max=LOAD_MAX, wave_workers=WAVE_WORKERS),
+               approved=APPROVED, budget_rule=BUDGET_RULE, keys=keys, cfg_overrides=dict(load_max=LOAD_MAX, wave_workers=WAVE_WORKERS, mem_available_min_gb=MEM_MIN_GB),
                newmap_extra=dict(action_set='clean5a N2 slate + LCEXEC per-CAV free_program (lc_families cap 6)',
                                  program_targets='none (offerable only; no program BC/EV; G4 off for programs)',
                                  hold_lane_pin='ON (MAIN 2026-11-07; FULLPOL 5cbd616e): '+HOLD_LANE_PIN_NOTE,

@@ -48,9 +48,23 @@ def verify(root):
     return b
 
 
+def _mem_available_bytes():
+    mem = dict(line.split(':', 1) for line in Path('/proc/meminfo').read_text().splitlines())
+    return int(mem['MemAvailable'].split()[0])*1024
+
+
 def admission(b):
     from tools.coopnative.runner import admission as prior
     prior(dict(load_max=b['load_max']))
+    need = b.get('mem_available_min_gb')
+    if need is not None:
+        # clean5b (MAIN 2026-11-07): the r2 B wave (16 workers x ~5-6 GB RSS) died of OOM on a 92 GB host;
+        # every wave now waits for MemAvailable >= the registered floor (absent = unchanged 8 GB guard).
+        if type(need) is not int or not 8 <= need <= 160:
+            raise ValueError('mem_available_min_gb must be an int in 8..160')
+        while _mem_available_bytes() < need*1024**3:
+            time.sleep(30)
+            prior(dict(load_max=b['load_max']))
 
 
 def wave(root,b,policy,ws,arm,role,ident,phase,deterministic=False,extra=None):
