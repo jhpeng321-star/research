@@ -95,7 +95,9 @@ REGISTRY = {
     'amax': Range(1., 1., (1.,), 'NEWMAP2 REL amax 1.0; COOPKINDS zip_yield amax 1.0; LCMOVES prog default'),
     'hold_s': Range(2, 300, (90, 120, 150, 180, 240, 300),
                     'NEWMAP2 hold {90,120,150,180}; COOPKINDS hold 240/300; dither pulse dur 2'),
-    'tau': Range(1.6, 2.4, (1.6, 2.0, 2.4), 'COOPKINDS/PLANGEN2 early_merge room_tau B 2.0, R grid {1.6,2.0,2.4}'),
+    'tau': Range(.5, 2.4, (.5, .6, .8, 1.6, 2.0, 2.4),
+                 'COOPKINDS ck_plan B_PARAMS/R_GRID: platoon/discharge tau B 0.6, R {0.5,0.6,0.8}; '
+                 'early_merge room_tau B 2.0, R {1.6,2.0,2.4} (PLANGEN2 CK_B/CK_R)'),
     'kp': Range(.15, .15, (.15,), 'COOPKINDS zip_yield kp 0.15; LCMOVES track default'),
     'kv': Range(.6, .6, (.6,), 'COOPKINDS zip_yield kv 0.6; LCMOVES track default'),
     'track_off_m': Range(-35., 0., (-35., -25., -15.), 'COOPKINDS zipper gap {15,25,35} (off = -gap)'),
