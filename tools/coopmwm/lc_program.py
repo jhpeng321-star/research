@@ -284,9 +284,9 @@ class FreeProgram:
     """A group program: members in join order (initiator first), one MemberProgram each.
 
     ``join_el`` = each member's join second relative to the initiator (0 for the initiator);
-    member programs run on the MOVE clock (el since t0). ``relay`` = V2V join chaining
-    (members re-broadcast the session so groups larger than one radio hop / 4 partner slots
-    can fill, see lc_families)."""
+    member programs run on the MOVE clock (el since t0). V2V join chaining (members
+    re-broadcast the session so groups beyond one radio hop / 4 partner slots can fill) is a
+    runtime property of lc_families.Protocol, not a program field."""
     members: tuple
     programs: tuple                      # MemberProgram per member (same order)
     map: str = 'wz3to2'
@@ -471,6 +471,10 @@ class MemberExecutor:
     def _release(self, el, why):
         self.released, self.release_el, self.release_reason = True, el, why
         return [('release', why)]
+
+    def release(self, el, why):
+        """External release (session end / commitment cut); no-op once released."""
+        return [] if self.released else self._release(el, why)
 
     def _activate(self, out):
         if self.p.mode_on != 'never' and not self.active:

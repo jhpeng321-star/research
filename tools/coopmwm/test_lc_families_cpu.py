@@ -447,8 +447,10 @@ def test_end_to_end_wall_fill_program_on_the_real_env_writer(cfg, wz):
         assert not {'h1', 'h2'} & {v for k in (s.get('lc_tick') or {}).values() for v in k}
     # Per member-second labels (schema lcexec-tick-label-v1) and executor receipts.
     labels = [lab for t in range(300, 310) for lab in samples[t]['track2']['lc_families']['labels']]
+    # Released members are freed from their commitment the next second: labels end at release.
     assert {(lab['vid'], lab['t']) for lab in labels} == {('c0', 300)} | {
-        (v, t) for v in ('c0', 'c1', 'c2') for t in range(301, 310)}
+        (v, t) for v in ('c0', 'c1', 'c2') for t in range(301, 309)}
+    assert not {v for e in samples[309]['track2']['active_moves'] for v in e['move']['members']}
     assert all(lab['schema'] == lp.LABEL_SCHEMA and lab['session_id'] == 'free_program:c0@300' for lab in labels)
     by = {(lab['vid'], lab['t']): lab for lab in labels}
     assert by[('c2', 301)]['lane_target'] == 2 and by[('c2', 301)]['tau'] == 2.0
@@ -763,3 +765,64 @@ def test_offline_open_and_admit_reconstruct_a_session_without_executors(cfg, wz)
     session = proto.sessions[sid]
     assert session['slots'] == {0: 'c0', 1: 'c1', 2: 'c2'} and session['executors']['c2'].p.lon.refs == ('c0', 'c1')
     assert proto.membership == dict(c0=sid, c1=sid, c2=sid)
+
+
+# ------------------------------------------------------------------ LCEXEC integration additions
+
+_SEEN = {}
+
+
+def args_probe(state, own, rng):
+    """Generator fixture recording the opaque generator_args view (FULLPOL per-arm templates)."""
+    _SEEN['args'] = state['generator_args']
+    _SEEN['rows'] = state['rows'] is state['sensed'] and state['fullpol'] is state['generator_args']
+    return wall_fill(state, own, rng)
+
+
+def three_floats(option):
+    return [float(option.slot), float(option.member_count), 1.]
+
+
+def test_multi_lane_program_target_is_requested_one_adjacent_lane_at_a_time(cfg, wz):
+    proto = _proto(cfg, wz)
+    rows = e2e_rows(300)
+    rows = [row('c2', -1040, 0) if r['vid'] == 'c2' else r for r in rows]
+    sid = _session(proto, rows)
+    template = proto.sessions[sid]['template_dict']
+    active = [('c0', lf.ProgramOption('free_program_initiate', ('c0',), sid, 'c0', 0, template, 0, 10, 0., 1, 3))]
+    active += [(v, lf.ProgramOption('free_program_join', (v,), sid, 'c0', k, template, 0, 10, 0., 1, 3))
+               for v, k in (('c1', 1), ('c2', 2))]
+    tick = proto.commands(300, active)
+    # The filler's program target is the closing lane (WM 2) from WM 0: the request is the
+    # adjacent WM 1 (sequential changes), through the same own-sensing gate.
+    if 'c2' in proto.last_gate:
+        assert proto.last_gate['c2']['target'] == 1 and proto.last_gate['c2']['program_target'] == 2
+    else:
+        assert tick['lanes']['c2'] == [1, 2.0]
+        label = next(lab for lab in proto.last_labels if lab['vid'] == 'c2')
+        assert label['lane_target'] == 1
+
+
+def test_generator_args_reach_the_generator_and_custom_descriptor_replaces_the_builtin(cfg, wz):
+    args = dict(templates=[], classes=['verified'])
+    raw = lc_cfg(cfg, cap=3, generator='args_probe')
+    raw['lc_families'].update(generator_args=args, descriptor=f'{HERE}:three_floats', descriptor_width=3)
+    settings = lf.settings(raw)
+    assert settings['generator_args'] == args and settings['descriptor_width'] == 3
+    proto = lf.Protocol(settings)
+    rows = e2e_rows(300)
+    table = {r['vid']: r for r in rows}
+    proto.receive(300, {v: r for v, r in table.items() if r['is_cav']},
+                  {v: [r for r in rows if abs(r['s_m']-table[v]['s_m']) <= 100.] for v in table}, {})
+    options = lf.pool('free_program_initiate', proto.state('c0', 300), table['c0'], np.random.default_rng(0))
+    assert options and _SEEN['args'] == args and _SEEN['rows'] is True
+    ext = lf.TriggerExtension(settings)
+    assert ext.descriptor_width == 3 and ext.descriptor(options[0]) == [0., 1., 1.]
+    assert ext.descriptor(None) == [0.]*3
+    bad = lc_cfg(cfg, cap=3)
+    bad['lc_families'].update(descriptor=f'{HERE}:three_floats')
+    with pytest.raises(ValueError, match='descriptor_width'):
+        lf.settings(bad)
+    wrong = lf.TriggerExtension(dict(settings, descriptor_width=4))
+    with pytest.raises(ValueError, match='descriptor_width'):
+        wrong.descriptor(options[0])

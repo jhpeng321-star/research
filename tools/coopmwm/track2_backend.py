@@ -671,6 +671,12 @@ class EpisodePolicy(torch.nn.Module):
             reserved = {v for v in context['members']
                         if self.now < self.command_reservations.get(v, {}).get(v, -math.inf)}
             lc_tick = self.lc_families.commands(self.now, active, reserved=reserved)
+            released = set(self.lc_families.just_released)
+            for entry in self.executor.active:
+                if (released and isinstance(entry['move'].move, lc_families.ProgramOption)
+                        and set(entry['move'].members) <= released):
+                    # A released program member is free from the next second (no idle commitment).
+                    entry['until'] = min(entry['until'], self.now+1)
         for entry in self.executor.active:
             if self.lane_drop is not None and lane_drop.is_lane_drop(entry['move']):
                 continue

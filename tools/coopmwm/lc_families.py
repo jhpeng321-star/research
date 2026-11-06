@@ -97,7 +97,8 @@ def settings(cfg):
     raw = (cfg or {}).get(CONFIG_KEY, False)
     if raw is False or raw is None:
         return None
-    keys, optional = {'enabled', 'rule', 'provenance', 'map', 'cap'}, {'range_m', 'generator'}
+    keys = {'enabled', 'rule', 'provenance', 'map', 'cap'}
+    optional = {'range_m', 'generator', 'generator_args', 'descriptor', 'descriptor_width'}
     if (not isinstance(raw, dict) or not keys <= set(raw) or set(raw)-keys-optional
             or raw['enabled'] is not True or raw['rule'] != RULE
             or not isinstance(raw['provenance'], str) or not raw['provenance'].strip()):
@@ -116,18 +117,33 @@ def settings(cfg):
         raise ValueError(f'{CONFIG_KEY}.range_m must be finite and positive')
     generator = raw.get('generator')
     propose = default_generator if generator is None else _resolve_generator(generator)
+    args = raw.get('generator_args', {})
+    if not isinstance(args, dict):
+        raise ValueError(f'{CONFIG_KEY}.generator_args must be a JSON object (opaque to the protocol)')
+    descriptor, width = raw.get('descriptor'), raw.get('descriptor_width')
+    if (descriptor is None) != (width is None) or (width is not None and (type(width) is not int or width < 1)):
+        raise ValueError(f'{CONFIG_KEY}.descriptor needs a positive integer descriptor_width (and vice versa)')
     return dict(rule=RULE, provenance=raw['provenance'], map=desc.name, frame=lp.frame_from_descriptor(desc),
                 n_lanes=int(desc.frame.n_lanes), cap=cap, range_m=float(range_m), generator=generator,
-                propose=propose)
+                propose=propose, generator_args=json.loads(json.dumps(args)),
+                descriptor=None if descriptor is None else _resolve_generator(descriptor),
+                descriptor_width=width)
 
 
-def config_keys(*, provenance, map_name='wz3to2', cap, range_m=None, generator=None):
-    """Exact common B/R binding."""
+def config_keys(*, provenance, map_name='wz3to2', cap, range_m=None, generator=None, generator_args=None,
+                descriptor=None, descriptor_width=None):
+    """Exact B/R binding. ``generator_args`` is passed verbatim to the generator (e.g. an arm's own
+    verified templates); ``descriptor`` ('module:function', fn(option) -> list of
+    ``descriptor_width`` floats) replaces the built-in trigger descriptor (FULLPOL head)."""
     out = dict(enabled=True, rule=RULE, provenance=provenance, map=map_name, cap=int(cap))
     if range_m is not None:
         out['range_m'] = float(range_m)
     if generator is not None:
         out['generator'] = generator
+    if generator_args is not None:
+        out['generator_args'] = generator_args
+    if descriptor is not None:
+        out.update(descriptor=descriptor, descriptor_width=int(descriptor_width))
     return {CONFIG_KEY: out}
 
 
@@ -416,9 +432,11 @@ def _row(r):
 
 def _propose(state, own, rng):
     """Validated templates from the registered generator (own state/sensing + static map only)."""
+    sensed = tuple(_row(r) for r in state['sensed'])
+    args = state.get('generator_args') or {}
     view = dict(now=state['now'], map=state['map'], frame=state['frame'], cap=state['cap'],
-                range_m=state['range_m'], sensed=tuple(_row(r) for r in state['sensed']),
-                registry=lp.REGISTRY)
+                range_m=state['range_m'], sensed=sensed, rows=sensed, registry=lp.REGISTRY,
+                generator_args=args, fullpol=args)
     out = state['propose'](view, _row(own), rng) or []
     return [template_of(t, cap=state['cap'], frame=state['frame'], n_lanes=state['n_lanes']) for t in out]
 
@@ -516,6 +534,7 @@ class Protocol:
         self.rows, self.sensed, self.prev_reports, self.now = {}, {}, {}, None
         self.last_published, self.last_joins, self.last_commands = [], [], {}
         self.last_labels, self.last_gate, self.last_request, self.expired = [], {}, {}, []
+        self.just_released = []
 
     # ------------------------------------------------ inputs
     def _expire(self, now):
@@ -523,8 +542,7 @@ class Protocol:
             session = self.sessions.pop(sid)
             receipts = {}
             for vid, ex in session['executors'].items():
-                if not ex.released:
-                    ex._release(now-session['start_s'], 'session_end')
+                ex.release(now-session['start_s'], 'session_end')
                 receipts[vid] = ex.receipt()
                 if self.membership.get(vid) == sid:
                     del self.membership[vid]
@@ -593,7 +611,8 @@ class Protocol:
         """Local view attached to the CAV's candidate state (own row/sensing + received offers)."""
         return dict(now=_second(now), families=PROGRAM_FAMILIES, offers=self.offers.get(vid, ()),
                     cap=self.cap, range_m=self.range_m, map=self.frame.name, frame=self.frame,
-                    n_lanes=self.n_lanes, sensed=tuple(self.sensed.get(vid, ())), propose=self.propose)
+                    n_lanes=self.n_lanes, sensed=tuple(self.sensed.get(vid, ())), propose=self.propose,
+                    generator_args=self.settings.get('generator_args') or {})
 
     def events(self, members, free):
         return {v for v in members if v in free and any(
@@ -774,10 +793,21 @@ class Protocol:
             status = 'released' if ex.released else ('active' if ex.active or commands else 'waiting')
             lane = next((c for c in commands if c[0] == 'changeLane'), None)
             if lane is not None:
-                ok, reason = lane_gate(vid, int(lane[1][0]), self.sensed.get(vid, []), self.frame, self.n_lanes)
+                target, current = int(lane[1][0]), int(self.rows[vid]['lane'])
+                stepped_from = None
+                if abs(target-current) > 1:
+                    # Multi-lane program target: sequential adjacent requests (one lane per
+                    # request toward the target), each through the same own-sensing gate.
+                    step = current+(1 if target > current else -1)
+                    commands = [('changeLane', (step, lane[1][1])) if c[0] == 'changeLane' else c
+                                for c in commands]
+                    stepped_from, target = target, step
+                ok, reason = lane_gate(vid, target, self.sensed.get(vid, []), self.frame, self.n_lanes)
                 if not ok:
                     commands = [c for c in commands if c[0] != 'changeLane']
-                    gate[vid] = dict(target=int(lane[1][0]), reason=reason)
+                    gate[vid] = dict(target=target, reason=reason)
+                    if stepped_from is not None:
+                        gate[vid]['program_target'] = stepped_from
             by_vid[vid], stepped[vid] = commands, ex
             out[vid] = dict(session_id=option.session_id, slot=session['members'][vid]['slot'], el=obs.el,
                             status=status, commands=[[k, list(v) if isinstance(v, tuple) else v] for k, v in commands],
@@ -789,6 +819,15 @@ class Protocol:
             ex = session['executors'].get(session['initiator'])
             if ex is not None and ex.released:
                 session['closed'] = True                     # no further joins/broadcasts
+        # A member whose program released (or left) is free again: the session keeps its
+        # receipt, the CAV leaves the one-session-per-CAV ledger and its commitment is cut
+        # by the caller (EpisodePolicy) via released_members().
+        self.just_released = sorted(v for v, opt in live.items()
+                                    if (s := self.sessions.get(opt.session_id)) is not None
+                                    and v in s['executors'] and s['executors'][v].released)
+        for vid in self.just_released:
+            if self.membership.get(vid) == live[vid].session_id:
+                del self.membership[vid]
         request = requests_from_commands(by_vid, stepped)
         tick = {}
         for key in ('accel', 'native', 'lanes', 'lane_mode', 'tau'):
@@ -864,7 +903,9 @@ class TriggerExtension:
     def __init__(self, program_settings):
         self.lc = program_settings
         self.families = PROGRAM_FAMILIES
-        self.descriptor_width = len(DESCRIPTOR)
+        self.custom = (program_settings or {}).get('descriptor')
+        self.descriptor_width = (len(DESCRIPTOR) if self.custom is None
+                                 else int(program_settings['descriptor_width']))
         self.context_width = 0
 
     def descriptor(self, move):
@@ -873,6 +914,11 @@ class TriggerExtension:
             return [0.]*self.descriptor_width
         option = move if isinstance(move, ProgramOption) else (
             ProgramOption.from_dict(move) if isinstance(move, dict) else getattr(move, 'move', move))
+        if self.custom is not None:
+            out = [float(x) for x in self.custom(option)]
+            if len(out) != self.descriptor_width or not all(math.isfinite(x) for x in out):
+                raise ValueError('lc_families custom descriptor must return descriptor_width finite floats')
+            return out
         program = lp.FreeProgram.from_dict(option.template).programs[option.slot]
         out = [float(option.kind == 'initiate'), float(option.kind == 'join')]
         out += [float(option.slot == k) for k in range(MAX_SLOTS)]
