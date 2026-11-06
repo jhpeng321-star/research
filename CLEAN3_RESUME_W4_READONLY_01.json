@@ -1,0 +1,330 @@
+{
+  "authority_sha256": "403c7e01b3f5bdc54e01a010149d80f58bef14fe42dc8093fe9d823d9d682b8a",
+  "budget": null,
+  "chain_authority": {
+    "budget": {
+      "available_for_clean3_sim_s": 3701360,
+      "mining_reserved_sim_s": 500000,
+      "owner_cap_sim_s": 7300000,
+      "plan_fix": "released (owner 03:00)",
+      "prior_clean1_clean2_parity_sim_s": 3098640
+    },
+    "chain": "G1 batch -> CLEAN3_GO_NOGO (continue regardless) -> mined wait (>=3 per-seed verified joint examples; deadline 14:00) -> CONFIRM (owner pre-approved) -> prepare root/ledger -> smoke (all levers+fixes, mined exposure a-d) -> gate once (0 collisions/teleports) -> u1-u24 phase coverage -> launch A/B/R u0 x24 + monitor",
+    "created": "2026-11-06T11:16+08:00 (system clock)",
+    "criterion": "registered u24 criterion unchanged: pooled B group-over-best-single synergy CI95 lower > 0 and original no-safety-regression criterion; total benefit vs common base reported descriptively",
+    "extra_final_baseline": "lane-on MAPPO aecd7d70, frozen, descriptive only (primary comparator speed-only MAPPO)",
+    "g1_accounting": "3e5bc9f9: quote assertion counts the completed G1 phase at actual spend (0) once; cap 7,300,000 unchanged; other phases unchanged",
+    "g5_runtime": "MAIN 05:30 blocker fixed: accepted G5 env change bound onto the frozen e3final env that every episode imports (tools/coopmwm/g5_runtime.py, overlay SHA 5aac1769..., base SHA 59aecd0b...; COOPMWM_G5_RUNTIME=1 set by the chain); Linux test exercises the real frozen runtime path with lane_actors and byte-identity when absent; smoke requires a real G5 lane move",
+    "mined_exposure_rule": "owner ~05:05 \"make sure the policy is actually SHOWN what the mined plans can do\": smoke (a) executable imitation targets, (b) practice from mined seed situations (smoke: mined families first), (c) tape-verified execution of the mined plan in a demonstration practice episode, (d) G4-format measured synergy rows; R same counts/families with its own examples; per-update mined usage/fit/trigger-rate reports",
+    "mined_launch_rule": "owner ~07:2x walls-only \"yes.\" (amends ~04:35): launch when /home/ubuntu/mined/MINED_MOVES.jsonl yields >=3 per-seed SUMO-verified joint examples for B (>=2 executing CAVs, seed CI95 low>0, measured synergy present); no family-count rule; owner approval replaces LAUNCH_CONFIRMED; deadline 14:00 local",
+    "minedlink": "c4/clean3-minedlink 0496e758 (GLM 5.3) reviewed+merged: rows carrying a full verified situation binding take their decision snapshot from their own sealed SUMO verification (SNAPSHOT.pt, receipt snapshot_sha256, sidecar), then the unchanged per-seed restart (replicate salt, own-seed tape/plan binding) builds the practice start; imitation targets from the example own trace; partial bindings fail closed; operator hardening: binding members/duration/profile must equal the verified plan",
+    "observability_amendment": "MAIN verbatim (owner asleep, delegated): \"go with OPTION 1\" - smoke check (a): every admitted mined example must load as an executable bank example and be practice-demonstrated; imitation targets only for examples observable from a member's slots; per-example/per-seed observable counts in smoke receipt and per-update monitor; (b),(c),(d) unchanged; R identical; observation limit not relaxed",
+    "operator": "Claude launch operator (replaces S-LAUNCH)",
+    "owner_quotes": {
+      "2026-11-05 23:39": "when the lever finishes, just stop the current run and rerun it",
+      "2026-11-06 01:16": "keep it as the baseline for now. if the our version does while, we can train a new baseline that matches everything",
+      "2026-11-06 02:13": "yes, do that",
+      "2026-11-06 02:44": "use your own usage from now on. and 1",
+      "2026-11-06 03:00": "approve"
+    },
+    "pool_fix": "d3986eea: mined plans keep distinct practice contexts (situation+family+plan hash) so every mined example is separately demonstrable; check (b) per example",
+    "previous_chain": "r1 /home/ubuntu/cpuv_setup_20261105/clean3_chain_b7b74545 (pid 428197) stopped by operator in MINED_WAIT before any clean3 physics; its G1 batch ran (0 candidates, 0 sim-s, NO-GO) in /home/ubuntu/coopmwm20261106_clean3_g1cert; reason: smoke lever check bug fixed in a0f9401d; r2 /home/ubuntu/cpuv_setup_20261105/clean3_chain_a0f9401d (pid 434007) stopped by operator in MINED_WAIT before any clean3 physics to apply the owner mined-launch rule; its G1 (0 sim-s, NO-GO) in g1cert_r2; r3 /home/ubuntu/cpuv_setup_20261105/clean3_chain_bf3f1d68 (pid 446254) stopped by operator mid-G1 before any clean3 physics (0 rows) to add the owner mined-plan exposure checks; r4 clean3_chain_d27b3d00 (pid 451163) stopped pre-physics mid-G1 for the G5 runtime blocker; r5 clean3_chain_162b35c9 (pid 455812) stopped by operator in MINED_WAIT (pre-physics) to apply the walls-only amendment; r6 clean3_chain_dd424702 (pid 467291) FAILED in MINED_WAIT (pre-physics) on a NameError in mined_move (missing import), fixed in 0533fb16; 6cf4868f counts B examples for readiness; r7 clean3_chain_6cf4868f launched prepare/smoke, smoke FAILED (no decision link for mined R row), STOP in r1 root, 3,600 sim-s; r8 clean3_chain_673e80a7 FAILED in PREPARE (pre-physics) on offline supervision candidates beyond observable slots; r9 clean3_chain_7b8cbaad smoke STOP on original check (a) (non-observable mined walls), 9,600 sim-s; r10 clean3_chain_ac9e4691 smoke STOP on check (b): two mined plans shared one restart context and the pool deduplicated one; r11 clean3_chain_d3986eea PREPARE refused on the quote assertion before root creation",
+    "quote": {
+      "file": "E:/agent-work/c4-rerun-launch/CLEAN3_QUOTE.json",
+      "phases": {
+        "early_probes": 52800,
+        "g1_certification": 230400,
+        "g4_synergy_credit": 230400,
+        "gate_bank_verification_ext": 18000,
+        "isolated_replicated": 165600,
+        "track2_smoke": 24000,
+        "v2v_final": 398400,
+        "v2v_final_laneon_mappo_aecd7d70": 133200,
+        "v2v_interim": 398400,
+        "v2v_lessons": 40800,
+        "v2v_practice_refs": 398400,
+        "v2v_train_waves": 1590000
+      },
+      "sha256": "e42d5636a034aab31b16ad976b8b688c9641c1c142a4a2f87758d1e573b6e3fe",
+      "total_sim_s": 3680400
+    },
+    "root": "/home/ubuntu/coopmwm20261106_clean3_r6 (stopped roots clean3 3,600 / r2 0 / r3 9,600 / r4 9,600 sim-s kept and counted)",
+    "safety_rule": "A: full original rule. B and R: composite TTC/critical comparison reported each update, no pause. Any collision or teleport in any arm pauses.",
+    "schema": "coopmwm.clean3.chain_authority.v1",
+    "seeds": "registered TRAIN worlds only (986000-986071 family); never 964000-964199, 962xxx, 977xxx",
+    "supervision_fix": "7b8cbaad: offline trigger supervision candidates restricted to the ego observable slots (online acquirability contract), B=R"
+  },
+  "chain_owner": {
+    "alive": true,
+    "command": "/home/ubuntu/miniconda3/bin/python -B -u /home/ubuntu/coopmwm20261106_clean3_src_3e5bc9f9/ops/clean3_chain.py --source /home/ubuntu/coopmwm20261106_clean3_src_3e5bc9f9 --control /home/ubuntu/cpuv_setup_20261105/clean3_chain_3e5bc9f9 ",
+    "pid": 560611,
+    "start_ticks": "12554274",
+    "state": "R",
+    "unix": 1793935694.2755132
+  },
+  "completed_g1": {
+    "admitted_by_arm": {
+      "B": 0,
+      "R": 0
+    },
+    "admitted_families": {
+      "B": [],
+      "R": []
+    },
+    "branches": 0,
+    "charged_sim_s": 0,
+    "decision": "NO-GO",
+    "diagnostics": 0,
+    "executable_joint_labels_ci95_low_positive": 0,
+    "jobs": 0,
+    "manifest_path": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r12/G1_MANIFEST.json",
+    "manifest_sha256": "be44cdc7af132206a2bb36f91c37ca541244d044058f15f107ad59052a1d02d9",
+    "receipt_sha256": "af22a2240a987fcbe0dff2b01b4de7acf8121908416c425dc84412163713a7d2",
+    "rule": "GO iff >=1 admitted executable joint label (synergy CI95 low>0 on pooled and both seeds, safety holds) in BOTH B and R with identical admitted family sets; then the certificate manifest gates B/R bank lessons. Otherwise NO-GO: manifest kept as diagnostic, not bound.",
+    "runtime_sha256": "aa95ad5e1d01968d0c85c17d92c57969a7d1d89a8c97aba1208a6233649ae1a5",
+    "schema": "coopmwm.clean3.g1_go_nogo.v1",
+    "unix": 1793935931.8772285
+  },
+  "config_file_sha256": null,
+  "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_3e5bc9f9",
+  "events": [
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 1,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "QUALIFIED",
+      "timestamp": "2026-11-06T03:28:14.278422+00:00",
+      "unix": 1793935694.2784219
+    },
+    {
+      "detail": {
+        "qualification": {
+          "returncode": 0,
+          "seconds": 209.26640343666077,
+          "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0"
+        },
+        "source_files": 735
+      },
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 2,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "PASS",
+      "step": "QUALIFIED",
+      "timestamp": "2026-11-06T03:28:16.471809+00:00",
+      "unix": 1793935696.4718049
+    },
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 3,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "G1_CERTIFY",
+      "timestamp": "2026-11-06T03:28:16.476690+00:00",
+      "unix": 1793935696.4766893
+    },
+    {
+      "detail": {
+        "admitted_by_arm": {
+          "B": 0,
+          "R": 0
+        },
+        "charged_sim_s": 0,
+        "decision": "NO-GO",
+        "error": null,
+        "executable_joint_labels_ci95_low_positive": 0
+      },
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 4,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "PASS",
+      "step": "G1_CERTIFY",
+      "timestamp": "2026-11-06T03:32:11.881895+00:00",
+      "unix": 1793935931.881891
+    },
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 5,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "MINED_WAIT",
+      "timestamp": "2026-11-06T03:32:11.886094+00:00",
+      "unix": 1793935931.8860936
+    },
+    {
+      "detail": {
+        "admitted": 5,
+        "admitted_path": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_3e5bc9f9/MINED_MOVES_ADMITTED_001.jsonl",
+        "families": [
+          "wall"
+        ],
+        "joint_families": [
+          "wall"
+        ],
+        "joint_verified_examples": 5,
+        "joint_verified_moves": 3,
+        "rows": 5,
+        "rule": "owner 2026-11-06 ~07:2x walls-only launch (\"yes.\"), amending ~04:35: launch when /home/ubuntu/mined/MINED_MOVES.jsonl yields >=3 per-seed SUMO-verified JOINT examples for B (natively admitted plan with >=2 executing CAVs; that seed synergy CI95 lower bound > 0); no family-count requirement; families must exist in both B and R verified pools (R same family distribution from its own bank); hard deadline 14:00 local -> stop and report; owner approval replaces the MAIN confirmation file."
+      },
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 6,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "PASS",
+      "step": "MINED_WAIT",
+      "timestamp": "2026-11-06T03:33:48.903818+00:00",
+      "unix": 1793936028.9038153
+    },
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 7,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "CONFIRM_WAIT",
+      "timestamp": "2026-11-06T03:33:48.908703+00:00",
+      "unix": 1793936028.9087024
+    },
+    {
+      "detail": {
+        "authority": "owner ~07:2x walls-only clean3 launch \"yes.\" (REGISTRATION.md); launch when the amended mined rule holds; no LAUNCH_CONFIRMED file required",
+        "confirmed": true
+      },
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 8,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "PASS",
+      "step": "CONFIRM_WAIT",
+      "timestamp": "2026-11-06T03:33:48.912323+00:00",
+      "unix": 1793936028.9123225
+    },
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 9,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "PREPARE",
+      "timestamp": "2026-11-06T03:33:48.916050+00:00",
+      "unix": 1793936028.9160504
+    }
+  ],
+  "launch_owners": {},
+  "logs": {
+    "CHAIN.log": ""
+  },
+  "mined_admission": [
+    {
+      "admitted": 5,
+      "admitted_path": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_3e5bc9f9/MINED_MOVES_ADMITTED_001.jsonl",
+      "families": [
+        "wall"
+      ],
+      "joint_families": [
+        "wall"
+      ],
+      "joint_verified_examples": 5,
+      "joint_verified_moves": 3,
+      "ready": true,
+      "rejected": [],
+      "rows": 5,
+      "rule": "owner 2026-11-06 ~07:2x walls-only launch (\"yes.\"), amending ~04:35: launch when /home/ubuntu/mined/MINED_MOVES.jsonl yields >=3 per-seed SUMO-verified JOINT examples for B (natively admitted plan with >=2 executing CAVs; that seed synergy CI95 lower bound > 0); no family-count requirement; families must exist in both B and R verified pools (R same family distribution from its own bank); hard deadline 14:00 local -> stop and report; owner approval replaces the MAIN confirmation file.",
+      "source": "/home/ubuntu/mined/MINED_MOVES.jsonl",
+      "source_sha256": "7a225dbd59436392c29fd3cad6e9df3c2deb01af976289bc787e9865c0f1471b",
+      "unix": 1793936028.9004588
+    }
+  ],
+  "new_dispatch": false,
+  "new_physics": false,
+  "previous_clean3_roots": {
+    "/home/ubuntu/coopmwm20261106_clean3": {
+      "phases": {
+        "track2_smoke": 3600
+      },
+      "rows": 3,
+      "sha256": "b6144a029a9c4fc585d12cd14aaf1c415202e947f1bc690b3422e4e16bd2471a",
+      "total_sim_s": 3600
+    },
+    "/home/ubuntu/coopmwm20261106_clean3_r2": {
+      "phases": {},
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "total_sim_s": 0
+    },
+    "/home/ubuntu/coopmwm20261106_clean3_r3": {
+      "phases": {
+        "track2_smoke": 9600
+      },
+      "rows": 8,
+      "sha256": "c732ff2008043639973575eed7ab323c3af9a4d1bfe80378692067a4c61ac61d",
+      "total_sim_s": 9600
+    },
+    "/home/ubuntu/coopmwm20261106_clean3_r4": {
+      "phases": {
+        "track2_smoke": 9600
+      },
+      "rows": 8,
+      "sha256": "c732ff2008043639973575eed7ab323c3af9a4d1bfe80378692067a4c61ac61d",
+      "total_sim_s": 9600
+    },
+    "/home/ubuntu/coopmwm20261106_clean3_r5": {
+      "phases": {},
+      "rows": 0,
+      "sha256": null,
+      "total_sim_s": 0
+    }
+  },
+  "process_signals": false,
+  "qualification": {
+    "returncode": 0,
+    "seconds": 209.26640343666077,
+    "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0"
+  },
+  "receipt_file_sha256": {},
+  "receipts": {},
+  "restart": null,
+  "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+  "root_charges": {
+    "phases": {},
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "total_sim_s": 0
+  },
+  "schema": "coopmwm.clean3.resume_w4_readonly.v1",
+  "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+  "source_files_verified": 735,
+  "source_manifest_sha256": "49689a0665ac3a1aa124231b5e78501261ffe5ff3b4e475660ceb0a25ab9c53b",
+  "status": {
+    "detail": null,
+    "pid": 560611,
+    "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+    "schema": "coopmwm.clean3.chain.v1",
+    "sequence": 9,
+    "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+    "status": "RUNNING",
+    "step": "PREPARE",
+    "timestamp": "2026-11-06T03:33:48.916050+00:00",
+    "unix": 1793936028.9160504
+  },
+  "timestamp": "2026-11-06T03:38:45.674447+00:00"
+}

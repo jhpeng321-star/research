@@ -1,0 +1,44 @@
+{
+  "schema": "coopmwm.clean3.resume_w6_public.v1",
+  "timestamp": "2026-11-06T04:13:08.943897+00:00",
+  "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+  "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_3e5bc9f9",
+  "probe": "ops/clean3_follow_remote.py via ops/clean3_follow.fetch and accepted F6 Transport",
+  "runtime_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+  "chain": {"pid": 560611, "step": "MONITOR", "status": "RUNNING", "sequence": 19},
+  "owners": {
+    "A": {"pid": 568096, "start_ticks": "12749728", "alive": true, "complete": false},
+    "B": {"pid": 568097, "start_ticks": "12749728", "alive": true, "complete": false},
+    "R": {"pid": 568098, "start_ticks": "12749729", "alive": true, "complete": false},
+    "monitor": {"pid": 568099, "start_ticks": "12749729", "alive": true, "complete": false}
+  },
+  "faults": {},
+  "combined_monitors": [],
+  "scheduled_diagnostics_completed": [],
+  "charged_sim_s": 75160,
+  "protected_total_sim_s": 3696600,
+  "cap_sim_s": 7300000,
+  "phases": {"gate_bank_verification_ext": 15160, "track2_smoke": 14400, "v2v_train": 45600},
+  "checks_passed_by_existing_probe": [
+    "immutable launch/config/root binding",
+    "sealed smoke and gate bound to launch; gate collisions and teleports zero",
+    "cumulative protected cap and each charged phase cap",
+    "recorded training/monitor PID start identities",
+    "no active STOP/FAULT/unreleased pause"
+  ],
+  "local_follower": {
+    "pid": 32668,
+    "creation_local": "2026-11-06T11:44:46+08:00",
+    "executable": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "script": "E:/agent-work/c4-rerun-launch/ops/clean3_r12_watch.py",
+    "identity_verified_with": "Get-CimInstance Win32_Process -Filter ProcessId=32668"
+  },
+  "concurrent_recovery": {
+    "observed_commit": "0e8982d6",
+    "note": "CLEAN3_CONTINUATION_W5.md",
+    "action": "adopt existing watcher and execution owners; do not duplicate W5 full audit"
+  },
+  "new_dispatch": false,
+  "new_physics": false,
+  "process_signals": false
+}
