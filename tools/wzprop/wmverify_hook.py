@@ -8,6 +8,9 @@ an activation are then executed by one of:
                acceleration through the plant's single writer (MAPPO safety downstream) and the role's lane target
                through ``controller.g5_lane_targets`` (frozen G5 path: own lane / adjacent change for 1 s, never into
                the closing lane). This is the S-REGIMEU0 solo2 path: DEFAULT for hold-only strategies.
+* ``n2``     - the plant path WITHOUT the G5 own-lane target: hold law through the plant writer only, members keep
+               their native laneChangeMode = what the policy's N2 hold execution (FULLPOL group_hold / SoloHold,
+               lane_drop.member_command) issues at TraCI (wmverify_n2.parity); selectable for hold-only strategies.
 * ``lcexec`` - the LCEXEC POLICY executor (c4/lcexec 0fe9574e; tools/coopmwm/lc_families.Protocol +
                lc_program.MemberExecutor + the own-sensing lane gate + env.lc_tick, process flag
                COOPMWM_LC_RUNTIME=1), exactly the production path of S-LCEXEC-SMOKE (lc_smoke.run_episode):
@@ -52,6 +55,8 @@ def resolve_executor(spec, *, lane_executor='lcexec', hold_executor='plant'):
     name = lane_executor if has_lane_roles(spec) else hold_executor
     if name not in EXECUTORS:
         raise ValueError(f'unknown executor {name!r} (registered: {sorted(EXECUTORS)})')
+    if name == 'n2' and has_lane_roles(spec):
+        raise ValueError('the n2 executor has no lane requests (hold-only strategies)')
     return name
 
 
@@ -184,7 +189,7 @@ class LcexecExecutor:
                     gate_withheld=dict(self.gate), released=dict(self.released), session_log=self.sessions[:50])
 
 
-EXECUTORS = {'plant': None, 'lcexec': LcexecExecutor}
+EXECUTORS = {'plant': None, 'n2': None, 'lcexec': LcexecExecutor}
 
 
 def register_executor(name, cls):
@@ -201,6 +206,8 @@ def make_hook(strategy, warmup_s=300, executor=None):
     name = resolve_executor(strategy) if executor is None else executor
     if strategy is not None and name not in EXECUTORS:
         raise ValueError(f'unknown executor {name!r}')
+    if strategy is not None and name == 'n2' and has_lane_roles(strategy):
+        raise ValueError('the n2 executor has no lane requests (hold-only strategies)')
 
     class VerifyHook(ir.Recorder):
         def __init__(self):
@@ -266,7 +273,7 @@ def make_hook(strategy, warmup_s=300, executor=None):
                 for vid, a in accel.items():
                     desired[vid] = dict(requested_raw=a, acceleration_residual=a - commands[vid],
                                         wmsearch_rule=self.strategy)
-                if lanes:
+                if lanes and self.executor != 'n2':
                     targets = dict(getattr(controller, 'g5_lane_targets', {}) or {})
                     targets.update(lanes)
                     controller.g5_lane_targets = targets

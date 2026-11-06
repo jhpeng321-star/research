@@ -47,6 +47,7 @@ from pathlib import Path
 from . import geometry as G
 from . import strategy_search as SS
 from . import wmverify_hook as VH
+from . import wmverify_n2 as N2
 
 SCHEMA = 'wmverify.v1'
 STABLE_ID = 'S-WMVERIFY'
@@ -72,6 +73,7 @@ SPREADS = (G.WALL_SPREAD, G.R_SPREAD)    # pg_plan WALL_SPREAD 200 m / R spread 
 SLOTS = (1,)                             # S-REGIMEU0: one activation at a time (cooldown >= hold)
 CLOSING_SUMO_LANE = 0                    # up lane 0 ends at X_B (WM lane 2)
 IDENTITY_JOB = 'identity_s989599_u0'
+N2_FIXTURE_S = 700                       # n2_parity fixture: fake plant 300 s warmup + 400 s control
 
 
 # ------------------------------------------------------------------------------------------ helpers
@@ -285,11 +287,13 @@ def family_records(specs_by_cell, *, lane_executor=DEFAULT_LANE_EXECUTOR, hold_e
                     spec=s, strategy_key=SS.strategy_key(s), executor=ex, cells={}, template=tpl,
                     template_sha256=tsha, offer_condition=VH.offer_condition(s),
                     lcexec_parity=dict(VH.LCEXEC_PARITY) if ex == 'lcexec' else None,
+                    n2_parity=None if ex == 'lcexec' else N2.parity(s, executor=ex, seconds=N2_FIXTURE_S),
                     verification_note=('members executed by the LCEXEC policy executor (Protocol + own-sensing lane '
                                        'gate; MAPPO pre-safety filter bypassed as in S-LCEXEC-SMOKE)'
                                        if ex == 'lcexec' else
                                        'hold members executed through the plant single writer with MAPPO safety '
-                                       'downstream (S-REGIMEU0 solo2 path), NOT through the LCEXEC template'))
+                                       'downstream (S-REGIMEU0 solo2 path), NOT through the LCEXEC template; '
+                                       'policy-side parity = n2_parity (FULLPOL N2 hold executor)'))
             out[s['name']]['cells'][cell] = source
     return out
 
@@ -498,6 +502,7 @@ def wmsearch_families(body):
         out[alias(arm)] = dict(spec=spec, strategy_key=SS.strategy_key(spec), executor='plant', cells={},
                                template=tpl, template_sha256=tsha, offer_condition=VH.offer_condition(spec),
                                lcexec_parity=None, source_arm=arm,
+                               n2_parity=None if VH.has_lane_roles(spec) else N2.parity(spec, seconds=N2_FIXTURE_S),
                                verification_note='S-WMSEARCH: WM-C strategy_hook.make_hook on the u0 plant (hold law '
                                                  'through the plant writer, lane targets through the frozen G5 path: '
                                                  'closing-lane entries refused); not the LCEXEC policy executor')
@@ -904,7 +909,10 @@ def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, identity=Tru
         'template_from_program -> Protocol.start / receive / commands (own 100 m sensing, own-sensing lane gate) -> '
         'env.lc_tick, exactly the S-LCEXEC-SMOKE production path; program members bypass the MAPPO pre-safety filter '
         'as in S-LCEXEC-SMOKE (speedMode 27, direct_target bounds, env edge-end guard stay). Verified = executable '
-        'by the policy executor. CAV rows only; HDVs never commanded. Parameter ranges: strategy_search.validate '
+        'by the policy executor. Hold families carry n2_parity (FULLPOL e36ece92 N2 hold executor vs the plant path '
+        'through the real env writer on fixture states: speed writes identical; the plant path additionally pins '
+        'laneChangeMode 513 via the G5 own-lane target, N2 holds do not; --hold-executor n2 runs holds without the '
+        'pin). CAV rows only; HDVs never commanded. Parameter ranges: strategy_search.validate '
         '(NEWMAP2 R grid, WMDATA offsets, zones, gates) + spread {200, 300} m + one slot + cooldown <= 240 s; '
         'anything else is rejected.',
         f'- Code: c4/wmverify; module sha256 {json.dumps(shas, sort_keys=True)}.',

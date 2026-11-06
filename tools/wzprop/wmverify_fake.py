@@ -184,7 +184,7 @@ def fake_tick(b, controller=None, trace=None):
 
 
 def run_episode(hook, *, seed=989950, share=0.6, seconds=1200, lc_runtime=True, tick=None, record=None,
-                warmup_s=300):
+                warmup_s=300, keep_rows=False):
     """Drive one fake episode through the hook protocol; returns dict(totals, series, trace)."""
     env = FakeEnv(seed, share=share, lc_runtime=lc_runtime)
     controller = FakeController()
@@ -210,6 +210,8 @@ def run_episode(hook, *, seed=989950, share=0.6, seconds=1200, lc_runtime=True, 
                                             for k, v in desired.items()},
                               g5=dict(sorted((targets or {}).items())),
                               lc=info['lc_lane_vehicles']))
+            if keep_rows:
+                trace[-1]['rows'] = rows
     return dict(totals=dict(env.totals), trace=trace, actual_sim_s=int(seconds))
 
 
