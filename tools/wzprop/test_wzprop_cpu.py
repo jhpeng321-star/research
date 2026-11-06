@@ -678,3 +678,36 @@ def test_regime_benefit_agreement_on_synthetic_inputs(tmp_path):
     assert res['point']['spearman_pooled'] > 0.9 and res['point']['sign_accuracy'] == 1.0
     assert res['point']['n_pairs'] == 8 and 'lane_balance' in res['not_evaluable']
     assert res['ci95']['sign_accuracy'][0] <= 1.0 and '| regime |' in RG.markdown(res)
+
+
+def test_tape_stage_and_trimmed_geometry(tmp_path, dry):
+    from tools.wzprop import runner as RN2
+    RN2.tape_verify()
+    ref = Path(dry['ref'])
+    out = tmp_path / 'tapes.jsonl'
+    res = V.plan_tapes(ref, out)
+    jobs = RN2.read_jobs(out)
+    assert res['jobs'] == len(jobs) == len(json.loads((ref / 'WORLDS.json').read_text()))
+    for j in jobs:
+        assert j['kind'] == 'prefix' and j['t_end'] == 900.0 and RN2.planned(j) == 900.0
+        assert j['out_dir'].replace('\\', '/').endswith(f"tapes/runs/{j['cell']}/s{j['seed']}/prefix")
+        G.check_seed(j['seed'])
+    geo = json.loads((ref / 'MOMENTS_GEOMETRY.json').read_text())
+    P = n3.modules()[0]
+    for m in geo:
+        if not m.get('valid'):
+            continue
+        r_ids = sorted(v for v in m['variants'] if v.startswith('R'))
+        assert r_ids == [f'R{i}' for i in range(len(r_ids))]
+        snap = dict(cavs=m['all_cavs_t0'])
+        excl = {frozenset(mm['id'] for mm in v['members']) for k, v in m['variants'].items() if not k.startswith('R')}
+        four = P.r_proposals.__globals__['N_R']
+        assert four == 5
+        P.N_R = 4
+        try:
+            r4 = P.r_proposals(snap, 'pg_' + m['sid'][4:], set(excl))
+        finally:
+            P.N_R = 5
+        assert [x[0] for x in r4] == r_ids[:len(r4)]
+        for vid, mem, prm in r4:
+            assert [mm['id'] for mm in m['variants'][vid]['members']] == [c['id'] for c in mem]

@@ -99,8 +99,8 @@ def _filter(P, rows, reserve):
 def write_jobs(rows, out):
     text = ''.join(json.dumps(r) + '\n' for r in rows)
     _write_new(out, text)
-    return dict(jobs=len(rows), sim_s=sum(float(r['t_end'] if r['kind'] == 'native' else r['H']) for r in rows),
-                out=str(out))
+    return dict(jobs=len(rows), sim_s=sum(float(r['t_end'] if r['kind'] in ('native', 'prefix') else r['H'])
+                                         for r in rows), out=str(out))
 
 
 # ------------------------------------------------------------------------------------------ fresh worlds
@@ -111,7 +111,27 @@ def plan_natives(root, out, reserve=None):
     return write_jobs(_filter(P, P.plan_natives(), reserve), out)
 
 
-def geometry_moments(root):
+def plan_tapes(root, out, reserve=None, t_end=900.0):
+    """WM-D native prefix tapes (verbatim wmd_prefix.py on the verbatim nm2_core) for the root's worlds: the
+    observable t0 state of every moment (tapes.enrich); identical scenario / SUMO command as the natives."""
+    P, _ = bind_root(root)
+    if root_config(root).get('natives_root'):
+        raise ValueError('tapes are recorded in the root that owns the natives')
+    rows = []
+    for (d, p, s) in P.worlds():
+        cell = P.cell_key(d, p)
+        rows.append(dict(kind='prefix', job_id=f'tape_{cell}_{s}', map='wz3to2', map_spec=str(P.MAPSPEC), seed=s,
+                         demand={'main': d}, penetration=p, cell=cell, t_end=float(t_end),
+                         snap_times=list(P.SAVE_TIMES), ref_native=str(P.native_dir(d, p, s) / 'RESULT.json'),
+                         out_dir=str(Path(root) / 'tapes' / 'runs' / cell / f's{s}' / 'prefix')))
+    rows = [r for r in rows if not (Path(r['out_dir']) / 'RESULT.json').exists()]
+    return write_jobs(rows, out)
+
+
+def geometry_moments(root, drop=()):
+    """pg_plan.moments() (geometry-only t0, structured B + random R variants). `drop` removes registered variant
+    ids (e.g. pair_h, R4: PLANGEN2's 4-hold B set and a count-matched 4-proposal R); R0..R3 are unchanged because
+    each R_i is drawn after R_0..R_{i-1} only; dither targets stay the source ones (never members)."""
     P, _ = bind_root(root)
     if root_config(root).get('natives_root'):
         raise ValueError('geometry moments come from the source root in reuse mode')
@@ -119,6 +139,10 @@ def geometry_moments(root):
     for m in rows:
         if m.get('sid', '').startswith('pg_'):
             m['sid'] = 'wmc_' + m['sid'][3:]
+        if drop and m.get('variants'):
+            m['dropped_variants'] = sorted(set(drop) & set(m['variants']))
+            for vid in drop:
+                m['variants'].pop(vid, None)
     out = _write_new(Path(root) / 'MOMENTS_GEOMETRY.json', json.dumps(rows))
     return dict(moments=len(rows), valid=sum(bool(m['valid']) for m in rows), out=str(out))
 
@@ -318,8 +342,8 @@ def analyze(root, out_dir=None, phase_id=PHASE_ID):
 # ------------------------------------------------------------------------------------------ CLI
 def main(argv=None):
     ap = argparse.ArgumentParser(prog='python -m tools.wzprop verify')
-    ap.add_argument('stage', choices=('init', 'natives', 'geometry-moments', 'moments', 'screen', 'solos', 'rep1',
-                                      'rep2', 'analyze'))
+    ap.add_argument('stage', choices=('init', 'natives', 'tapes', 'geometry-moments', 'moments', 'screen', 'solos',
+                                      'rep1', 'rep2', 'analyze'))
     ap.add_argument('--root', required=True)
     ap.add_argument('--out', help='jobs file (planning stages) or results dir (analyze)')
     ap.add_argument('--fit', type=float, default=None, help='pg_plan.fit reserve: whole moment units under the cap')
@@ -333,14 +357,17 @@ def main(argv=None):
     ap.add_argument('--proposals')
     ap.add_argument('--with-random', action='store_true')
     ap.add_argument('--reference', action='store_true')
+    ap.add_argument('--drop', default='', help='geometry-moments: comma list of variant ids to drop (e.g. pair_h,R4)')
     ap.add_argument('--allow-stub', action='store_true')
     a = ap.parse_args(argv)
     if a.stage == 'init':
         res = init(a.root, cap=a.cap, natives_root=a.natives_root, map_dir=a.map_dir, worlds=a.worlds, note=a.note)
     elif a.stage == 'natives':
         res = plan_natives(a.root, a.out, a.fit)
+    elif a.stage == 'tapes':
+        res = plan_tapes(a.root, a.out, a.fit)
     elif a.stage == 'geometry-moments':
-        res = geometry_moments(a.root)
+        res = geometry_moments(a.root, tuple(x for x in a.drop.split(',') if x))
     elif a.stage == 'moments':
         cfg = root_config(a.root)
         src = a.source_moments or (Path(cfg['natives_root']) / 'MOMENTS.json' if cfg.get('natives_root')

@@ -24,6 +24,19 @@ from . import geometry as G
 from . import n3
 
 REPO = Path(__file__).resolve().parents[2]
+TAPE_DIR = Path(__file__).resolve().parent / 'tape_pipeline'
+TAPE_PINS = {'wmd_prefix.py': '3173e46643453ac561dca48890236ee48c434a927d29d6440fb456ac105f07c8',
+             'nm2_core.py': 'ad6b4bd63426ca41f6ebf8b974db48eea508532f076981f652139de15fa20abb',
+             'population.py': '5e8c61a6c1d5195e2830a5f6825e7a0ed4fc0c3260e243880ab956ddbff5849b'}
+
+
+def tape_verify():
+    import hashlib
+    for name, pin in TAPE_PINS.items():
+        got = hashlib.sha256((TAPE_DIR / name).read_bytes().replace(b'\r\n', b'\n')).hexdigest()
+        if got != pin:
+            raise RuntimeError(f'tape_pipeline/{name} drifted: {got} != {pin}')
+    return dict(TAPE_PINS)
 
 
 def ledger_path(root):
@@ -38,7 +51,7 @@ def charged(root):
 
 
 def planned(job):
-    return float(job['t_end']) if job['kind'] == 'native' else float(job['H'])
+    return float(job['t_end']) if job['kind'] in ('native', 'prefix') else float(job['H'])
 
 
 def read_jobs(path):
@@ -53,6 +66,9 @@ def core_cmd(core, job_file):
         from . import families_lc as FL
         FL.verify()
         cmd = [sys.executable, str(FL.VENDOR / 'lcm_core.py'), str(job_file)]
+    elif core == 'prefix':                  # vendored WM-D wmd_prefix.py (native prefix + read-only tape capture)
+        tape_verify()
+        cmd = [sys.executable, str(TAPE_DIR / 'wmd_prefix.py'), str(job_file)]
     elif core == 'fake':
         cmd = [sys.executable, '-m', 'tools.wzprop.fakes', str(job_file)]
     else:
