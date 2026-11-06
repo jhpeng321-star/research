@@ -5,24 +5,64 @@
  "branch": "c4/wz-wm-port",
  "worktree": "E:/agent-work/c4-wz-wm-port",
  "base": "3e5bc9f9",
- "head": "SEE git log (this file is committed after c8637e53)",
+ "head": "see git log -1 on c4/wz-wm-port (this file's commit)",
  "merged": [
-  "c4/mainstart 1aee086e (round-16 WM lineage that trained WM1 5257a64c / WM2 b8797242 / WM3 41e18f09; configs/c4_wm_loop14_r16_ft.toml) via merge bd9bd5d6: the clean3 base carries the v6-era src/wms that cannot load those checkpoints; conflict-free (clean3 never touched src/wms after 571c1b8b)"
+  "c4/mainstart 1aee086e (round-16 WM lineage that trained WM1 5257a64c / WM2 b8797242 / WM3 41e18f09; configs/c4_wm_loop14_r16_ft.toml) via merge bd9bd5d6: the clean3 base carries the v6-era src/wms that cannot load those checkpoints; conflict-free (clean3 never touched src/wms after 571c1b8b)",
+  "c4/nm-abstract b2f30091 (N1_READY: map descriptor, wz3to2 assets, runtime binding) via merge a3fae0f1; only conflict .gitattributes (both appended blocks kept)"
  ],
- "not_merged": "c4/nm-abstract (N1_READY.json absent at write time): wms.core.road uses N1's tools.coopmwm.map_descriptor.load when importable, else a stub with identical numbers; verified locally that N1 e512b059's real descriptor gives the identical road geometry (geometry_digest 067bf8b1 both); tests/wz/test_wz_road.py::test_real_n1_descriptor_matches_the_stub runs once N1 is merged.",
+ "not_merged": "WM-PHYS lineages (c4/wmfixmerge, c4/rb2-int).",
  "commits": [
   "bd9bd5d6 WM-A: merge c4/mainstart (round-16 WM lineage) into the clean3 base",
   "e5380e4f WM-A: merge-map golden fixture captured on the unmodified merged WM code (pre-port), road + map guard modules",
   "fb856e23 WM-A: road binding wired into exits, entries, closing-lane adjacency, first-passage scope; map-aware converter + recorder map stamp; wz3to2 tests",
   "10a8f0b3 WM-A: seed registry v1 (superseded by 978a25ff)",
   "978a25ff WM-A: strict wz3to2 WM seed rule (train/val 989100-989199 only) + road SUMO->frame projection",
-  "c8637e53 WM-A: planning API wms.planapi (load/observe/evaluate) + geometry digest for pack checks"
+  "c8637e53 WM-A: planning API wms.planapi (load/observe/evaluate) + geometry digest for pack checks",
+  "6f8f6952 WM-A: WMA_READY.json",
+  "a3fae0f1 WM-A: merge c4/nm-abstract (N1_READY b2f30091)",
+  "(this commit) WM-A: current_road follows N1's programmatic map binding; READY update"
  ],
  "road_binding": {
   "module": "wms.core.road (RoadGeometry, MERGE_ORIGINAL, current_road, bind_road, road_scope, load_road, road_from_descriptor, map_default, geometry_digest_of)",
-  "env_vars": ["WMS_MAP_SPEC", "COOPMWM_MAP_SPEC"],
-  "rule": "set either to the wz3to2 MAP_SPEC.json in EVERY training / eval / planning process (one map per process; bind_road refuses rebinding); unset = the original on-ramp merge map. PYTHONPATH must reach tools.coopmwm.map_descriptor (repo root) for the N1 descriptor; otherwise the stub (same geometry) is used.",
-  "wz3to2_geometry": {"lane_extents_s_m": [[-2620.56, 1379.44], [-2620.56, 1379.44], [-2620.56, 75.44]], "road_end_m": 1379.44, "entry_s_m": [-2620.56, -2620.56, -2620.56], "closing_lane": 2, "target_lane": 1, "lane_end_zone_s_m": [0.0, 75.44], "closing_change_zone_s_m": [-2620.56, 75.44], "k_slots": 512, "geometry_digest_prefix": "067bf8b1"},
+  "env_vars": [
+   "WMS_MAP_SPEC",
+   "COOPMWM_MAP_SPEC"
+  ],
+  "rule": "set WMS_MAP_SPEC or COOPMWM_MAP_SPEC to the wz3to2 MAP_SPEC.json in EVERY training / eval / planning process (one map per process; bind_road refuses rebinding); a process where N1's map_descriptor.bind ran is followed too; unset = the original on-ramp merge map. With N1 merged, load_road uses tools.coopmwm.map_descriptor.load (repo root on PYTHONPATH); real N1 geometry == stub geometry (tested).",
+  "wz3to2_geometry": {
+   "lane_extents_s_m": [
+    [
+     -2620.56,
+     1379.44
+    ],
+    [
+     -2620.56,
+     1379.44
+    ],
+    [
+     -2620.56,
+     75.44
+    ]
+   ],
+   "road_end_m": 1379.44,
+   "entry_s_m": [
+    -2620.56,
+    -2620.56,
+    -2620.56
+   ],
+   "closing_lane": 2,
+   "target_lane": 1,
+   "lane_end_zone_s_m": [
+    0.0,
+    75.44
+   ],
+   "closing_change_zone_s_m": [
+    -2620.56,
+    75.44
+   ],
+   "k_slots": 512,
+   "geometry_digest_prefix": "067bf8b1"
+  },
   "what_changes_on_wz3to2": "exit at 1379.44; entry process lane starts / entrance-edge ends / speed caps; closing-lane cars may change 2->1 along the whole approach (mobil logits, physical envelope, lane_v5 mask); the first-passage merge law owns only the lane-end zone [0,75.44], upstream closing-lane cars use the lane_v5 merge head. Lane-end-zone modules (merge_pivot/merge_core/ramp_speed_adapt/forced window), sections and RSU field cells are unchanged by construction (same frame)."
  },
  "api": {
@@ -34,7 +74,12 @@
    "observe": "observe(handle, moment) -> state",
    "evaluate": "evaluate(handle, state, actions, *, K=8, H=300.0, seed=0, trace=None) -> {action_id: [J_1..J_K]}"
   },
-  "load_kwargs": {"checkpoint": "<WM-E wz3to2 fine-tuned wm_s.pt with its physics.json; None = fresh weights, DRY RUNS ONLY (handle.meta['trained'] is False)>", "map_spec": "<wz3to2 MAP_SPEC.json or None if WMS_MAP_SPEC/COOPMWM_MAP_SPEC is set>", "device": "cuda on gpuA/gpuR, cpu for tests", "max_rows": "action x draw rows per batched rollout"},
+  "load_kwargs": {
+   "checkpoint": "<WM-E wz3to2 fine-tuned wm_s.pt with its physics.json; None = fresh weights, DRY RUNS ONLY (handle.meta['trained'] is False)>",
+   "map_spec": "<wz3to2 MAP_SPEC.json or None if WMS_MAP_SPEC/COOPMWM_MAP_SPEC is set>",
+   "device": "cuda on gpuA/gpuR, cpu for tests",
+   "max_rows": "action x draw rows per batched rollout"
+  },
   "semantics": {
    "observe": "RSU-observable only: moment['cavs'] CAV self-states {id, edge, lane, x (global) | pos (lane position), v[, length]}; optional moment['vehicles'] CAV-detected neighbours (same format + is_cav); optional moment['counter'] [2,30] RSU entrance counts (10 s bins newest first; 0 = through lanes, 1 = closing lane) -> Poisson entries. Projection: up lane 2/1/0 -> WM 0/1/2, wz lane 1/0 -> WM 0/1, s = x - 2620.56. No world labels are read. moment['map'] must equal the road.",
    "evaluate": "J_k = team delay veh-s over [t0, t0+H): sum_t 0.5 s * sum_present max(0, 1 - v/31.29) of the predicted road vehicles (no source-waiting term unless an entry process is built from moment['counter']; then entrants count while on road). CRN: the WM rollout's lane-sampling uniforms for draw k are generated from sha256(seed, k, state digest) and shared by every action of the call; deterministic and repeatable (tested). Members (role 'hold'): a = clip((v_w - v)/1 s, -dmax, amax) for t in [start_s, start_s + hold_s) until the member passes release_x (global x) or the anchor passes anchor_release_x; WM native acceleration before/after; member lanes held except the WM first-passage merge in the lane-end zone (delegated). Non-member CAVs are native drivers (WM HDV law). Unknown member id / duplicate action ids / non-finite J raise wms.planapi.WMContractError.",
@@ -55,9 +100,11 @@
   ],
   "results": {
    "tests/wz/test_merge_golden.py": "PASS: merge-map pipeline bit-identical to the fixture captured pre-port (484 keys: pack arrays, decoded windows, round-16 loop-FT forward/backward loss record, one optimizer step, parameter sha, physics primitives)",
-   "tests/wz/test_wz_road.py": "27 passed, 1 skipped (real N1 descriptor; runs after the N1 merge)",
+   "tests/wz/test_wz_road.py": "29 tests: all pass after the N1 merge (real N1 descriptor matches the stub; N1 programmatic binding followed); 1 env-stub test skipped when N1 is importable",
    "related suites (golden + 23 WM unit/integration files incl. c4_loop, lanev5, lane_learnable, v8wm*, mainr16, merge_pivot*, exit_road_end, c4_sumo, v6entry, entryfix)": "409 passed, 3 skipped, 1 failed: tests/test_r9_lane_end_stop.py::test_round9_preset_pins_the_flag_and_the_fitter_physics_json (PRE-EXISTING on the merged WM lineage: the stored round-9 physics json lacks later PhysicsConfig keys emergency_onset/secure_gap_veto/lane_change_secure_gap; WM-A did not touch PhysicsConfig)",
-   "tests/golden + tests/equivalence on the merged base before any change": "60 passed, 26 skipped (data_cache packs absent)"
+   "tests/golden + tests/equivalence on the merged base before any change": "60 passed, 26 skipped (data_cache packs absent)",
+   "N1 map tests after the merge (tools/coopmwm/test_map_{descriptor,golden,runtime,scenarios}_cpu.py, test_newmap_sanity_cpu.py)": "pass (with tests/wz: 60 passed, 2 skipped: frozen cpuV runtime only / env-stub)",
+   "final merge golden + test_c4_loop + test_c4_v10entzone on 6f8f6952": "19 passed"
   }
  },
  "known_gaps": [

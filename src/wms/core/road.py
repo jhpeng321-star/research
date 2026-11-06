@@ -294,8 +294,20 @@ def current_road() -> RoadGeometry:
         return _SCOPED[-1]
     if _BOUND is None:
         path = next((os.environ[v] for v in ENV_VARS if os.environ.get(v)), None)
-        _BOUND = load_road(path) if path else MERGE_ORIGINAL
+        n1 = _n1_bound()
+        _BOUND = load_road(path) if path else (road_from_descriptor(n1) if n1 is not None
+                                                else MERGE_ORIGINAL)
     return _BOUND
+
+
+def _n1_bound():
+    """N1's process map when ``map_descriptor.bind`` was called without the env var (only if that
+    module is already imported; never imports it)."""
+    import sys
+
+    md = sys.modules.get("tools.coopmwm.map_descriptor")
+    desc = getattr(md, "_BOUND", None) if md is not None else None
+    return None if desc is None or getattr(desc, "is_original", True) else desc
 
 
 def bind_road(road: RoadGeometry) -> RoadGeometry:

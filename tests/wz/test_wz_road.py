@@ -294,3 +294,21 @@ def test_geometry_digest_ignores_provenance_and_projection():
     assert n1_like.digest != stub.digest and n1_like.geometry_digest == stub.geometry_digest
     assert R.geometry_digest_of(stub.record()) == stub.geometry_digest
     assert R.with_overrides(stub, road_end_m=1400.0).geometry_digest != stub.geometry_digest
+
+
+def test_current_road_follows_n1_programmatic_binding(monkeypatch):
+    md = pytest.importorskip("tools.coopmwm.map_descriptor")
+    if not hasattr(md, "load") or not SPEC.is_file():
+        pytest.skip("N1 not merged")
+    for var in R.ENV_VARS:
+        monkeypatch.delenv(var, raising=False)
+    md._reset_for_tests()
+    try:
+        md.bind(md.load(SPEC))
+        R._reset_for_tests()
+        road = R.current_road()
+        assert road.name == "wz3to2" and road.descriptor == "n1"
+        assert road.geometry_digest == wz_road().geometry_digest
+    finally:
+        md._reset_for_tests()
+        R._reset_for_tests()
