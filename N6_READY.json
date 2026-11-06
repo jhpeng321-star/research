@@ -1,173 +1,108 @@
 {
- "task": "N6: gated final paired evaluation on the wz3to2 lane-drop map for clean5a (u24) on registered HELD-OUT panels",
- "status": "READY (zero physics so far). Sealed pre-run of NATIVE/U0/RULE operated by IMITREPLAY on cpuV (ba65ed9c files); main run after clean5a u24 + bindings with 6db98f5d (or later) files; F11 built; F7 not built (MAIN decision)",
+ "task": "N6: gated final paired evaluation on the wz3to2 lane-drop map on registered HELD-OUT panels (claims 3a/3b/3c)",
+ "status": "READY. Sealed pre-run: 3a NATIVE/U0/RULE 96/96 published (unopened); 3c being completed by IMITREPLAY on cpuV (replay round 2 in fresh dirs, canary-first). PRIMARY = clean5b u12 B/R (owner decision); MAPPO_SPEED unavailable; MAPPO_LANE pending S-MAPPOWZL. F7 not built (MAIN).",
  "branch": "c4/nm-finaleval",
  "worktree": "E:/agent-work/c4-nm-finaleval",
- "head": "6db98f5d",
- "commits": {
-  "9f116b6c": "FAIRAUDIT F1/F2: training-parity eval path + bound-sha leverprobe pin shim",
-  "9c097694": "clean5a target, claims 3a/3b separate seals, 7 arms, registered binding (it168 / S-MAPPOWZL final), per-seed + regimes",
-  "829c7303": "claim 3c + RULE arm (exact S-REGIMEU0) + sealed chunked pre-run; N5 PASS (REVIEW_N6_3)",
-  "ba65ed9c": "v2v_final 1,340,000 (amendment 2)",
-  "fd07b6bb": "F11 registered parity (eval plant vs N7 training env), amendment 3",
-  "6db98f5d": "F7 not built (MAIN decision); decisions reported unavailable (not built); amendment 4"
+ "head": "ad800db5",
+ "new_sim_s_by_n6": 0,
+ "deploy": {
+  "dir": "E:/agent-work/c4-nm-finaleval/tmp/n6_deploy_ad800db5",
+  "src": "pre-run: 4fee5920 (clean5a deploy) + overlay; clean5b u12 main run: b58daad8 (clean5b deploy) + overlay ad800db5",
+  "operator": "IMITREPLAY (af2a7943)"
  },
- "new_sim_s": 0,
  "registrations": {
   "original": "2d9b8c0ebb8893fbf5e11d980924403aeda567e0ca5ed506476bf1c9e4af61b8",
   "amend1": "26c52f2f8d86d8118756365c7ef5f24d49882cefc931cb0e0e7ac865bbc8ef2f",
   "amend2": "0cf2382c1fe63be74c30ebf30d10db0c7dd5c52107eccbfbe4471faa44fb75f3",
-  "ledger": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md (19:52, 20:42, 20:5x blocks)",
   "amend3": "56bf566c9ad920aadf569f7ddd93b29ef4c9062311f301de71dbc263f2795f0d",
-  "amend4": "59bf91bf5a0772a9811bcd04d8477a8bc7517dba0a2a9f90c061fe5bafc14d8a"
+  "amend4": "59bf91bf5a0772a9811bcd04d8477a8bc7517dba0a2a9f90c061fe5bafc14d8a",
+  "amend5": "b99a85b66b8fb659d18511020b33f8f9d1bbf26319eda3cde22328158fa05c6e",
+  "amend6": "a862ff38b68740a32a26db059035c0ed14cd4aa9e5090ec578db4369486ebe58",
+  "amend7": "1a1ad3599958393596c8a37b0c349f9f62931f9d45296571c20ae7511e60a31a",
+  "amend8": "3c0e468a0e86e4659cfbfb7a1f6028ffc51e1547941e976c7979b371a11e55e1",
+  "amend9": "d0a3f7de46c48badaac35e71121df970d8e85a5b301b269f05548e4a21a6ab43",
+  "ledger": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
+  "amend10": "e0ab843706bc7686c1c5cb306e8f9265524baa8b9055c703fb8eed5e3bd9b602"
  },
  "panels": {
-  "claim3a_3b": {
-   "sha256": "3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130",
-   "worlds": "96 held-out 989600-989695, D3200_p60, N1 world(), 1200 s",
-   "file": "ops/nm_eval_panel_wz3to2_v2.json"
-  },
-  "claim3c": {
-   "sha256": "d43510e9c75308b575cf97c4309c68da06555dfa442ffc73f3cbbec04dbef3fb",
-   "worlds": "24 held-out 989600-989623, D2400_p60",
-   "file": "ops/nm_eval_panel_wz3to2_claim3c_D2400.json"
-  },
-  "superseded": "v1 b5e1cd2a",
-  "net_sha256": "b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa"
+  "claim3a_3b": "3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130",
+  "claim3c": "d43510e9c75308b575cf97c4309c68da06555dfa442ffc73f3cbbec04dbef3fb",
+  "net": "b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa"
  },
  "arms": {
-  "A": "clean5a A u24 (frozen u0 evaluation arm; BASE alias)",
-  "B": "clean5a B u24",
-  "R": "clean5a R u24 = the no-guidance arm",
-  "U0": "bound frozen d9042cc5 executor + common u0 residual (5ea22964)",
-  "RULE": "RULE: U0 + the S-REGIMEU0 wall_h_solo2 rule (one CAV holds in SUMO lane 2 at 15 m/s for 90 s, cooldown = hold), always on; digest 88728592",
-  "NATIVE": "true-native plant",
-  "MAPPO_SPEED": "S-MAPPOWZ it168 only",
-  "MAPPO_LANE": "S-MAPPOWZL final (never aecd7d70)"
+  "B": "clean5b B at u12 (PRIMARY) / u24 (SECONDARY)",
+  "R": "clean5b R (no-guidance arm)",
+  "A": "A = U0: the frozen control arm (no PPO update) carries the u0 weights at every update - verified zero-physics at the gate (A policy weights at the update == the common u0); not re-simulated",
+  "U0": "frozen d9042cc5 + common u0 (pre-run)",
+  "RULE": "RULE: U0 + the S-REGIMEU0 wall_h_solo2 rule (one CAV holds in SUMO lane 2 at 15 m/s for 90 s, cooldown = hold), always on (pre-run)",
+  "NATIVE": "native plant (pre-run)",
+  "MAPPO_SPEED": "declared UNAVAILABLE (owner decision)",
+  "MAPPO_LANE": "S-MAPPOWZL final, bound with --train-config (F11 parity first)"
  },
- "claims": {
-  "claim3a": [
-   "A",
-   "B",
-   "R",
-   "U0",
-   "RULE",
-   "NATIVE"
-  ],
-  "claim3b": [
-   "MAPPO_SPEED",
-   "MAPPO_LANE"
-  ],
-  "claim3c": [
-   "B",
-   "R",
-   "U0",
-   "RULE",
-   "NATIVE"
-  ],
-  "sealing": "F12: each analysis has its own seal; 3a opens after A/B/R bound + U0 bound/declared; each 3b only after its comparator is bound or declared unavailable; 3c opens with 3a; pre-run waves stay unopened"
+ "accounting": {
+  "v2v_final": 1600000,
+  "quote": 1241760,
+  "prerun_cap": 530000,
+  "ledger": "<final_root>/CHARGES.jsonl only (own-root); write-offs VOID2 76,800, VOID3 38,400, 3c pool failure 38,400, replay-1 failure 38,400; logcheck 720, seqcheck 1,080"
  },
- "quote": {
-  "phase": "v2v_final",
-  "allocation_sim_s": 1340000,
-  "total_ceiling_sim_s": 1164960,
-  "margin_over_total": 0.1503,
-  "need": {
-   "episodes_A": 115200,
-   "episodes_B": 115200,
-   "episodes_R": 115200,
-   "episodes_U0": 115200,
-   "episodes_RULE": 115200,
-   "episodes_MAPPO_SPEED": 115200,
-   "episodes_MAPPO_LANE": 115200,
-   "episodes_NATIVE": 115200,
-   "decisions_B": 48000,
-   "decisions_R": 48000,
-   "parity_f11": 3360,
-   "claim3c_B": 28800,
-   "claim3c_R": 28800,
-   "claim3c_U0": 28800,
-   "claim3c_RULE": 28800,
-   "claim3c_NATIVE": 28800
-  },
-  "prerun_sim_s": 432000
- },
- "prerun": {
-  "arms": [
-   "NATIVE",
-   "U0",
-   "RULE"
-  ],
-  "cap_sim_s": 432000,
-  "phase": "v2v_final_prerun",
-  "final_root": "/home/ubuntu/nm_finaleval_clean5a",
-  "src": "/home/ubuntu/nm_finaleval_src (copy of the clean5a source tree + 8 N6 files)",
-  "operator": "IMITREPLAY (af2a7943); STOP_PRERUN signal from N4",
-  "deploy": "E:/agent-work/c4-nm-finaleval/tmp/n6_deploy_ba65ed9c (LF files + SHA256SUMS)",
-  "commands": [
-   "prerun-register --final-root FR --plant-config <clean5a CONFIG> --u0-path <A_checkpoint_000.pt> --u0-sha256 <5ea22964...>",
-   "bind-mappo --final-root FR --arm U0 --mappo-kind u0_transferred_d9042cc5 --mappo-path <d9042cc5> --mappo-sha256 d9042cc5... --residual-path FR/prerun_plant/A_checkpoint_000.pt --residual-sha256 <5ea22964...>",
-   "prerun-run --final-root FR --workers 44 [--chunk 44]; touch FR/STOP_PRERUN to stop at a chunk boundary; cpuV: NM_PRERUN_HOST=cpuV, --workers 16"
-  ]
- },
- "main_run": [
-  "register --root <clean5a root> --final-root FR (accepts the pre-run root; prerun_compat checks plant + u0)",
-  "bind-arms --a-sha/--b-sha/--r-sha (clean5a u24) before the gate",
-  "bind-mappo --arm MAPPO_SPEED (it168) / MAPPO_LANE (S-MAPPOWZL final) or declare-unavailable",
-  "run --workers 24..46 (cpuZ)"
+ "safeguards": [
+  "vehicle log EVALUATION-ONLY (no driver/vType truth); check_episode refuses a missing/incomplete log",
+  "prerun-logcheck (NATIVE+RULE) and prerun-seqcheck (NATIVE->U0->RULE, 1 worker) before waves",
+  "one fresh process pool per arm",
+  "canary-first dispatch; whole-dispatch cap check before the canary",
+  "replays only by MAIN authorisation, one round each, fresh <job>__r<n> dirs",
+  "F12 sealing: tables per claim/update, nothing opened by operators"
  ],
- "requirements_on_clean5a": [
-  "quote phases.v2v_final >= 1,340,000",
-  "common_checkpoint_sha256 = 5ea22964... (= pre-run u0)",
-  "plant keys unchanged vs the pre-run CONFIG: runtime, checkpoint, warm_history, accel_bounds, v2v, v2v_intent, common_checkpoint_sha256, initial_checkpoint, launch_optimization",
-  "newmap.eval_panel_sha256 = 3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130"
+ "analyses": {
+  "primary": "CLAIM3A/3C_TABLES_u012 (+ u024 SECONDARY), CLAIM3B_MAPPO_LANE_TABLES_u0xx",
+  "secondary": "report-only fairness/safety/smoothness/throughput from the vehicle logs (amendment 5)",
+  "decisions": "unavailable (not built) - MAIN F7 decision"
+ },
+ "u12_commands": [
+  "mirror the clean5b root at the same path (CONFIG, A_checkpoint_000, {A,B,R}_UPDATE/checkpoint_012, LEARNING_MONITOR_u001..u012, CHARGES.jsonl, ISOLATED_REGISTRATION if present)",
+  "check/register/run ... --update 12 --mirror-config-sha256 <CONFIG sha>",
+  "bind-arms --update 12 --b-sha --r-sha",
+  "declare-unavailable --arm MAPPO_SPEED",
+  "bind-mappo --arm MAPPO_LANE ... --train-config (when delivered)"
+ ],
+ "open_items": [
+  "N5 re-review of 316461a4..ad800db5 (MAIN arranged)",
+  "clean5b CONFIG plant keys + common u0 vs the pre-run plan (register checks; code-level identity shown in amendment 10)",
+  "MAPPO_LANE binding (S-MAPPOWZL, ~26-30 h) with --train-config"
  ],
  "tests": {
-  "launcher": "ops/test_nm_finaleval.py 38 passed (incl. F11, pre-run, RULE)",
-  "runner_parity": "tools/coopmwm/test_nm_eval_runner_cpu.py 15 passed; test_nm_eval_parity_cpu.py 4 passed 1 skipped",
-  "nm_train_overlay": "ba65ed9c: 52 passed 1 skipped on c4/nm-train c36edaf6 and on N4 3028ef55; fd07b6bb: 57 passed 1 skipped on 3028ef55 (+ overlay)",
-  "ruff": "clean (N6 files)",
-  "full_repo": "pytest -q: 40 collection errors in legacy tests/ (missing local data files; unrelated to N6)",
-  "dry_run": "python ops/nm_finaleval.py dry-run --out <empty dir> (fake physics; pre-run then reuse)"
+  "launcher": "ops/test_nm_finaleval.py (dry run: logcheck -> pre-run -> u12 -> comparators -> u24, canaries)",
+  "runner": "tools/coopmwm/test_nm_eval_runner_cpu.py",
+  "parity": "tools/coopmwm/test_nm_eval_parity_cpu.py"
  },
- "pending": [
-  "bind MAPPO_SPEED it168 / MAPPO_LANE final (+ --train-config) when N7 delivers; A/B/R by sha at u24",
-  "N5 review of the F11 + amendment commits before any main eval wave (MAIN)"
- ],
  "files_lf_sha256": {
-  "ops/nm_finaleval.py": "f7d3790ce9919934f87a283beb8d3937bc61e3cc2ffc7167e063c6beb62e2a15",
-  "ops/test_nm_finaleval.py": "563822ce201d314bf488f57daed9ecbe47f54a03e282bcdb0d91e620506ee68a",
+  "ops/nm_finaleval.py": "5965c0f89cbcb919e994e79018815cd4056a5850d47287b3a8e4b629674abfbe",
+  "ops/test_nm_finaleval.py": "a7462b28f904f00533b4ddd65ba4fa972240ed1b2f991d3e0063e254904e69c3",
   "ops/clean3_finaleval.py": "4c4a085580ac5575c943fdadfa79699e98e6bc948e100a8ab1f46ec37395d627",
   "ops/nm_eval_panel_wz3to2_v2.json": "251496fcf6002a96bef412552ef2216627af2d8b80b28e3b545f98f8fb84b4fc",
   "ops/nm_eval_panel_wz3to2_claim3c_D2400.json": "4d95508da907444f9ac7a2e34aebc9d974990feb29efafabd70fa9f75d0c79cb",
   "ops/nm_eval_panel_SUPERSEDED.json": "78b3302b5587daa7b4162404eb7b7be606eb6e669d8fbe8a19b71c1aad25d582",
+  "tools/coopmwm/nm_eval_runner.py": "4cb371b9052b882cf448dde41856b00b996f1c858fe7874932e3d33317a23419",
+  "tools/coopmwm/test_nm_eval_runner_cpu.py": "758758f92660967bf2a9c9d42bcd7a4d284b2b67ffcf11c29f2f4aeb8067b024",
+  "tools/coopmwm/test_nm_eval_parity_cpu.py": "d19fbb68526d8be07e8867addd492404acdd598afc3753ef13117958d8966a58",
+  "tools/coopmwm/regimeu0.py": "bc962b22e6fde601c2e1690c7b4ce0db17e7a79cb8a354a351bd7e6dd2999195",
+  "tools/coopmwm/imitreplay.py": "319e5ee2b1211ad5580cd7933bf6c42f2fb645d5fac75067491d809a7a6704ce",
+  "tools/coopmwm/_n6_pool_probe.py": "9e0a3fef4b8d3f5d9e9353149dcf8d2ba23a9e113a9a14851756d20071974f63",
   "ops/nm_finaleval_clean5a_registration.json": "4d79bfc932bdcc582d4a64f3d61177e35c4b5cbaec4b78c5362d9b0fadde8db9",
   "ops/nm_finaleval_clean5a_registration_amend1.json": "bc18f7387459d77dc97cfbdd5066cf1ec999a748d707042795279e1998de2f73",
   "ops/nm_finaleval_clean5a_registration_amend2.json": "6defd327c7a57964bd4b6c3bcbc2e680530e609e6c5e9b6066378f6987e3694c",
-  "tools/coopmwm/nm_eval_runner.py": "1bd6422537c0610ac525aa8826c197b782da81b46cc5414fce4dd333bd567dd2",
-  "tools/coopmwm/test_nm_eval_runner_cpu.py": "03af362aa094e645d2be0fb42c5443bf3053cddebfcbf9152874082dcfe98b02",
-  "tools/coopmwm/test_nm_eval_parity_cpu.py": "ff6b4a7ea0ab3607528ca070842b2cc2fffc29bab843867547b3a07c0a0b0d9e",
-  "tools/coopmwm/regimeu0.py": "bc962b22e6fde601c2e1690c7b4ce0db17e7a79cb8a354a351bd7e6dd2999195",
-  "tools/coopmwm/imitreplay.py": "319e5ee2b1211ad5580cd7933bf6c42f2fb645d5fac75067491d809a7a6704ce",
   "ops/nm_finaleval_clean5a_registration_amend3.json": "81771994b91f9d5316ede38811907563c9def3caa0ab2375aefa3dba3b1b354d",
-  "ops/nm_finaleval_clean5a_registration_amend4.json": "12eba2423d26f698ec0f4ce9a6c7c1724f02fb210e1b1532cf1176fc23bbb85d"
+  "ops/nm_finaleval_clean5a_registration_amend4.json": "12eba2423d26f698ec0f4ce9a6c7c1724f02fb210e1b1532cf1176fc23bbb85d",
+  "ops/nm_finaleval_clean5a_registration_amend5.json": "888676cf9d53921188f10b7a709946b1ba2ded1a41aa597b674a68e4ae87190d",
+  "ops/nm_finaleval_clean5a_registration_amend6.json": "6448802499d9d3af120d25edf69dedfdec216a74d53c324e2cacb679d8aa076a",
+  "ops/nm_finaleval_clean5a_registration_amend7.json": "cdf19b386ee9319c7e6bac32b9d2a6cae4364f12866b73129468dc56b58277e1",
+  "ops/nm_finaleval_clean5a_registration_amend8.json": "3846ed3acdfa624bc897ab1b8a388255b779e93bc8e4dc6f11ec843792da446f",
+  "ops/nm_finaleval_clean5a_registration_amend9.json": "a22caee8a430b749bcba0115d17e10ba3ebe56e4f800dbee0fbfaa3183e4695b",
+  "ops/nm_finaleval_clean5a_registration_amend10.json": "97bd4d002b1bff2afa1ee256b1a4a0d27f1a5eb6293a65081352051080a889d5"
  },
- "f11": {
-  "worlds": [
-   989598,
-   989599
-  ],
-  "cell": "D3200_p60",
-  "window": "300+120 s",
-  "tolerances": {
-   "s_m": 0.001,
-   "v_mps": 0.001,
-   "command_mps2": 0.0001
-  },
-  "bind": "bind-mappo --arm MAPPO_SPEED|MAPPO_LANE ... --train-config <N7 run toml>",
-  "run": "parity --root <clean5a root> --final-root FR --arm MAPPO_SPEED (after register; or automatic before the 3b wave)",
-  "output": "FR/PARITY_<arm>.json (sealed, verdict IDENTICAL|DIFFERS; descriptive)"
- },
- "deploy_note": "pre-run uses the ba65ed9c runner (5fe6ea40); fd07b6bb changes only the MAPPO_LANE loop signature, F11 parity and the launcher F11 step - the NATIVE/U0/RULE episode code and specs are unchanged, so the pre-run waves stay reusable; deploy fd07b6bb files for the main run",
- "f7": "NOT built by MAIN decision 2026-11-06 (amendment 4): decisions tabulated \"unavailable (not built)\"; 96,000 ceiling never spent"
+ "clean5b_checks": {
+  "plant_identity": "IDENTICAL for NATIVE/U0/RULE (amendment 10)",
+  "training_parity": "b58daad8 + overlay: 8 passed incl. LCEXEC programs B/R and hold_lane_pin",
+  "lc_runtime": "Runtime.run sets COOPMWM_LC_RUNTIME=1 when the CONFIG enables lc_families"
+ }
 }
