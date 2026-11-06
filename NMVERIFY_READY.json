@@ -1,0 +1,70 @@
+{
+ "api": {
+  "CLI": "python -m tools.coopmwm.clean4_verify {init|collect|quote|verify|extract|status} (nice 19, own PIDs, --workers, <root>/STOP halts)",
+  "builder protocol": "builder(ctx, members, variant) -> plan dict {id, family, members, duration_s, policy_profile, profile, perturbation_profile} (probe.ease_plan shape) or None",
+  "charge(root, ident, sim_s, *, stage, branches) / spent(root) / remaining(root)": "atomic fcntl-locked precharge (fcntl_compat on Windows); refuses unregistered root, duplicate ids, over-cap",
+  "collect(root, world, arm, weights, *, select=None, windows=((450,550),(800,900)), every=10, geom, rt, leads, capture_fn, snapshot_sha)": "ONE base-policy episode charged 1200 before physics; per window the earliest pair+wall > pair > wall moment; ctx dirs collect/c4v_<arm>_<cell>_s<seed>/ctx_t<t0>/{CONTEXT.json, SNAPSHOT.pt} with policy_profile + cav_track (180 s) of every zone CAV, rows_t0, geometry, N3 lead",
+  "extract(root, *, range_m=200, cell=None)": "CLEAN4_MOVES_B.jsonl, CLEAN4_MOVES_R.jsonl, CLEAN4_NEGATIVES.jsonl, POTENTIAL_INPUTS.json (per cell screened_moments, robust_moments, b_examples[{id, reachable, robust}], sources with sha256 for clean4_potential.verdict)",
+  "init(root, cap=80000, *, base)": "sealed REGISTRATION.json (phase, cap, rules, module sha); idempotent",
+  "n3_select(rows, t, *, geom) / selector(geom)": "default observable selector (NEWMAP2 rule verbatim); rows are observable projections (vid, s_m, v_mps, lane, is_cav, length_m) only",
+  "plans(ctx, variants=None, *, builder) / variants_for(ctx) / r_proposals(ctx)": "B: pair_g/pair_h/pair_t/wall_g/wall_h (families closing_pair/abreast_wall); R: 2 seeded random proposals (family R_random); returns groups + member solos (replay_bank.solo_candidate) + meta",
+  "quote_moment(ctx, groups, *, seeds)": "zero-physics screen / confirmation quotes",
+  "run_context(root, ctx_dir, *, builder, seeds, workers, runner_factory, names)": "plans -> results/plans.jsonl -> verify; names restricts the registered slate",
+  "verify(root, ctx_dir, groups, *, seeds=3, workers, runner_factory, tail_s=120)": "seed-1 screen = ONE sv.verify(policy + groups + solos); pass iff adv LB95>0 and >=1 veh-s, synergy LB95>0 and >=1 veh-s, collision/teleport deltas<=0; then the probe_native path into <root>/minebank/bank (first-seed sv.verify + confirm_all8 extra_seeds=seeds-2); whole-stage quotes checked before dispatch; seed-2/extra salts guarded"
+ },
+ "base_commit": "0be0044e",
+ "branch": "c4/nm-verify",
+ "budget_notes": {
+  "note": "80,000 covers roughly 2-3 confirmed moments (collect 1,200 per world x arm); one robust group = 3 B examples (seeds 1-3), so the >=8-example gate needs >=3 robust groups. The confirmation quote is an upper bound (admission on every seed). Windows follow the coopmwm convention (t0+D+120; extended later harm t0+D+600, capped at 1200), not the N3 fixed 300 s; never shortened below sv.TAIL_S.",
+  "per_moment_quotes_sim_s": {
+   "t0=450, all 5 B variants": {
+    "confirm_one_group_max": 19440,
+    "screen": 12960
+   },
+   "t0=450, pair_g + wall_g": {
+    "confirm_one_group_max": 19440,
+    "screen": 5520
+   },
+   "t0=800, all 5 B variants": {
+    "confirm_one_group_max": 25920,
+    "screen": 19260
+   }
+  }
+ },
+ "caveats": [
+  "potential denominator: screened_moments counts every re-screened B moment; if only N3-lead worlds are collected the share is conditional on N3 admission (screened_with_lead is reported).",
+  "replay_bank._confirm_charge is rebound process-wide during one confirmation (scoped, always restored); run one context per process (the CLI does).",
+  "R rows carry family R_random (clean3 projects acceleration plans onto the move vocabulary).",
+  "existing modules untouched; merge map untouched."
+ ],
+ "commit": "abb1a376d65ebd5e392dc1f4b1f27fee02af70e1",
+ "files": {
+  "tools/coopmwm/clean4_verify.py": {
+   "git_blob": "25880553ed98fdad6c334c67f1730f6e5d5be170"
+  },
+  "tools/coopmwm/test_clean4_verify_cpu.py": {
+   "git_blob": "a2287eec2154e9865a52b8acd4ac066ed7b4d6b3"
+  }
+ },
+ "open_adapters": {
+  "geometry (N1)": "Wz3to2GeometryStub.locate(row) raises NotImplementedError: needs the observable WM-frame row -> NEWMAP2 (edge 'up', SUMO lane index with 0 = closing lane, global x; X_B = 2696) from the N1 map descriptor (map_descriptor.load: WM lane 2 = closing lane, s = 75.44 at x = 2696). collect preflights it before charging.",
+  "ingestion (not edited here)": "group_lane_bank.binding() requires world seed 986000-986071; wz3to2 TRAIN 989200-989599 rows fail it until that range is extended (the test asserts this failure and that every other binding field validates).",
+  "plan builder (N2)": "provisional_builder (PROVISIONAL: open-loop N3 law on the predicted speed, released at the drop or the pair_t anchor) until c4/nm-moves lane_drop.plan is wrapped as builder(ctx, members, variant); ctx carries policy_profile and per-second cav_track [s_m, lane, v] for member speeds/positions.",
+  "runtime binding + world guard (N1/N4)": "Wz3to2RuntimeStub.job raises NotImplementedError: needs job_fields(...) + the wz3to2 runtime/checkpoint/map binding; accel_plant.bind_runtime still guards the MERGE registry (accel_protocol.guard); sumo_verify branch workers must bind the same map; a native base needs controller hooks (the accel_plant native_reference path skips them). check_world calls map_scenarios.guard once N1 lands, a local range/cell check until then."
+ },
+ "phase": {
+  "cap_sim_s": 80000,
+  "ledger": "<root>/CHARGES.jsonl (own, precharged, never replayed)",
+  "name": "clean4_prelaunch_verify",
+  "registration": "<root>/REGISTRATION.json sealed, written by init before any job"
+ },
+ "schema": "coopmwm.clean4.nmverify_ready.v1",
+ "task": "N4 clean4 pre-launch re-verification (Plan A)",
+ "tests": {
+  "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider tools/coopmwm/test_clean4_verify_cpu.py",
+  "lint": "ruff check: All checks passed",
+  "physics": "none: a fake per-second plant drives the REAL sv.verify, verify_perseed.confirm_all8 and bank_statistics; a fake accel_plant episode drives the real Capture hook",
+  "result": "20 passed (with test_clean4_potential_cpu + test_clean4_budget_cpu: 33 passed; with test_verify_perseed_cpu + test_replay_bank_confirm_cpu + clean4 suites: 62 passed)"
+ },
+ "unix": 1793951563.1243503
+}
