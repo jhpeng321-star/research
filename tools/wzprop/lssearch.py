@@ -461,14 +461,17 @@ def run(root, **kw):
 
 
 # ------------------------------------------------------------------------------------------ analysis (zero physics)
-def _boot_np(values, n=BOOT, seed=BOOT_SEED):
+def _boot_np(values, n=BOOT, seed=BOOT_SEED, alpha=0.05):
     import numpy as np
     v = np.asarray(values, float)
     if len(v) == 0:
         return None
     idx = np.random.default_rng(seed).integers(0, len(v), (n, len(v)))
     m = v[idx].mean(1)
-    return [float(np.quantile(m, .025)), float(np.quantile(m, .975))]
+    return [float(np.quantile(m, alpha / 2)), float(np.quantile(m, 1 - alpha / 2))]
+
+
+N_CONFIRM_TESTS = 6          # 3 confirmed group candidates x 2 cells (Bonferroni robustness CI)
 
 
 def ineq(x):
@@ -598,6 +601,7 @@ def arm_stats(rows, cell, arm, R):
         if d2:
             lo, hi = R.boot_ci(d2)
             a['vs_solo2'] = dict(n=len(d2), mean=sum(d2) / len(d2), ci95=[lo, hi],
+                                 ci_bonferroni6=_boot_np(d2, alpha=0.05 / N_CONFIRM_TESTS),
                                  beats_fraction=sum(x < 0 for x in d2) / len(d2), seeds=s2, diffs=d2)
     a['fairness'] = fairness_stats(rows, cell, arm, 'u0')
     return a
