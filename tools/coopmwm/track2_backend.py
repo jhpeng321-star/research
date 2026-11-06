@@ -370,6 +370,8 @@ class EpisodePolicy(torch.nn.Module):
         ev = fullpol_ev.settings(cfg)
         if ev is not None:
             self.clean5_ev = {k: ev[k] for k in ('families', 'group_sizes', 'solo_geometry')}
+            if ev.get('hold_lane_pin'):
+                self.clean5_ev['hold_lane_pin'] = True   # registered N2 hold lcMode pin (G5 own lane)
         self.fullpol = fullpol_programs.settings(cfg)
         if self.fullpol is not None:
             self.fp_state = fullpol_programs.runtime_state(self.fullpol, arm)
@@ -687,6 +689,17 @@ class EpisodePolicy(torch.nn.Module):
                 sample['g5_lane_requests'] = lane_requests
         if ld_receipt is not None and ld_receipt['lane_requests']:
             sample['lane_drop_lane_requests'] = dict(ld_receipt['lane_requests'])
+        if ld_receipt is not None and (getattr(self, 'clean5_ev', None) or {}).get('hold_lane_pin'):
+            # clean5 hold_lane_pin (opt-in): active N2 hold members -> own current lane as a G5 lane
+            # target this tick (single-writer G5 path; laneChangeMode 513 like the verified plant path).
+            from .fullpol_ev import hold_pins
+            pins = hold_pins(set(ld_receipt['commands']) | set(ld_receipt['unresolved']),
+                             {v: r.source.lane for v, r in self.reports.items() if v in context['members']},
+                             ld_receipt['lane_requests'])
+            if pins:
+                # Own-lane targets: the G5 gap gate (one-lane-left yields) does not apply to staying put;
+                # group_lane.controller_targets rechecks target == own current lane, same writer.
+                sample['hold_lane_pins'] = dict(pins)
         if fp_receipt is not None:
             # FULLPOL: per-member primitive commands for LCEXEC's single env writer.
             sample['free_program_commands'] = fp_receipt
