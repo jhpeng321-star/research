@@ -319,6 +319,13 @@ def test_program_option_round_trip_validation_and_registered_templates(cfg, wz):
     # Generator contract: '@k' slots in order, registered ranges, map, references.
     with pytest.raises(ValueError, match='registered'):
         lf.template_of(unregistered(None, None, None)[0], cap=6, frame=frame, n_lanes=3)
+    off_grid = lp.MemberProgram(lon=lp.Lon('native'), tau=1.0, hold_s=8)          # in [0.5, 2.4], not on the grid
+    with pytest.raises(ValueError, match='tau grid'):                               # env.lc_tick would refuse it
+        lf.template_of(lp.FreeProgram(('@0',), (off_grid,), 'wz3to2', (0,), 10, {}, (None,)), cap=6, frame=frame,
+                       n_lanes=3)
+    with pytest.raises(ValueError, match='map'):
+        lf.template_of(lp.FreeProgram(('@0',), (HOLD,), 'merge', (0,), 10, {}, (None,)), cap=6, frame=frame,
+                       n_lanes=3)
     with pytest.raises(ValueError, match='@0'):
         lf.template_of(lp.FreeProgram(('@0', '@2'), (HOLD, HOLD), 'wz3to2', (0, 0), 10, {},
                                       (None, dict(lane=1, ds=(0., 1.)))), cap=6, frame=frame, n_lanes=3)
@@ -416,6 +423,9 @@ def test_end_to_end_wall_fill_program_on_the_real_env_writer(cfg, wz):
     accel = {t: requests[t].get('accel', {}) for t in range(301, 308)}
     assert all(-1. <= a <= 1. for a in accel[301].values()) and accel[301]['c2'] == 1.0
     assert snap[302]['lane_done'] is None and snap[303]['lane_done'] == 3
+    # Program members carry move offset 0: their longitudinal command is the exact program command.
+    assert samples[302]['context']['move_offsets'] == dict(c0=0., c1=0., c2=0.)
+    assert {m['move']['family'] for m in samples[302]['track2']['active_moves']} == set(lf.PROGRAM_FAMILIES)
     # 308: hold_end release -> no request; the env restores lcMode / tau and hands back to native.
     assert requests[307] and requests[308] is None and 'lc_tick' not in samples[308]
     w = writes[308]

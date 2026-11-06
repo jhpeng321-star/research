@@ -170,6 +170,10 @@ def template_of(value, *, cap, frame, n_lanes):
                 raise ValueError(f'free_program template reference {ref!r} names no slot')
         if p.lane is not None and p.lane.target not in range(n_lanes):
             raise ValueError('free_program lane target outside the map lanes')
+        grid = lp.REGISTRY['tau'].values
+        if p.tau is not None and grid and not any(abs(float(p.tau)-float(x)) <= 1e-9 for x in grid):
+            # env.lc_tick (lc_runtime) accepts only the registered tau grid values: fail at proposal time.
+            raise ValueError(f'free_program tau {p.tau} is not a registered tau grid value {grid}')
     bad = lp.check_registered(program)
     if bad:
         raise ValueError(f'free_program template outside the registered ranges: {bad}')
