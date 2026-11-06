@@ -21,8 +21,8 @@ registered ``lc_program.REGISTRY['tau']`` grid. The stash is consumed (and clear
 * ``accel``: the CAV's ``accel_by_slot`` entry is replaced by ``a`` -> the frozen
   CommandOwnership wall path -> ``damping.direct_target`` (clip to [max(-3, -v),
   min(direct_accel_max, allowed - v)]) -> ``vehicle.slowDown(vid, max(0, v + a'), 1.0)``; for
-  |a| <= 3 and v <= allowed + 3 this is exactly the probe ``slowDown(min(max(0, v + a), allowed),
-  1.0)``. ``native``: the entry is set to NaN -> SUMO car-following (``setSpeed(vid, -1)`` when
+  |a| <= 3 and v <= allowed + 3 this is the probe ``slowDown(min(max(0, v + a), allowed), 1.0)``
+  (to float rounding). ``native``: the entry is set to NaN -> SUMO car-following (``setSpeed(vid, -1)`` when
   the owner held it; such members are excluded from a damping/PI fallback via ``fallback_ids``).
   NOTE: replacing the entries BYPASSES the base executor's pre-safety MAPPO filter for program
   members (exactly as the SUMO probes did); SUMO speedMode 27 and the direct_target bounds
@@ -50,6 +50,17 @@ registered ``lc_program.REGISTRY['tau']`` grid. The stash is consumed (and clear
 A ``step`` without a stash is ``super().step`` EXACTLY (byte-identical) unless LCEXEC still holds
 a vehicle setting (an LCEXEC lane mode or a saved tau); that step runs as an EMPTY request so the
 saved originals are restored, after which the env is byte-identical again.
+
+Known differences from the probe ``Arm`` (test_lc_runtime_cpu documents each):
+* accel -> native WITHOUT a release: the owner issues ``setSpeed(vid, -1)`` (owned -> native); the
+  probe issued nothing, so its last ``slowDown(target, 1 s)`` still pinned one more 0.5 s step;
+* the probe's release ``setSpeed(vid, -1)`` for a member it never slowed is not issued (SUMO
+  no-op: empty speed timeline); slowDown targets agree to float rounding (|a| <= 3, v <= allowed+3;
+  above that direct_target clips / releases to native);
+* a lane request for the CURRENT lane is a no-op (frozen rule); the probe's LCMOVES ``prog``
+  re-issued ``changeLane(target, 2 s)`` every second after reaching it ("lane hold");
+* the edge-end deferral also defers changes OUT of the closing lane within ``v*duration + 10 m``
+  of the drop, where the probe kept requesting until its fallback position.
 """
 from __future__ import annotations
 
