@@ -62,7 +62,9 @@ def coverage(cfg, *, episodes_per_update=16, episode_sim_s=1200):
         isolated_replicated=sum(q[f'replicated_u{u:03}'] for u in (6, 12, 24)),
         v2v_final=1_020_960, gate_bank_verification_ext=r['gate_sim_s'],
         track2_smoke=cfg['clean2_smoke_reporting_quote']['complete_smoke_sim_s'],
-        g4_synergy_credit=phases['g4_synergy_credit'])
+)
+    if checked(cfg).get('g4_cap_sim_s') != 230400:
+        raise ValueError('G4 phase must equal its registered 230,400 hard cap')
     short = {k: (v, phases.get(k, 0)) for k, v in need.items() if v > phases.get(k, 0)}
     if short:
         raise ValueError('phase does not cover its u1-u24 schedule: '+json.dumps(short, sort_keys=True))

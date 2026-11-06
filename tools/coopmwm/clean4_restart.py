@@ -91,14 +91,17 @@ def budget(*, quote_doc, approval, prior_runtime_sim_s):
     phases = dict(quote_doc['runtime_phases'])
     if any(type(v) is not int or v < 0 for v in phases.values()):
         raise ValueError('integer phase allocations required')
-    # The clean4 root ledger may spend at most the approved envelope minus the phases charged on
-    # their own ledgers (base sanity, Plan A) - their allocations are protected as prior.
+    # G4 is allocated by g4_runtime.allocate_budget from cfg['g4_budget'] (its registered hard cap), exactly as
+    # in clean3: it must NOT also be a native phase (allocate_budget refuses 'G4 phase already allocated').
+    g4_cap = phases.pop('g4_synergy_credit', 0)
+    # The root ledger may spend at most the approved envelope minus the phases charged on their own ledgers
+    # (base sanity, Plan A) or before (clean4 actual) - those are protected as prior.
     remaining = APPROVED-prior_runtime_sim_s
-    if sum(phases.values()) > remaining:
+    if sum(phases.values())+g4_cap > remaining:
         raise ValueError('clean4 runtime phases exceed the approved envelope after sanity/Plan A')
     return _seal(dict(schema=SCHEMA, owner_cap_sim_s=OWNER_CAP, approved_sim_s=APPROVED,
         quote_sha256=quote_doc['receipt_sha256'], quote_total_sim_s=quote_doc['total_training_sim_s'],
-        owner_approval=bound['owner_approval'], phases=phases, own_ledger_prior_sim_s=prior_runtime_sim_s,
+        owner_approval=bound['owner_approval'], phases=phases, g4_cap_sim_s=g4_cap, own_ledger_prior_sim_s=prior_runtime_sim_s,
         protected_prior_sim_s=OWNER_CAP-APPROVED+prior_runtime_sim_s, remaining_sim_s=remaining,
         smoke_gate=quote_doc['smoke_gate'],
         rule='owner 14:58 "yes, approve the 4M budget"; re-quotes <=4M with >=15% per-phase margin '
@@ -109,7 +112,7 @@ def checked(cfg):
     value = cfg['clean4_budget']
     verify_sealed(value, 'receipt_sha256')
     if (value['schema'] != SCHEMA or value['owner_cap_sim_s'] != OWNER_CAP or value['approved_sim_s'] != APPROVED
-            or sum(value['phases'].values()) > value['remaining_sim_s']):
+            or sum(value['phases'].values())+value.get('g4_cap_sim_s', 0) > value['remaining_sim_s']):
         raise ValueError('clean4 budget registration differs')
     return deepcopy(value)
 
