@@ -216,13 +216,60 @@ def settings(cfg):
     return deepcopy(slot)
 
 
+# ---------------------------------------------------------------- budget-derived start cap (default OFF)
+# MAIN 2026-11-06 (clean5a, via N4): replace the hand-set 8 starts/arm with the cap DERIVED from
+# the registered G4 sim-s cap: per arity n, floor(budget_cap_sim_s / (2 arms x |verification seeds|
+# x (n+2) branches x episode_end_s)) = 12 / 9 / 8 for n = 2 / 3 / 4 at 230400. Sampling, scale,
+# clip, B/R arity matching and the cumulative sim-s cap are unchanged; absent key = the original 8.
+START_CAP_RULE = 'g4-budget-derived-start-cap-v1'
+
+
+def start_cap_keys(*, provenance):
+    return dict(enabled=True, rule=START_CAP_RULE, provenance=provenance)
+
+
+def start_cap(cfg):
+    """None when OFF (absent/False); else the validated common B = R slot (requires G4)."""
+    slot = cfg.get('g4_start_cap', False)
+    if slot is False:
+        return None
+    if (not isinstance(slot, dict) or set(slot) != {'enabled', 'rule', 'provenance'}
+            or slot['enabled'] is not True or slot['rule'] != START_CAP_RULE
+            or not isinstance(slot['provenance'], str) or not slot['provenance'].strip()):
+        raise ValueError('budget-derived G4 start cap requires the registered rule and provenance')
+    if settings(cfg) is None:
+        raise ValueError('budget-derived G4 start cap requires the enabled G4 registration')
+    return deepcopy(slot)
+
+
+def pair_sim_s(arity):
+    """Full-prefix verification effort of one matched B/R start pair of this arity."""
+    return (2*len(REGISTRATION['verification_seeds'])*(arity+2)*REGISTRATION['episode_end_s'])
+
+
+def derived_caps():
+    """{arity: starts per arm} derived from the registered cumulative sim-s cap."""
+    return {n: REGISTRATION['budget_cap_sim_s']//pair_sim_s(n) for n in range(2, moves.MOVE_MAX_MEMBERS+1)}
+
+
+def _arity_starts():
+    return {str(n): 0 for n in range(2, moves.MOVE_MAX_MEMBERS+1)}
+
+
 def initial_state(cfg):
     state = dict(binding=settings(cfg), last_update=0, reserved_sim_s=0,
                  starts={'B': 0, 'R': 0}, opportunity_ids=[])
     ext = extension(cfg)
     if ext is not None:
         state['extension'] = ext   # G4LD: bound into the reservation journal (absent when OFF)
+    cap = start_cap(cfg)
+    if cap is not None:            # budget-derived cap: journalled per-arity start counts
+        state.update(start_cap=cap, arity_starts=_arity_starts())
     return state
+
+
+def _max_starts(cap):
+    return REGISTRATION['max_starts_per_arm'] if cap is None else max(derived_caps().values())
 
 
 def _finite(value):
@@ -335,12 +382,16 @@ def plan_update(cfg, update, episodes_by_arm, captures, state):
     if binding is None:
         raise ValueError('G4 planning requires explicit opt-in')
     ext = extension(cfg)
+    cap = start_cap(cfg)
     if (set(episodes_by_arm) != {'B', 'R'} or state['binding'] != binding
-            or state.get('extension') != ext
+            or state.get('extension') != ext or state.get('start_cap') != cap
+            or (cap is not None and (set(state.get('arity_starts', {})) != set(_arity_starts())
+                                     or any(not 0 <= v <= derived_caps()[int(n)]
+                                            for n, v in state['arity_starts'].items())))
             or type(update) is not int or update < binding['first_update']
             or update <= state['last_update']
             or state['starts']['B'] != state['starts']['R']
-            or not 0 <= state['starts']['B'] <= REGISTRATION['max_starts_per_arm']
+            or not 0 <= state['starts']['B'] <= _max_starts(cap)
             or not 0 <= state['reserved_sim_s'] <= REGISTRATION['budget_cap_sim_s']):
         raise ValueError('G4 phase/update/reservation mismatch')
     candidates = {}
@@ -358,10 +409,20 @@ def plan_update(cfg, update, episodes_by_arm, captures, state):
     # Matching arity matches branch counts AND full-prefix verification effort.
     selected = {'B': [], 'R': []}
     remaining = REGISTRATION['max_starts_per_arm']-state['starts']['B']
+    budget = REGISTRATION['budget_cap_sim_s']-state['reserved_sim_s']
+    taken = {}
     for arity in range(2, moves.MOVE_MAX_MEMBERS+1):
         pools = {a: [r for r in candidates[a] if len(members_of(r)) == arity]
                  for a in ('B', 'R')}
-        count = min(remaining, len(pools['B']), len(pools['R']))
+        if cap is None:
+            count = min(remaining, len(pools['B']), len(pools['R']))
+        else:
+            # Arity-specific derived cap AND the remaining cumulative sim-s (cheapest arity
+            # first, the existing deterministic order); never a quote above the cap.
+            count = min(derived_caps()[arity]-state['arity_starts'][str(arity)],
+                        len(pools['B']), len(pools['R']), budget//pair_sim_s(arity))
+            budget -= count*pair_sim_s(arity)
+            taken[str(arity)] = count
         for arm in ('B', 'R'):
             selected[arm] += pools[arm][:count]
         remaining -= count
@@ -386,11 +447,16 @@ def plan_update(cfg, update, episodes_by_arm, captures, state):
     after.update(last_update=update, reserved_sim_s=state['reserved_sim_s']+quote)
     for arm in ('B', 'R'):
         after['starts'][arm] += count
+    if cap is not None:
+        for n, value in taken.items():
+            after['arity_starts'][n] += value
     after['opportunity_ids'] += [s['opportunity_id'] for s in starts]
     plan = dict(schema=SCHEMA, binding=binding, update=update, starts=starts, jobs=jobs,
         quote_sim_s=quote, reservation_before=deepcopy(state), reservation_after=after)
     if ext is not None:
         plan['extension'] = ext
+    if cap is not None:
+        plan['start_cap'] = cap
     return dict(plan, plan_sha256=digest(plan)), after
 
 
@@ -485,6 +551,9 @@ def _validate_plan(plan):
     ext = plan.get('extension')
     if ext is not None and extension(dict(g4_synergy_credit=plan['binding'], g4_extension=ext)) != ext:
         raise ValueError('G4LD plan extension mismatch')
+    cap = plan.get('start_cap')
+    if cap is not None and start_cap(dict(g4_synergy_credit=plan['binding'], g4_start_cap=cap)) != cap:
+        raise ValueError('G4 plan start-cap mismatch')
     for start in plan['starts']:
         capture = start['capture']
         row = _identity(start)
@@ -507,6 +576,7 @@ def _validate_plan(plan):
     before, after = plan['reservation_before'], plan['reservation_after']
     if (before['binding'] != binding or after['binding'] != binding
             or before.get('extension') != ext or after.get('extension') != ext
+            or before.get('start_cap') != cap or after.get('start_cap') != cap
             or type(update) is not int or before['last_update'] >= update
             or update < binding['first_update'] or after['last_update'] != update
             or after['reserved_sim_s'] != before['reserved_sim_s']+plan['quote_sim_s']
@@ -524,9 +594,16 @@ def _validate_plan(plan):
             or set(new_ids) & set(before['opportunity_ids'])
             or after['opportunity_ids'] != before['opportunity_ids']+new_ids or any(
                 before['starts'][a]+counts[a] != after['starts'][a]
-                or not 0 <= before['starts'][a] <= after['starts'][a] <= REGISTRATION['max_starts_per_arm']
+                or not 0 <= before['starts'][a] <= after['starts'][a] <= _max_starts(cap)
                 for a in ('B', 'R'))):
         raise ValueError('G4 B/R verification effort mismatch')
+    if cap is not None:
+        added = {str(n): sum(len(members_of(s)) == n for s in plan['starts'] if s['arm'] == 'B')
+                 for n in range(2, moves.MOVE_MAX_MEMBERS+1)}
+        if (set(before.get('arity_starts', {})) != set(added) or any(
+                after['arity_starts'][n] != before['arity_starts'][n]+added[n]
+                or not 0 <= after['arity_starts'][n] <= derived_caps()[int(n)] for n in added)):
+            raise ValueError('G4 budget-derived arity start cap mismatch')
 
 
 def trigger_terms(cfg, arm, update, episodes, envelope):

@@ -8,7 +8,8 @@
   "code": "28f6218d (C4 G4LD: G4 measured synergy credit for N2 lane-drop moves and W1/N2 V2V sessions; practice offer mode)",
   "merge_nm_moves": "75b11509",
   "merge_nm_train_62955c86": "23f44308",
-  "ready": "the commit adding this file (head of c4/g4ld)"
+  "ready": "the commit adding this file (head of c4/g4ld)",
+  "solo_hold_fix": "40789b61"
  },
  "files": {
   "modified": [
@@ -42,7 +43,13 @@
    "not_included": "G4 credit for offered practice decisions (see open_issues[1])"
   },
   "demo_onset_imitation": "no new term: the existing bank CE route (launch_production.bank_move_supervision -> bank_breadth.observable_contexts -> lane_drop.protocol_contexts) already trains the trigger every update, B = R, on every verified example's onset contexts for ALL members (initiator -> lane_drop_initiate at t0, others -> lane_drop_join at their own receive second; group_hold/no-protocol -> joint label), from the SAME snapshot state the forced demo restores. A per-demo duplicate would only re-weight contexts already present and break the registered equal-family-mass rule. Hold ticks stay out of PPO (unchanged). Depends on exact lane_drop_macro guidance plans (N2 59d8bace + N4 684fe30c fail-closed), now in this head. Test: test_g4ld_offer_cpu::test_demo_onset_imitation_reaches_every_member_through_the_bank_ce_path",
-  "b_equals_r": "both keys are single common config keys validated for B and R in track2_backend._check; G4 matches B/R by arity; offer slots are selected by slot index (B = R); enable both arms together"
+  "b_equals_r": "both keys are single common config keys validated for B and R in track2_backend._check; G4 matches B/R by arity; offer slots are selected by slot index (B = R); enable both arms together",
+  "g4_start_cap": {
+   "default": "absent/False = OFF: the registered hand-set 8 starts/arm (byte-identical, golden digests unchanged)",
+   "value": "sparse_synergy_credit.start_cap_keys(provenance=...) -> {enabled: true, rule: 'g4-budget-derived-start-cap-v1', provenance}; requires g4_synergy_credit; smoke turns it off with G4",
+   "rule": "per arity n: floor(budget_cap_sim_s / (2 arms x 2 seeds x (n+2) x 1200)) = 12 / 9 / 8 starts per arm for n = 2 / 3 / 4 at 230400; per-arity counts journalled in the reservation state; selection cheapest arity first (existing order) limited by the arity cap AND the remaining cumulative sim-s, so the quote never exceeds 230400; 1/16 sampling, UNIT scale, clip and B/R arity matching unchanged",
+   "requested_by": "MAIN clean5a decision via N4 (2026-11-06 ~20:00)"
+  }
  },
  "tests": {
   "new": "test_g4ld_credit_cpu.py 33 passed; test_g4ld_offer_cpu.py 7 passed",
@@ -54,7 +61,8 @@
   },
   "regression_after_merge_62955c86": "611 passed, 1 skipped (host symlink privilege), 0 failed at 23f44308: G4 group 103 (g4ld credit/offer, sparse_synergy_credit, g4_runtime, g4_worker_binding); lane_drop+v2v_wall 48; trigger_policy+feasible_proposals+practice_starts+practice_weighting 163; track2_backend+bank_breadth 200; clean3_restart+clean4_budget/train_world/fairness/potential+launch_integration+v2v_launch_wiring 97",
   "lint": "ruff: no new findings except the repo-wide F811 pytest-fixture pattern in tests",
-  "cpu_only": "no SUMO, GPU, ssh or training"
+  "cpu_only": "no SUMO, GPU, ssh or training",
+  "start_cap": "test_g4ld_credit_cpu: derived caps 12/9/8, per-arity caps reach 230400/216000/230400, sim-s cap binds across arities and updates (10x2 + 1x3 = 216000, then nothing), journal tamper refused, extension sessions capped at 9, registration shape; credit+sparse 90 passed; g4_runtime/worker_binding/offer 24, track2_backend 79, clean3/clean4/launch 78 + 1 skip"
  },
  "cost_delta": {
   "per_start_per_arm_sim_s": {
