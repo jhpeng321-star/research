@@ -32,9 +32,9 @@ TRUNK = '/home/ubuntu/mappospeed/production2/policy_00169.pt'
 TRUNK_SHA256 = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca'
 CELL_KEYS = ('D2400_p40', 'D2400_p60', 'D2800_p40', 'D2800_p60', 'D3200_p40', 'D3200_p60')   # 6 staged cells
 TRAIN_SEEDS = c4.TRAIN_SEEDS            # 989220-989267, 16 per update, rotating thirds
-FINAL_EVAL_CEILING = 1_200_000          # MAIN 19:57: v2v_final cap (claims 3a + 3c ~1,020,960)
+FINAL_EVAL_CEILING = 1_340_000          # MAIN 20:5x: v2v_final cap (N6 amend2; >= 15% over 1,164,960)
 G4_FAMILIES = ['abreast_wall', 'group_hold', 'lane_drop_initiate']
-IMITATION_EPOCHS = 20
+IMITATION_EPOCHS = 60                   # MAIN ~21:0x: EV-BC steps 20 -> 60 (lr, KL cap 0.045 unchanged)
 QUOTE_FILE = 'CLEAN5A_QUOTE.json'
 HOST_RECEIPTS = dict(
     cpuZ=dict(ready='/home/ubuntu/CPUZ_READY.json'),

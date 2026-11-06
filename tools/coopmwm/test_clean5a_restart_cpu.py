@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from tools.coopmwm import clean5a_restart as c5, bank_breadth as bb, map_descriptor as md
-from tools.coopmwm.test_track2_backend_cpu import cfg, cpu_threads  # noqa: F401 (fixture + autouse)
+from tools.coopmwm.test_track2_backend_cpu import cfg as _track2_cfg, cpu_threads  # noqa: F401 (fixture "cfg" + autouse)
 
 SPEC = Path(__file__).resolve().parents[2]/'assets/research/newmap_candidates/wz3to2'
 
@@ -40,7 +40,7 @@ def test_worlds_cover_six_cells_and_registered_train_seeds(wz):
 
 def test_keys_and_asserted_guidance(wz):
     cfg = c5.keys(desc=wz, guidance_doc=_doc(), provenance='MAIN clean5a GO')
-    assert cfg['imitation_epochs'] == 20 and bb.ev_only(cfg)
+    assert cfg['imitation_epochs'] == 60 and bb.ev_only(cfg)
     assert cfg['g4_extension']['families'] == sorted(c5.G4_FAMILIES)
     from tools.coopmwm import track2_backend as tb, fullpol_ev, practice_offer
     assert tb.frozen_control_arm(cfg) and fullpol_ev.settings(cfg) is not None
@@ -62,14 +62,14 @@ def test_ev_only_key_validation():
         bb.ev_only(dict(guidance_mode='ev'))
 
 
-def test_exact_clean5a_keys_g2_pairs_offer_only_n2_options_for_b_and_r(wz, cfg, monkeypatch):
+def test_exact_clean5a_keys_g2_pairs_offer_only_n2_options_for_b_and_r(wz, _track2_cfg, monkeypatch):  # noqa: F811
     """N11 F10 (MAIN 2026-11-06): with the EXACT clean5a keys (clean4_restart.levers + clean5a_restart.keys,
     G2 on), a G2 pair ego in B and in R gets only N2 options; the legacy G2 pair slate is never reached."""
     import numpy as np
     from . import clean4_restart as c4, coordination_opportunities as co, feasible_proposals as fpp
     from .clean4_receipts import CLEAN5A_ALLOWED
     from .test_lane_drop_cpu import make, row, tick
-    exact = c4.levers(dict(cfg, trigger_candidates=8, trigger_partner_slots=4),
+    exact = c4.levers(dict(_track2_cfg, trigger_candidates=8, trigger_partner_slots=4),
                       lane_drop_keys={}, v2v_keys={}, w2_keys={})
     exact.update(c5.keys(desc=wz, guidance_doc=_doc(), provenance='MAIN clean5a GO'))
     assert co.settings(exact) is not None and bb.ev_only(exact)

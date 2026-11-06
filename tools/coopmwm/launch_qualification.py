@@ -13,6 +13,11 @@ from .exact_grade import _seal, verify_sealed
 from .protocol import digest
 
 
+def _clean5a_imitation_epochs():
+    from .clean5a_restart import IMITATION_EPOCHS
+    return IMITATION_EPOCHS
+
+
 def verify_inputs(cfg):
     manifest = training.read(Path(cfg['run_root'])/'STAGING_MANIFEST.json')
     verify_sealed(manifest, 'manifest_sha256')
@@ -70,7 +75,7 @@ def smoke(cfg):
                     or m['merge_missing_share'] >= 1 or m['track2_reward']['cav_outcomes'] <= 0
                     or learning['bank']['pairs_total'] != 0 or learning['bank']['optimizer_steps'] != 0
                     or m['weighted_starts'] != 0 or learning['bank_trigger'].get('contexts')
-                    or cfg.get('imitation_epochs') != 20
+                    or cfg.get('imitation_epochs') != _clean5a_imitation_epochs()
                     or (update['arm'] == 'B' and records <= 0) or (update['arm'] == 'R' and records != 0)):
                 raise ValueError('smoke EV-BC receipt invalid: '+update['arm']+'; fix and requalify')
             continue
