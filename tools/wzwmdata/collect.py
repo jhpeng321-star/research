@@ -367,8 +367,9 @@ def _wait_capacity(root, data_path, load_max):
         if (Path(root) / 'STOP').exists():
             return 'stop'
         load = os.getloadavg()[0]
-        free = min(shutil.disk_usage(str(root)).free, shutil.disk_usage(str(data_path)).free) / 1e9
-        if (load_max <= 0 or load < load_max) and free >= MIN_FREE_GB:
+        free = shutil.disk_usage(str(data_path)).free / 1e9
+        root_free = shutil.disk_usage(str(root)).free / 1e9
+        if (load_max <= 0 or load < load_max) and free >= MIN_FREE_GB and root_free >= 1.0:
             return None
         time.sleep(30)
 
