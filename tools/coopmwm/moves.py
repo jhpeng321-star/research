@@ -502,6 +502,9 @@ def from_plan(plan):
         plan = plan['plan']
     elif isinstance(plan.get('chosen_plan'), dict):
         plan = plan['chosen_plan']
+    if plan.get('nm_move') is not None:
+        # N9 closed-loop family plans are not shared-vocabulary boxes; never project them.
+        raise ValueError('N9 nm_move plans bind through nm_families.from_plan, not the move vocabulary')
     if plan.get('lane_drop_macro') is not None:
         # N2 lane-drop macro (closed-loop speed law): exact executable binding.
         from .lane_drop import from_plan as lane_drop_move
