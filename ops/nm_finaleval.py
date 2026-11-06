@@ -33,6 +33,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 import hashlib
 import importlib
+import importlib.util
 import json
 import math
 import os
@@ -54,12 +55,42 @@ UPDATE = 24
 ARMS = ('A', 'B', 'R')
 DECISION_ARMS = ('B', 'R')
 BASES = ('mappo_frozen', 'mappo_u0', 'native')   # clean5a: frozen S-MAPPOWZ snapshot base (A = base alone)
-ORDER = ('B', 'A', 'R', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
+ORDER = ('B', 'A', 'R', 'RULE', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
 #: MAIN 2026-11-06 (FAIRAUDIT F6): 7 arms; BASE is an alias (U0 for a mappo_u0 base, NATIVE for native)
-EPISODE_ARMS = ('A', 'B', 'R', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
+EPISODE_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
 COMPARATOR_ARMS = ('MAPPO_SPEED', 'MAPPO_LANE')        # claim 3b, one seal per comparator
 BOUND_ARMS = ('U0',)+COMPARATOR_ARMS                    # executors bound by path + sha256
-CLAIM3A_ARMS = ('A', 'B', 'R', 'U0', 'NATIVE')
+CLAIM3A_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'NATIVE')
+#: records of these arms carry the executor sha actually loaded (bound executors)
+EXECUTOR_ARMS = ('U0', 'RULE')+COMPARATOR_ARMS
+#: MAIN registration (pre-results): RULE = U0 + the solo2 rule always on (one CAV holding in SUMO lane 2
+#: with wall_h parameters, cooldown = hold) = the EXACT S-REGIMEU0 implementation (c4/imitreplay
+#: tools/coopmwm/regimeu0.py RuleHook('wall_h_solo2')): the hand-designed cooperation baseline.
+RULE_STRATEGY = 'wall_h_solo2'
+RULE_LABEL = ('RULE: U0 + the S-REGIMEU0 wall_h_solo2 rule (one CAV holds in SUMO lane 2 at 15 m/s for 90 s, '
+              'cooldown = hold), always on')
+#: arms independent of the clean5a training: pre-run (sealed) before clean5a launches
+PRERUN_ARMS = ('NATIVE', 'U0', 'RULE')
+PRERUN_PHASE = 'v2v_final_prerun'
+#: rule_digest() of the exact S-REGIMEU0 rule (sumo_lane, pick_wall, RuleHook, Recorder, constants);
+#: identical at c4/imitreplay 385c4b8f, 52248a4b and d02228cf (blob 2e267403 / imitreplay d5042c33)
+RULE_SHA256 = '887285923ca0b4ac1a7f728f3d687c57b49e944d3ec7abf62bddb4249d6690b4'
+PRERUN_FILE = 'PRERUN_PLAN.json'
+#: operator stop: the pre-run finishes the chunk in flight, publishes it and stops (resume anywhere)
+STOP_PRERUN = 'STOP_PRERUN'
+PRERUN_PLANT = 'prerun_plant'
+#: what NATIVE/U0/RULE episodes read from the plant CONFIG (runner + accel_plant + u0 loaders)
+PLANT_KEYS = ('runtime', 'checkpoint', 'warm_history', 'accel_bounds', 'v2v', 'v2v_intent', 'common_checkpoint_sha256',
+              'initial_checkpoint', 'launch_optimization')
+PRERUN_AUTHORITY = ('MAIN registration 2026-11-06 (pre-results): PRE-RUN NATIVE, U0 and RULE for 3a and 3c from about '
+                    '21:15 on cpuZ (off cpuZ by 00:30 for clean5a; else cpuV <= 16 workers); results stay SEALED (F12) '
+                    'until clean5a A/B/R are bound and the 3a seal opens')
+#: MAIN registration (pre-results): secondary claim 3c "condition-aware: no harm in light traffic" -
+#: B, R, U0, NATIVE on 24 held-out worlds of the D2400_p60 cell (seeds 989600-989623, N1 world());
+#: separate seal, opens with 3a. clean5a's base is u0 (d9042cc5), so A = U0 (BASE alias U0).
+CLAIM3C_ARMS = ('B', 'R', 'U0', 'RULE', 'NATIVE')
+CLAIM3C_CELL = dict(demand=2400, penetration=0.6)
+CLAIM3C_WORLDS = 24
 FROZEN_MAPPO_SHA = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca'
 #: Comparator executors are parameters (bind-mappo: path + sha256, re-verified at load). MAPPO_SPEED =
 #: N7's wz3to2 speed-only retrain (S-MAPPOWZ), the transferred d9042cc5 export only as an explicitly
@@ -104,10 +135,10 @@ CELL_AUTHORITY = ('MAIN 2026-11-06 (N6): clean4 training cell = demand 3200 veh/
 NEWMAP2_REPORT_SHA256 = '70c119595ff3f391bbdebfa0a98d9c2f7ca02d2ae61f8acb53c126754adfdb05'
 PHASE = 'v2v_final'
 PANEL_ALLOCATION_SIM_S = 690_000       # value registered in panel v2's contract
-ALLOCATION_SIM_S = 1_040_000           # clean4 v2v_final raised by MAIN 2026-11-06 (FAIRAUDIT F6, owner authorisation)
+ALLOCATION_SIM_S = 1_200_000           # v2v_final raised by MAIN 2026-11-06 (RULE arm registration)
 ALLOCATION_AUTHORITY = ('MAIN 2026-11-06 under the owner authorisation to act on its recommendations: v2v_final '
-                        'raised from 690,000 to <= 1,040,000 sim-s for A, B, R, NATIVE, U0, MAPPO-speed, MAPPO-lane '
-                        'x panel v2 + the 8-world decision branches (~902k, 15% margin)')
+                        'raised 690,000 -> 1,040,000 (F6: 7 arms + branches) -> <= 1,200,000 (RULE arm in 3a and 3c, '
+                        'claim 3c); pre-run spend in the evaluation root ledger counts against the same cap')
 BUDGET_KEYS = ('clean4_budget', 'clean3_budget')
 SAFETY = fe.SAFETY
 HARD = fe.HARD
@@ -117,6 +148,9 @@ PANEL_FILE = HERE/'nm_eval_panel_wz3to2_v2.json'
 #: sealed content digest of nm_eval_panel_wz3to2_v2.json (registered 2026-11-06 before clean4 launch)
 PANEL_SHA256 = '3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130'
 SUPERSEDED_FILE = HERE/'nm_eval_panel_SUPERSEDED.json'
+PANEL_3C_FILE = HERE/'nm_eval_panel_wz3to2_claim3c_D2400.json'
+#: sealed content digest of the claim-3c panel (registered before any clean5a result)
+PANEL_3C_SHA256 = 'd43510e9c75308b575cf97c4309c68da06555dfa442ffc73f3cbbec04dbef3fb'
 #: superseded panels: never valid for a clean4 CONFIG binding (see SUPERSEDED_FILE)
 SUPERSEDED = {'b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1':
               'v1 cell 2800 veh/h x 0.3 superseded by the 3200 x 0.6 clean4 cell (MAIN 2026-11-06)'}
@@ -126,7 +160,7 @@ NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'
 ROOT = '/home/ubuntu/coopmwm_clean5a_wz3to2'            # cpuZ; pass --root explicitly
 FINAL_ROOT = '/home/ubuntu/coopmwm_clean5a_wz3to2_finaleval'
 MAX_WORKERS = 46                                          # cpuZ 48 cores (MAIN: run right after u24)
-PREFIXES = ('nmfinal_', 'nmdec_', 'nmparity_')
+PREFIXES = ('nmfinal_', 'nmdec_', 'nmparity_', 'nm3c_')
 RUNNER = 'tools.coopmwm.nm_eval_runner'
 RUNNER_CONTRACT = dict(
     module=RUNNER, MAP=MAP,
@@ -176,10 +210,14 @@ def quote(base='mappo_u0'):
     # clean3 prefix-replay branches are charged from t=0 (sumo_verify.branch_sim_s): <= HORIZON_S each
     need.update({f'decisions_{a}': subset*(2+MAX_MEMBERS)*(DECISION_MAX_T+DECISION_H) for a in DECISION_ARMS})
     need['parity_f11'] = PARITY_SIM_S
+    need.update({f'claim3c_{a}': CLAIM3C_WORLDS*HORIZON_S for a in CLAIM3C_ARMS})
+    prerun = len(PRERUN_ARMS)*(N_WORLDS+CLAIM3C_WORLDS)*HORIZON_S
     total = sum(need.values())
-    core = total-PARITY_SIM_S
+    core = total-PARITY_SIM_S-len(CLAIM3C_ARMS)*CLAIM3C_WORLDS*HORIZON_S
     return dict(base=base, phase=PHASE, allocation_sim_s=ALLOCATION_SIM_S, allocation_authority=ALLOCATION_AUTHORITY,
                 need_ceiling=need, episodes_sim_s=len(arms)*episode,
+                claim3c_sim_s=len(CLAIM3C_ARMS)*CLAIM3C_WORLDS*HORIZON_S, prerun_sim_s=prerun,
+                prerun_arms=list(PRERUN_ARMS),
                 decisions_ceiling_sim_s=core-len(arms)*episode, parity_sim_s=PARITY_SIM_S,
                 core_ceiling_sim_s=core, total_ceiling_sim_s=total, slack_sim_s=ALLOCATION_SIM_S-total,
                 margin_over_core=round(ALLOCATION_SIM_S/core-1, 4), margin_over_total=round(ALLOCATION_SIM_S/total-1, 4),
@@ -190,6 +228,7 @@ def quote(base='mappo_u0'):
                                       'from 0 to t_s+360); only captured decisions are reserved'),
                            parity_f11=(f'{len(PARITY_WORLDS)} TRAIN worlds x 2 paths (eval plant, training env) x '
                                        f'{len(COMPARATOR_ARMS)} comparators x {300+PARITY_ROLLOUT_S} s'),
+                           claim3c=(f'{len(CLAIM3C_ARMS)} arms x {CLAIM3C_WORLDS} held-out D2400_p60 worlds x {HORIZON_S} s'),
                            charging='planned sim-s precharged per job; whole wave reserved before dispatch'),
                 wall_time=dict(workers=24, sim_s_per_worker_s='6-9 (newmap_probe cpuV: ~148k sim-s in ~22-25 min '
                                                               'on <=12 workers)',
@@ -322,6 +361,50 @@ def load_panel(path=PANEL_FILE, *, pinned=PANEL_SHA256):
     panel = validate_panel(read(path))
     if pinned is not None and panel['panel_sha256'] != pinned:
         raise Blocked(f'panel_sha256 {panel["panel_sha256"]} != pinned {pinned}')
+    return panel
+
+
+def build_panel_3c(spec_path, registered_utc):
+    """Claim-3c panel: 24 held-out worlds of the D2400_p60 cell (N1 world()), same estimator."""
+    v2 = load_panel()
+    from tools.coopmwm import map_scenarios as ms
+    cell_row = next(c for c in ms.cells() if c['demand'] == CLAIM3C_CELL['demand']
+                    and c['penetration'] == CLAIM3C_CELL['penetration'])
+    cell = dict(v2['cell'], demand_vph={'main': CLAIM3C_CELL['demand']}, penetration=CLAIM3C_CELL['penetration'],
+                cell=cell_row['cell'], cell_key=cell_row['cell_key'],
+                authority='MAIN registration (pre-results): claim 3c, condition-aware: no harm in light traffic')
+    seeds = list(range(EVAL_RANGE[0], EVAL_RANGE[0]+CLAIM3C_WORLDS))
+    worlds = [dict(world_id=f'{MAP}_{cell_row["cell_key"]}_{s}', world=_world(s, cell)) for s in seeds]
+    contract = dict({k: v2['contract'][k] for k in ('update', 'metric', 'higher_is_better', 'metric_definition',
+                                                  'horizon_s', 'window', 'horizon_note', 'noise_seed', 'deterministic',
+                                                  'role', 'bootstrap', 'estimator', 'safety_counters')},
+                    claim='3c: condition-aware - no harm in light traffic', arms=list(CLAIM3C_ARMS),
+                    comparisons=['B-R'], total_benefit=dict(vs=['BASE', 'NATIVE'], arms=['B', 'R']),
+                    primary=dict(contrast='B-BASE', rule='descriptive: no-harm check of B vs BASE (= U0) and NATIVE in '
+                                                         'the light-traffic cell; CI and per-seed harm fraction reported',
+                                 note='secondary claim; opens with 3a; separate seal'),
+                    decisions=dict(arms=[], worlds=[], note='no decision capture on the 3c panel'))
+    panel = dict(schema=SCHEMA+'.panel', version='claim3c', map=MAP, role='evaluation only (claim 3c)',
+                 registered_utc=registered_utc, authority='MAIN registration 2026-11-06 (claim 3c)',
+                 seed_ranges=v2['seed_ranges'], seeds_used=[seeds[0], seeds[-1]], cell=cell,
+                 map_binding=v2['map_binding'], stream_rule=v2['stream_rule'], exposure=v2['exposure'],
+                 sibling_panel_sha256=v2['panel_sha256'], worlds=worlds, contract=contract, job_prefix='nm3c',
+                 wave_prefix='C3_')
+    return seal(json.loads(json.dumps(panel)), 'panel_sha256')
+
+
+def load_panel_3c(path=PANEL_3C_FILE, *, pinned=PANEL_3C_SHA256):
+    panel = verify(read(path), 'panel_sha256', 'claim-3c panel seal')
+    if pinned is not None and panel['panel_sha256'] != pinned:
+        raise Blocked(f'claim-3c panel_sha256 {panel["panel_sha256"]} != pinned {pinned}')
+    seeds = [r['world']['seed'] for r in panel['worlds']]
+    if seeds != list(range(EVAL_RANGE[0], EVAL_RANGE[0]+CLAIM3C_WORLDS)) or panel['map_binding']['net_sha256'] != NET_SHA256:
+        raise Blocked('claim-3c panel differs from its registration')
+    for r in panel['worlds']:
+        if r['world'] != _world(r['world']['seed'], panel['cell']) or r['world']['cell_key'] != 'D2400_p60':
+            raise Blocked('claim-3c world does not follow the registered cell')
+    if panel['contract']['bootstrap'] != BOOTSTRAP or panel['contract']['horizon_s'] != HORIZON_S:
+        raise Blocked('claim-3c contract differs from the launcher constants')
     return panel
 
 
@@ -505,19 +588,20 @@ def allocation(cfg):
     return 'budget', ((cfg.get('budget') or {}).get('phases') or {}).get(PHASE)
 
 
-def budget_check(root, cfg, base, *, outstanding=None):
-    """Zero physics: the registered allocation covers this launcher's ceiling; v2v_final carries no
-    foreign spend (the in-run u8/u24 evaluations are off)."""
+def budget_check(root, cfg, base, *, outstanding=None, final_root=None):
+    """Zero physics: the registered allocation covers this launcher's ceiling (pre-run spend in the
+    evaluation root ledger included); v2v_final carries no foreign spend."""
     source, allocated = allocation(cfg)
     q = quote(base)
     rows = [r for r in fe.ledger_rows(root) if r.get('phase') == PHASE]
-    mine = sum(r['sim_s'] for r in rows if str(r['id']).startswith(PREFIXES))
+    prerun = sum(r['sim_s'] for r in fe.ledger_rows(final_root)) if final_root is not None and Path(final_root).is_dir() else 0
+    mine = sum(r['sim_s'] for r in rows if str(r['id']).startswith(PREFIXES))+prerun
     foreign = [r['id'] for r in rows if not str(r['id']).startswith(PREFIXES)]
     cap = min(allocated or 0, ALLOCATION_SIM_S)
     need = max(0, q['total_ceiling_sim_s']-mine) if outstanding is None else outstanding
     out = dict(source=source, phase=PHASE, allocated=allocated, sub_cap=cap, spent_by_launcher=mine,
                foreign_rows=foreign[:5], foreign_count=len(foreign), ceiling=q['total_ceiling_sim_s'],
-               outstanding_ceiling=need, remaining=cap-mine)
+               outstanding_ceiling=need, remaining=cap-mine, prerun_spent=prerun)
     if allocated is None or allocated < ALLOCATION_SIM_S:
         raise Blocked(f'clean4 {PHASE} allocation {allocated} < registered {ALLOCATION_SIM_S}: {out}')
     if foreign:
@@ -593,15 +677,25 @@ def check_export(arm, sha256, meta):
 
 
 def _wave_started(final_root, arm):
-    return (Path(final_root)/f'RESERVED_{arm}.json').is_file() or (Path(final_root)/f'WAVE_{arm}.json').is_file()
+    root = Path(final_root)
+    return ((root/f'RESERVED_{arm}.json').is_file() or (root/f'WAVE_{arm}.json').is_file()
+            or any(root.glob(f'RESERVED_{arm}__*.json')) or any(root.glob(f'WAVE_{arm}__*.json')))
 
 
-def bind_mappo(*, final_root, path, sha256, kind, authority, arm='MAPPO_SPEED', check=None, dry_run=False):
+def bind_mappo(*, final_root, path, sha256, kind, authority, arm='MAPPO_SPEED', check=None, dry_run=False,
+               residual_path=None, residual_sha256=None):
     """Bind a comparator executor (path + sha256, re-verified at every load). Rebinding is allowed
     only before that arm's wave is reserved; earlier bindings are kept."""
     final_root, arm = Path(final_root), _arm(arm)
-    if run_plan(final_root) is None:
-        raise Blocked('RUN_PLAN.json missing: run register first')
+    if run_plan(final_root) is None and prerun_plan(final_root) is None:
+        raise Blocked('RUN_PLAN.json / PRERUN_PLAN.json missing: run register or prerun-register first')
+    residual = None
+    if arm == 'U0':
+        if not residual_path or not re.fullmatch('[0-9a-f]{64}', str(residual_sha256 or '')):
+            raise Blocked('U0 needs the zero-residual u0 checkpoint: --residual-path and --residual-sha256')
+        if file_sha(residual_path) != residual_sha256:
+            raise Blocked(f'{residual_path} does not hash to {residual_sha256}')
+        residual = dict(residual_path=str(residual_path), residual_sha256=residual_sha256)
     if kind not in MAPPO_KINDS[arm]:
         raise Blocked(f'{arm} kind must be one of {sorted(MAPPO_KINDS[arm])}')
     if not re.fullmatch('[0-9a-f]{64}', str(sha256)):
@@ -625,7 +719,7 @@ def bind_mappo(*, final_root, path, sha256, kind, authority, arm='MAPPO_SPEED', 
         publish(final_root/f'BOUND_{arm}_superseded_{n:03}.json', read(target))
     value = seal(dict(schema=SCHEMA+'.comparator', arm=arm, kind=kind, label=MAPPO_KINDS[arm][kind], path=str(path),
                       sha256=sha256, export=meta, authority=str(authority), rule=MAPPO_AUTHORITY, load_check=check,
-                      dry_run=bool(dry_run),
+                      dry_run=bool(dry_run), **(residual or {}),
                       bound_utc=datetime.now(timezone.utc).isoformat()), 'binding_sha256')
     publish(target, value, replace=True)
     return dict(value, binding_path=str(target))
@@ -634,8 +728,8 @@ def bind_mappo(*, final_root, path, sha256, kind, authority, arm='MAPPO_SPEED', 
 def declare_unavailable(*, final_root, arm, authority, reason):
     """F12: an explicit, sealed 'comparator unavailable' declaration (never implied by a timeout)."""
     final_root, arm = Path(final_root), _arm(arm)
-    if run_plan(final_root) is None:
-        raise Blocked('RUN_PLAN.json missing: run register first')
+    if run_plan(final_root) is None and prerun_plan(final_root) is None:
+        raise Blocked('RUN_PLAN.json / PRERUN_PLAN.json missing')
     if not str(authority).strip() or not str(reason).strip():
         raise Blocked('authority and reason required')
     if mappo_binding(final_root, arm) is not None:
@@ -713,22 +807,26 @@ def gate(root, cfg, runtime, binding, final_root=None):
 
 # ---------------------------------------------------------------- specs and records
 
-def episode_specs(arm, panel, cfg, root, base, binding=None):
+def episode_specs(arm, panel, cfg, root, base, binding=None, u0=None):
     root = Path(root)
     if arm in ARMS:
         path = root/f'{arm}_checkpoint_{UPDATE:03}.pt'
         checkpoint = dict(path=str(path), file_sha256=file_sha(path), update=UPDATE, arm=arm)
-    elif arm in ('U0', 'MAPPO_SPEED'):
-        if not cfg.get('common_checkpoint_sha256'):
-            raise Blocked(f'{arm} needs the run common u0 (zero residual) checkpoint')
-        if binding is None:
+    elif arm in ('U0', 'RULE', 'MAPPO_SPEED'):
+        if u0 is None:
+            raise Blocked(f'{arm} needs the U0 binding (frozen executor + zero-residual u0): bind-mappo --arm U0')
+        exe = u0 if arm in ('U0', 'RULE') else binding
+        if exe is None:
             raise Blocked(f'{arm} executor not bound (bind-mappo --arm {arm})')
-        # executor = the bound frozen/comparator export; residual = the run common u0 (zero residual)
-        checkpoint = dict(kind='u0' if arm == 'U0' else 'mappo_comparator', comparator_kind=binding['kind'],
-                          label=binding['label'], executor_path=binding['path'], executor_sha256=binding['sha256'],
-                          binding_sha256=binding['binding_sha256'], binding_path=binding['binding_path'],
-                          path=str(root/'A_checkpoint_000.pt'), file_sha256=cfg['common_checkpoint_sha256'],
+        # executor = the bound frozen/comparator export; residual = the bound zero-residual u0
+        checkpoint = dict(kind=dict(U0='u0', RULE='rule', MAPPO_SPEED='mappo_comparator')[arm],
+                          comparator_kind=exe['kind'], label=exe['label'], executor_path=exe['path'],
+                          executor_sha256=exe['sha256'], binding_sha256=exe['binding_sha256'],
+                          binding_path=exe['binding_path'], path=u0['residual_path'], file_sha256=u0['residual_sha256'],
                           update=0, arm='A')
+        if arm == 'RULE':
+            checkpoint.update(rule=RULE_STRATEGY, rule_sha256=RULE_SHA256, rule_module='tools.coopmwm.regimeu0',
+                              rule_source='c4/imitreplay')
     elif arm == 'MAPPO_LANE':
         if binding is None:
             raise Blocked('MAPPO_LANE comparator not bound (bind-mappo --arm MAPPO_LANE)')
@@ -739,13 +837,15 @@ def episode_specs(arm, panel, cfg, root, base, binding=None):
         checkpoint = dict(kind='native')
     else:
         raise Blocked(f'no {arm} wave')
-    capture = dict(rule=panel['contract']['decisions']['rule'], min_t_s=DECISION_MIN_T, max_t_s=DECISION_MAX_T,
+    capture = dict(rule=panel['contract']['decisions'].get('rule'), min_t_s=DECISION_MIN_T, max_t_s=DECISION_MAX_T,
                    min_members=MIN_MEMBERS, max_members=MAX_MEMBERS)
     tag = arm.lower()+(f'_u{UPDATE:03}' if arm in ARMS else '')
-    return [dict(job_id=f'nmfinal_{tag}_{i:04}', arm=arm, world_id=r['world_id'], world=deepcopy(r['world']),
+    subset = set(panel['contract']['decisions']['worlds'])
+    prefix = panel.get('job_prefix', 'nmfinal')
+    return [dict(job_id=f'{prefix}_{tag}_{i:04}', arm=arm, world_id=r['world_id'], world=deepcopy(r['world']),
                  checkpoint=deepcopy(checkpoint), sim_s=HORIZON_S, window=dict(WINDOW), noise_seed=r['world']['seed'],
                  deterministic=True, panel_sha256=panel['panel_sha256'],
-                 capture=deepcopy(capture) if arm in DECISION_ARMS and in_decision_subset(r['world']) else None)
+                 capture=deepcopy(capture) if arm in DECISION_ARMS and r['world_id'] in subset else None)
             for i, r in enumerate(panel['worlds'])]
 
 
@@ -800,7 +900,7 @@ def check_episode(record, spec):
         check_decision(record['decision'], what)
     elif record.get('decision') is not None:
         raise Blocked(f'{what}: decision captured outside the registered B/R decision subset')
-    if spec['arm'] in BOUND_ARMS and record.get('executor_sha256_loaded') != spec['checkpoint']['executor_sha256']:
+    if spec['arm'] in EXECUTOR_ARMS and record.get('executor_sha256_loaded') != spec['checkpoint']['executor_sha256']:
         raise Blocked(f'{what}: comparator executor actually loaded differs from its binding (never silent)')
     if spec['arm'] in DECISION_ARMS:
         log = check_decision_log(record.get('decision_log', []), what)
@@ -813,8 +913,15 @@ def check_episode(record, spec):
                decision=deepcopy(record.get('decision')))
     if log is not None:
         out['decision_log'] = log
-    if spec['arm'] in BOUND_ARMS:
+    if spec['arm'] in EXECUTOR_ARMS:
         out['executor_sha256_loaded'] = record['executor_sha256_loaded']
+    if spec['arm'] == 'RULE':
+        if record.get('rule_sha256_loaded') != spec['checkpoint']['rule_sha256']:
+            raise Blocked(f'{what}: S-REGIMEU0 rule actually loaded differs from its registration')
+        out['rule_sha256_loaded'] = record['rule_sha256_loaded']
+        out['rule'] = deepcopy(record.get('rule'))
+    elif record.get('rule') is not None:
+        raise Blocked(f'{what}: rule telemetry outside the RULE arm')
     if spec['arm'] == 'NATIVE' and record.get('regime') is not None:
         regime = record['regime']
         v = regime.get('closing_lane_speed_mps') if isinstance(regime, dict) else 'bad'
@@ -898,12 +1005,19 @@ class Runtime:
             module = importlib.import_module(self.runner)
         except ImportError as error:
             return dict(ok=False, reason=f'{self.runner} not importable: {error!r}', native=False, decisions=False,
-                        lane=False)
+                        lane=False, rule=False)
         ok = getattr(module, 'MAP', None) == MAP and callable(getattr(module, 'episode', None))
         return dict(ok=ok, native=ok and getattr(module, 'NATIVE', True) is not False,
                     decisions=ok and callable(getattr(module, 'decision_branch', None)),
                     lane=ok and getattr(module, 'MAPPO_LANE', False) is True,
+                    rule=ok and getattr(module, 'RULE', False) is True and importlib.util.find_spec('tools.coopmwm.regimeu0') is not None,
                     reason=None if ok else f'{self.runner} lacks MAP={MAP!r} or episode()')
+
+    def plant_view(self, cfg):
+        """What NATIVE/U0/RULE episodes read from the plant CONFIG (validated by the production loader)."""
+        from tools.coopmwm import launch_production as production
+        native = production.backend_config(cfg)
+        return {k: deepcopy(native.get(k)) for k in PLANT_KEYS}
 
     def reserve(self, cfg, jobs):
         """The clean4 ledger, through the clean4 owner's own whole-wave reservation (as clean3 lane-on)."""
@@ -926,13 +1040,17 @@ def _h(*parts):
 def fake_episode(spec):
     w, arm = spec['world'], spec['arm']
     u = _h(w['seed'], arm)/0xffffffff
-    factor = dict(NATIVE=1.06, U0=1.0, MAPPO_SPEED=.995, MAPPO_LANE=.993, A=0.99, R=0.985, B=0.975)[arm]
+    factor = dict(NATIVE=1.06, U0=1.0, RULE=.985, MAPPO_SPEED=.995, MAPPO_LANE=.993, A=0.99, R=0.985, B=0.975)[arm]
     record = dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='graded',
                   J_veh_s=float(100_000*factor*(1+0.03*(u-.5))),
                   safety=dict(collisions=0, teleports=0, hard_brakes=_h(w['seed'], arm, 'b') % 7,
                               ttc_events=_h(w['seed'], arm, 't') % 11))
-    if arm in BOUND_ARMS:
+    if arm in EXECUTOR_ARMS:
         record['executor_sha256_loaded'] = spec['checkpoint']['executor_sha256']
+    if arm == 'RULE':
+        record['rule_sha256_loaded'] = spec['checkpoint']['rule_sha256']
+        record['rule'] = dict(strategy=spec['checkpoint']['rule'], activations=_h(w['seed'], 'rule') % 9+1, issued=600,
+                              lane_held_steps=600, members=_h(w['seed'], 'rule') % 9+1)
     if arm == 'NATIVE':
         record['regime'] = dict(closing_lane_speed_mps=4.+_h(w['seed'], 'regime') % 1500/100., n_obs=60)
     if arm in DECISION_ARMS:
@@ -963,7 +1081,7 @@ class FakeRuntime:
 
     def __init__(self, runner=None):
         self.calls = []
-        self.status = dict(dict(ok=True, native=True, decisions=True, lane=True, reason=None), **(runner or {}))
+        self.status = dict(dict(ok=True, native=True, decisions=True, lane=True, rule=True, reason=None), **(runner or {}))
 
     def config(self, root):
         cfg = read(Path(root)/'CONFIG.json')
@@ -978,6 +1096,9 @@ class FakeRuntime:
 
     def runner_status(self):
         return dict(self.status)
+
+    def plant_view(self, cfg):
+        return {k: deepcopy(cfg.get(k)) for k in PLANT_KEYS}
 
     def reserve(self, cfg, jobs):
         root = Path(cfg['run_root'])
@@ -1000,52 +1121,101 @@ class FakeRuntime:
 
 # ---------------------------------------------------------------- waves (reserve whole wave, never replay)
 
-def run_waves(waves, *, root, final_root, cfg, runtime, workers, base):
-    """waves: [(name, kind, specs)]. Every NEW wave is reserved whole in the clean4 ledger BEFORE one
-    shared dispatch; a published wave is reused, an interrupted one (charges, no receipt) refuses."""
+def _chunk_files(final_root, name):
+    out = []
+    for path in Path(final_root).glob(f'WAVE_{name}__*.json'):
+        m = re.fullmatch(rf'WAVE_{re.escape(name)}__(\d{{4}})-(\d{{4}})\.json', path.name)
+        if m:
+            out.append((int(m[1]), int(m[2]), path))
+    return sorted(out)
+
+
+def published(final_root, name, specs, check_):
+    """(records, source, covered): the whole-wave receipt, else the contiguous prefix of chunk receipts
+    WAVE_<name>__<first>-<last>.json (a pre-run stopped at a chunk boundary and resumed elsewhere)."""
+    final_root = Path(final_root)
+    target = final_root/f'WAVE_{name}.json'
+    if target.is_file():
+        value = verify(read(target), 'receipt_sha256', target.name)
+        if [r['job_id'] for r in value['records']] != [s['job_id'] for s in specs]:
+            raise Blocked(f'{name}: published wave does not match its registered specs')
+        return ([check_(r, s) for r, s in zip(value['records'], specs)],
+                dict(source=str(target), receipt_sha256=value['receipt_sha256']), len(specs))
+    records, paths, shas, covered = [], [], [], 0
+    for first, last, path in _chunk_files(final_root, name):
+        if first != covered or last < first or last >= len(specs):
+            raise Blocked(f'{name}: chunk receipts are not a contiguous partition of the registered specs')
+        value = verify(read(path), 'receipt_sha256', path.name)
+        part = specs[first:last+1]
+        if [r['job_id'] for r in value['records']] != [s['job_id'] for s in part]:
+            raise Blocked(f'{name}: chunk {path.name} does not match its registered specs')
+        records += [check_(r, s) for r, s in zip(value['records'], part)]
+        paths.append(str(path))
+        shas.append(value['receipt_sha256'])
+        covered = last+1
+    return records, dict(source=paths, receipt_sha256=shas, chunks=len(paths)), covered
+
+
+def run_waves(waves, *, root, final_root, cfg, runtime, workers, base, chunked=False, limit=None):
+    """waves: [(name, kind, specs)]. Every NEW wave (or the unpublished rest of a chunked wave) is
+    reserved whole in the ledger BEFORE one shared dispatch; published receipts are reused, an
+    interrupted one (charges, no receipt) refuses. chunked=True publishes WAVE_<name>__<a>-<b>.json."""
     root, final_root = Path(root), Path(final_root)
-    out, sources, todo = {}, {}, []
-    charged = {r['id'] for r in fe.ledger_rows(root)}
+    out, sources, todo, done_before = {}, {}, [], {}
+    chunked = chunked or bool(limit)
+    prerun = isinstance(runtime, PrerunRuntime)
+    phase = PRERUN_PHASE if prerun else PHASE
+    # the clean-run ledger AND the evaluation root's pre-run ledger: an interrupted wave never replays
+    charged = {r['id'] for r in fe.ledger_rows(root)} | {r['id'] for r in fe.ledger_rows(final_root)}
     for name, kind, specs in waves:
-        target = final_root/f'WAVE_{name}.json'
         check_ = check_episode if kind == 'episode' else check_branch
-        if target.is_file():
-            value = verify(read(target), 'receipt_sha256', target.name)
-            if [r['job_id'] for r in value['records']] != [s['job_id'] for s in specs]:
-                raise Blocked(f'{name}: published wave does not match its registered specs')
-            out[name] = [check_(r, s) for r, s in zip(value['records'], specs)]
-            sources[name] = dict(source=str(target), receipt_sha256=value['receipt_sha256'])
+        records, source, covered = published(final_root, name, specs, check_)
+        if covered == len(specs):
+            out[name], sources[name] = records, source
             continue
-        if {s['job_id'] for s in specs} & charged:
-            raise Blocked(f'{name}: interrupted wave in the clean4 ledger; never replay')
-        todo.append((name, kind, specs))
-    new = sum(s['sim_s'] for _, _, specs in todo for s in specs)
-    if new:
+        if {s['job_id'] for s in specs[covered:]} & charged:
+            raise Blocked(f'{name}: interrupted wave in the ledger; never replay')
+        n = (limit.get(name) if isinstance(limit, dict) else limit) or len(specs)
+        rest = specs[covered:covered+n]
+        done_before[name] = (records, source, covered, len(specs))
+        part = f'{name}__{covered:04}-{covered+len(rest)-1:04}' if chunked or covered else name
+        todo.append((name, part, kind, rest))
+    new = sum(s['sim_s'] for *_, specs in todo for s in specs)
+    if new and not prerun:          # pre-run: PrerunRuntime.reserve enforces the registered pre-run cap
         mine = sum(r['sim_s'] for r in fe.ledger_rows(root) if r.get('phase') == PHASE and str(r['id']).startswith(PREFIXES))
-        budget_check(root, cfg, base, outstanding=new)
+        budget_check(root, cfg, base, outstanding=new, final_root=final_root)
+        mine += sum(r['sim_s'] for r in fe.ledger_rows(final_root))
         if mine+new > ALLOCATION_SIM_S:
             raise Blocked(f'{PHASE} sub-cap {ALLOCATION_SIM_S} would be exceeded')
-    for name, kind, specs in todo:
+    for name, part, kind, specs in todo:
         if specs:
             jobs = [dict(id=s['job_id'], sim_s=s['sim_s']) for s in specs]
             runtime.reserve(cfg, jobs)
-            publish(final_root/f'RESERVED_{name}.json', dict(name=name, phase=PHASE, jobs=[j['id'] for j in jobs],
-                    sim_s=sum(j['sim_s'] for j in jobs), ledger=str(root/'CHARGES.jsonl'), unix=time.time()))
-    items = [(kind, s, str(final_root/'evaluation'/s['job_id'])) for _, kind, specs in todo for s in specs]
+            publish(final_root/f'RESERVED_{part}.json', dict(name=part, wave=name, phase=phase, jobs=[j['id'] for j in jobs],
+                    sim_s=sum(j['sim_s'] for j in jobs), ledger=str((final_root if prerun else root)/'CHARGES.jsonl'),
+                    unix=time.time()))
+    items = [(kind, s, str(final_root/'evaluation'/s['job_id'])) for _, _, kind, specs in todo for s in specs]
     results = runtime.run(items, cfg, workers) if items else []
     position = 0
-    for name, kind, specs in todo:
+    for name, part, kind, specs in todo:
         records = results[position:position+len(specs)]
         position += len(specs)
         check_ = check_episode if kind == 'episode' else check_branch
         checked = [check_(r, s) for r, s in zip(records, specs)]
         if len(checked) != len(specs):
             raise Blocked(f'{name}: incomplete wave; never drop/impute/retry')
-        value = seal(dict(schema=SCHEMA+'.wave', name=name, phase=PHASE, kind=kind, physics=runtime.physics,
+        value = seal(dict(schema=SCHEMA+'.wave', name=part, wave=name, phase=phase, kind=kind, physics=runtime.physics,
                           sim_s=sum(s['sim_s'] for s in specs), records=checked), 'receipt_sha256')
-        publish(final_root/f'WAVE_{name}.json', value)
-        out[name] = checked
-        sources[name] = dict(source=str(final_root/f'WAVE_{name}.json'), receipt_sha256=value['receipt_sha256'])
+        publish(final_root/f'WAVE_{part}.json', value)
+        before, source, covered, n = done_before[name]
+        if part == name:
+            out[name] = checked
+            sources[name] = dict(source=str(final_root/f'WAVE_{part}.json'), receipt_sha256=value['receipt_sha256'])
+        elif covered+len(checked) == n:            # the last chunk completes the wave
+            out[name] = before+checked
+            sources[name] = dict(source=list(source.get('source') or [])+[str(final_root/f'WAVE_{part}.json')],
+                                 receipt_sha256=list(source.get('receipt_sha256') or [])+[value['receipt_sha256']],
+                                 chunks=(source.get('chunks') or 0)+1)
     return out, sources
 
 
@@ -1131,6 +1301,7 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
     labels = dict(A='A u24 (the frozen S-MAPPOWZ base alone)' if base == 'mappo_frozen' else 'A u24 (base only)',
                   B='B u24 (cooperation layer + SUMO-verified guidance)',
                   R='R u24 (cooperation layer, no guidance)', NATIVE='native SUMO CAV driving', U0=U0_LABEL,
+                  RULE=RULE_LABEL,
                   **{a: mappo_label(loaded[a], a)[1] if a in loaded else f'{a} (not run)' for a in COMPARATOR_ARMS})
     summary = {n: dict(label=labels[n]+(' = BASE' if n == base_arm else ''), n=len(worlds), mean_J_veh_s=float(J[n].mean()),
                        safety_totals={k: int(S[n][k].sum()) for k in SAFETY},
@@ -1142,7 +1313,7 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
         for a, b in (comparators or {}).items()}))
     alias = lambda n, c: c == 'BASE' and n == base_arm  # noqa: E731
     total = {}
-    for comparator in ('BASE', 'NATIVE')+COMPARATOR_ARMS:
+    for comparator in TOTAL_COMPARATORS:
         if comparator in have:
             total[f'vs_{comparator}'] = dict(
                 convention=f'diff = X - {comparator}; negative = X has less delay',
@@ -1168,7 +1339,7 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
     train = ('A-BASE', 'A', 'BASE', 'A over BASE (identically 0 when BASE = A, the frozen base alone)')
     for comparator, chain in (('BASE', (train,)),
                               ('NATIVE', (('BASE-NATIVE', 'BASE', 'NATIVE', 'base controller over native'), train))):
-        if not {comparator, 'BASE'} <= set(have):
+        if not {comparator, 'BASE', 'A', 'B', 'R'} <= set(have):
             decomposition[f'B-{comparator}'] = dict(status=f'unavailable (needs {comparator})')
             continue
         steps = chain+(('R-A', 'R', 'A', 'cooperation layer without guidance (R = the no-guidance arm)'),
@@ -1224,12 +1395,15 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
                  present=names, missing=missing or {}, sources=sources or {}, tables=tables,
                  claim=dict(claim3a='does learned cooperation add on top of the frozen MAPPO base: B vs A, B vs R, vs NATIVE '
                                     'and U0 (opens when those arms finish)',
-                            claim3b='vs MAPPO-speed it168 and MAPPO-lane, each opened only after it is bound')[scope[:7]],
+                            claim3b='vs MAPPO-speed it168 and MAPPO-lane, each opened only after it is bound',
+                            claim3c='condition-aware: no harm in light traffic (D2400_p60; B, R, U0, NATIVE; opens with 3a)'
+                            )[scope[:7]],
                  primary_criterion_training='u24 replicated synergy test on registered TRAIN states (run registration); unchanged')
     return seal(json.loads(json.dumps(value, allow_nan=False)), 'analysis_sha256')
 
 
-PER_SEED_COMPARATORS = ('NATIVE', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE')
+PER_SEED_COMPARATORS = ('NATIVE', 'U0', 'RULE', 'MAPPO_SPEED', 'MAPPO_LANE')
+TOTAL_COMPARATORS = ('BASE', 'NATIVE', 'RULE')+COMPARATOR_ARMS
 
 
 def seed_stats(diff, worlds):
@@ -1253,8 +1427,10 @@ def per_seed_tables(panel, J, names, worlds, base_arm):
             continue
         out['comparators'][c] = {n: dict(mean_ci=fe.paired_stats(J[n], J[c], bootstrap), **seed_stats(J[n]-J[c], worlds))
                                  for n in names if n != c}
-    out['B-R'] = dict(mean_ci=fe.paired_stats(J['B'], J['R'], bootstrap), **seed_stats(J['B']-J['R'], worlds))
-    out['B-A'] = dict(mean_ci=fe.paired_stats(J['B'], J['A'], bootstrap), **seed_stats(J['B']-J['A'], worlds))
+    for pair in ('B-R', 'B-A'):
+        x, y = pair.split('-')
+        out[pair] = (dict(mean_ci=fe.paired_stats(J[x], J[y], bootstrap), **seed_stats(J[x]-J[y], worlds))
+                     if x in J and y in J else dict(status='unavailable'))
     cols = [c for c in ('A', 'R')+PER_SEED_COMPARATORS if c in J]
     order = np.argsort(J['B']-J[base_arm], kind='stable') if base_arm in J else range(len(worlds))
     out['table_B'] = dict(sorted_by=f'B-{base_arm}' if base_arm in J else 'panel order',
@@ -1270,7 +1446,7 @@ def regime_tables(panel, have, J, names, worlds):
     bootstrap = panel['contract']['bootstrap']
     cells = sorted({r['world']['cell_key'] for r in panel['worlds']})
     pairs = [(n, c) for c in PER_SEED_COMPARATORS if c in J for n in names if n != c]
-    pairs += [('B', 'R'), ('B', 'A')]
+    pairs += [(x, y) for x, y in (('B', 'R'), ('B', 'A')) if x in J and y in J]
 
     def block(mask):
         idx = np.flatnonzero(mask)
@@ -1304,9 +1480,10 @@ def _ci(pair, digits=1):
 
 def render(value):
     t = value['tables']
-    lines = [f'# clean5a wz3to2 final paired evaluation (u{value["update"]}) - {value["scope"]} - panel v2', '',
+    lines = [f'# clean5a wz3to2 final paired evaluation (u{value["update"]}) - {value["scope"]} - '
+             f'panel {value["panel_sha256"][:8]}', '',
              f"Claim: {value['claim']}.", '',
-             f"Panel: {value['worlds']} wz3to2 evaluation worlds (989600-989695), panel_sha256 `{value['panel_sha256']}`; "
+             f"Panel: {value['worlds']} held-out wz3to2 worlds, panel_sha256 `{value['panel_sha256']}`; "
              f"base controller {value['base']} (BASE = {t['base']['alias_of']}); comparators "
              f"{', '.join(t['arms'][a]['label'] for a in COMPARATOR_ARMS if a in t['arms']) or 'none run'}; metric {value['metric']} (veh-s, lower is better), full "
              f"{value['horizon_s']} s; paired whole-world percentile bootstrap {value['bootstrap']['reps']} reps, seed "
@@ -1334,7 +1511,7 @@ def render(value):
     if 'row' in p:
         lines.append(f"diff {_f(p['row']['diff'])} veh-s, CI95 {_ci(p['row']['ci95'])}, hard events {p['hard_events']}: "
                      f"meets rule = **{p['meets_rule']}**.")
-    for comparator in ('BASE', 'NATIVE')+COMPARATOR_ARMS:
+    for comparator in TOTAL_COMPARATORS:
         tb = t['total_benefit'][f'vs_{comparator}']
         if 'rows' in tb:
             lines += block(f'## T1 Total benefit vs {comparator}', {f'{k}-{comparator}': v for k, v in tb['rows'].items()},
@@ -1370,7 +1547,7 @@ def render(value):
         if 'B-R_matched_worlds' in pdx:
             s = pdx['B-R_matched_worlds']['policy_cooperation_gain_veh_s']
             lines.append(f"\nB-R cooperation gain on matched worlds (descriptive): {_f(s['mean'])} {_ci(s['ci95'])}, n={s['n']}.")
-    act = t['synergy'].get('decision_activity', {})
+    act = {k: v for k, v in t['synergy'].get('decision_activity', {}).items() if isinstance(v, dict)}
     if any(arm in act for arm in DECISION_ARMS):
         lines += ['', 'Decision activity (descriptive): worlds with a cooperative move / moves / by move / median first t.', '',
                   '| arm | worlds with move | moves | by move | median first t (s) | subset captures |',
@@ -1396,6 +1573,9 @@ def render(value):
                          f"{r['frac_harm']:.2f} | {', '.join(_f(q) for q in r['quartiles'])} |")
     for k in ('B-R', 'B-A'):
         r = ps[k]
+        if 'status' in r:
+            lines.append(f"| {k[2:]} | B | {r['status']} | | | |")
+            continue
         lines.append(f"| {k[2:]} | B | {_f(r['mean_ci']['diff'])} {_ci(r['mean_ci']['ci95'])} | {r['frac_benefit']:.2f} | "
                      f"{r['frac_harm']:.2f} | {', '.join(_f(q) for q in r['quartiles'])} |")
     tb = ps['table_B']
@@ -1488,7 +1668,7 @@ def preflight(root, final_root, runtime, panel, map_module=None):
                              or plan['binding']['base'] != binding['base'] or plan['clean4_root'] != str(root)):
         raise Blocked('RUN_PLAN binds a different panel, base controller or clean4 root')
     exposure = exposure_check(root, cfg)
-    budget = budget_check(root, cfg, binding['base'])
+    budget = budget_check(root, cfg, binding['base'], final_root=final_root)
     maps = map_check(bind_map_api(map_module), panel)
     runner = runtime.runner_status()
     if runtime.physics and not os.environ.get('COOPMWM_MAP_SPEC'):
@@ -1515,8 +1695,9 @@ def _settle(final_root, arms, status, step, *, poll, timeout, sleep):
     return fe.wait(step, settled, status, poll=poll, timeout=timeout, sleep=sleep)
 
 
-def execute(*, root, final_root, runtime, panel, allow_missing=(), workers=24, poll=60, gate_timeout=7*86400,
-            replicated_timeout=0, comparator_timeout=7*86400, map_module=None, dry_run=False, sleep=time.sleep):
+def execute(*, root, final_root, runtime, panel, panel_3c=None, allow_missing=(), workers=24, poll=60,
+            gate_timeout=7*86400, replicated_timeout=0, comparator_timeout=7*86400, map_module=None, dry_run=False,
+            sleep=time.sleep):
     """CONFIG -> GATE (u24 sealed, safety clean, A/B/R bound by sha) -> U0 bound/declared -> claim 3a
     episodes (A, B, R, U0, NATIVE) + decisions -> sealed CLAIM3A tables -> for each MAPPO comparator:
     bound/declared -> its wave -> its own sealed CLAIM3B tables. Returns {analysis: value}."""
@@ -1551,20 +1732,36 @@ def execute(*, root, final_root, runtime, panel, allow_missing=(), workers=24, p
         # ---------------------------------------------------------------- claim 3a
         current = 'U0'
         u0 = _settle(final_root, ('U0',), status, current, poll=poll, timeout=comparator_timeout, sleep=sleep)
-        bindings = dict(u0['bound'])
+        bindings, compat = dict(u0['bound']), None
         if 'U0' in bindings:
             arms.append('U0')
+            if cfg.get('common_checkpoint_sha256') not in (None, bindings['U0']['residual_sha256']):
+                raise Blocked('the run common u0 differs from the bound zero-residual u0 (pre-run U0/RULE invalid)')
+            if report['runner'].get('rule'):
+                arms.append('RULE')
+            elif 'RULE' in allow_missing:
+                missing['RULE'] = 'runner has no S-REGIMEU0 rule (tools.coopmwm.regimeu0)'
+            else:
+                raise Blocked('RULE: runner has no S-REGIMEU0 rule (--allow-missing RULE)')
+            compat = prerun_compat(final_root, cfg, runtime)
         else:
             missing['U0'] = f'declared unavailable: {u0["declared"]["U0"]["reason"]}'
-        status(current, 'PASS', dict(bound=sorted(bindings), declared=sorted(u0['declared'])))
+            missing['RULE'] = 'needs the U0 executor (declared unavailable)'
+        status(current, 'PASS', dict(bound=sorted(bindings), declared=sorted(u0['declared']),
+                                     prerun=compat if 'U0' in bindings else None))
         current = 'EPISODES_3A'
-        specs = {arm: episode_specs(arm, panel, cfg, root, base, bindings.get(arm)) for arm in arms}
+        specs = {arm: episode_specs(arm, panel, cfg, root, base, bindings.get(arm), bindings.get('U0')) for arm in arms}
         if any(specs[arm][0]['checkpoint']['file_sha256'] != gated['checkpoint_sha256'][arm] for arm in ARMS):
             raise Blocked('u24 checkpoint changed after the gate')
-        status(current, 'RUNNING', dict(arms=arms, workers=workers))
-        done, sources = run_waves([(arm, 'episode', specs[arm]) for arm in arms], **kw)
+        arms_3c = [a for a in CLAIM3C_ARMS if a in arms] if panel_3c is not None else []
+        specs_3c = {a: episode_specs(a, panel_3c, cfg, root, base, bindings.get(a), bindings.get('U0')) for a in arms_3c}
+        status(current, 'RUNNING', dict(arms=arms, claim3c_arms=arms_3c, workers=workers))
+        # claim 3c (secondary, separate seal) runs in the same dispatch: it opens with 3a
+        done, sources = run_waves([(arm, 'episode', specs[arm]) for arm in arms]
+                                  + [(f'C3_{a}', 'episode', specs_3c[a]) for a in arms_3c], **kw)
         episodes = {arm: {r['world_id']: r for r in done[arm]} for arm in arms}
-        status(current, 'PASS', dict(arms=sorted(episodes)))
+        episodes_3c = {a: {r['world_id']: r for r in done[f'C3_{a}']} for a in arms_3c}
+        status(current, 'PASS', dict(arms=sorted(episodes), claim3c_arms=sorted(episodes_3c)))
         decisions = None
         if do_decisions:
             current = 'DECISIONS'
@@ -1592,6 +1789,14 @@ def execute(*, root, final_root, runtime, panel, allow_missing=(), workers=24, p
                                     a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS}),
                                 dry_run=dry_run, comparators=bindings, scope='claim3a', stem='CLAIM3A_TABLES')
         status(current, 'PASS', dict(analysis_sha256=out['claim3a']['analysis_sha256'], present=out['claim3a']['present']))
+        if panel_3c is not None:
+            current = 'TABLES_3C'
+            out['claim3c'] = tables(root=root, final_root=final_root, panel=panel_3c, base=base, episodes=episodes_3c,
+                                    decisions=None, sources={f'C3_{a}': sources[f'C3_{a}'] for a in arms_3c},
+                                    missing={a: missing[a] for a in CLAIM3C_ARMS if a in missing},
+                                    dry_run=dry_run, comparators={a: b for a, b in bindings.items() if a == 'U0'},
+                                    scope='claim3c', stem='CLAIM3C_TABLES')
+            status(current, 'PASS', dict(analysis_sha256=out['claim3c']['analysis_sha256'], present=out['claim3c']['present']))
         # ---------------------------------------------------------------- claim 3b, one comparator at a time
         for arm in COMPARATOR_ARMS:
             current = f'COMPARATOR_{arm}'
@@ -1611,7 +1816,8 @@ def execute(*, root, final_root, runtime, panel, allow_missing=(), workers=24, p
                     raise Blocked('MAPPO_LANE bound but the runner has no lane episode (--allow-missing MAPPO_LANE)')
                 status(current, 'SKIPPED', dict(reason='runner has no lane-capable MAPPO episode'))
                 continue
-            done, more = run_waves([(arm, 'episode', episode_specs(arm, panel, cfg, root, base, bound))], **kw)
+            done, more = run_waves([(arm, 'episode', episode_specs(arm, panel, cfg, root, base, bound,
+                                                                     bindings.get('U0')))], **kw)
             sources.update(more)
             both = dict(episodes, **{arm: {r['world_id']: r for r in done[arm]}})
             out[f'claim3b_{arm}'] = tables(
@@ -1628,20 +1834,225 @@ def execute(*, root, final_root, runtime, panel, allow_missing=(), workers=24, p
         raise
 
 
+# ---------------------------------------------------------------- pre-run (NATIVE, U0, RULE; sealed)
+
+def prerun_plan(final_root):
+    path = Path(final_root)/PRERUN_FILE
+    return verify(read(path), 'receipt_sha256', 'PRERUN_PLAN seal') if path.is_file() else None
+
+
+def prerun_cap():
+    return len(PRERUN_ARMS)*(N_WORLDS+CLAIM3C_WORLDS)*HORIZON_S
+
+
+class PrerunRuntime:
+    """The same runner/plant (real or fake) with the evaluation root's OWN ledger (phase
+    v2v_final_prerun, cap = PRERUN_ARMS x (96 + 24) x 1200 s); the CONFIG is the registered plant copy."""
+
+    def __init__(self, inner, final_root):
+        self.inner, self.final_root = inner, Path(final_root)
+        self.physics = inner.physics
+        self.calls = getattr(inner, 'calls', None)
+
+    def config(self, root):
+        plan = prerun_plan(self.final_root)
+        if plan is None:
+            raise Blocked('PRERUN_PLAN.json missing: prerun-register first')
+        if Path(root) != self.final_root/PRERUN_PLANT:
+            raise Blocked('the pre-run plant root is <final_root>/prerun_plant')
+        cfg = read(Path(root)/'CONFIG.json')
+        if digest(cfg) != plan['plant']['config_sha256'] or self.inner.plant_view(cfg) != plan['plant']['view']:
+            raise Blocked('pre-run plant CONFIG differs from PRERUN_PLAN')
+        return cfg
+
+    def health(self, root):
+        return None
+
+    def runner_status(self):
+        return self.inner.runner_status()
+
+    def plant_view(self, cfg):
+        return self.inner.plant_view(cfg)
+
+    def reserve(self, cfg, jobs):
+        plan = prerun_plan(self.final_root)
+        rows = fe.ledger_rows(self.final_root)
+        ids = [j['id'] for j in jobs]
+        if len(set(ids)) != len(ids) or set(ids) & {r['id'] for r in rows}:
+            raise Blocked('duplicate pre-run charge/attempt')
+        amount = sum(j['sim_s'] for j in jobs)
+        if sum(r['sim_s'] for r in rows)+amount > plan['cap_sim_s']:
+            raise Blocked(f'pre-run cap {plan["cap_sim_s"]} would be exceeded')
+        with (self.final_root/'CHARGES.jsonl').open('a', encoding='utf-8') as f:
+            for j in jobs:
+                f.write(json.dumps(dict(id=j['id'], phase=PRERUN_PHASE, sim_s=j['sim_s'], unix=time.time()),
+                                   sort_keys=True)+'\n')
+        if self.calls is not None:
+            self.calls.append(('reserve', PRERUN_PHASE, amount))
+
+    def run(self, items, cfg, workers):
+        return self.inner.run(items, cfg, workers)
+
+
+def prerun_register(*, final_root, plant_config, u0_path, u0_sha256, runtime, panel, panel_3c, authority):
+    """Zero physics: a NEW evaluation root with the sealed PRERUN_PLAN, the plant CONFIG copy (run_root =
+    <final_root>/prerun_plant) and the bound common u0 copy (A_checkpoint_000.pt, sha re-verified)."""
+    import shutil
+    final_root = guard(Path(final_root))
+    if final_root.exists():
+        raise Blocked('final root exists; never overwrite')
+    if not str(authority).strip():
+        raise Blocked('authority required')
+    source = read(plant_config)
+    if source.get('common_checkpoint_sha256') not in (None, u0_sha256):
+        raise Blocked('plant CONFIG common u0 differs from the bound u0 sha')
+    if file_sha(u0_path) != u0_sha256:
+        raise Blocked(f'{u0_path} does not hash to {u0_sha256}')
+    plant = final_root/PRERUN_PLANT
+    plant.mkdir(parents=True)
+    shutil.copyfile(u0_path, plant/'A_checkpoint_000.pt')
+    if file_sha(plant/'A_checkpoint_000.pt') != u0_sha256:
+        raise Blocked('u0 copy does not hash to the bound sha')
+    cfg = dict(deepcopy(source), run_root=str(plant))
+    view = runtime.plant_view(cfg)
+    publish(plant/'CONFIG.json', cfg)
+    plan = seal(dict(schema=SCHEMA+'.prerun', created=datetime.now(timezone.utc).isoformat(), authority=str(authority),
+                     registration=PRERUN_AUTHORITY, arms=list(PRERUN_ARMS), phase=PRERUN_PHASE, cap_sim_s=prerun_cap(),
+                     debits=f'{PHASE} (counted by this launcher against {ALLOCATION_SIM_S}; ledger = this root)',
+                     panel_sha256=panel['panel_sha256'], panel_3c_sha256=panel_3c['panel_sha256'],
+                     plant=dict(source=str(plant_config), source_file_sha256=file_sha(plant_config),
+                                source_sha256=digest(source), config_sha256=digest(cfg), view=view, root=str(plant)),
+                     u0=dict(source=str(u0_path), sha256=u0_sha256, path=str(plant/'A_checkpoint_000.pt')),
+                     rule=dict(strategy=RULE_STRATEGY, rule_sha256=RULE_SHA256),
+                     sealed=('F12: pre-run WAVE receipts are not opened, tabulated or summarised by anyone until clean5a '
+                             'A/B/R are bound and the claim-3a seal opens; this launcher publishes no pre-run table'),
+                     reuse=('the main run reuses each pre-run wave unchanged when the clean5a plant view and common u0 '
+                            'equal this plan (prerun_compat); an interrupted pre-run wave is never replayed')),
+                'receipt_sha256')
+    publish(final_root/PRERUN_FILE, plan)
+    return plan
+
+
+def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRERUN_ARMS, chunk=None):
+    """Pre-run NATIVE, U0 and RULE on panel v2 (3a) and the 3c panel: waves only, no analysis. Dispatched
+    in chunks of ``chunk`` episodes (default 2 x workers) published as WAVE_<wave>__<a>-<b>.json; the
+    ``STOP_PRERUN`` file stops cleanly after the chunk in flight; a later call (any host with the same
+    absolute paths) resumes at the first unpublished episode. Returns receipt shas and counts only
+    (results stay sealed, F12)."""
+    final_root = Path(final_root)
+    plan = prerun_plan(final_root)
+    if plan is None:
+        raise Blocked('PRERUN_PLAN.json missing: prerun-register first')
+    if (plan['panel_sha256'], plan['panel_3c_sha256']) != (panel['panel_sha256'], panel_3c['panel_sha256']):
+        raise Blocked('PRERUN_PLAN binds other panels')
+    if not set(arms) <= set(PRERUN_ARMS):
+        raise Blocked(f'pre-run arms are {PRERUN_ARMS}')
+    pre = runtime if isinstance(runtime, PrerunRuntime) else PrerunRuntime(runtime, final_root)
+    status = Status(final_root)
+    current = 'PRERUN'
+    try:
+        status(current, 'RUNNING', dict(arms=list(arms), workers=workers))
+        plant = final_root/PRERUN_PLANT
+        cfg = pre.config(plant)
+        runner = pre.runner_status()
+        if pre.physics and not os.environ.get('COOPMWM_MAP_SPEC'):
+            raise Blocked('set COOPMWM_MAP_SPEC to the staged wz3to2 MAP_SPEC.json (N1 process map) before physics')
+        if not runner['ok'] or ('NATIVE' in arms and not runner['native']) or ('RULE' in arms and not runner.get('rule')):
+            raise Blocked(f'runner cannot run the pre-run arms: {runner}')
+        if pre.physics:
+            map_check(bind_map_api(None), panel)
+        u0 = mappo_binding(final_root, 'U0')
+        if {'U0', 'RULE'} & set(arms):
+            if u0 is None:
+                raise Blocked('bind-mappo --arm U0 (frozen d9042cc5 + --residual-path <final_root>/prerun_plant/'
+                              'A_checkpoint_000.pt) before the pre-run')
+            if (u0['residual_path'], u0['residual_sha256']) != (plan['u0']['path'], plan['u0']['sha256']):
+                raise Blocked('the U0 binding residual is not the pre-run u0 copy')
+        waves = []
+        for arm in arms:
+            waves.append((arm, 'episode', episode_specs(arm, panel, cfg, plant, 'mappo_frozen', None, u0)))
+        for arm in arms:
+            waves.append((f'C3_{arm}', 'episode', episode_specs(arm, panel_3c, cfg, plant, 'mappo_frozen', None, u0)))
+        chunk = int(chunk or 2*workers)
+        if chunk < 1:
+            raise Blocked('chunk must be >= 1')
+        stopped, rounds = False, 0
+
+        def coverage():
+            return {name: (published(final_root, name, specs, check_episode)[2], len(specs)) for name, _, specs in waves}
+        while True:
+            cov = coverage()
+            pending = [(name, kind, specs) for name, kind, specs in waves if cov[name][0] < cov[name][1]]
+            if not pending:
+                break
+            if (final_root/STOP_PRERUN).exists():
+                stopped = True
+                break
+            budget, limits, selection = chunk, {}, []
+            for name, kind, specs in pending:
+                take = min(cov[name][1]-cov[name][0], budget)
+                selection.append((name, kind, specs))
+                limits[name] = take
+                budget -= take
+                if budget == 0:
+                    break
+            run_waves(selection, root=plant, final_root=final_root, cfg=cfg, runtime=pre, workers=workers,
+                      base='mappo_frozen', chunked=True, limit=limits)
+            rounds += 1
+            status(current, 'CHUNK', dict(round=rounds, published={k: v[0] for k, v in coverage().items()}))
+        cov = coverage()
+        receipts = {name: published(final_root, name, specs, check_episode)[1] for name, _, specs in waves}
+        out = dict(schema=SCHEMA+'.prerun_done', status='STOPPED' if stopped else 'PASS', sealed=True,
+                   prerun_plan_sha256=plan['receipt_sha256'], chunk=chunk, rounds=rounds,
+                   coverage={k: dict(published=v[0], registered=v[1]) for k, v in cov.items()},
+                   receipts={k: v['receipt_sha256'] for k, v in receipts.items()},
+                   charged_sim_s=sum(r['sim_s'] for r in fe.ledger_rows(final_root)), cap_sim_s=plan['cap_sim_s'],
+                   resume=None if not stopped else ('remove STOP_PRERUN (or copy the whole final root to the same '
+                                                    'absolute path on the other host) and run prerun-run again'))
+        status(current, out['status'], out)
+        return out
+    except BaseException as error:
+        status(current, 'FAILED', dict(error=repr(error), traceback=traceback.format_exc()))
+        raise
+
+
+def prerun_compat(final_root, cfg, runtime):
+    """The clean run may reuse the pre-run waves only if its plant view and common u0 equal the
+    PRERUN_PLAN (zero physics; checked at register and again before the episodes)."""
+    plan = prerun_plan(final_root)
+    if plan is None:
+        return None
+    view = runtime.plant_view(cfg)
+    differs = sorted(k for k in PLANT_KEYS if view.get(k) != plan['plant']['view'].get(k))
+    if differs:
+        raise Blocked(f'clean run plant differs from the pre-run plant on {differs}: the pre-run waves are not reusable')
+    if cfg.get('common_checkpoint_sha256') != plan['u0']['sha256']:
+        raise Blocked('clean run common u0 differs from the pre-run u0')
+    if plan['rule']['rule_sha256'] != RULE_SHA256:
+        raise Blocked('pre-run RULE digest differs from this launcher')
+    source = dict(cfg)
+    return dict(status='compatible', prerun_plan_sha256=plan['receipt_sha256'], plant_keys=list(PLANT_KEYS),
+                same_config_except_run_root=digest(dict(source, run_root=plan['plant']['root'])) == plan['plant']['config_sha256'])
+
+
 def register(*, root, final_root, runtime, panel, base=None):
     """Zero physics: the output root and its sealed run plan (binding + budget check included)."""
     root, final_root = Path(root), Path(final_root)
     guard(final_root)
-    if final_root.exists():
-        raise Blocked('final root exists; never overwrite')
+    if (final_root/'RUN_PLAN.json').exists():
+        raise Blocked('RUN_PLAN.json exists; never overwrite')
+    if final_root.exists() and prerun_plan(final_root) is None:
+        raise Blocked('final root exists and is not a registered pre-run root; never overwrite')
     cfg = runtime.config(root)
     binding = clean4_binding(cfg, panel, declared_base=base)
     exposure_check(root, cfg)
-    budget = budget_check(root, cfg, binding['base'])
-    final_root.mkdir(parents=True)
+    budget = budget_check(root, cfg, binding['base'], final_root=final_root)
+    compat = prerun_compat(final_root, cfg, runtime) if final_root.exists() else None
+    final_root.mkdir(parents=True, exist_ok=True)
     plan = seal(dict(schema=SCHEMA+'.plan', created=datetime.now(timezone.utc).isoformat(), clean4_root=str(root),
                      config_sha256=digest(cfg), binding=binding, panel_sha256=panel['panel_sha256'],
                      contract_sha256=digest(panel['contract']), budget=budget, quote=quote(binding['base']),
+                     prerun=compat,
                      amendments=[dict(rule=MAPPO_AUTHORITY, allocation=ALLOCATION_AUTHORITY, arms=list(EPISODE_ARMS),
                                       base_alias=alias_of(binding['base']),
                                       quote_note='7 distinct arms for either base + 8-world decision branches + F11 '
@@ -1714,8 +2125,8 @@ def fake_replicated(root):
             records=records, dry_run=True, **analysis), 'receipt_sha256'))
 
 
-def bind_fake_mappo(out, final_root, arm='MAPPO_SPEED'):
-    """Dry run only: a stand-in executor file bound as a retrained comparator."""
+def bind_fake_mappo(out, final_root, arm='MAPPO_SPEED', residual=None):
+    """Dry run only: a stand-in executor file bound as a retrained comparator (U0: + the u0 residual)."""
     import torch
     fake = Path(out)/f'fake_{arm.lower()}_wz3to2.pt'
     if not fake.exists():
@@ -1726,12 +2137,17 @@ def bind_fake_mappo(out, final_root, arm='MAPPO_SPEED'):
                         lane_control='native' if arm == 'MAPPO_SPEED' else 'policy', lane_head=arm == 'MAPPO_LANE',
                         policy=policy, note='dry-run stand-in, not a MAPPO export'), fake)
     kind = next(iter(MAPPO_KINDS[arm]))
+    extra = {}
+    if arm == 'U0':
+        extra = dict(residual_path=str(residual), residual_sha256=file_sha(residual))
     return bind_mappo(final_root=final_root, path=fake, sha256=file_sha(fake), kind=kind, arm=arm,
-                      authority='DRY RUN ONLY - not N7', check=dict(status='dry run'), dry_run=arm in REQUIRED_SHA)
+                      authority='DRY RUN ONLY - not N7', check=dict(status='dry run'), dry_run=arm in REQUIRED_SHA,
+                      **extra)
 
 
-def dry_run(*, out, panel, base='mappo_frozen', replicated=True):
-    """Full launcher path with fake physics on the REAL registered panel. Writes only under ``out``."""
+def dry_run(*, out, panel, base='mappo_frozen', replicated=True, prerun=True):
+    """Full launcher path with fake physics on the REAL registered panels: the sealed pre-run of
+    NATIVE/U0/RULE (3a + 3c) first, then the main run reusing it. Writes only under ``out``."""
     out = guard(Path(out))
     if out.exists() and any(out.iterdir()):
         raise Blocked('dry-run output directory must be empty')
@@ -1741,22 +2157,33 @@ def dry_run(*, out, panel, base='mappo_frozen', replicated=True):
         fake_replicated(root)
     runtime = FakeRuntime()
     final_root = out/'final_root'
+    panel_3c = load_panel_3c()
+    pre = None
+    if prerun:
+        prerun_register(final_root=final_root, plant_config=root/'CONFIG.json', u0_path=root/'A_checkpoint_000.pt',
+                        u0_sha256=cfg['common_checkpoint_sha256'], runtime=runtime, panel=panel, panel_3c=panel_3c,
+                        authority='DRY RUN ONLY')
+        bind_fake_mappo(out, final_root, 'U0', residual=final_root/PRERUN_PLANT/'A_checkpoint_000.pt')
+        pre = prerun_execute(final_root=final_root, runtime=runtime, panel=panel, panel_3c=panel_3c, workers=16)
     plan = register(root=root, final_root=final_root, runtime=runtime, panel=panel)
     for arm in BOUND_ARMS:
-        bind_fake_mappo(out, final_root, arm)
-    value = execute(root=root, final_root=final_root, runtime=runtime, panel=panel, poll=0, dry_run=True)
+        if arm != 'U0' or not prerun:
+            bind_fake_mappo(out, final_root, arm, residual=root/'A_checkpoint_000.pt')
+    value = execute(root=root, final_root=final_root, runtime=runtime, panel=panel, panel_3c=panel_3c,
+                    poll=0, dry_run=True)
     charged = sum(r['sim_s'] for r in fe.ledger_rows(root) if r['phase'] == PHASE)
     return dict(status='PASS', new_sim_s=0, physics=False, out=str(out), final_root=str(final_root), base=base,
                 target='clean5a (dry)',
                 analyses={k: v['analysis_sha256'] for k, v in value.items()},
                 present={k: v.get('present') for k, v in value.items()}, calls=runtime.calls,
-                fake_v2v_final_sim_s=charged, quote=plan['quote'],
+                fake_v2v_final_sim_s=charged, quote=plan['quote'], prerun=pre,
+                fake_prerun_sim_s=sum(r['sim_s'] for r in fe.ledger_rows(final_root)),
                 tables=sorted(str(x) for x in final_root.glob('CLAIM3*_TABLES.md')))
 
 
 # ---------------------------------------------------------------- CLI
 
-def _analyse_published(root, final_root, runtime, panel):
+def _analyse_published(root, final_root, runtime, panel, panel_3c=None):
     """Zero physics: re-tabulate every analysis whose arms are published (3a; each bound 3b)."""
     cfg = runtime.config(root)
     plan = run_plan(final_root)
@@ -1767,16 +2194,18 @@ def _analyse_published(root, final_root, runtime, panel):
     bindings = state['bound']
     episodes, sources, missing = {}, {}, {}
     for arm in EPISODE_ARMS:
-        path = Path(final_root)/f'WAVE_{arm}.json'
-        if not path.is_file():
+        if not (Path(final_root)/f'WAVE_{arm}.json').is_file() and not _chunk_files(final_root, arm):
             missing[arm] = 'no published wave receipt'
             continue
         if arm in BOUND_ARMS and arm not in bindings:
             raise Blocked(f'{arm} wave published without a binding')
-        specs = episode_specs(arm, panel, cfg, root, base, bindings.get(arm))
-        value = verify(read(path), 'receipt_sha256', path.name)
-        episodes[arm] = {r['world_id']: check_episode(r, s) for r, s in zip(value['records'], specs)}
-        sources[arm] = dict(source=str(path), receipt_sha256=value['receipt_sha256'])
+        specs = episode_specs(arm, panel, cfg, root, base, bindings.get(arm), bindings.get('U0'))
+        records, source, covered = published(final_root, arm, specs, check_episode)
+        if covered < len(specs):
+            missing[arm] = f'wave incomplete ({covered}/{len(specs)} published)'
+            continue
+        episodes[arm] = {r['world_id']: r for r in records}
+        sources[arm] = source
     if any(a in missing for a in ARMS):
         raise Blocked(f'A/B/R waves are not all published: {missing}')
     decisions = {}
@@ -1797,6 +2226,19 @@ def _analyse_published(root, final_root, runtime, panel):
                               sources=sources, missing=dict(missing, **{a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS}),
                               comparators={a: b for a, b in bindings.items() if a == 'U0'}, scope='claim3a',
                               stem='CLAIM3A_TABLES'))
+    if panel_3c is not None and all((Path(final_root)/f'WAVE_C3_{a}.json').is_file() for a in ('B', 'R')):
+        e3c, s3c = {}, {}
+        for arm in CLAIM3C_ARMS:
+            if (Path(final_root)/f'WAVE_C3_{arm}.json').is_file() or _chunk_files(final_root, f'C3_{arm}'):
+                specs = episode_specs(arm, panel_3c, cfg, root, base, bindings.get(arm), bindings.get('U0'))
+                records, source, covered = published(final_root, f'C3_{arm}', specs, check_episode)
+                if covered == len(specs):
+                    e3c[arm] = {r['world_id']: r for r in records}
+                    s3c[f'C3_{arm}'] = source
+        out['claim3c'] = tables(root=root, final_root=final_root, panel=panel_3c, base=base, episodes=e3c, decisions=None,
+                                sources=s3c, missing={a: 'no published wave receipt' for a in CLAIM3C_ARMS if a not in e3c},
+                                comparators={a: b for a, b in bindings.items() if a == 'U0'}, scope='claim3c',
+                                stem='CLAIM3C_TABLES')
     for arm in COMPARATOR_ARMS:
         if arm in episodes:
             out[f'claim3b_{arm}'] = tables(
@@ -1810,7 +2252,8 @@ def _analyse_published(root, final_root, runtime, panel):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument('command', choices=('register-panel', 'verify-panel', 'quote', 'check', 'register', 'bind-arms',
+    p.add_argument('command', choices=('register-panel', 'register-panel-3c', 'verify-panel', 'quote', 'check', 'register',
+                                       'bind-arms', 'prerun-register', 'prerun-run',
                                        'bind-mappo', 'declare-unavailable', 'run', 'analyse', 'dry-run'))
     p.add_argument('--root', default=ROOT)
     p.add_argument('--final-root', default=FINAL_ROOT)
@@ -1833,6 +2276,14 @@ def main(argv=None):
     p.add_argument('--mappo-kind', choices=sorted({k for v in MAPPO_KINDS.values() for k in v}),
                    help='bind-mappo: retrained_wz3to2 | u0_transferred_not_retrained (MAPPO_SPEED), lane_retrained_wz3to2 (MAPPO_LANE)')
     p.add_argument('--reason', help='declare-unavailable: why the comparator cannot be evaluated')
+    p.add_argument('--residual-path', help='bind-mappo --arm U0: the common u0 A_checkpoint_000.pt (pre-run: '
+                                           '<final_root>/prerun_plant/A_checkpoint_000.pt)')
+    p.add_argument('--residual-sha256', help='bind-mappo --arm U0: its sha256 (= clean5a common_checkpoint_sha256)')
+    p.add_argument('--plant-config', help='prerun-register: the clean5a CONFIG.json (plant source for NATIVE/U0/RULE)')
+    p.add_argument('--u0-path', help='prerun-register: the common u0 checkpoint (A_checkpoint_000.pt)')
+    p.add_argument('--u0-sha256', help='prerun-register: its sha256')
+    p.add_argument('--chunk', type=int, help='prerun-run: episodes per dispatch (default 2 x workers); STOP_PRERUN '
+                                             'in the final root stops after the chunk in flight')
     p.add_argument('--authority', help='bind-mappo: verbatim message/decision (e.g. N7 hand-off or MAIN fallback decision)')
     p.add_argument('--comparator-wait', type=int, default=7*86400,
                    help='run: seconds to wait (after the u24 gate) for every comparator to be bound or declared')
@@ -1844,6 +2295,13 @@ def main(argv=None):
         if path.exists():
             p.error('panel file exists; never overwrite a registration')
         value = build_panel(a.map_spec or default_spec_path(), datetime.now(timezone.utc).isoformat())
+        publish(path, value)
+        result = dict(panel_sha256=value['panel_sha256'], file_sha256=file_sha(path), path=str(path))
+    elif a.command == 'register-panel-3c':
+        path = guard(PANEL_3C_FILE)
+        if path.exists():
+            p.error('claim-3c panel exists; never overwrite a registration')
+        value = build_panel_3c(a.map_spec or default_spec_path(), datetime.now(timezone.utc).isoformat())
         publish(path, value)
         result = dict(panel_sha256=value['panel_sha256'], file_sha256=file_sha(path), path=str(path))
     elif a.command == 'verify-panel':
@@ -1870,13 +2328,28 @@ def main(argv=None):
             except ImportError as error:
                 check_ = dict(status='not run', reason=repr(error))
             result = bind_mappo(final_root=a.final_root, path=a.mappo_path, sha256=a.mappo_sha256, kind=a.mappo_kind,
-                                arm=a.arm, authority=a.authority, check=check_)
+                                arm=a.arm, authority=a.authority, check=check_, residual_path=a.residual_path,
+                                residual_sha256=a.residual_sha256)
+        elif a.command == 'prerun-register':
+            result = prerun_register(final_root=a.final_root, plant_config=a.plant_config, u0_path=a.u0_path,
+                                     u0_sha256=a.u0_sha256, runtime=Runtime(a.runner), panel=panel,
+                                     panel_3c=load_panel_3c(), authority=a.authority or PRERUN_AUTHORITY)
+        elif a.command == 'prerun-run':
+            import fcntl
+            if a.workers > 16 and os.environ.get('NM_PRERUN_HOST') == 'cpuV':
+                p.error('cpuV pre-run: <= 16 workers (MAIN)')
+            with (Path(a.final_root)/'OWNER.lock').open('a') as lock:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                publish(Path(a.final_root)/'LAUNCHER.json', dict(pid=os.getpid(), argv=sys.argv, unix=time.time()),
+                        replace=True)
+                result = prerun_execute(final_root=a.final_root, runtime=Runtime(a.runner), panel=panel,
+                                        panel_3c=load_panel_3c(), workers=a.workers, chunk=a.chunk)
         elif a.command == 'bind-arms':
             result = bind_arms(final_root=a.final_root, shas=dict(A=a.a_sha, B=a.b_sha, R=a.r_sha), authority=a.authority)
         elif a.command == 'declare-unavailable':
             result = declare_unavailable(final_root=a.final_root, arm=a.arm, authority=a.authority, reason=a.reason)
         elif a.command == 'analyse':
-            value = _analyse_published(a.root, a.final_root, Runtime(a.runner), panel)
+            value = _analyse_published(a.root, a.final_root, Runtime(a.runner), panel, load_panel_3c())
             result = {k: dict(analysis_sha256=v['analysis_sha256'], present=v.get('present'), missing=v.get('missing'))
                       for k, v in value.items()}
         else:
@@ -1888,6 +2361,7 @@ def main(argv=None):
                 publish(Path(a.final_root)/'LAUNCHER.json', dict(pid=os.getpid(), argv=sys.argv, unix=time.time()),
                         replace=True)
                 value = execute(root=a.root, final_root=a.final_root, runtime=Runtime(a.runner), panel=panel,
+                                panel_3c=load_panel_3c(),
                                 allow_missing=tuple(x for x in a.allow_missing.split(',') if x), workers=a.workers,
                                 poll=a.poll, replicated_timeout=a.replicated_wait, comparator_timeout=a.comparator_wait,
                                 map_module=a.map_api)

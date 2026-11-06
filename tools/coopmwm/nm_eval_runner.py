@@ -19,6 +19,12 @@ SAME controller wrapper as the clean4 training episodes (``track2_backend.episod
   (held-out worlds), noise seed = world seed, no training-only telemetry/health/abort-on-hard-event
   flags (events are counted, not aborted - the registered clean3 final-eval convention).
 
+RULE (MAIN registration 2026-11-06, pre-results): the U0 episode with the EXACT S-REGIMEU0 rule
+(``tools.coopmwm.regimeu0.RuleHook('wall_h_solo2')``, byte-identical to c4/imitreplay) wrapped on the
+controller after the U0 hook: one CAV in SUMO lane 2 holds at 15 m/s for 90 s (cooldown = hold),
+through the plant's single writer and the G5 lane path; the rule source digest (``rule_digest``) is
+checked against the spec and recorded.
+
 Comparators (MAIN F6 + clean5a registration): U0 = the transferred MAPPO u0: the bound frozen
 d9042cc5 executor (path + sha256, re-verified) with the run's common u0 (zero residual). MAPPO_SPEED = the bound speed-only
 executor (``bind-mappo``: path + sha256, re-verified here) replacing the plant's frozen executor;
@@ -56,6 +62,8 @@ WARMUP_S = 300
 IDENTITY = ('arm', 'world_id', 'world', 'checkpoint', 'window', 'panel_sha256')
 LOG_LIMIT = 200
 MAPPO_LANE = True
+RULE = True
+RULE_STRATEGIES = ('wall_h_solo2',)
 LANE_GRID = (-1, 0, 1, 2)
 LANE_CHANGE_MODE = 513
 FROZEN_MAPPO_SHA = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca'
@@ -130,6 +138,33 @@ def comparator_setup(expected_sha):
         yield shim
     finally:
         lp.setup = original
+
+
+# ---------------------------------------------------------------- RULE (exact S-REGIMEU0)
+
+RULE_CONSTANTS = ('X_B', 'S_OFF', 'ZONE_S', 'WALL_SPREAD', 'RELEASE_S', 'WALL_H', 'STRATEGIES')
+
+
+def rule_digest(module=None):
+    """sha256 of the S-REGIMEU0 rule as executed: source of sumo_lane/pick_wall/RuleHook plus the
+    Recorder base and every rule constant (a file edit elsewhere in regimeu0.py does not move it)."""
+    import inspect
+    if module is None:
+        from . import regimeu0 as module
+    parts = [inspect.getsource(getattr(module, n)) for n in ('sumo_lane', 'pick_wall', 'RuleHook')]
+    parts.append(inspect.getsource(module.ir.Recorder))
+    parts.append(json.dumps({n: getattr(module, n) for n in RULE_CONSTANTS}, sort_keys=True, default=list))
+    return hashlib.sha256('\n'.join(parts).encode()).hexdigest()
+
+
+def rule_hook(strategy, expected_sha256):
+    from . import regimeu0
+    if strategy not in RULE_STRATEGIES:
+        raise ValueError(f'unregistered RULE strategy {strategy!r}')
+    loaded = rule_digest(regimeu0)
+    if loaded != expected_sha256:
+        raise ValueError('S-REGIMEU0 rule differs from its registration (rule_sha256)')
+    return regimeu0.RuleHook(strategy), loaded
 
 
 # ---------------------------------------------------------------- policies (training parity)
@@ -231,16 +266,32 @@ def _policy_episode(spec, cfg, work):
     native = production.backend_config(cfg)
     ck = spec['checkpoint']
     arm, update = ck['arm'], int(ck['update'])
-    path = Path(native['run_root'])/f'{arm}_checkpoint_{update:03}.pt'
-    if Path(ck['path']) != path or rc.sha(path) != ck['file_sha256']:
-        raise ValueError('evaluation checkpoint changed after registration')
-    executor, loaded = native['checkpoint'], None
-    if spec['arm'] in ('U0', 'MAPPO_SPEED'):
-        kind = 'u0' if spec['arm'] == 'U0' else 'mappo_comparator'
+    executor, loaded, rule = native['checkpoint'], None, None
+    if spec['arm'] in ('U0', 'RULE', 'MAPPO_SPEED'):
+        kind = dict(U0='u0', RULE='rule', MAPPO_SPEED='mappo_comparator')[spec['arm']]
         if ck.get('kind') != kind or (arm, update) != ('A', 0):
-            raise ValueError(f'{spec["arm"]} arm = its bound executor + the common u0 (zero residual)')
-        executor, loaded = bound_executor(ck)        # U0: the frozen d9042cc5 export (pin unchanged)
+            raise ValueError(f'{spec["arm"]} arm = its bound executor + the bound common u0 (zero residual)')
+        # the bound zero-residual u0 (A_checkpoint_000.pt, sha re-verified), loaded by the SAME
+        # production loaders with run_root = its directory (pre-run plant root or the clean run root)
+        path = Path(ck['path'])
+        if path.name != 'A_checkpoint_000.pt' or rc.sha(path) != ck['file_sha256']:
+            raise ValueError('bound u0 residual changed after registration')
+        native = dict(native, run_root=str(path.parent))
+        executor, loaded = bound_executor(ck)        # U0/RULE: the frozen d9042cc5 export (pin unchanged)
+        if spec['arm'] == 'RULE':
+            rule = rule_hook(ck['rule'], ck['rule_sha256'])
+    else:
+        path = Path(native['run_root'])/f'{arm}_checkpoint_{update:03}.pt'
+        if Path(ck['path']) != path or rc.sha(path) != ck['file_sha256']:
+            raise ValueError('evaluation checkpoint changed after registration')
     weights, loader, hook, log = eval_components(native, spec)
+    if rule is not None:
+        rule_state, base_hook = rule[0], hook
+
+        def hook(controller, job, prefixes):           # U0 hook first, then the S-REGIMEU0 rule (as regimeu0.worker)
+            base_hook(controller, job, prefixes)
+            rule_state(controller, job, prefixes)
+        hook.after_step = base_hook.after_step
     job = dict(id=Path(work).name, path=str(work), world=world, role=ROLE, arm=arm, weights=weights,
                runtime=native['runtime'], checkpoint=executor, noise_seed=spec['noise_seed'],
                deterministic=True, guided=False, v2v=True, sim_s=HORIZON_S, stop=HORIZON_S,
@@ -259,6 +310,11 @@ def _policy_episode(spec, cfg, work):
         extra['decision'] = log.first
     if loaded is not None:
         extra['executor_sha256_loaded'] = loaded
+    if rule is not None:
+        h = rule[0]
+        extra['rule_sha256_loaded'] = rule[1]
+        extra['rule'] = dict(strategy=h.strategy, activations=len(h.acts), issued=len(h.issued),
+                             lane_held_steps=h.lane_held, members=sum(len(a['members']) for a in h.acts))
     return _record(spec, result['totals']['team_delay_vs'], safety(result, Path(work)/'observable.jsonl.gz'), **extra)
 
 
@@ -476,7 +532,7 @@ def episode(spec, cfg, work):
         return _native_episode(spec, cfg, work)
     if spec['arm'] == 'MAPPO_LANE':
         return _mappo_lane_episode(spec, cfg, work)
-    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'MAPPO_SPEED'):
+    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'MAPPO_SPEED'):
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')
     return _policy_episode(spec, cfg, work)
 

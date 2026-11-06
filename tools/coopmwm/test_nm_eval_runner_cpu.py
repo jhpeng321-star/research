@@ -103,8 +103,8 @@ def fake_plant(calls, moves_at):
 def test_runner_declares_the_contract():
     assert runner.MAP == 'wz3to2' and runner.NATIVE is True and callable(runner.episode)
     assert not hasattr(runner, 'decision_branch')            # per-decision branches not built: never faked
-    assert nm.Runtime().runner_status() == dict(ok=True, native=True, decisions=False, lane=True, reason=None)
-    assert runner.MAPPO_LANE is True
+    assert nm.Runtime().runner_status() == dict(ok=True, native=True, decisions=False, lane=True, rule=True, reason=None)
+    assert runner.MAPPO_LANE is True and runner.RULE is True and runner.rule_digest() == nm.RULE_SHA256
 
 
 def test_policy_episode_runs_the_registered_job_and_logs_decisions(env, monkeypatch):
@@ -150,7 +150,8 @@ def test_mappo_arm_swaps_only_the_executor_and_reverifies_it(env, monkeypatch, l
     final_root = env['tmp']/'dry'/'final_root'
     nm.register(root=env['root'], final_root=final_root, runtime=nm.FakeRuntime(), panel=env['panel'])
     binding = nm.bind_fake_mappo(env['tmp']/'dry', final_root, 'MAPPO_SPEED')
-    spec = nm.episode_specs('MAPPO_SPEED', env['panel'], env['cfg'], env['root'], 'mappo_u0', binding)[0]
+    u0 = nm.bind_fake_mappo(env['tmp']/'dry', final_root, 'U0', residual=env['root']/'A_checkpoint_000.pt')
+    spec = nm.episode_specs('MAPPO_SPEED', env['panel'], env['cfg'], env['root'], 'mappo_u0', binding, u0)[0]
     original_setup = leverprobe.setup
     record = runner.episode(spec, env['cfg'], env['tmp']/'work'/spec['job_id'])
     assert calls[-1]['checkpoint'] == binding['path'] and calls[-1]['weights'] == {'arm': 'A', 'update': 0}
@@ -381,3 +382,50 @@ def test_mappo_lane_episode_steers_cavs_only_through_the_env_lane_path(env, monk
         runner.cav_only(dict(is_cav=[True, False]), [[.1, .2]], [[0, -1]])
     with pytest.raises(ValueError, match='lane command for a non-CAV'):
         runner.cav_only(dict(is_cav=[True, False]), [[.1, float('nan')]], [[0, 1]])
+
+
+class RuleController(FakeController):
+    def apply(self, rows, commands, now):
+        return {}
+
+
+def test_rule_arm_runs_the_exact_s_regimeu0_rule_on_the_u0_episode(env, monkeypatch, leverprobe):
+    from tools.coopmwm import accel_plant, regimeu0
+    calls, applied = [], []
+    rows = [dict(vid=f'main.{lane}', is_cav=True, s_m=-1000.0+10*lane, v_mps=25.0, lane=lane) for lane in (0, 1, 2)]
+    rows.append(dict(vid='main.h', is_cav=False, s_m=-995.0, v_mps=20.0, lane=1))
+
+    def episode(job, *, controller_hook=None, policy_loader=None):
+        import tools.leverprobe.backend as lp
+        lp.setup('/home/ubuntu/e3final', job['checkpoint'])
+        calls.append(job)
+        policy_loader(job['weights'])
+        controller = RuleController()
+        controller_hook(controller, job, {})
+        commands = {r['vid']: 0.5 for r in rows if r['is_cav']}
+        for t in (300, 301, 391):
+            applied.append((t, controller.apply(rows, commands, t), dict(getattr(controller, 'g5_lane_targets', {}))))
+            controller_hook.after_step(t, rows)
+        return dict(totals=dict(team_delay_vs=50000.0, collisions=0, teleports=0, hard_brake=1))
+    monkeypatch.setattr(accel_plant, 'episode', episode)
+    final_root = env['tmp']/'dry'/'final_root'
+    nm.register(root=env['root'], final_root=final_root, runtime=nm.FakeRuntime(), panel=env['panel'])
+    u0 = nm.bind_fake_mappo(env['tmp']/'dry', final_root, 'U0', residual=env['root']/'A_checkpoint_000.pt')
+    spec = nm.episode_specs('RULE', env['panel'], env['cfg'], env['root'], 'mappo_u0', None, u0)[0]
+    record = runner.episode(spec, env['cfg'], env['tmp']/'work'/spec['job_id'])
+    job = calls[-1]
+    assert job['checkpoint'] == u0['path'] and job['weights'] == {'arm': 'A', 'update': 0} and job['arm'] == 'A'
+    assert env['built'][-1] == ('A', 0, 989600)                 # the U0 policy, built like the training A arm
+    # solo2: only the CAV in SUMO lane 2 (WM lane 0) holds: a = clip(15 - 25, -1.5, +1) = -1.5, lane kept
+    t, desired, lanes = applied[0]
+    assert desired == {'main.0': dict(requested_raw=-1.5, acceleration_residual=-2.0, regime_rule='wall_h_solo2')}
+    assert lanes == {'main.0': 0} and 'main.h' not in desired
+    assert applied[1][1]['main.0']['requested_raw'] == -1.5        # held while active
+    assert record['rule'] == dict(strategy='wall_h_solo2', activations=2, issued=3, lane_held_steps=3, members=2)
+    assert record['rule_sha256_loaded'] == nm.RULE_SHA256 and record['executor_sha256_loaded'] == u0['sha256']
+    checked = nm.check_episode(record, spec)
+    assert checked['rule']['activations'] == 2 and 'decision_log' not in record
+    monkeypatch.setattr(regimeu0, 'WALL_H', dict(regimeu0.WALL_H, v_w=16.0))  # any rule change is refused
+    with pytest.raises(ValueError, match='differs from its registration'):
+        runner.episode(spec, env['cfg'], env['tmp']/'work'/'tampered')
+    assert len(calls) == 1
