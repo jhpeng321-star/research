@@ -40,6 +40,10 @@
     {
       "sha": "4718f00041d71b9f81310c3c87d772975105d941",
       "subject": "C4 G1: renew CPU readiness after review r0 fix"
+    },
+    {
+      "sha": "a9207931",
+      "subject": "C4 G1: record independent fix acceptance and resume receipts"
     }
   ],
   "files": [
@@ -145,6 +149,23 @@
     "completed_tests_repeated": false,
     "new_jobs_or_dispatches": false,
     "preserved_prior_readiness": "G1_READY.blocked0_1793894069.json"
+  },
+  "latest_resume_reconciliation": {
+    "date": "2026-11-06",
+    "initial_head": "a9207931",
+    "initial_worktree_status": "clean on c4/grp-certify",
+    "specification_read": "E:/agent-work/_sol/tracks_spec.md",
+    "receipts_read": ["G1_READY.json", "REVIEW_G1_r0.md", "G1_ACCEPTED.json", "REVIEW_G1_r1.md", "_out/g1_fix_results.xml"],
+    "r0_blockers": 1,
+    "unresolved_blockers": 0,
+    "implementation_changes_required": false,
+    "reviewed_source_unchanged": true,
+    "source_comparison": "git diff --exit-code 4718f00041d71b9f81310c3c87d772975105d941 HEAD -- tools/coopmwm/executable_labels.py tools/coopmwm/test_executable_labels_cpu.py tools/coopmwm/bank_breadth.py tools/coopmwm/launch_production.py G1_CERTIFICATION.md G1_BUDGET.json",
+    "verified_junit_counts": {"tests": 250, "passed": 249, "skipped": 1, "failures": 0, "errors": 0},
+    "independent_review_verdict": "PASS",
+    "completed_tests_repeated": false,
+    "new_jobs_or_dispatches": false,
+    "result": "Previously completed fix, regression coverage, CPU test results, and independent acceptance remain applicable; readiness refreshed without duplicating completed work."
   },
   "open_issues": [],
   "later_authorized_handoff": [
