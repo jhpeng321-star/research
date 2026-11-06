@@ -72,6 +72,10 @@ def config_from_dict(cfg: Mapping) -> MappoConfig:
 
 def build_trainer(cfg: Mapping, *, workers: int, out_dir: Path | str, config_path: str = "",
                   smoke: bool = False) -> MappoTrainer:
+    binding = None
+    if "map" in cfg:            # non-default map (mapbind.py); absent -> unchanged behaviour
+        from .mapbind import apply_map
+        cfg, binding = apply_map(cfg)
     env_section = dict(cfg.get("env", {}))
     weights = RewardWeights(**dict(cfg.get("reward_weights", {})))
     env_name = env_section.get("name", "fake")
@@ -98,6 +102,8 @@ def build_trainer(cfg: Mapping, *, workers: int, out_dir: Path | str, config_pat
             "group_encoder": "wms.control.policy.RsuGroupEncoder",
             "critic": "wms.control.policy.TeamCritic",
             "reward": "wms.control.reward.team_reward (per physics step, summed per control step)"}
+    if binding is not None:
+        meta["map"] = binding.record()
     return MappoTrainer(out_dir=out_dir, config=config_from_dict(cfg), policy=policy,
                         group_encoder=encoder, critic=critic, env_spec=env_spec,
                         weights=weights, meta=meta, workers=workers)
