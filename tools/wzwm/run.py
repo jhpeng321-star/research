@@ -131,6 +131,107 @@ def split_by_arm(src: str, out_root: Path) -> list[tuple[str, str]]:
     return out
 
 
+# ------------------------------------------------------------------ pack (WM-B shards -> C4 sources) ---
+SHARD_SCHEMA = "wzwmdata.shard.v1"
+
+
+def shard_episodes(shard_paths, *, arms=None, keep_canary=False) -> tuple[dict, dict, list]:
+    """``({(seed, arm): entry}, {seed: split}, shard shas)`` over WM-B shards (later shards win)."""
+    eps, split_of, shas = {}, {}, []
+    for sp in shard_paths:
+        doc = read(sp)
+        if doc.get("schema") != SHARD_SCHEMA or doc.get("map") != "wz3to2":
+            raise ValueError(f"{sp}: not a wz3to2 {SHARD_SCHEMA} shard")
+        shas.append({"path": str(sp), "sha256": sha(sp), "shard_sha256": doc.get("shard_sha256")})
+        for e in doc["episodes"]:
+            if e.get("canary") and not keep_canary:
+                continue
+            if arms and e["arm_tag"] not in arms:
+                continue
+            guard.check_path(e["episode_dir"])
+            seed = int(e["seed"])
+            if split_of.setdefault(seed, e["split"]) != e["split"]:
+                raise worlds.WorldError(f"seed {seed}: split differs between arms/shards")
+            eps[(seed, e["arm_tag"])] = e
+    worlds.check_worlds(sorted(split_of))
+    if not any(v == "val" for v in split_of.values()) or not any(v == "train" for v in split_of.values()):
+        raise worlds.WorldError("shards need both train and val worlds")
+    return eps, split_of, shas
+
+
+def apply_roles(src: Path, split_of: dict, note: str) -> dict:
+    """Set every entry's ``split_role`` from the registered shard split (by seed); the converter's own
+    manifest is kept beside it as ``C4_EPISODES_MANIFEST.converter.json``."""
+    mpath = src / MANIFEST_NAME
+    doc = read(mpath)
+    keep = src / "C4_EPISODES_MANIFEST.converter.json"
+    if not keep.exists():
+        keep.write_text(mpath.read_text(encoding="utf-8"), encoding="utf-8")
+    for e in doc["episodes"]:
+        e["split_role"] = "val" if split_of[int(e["seed"])] == "val" else "train"
+    doc.update(n_train=sum(e["split_role"] == "train" for e in doc["episodes"]),
+               n_val=sum(e["split_role"] == "val" for e in doc["episodes"]),
+               val_frac=None, split_seed=None, split_rule=note)
+    write(mpath, doc)
+    return doc
+
+
+def pack(args) -> dict:
+    out = Path(guard.check_path(args.out))
+    if out.exists() and any(out.iterdir()):
+        raise FileExistsError(f"{out} is not empty")
+    out.mkdir(parents=True, exist_ok=True)
+    eps, split_of, shas = shard_episodes(args.shard, arms=set(args.arms.split(",")) if args.arms else None,
+                                         keep_canary=args.keep_canary)
+    by_arm: dict[str, list] = {}
+    for (seed, arm), e in sorted(eps.items()):
+        by_arm.setdefault(arm, []).append(e)
+    jobs = []
+    for arm, items in sorted(by_arm.items()):
+        n = max(1, math.ceil(len(items) / max(1, args.chunks)))
+        for ci in range(0, len(items), n):
+            src = out / f"src_{arm}_{ci // n:02d}"
+            cmd = [args.python or sys.executable, "-B", "-m", "wms.data.c4_episodes", "--episodes",
+                   *[e["episode_dir"] for e in items[ci:ci + n]], "--out", str(src), "--map-spec", args.map_spec]
+            jobs.append((f"wz_{arm}_{ci // n:02d}", src, cmd))
+    env = dict(os.environ, WMS_MAP_SPEC=args.map_spec, PYTHONPATH=os.pathsep.join([str(REPO / "src"), str(REPO)]),
+               OMP_NUM_THREADS="1", MKL_NUM_THREADS="1", PYTHONDONTWRITEBYTECODE="1")
+    running, results = [], {}
+    pending = list(jobs)
+    while pending or running:
+        while pending and len(running) < args.workers:
+            name, src, cmd = pending.pop(0)
+            log = open(out / f"{name}.log", "wb")
+            pre = ["nice", "-n", "10"] if os.name != "nt" else []
+            running.append((name, src, subprocess.Popen(pre + cmd, cwd=str(REPO), env=env, stdout=log,
+                                                         stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL), log))
+        time.sleep(2)
+        for item in list(running):
+            name, src, proc, log = item
+            if proc.poll() is not None:
+                log.close()
+                running.remove(item)
+                results[name] = proc.returncode
+    bad = {k: v for k, v in results.items() if v}
+    if bad:
+        raise RuntimeError(f"converter failures {bad} (logs in {out})")
+    note = ("WM-B registered split by seed (shard field 'split': VAL = per cell min "
+            "sha256('wzwmdata_val_v1:<seed>')), applied by tools.wzwm.run pack")
+    sources = []
+    for name, src, _ in jobs:
+        doc = apply_roles(src, split_of, note)
+        sources.append({"name": name, "path": str(src), "episodes": len(doc["episodes"]),
+                        "train_episodes": doc["n_train"], "val_episodes": doc["n_val"],
+                        "road_digest": doc.get("road_digest")})
+    body = {"schema": "wzwm.pack/1", "created": now(), "shards": shas, "map_spec": args.map_spec,
+            "sources": sources, "n_episodes": len(eps),
+            "train_seeds": sorted(s for s, v in split_of.items() if v == "train"),
+            "val_seeds": sorted(s for s, v in split_of.items() if v == "val"),
+            "arms": sorted(by_arm), "skipped_canary": not args.keep_canary}
+    write(out / "PACK.json", body)
+    return body
+
+
 # ------------------------------------------------------------------ config ---
 def load_cfg(config: str, overrides):
     from wms.config.load import load_train_config
@@ -182,7 +283,11 @@ def prepare(args) -> dict:
     if (root / "PLAN.json").exists():
         raise FileExistsError(f"{root}/PLAN.json exists (write-once; use a new root)")
     root.mkdir(parents=True, exist_ok=True)
-    specs = [plan.parse_source(s) for s in args.source]
+    specs = [plan.parse_source(s) for s in (args.source or [])]
+    if args.pack:
+        specs += [(s["name"], s["path"], None) for s in read(args.pack)["sources"]]
+    if not specs:
+        raise ValueError("bind sources with --source or --pack")
     if args.split_by_arm:
         if len(specs) != 1:
             raise ValueError("--split-by-arm takes exactly one --source")
@@ -537,7 +642,8 @@ def main(argv=None) -> int:
     pr.add_argument("--root", required=True)
     pr.add_argument("--init", default=WM2_GPUA)
     pr.add_argument("--init-sha", default=WM2_SHA256)
-    pr.add_argument("--source", action="append", required=True, help="NAME=PATH[@MIX] (repeat)")
+    pr.add_argument("--source", action="append", default=[], help="NAME=PATH[@MIX] (repeat)")
+    pr.add_argument("--pack", default=None, help="PACK.json of tools.wzwm.run pack (adds its sources)")
     pr.add_argument("--split-by-arm", action="store_true")
     pr.add_argument("--base", default=None)
     pr.add_argument("--paired", action="store_true", help="enable paired_diff if a source has pair keys")
@@ -551,6 +657,15 @@ def main(argv=None) -> int:
     pr.add_argument("--gpu-mem-fraction", type=float, default=0.5)
     pr.add_argument("--max-retries", type=int, default=2)
     pr.add_argument("--no-smoke", action="store_true")
+    pk = sub.add_parser("pack")
+    pk.add_argument("--shard", action="append", required=True)
+    pk.add_argument("--out", required=True)
+    pk.add_argument("--map-spec", required=True)
+    pk.add_argument("--arms", default="native,mappo_u0")
+    pk.add_argument("--chunks", type=int, default=3, help="converter processes per arm")
+    pk.add_argument("--workers", type=int, default=6)
+    pk.add_argument("--keep-canary", action="store_true")
+    pk.add_argument("--python", default=None)
     ini = sub.add_parser("init")
     ini.add_argument("--out-dir", required=True)
     ini.add_argument("--init", default=WM2_GPUA)
@@ -565,6 +680,10 @@ def main(argv=None) -> int:
     if args.cmd == "prepare":
         body = prepare(args)
         print(json.dumps({k: body[k] for k in ("root", "n_train_worlds", "n_val_worlds", "worlds_sha256")}))
+        return 0
+    if args.cmd == "pack":
+        body = pack(args)
+        print(json.dumps({k: body[k] for k in ("n_episodes", "arms")} | {"sources": len(body["sources"])}))
         return 0
     if args.cmd == "init":
         print(json.dumps(init_only(args), default=str))

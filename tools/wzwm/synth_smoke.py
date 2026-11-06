@@ -15,9 +15,17 @@ from pathlib import Path
 
 
 def build(out: Path, *, worlds: int = 6, k: int = 512, total_s: float = 230.0, warmup_s: float = 90.0,
-          first_seed: int = 989101) -> dict:
+          first_seed: int = 989301, map_spec: str | None = None) -> dict:
     from tests.wz.synth import WZ3TO2, write_episode
+    from wms.core.road import bind_road, current_road, load_road
     from wms.data.c4_episodes import convert
+
+    if map_spec:
+        bind_road(load_road(map_spec))
+    road = current_road()
+    if road.name != "wz3to2":
+        raise RuntimeError(f"bind the wz3to2 road first (process road {road.name!r})")
+    k = int(road.k_slots)
 
     import shutil
 
@@ -40,7 +48,7 @@ def build(out: Path, *, worlds: int = 6, k: int = 512, total_s: float = 230.0, w
         for s in seeds:
             write_episode(eroot, WZ3TO2, seed=s, demand=3200, penetration=0.2, policy=arm,
                           warmup_s=warmup_s, total_s=total_s, k=k,
-                          extra_meta={"map": "wz3to2", "synthetic": True})
+                          extra_meta={"map": "wz3to2", "road_digest": road.digest, "synthetic": True})
         doc = convert([eroot], out / f"src_{arm}", val_frac=0.34, split_seed=0)
         srcs[f"wz_{arm}"] = {"path": str(out / f"src_{arm}"), "n_train": doc["n_train"], "n_val": doc["n_val"]}
     (out / "SYNTH.json").write_text(json.dumps({"synthetic": True, "k": k, "worlds": worlds,
@@ -54,8 +62,9 @@ def main(argv=None) -> int:
     ap.add_argument("--worlds", type=int, default=6)
     ap.add_argument("--k", type=int, default=512)
     ap.add_argument("--total-s", type=float, default=230.0)
+    ap.add_argument("--map-spec", required=True)
     a = ap.parse_args(argv)
-    print(json.dumps(build(Path(a.out), worlds=a.worlds, k=a.k, total_s=a.total_s)))
+    print(json.dumps(build(Path(a.out), worlds=a.worlds, k=a.k, total_s=a.total_s, map_spec=a.map_spec)))
     return 0
 
 
