@@ -175,11 +175,19 @@ def test_mappo_relative_rows_win_over_native_and_parity_filters(cfg):
     rows = [grow('wall_h_solo2', 300., baseline='native'), grow('wall_h_solo2', -50., baseline='mappo'),
             grow('wall_g', 400., baseline='native'), grow('zipper', 900.)]
     on = ev_cfg(cfg, guidance=guidance(rows), learn=dict(ev_bc=True))
+    rows.append(grow('wall_h', 50., regime='D2400_p60'))
+    on = ev_cfg(cfg, guidance=guidance(rows), learn=dict(ev_bc=True))
     table, receipt = fl.ev_table(on, 'B')
-    assert table['D3200_p60']['wall_h_solo2']['baseline'] == 'mappo'     # MAPPO-relative estimate wins
-    assert table['D3200_p60']['wall_g']['baseline'] == 'native'           # native only where no MAPPO row
-    assert 'zipper' not in table['D3200_p60'] and receipt['dropped_without_parity'] == {'zipper': 1}
-    assert fl.qualifying(table['D3200_p60']) == ['wall_g']
+    # a cell with MAPPO-relative (S-REGIMEU0) rows uses ONLY those; native rows only for other cells
+    assert set(table['D3200_p60']) == {'wall_h_solo2'}
+    assert table['D3200_p60']['wall_h_solo2']['baseline'] == 'mappo'
+    assert table['D2400_p60']['wall_h']['baseline'] == 'native'
+    assert receipt['regime_baseline'] == {'D2400_p60': 'native', 'D3200_p60': 'mappo'}
+    assert fl.qualifying(table['D3200_p60']) == [] and fl.qualifying(table['D2400_p60']) == ['wall_h']
+    native_only = ev_cfg(cfg, guidance=guidance([r for r in rows if r['baseline'] == 'native']))
+    t2, r2 = fl.ev_table(native_only, 'B')
+    assert 'zipper' not in t2['D3200_p60'] and r2['dropped_without_parity'] == {'zipper': 1}
+    assert fl.qualifying(t2['D3200_p60']) == ['wall_g', 'wall_h_solo2']
 
 
 def _episode(sample, eid='e1', seed=989220):
@@ -327,3 +335,41 @@ def test_g4ld_credits_pair_holds_and_skips_solo_holds(cfg):
     assert found[1] == []                                            # a solo hold is not a joint start
     assert [r['g4ld']['members'] for r in found[2]] == [['a', 'b']]
     assert fe.labels(found[2][0]['move'], view) == ('group_hold_pair', 'group_hold')
+
+
+def test_guidance_builder_cli_and_recommended_recipe(cfg, tmp_path):
+    rng = np.random.default_rng(1)
+    lines = []
+    for seed in range(989700, 989706):
+        base = 30000.+rng.normal(0, 500)
+        lines += [dict(status='ok', cell='D3200_p60', seed=seed, arm='base', J_total=base),
+                  dict(status='ok', cell='D3200_p60', seed=seed, arm='wall_h_solo2', J_total=base-2000.)]
+    path = tmp_path/'REGIME_RESULTS.jsonl'
+    path.write_text('\n'.join(json.dumps(x) for x in lines))
+    out = tmp_path/'G.json'
+    fl.main(['guidance', '--native', str(path), '--provenance', PROV, '--out', str(out)])
+    doc = json.loads(out.read_text())
+    assert doc['rows'][0]['family'] == 'wall_h_solo2' and doc['rows'][0]['mean_veh_s'] == pytest.approx(2000.)
+    with pytest.raises(SystemExit):
+        fl.main(['guidance', '--native', str(path), '--provenance', PROV, '--out', str(out)])
+    on = dict(ld_cfg(cfg, v2v=False), **fe.recommended(provenance=PROV, regime_guidance=doc))
+    assert fe.settings(on) and fl.learn_settings(on)['ev_bc'] and not fl.learn_settings(on)['ev_credit']
+    table, _ = fl.ev_table(on, 'B')
+    assert fl.best_family(table['D3200_p60']) == 'wall_h_solo2'
+
+
+def test_u0_results_base_arm_and_analysis_summary_inputs(tmp_path):
+    rows = []
+    for seed in range(989850, 989856):
+        rows += [dict(status='ok', cell='D3200_p60', seed=seed, arm='u0', J_total=50000.),
+                 dict(status='ok', cell='D3200_p60', seed=seed, arm='wall_h_solo2', J_total=40000.+seed % 3)]
+    path = tmp_path/'U0.jsonl'
+    path.write_text('\n'.join(json.dumps(r) for r in rows))
+    doc = fl.build_guidance(mappo=str(path), provenance=PROV)
+    assert [(r['family'], r['baseline']) for r in doc['rows']] == [('wall_h_solo2', 'mappo')]
+    assert doc['rows'][0]['mean_veh_s'] == pytest.approx(10000.-1.)
+    summary = dict(cells={'D2800_p40': {'wall_h': dict(n=16, mean_diff=-900., ci95=[-1500., -300.], harm_rate=.1)}})
+    spath = tmp_path/'ANALYSIS.json'
+    spath.write_text(json.dumps(summary))
+    doc = fl.build_guidance(native=str(spath), provenance=PROV)
+    assert doc['rows'][0]['lb95_veh_s'] == 300. and doc['rows'][0]['mean_veh_s'] == 900.

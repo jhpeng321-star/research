@@ -1,5 +1,57 @@
 # FULLPOL design: learning arbitrary CAV programs (clean5 policy side)
 
+## 0. clean5a: speed-only EV mode (MAIN 19:3x; first deliverable, no LCEXEC dependency)
+
+**Key and default.** Key `clean5_ev` (`fullpol_ev.py`). It is default OFF, and when OFF the
+outputs are byte-identical.
+
+**Slate.** The slate contains N2 families only:
+- `abreast_wall`, with the wall_g and wall_h variants, plus its N2 V2V initiate/join slots
+  when lane_drop v2v is on;
+- `group_hold`, which becomes a runtime family with two F2 slots:
+  - `group_hold:solo`: a 1-member `SoloHold` using the wall_g/wall_h parameters, matching the
+    S-REGIME solo strategies wall_{g,h}_solo{L};
+  - `group_hold:pair`: 2 members, using N2 R_SETS;
+- none.
+
+All legacy and W1 families are filtered out.
+
+**Execution.** Execution is N2's closed-loop hold law (`SoloHold` is a 1-member
+`LaneDropMove`). The exact executor is therefore N2's (N5 PASS).
+
+**EV-BC.**
+1. `guidance_rows` re-runs the registered rg_analyze paired seed bootstrap (10,000 resamples,
+   RNG 20261106) on REGIME_RESULTS.
+2. It flips the sign: gain = J(base) − J(strategy), so positive means lower delay.
+3. Per (regime, family), the MAPPO-relative row (S-REGIMEU0) is preferred over the native one.
+4. Families are filtered to the parity list (wall_g, wall_h, wall_{g,h}_solo{0,1,2}).
+5. At every recorded decision row, the target is the highest-lb95 qualifying family (lb95 > 0)
+   among those offered in that slate, else none.
+6. The CE is −log P(set of equivalent slots).
+
+**Learning rules.**
+- The KL cap stays at 0.045. The step count is `imitation_epochs` (MAIN: 20).
+- PPO on the team reward and G4LD credit (pairs; a solo is not a joint start) are unchanged.
+- EV credit is available but OFF in the recipe (`fullpol_ev.recommended`).
+
+**Regime label.** The regime is the episode cell, an offline label only. It is tested never to
+reach the slate, descriptors, context or logits.
+
+**R arm.** R has no R guidance rows, so it gets no terms (it learns on its own).
+
+**Report-only receipts.** BC KL (on supervised contexts), KL on unlabelled contexts, and
+seed-split validation (held-back target NLL; AUC of act vs none when both occur).
+
+**Builder.** `python -m tools.coopmwm.fullpol_learn guidance --native REGIME_RESULTS.jsonl
+[--mappo REGIMEU0.jsonl] --provenance ... --out CLEAN5A_GUIDANCE.json`. It refuses to overwrite
+an existing output.
+
+**Caveats.**
+- The S-REGIME solo estimates come from wall-geometry triggers. clean5a offers solos whenever
+  the ego is in the registered zone (`solo_geometry='zone'`; `'wall'` is available for strict
+  matching).
+- The regime is the cell only. A per-window closing-speed tercile labeller is an open issue.
+
 Owner directive: the policy must be able to accelerate, brake and change lane, i.e. take any
 move SUMO allows, and must be able to use and learn the cooperative moves. LCEXEC owns
 *execution*: the primitive interface, `free_program`, the converter and the per-tick labels.

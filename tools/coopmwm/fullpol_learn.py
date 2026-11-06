@@ -101,6 +101,8 @@ def guidance(cfg):
 def regime_key(episode):
     """OFFLINE regime label of a training episode (world cell). Never a policy input."""
     world = episode['world']
+    if world.get('cell_key'):
+        return world['cell_key']                 # map_scenarios.world: the registered cell key
     return f"D{int(world['demand'])}_p{int(round(float(world['penetration'])*100))}"
 
 
@@ -112,21 +114,30 @@ def ev_table(cfg, arm):
         return None, dict(enabled=False)
     slot, _ = active_slot(cfg)
     parity = set(slot.get('parity_families') or ())
+    # MAIN 21:5x: per REGIME (cell) the MAPPO-relative (S-REGIMEU0) rows are used whenever that
+    # cell has any; native S-REGIME rows only for cells without MAPPO data (never mixed in a cell).
     table, dropped, used = {}, Counter(), Counter()
-    for row in sorted(g['rows'], key=lambda r: BASELINES.index(r.get('baseline', 'native'))):
-        if row['arm'] != arm:
-            continue
-        if row['family'] not in parity:
-            dropped[row['family']] += 1        # condition 1: no exact executor -> no EV term
-            continue
-        if row['family'] in table.setdefault(row['regime'], {}):
-            continue                           # the MAPPO-relative row already won
-        table[row['regime']][row['family']] = row
-        used[row.get('baseline', 'native')] += 1
+    mine = [r for r in g['rows'] if r['arm'] == arm]
+    chosen = {}
+    for regime in sorted({r['regime'] for r in mine}):
+        rows = [r for r in mine if r['regime'] == regime]
+        for baseline in BASELINES:
+            pick = [r for r in rows if r.get('baseline', 'native') == baseline]
+            if pick:
+                chosen[regime] = (baseline, pick)
+                break
+    for regime, (baseline, rows) in sorted(chosen.items()):
+        for row in rows:
+            if row['family'] not in parity:
+                dropped[row['family']] += 1        # condition 1: no exact executor -> no EV term
+                continue
+            table.setdefault(regime, {})[row['family']] = row
+            used[baseline] += 1
     table = {k: v for k, v in table.items() if v}
     receipt = dict(enabled=True, arm=arm, rule=EV_RULE, sign=GAIN_SIGN, source=g['source'],
                    regimes=sorted(table), families=sorted({f for r in table.values() for f in r}),
-                   baselines_used=dict(used), dropped_without_parity=dict(dropped),
+                   baselines_used=dict(used), regime_baseline={k: b for k, (b, _) in sorted(chosen.items())},
+                   dropped_without_parity=dict(dropped),
                    r_without_matched_sweep=(arm == 'R' and not table))
     return table, receipt
 
@@ -696,3 +707,72 @@ __all__ = ['learn_settings', 'guidance', 'regime_key', 'ev_table', 'best_family'
            'ev_bc_records', 'program_contexts', 'supervised_batch', 'bank_records', 'bc_steps', 'supervise',
            'valsplit_auc', 'auc', 'shift', 'first_activation_el', 'solo_program', 'register_g4_adapter',
            'reproduction']
+
+
+# ---------------------------------------------------------------- guidance builder (CPU, read-only inputs)
+
+def _base_arm(results, base_arm):
+    if base_arm is not None:
+        return base_arm
+    arms = {r.get('arm') for r in results}
+    return 'u0' if 'u0' in arms else 'base'      # S-REGIMEU0 names its MAPPO base arm 'u0'
+
+
+def guidance_rows_from_analysis(analysis, *, arm='B', baseline):
+    """rg_analyze ANALYSIS.json ``cells`` summaries (difference = strategy - base) -> gain rows."""
+    out = []
+    for cell, arms in sorted(analysis['cells'].items()):
+        for a, v in sorted(arms.items()):
+            lo, hi = v['ci95']
+            out.append(dict(arm=arm, regime=cell, family=a, baseline=baseline, n=int(v['n']),
+                            mean_veh_s=-float(v['mean_diff']), lb95_veh_s=-float(hi), ub95_veh_s=-float(lo),
+                            harm_rate=float(v.get('harm_rate', float('nan')))))
+    return out
+
+
+def build_guidance(*, native=None, mappo=None, provenance, arm='B', base_arm=None):
+    """S-REGIME (native-relative) and/or S-REGIMEU0 (MAPPO-relative) REGIME_RESULTS files ->
+    the ``regime_guidance`` config value. ev_table prefers the MAPPO-relative row per
+    (regime, family). Only TRAIN-type REGIME seeds are read; no evaluation data."""
+    from pathlib import Path
+    rows, sources = [], []
+    for path, baseline in ((native, 'native'), (mappo, 'mappo')):
+        if path is None:
+            continue
+        raw = Path(path).read_bytes()
+        text = raw.decode('utf-8')
+        if Path(path).suffix == '.json':       # an rg_analyze ANALYSIS.json summary
+            rows += guidance_rows_from_analysis(json.loads(text), arm=arm, baseline=baseline)
+            count = None
+        else:                                  # episode rows (regime_episode/1)
+            results = [json.loads(line) for line in text.splitlines() if line.strip()]
+            rows += guidance_rows(results, arm=arm, baseline=baseline, base_arm=_base_arm(results, base_arm))
+            count = len(results)
+        sources.append(dict(name=Path(path).name, sha256=hashlib.sha256(raw).hexdigest(), baseline=baseline,
+                            episodes=count))
+    if not sources:
+        raise ValueError('at least one S-REGIME results file required')
+    return guidance_doc(rows, sources=sources, provenance=provenance)
+
+
+def main(argv=None):
+    import argparse
+    from pathlib import Path
+    ap = argparse.ArgumentParser(description='FULLPOL clean5a guidance builder (CPU, no physics)')
+    ap.add_argument('command', choices=['guidance'])
+    ap.add_argument('--native', help='S-REGIME REGIME_RESULTS.jsonl or ANALYSIS.json (native base)')
+    ap.add_argument('--mappo', help='S-REGIMEU0 results jsonl or ANALYSIS.json (MAPPO u0 base)')
+    ap.add_argument('--provenance', required=True)
+    ap.add_argument('--arm', default='B', choices=['B', 'R'])
+    ap.add_argument('--out', required=True)
+    a = ap.parse_args(argv)
+    doc = build_guidance(native=a.native, mappo=a.mappo, provenance=a.provenance, arm=a.arm)
+    out = Path(a.out)
+    if out.exists():
+        raise SystemExit('refusing to overwrite '+str(out))
+    out.write_text(json.dumps(doc, indent=1, sort_keys=True), encoding='utf-8')
+    print(json.dumps(dict(out=str(out), rows=len(doc['rows']), sha256=doc['source']['sha256'])))
+
+
+if __name__ == '__main__':
+    main()
