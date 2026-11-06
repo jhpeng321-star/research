@@ -1,5 +1,22 @@
 # PLANFIX CPU continuation — 2026-11-05 18:36 +08
 
+## 2026-11-06 12:50 +08 — fresh read succeeded; neither preserved identity alive
+
+One bounded F6 read-only check succeeded (attempt1/1, rc0). Own WM381108/start8612088
+and coordinator381105/start8612061 both return `alive_same_identity=false`.
+Bootstrap/query preflight are preserved, **0/8 startup gates and no speed result**.
+The v2 coordinator's terminal traceback is the clean2 STOP/FAULT health assertion;
+it recorded its own unfinished model stopped at exit. This read does not establish
+the subsequent model-retirement cause. No model failure receipt exists, which is
+not proof that the whole chain succeeded. Full fresh evidence:
+`PLANFIX_CPU_STATUS_v7_1793940606467549300.json`; recovery:
+`PLANFIX_RESUME_20261106_1249.md`. No retry/dispatch/signal/new simulation.
+
+The02:44 supersession and03:00 release of566,400sim-s remain unresolved against
+the resumed historical prompt. Additional physics is blocked pending restored
+allocation and run/boundary authority. Counts stay0; actual switch indexUNSET.
+All earlier running/resident assertions below are historical.
+
 ## 2026-11-06 08:44 +08 — SUPERSEDED; older continuation instructions inactive
 
 Central owner decisions at02:44 superseded S-VARIETY with G1/mining; at03:00
