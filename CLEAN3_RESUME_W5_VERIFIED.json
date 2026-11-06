@@ -1,0 +1,67 @@
+{
+  "cap_sim_s": 7300000,
+  "charged_sim_s": 75160,
+  "completed_combined_updates": [],
+  "gate_safety": {
+    "collisions": 0,
+    "hard_brakes": 96,
+    "teleports": 0,
+    "ttc_events": 34
+  },
+  "margins": {
+    "early_probes": {
+      "allocated": 52800,
+      "margin_fraction": 0.16094986807387857,
+      "need": 45480
+    },
+    "gate_bank_verification_ext": {
+      "allocated": 18000,
+      "margin_fraction": 0.18733509234828505,
+      "need": 15160
+    },
+    "isolated_replicated": {
+      "allocated": 165600,
+      "margin_fraction": 0.15191986644407351,
+      "need": 143760
+    },
+    "track2_smoke": {
+      "allocated": 24000,
+      "margin_fraction": 0.19999999999999996,
+      "need": 20000
+    },
+    "v2v_final": {
+      "allocated": 531600,
+      "margin_fraction": 0.15364583333333326,
+      "need": 460800
+    },
+    "v2v_interim": {
+      "allocated": 398400,
+      "margin_fraction": 0.15277777777777768,
+      "need": 345600
+    },
+    "v2v_lessons": {
+      "allocated": 40800,
+      "margin_fraction": 0.1643835616438356,
+      "need": 35040
+    },
+    "v2v_train": {
+      "allocated": 1988400,
+      "margin_fraction": 0.15069444444444446,
+      "need": 1728000
+    }
+  },
+  "mined_exposure_evidence": {
+    "actual_B_smoke_demonstrations": 1,
+    "admitted_examples": 5,
+    "finding": "Registration says every example practice-demonstrated; code checks every example in pool and at least one actual demonstration. Refer to launch operator before claiming all-example demonstration coverage.",
+    "observable_imitation_targets": 1,
+    "practice_pool_contexts": 5
+  },
+  "protected_total_sim_s": 3696600,
+  "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+  "smoke_sim_s": 14400,
+  "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+  "source_files_verified": 735,
+  "status": "INTEGRITY_AND_PHASE_MARGIN_PASS",
+  "timestamp": "2026-11-06T04:14:55.742535+00:00"
+}

@@ -1,0 +1,4410 @@
+{
+  "authority_sha256": "3ffdcc29c1f9e5543ab755f6187aaa3f1567fba7440a65be0e387a1e8f7f13af",
+  "budget": {
+    "accepted": {
+      "F1": "5a2c7fef58cf6295cf81c84413e1bd670273214bc650fa0df8f85fd3c215ea19",
+      "F2": "9ca0383d204f878035473a72cf0831d1ed55ca4f6da31f00c5855c9421826b3f",
+      "F3": "127dbeb7ddda4f88861997acd71fad06eed19f6385f1223d42b42ef994278404",
+      "F4": "9a0ff8d0c234dd6875ffebe1205b0b720ae93f9cc6d3b288ae6dbb007f67b1dc",
+      "F5": "37ba2f36fb8bbd0acbe56ca2b0d2ba1a16c1fb083fe64e164757b1323a16263d",
+      "F6": "71d414d7b98fb858fbb1129f31e76d83507c8f405bfe35a6dde95865f9f5307e",
+      "G1": "ad977597c6431aa0b107855d5797e717b4b857e55f50c4ccb023cb786b58341b",
+      "G2": "7667323b2b22cd20122f6f89ead075dab4431304efe0291720cea665f3af5ea7",
+      "G4": "f49be9390bc23baa57a66478bc1457df0cb3a0a430686847299e7a81d0ccf5b1",
+      "G5": "6580935f09328abd7f3a82f624e31886eeebf8790e4f435a7fe545657b1ec386"
+    },
+    "g1_cap_sim_s": 230400,
+    "g4_cap_sim_s": 230400,
+    "mining_reserved_sim_s": 500000,
+    "owner_cap_sim_s": 7300000,
+    "phases": {
+      "augment_verify": 0,
+      "early_probes": 52800,
+      "gate_bank_verification_ext": 18000,
+      "group_credit_verify": 0,
+      "isolated_replicated": 165600,
+      "teacher_verify": 0,
+      "track2_smoke": 24000,
+      "v2v_final": 531600,
+      "v2v_interim": 398400,
+      "v2v_lessons": 40800,
+      "v2v_train": 1988400
+    },
+    "plan_fix_reserved_sim_s": 0,
+    "prefixes": {
+      "clean1": "cf0b0dd434f808486c64aec7a0ee63e14f26d4d7007a3c6c8ab8adbb411bed48",
+      "clean2": "be94e2b7b0f08fe21205207f586ac95c0e2988fbc92f423b3c2b95fef53bad32"
+    },
+    "prior_parity_sim_s": 960,
+    "protected_prior_sim_s": 3621440,
+    "quote_total_sim_s": 3680400,
+    "receipt_sha256": "5842f6b5501bcb56e9068f9b6460ff06e45f0294d1f0ea6da7a2e51df2573835",
+    "remaining_sim_s": 3678560,
+    "rows": {
+      "clean1": 1136,
+      "clean2": 1656,
+      "failed": 19,
+      "g1": 0
+    },
+    "rule": "clean1+clean2+parity+G1 actual+mining 500000 reserved; plan_fix released (owner 03:00); every phase sized for u1-u24 with >=15% margin",
+    "schema": "coopmwm.clean3.restart_budget.v1",
+    "spent": {
+      "clean1": 1248480,
+      "clean2": 1849200,
+      "failed": 22800,
+      "g1": 0,
+      "mining": 0
+    }
+  },
+  "chain_authority": {
+    "budget": {
+      "available_for_clean3_sim_s": 3701360,
+      "mining_reserved_sim_s": 500000,
+      "owner_cap_sim_s": 7300000,
+      "plan_fix": "released (owner 03:00)",
+      "prior_clean1_clean2_parity_sim_s": 3098640
+    },
+    "chain": "G1 batch -> CLEAN3_GO_NOGO (continue regardless) -> mined wait (>=3 per-seed verified joint examples; deadline 14:00) -> CONFIRM (owner pre-approved) -> prepare root/ledger -> smoke (all levers+fixes, mined exposure a-d) -> gate once (0 collisions/teleports) -> u1-u24 phase coverage -> launch A/B/R u0 x24 + monitor",
+    "created": "2026-11-06T11:16+08:00 (system clock)",
+    "criterion": "registered u24 criterion unchanged: pooled B group-over-best-single synergy CI95 lower > 0 and original no-safety-regression criterion; total benefit vs common base reported descriptively",
+    "extra_final_baseline": "lane-on MAPPO aecd7d70, frozen, descriptive only (primary comparator speed-only MAPPO)",
+    "g1_accounting": "3e5bc9f9: quote assertion counts the completed G1 phase at actual spend (0) once; cap 7,300,000 unchanged; other phases unchanged",
+    "g5_runtime": "MAIN 05:30 blocker fixed: accepted G5 env change bound onto the frozen e3final env that every episode imports (tools/coopmwm/g5_runtime.py, overlay SHA 5aac1769..., base SHA 59aecd0b...; COOPMWM_G5_RUNTIME=1 set by the chain); Linux test exercises the real frozen runtime path with lane_actors and byte-identity when absent; smoke requires a real G5 lane move",
+    "mined_exposure_rule": "owner ~05:05 \"make sure the policy is actually SHOWN what the mined plans can do\": smoke (a) executable imitation targets, (b) practice from mined seed situations (smoke: mined families first), (c) tape-verified execution of the mined plan in a demonstration practice episode, (d) G4-format measured synergy rows; R same counts/families with its own examples; per-update mined usage/fit/trigger-rate reports",
+    "mined_launch_rule": "owner ~07:2x walls-only \"yes.\" (amends ~04:35): launch when /home/ubuntu/mined/MINED_MOVES.jsonl yields >=3 per-seed SUMO-verified joint examples for B (>=2 executing CAVs, seed CI95 low>0, measured synergy present); no family-count rule; owner approval replaces LAUNCH_CONFIRMED; deadline 14:00 local",
+    "minedlink": "c4/clean3-minedlink 0496e758 (GLM 5.3) reviewed+merged: rows carrying a full verified situation binding take their decision snapshot from their own sealed SUMO verification (SNAPSHOT.pt, receipt snapshot_sha256, sidecar), then the unchanged per-seed restart (replicate salt, own-seed tape/plan binding) builds the practice start; imitation targets from the example own trace; partial bindings fail closed; operator hardening: binding members/duration/profile must equal the verified plan",
+    "observability_amendment": "MAIN verbatim (owner asleep, delegated): \"go with OPTION 1\" - smoke check (a): every admitted mined example must load as an executable bank example and be practice-demonstrated; imitation targets only for examples observable from a member's slots; per-example/per-seed observable counts in smoke receipt and per-update monitor; (b),(c),(d) unchanged; R identical; observation limit not relaxed",
+    "operator": "Claude launch operator (replaces S-LAUNCH)",
+    "owner_quotes": {
+      "2026-11-05 23:39": "when the lever finishes, just stop the current run and rerun it",
+      "2026-11-06 01:16": "keep it as the baseline for now. if the our version does while, we can train a new baseline that matches everything",
+      "2026-11-06 02:13": "yes, do that",
+      "2026-11-06 02:44": "use your own usage from now on. and 1",
+      "2026-11-06 03:00": "approve"
+    },
+    "pool_fix": "d3986eea: mined plans keep distinct practice contexts (situation+family+plan hash) so every mined example is separately demonstrable; check (b) per example",
+    "previous_chain": "r1 /home/ubuntu/cpuv_setup_20261105/clean3_chain_b7b74545 (pid 428197) stopped by operator in MINED_WAIT before any clean3 physics; its G1 batch ran (0 candidates, 0 sim-s, NO-GO) in /home/ubuntu/coopmwm20261106_clean3_g1cert; reason: smoke lever check bug fixed in a0f9401d; r2 /home/ubuntu/cpuv_setup_20261105/clean3_chain_a0f9401d (pid 434007) stopped by operator in MINED_WAIT before any clean3 physics to apply the owner mined-launch rule; its G1 (0 sim-s, NO-GO) in g1cert_r2; r3 /home/ubuntu/cpuv_setup_20261105/clean3_chain_bf3f1d68 (pid 446254) stopped by operator mid-G1 before any clean3 physics (0 rows) to add the owner mined-plan exposure checks; r4 clean3_chain_d27b3d00 (pid 451163) stopped pre-physics mid-G1 for the G5 runtime blocker; r5 clean3_chain_162b35c9 (pid 455812) stopped by operator in MINED_WAIT (pre-physics) to apply the walls-only amendment; r6 clean3_chain_dd424702 (pid 467291) FAILED in MINED_WAIT (pre-physics) on a NameError in mined_move (missing import), fixed in 0533fb16; 6cf4868f counts B examples for readiness; r7 clean3_chain_6cf4868f launched prepare/smoke, smoke FAILED (no decision link for mined R row), STOP in r1 root, 3,600 sim-s; r8 clean3_chain_673e80a7 FAILED in PREPARE (pre-physics) on offline supervision candidates beyond observable slots; r9 clean3_chain_7b8cbaad smoke STOP on original check (a) (non-observable mined walls), 9,600 sim-s; r10 clean3_chain_ac9e4691 smoke STOP on check (b): two mined plans shared one restart context and the pool deduplicated one; r11 clean3_chain_d3986eea PREPARE refused on the quote assertion before root creation",
+    "quote": {
+      "file": "E:/agent-work/c4-rerun-launch/CLEAN3_QUOTE.json",
+      "phases": {
+        "early_probes": 52800,
+        "g1_certification": 230400,
+        "g4_synergy_credit": 230400,
+        "gate_bank_verification_ext": 18000,
+        "isolated_replicated": 165600,
+        "track2_smoke": 24000,
+        "v2v_final": 398400,
+        "v2v_final_laneon_mappo_aecd7d70": 133200,
+        "v2v_interim": 398400,
+        "v2v_lessons": 40800,
+        "v2v_practice_refs": 398400,
+        "v2v_train_waves": 1590000
+      },
+      "sha256": "e42d5636a034aab31b16ad976b8b688c9641c1c142a4a2f87758d1e573b6e3fe",
+      "total_sim_s": 3680400
+    },
+    "root": "/home/ubuntu/coopmwm20261106_clean3_r6 (stopped roots clean3 3,600 / r2 0 / r3 9,600 / r4 9,600 sim-s kept and counted)",
+    "safety_rule": "A: full original rule. B and R: composite TTC/critical comparison reported each update, no pause. Any collision or teleport in any arm pauses.",
+    "schema": "coopmwm.clean3.chain_authority.v1",
+    "seeds": "registered TRAIN worlds only (986000-986071 family); never 964000-964199, 962xxx, 977xxx",
+    "supervision_fix": "7b8cbaad: offline trigger supervision candidates restricted to the ego observable slots (online acquirability contract), B=R"
+  },
+  "chain_owner": {
+    "alive": true,
+    "command": "/home/ubuntu/miniconda3/bin/python -B -u /home/ubuntu/coopmwm20261106_clean3_src_3e5bc9f9/ops/clean3_chain.py --source /home/ubuntu/coopmwm20261106_clean3_src_3e5bc9f9 --control /home/ubuntu/cpuv_setup_20261105/clean3_chain_3e5bc9f9 ",
+    "pid": 560611,
+    "start_ticks": "12554274",
+    "state": "S",
+    "unix": 1793935694.2755132
+  },
+  "completed_g1": {
+    "admitted_by_arm": {
+      "B": 0,
+      "R": 0
+    },
+    "admitted_families": {
+      "B": [],
+      "R": []
+    },
+    "branches": 0,
+    "charged_sim_s": 0,
+    "decision": "NO-GO",
+    "diagnostics": 0,
+    "executable_joint_labels_ci95_low_positive": 0,
+    "jobs": 0,
+    "manifest_path": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r12/G1_MANIFEST.json",
+    "manifest_sha256": "be44cdc7af132206a2bb36f91c37ca541244d044058f15f107ad59052a1d02d9",
+    "receipt_sha256": "af22a2240a987fcbe0dff2b01b4de7acf8121908416c425dc84412163713a7d2",
+    "rule": "GO iff >=1 admitted executable joint label (synergy CI95 low>0 on pooled and both seeds, safety holds) in BOTH B and R with identical admitted family sets; then the certificate manifest gates B/R bank lessons. Otherwise NO-GO: manifest kept as diagnostic, not bound.",
+    "runtime_sha256": "aa95ad5e1d01968d0c85c17d92c57969a7d1d89a8c97aba1208a6233649ae1a5",
+    "schema": "coopmwm.clean3.g1_go_nogo.v1",
+    "unix": 1793935931.8772285
+  },
+  "config_file_sha256": "b5d45dbe3f67e1749bb42b3a5bee5d13d81e52bf37d72f4d3791d921c74e7021",
+  "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_3e5bc9f9",
+  "events": [
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 1,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "QUALIFIED",
+      "timestamp": "2026-11-06T03:28:14.278422+00:00",
+      "unix": 1793935694.2784219
+    },
+    {
+      "detail": {
+        "qualification": {
+          "returncode": 0,
+          "seconds": 209.26640343666077,
+          "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0"
+        },
+        "source_files": 735
+      },
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 2,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "PASS",
+      "step": "QUALIFIED",
+      "timestamp": "2026-11-06T03:28:16.471809+00:00",
+      "unix": 1793935696.4718049
+    },
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 3,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "G1_CERTIFY",
+      "timestamp": "2026-11-06T03:28:16.476690+00:00",
+      "unix": 1793935696.4766893
+    },
+    {
+      "detail": {
+        "admitted_by_arm": {
+          "B": 0,
+          "R": 0
+        },
+        "charged_sim_s": 0,
+        "decision": "NO-GO",
+        "error": null,
+        "executable_joint_labels_ci95_low_positive": 0
+      },
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 4,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "PASS",
+      "step": "G1_CERTIFY",
+      "timestamp": "2026-11-06T03:32:11.881895+00:00",
+      "unix": 1793935931.881891
+    },
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 5,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "MINED_WAIT",
+      "timestamp": "2026-11-06T03:32:11.886094+00:00",
+      "unix": 1793935931.8860936
+    },
+    {
+      "detail": {
+        "admitted": 5,
+        "admitted_path": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_3e5bc9f9/MINED_MOVES_ADMITTED_001.jsonl",
+        "families": [
+          "wall"
+        ],
+        "joint_families": [
+          "wall"
+        ],
+        "joint_verified_examples": 5,
+        "joint_verified_moves": 3,
+        "rows": 5,
+        "rule": "owner 2026-11-06 ~07:2x walls-only launch (\"yes.\"), amending ~04:35: launch when /home/ubuntu/mined/MINED_MOVES.jsonl yields >=3 per-seed SUMO-verified JOINT examples for B (natively admitted plan with >=2 executing CAVs; that seed synergy CI95 lower bound > 0); no family-count requirement; families must exist in both B and R verified pools (R same family distribution from its own bank); hard deadline 14:00 local -> stop and report; owner approval replaces the MAIN confirmation file."
+      },
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 6,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "PASS",
+      "step": "MINED_WAIT",
+      "timestamp": "2026-11-06T03:33:48.903818+00:00",
+      "unix": 1793936028.9038153
+    },
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 7,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "CONFIRM_WAIT",
+      "timestamp": "2026-11-06T03:33:48.908703+00:00",
+      "unix": 1793936028.9087024
+    },
+    {
+      "detail": {
+        "authority": "owner ~07:2x walls-only clean3 launch \"yes.\" (REGISTRATION.md); launch when the amended mined rule holds; no LAUNCH_CONFIRMED file required",
+        "confirmed": true
+      },
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 8,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "PASS",
+      "step": "CONFIRM_WAIT",
+      "timestamp": "2026-11-06T03:33:48.912323+00:00",
+      "unix": 1793936028.9123225
+    },
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 9,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "PREPARE",
+      "timestamp": "2026-11-06T03:33:48.916050+00:00",
+      "unix": 1793936028.9160504
+    },
+    {
+      "detail": {
+        "config_sha256": "aa2168474a3aacdaf1fec98dd63d6533d218d737d383081ae657d08fdf169070",
+        "files": 7501,
+        "g1": "NO-GO",
+        "mined_admitted": 5,
+        "new_sim_s": 0,
+        "remaining_cap_sim_s": 3678560,
+        "status": "STAGED_NOT_LAUNCHED"
+      },
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 10,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "PASS",
+      "step": "PREPARE",
+      "timestamp": "2026-11-06T03:41:45.480557+00:00",
+      "unix": 1793936505.4805534
+    },
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 11,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "SMOKE",
+      "timestamp": "2026-11-06T03:41:45.487724+00:00",
+      "unix": 1793936505.4877222
+    },
+    {
+      "detail": {
+        "fixes_sha256": "40ea352e82daa750eee46017961b31850e3a0fd059bc85ce5913a826e8cb5239",
+        "levers": {
+          "G1": {
+            "admitted": 0,
+            "bound": false,
+            "decision": "NO-GO"
+          },
+          "G2": {
+            "B": {
+              "decisions": 1732,
+              "disjoint_pairs": 32,
+              "event_decisions": 30,
+              "graph_edges": 36,
+              "offered_joint": 98,
+              "offered_joint_rate": 0.05658198614318707
+            },
+            "R": {
+              "decisions": 514,
+              "disjoint_pairs": 7,
+              "event_decisions": 7,
+              "graph_edges": 9,
+              "offered_joint": 45,
+              "offered_joint_rate": 0.08754863813229571
+            }
+          },
+          "G4": {
+            "first_update": 1,
+            "phase_sim_s": 230400
+          },
+          "G5": {
+            "B": {
+              "open_gap_merge": 0,
+              "yield_lane": 0
+            },
+            "R": {
+              "open_gap_merge": 0,
+              "yield_lane": 0
+            }
+          },
+          "mined": {
+            "B": {
+              "demonstrations": [
+                {
+                  "executed": {
+                    "covered_s": 30,
+                    "kind": "profile",
+                    "passed": true
+                  },
+                  "family": "wall",
+                  "id": "clean1_smoke1_warm_u001_p01_B_986061"
+                }
+              ],
+              "examples": 5,
+              "g4_credit": 1,
+              "imitation_targets": 1,
+              "observability": {
+                "by_seed": {
+                  "1": {
+                    "non_observable": 2,
+                    "observable": 1
+                  },
+                  "5": {
+                    "non_observable": 1,
+                    "observable": 0
+                  },
+                  "6": {
+                    "non_observable": 1,
+                    "observable": 0
+                  }
+                },
+                "examples": [
+                  {
+                    "example_id": "sv_op2_collect01_R_train_986061_t0455_bd791969#c1#s1",
+                    "family": "wall",
+                    "observable": false,
+                    "seed_index": 1,
+                    "verification_id": "sv_op2_collect01_R_train_986061_t0455_bd791969"
+                  },
+                  {
+                    "example_id": "sv_op2_collect01_R_train_986061_t0455_bd791969#c1#s5",
+                    "family": "wall",
+                    "observable": false,
+                    "seed_index": 5,
+                    "verification_id": "sv_op2_collect01_R_train_986061_t0455_bd791969"
+                  },
+                  {
+                    "example_id": "sv_op2_collect01_R_train_986061_t0455_bd791969#c1#s6",
+                    "family": "wall",
+                    "observable": false,
+                    "seed_index": 6,
+                    "verification_id": "sv_op2_collect01_R_train_986061_t0455_bd791969"
+                  },
+                  {
+                    "example_id": "sv_op2_collect01_R_train_986061_t0455_481cf277#c1#s1",
+                    "family": "wall",
+                    "observable": false,
+                    "seed_index": 1,
+                    "verification_id": "sv_op2_collect01_R_train_986061_t0455_481cf277"
+                  },
+                  {
+                    "example_id": "sv_cp_hp_R_train_986067_t0340_9b768543#c1#s1",
+                    "family": "wall",
+                    "observable": true,
+                    "seed_index": 1,
+                    "verification_id": "sv_cp_hp_R_train_986067_t0340_9b768543"
+                  }
+                ],
+                "non_observable": 4,
+                "observable": 1,
+                "rule": "imitation targets only where a member own observable slots contain every macro member"
+              },
+              "practice_starts": 1,
+              "situations": {
+                "distinct_situations": 5,
+                "examples": 5,
+                "shared": []
+              }
+            },
+            "R": {
+              "demonstrations": [
+                {
+                  "executed": {
+                    "covered_s": 180,
+                    "kind": "profile",
+                    "passed": true
+                  },
+                  "family": "wall",
+                  "id": "clean1_smoke1_warm_u001_p01_R_986065"
+                }
+              ],
+              "examples": 0,
+              "g4_credit": 0,
+              "practice_starts": 1
+            }
+          }
+        },
+        "smoke_sha256": "a91b431118026e4d2a9376469eb0c918c6c0c9e8372f0d4ee5388757fe9a0681"
+      },
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 12,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "PASS",
+      "step": "SMOKE",
+      "timestamp": "2026-11-06T03:59:57.276434+00:00",
+      "unix": 1793937597.2764306
+    },
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 13,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "GATE",
+      "timestamp": "2026-11-06T03:59:57.283220+00:00",
+      "unix": 1793937597.283219
+    },
+    {
+      "detail": {
+        "gate_sha256": "293d47341f9e1670130e4b2b4b1233449a71948824912c7fe3ea1e68dad69390",
+        "safety": {
+          "collisions": 0,
+          "hard_brakes": 96,
+          "teleports": 0,
+          "ttc_events": 34
+        },
+        "smoke_sha256": "a91b431118026e4d2a9376469eb0c918c6c0c9e8372f0d4ee5388757fe9a0681"
+      },
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 14,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "PASS",
+      "step": "GATE",
+      "timestamp": "2026-11-06T04:00:48.520996+00:00",
+      "unix": 1793937648.5209935
+    },
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 15,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "PHASE_COVERAGE",
+      "timestamp": "2026-11-06T04:00:48.527660+00:00",
+      "unix": 1793937648.5276601
+    },
+    {
+      "detail": {
+        "allocated": {
+          "early_probes": 52800,
+          "gate_bank_verification_ext": 18000,
+          "isolated_replicated": 165600,
+          "track2_smoke": 24000,
+          "v2v_final": 531600,
+          "v2v_interim": 398400,
+          "v2v_lessons": 40800,
+          "v2v_train": 1988400
+        },
+        "g4": 230400,
+        "need": {
+          "early_probes": 45480,
+          "gate_bank_verification_ext": 15160,
+          "isolated_replicated": 143760,
+          "track2_smoke": 20000,
+          "v2v_final": 460800,
+          "v2v_interim": 345600,
+          "v2v_lessons": 35040,
+          "v2v_train": 1728000
+        }
+      },
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 16,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "PASS",
+      "step": "PHASE_COVERAGE",
+      "timestamp": "2026-11-06T04:00:48.631960+00:00",
+      "unix": 1793937648.6319568
+    },
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 17,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "LAUNCH",
+      "timestamp": "2026-11-06T04:00:48.640025+00:00",
+      "unix": 1793937648.6400247
+    },
+    {
+      "detail": {
+        "clean1_clean2_preserved": true,
+        "config_file_sha256": "b5d45dbe3f67e1749bb42b3a5bee5d13d81e52bf37d72f4d3791d921c74e7021",
+        "g1": "NO-GO",
+        "gate_sha256": "293d47341f9e1670130e4b2b4b1233449a71948824912c7fe3ea1e68dad69390",
+        "mined": 5,
+        "owner_cap_sim_s": 7300000,
+        "owners": {
+          "A": {
+            "pid": 568096,
+            "start_ticks": "12749728"
+          },
+          "B": {
+            "pid": 568097,
+            "start_ticks": "12749728"
+          },
+          "R": {
+            "pid": 568098,
+            "start_ticks": "12749729"
+          },
+          "monitor": {
+            "pid": 568099,
+            "start_ticks": "12749729"
+          }
+        },
+        "remaining_cap_sim_s": 3678560,
+        "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+        "runtime_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+        "runtime_sha256": "aa2168474a3aacdaf1fec98dd63d6533d218d737d383081ae657d08fdf169070",
+        "safety_rule": "A: full original rule. B and R: composite TTC/critical comparison reported each update, no pause. Any collision or teleport in any arm pauses. (owner 2026-11-06 02:44 \"1\")",
+        "schema": "coopmwm.clean3.launched.v1",
+        "smoke_sha256": "a91b431118026e4d2a9376469eb0c918c6c0c9e8372f0d4ee5388757fe9a0681",
+        "source_manifest_sha256": "aa95ad5e1d01968d0c85c17d92c57969a7d1d89a8c97aba1208a6233649ae1a5",
+        "source_root": "/home/ubuntu/coopmwm20261106_clean3_src_3e5bc9f9",
+        "start_updates": {
+          "A": 0,
+          "B": 0,
+          "R": 0
+        },
+        "timestamp": "2026-11-06T04:00:51.798254+00:00",
+        "unix": 1793937651.798275,
+        "updates": 24
+      },
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 18,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "PASS",
+      "step": "LAUNCH",
+      "timestamp": "2026-11-06T04:00:51.802252+00:00",
+      "unix": 1793937651.802252
+    },
+    {
+      "detail": null,
+      "pid": 560611,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "schema": "coopmwm.clean3.chain.v1",
+      "sequence": 19,
+      "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "status": "RUNNING",
+      "step": "MONITOR",
+      "timestamp": "2026-11-06T04:00:51.808260+00:00",
+      "unix": 1793937651.8082592
+    }
+  ],
+  "launch_owners": {
+    "A": {
+      "alive": true,
+      "command": "/home/ubuntu/miniconda3/bin/python -B -u -m tools.coopmwm.launch_training arm --config /home/ubuntu/coopmwm20261106_clean3_r6/CONFIG.json --arm A ",
+      "pid": 568096,
+      "start_ticks": "12749728",
+      "state": "S"
+    },
+    "B": {
+      "alive": true,
+      "command": "/home/ubuntu/miniconda3/bin/python -B -u -m tools.coopmwm.launch_training arm --config /home/ubuntu/coopmwm20261106_clean3_r6/CONFIG.json --arm B ",
+      "pid": 568097,
+      "start_ticks": "12749728",
+      "state": "R"
+    },
+    "R": {
+      "alive": true,
+      "command": "/home/ubuntu/miniconda3/bin/python -B -u -m tools.coopmwm.launch_training arm --config /home/ubuntu/coopmwm20261106_clean3_r6/CONFIG.json --arm R ",
+      "pid": 568098,
+      "start_ticks": "12749729",
+      "state": "S"
+    },
+    "monitor": {
+      "alive": true,
+      "command": "/home/ubuntu/miniconda3/bin/python -B -u -m tools.coopmwm.launch_training monitor --config /home/ubuntu/coopmwm20261106_clean3_r6/CONFIG.json ",
+      "pid": 568099,
+      "start_ticks": "12749729",
+      "state": "S"
+    }
+  },
+  "logs": {
+    "CHAIN.log": "",
+    "gate.log": "pj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n293d47341f9e1670130e4b2b4b1233449a71948824912c7fe3ea1e68dad69390\n",
+    "smoke.log": "pj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\na91b431118026e4d2a9376469eb0c918c6c0c9e8372f0d4ee5388757fe9a0681\n"
+  },
+  "mined_admission": [
+    {
+      "admitted": 5,
+      "admitted_path": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_3e5bc9f9/MINED_MOVES_ADMITTED_001.jsonl",
+      "families": [
+        "wall"
+      ],
+      "joint_families": [
+        "wall"
+      ],
+      "joint_verified_examples": 5,
+      "joint_verified_moves": 3,
+      "ready": true,
+      "rejected": [],
+      "rows": 5,
+      "rule": "owner 2026-11-06 ~07:2x walls-only launch (\"yes.\"), amending ~04:35: launch when /home/ubuntu/mined/MINED_MOVES.jsonl yields >=3 per-seed SUMO-verified JOINT examples for B (natively admitted plan with >=2 executing CAVs; that seed synergy CI95 lower bound > 0); no family-count requirement; families must exist in both B and R verified pools (R same family distribution from its own bank); hard deadline 14:00 local -> stop and report; owner approval replaces the MAIN confirmation file.",
+      "source": "/home/ubuntu/mined/MINED_MOVES.jsonl",
+      "source_sha256": "7a225dbd59436392c29fd3cad6e9df3c2deb01af976289bc787e9865c0f1471b",
+      "unix": 1793936028.9004588
+    }
+  ],
+  "new_dispatch": false,
+  "new_physics": false,
+  "previous_clean3_roots": {
+    "/home/ubuntu/coopmwm20261106_clean3": {
+      "phases": {
+        "track2_smoke": 3600
+      },
+      "rows": 3,
+      "sha256": "b6144a029a9c4fc585d12cd14aaf1c415202e947f1bc690b3422e4e16bd2471a",
+      "total_sim_s": 3600
+    },
+    "/home/ubuntu/coopmwm20261106_clean3_r2": {
+      "phases": {},
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "total_sim_s": 0
+    },
+    "/home/ubuntu/coopmwm20261106_clean3_r3": {
+      "phases": {
+        "track2_smoke": 9600
+      },
+      "rows": 8,
+      "sha256": "c732ff2008043639973575eed7ab323c3af9a4d1bfe80378692067a4c61ac61d",
+      "total_sim_s": 9600
+    },
+    "/home/ubuntu/coopmwm20261106_clean3_r4": {
+      "phases": {
+        "track2_smoke": 9600
+      },
+      "rows": 8,
+      "sha256": "c732ff2008043639973575eed7ab323c3af9a4d1bfe80378692067a4c61ac61d",
+      "total_sim_s": 9600
+    },
+    "/home/ubuntu/coopmwm20261106_clean3_r5": {
+      "phases": {},
+      "rows": 0,
+      "sha256": null,
+      "total_sim_s": 0
+    }
+  },
+  "process_signals": false,
+  "qualification": {
+    "returncode": 0,
+    "seconds": 209.26640343666077,
+    "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0"
+  },
+  "receipt_file_sha256": {
+    "GATE_PASS.json": "81a39be2ce1e421e5a6e5655edfc7dc8ce7bc1c4ea3221808c1c4519cfa4d5fb",
+    "GATE_STARTED.json": "b5689712dcf03125875f2501645ddb5aee0eb9accc83f61a630f4bc95e7f1a9e",
+    "LAUNCHED.json": "0b48fb7cebd5957bd1c831014d5f05096f01ff0c8e0d29407f299ea288785b6a",
+    "PHASE_COVERAGE_PASS.json": "2d75b84c3ee6d1ae7d27afb1dc980da0ca0fae6edffdc807d3ded9328febe19c",
+    "PREPARED.json": "5b0a1afb3de0549148e87509cb6f26d62fe027c83b993c001099b6722c57fb9f",
+    "SMOKE_FIX_RECEIPTS_PASS.json": "867a7aaf73a9012d19c236e57563b294d0e508ccc2600f5071617323782176e0",
+    "SMOKE_LEVER_RECEIPTS_PASS.json": "dd3364ba092862ecf2f139f75d00d13db8508388af080dc5d94774dfe4b7366b",
+    "SMOKE_PASS.json": "b5854a80aeba59cff15aad7fae1965b60f90b4e1f103e16bc36d842336880e65",
+    "SMOKE_REPORTING_PASS.json": "6414688ebff78c3b1a5b44b2bec2e197f00af645d9c5b3d88d14dcaa88eda79d",
+    "SMOKE_STARTED.json": "bc4d4a087c01a4ad518e0518918243ef5bda65b9f864994088f18591d90d17dc"
+  },
+  "receipts": {
+    "GATE_PASS.json": {
+      "augmentation_sha256": "9b1d8401245a6deae061a41deae2cf88689dcb9ecf8beb170d32f7fdfe745734",
+      "branches": 26,
+      "charged_sim_s": 15160,
+      "config_sha256": "aa2168474a3aacdaf1fec98dd63d6533d218d737d383081ae657d08fdf169070",
+      "receipt_sha256": "293d47341f9e1670130e4b2b4b1233449a71948824912c7fe3ea1e68dad69390",
+      "results": [
+        {
+          "J_veh_s": 3153.922896620591,
+          "actual_sim_s": 600.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 300,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "all",
+          "branch_sha256": "5220aeab3ef02456531eb4c00ef21d8253c377e10bd467ac1e179885956cb77a",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+            "302": "b1ad15dd67fc0195c457817e30cd03a2baa1d1c68ac333391f1b7a51f9f2765f",
+            "303": "594f712bfe77f6bb25aad1e9ac19190776d43ab2a5375aa1acb6dfb636ba34c9",
+            "304": "af4198bae135b32a2e05d3d4bd6f3ddfc65270d2572c68cf71603edf8a1f84dd",
+            "305": "9f10f94b0f23c9cadc005b7831128cdd8098d9206943b7805e25f9860ea4c38e",
+            "306": "77be8511d16e777ba206037b0cdb48cb3dcf7efd5670a5a5193b02881e7f89a9",
+            "307": "8c2c76f227732207a64855eedcd500331c7d29580c01dcce926e18696ca8f685",
+            "308": "c975792ef56756cb821daed82e44eb6a0dfb768152675c5ed1679aaa3e863130",
+            "309": "f8669da2545686a94ac6b5d32147e40731b1b039e849b841d1cf3f20114dc200",
+            "310": "c60e198997ac02a30348267fa19363743c12f5e0a4d5de561ffe616e8e570fae"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_B_s000_b00/clean1_gate_B_s000_b00/all/RESULT.json",
+          "result_sha256": "9cd9480dc7451864bfcaeaad33e07d1718a951959b3fdda0366e51f019c01a08",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 1,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 1.0,
+            "road_delay_vs": 3026.58728362059,
+            "source_wait_vs": 127.33561300000007,
+            "team_delay_vs": 3153.922896620591,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 45.5
+          }
+        },
+        {
+          "J_veh_s": 3154.0523804557006,
+          "actual_sim_s": 600.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 300,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "solo0",
+          "branch_sha256": "b1f8aeb2b1fb64eeccb0af4cc4d68f8dc52cc56fd24bb80cdceb45ea73f3b236",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+            "302": "b1ad15dd67fc0195c457817e30cd03a2baa1d1c68ac333391f1b7a51f9f2765f",
+            "303": "594f712bfe77f6bb25aad1e9ac19190776d43ab2a5375aa1acb6dfb636ba34c9",
+            "304": "af4198bae135b32a2e05d3d4bd6f3ddfc65270d2572c68cf71603edf8a1f84dd",
+            "305": "9f10f94b0f23c9cadc005b7831128cdd8098d9206943b7805e25f9860ea4c38e",
+            "306": "77be8511d16e777ba206037b0cdb48cb3dcf7efd5670a5a5193b02881e7f89a9",
+            "307": "8c2c76f227732207a64855eedcd500331c7d29580c01dcce926e18696ca8f685",
+            "308": "c975792ef56756cb821daed82e44eb6a0dfb768152675c5ed1679aaa3e863130",
+            "309": "cacf8d6ec639ce21c5bb8f0fff0a1b3062deb3e64e0e2863603533c4f928e121",
+            "310": "ced5a70e85e2696b70fdff0369803c23523c1ac25f35dbd6db840cb18665863c"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_B_s000_b01/clean1_gate_B_s000_b01/solo0/RESULT.json",
+          "result_sha256": "6ed0bde495febc93d15d3873817626283df7bcf466d5d31870ee03bce30bbe59",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 1,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 1.0,
+            "road_delay_vs": 3026.7167674557018,
+            "source_wait_vs": 127.33561300000007,
+            "team_delay_vs": 3154.0523804557006,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 45.5
+          }
+        },
+        {
+          "J_veh_s": 3153.7422305762416,
+          "actual_sim_s": 600.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 300,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "solo1",
+          "branch_sha256": "cc371e8658f74a88adf85ef404ce59fd9fcc19040b18b45db47fddc96f67808d",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+            "302": "b1ad15dd67fc0195c457817e30cd03a2baa1d1c68ac333391f1b7a51f9f2765f",
+            "303": "594f712bfe77f6bb25aad1e9ac19190776d43ab2a5375aa1acb6dfb636ba34c9",
+            "304": "af4198bae135b32a2e05d3d4bd6f3ddfc65270d2572c68cf71603edf8a1f84dd",
+            "305": "9f10f94b0f23c9cadc005b7831128cdd8098d9206943b7805e25f9860ea4c38e",
+            "306": "77be8511d16e777ba206037b0cdb48cb3dcf7efd5670a5a5193b02881e7f89a9",
+            "307": "8c2c76f227732207a64855eedcd500331c7d29580c01dcce926e18696ca8f685",
+            "308": "e6e94b277e5737938ab735e08abf0675a689f46134ed225f9f77314aa908cd6b",
+            "309": "e538e5fc133b962339476ce78f3d6b766a39da4bdc54699173c095752ae55b72",
+            "310": "b3b400de2af7f79e73372d92c28483481f822b03879b33aa8d595be2dcf0c224"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_B_s000_b02/clean1_gate_B_s000_b02/solo1/RESULT.json",
+          "result_sha256": "e1a325c089175fd12d7c85cce71de4fd1df5c9bf504d43fa09e56b0f800aabec",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 1,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 1.0,
+            "road_delay_vs": 3026.4066175762423,
+            "source_wait_vs": 127.33561300000007,
+            "team_delay_vs": 3153.7422305762416,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 45.5
+          }
+        },
+        {
+          "J_veh_s": 3153.742231791035,
+          "actual_sim_s": 600.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 300,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "reference",
+          "branch_sha256": "3919fd0499ba7b3e6feb4fdde20f2e641f867184a0e66031e666c2ac0cca4965",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+            "302": "b1ad15dd67fc0195c457817e30cd03a2baa1d1c68ac333391f1b7a51f9f2765f",
+            "303": "594f712bfe77f6bb25aad1e9ac19190776d43ab2a5375aa1acb6dfb636ba34c9",
+            "304": "af4198bae135b32a2e05d3d4bd6f3ddfc65270d2572c68cf71603edf8a1f84dd",
+            "305": "9f10f94b0f23c9cadc005b7831128cdd8098d9206943b7805e25f9860ea4c38e",
+            "306": "77be8511d16e777ba206037b0cdb48cb3dcf7efd5670a5a5193b02881e7f89a9",
+            "307": "8c2c76f227732207a64855eedcd500331c7d29580c01dcce926e18696ca8f685",
+            "308": "e6e94b277e5737938ab735e08abf0675a689f46134ed225f9f77314aa908cd6b",
+            "309": "e1315a2c56532c62f7a94d7fee21e350d548a36d9fba802e22534e6a54b941de",
+            "310": "a9d43ff053defd516e66664caca6e5afeab08e60e3f8c06c2973adb83384d8c8"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_B_s000_b03/clean1_gate_B_s000_b03/reference/RESULT.json",
+          "result_sha256": "48834e3d7f2fad60bf8502411e34e6d601890d8362c9fe57e9dbdbb651c0210b",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 1,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 1.0,
+            "road_delay_vs": 3026.406618791034,
+            "source_wait_vs": 127.33561300000007,
+            "team_delay_vs": 3153.742231791035,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 45.5
+          }
+        },
+        {
+          "J_veh_s": 5459.583808123821,
+          "actual_sim_s": 720.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 420,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "all",
+          "branch_sha256": "fc5592374cf55012d0d4bfaa3e95f51d73efb721b8809d0e1b00ae4ccdfaba5d",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "647bac587a96dc04952ac9ca2c1cc8b181a1113c3b2925484b094ca14ef649fa",
+            "302": "f3819763502de0a6cf130aba303bda0b34de8fba3b67a1ee5836636e20c3acde",
+            "303": "e9340c9bb518d410c83b7be0b30e74edbc5a350427f448e5b426633bb879a9f1",
+            "304": "1c2b58cac5a1bb08f1ab52797f2f4f3c1c69ff8104bf3b142c595b41acc59a55",
+            "305": "fe00139785c771bcde1da586eb9b812c0028ebfe8ca155471d5046bb9cf4d43f",
+            "306": "5fd0fbbf7918fc748b68a7980a3cbcdc3d0fcde71988a3f40803f6b39890c9bc",
+            "307": "fda9b2c0e1b64dcc69b22059461806a6a16af0302390e03dd815a859c2145421",
+            "308": "7d6bf8dfba8abfd7ad6cbc4e729d40e2d960f36e6a36660fe2754f4db62be44b",
+            "309": "ddf9020474f3a5026b9f368f2b9164205fe356bd8a84a113906741f4249cd5bb",
+            "310": "dedd3fe4a4f5ffb07313e7514f1bcca64ce42ee00a2e7e84e98901067c39493f"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_B_s001_b00/clean1_gate_B_s001_b00/all/RESULT.json",
+          "result_sha256": "342ea258fcdce643b0ce0edc935a0f2314665facd637ce05591b5248b4229be0",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 6,
+            "teleports": 0,
+            "ttc_events": 2
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 6.0,
+            "road_delay_vs": 5256.701408123814,
+            "source_wait_vs": 202.88239999999985,
+            "team_delay_vs": 5459.583808123821,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 121.5
+          }
+        },
+        {
+          "J_veh_s": 5459.583808123821,
+          "actual_sim_s": 720.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 420,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "solo0",
+          "branch_sha256": "b4cf6215fa978ad97de6874a380a76956706601bab5dbb34cb4fe7b5a2e76af9",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "647bac587a96dc04952ac9ca2c1cc8b181a1113c3b2925484b094ca14ef649fa",
+            "302": "f3819763502de0a6cf130aba303bda0b34de8fba3b67a1ee5836636e20c3acde",
+            "303": "e9340c9bb518d410c83b7be0b30e74edbc5a350427f448e5b426633bb879a9f1",
+            "304": "1c2b58cac5a1bb08f1ab52797f2f4f3c1c69ff8104bf3b142c595b41acc59a55",
+            "305": "fe00139785c771bcde1da586eb9b812c0028ebfe8ca155471d5046bb9cf4d43f",
+            "306": "5fd0fbbf7918fc748b68a7980a3cbcdc3d0fcde71988a3f40803f6b39890c9bc",
+            "307": "fda9b2c0e1b64dcc69b22059461806a6a16af0302390e03dd815a859c2145421",
+            "308": "7d6bf8dfba8abfd7ad6cbc4e729d40e2d960f36e6a36660fe2754f4db62be44b",
+            "309": "ddf9020474f3a5026b9f368f2b9164205fe356bd8a84a113906741f4249cd5bb",
+            "310": "dedd3fe4a4f5ffb07313e7514f1bcca64ce42ee00a2e7e84e98901067c39493f"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_B_s001_b01/clean1_gate_B_s001_b01/solo0/RESULT.json",
+          "result_sha256": "83bb2582b69a47bb9339e9de4cdd9a74e0d26993f6c5ff0f90e4678f204cca9c",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 6,
+            "teleports": 0,
+            "ttc_events": 2
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 6.0,
+            "road_delay_vs": 5256.701408123814,
+            "source_wait_vs": 202.88239999999985,
+            "team_delay_vs": 5459.583808123821,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 121.5
+          }
+        },
+        {
+          "J_veh_s": 5459.583808123821,
+          "actual_sim_s": 720.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 420,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "solo1",
+          "branch_sha256": "4de4fe30d41c58b9bf15fc5c4a2a907cdc5cf8b639281ee76f4f4343d0d40696",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "647bac587a96dc04952ac9ca2c1cc8b181a1113c3b2925484b094ca14ef649fa",
+            "302": "f3819763502de0a6cf130aba303bda0b34de8fba3b67a1ee5836636e20c3acde",
+            "303": "e9340c9bb518d410c83b7be0b30e74edbc5a350427f448e5b426633bb879a9f1",
+            "304": "1c2b58cac5a1bb08f1ab52797f2f4f3c1c69ff8104bf3b142c595b41acc59a55",
+            "305": "fe00139785c771bcde1da586eb9b812c0028ebfe8ca155471d5046bb9cf4d43f",
+            "306": "5fd0fbbf7918fc748b68a7980a3cbcdc3d0fcde71988a3f40803f6b39890c9bc",
+            "307": "fda9b2c0e1b64dcc69b22059461806a6a16af0302390e03dd815a859c2145421",
+            "308": "7d6bf8dfba8abfd7ad6cbc4e729d40e2d960f36e6a36660fe2754f4db62be44b",
+            "309": "ddf9020474f3a5026b9f368f2b9164205fe356bd8a84a113906741f4249cd5bb",
+            "310": "dedd3fe4a4f5ffb07313e7514f1bcca64ce42ee00a2e7e84e98901067c39493f"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_B_s001_b02/clean1_gate_B_s001_b02/solo1/RESULT.json",
+          "result_sha256": "e46161d1009726a55897609f585db5d9945ebbce9a76d79ab07f5dcc1cd6ad46",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 6,
+            "teleports": 0,
+            "ttc_events": 2
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 6.0,
+            "road_delay_vs": 5256.701408123814,
+            "source_wait_vs": 202.88239999999985,
+            "team_delay_vs": 5459.583808123821,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 121.5
+          }
+        },
+        {
+          "J_veh_s": 5459.583808123821,
+          "actual_sim_s": 720.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 420,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "reference",
+          "branch_sha256": "badd73d9977a817e4d81ba2a17c67ceb49a2fc70095e285590ed42498616c23e",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "647bac587a96dc04952ac9ca2c1cc8b181a1113c3b2925484b094ca14ef649fa",
+            "302": "f3819763502de0a6cf130aba303bda0b34de8fba3b67a1ee5836636e20c3acde",
+            "303": "e9340c9bb518d410c83b7be0b30e74edbc5a350427f448e5b426633bb879a9f1",
+            "304": "1c2b58cac5a1bb08f1ab52797f2f4f3c1c69ff8104bf3b142c595b41acc59a55",
+            "305": "fe00139785c771bcde1da586eb9b812c0028ebfe8ca155471d5046bb9cf4d43f",
+            "306": "5fd0fbbf7918fc748b68a7980a3cbcdc3d0fcde71988a3f40803f6b39890c9bc",
+            "307": "fda9b2c0e1b64dcc69b22059461806a6a16af0302390e03dd815a859c2145421",
+            "308": "7d6bf8dfba8abfd7ad6cbc4e729d40e2d960f36e6a36660fe2754f4db62be44b",
+            "309": "ddf9020474f3a5026b9f368f2b9164205fe356bd8a84a113906741f4249cd5bb",
+            "310": "dedd3fe4a4f5ffb07313e7514f1bcca64ce42ee00a2e7e84e98901067c39493f"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_B_s001_b03/clean1_gate_B_s001_b03/reference/RESULT.json",
+          "result_sha256": "2efdbbe101748bcb4c53f3d40d62d644b3a33bdbbf698e8bbbab7b0caf2915a6",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 6,
+            "teleports": 0,
+            "ttc_events": 2
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 6.0,
+            "road_delay_vs": 5256.701408123814,
+            "source_wait_vs": 202.88239999999985,
+            "team_delay_vs": 5459.583808123821,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 121.5
+          }
+        },
+        {
+          "J_veh_s": 1883.8222859373066,
+          "actual_sim_s": 460.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 150,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 10
+          },
+          "branch": "all",
+          "branch_sha256": "bbf979d2dc57b68d0cdb59b6a94b9c817b7b8a1c6de0f7df8f5196721083ecfd",
+          "continuation_prefix_sha256": {
+            "310": "7afdfd9a1f480d9fb068c06de317e344078d8118cb839e9a9e41175b5c921871",
+            "311": "e4fc82b089c3360d9595b9ef2389a57099a50409623e2bee5dfe5f02118a8ca8",
+            "312": "e4c58ea826c46db991e20001cd87f38579dde64cb4c7be1bd60d6513daf1e480",
+            "313": "f02579fa2b2fa4449a1c2083d89b0df9e9a6ff6a67fe38911e4043c8170e5c45",
+            "314": "6493106eb5b772f06c7b8aeabd9624c8493d5bc125ad674f8cdab9108b569349",
+            "315": "39c01a2940b8b761f5e6c6e1c72398c16751488d6cc4f6af2720249d26a57474",
+            "316": "6c0329555f9493d13ed64416deaf77cf6ba3e4743ef81d8202ba5069dafa41ec",
+            "317": "c9862b46c667001dce638fc9823e368880600a61d19a080f1f3e860384759854",
+            "318": "538744c342d3e51fd95bbcd68066dfe7f56cc6af82ca7288b8e25387d909fbb0",
+            "319": "d99d7623c39f53e0263084cba450c18ee84547f158f077ed40d09cac42092ee9",
+            "320": "2d583b7b1fb95537891738e761fa872e2a574986a34c40a414d3c7aba8e48b87"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_B_s002_b00/clean1_gate_B_s002_b00/all/RESULT.json",
+          "result_sha256": "3f3ad3e9b466c05189ecae08223c406a21077a74d4a14288e5424c567d8c5007",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 3.5,
+            "road_delay_vs": 1816.3731409373054,
+            "source_wait_vs": 67.44914500000021,
+            "team_delay_vs": 1883.8222859373066,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 43.5
+          }
+        },
+        {
+          "J_veh_s": 1885.1207125560964,
+          "actual_sim_s": 460.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 150,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 10
+          },
+          "branch": "solo0",
+          "branch_sha256": "2f47ed7f17a393f16555184144d5dcb5260e70c0870c44207b6b7fdd39cfcf0b",
+          "continuation_prefix_sha256": {
+            "310": "7afdfd9a1f480d9fb068c06de317e344078d8118cb839e9a9e41175b5c921871",
+            "311": "e4fc82b089c3360d9595b9ef2389a57099a50409623e2bee5dfe5f02118a8ca8",
+            "312": "e4c58ea826c46db991e20001cd87f38579dde64cb4c7be1bd60d6513daf1e480",
+            "313": "f02579fa2b2fa4449a1c2083d89b0df9e9a6ff6a67fe38911e4043c8170e5c45",
+            "314": "6493106eb5b772f06c7b8aeabd9624c8493d5bc125ad674f8cdab9108b569349",
+            "315": "39c01a2940b8b761f5e6c6e1c72398c16751488d6cc4f6af2720249d26a57474",
+            "316": "6c0329555f9493d13ed64416deaf77cf6ba3e4743ef81d8202ba5069dafa41ec",
+            "317": "c9862b46c667001dce638fc9823e368880600a61d19a080f1f3e860384759854",
+            "318": "538744c342d3e51fd95bbcd68066dfe7f56cc6af82ca7288b8e25387d909fbb0",
+            "319": "d99d7623c39f53e0263084cba450c18ee84547f158f077ed40d09cac42092ee9",
+            "320": "2d583b7b1fb95537891738e761fa872e2a574986a34c40a414d3c7aba8e48b87"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_B_s002_b01/clean1_gate_B_s002_b01/solo0/RESULT.json",
+          "result_sha256": "c3775f3edff6980ffc6b8f9bec1b3ccde339ff5ce9ff87c60030439b3be43be4",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 3.5,
+            "road_delay_vs": 1817.671567556095,
+            "source_wait_vs": 67.44914500000021,
+            "team_delay_vs": 1885.1207125560964,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 42.5
+          }
+        },
+        {
+          "J_veh_s": 1883.7059665827637,
+          "actual_sim_s": 460.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 150,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 10
+          },
+          "branch": "solo1",
+          "branch_sha256": "22af0629d25591a15f9fc35c099df1075ab5d1569ccaf28f21e8ddbcf2e088de",
+          "continuation_prefix_sha256": {
+            "310": "7afdfd9a1f480d9fb068c06de317e344078d8118cb839e9a9e41175b5c921871",
+            "311": "e4fc82b089c3360d9595b9ef2389a57099a50409623e2bee5dfe5f02118a8ca8",
+            "312": "e4c58ea826c46db991e20001cd87f38579dde64cb4c7be1bd60d6513daf1e480",
+            "313": "f02579fa2b2fa4449a1c2083d89b0df9e9a6ff6a67fe38911e4043c8170e5c45",
+            "314": "6493106eb5b772f06c7b8aeabd9624c8493d5bc125ad674f8cdab9108b569349",
+            "315": "39c01a2940b8b761f5e6c6e1c72398c16751488d6cc4f6af2720249d26a57474",
+            "316": "6c0329555f9493d13ed64416deaf77cf6ba3e4743ef81d8202ba5069dafa41ec",
+            "317": "c9862b46c667001dce638fc9823e368880600a61d19a080f1f3e860384759854",
+            "318": "538744c342d3e51fd95bbcd68066dfe7f56cc6af82ca7288b8e25387d909fbb0",
+            "319": "d99d7623c39f53e0263084cba450c18ee84547f158f077ed40d09cac42092ee9",
+            "320": "2d583b7b1fb95537891738e761fa872e2a574986a34c40a414d3c7aba8e48b87"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_B_s002_b02/clean1_gate_B_s002_b02/solo1/RESULT.json",
+          "result_sha256": "d75dee43335148197491bf87f52274fd0b41f9ab74ef6bb359ad4d508a3eb2ec",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 3.5,
+            "road_delay_vs": 1816.256821582764,
+            "source_wait_vs": 67.44914500000021,
+            "team_delay_vs": 1883.7059665827637,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 45.0
+          }
+        },
+        {
+          "J_veh_s": 1885.1247545799836,
+          "actual_sim_s": 460.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 150,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 10
+          },
+          "branch": "solo2",
+          "branch_sha256": "d04a6a9738b64fe34c80d74edec85e6e450f6201b6a2073b9cc8d78b4dfb6466",
+          "continuation_prefix_sha256": {
+            "310": "7afdfd9a1f480d9fb068c06de317e344078d8118cb839e9a9e41175b5c921871",
+            "311": "e4fc82b089c3360d9595b9ef2389a57099a50409623e2bee5dfe5f02118a8ca8",
+            "312": "e4c58ea826c46db991e20001cd87f38579dde64cb4c7be1bd60d6513daf1e480",
+            "313": "f02579fa2b2fa4449a1c2083d89b0df9e9a6ff6a67fe38911e4043c8170e5c45",
+            "314": "6493106eb5b772f06c7b8aeabd9624c8493d5bc125ad674f8cdab9108b569349",
+            "315": "39c01a2940b8b761f5e6c6e1c72398c16751488d6cc4f6af2720249d26a57474",
+            "316": "6c0329555f9493d13ed64416deaf77cf6ba3e4743ef81d8202ba5069dafa41ec",
+            "317": "c9862b46c667001dce638fc9823e368880600a61d19a080f1f3e860384759854",
+            "318": "538744c342d3e51fd95bbcd68066dfe7f56cc6af82ca7288b8e25387d909fbb0",
+            "319": "d99d7623c39f53e0263084cba450c18ee84547f158f077ed40d09cac42092ee9",
+            "320": "2d583b7b1fb95537891738e761fa872e2a574986a34c40a414d3c7aba8e48b87"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_B_s002_b03/clean1_gate_B_s002_b03/solo2/RESULT.json",
+          "result_sha256": "c181195047aab719f12e38745701ecbc717bd56c3947b1bc396e2aa6b17f5916",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 3.5,
+            "road_delay_vs": 1817.6756095799833,
+            "source_wait_vs": 67.44914500000021,
+            "team_delay_vs": 1885.1247545799836,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 42.5
+          }
+        },
+        {
+          "J_veh_s": 1883.6057702311819,
+          "actual_sim_s": 460.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 150,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 10
+          },
+          "branch": "reference",
+          "branch_sha256": "c7c5a5af6851ca7d580a975304ec2ead8a2919db9789999b6dee8c76147d609c",
+          "continuation_prefix_sha256": {
+            "310": "7afdfd9a1f480d9fb068c06de317e344078d8118cb839e9a9e41175b5c921871",
+            "311": "e4fc82b089c3360d9595b9ef2389a57099a50409623e2bee5dfe5f02118a8ca8",
+            "312": "e4c58ea826c46db991e20001cd87f38579dde64cb4c7be1bd60d6513daf1e480",
+            "313": "f02579fa2b2fa4449a1c2083d89b0df9e9a6ff6a67fe38911e4043c8170e5c45",
+            "314": "6493106eb5b772f06c7b8aeabd9624c8493d5bc125ad674f8cdab9108b569349",
+            "315": "39c01a2940b8b761f5e6c6e1c72398c16751488d6cc4f6af2720249d26a57474",
+            "316": "6c0329555f9493d13ed64416deaf77cf6ba3e4743ef81d8202ba5069dafa41ec",
+            "317": "c9862b46c667001dce638fc9823e368880600a61d19a080f1f3e860384759854",
+            "318": "538744c342d3e51fd95bbcd68066dfe7f56cc6af82ca7288b8e25387d909fbb0",
+            "319": "d99d7623c39f53e0263084cba450c18ee84547f158f077ed40d09cac42092ee9",
+            "320": "2d583b7b1fb95537891738e761fa872e2a574986a34c40a414d3c7aba8e48b87"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_B_s002_b04/clean1_gate_B_s002_b04/reference/RESULT.json",
+          "result_sha256": "9c8797b736ef2dfbe75f1e4521ae51da2d2c3a405db297e0f80bc328acef924b",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 3.5,
+            "road_delay_vs": 1816.1566252311818,
+            "source_wait_vs": 67.44914500000021,
+            "team_delay_vs": 1883.6057702311819,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 44.0
+          }
+        },
+        {
+          "J_veh_s": 3153.922896620591,
+          "actual_sim_s": 600.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 300,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "all",
+          "branch_sha256": "5695573bd6f67c160ffa47f02560d0bb6a84b526ba5cbfa73145d665d6351fd9",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+            "302": "b1ad15dd67fc0195c457817e30cd03a2baa1d1c68ac333391f1b7a51f9f2765f",
+            "303": "594f712bfe77f6bb25aad1e9ac19190776d43ab2a5375aa1acb6dfb636ba34c9",
+            "304": "af4198bae135b32a2e05d3d4bd6f3ddfc65270d2572c68cf71603edf8a1f84dd",
+            "305": "9f10f94b0f23c9cadc005b7831128cdd8098d9206943b7805e25f9860ea4c38e",
+            "306": "77be8511d16e777ba206037b0cdb48cb3dcf7efd5670a5a5193b02881e7f89a9",
+            "307": "8c2c76f227732207a64855eedcd500331c7d29580c01dcce926e18696ca8f685",
+            "308": "c975792ef56756cb821daed82e44eb6a0dfb768152675c5ed1679aaa3e863130",
+            "309": "f8669da2545686a94ac6b5d32147e40731b1b039e849b841d1cf3f20114dc200",
+            "310": "c60e198997ac02a30348267fa19363743c12f5e0a4d5de561ffe616e8e570fae"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_R_s000_b00/clean1_gate_R_s000_b00/all/RESULT.json",
+          "result_sha256": "2a94de7586d016a5a10bfdb945f113d45ce335364bfbf5e2d89227267d882cf7",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 1,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 1.0,
+            "road_delay_vs": 3026.58728362059,
+            "source_wait_vs": 127.33561300000007,
+            "team_delay_vs": 3153.922896620591,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 45.5
+          }
+        },
+        {
+          "J_veh_s": 3154.0523804557006,
+          "actual_sim_s": 600.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 300,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "solo0",
+          "branch_sha256": "7a09b94f214f00bde4f46b7194d04d903d7d56fb443c17ed51cd8b41979ca65a",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+            "302": "b1ad15dd67fc0195c457817e30cd03a2baa1d1c68ac333391f1b7a51f9f2765f",
+            "303": "594f712bfe77f6bb25aad1e9ac19190776d43ab2a5375aa1acb6dfb636ba34c9",
+            "304": "af4198bae135b32a2e05d3d4bd6f3ddfc65270d2572c68cf71603edf8a1f84dd",
+            "305": "9f10f94b0f23c9cadc005b7831128cdd8098d9206943b7805e25f9860ea4c38e",
+            "306": "77be8511d16e777ba206037b0cdb48cb3dcf7efd5670a5a5193b02881e7f89a9",
+            "307": "8c2c76f227732207a64855eedcd500331c7d29580c01dcce926e18696ca8f685",
+            "308": "c975792ef56756cb821daed82e44eb6a0dfb768152675c5ed1679aaa3e863130",
+            "309": "cacf8d6ec639ce21c5bb8f0fff0a1b3062deb3e64e0e2863603533c4f928e121",
+            "310": "ced5a70e85e2696b70fdff0369803c23523c1ac25f35dbd6db840cb18665863c"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_R_s000_b01/clean1_gate_R_s000_b01/solo0/RESULT.json",
+          "result_sha256": "eb4e0ebcd4655ca950e8a5b6daffcad64599ad4726ec12775a6c9970e409ef94",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 1,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 1.0,
+            "road_delay_vs": 3026.7167674557018,
+            "source_wait_vs": 127.33561300000007,
+            "team_delay_vs": 3154.0523804557006,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 45.5
+          }
+        },
+        {
+          "J_veh_s": 3153.7422305762416,
+          "actual_sim_s": 600.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 300,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "solo1",
+          "branch_sha256": "6a672c1b297669a50fe823a00ee7563e2dbd22ead54ac3df411a7810cfce1f1e",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+            "302": "b1ad15dd67fc0195c457817e30cd03a2baa1d1c68ac333391f1b7a51f9f2765f",
+            "303": "594f712bfe77f6bb25aad1e9ac19190776d43ab2a5375aa1acb6dfb636ba34c9",
+            "304": "af4198bae135b32a2e05d3d4bd6f3ddfc65270d2572c68cf71603edf8a1f84dd",
+            "305": "9f10f94b0f23c9cadc005b7831128cdd8098d9206943b7805e25f9860ea4c38e",
+            "306": "77be8511d16e777ba206037b0cdb48cb3dcf7efd5670a5a5193b02881e7f89a9",
+            "307": "8c2c76f227732207a64855eedcd500331c7d29580c01dcce926e18696ca8f685",
+            "308": "e6e94b277e5737938ab735e08abf0675a689f46134ed225f9f77314aa908cd6b",
+            "309": "e538e5fc133b962339476ce78f3d6b766a39da4bdc54699173c095752ae55b72",
+            "310": "b3b400de2af7f79e73372d92c28483481f822b03879b33aa8d595be2dcf0c224"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_R_s000_b02/clean1_gate_R_s000_b02/solo1/RESULT.json",
+          "result_sha256": "fc1b9a281dac3bb1ccd3a6359c06099c63f70f9d2084f4537710bfbd095e1cd2",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 1,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 1.0,
+            "road_delay_vs": 3026.4066175762423,
+            "source_wait_vs": 127.33561300000007,
+            "team_delay_vs": 3153.7422305762416,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 45.5
+          }
+        },
+        {
+          "J_veh_s": 3153.742231791035,
+          "actual_sim_s": 600.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 300,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "reference",
+          "branch_sha256": "31d8b1c298a681cabffa6c96f5a39e849cbcc3818ae1b38d1e99c094c5848248",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+            "302": "b1ad15dd67fc0195c457817e30cd03a2baa1d1c68ac333391f1b7a51f9f2765f",
+            "303": "594f712bfe77f6bb25aad1e9ac19190776d43ab2a5375aa1acb6dfb636ba34c9",
+            "304": "af4198bae135b32a2e05d3d4bd6f3ddfc65270d2572c68cf71603edf8a1f84dd",
+            "305": "9f10f94b0f23c9cadc005b7831128cdd8098d9206943b7805e25f9860ea4c38e",
+            "306": "77be8511d16e777ba206037b0cdb48cb3dcf7efd5670a5a5193b02881e7f89a9",
+            "307": "8c2c76f227732207a64855eedcd500331c7d29580c01dcce926e18696ca8f685",
+            "308": "e6e94b277e5737938ab735e08abf0675a689f46134ed225f9f77314aa908cd6b",
+            "309": "e1315a2c56532c62f7a94d7fee21e350d548a36d9fba802e22534e6a54b941de",
+            "310": "a9d43ff053defd516e66664caca6e5afeab08e60e3f8c06c2973adb83384d8c8"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_R_s000_b03/clean1_gate_R_s000_b03/reference/RESULT.json",
+          "result_sha256": "d854132710ef32dc2822903b1fb1b38c6144afc4f1daf025c50c27c74947cb72",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 1,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 1.0,
+            "road_delay_vs": 3026.406618791034,
+            "source_wait_vs": 127.33561300000007,
+            "team_delay_vs": 3153.742231791035,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 45.5
+          }
+        },
+        {
+          "J_veh_s": 5459.583808123821,
+          "actual_sim_s": 720.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 420,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "all",
+          "branch_sha256": "07bd1e4f6e9f848367fdda56bf52e7a79ce500f880bf2837699bdece7bfc12ff",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "647bac587a96dc04952ac9ca2c1cc8b181a1113c3b2925484b094ca14ef649fa",
+            "302": "f3819763502de0a6cf130aba303bda0b34de8fba3b67a1ee5836636e20c3acde",
+            "303": "e9340c9bb518d410c83b7be0b30e74edbc5a350427f448e5b426633bb879a9f1",
+            "304": "1c2b58cac5a1bb08f1ab52797f2f4f3c1c69ff8104bf3b142c595b41acc59a55",
+            "305": "fe00139785c771bcde1da586eb9b812c0028ebfe8ca155471d5046bb9cf4d43f",
+            "306": "5fd0fbbf7918fc748b68a7980a3cbcdc3d0fcde71988a3f40803f6b39890c9bc",
+            "307": "fda9b2c0e1b64dcc69b22059461806a6a16af0302390e03dd815a859c2145421",
+            "308": "7d6bf8dfba8abfd7ad6cbc4e729d40e2d960f36e6a36660fe2754f4db62be44b",
+            "309": "ddf9020474f3a5026b9f368f2b9164205fe356bd8a84a113906741f4249cd5bb",
+            "310": "dedd3fe4a4f5ffb07313e7514f1bcca64ce42ee00a2e7e84e98901067c39493f"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_R_s001_b00/clean1_gate_R_s001_b00/all/RESULT.json",
+          "result_sha256": "d27ff7b464a19de845ac0082c63d8c49a661d5c2560b015762c9700202d6a669",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 6,
+            "teleports": 0,
+            "ttc_events": 2
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 6.0,
+            "road_delay_vs": 5256.701408123814,
+            "source_wait_vs": 202.88239999999985,
+            "team_delay_vs": 5459.583808123821,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 121.5
+          }
+        },
+        {
+          "J_veh_s": 5459.583808123821,
+          "actual_sim_s": 720.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 420,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "solo0",
+          "branch_sha256": "2ab849aa5ee408b99b859827194e80fcae31973dbe8289e7c5c27c17840364d9",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "647bac587a96dc04952ac9ca2c1cc8b181a1113c3b2925484b094ca14ef649fa",
+            "302": "f3819763502de0a6cf130aba303bda0b34de8fba3b67a1ee5836636e20c3acde",
+            "303": "e9340c9bb518d410c83b7be0b30e74edbc5a350427f448e5b426633bb879a9f1",
+            "304": "1c2b58cac5a1bb08f1ab52797f2f4f3c1c69ff8104bf3b142c595b41acc59a55",
+            "305": "fe00139785c771bcde1da586eb9b812c0028ebfe8ca155471d5046bb9cf4d43f",
+            "306": "5fd0fbbf7918fc748b68a7980a3cbcdc3d0fcde71988a3f40803f6b39890c9bc",
+            "307": "fda9b2c0e1b64dcc69b22059461806a6a16af0302390e03dd815a859c2145421",
+            "308": "7d6bf8dfba8abfd7ad6cbc4e729d40e2d960f36e6a36660fe2754f4db62be44b",
+            "309": "ddf9020474f3a5026b9f368f2b9164205fe356bd8a84a113906741f4249cd5bb",
+            "310": "dedd3fe4a4f5ffb07313e7514f1bcca64ce42ee00a2e7e84e98901067c39493f"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_R_s001_b01/clean1_gate_R_s001_b01/solo0/RESULT.json",
+          "result_sha256": "6574d0f74a1cb236ef878be09051c8bccccae933d86fea931818667e63ce3601",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 6,
+            "teleports": 0,
+            "ttc_events": 2
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 6.0,
+            "road_delay_vs": 5256.701408123814,
+            "source_wait_vs": 202.88239999999985,
+            "team_delay_vs": 5459.583808123821,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 121.5
+          }
+        },
+        {
+          "J_veh_s": 5459.583808123821,
+          "actual_sim_s": 720.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 420,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "solo1",
+          "branch_sha256": "8e6785d3ab2530e0285c99ecf9d2e2b624bee9e76995608750d38ad04dd728b6",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "647bac587a96dc04952ac9ca2c1cc8b181a1113c3b2925484b094ca14ef649fa",
+            "302": "f3819763502de0a6cf130aba303bda0b34de8fba3b67a1ee5836636e20c3acde",
+            "303": "e9340c9bb518d410c83b7be0b30e74edbc5a350427f448e5b426633bb879a9f1",
+            "304": "1c2b58cac5a1bb08f1ab52797f2f4f3c1c69ff8104bf3b142c595b41acc59a55",
+            "305": "fe00139785c771bcde1da586eb9b812c0028ebfe8ca155471d5046bb9cf4d43f",
+            "306": "5fd0fbbf7918fc748b68a7980a3cbcdc3d0fcde71988a3f40803f6b39890c9bc",
+            "307": "fda9b2c0e1b64dcc69b22059461806a6a16af0302390e03dd815a859c2145421",
+            "308": "7d6bf8dfba8abfd7ad6cbc4e729d40e2d960f36e6a36660fe2754f4db62be44b",
+            "309": "ddf9020474f3a5026b9f368f2b9164205fe356bd8a84a113906741f4249cd5bb",
+            "310": "dedd3fe4a4f5ffb07313e7514f1bcca64ce42ee00a2e7e84e98901067c39493f"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_R_s001_b02/clean1_gate_R_s001_b02/solo1/RESULT.json",
+          "result_sha256": "24b993d3940ac3f8c3e70087788cf86e9a71118a182ec2ee500adf98b8d31ffe",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 6,
+            "teleports": 0,
+            "ttc_events": 2
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 6.0,
+            "road_delay_vs": 5256.701408123814,
+            "source_wait_vs": 202.88239999999985,
+            "team_delay_vs": 5459.583808123821,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 121.5
+          }
+        },
+        {
+          "J_veh_s": 5459.583808123821,
+          "actual_sim_s": 720.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 420,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 0
+          },
+          "branch": "reference",
+          "branch_sha256": "faa0ac662baf57239e3460506bbcee8dfa23a7abec411cb878acf82ca1f3d710",
+          "continuation_prefix_sha256": {
+            "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+            "301": "647bac587a96dc04952ac9ca2c1cc8b181a1113c3b2925484b094ca14ef649fa",
+            "302": "f3819763502de0a6cf130aba303bda0b34de8fba3b67a1ee5836636e20c3acde",
+            "303": "e9340c9bb518d410c83b7be0b30e74edbc5a350427f448e5b426633bb879a9f1",
+            "304": "1c2b58cac5a1bb08f1ab52797f2f4f3c1c69ff8104bf3b142c595b41acc59a55",
+            "305": "fe00139785c771bcde1da586eb9b812c0028ebfe8ca155471d5046bb9cf4d43f",
+            "306": "5fd0fbbf7918fc748b68a7980a3cbcdc3d0fcde71988a3f40803f6b39890c9bc",
+            "307": "fda9b2c0e1b64dcc69b22059461806a6a16af0302390e03dd815a859c2145421",
+            "308": "7d6bf8dfba8abfd7ad6cbc4e729d40e2d960f36e6a36660fe2754f4db62be44b",
+            "309": "ddf9020474f3a5026b9f368f2b9164205fe356bd8a84a113906741f4249cd5bb",
+            "310": "dedd3fe4a4f5ffb07313e7514f1bcca64ce42ee00a2e7e84e98901067c39493f"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_R_s001_b03/clean1_gate_R_s001_b03/reference/RESULT.json",
+          "result_sha256": "9b681f0c82451f078fa9f01a8d325c13cec676f9ffd2e906fd8acbd00d8ec990",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 6,
+            "teleports": 0,
+            "ttc_events": 2
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 6.0,
+            "road_delay_vs": 5256.701408123814,
+            "source_wait_vs": 202.88239999999985,
+            "team_delay_vs": 5459.583808123821,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 121.5
+          }
+        },
+        {
+          "J_veh_s": 1883.8222859373066,
+          "actual_sim_s": 460.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 150,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 10
+          },
+          "branch": "all",
+          "branch_sha256": "895329dd362d194f1b56ebd870ea792af38b40d8d3f67aac82bcb7e579b620de",
+          "continuation_prefix_sha256": {
+            "310": "7afdfd9a1f480d9fb068c06de317e344078d8118cb839e9a9e41175b5c921871",
+            "311": "e4fc82b089c3360d9595b9ef2389a57099a50409623e2bee5dfe5f02118a8ca8",
+            "312": "e4c58ea826c46db991e20001cd87f38579dde64cb4c7be1bd60d6513daf1e480",
+            "313": "f02579fa2b2fa4449a1c2083d89b0df9e9a6ff6a67fe38911e4043c8170e5c45",
+            "314": "6493106eb5b772f06c7b8aeabd9624c8493d5bc125ad674f8cdab9108b569349",
+            "315": "39c01a2940b8b761f5e6c6e1c72398c16751488d6cc4f6af2720249d26a57474",
+            "316": "6c0329555f9493d13ed64416deaf77cf6ba3e4743ef81d8202ba5069dafa41ec",
+            "317": "c9862b46c667001dce638fc9823e368880600a61d19a080f1f3e860384759854",
+            "318": "538744c342d3e51fd95bbcd68066dfe7f56cc6af82ca7288b8e25387d909fbb0",
+            "319": "d99d7623c39f53e0263084cba450c18ee84547f158f077ed40d09cac42092ee9",
+            "320": "2d583b7b1fb95537891738e761fa872e2a574986a34c40a414d3c7aba8e48b87"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_R_s002_b00/clean1_gate_R_s002_b00/all/RESULT.json",
+          "result_sha256": "83cb85d19367319f83296863dbb29cb8220b6b87e6ac2568c98c3636e160ad37",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 3.5,
+            "road_delay_vs": 1816.3731409373054,
+            "source_wait_vs": 67.44914500000021,
+            "team_delay_vs": 1883.8222859373066,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 43.5
+          }
+        },
+        {
+          "J_veh_s": 1885.1207125560964,
+          "actual_sim_s": 460.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 150,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 10
+          },
+          "branch": "solo0",
+          "branch_sha256": "03562ca766f6d591189f041566d544cfd4f474d66dd70d399347a84825c1a4e7",
+          "continuation_prefix_sha256": {
+            "310": "7afdfd9a1f480d9fb068c06de317e344078d8118cb839e9a9e41175b5c921871",
+            "311": "e4fc82b089c3360d9595b9ef2389a57099a50409623e2bee5dfe5f02118a8ca8",
+            "312": "e4c58ea826c46db991e20001cd87f38579dde64cb4c7be1bd60d6513daf1e480",
+            "313": "f02579fa2b2fa4449a1c2083d89b0df9e9a6ff6a67fe38911e4043c8170e5c45",
+            "314": "6493106eb5b772f06c7b8aeabd9624c8493d5bc125ad674f8cdab9108b569349",
+            "315": "39c01a2940b8b761f5e6c6e1c72398c16751488d6cc4f6af2720249d26a57474",
+            "316": "6c0329555f9493d13ed64416deaf77cf6ba3e4743ef81d8202ba5069dafa41ec",
+            "317": "c9862b46c667001dce638fc9823e368880600a61d19a080f1f3e860384759854",
+            "318": "538744c342d3e51fd95bbcd68066dfe7f56cc6af82ca7288b8e25387d909fbb0",
+            "319": "d99d7623c39f53e0263084cba450c18ee84547f158f077ed40d09cac42092ee9",
+            "320": "2d583b7b1fb95537891738e761fa872e2a574986a34c40a414d3c7aba8e48b87"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_R_s002_b01/clean1_gate_R_s002_b01/solo0/RESULT.json",
+          "result_sha256": "92d9cc24599dab1f00a7a0a6e1645cb442b87bf7aa7868cb6bb9c70b77a10170",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 3.5,
+            "road_delay_vs": 1817.671567556095,
+            "source_wait_vs": 67.44914500000021,
+            "team_delay_vs": 1885.1207125560964,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 42.5
+          }
+        },
+        {
+          "J_veh_s": 1883.7059665827637,
+          "actual_sim_s": 460.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 150,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 10
+          },
+          "branch": "solo1",
+          "branch_sha256": "4113a2ce6726d58c957f3af8582675749d0db0267aedfa61913688d7430447d1",
+          "continuation_prefix_sha256": {
+            "310": "7afdfd9a1f480d9fb068c06de317e344078d8118cb839e9a9e41175b5c921871",
+            "311": "e4fc82b089c3360d9595b9ef2389a57099a50409623e2bee5dfe5f02118a8ca8",
+            "312": "e4c58ea826c46db991e20001cd87f38579dde64cb4c7be1bd60d6513daf1e480",
+            "313": "f02579fa2b2fa4449a1c2083d89b0df9e9a6ff6a67fe38911e4043c8170e5c45",
+            "314": "6493106eb5b772f06c7b8aeabd9624c8493d5bc125ad674f8cdab9108b569349",
+            "315": "39c01a2940b8b761f5e6c6e1c72398c16751488d6cc4f6af2720249d26a57474",
+            "316": "6c0329555f9493d13ed64416deaf77cf6ba3e4743ef81d8202ba5069dafa41ec",
+            "317": "c9862b46c667001dce638fc9823e368880600a61d19a080f1f3e860384759854",
+            "318": "538744c342d3e51fd95bbcd68066dfe7f56cc6af82ca7288b8e25387d909fbb0",
+            "319": "d99d7623c39f53e0263084cba450c18ee84547f158f077ed40d09cac42092ee9",
+            "320": "2d583b7b1fb95537891738e761fa872e2a574986a34c40a414d3c7aba8e48b87"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_R_s002_b02/clean1_gate_R_s002_b02/solo1/RESULT.json",
+          "result_sha256": "54a15926de6b29598474bfbfd73cec1784000f9d14fdcb66fd71b317207307b8",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 3.5,
+            "road_delay_vs": 1816.256821582764,
+            "source_wait_vs": 67.44914500000021,
+            "team_delay_vs": 1883.7059665827637,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 45.0
+          }
+        },
+        {
+          "J_veh_s": 1885.1247545799836,
+          "actual_sim_s": 460.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 150,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 10
+          },
+          "branch": "solo2",
+          "branch_sha256": "1b339a1dd60c7b6a3b2497e036111fe966eaebd11b8bf487b9ff83d8767788cd",
+          "continuation_prefix_sha256": {
+            "310": "7afdfd9a1f480d9fb068c06de317e344078d8118cb839e9a9e41175b5c921871",
+            "311": "e4fc82b089c3360d9595b9ef2389a57099a50409623e2bee5dfe5f02118a8ca8",
+            "312": "e4c58ea826c46db991e20001cd87f38579dde64cb4c7be1bd60d6513daf1e480",
+            "313": "f02579fa2b2fa4449a1c2083d89b0df9e9a6ff6a67fe38911e4043c8170e5c45",
+            "314": "6493106eb5b772f06c7b8aeabd9624c8493d5bc125ad674f8cdab9108b569349",
+            "315": "39c01a2940b8b761f5e6c6e1c72398c16751488d6cc4f6af2720249d26a57474",
+            "316": "6c0329555f9493d13ed64416deaf77cf6ba3e4743ef81d8202ba5069dafa41ec",
+            "317": "c9862b46c667001dce638fc9823e368880600a61d19a080f1f3e860384759854",
+            "318": "538744c342d3e51fd95bbcd68066dfe7f56cc6af82ca7288b8e25387d909fbb0",
+            "319": "d99d7623c39f53e0263084cba450c18ee84547f158f077ed40d09cac42092ee9",
+            "320": "2d583b7b1fb95537891738e761fa872e2a574986a34c40a414d3c7aba8e48b87"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_R_s002_b03/clean1_gate_R_s002_b03/solo2/RESULT.json",
+          "result_sha256": "c9752d87a4845a7fe453fcbedd0d32a87080fcb49474fb0e4f42a4e56ff824b3",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 3.5,
+            "road_delay_vs": 1817.6756095799833,
+            "source_wait_vs": 67.44914500000021,
+            "team_delay_vs": 1885.1247545799836,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 42.5
+          }
+        },
+        {
+          "J_veh_s": 1883.6057702311819,
+          "actual_sim_s": 460.0,
+          "audit": {
+            "candidate": null,
+            "crn_verified_t0": true,
+            "live_steps": 150,
+            "noise_mode_used": "crn",
+            "replayed_prefix_steps": 10
+          },
+          "branch": "reference",
+          "branch_sha256": "e570c688c4e0e5447bce26ce2ea58e68127530bf8bf002b99d103aa858ae3b7a",
+          "continuation_prefix_sha256": {
+            "310": "7afdfd9a1f480d9fb068c06de317e344078d8118cb839e9a9e41175b5c921871",
+            "311": "e4fc82b089c3360d9595b9ef2389a57099a50409623e2bee5dfe5f02118a8ca8",
+            "312": "e4c58ea826c46db991e20001cd87f38579dde64cb4c7be1bd60d6513daf1e480",
+            "313": "f02579fa2b2fa4449a1c2083d89b0df9e9a6ff6a67fe38911e4043c8170e5c45",
+            "314": "6493106eb5b772f06c7b8aeabd9624c8493d5bc125ad674f8cdab9108b569349",
+            "315": "39c01a2940b8b761f5e6c6e1c72398c16751488d6cc4f6af2720249d26a57474",
+            "316": "6c0329555f9493d13ed64416deaf77cf6ba3e4743ef81d8202ba5069dafa41ec",
+            "317": "c9862b46c667001dce638fc9823e368880600a61d19a080f1f3e860384759854",
+            "318": "538744c342d3e51fd95bbcd68066dfe7f56cc6af82ca7288b8e25387d909fbb0",
+            "319": "d99d7623c39f53e0263084cba450c18ee84547f158f077ed40d09cac42092ee9",
+            "320": "2d583b7b1fb95537891738e761fa872e2a574986a34c40a414d3c7aba8e48b87"
+          },
+          "index": 0,
+          "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/safety_gate/gate_clean1_gate_R_s002_b04/clean1_gate_R_s002_b04/reference/RESULT.json",
+          "result_sha256": "c0db7a4593f9e0b4f476fade6a8658eb86cfd71ac96e589d4ef59c9e61161998",
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 1
+          },
+          "status": "graded",
+          "window": {
+            "collisions": 0.0,
+            "hard_brake": 3.5,
+            "road_delay_vs": 1816.1566252311818,
+            "source_wait_vs": 67.44914500000021,
+            "team_delay_vs": 1883.6057702311819,
+            "teleports": 0.0,
+            "ttc_below_3_vs": 44.0
+          }
+        }
+      ],
+      "rule": "0 collisions, 0 teleports; three prospectively fixed probe states, B/R group/solos/base, unchanged full windows",
+      "safety": {
+        "collisions": 0,
+        "hard_brakes": 96,
+        "teleports": 0,
+        "ttc_events": 34
+      },
+      "smoke_sha256": "a91b431118026e4d2a9376469eb0c918c6c0c9e8372f0d4ee5388757fe9a0681",
+      "source_manifest_sha256": "aa95ad5e1d01968d0c85c17d92c57969a7d1d89a8c97aba1208a6233649ae1a5",
+      "status": "PASS",
+      "unix": 1793937647.9173317
+    },
+    "GATE_STARTED.json": {
+      "config_sha256": "aa2168474a3aacdaf1fec98dd63d6533d218d737d383081ae657d08fdf169070",
+      "job_manifest": [
+        {
+          "id": "gate_clean1_gate_B_s000_b00",
+          "sim_s": 600
+        },
+        {
+          "id": "gate_clean1_gate_B_s000_b01",
+          "sim_s": 600
+        },
+        {
+          "id": "gate_clean1_gate_B_s000_b02",
+          "sim_s": 600
+        },
+        {
+          "id": "gate_clean1_gate_B_s000_b03",
+          "sim_s": 600
+        },
+        {
+          "id": "gate_clean1_gate_B_s001_b00",
+          "sim_s": 720
+        },
+        {
+          "id": "gate_clean1_gate_B_s001_b01",
+          "sim_s": 720
+        },
+        {
+          "id": "gate_clean1_gate_B_s001_b02",
+          "sim_s": 720
+        },
+        {
+          "id": "gate_clean1_gate_B_s001_b03",
+          "sim_s": 720
+        },
+        {
+          "id": "gate_clean1_gate_B_s002_b00",
+          "sim_s": 460
+        },
+        {
+          "id": "gate_clean1_gate_B_s002_b01",
+          "sim_s": 460
+        },
+        {
+          "id": "gate_clean1_gate_B_s002_b02",
+          "sim_s": 460
+        },
+        {
+          "id": "gate_clean1_gate_B_s002_b03",
+          "sim_s": 460
+        },
+        {
+          "id": "gate_clean1_gate_B_s002_b04",
+          "sim_s": 460
+        },
+        {
+          "id": "gate_clean1_gate_R_s000_b00",
+          "sim_s": 600
+        },
+        {
+          "id": "gate_clean1_gate_R_s000_b01",
+          "sim_s": 600
+        },
+        {
+          "id": "gate_clean1_gate_R_s000_b02",
+          "sim_s": 600
+        },
+        {
+          "id": "gate_clean1_gate_R_s000_b03",
+          "sim_s": 600
+        },
+        {
+          "id": "gate_clean1_gate_R_s001_b00",
+          "sim_s": 720
+        },
+        {
+          "id": "gate_clean1_gate_R_s001_b01",
+          "sim_s": 720
+        },
+        {
+          "id": "gate_clean1_gate_R_s001_b02",
+          "sim_s": 720
+        },
+        {
+          "id": "gate_clean1_gate_R_s001_b03",
+          "sim_s": 720
+        },
+        {
+          "id": "gate_clean1_gate_R_s002_b00",
+          "sim_s": 460
+        },
+        {
+          "id": "gate_clean1_gate_R_s002_b01",
+          "sim_s": 460
+        },
+        {
+          "id": "gate_clean1_gate_R_s002_b02",
+          "sim_s": 460
+        },
+        {
+          "id": "gate_clean1_gate_R_s002_b03",
+          "sim_s": 460
+        },
+        {
+          "id": "gate_clean1_gate_R_s002_b04",
+          "sim_s": 460
+        }
+      ],
+      "specs": [
+        {
+          "branch": "all",
+          "branch_sha256": "5220aeab3ef02456531eb4c00ef21d8253c377e10bd467ac1e179885956cb77a",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "lscollect1_B3_986040",
+            "role": "train",
+            "training_seed": 20261101,
+            "update": 3,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 600,
+          "snapshot_sha256": "ae8850a1c28e141cce4b470b4b7aefffb41cd904db8760d992c4027e29088764",
+          "verification_id": "clean1_gate_B_s000_b00",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo0",
+          "branch_sha256": "b1f8aeb2b1fb64eeccb0af4cc4d68f8dc52cc56fd24bb80cdceb45ea73f3b236",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "lscollect1_B3_986040",
+            "role": "train",
+            "training_seed": 20261101,
+            "update": 3,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 600,
+          "snapshot_sha256": "275d6838486435aaecf2e1059e512c87a66c1ae047ed257c9a86a8df666abcfd",
+          "verification_id": "clean1_gate_B_s000_b01",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo1",
+          "branch_sha256": "cc371e8658f74a88adf85ef404ce59fd9fcc19040b18b45db47fddc96f67808d",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "lscollect1_B3_986040",
+            "role": "train",
+            "training_seed": 20261101,
+            "update": 3,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 600,
+          "snapshot_sha256": "5f0d254dcddbd46ee03c99fa45d08fae84b5f0a5b4cf677609fa12c93a371194",
+          "verification_id": "clean1_gate_B_s000_b02",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "reference",
+          "branch_sha256": "3919fd0499ba7b3e6feb4fdde20f2e641f867184a0e66031e666c2ac0cca4965",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "lscollect1_B3_986040",
+            "role": "train",
+            "training_seed": 20261101,
+            "update": 3,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 600,
+          "snapshot_sha256": "5393538b62e278ff174c7f56b0665b9fe7826747ad0892a374e53bdeaa13ed9c",
+          "verification_id": "clean1_gate_B_s000_b03",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "all",
+          "branch_sha256": "fc5592374cf55012d0d4bfaa3e95f51d73efb721b8809d0e1b00ae4ccdfaba5d",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 720,
+          "snapshot_sha256": "673534929d8dc6792f8efc085c8d5e125fa163460c18324245c4fbe2ac3372be",
+          "verification_id": "clean1_gate_B_s001_b00",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo0",
+          "branch_sha256": "b4cf6215fa978ad97de6874a380a76956706601bab5dbb34cb4fe7b5a2e76af9",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 720,
+          "snapshot_sha256": "20530e84f047ece92b80594678bfec50a332d8ee4f2ac37bd67a67fa38e1d335",
+          "verification_id": "clean1_gate_B_s001_b01",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo1",
+          "branch_sha256": "4de4fe30d41c58b9bf15fc5c4a2a907cdc5cf8b639281ee76f4f4343d0d40696",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 720,
+          "snapshot_sha256": "9b8072bda7a50d59235390de1440b8bad13a0dfcd8df517b64e99442c63c9c76",
+          "verification_id": "clean1_gate_B_s001_b02",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "reference",
+          "branch_sha256": "badd73d9977a817e4d81ba2a17c67ceb49a2fc70095e285590ed42498616c23e",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 720,
+          "snapshot_sha256": "01e3158dbf4c0a7d358cc8615b4195bd2e0c368a72cd6cf615ca4a039d322dbf",
+          "verification_id": "clean1_gate_B_s001_b03",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "all",
+          "branch_sha256": "bbf979d2dc57b68d0cdb59b6a94b9c817b7b8a1c6de0f7df8f5196721083ecfd",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 460,
+          "snapshot_sha256": "6353ab1e06ea6ef24557e5cba01d115a84f1b591cb38415164f8a384aa85645a",
+          "verification_id": "clean1_gate_B_s002_b00",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo0",
+          "branch_sha256": "2f47ed7f17a393f16555184144d5dcb5260e70c0870c44207b6b7fdd39cfcf0b",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 460,
+          "snapshot_sha256": "789dd90bbb09567dcf44c5d2a2cc4cdb61597996394a75d94da3a7380626b0b3",
+          "verification_id": "clean1_gate_B_s002_b01",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo1",
+          "branch_sha256": "22af0629d25591a15f9fc35c099df1075ab5d1569ccaf28f21e8ddbcf2e088de",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 460,
+          "snapshot_sha256": "f399c190a03d80a50775978fd486d8d47c98a60e99fdb1ee7a1b9e6d80d50e0c",
+          "verification_id": "clean1_gate_B_s002_b02",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo2",
+          "branch_sha256": "d04a6a9738b64fe34c80d74edec85e6e450f6201b6a2073b9cc8d78b4dfb6466",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 460,
+          "snapshot_sha256": "8b6ba6e92542ff8b7856b1518050c0dac104cca36faaae6c919378f7c731d8d8",
+          "verification_id": "clean1_gate_B_s002_b03",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "reference",
+          "branch_sha256": "c7c5a5af6851ca7d580a975304ec2ead8a2919db9789999b6dee8c76147d609c",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 460,
+          "snapshot_sha256": "16c17823daa5ae866c156df9728acef39a52a8a5d610a684ec0e20982c5fdb16",
+          "verification_id": "clean1_gate_B_s002_b04",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "all",
+          "branch_sha256": "5695573bd6f67c160ffa47f02560d0bb6a84b526ba5cbfa73145d665d6351fd9",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "lscollect1_B3_986040",
+            "role": "train",
+            "training_seed": 20261101,
+            "update": 3,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 600,
+          "snapshot_sha256": "b62ac5dd2308594c5418df1ace240a4b1398540c19592945e7a0824bc3466482",
+          "verification_id": "clean1_gate_R_s000_b00",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo0",
+          "branch_sha256": "7a09b94f214f00bde4f46b7194d04d903d7d56fb443c17ed51cd8b41979ca65a",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "lscollect1_B3_986040",
+            "role": "train",
+            "training_seed": 20261101,
+            "update": 3,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 600,
+          "snapshot_sha256": "b97df2d14e308f59cc66384b736346f6c17749761076f2e482e2e410fc477ae6",
+          "verification_id": "clean1_gate_R_s000_b01",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo1",
+          "branch_sha256": "6a672c1b297669a50fe823a00ee7563e2dbd22ead54ac3df411a7810cfce1f1e",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "lscollect1_B3_986040",
+            "role": "train",
+            "training_seed": 20261101,
+            "update": 3,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 600,
+          "snapshot_sha256": "7101b4365d62323c6da189e78ccabd28f21816d7035fb542e541094244c8779d",
+          "verification_id": "clean1_gate_R_s000_b02",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "reference",
+          "branch_sha256": "31d8b1c298a681cabffa6c96f5a39e849cbcc3818ae1b38d1e99c094c5848248",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "lscollect1_B3_986040",
+            "role": "train",
+            "training_seed": 20261101,
+            "update": 3,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 600,
+          "snapshot_sha256": "b37ed0d17876ecadf7025f53094e47d924cd0641b1d1121dd6671e13db5af95f",
+          "verification_id": "clean1_gate_R_s000_b03",
+          "window": {
+            "end_s": 600,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "all",
+          "branch_sha256": "07bd1e4f6e9f848367fdda56bf52e7a79ce500f880bf2837699bdece7bfc12ff",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 720,
+          "snapshot_sha256": "7c9d3e8d6185a11b96a05dd4a89f4ffb1591ae71ec01dce35e47a0c0e3cbe71e",
+          "verification_id": "clean1_gate_R_s001_b00",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo0",
+          "branch_sha256": "2ab849aa5ee408b99b859827194e80fcae31973dbe8289e7c5c27c17840364d9",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 720,
+          "snapshot_sha256": "0bb8ab00b90940f9468571e6d00080d5a0a936d3911692541db67cc262572b55",
+          "verification_id": "clean1_gate_R_s001_b01",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo1",
+          "branch_sha256": "8e6785d3ab2530e0285c99ecf9d2e2b624bee9e76995608750d38ad04dd728b6",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 720,
+          "snapshot_sha256": "e6f71a0beee328c85f2e6cb4587a7939ab71479274aba168b14dfe7109d62b41",
+          "verification_id": "clean1_gate_R_s001_b02",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "reference",
+          "branch_sha256": "faa0ac662baf57239e3460506bbcee8dfa23a7abec411cb878acf82ca1f3d710",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 720,
+          "snapshot_sha256": "d8792a19e13678b11fe14f28219eb05a35fb07456af4204360a7cd8e3eee865e",
+          "verification_id": "clean1_gate_R_s001_b03",
+          "window": {
+            "end_s": 720,
+            "metric": "team_delay_vs",
+            "start_s": 300,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "all",
+          "branch_sha256": "895329dd362d194f1b56ebd870ea792af38b40d8d3f67aac82bcb7e579b620de",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 460,
+          "snapshot_sha256": "d213279a94ad11f67e8641b853bd57031c7cc4c1fa3e49556c6527baf236b26f",
+          "verification_id": "clean1_gate_R_s002_b00",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo0",
+          "branch_sha256": "03562ca766f6d591189f041566d544cfd4f474d66dd70d399347a84825c1a4e7",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 460,
+          "snapshot_sha256": "2762f3533856c6389d59497bcb0e0555449dc6f6b859c006058b982017647eae",
+          "verification_id": "clean1_gate_R_s002_b01",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo1",
+          "branch_sha256": "4113a2ce6726d58c957f3af8582675749d0db0267aedfa61913688d7430447d1",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 460,
+          "snapshot_sha256": "2c025a3099955c5c2cee2324f1822f12a87d2c7f5dd86fa5da069f5b3ac172f3",
+          "verification_id": "clean1_gate_R_s002_b02",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "solo2",
+          "branch_sha256": "1b339a1dd60c7b6a3b2497e036111fe966eaebd11b8bf487b9ff83d8767788cd",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 460,
+          "snapshot_sha256": "f4e4d737783c225fdb3fc6c7076cdb6e1869810b54b6bad4ba38c9e84b9c39b5",
+          "verification_id": "clean1_gate_R_s002_b03",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        },
+        {
+          "branch": "reference",
+          "branch_sha256": "e570c688c4e0e5447bce26ce2ea58e68127530bf8bf002b99d103aa858ae3b7a",
+          "committed_plan_ids": [],
+          "episode": {
+            "arm": "B",
+            "id": "replay0735_warm_u006_B_986040",
+            "role": "train",
+            "training_seed": null,
+            "update": 6,
+            "world": {
+              "cell": 6,
+              "demand": 1900,
+              "penetration": 0.2,
+              "repeat": 4,
+              "seed": 986040
+            }
+          },
+          "experiment": "S-COOPMWM-SUMO-VERIFY",
+          "index": 0,
+          "plan": null,
+          "proposer": "wm",
+          "schema": "coopmwm/sumo_verify/v1",
+          "sim_s": 460,
+          "snapshot_sha256": "882c3382892dc63a5d5663421c1a338a53cf6c9a509295b58cebe370503a2806",
+          "verification_id": "clean1_gate_R_s002_b04",
+          "window": {
+            "end_s": 460,
+            "metric": "team_delay_vs",
+            "start_s": 310,
+            "tail_s": 120,
+            "truncated": false
+          }
+        }
+      ],
+      "unix": 1793937605.8917923
+    },
+    "LAUNCHED.json": {
+      "clean1_clean2_preserved": true,
+      "config_file_sha256": "b5d45dbe3f67e1749bb42b3a5bee5d13d81e52bf37d72f4d3791d921c74e7021",
+      "g1": "NO-GO",
+      "gate_sha256": "293d47341f9e1670130e4b2b4b1233449a71948824912c7fe3ea1e68dad69390",
+      "mined": 5,
+      "owner_cap_sim_s": 7300000,
+      "owners": {
+        "A": {
+          "pid": 568096,
+          "start_ticks": "12749728"
+        },
+        "B": {
+          "pid": 568097,
+          "start_ticks": "12749728"
+        },
+        "R": {
+          "pid": 568098,
+          "start_ticks": "12749729"
+        },
+        "monitor": {
+          "pid": 568099,
+          "start_ticks": "12749729"
+        }
+      },
+      "remaining_cap_sim_s": 3678560,
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+      "runtime_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+      "runtime_sha256": "aa2168474a3aacdaf1fec98dd63d6533d218d737d383081ae657d08fdf169070",
+      "safety_rule": "A: full original rule. B and R: composite TTC/critical comparison reported each update, no pause. Any collision or teleport in any arm pauses. (owner 2026-11-06 02:44 \"1\")",
+      "schema": "coopmwm.clean3.launched.v1",
+      "smoke_sha256": "a91b431118026e4d2a9376469eb0c918c6c0c9e8372f0d4ee5388757fe9a0681",
+      "source_manifest_sha256": "aa95ad5e1d01968d0c85c17d92c57969a7d1d89a8c97aba1208a6233649ae1a5",
+      "source_root": "/home/ubuntu/coopmwm20261106_clean3_src_3e5bc9f9",
+      "start_updates": {
+        "A": 0,
+        "B": 0,
+        "R": 0
+      },
+      "timestamp": "2026-11-06T04:00:51.798254+00:00",
+      "unix": 1793937651.798275,
+      "updates": 24
+    },
+    "PHASE_COVERAGE_PASS.json": {
+      "allocated": {
+        "early_probes": 52800,
+        "gate_bank_verification_ext": 18000,
+        "isolated_replicated": 165600,
+        "track2_smoke": 24000,
+        "v2v_final": 531600,
+        "v2v_interim": 398400,
+        "v2v_lessons": 40800,
+        "v2v_train": 1988400
+      },
+      "g4": 230400,
+      "need": {
+        "early_probes": 45480,
+        "gate_bank_verification_ext": 15160,
+        "isolated_replicated": 143760,
+        "track2_smoke": 20000,
+        "v2v_final": 460800,
+        "v2v_interim": 345600,
+        "v2v_lessons": 35040,
+        "v2v_train": 1728000
+      }
+    },
+    "PREPARED.json": {
+      "config_sha256": "aa2168474a3aacdaf1fec98dd63d6533d218d737d383081ae657d08fdf169070",
+      "files": 7501,
+      "g1": "NO-GO",
+      "mined_admitted": 5,
+      "new_sim_s": 0,
+      "remaining_cap_sim_s": 3678560,
+      "status": "STAGED_NOT_LAUNCHED"
+    },
+    "SMOKE_FIX_RECEIPTS_PASS.json": {
+      "arms": {
+        "B": {
+          "actuation": {
+            "audited_library_member_ticks": 15223,
+            "full_strength_zero_residual_member_ticks": 15223,
+            "nonzero_library_member_ticks": 15223,
+            "physically_changed_issued_commands": 11192,
+            "recorded_samples": 1644
+          },
+          "actuation_examples": [
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 2.287850856781006,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 317,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 1.7248152494430542,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 318,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.334334373474121
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 2.52880859375,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 318,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 1.7129725217819214,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 319,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.3225436210632324
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 2.4120233058929443,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 319,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 1.2529993057250977,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 320,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 1.8627653121948242
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 2.1942780017852783,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 320,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 1.5654187202453613,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 321,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.1751744747161865
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 2.023618221282959,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 321,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 1.7604494094848633,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 322,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.369713306427002
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 2.4628331661224365,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 322,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 2.2647922039031982,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 323,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 2.4848642349243164,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 323,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 1.9721214771270752,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 324,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.5554707050323486
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 2.2231180667877197,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 324,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_B_986000",
+              "issued_safe": 1.6554278135299683,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 325,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.265131950378418
+            }
+          ],
+          "arm": "B",
+          "proposals": {
+            "controller_owned_cav_checks": 17,
+            "coordination_opportunities": {
+              "decisions": 1732,
+              "disjoint_pairs": 32,
+              "event_decisions": 30,
+              "graph_edges": 36,
+              "offered_joint": 98,
+              "offered_joint_rate": 0.05658198614318707,
+              "provenance": "MAIN 2026-11-05 23:15 G2 (CLEAN2_GROUP_COOP_RESEARCH rank 2); accepted c4/grp-opportunity",
+              "rule": "g2-observable-disjoint-merge-pairs-v1"
+            },
+            "decisions": 1732,
+            "family_checks": 10328,
+            "family_infeasible_rate": 0.9473276529821844,
+            "infeasible_family_checks": 9784,
+            "infeasible_rate": 0.0,
+            "owned_cav_checks": 2748,
+            "proposed_by_family": {
+              "ease_off": 2880,
+              "gap_open": 83,
+              "open_gap_merge": 0,
+              "ramp_assist": 85,
+              "wall": 264,
+              "yield_lane": 0
+            },
+            "provenance": "tracks_spec.md MAIN 15:15 2026-11-05 owner item F2",
+            "rejected_non_none": 0,
+            "rule": "f2-feasible-balanced-v1",
+            "selected_non_none": 358
+          },
+          "safety_reward": {
+            "aggregation": "equal acting-CAV mean; empty neighbourhood = 0",
+            "arm": "B",
+            "arms": [
+              "B",
+              "R"
+            ],
+            "cav_outcomes": 33907,
+            "close_call": {
+              "aggregation": "deduplicated observable pair count (own and neighbours), no global outcomes",
+              "arms": [
+                "B",
+                "R"
+              ],
+              "attribution": "measurement strictly after first nonzero library offset of a currently active move containing the acting CAV; through commitment expiry; temporal, not counterfactual",
+              "event_rule": "adjacent same-lane closing pair per 1s control tick; strict TTC<1.5s",
+              "provenance": "MAIN 2026-11-05 15:15 F4; implementation registration: 1.0 speed-deficit reward-second per pair-event; fixed before tests, no tuning",
+              "schema": "coopmwm-f4-close-call-v1",
+              "threshold_provenance": "MAIN 15:15 F4 TTC<1.5s; replay_bank.TTC_EVENT_S",
+              "threshold_s": 1.5,
+              "weight": 1.0
+            },
+            "close_call_events": 748,
+            "close_call_penalty_sum": -34.61033697860128,
+            "control_dt_s": 1.0,
+            "empty_cav_steps": 0,
+            "empty_neighbourhoods": 4089,
+            "global_reward_used": false,
+            "move_exposed_cav_ticks": 15262,
+            "neighbour_outcomes": 262685,
+            "neighbourhood_reward_sum": -482.5215881769352,
+            "outcome_rule": "negative measured speed deficit minus registered post-move observable close-call penalty",
+            "own_reward_sum": -522.8019789015005,
+            "partner_reports": 55934,
+            "provenance": "T2C proposed equal own/neighbour-mean weighting; MAIN 02:30; approval-bound, no tuning",
+            "reward_source": "SUMO observed speed deficit and post-move closing TTC; local sensing + timestamped V2V only",
+            "reward_sum": -1039.9339040570376,
+            "scope": "cooperation layer only",
+            "speed_limit_mps": 31.29,
+            "steps": 1644,
+            "team_addition_sum": -482.5215881769352,
+            "terminal_exits": 257,
+            "terminal_fallback_steps": 0,
+            "unavailable_partner_reports": 6207,
+            "weight": 1.0,
+            "wm_used": false
+          },
+          "trigger_breadth": {
+            "contexts": [
+              {
+                "example_id": "sv_lscollect1_B3_986052_t0300_5ab45ace#s1",
+                "family": "none",
+                "members": [
+                  "mainline.101"
+                ],
+                "time_s": 304,
+                "verification_id": "sv_lscollect1_B3_986052_t0300_5ab45ace"
+              },
+              {
+                "example_id": "sv_lscollect1_B3_986003_t0390_b18c6000#s1",
+                "family": "wall",
+                "members": [
+                  "mainline.153",
+                  "ramp.40"
+                ],
+                "time_s": 390,
+                "verification_id": "sv_lscollect1_B3_986003_t0390_b18c6000"
+              },
+              {
+                "example_id": "sv_replay0735_warm_u008_B_986026_t0300_e8f07481#s1",
+                "family": "wall",
+                "members": [
+                  "mainline.108",
+                  "mainline.111",
+                  "ramp.24"
+                ],
+                "time_s": 301,
+                "verification_id": "sv_replay0735_warm_u008_B_986026_t0300_e8f07481"
+              },
+              {
+                "example_id": "sv_replay0735_warm_u007_B_986036_t0300_6a57be40#s1",
+                "family": "wall",
+                "members": [
+                  "ramp.23"
+                ],
+                "time_s": 305,
+                "verification_id": "sv_replay0735_warm_u007_B_986036_t0300_6a57be40"
+              },
+              {
+                "example_id": "sv_cp_hp_R_train_986067_t0340_9b768543#c1#s1",
+                "family": "wall",
+                "members": [
+                  "mainline.112",
+                  "mainline.122",
+                  "mainline.144"
+                ],
+                "time_s": 340,
+                "verification_id": "sv_cp_hp_R_train_986067_t0340_9b768543"
+              }
+            ],
+            "examples": 5,
+            "family_counts": {
+              "none": 1,
+              "wall": 4
+            },
+            "family_mass": {
+              "none": 0.5,
+              "wall": 0.5
+            },
+            "rule": "F3 owner 2026-11-05 15:15: all usable admitted verified bank contexts; distinct contexts before repeats; least-used contexts across updates; uniform supported-family mass, identical B/R family distribution"
+          }
+        },
+        "R": {
+          "actuation": {
+            "audited_library_member_ticks": 7620,
+            "full_strength_zero_residual_member_ticks": 7620,
+            "nonzero_library_member_ticks": 7620,
+            "physically_changed_issued_commands": 5900,
+            "recorded_samples": 1339
+          },
+          "actuation_examples": [
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 2.287850856781006,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 317,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 1.7248152494430542,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 318,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.334334373474121
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 2.52880859375,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 318,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 1.7129725217819214,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 319,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.3225436210632324
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 2.4120233058929443,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 319,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 1.2529993057250977,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 320,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 1.8627653121948242
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 2.1942780017852783,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 320,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 1.5654187202453613,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 321,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.1751744747161865
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 2.023618221282959,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 321,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 1.7604494094848633,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 322,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.369713306427002
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 2.4628331661224365,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 322,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 2.2647922039031982,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 323,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 2.4848642349243164,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 323,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 1.9721214771270752,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 324,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.5554707050323486
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 2.2231180667877197,
+              "library_offset_mps2": -0.6462564931883186,
+              "time_s": 324,
+              "vid": "mainline.105",
+              "without_library_issued_safe": 2.565342664718628
+            },
+            {
+              "episode": "clean1_smoke1_warm_u001_R_986000",
+              "issued_safe": 1.6554278135299683,
+              "library_offset_mps2": -0.6097659666701927,
+              "time_s": 325,
+              "vid": "mainline.112",
+              "without_library_issued_safe": 2.265131950378418
+            }
+          ],
+          "arm": "R",
+          "proposals": {
+            "controller_owned_cav_checks": 20,
+            "coordination_opportunities": {
+              "decisions": 514,
+              "disjoint_pairs": 7,
+              "event_decisions": 7,
+              "graph_edges": 9,
+              "offered_joint": 45,
+              "offered_joint_rate": 0.08754863813229571,
+              "provenance": "MAIN 2026-11-05 23:15 G2 (CLEAN2_GROUP_COOP_RESEARCH rank 2); accepted c4/grp-opportunity",
+              "rule": "g2-observable-disjoint-merge-pairs-v1"
+            },
+            "decisions": 514,
+            "family_checks": 3070,
+            "family_infeasible_rate": 0.9087947882736156,
+            "infeasible_family_checks": 2790,
+            "infeasible_rate": 0.0,
+            "owned_cav_checks": 590,
+            "proposed_by_family": {
+              "ease_off": 1634,
+              "gap_open": 18,
+              "open_gap_merge": 0,
+              "ramp_assist": 20,
+              "wall": 152,
+              "yield_lane": 0
+            },
+            "provenance": "tracks_spec.md MAIN 15:15 2026-11-05 owner item F2",
+            "rejected_non_none": 0,
+            "rule": "f2-feasible-balanced-v1",
+            "selected_non_none": 204
+          },
+          "safety_reward": {
+            "aggregation": "equal acting-CAV mean; empty neighbourhood = 0",
+            "arm": "R",
+            "arms": [
+              "B",
+              "R"
+            ],
+            "cav_outcomes": 18763,
+            "close_call": {
+              "aggregation": "deduplicated observable pair count (own and neighbours), no global outcomes",
+              "arms": [
+                "B",
+                "R"
+              ],
+              "attribution": "measurement strictly after first nonzero library offset of a currently active move containing the acting CAV; through commitment expiry; temporal, not counterfactual",
+              "event_rule": "adjacent same-lane closing pair per 1s control tick; strict TTC<1.5s",
+              "provenance": "MAIN 2026-11-05 15:15 F4; implementation registration: 1.0 speed-deficit reward-second per pair-event; fixed before tests, no tuning",
+              "schema": "coopmwm-f4-close-call-v1",
+              "threshold_provenance": "MAIN 15:15 F4 TTC<1.5s; replay_bank.TTC_EVENT_S",
+              "threshold_s": 1.5,
+              "weight": 1.0
+            },
+            "close_call_events": 145,
+            "close_call_penalty_sum": -20.13566319278916,
+            "control_dt_s": 1.0,
+            "empty_cav_steps": 0,
+            "empty_neighbourhoods": 3396,
+            "global_reward_used": false,
+            "move_exposed_cav_ticks": 7620,
+            "neighbour_outcomes": 109722,
+            "neighbourhood_reward_sum": -354.5676963350473,
+            "outcome_rule": "negative measured speed deficit minus registered post-move observable close-call penalty",
+            "own_reward_sum": -397.34664197308575,
+            "partner_reports": 24681,
+            "provenance": "T2C proposed equal own/neighbour-mean weighting; MAIN 02:30; approval-bound, no tuning",
+            "reward_source": "SUMO observed speed deficit and post-move closing TTC; local sensing + timestamped V2V only",
+            "reward_sum": -772.050001500924,
+            "scope": "cooperation layer only",
+            "speed_limit_mps": 31.29,
+            "steps": 1339,
+            "team_addition_sum": -354.5676963350473,
+            "terminal_exits": 145,
+            "terminal_fallback_steps": 0,
+            "unavailable_partner_reports": 3490,
+            "weight": 1.0,
+            "wm_used": false
+          },
+          "trigger_breadth": {
+            "contexts": [
+              {
+                "example_id": "sv_replay0735_warm_u006_R_986065_t0760_c2cb3fc7#s1",
+                "family": "wall",
+                "members": [
+                  "mainline.330",
+                  "mainline.334"
+                ],
+                "time_s": 760,
+                "verification_id": "sv_replay0735_warm_u006_R_986065_t0760_c2cb3fc7"
+              },
+              {
+                "example_id": "sv_replay0735_warm_u009_R_986040_t0310_82bad9c4#s1",
+                "family": "none",
+                "members": [
+                  "ramp.23"
+                ],
+                "time_s": 310,
+                "verification_id": "sv_replay0735_warm_u009_R_986040_t0310_82bad9c4"
+              },
+              {
+                "example_id": "sv_replay0735_warm_u015_R_986023_t0320_7c9c3c8d#s1",
+                "family": "wall",
+                "members": [
+                  "mainline.103",
+                  "mainline.109"
+                ],
+                "time_s": 320,
+                "verification_id": "sv_replay0735_warm_u015_R_986023_t0320_7c9c3c8d"
+              }
+            ],
+            "examples": 3,
+            "family_counts": {
+              "none": 1,
+              "wall": 2
+            },
+            "family_mass": {
+              "none": 0.5,
+              "wall": 0.5
+            },
+            "rule": "F3 owner 2026-11-05 15:15: all usable admitted verified bank contexts; distinct contexts before repeats; least-used contexts across updates; uniform supported-family mass, identical B/R family distribution"
+          }
+        }
+      },
+      "metric_reports": {
+        "delta_all_new_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {
+            "B": -0.31968150544116725,
+            "R": -0.19660096934421745
+          },
+          "formula": "J_reference - J_all",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Total benefit vs common base",
+          "registered_u24_metric": false,
+          "unit": "veh-s"
+        },
+        "policy_cooperation_gain_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {
+            "B": -0.31968272023459576,
+            "R": -0.19659895820677775
+          },
+          "formula": "(J_reference - J_all) - max_i(J_reference - J_solo_i)",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Group-over-best-single synergy",
+          "registered_u24_metric": true,
+          "solo_zero_floor": false,
+          "unit": "veh-s"
+        }
+      },
+      "practice_pools": {
+        "B": {
+          "available_unique_contexts": 13,
+          "context_ids": [
+            "096cfe9364813c55629cb69ad268423ed5ae40af4ef6c089f5f08ce99ae71ec6",
+            "27d02e9a6400bf17464a39b6f5d18595c1ffb6b34cd77442bb33cee8b0af91e5",
+            "31c3c1f245240ade1c093750057caff8702115710dcd8390951258200acf65c5",
+            "3aecb90dd9fa074b83ed7947081cac30363f7e48227325626107cd7edf9d6c1a",
+            "4b7fdfb3a75b830ada84b2745f04ea54c5d5be1ee52d81a3f24e623e03d486f5",
+            "70f9fdbb3c96d22be842ade3b75058355669286368f404423cd76deb5736ca0b",
+            "77c843e85f8377702f1803ab1a861ee4ef01f46680ceceb43b71e7ec5405b6d8",
+            "858182510af987636e3e7a608cb39327adba9ab2381b690068262fd37ed2e1f3",
+            "8d7d8a1b78f3e236f94bd5eb0d1b5e8018adc2b50ed17f0bfafb79b82039c08e",
+            "a2d9f2e10190bbcb7dd28319815648f9874c40a67f3079d63a48313ee86dc67b",
+            "aad95b6ba90c469e25724bfc9df24a3f6f8d56a40063562291527131e89cc9b6",
+            "bb3116c864cb24ec71d4516500c56d0f6d1ac4bdcfbd05f4a808aeebf20aa9d2",
+            "f567a94832e5a7313b19540fb445331788100d4ef7e237b6cea8a963a3127fc0"
+          ],
+          "family_counts": {
+            "none": 1,
+            "wall": 12
+          },
+          "selected_context_ids": [
+            "27d02e9a6400bf17464a39b6f5d18595c1ffb6b34cd77442bb33cee8b0af91e5"
+          ]
+        },
+        "R": {
+          "available_unique_contexts": 3,
+          "context_ids": [
+            "09dc752312702cdc707b14b63da998558a79862cdcfb1085366658aacd92538c",
+            "73e5865d70020b52ae31d62f23bdafabe9231bbc4f2b4d7cbeeba586d0621c37",
+            "ef0cef2a2ce9751cbd9d7933d2db7db6d7495e34006463dae7128f7ee1521981"
+          ],
+          "family_counts": {
+            "none": 1,
+            "wall": 2
+          },
+          "selected_context_ids": [
+            "ef0cef2a2ce9751cbd9d7933d2db7db6d7495e34006463dae7128f7ee1521981"
+          ]
+        }
+      },
+      "receipt_sha256": "40ea352e82daa750eee46017961b31850e3a0fd059bc85ce5913a826e8cb5239",
+      "reporting_receipt_sha256": "e39ee20a46864bdac70e605bfc53a698454cb8f3dc48cc3f4e2296fd6cdd9fef",
+      "status": "FIX_RECEIPTS_PASS"
+    },
+    "SMOKE_LEVER_RECEIPTS_PASS.json": {
+      "fix_receipts_sha256": "40ea352e82daa750eee46017961b31850e3a0fd059bc85ce5913a826e8cb5239",
+      "levers": {
+        "G1": {
+          "admitted": 0,
+          "bound": false,
+          "decision": "NO-GO"
+        },
+        "G2": {
+          "B": {
+            "decisions": 1732,
+            "disjoint_pairs": 32,
+            "event_decisions": 30,
+            "graph_edges": 36,
+            "offered_joint": 98,
+            "offered_joint_rate": 0.05658198614318707
+          },
+          "R": {
+            "decisions": 514,
+            "disjoint_pairs": 7,
+            "event_decisions": 7,
+            "graph_edges": 9,
+            "offered_joint": 45,
+            "offered_joint_rate": 0.08754863813229571
+          }
+        },
+        "G4": {
+          "first_update": 1,
+          "phase_sim_s": 230400
+        },
+        "G5": {
+          "B": {
+            "open_gap_merge": 0,
+            "yield_lane": 0
+          },
+          "R": {
+            "open_gap_merge": 0,
+            "yield_lane": 0
+          }
+        },
+        "mined": {
+          "B": {
+            "demonstrations": [
+              {
+                "executed": {
+                  "covered_s": 30,
+                  "kind": "profile",
+                  "passed": true
+                },
+                "family": "wall",
+                "id": "clean1_smoke1_warm_u001_p01_B_986061"
+              }
+            ],
+            "examples": 5,
+            "g4_credit": 1,
+            "imitation_targets": 1,
+            "observability": {
+              "by_seed": {
+                "1": {
+                  "non_observable": 2,
+                  "observable": 1
+                },
+                "5": {
+                  "non_observable": 1,
+                  "observable": 0
+                },
+                "6": {
+                  "non_observable": 1,
+                  "observable": 0
+                }
+              },
+              "examples": [
+                {
+                  "example_id": "sv_op2_collect01_R_train_986061_t0455_bd791969#c1#s1",
+                  "family": "wall",
+                  "observable": false,
+                  "seed_index": 1,
+                  "verification_id": "sv_op2_collect01_R_train_986061_t0455_bd791969"
+                },
+                {
+                  "example_id": "sv_op2_collect01_R_train_986061_t0455_bd791969#c1#s5",
+                  "family": "wall",
+                  "observable": false,
+                  "seed_index": 5,
+                  "verification_id": "sv_op2_collect01_R_train_986061_t0455_bd791969"
+                },
+                {
+                  "example_id": "sv_op2_collect01_R_train_986061_t0455_bd791969#c1#s6",
+                  "family": "wall",
+                  "observable": false,
+                  "seed_index": 6,
+                  "verification_id": "sv_op2_collect01_R_train_986061_t0455_bd791969"
+                },
+                {
+                  "example_id": "sv_op2_collect01_R_train_986061_t0455_481cf277#c1#s1",
+                  "family": "wall",
+                  "observable": false,
+                  "seed_index": 1,
+                  "verification_id": "sv_op2_collect01_R_train_986061_t0455_481cf277"
+                },
+                {
+                  "example_id": "sv_cp_hp_R_train_986067_t0340_9b768543#c1#s1",
+                  "family": "wall",
+                  "observable": true,
+                  "seed_index": 1,
+                  "verification_id": "sv_cp_hp_R_train_986067_t0340_9b768543"
+                }
+              ],
+              "non_observable": 4,
+              "observable": 1,
+              "rule": "imitation targets only where a member own observable slots contain every macro member"
+            },
+            "practice_starts": 1,
+            "situations": {
+              "distinct_situations": 5,
+              "examples": 5,
+              "shared": []
+            }
+          },
+          "R": {
+            "demonstrations": [
+              {
+                "executed": {
+                  "covered_s": 180,
+                  "kind": "profile",
+                  "passed": true
+                },
+                "family": "wall",
+                "id": "clean1_smoke1_warm_u001_p01_R_986065"
+              }
+            ],
+            "examples": 0,
+            "g4_credit": 0,
+            "practice_starts": 1
+          }
+        }
+      },
+      "receipt_sha256": "9ca6ea8759baa2ba64a387d8c4498e09ae44e59a7fcac7da32f6e10ce8e9543f",
+      "smoke_updates": {
+        "A": "6c5eec8c8fbcdb7c30efe0419c96cf6bb092655414033ae7f7aa8088518ddc7e",
+        "B": "c005cdf7adeee5273ab1f5553cce7862ab22820aebe90821fc8eeb2e96375222",
+        "R": "b359b30ff9b921bf68f7e51bcd62def790f63bc1f8c68caa7b2981888ae43fbe"
+      },
+      "status": "LEVER_RECEIPTS_PASS"
+    },
+    "SMOKE_PASS.json": {
+      "augmentation_sha256": "9b1d8401245a6deae061a41deae2cf88689dcb9ecf8beb170d32f7fdfe745734",
+      "clean2_fix_receipts_sha256": "40ea352e82daa750eee46017961b31850e3a0fd059bc85ce5913a826e8cb5239",
+      "clean3_lever_receipts_sha256": "9ca6ea8759baa2ba64a387d8c4498e09ae44e59a7fcac7da32f6e10ce8e9543f",
+      "config_sha256": "aa2168474a3aacdaf1fec98dd63d6533d218d737d383081ae657d08fdf169070",
+      "dense_teacher": {
+        "enabled": false,
+        "reason": "owner 02:28 redesign"
+      },
+      "monitor_sha256": "b616d1af6872fdbbe718e7f823f1e32d0a528f6c91851d1121783593031a3b73",
+      "plan_augmentation": {
+        "enabled": false,
+        "reason": "MAIN 2026-11-05 08:30: augmentation OFF for BOTH B and R; diagnostics only"
+      },
+      "receipt_sha256": "a91b431118026e4d2a9376469eb0c918c6c0c9e8372f0d4ee5388757fe9a0681",
+      "replacement_reward": "native P2 real observable neighbourhood SUMO reward",
+      "replicated_dry": [
+        "a4574d0ea4e985277c9361a75f3320b6e4b008ab23b5e42cd526c9a60761a301",
+        "a80a057f20e9cd9612c289dc6694c4adc9b6b299ab02401db4b7f7b4b3f52f26",
+        "44f9827850f932b331dcf57fdbb2f9e74317c5dfeb0846fc6345e7a7dccd6c34"
+      ],
+      "smoke_sim_s": 14400,
+      "source_manifest_sha256": "aa95ad5e1d01968d0c85c17d92c57969a7d1d89a8c97aba1208a6233649ae1a5",
+      "status": "SMOKE_PASS",
+      "unix": 1793937596.6395211,
+      "updates": [
+        "6c5eec8c8fbcdb7c30efe0419c96cf6bb092655414033ae7f7aa8088518ddc7e",
+        "c005cdf7adeee5273ab1f5553cce7862ab22820aebe90821fc8eeb2e96375222",
+        "b359b30ff9b921bf68f7e51bcd62def790f63bc1f8c68caa7b2981888ae43fbe"
+      ],
+      "wm_group_credit": {
+        "enabled": false,
+        "reason": "owner 02:28 redesign"
+      }
+    },
+    "SMOKE_REPORTING_PASS.json": {
+      "accounting": {
+        "job_ids": [
+          "clean2_smoke1_reporting_B_s000_b00",
+          "clean2_smoke1_reporting_B_s000_b01",
+          "clean2_smoke1_reporting_B_s000_b02",
+          "clean2_smoke1_reporting_B_s000_b03",
+          "clean2_smoke1_reporting_R_s000_b00",
+          "clean2_smoke1_reporting_R_s000_b01",
+          "clean2_smoke1_reporting_R_s000_b02",
+          "clean2_smoke1_reporting_R_s000_b03"
+        ],
+        "phase": "track2_smoke",
+        "reserved": true,
+        "sim_s": 4800
+      },
+      "config_sha256": "aa2168474a3aacdaf1fec98dd63d6533d218d737d383081ae657d08fdf169070",
+      "inference": "descriptive one-state smoke only; registered u24 synergy criterion unchanged",
+      "metric_reports": {
+        "delta_all_new_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {
+            "B": -0.31968150544116725,
+            "R": -0.19660096934421745
+          },
+          "formula": "J_reference - J_all",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Total benefit vs common base",
+          "registered_u24_metric": false,
+          "unit": "veh-s"
+        },
+        "policy_cooperation_gain_veh_s": {
+          "aggregation": "equal state mean within world; equal world mean across replicates",
+          "arm_means": {
+            "B": -0.31968272023459576,
+            "R": -0.19659895820677775
+          },
+          "formula": "(J_reference - J_all) - max_i(J_reference - J_solo_i)",
+          "higher_is_better": true,
+          "inference": "descriptive means only; CIs, when present, resample paired worlds",
+          "label": "Group-over-best-single synergy",
+          "registered_u24_metric": true,
+          "solo_zero_floor": false,
+          "unit": "veh-s"
+        }
+      },
+      "receipt_sha256": "e39ee20a46864bdac70e605bfc53a698454cb8f3dc48cc3f4e2296fd6cdd9fef",
+      "records": [
+        {
+          "arm": "B",
+          "delta_all_new_veh_s": -0.31968150544116725,
+          "entries": [
+            {
+              "delta_all_new_veh_s": -0.31968150544116725,
+              "delta_only_member_new_veh_s": {
+                "mainline.100": 1.214793428516714e-06,
+                "ramp.22": -0.3121711843655248
+              },
+              "group": [
+                "ramp.22",
+                "mainline.100"
+              ],
+              "policy_cooperation_gain_veh_s": -0.31968272023459576,
+              "positive_policy_cooperation": false,
+              "results": [
+                {
+                  "J_veh_s": 3154.061913296476,
+                  "actual_sim_s": 600.0,
+                  "audit": {
+                    "candidate": null,
+                    "crn_verified_t0": true,
+                    "live_steps": 300,
+                    "noise_mode_used": "crn",
+                    "replayed_prefix_steps": 0
+                  },
+                  "branch": "all",
+                  "branch_sha256": "1964b0dfd7d85bb21838ace29f1d9cf0d16a1d1d61eb21526854bd964b53f89f",
+                  "continuation_prefix_sha256": {
+                    "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+                    "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+                    "302": "db0f87e2998dc0c99f45508861e0912644d99261c2c30d10b8770d1f6b67ede6",
+                    "303": "0e9a202a914bbe46c5032525d82effe9e921744f9704f2c3eb2d3dbbf9e92844",
+                    "304": "7062d7b3d86d055040814c1a2cc8558a193ebe06f2521eced4b07477ee33169b",
+                    "305": "1fe025787263ca8cecc546d88de4c9b6594c2e37664b6e889d64d9e804631e72",
+                    "306": "2b61086c57f11aacd16ed44bea783e2b54c78a3fbb7e62c5cfe60d33dbf355e4",
+                    "307": "51d16c224f6694ef786e4d44032f13277f5a4c8d4e724c5458c4eaba05f6f12c",
+                    "308": "9030f08966a11eff8adfc3d0610a1f09f52289e8dc98f0e07c37b40c28a31f02",
+                    "309": "2febb6144d4345972c47bb68d365567e64b95cea1fa8e8a82fa66f7f3b1a1c26",
+                    "310": "bba67501abab604a5f70e93efe697e7beb00cd97665fbe84a6fd0096f93d0073"
+                  },
+                  "index": 0,
+                  "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/smoke/branches/clean2_smoke1_reporting_B_s000_b00/clean2_smoke1_reporting_B_s000_b00/all/RESULT.json",
+                  "result_sha256": "a099494c67eb9495475497c943eb6d5388693d5de4ccd795366c50e6a715fe42",
+                  "safety": {
+                    "collisions": 0,
+                    "hard_brakes": 1,
+                    "teleports": 0,
+                    "ttc_events": 1
+                  },
+                  "status": "graded",
+                  "window": {
+                    "collisions": 0.0,
+                    "hard_brake": 1.0,
+                    "road_delay_vs": 3026.7263002964746,
+                    "source_wait_vs": 127.33561300000007,
+                    "team_delay_vs": 3154.061913296476,
+                    "teleports": 0.0,
+                    "ttc_below_3_vs": 45.5
+                  }
+                },
+                {
+                  "J_veh_s": 3154.0544029754005,
+                  "actual_sim_s": 600.0,
+                  "audit": {
+                    "candidate": null,
+                    "crn_verified_t0": true,
+                    "live_steps": 300,
+                    "noise_mode_used": "crn",
+                    "replayed_prefix_steps": 0
+                  },
+                  "branch": "solo0",
+                  "branch_sha256": "69b30f9870f41dde5bf0dbc6d78780c7b7c076efd471fb1accb887ac8e31f8eb",
+                  "continuation_prefix_sha256": {
+                    "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+                    "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+                    "302": "4bcf0c4bb42465883a4d462c495a81ad6801691c7dbfd767f630631c7dd8527e",
+                    "303": "b75d9f36a0a23207b6589a95a552bd65e525a429486c72372447c70bae3b1cc6",
+                    "304": "003f4c763dbe32dfa7985d1f5c5082107fca08fd20b2563ae2f0cedb8ad18517",
+                    "305": "72ec8450024a75e37e1f3f285bc0e169d8c1a24ed864c70d3964e07ad81ad82b",
+                    "306": "49839dd0a55cb994034515af4ddc91b1edb0961f85f7c0fede87e7725144b17c",
+                    "307": "d935f7766b8c476941a52a294f9705758c0059927fe57abdec38aa3f6e420775",
+                    "308": "753a0fe8edbe535f21e904bfc379db408e7fda9c40b2893afb706ef018a91c31",
+                    "309": "6d4e756468c541717028e734ce9c7cfcfe3b7250bfc9b3eb04ef45f2e870ba5c",
+                    "310": "09c5e66e0d18b4b66a13c927bf5dc9ecf81a8726dbb454a8ee3e3f7081ca1db7"
+                  },
+                  "index": 0,
+                  "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/smoke/branches/clean2_smoke1_reporting_B_s000_b01/clean2_smoke1_reporting_B_s000_b01/solo0/RESULT.json",
+                  "result_sha256": "57dfe2761960e366ece3eab5f4530a90783736f1c749b241d80da391ef818f97",
+                  "safety": {
+                    "collisions": 0,
+                    "hard_brakes": 1,
+                    "teleports": 0,
+                    "ttc_events": 1
+                  },
+                  "status": "graded",
+                  "window": {
+                    "collisions": 0.0,
+                    "hard_brake": 1.0,
+                    "road_delay_vs": 3026.7187899754,
+                    "source_wait_vs": 127.33561300000007,
+                    "team_delay_vs": 3154.0544029754005,
+                    "teleports": 0.0,
+                    "ttc_below_3_vs": 45.5
+                  }
+                },
+                {
+                  "J_veh_s": 3153.7422305762416,
+                  "actual_sim_s": 600.0,
+                  "audit": {
+                    "candidate": null,
+                    "crn_verified_t0": true,
+                    "live_steps": 300,
+                    "noise_mode_used": "crn",
+                    "replayed_prefix_steps": 0
+                  },
+                  "branch": "solo1",
+                  "branch_sha256": "5fe88b83d4e86497402ac8ec38ae4bc8a35a29606d81582fa57bb1cf898e30bf",
+                  "continuation_prefix_sha256": {
+                    "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+                    "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+                    "302": "fca73bfa1727097288ab6842a44dc9a56c9ec174cf9c9584fd5febfb38a4406f",
+                    "303": "b4d69e1f62adc94e8108e21b8907052a17635036a0a971f61a1d966c6c0b2e3d",
+                    "304": "0e3bb3c0f1dde9973a2436a2f1188b3b8a7d825ca8cb1e903f9a0b5e45fbadbe",
+                    "305": "d72a90d1dde40a88f8f3f199f48cff8060e4bd16111877eb2d9da69e3f7bee28",
+                    "306": "4820d492e0b3c83d63c19877b33b44cc8903ec653de0eb5a86c14344beb2ef5a",
+                    "307": "ddfe54171283ab77cb9563f56a6fd682cea1272205c671e6681266fcc93a9753",
+                    "308": "3b30207a147a233a481b550a9355dbb6e924f827a4fa82c468f4b525ec4ccc96",
+                    "309": "bcbbe91a631c6ce12dc46907db981656b98667396069cf8fbe830bcd185f7709",
+                    "310": "a809c8441052c985bca268cabb44ec79f68cfa016ef0b633641be308a0d14700"
+                  },
+                  "index": 0,
+                  "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/smoke/branches/clean2_smoke1_reporting_B_s000_b02/clean2_smoke1_reporting_B_s000_b02/solo1/RESULT.json",
+                  "result_sha256": "d2e094f2d43d7fcbbec7107a99cb30aab93fcfe768ee05b0c3e67c02ba6c1e1d",
+                  "safety": {
+                    "collisions": 0,
+                    "hard_brakes": 1,
+                    "teleports": 0,
+                    "ttc_events": 1
+                  },
+                  "status": "graded",
+                  "window": {
+                    "collisions": 0.0,
+                    "hard_brake": 1.0,
+                    "road_delay_vs": 3026.4066175762423,
+                    "source_wait_vs": 127.33561300000007,
+                    "team_delay_vs": 3153.7422305762416,
+                    "teleports": 0.0,
+                    "ttc_below_3_vs": 45.5
+                  }
+                },
+                {
+                  "J_veh_s": 3153.742231791035,
+                  "actual_sim_s": 600.0,
+                  "audit": {
+                    "candidate": null,
+                    "crn_verified_t0": true,
+                    "live_steps": 300,
+                    "noise_mode_used": "crn",
+                    "replayed_prefix_steps": 0
+                  },
+                  "branch": "reference",
+                  "branch_sha256": "538ca5f9c6e54e6d6ad063d5abf8475d6321f6e61d4557ffbc07ae45fb49d4a4",
+                  "continuation_prefix_sha256": {
+                    "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+                    "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+                    "302": "b1ad15dd67fc0195c457817e30cd03a2baa1d1c68ac333391f1b7a51f9f2765f",
+                    "303": "594f712bfe77f6bb25aad1e9ac19190776d43ab2a5375aa1acb6dfb636ba34c9",
+                    "304": "af4198bae135b32a2e05d3d4bd6f3ddfc65270d2572c68cf71603edf8a1f84dd",
+                    "305": "9f10f94b0f23c9cadc005b7831128cdd8098d9206943b7805e25f9860ea4c38e",
+                    "306": "77be8511d16e777ba206037b0cdb48cb3dcf7efd5670a5a5193b02881e7f89a9",
+                    "307": "8c2c76f227732207a64855eedcd500331c7d29580c01dcce926e18696ca8f685",
+                    "308": "e6e94b277e5737938ab735e08abf0675a689f46134ed225f9f77314aa908cd6b",
+                    "309": "e1315a2c56532c62f7a94d7fee21e350d548a36d9fba802e22534e6a54b941de",
+                    "310": "a9d43ff053defd516e66664caca6e5afeab08e60e3f8c06c2973adb83384d8c8"
+                  },
+                  "index": 0,
+                  "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/smoke/branches/clean2_smoke1_reporting_B_s000_b03/clean2_smoke1_reporting_B_s000_b03/reference/RESULT.json",
+                  "result_sha256": "7c26226a96d67ca1d24e22cd88c905635642786a63d0bddd21c40ab0035244c0",
+                  "safety": {
+                    "collisions": 0,
+                    "hard_brakes": 1,
+                    "teleports": 0,
+                    "ttc_events": 1
+                  },
+                  "status": "graded",
+                  "window": {
+                    "collisions": 0.0,
+                    "hard_brake": 1.0,
+                    "road_delay_vs": 3026.406618791034,
+                    "source_wait_vs": 127.33561300000007,
+                    "team_delay_vs": 3153.742231791035,
+                    "teleports": 0.0,
+                    "ttc_below_3_vs": 45.5
+                  }
+                }
+              ],
+              "status": "graded",
+              "window": {
+                "end_s": 600,
+                "metric": "team_delay_vs",
+                "start_s": 300,
+                "tail_s": 120,
+                "truncated": false
+              }
+            }
+          ],
+          "id": "clean2_smoke1_reporting_B",
+          "metric": -0.31968272023459576,
+          "metric_name": "policy_cooperation_gain_veh_s",
+          "policy_cooperation_gain_veh_s": -0.31968272023459576,
+          "reference_safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 4
+          },
+          "replicate": 0,
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 4
+          },
+          "state_set_sha256": "3db236d63601b82ffe79bb2baef1adb627d9afbfb2034f8bbed31ba2bf61714e",
+          "status": "graded",
+          "update": 1,
+          "window_set_sha256": "38e1f4d9f59190372e46426d72b484814fdb2961aab86eb1f88cddd6695dee52",
+          "world_seed": 986040
+        },
+        {
+          "arm": "R",
+          "delta_all_new_veh_s": -0.19660096934421745,
+          "entries": [
+            {
+              "delta_all_new_veh_s": -0.19660096934421745,
+              "delta_only_member_new_veh_s": {
+                "mainline.100": -2.0111374396947213e-06,
+                "ramp.22": -0.18873910497131874
+              },
+              "group": [
+                "ramp.22",
+                "mainline.100"
+              ],
+              "policy_cooperation_gain_veh_s": -0.19659895820677775,
+              "positive_policy_cooperation": false,
+              "results": [
+                {
+                  "J_veh_s": 3153.9388327603792,
+                  "actual_sim_s": 600.0,
+                  "audit": {
+                    "candidate": null,
+                    "crn_verified_t0": true,
+                    "live_steps": 300,
+                    "noise_mode_used": "crn",
+                    "replayed_prefix_steps": 0
+                  },
+                  "branch": "all",
+                  "branch_sha256": "641dcf18b28f5af8a07a039b3a9c007408ae30c8eb44ccb773a7e5c9bbcf628e",
+                  "continuation_prefix_sha256": {
+                    "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+                    "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+                    "302": "fb1cce9074791390d0e8264bbca7eb5d71171e518a9af04b4b862c1177fc2655",
+                    "303": "fac34b420f31f0a3e7d208089e7f6710c951736cee2d3c351c3ceaa5e207f621",
+                    "304": "cd7c22f4c8dc9152eb8c7b26aca3841bb60d1b3a63baf1aeecd941ee412ad4c0",
+                    "305": "d5bf0c63c55eecf4d151e269b66eb9d81ae66b1599f884635e1a97a7bb5d2da2",
+                    "306": "3ade605496cdb3448de7463c400c4afd12406d4aeb788323d2a68dd2da70f7b4",
+                    "307": "745dde2c36953ebafdbed57e3d9061b69860c3e4b85a2d3302b7fe873de7ebc8",
+                    "308": "d11bc22ba256a99d1277fe54d8a64a86e6942b90fd034ed542540957e09cf572",
+                    "309": "6fbed72299fcea1e38dca9a1666681a85dd3b0d1632b4800e4e691ce4687d53d",
+                    "310": "5275966758bcdbb1af0f16486535ddc612c13b9fcfd2e35f9439958b06bb56c1"
+                  },
+                  "index": 0,
+                  "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/smoke/branches/clean2_smoke1_reporting_R_s000_b00/clean2_smoke1_reporting_R_s000_b00/all/RESULT.json",
+                  "result_sha256": "06df8f26f611d9decbaeeae6dbc8233f9d01e1c5cb9293076ef929d1e3a9c0df",
+                  "safety": {
+                    "collisions": 0,
+                    "hard_brakes": 1,
+                    "teleports": 0,
+                    "ttc_events": 1
+                  },
+                  "status": "graded",
+                  "window": {
+                    "collisions": 0.0,
+                    "hard_brake": 1.0,
+                    "road_delay_vs": 3026.603219760378,
+                    "source_wait_vs": 127.33561300000007,
+                    "team_delay_vs": 3153.9388327603792,
+                    "teleports": 0.0,
+                    "ttc_below_3_vs": 45.5
+                  }
+                },
+                {
+                  "J_veh_s": 3153.9309708960063,
+                  "actual_sim_s": 600.0,
+                  "audit": {
+                    "candidate": null,
+                    "crn_verified_t0": true,
+                    "live_steps": 300,
+                    "noise_mode_used": "crn",
+                    "replayed_prefix_steps": 0
+                  },
+                  "branch": "solo0",
+                  "branch_sha256": "2594a8432ea7937580a263ea89b355d3e0d00f9464d96ab1b6889f3ebc3cf163",
+                  "continuation_prefix_sha256": {
+                    "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+                    "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+                    "302": "822920442fb463e31085d58aebe66c3b929e9c53b810cfd36dacbed047bf8e72",
+                    "303": "43cd786dd5680a11131bca74151cbccd2d7f150e353c506bf5c4a0f67f5be203",
+                    "304": "1d2f05dea9d996b8a5dcdd7762dc2ac110457e75725006b9578c34359d7c9e66",
+                    "305": "e963f2b86eac13ea2cf18f64354dbfb0bf68b7a2717cca3b1e9b66c78d55b024",
+                    "306": "0c9c63eabff80519b862eb8a0ba1efe936f30b58aa09516bf5a919fd60bb2421",
+                    "307": "1454d434e0714701ad58b6398d9b70321526b86c28ae770b185661b5a50560f6",
+                    "308": "b1b34aecf229602477a0a00bc067badf74b6243927901cb5e87bb3273172a772",
+                    "309": "314af1e284cf17bdf0b24c007d7032604c885915be417b86d53868d146713d02",
+                    "310": "bcccef96489486143118ed6bd5d93fdcac6ff2adced8749844c5c49b69dfd879"
+                  },
+                  "index": 0,
+                  "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/smoke/branches/clean2_smoke1_reporting_R_s000_b01/clean2_smoke1_reporting_R_s000_b01/solo0/RESULT.json",
+                  "result_sha256": "36fa3cb2000031ddd22c0f43f97d8c66f3c48138d2c207b8f9008a68762739af",
+                  "safety": {
+                    "collisions": 0,
+                    "hard_brakes": 1,
+                    "teleports": 0,
+                    "ttc_events": 1
+                  },
+                  "status": "graded",
+                  "window": {
+                    "collisions": 0.0,
+                    "hard_brake": 1.0,
+                    "road_delay_vs": 3026.5953578960043,
+                    "source_wait_vs": 127.33561300000007,
+                    "team_delay_vs": 3153.9309708960063,
+                    "teleports": 0.0,
+                    "ttc_below_3_vs": 45.5
+                  }
+                },
+                {
+                  "J_veh_s": 3153.7422338021724,
+                  "actual_sim_s": 600.0,
+                  "audit": {
+                    "candidate": null,
+                    "crn_verified_t0": true,
+                    "live_steps": 300,
+                    "noise_mode_used": "crn",
+                    "replayed_prefix_steps": 0
+                  },
+                  "branch": "solo1",
+                  "branch_sha256": "391d0dfb20527b16dbfb149ce5bf45db57dcbbb9884b6c526fc9959bbae4f985",
+                  "continuation_prefix_sha256": {
+                    "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+                    "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+                    "302": "7f7a76419b6f77b9f1f7e8c2ba169d59dffb0bd322b745e5ef59894c4f34f80f",
+                    "303": "81abca58cf6b8d4348e43281174351c101c8100922853a073d67e4ab46b64d4d",
+                    "304": "221bdef24eb3dd8d300bc2daa140d7efef085d14169654ba89b93c96ab38f519",
+                    "305": "02c0febcc8803aa85dc482387c6363cedc3c77a3a7b9e451544a8e1e00531ba8",
+                    "306": "cfe2a961ab7c9a65ae21514fd59c8b433617d89d44c12513a820f7e48d6a8f2d",
+                    "307": "079d38613e0c4eadc15c8c79bf3aae8d12388a06e4ba17d62ee1d43ce62394da",
+                    "308": "a4969bbf332a41a7e23a7a34c287c70184e361e567f3b8958bd058358c8aebdd",
+                    "309": "e0c966d5fd7a3df6b3e30081f01c3896bb6d8f222ada4277dec58bf2dea53b04",
+                    "310": "d0731732e18398242252de21df04a0ea7dd4c787176c5ecec76a068713b5dc51"
+                  },
+                  "index": 0,
+                  "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/smoke/branches/clean2_smoke1_reporting_R_s000_b02/clean2_smoke1_reporting_R_s000_b02/solo1/RESULT.json",
+                  "result_sha256": "edab884808edb526d3df1788db4fa777c0b959a502035d66a58f6e799ced94c0",
+                  "safety": {
+                    "collisions": 0,
+                    "hard_brakes": 1,
+                    "teleports": 0,
+                    "ttc_events": 1
+                  },
+                  "status": "graded",
+                  "window": {
+                    "collisions": 0.0,
+                    "hard_brake": 1.0,
+                    "road_delay_vs": 3026.4066208021713,
+                    "source_wait_vs": 127.33561300000007,
+                    "team_delay_vs": 3153.7422338021724,
+                    "teleports": 0.0,
+                    "ttc_below_3_vs": 45.5
+                  }
+                },
+                {
+                  "J_veh_s": 3153.742231791035,
+                  "actual_sim_s": 600.0,
+                  "audit": {
+                    "candidate": null,
+                    "crn_verified_t0": true,
+                    "live_steps": 300,
+                    "noise_mode_used": "crn",
+                    "replayed_prefix_steps": 0
+                  },
+                  "branch": "reference",
+                  "branch_sha256": "66999675f458b4b14767335b27a21da21889d834fd2d22809a948fce64412ddf",
+                  "continuation_prefix_sha256": {
+                    "300": "82d512706886393947eba875cdd8db5eac0bded6041e77259ed611162758f18d",
+                    "301": "decbd08b804277f1ba447e833185e059e3734ee3a9d211755196053dde569302",
+                    "302": "b1ad15dd67fc0195c457817e30cd03a2baa1d1c68ac333391f1b7a51f9f2765f",
+                    "303": "594f712bfe77f6bb25aad1e9ac19190776d43ab2a5375aa1acb6dfb636ba34c9",
+                    "304": "af4198bae135b32a2e05d3d4bd6f3ddfc65270d2572c68cf71603edf8a1f84dd",
+                    "305": "9f10f94b0f23c9cadc005b7831128cdd8098d9206943b7805e25f9860ea4c38e",
+                    "306": "77be8511d16e777ba206037b0cdb48cb3dcf7efd5670a5a5193b02881e7f89a9",
+                    "307": "8c2c76f227732207a64855eedcd500331c7d29580c01dcce926e18696ca8f685",
+                    "308": "e6e94b277e5737938ab735e08abf0675a689f46134ed225f9f77314aa908cd6b",
+                    "309": "e1315a2c56532c62f7a94d7fee21e350d548a36d9fba802e22534e6a54b941de",
+                    "310": "a9d43ff053defd516e66664caca6e5afeab08e60e3f8c06c2973adb83384d8c8"
+                  },
+                  "index": 0,
+                  "result_path": "/home/ubuntu/coopmwm20261106_clean3_r6/smoke/branches/clean2_smoke1_reporting_R_s000_b03/clean2_smoke1_reporting_R_s000_b03/reference/RESULT.json",
+                  "result_sha256": "2ab5c241e9f910d6c1f0e4c6120dbebf672d8352a28f14dc34f9190e4c20600d",
+                  "safety": {
+                    "collisions": 0,
+                    "hard_brakes": 1,
+                    "teleports": 0,
+                    "ttc_events": 1
+                  },
+                  "status": "graded",
+                  "window": {
+                    "collisions": 0.0,
+                    "hard_brake": 1.0,
+                    "road_delay_vs": 3026.406618791034,
+                    "source_wait_vs": 127.33561300000007,
+                    "team_delay_vs": 3153.742231791035,
+                    "teleports": 0.0,
+                    "ttc_below_3_vs": 45.5
+                  }
+                }
+              ],
+              "status": "graded",
+              "window": {
+                "end_s": 600,
+                "metric": "team_delay_vs",
+                "start_s": 300,
+                "tail_s": 120,
+                "truncated": false
+              }
+            }
+          ],
+          "id": "clean2_smoke1_reporting_R",
+          "metric": -0.19659895820677775,
+          "metric_name": "policy_cooperation_gain_veh_s",
+          "policy_cooperation_gain_veh_s": -0.19659895820677775,
+          "reference_safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 4
+          },
+          "replicate": 0,
+          "safety": {
+            "collisions": 0,
+            "hard_brakes": 4,
+            "teleports": 0,
+            "ttc_events": 4
+          },
+          "state_set_sha256": "3db236d63601b82ffe79bb2baef1adb627d9afbfb2034f8bbed31ba2bf61714e",
+          "status": "graded",
+          "update": 1,
+          "window_set_sha256": "38e1f4d9f59190372e46426d72b484814fdb2961aab86eb1f88cddd6695dee52",
+          "world_seed": 986040
+        }
+      ],
+      "safety": {
+        "collisions": 0,
+        "hard_brakes": 8,
+        "teleports": 0,
+        "ttc_events": 8
+      },
+      "status": "COMPLETE"
+    },
+    "SMOKE_STARTED.json": {
+      "config_sha256": "aa2168474a3aacdaf1fec98dd63d6533d218d737d383081ae657d08fdf169070",
+      "unix": 1793936511.497032
+    }
+  },
+  "restart": {
+    "clean1_root": "/home/ubuntu/coopmwm20261105_clean1",
+    "clean2_root": "/home/ubuntu/coopmwm20261105_clean2",
+    "clean2_stop_sha256": {
+      "owner_stop": "f934495dcf3514ab070ab038bb6a5fd6ee8becda7c1c97a52909c1df691b2fbb",
+      "stop": "3aedfd34d122a48c5149f5e92b11a301487dda00fe68630928707bede45e68c2"
+    },
+    "diagnostic_quotes": {
+      "probe_u002": 22740,
+      "probe_u004": 22740,
+      "replicated_u006": 47920,
+      "replicated_u012": 47920,
+      "replicated_u024": 47920
+    },
+    "g1_go_nogo": "NO-GO",
+    "g1_go_nogo_sha256": "af22a2240a987fcbe0dff2b01b4de7acf8121908416c425dc84412163713a7d2",
+    "g1_root": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r12",
+    "gate_sim_s": 15160,
+    "inherited_safety": "A: full original rule. B and R: composite TTC/critical comparison reported each update, no pause. Any collision or teleport in any arm pauses. (owner 2026-11-06 02:44 \"1\")",
+    "inherited_safety_receipts": {
+      "B_SAFETY_REPORT_ONLY_1434.json": "5ba8561c19e42d30860d9b4f7047cde96ce1de384b61bce2c4d64b8ece9c36a2",
+      "PAUSE_SAFETY_COMPOSITE_B_u009.json": "5ab3abec6cebf9e14406b5c06f8a47a256809716d76a802e0a461ce0eea72268",
+      "PAUSE_SAFETY_COMPOSITE_R_u003.json": "af0254374625bc2fb1728e69a7d9ecd13bc46502284b532c1ef4c7ec7b1efb24",
+      "R_SAFETY_REPORT_ONLY_1230.json": "055615dc6a10cbf7b2e3e055f3fc56ab32219e88e6a2126f90980577ea259b99"
+    },
+    "lesson_quotes": {
+      "lesson_u006": 8760,
+      "lesson_u012": 8760,
+      "lesson_u018": 8760,
+      "lesson_u024": 8760
+    },
+    "mined_moves": {
+      "admitted": 5,
+      "admitted_path": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_3e5bc9f9/MINED_MOVES_ADMITTED_001.jsonl",
+      "families": [
+        "wall"
+      ],
+      "joint_families": [
+        "wall"
+      ],
+      "joint_verified_examples": 5,
+      "joint_verified_moves": 3,
+      "ready": true,
+      "rejected": [],
+      "rows": 5,
+      "rule": "owner 2026-11-06 ~07:2x walls-only launch (\"yes.\"), amending ~04:35: launch when /home/ubuntu/mined/MINED_MOVES.jsonl yields >=3 per-seed SUMO-verified JOINT examples for B (natively admitted plan with >=2 executing CAVs; that seed synergy CI95 lower bound > 0); no family-count requirement; families must exist in both B and R verified pools (R same family distribution from its own bank); hard deadline 14:00 local -> stop and report; owner approval replaces the MAIN confirmation file.",
+      "source": "/home/ubuntu/mined/MINED_MOVES.jsonl",
+      "source_sha256": "7a225dbd59436392c29fd3cad6e9df3c2deb01af976289bc787e9865c0f1471b",
+      "unix": 1793936028.9004588
+    },
+    "owner_quote": "clean3",
+    "plan_fix": "superseded and released (owner 02:44/03:00)",
+    "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0"
+  },
+  "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+  "root_charges": {
+    "phases": {
+      "gate_bank_verification_ext": 15160,
+      "track2_smoke": 14400,
+      "v2v_train": 45600
+    },
+    "rows": 80,
+    "sha256": "d5ec160f5cf5ed30d4d757982c75c5ebebdf884150df3277251f8f7abc940ca1",
+    "total_sim_s": 75160
+  },
+  "schema": "coopmwm.clean3.resume_w4_readonly.v1",
+  "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+  "source_files_verified": 735,
+  "source_manifest_sha256": "49689a0665ac3a1aa124231b5e78501261ffe5ff3b4e475660ceb0a25ab9c53b",
+  "status": {
+    "detail": null,
+    "pid": 560611,
+    "root": "/home/ubuntu/coopmwm20261106_clean3_r6",
+    "schema": "coopmwm.clean3.chain.v1",
+    "sequence": 19,
+    "source_commit": "3e5bc9f9a41d7e34cf605ad257f340daba7525d0",
+    "status": "RUNNING",
+    "step": "MONITOR",
+    "timestamp": "2026-11-06T04:00:51.808260+00:00",
+    "unix": 1793937651.8082592
+  },
+  "timestamp": "2026-11-06T04:14:34.465306+00:00"
+}
