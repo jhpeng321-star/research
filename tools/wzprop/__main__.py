@@ -83,8 +83,11 @@ def score(argv):
     ap.add_argument('--source-root')
     ap.add_argument('--sids')
     ap.add_argument('--solos-labelled-by', action='append', help='summary JSON: solos only for its S-labelled variants')
+    ap.add_argument('--no-solos', action='store_true', help='T only (group vs base), e.g. the regime strategy check')
     a = ap.parse_args(argv)
     sv = PR.labelled_solo_variants(a.solos_labelled_by) if a.solos_labelled_by else None
+    if a.no_solos:
+        sv = set()
     print(json.dumps(PR.score_moments(_backend(a), a.moments, a.out, K=a.K, H=a.H, source_root=a.source_root,
                                       sids=a.sids.split(',') if a.sids else None, solo_variants=sv),
                      indent=1, default=str))
