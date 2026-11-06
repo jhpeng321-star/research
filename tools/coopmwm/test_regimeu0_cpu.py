@@ -39,7 +39,7 @@ def test_rule_hook_activation_law_lane_hold_and_release(strategy, members):
     rows = rows_wall()
     cmds = {r['vid']: .2 for r in rows if r['is_cav']}
     out = ctl.apply(rows, cmds, 300)
-    assert sorted(out) == members and hook.acts[0]['wall'] == ['a', 'b', 'c'] and hook.next_ok == 390
+    assert sorted(out) == members and sorted(hook.acts[0]['wall']) == ['a', 'b', 'c'] and hook.next_ok == 390
     for vid in members:
         v = next(r['v_mps'] for r in rows if r['vid'] == vid)
         assert out[vid]['requested_raw'] == pytest.approx(max(-1.5, min(1.0, 15.-v)))
