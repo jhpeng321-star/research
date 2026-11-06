@@ -427,3 +427,54 @@ def test_real_u0_analysis_excludes_base_and_derived_entries(cfg):
         assert fl.qualifying(table[cell])[0] == 'wall_h_solo2' and 'wall_h_solo0' not in fl.qualifying(table[cell])
     with pytest.raises(ValueError, match='unrecognised'):
         fl.guidance_rows_from_analysis(dict(cells={'D1_p1': {'odd': dict(point=1.)}}), baseline='mappo')
+
+
+def test_production_path_clean5a_episode_ppo_ev_bc_metrics_and_g4(cfg, monkeypatch):
+    """Real worker (episode_components + V2V controller), real ArmRuntime.train PPO on the recorded
+    N2-only slates incl. solo holds, EV-BC supervise, P3 update metrics and G4LD opportunities."""
+    from . import launch_production as launch, sparse_synergy_credit as g4
+    from .acceleration import Controller
+    from .v2v_runtime import controller_class
+    from .test_track2_backend_cpu import fake_load
+    fake_load(monkeypatch)
+    on = ev_cfg(cfg, guidance=guidance([grow('wall_h_solo2', 5000.), grow('wall_h', 3000.)]),
+                learn=dict(ev_bc=True, report_kl_unlabelled=True))
+    on['decision_interval_s'] = 10
+    runtime = tb.build_arm_runtime(on, 'B')['runtime']
+    runtime.safety_checked = True
+    p = runtime.policy
+    job = dict(track2_backend=True, track2_config=on, arm='B', track2_state=p.worker_state(), noise_seed=7)
+    worker, factory = tb.episode_components(job, p.layer.base, controller_class(Controller))
+    controller = factory(worker, torch.Generator().manual_seed(9), False)
+    slow = [dict(r, v_mps=2.) for r in scene()]
+    steps, reward_rows = [], []
+    reg = on['track2_reward']
+    for t in range(300, 361):
+        vehicles = advance(slow, t-300, speed=2.)
+        controller.apply(vehicles, {r['vid']: 0. for r in vehicles if r['is_cav']}, t)
+        s = controller.events[-1]['sample']
+        steps.append(dict(time_s=t, sample=s, reward=-1.))
+        outcomes = {r['vid']: -1. for r in vehicles}
+        for vid in s['context']['members']:
+            nb = {v: outcomes[v] for v in s['track2']['reward_neighbourhoods'][vid]}
+            reward_rows.append(dict(episode_id='ep1', time_s=t, cav_id=vid, source='sumo', own_reward=-1.,
+                                    neighbour_rewards=nb, reward=-1.+reg['weight']*(sum(nb.values())/len(nb) if nb else 0.),
+                                    weight=reg['weight'], weight_provenance=reg['provenance']))
+    picked = [m for st in steps if 'track2_trigger' in st['sample']
+              for i, m in enumerate(st['sample']['track2_trigger']['tables'])
+              for m in [m[st['sample']['track2_trigger']['actions'][i]]] if m]
+    assert picked and {m['family'] for m in picked} <= {'abreast_wall', 'group_hold'}
+    episode = dict(id='ep1', arm='B', steps=steps, actual_sim_s=361,
+                   world=dict(seed=989220, demand=3200, penetration=.6, cell_key='D3200_p60'))
+    monkeypatch.setattr(runtime, 'bank_pairs', lambda: ([], {}))
+    report = runtime.train([episode], rewards=dict(schema=tb.REWARD_SCHEMA, arm='B', update=1, rows=reward_rows))
+    assert report['trigger'] and all(np.isfinite(m['loss']) for m in report['trigger'])
+    out = fl.supervise(runtime, [episode])
+    assert out['ev_bc']['records'] > 0 and out['fit']['initial_ce'] is not None
+    metrics = launch.update_metrics('B', [dict(episode, totals=dict(collisions=0, teleports=0, hard_brake=0),
+                                               ttc_events=0)],
+                                    dict(report, bank_move_ce=None), dict(receipt={}), augmented_examples=0)
+    assert set(metrics['trigger_counts']) >= {'none'} and metrics['decisions'] > 0
+    ext = dict(enabled=True, rule=g4.EXTENSION_RULE, families=['abreast_wall', 'group_hold'], provenance=PROV)
+    rows_g4 = g4.opportunities([dict(id='ep1', steps=steps)], ext)
+    assert all(len(r['g4ld']['members']) >= 2 for r in rows_g4)
