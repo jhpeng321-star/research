@@ -4,12 +4,19 @@ Physics is exclusively accel_plant's native requests/CommandOwnership path. The
 ledger is the reservation journal: the complete paired plan and its successor
 state are committed in ONE atomic CHARGES.jsonl replacement under the existing
 ACCOUNTING.claim lock. A missing completion after reservation is never retried.
+
+Branch physics runs in spawned worker processes built exactly like the training
+waves' pool (accel_runner.wave), never inside the arm owner: the owner already
+imported traffic_shepherd from its PYTHONPATH, so only a fresh worker can bind the
+hash-verified frozen runtime (accel_plant.bind_runtime; clean3 u1 fault 2026-11-06).
 """
+from concurrent.futures import ProcessPoolExecutor
 from contextlib import contextmanager
 from copy import deepcopy
 import hashlib
 import io
 import json
+import multiprocessing
 import os
 from pathlib import Path
 
@@ -208,11 +215,34 @@ def paired_practice_count(cfg, update):
     return sum(bool(e.get('practice')) for e in value['episodes'])
 
 
+def worker_pool(cfg):
+    """The training waves' worker path (accel_runner.wave): spawn-context processes."""
+    return ProcessPoolExecutor(max_workers=cfg['workers'], mp_context=multiprocessing.get_context('spawn'))
+
+
+def dispatch(cfg, jobs):
+    """Run reserved branch jobs in spawned workers; results keep the plan's job order.
+
+    A failure cancels the not-yet-started jobs; the reservation stays spent.
+    """
+    if not jobs:
+        return []
+    pool = worker_pool(cfg)
+    try:
+        return list(pool.map(run_branch, jobs, [cfg]*len(jobs)))
+    except BaseException:
+        pool.shutdown(wait=True, cancel_futures=True)
+        raise
+    finally:
+        pool.shutdown(wait=True)
+
+
 class Coordinator:
     def __init__(self, cfg, *, worker=None):
         self.cfg = cfg
         self.root, self.cap, self.phases = tb.reservation_limits(cfg)
-        self.worker = worker or run_branch
+        # None = production spawned workers (dispatch); an injected worker runs in-process.
+        self.worker = worker
 
     def measure(self, update, episodes_by_arm):
         """One complete paired transaction. Failed/incomplete attempts stay spent."""
@@ -272,7 +302,10 @@ class Coordinator:
             suffix = ''.join(json.dumps(r, sort_keys=True, allow_nan=False)+'\n' for r in jobs)
             _publish(ledger_path, prior_bytes+suffix.encode(), replace=True)
         # Everything is charged durably BEFORE admission or the first worker.
-        results = [self.worker(job, self.cfg) for job in plan['jobs']]
+        if self.worker is None:
+            results = dispatch(self.cfg, plan['jobs'])
+        else:
+            results = [self.worker(job, self.cfg) for job in plan['jobs']]
         envelope = credit.measured_envelope(plan, results)
         if not plan['jobs']:
             # Keep the existing ledger reconciliation contract, even for a
@@ -396,7 +429,7 @@ def branch_hook(job, payload, observer):
 
 
 def run_branch(job, cfg):
-    """Production worker adapter; invoked only after the complete ledger commit."""
+    """Production worker (spawned by dispatch); invoked only after the complete ledger commit."""
     from . import accel_plant
     from .branch_eval import totals_at, check_prefix
     from .v2v_runtime import from_weights
@@ -406,9 +439,6 @@ def run_branch(job, cfg):
     admission(cfg)
     payload = load_capture(job, cfg)
     source = payload['job']
-    base = from_weights(source['weights'], enabled=True).eval()
-    # Reuse ONLY the production locality builder; no trigger/layer sampling.
-    observer = tb.EpisodePolicy(deepcopy(base), source['track2_config'], source['arm'])
     path = tb._path(Path(cfg['run_root'])/'jobs'/('g4_'+job['job_sha256']))
     native = dict(id='g4_'+job['job_sha256'], path=str(path), world=source['world'],
         arm=source['arm'], role='train', weights=source['weights'],
@@ -417,6 +447,13 @@ def run_branch(job, cfg):
         warm_history=source['warm_history'], sim_s=1200, stop=1200, deterministic=False,
         v2v=True, b_replay=True, guided=False, queue_root=cfg['run_root'],
         branch=dict(time_s=job['start']['time_s'], revert=[], prefixes=payload['prefixes']))
+    # The training worker's binding (same function, same runtime/checkpoint) comes FIRST,
+    # before the V2V policy and locality builders may import traffic_shepherd modules.
+    # accel_plant.episode repeats it below; repeated binding is idempotent.
+    accel_plant.bind_runtime(native)
+    base = from_weights(source['weights'], enabled=True).eval()
+    # Reuse ONLY the production locality builder; no trigger/layer sampling.
+    observer = tb.EpisodePolicy(deepcopy(base), source['track2_config'], source['arm'])
     # accel_plant's v2v wrapper remains the sole wrapper; no global monkeypatch.
     result = accel_plant.episode(native, policy_loader=lambda weights: base,
         controller_hook=branch_hook(job, payload, observer))
