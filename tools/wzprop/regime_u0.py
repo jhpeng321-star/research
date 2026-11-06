@@ -775,11 +775,17 @@ def score(states_path, out_path, *, checkpoint, u0, map_spec=None, device='cpu',
         for line in out_path.read_text().splitlines():
             if line.strip():
                 done.add(json.loads(line)['sid'])
-    states = load_states(states_path, sids=sids, shard=shard, max_per_cell=max_per_cell)
-    todo = [m for m in states if m['sid'] not in done][:limit]
-    report = dict(todo=len(todo), skipped=len(states) - len(todo), wall_s=0.0)
+    # Batches are formed over ALL selected states (deterministic) and then sharded (batch i, i+n, ...), so a state's
+    # call partners - hence its draws (one global seed per call) - do not depend on the number of workers.
+    states = load_states(states_path, sids=sids, max_per_cell=max_per_cell)
+    batches = _batches(states, states_per_call, slots, arms, K, max_rows)
+    if shard:
+        batches = batches[int(shard[0])::int(shard[1])]
+    batches = [[m for m in bt if m['sid'] not in done] for bt in batches]
+    batches = [bt for bt in batches if bt][:limit]
+    report = dict(todo=sum(len(bt) for bt in batches), batches=len(batches), done_before=len(done), wall_s=0.0)
     t0 = time.time()
-    for batch in _batches(todo, states_per_call, slots, arms, K, max_rows):
+    for batch in batches:
         try:
             results = evaluate_states(handle, exe, batch, arms=arms, K=K, H=H, seed=seed, slots=slots,
                                       max_rows=max_rows, heartbeat=heartbeat)
@@ -903,7 +909,7 @@ def main(argv=None):
     s.add_argument('--out', required=True)
     s.add_argument('--seed', type=int, default=DEFAULT_SEED)
     s.add_argument('--sids')
-    s.add_argument('--shard', help='i/n: this process scores states i, i+n, ...')
+    s.add_argument('--shard', help='i/n: this process scores the call batches i, i+n, ... (batches over all states)')
     s.add_argument('--limit', type=int)
     s.add_argument('--heartbeat', type=int, default=400, help='progress line every N physics steps (0 = off)')
     c = sub.add_parser('cost', help='dry-run cost; --calibrate measures s/step of one call on --device')
