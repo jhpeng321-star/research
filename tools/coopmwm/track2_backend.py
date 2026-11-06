@@ -473,6 +473,8 @@ class EpisodePolicy(torch.nn.Module):
         if ld['moves']:
             for vid in cavs:
                 state = dict(view=ld['view'], moves=True, v2v=self.ld_protocol is not None)
+                if 'joint' in ld:   # registered runtime subset (clean4); absent = byte-identical
+                    state['joint'] = ld['joint']
                 if self.ld_protocol is not None:
                     state.update(self.ld_protocol.state(vid, now))
                 states[vid]['lane_drop'] = state

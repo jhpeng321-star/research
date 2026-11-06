@@ -217,7 +217,7 @@ def settings(cfg):
     raw = (cfg or {}).get('lane_drop', False)
     if raw is False or raw is None:
         return None
-    keys, optional = ('enabled', 'rule', 'provenance', 'map'), ('features', 'moves', 'v2v', 'rsu')
+    keys, optional = ('enabled', 'rule', 'provenance', 'map'), ('features', 'moves', 'v2v', 'rsu', 'joint_families')
     if (not isinstance(raw, dict) or not set(keys) <= set(raw) or set(raw)-set(keys)-set(optional)
             or raw['enabled'] is not True or raw['rule'] != RULE
             or not isinstance(raw['provenance'], str) or not raw['provenance'].strip()):
@@ -231,6 +231,14 @@ def settings(cfg):
         out[key] = value
     if not (out['features'] or out['moves']):
         raise ValueError('lane_drop enabled with neither features nor moves')
+    joint = raw.get('joint_families')
+    if joint is not None:
+        # clean4 (MAIN option a): registered runtime subset of the joint families (group_hold is registered
+        # for mined-row binding but is not a clean4 runtime proposal family). Absent = all (byte-identical).
+        if (not isinstance(joint, list) or not joint or len(set(joint)) != len(joint)
+                or any(f not in JOINT_FAMILIES for f in joint) or not out['moves']):
+            raise ValueError('lane_drop joint_families must be a non-empty subset of '+repr(JOINT_FAMILIES))
+        out['joint'] = tuple(f for f in JOINT_FAMILIES if f in joint)
     v2v = raw.get('v2v')
     if v2v not in (None, False):
         if not out['moves']:
@@ -253,7 +261,7 @@ def settings(cfg):
 
 
 def config_keys(*, provenance, descriptor, features=True, moves_on=True, v2v_range_m=None,
-                member_cap=None, v2v=False, rsu=None):
+                member_cap=None, v2v=False, rsu=None, joint_families=None):
     """Exact binding keys for the common B/R config."""
     out = dict(enabled=True, rule=RULE, provenance=provenance,
                map=MapView.from_descriptor(descriptor).to_dict(), features=features, moves=moves_on)
@@ -261,6 +269,8 @@ def config_keys(*, provenance, descriptor, features=True, moves_on=True, v2v_ran
         out['v2v'] = {k: v for k, v in (('range_m', v2v_range_m), ('member_cap', member_cap)) if v is not None}
     if rsu is not None:
         out['rsu'] = rsu
+    if joint_families is not None:
+        out['joint_families'] = list(joint_families)
     return dict(lane_drop=out)
 
 
@@ -630,7 +640,7 @@ def families(structured, state, event):
         return out+(('lane_drop_join',) if state.get('v2v') else ())
     out = tuple(structured)
     if state.get('moves'):
-        out += JOINT_FAMILIES
+        out += tuple(state.get('joint', JOINT_FAMILIES))
     if state.get('v2v'):
         out += INITIATE_SLOTS+('lane_drop_join',)
     return out
@@ -1461,7 +1471,7 @@ class TriggerExtension:
 
 def extension_families(ld):
     """Executable lane-drop option families (joint moves when ``moves``, protocol when ``v2v``)."""
-    return (JOINT_FAMILIES if ld['moves'] else ())+(PROTOCOL_FAMILIES if ld['v2v'] is not None else ())
+    return (tuple(ld.get('joint', JOINT_FAMILIES)) if ld['moves'] else ())+(PROTOCOL_FAMILIES if ld['v2v'] is not None else ())
 
 
 def context_block(context):

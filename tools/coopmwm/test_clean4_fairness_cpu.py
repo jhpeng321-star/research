@@ -131,3 +131,24 @@ def test_first_three_registered_states_in_order():
     assert [(r['replicate'], s) for r, s in groups] == [(0, [(0, 0), (0, 1)]), (1, [(1, 0)])]
     with pytest.raises(ValueError):          # the registration must carry the same rule
         lq.first_three_groups(Backend([2, 1, 1, 1, 1]), cfg)
+
+
+def test_lane_drop_joint_family_subset_excludes_group_hold():
+    """MAIN option (a): group_hold is not a clean4 runtime proposal family (FULLPOL finding)."""
+    from pathlib import Path
+    from tools.coopmwm import lane_drop, map_descriptor as md
+    spec = Path(lane_drop.__file__).resolve().parents[2]/'assets/research/newmap_candidates/wz3to2'
+    desc = md.load(spec)
+    keys = lane_drop.config_keys(provenance='t', descriptor=desc, v2v_range_m=100., member_cap=3,
+                                 joint_families=['closing_pair', 'abreast_wall'])
+    ld = lane_drop.settings(keys)
+    assert ld['joint'] == ('closing_pair', 'abreast_wall')
+    assert 'group_hold' not in lane_drop.extension_families(ld)
+    state = dict(moves=True, v2v=True, joint=ld['joint'])
+    assert 'group_hold' not in lane_drop.families((), state, False)
+    default = lane_drop.settings(lane_drop.config_keys(provenance='t', descriptor=desc, v2v_range_m=100.))
+    assert 'joint' not in default and 'group_hold' in lane_drop.extension_families(default)
+    assert 'group_hold' in lane_drop.families((), dict(moves=True), False)
+    for bad in (['group_holdx'], [], ['closing_pair', 'closing_pair']):
+        with pytest.raises(ValueError):
+            lane_drop.settings(lane_drop.config_keys(provenance='t', descriptor=desc, joint_families=bad))
