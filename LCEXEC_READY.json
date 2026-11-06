@@ -1,0 +1,195 @@
+{
+ "task": "LCEXEC",
+ "status": "READY",
+ "branch": "c4/lcexec",
+ "worktree": "E:/agent-work/c4-lcexec",
+ "base": "c4/nm-train 5eb22ab4 (+ c4/nm-families bcf79c84 = clean4 final 6a5920be + N9)",
+ "head": "FILLED_BY_COMMIT (git log -1 c4/lcexec; this file is committed on top of the code head below)",
+ "code_head": "1fc89c5a5723e57db371b99f81a64eb5f9d2e898",
+ "merged_branches": {
+  "c4/nm-families": "bcf79c84 (N9 incl. lc_convert_probe f813e204; clean4 final 6a5920be)",
+  "c4/lcexec-rt": "40669eb6 (env knobs, writer harness)",
+  "c4/lcexec-cv": "ec578e92 (universal converter, parity harness, labels)",
+  "c4/lcexec-fam": "7b49d1b0 (free_program V2V protocol + wiring + E2E)"
+ },
+ "commits_own": [
+  "1fc89c5a C4 LCEXEC: N7 lane-MAPPO exports - lane rule table (lc_families.lane_rule_table = lane_gate as transitions), per-ego gate mappo_lane_gate (N9 safe_targets form), lc_runtime.mappo_lane_rules (GateRules adapter) and mappo_lane_writer (frozen _issue_lane_commands + closing-lane entries, lane-drop map only); tests",
+  "831d6c3f C4 LCEXEC: integration - multi-lane program targets as sequential adjacent requests through the own-sensing gate, released program members freed from their commitment the next second, opaque generator_args + custom trigger descriptor hook (FULLPOL head, single family registrant), public MemberExecutor.release; tests",
+  "02291125 C4 LCEXEC-CV: log streams follow a taut string through the constraint tube (piecewise-constant speeds), same-lane separation of lane-constrained members, report coverage / receipts / known items (persistent hold, writer_guard, writer_refused, dithers)",
+  "2b19d907 C4 LCEXEC-CV: CPU tests (fixtures sha, verbatim probe load w/o SUMO, all 138 rows convert, zero legacy projection, refusals, N1/N2 + classification, log + 3 random parity per row, dithers excluded, non-vacuity, labels, CLI) + LCEXEC_PARITY.json; random streams overlap-free",
+  "6fdcba4f C4 LCEXEC-FAM: templates must use the registered tau grid (env.lc_tick contract); E2E offset/active-move checks",
+  "bc1c4151 C4 LCEXEC-CV: lc_parity TraCI parity harness (verbatim probe Arm / lcm_families.Executor on FakeTraci vs lc_program executors + real LCEXEC env writer; N1/N2; log-consistent stream reconstruction + random streams; writer_guard/writer_refused classification)",
+  "60812560 C4 LCEXEC-FAM: free_program cooperation-layer runtime (lc_families, default OFF)",
+  "4fb1d27e C4 LCEXEC-CV: lc_convert universal verified-row -> free_program converter (NotRepresentable, N9 dispatch for lane families, lc_roles for hold/pulse/prog/legacy, dithers excluded, row_meta, CLI)",
+  "40669eb6 C4 LCEXEC-RT: LCEXEC current-lane request = persistent lane hold (changeLane to the current SUMO index, status 'held'; G5 keeps noop), per-vid receipts for deferred/refused, prog hold parity vs lcm_core 18:30 (sha 48aaae38, unchanged fixture), very-fast-vehicle difference documented, accel_plant hook split into two lines",
+  "7f4d49df C4 LCEXEC: LCMOVES final prog semantics (persistent lane request with hold, own tau with tau_from, accel speed kind), own-sensing-first references, template join_rules, executor lane-request receipts (timeouts), S-LCMOVES registry grids",
+  "e1459211 C4 LCEXEC-RT: document the known probe-Arm differences in lc_runtime",
+  "aaa67947 C4 LCEXEC-RT: env-side LCEXEC knobs (lc_runtime: flag-gated wz3to2 env subclass, accel/native/lane_mode/lanes/tau per-tick stash), writer harness, sha-pinned probe Arm fixtures, gated accel_plant hook",
+  "b48dedd9 C4 LCEXEC: tau registry = COOPKINDS discharge/platoon {0.5,0.6,0.8} + room_tau {1.6,2.0,2.4}",
+  "f6f35e5c C4 LCEXEC: probe role -> MemberProgram mapping (hold/pulse/tau/merge_early/zip_merge/zip_yield/lane_to/prog) + self-reference resolution in the executor",
+  "c846e8e5 C4 LCEXEC: free_program interface (member programs of CAV primitives, executor mirroring the probe Arm roles, WM frame from the N1 descriptor, per-tick label schema lcexec-tick-label-v1)"
+ ],
+ "files": {
+  "tools/coopmwm/lc_program.py": "free_program schema (FreeProgram/MemberProgram/Lon/LaneReq, templates with @k slots + join_rules), REGISTRY (cited probe grids), Frame (N1 descriptor), MemberExecutor (probe Arm role semantics incl. LCMOVES persistent lane hold, own tau, +/- accel, release order), receipts (lane outcome incl. timeout), tick_label",
+  "tools/coopmwm/lc_roles.py": "probe role spec -> MemberProgram (hold, pulse, tau, merge_early, zip_merge, zip_yield, lane_to, prog)",
+  "tools/coopmwm/lc_runtime.py": "env knobs (flag COOPMWM_LC_RUNTIME=1, lane-drop map only): env.lc_tick {accel, native, lanes, lane_mode, tau}; closing-lane entry; persistent hold (held); per-request duration; lcMode 513/512; tau set/restore; per-vehicle lane receipts; N7 exports lane_rule_table / mappo_lane_rules / mappo_lane_writer",
+  "tools/coopmwm/lc_writer_harness.py": "Harness (real env subclass + CommandOwnership on FakeTraci), requests_from_commands",
+  "tools/coopmwm/lc_families.py": "cooperation-layer runtime: ProgramOption free_program_initiate/join, Protocol (V2V initiate/join, relay join chaining for >4 members, own-sensing lane gate, sequential multi-lane requests, per-member executors, labels/receipts), template_of/template_from_program/resolve, generator + descriptor hooks, TriggerExtension, lane_rule_table, mappo_lane_gate",
+  "tools/coopmwm/lc_convert.py": "universal converter from_mined_row / row_meta / row_key / labels + CLI (convert|labels)",
+  "tools/coopmwm/lc_parity.py": "TraCI parity harness (verbatim probe Arm per source / lcm_families.Executor vs lc_program + real env writer; log + random streams) + report CLI",
+  "tools/coopmwm/lc_convert_probe.py": "N9 (owner a5e41d375dcfc6675): COOPKINDS/PLANGEN2 lane-family rows",
+  "shared hunks (default off, after N9 blocks)": "track2_backend.py, feasible_proposals.py (None-redraw guard), v2v_runtime.py (lane_request -> env.lc_tick), acceleration.py (lc_tick needs g5_lane_runtime), sparse_synergy_credit.py (skip program options), accel_plant.py (gated lc_runtime.install)",
+  "fixtures": "tools/coopmwm/fixtures/lcexec (rows + verbatim probe cores, sha256 MANIFEST), fixtures/lcexec_rt, fixtures/n9_probe_rows",
+  "LCEXEC_PARITY.json": "per-source conversion/parity report (regenerate: python -m tools.coopmwm.lc_parity report OUT.json)"
+ },
+ "api": {
+  "program": "lc_program.FreeProgram.from_dict/to_dict; MemberExecutor(vid, program).step(Obs) -> [(lcMode,m),(tau,x),(accel,a),(changeLane,(wm,dur)),(release,why)]; .receipt(); .release(el, why); tick_label(...)",
+  "converter": "lc_convert.from_mined_row(row, descriptor, file=None) -> FreeProgram | raise NotRepresentable(reason); labels(row, descriptor); row_meta(row); row_key(row); CLI python -m tools.coopmwm.lc_convert convert|labels ROWS.jsonl[.gz] OUT.jsonl",
+  "parity": "lc_parity.run(row, program, frame=..., stream=log|random, seed=0); python -m tools.coopmwm.lc_parity report OUT.json",
+  "runtime": "lc_families.settings/config_keys/Protocol/pool/redraw/option_from_dict/template_from_program; generator propose(view, own_row, rng) -> templates (view: now, map, frame, cap, range_m, sensed/rows, registry, generator_args/fullpol); descriptor fn(option) -> descriptor_width floats",
+  "env": "lc_runtime.install(job) (accel_plant.bind_runtime); env.lc_tick(request); info[lc_lane_vehicles]/[lc_lane_commands]",
+  "n7_lane_mappo": "tools.coopmwm.lc_runtime:mappo_lane_rules (GateRules adapter of lane_rule_table; dict if tools.nm_mappo absent), tools.coopmwm.lc_runtime:mappo_lane_writer (signature of CavSumoEnv._issue_lane_commands), tools.coopmwm.lc_families:mappo_lane_gate (per-ego parity gate, N9 safe_targets form)",
+  "labels": "schema lcexec-tick-label-v1: vid, t, el, session_id, role, lon (accel|native|base), accel_mps2, lane_target (WM or -1), lane_duration_s, lc_mode, tau, event (None|activate|release|left), release_reason, source; live copy in sample['track2']['lc_families']['labels']"
+ },
+ "config_keys": {
+  "lc_families": {
+   "enabled": true,
+   "rule": "lcexec-lc-families-v1",
+   "provenance": "non-empty",
+   "map": "wz3to2",
+   "cap": "2..6",
+   "range_m": "optional, default 100.0",
+   "generator": "optional 'module:function'",
+   "generator_args": "optional opaque JSON (per-arm templates; only B/R difference)",
+   "descriptor": "optional 'module:function' + descriptor_width int (FULLPOL head)"
+  },
+  "requires": [
+   "group_lane_moves=True",
+   "process map wz3to2 (COOPMWM_MAP_SPEC)",
+   "COOPMWM_G5_RUNTIME=1 and COOPMWM_LC_RUNTIME=1 in every episode worker process"
+  ],
+  "default": "absent/False = OFF; byte-identical (subprocess overlay vs aafdb8d2; env golden vs base env on merge + wz3to2)"
+ },
+ "results": {
+  "conversion": "138/138 verified rows, 0 refusals, 0 legacy projections (NEWMAP B27/R3, PLANGEN B18/R15, PLANGEN2 B24/R18, COOPKINDS B18, LOWCAV B12, LCMOVES B3; COOPKINDS_R/LCMOVES_R empty)",
+  "log_check": "138/138: verbatim probe Arm reproduces each row's own log on the reconstructed stream",
+  "parity_log": "132/138 identical TraCI sequences; 6 differ by one env edge-end guard second each (zipper merges near the drop: PLANGEN2 main.288 el 58 x3, COOPKINDS main.563 el 43/43/44)",
+  "parity_random": "356/414 random streams identical; rest = writer receipts only (non-adjacent probe requests -> sequential adjacent requests, edge-end guard); 0 plain mismatches",
+  "per_file": {
+   "COOPKINDS_MOVES_B": {
+    "rows": 18,
+    "converted": 18,
+    "log_check_pass": 18,
+    "parity_log_pass": 15,
+    "parity_random_pass": 6,
+    "random_streams_pass": 30,
+    "random_streams": 54
+   },
+   "LCMOVES_MOVES_B": {
+    "rows": 3,
+    "converted": 3,
+    "log_check_pass": 3,
+    "parity_log_pass": 3,
+    "parity_random_pass": 0,
+    "random_streams_pass": 6,
+    "random_streams": 9
+   },
+   "LOWCAV_MOVES_B": {
+    "rows": 12,
+    "converted": 12,
+    "log_check_pass": 12,
+    "parity_log_pass": 12,
+    "parity_random_pass": 12,
+    "random_streams_pass": 36,
+    "random_streams": 36
+   },
+   "NEWMAP_MOVES_B": {
+    "rows": 27,
+    "converted": 27,
+    "log_check_pass": 27,
+    "parity_log_pass": 27,
+    "parity_random_pass": 27,
+    "random_streams_pass": 81,
+    "random_streams": 81
+   },
+   "NEWMAP_MOVES_R": {
+    "rows": 3,
+    "converted": 3,
+    "log_check_pass": 3,
+    "parity_log_pass": 3,
+    "parity_random_pass": 3,
+    "random_streams_pass": 9,
+    "random_streams": 9
+   },
+   "PLANGEN2_MOVES_B": {
+    "rows": 24,
+    "converted": 24,
+    "log_check_pass": 24,
+    "parity_log_pass": 21,
+    "parity_random_pass": 16,
+    "random_streams_pass": 58,
+    "random_streams": 72
+   },
+   "PLANGEN2_MOVES_R": {
+    "rows": 18,
+    "converted": 18,
+    "log_check_pass": 18,
+    "parity_log_pass": 18,
+    "parity_random_pass": 11,
+    "random_streams_pass": 37,
+    "random_streams": 54
+   },
+   "PLANGEN_MOVES_B": {
+    "rows": 18,
+    "converted": 18,
+    "log_check_pass": 18,
+    "parity_log_pass": 18,
+    "parity_random_pass": 18,
+    "random_streams_pass": 54,
+    "random_streams": 54
+   },
+   "PLANGEN_MOVES_R": {
+    "rows": 15,
+    "converted": 15,
+    "log_check_pass": 15,
+    "parity_log_pass": 15,
+    "parity_random_pass": 15,
+    "random_streams_pass": 45,
+    "random_streams": 45
+   }
+  },
+  "lcmoves_hold": "persistent hold: every probe changeLane during LCMOVES hold seconds matched by a held changeLane (307 seconds)"
+ },
+ "tests": {
+  "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q <files>",
+  "own": [
+   "tools/coopmwm/test_lc_families_cpu.py (24)",
+   "test_lc_runtime_cpu.py (130)",
+   "test_lc_convert_cpu.py (52)",
+   "test_lc_convert_probe_cpu.py (N9)",
+   "test_lc_mappo_lane_cpu.py (20)"
+  ],
+  "regression_run": "782 passed, 3 skipped, 0 failed (767 s, code head 1fc89c5a) (21 files: lc_* + nm_families, track2_backend, feasible_proposals, group_lane, map_runtime, map_descriptor, lane_drop, v2v_wall, trigger_policy, g5_runtime, g4_worker_binding, sparse_synergy_credit, bank_breadth, map_golden, wall_w2, coop_layer); skips = frozen cpuV runtime only",
+  "not_run": "SUMO, GPU, full repository pytest; test_acceleration_cpu (env-dependent failures on Windows also at base, per FAM)"
+ },
+ "frozen_runtime": "unchanged: frozen env 59aecd0b and G5 overlay 5aac1769 (test-checked); no new frozen bundle needed. LCEXEC lives in repo source (lc_runtime env subclass, flag-gated).",
+ "requalification_before_clean5b": [
+  "1 setup-only load check on the frozen runtime with COOPMWM_G5_RUNTIME=1, COOPMWM_MAP_SPEC=wz3to2, COOPMWM_LC_RUNTIME=1: bind_runtime, env under e3final, overlay 5aac1769, 512 slots, LC subclass bound; run test_lc_runtime_cpu against that env",
+  "2 flag-off identity: installed_record() empty, short native episode prefix fingerprints identical",
+  "3 SUMO mechanics smoke on wz3to2 (budget to be registered by MAIN; NOT run): side by side with lcm_core from one saved state - closing-lane entry + persistent hold + deferral near the drop, tau set/restore, lane-only actors 513/512, slowDown targets, setSpeed(-1) no-op claim, 0 collisions/teleports"
+ ],
+ "open_issues": [
+  "No SUMO run: closing-lane entry/hold, tau, lane-only actors and the N7 writer are verified on a fake TraCI only (requalification step 3).",
+  "Program members bypass the MAPPO pre-safety filter (wms.control.safety.safe_accel), exactly as the probes; SUMO speedMode 27 + CommandOwnership direct_target bounds remain. MAIN to confirm.",
+  "Env edge-end deferral (v*duration + 10 m before an edge end) kept as a SUMO lane-index safety guard: 6/138 log streams lose one probe changeLane second near the drop; CV proposal to drop it NOT applied.",
+  "Multi-lane targets are sequential adjacent requests (coordinator rule); probes issued changeLane(final) and let SUMO step (only in random streams, no real row).",
+  "accel -> native without release: writer issues setSpeed(-1) where the probe let its 1 s slowDown expire (one 0.5 s physics step difference); v > allowed+3 m/s releases to native (probe slowed to allowed). Documented in lc_runtime.",
+  "Live V2V joins start >= 1 s after the initiator (t-1 message visibility); probes started all members at el 0. Converted programs keep join_el 0 (BC/replay).",
+  "Per-tick label BC term is NOT wired into any loss (G4LD declined; FULLPOL integrates; MAIN registration, B = R).",
+  "No bank_breadth.observable_contexts route for program plans; FULLPOL builds BC contexts via lc_convert + template_from_program/open_offline/admit_offline.",
+  "clean4_restart.levers lc_families kwarg / clean4_receipts absence check not added (N4 scope).",
+  "N7: mappo_lane_gate expects python bool is_cav and int lanes in rows (numpy bools fail closed); run their parity(VectorLaneGate(mappo_lane_rules()), mappo_lane_gate) on landing.",
+  "Pre-existing (N9 owner): the N9 slate loop can spin if N9 redraw keeps returning None with no other family in the pool."
+ ],
+ "hard_rules": "CPU only (no ssh/SUMO/GPU/training); worktrees c4-lcexec(-rt/-cv/-fam) only; no reset/clean/stash drop/push/rebase; no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 paths; no truth files read"
+}
