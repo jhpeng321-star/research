@@ -1,7 +1,7 @@
 import json, os, subprocess, time, shlex
 from pathlib import Path
 old = json.loads(open('/home/ubuntu/cpuv_setup_20261105/clean2_tests_285663a1/DISPATCH_STARTED.json').read())['command']
-src = '/home/ubuntu/coopmwm20261106_clean3_src_673e80a7'
+src = '/home/ubuntu/coopmwm20261106_clean3_src_7b8cbaad'
 commit = json.loads(open(src+'/SOURCE_MANIFEST.json').read())['commit']
 control = Path('/home/ubuntu/cpuv_setup_20261105/clean3_tests_'+commit[:8]); control.mkdir()
 prefix = old.split(' && /home/ubuntu/miniconda3/bin/python')[0].replace('/home/ubuntu/coopmwm20261105_clean2_src_285663a1', src)

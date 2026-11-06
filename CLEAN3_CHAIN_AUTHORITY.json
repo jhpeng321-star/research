@@ -7,7 +7,7 @@
   "prior_clean1_clean2_parity_sim_s": 3098640
  },
  "chain": "G1 batch -> CLEAN3_GO_NOGO (continue regardless) -> mined wait (>=3 per-seed verified joint examples; deadline 14:00) -> CONFIRM (owner pre-approved) -> prepare root/ledger -> smoke (all levers+fixes, mined exposure a-d) -> gate once (0 collisions/teleports) -> u1-u24 phase coverage -> launch A/B/R u0 x24 + monitor",
- "created": "2026-11-06T08:50+08:00 (system clock, approx)",
+ "created": "2026-11-06T09:20+08:00 (system clock, approx)",
  "criterion": "registered u24 criterion unchanged: pooled B group-over-best-single synergy CI95 lower > 0 and original no-safety-regression criterion; total benefit vs common base reported descriptively",
  "extra_final_baseline": "lane-on MAPPO aecd7d70, frozen, descriptive only (primary comparator speed-only MAPPO)",
  "g5_runtime": "MAIN 05:30 blocker fixed: accepted G5 env change bound onto the frozen e3final env that every episode imports (tools/coopmwm/g5_runtime.py, overlay SHA 5aac1769..., base SHA 59aecd0b...; COOPMWM_G5_RUNTIME=1 set by the chain); Linux test exercises the real frozen runtime path with lane_actors and byte-identity when absent; smoke requires a real G5 lane move",
@@ -22,7 +22,7 @@
   "2026-11-06 02:44": "use your own usage from now on. and 1",
   "2026-11-06 03:00": "approve"
  },
- "previous_chain": "r1 /home/ubuntu/cpuv_setup_20261105/clean3_chain_b7b74545 (pid 428197) stopped by operator in MINED_WAIT before any clean3 physics; its G1 batch ran (0 candidates, 0 sim-s, NO-GO) in /home/ubuntu/coopmwm20261106_clean3_g1cert; reason: smoke lever check bug fixed in a0f9401d; r2 /home/ubuntu/cpuv_setup_20261105/clean3_chain_a0f9401d (pid 434007) stopped by operator in MINED_WAIT before any clean3 physics to apply the owner mined-launch rule; its G1 (0 sim-s, NO-GO) in g1cert_r2; r3 /home/ubuntu/cpuv_setup_20261105/clean3_chain_bf3f1d68 (pid 446254) stopped by operator mid-G1 before any clean3 physics (0 rows) to add the owner mined-plan exposure checks; r4 clean3_chain_d27b3d00 (pid 451163) stopped pre-physics mid-G1 for the G5 runtime blocker; r5 clean3_chain_162b35c9 (pid 455812) stopped by operator in MINED_WAIT (pre-physics) to apply the walls-only amendment; r6 clean3_chain_dd424702 (pid 467291) FAILED in MINED_WAIT (pre-physics) on a NameError in mined_move (missing import), fixed in 0533fb16; 6cf4868f counts B examples for readiness; r7 clean3_chain_6cf4868f launched prepare/smoke, smoke FAILED (no decision link for mined R row), STOP in r1 root, 3,600 sim-s",
+ "previous_chain": "r1 /home/ubuntu/cpuv_setup_20261105/clean3_chain_b7b74545 (pid 428197) stopped by operator in MINED_WAIT before any clean3 physics; its G1 batch ran (0 candidates, 0 sim-s, NO-GO) in /home/ubuntu/coopmwm20261106_clean3_g1cert; reason: smoke lever check bug fixed in a0f9401d; r2 /home/ubuntu/cpuv_setup_20261105/clean3_chain_a0f9401d (pid 434007) stopped by operator in MINED_WAIT before any clean3 physics to apply the owner mined-launch rule; its G1 (0 sim-s, NO-GO) in g1cert_r2; r3 /home/ubuntu/cpuv_setup_20261105/clean3_chain_bf3f1d68 (pid 446254) stopped by operator mid-G1 before any clean3 physics (0 rows) to add the owner mined-plan exposure checks; r4 clean3_chain_d27b3d00 (pid 451163) stopped pre-physics mid-G1 for the G5 runtime blocker; r5 clean3_chain_162b35c9 (pid 455812) stopped by operator in MINED_WAIT (pre-physics) to apply the walls-only amendment; r6 clean3_chain_dd424702 (pid 467291) FAILED in MINED_WAIT (pre-physics) on a NameError in mined_move (missing import), fixed in 0533fb16; 6cf4868f counts B examples for readiness; r7 clean3_chain_6cf4868f launched prepare/smoke, smoke FAILED (no decision link for mined R row), STOP in r1 root, 3,600 sim-s; r8 clean3_chain_673e80a7 FAILED in PREPARE (pre-physics) on offline supervision candidates beyond observable slots",
  "quote": {
   "file": "E:/agent-work/c4-rerun-launch/CLEAN3_QUOTE.json",
   "phases": {
@@ -42,8 +42,9 @@
   "sha256": "e42d5636a034aab31b16ad976b8b688c9641c1c142a4a2f87758d1e573b6e3fe",
   "total_sim_s": 3680400
  },
- "root": "/home/ubuntu/coopmwm20261106_clean3_r2 (r1 root /home/ubuntu/coopmwm20261106_clean3 kept as evidence; its 3,600 smoke sim-s counted as prior)",
+ "root": "/home/ubuntu/coopmwm20261106_clean3_r3 (r1 smoke-failed 3,600 sim-s and r2 prepare-failed 0 sim-s roots kept as evidence and counted)",
  "safety_rule": "A: full original rule. B and R: composite TTC/critical comparison reported each update, no pause. Any collision or teleport in any arm pauses.",
  "schema": "coopmwm.clean3.chain_authority.v1",
- "seeds": "registered TRAIN worlds only (986000-986071 family); never 964000-964199, 962xxx, 977xxx"
+ "seeds": "registered TRAIN worlds only (986000-986071 family); never 964000-964199, 962xxx, 977xxx",
+ "supervision_fix": "7b8cbaad: offline trigger supervision candidates restricted to the ego observable slots (online acquirability contract), B=R"
 }
