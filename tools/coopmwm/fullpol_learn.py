@@ -718,11 +718,22 @@ def _base_arm(results, base_arm):
     return 'u0' if 'u0' in arms else 'base'      # S-REGIMEU0 names its MAPPO base arm 'u0'
 
 
+BASE_ENTRIES = ('base', 'u0')                       # base arms (mean_J only), never a guidance family
+DERIVED_ENTRIES = ('group_minus_best_solo',)          # derived contrasts (point/ci95/solos), never a family
+
+
 def guidance_rows_from_analysis(analysis, *, arm='B', baseline):
-    """rg_analyze ANALYSIS.json ``cells`` summaries (difference = strategy - base) -> gain rows."""
+    """rg_analyze / S-REGIMEU0 ANALYSIS ``cells`` summaries (difference = strategy - base) -> gain rows.
+
+    Only STRATEGY entries (dicts carrying mean_diff, ci95 and n) become rows; the base entry
+    ('base' / 'u0') and derived contrasts ('group_minus_best_solo') are excluded explicitly."""
     out = []
     for cell, arms in sorted(analysis['cells'].items()):
         for a, v in sorted(arms.items()):
+            if a in BASE_ENTRIES or a in DERIVED_ENTRIES or 'minus' in a:
+                continue
+            if not isinstance(v, dict) or not {'mean_diff', 'ci95', 'n'} <= set(v):
+                raise ValueError(f'unrecognised ANALYSIS entry {cell}/{a}: strategy rows need mean_diff, ci95, n')
             lo, hi = v['ci95']
             out.append(dict(arm=arm, regime=cell, family=a, baseline=baseline, n=int(v['n']),
                             mean_veh_s=-float(v['mean_diff']), lb95_veh_s=-float(hi), ub95_veh_s=-float(lo),
