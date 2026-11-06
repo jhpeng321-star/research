@@ -711,3 +711,84 @@ def test_tape_stage_and_trimmed_geometry(tmp_path, dry):
         assert [x[0] for x in r4] == r_ids[:len(r4)]
         for vid, mem, prm in r4:
             assert [mm['id'] for mm in m['variants'][vid]['members']] == [c['id'] for c in mem]
+
+
+# ------------------------------------------------------------------------------------ open search
+OS_SMALL = dict(n_init=24, generations=2, n_elite=4, n_children=12, finalists=8, k=5)
+
+
+def test_open_search_roams_archives_and_splits_slots(P):
+    from tools.wzprop import open_search as OS
+    m = _lc_moment()
+    row, archive, evaluated = OS.search(W.StubWM(), m, OS.config(OS_SMALL))
+    assert len(row['variants']) == 5 and row['archive_cells'] >= 4 and len(evaluated) > 24
+    slots = [v['wm']['open_search']['slot'] for v in row['variants'].values()]
+    assert slots[0] == 'top' and 'diverse' in slots
+    cells = [tuple(v['wm']['open_search']['cell']) for v in row['variants'].values()]
+    div = [c for c, s in zip(cells, slots) if s == 'diverse']
+    assert len(set(div)) == len(div) and not set(div) & {cells[0]}
+    roles = {mm['role'] for v in row['variants'].values() for mm in v['members']}
+    assert roles <= {'hold', 'prog'}
+    for vid, v in row['variants'].items():
+        assert 2 <= len(v['members']) <= 6 or v['family'] != 'free_program'
+        V.validate_variant(P, m, vid, v)                   # the SUMO plug-in accepts every proposal
+    for r in evaluated.values():                           # disagreement-penalised LCB
+        st = r.get('M') or r['T']
+        assert r['score'] <= st['mean'] - 0.5 * st['sd'] + 1e-9
+    assert OS.search(W.StubWM(), m, OS.config(OS_SMALL))[0]['variants'] == row['variants']
+
+
+def test_open_search_with_a_hold_only_wm_stays_executable(P):
+    from tools.wzprop import open_search as OS
+
+    class HoldOnly:
+        name = 'hold_only'
+        meta = dict(backend='hold_only')
+
+        def __init__(self):
+            self.inner = W.StubWM()
+
+        def observe(self, mo):
+            return self.inner.observe(mo)
+
+        def evaluate(self, st, acts, K, H, seed):
+            assert all(mm.get('role', 'hold') == 'hold' for a in acts for mm in a['members'])
+            return self.inner.evaluate(st, acts, K, H, seed)
+    m = _lc_moment()
+    row, _a, _e = OS.search(W._Factory(HoldOnly()), m, OS.config(OS_SMALL))
+    assert row['variants'] and all(mm['role'] == 'hold' for v in row['variants'].values() for mm in v['members'])
+    het = [v for v in row['variants'].values() if v['family'] == 'free_program']
+    for v in het:
+        V.validate_variant(P, m, 'x', v)
+    bad = json.loads(json.dumps(next(iter(row['variants'].values()))))
+    bad['params'] = {}
+    bad['members'][0]['params']['v_w'] = 40.0
+    with pytest.raises(ValueError, match='registered ranges'):
+        V.validate_variant(P, m, 'bad', bad)
+
+
+def test_descriptor_cells_select_and_feedback(dry):
+    from tools.wzprop import open_search as OS
+    c = [dict(id='a', edge='up', lane=0, x=1500.0, v=20.0), dict(id='b', edge='up', lane=1, x=1560.0, v=24.0)]
+    hold = dict(members=[F.member_spec(x, dict(v_w=15.0, hold_s=90, dmax=1.5)) for x in c])
+    cell = OS.descriptor(hold, {x['id']: x for x in c})
+    assert cell == (2, 2, 0, OS._bin(-7.0, OS.DV_BINS), OS._bin(G.X_B - 1530.0, OS.DROP_BINS), 0)
+    Pl = __import__('tools.wzprop.families_lc', fromlist=['lcm']).lcm()
+    prog = dict(members=[Pl.prog(c[0], lc_target=1, lc_from=0, speed='accel', dmax=1.0, hold_s=60)])
+    assert OS.descriptor(prog, {})[1:3] == (1, 1)
+
+    def rec(key, mean, sd, cell):
+        return dict(move=dict(key=key), score=mean - sd, cell=cell, T=dict(mean=mean, sd=sd), K=8)
+    final = [rec('a', 100, 10, (1,)), rec('b', 90, 5, (1,)), rec('c', 50, 5, (2,)), rec('d', 20, 80, (3,)),
+             rec('e', 10, 1, (4,))]
+    picks = OS.select(final, 4, 0.5, 0.25)
+    assert [s for s, _ in picks] == ['top', 'top', 'diverse', 'uncertain']
+    assert [r['move']['key'] for _, r in picks] == ['a', 'b', 'c', 'd']
+    summ = json.loads((Path(dry['wm']) / 'results' / 'WMC_SUMMARY.json').read_text())
+    moms = json.loads((Path(dry['wm']) / 'MOMENTS.json').read_text())
+    fb = OS.feedback_rows(summ, moms)
+    assert fb and all(r['measured']['T_r0'] is not None and r['action']['members'] for r in fb)
+    cmp = C.compare([Path(dry['ref']) / 'results' / 'WMC_SUMMARY.json', Path(dry['wm']) / 'results' / 'WMC_SUMMARY.json'],
+                    moments=[Path(dry['ref']) / 'MOMENTS.json', Path(dry['wm']) / 'MOMENTS.json'])
+    vp = cmp['verified_plans']
+    assert vp and all(r['cell'] is not None and r['origin'] for r in vp)

@@ -56,6 +56,22 @@ def member_spec(c, params, anchor=None):
     return dict(id=c['id'], role='hold', params=p, lane=c['lane'], x=c['x'], v=c['v'])
 
 
+HOLD_RANGES = dict(v_w=(15.0, 22.0), hold_s=(60, 300), dmax=(1.0, 1.5), start_s=(0, 60))
+
+
+def hold_out_of_range(mm):
+    """Registered-range check of an nm2 'hold' member (NEWMAP2 / PLANGEN / R grid / WMDATA offsets)."""
+    p = mm['params']
+    bad = [k for k, (lo, hi) in HOLD_RANGES.items() if k in p and not lo <= float(p[k]) <= hi]
+    if float(p.get('amax', 1.0)) != 1.0:
+        bad.append('amax')
+    if float(p.get('release_x', G.X_B)) not in (G.X_B, G.X_B - EARLY_RELEASE_M):
+        bad.append('release_x')
+    if 'anchor_release_x' in p and float(p['anchor_release_x']) != G.X_B - EARLY_RELEASE_M:
+        bad.append('anchor_release_x')
+    return bad
+
+
 def params_of(family, knob):
     """Variant params (pg_plan VARIANTS layout) of one knob setting."""
     p = dict(v_w=float(knob['v_w']), hold_s=int(knob['hold_s']), dmax=float(knob['dmax']))

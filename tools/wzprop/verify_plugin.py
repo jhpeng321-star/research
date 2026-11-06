@@ -30,6 +30,7 @@ import time
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from . import families as HF
 from . import families_lc as FL
 from . import geometry as G
 from . import n3
@@ -173,9 +174,15 @@ def validate_variant(P, m, vid, v):
             raise ValueError(f"{m['sid']}/{vid}: member {mm['id']} is not a CAV on 'up' at t0")
         if mm['role'] != 'hold':
             raise ValueError(f"{m['sid']}/{vid}: role {mm['role']!r} has no N3 executor")
-        ref = P.member_spec(c, v['params'], anchor=mm['params'].get('anchor'))
+        # shared variant params (structured / WM grid moves) or per-member programs (open search: params {})
+        prm = v['params'] or {k: x for k, x in mm['params'].items() if k != 'anchor'}
+        ref = P.member_spec(c, prm, anchor=mm['params'].get('anchor'))
         if ref != mm:
             raise ValueError(f"{m['sid']}/{vid}: member spec differs from pg_plan.member_spec: {mm} != {ref}")
+        if v['family'] != 'harmonize_rows':
+            bad = HF.hold_out_of_range(mm)
+            if bad:
+                raise ValueError(f"{m['sid']}/{vid}: member {mm['id']} outside the registered ranges: {bad}")
     return ids
 
 
@@ -295,6 +302,7 @@ def analyze(root, out_dir=None, phase_id=PHASE_ID):
             vd['v2v'] = A.v2v(m, vid)
             vd['proposer'] = proposer_of(v)
             vd['wm_prediction'] = v.get('wm')
+            vd['origin'] = ((v.get('wm') or {}).get('open_search') or {}).get('origin') or vd['family']
             vd['n_members'] = len(v['members'])
             verdicts.append(vd)
             if vd['admitted']:

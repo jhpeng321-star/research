@@ -4,6 +4,7 @@ propose  (WM host)  MOMENTS.json -> PROPOSALS.jsonl (+ _RECEIPT.json); zero SUMO
 score    (WM host)  WM predictions of the variants already in a MOMENTS.json -> SCORES.jsonl; zero SUMO
 rankcheck (any)     WM ranking vs existing SUMO verdicts (Spearman T/S, AUC admitted, top-1) -> JSON
 enrich   (any)      MOMENTS.json + WM-D tapes -> observable moments (CAV-detected neighbours, RSU counters)
+opensearch (WM host) open roaming search (free programs, CEM/evolution, MAP-Elites, LCB - disagreement)
 regime   (any)      claim-4: S-REGIME strategy states from tapes / WM-vs-measured benefit agreement
 wmrank   (WM host)  score + bootstrap rank metrics with one WM checkpoint (baseline WM2 / WM-E) -> DIR
 rankmetrics (any)   bootstrap rank metrics from SCORES.jsonl + summaries -> JSON + .md
@@ -153,6 +154,32 @@ def rankcheck(argv):
     print(json.dumps(dict(all=res['all'], top1=res['top1_admitted_given_any']), indent=1))
 
 
+def opensearch(argv):
+    """Open (roaming) WM search over free programs + family seeds; output rows plug into verify moments."""
+    from . import geometry as G
+    from . import open_search as OS
+    ap = argparse.ArgumentParser(prog='python -m tools.wzprop opensearch')
+    ap.add_argument('--moments', required=True)
+    ap.add_argument('--out', required=True)
+    ap.add_argument('--wm', default='auto')
+    ap.add_argument('--wm-api', action='append')
+    ap.add_argument('--wm-arg', action='append')
+    ap.add_argument('--config', help='JSON dict of open_search.DEFAULTS overrides')
+    ap.add_argument('--sids')
+    a = ap.parse_args(argv)
+    wm = _backend(a)
+    cfg = OS.config(json.loads(a.config) if a.config else None)
+    ms = [m for m in json.loads(G.check_path(a.moments).read_text()) if m.get('valid')]
+    if a.sids:
+        ms = [m for m in ms if m['sid'] in set(a.sids.split(','))]
+    with G.check_path(a.out).open('x') as fh:
+        for m in ms:
+            row, _arch, _ev = OS.search(wm, m, cfg)
+            fh.write(json.dumps(row, sort_keys=True, default=str) + '\n')
+            fh.flush()
+    print(json.dumps(dict(out=a.out, moments=len(ms), backend=wm.meta), default=str))
+
+
 def labels(argv):
     from . import wallfit_bridge as WB
     ap = argparse.ArgumentParser(prog='python -m tools.wzprop labels')
@@ -180,6 +207,8 @@ def main(argv=None):
         return rankcheck(rest)
     if cmd == 'wmrank':
         return wmrank(rest)
+    if cmd == 'opensearch':
+        return opensearch(rest)
     if cmd == 'regime':
         from .regime_wm import main as rg
         rg(rest)
