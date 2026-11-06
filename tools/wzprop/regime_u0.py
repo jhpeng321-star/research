@@ -357,8 +357,10 @@ class U0RuleController:
     """WM CAV callback [B, n, 4] for rows (arm, draw): MAPPO u0 on every CAV slot (native WM lanes) + the S-REGIMEU0 rule
     (hold members) on strategy rows; ``native`` rows drive every CAV with the WM's native law (diagnostic)."""
 
-    def __init__(self, arms, n_slots, device, policy, group_encoder, *, t0_s=T0_S, accel_max=None):
+    def __init__(self, arms, n_slots, device, policy, group_encoder, *, t0_s=T0_S, accel_max=None, heartbeat=0,
+                 label=''):
         torch = _torch()
+        self.heartbeat, self.label, self.t_wall = int(heartbeat or 0), str(label), time.time()
         from wms.control.contract import ACCEL_MIN_MPS2
         B = len(arms)
         self.arms = list(arms)
@@ -435,6 +437,10 @@ class U0RuleController:
         index = int(_step_index(state))
         self._update(state, index)
         self.steps += 1
+        if self.heartbeat and index and index % self.heartbeat == 0:
+            print(json.dumps(dict(heartbeat=self.label, step=index, sim_s=index * DT_S,
+                                  wall_s=round(time.time() - self.t_wall, 1),
+                                  acts=[len(a) for a in self.acts])), flush=True)
         mask = self._mask(state)
         s, v, lane = state['s_m'], state['v_mps'], state['lane'].long()
         decision = index % STEPS_PER_CONTROL == 0
@@ -526,7 +532,7 @@ def _prep_state(handle, m, arms):
 
 
 def evaluate_states(handle, policy_exe, states, *, arms=DEFAULT_ARMS, K=4, H=H_MAX_S, seed=DEFAULT_SEED,
-                    slots=DEFAULT_SLOTS, pad=DEFAULT_PAD, max_rows=None, trace=None):
+                    slots=DEFAULT_SLOTS, pad=DEFAULT_PAD, max_rows=None, trace=None, heartbeat=0):
     """Roll the WM from several start states at once (rows = state x draw x arm, chunked by whole (state, draw)
     groups so every arm of a draw shares one call); returns one result dict per state (input order).
 
@@ -583,7 +589,8 @@ def evaluate_states(handle, policy_exe, states, *, arms=DEFAULT_ARMS, K=4, H=H_M
         if exit_s is not None:
             initial['exit_s_m'] = torch.full((b, n), float(exit_s), device=dev)
         controller = U0RuleController([a for _si, a, _k in rows], n, dev, policy_exe.policy,
-                                      policy_exe.group_encoder, accel_max=policy_exe.accel_max)
+                                      policy_exe.group_encoder, accel_max=policy_exe.accel_max, heartbeat=heartbeat,
+                                      label=','.join(sorted({preps[si]['m']['sid'] for si, _k in chunk})))
         uniform = torch.stack([P._draw_uniform(seed, k, preps[si]['digest'], n_steps, n)
                                for si, _a, k in rows]).to(dev)
         entries = None
@@ -721,7 +728,7 @@ def _batches(states, states_per_call, slots):
 
 def score(states_path, out_path, *, checkpoint, u0, map_spec=None, device='cpu', arms=DEFAULT_ARMS, K=8, H=H_MAX_S,
           seed=DEFAULT_SEED, slots=DEFAULT_SLOTS, max_rows=32, states_per_call=1, sids=None, shard=None,
-          threads=None, allow_fresh=False, limit=None, max_per_cell=None, mem_fraction=None):
+          threads=None, allow_fresh=False, limit=None, max_per_cell=None, mem_fraction=None, heartbeat=400):
     """Append one JSON line per start state to ``out_path`` (resumable: states already in the file are skipped).
 
     ``states_per_call`` start states share each batched WM call (rows <= ``max_rows``); results do not depend on the
@@ -759,7 +766,7 @@ def score(states_path, out_path, *, checkpoint, u0, map_spec=None, device='cpu',
     for batch in _batches(todo, states_per_call, slots):
         try:
             results = evaluate_states(handle, exe, batch, arms=arms, K=K, H=H, seed=seed, slots=slots,
-                                      max_rows=max_rows)
+                                      max_rows=max_rows, heartbeat=heartbeat)
         except Exception as exc:                                       # recorded, never imputed
             results = [dict(sid=m['sid'], cell=m['cell'], seed=int(m['seed']), error=f'{type(exc).__name__}: {exc}')
                        for m in batch]
@@ -882,6 +889,7 @@ def main(argv=None):
     s.add_argument('--sids')
     s.add_argument('--shard', help='i/n: this process scores states i, i+n, ...')
     s.add_argument('--limit', type=int)
+    s.add_argument('--heartbeat', type=int, default=400, help='progress line every N physics steps (0 = off)')
     c = sub.add_parser('cost', help='dry-run cost; --calibrate measures s/step of one call on --device')
     common(c)
     c.add_argument('--s-per-step', type=float)
@@ -904,7 +912,7 @@ def main(argv=None):
                                max_rows=a.max_rows, states_per_call=a.states_per_call,
                                sids=a.sids.split(',') if a.sids else None, shard=shard, threads=a.threads,
                                allow_fresh=a.allow_fresh, limit=a.limit, max_per_cell=a.max_per_cell,
-                               mem_fraction=a.mem_fraction)))
+                               mem_fraction=a.mem_fraction, heartbeat=a.heartbeat)))
         return
     sps = a.s_per_step
     cal = None
