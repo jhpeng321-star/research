@@ -144,6 +144,10 @@ def make_backend(args):
     if args.backend == "keep_speed":
         return KeepSpeedBackend()
     if args.backend == "wm":
+        import os
+
+        import torch
+        torch.set_num_threads(int(os.environ.get("WZQ_THREADS", torch.get_num_threads())))
         from .wm_backend import WmBackend
         return WmBackend(args.checkpoint, device=args.device, map_spec=args.map_spec,
                          physics_toml=args.physics_toml)
