@@ -217,7 +217,9 @@ def validate_clean5a(cfg, updates, fixes=None):
         if (not lc_runtime.enabled() or lc_families.settings(cfg) is None or lc.get('cap') != c5b.LC_CAP
                 or (lc.get('generator_args') or {}).get('templates') != []):
             raise ValueError('clean5b requires the LC runtime and lc_families cap 6 with no templates (B = R)')
-        out['lc_families'] = dict(cap=lc['cap'], generator=lc.get('generator'), templates=0)
+        if (cfg.get('clean5_ev') or {}).get('hold_lane_pin') is not True:
+            raise ValueError('clean5b launches with clean5_ev.hold_lane_pin ON (MAIN 2026-11-07)')
+        out['lc_families'] = dict(cap=lc['cap'], generator=lc.get('generator'), templates=0, hold_lane_pin=True)
     base = cfg['newmap']['base']
     if (frozen_trunk.file_sha256(base['trunk']) != base['trunk_sha256'] or cfg['checkpoint'] != base['trunk']
             or frozen_trunk.check_process(cfg) is not None):

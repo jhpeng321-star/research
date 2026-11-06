@@ -29,6 +29,7 @@ def test_exact_keys_registered_values(cfg, wz):
     ev = fe.settings(k)
     assert ev['families'] == ('abreast_wall', 'group_hold', 'free_program')
     assert ev['ev_bc_steps'] == 60 and ev['ppo_kl'] == 'row_mean' and k['imitation_epochs'] == 60 and bb.ev_only(k)
+    assert ev['hold_lane_pin'] is True                                          # MAIN 2026-11-07
     lc = lf.settings(k)
     assert k['lc_families']['cap'] == c5b.LC_CAP == fh.TEMPLATE_CAP == 6     # every FULLPOL template admissible
     assert k['lc_families']['generator_args']['templates'] == []
@@ -46,7 +47,7 @@ def test_exact_keys_registered_values(cfg, wz):
     a.update(c5.keys(desc=wz, guidance_doc=_doc(), provenance='MAIN clean5b 23:40'))
     assert set(k)-set(a) == {'lc_families'} and {x for x in a if a[x] != k[x]} == {'clean5_ev'}
     assert {x: v for x, v in a['clean5_ev'].items() if x != 'families'} == {
-        x: v for x, v in k['clean5_ev'].items() if x != 'families'}
+        x: v for x, v in k['clean5_ev'].items() if x not in ('families', 'hold_lane_pin')}
 
 
 def test_b_and_r_offer_identical_slates_with_programs(cfg, wz):

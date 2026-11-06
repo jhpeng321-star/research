@@ -40,7 +40,7 @@ def settings(cfg):
     if raw is False or raw is None:
         return None
     keys = {'enabled', 'rule', 'provenance', 'families', 'group_sizes', 'solo_geometry', 'learn',
-            'regime_guidance', 'parity_families', 'sumo_lanes', 'ev_bc_steps', 'ppo_kl'}
+            'regime_guidance', 'parity_families', 'sumo_lanes', 'ev_bc_steps', 'ppo_kl', 'hold_lane_pin'}
     if (not isinstance(raw, dict) or raw.get('enabled') is not True or raw.get('rule') != RULE
             or set(raw)-keys or not isinstance(raw.get('provenance'), str) or not raw['provenance'].strip()):
         raise ValueError('clean5_ev requires enabled=True, the registered rule, provenance and known keys')
@@ -58,6 +58,8 @@ def settings(cfg):
         raise ValueError('clean5_ev ev_bc_steps must be a positive integer (registered)')
     if raw.get('ppo_kl', 'row_sum') not in PPO_KL:
         raise ValueError(f'clean5_ev ppo_kl in {PPO_KL}')
+    if type(raw.get('hold_lane_pin', False)) is not bool:
+        raise ValueError('clean5_ev hold_lane_pin must be bool')
     out = deepcopy(raw)
     out.update(families=families, group_sizes=sizes, solo_geometry=raw.get('solo_geometry', 'zone'))
     return out
@@ -73,13 +75,15 @@ PACE_RULE = ('MAIN 2026-11-06 ~21:1x (pre-launch, registered): EV-BC imitation s
 
 def config_keys(*, provenance, families=('abreast_wall', 'group_hold'), group_sizes=(1, 2), solo_geometry='zone',
                 learn=None, regime_guidance=None, parity_families=None, sumo_lanes=None, ev_bc_steps=None,
-                ppo_kl=None):
+                ppo_kl=None, hold_lane_pin=None):
     out = dict(enabled=True, rule=RULE, provenance=provenance, families=list(families),
                group_sizes=list(group_sizes), solo_geometry=solo_geometry)
     if ev_bc_steps is not None:
         out['ev_bc_steps'] = int(ev_bc_steps)
     if ppo_kl is not None:
         out['ppo_kl'] = ppo_kl
+    if hold_lane_pin is not None:
+        out['hold_lane_pin'] = bool(hold_lane_pin)
     for key, value in (('learn', learn), ('regime_guidance', regime_guidance),
                        ('parity_families', None if parity_families is None else sorted(parity_families)),
                        ('sumo_lanes', sumo_lanes)):
@@ -298,3 +302,18 @@ def recommended_5b(*, provenance, regime_guidance, cap, range_m=None, templates=
                                        generator_args=args, descriptor=DESCRIPTOR_HOOK,
                                        descriptor_width=fullpol_head.PROGRAM_DESCRIPTOR_WIDTH))
     return out
+
+
+HOLD_LANE_PIN_RULE = ('MAIN 2026-11-07 ~01:0x (registered): during an ACTIVE N2 hold (the N2 law of the member is '
+                      'commanding this second) each member gets its own current lane as a G5 lane target every '
+                      'tick through the existing single-writer G5 path - the same mechanism as the verified plant '
+                      'path (S-REGIMEU0 RuleHook: laneChangeMode 513 on hold members, restored at release). No '
+                      'lane change is requested (target = own lane); zip members keep their N2 zip request.')
+
+
+def hold_pins(active, own_lanes, zip_members=()):
+    """{vid: own current WM lane} for the active N2 hold members (``active``: vids whose N2 law is
+    commanding this second, incl. unresolved-native ones); zip-request members and vehicles without
+    an own lane observation are excluded. Pure function of the member's OWN state."""
+    zips = set(zip_members)
+    return {v: int(own_lanes[v]) for v in sorted(set(active)) if v not in zips and v in own_lanes}

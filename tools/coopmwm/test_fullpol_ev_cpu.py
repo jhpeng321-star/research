@@ -648,3 +648,44 @@ def test_production_train_reports_ppo_kl_only_when_clean5a_row_mean(cfg, monkeyp
     assert 'fullpol_ppo_kl' not in reports['row_sum']
     r = reports['row_mean']['fullpol_ppo_kl']
     assert r['rule'] == 'row_mean' and r['kl_budget'] == .045 and r['accepted']+r['rejected'] >= 1
+
+
+def _solo_run(value, ticks=40):
+    """Tick a scene until a CAV's solo hold is accepted; return (policy, controller, events)."""
+    from .acceleration import Controller
+    from .v2v_runtime import controller_class
+    p = make(value)
+    c = controller_class(Controller)(p, torch.Generator().manual_seed(9), False)
+    out = []
+    for t in range(300, 300+ticks):
+        vehicles = [dict(r, v_mps=2.) for r in advance(scene(), t-300, speed=2.)]
+        p.observe(vehicles, t, native_commands={r['vid']: 0. for r in vehicles if r['is_cav']})
+        c.apply(vehicles, {r['vid']: 0. for r in vehicles if r['is_cav']}, t)
+        out.append((t, vehicles, c.events[-1]['sample'], dict(c.g5_lane_targets)))
+    return p, c, out
+
+
+def test_hold_lane_pin_off_is_identical_and_on_pins_active_hold_members_to_their_own_lane(cfg):
+    base = ev_cfg(cfg)
+    runs = {}
+    for name, value in (('absent', base), ('false', dict(base, clean5_ev=dict(base['clean5_ev'], hold_lane_pin=False))),
+                        ('on', dict(base, clean5_ev=dict(base['clean5_ev'], hold_lane_pin=True)))):
+        runs[name] = _solo_run(value)
+    canon_run = lambda r: canon([s for _, _, s, _ in r[2]])
+    assert canon_run(runs['absent']) == canon_run(runs['false'])
+    assert all('hold_lane_pins' not in s for _, _, s, _ in runs['absent'][2])
+    pinned = 0
+    for t, vehicles, s, g5 in runs['on'][2]:
+        lanes = {r['vid']: r['lane'] for r in vehicles}
+        law = (s['track2'].get('lane_drop') or {}).get('law_commands') or {}
+        pins = s.get('hold_lane_pins') or {}
+        assert set(pins) == set(law) - set(s.get('lane_drop_lane_requests') or {})   # exactly the active N2 members
+        for vid, lane in pins.items():
+            assert lane == lanes[vid]                                           # own CURRENT lane, no change
+            assert g5.get(vid) == lane                                          # enters the single lane writer
+            assert not vid.startswith('h')                                      # HDVs never pinned
+            pinned += 1
+    assert pinned > 0
+    with pytest.raises(ValueError):
+        fe.settings(dict(base, clean5_ev=dict(base['clean5_ev'], hold_lane_pin='yes')))
+    assert fe.hold_pins({'a', 'b', 'z'}, {'a': 0, 'b': 2}, zip_members={'b'}) == {'a': 0}

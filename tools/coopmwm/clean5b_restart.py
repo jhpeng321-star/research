@@ -35,6 +35,9 @@ DESIGN = ('A = frozen u0 base evaluated as an arm (no PPO); B/R identical code (
 AUTHORITY = ('MAIN 2026-11-06 23:40 phase clean5b <= 3,900,000 (owner: run clean5b alongside clean5a; BUDGET_CLEAN5B.json); '
              'MAIN 23:48 S-LCEXEC-SMOKE gate satisfied (c4/lcexec 0fe9574e); launch requires local suites + Linux '
              'qualification + N11 integration PASS + dry prepare + smoke + gate')
+HOLD_LANE_PIN_NOTE = ('active N2 hold members get their own current lane as a G5 lane target every tick '
+                      '(single writer; laneChangeMode 513 like the verified S-REGIMEU0 plant path); WMVERIFY found '
+                      'unpinned N2 solo holders may leave lane 2')
 BUDGET_RULE = ('MAIN 23:40 "phase clean5b <= 3,900,000 sim-s registered" (owner: run clean5b alongside clean5a); '
                'separate envelope, prior 0; smoke+gate inside the quote smoke_gate phase')
 
@@ -45,6 +48,7 @@ def keys(*, desc, guidance_doc, provenance):
     out = c5.keys(desc=desc, guidance_doc=guidance_doc, provenance=provenance)
     out.update(fullpol_ev.recommended_5b(provenance=provenance, regime_guidance=guidance_doc, cap=LC_CAP,
                                          templates=[]))
+    out['clean5_ev']['hold_lane_pin'] = True     # MAIN 2026-11-07: clean5b launches WITH hold_lane_pin ON
     return out
 
 
@@ -52,6 +56,7 @@ VARIANT = dict(run=RUN, quote_file=QUOTE_FILE, approval_file=APPROVAL_FILE, budg
                approved=APPROVED, budget_rule=BUDGET_RULE, keys=keys, cfg_overrides=dict(load_max=LOAD_MAX),
                newmap_extra=dict(action_set='clean5a N2 slate + LCEXEC per-CAV free_program (lc_families cap 6)',
                                  program_targets='none (offerable only; no program BC/EV; G4 off for programs)',
+                                 hold_lane_pin='ON (MAIN 2026-11-07; FULLPOL 5cbd616e): '+HOLD_LANE_PIN_NOTE,
                                  practice_offer_note='practice_offer ON (0.5); no exact-plan demonstration slots in '
                                  'clean5b (no templates, EV-BC only), so it is inert - disclosed'),
                requires_lc_runtime=True, authority=AUTHORITY)
