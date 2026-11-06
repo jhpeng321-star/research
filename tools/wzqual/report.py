@@ -46,15 +46,15 @@ def criteria_rows(m: dict, v: dict) -> list:
     rd = d.get("rate_diff_pooled")
     add("D1_breakdown_rate", f"WM {_f((d.get('breakdown_rate_wm') or {}).get('300'))} vs real "
         f"{_f((d.get('breakdown_rate_truth') or {}).get('300'))}; diff {_f(rd)}{_ci(d.get('rate_diff_pooled_ci'))}",
-        "|diff| <= 0.10 pooled, <= 0.20 per cell (n>=12)", None if rd is None else abs(rd) - 0.10)
+        "abs(diff) <= 0.10 pooled, <= 0.20 per cell (n>=12)", None if rd is None else abs(rd) - 0.10)
     w1 = d.get("onset_w1_s")
     add("D2_onset", f"W1 {_f(w1, 1)} s (real events {d.get('n_truth_events')})", "<= 45 s",
         None if w1 is None else w1 - 45.0)
     q, qw = d.get("queue_rel_mean_err"), d.get("queue_norm_w1")
-    add("D3_queue", f"rel err {_f(q)}; W1/SD {_f(qw)}", "|rel| <= 0.25 and W1/SD <= 0.50",
+    add("D3_queue", f"rel err {_f(q)}; W1/SD {_f(qw)}", "abs(rel) <= 0.25 and W1/SD <= 0.50",
         None if q is None else abs(q) - 0.25)
     t = d.get("throughput_rel_err")
-    add("D4_throughput", f"rel err {_f(t)}", "|rel| <= 0.08", None if t is None else abs(t) - 0.08)
+    add("D4_throughput", f"rel err {_f(t)}", "abs(rel) <= 0.08", None if t is None else abs(t) - 0.08)
     cr = d.get("zone_crps") or {}
     add("D5_zone_crps", "; ".join(f"{h} s WM {_f(cr.get(h, {}).get('wm'))} vs keep-speed {_f(cr.get(h, {}).get('keep_speed'))}"
                                   for h in ("120", "300")), "WM <= keep-speed at 120 and 300 s", None)
