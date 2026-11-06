@@ -434,6 +434,64 @@ def init_only(args) -> dict:
     return body
 
 
+# ------------------------------------------------------------------ interim package ---
+def interim(args) -> dict:
+    """Package a finished phase's weights for inference with the phase-B model config.
+
+    Phase A trains the core with residual/courtesy switched off; its weights loaded with the B
+    config (residual + courtesy ON, exactly what phase B starts from) are WM2's residual/courtesy on
+    the wz-recalibrated core.  Writes ``<root>/interim_<P>/{wm_s.pt, physics.json, INTERIM.json}``:
+    weights unchanged (sha-checked per tensor), payload ``config`` = phase-B flat config, physics.json
+    = the phase run's (asserted equal to the phase-B physics)."""
+    import dataclasses
+
+    import torch
+    from wms.cli.assemble import build_model, build_physics
+    from wms.model.checkpoint import load_checkpoint
+
+    root = Path(args.root)
+    p = read(root / "PLAN.json")
+    os.environ.update({k: v for k, v in p["env"].items() if k == "WMS_MAP_SPEC"})
+    pdir = root / ("smoke" if args.phase == "smoke" else f"phases/{args.phase}")
+    done = read(pdir / "DONE.json")
+    src = Path(args.checkpoint or done["final"])
+    if not args.checkpoint and sha(src) != done["final_sha256"]:
+        raise RuntimeError("phase final checkpoint hash changed")
+    out = root / f"interim_{args.phase}"
+    out.mkdir(exist_ok=False)
+    sets = [s if not s.startswith("model.init_from=") else 'model.init_from="INIT.pt"'
+            for s in p["phases"]["B"]["overrides"]]
+    sets = [s if not s.startswith("runtime.device=") else 'runtime.device="cpu"' for s in sets]
+    cfg_b = load_cfg(p["phases"]["B"]["config"] if Path(p["phases"]["B"]["config"]).is_absolute()
+                     else str(Path(p["repo"]) / p["phases"]["B"]["config"]), sets)
+    phys_b = dataclasses.asdict(build_physics(cfg_b))
+    phys_run = read(src.with_name("physics.json"))
+    if json.dumps(phys_run, sort_keys=True) != json.dumps(phys_b, sort_keys=True):
+        raise RuntimeError("phase physics.json differs from the phase-B physics")
+    payload = torch.load(src, map_location="cpu", weights_only=True)
+    model = build_model(cfg_b, build_physics(cfg_b))
+    model.load_state_dict(payload["model"], strict=True)
+    new = {k: v for k, v in payload.items() if k not in ("history", "val_by_stage")}
+    new["config"] = cfg_b.to_legacy_flat()
+    new["wz_interim"] = {"source": str(src), "source_sha256": sha(src), "phase": args.phase,
+                         "config": "phase-B flat config (residual + courtesy on)"}
+    torch.save(new, out / "wm_s.pt")
+    write(out / "physics.json", phys_run)
+    loaded = load_checkpoint(out / "wm_s.pt", device="cpu", strict=True)
+    m = getattr(loaded, "model", loaded)
+    same = all(torch.equal(m.state_dict()[k].cpu(), v) for k, v in payload["model"].items())
+    if not same:
+        raise RuntimeError("interim weights differ from the source after reload")
+    body = {"t": now(), "phase": args.phase, "label": "INTERIM", "checkpoint": str(out / "wm_s.pt"),
+            "sha256": sha(out / "wm_s.pt"), "physics_json_sha256": sha(out / "physics.json"),
+            "source": str(src), "source_sha256": sha(src), "weights_identical": same,
+            "config": p["phases"]["B"]["config"], "overrides": p["phases"]["B"]["overrides"],
+            "map_spec": p["env"].get("WMS_MAP_SPEC"), "code_commit": git_head(),
+            "worlds_sha256": p["worlds_sha256"]}
+    write(out / "INTERIM.json", body)
+    return body
+
+
 # ------------------------------------------------------------------ probe (truth guard on a real batch) ---
 def probe(args) -> dict:
     root = Path(args.root)
@@ -719,6 +777,10 @@ def main(argv=None) -> int:
     ini.add_argument("--init", default=WM2_GPUA)
     ini.add_argument("--init-sha", default=WM2_SHA256)
     ini.add_argument("--map-spec", default=os.environ.get("WMS_MAP_SPEC"))
+    it = sub.add_parser("interim")
+    it.add_argument("--root", required=True)
+    it.add_argument("--phase", default="A", choices=["smoke", "A", "B"])
+    it.add_argument("--checkpoint", default=None, help="override (e.g. wm_s_best.pt of the phase)")
     for name in ("probe", "train", "status"):
         sp = sub.add_parser(name)
         sp.add_argument("--root", required=True)
@@ -732,6 +794,9 @@ def main(argv=None) -> int:
     if args.cmd == "pack":
         body = pack(args)
         print(json.dumps({k: body[k] for k in ("n_episodes", "arms")} | {"sources": len(body["sources"])}))
+        return 0
+    if args.cmd == "interim":
+        print(json.dumps(interim(args), default=str))
         return 0
     if args.cmd == "init":
         print(json.dumps(init_only(args), default=str))
