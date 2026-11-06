@@ -70,6 +70,12 @@ def backend_config(cfg, *, root=None, smoke=False):
         raise ValueError('production quote plus prior parity exceeds owner cap')
     out['run_root'] = str(root or cfg['run_root'])
     out['workers'] = cfg['cpu']['workers']//3  # 3 x 8 episodes + 16 diagnostics <= 40
+    if cfg.get('wave_workers') is not None:
+        # clean5b (MAIN 2026-11-07, ~32 cores): the A/B/R updates run SEQUENTIALLY (B waits for A, R for B),
+        # so one arm's wave may use up to 32 workers; absent = the inherited //3 (byte-identical).
+        if type(cfg['wave_workers']) is not int or not 1 <= cfg['wave_workers'] <= 32:
+            raise ValueError('wave_workers must be an int in 1..32')
+        out['workers'] = cfg['wave_workers']
     out['owner_approval_path'] = str(Path(cfg['run_root'])/'OWNER_APPROVAL.json')
     if smoke:
         if cfg.get('g4_synergy_credit'):

@@ -134,3 +134,13 @@ def test_full_class_generator_never_breaks_the_slate_under_exact_keys(cfg, wz):
         if trig:
             seen |= {m['family'] for table in trig['tables'] for m in table if m}
     assert seen <= ALLOWED and 'free_program_initiate' in seen, seen
+
+
+def test_wave_workers_override_is_registered():
+    """clean5b binds one 16-worker wave per (sequential) arm update; the backend_config override is bounded and
+    absent elsewhere (clean5a byte-identical). The live value is checked by the cpuV dry prepare."""
+    from . import launch_production as production
+    assert c5b.VARIANT['cfg_overrides'] == dict(load_max=120, wave_workers=16)
+    assert c5.VARIANT['cfg_overrides'] == {}
+    src = open(production.__file__, encoding='utf-8').read()
+    assert "not 1 <= cfg['wave_workers'] <= 32" in src and "out['workers'] = cfg['wave_workers']" in src

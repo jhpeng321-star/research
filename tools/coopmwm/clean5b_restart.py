@@ -28,6 +28,9 @@ LC_CAP = 6          # = fullpol_head.TEMPLATE_CAP: the FULLPOL generator does no
 # cpuV is shared with WM-D nice-19 shards (load ~55 before 5b) and N6/IMITREPLAY's 16 workers; the inherited
 # admission cap (40) would block every 5b wave. Memory guard (>= 8 GB available) and disk guard unchanged.
 LOAD_MAX = 120
+# clean5a ran at load 2-4 (u1 ~55 min): arms are sequential and each wave had cpu.workers//3 = 8 workers.
+# One arm's 16-episode update now runs as ONE wave of 16 (+16 diagnostic workers at u2/u4/u6/u12/u24 = 32 cores).
+WAVE_WORKERS = 16
 DESIGN = ('A = frozen u0 base evaluated as an arm (no PPO); B/R identical code (clean5a: FULLPOL clean5_ev N2 '
           'slate, lane_drop features/moves/V2V 100 m, G2, G4 + G4LD extension, G5 vocabulary, practice offer) + LCEXEC '
           'per-CAV free_program slots (lc_families cap 6, FULLPOL generator/descriptor, no templates, program moves '
@@ -53,7 +56,7 @@ def keys(*, desc, guidance_doc, provenance):
 
 
 VARIANT = dict(run=RUN, quote_file=QUOTE_FILE, approval_file=APPROVAL_FILE, budget_file=BUDGET_FILE, design=DESIGN,
-               approved=APPROVED, budget_rule=BUDGET_RULE, keys=keys, cfg_overrides=dict(load_max=LOAD_MAX),
+               approved=APPROVED, budget_rule=BUDGET_RULE, keys=keys, cfg_overrides=dict(load_max=LOAD_MAX, wave_workers=WAVE_WORKERS),
                newmap_extra=dict(action_set='clean5a N2 slate + LCEXEC per-CAV free_program (lc_families cap 6)',
                                  program_targets='none (offerable only; no program BC/EV; G4 off for programs)',
                                  hold_lane_pin='ON (MAIN 2026-11-07; FULLPOL 5cbd616e): '+HOLD_LANE_PIN_NOTE,
