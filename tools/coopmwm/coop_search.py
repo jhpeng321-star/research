@@ -68,7 +68,11 @@ import math
 import sys
 import numpy as np
 
-RAMP_LANE = 2   # observable convention used across the repo (speed2_transfers, coopfree.selection)
+from .map_descriptor import FRAME
+
+# Observable convention (speed2_transfers, coopfree.selection): the frame's merge lane
+# (ramp on the merge map, closing lane on a lane drop; N1 map descriptor).
+RAMP_LANE = FRAME.merge_lane
 COOP_REGISTERED = dict(coop_objective=False, coop_lambda=1.0, coop_solo_cap=16, coop_diversity=True,
                        coop_novelty=False, coop_novelty_k=3, coop_novelty_weight=.5,
                        coop_novelty_bank=None, coop_novelty_bank_sha256=None, coop_early_s=10,

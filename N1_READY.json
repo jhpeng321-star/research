@@ -1,0 +1,108 @@
+{
+ "schema": "coopmwm.newmap.n1_ready.v1",
+ "status": "READY",
+ "task": "N1 map abstraction for the clean3/clean4 SUMO-only runtime on wz3to2 (newmap_spec.md N1)",
+ "branch": "c4/nm-abstract",
+ "base": "3e5bc9f9 (c4/clean3-launch) fast-forwarded to c4/clean3-g4fix b7d6cde7 (8c1c47c3 G4 runtime fix: accel_plant.bind_runtime is the single worker binding point)",
+ "commits": {
+  "605bffba": "original-map golden fixture written on the UNCHANGED base before any N1 change",
+  "65d5f619": "map_descriptor + map_scenarios (bit-identical probe/NEWMAP2 generator), vendored wz3to2 assets, crossed 9-cell registry, 1200 s",
+  "f8762a5f": "map_runtime binding (bind_runtime + native plant), map_observations (CAV-report RSU), map world guards, frame constants read from the descriptor",
+  "e512b059": "newmap_sanity cpuV job + CPU tests",
+  "d31b605a": "raw net sha b6277898 binding (+ .gitattributes -text), canonical cell D3200_p60, map_api (N6 adapter), JSON-safe RSU summary (N11 F5), TRAIN-literal generalisation",
+  "ff3abb51": "lint only"
+ },
+ "main_decisions_addressed": {
+  "RSU (MAIN)": "RSU descriptor is part of the map descriptor; wz3to2 RSU = CAV self states + locally detected neighbours only (|ds|<=100 m, |dlane|<=1), receipt age/coverage/missingness in report_summary; 12-feature block layout kept (MAPPO u0 loadable); frozen MAPPO RSU field cells unchanged but count only CAV-detected vehicles; original map stays rsu_detector, golden byte-identical",
+  "scenario bit-identity (MAIN/N4 blocker)": "map_scenarios.requests/write_scenario are the verbatim probe_core.py scenario code (== nm2_core.py for wz3to2); requests.rou.xml and scenario.sumocfg are byte-identical to both vendored generators for the same (seed, demand, share) and map dir (5 cases incl. NEWMAP2 seeds 989200-989202 and a held-out seed); NEWMAP2 moments (seed, cell_key, t0) map one-to-one onto worlds (27/27 NEWMAP2 seed x cell combinations are registered TRAIN worlds)",
+  "episode length (MAIN)": "1200 s like the merge plant: native warmup 0-300 s, control 300-1200 s (Backend warmup 300 + horizon 901, stop 1200); demand file left identical to the probe (requests to 1800 s; departures after 1200 s never enter)",
+  "canonical cell (MAIN)": "D3200_p60 = demand 3200 x CAV share 0.6 (cell 8); map_scenarios.CANONICAL_CELL_KEY / map_api.CANONICAL_CELL_KEY; sanity job defaults to it",
+  "network identity (MAIN, N11 F4)": "descriptor bound to the RAW net bytes sha256 b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa (the staged file); load() refuses any other bytes (an LF copy is refused). 946594c5... is only the additional semantic digest (lanes+connections). Nothing rebuilds the net. Vendored copy committed with -text so every checkout keeps the exact bytes (blob sha == b6277898).",
+  "N11 F5": "report_summary returns plain float/bool; json round-trip asserted in test_map_runtime_cpu; rows/receipts in newmap_sanity checked for numpy scalars (all cast)"
+ },
+ "api": {
+  "tools/coopmwm/map_descriptor.py": {
+   "FRAME": "FrameContract: n_lanes 3, main_lanes (0,1), merge_lane 2 (ramp on the merge map / CLOSING lane on a lane drop), merge_zone_s_m (0,75.44), local_zone_s_m (-100,75.44), rsu_mainline_s_m (-800,225.44), rsu_ramp_s_m (-378.66,75.44), rsu_cell_m 50, speed 31.29, sensor 100 m",
+   "RsuDescriptor": "source ('rsu_detector'|'cav_reports'), block_zone_s_m per WM lane, field_* (must equal FRAME), report_range_m, report_lane_reach, receipt_age_s, max_receipt_age_s",
+   "MapDescriptor": "name, kind, lane_table, here_offsets, k_slots, edges, frame, rsu, lane_end_distance, network_path, network_sha256 (semantic), network_file_sha256 (raw), spec_sha256, bottleneck {edge, drop_x_m 2696, drop_s_m 75.44, closing_lane 2, adjacent_lane 1, through_lanes [0,1], anchor_x_m 2620.56}, lane_and_s(), sumo_index(edge, wm_lane), boundary_edges(), record(), digest",
+   "ORIGINAL": "merge map, exactly the frozen geometry/state/contract constants, k_slots 192, rsu_detector (digest ae305353...)",
+   "load(path)": "MAP_SPEC.json or its dir -> registered lane-drop descriptor (wz3to2 digest 6fc6be65...); fails closed on unregistered maps or any spec/net difference",
+   "current() / bind(desc) / for_world(world)": "process map = COOPMWM_MAP_SPEC else ORIGINAL; one map per process; world['map'] must equal the process map"
+  },
+  "tools/coopmwm/map_scenarios.py": "MAP, DEMANDS (2400,2800,3200), SHARES (0.2,0.4,0.6), CANONICAL_CELL_KEY, TRAIN_RANGE, HELDOUT_RANGE, FORBIDDEN_RANGES, cells(), cell_key(), world(seed,demand,share), world_from_key(seed,cell_key), worlds(role, seeds=, cell_ids=), guard(world, role), check_case(seed,demand), world_for_moment(nm2 row), requests()/write_scenario() (verbatim probe), build_scenario(desc, root, seed, demand, penetration=, ...) (env signature, returns TripRequest list + manifest, no truth file), scenario_builder(desc), registry_record()",
+  "tools/coopmwm/map_runtime.py": "install(job) (no-op None on the original map), guard_world(world, role), check_frame(...), primary_train_world(world), map_replacement_pool(...), patch_globals(ns, job), installed_record()",
+  "tools/coopmwm/map_observations.py": "detected_mask, cav_report_rows(env, desc), cav_report_rows_with_length, rsu_block(rows, zones), report_summary(frame, desc), masked_field_builder(build_rsu_field, desc)",
+  "tools/coopmwm/map_api.py (N6 adapter)": "seed_ranges(), descriptor(spec_path=None), world(seed, cell_key='D3200_p60'), check_world(world, role='final_test'), final_worlds(cell_key, seeds=None), train_worlds(cell_key, seeds=None), CANONICAL_CELL_KEY, CELLS",
+  "tools/coopmwm/newmap_sanity.py": "plan/run/summarize CLI (below)"
+ },
+ "frame_projection_wz3to2": {
+  "lanes": "SUMO up_2 (leftmost) -> WM 0, up_1 -> WM 1, up_0 (closing, ends x=2696) -> WM 2; wz_1 -> WM 0, wz_0 -> WM 1; junction :n1_0_* -> junction rows (carried s/lane)",
+  "s": "s = x - 2620.56 (drop x 2696 at s = 75.44 = MERGE_S1): s_to_merge_end_m = distance to the drop, merge-zone flag = last 75.44 m before the drop, closing lane plays the ramp role; G5 lane commands never target WM 2 (no change into the closing lane)",
+  "slots": "k_slots 512 on wz3to2 (CavSumoEnv subclass maps a requested 192 -> 512): the 3-lane 2.7 km drop queue can exceed 192 present vehicles, and a full pool is a plant anomaly",
+  "why": "frozen speed-only MAPPO u0 and the residual u0 were trained in this frame; install() verifies geometry/state/contract/env frame constants equal the descriptor frame and refuses otherwise"
+ },
+ "runtime_binding": {
+  "selection": "env COOPMWM_MAP_SPEC=<staged .../wz3to2/MAP_SPEC.json> in EVERY process of the run (chain, owners, spawned workers; owners re-encode rows in bank_breadth) AND world['map']=='wz3to2' in every job; mismatch either way raises",
+  "where": "accel_plant.bind_runtime (training waves, practice, G4 branches): leverprobe setup -> seed scope -> guard -> G5 overlay (COOPMWM_G5_RUNTIME=1, unchanged SHA 5aac1769) -> map_runtime.install(job); native-reference plant (plant.episode setup closure) -> install + patch_globals",
+  "what_is_rebound_on_wz3to2": "geometry.LANE_TABLE/HERE_OFFSETS (all importers), env.build_scenario/observation_map/boundary_edges/check_case/CavSumoEnv, tools.leverprobe.backend.observations + tools.coopnative.plant.observations (CAV-report rows), wms.control.rsu_field.build_rsu_field (masked field); frozen files untouched (no new runtime manifest)",
+  "guards": "accel_protocol.guard and protocol.guard dispatch worlds with a 'map' key to map_scenarios.guard (TRAIN roles <-> 989200-989599, final roles <-> 989600-989699); merge worlds unchanged",
+  "original_map": "install() returns None before importing anything; guards/encode/plant paths unchanged for worlds without 'map'; golden-tested byte-identical"
+ },
+ "src_wms_runtime_pieces": "imported by the runtime: wms.control.policy (PolicyExecutor), obs, rsu_field, contract, lanes, safety, core.constants. No src/wms file changed: in the anchored frame obs/safety/lanes/contract are valid as-is (frame equality enforced at install); rsu_field.build_rsu_field is wrapped on wz3to2 (CAV-detected only, same cells). WM training code (src/wms, 21 merge-zone files) NOT ported (SUMO-only run).",
+ "tools_side_descriptor_reads": {
+  "coopnative.policy.encode": "12-feature RSU block zones from current().rsu.block_zone_s_m (wz3to2: lanes 0/1 (-100,175.44) approach + 100 m past the drop, lane 2 (-100,75.44))",
+  "frame constants": "variety.VARIETY_REGISTERED (merge zone, ramp/mainline lane), coop_search.RAMP_LANE, merge_features (MERGE_S0/S1, N_LANES, SENSOR_RANGE), plan_proposer.MERGE_ZONE, coopfree.protocol.ZONE + selection.features: all now FRAME reads, identical values",
+  "not converted (frame-valid literals)": "tools/leverprobe selection features (other branch, used by exploration.regime), coopbandit.protocol, coopmwm.policy (WM-era), policy_wm, rehearsal_cpu, speed2_transfers"
+ },
+ "world_registry": {
+  "cells": "9 = demand (2400, 2800, 3200) x share (0.2, 0.4, 0.6), NEWMAP2's grid; cell_key 'D3200_p60'; canonical clean4 cell = cell 8",
+  "design": "CROSSED: every seed exists in every cell (as NEWMAP2); world = {seed, cell, repeat, penetration, demand, map:'wz3to2', cell_key}",
+  "train": "989200-989599 x 9 cells = 3600 worlds (roles train/check/dev/smoke/mechanics/calibration/discovery/practice/gate/sanity/mining)",
+  "heldout": "989600-989699 x 9 cells = 900 worlds (roles final_test/final/heldout/replication_test/random_guide_test); never train",
+  "refused": "964000-964199, 962000-962999, 977000-977999, every unregistered seed/demand/share, legacy3 population",
+  "aliasing": "merge-map final_test 989600-989635 (no 'map' key) can never pass the map guard and vice versa"
+ },
+ "config_keys": {
+  "env": {"COOPMWM_MAP_SPEC": "path of the staged wz3to2 MAP_SPEC.json (its net must be b6277898); unset = original map", "COOPMWM_G5_RUNTIME": "unchanged"},
+  "job/world": {"world.map": "'wz3to2'", "world.cell_key": "e.g. 'D3200_p60'"},
+  "CONFIG.json": "no new keys"
+ },
+ "sanity_job": {
+  "commands": [
+   "export COOPMWM_MAP_SPEC=<staged>/assets/research/newmap_candidates/wz3to2/MAP_SPEC.json COOPMWM_G5_RUNTIME=1 CUDA_VISIBLE_DEVICES=",
+   "nice -n 19 python -m tools.coopmwm.newmap_sanity plan --root /home/ubuntu/newmap_sanity_<tag> --runtime /home/ubuntu/e3final --checkpoint /home/ubuntu/mappospeed/production2/policy_00169.pt [--u0 <clean3 root>/A_checkpoint_000.pt] [--commit <sha>]",
+   "nice -n 19 python -m tools.coopmwm.newmap_sanity run --root /home/ubuntu/newmap_sanity_<tag> --workers 8",
+   "python -m tools.coopmwm.newmap_sanity summarize --root /home/ubuntu/newmap_sanity_<tag>"
+  ],
+  "worlds": "4 paired TRAIN worlds, seeds 989596-989599 (last TRAIN seeds; NEWMAP2 uses 989200-989202), all in the canonical cell D3200_p60 (--worlds 1..4)",
+  "arms": "mappo (frozen speed-only MAPPO executor = clean3 base / MAPPO u0, native lanes), native (all CAVs native); optional clean3_u0 (accel_plant.episode, deterministic u0, the real training episode path)",
+  "sim_s": "1200 per episode; default 8 jobs = 9,600 sim-s (+4,800 with --u0); precharged in CHARGES.jsonl before physics, never retried",
+  "outputs": "SANITY_PLAN.json (registration: worlds, arms, budget, rule, descriptor record, plan_sha256), jobs/<arm>_<seed>_<cell>/RESULT.json|FAILED.json (control-window J, collisions, teleports, TTC<3 s, hard brake, dropped slots, max present, lane commands, closing-lane queue, RSU coverage, per-second J), SANITY_SUMMARY.json (paired table + decision)",
+  "pass_rule": "MAPPO base iff every world paired, every mappo episode 0 collisions/teleports/dropped slot-steps, pooled sum(J_mappo-J_native)/sum(J_native) <= +0.05, pooled TTC<3 s exposure and hard braking each <= 1.5 x native + 10 veh-s; else native CAVs (sign: mappo_minus_native > 0 = MAPPO worse)",
+  "registration": "not appended to REGISTRATION.md / experiment_history (outside this worktree); the N4 operator registers the block from SANITY_PLAN.json before 'run'"
+ },
+ "n4_interface_needs": {
+  "1 world registry": "map_scenarios.worlds/world/world_from_key/guard; accel_protocol.guard + protocol.guard accept map worlds; install_seed_scope unchanged (map worlds bypass the merge seed registry; env.check_case is the map check)",
+  "2 episode length": "1200 s kept (all 1200 literals stay valid)",
+  "3 runtime binding": "COOPMWM_MAP_SPEC + world['map']; G5 overlay unchanged (5aac1769) and patched in place; merge map byte-identical when off (golden tests)",
+  "4 sanity job": "see sanity_job",
+  "5 native plant": "plant.episode native_reference path binds the map (install + patch_globals); coopnative.plant CavSumoEnv(k_slots=192) maps to 512; rows are CAV reports",
+  "6 986000-986071 literals": "generalised via map_runtime.primary_train_world: policy_synergy.py, bank_breadth.py, replay_bank.py, launch_preparation.py; accel_runner.replacement_world dispatches map worlds to map_replacement_pool; NOT changed: track2_monitor.py:509 (seed-only rows, no world dict) -> N4"
+ },
+ "tests": {
+  "new": "test_map_golden_cpu (4), test_map_descriptor_cpu (4), test_map_scenarios_cpu (13), test_map_runtime_cpu (9 + 1 skipped: real frozen /home/ubuntu/e3final + G5 runs on cpuV only), test_newmap_sanity_cpu (3)",
+  "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q <files> (repo root; pythonpath src)",
+  "run_1": "map suites + test_launch_final_cpu + acceleration, coop_search, coordination_opportunities, g4_runtime, g4_worker_binding, g5_runtime, group_lane, moves, plan_proposer, variety, feasible_proposals, executable_labels, track2_backend, warm_protocol, practice_starts, coopfree/test_cpu, coopnative/test_cpu, tests/unit/test_merge_features: 595 passed, 3 skipped, 13 failed + 3 errors; the SAME 16 fail identically on the base tree b7d6cde7 (Windows os.getpriority/os.nice, missing tools.leverprobe/coopbehav/wmteach, COOPFREE_CPU_CHECKPOINT/COOPMWM_MAPPO env, Windows file locks)",
+  "run_2": "after the TRAIN-literal generalisation: map suites + launch_final, policy_synergy(+isolated), bank_breadth, replay_bank_confirm/lesson/v2v, practice_starts, mined_link, launch_integration, rerun_cpus: 331 passed, 3 skipped, 0 failed",
+  "final": "map/descriptor/scenario/sanity suites re-run after the b6277898/canonical/F5 changes: all passed; ruff clean on new modules",
+  "not_run": "SUMO (none), GPU, Linux-only qualification, the frozen-runtime skipif test"
+ },
+ "caveats": [
+  "No SUMO was run: the wz3to2 env path is verified by CPU tests on the G5 overlay source with the checkout's traffic_shepherd/src.wms standing in for e3final (frame constants equal) and fake TraCI; the first real check is the sanity job.",
+  "Scenario FILES are bit-identical to the probe/NEWMAP2; the SUMO launch differs (traci + CommandOwnership, --end 2401, no --no-warnings/save-state flags), so trajectories are not claimed identical to NEWMAP2 runs. scenario.sumocfg embeds the absolute net path: point COOPMWM_MAP_SPEC at the same staged map dir NEWMAP2 used for byte-identical configs.",
+  "RSU change on wz3to2 is a deliberate input-distribution change vs the merge map (CAV reports only, lanes 0/1 block extends 100 m past the drop); MAPPO u0 weights load unchanged.",
+  "Merge-map move families (gap_open/ramp_assist/yield_lane/open_gap_merge) run in the frame with the closing lane as 'ramp'; lane-drop families are N2's.",
+  "k_slots 512 is a registered choice (not measured without SUMO); dropped slot-steps are reported by the sanity job and fail its safety check."
+ ],
+ "hard_rules": "no ssh/SUMO/GPU; worktree only (scratch base export for baseline tests in E:/Temp/n1_base_check); no reset/clean/stash drop/push/rebase; no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 paths opened; no truth files read; merge-map assets unchanged"
+}
