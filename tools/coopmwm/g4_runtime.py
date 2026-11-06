@@ -173,8 +173,12 @@ class BoundaryCapture:
         if self.pending is None:
             return
         episode = dict(id=self.job['id'], arm=self.job['arm'], world=self.job['world'], steps=[event])
-        rows = [r for r in credit.opportunities([episode]) if credit._sampled(
-            r, episode, self.job['track2_config'])]
+        # G4LD (opt-in): a sampled V2V session initiation is captured pre-action at its own
+        # decision second; whether anyone joins is only known later (same opportunity_id).
+        ext = credit.extension(self.job['track2_config'])
+        found = (credit.opportunities([episode]) if ext is None
+                 else credit.opportunities([episode], ext, pending=True))
+        rows = [r for r in found if credit._sampled(r, episode, self.job['track2_config'])]
         if not rows:
             self.pending = None
             return
@@ -362,6 +366,85 @@ def load_capture(job, cfg):
     return payload
 
 
+class ExtensionMacro:
+    """G4LD fixed macro: the ORIGINAL N2 joint move or W1/N2 V2V session, actor-masked.
+
+    Mirrors the live EpisodePolicy single-writer column on the branch's own observer:
+    N2 law offset = member_command - native - frozen MAPPO mean (plus the zip lane request);
+    W1 offset = Protocol.offsets. Sessions replay the recorded initiate/joins at their own
+    decision seconds on the observer's protocol ledger (open/admit offline), so release
+    messages and latches follow the same t-1 radio rule; commands are masked to the
+    retained members only. All non-macro commands come from the frozen common base.
+    """
+    def __init__(self, job, observer):
+        from . import lane_drop
+        self.job, self.observer = job, observer
+        start = job['start']
+        g = start['g4ld']
+        self.kind, self.family, self.t0 = g['kind'], g['family'], start['time_s']
+        self.retained = set(job['retained_members'])
+        self.view = (observer.lane_drop or {}).get('view') if self.kind != 'w1_session' else None
+        if self.kind == 'n2_joint':
+            move = lane_drop.LaneDropMove.from_dict(start['move'])
+            self.schedule = [(v, self.t0, move) for v in move.members]
+            self.protocol = None
+        else:
+            self.schedule = [(s['vid'], s['start_s'], credit._protocol_option(
+                self.family if i == 0 else credit.JOIN_FAMILY[self.family], s['option']))
+                for i, s in enumerate(g['schedule'])]
+            self.protocol = observer.ld_protocol if self.kind == 'n2_session' else observer.wall
+            if self.protocol is None:
+                raise ValueError('G4LD session replay requires the recorded protocol configuration')
+        if self.kind != 'w1_session' and self.view is None:
+            raise ValueError('G4LD lane-drop replay requires the registered map view')
+        self.admitted, self.speeds, self.native, self.now = set(), {}, {}, None
+
+    def before(self, rows, commands, now):
+        """After the observer's receive at t, before sampling (live: the decision step)."""
+        self.now = int(now)
+        self.speeds = {r['vid']: float(r['v_mps']) for r in rows if r['is_cav']}
+        self.native = {v: float(c) for v, c in (commands or {}).items()}
+        if self.protocol is None:
+            self.admitted = {v for v, _, _ in self.schedule}
+            return
+        for i, (vid, begin, option) in enumerate(self.schedule):
+            if begin != self.now:
+                continue
+            if i == 0:
+                self.protocol.open_offline(option, self.now)
+                self.admitted.add(vid)
+            elif self.protocol.admit_offline(option, self.now):
+                self.admitted.add(vid)
+            # A session already released/closed in THIS branch admits no later join
+            # (live offers stop at release); that member then runs the common base.
+
+    def offsets(self, context, mean):
+        from . import lane_drop
+        members = context['members']
+        out, lanes = {}, {}
+        for vid, begin, option in self.schedule:
+            if vid not in self.retained or vid not in members or vid not in self.admitted or self.now < begin:
+                continue
+            t = self.now-begin
+            positions = self.observer.execution_positions[vid]
+            if self.kind == 'w1_session':
+                out[vid] = self.protocol.offsets(option, t, positions, vid)[vid]
+                continue
+            command = lane_drop.member_command(option, vid, t, self.view, speed=self.speeds[vid],
+                                               positions=positions, protocol=self.protocol)
+            if command is not None and vid in self.native:   # never guess the native command
+                out[vid] = command-self.native[vid]-float(mean[members.index(vid)])
+            lane = lane_drop.zip_target(option, vid, t, self.view, positions.get(vid))
+            if lane is not None:
+                lanes[vid] = lane
+        return out, lanes
+
+    def after(self):
+        """Initiator broadcast at t (receivers see it at t+1), as in the live sample()."""
+        if self.protocol is not None:
+            self.protocol.publish(self.now, {v: r.source for v, r in self.observer.reports.items()})
+
+
 def branch_hook(job, payload, observer):
     """Use the real V2V controller and requests/safety writer, never TraCI writes.
 
@@ -375,6 +458,12 @@ def branch_hook(job, payload, observer):
         observer.reports = deepcopy(payload['reports'])
         base = controller.policy
 
+        family = job['start'].get('g4ld', {}).get('family')
+        # Adapter families (e.g. N9/FULLPOL) supply their own macro(job, observer) object with
+        # the ExtensionMacro interface: view, before(rows, commands, t), offsets(context, mean), after().
+        macro = (None if family is None else credit.ADAPTERS[family]['macro'](job, observer)
+                 if family in credit.ADAPTERS else ExtensionMacro(job, observer))
+
         class FixedMacro:
             base_policy = base
 
@@ -384,15 +473,26 @@ def branch_hook(job, payload, observer):
             def sample(self, context, generator, deterministic=False, memory=None):
                 sample, memory = base.sample(context, generator, False, memory)
                 offsets = {}
+                if macro is not None:
+                    with torch.no_grad():
+                        mean = base(context)[0].reshape(-1)
+                    local, lanes = macro.offsets(context, mean)
+                    if lanes:
+                        sample['lane_drop_lane_requests'] = lanes
                 for i, vid in enumerate(context['members']):
-                    value = credit.command_offsets(job, int(observer.now)-t0,
-                        observable_state={'s_m': observer.execution_positions[vid]}).get(vid, 0.)
+                    if macro is not None:
+                        value = local.get(vid, 0.)
+                    else:
+                        value = credit.command_offsets(job, int(observer.now)-t0,
+                            observable_state={'s_m': observer.execution_positions[vid]}).get(vid, 0.)
                     sample['action'][i][0] += value
                     offsets[vid] = value
                 sample['g4_fixed_macro'] = dict(job_sha256=job['job_sha256'], offsets=offsets)
                 return sample, memory
 
         fixed = FixedMacro()
+        if macro is not None and macro.view is not None:
+            fixed.lane_drop = observer.lane_drop   # zip requests: same view as the live runtime
 
         def apply(rows, commands, now):
             t = int(now)
@@ -416,7 +516,11 @@ def branch_hook(job, payload, observer):
                     controller.guide = None
                     controller.policy = fixed
                 observer.observe(rows, now)
+                if macro is not None:
+                    macro.before(rows, commands, t)
             result = original(rows, commands, now)
+            if t >= t0 and macro is not None:
+                macro.after()
             if t >= t0:
                 event = controller.events[-1]
                 if ('g4_fixed_macro' not in event['sample'] or event.get('proposal') is not None

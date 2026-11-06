@@ -1,0 +1,113 @@
+{
+ "task": "G4LD",
+ "status": "READY_FOR_REVIEW",
+ "branch": "c4/g4ld",
+ "worktree": "E:/agent-work/c4-g4ld",
+ "base": "c4/nm-train 5eb22ab4 (then merged c4/nm-moves c7983467 and c4/nm-train 62955c86 incl. N2 59d8bace)",
+ "commits": {
+  "code": "28f6218d (C4 G4LD: G4 measured synergy credit for N2 lane-drop moves and W1/N2 V2V sessions; practice offer mode)",
+  "merge_nm_moves": "75b11509",
+  "merge_nm_train_62955c86": "23f44308",
+  "ready": "the commit adding this file (head of c4/g4ld)"
+ },
+ "files": {
+  "modified": [
+   "tools/coopmwm/sparse_synergy_credit.py (g4_extension: rows, members_of, journalled binding, credit keys, validation, ADAPTERS)",
+   "tools/coopmwm/g4_runtime.py (BoundaryCapture pending session rows; ExtensionMacro branch executor; adapter macro hook)",
+   "tools/coopmwm/trigger_policy.py (decide: optional obs_state['offered'] -> slot 1; candidate rng draw unchanged)",
+   "tools/coopmwm/track2_backend.py (_check validates both keys; collect marks offer slots; episode_components passes the offer; EpisodePolicy._practice_offer)",
+   "tools/coopmwm/practice_starts.py (_snapshot_call: offer rows carry meta['offer'] instead of a forced plan)",
+   "tools/coopmwm/launch_production.py (smoke: g4_extension off together with G4)"
+  ],
+  "new": [
+   "tools/coopmwm/practice_offer.py",
+   "tools/coopmwm/test_g4ld_credit_cpu.py",
+   "tools/coopmwm/test_g4ld_offer_cpu.py"
+  ]
+ },
+ "flags": {
+  "g4_extension": {
+   "default": "absent/False = OFF, byte-identical (golden plan/terms digests from the original 5eb22ab4 module)",
+   "value": "sparse_synergy_credit.extension_keys(provenance=..., families=[...]) -> {enabled: true, rule: 'g4ld-lane-drop-v2v-session-synergy-credit-v1', families: sorted subset of [abreast_wall, closing_pair, group_hold, lane_drop_initiate, wall_initiate] (+ registered ADAPTERS), provenance}",
+   "requires": "g4_synergy_credit enabled (same registration); one common B = R key; smoke turns it off with G4",
+   "estimator": "unchanged registered G4: mean over CRN seeds 1,2 of (min member solo J - group J), /UNIT 10000, weight 1, clip +-1; base/group/ALL-member solos; full-prefix 1200 s replay; 1/16 outcome-blind hash on [training_seed, world, t, proposer]; B/R matched by arity 2..4; cumulative caps 8 starts/arm and 230400 sim-s",
+   "credit_recipients": "each member's OWN initiating decision row: joint N2 move (closing_pair/abreast_wall/group_hold) = the proposer only (passive members made no initiating decision); V2V session (lane_drop_initiate / wall_initiate) = the initiator's initiate row + every accepted joiner's join row (joins on non-PPO rows count physically but get no credit)",
+   "branch_representation": "g4_runtime.ExtensionMacro: N2 law offset = member_command - native - frozen MAPPO mean (+ zip lane request), W1 offset = Protocol.offsets; sessions replay the recorded initiate/joins at their own seconds on the observer's protocol ledger (open/admit offline, publish each second) so release messages/latches follow the live t-1 radio rule; commands masked to retained members; everything else the frozen common base (as legacy G4)"
+  },
+  "practice_offer": {
+   "default": "absent/False = OFF (slate, rng streams and practice meta unchanged)",
+   "value": "practice_offer.config_keys(fraction=F, provenance=...) -> {enabled: true, rule: 'g4ld-practice-offer-v1', fraction: F in (0,1], provenance}",
+   "proposed_fraction": 0.5,
+   "behaviour": "a demonstrate slot with an exact N2 plan (lane_drop_macro) is an offer slot iff sha256([training_seed, update, slot_index]) < F*2^256 (outcome- and arm-blind, B = R); the snapshot is restored with NO forced plan and at the first live periodic decision (t0+1; t0 is the sealed snapshot command) the verified move is placed in slot 1 of the offeree's slate (protocol initiate with the remaining onset/hold; joint move without the protocol or for group_hold); offeree = protocol_contexts rule (pair_t anchor, else most members within message range); one-shot; receipt sample['practice_offer']; the chosen row is an ordinary non-executed PPO row; partners get ordinary join offers at t+1",
+   "not_included": "G4 credit for offered practice decisions (see open_issues[1])"
+  },
+  "demo_onset_imitation": "no new term: the existing bank CE route (launch_production.bank_move_supervision -> bank_breadth.observable_contexts -> lane_drop.protocol_contexts) already trains the trigger every update, B = R, on every verified example's onset contexts for ALL members (initiator -> lane_drop_initiate at t0, others -> lane_drop_join at their own receive second; group_hold/no-protocol -> joint label), from the SAME snapshot state the forced demo restores. A per-demo duplicate would only re-weight contexts already present and break the registered equal-family-mass rule. Hold ticks stay out of PPO (unchanged). Depends on exact lane_drop_macro guidance plans (N2 59d8bace + N4 684fe30c fail-closed), now in this head. Test: test_g4ld_offer_cpu::test_demo_onset_imitation_reaches_every_member_through_the_bank_ce_path"
+ },
+ "tests": {
+  "new": "test_g4ld_credit_cpu.py 33 passed; test_g4ld_offer_cpu.py 7 passed",
+  "required_cases": {
+   "a": "test_joint_lane_drop_credit_signed_at_the_initiating_decision[closing_pair|abreast_wall x +30|-15 veh-s]; test_n2_session_credit_reaches_every_member_own_decision",
+   "b": "test_w1_wall_session_credit_reaches_initiator_and_every_joiner; test_branch_macro_w1_session_replays_joins_and_masks",
+   "c": "test_extension_keeps_the_registered_start_and_sim_s_caps; test_mixed_families_match_by_arity_and_cost_formula; test_sessions_beyond_the_registered_actor_arity_are_never_sampled; test_extension_binding_is_journalled_and_cannot_switch_mid_phase",
+   "d": "test_off_is_byte_identical_to_the_original_registration[2,3]; test_off_ignores_lane_drop_and_wall_rows_exactly_like_the_original (golden digests computed with the original 5eb22ab4 module)"
+  },
+  "regression_after_merge_62955c86": "611 passed, 1 skipped (host symlink privilege), 0 failed at 23f44308: G4 group 103 (g4ld credit/offer, sparse_synergy_credit, g4_runtime, g4_worker_binding); lane_drop+v2v_wall 48; trigger_policy+feasible_proposals+practice_starts+practice_weighting 163; track2_backend+bank_breadth 200; clean3_restart+clean4_budget/train_world/fairness/potential+launch_integration+v2v_launch_wiring 97",
+  "lint": "ruff: no new findings except the repo-wide F811 pytest-fixture pattern in tests",
+  "cpu_only": "no SUMO, GPU, ssh or training"
+ },
+ "cost_delta": {
+  "per_start_per_arm_sim_s": {
+   "2_members": 9600,
+   "3_members": 12000,
+   "4_members": 14400
+  },
+  "per_matched_B_R_pair_sim_s": {
+   "2_members": 19200,
+   "3_members": 24000,
+   "4_members": 28800
+  },
+  "formula": "per update = sum over matched B/R starts of 2 arms x 2 CRN seeds x (members + 2) branches x 1200 s",
+  "caps": "unchanged registered cumulative caps: <= 8 starts per arm per RUN and <= 230400 sim-s per run (phase g4_synergy_credit, CLEAN4_QUOTE allocated 230400)",
+  "run_envelope_delta_vs_clean4_allocation_sim_s": 0,
+  "vs_quote_base_153600": "base assumed 8 two-actor pairs; with abreast_wall (3 lanes on wz3to2) up to 192000 (+38400); with 4-member V2V sessions up to 230400 (+76800); all within the allocated 230400",
+  "worst_single_update_sim_s": 230400,
+  "practice_offer_delta_sim_s": 0,
+  "note": "the extension makes the 8 cumulative starts likely to be consumed EARLIER (more eligible families); clean3 produced 0 G4 rows"
+ },
+ "constants_provenance_for_MAIN": {
+  "max_starts_per_arm_8": "HAND-SET at registration: sparse_synergy_credit REGISTRATION provenance 'MAIN 2026-11-05 23:15 G4 ... no tuning: 1/16 hash, 8 starts/arm' (commit 5cc28272 2026-11-05 23:31); the number comes from the sizing example in CLEAN2_GROUP_COOP_RESEARCH.md Rank 4 ('8 opportunities/arm x2 arms x2 seeds x4 branches x1,200 s = 153,600'). The cap 230400 is DERIVED FROM 8 (8 x 2 arms x 2 seeds x (2+MOVE_MAX_MEMBERS 4) x 1200), not the reverse. There is no per-update G4 budget: the cap is cumulative over u1-u24. If MAIN prefers budget-derived: max starts/arm = floor(G4 phase / (2 x 2 x (n+2) x 1200)) = 12 (n=2), 9 (n=3), 8 (n=4) for the clean4 230400. MAIN decides.",
+  "sample_denominator_16": "HAND-SET in the same registration string; no derivation found in CLEAN2_GROUP_COOP_RESEARCH.md or REGISTRATION.md.",
+  "normalization_UNIT_10000": "INHERITED: accel_learner.UNIT = tools/coopnative/learner.py REWARD_UNIT 10000 (commit 8368ce1a 2026-11-01, MAPPO acceleration PPO reward scale); registered as 'inherited accel_learner.UNIT'. +1k..+5k veh-s synergy -> +0.1..+0.5 advantage.",
+  "imitation_KL_cap_0045": "INHERITED: coopnative/learner.py PPO early-stop 'if kl > .045' (8368ce1a 2026-11-01), carried to accel_learner, bank_imitation.KL_LIMIT ('registered separate-imitation bound', MAIN 2026-11-03 17:27 'separate imitation KL .045'), and launch_production.OPTIMIZATION layer_config.kl_budget ('registered T2D .045 cap', approval-bound). Not derived for the trigger head. Value NOT changed."
+ },
+ "kl_pace_analysis": {
+  "model": "trigger CE on one labelled slot from ~uniform over 9 slots (8 candidates + none); cap-limited lower bound N >= FisherRao(start, target) / sqrt(2 kappa) (small-step KL ~ s^2/2), all labelled contexts moving together",
+  "updates_needed_cap_limited": {
+   "kappa_0.045": {
+    "p0.5": 3,
+    "p0.8": 6,
+    "p0.9": 7
+   },
+   "kappa_0.090": {
+    "p0.5": 3,
+    "p0.8": 4,
+    "p0.9": 5
+   },
+   "kappa_0.135": {
+    "p0.5": 2,
+    "p0.8": 3,
+    "p0.9": 4
+   }
+  },
+  "empirical": "clean2 bank CE 2.13 (u1) -> 1.21 (u6) -> 0.39 (u12) = p_label 0.12 -> 0.30 -> 0.68, i.e. ~0.003-0.008 nats per update, 5-15x BELOW the 0.045 cap: the pace was optimizer-limited (imitation_epochs 5 Adam steps, lr 3e-4), not cap-limited. At that pace p=0.8 needs ~12-20 updates (matches LEARNAUDIT's 12+) regardless of the cap; raising the cap 2x/3x only helps if the per-update optimizer budget can also move further. Approximate (different contexts per run; KL is the mean over all CE records)."
+ },
+ "open_issues": [
+  "Constants 8 / (1/16) / UNIT / KL .045: hand-set or inherited (constants_provenance_for_MAIN); MAIN decides; no value changed.",
+  "G4 credit for OFFERED practice decisions is NOT built: the registered G4 samples ordinary TRAIN only (opportunities() skips practice; plan_update requires g4_source=ordinary_training and the update's registered worlds; BoundaryCapture is off for practice jobs). Enabling it needs a registration change: capture in practice jobs, practice snapshot worlds, and deterministic inclusion of offered decisions instead of the 1/16 hash. Offered decisions do get ordinary PPO now.",
+  "Offer fraction 0.5 is a proposal (rationale: forced demos give zero trigger gradient but keep post-move state coverage and the smoke '(c) demonstrated move executed' check; offers give an on-policy PPO row at the verified state, ~1/9 slot-1 pick at u1 so ~0.44 selections/update at 4 offers, rising with CE; B = R by slot index; 0 sim-s). With FAIRAUDIT F5 'R zero guidance' R has no demonstrate slots, so offers occur in B only - same as forced demos today.",
+  "V2V sessions with more than MOVE_MAX_MEMBERS=4 members (W1 cap up to 6) are never sampled (registered <=4 actors).",
+  "RSU-initiated lane-drop sessions are not covered (no CAV initiating decision; the RSU head has its own PPO).",
+  "N9 (c4/nm-families) families: not covered (N9 off in the clean4 final family set); sparse_synergy_credit.ADAPTERS is the fail-closed hook (row/check/macro). Merging N9 will conflict textually in opportunities(): keep the G4LD extension block first, then N9's is_family skip, then the original skips.",
+  "Branch fidelity as legacy G4: fixed macro on the frozen base without the learned residual; a session released earlier in a branch admits no later recorded join (that member runs the base)."
+ ]
+}

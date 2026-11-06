@@ -289,15 +289,25 @@ def _snapshot_call(root, arm, ident, row, index, base_extra, *, a_reference):
         from .protocol import digest as _digest
         if row.get('mined') and _digest(plan) != row['mined_plan_sha256']:
             raise ValueError('mined demonstration plan differs from the admitted MINED_MOVES binding')
-        # Owner 2026-11-06 05:05: the policy is SHOWN the mined move in its own state:
-        # the registered VerifyController starts the exact verified plan at t0 (as the
-        # verification group branch did); the current policy controls everything else.
-        meta['plan'] = plan
-        meta['demonstration'] = dict(plan_sha256=_digest(plan), mined=bool(row.get('mined')),
-                                     rule=DEMONSTRATION_RULE)
-        meta['breadth']['mined'] = bool(row.get('mined'))
-        meta['policy'] = ('current training policy from t0 with the mined verified plan started at t0 '
-                          '(demonstration); snapshot prefix replayed; committed snapshot plans continue')
+        if row.get('offer'):
+            # G4LD offer mode (practice_offer, opt-in): same snapshot, NO forced plan; the
+            # verified move is offered in slot 1 at the policy's first live decision.
+            from .practice_offer import offer_spec
+            meta['offer'] = offer_spec(plan, t0)
+            meta['breadth']['mined'] = bool(row.get('mined'))
+            meta['policy'] = ('current training policy from t0; the mined verified move is OFFERED in '
+                              'slot 1 at its first live decision (not forced); snapshot prefix replayed; '
+                              'committed snapshot plans continue')
+        else:
+            # Owner 2026-11-06 05:05: the policy is SHOWN the mined move in its own state:
+            # the registered VerifyController starts the exact verified plan at t0 (as the
+            # verification group branch did); the current policy controls everything else.
+            meta['plan'] = plan
+            meta['demonstration'] = dict(plan_sha256=_digest(plan), mined=bool(row.get('mined')),
+                                         rule=DEMONSTRATION_RULE)
+            meta['breadth']['mined'] = bool(row.get('mined'))
+            meta['policy'] = ('current training policy from t0 with the mined verified plan started at t0 '
+                              '(demonstration); snapshot prefix replayed; committed snapshot plans continue')
     extras = dict(base_extra,
                   practice=dict(meta, snapshot=snap),
                   branch=dict(time_s=t0, takeover_s=t0, revert=[],
