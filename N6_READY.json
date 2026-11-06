@@ -1,15 +1,16 @@
 {
  "task": "N6: gated final paired evaluation on the wz3to2 lane-drop map for clean5a (u24) on registered HELD-OUT panels",
- "status": "READY (zero physics so far). Sealed pre-run of NATIVE/U0/RULE operated by IMITREPLAY on cpuV (16 workers; deploy ba65ed9c files); main run after clean5a u24 + bindings with fd07b6bb (or later) files; F11 built; F7 not built",
+ "status": "READY (zero physics so far). Sealed pre-run of NATIVE/U0/RULE operated by IMITREPLAY on cpuV (ba65ed9c files); main run after clean5a u24 + bindings with 6db98f5d (or later) files; F11 built; F7 not built (MAIN decision)",
  "branch": "c4/nm-finaleval",
  "worktree": "E:/agent-work/c4-nm-finaleval",
- "head": "fd07b6bb",
+ "head": "6db98f5d",
  "commits": {
   "9f116b6c": "FAIRAUDIT F1/F2: training-parity eval path + bound-sha leverprobe pin shim",
   "9c097694": "clean5a target, claims 3a/3b separate seals, 7 arms, registered binding (it168 / S-MAPPOWZL final), per-seed + regimes",
   "829c7303": "claim 3c + RULE arm (exact S-REGIMEU0) + sealed chunked pre-run; N5 PASS (REVIEW_N6_3)",
   "ba65ed9c": "v2v_final 1,340,000 (amendment 2)",
-  "fd07b6bb": "F11 registered parity (eval plant vs N7 training env), amendment 3"
+  "fd07b6bb": "F11 registered parity (eval plant vs N7 training env), amendment 3",
+  "6db98f5d": "F7 not built (MAIN decision); decisions reported unavailable (not built); amendment 4"
  },
  "new_sim_s": 0,
  "registrations": {
@@ -17,7 +18,8 @@
   "amend1": "26c52f2f8d86d8118756365c7ef5f24d49882cefc931cb0e0e7ac865bbc8ef2f",
   "amend2": "0cf2382c1fe63be74c30ebf30d10db0c7dd5c52107eccbfbe4471faa44fb75f3",
   "ledger": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md (19:52, 20:42, 20:5x blocks)",
-  "amend3": "56bf566c9ad920aadf569f7ddd93b29ef4c9062311f301de71dbc263f2795f0d"
+  "amend3": "56bf566c9ad920aadf569f7ddd93b29ef4c9062311f301de71dbc263f2795f0d",
+  "amend4": "59bf91bf5a0772a9811bcd04d8477a8bc7517dba0a2a9f90c061fe5bafc14d8a"
  },
  "panels": {
   "claim3a_3b": {
@@ -129,12 +131,12 @@
   "dry_run": "python ops/nm_finaleval.py dry-run --out <empty dir> (fake physics; pre-run then reuse)"
  },
  "pending": [
-  "F7 per-decision branches: NOT built. Needs a decision-time snapshot in the B/R eval episode (sumo_verify.capture style: prefix fingerprints, RNG state, committed plans) and a wz3to2 branch runner executing the captured move as all/background/solo_i through N2 exact moves (c4/nm-moves c7983467 verified_plan/newmap_members) + N4 provisional SUMO builder; until then decisions are tabulated unavailable (never blocks)",
-  "bind MAPPO_SPEED it168 / MAPPO_LANE final (+ --train-config) when N7 delivers; A/B/R by sha at u24"
+  "bind MAPPO_SPEED it168 / MAPPO_LANE final (+ --train-config) when N7 delivers; A/B/R by sha at u24",
+  "N5 review of the F11 + amendment commits before any main eval wave (MAIN)"
  ],
  "files_lf_sha256": {
-  "ops/nm_finaleval.py": "44f9867c856fcee1173b865d1dd8ff51f40cf2360139f79c249c5f56c0d73691",
-  "ops/test_nm_finaleval.py": "8def708e61ae5b0c4630967ad75b1f766734e508910ccf54c1731f5638d1a5d7",
+  "ops/nm_finaleval.py": "f7d3790ce9919934f87a283beb8d3937bc61e3cc2ffc7167e063c6beb62e2a15",
+  "ops/test_nm_finaleval.py": "563822ce201d314bf488f57daed9ecbe47f54a03e282bcdb0d91e620506ee68a",
   "ops/clean3_finaleval.py": "4c4a085580ac5575c943fdadfa79699e98e6bc948e100a8ab1f46ec37395d627",
   "ops/nm_eval_panel_wz3to2_v2.json": "251496fcf6002a96bef412552ef2216627af2d8b80b28e3b545f98f8fb84b4fc",
   "ops/nm_eval_panel_wz3to2_claim3c_D2400.json": "4d95508da907444f9ac7a2e34aebc9d974990feb29efafabd70fa9f75d0c79cb",
@@ -147,7 +149,8 @@
   "tools/coopmwm/test_nm_eval_parity_cpu.py": "ff6b4a7ea0ab3607528ca070842b2cc2fffc29bab843867547b3a07c0a0b0d9e",
   "tools/coopmwm/regimeu0.py": "bc962b22e6fde601c2e1690c7b4ce0db17e7a79cb8a354a351bd7e6dd2999195",
   "tools/coopmwm/imitreplay.py": "319e5ee2b1211ad5580cd7933bf6c42f2fb645d5fac75067491d809a7a6704ce",
-  "ops/nm_finaleval_clean5a_registration_amend3.json": "81771994b91f9d5316ede38811907563c9def3caa0ab2375aefa3dba3b1b354d"
+  "ops/nm_finaleval_clean5a_registration_amend3.json": "81771994b91f9d5316ede38811907563c9def3caa0ab2375aefa3dba3b1b354d",
+  "ops/nm_finaleval_clean5a_registration_amend4.json": "12eba2423d26f698ec0f4ce9a6c7c1724f02fb210e1b1532cf1176fc23bbb85d"
  },
  "f11": {
   "worlds": [
@@ -165,5 +168,6 @@
   "run": "parity --root <clean5a root> --final-root FR --arm MAPPO_SPEED (after register; or automatic before the 3b wave)",
   "output": "FR/PARITY_<arm>.json (sealed, verdict IDENTICAL|DIFFERS; descriptive)"
  },
- "deploy_note": "pre-run uses the ba65ed9c runner (5fe6ea40); fd07b6bb changes only the MAPPO_LANE loop signature, F11 parity and the launcher F11 step - the NATIVE/U0/RULE episode code and specs are unchanged, so the pre-run waves stay reusable; deploy fd07b6bb files for the main run"
+ "deploy_note": "pre-run uses the ba65ed9c runner (5fe6ea40); fd07b6bb changes only the MAPPO_LANE loop signature, F11 parity and the launcher F11 step - the NATIVE/U0/RULE episode code and specs are unchanged, so the pre-run waves stay reusable; deploy fd07b6bb files for the main run",
+ "f7": "NOT built by MAIN decision 2026-11-06 (amendment 4): decisions tabulated \"unavailable (not built)\"; 96,000 ceiling never spent"
 }
