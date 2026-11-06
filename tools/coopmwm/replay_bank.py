@@ -918,7 +918,8 @@ def _ls_snapshot(src, key):
                    map_location='cpu', weights_only=False)
     ep = read(Path(envelope['episode_path'])/'RESULT.json');t0 = s['t0']
     assert ep['id'] == s['episode']['id'] and ep['world'] == s['episode']['world']
-    assert 986000 <= ep['world']['seed'] <= 986071
+    from .map_runtime import primary_train_world  # N1: merge 986000-986071 or the map's TRAIN registry
+    assert primary_train_world(ep['world'])
     s['prefixes'] = {str(t): ep['prefixes'][str(t)] for t in range(300, t0+1)}
     s['samples'] = {str(x['time_s']): x['sample'] for x in ep['steps'] if x['time_s'] < t0}
     s['samples'][str(t0)] = s.pop('current_sample')

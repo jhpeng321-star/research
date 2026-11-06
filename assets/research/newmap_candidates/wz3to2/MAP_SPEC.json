@@ -1,0 +1,32 @@
+{
+ "routes": [
+  [
+   "main",
+   "up wz"
+  ]
+ ],
+ "bottleneck": {
+  "edge": "up",
+  "x_m": 2700.0,
+  "dropped_lane": 0,
+  "through_lanes": [
+   1,
+   2
+  ]
+ },
+ "streams": {
+  "main": {
+   "route": "main",
+   "profile": "peak",
+   "depart_lane": "free"
+  }
+ },
+ "description": "3->2 work-zone lane drop: lane 0 (rightmost) of edge 'up' ends at x=2700 m without a connection, so its vehicles must change lanes before the end.",
+ "name": "wz3to2",
+ "net_file": "wz3to2.net.xml",
+ "routes_file": "wz3to2.routes.xml",
+ "speed_limit_mps": 31.29,
+ "ramp_speed_mps": 22.22,
+ "built_with": "netconvert (Eclipse SUMO 1.27.1)",
+ "builder": "runs/active/C4-V7FT-20261017/newmap_probe/build_maps.py"
+}
