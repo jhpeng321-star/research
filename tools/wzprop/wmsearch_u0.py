@@ -197,6 +197,9 @@ def main(argv=None):
     a = sub.add_parser('run')
     a.add_argument('--root', required=True)
     a.add_argument('--workers', type=int, default=16)
+    a.add_argument('--low-workers', type=int, default=8)
+    a.add_argument('--load-high', type=float, default=44.0)
+    a.add_argument('--normal-priority', action='store_true', help='only if MAIN allows (regimeu0.run rule)')
     a = sub.add_parser('worker')
     a.add_argument('--root', required=True)
     a.add_argument('--job', required=True)
@@ -211,7 +214,8 @@ def main(argv=None):
         print(json.dumps(dict(planned_sim_s=body['planned_sim_s'], arms=list(body['specs']),
                               plan_sha256=body['plan_sha256'])))
     elif x.cmd == 'run':
-        print(run(x.root, workers=x.workers))
+        print(run(x.root, workers=x.workers, low_workers=x.low_workers, load_high=x.load_high,
+                  normal_priority=x.normal_priority))
     elif x.cmd == 'worker':
         worker(x.root, x.job)
     else:
