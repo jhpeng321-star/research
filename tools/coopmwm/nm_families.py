@@ -1154,6 +1154,54 @@ def lane_requests(plan, t):
             if 0 <= t < plan['duration_s'] and plan['lane_targets'][i][t] >= 0}
 
 
+def verify_tape(plan, tape, t0):
+    """Admission check on a hash-bound verified tape (mirrors group_lane.verify_tape).
+
+    Every covered member-second executed exactly the bound ``profile``; every member
+    with recorded lane requests shows, at one of its request seconds, the G5 request,
+    gate pass, per-vehicle actuator telemetry (issued + completed) and the next sensed
+    lane equal to the target. Blocked/failed attempts stay diagnostics, never lessons.
+    """
+    move = from_plan(plan)
+    members, duration = move['members'], plan['duration_s']
+    steps = {int(s['time_s']): s for s in tape['steps']}
+    covered = 0
+    for t in range(duration):
+        step = steps.get(int(t0)+t)
+        if step is None:
+            continue
+        executed = (step.get('sample') or {}).get('absolute_accels') or {}
+        for i, vid in enumerate(members):
+            if vid not in executed or abs(float(executed[vid])-plan['profile'][i][t]) > 1e-8:
+                raise ValueError('N9 verified tape did not execute the bound executable profile')
+        covered += 1
+    if covered < min(duration, move['onset']+move['hold']):
+        raise ValueError('N9 verified tape does not cover the executed window')
+    for i, vid in enumerate(members):
+        seconds = [t for t in range(duration) if plan['lane_targets'][i][t] >= 0]
+        if not seconds:
+            continue
+        target, ok = plan['lane_targets'][i][seconds[0]], False
+        for t in seconds:
+            before, after = steps.get(int(t0)+t), steps.get(int(t0)+t+1)
+            if before is None or after is None:
+                continue
+            sample = before.get('sample') or {}
+            own = ((before.get('g5_lane_outcome') or {}).get('vehicles') or {}).get(vid)
+            pre = {r['vid']: r for r in before.get('rows', ())}
+            post = {r['vid']: r for r in after.get('rows', ())}
+            if ((sample.get('g5_lane_requests') or {}).get(vid) == target
+                    and ((sample.get('g5_lane_gate') or {}).get('safe') or {}).get(vid) == target
+                    and own == dict(target=target, status='issued', completed=True)
+                    and pre.get(vid, {}).get('is_cav') and post.get(vid, {}).get('is_cav')
+                    and pre[vid]['lane'] != target and post[vid]['lane'] == target):
+                ok = True
+                break
+        if not ok:
+            raise ValueError('N9 verified tape lacks the commanded CAV lane effect')
+    return move
+
+
 # ---------------------------------------------------------------- bank ingestion (initiate/join labels)
 
 def protocol_contexts(policy, plan, pairs, frames, *, t0):

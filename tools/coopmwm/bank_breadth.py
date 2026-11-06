@@ -390,6 +390,14 @@ def observable_contexts(policy, plan, pairs, frames, *, t0, certification=None):
         yield from _certified_contexts(policy, pairs, frames, certification)
         return
     from . import moves, v2v_wall
+    if plan.get('nm_move') is not None:
+        # N9 (opt-in): verified family examples are taught through their V2V protocol
+        # (recorded initiator -> <family>_initiate, received members -> <family>_join).
+        if getattr(policy, 'nm_families', None) is None:
+            raise ValueError('N9 nm_move examples require nm_families enabled for this policy')
+        from . import nm_families
+        yield from nm_families.protocol_contexts(policy, plan, pairs, frames, t0=t0)
+        return
     label = moves.from_plan(plan)
     if getattr(policy, 'wall', None) is not None and label.family == 'wall':
         # W1 (opt-in): every verified wall example is taught through the V2V

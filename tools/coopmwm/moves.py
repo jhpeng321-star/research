@@ -480,6 +480,9 @@ def from_plan(plan):
         plan = plan['plan']
     elif isinstance(plan.get('chosen_plan'), dict):
         plan = plan['chosen_plan']
+    if plan.get('nm_move') is not None:
+        # N9 closed-loop family plans are not shared-vocabulary boxes; never project them.
+        raise ValueError('N9 nm_move plans bind through nm_families.from_plan, not the move vocabulary')
     if plan.get('g5_move') or plan.get('uses_lane_actions') or any(
             any(row) for row in plan.get('lane_actions', ())):
         from .group_lane import from_plan as lane_move
