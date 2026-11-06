@@ -353,7 +353,11 @@ def run_branch(spec, snapshot, cfg, work):
             if isinstance(new, p1.EpisodePolicy):
                 # VerifyController restores its ledger at t0; refresh from the
                 # live instance so the next decision sees original expiries.
-                new.observe(rows, now, command_commitments=controller.active_plans)
+                if new.lane_drop is not None:   # N2 speed law needs the own native command
+                    new.observe(rows, now, command_commitments=controller.active_plans,
+                                native_commands=commands)
+                else:
+                    new.observe(rows, now, command_commitments=controller.active_plans)
             return original(rows, commands, now)
         controller.apply = apply
     runner = sv.LocalBranchRunner(work, controller_hook=hook, policy_loader=loader)

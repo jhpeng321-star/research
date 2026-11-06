@@ -1202,8 +1202,7 @@ class TriggerExtension:
         self.wall = getattr(base, 'wall', None)
         self.aware = getattr(base, 'aware', None)
         self.lane_drop = ld
-        self.families = (tuple(base.families) if base is not None else ())+(
-            PROTOCOL_FAMILIES if ld['v2v'] is not None else ())
+        self.families = (tuple(base.families) if base is not None else ())+extension_families(ld)
         self.ld_descriptor_width = len(LD_DESCRIPTOR) if ld['moves'] else 0
         self.ld_context_width = LANE_DROP_DIM if ld['features'] else 0
         self.descriptor_width = (base.descriptor_width if base is not None else 0)+self.ld_descriptor_width
@@ -1223,6 +1222,11 @@ class TriggerExtension:
             parts.append(context_block(context))
         out = torch.cat(parts, -1) if parts else torch.zeros((len(context['members']), 0))
         return out.reshape(len(context['members']), self.context_width)
+
+
+def extension_families(ld):
+    """Executable lane-drop option families (joint moves when ``moves``, protocol when ``v2v``)."""
+    return (JOINT_FAMILIES if ld['moves'] else ())+(PROTOCOL_FAMILIES if ld['v2v'] is not None else ())
 
 
 def context_block(context):

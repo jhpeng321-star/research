@@ -332,6 +332,57 @@ def random_teacher_target(decision, rng):
     return int(available[int(rng.integers(len(available)))]) if available else 0
 
 
+def rollout_records(samples, returns):
+    """(decision, return) for every recorded RSU decision whose uplink CAVs have returns.
+
+    The RSU's return is the mean per-CAV return of its own uplink CAVs at that tick (its
+    observable coverage), the same per-CAV SUMO returns the trigger PPO uses."""
+    out = []
+    for key in sorted(returns):
+        decision = (((samples[key].get('track2') or {}).get('lane_drop') or {}).get('rsu') or {}).get('decision')
+        if not decision:
+            continue
+        members = samples[key]['context']['members']
+        values = [returns[key][members.index(v)] for v in decision['uplink'] if v in members]
+        if values:
+            out.append((decision, float(np.mean(values))))
+    return out
+
+
+def train_rsu(head, optimizer, records, *, ppo, kl_budget):
+    """One clipped-PPO step over this update's RSU decisions with an exact KL guard (reverted
+    when above the registered budget, like the trigger). Identical for B and R."""
+    from copy import deepcopy
+    from .trigger_policy import ppo_update
+    if not records:
+        return dict(decisions=0, accepted=None)
+    decisions = [d for d, _ in records]
+    rollout = batch(decisions)
+    returns = [r for _, r in records]
+    advantages = [r-float(v) for r, v in zip(returns, rollout.values.tolist())]
+    with torch.no_grad():
+        before_logits = head.distribution(rollout.field, rollout.descriptors, rollout.mask)[0]
+    weights, state = deepcopy(head.state_dict()), deepcopy(optimizer.state_dict())
+    metrics = ppo_update(head, optimizer, rollout, advantages, returns, **ppo)
+    with torch.no_grad():
+        after = head.distribution(rollout.field, rollout.descriptors, rollout.mask)[0]
+        kl = float(torch.distributions.kl_divergence(Categorical(logits=before_logits),
+                                                     Categorical(logits=after)).mean())
+    accepted = math.isfinite(kl) and kl <= kl_budget
+    if not accepted:
+        head.load_state_dict(weights)
+        optimizer.load_state_dict(state)
+    return dict(metrics, decisions=len(decisions), exact_kl=kl, accepted=accepted)
+
+
+def supervision_batch(decisions, targets):
+    """CE guidance on recorded slates (B: teacher_target of verified examples; R: the random
+    teacher). Returns (RSUBatch, targets) for ``RSUHead.imitation_loss``."""
+    if len(decisions) != len(targets):
+        raise ValueError('one guidance target per RSU decision')
+    return batch(decisions), list(targets)
+
+
 # ---------------------------------------------------------------- runtime
 
 class RSU:

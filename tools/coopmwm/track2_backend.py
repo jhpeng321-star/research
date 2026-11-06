@@ -71,15 +71,15 @@ class MoveAPI:
     def __init__(self, cfg=None):
         from .group_lane import families
         self.FAMILIES = families(cfg)
-        # N2 (opt-in): joint lane-drop moves are trigger one-hot families only when ON.
-        ld = lane_drop.settings(cfg)
-        if ld is not None and ld['moves']:
-            self.FAMILIES = self.FAMILIES+lane_drop.JOINT_FAMILIES
         # W1 protocol options are executable commitments, not trigger one-hot families.
         self.EXECUTABLE_FAMILIES = self.FAMILIES+(
             v2v_wall.FAMILIES if v2v_wall.settings(cfg) is not None else ())
-        if ld is not None and ld['v2v'] is not None:
-            self.EXECUTABLE_FAMILIES = self.EXECUTABLE_FAMILIES+lane_drop.PROTOCOL_FAMILIES
+        # N2 (opt-in): joint lane-drop moves and protocol options are executable extension
+        # families described by zero-initialised descriptor columns (the trigger one-hot,
+        # and so every pre-existing candidate logit, is unchanged).
+        ld = lane_drop.settings(cfg)
+        if ld is not None:
+            self.EXECUTABLE_FAMILIES = self.EXECUTABLE_FAMILIES+lane_drop.extension_families(ld)
 
     @staticmethod
     def candidates(obs_state, rng, n):
@@ -348,6 +348,8 @@ class EpisodePolicy(torch.nn.Module):
             w2=w2 if any(w2.values()) else None)
         self.wall_ends, self.pressure_blocks = {}, {}
         self.trigger_optimizer = self.trigger.optimizer(lr=cfg['trigger_lr'])
+        if self.rsu is not None:
+            self.rsu_optimizer = self.rsu.head.optimizer(lr=cfg['trigger_lr'])   # N2 RSU (ON only)
         self.layer_rng = torch.Generator().manual_seed(int(cfg['training_seed']))
         self.candidate_rng = np.random.default_rng(int(cfg['training_seed']))
         self.executor = MoveExecutor(moves_api=MoveAPI(cfg))
@@ -836,6 +838,8 @@ class ArmRuntime:
             self.policy.restore_worker(state['worker'])
             self.policy.layer.optimizer.load_state_dict(state['layer_optimizer'])
             self.policy.trigger_optimizer.load_state_dict(state['trigger_optimizer'])
+            if getattr(self.policy, 'rsu', None) is not None:
+                self.policy.rsu_optimizer.load_state_dict(state['rsu_optimizer'])
         if arm != 'A':
             self.base = self.policy.layer.base  # runner serializes the immutable low-level model
 
@@ -1052,6 +1056,13 @@ class ArmRuntime:
                 self.policy.trigger.load_state_dict(before)
                 self.policy.trigger_optimizer.load_state_dict(optimizer)
             trigger_metrics.append(dict(metrics, exact_kl=kl, accepted=accepted))
+        rsu_metrics = None
+        if getattr(self.policy, 'rsu', None) is not None:
+            # N2 RSU suggestion head: PPO on its recorded decisions (B = R), exact KL guard.
+            from .lane_drop_rsu import rollout_records, train_rsu
+            rsu_metrics = train_rsu(self.policy.rsu.head, self.policy.rsu_optimizer,
+                rollout_records(by_key, {k: returns[k] for k in sorted(eligible)}),
+                ppo=cfg['trigger_ppo'], kl_budget=self.policy.layer.config.kl_budget)
         pairs, bank_summary = self.bank_pairs()
         from . import bank_imitation as bi
         if cfg.get('v2v_intent'):
@@ -1068,6 +1079,7 @@ class ArmRuntime:
         from .track2_safety_reward import settings as close_call_settings
         close_call = close_call_settings(cfg)
         return dict(**(dict(g4_synergy_credit=synergy_receipt) if synergy_receipt is not None else {}),
+            **(dict(rsu=rsu_metrics) if rsu_metrics is not None else {}),
             layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),
             wm_credit=dict(enabled=False), reward=dict(schema=REWARD_SCHEMA,
                 registration=deepcopy(cfg['track2_reward']),
@@ -1212,6 +1224,8 @@ class ArmRuntime:
             state = dict(arm=self.arm, update=self.update, worker=self.policy.worker_state(),
                          layer_optimizer=self.policy.layer.optimizer.state_dict(),
                          trigger_optimizer=self.policy.trigger_optimizer.state_dict())
+            if getattr(self.policy, 'rsu', None) is not None:
+                state['rsu_optimizer'] = self.policy.rsu_optimizer.state_dict()
             with sidecar.open('xb') as stream:
                 torch.save(state, stream)
         return str(target)

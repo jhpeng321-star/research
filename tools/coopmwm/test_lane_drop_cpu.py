@@ -317,6 +317,21 @@ def test_features_only_are_zero_init_additive_and_mappo_untouched(cfg):
     assert all(not p.requires_grad for p in on.layer.base.parameters())
 
 
+def test_moves_on_keep_every_pre_existing_trigger_weight(cfg):
+    """Joint/protocol lane-drop options are extension families: zero-init descriptor columns,
+    unchanged one-hot, so pre-existing candidates keep their logits at initialisation."""
+    off = make(dict(cfg, trigger_partner_slots=4))
+    on = make(ld_cfg(cfg, rsu=dict(range_m=1000.)))
+    assert on.trigger.families == off.trigger.families
+    assert on.trigger.option_families == off.trigger.families+ld.JOINT_FAMILIES+ld.PROTOCOL_FAMILIES
+    t_off, t_on = off.trigger.trigger_head[0].weight, on.trigger.trigger_head[0].weight
+    assert torch.equal(t_on[:, :t_off.shape[1]], t_off) and not bool(t_on[:, t_off.shape[1]:].any())
+    for a, b in zip(off.trigger.parameters(), on.trigger.parameters()):
+        if a.shape == b.shape:
+            assert torch.equal(a, b)
+    assert all(torch.equal(v, on.layer.base.state_dict()[k]) for k, v in off.layer.base.state_dict().items())
+
+
 # ------------------------------------------------------------------ moves / execution
 
 def test_joint_candidates_roles_windows_and_hdvs(cfg, fixed):
@@ -389,7 +404,7 @@ def test_runtime_execution_matches_the_verified_profile(cfg, fixed):
     p = make(ld_cfg(cfg, v2v=False))
     with torch.no_grad():
         p.layer.base.actor[-1].bias.fill_(.25)                   # nonzero frozen MAPPO mean
-    p.trigger.trigger_head = Prefer(p.trigger, {'closing_pair': 50.})
+    p.trigger.trigger_head = Prefer(p.trigger, {'ld_kind_closing_pair': 50.})
     controller = controller_class(Controller)(p, torch.Generator().manual_seed(9), True)
     natives = {'a': .4, 'b': -.2, 'c': .1}
     recorded, requests = {'a': [], 'b': []}, {'a': [], 'b': []}
@@ -429,7 +444,7 @@ def zip_scene():
 def test_zip_lane_change_uses_the_g5_env_path_for_cavs_only(cfg, fixed):
     fixed.update(onset=0, hold=20, zip=True)
     p = make(ld_cfg(cfg, v2v=False))
-    p.trigger.trigger_head = Prefer(p.trigger, {'closing_pair': 50.})
+    p.trigger.trigger_head = Prefer(p.trigger, {'ld_kind_closing_pair': 50.})
     controller = controller_class(Controller)(p, torch.Generator().manual_seed(9), True)
     natives = {'a': 0., 'b': 0., 'c': 0.}
 
@@ -449,7 +464,7 @@ def test_zip_lane_change_uses_the_g5_env_path_for_cavs_only(cfg, fixed):
     # Replay the zip second: safe gap -> the closing-lane CAV only; occupied gap -> blocked.
     for scene, expected in ((advance(zip_scene(), 19), {'a': 1}), (blocked, {})):
         q = make(ld_cfg(cfg, v2v=False))
-        q.trigger.trigger_head = Prefer(q.trigger, {'closing_pair': 50.})
+        q.trigger.trigger_head = Prefer(q.trigger, {'ld_kind_closing_pair': 50.})
         c2 = controller_class(Controller)(q, torch.Generator().manual_seed(9), True)
         for now in range(300, 320):
             rows = advance(zip_scene(), now-300) if now < 319 else scene
@@ -770,3 +785,26 @@ def test_rsu_head_zero_init_learnable_and_teachers_identical_for_b_and_r(cfg, fi
         {k: v.tolist() for k, v in state['rsu'].items()})
     with pytest.raises(ValueError):
         make(ld_cfg(cfg, range_m=200.)).restore_worker(state)   # same layer, no RSU option
+
+
+def test_rsu_rollout_ppo_uses_uplink_returns_and_the_kl_guard(cfg, fixed):
+    p = make(ld_cfg(cfg, range_m=200., rsu=dict(range_m=1000.)))
+    samples, returns = {}, {}
+    for now in range(300, 303):
+        p.last_decision = None                                   # periodic RSU decision each tick
+        s = tick(p, advance(rsu_scene(), now-300), now, deterministic=False, seed=now)
+        samples[('ep', now)] = s
+        returns[('ep', now)] = [{'a': 1., 'b': 3., 'c': 100.}[v] for v in s['context']['members']]
+    records = rsu_mod.rollout_records(samples, returns)
+    assert [r for _, r in records] == [2., 2.]                   # mean over own uplink (a, b); 300 has none
+    assert all(d['uplink'] == ['a', 'b'] for d, _ in records)
+    head = p.rsu.head
+    before = deepcopy(head.state_dict())
+    reverted = rsu_mod.train_rsu(head, p.rsu_optimizer, records, kl_budget=0.,
+                                 ppo=dict(clip_ratio=.2, value_weight=.5, entropy_weight=.01, max_grad_norm=.5))
+    assert reverted['accepted'] is False and reverted['decisions'] == 2
+    assert all(torch.equal(v, head.state_dict()[k]) for k, v in before.items())
+    kept = rsu_mod.train_rsu(head, p.rsu_optimizer, records, kl_budget=.045,
+                             ppo=dict(clip_ratio=.2, value_weight=.5, entropy_weight=.01, max_grad_norm=.5))
+    assert kept['accepted'] is True and not all(torch.equal(v, head.state_dict()[k]) for k, v in before.items())
+    assert rsu_mod.train_rsu(head, p.rsu_optimizer, [], kl_budget=.045, ppo={}) == dict(decisions=0, accepted=None)
