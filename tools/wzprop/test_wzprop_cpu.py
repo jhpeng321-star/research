@@ -792,3 +792,89 @@ def test_descriptor_cells_select_and_feedback(dry):
                     moments=[Path(dry['ref']) / 'MOMENTS.json', Path(dry['wm']) / 'MOMENTS.json'])
     vp = cmp['verified_plans']
     assert vp and all(r['cell'] is not None and r['origin'] for r in vp)
+
+
+# ------------------------------------------------------------------------------------ strategy-level search
+def _strategy_states(n=6, seed0=989300):
+    out = []
+    for i in range(n):
+        m = moment(seed=seed0 + i, t0=450 + 10 * (i % 2))
+        m['sid'] = f"st_{m['sid']}_{i}"
+        out.append(m)
+    return out
+
+
+def test_solo2_is_the_regime_rule_and_strategies_validate(P):
+    from tools.wzprop import strategy_search as SS
+    m = moment()
+    wall = P.pick_wall(dict(cavs=m['all_cavs_t0']))
+    ref = [P.member_spec(c, P.VARIANTS['wall_h'][1]) for c in wall if c['lane'] == 2]
+    assert SS.activation(SS.SOLO2, m['all_cavs_t0']) == ref
+    for s in SS.seeds():
+        SS.validate(s)
+    rng = __import__('random').Random(3)
+    rs = [SS.random_strategy(rng) for _ in range(50)]
+    assert all(1 <= len(s['roles']) <= 6 for s in rs) and len({SS.strategy_key(s) for s in rs}) > 40
+    for s in rs:
+        spec = SS.activation(s, m['all_cavs_t0'])
+        if spec:
+            roles = {x['role'] for x in spec}
+            assert len(roles) == 1 and all(x['id'] in {c['id'] for c in m['all_cavs_t0']} for x in spec)
+            if roles == {'prog'}:
+                from tools.wzprop import families_lc as FL
+                for x in spec:
+                    assert not FL.out_of_range(x)
+            else:
+                for x in spec:
+                    assert not F.hold_out_of_range(x)
+    with pytest.raises(ValueError):
+        SS.validate(dict(SS.SOLO2, roles=[dict(SS.SOLO2['roles'][0], v_w=40.0)]))
+    with pytest.raises(ValueError):
+        SS.validate(dict(SS.SOLO2, roles=[dict(SS.SOLO2['roles'][0], lc_target=0)]))
+    kids = [SS.mutate(rng, s, 0.5) for s in rs[:20]]
+    assert any(k is not None for k in kids)
+
+
+def test_strategy_search_beats_or_reports_against_solo2_in_imagination():
+    from tools.wzprop import strategy_search as SS
+    states = _strategy_states(6)
+    per, n = SS.evaluate(W.StubWM(), states, [SS.SOLO2] + SS.seeds()[1:3], 4, 300)
+    s2 = SS.summarize(per[SS.strategy_key(SS.SOLO2)], 0.5)
+    assert s2['gain_vs_solo2'] == 0.0 and s2['n_states'] == 6 and n > 0
+    res = SS.search_cell(W.StubWM(), states, dict(n_init=10, generations=1, n_children=8, n_screen_states=4,
+                                                    finalists=5, K_final=4))
+    keys = [r['key'] for r in res['final']]
+    assert SS.strategy_key(SS.SOLO2) in keys and res['archive_cells'] >= 3
+    assert all(r['gain_vs_solo2_lcb'] <= r['gain_vs_solo2'] + 1e-9 for r in res['final'])
+    picks = SS.select_for_sumo(res, 3)
+    assert len({tuple(SS.descriptor(p)) for p in picks}) == len(picks)
+    assert all(SS.strategy_key(p) != SS.strategy_key(SS.SOLO2) for p in picks)
+    assert len(SS.structured_arm()) == 4 and len(SS.random_arm()) == 4
+    if res['best_beating_solo2']:
+        assert res['best_beating_solo2']['gain_vs_solo2_lcb'] > 0
+
+
+def test_strategy_core_executes_the_rule_on_plant_rows():
+    from tools.wzprop import strategy_hook as SH
+    from tools.wzprop import strategy_search as SS
+    cav = [('A', 1600.0, 2), ('B', 1580.0, 1), ('C', 1400.0, 0), ('D', 1200.0, 2)]
+    rows = [dict(vid=v, s_m=x - SH.S_OFF, v_mps=22.0, lane=2 - ln, is_cav=True) for v, x, ln in cav]
+    rows.append(dict(vid='hdv1', s_m=1610.0 - SH.S_OFF, v_mps=20.0, lane=0, is_cav=False))
+    cmds = {r['vid']: 0.0 for r in rows if r['is_cav']}
+    s = dict(name='t', trigger='lanes', zone='full', spread_m=300.0, cooldown_s=60, slots=1,
+             roles=[dict(lane=2, rank=0, v_w=15.0, dmax=1.5, hold_s=90, onset_s=0, lc_target=None),
+                    dict(lane=1, rank=0, v_w=18.0, dmax=1.0, hold_s=90, onset_s=20, lc_target=2)])
+    core = SH.StrategyCore(s, warmup_s=300)
+    assert core.step(rows, cmds, 299) == ({}, {})
+    acc, lanes = core.step(rows, cmds, 300)
+    mem = SS.select_members(s, [SH.to_sumo_row(r) for r in rows if r['is_cav']])
+    assert mem and set(core.active) == {c['id'] for c in mem} and 'hdv1' not in acc
+    assert list(acc) == [mem[0]['id']]                     # second role starts at onset 20 s
+    for t in range(301, 321):
+        acc, lanes = core.step(rows, cmds, t)
+    assert mem[1]['id'] in acc and lanes[mem[1]['id']] == SH.wm_lane_of(2) and core.lane_requests >= 1
+    assert len(core.acts) == 1                             # cooldown 60 s: no second activation yet
+    for t in range(321, 430):
+        core.step(rows, cmds, t)
+    assert all(v[1] in ('hold_end', 'at_drop', 'left') for a in core.acts for v in a['release'].values())
+    assert len(core.acts) >= 2

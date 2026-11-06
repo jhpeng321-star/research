@@ -4,6 +4,7 @@ propose  (WM host)  MOMENTS.json -> PROPOSALS.jsonl (+ _RECEIPT.json); zero SUMO
 score    (WM host)  WM predictions of the variants already in a MOMENTS.json -> SCORES.jsonl; zero SUMO
 rankcheck (any)     WM ranking vs existing SUMO verdicts (Spearman T/S, AUC admitted, top-1) -> JSON
 enrich   (any)      MOMENTS.json + WM-D tapes -> observable moments (CAV-detected neighbours, RSU counters)
+strategy (WM host)  strategy-level search per demand cell vs the solo2 incumbent -> STRATEGY_SEARCH_*.json, ARMS.json
 opensearch (WM host) open roaming search (free programs, CEM/evolution, MAP-Elites, LCB - disagreement)
 regime   (any)      claim-4: S-REGIME strategy states from tapes / WM-vs-measured benefit agreement
 wmrank   (WM host)  score + bootstrap rank metrics with one WM checkpoint (baseline WM2 / WM-E) -> DIR
@@ -187,6 +188,47 @@ def opensearch(argv):
     print(json.dumps(dict(out=a.out, moments=len(ms), backend=wm.meta), default=str))
 
 
+def strategy(argv):
+    """Strategy-level WM search per demand cell (incumbent solo2) -> STRATEGY_SEARCH_<cell>.json + ARMS.json."""
+    import time
+    from . import geometry as G
+    from . import strategy_search as SS
+    ap = argparse.ArgumentParser(prog='python -m tools.wzprop strategy')
+    ap.add_argument('--states', required=True, help='observable start states (regime states / enriched moments)')
+    ap.add_argument('--cells', required=True)
+    ap.add_argument('--out', required=True, help='NEW directory')
+    ap.add_argument('--wm', default='auto')
+    ap.add_argument('--wm-api', action='append')
+    ap.add_argument('--wm-arg', action='append')
+    ap.add_argument('--config', help='JSON dict of strategy_search.DEFAULTS overrides')
+    ap.add_argument('--k', type=int, default=4)
+    ap.add_argument('--mem-fraction', type=float)
+    a = ap.parse_args(argv)
+    if a.mem_fraction:
+        import torch
+        torch.cuda.set_per_process_memory_fraction(float(a.mem_fraction))
+    out = G.check_path(a.out)
+    out.mkdir(parents=True, exist_ok=False)
+    wm = _backend(a)
+    cfg = json.loads(a.config) if a.config else None
+    states = [m for m in json.loads(G.check_path(a.states).read_text()) if m.get('valid')]
+    arms = {}
+    for cell in a.cells.split(','):
+        st = [m for m in states if m['cell'] == cell]
+        t0 = time.time()
+        log = (out / f'LOG_{cell}.jsonl').open('x')
+        res = SS.search_cell(wm, st, cfg, log=lambda d: (log.write(json.dumps(d) + '\n'), log.flush()))
+        log.close()
+        res.update(cell=cell, backend=wm.meta, wall_s=round(time.time() - t0, 1), new_sumo_sim_s=0)
+        (out / f'STRATEGY_SEARCH_{cell}.json').write_text(json.dumps(res, indent=1, default=str))
+        arms[cell] = dict(wm=SS.select_for_sumo(res, a.k), structured=SS.structured_arm(a.k),
+                          random=SS.random_arm(a.k), incumbent=SS.SOLO2,
+                          best_beating_solo2=(res['best_beating_solo2'] or {}).get('strategy'))
+        print(cell, 'evaluated', res['evaluated'], 'archive', res['archive_cells'], 'best',
+              (res['final'][0]['strategy']['name'], res['final'][0]['gain_vs_solo2'], res['final'][0]['gain_vs_solo2_lcb']))
+    (out / 'ARMS.json').write_text(json.dumps(arms, indent=1))
+
+
 def labels(argv):
     from . import wallfit_bridge as WB
     ap = argparse.ArgumentParser(prog='python -m tools.wzprop labels')
@@ -214,6 +256,8 @@ def main(argv=None):
         return rankcheck(rest)
     if cmd == 'wmrank':
         return wmrank(rest)
+    if cmd == 'strategy':
+        return strategy(rest)
     if cmd == 'opensearch':
         return opensearch(rest)
     if cmd == 'regime':
