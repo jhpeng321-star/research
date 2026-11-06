@@ -17,7 +17,7 @@ import subprocess
 import time
 import traceback
 
-ROOT = Path('/home/ubuntu/coopmwm20261106_clean3_r5')
+ROOT = Path('/home/ubuntu/coopmwm20261106_clean3_r6')
 PYTHON = '/home/ubuntu/miniconda3/bin/python'
 MINED_DEFAULT = '/home/ubuntu/mined/MINED_MOVES.jsonl'
 UPDATES = 24

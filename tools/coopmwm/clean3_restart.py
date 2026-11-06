@@ -16,7 +16,7 @@ import time
 from .exact_grade import _seal, verify_sealed
 from .protocol import digest
 
-ROOT = '/home/ubuntu/coopmwm20261106_clean3_r5'
+ROOT = '/home/ubuntu/coopmwm20261106_clean3_r6'
 # Root r1 (chain r7, source 6cf4868f) stopped at smoke on 'no decision link' (fixed by
 # c4/clean3-minedlink); kept intact as evidence and its ledger counted as prior spend.
 FAILED_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3', '/home/ubuntu/coopmwm20261106_clean3_r2',  # r2: prepare fault, 0 rows
@@ -26,7 +26,7 @@ CLEAN2 = '/home/ubuntu/coopmwm20261105_clean2'
 CLEAN1 = '/home/ubuntu/coopmwm20261105_clean1'
 # r1 (b7b74545), r2 (a0f9401d) and r3 (bf3f1d68) chains were stopped by the operator before any clean3
 # physics; each ran the same G1 selection: 0 candidates, 0 sim-s, NO-GO. Ledgers stay counted.
-G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r11'
+G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r12'
 G1_PRIOR_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3_g1cert', '/home/ubuntu/coopmwm20261106_clean3_g1cert_r2',
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r3',
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r4',  # r3/r4 stopped mid-G1: 0 rows
@@ -35,7 +35,8 @@ G1_PRIOR_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3_g1cert', '/home/ubuntu/co
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r7',  # r7 NO-GO, 0 rows
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r8',  # r8 NO-GO, 0 rows
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r9',  # r9 NO-GO, 0 rows
-                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r10')  # r10 NO-GO, 0 rows
+                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r10',  # r10 NO-GO, 0 rows
+                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r11')  # r11 NO-GO, 0 rows
 MINING_ROOT = '/home/ubuntu/coopmwm20261106_s_mining'
 SCHEMA = 'coopmwm.clean3.restart_budget.v1'
 
@@ -87,9 +88,11 @@ def build(*, clean1_rows, clean2_rows, g1_rows, mining_rows, prefixes, accepted,
         raise ValueError('mining exceeded its separate 500000 phase')
     if set(accepted) != {'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'G1', 'G2', 'G4', 'G5'}:
         raise ValueError('F1-F6 and G1/G2/G4/G5 acceptance receipts required')
-    # Quote assertion (MAIN 02:43): full quote <= cap - prior - mining.
+    # Quote assertion (MAIN 02:43): full quote <= cap - prior - mining. Registration runs only
+    # after the pre-launch G1 batch has COMPLETED, so its phase enters at its actual charged
+    # spend (counted once) instead of the unspent 230400 reservation.
     before = spent['clean1']+spent['clean2']+spent['failed']+PARITY
-    if before+MINING+QUOTE_TOTAL > CAP:
+    if before+MINING+QUOTE_TOTAL-G1_CAP+spent['g1'] > CAP:
         raise ValueError('CLEAN3 full quote exceeds remaining owner cap')
     prior = before+spent['g1']+MINING
     remaining = CAP-prior

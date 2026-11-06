@@ -43,7 +43,7 @@ def test_budget_refuses_overspend_and_missing_acceptance():
         c3.build(clean1_rows=[], clean2_rows=[], g1_rows=[], mining_rows=[], prefixes=PREFIXES,
                  accepted={k: v for k, v in ACCEPTED.items() if k != 'G5'})
     with pytest.raises(ValueError, match='exceeds remaining owner cap'):
-        c3.build(clean1_rows=rows('a', 1248480+30000), clean2_rows=rows('b', 1849200),
+        c3.build(clean1_rows=rows('a', 1248480+260000), clean2_rows=rows('b', 1849200),
                  g1_rows=[], mining_rows=[], prefixes=PREFIXES, accepted=ACCEPTED)
 
 
@@ -414,3 +414,13 @@ def test_amended_check_a_reports_non_observable_examples_without_failing(monkeyp
     obs = out['B']['observability']
     assert obs['observable'] == 1 and obs['non_observable'] == 1
     assert obs['by_seed'] == {'1': dict(observable=1, non_observable=0), '5': dict(observable=0, non_observable=1)}
+
+
+def test_completed_g1_phase_counts_actual_spend_in_quote_check():
+    # 22,800 sim-s of failed pre-launch smokes: fits only because completed G1 (0 sim-s) is counted actual.
+    value = c3.build(clean1_rows=rows('a', 1248480, 480), clean2_rows=rows('b', 1849200), g1_rows=[],
+                     mining_rows=[], prefixes=PREFIXES, accepted=ACCEPTED, failed_rows=rows('f', 22800))
+    assert value['remaining_sim_s'] >= sum(c3.PHASES.values())+c3.G4_CAP
+    with pytest.raises(ValueError, match='exceeds'):
+        c3.build(clean1_rows=rows('a', 1248480, 480), clean2_rows=rows('b', 1849200), g1_rows=[],
+                 mining_rows=[], prefixes=PREFIXES, accepted=ACCEPTED, failed_rows=rows('f', 260000))
