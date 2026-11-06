@@ -1,0 +1,39 @@
+{
+  "schema": "sgroupdiag-fresh-session-check/1",
+  "task_id": "S-GROUPDIAG",
+  "date": "2026-11-06",
+  "status": "previously_completed_analysis_preserved_and_reverified",
+  "initial_repository_head": "19ff0f36",
+  "prior_closeout_commit": "9731317d",
+  "prior_report_commit": "46885cc8",
+  "report": "runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md",
+  "report_sha256": "065592a20e0c5f6d87dd77cd8d5f90c53ebe6198a71bcada1da4cf70cf1c75f8",
+  "evidence_cutoff_utc": "2026-11-05T14:25:50.065782+00:00",
+  "checks": [
+    {
+      "command": "python -B E:/Temp/opencode/sgroup_verify.py",
+      "result": "PASS: B/R branch arithmetic, 16 B/u6 training tapes, eight positive native teaching examples, 14-line summary, six ranked levers."
+    },
+    {
+      "command": "python -B E:/Temp/opencode/sgroup_fresh_integrity_20261106.py",
+      "result": "PASS: unchanged report and all eight fixed saved-capture SHA256 bindings from the prior resume receipt."
+    }
+  ],
+  "recordkeeping": "Prior report, resume receipt, record-check receipt and scientific closeout retained. No scientific conclusion, ledger or shared status document changed; this is only an additive local verification receipt.",
+  "fresh_session_activity": {
+    "ssh_connections": 0,
+    "remote_commands": 0,
+    "dispatches": 0,
+    "simulation_seconds": 0,
+    "charges": 0,
+    "running_process_inspections_or_control": 0,
+    "prohibited_path_or_hidden_truth_reads": 0,
+    "new_literature_research": 0
+  },
+  "limitations_preserved": [
+    "No complete same-background, full-window native-oracle ceiling for all seven diagnostic states.",
+    "Member-policy bundles do not isolate the causal effect of named moves from continuous residuals.",
+    "Native positive synergy does not certify projected executable macros.",
+    "No later remote progress, live budget balance or u24 outcome established."
+  ]
+}
