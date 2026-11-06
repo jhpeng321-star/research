@@ -111,7 +111,7 @@ def main():
                         'CLEAN3 Reason '+str(value.get('reason', value.get('error', 'see public receipt')))+'.',
                         'CLEAN3 Root '+args.root+'; exact evidence retained.',
                         'CLEAN3 Remote chain retains pause/control ownership; no follower signals or replay.',
-                        'CLEAN3 Safety failure remains paused; diagnose with tests before any authorized recovery.']
+                        'CLEAN3 Any safety failure remains paused; diagnose with tests before any authorized recovery.']
                     with STATUS.open('a', encoding='utf-8') as stream:
                         stream.write('\n'.join(lines)+'\n\n')
                     print('\n'.join(lines), flush=True); state['faults'].append(token)

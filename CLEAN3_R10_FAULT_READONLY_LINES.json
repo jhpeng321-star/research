@@ -1,0 +1,198 @@
+{
+  "charges": {
+    "rows": 8,
+    "sim_s": 9600
+  },
+  "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_ac9e4691",
+  "files": {
+    "/home/ubuntu/coopmwm20261106_clean3_r4/CLEAN3_BUDGET.json": {
+      "sha256": "b3a9f086279411fc1c5b354bb9198da163d31306c095593f0dcf66092508a3d2",
+      "value": {
+        "accepted": {
+          "F1": "5a2c7fef58cf6295cf81c84413e1bd670273214bc650fa0df8f85fd3c215ea19",
+          "F2": "9ca0383d204f878035473a72cf0831d1ed55ca4f6da31f00c5855c9421826b3f",
+          "F3": "127dbeb7ddda4f88861997acd71fad06eed19f6385f1223d42b42ef994278404",
+          "F4": "9a0ff8d0c234dd6875ffebe1205b0b720ae93f9cc6d3b288ae6dbb007f67b1dc",
+          "F5": "37ba2f36fb8bbd0acbe56ca2b0d2ba1a16c1fb083fe64e164757b1323a16263d",
+          "F6": "71d414d7b98fb858fbb1129f31e76d83507c8f405bfe35a6dde95865f9f5307e",
+          "G1": "ad977597c6431aa0b107855d5797e717b4b857e55f50c4ccb023cb786b58341b",
+          "G2": "7667323b2b22cd20122f6f89ead075dab4431304efe0291720cea665f3af5ea7",
+          "G4": "f49be9390bc23baa57a66478bc1457df0cb3a0a430686847299e7a81d0ccf5b1",
+          "G5": "6580935f09328abd7f3a82f624e31886eeebf8790e4f435a7fe545657b1ec386"
+        },
+        "g1_cap_sim_s": 230400,
+        "g4_cap_sim_s": 230400,
+        "mining_reserved_sim_s": 500000,
+        "owner_cap_sim_s": 7300000,
+        "phases": {
+          "augment_verify": 0,
+          "early_probes": 52800,
+          "gate_bank_verification_ext": 18000,
+          "group_credit_verify": 0,
+          "isolated_replicated": 165600,
+          "teacher_verify": 0,
+          "track2_smoke": 24000,
+          "v2v_final": 531600,
+          "v2v_interim": 398400,
+          "v2v_lessons": 40800,
+          "v2v_train": 1988400
+        },
+        "plan_fix_reserved_sim_s": 0,
+        "prefixes": {
+          "clean1": "cf0b0dd434f808486c64aec7a0ee63e14f26d4d7007a3c6c8ab8adbb411bed48",
+          "clean2": "be94e2b7b0f08fe21205207f586ac95c0e2988fbc92f423b3c2b95fef53bad32"
+        },
+        "prior_parity_sim_s": 960,
+        "protected_prior_sim_s": 3611840,
+        "quote_total_sim_s": 3680400,
+        "receipt_sha256": "a5ce40d4e216220c6c8f71a3c8a992b6c69cedae30adb673dbb43ecdf031ea5c",
+        "remaining_sim_s": 3688160,
+        "rows": {
+          "clean1": 1136,
+          "clean2": 1656,
+          "failed": 11,
+          "g1": 0
+        },
+        "rule": "clean1+clean2+parity+G1 actual+mining 500000 reserved; plan_fix released (owner 03:00); every phase sized for u1-u24 with >=15% margin",
+        "schema": "coopmwm.clean3.restart_budget.v1",
+        "spent": {
+          "clean1": 1248480,
+          "clean2": 1849200,
+          "failed": 13200,
+          "g1": 0,
+          "mining": 0
+        }
+      }
+    },
+    "/home/ubuntu/coopmwm20261106_clean3_r4/FAULT.json": null,
+    "/home/ubuntu/coopmwm20261106_clean3_r4/GATE_PASS.json": null,
+    "/home/ubuntu/coopmwm20261106_clean3_r4/GATE_STARTED.json": null,
+    "/home/ubuntu/coopmwm20261106_clean3_r4/LAUNCHED.json": null,
+    "/home/ubuntu/coopmwm20261106_clean3_r4/SMOKE_FAILED.json": null,
+    "/home/ubuntu/coopmwm20261106_clean3_r4/SMOKE_FIX_RECEIPTS_PASS.json": null,
+    "/home/ubuntu/coopmwm20261106_clean3_r4/SMOKE_LEVER_RECEIPTS_PASS.json": null,
+    "/home/ubuntu/coopmwm20261106_clean3_r4/SMOKE_PASS.json": null,
+    "/home/ubuntu/coopmwm20261106_clean3_r4/SMOKE_REPORTING_PASS.json": null,
+    "/home/ubuntu/coopmwm20261106_clean3_r4/SMOKE_STARTED.json": {
+      "sha256": "b08d0792a554b14b301d95554d1d61f09b841ffb968054acb4200bffe862e352",
+      "value": {
+        "config_sha256": "5171d2daf732466279a876dd2413ae895683ca85ed2423fa423aefb66479c998",
+        "unix": 1793931891.564346
+      }
+    },
+    "/home/ubuntu/coopmwm20261106_clean3_r4/STOP.json": {
+      "sha256": "8a7ae68d9a0cccbf80867fc764b7d9b14e95a412df1c3525aa066770ebaa42ad",
+      "value": {
+        "detail": {
+          "error": "RuntimeError('smoke failed; inspect log; no automatic retry')",
+          "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_ac9e4691/ops/clean3_chain.py\", line 47, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_ac9e4691/ops/clean3_chain.py\", line 401, in <lambda>\n    ('SMOKE', lambda: self.command('smoke')), ('GATE', lambda: self.command('gate')),\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_ac9e4691/ops/clean3_chain.py\", line 260, in command\n    raise RuntimeError(action+' failed; inspect log; no automatic retry')\nRuntimeError: smoke failed; inspect log; no automatic retry\n"
+        },
+        "pid": 540487,
+        "reason": "clean3 detached chain failed; no retry",
+        "root": "/home/ubuntu/coopmwm20261106_clean3_r4",
+        "schema": "coopmwm.clean3.chain.v1",
+        "sequence": 12,
+        "source_commit": "ac9e4691a22b19573d80f610daa0f4685e96bdbd",
+        "status": "FAILED",
+        "step": "SMOKE",
+        "timestamp": "2026-11-06T02:40:21.901507+00:00",
+        "unix": 1793932821.9015048
+      }
+    },
+    "/home/ubuntu/cpuv_setup_20261105/clean3_chain_ac9e4691/CHAIN_STARTED.json": {
+      "sha256": "72c76daef01e53fc5eb378b0a0112d41e843d6b3219e7665c9dbce086d931def",
+      "value": {
+        "pid": 540487,
+        "start_ticks": "12092639",
+        "unix": 1793931077.9308493
+      }
+    },
+    "/home/ubuntu/cpuv_setup_20261105/clean3_chain_ac9e4691/CHAIN_STATUS.json": {
+      "sha256": "f3673acb39e0fdff8ba92abeea7859bf96d4452737551cf9be5f995522dc783a",
+      "value": {
+        "detail": {
+          "error": "RuntimeError('smoke failed; inspect log; no automatic retry')",
+          "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_ac9e4691/ops/clean3_chain.py\", line 47, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_ac9e4691/ops/clean3_chain.py\", line 401, in <lambda>\n    ('SMOKE', lambda: self.command('smoke')), ('GATE', lambda: self.command('gate')),\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_ac9e4691/ops/clean3_chain.py\", line 260, in command\n    raise RuntimeError(action+' failed; inspect log; no automatic retry')\nRuntimeError: smoke failed; inspect log; no automatic retry\n"
+        },
+        "pid": 540487,
+        "root": "/home/ubuntu/coopmwm20261106_clean3_r4",
+        "schema": "coopmwm.clean3.chain.v1",
+        "sequence": 12,
+        "source_commit": "ac9e4691a22b19573d80f610daa0f4685e96bdbd",
+        "status": "FAILED",
+        "step": "SMOKE",
+        "timestamp": "2026-11-06T02:40:21.901507+00:00",
+        "unix": 1793932821.9015048
+      }
+    },
+    "/home/ubuntu/cpuv_setup_20261105/clean3_chain_ac9e4691/SMOKE_EXIT.json": {
+      "sha256": "354962d0811adb555c66ceededb46055e011d32142883284cdc805c6bb026456",
+      "value": {
+        "returncode": 1,
+        "unix": 1793932821.897602
+      }
+    },
+    "/home/ubuntu/cpuv_setup_20261105/clean3_chain_ac9e4691/smoke.log": {
+      "sha256": "127b81245f4923472537a236a9c38acd20fc2024420259fc6d8417976790f7dd",
+      "value": [
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        " Retrying in 1 seconds",
+        " Retrying in 1 seconds",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        " Retrying in 1 seconds",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        " Retrying in 1 seconds",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        " Retrying in 1 seconds",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        " Retrying in 1 seconds",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        " Retrying in 1 seconds",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        "pj_obj_create: Cannot find proj.db",
+        " Retrying in 1 seconds",
+        "Traceback (most recent call last):",
+        "  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main",
+        "    return _run_code(code, main_globals, None,",
+        "  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code",
+        "    exec(code, run_globals)",
+        "  File \"/home/ubuntu/coopmwm20261106_clean3_src_ac9e4691/pytools/tools/coopmwm/launch_qualification.py\", line 191, in <module>",
+        "    main()",
+        "  File \"/home/ubuntu/coopmwm20261106_clean3_src_ac9e4691/pytools/tools/coopmwm/launch_qualification.py\", line 186, in main",
+        "    result = smoke(cfg) if args.action == 'smoke' else gate(cfg)",
+        "  File \"/home/ubuntu/coopmwm20261106_clean3_src_ac9e4691/pytools/tools/coopmwm/launch_qualification.py\", line 79, in smoke",
+        "    validate_levers(cfg, updates)  # precheck before the extra reporting branches",
+        "  File \"/home/ubuntu/coopmwm20261106_clean3_src_ac9e4691/pytools/tools/coopmwm/clean3_receipts.py\", line 67, in validate_levers",
+        "    out['mined'] = smoke_check(cfg, updates, root/'smoke')",
+        "  File \"/home/ubuntu/coopmwm20261106_clean3_src_ac9e4691/pytools/tools/coopmwm/clean3_mined.py\", line 220, in smoke_check",
+        "    raise ValueError('(b) mined seed situations missing from the practice pool: '+arm)",
+        "ValueError: (b) mined seed situations missing from the practice pool: B"
+      ]
+    }
+  },
+  "owner": {
+    "pid": 540487,
+    "proc_stat": null,
+    "start_ticks": "12092639",
+    "unix": 1793931077.9308493
+  },
+  "root": "/home/ubuntu/coopmwm20261106_clean3_r4",
+  "status": "READ_ONLY_FAULT_AUDIT",
+  "timestamp": "2026-11-06T02:44:13.198494+00:00"
+}
