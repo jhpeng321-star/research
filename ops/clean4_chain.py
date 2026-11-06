@@ -276,7 +276,7 @@ class Chain:
                     f'CLEAN4 Budget clean4 root={spent}/{cfg["clean4_budget"]["remaining_sim_s"]} sim-s; u24 criterion unchanged.']
                 try:
                     from tools.coopmwm import clean4_diag
-                    lines.append(clean4_diag.status_line(root, u))
+                    lines.append(clean4_diag.status_line(clean4_diag.diagnose_update(root, u, tapes=True)))
                 except Exception as error:   # report-only diagnostics never stop training
                     lines.append(f'CLEAN4 diag u{u} unavailable: {error!r}')
                 with (root/'CLEAN4_STATUS.md').open('a', encoding='utf-8') as f:
