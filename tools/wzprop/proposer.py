@@ -302,20 +302,29 @@ def score_moments(wm, moments_path, out_path, *, K=8, H=300, z=1.645, source_roo
     out_path.parent.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     n = rollouts = 0
+    errors = []
     with out_path.open('x') as fh:
         for m in moments:
             mi = W.moment_input(m, native_state(source_root, m))
-            state = wm.observe(mi)
             moves = [variant_move(vid, v) for vid, v in sorted(m['variants'].items())]
             ledger = dict(calls=0, rollouts=0)
-            recs = evaluate_batch(wm, state, moves, K, H, mi['crn_seed'], mi['cavs'], z, ledger) if moves else []
+            try:
+                state = wm.observe(mi)
+                recs = evaluate_batch(wm, state, moves, K, H, mi['crn_seed'], mi['cavs'], z, ledger) if moves else []
+            except Exception as exc:          # receipted per moment, never silently dropped or retried
+                errors.append(dict(sid=m['sid'], error=repr(exc)[:500]))
+                fh.write(json.dumps(dict(schema='wmc-variant-scores-error-v1', sid=m['sid'],
+                                         error=repr(exc)[:500])) + '\n')
+                fh.flush()
+                continue
             for r in recs:
                 fh.write(json.dumps(dict(schema='wmc-variant-scores-v1', sid=m['sid'], variant=r['move']['vid'],
                                          family=r['move']['family'], members=r['move']['member_ids'],
                                          wm=dict(T=r['T'], S=r['S'], M=r['M'], K=int(K), H=int(H),
                                                  best_solo=r['best_solo'], solo_adv=r['solo_adv'], backend=wm.name)),
                                     sort_keys=True) + '\n')
+            fh.flush()
             n += len(recs)
             rollouts += ledger['rollouts']
-    return dict(scores=str(out_path), n_variants=n, n_moments=len(moments), wm_rollouts=rollouts, backend=wm.meta,
-                wall_s=round(time.time() - t0, 2), new_sumo_sim_s=0)
+    return dict(scores=str(out_path), n_variants=n, n_moments=len(moments), errors=errors, wm_rollouts=rollouts,
+                backend=wm.meta, wall_s=round(time.time() - t0, 2), new_sumo_sim_s=0)

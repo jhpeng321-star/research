@@ -275,7 +275,8 @@ def read_scores(path):
     for line in G.check_path(path).read_text().splitlines():
         if line.strip():
             r = json.loads(line)
-            out[(r['sid'], r['variant'])] = r['wm']
+            if 'wm' in r and 'variant' in r:          # error receipts (wmc-variant-scores-error-v1) are skipped
+                out[(r['sid'], r['variant'])] = r['wm']
     return out
 
 

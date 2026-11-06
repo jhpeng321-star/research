@@ -53,15 +53,25 @@ class WMContractError(ValueError):
 def moment_input(m, state_file=None):
     """Observable moment dict passed to observe(): no world labels, no global aggregates."""
     G.check_seed(m['seed'], where=f"(moment {m.get('sid')})")
-    out = dict(moment_id=moment_id(m['sid']), t0=int(m['t0']), map=G.MAP, cavs=[dict(c) for c in m['all_cavs_t0']],
+    out = dict(moment_id=moment_id(m['sid']), t0=int(m['t0']), map=G.MAP, cavs=[wm_edge(c) for c in m['all_cavs_t0']],
                state_file=None if state_file is None else str(state_file), inserted_t0=m.get('inserted_t0'),
                crn_seed=F.crn_seed(m['sid']))
     obs = m.get('observed')             # tapes.enrich: CAV-detected neighbours + RSU entrance counters
     if obs:
-        out['vehicles'] = [dict(v) for v in obs.get('vehicles') or []]
+        out['vehicles'] = [wm_edge(v) for v in obs.get('vehicles') or []]
         if obs.get('counter') is not None:
             out['counter'] = [list(r) for r in obs['counter']]
     return out
+
+
+def wm_edge(row):
+    """Copy of a SUMO row for observe(): a vehicle on the internal junction ':n1_0' (8 m, x 2696-2704) is
+    labelled 'wz' with the same lane index and global x (junction lane i continues into wz lane i: up_1 -> wz_0,
+    up_2 -> wz_1), because WM-A's road projection knows only 'up' and 'wz'."""
+    r = dict(row)
+    if str(r.get('edge', '')).startswith(':'):
+        r['edge'] = 'wz'
+    return r
 
 
 def moment_id(sid):
