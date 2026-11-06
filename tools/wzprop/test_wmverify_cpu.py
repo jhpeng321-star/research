@@ -285,7 +285,7 @@ def test_end_to_end_plan_worker_analyze(tmp_path, monkeypatch, wz):
     fam = body['families']
     assert fam['wmv_lc_closing']['executor'] == 'lcexec' and fam['solo2_v18']['executor'] == 'plant'
     assert fam['wmv_lc_closing']['lcexec_parity']['id'] == 'S-LCEXEC-SMOKE' and fam['solo2_v18']['lcexec_parity'] is None
-    assert fam['wmv_lc_closing']['n2_parity'] is None and fam['solo2_v18']['n2_parity']['speed_writes_identical']
+    assert fam['wmv_lc_closing']['n2_parity'] is None and fam['solo2_v18']['n2_parity']['identical']
     jobs = [j for g in body['groups'] for j in g['jobs']]
     assert [j['arm'] for j in jobs[:6]] == ['u0', 'u0', 'wall_h_solo2', 'solo2_core', 'wmv_lc_closing', 'solo2_v18']
     with pytest.raises(ValueError, match='prior root'):
@@ -396,18 +396,22 @@ def test_n2_parity_hold_strategies():
     real env writer on fixture states: speed writes identical; lane-mode writes differ only by the plant path's
     G5 own-lane pin (513); the n2 executor (no pin) is TraCI-identical; staggered onsets > 30 s are not N2."""
     from tools.wzprop import wmverify_n2 as N2
-    r = N2.parity(solo2(), seconds=SECONDS)
+    r = N2.parity(solo2(), seconds=SECONDS, n2_pin=False, both=False)        # FULLPOL e36ece92 (no pin)
     assert r['verdict'] == 'speed_identical_lane_mode_differs' and r['speed_writes_identical']
     assert r['write_counts']['speed_plant'] == r['write_counts']['speed_n2'] > 50 and r['write_counts']['lane_n2'] == 0
     assert all(d['side'] == 'plant_only' and d['write'][1] == 'setLaneChangeMode' for d in r['differences'])
     assert r['n2_moves'][0][0]['family'] == 'group_hold' and len(r['n2_moves'][0][0]['members']) == 1
-    n = N2.parity(solo2(), executor='n2', seconds=SECONDS)
+    p = N2.parity(solo2(), seconds=SECONDS)                                   # FULLPOL 5cbd616e hold_lane_pin ON
+    assert p['identical'] is True and p['n2_hold_lane_pin'] and p['pin_off']['verdict'] == r['verdict']
+    g = N2.parity(dict(solo2(), name='solo2_gate10', gate=10.0), seconds=SECONDS, both=False)
+    assert g['identical'] is True and 'ungated twin' in g['evaluated_on']
+    n = N2.parity(solo2(), executor='n2', seconds=SECONDS, n2_pin=False, both=False)   # unpinned twins
     assert n['identical'] is True and n['verdict'] == 'identical'
     wall = next(s for s in SS.seeds() if s['name'] == 'wall_h')
-    w = N2.parity(wall, seconds=SECONDS)
-    assert w['speed_writes_identical'] and w['n2_moves'][0][0]['family'] == 'abreast_wall'
+    w = N2.parity(wall, seconds=SECONDS, both=False)
+    assert w['identical'] and w['n2_moves'][0][0]['family'] == 'abreast_wall'
     stag = next(s for s in SS.seeds() if s['name'] == 'l2hold_stagger')
-    assert N2.parity(stag, seconds=SECONDS)['verdict'] == 'not_representable'
+    assert N2.parity(stag, seconds=SECONDS, both=False)['verdict'] == 'not_representable'
     with pytest.raises(ValueError, match='n2 executor'):
         VH.make_hook(lane_spec(), executor='n2')
     a = F.run_episode(VH.make_hook(solo2(), executor='plant'), seed=989950, seconds=SECONDS, record=True)

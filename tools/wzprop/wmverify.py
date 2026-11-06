@@ -287,7 +287,8 @@ def family_records(specs_by_cell, *, lane_executor=DEFAULT_LANE_EXECUTOR, hold_e
                     spec=s, strategy_key=SS.strategy_key(s), executor=ex, cells={}, template=tpl,
                     template_sha256=tsha, offer_condition=VH.offer_condition(s),
                     lcexec_parity=dict(VH.LCEXEC_PARITY) if ex == 'lcexec' else None,
-                    n2_parity=None if ex == 'lcexec' else N2.parity(s, executor=ex, seconds=N2_FIXTURE_S),
+                    n2_parity=None if ex == 'lcexec' else N2.parity(s, executor=ex, seconds=N2_FIXTURE_S,
+                                                                       n2_pin=ex == 'plant'),
                     verification_note=('members executed by the LCEXEC policy executor (Protocol + own-sensing lane '
                                        'gate; MAPPO pre-safety filter bypassed as in S-LCEXEC-SMOKE)'
                                        if ex == 'lcexec' else
@@ -909,10 +910,10 @@ def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, identity=Tru
         'template_from_program -> Protocol.start / receive / commands (own 100 m sensing, own-sensing lane gate) -> '
         'env.lc_tick, exactly the S-LCEXEC-SMOKE production path; program members bypass the MAPPO pre-safety filter '
         'as in S-LCEXEC-SMOKE (speedMode 27, direct_target bounds, env edge-end guard stay). Verified = executable '
-        'by the policy executor. Hold families carry n2_parity (FULLPOL e36ece92 N2 hold executor vs the plant path '
-        'through the real env writer on fixture states: speed writes identical; the plant path additionally pins '
-        'laneChangeMode 513 via the G5 own-lane target, N2 holds do not; --hold-executor n2 runs holds without the '
-        'pin). CAV rows only; HDVs never commanded. Parameter ranges: strategy_search.validate '
+        'by the policy executor. Hold families carry n2_parity (FULLPOL N2 hold executor e36ece92 + hold_lane_pin '
+        '5cbd616e vs the plant path, through the real env writer on fixture states: identical TraCI writes with '
+        'hold_lane_pin ON; without it only the plant-path laneChangeMode 513 pin differs; --hold-executor n2 runs '
+        'holds without the pin). CAV rows only; HDVs never commanded. Parameter ranges: strategy_search.validate '
         '(NEWMAP2 R grid, WMDATA offsets, zones, gates) + spread {200, 300} m + one slot + cooldown <= 240 s; '
         'anything else is rejected.',
         f'- Code: c4/wmverify; module sha256 {json.dumps(shas, sort_keys=True)}.',

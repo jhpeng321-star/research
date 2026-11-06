@@ -36,6 +36,8 @@ from . import strategy_hook as SH
 N2_FILE = Path(__file__).with_name('fixtures') / 'wmverify' / 'n2_lane_drop_fullpol_e36ece92.pysrc'
 N2_SHA256 = '40515bc01f7f39933dc3e24fd999c45d9057d048bbb2c408a2534fcc324a4404'
 N2_SOURCE = 'c4/fullpol-5a e36ece92 tools/coopmwm/lane_drop.py (+ fullpol_ev.SoloHold arity rule)'
+PIN_SOURCE = ('c4/fullpol-5a 5cbd616e fullpol_ev.hold_pins (hold_lane_pin, MAIN 2026-11-07 registered, default OFF; '
+              'lane_drop.py unchanged since e36ece92)')
 SPEED_WRITES = ('slowDown', 'setSpeed', 'setSpeedMode')
 LANE_WRITES = ('setLaneChangeMode', 'changeLane')
 _MODULE = None
@@ -76,6 +78,13 @@ def solo_hold_cls(ld):
             if self.zip or float(self.gap_dv_mps) != 0. or self.anchor != -1:
                 raise ValueError('a solo hold holds ONE common speed, no zip/gap/anchor')
     return SoloHold
+
+
+def hold_pins(active, own_lanes, zip_members=()):
+    """fullpol_ev.hold_pins (c4/fullpol-5a 5cbd616e, verbatim): {vid: own current WM lane} for the active N2 hold
+    members; zip-request members and vehicles without an own lane observation are excluded."""
+    zips = set(zip_members)
+    return {v: int(own_lanes[v]) for v in sorted(set(active)) if v not in zips and v in own_lanes}
 
 
 def n2_moves(spec, members, wm_lanes, view):
@@ -122,14 +131,33 @@ def _writes(desc, roster, ticks):
     return out
 
 
-def parity(spec, *, executor='plant', seed=989950, share=0.6, seconds=900, max_acts=3):
-    """n2_parity record of one hold-only strategy executed by ``executor`` ('plant' or 'n2'; module docstring)."""
+def parity(spec, *, executor='plant', seed=989950, share=0.6, seconds=900, max_acts=3, n2_pin=True, both=True):
+    """n2_parity record of one hold-only strategy executed by ``executor`` ('plant' or 'n2'; module docstring).
+    ``n2_pin``: the N2 side with FULLPOL hold_lane_pin ON (5cbd616e: every active N2 law member gets its own current
+    lane through the single lanes writer); ``both`` adds the other setting under 'pin_off' / 'pin_on'."""
+    gated = spec.get('gate') is not None
+    if gated:   # the observable gate only decides WHEN the rule activates; execution is that of the ungated twin
+        spec = dict(spec, gate=None)
+    rec = _parity(spec, executor=executor, seed=seed, share=share, seconds=seconds, max_acts=max_acts, n2_pin=n2_pin)
+    if gated:
+        rec['evaluated_on'] = 'ungated twin (the gate is a trigger condition; member execution is identical)'
+    if both:
+        other = _parity(spec, executor=executor, seed=seed, share=share, seconds=seconds, max_acts=max_acts,
+                        n2_pin=not n2_pin)
+        rec['pin_off' if n2_pin else 'pin_on'] = {k: other.get(k) for k in (
+            'verdict', 'identical', 'speed_writes_identical', 'lane_writes_identical', 'write_counts', 'differences',
+            'reason', 'note')}
+    return rec
+
+
+def _parity(spec, *, executor, seed, share, seconds, max_acts, n2_pin):
     from . import wmverify_fake as F
     from . import wmverify_hook as VH
     ld = load_n2()
     desc = VH.wz_descriptor()
     view = ld.MapView.from_descriptor(desc)
-    rec = dict(executor=executor, source=N2_SOURCE, sha256=N2_SHA256, method='open-loop fixture states (fake plant), real env writer '
+    rec = dict(executor=executor, n2_hold_lane_pin=bool(n2_pin), source=N2_SOURCE,
+               pin_source=PIN_SOURCE if n2_pin else None, sha256=N2_SHA256, method='open-loop fixture states (fake plant), real env writer '
                'on a recording fake TraCI (lc_writer_harness.Harness)', fixture=dict(seed=seed, share=share,
                                                                                     seconds=seconds))
     hook = VH.make_hook(spec, executor=executor)
@@ -168,7 +196,8 @@ def parity(spec, *, executor='plant', seed=989950, share=0.6, seconds=900, max_a
                         if a is not None:
                             na[v] = a
             plant_ticks.append((el, states, pa, pl))
-            n2_ticks.append((el, states, na, None))
+            pins = hold_pins(set(na), {v: int(rows[v]['lane']) for v in live}) if n2_pin else None
+            n2_ticks.append((el, states, na, pins or None))
             n_ticks += 1
         wp, wn = _writes(desc, members, plant_ticks), _writes(desc, members, n2_ticks)
         for kinds, flag in ((SPEED_WRITES, 'speed'), (LANE_WRITES, 'lane')):
@@ -189,9 +218,12 @@ def parity(spec, *, executor='plant', seed=989950, share=0.6, seconds=900, max_a
     verdict = ('identical' if identical else 'speed_identical_lane_mode_differs' if speed_ok else
                'speed_differs')
     note = None
-    if speed_ok and not lane_ok:
+    if speed_ok and not lane_ok and not n2_pin:
         note = ('the plant path pins laneChangeMode 513 on hold members through the G5 own-lane target '
-                '(S-REGIMEU0 solo2 path); N2 holds issue no lane request, members keep their native lcMode')
+                '(S-REGIMEU0 solo2 path); N2 holds without hold_lane_pin issue no lane request (native lcMode)')
+    elif speed_ok and not lane_ok:
+        note = ('with hold_lane_pin the remaining lane-write differences are the seconds where the plant path pins a '
+                'member that N2 does not command (e.g. before a role onset > 0)')
     return dict(rec, verdict=verdict, identical=identical, speed_writes_identical=speed_ok,
                 lane_writes_identical=lane_ok, activations=len(acts), ticks=n_ticks, write_counts=dict(counts),
                 n2_moves=moves_out, differences=diffs[:12], note=note)
