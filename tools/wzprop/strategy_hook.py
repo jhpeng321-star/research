@@ -34,6 +34,19 @@ def to_sumo_row(r):
                 x=float(r['s_m']) + S_OFF, v=float(r['v_mps']))
 
 
+def observed_rows(rows, report_range=100.0, lane_reach=1):
+    """CAV rows + non-CAV rows a CAV detects (N1 cav_reports: |ds| <= 100 m, |dWM lane| <= 1), SUMO frame."""
+    cav = [r for r in rows if r.get('is_cav')]
+    out = [to_sumo_row(r) for r in cav]
+    for r in rows:
+        if r.get('is_cav'):
+            continue
+        if any(abs(float(r['s_m']) - float(c['s_m'])) <= report_range and abs(int(r['lane']) - int(c['lane'])) <= lane_reach
+               for c in cav):
+            out.append(to_sumo_row(r))
+    return out
+
+
 class StrategyCore:
     """Plant-independent rule state machine (tested with fake rows); the harness hook wraps it."""
 
@@ -80,7 +93,7 @@ class StrategyCore:
         busy = len({id(m['act']) for m in self.active.values()})
         if t >= self.next_ok and busy < int(self.s.get('slots', 1)):
             free = [to_sumo_row(r) for vid, r in by.items() if vid not in self.active and vid in commands]
-            mem = SS.select_members(self.s, free)
+            mem = SS.select_members(self.s, free, observed_rows(rows))
             if mem:
                 act = dict(t=t, strategy=self.s['name'], members=[c['id'] for c in mem],
                            sumo_lanes=[c['lane'] for c in mem], x=[round(c['x'], 2) for c in mem], release={})

@@ -38,7 +38,12 @@ from . import wm_backend as W
 
 ZONES = {'full': (G.X_B - 1800.0, G.X_B - 400.0), 'near': (G.X_B - 1200.0, G.X_B - 400.0),
          'far': (G.X_B - 1800.0, G.X_B - 1000.0)}
-SOLO2 = dict(name='solo2', trigger='wall', zone='full', spread_m=200.0, cooldown_s=90, slots=1,
+# Observable condition gate (condition-aware within a cell): activate only if the mean speed of OBSERVED vehicles
+# (CAV self + CAV-detected) in the N1 RSU closing-lane field x in [X_B-454.10, X_B] is <= gate (m/s); no observed
+# vehicle there = closed; None = always (S-REGIME amendment 4 'fld_v' proxy, instantaneous at the decision second).
+GATES = (None, 5.0, 10.0, 15.0)
+FIELD_X = (G.X_B - 454.10, G.X_B)
+SOLO2 = dict(name='solo2', trigger='wall', zone='full', spread_m=200.0, cooldown_s=90, slots=1, gate=None,
              roles=[dict(lane=2, rank=0, v_w=15.0, dmax=1.5, hold_s=90, onset_s=0, lc_target=None)])
 DEFAULTS = dict(H=300, K_screen=4, K_final=8, n_init=40, generations=3, n_elite=6, n_children=24, p_mutate=0.35,
                 n_screen_states=12, finalists=12, lam=0.5, max_roles=6, seed=20261107)
@@ -60,6 +65,8 @@ def validate(s):
     g = grids()
     if s['trigger'] not in ('wall', 'lanes') or s['zone'] not in ZONES:
         raise ValueError('trigger/zone')
+    if s.get('gate') not in GATES:
+        raise ValueError('gate not registered')
     if not 1 <= len(s['roles']) <= 6:
         raise ValueError('1-6 roles')
     seen = set()
@@ -98,8 +105,24 @@ def _pick_wall(z):
     return None if best is None else {int(c['lane']): c for c in best[1]}
 
 
-def select_members(s, cavs):
-    """CAV rows (id, edge, lane, x, v) chosen by the strategy's trigger at this snapshot, in role order, else None."""
+def field_speed(rows):
+    sp = [float(r['v']) for r in rows if r['edge'] == 'up' and int(r['lane']) == 0
+          and FIELD_X[0] <= float(r['x']) <= FIELD_X[1]]
+    return sum(sp) / len(sp) if sp else None
+
+
+def gate_open(s, observed):
+    if s.get('gate') is None:
+        return True
+    fv = field_speed(observed)
+    return fv is not None and fv <= float(s['gate'])
+
+
+def select_members(s, cavs, observed=None):
+    """CAV rows (id, edge, lane, x, v) chosen by the strategy's trigger at this snapshot, in role order, else None.
+    observed = every observable row (CAV self + CAV-detected) for the condition gate (default: the CAVs only)."""
+    if not gate_open(s, list(cavs) + list(observed or [])):
+        return None
     lo, hi = ZONES[s['zone']]
     z = [c for c in cavs if c['edge'] == 'up' and lo <= float(c['x']) <= hi]
     if s['trigger'] == 'wall':
@@ -138,8 +161,8 @@ def member_specs(s, members):
     return out
 
 
-def activation(s, cavs):
-    mem = select_members(s, cavs)
+def activation(s, cavs, observed=None):
+    mem = select_members(s, cavs, observed)
     return None if mem is None else member_specs(s, mem)
 
 
@@ -148,7 +171,7 @@ def descriptor(s):
     on = [r['onset_s'] for r in s['roles']]
     return (len(s['roles']), len({r['lane'] if r['lc_target'] is None else r['lc_target'] for r in s['roles']}),
             sum(r['lc_target'] is not None for r in s['roles']), int(v >= 17.0) + int(v >= 20.0),
-            int(max(on) > min(on)), s['zone'], s['trigger'])
+            int(max(on) > min(on)), s['zone'], s['trigger'], s.get('gate') is not None)
 
 
 # ------------------------------------------------------------------------------------------ sampling
@@ -164,7 +187,7 @@ def random_strategy(rng, max_roles=6):
         roles.append(dict(lane=ln, rank=rk, v_w=rng.choice(g['v_w']), dmax=rng.choice(g['dmax']),
                           hold_s=rng.choice(g['hold_s']), onset_s=rng.choice(g['onset_s']), lc_target=tl))
     s = dict(name='', trigger=trigger, zone=rng.choice(list(ZONES)), spread_m=float(rng.choice([200.0, 300.0])),
-             slots=1, roles=roles)
+             slots=1, roles=roles, gate=rng.choice(GATES) if rng.random() < 0.3 else None)
     s['cooldown_s'] = int(max(r['onset_s'] + r['hold_s'] for r in roles))
     s['name'] = 'rand_' + strategy_key(s)
     return validate(s)
@@ -188,6 +211,9 @@ def seeds():
                     roles=[dict(l2), dict(lane=1, rank=1, v_w=15.0, dmax=1.5, hold_s=90, onset_s=20, lc_target=2)]))
     out.append(dict(name='l2hold_stagger', trigger='lanes', zone='full', spread_m=300.0, cooldown_s=120, slots=1,
                     roles=[dict(l2), dict(l2, rank=1, onset_s=40)]))
+    for theta in (10.0, 15.0):
+        out.append(dict(SOLO2, name=f'solo2_gate{theta:g}', gate=theta))
+    out = [dict(s, gate=s.get('gate')) for s in out]
     return [validate(s) for s in out]
 
 
@@ -205,6 +231,8 @@ def mutate(rng, s, p):
     t = dict(s, roles=roles)
     if rng.random() < p / 2:
         t['zone'] = rng.choice(list(ZONES))
+    if rng.random() < p / 2:
+        t['gate'] = rng.choice(GATES)
     if rng.random() < p / 3 and t['trigger'] == 'lanes' and len(roles) < 6:
         free = [(ln, rk) for ln in (0, 1, 2) for rk in (0, 1) if (ln, rk) not in {(x['lane'], x['rank']) for x in roles}]
         if free:
@@ -228,16 +256,17 @@ def evaluate(wm, states, strategies, K, H, z=1.645):
     for m in states:
         mi = W.moment_input(m)
         cavs = m['all_cavs_t0']
+        observed = list((m.get('observed') or {}).get('vehicles') or [])
         state = wm.observe(mi)
         acts = [W.action('base', 'base', None, 'base', [], H)]
-        inc = activation(SOLO2, cavs)
+        inc = activation(SOLO2, cavs, observed)
         if inc:
             acts.append(W.action('inc', 'group', 'solo2', 'solo2', inc, H))
         aid_of, specs_seen = {}, {}
         if inc:                                  # a candidate whose activation IS the incumbent's reuses its row
             specs_seen[json.dumps([[x['id'], x['role'], x['params']] for x in inc], sort_keys=True)] = 'inc'
         for s in strategies:
-            spec = activation(s, cavs)
+            spec = activation(s, cavs, observed)
             if spec is None:
                 continue
             sk = json.dumps([[x['id'], x['role'], x['params']] for x in spec], sort_keys=True)

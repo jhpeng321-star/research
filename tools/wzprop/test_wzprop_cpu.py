@@ -917,3 +917,26 @@ def test_parallel_wm_equals_sequential():
     finally:
         pw.close()
     assert dict(seq) == dict(par) and pw.meta['parallel_workers'] == 2
+
+
+def test_condition_gate_is_observable_and_shared_by_wm_and_sumo():
+    from tools.wzprop import strategy_hook as SH
+    from tools.wzprop import strategy_search as SS
+    m = moment()
+    cavs = m['all_cavs_t0']
+    gated = dict(SS.SOLO2, name='g', gate=10.0)
+    slow = [dict(id='h1', edge='up', lane=0, x=G.X_B - 100.0, v=4.0, is_cav=False)]
+    fast = [dict(id='h1', edge='up', lane=0, x=G.X_B - 100.0, v=25.0, is_cav=False)]
+    base = SS.activation(SS.SOLO2, cavs)
+    assert base and SS.activation(gated, cavs, slow) == base
+    assert SS.activation(gated, cavs, fast) is None
+    assert SS.activation(gated, [c for c in cavs if not (c['edge'] == 'up' and c['lane'] == 0 and
+                                                      c['x'] >= SS.FIELD_X[0])], []) is None   # nothing observed: closed
+    with pytest.raises(ValueError):
+        SS.validate(dict(SS.SOLO2, gate=7.0))
+    rows = [dict(vid='c', s_m=-50.0, v_mps=10.0, lane=1, is_cav=True),
+            dict(vid='h_near', s_m=0.0, v_mps=3.0, lane=2, is_cav=False),
+            dict(vid='h_far', s_m=-400.0, v_mps=3.0, lane=2, is_cav=False),
+            dict(vid='h_lane', s_m=-40.0, v_mps=3.0, lane=0, is_cav=False)]
+    ids = {r['id'] for r in SH.observed_rows(rows)}
+    assert ids == {'c', 'h_near', 'h_lane'}
