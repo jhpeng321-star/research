@@ -56,9 +56,9 @@ def test_wm_frame_projection_matches_n1_descriptor():
 
 
 def test_guard_refuses_heldout_eval_and_non_train_seeds():
-    for s in (989200, 989400, 989599):
+    for s in (989000, 989200, 989400, 989599, 989700, 989899):
         assert G.check_seed(s) == s
-    for s in (989600, 989650, 989699, 964000, 964199, 962123, 977001, 986000, 989199, 989700, 'x'):
+    for s in (989600, 989650, 989699, 964000, 964199, 962123, 977001, 986000, 989100, 989199, 989900, 'x'):
         with pytest.raises(G.ForbiddenSeedError):
             G.check_seed(s)
     for bad in ('/a/holdout/M.json', 'E:/x/HELDOUT.json', '/c/cal_split/m', '/s/sealed/x', '/t/hetdata_truth.json',
@@ -878,3 +878,29 @@ def test_strategy_core_executes_the_rule_on_plant_rows():
         core.step(rows, cmds, t)
     assert all(v[1] in ('hold_end', 'at_drop', 'left') for a in core.acts for v in a['release'].values())
     assert len(core.acts) >= 2
+
+
+def test_wmsearch_u0_plan_and_paired_analysis(tmp_path):
+    from tools.wzprop import strategy_search as SS
+    from tools.wzprop import wmsearch_u0 as WU
+    arms = dict(D3200_p60=dict(incumbent=SS.SOLO2, wm=SS.random_arm(4, seed=1), structured=SS.structured_arm(4),
+                                random=SS.random_arm(4, seed=2)))
+    specs = WU.arm_specs(arms, 'D3200_p60')
+    assert list(specs)[:2] == ['u0', 'solo2'] and len(specs) == 14
+    groups = WU.plan_jobs('D3200_p60', range(989770, 989786), specs,
+                          lambda s, d, p: dict(seed=s, demand=d, penetration=p, cell_key='D3200_p60'))
+    assert sum(j['sim_s'] for g in groups for j in g['jobs']) == 16 * 14 * 1200 <= WU.CAP
+    with pytest.raises(G.ForbiddenSeedError):
+        WU.plan_jobs('D3200_p60', [989650], specs, lambda s, d, p: {})
+    rows = []
+    for s in range(16):
+        J = dict(u0=50000.0 + 100 * s, solo2=40000.0 + 100 * s)
+        for a in specs:
+            if a.startswith('wm_'):
+                J[a] = J['solo2'] - 2000.0 + 50 * (s % 3)
+            elif a.startswith(('str_', 'rnd_')):
+                J[a] = J['solo2'] + 500.0 - 40 * (s % 4)
+        rows.append(dict(seed=989770 + s, J=J))
+    res = WU.analyze_rows(rows, specs)
+    assert res['summary']['wm']['n_beat_solo2_ci'] == 4 and res['summary']['random']['n_beat_solo2_ci'] == 0
+    assert res['arms']['solo2']['vs_u0']['mean'] == pytest.approx(-10000.0)

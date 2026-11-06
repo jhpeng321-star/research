@@ -5,8 +5,8 @@ Map: edge 'up' 0..2696 m with 3 lanes, SUMO lane 0 (rightmost) ends at X_B = 269
 has 2 lanes. N1 projection into the WM-S model frame: SUMO up lane 2 -> WM 0, up 1 -> WM 1,
 up 0 (closing) -> WM 2 (the 'merge' lane); s = x - (X_B - 75.44), i.e. the lane end is s = 75.44.
 
-Seeds: wz3to2 TRAIN worlds 989200-989599 only. HELD-OUT 989600-989699 and the evaluation ranges
-962xxx / 964000-964199 / 977xxx are refused. Paths containing holdout/heldout/cal_split/chunk5/
+Seeds: registered wz3to2 TRAIN-type worlds only (989000-989099, 989200-989599, 989700-989899). HELD-OUT
+989600-989699, WM data 989100-989199 and the evaluation ranges 962xxx / 964000-964199 / 977xxx are refused. Paths containing holdout/heldout/cal_split/chunk5/
 j4b/inc1/sealed or a driver-truth token are refused before they are opened.
 """
 from __future__ import annotations
@@ -29,6 +29,9 @@ EDGE_OFFSET = {'up': 0.0, ':n1_0': 2696.0, 'wz': 2704.0}
 _WM_LANE = {('up', 2): 0, ('up', 1): 1, ('up', 0): 2, ('down', 1): 0, ('down', 0): 1}
 
 TRAIN_SEEDS = (989200, 989599)
+# All registered wz3to2 TRAIN-type ranges: clean4 TRAIN 989200-989599, PLANGEN2/LCMOVES extra TRAIN 989000-989099
+# (MAIN 16:45, N4), S-REGIME sweep 989700-989899 (TRAIN-type, never eval; MAIN 18:21). 989100-989199 (WM data) refused.
+TRAIN_RANGES = ((989000, 989099), (989200, 989599), (989700, 989899))
 HELDOUT_SEEDS = (989600, 989699)
 FORBIDDEN_SEED_RANGES = ((962000, 962999), (964000, 964199), (977000, 977999), HELDOUT_SEEDS)
 FORBIDDEN_PATH_TOKENS = ('holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1', 'sealed',
@@ -50,8 +53,8 @@ def check_seed(seed, where=''):
         raise ForbiddenSeedError(f'unparseable world seed {seed!r} {where}'.strip())
     if any(lo <= s <= hi for lo, hi in FORBIDDEN_SEED_RANGES):
         raise ForbiddenSeedError(f'held-out/evaluation world seed {s} refused {where}'.strip())
-    if not TRAIN_SEEDS[0] <= s <= TRAIN_SEEDS[1]:
-        raise ForbiddenSeedError(f'world seed {s} is not a wz3to2 TRAIN world (989200-989599) {where}'.strip())
+    if not any(lo <= s <= hi for lo, hi in TRAIN_RANGES):
+        raise ForbiddenSeedError(f'world seed {s} is not a registered wz3to2 TRAIN world {where}'.strip())
     return s
 
 
