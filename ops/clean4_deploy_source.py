@@ -62,6 +62,22 @@ def main():
                                                   'inc1', 'hetdata_truth')]
     tar = subprocess.check_output(['git', '-C', a.worktree, '-c', 'core.autocrlf=false', 'archive', '--format=tar',
                                    commit, '--', 'tools', 'tests', 'ops', 'assets/research/newmap_candidates', *excludes])
+    # Second filter: every member must pass the runtime's own guard (forbidden tokens AND truth-file names).
+    import tarfile
+    sys.path.insert(0, str(Path(a.worktree)))
+    from tools.coopmwm.rerun_cpus import guard_path
+    src_tar, out_buf = tarfile.open(fileobj=io.BytesIO(tar)), io.BytesIO()
+    dropped = []
+    with tarfile.open(fileobj=out_buf, mode='w', format=tarfile.PAX_FORMAT) as dst:
+        for member in src_tar.getmembers():
+            try:
+                guard_path('/x/'+member.name)
+            except ValueError:
+                dropped.append(member.name)
+                continue
+            dst.addfile(member, src_tar.extractfile(member) if member.isfile() else None)
+    tar = out_buf.getvalue()
+    print(dict(dropped_by_guard=dropped))
     blob = gzip.compress(tar, mtime=0)
     local = Path(a.worktree)/'_out'/f'{name}.tar.gz'
     local.parent.mkdir(exist_ok=True)
