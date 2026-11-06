@@ -79,6 +79,21 @@ def seed_scope(seed):
     return None
 
 
+def repeat_index(seed):
+    """Per-scope repeat: TRAIN 989200.. -> 0..399; the extra TRAIN ranges continue AFTER the main range
+    (989000-989099 -> 400..499, never colliding with a main TRAIN repeat); HELD-OUT 989600.. -> 0..99."""
+    if TRAIN_RANGE[0] <= seed <= TRAIN_RANGE[1]:
+        return seed-TRAIN_RANGE[0]
+    offset = TRAIN_RANGE[1]-TRAIN_RANGE[0]+1
+    for lo, hi in EXTRA_TRAIN_RANGES:
+        if lo <= seed <= hi:
+            return offset+seed-lo
+        offset += hi-lo+1
+    if HELDOUT_RANGE[0] <= seed <= HELDOUT_RANGE[1]:
+        return seed-HELDOUT_RANGE[0]
+    raise ValueError(f'seed {seed!r} has no registered {MAP} repeat')
+
+
 def world(seed, demand, penetration):
     """The registered world dict for (seed, demand, penetration); raises when unregistered."""
     scope = seed_scope(seed)
@@ -87,9 +102,7 @@ def world(seed, demand, penetration):
     cell = next((c for c in cells() if c['demand'] == demand and c['penetration'] == penetration), None)
     if cell is None or type(demand) is not int:
         raise ValueError(f'({demand!r}, {penetration!r}) is not a registered {MAP} cell')
-    start = (next((lo for lo, hi in EXTRA_TRAIN_RANGES if lo <= seed <= hi), TRAIN_RANGE[0]) if scope == 'train'
-             else HELDOUT_RANGE[0])
-    return dict(seed=seed, cell=cell['cell'], repeat=seed-start, penetration=penetration, demand=demand,
+    return dict(seed=seed, cell=cell['cell'], repeat=repeat_index(seed), penetration=penetration, demand=demand,
                 map=MAP, cell_key=cell['cell_key'])
 
 
@@ -285,6 +298,7 @@ def registry_record():
     return dict(schema=SCHEMA, map=MAP, demands=list(DEMANDS), shares=list(SHARES), cells=cells(),
                 canonical_cell_key=CANONICAL_CELL_KEY,
                 train_range=list(TRAIN_RANGE), heldout_range=list(HELDOUT_RANGE),
+                extra_train_ranges=[list(r) for r in EXTRA_TRAIN_RANGES],
                 forbidden_ranges=[list(r) for r in FORBIDDEN_RANGES], crossed=True,
                 episode_s=EPISODE_S, warmup_s=WARMUP_S, horizon_s=HORIZON_S,
                 control_window_s=list(CONTROL_WINDOW_S), demand_end_s=DEMAND_END,

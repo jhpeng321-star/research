@@ -123,7 +123,11 @@ def validate_smoke(cfg, updates, reporting_receipt=None):
         pool=bank_breadth.practice_pool(native,arm)
         ids={row['context_id'] for row in pool}
         selected={row['breadth']['context_id'] for row in update['practice']['episodes'] if row.get('breadth')}
-        if not pool or not selected or not selected<=ids or not e['trigger_breadth']['contexts']:
+        if arm=='R' and bank_breadth.subset_rule(cfg) and not pool:
+            # clean4 F5 option (a): R has ZERO runtime-usable guidance rows - must be exactly empty.
+            if selected or e['trigger_breadth']['contexts']:
+                raise ValueError('F3 R zero-guidance rule: R must have no practice/trigger contexts')
+        elif not pool or not selected or not selected<=ids or not e['trigger_breadth']['contexts']:
             raise ValueError('F3 actual verified pool/selected-practice/trigger contexts required')
         pools[arm]=dict(available_unique_contexts=len(ids),context_ids=sorted(ids),
             selected_context_ids=sorted(selected),family_counts=dict(Counter(row['family'] for row in pool)))
@@ -131,8 +135,10 @@ def validate_smoke(cfg, updates, reporting_receipt=None):
         if (not reward.get('close_call') or reward.get('move_exposed_cav_ticks',0)<=0 or
                 'close_call_penalty_sum' not in reward or reward['close_call_penalty_sum']>0):
             raise ValueError('F4 measured exposed safety-term rows required')
-    if arms['B']['clean2_fix_receipts']['trigger_breadth']['family_mass']!=arms['R']['clean2_fix_receipts']['trigger_breadth']['family_mass']:
-        raise ValueError('F3 B/R guidance family distribution differs')
+    mass={a:arms[a]['clean2_fix_receipts']['trigger_breadth']['family_mass'] for a in ('B','R')}
+    if mass['B']!=mass['R']:
+        if not (bank_breadth.subset_rule(cfg) and set(mass['R'] or {})<=set(mass['B'] or {})):
+            raise ValueError('F3 B/R guidance family distribution differs')
     if reporting_receipt is None:
         # Precheck before spending the extra reporting branches. This is never
         # a published pass and cannot satisfy launch/release admission.

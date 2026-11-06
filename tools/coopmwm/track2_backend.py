@@ -337,7 +337,7 @@ class EpisodePolicy(torch.nn.Module):
                 from .lane_drop_rsu import RSU
                 self.rsu = RSU(self.lane_drop, self.ld_protocol)
             self.lane_drop_blocks, self.own_speeds, self.native_commands = {}, {}, {}
-        self.layer.actuation_receipts = 'clean2_budget' in cfg or 'clean3_budget' in cfg
+        self.layer.actuation_receipts = 'clean2_budget' in cfg or 'clean3_budget' in cfg or 'clean4_budget' in cfg
         # Retain the legacy slot/optimizer layout for existing sidecars. It is
         # unused by ProductionLayer, gets no gradient and cannot gate actuation.
         self.layer.trigger_gain.requires_grad_(True)
@@ -797,6 +797,8 @@ def reservation_limits(cfg):
     limit = 5000000
     if 'clean3_budget' in cfg:
         from .clean3_restart import CAP as limit
+    if 'clean4_budget' in cfg:
+        from .clean4_restart import OWNER_CAP as limit
     if type(total) is not int or total > limit or total <= 0:
         raise ValueError('registered owner-cap budget required')
     prior = cfg.get('prior_charged_sim_s', 960)
@@ -891,7 +893,7 @@ class ArmRuntime:
         for world in worlds:
             guard(world, 'train')
         extras = dict(update=u, v2v=True, v2v_dim=cfg['v2v_dim'], b_replay=arm != 'A', health_guards=True)
-        if 'clean2_budget' in cfg or 'clean3_budget' in cfg:
+        if 'clean2_budget' in cfg or 'clean3_budget' in cfg or 'clean4_budget' in cfg:
             extras['clean2_safety_guard'] = True
         if arm != 'A':
             extras.update(track2_backend=True, track2_config=cfg, track2_state=self.policy.worker_state())
