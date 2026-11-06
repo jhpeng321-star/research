@@ -41,9 +41,24 @@ GAP_MAX = 250.0
 #: 3197.55 - 2644.22; the accel lane end is 454.1 - 378.66.  The merge zone is
 #: the physical 378.66..454.1 shifted by -off[2]; lane offsets are zeroed.
 MODEL_FRAME_LANE_LENGTHS = (553.33, 553.33, 75.44)
+#: Mainline road end (model frame): the downstream bound every rollout removes vehicles at.
+#: Derived from the frozen lane-length contract so the 553.33 m value has one source.
+MODEL_FRAME_ROAD_END_M = MODEL_FRAME_LANE_LENGTHS[0]
 MODEL_FRAME_LANE_OFFSETS = (0.0, 0.0, 0.0)
 MODEL_FRAME_MERGE_START_M = 0.0
 MODEL_FRAME_MERGE_END_M = 75.44
+
+
+def road_end_exit_bound(physics: object) -> Optional[float]:
+    """Model-frame exit bound of a rollout, or ``None`` when removal is disabled.
+
+    ``physics.exit_at_road_end`` is the documented replay escape (default true): old
+    results can be reproduced bit-identically by supplying ``exit_at_road_end=false``.
+    Models without a physics config keep the bug fix (exit at the road end).
+    """
+    if not bool(getattr(physics, "exit_at_road_end", True)):
+        return None
+    return MODEL_FRAME_ROAD_END_M
 
 
 @dataclass

@@ -16,7 +16,7 @@ import os
 import random
 import sys
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field, replace
 from typing import Optional
 
 import numpy as np
@@ -24,11 +24,16 @@ import torch
 from torch import Tensor, nn
 from torch.utils.checkpoint import checkpoint as activation_checkpoint
 
+from wms.core import speed_flags
+from wms.physics.batched import road_end_exit_bound
+
 from .contract import ACCEL_MAX_MPS2, PHYSICS_DT_S, STEPS_PER_CONTROL, RewardWeights
 from .counterfactual import (KIND_ALL, CounterfactualConfig, baseline_index, build_variants,
                              decompose, expand_rows, group_rich, mean_or_none, native_fn,
                              row_coefficients)
+from .entrance import DEFAULT_ENTRANCE_ZONE_M, make_entrance_zone_fn
 from .futures import FuturesConfig, SampledFutures, lane_uniform_draws
+from .real_returns14 import RealReturnBatch, RealReturnProvider
 from .start_states import StartBatch, checked_path
 
 # /2 (2026-10-12 late): lane head, lane rules, counterfactuals; /3: reports carry the other CAVs'
@@ -57,6 +62,13 @@ class DreamerConfig:
     validation_every: int = 100
     lane_pg_weight: float = 1.0          # REINFORCE term of the categorical lane head
     lane_entropy_weight: float = 3e-4    # DreamerV3 discrete-action entropy bonus (lane head)
+    # CAVLANE (2026-10-19; default True = current behaviour): allow the POLICY to issue CAV lane
+    # actions in imagination.  The lane path is active only when this is True AND lane rules are
+    # supplied AND the policy has a lane head (the existing condition).  Setting it False keeps
+    # CAVs in lane (the bridge's forced ramp merge still runs), which is what
+    # ``[policy] lane_control = "native"`` already does for the v7..v10 policy chain; the switch
+    # lets the training loop disable policy lane actions independently of the actor/config.
+    policy_lane_actions: bool = True
     # Entropy temperature (V6EXPLORE, 2026-10-15; default None = off = bit-identical): with
     # ``entropy_target`` set (nats per action dim) the fixed ``entropy_weight`` bonus is
     # replaced by ``alpha * entropy`` with a learned SAC-style dual ``log_alpha`` (Adam,
@@ -118,8 +130,72 @@ class DreamerConfig:
     # Reward-window credit to the first continuous policy action (one start/member/future).
     # Zero disables all diagnostic autograd work; otherwise sample every N updates.
     credit_profile_every: int = 0
+    # V7POL (owner 2026-10-17; defaults = bit-identical).
+    # Safety budget: "absolute" = mean all-CAV-row TTC cost vs ``ttc_budget`` (as before);
+    # "native_relative" = per start, the policy row's cost vs its counterfactual all-native base
+    # row (+ ``ttc_native_margin``), absolute ``ttc_budget`` for starts without a base row; the
+    # actor penalty is lambda * mean_s relu(excess_s) (no credit for being safer than native) and
+    # the dual ascends on mean_s excess_s over the native-referenced starts (all starts if none).
+    ttc_budget_mode: str = "absolute"
+    ttc_native_margin: float = 0.0
+    # Divide the Lagrangian actor term by the same return scale as the objective.
+    lagrange_scaled: bool = False
+    # Entropy floor: alpha = exp(log_alpha) (and the lane temperature) never below this value;
+    # log_alpha itself is clamped after every dual step, so recovery starts from the floor.
+    alpha_min: float = 0.0
+    # V8POL (2026-10-17; defaults = bit-identical). ``lagrange_max``: cap on the TTC multiplier
+    # (None = uncapped); with a cap the update log gets ``lagrange_capped`` and
+    # ``lagrange_pre_cap`` (this step's value before the cap).
+    # ``lagrange_decay``: lambda <- (1 - decay) * lambda before each dual ascent step (0 = off).
+    lagrange_max: Optional[float] = None
+    lagrange_decay: float = 0.0
+    # V9ENTRY (2026-10-18; default off = bit-identical): the imagined entrance (source) queue
+    # starts from the recorded SUMO backlog at t0 and arrivals follow the demand (request) rate
+    # instead of the observed insertion rate; a lane's same-step entrant gets no end-of-step
+    # credit (EntryConfig.fresh_no_credit).  Needs start windows with ``entry_queue``
+    # (converted sources with queue arrays) and imagine_entries; refuses batches without it.
+    entry_queue_state: bool = False
+    # V9NOYIELD (2026-10-18; default empty = bit-identical): PhysicsConfig field -> value
+    # overrides applied to EVERY PhysicsConfig holder of each frozen WM member right after it is
+    # loaded (same holder-walk as tools/wm_eval_common.py / coop_cl_noyield.py), so the imagined
+    # rollouts run with the override without touching the checkpoint.  The intended use is
+    # ``{mainline_merge_yield = false}``: the WM's mainline yield rule deadlocks the merge zone and
+    # penalises any CAV that deviates from its native CAV (ONROAD_DIAG.md).
+    wm_physics_overrides: dict = field(default_factory=dict)
+    # V10ENTZONE (2026-10-19; default off = bit-identical): a CAV inside an entrance zone (the
+    # first ``entrance_zone_main_m`` metres downstream of the lane-0/1 insertion points and
+    # ``entrance_zone_ramp_m`` for the ramp) drives native inside imagination -- its policy action
+    # is replaced by the native/IDM twin command and the step is excluded from the actor loss.
+    # Same zones as the SUMO autocheck (entrance_mask/entrance_mask_loader.py); the policy must
+    # learn under the restriction it is evaluated with so it cannot win by metering entrances.
+    entrance_zone_native: bool = False
+    entrance_zone_main_m: float = DEFAULT_ENTRANCE_ZONE_M
+    entrance_zone_ramp_m: float = DEFAULT_ENTRANCE_ZONE_M
+    # POLICY14: critic-only fitting of authoritative negative-total-vehicle-second
+    # returns. Convex mix of independently mean-reduced real/imagined MSE. The
+    # real residual uses the return scale with the floor below. Zero never calls the provider.
+    # Enable only with imagined rewards in these same raw units (no per-car mean).
+    real_return_mix: float = 0.0
+    # Independent real-target residual scale floor; raw critic values stay in veh-s.
+    real_return_scale: float = 1.0
+    # Extra autograd passes for weighted actor-loss components, plus pre-safety
+    # acceleration saturation/entropy in m/s^2. False adds no diagnostic graph work.
+    actor_gradient_audit: bool = False
+    # POLICY14 evidence guards; legacy trainers retain their original behaviour.
+    low_penetration_horizon_cap: bool = False
+    wm_safety_report_only: bool = False
 
     def __post_init__(self):
+        if (isinstance(self.real_return_mix, bool)
+                or not isinstance(self.real_return_mix, (int, float))
+                or not math.isfinite(self.real_return_mix) or not 0 <= self.real_return_mix <= 1):
+            raise ValueError("real_return_mix must be a finite number in [0, 1]")
+        if (isinstance(self.real_return_scale, bool)
+                or not isinstance(self.real_return_scale, (int, float))
+                or not math.isfinite(self.real_return_scale) or self.real_return_scale <= 0):
+            raise ValueError("real_return_scale must be a finite positive number")
+        if not isinstance(self.actor_gradient_audit, bool):
+            raise ValueError("actor_gradient_audit must be a boolean")
         for name in ("batch_size", "horizon"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
@@ -135,8 +211,9 @@ class DreamerConfig:
             raise ValueError("credit_profile_every must be a nonnegative integer")
         for name, value in asdict(self).items():
             if name in ("cav_exec_cap", "entry_insert_rule", "imagination_grad_decay",
-                        "entropy_target", "lane_entropy_target") or value is None:
-                continue   # the string fields; the optional decay / entropy targets
+                        "entropy_target", "lane_entropy_target", "ttc_budget_mode",
+                        "lagrange_max", "wm_physics_overrides") or value is None:
+                continue   # the string fields; the optional decay / entropy targets; the overrides
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
         for name in ("entropy_target", "lane_entropy_target"):
@@ -152,10 +229,28 @@ class DreamerConfig:
         for name in ("checkpoint_every", "validation_every"):
             if not isinstance(getattr(self, name), int):
                 raise ValueError(f"{name} must be an integer")
+        if self.lagrange_max is not None and (
+                isinstance(self.lagrange_max, bool) or not isinstance(self.lagrange_max, (int, float))
+                or not math.isfinite(self.lagrange_max) or self.lagrange_max < 0):
+            raise ValueError("lagrange_max must be None or a finite nonnegative number")
+        if self.lagrange_decay >= 1:
+            raise ValueError("lagrange_decay must be in [0, 1)")
+        if self.ttc_budget_mode not in ("absolute", "native_relative"):
+            raise ValueError("ttc_budget_mode must be 'absolute' or 'native_relative'")
         for name in ("checkpoint_imagination", "imagine_entries", "future_accel_noise",
-                     "source_wait_grad", "critic_entry_backlog"):
+                     "source_wait_grad", "critic_entry_backlog", "lagrange_scaled",
+                     "entry_queue_state", "entrance_zone_native", "policy_lane_actions",
+                     "low_penetration_horizon_cap", "wm_safety_report_only"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
+        if self.entrance_zone_native and not (
+                math.isfinite(self.entrance_zone_main_m) and self.entrance_zone_main_m > 0.0
+                and math.isfinite(self.entrance_zone_ramp_m) and self.entrance_zone_ramp_m > 0.0):
+            raise ValueError("entrance_zone_native needs positive entrance_zone_main_m / "
+                             "entrance_zone_ramp_m")
+        if not isinstance(self.wm_physics_overrides, dict):
+            raise ValueError("wm_physics_overrides must be a mapping of PhysicsConfig field "
+                             "names to values")
         if self.entry_insert_rule not in ("v2", "sumo_like", "sumo_like_v2"):
             raise ValueError("entry_insert_rule must be 'v2', 'sumo_like' or 'sumo_like_v2'")
         if isinstance(self.entry_pad_max, bool) or not isinstance(self.entry_pad_max, int) \
@@ -252,6 +347,62 @@ class _Recompute:
         return self.fn(*args, **kwargs)
 
 
+def _physics_holders(model):
+    """Every ``(owner, attr)`` in the model graph that holds a PhysicsConfig instance.
+
+    Same walk as ``tools/wm_eval_common.py`` / ``coop_cl_noyield.py``: an override must replace
+    every reference (``model.physics`` and any submodule attribute), not just the top-level one.
+    """
+    from wms.physics.config import PhysicsConfig
+    found, seen = [], set()
+
+    def visit(obj):
+        if id(obj) in seen:
+            return
+        seen.add(id(obj))
+        for name, value in list(vars(obj).items()):
+            if isinstance(value, PhysicsConfig):
+                found.append((obj, name))
+        for sub in getattr(obj, "_modules", {}).values():
+            if sub is not None:
+                visit(sub)
+
+    visit(model)
+    return found
+
+
+def apply_wm_physics_overrides(model, overrides):
+    """Swap every PhysicsConfig holder of ``model`` for a copy with ``overrides`` applied.
+
+    V9NOYIELD: ``{"mainline_merge_yield": False}`` turns the WM's mainline yield rule off inside
+    imagination.  An empty mapping is a no-op (default path stays bit-identical) and the frozen
+    member's loaded physics fields are remembered in a plain dict so repeated applications always
+    start from the checkpoint's configuration.
+    Returns the applied overrides and how many holders were replaced.
+    """
+    from wms.physics.config import PhysicsConfig
+    changes = dict(overrides or {})
+    holders = _physics_holders(model)
+    if not changes:
+        return {"overrides": {}, "holders": len(holders)}
+    unknown = sorted(set(changes) - set(PhysicsConfig.__dataclass_fields__))
+    if unknown:
+        raise ValueError(f"unknown WM physics override fields {unknown}")
+    if not holders:
+        raise ValueError("no PhysicsConfig reference found on the model")
+    # Remember the loaded fields as a plain dict (NOT a PhysicsConfig instance) so the walk above
+    # never picks it up and repeated applications always start from the checkpoint's physics.
+    base_fields = getattr(model, "_wm_physics_base_fields", None)
+    if base_fields is None:
+        base_fields = {name: getattr(model.physics, name)
+                       for name in PhysicsConfig.__dataclass_fields__}
+        model._wm_physics_base_fields = base_fields
+    new = replace(PhysicsConfig(**base_fields), **changes)
+    for owner, name in holders:
+        setattr(owner, name, new)
+    return {"overrides": {key: getattr(new, key) for key in changes}, "holders": len(holders)}
+
+
 def _model_identity(model, imagination_grad_decay=None):
     digest = hashlib.sha256(type(model).__qualname__.encode())
     for key, value in model.state_dict().items():
@@ -287,6 +438,16 @@ def _credit_profile(rewards, action, mask):
             "active_actions": int(mask[0].sum())}
 
 
+def _entropy_temperature(parameter, fixed, config):
+    """V6EXPLORE/V7POL entropy weight: ``exp(log_alpha)`` floored at ``config.alpha_min`` (when > 0),
+    or the fixed weight when no temperature is learned."""
+    if parameter is None:
+        return fixed
+    alpha = parameter.detach().exp()
+    floor = float(getattr(config, "alpha_min", 0.0))
+    return alpha.clamp_min(floor) if floor > 0.0 else alpha
+
+
 _ENTRY_PAD_SAFETY = 1.5
 _ENTRY_PAD_MARGIN = 16
 _PAD_FILL = {"lane": -1, "length_m": 5.0}
@@ -300,28 +461,52 @@ def _pad_slots(value, k, pad, fill=0):
     return torch.cat((value, torch.full(shape, fill, dtype=value.dtype, device=value.device)), 1)
 
 
-def with_entry_slots(batch: StartBatch, horizon_s: float, pad_max: int, generator=None):
+#: V9ENTRY: extra entrant slots for a t0 backlog, at most this many veh/s beyond the demand.
+_ENTRY_PAD_BACKLOG_RATE = 0.5
+
+
+def with_entry_slots(batch: StartBatch, horizon_s: float, pad_max: int, generator=None,
+                     queue_state: bool = False):
     """Start batch with empty entrant slots appended and its entry spec (``batch.entry_spec``).
 
     The pad holds 1.5x the expected arrivals (observed entry-history rate x horizon) + 16, the
     batch maximum, capped at ``pad_max``; one process seed per start (rows of a start share it).
-    Returns ``batch`` unchanged when it has no ``entry_feat``."""
+    Returns ``batch`` unchanged when it has no ``entry_feat``.
+
+    ``queue_state`` (V9ENTRY): the spec also carries one ``EntranceQueue`` per start (t0 backlog,
+    demand rate) from ``batch.entry_queue`` (required), and the pad is sized from the demand
+    plus the backlog (at most ``_ENTRY_PAD_BACKLOG_RATE`` veh/s of extra service)."""
     if batch.entry_feat is None:
         return batch
-    from wms.model.entries import EntranceHistory
+    from wms.model.entries import EntranceHistory, EntranceQueue
 
     feats = batch.entry_feat.detach().cpu().numpy()
     histories = [EntranceHistory.from_features(row) for row in feats]
     k = batch.state["s_m"].shape[1]
-    pad = max(int(math.ceil(float(np.sum(h.rate)) * horizon_s * _ENTRY_PAD_SAFETY))
-              + _ENTRY_PAD_MARGIN for h in histories)
+    queues = None
+    if queue_state:
+        if batch.entry_queue is None:
+            raise ValueError("entry_queue_state needs start windows with entry_queue "
+                             "(a converted source with V9ENTRY queue arrays)")
+        queues = [EntranceQueue.from_vector(row) for row in
+                  batch.entry_queue.detach().cpu().numpy()]
+        pad = max(int(math.ceil((float(np.sum(q.demand_rate)) * horizon_s
+                                 + min(float(np.sum(q.backlog)),
+                                       _ENTRY_PAD_BACKLOG_RATE * horizon_s))
+                                * _ENTRY_PAD_SAFETY)) + _ENTRY_PAD_MARGIN for q in queues)
+    else:
+        pad = max(int(math.ceil(float(np.sum(h.rate)) * horizon_s * _ENTRY_PAD_SAFETY))
+                  + _ENTRY_PAD_MARGIN for h in histories)
     pad = max(1, min(int(pad_max), pad))
     seeds = torch.randint(0, 2 ** 31 - 1, (len(histories),), generator=generator).tolist()
     state = {key: _pad_slots(value, k, pad, _PAD_FILL.get(key, 0))
              for key, value in batch.state.items()}
     kwargs = {key: _pad_slots(value, k, pad) for key, value in batch.rollout_kwargs.items()}
-    return StartBatch(state, kwargs, batch.metadata, batch.entry_feat,
-                      {"histories": histories, "seeds": seeds, "k0": k, "pad": pad})
+    spec = {"histories": histories, "seeds": seeds, "k0": k, "pad": pad}
+    if queues is not None:
+        spec["queues"] = queues
+    return StartBatch(state, kwargs, batch.metadata, batch.entry_feat, spec,
+                      entry_queue=batch.entry_queue)
 
 
 class _EntryRecorder:
@@ -353,17 +538,26 @@ def _queue_surrogate_fn(state, new_mask, pending_before, hist, entry_s, entry_cf
     return queue_surrogate(state, present, pending_before, hist, entry_s, entry_cfg, PHYSICS_DT_S)[0]
 
 
-def _entry_process(spec, rows, n_slots, insert_rule: str = "v2"):
+def _entry_process(spec, rows, n_slots, insert_rule: str = "v2", learned_entry=None):
     from wms.model.entries import EntryConfig, TorchEntryProcessV2
 
     pool = np.zeros((len(rows), n_slots), dtype=bool)
     pool[:, spec["k0"]:] = True
+    queues = spec.get("queues")         # V9ENTRY (absent = unchanged)
+    # V9ENTRY: coupled draws = common random numbers across the counterfactual rows of a start
+    # (arrival times and candidate identities keyed by (row seed, entrance, index), as in WM paired
+    # training).  A shared row seed alone loses CRN as soon as one row defers an insertion; with a
+    # standing backlog every arrival-count difference becomes a queue (source-wait) difference.
+    extra = {} if queues is None else {"queues": [queues[r] for r in rows], "couple_draws": True}
+    cfg = (EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule,
+                       learned_entry=learned_entry) if queues is None else
+           EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule, fresh_no_credit=True,
+                       learned_entry=learned_entry))
     # Uncapped backlog: every due arrival that cannot enter keeps waiting (as in SUMO).
     return TorchEntryProcessV2(histories=[spec["histories"][r] for r in rows],
                                dt_s=PHYSICS_DT_S, seed=0, batch=len(rows),
-                               cfg=EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule),
-                               pool=pool,
-                               row_seeds=[spec["seeds"][r] for r in rows])
+                               cfg=cfg, pool=pool,
+                               row_seeds=[spec["seeds"][r] for r in rows], **extra)
 
 
 def _same_groups(sampler, state):
@@ -385,23 +579,58 @@ class DreamerTrainer:
     def __init__(self, world_models, policy, group_encoder, critic, start_states, *,
                  observation_builder, reward_fn, safety, controller_factory=None, config=None,
                  reward_weights=None, device="cpu", output_dir=None, lane_rules=None,
-                 counterfactual=None):
+                 counterfactual=None, real_return_provider: RealReturnProvider | None = None,
+                 uncertainty=None, exploration=None, horizon=None):
         self.config = config or DreamerConfig()
+        # S-COOPW [exploration] (wms.control.coopw.ExplorationConfig; None/disabled = unchanged).
+        self.exploration = exploration if exploration is not None and exploration.enabled else None
+        # S-COOPW [horizon] (wms.control.coopw.HorizonConfig; gate resolved by HorizonConfig.bind).
+        self.horizon_curriculum = horizon if horizon is not None and horizon.enabled else None
+        # S-COOPW [uncertainty] (wms.control.coopw.UncertaintyConfig; None/disabled = unchanged).
+        self.uncertainty = uncertainty if uncertainty is not None and uncertainty.enabled else None
+        self._training_imagination = False
+        self.coop_anchor = None
+        self._last_start_info = None
+        self.real_return_provider = real_return_provider
+        self._check_real_return_provider(self.config)
         # Lane head (owner 2026-10-12 late): active when lane rules are supplied AND the
         # policy has a categorical lane head; trained by REINFORCE (accelerations stay analytic).
         self.lane_rules = lane_rules
-        self.use_lanes = lane_rules is not None and bool(getattr(policy, "has_lane_head", False))
+        # CAVLANE switch: False disables the policy lane path (CAVs stay in lane; forced ramp merge
+        # still applies) without changing the actor or the rest of the trainer.
+        self.use_lanes = (bool(self.config.policy_lane_actions) and lane_rules is not None
+                          and bool(getattr(policy, "has_lane_head", False)))
+        # V7POL ``[policy] lane_control = "native"``: an actor WITHOUT a lane head (attribute set by
+        # train_cli); imagination keeps CAVs in lane (bridge forced ramp merge only) and the
+        # checkpoint records it so the SUMO executor leaves CAV lane changes to SUMO.
+        self.lane_control = getattr(policy, "lane_control", "learned")
+        if self.lane_control not in ("learned", "native"):
+            raise ValueError("lane_control must be 'learned' or 'native'")
+        if self.lane_control == "native" and (self.use_lanes
+                                              or getattr(policy, "has_lane_head", False)):
+            raise ValueError("lane_control='native' requires a policy without a lane head "
+                             "and no lane rules")
         self.counterfactual = counterfactual or CounterfactualConfig()
         self.device = torch.device(device)
         if not world_models:
             raise ValueError("at least one world model is required")
         self.world_models = [model.to(self.device).eval() for model in world_models]
+        self.wm_physics_overrides = []
         for model in self.world_models:
             model.requires_grad_(False)
             model.zero_grad(set_to_none=True)
             dt = getattr(getattr(model, "physics", None), "dt_s", PHYSICS_DT_S)
             if not math.isclose(dt, PHYSICS_DT_S):
                 raise ValueError("WM physics dt does not match the shared control contract")
+            # V9NOYIELD: apply the configured physics switch to EVERY PhysicsConfig holder of
+            # this member before its identity is fixed (empty overrides = bit-identical).
+            applied = apply_wm_physics_overrides(model, self.config.wm_physics_overrides)
+            self.wm_physics_overrides.append(applied)
+            if applied["overrides"]:
+                print(f"[wm-physics] member {len(self.wm_physics_overrides) - 1}: "
+                      f"{applied['overrides']} applied to {applied['holders']} PhysicsConfig "
+                      f"holder(s); effective mainline_merge_yield="
+                      f"{model.physics.mainline_merge_yield}", flush=True)
         self.world_model_ids = [_model_identity(model, self.config.imagination_grad_decay)
                                 for model in self.world_models]
         self.policy = policy.to(self.device)
@@ -431,6 +660,28 @@ class DreamerTrainer:
         self.validation_states = None
         self._pending_validation_state = None
         self.output_dir = checked_path(output_dir) if output_dir is not None else None
+        self._tilt_sampler = None
+        if self.counterfactual.enabled and self.counterfactual.start_tilt is not None:
+            from .coopw import TiltSampler
+            self._tilt_sampler = TiltSampler(self.counterfactual.start_tilt)
+
+    def _check_real_return_provider(self, config):
+        if self.real_return_provider is not None and not callable(self.real_return_provider):
+            raise ValueError("real_return_provider must be callable or None")
+        if config.real_return_mix > 0 and self.real_return_provider is None:
+            raise ValueError("real_return_mix > 0 requires a real_return_provider")
+
+    def _real_return_batch(self):
+        """Provider boundary: no actor/WM graph can enter critic regression."""
+        if self.config.real_return_mix == 0:
+            return None
+        self._check_real_return_provider(self.config)
+        with torch.no_grad():
+            batch = self.real_return_provider(batch_size=self.config.batch_size,
+                                              device=self.device, update=self.update_count + 1)
+            if not isinstance(batch, RealReturnBatch):
+                raise ValueError("real_return_provider must return a RealReturnBatch")
+            return batch.detached(device=self.device, gamma=self.config.gamma)
 
     def _init_entropy_temperature(self):
         """(Re)create the learned entropy-temperature parameters for the configured targets.
@@ -453,6 +704,17 @@ class DreamerTrainer:
                 self.lane_alpha_optimizer = torch.optim.Adam([self.log_lane_alpha],
                                                              lr=self.config.alpha_lr)
 
+    def _clamp_log_alpha(self, parameter):
+        """V7POL entropy floor: keep exp(log_alpha) >= ``alpha_min`` (no-op when 0)."""
+        floor = float(getattr(self.config, "alpha_min", 0.0))
+        if parameter is not None and floor > 0.0:
+            with torch.no_grad():
+                parameter.clamp_(min=math.log(floor))
+
+    def _temperature(self, parameter, fixed):
+        """Entropy weight in use: exp(log_alpha) floored at ``alpha_min``, else the fixed weight."""
+        return _entropy_temperature(parameter, fixed, self.config)
+
     def _alpha_update(self, imagined, entropy):
         """V6EXPLORE dual steps on the entropy temperatures; extra metrics for ``update``.
 
@@ -464,6 +726,7 @@ class DreamerTrainer:
             self.alpha_optimizer.zero_grad(set_to_none=True)
             alpha_loss.backward()
             self.alpha_optimizer.step()
+            self._clamp_log_alpha(self.log_alpha)
             out.update({"alpha": float(self.log_alpha.detach().exp()),
                         "entropy_target": float(self.config.entropy_target)})
         lanes = imagined.get("lanes")
@@ -474,9 +737,55 @@ class DreamerTrainer:
             self.lane_alpha_optimizer.zero_grad(set_to_none=True)
             lane_alpha_loss.backward()
             self.lane_alpha_optimizer.step()
+            self._clamp_log_alpha(self.log_lane_alpha)
             out.update({"lane_alpha": float(self.log_lane_alpha.detach().exp()),
                         "lane_entropy_target": float(self.config.lane_entropy_target)})
         return out
+
+    def _imagination_config(self, batch):
+        """Cap low-support starts using observed present-CAV share, never metadata.
+
+        A mixed batch conservatively shares its shortest allowed horizon so every
+        ensemble/counterfactual row stays paired. Empty roads count as zero share;
+        imagined entries cannot retroactively extend the start-state horizon.
+        """
+        cfg = self.config
+        if self._training_imagination and self.horizon_curriculum is not None:
+            # S-COOPW gated horizon curriculum: medium/high observed CAV share only (the low-share
+            # test below keeps the base horizon for <= 10 % shares).
+            present = batch.state["present"].bool()
+            cav_count = (present & batch.state["is_cav"].bool()).sum(-1)
+            if not bool((cav_count * 10 <= present.sum(-1)).any()):
+                h = self.horizon_curriculum
+                seconds = h.horizons_s[h.stage(self._curriculum_position(advance=False))]
+                steps = int(round(seconds / (STEPS_PER_CONTROL * PHYSICS_DT_S)))
+                if steps > cfg.horizon:
+                    cfg = replace(cfg, horizon=steps)
+        if cfg.low_penetration_horizon_cap:
+            present = batch.state["present"].bool()
+            cav_count = (present & batch.state["is_cav"].bool()).sum(-1)
+            low = cav_count * 10 <= present.sum(-1)
+            if bool(low.any()):
+                max_steps = math.floor(60.0 / (STEPS_PER_CONTROL * PHYSICS_DT_S))
+                cfg = replace(cfg, horizon=min(cfg.horizon, max_steps))
+        if self._training_imagination and self.uncertainty is not None:
+            # S-COOPW: sampled driver futures + the pessimism curriculum, training imagination only.
+            u = self.uncertainty
+            cfg = replace(cfg, future_samples=u.future_samples,
+                          future_driver_scale=u.driver_noise_scale,
+                          uncertainty_weight=u.weight(self._curriculum_position(advance=False)))
+        return cfg
+
+    def _curriculum_position(self, advance=True):
+        """Counterfactual (and uncertainty) curriculum position: ``update_count`` (legacy) or, with
+        ``curriculum_anchor = "first_update"``, the updates since this config first trained."""
+        if self.counterfactual.curriculum_anchor != "first_update":
+            return self.update_count
+        if self.coop_anchor is None:
+            if not advance:
+                return 0
+            self.coop_anchor = self.update_count
+        return self.update_count - self.coop_anchor
 
     def imagine(self, batch: StartBatch, deterministic=False, variants=None, future_seed=None,
                 credit_profile=False):
@@ -496,7 +805,7 @@ class DreamerTrainer:
         members and all counterfactual rows of that start.  ``future_seed`` fixes the draws
         (default: from the config seed and the update count).  Off: nothing changes.
         """
-        cfg = self.config
+        cfg = self._imagination_config(batch)
         forbidden = {"cav_teacher", "lane_teacher", "action_timeline", "present_seq", "is_cav_seq",
                      "junction_seq", "truncation_steps", "cav_controller"}
         if forbidden.intersection(batch.rollout_kwargs):
@@ -520,12 +829,28 @@ class DreamerTrainer:
                 act_mask[variants.row_kind.to(self.device) == KIND_ALL, entry_spec["k0"]:] = True
         if self.use_lanes and self.controller_factory is None:
             raise ValueError("lane decisions require the bridge controller factory")
-        need_bridge = self.controller_factory is not None and (self.use_lanes or act_mask is not None)
+        # V10ENTZONE: dynamic per-tick predicate; None keeps the default path bit-identical.
+        zone_fn = (make_entrance_zone_fn(cfg.entrance_zone_main_m, cfg.entrance_zone_ramp_m)
+                   if cfg.entrance_zone_native else None)
+        need_bridge = self.controller_factory is not None and (
+            self.use_lanes or act_mask is not None or zone_fn is not None)
         crn = act_mask is not None and bool(getattr(self.policy, "supports_noise", False))
+        # S-COOPW correlated exploration: training imagination only, stochastic, CRN path.
+        explore = None
+        if (crn and not deterministic and self._training_imagination and self.exploration is not None):
+            from .coopw import exploration_plan
+            rho = self.exploration.rho_at(self._curriculum_position(advance=False))
+            if rho > 0.0:
+                radius = self.exploration.radius_m or self.counterfactual.group_radius_m
+                gid, shared = exploration_plan(
+                    batch.state, radius, cfg.horizon, self.exploration.persistence_steps,
+                    torch.Generator().manual_seed(3_000_017 * (self.update_count + 1)))
+                explore = (gid, shared, rho)
         recompute = cfg.checkpoint_imagination and torch.is_grad_enabled()
         from wms.model.cav import apply_exec_cap
         native = _Recompute(native_fn(self.counterfactual.native_cav,
-                                      a_max=self.counterfactual.native_accel_max_mps2), recompute)
+                                      a_max=self.counterfactual.native_accel_max_mps2,
+                                      head_path=self.counterfactual.native_cav_head_path), recompute)
         # Action bounds (ACCELCAP_NOTES.md): the policy's stored cap bounds its commands; native
         # counterfactual CAVs use the native (SUMO CAV) accel; safety layers without an
         # ``accel_max`` keyword are called unchanged.
@@ -561,6 +886,8 @@ class DreamerTrainer:
             lane_uniform = expand_rows(lane_uniform, index, n_base)
         member_states, member_rewards, member_costs, member_values = [], [], [], []
         member_entropy, member_actions, member_components, member_lanes = [], [], [], []
+        member_zone = []
+        member_action_audit = []
         profile = None
         rng = _rng_state(self.device)
         advanced_rng = None
@@ -574,6 +901,7 @@ class DreamerTrainer:
             step = 0
             held_out = None
             last_decision_step = -1
+            zone_now = None
 
             def policy_proxy(obs, signal, **kwargs):
                 nonlocal held_out, last_decision_step
@@ -581,10 +909,18 @@ class DreamerTrainer:
                     if crn:
                         from .policy import PolicyNoise, draw_policy_noise
                         noise = draw_policy_noise((n_base, obs.cav_mask.shape[-1]), device=self.device)
+                        if explore is not None:
+                            from .coopw import correlate
+                            gid, shared, rho = explore
+                            noise = PolicyNoise(correlate(noise.accel, gid, shared[min(
+                                step // STEPS_PER_CONTROL, shared.shape[0] - 1)], rho),
+                                noise.lane_gumbel)
                         kwargs["noise"] = PolicyNoise(noise.accel.index_select(0, index),
                                                       noise.lane_gumbel.index_select(0, index))
                     held_out = policy_call(obs, signal, deterministic=deterministic, **kwargs)
                     acting = obs.cav_mask if act_mask is None else obs.cav_mask & act_mask
+                    if zone_now is not None:      # V10ENTZONE: zone CAVs excluded from the actor loss
+                        acting = acting & ~zone_now
                     log_prob = getattr(held_out, "log_prob_accel", None)
                     log_prob = held_out[1] if log_prob is None else log_prob
                     record = records[-1]
@@ -592,6 +928,10 @@ class DreamerTrainer:
                         record["credit_action"] = held_out[0]
                         record["credit_mask"] = acting
                     record["entropy"] = -(log_prob * acting).sum(-1) / acting.sum(-1).clamp_min(1)
+                    if cfg.actor_gradient_audit:
+                        record["audit_action"] = held_out[0].detach()
+                        record["audit_log_prob"] = log_prob.detach()
+                        record["audit_acting"] = acting.detach()
                     if hasattr(held_out, "log_prob_lane"):
                         record["lane_log_prob"] = held_out.log_prob_lane
                         record["lane_entropy"] = held_out.entropy_lane
@@ -611,10 +951,14 @@ class DreamerTrainer:
                 extra = {}
                 if self.use_lanes:
                     extra["lane_rules"] = self.lane_rules
-                if act_mask is not None:
-                    extra.update(act_mask=act_mask, native=native)
+                if act_mask is not None or zone_fn is not None:
+                    extra["native"] = native
                     if _accepts(self.controller_factory, "native_accel_max"):
                         extra["native_accel_max"] = native_max
+                if act_mask is not None:
+                    extra["act_mask"] = act_mask
+                if zone_fn is not None:
+                    extra["zone"] = zone_fn
                 external_callback = self.controller_factory(
                     policy_proxy, group_call, safety_call,
                     lane_record if self.use_lanes else None, **extra)
@@ -623,10 +967,13 @@ class DreamerTrainer:
                                                             safety_call, None)
 
             def controller(state):
-                nonlocal step
+                nonlocal step, zone_now
                 mask = state["present"].bool() & state["is_cav"].bool()
                 if step % STEPS_PER_CONTROL == 0:
                     records.append({"mask": mask})
+                    if zone_fn is not None:
+                        zone_now = zone_fn(state)
+                        records[-1]["entrance_zone"] = zone_now
                 if external_callback is not None:
                     command = external_callback(state)
                     if step % STEPS_PER_CONTROL == 0:
@@ -641,15 +988,20 @@ class DreamerTrainer:
                     policy_proxy(obs, signal)
                 command = held_out[0]
                 ceiling = policy_max
-                if act_mask is not None:       # counterfactual rows: non-acting CAVs native
-                    command = torch.where(act_mask, command, native(state))
-                    ceiling = torch.where(act_mask, torch.full_like(command, policy_max),
+                acting = None if act_mask is None else act_mask
+                if zone_fn is not None:      # V10ENTZONE: zone CAVs released to the native twin
+                    acting = (torch.ones_like(command, dtype=torch.bool)
+                              if acting is None else acting)
+                    acting = acting & ~zone_now
+                if acting is not None:       # counterfactual rows / entrance zones: native CAVs
+                    command = torch.where(acting, command, native(state))
+                    ceiling = torch.where(acting, torch.full_like(command, policy_max),
                                           torch.full_like(command, native_max))
                 accel = safety_call(state, command, accel_max=ceiling)
                 cav = state["present"].bool() & state["is_cav"].bool()
                 accel = torch.where(cav, accel, torch.zeros_like(accel))
                 # EXECCAP_NOTES.md: policy CAVs only (identity unless the WM's cav_exec_cap is on).
-                accel = apply_exec_cap(state, accel, cav if act_mask is None else cav & act_mask)
+                accel = apply_exec_cap(state, accel, cav if acting is None else cav & acting)
                 if step % STEPS_PER_CONTROL == 0:
                     records[-1]["action"] = accel
                 # SUMO's ballistic position integration, including a stop inside this step.
@@ -661,16 +1013,32 @@ class DreamerTrainer:
                 step += 1
                 return torch.stack((position, state["lane"].to(speed.dtype), speed, accel), -1)
 
+            if external_callback is not None and hasattr(external_callback, "native_lane_mask"):
+                controller.native_lane_mask = external_callback.native_lane_mask
             initial = {key: value.clone() if torch.is_tensor(value) else value
                        for key, value in start_state.items()}
+            # Plain-bug fix: imagined vehicles leave at the road end (same gate as evaluation
+            # and training); physics.exit_at_road_end=false keeps old replays bit-identical.
+            exit_s = road_end_exit_bound(getattr(model, "physics", None))
+            if exit_s is None:
+                initial.pop("exit_s_m", None)
+            else:
+                initial.setdefault("exit_s_m", torch.full_like(
+                    initial["s_m"], float(exit_s)))
             recorder = None
             member_kwargs = {**rollout_kwargs, **future}
             if lane_uniform is not None:
                 member_kwargs["lane_uniform"] = lane_uniform
             if entry_spec is not None:
+                learned = None
+                if bool(getattr(getattr(model, "physics", None), "entry_learned", False)):
+                    from wms.model.entry_learned import load_learned_entry
+
+                    learned = load_learned_entry()
                 recorder = _EntryRecorder(_entry_process(entry_spec, entry_rows,
                                                          initial["s_m"].shape[1],
-                                                         cfg.entry_insert_rule))
+                                                         cfg.entry_insert_rule,
+                                                         learned_entry=learned))
                 member_kwargs = {**member_kwargs, "entries": recorder}
             switch = hasattr(model, "checkpoint_forward")
             previous_switch = getattr(model, "checkpoint_forward", False)
@@ -769,6 +1137,12 @@ class DreamerTrainer:
             member_states.append(physics_states[::STEPS_PER_CONTROL])
             member_entropy.append(torch.stack([record["entropy"] for record in records]))
             member_actions.append(torch.stack([record["action"] for record in records]))
+            if cfg.actor_gradient_audit:
+                member_action_audit.append({name: torch.stack([record[name] for record in records])
+                                            for name in ("audit_action", "audit_log_prob",
+                                                         "audit_acting")})
+            if zone_fn is not None:
+                member_zone.append(torch.stack([record["entrance_zone"] for record in records]))
             if self.use_lanes:
                 member_lanes.append({name: torch.stack([record[name] for record in records])
                                      for name in ("lane_log_prob", "lane_entropy", "lane_active",
@@ -788,26 +1162,105 @@ class DreamerTrainer:
                                          for state in states[:-1]]) for states in member_states])
         if act_mask is not None:
             masks = masks & act_mask
+        zone_masks = None
+        if member_zone:
+            zone_masks = torch.stack(member_zone)
+            masks = masks & ~zone_masks
         lanes = None
         if member_lanes:
             lanes = {name: torch.stack([m[name] for m in member_lanes]) for name in member_lanes[0]}
+        # V10ENTZONE: fraction of all-CAV-row CAV-steps released to native inside an entrance zone
+        # (the imagination analogue of the SUMO autocheck's masked fraction).
+        zone_fraction = None
+        if zone_masks is not None:
+            cav = torch.stack([torch.stack([state["present"] & state["is_cav"]
+                                            for state in states[:-1]]) for states in member_states])
+            cav = cav[..., :n_base, :]
+            zone_base = zone_masks[..., :n_base, :]
+            zone_fraction = float((zone_base & cav).sum()) / max(1, int(cav.sum()))
         return {"rewards": rewards, "costs": costs, "returns": torch.stack(returns),
+                "imagination_horizon_s": cfg.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S,
+                **({"action_audit": {name: torch.stack([m[name] for m in member_action_audit])
+                                     for name in member_action_audit[0]}}
+                   if member_action_audit else {}),
                 **({"credit_profile": profile} if profile is not None else {}),
                 "values": torch.stack(member_values),
                 "disagreement": disagreement, "states": member_states,
                 "entropy": torch.stack(member_entropy), "actions": torch.stack(member_actions),
                 "action_mask": masks, "lanes": lanes, "variants": variants, "n_base": n_base,
+                "entrance_zone": zone_masks, "entrance_zone_fraction": zone_fraction,
                 "n_members": len(self.world_models), "n_futures": n_futures,
+                "uncertainty_weight": cfg.uncertainty_weight,
+                **({"exploration_rho": explore[2]} if explore is not None else {}),
                 "components": {key: torch.stack([c[key] for c in member_components])
                                for key in member_components[0]}}
 
-    def update_lagrange(self, mean_cost):
+    def update_lagrange(self, mean_cost, budget=None):
+        """Dual ascent ``lambda += dual_lr * (mean_cost - budget)`` (budget default ``ttc_budget``;
+        native_relative passes the mean excess over native with budget 0)."""
         value = float(mean_cost)
         if not math.isfinite(value):
             raise ValueError("nonfinite safety cost")
-        self.lagrange_multiplier = max(0.0, self.lagrange_multiplier + self.config.dual_lr *
-                                      (value - self.config.ttc_budget))
+        if self.config.wm_safety_report_only:
+            self._lagrange_pre_cap = self.lagrange_multiplier
+            self._lagrange_capped = False
+            return self.lagrange_multiplier
+        budget = self.config.ttc_budget if budget is None else float(budget)
+        current = self.lagrange_multiplier
+        decay = float(getattr(self.config, "lagrange_decay", 0.0))
+        if decay > 0.0:                                   # V8POL: leaky dual
+            current = (1.0 - decay) * current
+        self.lagrange_multiplier = max(0.0, current + self.config.dual_lr * (value - budget))
+        cap = getattr(self.config, "lagrange_max", None)
+        if cap is not None:                               # V8POL: capped dual
+            was_capped = getattr(self, "_lagrange_capped", False)
+            self._lagrange_pre_cap = self.lagrange_multiplier
+            self._lagrange_capped = self.lagrange_multiplier > float(cap)
+            if self._lagrange_capped and not was_capped:
+                print(f"[lagrange-cap] update {self.update_count + 1}: lambda "
+                      f"{self._lagrange_pre_cap:.4g} capped at lagrange_max={float(cap):.4g}", flush=True)
+            self.lagrange_multiplier = min(self.lagrange_multiplier, float(cap))
         return self.lagrange_multiplier
+
+    def _safety_terms(self, imagined, mean_cost):
+        """``(actor penalty, dual value, dual budget, log metrics)`` of the TTC constraint.
+
+        absolute (default): ``(mean_cost, mean_cost, None -> ttc_budget, {})`` = the original terms.
+        native_relative (V7POL): per all-CAV row s, ``c_s`` = mean over members/futures/horizon of
+        its per-control-step cost and ``ref_s`` = the same mean of its start's all-native base row
+        (detached) + ``ttc_native_margin``, or ``ttc_budget`` when the start has no base row.
+        Penalty ``mean_s relu(c_s - ref_s)``; the dual ascends on ``mean_s (c_s - ref_s)`` over the
+        native-referenced starts (over the absolute ones only when no start has a base row)."""
+        cfg = self.config
+        if cfg.ttc_budget_mode == "absolute":
+            if cfg.wm_safety_report_only:
+                return mean_cost.detach().new_zeros(()), mean_cost.detach(), None, {
+                    "wm_safety_report_only": True, "ttc_penalty_report": float(mean_cost.detach())}
+            return mean_cost, mean_cost.detach(), None, {}
+        n_base = imagined["n_base"]
+        per_row = imagined["costs"].mean((0, 1))                 # [N]
+        policy_cost = per_row[:n_base]
+        reference = torch.full_like(policy_cost, float(cfg.ttc_budget))
+        native = torch.zeros(n_base, dtype=torch.bool, device=policy_cost.device)
+        variants = imagined.get("variants")
+        if variants is not None:
+            for start, row in variants.base_row.items():
+                reference[start] = per_row[row].detach() + float(cfg.ttc_native_margin)
+                native[start] = True
+        excess = policy_cost - reference
+        penalty = torch.relu(excess).mean()
+        chosen = native if bool(native.any()) else ~native
+        dual_value = excess.detach()[chosen].mean()
+        extra = {"ttc_budget_mode": "native_relative", "ttc_native_starts": int(native.sum()),
+                 "ttc_excess": float(dual_value),
+                 "ttc_penalty": float(penalty.detach())}
+        if bool(native.any()):
+            extra["ttc_native_cost"] = float((reference[native] - float(cfg.ttc_native_margin)).mean())
+            extra["ttc_policy_cost_native_starts"] = float(policy_cost.detach()[native].mean())
+        if cfg.wm_safety_report_only:
+            extra.update(wm_safety_report_only=True, ttc_penalty_report=float(penalty.detach()))
+            penalty = penalty.detach().new_zeros(())
+        return penalty, dual_value, 0.0, extra
 
     def _return_scale(self, returns):
         quantiles = torch.quantile(returns.detach().float().flatten(),
@@ -821,7 +1274,7 @@ class DreamerTrainer:
             self.return_high = decay * self.return_high + (1 - decay) * high
         return max(1.0, self.return_high - self.return_low)
 
-    def actor_objective(self, imagined, scale, weights):
+    def actor_objective(self, imagined, scale, weights, *, gradient_components=None):
         """Actor objective to MINIMISE (without the accel entropy / Lagrangian terms).
 
         The maximised objective is ``sum_r c_r * mean_{E,H}(R_r - B_r) / scale`` with the row
@@ -860,10 +1313,12 @@ class DreamerTrainer:
             pg_loss = -((joint * advantage).mean((0, 1)) * coefficients).sum()
             lane_entropy = _masked_mean(lanes["lane_entropy"], active)
             # V6EXPLORE: a learned lane temperature replaces the fixed weight when a target is set.
-            lane_weight = (self.log_lane_alpha.detach().exp()
-                           if getattr(self, "log_lane_alpha", None) is not None
-                           else self.config.lane_entropy_weight)
+            lane_weight = _entropy_temperature(getattr(self, "log_lane_alpha", None),
+                                               self.config.lane_entropy_weight, self.config)
             loss = loss + self.config.lane_pg_weight * pg_loss - lane_weight * lane_entropy
+            if gradient_components is not None:
+                gradient_components["lane"] = (self.config.lane_pg_weight * pg_loss
+                                                - lane_weight * lane_entropy)
             acting = lanes["lane_acting"][..., :n_base, :]
             changed = lanes["lane_changed"][..., :n_base, :] & acting
             extra.update({"lane_pg_loss": float(pg_loss.detach()),
@@ -871,6 +1326,66 @@ class DreamerTrainer:
                           "lane_change_rate": float(changed.sum() / acting.sum().clamp_min(1)),
                           "lane_decisions_with_options": int(active[..., :n_base, :].sum())})
         return loss, extra
+
+    def _actor_gradient_norms(self, imagined, scale, weights, components):
+        """Pre-clip L2 parameter norms of actual weighted loss contributions.
+
+        TD(lambda) is linear: split analytic return credit into raw reward,
+        disagreement and frozen-critic bootstrap, preserving the row coefficients.
+        Counterfactual baselines and lane advantages are detached in the loss.
+        autograd.grad retains the training graph and never writes .grad buffers.
+        """
+        rewards, values = imagined["rewards"], imagined["values"]
+        coefficients = row_coefficients(imagined.get("variants"), weights, rewards.shape[-1],
+                                        imagined["n_base"], device=rewards.device,
+                                        dtype=rewards.dtype)
+        sources = {"reward": (rewards, torch.zeros_like(values)),
+                   "critic": (torch.zeros_like(rewards), values)}
+        uncertainty_weight = imagined.get("uncertainty_weight", self.config.uncertainty_weight)
+        if uncertainty_weight > 0:
+            sources["uncertainty"] = (
+                -uncertainty_weight * imagined["disagreement"].unsqueeze(0).expand_as(rewards),
+                torch.zeros_like(values))
+        for name, (reward, value) in sources.items():
+            credit = torch.stack([lambda_returns(r, v, self.config.gamma, self.config.lambda_)
+                                  for r, v in zip(reward, value)])
+            components[name] = -(credit.mean((0, 1)) * coefficients).sum() / scale
+        parameters = [p for p in self.actor_parameters if p.requires_grad]
+        norms = {}
+        for name, term in components.items():
+            grads = (torch.autograd.grad(term, parameters, retain_graph=True, allow_unused=True)
+                     if term.requires_grad and parameters else ())
+            norms[name] = math.sqrt(sum(float(g.detach().double().square().sum())
+                                        for g in grads if g is not None))
+        return norms
+
+    def _action_audit_metrics(self, imagined):
+        """Policy commands BEFORE safety/caps, only actively controlled all-CAV rows.
+
+        CavPolicy's log density includes the affine-tanh Jacobian in m/s^2.
+        exp(differential entropy) is an effective action width in those units.
+        Saturation means within 1% of the action span of either stored bound.
+        """
+        audit, n_base = imagined.get("action_audit"), imagined["n_base"]
+        if audit is None:
+            return {}
+        active = audit["audit_acting"][..., :n_base, :]
+        actions = audit["audit_action"][..., :n_base, :][active]
+        log_prob = audit["audit_log_prob"][..., :n_base, :][active]
+        entropy = float(-log_prob.double().mean()) if log_prob.numel() else 0.0
+        out = {"active_actions": actions.numel(), "action_unit": "m/s^2",
+               "entropy_nats": entropy,
+               "entropy_effective_width_mps2": math.exp(entropy) if log_prob.numel() else 0.0}
+        lo, hi = getattr(self.policy, "accel_min", None), getattr(self.policy, "accel_max", None)
+        if lo is not None and hi is not None:
+            margin = 0.01 * (hi - lo)
+            low, high = actions <= lo + margin, actions >= hi - margin
+            out.update({"lower_bound_mps2": float(lo), "upper_bound_mps2": float(hi),
+                        "saturation_margin_mps2": float(margin),
+                        "saturation_low_fraction": float(low.float().mean()) if actions.numel() else 0.0,
+                        "saturation_high_fraction": float(high.float().mean()) if actions.numel() else 0.0,
+                        "saturation_fraction": float((low | high).float().mean()) if actions.numel() else 0.0})
+        return out
 
     @staticmethod
     def _cooperation_metrics(imagined, variants, weights):
@@ -897,10 +1412,57 @@ class DreamerTrainer:
                         for name, rows in sorted(table.items())}
         return out
 
-    def _sample_starts(self, sampler):
+    def _coopw_metrics(self, imagined, batch, variants, scale):
+        """S-COOPW logs (empty unless switched on): row coverage, oversampling, curriculum
+        position, pessimism weight, and every ``term_grad_audit_every`` updates the unit-weight
+        gradient norms of the objective terms (``coopw.term_objectives``)."""
+        cf, out = self.counterfactual, {}
+        if cf.enabled and cf.coop_audit:
+            from .coopw import coverage
+            out["cf_coverage"] = coverage(variants, batch.state)
+            out["cf_curriculum_position"] = self._curriculum_position()
+            if self._last_start_info is not None:
+                out["start_oversampling"] = self._last_start_info
+            if self.uncertainty is not None:
+                out["uncertainty_weight_effective"] = imagined.get("uncertainty_weight")
+                out["n_futures"] = imagined.get("n_futures")
+            if self.exploration is not None:
+                out["exploration_rho"] = imagined.get("exploration_rho", 0.0)
+            if self.horizon_curriculum is not None:
+                out["imagination_horizon_stage"] = self.horizon_curriculum.stage(
+                    self._curriculum_position(advance=False))
+        every = cf.term_grad_audit_every if cf.enabled else 0
+        if every and (self.update_count + 1) % every == 0 and variants is not None and variants.groups:
+            from .coopw import term_gradient_norms, term_objectives
+            terms, values = term_objectives(imagined, scale, self.config.lane_pg_weight)
+            parameters = [p for p in self.actor_parameters if p.requires_grad]
+            out["cf_term_grad_norms"] = term_gradient_norms(terms, parameters)
+            out["cf_term_values"] = values
+        return out
+
+    def _sample_starts(self, sampler, validation=False):
         """Group-rich oversampling (``group_state_fraction`` of the batch satisfies
-        :func:`wms.control.counterfactual.group_rich`) when the sampler supports it."""
+        :func:`wms.control.counterfactual.group_rich`) when the sampler supports it.
+        S-COOPW: ``validation_uniform`` draws VAL starts from the target distribution;
+        ``start_tilt`` tilts TRAINING starts (``coopw.TiltSampler``, observable features)."""
         cf = self.counterfactual
+        if validation and cf.enabled and cf.validation_uniform:
+            return sampler.sample(self.config.batch_size, device=self.device)
+        if not validation and self._tilt_sampler is not None:
+            from .coopw import start_features
+            horizon_s = self.config.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S
+
+            def features(batch):
+                state = {k: v[:1] for k, v in batch.state.items()
+                         if torch.is_tensor(v) and v.ndim >= 1 and v.shape[0] == batch.state["s_m"].shape[0]}
+                queue = batch.entry_queue[0] if batch.entry_queue is not None else None
+                return start_features(state, cf, horizon_s, entry_queue=queue,
+                                      lane_rules=self.lane_rules)
+            generator = torch.Generator().manual_seed(2_000_003 * (self.update_count + 1))
+            batch, self._last_start_info = self._tilt_sampler.draw(
+                sampler, self.config.batch_size, self.device, features,
+                max_tries=cf.max_group_tries, generator=generator)
+            return batch
         if cf.enabled and cf.group_state_fraction > 0 and hasattr(sampler, "sample_where"):
             return sampler.sample_where(self.config.batch_size, device=self.device,
                                         predicate=lambda state: group_rich(state, cf),
@@ -929,8 +1491,16 @@ class DreamerTrainer:
     def _entry_slots(self, batch, generator=None):
         if not self.config.imagine_entries:
             return batch
-        horizon_s = self.config.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S
-        return with_entry_slots(batch, horizon_s, self.config.entry_pad_max, generator)
+        horizon_steps = self._imagination_config(batch).horizon
+        horizon_s = horizon_steps * STEPS_PER_CONTROL * PHYSICS_DT_S
+        pad_max = self.config.entry_pad_max
+        if (self._training_imagination and self.horizon_curriculum is not None
+                and horizon_steps > self.config.horizon):
+            # S-COOPW: a staged horizon gets its stage's entrant-slot cap (COOPW.md).
+            pad_max = max(pad_max, self.horizon_curriculum.pad_cap(horizon_s))
+        if self.config.entry_queue_state:
+            return with_entry_slots(batch, horizon_s, pad_max, generator, queue_state=True)
+        return with_entry_slots(batch, horizon_s, pad_max, generator)
 
     @staticmethod
     def _wait_metrics(imagined):
@@ -953,33 +1523,56 @@ class DreamerTrainer:
 
     def update(self):
         started = time.perf_counter()
+        real_batch = self._real_return_batch()
         self.policy.train()
         self.group_encoder.train()
         self.critic.train()
         # Entry seeds from a per-update generator: enabling entries leaves the global RNG stream
         # (variant choice, policy noise) unchanged, and a resumed run draws the same seeds.
-        batch = self._entry_slots(self._sample_starts(self.start_states),
-                                  torch.Generator().manual_seed(1_000_003 * (self.update_count + 1)))
-        variants = (build_variants(batch.state, self.counterfactual)
-                    if self.counterfactual.enabled else None)
         profile_due = (self.config.credit_profile_every > 0
                        and (self.update_count + 1) % self.config.credit_profile_every == 0)
-        imagined = self.imagine(batch, variants=variants, **({"credit_profile": True}
-                                                            if profile_due else {}))
+        # S-COOPW switches (uncertainty futures, correlated exploration, horizon stage) act on
+        # this training imagination only; unset they change nothing.
+        self._training_imagination = True
+        try:
+            batch = self._entry_slots(self._sample_starts(self.start_states),
+                                      torch.Generator().manual_seed(1_000_003 * (self.update_count + 1)))
+            variants = (build_variants(batch.state, self.counterfactual)
+                        if self.counterfactual.enabled else None)
+            imagined = self.imagine(batch, variants=variants, **({"credit_profile": True}
+                                                                if profile_due else {}))
+        finally:
+            self._training_imagination = False
         imagined["penetration_buckets"] = self._penetration_buckets(batch)
         n_base, n_rows = imagined["n_base"], imagined["returns"].shape[-1]
         all_returns = imagined["returns"]
         returns = all_returns[..., :n_base]
         scale = self._return_scale(returns)
-        weights = self.counterfactual.weights(self.update_count)
+        weights = self.counterfactual.weights(self._curriculum_position())
         entropy = imagined["entropy"][..., :n_base].mean()
         mean_cost = imagined["costs"][..., :n_base].mean()
-        objective, extra = self.actor_objective(imagined, scale, weights)
-        # V6EXPLORE: a learned entropy temperature replaces the fixed weight when a target is set.
-        entropy_weight = (self.log_alpha.detach().exp() if self.log_alpha is not None
-                          else self.config.entropy_weight)
-        actor_loss = (objective - entropy_weight * entropy +
-                      self.lagrange_multiplier * mean_cost)
+        audit_components = {} if self.config.actor_gradient_audit else None
+        objective, extra = self.actor_objective(
+            imagined, scale, weights,
+            **({"gradient_components": audit_components} if audit_components is not None else {}))
+        # V6EXPLORE: a learned entropy temperature replaces the fixed weight when a target is set
+        # (V7POL: floored at alpha_min).
+        entropy_weight = self._temperature(self.log_alpha, self.config.entropy_weight)
+        # V7POL safety terms (absolute + unscaled = the original lambda * mean_cost exactly).
+        penalty, dual_value, dual_budget, safety_extra = self._safety_terms(imagined, mean_cost)
+        extra.update(safety_extra)
+        lagrange_term = self.lagrange_multiplier * penalty
+        if self.config.lagrange_scaled:
+            lagrange_term = lagrange_term / scale
+        actor_loss = (objective - entropy_weight * entropy + lagrange_term)
+        if audit_components is not None:
+            audit_components.update(constraint=lagrange_term, entropy=-entropy_weight * entropy)
+            # S-SPEED2 grad_audit_every: diagnostic only (never read by the update).
+            if self.update_count % speed_flags.every("grad_audit_every") == 0:
+                extra["actor_grad_norms"] = self._actor_gradient_norms(
+                    imagined, scale, weights, audit_components)
+            extra["action_audit"] = self._action_audit_metrics(imagined)
+        extra.update(self._coopw_metrics(imagined, batch, variants, scale))
         self.actor_optimizer.zero_grad(set_to_none=True)
         actor_loss.backward()
         # clip_grad_norm_ returns the PRE-clip norm (logged below), including when V6
@@ -990,10 +1583,34 @@ class DreamerTrainer:
         # V6EXPLORE: dual steps on the entropy temperature(s), logged with the entropy above.
         extra.update(self._alpha_update(imagined, entropy))
         # The critic estimates the value of the all-CAV policy: fit it on the all-CAV rows.
-        predictions = torch.stack([torch.stack([self.critic(_detach(_rows(state, n_base, n_rows)))
-                                                for state in states[:-1]])
-                                   for states in imagined["states"]])
-        critic_loss = ((predictions - returns.detach()) / scale).square().mean()
+        mix = self.config.real_return_mix
+        imagined_loss = None
+        if mix < 1:
+            predictions = torch.stack([torch.stack([self.critic(_detach(_rows(state, n_base, n_rows)))
+                                                    for state in states[:-1]])
+                                       for states in imagined["states"]])
+            # Real and imagined targets share raw value units, including scaled
+            # critics. Do not amplify imagined regression by a short-rollout
+            # advantage scale when real-return scaling was explicitly requested.
+            critic_scale = max(scale, self.config.real_return_scale)
+            imagined_loss = ((predictions - returns.detach()) / critic_scale).square().mean()
+        if real_batch is None:
+            critic_loss = imagined_loss
+        else:
+            real_predictions = self.critic(real_batch.states)
+            if real_predictions.shape != real_batch.returns.shape:
+                raise ValueError("real critic predictions must have shape [B], matching real returns")
+            real_scale = max(scale, self.config.real_return_scale)
+            real_loss = ((real_predictions - real_batch.returns.to(real_predictions)) / real_scale).square().mean()
+            critic_loss = mix * real_loss
+            if imagined_loss is not None:
+                critic_loss = critic_loss + (1 - mix) * imagined_loss
+            extra.update({"real_return_mix": mix, "critic_real_loss": float(real_loss.detach()),
+                          "critic_imagined_loss": (float(imagined_loss.detach())
+                                                   if imagined_loss is not None else None),
+                          "real_return_mean": float(real_batch.returns.mean()),
+                          "real_return_count": real_batch.returns.numel(),
+                          "real_return_units": real_batch.units})
         self.critic_optimizer.zero_grad(set_to_none=True)
         critic_loss.backward()
         critic_norm = nn.utils.clip_grad_norm_(self.critic.parameters(), self.config.grad_clip,
@@ -1007,7 +1624,7 @@ class DreamerTrainer:
                     target.lerp_(source, self.config.target_tau)
                 else:
                     target.copy_(source)
-        self.update_lagrange(mean_cost.detach())
+        self.update_lagrange(dual_value, dual_budget)
         self.update_count += 1
         selected = imagined["actions"][..., :n_base, :].detach()[imagined["action_mask"][..., :n_base, :]]
         action_stats = {"mean": 0.0, "std": 0.0, "min": 0.0, "max": 0.0}
@@ -1018,6 +1635,7 @@ class DreamerTrainer:
         if any(flag is not None for flag in flags):
             extra["group_rich_fraction"] = mean_or_none(float(bool(f)) for f in flags)
         metrics = {"update": self.update_count, "returns": float(returns.detach().mean()),
+                   "imagination_horizon_s": imagined["imagination_horizon_s"],
                    **({"credit_profile": imagined["credit_profile"]} if profile_due else {}),
                    "reward": float(imagined["rewards"][..., :n_base].detach().mean()),
                    **extra,
@@ -1036,8 +1654,16 @@ class DreamerTrainer:
                 float(value[..., :n_base].detach().mean()) if value is not None else 0.0)
         # Total wait per control step = on-road speed-deficit delay + entry (source) waiting.
         metrics["total_wait"] = metrics["delay"] + metrics["source_wait"]
+        free = imagined["components"].get("free_speed_shortfall")
+        if free is not None:                              # V8POL free-road CAV speed shortfall
+            metrics["free_speed_shortfall"] = float(free[..., :n_base].detach().mean())
+        if self.config.lagrange_max is not None:          # V8POL: log when the cap binds
+            metrics["lagrange_capped"] = bool(self._lagrange_capped)
+            metrics["lagrange_pre_cap"] = float(self._lagrange_pre_cap)
         metrics["entries"] = bool(getattr(batch, "entry_spec", None) is not None
                                   and self.config.imagine_entries)
+        if imagined.get("entrance_zone_fraction") is not None:   # V10ENTZONE masked fraction
+            metrics["entrance_zone_fraction"] = float(imagined["entrance_zone_fraction"])
         if self.output_dir is not None:
             self.output_dir.mkdir(parents=True, exist_ok=True)
             with (self.output_dir / "updates.jsonl").open("a", encoding="utf-8") as stream:
@@ -1072,7 +1698,8 @@ class DreamerTrainer:
                 generator = torch.Generator().manual_seed(12345)
                 entry_generator = torch.Generator().manual_seed(54321)
                 for batch_index in range(batches):
-                    batch = self._entry_slots(self._sample_starts(sampler), entry_generator)
+                    batch = self._entry_slots(self._sample_starts(sampler, validation=True),
+                                              entry_generator)
                     variants = build_variants(batch.state, cf, generator) if cf.enabled else None
                     # Fixed sampled futures (same worlds at every validation) when enabled.
                     imagined = self.imagine(batch, deterministic=True, variants=variants,
@@ -1146,6 +1773,7 @@ class DreamerTrainer:
         payload = {"format": CHECKPOINT_FORMAT, "config": asdict(self.config),
                    "lane_rules": asdict(self.lane_rules) if self.lane_rules is not None else None,
                    "lane_head": self.use_lanes, "counterfactual": self.counterfactual.as_dict(),
+                   **({"lane_control": "native"} if self.lane_control == "native" else {}),
                    "reward_weights": asdict(self.reward_weights),
                    "policy": self.policy.state_dict(), "group_encoder": self.group_encoder.state_dict(),
                    **accel_bounds_payload(self.policy),
@@ -1167,6 +1795,15 @@ class DreamerTrainer:
                    "validation_sampler": (self.validation_states.state_dict()
                                           if hasattr(self.validation_states, "state_dict") else None),
                    "sampler": self.start_states.state_dict() if hasattr(self.start_states, "state_dict") else None}
+        coopw = {**({"anchor": self.coop_anchor} if self.coop_anchor is not None else {}),
+                 **({"tilt_sampler": self._tilt_sampler.state_dict()}
+                    if self._tilt_sampler is not None else {})}
+        if coopw:
+            payload["coopw"] = coopw
+        lane_switches = getattr(self.controller_factory, "ramp_merge", {})
+        if lane_switches.get("native_lane_change", False):
+            payload["wm_controller_kwargs"] = {"symmetric_exec_cap": True, "mask_forced_merge": True,
+                                                **lane_switches}
         torch.save(payload, path)
 
     def load_checkpoint(self, path, *, policy_only=False):
@@ -1175,6 +1812,8 @@ class DreamerTrainer:
             raise ValueError(f"expected a {' or '.join(READABLE_FORMATS)} checkpoint")
         if not policy_only and payload["format"] != CHECKPOINT_FORMAT:
             raise ValueError(f"full resume requires a {CHECKPOINT_FORMAT} checkpoint (use policy_only)")
+        if not policy_only:
+            self._check_real_return_provider(DreamerConfig(**payload["config"]))
         loop_refresh = os.environ.get("WMS_LOOP_REFRESH", "") == "1"
         if not policy_only and (payload["ensemble_size"] != len(self.world_models) or
                                 (payload["world_model_ids"] != self.world_model_ids
@@ -1224,6 +1863,11 @@ class DreamerTrainer:
         for name in ("update_count", "lagrange_multiplier", "return_low", "return_high", "best_validation"):
             setattr(self, name, payload[name])
         self.best_coop_validation = payload.get("best_coop_validation", -math.inf)
+        coopw = payload.get("coopw") or {}
+        if self.counterfactual.curriculum_anchor == "first_update" and "anchor" in coopw:
+            self.coop_anchor = int(coopw["anchor"])
+        if self._tilt_sampler is not None and "tilt_sampler" in coopw:
+            self._tilt_sampler.load_state_dict(coopw["tilt_sampler"])
         if loop_refresh and payload["world_model_ids"] != self.world_model_ids:
             # Validation scores on a refreshed WM are not comparable with the old WM's: the new run
             # directory keeps its own policy_best*.pt (selected on this WM only).

@@ -1,0 +1,42 @@
+{
+ "rule": "weight = G_cutin_weighted / G_courtesy(weight=1): G_cutin_weighted = 2.174 x 0.33918 (docs/r10_weight_rule.json, fix-B term on its trainable set); G_courtesy = geometric-mean gradient norm of the unweighted courtesy loss over the zero-initialised head, 8 production-like batches (4 windows x 120 s) of local TRAIN data; tools/r10b_courtesy_offline.py fit",
+ "status": "MEASURED",
+ "chosen_weight": 4.719,
+ "weight_geomean_ratio": 4.718825715316848,
+ "g_cutin_weighted": 0.7373693440399065,
+ "g_courtesy_geomean": 0.15626119473886851,
+ "g_courtesy_per_batch": [
+  0.19175945222377777,
+  0.04774222895503044,
+  0.19878283143043518,
+  0.0675642192363739,
+  0.1762261539697647,
+  0.26825860142707825,
+  0.2494587004184723,
+  0.24514968693256378
+ ],
+ "why_parity": "the head is reached only by this term and Adam is per-parameter scale invariant, so the weight acts only through the global grad-norm clip (1.0) and the logged total; parity keeps its share of the clipped norm equal to fix-B's",
+ "lr_scale_chosen": 1000.0,
+ "lr_rule": "largest-gain rule: the scale in {1,10,100,1000} with the lowest held-out (episode-disjoint TRAIN) courtesy loss after the production schedule 30 x 4 windows @5e-5*s + 60 x 5 windows @3e-5*s (Adam)",
+ "lr_pilot_held_loss": {
+  "1": 0.869507908821106,
+  "10": 0.8584088683128357,
+  "100": 0.6761677861213684,
+  "1000": 0.577800989151001,
+  "zero_head_held_loss": 0.8705229759216309
+ },
+ "lr_pilot_note": "1000 is the top of the declared grid {1,10,100,1000}; not extended after seeing results",
+ "data": {
+  "windows": 104,
+  "by_source": {
+   "generic_random": 51,
+   "native": 53
+  },
+  "held_episodes": 18,
+  "checkpoint": "E:/agent-work/c4-v10r9fix/data/r9_train/wm_s_stage300.pt (round-8 stage-300; HDV acceleration identical to round 9, which trains only merge_pivot)"
+ },
+ "caveats": [
+  "local CPU, 104 x 120 s windows (53 v5_native, 51 genrand_plain), round-8 weights",
+  "per-batch gradient norms 0.05-0.27 (wide)"
+ ]
+}

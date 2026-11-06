@@ -1,0 +1,17 @@
+# GPU/CPU smoke of configs/c4_policy_v10entzone_v5m.toml (2026-10-19): same settings,
+# batch 2, counterfactual max_starts 1, <= 5 updates, no checkpoints (mirrors
+# c4_policy_v9entry_v5m_smoke.toml).
+extends = "c4_policy_v10entzone_v5m.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V10ENTZONE-V5M-SMOKE"
+updates = 5
+validation_batches = 1
+
+[trainer]
+batch_size = 2
+checkpoint_every = 1000
+validation_every = 1000
+
+[counterfactual]
+max_starts = 1

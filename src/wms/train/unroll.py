@@ -49,6 +49,8 @@ class _Accumulators:
     hybrid_residual: Optional[Tensor] = None
     hybrid_physics: Optional[Tensor] = None
     hybrid_count: int = 0
+    window_err_sum: Optional[Tensor] = None
+    window_valid: Optional[Tensor] = None
 
     def add(self, name: str, value: Tensor) -> None:
         value = value.detach().double()
@@ -119,12 +121,26 @@ class UnrollRunner:
                  projection: Optional[Any], device: torch.device) -> None:
         self.model, self.settings, self.composer = model, settings, composer
         self.projection, self.device = projection, device
+        if ("merge_timing" in composer.names or "lane_flow" in composer.names
+                or "merge_first_passage" in composer.names
+                or "merge_frailty" in composer.names
+                or getattr(model, "merge_negotiation", None) is not None):
+            # V8WM / V8LANE / V10NEGOT: the merge-timing, lane-flow and negotiation terms
+            # need the hazard_v5 own-head logit with gradient.
+            model.emit_merge_hazard = True
+        if "post_merge_residual" in composer.names:
+            # R5MERGE: the one-sided penalty conditions on the physics-core IDM term.
+            model.emit_physics_accel = True
+        if any(name in composer.names for name in
+               ("yield_huber", "ramp_adapt_huber", "safety_bce")):
+            # R5YIELD: the auxiliary residuals are measured against the IDM core.
+            model.emit_physics_accel = True
 
     def run(self, batch: Mapping[str, Any], *, unroll_steps: int, backward: bool = True,
             share: bool = False, capture_shares: bool = False,
             truncation_steps: Optional[int] = None,
             _rate_probe: bool = False, _pair_probe: bool = False,
-            _probe_training: bool = False) -> dict:
+            _probe_training: bool = False, _window_probe: bool = False) -> dict:
         """One pass; returns the log record (``loss`` plus every logged term and monitor).
 
         ``share`` (forward-only diagnostic) adds ``loss_share``: each term's share of the
@@ -159,8 +175,25 @@ class UnrollRunner:
             rate_reference = probe["predicted_lane_change_rate"]
         model = self.model
         inp = prepare_inputs(batch, model, cfg, self.device, unroll_steps)
-        targets = build_targets(inp, batch, cfg, float(model.physics.dt_s), self.device)
+        targets = build_targets(inp, batch, cfg, float(model.physics.dt_s), self.device,
+                                physics=model.physics)
+        if "merge_pivot" in self.composer.names:
+            targets.prepared["merge_pivot_source"] = (model, inp)
         self.composer.prepare(targets)
+        if ("cutin_reaction" in self.composer.names
+                or "follower_courtesy" in self.composer.names):
+            # R10 fix B: the recorded-state replay must see the same causal pre-t0 observations
+            # the rollout encodes (detached raw observations, never driver truth tables).
+            # Presence-only C4 windows keep stable slots (a reused slot never revives), so no
+            # explicit ``reset`` mask is needed; a source that reuses slots must add one.
+            targets.prepared["cutin_reaction_inputs"] = {
+                "history": inp.hist, "history_mask": inp.hist_mask,
+                "driver_history": inp.observed_hist,
+                "driver_history_mask": inp.observed_hist_mask}
+            if getattr(cfg, "recorded_replay_present", "loss_valid") == "filled":
+                # R12 fix D: the replay state is the filled window presence (junction_fix = ffill);
+                # loss_valid keeps selecting the supervised rows only.
+                targets.prepared["cutin_reaction_inputs"]["present"] = inp.present
         if pair_reference is not None:
             targets.prepared["paired_return_reference"] = pair_reference
         parameters = [p for p in model.parameters() if p.requires_grad]
@@ -245,6 +278,9 @@ class UnrollRunner:
                     driver_history=inp.observed_hist,
                     driver_history_mask=inp.observed_hist_mask,
                     driver_params=chunk_params, driver_embedding=chunk_embedding,
+                    **({} if getattr(model, "merge_teacher_frac", 0.0) <= 0.0 else {
+                        "merge_lane_teacher": inp.states[:, c0:c1 + 1, :, 1:4].argmax(-1),
+                        "merge_teacher_frac": float(model.merge_teacher_frac)}),
                     **observe_kwargs)
                 self._collect_rollout(roll, acc, conservation, inp, c0, c1)
                 if "driver_parameters_updated" in roll:
@@ -261,6 +297,15 @@ class UnrollRunner:
                 ctx = LossContext(pred=roll, current=current, targets=targets, c0=c0, c1=c1,
                                   rate_reference=rate_reference)
                 breakdown = self.composer(ctx)
+                if _window_probe:
+                    # V10HORIZON: per-window mean positional (Huber) error for priority replay.
+                    masked = ctx.pos_huber.detach() * ctx.m
+                    num = masked.sum(dim=(1, 2))
+                    den = ctx.m.sum(dim=(1, 2))
+                    acc.window_err_sum = (num if acc.window_err_sum is None
+                                          else acc.window_err_sum + num)
+                    acc.window_valid = (den if acc.window_valid is None
+                                        else acc.window_valid + den)
                 if return_on:
                     difference = pair_loss.predicted_return_difference(ctx).detach()
                     pair_difference = (difference if pair_difference is None
@@ -277,6 +322,11 @@ class UnrollRunner:
                     for name, tensor in shareable.items():
                         shares.capture(name, tensor)
                 if not bool(torch.isfinite(breakdown.total)):
+                    if "merge_pivot" in self.composer.names:
+                        from .losses.merge_pivot import merge_pivot_metrics
+
+                        metrics = merge_pivot_metrics(targets.prepared["merge_pivot"], targets.dt_s)
+                        raise RuntimeError(f"non-finite first_passage loss: {metrics}")
                     raise RuntimeError("non-finite WM-S loss")
                 if pair_grads is not None:
                     paired = sum(v.value for n, v in breakdown.terms.items()
@@ -410,9 +460,14 @@ class UnrollRunner:
             kin0 = inp.states[:, 0]
             lane_age0 = model._initial_lane_age({}, inp.present[:, 0], kin0, inp.observed_hist,
                                                 inp.observed_hist_mask)
-            return {"lane_age0": lane_age0,
+            prep = {"lane_age0": lane_age0,
                     "lane_v5_acc0": model.initial_lane_v5_acc(
                         inp.present[:, 0], kin0, inp.observed_hist, inp.observed_hist_mask)}
+            if getattr(model, "_tracks_merge_wait", False):
+                # V8WM3: pre-t0 lane-end waiting time of the teacher-forced feasibility mask.
+                prep["merge_wait0"] = model.initial_merge_wait(
+                    inp.present[:, 0], kin0, inp.observed_hist, inp.observed_hist_mask)
+            return prep
         if driver_leaves is not None:
             params, embedding = driver_leaves.chunk_inputs()
         else:
@@ -530,7 +585,12 @@ class UnrollRunner:
             if measure:
                 shares.capture(name, value.value)
             if backward and composer.differentiable(name):
-                value.value.backward()
+                # R9TDIAG: a differentiable unroll term (lane_event, stability) whose inputs are all
+                # frozen has no autograd graph and a zero gradient by definition (round 9 trains only
+                # merge_pivot, yet inherits loss.lane_event.weight > 0).  Its VALUE is still logged;
+                # only the empty backward is skipped, a term WITH a graph is always back-propagated.
+                if torch.is_tensor(value.value) and value.value.requires_grad:
+                    value.value.backward()
             if share:
                 shares.probe(name, value.value, keep_zero=True)
         extra = composer.extra_total(unroll_values, like=inp.states)
@@ -591,6 +651,112 @@ class UnrollRunner:
             agg_total = sum(float(logged[n]) for n in agg_names)
             record["aggregate_value_share"] = (agg_total / loss_logged
                                                if loss_logged > 0.0 else 0.0)
+        delay_names = [n for n in ("agg_delay_region", "agg_queue", "agg_throughput", "agg_pair")
+                       if n in logged]
+        if delay_names:
+            # A5 long-horizon aggregate delay loss: share of the logged loss value.
+            delay_total = sum(float(logged[n]) for n in delay_names)
+            record["agg_delay_value_share"] = (delay_total / loss_logged
+                                               if loss_logged > 0.0 else 0.0)
+        brake_prep = targets.prepared.get("brake_follow")
+        if brake_prep is not None:
+            record["brake_follow_steps"] = int(brake_prep["count"])
+            record["brake_follow_weight"] = float(cfg.brake_follow_weight)
+        persist_prep = targets.prepared.get("brake_persist")
+        if persist_prep is not None:
+            record["brake_persist_onsets"] = int(persist_prep["count"])
+            record["brake_persist_cells"] = int(persist_prep["n_cells"])
+            record["brake_persist_window_steps"] = int(persist_prep["window_steps"])
+        # V10COURTESY: expose the actually applied boost so train_log proves it is live.
+        boost = targets.courtesy_boost
+        if boost is not None:
+            hit = boost > 1.0
+            record["courtesy_weight"] = float(cfg.courtesy_weight)
+            record["courtesy_boost_slots"] = int(hit.sum())
+            record["courtesy_boost_frac"] = float(hit.to(torch.float64).mean())
+        if getattr(model, "merge_teacher_frac", 0.0) > 0.0:
+            record["merge_teacher_frac"] = float(model.merge_teacher_frac)
+        neg_prep = targets.prepared.get("merge_negotiation")
+        if neg_prep is not None:
+            record["merge_negotiation_pairs"] = neg_prep["n_valid"]
+            record["merge_negotiation_yield_pos"] = neg_prep["n_pos"]
+            record["merge_negotiation_non_yield_neg"] = neg_prep["n_neg"]
+        yield_prep = targets.prepared.get("merge_yield")
+        if yield_prep is not None and not yield_prep.get("empty"):
+            record["merge_yield_premerge_windows"] = yield_prep["n_premerge"]
+            record["merge_yield_pos"] = yield_prep["n_pos"]
+            record["merge_yield_non_yield_controls"] = yield_prep["n_neg"]
+            record["merge_gap_windows"] = yield_prep["n_gap"]
+            record["merge_safety_pos"] = yield_prep["n_safety_pos"]
+            record["merge_safety_neg"] = yield_prep["n_safety_neg"]
+            record["merge_safety_conflicts"] = yield_prep["n_conflict"]
+        merge_prep = targets.prepared.get("merge")
+        if merge_prep is not None:
+            # V7FT merge-zone calibration: whole-unroll metrics and share of the logged loss.
+            from .losses.merge import merge_metrics
+
+            record.update(merge_metrics(merge_prep, targets.n_steps))
+            merge_total = sum(float(logged[n]) for n in ("merge_speed", "merge_discharge")
+                              if n in logged)
+            record["merge_value_share"] = (merge_total / loss_logged
+                                           if loss_logged > 0.0 else 0.0)
+        timing_prep = targets.prepared.get("merge_timing")
+        if timing_prep is not None:
+            # V8WM merge-timing: ramp / stuck / merge-time metrics and value share.
+            from .losses.merge_timing import merge_timing_metrics
+
+            record.update(merge_timing_metrics(timing_prep))
+            if "merge_timing" in logged:
+                record["merge_timing_value_share"] = (float(logged["merge_timing"]) / loss_logged
+                                                      if loss_logged > 0.0 else 0.0)
+        fp_prep = targets.prepared.get("merge_first_passage")
+        if fp_prep is not None:
+            # R5THR integrated first-passage merge diagnostics and value share.
+            from .losses.merge_first_passage import merge_first_passage_metrics
+
+            record.update(merge_first_passage_metrics(fp_prep))
+            if "merge_first_passage" in logged:
+                record["merge_fp_value_share"] = (
+                    float(logged["merge_first_passage"]) / loss_logged
+                    if loss_logged > 0.0 else 0.0)
+        fr_prep = targets.prepared.get("merge_frailty")
+        if fr_prep is not None:
+            # R5FR frailty survival merge diagnostics and value share.
+            from .losses.merge_frailty import merge_frailty_metrics
+
+            record.update(merge_frailty_metrics(fr_prep))
+            if "merge_frailty" in logged:
+                record["merge_frailty_value_share"] = (
+                    float(logged["merge_frailty"]) / loss_logged
+                    if loss_logged > 0.0 else 0.0)
+        for term in composer.unroll_terms:
+            stats = getattr(term, "last_stats", None)
+            if term.name == "cutin_reaction" and stats:
+                # R10 fix B telemetry: per-unroll event census and the two loss parts.
+                record.update({f"cutin_reaction_{key}": value for key, value in stats.items()})
+            if term.name == "follower_courtesy" and stats:
+                # R10B telemetry: courtesy row census, raw loss, head output summary.
+                record.update({f"follower_courtesy_{key}": value for key, value in stats.items()})
+        core_prep = targets.prepared.get("merge_core")
+        if "merge_pivot" in targets.prepared:
+            from .losses.merge_pivot import merge_pivot_metrics
+
+            record.update(merge_pivot_metrics(targets.prepared["merge_pivot"], targets.dt_s))
+        if core_prep is not None:
+            # SECUREGAP secure-gap core diagnostics and value shares.
+            from .losses.merge_core import merge_core_metrics
+
+            record.update(merge_core_metrics(core_prep))
+            for name in ("merge_core", "merge_core_yield"):
+                if name in logged:
+                    record[f"{name}_value_share"] = (
+                        float(logged[name]) / loss_logged if loss_logged > 0.0 else 0.0)
+        flow_prep = targets.prepared.get("lane_flow")
+        if flow_prep is not None:
+            # V8LANE lane-flow: expected vs recorded mainline counts.
+            from .losses.lane_flow import lane_flow_metrics
+
+            record.update(lane_flow_metrics(flow_prep))
         pair_names = [n for n in ("pair_pos", "pair_speed", "pair_agg", "pair_return", "pair_rank")
                       if n in logged]
         if pair_names:
@@ -618,7 +784,18 @@ class UnrollRunner:
         if measure:
             shares_by_term, norms = shares.accumulated()
             record.update(loss_share=shares_by_term, loss_grad_norm=norms)
+        if acc.window_err_sum is not None:
+            valid = acc.window_valid.clamp_min(1.0)
+            record["window_position_error"] = (acc.window_err_sum / valid).tolist()
         return record
+
+    @torch.no_grad()
+    def window_errors(self, batch: Mapping[str, Any], *, unroll_steps: int,
+                      truncation_steps: Optional[int] = None) -> list[float]:
+        """V10HORIZON: forward-only mean positional Huber error per window of a batch."""
+        record = self.run(batch, unroll_steps=unroll_steps, backward=False,
+                          truncation_steps=truncation_steps, _window_probe=True)
+        return record["window_position_error"]
 
     def _host_scalars(self, acc: _Accumulators, targets: UnrollTargets,
                       unroll_values: Mapping[str, TermValue]) -> dict:

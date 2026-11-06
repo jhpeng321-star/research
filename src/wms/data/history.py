@@ -10,6 +10,7 @@ import math
 import torch
 from torch import Tensor
 
+from wms.core import speed_flags
 from wms.core.constants import LONG_HISTORY_F  # noqa: F401  (single source of truth)
 
 
@@ -52,16 +53,24 @@ def long_history_features(kin: Tensor, mask: Tensor, target: Tensor,
     t = kin.shape[0]
     # Sanitise unobserved values BEFORE arithmetic (even NaN padding is inert).
     kin = torch.where(mask.unsqueeze(-1), kin, torch.zeros_like(kin))
+    fast = speed_flags.enabled("fast_long_history")
     same = torch.ones(t, k, dtype=torch.bool, device=kin.device)
-    for j in range(t - 2, -1, -1):
-        same[j] = same[j + 1] & target[j]
+    if fast and t > 1:
+        # S-SPEED2: reverse cumulative AND (exact boolean identity of the loop below).
+        same[:-1] = torch.cumprod(target.flip(0).to(torch.uint8), 0).flip(0).bool()
+    else:
+        for j in range(t - 2, -1, -1):
+            same[j] = same[j + 1] & target[j]
     valid = same & mask & present_now.bool().unsqueeze(0)
     indices = torch.arange(t - 1, -1, -stride, device=kin.device).flip(0)
     sample = kin[indices]
     seen = mask[indices]
     sample_valid = valid[indices]
-    features = kin.new_zeros(len(indices), k, LONG_HISTORY_F)
-    for i in range(len(indices)):
+    if fast:
+        features = _sample_features(sample, seen, kin[-1, :, 0:1])
+    else:
+        features = kin.new_zeros(len(indices), k, LONG_HISTORY_F)
+    for i in range(0 if fast else len(indices)):
         row = sample[i]
         lane = row[:, 1:4].argmax(-1)
         ds = row[:, 0].unsqueeze(0) - row[:, 0].unsqueeze(1)
@@ -84,6 +93,35 @@ def long_history_features(kin: Tensor, mask: Tensor, target: Tensor,
                                torch.zeros_like(features)).transpose(0, 1)
     out_mask[:, -use:] = sample_valid.transpose(0, 1)
     return out, out_mask
+
+
+def _sample_features(sample: Tensor, seen: Tensor, anchor_s: Tensor, chunk: int = 16) -> Tensor:
+    """S-SPEED2 ``fast_long_history``: the per-sample feature loop, batched over samples.
+
+    Every element is the same elementwise expression of the same inputs; the leader is the
+    first minimum of the same row (``min`` returns the first index on ties), so the result is
+    identical.  ``chunk`` samples at a time bound the ``[chunk, K, K]`` temporaries.
+    """
+    parts = []
+    for lo in range(0, sample.shape[0], chunk):
+        row, obs = sample[lo:lo + chunk], seen[lo:lo + chunk]
+        lane = row[..., 1:4].argmax(-1)
+        ds = row[..., 0].unsqueeze(-2) - row[..., 0].unsqueeze(-1)
+        candidates = (obs.unsqueeze(-2) & obs.unsqueeze(-1)
+                      & (lane.unsqueeze(-2) == lane.unsqueeze(-1)) & (ds > 0))
+        distances = torch.where(candidates, ds, torch.full_like(ds, float("inf")))
+        distance, leader = distances.min(-1)
+        has = torch.isfinite(distance)
+        lead_length = torch.gather(row[..., 6], -1, leader)
+        lead_v = torch.gather(row[..., 4], -1, leader)
+        gap = torch.where(has, distance - lead_length,
+                          torch.full_like(distance, 250.0)).clamp(0.3, 250.0)
+        dv = torch.where(has, lead_v - row[..., 4], torch.zeros_like(gap))
+        parts.append(torch.cat((row[..., 4:5] / 30, row[..., 5:6] / 3,
+                                row[..., 1:4], gap[..., None] / 100,
+                                (row[..., 0:1] - anchor_s) / 250,
+                                dv[..., None] / 30, has[..., None].to(row.dtype)), -1))
+    return torch.cat(parts) if parts else sample.new_zeros(0, sample.shape[1], LONG_HISTORY_F)
 
 
 def history_step_features(kin: Tensor, gap: Tensor) -> Tensor:

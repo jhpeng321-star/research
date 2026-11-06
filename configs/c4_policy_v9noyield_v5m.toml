@@ -1,0 +1,18 @@
+# V9ENTRY policy on WM v5m (2026-10-18; PREPARED, NOT LAUNCHED - owner approval required).
+# = c4_policy_v8.toml (the v8 policy run runs/c4_policy_v8_on_v5m: from scratch, 600 updates) with ONE change:
+# trainer.entry_queue_state = true (runs/active/C4-V7FT-20261017/entry_fix/ENTRY_FIX.md).  The start windows are
+# the same native_v5 / genrand_plain windows, read from copies that add the queue arrays the switch needs
+# (configs/c4_wm_v5m_refresh_q.toml; base arrays are symlinks to the v8 run's data).  Unlike
+# c4_policy_v9entry.toml this keeps the v8 start-window config (c4_wm_v5m_refresh), so nothing else changes.
+# Train from scratch: the critic's entry_backlog input now sees real backlogs (do not resume a v8 critic).
+extends = "c4_policy_v8.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V9ENTRY-V5M"
+
+[data]
+wm_config = "configs/c4_wm_v5m_refresh_q.toml"
+
+[trainer]
+entry_queue_state = true
+wm_physics_overrides = {mainline_merge_yield = false}

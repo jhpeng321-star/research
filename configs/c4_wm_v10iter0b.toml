@@ -1,0 +1,49 @@
+# V10 iteration-0 RETRAIN (2026-10-19, owner rule: no WM training without the A5 aggregate loss).
+# = c4_wm_v10loop_iter0.toml (native 0.65 / genrand_plain 0.30 / genrand_branch 0.05, init v5m) plus:
+#   lane_learnable + option C (mainline_lane_mode = courtesy), the censor/envelope fixes on c4/v10int,
+#   A5 loss.agg_delay over 120-300 s (active on the 240 s stage), lane_flow count loss,
+#   v10horizon static prioritised replay (merge-zone / CAV-follower x2) and step checkpointing.
+schema_version = 2
+name = "WM-S-C4-V10-ITER0B"
+extends = "c4_wm_v10loop_iter0.toml"
+
+[physics]
+lane_learnable = true
+mainline_lane_mode = "courtesy"
+
+[model]
+checkpoint_step = true
+
+[curriculum]
+unroll_s = [60.0, 120.0, 240.0]
+stage_steps = [80, 60, 40]
+truncation_steps_per_stage = [120, 120, 60]
+max_hours = 3.0
+
+[optim]
+lr_per_stage = [1.0e-4, 5.0e-5, 3.0e-5]
+batch_size_per_stage = [8, 4, 2]
+
+[loss.agg_delay]
+weight = 0.1
+start_s = 120.0
+horizon_s = 300.0
+paired_weight = 0.1
+bin_s = 10.0
+queue_scale_veh = 4.0
+throughput_scale_veh = 4.0
+
+[loss.lane_flow]
+weight = 1.0
+balance = 0.5
+
+[data.replay]
+enabled = true
+merge_oversample = 2.0
+cav_follower_oversample = 2.0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10_iter0b"
+
+[loss]
+loss_share_logging = false   # 10-19: the per-term gradient probe OOMed the 24 GB GPU at the 120 s stage

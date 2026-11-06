@@ -1,0 +1,23 @@
+# V10 iteration-0c (2026-10-20): fine-tune of iter0b (runs/c4_wm_v10_iter0b/wm_s_stage240.pt) with the learned
+# courtesy inputs (ramp-car distance-to-end / wait / speed / merge intent, zero-init) + courtesy event weight,
+# HDV brake-event replay + follower-chain weight. Same 60/120/240 s curriculum (agg_delay active at 240 s).
+schema_version = 2
+name = "WM-S-C4-V10-ITER0C"
+extends = "c4_wm_v10iter0b.toml"
+
+[model]
+courtesy_inputs = true
+
+[curriculum]
+stage_steps = [40, 40, 40]
+max_hours = 2.5
+
+[loss]
+courtesy_weight = 3.0
+brake_follow_weight = 2.0
+
+[data.replay]
+brake_oversample = 2.0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10_iter0c"

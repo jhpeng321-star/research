@@ -1,0 +1,76 @@
+# V10 round 1 (2026-10-20): iter0c + the 300 s paired source, rebalanced mix, longer 240 s stage,
+# earlier/paired aggregate-delay supervision, moderate braking persistence and a corrected
+# merge-zone replay flag.  init_from is set by the coordinator at launch.
+#
+# REPLAY FLAG (src/wms/data/replay_flags.py): a window is merge-zone only when, at some step, a
+# present HDV in lane 2 is within `merge_zone_end_m` (40 m) of the acceleration-lane end
+# (physics.merge_zone_s1_m = 75.44 m).  The old rule ("any lane-2 HDV somewhere") marked ~99 % of
+# the TRAIN-val windows, so merge_oversample = 2 was ~a no-op.
+#
+# PAIRED HORIZON: `PairedBranchSource` (fixed horizon_mode) uses
+# min(curriculum max unroll, shortest branch span).  With the 300 s pairs300 branches and the
+# 240 s stage that is 480 steps = 240 s, so loss.agg_delay's paired term (start_s 60 .. 240 s)
+# is non-zero.  The old 60 s genrand_branch branches capped it at 120 steps (= 60 s), which is
+# why the paired term never activated.  genrand_branch stays an ordinary (unpaired) source here
+# because `loss.paired_diff` accepts exactly one paired source; its shares are unchanged.
+schema_version = 2
+name = "WM-S-C4-V10ROUND1"
+extends = "c4_wm_v10iter0c.toml"
+
+[model]
+init_from = "SET_BY_COORDINATOR"   # launch: --set model.init_from=<abs path of the iter0c/fresh checkpoint>
+
+# `data.c4_sources` REPLACES the parent list (lists are replaced, not merged): repeat every source.
+[[data.c4_sources]]
+name = "native_v5"
+path = "v5_native"          # WMS_DATA_V5_NATIVE
+mix_ratio = 0.50
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_plain"
+path = "genrand_plain"      # WMS_DATA_GENRAND_PLAIN
+mix_ratio = 0.25
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_branch"
+path = "genrand_branch"     # WMS_DATA_GENRAND_BRANCH (ordinary windows only; pairs300 is paired)
+mix_ratio = 0.10
+window_stride_s = 10.0
+use_val = true
+paired = false
+
+[[data.c4_sources]]
+name = "pairs300"
+path = "pairs300"           # WMS_DATA_PAIRS300 (300 s paired branches: generic_random + native)
+mix_ratio = 0.15
+window_stride_s = 10.0
+use_val = true
+paired = true
+
+[data.replay]
+merge_oversample = 2.0
+merge_zone_end_m = 40.0
+brake_oversample = 2.0       # V10BRAKEWAVE key kept from iter0c
+
+[curriculum]
+unroll_s = [60.0, 120.0, 240.0]
+stage_steps = [40, 40, 60]   # the 240 s stage is the long one
+max_hours = 2.5
+
+[loss.agg_delay]
+weight = 0.5
+paired_weight = 0.5
+start_s = 60.0               # supervise the early delay deficit earlier (was 120 s)
+horizon_s = 300.0
+
+[loss.brake_persist]
+weight = 0.5
+quantile_weight = 0.2
+event_balance = 1.0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10round1"

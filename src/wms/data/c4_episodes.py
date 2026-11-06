@@ -60,6 +60,7 @@ from wms.core.guard import refuse_restricted
 from wms.data.action_timeline import CONTROLLERS, ActionTimeline
 from wms.data.dataset import (TrajectoryDataset, _n_control_steps, _states_from_teacher,
                               road_presence)
+from wms.data.recorded_prefix import recorded_prefix
 from wms.data.sources import validate_train_source
 
 SOURCE_SCHEMA = "wms_c4_episode_source/1"
@@ -79,6 +80,17 @@ ARRAYS = ("veh_kin", "veh_mask", "target_mask", "counter", "vid", "is_cav", "tim
 #: speed-bound clip; ``issued_acceleration_mps2`` is the clipped command, the REALIZED
 #: acceleration is ``veh_kin[..., 5]``), and the issued / requested WM lane targets (-1 none).
 EXTRA_ARRAYS = ("requested_acceleration_mps2", "lane_command_target", "lane_request_target")
+#: V9ENTRY optional entrance-queue arrays, written when the episode directory carries its SUMO
+#: request file (``scenario/requests.rou.xml``, written by the C4 recorder):
+#:   entry_backlog    f32 [T,2]     requested-but-not-inserted vehicles per entrance at each tick
+#:                                  (SUMO ledger ``due(now) - inserted``; 0 mainline, 1 ramp)
+#:   request_counter  f32 [T,2,30]  10 s REQUEST (demand) counts over the last 300 s, binned as
+#:                                  ``counter`` (which counts insertions, i.e. service)
+#:   entry_cav_counter f32 [T,2,30] 10 s CAV INSERTION counts (the CAV part of ``counter``; CAVs
+#:                                  identify themselves, so the entrant CAV share is RSU-observable)
+#: The window loader turns them into ``record["entry_queue"]`` (:func:`queue_features`).
+QUEUE_ARRAYS = ("entry_backlog", "request_counter", "entry_cav_counter")
+REQUESTS_FILE = "scenario/requests.rou.xml"
 
 
 class C4EpisodeRefusal(TrainDataRefusal):
@@ -206,6 +218,112 @@ def episode_arrays(ep: dict) -> dict[str, np.ndarray]:
     }
 
 
+def read_requests(path: Path) -> tuple[list[str], np.ndarray, np.ndarray]:
+    """``(vehicle ids, depart s, entrance)`` of a SUMO request file (entrance 1 = a route whose
+    id contains "ramp", else 0 mainline; ``traffic_shepherd.scenarios`` uses
+    ``mainline_route`` / ``ramp_route``)."""
+    import xml.etree.ElementTree as ET
+
+    names, depart, entrance = [], [], []
+    for _event, el in ET.iterparse(str(path), events=("end",)):
+        if el.tag == "vehicle":
+            names.append(str(el.get("id")))
+            depart.append(float(el.get("depart")))
+            entrance.append(1 if "ramp" in str(el.get("route", "")).lower() else 0)
+            el.clear()
+    return names, np.asarray(depart, np.float64), np.asarray(entrance, np.int64)
+
+
+def episode_queue_arrays(time_s: np.ndarray, vid: np.ndarray, present: np.ndarray,
+                         vehicle_ids: Sequence[str], req_names: Sequence[str],
+                         req_depart: np.ndarray, req_entrance: np.ndarray,
+                         first_seen_s: Optional[np.ndarray] = None) -> tuple[dict, dict]:
+    """V9ENTRY ``entry_backlog [T,2]`` / ``request_counter [T,2,30]`` (see :data:`QUEUE_ARRAYS`).
+
+    A request's insertion time is its vehicle's first occupied tick (or ``first_seen_s`` of a
+    branch episode, recorded over the longer base run).  A request never seen on the road is still
+    waiting when the arrays start at t = 0; when they start later (branch episodes) and the
+    request is older than the start it is counted as ``unknown`` and treated as inserted, so the
+    backlog is then a lower bound.  Returns ``(arrays, stats)``."""
+    time_s = np.asarray(time_s, np.float64)
+    first = {}
+    if first_seen_s is not None:
+        for v, ts in enumerate(np.asarray(first_seen_s, np.float64).tolist()):
+            if math.isfinite(ts):
+                first[v] = float(ts)
+    for t in range(vid.shape[0]):
+        for v in vid[t][present[t]].tolist():
+            if v >= 0 and v not in first:
+                first[v] = float(time_s[t])
+    by_name = {str(n): first[v] for v, n in enumerate(vehicle_ids) if v in first}
+    t_start = float(time_s[0])
+    ins = np.empty(len(req_names), np.float64)
+    unknown = 0
+    for j, (name, dep) in enumerate(zip(req_names, np.asarray(req_depart).tolist())):
+        if name in by_name:
+            ins[j] = by_name[name]
+        elif t_start > 0.0 and dep < t_start:
+            ins[j] = -np.inf
+            unknown += 1
+        else:
+            ins[j] = np.inf
+    dep = np.asarray(req_depart, np.float64)
+    ent = np.asarray(req_entrance, np.int64)
+    t_count = len(time_s)
+    backlog = np.zeros((t_count, N_ENTRANCES), np.float32)
+    counter = np.zeros((t_count, N_ENTRANCES, COUNTER_BINS), np.float32)
+    for t in range(t_count):
+        now = float(time_s[t])
+        due = dep <= now + 1e-9
+        for e in range(N_ENTRANCES):
+            backlog[t, e] = float((due & (ins > now + 1e-9) & (ent == e)).sum())
+        age = now - dep
+        keep = due & (age < COUNTER_BINS * COUNTER_BIN_S)
+        if keep.any():
+            np.add.at(counter[t], (ent[keep], np.floor(np.clip(age[keep], 0.0, None)
+                                                        / COUNTER_BIN_S).astype(np.int64)), 1.0)
+    stats = {"n_requests": int(len(req_names)), "queue_unknown": int(unknown),
+             "not_inserted_by_end": int(np.isposinf(ins).sum())}
+    return {"entry_backlog": backlog, "request_counter": counter}, stats
+
+
+def cav_entry_counter(time_s, vid, present, is_cav, lane_carry, first_seen_s=None,
+                      first_entrance=None) -> np.ndarray:
+    """``[T,2,30]`` CAV insertion counts, binned exactly as :func:`episode_counter` (whose CAV
+    part it is): the counter restricted to vehicles that are CAVs."""
+    vid = np.asarray(vid)
+    cav_ids = np.unique(vid[np.asarray(present, bool) & np.asarray(is_cav, bool) & (vid >= 0)])
+    keep = np.isin(vid, cav_ids) & np.asarray(present, bool)
+    fs = fe = None
+    if first_seen_s is not None and first_entrance is not None:
+        fs = np.asarray(first_seen_s, np.float64).copy()
+        fe = np.asarray(first_entrance).copy()
+        not_cav = ~np.isin(np.arange(fs.size), cav_ids)
+        fs[not_cav] = np.nan
+        fe[not_cav] = -1
+    return episode_counter(np.asarray(time_s), vid, keep, lane_carry, fs, fe)
+
+
+def queue_features(ep, tick: int) -> np.ndarray:
+    """``[backlog main, backlog ramp, demand main, demand ramp(, CAV share main, CAV share ramp)]``
+    (vehicles, veh/s, fraction) at ``tick``.
+
+    The demand rate is the mean request rate over the fully observed 10 s bins of the last
+    300 s (an upstream arrival count); the backlog is the recorded SUMO entrance queue; the CAV
+    share (when ``entry_cav_counter`` exists) is the CAV fraction of the insertions in the same
+    bins (0 when there were none)."""
+    backlog = np.asarray(ep.array("entry_backlog")[tick], np.float64)
+    counter = np.asarray(ep.array("request_counter")[tick], np.float64)
+    n = max(1, min(COUNTER_BINS, int(float(ep.array("time_s")[tick]) // COUNTER_BIN_S)))
+    demand = counter[:, :n].sum(1) / (n * COUNTER_BIN_S)
+    parts = [backlog, demand]
+    if ep.has("entry_cav_counter"):
+        ins = np.asarray(ep.array("counter")[tick], np.float64)[:, :n].sum(1)
+        cav = np.asarray(ep.array("entry_cav_counter")[tick], np.float64)[:, :n].sum(1)
+        parts.append(np.where(ins > 0, cav / np.maximum(ins, 1.0), 0.0))
+    return np.concatenate(parts).astype(np.float32)
+
+
 def _load_episode_npz(path: Path) -> dict:
     with np.load(path, allow_pickle=False) as data:
         out = {k: data[k] for k in data.files}
@@ -248,6 +366,19 @@ def convert_episode(src: Path, dst_root: Path, *, allow_designed: bool = False) 
     arrays = episode_arrays(ep)
     for key, value in arrays.items():
         np.save(out / f"{key}.npy", value, allow_pickle=False)
+    queue_stats = None
+    if (src / REQUESTS_FILE).is_file() and "vehicle_ids" in ep:      # V9ENTRY
+        names, depart, entrance = read_requests(src / REQUESTS_FILE)
+        queue, queue_stats = episode_queue_arrays(
+            arrays["time_s"], arrays["vid"], arrays["veh_mask"].astype(bool),
+            [str(x) for x in ep["vehicle_ids"]], names, depart, entrance,
+            ep.get("entry_first_seen_s"))
+        for key, value in queue.items():
+            np.save(out / f"{key}.npy", value, allow_pickle=False)
+        np.save(out / "entry_cav_counter.npy", cav_entry_counter(
+            arrays["time_s"], arrays["vid"], arrays["veh_mask"].astype(bool),
+            arrays["is_cav"].astype(bool), np.asarray(ep.get("lane_carry", ep["lane"]), np.int64),
+            ep.get("entry_first_seen_s"), ep.get("entry_first_entrance")), allow_pickle=False)
     present = arrays["veh_mask"].astype(bool)
     cav = present & arrays["is_cav"].astype(bool)
     entry = {
@@ -264,6 +395,8 @@ def convert_episode(src: Path, dst_root: Path, *, allow_designed: bool = False) 
         "t_start_s": float(arrays["time_s"][0]),
         "extra_arrays": sorted(n for n in EXTRA_ARRAYS if n in arrays),
     }
+    if queue_stats is not None:
+        entry["queue_arrays"] = {"source": REQUESTS_FILE, **queue_stats}
     if isinstance(meta.get("branch"), dict):        # paired-branch group (genrand)
         entry["branch"] = meta["branch"]
         entry["pair_key"] = meta["branch"].get("pair_key")
@@ -341,13 +474,24 @@ class EpisodeArrays:
         self.root = Path(root)
         self._arrays = {name: np.load(self.root / f"{name}.npy", mmap_mode="r",
                                       allow_pickle=False) for name in ARRAYS}
+        for name in QUEUE_ARRAYS:            # V9ENTRY, optional
+            if (self.root / f"{name}.npy").is_file():
+                self._arrays[name] = np.load(self.root / f"{name}.npy", mmap_mode="r",
+                                             allow_pickle=False)
 
     def array(self, name: str) -> np.ndarray:
         return self._arrays[name]
 
+    def has(self, name: str) -> bool:
+        return name in self._arrays
+
     @staticmethod
     def run_start(_tick: int) -> int:
         return 0
+
+    def run_bounds(self, tick: int) -> Optional[tuple[int, int]]:
+        n = len(self.array("veh_kin"))
+        return (0, n) if 0 <= tick < n else None
 
 
 @lru_cache(maxsize=64)
@@ -384,7 +528,8 @@ class C4WindowLoader:
 
     def __init__(self, root: Path, entries: list[dict], index: list[tuple[int, int]], *,
                  horizon_steps: int, history_s, history_stride_s: float, entries_v2: bool,
-                 junction_fix: str = "off", command_known: bool = False):
+                 junction_fix: str = "off", command_known: bool = False,
+                 merge_pivot_history: bool = False):
         self.root = Path(root)
         self.entries = entries
         self.index = index
@@ -396,6 +541,7 @@ class C4WindowLoader:
         # ``command_known`` (every issued command of a C4 episode is recorded).
         self.junction_fix = str(junction_fix)
         self.command_known = bool(command_known)
+        self.merge_pivot_history = bool(merge_pivot_history)
 
     def episode(self, e: int) -> EpisodeArrays:
         return _open_episode(str(self.root / self.entries[e]["dir"]))
@@ -444,6 +590,29 @@ class C4WindowLoader:
             road["road_continue"] = road["road_continue"] & ~gone[:-1]
         return teacher, alive, road
 
+    def recorded_prefix(self, ep: EpisodeArrays, tick: int) -> Optional[dict]:
+        """Full historical scenes/actions, not the window's t0-cohort timeline."""
+        prefix = recorded_prefix(ep, tick, cav_array="is_cav")
+        if not tick:
+            return prefix
+        times, controls = ep.array("time_s"), ep.array("control_time_s")
+        c0 = int(np.searchsorted(controls, float(times[0]) - 1e-6))
+        count = _n_control_steps(tick + 1)
+        # Missing historical control coverage cannot be filled from t0 commands.
+        expected = float(times[0]) + np.arange(count)
+        if (c0 + count > len(controls)
+                or not np.allclose(controls[c0:c0 + count], expected, atol=1e-6, rtol=0)):
+            return None if prefix["is_cav"][:-1].any() else prefix
+        sl = slice(c0, c0 + count)
+        prefix["action_timeline"] = {
+            key: np.asarray(ep.array(name)[sl]).copy() for key, name in (
+                ("controller", "controller"),
+                ("acceleration_mps2", "issued_acceleration_mps2"),
+                ("target_speed_mps", "issued_target_speed_mps"))}
+        prefix["action_timeline"].update(
+            control_dt_s=1., command_known=np.ones((count, prefix["states"].shape[1]), bool))
+        return prefix
+
     def events(self, e: int, tick: int) -> tuple[int, int]:
         """``(first_switch_step, first_direct_step)`` of the window's timeline."""
         from wms.data.mixdata import event_steps
@@ -483,7 +652,7 @@ class C4WindowLoader:
         alive = self.alive(ep, tick)
         road = None
         on_road = lane >= 0
-        if self.junction_fix != "off":
+        if self.junction_fix != "off" and not self.merge_pivot_history:
             teacher, alive, road = self._fix_junctions(ep, int(tick), teacher, alive)
         states = _states_from_teacher(teacher, kin[0, :, 6])
         present0 = alive[0]
@@ -510,11 +679,34 @@ class C4WindowLoader:
         }
         if self.entries_v2:
             record["entry_feat"] = entry_features(ep, {"tick": int(tick)})
+            if ep.has("entry_backlog") and ep.has("request_counter"):     # V9ENTRY
+                record["entry_queue"] = queue_features(ep, int(tick))
             record.update(road if road is not None else road_presence(ep, int(tick), h))
         if self.history_s is not None:
             record["driver_hist"], record["driver_hist_mask"] = prior_history(
                 ep, tick, present0, history_s=self.history_s,
                 history_stride_s=self.history_stride_s)
+        if self.merge_pivot_history:
+            from wms.data.recorded_prefix import causal_scene
+
+            prefix = self.recorded_prefix(ep, int(tick))
+            # A full-scene observation is distinct from the t0 supervision cohort.
+            # Later arrivals/reused slots keep CURRENT length, identity and owner.
+            full_present = np.asarray(ep.array("veh_mask")[:tick + h + 1], bool)
+            full_cont = np.asarray(ep.array("target_mask")[:tick + h], bool)
+            full = causal_scene(ep.array("veh_kin")[:tick + h + 1], full_present, full_cont)
+            current = full[tick:tick + h + 1]
+            record["states"] = current.copy()
+            record["cav_teacher"] = np.stack((current[..., 0],
+                np.where(current[..., 1:4].sum(-1) > 0, current[..., 1:4].argmax(-1), -1),
+                current[..., 4], current[..., 5]), -1).astype(np.float32)
+            record["merge_pivot_prefix"] = prefix
+            scene_present = full_present[tick:tick + h + 1].copy()
+            record["merge_pivot_scene"] = dict(
+                states=current.copy(), present=scene_present,
+                is_cav=np.asarray(ep.array("is_cav")[tick:tick + h + 1], bool).copy(),
+                continuity=full_cont[tick:tick + h].copy(),
+                action_timeline=self.timeline(ep, tick, scene_present))
         return record
 
 
@@ -522,7 +714,7 @@ def _one_split(root: Path, doc: dict, role: str, *, horizon_steps: int, history_
                history_stride_s: float, entries_v2: bool, stride_s: float,
                start_s: Optional[float], refuse_worlds=None, role_of=None,
                junction_fix: str = "off", command_known: bool = False,
-               allow_empty: bool = False):
+               allow_empty: bool = False, merge_pivot_history: bool = False):
     roles = role_of or {}
     entries = [e for e in doc["episodes"]
                if roles.get(e["world"], e.get("split_role")) == role]
@@ -547,7 +739,7 @@ def _one_split(root: Path, doc: dict, role: str, *, horizon_steps: int, history_
     loader = C4WindowLoader(root, entries, index, horizon_steps=horizon_steps,
                             history_s=history_s, history_stride_s=history_stride_s,
                             entries_v2=entries_v2, junction_fix=junction_fix,
-                            command_known=command_known)
+                            command_known=command_known, merge_pivot_history=merge_pivot_history)
     events = np.asarray([loader.events(e, t) for e, t in index], np.int64)
     receipt = {
         "mode": "c4-episodes", "split": "TRAIN", "role": role, "source": str(root),
@@ -562,6 +754,8 @@ def _one_split(root: Path, doc: dict, role: str, *, horizon_steps: int, history_
     if history_s is not None:
         receipt["driver_history"] = {"history_s": history_s,
                                      "history_stride_s": history_stride_s}
+    if merge_pivot_history:
+        receipt["merge_pivot_history"] = "raw native full-scene prefix through t0"
     dataset = TrajectoryDataset([{} for _ in index], loader=loader, receipt=receipt)
     dataset.positions = list(index)
     return dataset, events
@@ -572,7 +766,7 @@ def build_c4_datasets(root: str | Path, *, horizon_steps: int, history_s=None,
                       stride_s: float = 10.0, start_s: Optional[float] = None,
                       k_slots: Optional[int] = None, heldout=None, role_of=None,
                       junction_fix: str = "off", command_known: bool = False,
-                      allow_empty: bool = False) -> dict:
+                      allow_empty: bool = False, merge_pivot_history: bool = False) -> dict:
     """``{"train", "train_events", "val", "receipt"}`` of a converted episode source.
 
     ``heldout`` (a :class:`wms.data.mixdata.HeldOutGuard`) refuses held-out worlds;
@@ -598,6 +792,8 @@ def build_c4_datasets(root: str | Path, *, horizon_steps: int, history_s=None,
     if role_of is not None or junction_fix != "off" or command_known or allow_empty:
         common.update(role_of=role_of, junction_fix=junction_fix, command_known=command_known,
                       allow_empty=allow_empty)
+    if merge_pivot_history:
+        common["merge_pivot_history"] = True
     train, events = _one_split(root, doc, "train", **common)
     if train is None and allow_empty:
         val, _ = _one_split(root, doc, "val", **common)

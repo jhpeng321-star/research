@@ -51,6 +51,8 @@ class TrainSettings:
     epochs_per_stage: int = 1
     steps_per_epoch: int = 2000
     batch_size: int = 8
+    #: V10HORIZON: optional per-curriculum-stage batch size (memory control at long horizons).
+    batch_size_per_stage: Optional[tuple[int, ...]] = None
     lr: float = 1.0e-3
     weight_decay: float = 0.0
     grad_clip: float = 1.0
@@ -59,10 +61,97 @@ class TrainSettings:
     lane_weight: float = 1.0
     position_weight: float = 1.0
     speed_weight: float = 1.0
+    # V10BRAKEWAVE (default 1 = OFF, bit-identical): per-step position/speed multiplier on
+    # followers whose same-lane recorded leader (<= 40 m) is decelerating below -1 m/s^2.
+    brake_follow_weight: float = 1.0
+    # V10CAVFOLLOW (default 0 = OFF, bit-identical): extra per-step position/speed multiplier
+    # on HDV followers of a recorded same-lane CAV leader (<= 40 m) braking below -1 m/s^2.
+    brake_follow_cav_weight: float = 0.0
+    # BRAKE_DIAG V10PERSIST (default 0 = OFF, bit-identical): multi-step onset persistence,
+    # onset quantiles and optional inverse-frequency event balancing.
+    brake_persist_weight: float = 0.0
+    brake_persist_quantile_weight: float = 0.0
+    brake_persist_event_balance: float = 0.0
+    brake_persist_window_s: float = 4.0
+    # WAVE (default 0 = OFF, bit-identical): onset-conditioned speed-drop, residual
+    # cancellation and one-step spurious-pulse terms.
+    brake_wave_weight: float = 0.0
+    brake_wave_residual_weight: float = 0.0
+    brake_wave_spurious_weight: float = 0.0
+    brake_wave_window_s: float = 4.0
+    brake_wave_onset_decel_mps2: float = 1.0
+    brake_wave_spurious_decel_mps2: float = 1.5
+    # SLOWRES / astra #3 (default 0 = OFF, bit-identical): free-rollout onset statistics.
+    onset_stats_weight: float = 0.0
+    onset_stats_onset_decel_mps2: float = 1.5
+    onset_stats_temperature_mps2: float = 0.25
+    onset_stats_max_duration_s: float = 10.0
+    # R5MERGE (default 0 = OFF, bit-identical): acceleration consistency of recorded
+    # HDVs that changed lane 2->1 within the last window_s seconds.
+    post_merge_weight: float = 0.0
+    post_merge_residual_weight: float = 0.0
+    post_merge_window_s: float = 10.0
+    post_merge_huber_delta_mps2: float = 0.5
+    # CUT-IN REACTION (R9K)
+    cutin_reaction_weight: float = 0.0
+    cutin_reaction_control_weight: float = 1.0
+    cutin_reaction_pre_s: float = 1.0
+    cutin_reaction_max_window_s: float = 6.0
+    cutin_reaction_huber_delta_mps2: float = 0.5
+    leader_change_features: bool = False
+    # R10B LEARNED FOLLOWER COURTESY (model switches live in ModelSpec; the loss reads these)
+    follower_courtesy: bool = False
+    follower_courtesy_hidden: int = 32
+    follower_courtesy_embedding: bool = False
+    follower_courtesy_rollout_grad: bool = False
+    follower_courtesy_weight: float = 0.0
+    follower_courtesy_huber_delta_mps2: float = 1.0
+    # R11 STRUCTURAL COURTESY FIX (all default = round 10b)
+    follower_courtesy_version: int = 1
+    follower_courtesy_init_zero: bool = False
+    follower_courtesy_contrast: bool = False
+    cutin_reaction_exclude_partnered_controls: bool = False
+    # R13A COURTESY PAIR-CONTRACT REPAIR (all default = round 12 behaviour)
+    follower_courtesy_state_grad: bool = False
+    follower_courtesy_intent: str = "lane_v5"
+    follower_courtesy_absolute_weight: float = 0.0
+    # R13F/R13T TEMPORAL EMISSION SWITCHES (default = round 12)
+    temporal_accel_off: bool = False
+    temporal_accel_reinit: bool = False
+    temporal_accel_lane_bias: bool = False
+    temporal_lane_bias_init: Optional[tuple[float, ...]] = None
+    temporal_accel_state_table: bool = False
+    temporal_state_table_init: Optional[str] = None
+    accel_tail_weight: float = 0.0
+    accel_tail_jerk_weight: float = 0.0
+    accel_tail_table: Optional[str] = None
+    accel_tail_lanes: tuple[int, ...] = (1,)
+    # R12C PHYSICS-ONLY CORE CALIBRATION (default = round 12)
+    residual_accel_off: bool = False
+    follower_courtesy_off: bool = False
+    # R13E opt-in physics, mirrored for flat training-config validation.
+    emergency_braking: bool = False
+    secure_gap_veto: bool = False
+    lane_change_secure_gap: bool = False
+    # LOOP14 (S-TTC): envelope onset ("plant" = R13E; "driver_b" = learned comfortable b).
+    emergency_onset: str = "plant"
+    # R13Y learned merge yield (model switch), mirrored for flat training-config validation.
+    mainline_merge_yield_learnable: bool = False
+    # R16 learned ramp speed adaptation (model switch), mirrored for flat validation.
+    ramp_speed_adapt_learnable: bool = False
+    # R12 BASE CALIBRATION (all default = round 11 behaviour)
+    driver_param_init: str = "checkpoint"
+    residual_accel_reinit: bool = False
+    recorded_replay_present: str = "loss_valid"
     step_weight_decay: float = 0.01
     truncation_steps: int = 20
     truncation_steps_per_stage: Optional[tuple[int, ...]] = None
     lr_per_stage: Optional[tuple[float, ...]] = None
+    # R5TOOLS (default OFF = bit-identical): optimizer parameter protection.  Prefixes in
+    # freeze_prefixes get requires_grad=False and are excluded; lr_scale multiplies the stage
+    # learning rate for parameters whose names start with the prefix (longest prefix wins).
+    freeze_prefixes: tuple[str, ...] = ()
+    lr_scale: Optional[Mapping[str, float]] = None
     driver_grad_across_chunks: bool = False
     history_features: int = 6
     history_s: Optional[float] = None
@@ -129,6 +218,7 @@ class TrainSettings:
     lane_gate_g_max_init: float = 0.16
     lane_gate_tau_steps_init: float = 30.0
     checkpoint_step: bool = False
+    checkpoint_forward: bool = False
     grad_decay_per_step: float = 1.0
     init_from: Optional[str] = None
     flip_rate_weight: float = 0.0
@@ -157,9 +247,29 @@ class TrainSettings:
     aggregate_horizon_start_s: float = 0.0
     aggregate_horizon_full_s: float = 0.0
     aggregate_cell_temp_m: float = 5.0
+    # A5 (2026-10-19, default OFF = bit-identical): long-horizon aggregate delay loss.
+    agg_delay_weight: float = 0.0
+    agg_delay_paired_weight: float = 0.0
+    agg_delay_start_s: float = 120.0
+    agg_delay_horizon_s: float = 300.0
+    agg_delay_fade_s: float = 0.0
+    agg_delay_bin_s: float = 5.0
+    agg_delay_merge_s0_m: float = 0.0
+    agg_delay_merge_s1_m: float = 75.44
+    agg_delay_merge_lane: int = 2
+    agg_delay_road_end_m: float = 553.33
+    agg_delay_sections_m: tuple[float, ...] = (-400.0, 0.0, 75.44, 400.0)
+    agg_delay_queue_speed_mps: float = 5.0
+    agg_delay_region_temp_m: float = 5.0
+    agg_delay_queue_temp_mps: float = 1.0
+    agg_delay_delay_scale_veh_s: float = 1.0
+    agg_delay_queue_scale_veh: float = 1.0
+    agg_delay_throughput_scale_veh: float = 1.0
+    agg_delay_huber_delta: float = 1.0
     entry_pad_auto: bool = False
     entry_pad_max: int = 256
     entry_insert_rule: str = "v2"  # ENTRYFIX/V6ENTRY: "v2" | "sumo_like" | "sumo_like_v2"
+    entry_queue_state: bool = False  # V9ENTRY: recorded t0 backlog + demand-rate arrivals
     junction_fix: str = "off"  # JUNCTIONFIX: data-side only (wms.data.junction_fix)
     controller_hygiene: str = "off"  # DATAHYG: data-side only (wms.data.controller_hygiene)
     # LANEFIX (2026-10-14, default OFF): model switches mirrored for validation; the
@@ -184,6 +294,27 @@ class TrainSettings:
     mixed_horizon_frac: float = 0.0
     mixed_horizon_s: tuple[float, ...] = (10.0, 20.0)
     mixed_horizon_min_stage_s: float = 30.0
+    # V10HORIZON (2026-10-19, default OFF): advance each curriculum stage when the
+    # stage-horizon validation error plateaus instead of after a fixed step budget.
+    plateau_advance: bool = False
+    plateau_patience: int = 3
+    plateau_min_delta: float = 0.01
+    plateau_min_steps: int = 2
+    plateau_max_steps: int = 0
+    # V10HORIZON prioritised mixed replay (default OFF; all multipliers 1 = unchanged).
+    replay_enabled: bool = False
+    replay_merge_oversample: float = 1.0
+    replay_cav_follower_oversample: float = 1.0
+    replay_brake_oversample: float = 1.0
+    # R14 D3 low-CAV-share replay weight (default 1 = OFF)
+    replay_low_share_oversample: float = 1.0
+    replay_low_share_max: float = 0.15
+    replay_low_share_min_stage_s: float = 120.0
+    replay_error_max_boost: float = 8.0
+    replay_error_alpha: float = 1.0
+    replay_error_decay: float = 0.9
+    replay_probe_windows: int = 0
+    replay_refresh_every: int = 0
     # PAIRLOSS (2026-10-14, default OFF): paired-difference loss on paired SUMO branches.
     paired_diff_weight: float = 0.0
     paired_diff_fraction: float = 0.25
@@ -214,6 +345,127 @@ class TrainSettings:
     # V6MERGE: retained in flat checkpoint configs; absent in older checkpoints.
     merge_end_wait: bool = False
     mainline_merge_yield: bool = False
+    # V10UNBLOCK (2026-10-19, default OFF = bit-identical): physical envelope + all-risk lane
+    # learning (wms.physics.config.PhysicsConfig.lane_learnable).
+    lane_learnable: bool = False
+    # R9LANE (2026-10-22, default OFF = bit-identical): ramp-lane cars cannot pass the lane end.
+    ramp_lane_end_stop: bool = False
+    # R9LANE2 (2026-10-22, default OFF = bit-identical): zone-start risk-chain retain.
+    ramp_risk_retain: bool = False
+    # V10LANEOPT (2026-10-19, default 'free' = current behaviour): staged mainline lane changes
+    # (wms.physics.config.PhysicsConfig.mainline_lane_mode).
+    mainline_lane_mode: str = "free"
+    mainline_courtesy_zone_m: float = 300.0
+    # V7FT (2026-10-17, default OFF): merge-zone calibration loss (wms.train.losses.merge).
+    merge_loss_speed_weight: float = 0.0
+    merge_loss_discharge_weight: float = 0.0
+    merge_loss_cell_edges_m: tuple[float, ...] = (-100.0, 0.0, 75.44, 300.0)
+    merge_loss_line_m: float = 75.44
+    merge_loss_bin_s: float = 5.0
+    merge_loss_cell_temp_m: float = 2.0
+    merge_loss_cross_temp_m: float = 5.0
+    merge_loss_speed_scale_mps: float = 1.0
+    merge_loss_discharge_scale_veh: float = 2.0
+    # V8WM (2026-10-17, all default OFF / unchanged).
+    merge_loss_speed_cells: Optional[tuple[int, ...]] = None
+    merge_loss_max_share: Optional[float] = None
+    merge_timing_weight: float = 0.0
+    merge_timing_metrics: bool = False
+    physics_overrides: Optional[Mapping[str, float]] = None
+    physics_inference: Optional[Mapping[str, Any]] = None
+    selection_ramp_weight: float = 0.0
+    selection_stuck_weight: float = 0.0
+    # V8LANE (2026-10-17, default OFF): mainline decision rule (model switch, mirrored for
+    # validation) and the on-policy lane-flow loss.
+    lane_v5_mainline: str = "default"
+    lane_v5_extra_features: bool = False
+    """R5INPUTS (default OFF): append follower acceleration/EMA, gap trends, next-behind and
+    next-ahead neighbours, alignment times and lane-end time to the lane-v5 features."""
+    lane_flow_weight: float = 0.0
+    lane_flow_balance: float = 0.0
+    # V10COURTESY (2026-10-19, default OFF): learned courtesy inputs and the
+    # position/speed event boost for lane-1 followers near a merging ramp car.
+    courtesy_inputs: bool = False
+    courtesy_weight: float = 1.0
+    # R5MERGE (default OFF): exact-identity-at-load output rescale of the residual head.
+    residual_head_rescale: bool = False
+    # SLOWRES (default 'direct' = bit-identical): learned low-pass temporal residual state.
+    temporal_residual_mode: str = "direct"
+    temporal_tau_init_s: float = 0.1
+    temporal_tau_conditioned: bool = False
+    temporal_slew_init_mps2: Optional[float] = None
+    # V10NEGOT (default OFF): learned merge-negotiation block, censored merge-survival loss
+    # and the ramp-only merge teacher-forcing schedule.
+    merge_negotiation: bool = False
+    merge_survival_weight: float = 0.0
+    merge_survival_negative_weight: float = 0.0
+    merge_survival_metrics: bool = False
+    merge_teacher_frac_schedule: tuple[float, ...] = ()
+    # R5YIELD (default OFF): follower-yield Huber, ramp speed adaptation and safety head.
+    merge_yield_huber: float = 0.0
+    merge_ramp_adapt_huber: float = 0.0
+    merge_safety_bce: float = 0.0
+    merge_yield_window_s: float = 5.0
+    merge_gap_window_s: float = 5.0
+    merge_safety_window_s: float = 3.0
+    merge_yield_huber_delta_mps2: float = 0.5
+    merge_gap_huber_delta_m: float = 2.0
+    merge_gap_weight: float = 0.5
+    merge_brake_huber_delta_mps2: float = 1.0
+    merge_safety_brake_weight: float = 0.5
+    merge_conflict_decel_mps2: float = 1.5
+    merge_yield_decel_mps2: float = -0.5
+    merge_yield_control_weight: float = 0.5
+    merge_safety_control_weight: float = 0.25
+    merge_yield_behind_m: float = 40.0
+    merge_yield_dend_m: float = 60.0
+    # R5THR (default 'hazard' / weights 0 = bit-identical): persistent learned gap-acceptance
+    # threshold and the integrated censored first-passage merge loss.
+    merge_decision: str = "hazard"
+    merge_st_width: float = 1.0
+    # R9: strict is the backward-compatible law; hybrid learns a positive passage width.
+    merge_passage_law: str = "strict"
+    merge_w_init: float = 1.0
+    merge_quadrature_order: int = 32
+    merge_pivot_state_st: bool = True
+    merge_core_tau_reg_weight: float = 0.0
+    merge_core_w_reg_weight: float = 0.0
+    merge_first_passage_weight: float = 0.0
+    merge_first_passage_rank_weight: float = 0.0
+    merge_first_passage_metrics: bool = False
+    merge_first_passage_pos_tol_m: float = 25.0
+    merge_first_passage_speed_tol_mps: float = 5.0
+    merge_first_passage_gap_tol_m: float = 20.0
+    merge_first_passage_gap_speed_tol_mps: float = 5.0
+    merge_first_passage_location_reg_weight: float = 1.0e-3
+    # R5FR (default OFF / weights 0 = bit-identical): ONE persistent per-driver frailty on
+    # the per-step merge hazard and the censored discrete-time survival merge loss.
+    merge_frailty_weight: float = 0.0
+    merge_frailty_n_quad: int = 8
+    merge_frailty_metrics: bool = False
+    merge_frailty_pos_tol_m: float = 25.0
+    merge_frailty_speed_tol_mps: float = 5.0
+    merge_frailty_gap_tol_m: float = 20.0
+    merge_frailty_gap_speed_tol_mps: float = 5.0
+    merge_frailty_location_reg_weight: float = 1.0e-3
+    # SECUREGAP (default OFF / weights 0 = bit-identical): learned LC2013-like two-sided
+    # secure-gap core, its censored survival / teacher-forced acceptance / follower-yield losses.
+    merge_core_weight: float = 0.0
+    merge_core_tf_weight: float = 0.0
+    merge_core_yield_weight: float = 0.0
+    merge_core_n_quad: int = 8
+    merge_core_metrics: bool = False
+    merge_core_pos_tol_m: float = 25.0
+    merge_core_speed_tol_mps: float = 5.0
+    merge_core_gap_tol_m: float = 20.0
+    merge_core_gap_speed_tol_mps: float = 5.0
+    merge_core_location_reg_weight: float = 1.0e-3
+    # R8 merge-core v2 (version 1 = bit-identical legacy behaviour).
+    merge_core_version: int = 1
+    merge_core_z_tf: float = 1.0
+    merge_core_z_on: float = 1.0
+    merge_core_sigma_reg_weight: float = 0.0
+    merge_core_sigma_fit: float = 0.0
 
     def __post_init__(self) -> None:
         _require(self.emergency_decel_mps2 is None or (
@@ -232,6 +484,10 @@ class TrainSettings:
             len(self.stage_steps) == len(self.unroll_curriculum_s)
             and all(int(x) >= 1 for x in self.stage_steps)),
             "stage_steps must give one positive count per curriculum stage")
+        _require(self.batch_size_per_stage is None or (
+            len(self.batch_size_per_stage) == len(self.unroll_curriculum_s)
+            and all(int(x) >= 1 for x in self.batch_size_per_stage)),
+            "batch_size_per_stage must give one positive batch size per curriculum stage")
         _require(float(self.traffic_bin_s) > 0.0 and float(self.traffic_weight) >= 0.0,
                  "traffic_bin_s must be positive and traffic_weight non-negative")
         _require(float(self.traffic_ramp_end_s) > float(self.traffic_ramp_start_s),
@@ -297,6 +553,15 @@ class TrainSettings:
             len(self.lr_per_stage) == len(self.unroll_curriculum_s)
             and all(math.isfinite(float(x)) and float(x) > 0 for x in self.lr_per_stage)),
             "lr_per_stage must give one positive learning rate per stage")
+        _require(all(isinstance(prefix, str) and prefix for prefix in self.freeze_prefixes),
+                 "freeze_prefixes must be non-empty parameter-name prefixes")
+        _require(len(set(self.freeze_prefixes)) == len(self.freeze_prefixes),
+                 "freeze_prefixes must not contain duplicates")
+        _require(self.lr_scale is None or (
+            all(isinstance(prefix, str) and prefix for prefix in self.lr_scale)
+            and all(math.isfinite(float(scale)) and float(scale) > 0
+                    for scale in self.lr_scale.values())),
+            "lr_scale must map non-empty prefixes to positive finite multipliers")
         _require(math.isfinite(self.flip_rate_weight) and self.flip_rate_weight >= 0,
                  "flip_rate_weight must be finite and non-negative")
         _require(math.isfinite(self.flip_rate_allowance)
@@ -323,6 +588,25 @@ class TrainSettings:
         _require(float(self.aggregate_bin_s) > 0 and float(self.aggregate_cell_temp_m) > 0
                  and int(self.aggregate_every_steps) >= 1,
                  "aggregate_bin_s/cell_temp_m must be positive and every_steps >= 1")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.agg_delay_weight, self.agg_delay_paired_weight, self.agg_delay_start_s,
+            self.agg_delay_horizon_s, self.agg_delay_fade_s)),
+            "agg_delay weights/window must be finite and non-negative")
+        _require(all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+            self.agg_delay_bin_s, self.agg_delay_region_temp_m, self.agg_delay_queue_temp_mps,
+            self.agg_delay_delay_scale_veh_s, self.agg_delay_queue_scale_veh,
+            self.agg_delay_throughput_scale_veh, self.agg_delay_huber_delta)),
+            "agg_delay bin/temperatures/scales must be finite and positive")
+        _require(math.isfinite(float(self.agg_delay_merge_s1_m))
+                 and float(self.agg_delay_merge_s1_m) > float(self.agg_delay_merge_s0_m)
+                 and int(self.agg_delay_merge_lane) >= 1
+                 and math.isfinite(float(self.agg_delay_road_end_m))
+                 and float(self.agg_delay_road_end_m) > 0.0,
+                 "agg_delay merge geometry must be finite with merge_s1_m > merge_s0_m, "
+                 "merge_lane >= 1 and road_end_m > 0")
+        _require(len(self.agg_delay_sections_m) >= 1
+                 and all(math.isfinite(float(x)) for x in self.agg_delay_sections_m),
+                 "agg_delay_sections_m must be non-empty finite positions")
         _require(int(self.entry_pad_max) >= 1, "entry_pad_max must be positive")
         _require(self.junction_fix in JUNCTION_FIX_MODES,
                  f"junction_fix must be one of {JUNCTION_FIX_MODES}")
@@ -363,6 +647,18 @@ class TrainSettings:
                  "paired_diff_groups must be >= 1 and paired_diff_max_arms >= 2")
         _require(self.paired_diff_horizon_mode in ("fixed", "stage"),
                  "paired_diff_horizon_mode must be fixed or stage")
+        _require(self.lane_v5_mainline in ("default", "sample", "budget", "budget_prop"),
+                 "lane_v5_mainline must be default, sample, budget or budget_prop")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0
+                     for x in (self.lane_flow_weight, self.lane_flow_balance)),
+                 "lane_flow_weight / lane_flow_balance must be finite and non-negative")
+        _require((self.lane_v5_mainline == "default" and float(self.lane_flow_weight) == 0.0)
+                 or self.lane_model == "hazard_v5",
+                 "lane_v5_mainline / lane_flow_weight require lane_model='hazard_v5'")
+        _require(isinstance(self.lane_v5_extra_features, bool),
+                 "lane_v5_extra_features must be a boolean")
+        _require(not self.lane_v5_extra_features or self.lane_model == "hazard_v5",
+                 "lane_v5_extra_features requires lane_model='hazard_v5'")
         lanefix_on = (self.lane_decision != "argmax"
                       or any(float(x) for x in self.lane_logit_offsets)
                       or self.lane_hazard_features != "v1"
@@ -397,6 +693,17 @@ class TrainSettings:
                          for x in self.selection_horizons_s)
                  and all(math.isfinite(float(x)) for x in self.selection_reference),
                  "selection_reference needs one finite value per selection horizon")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.merge_timing_weight, self.selection_ramp_weight, self.selection_stuck_weight)),
+            "merge_timing_weight / selection_ramp_weight / selection_stuck_weight must be >= 0")
+        _require(self.merge_loss_max_share is None
+                 or 0.0 < float(self.merge_loss_max_share) < 1.0,
+                 "merge_loss_max_share must be in (0, 1) when set")
+        _require(not (self.selection_ramp_weight or self.selection_stuck_weight)
+                 or (self.selection_mode == "multi_horizon_v2" and self.merge_timing_on),
+                 "selection_ramp_weight / selection_stuck_weight need selection_mode "
+                 "multi_horizon_v2 and the merge-timing metrics (merge_timing_weight > 0 or "
+                 "merge_timing_metrics)")
         _require(math.isfinite(self.selection_agg_reward_weight)
                  and self.selection_agg_reward_weight >= 0.0,
                  "selection_agg_reward_weight must be finite and non-negative")
@@ -404,6 +711,245 @@ class TrainSettings:
                  and len(self.mixed_horizon_s) >= 1
                  and all(math.isfinite(float(x)) and float(x) > 0 for x in self.mixed_horizon_s),
                  "mixed_horizon_frac must be in [0,1] and mixed_horizon_s positive")
+        _require(isinstance(self.plateau_advance, bool), "plateau_advance must be a boolean")
+        _require(int(self.plateau_patience) >= 1 and int(self.plateau_min_steps) >= 1
+                 and int(self.plateau_max_steps) >= 0,
+                 "plateau_patience/min_steps must be >= 1 and plateau_max_steps >= 0")
+        _require(math.isfinite(float(self.plateau_min_delta)) and float(self.plateau_min_delta) >= 0.0,
+                 "plateau_min_delta must be finite and non-negative")
+        _require(isinstance(self.courtesy_inputs, bool),
+                 "courtesy_inputs must be a boolean")
+        _require(math.isfinite(float(self.courtesy_weight))
+                 and float(self.courtesy_weight) >= 1.0,
+                 "courtesy_weight must be finite and >= 1 (1 = off)")
+        _require(isinstance(self.merge_negotiation, bool)
+                 and isinstance(self.merge_survival_metrics, bool),
+                 "merge_negotiation / merge_survival_metrics must be booleans")
+        _require(math.isfinite(float(self.merge_survival_weight))
+                 and float(self.merge_survival_weight) >= 0.0
+                 and math.isfinite(float(self.merge_survival_negative_weight))
+                 and float(self.merge_survival_negative_weight) >= 0.0,
+                 "merge_survival weights must be finite and non-negative")
+        _require(all(math.isfinite(float(x)) and 0.0 <= float(x) <= 1.0
+                     for x in self.merge_teacher_frac_schedule),
+                 "merge_teacher_frac_schedule values must be in [0, 1]")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.merge_yield_huber, self.merge_ramp_adapt_huber, self.merge_safety_bce)),
+            "merge_yield weights must be finite and non-negative")
+        _require(all(math.isfinite(float(x)) and 0.0 < float(x) <= 15.0 for x in (
+            self.merge_yield_window_s, self.merge_gap_window_s, self.merge_safety_window_s)),
+            "merge_yield windows must be finite and in (0, 15]")
+        _require(all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+            self.merge_yield_huber_delta_mps2, self.merge_gap_huber_delta_m,
+            self.merge_brake_huber_delta_mps2, self.merge_conflict_decel_mps2,
+            self.merge_yield_behind_m, self.merge_yield_dend_m)),
+            "merge_yield Huber deltas / distances / conflict threshold must be positive")
+        _require(math.isfinite(float(self.merge_yield_decel_mps2))
+                 and float(self.merge_yield_decel_mps2) < 0.0,
+                 "merge_yield_decel_mps2 must be negative")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.merge_gap_weight, self.merge_safety_brake_weight,
+            self.merge_yield_control_weight, self.merge_safety_control_weight)),
+            "merge_yield gap/brake/control weights must be non-negative")
+        _require(self.merge_decision in ("hazard", "threshold", "frailty", "secure_gap", "first_passage"),
+                 "merge_decision must be hazard, threshold, frailty, secure_gap or first_passage")
+        _require(math.isfinite(self.merge_st_width) and self.merge_st_width > 0.0,
+                 "merge_st_width must be finite and positive")
+        _require(self.merge_passage_law in ("strict", "hybrid"),
+                 "merge_passage_law must be strict or hybrid")
+        _require(not isinstance(self.merge_w_init, bool)
+                 and math.isfinite(float(self.merge_w_init)) and float(self.merge_w_init) > 0.0,
+                 "merge_w_init must be finite and positive")
+        _require(isinstance(self.merge_quadrature_order, int)
+                 and not isinstance(self.merge_quadrature_order, bool)
+                 and self.merge_quadrature_order >= 2,
+                 "merge_quadrature_order must be an integer >= 2")
+        _require(math.isfinite(self.merge_core_tau_reg_weight) and self.merge_core_tau_reg_weight >= 0.0,
+                 "merge_core_tau_reg_weight must be finite and non-negative")
+        _require(not isinstance(self.merge_core_w_reg_weight, bool)
+                 and math.isfinite(float(self.merge_core_w_reg_weight))
+                 and float(self.merge_core_w_reg_weight) >= 0.0,
+                 "merge_core_w_reg_weight must be finite and non-negative")
+        if self.merge_decision == "first_passage":
+            _require(self.lane_model == "hazard_v5", "first_passage requires lane_model=hazard_v5")
+            _require(not self.merge_negotiation and not getattr(self, "merge_context", False)
+                     and not any((self.merge_core_yield_weight, self.merge_yield_huber,
+                                  self.merge_ramp_adapt_huber, self.merge_safety_bce,
+                                  self.merge_survival_negative_weight)),
+                     "first_passage requires B yield/negotiation weights and context off")
+        _require(math.isfinite(float(self.merge_first_passage_weight))
+                 and float(self.merge_first_passage_weight) >= 0.0
+                 and math.isfinite(float(self.merge_first_passage_rank_weight))
+                 and float(self.merge_first_passage_rank_weight) >= 0.0,
+                 "merge_first_passage weights must be finite and non-negative")
+        _require(all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+            self.merge_first_passage_pos_tol_m, self.merge_first_passage_speed_tol_mps,
+            self.merge_first_passage_gap_tol_m, self.merge_first_passage_gap_speed_tol_mps)),
+            "merge_first_passage tolerances must be finite and positive")
+        _require(math.isfinite(float(self.merge_first_passage_location_reg_weight))
+                 and float(self.merge_first_passage_location_reg_weight) >= 0.0,
+                 "merge_first_passage_location_reg_weight must be finite and >= 0")
+        _require(math.isfinite(float(self.merge_frailty_weight))
+                 and float(self.merge_frailty_weight) >= 0.0,
+                 "merge_frailty_weight must be finite and non-negative")
+        _require(1 <= int(self.merge_frailty_n_quad) <= 64,
+                 "merge_frailty_n_quad must be in [1, 64]")
+        _require(all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+            self.merge_frailty_pos_tol_m, self.merge_frailty_speed_tol_mps,
+            self.merge_frailty_gap_tol_m, self.merge_frailty_gap_speed_tol_mps)),
+            "merge_frailty tolerances must be finite and positive")
+        _require(math.isfinite(float(self.merge_frailty_location_reg_weight))
+                 and float(self.merge_frailty_location_reg_weight) >= 0.0,
+                 "merge_frailty_location_reg_weight must be finite and >= 0")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.merge_core_weight, self.merge_core_tf_weight, self.merge_core_yield_weight,
+            self.merge_core_location_reg_weight, self.merge_core_sigma_reg_weight)),
+            "merge_core weights must be finite and non-negative")
+        _require(1 <= int(self.merge_core_n_quad) <= 64,
+                 "merge_core_n_quad must be in [1, 64]")
+        _require(all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+            self.merge_core_pos_tol_m, self.merge_core_speed_tol_mps,
+            self.merge_core_gap_tol_m, self.merge_core_gap_speed_tol_mps)),
+            "merge_core tolerances must be finite and positive")
+        _require(not isinstance(self.merge_core_version, bool)
+                 and int(self.merge_core_version) in (1, 2),
+                 "merge_core_version must be 1 or 2")
+        _require(all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+            self.merge_core_z_tf, self.merge_core_z_on)),
+            "merge_core z_tf / z_on must be finite and positive")
+        _require(math.isfinite(float(self.merge_core_sigma_fit))
+                 and float(self.merge_core_sigma_fit) >= 0.0,
+                 "merge_core_sigma_fit must be finite and non-negative")
+        _require(isinstance(self.replay_enabled, bool)
+                 and all(math.isfinite(float(x)) and float(x) >= 1.0 for x in (
+                     self.replay_merge_oversample, self.replay_cav_follower_oversample,
+                     self.replay_brake_oversample, self.replay_low_share_oversample,
+                     self.replay_error_max_boost, self.replay_error_alpha))
+                 and 0.0 < float(self.replay_low_share_max) < 1.0
+                 and math.isfinite(float(self.replay_low_share_min_stage_s))
+                 and float(self.replay_low_share_min_stage_s) >= 0.0
+                 and math.isfinite(float(self.brake_follow_weight))
+                 and float(self.brake_follow_weight) >= 1.0
+                 and math.isfinite(float(self.brake_follow_cav_weight))
+                 and float(self.brake_follow_cav_weight) >= 0.0
+                 and math.isfinite(float(self.replay_error_decay))
+                 and 0.0 <= float(self.replay_error_decay) < 1.0
+                 and int(self.replay_probe_windows) >= 0 and int(self.replay_refresh_every) >= 0,
+                 "replay_* multipliers must be >= 1, brake_follow_cav_weight >= 0, "
+                 "error_decay in [0,1), probe_windows/refresh_every >= 0")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.brake_persist_weight, self.brake_persist_quantile_weight))
+            and math.isfinite(float(self.brake_persist_event_balance))
+            and 0.0 <= float(self.brake_persist_event_balance) <= 4.0
+            and math.isfinite(float(self.brake_persist_window_s))
+            and 3.0 <= float(self.brake_persist_window_s) <= 5.0,
+            "brake_persist weights must be >= 0, event_balance in [0,4], "
+            "window_s in [3,5]")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.brake_wave_weight, self.brake_wave_residual_weight,
+            self.brake_wave_spurious_weight))
+            and all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+                self.brake_wave_onset_decel_mps2, self.brake_wave_spurious_decel_mps2))
+            and math.isfinite(float(self.brake_wave_window_s))
+            and 3.0 <= float(self.brake_wave_window_s) <= 5.0,
+            "brake_wave weights must be >= 0, thresholds > 0, window_s in [3,5]")
+        _require(math.isfinite(float(self.onset_stats_weight))
+                 and float(self.onset_stats_weight) >= 0.0
+                 and math.isfinite(float(self.onset_stats_onset_decel_mps2))
+                 and float(self.onset_stats_onset_decel_mps2) > 0.0
+                 and math.isfinite(float(self.onset_stats_temperature_mps2))
+                 and float(self.onset_stats_temperature_mps2) > 0.0
+                 and math.isfinite(float(self.onset_stats_max_duration_s))
+                 and 2.0 <= float(self.onset_stats_max_duration_s) <= 20.0,
+                 "onset_stats weight must be >= 0, thresholds/temperature > 0, "
+                 "max_duration_s in [2,20]")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.post_merge_weight, self.post_merge_residual_weight))
+            and math.isfinite(float(self.post_merge_window_s))
+            and 2.0 <= float(self.post_merge_window_s) <= 20.0
+            and math.isfinite(float(self.post_merge_huber_delta_mps2))
+            and float(self.post_merge_huber_delta_mps2) > 0.0,
+            "post_merge weights must be >= 0, window_s in [2,20], huber delta > 0")
+        # CUT-IN REACTION (R9K)
+        _require(isinstance(self.leader_change_features, bool),
+                 "leader_change_features must be a boolean")
+        _require(all(math.isfinite(float(x)) for x in (
+            self.cutin_reaction_weight, self.cutin_reaction_control_weight,
+            self.cutin_reaction_pre_s, self.cutin_reaction_max_window_s,
+            self.cutin_reaction_huber_delta_mps2))
+            and self.cutin_reaction_weight >= 0 and self.cutin_reaction_control_weight > 0
+            and 0 <= self.cutin_reaction_pre_s <= 1
+            and 0 < self.cutin_reaction_max_window_s <= 6
+            and self.cutin_reaction_huber_delta_mps2 > 0,
+            "cutin_reaction needs finite weight >= 0, control_weight > 0, "
+            "pre_s in [0,1], max_window_s in (0,6], huber delta > 0")
+        _require(math.isfinite(float(self.follower_courtesy_weight))
+                 and float(self.follower_courtesy_weight) >= 0
+                 and math.isfinite(float(self.follower_courtesy_huber_delta_mps2))
+                 and float(self.follower_courtesy_huber_delta_mps2) > 0,
+                 "follower_courtesy needs finite weight >= 0 and huber delta > 0")
+        _require(float(self.follower_courtesy_weight) == 0 or bool(self.follower_courtesy),
+                 "loss.follower_courtesy.weight > 0 needs model.follower_courtesy = true")
+        _require(int(self.follower_courtesy_version) in (1, 2)
+                 and (int(self.follower_courtesy_version) == 1 or bool(self.follower_courtesy)),
+                 "follower_courtesy_version must be 1 or 2 (2 needs model.follower_courtesy)")
+        _require(self.driver_param_init in ("checkpoint", "centre")
+                 and (self.driver_param_init == "checkpoint" or self.driver_param_mode == "physical"),
+                 "driver_param_init must be checkpoint or centre (centre needs physical mode)")
+        _require(self.recorded_replay_present in ("loss_valid", "filled"),
+                 "recorded_replay_present must be loss_valid or filled")
+        _require(not bool(self.follower_courtesy_contrast)
+                 or float(self.follower_courtesy_weight) > 0,
+                 "loss.follower_courtesy.contrast needs loss.follower_courtesy.weight > 0")
+        _require(isinstance(self.follower_courtesy_state_grad, bool)
+                 and self.follower_courtesy_intent in ("lane_v5", "pivot", "none"),
+                 "follower_courtesy_state_grad must be a boolean and follower_courtesy_intent "
+                 "lane_v5, pivot or none")
+        _require(math.isfinite(float(self.follower_courtesy_absolute_weight))
+                 and float(self.follower_courtesy_absolute_weight) >= 0
+                 and (float(self.follower_courtesy_absolute_weight) == 0
+                      or float(self.follower_courtesy_weight) > 0),
+                 "loss.follower_courtesy.absolute_weight must be finite >= 0 (> 0 needs "
+                 "loss.follower_courtesy.weight > 0)")
+        _require(isinstance(self.temporal_accel_off, bool) and isinstance(self.temporal_accel_reinit, bool),
+                 "temporal_accel_off / temporal_accel_reinit must be booleans")
+        _require(self.temporal_lane_bias_init is None
+                 or (bool(self.temporal_accel_lane_bias) and len(tuple(self.temporal_lane_bias_init)) == 3
+                     and all(math.isfinite(float(x)) for x in self.temporal_lane_bias_init)),
+                 "temporal_lane_bias_init needs temporal_accel_lane_bias and 3 finite values")
+        _require(self.temporal_state_table_init is None or bool(self.temporal_accel_state_table),
+                 "temporal_state_table_init needs temporal_accel_state_table")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0
+                     for x in (self.accel_tail_weight, self.accel_tail_jerk_weight))
+                 and (not self.accel_tail_on or bool(self.accel_tail_table))
+                 and len(tuple(self.accel_tail_lanes)) > 0
+                 and all(int(x) in (0, 1, 2) for x in self.accel_tail_lanes),
+                 "accel_tail weights must be >= 0, a table is needed when on, lanes in {0, 1, 2}")
+        _require(isinstance(self.residual_accel_off, bool), "residual_accel_off must be a boolean")
+        _require(isinstance(self.follower_courtesy_off, bool), "follower_courtesy_off must be a boolean")
+        _require(isinstance(self.emergency_braking, bool), "emergency_braking must be a boolean")
+        _require(isinstance(self.secure_gap_veto, bool), "secure_gap_veto must be a boolean")
+        _require(isinstance(self.lane_change_secure_gap, bool),
+                 "lane_change_secure_gap must be a boolean")
+        _require(self.emergency_onset in ("plant", "driver_b"),
+                 "emergency_onset must be 'plant' or 'driver_b'")
+        _require(isinstance(self.mainline_merge_yield_learnable, bool),
+                 "mainline_merge_yield_learnable must be a boolean")
+        _require(isinstance(self.ramp_speed_adapt_learnable, bool),
+                 "ramp_speed_adapt_learnable must be a boolean")
+        _require(isinstance(self.residual_head_rescale, bool),
+                 "residual_head_rescale must be a boolean")
+        _require(self.temporal_residual_mode in ("direct", "slow"),
+                 "temporal_residual_mode must be 'direct' or 'slow'")
+        _require(math.isfinite(float(self.temporal_tau_init_s))
+                 and float(self.temporal_tau_init_s) > 0.0,
+                 "temporal_tau_init_s must be finite and positive")
+        _require(isinstance(self.temporal_tau_conditioned, bool),
+                 "temporal_tau_conditioned must be a boolean")
+        _require(self.temporal_slew_init_mps2 is None
+                 or (math.isfinite(float(self.temporal_slew_init_mps2))
+                     and float(self.temporal_slew_init_mps2) > 0.0),
+                 "temporal_slew_init_mps2 must be finite and positive when set")
 
     @classmethod
     def from_flat(cls, data: Mapping[str, Any]) -> "TrainSettings":
@@ -416,15 +962,26 @@ class TrainSettings:
             values["unroll_curriculum_s"] = tuple(float(x) for x in values["unroll_curriculum_s"])
         if values.get("stage_steps") is not None:
             values["stage_steps"] = tuple(int(x) for x in values["stage_steps"])
+        if values.get("batch_size_per_stage") is not None:
+            values["batch_size_per_stage"] = tuple(int(x)
+                                                   for x in values["batch_size_per_stage"])
         if values.get("truncation_steps_per_stage") is not None:
             values["truncation_steps_per_stage"] = tuple(
                 int(x) for x in values["truncation_steps_per_stage"])
         if values.get("lr_per_stage") is not None:
             values["lr_per_stage"] = tuple(float(x) for x in values["lr_per_stage"])
-        for key in ("selection_horizons_s", "selection_reference", "mixed_horizon_s"):
+        if values.get("freeze_prefixes") is not None:
+            values["freeze_prefixes"] = tuple(str(x) for x in values["freeze_prefixes"])
+        if values.get("lr_scale") is not None:
+            values["lr_scale"] = {str(k): float(v) for k, v in values["lr_scale"].items()}
+        for key in ("selection_horizons_s", "selection_reference", "mixed_horizon_s",
+                    "merge_loss_cell_edges_m", "agg_delay_sections_m"):
             if values.get(key) is not None:
                 values[key] = tuple(float(x) for x in values[key])
-        for key in ("lane_logit_offsets", "lane_v5_gates", "lane_v5_head_ap"):
+        if values.get("merge_loss_speed_cells") is not None:
+            values["merge_loss_speed_cells"] = tuple(int(x) for x in values["merge_loss_speed_cells"])
+        for key in ("lane_logit_offsets", "lane_v5_gates", "lane_v5_head_ap",
+                    "merge_teacher_frac_schedule"):
             if values.get(key) is not None:
                 values[key] = tuple(float(x) for x in values[key])
         return cls(**values)
@@ -438,6 +995,86 @@ class TrainSettings:
     def uses_hard_cap(self) -> bool:
         """True when a legacy hard residual clamp is configured (REJECTED, #3)."""
         return any(getattr(self, name) is not None for name in HARD_CAP_FIELDS)
+
+    @property
+    def accel_tail_on(self) -> bool:
+        """R13T tail-matching terms enabled (either weight > 0)."""
+        return float(self.accel_tail_weight) > 0.0 or float(self.accel_tail_jerk_weight) > 0.0
+
+    @property
+    def brake_persist_on(self) -> bool:
+        """BRAKE_DIAG persistence terms enabled (either weight > 0)."""
+        return (float(self.brake_persist_weight) > 0.0
+                or float(self.brake_persist_quantile_weight) > 0.0)
+
+    @property
+    def brake_wave_on(self) -> bool:
+        """WAVE onset-conditioned terms enabled (any weight > 0)."""
+        return (float(self.brake_wave_weight) > 0.0
+                or float(self.brake_wave_residual_weight) > 0.0
+                or float(self.brake_wave_spurious_weight) > 0.0)
+
+    @property
+    def onset_stats_on(self) -> bool:
+        """SLOWRES free-rollout onset-statistics auxiliary enabled."""
+        return float(self.onset_stats_weight) > 0.0
+
+    @property
+    def post_merge_on(self) -> bool:
+        """R5MERGE post-merge acceleration terms enabled (any weight > 0)."""
+        return (float(self.post_merge_weight) > 0.0
+                or float(self.post_merge_residual_weight) > 0.0)
+
+    @property
+    def merge_loss_on(self) -> bool:
+        """V7FT merge-zone calibration loss enabled (either weight > 0)."""
+        return (float(self.merge_loss_speed_weight) > 0.0
+                or float(self.merge_loss_discharge_weight) > 0.0)
+
+    @property
+    def agg_delay_on(self) -> bool:
+        """A5 long-horizon aggregate delay loss enabled (either weight > 0)."""
+        return float(self.agg_delay_weight) > 0.0 or float(self.agg_delay_paired_weight) > 0.0
+
+    @property
+    def merge_timing_on(self) -> bool:
+        """V8WM/V10NEGOT merge-timing / survival term built (weight or metrics)."""
+        return (float(self.merge_timing_weight) > 0.0 or float(self.merge_survival_weight) > 0.0
+                or bool(self.merge_timing_metrics) or bool(self.merge_survival_metrics))
+
+    @property
+    def merge_negotiation_on(self) -> bool:
+        """V10NEGOT negotiation auxiliary (matched non-yield negatives) built."""
+        return (bool(self.merge_negotiation)
+                and float(self.merge_survival_negative_weight) > 0.0)
+
+    @property
+    def merge_yield_on(self) -> bool:
+        """R5YIELD follower-yield / ramp-adaptation / safety terms built."""
+        return (bool(self.merge_negotiation)
+                and (float(self.merge_yield_huber) > 0.0
+                     or float(self.merge_ramp_adapt_huber) > 0.0
+                     or float(self.merge_safety_bce) > 0.0))
+
+    @property
+    def merge_first_passage_on(self) -> bool:
+        """R5THR integrated first-passage merge term built (loss or metrics)."""
+        return (float(self.merge_first_passage_weight) > 0.0
+                or float(self.merge_first_passage_rank_weight) > 0.0
+                or bool(self.merge_first_passage_metrics))
+
+    @property
+    def merge_frailty_on(self) -> bool:
+        """R5FR frailty survival merge term built (loss or metrics)."""
+        return (float(self.merge_frailty_weight) > 0.0
+                or bool(self.merge_frailty_metrics))
+
+    @property
+    def merge_core_on(self) -> bool:
+        """SECUREGAP secure-gap term built (loss, teacher forcing or metrics)."""
+        return (float(self.merge_core_weight) > 0.0
+                or float(self.merge_core_tf_weight) > 0.0
+                or bool(self.merge_core_metrics))
 
     @property
     def long_horizon_on(self) -> bool:

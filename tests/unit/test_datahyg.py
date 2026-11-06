@@ -1,7 +1,8 @@
 """DATAHYG: no designed controllers in the WM-S training windows (``data.controller_hygiene``).
 
-Synthetic tests always run; real TRAIN-window tests are skipped without the E:/research-dense
-data cache.  ``off`` is bit-identical to c4/int a2d3716 (golden record hashes of TRAIN and
+Synthetic tests always run; real TRAIN-window tests are skipped without the workspace
+data cache or an explicit WMS_DATA_PACK_V3 / WMS_DATAHYG_DATA_ROOT. ``off`` is bit-identical
+to c4/int a2d3716 (golden record hashes of TRAIN and
 validation windows of configs/c4_wm_v3.toml and v4, captured before this change).  Only TRAIN
 windows are read; no guard / CAL / holdout file is opened.
 """
@@ -18,10 +19,12 @@ import torch
 
 from wms.config.load import load_train_config
 from wms.data import controller_hygiene as H
+from tests.fixtures.c4_historical import load_window_config
 
 ROOT = Path(__file__).resolve().parents[2]
-DATA_ROOT = Path(os.environ.get("WMS_DATAHYG_DATA_ROOT", "E:/research-dense"))
-HAS_DATA = (DATA_ROOT / "data_cache" / "pack_v3" / "manifest.json").is_file()
+DATA_ROOT = Path(os.environ.get("WMS_DATAHYG_DATA_ROOT", str(ROOT)))
+HAS_DATA = (Path(os.environ.get("WMS_DATA_PACK_V3", str(DATA_ROOT / "data_cache" / "pack_v3")))
+            / "manifest.json").is_file()
 NATIVE, DAMPING, DIRECT = 0, 1, 3
 
 
@@ -266,7 +269,7 @@ def datasets(tmp_path_factory):
 
     out = {}
     for name in ("c4_wm_v3", "c4_wm_v4", "c4_wm_v4_hygiene"):
-        cfg = load_train_config(f"configs/{name}.toml", ["runtime.device=cpu"])
+        cfg = load_window_config(name, ["runtime.device=cpu"])
         out[name] = build_datasets(cfg, tmp_path_factory.mktemp(name))[:2]
     return out
 

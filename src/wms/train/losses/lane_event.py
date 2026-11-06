@@ -21,7 +21,8 @@ runner from the same t0 encoding the rollout uses).
 LANEV5 (``model.lane_model='hazard_v5'``): the per-transition lane network is scored on EVERY
 recorded step of each window (not only the unroll), with a plain binary cross entropy per
 head (overtake / return / merge) on the rows whose own transition the physics allows outside
-the forced end-of-lane window, summed over the heads (``wms.model.lane_v5.recorded_rows`` /
+the forced end-of-lane window (V8WM2 ``physics.forced_window_mode='hazard'``: inside it too),
+summed over the heads (``wms.model.lane_v5.recorded_rows`` /
 ``head_bce``; ``gamma`` / ``max_weight`` do not apply).  The accumulators start from the
 pre-t0 history value the rollout uses (``prepared['lane_event']['lane_v5_acc0']``).
 """
@@ -205,7 +206,8 @@ class LaneEventLoss(UnrollTerm):
         lanes = states[..., 1:4].argmax(-1)
         age = recorded_lane_age(lanes, valid, prep["lane_age0"].to(states.dtype), n_all)
         rows = lv5.recorded_rows(states, valid, is_cav, model.physics, model.lane_v5_mask_fn(),
-                                 age, prep["lane_v5_acc0"])
+                                 age, prep["lane_v5_acc0"], prep.get("merge_wait0"),
+                                 extra=bool(getattr(model.lane_v5, "extra_features", False)))
         logits = model.lane_v5(rows["features"]).gather(
             -1, rows["head"].unsqueeze(-1)).squeeze(-1)
         offsets = tuple(getattr(model, "lane_logit_offsets", (0.0, 0.0, 0.0)))
@@ -242,5 +244,9 @@ def lane_v5_batch_rows(model: Any, batch: Mapping[str, Any], settings: Any,
         is_cav = inp.is_cav[:, :n_all + 1].bool()
         lanes = states[..., 1:4].argmax(-1)
         age = recorded_lane_age(lanes, valid, age0.to(states.dtype), n_all)
+        wait0 = (model.initial_merge_wait(inp.present[:, 0], kin0, inp.observed_hist,
+                                          inp.observed_hist_mask)
+                 if getattr(model, "_tracks_merge_wait", False) else None)
         return lv5.recorded_rows(states, valid, is_cav, model.physics, model.lane_v5_mask_fn(),
-                                 age, acc0)
+                                 age, acc0, wait0,
+                                 extra=bool(getattr(model.lane_v5, "extra_features", False)))

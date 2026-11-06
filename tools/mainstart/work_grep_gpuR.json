@@ -1,0 +1,21 @@
+{
+ "processes": [
+  {
+   "pid": 717015,
+   "cwd": "/root/autodl-tmp/c4/v5/pairft/code",
+   "cmd": "/root/miniconda3/bin/python -u tools/pairft/run.py --work /root/autodl-tmp/c4/v5/pairft "
+  },
+  {
+   "pid": 718536,
+   "cwd": "/root/autodl-tmp/c4/v5/pairft/code",
+   "cmd": "/root/miniconda3/bin/python -u tools/pairft/closed.py --work /root/autodl-tmp/c4/v5/pairft "
+  }
+ ],
+ "roots": [
+  "/root/autodl-tmp/c4/v5",
+  "/root/autodl-tmp/c4/v5/pairft/code"
+ ],
+ "scanned_files": 2967,
+ "matches": [],
+ "symlinks": []
+}

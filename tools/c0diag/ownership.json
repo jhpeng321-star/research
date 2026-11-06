@@ -1,0 +1,30 @@
+[
+  {
+    "seed": 968132,
+    "t": 360.0,
+    "horizon": 300,
+    "requested_horizon": 300,
+    "population": "t0-cohort, physical exits, entries OFF; no SUMO future-mask censoring",
+    "wm_policy_road": 12421.9130859375,
+    "wm_native_road": 1117.2362060546875,
+    "sumo_policy_road": 10479.79296875,
+    "sumo_native_road": 1003.5987548828125,
+    "wm_cav_speed": 2.672668218612671,
+    "wm_cav_stop": 0.8076253533363342,
+    "raw_action_mean": -0.39358124136924744,
+    "raw_action_std": 0.11360109597444534,
+    "raw_negative_fraction": 0.9999999403953552,
+    "wm_physical_ramp_merges": 2,
+    "wm_automatic_ramp_merges": 0,
+    "wm_return_gain": -51389.2265625,
+    "wm_native_terminal_value": 0.0,
+    "executed_action_mean": -0.08147664368152618,
+    "first_executor_requested_maxerr": 2.384185791015625e-07,
+    "first_lane_mismatches": 0,
+    "initial_imagined_action_mean": -0.5667827725410461,
+    "online_value": -46232.16796875,
+    "target_initial_value": -40968.8046875,
+    "target_terminal_value": -40084.55859375,
+    "wm_lane_changes": 612
+  }
+]

@@ -1,0 +1,125 @@
+{
+ "steps": 2,
+ "cutin_values": [
+  0.624396562576294,
+  0.9480445384979248
+ ],
+ "cutin_events": [
+  6,
+  7
+ ],
+ "cutin_event_rows": [
+  17,
+  20
+ ],
+ "cutin_control_rows": [
+  2619,
+  1690
+ ],
+ "cutin_event_loss": [
+  0.33777669072151184,
+  0.6800113916397095
+ ],
+ "cutin_control_loss": [
+  0.2866198718547821,
+  0.2680331766605377
+ ],
+ "losses": [
+  30.6601986561784,
+  24.99230585492971
+ ],
+ "all_finite": true,
+ "trainable_parameter_names": [
+  "follower_courtesy.net.0.bias",
+  "follower_courtesy.net.0.weight",
+  "follower_courtesy.net.2.bias",
+  "follower_courtesy.net.2.weight",
+  "follower_courtesy.net.4.bias",
+  "follower_courtesy.net.4.weight",
+  "gate_g_max_logit",
+  "gate_tau_raw",
+  "temporal.0.bias",
+  "temporal.0.weight",
+  "temporal.2.bias",
+  "temporal.2.weight"
+ ],
+ "changed_tensors": [
+  "follower_courtesy.net.0.bias",
+  "follower_courtesy.net.0.weight",
+  "follower_courtesy.net.2.bias",
+  "follower_courtesy.net.2.weight",
+  "follower_courtesy.net.4.bias",
+  "follower_courtesy.net.4.weight",
+  "gate_g_max_logit",
+  "gate_tau_raw",
+  "temporal.0.bias",
+  "temporal.0.weight",
+  "temporal.2.bias",
+  "temporal.2.weight"
+ ],
+ "changed_subset_of_trainable": true,
+ "frozen_changed": [],
+ "merge_pivot_changed": [],
+ "grad_norm": [
+  5.218152046203613,
+  5.762662410736084
+ ],
+ "courtesy_values": [
+  0.4161666929721832,
+  0.3335840106010437
+ ],
+ "courtesy_rows": [
+  229,
+  1260
+ ],
+ "courtesy_shared_replay": [
+  1,
+  1
+ ],
+ "courtesy_head_mean": [
+  0.1472821682691574,
+  0.5544254183769226
+ ],
+ "courtesy_base_residual_mean": [
+  0.08545055985450745,
+  0.8136714696884155
+ ],
+ "courtesy_head_grad_abs_sum": [
+  2.140951156616211,
+  1.6295089721679688
+ ],
+ "courtesy_head_changed": [
+  "follower_courtesy.net.0.bias",
+  "follower_courtesy.net.0.weight",
+  "follower_courtesy.net.2.bias",
+  "follower_courtesy.net.2.weight",
+  "follower_courtesy.net.4.bias",
+  "follower_courtesy.net.4.weight"
+ ],
+ "contrast_n_controls": [
+  2625,
+  1696
+ ],
+ "contrast_shift_mean": [
+  0.43214499950408936,
+  0.05356672406196594
+ ],
+ "contrast_neff_median": [
+  191.17440795898438,
+  142.28102111816406
+ ],
+ "partnered_controls_excluded": [
+  218,
+  1246
+ ],
+ "init_report": {
+  "expanded": [
+   "follower_courtesy.net.0.weight"
+  ],
+  "new_in_model": [],
+  "shape_mismatch": [],
+  "unused_from_checkpoint": [],
+  "follower_courtesy_init": "checkpoint"
+ },
+ "head_version": 2
+}

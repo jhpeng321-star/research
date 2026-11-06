@@ -73,6 +73,158 @@ def target_overlap(kin: Tensor, present: Tensor, target_lane: Tensor,
     return hit.any(-1)
 
 
+#: V10UNBLOCK: target lane of each source lane for the only road-legal transitions.
+PHYSICAL_TARGET_OF_LANE = (1, 0, 1)
+
+
+def physical_target_lane(lane: Tensor) -> Tensor:
+    """Target lane of each source lane (0 -> 1, 1 -> 0, 2 -> 1; lane 2 is never a target)."""
+    table = torch.tensor(PHYSICAL_TARGET_OF_LANE, device=lane.device, dtype=lane.dtype)
+    return table[lane.clamp(0, 2)]
+
+
+def body_overlap(kin: Tensor, present: Tensor, target_lane: Tensor, margin_m: float,
+                 exempt: Optional[Tensor] = None) -> Tensor:
+    """``[B, K]``: ego body ``[s - L, s]`` intersects a present body in ``target_lane``.
+
+    Same length/position convention as :func:`target_overlap` (``s`` = front bumper, body
+    extends backwards by ``length_m``), judged on the supplied configuration.
+
+    V10ENVFIX ``exempt`` (optional bool ``[B, K]``, default ``None`` = bit-identical): a body
+    marked here does not block -- the audit's simultaneous-lane-change rule, where a
+    target-lane vehicle that is itself mid-lane-change is not an intersection.  The mask only
+    ever removes obstacles; it never adds one.
+    """
+    s, length = kin[..., 0], kin[..., 6]
+    lane = lane_of(kin)
+    rear, front = s - length, s
+    rear_i, front_i = rear.unsqueeze(-1), front.unsqueeze(-1)
+    rear_j, front_j = rear.unsqueeze(-2), front.unsqueeze(-2)
+    other = present.unsqueeze(-2) & (lane.unsqueeze(-2) == target_lane.unsqueeze(-1))
+    if exempt is not None:
+        other = other & ~exempt.bool().unsqueeze(-2)
+    eye = torch.eye(s.shape[-1], dtype=torch.bool, device=s.device)
+    hit = other & ~eye & (rear_j < front_i + margin_m) & (front_j > rear_i - margin_m)
+    return hit.any(-1)
+
+
+def mid_change_exempt(physics: PhysicsConfig, mid_change: Optional[Tensor] = None,
+                      lane_age: Optional[Tensor] = None) -> Optional[Tensor]:
+    """V10ENVFIX: target-lane bodies exempted as being themselves mid-lane-change.
+
+    Returns a bool ``[B, K]`` mask (or ``None`` = no exemption), and only when
+    ``physics.lane_learnable`` is on -- the default path stays bit-identical.  ``mid_change``
+    is the explicit per-body mask (the census / audit passes the recorded
+    ``lane[t] != lane[t + 1]``).  When it is absent, ``lane_age`` (steps since the body's last
+    lane change; ``0`` = changed in the last step) derives it: ``lane_age <= 0``.  The
+    sentinel ``AGE_SENTINEL`` (999, never changed) is never exempt.
+    """
+    if not getattr(physics, "lane_learnable", False):
+        return None
+    if mid_change is None and lane_age is not None:
+        mid_change = lane_age.float() <= 0.0
+    return None if mid_change is None else mid_change.bool()
+
+
+def physical_merge_envelope(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
+                            mid_change: Optional[Tensor] = None,
+                            lane_age: Optional[Tensor] = None) -> dict[str, Tensor]:
+    """V10UNBLOCK: the strictly physical lane-change envelope ``[B, K]``.
+
+    ``legal``: the road's only transitions (lane 1 -> 0, 0 -> 1, and the ramp merge 2 -> 1
+    inside the merge zone; no transition into lane 2).  ``clear``: the ego's body after one
+    step (``anticipated_kin``, constant acceleration) does not intersect any present body of
+    the target lane with ``lane_physical_margin_m`` clearance.  No headway / standstill /
+    impatience / ``merge_end_wait`` margin enters.  ``clear_now`` (current configuration) and
+    the overlaps are diagnostics; ``admissible`` = envelope + presence.
+
+    V10ENVFIX ``mid_change`` / ``lane_age`` (optional, ``None`` = bit-identical): a target-lane
+    body that is itself mid-lane-change does not block (the audit's simultaneous-change rule),
+    see :func:`mid_change_exempt`.  The exemption is applied only under ``physics.lane_learnable``.
+    """
+    p = physics
+    present = present.bool()
+    lane = lane_of(kin)
+    tq = physical_target_lane(lane)
+    s = kin[..., 0]
+    in_zone = (s >= p.merge_zone_s0_m) & (s <= p.merge_zone_s1_m)
+    is_ramp = lane == p.merge_lane
+    legal = ((~is_ramp) | in_zone) & (tq != p.merge_lane) & (lane >= 0)
+    margin = float(getattr(p, "lane_physical_margin_m", 0.0))
+    exempt = mid_change_exempt(p, mid_change, lane_age)
+    kin_a = anticipated_kin(kin, float(p.dt_s))
+    overlap_next = body_overlap(kin_a, present, tq, margin, exempt)
+    overlap_now = body_overlap(kin, present, tq, margin, exempt)
+    clear = ~overlap_next
+    return {"legal": legal, "clear": clear, "clear_now": ~overlap_now,
+            "overlap_next": overlap_next, "overlap_now": overlap_now,
+            "admissible": legal & clear & present, "target_lane": tq}
+
+
+def lane_change_secure_ok(kin: Tensor, present: Tensor, target_lane: Tensor,
+                          physics: PhysicsConfig,
+                          driver_params: Optional[Mapping[str, Tensor]] = None) -> Tensor:
+    """R14 D1: GAPACC ``gs`` secure gaps of a lane change into ``target_lane`` ``[B, K]`` bool.
+
+    Judged on ``kin`` (the caller passes the one-step anticipated configuration, as the body
+    envelope).  For the new target-lane follower ``f`` behind the ego ``e`` and the ego behind
+    its new leader ``l``, the SAME law as the R13E insertion veto / yield pass rule
+    (:func:`wms.physics.secure_gap.secure_gap_need`, learned per-slot ``time_headway`` and
+    ``decel`` gathered by neighbour index; no s0, no multiplier, no new constants):
+
+    ``gap_f >= T_f v_f + relu(v_f^2/(2 b_f) - v_e^2/(2 b_e))`` and
+    ``gap_l >= T_e v_e + relu(v_e^2/(2 b_e) - v_l^2/(2 b_l))``.
+
+    Bumper gaps (front bumper ``s``, body ``[s - L, s]``).  A missing neighbour never blocks.
+    Invalid / non-finite settings or states fail CLOSED (as the pivot veto).  Without
+    ``driver_params`` the road's default IDM ``T`` and ``b`` are used.  Discrete mask: no
+    autograd graph.
+    """
+    from .secure_gap import secure_gap_need, secure_gap_ok
+
+    with torch.no_grad():
+        kin = kin.detach()
+        s, v, length = kin[..., 0], kin[..., 4], kin[..., 6]
+        if driver_params is None:
+            _, b_comf, headway, _, _ = physics.idm()
+            t_set = torch.full_like(v, float(headway))
+            b_set = torch.full_like(v, float(b_comf))
+        else:
+            t_set = driver_params["time_headway"].detach().to(v)
+            b_set = driver_params["decel"].detach().to(v)
+        lane = lane_of(kin)
+        inf = float("inf")
+        other = (present.bool().unsqueeze(-2)
+                 & (lane.unsqueeze(-2) == target_lane.unsqueeze(-1)))           # [B, i, j]
+        eye = torch.eye(s.shape[-1], dtype=torch.bool, device=s.device)
+        other = other & ~eye
+        ds = s.unsqueeze(-2) - s.unsqueeze(-1)                                   # s_j - s_i
+        # leader: nearest front bumper ahead; gap = rear_l - s_e
+        gap_l, i_l = torch.where(other & (ds > 0), ds - length.unsqueeze(-2), inf).min(-1)
+        # follower: nearest front bumper behind; gap = rear_e - s_f
+        gap_f, i_f = torch.where(other & (ds < 0), -ds - length.unsqueeze(-1), inf).min(-1)
+        ok = torch.ones_like(present, dtype=torch.bool)
+        for gap, index, side in ((gap_f, i_f, "f"), (gap_l, i_l, "l")):
+            has = torch.isfinite(gap)
+            v_n, t_n, b_n = (x.gather(-1, index) for x in (v, t_set, b_set))
+            if side == "f":
+                v_back, v_front, t_back, b_back, b_front = v_n, v, t_n, b_n, b_set
+            else:
+                v_back, v_front, t_back, b_back, b_front = v, v_n, t_set, b_set, b_n
+            valid = (torch.isfinite(v_back) & (v_back >= 0.0) & torch.isfinite(v_front)
+                     & (v_front >= 0.0) & torch.isfinite(t_back) & (t_back >= 0.0)
+                     & torch.isfinite(b_back) & (b_back > 0.0)
+                     & torch.isfinite(b_front) & (b_front > 0.0))
+            need = secure_gap_need(
+                torch.where(valid, v_back, torch.zeros_like(v_back)),
+                torch.where(valid, v_front, torch.zeros_like(v_front)),
+                torch.where(valid, t_back, torch.zeros_like(t_back)),
+                torch.where(valid, b_back, torch.ones_like(b_back)),
+                torch.where(valid, b_front, torch.ones_like(b_front)))
+            ok = ok & (~has | (valid & secure_gap_ok(gap, need)))
+        return ok
+
+
 def anticipated_kin(kin: Tensor, horizon_s: float) -> Tensor:
     """``kin`` with every vehicle moved ``horizon_s`` ahead at its current acceleration.
 
@@ -92,8 +244,60 @@ def anticipated_kin(kin: Tensor, horizon_s: float) -> Tensor:
     return out
 
 
+def merge_waiting_now(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> Tensor:
+    """V8WM3 ``merge_impatience``: ramp cars waiting this step ``[B, K]`` (accel lane, within
+    ``merge_impatience_distance_m`` of its end, no faster than ``merge_impatience_speed_mps``)."""
+    p = physics
+    s, v = kin[..., 0], kin[..., 4]
+    return (present.bool() & (lane_of(kin) == p.merge_lane)
+            & (s >= p.merge_zone_s1_m - p.merge_impatience_distance_m)
+            & (s <= p.merge_zone_s1_m) & (v <= p.merge_impatience_speed_mps))
+
+
+def update_merge_wait(wait: Optional[Tensor], kin: Tensor, present: Tensor,
+                      physics: PhysicsConfig) -> Tensor:
+    """V8WM3: waiting time ``[B, K]`` (s) including the state ``kin``: ``+dt`` while waiting
+    (:func:`merge_waiting_now`), held while the car stays in the accel lane, 0 off it / absent.
+    No autograd graph (a discrete counter)."""
+    with torch.no_grad():
+        kin = kin.detach()
+        prev = (torch.zeros(kin.shape[:-1], dtype=torch.float32, device=kin.device)
+                if wait is None else wait.detach().float())
+        ramp = present.bool() & (lane_of(kin) == physics.merge_lane)
+        step = merge_waiting_now(kin, present, physics).float() * float(physics.dt_s)
+        return torch.where(ramp, prev + step, torch.zeros_like(prev))
+
+
+def merge_impatience_level(wait: Optional[Tensor], physics: PhysicsConfig) -> Optional[Tensor]:
+    """V8WM3: gap-relaxation level ``q = min(1, w / merge_impatience_gap_tau_s)`` ``[B, K]``;
+    ``None`` (legacy code paths) when the switch is off or no waiting time is carried."""
+    if wait is None or not getattr(physics, "merge_impatience", False):
+        return None
+    return (wait.detach().float() / float(physics.merge_impatience_gap_tau_s)).clamp(0.0, 1.0)
+
+
+def merge_impatience_floor(wait: Tensor, physics: PhysicsConfig) -> Tensor:
+    """V8WM3: forced-window hazard floor ``min(1, h0 + (1 - h0) w / tau_h)`` ``[B, K]``."""
+    h0 = float(physics.forced_window_min_hazard)
+    tau = float(physics.merge_impatience_hazard_tau_s)
+    return (h0 + (1.0 - h0) * wait.detach().float() / tau).clamp(h0, 1.0)
+
+
+def _relaxed(value: float, minimum: float, level: Tensor) -> Tensor:
+    """``value - level * max(0, value - minimum)`` (margins only shrink)."""
+    return value - level * max(0.0, float(value) - float(minimum))
+
+
+def impatient_margins(physics: PhysicsConfig, level: Tensor) -> tuple[Tensor, ...]:
+    """V8WM3: relaxed speed-gap-rule margins ``(s0_lead, T_lead, s0_follow, T_follow)``."""
+    p = physics
+    s0m, tm = p.merge_impatience_s0_min_m, p.merge_impatience_t_min_s
+    return (_relaxed(p.gap_s0_lead_m, s0m, level), _relaxed(p.gap_t_lead_s, tm, level),
+            _relaxed(p.gap_s0_follow_m, s0m, level), _relaxed(p.gap_t_follow_s, tm, level))
+
+
 def speed_gap_safe(kin: Tensor, present: Tensor, target_lane: Tensor,
-                   physics: PhysicsConfig) -> Tensor:
+                   physics: PhysicsConfig, impatience: Optional[Tensor] = None) -> Tensor:
     """GAPRULE ``lane_gap_rule='speed'``: SUMO-LC2013-like secure gaps (``[B, K]`` bool).
 
     Judged on the configuration one ``gap_anticipation_s`` ahead (every car extrapolated at
@@ -108,16 +312,25 @@ def speed_gap_safe(kin: Tensor, present: Tensor, target_lane: Tensor,
     The kinematic term is the follower-braking limit: the follower must not need more than
     ``b_follow`` (beyond its headway margin) to stay behind the changing car.  Missing
     neighbours carry the free-road gap and the ego's speed, so they never block.
+
+    V8WM3 ``impatience`` (``[B, K]`` level in [0, 1], default ``None`` = legacy): the ``s0`` /
+    ``T`` margins shrink (:func:`impatient_margins`); kinematic terms and overlap unchanged.
     """
     p = physics
     kin_a = anticipated_kin(kin, p.gap_anticipation_s)
     gap_l, lv_l = lane_neighbour(kin_a, present, target_lane, p, ahead=True)
     gap_f, fv_f = lane_neighbour(kin_a, present, target_lane, p, ahead=False)
     v = kin_a[..., 4]
-    req_l = p.gap_s0_lead_m + p.gap_t_lead_s * v \
-        + (v * v - lv_l * lv_l).clamp_min(0.0) / (2.0 * p.gap_b_lead_mps2)
-    req_f = p.gap_s0_follow_m + p.gap_t_follow_s * fv_f \
-        + (fv_f * fv_f - v * v).clamp_min(0.0) / (2.0 * p.gap_b_follow_mps2)
+    if impatience is None:
+        req_l = p.gap_s0_lead_m + p.gap_t_lead_s * v \
+            + (v * v - lv_l * lv_l).clamp_min(0.0) / (2.0 * p.gap_b_lead_mps2)
+        req_f = p.gap_s0_follow_m + p.gap_t_follow_s * fv_f \
+            + (fv_f * fv_f - v * v).clamp_min(0.0) / (2.0 * p.gap_b_follow_mps2)
+    else:
+        s0l, tl, s0f, tf = impatient_margins(p, impatience)
+        req_l = s0l + tl * v + (v * v - lv_l * lv_l).clamp_min(0.0) / (2.0 * p.gap_b_lead_mps2)
+        req_f = s0f + tf * fv_f + (fv_f * fv_f - v * v).clamp_min(0.0) / (
+            2.0 * p.gap_b_follow_mps2)
     clear = ~target_overlap(kin_a, present, target_lane, p.gap_overlap_margin_m)
     return (gap_l >= req_l) & (gap_f >= req_f) & clear
 
@@ -154,13 +367,21 @@ def merge_end_waiting(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> T
 
 
 def secure_gaps(v: Tensor, gap_l: Tensor, lv_l: Tensor, gap_f: Tensor, fv_f: Tensor,
-                physics: PhysicsConfig) -> Tensor:
+                physics: PhysicsConfig, impatience: Optional[Tensor] = None) -> Tensor:
     """SUMO-LC2013-like secure gaps with the road's IDM constants ``[B, K]``: leader
     ``>= s0 + T v + max(0, v^2 - v_l^2) / (2 b)``, follower
-    ``>= s0 + T v_f + max(0, v_f^2 - v^2) / (2 b)`` (no footprint test)."""
+    ``>= s0 + T v_f + max(0, v_f^2 - v^2) / (2 b)`` (no footprint test).  V8WM2: the
+    follower ``s0`` / ``T`` are :meth:`PhysicsConfig.merge_end_follow_constants` (default: the
+    road IDM values).  V8WM3 ``impatience`` (level ``[B, K]``, ``None`` = legacy): leader and
+    follower ``s0`` / ``T`` shrink towards the ``merge_impatience_*_min`` values."""
     _, b_comf, time_headway, s0, _ = physics.idm()
+    s0_f, t_f = physics.merge_end_follow_constants()
+    if impatience is not None:
+        s0m, tm = physics.merge_impatience_s0_min_m, physics.merge_impatience_t_min_s
+        s0, time_headway = _relaxed(s0, s0m, impatience), _relaxed(time_headway, tm, impatience)
+        s0_f, t_f = _relaxed(s0_f, s0m, impatience), _relaxed(t_f, tm, impatience)
     req_l = s0 + time_headway * v + (v * v - lv_l * lv_l).clamp_min(0.0) / (2.0 * b_comf)
-    req_f = s0 + time_headway * fv_f + (fv_f * fv_f - v * v).clamp_min(0.0) / (2.0 * b_comf)
+    req_f = s0_f + t_f * fv_f + (fv_f * fv_f - v * v).clamp_min(0.0) / (2.0 * b_comf)
     return (gap_l >= req_l) & (gap_f >= req_f)
 
 
@@ -174,7 +395,8 @@ def _secure_gaps_now(kin: Tensor, present: Tensor, target_lane: Tensor,
     return secure_gaps(kin[..., 4], gap_l, lv_l, gap_f, fv_f, p) & clear
 
 
-def merge_end_gap_safe(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> Tensor:
+def merge_end_gap_safe(kin: Tensor, present: Tensor, physics: PhysicsConfig,
+                       impatience: Optional[Tensor] = None) -> Tensor:
     """V6MERGE: both lane-1 gaps secure now AND one ``gap_anticipation_s`` ahead ``[B, K]``.
 
     The current check stops anticipation from accepting a gap only because a follower is
@@ -202,22 +424,27 @@ def merge_end_gap_safe(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> 
     eye = torch.eye(s.shape[-1], dtype=torch.bool, device=s.device)
     hit = (lane_j & ~eye & (rear.unsqueeze(-2) < s.unsqueeze(-1) + m)
            & (s.unsqueeze(-2) > rear.unsqueeze(-1) - m))
-    ok = secure_gaps(v, gap_l, lv_l, gap_f, fv_f, p) & ~hit.any(-1)
+    ok = secure_gaps(v, gap_l, lv_l, gap_f, fv_f, p, impatience) & ~hit.any(-1)
     return ok[0] & ok[1]
 
 
-def merge_end_blocked(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> Tensor:
+def merge_end_blocked(kin: Tensor, present: Tensor, physics: PhysicsConfig,
+                      impatience: Optional[Tensor] = None) -> Tensor:
     """V6MERGE: lane-end mergers whose lane-1 gaps are not secure ``[B, K]`` (a discrete
-    mask: computed without an autograd graph)."""
+    mask: computed without an autograd graph).  V8WM3 ``impatience``: see :func:`secure_gaps`."""
     with torch.no_grad():
         kin = kin.detach()
-        return merge_end_waiting(kin, present, physics) & ~merge_end_gap_safe(kin, present,
-                                                                               physics)
+        return merge_end_waiting(kin, present, physics) & ~merge_end_gap_safe(
+            kin, present, physics, impatience)
 
 
 def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                        driver_params: Optional[Mapping[str, Tensor]] = None, *,
-                       merge_blocked: Optional[Tensor] = None) -> Tensor:
+                       merge_blocked: Optional[Tensor] = None,
+                       impatience: Optional[Tensor] = None,
+                       mid_change: Optional[Tensor] = None,
+                       lane_age: Optional[Tensor] = None,
+                       is_cav: Optional[Tensor] = None) -> Tensor:
     """MOBIL plus mandatory-merge baseline lane logits ``[B, K, 3]``.
 
     ``stay`` has logit 0; a change to an adjacent lane has
@@ -236,6 +463,16 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
 
     ``merge_blocked`` (V6MERGE, ``merge_end_wait`` only): a precomputed
     :func:`merge_end_blocked` of this configuration (computed here when ``None``).
+
+    ``impatience`` (V8WM3 ``merge_impatience``, level ``[B, K]``; ``None`` = legacy): relaxes
+    the ramp merge's speed-rule and ``merge_end_wait`` margins (:func:`speed_gap_safe`,
+    :func:`secure_gaps`).  Discretionary changes are never relaxed.
+
+    R14 D1 ``physics.lane_change_secure_gap`` (with ``lane_learnable`` only; default off =
+    bit-identical): an HDV mainline change (source lane != ``merge_lane``) additionally needs
+    :func:`lane_change_secure_ok` on the same one-step anticipated configuration as the body
+    envelope, with the learned settings in ``driver_params``.  ``is_cav`` (optional ``[B, K]``)
+    exempts CAV rows; the ramp merge keeps the first-passage pivot's own secure-gap veto.
     """
     p = physics
     s, v = kin[..., 0], kin[..., 4]
@@ -270,13 +507,35 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
         no_to_ramp = torch.full_like(lane, target) != p.merge_lane
         forced = (lane == p.merge_lane) & (target == p.merge_target_lane)
         if p.lane_gap_rule == "speed":
-            safe = speed_gap_safe(kin, present, target_lane, p)
+            if impatience is not None and target == p.merge_target_lane:
+                # V8WM3: only the ramp merge (lane 2 -> 1) is relaxed; any other car into
+                # this target keeps the legacy rule.
+                safe = torch.where(lane == p.merge_lane,
+                                   speed_gap_safe(kin, present, target_lane, p, impatience),
+                                   speed_gap_safe(kin, present, target_lane, p))
+            else:
+                safe = speed_gap_safe(kin, present, target_lane, p)
             if p.gap_stopped_relax and target == p.merge_target_lane:
                 # LANEFIX: jam merges of (near-)stopped ramp cars at the lane end.
                 stopped = forced & (v < p.gap_stopped_speed_mps)
                 safe = safe | (stopped & stopped_merge_gap_safe(kin, present, target_lane, p))
         else:
             safe = (gap_l >= min_gap) & (gap_f >= min_gap) & (a_follow >= -b_safe)
+        if getattr(p, "lane_learnable", False):
+            # V10UNBLOCK: the physics lane logits use the strictly physical envelope instead of
+            # every behavioural veto above (speed-gap margins, stopped relax, impatience).
+            # V10ENVFIX: a target-lane body that is itself mid-lane-change does not block.
+            kin_a = anticipated_kin(kin, float(p.dt_s))
+            exempt = mid_change_exempt(p, mid_change, lane_age)
+            safe = ~body_overlap(kin_a, present, target_lane,
+                                 float(getattr(p, "lane_physical_margin_m", 0.0)), exempt)
+            if getattr(p, "lane_change_secure_gap", False):
+                # R14 D1: HDV mainline changes need the learned-parameter gs secure gaps.
+                gated = lane != p.merge_lane
+                if is_cav is not None:
+                    gated = gated & ~is_cav.bool()
+                safe = safe & (~gated | lane_change_secure_ok(kin_a, present, target_lane, p,
+                                                              driver_params))
         allowed = adjacent & ramp_ok & no_to_ramp & safe
         discretionary = allowed & ~forced
         if p.lane_rule in ("forced_merge_only", "learned_discretionary"):
@@ -296,11 +555,13 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                 discretionary, torch.full_like(move, LEARNED_PRIOR_LOGIT), logits[..., target])
     if p.merge_cal:
         logits = merge_cal_target_logit(logits, kin, present, p, urgency, in_zone)
-    if p.merge_end_wait:
+    if p.merge_end_wait and not getattr(p, "lane_learnable", False):
         # Final veto (after the stopped relaxation and merge_cal): a masked prior keeps every
         # lane head, the forced-late window included, from merging into an insecure gap.
+        # V10UNBLOCK lane_learnable: the physical envelope replaces this behavioural veto.
         logits[..., p.merge_target_lane] = torch.where(
-            merge_end_blocked(kin, present, p) if merge_blocked is None else merge_blocked,
+            merge_end_blocked(kin, present, p, impatience) if merge_blocked is None
+            else merge_blocked,
             torch.full_like(s, MASKED_LOGIT),
             logits[..., p.merge_target_lane])
     logits = logits.scatter(-1, lane.unsqueeze(-1), torch.zeros_like(s).unsqueeze(-1))

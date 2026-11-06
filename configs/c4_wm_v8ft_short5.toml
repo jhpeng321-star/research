@@ -1,0 +1,13 @@
+# V8FT pre-check 5 (overnight autonomous WM iteration, 2026-10-18): pre-check 4 + STRONGER waiting-time impatience
+# (hazard and gap time constants 25 s -> 12 s) in training and inference. One change vs pre-check 4: targets the
+# remaining stuck ramp cars (best so far 23-39 of 368; SUMO 4).
+schema_version = 2
+name = "WM-S-C4-V8FT-SHORT5"
+extends = "c4_wm_v8ft_short4.toml"
+
+[physics.overrides]
+merge_impatience_hazard_tau_s = 12.0
+merge_impatience_gap_tau_s = 12.0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v8ft_short5"

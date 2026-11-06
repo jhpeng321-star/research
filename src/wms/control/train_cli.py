@@ -60,11 +60,13 @@ def policy_settings(raw) -> dict:
     own stored bound (legacy 1.5 when it has none) and the trainer warns about the override.
     ``init_zero_accel`` (V6EXPLORE, default off) applies the neutral zero-mean acceleration
     start to the fresh actor; the key is returned only when enabled so existing digests of
-    default configs stay unchanged."""
+    default configs stay unchanged.
+    ``lane_control`` (V7POL): "learned" (default, the categorical lane head) or "native" (an actor
+    without a lane head, no lane decisions; returned only when "native")."""
     from .contract import DIRECT_ACCEL_MAX_MPS2, POLICY_ACCEL_MAX_MPS2
 
     section = dict(raw.get("policy", {}))
-    unknown = set(section) - {"accel_max_mps2", "init_zero_accel"}
+    unknown = set(section) - {"accel_max_mps2", "init_zero_accel", "lane_control"}
     if unknown:
         raise ValueError(f"unknown [policy] keys: {sorted(unknown)}")
     accel_max = float(section.get("accel_max_mps2", POLICY_ACCEL_MAX_MPS2))
@@ -77,6 +79,11 @@ def policy_settings(raw) -> dict:
         raise ValueError("[policy] init_zero_accel must be a boolean")
     if zero:
         out["init_zero_accel"] = True
+    lane_control = section.get("lane_control", "learned")
+    if lane_control not in ("learned", "native"):
+        raise ValueError("[policy] lane_control must be 'learned' or 'native'")
+    if lane_control == "native":
+        out["lane_control"] = "native"
     return out
 
 
@@ -127,7 +134,7 @@ def _load_starts(data, models, seed, entries=False):
         raise ValueError("ensemble members must use the same observed-history specification")
     history_s, history_stride_s = history_specs.pop()
     split_kwargs = dict(
-        val_fraction=float(data.get("val_fraction", 0.1)), seed=seed,
+        val_fraction=float(data.get("val_fraction", 0.1)), seed=int(data.get("split_seed", seed)),
         excluded_penetrations=tuple(data.get("excluded_penetrations", [])),
         relabel=bool(data.get("relabel_cavs", False)),
         target_penetration=float(data.get("target_penetration", 0.2)))
@@ -248,6 +255,13 @@ def main(argv=None):
         paths = [str(checked_path(path)) for path in paths]
         policy_kwargs = policy_settings(raw)
         components = _load_components()
+        if policy_kwargs.get("lane_control") == "native":
+            # V7POL: actor without a lane head; no lane rules -> imagination keeps CAVs in lane
+            # (bridge forced ramp merge only), SUMO keeps its own CAV lane changes (PolicyExecutor).
+            components["policy"] = importlib.import_module("wms.control.policy").CavPolicy(
+                lane_head=False)
+            components["policy"].lane_control = "native"
+            lane_rules = None
         if hasattr(components["policy"], "set_accel_bounds"):      # fresh actor: configured cap
             components["policy"].set_accel_bounds(components["policy"].accel_min,
                                                   policy_kwargs["accel_max"])
@@ -296,6 +310,8 @@ def main(argv=None):
                                                np.isfinite(trainer.best_validation) else None),
                        best_coop_gain_val=(trainer.best_coop_validation if
                                            np.isfinite(trainer.best_coop_validation) else None))
+        if trainer.lane_control == "native":
+            summary["lane_control"] = "native"
         if hasattr(train.dataset, "start_meta"):     # POLICYV5: windows per C4 start source
             summary["start_windows_by_source"] = {
                 role: _windows_by_source(sampler) for role, sampler in (("train", train),

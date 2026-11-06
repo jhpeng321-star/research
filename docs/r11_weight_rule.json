@@ -1,0 +1,37 @@
+{
+ "status": "MEASURED",
+ "date": "2026-10-24",
+ "tool": "tools/r11_courtesy_offline.py fit (docs/r11_offline_fit.json)",
+ "data": "local TRAIN windows (E:/agent-work/c4-v10r10b/tmp_r10b/roots = filtered r9_train v5_native + genrand_plain), 207 windows x 120 s, 54 held out by episode",
+ "checkpoint": "E:/agent-work/c4-v10r9fix/data/r9_train/wm_s_stage300.pt (round-8 stage-300; HDV acceleration identical to round 9); round-10b head stand-in = the offline production head of the round-10b loss (arm A) on the same windows, zero-expanded",
+ "weight_rule": "gradient-norm parity with the weighted fix-B term: w = G_cutin_weighted / G_courtesy(w=1), G_courtesy = geometric-mean gradient norm of the unweighted R11 contrast loss over the head at its round-11 INIT on 8 production-like batches (4 windows x 120 s)",
+ "lr_rule": "the scale in {1,10,100,1000} with the lowest held-out (episode-disjoint TRAIN) contrast loss after the production schedule (30 x 4 windows @5e-5*s, 60 x 5 windows @3e-5*s, Adam), starting from the round-11 init",
+ "g_cutin_weighted": 0.7373693440399065,
+ "default_init_round10b_head": {
+  "g_courtesy": 0.6787991519345586,
+  "weight": 1.086,
+  "held_loss_by_scale": {
+   "1": 0.6563841862980688,
+   "10": 0.6038965419869222,
+   "100": 0.566243301286623,
+   "1000": 0.5845744387073767,
+   "init_only": 0.6663671402997823
+  },
+  "lr_scale": 100.0
+ },
+ "switch_zero_init_head": {
+  "g_courtesy": 0.08132293140749375,
+  "weight": 9.067,
+  "held_loss_by_scale": {
+   "1": 0.6981476290057987,
+   "10": 0.6821773771447933,
+   "100": 0.60547100569422,
+   "1000": 0.5775223647503278,
+   "zero_head": 0.6988357883082162
+  },
+  "lr_scale": 1000.0
+ },
+ "chosen_weight": 1.086,
+ "lr_scale_chosen": 100.0,
+ "note": "config carries the default-init values; scripts/round11_gate.sh passes the zero-init values (weight, lr scale) when R11_HEAD_INIT=zero. The weight acts only through the global grad-norm clip and the logged total (Adam is per-parameter scale invariant)."
+}

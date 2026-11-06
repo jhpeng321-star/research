@@ -1,0 +1,300 @@
+{
+  "verdict": "NOT_EQUIVALENT",
+  "same_event_inputs": true,
+  "recorded_events": 256,
+  "parameter_source": "S-R12C encoder, exact pre-t0 history, captured first forward; identical per-slot T,b,s0 supplied to both gates",
+  "event_source": "same 48 TRAIN snapshots, recorded lane2->1 post-insertion geometry, both methods on every event",
+  "reference_sha256": "ecef2786cbd7d400c9f9a4f3c12d45df69e2836796285818a13c50b28e56c825",
+  "extractor_sha256": "50fa4a1b92e6671890072241be411158cdf03320ae6b074216c71b0882188ebe",
+  "definition_difference": "R13E adds rear learned min_gap; GAPACC gs has no min_gap term",
+  "events": {
+    "all": {
+      "torch.float32": {
+        "n": 256,
+        "gate_equal": 136,
+        "gapacc_only": 120,
+        "r13e_only": 0,
+        "both_accept": 68,
+        "both_reject": 68,
+        "boundary_equal": 136,
+        "boundary_different": 120,
+        "ungated_boundary_neg_inf": 54,
+        "log_vs_direct_differences": 0,
+        "log_vs_direct_examples": [],
+        "examples": [
+          {
+            "label": "state0:row4:slot17",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.0646934509277344,
+            "gap_l": 26.288352966308594
+          },
+          {
+            "label": "state0:row29:slot42",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.3075408935546875,
+            "gap_l": 4.1046295166015625
+          },
+          {
+            "label": "state0:row37:slot43",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.1279220581054688,
+            "gap_l": 17.50994110107422
+          },
+          {
+            "label": "state0:row43:slot46",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.95355224609375,
+            "gap_l": 5.518558502197266
+          },
+          {
+            "label": "state0:row55:slot61",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.913625717163086,
+            "gap_l": 3.4550857543945312
+          },
+          {
+            "label": "state0:row67:slot62",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.681062698364258,
+            "gap_l": 9.336311340332031
+          },
+          {
+            "label": "state0:row75:slot67",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.269073486328125,
+            "gap_l": 8.707582473754883
+          },
+          {
+            "label": "state0:row92:slot73",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.285522937774658,
+            "gap_l": 14.219402313232422
+          }
+        ]
+      },
+      "torch.float64": {
+        "n": 256,
+        "gate_equal": 136,
+        "gapacc_only": 120,
+        "r13e_only": 0,
+        "both_accept": 68,
+        "both_reject": 68,
+        "boundary_equal": 136,
+        "boundary_different": 120,
+        "ungated_boundary_neg_inf": 54,
+        "log_vs_direct_differences": 0,
+        "log_vs_direct_examples": [],
+        "examples": [
+          {
+            "label": "state0:row4:slot17",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.0646934509277344,
+            "gap_l": 26.288352966308594
+          },
+          {
+            "label": "state0:row29:slot42",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.3075408935546875,
+            "gap_l": 4.1046295166015625
+          },
+          {
+            "label": "state0:row37:slot43",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.1279220581054688,
+            "gap_l": 17.50994110107422
+          },
+          {
+            "label": "state0:row43:slot46",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.95355224609375,
+            "gap_l": 5.518558502197266
+          },
+          {
+            "label": "state0:row55:slot61",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.913625717163086,
+            "gap_l": 3.4550857543945312
+          },
+          {
+            "label": "state0:row67:slot62",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.681062698364258,
+            "gap_l": 9.336311340332031
+          },
+          {
+            "label": "state0:row75:slot67",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.269073486328125,
+            "gap_l": 8.707582473754883
+          },
+          {
+            "label": "state0:row92:slot73",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.285522937774658,
+            "gap_l": 14.219402313232422
+          }
+        ]
+      }
+    },
+    "hdv": {
+      "torch.float32": {
+        "n": 204,
+        "gate_equal": 107,
+        "gapacc_only": 97,
+        "r13e_only": 0,
+        "both_accept": 53,
+        "both_reject": 54,
+        "boundary_equal": 107,
+        "boundary_different": 97,
+        "ungated_boundary_neg_inf": 42,
+        "log_vs_direct_differences": 0,
+        "log_vs_direct_examples": [],
+        "examples": [
+          {
+            "label": "state0:row4:slot17",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.0646934509277344,
+            "gap_l": 26.288352966308594
+          },
+          {
+            "label": "state0:row37:slot43",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.1279220581054688,
+            "gap_l": 17.50994110107422
+          },
+          {
+            "label": "state0:row43:slot46",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.95355224609375,
+            "gap_l": 5.518558502197266
+          },
+          {
+            "label": "state0:row55:slot61",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.913625717163086,
+            "gap_l": 3.4550857543945312
+          },
+          {
+            "label": "state0:row67:slot62",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.681062698364258,
+            "gap_l": 9.336311340332031
+          },
+          {
+            "label": "state0:row75:slot67",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.269073486328125,
+            "gap_l": 8.707582473754883
+          },
+          {
+            "label": "state0:row92:slot73",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.285522937774658,
+            "gap_l": 14.219402313232422
+          },
+          {
+            "label": "state0:row103:slot86",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.556899309158325,
+            "gap_l": 9.402804374694824
+          }
+        ]
+      },
+      "torch.float64": {
+        "n": 204,
+        "gate_equal": 107,
+        "gapacc_only": 97,
+        "r13e_only": 0,
+        "both_accept": 53,
+        "both_reject": 54,
+        "boundary_equal": 107,
+        "boundary_different": 97,
+        "ungated_boundary_neg_inf": 42,
+        "log_vs_direct_differences": 0,
+        "log_vs_direct_examples": [],
+        "examples": [
+          {
+            "label": "state0:row4:slot17",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.0646934509277344,
+            "gap_l": 26.288352966308594
+          },
+          {
+            "label": "state0:row37:slot43",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.1279220581054688,
+            "gap_l": 17.50994110107422
+          },
+          {
+            "label": "state0:row43:slot46",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.95355224609375,
+            "gap_l": 5.518558502197266
+          },
+          {
+            "label": "state0:row55:slot61",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.913625717163086,
+            "gap_l": 3.4550857543945312
+          },
+          {
+            "label": "state0:row67:slot62",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.681062698364258,
+            "gap_l": 9.336311340332031
+          },
+          {
+            "label": "state0:row75:slot67",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 2.269073486328125,
+            "gap_l": 8.707582473754883
+          },
+          {
+            "label": "state0:row92:slot73",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.285522937774658,
+            "gap_l": 14.219402313232422
+          },
+          {
+            "label": "state0:row103:slot86",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 3.556899309158325,
+            "gap_l": 9.402804374694824
+          }
+        ]
+      }
+    }
+  }
+}

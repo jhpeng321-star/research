@@ -1,0 +1,41 @@
+{
+ "schema": "c4_collect_summary/1",
+ "policy": "/home/ubuntu/sumocredit/inputs/policy/v8_u600.pt",
+ "workers": 1,
+ "warmup_s": 60,
+ "horizon_s": 63,
+ "episodes_run": 1,
+ "episodes_complete": 1,
+ "episodes_failed": 0,
+ "wall_seconds": 8.792377384999781,
+ "simulated_seconds": 63.0,
+ "aggregate_sim_s_per_wall_s": 7.165297534598666,
+ "per_worker_episode_sim_s_per_wall_s_mean": 39.71585982800006,
+ "per_worker_window_sim_s_per_wall_s_mean": 12.113992768895173,
+ "collisions": 0,
+ "teleports": 0,
+ "branches": 2,
+ "branch_collisions": 0,
+ "branch_teleports": 0,
+ "case_plan": "product",
+ "pen_weights": null,
+ "population": "textbook",
+ "gr_mode": null,
+ "branch_cadence_s": 60,
+ "policy_pairs": true,
+ "pair_sim_seconds": 75,
+ "pair_dJ": {
+  "w967603m2700p40t60@t62": 0.021908885306388015
+ },
+ "host_cpus": 48,
+ "finished_utc": "2026-10-25T16:20:30.509905+00:00",
+ "sumocredit": {
+  "jobs": 1,
+  "sim_s": 6,
+  "files": {
+   "gate": 1,
+   "gated": 0,
+   "credit": 0
+  }
+ }
+}

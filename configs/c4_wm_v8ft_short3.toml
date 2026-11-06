@@ -1,0 +1,12 @@
+# V8FT3 pre-check 3 (~1 h on a 24 GB GPU): c4_wm_v8ft3.toml with stage_steps [80, 60] (as v8ft_short2).
+# Same launch: --set model.init_from=<abs path of the v5m checkpoint> --set loss.loss_share_logging=false
+schema_version = 2
+name = "WM-S-C4-V8FT-SHORT3"
+extends = "c4_wm_v8ft3.toml"
+
+[curriculum]
+stage_steps = [80, 60]
+max_hours = 1.75
+
+[runtime]
+out_dir = "runs/active/c4_wm_v8ft_short3"

@@ -15,7 +15,9 @@ from .neighbours import lead_neighbour
 
 def baseline_accel(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                    driver_params: Optional[Mapping[str, Tensor]] = None, *,
-                   merge_blocked: Optional[Tensor] = None) -> Tensor:
+                   merge_blocked: Optional[Tensor] = None,
+                   impatience: Optional[Tensor] = None,
+                   emergency_envelope: bool = True) -> Tensor:
     """IDM acceleration ``[B, K]`` of every present vehicle (zero when absent).
 
     With ``driver_params`` the per-driver IDM parameters replace the defaults and
@@ -51,10 +53,46 @@ def baseline_accel(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                             torch.maximum(accel, -comfortable)).clamp_min(-limit)
     if physics.merge_cal:
         accel = merge_cal_yield(kin, present, accel, physics)
-    if physics.mainline_merge_yield:
+    if physics.mainline_merge_yield and not getattr(physics, "lane_learnable", False):
+        # V10UNBLOCK lane_learnable: no hard courtesy rule; the residual must learn it.
         accel = mainline_merge_yield(kin, present, accel, physics, params,
                                      None if driver_params is None else driver_params["decel"],
-                                     merge_blocked)
+                                     merge_blocked, impatience)
     if physics.emergency_decel_mps2 is not None:
         accel = accel.clamp_min(-physics.emergency_decel_mps2)
+    if physics.emergency_braking and emergency_envelope:
+        accel = apply_emergency_envelope(kin, present, accel, physics, driver_params)
     return torch.where(present, accel, torch.zeros_like(accel))
+
+
+def apply_emergency_envelope(kin: Tensor, present: Tensor, accel: Tensor, physics: PhysicsConfig,
+                             driver_params: Optional[Mapping[str, Tensor]] = None) -> Tensor:
+    """R13E emergency safe-follow envelope on a (final, pre-clamp) acceleration.
+
+    ``WmSModel.forward`` applies it ONCE to the composed acceleration (baseline +
+    residual + courtesy + yield, review B2) and requests the baseline without it.
+    d(out)/d(accel) lies in [0, 1] (smooth minimum), so the composed terms keep
+    bounded gradients; slots without a real leader/obstacle are unchanged.
+    """
+    from .emergency import leader_inputs, safe_accel, safe_accel_driver_b
+
+    params = (physics.idm_params() if driver_params is None
+              else IDMParams.from_driver_params(driver_params))
+    if getattr(physics, "emergency_onset", "plant") == "driver_b":
+        # LOOP14: plan the envelope onset with the learned comfortable decel b (ego and leader).
+        safe_gap, safe_leader_v, has_leader, lead = leader_inputs(kin, present, physics,
+                                                                  return_index=True)
+        plant = -physics.accel_min_mps2
+        b = torch.as_tensor(params.b_comf, dtype=kin.dtype, device=kin.device).expand_as(kin[..., 4])
+        # Slots without a usable learned b (padding) plan with the plant limit (= 13E); a
+        # comfortable decel cannot exceed the plant limit.
+        b = torch.where(torch.isfinite(b) & (b > 0), b, torch.full_like(b, plant)).clamp_max(plant)
+        b_lead = torch.where(lead >= 0, torch.gather(b, -1, lead.clamp_min(0)), b)
+        emergency = safe_accel_driver_b(kin[..., 4], safe_leader_v, safe_gap, accel, params.s0,
+                                        dt=physics.dt_s, emergency_decel=-physics.accel_min_mps2,
+                                        comfort_decel=b, leader_comfort_decel=b_lead)
+        return torch.where(has_leader, emergency, accel)
+    safe_gap, safe_leader_v, has_leader = leader_inputs(kin, present, physics)
+    emergency = safe_accel(kin[..., 4], safe_leader_v, safe_gap, accel, params.s0,
+                           dt=physics.dt_s, emergency_decel=-physics.accel_min_mps2)
+    return torch.where(has_leader, emergency, accel)

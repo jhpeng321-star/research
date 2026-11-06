@@ -1,0 +1,172 @@
+{
+ "schema": "c4_real_credit/1",
+ "split": "TRAIN",
+ "sources": [
+  "/home/ubuntu/sumocredit/out_a2/points_s1.jsonl"
+ ],
+ "points": 2,
+ "sign": "D positive = better (J_B - J_X, veh-s)",
+ "fits": {
+  "all": {
+   "n": 2,
+   "slope": null,
+   "slope_se": null,
+   "intercept": null,
+   "corr": null,
+   "multiplier": 1.0,
+   "estimated": false,
+   "reason": "n < 3"
+  },
+  "individual": {
+   "n": 6,
+   "slope": 0.020103121942789338,
+   "slope_se": 0.5894778081302413,
+   "intercept": 0.8304014309351778,
+   "corr": 0.01704915751540755,
+   "multiplier": 2.3353436440777156e-05,
+   "estimated": true,
+   "shrinkage": 0.001161682076407722
+  },
+  "group": {
+   "n": 2,
+   "slope": null,
+   "slope_se": null,
+   "intercept": null,
+   "corr": null,
+   "multiplier": 1.0,
+   "estimated": false,
+   "reason": "n < 3"
+  },
+  "coop": {
+   "n": 2,
+   "slope": null,
+   "slope_se": null,
+   "intercept": null,
+   "corr": null,
+   "multiplier": 1.0,
+   "estimated": false,
+   "reason": "n < 3"
+  },
+  "team": {
+   "n": 2,
+   "slope": null,
+   "slope_se": null,
+   "intercept": null,
+   "corr": null,
+   "multiplier": 1.0,
+   "estimated": false,
+   "reason": "n < 3"
+  }
+ },
+ "multipliers": {
+  "individual": 2.3353436440777156e-05,
+  "group": 1.0,
+  "coop": 1.0,
+  "team": 1.0
+ },
+ "variance": {
+  "points": 2,
+  "extra_sim_s_per_point": 150.0,
+  "terms": {
+   "D_all": {
+    "n": 2,
+    "mean": -2.2709908517806525,
+    "sd": 8.59561562882027,
+    "se": 6.0780180996118816,
+    "n_for_mean": 58,
+    "sim_s_for_mean": 8700.0,
+    "share_of_cycle_budget": 0.2921816227834498
+   },
+   "D_i": {
+    "n": 6,
+    "mean": 0.8171856742756063,
+    "sd": 5.867794816913807,
+    "se": 2.395517202797778,
+    "n_for_mean": 207,
+    "sim_s_for_mean": 31050.0,
+    "share_of_cycle_budget": 1.0427861364857602
+   },
+   "D_G": {
+    "n": 2,
+    "mean": 10.193669448487071,
+    "sd": 14.407846257275525,
+    "se": 10.187885790812741,
+    "n_for_mean": 8,
+    "sim_s_for_mean": 1200.0,
+    "share_of_cycle_budget": 0.04030091348737238
+   },
+   "C_G": {
+    "n": 2,
+    "mean": 7.7421124256602525,
+    "sd": 10.94655887152088,
+    "se": 7.740386008710175,
+    "n_for_mean": 8,
+    "sim_s_for_mean": 1200.0,
+    "share_of_cycle_budget": 0.04030091348737238
+   },
+   "M_i": {
+    "n": 2,
+    "mean": 4.720330192140864,
+    "sd": 6.671357003723873,
+    "se": 4.7173617770495175,
+    "n_for_mean": 8,
+    "sim_s_for_mean": 1200.0,
+    "share_of_cycle_budget": 0.04030091348737238
+   }
+  },
+  "slopes": {
+   "all": {
+    "n": 2,
+    "slope": null,
+    "slope_se": null,
+    "intercept": null,
+    "corr": null,
+    "multiplier": 1.0,
+    "estimated": false,
+    "reason": "n < 3"
+   },
+   "individual": {
+    "n": 6,
+    "slope": 0.020103121942789338,
+    "slope_se": 0.5894778081302413,
+    "intercept": 0.8304014309351778,
+    "corr": 0.01704915751540755,
+    "multiplier": 2.3353436440777156e-05,
+    "estimated": true,
+    "shrinkage": 0.001161682076407722,
+    "n_for_slope": 20636,
+    "sim_s_for_slope": 3095400.0
+   },
+   "group": {
+    "n": 2,
+    "slope": null,
+    "slope_se": null,
+    "intercept": null,
+    "corr": null,
+    "multiplier": 1.0,
+    "estimated": false,
+    "reason": "n < 3"
+   },
+   "coop": {
+    "n": 2,
+    "slope": null,
+    "slope_se": null,
+    "intercept": null,
+    "corr": null,
+    "multiplier": 1.0,
+    "estimated": false,
+    "reason": "n < 3"
+   },
+   "team": {
+    "n": 2,
+    "slope": null,
+    "slope_se": null,
+    "intercept": null,
+    "corr": null,
+    "multiplier": 1.0,
+    "estimated": false,
+    "reason": "n < 3"
+   }
+  }
+ }
+}

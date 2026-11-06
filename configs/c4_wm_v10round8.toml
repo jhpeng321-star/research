@@ -1,0 +1,70 @@
+# V10 round 8 (2026-10-21): repaired merge-core survival (version 2). Round 7b trained only the
+# core's physical scalars; round 8 turns on the repaired two-sided recorded/on-policy likelihoods
+# with fixed normalisers (z_tf/z_on placeholders 1.0), a sigma regulariser and a frozen margin
+# temperature / residual head (both verified exactly at their zero-effect init) so the repaired
+# likelihood cannot be absorbed by the temperature or the residual.
+# (extends round 2 directly with round 7b's non-core settings copied: the loader caps the
+# extends chain depth.)
+schema_version = 2
+name = "WM-S-C4-V10ROUND8"
+extends = "c4_wm_v10round2.toml"
+
+[model]
+merge_decision = "secure_gap"
+
+[loss.merge_core]
+version = 2
+weight = 0.4
+tf_weight = 0.6
+yield_weight = 0.4
+n_quad = 8
+metrics = true
+pos_tol_m = 50.0
+speed_tol_mps = 8.0
+gap_tol_m = 40.0
+gap_speed_tol_mps = 8.0
+location_reg_weight = 1.0e-3
+sigma_reg_weight = 1.0e-3
+z_tf = 395.2   # pooled mean per-car recorded-state NLL at init (r8_measure: 8 x 120 s + 4 x 300 s TRAIN batches, 2026-10-21; heavy-tailed, one batch 3269)
+z_on = 2.15    # pooled mean per-car on-policy NLL at init (same measurement)
+
+[loss.merge_survival]
+weight = 0.0
+negative_weight = 0.0
+
+[curriculum]
+unroll_s = [120.0, 300.0]
+stage_steps = [30, 60]
+truncation_steps_per_stage = [120, 60]
+max_hours = 2.5
+
+[optim]
+lr_per_stage = [5.0e-5, 3.0e-5]
+batch_size_per_stage = [4, 2]
+freeze_prefixes = [
+  "merge_core.temperature_raw",
+  "merge_core.residual_head",
+  "merge_core.residual_scale_raw",
+]
+
+[optim.lr_scale]
+"lane_v5" = 0.05            # near-frozen mainline lane head (freezing breaks the unroll-level lane-flow term: no grad)
+"driver_encoder" = 0.3
+"driver_updater" = 0.3
+"residual_net" = 0.5
+"k_embedding" = 0.5
+"history_proj" = 0.5
+"merge_core" = 20.0
+"merge_core.s0_raw" = 100.0
+"merge_core.t_raw" = 100.0
+"merge_core.b_raw" = 100.0
+"merge_core.tau_raw" = 100.0
+"merge_core.alpha_bias" = 20.0
+"merge_core.alpha_log_sigma_raw" = 20.0
+"merge_core.yield_scale_raw" = 20.0
+
+[selection]
+val_max_windows = 256
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10_round8"

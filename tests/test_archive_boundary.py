@@ -1,4 +1,5 @@
 import ast
+import hashlib
 import json
 from pathlib import Path
 
@@ -36,3 +37,5 @@ def test_path_map_entries_exist_at_new_location():
         moved = ROOT / row["new"]
         size = row.get("current_bytes", row["bytes"])
         assert moved.is_file() and moved.stat().st_size == size, row["new"]
+        digest = row.get("current_sha256", row["sha256"])
+        assert hashlib.sha256(moved.read_bytes()).hexdigest() == digest, row["new"]

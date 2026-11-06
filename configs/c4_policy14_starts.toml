@@ -1,0 +1,18 @@
+# Only native/random-direct TRAIN sources; independent of selected WM checkpoint.
+schema_version = 2
+name = "POLICY14-STARTS"
+[data]
+c4_base = "native_v5"
+junction_fix = "ffill"
+[[data.c4_sources]]
+name = "native_v5"
+path = "v5_native_q"
+mix_ratio = 0.5
+window_stride_s = 10.0
+use_val = true
+[[data.c4_sources]]
+name = "genrand_plain"
+path = "genrand_plain_q"
+mix_ratio = 0.5
+window_stride_s = 10.0
+use_val = true

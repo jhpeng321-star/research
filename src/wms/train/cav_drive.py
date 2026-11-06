@@ -12,6 +12,7 @@ from typing import Any, Mapping, Optional
 import numpy as np
 import torch
 
+from wms.core import speed_flags
 from wms.data.action_timeline import CONTROLLERS
 
 #: Timeline controller ids that need the sim-layer controllers: damping=1, pi-external-u=2.
@@ -120,20 +121,32 @@ class TimelineControllers:
         return min(cfg.acceleration_max_mps2,
                    max(cfg.acceleration_min_mps2, float(target) - float(v[b, k])))
 
-    @torch.no_grad()
-    def __call__(self, state: Mapping[str, torch.Tensor]) -> torch.Tensor:
+    def _native_accel(self, state: Mapping[str, torch.Tensor]) -> torch.Tensor:
+        """Physics-baseline acceleration with the SAME learned driver settings as the WM step.
+
+        R13E emergency braking (learned min-gap) and the learned mainline yield (T, b, a, v0)
+        need per-slot driver settings; the WM step supplies them to its callbacks as
+        ``inferred_driver_parameters`` [B,K,9]. With every such flag off the call is the
+        legacy ``physics_accel(state)`` (bit-identical)."""
         model = self.model
-        dt = float(model.physics.dt_s)
-        s, v, lane = state["s_m"], state["v_mps"], state["lane"]
-        cav = state["is_cav"].bool() & state["present"].bool()
-        # Native handback remains native at each physics tick.
-        accel = model.physics_accel(state).detach().clone()
-        boundary = self.step_index % 2 == 0
-        control = self.step_index // 2
-        if control >= self.ids.shape[1]:
-            raise ValueError("closed_loop action timeline exhausted")
-        for b in range(s.shape[0]):
-            for k in range(s.shape[1]):
+        needs = (getattr(model, "mainline_merge_yield_learnable", False)
+                 or getattr(model.physics, "emergency_braking", False)
+                 or getattr(model.physics, "secure_gap_veto", False))
+        values = state.get("inferred_driver_parameters")
+        if not needs or values is None:
+            if needs and getattr(model, "mainline_merge_yield_learnable", False):
+                raise ValueError("learned mainline yield needs inferred_driver_parameters in the "
+                                 "CAV callback state")
+            return model.physics_accel(state)
+        from wms.model.driver_encoder import PARAMETER_NAMES
+
+        params = {name: values[..., i] for i, name in enumerate(PARAMETER_NAMES)}
+        return model.physics_accel(state, params)
+
+    def _loop_device(self, state, cav, lane, v, accel, boundary, control, dt) -> None:
+        """Legacy per-slot loop (reads device scalars; writes ``accel`` in place)."""
+        for b in range(cav.shape[0]):
+            for k in range(cav.shape[1]):
                 vid = f"{b}:{k}"
                 if not cav[b, k] or lane[b, k] < 0:
                     self._invalidate(vid)
@@ -157,7 +170,82 @@ class TimelineControllers:
                                       (float(self.target[b, control, k]) - float(v[b, k])) / dt)
                     # speedMode31's safe plant can brake below the requested command.
                     accel[b, k] = min(float(accel[b, k]), request)
+
+    def _loop_host(self, state, cav, lane, v, accel, boundary, control, dt) -> None:
+        """S-SPEED2 ``fast_cav_drive``: :meth:`_loop_device` on host copies.
+
+        Same slot order, same controller calls and the same float64 ``min`` per commanded
+        slot; the float32 results are written back with one indexed copy (the same
+        round-to-nearest conversion as the per-element assignment).  Non-CAV slots only
+        clear tracked state, so they are skipped while nothing is tracked.
+        """
+        cav_h = cav.detach().cpu().numpy()
+        lane_h = lane.detach().cpu().numpy()
+        v_h = v.detach().cpu().numpy()
+        accel_h = accel.detach().cpu().numpy()
+        rows, cols, values = [], [], []
+        for b in range(cav_h.shape[0]):
+            for k in range(cav_h.shape[1]):
+                if not cav_h[b, k] or lane_h[b, k] < 0:
+                    if self.active or self.pi_active:
+                        vid = f"{b}:{k}"
+                        self._invalidate(vid)
+                        self.active.pop(vid, None)
+                    continue
+                vid = f"{b}:{k}"
+                action = CONTROLLERS[int(self.ids[b, control, k])]
+                if boundary:
+                    if action != "pi-external-u":
+                        self._invalidate(vid)
+                    self.active.pop(vid, None)
+                    if action == "direct":
+                        self.active[vid] = float(self.acc[b, control, k])
+                    elif action != "native":
+                        command = self._new_command(action, vid, b, k, control, state)
+                        if command is not None:
+                            self.active[vid] = command
+                if vid in self.active:
+                    request = self.active[vid]
+                    if action == "direct":
+                        request = min(request,
+                                      (float(self.target[b, control, k]) - float(v_h[b, k])) / dt)
+                    # speedMode31's safe plant can brake below the requested command.
+                    rows.append(b)
+                    cols.append(k)
+                    values.append(min(float(accel_h[b, k]), request))
+        if rows:
+            accel[rows, cols] = torch.tensor(values, dtype=accel.dtype).to(accel.device)
+
+    @torch.no_grad()
+    def __call__(self, state: Mapping[str, torch.Tensor]) -> torch.Tensor:
+        model = self.model
+        dt = float(model.physics.dt_s)
+        s, v, lane = state["s_m"], state["v_mps"], state["lane"]
+        cav = state["is_cav"].bool() & state["present"].bool()
+        # Native handback remains native at each physics tick.
+        native = state.get("merge_pivot_native_accel")
+        accel = (self._native_accel(state) if native is None else native).detach().clone()
+        boundary = self.step_index % 2 == 0
+        control = self.step_index // 2
+        if control >= self.ids.shape[1]:
+            raise ValueError("closed_loop action timeline exhausted")
+        if speed_flags.enabled("fast_cav_drive") and v.dtype != torch.bfloat16:
+            # S-SPEED2: identical loop on batched host copies, not device reads per slot.
+            # NumPy has no bfloat16 scalar representation; preserve that legacy path.
+            self._loop_host(state, cav, lane, v, accel, boundary, control, dt)
+        else:
+            self._loop_device(state, cav, lane, v, accel, boundary, control, dt)
         self.step_index += 1
         speed = (v + accel * dt).clamp_min(0)
         position = s + 0.5 * (v + speed) * dt
+        if native is not None and model.physics.stop_time_integration:
+            from wms.model.merge_pivot import advance_longitudinal
+
+            # Same integration and encoded native plant as the first-passage step.
+            kin = state.get("veh_kin")
+            if kin is None:
+                from wms.physics.state import state_kin
+                kin = state_kin(state)
+            moved = advance_longitudinal(kin, accel, dt, True)
+            position, speed = moved[..., 0], moved[..., 4]
         return torch.stack((position, lane.float(), speed, accel), dim=-1)

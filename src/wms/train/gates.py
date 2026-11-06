@@ -107,6 +107,20 @@ def required_terms(settings: TrainSettings, *, long_horizon: bool = True) -> tup
     terms.extend(BrakingParams(
         asym_alpha=settings.asym_speed_alpha, decel_weight=settings.decel_weight,
         prop_weight=settings.propagation_weight).log_terms)
+    if float(getattr(settings, "brake_persist_weight", 0.0)) > 0.0:
+        terms.append("brake_persist")
+    if float(getattr(settings, "brake_persist_quantile_weight", 0.0)) > 0.0:
+        terms.append("brake_persist_quantile")
+    if float(getattr(settings, "brake_wave_weight", 0.0)) > 0.0:
+        terms.append("brake_wave")
+    if float(getattr(settings, "brake_wave_residual_weight", 0.0)) > 0.0:
+        terms.append("brake_wave_residual")
+    if float(getattr(settings, "brake_wave_spurious_weight", 0.0)) > 0.0:
+        terms.append("brake_wave_spurious")
+    if float(getattr(settings, "post_merge_weight", 0.0)) > 0.0:
+        terms.append("post_merge")
+    if float(getattr(settings, "post_merge_residual_weight", 0.0)) > 0.0:
+        terms.append("post_merge_residual")
     if settings.stability_weight > 0:
         terms.append("stability")
     if settings.conservation_weight > 0:
@@ -121,6 +135,14 @@ def required_terms(settings: TrainSettings, *, long_horizon: bool = True) -> tup
                                                ("agg_reward", settings.aggregate_reward_weight),
                                                ("agg_flow", settings.aggregate_flow_weight))
                      if weight > 0.0)
+    if getattr(settings, "merge_loss_on", False):
+        terms.extend(name for name, weight in (
+            ("merge_speed", settings.merge_loss_speed_weight),
+            ("merge_discharge", settings.merge_loss_discharge_weight)) if weight > 0.0)
+    if float(getattr(settings, "merge_timing_weight", 0.0)) > 0.0:
+        terms.append("merge_timing")
+    if float(getattr(settings, "lane_flow_weight", 0.0)) > 0.0:
+        terms.append("lane_flow")
     return tuple(dict.fromkeys(terms))
 
 

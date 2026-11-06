@@ -438,6 +438,24 @@ def test_offload_map_is_well_formed():
     assert mod.check() == []
 
 
+def test_offloaded_repository_paths_are_worktree_independent(tmp_path):
+    tool = _tool()
+    receipt = {'schema': 'offloaded_paths/1', 'entries': [
+        {'local': 'E:/research-dense/output/study_v1',
+         'drive': 'gdrive:research-archive/study_v1.tar.zst'}]}
+    path = tmp_path / 'map.json'
+    path.write_text(json.dumps(receipt), encoding='utf-8')
+    tool.OFFLOADED = str(path)
+    expected = receipt['entries'][0]['drive']
+    for source in ('output/study_v1/REPORT.md', str(ROOT / 'output/study_v1/REPORT.md'),
+                   'D:/research-dense/output/study_v1/REPORT.md',
+                   'e:\\research-dense\\output\\study_v1\\REPORT.md'):
+        assert tool.offloaded(source) == expected
+    assert tool.offloaded('output/study_v10/REPORT.md') is None
+    assert tool.offloaded('output/unregistered_study/REPORT.md') is None
+    assert tool.offloaded(str(tmp_path / 'output/study_v1/REPORT.md')) is None
+
+
 def test_relocated_maps_paths_inside_a_moved_directory():
     tool = _tool()
     tool._relocated = {'output/old_study': 'sealed/relocated_20261010/E/research-dense/output/old_study'}

@@ -19,8 +19,16 @@ LANE_MODELS = ("residual", "hazard", "hazard_v5")
 DRIVER_UPDATES = ("off", "ema")
 #: LANEFIX (hazard mode only): rollout lane decision, hazard feature set, merge ownership.
 LANE_DECISIONS = ("argmax", "sample", "gated")
+#: V8LANE mainline decision rules (= wms.model.lane_v5.MAINLINE_MODES).
+LANE_V5_MAINLINE = ("default", "sample", "budget", "budget_prop")
 LANE_HAZARD_FEATURES = ("v1", "v2")
 MERGE_HAZARD_ZONES = ("forced_late", "full")
+#: R5THR/R5FR/SECUREGAP merge decision: per-step Bernoulli hazard (default), persistent
+#: gap-acceptance threshold + first passage, per-step hazard with a persistent per-driver
+#: latent frailty, or the learned LC2013-like two-sided secure-gap core.
+MERGE_DECISIONS = ("hazard", "threshold", "frailty", "secure_gap", "first_passage")
+#: SLOWRES: direct per-step temporal acceleration or a learned low-pass state.
+TEMPORAL_RESIDUAL_MODES = ("direct", "slow")
 
 
 @dataclass(frozen=True)
@@ -81,13 +89,118 @@ class ModelSpec:
     # LANEV5 (lane_model='hazard_v5' only): gated-decision gates and configured head APs.
     lane_v5_gates: tuple[float, float, float] = (0.25, 0.10, 0.5)
     lane_v5_head_ap: tuple[float, float, float] = (-1.0, -1.0, -1.0)
+    # R5INPUTS (default OFF): append the extra merge inputs (follower acceleration / gap
+    # trends / next neighbours / alignment times) to the lane-v5 feature vector.
+    lane_v5_extra_features: bool = False
+    # V8LANE (default 'default' = lane_decision): mainline overtake / return decision rule.
+    lane_v5_mainline: str = "default"
     # V6: default values preserve the legacy encoder and algebraic EMA updates.
     driver_param_mode: str = "legacy"
     driver_ema_update: bool = True
     # V6INTEG: opt-in resolution of simultaneous lane-change conflicts.
     lane_conflict_resolve: bool = False
+    # V10COURTESY (default OFF): ramp-car distance-to-end / speed / waiting time and
+    # the merge head's current probability as extra residual inputs.
+    courtesy_inputs: bool = False
+    # R5MERGE (default OFF): learned pre-tanh divisor of the residual head, exactly
+    # identity (and no new parameter) when off.
+    residual_head_rescale: bool = False
+    # V10NEGOT (default OFF): learned ramp/follower merge negotiation block (zero-init).
+    merge_negotiation: bool = False
+    # R5THR (default 'hazard' = the per-step Bernoulli merge draw): 'threshold' replaces the
+    # merge decision by a persistent learned gap-acceptance threshold (first passage).
+    merge_decision: str = "hazard"
+    merge_st_width: float = 1.0
+    # R9 first-passage law: strict preserves the legacy path; hybrid learns a width.
+    merge_passage_law: str = "strict"
+    merge_w_init: float = 1.0
+    merge_quadrature_order: int = 32
+    # False: no straight-through adjoint from the pivot lane weights into the next rollout step.
+    merge_pivot_state_st: bool = True
+    # SLOWRES (default 'direct' = bit-identical): 'slow' replaces the temporal path's
+    # direct per-step acceleration with a learned low-pass residual state r_t carried in
+    # the rollout state (see wms.model.temporal_slow).  New parameters are created only in
+    # slow mode; a direct model has exactly the pre-SLOWRES key set.
+    temporal_residual_mode: str = "direct"
+    temporal_tau_init_s: float = 0.1
+    temporal_tau_conditioned: bool = False
+    temporal_slew_init_mps2: Optional[float] = None
+    # R9K/R10 (default OFF, FAIL CLOSED): the leader-change tracker exists for recorded-state
+    # replay only.  The runtime consumer (zero-init 14->d_model adapter on the residual net and
+    # the rollout carry) is NOT installed, so enabling this key would silently do nothing;
+    # ModelSpec therefore refuses it until the consumer lands.
+    leader_change_features: bool = False
+    # R10B (default OFF = bit-identical, no new tensor): learned pre-merge courtesy offset for the
+    # target lane-1 follower of a ramp-lane car (wms.model.follower_courtesy).  ``hidden`` is the MLP
+    # width; ``embedding`` (ablation only) adds the follower's driver embedding as an input;
+    # ``rollout_grad`` lets rollout losses train the head (default False: only the recorded-state
+    # courtesy loss reaches its parameters; the state adjoint through the head is kept either way).
+    follower_courtesy: bool = False
+    follower_courtesy_hidden: int = 32
+    follower_courtesy_embedding: bool = False
+    follower_courtesy_rollout_grad: bool = False
+    # R11: courtesy input version (1 = round 10b; 2 = + ramp car accel t/t-1 + carried merge-zone time)
+    follower_courtesy_version: int = 1
+    # R13A (defaults = round 12): keep the pair features' continuous state derivative (discrete
+    # pairing stays non-differentiable); intent input source: lane_v5 (round 10b-12), pivot (the
+    # first-passage clearance CDF at the step-start state) or none (ablation: input slot = 0).
+    follower_courtesy_state_grad: bool = False
+    follower_courtesy_intent: str = "lane_v5"
+    # R13F (default false = round 12): the temporal acceleration emission (row 0 of the temporal
+    # MLP output) is replaced by an exact 0 (the BRAKE_DIAG zerotemp tensor); lane rows unchanged.
+    temporal_accel_off: bool = False
+    # R13M (default false = round 12): "keep the mean, remove the noise" -- the temporal acceleration
+    # emission is replaced by a learned per-lane constant b[lane] (pre-gate, learned HDV rows only;
+    # parameter ``temporal_lane_bias`` [3], created only when on); the history MLP no longer acts.
+    temporal_accel_lane_bias: bool = False
+    # R13S (default false = round 12): the emission is the S-FACTORIAL state-conditional mean table over
+    # (lane, v, gap, closing, s, k) with backoff (wms.model.temporal_state_table); the tables are parameters.
+    temporal_accel_state_table: bool = False
+    # R12C (default false = round 12): physics-only core calibration switches.  residual_accel_off
+    # replaces the residual attention/accel emission by an exact 0; follower_courtesy_off makes the
+    # courtesy offset an exact 0 (BRAKE_DIAG 'physics only (residual and courtesy off)' arm).
+    residual_accel_off: bool = False
+    follower_courtesy_off: bool = False
+    # R13Y: learned shared virtual-leader yield on the lane_learnable core only.
+    # No module, tensors, RNG draws or forward operations when disabled.
+    mainline_merge_yield_learnable: bool = False
+    # R16 (S-RAMPSPEED): learned ramp-HDV speed adaptation to the target-lane leader (three shared
+    # scalars, wms.model.ramp_speed_adapt).  No module, tensors or forward operations when disabled.
+    ramp_speed_adapt_learnable: bool = False
 
     def __post_init__(self) -> None:
+        if (not isinstance(self.follower_courtesy_version, int)
+                or isinstance(self.follower_courtesy_version, bool)
+                or self.follower_courtesy_version not in (1, 2)):
+            raise ValueError("follower_courtesy_version must be 1 or 2")
+        if self.follower_courtesy_version == 2 and not self.follower_courtesy:
+            raise ValueError("follower_courtesy_version = 2 needs follower_courtesy")
+        if sum(getattr(self, name) is True for name in (
+                "temporal_accel_off", "temporal_accel_lane_bias", "temporal_accel_state_table")) > 1:
+            raise ValueError("temporal_accel_off, temporal_accel_lane_bias and temporal_accel_state_table "
+                             "are exclusive")
+        if self.follower_courtesy_intent not in ("lane_v5", "pivot", "none"):
+            raise ValueError("follower_courtesy_intent must be lane_v5, pivot or none")
+        if self.follower_courtesy_intent == "pivot" and self.merge_decision != "first_passage":
+            raise ValueError("follower_courtesy_intent='pivot' needs merge_decision='first_passage'")
+        for name in ("follower_courtesy", "follower_courtesy_embedding",
+                     "follower_courtesy_rollout_grad", "follower_courtesy_state_grad",
+                     "temporal_accel_off", "temporal_accel_lane_bias", "temporal_accel_state_table",
+                     "residual_accel_off", "follower_courtesy_off",
+                     "mainline_merge_yield_learnable", "ramp_speed_adapt_learnable"):
+            if not isinstance(getattr(self, name), bool):
+                raise ValueError(f"{name} must be a boolean")
+        if not isinstance(self.follower_courtesy_hidden, int)                 or isinstance(self.follower_courtesy_hidden, bool)                 or self.follower_courtesy_hidden < 1:
+            raise ValueError("follower_courtesy_hidden must be an integer >= 1")
+        if self.follower_courtesy and self.black_box:
+            raise ValueError("follower_courtesy needs the structured WM-S (black_box off)")
+        if not isinstance(self.leader_change_features, bool):
+            raise ValueError("leader_change_features must be a boolean")
+        if self.leader_change_features:
+            raise ValueError(
+                "model.leader_change_features=true is refused: only the recorded-state replay "
+                "tracker exists (R9_K.md coordinator hooks 1-6 are not installed), so the "
+                "runtime model would ignore the key")
         if self.driver_param_mode not in ("legacy", "physical"):
             raise ValueError("driver_param_mode must be legacy or physical")
         if not isinstance(self.driver_ema_update, bool):
@@ -142,6 +255,44 @@ class ModelSpec:
             raise ValueError("lane_logit_offsets must be three finite (overtake, return, merge)")
         if self.lane_decision not in LANE_DECISIONS:
             raise ValueError(f"lane_decision must be one of {LANE_DECISIONS}")
+        if not isinstance(self.courtesy_inputs, bool):
+            raise ValueError("courtesy_inputs must be a boolean")
+        if not isinstance(self.residual_head_rescale, bool):
+            raise ValueError("residual_head_rescale must be a boolean")
+        if not isinstance(self.merge_negotiation, bool):
+            raise ValueError("merge_negotiation must be a boolean")
+        if self.temporal_residual_mode not in TEMPORAL_RESIDUAL_MODES:
+            raise ValueError(f"temporal_residual_mode must be one of {TEMPORAL_RESIDUAL_MODES}")
+        if not math.isfinite(float(self.temporal_tau_init_s)) \
+                or float(self.temporal_tau_init_s) <= 0.0:
+            raise ValueError("temporal_tau_init_s must be finite and positive")
+        if not isinstance(self.temporal_tau_conditioned, bool):
+            raise ValueError("temporal_tau_conditioned must be a boolean")
+        if self.temporal_slew_init_mps2 is not None and (
+                not math.isfinite(float(self.temporal_slew_init_mps2))
+                or float(self.temporal_slew_init_mps2) <= 0.0):
+            raise ValueError("temporal_slew_init_mps2 must be finite and positive when set")
+        if self.temporal_residual_mode == "slow" and self.black_box:
+            raise ValueError("temporal_residual_mode='slow' needs the structured model")
+        if self.merge_negotiation and self.lane_model != "hazard_v5":
+            raise ValueError("merge_negotiation needs lane_model='hazard_v5'")
+        if self.merge_decision not in MERGE_DECISIONS:
+            raise ValueError(f"merge_decision must be one of {MERGE_DECISIONS}")
+        if not math.isfinite(self.merge_st_width) or self.merge_st_width <= 0.0:
+            raise ValueError("merge_st_width must be finite and positive")
+        if self.merge_passage_law not in ("strict", "hybrid"):
+            raise ValueError("merge_passage_law must be strict or hybrid")
+        if isinstance(self.merge_w_init, bool) or not math.isfinite(float(self.merge_w_init)) \
+                or float(self.merge_w_init) <= 0.0:
+            raise ValueError("merge_w_init must be finite and positive")
+        if not isinstance(self.merge_quadrature_order, int) \
+                or isinstance(self.merge_quadrature_order, bool) \
+                or self.merge_quadrature_order < 2:
+            raise ValueError("merge_quadrature_order must be an integer >= 2")
+        if self.merge_decision == "first_passage" and self.merge_negotiation:
+            raise ValueError("first_passage requires B merge_negotiation off")
+        if self.merge_decision != "hazard" and self.lane_model != "hazard_v5":
+            raise ValueError("merge_decision!='hazard' needs lane_model='hazard_v5'")
         if self.lane_hazard_features not in LANE_HAZARD_FEATURES:
             raise ValueError(f"lane_hazard_features must be one of {LANE_HAZARD_FEATURES}")
         if self.merge_hazard_zone not in MERGE_HAZARD_ZONES:
@@ -162,6 +313,14 @@ class ModelSpec:
                 or self.lane_hazard_features != "v1" or self.merge_hazard_zone != "forced_late"):
             raise ValueError("lane_decision / lane_logit_offsets / lane_hazard_features / "
                              "merge_hazard_zone need lane_model='hazard'")
+        if self.lane_v5_mainline not in LANE_V5_MAINLINE:
+            raise ValueError(f"lane_v5_mainline must be one of {LANE_V5_MAINLINE}")
+        if self.lane_v5_mainline != "default" and self.lane_model != "hazard_v5":
+            raise ValueError("lane_v5_mainline needs lane_model='hazard_v5'")
+        if not isinstance(self.lane_v5_extra_features, bool):
+            raise ValueError("lane_v5_extra_features must be a boolean")
+        if self.lane_v5_extra_features and self.lane_model != "hazard_v5":
+            raise ValueError("lane_v5_extra_features needs lane_model='hazard_v5'")
         if self.history_features < 0:
             raise ValueError("history_features must be >= 0")
         if self.long_history and (self.black_box or self.history_features != HISTORY_F):

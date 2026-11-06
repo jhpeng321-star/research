@@ -11,7 +11,7 @@ import torch
 from torch import Tensor
 
 
-_RESTRICTED = re.compile(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1", re.I)
+_RESTRICTED = re.compile(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth", re.I)
 _PENETRATION = re.compile(r"m\d+p(02|05|10|20|40)(?!\d)", re.I)  # e.g. w8411m2700p02t240
 
 
@@ -41,6 +41,9 @@ class StartBatch:
     entry_feat: Tensor | None = None
     #: Set by ``wms.control.dreamer.with_entry_slots`` (entry histories, seeds, padding).
     entry_spec: dict | None = None
+    #: V9ENTRY [B, 4] entrance-queue state at t0 (backlog main/ramp, demand rate main/ramp;
+    #: ``wms.data.c4_episodes.queue_features``) when every window carries it; else None.
+    entry_queue: Tensor | None = None
 
 
 def penetration_of(meta):
@@ -160,6 +163,8 @@ class StartStateSampler:
         meta = dict(meta)
         if "entry_feat" in record:       # kept out of the JSON-able metadata by _batch
             meta["_entry_feat"] = torch.as_tensor(record["entry_feat"]).float()
+        if "entry_queue" in record:      # V9ENTRY
+            meta["_entry_queue"] = torch.as_tensor(record["entry_queue"]).float()
         return state, hist, meta
 
     def _batch(self, loaded, device):
@@ -173,10 +178,14 @@ class StartStateSampler:
         feats = [m.pop("_entry_feat", None) for m in metadata]
         entry_feat = (torch.stack(feats) if feats and all(f is not None for f in feats)
                       else None)
+        queues = [m.pop("_entry_queue", None) for m in metadata]
+        entry_queue = (torch.stack(queues) if queues and all(q is not None for q in queues)
+                       else None)
         return StartBatch({key: torch.stack([s[key] for s in states]).to(device)
                            for key in states[0]},
                           {key: torch.stack([h[key] for h in histories]).to(device)
-                           for key in histories[0]}, list(metadata), entry_feat)
+                           for key in histories[0]}, list(metadata), entry_feat,
+                          entry_queue=entry_queue)
 
     def sample(self, batch_size, device="cpu"):
         return self._batch([self._load(self._draw_index()) for _ in range(batch_size)], device)

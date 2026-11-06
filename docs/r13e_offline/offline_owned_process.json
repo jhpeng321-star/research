@@ -1,0 +1,29 @@
+{
+  "pid": 561734,
+  "start_ticks": "4149806622",
+  "argv": [
+    "/root/miniconda3/bin/python",
+    "-B",
+    "-u",
+    "/root/autodl-tmp/c4/v5/repo_r13e_8c7ff0a1/tools/r13e_checks/offline.py",
+    "--checkpoint",
+    "/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round12c/wm_s.pt",
+    "--train-root",
+    "/root/autodl-tmp/c4/v5/data/v5_native",
+    "--train-root",
+    "/root/autodl-tmp/c4/v5/data/genrand_plain",
+    "--states",
+    "/root/autodl-tmp/c4/v5/diag_emerg/train_states48.json.gz",
+    "--out",
+    "/root/autodl-tmp/c4/v5/diag_emerg/offline_train48_workers4",
+    "--workers",
+    "4",
+    "--one-step-panel"
+  ],
+  "started_utc": "2026-10-24T19:51:19.405124+00:00",
+  "nice": 19,
+  "workers": 4,
+  "nofile_soft": 65536,
+  "checkpoint_sha256": "c76c338dea6355f85cfaee63cdb9077fb129ed25db0ab582d77eda2961822091",
+  "offline_tool_sha256": "f62b561657748444ecf066a42619cc7cc1068a0d2a7c65ac0724000a6f8a1cc9"
+}

@@ -1,0 +1,22 @@
+# V8LANE3 (owner-approved 2026-10-17): c4_wm_v8ft3.toml (all merge-zone rules ON in training and
+# inference, incl. V8WM3 merge_impatience) + the V8LANE mainline lane fix
+# (runs/active/C4-V7FT-20261017/lane_fix/LANE_FIX.md): overtake / return decisions are
+# population-matched ("budget"), and the on-policy lane-flow loss calibrates the two mainline heads
+# on the model's own rollout states (pooled Poisson count match + lane-0 occupancy feedback on the
+# return target).  No inference logit offsets: the loss is the calibration.  Merges keep
+# lane_decision.
+# Launch: --set model.init_from=<abs path of the full v8 checkpoint or the v5m checkpoint>
+#         --set loss.loss_share_logging=false
+schema_version = 2
+name = "WM-S-C4-V8LANE3"
+extends = "c4_wm_v8ft3.toml"
+
+[model]
+lane_v5_mainline = "budget"
+
+[loss.lane_flow]
+weight = 1.0
+balance = 0.5
+
+[runtime]
+out_dir = "runs/active/c4_wm_v8lane3"

@@ -1,0 +1,290 @@
+{
+ "receipt": {
+  "id": "S-MAINR16",
+  "status": "WAIT_OWNER",
+  "t": "2026-10-26T08:19:12.597816+00:00",
+  "error": "gpuB source SHA probe failed: Connection closed by 172.19.0.169 port 16573",
+  "failed_command": "ssh -o BatchMode=yes -o ConnectTimeout=15 gpuB sha256sum <round16 FINAL> && ls -lh <FINAL> <config.resolved.json>",
+  "checkpoint_sha256": null,
+  "checkpoint_copy_started": false,
+  "launched": false,
+  "owned_pids": [],
+  "charged_sim_s": 58266,
+  "actual_sim_s": 0,
+  "new_sim_s": 0,
+  "seeds_used": [
+   968103,
+   968104,
+   968105,
+   968106,
+   968107,
+   968108,
+   968109,
+   968110,
+   968111,
+   968112,
+   968113,
+   968114,
+   968115,
+   968116,
+   968117,
+   968118,
+   968119,
+   968120,
+   968121,
+   968122,
+   968123,
+   968124,
+   968125,
+   968126,
+   968127,
+   968128
+  ],
+  "new_seeds": [],
+  "superseded_policy": {
+   "checkpoint": "/root/main14_loop/policy/c00/policy_latest.pt",
+   "sha256": "63219be447762da33b3ceef634092bbfde1324d9217e35cde8735b96a0577866",
+   "source": "cycle 0",
+   "trained_on_wm_sha256": "952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8"
+  },
+  "live_state_registration": "/root/autodl-tmp/c4/v5/mainstart/collectfix/REGISTRATION.json",
+  "amendment_snapshot": "/root/autodl-tmp/c4/v5/mainstart/mainr16/REGISTRATION.json",
+  "amendment_sha256": "bb0456caedf5b9e908baecde88b0f3b8cde2233b97efdfd76a4f9ae8a52fc741",
+  "live_state_migrated": false,
+  "shared_registration_sha256": "49097b5efc3aa656f956c3254ab08aef85d35adf4fc98224400a230d719bc3a4",
+  "next_owner_action": "Restore/confirm gpuB read-only access, then explicitly authorize continuation from WAIT_OWNER; require SHA-verified staging, state restart migration, prearm smoke, fresh policy gate and both-box collection verification before unattended operation"
+ },
+ "registration": {
+  "id": "C4-LOOP14-COOPON-20261026",
+  "status": "registered",
+  "split": "TRAIN",
+  "acknowledged_by": "owner-approved TASK S-MAIN-COOPON, 2026-10-26 (UTC+8)",
+  "seed_block": [
+   968100,
+   968227
+  ],
+  "exclude": [
+   [
+    968100,
+    968102
+   ]
+  ],
+  "sources": {
+   "initial_wm_rule": "13E b2 FINAL now; S-MAINSTART later-boundary eligibility rule",
+   "fallback_wm_sha256": "952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8",
+   "policy0": "from scratch; policy optimisation seed 965140 + cycle; fixed start split seed 965140",
+   "code_sha": "9cc39f15c7d63bdea302423e93a5e6735680ba4b",
+   "config_sha256": "d2e0a712da98974e74ad4c004f7b03c43ed5f715f6c26f5684388c289c44573f",
+   "source_manifest_sha256": "639672b97778ae34ffe3ae7146f359b0451f063d3acf60c3c6b9a313b0ca29d2",
+   "fastloop_options": {
+    "speed2_policy": true,
+    "two_box": true,
+    "spot_resume": true,
+    "overlap_policy": false,
+    "cpu_checks": false,
+    "repoint": false,
+    "base_three": false,
+    "boxes": [
+     "cpuP",
+     "cpuQ"
+    ],
+    "workers_per_box": 7
+   },
+   "fastloop_commit": "72300236"
+  },
+  "comparators": "previous accepted WM (same registered flags and fixed panel); real SUMO native B per pair",
+  "budget": {
+   "max_cycles": 4,
+   "policy_updates_per_cycle": 150,
+   "sim_s_per_cycle": 58266,
+   "sim_s_total": 210000,
+   "gpu_h_policy_per_cycle": 3,
+   "gpu_h_wm_per_cycle": 1.5,
+   "wm_steps_per_cycle": 40
+  },
+  "stop": {
+   "consecutive_wm_rejects": 2,
+   "max_branch_incidents_per_cycle": 0
+  },
+  "collection": {
+   "host": "cpuP+cpuQ",
+   "workers_max": 12,
+   "worlds_per_cycle": 13,
+   "charged_sim_s_per_cycle": 29133,
+   "charged_sim_s_four_cycles": 116532,
+   "gate_candidates": 8,
+   "gate_horizon": 10,
+   "credit_horizon": 30,
+   "gate_threshold": 0.8,
+   "gated_arm": false,
+   "note": "collect ungated POLICY/B plus calibration and real-credit arms; fit both K=8 deployment tables; calibrated gated evaluation supported separately",
+   "fallback": "cpuQ",
+   "workers_per_box": 7,
+   "primary_sim_s_per_cycle": 29133,
+   "retry_reserve_sim_s_per_cycle": 29133
+  },
+  "gates": {
+   "update_10": "frozen 16-start VAL panel from TRAIN corpus; paired mean delta J < 0",
+   "horizon": "10 -> 30 -> 60 s at curriculum positions 0/150/300; WM-sha-bound paired-difference gate, fixed 13E b2 measured lower-bound threshold; missing/failing receipt keeps 10 s",
+   "before_launch": "S-MAINSTART: source/hash checks; exact PAIRFT concurrency only; integrated tests and2-update real-WM CPU smoke; frozen panel;>=6GiB output space",
+   "verdict_deadline": "superseded for initial launch by S-MAINSTART",
+   "failure": "log, write WAIT_OWNER, no automatic retry or substitute run"
+  },
+  "resources": {
+   "gpu": "gpuR RTX4090 24 GB",
+   "cuda_memory_fraction": 0.45,
+   "policy_batch": 1,
+   "driver_futures": 2,
+   "checkpoint_imagination": true,
+   "policy_threads": 2,
+   "wm_threads": 4,
+   "check_workers": 4,
+   "disk_floor_gib": 1.5,
+   "disk_plan": "verify cpuX archive then retire only this arm's completed-cycle converted pair cache",
+   "loop_output": "/root/main14_loop"
+  },
+  "smoke": {
+   "host": "gpuR",
+   "device": "cpu",
+   "policy_updates": 2,
+   "synthetic_starts": true,
+   "real_selected_wm": true,
+   "new_sumo_sim_s": 0
+  },
+  "registered_at": "2026-10-25T20:58:40.852465+00:00",
+  "native_lane_amendment": {
+   "registration": "S-NATIVELANE-1",
+   "flag": "policy14.native_lane_change=true",
+   "conditional": "Install only after all registered 13E FINAL paired evidence is complete and adoption rule passes before 09:00; no PASS->FAIL exploratory pulse_m/gap_open sign unit; tests and real-WM 2-update CPU prearm smoke pass before documented disarm",
+   "deadline": "2026-10-26T09:00:00+08:00",
+   "new_sumo_sim_s": 0,
+   "preserved": "base selection, frozen gate panel, seeds/exclusions, budgets, acceptance/incident/update-10 stops, readiness and allocator fixes",
+   "failure": "Do not disarm on failed/incomplete/late scientific or prearm evidence; no autonomous retry after operational failure"
+  },
+  "mainstart_amendment": {
+   "id": "S-MAINSTART",
+   "owner_request": "2026-10-26 ~12:00 UTC+8: start policy while scores pending",
+   "reason": "cpuX scoring host spot reclaimed; owner requested immediate start",
+   "initial_base": "13E b2 FINAL",
+   "initial_base_sha256": "952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8",
+   "collect_host": "cpuP",
+   "fallback_host": "cpuQ",
+   "sumo_workers_max": 12,
+   "collect_wait": "Readiness/code/fixture/RAM checks before phase entry or seed charge",
+   "later_base_swap": "cycle>=1 unstarted policy boundary only; best eligible of 14b/round16 by lower strict TTC ratio, tie14b; no new aggregate/per-set HDV reaction sign/late-sign/magnitude FAIL versus13E and strict TTC ratio<=13E; FINAL SHA must match scored SHA; record every decision",
+   "native_lane_change": true,
+   "speed2": "OFF; fastloop changes uncommitted at launch",
+   "policy_cuda_memory_fraction": 0.45,
+   "pairft_incarnations": {
+    "717015": "4161293097",
+    "718536": "4161359689"
+   },
+   "wm_gpu_guard": "exclusive, unchanged; waits if any CUDA process remains",
+   "loop_output": "/root/main14_loop",
+   "output_free_bytes_before_launch": 12780822528,
+   "scratch_free_bytes_after_archive": 2536873984,
+   "storage": "Protected scratch occupancy prevents6GB safely; output filesystem has>=6GiB;1.5GiB phase floor retained",
+   "wrapper_code_sha": "b9a9b5e029f9bfc124332d7f7b695f162d334adb",
+   "registered_at": "2026-10-26T04:10:55.896552+00:00"
+  },
+  "collectfix_amendment": {
+   "id": "S-COLLECTFIX",
+   "owner_task": "2026-10-26 13:30 UTC+8",
+   "predecessor_registration_sha256": "8f80a023e2fdb230808be13a3f046694013bae5b7a7e92d0654bcec09817c6ea",
+   "prior_charge_sim_s": 29133,
+   "prior_actual_sim_s": 0,
+   "prior_seeds": [
+    968103,
+    968104,
+    968105,
+    968106,
+    968107,
+    968108,
+    968109,
+    968110,
+    968111,
+    968112,
+    968113,
+    968114,
+    968115
+   ],
+   "accounting": "No refund; official retry allocates fresh worlds after legacy batch; later journal retries reuse only their own worlds",
+   "scheduling": "Deterministic alternating cpuP/cpuQ, 7 one-world workers each, numerical threads1; caps<=12 alongside scoring",
+   "policy_flags": "SAFE SPEED2 only: PIVOT_DIAG_OFF=1, GRAD_AUDIT_EVERY=10, numerical accelerations OFF; WM flags OFF/audit1",
+   "gates": "419 integrated CPU tests and one-world mechanics dry run PASS; no SUMO consumed by dry run",
+   "preserved": "seeds/exclusions, 4 cycles, policy150/WM40, native-lane ON, existing base-boundary comparator and all scientific stops"
+  },
+  "mainr16_amendment": {
+   "id": "S-MAINR16",
+   "owner_approved": "2026-10-26 ~16:15 UTC+8",
+   "owner_decisions_verbatim": "OWNER DECISIONS (record verbatim in the registration amendment BEFORE launch, append to E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md and the loop's registration json): (a) total registered SUMO budget raised from 120,000 to 210,000 charged sim-s; failed-startup reservations (58,266 charged / 0 actual, 26 seeds) remain recorded as charged; (b) base WM = round 16 final (gpuB /root/autodl-tmp/c4/v5/runs/c4_wm_v10_round16_b/wm_s.pt; record sha256; code c4/v10r16 3b3c201d + its physics flags; verdict E:/archive_cpuN/QUAL_r16.md: selected under the registered base rule - no new HDV-reaction FAIL vs 13E, best strict TTC 11.3x vs 14b 12.1x vs 13E 16.3x); native-lane flag stays ON; (c) cycle 0 restarts (the 13E cycle-0 policy is superseded, kept on disk, never collected); (d) fast loop ON: S-FASTLOOP SAFE SPEED2 policy flags + deterministic two-box collection cpuP+cpuQ (as integrated by S-COLLECTFIX on c4/mainstart a5b76fcf/c38c7ec3; E:/agent-work/c4-mainstart/MAINSTART.md, E:/agent-work/c4-fastloop/FASTLOOP.md), worker caps <= 12 per box (round-17 work may use cpuQ lightly). Seeds: continue the loop's registered block 968100-968227 with its own allocation rules (no reuse).",
+   "registered_at": "2026-10-26T08:19:12.597816+00:00",
+   "predecessor_registration_sha256": "9fa79f1fac53949108531562ebf268946b8444dcba146d2adcb6b2b68f407cc2",
+   "status": "WAIT_OWNER / uninstalled amendment snapshot; no launch",
+   "prior_charged_sim_s": 58266,
+   "prior_actual_sim_s": 0,
+   "prior_seeds": [
+    968103,
+    968104,
+    968105,
+    968106,
+    968107,
+    968108,
+    968109,
+    968110,
+    968111,
+    968112,
+    968113,
+    968114,
+    968115,
+    968116,
+    968117,
+    968118,
+    968119,
+    968120,
+    968121,
+    968122,
+    968123,
+    968124,
+    968125,
+    968126,
+    968127,
+    968128
+   ],
+   "total_cap_supersedes_all_prior_caps": 210000,
+   "base_checkpoint_source": "gpuB:/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round16_b/wm_s.pt",
+   "base_checkpoint_sha256": null,
+   "checkpoint_sha_status": "UNVERIFIED: source SSH failed before hash output",
+   "wm_code": "c4/v10r16 3b3c201df9dc04b11bc2f647e52fc508bb7a6bce integrated into c4/mainstart",
+   "physics_config": "configs/c4_wm_v10round16_stage_b.toml",
+   "physics_flags": {
+    "emergency_braking": true,
+    "secure_gap_veto": true,
+    "lane_change_secure_gap": true,
+    "emergency_onset": "driver_b",
+    "merge_end_wait": false,
+    "ramp_lane_end_stop": true,
+    "ramp_risk_retain": true
+   },
+   "model_flag": {
+    "ramp_speed_adapt_learnable": true
+   },
+   "native_lane_change": true,
+   "wm_ft_config": "configs/c4_wm_loop14_r16_ft.toml",
+   "policy_flags": {
+    "WMS_SPEED_PIVOT_DIAG_OFF": "1",
+    "WMS_SPEED_GRAD_AUDIT_EVERY": "10"
+   },
+   "workers_per_box": 7,
+   "workers_cap_per_box": 12,
+   "policy_superseded": {
+    "checkpoint": "/root/main14_loop/policy/c00/policy_latest.pt",
+    "sha256": "63219be447762da33b3ceef634092bbfde1324d9217e35cde8735b96a0577866",
+    "source": "cycle 0",
+    "trained_on_wm_sha256": "952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8"
+   },
+   "restart": "not installed; prior state, seeds, policy, world journal and all artifacts preserved",
+   "shared_registration_sha256": "49097b5efc3aa656f956c3254ab08aef85d35adf4fc98224400a230d719bc3a4"
+  }
+ }
+}

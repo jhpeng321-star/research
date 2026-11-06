@@ -1,0 +1,48 @@
+# S-COOPW (COOPW.md): c4_policy14_loop14c.toml + the counterfactual cooperation credit switched on,
+# uncertainty pessimism over sampled driver futures, correlated group exploration, a gated
+# horizon curriculum and an observable start tilt.  Every other section is inherited unchanged.
+# Numbers come from tools/coopw measurements (COOPW.md "Measured"); none is a behavioural threshold.
+extends = "c4_policy14_loop14c.toml"
+
+[counterfactual]
+# Rows: all, base, every group member alone (C_G needs every D_i), the group, flip-one rows.
+n_flip = 3
+cover_group_members = true
+group_max_size = 3
+# Curriculum position = updates since this config first trained (adopted policy0 starts at 0).
+# 0..10: plain loop14c objective (policy14 signal gate / resume critic warm-up), ramp to 150 = one
+# loop cycle (updates_per_cycle).  w_all = 1 is the anchor.  End weights = 1/5 of the median
+# gradient-norm parity ||g_all|| / ||g_term|| (18 TRAIN starts, 13E-A): ind 44.5, group 49.4,
+# coop 171.9 (clipped to w_ind: anti-gaming guard), team 51.5.
+curriculum_anchor = "first_update"
+curriculum_updates = [0, 10, 150]
+w_all = [1.0, 1.0, 1.0]
+w_individual = [0.0, 0.0, 8.9]
+w_group = [0.0, 0.0, 9.9]
+w_coop = [0.0, 0.0, 8.9]
+w_team = [0.0, 0.0, 10.3]
+# Training-start tilt (observable features; congested dropped: base rate 0.98, no information).
+start_tilt = {multi_cav = 1.0, side_by_side = 1.0, high_share = 1.0, high_demand = 1.0}
+validation_uniform = true
+coop_audit = true
+term_grad_audit_every = 25
+
+[uncertainty]
+enabled = true
+future_samples = 2
+curriculum_updates = [0, 10, 150]
+weights = [0.1, 0.1, 0.1]
+
+[exploration]
+enabled = true
+curriculum_updates = [0, 10, 150]
+rho = [0.0, 0.0, 0.5]
+persistence_steps = 4.0
+
+[horizon]
+# gpuR (24 GB): 10 -> 30 s; gpuB (48 GB): configs/c4_policy14_coop_gpub.toml adds 60 s.
+enabled = true
+horizons_s = [10, 30]
+curriculum_updates = [0, 150]
+entry_pad_max = [32, 83]
+gate_file = "configs/coopw_horizon_gate_13E_b2.json"

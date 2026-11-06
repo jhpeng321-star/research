@@ -1,0 +1,305 @@
+{
+  "_comment": "CLOSED Dreamer loop v10loop (2026-10-19; PREPARED, NOT LAUNCHED). Replace REPO_SHA before starting. Closed iteration: collect -> convert -> WM fine-tune -> policy update in the new WM -> SUMO check vs the native reference -> rollback/log. Iteration 0 already ran (runs/c4_wm_v10_iter000) so the loop starts from that existing WM (wm.iter0_mode='existing') and only trains the policy from scratch. lane_learnable lives on the physical envelope key physics.lane_learnable (c4/v10unblock); the c4/v10horizon curriculum/replay keys are NOT merged yet and stay in the separate list wm.extra_set_horizon (empty by default).",
+  "mode": "closed",
+  "loop_root": "/root/autodl-tmp/c4/v5/loop_v10",
+  "data_root": "/root/autodl-tmp/c4/v5/data_v10",
+  "wm_runs_root": "/root/autodl-tmp/c4/v5/runs",
+  "v7ft_run": "/root/autodl-tmp/c4/v5/runs/active/C4-V7FT-20261017",
+  "disk_paths": [
+    "/root/autodl-tmp"
+  ],
+  "min_free_gb": 5.0,
+  "iterations": 4,
+  "seed": {
+    "block": [
+      966000,
+      966999
+    ],
+    "exclude": [
+      [
+        965990,
+        965993
+      ],
+      [
+        969824,
+        969835
+      ]
+    ],
+    "eval": [
+      964000,
+      964199
+    ],
+    "check": [
+      969824,
+      969835
+    ],
+    "approved_blocks": [
+      [
+        965184,
+        965999
+      ],
+      [
+        966000,
+        969999
+      ]
+    ],
+    "used_elsewhere": [
+      [
+        969700,
+        969703
+      ],
+      [
+        969800,
+        969835
+      ],
+      [
+        969960,
+        969995
+      ]
+    ],
+    "used_note": "Ranges inside the C4_LOOP_TRAIN parent 966000-969999 already consumed elsewhere (10-19); they are outside this block 966000-966999. Re-grep the remote ledgers before a real launch (used_ledger_globs).",
+    "used_ledger_globs": [
+      "/root/autodl-tmp/c4/v5/loop*/seed_ledger.jsonl",
+      "/root/autodl-tmp/c4/v5/loop*/iterations.jsonl",
+      "~/c4/loop*/seed_ledger.jsonl",
+      "~/c4/loop*/iterations.jsonl"
+    ]
+  },
+  "hosts": {
+    "wm": {
+      "code_root": "/root/autodl-tmp/c4/v5/repo_REPO_SHA",
+      "python": "/root/miniconda3/bin/python"
+    },
+    "gpuR": {
+      "code_root": "/root/autodl-tmp/c4/v5/repo_REPO_SHA",
+      "python": "/root/miniconda3/bin/python",
+      "work_root": "/root/autodl-tmp/c4/v5/loop_v10",
+      "workers": 24,
+      "entrance_mask_root": "/root/autodl-tmp/c4/v5/entrance_mask"
+    },
+    "cpuN": {
+      "ssh": [
+        "cpuN"
+      ],
+      "code_root": "~/c4/repo_REPO_SHA",
+      "python": "~/miniconda3/bin/python",
+      "work_root": "~/c4/loop_v10",
+      "workers": 46,
+      "sumo_home": "~/miniconda3/lib/python3.10/site-packages/sumo",
+      "entrance_mask_root": "~/c4/entrance_mask"
+    }
+  },
+  "collect": {
+    "hosts": [
+      "gpuR",
+      "cpuN"
+    ],
+    "batch_size": {
+      "gpuR": 60,
+      "cpuN": 140
+    },
+    "population": "textbook",
+    "case_plan": "weighted-cycle",
+    "penetrations": "0.05,0.1,0.2,0.4",
+    "pen_weights": "1,1,2,2",
+    "demands": "1900,2100,2400,2700",
+    "warmup": 300,
+    "horizon": 900,
+    "cav_vtype": "normal_car",
+    "timeout_s": 7200,
+    "nice": 5,
+    "policy_config": "configs/c4_policy_v10entzone_v5m.toml",
+    "entrance_zone_native": true,
+    "policy_loader": "entrance_mask_loader:load_entrance_mask_policy",
+    "entrance_native_main_m": 25,
+    "entrance_native_ramp_m": 25,
+    "ship_commands": [
+      "cd {gpuR_code_root}/.. && tar -czf /tmp/repo_{sha}.tgz repo_{sha} && md5sum /tmp/repo_{sha}.tgz | tee /tmp/repo_{sha}.md5",
+      "scp /tmp/repo_{sha}.tgz cpuN:~/c4/ && ssh cpuN 'cd ~/c4 && rm -rf repo_{sha} && tar -xzf repo_{sha}.tgz && md5sum repo_{sha}.tgz'",
+      "scp -r {gpuR_entrance_mask_root} cpuN:~/c4/entrance_mask && ssh cpuN 'md5sum ~/c4/entrance_mask/*'",
+      "echo 'compare the gpuR and cpuN md5 lines above; they must be identical before collection'"
+    ],
+    "ship_note": "gpuR builds repo_<sha>.tgz, scp's it to cpuN:~/c4/, unpacks it and prints both md5 lines; the entrance-mask loader dir ships alongside. Verified manually from the dry-run output before run --execute.",
+    "_note_hosts": "10-19: gpuR container quota is 25 CPUs (cpuN 48 dedicated) -> cpuN 140 / gpuR 60."
+  },
+  "convert": {
+    "prefix": "v10_policy_iter",
+    "mb_per_episode": 21.0,
+    "min_window": 50
+  },
+  "wm": {
+    "config": "configs/c4_wm_v10loop_k.toml",
+    "config_iter0": "configs/c4_wm_v10loop_iter0.toml",
+    "init_wm": "/root/autodl-tmp/c4/v5/wm_v5m/wm_s_best_ap.pt",
+    "init_wm_md5": "d736db86",
+    "iter0_mode": "existing",
+    "iter0_wm_out": "/root/autodl-tmp/c4/v5/runs/c4_wm_v10_iter0_sel",
+    "iter0_wm_note": "Iteration-0 WM training is already running on gpuR (manual launch: --set physics.lane_learnable=true --set curriculum.stage_steps=[200,150] --set curriculum.max_hours=4.0, init /root/autodl-tmp/c4/v5/wm_v5m/wm_s_best_ap.pt md5 d736db86). With iter0_mode='existing' the loop skips the iteration-0 WM stage and trains the policy from scratch on iter0_wm_out/wm_s_best.pt. Set iter0_mode='train' to re-run the WM bootstrap instead.",
+    "stage_steps": [
+      60,
+      40,
+      30
+    ],
+    "extra_set_iter0": [
+      "physics.lane_learnable=true",
+      "loss.loss_share_logging=false"
+    ],
+    "extra_set": [
+      "physics.lane_learnable=true",
+      "loss.loss_share_logging=false"
+    ],
+    "extra_set_horizon": [
+      "curriculum.plateau_advance=true",
+      "curriculum.plateau_patience=3",
+      "data.replay.enabled=true",
+      "data.replay.merge_oversample=2.0",
+      "data.replay.cav_follower_oversample=2.0",
+      "data.replay.probe_windows=64",
+      "model.checkpoint_step=true"
+    ],
+    "lane_calib": {
+      "enabled": true,
+      "n_starts": 48,
+      "n_native": 24,
+      "n_genrand": 24,
+      "workers": 24,
+      "rounds": 6,
+      "horizon_s": 120.0,
+      "tol": 0.1,
+      "damping": 0.7,
+      "max_step": 1.0,
+      "max_offset": 6.0,
+      "heads": [
+        "merge"
+      ],
+      "lane_learnable": true,
+      "out": "lane_calib.json",
+      "_note": "LANERATECAL: fits one additive logit offset per fitted lane head so the WM free-rollout lane-change counts match SUMO on TRAIN-val starts; writes <wm_out>/lane_calib.json, which load_checkpoint reads when the policy stage loads the same checkpoint. Run after wm_check and before policy_update on a many-core CPU host (gpuR).",
+      "_note_heads": "10-20 owner: merge-rate calibration every iteration; overtake/return are frozen in courtesy mode, add them back when the lane-mode curriculum switches to free."
+    },
+    "extra_set_laneflow": [
+      "loss.lane_flow.weight=1.0",
+      "loss.lane_flow.balance=0.5"
+    ],
+    "laneflow_note": "FIX 2 (LANEFLOW.md): the on-policy count-matching lane-change loss (loss.lane_flow, V8LANE) under physics.lane_learnable. wm.extra_set_laneflow is merged into every iteration >= 1 WM fine-tune (never iteration 0). weight 1.0 / balance 0.5 match the trained V8LANE checkpoint (configs/c4_wm_v8lane_short3.toml); the term needs lane_model='hazard_v5' (v5m refresh) and no longer needs model.lane_v5_mainline='budget'.",
+    "extra_set_agg": [
+      "loss.agg_delay.weight=0.1",
+      "loss.agg_delay.start_s=120.0",
+      "loss.agg_delay.horizon_s=300.0",
+      "loss.agg_delay.paired_weight=0.1",
+      "loss.agg_delay.bin_s=10.0",
+      "loss.agg_delay.queue_scale_veh=4.0",
+      "loss.agg_delay.throughput_scale_veh=4.0"
+    ],
+    "extra_set_agg_note": "A5 long-horizon aggregate delay loss (c4/v10aggloss): matches WM-rollout team delay per region, queue and throughput to the recorded SUMO over the 120-300 s window, plus the paired branch difference; appended by loop_v10.py for iterations >= 1 (never iteration 0). The loss is active on whatever long window the stage unrolls to; to actually reach 300 s add a long curriculum stage to wm.config (curriculum.unroll_s / curriculum.stage_steps / curriculum.truncation_steps_per_stage, e.g. truncation 240-300 steps) -- wm.stage_steps and the budget must stay in sync, so that is a config change, not an extra_set_agg item.",
+    "pass_through_note": "Verbatim --set items: physics.lane_learnable, extra_set_horizon, extra_set_laneflow (k>=1), extra_set_agg (A5), physics.mainline_lane_mode from the lane-mode curriculum.",
+    "timeout_s": 10800,
+    "val_metric": "mean_position",
+    "val_tolerance": 0.3
+  },
+  "policy": {
+    "config": "configs/c4_policy_v10entzone_v5m.toml",
+    "config_iter0": "configs/c4_policy_v10entzone_v5m.toml",
+    "device": "cuda",
+    "updates": 200,
+    "max_updates": 100000,
+    "env": {
+      "WMS_DATA_V5_NATIVE": "/root/autodl-tmp/c4/v5/data/v5_native",
+      "WMS_DATA_GENRAND_PLAIN": "/root/autodl-tmp/c4/v5/data/genrand_plain",
+      "WMS_DATA_GENRAND_BRANCH": "/root/autodl-tmp/c4/v5/data/genrand_branch",
+      "OMP_NUM_THREADS": "12",
+      "MKL_NUM_THREADS": "12"
+    },
+    "physics_note": "train_cli loads the --wm-ckpt via wms.eval.backend and imagines with the checkpoint's physics.json; a WM trained with physics.lane_learnable=true writes lane_learnable=true there, so the policy imagines inside the physical lane envelope. Verify: python -c \"import json;print(json.load(open('<iter0_wm_out>/physics.json'))['lane_learnable'])\" must print True before the iter-0 policy update.",
+    "entrance_zone_native": true,
+    "entrance_zone_main_m": 25.0,
+    "entrance_zone_ramp_m": 25.0
+  },
+  "lane_mode_curriculum": {
+    "_note": "V10LANEOPT (c4/v10laneopt): staged mainline lane changes. Iterations in courtesy_iterations run physics.mainline_lane_mode='courtesy' (merges fully learned + only the learned lane-1 -> lane-0 overtakes of HDVs in the approach zone upstream of the merge). Later iterations switch to 'free' only when the lane_calib JSON of the WM being fine-tuned (written by the c4/v10lanecal stage next to that WM's checkpoint) is within tolerance on the gating heads; a missing/malformed lane_calib keeps 'courtesy'.",
+    "enabled": true,
+    "courtesy_iterations": [
+      1,
+      2
+    ],
+    "tolerance": 0.2,
+    "gating_heads": [
+      "overtake",
+      "return"
+    ],
+    "calib_file": "lane_calib.json",
+    "iter0_mode": "free"
+  },
+  "check": {
+    "seeds": [
+      969824,
+      969835
+    ],
+    "native_ref": "/root/autodl-tmp/c4/v5/runs/sumo_check_v8pol_u600/native",
+    "native_ref_note": "sumo_check_v8pol_u600/native was collected with the policy-check flags (2400 vph, 0.4, product, warmup 300, horizon 600, normal_car, textbook) - same as all v9/v10 autochecks.",
+    "warmup": 300,
+    "horizon": 600,
+    "demands": 2400,
+    "penetrations": 0.4,
+    "case_plan": "product",
+    "cav_vtype": "normal_car",
+    "pair_check": "/root/autodl-tmp/c4/v5/pair_check.py",
+    "coop_metrics": "/root/autodl-tmp/c4/v5/coop_metrics/coop_metrics.py",
+    "wm_fidelity": "scripts/c4/wm_fidelity_v10.py",
+    "fixed_val_states": "/root/autodl-tmp/c4/v5/runs/active/C4-V7FT-20261017/v10loop/fixed_train_val_states.json",
+    "fixed_val_note": "48 deterministic TRAIN-val states from data/v5_native val windows; generated once with scripts/c4/wm_fidelity_v10.py --states <v5_native val states> --select 48 --save-selection <fixed_val_states>.",
+    "entrance_mask_root": "/root/autodl-tmp/c4/v5/entrance_mask",
+    "entrance_native_main_m": 25,
+    "entrance_native_ramp_m": 25,
+    "commands": [
+      "{gpuR_python} -m traffic_shepherd.c4.collect --policy {policy_ckpt} --policy-loader entrance_mask_loader:load_entrance_mask_policy --population textbook --seeds 969824-969835 --case-plan product --penetrations 0.4 --demands 2400 --warmup 300 --horizon 600 --cav-vtype normal_car --workers 64 --no-physics-log --out {check_dir}/policy",
+      "{gpuR_python} {check_pair_check} {native_ref} {check_dir}/policy | {gpuR_python} scripts/c4/loop_v10.py parse-pair --native {native_ref} --policy {check_dir}/policy --out {check_dir}/pairs.json",
+      "{gpuR_python} {check_coop_metrics} --arm native={native_ref} --arm pol={check_dir}/policy --reference native --out-json {check_dir}/coop.json --out-md {check_dir}/coop.md",
+      "{gpuR_python} scripts/c4/wm_fidelity_v10.py --wm {new_wm} --states {fixed_val_states} --horizons 10,30,60,120 --device cuda --out {check_dir}/wm_fidelity.json"
+    ],
+    "metrics": {
+      "sumo_total_D_key": "total_D.policy_minus_native",
+      "wm60_key": "hdv.abs_ds.60"
+    }
+  },
+  "delay_check": {
+    "tool": "scripts/c4/wm_delay_check.py",
+    "host": "cpuN",
+    "wm": "~/c4/delay_check/wm_s_best.pt",
+    "wm_note": "The iteration WM checkpoint synced to the CPU box (or v5m for the baseline run). The 48-core CPU box runs the check with NO GPU; it reads only TRAIN-val starts and the recorded genrand_branch pairs. Sync once before the stage, e.g. from gpuR: scp <new_wm> cpuN:~/c4/delay_check/wm_s_best.pt.",
+    "states": "~/c4/delay_check/fixed_train_val_states.json",
+    "states_note": "The same 48 deterministic TRAIN-val starts as scripts/c4/wm_fidelity_v10.py --select 48 --save-selection (copied to the CPU box).",
+    "pairs": "~/c4/delay_check/genrand_branch_states.json",
+    "pairs_note": "Paired-branch state records from the converted genrand_branch source (per-arm records carrying pair_key + recorded frames; base/native arm vs action arm, same t0). Copied to the CPU box.",
+    "selection": "~/c4/delay_check/delay_states_selection.json",
+    "pairs_selection": "~/c4/delay_check/delay_pairs_selection.json",
+    "selection_note": "Deterministic 48-start / 48-pair selection written once by the tool (--save-selection / --save-pairs-selection) and reused on every iteration.",
+    "horizons": "60,120,300",
+    "k": 8,
+    "workers": 44,
+    "device": "cpu",
+    "entries": "queue",
+    "entry_note": "entries=queue seeds entrants with the recorded entrance backlog (v9entry entry_queue_state), so the ramp/source queue is carried through the WM rollout.",
+    "wm_md5_reference": "d736db86",
+    "pair_source": "/root/autodl-tmp/c4/v5/data/genrand_branch"
+  },
+  "rollback": {
+    "sumo_total_D_max_worsen": 0.0,
+    "pair_sign_drop_max": 0.05,
+    "delay_log_ratio_worsen_max": 0.1,
+    "halve_factor": 0.5,
+    "min_policy_updates": 50,
+    "rule_note": "A6: revert if the paired-delta sign agreement drops > 0.05 or the 120 s delay-level |log(WM/SUMO)| worsens > 0.1 vs the previous iteration (plus the SUMO total-D term). The near-CAV 10/30 s |ds| is reported, non-gating."
+  },
+  "budget": {
+    "gpu_hours_per_wm_step": 0.012,
+    "gpu_hours_per_policy_update": 0.008,
+    "gpu_hours_per_check_episode": 0.0005,
+    "mappo_control_dt_s": 0.5
+  },
+  "execute_guard": {
+    "allow": false,
+    "require_owner_approval": true,
+    "owner_approved": false
+  }
+}
