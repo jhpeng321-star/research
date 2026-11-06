@@ -20,6 +20,23 @@ def clean2_safety_failure(job, totals):
             source='clean2 absolute hard-event guard; never eligible for TRAIN replacement'))
 
 
+def bind_runtime(job):
+    """The ONE frozen-runtime binding of a native worker process (training waves and G4 branches).
+
+    leverprobe's setup hash-verifies the frozen runtime and PREPENDS it to sys.path; the
+    registered seed scope/guard and the opt-in G5 env follow. g5_runtime.install refuses
+    unless traffic_shepherd.c4 resolves to that frozen runtime, so this must run in a worker
+    process before anything imports traffic_shepherd (never in an arm owner, whose
+    PYTHONPATH copy is already imported). Repeated calls in one pool-reused process are
+    idempotent: the same paths are prepended again and the installed G5 env is reused.
+    """
+    from tools.leverprobe import backend as exact
+    exact.setup(job['runtime'],job['checkpoint']);install_seed_scope();guard(job['world'],job['role'])
+    from .g5_runtime import install as _g5_runtime
+    _g5_runtime(job['runtime'])  # clean3 opt-in (COOPMWM_G5_RUNTIME=1): bound G5 env on the frozen runtime
+    return exact
+
+
 def episode(job, *, controller_hook=None, policy_loader=None):
     if job.get('native_reference'):
         import types
@@ -31,9 +48,7 @@ def episode(job, *, controller_hook=None, policy_loader=None):
     write(path/'CLAIM.json',dict(pid=os.getpid(),id=job['id'],charged_sim_s=job['sim_s']))
     from tools.leverprobe import backend as exact
     from tools.coopfree import backend as cf
-    exact.setup(job['runtime'],job['checkpoint']);install_seed_scope();guard(job['world'],job['role'])
-    from .g5_runtime import install as _g5_runtime
-    _g5_runtime(job['runtime'])  # clean3 opt-in (COOPMWM_G5_RUNTIME=1): bound G5 env on the frozen runtime
+    bind_runtime(job)
     exact.guard=lambda w:guard(w,job['role'])
     v2v = bool(job.get('v2v')) or os.environ.get('C4NM_V2V') == '1'
     if policy_loader is not None:
