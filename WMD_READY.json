@@ -1,0 +1,46 @@
+{
+ "id": "WM-D",
+ "title": "wz3to2 world-model fidelity and qualification suite (distributional + action-response) with a pre-registered PROPOSE gate",
+ "status": "BUILT; WMQUAL-B truth tapes done (74, identity 74/74); WM2 baseline running; fine-tuned run pending WM-E's checkpoint",
+ "branch": "c4/wz-wm-qual",
+ "worktree": "E:/agent-work/c4-wz-wm-qual",
+ "base": "3e5bc9f9 + merges c4/wz-wm-port (6f8f6952) and c4/wz-wm-train (1e3c66eb): src/wms identical to WM-E's deployed code",
+ "gate": {
+  "doc": "WM_QUAL_GATE.md (sha256 ada6fd5f825831795327cb0412f8539c85b2bdea5926e98cbf0c9a7fa9aa3d83; copy runs/active/C4-V7FT-20261017/wmqual/WM_QUAL_GATE.md)",
+  "spec": "tools/wzqual/gate_spec.json (registered sha256 b013c0da... = working-copy bytes with CRLF; git blob LF = fac7757c...)",
+  "registration": "REGISTRATION.md 2026-11-06 ~17:00 (gate), 17:40 amendment 1 (backend designation), 19:55 amendment 2 (K=4, stride 240 s; compute)",
+  "primary": "C0 role coverage; D1 breakdown probability, D2 onset W1, D3 queue, D4 throughput, D5 zone-speed CRPS vs keep-speed; A1 within-moment Spearman T, A2 pooled Spearman T, A3 precision of WM-positive T, A4 synergy precision@k, A5 planning regret, A6 beats keep-speed",
+  "integrity": "I1 world-disjoint (checkpoint train/val list), I2 identity-gated truth, I3 rule frozen first, I4 closed-loop backend contract, I5 TRAIN seeds only",
+  "verdicts": "PASS / FAIL / INCONCLUSIVE / INVALID"
+ },
+ "interfaces": {
+  "cli": "python -m tools.wzqual.run_qual --out NEW_DIR --tapes GLOB --identity IDENTITY.json --labels-dir DIR --moments GLOB --backend wm|keep_speed --checkpoint CKPT --train-worlds MANIFEST --map-spec MAP_SPEC [--physics-toml TOML] [--samples 4 --start-stride 240] [--start-shard i/n --moment-shard i/n] [--skip-distributional|--skip-action] [--secondary planapi_proposer|planapi_full] [--max-rows N --batch-starts N --batch-moments N] [--device cpu|cuda]",
+  "merge": "python -m tools.wzqual.run_qual merge --out FINAL --shards DIR ...",
+  "report": "python -m tools.wzqual.report --run FINAL --out REPORT.md --title T [--compare OTHER_FINAL]",
+  "launchers": "tools/wzqual/ops/qual_launch.sh (one shard, own PID, nice 19, WZQ_GPU_FRACTION), tools/wzqual/ops/run_ckpt.sh (gpuA layout for any checkpoint)",
+  "backend_protocol": "tools/wzqual/backends.py: rollout(start, {arm: member specs}, horizon_s, n_samples, seed) -> {arm: [Traj]}; flags stochastic, models_entries, closed_loop, supported_roles; WmBackend (tools/wzqual/wm_backend.py) adds rollout_batch; PlanApiBackend (planapi_backend.py) = WM-C's proposer path, J-only, secondary",
+  "truth_tapes": "wzqual_native_tape/1 (TAPE.npz, SUMO frame; loader converts to the WM frame): cpuV /home/ubuntu/wmqual_20261106/runs/<cell>/s<seed>/prefix, copies on gpuA /root/autodl-fs/wzqual/data/tapes, cpuZ /home/ubuntu/wzqual/data/tapes, laptop runs/active/C4-V7FT-20261017/wmqual/tapes",
+  "labels": "tools/wzqual/labels.py: NEWMAP/COOPKINDS/PLANGEN/LOWCAV/WMPROP *_MOVES_B/R + *_NEGATIVES -> Candidate (T, S, member specs); frozen snapshot runs/active/C4-V7FT-20261017/wmqual/labels_snapshot (SHA256SUMS.txt)"
+ },
+ "sumo": {
+  "phase": "wm_wz_data (task WM-D, REGISTRATION 16:10)",
+  "charged_sim_s": 88800,
+  "cap_sim_s": 100000,
+  "jobs": 74,
+  "ledger": "cpuV /home/ubuntu/wmqual_20261106/ledger/CHARGES.jsonl (sha 5721eb20)",
+  "identity": "74/74 (IDENTITY.json sha 99b45819): per-second J_road/J_src/arrivals diff 0.0 over 0-900 s, CAV snapshots equal at 22 save times",
+  "collisions_teleports": 0
+ },
+ "tests": {
+  "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/wzqual/tests",
+  "result": "24 passed (fakes only; no SUMO, no WM checkpoint)",
+  "lint": "ruff check tools/wzqual: clean"
+ },
+ "findings_so_far": [
+  "SUMO wz3to2 lane changes into the closing lane (WM 1->2) are negligible: 3 in 3,315 veh-h vs 2->1 6.07/veh-h (WM-A known gap is not material).",
+  "Label noise: r0 vs dithered r1 on 83 replicated candidates: T Spearman 0.68, S Spearman 0.37, S sign agreement 66 %.",
+  "Native continuation vs loadState branch base J differ (median 8 veh-s, p90 1,473 veh-s per 300 s): SUMO near-chaotic; labels are single realisations.",
+  "Breakdown rule (pooled truth, frozen): boundary 7.67 m/s on 8,349 10-s bins."
+ ],
+ "hard_rules_observed": "own PIDs only (stopped/reniced only own processes); no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 path; no hetdata_truth / vType/driver truth file read; no git reset/clean/stash drop/push; SUMO only inside the registered wm_wz_data allocation (88,800 / 100,000 sim-s)"
+}
