@@ -137,6 +137,9 @@ def wm_rows(score_paths):
                 continue
             book['states'] += 1
             for arm, o in r['arms'].items():
+                if r['sid'] in out[r['cell']][arm]:          # first file wins (primary run before add-on runs)
+                    book['duplicates'] = book.get('duplicates', 0) + 1
+                    continue
                 out[r['cell']][arm][r['sid']] = dict(o, seed=r['seed'])
                 book['no_slot_rows'] += sum(1 for x in o['no_slot'] if x)
                 if arm not in (BASE, 'native'):
