@@ -48,13 +48,45 @@ def candidates(obs_state, rng, n):
                              and r['vid'] in available], float(own['s_m']))
     from . import group_lane
     structured = group_lane.families(obs_state)[1:]
+    # W1 (opt-in): v2v wall protocol options from the ego's own state and the t-1
+    # messages it received; an event decision offers only joins.
+    wall = obs_state.get('v2v_wall')
+    if wall is not None:
+        from . import v2v_wall
+        structured = (('wall_join',) if wall.get('only_join')
+                      else tuple(structured)+v2v_wall.FAMILIES)
+    release = obs_state.get('wall_release', False)
+    if type(release) is not bool:
+        raise ValueError('wall_release must be bool')
+    # N2 (opt-in): lane-drop joint moves and protocol options from the ego's own state,
+    # its acquirable observable partners and the t-1 messages it received.
+    ld = obs_state.get('lane_drop')
+    if ld is not None:
+        from . import lane_drop
+        event = bool(ld.get('only_join')) or (wall is not None and bool(wall.get('only_join')))
+        structured = lane_drop.families(structured, ld, event)
     def propose(family, group):
         if family in moves.LANE_FAMILIES:
             return group_lane.candidate(family, obs_state, own, group, rng)
-        return moves._candidate(family, own, group, rng)
+        move = moves._candidate(family, own, group, rng)
+        if release and family == 'wall':
+            # W2 (opt-in, B = R): registered gradual-release shape draw for this wall.
+            from .wall_release import with_release
+            move = with_release(move, [own]+list(group), rng)
+        return move
     pools = {}
     if n and ego in available:
         for family in structured:
+            if wall is not None and family in v2v_wall.FAMILIES:
+                options = v2v_wall.pool(family, wall, own, rng)
+                if options:
+                    pools[family] = options
+                continue
+            if ld is not None and lane_drop.owns(family):
+                options = lane_drop.pool(family, ld, own, partners, rng)
+                if options:
+                    pools[family] = options
+                continue
             # Enumerate bounded local member sets. The nearest three alone may
             # miss an otherwise feasible wall in a different lane.
             subsets = ([partners] if family != 'wall' else
@@ -73,6 +105,18 @@ def candidates(obs_state, rng, n):
         for family in rng.permutation(list(pools)):
             options = pools[family]
             template = options[int(rng.integers(len(options)))]
+            if wall is not None and family in v2v_wall.FAMILIES:
+                out.append(v2v_wall.redraw(template, wall, own, rng))
+                if len(out) == n:
+                    break
+                continue
+            if ld is not None and lane_drop.owns(family):
+                option = lane_drop.redraw(template, ld, own, by_vid, rng)
+                if option is not None:
+                    out.append(option)
+                if len(out) == n:
+                    break
+                continue
             # Gap/ramp eligibility depends on the full local pool (notably the
             # ahead-most mainline role); only walls enumerate member subsets.
             group = ([by_vid[v] for v in template.members if v != ego]
@@ -85,8 +129,14 @@ def candidates(obs_state, rng, n):
 
 def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
                      now, rng, generator, deterministic=False, command_reservations=None,
-                     coordination=None, opportunity_pairs=None, event=False):
+                     coordination=None, opportunity_pairs=None, event=False,
+                     wall=None, wall_events=None, lane_drop=None, lane_drop_events=None):
     """Acquire in stable id order (opt-in G2: role pairs first).
+
+    W1 (opt-in ``wall``): protocol options start through ``wall.start`` (atomic
+    session ownership/cap + executor commitment). ``wall_events`` marks a
+    non-periodic first-receipt tick: those egos get join-only slates, all others
+    (outside G2 pairs) only ``none``.
 
     Each slate is conditional on earlier acquisitions. PPO reuses these exact
     slates/masks/logps; it never regenerates an unconditional proposal table.
@@ -102,8 +152,17 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
     stats = dict(rule=RULE, provenance=PROVENANCE, decisions=len(members),
                  family_checks=0, infeasible_family_checks=0,
                  owned_cav_checks=0, controller_owned_cav_checks=0,
-                 proposed_by_family=dict.fromkeys(trigger.families[1:], 0),
+                 proposed_by_family=dict.fromkeys(getattr(trigger, 'option_families', trigger.families)[1:], 0),
                  selected_non_none=0, rejected_non_none=0)
+    if wall is not None:
+        stats['v2v_wall'] = dict(rule=wall.settings['rule'], event=wall_events is not None,
+            event_cavs=sorted(wall_events or ()), offered_join=0, selected_initiate=0,
+            accepted_initiate=0, selected_join=0, accepted_join=0)
+    if lane_drop is not None:
+        stats['lane_drop'] = dict(rule=lane_drop.settings['rule'], event=lane_drop_events is not None,
+            event_cavs=sorted(lane_drop_events or ()), offered_join=0, selected_initiate=0,
+            accepted_initiate=0, selected_join=0, accepted_join=0)
+    ld_tick = lane_drop is not None and lane_drop_events is not None
     order = sorted(members)
     pairs = ()
     if coordination is not None:
@@ -135,6 +194,7 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
         local_stats = {}
         state = dict(obs_states[ego], acquirable_cav_ids=[v for v in observable_cavs[ego]
                      if v in eligible and v not in occupied], proposal_stats=local_stats)
+        free = ego in state['acquirable_cav_ids']
         if coordination is not None:
             state['rows'] = opportunities.canonical_rows(state)
             if event:
@@ -146,6 +206,29 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
             pair = pair_by_ego.get(ego)
             if pair is not None and set(pair.members) <= set(state['acquirable_cav_ids']):
                 state['coordination_partner'] = pair.merger
+        if ld_tick:
+            # N2 event tick (non-periodic first receipt): only pending joins, others none.
+            in_wall = (wall is not None and wall_events is not None and ego in wall_events
+                       and ego not in event_members and 'v2v_wall' in state)
+            in_ld = ego in lane_drop_events and ego not in event_members and 'lane_drop' in state
+            if in_wall or in_ld:
+                state['acquirable_cav_ids'] = [ego] if free else []
+                if 'v2v_wall' in state:
+                    state['v2v_wall'] = dict(state['v2v_wall'], only_join=True,
+                                             **({} if in_wall else dict(offers=())))
+                if 'lane_drop' in state:
+                    state['lane_drop'] = dict(state['lane_drop'], only_join=True,
+                                              **({} if in_ld else dict(offers=())))
+            elif coordination is None:
+                state['acquirable_cav_ids'] = []
+        elif wall is not None and wall_events is not None:
+            if ego in wall_events and ego not in event_members and 'v2v_wall' in state:
+                state['acquirable_cav_ids'] = [ego] if free else []
+                state['v2v_wall'] = dict(state['v2v_wall'], only_join=True)
+                if 'lane_drop' in state:
+                    state['lane_drop'] = dict(state['lane_drop'], only_join=True, offers=())
+            elif coordination is None:
+                state['acquirable_cav_ids'] = []
         local_context = dict(context, members=[ego], x=[context['x'][index]])
         batch = trigger.decide(local_context, obs_states={ego: state},
             observable_cavs={ego: observable_cavs[ego]}, rng=rng, generator=generator,
@@ -161,8 +244,30 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
                 m is not None and len(m.actors) >= 2 for m in batch.tables[0]))
         move = batch.selected()[ego]
         selected = move is not None and move.family != 'none'
-        accepted[ego] = executor.start(move, ego=ego, observable_cav_ids=observable_cavs[ego],
-            now=now, until=now+move.onset_s+move.hold_s) if selected else False
+        if wall is not None:
+            wall.mark_offered(ego, batch.tables[0])
+            stats['v2v_wall']['offered_join'] += sum(m is not None and m.family == 'wall_join'
+                                                     for m in batch.tables[0])
+        if lane_drop is not None:
+            lane_drop.mark_offered(ego, batch.tables[0])
+            stats['lane_drop']['offered_join'] += sum(m is not None and m.family == 'lane_drop_join'
+                                                      for m in batch.tables[0])
+        if selected and wall is not None and move.family in wall.FAMILIES:
+            accepted[ego] = wall.start(move, ego=ego, executor=executor,
+                                       observable_cav_ids=observable_cavs[ego], now=now)
+            kind = 'initiate' if move.family == 'wall_initiate' else 'join'
+            stats['v2v_wall']['selected_'+kind] += 1
+            stats['v2v_wall']['accepted_'+kind] += int(accepted[ego])
+        elif selected and lane_drop is not None and move.family in lane_drop.FAMILIES:
+            accepted[ego] = lane_drop.start(move, ego=ego, executor=executor,
+                                            observable_cav_ids=observable_cavs[ego], now=now)
+            kind = 'initiate' if move.family == 'lane_drop_initiate' else 'join'
+            stats['lane_drop']['selected_'+kind] += 1
+            stats['lane_drop']['accepted_'+kind] += int(accepted[ego])
+        else:
+            # A W2 gradual-release wall stays committed through its release ramp (0 otherwise).
+            accepted[ego] = executor.start(move, ego=ego, observable_cav_ids=observable_cavs[ego],
+                now=now, until=now+move.onset_s+move.hold_s+getattr(move, 'release_s', 0)) if selected else False
         stats['selected_non_none'] += int(selected)
         stats['rejected_non_none'] += int(selected and not accepted[ego])
     ordered = [batches[v] for v in members]

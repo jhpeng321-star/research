@@ -506,7 +506,8 @@ def _registration(cfg):
         seed = row.get('world_seed')
         if type(row.get('replicate')) is not int or row['replicate'] != i:
             raise ValueError('REFUSED: unique replicate indices 0..4 required')
-        if type(seed) is not int or not 986000 <= seed <= 986071 or seed in seeds:
+        from .map_runtime import primary_train_seed  # N4: merge 986000-986071 or the process map TRAIN seeds
+        if not primary_train_seed(seed) or seed in seeds:
             raise ValueError('REFUSED: distinct registered TRAIN world seeds required')
         seeds.add(seed)
         for k in ('state_set_sha256', 'window_set_sha256'):

@@ -97,11 +97,23 @@ def bank_move_supervision(runtime):
         return dict(examples=0, source='A_no_bank')
     cfg, policy, records = runtime.cfg, runtime.policy, []
     contexts = []
+    from .wall_w2 import settings as w2_settings
+    w2 = w2_settings(cfg)
+    observer = policy
+    if w2['wall_pressure_features']:
+        # W2: bank readers observe from a copy WITHOUT this process's wall memory.
+        from .wall_negatives import observer as clean_observer
+        observer = clean_observer(policy)
     def consume(*, cfg, receipt, example, plan, pairs, trace):
         frames = bank_v2v.trace_frames(trace)
         for context, label, reader, weight, time in bank_breadth.observable_contexts(
-                policy, plan, pairs, frames, t0=receipt['t0'],
+                observer, plan, pairs, frames, t0=receipt['t0'],
                 certification=cfg.get('_executable_lesson')):
+            if w2['wall_pressure_features']:
+                # Same causal observer as online: the reader's own merge-pressure blocks.
+                context = dict(context, merge_pressure={v: reader.pressure_blocks[v]
+                                                        for v in context['members']
+                                                        if v in reader.pressure_blocks})
             # Same acquirability contract as online feasible_proposals: candidates only over
             # the ego's observable CAV slots. With G5 on, local rows also carry sensed CAVs
             # outside the slots (gap geometry), which must never become move members.
@@ -143,6 +155,14 @@ def bank_move_supervision(runtime):
     bank_breadth.visit(cfg, 'R' if runtime.arm == 'B' else 'B', other_support)
     if set(families) != other_families:
         raise ValueError('F3 B/R observable trigger family support differs; add verified guidance')
+    negatives = None
+    if w2['wall_negative_labels']:
+        # W2: this arm's OWN per-seed losing walls as do-not-wall labels (own family-mass bucket).
+        from . import wall_negatives
+        extra, extra_contexts, negatives = wall_negatives.trigger_records(cfg, runtime.arm, policy)
+        records += extra
+        contexts += extra_contexts
+        families = Counter(c['family'] for c in contexts)
     weights = [1./families[c['family']] for c in contexts]
     records = [(b, w) for (b, _), w in zip(records, weights)]
     reference = []
@@ -182,10 +202,13 @@ def bank_move_supervision(runtime):
         # Per-context fit, aligned with `contexts` (reporting only; e.g. mined-example fit).
         context_ce = [float(torch.nn.functional.cross_entropy(
             policy.trigger.distribution(b.context, b.descriptors, b.mask)[0], b.actions)) for b, _ in records]
-    return dict(initial_ce=initial, final_ce=float(loss().detach()), context_final_ce=context_ce,
+    out = dict(initial_ce=initial, final_ce=float(loss().detach()), context_final_ce=context_ce,
         examples=len(records), passes=passes, contexts=contexts, family_counts=dict(families),
         family_mass={f: 1./len(families) for f in families}, rule=bank_breadth.RULE,
         source='all usable verified bank plans and observable traces, including PLAN_FIX outputs')
+    if negatives is not None:
+        out['wall_negatives'] = negatives
+    return out
 
 
 def monitor_config(cfg, *, root=None):
@@ -234,6 +257,11 @@ def update_metrics(arm, episodes, learning, reward_envelope, *, augmented_exampl
                 for table, selected in zip(trigger['tables'], trigger['actions']):
                     move = table[selected]
                     family = 'none' if move is None else move['family']
+                    if family not in metrics['trigger_counts']:
+                        # Opt-in option families (W1/N2 protocols, N2 joint moves) are counted
+                        # in their own key; the default family list is unchanged when OFF.
+                        metrics['families'].append(family)
+                        metrics['trigger_counts'][family] = 0
                     metrics['trigger_counts'][family] += 1
                     metrics['decisions'] += 1
             for block in sample.get('track2', {}).get('merge_features', {}).values():
@@ -325,7 +353,11 @@ def run_branch(spec, snapshot, cfg, work):
             if isinstance(new, p1.EpisodePolicy):
                 # VerifyController restores its ledger at t0; refresh from the
                 # live instance so the next decision sees original expiries.
-                new.observe(rows, now, command_commitments=controller.active_plans)
+                if new.lane_drop is not None:   # N2 speed law needs the own native command
+                    new.observe(rows, now, command_commitments=controller.active_plans,
+                                native_commands=commands)
+                else:
+                    new.observe(rows, now, command_commitments=controller.active_plans)
             return original(rows, commands, now)
         controller.apply = apply
     runner = sv.LocalBranchRunner(work, controller_hook=hook, policy_loader=loader)

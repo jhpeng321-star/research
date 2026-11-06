@@ -1,0 +1,139 @@
+{
+  "task": "W1",
+  "status": "READY",
+  "scope": "V2V wall initiate/join protocol + wider coop awareness + protocol bank ingestion; CPU implementation and CPU contract tests only (no SUMO/GPU/ssh)",
+  "branch": "c4/wall-v2v",
+  "worktree": "E:/agent-work/c4-wall-v2v",
+  "base_commit": "3e5bc9f9",
+  "code_commit": "4ecde923d112f45d774fc6b500d6cd1a932c8792",
+  "commits": [
+    {
+      "sha": "4ecde923d112f45d774fc6b500d6cd1a932c8792",
+      "subject": "C4 W1: V2V wall initiate/join protocol, wider coop awareness, protocol bank ingestion (default off)"
+    }
+  ],
+  "context": [
+    "runs/active/C4-V7FT-20261017/COOP_PROBE_REPORT.md",
+    "REGISTRATION.md r9/r12 Nov 6 observability limit (4 of 5 mined wall examples: no member sees all members in its 4 slots)"
+  ],
+  "files": {
+    "new": [
+      "tools/coopmwm/v2v_wall.py",
+      "tools/coopmwm/test_v2v_wall_cpu.py"
+    ],
+    "modified": [
+      "tools/coopmwm/track2_backend.py",
+      "tools/coopmwm/trigger_policy.py",
+      "tools/coopmwm/feasible_proposals.py",
+      "tools/coopmwm/bank_breadth.py",
+      "tools/coopmwm/merge_features.py",
+      "tools/coopmwm/sparse_synergy_credit.py"
+    ]
+  },
+  "config_keys": {
+    "v2v_wall": {
+      "enabled": true,
+      "member_cap": "registered int 2..6",
+      "rule": "w1-v2v-wall-initiate-join-v1",
+      "provenance": "non-empty owner registration string",
+      "range_m": "optional float > 0 (message radio range), default 100.0 = V2V_RANGE_M"
+    },
+    "coop_awareness": {
+      "enabled": true,
+      "slots": "4 or 6",
+      "range_m": "float >= 100.0",
+      "rule": "w1-coop-awareness-v1",
+      "provenance": "non-empty owner registration string"
+    },
+    "default": "both keys absent (or False) = OFF; validated for B/R in track2_backend._check; A never reads them",
+    "helper": "tools.coopmwm.v2v_wall.config_keys(provenance=..., member_cap=..., range_m=..., awareness_slots=..., awareness_range_m=...)"
+  },
+  "how_to_enable": [
+    "Add the same keys to the common B/R backend config (registration), e.g. v2v_wall={enabled:true, member_cap:4, rule:'w1-v2v-wall-initiate-join-v1', provenance:'<owner>'[, range_m:200.0]} and/or coop_awareness={enabled:true, slots:6, range_m:200.0, rule:'w1-coop-awareness-v1', provenance:'<owner>'}.",
+    "Either option can be enabled alone; both are identical for B and R; A (plain MAPPO) is untouched.",
+    "Start from MAPPO u0 with fresh B/R track2 sidecars: the trigger first layer (and, with awareness, the residual first layer) gains zero-initialised columns, so OFF-run sidecars do not strict-load into an ON config.",
+    "No launch/registration file was changed; the operator owns budget, registration and smoke before any physics."
+  ],
+  "api": {
+    "protocol": "v2v_wall.Protocol (EpisodePolicy.wall): receive(now, own_rows) -> offers from messages published at now-1 within range_m; publish(now, own sources) after each sample(); start(option, ego, executor, ...) = atomic session cap/ownership + MoveExecutor commitment; offsets(option, t, positions, vid)",
+    "options": "WallOption(family in ('wall_initiate','wall_join'), members=(ego,), onset/hold relative, depth, wall_id, initiator, gap_m, member_count, cap, range_m); a join is the remaining part of the initiator absolute schedule",
+    "message": "WallIntent(wall_id, initiator, timestamp_s, source_s_m, source_lane, start_s, onset, hold, depth, zone=registered merge zone, member_count (joins acknowledged by t-1), cap, released)",
+    "decisions": "initiate offered at periodic decisions to a free CAV upstream of the merge zone (variety windows clipped to its constant-speed zone arrival, as the wall move); first receipt of a wall -> one-shot non-periodic event decision (join-only slate for receivers, none for others); join also offered at periodic decisions while received",
+    "trigger_inputs": "TriggerPolicy(extension=...): descriptor += (is_initiate, is_join, initiator_gap/range, member_count/cap, open_slots/6); context += own merge-pressure block (wall) + awareness block; all extra first-layer columns zero-initialised; frozen MAPPO trunk input unchanged",
+    "awareness": "per slot (gap_m, lane_offset, v_mps, present) for the K nearest other CAV publishers whose own t-1 packet is valid within range_m, + merge_features over those packets (merge_features k/range_m kwargs, defaults unchanged); inserted before the committed-offset column of the residual; candidate slates/visible slots unchanged",
+    "ingestion": "bank_breadth.observable_contexts routes every verified wall-family example (mined and legacy, B and R alike) to v2v_wall.protocol_contexts when v2v_wall is on: initiator (member reaching most other members within range_m, ties plan order) imitates wall_initiate from its own observation; each other member imitates wall_join at the earliest second its own receive step produced the offer for the reconstructed t-1 message; admitted in stable order up to member_cap",
+    "g4": "sparse_synergy_credit.opportunities skips per-CAV protocol options (not single-proposer joint macros)",
+    "r_arm": "no arm-specific code: R runs the identical protocol online and ingests its own (random-proposer) verified wall examples through the same rule"
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q",
+    "new_suite": {
+      "file": "tools/coopmwm/test_v2v_wall_cpu.py",
+      "result": "17 passed (final code)",
+      "covers": [
+        "settings default off / registered values / cap<=6 / slots in {4,6} / range>=100",
+        "off = byte-identical: absent vs False identical; subprocess overlay of 3e5bc9f9 sources gives an identical sample+weight digest",
+        "message timing t-1 (not same tick; a skipped publication is not received)",
+        "join option only within range; HDVs never offered or commanded",
+        "single-writer execution: initiator and joiner share the absolute window via committed offsets",
+        "ownership (owned CAV gets none only; a member cannot initiate/join again) and member cap",
+        "release message latch / zone release / ownership held to expiry",
+        "MAPPO observation and frozen base untouched",
+        "awareness zero-init equivalence (K=6/250 m, K=4/200 m, K=6/100 m): identical actions, trigger tables/logp, residuals",
+        "B and R identical protocol runs and identical bank supervision",
+        "4-member wall where no member sees all others: legacy path 0 contexts; protocol initiate+joins (range 100: 1+2, range 200: 1+3, cap 3: 1+2)",
+        "ingestion uses only own observation + received message; recorded wall decisions replay for trigger PPO; G4 ignores them"
+      ]
+    },
+    "touched_suites": {
+      "group_A": {
+        "files": [
+          "test_v2v_wall_cpu",
+          "test_track2_backend_cpu",
+          "test_trigger_policy_cpu",
+          "test_feasible_proposals_cpu",
+          "test_bank_breadth_cpu",
+          "test_launch_final_cpu",
+          "test_coop_layer_cpu"
+        ],
+        "result": "332 passed"
+      },
+      "group_B": {
+        "files": [
+          "test_clean2_budget_cpu",
+          "test_clean3_restart_cpu",
+          "test_coordination_opportunities_cpu",
+          "test_executable_labels_cpu",
+          "test_f1_actuation_cpu",
+          "test_f4_safety_reward_cpu",
+          "test_g4_runtime_cpu",
+          "test_group_lane_cpu",
+          "test_launch_clean2_cpu",
+          "test_launch_integration_cpu",
+          "test_mined_link_cpu",
+          "test_rerun_cpus_cpu",
+          "test_sparse_synergy_credit_cpu",
+          "test_g1_certification_cpu",
+          "test_t2c_augmentation_cpu",
+          "test_t2c_backend_cpu",
+          "test_t2c_compat_cpu",
+          "test_t2c_multicav_cpu",
+          "test_t2c_runtime_cpu",
+          "tests/unit/test_merge_features",
+          "tests/unit/test_track2_reward"
+        ],
+        "result": "638 passed, 2 skipped (pre-existing Windows symlink-privilege skips)"
+      }
+    },
+    "lint": "ruff: v2v_wall.py clean; touched modules no new findings; test file only the repo-standard F811 cfg-fixture import",
+    "not_run": "SUMO, GPU, Linux qualification, clean3 smoke/admit_mined on the real bank"
+  },
+  "caveats": [
+    "Zero-init equivalence is guaranteed for coop_awareness. Enabling v2v_wall adds new slate options, so an untrained ON policy can select them (logits of pre-existing candidates are unchanged).",
+    "With v2v_wall on, wall-family bank examples are taught via initiate/join instead of the direct joint wall label (B and R alike); the F3 B/R family-support check then needs wall examples in both arms, as before.",
+    "Protocol latency: joiners start one second after the initiation and run the remaining schedule; the first second of an onset-0 plan is not reproduced for joiners.",
+    "With the default 100 m message range, 986061-like geometry (60 m spacing) reaches 2 of 3 partners; a longer registered range_m (e.g. 200 m) reaches all; this is an owner registration choice.",
+    "coop_awareness K=6 widens coop-layer inputs only; it does not change trigger_partner_slots or move membership."
+  ],
+  "hard_rules": "no ssh/SUMO/GPU; worktree only; no reset/clean/stash drop/push/rebase; no sealed/holdout/cal_split/chunk5/j4b/inc1 paths or truth files read; policy inputs are observables only"
+}

@@ -603,7 +603,8 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1, clean2=CLEAN2, g1_root=G1_ROOT,
             if not supervision['contexts']:
                 raise ValueError('nonempty trigger supervision required: '+arm)
     actual.update(recorder.paths); actual.update(recorder.lexical)
-    for extra in filter(None, (cfg.get('executable_label_manifest'), cfg.get('mined_moves'))):
+    for extra in filter(None, (cfg.get('executable_label_manifest'), cfg.get('mined_moves'),
+                               cfg.get('wall_negatives'))):
         actual.add(Path(extra))
     for row in registration['replicates']:
         for item in row['states']:
