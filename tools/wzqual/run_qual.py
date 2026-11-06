@@ -181,12 +181,48 @@ def check_contract(start, trajs: dict) -> list:
 
 
 # ------------------------------------------------------------------------ parts
-def _predict(backend, jobs, *, n_samples):
-    """``jobs = [(start, arms, seed)]`` -> list of {arm: [Traj]} (batched when supported)."""
-    if hasattr(backend, "rollout_batch"):
-        return backend.rollout_batch(jobs, horizon_s=HORIZON, n_samples=n_samples)
-    return [backend.rollout(st, arms, horizon_s=HORIZON, n_samples=n_samples, seed=seed)
-            for st, arms, seed in jobs]
+def _predict(backend, jobs, *, n_samples, max_rows: int = 0):
+    """``jobs = [(start, arms, seed)]`` -> list of {arm: [Traj]} (batched when supported).
+
+    ``max_rows`` bounds the rows (arms x samples) of one WM call: a job whose arms exceed it is
+    split into calls holding that start ALONE (same slot count K and seeds -> identical driver,
+    lane and entry draws: common random numbers across the arms are preserved); jobs that fit
+    are packed together up to the bound."""
+    if not hasattr(backend, "rollout_batch"):
+        return [backend.rollout(st, arms, horizon_s=HORIZON, n_samples=n_samples, seed=seed)
+                for st, arms, seed in jobs]
+    n = max(1, int(n_samples))
+    if not max_rows:
+        return backend.rollout_batch(jobs, horizon_s=HORIZON, n_samples=n)
+    out = [None] * len(jobs)
+    pack, pack_rows = [], 0
+
+    def flush():
+        nonlocal pack, pack_rows
+        if pack:
+            res = backend.rollout_batch([jobs[i] for i in pack], horizon_s=HORIZON, n_samples=n)
+            for i, r in zip(pack, res):
+                out[i] = r
+        pack, pack_rows = [], 0
+
+    for i, (st, arms, seed) in enumerate(jobs):
+        rows = len(arms) * n
+        if rows > max_rows:
+            flush()
+            names = list(arms)
+            per_call = max(1, max_rows // n)
+            merged: dict = {}
+            for c in range(0, len(names), per_call):
+                sub = {k: arms[k] for k in names[c:c + per_call]}
+                merged.update(backend.rollout_batch([(st, sub, seed)], horizon_s=HORIZON, n_samples=n)[0])
+            out[i] = merged
+            continue
+        if pack_rows + rows > max_rows:
+            flush()
+        pack.append(i)
+        pack_rows += rows
+    flush()
+    return out
 
 
 def distributional(tapes, backend, ks, rule, args, log) -> tuple[list, list, list]:
@@ -214,7 +250,7 @@ def distributional(tapes, backend, ks, rule, args, log) -> tuple[list, list, lis
             seed = int(hashlib.sha256(f"wzqual:{world}:{t0}".encode()).hexdigest()[:8], 16)
             descs.append((world, tr, t0, st, seed))
             jobs.append((st, {"base": []}, seed))
-        preds = _predict(backend, jobs, n_samples=args.samples)
+        preds = _predict(backend, jobs, n_samples=args.samples, max_rows=getattr(args, "max_rows", 0))
         for (world, tr, t0, st, seed), pred in zip(descs, preds):
             pre = TR.zone_speed_bins(tr, t0 - 30.0, t0)
             broken = BD.start_class(pre, rule)
@@ -308,7 +344,7 @@ def action_rows(cands, tapes, backend, args, log) -> tuple[list, dict]:
                                                seed=seed), "backend_J"))
         else:
             preds = _predict(backend, [(st, arms, seed) for _m, _o, st, arms, seed in part],
-                             n_samples=args.samples)
+                             n_samples=args.samples, max_rows=getattr(args, "max_rows", 0))
             for (mom, ok, st, arms, seed), pred in zip(part, preds):
                 mode = j_mode(backend, pred["base"])
                 jds.append(({k: np.asarray([pred_J(p, st.t0, st.frame["ids"], mode) for p in v])
@@ -412,6 +448,8 @@ def main(argv=None) -> int:
     ap.add_argument("--moment-shard", default=None, help="i/n: score moments i::n only (parallel)")
     ap.add_argument("--batch-starts", type=int, default=16, help="starts per batched WM rollout")
     ap.add_argument("--batch-moments", type=int, default=2, help="moments per batched WM rollout")
+    ap.add_argument("--max-rows", type=int, default=96,
+                    help="max rows (arms x samples) per WM call; a moment is split, CRN kept")
     ap.add_argument("--start-shard", default=None, help="i/n: distributional worlds i::n only")
     args = ap.parse_args(argv)
     out = Path(args.out)
