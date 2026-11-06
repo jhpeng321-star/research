@@ -44,3 +44,22 @@ CPU status has both exact identities exited and an empty gate set.
 No fresh liveness or native scientific re-verification is claimed.
 `PLANFIX_RECEIPT_CHECK_20261106_1347.json` pins the two input file hashes.
 Existing full suites remain adopted; this is bookkeeping-only verification.
+
+## Step 3 — readiness metadata and progress reconciled
+
+Updated central `PLAN_FIX_READY.json` to retain the historical allocation and
+bank-completion spend separately from zero active allocation/remaining authority.
+Run and actual update target are null; the original u12 is historical only.
+Obsolete missing-input/clean2-not-launched blockers are replaced with supersession,
+released reservation and the observed terminal CPU gate/search state. The
+machine consumer remains disabled (`ready=false`, `apply=false`, `outputs=[]`).
+Added a dated section to `PLAN_FIX_READY.md` and four PLANFIX lines to
+`CLEAN1_STATUS.md`. No AUTHORITY or ledger is amended: this recovery grants no
+budget. No remote command or process action was needed. Existing unrelated
+untracked files and every earlier receipt remain intact.
+
+Final local assertions PASS: switch disabled, null run/update, zero active
+allocation, historical33,600 + released566,400 =600,000 and unchanged bank
+results hash. Readiness metadata SHA is pinned in the receipt-check JSON.
+Central run artifacts are not tracked changes in `E:/research-dense`; recovery
+documentation and their content-addressed check are committed in this worktree.
