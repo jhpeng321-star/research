@@ -233,9 +233,10 @@ def strategy(argv):
         log.close()
         res.update(cell=cell, backend=wm.meta, wall_s=round(time.time() - t0, 1), new_sumo_sim_s=0)
         (out / f'STRATEGY_SEARCH_{cell}.json').write_text(json.dumps(res, indent=1, default=str))
-        arms[cell] = dict(wm=SS.select_for_sumo(res, a.k), structured=SS.structured_arm(a.k),
-                          random=SS.random_arm(a.k), incumbent=SS.SOLO2,
-                          best_beating_solo2=(res['best_beating_solo2'] or {}).get('strategy'))
+        arms[cell] = dict(wm=SS.select_for_sumo(res, a.k), wm_fair=SS.select_for_sumo(res, a.k, fair=True),
+                          structured=SS.structured_arm(a.k), random=SS.random_arm(a.k), incumbent=SS.SOLO2,
+                          best_beating_solo2=(res['best_beating_solo2'] or {}).get('strategy'),
+                          best_fair=(res['best_fair'] or {}).get('strategy'), fairness=res['fairness'])
         print(cell, 'evaluated', res['evaluated'], 'archive', res['archive_cells'], 'best',
               (res['final'][0]['strategy']['name'], res['final'][0]['gain_vs_solo2'], res['final'][0]['gain_vs_solo2_lcb']))
     (out / 'ARMS.json').write_text(json.dumps(arms, indent=1))
