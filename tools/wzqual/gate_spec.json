@@ -1,0 +1,37 @@
+{
+  "schema": "wzqual_gate/1",
+  "name": "WM-D qualification gate: WM good enough to PROPOSE plans on wz3to2 (SUMO verifies every proposal)",
+  "registered": "2026-11-06 (before any fine-tuned wz3to2 WM checkpoint or WM prediction existed); see WM_QUAL_GATE.md",
+  "horizon_s": 300,
+  "start_grid": {"first_t0_s": 300, "stride_s": 120, "history_s": 120, "require_truth_until_t0_plus_s": 300},
+  "samples_per_start": {"stochastic": 8, "deterministic": 1},
+  "integrity": {
+    "I1_world_disjoint": "every qualification world (seed) is absent from the checkpoint's train AND validation world lists; a missing list = INVALID",
+    "I2_truth_identity": "label-world tapes pass the WMQUAL-B identity gate; distributional tapes are WM-B split=WMQUAL natives",
+    "I3_rule_frozen_first": "breakdown rule fitted and hashed before any WM rollout is scored",
+    "I4_backend_contract": "t0 frame reproduced (|ds|,|dv| <= 1e-3), 0.5 s steps, CRN across arms, members closed loop (no recorded member path)",
+    "I5_no_restricted_seeds": "no seed outside TRAIN 989200-989599; never 989600-989699, 964000-964199, 962xxx, 977xxx"
+  },
+  "minimum_samples": {
+    "starts_total": 40,
+    "starts_per_cell_for_cell_check": 12,
+    "truth_breakdown_events": 10,
+    "moments_ranked": 30,
+    "S_candidates": 20
+  },
+  "primary": {
+    "C0_role_coverage": {"min_fraction_T_candidates_supported": 0.80, "required_roles": ["hold", "lane_to"]},
+    "D1_breakdown_rate": {"horizon": "300", "pooled_abs_diff_max": 0.10, "per_cell_abs_diff_max": 0.20},
+    "D2_onset_w1_max_s": 45.0,
+    "D3_queue": {"field": "queue_mean", "rel_mean_err_max": 0.25, "norm_w1_max": 0.50},
+    "D4_throughput_rel_err_max": 0.08,
+    "D5_zone_crps_not_worse_than_keep_speed": {"horizons_s": [120, 300]},
+    "A1_within_moment_spearman_T": {"min": 0.30, "ci_low_min": 0.0},
+    "A2_pooled_spearman_T": {"min": 0.30, "ci_low_min": 0.10},
+    "A3_precision_positive_T": {"min": 0.60, "min_over_base_rate": 0.10},
+    "A4_precision_at_k_S": {"min": 0.50, "min_lift_over_base_rate": 1.30, "lift_requirement_cap": 0.70},
+    "A5_regret": {"max_ratio_to_random": 0.50, "wm_gain_ci_low_min": 0.0},
+    "A6_pooled_spearman_T_beats_keep_speed": true
+  },
+  "verdict_rule": "PASS iff all integrity checks hold and every primary criterion passes. FAIL if any primary criterion fails. INCONCLUSIVE if none fails but at least one is unidentifiable (below minimum samples or degenerate breakdown rule). INVALID if an integrity check fails. Secondary metrics never change the verdict."
+}
