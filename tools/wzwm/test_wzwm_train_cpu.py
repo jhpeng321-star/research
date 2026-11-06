@@ -447,3 +447,44 @@ def test_prepare_with_wz_road_binding(tmp_path, monkeypatch):
         assert p["env"]["WMS_MAP_SPEC"] == str(spec)
     finally:
         road_mod._reset_for_tests()
+
+
+# ------------------------------------------------------------------ pack (shard bookkeeping) ---
+def _shard(tmp_path, name, rows):
+    eps = [{"seed": s, "arm_tag": a, "split": sp, "canary": c, "episode_dir": f"/data/{s}/{a}/episode"}
+           for s, a, sp, c in rows]
+    p = tmp_path / name
+    p.write_text(json.dumps({"schema": run.SHARD_SCHEMA, "map": "wz3to2", "episodes": eps, "shard_sha256": "x"}))
+    return p
+
+
+def test_shard_episodes_split_and_refusals(tmp_path):
+    s1 = _shard(tmp_path, "s1.json", [(989100, "native", "train", False), (989100, "mappo_u0", "train", False),
+                                      (989103, "native", "val", True), (989104, "native", "val", False)])
+    s2 = _shard(tmp_path, "s2.json", [(989101, "coop_native", "train", False), (989104, "mappo_u0", "val", False)])
+    eps, split_of, shas = run.shard_episodes([s1, s2], arms={"native", "mappo_u0", "coop_native"})
+    assert (989103, "native") not in eps                       # canary dropped
+    assert split_of == {989100: "train", 989101: "train", 989104: "val"} and len(shas) == 2
+    eps2, _, _ = run.shard_episodes([s1, s2], arms={"native"})
+    assert sorted(eps2) == [(989100, "native"), (989104, "native")]
+    bad = _shard(tmp_path, "bad.json", [(989100, "native", "train", False), (989100, "mappo_u0", "val", False),
+                                        (989104, "native", "val", False)])
+    with pytest.raises(worlds.WorldError, match="split differs"):
+        run.shard_episodes([bad])
+    res = _shard(tmp_path, "res.json", [(989100, "native", "train", False), (989210, "native", "val", False)])
+    with pytest.raises(worlds.WorldError):
+        run.shard_episodes([res])
+
+
+def test_apply_roles_overrides_converter_split_by_seed(tmp_path):
+    src = tmp_path / "src"
+    src.mkdir()
+    doc = _manifest([("w989100m2800p40t300", "val", "native"), ("w989104m3200p60t300", "train", "native")])
+    for e, s in zip(doc["episodes"], (989100, 989104)):
+        e["seed"] = s
+    (src / run.MANIFEST_NAME).write_text(json.dumps(doc))
+    out = run.apply_roles(src, {989100: "train", 989104: "val"}, "registered")
+    assert [e["split_role"] for e in out["episodes"]] == ["train", "val"]
+    assert out["n_train"] == 1 and out["n_val"] == 1 and out["split_rule"] == "registered"
+    kept = json.loads((src / "C4_EPISODES_MANIFEST.converter.json").read_text())
+    assert [e["split_role"] for e in kept["episodes"]] == ["val", "train"]
