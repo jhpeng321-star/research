@@ -427,7 +427,7 @@ def observable_contexts(policy, plan, pairs, frames, *, t0, certification=None):
             break
 
 
-def practice_pool(cfg, arm):
+def practice_pool(cfg, arm, *, deduplicate=True):
     """Verified restarts including imported contexts; preserve exact seed salts."""
     from . import practice_starts as ps, moves, sumo_verify as sv
     rows = []
@@ -454,7 +454,8 @@ def practice_pool(cfg, arm):
             snapshot_lookup=dict(binding_version=1, run_root=str(root), bank_cfg=bank_cfg,
                 receipt=receipt, example=example, plan=plan, verification_binding=binding),
             snapshot_sha256=sv.snapshot_sha(snap),
-            context_id=digest(dict(snapshot=sv.snapshot_sha(snap), family=family)))
+            context_id=digest(dict(snapshot=sv.snapshot_sha(snap), family=family,
+                                   **({'mined_plan': digest(plan)} if '_g5_mined' in cfg else {}))))
         if cfg.get('_mined_binding') is not None:
             # The binding is revalidated on resume from the frozen plan itself.
             row['snapshot_lookup']['mined_binding'] = cfg['_mined_binding']
@@ -477,6 +478,10 @@ def practice_pool(cfg, arm):
         rows.append(row)
     visit(cfg, arm, consume)
     # Multiple verified plans/links can describe the very same restart context.
+    if not deduplicate:
+        # Every verified example row (reporting/coverage); the sampler uses the
+        # deduplicated pool, where one restart context may describe several plans.
+        return sorted(rows, key=lambda row: (row['context_id'], row['verification_id'], row['example_id']))
     unique = {}
     for row in rows:
         unique.setdefault(row['context_id'], row)

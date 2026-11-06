@@ -215,9 +215,18 @@ def smoke_check(cfg, updates, artifacts):
             # observable from a member's own slots; every example must still load as an
             # executable bank example (above) and be practice-demonstrable (pool, below).
             info['observability'] = observability(found, contexts)
-            pool_examples = {(r['verification_id'], r['example_id']) for r in pool if r.get('mined')}
-            if not targets <= pool_examples:
+            # (b) concerns seed SITUATIONS: every mined example's verified restart context must
+            # be in the sampled pool (several mined plans may share one situation/seed).
+            every = {(r['verification_id'], r['example_id']): r['context_id']
+                     for r in bank_breadth.practice_pool(native, arm, deduplicate=False) if r.get('mined')}
+            pool_ids = {r['context_id'] for r in pool}
+            # Mined plans carry their own context id (situation+family+plan), so every mined
+            # example stays separately demonstrable even when several share one situation.
+            if not targets <= set(every) or any(every[t] not in pool_ids for t in targets)                     or len({every[t] for t in targets}) != len(targets):
                 raise ValueError('(b) mined seed situations missing from the practice pool: '+arm)
+            info['situations'] = dict(examples=len(targets), distinct_situations=len({every[t] for t in targets}),
+                                      shared=sorted('|'.join(t) for t in targets
+                                                    if sum(every[x] == every[t] for x in targets) > 1))
             info['imitation_targets'] = len(targets & contexts)
         started = [e for e in arms[arm]['practice']['episodes']
                    if (e.get('breadth') or {}).get('context_id') in demo_ctx

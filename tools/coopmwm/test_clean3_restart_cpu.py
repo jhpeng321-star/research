@@ -338,7 +338,7 @@ def test_mined_smoke_check_a_to_d_and_fairness(monkeypatch):
     found = {a: [dict(verification_id=f'v{a}', plan_sha256='s', example_id=f'v{a}#s1', executable=True,
                       family='yield_lane')] for a in 'BR'}
     monkeypatch.setattr(cm, 'examples', lambda native, arm: (found[arm], {(f'v{arm}', 's')}))
-    monkeypatch.setattr(bank_breadth, 'practice_pool', lambda native, arm: [dict(context_id=f'c{arm}',
+    monkeypatch.setattr(bank_breadth, 'practice_pool', lambda native, arm, **k: [dict(context_id=f'c{arm}',
         verification_id=f'v{arm}', example_id=f'v{arm}#s1', mined=True, demonstrate=True, family='yield_lane')])
     def update(a, passed=True, credit=1, ctx=None):
         return dict(arm=a, learning=dict(bank_trigger=dict(contexts=[dict(verification_id=f'v{a}', example_id=f'v{a}#s1')])),
@@ -402,11 +402,11 @@ def test_amended_check_a_reports_non_observable_examples_without_failing(monkeyp
     found = [dict(verification_id='v', plan_sha256='s', example_id=f'v#s{i}', seed_index=i, executable=True,
                   family='wall') for i in (1, 5)]
     monkeypatch.setattr(cm, 'examples', lambda native, arm: (found, {('v', 's')}) if arm == 'B' else ([], set()))
-    monkeypatch.setattr(bank_breadth, 'practice_pool', lambda native, arm: [dict(context_id='c'+arm,
+    monkeypatch.setattr(bank_breadth, 'practice_pool', lambda native, arm, **k: [dict(context_id='c'+arm+e['example_id'],
         verification_id='v', example_id=e['example_id'], mined=arm == 'B', demonstrate=True, family='wall') for e in found])
     def update(a, ctx):
         return dict(arm=a, learning=dict(bank_trigger=dict(contexts=ctx)),
-            practice=dict(practice=1, episodes=[dict(breadth=dict(context_id='c'+a, family='wall'))]),
+            practice=dict(practice=1, episodes=[dict(breadth=dict(context_id='c'+a+'v#s1', family='wall'))]),
             clean3_mined_usage=dict(demonstrations=[dict(id='e', family='wall',
                 executed=dict(passed=True, kind='profile'))], g4_credit=[{}]))
     out = cm.smoke_check(dict(demonstrate_families=['wall']),
