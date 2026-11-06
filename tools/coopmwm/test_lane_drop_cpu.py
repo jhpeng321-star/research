@@ -149,11 +149,48 @@ def test_settings_default_off_registered_values_and_map_api(cfg):
             ld.settings(dict(cfg, lane_drop=value))
     with pytest.raises(ValueError):
         tb._check(dict(cfg, lane_drop=bad[0]), 'B')
-    # MAP_SPEC helper (identity frame) and a 0-dropped variant: adjacent is the nearest through lane.
-    spec = dict(name='wz3to2', bottleneck=dict(edge='up', x_m=2700., dropped_lane=0, through_lanes=[1, 2]))
-    view = ld.MapView.from_descriptor(ld.from_map_spec(spec))
-    assert (view.lane_drop_s_m, view.dropped_lane, view.adjacent_lane) == (2700., 0, 1)
-    assert view.distance_to_drop(2000.) == 700.
+    # A 0-dropped frame variant: adjacent is the nearest through lane.
+    view = ld.MapView('variant', 2700., (0, 1, 2), 0)
+    assert (view.adjacent_lane, view.through_lanes, view.distance_to_drop(2000.)) == (1, (1, 2), 700.)
+
+
+WZ3TO2 = REPO/'assets'/'research'/'newmap_candidates'/'wz3to2'
+
+
+def test_map_view_from_the_n1_wz3to2_descriptor_is_the_single_wm_frame(cfg, fixed):
+    """F6: N1's MapDescriptor (map_descriptor.load) -> drop at s=75.44, closing lane = WM lane 2."""
+    from . import map_descriptor as md
+    desc = md.load(WZ3TO2)
+    view = ld.MapView.from_descriptor(desc)
+    assert view == ld.MapView('wz3to2', 75.44, (0, 1, 2), 2)
+    assert (view.adjacent_lane, view.through_lanes) == (desc.bottleneck['adjacent_lane'], (0, 1))
+    assert view.lane_drop_s_m == desc.frame.merge_zone_s_m[1]
+    assert ld.from_map_spec(WZ3TO2) == view.to_dict() == ld.from_map_spec(WZ3TO2/'MAP_SPEC.json')
+    # The SUMO x=2696 m end of up_0 projects onto the same drop point.
+    lane, s = desc.lane_and_s('up_0', desc.bottleneck['drop_x_m']-desc.lane_table[('up', 0)][1])
+    assert (lane, s) == (2, pytest.approx(75.44)) and view.distance_to_drop(s) == pytest.approx(0.)
+    with pytest.raises(ValueError):
+        ld.MapView.from_descriptor(md.ORIGINAL)                 # merge map: no lane-drop bottleneck
+    bad = md.MapDescriptor(**{**{k: getattr(desc, k) for k in desc.__dataclass_fields__},
+                              'bottleneck': dict(desc.bottleneck, adjacent_lane=0)})
+    with pytest.raises(ValueError):
+        ld.MapView.from_descriptor(bad)
+    # Registered config from the N1 descriptor; candidates in that frame are CAV-only, role-correct.
+    on = dict(cfg, trigger_partner_slots=4, **ld.config_keys(provenance=PROV, descriptor=desc, v2v=True))
+    assert ld.settings(on)['view'] == view
+    rows = [row('a', 75.44-1200, 2), row('b', 75.44-1195, 1), row('c', 75.44-1210, 0),
+            row('h1', 75.44-1150, 1, cav=False)]
+    groups = ld.joint_groups('closing_pair', view, rows[0], rows[1:3])
+    assert [tuple(r['vid'] for r in g) for g in groups] == [('a', 'b')]
+    p = make(on)
+    p.trigger.trigger_head = Prefer(p.trigger, {'ld_kind_closing_pair': 50., 'ld_is_initiate': -60.})
+    s = tick(p, rows, 300)
+    assert s['track2_trigger']['accepted'] == dict(a=True, b=False, c=False)
+    assert [e['move'].family for e in p.executor.active] == ['closing_pair']
+    tick(p, advance(rows, 1), 301)
+    s = tick(p, advance(rows, 2), 302)                          # registered onset 2 s
+    assert set(s['track2']['lane_drop']['law_commands']) == {'a', 'b'}
+    assert 'h1' not in s['context']['move_offsets']
 
 
 # ------------------------------------------------------------------ OFF = byte-identical
