@@ -1,0 +1,72 @@
+{
+ "schema": "coopmwm.boostpre_warmstart_ready.v1",
+ "task": "BOOST-PRE: offline warm start of the clean4 cooperation-layer trigger before RL u1 (B from own verified rows, R from own random-procedure rows, shared do-not-act negatives, identical effort)",
+ "status": "READY_CODE_DEFAULT_OFF; MAIN 2026-11-06 ~19:00: warm start OFF for BOTH arms in clean4 (learnability at chance on held-out seeds; blind walls beat native on average). Diagnostic sidecars delivered to IMITREPLAY. Plan A bank training NOT run: Plan A is on hold until N2's exact converter lands (N4 18:40).",
+ "branch": "c4/nm-warmstart",
+ "worktree": "E:/agent-work/c4-nm-warmstart",
+ "base": "3e5bc9f9",
+ "code_commit": "593382ae6837f10b53cd123b34a928dfc4333312",
+ "commit_note": "code commit tested; this READY file is committed on top of it",
+ "merged": {
+  "c4/nm-moves": "64825957 (N2 lane-drop moves + N1 frame) via a7048177",
+  "c4/nm-families": "6f2ecea6 (N9 + N4 clean4 integrated head 7a0f7721) via 13895d8b",
+  "note": "both branches were still receiving commits; merges are additive, re-merge for later heads"
+ },
+ "files": {
+  "tools/coopmwm/coop_warmstart.py": "trainer, bank/dry/moments modes, settings/load/apply/sidecar_state (clean4 prepare hook), CLI",
+  "tools/coopmwm/test_coop_warmstart_cpu.py": "25 CPU tests with fakes",
+  "tools/coopmwm/coop_warmstart_learncheck.py": "MAIN learnability readout (seed-grouped CV, learning curve, coarse baseline, --frames for exact runtime frames) + diagnostic sidecar builder"
+ },
+ "config_key": {
+  "name": "coop_warmstart",
+  "default": "absent/None/False = OFF; sidecar_state() returns exactly the clean3 inline {arm}_track2_000.pt dict (byte-identical, tested)",
+  "on": "{B:{path,sha256}, R:{path,sha256}, steps, rows_sha256, rule[, allow_dry]} -> load() verifies sha, own-arm, B==R effort, rows_sha256, step count, frozen-base hash, non-bank refused unless allow_dry; apply() restore_worker()s into a freshly built EpisodePolicy; shape mismatch refused",
+  "integration": "N4 accepted: call coop_warmstart.sidecar_state(cfg, arm, runtime) in the clean4 prepare (prepare-time only; track2_backend/runtime untouched)"
+ },
+ "design": {
+  "trained_parameters": "trigger LOGIT parameters only (trigger_head + W2 w2_head / extension columns); frozen MAPPO base, cooperation residual, legacy gain and trigger_value untouched and hash-checked",
+  "inputs": "observable only: bank pair contexts via bank_breadth.visit + observable_contexts (the clean3/clean4 supervision reader) or sensor-whitelisted frames (vid,s_m,v_mps,lane,is_cav,length_m) through EpisodePolicy.observe t0-1 then t0; row metadata selects/labels only",
+  "labels": "positive = the verified move in slot 1 of the deterministic online slate (TriggerMove-wrapped, as bank_move_supervision); negative = target none with the failed move in slot 1 (W2 rule); bank labels projected onto legacy merge families are refused",
+  "negative_rule": "do-not-act iff the row's own evaluation failed (screen group-vs-base, solos synergy, r1/r2); outranked/unevaluated rows excluded",
+  "fair_effort": "same steps (800), batch 32 (16 negative + 16 positive slots), Adam lr 1e-3, clip 0.5, CE sum/batch; negative slots drawn from ONE seeded stream so B and R see identical negative examples every step (receipt negative_draws_equal); an arm without guidance rows keeps its positive slots empty; B and R start from the identical initial layer",
+  "rows": "wz3to2 TRAIN seeds 989200-989599 and the N1 training cells only; any 989600-989699 row refuses the run; restricted paths refused",
+  "split": "sha256(salt:seed) rank, 25% of TRAIN world seeds held out, common to B, R and negatives; delivered checkpoint = the TRAIN-split model; held-out imitation metrics in the receipt",
+  "ledger": "WARMSTART_ROWS.jsonl lists every input row as used(+records) or excluded:<reason>"
+ },
+ "tests": {
+  "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+  "command": "python -m pytest -q -p no:cacheprovider tools/coopmwm/test_coop_warmstart_cpu.py",
+  "result": "25 passed (CPU only, no SUMO, fakes); ruff clean on the three files",
+  "related_suites_run_at_819d2287": "test_track2_backend_cpu, test_trigger_policy_cpu, test_coop_layer_cpu, test_bank_breadth_cpu + warm start: 294 passed",
+  "covers": ["OFF byte-identical (None/False/absent, B and R)", "equal effort on unequal data (optimizer steps, CE calls, identical negative draws)", "arm without guidance rows: equal steps on the same negatives", "MAPPO, residual, trigger_value untouched; trigger_head moves", "apply into a fresh runtime; other base refused; shape mismatch refused", "hidden frame fields (tau/vtype/driver) never reach tensors", "row labels/outcomes never reach tensors; no RSU channel", "held-out seed refuses run; non-TRAIN/other-map/non-cell rows filtered", "restricted paths refused", "own-arm rows only", "negative rule", "seed split common and reported", "CRN replicate rows collapse", "bank mode uses the registered reader, own admitted rows only, empty reader root, legacy-family labels refused, shared frames for negatives", "no overwrite", "rows ledger"]
+ },
+ "runs": {
+  "dry_plumbing": "E:/agent-work/_scratch/warmstart_dry_full1 (raw rows, synthetic frames, fixture base; plumbing only, refused by apply)",
+  "diagnostic_sidecars": {
+   "dir": "E:/agent-work/c4-nm-warmstart/_warmstart_out/sidecar_moments_v2",
+   "mode": "moments: raw NEWMAP/PLANGEN/LOWCAV *_MOVES_B rows + shared negatives on CAV-only MOMENTS frames; frozen MAPPO u0 sha 5ea22964 (E:/agent-work/_sol/n4_deploy/mappo_u0/A_checkpoint_000.pt); clean4 option set as of N4 18:40 (WARMSTART_CONFIG.json); R zero guidance rows (N4 18:40)",
+   "WARMSTART_B.pt": "7dcf11a2921ec37285b32e3a5daafd0f37777dc87cc241c724b5c008ed15fb87",
+   "WARMSTART_R.pt": "3a03b52bd2c9fa270109ff2d1d819def095284314236856f287c7b24a4fadeb2",
+   "B_track2_000.pt": "9d57d71264964499f36b777effda4801f0207baad563259b3e7053b2ecc36813",
+   "R_track2_000.pt": "555123bcc48c611558d4e939889ad26245c40f395b24b1886a577b9fff979de9",
+   "WARMSTART_CONFIG.json": "214f5106f1569b913c24ee189312eacc0b6a8c47ca51bdc6ad52bcb78db7db75",
+   "WARMSTART_RECEIPT.json": "a112fd242902133d86e0d1e557f48f93cb2aeeaa16928cbb3b75f17873843685",
+   "WARMSTART_ROWS.jsonl": "7857317f1d2dccc4dc6297066e1d6f0a39e223c6cdda0dadd65d36e6357c3835",
+   "checks": "effort_equal, negative_draws_equal, base_equal all true; base untouched",
+   "heldout": "B positives 8 tables: accuracy 0.00, act-prob 0.12; B negatives 80: accuracy 0.91, act-prob 0.17; R negatives 80: act-prob 0.0004",
+   "recipient": "IMITREPLAY (af2a7943f96f2c080), closed-loop diagnostic only"
+  },
+  "learncheck": {
+   "report": "E:/research-dense/runs/active/C4-V7FT-20261017/BOOSTPRE_LEARNCHECK.md",
+   "outputs": "E:/agent-work/c4-nm-warmstart/_warmstart_out/{final_run.json, final_c10_curve.json, final_c20_curve.json, lc_coarse.json}",
+   "result": "B held-out AUC 0.505 (95% CI 0.40-0.60), precision@npos 2/34 vs 1.7 expected; train AUC 0.985; learning curve flat; coarse logistic at/below chance; R not testable (no representable R row)"
+  },
+  "sim_s": 0
+ },
+ "pending": [
+  "Plan A bank training (mode bank on CLEAN4_MOVES_B + CLEAN4_NEGATIVE_FRAMES) once N4 publishes the rows and CLEAN4_CONFIG_TEMPLATE.json; must run where the banks are readable (cpuV), <=4 threads: python -m tools.coopmwm.coop_warmstart --mode bank --config <clean4 cfg> --base-checkpoint <u0> --base-sha256 5ea22964... --positives-B CLEAN4_MOVES_B.jsonl --positives-R --negatives <negatives> --negative-frames CLEAN4_NEGATIVE_FRAMES.jsonl --out <new dir>",
+  "decisive learncheck on EXACT runtime frames: python -m tools.coopmwm.coop_warmstart_learncheck --frames <N4 dump> --what run ...",
+  "re-merge c4/nm-moves / c4/nm-families / c4/nm-train heads when final"
+ ],
+ "hard_rules": "no SUMO; no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 path opened (guarded by track2_backend._path); no hetdata_truth/vType/driver/vehicle_params or SUMO state files read; no git reset/clean/stash drop/push; edits only in this worktree (plus the requested BOOSTPRE_LEARNCHECK.md); one read-only scp of the staged u0 from cpuV (sha-verified)"
+}
