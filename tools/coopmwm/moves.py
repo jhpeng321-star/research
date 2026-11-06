@@ -502,6 +502,10 @@ def from_plan(plan):
         plan = plan['plan']
     elif isinstance(plan.get('chosen_plan'), dict):
         plan = plan['chosen_plan']
+    if plan.get('lane_drop_macro') is not None:
+        # N2 lane-drop macro (closed-loop speed law): exact executable binding.
+        from .lane_drop import from_plan as lane_drop_move
+        return lane_drop_move(plan)
     if plan.get('g5_move') or plan.get('uses_lane_actions') or any(
             any(row) for row in plan.get('lane_actions', ())):
         from .group_lane import from_plan as lane_move

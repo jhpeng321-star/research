@@ -257,6 +257,11 @@ def update_metrics(arm, episodes, learning, reward_envelope, *, augmented_exampl
                 for table, selected in zip(trigger['tables'], trigger['actions']):
                     move = table[selected]
                     family = 'none' if move is None else move['family']
+                    if family not in metrics['trigger_counts']:
+                        # Opt-in option families (W1/N2 protocols, N2 joint moves) are counted
+                        # in their own key; the default family list is unchanged when OFF.
+                        metrics['families'].append(family)
+                        metrics['trigger_counts'][family] = 0
                     metrics['trigger_counts'][family] += 1
                     metrics['decisions'] += 1
             for block in sample.get('track2', {}).get('merge_features', {}).values():
