@@ -4,7 +4,7 @@
 set -euo pipefail
 C=$(git rev-parse "${1:-HEAD}"); S=${C:0:12}; DEST=/root/autodl-fs/wzwm/code_$S
 TAR=$(mktemp -d)/code_$S.tar
-PATHS="src tools configs traffic_shepherd pyproject.toml"
+PATHS="src tools configs traffic_shepherd tests/wz pyproject.toml"
 git cat-file -e "$C:assets/research/newmap_candidates" 2>/dev/null && PATHS="$PATHS assets/research/newmap_candidates"
 git -c core.autocrlf=false -c core.eol=lf archive --format=tar "$C" $PATHS > "$TAR"   # slim (~30 MB), LF
 SUM=$(sha256sum "$TAR" | cut -d' ' -f1)

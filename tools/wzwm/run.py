@@ -498,11 +498,14 @@ def train(args) -> int:
         init_wz, init_sha = p["init"]["init_wz"], p["init"]["init_wz_sha256"]
         if sha(init_wz) != init_sha:
             raise RuntimeError("INIT_WZ.pt hash changed")
-        if p["smoke"]["enabled"]:
+        if p["smoke"]["enabled"] or getattr(args, "smoke_only", False):
             run_phase(root, p, "A", init_wz, init_sha, smoke=True)
             if not (root / "ESTIMATE.json").is_file():
                 est = estimate_from_smoke(root, p)
                 event(root, "estimate", total_h=est.get("total_h"))
+        if getattr(args, "smoke_only", False):
+            status(root, state="smoke_done", phase=None)
+            return 0
         done_a = run_phase(root, p, "A", init_wz, init_sha)
         done_b = run_phase(root, p, "B", done_a["final"], done_a["final_sha256"])
         body = manifest(root, p, done_a, done_b)
@@ -556,6 +559,8 @@ def main(argv=None) -> int:
     for name in ("probe", "train", "status"):
         sp = sub.add_parser(name)
         sp.add_argument("--root", required=True)
+        if name == "train":
+            sp.add_argument("--smoke-only", action="store_true", help="2-step smoke + ESTIMATE.json, then exit")
     args = ap.parse_args(argv)
     if args.cmd == "prepare":
         body = prepare(args)
