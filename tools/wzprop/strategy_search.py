@@ -46,7 +46,8 @@ FIELD_X = (G.X_B - 454.10, G.X_B)
 SOLO2 = dict(name='solo2', trigger='wall', zone='full', spread_m=200.0, cooldown_s=90, slots=1, gate=None,
              roles=[dict(lane=2, rank=0, v_w=15.0, dmax=1.5, hold_s=90, onset_s=0, lc_target=None)])
 DEFAULTS = dict(H=300, K_screen=4, K_final=8, n_init=40, generations=3, n_elite=6, n_children=24, p_mutate=0.35,
-                n_screen_states=12, finalists=12, lam=0.5, max_roles=6, seed=20261107, fairness=True, fair_tol=0.0)
+                n_screen_states=12, finalists=12, lam=0.5, max_roles=6, seed=20261107, fairness=True, fair_tol=0.0,
+                n_final_states=0)
 
 
 def grids():
@@ -391,7 +392,10 @@ def search_cell(wm, states, cfg=None, log=None):
     finals = [dict(f['strategy']) for f in fin]
     if not any(strategy_key(f) == strategy_key(SOLO2) for f in finals):
         finals.append(dict(SOLO2))
-    per, n = evaluate(wm, states, finals, cfg['K_final'], cfg['H'], groups=groups)
+    fstates = states
+    if int(cfg['n_final_states']) and len(states) > int(cfg['n_final_states']):
+        fstates = random.Random(cfg['seed'] + 1).sample(states, int(cfg['n_final_states']))
+    per, n = evaluate(wm, fstates, finals, cfg['K_final'], cfg['H'], groups=groups)
     total += n
     final = []
     for f in finals:
@@ -403,6 +407,7 @@ def search_cell(wm, states, cfg=None, log=None):
     fair = [r for r in final if r.get('fair') and r['key'] != inc]
     fairness = 'available' if final and final[0].get('fair') is not None else 'unavailable (WM has no per-group delay)'
     return dict(schema='wmc-strategy-search-v2', config=cfg, n_states=len(states), n_screen_states=len(screen),
+                n_final_states=len(fstates),
                 evaluated=len(evaluated), archive_cells=len(archive), fair_archive_cells=len(fair_archive),
                 wm_rollouts=total, fairness=fairness, final=final,
                 best_beating_solo2=beats[0] if beats else None, best_fair=fair[0] if fair else None,
