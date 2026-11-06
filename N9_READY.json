@@ -1,10 +1,10 @@
 {
  "task": "N9",
- "status": "READY",
+ "status": "OFF_FOR_CLEAN4 (MAIN after N5 BLOCK REVIEW_N9_1); clean5 work moved under LCEXEC free_program",
  "branch": "c4/nm-families",
  "worktree": "E:/agent-work/c4-nm-families",
  "base_commit": "3e5bc9f9",
- "head": "9bc74dfe8b32f70fb385d62fd6571ffe45251f18",
+ "head": "954c2e8302d1a649962dc167073dd8b6fdfb0ac0",
  "merged": {
   "w1": "c4/wall-v2v 6908675a",
   "w2": "c4/wall-tune b10327c5 (N11 F2; W1+W2 resolution as c4/nm-moves 7fb5cb17)",
@@ -778,5 +778,13 @@
   "No SUMO/GPU run: efficacy and real lane-change execution on wz3to2 are unverified (N3/N4 SUMO checks).",
   "Re-merge N2 after its F6 fix; N2 lane_drop and N9 coexist (separate options, sample keys and receipts)."
  ],
- "hard_rules": "no ssh/SUMO/GPU; worktree only; no reset/clean/stash drop/push/rebase; no sealed/holdout/cal_split/chunk5/j4b/inc1 paths or truth files read; policy inputs observable only"
+ "hard_rules": "no ssh/SUMO/GPU; worktree only; no reset/clean/stash drop/push/rebase; no sealed/holdout/cal_split/chunk5/j4b/inc1 paths or truth files read; policy inputs observable only",
+ "update_2026_11_06_evening": {
+  "clean4": "N9 families stay default OFF and must not be enabled (N5 REVIEW_N9_1 BLOCK: self-registered ranges, executors differ from the verified procedures, platoon/discharge not realisable under speedMode 27).",
+  "f8": "feasible_proposals skips an infeasible re-sampled initiate (redraw -> None); test test_infeasible_initiate_redraw_is_never_offered (commit 20fb3740).",
+  "no_legacy_projection": "moves.from_plan refuses coopmwm-mined-move-v1 rows of lane_balance/early_merge/zipper(_order)/discharge/platoon/vsl_rows; 0 legacy projections on all 36 COOPKINDS/PLANGEN2 lane rows (fixtures tools/coopmwm/fixtures/n9_probe_rows, sha256 pinned).",
+  "converter_draft": "tools/coopmwm/lc_convert_probe.py convert(row, geometry) -> WM-frame command program; to_traci inverse; 36/36 lane rows convert with exact member TraCI command-sequence parity (test_lc_convert_probe_cpu.py). Schema to be aligned with LCEXEC free_program (owner of the action interface and universal converter).",
+  "map_helpers": "nm_map.LaneDrop.x_to_s / wm_lane from the N1 descriptor (drop_x_m, approach-edge lane table).",
+  "superseded": "Per-family registrations/executors in nm_families.py are NOT the verified procedures; do not enable. The probe registrations live in the probe code cited in lc_convert_probe.py."
+ }
 }
