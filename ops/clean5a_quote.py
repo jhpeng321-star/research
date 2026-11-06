@@ -15,12 +15,16 @@ from tools.coopmwm import clean4_budget as b  # noqa: E402
 CLEAN4_SPENT = 28_800+75_802
 ENVELOPE = 4_000_000
 PARENT = '903e2be27145f7da0e25cf7dfcd0303f0b0db0ce327badd007d0bad6a3a8a7eb'   # owner-approved clean4 quote (BUDGET_CLEAN4.json binds it)
-phases = b.quote(lesson_sim_s=35_040, probe_sim_s=45_480, replicated_sim_s=143_760, g4_base_sim_s=200_000,
-                 g4_cap_sim_s=230_400, diagnostic_factor=1.5,
+# Bases from the zero-physics dry prepare on cpuZ (c20965f0, config b5afa5ff): native probe manifests 2 x 36,003,
+# replicated 3 x 43,524; EV-only mode has no bank lessons (0). G4 at its registered hard cap.
+phases = b.quote(lesson_sim_s=0, probe_sim_s=72_006, replicated_sim_s=130_572, g4_base_sim_s=200_000,
+                 g4_cap_sim_s=230_400, diagnostic_factor=1.0,
                  basis=dict(train='3 arms (A frozen evaluation arm + B + R) x 16 episodes x 1200 s x 24',
+                            lessons='EV-only guidance: no verified bank lessons (registered; 0 sim-s)',
+                            probes='native dry-prepare manifests 2 x 36,003', replicated='native dry-prepare manifests 3 x 43,524',
                             g4='G4LD expected 192,000-230,400 within the registered 230,400 hard cap'))
-phases['v2v_final'] = b.phase('u24 final evaluation (N6): claims 3a (96 x arms) + 3c light-traffic panel', 1_020_960,
-                              allocated=1_200_000, basis='MAIN 19:54/19:57: total ~1,020,960; v2v_final cap 1,200,000')
+phases['v2v_final'] = b.phase('u24 final evaluation (N6): claims 3a + 3c incl. RULE arm', 1_165_200, allocated=1_340_000,
+                              basis='MAIN-registered final-eval cap 1,340,000 (N6 launcher budget_check); base = cap/1.15')
 phases['smoke_gate'] = b.phase('pre-launch smoke (<=20,000) + one safety gate (<=35,820 registered gate limit)', 48_000,
                                allocated=56_000, basis='smoke cap 20,000 + rerun_cpus.GATE_SIM_S 35,820 (3-member '
                                'Plan A walls: the dry prepare showed the full-window gate exceeds 20,000)')

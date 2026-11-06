@@ -6,7 +6,7 @@
   "R"
  ],
  "available_sim_s": 3895398,
- "created": "2026-11-06T20:35:18+08:00",
+ "created": "2026-11-06T20:47:51+08:00",
  "final_arms": [
   "A",
   "B",
@@ -27,10 +27,10 @@
  "parent_quote_sha256": "903e2be27145f7da0e25cf7dfcd0303f0b0db0ce327badd007d0bad6a3a8a7eb",
  "phases": {
   "early_probes": {
-   "allocated_sim_s": 79200,
-   "base_sim_s": 68220,
-   "basis": "probes",
-   "margin_fraction": 0.1609,
+   "allocated_sim_s": 84000,
+   "base_sim_s": 72006,
+   "basis": "native dry-prepare manifests 2 x 36,003",
+   "margin_fraction": 0.1666,
    "schedule": "u2,u4 probes"
   },
   "g4_synergy_credit": {
@@ -41,10 +41,10 @@
    "schedule": "u1-u24 G4 sparse synergy credit B=R"
   },
   "isolated_replicated": {
-   "allocated_sim_s": 248400,
-   "base_sim_s": 215640,
-   "basis": "replicated",
-   "margin_fraction": 0.1519,
+   "allocated_sim_s": 151200,
+   "base_sim_s": 130572,
+   "basis": "native dry-prepare manifests 3 x 43,524",
+   "margin_fraction": 0.158,
    "schedule": "u6,u12,u24 replicated synergy test (TRAIN states)"
   },
   "smoke_gate": {
@@ -55,17 +55,17 @@
    "schedule": "pre-launch smoke (<=20,000) + one safety gate (<=35,820 registered gate limit)"
   },
   "v2v_final": {
-   "allocated_sim_s": 1200000,
-   "base_sim_s": 1020960,
-   "basis": "MAIN 19:54/19:57: total ~1,020,960; v2v_final cap 1,200,000",
-   "margin_fraction": 0.1754,
-   "schedule": "u24 final evaluation (N6): claims 3a (96 x arms) + 3c light-traffic panel"
+   "allocated_sim_s": 1340000,
+   "base_sim_s": 1165200,
+   "basis": "MAIN-registered final-eval cap 1,340,000 (N6 launcher budget_check); base = cap/1.15",
+   "margin_fraction": 0.15,
+   "schedule": "u24 final evaluation (N6): claims 3a + 3c incl. RULE arm"
   },
   "v2v_lessons": {
-   "allocated_sim_s": 61200,
-   "base_sim_s": 52560,
-   "basis": "lessons",
-   "margin_fraction": 0.1644,
+   "allocated_sim_s": 0,
+   "base_sim_s": 0,
+   "basis": "EV-only guidance: no verified bank lessons (registered; 0 sim-s)",
+   "margin_fraction": null,
    "schedule": "u6,u12,u18,u24 B lessons"
   },
   "v2v_practice_refs": {
@@ -87,19 +87,19 @@
   "clean4_actual": 104602
  },
  "prior_total_sim_s": 104602,
- "receipt_sha256": "b26d4b0a9189e1fbb9ce8cf0f814687caf1629d976f22f5673437ad18405f154",
+ "receipt_sha256": "b80fbd6687311c350c3ef7980f09967f9b93fbd917f78cd7c07199a4c68f7db7",
  "runtime_phases": {
   "augment_verify": 0,
-  "early_probes": 79200,
+  "early_probes": 84000,
   "g4_synergy_credit": 230400,
   "gate_bank_verification_ext": 36000,
   "group_credit_verify": 0,
-  "isolated_replicated": 248400,
+  "isolated_replicated": 151200,
   "teacher_verify": 0,
   "track2_smoke": 20000,
-  "v2v_final": 1200000,
+  "v2v_final": 1340000,
   "v2v_interim": 0,
-  "v2v_lessons": 61200,
+  "v2v_lessons": 0,
   "v2v_train": 1988400
  },
  "schema": "coopmwm.clean4.quote.v1",
@@ -124,6 +124,6 @@
   ],
   "smoke_cap_sim_s": 20000
  },
- "total_training_sim_s": 3863600,
+ "total_training_sim_s": 3850000,
  "updates": 24
 }

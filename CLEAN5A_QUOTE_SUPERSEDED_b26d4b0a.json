@@ -1,0 +1,129 @@
+{
+ "approval_contract": "MAIN writes E:/agent-work/_sol/BUDGET_CLEAN4.json with owner_approval (verbatim owner text), total_cap_sim_s, approved_sim_s >= total_training_sim_s and quote_sha256 == this receipt_sha256; training phases are charged only after it exists",
+ "arms": [
+  "A",
+  "B",
+  "R"
+ ],
+ "available_sim_s": 3895398,
+ "created": "2026-11-06T20:35:18+08:00",
+ "final_arms": [
+  "A",
+  "B",
+  "R",
+  "base",
+  "native"
+ ],
+ "fits": true,
+ "margin_min": 0.15,
+ "new_sim_s": 0,
+ "notes": [
+  "clean5a inside the owner-approved 4M clean-training envelope (BUDGET_CLEAN4.json, owner 14:58); available = 4,000,000 - clean4 actual 104,602 = 3,895,398",
+  "A = frozen evaluation arm (registered frozen_control_arm): its episodes are still collected every update as references/evaluation; no PPO",
+  "base u0 d9042cc5 frozen; bound-trunk shim (frozen_trunk) available as fallback only"
+ ],
+ "own_ledger_phases": {},
+ "owner_cap_sim_s": 4000000,
+ "parent_quote_sha256": "903e2be27145f7da0e25cf7dfcd0303f0b0db0ce327badd007d0bad6a3a8a7eb",
+ "phases": {
+  "early_probes": {
+   "allocated_sim_s": 79200,
+   "base_sim_s": 68220,
+   "basis": "probes",
+   "margin_fraction": 0.1609,
+   "schedule": "u2,u4 probes"
+  },
+  "g4_synergy_credit": {
+   "allocated_sim_s": 230400,
+   "base_sim_s": 200000,
+   "basis": "G4LD expected 192,000-230,400 within the registered 230,400 hard cap",
+   "margin_fraction": 0.152,
+   "schedule": "u1-u24 G4 sparse synergy credit B=R"
+  },
+  "isolated_replicated": {
+   "allocated_sim_s": 248400,
+   "base_sim_s": 215640,
+   "basis": "replicated",
+   "margin_fraction": 0.1519,
+   "schedule": "u6,u12,u24 replicated synergy test (TRAIN states)"
+  },
+  "smoke_gate": {
+   "allocated_sim_s": 56000,
+   "base_sim_s": 48000,
+   "basis": "smoke cap 20,000 + rerun_cpus.GATE_SIM_S 35,820 (3-member Plan A walls: the dry prepare showed the full-window gate exceeds 20,000)",
+   "margin_fraction": 0.1667,
+   "schedule": "pre-launch smoke (<=20,000) + one safety gate (<=35,820 registered gate limit)"
+  },
+  "v2v_final": {
+   "allocated_sim_s": 1200000,
+   "base_sim_s": 1020960,
+   "basis": "MAIN 19:54/19:57: total ~1,020,960; v2v_final cap 1,200,000",
+   "margin_fraction": 0.1754,
+   "schedule": "u24 final evaluation (N6): claims 3a (96 x arms) + 3c light-traffic panel"
+  },
+  "v2v_lessons": {
+   "allocated_sim_s": 61200,
+   "base_sim_s": 52560,
+   "basis": "lessons",
+   "margin_fraction": 0.1644,
+   "schedule": "u6,u12,u18,u24 B lessons"
+  },
+  "v2v_practice_refs": {
+   "allocated_sim_s": 398400,
+   "base_sim_s": 345600,
+   "basis": "12 matched A references/update x 1200 s",
+   "margin_fraction": 0.1528,
+   "schedule": "u1-u24 B/R practice A-references"
+  },
+  "v2v_train_waves": {
+   "allocated_sim_s": 1590000,
+   "base_sim_s": 1382400,
+   "basis": "3 arms (A frozen evaluation arm + B + R) x 16 episodes x 1200 s x 24",
+   "margin_fraction": 0.1502,
+   "schedule": "u1-u24 A/B/R training episodes"
+  }
+ },
+ "prior_registered_sim_s": {
+  "clean4_actual": 104602
+ },
+ "prior_total_sim_s": 104602,
+ "receipt_sha256": "b26d4b0a9189e1fbb9ce8cf0f814687caf1629d976f22f5673437ad18405f154",
+ "runtime_phases": {
+  "augment_verify": 0,
+  "early_probes": 79200,
+  "g4_synergy_credit": 230400,
+  "gate_bank_verification_ext": 36000,
+  "group_credit_verify": 0,
+  "isolated_replicated": 248400,
+  "teacher_verify": 0,
+  "track2_smoke": 20000,
+  "v2v_final": 1200000,
+  "v2v_interim": 0,
+  "v2v_lessons": 61200,
+  "v2v_train": 1988400
+ },
+ "schema": "coopmwm.clean4.quote.v1",
+ "seeds": {
+  "final": [
+   989600,
+   989699
+  ],
+  "train": [
+   989200,
+   989599
+  ]
+ },
+ "shortfall_sim_s": 0,
+ "smoke_gate": {
+  "authority": "pre-approved inside phase newmap2 (owner/MAIN 2026-11-06 14:37)",
+  "cap_sim_s": 40000,
+  "phase": "newmap2_smoke",
+  "runtime_ledger_phases": [
+   "track2_smoke",
+   "gate_bank_verification_ext"
+  ],
+  "smoke_cap_sim_s": 20000
+ },
+ "total_training_sim_s": 3863600,
+ "updates": 24
+}
