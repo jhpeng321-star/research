@@ -83,7 +83,12 @@ def make_jobs(root, *, runtime, checkpoint, data_root=None, skip=()):
     root = Path(data_root or root)
     jobs = []
     order = {c: i for i, c in enumerate(reg.CELL_ORDER)}
-    worlds = sorted(reg.wmdata_worlds(), key=lambda w: (order[(w['demand'], w['penetration'])], w['seed']))
+    rank = {}
+    for w in sorted(reg.wmdata_worlds(), key=lambda w: w['seed']):
+        cell = (w['demand'], w['penetration'])
+        rank[w['seed']] = sum(1 for x in rank if reg.wmdata_assignment()[x] == cell)
+    # round-robin over cells (world rank within its cell, then cell order): every early shard covers all cells
+    worlds = sorted(reg.wmdata_worlds(), key=lambda w: (rank[w['seed']], order[(w['demand'], w['penetration'])]))
     for w in worlds:
         for arm in ARMS:
             jid = f"{w['cell_key']}_s{w['seed']}_{arm}"

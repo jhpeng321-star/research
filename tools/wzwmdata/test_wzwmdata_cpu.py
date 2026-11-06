@@ -154,3 +154,30 @@ def test_plan_skip_and_prior(tmp_path, monkeypatch):
     assert 'WMQUAL_D3200_p60_s989580_native' not in ids and 'D3200_p60_s989103_coop_native' in ids
     assert all(str(tmp_path / 'data') in j['path'] for j in body['jobs'])
     assert body['budget']['total_sim_s'] == 600_000 - 2 * 1200 - 1500 and body['host'] == 'gpuA'
+
+
+def test_val_split_one_world_per_cell_and_holdouts_refused():
+    from tools.wzwmdata import shards
+    v = shards.val_seeds()
+    assert len(v) == 12
+    assert len({reg.wmdata_assignment()[x] for x in v}) == 12
+    assert sum(shards.split_of(x) == 'val' for x in range(989100, 989200)) == 12
+    for bad in (989200, 989210, 989351, 989401, 989585):
+        with pytest.raises(ValueError):
+            shards.split_of(bad)
+
+
+def test_job_order_round_robin_over_cells(tmp_path, monkeypatch):
+    if not SPEC.exists():
+        pytest.skip('map asset missing')
+    from tools.coopmwm import map_descriptor as md
+    from tools.wzwmdata import collect
+    monkeypatch.setenv(md.ENV, str(SPEC))
+    md._reset_for_tests()
+    try:
+        jobs = collect.make_jobs(tmp_path, runtime='r', checkpoint='c')
+    finally:
+        md._reset_for_tests()
+    first48 = [j['world']['cell_key'] for j in jobs[:48]]
+    assert len(set(first48)) == 12
+    assert jobs[0]['world']['seed'] == 989103 and jobs[0]['wave'] == 'canary'
