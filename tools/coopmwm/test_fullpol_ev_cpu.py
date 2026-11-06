@@ -6,6 +6,7 @@ synthetic observation rows / S-REGIME-format episode rows.
 """
 from copy import deepcopy
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
@@ -403,3 +404,26 @@ def test_solo_hold_ev_target_is_lane_specific(cfg):
     generic = dict(rows, group_hold=grow('group_hold', 9000.), solo_hold=grow('solo_hold', 9000.))
     trig = dict(context=dict(members=['s0']), tables=[[None, solo('s0', 2)]], mask=[[True, True]])
     assert fl.ev_targets(on, trig, generic)[0][0] == 0
+
+
+U0_ANALYSIS = Path('E:/research-dense/runs/active/C4-V7FT-20261017/regimeu0/ANALYSIS_p60_p40.json')
+
+
+def test_real_u0_analysis_excludes_base_and_derived_entries(cfg):
+    if not U0_ANALYSIS.exists():
+        pytest.skip('S-REGIMEU0 ANALYSIS not present in this checkout')
+    doc = fl.build_guidance(mappo=str(U0_ANALYSIS), provenance=PROV)
+    fams = {(r['regime'], r['family']) for r in doc['rows']}
+    assert {f for _, f in fams} == {'wall_h', 'wall_h_solo0', 'wall_h_solo2'}
+    assert not any(f in ('u0', 'group_minus_best_solo') for _, f in fams)
+    raw = json.loads(U0_ANALYSIS.read_text())
+    for r in doc['rows']:
+        v = raw['cells'][r['regime']][r['family']]
+        assert r['mean_veh_s'] == pytest.approx(-v['mean_diff']) and r['lb95_veh_s'] == pytest.approx(-v['ci95'][1])
+        assert r['baseline'] == 'mappo' and r['n'] == v['n']
+    on = ev_cfg(cfg, guidance=doc, learn=dict(ev_bc=True))
+    table, _ = fl.ev_table(on, 'B')
+    for cell in ('D3200_p60', 'D3200_p40'):
+        assert fl.qualifying(table[cell])[0] == 'wall_h_solo2' and 'wall_h_solo0' not in fl.qualifying(table[cell])
+    with pytest.raises(ValueError, match='unrecognised'):
+        fl.guidance_rows_from_analysis(dict(cells={'D1_p1': {'odd': dict(point=1.)}}), baseline='mappo')
