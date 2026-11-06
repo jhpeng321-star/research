@@ -1,0 +1,76 @@
+{
+  "task": "G4FIX",
+  "status": "READY_FOR_REVIEW_CPU_VERIFIED",
+  "worktree": "E:/agent-work/c4-clean3-g4fix",
+  "branch": "c4/clean3-g4fix",
+  "base_commit": "3e5bc9f9 (running clean3 source on cpuV)",
+  "ready_receipt_commit": "The subsequent commit updating this file; discover with git log --oneline -- G4FIX_READY.json",
+  "fault": {
+    "when": "2026-11-06 12:25, clean3 u1, arm B",
+    "error": "ValueError('traffic_shepherd.c4 must resolve to the hash-verified frozen runtime')",
+    "path": "launch_training.update -> g4_runtime.paired_envelope -> Coordinator.measure -> self.worker(job) in-process -> run_branch -> accel_plant.episode(...)"
+  },
+  "root_cause": [
+    "The G4 Coordinator ran its branch worker IN-PROCESS inside the arm owner (self.worker = run_branch called directly from Coordinator.measure).",
+    "ArmRuntime.collect's seed scope had already imported traffic_shepherd.c4 in the owner process from the owner's PYTHONPATH (runtime_src), before the branch worker could bind the frozen runtime.",
+    "g5_runtime.install therefore refused: traffic_shepherd.c4 did not resolve to the hash-verified frozen runtime. Regular training episodes never hit this because they run in spawned worker processes (accel_runner.wave's spawn-context pool) that bind the frozen runtime before any traffic_shepherd import."
+  ],
+  "fix": [
+    "accel_plant.bind_runtime(job): the single frozen-runtime binding (leverprobe setup hash-verification + sys.path prepend, seed scope/guard, opt-in G5 env) factored out of episode; episode calls it exactly as before, so every native worker uses one binding. The hash/package guard is unchanged and not weakened.",
+    "g4_runtime.worker_pool(cfg): the training waves' pool construction (spawn-context ProcessPoolExecutor(max_workers=workers), as accel_runner.wave) is reused for G4 branch jobs.",
+    "g4_runtime.dispatch(cfg, jobs): production Coordinator (worker=None) runs reserved branch jobs through worker_pool.map(run_branch, ...); a failure cancels not-yet-started jobs and the reservation stays spent (all-or-nothing ledger contract preserved).",
+    "run_branch binds the frozen runtime (accel_plant.bind_runtime) BEFORE the V2V policy/locality builders that may import traffic_shepherd modules; accel_plant.episode repeats the binding idempotently.",
+    "Injected test workers still run in-process (Coordinator(cfg, worker=...)), so existing toy G4 tests keep their in-process fake physics via a monkeypatched dispatch."
+  ],
+  "commits": [
+    {
+      "sha": "8c1c47c3e2e27541f3213c6e14570b4ed346764f",
+      "subject": "C4 clean3: run G4 branches in spawned workers with the training workers' frozen-runtime binding"
+    }
+  ],
+  "new_tests": [
+    "tools/coopmwm/test_g4_worker_binding_cpu.py: reproduces the u1 guard failure in an owner-like process (fake runtime paths), shows the spawned G4 worker binds the frozen runtime and passes after the fix, and asserts the G4 branch worker and the training-wave worker share the pool construction and an identical runtime binding (real run_branch/accel_plant.episode, real capture load, real G5 guard; fake on-disk runtime, no SUMO)"
+  ],
+  "files": [
+    "tools/coopmwm/accel_plant.py",
+    "tools/coopmwm/g4_runtime.py",
+    "tools/coopmwm/test_g4_runtime_cpu.py",
+    "tools/coopmwm/test_g4_worker_binding_cpu.py",
+    "ops/clean3_tests.py",
+    "ops/clean3_assemble_source.py",
+    "G4FIX_READY.json"
+  ],
+  "tests": [
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_g4_runtime_cpu.py",
+      "result": "13 passed in 104.78s"
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_g4_worker_binding_cpu.py",
+      "result": "4 passed in 52.82s"
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_g5_runtime_cpu.py tools/coopmwm/test_clean3_restart_cpu.py",
+      "result": "28 passed, 2 skipped in 5.45s",
+      "skip": "Existing test_g5_runtime_cpu.py 'frozen cpuV runtime only' skips; require the frozen cpuV runtime directory"
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/coopmwm/test_launch_final_cpu.py",
+      "result": "13 passed in 162.79s"
+    },
+    {
+      "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m ruff check --no-cache tools/coopmwm/accel_plant.py tools/coopmwm/g4_runtime.py tools/coopmwm/test_g4_runtime_cpu.py tools/coopmwm/test_g4_worker_binding_cpu.py ops/clean3_tests.py ops/clean3_assemble_source.py",
+      "result": "passed, exit 0"
+    }
+  ],
+  "test_environment": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+    "cpu_only": true,
+    "sumo_runs": 0,
+    "ssh_calls": 0,
+    "gpu_runs": 0
+  },
+  "hash_guard": "Unchanged and not weakened: g5_runtime.install still refuses unless traffic_shepherd.c4 resolves to the hash-verified frozen runtime; the fix moves the G4 branch into a fresh spawned worker where that resolution holds",
+  "note": "Owner paused clean3 at 13:00; this fix is code for a future run, not a resume. A previous session froze after committing the fix; this session verified the tests and wrote this receipt.",
+  "open_issues": []
+}

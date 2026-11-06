@@ -366,11 +366,11 @@ class FamilyOption:
 
 
 def option_from_dict(data):
-    """Recorded slate entry -> option (N9, else the W1/shared vocabulary)."""
+    """Recorded slate entry -> option (N9, else N2 lane-drop / W1 / shared vocabulary)."""
     if is_family(data['family']):
         return FamilyOption.from_dict(data)
-    from .v2v_wall import option_from_dict as w1
-    return w1(data)
+    from .lane_drop import option_from_dict as n2      # N2 lane-drop, then W1 / shared vocabulary
+    return n2(data)
 
 
 @dataclass(frozen=True)

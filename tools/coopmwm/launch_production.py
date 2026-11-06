@@ -257,6 +257,11 @@ def update_metrics(arm, episodes, learning, reward_envelope, *, augmented_exampl
                 for table, selected in zip(trigger['tables'], trigger['actions']):
                     move = table[selected]
                     family = 'none' if move is None else move['family']
+                    if family not in metrics['trigger_counts']:
+                        # Opt-in option families (W1/N2 protocols, N2 joint moves) are counted
+                        # in their own key; the default family list is unchanged when OFF.
+                        metrics['families'].append(family)
+                        metrics['trigger_counts'][family] = 0
                     metrics['trigger_counts'][family] += 1
                     metrics['decisions'] += 1
             for block in sample.get('track2', {}).get('merge_features', {}).values():
@@ -348,7 +353,11 @@ def run_branch(spec, snapshot, cfg, work):
             if isinstance(new, p1.EpisodePolicy):
                 # VerifyController restores its ledger at t0; refresh from the
                 # live instance so the next decision sees original expiries.
-                new.observe(rows, now, command_commitments=controller.active_plans)
+                if new.lane_drop is not None:   # N2 speed law needs the own native command
+                    new.observe(rows, now, command_commitments=controller.active_plans,
+                                native_commands=commands)
+                else:
+                    new.observe(rows, now, command_commitments=controller.active_plans)
             return original(rows, commands, now)
         controller.apply = apply
     runner = sv.LocalBranchRunner(work, controller_hook=hook, policy_loader=loader)

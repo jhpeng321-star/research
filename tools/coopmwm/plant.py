@@ -17,6 +17,9 @@ def episode(job):
         original_setup=native.setup
         def setup(runtime):
             original_setup(runtime);install_seed_scope()
+            from .map_runtime import install as _map_install, patch_globals as _map_globals
+            if _map_install(job) is not None:  # N1: original map -> None, nothing touched
+                _map_globals(run.__globals__,job)
         def approved(text):
             if authority(text)!=job['authority']:raise ValueError('native reference authority mismatch')
         run=types.FunctionType(native.episode.__code__,dict(native.episode.__globals__,

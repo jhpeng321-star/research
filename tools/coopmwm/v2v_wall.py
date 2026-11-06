@@ -574,6 +574,9 @@ def attach_context(context, reader, members):
         context['merge_features'] = {v: list(reader.blocks[v]) for v in members}
     if ext.aware:
         context['coop_awareness'] = {v: list(reader.awareness_blocks[v]) for v in members}
+    if getattr(ext, 'lane_drop', None) is not None:
+        from .lane_drop import attach_context as lane_drop_context
+        lane_drop_context(context, reader, members)   # N2 lane-drop blocks (opt-in)
     return context
 
 

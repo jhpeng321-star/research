@@ -106,6 +106,9 @@ def opportunities(episodes):
                 from .nm_families import is_family
                 if is_family(selected['family']):
                     continue  # N9 per-CAV protocol options, likewise
+                if selected['family'] in ('closing_pair', 'abreast_wall', 'lane_drop_initiate',
+                                          'lane_drop_join'):
+                    continue  # N2 closed-loop lane-drop macros: no G4 branch representation yet
                 move = moves.Move.from_dict(selected)
                 if len(move.actors) < 2:
                     continue
