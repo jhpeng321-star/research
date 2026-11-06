@@ -294,16 +294,40 @@ def compare_member(probe_by_el, ours_by_el, program_cmd_els, released_el=None):
             matched += 1
         for kind, value in left:
             mismatches.append(dict(el=el, side='ours_only', kind=kind, value=value))
+    # Pair unmatched slowDowns of the same second (value difference recorded for classification).
+    for x in mismatches:
+        if x['kind'] == 'slowDown':
+            other = next((y for y in mismatches if y is not x and y['kind'] == 'slowDown' and y['el'] == x['el']
+                          and y['side'] != x['side']), None)
+            if other is not None:
+                x['dev'] = abs(float(x['value'][0])-float(other['value'][0]))
     return dict(matched=matched, mismatches=mismatches, normalised=dict(norm), max_target_dev=dev)
 
 
-def classify(mismatch, gate_els, guard_els):
-    """gate / guard / other for one mismatch (receipts of our lane gate and env writer)."""
+PRECISION_TOL = 2e-3      # analysis class (registered amendment 1): observation precision, probe 1 cm rounding
+RELEASE_WINDOW_S = 2      # analysis class: release-second timing near the drop / junction
+
+
+def classify(mismatch, gate_els, guard_els, unobs_els=(), release_els=()):
+    """gate / guard / ref_unobservable / release_timing / precision / other for one mismatch.
+
+    gate: our own-sensing lane gate withheld a probe lane request; guard: env edge-end deferral;
+    ref_unobservable: every track/partner reference of the member was beyond own sensing (100 m) at
+    that second (analysis-only truth check; the probe read global positions); release_timing: within
+    RELEASE_WINDOW_S of the probe's or our release; precision: paired slowDown values within
+    PRECISION_TOL."""
+    el = mismatch['el']
     if mismatch['kind'] == 'changeLane' and mismatch['side'] == 'probe_only':
-        if mismatch['el'] in gate_els:
+        if el in gate_els:
             return 'gate'
-        if mismatch['el'] in guard_els:
+        if el in guard_els:
             return 'guard'
+    if el in unobs_els:
+        return 'ref_unobservable'
+    if any(abs(el-r) <= RELEASE_WINDOW_S for r in release_els if r is not None):
+        return 'release_timing'
+    if mismatch['kind'] == 'slowDown' and mismatch.get('dev') is not None and mismatch['dev'] <= PRECISION_TOL:
+        return 'precision'
     return 'other'
 
 
@@ -471,7 +495,8 @@ def run_episode(job, root):
                                       options=dict(options), shadow=shadow, executor=ref_exec, done=False,
                                       probe=defaultdict(list), ours=defaultdict(list), prog_els=defaultdict(set),
                                       gate=defaultdict(set), guard=defaultdict(set), lanes={}, end=None,
-                                      ours_release={}, lanes_t0={v: int(table[v]['lane']) for v in ids}))
+                                      ours_release={}, unobs=defaultdict(set),
+                                      lanes_t0={v: int(table[v]['lane']) for v in ids}))
                     for v, o in options:
                         active[v] = o
                 else:
@@ -481,6 +506,22 @@ def run_episode(job, root):
                 if m['done']:
                     continue
                 el = t-m['t0']
+                # analysis-only truth check (never a policy input): references beyond own sensing
+                for spec in m['members']:
+                    p = spec['params']
+                    refs = list(p.get('track_ref') or ())+[p[k] for k in ('partner', 'release_on_partner_merge',
+                                                                          'anchor') if p.get(k)]
+                    refs = [r for r in refs if r != spec['id']]
+                    if refs and spec['id'] in live:
+                        x = float(traci.vehicle.getLanePosition(spec['id']))
+                        e = traci.vehicle.getRoadID(spec['id'])
+                        far = True
+                        for r in refs:
+                            if r in live and traci.vehicle.getRoadID(r) == e and \
+                                    abs(float(traci.vehicle.getLanePosition(r))-x) <= SENSOR_RANGE_M:
+                                far = False
+                        if far:
+                            m['unobs'][spec['id']].add(el)
                 m['executor'].step(el)
                 for kind, vid, value in m['shadow'].take():
                     m['probe'][(vid, el)].append((kind, value))
@@ -561,8 +602,10 @@ def run_episode(job, root):
                 last = m['end'] if m['end'] is not None else max([el for (v, el) in m['probe']] or [0])
                 ours_by_el = {el: c for el, c in ours_by_el.items() if el <= last}
                 res = compare_member(probe_by_el, ours_by_el, m['prog_els'][vid])
-                res['classes'] = dict(Counter(classify(x, m['gate'][vid], m['guard'][vid])
-                                              for x in res['mismatches']))
+                releases = (m['executor'].log['release_el'].get(vid), (m['ours_release'].get(vid) or (None,))[0])
+                res['classes'] = dict(Counter(classify(x, m['gate'][vid], m['guard'][vid], m['unobs'][vid],
+                                                       releases) for x in res['mismatches']))
+                res['ref_unobservable_seconds'] = len(m['unobs'][vid])
                 res['mismatches'] = res['mismatches'][:20]
                 spec = next(x for x in m['members'] if x['id'] == vid)
                 p = spec['params']

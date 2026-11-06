@@ -89,3 +89,14 @@ def test_compare_member_normalisations_and_mismatches():
     # Value differences are mismatches.
     res = S.compare_member({0: [('slowDown', (20., 1.))]}, {0: [('slowDown', (20.5, 1.))]}, {0})
     assert len(res['mismatches']) == 2
+
+
+def test_mismatch_classes():
+    res = S.compare_member({3: [('slowDown', (10.420, 1.))]}, {3: [('slowDown', (10.419, 1.))]}, {3})
+    assert [x.get('dev') for x in res['mismatches']] == [pytest.approx(1e-3)]*2 or res['mismatches'] == []
+    res = S.compare_member({3: [('slowDown', (10.4205, 1.))]}, {3: [('slowDown', (10.4190, 1.))]}, {3})
+    assert {S.classify(x, set(), set()) for x in res['mismatches']} == {'precision'}
+    res = S.compare_member({3: [('slowDown', (25., 1.))]}, {3: [('slowDown', (23., 1.))]}, {3})
+    assert {S.classify(x, set(), set(), {3}) for x in res['mismatches']} == {'ref_unobservable'}
+    assert {S.classify(x, set(), set(), (), (5, None)) for x in res['mismatches']} == {'release_timing'}
+    assert {S.classify(x, set(), set()) for x in res['mismatches']} == {'other'}
