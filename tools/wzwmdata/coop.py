@@ -129,7 +129,8 @@ class CoopSchedule:
                 return None
             variant = self.rng.choice(['pair_g', 'pair_h', 'pair_t'])
             params = dict(VARIANTS[variant][1])
-            anchor = mem[0][0]                                  # the closing-lane member
+            # pair_t only: both members release when the closing-lane member nears the drop
+            anchor = mem[0][0] if 'anchor_release_ds' in params else None
             return variant, params, mem, anchor
         if fam == 'abreast_wall':
             mem = pick_wall(cands, self.lanes)

@@ -136,6 +136,38 @@ def plan(root, *, runtime=DEFAULT_RUNTIME, checkpoint=DEFAULT_CHECKPOINT, commit
     return body
 
 
+def all_jobs(root):
+    """PLAN.json jobs + jobs of every PLAN_AMEND_*.json (registered amendments, sorted by name)."""
+    root = Path(root)
+    jobs = list(_read(root / 'PLAN.json')['jobs'])
+    for amend in sorted(root.glob('PLAN_AMEND_*.json')):
+        jobs.extend(_read(amend)['jobs'])
+    ids = [j['id'] for j in jobs]
+    if len(ids) != len(set(ids)):
+        raise ValueError('duplicate job ids across plan amendments')
+    return jobs
+
+
+def amend(root, *, name, reason, commit):
+    """Explicit re-run jobs (new ids/paths) for every FAILED job; failed receipts stay charged."""
+    root = Path(root)
+    out = root / f'PLAN_AMEND_{name}.json'
+    if out.exists():
+        raise ValueError('amendment exists; never overwrite')
+    jobs = []
+    for job in all_jobs(root):
+        if (Path(job['path']) / 'FAILED.json').exists():
+            new = dict(job, id=f"{job['id']}_{name}", path=f"{job['path']}_{name}", wave='main',
+                       rerun_of=job['id'])
+            jobs.append(new)
+    total = sum(j['sim_s'] for j in jobs)
+    body = dict(schema=SCHEMA + '.amend', name=name, reason=reason, source_commit=commit, jobs=jobs,
+                total_sim_s=total, unix=time.time())
+    body['amend_sha256'] = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
+    _write(out, body)
+    return body
+
+
 # --------------------------------------------------------------------------- ledger
 def _ledger_rows(path):
     if not Path(path).exists():
@@ -363,12 +395,11 @@ def run(root, *, workers=12, only=None, ids=None):
     import multiprocessing
     root = Path(root)
     _guard_path(root)
-    body = _read(root / 'PLAN.json')
     if os.environ.get('CUDA_VISIBLE_DEVICES') != '' or os.getpriority(os.PRIO_PROCESS, 0) != 19:
         raise ValueError('run under nice 19 with CUDA_VISIBLE_DEVICES= (CPU only)')
     if int(workers) > 12:
         raise ValueError('cpuV WM-B limit: at most 12 workers')
-    jobs = [j for j in body['jobs'] if (only is None or j['wave'] == only) and (ids is None or j['id'] in ids)]
+    jobs = [j for j in all_jobs(root) if (only is None or j['wave'] == only) and (ids is None or j['id'] in ids)]
     stamp = time.strftime('%Y%m%dT%H%M%S')
     _write(root / f'RUN_START_{stamp}.json', dict(pid=os.getpid(), workers=workers, only=only,
                                                  n_jobs=len(jobs), unix=time.time()))
@@ -391,7 +422,8 @@ def summarize(root):
     per_cell, per_arm, failures, sizes = {}, Counter(), {}, []
     safety = Counter()
     done = 0
-    for job in body['jobs']:
+    jobs = all_jobs(root)
+    for job in jobs:
         p = Path(job['path'])
         if (p / 'RESULT.json').exists():
             r = _read(p / 'RESULT.json')
@@ -412,7 +444,7 @@ def summarize(root):
             c['max_present'] = max(c.get('max_present', 0), r.get('max_present', 0))
         elif (p / 'FAILED.json').exists():
             failures[job['id']] = _read(p / 'FAILED.json')['error']
-    out = dict(schema=SCHEMA + '.summary', plan_sha256=body['plan_sha256'], jobs_planned=len(body['jobs']),
+    out = dict(schema=SCHEMA + '.summary', plan_sha256=body['plan_sha256'], jobs_planned=len(jobs),
                jobs_done=done, failures=failures, per_cell={k: dict(v) for k, v in sorted(per_cell.items())},
                per_arm=dict(per_arm), safety=dict(safety),
                ledger=dict(rows=len(rows), phase_charged_sim_s=sum(float(r['sim_s']) for r in rows),
@@ -436,6 +468,11 @@ def main(argv=None):
     r.add_argument('--workers', type=int, default=12)
     r.add_argument('--only', choices=('canary', 'main'))
     r.add_argument('--ids-file')
+    m = sub.add_parser('amend')
+    m.add_argument('--root', required=True)
+    m.add_argument('--name', required=True)
+    m.add_argument('--reason', required=True)
+    m.add_argument('--commit', required=True)
     s = sub.add_parser('summarize')
     s.add_argument('--root', required=True)
     a = ap.parse_args(argv)
@@ -446,6 +483,10 @@ def main(argv=None):
         ids = None if not a.ids_file else set(Path(a.ids_file).read_text().split())
         out = run(a.root, workers=a.workers, only=a.only, ids=ids)
         print(json.dumps(dict(done=out['jobs_done'], failures=len(out['failures']), ledger=out['ledger'])))
+    elif a.cmd == 'amend':
+        out = amend(a.root, name=a.name, reason=a.reason, commit=a.commit)
+        print(json.dumps(dict(amend_sha256=out['amend_sha256'], jobs=[j['id'] for j in out['jobs']],
+                              total_sim_s=out['total_sim_s'])))
     else:
         out = summarize(a.root)
         print(json.dumps(dict(done=out['jobs_done'], failures=len(out['failures']), ledger=out['ledger'],

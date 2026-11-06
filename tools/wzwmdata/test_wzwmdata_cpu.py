@@ -117,3 +117,19 @@ def test_plan_budget(tmp_path, monkeypatch):
     assert all('wmqual' in j['path'] for j in body['jobs'] if j['block'] == 'WMQUAL')
     with pytest.raises(ValueError):
         collect.plan(tmp_path / 'run')
+
+
+def test_every_variant_runs_without_anchor_errors():
+    drop = 75.44
+    f, ids = _frame([('c0', 2, -1000., 30., True, False), ('c1', 1, -980., 30., True, False),
+                     ('c2', 0, -1050., 30., True, False)])
+    seen = set()
+    for i in range(60):
+        sch = coop.CoopSchedule(f't:{i}', drop_s=drop, start_s=300., end_s=1200.)
+        for tt in range(300, 700):
+            f.s[:3] += 0.0
+            sch.commands(float(tt), f, ids)
+        seen.update(m['variant'] for m in sch.moves)
+        for m in sch.moves:
+            assert (m['anchor'] is not None) == (m['variant'] == 'pair_t')
+    assert {'pair_g', 'pair_h', 'pair_t', 'wall_g', 'wall_h', 'wall_l', 'R_random'} <= seen
