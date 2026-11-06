@@ -202,6 +202,6 @@ def test_clean5b_f8_worlds_and_memory_overrides(wz):
         seeds |= {w['seed'] for w in rows}
     assert set(cells) == set(c5.CELL_KEYS) and len(seeds) == 48
     o = c5b.VARIANT_F8['cfg_overrides']
-    assert o == dict(load_max=120, wave_workers=6, mem_available_min_gb=100)
-    assert 1+38+38+o['wave_workers']*10.6 <= 150                          # registered worst-case peak (GB)
+    assert o == dict(load_max=120, wave_workers=8, mem_available_min_gb=95)
+    assert 1+38+38+o['wave_workers']*10.6 < 184 and 184-77-5 >= o['mem_available_min_gb']   # MAIN 07:5x arithmetic
     assert c5b.VARIANT_F8['quote_file'] == 'CLEAN5BF8_QUOTE.json' and set(c5b.VARIANT_F8) == set(c5.VARIANT)
