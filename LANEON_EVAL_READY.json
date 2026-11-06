@@ -1,0 +1,68 @@
+{
+  "task": "clean3 u24 EXTRA frozen evaluation baseline 'lane-on MAPPO aecd7d70' (descriptive only; primary comparator stays speed-only MAPPO d9042cc5; u24 synergy criterion unchanged)",
+  "status": "READY_CPU_ONLY",
+  "branch": "c4/laneon-eval-claude",
+  "worktree": "E:/agent-work/c4-laneon-eval-claude",
+  "base": "3e5bc9f9 (running clean3 r12 source, root /home/ubuntu/coopmwm20261106_clean3_r6)",
+  "commit": "e4596e74bda6faa9ec0575b53ce4ce503e6f4ea1",
+  "files": {
+    "tools/coopmwm/laneon_eval.py": "220de7d329946b92a0e4708c098c31460acdb2027b6c785f6dbe8b40acf8984f",
+    "tools/coopmwm/test_laneon_eval_cpu.py": "94623571cc5725c75c2cfca9054cc0b445da358f1b523d3c6ce8b86ed4481b9b"
+  },
+  "existing_files_changed": [],
+  "authority": [
+    "CLEAN3_QUOTE.json phase v2v_final_laneon_mappo_aecd7d70: base 115200 (96 x 1200), allocated 133200; 'owner 01:16: lane-on MAPPO aecd7d70 on the same 96 paired worlds'",
+    "clean3_restart.LANE_ON_BASELINE / cfg['extra_final_baselines'] (metadata slot in the running config)",
+    "LANE_MAPPO_FEASIBILITY.md section 8 (extra frozen evaluation baseline; full lane-aware path with mode 513)",
+    "CLEAN3_FINAL_BASELINE_WIRING_W4.md (quoted but never executed gap)"
+  ],
+  "design": {
+    "entry_point": "python -m tools.coopmwm.laneon_eval {dry,run}; separate module because the running source is hash-pinned and the monitor imports launch_evaluation lazily. It only READS evaluation/PAIRED_u024.json and writes evaluation/LANEON_u024.json (or LANEON_u024_FAILED.json).",
+    "checkpoint": "pinned sha256 aecd7d70ccce2995a10d03d9400f587040b1d3b435eebeab2561768ba57c3564, checked before any charge (path, payload format c4_dreamer/3, trainer mappo, lane_head) and again in every worker; deterministic load via wms.control.policy.load_policy_fn after the frozen runtime setup; stochastic/noise env vars refused",
+    "same_worlds": "jobs built from the same sealed ISOLATED_REGISTRATION final panel; the sealed PAIRED_u024 receipt must carry the identical registration and its analysis must reproduce through planner_eval.analyse_track2; every lane-on world must equal each arm's world/window/panel; t=300 Backend fingerprints vs the A/B/R RESULT.json prefixes are reported (warmup_prefix_check), not gated",
+    "plant": "same as the A/B/R final episodes: tools.leverprobe.backend.setup(cfg runtime, cfg checkpoint) + Backend(work, world, 1200, cfg checkpoint), original registered TRAIN guard, G5 env (COOPMWM_G5_RUNTIME=1 required when cfg binds g5_runtime); per-tick loop mirrors tools.coopfree.backend.tick (slot-reuse memory/dwell masking, totals, observable tape, collision/teleport/dropped-step stop) with exe(state, with_lanes=True)",
+    "lanes": "env.step(cmd, lanes=lanes) every tick without lane_actors = laneChangeMode 513 on every finite-command CAV (stay-only ticks included), SUMO gap/brake safety: the E3 regime. Any lane or acceleration command on a non-CAV/absent slot, off-grid or non-integer target is refused before the env sees it",
+    "charging": "the registered phase that carries the allocation: the running r6 sealed budget merges it into v2v_final = 531600 = 398400 A/B/R + 133200 lane-on (clean3_restart.PHASES; ops/clean3_chain.coverage need 4 x 96 x 1200), so 96 jobs laneon_u024_0000..0095 x 1200 = 115200 are reserved under v2v_final with a hard 133200 sub-cap; a registration that has the quote phase key is charged under that key. The A/B/R paired_u024_* charges must already be reserved; existing laneon charges without a receipt refuse (never retry)",
+    "receipts": "per-world sealed coopmwm/laneon_eval/receipt/v1 (world, seed, checkpoint sha, mode 513, full window, charged phase/sim_s, actual sim_s, J_veh_s, 4 safety counters, lane command counts, lane-request ticks, warmup prefix digest, result ref) + sealed LANEON_u024.json",
+    "analysis": "descriptive, never gated: paired whole-world bootstrap CIs of lane-on minus A, B and R on J_veh_s with the registered estimator (planner_eval._paired_ci, u24 contract bootstrap 10000 reps, seed 20261104, 95%), per-counter paired safety CIs, safety sums, mean J; sign: negative = lane-on lower delay"
+  },
+  "glm_attempt_c4_laneon_eval": {
+    "commits": ["9d23e5b9", "576939fb"],
+    "verdict": "reviewed, not reused as code (fixture/refusal test ideas reused)",
+    "reasons": [
+      "splits clean3_restart.PHASES (v2v_final 531600 -> 398400 + new key): clean3_restart.checked() on the running r6 sealed budget would fail 'clean3 budget registration differs: phases'",
+      "requires a laneon checkpoint binding inside extra_final_baselines, which the running config does not have (W4: prepare called without laneon), so it refuses on the running chain",
+      "edits launch_evaluation.scheduled, a hash-pinned file of the running source",
+      "builds the env via tools.coopnative.plant.setup (different runtime manifest pin, nice19 check) instead of the leverprobe Backend the A/B/R episodes use; no slot-reuse memory/dwell masking"
+    ]
+  },
+  "tests": {
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q",
+    "exact_command_run": "tools/coopmwm/test_laneon_eval_cpu.py tools/coopmwm/test_launch_final_cpu.py -> 22 passed in 316.21s",
+    "touched_plus_related": "same interpreter, -p no:cacheprovider: test_laneon_eval_cpu (9) + test_launch_final_cpu (13) + test_lesson_quote_cpu (1) + test_launch_integration_cpu (30) + test_clean3_restart_cpu (25) -> 77 passed, 1 skipped (pre-existing Windows symlink-privilege skip) in 377.91s",
+    "ruff": "python -m ruff check tools/coopmwm/laneon_eval.py tools/coopmwm/test_laneon_eval_cpu.py -> All checks passed",
+    "coverage": {
+      "checkpoint_sha": "test_adapter_loads_the_pinned_checkpoint_and_refuses_a_wrong_sha (loads real C4 export; production pin refuses others; tampered/lane-stripped/foreign/stochastic refused; run() refuses before any ledger write)",
+      "same_worlds": "test_specs_use_the_same_paired_worlds_and_seeds_as_the_arms, test_run_uses_exactly_the_paired_u24_worlds_and_refuses_a_different_panel",
+      "cav_only_lanes": "test_lane_commands_reach_only_cavs_through_the_env_lane_path, test_episode_runs_the_frozen_plant_with_lanes_every_tick (fake leverprobe plant, 900 ticks, lanes every tick, HDV/absent slots never)",
+      "receipt_schema": "test_receipt_schema_binds_identity_and_refuses_tampering",
+      "option_off_byte_identical": "test_existing_u24_evaluation_is_byte_identical_when_the_option_is_off (PAIRED_u024.json and ledger bytes identical off vs registered-but-not-run; unchanged after the lane-on run; ledger append-only)",
+      "phase_and_cis": "test_run_charges_its_budgeted_phase_and_reports_paired_cis_against_each_arm, test_run_never_retries_and_records_a_failed_attempt"
+    },
+    "sumo_tests": "none run (CPU fakes only)"
+  },
+  "enable_at_u24": {
+    "deploy": "add ONE new file on cpuV, replacing nothing: write the LF bytes of tools/coopmwm/laneon_eval.py at commit e4596e74 (git show e4596e74:tools/coopmwm/laneon_eval.py) to /home/ubuntu/tools/coopmwm/laneon_eval.py and confirm sha256sum = 220de7d329946b92a0e4708c098c31460acdb2027b6c785f6dbe8b40acf8984f",
+    "dry_check_now_zero_physics": "cd /home/ubuntu && COOPMWM_G5_RUNTIME=1 CUDA_VISIBLE_DEVICES= nice -n 19 /home/ubuntu/miniconda3/bin/python -B -u -m tools.coopmwm.laneon_eval dry --config /home/ubuntu/coopmwm20261106_clean3_r6/CONFIG.json --checkpoint /home/ubuntu/cpuq_final/e3final/inputs/mappo_v5_final.pt",
+    "command": "cd /home/ubuntu && COOPMWM_G5_RUNTIME=1 CUDA_VISIBLE_DEVICES= setsid nohup nice -n 19 /home/ubuntu/miniconda3/bin/python -B -u -m tools.coopmwm.laneon_eval run --config /home/ubuntu/coopmwm20261106_clean3_r6/CONFIG.json --checkpoint /home/ubuntu/cpuq_final/e3final/inputs/mappo_v5_final.pt --wait-hours 168 > /home/ubuntu/clean3_laneon_u024.log 2>&1 < /dev/null &",
+    "command_note": "start any time before or after u24; it waits (health-checked) for the sealed evaluation/PAIRED_u024.json, then reserves 115200 sim-s once and runs 96 jobs on 16 spawn workers. Without --wait-hours it refuses unless PAIRED_u024.json already exists. Output: evaluation/LANEON_u024.json; re-running returns the sealed receipt.",
+    "expected_charge": "96 x 1200 = 115200 sim-s under v2v_final (sub-cap 133200); v2v_final total 345600 + 115200 = 460800 <= 531600"
+  },
+  "caveats": [
+    "Not physically qualified: the frozen e3final runtime API (load_policy_fn, exe(state, with_lanes=True), executor memory/dwell .present, leverprobe Backend attributes) is taken from the A/B/R path that already uses it (coopfree.backend.tick, coopnative Comparator); dry does not load the executor or touch SUMO, so the first real test is the u24 run itself",
+    "Fail-closed like the A/B/R harness: any collision/teleport/dropped step stops that episode; any failed job writes LANEON_u024_FAILED.json, charges stay recorded and the command refuses to retry",
+    "launch_training.health() gates waiting and dispatch: a durable STOP/FAULT/PAUSE_SAFETY in the root blocks the baseline (it never writes STOP/FAULT itself)",
+    "Cross-action-regime and descriptive: lane-on aecd7d70 vs speed-only-base arms is not a controlled lane ablation"
+  ],
+  "new_sim_s": 0
+}
