@@ -14,7 +14,7 @@ from tools.coopmwm import clean4_budget as b  # noqa: E402
 
 ENVELOPE = 3_930_000
 PARENT = '1bb292e1085fad10e2d064cf6f34caf646af9e44fd32d90a35c3d1725f73097f'   # CLEAN5B_QUOTE (BUDGET_CLEAN5B binds it)
-PRIOR = dict(clean5b_failed_roots=2_400+75_772+7_200)   # r1 + r2 (cpuV OOM) + r3 (owner stop, smoke only)
+PRIOR = dict(clean5b_failed_roots=2_400+75_772+7_200, clean5bf_logger_identity_canary=2_400)   # r1 + r2 (cpuV OOM) + r3 (owner stop) + identity canary
 phases = b.quote(lesson_sim_s=0, probe_sim_s=72_006, replicated_sim_s=130_572, g4_base_sim_s=200_000,
                  g4_cap_sim_s=230_400, diagnostic_factor=1.0,
                  basis=dict(train='3 arms (A frozen evaluation arm + B + R) x 16 episodes x 1200 s x 24',

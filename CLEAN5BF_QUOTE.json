@@ -5,8 +5,8 @@
   "B",
   "R"
  ],
- "available_sim_s": 3844628,
- "created": "2026-11-07T04:17:09+08:00",
+ "available_sim_s": 3842228,
+ "created": "2026-11-07T04:45:28+08:00",
  "final_arms": [
   "A",
   "B",
@@ -83,10 +83,11 @@
   }
  },
  "prior_registered_sim_s": {
-  "clean5b_failed_roots": 85372
+  "clean5b_failed_roots": 85372,
+  "clean5bf_logger_identity_canary": 2400
  },
- "prior_total_sim_s": 85372,
- "receipt_sha256": "84f0883c484fcbce9f054037731491a488863f1323ec65498a30957a744cf4ca",
+ "prior_total_sim_s": 87772,
+ "receipt_sha256": "8da50e55ef728cc289d62e699c81a8585c620f0385bbb81b9dbe01464dee8eec",
  "runtime_phases": {
   "augment_verify": 0,
   "early_probes": 84000,

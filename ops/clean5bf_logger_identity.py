@@ -34,8 +34,11 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--config', required=True); p.add_argument('--src-off', required=True)
     p.add_argument('--src-on', required=True); p.add_argument('--out', required=True)
+    p.add_argument('--compare-only', action='store_true', help='re-evaluate an existing --out (no physics)')
     a = p.parse_args()
     out = Path(a.out)
+    if a.compare_only:
+        return compare(out, a)
     out.mkdir(parents=False)
     from tools.coopmwm import launch_production as production, track2_backend as tb, accel_runner
     cfg = json.loads(Path(a.config).read_text(encoding='utf-8'))
@@ -70,10 +73,17 @@ def main():
                                   stdin=subprocess.DEVNULL).returncode
         if code:
             raise SystemExit(f'{label} episode failed ({code}); see {out}/{label}.log')
-    res = {k: json.loads((Path(jobs[k]['path'])/'RESULT.json').read_text()) for k in ('off', 'on')}
+    return compare(out, a)
+
+
+def compare(out, a):
+    from tools.coopmwm.accel_storage import read
+    paths = {k: next((out/k/'jobs').iterdir()) for k in ('off', 'on')}
+    res = {k: read(paths[k]/'RESULT.json') for k in ('off', 'on')}
+    world = res['off']['world']
 
     def trace(k):
-        return gzip.open(Path(jobs[k]['path'])/'observable.jsonl.gz').read()
+        return gzip.open(paths[k]/'observable.jsonl.gz').read()
     t_off, t_on = trace('off'), trace('on')
     checks = dict(
         observable_trace=t_off == t_on,
