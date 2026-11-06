@@ -6,7 +6,7 @@ wall_fill program: the initiator changes lane INTO the closing lane and slot-tra
 15 m/s; the decision rows then receive BC (initiate/join contexts), PPO and the (offline) EV labels.
 No SUMO: the env writer is the LCEXEC Capture stand-in.
 """
-# ruff: noqa: F811 (imported pytest fixtures are test parameters)
+# ruff: noqa: F811, E731 (imported pytest fixtures are test parameters; small test lambdas)
 import json
 
 import numpy as np

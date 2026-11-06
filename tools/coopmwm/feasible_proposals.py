@@ -138,7 +138,7 @@ def candidates(obs_state, rng, n):
                     pools[family] = options
                 continue
             if ev is not None and fullpol_ev.owns(family):
-                options = fullpol_ev.pool(family, ev, ld['view'], own, partners, rng)
+                options = fullpol_ev.pool(family, ev, ld['view'], own, partners, rng, by_vid=by_vid)
                 if options:
                     pools[family] = options
                 continue

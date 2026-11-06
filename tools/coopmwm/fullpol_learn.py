@@ -126,8 +126,14 @@ def ev_table(cfg, arm):
             if pick:
                 chosen[regime] = (baseline, pick)
                 break
+    from .fullpol_fair import settings as fair_settings
+    fair = fair_settings(cfg)
+    unfair = Counter()
     for regime, (baseline, rows) in sorted(chosen.items()):
         for row in rows:
+            if fair is not None and fair.get('ev_filter') and row.get('fair') is not True:
+                unfair[row['family']] += 1           # clean5b-F: group delay increase > 10 s, banned or unchecked
+                continue
             if row['family'] not in parity:
                 dropped[row['family']] += 1        # condition 1: no exact executor -> no EV term
                 continue
@@ -138,6 +144,7 @@ def ev_table(cfg, arm):
                    regimes=sorted(table), families=sorted({f for r in table.values() for f in r}),
                    baselines_used=dict(used), regime_baseline={k: b for k, (b, _) in sorted(chosen.items())},
                    dropped_without_parity=dict(dropped),
+                   **(dict(dropped_unfair=dict(unfair)) if fair is not None else {}),
                    r_without_matched_sweep=(arm == 'R' and not table))
     return table, receipt
 
