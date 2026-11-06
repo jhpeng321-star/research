@@ -425,6 +425,9 @@ class MemberExecutor:
         self.last = []
 
     # ---- helpers
+    def _ref(self, obs, vid):
+        return obs.own if vid == self.vid else obs.ref(vid)
+
     def _release(self, el, why):
         self.released, self.release_el, self.release_reason = True, el, why
         return [('release', why)]
@@ -449,7 +452,7 @@ class MemberExecutor:
             out.append(('accel', float(lon.a)))
             return
         if lon.kind == 'track' and self.settled is None:
-            refs = [obs.ref(r) for r in lon.refs]
+            refs = [self._ref(obs, r) for r in lon.refs]
             refs = [r for r in refs if r is not None]
             if not refs:
                 self.settled = obs.el
@@ -523,7 +526,7 @@ class MemberExecutor:
             if r == 'release_s' and p.release_s is not None and s >= p.release_s:
                 return self._release(obs.el, 'release_s')
             if r == 'anchor':
-                a = obs.ref(p.anchor)
+                a = self._ref(obs, p.anchor)
                 if a is None or not a.on_approach or a.s_m >= p.anchor_release_s:
                     return self._release(obs.el, 'anchor')
             if r == 'zone':
@@ -532,7 +535,7 @@ class MemberExecutor:
                 if s > p.zone[1]:
                     return self._release(obs.el, 'zone_end')
             if r == 'partner_left':
-                q = obs.ref(p.partner)
+                q = self._ref(obs, p.partner)
                 if q is None or not q.on_approach or q.lane != p.partner_lane:
                     return self._release(obs.el, 'partner_merged')
             if r == 'merged_zip' and (not own.on_approach or own.lane != p.merger_lane):
