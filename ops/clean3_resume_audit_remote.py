@@ -33,8 +33,10 @@ controls = []
 for control in sorted((home/'cpuv_setup_20261105').glob('clean3_chain_*')):
     dispatch = public(control/'CHAIN_DISPATCH.json')
     status = public(control/'CHAIN_STATUS.json')
+    started = public(control/'CHAIN_STARTED.json')
     controls.append(dict(control=str(control),
         status=status, dispatch=dispatch,
+        started=started, owner_process=identity(started['value']) if started else None,
         status_process=identity(status['value']) if status else None,
         process=identity(dispatch['value']) if dispatch else None))
 roots = []
@@ -58,6 +60,10 @@ for root in sorted(home.glob('coopmwm20261106_clean3*')):
             'PHASE_COVERAGE_PASS.json', 'CLEAN3_GO_NOGO.json')},
         owners={role: identity(owner) for role, owner in owners.items()},
         latest_monitor=public(monitors[-1]) if monitors else None))
+qualifications = [dict(control=str(control), result=public(control/'RESULT.json'),
+    dispatch=public(control/'DISPATCH.json'))
+    for control in sorted((home/'cpuv_setup_20261105').glob('clean3_tests_*'))]
 print(json.dumps(dict(schema='coopmwm.clean3.resume_readonly.v1',
     timestamp=datetime.now(timezone.utc).isoformat(), unix=time.time(),
-    status='READ_ONLY_INVENTORY', controls=controls, roots=roots), sort_keys=True))
+    status='READ_ONLY_INVENTORY', controls=controls, roots=roots,
+    qualifications=qualifications), sort_keys=True))
