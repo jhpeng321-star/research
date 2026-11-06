@@ -253,3 +253,27 @@ def test_sumo_identity_check(tmp_path):
     mine["J_road"][1] = 2.5
     (out / "RESULT.json").write_text(json.dumps(mine))
     assert wmd_check.check(job)["identical"] is False
+
+
+def test_rule_controller_holds_member_and_idm_for_released():
+    torch = pytest.importorskip("torch")
+    from tools.wzqual.wm_backend import RuleController
+    from tools.wzqual.moves import MoveExecutor
+    spec = [dict(id="a", role="hold", params=dict(v_w=10.0, hold_s=2, dmax=1.0, amax=1.0, release_x=2696.0))]
+    ctrl = RuleController([MoveExecutor(spec), MoveExecutor([])], [["a", "b"], ["a", "b"]], 0.5)
+    state = dict(s_m=torch.tensor([[0.0, 100.0], [0.0, 100.0]]), v_mps=torch.tensor([[20.0, 20.0], [20.0, 20.0]]),
+                 lane=torch.tensor([[1, 1], [1, 1]]), present=torch.ones(2, 2, dtype=torch.bool),
+                 is_cav=torch.tensor([[True, False], [False, False]]), physics_step_index=0)
+    out = ctrl(state)
+    assert out.shape == (2, 2, 4)
+    assert float(out[0, 0, 2]) == pytest.approx(19.5)            # held: a = -1 for the control second
+    assert float(out[1, 0, 2]) == pytest.approx(20.0)            # non-CAV slots pass through
+    from wms.model import cav as cav_motion
+    assert cav_motion.WM_MERGE_KEY in state
+    for step in (1, 2, 3, 4):
+        state["physics_step_index"] = step
+        out = ctrl(state)
+    assert "a" in ctrl.released[0]                               # hold_end after 2 s
+    a = RuleController._idm(np.array([0.0, 10.0]), np.array([20.0, 0.0]), np.array([1, 1]),
+                            np.array([True, True]), 0)
+    assert a < -5.0                                              # IDM brakes behind a stopped leader

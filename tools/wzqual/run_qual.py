@@ -177,46 +177,65 @@ def check_contract(start, trajs: dict) -> list:
 
 
 # ------------------------------------------------------------------------ parts
+def _predict(backend, jobs, *, n_samples):
+    """``jobs = [(start, arms, seed)]`` -> list of {arm: [Traj]} (batched when supported)."""
+    if hasattr(backend, "rollout_batch"):
+        return backend.rollout_batch(jobs, horizon_s=HORIZON, n_samples=n_samples)
+    return [backend.rollout(st, arms, horizon_s=HORIZON, n_samples=n_samples, seed=seed)
+            for st, arms, seed in jobs]
+
+
 def distributional(tapes, backend, ks, rule, args, log) -> tuple[list, list, list]:
     records, car_wm, car_ks, traffic_wm = [], [], [], []
     issues = []
-    n = 0
     worlds = sorted(tapes.items())
     if getattr(args, "start_shard", None):
-        i, n = (int(x) for x in args.start_shard.split("/"))
-        worlds = worlds[i::n]
+        si, sn = (int(x) for x in args.start_shard.split("/"))
+        worlds = worlds[si::sn]
+    starts = []
     for world, tr in worlds:
         t_end = float(tr.time_s[-1])
         t0 = 300.0
         while t0 + HORIZON <= t_end + 1e-6:
-            if args.max_starts and n >= args.max_starts:
-                break
+            starts.append((world, tr, t0))
+            t0 += 120.0
+    if args.max_starts:
+        starts = starts[: args.max_starts]
+    chunk = max(1, int(getattr(args, "batch_starts", 1) or 1))
+    for c0 in range(0, len(starts), chunk):
+        part = starts[c0:c0 + chunk]
+        descs, jobs = [], []
+        for world, tr, t0 in part:
             st = start_state(tr, t0, history_s=120.0)
+            seed = int(hashlib.sha256(f"wzqual:{world}:{t0}".encode()).hexdigest()[:8], 16)
+            descs.append((world, tr, t0, st, seed))
+            jobs.append((st, {"base": []}, seed))
+        preds = _predict(backend, jobs, n_samples=args.samples)
+        for (world, tr, t0, st, seed), pred in zip(descs, preds):
             pre = TR.zone_speed_bins(tr, t0 - 30.0, t0)
             broken = BD.start_class(pre, rule)
             cohort = np.asarray([tr.index_of(x) for x in st.frame["ids"]])
             truth = tr.window(t0, t0 + HORIZON)
-            seed = int(hashlib.sha256(f"wzqual:{world}:{t0}".encode()).hexdigest()[:8], 16)
-            pred = backend.rollout(st, {"base": []}, horizon_s=HORIZON, n_samples=args.samples, seed=seed)
             kpred = ks.rollout(st, {"base": []}, horizon_s=HORIZON, n_samples=1, seed=seed)
             issues += check_contract(st, pred)
-            summ = lambda x, coh=None: D.summarize_future(x, t0, HORIZON, rule, broken_at_start=broken,  # noqa: E731
-                                                         cohort=coh)
             ids_t0 = st.frame["ids"]
+
+            def summ(x, coh=None, t0=t0, broken=broken):
+                return D.summarize_future(x, t0, HORIZON, rule, broken_at_start=broken, cohort=coh)
+
+            def coh_of(p, ids_t0=ids_t0):
+                return np.asarray([p.index_of(x) for x in ids_t0 if x in p._index])
             rec = dict(world=world, seed=st.seed, cell=st.cell, t0=t0, broken_at_start=broken,
-                       truth=summ(truth, cohort),
-                       wm=[summ(p, np.asarray([p.index_of(x) for x in ids_t0 if x in p._index]))
-                           for p in pred["base"]],
-                       ks=[summ(p, np.asarray([p.index_of(x) for x in ids_t0 if x in p._index]))
-                           for p in kpred["base"]])
+                       truth=summ(truth, cohort), wm=[summ(p, coh_of(p)) for p in pred["base"]],
+                       ks=[summ(p, coh_of(p)) for p in kpred["base"]],
+                       lane_changes=dict(truth=TR.lane_changes(truth, t0, t0 + HORIZON),
+                                         wm=[TR.lane_changes(p, t0, t0 + HORIZON) for p in pred["base"]]))
             records.append(rec)
             for p in pred["base"]:
                 car_wm.append(E.car_errors(truth, p, t0))
                 traffic_wm.append(E.traffic_errors(truth, p, t0, HORIZON))
             car_ks.append(E.car_errors(truth, kpred["base"][0], t0))
-            n += 1
-            t0 += 120.0
-        log(f"distributional {world}: {n} starts")
+        log(f"distributional {len(records)}/{len(starts)} starts")
     return records, (car_wm, car_ks, traffic_wm), issues
 
 
@@ -247,7 +266,8 @@ def action_rows(cands, tapes, backend, args, log) -> tuple[list, dict]:
     if getattr(args, "moment_shard", None):
         i, n = (int(x) for x in args.moment_shard.split("/"))
         moments = moments[i::n]
-    for i, mom in enumerate(moments):
+    prepared = []
+    for mom in moments:
         group = by_moment[mom]
         cov["n_T"] += len(group)
         c0 = group[0]
@@ -265,7 +285,6 @@ def action_rows(cands, tapes, backend, args, log) -> tuple[list, dict]:
         if not ok:
             continue
         st = start_state(tr, c0.t0, history_s=120.0)
-        live = set(st.frame["ids"])
         arms = {"base": []}
         for c in ok:
             a = arms_for(c.members, with_solos=c.S is not None)
@@ -274,13 +293,25 @@ def action_rows(cands, tapes, backend, args, log) -> tuple[list, dict]:
                     continue
                 arms[f"{c.cid}::{name}"] = members
         seed = int(hashlib.sha256(f"wzqual:{mom}".encode()).hexdigest()[:8], 16)
+        prepared.append((mom, ok, st, arms, seed))
+    chunk = max(1, int(getattr(args, "batch_moments", 1) or 1))
+    jds = []
+    for c0_ in range(0, len(prepared), chunk):
+        part = prepared[c0_:c0_ + chunk]
         if hasattr(backend, "evaluate_J"):
-            jd = backend.evaluate_J(st, arms, horizon_s=HORIZON, n_samples=args.samples, seed=seed)
-            mode = "backend_J"
+            for mom, ok, st, arms, seed in part:
+                jds.append((backend.evaluate_J(st, arms, horizon_s=HORIZON, n_samples=args.samples,
+                                               seed=seed), "backend_J"))
         else:
-            pred = backend.rollout(st, arms, horizon_s=HORIZON, n_samples=args.samples, seed=seed)
-            mode = j_mode(backend, pred["base"])
-            jd = {k: np.asarray([pred_J(p, st.t0, st.frame["ids"], mode) for p in v]) for k, v in pred.items()}
+            preds = _predict(backend, [(st, arms, seed) for _m, _o, st, arms, seed in part],
+                             n_samples=args.samples)
+            for (mom, ok, st, arms, seed), pred in zip(part, preds):
+                mode = j_mode(backend, pred["base"])
+                jds.append(({k: np.asarray([pred_J(p, st.t0, st.frame["ids"], mode) for p in v])
+                             for k, v in pred.items()}, mode))
+        log(f"action-response {getattr(backend, 'name', '?')}: {len(jds)}/{len(prepared)} moments")
+    for (mom, ok, st, arms, seed), (jd, mode) in zip(prepared, jds):
+        live = set(st.frame["ids"])
         jb = jd["base"]
         for c in ok:
             jg = jd[f"{c.cid}::group"]
@@ -296,8 +327,6 @@ def action_rows(cands, tapes, backend, args, log) -> tuple[list, dict]:
             elif c.S is not None and len(c.members) == 1:
                 row["pred_S"] = 0.0
             rows.append(row)
-        if i % 10 == 0:
-            log(f"action-response moment {i + 1}/{len(moments)} {mom}: {len(ok)} candidates")
     cov["fraction_T_candidates_supported"] = cov["n_supported"] / max(cov["n_T"], 1)
     cov["supported_roles"] = sorted(supported)
     return rows, cov
@@ -332,8 +361,26 @@ def distributional_metrics(records, rule) -> dict:
                        auc_300=D.auc([np.mean([s["occ"]["300"] for s in r["wm"]]) for r in nb],
                                      [r["truth"]["occ"]["300"] for r in nb]) if nb else None,
                        reliability_300=D.reliability(records),
-                       recovery=D.recovery_diff(records)))
+                       recovery=D.recovery_diff(records),
+                       lane_change_rates=_lane_rates(records)))
     return out
+
+
+def _lane_rates(records) -> dict:
+    """Pooled lane-change rates per WM-lane transition (per veh-h): truth vs WM sample mean."""
+    def pool(items):
+        cnt, vh = {}, 0.0
+        for it in items:
+            vh += it["veh_h"]
+            for k, v in it["counts"].items():
+                cnt[k] = cnt.get(k, 0) + v
+        return {k: v / max(vh, 1e-9) for k, v in sorted(cnt.items())}
+    recs = [r for r in records if r.get("lane_changes")]
+    if not recs:
+        return {}
+    truth = pool([r["lane_changes"]["truth"] for r in recs])
+    wm = pool([x for r in recs for x in r["lane_changes"]["wm"]])
+    return dict(truth=truth, wm=wm)
 
 
 def main(argv=None) -> int:
@@ -359,6 +406,8 @@ def main(argv=None) -> int:
     ap.add_argument("--secondary", action="append", default=[],
                     help="secondary action-response backend(s): planapi_proposer, planapi_full")
     ap.add_argument("--moment-shard", default=None, help="i/n: score moments i::n only (parallel)")
+    ap.add_argument("--batch-starts", type=int, default=16, help="starts per batched WM rollout")
+    ap.add_argument("--batch-moments", type=int, default=2, help="moments per batched WM rollout")
     ap.add_argument("--start-shard", default=None, help="i/n: distributional worlds i::n only")
     args = ap.parse_args(argv)
     out = Path(args.out)

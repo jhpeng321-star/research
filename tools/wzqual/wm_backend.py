@@ -42,59 +42,73 @@ def _sha(path) -> str:
 
 
 class RuleController:
-    """``cav_controller`` callback: per batch row an executor; returns [B, K, 4] (s, lane, v, a)."""
+    """``cav_controller`` callback: per batch row an executor; returns [B, K, 4] (s, lane, v, a).
 
-    def __init__(self, executors: list, slot_ids: list, dt: float, n_t0: int):
+    ``slot_ids[b]`` maps row b's t0 slots to vehicle ids (rows of different starts differ).
+    The state is copied to the CPU once per call (one transfer); commands are evaluated in numpy.
+    """
+
+    def __init__(self, executors: list, slot_ids: list, dt: float):
         self.ex = executors
-        self.slot_ids = slot_ids                 # slot -> vehicle id (t0 slots only)
-        self.slot_of = {vid: k for k, vid in enumerate(slot_ids)}
+        self.slot_ids = slot_ids
+        self.slot_of = [{vid: k for k, vid in enumerate(ids)} for ids in slot_ids]
         self.dt = float(dt)
-        self.n_t0 = n_t0
         b = len(executors)
-        self.accel = [dict() for _ in range(b)]  # held accel per member id
+        self.accel = [dict() for _ in range(b)]
         self.lane_target = [dict() for _ in range(b)]
         self.released = [set() for _ in range(b)]
         self.watch = [set(e.ids) | {m["params"].get(k) for m in e.members for k in ("anchor", "partner")}
                       for e in executors]
+        self.active = [bool(e.members) for e in executors]
         self.calls = 0
 
-    def _idm(self, s, v, lane, present, k):
-        """Textbook-CAV IDM acceleration of slot k (row tensors), leader in the same lane;
+    @staticmethod
+    def _idm(s, v, lane, present, k):
+        """Textbook-CAV IDM acceleration of slot k (numpy row), leader in the same lane;
         a closing-lane vehicle also sees the lane end as a standing obstacle."""
         same = present & (lane == lane[k]) & (s > s[k])
-        gap, dv = torch.tensor(1e4), torch.tensor(0.0)
-        if bool(same.any()):
-            j = torch.argmin(torch.where(same, s, torch.full_like(s, 1e9)))
-            gap = s[j] - s[k] - CAV_IDM["length"]
-            dv = v[k] - v[j]
-        if int(lane[k]) == F.CLOSING_LANE and float(s[k]) < F.DROP_S:
-            end_gap = torch.tensor(F.DROP_S - float(s[k]))
-            if end_gap < gap:
-                gap, dv = end_gap, v[k]
+        gap, dv = 1e4, 0.0
+        if same.any():
+            j = int(np.argmin(np.where(same, s, 1e9)))
+            gap, dv = float(s[j] - s[k] - CAV_IDM["length"]), float(v[k] - v[j])
+        if int(lane[k]) == F.CLOSING_LANE and s[k] < F.DROP_S and F.DROP_S - s[k] < gap:
+            gap, dv = float(F.DROP_S - s[k]), float(v[k])
         p = CAV_IDM
-        star = p["s0"] + torch.clamp(v[k] * p["T"] + v[k] * dv / (2.0 * (p["a"] * p["b"]) ** 0.5), min=0.0)
-        a = p["a"] * (1.0 - (v[k] / p["v0"]) ** p["delta"] - (star / torch.clamp(gap, min=0.1)) ** 2)
-        return float(torch.clamp(a, min=-9.0, max=p["a"]))
+        vk = float(v[k])
+        star = p["s0"] + max(0.0, vk * p["T"] + vk * dv / (2.0 * (p["a"] * p["b"]) ** 0.5))
+        a = p["a"] * (1.0 - (vk / p["v0"]) ** p["delta"] - (star / max(gap, 0.1)) ** 2)
+        return min(max(a, -9.0), p["a"])
 
     def __call__(self, state: dict) -> torch.Tensor:
         from wms.model import cav as cav_motion
 
-        s, v, lane = state["s_m"], state["v_mps"], state["lane"]
-        present = state["present"].bool()
-        cav = state["is_cav"].bool() & present
+        dev = state["s_m"].device
         step = state.get("physics_step_index", self.calls)
         step = int(step.flatten()[0]) if torch.is_tensor(step) else int(step)
         self.calls += 1
-        out = torch.stack((s, lane.to(s.dtype), v, torch.zeros_like(s)), -1).clone()
-        merge = torch.zeros_like(present)
-        for b, ex in enumerate(self.ex):
-            if step % 2 == 0:
+        s_t, v_t, lane_t = state["s_m"], state["v_mps"], state["lane"]
+        out = torch.stack((s_t, lane_t.to(s_t.dtype), v_t, torch.zeros_like(s_t)), -1)
+        cav_t = state["is_cav"].bool() & state["present"].bool()
+        rows = {b for b in range(len(self.ex)) if self.active[b]}
+        rows |= set(torch.nonzero(cav_t.any(1)).flatten().tolist())      # entrant CAVs, if any
+        if not rows:
+            state[cav_motion.WM_MERGE_KEY] = torch.zeros_like(cav_t)
+            return out
+        s, v = s_t.detach().cpu().numpy(), v_t.detach().cpu().numpy()
+        lane = lane_t.detach().cpu().numpy()
+        present = state["present"].bool().cpu().numpy()
+        cav = cav_t.cpu().numpy()
+        o = out.detach().cpu().numpy().copy()
+        mg = np.zeros(present.shape, bool)
+        for b in sorted(rows):
+            slot_of = self.slot_of[b]
+            if step % 2 == 0 and self.active[b]:
                 view = {}
                 for vid in self.watch[b]:
-                    k = self.slot_of.get(vid)
-                    if k is not None and bool(present[b, k]):
+                    k = slot_of.get(vid)
+                    if k is not None and present[b, k]:
                         view[vid] = (float(s[b, k]), int(lane[b, k]), float(v[b, k]))
-                for vid, cmds in ex.control(step // 2, view).items():
+                for vid, cmds in self.ex[b].control(step // 2, view).items():
                     for kind, val in cmds:
                         if kind == "accel":
                             self.accel[b][vid] = float(val)
@@ -104,8 +118,9 @@ class RuleController:
                             self.released[b].add(vid)
                             self.accel[b].pop(vid, None)
                             self.lane_target[b].pop(vid, None)
-            for k in torch.nonzero(cav[b]).flatten().tolist():
-                vid = self.slot_ids[k] if k < self.n_t0 else None
+            ids = self.slot_ids[b]
+            for k in np.flatnonzero(cav[b]).tolist():
+                vid = ids[k] if k < len(ids) else None
                 held = vid is not None and vid in self.accel[b] and vid not in self.released[b]
                 a = self.accel[b][vid] if held else self._idm(s[b], v[b], lane[b], present[b], k)
                 nv = min(max(float(v[b, k]) + a * self.dt, 0.0), F.SPEED_LIMIT)
@@ -114,12 +129,12 @@ class RuleController:
                 if vid is not None and vid in self.lane_target[b]:
                     ln = self.lane_target[b].pop(vid)
                 if ln == F.CLOSING_LANE:
-                    merge[b, k] = True
+                    mg[b, k] = True
                     if ns > F.DROP_S:                      # SUMO: wait at the lane end
                         ns, nv = F.DROP_S, 0.0
-                out[b, k] = torch.tensor([ns, float(ln), nv, (nv - float(v[b, k])) / self.dt], dtype=out.dtype)
-        state[cav_motion.WM_MERGE_KEY] = merge
-        return out
+                o[b, k] = (ns, float(ln), nv, (nv - float(v[b, k])) / self.dt)
+        state[cav_motion.WM_MERGE_KEY] = torch.as_tensor(mg, device=dev)
+        return torch.as_tensor(o, dtype=out.dtype, device=dev)
 
 
 class WmBackend:
@@ -197,9 +212,15 @@ class WmBackend:
         return rec
 
     # ------------------------------------------------------------------ rollout
-    @torch.no_grad()
     def rollout(self, start: StartState, arms: Mapping[str, list], *, horizon_s: float,
                 n_samples: int = 8, seed: int = 0) -> dict:
+        return self.rollout_batch([(start, arms, seed)], horizon_s=horizon_s, n_samples=n_samples)[0]
+
+    @torch.no_grad()
+    def rollout_batch(self, jobs: list, *, horizon_s: float, n_samples: int = 8) -> list:
+        """Several starts in ONE batched rollout.  ``jobs = [(start, arms, seed), ...]``; rows are
+        start-major, then arm, then sample.  Row layout per start: its t0 vehicles in slots
+        [0, n_i), never-present slots up to N = max n_i, then the shared entry pool [N, K)."""
         from wms.control.futures import sample_driver_encodings
         from wms.eval import entries_input as EI
         from wms.eval.rollout_inputs import t0_vehicles
@@ -208,93 +229,117 @@ class WmBackend:
         reset = getattr(self.model, "reset_diag_state", None)
         if reset is not None:
             reset()
-        rec = self.state_record(start)
-        t0_s, ids, kin, _cav_obs = t0_vehicles(rec)
-        n_t0 = len(ids)
-        names = list(arms)
-        n_arm, n = len(names), max(1, int(n_samples))
-        B = n_arm * n
+        dev = torch.device(self.device)
+        n = max(1, int(n_samples))
         steps = int(round(float(horizon_s) / F.DT))
-        dh, dhm = self.hist.build(rec, ids)
-        # entries v2 (observable counter + observed entry history), one row stream per sample
         tools = self.be.tools
         mod = EI._entries(tools)
-        history = EI._entry_history(rec, t0_s, kin, tools)
-        n_pad = EI._pad_size(history.rate.sum(), horizon_s)
+        per = []
+        for start, arms, seed in jobs:
+            rec = self.state_record(start)
+            t0_s, ids, kin, _ = t0_vehicles(rec)
+            dh, dhm = self.hist.build(rec, ids)
+            history = EI._entry_history(rec, t0_s, kin, tools)
+            per.append(dict(start=start, arms=arms, seed=int(seed), rec=rec, ids=ids, kin=kin,
+                            dh=dh, dhm=dhm, history=history,
+                            pad=EI._pad_size(history.rate.sum(), horizon_s)))
+        N = max(len(p["ids"]) for p in per)
+        n_pad = max(p["pad"] for p in per)
+        K = N + n_pad
+        S = len(per)
+        st = dict(s_m=torch.zeros(S, K), v_mps=torch.zeros(S, K), a_mps2=torch.zeros(S, K),
+                  lane=torch.zeros(S, K, dtype=torch.long), length_m=torch.full((S, K), 5.0),
+                  present=torch.zeros(S, K, dtype=torch.bool), is_cav=torch.zeros(S, K, dtype=torch.bool))
+        dh_all = dhm_all = None
+        for i, p in enumerate(per):
+            m = len(p["ids"])
+            st["s_m"][i, :m] = torch.as_tensor(p["kin"][:, 0])
+            st["v_mps"][i, :m] = torch.as_tensor(p["kin"][:, 4])
+            st["lane"][i, :m] = torch.as_tensor(p["kin"][:, 1:4].argmax(-1))
+            st["present"][i, :m] = True
+            if p["dh"] is not None:
+                if dh_all is None:
+                    dh_all = torch.zeros(S, K, *p["dh"].shape[2:], dtype=p["dh"].dtype)
+                    dhm_all = torch.zeros(S, K, p["dhm"].shape[2], dtype=torch.bool)
+                dh_all[i, :m] = p["dh"][0]
+                dhm_all[i, :m] = p["dhm"][0]
+        exit_s = road_end_exit_bound(getattr(self.model, "physics", None))
+        if exit_s is not None:
+            st["exit_s_m"] = torch.full((S, K), float(exit_s))
+        st = {k: v.to(dev) for k, v in st.items()}
+        hist_args = {} if dh_all is None else dict(driver_history=dh_all.to(dev),
+                                                   driver_history_mask=dhm_all.to(dev))
+        gen = torch.Generator().manual_seed(int(per[0]["seed"]) % (2 ** 63))
+        sampled = sample_driver_encodings(
+            self.model, st, hist_args, n,
+            lambda shape, reference, key: torch.randn(tuple(shape), generator=gen).to(reference),
+            driver_noise_scale=self.driver_noise, embedding_noise_std=self.embedding_noise)
+        row_start, row_arm, row_k, execs, slot_ids = [], [], [], [], []
+        for i, p in enumerate(per):
+            for name in p["arms"]:
+                for k in range(n):
+                    row_start.append(i)
+                    row_arm.append(name)
+                    row_k.append(k)
+                    execs.append(MoveExecutor(p["arms"][name], t0=p["start"].t0))
+                    slot_ids.append(p["ids"])
+        B = len(row_start)
+        rs = torch.as_tensor(row_start, device=dev)
+        rk = torch.as_tensor(row_k, device=dev)
+        state = {k: v[rs] for k, v in st.items()}
+        member = torch.zeros(B, K, dtype=torch.bool)
+        for r in range(B):
+            mids = {m["id"] for m in per[row_start[r]]["arms"][row_arm[r]]}
+            for j, vid in enumerate(per[row_start[r]]["ids"]):
+                if vid in mids:
+                    member[r, j] = True
+        state["is_cav"] = member.to(dev)
+        drivers = {}
+        if "driver_params" in sampled:              # [n, S, K] -> row (start, sample)
+            drivers["driver_params"] = {q: v[rk, rs] for q, v in sampled["driver_params"].items()}
+        if "driver_embedding" in sampled:
+            drivers["driver_embedding"] = sampled["driver_embedding"][rk, rs]
+        lanes = {}
+        if getattr(self.model, "_samples_lanes", False):
+            draws = torch.stack([torch.rand(n, steps, K, generator=torch.Generator().manual_seed(
+                int(hashlib.sha256(f"wzqual-lanes:{p['seed']}".encode()).hexdigest()[:12], 16)))
+                for p in per])                              # [S, n, T, K]
+            lanes["lane_uniform"] = draws[torch.as_tensor(row_start), torch.as_tensor(row_k)].to(dev)
         cfg_kwargs = {}
         rule = self.be.config.get("entry_insert_rule")
         if rule and "insert_rule" in mod.EntryConfig.__dataclass_fields__:
             cfg_kwargs["insert_rule"] = str(rule)
-        row_seeds = [int(hashlib.sha256(f"wzqual-entry:{seed}:{k}".encode()).hexdigest()[:12], 16)
-                     for _a in range(n_arm) for k in range(n)]
-        proc = mod.TorchEntryProcessV2(history=history, dt_s=F.DT, seed=int(seed), batch=B,
-                                       cfg=mod.EntryConfig(**cfg_kwargs), pool=EI._pool(n_t0, n_pad),
-                                       row_seeds=row_seeds, couple_draws=True)
-        K = n_t0 + n_pad
-        one = dict(s_m=torch.zeros(1, K), v_mps=torch.zeros(1, K), a_mps2=torch.zeros(1, K),
-                   lane=torch.zeros(1, K, dtype=torch.long), length_m=torch.full((1, K), 5.0),
-                   present=torch.zeros(1, K, dtype=torch.bool), is_cav=torch.zeros(1, K, dtype=torch.bool))
-        one["s_m"][0, :n_t0] = torch.as_tensor(kin[:, 0])
-        one["v_mps"][0, :n_t0] = torch.as_tensor(kin[:, 4])
-        one["lane"][0, :n_t0] = torch.as_tensor(kin[:, 1:4].argmax(-1))
-        one["present"][0, :n_t0] = True
-        exit_s = road_end_exit_bound(getattr(self.model, "physics", None))
-        if exit_s is not None:
-            one["exit_s_m"] = torch.full((1, K), float(exit_s))
-        if dh is not None:
-            dh = torch.cat((dh, torch.zeros(1, n_pad, *dh.shape[2:], dtype=dh.dtype)), dim=1)
-            dhm = torch.cat((dhm, torch.zeros(1, n_pad, dhm.shape[2], dtype=torch.bool)), dim=1)
-        gen = torch.Generator().manual_seed(int(seed) % (2 ** 63))
-        hist_args = {} if dh is None else dict(driver_history=dh, driver_history_mask=dhm)
-        drivers = {}
-        sampled = sample_driver_encodings(
-            self.model, one, hist_args, n,
-            lambda shape, reference, key: torch.randn(tuple(shape), generator=gen).to(reference),
-            driver_noise_scale=self.driver_noise, embedding_noise_std=self.embedding_noise)
-        if "driver_params" in sampled:          # [n, 1, K] -> rows arm-major / sample-minor
-            drivers["driver_params"] = {p: v[:, 0].repeat(n_arm, 1) for p, v in sampled["driver_params"].items()}
-        if "driver_embedding" in sampled:
-            drivers["driver_embedding"] = sampled["driver_embedding"][:, 0].repeat(n_arm, 1, 1)
-        lanes = {}
-        if getattr(self.model, "_samples_lanes", False):
-            draws = torch.rand(n, steps, K, generator=gen)
-            lanes["lane_uniform"] = draws.repeat(n_arm, 1, 1)
-        state = {key: val.repeat(B, *([1] * (val.ndim - 1))) for key, val in one.items()}
-        member = torch.zeros(B, K, dtype=torch.bool)
-        execs = []
-        for a, name in enumerate(names):
-            mids = {m["id"] for m in arms[name]}
-            for k in range(n):
-                row = a * n + k
-                execs.append(MoveExecutor(arms[name], t0=start.t0))
-                for j, vid in enumerate(ids):
-                    if vid in mids:
-                        member[row, j] = True
-        state["is_cav"] = member
-        ctrl = RuleController(execs, ids, F.DT, n_t0)
-        bh = {} if dh is None else dict(driver_history=dh.repeat(B, 1, 1, 1),
-                                        driver_history_mask=dhm.repeat(B, 1, 1))
+        row_seeds = [int(hashlib.sha256(f"wzqual-entry:{per[i]['seed']}:{k}".encode()).hexdigest()[:12], 16)
+                     for i, k in zip(row_start, row_k)]
+        proc = mod.TorchEntryProcessV2(histories=[per[i]["history"] for i in row_start], dt_s=F.DT,
+                                       seed=int(per[0]["seed"]), batch=B, cfg=mod.EntryConfig(**cfg_kwargs),
+                                       pool=EI._pool(N, n_pad), row_seeds=row_seeds, couple_draws=True)
+        ctrl = RuleController(execs, slot_ids, F.DT)
+        bh = {} if not hist_args else {k: v[rs] for k, v in hist_args.items()}
         roll = self.model.rollout(state, n_steps=steps, k0=0, cav_controller=ctrl, entries=proc,
                                   projection=self.be.projection, controller_id=None, **bh, **drivers,
                                   **lanes)
         pos, spd = roll["positions"].cpu().numpy(), roll["speeds"].cpu().numpy()
         lan, msk = roll["lanes"].cpu().numpy(), roll["masks"].cpu().numpy().astype(bool)
-        slot_names = list(ids) + [f"__entry_{j}" for j in range(n_pad)]
-        is_cav_slot = np.zeros(K, bool)
-        is_cav_slot[:n_t0] = np.asarray([bool(x) for x in rec_cav(rec, ids)])
-        out: dict = {name: [] for name in names}
-        times = start.t0 + F.DT * np.arange(steps + 1)
-        for a, name in enumerate(names):
-            for k in range(n):
-                r = a * n + k
-                S = np.concatenate([one["s_m"][0].numpy()[None], pos[r]], 0)
-                V = np.concatenate([one["v_mps"][0].numpy()[None], spd[r]], 0)
-                L = np.concatenate([one["lane"][0].numpy()[None], lan[r]], 0)
-                P = np.concatenate([one["present"][0].numpy()[None], msk[r]], 0)
-                ki, vi = np.nonzero(P)
-                out[name].append(Traj(times, ki, vi, S[ki, vi], L[ki, vi], V[ki, vi], slot_names,
-                                      is_cav_slot, None, dict(backend=self.name, arm=name, sample=k)))
-        return out
+        s0, v0 = state["s_m"].cpu().numpy(), state["v_mps"].cpu().numpy()
+        l0, p0 = state["lane"].cpu().numpy(), state["present"].cpu().numpy()
+        results = [{name: [] for name in p["arms"]} for p in per]
+        for r in range(B):
+            p = per[row_start[r]]
+            names = (list(p["ids"]) + [f"__void_{j}" for j in range(N - len(p["ids"]))]
+                     + [f"__entry_{j}" for j in range(n_pad)])
+            cav_slot = np.zeros(K, bool)
+            cav_slot[:len(p["ids"])] = rec_cav(p["rec"], p["ids"])
+            Sx = np.concatenate([s0[r][None], pos[r]], 0)
+            Vx = np.concatenate([v0[r][None], spd[r]], 0)
+            Lx = np.concatenate([l0[r][None], lan[r]], 0)
+            Px = np.concatenate([p0[r][None], msk[r]], 0)
+            ki, vi = np.nonzero(Px)
+            times = p["start"].t0 + F.DT * np.arange(steps + 1)
+            results[row_start[r]][row_arm[r]].append(
+                Traj(times, ki, vi, Sx[ki, vi], Lx[ki, vi], Vx[ki, vi], names, cav_slot, None,
+                     dict(backend=self.name, arm=row_arm[r], sample=row_k[r])))
+        return results
 
 
 def rec_cav(rec: dict, ids: list) -> list:
