@@ -1,0 +1,537 @@
+{
+ "schema": "c4-ledger-sources/1",
+ "closeout_id": "C4-LEDGER-1106",
+ "generated_at": "2026-11-06T20:00:06+08:00",
+ "branch": "c4/ledger-1106 (worktree E:/agent-work/c4-ledger-1106, from c4/closeout-20261106 92ab634b)",
+ "new_sim_s": 0,
+ "new_charges": 0,
+ "restricted_paths_opened": 0,
+ "sources": [
+  {
+   "path": "runs/active/C4-V7FT-20261017/REGISTRATION.md",
+   "role": "live registration log; 2026-11-06 entries 12:38-19:57 read (lines ~7799-8287); later entries not used; not committed",
+   "bytes": 3329358,
+   "sha256": "dd14aa051d8bfa86ff1a947265044a4362ed282a8ce7810b1dadba5724cc0c20",
+   "sha256_lf": "dd14aa051d8bfa86ff1a947265044a4362ed282a8ce7810b1dadba5724cc0c20",
+   "committed_copy": false,
+   "sha256_at_first_read": "a34f95ffabc579e7ae8bc13296f92156c3d46ad46908bd49f9f75472b815382a",
+   "changed_since_first_read": true
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/CLEAN1_STATUS.md",
+   "role": "live status log (WALLMINE/CLEAN3/NEWMAP2/COOPKINDS/PLANGEN/PLANGEN2/LOWCAV/WMQUAL/WMDATA/CLEAN4/LEARN*/FAIRAUDIT/LCMOVES/REGIME lines 1291-1396); later lines not used; not committed",
+   "bytes": 185891,
+   "sha256": "ed041e274fcf0c2c2ab5cf948419522654e5ae01b65e9a8a01f99f7fdaba2e94",
+   "sha256_lf": "ed041e274fcf0c2c2ab5cf948419522654e5ae01b65e9a8a01f99f7fdaba2e94",
+   "committed_copy": false,
+   "sha256_at_first_read": "edc1f3e36733150e6fd902ca7c6307696384936dd2832f3d99e2d16556df5ea6",
+   "changed_since_first_read": true
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/WALLMINE_REPORT.md",
+   "role": "WALLMINE-20261106 final report (13:46)",
+   "bytes": 10753,
+   "sha256": "202f755f59c437e25dace4c414e42db6459a0708c7600c1e48e1940301823c94",
+   "sha256_lf": "4c582c189ce70e906179af3ce05e80455f85679f363e7773f91fdc626e75c39c",
+   "committed_copy": true,
+   "sha256_at_first_read": "202f755f59c437e25dace4c414e42db6459a0708c7600c1e48e1940301823c94",
+   "changed_since_first_read": false,
+   "copy_sha256": "4c582c189ce70e906179af3ce05e80455f85679f363e7773f91fdc626e75c39c"
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/NEWMAP2_REPORT.md",
+   "role": "NEWMAP2-20261106 report",
+   "bytes": 16593,
+   "sha256": "70c119595ff3f391bbdebfa0a98d9c2f7ca02d2ae61f8acb53c126754adfdb05",
+   "sha256_lf": "70c119595ff3f391bbdebfa0a98d9c2f7ca02d2ae61f8acb53c126754adfdb05",
+   "committed_copy": true,
+   "sha256_at_first_read": "70c119595ff3f391bbdebfa0a98d9c2f7ca02d2ae61f8acb53c126754adfdb05",
+   "changed_since_first_read": false,
+   "copy_sha256": "70c119595ff3f391bbdebfa0a98d9c2f7ca02d2ae61f8acb53c126754adfdb05"
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/COOPKINDS_REPORT.md",
+   "role": "COOPKINDS-20261106 report",
+   "bytes": 14973,
+   "sha256": "48c02fd7db6ff9eed8b2fb62a1ed8419aea4248663a2abad0f73c73eb8efc6d4",
+   "sha256_lf": "e31d5710ccfbe1694e25fa85fb054a88a485bdf642cee2c0d824a0c899b0459d",
+   "committed_copy": true,
+   "sha256_at_first_read": "48c02fd7db6ff9eed8b2fb62a1ed8419aea4248663a2abad0f73c73eb8efc6d4",
+   "changed_since_first_read": false,
+   "copy_sha256": "e31d5710ccfbe1694e25fa85fb054a88a485bdf642cee2c0d824a0c899b0459d"
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/PLANGEN_REPORT.md",
+   "role": "PLANGEN-20261106 report",
+   "bytes": 10374,
+   "sha256": "5fd0d78a7d418347c6e5fca15fae9da72581e173ce8dba07536fc66dd2ccdf4d",
+   "sha256_lf": "faafcf3bf3a50f61e04b809a0f670bc621c1a4289441ca9db4c5e09a25914e92",
+   "committed_copy": true,
+   "sha256_at_first_read": "5fd0d78a7d418347c6e5fca15fae9da72581e173ce8dba07536fc66dd2ccdf4d",
+   "changed_since_first_read": false,
+   "copy_sha256": "faafcf3bf3a50f61e04b809a0f670bc621c1a4289441ca9db4c5e09a25914e92"
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/PLANGEN2_REPORT.md",
+   "role": "PLANGEN2-20261106 report",
+   "bytes": 15003,
+   "sha256": "63c60e387580d8d9cab71a4ed7712a050c13ff2cb2129cb7bf35603cb1b1f31e",
+   "sha256_lf": "63c60e387580d8d9cab71a4ed7712a050c13ff2cb2129cb7bf35603cb1b1f31e",
+   "committed_copy": true,
+   "sha256_at_first_read": "63c60e387580d8d9cab71a4ed7712a050c13ff2cb2129cb7bf35603cb1b1f31e",
+   "changed_since_first_read": false,
+   "copy_sha256": "63c60e387580d8d9cab71a4ed7712a050c13ff2cb2129cb7bf35603cb1b1f31e"
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/LOWCAV_REPORT.md",
+   "role": "LOWCAV-20261106 report",
+   "bytes": 12485,
+   "sha256": "45d68a90f43a83fb31ba1237cc97b84b4257c61bb70f90b6ebb0d02d0d6a1542",
+   "sha256_lf": "45d68a90f43a83fb31ba1237cc97b84b4257c61bb70f90b6ebb0d02d0d6a1542",
+   "committed_copy": true,
+   "sha256_at_first_read": "45d68a90f43a83fb31ba1237cc97b84b4257c61bb70f90b6ebb0d02d0d6a1542",
+   "changed_since_first_read": false,
+   "copy_sha256": "45d68a90f43a83fb31ba1237cc97b84b4257c61bb70f90b6ebb0d02d0d6a1542"
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/WZ_WM_DATA_REPORT.md",
+   "role": "WZ-WMDATA-20261106 report",
+   "bytes": 9313,
+   "sha256": "29e8aed2250db496a40d9acc1880b3cdb5ed6a605ad8b7aa552fe0bf16bc1407",
+   "sha256_lf": "539ae6cf17419a29cdde735da8314eae6e2a92cb4acdc40a40f702647900d05a",
+   "committed_copy": true,
+   "sha256_at_first_read": "29e8aed2250db496a40d9acc1880b3cdb5ed6a605ad8b7aa552fe0bf16bc1407",
+   "changed_since_first_read": false,
+   "copy_sha256": "539ae6cf17419a29cdde735da8314eae6e2a92cb4acdc40a40f702647900d05a"
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/LCMOVES_REPORT.md",
+   "role": "S-LCMOVES report",
+   "bytes": 14648,
+   "sha256": "5d19de89e07ca8c5e53695722e6110cedb998e89818194d1036aa4c724be32d7",
+   "sha256_lf": "ddc5e547f048f225fcb07d977134acba865fa9e1dc7d3be6c379d2ad8a5d3bf9",
+   "committed_copy": true,
+   "sha256_at_first_read": "5d19de89e07ca8c5e53695722e6110cedb998e89818194d1036aa4c724be32d7",
+   "changed_since_first_read": false,
+   "copy_sha256": "ddc5e547f048f225fcb07d977134acba865fa9e1dc7d3be6c379d2ad8a5d3bf9"
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/wmqual/identity/IDENTITY.json",
+   "role": "WMQUAL-B-20261106 identity-gate receipt (74/74)",
+   "bytes": 34267,
+   "sha256": "99b4581987c99b884f2c910da1dba91207cd834322d6c0109f9a1ee9facd591a",
+   "sha256_lf": "99b4581987c99b884f2c910da1dba91207cd834322d6c0109f9a1ee9facd591a",
+   "committed_copy": true,
+   "sha256_at_first_read": "99b4581987c99b884f2c910da1dba91207cd834322d6c0109f9a1ee9facd591a",
+   "changed_since_first_read": false,
+   "copy_sha256": "99b4581987c99b884f2c910da1dba91207cd834322d6c0109f9a1ee9facd591a"
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/LEARNABILITY_REPORT.md",
+   "role": "LEARNABILITY-20261106 report incl. 19:11 addendum (live; hashed only)",
+   "bytes": 33959,
+   "sha256": "b69494ea20ff24cfcd398aeade2b3c0d1b5fec8d2fb29d369223fed917c4196f",
+   "sha256_lf": "9c92e9bc26a3ea1c2653f4e675f2d4f73394f05d271f66e29a89fe43c15b373a",
+   "committed_copy": false,
+   "sha256_at_first_read": "b69494ea20ff24cfcd398aeade2b3c0d1b5fec8d2fb29d369223fed917c4196f",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/LEARNAUDIT_REPORT.md",
+   "role": "LEARNAUDIT-20261106 report incl. 19:33 addendum (live; hashed only)",
+   "bytes": 12531,
+   "sha256": "1d4edc8ad9220e35fbee3a027215c6a2970eced473b43fc3db5a0f6bc9f4f150",
+   "sha256_lf": "1d4edc8ad9220e35fbee3a027215c6a2970eced473b43fc3db5a0f6bc9f4f150",
+   "committed_copy": false,
+   "sha256_at_first_read": "5dd89e7bef80abe3116fe8b971b14518c38da9a34359bc5fc846e455b4ce39f3",
+   "changed_since_first_read": true
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/FAIRAUDIT_REPORT.md",
+   "role": "FAIRAUDIT-20261106 report incl. addenda 18:05/19:25 (live; hashed only)",
+   "bytes": 24247,
+   "sha256": "6f6081caf758ec538a7d12c73c79acfd043ea65d23cfc75ff9ea724b7e3eb5d9",
+   "sha256_lf": "6f6081caf758ec538a7d12c73c79acfd043ea65d23cfc75ff9ea724b7e3eb5d9",
+   "committed_copy": false,
+   "sha256_at_first_read": "73531927d1bc4e78b3680ab9be4758c7d771b5abbb375e83164b361049fe821e",
+   "changed_since_first_read": true
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/CLEAN4_STAGING.md",
+   "role": "clean4 N10 staging (0 sim-s; context for CLEAN4-BASESANITY-20261106; not an entry)",
+   "bytes": 6828,
+   "sha256": "521aa0d5d9342566c674ca9bcdf3c3247458b9c08c510a54416c895761eb491f",
+   "sha256_lf": "521aa0d5d9342566c674ca9bcdf3c3247458b9c08c510a54416c895761eb491f",
+   "committed_copy": false,
+   "sha256_at_first_read": "521aa0d5d9342566c674ca9bcdf3c3247458b9c08c510a54416c895761eb491f",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/MINING_REPORT.md",
+   "role": "S-MINING-20261106 operator-2 final report (already committed by C4-CLOSEOUT-20261106; re-checked unchanged)",
+   "bytes": 5577,
+   "sha256": "cea7db078b1615c1db44047522344b516a51a285e22a1bb8cccf2a0e8d8cc4f1",
+   "sha256_lf": "cea7db078b1615c1db44047522344b516a51a285e22a1bb8cccf2a0e8d8cc4f1",
+   "committed_copy": false,
+   "sha256_at_first_read": "cea7db078b1615c1db44047522344b516a51a285e22a1bb8cccf2a0e8d8cc4f1",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/NEWMAP_RESEARCH.md",
+   "role": "NEWMAP-PROBE-20261106 report (already committed; re-checked unchanged modulo CRLF)",
+   "bytes": 28971,
+   "sha256": "33a94fa6770edd0016517fd8b22d5d50474690861a69d7fbd0bcaaff8a2b85c4",
+   "sha256_lf": "d0a7fc866df99a8c3a6908ed41567efecb23a7a137caf5b295804cf94fee5c84",
+   "committed_copy": false,
+   "sha256_at_first_read": "33a94fa6770edd0016517fd8b22d5d50474690861a69d7fbd0bcaaff8a2b85c4",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/UPPER_BOUND_REPORT.md",
+   "role": "UPPER-BOUND-20261106 report (already committed; re-checked unchanged)",
+   "bytes": 13922,
+   "sha256": "c2a365fb5e9cd2857c1c68bb6b4e95d6ded68cc8d0378d1a57e06ace0d867d00",
+   "sha256_lf": "c2a365fb5e9cd2857c1c68bb6b4e95d6ded68cc8d0378d1a57e06ace0d867d00",
+   "committed_copy": false,
+   "sha256_at_first_read": "c2a365fb5e9cd2857c1c68bb6b4e95d6ded68cc8d0378d1a57e06ace0d867d00",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/newmap2/results/NM2_SUMMARY.json",
+   "role": "NEWMAP2 analysis summary (local; not committed, size)",
+   "bytes": 582039,
+   "sha256": "596968d05ba8c7acf2a6bdf8313a99844707d3f93a007d1ba76eec9bbbc2d2d7",
+   "sha256_lf": "596968d05ba8c7acf2a6bdf8313a99844707d3f93a007d1ba76eec9bbbc2d2d7",
+   "committed_copy": false,
+   "sha256_at_first_read": "596968d05ba8c7acf2a6bdf8313a99844707d3f93a007d1ba76eec9bbbc2d2d7",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/coopkinds/results/ANALYSIS.json",
+   "role": "COOPKINDS analysis (local; not committed, size)",
+   "bytes": 302311,
+   "sha256": "65533718e7339bff196ad422cf32ce438891e13be3e023d48f9e5270a65f5911",
+   "sha256_lf": "65533718e7339bff196ad422cf32ce438891e13be3e023d48f9e5270a65f5911",
+   "committed_copy": false,
+   "sha256_at_first_read": "65533718e7339bff196ad422cf32ce438891e13be3e023d48f9e5270a65f5911",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/plangen/results/PG_SUMMARY.json",
+   "role": "PLANGEN verdicts (local; not committed, size)",
+   "bytes": 910570,
+   "sha256": "f190e56d1f10ee4b0cb26211e0067a884cb3b4e4852435ea644494d9a400d058",
+   "sha256_lf": "f190e56d1f10ee4b0cb26211e0067a884cb3b4e4852435ea644494d9a400d058",
+   "committed_copy": false,
+   "sha256_at_first_read": "f190e56d1f10ee4b0cb26211e0067a884cb3b4e4852435ea644494d9a400d058",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/lowcav/results/LC_SUMMARY.json",
+   "role": "LOWCAV summary (local; not committed, size)",
+   "bytes": 211558,
+   "sha256": "95c596f12c59b2da1106a627a6236785f1480dbd59df8789099a0cd91ba2a858",
+   "sha256_lf": "95c596f12c59b2da1106a627a6236785f1480dbd59df8789099a0cd91ba2a858",
+   "committed_copy": false,
+   "sha256_at_first_read": "95c596f12c59b2da1106a627a6236785f1480dbd59df8789099a0cd91ba2a858",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/lcmoves/results/final/LCM_SUMMARY.json",
+   "role": "S-LCMOVES verdicts (local; not committed, size)",
+   "bytes": 698583,
+   "sha256": "9ed2a1dd846f5448b2cb05a1cc2edf33181d14a052057c52565135db63275889",
+   "sha256_lf": "9ed2a1dd846f5448b2cb05a1cc2edf33181d14a052057c52565135db63275889",
+   "committed_copy": false,
+   "sha256_at_first_read": "9ed2a1dd846f5448b2cb05a1cc2edf33181d14a052057c52565135db63275889",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/REGIME_REPORT.md",
+   "role": "S-REGIME report incl. amendment-4 sections 8a/8b (still being edited near 20:00; hashed only)",
+   "bytes": 39438,
+   "sha256": "6dac34ea11f44af69e6f9786dc4359fa04c4ea2f04b03b2a5780feaadc0ad68c",
+   "sha256_lf": "80b263f77cd8aba415b500e58759f7010d2d77e875abc2e7def913b68d019799",
+   "committed_copy": false,
+   "sha256_at_first_read": "6dac34ea11f44af69e6f9786dc4359fa04c4ea2f04b03b2a5780feaadc0ad68c",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/REGIME_RESULTS.jsonl",
+   "role": "S-REGIME per-episode results (1,167 rows incl. 19 amendment-4 gated episodes; the registered sweep was 1,148 rows, sha 93774284 at first read ~19:47; hashed only)",
+   "bytes": 2108813,
+   "sha256": "b1cad916cb53caefaddc63d8479b40e74b1e6e8ce05e9e09d65054347a459c37",
+   "sha256_lf": "b1cad916cb53caefaddc63d8479b40e74b1e6e8ce05e9e09d65054347a459c37",
+   "committed_copy": false,
+   "rows_at_first_read": 1167,
+   "sha256_at_first_read": "b1cad916cb53caefaddc63d8479b40e74b1e6e8ce05e9e09d65054347a459c37",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/CLEAN4_GATE_FAIL.md",
+   "role": "CLEAN4-PLANA-20261106 gate-fail report",
+   "bytes": 2783,
+   "sha256": "9d2e67e57392ff41f2bcca0ebea7c61caf913bcd18f8ed8cc13ba0c7b1ef512f",
+   "sha256_lf": "b0fda30e2513e3c56e6da38491fcbbbeaa372c2adc3392f73ddc071d4373729e",
+   "committed_copy": true,
+   "sha256_at_first_read": "9d2e67e57392ff41f2bcca0ebea7c61caf913bcd18f8ed8cc13ba0c7b1ef512f",
+   "changed_since_first_read": false,
+   "copy_sha256": "b0fda30e2513e3c56e6da38491fcbbbeaa372c2adc3392f73ddc071d4373729e"
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/clean4_verify/POTENTIAL_GATE.json",
+   "role": "CLEAN4-PLANA-20261106 sealed gate receipt (receipt_sha256 b1a81fb1)",
+   "bytes": 1893,
+   "sha256": "f0ac7185edc255a1207ec352ec3592bab87ff1a139764058eb5efa4f4bb76ad8",
+   "sha256_lf": "a3f66de415465b4f477caab864a356b04df3867d64135a78a58eb73f0f5d9960",
+   "committed_copy": true,
+   "sha256_at_first_read": "f0ac7185edc255a1207ec352ec3592bab87ff1a139764058eb5efa4f4bb76ad8",
+   "changed_since_first_read": false,
+   "copy_sha256": "a3f66de415465b4f477caab864a356b04df3867d64135a78a58eb73f0f5d9960"
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/clean4_verify/MOVE_LIST.json",
+   "role": "CLEAN4 Plan A frozen move list (sha equals the gate source)",
+   "bytes": 62112,
+   "sha256": "fe3836396a6482092a459124d02bd806e3a3d5866d967dea7158dd973a6f1a3f",
+   "sha256_lf": "fe3836396a6482092a459124d02bd806e3a3d5866d967dea7158dd973a6f1a3f",
+   "committed_copy": false,
+   "sha256_at_first_read": "fe3836396a6482092a459124d02bd806e3a3d5866d967dea7158dd973a6f1a3f",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/clean4_verify/CHARGES.jsonl",
+   "role": "CLEAN4 Plan A ledger copy (sha equals the gate source)",
+   "bytes": 6098,
+   "sha256": "b7eca87e0f25f40dc3a434dfd43a5aff76b133e1b61dd562c2d51c13a6aa2465",
+   "sha256_lf": "b7eca87e0f25f40dc3a434dfd43a5aff76b133e1b61dd562c2d51c13a6aa2465",
+   "committed_copy": false,
+   "sha256_at_first_read": "b7eca87e0f25f40dc3a434dfd43a5aff76b133e1b61dd562c2d51c13a6aa2465",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/clean4_verify/CLEAN4_MOVES_B.jsonl",
+   "role": "CLEAN4 Plan A admitted B row (1; sha equals the gate source)",
+   "bytes": 10466,
+   "sha256": "a4698f613f0fe0413166208a6c1cc1784329a1de4ece67034fcbc65748e0ea18",
+   "sha256_lf": "a4698f613f0fe0413166208a6c1cc1784329a1de4ece67034fcbc65748e0ea18",
+   "committed_copy": false,
+   "rows_at_first_read": 1,
+   "sha256_at_first_read": "a4698f613f0fe0413166208a6c1cc1784329a1de4ece67034fcbc65748e0ea18",
+   "changed_since_first_read": false
+  }
+ ],
+ "local_ledger_resums": {
+  "wallmine/gpuA/CHARGES.jsonl": {
+   "rows": 43,
+   "sim_s": 89075.0,
+   "by_kind": {
+    "collect": 10800.0,
+    "screen": 49775.0,
+    "synergy": 13880.0,
+    "wallmine": 14620.0
+   }
+  },
+  "wallmine/cpuV/CHARGES.jsonl": {
+   "rows": 24,
+   "sim_s": 58475.0,
+   "by_kind": {
+    "screen": 29140.0,
+    "synergy": 8545.0,
+    "wallmine": 19590.0,
+    "collect": 1200.0
+   }
+  },
+  "newmap2/results/CHARGES.jsonl": {
+   "rows": 965,
+   "sim_s": 298980.0,
+   "by_kind": {}
+  },
+  "coopkinds/results/CHARGES.jsonl": {
+   "rows": 584,
+   "sim_s": 199920.0,
+   "by_kind": {}
+  },
+  "plangen/results/CHARGES.jsonl": {
+   "rows": 1009,
+   "sim_s": 308220.0,
+   "by_kind": {}
+  },
+  "plangen2/results/host_gpuA/CHARGES.jsonl": {
+   "rows": 763,
+   "sim_s": 225030.0,
+   "by_kind": {}
+  },
+  "plangen2/results/host_cpuV/CHARGES.jsonl": {
+   "rows": 220,
+   "sim_s": 67080.0,
+   "by_kind": {}
+  },
+  "lowcav/results/CHARGES.jsonl": {
+   "rows": 357,
+   "sim_s": 114300.0,
+   "by_kind": {}
+  },
+  "lcmoves/results/final/CHARGES.jsonl": {
+   "rows": 553,
+   "sim_s": 149720.0,
+   "by_kind": {
+    "shared": 9800.0,
+    "B": 53520.0,
+    "ref": 22500.0,
+    "R": 63900.0
+   }
+  },
+  "regime/results/host_gpuA/CHARGES.jsonl": {
+   "rows": 1194,
+   "sim_s": 1413700.0,
+   "by_kind": {}
+  },
+  "clean4_verify/CHARGES.jsonl": {
+   "rows": 29,
+   "sim_s": 75802.0,
+   "by_kind": {
+    "collect": 12000.0,
+    "screen": 38890.0,
+    "first": 1968.0,
+    "confirm_seed2_all8": 1968.0,
+    "confirm_extended_all8": 2400.0,
+    "confirm_extended_seed2_all8": 2400.0,
+    "confirm_solo_all8_s1": 3936.0,
+    "confirm_solo_all8_s2": 3936.0,
+    "confirm_seed3_all8": 1968.0,
+    "confirm_extended_seed3_all8": 2400.0,
+    "confirm_solo_all8_s3": 3936.0
+   }
+  }
+ },
+ "row_files": {
+  "WALLMINE_MOVES.jsonl": {
+   "rows": 3,
+   "sha256": "bb94bab7f0018244a3c7dcac4f901f30caecae507a1252adc511ed2e31146573"
+  },
+  "WALLMINE_MOVES_R.jsonl": {
+   "rows": 0,
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "WALLMINE_NEGATIVES.jsonl": {
+   "rows": 106,
+   "sha256": "f56cb9be41c11918b477ac0485cbe8271eb2213be9a55a546c6ff2b9dec9ed04"
+  },
+  "NEWMAP_MOVES_B.jsonl": {
+   "rows": 27,
+   "sha256": "88adb68aca9d9cac3537db3291abf224bdb91885914664a2419627bb63fc864b"
+  },
+  "NEWMAP_MOVES_R.jsonl": {
+   "rows": 3,
+   "sha256": "d6b4b1af80d3ad08d18a1cff97be155c70de1a4f8a829577d7fbb8e636d08388"
+  },
+  "NEWMAP_NEGATIVES.jsonl": {
+   "rows": 359,
+   "sha256": "bbb3dfbb7ee58e30d6147ea31ec2ed0253be85df370fc9a7689c2c7c394f5e85"
+  },
+  "COOPKINDS_MOVES_B.jsonl": {
+   "rows": 18,
+   "sha256": "317d1e6961ceee9ee2456b215569de913e10745391c9c400a3a26e41acc63bcd"
+  },
+  "COOPKINDS_MOVES_R.jsonl": {
+   "rows": 0,
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "COOPKINDS_NEGATIVES.jsonl": {
+   "rows": 157,
+   "sha256": "934d10a75e64ea0b24bd105d83ac748d9ffac90a37b5b4629e4b5a3ef2a103da"
+  },
+  "PLANGEN_MOVES_B.jsonl": {
+   "rows": 18,
+   "sha256": "369ccd4ff8c477554808b3a76e0cc344c0afd1ee8ad10328111467e6d56b5c93"
+  },
+  "PLANGEN_MOVES_R.jsonl": {
+   "rows": 15,
+   "sha256": "7c43b502a1d3f9eb5d023ddc1576a79dd8c4bae63ab4b4b72384299eb9d7acea"
+  },
+  "PLANGEN_NEGATIVES.jsonl": {
+   "rows": 379,
+   "sha256": "79e981f42ddf0a80ec7b784e15467ef4f28e6c23a932d0b8a497e4726eb5aa75"
+  },
+  "PLANGEN2_MOVES_B.jsonl": {
+   "rows": 24,
+   "sha256": "ec097835b2a4d417338901f2bd71568fa9a260a9d0dc4e04c2980d155607ade0"
+  },
+  "PLANGEN2_MOVES_R.jsonl": {
+   "rows": 18,
+   "sha256": "591078b861f23925bdce5d75a2998dcb7e759bbbc928f77af0549330377c7f2f"
+  },
+  "PLANGEN2_NEGATIVES.jsonl": {
+   "rows": 296,
+   "sha256": "9a6c78c2c3b91f7e070ca0c2190c2072c7aff74d1e17375e7d885ea856588036"
+  },
+  "LOWCAV_MOVES_B.jsonl": {
+   "rows": 12,
+   "sha256": "f2b802b3a9e62c6e84eab6b22fb404fd991c0f4b1c8732b881e3c4f15a79eb9b"
+  },
+  "LOWCAV_NEGATIVES.jsonl": {
+   "rows": 102,
+   "sha256": "076ad9da391b4cee72afb7af49112b006797d7e9e15acbee30bd0ccbe1e25f12"
+  },
+  "LCMOVES_MOVES_B.jsonl": {
+   "rows": 3,
+   "sha256": "446bfdbb2d7f431d99698c45172006c138270323a08bffbc6235fe70511965a5"
+  },
+  "LCMOVES_MOVES_R.jsonl": {
+   "rows": 0,
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "LCMOVES_NEGATIVES.jsonl": {
+   "rows": 125,
+   "sha256": "93201558099e52f9a1fab399c8f87d9afc3dfe68cf887cfbc28bc4364470ac1c"
+  },
+  "REGIME_RESULTS.jsonl": {
+   "rows": 1167,
+   "sha256": "b1cad916cb53caefaddc63d8479b40e74b1e6e8ce05e9e09d65054347a459c37"
+  },
+  "clean4_verify/CLEAN4_MOVES_B.jsonl": {
+   "rows": 1,
+   "sha256": "a4698f613f0fe0413166208a6c1cc1784329a1de4ece67034fcbc65748e0ea18"
+  },
+  "clean4_verify/CLEAN4_NEGATIVES.jsonl": {
+   "rows": 11,
+   "sha256": "10c0a68b9c55d96dda8fc63fcd193e1da68c1f80baf6fa4d8b46456efc61df8b"
+  }
+ },
+ "wmqual_identity_check": {
+  "n": 74,
+  "n_identical": 74,
+  "rows": 74,
+  "all_identical": true,
+  "cells": [
+   "D2400_p20",
+   "D2400_p40",
+   "D2400_p60",
+   "D2800_p20",
+   "D2800_p40",
+   "D2800_p60",
+   "D3200_p10",
+   "D3200_p20",
+   "D3200_p30",
+   "D3200_p40",
+   "D3200_p60"
+  ],
+  "seeds": [
+   989200,
+   989402
+  ]
+ },
+ "sign_note": "Probe reports use T = J_base - J_group and S = min solo J - J_group (veh-s, POSITIVE = better); WALLMINE/COOP use advantage = J_policy - J_group and synergy = best solo J - J_group. Ledger cost difference = treatment - reference = -T / -S / -advantage (negative = improvement).",
+ "not_recorded_running": [
+  "S-MAPPOWZ (production running)",
+  "S-REGIMEU0 (registered 19:38; p60 interim 19:54; amendment 5 running)",
+  "S-IMITREPLAY (registered; deprioritised 19:39)",
+  "WM-E ft_r1 fine-tune",
+  "WM-D WMQUAL baseline",
+  "BOOST-PRE learncheck",
+  "G4LD / LCEXEC / FULLPOL / MAPPOWZL (code/prep only)",
+  "CLEAN4 N10 staging (0 sim-s)",
+  "CPUZ setup (0 sim-s)"
+ ]
+}

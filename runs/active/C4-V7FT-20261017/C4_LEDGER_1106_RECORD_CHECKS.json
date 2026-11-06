@@ -1,0 +1,91 @@
+{
+ "schema": "c4-closeout-record-checks/1",
+ "closeout_id": "C4-LEDGER-1106",
+ "date": "2026-11-06",
+ "branch": "c4/ledger-1106 (worktree E:/agent-work/c4-ledger-1106, from c4/closeout-20261106 92ab634b)",
+ "new_sim_s": 0,
+ "new_charges": 0,
+ "entries_added": [
+  "NEWMAP2-20261106",
+  "COOPKINDS-20261106",
+  "PLANGEN-20261106",
+  "LOWCAV-20261106",
+  "WMQUAL-B-20261106",
+  "PLANGEN2-20261106",
+  "CLEAN4-BASESANITY-20261106",
+  "WZ-WMDATA-20261106",
+  "LEARNAUDIT-20261106",
+  "FAIRAUDIT-20261106",
+  "LEARNABILITY-20261106",
+  "S-LCMOVES",
+  "CLEAN4-PLANA-20261106",
+  "S-REGIME"
+ ],
+ "entries_updated": {
+  "WALLMINE-20261106": "interim in-progress record (92ab634b) replaced by the final record: completed 13:46, 1 new B example (seed 2), rows never fed",
+  "CLEAN3-20261106": "status -> paused_by_owner_after_u1_software_fault_not_concluded; execution_status stopped -> paused; status_update added; all other fields unchanged"
+ },
+ "unchanged_already_recorded": [
+  "NEWMAP-PROBE-20261106",
+  "UPPER-BOUND-20261106",
+  "S-MINING-20261106 (operator-2 final; matches MINING_REPORT.md)"
+ ],
+ "ledger_sha256": "e947a3bb057b1d5de298715b61999c83b135220610a826ce7f18a38c8d24f5e4",
+ "ledger_diff": "textual insertion of 14 entries at the top of entries, in-place replacement of the WALLMINE-20261106 and CLEAN3-20261106 blocks, one corrected phrase in coverage.c4_closeout_20261106, new coverage.c4_ledger_1106, one identity-only allowed source; every other entry and top-level key asserted equal on parsed JSON",
+ "validate": {
+  "method": "tools.experiment_history.validate via guard wrapper (restricted-path opens refused, 0 attempted; sealed-relocated PATH_MAP excluded), as in the C4-CLOSEOUT-20261106 checks",
+  "worktree_frame": {
+   "hard_errors_before": 1560,
+   "hard_errors_after": 1560,
+   "new_hard_errors": 0,
+   "new_warnings": 0
+  },
+  "main_worktree_path_frame": {
+   "hard_errors_before": 174,
+   "hard_errors_after": 174,
+   "new_hard_errors": 0,
+   "new_warnings": 0,
+   "new_documented_unknowns": 15,
+   "note": "unknowns = branch-only receipts (C4_LEDGER_1106_SOURCES.json, and C4_CLOSEOUT_20261106_SOURCES.json for WALLMINE/CLEAN3) absent from E:/research-dense until merge"
+  },
+  "zero_hard_errors": false
+ },
+ "scoped_verify_sources": {
+  "sources": [
+   "SRC-C4-CLOSEOUT-20261106",
+   "SRC-S-MINING-20261106-REGISTRATION",
+   "SRC-COOP-PROBE-20261106-SUMMARY",
+   "SRC-HICAV-PROBE-20261106-SUMMARY",
+   "SRC-UPPER-BOUND-20261106-SUMMARY",
+   "SRC-C4-LEDGER-1106-20261106"
+  ],
+  "complete": 6,
+  "mismatches": 0,
+  "numeric_checks": 0,
+  "note": "identity-only. In this core.autocrlf=true worktree the four C4-CLOSEOUT JSON sources were checked out CRLF and first reported SOURCE CHANGED (LF sha equal); their committed LF bytes were rewritten in place (content-identical, no blob change) before the passing run. A CRLF checkout of any registered JSON source will show the same CRLF-only mismatch."
+ },
+ "summary": {
+  "write": "tools/experiment_history.py summary --write",
+  "check": "CURRENT (ledger sha e947a3bb057b...)"
+ },
+ "ledger_tests": {
+  "command": "python -B -m pytest -q -p no:cacheprovider -p guardplug tests/test_experiment_history_ledger.py (guard plugin; 0 refused opens)",
+  "result": "22 passed, 3 failed, 5 skipped",
+  "baseline_same_worktree_before_edits": "21 passed, 4 failed, 5 skipped (test_generated_summary_is_current failed on the CRLF checkout; passes after regeneration)",
+  "pre_existing_failures": [
+   "test_all_referenced_paths_exist (missing gitignored paths)",
+   "test_validator_reports_no_hard_errors (1560 pre-existing missing paths)",
+   "test_source_verification_clean_on_real_ledger (registered historical sources absent in the worktree)"
+  ]
+ },
+ "sign_conventions": "Probe reports: T = J_base - J_group, S = min solo J - J_group, advantage = J_policy - J_group (POSITIVE = better); S-REGIME and CLEAN4 sanity already use strategy - base (negative = better). Every entry states the ledger conversion (cost difference = treatment - reference = -T / -S; negative = improvement). No structured outcomes added (all evidence report_only_indexed except WMQUAL-B integrity_receipt_verified).",
+ "local_rechecks": "Local ledger copies re-summed for WALLMINE (gpuA/cpuV), NEWMAP2, COOPKINDS, PLANGEN, PLANGEN2 (gpuA/cpuV), LOWCAV, S-LCMOVES, S-REGIME and CLEAN4 Plan A; row counts and sha prefixes of every *_MOVES_* / *_NEGATIVES file match the reports; WMQUAL-B IDENTITY.json 74/74; CLEAN4 sanity per-world arithmetic re-added. Remote receipts/RESULT.json were not read (no ssh).",
+ "open_items": [
+  "MERGE: the main worktree holds an UNCOMMITTED stale S-MINING-20261106 draft (operator-1 blocked state) and an uncommitted S-W78SCORE entry in protocols/experiment_history.json. Drop the stale S-MINING draft before merging (duplicate id; validate flags it) and keep S-W78SCORE with its owner; git will refuse the merge while that file has local changes.",
+  "MERGE: committed evidence copies (WALLMINE, NEWMAP2, COOPKINDS, PLANGEN, PLANGEN2, LOWCAV, WZ_WM_DATA, LCMOVES reports, CLEAN4_GATE_FAIL.md, clean4_verify/POTENTIAL_GATE.json, wmqual/identity/IDENTITY.json) overwrite the gitignored originals on merge; with core.autocrlf=true the LF originals (NEWMAP2, PLANGEN2, LOWCAV reports, IDENTITY.json) would be re-written CRLF (content identical, LF sha unchanged).",
+  "LIVE: LEARNABILITY_REPORT.md, LEARNAUDIT_REPORT.md, FAIRAUDIT_REPORT.md and REGIME_REPORT.md were still being appended; they are hashed in C4_LEDGER_1106_SOURCES.json (versions read) and not committed; later addenda are not reflected.",
+  "NOT RECORDED (running/unfinished at ~20:00): S-MAPPOWZ, S-REGIMEU0 (p60 interim 19:54; amendment 5), S-IMITREPLAY, WM-E ft_r1, WM-D WMQUAL baseline, BOOST-PRE learncheck, code-only G4LD/LCEXEC/FULLPOL/MAPPOWZL, CLEAN4 N10 staging and cpuZ setup (0 sim-s).",
+  "HYGIENE: six empty stray files created in this worktree by a shell CR-in-path mistake were removed immediately (own files, never committed); no other file was deleted.",
+  "174 (main frame) / 1560 (worktree frame) pre-existing missing-path errors remain; not a globally clean ledger."
+ ]
+}
