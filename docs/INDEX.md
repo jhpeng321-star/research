@@ -1,5 +1,9 @@
 # INDEX — current documents and superseded pointers
 
+<!-- C4-CLOSEOUT-20261106 -->
+**2026-11-06, C4 close-out (Nov 4-6) ledger entries:** CLEAN1-20261105, CLEAN2-20261105, CLEAN3-20261106 ([status log](../runs/active/C4-V7FT-20261017/CLEAN1_STATUS.md)), S-MINING-20261106 ([mining](../runs/active/C4-V7FT-20261017/MINING_REPORT.md)), COOP-PROBE-20261106 ([coop probe](../runs/active/C4-V7FT-20261017/COOP_PROBE_REPORT.md)), HICAV-PROBE-20261106 ([high-CAV probe](../runs/active/C4-V7FT-20261017/HICAV_PROBE_REPORT.md)), NEWMAP-PROBE-20261106 ([new-map research](../runs/active/C4-V7FT-20261017/NEWMAP_RESEARCH.md)), UPPER-BOUND-20261106 ([upper bound](../runs/active/C4-V7FT-20261017/UPPER_BOUND_REPORT.md)), WALLMINE-20261106 ([wall mining (in progress)](../runs/active/C4-V7FT-20261017/WALLMINE_REPORT.md)), PLANFIX-20261105 ([plan_fix bank results](../runs/active/C4-V7FT-20261017/PLAN_FIX_BANK_RESULTS.json)), S-LANEMAPPO-20261106 ([lane-on MAPPO feasibility](../runs/active/C4-V7FT-20261017/LANE_MAPPO_FEASIBILITY.md)); clean3 [final-eval readiness](../runs/active/C4-V7FT-20261017/FINAL_EVAL_READY.md); [sources receipt](../runs/active/C4-V7FT-20261017/C4_CLOSEOUT_20261106_SOURCES.json). WM error check and clean1/clean2 diagnoses remain S-WMCHECK, S-DIAG-CLEAN1-20261105 and S-GROUPDIAG.
+<!-- /C4-CLOSEOUT-20261106 -->
+
 <!-- S-GROUPDIAG-closeout -->
 **2026-11-06, S-GROUPDIAG completed:** [Clean2 research](../runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md), [resume/evidence receipt](../runs/active/C4-V7FT-20261017/S_GROUPDIAG_RESUME_RECEIPT_20261106.json). Member-level +726 decomposition, actual joint execution/F2, native versus executable synergy, reward credit, primary literature and six ranked one-day levers. Zero new physics/charges.
 <!-- /S-GROUPDIAG-closeout -->

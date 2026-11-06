@@ -1,0 +1,114 @@
+{
+ "runs/wz3to2/main2800/s989001/wallW1_t440": {
+  "base": {
+   "J": 13637.907,
+   "members": []
+  },
+  "group": {
+   "J": 10456.8583,
+   "members": [
+    "main.264@lane0",
+    "main.265@lane1",
+    "main.266@lane2"
+   ]
+  },
+  "pair_main.264_main.265": {
+   "J": 10675.334,
+   "members": [
+    "main.264@lane0",
+    "main.265@lane1"
+   ]
+  },
+  "pair_main.264_main.266": {
+   "J": 14670.5356,
+   "members": [
+    "main.264@lane0",
+    "main.266@lane2"
+   ]
+  },
+  "pair_main.265_main.266": {
+   "J": 17066.0077,
+   "members": [
+    "main.265@lane1",
+    "main.266@lane2"
+   ]
+  },
+  "pulse_main.264": {
+   "J": 13637.907,
+   "members": [
+    "main.264@lane0"
+   ]
+  },
+  "solo_main.264": {
+   "J": 17160.3251,
+   "members": [
+    "main.264@lane0"
+   ]
+  },
+  "solo_main.265": {
+   "J": 16829.1545,
+   "members": [
+    "main.265@lane1"
+   ]
+  },
+  "solo_main.266": {
+   "J": 13989.4464,
+   "members": [
+    "main.266@lane2"
+   ]
+  }
+ },
+ "runs/wz3to2/main2800/s989006/wallW2_t1090": {
+  "base": {
+   "J": 68081.1159,
+   "members": []
+  },
+  "group": {
+   "J": 59830.2523,
+   "members": [
+    "main.768@lane0",
+    "main.769@lane1",
+    "main.774@lane2"
+   ]
+  },
+  "pair_main.768_main.769": {
+   "J": 67485.2619,
+   "members": [
+    "main.768@lane0",
+    "main.769@lane1"
+   ]
+  },
+  "pair_main.768_main.774": {
+   "J": 59830.2523,
+   "members": [
+    "main.768@lane0",
+    "main.774@lane2"
+   ]
+  },
+  "pair_main.769_main.774": {
+   "J": 65453.5884,
+   "members": [
+    "main.769@lane1",
+    "main.774@lane2"
+   ]
+  },
+  "solo_main.768": {
+   "J": 67485.2619,
+   "members": [
+    "main.768@lane0"
+   ]
+  },
+  "solo_main.769": {
+   "J": 68081.1159,
+   "members": [
+    "main.769@lane1"
+   ]
+  },
+  "solo_main.774": {
+   "J": 65453.5884,
+   "members": [
+    "main.774@lane2"
+   ]
+  }
+ }
+}

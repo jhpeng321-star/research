@@ -1,3 +1,7 @@
+<!-- C4-CLOSEOUT-20261106 -->
+**2026-11-06, C4 close-out (Nov 4-6):** clean1 stopped at u9, clean2 at u18, and clean3 (root r6) faulted at u1 and is owner-paused, so the registered u24 cooperation test was never reached. Measurement shows group-over-best-single synergy is ~0 on typical situations of this merge map, even for a full-information planner ([upper bound](runs/active/C4-V7FT-20261017/UPPER_BOUND_REPORT.md)). Rare mainline walls show real but seed-dependent synergy that 100 m / 4-slot sensing cannot observe ([coop probe](runs/active/C4-V7FT-20261017/COOP_PROBE_REPORT.md), [high-CAV probe](runs/active/C4-V7FT-20261017/HICAV_PROBE_REPORT.md), [wall mining (in progress)](runs/active/C4-V7FT-20261017/WALLMINE_REPORT.md)). The lane-drop map shows real pairwise synergy ([new-map research](runs/active/C4-V7FT-20261017/NEWMAP_RESEARCH.md)). The WM mis-ranks. Paper A framing is an open owner decision. Ledger: 11 new entries, [sources receipt](runs/active/C4-V7FT-20261017/C4_CLOSEOUT_20261106_SOURCES.json).
+<!-- /C4-CLOSEOUT-20261106 -->
+
 <!-- S-GROUPDIAG-closeout -->
 **2026-11-06, S-GROUPDIAG:** [Clean2 group-cooperation research](runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md): B's +726.400 veh-s is reproduced by state-specific best solos (+726.434); synergy -0.034. Joint opportunities, executable teacher fidelity and second-helper credit are the key gaps. Existing receipts/literature only; zero new SUMO or charges.
 <!-- /S-GROUPDIAG-closeout -->

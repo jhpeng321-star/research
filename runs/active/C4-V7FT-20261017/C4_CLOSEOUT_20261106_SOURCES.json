@@ -1,0 +1,391 @@
+{
+ "schema": "c4-closeout-sources/1",
+ "closeout_id": "C4-CLOSEOUT-20261106",
+ "created_local": "2026-11-06T14:02:44",
+ "integrator": "Claude close-out integrator (subagent), branch c4/closeout-20261106 from c4/int 59a9b5ae",
+ "scope": "Ledger close-out of Nov 4-6 C4 experiments; zero new SUMO, training, GPU or remote access.",
+ "access_rules": "No sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 path, hetdata_truth or vType/driver/vehicle-parameter truth file was opened; only the listed files were read.",
+ "sources": [
+  {
+   "path": "runs/active/C4-V7FT-20261017/REGISTRATION.md",
+   "role": "live registration log; Nov 4-6 entries read (lines ~6789-7863); 3.1 MB, not committed",
+   "bytes": 3193492,
+   "mtime_local": "2026-11-06T13:52:20",
+   "sha256": "3b22d133288217924f8ec1c008d106693e8b2628ef5286ca1e5aa3d4e229967f",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": false,
+   "sha256_at_first_read_1351": "0e6e042d62eacad183bde1481102dfd4bd8bfa4d0aa5b9bfb3b2475280e860f8",
+   "changed_since_first_read": true
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/CLEAN1_STATUS.md",
+   "role": "live status log (CLEAN1/CLEAN2/CLEAN3/PROBE/PLANFIX/MINING/NEWMAP/UPPERBOUND/WALLMINE lines); not committed",
+   "bytes": 144905,
+   "mtime_local": "2026-11-06T13:52:20",
+   "sha256": "b810e8c90f82e5ab767aa2fb39565abaf7bb8d7cc2975912fa716e46a915ba2f",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": false,
+   "sha256_at_first_read_1351": "942b7be4dd9b26cde15dc91829e8f3b7460991dc5fbccbf2f923d82f23bbcd7a",
+   "changed_since_first_read": true
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md",
+   "role": "S-WMCHECK report (already tracked; existing ledger entry)",
+   "bytes": 28726,
+   "mtime_local": "2026-11-05T02:11:04",
+   "sha256": "fa0873dfdfbb2c0c5399e3baccb7b24379a28859714129004e7027cf66ecde4b",
+   "tracked_in_git_at_head": true,
+   "committed_copy_in_closeout_branch": false,
+   "sha256_at_first_read_1351": "fa0873dfdfbb2c0c5399e3baccb7b24379a28859714129004e7027cf66ecde4b",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md",
+   "role": "S-DIAG-CLEAN1-20261105 report (already tracked)",
+   "bytes": 45186,
+   "mtime_local": "2026-11-06T05:56:16",
+   "sha256": "abaa4c125f805d8890030fdaedb15ab3b242531e48f03e8e213091f69fb4153b",
+   "tracked_in_git_at_head": true,
+   "committed_copy_in_closeout_branch": false,
+   "sha256_at_first_read_1351": "abaa4c125f805d8890030fdaedb15ab3b242531e48f03e8e213091f69fb4153b",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md",
+   "role": "S-GROUPDIAG report (already tracked)",
+   "bytes": 62565,
+   "mtime_local": "2026-11-06T09:51:50",
+   "sha256": "065592a20e0c5f6d87dd77cd8d5f90c53ebe6198a71bcada1da4cf70cf1c75f8",
+   "tracked_in_git_at_head": true,
+   "committed_copy_in_closeout_branch": false,
+   "sha256_at_first_read_1351": "065592a20e0c5f6d87dd77cd8d5f90c53ebe6198a71bcada1da4cf70cf1c75f8",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/LANE_MAPPO_FEASIBILITY.md",
+   "role": "S-LANEMAPPO report (already tracked)",
+   "bytes": 32498,
+   "mtime_local": "2026-11-06T07:51:04",
+   "sha256": "35674c3bf365a25afa72878432aeff830073fd11b2e2c271346ae814eabef86b",
+   "tracked_in_git_at_head": true,
+   "committed_copy_in_closeout_branch": false,
+   "sha256_at_first_read_1351": "35674c3bf365a25afa72878432aeff830073fd11b2e2c271346ae814eabef86b",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/FINAL_EVAL_READY.md",
+   "role": "clean3 final-evaluation readiness (live; not committed)",
+   "bytes": 14536,
+   "mtime_local": "2026-11-06T13:44:35",
+   "sha256": "d59b8a7d07d8dec9898f42f865d1e70bec586b3b1d838fae8ab38d320715f2a8",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": false,
+   "sha256_at_first_read_1351": "d59b8a7d07d8dec9898f42f865d1e70bec586b3b1d838fae8ab38d320715f2a8",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/PLAN_FIX_READY.md",
+   "role": "plan_fix readiness (live; not committed)",
+   "bytes": 21876,
+   "mtime_local": "2026-11-06T13:50:31",
+   "sha256": "a573f0a5a10b786fb85477110da874a5b902832471559f1b655e80bc02e9063e",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": false,
+   "sha256_at_first_read_1351": "a573f0a5a10b786fb85477110da874a5b902832471559f1b655e80bc02e9063e",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/PLAN_FIX_READY.json",
+   "role": "plan_fix readiness metadata (live; not committed)",
+   "bytes": 2099,
+   "mtime_local": "2026-11-06T13:50:31",
+   "sha256": "a8aa4589e4a8f71e273ed1396b196897746fc0577cf9bfd3084b0a32474a92f1",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": false,
+   "sha256_at_first_read_1351": "a8aa4589e4a8f71e273ed1396b196897746fc0577cf9bfd3084b0a32474a92f1",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/WALLMINE_REPORT.md",
+   "role": "WALLMINE-20261106 report snapshot (recorded in progress; not committed)",
+   "bytes": 10753,
+   "mtime_local": "2026-11-06T13:46:45",
+   "sha256": "202f755f59c437e25dace4c414e42db6459a0708c7600c1e48e1940301823c94",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": false,
+   "sha256_at_first_read_1351": "202f755f59c437e25dace4c414e42db6459a0708c7600c1e48e1940301823c94",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/WALLMINE_MOVES.jsonl",
+   "role": "WALLMINE B rows (not committed)",
+   "bytes": 20613,
+   "mtime_local": "2026-11-06T13:45:30",
+   "sha256": "bb94bab7f0018244a3c7dcac4f901f30caecae507a1252adc511ed2e31146573",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/MINING_REPORT.md",
+   "role": "S-MINING-20261106 operator-2 final report",
+   "bytes": 5577,
+   "mtime_local": "2026-11-06T05:04:04",
+   "sha256": "cea7db078b1615c1db44047522344b516a51a285e22a1bb8cccf2a0e8d8cc4f1",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": true,
+   "sha256_at_first_read_1351": "cea7db078b1615c1db44047522344b516a51a285e22a1bb8cccf2a0e8d8cc4f1",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/MINING_REGISTRATION.json",
+   "role": "S-MINING-20261106 registration (operator 1, 00:38)",
+   "bytes": 7838,
+   "mtime_local": "2026-11-06T00:38:17",
+   "sha256": "5afafe985cc4b61c14877d7f05ff522a1aacda87f6b0c8b46b7dd2ada4203433",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": true,
+   "sha256_at_first_read_1351": "5afafe985cc4b61c14877d7f05ff522a1aacda87f6b0c8b46b7dd2ada4203433",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/COOP_PROBE_REPORT.md",
+   "role": "COOP-PROBE-20261106 final report",
+   "bytes": 12496,
+   "mtime_local": "2026-11-06T07:05:44",
+   "sha256": "94d8fe58b5022c10d2a335483f68b090e80cf4b168bea13401622f7f73b7ea16",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": true,
+   "sha256_at_first_read_1351": "94d8fe58b5022c10d2a335483f68b090e80cf4b168bea13401622f7f73b7ea16",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/coop_probe/results/SUMMARY.json",
+   "role": "COOP-PROBE-20261106 results summary",
+   "bytes": 17077,
+   "mtime_local": "2026-11-06T07:04:13",
+   "sha256": "818aff96b929dba414c55884414146697fd320ef945ebd47953d3bfb097bdbfb",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": true
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/coop_probe/CHARGES.jsonl",
+   "role": "COOP-PROBE ledger copy (re-summed; not committed)",
+   "bytes": 19248,
+   "mtime_local": "2026-11-06T07:01:53",
+   "sha256": "15509deec1b0ae1656c4afd03b11c8e4012bb617edead7bf2a909c82f9dea735",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/HICAV_PROBE_REPORT.md",
+   "role": "HICAV-PROBE-20261106 final report",
+   "bytes": 13455,
+   "mtime_local": "2026-11-06T13:33:46",
+   "sha256": "bded8a1ad946b42122c6c2a5ee12b21cfb755d0661480058ee5193f021c15911",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": true,
+   "sha256_at_first_read_1351": "bded8a1ad946b42122c6c2a5ee12b21cfb755d0661480058ee5193f021c15911",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/hicav_probe/SUMMARY.json",
+   "role": "HICAV-PROBE-20261106 summary",
+   "bytes": 79740,
+   "mtime_local": "2026-11-06T13:30:15",
+   "sha256": "c9afd76e04fb379e503a7f3522c8d70f77247b865267bee8d19bbf6d93940eb1",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": true
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/hicav_probe/CHARGES.jsonl",
+   "role": "HICAV-PROBE ledger copy (re-summed; not committed)",
+   "bytes": 11396,
+   "mtime_local": "2026-11-06T13:30:15",
+   "sha256": "a04d74f872054e8c361329bd7fe5194b4b567534d8e3e2181854f4fb274fc748",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/NEWMAP_RESEARCH.md",
+   "role": "NEWMAP-PROBE-20261106 final report",
+   "bytes": 28971,
+   "mtime_local": "2026-11-06T13:31:20",
+   "sha256": "33a94fa6770edd0016517fd8b22d5d50474690861a69d7fbd0bcaaff8a2b85c4",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": true,
+   "sha256_at_first_read_1351": "33a94fa6770edd0016517fd8b22d5d50474690861a69d7fbd0bcaaff8a2b85c4",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/newmap_probe/results/FINAL_TABLE.json",
+   "role": "NEWMAP-PROBE final table",
+   "bytes": 8612,
+   "mtime_local": "2026-11-06T13:17:32",
+   "sha256": "5718db7906c5bfefcf42a699521994b44dfb48f3a3970361e043ff94d3e8b617",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": true
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/newmap_probe/results/PARTIAL_WALLS.json",
+   "role": "NEWMAP-PROBE partial-wall mechanism table",
+   "bytes": 1787,
+   "mtime_local": "2026-11-06T13:26:54",
+   "sha256": "cf515a3783573a51209e3f5ae2bf625b881f9dbdbf3b609af5bb4344ae7ec60a",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": true
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/newmap_probe/results/CHARGES.jsonl",
+   "role": "NEWMAP-PROBE ledger copy (re-summed; not committed)",
+   "bytes": 57324,
+   "mtime_local": "2026-11-06T13:26:55",
+   "sha256": "0b1d460be19eb24f96dba529b2e8d6e1121431ce53417202194a4b3ce2765b41",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/UPPER_BOUND_REPORT.md",
+   "role": "UPPER-BOUND-20261106 final report",
+   "bytes": 13922,
+   "mtime_local": "2026-11-06T13:46:28",
+   "sha256": "c2a365fb5e9cd2857c1c68bb6b4e95d6ded68cc8d0378d1a57e06ace0d867d00",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": true,
+   "sha256_at_first_read_1351": "c2a365fb5e9cd2857c1c68bb6b4e95d6ded68cc8d0378d1a57e06ace0d867d00",
+   "changed_since_first_read": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/upper_bound/REGISTRATION.json",
+   "role": "UPPER-BOUND-20261106 registration",
+   "bytes": 2846,
+   "mtime_local": "2026-11-06T13:24:20",
+   "sha256": "5ade069accf51205c8007a5912386f8bf46930281a1875fa314aada30b39c714",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": true
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/upper_bound/results/SUMMARY.json",
+   "role": "UPPER-BOUND summary (pre-A2: held-out seeds 2-3 only)",
+   "bytes": 34699,
+   "mtime_local": "2026-11-06T13:40:16",
+   "sha256": "fbe5fcf8454f0f32d40b8848565860c04403d1d5df6dcf51d3ec7cb7bbfa89e3",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": true
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/upper_bound/CHARGES.jsonl",
+   "role": "UPPER-BOUND ledger copy (re-summed; not committed)",
+   "bytes": 10886,
+   "mtime_local": "2026-11-06T13:42:36",
+   "sha256": "a47a769bf7534ec5ee691baba19f90d49825e0de064e8083f922f595c208f31b",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/wallmine/gpuA/CHARGES.jsonl",
+   "role": "WALLMINE gpuA ledger copy (re-summed; not committed)",
+   "bytes": 8496,
+   "mtime_local": "2026-11-06T13:39:15",
+   "sha256": "1ffd6ffb74c04a6723898c7ffc76bade759fe1092f0b5d50ced781e8dba333c2",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/wallmine/cpuV/CHARGES.jsonl",
+   "role": "WALLMINE cpuV ledger copy (re-summed; not committed)",
+   "bytes": 5007,
+   "mtime_local": "2026-11-06T13:38:49",
+   "sha256": "5f8eeaf9a2bc250a39973a5c0f9a6f66dc1cfb52c65db6ed9a40e7cc651d47e5",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": false
+  },
+  {
+   "path": "runs/active/C4-V7FT-20261017/PLAN_FIX_BANK_RESULTS.json",
+   "role": "PLANFIX-20261105 terminal bank-pass results (stable since 2026-11-05 17:36)",
+   "bytes": 17710,
+   "mtime_local": "2026-11-05T17:36:30",
+   "sha256": "92220ca4825a34c69c65edab577f0a70daf3e730fde912f3235ed0dc097e0c2f",
+   "tracked_in_git_at_head": false,
+   "committed_copy_in_closeout_branch": true
+  }
+ ],
+ "independent_checks": {
+  "coop_probe_ledger": {
+   "rows": 107,
+   "sim_s_sum": 240078,
+   "reported": 240078,
+   "match": true
+  },
+  "hicav_probe_ledger": {
+   "rows": 64,
+   "sim_s_sum": 149715,
+   "reported": 149715,
+   "match": true
+  },
+  "upper_bound_ledger": {
+   "rows": 73,
+   "sim_s_sum": 148995,
+   "reported": 148995,
+   "match": true
+  },
+  "newmap_probe_ledger": {
+   "rows": 365,
+   "sim_s_sum": 148520.0,
+   "reported": 148520,
+   "match": true
+  },
+  "wallmine_gpuA_ledger": {
+   "rows": 43,
+   "sim_s_sum": 89075,
+   "reported": 89075,
+   "match": true
+  },
+  "wallmine_cpuV_ledger": {
+   "rows": 24,
+   "sim_s_sum": 58475,
+   "reported": 58475,
+   "match": true
+  },
+  "planfix_bank_charges": {
+   "rows": 8,
+   "sum_rows": 33600,
+   "reported_charged_sim_s": 33600,
+   "match": true
+  },
+  "upper_bound_heldout_seeds2_4": {
+   "mean": 200.9,
+   "median": 42.2,
+   "reported_mean": 200.9,
+   "reported_median": 42.1,
+   "note": "recomputed from the report per-seed table (rounded inputs); SUMMARY.json aggregate is the pre-A2 seeds-2-3 value (mean 234.35, median 80.16)"
+  },
+  "newmap_wz3to2_walls": {
+   "W1": {
+    "n": 17,
+    "admitted": 3,
+    "S_mean": -1421,
+    "S_t95": [
+     -3198,
+     356
+    ],
+    "T_mean": 1128
+   },
+   "W2": {
+    "n": 17,
+    "admitted": 5,
+    "S_mean": -247,
+    "S_t95": [
+     -1432,
+     938
+    ],
+    "T_mean": 1898
+   }
+  },
+  "coop_probe_lead_wall_seed1": {
+   "synergy": 336.733,
+   "lb95": 73.568,
+   "adv": 490.31
+  }
+ },
+ "committed_copies_note": "Files with committed_copy_in_closeout_branch=true were copied byte-identically (sha256 equal) from the gitignored main-worktree runs/ tree; live logs and in-progress artifacts stay uncommitted."
+}

@@ -1,0 +1,73 @@
+{
+  "schema": "sol.group-move-mining.registration.v1",
+  "experiment_id": "S-MINING-20261106",
+  "status": "BLOCKED_GPUA_ACCESS_BEFORE_PHYSICS",
+  "owner_approval": "REGISTRATION.md 2026-11-06 00:27: add the lane change also. approve",
+  "phase": "mining",
+  "phase_cap_sim_s": 500000,
+  "total_owner_cap_sim_s": 6500000,
+  "allocation_rule": "Mining's entire 500000, including any new parity, collection, failed or interrupted branch and full-prefix replay costs, is inside 6500000. Do not cancel or borrow clean1/clean2/clean3/plan_fix reservations. Before physics, audit all current ledgers and protected allocations, then precharge each branch once in the mining ledger.",
+  "preferred_host": "gpuA",
+  "fallback_host": "cpuV",
+  "staging_root": "/home/ubuntu/coopmwm20261106_s_mining",
+  "staging_ledger": "/home/ubuntu/coopmwm20261106_s_mining/CHARGES.jsonl",
+  "staging_only": true,
+  "host_admitted_for_mining": null,
+  "source_contract": "E:/agent-work/_sol/tracks_spec.md lines 70-77; CLEAN2_GROUP_COOP_RESEARCH.md; existing SUMO verification, all8 CRN and sole-writer semantics. Bind actual executable source, base-policy weights, WM and inputs by SHA before dispatch.",
+  "environment": {
+    "python": "3.10.16",
+    "eclipse-sumo": "1.27.1",
+    "traci": "1.27.1",
+    "sumolib": "1.27.1",
+    "libsumo": "1.27.1",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "pandas": "2.3.3",
+    "cpuV_torch": "2.12.1+cpu",
+    "cpuV_sumo_binary_sha256": "118bd81749f3fc0e4bd8c5840053ebe65a29770c940cb4e43e9eb561b06b7591",
+    "cpuV_mkl_shim_sha256": "505bcbd243e89cd49b451ae5fe6e7d3e0d5a8a62f43a36943a7809e601a71f79",
+    "matching_rule": "Exact cpuV physics-sensitive pins and required environment; GPU WM environment separate from the parity SUMO process. gpuA is not yet inventoried or modified."
+  },
+  "parity": {
+    "status": "NOT_RUN_GPUA_UNREACHABLE",
+    "registered_cases": [
+      {"name": "P3", "sim_s": 510, "world_seed": 986047, "input_root": "/home/ubuntu/coopmwm20261102_warm1/replay_bank/B/confirm_seed2_all8/branches/sv_replay0735_warm_u018_B_986047_t0360_4f83130c", "payload_sha256": "90d82a9b398d60c2fa532da6c369033d0699ab2ce3045f826a949ac903f16cf2", "result_sha256": "57a9bc83d7d18ce8be270a8b464b5fda1133d379210c14943844475cd833c2c7"},
+      {"name": "P4", "sim_s": 450, "world_seed": 986038, "input_root": "/home/ubuntu/coopmwm20261102_warm1/replay_bank/B/confirm_replication/branches/sv_replay0735_warm_u014_B_986038_t0300_50f99a16", "payload_sha256": "ca85ea6d0682d734309f90f9eb30ab1a4fc9604fd6a7eecbfcf81a70de118d2b", "result_sha256": "d85a91e8ceadd0940a3ccce2f5913bafd4b1b661c25882985e7b7e231d896fb6"}
+    ],
+    "max_new_sim_s": 960,
+    "rule": "One attempt per registered branch, P4 only after P3 passes. Compare complete uncompressed payload, result seal, prefix, steps, totals and final bit-for-bit against cpuV. Any mismatch stops gpuA SUMO and selects cpuV; connection failure is not a measured parity mismatch. New parity charged inside mining cap, existing cpuV 960 already charged historically and not charged again."
+  },
+  "training_world_seeds": {"min": 986000, "max": 986071, "provenance": "Existing primary TRAIN registration; only contexts with role=train and seed membership proof eligible"},
+  "forbidden_world_seed_ranges": [[964000, 964199], [962000, 962999], [977000, 977999]],
+  "context_selection": "Observable merge-conflict geometry and approaching arrival/timing only; prospectively select ordinary training opportunities, never select the seven diagnostic states by their measured outcome. Use CAV own sensing and causal timestamped V2V reports, missingness flags and observable target-lane gaps. No population/driver truth or global state as trigger input.",
+  "candidate_families": [
+    {"family": "yield_lane", "roles": ["mainline_yielder", "ramp_merger"], "action": "mainline right-lane CAV requests safe lane-left change; ramp CAV requests safe merge into freed right lane, with role timing/longitudinal offsets"},
+    {"family": "open_gap_merge", "roles": ["mainline_gap_opener", "ramp_merger"], "action": "complementary mainline easing and ramp timing/acceleration offsets plus safe merge"},
+    {"family": "merge_timed_wall", "roles": ["upstream_protector", "upstream_partner"], "action": "two-actor upstream hold, release at/before observable merge timing"},
+    {"family": "controls", "action": "existing ease_off, gap_open, wall, ramp_assist and none, retaining actual per-member actuation semantics"}
+  ],
+  "grid_contract": "Small grid within variety.py registered onset0..30s, hold20..90s, depth0.3..1.0m/s2. Preserve 1s control/0.5s physics and CAV cap1.2m/s2; final bounds/safety clipping unchanged. Exact grid and G5 execution ABI must be source-bound before collection; no grid is executed by this staging registration.",
+  "wm_prescreen": "Required real WM on GPU, ranking only. No WM confidence/gain is a certificate. GPU availability and exact runtime/input/source binding are unresolved prerequisites; no random or heuristic substitute is authorized by this staging record.",
+  "verification": {
+    "branches_per_seed": ["base", "group", "solo_mainline_or_member0", "solo_ramp_or_member1"],
+    "crn_seeds": 2,
+    "rule": "Same captured training state, matched CRN and background base policy, both members' solo interventions, identical complete registered horizon and source-wait accounting. Retain full-prefix replay cost; never shorten look-ahead/window to obtain a positive effect.",
+    "synergy": "S = min(J_solo0,J_solo1) - J_group = group benefit minus best-solo benefit; no zero floor on solo benefits",
+    "admit": "Require paired bootstrap synergy CI95 lower>0 on BOTH seeds and positive total benefit versus base, all branch identities/prefixes valid and actual executable command effects on both actors. Report per-seed/pooled estimates and CI convention. No partial-solo admission.",
+    "bootstrap": "Reuse all8 bank_statistics estimator: B2000, RNG20261103, circular30s paired blocks (or complete matched per-vehicle units if actually available); label one-sided95 convention explicitly. Retain two-sided intervals if computed, without relabelling them.",
+    "safety": "0 collisions and 0 teleports in every branch, no safety regression under registered native comparison; report TTC<1.5/TTC<3, critical and hard-braking measurements with availability and common-window deltas. Missing evidence never passes. SUMO lane-change safety retained, CAV-only commands, final single writer retained."
+  },
+  "resources": {
+    "gpuA_cpu_ceiling": "min(20, measured cgroup quota and available affinity)",
+    "cpuV_cpu_fraction_max": 0.30,
+    "cpuV_observed_cores": 48,
+    "cpuV_integer_core_ceiling": 14,
+    "initial_cpuV_workers": 1,
+    "priority": "nice19, OMP/MKL/OPENBLAS threads1, bounded affinity; count coordinator and any own children inside quota",
+    "no_slowdown": "Before any cpuV dispatch, freeze public clean2/clean3 update-pace and health baselines; hold only own subsequent work if pace worsens or health/ownership changes. Never signal training or another worker. No mining process is started by this staging record.",
+    "storage": "gpuA reported ~9.8GB free is unverified. Resource admission before physics; bulky new SUMO output ephemeral only after immutable small branch summaries, safety, hashes and reconstructible executable records retained. Do not delete pre-existing research data."
+  },
+  "output_files": ["MINED_MOVES.jsonl", "MINING_REPORT.md"],
+  "current_results": {"candidate_count": 0, "wm_ranked_count": 0, "sumo_verified_count": 0, "admitted_count": 0, "charged_sim_s": 0, "actual_sim_s": 0},
+  "restrictions": "Own PIDs only; no kill by name; no prohibited partitions or truth paths; no reset/clean/stash-drop/push; no permanent research-data deletion; no automatic bank import or clean3 switch."
+}

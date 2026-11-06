@@ -1,0 +1,82 @@
+{
+ "schema": "c4-closeout-record-checks/1",
+ "closeout_id": "C4-CLOSEOUT-20261106",
+ "date": "2026-11-06",
+ "branch": "c4/closeout-20261106 (worktree E:/agent-work/c4-closeout-20261106, from c4/int 59a9b5ae)",
+ "new_sim_s": 0,
+ "new_charges": 0,
+ "entries_added": [
+  "CLEAN1-20261105",
+  "CLEAN2-20261105",
+  "CLEAN3-20261106",
+  "S-MINING-20261106",
+  "COOP-PROBE-20261106",
+  "HICAV-PROBE-20261106",
+  "NEWMAP-PROBE-20261106",
+  "UPPER-BOUND-20261106",
+  "WALLMINE-20261106",
+  "PLANFIX-20261105",
+  "S-LANEMAPPO-20261106"
+ ],
+ "not_duplicated": {
+  "WM error check": "S-WMCHECK",
+  "clean1 diagnosis": "S-DIAG-CLEAN1-20261105",
+  "clean2 diagnosis": "S-GROUPDIAG"
+ },
+ "ledger_sha256": "4caa827533bc29bc3cf7ea66ae28022f2cd47a70ca39e83486e0e0e9a6929919",
+ "ledger_diff": "pure insertion: 11 entries at the top of entries, coverage.c4_closeout_20261106, 5 identity-only allowed sources; every pre-existing entry/key byte-identical (asserted on parsed JSON)",
+ "validate": {
+  "method": "tools.experiment_history.validate via guard wrapper: restricted-path opens refused (0 attempted) and the archive/sealed_relocated_20261010 PATH_MAP excluded from relocation lookups (same method as prior S-GROUPDIAG/S-DIAG checks)",
+  "worktree_frame": {
+   "hard_errors_before": 1560,
+   "hard_errors_after": 1560,
+   "new_hard_errors": 0,
+   "new_warnings": 0,
+   "note": "pre-existing missing paths: gitignored runs/ and output/ evidence exists only in the main worktree"
+  },
+  "main_worktree_path_frame": {
+   "hard_errors_before": 174,
+   "hard_errors_after": 174,
+   "new_hard_errors": 0,
+   "new_warnings": 0,
+   "new_documented_unknowns": 11,
+   "note": "the 11 unknowns are the branch-only sources receipt path, absent from E:/research-dense until merge"
+  },
+  "zero_hard_errors": false
+ },
+ "scoped_verify_sources": {
+  "sources": [
+   "SRC-C4-CLOSEOUT-20261106",
+   "SRC-S-MINING-20261106-REGISTRATION",
+   "SRC-COOP-PROBE-20261106-SUMMARY",
+   "SRC-HICAV-PROBE-20261106-SUMMARY",
+   "SRC-UPPER-BOUND-20261106-SUMMARY"
+  ],
+  "complete": 5,
+  "mismatches": 0,
+  "numeric_checks": 0,
+  "note": "identity-only; global verify-sources not run (registered historical sources are absent in the worktree and some live outside permitted scope). CRLF-on-disk files (newmap FINAL_TABLE.json, PLAN_FIX_BANK_RESULTS.json) were not registered because git normalizes them; their sha256 are pinned inside the sources receipt."
+ },
+ "summary": {
+  "write": "tools/experiment_history.py summary --write (file normalized to LF)",
+  "check": "CURRENT (ledger sha 4caa827533bc...)"
+ },
+ "ledger_tests": {
+  "command": "python -B -m pytest -q -p no:cacheprovider -p guardplug tests/test_experiment_history_ledger.py (guard plugin refuses restricted opens; 0 refused)",
+  "result": "22 passed, 3 failed, 5 skipped",
+  "baseline_head_same_worktree": "22 passed, 3 failed, 5 skipped (identical)",
+  "pre_existing_failures": [
+   "test_all_referenced_paths_exist (missing gitignored paths)",
+   "test_validator_reports_no_hard_errors (1560 pre-existing missing paths)",
+   "test_source_verification_clean_on_real_ledger (registered sources absent in worktree; 0 checks)"
+  ]
+ },
+ "prepush_check": "tools/prepush_check.py: no hit on any close-out file; 1 pre-existing blocking hit (tests/fixtures/v6merge_off_golden.pt) and 87 pre-existing name warnings unrelated. Not pushed.",
+ "line_endings": "Worktree checkout used CRLF (core.autocrlf=true); edited files normalized to LF so the RESULTS_SUMMARY ledger sha equals the committed (LF) bytes.",
+ "open_items": [
+  "WALLMINE-20261106 recorded in progress as instructed, although its 13:46 report/REGISTRATION entry say physics CLOSED; flip status after admission/feed decision.",
+  "The main worktree holds an UNCOMMITTED stale S-MINING-20261106 draft (operator-1 blocked state) and an uncommitted S-W78SCORE entry; merging this branch with that draft would create a duplicate id (validate flags it): drop the stale draft, keep S-W78SCORE with its owner.",
+  "Committed evidence copies under runs/ equal the main-worktree bytes at commit time (sha256 in the sources receipt); gitignored originals would be overwritten on merge only if they changed afterwards.",
+  "174 (main frame) / 1560 (worktree frame) pre-existing missing-path errors remain; not a globally clean ledger."
+ ]
+}

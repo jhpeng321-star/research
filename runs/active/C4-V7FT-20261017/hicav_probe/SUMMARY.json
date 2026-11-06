@@ -1,0 +1,3319 @@
+{
+ "mappo_vs_native": {
+  "60": [
+   {
+    "seed": 995000,
+    "600": {
+     "mappo": {
+      "team_delay_vs": 80286.06782355331,
+      "road_delay_vs": 23427.206522553355,
+      "source_wait_vs": 56858.86130099998,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 628.5,
+      "hard_brake": 6.0
+     },
+     "native": {
+      "team_delay_vs": 72696.04753645587,
+      "road_delay_vs": 15826.186235455869,
+      "source_wait_vs": 56869.86130099998,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 334.5,
+      "hard_brake": 18.0
+     },
+     "diff_mappo_minus_native": {
+      "team_delay_vs": 7590.020287097446,
+      "road_delay_vs": 7601.020287097486,
+      "source_wait_vs": -11.0,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 294.0,
+      "hard_brake": -12.0
+     }
+    },
+    "900": {
+     "mappo": {
+      "team_delay_vs": 160472.58824224284,
+      "road_delay_vs": 40553.85008324276,
+      "source_wait_vs": 119918.73815899987,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 1008.0,
+      "hard_brake": 13.5
+     },
+     "native": {
+      "team_delay_vs": 147226.05325129707,
+      "road_delay_vs": 27260.815092297005,
+      "source_wait_vs": 119965.23815899987,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 624.5,
+      "hard_brake": 24.0
+     },
+     "diff_mappo_minus_native": {
+      "team_delay_vs": 13246.534990945773,
+      "road_delay_vs": 13293.034990945755,
+      "source_wait_vs": -46.5,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 383.5,
+      "hard_brake": -10.5
+     }
+    }
+   },
+   {
+    "seed": 995001,
+    "600": {
+     "mappo": {
+      "team_delay_vs": 94801.62628150982,
+      "road_delay_vs": 29189.409169509894,
+      "source_wait_vs": 65612.21711199995,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 595.5,
+      "hard_brake": 18.5
+     },
+     "native": {
+      "team_delay_vs": 99626.96937278382,
+      "road_delay_vs": 34058.75226078386,
+      "source_wait_vs": 65568.21711199995,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 518.5,
+      "hard_brake": 60.0
+     },
+     "diff_mappo_minus_native": {
+      "team_delay_vs": -4825.3430912740005,
+      "road_delay_vs": -4869.343091273968,
+      "source_wait_vs": 44.0,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 77.0,
+      "hard_brake": -41.5
+     }
+    },
+    "900": {
+     "mappo": {
+      "team_delay_vs": 176657.24109797736,
+      "road_delay_vs": 49023.498968977096,
+      "source_wait_vs": 127633.74212900002,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 962.5,
+      "hard_brake": 22.0
+     },
+     "native": {
+      "team_delay_vs": 176797.996474978,
+      "road_delay_vs": 49277.75434597789,
+      "source_wait_vs": 127520.24212900002,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 832.0,
+      "hard_brake": 86.0
+     },
+     "diff_mappo_minus_native": {
+      "team_delay_vs": -140.75537700063433,
+      "road_delay_vs": -254.2553770007944,
+      "source_wait_vs": 113.5,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 130.5,
+      "hard_brake": -64.0
+     }
+    }
+   }
+  ],
+  "80": [
+   {
+    "seed": 995100,
+    "600": {
+     "mappo": {
+      "team_delay_vs": 100132.71650818577,
+      "road_delay_vs": 30409.518491185645,
+      "source_wait_vs": 69723.19801700005,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 840.0,
+      "hard_brake": 4.5
+     },
+     "native": {
+      "team_delay_vs": 95564.59168217154,
+      "road_delay_vs": 25842.893665171385,
+      "source_wait_vs": 69721.69801700005,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 587.5,
+      "hard_brake": 25.0
+     },
+     "diff_mappo_minus_native": {
+      "team_delay_vs": 4568.124826014231,
+      "road_delay_vs": 4566.62482601426,
+      "source_wait_vs": 1.5,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 252.5,
+      "hard_brake": -20.5
+     }
+    },
+    "900": {
+     "mappo": {
+      "team_delay_vs": 184404.1823753427,
+      "road_delay_vs": 53662.20567334264,
+      "source_wait_vs": 130741.97670200006,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 1273.5,
+      "hard_brake": 6.0
+     },
+     "native": {
+      "team_delay_vs": 184538.33200539183,
+      "road_delay_vs": 53735.8553033916,
+      "source_wait_vs": 130802.47670200006,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 1004.5,
+      "hard_brake": 80.0
+     },
+     "diff_mappo_minus_native": {
+      "team_delay_vs": -134.14963004912715,
+      "road_delay_vs": -73.6496300489598,
+      "source_wait_vs": -60.5,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 269.0,
+      "hard_brake": -74.0
+     }
+    }
+   },
+   {
+    "seed": 995101,
+    "600": {
+     "mappo": {
+      "team_delay_vs": 124282.73594163498,
+      "road_delay_vs": 32394.530187634977,
+      "source_wait_vs": 91888.20575400004,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 797.5,
+      "hard_brake": 5.5
+     },
+     "native": {
+      "team_delay_vs": 129489.55975423897,
+      "road_delay_vs": 37671.35400023907,
+      "source_wait_vs": 91818.20575400004,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 750.5,
+      "hard_brake": 58.0
+     },
+     "diff_mappo_minus_native": {
+      "team_delay_vs": -5206.823812603994,
+      "road_delay_vs": -5276.823812604096,
+      "source_wait_vs": 70.0,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 47.0,
+      "hard_brake": -52.5
+     }
+    },
+    "900": {
+     "mappo": {
+      "team_delay_vs": 222996.79658028204,
+      "road_delay_vs": 53612.714457281945,
+      "source_wait_vs": 169384.08212300006,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 1134.0,
+      "hard_brake": 11.5
+     },
+     "native": {
+      "team_delay_vs": 234216.7399988695,
+      "road_delay_vs": 64993.65787586948,
+      "source_wait_vs": 169223.08212300006,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 1066.5,
+      "hard_brake": 73.5
+     },
+     "diff_mappo_minus_native": {
+      "team_delay_vs": -11219.94341858747,
+      "road_delay_vs": -11380.943418587536,
+      "source_wait_vs": 161.0,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 67.5,
+      "hard_brake": -62.0
+     }
+    }
+   }
+  ]
+ },
+ "mappo_episodes": {
+  "60": [
+   {
+    "seed": 995000,
+    "actual_sim_s": 1200.0,
+    "team_delay_vs": 160472.58824224284,
+    "road_delay_vs": 40553.85008324276,
+    "source_wait_vs": 119918.73815899987,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 1008.0,
+    "hard_brake": 13.5,
+    "override_fraction": 0.8945791337510215,
+    "max_cavs": 70
+   },
+   {
+    "seed": 995001,
+    "actual_sim_s": 1200.0,
+    "team_delay_vs": 176657.24109797736,
+    "road_delay_vs": 49023.498968977096,
+    "source_wait_vs": 127633.74212900002,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 962.5,
+    "hard_brake": 22.0,
+    "override_fraction": 0.8950341609731711,
+    "max_cavs": 89
+   },
+   {
+    "seed": 995002,
+    "actual_sim_s": 1200.0,
+    "team_delay_vs": 186704.64364781146,
+    "road_delay_vs": 53524.71536781163,
+    "source_wait_vs": 133179.92828000002,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 1036.0,
+    "hard_brake": 8.5,
+    "override_fraction": 0.9148418875609795,
+    "max_cavs": 83
+   },
+   {
+    "seed": 995003,
+    "actual_sim_s": 1200.0,
+    "team_delay_vs": 167225.65908814146,
+    "road_delay_vs": 42266.85561214167,
+    "source_wait_vs": 124958.80347600007,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 1034.5,
+    "hard_brake": 22.5,
+    "override_fraction": 0.9066477083223621,
+    "max_cavs": 85
+   },
+   {
+    "seed": 995004,
+    "actual_sim_s": 1200.0,
+    "team_delay_vs": 126038.30143747629,
+    "road_delay_vs": 44432.97706747659,
+    "source_wait_vs": 81605.32436999999,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 956.0,
+    "hard_brake": 7.0,
+    "override_fraction": 0.8977897886304411,
+    "max_cavs": 64
+   }
+  ],
+  "80": [
+   {
+    "seed": 995100,
+    "actual_sim_s": 1200.0,
+    "team_delay_vs": 184404.1823753427,
+    "road_delay_vs": 53662.20567334264,
+    "source_wait_vs": 130741.97670200006,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 1273.5,
+    "hard_brake": 6.0,
+    "override_fraction": 0.9105876393110436,
+    "max_cavs": 124
+   },
+   {
+    "seed": 995101,
+    "actual_sim_s": 1200.0,
+    "team_delay_vs": 222996.79658028204,
+    "road_delay_vs": 53612.714457281945,
+    "source_wait_vs": 169384.08212300006,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 1134.0,
+    "hard_brake": 11.5,
+    "override_fraction": 0.9165112591183,
+    "max_cavs": 103
+   },
+   {
+    "seed": 995102,
+    "actual_sim_s": 1200.0,
+    "team_delay_vs": 185045.5652909551,
+    "road_delay_vs": 45053.980113955055,
+    "source_wait_vs": 139991.5851770001,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 1069.5,
+    "hard_brake": 2.5,
+    "override_fraction": 0.8877970572263453,
+    "max_cavs": 94
+   },
+   {
+    "seed": 995103,
+    "actual_sim_s": 1200.0,
+    "team_delay_vs": 171996.1649913845,
+    "road_delay_vs": 35496.55797838436,
+    "source_wait_vs": 136499.6070130002,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 907.5,
+    "hard_brake": 2.5,
+    "override_fraction": 0.9101929034285628,
+    "max_cavs": 94
+   },
+   {
+    "seed": 995104,
+    "actual_sim_s": 1200.0,
+    "team_delay_vs": 178937.10733980304,
+    "road_delay_vs": 63576.97045180299,
+    "source_wait_vs": 115360.13688800004,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 1238.5,
+    "hard_brake": 4.5,
+    "override_fraction": 0.9188056342999592,
+    "max_cavs": 123
+   }
+  ]
+ },
+ "shares": {
+  "60": {
+   "moments_screened": 12,
+   "walls_tried": 46,
+   "screen_errors": [],
+   "moments_with_wall_beating_policy": 5,
+   "walls_beating_policy": 9,
+   "walls_synergy_measured": 7,
+   "moments_with_admissible_wall_seed1": 2,
+   "admissible_moments": [
+    "hc_p60_B_995000_a2_t355",
+    "hc_p60_B_995004_a2_t355"
+   ],
+   "walls_admitted_seed1": 2,
+   "fits4_all": 5,
+   "fits6_all": 18,
+   "fits_by_k": {
+    "3": {
+     "n": 12,
+     "fits4": 4,
+     "fits6": 10
+    },
+    "4": {
+     "n": 12,
+     "fits4": 1,
+     "fits6": 5
+    },
+    "5": {
+     "n": 12,
+     "fits4": 0,
+     "fits6": 3
+    },
+    "6": {
+     "n": 10,
+     "fits4": 0,
+     "fits6": 0
+    }
+   },
+   "replicate_rows": [
+    {
+     "state_id": "hc_p60_B_995004_a2_t355",
+     "k": 5,
+     "seed": 2,
+     "group_adv": -0.3754817090466531,
+     "adv_lb95": -0.7683103782565694,
+     "synergy": -0.3753573050726118,
+     "synergy_lb95": -0.7680697843645475,
+     "status": "not_admitted",
+     "safety": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995004_a2_t355",
+     "k": 5,
+     "seed": 3,
+     "group_adv": -0.35453142452934117,
+     "adv_lb95": -0.7276978244952943,
+     "synergy": -0.35453142452934117,
+     "synergy_lb95": -0.7276978244952943,
+     "status": "not_admitted",
+     "safety": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995000_a2_t355",
+     "k": 5,
+     "seed": 2,
+     "group_adv": 44.66127334013072,
+     "adv_lb95": 1.2252110928435287,
+     "synergy": -27.07211184900916,
+     "synergy_lb95": -65.16588526668549,
+     "status": "not_admitted",
+     "safety": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995000_a2_t355",
+     "k": 5,
+     "seed": 3,
+     "group_adv": 174.16968246362921,
+     "adv_lb95": 107.3248926582165,
+     "synergy": 58.32206587764631,
+     "synergy_lb95": -21.670482040825824,
+     "status": "not_admitted",
+     "safety": {
+      "collisions": 0.0,
+      "hard_brake": 0.5,
+      "teleports": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995004_a2_t355",
+     "k": 5,
+     "seed": 4,
+     "group_adv": 377.1235297272142,
+     "adv_lb95": 201.57924147648774,
+     "synergy": 377.1235297272142,
+     "synergy_lb95": 201.57924147648774,
+     "status": "admitted",
+     "safety": {
+      "collisions": 0.0,
+      "hard_brake": 1.0,
+      "teleports": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995000_a2_t355",
+     "k": 5,
+     "seed": 4,
+     "group_adv": -4.468942832460016,
+     "adv_lb95": -80.07190473105227,
+     "synergy": -16.26778133454536,
+     "synergy_lb95": -98.9243915059371,
+     "status": "not_admitted",
+     "safety": {
+      "collisions": 0.0,
+      "hard_brake": -0.5,
+      "teleports": 0.0
+     }
+    }
+   ],
+   "per_seed_admission": {
+    "hc_p60_B_995004_a2_t355|k5": {
+     "1": true,
+     "2": false,
+     "3": false,
+     "4": true
+    },
+    "hc_p60_B_995000_a2_t355|k5": {
+     "1": true,
+     "2": false,
+     "3": false,
+     "4": false
+    }
+   },
+   "walls": [
+    {
+     "state_id": "hc_p60_B_995000_a2_t305",
+     "t0": 305,
+     "k": 3,
+     "members": [
+      "mainline.114",
+      "mainline.109",
+      "mainline.113"
+     ],
+     "J_policy": 9625.670350962871,
+     "group_adv": -2.6377781978226267e-05,
+     "adv_lb95": -0.00013502083728553771,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 5,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 89.19274520874023,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995000_a2_t305",
+     "t0": 305,
+     "k": 4,
+     "members": [
+      "mainline.114",
+      "mainline.109",
+      "mainline.113",
+      "mainline.116"
+     ],
+     "J_policy": 9625.670350962871,
+     "group_adv": -0.08166684798561619,
+     "adv_lb95": -0.16422499764476015,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 5,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 100.6035270690918,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -0.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995000_a2_t305",
+     "t0": 305,
+     "k": 5,
+     "members": [
+      "mainline.114",
+      "mainline.109",
+      "mainline.113",
+      "mainline.116",
+      "mainline.115"
+     ],
+     "J_policy": 9625.670350962871,
+     "group_adv": -13.269065254949965,
+     "adv_lb95": -30.988484006503732,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 6,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 134.77480697631836,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -1.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 3.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995000_a2_t305",
+     "t0": 305,
+     "k": 6,
+     "members": [
+      "mainline.114",
+      "mainline.109",
+      "mainline.113",
+      "mainline.116",
+      "mainline.115",
+      "mainline.117"
+     ],
+     "J_policy": 9625.670350962871,
+     "group_adv": -13.26923580030234,
+     "adv_lb95": -30.988630879054046,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": null,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 198.4711036682129,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -1.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 3.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995001_a2_t500",
+     "t0": 500,
+     "k": 3,
+     "members": [
+      "mainline.158",
+      "mainline.164",
+      "mainline.166"
+     ],
+     "J_policy": 22147.835010580817,
+     "group_adv": -1.8349747974716593,
+     "adv_lb95": -8.280473971360333,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 6,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 37.132668256759644,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -2.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 4.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995001_a2_t500",
+     "t0": 500,
+     "k": 4,
+     "members": [
+      "mainline.158",
+      "mainline.164",
+      "mainline.166",
+      "mainline.178"
+     ],
+     "J_policy": 22147.835010580817,
+     "group_adv": -1.8349747974716593,
+     "adv_lb95": -8.280473971360333,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 8,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 67.50311660766602,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -2.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 4.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995001_a2_t500",
+     "t0": 500,
+     "k": 5,
+     "members": [
+      "mainline.158",
+      "mainline.164",
+      "mainline.166",
+      "mainline.178",
+      "mainline.180"
+     ],
+     "J_policy": 22147.835010580817,
+     "group_adv": -1.8349747974716593,
+     "adv_lb95": -8.280473971360333,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 9,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 75.28366470336914,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -2.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 4.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995001_a2_t500",
+     "t0": 500,
+     "k": 6,
+     "members": [
+      "mainline.158",
+      "mainline.164",
+      "mainline.166",
+      "mainline.178",
+      "mainline.180",
+      "mainline.200"
+     ],
+     "J_policy": 22147.835010580817,
+     "group_adv": -1.8349727173699648,
+     "adv_lb95": -8.280475485031275,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 12,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 129.19414520263672,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -2.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 4.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995004_a2_t355",
+     "t0": 355,
+     "k": 3,
+     "members": [
+      "mainline.183",
+      "mainline.187",
+      "mainline.185"
+     ],
+     "J_policy": 10347.045601825637,
+     "group_adv": -0.017484681127825752,
+     "adv_lb95": -0.04081111729401528,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 9,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 56.65022659301758,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995004_a2_t355",
+     "t0": 355,
+     "k": 4,
+     "members": [
+      "mainline.183",
+      "mainline.187",
+      "mainline.185",
+      "mainline.186"
+     ],
+     "J_policy": 10347.045601825637,
+     "group_adv": -3.3534520948905993,
+     "adv_lb95": -10.004318233726234,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 14,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 118.18685913085938,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -0.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995004_a2_t355",
+     "t0": 355,
+     "k": 5,
+     "members": [
+      "mainline.183",
+      "mainline.187",
+      "mainline.185",
+      "mainline.186",
+      "mainline.188"
+     ],
+     "J_policy": 10347.045601825637,
+     "group_adv": 731.9907528813947,
+     "adv_lb95": 364.0966045882636,
+     "beat_policy": true,
+     "synergy": 731.9907528813947,
+     "synergy_lb95": 364.0966045882636,
+     "best_solo_adv": 0.0,
+     "synergy_status": "admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": true,
+     "slots_needed": null,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 181.1825942993164,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -2.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -75.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995002_a2_t490",
+     "t0": 490,
+     "k": 3,
+     "members": [
+      "mainline.186",
+      "mainline.188",
+      "mainline.192"
+     ],
+     "J_policy": 24974.78430801878,
+     "group_adv": 1.2200129276607186e-05,
+     "adv_lb95": 6.62610364088323e-07,
+     "beat_policy": true,
+     "synergy": 0.0,
+     "synergy_lb95": 0.0,
+     "best_solo_adv": 1.2200129276607186e-05,
+     "synergy_status": "not_admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": false,
+     "slots_needed": 6,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 16.1644926071167,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995002_a2_t490",
+     "t0": 490,
+     "k": 4,
+     "members": [
+      "mainline.186",
+      "mainline.188",
+      "mainline.192",
+      "mainline.194"
+     ],
+     "J_policy": 24974.78430801878,
+     "group_adv": -3.5222408769186586e-05,
+     "adv_lb95": -7.58334805141203e-05,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 9,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 25.485073268413544,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995002_a2_t490",
+     "t0": 490,
+     "k": 5,
+     "members": [
+      "mainline.186",
+      "mainline.188",
+      "mainline.192",
+      "mainline.194",
+      "mainline.201"
+     ],
+     "J_policy": 24974.78430801878,
+     "group_adv": 18.48536515871092,
+     "adv_lb95": -0.7539007911194858,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 9,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 32.26150417327881,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.5,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -21.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995002_a2_t490",
+     "t0": 490,
+     "k": 6,
+     "members": [
+      "mainline.186",
+      "mainline.188",
+      "mainline.192",
+      "mainline.194",
+      "mainline.201",
+      "mainline.204"
+     ],
+     "J_policy": 24974.78430801878,
+     "group_adv": -2.1921120174229145,
+     "adv_lb95": -6.854269079705955,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 10,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 40.669678688049316,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -14.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995003_a2_t435",
+     "t0": 435,
+     "k": 3,
+     "members": [
+      "mainline.154",
+      "mainline.166",
+      "mainline.168"
+     ],
+     "J_policy": 18351.153163308736,
+     "group_adv": 0.010314442188246176,
+     "adv_lb95": -0.04998608154819521,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 5,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 36.20021057128906,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995003_a2_t435",
+     "t0": 435,
+     "k": 4,
+     "members": [
+      "mainline.154",
+      "mainline.166",
+      "mainline.168",
+      "mainline.170"
+     ],
+     "J_policy": 18351.153163308736,
+     "group_adv": 0.010314442188246176,
+     "adv_lb95": -0.04998608154819521,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 5,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 44.97303485870361,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995003_a2_t435",
+     "t0": 435,
+     "k": 5,
+     "members": [
+      "mainline.154",
+      "mainline.166",
+      "mainline.168",
+      "mainline.170",
+      "mainline.172"
+     ],
+     "J_policy": 18351.153163308736,
+     "group_adv": 0.0067270845065650064,
+     "adv_lb95": -0.05576052197829995,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 6,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 55.346784591674805,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995003_a2_t435",
+     "t0": 435,
+     "k": 6,
+     "members": [
+      "mainline.154",
+      "mainline.166",
+      "mainline.168",
+      "mainline.170",
+      "mainline.172",
+      "mainline.178"
+     ],
+     "J_policy": 18351.153163308736,
+     "group_adv": -0.0005016777649871074,
+     "adv_lb95": -0.07632868113596487,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 8,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 74.04961204528809,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995000_a2_t330",
+     "t0": 330,
+     "k": 3,
+     "members": [
+      "mainline.109",
+      "mainline.113",
+      "mainline.117"
+     ],
+     "J_policy": 10626.378047166594,
+     "group_adv": -80.71503776513782,
+     "adv_lb95": -111.33318775731912,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 3,
+     "fits4": true,
+     "fits6": true,
+     "span_m": 15.05499267578125,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -1.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995000_a2_t330",
+     "t0": 330,
+     "k": 4,
+     "members": [
+      "mainline.109",
+      "mainline.113",
+      "mainline.117",
+      "mainline.125"
+     ],
+     "J_policy": 10626.378047166594,
+     "group_adv": -80.71442635269159,
+     "adv_lb95": -111.33020156122906,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 4,
+     "fits4": true,
+     "fits6": true,
+     "span_m": 46.94831830263138,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -1.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995000_a2_t330",
+     "t0": 330,
+     "k": 5,
+     "members": [
+      "mainline.109",
+      "mainline.113",
+      "mainline.117",
+      "mainline.125",
+      "mainline.127"
+     ],
+     "J_policy": 10626.378047166594,
+     "group_adv": -80.56516898261907,
+     "adv_lb95": -110.98912045503795,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 5,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 71.1693115234375,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -1.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995000_a2_t330",
+     "t0": 330,
+     "k": 6,
+     "members": [
+      "mainline.109",
+      "mainline.113",
+      "mainline.117",
+      "mainline.125",
+      "mainline.127",
+      "mainline.131"
+     ],
+     "J_policy": 10626.378047166594,
+     "group_adv": -71.42402408859198,
+     "adv_lb95": -115.29071858115627,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": null,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 271.8858947753906,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -1.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 8.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995001_a2_t425",
+     "t0": 425,
+     "k": 3,
+     "members": [
+      "mainline.139",
+      "mainline.142",
+      "ramp.41"
+     ],
+     "J_policy": 19435.696811689504,
+     "group_adv": 126.16000813806022,
+     "adv_lb95": 78.15959844173139,
+     "beat_policy": true,
+     "synergy": 0.002250680416182149,
+     "synergy_lb95": -0.0002915807472163578,
+     "best_solo_adv": 126.15775745764404,
+     "synergy_status": "not_admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": false,
+     "slots_needed": 5,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 20.155784606933594,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -8.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 6.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995001_a2_t425",
+     "t0": 425,
+     "k": 4,
+     "members": [
+      "mainline.139",
+      "mainline.142",
+      "ramp.41",
+      "mainline.158"
+     ],
+     "J_policy": 19435.696811689504,
+     "group_adv": 126.16373582410597,
+     "adv_lb95": 78.1656865993381,
+     "beat_policy": true,
+     "synergy": 0.005978366461931728,
+     "synergy_lb95": -0.0008268573970781289,
+     "best_solo_adv": 126.15775745764404,
+     "synergy_status": "not_admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": false,
+     "slots_needed": 10,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 54.645461082458496,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -8.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 6.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995001_a2_t425",
+     "t0": 425,
+     "k": 5,
+     "members": [
+      "mainline.139",
+      "mainline.142",
+      "ramp.41",
+      "mainline.158",
+      "mainline.164"
+     ],
+     "J_policy": 19435.696811689504,
+     "group_adv": 126.16373582410597,
+     "adv_lb95": 78.1656865993381,
+     "beat_policy": true,
+     "synergy": 0.005978366461931728,
+     "synergy_lb95": -0.0008268573970781289,
+     "best_solo_adv": 126.15775745764404,
+     "synergy_status": "not_admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": false,
+     "slots_needed": 14,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 76.99803352355957,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -8.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 6.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995001_a2_t425",
+     "t0": 425,
+     "k": 6,
+     "members": [
+      "mainline.139",
+      "mainline.142",
+      "ramp.41",
+      "mainline.158",
+      "mainline.164",
+      "mainline.166"
+     ],
+     "J_policy": 19435.696811689504,
+     "group_adv": 126.16373582410597,
+     "adv_lb95": 78.1656865993381,
+     "beat_policy": true,
+     "synergy": 0.005978366461931728,
+     "synergy_lb95": -0.0008268573970781289,
+     "best_solo_adv": 126.15775745764404,
+     "synergy_status": "not_admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": false,
+     "slots_needed": 14,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 84.86050796508789,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -8.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 6.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995002_a2_t460",
+     "t0": 460,
+     "k": 3,
+     "members": [
+      "mainline.178",
+      "mainline.200",
+      "mainline.180"
+     ],
+     "J_policy": 23163.419339922144,
+     "group_adv": -4.834649007534608e-05,
+     "adv_lb95": -0.00011093665980297374,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 4,
+     "fits4": true,
+     "fits6": true,
+     "span_m": 7.529199600219727,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995002_a2_t460",
+     "t0": 460,
+     "k": 4,
+     "members": [
+      "mainline.178",
+      "mainline.200",
+      "mainline.180",
+      "mainline.186"
+     ],
+     "J_policy": 23163.419339922144,
+     "group_adv": -4.8340109060518444e-05,
+     "adv_lb95": -0.00011092402546637458,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 8,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 25.38722276687622,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995002_a2_t460",
+     "t0": 460,
+     "k": 5,
+     "members": [
+      "mainline.178",
+      "mainline.200",
+      "mainline.180",
+      "mainline.186",
+      "mainline.188"
+     ],
+     "J_policy": 23163.419339922144,
+     "group_adv": 0.07584001638315385,
+     "adv_lb95": 0.00770306320173404,
+     "beat_policy": true,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 9,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 33.14153432846069,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995002_a2_t460",
+     "t0": 460,
+     "k": 6,
+     "members": [
+      "mainline.178",
+      "mainline.200",
+      "mainline.180",
+      "mainline.186",
+      "mainline.188",
+      "mainline.192"
+     ],
+     "J_policy": 23163.419339922144,
+     "group_adv": 0.0596793890799745,
+     "adv_lb95": 0.009354386922495905,
+     "beat_policy": true,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 11,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 40.912808418273926,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995003_a2_t455",
+     "t0": 455,
+     "k": 3,
+     "members": [
+      "ramp.46",
+      "mainline.166",
+      "mainline.168"
+     ],
+     "J_policy": 19240.37397020221,
+     "group_adv": -102.02556433164864,
+     "adv_lb95": -191.31262429147483,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 4,
+     "fits4": true,
+     "fits6": true,
+     "span_m": 33.56896209716797,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 1.5,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -13.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995003_a2_t455",
+     "t0": 455,
+     "k": 4,
+     "members": [
+      "ramp.46",
+      "mainline.166",
+      "mainline.168",
+      "mainline.170"
+     ],
+     "J_policy": 19240.37397020221,
+     "group_adv": -102.12373895554629,
+     "adv_lb95": -191.4399836131175,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 6,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 42.3969612121582,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 1.5,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -13.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995003_a2_t455",
+     "t0": 455,
+     "k": 5,
+     "members": [
+      "ramp.46",
+      "mainline.166",
+      "mainline.168",
+      "mainline.170",
+      "mainline.172"
+     ],
+     "J_policy": 19240.37397020221,
+     "group_adv": -102.12815336818312,
+     "adv_lb95": -191.44027795159565,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 7,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 50.973899841308594,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 1.5,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -13.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995003_a2_t455",
+     "t0": 455,
+     "k": 6,
+     "members": [
+      "ramp.46",
+      "mainline.166",
+      "mainline.168",
+      "mainline.170",
+      "mainline.172",
+      "mainline.178"
+     ],
+     "J_policy": 19240.37397020221,
+     "group_adv": -102.12762368743279,
+     "adv_lb95": -191.44036381717106,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 8,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 68.2133960723877,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 1.5,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -13.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995004_a2_t335",
+     "t0": 335,
+     "k": 3,
+     "members": [
+      "mainline.172",
+      "mainline.173",
+      "mainline.174"
+     ],
+     "J_policy": 9459.463293087729,
+     "group_adv": 0.0,
+     "adv_lb95": 0.0,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 14,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 72.78309440612793,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995004_a2_t335",
+     "t0": 335,
+     "k": 4,
+     "members": [
+      "mainline.172",
+      "mainline.173",
+      "mainline.174",
+      "mainline.175"
+     ],
+     "J_policy": 9459.463293087729,
+     "group_adv": 0.0,
+     "adv_lb95": 0.0,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 16,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 85.57048416137695,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995004_a2_t335",
+     "t0": 335,
+     "k": 5,
+     "members": [
+      "mainline.172",
+      "mainline.173",
+      "mainline.174",
+      "mainline.175",
+      "mainline.177"
+     ],
+     "J_policy": 9459.463293087729,
+     "group_adv": 0.0,
+     "adv_lb95": 0.0,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 17,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 171.4034309387207,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995004_a2_t335",
+     "t0": 335,
+     "k": 6,
+     "members": [
+      "mainline.172",
+      "mainline.173",
+      "mainline.174",
+      "mainline.175",
+      "mainline.177",
+      "mainline.179"
+     ],
+     "J_policy": 9459.463293087729,
+     "group_adv": 0.0,
+     "adv_lb95": 0.0,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": null,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 253.06943130493164,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995000_a2_t355",
+     "t0": 355,
+     "k": 3,
+     "members": [
+      "mainline.134",
+      "mainline.140",
+      "mainline.143"
+     ],
+     "J_policy": 12144.160857804762,
+     "group_adv": -236.5757657863669,
+     "adv_lb95": -291.0154700928374,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 4,
+     "fits4": true,
+     "fits6": true,
+     "span_m": 95.24667167663574,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -0.5,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 26.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995000_a2_t355",
+     "t0": 355,
+     "k": 4,
+     "members": [
+      "mainline.134",
+      "mainline.140",
+      "mainline.143",
+      "mainline.144"
+     ],
+     "J_policy": 12144.160857804762,
+     "group_adv": -394.1122022389609,
+     "adv_lb95": -571.5456904442378,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 5,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 172.4242458343506,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -0.5,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 10.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995000_a2_t355",
+     "t0": 355,
+     "k": 5,
+     "members": [
+      "mainline.134",
+      "mainline.140",
+      "mainline.143",
+      "mainline.144",
+      "mainline.146"
+     ],
+     "J_policy": 12144.160857804762,
+     "group_adv": 171.74420521110915,
+     "adv_lb95": 118.8554040586966,
+     "beat_policy": true,
+     "synergy": 142.22812191637604,
+     "synergy_lb95": 107.20945458293404,
+     "best_solo_adv": 29.516083294733107,
+     "synergy_status": "admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": true,
+     "slots_needed": null,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 253.22731590270996,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 5.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995001_a2_t460",
+     "t0": 460,
+     "k": 3,
+     "members": [
+      "ramp.47",
+      "mainline.194",
+      "mainline.158"
+     ],
+     "J_policy": 20494.450464943613,
+     "group_adv": -101.81164098270528,
+     "adv_lb95": -149.9612266275255,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 6,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 53.94558238983154,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -0.5,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995001_a2_t460",
+     "t0": 460,
+     "k": 4,
+     "members": [
+      "ramp.47",
+      "mainline.194",
+      "mainline.158",
+      "mainline.164"
+     ],
+     "J_policy": 20494.450464943613,
+     "group_adv": -101.51949049781979,
+     "adv_lb95": -149.64585203180212,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 8,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 80.38338470458984,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -0.5,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995001_a2_t460",
+     "t0": 460,
+     "k": 5,
+     "members": [
+      "ramp.47",
+      "mainline.194",
+      "mainline.158",
+      "mainline.164",
+      "mainline.166"
+     ],
+     "J_policy": 20494.450464943613,
+     "group_adv": -101.51949049781979,
+     "adv_lb95": -149.64585203180212,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 8,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 89.47830581665039,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -0.5,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.5
+     }
+    },
+    {
+     "state_id": "hc_p60_B_995001_a2_t460",
+     "t0": 460,
+     "k": 6,
+     "members": [
+      "ramp.47",
+      "mainline.194",
+      "mainline.158",
+      "mainline.164",
+      "mainline.166",
+      "mainline.178"
+     ],
+     "J_policy": 20494.450464943613,
+     "group_adv": -101.51949087248067,
+     "adv_lb95": -149.64585314191118,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 11,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 121.5408821105957,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -0.5,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.5
+     }
+    }
+   ]
+  },
+  "80": {
+   "moments_screened": 10,
+   "walls_tried": 38,
+   "screen_errors": [],
+   "moments_with_wall_beating_policy": 4,
+   "walls_beating_policy": 12,
+   "walls_synergy_measured": 9,
+   "moments_with_admissible_wall_seed1": 2,
+   "admissible_moments": [
+    "hc_p80_B_995103_a2_t365",
+    "hc_p80_B_995104_a2_t475"
+   ],
+   "walls_admitted_seed1": 5,
+   "fits4_all": 3,
+   "fits6_all": 8,
+   "fits_by_k": {
+    "3": {
+     "n": 10,
+     "fits4": 3,
+     "fits6": 5
+    },
+    "4": {
+     "n": 10,
+     "fits4": 0,
+     "fits6": 3
+    },
+    "5": {
+     "n": 10,
+     "fits4": 0,
+     "fits6": 0
+    },
+    "6": {
+     "n": 8,
+     "fits4": 0,
+     "fits6": 0
+    }
+   },
+   "replicate_rows": [
+    {
+     "state_id": "hc_p80_B_995104_a2_t475",
+     "k": 4,
+     "seed": 3,
+     "group_adv": -0.07539270790584851,
+     "adv_lb95": -0.1699687125352284,
+     "synergy": -0.07606737796595553,
+     "synergy_lb95": -0.17024272390353873,
+     "status": "not_admitted",
+     "safety": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995104_a2_t475",
+     "k": 4,
+     "seed": 2,
+     "group_adv": -0.04201296735118376,
+     "adv_lb95": -0.09502806136224536,
+     "synergy": -0.04206941018492216,
+     "synergy_lb95": -0.0951244810690696,
+     "status": "not_admitted",
+     "safety": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995103_a2_t365",
+     "k": 4,
+     "seed": 3,
+     "group_adv": -2.6064454653314897,
+     "adv_lb95": -5.444342808283136,
+     "synergy": -2.783495739349746,
+     "synergy_lb95": -5.832849843228814,
+     "status": "not_admitted",
+     "safety": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995103_a2_t365",
+     "k": 4,
+     "seed": 2,
+     "group_adv": -159.2609615872716,
+     "adv_lb95": -303.44023572435583,
+     "synergy": -158.9730972937832,
+     "synergy_lb95": -303.3511472948775,
+     "status": "not_admitted",
+     "safety": {
+      "collisions": 0.0,
+      "hard_brake": 3.5,
+      "teleports": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995103_a2_t365",
+     "k": 4,
+     "seed": 4,
+     "group_adv": 47.81544760480028,
+     "adv_lb95": 4.032897334768041,
+     "synergy": -27.90034000486048,
+     "synergy_lb95": -46.31208463673725,
+     "status": "not_admitted",
+     "safety": {
+      "collisions": 0.0,
+      "hard_brake": 0.5,
+      "teleports": 0.0
+     }
+    }
+   ],
+   "per_seed_admission": {
+    "hc_p80_B_995104_a2_t475|k4": {
+     "1": true,
+     "3": false,
+     "2": false
+    },
+    "hc_p80_B_995104_a2_t475|k5": {
+     "1": true
+    },
+    "hc_p80_B_995104_a2_t475|k6": {
+     "1": true
+    },
+    "hc_p80_B_995103_a2_t365|k4": {
+     "1": true,
+     "3": false,
+     "2": false,
+     "4": false
+    },
+    "hc_p80_B_995103_a2_t365|k5": {
+     "1": true
+    }
+   },
+   "walls": [
+    {
+     "state_id": "hc_p80_B_995104_a2_t365",
+     "t0": 365,
+     "k": 3,
+     "members": [
+      "mainline.122",
+      "mainline.152",
+      "mainline.123"
+     ],
+     "J_policy": 19172.614095624594,
+     "group_adv": 11.81986888335814,
+     "adv_lb95": -53.28690471865416,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 4,
+     "fits4": true,
+     "fits6": true,
+     "span_m": 8.45650863647461,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -22.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995104_a2_t365",
+     "t0": 365,
+     "k": 4,
+     "members": [
+      "mainline.122",
+      "mainline.152",
+      "mainline.123",
+      "mainline.127"
+     ],
+     "J_policy": 19172.614095624594,
+     "group_adv": 11.787136987455597,
+     "adv_lb95": -53.31102954473367,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 6,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 17.23162841796875,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -22.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995104_a2_t365",
+     "t0": 365,
+     "k": 5,
+     "members": [
+      "mainline.122",
+      "mainline.152",
+      "mainline.123",
+      "mainline.127",
+      "ramp.29"
+     ],
+     "J_policy": 19172.614095624594,
+     "group_adv": 11.713246870902367,
+     "adv_lb95": -53.43067452099363,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 8,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 27.932170867919922,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -22.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995104_a2_t365",
+     "t0": 365,
+     "k": 6,
+     "members": [
+      "mainline.122",
+      "mainline.152",
+      "mainline.123",
+      "mainline.127",
+      "ramp.29",
+      "ramp.30"
+     ],
+     "J_policy": 19172.614095624594,
+     "group_adv": 5.181228814053611,
+     "adv_lb95": -17.043495089410136,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 10,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 39.404197692871094,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -19.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995104_a2_t475",
+     "t0": 475,
+     "k": 3,
+     "members": [
+      "ramp.41",
+      "mainline.154",
+      "mainline.156"
+     ],
+     "J_policy": 24215.264471883333,
+     "group_adv": -0.0001434327568858862,
+     "adv_lb95": -0.00048682353135518495,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 10,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 30.13756012916565,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995104_a2_t475",
+     "t0": 475,
+     "k": 4,
+     "members": [
+      "ramp.41",
+      "mainline.154",
+      "mainline.156",
+      "mainline.158"
+     ],
+     "J_policy": 24215.264471883333,
+     "group_adv": 0.04518093945807777,
+     "adv_lb95": 0.0005046424586907961,
+     "beat_policy": true,
+     "synergy": 0.00036863017157884315,
+     "synergy_lb95": 3.3084870665334178e-06,
+     "best_solo_adv": 0.04481230928649893,
+     "synergy_status": "admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": true,
+     "slots_needed": 10,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 37.505638122558594,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995104_a2_t475",
+     "t0": 475,
+     "k": 5,
+     "members": [
+      "ramp.41",
+      "mainline.154",
+      "mainline.156",
+      "mainline.158",
+      "mainline.160"
+     ],
+     "J_policy": 24215.264471883333,
+     "group_adv": 0.04518093945807777,
+     "adv_lb95": 0.0005046424586907961,
+     "beat_policy": true,
+     "synergy": 0.00036863017157884315,
+     "synergy_lb95": 3.3084870665334178e-06,
+     "best_solo_adv": 0.04481230928649893,
+     "synergy_status": "admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": true,
+     "slots_needed": 10,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 45.02559852600098,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995104_a2_t475",
+     "t0": 475,
+     "k": 6,
+     "members": [
+      "ramp.41",
+      "mainline.154",
+      "mainline.156",
+      "mainline.158",
+      "mainline.160",
+      "mainline.215"
+     ],
+     "J_policy": 24215.264471883333,
+     "group_adv": 0.04518093945807777,
+     "adv_lb95": 0.0005046424586907961,
+     "beat_policy": true,
+     "synergy": 0.00036863017157884315,
+     "synergy_lb95": 3.3084870665334178e-06,
+     "best_solo_adv": 0.04481230928649893,
+     "synergy_status": "admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": true,
+     "slots_needed": 12,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 47.841434478759766,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995100_a2_t430",
+     "t0": 430,
+     "k": 3,
+     "members": [
+      "mainline.190",
+      "mainline.187",
+      "mainline.189"
+     ],
+     "J_policy": 22114.83556719737,
+     "group_adv": 6.043046596460044e-07,
+     "adv_lb95": 5.908959792577662e-08,
+     "beat_policy": true,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 7,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 39.703474044799805,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995100_a2_t430",
+     "t0": 430,
+     "k": 4,
+     "members": [
+      "mainline.190",
+      "mainline.187",
+      "mainline.189",
+      "mainline.191"
+     ],
+     "J_policy": 22114.83556719737,
+     "group_adv": 6.043046596460044e-07,
+     "adv_lb95": 5.908959792577662e-08,
+     "beat_policy": true,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 11,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 71.5468635559082,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995100_a2_t430",
+     "t0": 430,
+     "k": 5,
+     "members": [
+      "mainline.190",
+      "mainline.187",
+      "mainline.189",
+      "mainline.191",
+      "mainline.192"
+     ],
+     "J_policy": 22114.83556719737,
+     "group_adv": 6.043046596460044e-07,
+     "adv_lb95": 5.908959792577662e-08,
+     "beat_policy": true,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 12,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 80.0296859741211,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995100_a2_t430",
+     "t0": 430,
+     "k": 6,
+     "members": [
+      "mainline.190",
+      "mainline.187",
+      "mainline.189",
+      "mainline.191",
+      "mainline.192",
+      "mainline.193"
+     ],
+     "J_policy": 22114.83556719737,
+     "group_adv": -1.5051366062834859e-05,
+     "adv_lb95": -3.174215598846786e-05,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 20,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 119.07345581054688,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995101_a2_t425",
+     "t0": 425,
+     "k": 3,
+     "members": [
+      "mainline.133",
+      "mainline.137",
+      "mainline.144"
+     ],
+     "J_policy": 25792.216699033674,
+     "group_adv": -0.09116112899209838,
+     "adv_lb95": -0.3503200150269549,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 6,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 31.270792961120605,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995101_a2_t425",
+     "t0": 425,
+     "k": 4,
+     "members": [
+      "mainline.133",
+      "mainline.137",
+      "mainline.144",
+      "mainline.148"
+     ],
+     "J_policy": 25792.216699033674,
+     "group_adv": 111.37471511842887,
+     "adv_lb95": 68.21553300940577,
+     "beat_policy": true,
+     "synergy": -3.0770317128117313,
+     "synergy_lb95": -6.311841035729595,
+     "best_solo_adv": 114.4517468312406,
+     "synergy_status": "not_admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": false,
+     "slots_needed": 8,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 41.325082778930664,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 1.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995101_a2_t425",
+     "t0": 425,
+     "k": 5,
+     "members": [
+      "mainline.133",
+      "mainline.137",
+      "mainline.144",
+      "mainline.148",
+      "mainline.150"
+     ],
+     "J_policy": 25792.216699033674,
+     "group_adv": 111.3775186544517,
+     "adv_lb95": 68.21540272543898,
+     "beat_policy": true,
+     "synergy": -3.0742281767888926,
+     "synergy_lb95": -6.317959644493749,
+     "best_solo_adv": 114.4517468312406,
+     "synergy_status": "not_admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": false,
+     "slots_needed": 10,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 50.44437789916992,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 1.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995101_a2_t425",
+     "t0": 425,
+     "k": 6,
+     "members": [
+      "mainline.133",
+      "mainline.137",
+      "mainline.144",
+      "mainline.148",
+      "mainline.150",
+      "mainline.152"
+     ],
+     "J_policy": 25792.216699033674,
+     "group_adv": 111.35779373012338,
+     "adv_lb95": 68.17834441391442,
+     "beat_policy": true,
+     "synergy": -3.093953101117222,
+     "synergy_lb95": -6.344287740642903,
+     "best_solo_adv": 114.4517468312406,
+     "synergy_status": "not_admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": false,
+     "slots_needed": 10,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 58.84724998474121,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 1.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995102_a2_t405",
+     "t0": 405,
+     "k": 3,
+     "members": [
+      "ramp.37",
+      "mainline.171",
+      "mainline.168"
+     ],
+     "J_policy": 19702.237980545506,
+     "group_adv": -19.646881738779484,
+     "adv_lb95": -30.60265374960709,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 10,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 54.23095893859863,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -2.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995102_a2_t405",
+     "t0": 405,
+     "k": 4,
+     "members": [
+      "ramp.37",
+      "mainline.171",
+      "mainline.168",
+      "mainline.170"
+     ],
+     "J_policy": 19702.237980545506,
+     "group_adv": -19.674108919411083,
+     "adv_lb95": -30.620129614118195,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 16,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 103.9359302520752,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -2.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995102_a2_t405",
+     "t0": 405,
+     "k": 5,
+     "members": [
+      "ramp.37",
+      "mainline.171",
+      "mainline.168",
+      "mainline.170",
+      "mainline.173"
+     ],
+     "J_policy": 19702.237980545506,
+     "group_adv": -19.674108919411083,
+     "adv_lb95": -30.620129614118195,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 22,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 151.16314697265625,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -2.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995102_a2_t405",
+     "t0": 405,
+     "k": 6,
+     "members": [
+      "ramp.37",
+      "mainline.171",
+      "mainline.168",
+      "mainline.170",
+      "mainline.173",
+      "mainline.172"
+     ],
+     "J_policy": 19702.237980545506,
+     "group_adv": -19.674108919411083,
+     "adv_lb95": -30.620129614118195,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": null,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 172.10851287841797,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -2.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995103_a2_t325",
+     "t0": 325,
+     "k": 3,
+     "members": [
+      "mainline.138",
+      "mainline.139",
+      "mainline.140"
+     ],
+     "J_policy": 18690.24170354856,
+     "group_adv": -53.58653360167591,
+     "adv_lb95": -96.7544377246833,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 6,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 95.32585906982422,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 1.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 11.5
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995103_a2_t325",
+     "t0": 325,
+     "k": 4,
+     "members": [
+      "mainline.138",
+      "mainline.139",
+      "mainline.140",
+      "mainline.141"
+     ],
+     "J_policy": 18690.24170354856,
+     "group_adv": -53.60527224096586,
+     "adv_lb95": -96.77035650131968,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 6,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 109.35057067871094,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 1.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 11.5
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995103_a2_t325",
+     "t0": 325,
+     "k": 5,
+     "members": [
+      "mainline.138",
+      "mainline.139",
+      "mainline.140",
+      "mainline.141",
+      "mainline.143"
+     ],
+     "J_policy": 18690.24170354856,
+     "group_adv": -51.97542406920911,
+     "adv_lb95": -91.52187079339926,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": null,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 200.76734924316406,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": -1.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 6.5
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995100_a2_t390",
+     "t0": 390,
+     "k": 3,
+     "members": [
+      "mainline.166",
+      "mainline.170",
+      "mainline.168"
+     ],
+     "J_policy": 20391.237242989795,
+     "group_adv": 0.0,
+     "adv_lb95": 0.0,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 10,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 42.064962565898895,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995100_a2_t390",
+     "t0": 390,
+     "k": 4,
+     "members": [
+      "mainline.166",
+      "mainline.170",
+      "mainline.168",
+      "mainline.169"
+     ],
+     "J_policy": 20391.237242989795,
+     "group_adv": 0.0,
+     "adv_lb95": 0.0,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 12,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 77.09546279907227,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995100_a2_t390",
+     "t0": 390,
+     "k": 5,
+     "members": [
+      "mainline.166",
+      "mainline.170",
+      "mainline.168",
+      "mainline.169",
+      "mainline.172"
+     ],
+     "J_policy": 20391.237242989795,
+     "group_adv": 0.0,
+     "adv_lb95": -4.202176569378935e-07,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 19,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 121.8804931640625,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995100_a2_t390",
+     "t0": 390,
+     "k": 6,
+     "members": [
+      "mainline.166",
+      "mainline.170",
+      "mainline.168",
+      "mainline.169",
+      "mainline.172",
+      "mainline.171"
+     ],
+     "J_policy": 20391.237242989795,
+     "group_adv": 0.0,
+     "adv_lb95": -4.202176569378935e-07,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 19,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 132.73931884765625,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995101_a2_t350",
+     "t0": 350,
+     "k": 3,
+     "members": [
+      "mainline.104",
+      "mainline.135",
+      "mainline.108"
+     ],
+     "J_policy": 23035.432956118624,
+     "group_adv": -0.004416308052896056,
+     "adv_lb95": -0.020312963846163257,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 4,
+     "fits4": true,
+     "fits6": true,
+     "span_m": 12.094635009765625,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995101_a2_t350",
+     "t0": 350,
+     "k": 4,
+     "members": [
+      "mainline.104",
+      "mainline.135",
+      "mainline.108",
+      "mainline.110"
+     ],
+     "J_policy": 23035.432956118624,
+     "group_adv": -224.89554207700712,
+     "adv_lb95": -325.5192507209683,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 6,
+     "fits4": false,
+     "fits6": true,
+     "span_m": 24.617069244384766,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 15.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995101_a2_t350",
+     "t0": 350,
+     "k": 5,
+     "members": [
+      "mainline.104",
+      "mainline.135",
+      "mainline.108",
+      "mainline.110",
+      "mainline.112"
+     ],
+     "J_policy": 23035.432956118624,
+     "group_adv": -266.14792501175543,
+     "adv_lb95": -382.61561288724243,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 9,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 36.17828941345215,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 15.5
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995101_a2_t350",
+     "t0": 350,
+     "k": 6,
+     "members": [
+      "mainline.104",
+      "mainline.135",
+      "mainline.108",
+      "mainline.110",
+      "mainline.112",
+      "mainline.114"
+     ],
+     "J_policy": 23035.432956118624,
+     "group_adv": -266.14791830273316,
+     "adv_lb95": -382.61559924149776,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 9,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 46.559383392333984,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 15.5
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995102_a2_t425",
+     "t0": 425,
+     "k": 3,
+     "members": [
+      "ramp.47",
+      "mainline.176",
+      "mainline.178"
+     ],
+     "J_policy": 20325.003680136593,
+     "group_adv": 14.147306250546535,
+     "adv_lb95": -7.660351929581066,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 8,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 42.3765606880188,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 1.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995102_a2_t425",
+     "t0": 425,
+     "k": 4,
+     "members": [
+      "ramp.47",
+      "mainline.176",
+      "mainline.178",
+      "mainline.180"
+     ],
+     "J_policy": 20325.003680136593,
+     "group_adv": 14.14722068831179,
+     "adv_lb95": -7.660359751163833,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 12,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 65.05367469787598,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 1.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995102_a2_t425",
+     "t0": 425,
+     "k": 5,
+     "members": [
+      "ramp.47",
+      "mainline.176",
+      "mainline.178",
+      "mainline.180",
+      "mainline.183"
+     ],
+     "J_policy": 20325.003680136593,
+     "group_adv": 14.147213225915038,
+     "adv_lb95": -7.6603672559084774,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 12,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 68.25604248046875,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 1.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995102_a2_t425",
+     "t0": 425,
+     "k": 6,
+     "members": [
+      "ramp.47",
+      "mainline.176",
+      "mainline.178",
+      "mainline.180",
+      "mainline.183",
+      "mainline.182"
+     ],
+     "J_policy": 20325.003680136593,
+     "group_adv": 14.147213225915038,
+     "adv_lb95": -7.6603672559084774,
+     "beat_policy": false,
+     "synergy": null,
+     "synergy_lb95": null,
+     "best_solo_adv": null,
+     "synergy_status": null,
+     "policy_reproduced": null,
+     "admitted_seed1": false,
+     "slots_needed": 16,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 95.06886672973633,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 1.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995103_a2_t365",
+     "t0": 365,
+     "k": 3,
+     "members": [
+      "mainline.157",
+      "mainline.159",
+      "mainline.160"
+     ],
+     "J_policy": 19831.97382884146,
+     "group_adv": 72.91288669432834,
+     "adv_lb95": 33.9807424675595,
+     "beat_policy": true,
+     "synergy": -142.7127951255752,
+     "synergy_lb95": -252.98305968768264,
+     "best_solo_adv": 215.62568181990355,
+     "synergy_status": "not_admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": false,
+     "slots_needed": 4,
+     "fits4": true,
+     "fits6": true,
+     "span_m": 36.611053466796875,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.5,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -6.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995103_a2_t365",
+     "t0": 365,
+     "k": 4,
+     "members": [
+      "mainline.157",
+      "mainline.159",
+      "mainline.160",
+      "mainline.164"
+     ],
+     "J_policy": 19831.97382884146,
+     "group_adv": 425.2321266601357,
+     "adv_lb95": 243.18499327610022,
+     "beat_policy": true,
+     "synergy": 73.98644941403472,
+     "synergy_lb95": 21.927277513802437,
+     "best_solo_adv": 351.24567724610097,
+     "synergy_status": "admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": true,
+     "slots_needed": null,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 188.80589294433594,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -33.0
+     }
+    },
+    {
+     "state_id": "hc_p80_B_995103_a2_t365",
+     "t0": 365,
+     "k": 5,
+     "members": [
+      "mainline.157",
+      "mainline.159",
+      "mainline.160",
+      "mainline.164",
+      "mainline.165"
+     ],
+     "J_policy": 19831.97382884146,
+     "group_adv": 421.83182385610417,
+     "adv_lb95": 242.63332222778408,
+     "beat_policy": true,
+     "synergy": 70.5861466100032,
+     "synergy_lb95": 21.314955708736214,
+     "best_solo_adv": 351.24567724610097,
+     "synergy_status": "admitted",
+     "policy_reproduced": true,
+     "admitted_seed1": true,
+     "slots_needed": null,
+     "fits4": false,
+     "fits6": false,
+     "span_m": 235.2251739501953,
+     "safety_delta": {
+      "collisions": 0.0,
+      "hard_brake": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": -32.5
+     }
+    }
+   ]
+  }
+ },
+ "ledger": {
+  "sim_s": 149715,
+  "rows": 64
+ }
+}

@@ -1,0 +1,462 @@
+{
+  "charged_sim_s": 33600,
+  "new_bank_applied": false,
+  "results": [
+    {
+      "charged_sim_s": 2400,
+      "input_sha256": "454636ada19abb856f899496e04035b1fa7901b13d5aaeddc74a9179156b9da0",
+      "move": {
+        "depth": 0.0,
+        "family": "none",
+        "hold": 0,
+        "members": [
+          "mainline.101"
+        ],
+        "onset": 0
+      },
+      "rows": [
+        {
+          "admitted": false,
+          "cooperative": false,
+          "family": "none",
+          "keep": false,
+          "original_gain_veh_s": 0.013822659471770748,
+          "reason": "prior native FileNotFoundError; charges retained; never replayed",
+          "seed_index": 1,
+          "source_example_id": "sv_lscollect1_B3_986052_t0300_5ab45ace#s1",
+          "status": "verification_failed",
+          "translated_gain_veh_s": null,
+          "world_seed": 986052
+        }
+      ]
+    },
+    {
+      "charged_sim_s": 2400,
+      "input_sha256": "536f8584915e8bee6c071a3cff5b3e5b7b86b7bc4a91cf7a2b196ab714d75e0b",
+      "move": {
+        "depth": 0.5506691935037038,
+        "family": "wall",
+        "hold": 90,
+        "members": [
+          "mainline.104",
+          "ramp.17",
+          "ramp.20"
+        ],
+        "onset": 9
+      },
+      "rows": [
+        {
+          "admitted": false,
+          "cooperative": false,
+          "family": "wall",
+          "keep": false,
+          "original_gain_veh_s": 5580.842392459883,
+          "reason": "v4 missing staged adapter config at startup; no replay, charges retained",
+          "seed_index": 1,
+          "source_example_id": "sv_lscollect1_B3_986066_t0300_d13b0e6c#s1",
+          "status": "verification_failed",
+          "translated_gain_veh_s": null,
+          "world_seed": 986066
+        }
+      ]
+    },
+    {
+      "calls": [
+        {
+          "adopted_without_replay": true,
+          "charge_ids": [
+            "planfix_7607925f9d5a12f2079e_sv_lscollect1_B3_986066_t0300_158dd901_policy",
+            "planfix_7607925f9d5a12f2079e_sv_lscollect1_B3_986066_t0300_158dd901_cand1"
+          ],
+          "charged_sim_s": 2400,
+          "directory": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/bank_verification_v5/bank_606ea498f1c6082c/replay_bank/B/sumo_verification"
+        },
+        {
+          "adopted_without_replay": true,
+          "charge_ids": [
+            "planfix_2453d5c10d42bc6ba3dd_sv_lscollect1_B3_986066_t0300_158dd901_policy",
+            "planfix_2453d5c10d42bc6ba3dd_sv_lscollect1_B3_986066_t0300_158dd901_cand1"
+          ],
+          "charged_sim_s": 2400,
+          "directory": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/bank_verification_v5/bank_606ea498f1c6082c/replay_bank/B/confirm_seed2_all8"
+        }
+      ],
+      "charged_sim_s": 4800,
+      "confirmation_sha256": "4a61aa3cc02b6be65bfba6285385c196ad32d29f29dba5bb00adc1bdb9f8e2bb",
+      "input_sha256": "e4d17ab650818f8d26a2a3264514d19183a226b5cfab695587b637e5956451d7",
+      "move": {
+        "depth": 0.5506691935037038,
+        "family": "wall",
+        "hold": 90,
+        "members": [
+          "mainline.104",
+          "ramp.17",
+          "ramp.20"
+        ],
+        "onset": 9
+      },
+      "rows": [
+        {
+          "admitted": false,
+          "confirmation_sha256": "4a61aa3cc02b6be65bfba6285385c196ad32d29f29dba5bb00adc1bdb9f8e2bb",
+          "cooperative": false,
+          "family": "wall",
+          "keep": false,
+          "locally_executable": true,
+          "lower95_one_sided_veh_s": 0.0,
+          "original_gain_veh_s": 1066.8085821550412,
+          "reason": "seed-1 one-sided 95% lower bound 0 <= 0",
+          "seed_index": 1,
+          "source_example_id": "sv_lscollect1_B3_986066_t0300_d13b0e6c#s2",
+          "translated_gain_veh_s": 0.0,
+          "world_seed": 986066
+        },
+        {
+          "admitted": false,
+          "confirmation_sha256": "4a61aa3cc02b6be65bfba6285385c196ad32d29f29dba5bb00adc1bdb9f8e2bb",
+          "cooperative": false,
+          "family": "wall",
+          "keep": false,
+          "locally_executable": true,
+          "lower95_one_sided_veh_s": 0.0,
+          "original_gain_veh_s": 1066.8085821550412,
+          "reason": "seed-2 one-sided 95% lower bound 0 <= 0",
+          "seed_index": 2,
+          "source_example_id": "sv_lscollect1_B3_986066_t0300_d13b0e6c#s2",
+          "translated_gain_veh_s": 0.0,
+          "world_seed": 986066
+        }
+      ]
+    },
+    {
+      "calls": [
+        {
+          "charge_ids": [
+            "planfix_ffd777d842ca0490ab46_sv_lscollect1_B3_986068_t0600_1dde1d75_policy",
+            "planfix_ffd777d842ca0490ab46_sv_lscollect1_B3_986068_t0600_1dde1d75_cand1"
+          ],
+          "charged_sim_s": 2400,
+          "directory": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/bank_verification_v5/bank_8c3f55c3482460b6/replay_bank/B/sumo_verification"
+        },
+        {
+          "charge_ids": [
+            "planfix_c2ff73408d846a57ce59_sv_lscollect1_B3_986068_t0600_1dde1d75_policy",
+            "planfix_c2ff73408d846a57ce59_sv_lscollect1_B3_986068_t0600_1dde1d75_cand1"
+          ],
+          "charged_sim_s": 2400,
+          "directory": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/bank_verification_v5/bank_8c3f55c3482460b6/replay_bank/B/confirm_seed2_all8"
+        }
+      ],
+      "charged_sim_s": 4800,
+      "confirmation_sha256": "735d41140e532ebd4e18c0092f49d7f04ed6cc8454ecf8a3c44a313b680ac29a",
+      "input_sha256": "c23903fe331a42912cd6b61e03772f0ceddabf23e83f6d918d3c30f2808897ba",
+      "move": {
+        "depth": 1.0,
+        "family": "wall",
+        "hold": 90,
+        "members": [
+          "ramp.51",
+          "mainline.270"
+        ],
+        "onset": 2
+      },
+      "rows": [
+        {
+          "admitted": false,
+          "confirmation_sha256": "735d41140e532ebd4e18c0092f49d7f04ed6cc8454ecf8a3c44a313b680ac29a",
+          "cooperative": false,
+          "family": "wall",
+          "keep": false,
+          "locally_executable": false,
+          "lower95_one_sided_veh_s": 0.0,
+          "original_gain_veh_s": 3216.944237807562,
+          "reason": "seed-1 one-sided 95% lower bound 0 <= 0",
+          "seed_index": 1,
+          "source_example_id": "sv_lscollect1_B3_986068_t0600_a7ec9bd2#s1",
+          "translated_gain_veh_s": 0.0,
+          "world_seed": 986068
+        },
+        {
+          "admitted": false,
+          "confirmation_sha256": "735d41140e532ebd4e18c0092f49d7f04ed6cc8454ecf8a3c44a313b680ac29a",
+          "cooperative": false,
+          "family": "wall",
+          "keep": false,
+          "locally_executable": false,
+          "lower95_one_sided_veh_s": 0.0,
+          "original_gain_veh_s": 3216.944237807562,
+          "reason": "seed-2 one-sided 95% lower bound 0 <= 0",
+          "seed_index": 2,
+          "source_example_id": "sv_lscollect1_B3_986068_t0600_a7ec9bd2#s1",
+          "translated_gain_veh_s": 0.0,
+          "world_seed": 986068
+        }
+      ]
+    },
+    {
+      "calls": [
+        {
+          "charge_ids": [
+            "planfix_fa80a01828d28e911383_sv_lscollect1_B3_986003_t0390_10bcb5df_policy",
+            "planfix_fa80a01828d28e911383_sv_lscollect1_B3_986003_t0390_10bcb5df_cand1"
+          ],
+          "charged_sim_s": 2400,
+          "directory": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/bank_verification_v5/bank_5c02d11a53c38484/replay_bank/B/sumo_verification"
+        },
+        {
+          "charge_ids": [
+            "planfix_23c1883f76b053d3818a_sv_lscollect1_B3_986003_t0390_10bcb5df_policy",
+            "planfix_23c1883f76b053d3818a_sv_lscollect1_B3_986003_t0390_10bcb5df_cand1"
+          ],
+          "charged_sim_s": 2400,
+          "directory": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/bank_verification_v5/bank_5c02d11a53c38484/replay_bank/B/confirm_seed2_all8"
+        }
+      ],
+      "charged_sim_s": 4800,
+      "confirmation_sha256": "e8e57640595c52879189452ff842424b95b46efb6e7891033c9f969e50b4d088",
+      "input_sha256": "08d0711a71edb490b4dc76af60d4350152d982e121cf184649fe24979f040e54",
+      "move": {
+        "depth": 1.0,
+        "family": "wall",
+        "hold": 22,
+        "members": [
+          "ramp.40",
+          "mainline.153"
+        ],
+        "onset": 3
+      },
+      "rows": [
+        {
+          "admitted": false,
+          "confirmation_sha256": "e8e57640595c52879189452ff842424b95b46efb6e7891033c9f969e50b4d088",
+          "cooperative": false,
+          "family": "wall",
+          "keep": false,
+          "locally_executable": true,
+          "lower95_one_sided_veh_s": 0.0,
+          "original_gain_veh_s": 2909.829893602271,
+          "reason": "seed-1 one-sided 95% lower bound 0 <= 0",
+          "seed_index": 1,
+          "source_example_id": "sv_lscollect1_B3_986003_t0390_b18c6000#s1",
+          "translated_gain_veh_s": 0.0,
+          "world_seed": 986003
+        },
+        {
+          "admitted": false,
+          "confirmation_sha256": "e8e57640595c52879189452ff842424b95b46efb6e7891033c9f969e50b4d088",
+          "cooperative": false,
+          "family": "wall",
+          "keep": false,
+          "locally_executable": true,
+          "lower95_one_sided_veh_s": 0.0,
+          "original_gain_veh_s": 2909.829893602271,
+          "reason": "seed-2 one-sided 95% lower bound 0 <= 0",
+          "seed_index": 2,
+          "source_example_id": "sv_lscollect1_B3_986003_t0390_b18c6000#s1",
+          "translated_gain_veh_s": 0.0,
+          "world_seed": 986003
+        }
+      ]
+    },
+    {
+      "calls": [
+        {
+          "charge_ids": [
+            "planfix_f7caf2ff7bd954a52dd5_sv_replay0735_warm_u008_B_986026_t0300_e72ff43f_policy",
+            "planfix_f7caf2ff7bd954a52dd5_sv_replay0735_warm_u008_B_986026_t0300_e72ff43f_cand1"
+          ],
+          "charged_sim_s": 2400,
+          "directory": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/bank_verification_v5/bank_19adbac6bc41fd58/replay_bank/B/sumo_verification"
+        },
+        {
+          "charge_ids": [
+            "planfix_5789263c3f4a92b51fc7_sv_replay0735_warm_u008_B_986026_t0300_e72ff43f_policy",
+            "planfix_5789263c3f4a92b51fc7_sv_replay0735_warm_u008_B_986026_t0300_e72ff43f_cand1"
+          ],
+          "charged_sim_s": 2400,
+          "directory": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/bank_verification_v5/bank_19adbac6bc41fd58/replay_bank/B/confirm_seed2_all8"
+        }
+      ],
+      "charged_sim_s": 4800,
+      "confirmation_sha256": "f070ceee921443e3f2995dd67ab9752fc722aeb3caafcdce885af22f3c0e35b9",
+      "input_sha256": "0594b499d9b88396fa285078c8e42547caa90816b83c7c324bc9f4c906fd4404",
+      "move": {
+        "depth": 1.0,
+        "family": "wall",
+        "hold": 29,
+        "members": [
+          "ramp.24",
+          "mainline.108",
+          "mainline.111"
+        ],
+        "onset": 1
+      },
+      "rows": [
+        {
+          "admitted": false,
+          "confirmation_sha256": "f070ceee921443e3f2995dd67ab9752fc722aeb3caafcdce885af22f3c0e35b9",
+          "cooperative": false,
+          "family": "wall",
+          "keep": false,
+          "locally_executable": true,
+          "lower95_one_sided_veh_s": 0.0,
+          "original_gain_veh_s": 626.5987840405014,
+          "reason": "seed-1 one-sided 95% lower bound 0 <= 0",
+          "seed_index": 1,
+          "source_example_id": "sv_replay0735_warm_u008_B_986026_t0300_e8f07481#s1",
+          "translated_gain_veh_s": 0.0,
+          "world_seed": 986026
+        },
+        {
+          "admitted": false,
+          "confirmation_sha256": "f070ceee921443e3f2995dd67ab9752fc722aeb3caafcdce885af22f3c0e35b9",
+          "cooperative": false,
+          "family": "wall",
+          "keep": false,
+          "locally_executable": true,
+          "lower95_one_sided_veh_s": 0.0,
+          "original_gain_veh_s": 626.5987840405014,
+          "reason": "seed-2 one-sided 95% lower bound 0 <= 0",
+          "seed_index": 2,
+          "source_example_id": "sv_replay0735_warm_u008_B_986026_t0300_e8f07481#s1",
+          "translated_gain_veh_s": 0.0,
+          "world_seed": 986026
+        }
+      ]
+    },
+    {
+      "calls": [
+        {
+          "charge_ids": [
+            "planfix_7f9da72c910c0a62ba6f_sv_replay0735_warm_u007_B_986036_t0300_97fba0a8_policy",
+            "planfix_7f9da72c910c0a62ba6f_sv_replay0735_warm_u007_B_986036_t0300_97fba0a8_cand1"
+          ],
+          "charged_sim_s": 2400,
+          "directory": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/bank_verification_v5/bank_28f7e501fe391cd7/replay_bank/B/sumo_verification"
+        },
+        {
+          "charge_ids": [
+            "planfix_aef5664f392a0d41a0b1_sv_replay0735_warm_u007_B_986036_t0300_97fba0a8_policy",
+            "planfix_aef5664f392a0d41a0b1_sv_replay0735_warm_u007_B_986036_t0300_97fba0a8_cand1"
+          ],
+          "charged_sim_s": 2400,
+          "directory": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/bank_verification_v5/bank_28f7e501fe391cd7/replay_bank/B/confirm_seed2_all8"
+        }
+      ],
+      "charged_sim_s": 4800,
+      "confirmation_sha256": "cde1cf3af0e223e1fe8cf5bade79193f5c85a65770da5755ccf4864398ebdd1a",
+      "input_sha256": "60a48444fe8649f747f45c3576ba621daaf04cf81b35648c8a17472c86882f87",
+      "move": {
+        "depth": 1.0,
+        "family": "wall",
+        "hold": 28,
+        "members": [
+          "ramp.23",
+          "mainline.122",
+          "ramp.27",
+          "mainline.126"
+        ],
+        "onset": 2
+      },
+      "rows": [
+        {
+          "admitted": false,
+          "confirmation_sha256": "cde1cf3af0e223e1fe8cf5bade79193f5c85a65770da5755ccf4864398ebdd1a",
+          "cooperative": false,
+          "family": "wall",
+          "keep": false,
+          "locally_executable": false,
+          "lower95_one_sided_veh_s": 0.0,
+          "original_gain_veh_s": 270.85763912331004,
+          "reason": "seed-1 one-sided 95% lower bound 0 <= 0",
+          "seed_index": 1,
+          "source_example_id": "sv_replay0735_warm_u007_B_986036_t0300_6a57be40#s1",
+          "translated_gain_veh_s": 0.0,
+          "world_seed": 986036
+        },
+        {
+          "admitted": false,
+          "confirmation_sha256": "cde1cf3af0e223e1fe8cf5bade79193f5c85a65770da5755ccf4864398ebdd1a",
+          "cooperative": false,
+          "family": "wall",
+          "keep": false,
+          "locally_executable": false,
+          "lower95_one_sided_veh_s": 0.0,
+          "original_gain_veh_s": 270.85763912331004,
+          "reason": "seed-2 one-sided 95% lower bound 0 <= 0",
+          "seed_index": 2,
+          "source_example_id": "sv_replay0735_warm_u007_B_986036_t0300_6a57be40#s1",
+          "translated_gain_veh_s": 0.0,
+          "world_seed": 986036
+        }
+      ]
+    },
+    {
+      "calls": [
+        {
+          "charge_ids": [
+            "planfix_08179eef798e09633525_sv_replay0735_warm_u018_B_986047_t0360_7a1f93ff_policy",
+            "planfix_08179eef798e09633525_sv_replay0735_warm_u018_B_986047_t0360_7a1f93ff_cand1"
+          ],
+          "charged_sim_s": 2400,
+          "directory": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/bank_verification_v5/bank_34154c16e4a314e6/replay_bank/B/sumo_verification"
+        },
+        {
+          "charge_ids": [
+            "planfix_0a49706f050b393fc487_sv_replay0735_warm_u018_B_986047_t0360_7a1f93ff_policy",
+            "planfix_0a49706f050b393fc487_sv_replay0735_warm_u018_B_986047_t0360_7a1f93ff_cand1"
+          ],
+          "charged_sim_s": 2400,
+          "directory": "/home/ubuntu/coopmwm20261105_clean1/plan_fix/bank_verification_v5/bank_34154c16e4a314e6/replay_bank/B/confirm_seed2_all8"
+        }
+      ],
+      "charged_sim_s": 4800,
+      "confirmation_sha256": "bfc4fbee3f42a7129f6b1010e055dc55ab2a5abfe2a8db1cc95af897af4eeed8",
+      "input_sha256": "887d2f862e6b77748023fdc2f18c245e49f1b2623d121231955c0463a0e814ac",
+      "move": {
+        "depth": 1.0,
+        "family": "wall",
+        "hold": 24,
+        "members": [
+          "mainline.142",
+          "mainline.147",
+          "ramp.44",
+          "ramp.45"
+        ],
+        "onset": 6
+      },
+      "rows": [
+        {
+          "admitted": false,
+          "confirmation_sha256": "bfc4fbee3f42a7129f6b1010e055dc55ab2a5abfe2a8db1cc95af897af4eeed8",
+          "cooperative": false,
+          "family": "wall",
+          "keep": false,
+          "locally_executable": false,
+          "lower95_one_sided_veh_s": 0.0,
+          "original_gain_veh_s": 595.8200177477538,
+          "reason": "seed-1 one-sided 95% lower bound 0 <= 0",
+          "seed_index": 1,
+          "source_example_id": "sv_replay0735_warm_u018_B_986047_t0360_4f83130c#s1",
+          "translated_gain_veh_s": 0.0,
+          "world_seed": 986047
+        },
+        {
+          "admitted": false,
+          "confirmation_sha256": "bfc4fbee3f42a7129f6b1010e055dc55ab2a5abfe2a8db1cc95af897af4eeed8",
+          "cooperative": false,
+          "family": "wall",
+          "keep": false,
+          "locally_executable": false,
+          "lower95_one_sided_veh_s": 0.0,
+          "original_gain_veh_s": 595.8200177477538,
+          "reason": "seed-2 one-sided 95% lower bound 0 <= 0",
+          "seed_index": 2,
+          "source_example_id": "sv_replay0735_warm_u018_B_986047_t0360_4f83130c#s1",
+          "translated_gain_veh_s": 0.0,
+          "world_seed": 986047
+        }
+      ]
+    }
+  ]
+}
