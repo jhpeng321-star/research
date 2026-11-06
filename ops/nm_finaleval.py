@@ -597,6 +597,39 @@ def allocation(cfg):
     return 'budget', ((cfg.get('budget') or {}).get('phases') or {}).get(PHASE)
 
 
+def own_reserve(final_root, jobs, phase, *, cap=None, clean_root=None, calls=None):
+    """The evaluation root's OWN ledger (<final_root>/CHARGES.jsonl): whole waves precharged before any
+    dispatch; total over every phase <= ALLOCATION_SIM_S; ``cap`` bounds this phase. The clean run's
+    root and ledger are never written (check_pins: a standalone experiment accounts in its own root)."""
+    final_root = Path(final_root)
+    lock = None
+    try:
+        import fcntl
+        lock = (final_root/'LEDGER.lock').open('a')
+        fcntl.flock(lock, fcntl.LOCK_EX)
+    except ImportError:
+        pass
+    try:
+        rows = fe.ledger_rows(final_root)
+        ids = [j['id'] for j in jobs]
+        known = {r['id'] for r in rows} | ({r['id'] for r in fe.ledger_rows(clean_root)} if clean_root else set())
+        if len(set(ids)) != len(ids) or set(ids) & known:
+            raise Blocked('duplicate charge/attempt')
+        amount = sum(j['sim_s'] for j in jobs)
+        if sum(r['sim_s'] for r in rows)+amount > ALLOCATION_SIM_S:
+            raise Blocked(f'{PHASE} allocation {ALLOCATION_SIM_S} would be exceeded (own ledger)')
+        if cap is not None and sum(r['sim_s'] for r in rows if r.get('phase') == phase)+amount > cap:
+            raise Blocked(f'{phase} cap {cap} would be exceeded')
+        with (final_root/'CHARGES.jsonl').open('a', encoding='utf-8') as f:
+            for j in jobs:
+                f.write(json.dumps(dict(id=j['id'], phase=phase, sim_s=j['sim_s'], unix=time.time()), sort_keys=True)+'\n')
+        if calls is not None:
+            calls.append(('reserve', phase, amount))
+    finally:
+        if lock is not None:
+            lock.close()
+
+
 def budget_check(root, cfg, base, *, outstanding=None, final_root=None):
     """Zero physics: the registered allocation covers this launcher's ceiling (pre-run spend in the
     evaluation root ledger included); v2v_final carries no foreign spend."""
@@ -610,7 +643,7 @@ def budget_check(root, cfg, base, *, outstanding=None, final_root=None):
     need = max(0, q['total_ceiling_sim_s']-mine) if outstanding is None else outstanding
     out = dict(source=source, phase=PHASE, allocated=allocated, sub_cap=cap, spent_by_launcher=mine,
                foreign_rows=foreign[:5], foreign_count=len(foreign), ceiling=q['total_ceiling_sim_s'],
-               outstanding_ceiling=need, remaining=cap-mine, prerun_spent=prerun)
+               outstanding_ceiling=need, remaining=cap-mine, eval_root_spent=prerun)
     if allocated is None or allocated < ALLOCATION_SIM_S:
         raise Blocked(f'clean4 {PHASE} allocation {allocated} < registered {ALLOCATION_SIM_S}: {out}')
     if foreign:
@@ -1033,11 +1066,6 @@ class Runtime:
         native = production.backend_config(cfg)
         return {k: deepcopy(native.get(k)) for k in PLANT_KEYS}
 
-    def reserve(self, cfg, jobs):
-        """The clean4 ledger, through the clean4 owner's own whole-wave reservation (as clean3 lane-on)."""
-        from tools.coopmwm import launch_production as production, track2_backend as p1
-        p1._reserve(production.backend_config(cfg), jobs, PHASE)
-
     def run(self, items, cfg, workers):
         from concurrent.futures import ProcessPoolExecutor
         import multiprocessing
@@ -1126,21 +1154,10 @@ class FakeRuntime:
         return dict(self.status)
 
     def plant_view(self, cfg):
+        # the production loader's check_pins rule (rerun_cpus): a standalone run accounts in its OWN root
+        if cfg.get('accounting_root') != cfg.get('run_root'):
+            raise ValueError('REFUSED: the standalone experiment must account in its OWN root')
         return {k: deepcopy(cfg.get(k)) for k in PLANT_KEYS}
-
-    def reserve(self, cfg, jobs):
-        root = Path(cfg['run_root'])
-        rows = fe.ledger_rows(root)
-        ids = [j['id'] for j in jobs]
-        if len(set(ids)) != len(ids) or set(ids) & {r['id'] for r in rows}:
-            raise Blocked('duplicate charge/attempt')
-        amount = sum(j['sim_s'] for j in jobs)
-        if sum(r['sim_s'] for r in rows if r['phase'] == PHASE)+amount > allocation(cfg)[1]:
-            raise Blocked('whole-wave budget blocked')
-        with (root/'CHARGES.jsonl').open('a', encoding='utf-8') as f:
-            for j in jobs:
-                f.write(json.dumps(dict(id=j['id'], phase=PHASE, sim_s=j['sim_s']), sort_keys=True)+'\n')
-        self.calls.append(('reserve', PHASE, amount))
 
     def run(self, items, cfg, workers):
         self.calls.append(('run', len(items), workers))
@@ -1332,10 +1349,12 @@ def run_waves(waves, *, root, final_root, cfg, runtime, workers, base, chunked=F
     for name, part, kind, specs in todo:
         if specs:
             jobs = [dict(id=s['job_id'], sim_s=s['sim_s']) for s in specs]
-            runtime.reserve(cfg, jobs)
+            if prerun:
+                runtime.reserve(cfg, jobs)
+            else:                     # the evaluation root's own ledger; the clean run root is never written
+                own_reserve(final_root, jobs, PHASE, clean_root=root, calls=getattr(runtime, 'calls', None))
             publish(final_root/f'RESERVED_{part}.json', dict(name=part, wave=name, phase=phase, jobs=[j['id'] for j in jobs],
-                    sim_s=sum(j['sim_s'] for j in jobs), ledger=str((final_root if prerun else root)/'CHARGES.jsonl'),
-                    unix=time.time()))
+                    sim_s=sum(j['sim_s'] for j in jobs), ledger=str(final_root/'CHARGES.jsonl'), unix=time.time()))
     items = [(kind, s, str(final_root/'evaluation'/s['job_id'])) for _, _, kind, specs in todo for s in specs]
     results = runtime.run(items, cfg, workers) if items else []
     position = 0
@@ -2032,27 +2051,20 @@ class PrerunRuntime:
 
     def reserve(self, cfg, jobs):
         plan = prerun_plan(self.final_root)
-        rows = fe.ledger_rows(self.final_root)
-        ids = [j['id'] for j in jobs]
-        if len(set(ids)) != len(ids) or set(ids) & {r['id'] for r in rows}:
-            raise Blocked('duplicate pre-run charge/attempt')
-        amount = sum(j['sim_s'] for j in jobs)
-        if sum(r['sim_s'] for r in rows)+amount > plan['cap_sim_s']:
-            raise Blocked(f'pre-run cap {plan["cap_sim_s"]} would be exceeded')
-        with (self.final_root/'CHARGES.jsonl').open('a', encoding='utf-8') as f:
-            for j in jobs:
-                f.write(json.dumps(dict(id=j['id'], phase=PRERUN_PHASE, sim_s=j['sim_s'], unix=time.time()),
-                                   sort_keys=True)+'\n')
-        if self.calls is not None:
-            self.calls.append(('reserve', PRERUN_PHASE, amount))
+        try:
+            own_reserve(self.final_root, jobs, PRERUN_PHASE, cap=plan['cap_sim_s'], calls=self.calls)
+        except Blocked as error:
+            raise Blocked(f'pre-run: {error}') from None
 
     def run(self, items, cfg, workers):
         return self.inner.run(items, cfg, workers)
 
 
 def prerun_register(*, final_root, plant_config, u0_path, u0_sha256, runtime, panel, panel_3c, authority):
-    """Zero physics: a NEW evaluation root with the sealed PRERUN_PLAN, the plant CONFIG copy (run_root =
-    <final_root>/prerun_plant) and the bound common u0 copy (A_checkpoint_000.pt, sha re-verified)."""
+    """Zero physics: a NEW evaluation root with the sealed PRERUN_PLAN, a byte-for-byte content copy of the
+    clean run CONFIG (unchanged: run_root/accounting_root stay the clean root, which passes the production
+    check_pins; the plant only READS it - runtime, executor, loaders) and the bound common u0 copy
+    (A_checkpoint_000.pt, sha re-verified). Charges go to the evaluation root's own ledger."""
     import shutil
     final_root = guard(Path(final_root))
     if final_root.exists():
@@ -2064,13 +2076,14 @@ def prerun_register(*, final_root, plant_config, u0_path, u0_sha256, runtime, pa
         raise Blocked('plant CONFIG common u0 differs from the bound u0 sha')
     if file_sha(u0_path) != u0_sha256:
         raise Blocked(f'{u0_path} does not hash to {u0_sha256}')
+    runtime.plant_view(source)                      # zero-physics refusal leaves no partial final root
     plant = final_root/PRERUN_PLANT
     plant.mkdir(parents=True)
     shutil.copyfile(u0_path, plant/'A_checkpoint_000.pt')
     if file_sha(plant/'A_checkpoint_000.pt') != u0_sha256:
         raise Blocked('u0 copy does not hash to the bound sha')
-    cfg = dict(deepcopy(source), run_root=str(plant))
-    view = runtime.plant_view(cfg)
+    cfg = deepcopy(source)
+    view = runtime.plant_view(cfg)                  # the production loader validates it BEFORE any file is written
     publish(plant/'CONFIG.json', cfg)
     plan = seal(dict(schema=SCHEMA+'.prerun', created=datetime.now(timezone.utc).isoformat(), authority=str(authority),
                      registration=PRERUN_AUTHORITY, arms=list(PRERUN_ARMS), phase=PRERUN_PHASE, cap_sim_s=prerun_cap(),
@@ -2188,7 +2201,7 @@ def prerun_compat(final_root, cfg, runtime):
         raise Blocked('pre-run RULE digest differs from this launcher')
     source = dict(cfg)
     return dict(status='compatible', prerun_plan_sha256=plan['receipt_sha256'], plant_keys=list(PLANT_KEYS),
-                same_config_except_run_root=digest(dict(source, run_root=plan['plant']['root'])) == plan['plant']['config_sha256'])
+                same_config=digest(source) == plan['plant']['config_sha256'])
 
 
 def register(*, root, final_root, runtime, panel, base=None):
@@ -2245,7 +2258,7 @@ def build_fake_root(out, panel, base):
     root = Path(out)/'clean4_root'
     root.mkdir(parents=True)
     (root/'A_checkpoint_000.pt').write_bytes(b'dry-run fake common u0')
-    cfg = dict(run_root=str(root), source_root=str(Path(out)/'no_source'), runtime='dry',
+    cfg = dict(run_root=str(root), accounting_root=str(root), source_root=str(Path(out)/'no_source'), runtime='dry',
                common_checkpoint_sha256=file_sha(root/'A_checkpoint_000.pt'),
                clean4_budget=seal(dict(phases=dict(v2v_train=6_000_000, isolated_replicated=165_600,
                                                    v2v_final=ALLOCATION_SIM_S)), 'receipt_sha256'),
@@ -2332,13 +2345,13 @@ def dry_run(*, out, panel, base='mappo_frozen', replicated=True, prerun=True):
             bind_fake_mappo(out, final_root, arm, residual=root/'A_checkpoint_000.pt')
     value = execute(root=root, final_root=final_root, runtime=runtime, panel=panel, panel_3c=panel_3c,
                     poll=0, dry_run=True)
-    charged = sum(r['sim_s'] for r in fe.ledger_rows(root) if r['phase'] == PHASE)
+    charged = sum(r['sim_s'] for r in fe.ledger_rows(final_root) if r['phase'] == PHASE)
     return dict(status='PASS', new_sim_s=0, physics=False, out=str(out), final_root=str(final_root), base=base,
                 target='clean5a (dry)',
                 analyses={k: v['analysis_sha256'] for k, v in value.items()},
                 present={k: v.get('present') for k, v in value.items()}, calls=runtime.calls,
                 fake_v2v_final_sim_s=charged, quote=plan['quote'], prerun=pre,
-                fake_prerun_sim_s=sum(r['sim_s'] for r in fe.ledger_rows(final_root)),
+                fake_prerun_sim_s=sum(r['sim_s'] for r in fe.ledger_rows(final_root) if r['phase'] == PRERUN_PHASE),
                 tables=sorted(str(x) for x in final_root.glob('CLAIM3*_TABLES.md')))
 
 
