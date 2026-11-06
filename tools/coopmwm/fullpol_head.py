@@ -119,6 +119,12 @@ class Extension:
         self.aware = getattr(base, 'aware', None)
         self.lane_drop = getattr(base, 'lane_drop', None)
 
+    def __getattr__(self, name):
+        # Other switches of the wrapped (W1/N2/N9) extension; deepcopy probes uninitialised objects.
+        if 'base' not in self.__dict__ or self.__dict__['base'] is None:
+            raise AttributeError(name)
+        return getattr(self.__dict__['base'], name)
+
     def descriptor(self, move, visible=None):
         out = list(self.base.descriptor(move)) if self.base is not None else []
         if visible is None:
@@ -131,10 +137,11 @@ class Extension:
         return torch.zeros((len(context['members']), 0))
 
 
-def extension(cfg):
-    """Exactly ``lane_drop.extension(cfg)`` when fullpol is OFF (byte-identical)."""
-    from . import lane_drop
-    base = lane_drop.extension(cfg)
+def extension(cfg, base=None):
+    """Exactly ``base`` (default ``lane_drop.extension(cfg)``) when fullpol is OFF (byte-identical)."""
+    if base is None:
+        from . import lane_drop
+        base = lane_drop.extension(cfg)
     settings = fp.settings(cfg)
     if settings is None:
         return base
@@ -142,3 +149,86 @@ def extension(cfg):
 
 
 __all__ = ['SLOT_FEATURES', 'GROUP_FEATURES', 'width', 'descriptor', 'Extension', 'extension']
+
+
+# ---------------------------------------------------------------- clean5b: LCEXEC template options
+
+TEMPLATE_CAP = 6            # lc_program.REGISTRY['cap'] max (S-LCMOVES <=4; COOPKINDS early_merge 5; 6-cap)
+TEMPLATE_SLOT_FEATURES = (
+    'present', 'lon_base', 'lon_native', 'lon_speed', 'lon_track', 'lon_match', 'lon_accel', 'v_w_frac', 'dmax_frac',
+    'amax_frac', 'accel_frac', 'track_off_frac', 'hold_frac', 'start_frac', 'tau_set', 'tau_frac', 'lc_mode_512',
+    'lane_request', 'target_lane_0', 'target_lane_1', 'target_lane_2', 'into_closing', 'lane_offset_frac',
+    'lane_giveup_to_drop_frac', 'rule_hold', 'rule_until_reached', 'rule_right_of_target', 'rule_from_lane',
+    'release_relative', 'release_position', 'join_any_lane', 'join_lane_0', 'join_lane_1', 'join_lane_2',
+    'join_ds_lo_frac', 'join_ds_hi_frac', 'is_own_slot')
+TEMPLATE_GROUP_FEATURES = ('is_initiate', 'is_join', 'slots_frac', 'duration_frac', 'member_count_frac',
+                           'gap_over_range')
+TEMPLATE_RULES = ('hold', 'until_reached', 'right_of_target', 'from_lane')
+
+
+def template_width():
+    return TEMPLATE_CAP*len(TEMPLATE_SLOT_FEATURES)+len(TEMPLATE_GROUP_FEATURES)
+
+
+def _template_dict(option):
+    t = getattr(option, 'template', None)
+    if t is None and isinstance(option, dict):
+        t = option.get('template')
+    return t.to_dict() if hasattr(t, 'to_dict') else dict(t)
+
+
+def _template_slot(view, p, rule, own):
+    lon = p['lon']
+    out = [1.]+[float(lon['kind'] == k) for k in fp.LON_KINDS]
+    out += [_frac(lon.get('v_w'), *V_W) if lon.get('v_w') is not None else 0.,
+            _frac(lon['dmax'], *DMAX) if lon['kind'] in ('speed', 'track', 'match') else 0.,
+            float(lon['amax'])/CAV_CAP_MPS2 if lon['kind'] in ('speed', 'track', 'match') else 0.,
+            float(lon['a'])/CAV_CAP_MPS2 if lon['kind'] == 'accel' and lon.get('a') is not None else 0.,
+            float(lon['off'])/TRACK_OFF_MAX_M if lon['kind'] == 'track' else 0.,
+            float(p.get('hold_s') or 0)/HOLD_MAX_S, float(p['start_el'])/OFFSET_MAX_S,
+            float(p.get('tau') is not None), 0. if p.get('tau') is None else float(p['tau'])/TAU_MAX_S,
+            float(int(p['lc_mode']) == fp.LC_MODE_TRACI_ONLY)]
+    q = p.get('lane')
+    if q is None:
+        out += [0.]*6
+    else:
+        t = int(q['target'])
+        out += [1.]+[float(t == l) for l in (0, 1, 2)]+[float(t == view.dropped_lane), float(q['from_el'])/OFFSET_MAX_S]
+    out += [_dist(view, None if q is None else q.get('giveup_s'))]
+    out += [float(q is not None and q['rule'] == r) for r in TEMPLATE_RULES]
+    rel = set(p['releases'])
+    out += [float(bool(rel & {'anchor', 'partner_left', 'merged_zip', 'merger'})),
+            float(bool(rel & {'release_s', 'zone', 'fallback'}))]
+    if rule is None:
+        out += [0.]*6
+    else:
+        lane = rule.get('lane')
+        out += [float(lane is None)]+[float(lane == l) for l in (0, 1, 2)]
+        out += [max(-1., min(1., float(rule['ds'][0])/SENSING_M)), max(-1., min(1., float(rule['ds'][1])/SENSING_M))]
+    out += [float(own)]
+    return out
+
+
+def template_descriptor(option, view):
+    """[TEMPLATE_CAP * slot | group] floats for an LCEXEC free_program initiate/join option (zeros
+    for any other candidate). Absolute WM lane one-hots (single registered map frame); the
+    acting CAV's own slot is flagged (slot 0 for an initiate, ``option.slot`` for a join)."""
+    out = [0.]*template_width()
+    family = None if option is None else (option.get('family') if isinstance(option, dict)
+                                          else getattr(getattr(option, 'move', option), 'family', None))
+    if family not in ('free_program_initiate', 'free_program_join'):
+        return out
+    inner = getattr(option, 'move', option)
+    get = (lambda k, d=None: inner.get(k, d)) if isinstance(inner, dict) else (lambda k, d=None: getattr(inner, k, d))
+    t = _template_dict(inner)
+    rules = list(t.get('join_rules') or [None]*len(t['programs']))
+    own_slot = 0 if family == 'free_program_initiate' else int(get('slot'))
+    n = len(TEMPLATE_SLOT_FEATURES)
+    for k, p in enumerate(t['programs'][:TEMPLATE_CAP]):
+        out[k*n:(k+1)*n] = _template_slot(view, p, rules[k] if k < len(rules) else None, k == own_slot)
+    cap = float(get('cap', len(t['programs'])) or len(t['programs']))
+    rng_m = float(get('range_m', SENSING_M) or SENSING_M)
+    out[TEMPLATE_CAP*n:] = [float(family == 'free_program_initiate'), float(family == 'free_program_join'),
+                            len(t['programs'])/float(TEMPLATE_CAP), float(t['duration_s'])/HOLD_MAX_S,
+                            float(get('member_count', 1) or 1)/cap, max(-1., min(1., float(get('gap_m', 0.) or 0.)/rng_m))]
+    return out

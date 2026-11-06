@@ -1,0 +1,24 @@
+{
+ "schema": "lcexec-rt-probe-fixtures-v1",
+ "note": "Verbatim copies of the probe cores (read-only sources under E:/research-dense/runs/active/C4-V7FT-20261017); the parity tests execute only the AST nodes of class Arm, _positions, xglob and the module constants (no population/traci import). lf_sha256 = SHA256 of the LF-normalised bytes (= raw bytes of the sources).",
+ "files": {
+  "lcm_core.pysrc": {
+   "source": "runs/active/C4-V7FT-20261017/lcmoves/code/lcm_core.py",
+   "lf_sha256": "48aaae384210e1bb97e9a2c028761e01ba7fd6d4c632d70946b007319cc330db",
+   "arm_lines": [
+    294,
+    559
+   ],
+   "arm_lf_sha256": "f34a262fbcb9a5a8654ee298021db72a1773f9dbb6219dd07a69ae33577a5fa8"
+  },
+  "pg2_core.pysrc": {
+   "source": "runs/active/C4-V7FT-20261017/plangen2/code/pg2_core.py",
+   "lf_sha256": "fb00fe48f01dff96ef777fe053ff739f57873d936016e6c1b6f926c59b2960f9",
+   "arm_lines": [
+    261,
+    423
+   ],
+   "arm_lf_sha256": "f6f56378e95daca51e32ff45e821325640276b8d71592b8c68a8c88efc4e7bb6"
+  }
+ }
+}
