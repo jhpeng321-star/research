@@ -715,3 +715,10 @@ __all__ = ['FAMILY', 'RULE', 'CLASSES', 'SLOTS', 'STRUCTURED', 'REGISTERED', 'se
            'runtime_state', 'FreeProgramOption', 'is_free_program', 'option_from_dict', 'program', 'member',
            'lon', 'lane_req', 'template', 'adapt', 'structured', 'random_program', 'families', 'owns', 'pool',
            'redraw', 'offered', 'adjacent_targets', 'lanes_at', 'rebind', 'lc_checked']
+
+
+def propose(state, own, rng):
+    """LCEXEC lc_families generator hook (config ``lc_families.generator =
+    'tools.coopmwm.fullpol_programs:propose'``): clean5b slot templates, see fullpol_templates."""
+    from .fullpol_templates import propose as templates
+    return templates(state, own, rng)
