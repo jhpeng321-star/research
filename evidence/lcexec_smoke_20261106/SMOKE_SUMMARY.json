@@ -1,0 +1,660 @@
+{
+ "jobs_ok": 13,
+ "jobs_failed": [
+  "D3200_p30_s989068_a1",
+  "D3200_p30_s989069_a1",
+  "D3200_p30_s989070_a1",
+  "D3200_p30_s989071_a1"
+ ],
+ "totals": {
+  "collisions": 0.0,
+  "dropped_vehicle_steps": 0.0,
+  "hard_brake_vs": 255.5,
+  "teleports": 0.0,
+  "ttc_below_3_vs": 7382.0,
+  "actual_sim_s": 13650.0
+ },
+ "families": {
+  "wall_fill": {
+   "moves": 9,
+   "executed": 9,
+   "parity_exact": 0,
+   "matched_calls": 1798,
+   "mm_release_timing": 40,
+   "closing_members": 9,
+   "closing_entered": 8,
+   "lane_members": 9,
+   "lane_reached": 8,
+   "gate_blocked_s": 76,
+   "guard_s": 0,
+   "win_hard_brake_vs": 11.0,
+   "win_ttc_below_3_vs": 481.0,
+   "mm_ref_unobservable": 21,
+   "mm_gate": 76,
+   "mm_other": 44,
+   "mm_precision": 10
+  },
+  "lane_redistribute": {
+   "moves": 9,
+   "executed": 9,
+   "parity_exact": 0,
+   "matched_calls": 1361,
+   "mm_release_timing": 47,
+   "closing_members": 23,
+   "closing_entered": 23,
+   "lane_members": 26,
+   "lane_reached": 25,
+   "gate_blocked_s": 180,
+   "guard_s": 0,
+   "win_hard_brake_vs": 28.5,
+   "win_ttc_below_3_vs": 994.0,
+   "mm_gate": 180,
+   "mm_other": 17
+  },
+  "rolling_wall": {
+   "moves": 9,
+   "executed": 9,
+   "parity_exact": 0,
+   "matched_calls": 2498,
+   "mm_gate": 93,
+   "mm_other": 370,
+   "mm_ref_unobservable": 578,
+   "mm_release_timing": 28,
+   "closing_members": 7,
+   "closing_entered": 7,
+   "lane_members": 7,
+   "lane_reached": 7,
+   "gate_blocked_s": 93,
+   "guard_s": 0,
+   "win_hard_brake_vs": 36.0,
+   "win_ttc_below_3_vs": 656.0
+  },
+  "gom_1": {
+   "moves": 8,
+   "executed": 8,
+   "parity_exact": 0,
+   "matched_calls": 631,
+   "mm_gate": 383,
+   "mm_ref_unobservable": 252,
+   "closing_members": 0,
+   "closing_entered": 0,
+   "lane_members": 8,
+   "lane_reached": 0,
+   "gate_blocked_s": 383,
+   "guard_s": 0,
+   "win_hard_brake_vs": 15.0,
+   "win_ttc_below_3_vs": 854.5,
+   "mm_other": 121,
+   "mm_precision": 14,
+   "mm_release_timing": 4
+  },
+  "gom_multi": {
+   "moves": 7,
+   "executed": 7,
+   "parity_exact": 0,
+   "matched_calls": 328,
+   "mm_ref_unobservable": 136,
+   "closing_members": 0,
+   "closing_entered": 0,
+   "lane_members": 7,
+   "lane_reached": 0,
+   "gate_blocked_s": 17,
+   "guard_s": 0,
+   "win_hard_brake_vs": 15.0,
+   "win_ttc_below_3_vs": 138.0,
+   "mm_gate": 17,
+   "mm_precision": 2
+  },
+  "free_program": {
+   "moves": 10,
+   "executed": 10,
+   "parity_exact": 0,
+   "matched_calls": 2106,
+   "mm_gate": 181,
+   "mm_release_timing": 57,
+   "closing_members": 3,
+   "closing_entered": 2,
+   "lane_members": 6,
+   "lane_reached": 2,
+   "gate_blocked_s": 181,
+   "guard_s": 0,
+   "win_hard_brake_vs": 36.0,
+   "win_ttc_below_3_vs": 927.5,
+   "mm_other": 5
+  }
+ },
+ "mismatch_classes": {
+  "release_timing": 176,
+  "gate": 930,
+  "other": 557,
+  "ref_unobservable": 987,
+  "precision": 26
+ },
+ "max_target_dev": 0.0009784838104466287,
+ "moves": [
+  [
+   "D3200_p60_s989060_a1",
+   450,
+   "wall_fill",
+   {
+    "release_timing": 7
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p60_s989060_a1",
+   600,
+   "lane_redistribute",
+   {
+    "release_timing": 5
+   },
+   "closing 3/3"
+  ],
+  [
+   "D3200_p60_s989060_a1",
+   750,
+   "rolling_wall",
+   {
+    "gate": 47,
+    "other": 10,
+    "ref_unobservable": 218,
+    "release_timing": 4
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p60_s989060_a1",
+   900,
+   "gom_1",
+   {
+    "gate": 44,
+    "ref_unobservable": 58
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989061_a1",
+   450,
+   "lane_redistribute",
+   {
+    "gate": 1,
+    "release_timing": 5
+   },
+   "closing 3/3"
+  ],
+  [
+   "D3200_p60_s989061_a1",
+   600,
+   "rolling_wall",
+   {
+    "other": 72,
+    "release_timing": 4
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p60_s989061_a1",
+   750,
+   "gom_1",
+   {
+    "gate": 17
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989061_a1",
+   900,
+   "gom_multi",
+   {
+    "ref_unobservable": 20
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989062_a1",
+   450,
+   "rolling_wall",
+   {
+    "other": 136,
+    "ref_unobservable": 3,
+    "release_timing": 5
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989062_a1",
+   600,
+   "gom_1",
+   {
+    "gate": 43,
+    "other": 78,
+    "precision": 6,
+    "ref_unobservable": 19,
+    "release_timing": 2
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989062_a1",
+   750,
+   "gom_multi",
+   {
+    "gate": 2,
+    "ref_unobservable": 11
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989062_a1",
+   900,
+   "free_program",
+   {
+    "gate": 35,
+    "release_timing": 6
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p60_s989063_a1",
+   450,
+   "gom_1",
+   {
+    "gate": 33,
+    "precision": 8,
+    "release_timing": 2
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989063_a1",
+   600,
+   "gom_multi",
+   {
+    "gate": 3,
+    "ref_unobservable": 10
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989063_a1",
+   750,
+   "free_program",
+   {
+    "release_timing": 4
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989063_a1",
+   900,
+   "wall_fill",
+   {
+    "ref_unobservable": 4,
+    "release_timing": 5
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p60_s989064_a1",
+   450,
+   "gom_multi",
+   {
+    "precision": 2
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989064_a1",
+   600,
+   "free_program",
+   {
+    "release_timing": 7
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989064_a1",
+   750,
+   "wall_fill",
+   {
+    "gate": 16
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p60_s989064_a1",
+   900,
+   "lane_redistribute",
+   {
+    "release_timing": 5
+   },
+   "closing 3/3"
+  ],
+  [
+   "D3200_p60_s989065_a1",
+   450,
+   "free_program",
+   {
+    "release_timing": 10
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989065_a1",
+   600,
+   "wall_fill",
+   {
+    "gate": 24,
+    "other": 26,
+    "precision": 2,
+    "ref_unobservable": 4,
+    "release_timing": 4
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p60_s989065_a1",
+   750,
+   "lane_redistribute",
+   {
+    "gate": 47,
+    "release_timing": 5
+   },
+   "closing 3/3"
+  ],
+  [
+   "D3200_p60_s989065_a1",
+   900,
+   "rolling_wall",
+   {
+    "other": 18,
+    "ref_unobservable": 30,
+    "release_timing": 4
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p60_s989066_a1",
+   450,
+   "wall_fill",
+   {
+    "gate": 20,
+    "precision": 8,
+    "ref_unobservable": 3,
+    "release_timing": 8
+   },
+   "closing 0/1"
+  ],
+  [
+   "D3200_p60_s989066_a1",
+   600,
+   "lane_redistribute",
+   {
+    "gate": 41,
+    "other": 12,
+    "release_timing": 14
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989066_a1",
+   750,
+   "rolling_wall",
+   {
+    "gate": 37,
+    "other": 28,
+    "ref_unobservable": 102
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p60_s989066_a1",
+   900,
+   "gom_1",
+   {
+    "gate": 52,
+    "ref_unobservable": 70
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989067_a1",
+   450,
+   "lane_redistribute",
+   {
+    "release_timing": 5
+   },
+   "closing 3/3"
+  ],
+  [
+   "D3200_p60_s989067_a1",
+   600,
+   "rolling_wall",
+   {
+    "gate": 9,
+    "other": 18,
+    "ref_unobservable": 156
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p60_s989067_a1",
+   750,
+   "gom_1",
+   {
+    "gate": 69,
+    "ref_unobservable": 42
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989067_a1",
+   900,
+   "gom_multi",
+   {
+    "ref_unobservable": 11
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989072_a1",
+   450,
+   "wall_fill",
+   {
+    "other": 4
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p60_s989072_a1",
+   600,
+   "lane_redistribute",
+   {
+    "gate": 41,
+    "other": 5
+   },
+   "closing 3/3"
+  ],
+  [
+   "D3200_p60_s989072_a1",
+   750,
+   "rolling_wall",
+   {
+    "other": 50
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p60_s989072_a1",
+   900,
+   "gom_1",
+   {
+    "gate": 90,
+    "other": 43
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p40_s989068_a2",
+   450,
+   "rolling_wall",
+   {
+    "other": 28,
+    "ref_unobservable": 3,
+    "release_timing": 4
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p40_s989068_a2",
+   600,
+   "gom_1",
+   {
+    "gate": 35,
+    "ref_unobservable": 63
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p40_s989068_a2",
+   750,
+   "free_program",
+   {
+    "gate": 133,
+    "release_timing": 6
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p40_s989068_a2",
+   900,
+   "free_program",
+   {
+    "gate": 7,
+    "other": 3,
+    "release_timing": 5
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p40_s989069_a2",
+   450,
+   "gom_multi",
+   {
+    "gate": 12,
+    "ref_unobservable": 71
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p40_s989069_a2",
+   600,
+   "gom_multi",
+   {
+    "ref_unobservable": 13
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p40_s989069_a2",
+   750,
+   "free_program",
+   {
+    "gate": 6,
+    "other": 2,
+    "release_timing": 4
+   },
+   "closing 0/1"
+  ],
+  [
+   "D3200_p40_s989069_a2",
+   900,
+   "wall_fill",
+   {
+    "ref_unobservable": 3,
+    "release_timing": 4
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p40_s989070_a2",
+   450,
+   "free_program",
+   {
+    "release_timing": 4
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p40_s989070_a2",
+   600,
+   "free_program",
+   {
+    "release_timing": 7
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p40_s989070_a2",
+   750,
+   "wall_fill",
+   {
+    "gate": 6,
+    "other": 14,
+    "ref_unobservable": 2,
+    "release_timing": 8
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p40_s989070_a2",
+   900,
+   "lane_redistribute",
+   {
+    "release_timing": 3
+   },
+   "closing 2/2"
+  ],
+  [
+   "D3200_p40_s989071_a2",
+   450,
+   "free_program",
+   {
+    "release_timing": 4
+   },
+   "closing 0/0"
+  ],
+  [
+   "D3200_p40_s989071_a2",
+   600,
+   "wall_fill",
+   {
+    "gate": 10,
+    "ref_unobservable": 5,
+    "release_timing": 4
+   },
+   "closing 1/1"
+  ],
+  [
+   "D3200_p40_s989071_a2",
+   750,
+   "lane_redistribute",
+   {
+    "gate": 50,
+    "release_timing": 5
+   },
+   "closing 3/3"
+  ],
+  [
+   "D3200_p40_s989071_a2",
+   900,
+   "rolling_wall",
+   {
+    "other": 10,
+    "ref_unobservable": 66,
+    "release_timing": 7
+   },
+   "closing 1/1"
+  ]
+ ]
+}
