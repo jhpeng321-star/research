@@ -49,13 +49,34 @@ WALL_SPREAD = 200.0
 RELEASE_S = X_B-S_OFF
 WALL_H = dict(v_w=15.0, hold_s=90, dmax=1.5, amax=1.0)
 WALL_G = dict(v_w=22.0, hold_s=120, dmax=1.0, amax=1.0)          # pg2_plan VARIANTS['wall_g'] (S-LOWSHARE-U0)
-VARIANT_PARAMS = dict(wall_h=WALL_H, wall_g=WALL_G)
-# strategy -> (variant, solo SUMO lane or None)
+WALL_M = dict(v_w=18.0, hold_s=90, dmax=1.0, amax=1.0)           # pg2_plan R_GRID point (v_w 18, hold 90, dmax 1.0) (S-MULTICRIT)
+VARIANT_PARAMS = dict(wall_h=WALL_H, wall_g=WALL_G, wall_m=WALL_M)
+# strategy -> (variant, solo SUMO lane or None, or a tuple of SUMO lanes = partial wall)
 STRATEGIES = {f'{w}{suffix}': (w, solo) for w in ('wall_h', 'wall_g')
               for suffix, solo in (('', None), ('_solo0', 0), ('_solo1', 1), ('_solo2', 2))}
+# S-MULTICRIT (MAIN 2026-11-06 ~23:35, fair/light-traffic candidates; registered parameters only)
+STRATEGIES.update({'wall_m_solo2': ('wall_m', 2),            # lane-2 member holds 18 m/s / 90 s / dmax 1.0
+                   'wall_g_duo12': ('wall_g', (1, 2)),       # lane-1 + lane-2 members hold 22 m/s / 120 s (shared partial wall)
+                   'wall_g_solo2_gate0': ('wall_g', 2)})     # wall_g_solo2, started only if its lane is empty 100 m behind
+#: start gate: a new group starts only if, for every holding member, at most max_behind observed vehicles
+#: (CAV reports + RSU detections, i.e. the rows the controller sees) are in its WM lane within behind_m behind it.
+GATES = {'wall_g_solo2_gate0': dict(behind_m=100.0, max_behind=0)}
 GROUP_ARMS = ('wall_h', 'wall_g')
 ARMS = ('u0', 'wall_h_solo2', 'wall_h', 'wall_h_solo0')
-ALL_ARMS = ('u0', 'wall_h_solo2', 'wall_h', 'wall_h_solo0', 'wall_g', 'wall_g_solo2', 'wall_g_solo0')
+ALL_ARMS = ('u0', 'wall_h_solo2', 'wall_h', 'wall_h_solo0', 'wall_g', 'wall_g_solo2', 'wall_g_solo0',
+            'wall_m_solo2', 'wall_g_duo12', 'wall_g_solo2_gate0')
+
+
+def solo_lanes(solo):
+    """None (all wall members hold) or the tuple of SUMO lanes whose wall member holds."""
+    return None if solo is None else ((solo,) if isinstance(solo, int) else tuple(solo))
+
+
+def behind_count(rows, member, behind_m):
+    """Observed vehicles in the member's WM lane within behind_m behind it (excluding itself)."""
+    s, lane = float(member['s_m']), int(member['lane'])
+    return sum(1 for r in rows if r['vid'] != member['vid'] and int(r['lane']) == lane
+               and s-behind_m <= float(r['s_m']) < s)
 SEEDS = tuple(range(989850, 989866))
 CELL = (3200, 0.6)
 IDENTITY = dict(seed=989599, demand=3200, penetration=0.6, expected_team_delay_vs=53269.32889342696)
@@ -100,6 +121,7 @@ class RuleHook(ir.Recorder):
         self.acts, self.issued = [], []
         self.next_ok = -1
         self.lane_held = 0
+        self.gate_refusals = 0
 
     def __call__(self, controller, job, prefixes):
         self.controller = controller
@@ -140,8 +162,13 @@ class RuleHook(ir.Recorder):
             free = [r for r in by.values() if r['vid'] not in self.active and r['vid'] in commands]
             wall = pick_wall(free)
             if wall:
-                solo = STRATEGIES[self.strategy][1]
-                members = [c for c in wall if solo is None or sumo_lane(c['lane']) == solo]
+                lanes_sel = solo_lanes(STRATEGIES[self.strategy][1])
+                members = [c for c in wall if lanes_sel is None or sumo_lane(c['lane']) in lanes_sel]
+                gate = GATES.get(self.strategy)
+                if gate is not None and any(behind_count(rows, c, gate['behind_m']) > gate['max_behind'] for c in members):
+                    self.gate_refusals += 1
+                    wall = None
+            if wall:
                 xs = [c['s_m'] for c in wall]
                 act = dict(t=t, strategy=self.strategy, members=[c['vid'] for c in members],
                            wall=[c['vid'] for c in wall], sumo_lanes=[sumo_lane(c['lane']) for c in members],
@@ -273,6 +300,7 @@ def worker(root, ident):
                    totals=(result or {}).get('totals'), actual_sim_s=(result or {}).get('actual_sim_s'),
                    series_keys=list(ir.SERIES_KEYS), series=hook.series, activations=hook.acts,
                    issued=len(hook.issued), lane_held_steps=hook.lane_held, lane_outcome=lane_out,
+                   gate_refusals=hook.gate_refusals,
                    base_sha256=state_sha256(base_model), error=error, wall_s=round(time.time()-started, 2))
     with gzip.open(work/'SUMMARY.json.gz', 'xt', encoding='utf-8') as f:
         json.dump(summary, f, default=str)

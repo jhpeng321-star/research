@@ -48,7 +48,9 @@ EXTRA_TRAIN_RANGES = ((989000, 989099),
                       # S-REGIMEU0 amendment 5 (MAIN 20:0x): 989724-989819 (S-REGIME range, unused by REGIME)
                       (989724, 989819),
                       # S-LOWSHARE-U0 (MAIN 20:3x): 989820-989849 (S-REGIME range, unused by REGIME / REGIMEU0)
-                      (989820, 989849))
+                      (989820, 989849),
+                      # S-MULTICRIT Task B (MAIN 2026-11-06 23:38 seed allocation, TRAIN-type, never eval): 991000-991099
+                      (991000, 991099))
 HELDOUT_RANGE = (989600, 989699)
 FORBIDDEN_RANGES = ((964000, 964199), (962000, 962999), (977000, 977999))
 EPISODE_S = 1200

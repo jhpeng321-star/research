@@ -72,3 +72,45 @@ def test_wall_g_parameters_and_cooldown():
     assert sorted(out) == ['a', 'b', 'c'] and hook.next_ok == 420
     assert out['c']['requested_raw'] == pytest.approx(1.0)            # v=10 -> clip(22-10, -1, 1)
     assert out['a']['requested_raw'] == pytest.approx(-1.0)           # v=25 -> clip(22-25, -1, 1)
+
+
+@pytest.mark.parametrize('strategy,members,law_v,next_ok', [('wall_m_solo2', ['a'], 18., 390),
+                                                            ('wall_g_duo12', ['a', 'b'], 22., 420),
+                                                            ('wall_g_solo2_gate0', ['a'], 22., 420)])
+def test_multicrit_strategies(strategy, members, law_v, next_ok):
+    ctl = Ctl()
+    hook = ru.RuleHook(strategy)
+    hook(ctl, {}, {})
+    rows = rows_wall()
+    cmds = {r['vid']: .2 for r in rows if r['is_cav']}
+    out = ctl.apply(rows, cmds, 300)
+    assert sorted(out) == members and hook.next_ok == next_ok and hook.gate_refusals == 0
+    assert hook.acts[0]['sumo_lanes'] == [ru.sumo_lane(next(r['lane'] for r in rows if r['vid'] == m)) for m in hook.acts[0]['members']]
+    for vid in members:
+        v = next(r['v_mps'] for r in rows if r['vid'] == vid)
+        assert out[vid]['requested_raw'] == pytest.approx(max(-1.0, min(1.0, law_v-v)))
+
+
+def test_gate0_refuses_when_lane_occupied_behind():
+    ctl = Ctl()
+    hook = ru.RuleHook('wall_g_solo2_gate0')
+    hook(ctl, {}, {})
+    rows = rows_wall()+[dict(vid='h2', s_m=-1060., v_mps=28., lane=0, is_cav=False),     # 60 m behind 'a', same lane
+                        dict(vid='h3', s_m=-1050., v_mps=28., lane=1, is_cav=False)]     # other lane: ignored
+    cmds = {r['vid']: .2 for r in rows if r['is_cav']}
+    out = ctl.apply(rows, cmds, 300)
+    assert out == {} and hook.acts == [] and hook.gate_refusals == 1 and hook.next_ok == -1
+    far = [dict(r, s_m=-1120.) if r['vid'] == 'h2' else r for r in rows]                 # 120 m behind: allowed
+    out = ctl.apply(far, cmds, 301)
+    assert sorted(out) == ['a'] and hook.next_ok == 421
+    assert ru.behind_count(rows, rows[0], 100.) == 1
+
+
+def test_seed_range_registered():
+    from . import map_scenarios as ms
+    w = ru.world_of(991000, 2400, 0.6)
+    assert w['seed'] == 991000 and w['cell_key'] == 'D2400_p60' and w['repeat'] == 0
+    assert ru.world_of(991099, 2800, 0.4)['cell_key'] == 'D2800_p40'
+    with pytest.raises(ValueError):
+        ru.world_of(991100, 2400, 0.6)
+    assert ms.guard(w, 'train') == w
