@@ -192,6 +192,16 @@ def test_credit_skips_ineligible_join_rows_and_validates_session_binding():
         g4._validate_plan(bad)
 
 
+def test_single_member_hold_is_not_a_joint_start():
+    """A 1-member group_hold row (e.g. a solo hold subclass) is skipped like legacy 1-actor moves."""
+    cfg = ext_config()
+    t = times('c0', 1)[0]
+    solo = dict(joint_move('closing_pair').to_dict(), family='group_hold', members=['c0'], lanes=[2])
+    episode = _episode('B', [_step(t, ['c0', 'c1'], {'c0': solo})])
+    assert g4.opportunities([episode], g4.extension(cfg)) == []
+    assert g4.opportunities([episode], g4.extension(cfg), pending=True) == []
+
+
 # ---------------------------------------------------------------- (c) caps / budget accounting
 
 def test_extension_keeps_the_registered_start_and_sim_s_caps():
