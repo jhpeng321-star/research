@@ -114,7 +114,8 @@ def test_grouped_entries_share_arrivals_within_a_draw_and_keep_cav_identity():
         st['present'][:, 0] = True
         st['s_m'][:, 0] = 500.0
         st['v_mps'][:, 0] = 20.0
-        ep = R.GroupedEntryProcess(counter, [0, 0, 1, 1], {0: 11, 1: 12}, cav_share=0.5)
+        ep = R.GroupedEntryProcess([0, 0, 1, 1], {g: dict(counter=counter, cav_share=0.5, seed=11 + g)
+                                                  for g in (0, 1)})
         masks = []
         for _ in range(60):
             masks.append(ep.insert(st).clone())
@@ -156,8 +157,8 @@ def test_wm2_rollout_crn_divergence_after_activation_and_determinism(wm):
     m = _fixture(wall=True)
     arms = ['u0', 'wall_h_solo2', 'wall_h']
     tr = {}
-    a = R.evaluate_state(h, exe, m, arms=arms, K=2, H=6.0, pad=24, max_rows=8, trace=tr)
-    b = R.evaluate_state(h, exe, m, arms=arms, K=2, H=6.0, pad=24, max_rows=8)
+    a = R.evaluate_state(h, exe, m, arms=arms, K=2, H=6.0, slots=48, max_rows=8, trace=tr)
+    b = R.evaluate_state(h, exe, m, arms=arms, K=2, H=6.0, slots=48, max_rows=8)
     for arm in arms:
         assert a['arms'][arm]['road_w'] == b['arms'][arm]['road_w']                    # deterministic
         for k in range(2):
@@ -173,9 +174,27 @@ def test_wm2_rollout_crn_divergence_after_activation_and_determinism(wm):
 
 
 @needs_wm
+def test_wm2_multi_state_call_matches_single_state_calls(wm):
+    """Packing several start states into one call (fixed slot count) reproduces the per-state results."""
+    h, exe = wm
+    m1, m2 = _fixture(wall=True), dict(_fixture(wall=False), sid='fixture2_D2400_p40_s989201_t300', cell='D2400_p40',
+                                       seed=989201)
+    kw = dict(arms=['auto'], K=2, H=4.0, slots=64, max_rows=64)
+    both = R.evaluate_states(h, exe, [m1, m2], **kw)
+    one = [R.evaluate_states(h, exe, [m], **kw)[0] for m in (m1, m2)]
+    assert both[0]['batch'] == 2 and one[0]['batch'] == 1
+    for x, y in zip(both, one):
+        assert set(x['arms']) == set(y['arms'])
+        for arm in x['arms']:
+            np.testing.assert_allclose(np.array(x['arms'][arm]['road_w']), np.array(y['arms'][arm]['road_w']),
+                                       rtol=1e-4)
+            assert x['arms'][arm]['activations'] == y['arms'][arm]['activations']
+
+
+@needs_wm
 def test_wm2_no_feasible_wall_means_identical_rows(wm):
     h, exe = wm
-    r = R.evaluate_state(h, exe, _fixture(wall=False), arms=['u0', 'wall_h_solo2', 'wall_h'], K=1, H=4.0, pad=24,
+    r = R.evaluate_state(h, exe, _fixture(wall=False), arms=['u0', 'wall_h_solo2', 'wall_h'], K=1, H=4.0, slots=48,
                          max_rows=8)
     assert r['arms']['wall_h']['activations'] == [0] and r['arms']['wall_h']['first_div_s'] == [None]
     assert r['arms']['wall_h']['road_w'] == r['arms']['u0']['road_w'] == r['arms']['wall_h_solo2']['road_w']
@@ -276,4 +295,6 @@ def test_cost_estimate_counts_rows(tmp_path):
     p.write_text(json.dumps(rows))
     est = R.cost_estimate(p, K=8, H=900, max_rows=32, s_per_step=0.1, workers=2)
     assert est['calls'] == 2 and est['row_steps'] == (4 + 3) * 8 * 1800
+    est2 = R.cost_estimate(p, K=8, H=900, max_rows=64, states_per_call=2, s_per_step=0.1)
+    assert est2['calls'] == 1                                                   # 4 x 8 + 3 x 8 = 56 rows <= 64
     assert est['serial_minutes'] == pytest.approx(2 * 1800 * 0.1 / 60, abs=0.1)

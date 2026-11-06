@@ -67,6 +67,11 @@ SPEED_LIMIT_MPS = 31.29
 STEPS_PER_CONTROL = 2
 CAV_SHARE_WINDOW_S = 120.0             # = EntryConfig.window_bins (12) x 10 s: the counter-rate window
 DEFAULT_PAD = 256
+DEFAULT_SLOTS = 'auto'                  # fixed slot count per demand level (CELL_SLOTS), see evaluate_states
+# WM cost grows ~n^2 in the slot count (pairwise attention / lane neighbours over ALL slots).  SUMO native tapes
+# (WM-D, 300-1200 s) peak at 146 / 256 / 356 vehicles at D2400 / D2800 / D3200; a shortage is counted (no_slot)
+# and fails the horizon check.
+CELL_SLOTS = {2400: 256, 2800: 352, 3200: 448}
 DEFAULT_SEED = 20261107
 CELLS = ('D2400_p40', 'D2400_p60', 'D2800_p40', 'D2800_p60', 'D3200_p20', 'D3200_p30', 'D3200_p40', 'D3200_p60')
 # 'auto' arms = exactly the SUMO-measured arms of each cell (S-REGIMEU0 / S-LOWSHARE-U0), u0 first
@@ -241,24 +246,43 @@ def _torch():
 
 
 class GroupedEntryProcess:
-    """Arrival process of the WM rollout: ``TorchEntryProcess`` placement/rate statistics, one Poisson stream per CRN
-    group (draw k) shared by every row of the group, a full FIFO backlog per row and entrance (CAV identity kept while
-    queued), and CAV entrants allowed in any free slot (never-used slots first).  Built lazily so that importing this
-    module does not import the WM."""
+    """Arrival process of the WM rollout: ``TorchEntryProcess`` placement statistics with one Poisson stream per CRN
+    group g = (start state, draw k) shared by every row (arm) of the group; per-group observed-counter rates and
+    RSU-observable CAV entry share; per-row lane split from the row's own t0 state; a full FIFO backlog per row and
+    entrance (CAV identity kept while queued); CAV entrants may use any free slot (never-used slots first).
+    ``specs[g] = dict(counter=[2, 30], cav_share=float, seed=int)``.  Built lazily (no WM import at module load)."""
 
-    def __new__(cls, *args, **kwargs):
-        from wms.model.entries import EntryConfig, TorchEntryProcess, N_ENTRANCES
+    def __new__(cls, groups, specs, *, dt_s=DT_S):
+        from wms.model.entries import EntryConfig, N_ENTRANCES, TorchEntryProcess, observed_rates
 
         class _Grouped(TorchEntryProcess):
-            def __init__(self, counter, groups, group_seeds, *, cav_share, dt_s=DT_S):
-                super().__init__(np.asarray(counter, np.float32), dt_s=dt_s, seed=0, batch=len(groups),
-                                 cfg=EntryConfig(cav_share=cav_share, max_pending=10 ** 9))
+            def __init__(self):
+                g0 = specs[int(groups[0])]
+                super().__init__(np.asarray(g0['counter'], np.float32), dt_s=dt_s, seed=0, batch=len(groups),
+                                 cfg=EntryConfig(cav_share=float(g0['cav_share']), max_pending=10 ** 9))
                 self.groups = np.asarray(groups, np.int64)
                 self.group_rows = {int(g): np.flatnonzero(self.groups == g) for g in np.unique(self.groups)}
-                self.group_rng = {int(g): np.random.default_rng(int(group_seeds[int(g)])) for g in self.group_rows}
-                self.queues = [[[] for _ in range(N_ENTRANCES)] for _ in range(len(groups))]
+                self.group_rates = {g: observed_rates(np.asarray(specs[g]['counter'], np.float32),
+                                                      self.cfg.window_bins) * float(self.cfg.rate_scale)
+                                    for g in self.group_rows}
+                self.group_rng = {g: np.random.default_rng(int(specs[g]['seed'])) for g in self.group_rows}
+                self.row_share = np.array([float(specs[int(g)]['cav_share']) for g in self.groups])
+                self.row_p_lane1 = None
+                self.queues = [[[] for _ in range(N_ENTRANCES)] for _ in range(len(self.groups))]
                 self.backlog_log = []
                 self.n_entrances = N_ENTRANCES
+
+            def _observe(self, state):
+                if self.row_p_lane1 is not None:
+                    return
+                present = state['present'].detach().bool().cpu().numpy()
+                lane = state['lane'].detach().cpu().numpy()
+                n0 = (present & (lane == 0)).sum(1)
+                n1 = (present & (lane == 1)).sum(1)
+                self.row_p_lane1 = np.where(n0 + n1 > 0, n1 / np.maximum(n0 + n1, 1), 0.5)
+                self.p_lane1 = float(self.row_p_lane1[0])
+                self.virgin = ~present & self._pool_row(0, present.shape[1])[None, :]
+                self._cav_slots = np.zeros_like(present)
 
             def insert(self, state):
                 torch = _torch()
@@ -268,7 +292,7 @@ class GroupedEntryProcess:
                 work = _Working(state)
                 for g, rows in self.group_rows.items():
                     rng = self.group_rng[g]
-                    n = rng.poisson(self.rates * self.dt)
+                    n = rng.poisson(self.group_rates[g] * self.dt)
                     arrivals = [[] for _ in range(self.n_entrances)]
                     for e in range(self.n_entrances):
                         for _ in range(int(n[e])):
@@ -283,9 +307,14 @@ class GroupedEntryProcess:
 
             def _serve(self, work, b, e):
                 q = self.queues[b][e]
+                if not q:
+                    self.pending[b, e] = 0
+                    return
+                self.cav_share = float(self.row_share[b])
+                p1 = float(self.row_p_lane1[b])
                 done = 0
                 for u_lane, u_cav in q:
-                    lanes_try = ([1, 0] if u_lane < self.p_lane1 else [0, 1]) if e == 0 else [2]
+                    lanes_try = ([1, 0] if u_lane < p1 else [0, 1]) if e == 0 else [2]
                     if not any(self._try_lane(work, b, e, ln, u_cav) for ln in lanes_try):
                         self.stats[b].deferred_steps += 1
                         break
@@ -312,7 +341,16 @@ class GroupedEntryProcess:
                 work.inserted.append((b, k))
                 return True
 
-        return _Grouped(*args, **kwargs)
+            def summary(self, b=0):
+                st = self.stats[b]
+                g = int(self.groups[b])
+                return dict(rates_veh_s=[float(x) for x in self.group_rates[g]],
+                            p_lane1=None if self.row_p_lane1 is None else float(self.row_p_lane1[b]),
+                            cav_share=float(self.row_share[b]), inserted=st.inserted, inserted_cav=st.inserted_cav,
+                            per_entrance=list(st.per_entrance), deferred_steps=st.deferred_steps,
+                            no_slot=st.no_slot, backlog_end=int(self.pending[b].sum()))
+
+        return _Grouped()
 
 
 class U0RuleController:
@@ -353,7 +391,6 @@ class U0RuleController:
         self.updated_step = index
         if index % STEPS_PER_CONTROL:
             return
-        torch = _torch()
         t = index * DT_S                                   # time since t0 (rule semantics are shift-invariant)
         mask = self._mask(state)
         s = state['s_m']
@@ -472,60 +509,89 @@ def group_seed(seed, k, digest):
     return int(hashlib.sha256(f'wmev:entries:{seed}:{k}:{digest}'.encode()).hexdigest()[:15], 16)
 
 
-def evaluate_state(handle, policy_exe, m, *, arms=DEFAULT_ARMS, K=4, H=H_MAX_S, seed=DEFAULT_SEED, pad=DEFAULT_PAD,
-                   max_rows=None, trace=None):
-    """Roll the WM from one start state for every (arm, draw); returns {arm: {road_w, src_w, n_w, ...}}."""
+def _prep_state(handle, m, arms):
+    from wms import planapi as P
+    arms_m = arms_for(m['cell'], arms)
+    if BASE not in arms_m:
+        raise ValueError('the u0 base arm is required (gains are vs u0)')
+    for a in arms_m:
+        arm_rule(a)
+    st = P.observe(handle, wm_moment(m))
+    veh = st['vehicles']
+    share = m['observed'].get('cav_entry_share')
+    if share is None:                                   # no counted entry in the window: snapshot share
+        share = sum(1 for r in veh if r['is_cav']) / max(1, len(veh))
+    return dict(m=m, arms=arms_m, state=st, digest=P.state_digest(st), vehicles=veh, share=float(share),
+                counter=st.get('counter'))
+
+
+def evaluate_states(handle, policy_exe, states, *, arms=DEFAULT_ARMS, K=4, H=H_MAX_S, seed=DEFAULT_SEED,
+                    slots=DEFAULT_SLOTS, pad=DEFAULT_PAD, max_rows=None, trace=None):
+    """Roll the WM from several start states at once (rows = state x draw x arm, chunked by whole (state, draw)
+    groups so every arm of a draw shares one call); returns one result dict per state (input order).
+
+    The slot count n is FIXED (``slots``, default max n_obs + ``pad``) so a state's draws do not depend on which
+    other states share its call (lane uniforms are [T, n] per (seed, k, state digest))."""
     torch = _torch()
     from wms import planapi as P
-    arms = arms_for(m['cell'], arms)
-    if BASE not in arms:
-        raise ValueError('the u0 base arm is required (gains are vs u0)')
-    for a in arms:
-        arm_rule(a)
-    state = P.observe(handle, wm_moment(m))
-    digest = P.state_digest(state)
+    preps = [_prep_state(handle, m, arms) for m in states]
     model, dev = handle.model, torch.device(handle.device)
     n_steps = int(round(float(H) / DT_S))
     steps_w = int(round(WINDOW_S / DT_S))
     n_win = int(math.ceil(n_steps / steps_w))
-    vehicles = state['vehicles']
-    n_obs = len(vehicles)
-    n = n_obs + int(pad)
-    share = m['observed'].get('cav_entry_share')
-    if share is None:                                   # no counted entry in the window: snapshot share
-        share = sum(1 for r in vehicles if r['is_cav']) / max(1, n_obs)
-    counter = state.get('counter')
+    n_max_obs = max(len(p['vehicles']) for p in preps)
+    n = resolve_slots(slots, [p['m'] for p in preps], n_max_obs, pad)
+    if n < n_max_obs + 32:
+        raise ValueError(f'slots {n} leave < 32 entry slots for a state with {n_max_obs} observed vehicles')
     exit_s = handle.road.road_end_m if getattr(model.physics, 'exit_at_road_end', True) else None
     max_rows = int(max_rows or handle.max_rows)
-    per_k = max(1, max_rows // len(arms))
-    out = {a: dict(road_w=[None] * K, src_w=[None] * K, n_w=[None] * K, activations=[None] * K,
-                   first_act_s=[None] * K, first_div_s=[None] * K, no_slot=[None] * K) for a in arms}
+    outs = [{a: dict(road_w=[None] * K, src_w=[None] * K, n_w=[None] * K, activations=[None] * K,
+                     first_act_s=[None] * K, first_div_s=[None] * K, no_slot=[None] * K, backlog_end=[None] * K)
+             for a in p['arms']} for p in preps]
+    groups_all = [(si, k) for si in range(len(preps)) for k in range(int(K))]
+    chunks, cur, cur_rows = [], [], 0
+    for si, k in groups_all:
+        need = len(preps[si]['arms'])
+        if cur and cur_rows + need > max_rows:
+            chunks.append(cur)
+            cur, cur_rows = [], 0
+        cur.append((si, k))
+        cur_rows += need
+    if cur:
+        chunks.append(cur)
     t_start = time.time()
-    for k_lo in range(0, int(K), per_k):
-        ks = list(range(k_lo, min(int(K), k_lo + per_k)))
-        rows = [(a, k) for k in ks for a in arms]
+    for chunk in chunks:
+        rows = [(si, a, k) for si, k in chunk for a in preps[si]['arms']]
         b = len(rows)
-
-        def col(key, default=0.0):
-            vals = [float(r.get(key, default)) for r in vehicles] + [0.0] * int(pad)
-            return torch.tensor(vals, dtype=torch.float32, device=dev).expand(b, n).clone()
-        present = torch.zeros(b, n, dtype=torch.bool, device=dev)
-        present[:, :n_obs] = True
-        is_cav = torch.zeros(b, n, dtype=torch.bool, device=dev)
-        is_cav[:, :n_obs] = torch.tensor([bool(r['is_cav']) for r in vehicles], device=dev)
-        initial = {'s_m': col('s'), 'v_mps': col('v'), 'a_mps2': torch.zeros(b, n, device=dev),
-                   'lane': col('lane').long(), 'length_m': col('length', P.NOMINAL_LENGTH_M),
-                   'present': present, 'is_cav': is_cav}
+        S, V, L, LEN = (np.zeros((b, n), np.float32) for _ in range(4))
+        LEN[:] = P.NOMINAL_LENGTH_M
+        PRES, CAV = np.zeros((b, n), bool), np.zeros((b, n), bool)
+        for i, (si, _a, _k) in enumerate(rows):
+            veh = preps[si]['vehicles']
+            no = len(veh)
+            S[i, :no] = [r['s'] for r in veh]
+            V[i, :no] = [r['v'] for r in veh]
+            L[i, :no] = [r['lane'] for r in veh]
+            LEN[i, :no] = [r.get('length', P.NOMINAL_LENGTH_M) for r in veh]
+            PRES[i, :no] = True
+            CAV[i, :no] = [bool(r['is_cav']) for r in veh]
+        present = torch.tensor(PRES, device=dev)
+        initial = {'s_m': torch.tensor(S, device=dev), 'v_mps': torch.tensor(V, device=dev),
+                   'a_mps2': torch.zeros(b, n, device=dev), 'lane': torch.tensor(L, device=dev).long(),
+                   'length_m': torch.tensor(LEN, device=dev), 'present': present,
+                   'is_cav': torch.tensor(CAV, device=dev)}
         if exit_s is not None:
             initial['exit_s_m'] = torch.full((b, n), float(exit_s), device=dev)
-        controller = U0RuleController([a for a, _k in rows], n, dev, policy_exe.policy, policy_exe.group_encoder,
-                                      accel_max=policy_exe.accel_max)
-        uniform = torch.stack([P._draw_uniform(seed, k, digest, n_steps, n) for _a, k in rows]).to(dev)
+        controller = U0RuleController([a for _si, a, _k in rows], n, dev, policy_exe.policy,
+                                      policy_exe.group_encoder, accel_max=policy_exe.accel_max)
+        uniform = torch.stack([P._draw_uniform(seed, k, preps[si]['digest'], n_steps, n)
+                               for si, _a, k in rows]).to(dev)
         entries = None
-        if counter is not None:
-            groups = [ks.index(k) for _a, k in rows]
-            entries = GroupedEntryProcess(counter, groups, {ks.index(k): group_seed(seed, k, digest) for k in ks},
-                                          cav_share=float(share))
+        if all(p['counter'] is not None for p in preps):
+            gid = {g: j for j, g in enumerate(chunk)}
+            specs = {gid[(si, k)]: dict(counter=preps[si]['counter'], cav_share=preps[si]['share'],
+                                        seed=group_seed(seed, k, preps[si]['digest'])) for si, k in chunk}
+            entries = GroupedEntryProcess([gid[(si, k)] for si, _a, k in rows], specs)
         hist = {}
         if getattr(model, 'long_history', False):
             from wms.model.history import LONG_HISTORY_F
@@ -539,6 +605,7 @@ def evaluate_state(handle, policy_exe, m, *, arms=DEFAULT_ARMS, K=4, H=H_MAX_S, 
         masks = torch.cat((present[:, None], roll['masks'][:, :-1].bool()), 1)
         deficit = ((1.0 - speeds / SPEED_LIMIT_MPS).clamp_min(0.0) * masks).sum(2).double()     # [b, T]
         count = masks.sum(2).double()
+        del roll
         pad_t = n_win * steps_w - n_steps
         if pad_t:
             deficit = torch.cat((deficit, deficit.new_zeros(b, pad_t)), 1)
@@ -552,13 +619,13 @@ def evaluate_state(handle, policy_exe, m, *, arms=DEFAULT_ARMS, K=4, H=H_MAX_S, 
         else:
             src_w = np.zeros_like(road_w)
         per_step = deficit[:, :n_steps].cpu().numpy()
-        base_row = {k: i for i, (a, k) in enumerate(rows) if a == BASE}
-        for i, (a, k) in enumerate(rows):
+        base_row = {(si, k): i for i, (si, a, k) in enumerate(rows) if a == BASE}
+        for i, (si, a, k) in enumerate(rows):
             if not (np.all(np.isfinite(road_w[i])) and np.all(np.isfinite(src_w[i]))):
-                raise FloatingPointError(f'non-finite WM delay ({m["sid"]}, {a}, k={k})')
+                raise FloatingPointError(f'non-finite WM delay ({preps[si]["m"]["sid"]}, {a}, k={k})')
             acts = controller.acts[i]
-            diff = np.flatnonzero(np.abs(per_step[i] - per_step[base_row[k]]) > 1e-6)
-            o = out[a]
+            diff = np.flatnonzero(np.abs(per_step[i] - per_step[base_row[(si, k)]]) > 1e-6)
+            o = outs[si][a]
             o['road_w'][k] = [round(float(x), 4) for x in road_w[i]]
             o['src_w'][k] = [round(float(x), 4) for x in src_w[i]]
             o['n_w'][k] = [round(float(x), 2) for x in n_w[i]]
@@ -566,18 +633,38 @@ def evaluate_state(handle, policy_exe, m, *, arms=DEFAULT_ARMS, K=4, H=H_MAX_S, 
             o['first_act_s'][k] = acts[0][0] if acts else None
             o['first_div_s'][k] = float(diff[0] * DT_S) if len(diff) else None
             o['no_slot'][k] = int(entries.stats[i].no_slot) if entries is not None else 0
+            o['backlog_end'][k] = int(entries.pending[i].sum()) if entries is not None else 0
         if trace is not None:
-            trace.setdefault('rows', []).extend(rows)
+            trace.setdefault('rows', []).extend([(a, k) if len(preps) == 1 else (si, a, k) for si, a, k in rows])
             trace.setdefault('acts', []).extend(controller.acts)
             trace.setdefault('per_step', []).append(per_step)
-            trace.setdefault('lanes', []).append(roll['lanes'].cpu())
             trace.setdefault('speeds', []).append(speeds.cpu())
-            trace['n_obs'], trace['n_slots'] = n_obs, n
+            trace['n_slots'] = n
             trace.setdefault('entry_stats', []).extend(
                 [entries.summary(i) for i in range(b)] if entries is not None else [])
-    return dict(sid=m['sid'], cell=m['cell'], seed=int(m['seed']), t0=int(m['t0']), H=float(H), K=int(K),
-                window_s=WINDOW_S, arms=out, n_obs=n_obs, n_slots=n, cav_entry_share=float(share),
-                digest=digest[:16], wall_s=round(time.time() - t_start, 2))
+    wall = round(time.time() - t_start, 2)
+    return [dict(sid=p['m']['sid'], cell=p['m']['cell'], seed=int(p['m']['seed']), t0=int(p['m']['t0']),
+                 H=float(H), K=int(K), window_s=WINDOW_S, arms=o, n_obs=len(p['vehicles']), n_slots=n,
+                 cav_entry_share=p['share'], digest=p['digest'][:16], wall_s=wall, batch=len(preps))
+            for p, o in zip(preps, outs)]
+
+
+def resolve_slots(slots, states, n_max_obs=0, pad=DEFAULT_PAD):
+    """Slot count of one call: an int, 'auto' (CELL_SLOTS of the demand level; all states of a call must share
+    it), or None (largest observed count + pad)."""
+    if slots in (None, '', 'none'):
+        return int(n_max_obs) + int(pad)
+    if str(slots) == 'auto':
+        vals = {CELL_SLOTS.get(int(str(m['cell']).split('_')[0][1:]), 448) for m in states}
+        if len(vals) != 1:
+            raise ValueError(f'states of one call need one slot count, got {sorted(vals)}')
+        return vals.pop()
+    return int(slots)
+
+
+def evaluate_state(handle, policy_exe, m, **kw):
+    """One start state (see :func:`evaluate_states`)."""
+    return evaluate_states(handle, policy_exe, [m], **kw)[0]
 
 
 def load_policy(path, device='cpu'):
@@ -596,13 +683,50 @@ def sha256_file(path):
     return h.hexdigest()
 
 
-def score(states_path, out_path, *, checkpoint, u0, map_spec=None, device='cpu', arms=DEFAULT_ARMS, K=4, H=H_MAX_S,
-          seed=DEFAULT_SEED, pad=DEFAULT_PAD, max_rows=40, sids=None, shard=None, threads=None, allow_fresh=False,
-          limit=None, max_per_cell=None):
-    """Append one JSON line per start state to ``out_path`` (resumable: states already in the file are skipped)."""
+def _chunk_count(n_arms_list, K, max_rows):
+    """Number of rollout calls of evaluate_states for states with these arm counts (same packing rule)."""
+    calls, cur = 0, 0
+    for na in n_arms_list:
+        for _k in range(int(K)):
+            if cur and cur + na > max_rows:
+                calls, cur = calls + 1, 0
+            cur += na
+    return calls + (1 if cur else 0)
+
+
+def _device_setup(device, threads=None, mem_fraction=None):
     torch = _torch()
     if threads:
         torch.set_num_threads(int(threads))
+    if mem_fraction and str(device).startswith('cuda'):
+        torch.cuda.set_per_process_memory_fraction(float(mem_fraction))
+
+
+def _batches(states, states_per_call, slots):
+    """Consecutive batches of <= states_per_call states sharing one slot count (one demand level when 'auto')."""
+    spc = max(1, int(states_per_call))
+    out, cur, key = [], [], None
+    for m in states:
+        k = resolve_slots(slots, [m], len(m['all_cavs_t0']) + len(m['observed']['vehicles'])) \
+            if str(slots) == 'auto' else None
+        if cur and (len(cur) >= spc or k != key):
+            out.append(cur)
+            cur = []
+        cur.append(m)
+        key = k
+    if cur:
+        out.append(cur)
+    return out
+
+
+def score(states_path, out_path, *, checkpoint, u0, map_spec=None, device='cpu', arms=DEFAULT_ARMS, K=8, H=H_MAX_S,
+          seed=DEFAULT_SEED, slots=DEFAULT_SLOTS, max_rows=32, states_per_call=1, sids=None, shard=None,
+          threads=None, allow_fresh=False, limit=None, max_per_cell=None, mem_fraction=None):
+    """Append one JSON line per start state to ``out_path`` (resumable: states already in the file are skipped).
+
+    ``states_per_call`` start states share each batched WM call (rows <= ``max_rows``); results do not depend on the
+    grouping because the slot count is fixed (``slots``) and every draw is keyed by (seed, k, state digest)."""
+    _device_setup(device, threads, mem_fraction)
     from wms import planapi as P
     if not checkpoint and not allow_fresh:
         raise ValueError('a trained WM checkpoint is required (allow_fresh only for dry runs)')
@@ -612,13 +736,13 @@ def score(states_path, out_path, *, checkpoint, u0, map_spec=None, device='cpu',
     out_path.parent.mkdir(parents=True, exist_ok=True)
     meta = dict(schema=SCHEMA + '.scores_meta', checkpoint=str(checkpoint), checkpoint_sha256=handle.meta.get(
         'checkpoint_sha256'), trained=bool(handle.meta.get('trained')), u0=str(u0), u0_sha256=sha256_file(u0),
-        road_digest=handle.road.digest, arms=list(arms), K=int(K), H=float(H), seed=int(seed), pad=int(pad),
-        max_rows=int(max_rows), device=device, states=str(states_path),
+        road_digest=handle.road.digest, arms=list(arms), K=int(K), H=float(H), seed=int(seed), slots=str(slots),
+        max_rows=int(max_rows), states_per_call=int(states_per_call), device=device, states=str(states_path),
         states_sha256=sha256_file(G.check_path(states_path)), rule_source=RULE_SOURCE)
     meta_path = Path(str(out_path) + '.meta.json')
     if meta_path.exists():
         old = json.loads(meta_path.read_text())
-        keys = ('checkpoint_sha256', 'u0_sha256', 'arms', 'K', 'H', 'seed', 'pad', 'states_sha256')
+        keys = ('checkpoint_sha256', 'u0_sha256', 'arms', 'K', 'H', 'seed', 'slots', 'states_sha256')
         if any(old.get(k) != meta.get(k) for k in keys):
             raise ValueError(f'{meta_path}: different run settings; use a new --out')
     else:
@@ -632,66 +756,93 @@ def score(states_path, out_path, *, checkpoint, u0, map_spec=None, device='cpu',
     todo = [m for m in states if m['sid'] not in done][:limit]
     report = dict(todo=len(todo), skipped=len(states) - len(todo), wall_s=0.0)
     t0 = time.time()
-    for m in todo:
+    for batch in _batches(todo, states_per_call, slots):
         try:
-            res = evaluate_state(handle, exe, m, arms=arms, K=K, H=H, seed=seed, pad=pad, max_rows=max_rows)
+            results = evaluate_states(handle, exe, batch, arms=arms, K=K, H=H, seed=seed, slots=slots,
+                                      max_rows=max_rows)
         except Exception as exc:                                       # recorded, never imputed
-            res = dict(sid=m['sid'], cell=m['cell'], seed=int(m['seed']), error=f'{type(exc).__name__}: {exc}')
+            results = [dict(sid=m['sid'], cell=m['cell'], seed=int(m['seed']), error=f'{type(exc).__name__}: {exc}')
+                       for m in batch]
         with out_path.open('a') as fh:
-            fh.write(json.dumps(res) + '\n')
+            for res in results:
+                fh.write(json.dumps(res) + '\n')
             fh.flush()
-        print(json.dumps(dict(sid=res['sid'], wall_s=res.get('wall_s'), error=res.get('error'))), flush=True)
+        for res in results:
+            print(json.dumps(dict(sid=res['sid'], wall_s=res.get('wall_s'), error=res.get('error'))), flush=True)
     report['wall_s'] = round(time.time() - t0, 1)
     return report
 
 
 # ================================================================================ cost (dry run + calibration)
-def cost_estimate(states_path, *, arms=DEFAULT_ARMS, K=4, H=H_MAX_S, max_rows=40, s_per_step=None, workers=1,
-                  parallel_efficiency=0.8, sids=None, max_per_cell=None):
-    """Row-steps of a full run and the wall/GPU minutes for a measured (or assumed) seconds per rollout step."""
+def cost_estimate(states_path, *, arms=DEFAULT_ARMS, K=8, H=H_MAX_S, max_rows=32, states_per_call=1,
+                  s_per_step=None, workers=1, parallel_efficiency=0.8, sids=None, max_per_cell=None,
+                  slots=DEFAULT_SLOTS):
+    """Rollout calls / steps of a full run and the wall minutes for a measured (or assumed) seconds per rollout step
+    of one call (calibrate at the planned max_rows / states_per_call)."""
     states = load_states(states_path, sids=sids, max_per_cell=max_per_cell)
     n_steps = int(round(H / DT_S))
-    by_cell, calls, row_steps, rows_max = {}, 0, 0, 0
+    by_cell, row_steps = {}, 0
     for m in states:
         by_cell[m['cell']] = by_cell.get(m['cell'], 0) + 1
-        arms_m = arms_for(m['cell'], arms)
-        per_k = max(1, max_rows // len(arms_m))
-        calls += math.ceil(K / per_k)
-        row_steps += len(arms_m) * K * n_steps
-        rows_max = max(rows_max, min(K, per_k) * len(arms_m))
-    out = dict(states=len(states), by_cell=by_cell, arms=list(arms), K=K, H=H, max_rows_per_call=rows_max,
-               calls=calls, steps_per_call=n_steps, call_steps=calls * n_steps, row_steps=row_steps)
+        row_steps += len(arms_for(m['cell'], arms)) * K * n_steps
+    calls, calls_by_slots = 0, {}
+    for batch in _batches(states, states_per_call, slots):
+        c = _chunk_count([len(arms_for(m['cell'], arms)) for m in batch], K, max_rows)
+        n = resolve_slots(slots, batch, max(len(m['all_cavs_t0']) + len(m['observed']['vehicles']) for m in batch))
+        calls += c
+        calls_by_slots[n] = calls_by_slots.get(n, 0) + c
+    out = dict(states=len(states), by_cell=by_cell, arms=list(arms), K=K, H=H, max_rows=max_rows,
+               states_per_call=int(states_per_call), slots=str(slots), calls=calls, calls_by_slots=calls_by_slots,
+               steps_per_call=n_steps, call_steps=calls * n_steps, row_steps=row_steps)
     if s_per_step:
-        serial_min = calls * n_steps * float(s_per_step) / 60.0
+        # s_per_step is calibrated at the LARGEST slot count; smaller calls scale ~ (n / n_max)^2 (conservative)
+        n_max = max(calls_by_slots) if calls_by_slots else 1
+        eff_calls = sum(c * (n / n_max) ** 2 for n, c in calls_by_slots.items()) if str(slots) == 'auto' else calls
+        out['effective_calls_at_max_slots'] = round(eff_calls, 1)
+        serial_min = eff_calls * n_steps * float(s_per_step) / 60.0
+        wall = serial_min / max(1.0, workers * parallel_efficiency)
         out.update(s_per_step=float(s_per_step), serial_minutes=round(serial_min, 1), workers=int(workers),
-                   wall_minutes=round(serial_min / max(1.0, workers * parallel_efficiency), 1),
-                   gpu_minutes=round(serial_min / max(1.0, workers * parallel_efficiency), 1))
+                   parallel_efficiency=parallel_efficiency, wall_minutes=round(wall, 1))
     return out
 
 
-def calibrate(states_path, *, checkpoint, u0, map_spec=None, device='cpu', arms=DEFAULT_ARMS, K=4, steps=40,
-              max_rows=40, pad=DEFAULT_PAD, threads=None, allow_fresh=False, sid=None):
-    """Seconds per rollout step on this device for one call (rows = arms x draws per call) of the first/given state."""
+def calibrate(states_path, *, checkpoint, u0, map_spec=None, device='cpu', arms=DEFAULT_ARMS, K=8, steps=40,
+              max_rows=32, states_per_call=1, slots=DEFAULT_SLOTS, threads=None, allow_fresh=False, sid=None,
+              mem_fraction=None, H=H_MAX_S):
+    """Seconds per rollout step of ONE call at the planned packing (states_per_call heaviest states, rows <= max_rows)
+    on this device (excludes model loading; includes the CPU-side entry / rule work).  On CUDA also the peak memory
+    of the call and its linear extrapolation to the full horizon H (the rollout keeps per-step logs)."""
     torch = _torch()
-    if threads:
-        torch.set_num_threads(int(threads))
+    _device_setup(device, threads, mem_fraction)
     from wms import planapi as P
-    handle = P.load(checkpoint or None, map_spec=map_spec, device=device, max_rows=max_rows)
     if not checkpoint and not allow_fresh:
         raise ValueError('checkpoint required')
+    handle = P.load(checkpoint or None, map_spec=map_spec, device=device, max_rows=max_rows)
     exe = load_policy(u0, device=device)
     states = load_states(states_path, sids=[sid] if sid else None)
-    m = max(states, key=lambda r: len(r['all_cavs_t0']) + len(r['observed']['vehicles'])) if not sid else states[0]
-    arms_m = arms_for(m['cell'], arms)
-    per_k = max(1, max_rows // len(arms_m))
-    kk = min(int(K), per_k)
+    states = sorted(states, key=lambda r: -(len(r['all_cavs_t0']) + len(r['observed']['vehicles'])))
+    batch = _batches(states, states_per_call, slots)[0]
+    per_state = len(arms_for(batch[0]['cell'], arms))
+    kk = max(1, min(int(K), max_rows // max(1, per_state * len(batch))))
+    evaluate_states(handle, exe, batch, arms=arms, K=kk, H=2 * DT_S, slots=slots, max_rows=max_rows)   # warm-up
+    if device.startswith('cuda'):
+        torch.cuda.synchronize()
+    mem = {}
+    if device.startswith('cuda'):
+        torch.cuda.reset_peak_memory_stats()
+        base = torch.cuda.memory_allocated()
     t = time.time()
-    evaluate_state(handle, exe, m, arms=arms_m, K=kk, H=steps * DT_S, pad=pad, max_rows=max_rows)
+    res = evaluate_states(handle, exe, batch, arms=arms, K=kk, H=steps * DT_S, slots=slots, max_rows=max_rows)
     if device.startswith('cuda'):
         torch.cuda.synchronize()
     dt = (time.time() - t) / steps
-    return dict(sid=m['sid'], device=device, rows=kk * len(arms_m), steps=steps, s_per_step=round(dt, 4),
-                n_obs=len(m['all_cavs_t0']) + len(m['observed']['vehicles']), pad=pad)
+    if device.startswith('cuda'):
+        peak = torch.cuda.max_memory_allocated() - base
+        mem = dict(peak_gb=round(peak / 2 ** 30, 3), peak_gb_full_H=round(peak / 2 ** 30 * float(H) / (steps * DT_S), 2),
+                   note='linear in steps (per-step rollout logs); plan max_rows so peak_gb_full_H fits mem_fraction')
+    rows = sum(len(r['arms']) for r in res) * kk
+    return dict(sids=[m['sid'] for m in batch], device=device, rows=rows, draws_per_state=kk, steps=steps,
+                s_per_step=round(dt, 4), slots=res[0]['n_slots'], threads=threads, memory=mem)
 
 
 # ================================================================================ CLI
@@ -710,42 +861,34 @@ def main(argv=None):
     def common(p):
         p.add_argument('--states', required=True)
         p.add_argument('--checkpoint')
-        p.add_argument('--u0', required=True, help='speed-only MAPPO169 policy_00169.pt (sha d9042cc5)')
+        p.add_argument('--u0', help='speed-only MAPPO169 policy_00169.pt (sha d9042cc5)')
         p.add_argument('--map-spec')
         p.add_argument('--device', default='cpu')
-        p.add_argument('--arms', default=','.join(DEFAULT_ARMS))
-        p.add_argument('--K', type=int, default=4)
-        p.add_argument('--max-rows', type=int, default=40)
-        p.add_argument('--pad', type=int, default=DEFAULT_PAD)
+        p.add_argument('--arms', default=','.join(DEFAULT_ARMS), help="'auto' = the SUMO arms of each cell; "
+                                                                     "'auto,native' adds the horizon-check arm")
+        p.add_argument('--K', type=int, default=8)
+        p.add_argument('--H', type=float, default=H_MAX_S)
+        p.add_argument('--max-rows', type=int, default=32)
+        p.add_argument('--states-per-call', type=int, default=1)
+        p.add_argument('--slots', default=DEFAULT_SLOTS, help="'auto' (CELL_SLOTS per demand) or an int")
+        p.add_argument('--max-per-cell', type=int)
         p.add_argument('--threads', type=int)
+        p.add_argument('--mem-fraction', type=float, help='CUDA per-process memory cap (shared GPU)')
         p.add_argument('--allow-fresh', action='store_true', help='dry run with an untrained WM (never a result)')
     s = sub.add_parser('score', help='WM rollouts (u0 base + rule strategies), JSONL per start state, resumable')
     common(s)
     s.add_argument('--out', required=True)
-    s.add_argument('--H', type=float, default=H_MAX_S)
     s.add_argument('--seed', type=int, default=DEFAULT_SEED)
     s.add_argument('--sids')
     s.add_argument('--shard', help='i/n: this process scores states i, i+n, ...')
     s.add_argument('--limit', type=int)
-    s.add_argument('--max-per-cell', type=int)
-    c = sub.add_parser('cost', help='dry-run cost; --calibrate measures s/step on --device')
-    c.add_argument('--states', required=True)
-    c.add_argument('--arms', default=','.join(DEFAULT_ARMS))
-    c.add_argument('--K', type=int, default=4)
-    c.add_argument('--H', type=float, default=H_MAX_S)
-    c.add_argument('--max-rows', type=int, default=40)
+    c = sub.add_parser('cost', help='dry-run cost; --calibrate measures s/step of one call on --device')
+    common(c)
     c.add_argument('--s-per-step', type=float)
     c.add_argument('--workers', type=int, default=1)
-    c.add_argument('--max-per-cell', type=int)
+    c.add_argument('--parallel-efficiency', type=float, default=0.8)
     c.add_argument('--calibrate', action='store_true')
-    c.add_argument('--checkpoint')
-    c.add_argument('--u0')
-    c.add_argument('--map-spec')
-    c.add_argument('--device', default='cpu')
     c.add_argument('--steps', type=int, default=40)
-    c.add_argument('--pad', type=int, default=DEFAULT_PAD)
-    c.add_argument('--threads', type=int)
-    c.add_argument('--allow-fresh', action='store_true')
     a = ap.parse_args(argv)
     if a.cmd == 'states':
         print(json.dumps(build_states(a.tapes, a.out, cells=a.cells.split(','), t0=a.t0, ref_out=a.ref_out,
@@ -753,22 +896,29 @@ def main(argv=None):
         return
     arms = tuple(x for x in a.arms.split(',') if x)
     if a.cmd == 'score':
+        if not a.u0:
+            ap.error('--u0 is required')
         shard = tuple(int(x) for x in a.shard.split('/')) if a.shard else None
         print(json.dumps(score(a.states, a.out, checkpoint=a.checkpoint, u0=a.u0, map_spec=a.map_spec,
-                               device=a.device, arms=arms, K=a.K, H=a.H, seed=a.seed, pad=a.pad,
-                               max_rows=a.max_rows, sids=a.sids.split(',') if a.sids else None, shard=shard,
-                               threads=a.threads, allow_fresh=a.allow_fresh, limit=a.limit,
-                               max_per_cell=a.max_per_cell)))
+                               device=a.device, arms=arms, K=a.K, H=a.H, seed=a.seed, slots=a.slots,
+                               max_rows=a.max_rows, states_per_call=a.states_per_call,
+                               sids=a.sids.split(',') if a.sids else None, shard=shard, threads=a.threads,
+                               allow_fresh=a.allow_fresh, limit=a.limit, max_per_cell=a.max_per_cell,
+                               mem_fraction=a.mem_fraction)))
         return
     sps = a.s_per_step
     cal = None
     if a.calibrate:
+        if not a.u0:
+            ap.error('--u0 is required for --calibrate')
         cal = calibrate(a.states, checkpoint=a.checkpoint, u0=a.u0, map_spec=a.map_spec, device=a.device, arms=arms,
-                        K=a.K, steps=a.steps, max_rows=a.max_rows, pad=a.pad, threads=a.threads,
-                        allow_fresh=a.allow_fresh)
+                        K=a.K, steps=a.steps, max_rows=a.max_rows, states_per_call=a.states_per_call,
+                        slots=a.slots, threads=a.threads, allow_fresh=a.allow_fresh, mem_fraction=a.mem_fraction,
+                        H=a.H)
         sps = cal['s_per_step']
-    est = cost_estimate(a.states, arms=arms, K=a.K, H=a.H, max_rows=a.max_rows, s_per_step=sps, workers=a.workers,
-                        max_per_cell=a.max_per_cell)
+    est = cost_estimate(a.states, arms=arms, K=a.K, H=a.H, max_rows=a.max_rows, states_per_call=a.states_per_call,
+                        s_per_step=sps, workers=a.workers, parallel_efficiency=a.parallel_efficiency,
+                        max_per_cell=a.max_per_cell, slots=a.slots)
     print(json.dumps(dict(calibration=cal, estimate=est), indent=1))
 
 
