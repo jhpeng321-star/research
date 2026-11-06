@@ -1,5 +1,9 @@
 # Current route — WM-S readiness (2026-10-09)
 
+<!-- S-GROUPDIAG-closeout -->
+**2026-11-06, S-GROUPDIAG:** [Clean2 mechanism diagnosis](../runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md) prioritizes certified executable labels, earlier role-aware pair opportunities, complementary macros and sparse measured marginal credit. B's total benefit is essentially best-solo benefit, not group synergy. Preserve the registered u24 criterion and B/R symmetry; changed actions/rewards require a labelled successor. Existing mining/PLANFIX ownership must be consulted before follow-up.
+<!-- /S-GROUPDIAG-closeout -->
+
 <!-- S-DIAG-closeout -->
 **2026-11-06, S-DIAG:** [Clean1 evidence through final A9/B9/R9](../runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md) prioritizes production-consistent move actuation/credit, feasible joint opportunities and broader usable practice over blanket KL/imitation increases. Clean1's durable owner STOP remains authoritative. Consult existing clean2/plan-fix receipts before overlapping follow-up work; this zero-simulation analysis authorizes no dispatch.
 <!-- /S-DIAG-closeout -->

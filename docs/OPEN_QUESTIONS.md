@@ -1,4 +1,8 @@
 <!-- WM-S-open-questions-20261009 -->
+<!-- S-GROUPDIAG-closeout -->
+**2026-11-06, S-GROUPDIAG (mechanism partly answered):** [Clean2 analysis](../runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md) decomposes +726.400 benefit into +726.434 best-solo benefit and -0.034 synergy. Eight native synergistic lessons exist; projected executable labels remain uncertified. Open: full-window native oracle for all seven states, causal named-move attribution, and whether feasible complementary pair actions with measured marginal credit create positive synergy. No new physics or diagnostic-outcome training.
+<!-- /S-GROUPDIAG-closeout -->
+
 <!-- S-DIAG-closeout -->
 **2026-11-06, S-DIAG (partially answered):** [Clean1 diagnosis](../runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md) rules out none-collapse/dead residual and identifies weak, reversed instantaneous move actuation, concentrated supervision, feasibility limits and local-credit mismatch. Still open: causal move-versus-none physical benefit, exact identities of three usable CE contexts, and whether production-consistent actuation plus feasible diverse practice produces group-over-best-solo benefit. Final clean1 owner STOP retained; existing clean2/plan-fix/mining work must be consulted before any follow-up.
 <!-- /S-DIAG-closeout -->

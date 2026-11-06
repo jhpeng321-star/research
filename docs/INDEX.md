@@ -1,5 +1,9 @@
 # INDEX — current documents and superseded pointers
 
+<!-- S-GROUPDIAG-closeout -->
+**2026-11-06, S-GROUPDIAG completed:** [Clean2 research](../runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md), [resume/evidence receipt](../runs/active/C4-V7FT-20261017/S_GROUPDIAG_RESUME_RECEIPT_20261106.json). Member-level +726 decomposition, actual joint execution/F2, native versus executable synergy, reward credit, primary literature and six ranked one-day levers. Zero new physics/charges.
+<!-- /S-GROUPDIAG-closeout -->
+
 <!-- S-DIAG-closeout -->
 **2026-11-06, S-DIAG completed:** [Clean1 diagnosis](../runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md), [resume/evidence receipt](../runs/active/C4-V7FT-20261017/S_DIAG_RESUME_RECEIPT_20261106.json). All seven requested topics, u1–u9 history, matched physical outcomes and ranked levers; zero new simulation/charges. Final clean1 owner STOP supersedes the recovered u8 draft's continuation advice.
 <!-- /S-DIAG-closeout -->

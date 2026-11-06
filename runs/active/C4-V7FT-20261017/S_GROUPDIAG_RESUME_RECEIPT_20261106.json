@@ -1,0 +1,54 @@
+{
+  "schema": "sgroupdiag-resume/1",
+  "task_id": "S-GROUPDIAG",
+  "date": "2026-11-06",
+  "status": "completed_with_native_oracle_and_move_causal_limits",
+  "report": "runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md",
+  "report_sha256": "065592a20e0c5f6d87dd77cd8d5f90c53ebe6198a71bcada1da4cf70cf1c75f8",
+  "preserved_report_commit": "46885cc87298b04a522e3f00cae9ef9f9717fbc8",
+  "resume_note_commit": "ca0dc44c",
+  "evidence_cutoff_utc": "2026-11-05T14:25:50.065782+00:00",
+  "verification_command": "python -B E:/Temp/opencode/sgroup_verify.py",
+  "verification_result": "PASS: B/R matched branch arithmetic; 16 training tapes reconcile to B/u6; eight positive matched native teaching examples; 14-line summary and six ranked levers.",
+  "results": {
+    "B_total_benefit_veh_s": 726.399611565388,
+    "B_best_solo_benefit_veh_s": 726.4336855229116,
+    "B_synergy_veh_s": -0.03407395752357539,
+    "R_total_benefit_veh_s": -59.383381467674006,
+    "R_synergy_veh_s": -59.392844072477615,
+    "B_u6_decisions": 2097,
+    "B_u6_accepted_starts": 1205,
+    "B_u6_rejected_non_none": 0,
+    "B_u6_joint_starts": 96,
+    "B_u6_physically_joint_commitments": 93,
+    "B_u6_physically_joint_normal_commitments": 15,
+    "B_u6_physically_joint_practice_commitments": 78,
+    "B_admitted_native_examples": 8,
+    "B_admitted_native_mean_synergy_veh_s": 363.9803746404268
+  },
+  "local_capture_sha256": {
+    "sgroup_verify.py": "97ad0180c6e24f88ddc467d05190f430791e54eed05576b9a05460d28ba15f49",
+    "sgroup_next.jsonl": "8ada37376266c0012528d6b4cd599fab64cc3e230d148ebb384207021bd017c8",
+    "sgroup_diagmetrics.jsonl": "8311ba60076e58bf06c5b1e7e3cf43cb71f12c38a869f922d8bd5f77e1c3c650",
+    "sgroup_trainmetrics.jsonl": "f2a6ce3773b28578e95160524c09c06747408357769f3c717f76e775ad3043ed",
+    "sgroup_bankcompact.jsonl": "e1dac5bae9558c10cdaf6319712997e28a84ce213edb66b6122d9b279e8fc5fb",
+    "sgroup_nativepaired.jsonl": "7e10f47d59a35cf4a2088e93135c5989658733693ab063dc54116326313f6c25",
+    "sgroup_geometry.jsonl": "aaf36350618a073ba33f251538bffaa76a531da4cdc1a073a6988b36ceb3fee1",
+    "sgroup_finalmeta.jsonl": "4e78f495764749d84ad816bddb53b0eb512d6754aa226ba5456b72156f874221"
+  },
+  "resume_actions": {
+    "ssh_connections": 0,
+    "remote_commands": 0,
+    "simulation_seconds": 0,
+    "charges": 0,
+    "dispatches": 0,
+    "process_inspections_or_control": 0,
+    "restricted_path_or_hidden_truth_reads": 0
+  },
+  "limitations": [
+    "No complete full-window same-background native-plan synergy ceiling for all seven registered states.",
+    "Member-policy bundles, not isolated named-move causal ablations.",
+    "Native positive synergy does not certify projected executable macros.",
+    "Saved cutoff only; no current process health, live discretionary balance or u24 result established."
+  ]
+}

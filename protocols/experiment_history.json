@@ -27,6 +27,32 @@
   },
   "entries": [
     {
+      "id": "S-GROUPDIAG",
+      "date": "2026-11-06",
+      "family": "PL",
+      "name": "Clean2 group cooperation decomposition and coordination literature research",
+      "status": "completed_with_native_oracle_and_move_causal_limits",
+      "question": "Where does B's replicated u6 total benefit come from, why is group-over-best-single synergy absent, and which concrete coordination levers fit one day and the remaining budget?",
+      "changed_vars": "Read-only existing branch/member, move, training, bank and reward analysis plus literature research. Resume preserves completed report and validates saved captures; no run change.",
+      "comparators": "Common-state/base/background/CRN group and every member solo. Benefit=J_base-J_group; synergy=min(J_solo)-J_group, positive better. Equal-world mean with equal-state averaging within worlds.",
+      "matching_reuse": "Reuse complete replicated u6 B/R receipts, seven B group tapes and solos, all16 B/u6 training tapes, B/R u1-u9 updates and matched native-bank evidence. Preserve recovered report commit46885cc8 and independent verification commitca0dc44c; no recollection or redispatch.",
+      "budget_registered": "Owner S-GROUPDIAG: <=90min, cpuV read-only with bounded multiplexed SSH; no SUMO, charges, process interaction, restricted evaluation paths or hidden driver/population truth.",
+      "budget_actual": "Zero new sim-s, training, charges or process inspection/control. Resumed session used local saved captures only: zero SSH connections, remote commands or dispatches.",
+      "criteria_verdict": "B benefit+726.399612veh-s=best solo+726.433686 minus0.034074 synergy; 90.48% of net benefit in world986048, reproduced by ramp.22 solo. One joint macro offered/executed in seven diagnostic states. Training96 accepted joint starts,93 physically joint,78 in practice; zero rejected non-none starts. Eight admitted native lessons have positive matched-window synergy, but projected executable macros are not certified to retain it.",
+      "limitations": "No full-window same-background native oracle across all seven states; native and projected labels differ; member-policy bundles do not isolate ease_off causality. Legacy unequal-horizon gains are not synergy certificates. Saved u6/u1-u9 cutoff establishes neither current progress nor u24 verdict or live discretionary balance.",
+      "answers": "Benefit is essentially state-specific single-ramp-member control. Sparse feasible opportunities, lossy native-to-macro teaching and no second-helper counterfactual credit explain missing group synergy. Rank executable-label certification, role-aware opportunities, complementary pair macros and sparse measured credit; follow-up efficacy remains untested.",
+      "paths": ["runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md", "runs/active/C4-V7FT-20261017/S_GROUPDIAG_RESUME_RECEIPT_20261106.json"],
+      "structured": {
+        "record_kind": "analysis",
+        "execution_status": "completed",
+        "evidence_validity": "Existing ordinary TRAIN diagnostic and teaching receipts; matched branch/member arithmetic and physical exposure. Literature-informed levers are prospective, not new efficacy evidence.",
+        "scientific_verdict": "Positive total traffic benefit is not positive cooperation synergy. Native synergy exists, but useful executable complementary action, opportunity and aligned marginal credit are unproven links.",
+        "evidence_status": "integrity_receipt_verified",
+        "review_status": "Saved receipt arithmetic, all16 B/u6 training count reconciliation, eight native-positive lessons and artifact checks PASS. Resume receipt hashes bind report and saved captures. Scoped ledger/source and summary checks recorded separately; global pre-existing missing-path errors retained.",
+        "outcomes": []
+      }
+    },
+    {
       "id": "S-DIAG-CLEAN1-20261105",
       "date": "2026-11-06",
       "family": "PL",
@@ -46172,6 +46198,13 @@
   "source_verification": {
     "purpose": "Registered allowed sources for the separate source-verification mode. Consistency validation (validate) never reads these contents; verify-sources reads ONLY these registered paths, compares stored costs/differences/verdicts to the source fields, and writes protocols/source_verification_report.json with path, sha256, field locations and verification time. Sealed outcomes are never traversed.",
     "allowed_sources": [
+      {
+        "source_id": "SRC-SGROUPDIAG-RESUME",
+        "path": "runs/active/C4-V7FT-20261017/S_GROUPDIAG_RESUME_RECEIPT_20261106.json",
+        "entries": ["S-GROUPDIAG"],
+        "field_map": "Integrity/report binding only; group/solo arithmetic and physical exposure independently reconciled by saved task verifier, not generic physical outcome mapping",
+        "sha256_registered": "9a223a85cd8d6b123ed4285b453f1abe8a8c8bd0963084f4bc07ae60a060ae19"
+      },
       {
         "source_id": "SRC-SDIAG-CLEAN1-RESUME",
         "path": "runs/active/C4-V7FT-20261017/S_DIAG_RESUME_RECEIPT_20261106.json",

@@ -1,3 +1,7 @@
+<!-- S-GROUPDIAG-closeout -->
+**2026-11-06, S-GROUPDIAG:** [Clean2 group-cooperation research](runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md): B's +726.400 veh-s is reproduced by state-specific best solos (+726.434); synergy -0.034. Joint opportunities, executable teacher fidelity and second-helper credit are the key gaps. Existing receipts/literature only; zero new SUMO or charges.
+<!-- /S-GROUPDIAG-closeout -->
+
 <!-- S-DIAG-closeout -->
 **2026-11-06, S-DIAG:** [Clean1 diagnosis through final u9](runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md): B is not stuck at none; sampled named braking offsets have weak, reversed instantaneous actuation. Bank/practice concentration and credit mismatch constrain cooperation. Clean1 owner STOP preserved; zero new SUMO, training or charges.
 <!-- /S-DIAG-closeout -->
