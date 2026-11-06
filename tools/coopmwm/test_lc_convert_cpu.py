@@ -36,11 +36,12 @@ PROBE_SHA = {                                   # sha256 of the probe sources (r
 }
 POPULATION_SHA = '6af5ee232dd99f5ae0c142fdaf1b7de50f23f04d58f70def61482b76f4b2e6c6'
 # Known writer differences on the LOG streams (lc_runtime edge-end deferral, v*2 + 10 m of the closing
-# lane end): COOPKINDS zipper zip_merge changeLane(1) in its last seconds before the fallback.
+# lane end): the zip_merge member's last changeLane(1) request before its fallback position.
+ZIP_ORDER = 'pg2v_pg2_D3200_p60_s989017_t450_zipper_order_9cdc294c'
+ZIPPER = 'ckv_ck_D2800_p60_s989400_t880_B_zipper_d0190fb5'
 LOG_WRITER_GUARD = {
-    'ckv_ck_D2800_p60_s989400_t880_B_zipper_d0190fb5#r1': [(42, 'main.563'), (43, 'main.563')],
-    'ckv_ck_D2800_p60_s989400_t880_B_zipper_d0190fb5#r2': [(42, 'main.563'), (43, 'main.563')],
-    'ckv_ck_D2800_p60_s989400_t880_B_zipper_d0190fb5#r3': [(43, 'main.563'), (44, 'main.563')],
+    f'{ZIP_ORDER}#r1': [(58, 'main.288')], f'{ZIP_ORDER}#r2': [(58, 'main.288')], f'{ZIP_ORDER}#r3': [(58, 'main.288')],
+    f'{ZIPPER}#r1': [(43, 'main.563')], f'{ZIPPER}#r2': [(43, 'main.563')], f'{ZIPPER}#r3': [(44, 'main.563')],
 }
 WRITER_CLASSES = {'writer_guard': 'deferred_edge_end', 'writer_refused': 'refused_not_allowed'}
 

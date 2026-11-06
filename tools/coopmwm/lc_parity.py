@@ -585,9 +585,11 @@ class LogStream:
         return v
 
     def _positions(self, T, v):
+        """Monotone positions inside the per-second tube [L, U]: the start follows the nominal path
+        (scale/shift fit, x_t0 when known), then the TAUT STRING through the tube (piecewise-constant
+        speed that changes only where a constraint forces it)."""
         n = T.n if T.gone is None else T.gone
-        lo, hi = T.lo[:n], T.hi[:n]
-        L, U = lo[:], hi[:]
+        L, U = T.lo[:n], T.hi[:n]
         for el in range(1, n):
             L[el] = max(L[el], L[el-1])
         for el in range(n-2, -1, -1):
@@ -600,28 +602,20 @@ class LogStream:
         for el in range(1, n):
             d.append(d[-1]+round(50.0*(max(v[el-1], 0.0)+max(v[el], 0.0))))
         x0 = None if T.x_t0 is None else round(float(T.x_t0)*100)
-        chosen = None
-        for s in (1.0, .8, .65, .5, .35, .25, .15, .1, .05, .02, 0.0):
-            dd = [round(s*x) for x in d]
+        start, scale = None, None
+        for sc in (1.0, .8, .65, .5, .35, .25, .15, .1, .05, .02, 0.0):
+            dd = [round(sc*x) for x in d]
             smin = max(L[el]-dd[el] for el in range(n))
             smax = min(U[el]-dd[el] for el in range(n))
             if smin <= smax:
-                shift = (smin+smax)//2 if x0 is None else min(max(x0, smin), smax)
-                chosen = (s, dd, shift)
+                start, scale = ((smin+smax)//2 if x0 is None else min(max(x0, smin), smax)), sc
                 break
-        if chosen is None:
-            dd = d
-            shift = x0 if x0 is not None else L[0]
-            chosen = (None, dd, shift)
-            self.notes.append(f'{T.vid}: nominal path clamped')
-        s, dd, shift = chosen
-        xs = []
-        for el in range(n):
-            x = min(max(shift+dd[el], L[el]), U[el])
-            if xs and x < xs[-1]:
-                x = xs[-1]
-            xs.append(int(x))
-        return xs, s
+        if start is None:
+            start = x0 if x0 is not None else L[0]
+            self.notes.append(f'{T.vid}: nominal path does not fit the tube (taut string from the start)')
+        start = min(max(start, L[0]), U[0])
+        end_slope = 100.0*max(v[n-1], 0.0)*(scale if scale is not None else 1.0)
+        return _taut_string(L, U, start, end_slope), scale
 
     def _solve(self):
         self.x, self.v, self.lanes, self.scale = {}, {}, {}, {}
@@ -629,6 +623,7 @@ class LogStream:
         first = [vid for vid in self.tracks if vid not in {m['id'] for m in yields}]
         for vid in first:
             self._solve_track(vid)
+        self._separate_tracks(first)
         for m in yields:
             self._zip_band(m)
             self._solve_track(m['id'])
@@ -653,8 +648,14 @@ class LogStream:
         v = self._vnom(T)
         xs, s = self._positions(T, v)
         self.x[vid], self.scale[vid] = xs, s
-        if s not in (None, 1.0):
-            v = [vv*s if T.vpin[el] is None and T.vrng[el] is None else vv for el, vv in enumerate(v)]
+        for el in range(len(xs)):
+            if T.vpin[el] is not None:
+                continue
+            k = el if el+1 < len(xs) else el-1
+            slope = (xs[k+1]-xs[k])/100.0 if 0 <= k < len(xs)-1 else v[el]
+            if T.vrng[el] is not None:
+                slope = min(max(slope, T.vrng[el][0]), T.vrng[el][1])
+            v[el] = slope
         self.v[vid] = [round(min(max(vv, 0.0), V_MAX), 4) for vv in v]
         lanes, cur = [], T.lane0
         for el in range(T.n):
@@ -662,6 +663,42 @@ class LogStream:
                 cur = T.lane[el]
             lanes.append(cur)
         self.lanes[vid] = lanes
+
+    def _separate_tracks(self, vids, min_gap=6.0):
+        """SUMO keeps same-lane vehicles apart: a lane-constrained member never overlaps / passes another
+        member in the same approach lane. Front-to-back (x at el 0), each member is re-solved with
+        x <= x_ahead - min_gap at every second both are planned in that lane on the approach (seconds
+        where it must already be past the drop excluded); a pair whose constraints are infeasible is
+        left to the lane-relocation repair (noted)."""
+        drop = cm_lt(self.geo.drop)
+        cons = [v for v in vids if any(lane is not None for lane in self.tracks[v].lane)]
+        order = sorted(cons, key=lambda v: -self.x[v][0])
+        for i, b in enumerate(order):
+            T = self.tracks[b]
+            saved = (T.lo[:], T.hi[:])
+            past = list(T.lo)                       # forward running max: must already be past the drop
+            for el in range(1, len(past)):
+                past[el] = max(past[el], past[el-1])
+            changed = False
+            for a in order[:i]:
+                A = self.tracks[a]
+                for el in range(min(len(self.x[a]), len(self.x[b]))):
+                    if not (A.live(el) and T.live(el)) or self.x[a][el] > drop:
+                        continue
+                    if self.lanes[a][el] != self.lanes[b][el] or past[el] > drop:
+                        continue
+                    lim = self.x[a][el]-round(min_gap*100)
+                    if T.hi[el] > lim:
+                        T.hi[el] = lim
+                        changed = changed or self.x[b][el] > lim
+            if not changed:
+                continue
+            try:
+                self._solve_track(b)
+            except StreamError:
+                T.lo, T.hi = saved
+                self._solve_track(b)
+                self.notes.append(f'{b}: same-lane separation infeasible (lane relocation repair only)')
 
     def _zip_band(self, m):
         """Position band of a zip_yield member around its partner in which some plausible own speed
@@ -707,7 +744,7 @@ class LogStream:
                 v = round(min(max(v, 0.0), V_MAX+1.0), 4)
             self.v[vid][el] = v
 
-    def _repair_overlaps(self, min_gap=7.5):
+    def _repair_overlaps(self, min_gap=6.0):
         """No same-lane overlap involving a CAV (SUMO never produces one; the env sensor refuses it):
         move a vehicle whose lane is unconstrained at that second to a free lane."""
         geo = self.geo
@@ -813,6 +850,47 @@ class LogStream:
             for k, v in enumerate(vids):
                 pid = f'~ph.{v}.{el}'
                 self.extra[el][pid] = (int(ph[v]), tl[v], round(float(u[k]), 4), False)
+
+
+def _taut_string(L, U, x0, end_slope):
+    """Shortest non-decreasing path x[0..n-1] with x[0] = x0 inside L <= x <= U (funnel algorithm):
+    piecewise-constant slope, bending only at binding bounds; the free end takes the slope closest to
+    end_slope. Integer cm in, integer cm out."""
+    n = len(L)
+    xs = [0.0]*n
+    xs[0] = float(x0)
+    i, xi = 0, float(x0)
+    while i < n-1:
+        lo, hi, jlo, jhi = 0.0, math.inf, None, None
+        bend = None
+        for j in range(i+1, n):
+            s_lo, s_hi = (L[j]-xi)/(j-i), (U[j]-xi)/(j-i)
+            if s_lo > hi:
+                bend = (jhi, hi)
+                break
+            if s_hi < lo:
+                bend = (jlo, lo) if jlo is not None else (j, max(s_hi, 0.0))
+                break
+            if s_lo > lo:
+                lo, jlo = s_lo, j
+            if s_hi < hi:
+                hi, jhi = s_hi, j
+        if bend is None:
+            slope = min(max(end_slope, lo), hi)
+            for k in range(i+1, n):
+                xs[k] = xi+slope*(k-i)
+            break
+        j, slope = bend
+        for k in range(i+1, j+1):
+            xs[k] = xi+slope*(k-i)
+        i, xi = j, xs[j]
+    out = []
+    for k in range(n):
+        x = min(max(int(round(xs[k])), L[k]), U[k])
+        if out and x < out[-1]:
+            x = out[-1]
+        out.append(x)
+    return out
 
 
 def _first_overlap(rows, min_gap):
@@ -1181,12 +1259,33 @@ def check_row(name, idx, row, *, n_random=N_RANDOM, desc=None):
                       log_check=log['log_check'], error=log.get('error'),
                       mismatches=log['mismatches'][:12], n_mismatches=len(log['mismatches']),
                       n_ticks=log.get('n_ticks'), probe_calls=len(log.get('probe_calls') or ()),
-                      our_calls=len(log.get('our_calls') or ()))
+                      our_calls=len(log.get('our_calls') or ()), receipts=log.get('receipts_count') or {},
+                      kinds=dict(Counter(f"{m['cls']}:{m['kind']}" for m in log['mismatches'])),
+                      probe_kinds=dict(Counter(c[2] for c in log.get('probe_calls') or ())),
+                      notes=note_counts((log.get('log_check') or {}).get('notes') or ()))
     rec['random'] = [dict(seed=r['seed'], passed=r['passed'], writer_only=r['writer_only'], classes=r['classes'],
                           mismatches=r['mismatches'][:6], n_mismatches=len(r['mismatches']), n_ticks=r['n_ticks'],
-                          probe_calls=len(r['probe_calls']), our_calls=len(r['our_calls']))
+                          probe_calls=len(r['probe_calls']), our_calls=len(r['our_calls']),
+                          receipts=r.get('receipts_count') or {},
+                          kinds=dict(Counter(f"{m['cls']}:{m['kind']}" for m in r['mismatches'])),
+                          probe_kinds=dict(Counter(c[2] for c in r['probe_calls'])))
                      for r in runs[1:]]
     return rec
+
+
+def note_counts(notes):
+    """Log-stream reconstruction notes by category (plausibility receipts, not parity failures)."""
+    out = Counter()
+    for n in notes:
+        if 'unresolved same-lane overlap' in n:
+            out['overlap_seconds'] += 1
+        elif 'separation infeasible' in n:
+            out['separation_infeasible_tracks'] += 1
+        elif 'does not fit the tube' in n:
+            out['nominal_path_misfit_tracks'] += 1
+        else:
+            out['other'] += 1
+    return dict(out)
 
 
 def report(n_random=N_RANDOM, rows=None):
@@ -1199,8 +1298,14 @@ def report(n_random=N_RANDOM, rows=None):
                                            log_check_pass=0, parity_random_pass=0,
                                            parity_random_writer_only=0, random_streams=0,
                                            random_streams_pass=0, refusals=[], registered_violations=0,
-                                           mismatch_classes=Counter(), mismatch_kinds=Counter()))
+                                           mismatch_classes=Counter(), log_mismatch_kinds=Counter(),
+                                           random_mismatch_kinds=Counter(),
+                                           log_probe_call_kinds=Counter(), random_probe_call_kinds=Counter(),
+                                           log_receipts=Counter(), random_receipts=Counter(),
+                                           log_stream_notes=Counter(), dither_rows=0, dither_vehicles=0))
         f['rows'] += 1
+        f['dither_rows'] += bool(rec['dither_excluded'])
+        f['dither_vehicles'] += len(rec['dither_excluded'])
         if not rec['converted']:
             f['refusals'].append(dict(verification_id=rec['verification_id'], key=rec['key'],
                                       reason=rec['refusal']))
@@ -1219,10 +1324,19 @@ def report(n_random=N_RANDOM, rows=None):
             r['passed'] for r in rnd)
         for r in [log]+rnd:
             f['mismatch_classes'].update(r['classes'])
-            f['mismatch_kinds'].update(f"{m['cls']}:{m['kind']}" for m in r['mismatches'])
+        f['log_mismatch_kinds'].update(log.get('kinds') or {})
+        for r in rnd:
+            f['random_mismatch_kinds'].update(r['kinds'])
+        f['log_probe_call_kinds'].update(log.get('probe_kinds') or {})
+        f['log_receipts'].update(log.get('receipts') or {})
+        f['log_stream_notes'].update(log.get('notes') or {})
+        for r in rnd:
+            f['random_probe_call_kinds'].update(r['probe_kinds'])
+            f['random_receipts'].update(r['receipts'])
     for f in per_file.values():
-        f['mismatch_classes'] = dict(f['mismatch_classes'])
-        f['mismatch_kinds'] = dict(f['mismatch_kinds'])
+        for k, v in list(f.items()):
+            if isinstance(v, Counter):
+                f[k] = dict(v)
     writer = [dict(key=r['key'], stream='log', el=m['el'], vid=m['vid'], cls=m['cls'], reason=m.get('reason'))
               for r in records if r.get('converted') for m in r['log']['mismatches'] if m['cls'] != 'mismatch']
     other = [dict(key=r['key'], stream=s, mismatch=m)
@@ -1233,15 +1347,37 @@ def report(n_random=N_RANDOM, rows=None):
     totals = Counter()
     for f in per_file.values():
         for k in ('rows', 'converted', 'parity_log_pass', 'parity_log_writer_only', 'log_check_pass',
-                  'parity_random_pass', 'parity_random_writer_only', 'random_streams', 'random_streams_pass'):
+                  'parity_random_pass', 'parity_random_writer_only', 'random_streams', 'random_streams_pass',
+                  'dither_rows', 'dither_vehicles'):
             totals[k] += f[k]
+    rnd_cls = Counter()
+    for f in per_file.values():
+        rnd_cls.update(f['random_mismatch_kinds'])
+    lcm = per_file.get('LCMOVES_MOVES_B', {})
+    known = dict(
+        persistent_lane_hold=dict(
+            note=('LCMOVES prog re-issues changeLane(target, 2 s) every second while armed, also in the '
+                  'target lane; lc_runtime (c4/lcexec-rt 40669eb6, merged) issues a current-lane request as '
+                  "changeLane to the current SUMO index (receipt 'held')"),
+            lcmoves_log_held_seconds=(lcm.get('log_receipts') or {}).get('held', 0),
+            all_log_held_seconds=sum((f['log_receipts'] or {}).get('held', 0) for f in per_file.values())),
+        writer_guard=dict(note='env edge-end deferral (v*duration + 10 m of the current lane end) drops a probe '
+                               'changeLane near the drop (zip_merge / merge_early out of the closing lane)',
+                          log_seconds=[w for w in writer if w['cls'] == 'writer_guard'],
+                          random_seconds=sum(v for k, v in rnd_cls.items() if k.startswith('writer_guard'))),
+        writer_refused=dict(note='env adjacent-only rule refuses a non-adjacent LCEXEC lane request (probe: '
+                                 'changeLane(target) two lanes away, SUMO changes stepwise); random streams only',
+                            log_seconds=[w for w in writer if w['cls'] == 'writer_refused'],
+                            random_seconds=sum(v for k, v in rnd_cls.items() if k.startswith('writer_refused'))),
+        dithers=dict(note='non-member pulse vehicles excluded from the program and from both parity sides',
+                     rows=totals['dither_rows'], vehicles=totals['dither_vehicles']))
     return dict(schema='lcexec-parity-report-v1', n_random=n_random,
                 normalisations=['N1 setSpeed(-1) without a live speed command dropped on both sides',
                                 "N2 our setSpeed(-1) at the first non-commanded second == the probe's slowDown expiry"],
                 fixtures=dict(manifest_schema=manifest()['schema'],
                               rows={k: v['sha256'] for k, v in manifest()['rows'].items()},
                               probes={k: v['sha256'] for k, v in manifest()['probes'].items()}),
-                totals=dict(totals), per_file=per_file, writer_log_mismatches=writer[:200],
+                totals=dict(totals), known_items=known, per_file=per_file, writer_log_mismatches=writer[:200],
                 n_writer_log_mismatches=len(writer), other_mismatches=other[:100],
                 n_other_mismatches=len(other), rows=[_slim(r) for r in records])
 
@@ -1255,7 +1391,8 @@ def _slim(rec):
                           log_check_diffs=(lg['log_check'] or {}).get('diffs', [])[:4],
                           log_check_notes=(lg['log_check'] or {}).get('notes', [])[:4],
                           accel_max_err=(lg['log_check'] or {}).get('accel_max_err'), error=lg.get('error'),
-                          n_ticks=lg['n_ticks'], probe_calls=lg['probe_calls'], our_calls=lg['our_calls'])
+                          n_ticks=lg['n_ticks'], probe_calls=lg['probe_calls'], our_calls=lg['our_calls'],
+                          receipts=lg.get('receipts'), notes=lg.get('notes'))
         out['random'] = [dict(seed=r['seed'], passed=r['passed'], writer_only=r['writer_only'], classes=r['classes'])
                          for r in rec['random']]
     return out
@@ -1275,7 +1412,8 @@ def main(argv=None):
 
 
 __all__ = ['run', 'compare', 'build_stream', 'LogStream', 'RandomStream', 'StreamError', 'probe', 'all_rows',
-           'fixture_rows', 'check_row', 'report', 'probe_members', 'manifest', 'dither_ids', 'move_of']
+           'fixture_rows', 'check_row', 'report', 'probe_members', 'manifest', 'dither_ids', 'move_of',
+           'note_counts']
 
 if __name__ == '__main__':
     raise SystemExit(main())

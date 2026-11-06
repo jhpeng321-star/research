@@ -29,6 +29,77 @@
    "PLANGEN_MOVES_R": "7c43b502a1d3f9eb5d023ddc1576a79dd8c4bae63ab4b4b72384299eb9d7acea"
   }
  },
+ "known_items": {
+  "dithers": {
+   "note": "non-member pulse vehicles excluded from the program and from both parity sides",
+   "rows": 92,
+   "vehicles": 92
+  },
+  "persistent_lane_hold": {
+   "all_log_held_seconds": 307,
+   "lcmoves_log_held_seconds": 307,
+   "note": "LCMOVES prog re-issues changeLane(target, 2 s) every second while armed, also in the target lane; lc_runtime (c4/lcexec-rt 40669eb6, merged) issues a current-lane request as changeLane to the current SUMO index (receipt 'held')"
+  },
+  "writer_guard": {
+   "log_seconds": [
+    {
+     "cls": "writer_guard",
+     "el": 58,
+     "key": "pg2v_pg2_D3200_p60_s989017_t450_zipper_order_9cdc294c#r1",
+     "reason": "env edge-end deferral (v*duration + 10 m of the lane end)",
+     "stream": "log",
+     "vid": "main.288"
+    },
+    {
+     "cls": "writer_guard",
+     "el": 58,
+     "key": "pg2v_pg2_D3200_p60_s989017_t450_zipper_order_9cdc294c#r2",
+     "reason": "env edge-end deferral (v*duration + 10 m of the lane end)",
+     "stream": "log",
+     "vid": "main.288"
+    },
+    {
+     "cls": "writer_guard",
+     "el": 58,
+     "key": "pg2v_pg2_D3200_p60_s989017_t450_zipper_order_9cdc294c#r3",
+     "reason": "env edge-end deferral (v*duration + 10 m of the lane end)",
+     "stream": "log",
+     "vid": "main.288"
+    },
+    {
+     "cls": "writer_guard",
+     "el": 43,
+     "key": "ckv_ck_D2800_p60_s989400_t880_B_zipper_d0190fb5#r1",
+     "reason": "env edge-end deferral (v*duration + 10 m of the lane end)",
+     "stream": "log",
+     "vid": "main.563"
+    },
+    {
+     "cls": "writer_guard",
+     "el": 43,
+     "key": "ckv_ck_D2800_p60_s989400_t880_B_zipper_d0190fb5#r2",
+     "reason": "env edge-end deferral (v*duration + 10 m of the lane end)",
+     "stream": "log",
+     "vid": "main.563"
+    },
+    {
+     "cls": "writer_guard",
+     "el": 44,
+     "key": "ckv_ck_D2800_p60_s989400_t880_B_zipper_d0190fb5#r3",
+     "reason": "env edge-end deferral (v*duration + 10 m of the lane end)",
+     "stream": "log",
+     "vid": "main.563"
+    }
+   ],
+   "note": "env edge-end deferral (v*duration + 10 m of the current lane end) drops a probe changeLane near the drop (zip_merge / merge_early out of the closing lane)",
+   "random_seconds": 31
+  },
+  "writer_refused": {
+   "log_seconds": [],
+   "note": "env adjacent-only rule refuses a non-adjacent LCEXEC lane request (probe: changeLane(target) two lanes away, SUMO changes stepwise); random streams only",
+   "random_seconds": 1754
+  }
+ },
  "n_other_mismatches": 0,
  "n_random": 3,
  "n_writer_log_mismatches": 6,
@@ -40,19 +111,51 @@
  "per_file": {
   "COOPKINDS_MOVES_B": {
    "converted": 18,
+   "dither_rows": 12,
+   "dither_vehicles": 12,
    "log_check_pass": 18,
-   "mismatch_classes": {
-    "writer_guard": 18,
-    "writer_refused": 631
+   "log_mismatch_kinds": {
+    "writer_guard:changeLane": 3
    },
-   "mismatch_kinds": {
-    "writer_guard:changeLane": 18,
-    "writer_refused:changeLane": 107
+   "log_probe_call_kinds": {
+    "changeLane": 3260,
+    "setLaneChangeMode": 113,
+    "setSpeed": 56,
+    "setTau": 30,
+    "slowDown": 150
+   },
+   "log_receipts": {
+    "deferred_edge_end": 3,
+    "issued": 3257
+   },
+   "log_stream_notes": {
+    "nominal_path_misfit_tracks": 11,
+    "overlap_seconds": 3
+   },
+   "mismatch_classes": {
+    "writer_guard": 15,
+    "writer_refused": 631
    },
    "parity_log_pass": 15,
    "parity_log_writer_only": 3,
    "parity_random_pass": 6,
    "parity_random_writer_only": 12,
+   "random_mismatch_kinds": {
+    "writer_guard:changeLane": 12,
+    "writer_refused:changeLane": 631
+   },
+   "random_probe_call_kinds": {
+    "changeLane": 2776,
+    "setLaneChangeMode": 261,
+    "setSpeed": 104,
+    "setTau": 49,
+    "slowDown": 180
+   },
+   "random_receipts": {
+    "deferred_edge_end": 12,
+    "issued": 2133,
+    "refused_not_allowed": 631
+   },
    "random_streams": 54,
    "random_streams_pass": 30,
    "refusals": [],
@@ -61,17 +164,42 @@
   },
   "LCMOVES_MOVES_B": {
    "converted": 3,
+   "dither_rows": 2,
+   "dither_vehicles": 2,
    "log_check_pass": 3,
+   "log_mismatch_kinds": {},
+   "log_probe_call_kinds": {
+    "changeLane": 316,
+    "setLaneChangeMode": 18,
+    "setSpeed": 9,
+    "slowDown": 9
+   },
+   "log_receipts": {
+    "held": 307,
+    "issued": 9
+   },
+   "log_stream_notes": {},
    "mismatch_classes": {
     "writer_refused": 127
-   },
-   "mismatch_kinds": {
-    "writer_refused:changeLane": 18
    },
    "parity_log_pass": 3,
    "parity_log_writer_only": 0,
    "parity_random_pass": 0,
    "parity_random_writer_only": 3,
+   "random_mismatch_kinds": {
+    "writer_refused:changeLane": 127
+   },
+   "random_probe_call_kinds": {
+    "changeLane": 406,
+    "setLaneChangeMode": 44,
+    "setSpeed": 17,
+    "slowDown": 309
+   },
+   "random_receipts": {
+    "held": 110,
+    "issued": 169,
+    "refused_not_allowed": 127
+   },
    "random_streams": 9,
    "random_streams_pass": 6,
    "refusals": [],
@@ -80,13 +208,29 @@
   },
   "LOWCAV_MOVES_B": {
    "converted": 12,
+   "dither_rows": 8,
+   "dither_vehicles": 8,
    "log_check_pass": 12,
+   "log_mismatch_kinds": {},
+   "log_probe_call_kinds": {
+    "setLaneChangeMode": 60,
+    "setSpeed": 30,
+    "slowDown": 2290
+   },
+   "log_receipts": {},
+   "log_stream_notes": {},
    "mismatch_classes": {},
-   "mismatch_kinds": {},
    "parity_log_pass": 12,
    "parity_log_writer_only": 0,
    "parity_random_pass": 12,
    "parity_random_writer_only": 0,
+   "random_mismatch_kinds": {},
+   "random_probe_call_kinds": {
+    "setLaneChangeMode": 164,
+    "setSpeed": 78,
+    "slowDown": 3442
+   },
+   "random_receipts": {},
    "random_streams": 36,
    "random_streams_pass": 36,
    "refusals": [],
@@ -95,13 +239,31 @@
   },
   "NEWMAP_MOVES_B": {
    "converted": 27,
+   "dither_rows": 18,
+   "dither_vehicles": 18,
    "log_check_pass": 27,
+   "log_mismatch_kinds": {},
+   "log_probe_call_kinds": {
+    "setLaneChangeMode": 150,
+    "setSpeed": 75,
+    "slowDown": 6350
+   },
+   "log_receipts": {},
+   "log_stream_notes": {
+    "overlap_seconds": 3
+   },
    "mismatch_classes": {},
-   "mismatch_kinds": {},
    "parity_log_pass": 27,
    "parity_log_writer_only": 0,
    "parity_random_pass": 27,
    "parity_random_writer_only": 0,
+   "random_mismatch_kinds": {},
+   "random_probe_call_kinds": {
+    "setLaneChangeMode": 427,
+    "setSpeed": 210,
+    "slowDown": 8573
+   },
+   "random_receipts": {},
    "random_streams": 81,
    "random_streams_pass": 81,
    "refusals": [],
@@ -110,13 +272,29 @@
   },
   "NEWMAP_MOVES_R": {
    "converted": 3,
+   "dither_rows": 2,
+   "dither_vehicles": 2,
    "log_check_pass": 3,
+   "log_mismatch_kinds": {},
+   "log_probe_call_kinds": {
+    "setLaneChangeMode": 18,
+    "setSpeed": 9,
+    "slowDown": 499
+   },
+   "log_receipts": {},
+   "log_stream_notes": {},
    "mismatch_classes": {},
-   "mismatch_kinds": {},
    "parity_log_pass": 3,
    "parity_log_writer_only": 0,
    "parity_random_pass": 3,
    "parity_random_writer_only": 0,
+   "random_mismatch_kinds": {},
+   "random_probe_call_kinds": {
+    "setLaneChangeMode": 41,
+    "setSpeed": 14,
+    "slowDown": 1161
+   },
+   "random_receipts": {},
    "random_streams": 9,
    "random_streams_pass": 9,
    "refusals": [],
@@ -125,19 +303,52 @@
   },
   "PLANGEN2_MOVES_B": {
    "converted": 24,
+   "dither_rows": 16,
+   "dither_vehicles": 16,
    "log_check_pass": 24,
+   "log_mismatch_kinds": {
+    "writer_guard:changeLane": 3
+   },
+   "log_probe_call_kinds": {
+    "changeLane": 676,
+    "setLaneChangeMode": 138,
+    "setSpeed": 69,
+    "setTau": 12,
+    "slowDown": 2756
+   },
+   "log_receipts": {
+    "deferred_edge_end": 3,
+    "issued": 673
+   },
+   "log_stream_notes": {
+    "nominal_path_misfit_tracks": 23,
+    "overlap_seconds": 9,
+    "separation_infeasible_tracks": 6
+   },
    "mismatch_classes": {
-    "writer_guard": 19,
+    "writer_guard": 22,
     "writer_refused": 235
    },
-   "mismatch_kinds": {
-    "writer_guard:changeLane": 19,
-    "writer_refused:changeLane": 36
-   },
-   "parity_log_pass": 24,
-   "parity_log_writer_only": 0,
+   "parity_log_pass": 21,
+   "parity_log_writer_only": 3,
    "parity_random_pass": 16,
    "parity_random_writer_only": 8,
+   "random_mismatch_kinds": {
+    "writer_guard:changeLane": 19,
+    "writer_refused:changeLane": 235
+   },
+   "random_probe_call_kinds": {
+    "changeLane": 1779,
+    "setLaneChangeMode": 333,
+    "setSpeed": 147,
+    "setTau": 20,
+    "slowDown": 4728
+   },
+   "random_receipts": {
+    "deferred_edge_end": 19,
+    "issued": 1525,
+    "refused_not_allowed": 235
+   },
    "random_streams": 72,
    "random_streams_pass": 58,
    "refusals": [],
@@ -146,17 +357,44 @@
   },
   "PLANGEN2_MOVES_R": {
    "converted": 18,
+   "dither_rows": 12,
+   "dither_vehicles": 12,
    "log_check_pass": 18,
+   "log_mismatch_kinds": {},
+   "log_probe_call_kinds": {
+    "changeLane": 1790,
+    "setLaneChangeMode": 96,
+    "setSpeed": 48,
+    "slowDown": 2727
+   },
+   "log_receipts": {
+    "issued": 1790
+   },
+   "log_stream_notes": {
+    "nominal_path_misfit_tracks": 15,
+    "overlap_seconds": 21,
+    "separation_infeasible_tracks": 6
+   },
    "mismatch_classes": {
     "writer_refused": 761
-   },
-   "mismatch_kinds": {
-    "writer_refused:changeLane": 102
    },
    "parity_log_pass": 18,
    "parity_log_writer_only": 0,
    "parity_random_pass": 11,
    "parity_random_writer_only": 7,
+   "random_mismatch_kinds": {
+    "writer_refused:changeLane": 761
+   },
+   "random_probe_call_kinds": {
+    "changeLane": 1508,
+    "setLaneChangeMode": 247,
+    "setSpeed": 103,
+    "slowDown": 3413
+   },
+   "random_receipts": {
+    "issued": 747,
+    "refused_not_allowed": 761
+   },
    "random_streams": 54,
    "random_streams_pass": 37,
    "refusals": [],
@@ -165,13 +403,31 @@
   },
   "PLANGEN_MOVES_B": {
    "converted": 18,
+   "dither_rows": 12,
+   "dither_vehicles": 12,
    "log_check_pass": 18,
+   "log_mismatch_kinds": {},
+   "log_probe_call_kinds": {
+    "setLaneChangeMode": 96,
+    "setSpeed": 48,
+    "slowDown": 3629
+   },
+   "log_receipts": {},
+   "log_stream_notes": {
+    "overlap_seconds": 3
+   },
    "mismatch_classes": {},
-   "mismatch_kinds": {},
    "parity_log_pass": 18,
    "parity_log_writer_only": 0,
    "parity_random_pass": 18,
    "parity_random_writer_only": 0,
+   "random_mismatch_kinds": {},
+   "random_probe_call_kinds": {
+    "setLaneChangeMode": 258,
+    "setSpeed": 134,
+    "slowDown": 4836
+   },
+   "random_receipts": {},
    "random_streams": 54,
    "random_streams_pass": 54,
    "refusals": [],
@@ -180,13 +436,29 @@
   },
   "PLANGEN_MOVES_R": {
    "converted": 15,
+   "dither_rows": 10,
+   "dither_vehicles": 10,
    "log_check_pass": 15,
+   "log_mismatch_kinds": {},
+   "log_probe_call_kinds": {
+    "setLaneChangeMode": 72,
+    "setSpeed": 36,
+    "slowDown": 2607
+   },
+   "log_receipts": {},
+   "log_stream_notes": {},
    "mismatch_classes": {},
-   "mismatch_kinds": {},
    "parity_log_pass": 15,
    "parity_log_writer_only": 0,
    "parity_random_pass": 15,
    "parity_random_writer_only": 0,
+   "random_mismatch_kinds": {},
+   "random_probe_call_kinds": {
+    "setLaneChangeMode": 206,
+    "setSpeed": 98,
+    "slowDown": 3740
+   },
+   "random_receipts": {},
    "random_streams": 45,
    "random_streams_pass": 45,
    "refusals": [],
@@ -210,9 +482,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 47,
+    "notes": {},
     "our_calls": 98,
     "passed": true,
     "probe_calls": 98,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -261,9 +535,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 47,
+    "notes": {},
     "our_calls": 98,
     "passed": true,
     "probe_calls": 98,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -312,9 +588,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 47,
+    "notes": {},
     "our_calls": 98,
     "passed": true,
     "probe_calls": 98,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -361,9 +639,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 50,
+    "notes": {},
     "our_calls": 144,
     "passed": true,
     "probe_calls": 144,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -413,9 +693,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 50,
+    "notes": {},
     "our_calls": 144,
     "passed": true,
     "probe_calls": 144,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -465,9 +747,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 50,
+    "notes": {},
     "our_calls": 144,
     "passed": true,
     "probe_calls": 144,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -515,9 +799,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -567,9 +853,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -619,9 +907,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -666,12 +956,18 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [],
+    "log_check_notes": [
+     "el 90: unresolved same-lane overlap ['main.368', 'main.372']"
+    ],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {
+     "overlap_seconds": 1
+    },
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -718,12 +1014,18 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [],
+    "log_check_notes": [
+     "el 90: unresolved same-lane overlap ['main.368', 'main.372']"
+    ],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {
+     "overlap_seconds": 1
+    },
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -770,12 +1072,18 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [],
+    "log_check_notes": [
+     "el 90: unresolved same-lane overlap ['main.368', 'main.372']"
+    ],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {
+     "overlap_seconds": 1
+    },
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -823,9 +1131,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 118,
+    "notes": {},
     "our_calls": 228,
     "passed": true,
     "probe_calls": 228,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -874,9 +1184,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 118,
+    "notes": {},
     "our_calls": 228,
     "passed": true,
     "probe_calls": 228,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -925,9 +1237,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 118,
+    "notes": {},
     "our_calls": 228,
     "passed": true,
     "probe_calls": 228,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -974,9 +1288,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 121,
+    "notes": {},
     "our_calls": 352,
     "passed": true,
     "probe_calls": 352,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1026,9 +1342,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 121,
+    "notes": {},
     "our_calls": 352,
     "passed": true,
     "probe_calls": 352,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1078,9 +1396,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 121,
+    "notes": {},
     "our_calls": 352,
     "passed": true,
     "probe_calls": 352,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1128,9 +1448,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 112,
+    "notes": {},
     "our_calls": 239,
     "passed": true,
     "probe_calls": 239,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1180,9 +1502,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 104,
+    "notes": {},
     "our_calls": 231,
     "passed": true,
     "probe_calls": 231,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1232,9 +1556,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 112,
+    "notes": {},
     "our_calls": 239,
     "passed": true,
     "probe_calls": 239,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1282,9 +1608,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1334,9 +1662,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1386,9 +1716,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1436,9 +1768,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 121,
+    "notes": {},
     "our_calls": 300,
     "passed": true,
     "probe_calls": 300,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1488,9 +1822,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 121,
+    "notes": {},
     "our_calls": 288,
     "passed": true,
     "probe_calls": 288,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1540,9 +1876,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 121,
+    "notes": {},
     "our_calls": 301,
     "passed": true,
     "probe_calls": 301,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1590,9 +1928,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 65,
+    "notes": {},
     "our_calls": 175,
     "passed": true,
     "probe_calls": 175,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1642,9 +1982,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 65,
+    "notes": {},
     "our_calls": 175,
     "passed": true,
     "probe_calls": 175,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1694,9 +2036,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 66,
+    "notes": {},
     "our_calls": 176,
     "passed": true,
     "probe_calls": 176,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1744,9 +2088,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 47,
+    "notes": {},
     "our_calls": 98,
     "passed": true,
     "probe_calls": 98,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1795,9 +2141,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 47,
+    "notes": {},
     "our_calls": 98,
     "passed": true,
     "probe_calls": 98,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1846,9 +2194,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 47,
+    "notes": {},
     "our_calls": 98,
     "passed": true,
     "probe_calls": 98,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1892,12 +2242,18 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [],
+    "log_check_notes": [
+     "el 90: unresolved same-lane overlap ['main.597', 'main.599']"
+    ],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {
+     "overlap_seconds": 1
+    },
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1944,12 +2300,18 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [],
+    "log_check_notes": [
+     "el 90: unresolved same-lane overlap ['main.597', 'main.599']"
+    ],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {
+     "overlap_seconds": 1
+    },
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -1996,12 +2358,18 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [],
+    "log_check_notes": [
+     "el 90: unresolved same-lane overlap ['main.597', 'main.599']"
+    ],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {
+     "overlap_seconds": 1
+    },
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2049,9 +2417,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 252,
     "passed": true,
     "probe_calls": 252,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2101,9 +2471,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 252,
     "passed": true,
     "probe_calls": 252,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2153,9 +2525,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 252,
     "passed": true,
     "probe_calls": 252,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2203,9 +2577,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2255,9 +2631,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2307,9 +2685,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2357,9 +2737,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 81,
+    "notes": {},
     "our_calls": 166,
     "passed": true,
     "probe_calls": 166,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2408,9 +2790,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 81,
+    "notes": {},
     "our_calls": 166,
     "passed": true,
     "probe_calls": 166,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2459,9 +2843,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 81,
+    "notes": {},
     "our_calls": 166,
     "passed": true,
     "probe_calls": 166,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2508,9 +2894,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 79,
+    "notes": {},
     "our_calls": 197,
     "passed": true,
     "probe_calls": 197,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2560,9 +2948,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 79,
+    "notes": {},
     "our_calls": 197,
     "passed": true,
     "probe_calls": 197,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2612,9 +3002,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 53,
+    "notes": {},
     "our_calls": 157,
     "passed": true,
     "probe_calls": 157,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2662,9 +3054,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 72,
+    "notes": {},
     "our_calls": 188,
     "passed": true,
     "probe_calls": 188,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2714,9 +3108,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 227,
     "passed": true,
     "probe_calls": 227,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2766,9 +3162,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 72,
+    "notes": {},
     "our_calls": 188,
     "passed": true,
     "probe_calls": 188,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2816,9 +3214,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 36,
+    "notes": {},
     "our_calls": 70,
     "passed": true,
     "probe_calls": 70,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2867,9 +3267,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 36,
+    "notes": {},
     "our_calls": 70,
     "passed": true,
     "probe_calls": 70,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2918,9 +3320,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 36,
+    "notes": {},
     "our_calls": 70,
     "passed": true,
     "probe_calls": 70,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -2967,9 +3371,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 80,
+    "notes": {},
     "our_calls": 149,
     "passed": true,
     "probe_calls": 149,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3018,9 +3424,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 80,
+    "notes": {},
     "our_calls": 149,
     "passed": true,
     "probe_calls": 149,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3069,9 +3477,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 80,
+    "notes": {},
     "our_calls": 149,
     "passed": true,
     "probe_calls": 149,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3118,9 +3528,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 121,
+    "notes": {},
     "our_calls": 307,
     "passed": true,
     "probe_calls": 307,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3170,9 +3582,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 121,
+    "notes": {},
     "our_calls": 311,
     "passed": true,
     "probe_calls": 311,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3222,9 +3636,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 121,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3272,9 +3688,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 186,
     "passed": true,
     "probe_calls": 186,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3323,9 +3741,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 186,
     "passed": true,
     "probe_calls": 186,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3374,9 +3794,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 186,
     "passed": true,
     "probe_calls": 186,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3423,9 +3845,13 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 109,
+    "notes": {},
     "our_calls": 130,
     "passed": true,
     "probe_calls": 133,
+    "receipts": {
+     "issued": 124
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -3478,17 +3904,16 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [
-     "el 11: unresolved same-lane overlap ['main.593', 'main.591']",
-     "el 12: unresolved same-lane overlap ['main.593', 'main.591']",
-     "el 13: unresolved same-lane overlap ['main.593', 'main.591']",
-     "el 14: unresolved same-lane overlap ['main.593', 'main.591']"
-    ],
+    "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 110,
+    "notes": {},
     "our_calls": 130,
     "passed": true,
     "probe_calls": 133,
+    "receipts": {
+     "issued": 124
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -3537,17 +3962,16 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [
-     "el 9: unresolved same-lane overlap ['main.593', 'main.591']",
-     "el 10: unresolved same-lane overlap ['main.593', 'main.591']",
-     "el 11: unresolved same-lane overlap ['main.593', 'main.591']",
-     "el 12: unresolved same-lane overlap ['main.593', 'main.591']"
-    ],
+    "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 101,
+    "notes": {},
     "our_calls": 110,
     "passed": true,
     "probe_calls": 113,
+    "receipts": {
+     "issued": 104
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -3599,9 +4023,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 93,
+    "notes": {},
     "our_calls": 206,
     "passed": true,
     "probe_calls": 206,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3651,9 +4077,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 71,
+    "notes": {},
     "our_calls": 187,
     "passed": true,
     "probe_calls": 187,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3703,9 +4131,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 93,
+    "notes": {},
     "our_calls": 206,
     "passed": true,
     "probe_calls": 206,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3753,9 +4183,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3805,9 +4237,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3857,9 +4291,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3907,9 +4343,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 216,
     "passed": true,
     "probe_calls": 216,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -3959,9 +4397,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 221,
     "passed": true,
     "probe_calls": 221,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -4011,9 +4451,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 216,
     "passed": true,
     "probe_calls": 216,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -4061,9 +4503,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 54,
+    "notes": {},
     "our_calls": 112,
     "passed": true,
     "probe_calls": 112,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -4112,9 +4556,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 54,
+    "notes": {},
     "our_calls": 112,
     "passed": true,
     "probe_calls": 112,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -4163,9 +4609,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 54,
+    "notes": {},
     "our_calls": 112,
     "passed": true,
     "probe_calls": 112,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -4210,16 +4658,24 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "main.615: nominal path clamped",
-     "main.618: nominal path clamped",
-     "main.621: nominal path clamped",
-     "main.623: nominal path clamped"
+     "main.615: nominal path does not fit the tube (taut string from the start)",
+     "main.618: nominal path does not fit the tube (taut string from the start)",
+     "main.621: nominal path does not fit the tube (taut string from the start)",
+     "main.623: nominal path does not fit the tube (taut string from the start)"
     ],
     "log_check_ok": true,
     "n_ticks": 146,
+    "notes": {
+     "nominal_path_misfit_tracks": 7,
+     "overlap_seconds": 3,
+     "separation_infeasible_tracks": 2
+    },
     "our_calls": 113,
     "passed": true,
     "probe_calls": 118,
+    "receipts": {
+     "issued": 99
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -4269,16 +4725,24 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "main.615: nominal path clamped",
-     "main.618: nominal path clamped",
-     "main.621: nominal path clamped",
-     "main.623: nominal path clamped"
+     "main.615: nominal path does not fit the tube (taut string from the start)",
+     "main.618: nominal path does not fit the tube (taut string from the start)",
+     "main.621: nominal path does not fit the tube (taut string from the start)",
+     "main.623: nominal path does not fit the tube (taut string from the start)"
     ],
     "log_check_ok": true,
     "n_ticks": 146,
+    "notes": {
+     "nominal_path_misfit_tracks": 7,
+     "overlap_seconds": 3,
+     "separation_infeasible_tracks": 2
+    },
     "our_calls": 113,
     "passed": true,
     "probe_calls": 118,
+    "receipts": {
+     "issued": 99
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -4330,16 +4794,24 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "main.615: nominal path clamped",
-     "main.618: nominal path clamped",
-     "main.621: nominal path clamped",
-     "main.623: nominal path clamped"
+     "main.615: nominal path does not fit the tube (taut string from the start)",
+     "main.618: nominal path does not fit the tube (taut string from the start)",
+     "main.621: nominal path does not fit the tube (taut string from the start)",
+     "main.623: nominal path does not fit the tube (taut string from the start)"
     ],
     "log_check_ok": true,
     "n_ticks": 146,
+    "notes": {
+     "nominal_path_misfit_tracks": 7,
+     "overlap_seconds": 3,
+     "separation_infeasible_tracks": 2
+    },
     "our_calls": 113,
     "passed": true,
     "probe_calls": 118,
+    "receipts": {
+     "issued": 99
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -4389,16 +4861,23 @@
    "key": "pg2v_pg2_D3200_p60_s989017_t450_zipper_order_9cdc294c#r1",
    "log": {
     "accel_max_err": 0.0,
-    "classes": {},
+    "classes": {
+     "writer_guard": 1
+    },
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 61,
-    "our_calls": 74,
-    "passed": true,
+    "notes": {},
+    "our_calls": 73,
+    "passed": false,
     "probe_calls": 75,
-    "writer_only": false
+    "receipts": {
+     "deferred_edge_end": 1,
+     "issued": 8
+    },
+    "writer_only": true
    },
    "r_kind": null,
    "random": [
@@ -4444,18 +4923,28 @@
    "key": "pg2v_pg2_D3200_p60_s989017_t450_zipper_order_9cdc294c#r2",
    "log": {
     "accel_max_err": 0.0,
-    "classes": {},
+    "classes": {
+     "writer_guard": 1
+    },
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "main.288: nominal path clamped"
+     "main.288: nominal path does not fit the tube (taut string from the start)",
+     "main.292: nominal path does not fit the tube (taut string from the start)"
     ],
     "log_check_ok": true,
     "n_ticks": 77,
-    "our_calls": 90,
-    "passed": true,
+    "notes": {
+     "nominal_path_misfit_tracks": 2
+    },
+    "our_calls": 89,
+    "passed": false,
     "probe_calls": 91,
-    "writer_only": false
+    "receipts": {
+     "deferred_edge_end": 1,
+     "issued": 8
+    },
+    "writer_only": true
    },
    "r_kind": null,
    "random": [
@@ -4499,16 +4988,23 @@
    "key": "pg2v_pg2_D3200_p60_s989017_t450_zipper_order_9cdc294c#r3",
    "log": {
     "accel_max_err": 0.0,
-    "classes": {},
+    "classes": {
+     "writer_guard": 1
+    },
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 61,
-    "our_calls": 74,
-    "passed": true,
+    "notes": {},
+    "our_calls": 73,
+    "passed": false,
     "probe_calls": 75,
-    "writer_only": false
+    "receipts": {
+     "deferred_edge_end": 1,
+     "issued": 8
+    },
+    "writer_only": true
    },
    "r_kind": null,
    "random": [
@@ -4556,9 +5052,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 41,
+    "notes": {},
     "our_calls": 84,
     "passed": true,
     "probe_calls": 84,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -4607,9 +5105,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 41,
+    "notes": {},
     "our_calls": 84,
     "passed": true,
     "probe_calls": 84,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -4658,9 +5158,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 41,
+    "notes": {},
     "our_calls": 84,
     "passed": true,
     "probe_calls": 84,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -4707,9 +5209,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 157,
+    "notes": {},
     "our_calls": 287,
     "passed": true,
     "probe_calls": 287,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": "hold",
@@ -4758,9 +5262,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 181,
+    "notes": {},
     "our_calls": 361,
     "passed": true,
     "probe_calls": 361,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": "hold",
@@ -4809,9 +5315,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 157,
+    "notes": {},
     "our_calls": 287,
     "passed": true,
     "probe_calls": 287,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": "hold",
@@ -4856,16 +5364,24 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "main.529: nominal path clamped",
-     "main.541: nominal path clamped",
-     "el 0: unresolved same-lane overlap ['main.529', 'main.541']",
-     "el 1: unresolved same-lane overlap ['main.529', 'main.541']"
+     "main.529: nominal path does not fit the tube (taut string from the start)",
+     "main.541: nominal path does not fit the tube (taut string from the start)",
+     "main.529: nominal path does not fit the tube (taut string from the start)",
+     "main.541: nominal path does not fit the tube (taut string from the start)"
     ],
     "log_check_ok": true,
     "n_ticks": 287,
+    "notes": {
+     "nominal_path_misfit_tracks": 4,
+     "overlap_seconds": 2,
+     "separation_infeasible_tracks": 1
+    },
     "our_calls": 555,
     "passed": true,
     "probe_calls": 558,
+    "receipts": {
+     "issued": 549
+    },
     "writer_only": false
    },
    "r_kind": "lane_balance",
@@ -4919,16 +5435,24 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "main.529: nominal path clamped",
-     "main.535: nominal path clamped",
-     "main.541: nominal path clamped",
-     "el 0: unresolved same-lane overlap ['main.529', 'main.535']"
+     "main.529: nominal path does not fit the tube (taut string from the start)",
+     "main.535: nominal path does not fit the tube (taut string from the start)",
+     "main.541: nominal path does not fit the tube (taut string from the start)",
+     "main.535: nominal path does not fit the tube (taut string from the start)"
     ],
     "log_check_ok": true,
     "n_ticks": 265,
+    "notes": {
+     "nominal_path_misfit_tracks": 5,
+     "overlap_seconds": 10,
+     "separation_infeasible_tracks": 2
+    },
     "our_calls": 530,
     "passed": true,
     "probe_calls": 533,
+    "receipts": {
+     "issued": 524
+    },
     "writer_only": false
    },
    "r_kind": "lane_balance",
@@ -4984,9 +5508,13 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 180,
+    "notes": {},
     "our_calls": 354,
     "passed": true,
     "probe_calls": 357,
+    "receipts": {
+     "issued": 348
+    },
     "writer_only": false
    },
    "r_kind": "lane_balance",
@@ -5036,16 +5564,24 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "el 0: unresolved same-lane overlap ['main.293', 'main.297']",
-     "el 1: unresolved same-lane overlap ['main.293', 'main.297']",
-     "el 2: unresolved same-lane overlap ['main.293', 'main.297']",
-     "el 3: unresolved same-lane overlap ['main.293', 'main.297']"
+     "main.297: nominal path does not fit the tube (taut string from the start)",
+     "main.293: same-lane separation infeasible (lane relocation repair only)",
+     "el 1: unresolved same-lane overlap ['main.293', 'main.299']",
+     "el 2: unresolved same-lane overlap ['main.293', 'main.299']"
     ],
     "log_check_ok": true,
     "n_ticks": 66,
+    "notes": {
+     "nominal_path_misfit_tracks": 1,
+     "overlap_seconds": 3,
+     "separation_infeasible_tracks": 1
+    },
     "our_calls": 22,
     "passed": true,
     "probe_calls": 25,
+    "receipts": {
+     "issued": 16
+    },
     "writer_only": false
    },
    "r_kind": "lane_balance",
@@ -5093,16 +5629,24 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "el 0: unresolved same-lane overlap ['main.293', 'main.297']",
-     "el 1: unresolved same-lane overlap ['main.293', 'main.297']",
-     "el 2: unresolved same-lane overlap ['main.293', 'main.297']",
-     "el 3: unresolved same-lane overlap ['main.293', 'main.297']"
+     "main.297: nominal path does not fit the tube (taut string from the start)",
+     "main.293: same-lane separation infeasible (lane relocation repair only)",
+     "el 1: unresolved same-lane overlap ['main.293', 'main.299']",
+     "el 2: unresolved same-lane overlap ['main.293', 'main.299']"
     ],
     "log_check_ok": true,
     "n_ticks": 66,
+    "notes": {
+     "nominal_path_misfit_tracks": 1,
+     "overlap_seconds": 3,
+     "separation_infeasible_tracks": 1
+    },
     "our_calls": 22,
     "passed": true,
     "probe_calls": 25,
+    "receipts": {
+     "issued": 16
+    },
     "writer_only": false
    },
    "r_kind": "lane_balance",
@@ -5150,16 +5694,24 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "el 0: unresolved same-lane overlap ['main.293', 'main.297']",
-     "el 1: unresolved same-lane overlap ['main.293', 'main.297']",
-     "el 2: unresolved same-lane overlap ['main.293', 'main.297']",
-     "el 3: unresolved same-lane overlap ['main.293', 'main.297']"
+     "main.297: nominal path does not fit the tube (taut string from the start)",
+     "main.293: same-lane separation infeasible (lane relocation repair only)",
+     "el 1: unresolved same-lane overlap ['main.293', 'main.299']",
+     "el 2: unresolved same-lane overlap ['main.293', 'main.299']"
     ],
     "log_check_ok": true,
     "n_ticks": 66,
+    "notes": {
+     "nominal_path_misfit_tracks": 1,
+     "overlap_seconds": 3,
+     "separation_infeasible_tracks": 1
+    },
     "our_calls": 22,
     "passed": true,
     "probe_calls": 25,
+    "receipts": {
+     "issued": 16
+    },
     "writer_only": false
    },
    "r_kind": "lane_balance",
@@ -5213,9 +5765,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 85,
+    "notes": {},
     "our_calls": 161,
     "passed": true,
     "probe_calls": 161,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": "hold",
@@ -5264,9 +5818,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 85,
+    "notes": {},
     "our_calls": 161,
     "passed": true,
     "probe_calls": 161,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": "hold",
@@ -5315,9 +5871,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 85,
+    "notes": {},
     "our_calls": 161,
     "passed": true,
     "probe_calls": 161,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": "hold",
@@ -5362,13 +5920,19 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "main.583: nominal path clamped"
+     "main.583: nominal path does not fit the tube (taut string from the start)"
     ],
     "log_check_ok": true,
     "n_ticks": 115,
+    "notes": {
+     "nominal_path_misfit_tracks": 1
+    },
     "our_calls": 113,
     "passed": true,
     "probe_calls": 116,
+    "receipts": {
+     "issued": 107
+    },
     "writer_only": false
    },
    "r_kind": "lane_balance",
@@ -5422,13 +5986,19 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "main.583: nominal path clamped"
+     "main.583: nominal path does not fit the tube (taut string from the start)"
     ],
     "log_check_ok": true,
     "n_ticks": 115,
+    "notes": {
+     "nominal_path_misfit_tracks": 1
+    },
     "our_calls": 113,
     "passed": true,
     "probe_calls": 116,
+    "receipts": {
+     "issued": 107
+    },
     "writer_only": false
    },
    "r_kind": "lane_balance",
@@ -5480,13 +6050,19 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "main.583: nominal path clamped"
+     "main.583: nominal path does not fit the tube (taut string from the start)"
     ],
     "log_check_ok": true,
     "n_ticks": 115,
+    "notes": {
+     "nominal_path_misfit_tracks": 1
+    },
     "our_calls": 113,
     "passed": true,
     "probe_calls": 116,
+    "receipts": {
+     "issued": 107
+    },
     "writer_only": false
    },
    "r_kind": "lane_balance",
@@ -5536,9 +6112,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 172,
+    "notes": {},
     "our_calls": 506,
     "passed": true,
     "probe_calls": 506,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": "hold",
@@ -5588,9 +6166,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 121,
+    "notes": {},
     "our_calls": 360,
     "passed": true,
     "probe_calls": 360,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": "hold",
@@ -5640,9 +6220,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 172,
+    "notes": {},
     "our_calls": 506,
     "passed": true,
     "probe_calls": 506,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": "hold",
@@ -5688,15 +6270,23 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "main.555: nominal path clamped",
-     "main.551: nominal path clamped",
-     "main.554: nominal path clamped"
+     "main.555: nominal path does not fit the tube (taut string from the start)",
+     "main.551: nominal path does not fit the tube (taut string from the start)",
+     "main.554: nominal path does not fit the tube (taut string from the start)",
+     "el 262: unresolved same-lane overlap ['main.551', 'main.554']"
     ],
     "log_check_ok": true,
     "n_ticks": 263,
+    "notes": {
+     "nominal_path_misfit_tracks": 3,
+     "overlap_seconds": 1
+    },
     "our_calls": 178,
     "passed": true,
     "probe_calls": 182,
+    "receipts": {
+     "issued": 165
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -5748,16 +6338,23 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "main.555: nominal path clamped",
-     "main.551: nominal path clamped",
-     "main.554: nominal path clamped",
-     "el 289: unresolved same-lane overlap ['main.551', 'main.554']"
+     "main.555: nominal path does not fit the tube (taut string from the start)",
+     "main.551: nominal path does not fit the tube (taut string from the start)",
+     "main.554: nominal path does not fit the tube (taut string from the start)",
+     "el 300: unresolved same-lane overlap ['main.551', 'main.554']"
     ],
     "log_check_ok": true,
     "n_ticks": 301,
+    "notes": {
+     "nominal_path_misfit_tracks": 3,
+     "overlap_seconds": 1
+    },
     "our_calls": 180,
     "passed": true,
     "probe_calls": 185,
+    "receipts": {
+     "issued": 166
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -5807,16 +6404,23 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "main.555: nominal path clamped",
-     "main.551: nominal path clamped",
-     "main.554: nominal path clamped",
-     "el 263: unresolved same-lane overlap ['main.551', 'main.554']"
+     "main.555: nominal path does not fit the tube (taut string from the start)",
+     "main.551: nominal path does not fit the tube (taut string from the start)",
+     "main.554: nominal path does not fit the tube (taut string from the start)",
+     "el 300: unresolved same-lane overlap ['main.551', 'main.554']"
     ],
     "log_check_ok": true,
     "n_ticks": 301,
+    "notes": {
+     "nominal_path_misfit_tracks": 3,
+     "overlap_seconds": 1
+    },
     "our_calls": 179,
     "passed": true,
     "probe_calls": 184,
+    "receipts": {
+     "issued": 165
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -5865,16 +6469,21 @@
    "log": {
     "accel_max_err": 0.0,
     "classes": {
-     "writer_guard": 2
+     "writer_guard": 1
     },
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 52,
-    "our_calls": 61,
+    "notes": {},
+    "our_calls": 62,
     "passed": false,
     "probe_calls": 64,
+    "receipts": {
+     "deferred_edge_end": 1,
+     "issued": 6
+    },
     "writer_only": true
    },
    "r_kind": null,
@@ -5920,16 +6529,21 @@
    "log": {
     "accel_max_err": 0.0,
     "classes": {
-     "writer_guard": 2
+     "writer_guard": 1
     },
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 52,
-    "our_calls": 61,
+    "notes": {},
+    "our_calls": 62,
     "passed": false,
     "probe_calls": 64,
+    "receipts": {
+     "deferred_edge_end": 1,
+     "issued": 6
+    },
     "writer_only": true
    },
    "r_kind": null,
@@ -5973,16 +6587,21 @@
    "log": {
     "accel_max_err": 0.0,
     "classes": {
-     "writer_guard": 2
+     "writer_guard": 1
     },
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 49,
-    "our_calls": 59,
+    "notes": {},
+    "our_calls": 60,
     "passed": false,
     "probe_calls": 62,
+    "receipts": {
+     "deferred_edge_end": 1,
+     "issued": 7
+    },
     "writer_only": true
    },
    "r_kind": null,
@@ -6026,17 +6645,16 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [
-     "el 0: unresolved same-lane overlap ['main.480', 'main.479']",
-     "el 1: unresolved same-lane overlap ['main.480', 'main.479']",
-     "el 2: unresolved same-lane overlap ['main.480', 'main.479']",
-     "el 3: unresolved same-lane overlap ['main.480', 'main.479']"
-    ],
+    "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 185,
+    "notes": {},
     "our_calls": 318,
     "passed": true,
     "probe_calls": 321,
+    "receipts": {
+     "issued": 312
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -6089,17 +6707,16 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [
-     "el 0: unresolved same-lane overlap ['main.480', 'main.479']",
-     "el 1: unresolved same-lane overlap ['main.480', 'main.479']",
-     "el 2: unresolved same-lane overlap ['main.480', 'main.479']",
-     "el 3: unresolved same-lane overlap ['main.480', 'main.479']"
-    ],
+    "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 195,
+    "notes": {},
     "our_calls": 319,
     "passed": true,
     "probe_calls": 322,
+    "receipts": {
+     "issued": 313
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -6148,17 +6765,16 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [
-     "el 0: unresolved same-lane overlap ['main.480', 'main.479']",
-     "el 1: unresolved same-lane overlap ['main.480', 'main.479']",
-     "el 2: unresolved same-lane overlap ['main.480', 'main.479']",
-     "el 3: unresolved same-lane overlap ['main.480', 'main.479']"
-    ],
+    "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 185,
+    "notes": {},
     "our_calls": 342,
     "passed": true,
     "probe_calls": 345,
+    "receipts": {
+     "issued": 336
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -6210,9 +6826,13 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 114,
+    "notes": {},
     "our_calls": 121,
     "passed": true,
     "probe_calls": 124,
+    "receipts": {
+     "issued": 115
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -6266,9 +6886,13 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 116,
+    "notes": {},
     "our_calls": 119,
     "passed": true,
     "probe_calls": 122,
+    "receipts": {
+     "issued": 113
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -6322,9 +6946,13 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 114,
+    "notes": {},
     "our_calls": 121,
     "passed": true,
     "probe_calls": 124,
+    "receipts": {
+     "issued": 115
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -6376,14 +7004,19 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "el 20: unresolved same-lane overlap ['main.594', 'main.593']",
-     "el 21: unresolved same-lane overlap ['main.594', 'main.593']"
+     "main.594: nominal path does not fit the tube (taut string from the start)"
     ],
     "log_check_ok": true,
     "n_ticks": 256,
+    "notes": {
+     "nominal_path_misfit_tracks": 1
+    },
     "our_calls": 490,
     "passed": true,
     "probe_calls": 493,
+    "receipts": {
+     "issued": 484
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -6437,14 +7070,19 @@
     "error": null,
     "log_check_diffs": [],
     "log_check_notes": [
-     "el 20: unresolved same-lane overlap ['main.594', 'main.593']",
-     "el 21: unresolved same-lane overlap ['main.594', 'main.593']"
+     "main.594: nominal path does not fit the tube (taut string from the start)"
     ],
     "log_check_ok": true,
     "n_ticks": 256,
+    "notes": {
+     "nominal_path_misfit_tracks": 1
+    },
     "our_calls": 490,
     "passed": true,
     "probe_calls": 493,
+    "receipts": {
+     "issued": 484
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -6495,15 +7133,16 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [
-     "el 20: unresolved same-lane overlap ['main.594', 'main.593']",
-     "el 21: unresolved same-lane overlap ['main.594', 'main.593']"
-    ],
+    "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 253,
+    "notes": {},
     "our_calls": 476,
     "passed": true,
     "probe_calls": 479,
+    "receipts": {
+     "issued": 470
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -6555,9 +7194,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 67,
+    "notes": {},
     "our_calls": 12,
     "passed": true,
     "probe_calls": 15,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -6607,9 +7248,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 67,
+    "notes": {},
     "our_calls": 12,
     "passed": true,
     "probe_calls": 15,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -6659,9 +7302,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 67,
+    "notes": {},
     "our_calls": 12,
     "passed": true,
     "probe_calls": 15,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -6709,9 +7354,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 71,
+    "notes": {},
     "our_calls": 121,
     "passed": true,
     "probe_calls": 121,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -6760,9 +7407,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 71,
+    "notes": {},
     "our_calls": 121,
     "passed": true,
     "probe_calls": 121,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -6811,9 +7460,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 74,
+    "notes": {},
     "our_calls": 124,
     "passed": true,
     "probe_calls": 124,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -6860,9 +7511,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -6912,9 +7565,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -6964,9 +7619,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 279,
     "passed": true,
     "probe_calls": 279,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -7014,9 +7671,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 268,
     "passed": true,
     "probe_calls": 268,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -7066,9 +7725,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 268,
     "passed": true,
     "probe_calls": 268,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -7118,9 +7779,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 91,
+    "notes": {},
     "our_calls": 257,
     "passed": true,
     "probe_calls": 257,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -7168,9 +7831,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 62,
+    "notes": {},
     "our_calls": 128,
     "passed": true,
     "probe_calls": 128,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -7219,9 +7884,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 62,
+    "notes": {},
     "our_calls": 128,
     "passed": true,
     "probe_calls": 128,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -7270,9 +7937,11 @@
     "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 62,
+    "notes": {},
     "our_calls": 128,
     "passed": true,
     "probe_calls": 128,
+    "receipts": {},
     "writer_only": false
    },
    "r_kind": null,
@@ -7316,17 +7985,17 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [
-     "el 47: unresolved same-lane overlap ['main.275', 'main.273']",
-     "el 48: unresolved same-lane overlap ['main.275', 'main.273']",
-     "el 49: unresolved same-lane overlap ['main.275', 'main.273']",
-     "el 50: unresolved same-lane overlap ['main.275', 'main.273']"
-    ],
+    "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 82,
-    "our_calls": 63,
+    "notes": {},
+    "our_calls": 131,
     "passed": true,
-    "probe_calls": 63,
+    "probe_calls": 131,
+    "receipts": {
+     "held": 116,
+     "issued": 3
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -7375,17 +8044,17 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [
-     "el 36: unresolved same-lane overlap ['main.275', 'main.273']",
-     "el 37: unresolved same-lane overlap ['main.275', 'main.273']",
-     "el 38: unresolved same-lane overlap ['main.275', 'main.273']",
-     "el 39: unresolved same-lane overlap ['main.275', 'main.273']"
-    ],
+    "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 55,
-    "our_calls": 61,
+    "notes": {},
+    "our_calls": 90,
     "passed": true,
-    "probe_calls": 61,
+    "probe_calls": 90,
+    "receipts": {
+     "held": 75,
+     "issued": 3
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -7434,17 +8103,17 @@
     "classes": {},
     "error": null,
     "log_check_diffs": [],
-    "log_check_notes": [
-     "el 47: unresolved same-lane overlap ['main.275', 'main.273']",
-     "el 48: unresolved same-lane overlap ['main.275', 'main.273']",
-     "el 49: unresolved same-lane overlap ['main.275', 'main.273']",
-     "el 50: unresolved same-lane overlap ['main.275', 'main.273']"
-    ],
+    "log_check_notes": [],
     "log_check_ok": true,
     "n_ticks": 82,
-    "our_calls": 63,
+    "notes": {},
+    "our_calls": 131,
     "passed": true,
-    "probe_calls": 63,
+    "probe_calls": 131,
+    "receipts": {
+     "held": 116,
+     "issued": 3
+    },
     "writer_only": false
    },
    "r_kind": null,
@@ -7483,9 +8152,11 @@
  "schema": "lcexec-parity-report-v1",
  "totals": {
   "converted": 138,
+  "dither_rows": 92,
+  "dither_vehicles": 92,
   "log_check_pass": 138,
-  "parity_log_pass": 135,
-  "parity_log_writer_only": 3,
+  "parity_log_pass": 132,
+  "parity_log_writer_only": 6,
   "parity_random_pass": 108,
   "parity_random_writer_only": 30,
   "random_streams": 414,
@@ -7495,11 +8166,27 @@
  "writer_log_mismatches": [
   {
    "cls": "writer_guard",
-   "el": 42,
-   "key": "ckv_ck_D2800_p60_s989400_t880_B_zipper_d0190fb5#r1",
+   "el": 58,
+   "key": "pg2v_pg2_D3200_p60_s989017_t450_zipper_order_9cdc294c#r1",
    "reason": "env edge-end deferral (v*duration + 10 m of the lane end)",
    "stream": "log",
-   "vid": "main.563"
+   "vid": "main.288"
+  },
+  {
+   "cls": "writer_guard",
+   "el": 58,
+   "key": "pg2v_pg2_D3200_p60_s989017_t450_zipper_order_9cdc294c#r2",
+   "reason": "env edge-end deferral (v*duration + 10 m of the lane end)",
+   "stream": "log",
+   "vid": "main.288"
+  },
+  {
+   "cls": "writer_guard",
+   "el": 58,
+   "key": "pg2v_pg2_D3200_p60_s989017_t450_zipper_order_9cdc294c#r3",
+   "reason": "env edge-end deferral (v*duration + 10 m of the lane end)",
+   "stream": "log",
+   "vid": "main.288"
   },
   {
    "cls": "writer_guard",
@@ -7511,24 +8198,8 @@
   },
   {
    "cls": "writer_guard",
-   "el": 42,
-   "key": "ckv_ck_D2800_p60_s989400_t880_B_zipper_d0190fb5#r2",
-   "reason": "env edge-end deferral (v*duration + 10 m of the lane end)",
-   "stream": "log",
-   "vid": "main.563"
-  },
-  {
-   "cls": "writer_guard",
    "el": 43,
    "key": "ckv_ck_D2800_p60_s989400_t880_B_zipper_d0190fb5#r2",
-   "reason": "env edge-end deferral (v*duration + 10 m of the lane end)",
-   "stream": "log",
-   "vid": "main.563"
-  },
-  {
-   "cls": "writer_guard",
-   "el": 43,
-   "key": "ckv_ck_D2800_p60_s989400_t880_B_zipper_d0190fb5#r3",
    "reason": "env edge-end deferral (v*duration + 10 m of the lane end)",
    "stream": "log",
    "vid": "main.563"
