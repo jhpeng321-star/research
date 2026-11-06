@@ -447,5 +447,114 @@ def installed_record():
     return dict(_RECORD)
 
 
+# ---------------------------------------------------------------- N7 lane MAPPO exports (S-MAPPOWZL)
+def _process_desc(desc=None):
+    from . import map_descriptor as md
+    desc = desc if desc is not None else md.current()
+    if desc.kind != 'lane_drop':
+        raise ValueError(f'LCEXEC lane rules/writer are lane-drop only; process map is {desc.name!r}')
+    return desc
+
+
+def lane_rule_table(desc=None):
+    """JSON lane rule table of the clean5 action set (``lc_families.lane_rule_table``) for the
+    process lane-drop map (or ``desc``)."""
+    from . import lc_program as lp
+    from .lc_families import lane_rule_table as table
+    desc = _process_desc(desc)
+    return table(lp.frame_from_descriptor(desc), int(desc.frame.n_lanes))
+
+
+def mappo_lane_rules(desc=None):
+    """``tools.nm_mappo.lane_actions.GateRules`` of :func:`lane_rule_table` (the N7 lane-MAPPO
+    config entry ``lane_actions = "tools.nm_mappo.lane_actions:lcexec"`` resolves this); the plain
+    table dict when that module is not in the tree."""
+    table = lane_rule_table(desc)
+    try:
+        from tools.nm_mappo.lane_actions import GateRules, Transition
+    except ImportError:
+        return table
+    return GateRules(transitions=tuple(Transition(t['source'], t['target'], t['s_lo'], t['s_hi'], t['guard'])
+                                       for t in table['transitions']),
+                     guard_points_s_m=tuple(table['guard_points_s_m']), n_lanes=table['n_lanes'],
+                     sensor_range_m=table['sensor_range_m'], source=table['source'])
+
+
+def _frozen_globals(env):
+    """The env module namespace of the frozen ``_issue_lane_commands`` in ``env``'s MRO."""
+    need = ('LANE_TABLE', 'LANE_REQUEST_S', 'LANE_EDGE_GUARD_M', 'is_junction_lane', 'lane_and_s')
+    for klass in type(env).__mro__:
+        fn = klass.__dict__.get('_issue_lane_commands')
+        if fn is not None and all(k in fn.__globals__ for k in need):
+            return fn.__globals__
+    raise ValueError('no frozen _issue_lane_commands in the env class hierarchy')
+
+
+def mappo_lane_writer(env, targets, policy_cavs, statuses=None):
+    """N7 lane-MAPPO lane writer (signature of ``CavSumoEnv._issue_lane_commands``).
+
+    The frozen method EXACTLY (target == current -> noop, adjacent only, junction refusal, LANE_TABLE
+    index on the current edge, edge-end deferral, ``changeLane(vid, idx, LANE_REQUEST_S)``), except
+    that on a lane-drop process map the CLOSING lane (WM 2) may be targeted where it exists on the
+    CAV's current edge and its remaining length ahead exceeds ``v*LANE_REQUEST_S + LANE_EDGE_GUARD_M``
+    (else ``deferred_edge_end``). On the original merge map it is the frozen rule (never into lane 2).
+    Returns ``(issued {vid: (target, sumo index)}, Counter)``; ``statuses`` filled per vid."""
+    from . import map_descriptor as md
+    G = _frozen_globals(env)
+    desc = md.current()
+    closing = int(desc.bottleneck['closing_lane']) if desc.kind == 'lane_drop' else None
+    api = env.api
+    issued, counts = {}, Counter()
+    note = statuses if statuses is not None else {}
+
+    def length_of(lane_id):
+        length = env._lane_lengths.get(lane_id)
+        if length is None:
+            length = env._lane_lengths[lane_id] = float(api.lane.getLength(lane_id))
+        return length
+
+    for vid, target in sorted(targets.items()):
+        if vid not in policy_cavs:
+            counts['refused_not_policy'] += 1
+            note[vid] = 'refused_not_policy'
+            continue
+        row = env._table.get(vid)
+        if row is None or G['is_junction_lane'](row['lane_id']):
+            counts['refused_junction'] += 1
+            note[vid] = 'refused_junction'
+            continue
+        current, s_now = G['lane_and_s'](row['lane_id'], row['lane_position_m'])
+        if target == current:
+            counts['noop'] += 1
+            note[vid] = 'noop'
+            continue
+        closing_target = closing is not None and target == closing
+        if target not in (0, 1, 2) or abs(target - current) != 1 or (target == 2 and not closing_target):
+            counts['refused_not_allowed'] += 1
+            note[vid] = 'refused_not_allowed'
+            continue
+        edge = row['road_id']
+        index = next((i for (e, i), (lane, _) in G['LANE_TABLE'].items() if e == edge and lane == target), None)
+        if index is None:
+            counts['refused_no_lane'] += 1
+            note[vid] = 'refused_no_lane'
+            continue
+        margin = row['speed_mps'] * G['LANE_REQUEST_S'] + G['LANE_EDGE_GUARD_M']
+        deferred = length_of(row['lane_id']) - row['lane_position_m'] <= margin
+        if not deferred and closing_target:
+            target_id = f'{edge}_{int(index)}'
+            _, s_end = G['lane_and_s'](target_id, length_of(target_id))
+            deferred = s_end - s_now <= margin
+        if deferred:
+            counts['deferred_edge_end'] += 1
+            note[vid] = 'deferred_edge_end'
+            continue
+        api.vehicle.changeLane(vid, int(index), G['LANE_REQUEST_S'])
+        issued[vid] = (target, int(index))
+        counts['issued'] += 1
+        note[vid] = 'issued'
+    return issued, counts
+
+
 __all__ = ['FLAG', 'SCHEMA', 'KEYS', 'enabled', 'validate', 'empty_request', 'lc_env_class', 'install',
-           'installed_record']
+           'installed_record', 'lane_rule_table', 'mappo_lane_rules', 'mappo_lane_writer']

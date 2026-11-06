@@ -511,6 +511,67 @@ def lane_gate(vid, target, rows, frame, n_lanes):
     return (True, 'ok') if bool(ok) else (False, 'unsafe_gap_or_edge')
 
 
+LANE_RULES_SCHEMA = 'lcexec-lane-rules-v1'
+
+
+def lane_rule_table(frame, n_lanes=3):
+    """The clean5 lane action set as a transition table (single source: mirrors :func:`lane_gate`).
+
+    One entry per allowed adjacent WM change ``source -> target`` with the ego s window
+    ``[s_lo, s_hi]`` (inclusive) and ``guard`` = not issued within ``v*1 s + LaneRules.edge_guard_m``
+    before a guard point (the drop). Into the closing lane only while it exists ahead (s strictly
+    before its end on the approach); out of the closing lane anywhere, no guard; through-lane changes
+    anywhere outside the guard. Every allowed change still needs the unchanged
+    ``wms.control.lanes.LaneRules._target_gap_ok`` on the CAV's OWN sensing (|ds| <= 100 m), and a
+    sensed vehicle outside lanes 0..n-1 (junction) blocks (fail closed). Used by the N7 lane MAPPO
+    (lc_runtime.mappo_lane_rules) so its action set equals the free_program policy's."""
+    closing, inf = frame.closing_lane, math.inf
+    end = math.nextafter(float(frame.approach_end_s_m[closing]), -inf)
+    transitions = []
+    for source in range(n_lanes):
+        for target in (source-1, source+1):
+            if target not in range(n_lanes):
+                continue
+            if target == closing:
+                transitions.append(dict(source=source, target=target, s_lo=-inf, s_hi=end, guard=True))
+            elif source == closing:
+                transitions.append(dict(source=source, target=target, s_lo=-inf, s_hi=inf, guard=False))
+            else:
+                transitions.append(dict(source=source, target=target, s_lo=-inf, s_hi=inf, guard=True))
+    return dict(schema=LANE_RULES_SCHEMA, map=frame.name, n_lanes=int(n_lanes), transitions=transitions,
+                guard_points_s_m=[float(frame.drop_s_m)], sensor_range_m=float(SENSOR_RANGE_M),
+                gap_rule='wms.control.lanes.LaneRules._target_gap_ok on own sensing (|ds| <= sensor_range_m)',
+                junction_rule='a sensed vehicle with lane outside 0..n_lanes-1 blocks (fail closed)',
+                source='lc_families.lane_gate (LCEXEC clean5 lane action set)')
+
+
+def mappo_lane_gate(requests, local_states, eligible_cavs, *, frame=None, n_lanes=None):
+    """Per-ego gate in the N9 ``safe_targets`` form for the N7 lane-MAPPO parity harness:
+    ``requests {vid: WM target}``, ``local_states {vid: {self, rows}}`` (own sensing incl. the
+    ego), ``eligible_cavs`` -> ``(safe {vid: target}, blocked {vid: reason})`` via :func:`lane_gate`."""
+    if frame is None or n_lanes is None:
+        desc = _descriptor()
+        frame = frame or lp.frame_from_descriptor(desc)
+        n_lanes = n_lanes or int(desc.frame.n_lanes)
+    safe, blocked = {}, {}
+    for vid, target in sorted(requests.items(), key=lambda kv: str(kv[0])):
+        state = local_states.get(vid) if vid in eligible_cavs else None
+        if state is None or state.get('self') != vid:
+            blocked[vid] = 'missing_observable_gap_or_cav'
+            continue
+        rows = list(state.get('rows') or ())
+        ego = next((r for r in rows if r.get('vid') == vid), None)
+        if ego is not None and target == ego.get('lane'):
+            blocked[vid] = 'not_a_change'
+            continue
+        ok, reason = lane_gate(vid, target, rows, frame, n_lanes)
+        if ok:
+            safe[vid] = target
+        else:
+            blocked[vid] = reason
+    return safe, blocked
+
+
 # ---------------------------------------------------------------- runtime protocol
 
 class Protocol:
@@ -942,4 +1003,5 @@ def extension(cfg):
 __all__ = ['RULE', 'CONFIG_KEY', 'PROGRAM_FAMILIES', 'settings', 'config_keys', 'ProgramOption', 'ProgramIntent',
            'Protocol', 'TriggerExtension', 'extension', 'pool', 'redraw', 'slate_families', 'join_families',
            'option_from_dict', 'is_program_option', 'is_program_family', 'template_of', 'template_from_program',
-           'resolve', 'lane_gate', 'default_generator', 'controller_requests', 'DESCRIPTOR']
+           'resolve', 'lane_gate', 'default_generator', 'controller_requests', 'DESCRIPTOR',
+           'lane_rule_table', 'mappo_lane_gate', 'LANE_RULES_SCHEMA']
