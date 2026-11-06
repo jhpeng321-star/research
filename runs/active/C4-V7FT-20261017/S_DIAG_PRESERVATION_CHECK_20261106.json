@@ -1,0 +1,37 @@
+{
+  "analysis_id": "S-DIAG-CLEAN1-20261105",
+  "date": "2026-11-06",
+  "status": "PASS_existing_completed_deliverable_preserved",
+  "purpose": "Fresh-session resume: verify existing completed work before any repeat analysis or dispatch.",
+  "report": "runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md",
+  "prior_commits": {
+    "recovered_u8_report": "5b43fc61",
+    "final_u9_evidence": "07c85ccd",
+    "record_closeout": "3b7a1188"
+  },
+  "verified_sha256": {
+    "CLEAN1_DIAGNOSIS_20261105.md": "abaa4c125f805d8890030fdaedb15ab3b242531e48f03e8e213091f69fb4153b",
+    "S_DIAG_RESUME_RECEIPT_20261106.json": "48e963ae6c28a3834fb73dc8b57c735308904042b41886f801edb73d6b0c759f",
+    "S_DIAG_RECORD_CHECKS_20261106.json": "d29c8ba982d58d529ad700cc55f354ee42d2898440f7f2b4b949e0c3ae1b737d"
+  },
+  "checks": [
+    "Report hash matches the completed resume receipt.",
+    "Resume receipt hash matches its scoped source-verification record.",
+    "All three existing deliverable/receipt files match HEAD; index was empty before this receipt.",
+    "Report contains the <=15-line opening and all seven requested evidence topics through final u9.",
+    "Existing close-out is linked in README, INDEX and ROUTE; no scientific conclusion or evidence record was changed."
+  ],
+  "reused_verification": "S_DIAG_RECORD_CHECKS_20261106.json; prior scientific arithmetic, metadata tests and ledger checks were not repeated.",
+  "new_remote_connections": 0,
+  "new_sim_s": 0,
+  "new_charges": 0,
+  "new_dispatches": 0,
+  "process_inspections_or_signals": 0,
+  "report_changes": 0,
+  "limitations_preserved": [
+    "No isolated same-state causal move-versus-none reward estimate.",
+    "Exact identities/family mix of the three post-filter CE contexts remain uncaptured.",
+    "Prior ledger verification recorded 174 preexisting missing-path errors and zero new errors; not rerun here."
+  ],
+  "restrictions": "Local verification only. No prohibited data paths opened, no remote access, no run changes. Unrelated worktree changes preserved."
+}
