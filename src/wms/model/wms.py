@@ -24,6 +24,7 @@ from torch.func import functional_call
 from torch.utils.checkpoint import checkpoint
 
 from wms.core import speed_flags
+from wms.core.road import current_road
 from wms.physics.accel import apply_emergency_envelope, baseline_accel
 from wms.physics.config import PhysicsConfig
 from wms.physics.lane_conflict import resolve_lane_conflicts
@@ -1891,6 +1892,11 @@ class WmSModel(nn.Module):
             own = own | (present & delegated.bool())
         ramp_lane, target_lane = int(self.physics.merge_lane), int(self.physics.merge_target_lane)
         ramp = own & (state["lane"].long() == ramp_lane)
+        if not current_road().closing_change_restricted:
+            # WM-A lane-drop road: the first-passage law owns only the lane-end zone (the
+            # on-ramp map's accel-lane geometry); upstream closing-lane cars keep the learned
+            # lane head's decision (the physics envelope allows their change there).
+            ramp = ramp & (kin[..., 0] >= float(getattr(self.physics, "merge_zone_s0_m", 0.0)))
         geo["eligible"] = geo["eligible"] & own
         c = self.merge_pivot(geo)
         veto_margin = None

@@ -185,9 +185,21 @@ def build_episode_arrays(frames: list, controls: list, lane_controls: list, lane
         # WM target lane REQUESTED by the policy (before the env's safety mask), -1 = none.
         "lane_request_target": stack(lane_requests, np.int8),
         "controller_vocab": np.asarray(CONTROLLERS, dtype=str),
-        "meta_json": np.asarray(json.dumps({"schema": EPISODE_SCHEMA, **meta},
+        "meta_json": np.asarray(json.dumps({"schema": EPISODE_SCHEMA, **map_meta(), **meta},
                                            allow_nan=False)),
     }
+
+
+def map_meta() -> dict:
+    """WM-A: map identity of a non-original process road (``wms.core.road``; N1 sets
+    ``COOPMWM_MAP_SPEC``); empty on the on-ramp merge map (episode bytes unchanged)."""
+    from wms.core.road import current_road
+
+    road = current_road()
+    if road.is_original:
+        return {}
+    return {"map": road.name, "map_descriptor_sha256": road.descriptor_sha256,
+            "road_digest": road.digest, "k_slots": int(road.k_slots)}
 
 
 # ---------------------------------------------------------------- WM-S windows
