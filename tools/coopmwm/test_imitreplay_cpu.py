@@ -299,3 +299,15 @@ def test_episode_components_accepts_a_warm_started_worker(tmp_path):
     job = dict(track2_backend=True, track2_config=cfg, arm='B', track2_state=state, noise_seed=5)
     policy, ctl = tb.episode_components(job, base, acceleration.Controller)
     assert ir.state_equal(policy.trigger.state_dict(), trained.trigger.state_dict())
+
+
+def test_r_on_b_control_reuses_b_base(files):
+    by = dict(B=ir._order(ir.moments([files[0]], 'B')[0]))
+    by['R'] = [dict(m, id='R'+m['id'][1:], arm='R') for m in by['B']]
+    groups = ir.build_jobs(by, r_on_b=True)
+    r0r = [g for g in groups if g['stage'] == 'r0_R']
+    assert r0r and all(len(g['jobs']) == 1 and g['jobs'][0]['kind'] == 'coop' and g['jobs'][0]['noise_arm'] == 'B'
+                       and g['jobs'][0]['needs'][0].startswith('r0_B_') for g in r0r)
+    assert not any(g['stage'] == 'dither_R' for g in groups)
+    b_bases = {j['id'] for g in groups if g['stage'] == 'r0_B' for j in g['jobs'] if j['kind'] == 'base'}
+    assert {g['jobs'][0]['needs'][0] for g in r0r} <= b_bases

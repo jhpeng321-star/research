@@ -305,29 +305,45 @@ def _order(ms_):
                                       m['world']['cell_key'], m['t0'], m['family']))
 
 
-def build_jobs(moments_by_arm, *, include_r=True, r0_stop=EPISODE_S):
+def build_jobs(moments_by_arm, *, include_r=True, r0_stop=EPISODE_S, r_on_b=False):
     """Frozen job list. Each entry is an atomic PAIR {base, coop} charged together (or a single coop
     job for 'sampled', whose base is the r0 base)."""
     groups = []
 
-    def add(stage, arm, world, kind, decode, stop, moment=None, dither=None, needs=()):
+    def add(stage, arm, world, kind, decode, stop, moment=None, dither=None, needs=(), noise_arm=None):
         ident = f'{stage}_{world_key(world)}' + (f'_t{moment["t0"]}_{moment["family"]}' if moment else '')
         if dither:
             ident += f'_{dither}'
         return dict(id=f'{ident}_{kind}', stage=stage, arm=arm, world=world, kind=kind, decode=decode,
                     stop=int(stop), sim_s=int(stop), moment=moment['id'] if moment else None,
-                    t0=moment['t0'] if moment else None, dither=dither, needs=list(needs))
+                    t0=moment['t0'] if moment else None, dither=dither, needs=list(needs),
+                    noise_arm=noise_arm or arm)
 
     for arm in ('B', 'R') if include_r else ('B',):
         worlds = {}
         for m in _order(moments_by_arm.get(arm, ())):
             worlds.setdefault(world_key(m['world']), (m['world'], []))[1].append(m)
         for wk, (world, ms_) in worlds.items():
+            if arm == 'R' and r_on_b:
+                # no-guidance control on the B worlds: same noise stream as B, base = the r0_B base run
+                coop = add('r0_R', 'R', world, 'coop', 'greedy', r0_stop, needs=[f'r0_B_{wk}_base'], noise_arm='B')
+                groups.append(dict(stage='r0_R', jobs=[coop], moments=[m['id'] for m in ms_]))
+                continue
             base = add(f'r0_{arm}', arm, world, 'base', None, r0_stop)
             coop = add(f'r0_{arm}', arm, world, 'coop', 'greedy', r0_stop)
             groups.append(dict(stage=f'r0_{arm}', jobs=[base, coop], moments=[m['id'] for m in ms_]))
     for arm in ('B', 'R') if include_r else ('B',):
         ordered = _order(moments_by_arm.get(arm, ()))
+        if arm == 'R' and r_on_b:
+            done = set()
+            for m in ordered:
+                wk = world_key(m['world'])
+                if wk not in done:
+                    done.add(wk)
+                    groups.append(dict(stage='sampled_R', jobs=[
+                        add('sampled_R', 'R', m['world'], 'coop', 'sampled', EPISODE_S, needs=[f'r0_B_{wk}_base'],
+                            noise_arm='B')], moments=[x['id'] for x in ordered if world_key(x['world']) == wk]))
+            continue
         for m in ordered:
             r0 = [f'r0_{arm}_{world_key(m["world"])}_base', f'r0_{arm}_{world_key(m["world"])}_coop']
             stop = min(EPISODE_S, m['t0']+LATER_S)
@@ -350,7 +366,7 @@ def build_jobs(moments_by_arm, *, include_r=True, r0_stop=EPISODE_S):
 
 
 def plan(root, *, config, u0, sidecars, rows, only_rows=None, receipt=None, u0_sha256=None,
-         include_r=True, policy_deterministic=False, r0_stop=EPISODE_S, max_moments=None):
+         include_r=True, policy_deterministic=False, r0_stop=EPISODE_S, max_moments=None, r_on_b=False):
     """Zero physics: copy/verify inputs into <root>/inputs and freeze PLAN.json."""
     import shutil
     root = guard_path(root)
@@ -404,13 +420,17 @@ def plan(root, *, config, u0, sidecars, rows, only_rows=None, receipt=None, u0_s
         for m in ms_:
             m['imitation_split'] = split.get(m['world']['seed'])
         by_arm[arm], excluded[arm] = _order(ms_)[:max_moments], ex
-    groups = build_jobs(by_arm, include_r=include_r, r0_stop=int(r0_stop))
+    if r_on_b:
+        if by_arm.get('R'):
+            raise ValueError('r_on_b replays the R sidecar on the B moments only')
+        by_arm['R'] = [dict(m, id='R'+m['id'][1:], arm='R') for m in by_arm['B']]
+    groups = build_jobs(by_arm, include_r=include_r, r0_stop=int(r0_stop), r_on_b=r_on_b)
     for g in groups:
         for j in g['jobs']:
             if not seed_allowed(j['world']['seed']):
                 raise ValueError('forbidden world in plan')
     body = dict(schema=SCHEMA+'.plan', stable_id=STABLE_ID, phase=PHASE, cap_sim_s=reg['cap_sim_s'],
-                inputs=files, policy_deterministic=bool(policy_deterministic), rule=RULE,
+                inputs=files, policy_deterministic=bool(policy_deterministic), rule=RULE, r_on_b=bool(r_on_b),
                 moments=by_arm, excluded=excluded, groups=groups,
                 planned_sim_s={s: sum(j['sim_s'] for g in groups if g['stage'] == s for j in g['jobs'])
                                for s in STAGES},
@@ -448,7 +468,7 @@ def accel_job(root, plan_body, job, *, weights, cfg=None, worker=None):
     world, arm = job['world'], job['arm']
     path = Path(root)/'jobs'/job['id']/'plant'
     out = c4v.job_fields(ident=job['id'], path=path, world=world, arm=arm, weights=weights,
-                         noise_seed=c4v.noise_seed(world, arm), runtime=c4v.RUNTIME_DIR,
+                         noise_seed=c4v.noise_seed(world, job.get('noise_arm', arm)), runtime=c4v.RUNTIME_DIR,
                          checkpoint=c4v.CHECKPOINT, sim_s=job['sim_s'], v2v=c4v._v2v_width(weights),
                          deterministic=plan_body.get('policy_deterministic', False))
     out.update(stop=job['stop'], queue_root=str(Path(root)/'jobs'))
@@ -1036,7 +1056,10 @@ def analyze(root):
     for g in body['groups']:
         if not g['stage'].startswith('r0_'):
             continue
-        base_id, coop_id = (j['id'] for j in g['jobs'])
+        if len(g['jobs']) == 1:
+            base_id, coop_id = g['jobs'][0]['needs'][0], g['jobs'][0]['id']
+        else:
+            base_id, coop_id = (j['id'] for j in g['jobs'])
         base, coop = load(base_id), load(coop_id)
         ms_ = [moment_of(body, mid) for mid in g['moments']]
         w = dict(stage=g['stage'], base=base_id, coop=coop_id, ran=base is not None and coop is not None)
@@ -1093,8 +1116,7 @@ def analyze(root):
         if g['stage'].startswith('sampled_'):
             (cj,) = g['jobs']
             coop = load(cj['id'])
-            wk = world_key(cj['world'])
-            base = load(f'r0_{cj["arm"]}_{wk}_base')
+            base = load(cj['needs'][0])
             rec = dict(job=cj['id'], ran=coop is not None)
             if coop is not None and base is not None and not coop.get('error'):
                 ms_ = [moment_of(body, mid) for mid in g['moments']]
@@ -1209,6 +1231,7 @@ def main(argv=None):
     a.add_argument('--policy-deterministic', action='store_true')
     a.add_argument('--r0-stop', type=int, default=EPISODE_S)
     a.add_argument('--max-moments', type=int)
+    a.add_argument('--r-on-b', action='store_true', help='replay the R sidecar on the B moments (no-guidance control)')
     a = sub.add_parser('smoke-inputs')
     a.add_argument('--out', required=True)
     a.add_argument('--u0', required=True)
@@ -1236,8 +1259,9 @@ def main(argv=None):
         body = plan(args.root, config=args.config, u0=args.u0, u0_sha256=args.u0_sha256, sidecars=side,
                     rows=dict(B=args.rows_B, R=args.rows_R), receipt=args.receipt,
                     only_rows=dict(B=args.only_rows_B, R=args.only_rows_R),
-                    include_r=bool(args.sidecar_R and args.rows_R), policy_deterministic=args.policy_deterministic,
-                    r0_stop=args.r0_stop, max_moments=args.max_moments)
+                    include_r=bool(args.sidecar_R and (args.rows_R or args.r_on_b)),
+                    policy_deterministic=args.policy_deterministic, r0_stop=args.r0_stop,
+                    max_moments=args.max_moments, r_on_b=args.r_on_b)
         print(json.dumps(dict(plan_sha256=body['plan_sha256'], planned_sim_s=body['planned_sim_s'],
                               moments={k: len(v) for k, v in body['moments'].items()},
                               excluded={k: len(v) for k, v in body['excluded'].items()}), indent=1))
