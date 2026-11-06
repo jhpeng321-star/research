@@ -112,6 +112,8 @@ def main(argv=None) -> int:
     ap.add_argument("--every-s", type=int, default=600)
     ap.add_argument("--run", default="run2", help="run dir name under --remote (production inside)")
     ap.add_argument("--lane-on", action="store_true", help="lane-capable MAPPO: lane commands expected")
+    ap.add_argument("--watch-only", action="store_true",
+                    help="never exit on milestones (operator absent); exit only once production has exited")
     a = ap.parse_args(argv)
     local = Path(a.local)
     (local / "_sync").mkdir(parents=True, exist_ok=True)
@@ -135,8 +137,10 @@ def main(argv=None) -> int:
             ms_path.write_text(json.dumps(milestones, indent=1))
             print(f"{state['last_sync_utc']} synced {len(got)}/{len(changed)} files; milestone {code}",
                   flush=True)
-            if code is not None:
+            if code is not None and not a.watch_only:
                 return code
+            if a.watch_only and any((local / a.run / "production").glob("EXIT_production_*.json")):
+                return 0
         except (OSError, subprocess.SubprocessError, ValueError, tarfile.TarError) as exc:
             misses += 1
             print(f"sync failed ({misses}): {exc}", flush=True)
