@@ -118,6 +118,10 @@ REGISTERED_PANEL_QUOTE = dict(quote_mappo_u0=672_000, quote_native=556_800)
 #: 2 paths x 2 comparators x (300 s warmup + 120 s rollout)
 PARITY_WORLDS, PARITY_ROLLOUT_S = (989598, 989599), 120
 PARITY_SIM_S = len(PARITY_WORLDS)*2*len(COMPARATOR_ARMS)*(300+PARITY_ROLLOUT_S)
+#: MAIN decision 2026-11-06 (F7): per-decision branches are NOT built; claims 3a/3c rest on B vs A/U0/RULE/R
+DECISIONS_UNAVAILABLE = ('unavailable (not built): MAIN decision 2026-11-06 - F7 per-decision synergy branches are not built; '
+                         'claims 3a/3c rest on B vs A/U0/RULE/R on the held-out panels (decision-level attribution not '
+                         'required); B/R decision activity is reported descriptively')
 PARITY_CELL = dict(demand=3200, penetration=0.6)      # the clean5a / S-MAPPOWZ training cell D3200_p60
 PARITY_TAG = 'F11 parity (TRAIN worlds; not a panel)'
 #: agreement tolerances (float32 env state vs float64 plant rows; deterministic executors)
@@ -1861,7 +1865,7 @@ def execute(*, root, final_root, runtime, panel, panel_3c=None, allow_missing=()
             if name not in allow_missing:
                 raise Blocked(f'{name}: {missing[name]} (pass --allow-missing {name} to proceed without it)')
         if not do_decisions:   # never blocks the evaluation (MAIN): tabulated as unavailable
-            missing['DECISIONS'] = 'runner has no decision_branch (per-decision branches not built)'
+            missing['DECISIONS'] = DECISIONS_UNAVAILABLE
         status(current, 'PASS', dict(report, arms=arms, missing=missing, comparators=comparators(final_root)))
         current = 'GATE'
         gated = fe.wait(current, lambda: gate(root, cfg, runtime, binding, final_root), status, poll=poll,

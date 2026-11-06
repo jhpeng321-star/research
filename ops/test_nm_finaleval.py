@@ -228,7 +228,7 @@ def test_runner_without_decision_branches_never_blocks_the_evaluation(panel, tmp
     assert value['present'] == ['B', 'A', 'R', 'RULE', 'U0', 'NATIVE']
     assert value['tables']['synergy']['per_decision']['status'] == 'unavailable'
     assert value['tables']['synergy']['decision_activity']['B']['worlds'] == 96
-    assert 'DECISIONS' in value['missing']
+    assert value['missing']['DECISIONS'].startswith('unavailable (not built): MAIN decision')
     assert not [r for r in nm.fe.ledger_rows(f['root']) if r['id'].startswith('nmdec_')]
 
 
