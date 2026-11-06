@@ -124,7 +124,8 @@ class Chain:
         c4.prepare(self.source, plan_a=i['plan_a'], quote_doc=read(self.control/'CLEAN4_QUOTE.json'),
                    approval=read(self.control/'BUDGET_CLEAN4.json'), prior_runtime_sim_s=i['prior_runtime_sim_s'],
                    lane_drop_keys=i['lane_drop_keys'], v2v_keys=i['v2v_keys'], w2_keys=i['w2_keys'],
-                   warmstart=i.get('warmstart'), root=self.root)
+                   warmstart=i.get('warmstart'), root=self.root, extra_keys=i.get('extra_keys'),
+                   **({k: i[k] for k in ('registered_stop', 'u0', 'u0_sha256') if k in i}))
         (self.root/'chain').symlink_to(self.control, target_is_directory=True)
         with (self.root/'AUTHORITY.md').open('a', encoding='utf-8') as f:
             f.write('\nclean4 chain: qualification -> potential gate PASS -> budget binding -> prepare -> smoke '

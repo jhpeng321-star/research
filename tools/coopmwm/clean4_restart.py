@@ -253,7 +253,11 @@ def levers(cfg, *, lane_drop_keys, v2v_keys, w2_keys, nm_families=None):
 
 
 def prepare(source, *, plan_a, quote_doc, approval, prior_runtime_sim_s, lane_drop_keys, v2v_keys, w2_keys,
-            nm_families=None, warmstart=None, root=ROOT, clean2=CLEAN2):
+            nm_families=None, warmstart=None, root=ROOT, clean2=CLEAN2, extra_keys=None,
+            registered_stop=REGISTERED_STOP, u0=U0, u0_sha256=U0_SHA256):
+    """extra_keys / registered_stop / u0 make the same zero-physics prepare reusable for the next newmap run
+    (clean5a skeleton): extra common B/R keys (e.g. G4LD g4_extension, practice_offer, the FULLPOL learner key)
+    are merged into the config BEFORE every derived quote/sidecar/registration, so smoke binds them."""
     """Zero physics. plan_a = dict(rows=[B/R jsonl paths], contexts=[...], move_list_sha256, potential_sha256,
     negatives=<path|None>, cells=[(demand, share), ...])."""
     import torch
@@ -267,7 +271,7 @@ def prepare(source, *, plan_a, quote_doc, approval, prior_runtime_sim_s, lane_dr
         rc.guard_path(path); rc.guard_path(path.resolve())
     if root.exists():
         raise ValueError('new clean4 root required; never overwrite')
-    if hashlib.sha256(Path(U0).read_bytes()).hexdigest() != U0_SHA256:
+    if hashlib.sha256(Path(u0).read_bytes()).hexdigest() != u0_sha256:
         raise ValueError('staged MAPPO u0 identity differs')
     desc = md.current()
     if desc.name != 'wz3to2' or desc.network_file_sha256 != NET_FILE_SHA256:
@@ -310,7 +314,13 @@ def prepare(source, *, plan_a, quote_doc, approval, prior_runtime_sim_s, lane_dr
     cfg['r_family_subset'] = SUBSET_RULE
     from .track2_monitor import STATE_ORDER_RULE
     cfg['registered_state_order'] = STATE_ORDER_RULE
-    cfg['registered_stop'] = deepcopy(REGISTERED_STOP)
+    if registered_stop is not None:
+        cfg['registered_stop'] = deepcopy(registered_stop)
+    if extra_keys:
+        clash = set(extra_keys) & {'run_root', 'clean4_budget', 'clean4_restart', 'newmap', 'mined_moves'}
+        if clash:
+            raise ValueError('extra_keys may not override registered clean4 bindings: '+repr(sorted(clash)))
+        cfg.update(deepcopy(extra_keys))
     cfg['g5_runtime'] = dict(flag=g5_runtime.FLAG, base=str(g5_runtime.BASE_REL),
         base_sha256=g5_runtime.BASE_SHA256, overlay_sha256=g5_runtime.OVERLAY_SHA256,
         rule='accepted G5 env change bound onto the frozen e3final env; wz3to2 bound by map_runtime.install')
@@ -351,7 +361,7 @@ def prepare(source, *, plan_a, quote_doc, approval, prior_runtime_sim_s, lane_dr
     for arm in ('B', 'R'):
         (root/'replay_bank'/arm).mkdir(parents=True)
     for arm in ('A', 'B', 'R'):
-        stage.copy_equal(U0, root/f'{arm}_checkpoint_000.pt')
+        stage.copy_equal(u0, root/f'{arm}_checkpoint_000.pt')
         if rc.sha(root/f'{arm}_checkpoint_000.pt') != cfg['common_checkpoint_sha256']:
             raise ValueError('MAPPO u0 identity differs')
     cfg['clean4_budget'] = clean4_budget
@@ -457,7 +467,8 @@ def prepare(source, *, plan_a, quote_doc, approval, prior_runtime_sim_s, lane_dr
                   'registered TRAIN worlds (989000-989099 MAIN 16:45 + 989200-989599); final panel 989600-989695 (N6)',
             criterion=rc.criterion_document(), reporting=cfg['clean2_reporting_definition'],
             paired_evaluation='in-run u8/u24 OFF; no final evaluation for clean4 unless MAIN registers one later',
-            registered_stop=REGISTERED_STOP, registered_state_order=STATE_ORDER_RULE_TEXT,
+            registered_stop=registered_stop, registered_state_order=STATE_ORDER_RULE_TEXT,
+            extra_keys=sorted(extra_keys or ()),
             safety=SAFETY_RULE), sort_keys=True)+'\n')
     training.checked_config(root/'CONFIG.json')
     qualification.verify_inputs(cfg)
