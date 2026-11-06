@@ -1,0 +1,62 @@
+{
+ "amendment": 6,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend5.json",
+  "registration_sha256": "b99a85b66b8fb659d18511020b33f8f9d1bbf26319eda3cde22328158fa05c6e"
+ },
+ "authority": [
+  "MAIN 2026-11-07 ~00:3x: fix the logging and prove it on ONE short TRAIN episode (field by field: delay, origin lane, class, accel/TTC) charged to v2v_final as a test; every new mode gets a one-episode check first; then the pre-run"
+ ],
+ "budget_outlook": {
+  "allocation": 1340000,
+  "logcheck": 720,
+  "note": "the launcher counts only the live root ledger; MAIN must decide the over-cap remainder if every quoted wave runs",
+  "outlook": 1357680,
+  "quote_total": 1241760,
+  "write_offs": 115200
+ },
+ "defect": {
+  "cause": "the NATIVE wrapper of coopnative observations() was installed before map_runtime.patch_globals replaced observations() with the map CAV-report rows -> empty log",
+  "commit": "316461a4",
+  "fix": "702f143a: wrapper installed in setup() after the patch; test reproduces the replacement"
+ },
+ "logcheck": {
+  "arms": [
+   "NATIVE",
+   "RULE"
+  ],
+  "fields": [
+   "60 consecutive ticks",
+   "both fleet classes",
+   "route origin >= 95%",
+   "depart delay >= 95%",
+   "finite kinematics and lanes",
+   "per-vehicle delay",
+   "same-lane TTC pairs",
+   "non-constant acceleration"
+  ],
+  "gate": "prerun-run refuses without a sealed LOGCHECK PASS",
+  "phase": "v2v_final_logcheck",
+  "sim_s": 720,
+  "stop_s": 360,
+  "why": "one episode per code path: NATIVE = native plant, RULE = U0 policy path + rule hook",
+  "world": "TRAIN 989598 D3200_p60 (role check)"
+ },
+ "registered_utc": "2026-11-06T16:21:46.101971+00:00",
+ "registration_sha256": "a862ff38b68740a32a26db059035c0ed14cd4aa9e5090ec578db4369486ebe58",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: no result opened; two pre-run roots VOID (zero results opened)",
+ "write_offs": {
+  "rule": "counted against v2v_final by MAIN accounting; zero results opened",
+  "void2": {
+   "cause": "episodes lacked the vehicle log (pre-amendment-5 code)",
+   "root": "/home/ubuntu/nm_finaleval_clean5a.VOID2_20261106_2335",
+   "sim_s": 76800
+  },
+  "void3": {
+   "cause": "empty NATIVE log",
+   "root": "to be renamed .VOID3 (316461a4 run)",
+   "sim_s": 38400
+  }
+ }
+}
