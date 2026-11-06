@@ -1,9 +1,9 @@
 import hashlib, json, os, shutil, subprocess, tarfile
 from pathlib import Path
-commit = 'ac9e4691a22b19573d80f610daa0f4685e96bdbd'
-up = Path('/home/ubuntu/cpuv_setup_20261105/clean3_upload_ac9e4691')
+commit = 'd3986eead461b02d586a74fb0a0eb8539ae947bf'
+up = Path('/home/ubuntu/cpuv_setup_20261105/clean3_upload_d3986eea')
 old = Path('/home/ubuntu/coopmwm20261105_clean2_src_285663a1')
-src = Path('/home/ubuntu/coopmwm20261106_clean3_src_ac9e4691')
+src = Path('/home/ubuntu/coopmwm20261106_clean3_src_d3986eea')
 assert not src.exists()
 src.mkdir()
 for name in ('pytools.tgz', 'top.tgz'):

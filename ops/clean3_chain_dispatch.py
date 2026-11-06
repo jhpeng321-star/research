@@ -1,11 +1,11 @@
 import subprocess, json, os, time, shutil
-SRC='/home/ubuntu/coopmwm20261106_clean3_src_ac9e4691'
-CTRL='/home/ubuntu/cpuv_setup_20261105/clean3_chain_ac9e4691'
-q=json.load(open('/home/ubuntu/cpuv_setup_20261105/clean3_tests_ac9e4691/RESULT.json'))
-assert q['returncode']==0 and q['source_commit'].startswith('ac9e4691'), q
-assert not os.path.exists('/home/ubuntu/coopmwm20261106_clean3_r4') and not os.path.exists('/home/ubuntu/coopmwm20261106_clean3_g1cert_r10')
+SRC='/home/ubuntu/coopmwm20261106_clean3_src_d3986eea'
+CTRL='/home/ubuntu/cpuv_setup_20261105/clean3_chain_d3986eea'
+q=json.load(open('/home/ubuntu/cpuv_setup_20261105/clean3_tests_d3986eea/RESULT.json'))
+assert q['returncode']==0 and q['source_commit'].startswith('d3986eea'), q
+assert not os.path.exists('/home/ubuntu/coopmwm20261106_clean3_r5') and not os.path.exists('/home/ubuntu/coopmwm20261106_clean3_g1cert_r11')
 os.mkdir(CTRL)
-shutil.copy('/home/ubuntu/cpuv_setup_20261105/clean3_upload_ac9e4691/AUTHORITY.json', CTRL+'/AUTHORITY.json')
+shutil.copy('/home/ubuntu/cpuv_setup_20261105/clean3_upload_d3986eea/AUTHORITY.json', CTRL+'/AUTHORITY.json')
 cmd = f". /home/ubuntu/cpus_env/env.sh {SRC} && exec nice -n 19 /home/ubuntu/miniconda3/bin/python -B -u {SRC}/ops/clean3_chain.py --source {SRC} --control {CTRL}"
 json.dump(dict(unix=time.time(), command=cmd, qualification=q), open(CTRL+'/DISPATCH_STARTED.json','x'))
 p = subprocess.Popen(['setsid','bash','-c',cmd], stdin=subprocess.DEVNULL, stdout=open(CTRL+'/CHAIN.log','x'),
