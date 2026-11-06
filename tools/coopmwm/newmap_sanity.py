@@ -138,7 +138,9 @@ def run_controlled(job):
     from .map_observations import report_summary
     path = Path(job['path'])
     world, mappo = job['world'], job['arm'] == 'mappo'
-    random.seed(world['seed']); np.random.seed(world['seed']); torch.manual_seed(world['seed'])
+    random.seed(world['seed'])
+    np.random.seed(world['seed'])
+    torch.manual_seed(world['seed'])
     original, used = traci.simulationStep, [0.]
 
     def counted(*args, **kwargs):
