@@ -274,6 +274,10 @@ def test_rule_controller_holds_member_and_idm_for_released():
         state["physics_step_index"] = step
         out = ctrl(state)
     assert "a" in ctrl.released[0]                               # hold_end after 2 s
-    a = RuleController._idm(np.array([0.0, 10.0]), np.array([20.0, 0.0]), np.array([1, 1]),
-                            np.array([True, True]), 0)
-    assert a < -5.0                                              # IDM brakes behind a stopped leader
+    s = torch.tensor([[0.0, 10.0]])
+    a = RuleController.idm(s, torch.tensor([[20.0, 0.0]]), torch.tensor([[1, 1]]),
+                           torch.ones(1, 2, dtype=torch.bool), torch.tensor([[True, False]]))
+    assert float(a[0, 0]) < -5.0 and float(a[0, 1]) == 0.0       # IDM brakes behind a stopped leader
+    end = RuleController.idm(torch.tensor([[60.0]]), torch.tensor([[15.0]]), torch.tensor([[2]]),
+                             torch.ones(1, 1, dtype=torch.bool), torch.ones(1, 1, dtype=torch.bool))
+    assert float(end[0, 0]) < -3.0                                # closing lane: lane end ahead

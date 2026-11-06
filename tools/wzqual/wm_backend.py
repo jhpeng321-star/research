@@ -45,7 +45,11 @@ class RuleController:
     """``cav_controller`` callback: per batch row an executor; returns [B, K, 4] (s, lane, v, a).
 
     ``slot_ids[b]`` maps row b's t0 slots to vehicle ids (rows of different starts differ).
-    The state is copied to the CPU once per call (one transfer); commands are evaluated in numpy.
+    Executors run on the CPU once per control second on the watched slots only (members, anchors,
+    partners; one small transfer); the per-step motion of every CAV slot is vectorised in torch:
+    held members follow their commanded acceleration, every other CAV slot (released / not yet
+    started members, entrant CAVs) a textbook-CAV IDM behind its same-lane leader (closing-lane
+    slots also see the lane end).  Closing-lane CAV slots hand their merge to the WM merge law.
     """
 
     def __init__(self, executors: list, slot_ids: list, dt: float):
@@ -53,88 +57,102 @@ class RuleController:
         self.slot_ids = slot_ids
         self.slot_of = [{vid: k for k, vid in enumerate(ids)} for ids in slot_ids]
         self.dt = float(dt)
-        b = len(executors)
-        self.accel = [dict() for _ in range(b)]
-        self.lane_target = [dict() for _ in range(b)]
-        self.released = [set() for _ in range(b)]
-        self.watch = [set(e.ids) | {m["params"].get(k) for m in e.members for k in ("anchor", "partner")}
-                      for e in executors]
-        self.active = [bool(e.members) for e in executors]
+        self.watch = []
+        for b, e in enumerate(executors):
+            w = set(e.ids) | {m["params"].get(k) for m in e.members for k in ("anchor", "partner")}
+            self.watch.append([(vid, self.slot_of[b][vid]) for vid in sorted(x for x in w if x)
+                               if vid in self.slot_of[b]])
+        self.active = [b for b, e in enumerate(executors) if e.members]
+        self.released = [set() for _ in executors]
+        self.accel = None            # [B, K] commanded accel (held members), NaN = not held
+        self.lane_target = None      # [B, K] pending lane command, -1 = none
         self.calls = 0
 
     @staticmethod
-    def _idm(s, v, lane, present, k):
-        """Textbook-CAV IDM acceleration of slot k (numpy row), leader in the same lane;
-        a closing-lane vehicle also sees the lane end as a standing obstacle."""
-        same = present & (lane == lane[k]) & (s > s[k])
-        gap, dv = 1e4, 0.0
-        if same.any():
-            j = int(np.argmin(np.where(same, s, 1e9)))
-            gap, dv = float(s[j] - s[k] - CAV_IDM["length"]), float(v[k] - v[j])
-        if int(lane[k]) == F.CLOSING_LANE and s[k] < F.DROP_S and F.DROP_S - s[k] < gap:
-            gap, dv = float(F.DROP_S - s[k]), float(v[k])
+    def idm(s, v, lane, present, cav):
+        """Vectorised textbook-CAV IDM for the CAV slots: returns accel [B, K] (0 elsewhere)."""
         p = CAV_IDM
-        vk = float(v[k])
-        star = p["s0"] + max(0.0, vk * p["T"] + vk * dv / (2.0 * (p["a"] * p["b"]) ** 0.5))
-        a = p["a"] * (1.0 - (vk / p["v0"]) ** p["delta"] - (star / max(gap, 0.1)) ** 2)
-        return min(max(a, -9.0), p["a"])
+        b_idx, k_idx = torch.nonzero(cav, as_tuple=True)
+        acc = torch.zeros_like(s)
+        if b_idx.numel() == 0:
+            return acc
+        s_r, v_r, l_r, pr = s[b_idx], v[b_idx], lane[b_idx], present[b_idx]          # [n, K]
+        s_k, v_k, l_k = s[b_idx, k_idx], v[b_idx, k_idx], lane[b_idx, k_idx]
+        ahead = pr & (l_r == l_k[:, None]) & (s_r > s_k[:, None])
+        s_lead = torch.where(ahead, s_r, torch.full_like(s_r, 1e9))
+        s_min, j = s_lead.min(1)
+        has = s_min < 1e8
+        gap = torch.where(has, s_min - s_k - p["length"], torch.full_like(s_k, 1e4))
+        dv = torch.where(has, v_k - v_r.gather(1, j[:, None])[:, 0], torch.zeros_like(v_k))
+        end = (l_k == F.CLOSING_LANE) & (s_k < F.DROP_S) & ((F.DROP_S - s_k) < gap)
+        gap = torch.where(end, F.DROP_S - s_k, gap)
+        dv = torch.where(end, v_k, dv)
+        star = p["s0"] + torch.clamp(v_k * p["T"] + v_k * dv / (2.0 * (p["a"] * p["b"]) ** 0.5), min=0.0)
+        a = p["a"] * (1.0 - (v_k / p["v0"]) ** p["delta"] - (star / torch.clamp(gap, min=0.1)) ** 2)
+        acc[b_idx, k_idx] = torch.clamp(a, min=-9.0, max=p["a"])
+        return acc
+
+    def _control(self, step: int, s, v, lane, present):
+        """Run the executors for control second step // 2 and refresh accel / lane commands."""
+        idx = [(b, vid, k) for b in self.active for vid, k in self.watch[b]]
+        if not idx:
+            return
+        bi = torch.as_tensor([x[0] for x in idx], device=s.device)
+        ki = torch.as_tensor([x[2] for x in idx], device=s.device)
+        vals = torch.stack((s[bi, ki], lane[bi, ki].to(s.dtype), v[bi, ki],
+                            present[bi, ki].to(s.dtype)), -1).cpu().numpy()
+        views: dict = {}
+        for (b, vid, k), (sv, lv, vv, pv) in zip(idx, vals):
+            if pv > 0.5:
+                views.setdefault(b, {})[vid] = (float(sv), int(round(lv)), float(vv))
+        acc = self.accel.cpu().numpy()
+        lt = self.lane_target.cpu().numpy()
+        for b in self.active:
+            for vid, cmds in self.ex[b].control(step // 2, views.get(b, {})).items():
+                k = self.slot_of[b][vid]
+                for kind, val in cmds:
+                    if kind == "accel":
+                        acc[b, k] = float(val)
+                    elif kind == "lane":
+                        lt[b, k] = int(val)
+                    elif kind == "release":
+                        self.released[b].add(vid)
+                        acc[b, k] = float("nan")
+                        lt[b, k] = -1
+        self.accel = torch.as_tensor(acc, device=s.device)
+        self.lane_target = torch.as_tensor(lt, device=s.device)
 
     def __call__(self, state: dict) -> torch.Tensor:
         from wms.model import cav as cav_motion
 
-        dev = state["s_m"].device
+        s, v, lane = state["s_m"], state["v_mps"], state["lane"]
+        present = state["present"].bool()
+        cav = state["is_cav"].bool() & present
         step = state.get("physics_step_index", self.calls)
         step = int(step.flatten()[0]) if torch.is_tensor(step) else int(step)
         self.calls += 1
-        s_t, v_t, lane_t = state["s_m"], state["v_mps"], state["lane"]
-        out = torch.stack((s_t, lane_t.to(s_t.dtype), v_t, torch.zeros_like(s_t)), -1)
-        cav_t = state["is_cav"].bool() & state["present"].bool()
-        rows = {b for b in range(len(self.ex)) if self.active[b]}
-        rows |= set(torch.nonzero(cav_t.any(1)).flatten().tolist())      # entrant CAVs, if any
-        if not rows:
-            state[cav_motion.WM_MERGE_KEY] = torch.zeros_like(cav_t)
-            return out
-        s, v = s_t.detach().cpu().numpy(), v_t.detach().cpu().numpy()
-        lane = lane_t.detach().cpu().numpy()
-        present = state["present"].bool().cpu().numpy()
-        cav = cav_t.cpu().numpy()
-        o = out.detach().cpu().numpy().copy()
-        mg = np.zeros(present.shape, bool)
-        for b in sorted(rows):
-            slot_of = self.slot_of[b]
-            if step % 2 == 0 and self.active[b]:
-                view = {}
-                for vid in self.watch[b]:
-                    k = slot_of.get(vid)
-                    if k is not None and present[b, k]:
-                        view[vid] = (float(s[b, k]), int(lane[b, k]), float(v[b, k]))
-                for vid, cmds in self.ex[b].control(step // 2, view).items():
-                    for kind, val in cmds:
-                        if kind == "accel":
-                            self.accel[b][vid] = float(val)
-                        elif kind == "lane":
-                            self.lane_target[b][vid] = int(val)
-                        elif kind == "release":
-                            self.released[b].add(vid)
-                            self.accel[b].pop(vid, None)
-                            self.lane_target[b].pop(vid, None)
-            ids = self.slot_ids[b]
-            for k in np.flatnonzero(cav[b]).tolist():
-                vid = ids[k] if k < len(ids) else None
-                held = vid is not None and vid in self.accel[b] and vid not in self.released[b]
-                a = self.accel[b][vid] if held else self._idm(s[b], v[b], lane[b], present[b], k)
-                nv = min(max(float(v[b, k]) + a * self.dt, 0.0), F.SPEED_LIMIT)
-                ns = float(s[b, k]) + 0.5 * (float(v[b, k]) + nv) * self.dt
-                ln = int(lane[b, k])
-                if vid is not None and vid in self.lane_target[b]:
-                    ln = self.lane_target[b].pop(vid)
-                if ln == F.CLOSING_LANE:
-                    mg[b, k] = True
-                    if ns > F.DROP_S:                      # SUMO: wait at the lane end
-                        ns, nv = F.DROP_S, 0.0
-                o[b, k] = (ns, float(ln), nv, (nv - float(v[b, k])) / self.dt)
-        state[cav_motion.WM_MERGE_KEY] = torch.as_tensor(mg, device=dev)
-        return torch.as_tensor(o, dtype=out.dtype, device=dev)
+        if self.accel is None:
+            self.accel = torch.full_like(s, float("nan"))
+            self.lane_target = torch.full_like(lane, -1)
+        if step % 2 == 0 and self.active:
+            self._control(step, s, v, lane, present)
+        held = cav & torch.isfinite(self.accel)
+        a = torch.where(held, torch.nan_to_num(self.accel), self.idm(s, v, lane, present, cav & ~held))
+        nv = torch.clamp(v + a * self.dt, min=0.0, max=F.SPEED_LIMIT)
+        ns = s + 0.5 * (v + nv) * self.dt
+        new_lane = torch.where(cav & (self.lane_target >= 0), self.lane_target, lane)
+        self.lane_target = torch.where(cav & (self.lane_target >= 0), torch.full_like(lane, -1),
+                                       self.lane_target)
+        closing = cav & (new_lane == F.CLOSING_LANE)
+        stop = closing & (ns > F.DROP_S)                     # SUMO: wait at the lane end
+        ns = torch.where(stop, torch.full_like(ns, F.DROP_S), ns)
+        nv = torch.where(stop, torch.zeros_like(nv), nv)
+        state[cav_motion.WM_MERGE_KEY] = closing
+        acc = torch.where(cav, (nv - v) / self.dt, torch.zeros_like(v))
+        ns = torch.where(cav, ns, s)
+        nv = torch.where(cav, nv, v)
+        new_lane = torch.where(cav, new_lane, lane)
+        return torch.stack((ns, new_lane.to(s.dtype), nv, acc), -1)
 
 
 class WmBackend:
