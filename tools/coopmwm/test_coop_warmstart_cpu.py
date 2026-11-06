@@ -163,7 +163,7 @@ def test_apply_refuses_unequal_effort_wrong_arm_sha_and_dry(cfg, tmp_path):
     report = dry_run(cfg, tmp_path)
     good = registration_cfg(cfg, report)
     with pytest.raises(ValueError, match='plumbing only'):
-        cw.load(dict(cfg, coop_warmstart=report['coop_warmstart']), 'B')   # dry needs allow_dry
+        cw.load(dict(cfg, coop_warmstart=dict(report['coop_warmstart'], allow_dry=False)), 'B')   # dry needs allow_dry
     swapped = deepcopy(good)
     swapped['coop_warmstart']['B'], swapped['coop_warmstart']['R'] = (good['coop_warmstart']['R'],
                                                                       good['coop_warmstart']['B'])

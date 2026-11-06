@@ -437,6 +437,30 @@ def coarse_baseline(prep, *, k=5):
                       "miners' aggregates over all vehicles (RSU-like, includes HDVs); lane counts are CAVs only"))
 
 
+def sidecars(*, base, out_dir, prep, rows_root=ROWS_ROOT):
+    """DIAGNOSTIC warm-start sidecars from raw rows on the MOMENTS frames (MAIN 19:00: warm start
+    OFF in clean4; IMITREPLAY replays the B sidecar as a closed-loop diagnostic only). B imitates
+    its own *_MOVES_B rows; R has zero guidance rows (N4 18:40) and takes the same steps on the
+    same negatives with identical negative draws. Writes WARMSTART_{B,R}.pt, the receipt,
+    {B,R}_track2_000.pt (clean3 sidecar layout via sidecar_state) and WARMSTART_CONFIG.json."""
+    from types import SimpleNamespace
+    out_dir = Path(out_dir)
+    root = Path(rows_root)
+    cfg = dict(prep['cfg'], run_root=str(out_dir))
+    report = cw.run(cfg=cfg, base=base, out_dir=out_dir, mode='moments', situation_frames=prep['frames'],
+                    positives=dict(B=[root/p for p in SOURCES['B']], R=[]),
+                    negatives=[root/p for p in SOURCES['negatives']], training=prep['settings'])
+    registered = dict(cfg, coop_warmstart=report['coop_warmstart'])
+    for arm in ('B', 'R'):
+        policy = cw.build_policy(base, cfg, arm)
+        state = cw.sidecar_state(registered, arm, SimpleNamespace(policy=policy))
+        with open(out_dir/f'{arm}_track2_000.pt', 'xb') as stream:
+            torch.save(state, stream)
+    (out_dir/'WARMSTART_CONFIG.json').write_text(json.dumps(cfg, indent=1, sort_keys=True, default=str)+chr(10),
+                                                 encoding='utf-8')
+    return report
+
+
 def verdict(task):
     test = task['heldout_pooled']
     if not test.get('n') or test.get('auc') is None:
@@ -454,7 +478,7 @@ def main(argv=None):
     parser.add_argument('--k', type=int, default=5)
     parser.add_argument('--training')
     parser.add_argument('--threads', type=int, default=4)
-    parser.add_argument('--what', default='run', choices=('run', 'curve', 'baseline', 'all'))
+    parser.add_argument('--what', default='run', choices=('run', 'curve', 'baseline', 'all', 'sidecar'))
     parser.add_argument('--caps', default='10,20,all', help='TRAIN positive caps for --what curve')
     parser.add_argument('--frames', nargs='*', default=(), help='EXACT runtime frames (W2 format) instead of MOMENTS')
     args = parser.parse_args(argv)
@@ -475,6 +499,13 @@ def main(argv=None):
                    frames_paths=tuple(args.frames))
     out = Path(args.out)
     result = {}
+    if args.what == 'sidecar':
+        report = sidecars(base=base, out_dir=out, prep=prep)
+        print(json.dumps(dict(coop_warmstart=report['coop_warmstart'], effort_equal=report['effort_equal'],
+                              negative_draws_equal=report['negative_draws_equal'],
+                              heldout={a: report['arms'][a]['after']['heldout'] for a in ('B', 'R')}),
+                         indent=1, default=str), flush=True)
+        return dict(sidecar=report)
     if args.what in ('run', 'all'):
         report = run(base=base, out_path=out, k=args.k, prep=prep)
         for name, task in report['tasks'].items():

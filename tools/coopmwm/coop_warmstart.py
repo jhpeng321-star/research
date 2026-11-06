@@ -703,7 +703,18 @@ def train(policy, records, settings):
 
 # ---------------------------------------------------------------- run
 
-def _negatives(policy, rows, frame_index, *, dry, slate_seed, split):
+def _situation(situation_frames, row):
+    """Observable frames of the row's own moment (mode 'moments'); seed/t0 must agree."""
+    moment = situation_frames.get(row.get('situation_id'))
+    if moment is None:
+        return None
+    seed, t0, frames = moment
+    if seed != world_seed(row) or t0 != int(row['t0']):
+        raise ValueError('moment/row world or t0 mismatch '+str(row.get('situation_id')))
+    return frames
+
+
+def _negatives(policy, rows, frame_index, *, dry, slate_seed, split, situation_frames=None):
     records, reasons, labels = [], Counter(), Counter()
     for row in rows:
         try:
@@ -718,6 +729,8 @@ def _negatives(policy, rows, frame_index, *, dry, slate_seed, split):
             frames = dry_frames(row)
         elif isinstance(row.get('frames'), dict):
             frames = frame_entries([row])[(seed, int(row['t0']))]   # the row's own recorded frames
+        elif situation_frames is not None:
+            frames = _situation(situation_frames, row)
         else:
             frames = frame_index.get((seed, int(row['t0'])))
         if frames is None:
@@ -737,15 +750,17 @@ def _negatives(policy, rows, frame_index, *, dry, slate_seed, split):
 
 
 def run(*, cfg, base, out_dir, positives, negatives, mode, training=None, cells=TRAIN_CELLS,
-        negative_frames=(), allow_existing=False):
+        negative_frames=(), allow_existing=False, situation_frames=None):
     """Build, train and save B/R warm-start checkpoints plus WARMSTART_RECEIPT.json.
 
     positives: {'B': [paths], 'R': [paths]} (each arm reads ONLY its own rows)
     negatives: [paths] (one shared set). negative_frames: [paths] (bank mode frame index).
     """
-    if mode not in ('bank', 'dry'):
-        raise ValueError("mode must be 'bank' or 'dry'")
+    if mode not in ('bank', 'dry', 'moments'):
+        raise ValueError("mode must be 'bank', 'dry' or 'moments'")
     dry = mode == 'dry'
+    if (mode == 'moments') != (situation_frames is not None):
+        raise ValueError("situation_frames ({sid: (seed, t0, frames)}) belong to mode 'moments' only")
     settings = training_settings(training)
     out_dir = _guard(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -805,12 +820,16 @@ def run(*, cfg, base, out_dir, positives, negatives, mode, training=None, cells=
     if initial['B'] != initial['R']:
         raise ValueError('B and R must start from the identical initial cooperation layer')
     for arm in ('B', 'R'):
-        if dry:
+        if mode in ('dry', 'moments'):
             recs, why = [], Counter()
             for row in pos_rows[arm]:
+                frames = dry_frames(row) if dry else _situation(situation_frames, row)
+                if frames is None:
+                    why['no_moment_snapshot'] += 1
+                    continue
                 try:
-                    out, reasons = frame_records(policies[arm], row, dry_frames(row), target=1, kind='positive',
-                                                 seed=world_seed(row), dry=True, slate_seed=settings['slate_seed'])
+                    out, reasons = frame_records(policies[arm], row, frames, target=1, kind='positive',
+                                                 seed=world_seed(row), dry=dry, slate_seed=settings['slate_seed'])
                 except Unrepresentable as error:
                     why['unrepresentable:'+str(error)[:60]] += 1
                     continue
@@ -824,7 +843,8 @@ def run(*, cfg, base, out_dir, positives, negatives, mode, training=None, cells=
         notes[arm] = dict(positive_exclusions=dict(why))
     # ONE shared negatives set, built once on the (identical) initial B layer.
     shared, neg_reasons, neg_labels = _negatives(policies['B'], neg_rows, frame_index, dry=dry,
-                                                 slate_seed=settings['slate_seed'], split=split)
+                                                 slate_seed=settings['slate_seed'], split=split,
+                                                 situation_frames=situation_frames)
     shared_keys = sorted(_content_key(r) for r in deduplicate(shared))
     report = dict(schema=SCHEMA, rule=RULE, negative_rule=RULE_NEGATIVE, mode=mode, dry=dry,
                   map=MAP, train_seeds=list(TRAIN_SEEDS), refused_seeds=list(HELDOUT_EVAL_SEEDS),
@@ -918,7 +938,7 @@ def registration(report):
     return dict(B=dict(path=arms['B']['checkpoint'], sha256=arms['B']['checkpoint_sha256']),
                 R=dict(path=arms['R']['checkpoint'], sha256=arms['R']['checkpoint_sha256']),
                 steps=arms['B']['effort']['optimizer_steps'], rows_sha256=report['rows_sha256'],
-                rule=RULE, allow_dry=False)
+                rule=RULE, allow_dry=report['mode'] != 'bank')   # non-bank = diagnostic/plumbing only
 
 
 # ---------------------------------------------------------------- clean4 prepare (default OFF)
@@ -963,8 +983,9 @@ def load(cfg, arm):
         payload = torch.load(path, map_location='cpu', weights_only=False)
         if payload.get('schema') != CHECKPOINT_SCHEMA or payload.get('arm') != name:
             raise ValueError(f'coop_warmstart.{name} is not an own-arm {name} warm-start checkpoint')
-        if payload.get('dry') and not value.get('allow_dry', False):
-            raise ValueError('dry warm-start checkpoints are plumbing only (allow_dry not registered)')
+        if (payload.get('dry') or payload.get('mode') != 'bank') and not value.get('allow_dry', False):
+            raise ValueError('dry/diagnostic (non-bank) warm-start checkpoints are plumbing only '
+                             '(allow_dry not registered)')
         if payload.get('rows_sha256') != value['rows_sha256']:
             raise ValueError(f'coop_warmstart.{name} rows_sha256 mismatch')
         if payload['effort'].get('optimizer_steps') != value['steps']:
