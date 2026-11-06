@@ -59,6 +59,7 @@ MAP = 'wz3to2'
 EPISODE_S = 1200
 WARMUP_S = 300
 ONSET_TOL_S = 10
+CADENCE_TOL_S = 30          # secondary: +-decision_interval_s/2 (production cadence 60 s, periodic ticks 300+60k)
 TAIL_S = 120
 LATER_S = 420
 DITHER_A = -1.0
@@ -310,7 +311,7 @@ def build_jobs(moments_by_arm, *, include_r=True, r0_stop=EPISODE_S):
     groups = []
 
     def add(stage, arm, world, kind, decode, stop, moment=None, dither=None, needs=()):
-        ident = f'{stage}_{arm}_{world_key(world)}' + (f'_t{moment["t0"]}_{moment["family"]}' if moment else '')
+        ident = f'{stage}_{world_key(world)}' + (f'_t{moment["t0"]}_{moment["family"]}' if moment else '')
         if dither:
             ident += f'_{dither}'
         return dict(id=f'{ident}_{kind}', stage=stage, arm=arm, world=world, kind=kind, decode=decode,
@@ -983,6 +984,12 @@ def assess_moment(m, base, coop, *, tol=ONSET_TOL_S):
         link = 'no_gain'
     else:
         link = 'reproduced'
+    divergence = first_divergence(base, coop)
+    # clean attribution: the coop run equals the base run until the moment's tolerance window (no earlier
+    # executed move changed the verified state); otherwise the window dJ mixes earlier moves.
+    attribution = 'clean' if divergence is None or divergence >= t0-tol else 'confounded'
+    if link == 'reproduced' and attribution != 'clean':
+        link = 'reproduced_confounded'
     nearest = min(starts, key=lambda s: abs(s['t']-t0), default=None)
     first_any = min((s['t'] for s in starts), default=None)
     return dict(moment=m['id'], arm=m['arm'], world=world_key(m['world']), t0=t0, verified_type=verified,
@@ -991,8 +998,8 @@ def assess_moment(m, base, coop, *, tol=ONSET_TOL_S):
                 member_overlap=round(overlap, 3), decision_ticks_near=decision_ticks_near,
                 sessions_near=[dict(id=s['id'], kind=s['kind'], first_t=s['first_t'], max_members=s['max_members'],
                                     released_t=s['released_t'], members_by_t=s['members_by_t']) for s in sess],
-                group_members=group_members, assembled=assembled, dJ=gains,
-                first_divergence_s=first_divergence(base, coop), first_executed_start_s=first_any,
+                group_members=group_members, assembled=assembled, dJ=gains, attribution=attribution,
+                first_divergence_s=divergence, first_executed_start_s=first_any,
                 earlier_move_before_t0=first_any is not None and first_any < t0-tol,
                 nearest_start=None if nearest is None else dict(t=nearest['t'], type=nearest['type'],
                                                                 dt=nearest['t']-t0),
@@ -1055,7 +1062,11 @@ def analyze(root):
                                               base_error=(base.get('error') or {}).get('error'),
                                               coop_error=(coop.get('error') or {}).get('error')))
                 continue
-            report['moments'].append(assess_moment(m, base, coop))
+            one = assess_moment(m, base, coop)
+            cad = assess_moment(m, base, coop, tol=CADENCE_TOL_S)
+            one['cadence'] = {k: cad[k] for k in ('fired', 'type_match', 'assembled', 'group_members', 'link', 'attribution',
+                                                   'starts_near', 'picks_near', 'decision_ticks_near')}
+            report['moments'].append(one)
     for g in body['groups']:
         if g['stage'].startswith('dither_'):
             bj, cj = g['jobs']
@@ -1095,6 +1106,8 @@ def analyze(root):
                 rec.update(error=(coop.get('error') or {}).get('error'))
             report['sampled'].append(rec)
     report['links'] = {arm: _count(x['link'] for x in report['moments'] if x.get('arm') == arm) for arm in ('B', 'R')}
+    report['links_cadence'] = {arm: _count((x.get('cadence') or {}).get('link', x['link']) for x in report['moments']
+                                           if x.get('arm') == arm) for arm in ('B', 'R')}
     return report
 
 
