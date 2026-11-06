@@ -65,6 +65,13 @@ def candidates(obs_state, rng, n):
         from . import lane_drop
         event = bool(ld.get('only_join')) or (wall is not None and bool(wall.get('only_join')))
         structured = lane_drop.families(structured, ld, event)
+    # FULLPOL (opt-in): free_program slots, one per enabled program class (none on event ticks).
+    fp = obs_state.get('free_program')
+    if fp is not None:
+        from . import fullpol_programs
+        fp_event = (bool(fp.get('only_join')) or (wall is not None and bool(wall.get('only_join')))
+                    or (ld is not None and bool(ld.get('only_join'))))
+        structured = fullpol_programs.families(structured, fp, fp_event)
     def propose(family, group):
         if family in moves.LANE_FAMILIES:
             return group_lane.candidate(family, obs_state, own, group, rng)
@@ -87,6 +94,11 @@ def candidates(obs_state, rng, n):
                 if options:
                     pools[family] = options
                 continue
+            if fp is not None and fullpol_programs.owns(family):
+                options = fullpol_programs.pool(family, fp, own, partners, by_vid, rng)
+                if options:
+                    pools[family] = options
+                continue
             # Enumerate bounded local member sets. The nearest three alone may
             # miss an otherwise feasible wall in a different lane.
             subsets = ([partners] if family != 'wall' else
@@ -101,12 +113,22 @@ def candidates(obs_state, rng, n):
         stats.update(family_checks=len(structured) if n else 0,
                      infeasible_family_checks=len(structured)-len(pools) if n else 0)
     out = []
+    if fp is not None and n and ego in available and fp.get('offered'):
+        # Practice 'offer, don't force' (B = R rule): offered programs take the first slots.
+        out += fullpol_programs.offered(fp, own, partners, rng)[:n]
     while pools and len(out) < n:
         for family in rng.permutation(list(pools)):
             options = pools[family]
             template = options[int(rng.integers(len(options)))]
             if wall is not None and family in v2v_wall.FAMILIES:
                 out.append(v2v_wall.redraw(template, wall, own, rng))
+                if len(out) == n:
+                    break
+                continue
+            if fp is not None and fullpol_programs.owns(family):
+                # None-guard (N11 F8): an infeasible fresh draw keeps the feasible pooled template.
+                option = fullpol_programs.redraw(template, family, fp, own, partners, by_vid, rng)
+                out.append(template if option is None else option)
                 if len(out) == n:
                     break
                 continue

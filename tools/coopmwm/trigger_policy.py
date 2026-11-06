@@ -247,7 +247,9 @@ class TriggerPolicy(nn.Module):
     def _descriptor(self, move, visible):
         out = self._base_descriptor(move, visible)
         if self.extension is not None:
-            out += self.extension.descriptor(move)
+            # FULLPOL (opt-in) program descriptors are relative to the acting CAV's slots.
+            out += (self.extension.descriptor(move, visible) if getattr(self.extension, 'relative', False)
+                    else self.extension.descriptor(move))
         if self.w2_descriptor_dim:
             from .wall_release import descriptor
             out += descriptor(move)
