@@ -36,7 +36,7 @@ started = time.time()
 for k, shard in enumerate(shards):
     cmd = (prefix+f' && cd {src}/pytools && nice -n 19 /home/ubuntu/miniconda3/bin/python -B -m pytest -q '
            '--import-mode=importlib -o consider_namespace_packages=true '+' '.join(shard)+
-           f' --tb=short -p no:cacheprovider {deselect} --basetemp={control}/tmp{k}')
+           f' --tb=short -p no:cacheprovider {deselect} --basetemp=/tmp/clean5a_q_{commit[:8]}_{k}')  # outside /home/ubuntu (staging tests mirror it)
     log = (control/f'shard_{k}.log').open('x')
     procs.append(subprocess.Popen(['bash', '-c', cmd], stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL))
 (control/'DISPATCH.json').write_text(json.dumps(dict(source_commit=commit, shards=a.shards, paths=len(paths),

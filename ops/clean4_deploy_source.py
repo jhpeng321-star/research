@@ -26,6 +26,7 @@ cp -a "$B" "$S"
 rm -rf "$S/pytools/tools" "$S/pytools/tests" "$S/pytools/assets" "$S/ops"
 tar -xzf {tarball} -C "$S/pytools"
 mv "$S/pytools/ops" "$S/ops"
+ln -s ../ops "$S/pytools/ops"   # tests import ops/ modules relative to the repo root (= pytools)
 for p in {linked}; do test -e "$S/pytools/tools/$p" || ln -s "$L/$p" "$S/pytools/tools/$p"; done
 /home/ubuntu/miniconda3/bin/python - "$S" {commit} <<'EOF'
 import hashlib, json, sys
