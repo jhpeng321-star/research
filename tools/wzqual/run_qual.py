@@ -148,6 +148,9 @@ def make_backend(args):
 
         import torch
         torch.set_num_threads(int(os.environ.get("WZQ_THREADS", torch.get_num_threads())))
+        frac = os.environ.get("WZQ_GPU_FRACTION")
+        if frac and str(args.device).startswith("cuda"):
+            torch.cuda.set_per_process_memory_fraction(float(frac))   # shared card (WM-E priority)
         from .wm_backend import WmBackend
         return WmBackend(args.checkpoint, device=args.device, map_spec=args.map_spec,
                          physics_toml=args.physics_toml)
