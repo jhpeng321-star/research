@@ -123,25 +123,67 @@ class FairnessUnavailable(WMContractError):
     """The WM cannot report per-group predicted delay (no trace masks / group_delay)."""
 
 
+def cvar90(x):
+    """Mean of the worst ceil(0.1 n) values (traffic_shepherd/c4/branching.cvar, alpha 0.9; S-MULTICRIT P3)."""
+    import numpy as np
+    x = np.sort(np.asarray(x, float))[::-1]
+    return float(x[:max(1, int(math.ceil(0.1 * len(x))))].mean()) if len(x) else 0.0
+
+
+def vehicle_records(speeds, masks, lanes, origin, cav, dt=0.5, v_lim=G.SPEED_LIMIT):
+    """Per-VEHICLE window delay of one trace row: (delay [V], SUMO origin lane [V], is_cav [V]).
+    speeds/masks [T, n] (T = the J sum's time axis), lanes [T, n] = WM lane after each step (time t+1) or None,
+    origin [n] = WM lane at first presence, cav [n]. A padding slot can hold several entrants in turn (the entry
+    process reuses vacated padding slots), so each presence segment of a slot is one vehicle; its origin lane is
+    the WM lane at its first present second (t0 lane for the t0 rows). Class is per slot (approximate for reused
+    slots). Without lanes every present slot counts as one vehicle (older traces). Delays re-sum to J exactly."""
+    import numpy as np
+    m = np.asarray(masks).astype(bool)
+    d = dt * np.clip(1.0 - np.asarray(speeds, float) / v_lim, 0.0, None) * m
+    origin, cav = np.asarray(origin).astype(int), np.asarray(cav).astype(bool)
+    if lanes is None:
+        idx = np.flatnonzero(m.any(0))
+        return d.sum(0)[idx], 2 - origin[idx], cav[idx]
+    prev = np.zeros_like(m)
+    prev[1:] = m[:-1]
+    onset = m & ~prev
+    seg = np.cumsum(onset, 0)
+    S = int(seg.max()) + 1
+    key = np.arange(m.shape[1])[None, :] * S + seg
+    delay = np.bincount(key[m], weights=d[m], minlength=m.shape[1] * S)
+    ts, js = np.nonzero(onset)
+    lanes = np.asarray(lanes).astype(int)
+    wm_lane = np.where(ts == 0, origin[js], lanes[np.maximum(ts - 1, 0), js])
+    return delay[js * S + seg[ts, js]], 2 - wm_lane, cav[js]
+
+
 def groups_from_trace(trace, actions, K, dt=0.5, v_lim=G.SPEED_LIMIT):
-    """{aid: {group: [J_k]}} from a planapi trace (rows, speeds, masks, is_cav, origin_lane per chunk)."""
+    """{aid: {group: [J_k], 'n_<group>': [vehicles_k], 'cvar90': [k], 'p90': [k]}} from a planapi trace (rows,
+    speeds, masks, is_cav, origin_lane[, lanes] per chunk; WM-A 7138ba9a). Groups: SUMO origin lane 0/1/2
+    (= 2 - WM lane at first presence), HDV/CAV, all. Per-vehicle values via vehicle_records."""
     import numpy as np
     need = ('rows', 'speeds', 'masks', 'is_cav', 'origin_lane')
     if any(k not in trace for k in need):
         raise FairnessUnavailable(f'trace lacks {[k for k in need if k not in trace]}')
     aids = [a['id'] for a in actions]
-    out = {aid: {g: [None] * int(K) for g in GROUPS} for aid in aids}
+    extra = ['n_' + g for g in GROUPS] + ['cvar90', 'p90']
+    out = {aid: {g: [None] * int(K) for g in list(GROUPS) + extra} for aid in aids}
     rows = list(trace['rows'])
-    speeds = np.concatenate([np.asarray(x) for x in trace['speeds']], 0)
-    masks = np.concatenate([np.asarray(x) for x in trace['masks']], 0).astype(bool)
-    cav = np.concatenate([np.asarray(x) for x in trace['is_cav']], 0).astype(bool)
-    lane = 2 - np.concatenate([np.asarray(x) for x in trace['origin_lane']], 0).astype(int)   # WM -> SUMO lane
-    per = dt * (np.clip(1.0 - speeds / v_lim, 0.0, None) * masks).sum(1)                       # [b, n]
+
+    def cat(key):
+        return np.concatenate([np.asarray(x) for x in trace[key]], 0)
+    speeds, masks, cav, origin = cat('speeds'), cat('masks'), cat('is_cav'), cat('origin_lane')
+    lanes = cat('lanes') if trace.get('lanes') else None
     for i, (a, k) in enumerate(rows):
-        sel = dict(lane0=lane[i] == 0, lane1=lane[i] == 1, lane2=lane[i] == 2, hdv=~cav[i], cav=cav[i],
-                   all=np.ones_like(cav[i]))
+        dl, ln, cv = vehicle_records(speeds[i], masks[i], None if lanes is None else lanes[i], origin[i], cav[i],
+                                     dt, v_lim)
+        sel = dict(lane0=ln == 0, lane1=ln == 1, lane2=ln == 2, hdv=~cv, cav=cv, all=np.ones(len(dl), bool))
+        o = out[aids[a]]
         for g, msk in sel.items():
-            out[aids[a]][g][k] = float(per[i][msk].sum())
+            o[g][k] = float(dl[msk].sum())
+            o['n_' + g][k] = int(msk.sum())
+        o['cvar90'][k] = cvar90(dl)
+        o['p90'][k] = float(np.percentile(dl, 90)) if len(dl) else 0.0
     return out
 
 
@@ -210,6 +252,14 @@ class StubWM:
                 g.setdefault('cav', []).append(ref * ncav / n - 0.3 * delta)
                 g.setdefault('hdv', []).append(ref * (n - ncav) / n - 0.7 * delta)
                 g.setdefault('all', []).append(j)
+                for L in (0, 1, 2):
+                    g.setdefault(f'n_lane{L}', []).append(nl[L])
+                g.setdefault('n_cav', []).append(ncav)
+                g.setdefault('n_hdv', []).append(n - ncav)
+                g.setdefault('n_all', []).append(n)
+                # planted tail: 3x the mean per-vehicle delay plus the worst per-vehicle hold cost
+                g.setdefault('cvar90', []).append(3.0 * j / n + 2.0 * max(cost[L] / max(1, nl[L]) for L in (0, 1, 2)))
+                g.setdefault('p90', []).append(2.0 * j / n + max(cost[L] / max(1, nl[L]) for L in (0, 1, 2)))
             out[a['id']] = g
         return out
 

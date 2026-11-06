@@ -4,7 +4,7 @@ propose  (WM host)  MOMENTS.json -> PROPOSALS.jsonl (+ _RECEIPT.json); zero SUMO
 score    (WM host)  WM predictions of the variants already in a MOMENTS.json -> SCORES.jsonl; zero SUMO
 rankcheck (any)     WM ranking vs existing SUMO verdicts (Spearman T/S, AUC admitted, top-1) -> JSON
 enrich   (any)      MOMENTS.json + WM-D tapes -> observable moments (CAV-detected neighbours, RSU counters)
-strategy (WM host)  strategy-level search per demand cell vs the solo2 incumbent -> STRATEGY_SEARCH_*.json, ARMS.json
+strategy (WM host)  strategy-level search per demand cell (delay / bounded / fairer archives) -> STRATEGY_SEARCH_*.json, ARMS.json
 opensearch (WM host) open roaming search (free programs, CEM/evolution, MAP-Elites, LCB - disagreement)
 regime   (any)      claim-4: S-REGIME strategy states from tapes / WM-vs-measured benefit agreement
 wmrank   (WM host)  score + bootstrap rank metrics with one WM checkpoint (baseline WM2 / WM-E) -> DIR
@@ -189,7 +189,7 @@ def opensearch(argv):
 
 
 def strategy(argv):
-    """Strategy-level WM search per demand cell (incumbent solo2) -> STRATEGY_SEARCH_<cell>.json + ARMS.json."""
+    """Strategy-level WM search per demand cell (incumbent wall_g_solo2; three archives) -> STRATEGY_SEARCH_<cell>.json + ARMS.json."""
     import time
     from . import geometry as G
     from . import strategy_search as SS
@@ -233,12 +233,17 @@ def strategy(argv):
         log.close()
         res.update(cell=cell, backend=wm.meta, wall_s=round(time.time() - t0, 1), new_sumo_sim_s=0)
         (out / f'STRATEGY_SEARCH_{cell}.json').write_text(json.dumps(res, indent=1, default=str))
-        arms[cell] = dict(wm=SS.select_for_sumo(res, a.k), wm_fair=SS.select_for_sumo(res, a.k, fair=True),
-                          structured=SS.structured_arm(a.k), random=SS.random_arm(a.k), incumbent=SS.SOLO2,
-                          best_beating_solo2=(res['best_beating_solo2'] or {}).get('strategy'),
-                          best_fair=(res['best_fair'] or {}).get('strategy'), fairness=res['fairness'])
-        print(cell, 'evaluated', res['evaluated'], 'archive', res['archive_cells'], 'best',
-              (res['final'][0]['strategy']['name'], res['final'][0]['gain_vs_solo2'], res['final'][0]['gain_vs_solo2_lcb']))
+        arms[cell] = dict(wm=SS.select_for_sumo(res, a.k, 'delay'), wm_bounded=SS.select_for_sumo(res, a.k, 'bounded'),
+                          wm_fairer=SS.select_for_sumo(res, a.k, 'fairer'), wm_fair=SS.select_for_sumo(res, a.k, 'fair'),
+                          structured=SS.structured_arm(a.k), random=SS.random_arm(a.k), reference=SS.reference_arm(),
+                          incumbent=SS.INCUMBENT, banned_comparator=SS.SOLO2, banned_v_w=list(SS.BANNED_V_W),
+                          bound_s=SS.GROUP_BOUND_S,
+                          best={k2: (v or {}).get('strategy') for k2, v in res['best'].items()},
+                          best_beating_incumbent=(res['best_beating_incumbent'] or {}).get('strategy'),
+                          comparators=res['comparators'], fairness=res['fairness'])
+        top = res['final'][0]
+        print(cell, 'evaluated', res['evaluated'], 'archives', res['archive_cells'], 'best',
+              (top['strategy']['name'], top['gain_vs_base'], top['gain_vs_base_lcb'], top.get('worst_group_inc')))
     (out / 'ARMS.json').write_text(json.dumps(arms, indent=1))
 
 
