@@ -148,3 +148,22 @@ def test_bank_bc_initiate_and_join_contexts_from_a_verified_program(cfg, wz):
     rec = dict(batch=batch, weight=1., equivalent=same, meta=dict(kind='program', seed=989220))
     out = fl.bc_steps(learner, [rec], epochs=5, kl_budget=.045, max_grad_norm=.5)
     assert out['final_ce'] < out['initial_ce']
+
+
+def test_g4_program_session_rows_and_fail_closed_macro(cfg, wz, monkeypatch):
+    from . import sparse_synergy_credit as g4
+    monkeypatch.setattr(g4, 'ADAPTERS', {}, raising=False)
+    assert fl.register_g4_program_adapter()
+    p = make(b_cfg(cfg))
+    p.trigger.trigger_head = PreferPrograms(p.trigger)
+    c = controller(p)
+    samples, _ = run(p, c, range(300, 303))
+    # G4 credits stochastic decisions only; relabel this deterministic fixture's rows (test only)
+    steps = [dict(time_s=t, sample=dict(samples[t], deterministic=False)) for t in range(300, 303)]
+    ext = dict(enabled=True, rule=g4.EXTENSION_RULE, families=['free_program_initiate'], provenance=PROV)
+    rows = g4.opportunities([dict(id='ep', steps=steps)], ext)
+    mine = [r for r in rows if r['proposer'] == 'c0']
+    assert mine and mine[0]['g4ld']['members'][0] == 'c0' and len(mine[0]['g4ld']['members']) >= 2
+    g4.ADAPTERS['free_program_initiate']['check'](mine[0])
+    with pytest.raises(NotImplementedError):
+        g4.ADAPTERS['free_program_initiate']['macro'](dict(), None)

@@ -778,6 +778,82 @@ def register_g4_adapter():
     return True
 
 
+# ---------------------------------------------------------------- G4 for clean5b program sessions
+
+PROGRAM_INITIATE, PROGRAM_JOIN = 'free_program_initiate', 'free_program_join'
+
+
+def _program_session_joins(steps, index, option):
+    """Accepted joins of ONE LCEXEC program session from the recorded slates, in decision order."""
+    end = steps[index]['time_s']+int(option['hold'])
+    out = []
+    for step in steps[index+1:]:
+        if step['time_s'] >= end:
+            break
+        trigger = step['sample'].get('track2_trigger')
+        if trigger is None:
+            continue
+        for i, vid in enumerate(trigger['context']['members']):
+            sel = trigger['tables'][i][trigger['actions'][i]]
+            if (sel is None or sel.get('family') != PROGRAM_JOIN or sel.get('session_id') != option['session_id']
+                    or not trigger.get('accepted', {}).get(vid, False)):
+                continue
+            if sel['members'] != [vid] or vid in [m['vid'] for m in out] or vid == option['initiator']:
+                raise ValueError('FULLPOL G4 recorded program join does not match its session')
+            out.append(dict(vid=vid, start_s=step['time_s'], option=sel, slot=int(sel['slot']),
+                            eligible=not step['sample'].get('deterministic')
+                            and not step['sample'].get('behaviour', {}).get('executed')))
+    return out
+
+
+def _g4_program_row(episode, steps, index, ego, selected, trigger, members, pending):
+    """G4LD adapter row for an accepted LCEXEC free_program_initiate (session of >= 2 members)."""
+    from .sparse_synergy_credit import digest
+    start = steps[index]['time_s']
+    if (selected.get('family') != PROGRAM_INITIATE or selected['members'] != [ego] or selected['initiator'] != ego
+            or selected['session_id'] != f'free_program:{ego}@{start}'):
+        raise ValueError('FULLPOL G4 program initiation mismatch')
+    joins = [] if pending else _program_session_joins(steps, index, selected)
+    schedule = [dict(vid=ego, start_s=start, slot=0)]+[dict(vid=j['vid'], start_s=j['start_s'], slot=j['slot'])
+                                                       for j in joins]
+    if not pending and len(schedule) < 2:
+        return None              # nobody joined: a single-actor program, not a joint start
+    row = dict(episode_id=episode['id'], time_s=start, proposer=ego, move=selected, trigger_sha256=digest(trigger))
+    row['opportunity_id'] = digest(row)
+    row['g4ld'] = dict(kind='fp_session', family=PROGRAM_INITIATE, members=[s['vid'] for s in schedule],
+                       schedule=schedule, credit=[dict(vid=ego, time_s=start)]+[
+                           dict(vid=j['vid'], time_s=j['start_s']) for j in joins if j['eligible']])
+    return row
+
+
+def _g4_program_check(start):
+    g = start['g4ld']
+    members, schedule = g['members'], g['schedule']
+    if (g['kind'] != 'fp_session' or g['family'] != PROGRAM_INITIATE or len(members) < 2
+            or members != [s['vid'] for s in schedule] or len(set(members)) != len(members)
+            or schedule[0] != dict(vid=start['proposer'], start_s=start['time_s'], slot=0)
+            or len({s['slot'] for s in schedule}) != len(schedule)
+            or any(s['start_s'] < start['time_s'] for s in schedule)
+            or not g['credit'] or g['credit'][0] != dict(vid=start['proposer'], time_s=start['time_s'])):
+        raise ValueError('FULLPOL G4 program session schedule/credit mismatch')
+
+
+def _g4_program_macro(job, observer):
+    raise NotImplementedError(
+        'G4 branch execution of LCEXEC program sessions needs the program executor + lc_tick lane writer '
+        'in g4_runtime (LCEXEC/G4LD); keep free_program_initiate out of g4_extension.families until it lands')
+
+
+def register_g4_program_adapter():
+    """Register the clean5b session adapter (rows/check; macro fails closed until G4 branches exist)."""
+    from . import sparse_synergy_credit as g4
+    adapters = getattr(g4, 'ADAPTERS', None)
+    if adapters is None:
+        return False
+    adapters[PROGRAM_INITIATE] = dict(row=_g4_program_row, check=_g4_program_check, macro=_g4_program_macro)
+    return True
+
+
 # ---------------------------------------------------------------- reproduction receipt
 
 def reproduction(verified_labels, executed_labels):
