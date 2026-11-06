@@ -100,3 +100,34 @@ def test_raw_newmap_hold_row_refused_exact_binding_accepted(monkeypatch):
                   perturbation_profile=[[0., -1., -1.], [0., -1., -1.]], policy_profile=[[0., 0., 0.]]*2,
                   profile=[[0., -1., -1.]]*2)
     assert moves.from_plan(legacy).family in moves.FAMILIES
+
+
+def test_registered_stop_rule():
+    from tools.coopmwm import launch_training as lt
+    assert lt.registered_last_update({}) == 24
+    assert lt.registered_last_update(dict(registered_stop=dict(after_update=12, rule='MAIN stop'))) == 12
+    for bad in (dict(after_update=0, rule='x'), dict(after_update=25, rule='x'), dict(after_update=12),
+                dict(after_update='12', rule='x'), 'u12'):
+        with pytest.raises(ValueError):
+            lt.registered_last_update(dict(registered_stop=bad))
+
+
+def test_first_three_registered_states_in_order():
+    from tools.coopmwm import launch_qualification as lq, track2_monitor as tm
+
+    class Backend:
+        def __init__(self, counts, rule=None):
+            self.registration = dict(replicates=[dict(replicate=i, world_seed=1000+i) for i in range(len(counts))],
+                                     **({'state_order_rule': rule} if rule else {}))
+            self.counts = counts
+
+        def resolve_states(self, row):
+            return [(row['replicate'], k) for k in range(self.counts[row['replicate']])]
+
+    legacy = lq.first_three_groups(Backend([3, 1, 1, 1, 1]), {})
+    assert [(r['replicate'], s) for r, s in legacy] == [(0, [(0, 0), (0, 1), (0, 2)])]
+    cfg = dict(registered_state_order=tm.STATE_ORDER_RULE)
+    groups = lq.first_three_groups(Backend([2, 1, 1, 1, 1], tm.STATE_ORDER_RULE), cfg)
+    assert [(r['replicate'], s) for r, s in groups] == [(0, [(0, 0), (0, 1)]), (1, [(1, 0)])]
+    with pytest.raises(ValueError):          # the registration must carry the same rule
+        lq.first_three_groups(Backend([2, 1, 1, 1, 1]), cfg)

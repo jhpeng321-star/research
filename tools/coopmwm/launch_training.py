@@ -188,13 +188,26 @@ def update(cfg, arm, u, *, smoke=False):
     return value
 
 
+def registered_last_update(cfg):
+    """clean4 registered stop rule (REGISTRATION 2026-11-06, MAIN, before launch): stop cleanly after u12 and
+    its replicated test. Absent key = the original 24 updates (byte-identical)."""
+    stop = cfg.get('registered_stop')
+    if stop is None:
+        return 24
+    if (not isinstance(stop, dict) or type(stop.get('after_update')) is not int
+            or not 1 <= stop['after_update'] <= 24 or not str(stop.get('rule', '')).strip()):
+        raise ValueError('registered_stop needs after_update (1..24) and its registered rule text')
+    return stop['after_update']
+
+
 def run_arm(cfg, arm):
     root = Path(cfg['run_root'])
     release(cfg)
     write(root/f'owners/{arm}.json', dict(pid=os.getpid(), unix=time.time(),
         start_ticks=Path(f'/proc/{os.getpid()}/stat').read_text().split()[21], config_sha256=digest(cfg)))
     torch.set_num_threads(1)
-    for u in range(1, 25):
+    last = registered_last_update(cfg)
+    for u in range(1, last+1):
         # Only completed updates can be adopted. Never redo an attempted update.
         done = root/f'{arm}_UPDATE_{u:03}.json'
         if done.exists():
@@ -203,7 +216,8 @@ def run_arm(cfg, arm):
                 raise ValueError('cannot adopt a different final runtime')
             continue
         update(cfg, arm, u)
-    write(root/f'{arm}_COMPLETE.json', dict(arm=arm, updates=24, unix=time.time()))
+    write(root/f'{arm}_COMPLETE.json', dict(arm=arm, updates=last, unix=time.time(),
+        **({} if last == 24 else dict(registered_stop=cfg['registered_stop']))))
 
 
 class MonitorBackend:
@@ -301,7 +315,8 @@ def run_monitor(cfg):
     release(cfg)
     root = Path(cfg['run_root'])
     write(root/'owners/monitor.json', dict(pid=os.getpid(), unix=time.time()))
-    for u in range(1, 25):
+    last = registered_last_update(cfg)
+    for u in range(1, last+1):
         if not (root/f'LEARNING_MONITOR_u{u:03}.json').exists():
             monitor_update(cfg, u)
         if u in (2, 4, 6, 12, 24):
@@ -310,7 +325,8 @@ def run_monitor(cfg):
         # dispatched by the same diagnostic owner through the final adapters.
         from .launch_evaluation import scheduled
         scheduled(cfg, u)
-    write(root/'MONITOR_COMPLETE.json', dict(unix=time.time(), updates=24))
+    write(root/'MONITOR_COMPLETE.json', dict(unix=time.time(), updates=last,
+        **({} if last == 24 else dict(registered_stop=cfg['registered_stop']))))
 
 
 def main():

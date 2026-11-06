@@ -82,3 +82,26 @@ def test_owner_approval_binding():
     tampered = dict(doc, total_training_sim_s=1)
     with pytest.raises(ValueError):
         b.approved(good, tampered)
+
+
+def test_requote_covered_by_rule():
+    parent = b.document(_phases(), prior=dict(a=1000), cap=10_000_000, created='t')
+    phases = dict(_phases(), clean4_base_sanity=b.phase('sanity', 28800, basis='x'),
+                  clean4_prelaunch_verify=b.phase('plan A', 347800, basis='x', allocated=400000))
+    child = b.document(phases, prior=dict(a=1000), cap=12_400_000, created='t',
+                       parent_quote_sha256=parent['receipt_sha256'])
+    assert child['own_ledger_phases'] == dict(clean4_base_sanity=33600, clean4_prelaunch_verify=400000)
+    assert child['runtime_phases'] == parent['runtime_phases']
+    budget = dict(owner_approval='yes', quote_sha256=parent['receipt_sha256'], approved_sim_s=4_000_000,
+                  total_cap_sim_s=12_400_000, requote_rule='<=4M, >=15%')
+    out = b.approved(budget, child)
+    assert out['requote'] and out['parent_quote_sha256'] == parent['receipt_sha256']
+    with pytest.raises(ValueError):
+        b.approved(dict(budget, requote_rule=None), child)
+    orphan = b.document(phases, prior=dict(a=1000), cap=12_400_000, created='t', parent_quote_sha256='0'*64)
+    with pytest.raises(ValueError):
+        b.approved(budget, orphan)
+    big = dict(phases, v2v_final=b.phase('x', 900000, basis='x'))
+    over = b.document(big, prior=dict(a=1000), cap=12_400_000, created='t', parent_quote_sha256=parent['receipt_sha256'])
+    with pytest.raises(ValueError):
+        b.approved(budget, over)

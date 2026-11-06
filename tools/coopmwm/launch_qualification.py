@@ -114,22 +114,43 @@ def smoke(cfg):
     return receipt
 
 
+def first_three_groups(backend, cfg):
+    """clean4 amendment (REGISTRATION 19:22): the first three registered states in registration order,
+    grouped per replicate [(row, states)]; absent key = replicate 0's first three (byte-identical)."""
+    from .track2_monitor import STATE_ORDER_RULE
+    rows = sorted(backend.registration['replicates'], key=lambda r: r['replicate'])
+    if cfg.get('registered_state_order') != STATE_ORDER_RULE:
+        return [(rows[0], backend.resolve_states(rows[0])[:3])]
+    if cfg['registered_state_order'] != backend.registration.get('state_order_rule'):
+        raise ValueError('registration must carry the clean4 state-order rule')
+    groups, need = [], 3
+    for row in rows:
+        if need <= 0:
+            break
+        states = backend.resolve_states(row)[:need]
+        groups.append((row, states))
+        need -= len(states)
+    return groups
+
+
 def gate_pairs(cfg):
     """Prospective first-three-state gate, full windows and both bank policies."""
     backend = training.MonitorBackend(cfg)
-    row = backend.registration['replicates'][0]
-    states = backend.resolve_states(row)[:3]
-    if len(states) != 3:
+    groups = first_three_groups(backend, cfg)
+    if sum(len(states) for _, states in groups) != 3:
         raise ValueError('three pre-registered full-window gate states required')
+    row, states = groups[0]
     native = production.backend_config(cfg)
     common = production.checkpoint_weights(native, 'A', 0)
     pairs = []
     for arm in ('B', 'R'):
         current = production.checkpoint_weights(native, arm, 0)
-        job = dict(row, id='clean1_gate_'+arm, arm=arm, update=0,
-                   **p3.diagnostic_identity(states))
-        for group, specs in p3.isolated_expansion(job, states, current, common):
-            pairs.extend(specs)
+        for index, (row, states) in enumerate(groups):
+            # replicate 0 keeps the historical job id; later replicates (clean4 only) get a suffix.
+            job = dict(row, id='clean1_gate_'+arm+('' if index == 0 else f"_r{row['replicate']:03}"), arm=arm,
+                       update=0, **p3.diagnostic_identity(states))
+            for group, specs in p3.isolated_expansion(job, states, current, common):
+                pairs.extend(specs)
     cost = sum(s['sim_s'] for s, _ in pairs)
     if cost > rc.GATE_SIM_S:
         raise ValueError('complete full-window gate exceeds its quote; no horizon reduction')

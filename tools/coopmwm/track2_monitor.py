@@ -452,6 +452,11 @@ def _write_status(root):
     os.replace(temp, _path(root, 'CLEAN1_STATUS.md'))
 
 
+STATE_ORDER_RULE = ('clean4 amendment (REGISTRATION 2026-11-06 19:22, MAIN): gate and u2/u4 probes use the '
+                    'first three registered states in registration order (r0 s0, r0 s1, r1 s0), each expanded '
+                    'with its own replicate identity; the u6/u12/u24 replicated test is unchanged')
+
+
 def diagnostic_identity(states):
     from .sumo_verify import snapshot_sha
     return dict(state_set_sha256=digest(dict(states=[dict(state_id=r['verification_id'],
@@ -676,17 +681,22 @@ def _diagnostic(cfg, u, kind):
     prepared, jobs, manifest = [], [], []
     common_sha, current_shas = None, {}
     # Resolve and validate ALL cells before reserving the WHOLE wave.
+    ordered = cfg.get('registered_state_order') == STATE_ORDER_RULE and reg.get('state_order_rule') == STATE_ORDER_RULE
     for arm in arms:
-        for row in (rows[:1] if kind == 'probe' else rows):
+        need = 3
+        for row in ((rows if ordered else rows[:1]) if kind == 'probe' else rows):
+            if kind == 'probe' and need <= 0:
+                break
             job = dict(row, id=f'p3_{kind}_u{u:03}_{arm}_r{row["replicate"]:03}',
                        arm=arm, update=u, phase=phase, registration_sha256=registration_sha)
             states = backend.resolve_states(deepcopy(job))
             if diagnostic_identity(states) != {k: row[k] for k in diagnostic_identity(states)}:
                 raise ValueError('REFUSED: registered diagnostic states/windows differ')
             if kind == 'probe':
-                if len(states) < 3:
+                if not ordered and len(states) < 3:
                     raise ValueError('REFUSED: quick probe requires three registered states')
-                states = states[:3]
+                states = states[:need]
+                need -= len(states)
                 job.update(diagnostic_identity(states))
             current, common = backend.weights(arm, u)
             expanded = isolated_expansion(job, states, current, common)

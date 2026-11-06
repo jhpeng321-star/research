@@ -23,6 +23,8 @@ from pathlib import Path
 import time
 
 from .exact_grade import _seal, verify_sealed
+
+STATE_ORDER_RULE_TEXT = 'gate/probes: first three registered states in registration order (REGISTRATION 19:22)'
 from .protocol import digest
 
 ROOT = '/home/ubuntu/coopmwm20261106_clean4_r1'
@@ -61,6 +63,11 @@ RSU_ON = False
 R_GUIDANCE = ('MAIN 2026-11-06 option (a): the matched-effort random procedure (R; PLANGEN/PLANGEN2 R mining '
               'ledgers = matched effort) yielded 0 runtime-executable rows; R trains with ZERO guidance rows '
               '(same layer and procedure: RL + team reward + G4 only) - the clean "learns cooperation on its own" arm.')
+REGISTERED_STOP = dict(after_update=12, rule=(
+    'MAIN 2026-11-06 (owner framing "learn WHEN to cooperate: conditions, not moments"), registered BEFORE '
+    'launch and before any results: clean4 is a DRESS REHEARSAL plus early learning signal; it stops cleanly after '
+    'u12 and its replicated test, regardless of outcome. No final evaluation for clean4 unless MAIN registers one '
+    'later. cpuV is then handed to clean5.'))
 GUIDANCE_SOURCES = ('PLANGEN_MOVES_B.jsonl', 'PLANGEN2_MOVES_B.jsonl')   # FAIRAUDIT F3: effort-matched only
 
 
@@ -177,8 +184,10 @@ def registration_from_contexts(contexts, root):
         if 2 <= len(members) <= 4 and len(set(members)) == len(members):
             by_seed[int(c['seed'])].append(c)
     ordered = sorted(by_seed, key=lambda s: (-len(by_seed[s]), s))
-    if len(ordered) < 5 or len(by_seed[ordered[0]]) < 3:
-        raise ValueError('five distinct TRAIN world seeds and three first-world states required')
+    # REGISTRATION 19:22 amendment (MAIN): Plan A gives <= 2 contexts per world; replicate 0 keeps all of
+    # its contexts (<= 3), the gate/probes take the first three registered states in registration order.
+    if len(ordered) < 5:
+        raise ValueError('five distinct TRAIN world seeds required')
     rows = []
     for index, seed in enumerate(ordered[:5]):
         states, files = [], []
@@ -199,9 +208,14 @@ def registration_from_contexts(contexts, root):
                               receipt_path=str(directory/'RECEIPT.json'), receipt_file_sha256=rc.sha(directory/'RECEIPT.json')))
             states.append((snapshot, receipt))
         rows.append(dict(replicate=index, world_seed=seed, states=files, **diagnostic_identity(states)))
+    from .track2_monitor import STATE_ORDER_RULE
+    if sum(len(r['states']) for r in rows) < 3:
+        raise ValueError('three registered states required for the gate/probes')
     registration = dict(role='train', metric=rc.ISOLATED_TEST['metric'], replicates=rows,
+        state_order_rule=STATE_ORDER_RULE,
         selection='clean4: Plan A B contexts (frozen move-list order); five TRAIN world seeds by descending '
-                  'context count then seed; first world three states, others first state; no outcomes',
+                  'context count then seed; first world all its contexts (<=3), others first state; no outcomes '
+                  '(REGISTRATION 19:22 amendment)',
         final_evaluation=dict(role='external', panel=EVAL_PANEL))
     rc.isolated_jobs(registration)
     return registration
@@ -294,6 +308,9 @@ def prepare(source, *, plan_a, quote_doc, approval, prior_runtime_sim_s, lane_dr
         guidance_sources=list(GUIDANCE_SOURCES))
     from .bank_breadth import SUBSET_RULE
     cfg['r_family_subset'] = SUBSET_RULE
+    from .track2_monitor import STATE_ORDER_RULE
+    cfg['registered_state_order'] = STATE_ORDER_RULE
+    cfg['registered_stop'] = deepcopy(REGISTERED_STOP)
     cfg['g5_runtime'] = dict(flag=g5_runtime.FLAG, base=str(g5_runtime.BASE_REL),
         base_sha256=g5_runtime.BASE_SHA256, overlay_sha256=g5_runtime.OVERLAY_SHA256,
         rule='accepted G5 env change bound onto the frozen e3final env; wz3to2 bound by map_runtime.install')
@@ -363,7 +380,7 @@ def prepare(source, *, plan_a, quote_doc, approval, prior_runtime_sim_s, lane_dr
     if (diag['probe_u002']+diag['probe_u004'] > phases['early_probes'] or
             sum(diag[f'replicated_u{u:03}'] for u in (6, 12, 24)) > phases['isolated_replicated']):
         raise ValueError('native diagnostic manifests exceed clean4 phases')
-    reporting = [s for s in gate_manifest if '_s000_' in s['id']]
+    reporting = [s for s in gate_manifest if __import__('re').match(r'clean1_gate_[BR]_s000_', s['id'])]  # r0 s0 only
     if not reporting or cfg['smoke']['total_sim_s']+sum(s['sim_s'] for s in reporting) > 20000:
         raise ValueError('full first-state B/R smoke reporting plus episodes exceeds smoke cap')
     if cfg['smoke']['total_sim_s']+sum(s['sim_s'] for s in reporting)+gate_cost > 40000:
@@ -439,7 +456,8 @@ def prepare(source, *, plan_a, quote_doc, approval, prior_runtime_sim_s, lane_dr
             seeds='TRAIN worlds 989220-989267 (cell D3200_p60, 16/update, rotating thirds); guidance rows from '
                   'registered TRAIN worlds (989000-989099 MAIN 16:45 + 989200-989599); final panel 989600-989695 (N6)',
             criterion=rc.criterion_document(), reporting=cfg['clean2_reporting_definition'],
-            paired_evaluation='in-run u8/u24 OFF; final = N6 launcher on panel 3acb2b56..., debited from v2v_final',
+            paired_evaluation='in-run u8/u24 OFF; no final evaluation for clean4 unless MAIN registers one later',
+            registered_stop=REGISTERED_STOP, registered_state_order=STATE_ORDER_RULE_TEXT,
             safety=SAFETY_RULE), sort_keys=True)+'\n')
     training.checked_config(root/'CONFIG.json')
     qualification.verify_inputs(cfg)

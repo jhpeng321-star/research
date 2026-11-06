@@ -119,17 +119,24 @@ def runtime_phases(phases):
                 teacher_verify=0, group_credit_verify=0, augment_verify=0)
 
 
-def document(phases, *, prior, cap, created, notes=()):
-    """Sealed CLEAN4_QUOTE.json body."""
+OWN_LEDGER_PHASES = ('clean4_base_sanity', 'clean4_prelaunch_verify')   # charged on their own ledgers
+REQUOTE_LIMIT = 4_000_000   # BUDGET_CLEAN4.json requote_rule (owner 14:58 approval)
+
+
+def document(phases, *, prior, cap, created, notes=(), parent_quote_sha256=None):
+    """Sealed CLEAN4_QUOTE.json body (a re-quote names its approved parent)."""
     total = sum(p['allocated_sim_s'] for p in phases.values())
     prior_total = sum(prior.values())
     available = cap-prior_total
     for name, p in phases.items():
         if p['base_sim_s'] and p['allocated_sim_s'] < p['base_sim_s']*(1+MARGIN)-1e-9:
             raise ValueError('phase below margin: '+name)
+    runtime = runtime_phases({k: v for k, v in phases.items() if k not in OWN_LEDGER_PHASES})
     value = dict(schema=SCHEMA, created=created, updates=UPDATES, arms=['A', 'B', 'R'],
         final_arms=list(FINAL_ARMS), margin_min=MARGIN, phases=deepcopy(phases),
-        runtime_phases=runtime_phases(phases), total_training_sim_s=total,
+        runtime_phases=runtime, total_training_sim_s=total,
+        own_ledger_phases={k: phases[k]['allocated_sim_s'] for k in OWN_LEDGER_PHASES if k in phases},
+        **(dict(parent_quote_sha256=parent_quote_sha256) if parent_quote_sha256 else {}),
         smoke_gate=dict(phase=SMOKE_PHASE, cap_sim_s=SMOKE_PHASE_CAP, smoke_cap_sim_s=SMOKE_CAP,
                         runtime_ledger_phases=list(RUNTIME_SMOKE_PHASES),
                         authority='pre-approved inside phase newmap2 (owner/MAIN 2026-11-06 14:37)'),
@@ -166,8 +173,16 @@ def approved(budget, quote_doc):
     text = budget.get('owner_approval')
     if not isinstance(text, str) or not text.strip():
         raise ValueError('BUDGET_CLEAN4.json must quote the owner approval verbatim')
-    if budget.get('quote_sha256') != quote_doc['receipt_sha256']:
-        raise ValueError('BUDGET_CLEAN4.json must bind this exact CLEAN4 quote')
+    requote = budget.get('quote_sha256') != quote_doc['receipt_sha256']
+    if requote:
+        # BUDGET_CLEAN4.json requote_rule: a re-quote of the approved parent is covered iff its total is
+        # <= 4,000,000 and every phase keeps >= 15% margin (N4 records the new sha in AUTHORITY.md).
+        if (quote_doc.get('parent_quote_sha256') != budget.get('quote_sha256') or not budget.get('requote_rule')
+                or quote_doc['total_training_sim_s'] > REQUOTE_LIMIT):
+            raise ValueError('BUDGET_CLEAN4.json must bind this exact CLEAN4 quote or its covered re-quote')
+        for name, p in quote_doc['phases'].items():
+            if p['base_sim_s'] and p['allocated_sim_s'] < p['base_sim_s']*(1+MARGIN)-1e-9:
+                raise ValueError('re-quote phase below the 15% margin: '+name)
     amount = budget.get('approved_sim_s')
     if type(amount) is not int or amount < quote_doc['total_training_sim_s']:
         raise ValueError('approved training budget below the full u1-u24 quote')
@@ -175,4 +190,5 @@ def approved(budget, quote_doc):
     if type(cap) is not int or cap-quote_doc['prior_total_sim_s'] < quote_doc['total_training_sim_s']:
         raise ValueError('approved owner cap does not cover prior registered phases plus the clean4 quote')
     return dict(owner_approval=text, approved_sim_s=amount, total_cap_sim_s=cap,
-                quote_sha256=quote_doc['receipt_sha256'])
+                quote_sha256=quote_doc['receipt_sha256'], requote=requote,
+                parent_quote_sha256=quote_doc.get('parent_quote_sha256'))
