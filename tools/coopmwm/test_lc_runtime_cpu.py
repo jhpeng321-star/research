@@ -339,7 +339,6 @@ def test_closing_lane_target_issued_deferred_and_refused():
 @pytest.mark.parametrize('state,target,status', [
     (S('up', 2, 2000., 20.), 2, 'refused_not_allowed'),      # WM 0 -> WM 2: not adjacent
     (S('up', 0, 2000., 20.), 0, 'refused_not_allowed'),      # WM 2 -> WM 0
-    (S('up', 1, 2000., 20.), 1, 'noop'),
     (S(':n1_0', 0, 2700., 20.), 0, 'refused_junction'),
     (S('up', 1, 2000., 20.), 3, 'refused_not_allowed')])
 def test_lane_rules(state, target, status):
@@ -347,6 +346,65 @@ def test_lane_rules(state, target, status):
     calls = h.tick(0, wz_states(c1=state), dict(lane_mode={'c1': 513}, lanes={'c1': [target, 2.0]}))
     assert h.last_info['lc_lane_vehicles']['c1']['status'] == status
     assert 'changeLane' not in [c[2] for c in calls]
+
+
+@pytest.mark.usefixtures('both_envs')
+def test_lcexec_current_lane_request_is_a_held_change_lane_g5_keeps_noop():
+    h = harness()
+    st = wz_states()
+    g5 = dict(base={'c3': 0.}, lanes={'c3': 0}, lane_actors={'c3'})          # c3 already in WM 0
+    req = dict(lane_mode={'c1': 513, 'c2': 512}, lanes={'c1': [1, 2.0], 'c2': [2, 1.5]})
+    calls = h.tick(0, st, req, **g5)
+    assert (0, 'c1', 'changeLane', (1, 2.0)) in calls and (0, 'c2', 'changeLane', (0, 1.5)) in calls
+    assert not [c for c in calls if c[1] == 'c3' and c[2] == 'changeLane']   # frozen G5: noop
+    assert h.last_info['lane_vehicles'] == {'c3': dict(target=0, status='noop', completed=False)}
+    assert h.last_info['lc_lane_vehicles'] == {'c1': dict(target=1, status='held', completed=True),
+                                               'c2': dict(target=2, status='held', completed=True)}
+    assert h.last_info['lc_lane_commands'] == dict(held=2)
+    # pushed out during the step: the hold is reported not kept
+    h.tick(1, st, req, after=wz_states(c1=S('up', 2, 2000., 20.)))
+    assert h.last_info['lc_lane_vehicles']['c1'] == dict(target=1, status='held', completed=False)
+    # hold on the downstream edge: current SUMO index of that edge
+    h = harness()
+    calls = h.tick(0, wz_states(c1=S('wz', 0, 2800., 20.)), dict(lane_mode={'c1': 513}, lanes={'c1': [1, 2.0]}))
+    assert (0, 'c1', 'changeLane', (0, 2.0)) in calls
+    # closing-lane hold near the drop: deferred; junction: refused
+    for state, status in ((S('up', 0, 2680., 10.), 'deferred_edge_end'),
+                          (S(':n1_0', 0, 2700., 10.), 'refused_junction')):
+        h = harness()
+        calls = h.tick(0, wz_states(c2=state), dict(lane_mode={'c2': 513}, lanes={'c2': [2, 2.0]}))
+        assert h.last_info['lc_lane_vehicles']['c2']['status'] == status
+        assert 'changeLane' not in [c[2] for c in calls]
+    # merge map: holding a CAV in the ramp lane is refused; a main-lane hold is issued
+    h = Harness(None, ROSTER, desc=md.ORIGINAL, env_module=current_env(), default_lane_length=1000.)
+    calls = h.tick(0, merge_states(), dict(lane_mode={'c1': 513, 'c2': 513},
+                                           lanes={'c1': [1, 2.0], 'c2': [2, 2.0]}))
+    assert h.last_info['lc_lane_vehicles']['c2']['status'] == 'refused_not_allowed'
+    assert h.last_info['lc_lane_vehicles']['c1']['status'] == 'held' and (0, 'c1', 'changeLane', (0, 2.0)) in calls
+
+
+@pytest.mark.usefixtures('both_envs')
+def test_every_requested_vehicle_gets_a_receipt_status():
+    h = harness(roster=dict(ROSTER, c4=True, c5=True))
+    st = wz_states(c2=S('up', 0, 2680., 10.), c4=S('up', 2, 1500., 20.), c5=S('up', 1, 1200., 20.))
+    req = dict(lane_mode={'c1': 513, 'c2': 512, 'c4': 513}, native=['c5'],
+               lanes={'c1': [0, 2.0], 'c2': [1, 2.0], 'c4': [2, 2.0], 'c5': [0, 2.0]})
+    h.tick(0, st, req)
+    assert {v: r['status'] for v, r in h.last_info['lc_lane_vehicles'].items()} == dict(
+        c1='issued', c2='deferred_edge_end', c4='refused_not_allowed', c5='refused_not_policy')
+    assert h.last_info['lc_lane_commands'] == dict(issued=1, not_completed=1, deferred_edge_end=1,
+                                                   refused_not_allowed=1, refused_not_policy=1)
+    assert h.env.lc_lane_command_counts['deferred_edge_end'] == 1
+
+
+@pytest.mark.usefixtures('both_envs')
+def test_known_difference_very_fast_vehicle_is_released_to_native():
+    """v > allowed + 3: direct_target is infeasible -> native (the probe would slowDown to allowed)."""
+    h = harness()
+    assert h.tick(0, wz_states(), dict(accel={'c1': -1.0}))[0][2] == 'slowDown'
+    calls = h.tick(1, wz_states(c1=S('up', 1, 2020., 25., allowed=20.)), dict(accel={'c1': -1.0}))
+    assert calls == [(1, 'c1', 'setSpeed', -1.0)] and h.last_info['actions']['c1'] == 'native'
+    assert probe_target(25., -1.0, 20.) == 20.0
 
 
 @pytest.mark.usefixtures('both_envs')
@@ -467,7 +525,21 @@ def probe(name):
     return SimpleNamespace(**ns)
 
 
-def run_parity(core, members, seq, settings=None):
+def persistent_hold(ex, cmds, own):
+    """LCMOVES persistent lane request (lcm_core ``_prog``): changeLane(target, d) EVERY second while
+    on the approach before the give-up point, also after reaching the target (hold) or after being
+    pushed out. lc_program's until_reached rule stops requesting after lane_done (LCEXEC-owned
+    executor, reported); this adds the probe's request only where the executor emitted none."""
+    q = ex.p.lane
+    if (ex.released or q is None or q.rule != 'until_reached' or ex.lane_done is None or own is None
+            or any(k == 'changeLane' for k, _ in cmds)):
+        return cmds
+    if own.on_approach and own.s_m < (q.giveup_s if q.giveup_s is not None else math.inf):
+        return list(cmds)+[('changeLane', (int(q.target), float(q.duration_s)))]
+    return cmds
+
+
+def run_parity(core, members, seq, settings=None, persistent=False):
     roster = {}
     for st in seq:
         roster.update({v: s['is_cav'] for v, s in st.items()})
@@ -485,6 +557,8 @@ def run_parity(core, members, seq, settings=None):
         arm.control(el, live, p._positions(api, sorted(roster), live))
         probe_calls += api.calls[n:]
         cmds = {v: ex.step(h.obs(el, v, st)) for v, ex in execs.items()}
+        if persistent:
+            cmds = {v: persistent_hold(execs[v], c, h.obs(el, v, st).own) for v, c in cmds.items()}
         env_calls += h.tick(el, st, requests_from_commands(cmds, execs))
     return probe_calls, env_calls
 
@@ -594,17 +668,18 @@ def test_parity_prog_closing_lane_target_first_second():
 
 
 @pytest.mark.usefixtures('both_envs')
-def test_known_divergence_prog_lane_hold_after_reaching_the_target():
-    """OPEN ISSUE (reported): the probe prog role keeps calling changeLane(target, 2 s) every second
-    after reaching the lane ("lane hold"); lc_program's until_reached rule stops requesting and the
-    frozen env rule makes target == current a no-op. Every other write stays identical."""
-    seq = [{'c1': S('up', 1, 2000., 18.), 'h1': HDV}, {'c1': S('up', 0, 2017., 17.), 'h1': HDV},
-           {'c1': S('up', 0, 2033., 16.), 'h1': HDV}]
+@pytest.mark.usefixtures('both_envs')
+def test_parity_prog_persistent_lane_hold_into_the_closing_lane():
+    """LCMOVES prog into the closing lane: change (el 0), HOLD seconds (el 1, 2, 4: changeLane to the
+    lane it is in), re-request after being pushed out (el 3); speed hold law throughout."""
+    lanes = [1, 0, 0, 1, 0]
+    seq = [{'c1': S('up', lane, 2000.+16*i, 18.-i), 'h1': HDV} for i, lane in enumerate(lanes)]
     members = [dict(id='c1', role='prog', params=dict(lc_target=0, speed='hold', v_w=15., dmax=1.))]
-    probe_calls, env_calls = run_parity('lcm_core.pysrc', members, seq)
-    hold = [c for c in probe_calls if c[2] == 'changeLane' and c[0] > 0]
-    assert [c[:3] for c in hold] == [(1, 'c1', 'changeLane'), (2, 'c1', 'changeLane')]
-    assert_parity([c for c in probe_calls if c not in hold], env_calls)
+    probe_calls, env_calls = run_parity('lcm_core.pysrc', members, seq, persistent=True)
+    calls = assert_parity(probe_calls, env_calls)
+    assert [c[0] for c in calls if c[2] == 'changeLane'] == [0, 1, 2, 3, 4]
+    assert all(c[3] == (0, 2.0) for c in calls if c[2] == 'changeLane')
+    assert sum(c[2] == 'slowDown' for c in calls) == 5
 
 
 def test_harness_rejects_a_frame_from_another_descriptor():
