@@ -478,3 +478,27 @@ def test_production_path_clean5a_episode_ppo_ev_bc_metrics_and_g4(cfg, monkeypat
     ext = dict(enabled=True, rule=g4.EXTENSION_RULE, families=['abreast_wall', 'group_hold'], provenance=PROV)
     rows_g4 = g4.opportunities([dict(id='ep1', steps=steps)], ext)
     assert all(len(r['g4ld']['members']) >= 2 for r in rows_g4)
+
+
+U0_FINAL = Path('E:/research-dense/runs/active/C4-V7FT-20261017/regimeu0')
+
+
+@pytest.mark.parametrize('name', ['ANALYSIS.json', 'REGIMEU0_RESULTS.jsonl'])
+def test_final_u0_inputs_agree_and_light_cells_target_none(cfg, name):
+    path = U0_FINAL/name
+    if not path.exists():
+        pytest.skip('final S-REGIMEU0 files not present in this checkout')
+    doc = fl.build_guidance(mappo=str(path), provenance=PROV)
+    rows = {(r['regime'], r['family']): r for r in doc['rows']}
+    assert not any(f in ('u0', 'group_minus_best_solo') for _, f in rows)
+    if name.endswith('.jsonl'):
+        assert {r['j_field'] for r in doc['rows']} == {'J_300_1200_vs'}
+        raw = json.loads((U0_FINAL/'ANALYSIS.json').read_text()) if (U0_FINAL/'ANALYSIS.json').exists() else None
+        if raw is not None:
+            for (cell, fam), r in rows.items():
+                assert r['mean_veh_s'] == pytest.approx(-raw['cells'][cell][fam]['mean_diff'], rel=1e-6, abs=1e-3)
+    on = ev_cfg(cfg, guidance=doc, learn=dict(ev_bc=True))
+    table, _ = fl.ev_table(on, 'B')
+    assert fl.qualifying(table['D3200_p60'])[0] == 'wall_h_solo2'
+    for cell in ('D2400_p60', 'D2400_p40'):
+        assert fl.qualifying(table.get(cell, {})) == []       # light traffic: no metering -> none

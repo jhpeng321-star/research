@@ -88,8 +88,10 @@ def _wall_like(family, view, own, rng, range_m):
     v = VARIANTS[name]
     lane = int(own['lane'])
     if family == 'solo_hold':
+        from .fullpol_ev import sumo_lane
         prog = _speed(view, v_w=v['target_mps'], hold_s=v['hold'], dmax=v['depth'], role='solo')
-        return _template([prog], [], source=dict(family='solo_hold', variant=f'{name}_solo'))
+        # lane-specific strategy label (S-REGIME wall_{g,h}_solo{SUMO lane of the initiator}); offline only
+        return _template([prog], [], source=dict(family='solo_hold', variant=f'{name}_solo{sumo_lane(view, lane)}'))
     if family == 'abreast_wall':
         others = [l for l in view.lane_ids if l != lane]
         spread = fp.registered('wall_spread_m')[0]
