@@ -506,7 +506,13 @@ def mappo_binding(final_root):
     value = verify(read(path), 'binding_sha256', 'MAPPO comparator binding')
     if value['kind'] not in MAPPO_KINDS:
         raise Blocked('unknown MAPPO comparator kind')
-    return value
+    return dict(value, binding_path=str(path))      # location only; the sealed record is unchanged
+
+
+def mappo_label(sha256):
+    """The arm is named by the sha actually loaded: a d9042cc5 executor is never 'retrained'."""
+    kind = 'u0_transferred_not_retrained' if str(sha256).startswith(FALLBACK_SHA_PREFIX) else 'retrained_wz3to2'
+    return kind, f'{MAPPO_KINDS[kind]} [executor {str(sha256)[:12]}]'
 
 
 def bind_mappo(*, final_root, path, sha256, kind, authority, check=None):
@@ -521,6 +527,8 @@ def bind_mappo(*, final_root, path, sha256, kind, authority, check=None):
         raise Blocked('full lowercase sha256 required')
     if kind == 'u0_transferred_not_retrained' and not sha256.startswith(FALLBACK_SHA_PREFIX):
         raise Blocked(f'the fallback is the transferred {FALLBACK_SHA_PREFIX} export only')
+    if kind == 'retrained_wz3to2' and sha256.startswith(FALLBACK_SHA_PREFIX):
+        raise Blocked(f'{FALLBACK_SHA_PREFIX} is the transferred export, never the wz3to2 retrain')
     if not str(authority).strip():
         raise Blocked('authority (verbatim decision/message) required')
     if file_sha(path) != sha256:
@@ -536,7 +544,7 @@ def bind_mappo(*, final_root, path, sha256, kind, authority, check=None):
                       authority=str(authority), rule=MAPPO_AUTHORITY, load_check=check,
                       bound_utc=datetime.now(timezone.utc).isoformat()), 'binding_sha256')
     publish(target, value, replace=True)
-    return value
+    return dict(value, binding_path=str(target))
 
 
 # ---------------------------------------------------------------- gate (zero physics)
@@ -597,7 +605,8 @@ def episode_specs(arm, panel, cfg, root, base, mappo=None):
         # frozen MAPPO executor = the bound comparator; residual = clean4 common u0 (zero residual)
         checkpoint = dict(kind='mappo_comparator', comparator_kind=mappo['kind'], label=mappo['label'],
                           executor_path=mappo['path'], executor_sha256=mappo['sha256'],
-                          binding_sha256=mappo['binding_sha256'], path=str(root/'A_checkpoint_000.pt'),
+                          binding_sha256=mappo['binding_sha256'], binding_path=mappo['binding_path'],
+                          path=str(root/'A_checkpoint_000.pt'),
                           file_sha256=cfg['common_checkpoint_sha256'], update=0, arm='A')
     elif arm == 'NATIVE':
         checkpoint = dict(kind='native')
@@ -664,6 +673,8 @@ def check_episode(record, spec):
         check_decision(record['decision'], what)
     elif record.get('decision') is not None:
         raise Blocked(f'{what}: decision captured outside the registered B/R decision subset')
+    if spec['arm'] == 'MAPPO' and record.get('executor_sha256_loaded') != spec['checkpoint']['executor_sha256']:
+        raise Blocked(f'{what}: MAPPO executor actually loaded differs from the bound comparator (never silent)')
     if spec['arm'] in DECISION_ARMS:
         log = check_decision_log(record.get('decision_log', []), what)
     elif record.get('decision_log'):
@@ -675,6 +686,8 @@ def check_episode(record, spec):
                decision=deepcopy(record.get('decision')))
     if log is not None:
         out['decision_log'] = log
+    if spec['arm'] == 'MAPPO':
+        out['executor_sha256_loaded'] = record['executor_sha256_loaded']
     return out
 
 
@@ -783,6 +796,8 @@ def fake_episode(spec):
                   J_veh_s=float(100_000*factor*(1+0.03*(u-.5))),
                   safety=dict(collisions=0, teleports=0, hard_brakes=_h(w['seed'], arm, 'b') % 7,
                               ttc_events=_h(w['seed'], arm, 't') % 11))
+    if arm == 'MAPPO':
+        record['executor_sha256_loaded'] = spec['checkpoint']['executor_sha256']
     if arm in DECISION_ARMS:
         h = _h(w['seed'], arm, 'd')
         n = MIN_MEMBERS+h % 2
@@ -968,16 +983,22 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
     J = {n: np.array([have[n][w]['J_veh_s'] for w in worlds]) for n in have}
     S = {n: {k: np.array([have[n][w]['safety'][k] for w in worlds], float) for k in SAFETY} for n in have}
     names = [n for n in ORDER if n in have]
+    loaded = sorted({have['MAPPO'][w]['executor_sha256_loaded'] for w in worlds}) if 'MAPPO' in have else []
+    if len(loaded) > 1:
+        raise Blocked(f'MAPPO episodes loaded different executors: {loaded}')
     labels = dict(A='A u24 (base only, continued training)', B='B u24 (cooperation layer + SUMO-verified guidance)',
                   R='R u24 (same layer, random guidance)', NATIVE='native SUMO CAV driving',
-                  MAPPO=(mappo or {}).get('label', 'MAPPO comparator (not bound)'))
+                  MAPPO=mappo_label(loaded[0])[1] if loaded else 'MAPPO comparator (not run)')
     summary = {n: dict(label=labels[n]+(' = BASE' if n == alias_of else ''), n=len(worlds), mean_J_veh_s=float(J[n].mean()),
                        safety_totals={k: int(S[n][k].sum()) for k in SAFETY},
                        any_collision_or_teleport=bool(S[n]['collisions'].sum()+S[n]['teleports'].sum() > 0))
                for n in names}
     tables = dict(arms=summary, base=dict(
         controller=base, alias_of=alias_of,
-        mappo_comparator=None if mappo is None else {k: mappo[k] for k in ('kind', 'label', 'sha256', 'binding_sha256')}))
+        mappo_comparator=None if mappo is None else dict(
+            {k: mappo[k] for k in ('kind', 'label', 'sha256', 'binding_sha256')},
+            executor_sha256_loaded=loaded[0] if loaded else None,
+            kind_by_loaded_sha=mappo_label(loaded[0])[0] if loaded else None)))
     alias = lambda n, c: c == 'BASE' and n == alias_of  # noqa: E731
     total = {}
     for comparator in ('BASE', 'NATIVE'):
@@ -1075,7 +1096,7 @@ def render(value):
     lines = [f'# clean4 wz3to2 final paired evaluation (u{value["update"]}) - registered evaluation panel', '',
              f"Panel: {value['worlds']} wz3to2 evaluation worlds (989600-989695), panel_sha256 `{value['panel_sha256']}`; "
              f"base controller {value['base']} (BASE = {t['base']['alias_of']}); MAPPO comparator "
-             f"{(t['base']['mappo_comparator'] or {}).get('label', 'not bound')}; metric {value['metric']} (veh-s, lower is better), full "
+             f"{t['arms'].get('MAPPO', {}).get('label', 'not run')}; metric {value['metric']} (veh-s, lower is better), full "
              f"{value['horizon_s']} s; paired whole-world percentile bootstrap {value['bootstrap']['reps']} reps, seed "
              f"{value['bootstrap']['seed']}, 95% CI. analysis_sha256 `{value['analysis_sha256']}`.", '']
     if value.get('dry_run'):
