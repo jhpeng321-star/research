@@ -112,11 +112,12 @@
   },
   "latest_resume_verification": {
     "date": "2026-11-06",
-    "head_before_receipt_refresh": "4cc1b356",
+    "head_before_receipt_refresh": "1a97559c9956b5e5e598ba12d681a322cbe99b04",
     "tracked_worktree_clean_before_refresh": true,
     "requested_review": "REVIEW_F2_r1.md",
     "accepted_review": "REVIEW_F2_r2.md",
     "accepted_verdict": "PASS",
+    "acceptance_receipt": "F2_ACCEPTED.json",
     "source_and_tests_unchanged_since": "486c006fc54d1ec3cd72b7e9a4580af524ea1b5b",
     "changes_since_tested_code": "F2_READY.json only",
     "saved_junit_headers_verified": {
@@ -127,7 +128,8 @@
     "git_diff_check_against_track_base": "passed",
     "tests_rerun": false,
     "jobs_dispatched": 0,
-    "action": "Read status/log, shared specification, requested blocker review, readiness and acceptance receipts, and independent PASS review. Verified the committed fixes in both diagnostic hooks and all nine regression cases, confirmed source/tests unchanged, and reopened saved red/green/release JUnit headers. Preserved completed work and untracked receipts; refreshed readiness without duplicating tests or jobs."
+    "open_blockers": [],
+    "action": "Read status/log, shared specification, requested round-1 review and existing readiness/acceptance/round-2 PASS receipts. Confirmed the complete tracked diff since tested code is F2_READY.json only; inspected both live diagnostic ownership hooks and all nine A/B/R regression cases, and reopened saved red/green/release JUnit headers. Round-1 blocker remains fixed and independently accepted. Refreshed this latest recovery record, preserving earlier records and untracked work, with no repeated tests or dispatches."
   },
   "review_resolution": [
     {
