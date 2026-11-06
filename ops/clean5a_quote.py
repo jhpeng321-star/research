@@ -14,7 +14,7 @@ from tools.coopmwm import clean4_budget as b  # noqa: E402
 
 CLEAN4_SPENT = 28_800+75_802
 ENVELOPE = 4_000_000
-PARENT = 'c6b5ba487fb3491b42a6c3c02caec5ff1de4c23d4747defc7860305e1d72fa2d'   # covered clean4 re-quote
+PARENT = '903e2be27145f7da0e25cf7dfcd0303f0b0db0ce327badd007d0bad6a3a8a7eb'   # owner-approved clean4 quote (BUDGET_CLEAN4.json binds it)
 phases = b.quote(lesson_sim_s=35_040, probe_sim_s=45_480, replicated_sim_s=143_760, g4_base_sim_s=200_000,
                  g4_cap_sim_s=230_400, diagnostic_factor=1.5,
                  basis=dict(train='3 arms (A frozen evaluation arm + B + R) x 16 episodes x 1200 s x 24',

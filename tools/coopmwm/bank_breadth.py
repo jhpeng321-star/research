@@ -512,6 +512,20 @@ SUBSET_RULE = ('clean4 FAIRAUDIT F5 / MAIN 2026-11-06 option (a): the matched-ef
                'usable rows trains with zero guidance rows (RL + team reward + G4 only).')
 
 
+EV_ONLY_RULE = ('clean5a (MAIN GO 2026-11-06 19:54): guidance = FULLPOL regime EV-BC only (B rows; R none); no '
+                'verified bank/practice rows in either arm; bank supervision/imitation/practice are empty by design.')
+
+
+def ev_only(cfg):
+    """Registered clean5a guidance mode; absent = bank guidance required as before (byte-identical)."""
+    value = (cfg or {}).get('guidance_mode')
+    if value is None:
+        return False
+    if value != EV_ONLY_RULE:
+        raise ValueError('guidance_mode must carry the registered clean5a rule text')
+    return True
+
+
 def subset_rule(cfg):
     """Registered clean4 key; absent = the original equal-support rule (byte-identical)."""
     value = (cfg or {}).get('r_family_subset')

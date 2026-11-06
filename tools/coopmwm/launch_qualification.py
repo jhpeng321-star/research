@@ -56,11 +56,24 @@ def smoke(cfg):
     copy_safety_authority(cfg, output)
     updates = [training.update(cfg, arm, 1, smoke=True) for arm in ('A', 'B', 'R')]
     monitor = training.monitor_update(cfg, 1, smoke=True)
-    from .bank_breadth import subset_rule
+    from .bank_breadth import subset_rule, ev_only
     for update in updates:
         if update['arm'] == 'A':
             continue
         m, learning = update['metrics'], update['learning']
+        if ev_only(cfg):
+            # clean5a EV-BC only: bank/practice quantities exactly zero in both arms; B must fit EV-BC records,
+            # R has none; every online/RL component must still produce its receipt.
+            fit = learning.get('fullpol') or {}
+            records = fit.get('records', 0)
+            if (update['execution']['accepted_moves'] <= 0 or m['decisions'] <= 0
+                    or m['merge_missing_share'] >= 1 or m['track2_reward']['cav_outcomes'] <= 0
+                    or learning['bank']['pairs_total'] != 0 or learning['bank']['optimizer_steps'] != 0
+                    or m['weighted_starts'] != 0 or learning['bank_trigger'].get('contexts')
+                    or cfg.get('imitation_epochs') != 20
+                    or (update['arm'] == 'B' and records <= 0) or (update['arm'] == 'R' and records != 0)):
+                raise ValueError('smoke EV-BC receipt invalid: '+update['arm']+'; fix and requalify')
+            continue
         if update['arm'] == 'R' and subset_rule(cfg) and learning['bank_trigger'].get('examples', 0) == 0:
             # clean4 F5 option (a): R zero guidance - every guidance quantity must be exactly zero,
             # every online/RL component must still produce its receipt.

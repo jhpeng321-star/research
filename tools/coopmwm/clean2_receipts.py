@@ -123,7 +123,11 @@ def validate_smoke(cfg, updates, reporting_receipt=None):
         pool=bank_breadth.practice_pool(native,arm)
         ids={row['context_id'] for row in pool}
         selected={row['breadth']['context_id'] for row in update['practice']['episodes'] if row.get('breadth')}
-        if arm=='R' and bank_breadth.subset_rule(cfg) and not pool:
+        if bank_breadth.ev_only(cfg):
+            # clean5a EV-BC only: no verified pools by design; B's EV-BC records are checked by the smoke.
+            if pool or selected or e['trigger_breadth']['contexts']:
+                raise ValueError('F3 EV-only rule: no verified pool/practice/trigger contexts in either arm')
+        elif arm=='R' and bank_breadth.subset_rule(cfg) and not pool:
             # clean4 F5 option (a): R has ZERO runtime-usable guidance rows - must be exactly empty.
             if selected or e['trigger_breadth']['contexts']:
                 raise ValueError('F3 R zero-guidance rule: R must have no practice/trigger contexts')

@@ -114,7 +114,14 @@ def lesson_quotes(cfg):
 def scheduled(cfg, update):
     from .launch_training import write, read
     root = Path(cfg['run_root'])
-    if update in rc.SCHEDULE['B']['lessons']:
+    from .bank_breadth import ev_only
+    if update in rc.SCHEDULE['B']['lessons'] and ev_only(cfg):
+        # clean5a EV-only guidance: no verified bank, hence no bank lessons (registered; zero sim-s).
+        target = root/f'evaluation/LESSON_u{update:03}.json'
+        if not target.exists():
+            write(target, _seal(dict(status='not_applicable', update=update, reason='EV-only guidance: no verified '
+                                     'bank lessons', new_sim_s=0), 'receipt_sha256'))
+    elif update in rc.SCHEDULE['B']['lessons']:
         target = root/f'evaluation/LESSON_u{update:03}.json'
         if not target.exists():
             pairs = lesson_pairs(cfg, update)

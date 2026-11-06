@@ -126,7 +126,7 @@ def verify_previous(cfg):
     from . import clean4_budget as b
     bound = checked(cfg)
     root = Path(cfg['run_root'])
-    quote_doc = json.loads((root/'CLEAN4_QUOTE.json').read_text(encoding='utf-8'))
+    quote_doc = json.loads((root/bound.get('quote_file', 'CLEAN4_QUOTE.json')).read_text(encoding='utf-8'))
     approval = json.loads((root/'BUDGET_CLEAN4.json').read_text(encoding='utf-8'))
     b.approved(approval, quote_doc)
     if quote_doc['receipt_sha256'] != bound['quote_sha256']:

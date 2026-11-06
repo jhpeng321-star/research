@@ -27,6 +27,8 @@ def _proposed(update):
 def validate_levers(cfg, updates, fixes=None):
     from . import composite_health, coordination_opportunities as co, g4_runtime as g4, group_lane
     from . import launch_production as production, launch_training as training, wall_w2, clean4_restart as c4
+    if (cfg.get('newmap') or {}).get('run') == 'clean5a':
+        return validate_clean5a(cfg, updates, fixes)
     root = Path(cfg['run_root'])
     arms = {u['arm']: u for u in updates}
     out = {}
@@ -187,3 +189,79 @@ def mined_check(cfg, updates, artifacts):
                        demonstrations=[{k: d[k] for k in ('id', 'family', 'executed')} for d in demos],
                        g4_credit=len(credit)),
                 R=dict(examples=0, practice_starts=0, rule=c4.R_GUIDANCE))
+
+
+CLEAN5A_ALLOWED = ('abreast_wall', 'group_hold', 'lane_drop_initiate', 'lane_drop_join')
+
+
+def validate_clean5a(cfg, updates, fixes=None):
+    """clean5a smoke receipts (registered before the clean5a smoke): map/base binding, safety rule, G2, G4 + G4LD
+    extension, N2-only FULLPOL slate (solo/pair hold + abreast wall offered in B and R, no legacy/W1/N9 option),
+    EV-BC guidance fitted for B and absent for R, frozen A (no PPO), no verified bank rows, trunk binding."""
+    from . import composite_health, coordination_opportunities as co, g4_runtime as g4, group_lane
+    from . import launch_production as production, launch_training as training, clean4_restart as c4
+    from . import sparse_synergy_credit as ssc, frozen_trunk, clean5a_restart as c5
+    from .bank_breadth import ev_only
+    root = Path(cfg['run_root'])
+    arms = {u['arm']: u for u in updates}
+    out = dict(run='clean5a')
+    c4.check_map(cfg)
+    base = cfg['newmap']['base']
+    if (frozen_trunk.file_sha256(base['trunk']) != base['trunk_sha256'] or cfg['checkpoint'] != base['trunk']
+            or frozen_trunk.check_process(cfg) is not None):
+        raise ValueError('clean5a frozen base binding differs (trunk path/sha or an unexpected trunk shim)')
+    out['base'] = dict(trunk_sha256=base['trunk_sha256'], residual_sha256=base['residual_sha256'])
+    for arm in ('B', 'R'):
+        if not composite_health.report_only(root, arm):
+            raise ValueError('registered B/R report-only safety rule missing: '+arm)
+    native = production.backend_config(cfg)
+    if co.settings(native) is None:
+        raise ValueError('G2 coordination opportunities must be enabled')
+    if not g4.enabled(native, 1) or native['budget']['phases'].get('g4_synergy_credit') != 230400:
+        raise ValueError('G4 must be bound from u1 with its 230400 phase')
+    ext = ssc.extension(native)
+    if ext is None or ext['families'] != sorted(c5.G4_FAMILIES):
+        raise ValueError('G4LD extension must be bound with the registered clean5a families')
+    if g4.enabled(production.backend_config(cfg, root=root/'smoke', smoke=True), 1, smoke=True):
+        raise ValueError('G4 must stay disabled inside smoke (TRAIN-only sampling)')
+    out['G4'] = dict(phase_sim_s=230400, extension=ext['families'])
+    if not group_lane.enabled(cfg) or len(group_lane.families(cfg)) != 7:
+        raise ValueError('G5 seven-family lane vocabulary must stay registered')
+    if not ev_only(cfg) or cfg.get('mined_moves'):
+        raise ValueError('clean5a must run the registered EV-only guidance mode without mined rows')
+    out['slate'], out['ev_bc'] = {}, {}
+    for arm in ('B', 'R'):
+        proposed = {f: n for f, n in _proposed(arms[arm]).items() if n}
+        base_family = {f.split(':', 1)[0]: n for f, n in proposed.items()}
+        illegal = sorted(f for f in base_family if f not in CLEAN5A_ALLOWED)
+        if illegal:
+            raise ValueError('clean5a slate offered a non-N2 option: '+arm+' '+repr(illegal))
+        if not base_family.get('group_hold') or not (base_family.get('abreast_wall') or base_family.get('lane_drop_initiate')):
+            raise ValueError('clean5a slate must offer group_hold and abreast_wall moves: '+arm+' '+repr(proposed))
+        row = (arms[arm]['metrics'].get('move_proposals') or {}).get('coordination_opportunities')
+        if not row or row.get('decisions', 0) <= 0:
+            raise ValueError('G2 measured opportunity receipt required: '+arm)
+        out['slate'][arm] = proposed
+        fit = arms[arm]['learning'].get('fullpol') or {}
+        if arm == 'B' and fit.get('records', 0) <= 0:
+            raise ValueError('B must fit EV-BC records in the smoke')
+        if arm == 'R' and fit.get('records', 0) != 0:
+            raise ValueError('R is the no-guidance arm: zero EV-BC records')
+        out['ev_bc'][arm] = {k: fit.get(k) for k in ('records', 'ev_bc', 'report_bc_kl', 'report_kl_unlabelled')}
+    if cfg.get('imitation_epochs') != c5.IMITATION_EPOCHS:
+        raise ValueError('clean5a registered imitation epochs = 20')
+    for arm in ('B', 'R'):   # ONE trust region: legacy bank imitation is off (0 contexts, 0 steps)
+        learning = arms[arm]['learning']
+        if (learning['bank'].get('pairs_total', 0) or learning['bank'].get('optimizer_steps', 0)
+                or learning['bank_trigger'].get('contexts')):
+            raise ValueError('legacy bank imitation must be OFF in clean5a: '+arm)
+    ppo = arms['A']['learning'].get('ppo') or {}
+    if ppo.get('status') != 'frozen_base_no_update':
+        raise ValueError('A must be the frozen base evaluation arm (no PPO)')
+    out['A'] = ppo
+    if fixes is None:
+        return dict(status='LEVER_PRECHECK_ONLY', **out)
+    receipt = _seal(dict(status='LEVER_RECEIPTS_PASS', levers=out, fix_receipts_sha256=fixes['receipt_sha256'],
+        smoke_updates={a: arms[a]['update_sha256'] for a in arms}), 'receipt_sha256')
+    training.write(root/'SMOKE_LEVER_RECEIPTS_PASS.json', receipt)
+    return receipt

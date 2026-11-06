@@ -186,6 +186,9 @@ def approved(budget, quote_doc):
     amount = budget.get('approved_sim_s')
     if type(amount) is not int or amount < quote_doc['total_training_sim_s']:
         raise ValueError('approved training budget below the full u1-u24 quote')
+    spent_before = quote_doc.get('prior_registered_sim_s', {}).get('clean4_actual')
+    if spent_before is not None and (type(spent_before) is not int or spent_before+quote_doc['total_training_sim_s'] > amount):
+        raise ValueError('clean-training envelope exceeded: clean4 actual spend + this quote > approved_sim_s')
     cap = budget.get('total_cap_sim_s')
     if type(cap) is not int or cap-quote_doc['prior_total_sim_s'] < quote_doc['total_training_sim_s']:
         raise ValueError('approved owner cap does not cover prior registered phases plus the clean4 quote')

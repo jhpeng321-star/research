@@ -148,6 +148,9 @@ def bank_move_supervision(runtime):
                 family=label.family, time_s=time, members=list(context['members'])))
     bank_breadth.visit(cfg, runtime.arm, consume)
     subset = bank_breadth.subset_rule(cfg)
+    if not records and bank_breadth.ev_only(cfg):
+        # clean5a: no verified bank rows by design (EV-BC guidance runs in fullpol_learn.supervise).
+        return dict(examples=0, contexts=[], final_ce=None, source='ev_bc_only', rule=bank_breadth.EV_ONLY_RULE)
     if not records and subset and runtime.arm == 'R':
         # clean4 F5 option (a): R's matched-effort random procedure yielded no runtime-usable rows.
         return dict(examples=0, contexts=[], final_ce=None, source='R_zero_guidance_subset_rule',
