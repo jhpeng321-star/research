@@ -149,8 +149,9 @@ def labels(entry, view, ev=None):
         if len(entry['members']) == 1:
             v = variant_of(entry)
             lane = sumo_lane(view, entry['lanes'][0], ev)
-            out = (f'{v}_solo{lane}',) if v in SOLO_VARIANTS else ()
-            return out+('solo_hold', 'group_hold')
+            # Lane-specific ONLY (MAIN 22:1x): a solo carries the EV of the solo strategy of its own
+            # current SUMO lane, never a generic solo/group row.
+            return (f'{v}_solo{lane}',) if v in SOLO_VARIANTS else ('solo_unregistered_params',)
         return ('group_hold_pair', 'group_hold')
     if family in ('abreast_wall', 'closing_pair'):
         v = variant_of(entry)
