@@ -55,6 +55,7 @@ from typing import Optional, Sequence
 import numpy as np
 
 from wms.core.constants import controller_index
+from wms.core.road import ENV_VARS, bind_road, current_road, load_road
 from wms.core.errors import TrainDataRefusal
 from wms.core.guard import refuse_restricted
 from wms.data.action_timeline import CONTROLLERS, ActionTimeline
@@ -69,6 +70,7 @@ MANIFEST_NAME = "C4_EPISODES_MANIFEST.json"
 DT_S = 0.5
 NOMINAL_LENGTH_M = 5.0
 COUNTER_BINS, COUNTER_BIN_S, N_ENTRANCES = 30, 10.0, 2
+#: counter entrance 1 = the closing lane (on-ramp map: the ramp; lane drop: the dropped lane).
 RAMP_LANE = 2
 NATIVE = CONTROLLERS.index("native")
 DIRECT = CONTROLLERS.index("direct")
@@ -347,6 +349,15 @@ def convert_episode(src: Path, dst_root: Path, *, allow_designed: bool = False) 
     for key in ("seed", "demand_vph", "penetration", "warmup_s"):
         if key not in meta:
             raise C4EpisodeRefusal(f"{src}: episode meta lacks {key!r}")
+    # WM-A: the episode's map must be the process road; lane-drop maps take TRAIN seeds only.
+    from wms.data.map_guard import check_episode_map, check_train_seed
+
+    road = current_road()
+    check_episode_map(meta.get("map"), road)
+    if not road.is_original:
+        check_train_seed(road.name, int(meta["seed"]))
+        if int(meta.get("k_slots", road.k_slots)) != int(road.k_slots):
+            raise C4EpisodeRefusal(f"{src}: K={meta.get('k_slots')} != {road.name} pool {road.k_slots}")
     ctrl = np.asarray(ep["controller"])
     used = sorted({CONTROLLERS[int(i)] for i in np.unique(ctrl)})
     if not allow_designed and np.isin(ctrl, DESIGNED).any():
@@ -395,6 +406,9 @@ def convert_episode(src: Path, dst_root: Path, *, allow_designed: bool = False) 
         "t_start_s": float(arrays["time_s"][0]),
         "extra_arrays": sorted(n for n in EXTRA_ARRAYS if n in arrays),
     }
+    if not road.is_original:
+        entry["map"] = road.name
+        entry["map_descriptor_sha256"] = meta.get("map_descriptor_sha256")
     if queue_stats is not None:
         entry["queue_arrays"] = {"source": REQUESTS_FILE, **queue_stats}
     if isinstance(meta.get("branch"), dict):        # paired-branch group (genrand)
@@ -448,6 +462,10 @@ def convert(roots: Sequence[str | Path], out: str | Path, *, val_frac: float = 0
         "n_val": sum(e["split_role"] == "val" for e in entries),
         "roots": [str(Path(r)) for r in roots], "episodes": entries,
     }
+    road = current_road()
+    if not road.is_original:
+        # WM-A: map identity of a non-original source (absent = the on-ramp merge map).
+        manifest.update(map=road.name, road=road.record(), road_digest=road.digest)
     (out / MANIFEST_NAME).write_text(json.dumps(manifest, indent=1, sort_keys=True),
                                      encoding="utf-8")
     return manifest
@@ -463,6 +481,13 @@ def read_source_manifest(root: str | Path) -> dict:
     validate_train_source(root, doc)
     if doc.get("schema") != SOURCE_SCHEMA:
         raise C4EpisodeRefusal(f"{path}: schema {doc.get('schema')!r} != {SOURCE_SCHEMA}")
+    # WM-A: a source is usable only under its own map's road (no cross-map mixing).
+    from wms.data.map_guard import check_episode_map
+
+    road = current_road()
+    check_episode_map(doc.get("map"), road)
+    if not road.is_original and doc.get("road_digest") != road.digest:
+        raise C4EpisodeRefusal(f"{path}: road digest differs from the process {road.name} road")
     return doc
 
 
@@ -877,7 +902,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--split-seed", type=int, default=0)
     parser.add_argument("--allow-designed", action="store_true",
                         help="accept damping / PI action timelines (off: native + direct only)")
+    parser.add_argument("--map-spec", default=None,
+                        help="MAP_SPEC.json of a registered non-original map (wz3to2); default: "
+                             f"${ENV_VARS[0]} / ${ENV_VARS[1]}, else the on-ramp merge map")
     args = parser.parse_args(argv)
+    if args.map_spec:
+        bind_road(load_road(args.map_spec))
     doc = convert(args.episodes, args.out, val_frac=args.val_frac, split_seed=args.split_seed,
                   allow_designed=args.allow_designed)
     print(json.dumps({k: doc[k] for k in ("schema", "n_episodes", "n_train", "n_val",

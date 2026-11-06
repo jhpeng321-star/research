@@ -58,7 +58,11 @@ def road_end_exit_bound(physics: object) -> Optional[float]:
     """
     if not bool(getattr(physics, "exit_at_road_end", True)):
         return None
-    return MODEL_FRAME_ROAD_END_M
+    # WM-A: the bound road's through-lane end (merge map: MODEL_FRAME_ROAD_END_M, 553.33).
+    from wms.core.road import current_road
+
+    road = current_road()
+    return MODEL_FRAME_ROAD_END_M if road.is_original else float(road.road_end_m)
 
 
 @dataclass

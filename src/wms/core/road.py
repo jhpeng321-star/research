@@ -56,6 +56,8 @@ class RoadGeometry:
     lane_extents_s_m: tuple = ((-2645.67, 553.33), (-2644.22, 553.33), (-378.66, 75.44))
     entry_s_m: tuple = (-2645.67, -2644.22, -378.66)
     entry_lane_speed_mps: tuple = (31.29, 31.29, 22.22)
+    #: end of each lane's entrance edge (SUMO departLane occupancy key of the entry process)
+    entry_edge_end_s_m: tuple = (0.0, 0.0, 0.0)
     road_end_m: float = 553.33                 # through-lane exit (model frame)
     closing_change_zone_s_m: tuple = (0.0, 75.44)
     into_closing_allowed: bool = False
@@ -139,6 +141,8 @@ def road_from_descriptor(desc) -> RoadGeometry:
     entry_edge = desc.edges["mainline_entry"]
     entry = tuple(round(min(r[0] for r in lanes[wm] if r[2] == entry_edge), 6)
                   for wm in range(int(frame.n_lanes)))
+    entry_end = tuple(round(max(r[1] for r in lanes[wm] if r[2] == entry_edge), 6)
+                      for wm in range(int(frame.n_lanes)))
     speeds = _lane_speeds(desc, entry_edge) or (float(frame.speed_limit_mps),) * int(frame.n_lanes)
     road_end = extents[main[0]][1]
     if extents[main[1]][1] != road_end or extents[closing][1] != drop_s:
@@ -148,6 +152,7 @@ def road_from_descriptor(desc) -> RoadGeometry:
     return RoadGeometry(
         name=str(desc.name), kind="lane_drop", merge_zone_s_m=tuple(float(x) for x in frame.merge_zone_s_m),
         lane_extents_s_m=extents, entry_s_m=entry, entry_lane_speed_mps=tuple(speeds),
+        entry_edge_end_s_m=entry_end,
         road_end_m=float(road_end), closing_change_zone_s_m=(float(extents[closing][0]), drop_s),
         into_closing_allowed=True, speed_limit_mps=float(frame.speed_limit_mps),
         rsu_mainline_s_m=tuple(float(x) for x in rsu.field_mainline_s_m),
@@ -285,3 +290,16 @@ def _reset_for_tests() -> None:
 def with_overrides(road: RoadGeometry, **changes) -> RoadGeometry:
     """A modified copy (validation re-run)."""
     return replace(road, **changes)
+
+
+def map_default(value, merge_value, road_value):
+    """A geometry setting whose configured value is the merge-map default follows the road.
+
+    Config dataclasses keep their merge-map defaults (serialised configs stay byte-identical);
+    on a non-original road an UNCHANGED merge default (``value == merge_value``) is replaced by
+    the road's value, an explicitly configured value is kept.
+    """
+    road = current_road()
+    if road.is_original or value != merge_value:
+        return value
+    return road_value

@@ -105,7 +105,8 @@ def simulate(geo: Geometry, *, seed: int, k: int = 32, total_s: float = 160.0,
                     veh["lane"], veh["v0"] = 1, max(veh["v0"], speeds[1] - 1.0)
                 elif veh["lane"] == 1 and veh["over_s"] is not None and veh["s"] >= veh["over_s"]:
                     veh["lane"], veh["over_s"] = 0, None
-                elif (veh["lane"] == 1 and veh["into_s"] is not None and veh["s"] >= veh["into_s"]):
+                elif (veh["lane"] == 1 and veh["into_s"] is not None and veh["s"] >= veh["into_s"]
+                      and veh["s"] < geo.change_zone_s_m[1] - 60.0):
                     veh["lane"], veh["into_s"] = 2, None
                     z1 = geo.change_zone_s_m[1]
                     veh["merge_s"] = float(rng.uniform(veh["s"] + 50.0, z1 - 5.0))
