@@ -373,3 +373,33 @@ def test_u0_results_base_arm_and_analysis_summary_inputs(tmp_path):
     spath.write_text(json.dumps(summary))
     doc = fl.build_guidance(native=str(spath), provenance=PROV)
     assert doc['rows'][0]['lb95_veh_s'] == 300. and doc['rows'][0]['mean_veh_s'] == 900.
+
+
+def test_solo_hold_ev_target_is_lane_specific(cfg):
+    """MAIN 22:1x: a solo-hold entry carries the EV of the solo strategy of THAT member's current
+    SUMO lane; walls / pairs use their own rows; missing or lb95 <= 0 -> none."""
+    rows = {r['family']: r for r in [grow('wall_h_solo2', 5000., baseline='mappo'),
+                                     grow('wall_h_solo0', -900., baseline='mappo'),
+                                     grow('wall_h', 3000., baseline='mappo')]}
+    on = ev_cfg(cfg)
+    solo = lambda vid, wm: fe.SoloHold('group_hold', (vid,), 0, 90, 1.5, 15., 0., False, (wm,)).to_dict()
+    wall = ld.LaneDropMove('abreast_wall', ('s0', 'x', 'y'), 0, 90, 1.5, 15., 0., False, (0, 1, 2)).to_dict()
+    pair = ld.LaneDropMove('group_hold', ('s1', 'x'), 0, 90, 1.5, 15., 0., False, (1, 0)).to_dict()
+
+    def target(vid, table):
+        trig = dict(context=dict(members=[vid]), tables=[table], mask=[[m is not None or j == 0
+                                                                        for j, m in enumerate(table)]])
+        return fl.ev_targets(on, trig, rows)[0][0]
+    assert target('s2', [None, solo('s2', 0)]) == 1               # SUMO lane 2 (left, WM 0): solo2 > 0
+    assert target('s0', [None, solo('s0', 2)]) == 0               # SUMO lane 0 (closing, WM 2): solo0 n.s.
+    assert target('s1', [None, solo('s1', 1)]) == 0               # SUMO lane 1: no solo1 row -> none
+    assert target('s0', [None, solo('s0', 2), wall]) == 2         # walls use their own (positive) row
+    assert target('s1', [None, solo('s1', 1), pair]) == 0         # pairs: no group_hold_pair row -> none
+    view = ld.MapView.from_descriptor(on['lane_drop']['map'])
+    assert fe.labels(solo('s0', 2), view)[0] == 'wall_h_solo0' and fe.labels(solo('s2', 0), view)[0] == 'wall_h_solo2'
+    # a solo's ONLY label is its lane-specific strategy: a generic solo/group row can never match it
+    for wm in (0, 1, 2):
+        assert fe.labels(solo('s', wm), view) == (f'wall_h_solo{2-wm}',)
+    generic = dict(rows, group_hold=grow('group_hold', 9000.), solo_hold=grow('solo_hold', 9000.))
+    trig = dict(context=dict(members=['s0']), tables=[[None, solo('s0', 2)]], mask=[[True, True]])
+    assert fl.ev_targets(on, trig, generic)[0][0] == 0
