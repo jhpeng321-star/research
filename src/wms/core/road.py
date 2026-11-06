@@ -122,7 +122,24 @@ class RoadGeometry:
 
     @property
     def digest(self) -> str:
+        """Full identity (geometry + provenance); see :attr:`geometry_digest` for data checks."""
         return hashlib.sha256(json.dumps(self.record(), sort_keys=True).encode()).hexdigest()
+
+    @property
+    def geometry_digest(self) -> str:
+        """Digest of the geometry only (no descriptor provenance, no SUMO projection table):
+        stable across stub -> N1 descriptor and across added projection fields, so packs
+        converted earlier stay valid; :func:`geometry_digest_of` recomputes it from a record."""
+        return geometry_digest_of(self.record())
+
+
+#: record keys that are provenance / projection metadata, not WM geometry.
+NON_GEOMETRY_KEYS = ("descriptor", "descriptor_sha256", "frame_lanes", "anchor_x_m")
+
+
+def geometry_digest_of(record: dict) -> str:
+    body = {k: v for k, v in dict(record).items() if k not in NON_GEOMETRY_KEYS}
+    return hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
 
 
 def _plain(value):

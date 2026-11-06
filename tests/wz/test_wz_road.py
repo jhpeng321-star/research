@@ -247,3 +247,50 @@ def test_wz3to2_seed_registry(seed, ok):
             check_train_seed("wz3to2", seed)
     with pytest.raises(MapDataRefusal):
         check_train_seed("unregistered_map", 989150)
+
+
+# ------------------------------------------------------------------ planning API (WM-C contract)
+def _moment():
+    cavs = [{"id": f"c{i}", "edge": "up", "lane": i % 3, "x": 1500.0 + 40 * i, "v": 25.0}
+            for i in range(3)]
+    veh = [{"id": f"h{i}", "edge": "up", "lane": i % 3, "x": 1400.0 + 37 * i, "v": 22.0}
+           for i in range(6)] + [{"id": "w1", "edge": "wz", "lane": 0, "pos": 50.0, "v": 28.0}]
+    return {"t0": 300.0, "map": "wz3to2", "cavs": cavs, "vehicles": veh}
+
+
+def test_planapi_observe_evaluate_contract():
+    from wms import planapi as A
+
+    hold = {"v_w": 15.0, "hold_s": 20.0, "dmax": 1.5, "amax": 1.0, "release_x": 2690.0}
+    actions = [{"id": "base", "kind": "base", "members": []},
+               {"id": "g", "kind": "group", "members": [{"id": "c0", "role": "hold", "params": hold},
+                                                        {"id": "c1", "role": "hold", "params": hold}]},
+               {"id": "s0", "kind": "solo", "members": [{"id": "c0", "role": "hold", "params": hold}]}]
+    with R.road_scope(wz_road()):
+        h = A.load(None, max_rows=4)
+        assert h.meta["trained"] is False and h.meta["road"] == "wz3to2"
+        st = A.observe(h, _moment())
+        assert {v["id"]: v["lane"] for v in st["vehicles"]}["c0"] == 2       # up_0 -> WM lane 2
+        w1 = next(v for v in st["vehicles"] if v["id"] == "w1")
+        assert w1["lane"] == 1 and abs(w1["s"] - (2704.0 + 50.0 - 2620.56)) < 1e-6
+        trace = {}
+        out = A.evaluate(h, st, actions, K=2, H=2.0, seed=3, trace=trace)
+        again = A.evaluate(h, st, actions, K=2, H=2.0, seed=3)
+        with pytest.raises(A.WMContractError):
+            A.evaluate(h, st, [{"id": "x", "members": [{"id": "nope", "params": hold}]}], K=1, H=1.0)
+    assert set(out) == {"base", "g", "s0"} and all(len(v) == 2 for v in out.values())
+    assert out == again and all(np.isfinite(x) for v in out.values() for x in v)
+    # member c0 follows the hold law: 25 m/s braking at dmax 1.5 for 1.5 s (speeds t0..t0+1.5 s)
+    speeds = torch.cat(trace["speeds"], 0)
+    row = trace["rows"].index((1, 0))
+    j = trace["ids"].index("c0")
+    assert torch.allclose(speeds[row, :, j], torch.tensor([25.0, 24.25, 23.5, 22.75]), atol=1e-4)
+
+
+def test_geometry_digest_ignores_provenance_and_projection():
+    stub = wz_road()
+    n1_like = R.with_overrides(stub, descriptor="n1", descriptor_sha256="ab" * 32,
+                               frame_lanes=(), anchor_x_m=None)
+    assert n1_like.digest != stub.digest and n1_like.geometry_digest == stub.geometry_digest
+    assert R.geometry_digest_of(stub.record()) == stub.geometry_digest
+    assert R.with_overrides(stub, road_end_m=1400.0).geometry_digest != stub.geometry_digest

@@ -486,8 +486,12 @@ def read_source_manifest(root: str | Path) -> dict:
 
     road = current_road()
     check_episode_map(doc.get("map"), road)
-    if not road.is_original and doc.get("road_digest") != road.digest:
-        raise C4EpisodeRefusal(f"{path}: road digest differs from the process {road.name} road")
+    if not road.is_original:
+        from wms.core.road import geometry_digest_of
+
+        stored = doc.get("road")
+        if not isinstance(stored, dict) or geometry_digest_of(stored) != road.geometry_digest:
+            raise C4EpisodeRefusal(f"{path}: road geometry differs from the process {road.name} road")
     return doc
 
 
