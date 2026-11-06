@@ -1,0 +1,34 @@
+{
+ "amendment": 9,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend8.json",
+  "registration_sha256": "3c0e468a0e86e4659cfbfb7a1f6028ffc51e1547941e976c7979b371a11e55e1"
+ },
+ "authority": [
+  "owner decisions registered pre-results (REGISTRATION 2026-11-07 01:3x): (1) the PRIMARY 3a/3c evaluation targets clean5b u12 B/R (bound by sha), not clean5a; clean5a is stopped and has no final eval; (2) MAPPO_SPEED is declared UNAVAILABLE (S-MAPPOWZ stopped by owner decision, no substitution); (3) MAPPO_LANE (S-MAPPOWZL) is the only MAPPO comparator for 3b; the NATIVE/U0/RULE pre-run arms stay valid (same u0 base); eval waves may run on cpuQ once S-MAPPOWZ stops",
+  "MAIN 2026-11-07 ~01:4x: replays go to FRESH job dirs (<job>__r<n>), old dirs untouched; process rule: before releasing any dispatch, ONE job per arm (chunk type) runs and is verified (record valid, log non-empty); pre-run sub-cap -> 530,000 inside v2v_final 1,600,000"
+ ],
+ "comparators": {
+  "MAPPO_LANE": "S-MAPPOWZL final (lane head), bound with --train-config; F11 parity before its wave",
+  "MAPPO_SPEED": "declared UNAVAILABLE (owner decision; no substitution) -> sealed CLAIM3B_MAPPO_SPEED_UNAVAILABLE.json"
+ },
+ "prerun_cap": {
+  "new": 530000,
+  "outlook": "424,200 charged + 3c 86,400 = 510,600 <= 530,000"
+ },
+ "process": {
+  "canary": "run_waves charges and runs ONE job per arm first (fresh processes), verifies the records and non-empty vehicle logs, then charges and dispatches the rest",
+  "replay": "each MAIN authorisation allows one more round of every interrupted job (charged, nothing published): round n runs in <job>__r<n> and is charged <job>#r<n>; records carry work_dir",
+  "write_off": "the failed round-1 replay (01:25, FileExistsError in the original dirs): 38,400 charged, ~0 simulated"
+ },
+ "registered_utc": "2026-11-06T18:13:02.966119+00:00",
+ "registration_sha256": "d0a3f7de46c48badaac35e71121df970d8e85a5b301b269f05548e4a21a6ab43",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: 3a pre-run waves sealed (unopened); 3c 0/72; no clean5 result exists",
+ "target": {
+  "clean5a": "stopped; no final evaluation",
+  "compatibility": "the clean5b CONFIG must equal the pre-run plant on the registered plant keys and common u0 (prerun_compat at register), else the pre-run waves are not reusable and register blocks",
+  "primary": "clean5b u12 B and R (bind-arms --update 12 by sha); A = the frozen U0 alias (gate-checked)",
+  "secondary": "clean5b u24 B and R (if registered later by MAIN)"
+ }
+}

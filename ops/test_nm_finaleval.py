@@ -158,8 +158,15 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     runs = runs[1:]
     k = result['prerun']['rounds']
     assert result['prerun']['status'] == 'PASS' and k == -(-3*(96+24)//32)
-    assert sum(r[1] for r in runs[:k]) == 3*(96+24) and all(r[1] <= 32 and r[2] == 16 for r in runs[:k])
-    assert runs[k:] == [('run', 2*96+2*24, 24)]+[('run', 4, 24), ('run', 96, 24)]*2+[('run', 2*96+2*24, 24)]
+    acc, i = 0, 0
+    while acc < 3*(96+24):
+        acc, i = acc+runs[i][1], i+1
+    pre, runs = runs[:i], runs[i:]
+    # MAIN process rule: every dispatch = one canary job per arm (own processes) verified, then the rest (16 workers)
+    assert acc == 3*(96+24) and all(r[2] == 16 for r in pre[1::2]) and all(r[1] == r[2] <= 3 for r in pre[0::2])
+    assert runs == ([('run', 2, 2), ('run', 2*96+2*24-2, 24)]
+                    + [('run', 1, 1), ('run', 3, 24), ('run', 1, 1), ('run', 95, 24)]*2
+                    + [('run', 2, 2), ('run', 2*96+2*24-2, 24)])
     assert {c[1] for c in result['calls'] if c[0] == 'reserve'} == {'v2v_final', 'v2v_final_prerun', 'v2v_final_logcheck'}
     assert result['fake_prerun_sim_s'] == nm.prerun_cap() == 432_000 == result['quote']['prerun_sim_s']
     assert (result['fake_v2v_final_sim_s']+result['fake_prerun_sim_s'] == result['quote']['total_ceiling_sim_s']
@@ -621,7 +628,7 @@ def test_claim3a_opens_first_and_each_claim3b_only_after_its_comparator_is_bound
     runtime = nm.FakeRuntime()
     value = nm.execute(runtime=runtime, **kw)
     # only the new comparator: its F11 parity (4 traces) and its wave
-    assert [c for c in runtime.calls if c[0] == 'run'] == [('run', 4, 24), ('run', 96, 24)]
+    assert [c for c in runtime.calls if c[0] == 'run'] == [('run', 1, 1), ('run', 3, 24), ('run', 1, 1), ('run', 95, 24)]
     assert value['claim3a']['analysis_sha256'] == claim3a['analysis_sha256']     # 3a reproduces from its receipts
     assert value['claim3b_MAPPO_SPEED']['present'] == ['B', 'A', 'R', 'RULE', 'U0', 'MAPPO_SPEED', 'NATIVE']
     lane = json.loads((f['final_root']/'CLAIM3B_MAPPO_LANE_UNAVAILABLE.json').read_text())
@@ -784,7 +791,7 @@ def test_prerun_stops_at_a_chunk_boundary_and_resumes(panel, tmp_path):
 
     def run_then_stop(items, cfg, workers):           # the operator drops STOP_PRERUN during the 2nd chunk
         out = original(items, cfg, workers)
-        if len([c for c in first.calls if c[0] == 'run']) == 2:
+        if len([c for c in first.calls if c[0] == 'run']) == 4:  # 2 chunks x (canary + rest)
             (final_root/nm.STOP_PRERUN).write_text('N4: clean5a launch')
         return out
     first.run = run_then_stop
@@ -797,7 +804,7 @@ def test_prerun_stops_at_a_chunk_boundary_and_resumes(panel, tmp_path):
     second = nm.FakeRuntime()                         # e.g. cpuV, same absolute paths, fewer workers
     out = run_prerun(f, second, workers=16)
     assert out['status'] == 'PASS' and out['charged_sim_s'] == 432_000+720
-    assert [c for c in second.calls if c[0] == 'run'][0][1] == 32
+    assert [c[1] for c in second.calls if c[0] == 'run'][:2] == [1, 31]          # canary, then the rest of 32
     assert (final_root/'WAVE_NATIVE__0040-0071.json').is_file()
 
 
@@ -834,7 +841,8 @@ def test_main_run_reuses_the_prerun_only_on_the_same_plant_and_u0(panel, tmp_pat
     assert total+432_000 <= nm.quote('mappo_frozen')['total_ceiling_sim_s'] <= nm.ALLOCATION_SIM_S
     again = nm._analyse_published(f['root'], f['final_root'], runtime, panel, f['panel_3c'])
     for k in ('claim3a', 'claim3c'):                  # zero-physics re-tabulation from the chunked receipts
-        assert again[k]['tables'] == value[k]['tables'] and again[k]['present'] == value[k]['present']
+        strip = lambda x: {n: v for n, v in x.items() if n != 'secondary'}  # noqa: E731  (dry run: 200 secondary reps)
+        assert strip(again[k]['tables']) == strip(value[k]['tables']) and again[k]['present'] == value[k]['present']
 
 
 # ---------------------------------------------------------------- F11 parity
@@ -981,25 +989,29 @@ def test_failed_chunk_is_replayed_once_only_by_authorisation_and_the_cap_amendme
         return nm.FakeRuntime.run(first, items, cfg, workers)
     first.run = fail_second
     with pytest.raises(ValueError, match='G5'):
-        run_prerun(f, first, workers=8, chunk=20)                   # chunk 1 published; chunk 2 fails after reserving
-    assert list(nm.interrupted_parts(final_root)) == ['NATIVE__0020-0039']
+        run_prerun(f, first, workers=8, chunk=20)                   # chunk 1: canary ok, the rest fails after charging
+    assert nm.interrupted_jobs(final_root) == [f'nmfinal_native_{i:04}' for i in range(20)]
     with pytest.raises(nm.Blocked, match='never replay'):
         run_prerun(f, nm.FakeRuntime(), workers=8, chunk=20)
     with pytest.raises(nm.Blocked, match='authority and reason'):
         nm.authorize_replay(final_root=final_root, authority='MAIN', reason=' ')
     rep = nm.authorize_replay(final_root=final_root, authority='MAIN 2026-11-07: re-run 3c after the pool fix',
                               reason='pool-worker G5 failure, nothing published or opened')
-    assert rep['jobs'] == [f'nmfinal_native_{i:04}' for i in range(20, 40)] and rep['results_opened'] is False
+    assert rep['jobs'] == [f'nmfinal_native_{i:04}' for i in range(20)] and rep['results_opened'] is False
+    assert set(rep['rounds'].values()) == {1}
     with pytest.raises(nm.Blocked, match='v2v_final_prerun cap'):
         run_prerun(f, nm.FakeRuntime(), workers=16)                 # 432,000 cannot hold the replay + the rest
     with pytest.raises(nm.Blocked, match='cap in'):
-        nm.amend_prerun_cap(final_root=final_root, cap_sim_s=500_000, authority='MAIN')
+        nm.amend_prerun_cap(final_root=final_root, cap_sim_s=600_000, authority='MAIN')
     nm.amend_prerun_cap(final_root=final_root, cap_sim_s=480_000, authority='MAIN 2026-11-07: 432,000 -> 480,000')
     out = run_prerun(f, nm.FakeRuntime(), workers=16)
     assert out['status'] == 'PASS' and out['cap_sim_s'] == 480_000
     assert all(v['published'] == v['registered'] for v in out['coverage'].values())
     rows = [r['id'] for r in nm.fe.ledger_rows(final_root)]
-    assert sum(r.endswith('#r1') for r in rows) == 20 and len(list(final_root.glob('RESERVED_NATIVE__0020-*.replay1.json'))) == 1
+    assert sum(r.endswith('#r1') for r in rows) == 20 and len(list(final_root.glob('RESERVED_NATIVE__0000-*.replay1.json'))) == 1
+    assert all((final_root/'evaluation'/f'nmfinal_native_{i:04}__r1'/nm.VEHICLE_LOG).is_file() for i in range(20))
+    wave = json.loads((final_root/'WAVE_NATIVE__0000-0031.json').read_text())
+    assert wave['records'][0]['work_dir'] == 'nmfinal_native_0000__r1' and 'work_dir' not in wave['records'][25]
     with pytest.raises(nm.Blocked, match='no interrupted part'):
         nm.authorize_replay(final_root=final_root, authority='MAIN', reason='again')
 
@@ -1010,3 +1022,31 @@ def test_seqcheck_runs_native_u0_rule_in_one_dispatch(panel, tmp_path):
     assert value['verdict'] == 'PASS' and value['order'] == ['NATIVE', 'U0', 'RULE'] and value['sim_s'] == 1_080
     assert len(set(value['pids'])) == 3 and all(a['check']['ok'] for a in value['arms'].values())
     assert {r['phase'] for r in nm.fe.ledger_rows(f['final_root'])} >= {'v2v_final_seqcheck'}
+
+
+
+def test_a_failed_replay_round_needs_a_new_authorisation_and_a_fresh_dir(panel, tmp_path):
+    f = prerun_fixture(tmp_path, panel)
+    final_root = f['final_root']
+    bad = nm.FakeRuntime()
+
+    def always_fail_rest(items, cfg, workers):
+        bad.calls.append(('run', len(items), workers))
+        if len(items) > 1:
+            raise FileExistsError('vehicles.jsonl.gz')
+        return nm.FakeRuntime.run(nm.FakeRuntime(), items, cfg, workers)
+    bad.run = always_fail_rest
+    with pytest.raises(FileExistsError):
+        run_prerun(f, bad, workers=8, chunk=10)
+    nm.authorize_replay(final_root=final_root, authority='MAIN 1', reason='first failure')
+    with pytest.raises(FileExistsError):
+        run_prerun(f, bad, workers=8, chunk=10)                      # round 1 fails too
+    with pytest.raises(nm.Blocked, match='never replay without a MAIN authorisation'):
+        run_prerun(f, nm.FakeRuntime(), workers=8, chunk=10)
+    rep = nm.authorize_replay(final_root=final_root, authority='MAIN 2', reason='round-1 replay failed (fresh dirs)')
+    assert set(rep['rounds'].values()) == {2} and len(rep['jobs']) == 10
+    nm.amend_prerun_cap(final_root=final_root, cap_sim_s=530_000, authority='MAIN: 530,000')
+    out = run_prerun(f, nm.FakeRuntime(), workers=8, chunk=10)
+    assert out['status'] == 'PASS'
+    assert (final_root/'evaluation'/'nmfinal_native_0001__r2'/nm.VEHICLE_LOG).is_file()
+    assert sum(r['id'].endswith('#r2') for r in nm.fe.ledger_rows(final_root)) == 10

@@ -1031,6 +1031,10 @@ def check_episode(record, spec):
         out['decision_log'] = log
     if spec['arm'] in EXECUTOR_ARMS:
         out['executor_sha256_loaded'] = record['executor_sha256_loaded']
+    if record.get('work_dir') is not None:
+        if not re.fullmatch(re.escape(spec['job_id'])+r'__r[0-9]+', str(record['work_dir'])):
+            raise Blocked(f'{what}: work_dir is not a replay dir of this job')
+        out['work_dir'] = record['work_dir']
     if spec['arm'] == 'RULE':
         if record.get('rule_sha256_loaded') != spec['checkpoint']['rule_sha256']:
             raise Blocked(f'{what}: S-REGIMEU0 rule actually loaded differs from its registration')
@@ -1495,62 +1499,102 @@ def published(final_root, name, specs, check_):
     return records, dict(source=paths, receipt_sha256=shas, chunks=len(paths)), covered
 
 
-def run_waves(waves, *, root, final_root, cfg, runtime, workers, base, chunked=False, limit=None):
-    """waves: [(name, kind, specs)]. Every NEW wave (or the unpublished rest of a chunked wave) is
-    reserved whole in the ledger BEFORE one shared dispatch; published receipts are reused, an
-    interrupted one (charges, no receipt) refuses. chunked=True publishes WAVE_<name>__<a>-<b>.json."""
+def run_waves(waves, *, root, final_root, cfg, runtime, workers, base, chunked=False, limit=None, canary=True):
+    """waves: [(name, kind, specs)]. Published receipts are reused; an interrupted job (charged, nothing published)
+    refuses unless MAIN authorised a replay round (then it runs in a fresh <job>__r<n> dir, charged <job>#r<n>).
+    MAIN process rule (2026-11-07): ONE canary job per arm of a dispatch is charged, run and verified (record valid,
+    vehicle log non-empty) before the rest of the dispatch is charged. chunked=True publishes WAVE_<name>__<a>-<b>."""
     root, final_root = Path(root), Path(final_root)
     out, sources, todo, done_before = {}, {}, [], {}
     chunked = chunked or bool(limit)
     prerun = isinstance(runtime, PrerunRuntime)
     phase = PRERUN_PHASE if prerun else PHASE
-    # the clean-run ledger AND the evaluation root's pre-run ledger: an interrupted wave never replays
-    charged = {r['id'] for r in fe.ledger_rows(root)} | {r['id'] for r in fe.ledger_rows(final_root)}
-    replay = replay_authorized(final_root) - {i.split('#')[0] for i in charged if '#r1' in i}
+    used, rounds = _rounds_used(final_root, root), replay_rounds(final_root)
+
+    def attempt(job):          # 0 = first run; n = authorised replay round n; None = interrupted, needs MAIN
+        if job not in used:
+            return 0
+        return used[job]+1 if rounds.get(job, 0) > used[job] else None
     for name, kind, specs in waves:
         check_ = CHECKS[kind]
         records, source, covered = published(final_root, name, specs, check_)
         if covered == len(specs):
             out[name], sources[name] = records, source
             continue
-        if ({s['job_id'] for s in specs[covered:]} & charged)-replay:
-            raise Blocked(f'{name}: interrupted wave in the ledger; never replay')
+        if any(attempt(s['job_id']) is None for s in specs[covered:]):
+            raise Blocked(f'{name}: interrupted wave in the ledger; never replay without a MAIN authorisation')
         n = (limit.get(name) if isinstance(limit, dict) else limit) or len(specs)
         rest = specs[covered:covered+n]
         done_before[name] = (records, source, covered, len(specs))
         part = f'{name}__{covered:04}-{covered+len(rest)-1:04}' if chunked or covered else name
         todo.append((name, part, kind, rest))
     new = sum(s['sim_s'] for *_, specs in todo for s in specs)
+    if new and prerun:              # the whole dispatch must fit BEFORE its canary is charged
+        runtime.check_capacity(new)
     if new and not prerun:          # pre-run: PrerunRuntime.reserve enforces the registered pre-run cap
         mine = sum(r['sim_s'] for r in fe.ledger_rows(root) if r.get('phase') == PHASE and str(r['id']).startswith(PREFIXES))
         budget_check(root, cfg, base, outstanding=new, final_root=final_root)
         mine += sum(r['sim_s'] for r in fe.ledger_rows(final_root))
         if mine+new > ALLOCATION_SIM_S:
             raise Blocked(f'{PHASE} sub-cap {ALLOCATION_SIM_S} would be exceeded')
+
+    def ledger_id(s):
+        a = attempt(s['job_id'])
+        return s['job_id']+(f'#r{a}' if a else '')
+
+    def work_dir(s):
+        a = attempt(s['job_id'])
+        return final_root/'evaluation'/(s['job_id']+(f'__r{a}' if a else ''))
     for name, part, kind, specs in todo:
         if specs:
-            jobs = [dict(id=s['job_id']+('#r1' if s['job_id'] in replay and s['job_id'] in charged else ''),
-                         sim_s=s['sim_s']) for s in specs]
-            if prerun:
-                runtime.reserve(cfg, jobs)
-            else:                     # the evaluation root's own ledger; the clean run root is never written
-                own_reserve(final_root, jobs, PHASE, clean_root=root, calls=getattr(runtime, 'calls', None))
-            replayed = any('#r1' in j['id'] for j in jobs)
-            publish(final_root/(f'RESERVED_{part}.replay1.json' if replayed else f'RESERVED_{part}.json'),
-                    dict(name=part, wave=name, phase=phase, jobs=[j['id'] for j in jobs],
-                    sim_s=sum(j['sim_s'] for j in jobs), ledger=str(final_root/'CHARGES.jsonl'), unix=time.time()))
-    items = [(kind, s, str(final_root/'evaluation'/s['job_id'])) for _, _, kind, specs in todo for s in specs]
-    results = runtime.run(items, cfg, workers) if items else []
+            ids = [ledger_id(s_) for s_ in specs]
+            tag = max((attempt(s_['job_id']) for s_ in specs), default=0)
+            publish(final_root/(f'RESERVED_{part}.replay{tag}.json' if tag else f'RESERVED_{part}.json'),
+                    dict(name=part, wave=name, phase=phase, jobs=ids, sim_s=sum(s_['sim_s'] for s_ in specs),
+                         ledger=str(final_root/'CHARGES.jsonl'), canary_first=bool(canary), unix=time.time()))
+    items = [(kind, s_, str(work_dir(s_))) for _, _, kind, specs in todo for s_ in specs]
+    by_item = {id(it[1]): it for it in items}
+
+    def charge(sel):
+        jobs = [dict(id=ledger_id(it[1]), sim_s=it[1]['sim_s']) for it in sel]
+        if prerun:
+            runtime.reserve(cfg, jobs)
+        else:                         # the evaluation root's own ledger; the clean run root is never written
+            own_reserve(final_root, jobs, PHASE, clean_root=root, calls=getattr(runtime, 'calls', None))
+    results = [None]*len(items)
+    first = [g[0] for g in process_groups(items)] if canary and items else []
+    if first:
+        sel = [items[i] for i in first]
+        charge(sel)
+        for i, rec in zip(first, runtime.run(sel, cfg, len(sel))):
+            kind, spec_, work = items[i]
+            CHECKS[kind](rec, spec_)                       # raises on any invalid canary record
+            if kind == 'episode':
+                path = Path(work)/VEHICLE_LOG
+                if runtime.physics and (not path.is_file() or path.stat().st_size < 1000
+                                        or file_sha(path) != rec['vehicle_log']['sha256']):
+                    raise Blocked(f'canary {spec_["job_id"]}: vehicle log missing/empty; the rest is not charged')
+            results[i] = rec
+    rest_idx = [i for i in range(len(items)) if results[i] is None]
+    if rest_idx:
+        sel = [items[i] for i in rest_idx]
+        charge(sel)
+        for i, rec in zip(rest_idx, runtime.run(sel, cfg, workers)):
+            results[i] = rec
+    del by_item
     position = 0
     for name, part, kind, specs in todo:
         records = results[position:position+len(specs)]
+        works = [Path(it[2]).name for it in items[position:position+len(specs)]]
         position += len(specs)
         check_ = CHECKS[kind]
-        checked = [check_(r, s) for r, s in zip(records, specs)]
+        checked = [check_(r, s_) for r, s_ in zip(records, specs)]
+        if kind == 'episode':
+            checked = [dict(c, work_dir=w) if w != c['job_id'] else c for c, w in zip(checked, works)]
         if len(checked) != len(specs):
             raise Blocked(f'{name}: incomplete wave; never drop/impute/retry')
         value = seal(dict(schema=SCHEMA+'.wave', name=part, wave=name, phase=phase, kind=kind, physics=runtime.physics,
-                          sim_s=sum(s['sim_s'] for s in specs), records=checked), 'receipt_sha256')
+                          sim_s=sum(s_['sim_s'] for s_ in specs), records=checked), 'receipt_sha256')
         publish(final_root/f'WAVE_{part}.json', value)
         before, source, covered, n = done_before[name]
         if part == name:
@@ -1836,7 +1880,7 @@ def _ci(pair, digits=1):
 
 def render(value):
     t = value['tables']
-    lines = [f'# clean5a wz3to2 final paired evaluation (u{value["update"]}) - {value["scope"]} - '
+    lines = [f'# clean5 wz3to2 final paired evaluation (u{value["update"]}) - {value["scope"]} - '
              f'panel {value["panel_sha256"][:8]}', '',
              f"Claim: {value['claim']}.", '',
              f"Panel: {value['worlds']} held-out wz3to2 worlds, panel_sha256 `{value['panel_sha256']}`; "
@@ -1997,7 +2041,7 @@ REPORT_VERSION = 'vehicle_log_report/1'
 def episode_log_report(final_root, record):
     """The sealed episode's ground-truth log -> its report (file sha re-verified every time; the report is
     content-addressed: cached in-process and next to the log as vehicles_report.json, keyed by the log sha)."""
-    path = Path(final_root)/'evaluation'/record['job_id']/VEHICLE_LOG
+    path = Path(final_root)/'evaluation'/record.get('work_dir', record['job_id'])/VEHICLE_LOG
     if not path.is_file():
         return None
     sha = record['vehicle_log']['sha256']
@@ -2334,72 +2378,97 @@ def prerun_cap():
 
 
 PRERUN_CAP_FILE = 'PRERUN_CAP.json'
-PRERUN_CAP_MAX = 480_000                     # MAIN 2026-11-07 ~01:2x: pre-run sub-cap 432,000 -> 480,000
+PRERUN_CAP_MAX = 530_000                     # MAIN 2026-11-07: pre-run sub-cap 432,000 -> 480,000 -> 530,000
+
+
+def _cap_files(final_root):
+    return sorted(Path(final_root).glob('PRERUN_CAP*.json'))
 
 
 def effective_prerun_cap(final_root, plan):
-    path = Path(final_root)/PRERUN_CAP_FILE
-    if not path.is_file():
-        return plan['cap_sim_s']
-    value = verify(read(path), 'receipt_sha256', PRERUN_CAP_FILE)
-    if value['prerun_plan_sha256'] != plan['receipt_sha256'] or not plan['cap_sim_s'] <= value['cap_sim_s'] <= PRERUN_CAP_MAX:
-        raise Blocked('PRERUN_CAP.json does not amend this pre-run plan within the registered maximum')
-    return value['cap_sim_s']
+    cap = plan['cap_sim_s']
+    for path in _cap_files(final_root):
+        value = verify(read(path), 'receipt_sha256', path.name)
+        if value['prerun_plan_sha256'] != plan['receipt_sha256'] or not plan['cap_sim_s'] <= value['cap_sim_s'] <= PRERUN_CAP_MAX:
+            raise Blocked(f'{path.name} does not amend this pre-run plan within the registered maximum')
+        cap = max(cap, value['cap_sim_s'])
+    return cap
 
 
 def amend_prerun_cap(*, final_root, cap_sim_s, authority):
-    """MAIN cap decision for the pre-run sub-cap (sealed; within v2v_final; never lowers below the plan)."""
+    """MAIN cap decision for the pre-run sub-cap (sealed, in sequence; only raises, within the registered max)."""
     plan = prerun_plan(final_root)
     if plan is None:
         raise Blocked('PRERUN_PLAN.json missing')
-    if not str(authority).strip() or not plan['cap_sim_s'] <= int(cap_sim_s) <= PRERUN_CAP_MAX:
-        raise Blocked(f'authority and a cap in [{plan["cap_sim_s"]}, {PRERUN_CAP_MAX}] required')
-    target = Path(final_root)/PRERUN_CAP_FILE
-    if target.is_file():
-        raise Blocked('PRERUN_CAP.json exists; never overwrite')
+    current = effective_prerun_cap(final_root, plan)
+    if not str(authority).strip() or not current < int(cap_sim_s) <= PRERUN_CAP_MAX:
+        raise Blocked(f'authority and a cap in ({current}, {PRERUN_CAP_MAX}] required')
+    n = len(_cap_files(final_root))
+    target = Path(final_root)/(PRERUN_CAP_FILE if n == 0 else f'PRERUN_CAP_{n+1:02}.json')
     value = seal(dict(schema=SCHEMA+'.prerun_cap', prerun_plan_sha256=plan['receipt_sha256'], cap_sim_s=int(cap_sim_s),
-                      previous=plan['cap_sim_s'], authority=str(authority), utc=datetime.now(timezone.utc).isoformat()),
+                      previous=current, authority=str(authority), utc=datetime.now(timezone.utc).isoformat()),
                  'receipt_sha256')
     publish(target, value)
     return value
 
 
-def interrupted_parts(final_root):
-    """RESERVED parts without a published WAVE (failed/interrupted dispatches) -> {part: jobs}."""
-    out = {}
-    for path in Path(final_root).glob('RESERVED_*.json'):
-        value = read(path)
-        part = value.get('name')
-        if part and not (Path(final_root)/f'WAVE_{part}.json').is_file() and '.replay' not in path.name:
-            out[part] = list(value['jobs'])
-    done = replay_authorized(final_root)            # already authorised once: never listed again
-    return dict(sorted((k, v) for k, v in out.items() if not set(v) <= done))
+def _published_jobs(final_root):
+    jobs = set()
+    for path in Path(final_root).glob('WAVE_*.json'):
+        jobs |= {r['job_id'] for r in read(path).get('records', [])}
+    return jobs
 
 
-def authorize_replay(*, final_root, authority, reason):
-    """MAIN-authorised one-time replay of every interrupted (charged, unpublished) part: its results were never
-    published or opened; the jobs are recharged under '<job>#r1' ledger ids. Sealed; never repeated."""
-    final_root = Path(final_root)
-    parts = interrupted_parts(final_root)
-    if not parts:
-        raise Blocked('no interrupted part to replay')
-    if not str(authority).strip() or not str(reason).strip():
-        raise Blocked('authority and reason required')
-    n = len(list(final_root.glob('REPLAY_AUTHORIZED_*.json')))+1
-    if any(set(jobs) & replay_authorized(final_root) for jobs in parts.values()):
-        raise Blocked('a job was already authorised for replay once; never twice')
-    value = seal(dict(schema=SCHEMA+'.replay', parts=parts, jobs=sorted(j for v in parts.values() for j in v),
-                      authority=str(authority), reason=str(reason), results_opened=False,
-                      utc=datetime.now(timezone.utc).isoformat()), 'receipt_sha256')
-    publish(final_root/f'REPLAY_AUTHORIZED_{n:02}.json', value)
-    return value
+def _rounds_used(final_root, clean_root=None):
+    """{base job id: highest charged round} (0 = the original charge, n = '<job>#rn')."""
+    used = {}
+    rows = fe.ledger_rows(final_root)+(fe.ledger_rows(clean_root) if clean_root else [])
+    for r in rows:
+        base, _, n = str(r['id']).partition('#r')
+        used[base] = max(used.get(base, -1), int(n) if n else 0)
+    return used
+
+
+def replay_rounds(final_root):
+    """{base job id: number of MAIN replay authorisations}."""
+    rounds = {}
+    for path in sorted(Path(final_root).glob('REPLAY_AUTHORIZED_*.json')):
+        for job in verify(read(path), 'receipt_sha256', path.name)['jobs']:
+            rounds[job] = rounds.get(job, 0)+1
+    return rounds
 
 
 def replay_authorized(final_root):
-    jobs = set()
-    for path in Path(final_root).glob('REPLAY_AUTHORIZED_*.json'):
-        jobs |= set(verify(read(path), 'receipt_sha256', path.name)['jobs'])
-    return jobs
+    return set(replay_rounds(final_root))
+
+
+def interrupted_jobs(final_root):
+    """Charged jobs (any round) with no published record and no unused authorisation: they need MAIN."""
+    used, rounds, done = _rounds_used(final_root), replay_rounds(final_root), _published_jobs(final_root)
+    return sorted(j for j, n in used.items() if j not in done and rounds.get(j, 0) <= n and not j.startswith('nmlogcheck_'))
+
+
+def interrupted_parts(final_root):
+    jobs = interrupted_jobs(final_root)
+    return {'interrupted': jobs} if jobs else {}
+
+
+def authorize_replay(*, final_root, authority, reason):
+    """MAIN-authorised replay round of every interrupted job (charged, nothing published or opened): the next
+    round runs in a FRESH job dir <job>__r<n> (old dirs untouched) and is charged as <job>#r<n>. Sealed."""
+    final_root = Path(final_root)
+    jobs = interrupted_jobs(final_root)
+    if not jobs:
+        raise Blocked('no interrupted part to replay')
+    if not str(authority).strip() or not str(reason).strip():
+        raise Blocked('authority and reason required')
+    used = _rounds_used(final_root)
+    n = len(list(final_root.glob('REPLAY_AUTHORIZED_*.json')))+1
+    value = seal(dict(schema=SCHEMA+'.replay', jobs=jobs, rounds={j: used[j]+1 for j in jobs}, authority=str(authority),
+                      reason=str(reason), results_opened=False, work_dirs='<job>__r<round> (fresh)',
+                      utc=datetime.now(timezone.utc).isoformat()), 'receipt_sha256')
+    publish(final_root/f'REPLAY_AUTHORIZED_{n:02}.json', value)
+    return value
 
 
 class PrerunRuntime:
@@ -2430,6 +2499,16 @@ class PrerunRuntime:
 
     def plant_view(self, cfg):
         return self.inner.plant_view(cfg)
+
+    def check_capacity(self, amount):
+        """Whole-dispatch cap check BEFORE the canary is charged (a cap refusal never strands a canary)."""
+        plan = prerun_plan(self.final_root)
+        rows = fe.ledger_rows(self.final_root)
+        cap = effective_prerun_cap(self.final_root, plan)
+        if sum(r['sim_s'] for r in rows if r.get('phase') == PRERUN_PHASE)+amount > cap:
+            raise Blocked(f'pre-run: {PRERUN_PHASE} cap {cap} would be exceeded')
+        if sum(r['sim_s'] for r in rows)+amount > ALLOCATION_SIM_S:
+            raise Blocked(f'pre-run: {PHASE} allocation {ALLOCATION_SIM_S} would be exceeded')
 
     def reserve(self, cfg, jobs):
         plan = prerun_plan(self.final_root)
