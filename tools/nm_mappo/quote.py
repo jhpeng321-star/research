@@ -57,6 +57,9 @@ OPTIONS = {
     "mappowz168_u0": dict(iterations=168, init="u0",
                           purpose="S-MAPPOWZ production (owner 15:52 'approve the full 7M MAPPO baseline'): the full "
                                   "recipe minus one iteration so smoke 660 + sanity 32,400 + training fit <= 7,000,000"),
+    "mappowz167_u0": dict(iterations=167, init="u0",
+                          purpose="S-MAPPOWZ production after the failed attempt-1 precharge (22,260) is kept "
+                                  "charged: 167 iterations keep the phase <= 7,000,000"),
     "full169_scratch": dict(iterations=169, init="scratch",
                             purpose="same budget from a fresh actor (weaker: the original actor had ~14M sim-s "
                                     "of merge-map MAPPO history before its 169 speed-only iterations)"),

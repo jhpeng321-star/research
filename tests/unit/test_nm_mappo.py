@@ -210,6 +210,8 @@ def test_quote_numbers():
     prod = Q.option_quote("mappowz168_u0")
     assert prod["planned_sim_s"] == 6_955_200 and prod["controlled_s"] == 4_636_800
     assert prod["planned_sim_s"] + Q.SMOKE_SIM_S + 32_400 <= 7_000_000
+    alt = Q.option_quote("mappowz167_u0")          # attempt-1 precharge 22,260 kept charged
+    assert alt["planned_sim_s"] + Q.SMOKE_SIM_S + 22_260 + 32_400 <= 7_000_000
     # generic worker counts reproduce the named host rows
     assert Q.wall_h_for_workers(169, 30) == w["cpuQ"]
     assert Q.wall_h_for_workers(169, 46) == w["cpuV"]
