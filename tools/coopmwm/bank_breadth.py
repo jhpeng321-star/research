@@ -132,8 +132,10 @@ def visit(cfg, arm, consumer):
                 matched_mined.add(mined_key)
                 value = group_lane_bank.binding(row)
                 if value is not None:
-                    if (set(value['members']) != set(plan['members'])
-                            or int(value['duration_s']) != int(plan['duration_s'])):
+                    if (list(value['members']) != list(plan['members'])
+                            or int(value['duration_s']) != int(plan['duration_s'])
+                            or ('profile' in plan and value['profile'] != [[float(x) for x in line]
+                                                                          for line in plan['profile']])):
                         raise ValueError('MINED_MOVES binding differs from the verified plan it names')
                     bound = dict(local, _mined_binding=value)
             if plan.get('g5_move') and not local.get('group_lane_moves'):

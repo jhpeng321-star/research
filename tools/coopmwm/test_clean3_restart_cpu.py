@@ -376,3 +376,11 @@ def test_walls_only_rule_counts_b_examples_only(tmp_path, monkeypatch):
     rows = [mrow('R', 'r1', 'wall', 4, {'1': .5, '2': .1, '3': .2})]
     out = c3.admit_mined(mined_fixture(tmp_path, monkeypatch, rows, base=dict(B=['wall'])), {}, tmp_path/'a.jsonl')
     assert out['admitted'] == 1 and not out['ready'] and out['joint_verified_examples'] == 0
+
+
+def test_failed_clean3_root_spend_is_counted_once():
+    value = c3.build(clean1_rows=rows('a', 1248480, 480), clean2_rows=rows('b', 1849200), g1_rows=[],
+                     mining_rows=[], prefixes=PREFIXES, accepted=ACCEPTED, failed_rows=rows('f', 3600))
+    assert value['spent']['failed'] == 3600
+    assert value['protected_prior_sim_s'] == 1248480+1849200+3600+960+500000
+    assert c3.checked(dict(clean3_budget=value))['spent']['failed'] == 3600

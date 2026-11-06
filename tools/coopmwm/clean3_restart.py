@@ -16,17 +16,21 @@ import time
 from .exact_grade import _seal, verify_sealed
 from .protocol import digest
 
-ROOT = '/home/ubuntu/coopmwm20261106_clean3'
+ROOT = '/home/ubuntu/coopmwm20261106_clean3_r2'
+# Root r1 (chain r7, source 6cf4868f) stopped at smoke on 'no decision link' (fixed by
+# c4/clean3-minedlink); kept intact as evidence and its ledger counted as prior spend.
+FAILED_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3',)
 CLEAN2 = '/home/ubuntu/coopmwm20261105_clean2'
 CLEAN1 = '/home/ubuntu/coopmwm20261105_clean1'
 # r1 (b7b74545), r2 (a0f9401d) and r3 (bf3f1d68) chains were stopped by the operator before any clean3
 # physics; each ran the same G1 selection: 0 candidates, 0 sim-s, NO-GO. Ledgers stay counted.
-G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r7'
+G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r8'
 G1_PRIOR_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3_g1cert', '/home/ubuntu/coopmwm20261106_clean3_g1cert_r2',
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r3',
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r4',  # r3/r4 stopped mid-G1: 0 rows
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r5',  # r5 NO-GO, 0 rows
-                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r6')  # r6 NO-GO, 0 rows
+                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r6',  # r6 NO-GO, 0 rows
+                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r7')  # r7 NO-GO, 0 rows
 MINING_ROOT = '/home/ubuntu/coopmwm20261106_s_mining'
 SCHEMA = 'coopmwm.clean3.restart_budget.v1'
 
@@ -62,11 +66,12 @@ def _count(value, label):
     return value
 
 
-def build(*, clean1_rows, clean2_rows, g1_rows, mining_rows, prefixes, accepted):
+def build(*, clean1_rows, clean2_rows, g1_rows, mining_rows, prefixes, accepted, failed_rows=()):
     """Pure registration. Every prior/void row stays charged; mining reserved in full."""
     spent = {}
+    failed_rows = list(failed_rows)
     for name, rows in (('clean1', clean1_rows), ('clean2', clean2_rows), ('g1', g1_rows),
-                       ('mining', mining_rows)):
+                       ('mining', mining_rows), ('failed', failed_rows)):
         ids = [r['id'] for r in rows]
         if len(set(ids)) != len(ids):
             raise ValueError('duplicate charge id in '+name)
@@ -78,7 +83,7 @@ def build(*, clean1_rows, clean2_rows, g1_rows, mining_rows, prefixes, accepted)
     if set(accepted) != {'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'G1', 'G2', 'G4', 'G5'}:
         raise ValueError('F1-F6 and G1/G2/G4/G5 acceptance receipts required')
     # Quote assertion (MAIN 02:43): full quote <= cap - prior - mining.
-    before = spent['clean1']+spent['clean2']+PARITY
+    before = spent['clean1']+spent['clean2']+spent['failed']+PARITY
     if before+MINING+QUOTE_TOTAL > CAP:
         raise ValueError('CLEAN3 full quote exceeds remaining owner cap')
     prior = before+spent['g1']+MINING
@@ -89,7 +94,7 @@ def build(*, clean1_rows, clean2_rows, g1_rows, mining_rows, prefixes, accepted)
         mining_reserved_sim_s=MINING, plan_fix_reserved_sim_s=0, protected_prior_sim_s=prior,
         remaining_sim_s=remaining, phases=dict(PHASES), g4_cap_sim_s=G4_CAP, g1_cap_sim_s=G1_CAP,
         quote_total_sim_s=QUOTE_TOTAL, prefixes=deepcopy(prefixes), accepted=deepcopy(accepted),
-        rows=dict(clean1=len(clean1_rows), clean2=len(clean2_rows), g1=len(g1_rows)),
+        rows=dict(clean1=len(clean1_rows), clean2=len(clean2_rows), g1=len(g1_rows), failed=len(failed_rows)),
         rule='clean1+clean2+parity+G1 actual+mining 500000 reserved; plan_fix released (owner 03:00); '
              'every phase sized for u1-u24 with >=15% margin'), 'receipt_sha256')
 
@@ -98,10 +103,10 @@ def checked(cfg):
     value = cfg['clean3_budget']
     verify_sealed(value, 'receipt_sha256')
     synthetic = {name: [dict(id=name, sim_s=value['spent'][name])] if value['spent'][name] else []
-                 for name in ('clean1', 'clean2', 'g1', 'mining')}
+                 for name in ('clean1', 'clean2', 'g1', 'mining', 'failed')}
     rebuilt = build(clean1_rows=synthetic['clean1'], clean2_rows=synthetic['clean2'],
         g1_rows=synthetic['g1'], mining_rows=synthetic['mining'], prefixes=value['prefixes'],
-        accepted=value['accepted'])
+        accepted=value['accepted'], failed_rows=synthetic['failed'])
     for key in ('phases', 'protected_prior_sim_s', 'remaining_sim_s', 'owner_cap_sim_s',
                 'spent', 'quote_total_sim_s'):
         if rebuilt[key] != value[key]:
@@ -148,8 +153,11 @@ def stopped_clean2(root=CLEAN2):
 
 def ledgers():
     from .storage import ledger
-    return {name: ledger(Path(root)) for name, root in
-            (('clean1', CLEAN1), ('clean2', CLEAN2), ('mining', MINING_ROOT))}
+    out = {name: ledger(Path(root)) for name, root in
+           (('clean1', CLEAN1), ('clean2', CLEAN2), ('mining', MINING_ROOT))}
+    out['failed'] = [dict(r, id=f'{Path(item).name}:{r["id"]}') for item in FAILED_ROOTS
+                     for r in ledger(Path(item))]
+    return out
 
 
 def g1_rows(root=G1_ROOT):
@@ -175,6 +183,8 @@ def verify_previous(cfg):
             raise ValueError(name+' ledger changed after clean3 registration')
     if sum(r['sim_s'] for r in current['mining']) > MINING:
         raise ValueError('mining exceeded its separate phase')
+    if sum(r['sim_s'] for r in current['failed']) != bound['spent']['failed']:
+        raise ValueError('failed clean3 root ledger changed after registration')
     if sum(r['sim_s'] for r in g1_rows(restart['g1_root'])) != bound['spent']['g1']:
         raise ValueError('G1 certification ledger changed after registration')
     return bound
@@ -487,7 +497,7 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1, clean2=CLEAN2, g1_root=G1_ROOT,
     g1 = g1_rows(g1_root)
     prefixes = {name: digest(current[name]) for name in ('clean1', 'clean2')}
     budget = build(clean1_rows=current['clean1'], clean2_rows=current['clean2'], g1_rows=g1,
-        mining_rows=current['mining'], prefixes=prefixes, accepted=accepted)
+        mining_rows=current['mining'], prefixes=prefixes, accepted=accepted, failed_rows=current['failed'])
     rule = training.read(clean2/rc.RULE_FILE)
     rc.init_root(root, amendment_shas=[rule['amendment_sha256']], track2=True)
     training.write(root/'PREPARATION_STARTED.json', dict(unix=time.time(), source_root=str(source),
