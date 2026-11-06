@@ -779,7 +779,7 @@ def run(*, cfg, base, out_dir, positives, negatives, mode, training=None, cells=
                 why.update(reasons)
                 recs += out
         else:
-            local = dict(cfg, mined_moves=str(_mined_file(out_dir, arm, pos_rows[arm])))
+            local = bank_view_config(cfg, out_dir, arm, pos_rows[arm])
             recs, why = bank_records(local, arm, policies[arm], pos_rows[arm], slate_seed=settings['slate_seed'],
                                      frame_index=frame_index)
         records[arm] = recs
@@ -837,6 +837,24 @@ def run(*, cfg, base, out_dir, positives, negatives, mode, training=None, cells=
     text = json.dumps(report, indent=1, sort_keys=True, default=str)
     (out_dir/'WARMSTART_RECEIPT.json').write_text(text+'\n', encoding='utf-8')
     return report
+
+
+def bank_view_config(cfg, out_dir, arm, rows):
+    """The clean4 config reading ONLY this arm's admitted mined rows.
+
+    The reader's own run_root is a fresh empty directory (no inherited/merge-map bank, no
+    PLAN_FIX outputs, no replay sources, no G1 lesson manifest); every example comes from
+    the admitted own-arm rows written to WARMSTART_MINED_{arm}.jsonl.
+    """
+    view = out_dir/f'bank_view_{arm}'
+    view.mkdir(exist_ok=True)
+    if any(view.iterdir()):
+        raise ValueError('bank view directory must start empty')
+    local = dict(cfg, run_root=str(view), replay_sources={}, mined_moves=str(_mined_file(out_dir, arm, rows)))
+    for key in ('plan_fix_ready', 'executable_label_manifest', 'executable_label_runtime_sha256',
+                'accounting_root'):
+        local.pop(key, None)
+    return local
 
 
 def _mined_file(out_dir, arm, rows):

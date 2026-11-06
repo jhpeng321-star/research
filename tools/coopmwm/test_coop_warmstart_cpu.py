@@ -361,6 +361,8 @@ def test_bank_mode_uses_the_registered_reader_own_rows_and_shared_frames(cfg, tm
 
     def visit(config, arm, consume):
         assert config['mined_moves'].endswith(f'WARMSTART_MINED_{arm}.jsonl') and config['group_lane_moves']
+        assert config['run_root'].endswith(f'bank_view_{arm}') and config['replay_sources'] == {}
+        assert 'plan_fix_ready' not in config and 'executable_label_manifest' not in config
         mined = [json.loads(line) for line in open(config['mined_moves'], encoding='utf-8')]
         assert {r['arm'] for r in mined} == {arm}
         for r in mined+[dict(mined[0], verification_id='inherited_merge_bank')]:
@@ -385,7 +387,9 @@ def test_bank_mode_uses_the_registered_reader_own_rows_and_shared_frames(cfg, tm
     monkeypatch.setattr(bank_breadth, 'visit', visit)
     monkeypatch.setattr(bank_breadth, 'observable_contexts', observable_contexts)
     monkeypatch.setattr(bank_v2v, 'trace_frames', trace_frames)
-    report = cw.run(cfg=dict(cfg, group_lane_moves=True), base=base(), out_dir=tmp_path/'bank', mode='bank',
+    report = cw.run(cfg=dict(cfg, group_lane_moves=True, plan_fix_ready=str(tmp_path/'PF.json'),
+                             executable_label_manifest='x', replay_sources=dict(B=['inherited'])),
+                    base=base(), out_dir=tmp_path/'bank', mode='bank',
                     positives=dict(B=[files['B']], R=[files['R']]), negatives=[neg], training=SMALL)
     assert not report['dry'] and report['effort_equal']
     for arm in 'BR':
