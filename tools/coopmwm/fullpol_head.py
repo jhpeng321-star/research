@@ -193,7 +193,7 @@ def _template_slot(view, p, rule, own):
         out += [0.]*6
     else:
         t = int(q['target'])
-        out += [1.]+[float(t == l) for l in (0, 1, 2)]+[float(t == view.dropped_lane), float(q['from_el'])/OFFSET_MAX_S]
+        out += [1.]+[float(t == ln) for ln in (0, 1, 2)]+[float(t == view.dropped_lane), float(q['from_el'])/OFFSET_MAX_S]
     out += [_dist(view, None if q is None else q.get('giveup_s'))]
     out += [float(q is not None and q['rule'] == r) for r in TEMPLATE_RULES]
     rel = set(p['releases'])
@@ -203,7 +203,7 @@ def _template_slot(view, p, rule, own):
         out += [0.]*6
     else:
         lane = rule.get('lane')
-        out += [float(lane is None)]+[float(lane == l) for l in (0, 1, 2)]
+        out += [float(lane is None)]+[float(lane == ln) for ln in (0, 1, 2)]
         out += [max(-1., min(1., float(rule['ds'][0])/SENSING_M)), max(-1., min(1., float(rule['ds'][1])/SENSING_M))]
     out += [float(own)]
     return out
@@ -232,7 +232,7 @@ def template_descriptor(option, view):
                             len(t['programs'])/float(TEMPLATE_CAP), float(t['duration_s'])/HOLD_MAX_S,
                             float(get('member_count', 1) or 1)/cap, max(-1., min(1., float(get('gap_m', 0.) or 0.)/rng_m))]
     own_lane = get('lane')
-    out[-3:] = [float(own_lane == l) for l in (0, 1, 2)]
+    out[-3:] = [float(own_lane == ln) for ln in (0, 1, 2)]
     return out
 
 

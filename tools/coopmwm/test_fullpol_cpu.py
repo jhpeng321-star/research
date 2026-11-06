@@ -5,6 +5,7 @@ Fakes: the N1 map stub of test_lane_drop_cpu (drop at s = 0, WM lanes 0..2, clos
 synthetic observation rows, and - until LCEXEC lands lc_program on this branch - a local stub
 of LCEXEC's per-member executor (lcexec-free-program-v1 semantics for the primitives used).
 """
+# ruff: noqa: F811, E731 (imported pytest fixtures are test parameters; small test lambdas)
 from copy import deepcopy
 import json
 from pathlib import Path
@@ -355,8 +356,9 @@ def test_descriptor_block_is_zero_initialised_and_existing_logits_unchanged(cfg)
     assert torch.equal(torch.cat((w_on[:, :start], w_on[:, start+fh.width(4):]), 1), w_off)
     # every legacy candidate keeps its logit: program columns are zero for non-program entries
     vehicles = scene()
-    s_off, s_on = tick(off, vehicles, 300), tick(on, vehicles, 300)
-    t_off, t_on = s_off['track2_trigger'], s_on['track2_trigger']
+    tick(off, vehicles, 300)
+    s_on = tick(on, vehicles, 300)
+    t_on = s_on['track2_trigger']
     assert t_on['tables'][0][0] is None
     fams = {m['family'] for table in t_on['tables'] for m in table if m}
     assert fp.FAMILY in fams

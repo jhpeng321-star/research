@@ -782,7 +782,8 @@ def register_g4_adapter():
 
 def reproduction(verified_labels, executed_labels):
     """Per-second agreement of executed primitives with the verified LCEXEC tick labels."""
-    key = lambda r: (r['vid'], int(r['el']))
+    def key(r):
+        return r['vid'], int(r['el'])
     ref, got = {key(r): r for r in verified_labels}, {key(r): r for r in executed_labels}
     common = sorted(set(ref) & set(got))
     if not common:

@@ -312,7 +312,7 @@ def _to_drop(view, row):
 
 def lanes_at(view, s_m):
     """Existing lanes at road position s (the closing lane ends at the drop)."""
-    return tuple(l for l in view.lane_ids if l != view.dropped_lane or float(s_m) < _drop(view))
+    return tuple(ln for ln in view.lane_ids if ln != view.dropped_lane or float(s_m) < _drop(view))
 
 
 def adjacent_targets(view, row):
@@ -374,12 +374,12 @@ def _structured_groups(family, view, own, partners, by_vid):
             if max(s)-min(s) > spread:
                 continue
             lanes = [int(r['lane']) for r in group]
-            doubled = [l for l in set(lanes) if lanes.count(l) == 2]
+            doubled = [ln for ln in set(lanes) if lanes.count(ln) == 2]
             if len(set(lanes)) != 2 or not doubled:
                 continue
-            empty = [l for l in view.lane_ids if l not in lanes]
+            empty = [ln for ln in view.lane_ids if ln not in lanes]
             for filler in (r for r in group if int(r['lane']) == doubled[0]):
-                targets = [l for l in adjacent_targets(view, filler) if l in empty]
+                targets = [ln for ln in adjacent_targets(view, filler) if ln in empty]
                 # the empty lane must hold no other acquirable CAV that already makes a static wall
                 rest = [r for r in partners if r not in group and int(r['lane']) in targets
                         and abs(float(r['s_m'])-sum(s)/3.) <= spread]
@@ -412,17 +412,17 @@ def _structured_groups(family, view, own, partners, by_vid):
                 if max(s)-min(s) > registered('r_spread_m')[0]:
                     continue
                 centre, radius = sum(s)/len(s), registered('sensing_m')[0]
-                load = {l: sum(1 for r in sensed if int(r['lane']) == l and abs(float(r['s_m'])-centre) <= radius)
-                        for l in lanes_at(view, centre)}
+                load = {ln: sum(1 for r in sensed if int(r['lane']) == ln and abs(float(r['s_m'])-centre) <= radius)
+                        for ln in lanes_at(view, centre)}
                 lane = int(group[0]['lane'])
                 if load.get(lane) != max(load.values()):
                     continue   # the group must be in the locally most loaded lane
-                targets = [l for l in adjacent_targets(view, group[0]) if all(
-                    l in adjacent_targets(view, r) for r in group)]
+                targets = [ln for ln in adjacent_targets(view, group[0]) if all(
+                    ln in adjacent_targets(view, r) for r in group)]
                 if not targets:
                     continue
-                least = min(load[l] for l in targets)
-                out.append((group, min(l for l in targets if load[l] == least)))
+                least = min(load[ln] for ln in targets)
+                out.append((group, min(ln for ln in targets if load[ln] == least)))
         return out
     raise ValueError(f'unregistered structured family {family!r}')
 
@@ -591,7 +591,7 @@ def check_template(t):
         raise ValueError('fullpol template needs schema fullpol-template-v1 and an lcexec program')
     members = t['program']['members']
     if (len(t['member_lanes']) != len(members) or len(t['member_s']) != len(members)
-            or any(type(l) is not int for l in t['member_lanes'])
+            or any(type(ln) is not int for ln in t['member_lanes'])
             or any(not math.isfinite(float(s)) for s in t['member_s'])):
         raise ValueError('template roles need one WM lane and one WM s per member')
     if not isinstance(t.get('source'), dict) or not t['source'].get('verification_id'):

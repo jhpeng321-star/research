@@ -35,7 +35,8 @@ def main():
         vals = []
         with torch.no_grad():
             for r in recs:
-                b = r['batch']; pr = p.trigger.distribution(b.context, b.descriptors, b.mask)[0].softmax(-1)
+                b = r['batch']
+                pr = p.trigger.distribution(b.context, b.descriptors, b.mask)[0].softmax(-1)
                 for i in range(len(b.actions)):
                     if float(r['row_weight'][i]) > 0:
                         vals.append(float(pr[i][r['equivalent'][i]].sum()))

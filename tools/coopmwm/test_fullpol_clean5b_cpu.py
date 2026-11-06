@@ -92,7 +92,7 @@ def test_e2e_group_chooses_lane_change_into_closing_lane_and_learns(cfg, wz):
     joined = {e['vid'] for t in (301, 302) for e in samples[t]['track2']['lc_families'].get('joins', [])}
     assert 'c1' in joined or 'c1' in session.get('members', {})
     lanes = [r.get('lanes', {}) for r in requests.values() if r]
-    assert any(l.get('c0') == [2, 2.0] for l in lanes)                # lane change INTO the closing lane
+    assert any(ln.get('c0') == [2, 2.0] for ln in lanes)                # lane change INTO the closing lane
     accels = [r.get('accel', {}) for r in requests.values() if r]
     assert any('c1' in a or 'c2' in a for a in accels)                 # speed changes of the joiners
     for r in requests.values():

@@ -21,8 +21,6 @@ Classes (FULLPOL slate rule, every value from lc_program.REGISTRY / registration
 Observables only: own row + own sensing rows (HDV geometry for lane loads), the map frame.
 Every builder may return None (N11 F8 None-guard). No regime/config label is ever read.
 """
-import math
-
 from . import fullpol_programs as fp
 
 CLASSES = ('verified', 'structured', 'random_r', 'random_prim')
@@ -94,14 +92,14 @@ def _wall_like(family, view, own, rng, range_m):
         # lane-specific strategy label (S-REGIME wall_{g,h}_solo{SUMO lane of the initiator}); offline only
         return _template([prog], [], source=dict(family='solo_hold', variant=f'{name}_solo{sumo_lane(view, lane)}'))
     if family == 'abreast_wall':
-        others = [l for l in view.lane_ids if l != lane]
+        others = [ln for ln in view.lane_ids if ln != lane]
         spread = fp.registered('wall_spread_m')[0]
         ds = _ds(-spread, spread, range_m)
         if ds is None:
             return None
         progs = [_speed(view, v_w=v['target_mps'], hold_s=v['hold'], dmax=v['depth'], role='wall')
                  for _ in range(1+len(others))]
-        return _template(progs, [dict(lane=l, ds=ds) for l in others], source=dict(family=family, variant=name))
+        return _template(progs, [dict(lane=ln, ds=ds) for ln in others], source=dict(family=family, variant=name))
     # closing_pair: (closing-lane CAV, adjacent-lane CAV); the initiator takes its own role
     if lane not in (view.dropped_lane, view.adjacent_lane):
         return None
@@ -127,12 +125,12 @@ def _wall_fill(view, own, rows, rng, range_m):
     lane = int(own['lane'])
     spread = fp.registered('wall_spread_m')[0]
     cavs = [r for r in rows if r['is_cav'] and r['vid'] != own['vid']]
-    targets = [l for l in fp.adjacent_targets(view, own)
-               if not any(int(r['lane']) == l and abs(float(r['s_m'])-float(own['s_m'])) <= spread for r in cavs)]
+    targets = [ln for ln in fp.adjacent_targets(view, own)
+               if not any(int(r['lane']) == ln and abs(float(r['s_m'])-float(own['s_m'])) <= spread for r in cavs)]
     if not targets:
         return None
     empty = _pick(rng, targets)
-    third = [l for l in view.lane_ids if l not in (lane, empty)]
+    third = [ln for ln in view.lane_ids if ln not in (lane, empty)]
     if not third:
         return None
     ds = _ds(-spread, spread, range_m)
@@ -160,7 +158,7 @@ def _rolling_wall(view, own, rng, range_m):
     lanes = fp.lanes_at(view, own['s_m'])
     options = []
     for uncovered in lanes:
-        front = [l for l in lanes if l != uncovered]
+        front = [ln for ln in lanes if ln != uncovered]
         if len(front) != 2:
             continue
         if uncovered == lane:
@@ -177,7 +175,7 @@ def _rolling_wall(view, own, rng, range_m):
                      lane=None if target is None else fp.lane_req(target, giveup_s=giveup), hold_s=h['hold_s'],
                      release_s=fp._drop(view), role='rolling_rear', mode_on='on_action')
     fronts = [_speed(view, v_w=h['v_w'], hold_s=h['hold_s'], dmax=h['dmax'], role='rolling_front') for _ in front]
-    return _template([rear]+fronts, [dict(lane=l, ds=ds) for l in front], source=dict(family='rolling_wall'))
+    return _template([rear]+fronts, [dict(lane=ln, ds=ds) for ln in front], source=dict(family='rolling_wall'))
 
 
 def _gap_open_merge(view, own, rng, range_m):
@@ -217,16 +215,16 @@ def _lane_redistribute(view, own, rows, rng, range_m):
         return None
     radius = fp.registered('sensing_m')[0]
     lanes = fp.lanes_at(view, own['s_m'])
-    load = {l: sum(1 for r in rows if int(r['lane']) == l and abs(float(r['s_m'])-float(own['s_m'])) <= radius)
-            for l in lanes}
+    load = {ln: sum(1 for r in rows if int(r['lane']) == ln and abs(float(r['s_m'])-float(own['s_m'])) <= radius)
+            for ln in lanes}
     lane = int(own['lane'])
     if load.get(lane) != max(load.values()):
         return None
     targets = fp.adjacent_targets(view, own)
     if not targets:
         return None
-    least = min(load[l] for l in targets)
-    target = min(l for l in targets if load[l] == least)
+    least = min(load[ln] for ln in targets)
+    target = min(ln for ln in targets if load[ln] == least)
     size = _pick(rng, fp.registered('redistribute_size'))
     ds = _ds(-fp.registered('r_spread_m')[0], fp.registered('r_spread_m')[0], range_m)
     giveup = fp._drop(view)-fp.registered('lane_giveup_to_drop_m')[0]

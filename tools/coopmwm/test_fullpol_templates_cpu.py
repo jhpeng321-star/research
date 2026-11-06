@@ -4,6 +4,7 @@ Real lc_program FreeProgram / MemberProgram validation, registry check and Membe
 generated templates (slot ids resolved to concrete vehicles); no SUMO. The ProgramOption shape
 follows the LCEXEC contract (lc_families, ~21:3x) through a local test stub until it lands.
 """
+# ruff: noqa: F811, E731 (imported pytest fixtures are test parameters; small test lambdas)
 from collections import Counter
 from importlib import import_module
 
