@@ -395,6 +395,8 @@ def main(argv=None) -> int:
                    checkpoint=args.checkpoint, breakdown_rule=rule.record(),
                    checkpoint_sha256=getattr(backend, "checkpoint_sha256", None),
                    physics_source=getattr(backend, "physics_source", None),
+                   physics_sha256=getattr(backend, "physics_sha256", None),
+                   road=getattr(getattr(backend, "road", None), "name", None),
                    shards=dict(moments=args.moment_shard, starts=args.start_shard))
     contract_issues = []
     if not args.skip_distributional:

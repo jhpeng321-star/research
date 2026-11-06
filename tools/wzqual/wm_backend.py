@@ -141,21 +141,31 @@ class WmBackend:
         self.road = current_road()
         if self.road.name != "wz3to2":
             raise RuntimeError(f"road bound to {self.road.name!r}; set WMS_MAP_SPEC to the wz3to2 MAP_SPEC")
-        physics = None
+        physics = model_config = None
         self.physics_source = "checkpoint (embedded / physics.json / TRAIN_RECEIPT.json)"
         if physics_toml:
+            # Baseline (WM-E 2026-11-06): physics = build_physics(load_train_config(TOML)) and the
+            # TOML's flat config as model_config, so baseline and fine-tune differ only in weights.
             from wms.cli.assemble import build_physics
             from wms.config.load import load_train_config
-            physics = asdict(build_physics(load_train_config(physics_toml)))
-            self.physics_source = f"{physics_toml} sha256 {_sha(physics_toml)}"
-        self.be = load_backend(checkpoint, device=device, physics=physics)
+            cfg = load_train_config(physics_toml)
+            physics = asdict(build_physics(cfg))
+            model_config = cfg.to_legacy_flat()
+            self.physics_source = f"{physics_toml} sha256 {_sha(physics_toml)} (physics + flat model config)"
+        self.be = load_backend(checkpoint, device=device, physics=physics, model_config=model_config)
         self.model = self.be.model
         self.device = device
         self.hist = HistoryInputs(self.be)
         self.history_s, self.history_stride_s = self.hist.long_history_config()
         self.driver_noise, self.embedding_noise = float(driver_noise), float(embedding_noise)
         self.checkpoint_sha256 = _sha(checkpoint)
-        self.physics = asdict(self.model.physics) if hasattr(self.model, "physics") else {}
+        try:
+            self.physics = asdict(self.model.physics)
+        except TypeError:
+            self.physics = {}
+        import json as _json
+        self.physics_sha256 = hashlib.sha256(_json.dumps(self.physics, sort_keys=True, default=str)
+                                             .encode()).hexdigest()
 
     # ------------------------------------------------------------ observable state record
     def state_record(self, start: StartState) -> dict:
