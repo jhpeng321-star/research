@@ -290,11 +290,42 @@ def test_analysis_perfect_and_flipped_predictors(tmp_path):
 
 
 def test_cost_estimate_counts_rows(tmp_path):
-    rows = [dict(_fixture(), sid=f's{i}', cell=c) for i, c in enumerate(['D3200_p60', 'D2400_p40'])]
+    rows = [dict(_fixture(), sid=f's{i}', cell=c) for i, c in enumerate(['D3200_p60', 'D2400_p40', 'D3200_p20'])]
     p = tmp_path / 'st.json'
     p.write_text(json.dumps(rows))
-    est = R.cost_estimate(p, K=8, H=900, max_rows=32, s_per_step=0.1, workers=2)
-    assert est['calls'] == 2 and est['row_steps'] == (4 + 3) * 8 * 1800
-    est2 = R.cost_estimate(p, K=8, H=900, max_rows=64, states_per_call=2, s_per_step=0.1)
-    assert est2['calls'] == 1                                                   # 4 x 8 + 3 x 8 = 56 rows <= 64
-    assert est['serial_minutes'] == pytest.approx(2 * 1800 * 0.1 / 60, abs=0.1)
+    est = R.cost_estimate(p, K=8, H=900, max_rows=32, s_per_step=0.1, workers=2, slots=448)
+    assert est['calls'] == 3 and est['row_steps'] == (4 + 3 + 4) * 8 * 1800
+    assert est['serial_minutes'] == pytest.approx(3 * 1800 * 0.1 / 60, abs=0.1)
+    auto = R.cost_estimate(p, K=8, H=900, max_rows=32, s_per_step=0.1)
+    assert auto['calls_by_slots'] == {448: 2, 256: 1}
+    assert auto['effective_calls_at_max_slots'] == pytest.approx(2 + (256 / 448) ** 2, abs=0.05)
+    packed = R.cost_estimate(p, K=8, H=900, max_rows=64, states_per_call=2, s_per_step=0.1)
+    assert packed['calls'] == 3            # 'auto' slots never mix demand levels in one call: D3200 / D2400 / D3200
+    same = R.cost_estimate(p, K=8, H=900, max_rows=64, states_per_call=2, s_per_step=0.1,
+                           sids=['s0', 's2'])
+    assert same['calls'] == 1              # 4 x 8 + 4 x 8 = 64 rows, one demand level
+
+
+@needs_wm
+@pytest.mark.skipif(not SUMO_WIN.exists(), reason='SUMO windows not extracted')
+def test_end_to_end_score_cli_resume_and_analyze(tmp_path, wm):
+    """score CLI on two fixture states (tiny H) -> resumable JSONL + meta -> analyze/markdown on the real SUMO side."""
+    states = [_fixture(wall=True), dict(_fixture(wall=True), sid='fixture_D3200_p60_s989202_t300', seed=989202)]
+    sp = tmp_path / 'states.json'
+    sp.write_text(json.dumps(states))
+    out = tmp_path / 'SCORES.jsonl'
+    args = ['score', '--states', str(sp), '--checkpoint', str(WM2), '--u0', str(U0), '--K', '2', '--H', '4',
+            '--max-rows', '16', '--states-per-call', '2', '--slots', '48', '--threads', '2', '--out', str(out)]
+    R.main(args)
+    rows = [json.loads(x) for x in out.read_text().splitlines()]
+    assert [r['sid'] for r in rows] == [m['sid'] for m in states] and all('error' not in r for r in rows)
+    meta = json.loads(Path(str(out) + '.meta.json').read_text())
+    assert meta['u0_sha256'].startswith('d9042cc5') and meta['K'] == 2 and meta['slots'] == '48'
+    R.main(args)                                                        # resume: nothing re-scored
+    assert len(out.read_text().splitlines()) == 2
+    with pytest.raises(ValueError):                                     # changed settings refused
+        R.main([a if a != '2' else '3' for a in args])
+    res = C.analyze([out], SUMO_WIN, H=100, boot=20)
+    assert {r['strategy'] for r in res['table']} == {'wall_h_solo2', 'wall_h', 'wall_h_solo0'}
+    assert all(r['wm_states'] == 2 for r in res['table'])
+    assert 'Regime pattern' in C.markdown(res, C.horizon_check([out], SUMO_WIN))

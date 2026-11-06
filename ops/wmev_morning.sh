@@ -41,19 +41,23 @@ WMEV_U0=$U0 WMEV_WM2=$FINAL $PY -m pytest -q tools/wzprop/test_regime_u0_cpu.py 
 nice -n 10 $PY -B -m tools.wzprop.regime_u0 cost --calibrate --device cuda --threads 1 --mem-fraction 0.10 \
   --states wmev_data/u0_STATES_t300.json --checkpoint $FINAL --u0 $U0 --arms auto --K 8 --max-rows 32 \
   --steps 40 --workers 6 | tee $B/CALIBRATION.json
-# Registered plan choice (before any result): the FIRST plan whose estimate.wall_minutes <= 90 with 6 workers:
-#   P1  all 61 states, K 8, H 900                               (no extra flags)
-#   P2  --max-per-cell 8, K 8 (45 states)
-#   P3  --max-per-cell 6 --K 6 (40 states)
-#   P4  --max-per-cell 6 --K 4 --H 600 (the comparison is then [300, 900) s on BOTH sides)
-# Cost of P2-P4: re-run step 3 WITHOUT --calibrate, with --s-per-step <calibration.s_per_step> and the plan flags.
-# Memory: calibration.memory.peak_gb_full_H must stay below 0.10 x 48 GB = 4.8 GB, else halve --max-rows (and redo 3).
-PLAN_FLAGS=${PLAN_FLAGS:-""}                                    # e.g. "--max-per-cell 8"
+# Registered plan choice (before any result): the FIRST plan whose estimate.wall_minutes <= 90 with 6 workers
+# (every plan has <= 32 rows per call, so the one calibration above applies to all of them):
+#   P1  "--K 8"                                           61 states, H 900   (1 state per call)
+#   P2  "--K 4 --states-per-call 2"                       61 states, H 900
+#   P3  "--K 4 --states-per-call 2 --max-per-cell 6"      40 states, H 900
+#   P4  "--K 4 --states-per-call 2 --max-per-cell 6 --H 600"  (the comparison is then [300, 900) s on BOTH sides)
+# Cost of each plan: re-run step 3 WITHOUT --calibrate (and without --K 8) with --s-per-step <calibration.s_per_step>
+# and the plan flags.  Night prior (CPU-only build, WM-C's GPU rate): 0.3-0.6 s/step -> P1 98-196 min, P2 50-100,
+# P3 29-59, P4 20-39 min wall (6 workers, efficiency 0.8).
+# Memory: calibration.memory.peak_gb_full_H must stay below 0.10 x 48 GB = 4.8 GB, else use --max-rows 16 (and
+# halve K or states-per-call accordingly; redo step 3).
+PLAN_FLAGS=${PLAN_FLAGS:?set PLAN_FLAGS to the chosen plan, e.g. "--K 4 --states-per-call 2"}
 
 # --- 4 (gpuA GPU): 6 shard workers (resumable: re-running the same command skips scored states)
 for i in 0 1 2 3 4 5; do
   nohup nice -n 10 $PY -B -m tools.wzprop.regime_u0 score --device cuda --threads 1 --mem-fraction 0.10 \
-    --states wmev_data/u0_STATES_t300.json --checkpoint $FINAL --u0 $U0 --arms auto --K 8 --max-rows 32 \
+    --states wmev_data/u0_STATES_t300.json --checkpoint $FINAL --u0 $U0 --arms auto --max-rows 32 \
     --shard $i/6 --out $B/run/SCORES_part$i.jsonl $PLAN_FLAGS > $B/run/part$i.log 2>&1 &
   echo "$! part$i $(date +%s)" >> $B/run/PIDS.txt
 done
