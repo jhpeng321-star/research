@@ -99,9 +99,14 @@ class TriggerPolicy(nn.Module):
     its width must fit the supplied ``partner_slots`` (normally V2V K + ego).
     Candidate scoring shares weights across slots, so reordering the move table
     only reorders its categorical probabilities.
+
+    ``extension`` (W1 v2v_wall / coop_awareness; DEFAULT None = byte-identical) adds
+    protocol option families, per-candidate descriptor columns and per-ego context
+    columns read from the recorded context. Every extra first-layer input column is
+    zero-initialised on top of the unchanged default initialisation.
     """
     def __init__(self, base_policy, *, v2v_dim, n_candidates, partner_slots,
-                 freeze_base=True, moves_api=None):
+                 freeze_base=True, moves_api=None, extension=None):
         super().__init__()
         if (type(v2v_dim) is not int or v2v_dim < 1 or type(n_candidates) is not int
                 or n_candidates < 1 or type(partner_slots) is not int or partner_slots < 1):
@@ -126,6 +131,17 @@ class TriggerPolicy(nn.Module):
             self.trigger_head = nn.Sequential(nn.Linear(hidden+width, hidden), nn.Tanh(),
                                               nn.Linear(hidden, 1))
             self.trigger_value = nn.Linear(hidden, 1)
+        self.extension = extension
+        self.option_families = self.families
+        self.descriptor_width = width
+        if extension is not None:
+            if set(extension.families) & set(self.families):
+                raise ValueError('extension families must be new option families')
+            from .v2v_wall import widen_columns
+            self.option_families = self.families+tuple(extension.families)
+            self.descriptor_width = width+extension.descriptor_width
+            self.trigger_head[0] = widen_columns(self.trigger_head[0], hidden+width,
+                                                 extension.descriptor_width+extension.context_width)
 
     def forward(self, context):
         return self.base_policy(context)
@@ -186,6 +202,12 @@ class TriggerPolicy(nn.Module):
         return hidden.detach() if self.freeze_base else hidden
 
     def _descriptor(self, move, visible):
+        out = self._base_descriptor(move, visible)
+        if self.extension is not None:
+            out += self.extension.descriptor(move)
+        return out
+
+    def _base_descriptor(self, move, visible):
         family = 'none' if move is None else _field(move, 'family')
         out = [float(f == family) for f in self.families]
         members = () if move is None else _members(move)
@@ -202,12 +224,15 @@ class TriggerPolicy(nn.Module):
     def distribution(self, context, descriptors, mask):
         hidden = self._hidden(context)
         count = self.n_candidates+1
-        width = len(self.families)+self.partner_slots+3
+        width = self.descriptor_width
         if descriptors.shape != (len(hidden), count, width) or mask.shape != (len(hidden), count):
             raise ValueError('trigger table shape mismatch')
         if mask.dtype != torch.bool or (len(hidden) and not bool(mask[:, 0].all())):
             raise ValueError('none must always be available')
         inputs = torch.cat((hidden[:, None, :].expand(-1, count, -1), descriptors), -1)
+        if self.extension is not None and self.extension.context_width:
+            extra = self.extension.context_features(context)
+            inputs = torch.cat((inputs, extra[:, None, :].expand(-1, count, -1)), -1)
         logits = self.trigger_head(inputs).squeeze(-1).masked_fill(~mask, -torch.inf)
         return logits, self.trigger_value(hidden).squeeze(-1)
 
@@ -233,7 +258,7 @@ class TriggerPolicy(nn.Module):
                 raise ValueError('moves.candidates exceeded requested action budget')
             table = [None]
             for move in candidates:
-                _validate_move(move, ego, visible, self.families)
+                _validate_move(move, ego, visible, self.option_families)
                 if _field(move, 'family') != 'none':
                     table.append(copy.deepcopy(move))
             mask = [True]*len(table)+[False]*(self.n_candidates+1-len(table))
@@ -242,8 +267,7 @@ class TriggerPolicy(nn.Module):
             descriptors.append([self._descriptor(move, visible) for move in table])
             masks.append(mask)
         shape = (len(tables), self.n_candidates+1)
-        desc = torch.tensor(descriptors, dtype=torch.float32).reshape(
-            *shape, len(self.families)+self.partner_slots+3)
+        desc = torch.tensor(descriptors, dtype=torch.float32).reshape(*shape, self.descriptor_width)
         mask = torch.tensor(masks, dtype=torch.bool).reshape(shape)
         logits, values = self.distribution(context, desc, mask)
         if not len(tables):
@@ -357,7 +381,8 @@ class MoveExecutor:
         self._advance(now)
         if move is None:
             return False
-        _validate_move(move, ego, observable_cav_ids, self.moves_api.FAMILIES)
+        _validate_move(move, ego, observable_cav_ids,
+                       getattr(self.moves_api, 'EXECUTABLE_FAMILIES', self.moves_api.FAMILIES))
         if _field(move, 'family') == 'none':
             return False
         if not math.isfinite(until) or until <= now:

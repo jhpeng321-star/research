@@ -101,6 +101,8 @@ def opportunities(episodes):
                 selected = table[action]
                 if selected is None or not trigger.get('accepted', {}).get(ego, False):
                     continue
+                if selected['family'] in ('wall_initiate', 'wall_join'):
+                    continue  # W1 per-CAV protocol options are not single-proposer joint macros
                 move = moves.Move.from_dict(selected)
                 if len(move.actors) < 2:
                     continue
