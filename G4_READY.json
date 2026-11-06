@@ -25,7 +25,7 @@
   },
   "latest_resume_verification": {
     "date": "2026-11-06",
-    "starting_head": "fd7e64468f7dc16f6e44d820574e8fda7f48b8db",
+    "starting_head": "ec0472bbeb794d79d9d8a8fbd8fb0cf2ea825f4a",
     "reviewed_commit": "6db78a33366af80f2438c470b7b1065c889e0778",
     "tracked_delta_since_review": ["G4_READY.json"],
     "implementation_and_tests_unchanged_since_pass": true,
@@ -38,7 +38,7 @@
     "prior_independent_review_result": "309 passed, 0 failed, 1 skipped; 7 additional CPU assertion cases passed",
     "production_dispatches": 0,
     "scoped_whitespace_check": "git diff --check c4/track-base over the ten G4 files passed",
-    "review_resume_confirmation": "REVIEW_G4_r1.md confirms PASS again at starting HEAD fd7e6446; no required fixes remain",
+    "review_resume_confirmation": "REVIEW_G4_r1.md confirms PASS again at starting HEAD ec0472bb; no required fixes remain",
     "preexisting_untracked_review_and_receipt_files_preserved": true
   },
   "commits": [
@@ -65,6 +65,10 @@
     {
       "sha": "fd7e64468f7dc16f6e44d820574e8fda7f48b8db",
       "subject": "C4 G4: confirm accepted fix on fresh-session resume"
+    },
+    {
+      "sha": "ec0472bbeb794d79d9d8a8fbd8fb0cf2ea825f4a",
+      "subject": "C4 G4: refresh accepted readiness after resume verification"
     }
   ],
   "ready_receipt_commit": "The subsequent commit updating this file; discover with git log --oneline -- G4_READY.json",
