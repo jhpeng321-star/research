@@ -37,6 +37,8 @@ class LaneDrop:
     change_zone_s_m: tuple   # (s0, s1): closing lane physically adjacent to the adjacent lane
     guard_points_s_m: tuple  # edge boundaries guarding discretionary mainline changes
     source: str
+    drop_x_m: float = None   # SUMO x of the drop on the approach edge (probe X_B); s = x - (drop_x - drop_s)
+    sumo_to_wm: tuple = ()   # approach-edge ((sumo lane, WM lane), ...) from the N1 lane table
 
     def __post_init__(self):
         lanes = [self.closing_lane, self.adjacent_lane] + ([] if self.far_lane is None else [self.far_lane])
@@ -79,6 +81,19 @@ class LaneDrop:
         """Distance (m) still upstream of the drop point (negative = past it)."""
         return float(self.drop_s_m)-float(s_m)
 
+    def x_to_s(self, x_m):
+        """Probe/SUMO route x (m) -> WM s (m) via the N1 anchor (x - drop_x = s - drop_s)."""
+        if self.drop_x_m is None:
+            raise ValueError(f'map {self.name} has no SUMO x anchor')
+        return float(x_m)-float(self.drop_x_m)+float(self.drop_s_m)
+
+    def wm_lane(self, sumo_lane):
+        """Approach-edge SUMO lane index -> WM lane (N1 lane table)."""
+        table = dict(self.sumo_to_wm)
+        if int(sumo_lane) not in table:
+            raise ValueError(f'SUMO lane {sumo_lane!r} is not on the {self.name} approach edge')
+        return int(table[int(sumo_lane)])
+
     def to_dict(self):
         return {f.name: getattr(self, f.name) for f in fields(self)}
 
@@ -95,8 +110,11 @@ def from_descriptor(desc):
         drop = float(neck['drop_s_m'])
         # The approach edge starts at x = 0: s = x - anchor_x_m (N1 projection).
         start = -float(neck['anchor_x_m'])
+        table = tuple(sorted((int(i), int(wm)) for (edge, i), (wm, _) in desc.lane_table.items()
+                             if edge == neck['edge']))
         return LaneDrop(desc.name, int(frame.n_lanes), closing, adjacent, far, drop, (start, drop), (drop,),
-                        f'N1 map_descriptor {desc.name} digest {desc.digest}')
+                        f'N1 map_descriptor {desc.name} digest {desc.digest}',
+                        float(neck['drop_x_m']), table)
     s0, s1 = (float(x) for x in frame.merge_zone_s_m)
     return LaneDrop(desc.name, int(frame.n_lanes), int(frame.merge_lane), main_right, main_left, s1,
                     (s0, s1), (s0, s1), f'N1 map_descriptor {desc.name} (ramp lane as the closing lane)')
@@ -112,7 +130,7 @@ STUBS = {
     # Test fixtures only. Same WM frame as N1's wz3to2 projection (up_0 end -> s = 75.44 m;
     # up_0 lane end x = 2696 m, anchor 2620.56 m).
     'wz3to2': lambda: LaneDrop('wz3to2', 3, 2, 1, 0, 75.44, (-2620.56, 75.44), (75.44,),
-                               STUB_SOURCE+'; wz3to2 projection'),
+                               STUB_SOURCE+'; wz3to2 projection', 2696.0, ((0, 2), (1, 1), (2, 0))),
     'merge': _stub_merge,
 }
 

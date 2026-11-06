@@ -949,3 +949,44 @@ def test_process_map_from_env_gives_n1_drop_and_closing_lane(cfg, monkeypatch):
         assert nf.settings(fam_cfg(cfg, dict(early_merge=2), map_name='wz3to2'))['geometry'].drop_s_m == 75.44
     finally:
         md._reset_for_tests()
+
+
+def test_infeasible_initiate_redraw_is_never_offered(cfg, fixed, monkeypatch):
+    """N11 F8: redraw returning None (infeasible re-sampled initiate) must not reach the slate."""
+    p = make(fam_cfg(cfg, dict(early_merge=4)))
+    p.trigger.trigger_head = Prefer(p.trigger, initiate_then_join('early_merge', 'merge'))
+    monkeypatch.setattr(nf, 'redraw', lambda template, state, own, rng: None)
+    c = controller(p)
+    s, _ = step(p, c, early_rows(300, with_m2=False), 300)
+    assert 'early_merge_initiate' not in families_offered(s, 'm1')
+    assert s['track2_trigger']['accepted'] == dict(m1=False, y1=False)
+    assert all(m is None or m['family'] for table in s['track2_trigger']['tables'] for m in table)
+
+
+ROWS = Path(__file__).resolve().parent/'fixtures'/'n9_probe_rows'
+ROW_SHA = dict(COOPKINDS_MOVES_B='317d1e6961ceee9ee2456b215569de913e10745391c9c400a3a26e41acc63bcd',
+               PLANGEN2_MOVES_B='ec097835b2a4d417338901f2bd71568fa9a260a9d0dc4e04c2980d155607ade0',
+               PLANGEN2_MOVES_R='591078b861f23925bdce5d75a2998dcb7e759bbbc928f77af0549330377c7f2f')
+
+
+def probe_rows():
+    import hashlib
+    out = []
+    for name, sha in ROW_SHA.items():
+        data = (ROWS/f'{name}.jsonl').read_bytes()
+        assert hashlib.sha256(data).hexdigest() == sha        # verbatim copies of the probe deliverables
+        out += [(name, json.loads(line)) for line in data.decode().splitlines() if line.strip()]
+    return out
+
+
+def test_probe_lane_rows_are_never_projected_onto_legacy_families():
+    """N5 REVIEW_N9_1 blocker 1: 0 legacy projections of COOPKINDS/PLANGEN2 lane-family rows."""
+    lane, others = [], []
+    for name, row in probe_rows():
+        kind = row.get('r_kind') if row['family'] == 'R_random' else row['family']
+        (lane if kind in moves.PROBE_LANE_FAMILIES else others).append((name, kind, row))
+    assert len(lane) == 18+9+9                                # COOPKINDS B 18, PLANGEN2 B 9, R lane_balance 9
+    for name, kind, row in lane:
+        with pytest.raises(ValueError, match='exact converter'):
+            moves.from_plan(row)
+    assert {k for _, k, _ in others} == {'abreast_wall', 'closing_pair', 'hold'}   # N2's families
