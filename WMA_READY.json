@@ -21,7 +21,9 @@
   "6f8f6952 WM-A: WMA_READY.json",
   "a3fae0f1 WM-A: merge c4/nm-abstract (N1_READY b2f30091)",
   "22593a19 WM-A: current_road follows N1's programmatic map binding; READY update",
-  "(this commit) WM-A: junction-lane rows (':n1_0_i') project natively; supported_roles declared"
+  "2fb9d454 WM-A: junction-lane rows project natively; supported_roles declared",
+  "9edf586d WM-A: planapi hold-only golden captured before 'prog'",
+  "(this commit) WM-A: LCMOVES 'prog' executor (wms.planapi_prog); hold golden unchanged"
  ],
  "road_binding": {
   "module": "wms.core.road (RoadGeometry, MERGE_ORIGINAL, current_road, bind_road, road_scope, load_road, road_from_descriptor, map_default, geometry_digest_of)",
@@ -87,8 +89,19 @@
    "cost": "CPU fresh model: ~0.5 s per rollout step for 6 rows x 27 vehicles (4 threads); WM-C's ~1,300-1,600 action-draws x H=300 s per moment needs the GPU (batched rows, max_rows)."
   },
   "supported_roles": [
-   "hold"
-  ]
+   "hold",
+   "prog"
+  ],
+  "prog": {
+   "module": "wms.planapi_prog (ProgramController subclasses HoldSpeedController; built only when an action has a 'prog' member)",
+   "semantics": "lcm_core.Arm._prog (48aaae38) in the WM frame, decided at whole seconds and executed 1 s: releases (absent, start_s+hold_s, release_x, release_on_partner_merge partner off the closing lane / unobserved, merger left lane 0 or x >= fallback_x default drop-15); lane program lc_target (SUMO up index) from lc_from s / lc_from_x while x < lc_giveup_x (default drop-300), one lane per step when legal and GAPRULE secure (speed_gap_safe); speed kinds hold / track (kp, kv, track_off, settle_gap) / match (target lane mean speed within 100 m until the change) / accel, clipped [-dmax, amax], commanded speed capped at 31.29; members must be observed CAVs; unknown params / speed kinds / lanes raise WMContractError.",
+   "limitations": [
+    "tau APPROXIMATED: only the member's native (uncommanded) acceleration uses IDM with time headway tau (WM default IDM otherwise); SUMO's tau-dependent safe-speed cap on commanded speeds (speedMode 27) is not modelled",
+    "lc_mode recorded, not interpreted (513 assumed: only programmed changes)",
+    "after release / before start: WM native acceleration, lane held except the lane-end first-passage merge (SUMO restores native lane changes)",
+    "lane changes instantaneous within one 0.5 s step; settled 'track' without v_w = native"
+   ]
+  }
  },
  "data_pipeline": {
   "rollout_format": "traffic_shepherd.c4.recorder episode dirs (episode.npz schema c4_sumo_episode/1, model frame, K=512) recorded with N1's map runtime installed; recorder.map_meta() stamps meta_json map / map_descriptor_sha256 / road_digest / k_slots when the road is bound. Required meta: seed, demand_vph, penetration, warmup_s (+ map). Controllers native/direct only unless --allow-designed. WM-B used it for arms native, mappo_u0, coop_mappo_u0, coop_native (E:/agent-work/_sol/WMB_DATA_SHARDS.md).",
@@ -108,7 +121,9 @@
    "related suites (golden + 23 WM unit/integration files incl. c4_loop, lanev5, lane_learnable, v8wm*, mainr16, merge_pivot*, exit_road_end, c4_sumo, v6entry, entryfix)": "409 passed, 3 skipped, 1 failed: tests/test_r9_lane_end_stop.py::test_round9_preset_pins_the_flag_and_the_fitter_physics_json (PRE-EXISTING on the merged WM lineage: the stored round-9 physics json lacks later PhysicsConfig keys emergency_onset/secure_gap_veto/lane_change_secure_gap; WM-A did not touch PhysicsConfig)",
    "tests/golden + tests/equivalence on the merged base before any change": "60 passed, 26 skipped (data_cache packs absent)",
    "N1 map tests after the merge (tools/coopmwm/test_map_{descriptor,golden,runtime,scenarios}_cpu.py, test_newmap_sanity_cpu.py)": "pass (with tests/wz: 60 passed, 2 skipped: frozen cpuV runtime only / env-stub)",
-   "final merge golden + test_c4_loop + test_c4_v10entzone on 6f8f6952": "19 passed"
+   "final merge golden + test_c4_loop + test_c4_v10entzone on 6f8f6952": "19 passed",
+   "tests/wz/test_planapi_hold_golden.py": "PASS: hold-only evaluate (J draws float.hex, speed/lane traces sha) bit-identical to the pre-prog capture (9edf586d)",
+   "tests/wz/test_planapi_prog.py": "8 passed (lane change out of the closing lane, blocked change waits for a secure gap, accel capped at the limit, track, unobserved partner = native, merger release, refusals, tau native-only)"
   }
  },
  "known_gaps": [
@@ -116,8 +131,7 @@
   "Planning API: no observed pre-t0 driver history in the contract (population settings for every driver); no source-waiting term without moment['counter']; member lanes held during holds (except the lane-end merge).",
   "Geometry-tied learned parts WM-E may re-initialise: lane_v5 merge head (now also acts upstream), merge_pivot / merge_core / ramp_speed_adapt (lane-end-zone semantics kept), entry_learned statistics; driver settings remain learned only (no types/labels anywhere).",
   "Config geometry defaults not yet routed through road.map_default: loss.agg_delay road_end_m 553.33 / sections (set explicitly in a wz3to2 config if that loss is enabled; it is off in c4_wm_loop14_r16_ft).",
-  "Control-side (policy) constants (wms.control.belief DEFAULT_LANE_EXTENTS, wms.control.entrance entry positions) still merge-map; not used by WM training or wms.planapi.",
-  "Planning API roles: only 'hold' (supported_roles). The LCMOVES 'prog' role (lane change + hold/track/match/accel, lcm_core 48aaae38) is not executed; evaluate refuses it."
+  "Control-side (policy) constants (wms.control.belief DEFAULT_LANE_EXTENTS, wms.control.entrance entry positions) still merge-map; not used by WM training or wms.planapi."
  ],
  "hard_rules_observed": "no ssh/SUMO/GPU; writes only in this worktree plus E:/agent-work/_sol/WM_PORT_API.md (MAIN request); no reset/clean/stash drop/push/rebase; no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 path opened (WM-D's reservation file was not read; MAIN supplied the ranges; one wildcard grep over E:/agent-work/_sol/*.md listed its name, content not displayed); no hetdata_truth or vType/driver truth file read; original merge-map assets untouched.",
  "docs": "E:/agent-work/_sol/WM_PORT_API.md"

@@ -138,6 +138,9 @@ def _member_specs(actions: Sequence[Mapping[str, Any]], index: dict) -> list[lis
     for a in actions:
         members = []
         for m in a.get("members", ()) or ():
+            if str(m.get("role", "hold")) == "prog":
+                members.append(_prog_spec(a, m, index))
+                continue
             if str(m.get("role", "hold")) != "hold":
                 raise WMContractError(f"unsupported member role {m.get('role')!r}")
             if str(m["id"]) not in index:
@@ -212,6 +215,12 @@ class HoldSpeedController:
         return torch.stack((s_next, lane.to(v.dtype), v_next, a), dim=-1)
 
 
+def _prog_spec(action, m, index):
+    """LCMOVES 'prog' member spec (see :mod:`wms.planapi_prog`)."""
+    from wms.planapi_prog import prog_spec
+    return prog_spec(action, m, index)
+
+
 def _draw_uniform(seed: int, k: int, digest: str, n_steps: int, n_slots: int) -> torch.Tensor:
     g = torch.Generator().manual_seed(int(hashlib.sha256(
         f"wzapi:{seed}:{k}:{digest}".encode()).hexdigest()[:15], 16))
@@ -267,8 +276,20 @@ def evaluate(handle: Handle, state: Mapping[str, Any], actions: Sequence[Mapping
                    "present": present, "is_cav": is_cav}
         if exit_s is not None:
             initial["exit_s_m"] = torch.full((b, n), float(exit_s), device=dev)
-        controller = HoldSpeedController(ctrl_members, n, handle.road.anchor_x_m or 0.0,
-                                         DT_S, dev)
+        if any(m.get("role") == "prog" for mem in ctrl_members for m in mem):
+            for mem in ctrl_members:
+                for m in mem:
+                    if m.get("role") == "prog" and not state["vehicles"][m["slot"]]["is_cav"]:
+                        raise WMContractError(f"prog member {m['id']} is not an observed CAV")
+            from wms.planapi_prog import ProgramController
+            controller = ProgramController(
+                [[m for m in mem if m.get("role") != "prog"] for mem in ctrl_members],
+                [[m for m in mem if m.get("role") == "prog"] for mem in ctrl_members],
+                n, handle.road.anchor_x_m or 0.0, DT_S, dev, physics=model.physics,
+                road=handle.road)
+        else:
+            controller = HoldSpeedController(ctrl_members, n, handle.road.anchor_x_m or 0.0,
+                                             DT_S, dev)
         uniform = torch.stack([_draw_uniform(seed, k, digest, n_steps, n) for _a, k in chunk]
                               ).to(dev)
         entries = _entries(counter, b, seed, dev)
@@ -302,6 +323,6 @@ def evaluate(handle: Handle, state: Mapping[str, Any], actions: Sequence[Mapping
 def describe() -> dict:
     """Machine-readable contract (WMA_READY.json ``api``)."""
     return {"load": "wms.planapi:load", "observe": "wms.planapi:observe",
-            "evaluate": "wms.planapi:evaluate",
+            "evaluate": "wms.planapi:evaluate", "supported_roles": ["hold", "prog"],
             "evaluate_signature": "evaluate(handle, state, actions, K=8, H=300.0, seed=0) -> "
                                   "{action_id: [J_1..J_K]}"}
