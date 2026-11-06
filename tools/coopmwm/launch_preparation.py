@@ -84,7 +84,8 @@ def _snapshot_registration(root, cfg):
                                           if not p.is_file())
             continue
         seed = snapshot['episode']['world']['seed']
-        if snapshot['episode'].get('role') != 'train' or not 986000 <= seed <= 986071:
+        from .map_runtime import primary_train_world  # N1: merge 986000-986071 or the map's TRAIN registry
+        if snapshot['episode'].get('role') != 'train' or not primary_train_world(snapshot['episode']['world']):
             raise ValueError('diagnostics must use original registered primary TRAIN worlds')
         contexts[seed].append((snapshot, receipt, set(recorder.paths)|set(recorder.lexical)))
     ordered = sorted(contexts, key=lambda s: (-len(contexts[s]), s))

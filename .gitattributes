@@ -90,3 +90,6 @@ src/wms/train/round9_gate.py text eol=lf
 tests/test_round9_gate*.py text eol=lf
 R9_GATE2.md text eol=lf
 .gitattributes text eol=lf
+# N1 (2026-11-06): the wz3to2 map files are bound by raw-byte SHA256 (net b6277898...);
+# never convert their line endings on any checkout.
+assets/research/newmap_candidates/wz3to2/* -text

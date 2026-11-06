@@ -1,0 +1,10 @@
+{
+ "map": "wz3to2",
+ "demand_vph": {
+  "main": 2800
+ },
+ "penetration": 0.3,
+ "note": "probe demand: peak 2800 veh/h (0.8x 0-300 s, 1.0x 300-1500 s, 0.6x 1500-1800 s), departLane free, departPos base; calibrated vs 3400/4000 (persistent breakdown)",
+ "seeds": "989000-989006 (registered NEWMAP range 989000-989199, map-namespaced streams)",
+ "generator": "runs/active/C4-V7FT-20261017/newmap_probe/probe_core.py write_scenario"
+}

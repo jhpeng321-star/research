@@ -39,6 +39,10 @@ def batch_worlds(update,training_seed=0):
 
 
 def guard(world,role):
+    if isinstance(world,dict) and 'map' in world:
+        # N1: map worlds (wz3to2) have their own registry; merge-map worlds carry no 'map' key.
+        from .map_runtime import guard_world
+        guard_world(world,role);return
     allowed=([w for i in range(len(TRAINING_SEEDS)) for w in worlds('train',i)] if role=='train' else worlds(role))
     if world not in allowed:raise ValueError('exact registered world and role required')
     from traffic_shepherd.seeds import require_development_case
