@@ -238,15 +238,20 @@ __all__ = ['KEY', 'RULE', 'settings', 'config_keys', 'SoloHold', 'is_solo', 'opt
            'variant_of', 'sumo_lane', 'families', 'owns', 'pool', 'redraw']
 
 
-PARITY_FAMILIES = ('wall_g', 'wall_h')+tuple(f'wall_{v}_solo{k}' for v in 'gh' for k in (0, 1, 2))
+SOLO_LABELS = tuple(f'wall_{v}_solo{k}' for v in 'gh' for k in (0, 1, 2))
+PARITY_FAMILIES = SOLO_LABELS
+EV_TARGET_RULE = ('MAIN 2026-11-06 ~20:4x: EV-BC TARGETS are the solo strategies only (solo2 dominates the '
+                  'abreast wall in every u0 cell: group - best solo > 0 in 5/6 cells); walls and 2-member holds '
+                  'stay OFFERED in the slate so PPO and G4 can still discover group moves where they help')
 PARITY_NOTE = ('N2 exact executor (N5 PASS 59d8bace: 81/81 mined hold rows bind exactly); a solo hold runs the '
                'identical N2 hold law for one member (SoloHold), so wall_{g,h}_solo{L} share that executor')
 
 
 def recommended(*, provenance, regime_guidance, learn=None):
     """MAIN clean5a recipe (common B = R key; R simply has no R rows in the guidance):
-    families abreast_wall + group_hold (solo, pair); EV-BC ON, EV credit OFF (PPO on team
-    reward + G4LD credit carry the RL part); report-only receipts ON."""
+    families abreast_wall + group_hold (solo, pair) OFFERED; EV-BC targets = the lane-specific solo
+    strategies only (EV_TARGET_RULE); EV-BC ON, EV credit OFF (PPO on team reward + G4LD credit
+    carry the RL part, incl. group moves); report-only receipts ON."""
     return config_keys(provenance=provenance, families=('abreast_wall', 'group_hold'), group_sizes=(1, 2),
                        solo_geometry='zone', regime_guidance=regime_guidance, parity_families=PARITY_FAMILIES,
                        learn=learn or dict(ev_bc=True, ev_credit=False, report_kl_unlabelled=True,

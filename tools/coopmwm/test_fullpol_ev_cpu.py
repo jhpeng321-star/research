@@ -502,3 +502,31 @@ def test_final_u0_inputs_agree_and_light_cells_target_none(cfg, name):
     assert fl.qualifying(table['D3200_p60'])[0] == 'wall_h_solo2'
     for cell in ('D2400_p60', 'D2400_p40'):
         assert fl.qualifying(table.get(cell, {})) == []       # light traffic: no metering -> none
+
+
+def test_recipe_target_table_solo_only_lane2_meters_heavy_cells(cfg):
+    """MAIN ~20:4x: EV-BC targets = lane-specific solos only; walls / pairs stay offered."""
+    rows = []
+    for cell, solo2, wall in (('D3200_p60', 15169., 11684.), ('D3200_p40', 17739., 12855.), ('D2800_p60', 1836., -2749.),
+                              ('D2800_p40', -3308., -6262.), ('D2400_p60', -5763., -10702.), ('D2400_p40', -7542., -10413.)):
+        rows += [grow('wall_h_solo2', solo2, regime=cell, baseline='mappo'),
+                 grow('wall_h', wall, regime=cell, baseline='mappo')]
+        if cell in ('D3200_p60', 'D3200_p40'):
+            rows.append(grow('wall_h_solo0', -2772., regime=cell, baseline='mappo'))
+    on = dict(ld_cfg(cfg, v2v=False), **fe.recommended(provenance=PROV, regime_guidance=guidance(rows)))
+    assert set(fe.settings(on)['families']) == {'abreast_wall', 'group_hold'}      # still offered
+    table, receipt = fl.ev_table(on, 'B')
+    assert receipt['dropped_without_parity'] == {'wall_h': 6}
+    solo = lambda vid, wm: fe.SoloHold('group_hold', (vid,), 0, 90, 1.5, 15., 0., False, (wm,)).to_dict()
+    wall = ld.LaneDropMove('abreast_wall', ('e', 'x', 'y'), 0, 90, 1.5, 15., 0., False, (0, 1, 2)).to_dict()
+    pair = ld.LaneDropMove('group_hold', ('e', 'x'), 0, 90, 1.5, 15., 0., False, (1, 0)).to_dict()
+
+    def target(cell, wm):
+        table_row = [None, solo('e', wm), wall, pair]
+        trig = dict(context=dict(members=['e']), tables=[table_row], mask=[[True]*4])
+        return fl.ev_targets(on, trig, table.get(cell, {}))[0][0]
+    for cell in ('D3200_p60', 'D3200_p40', 'D2800_p60'):
+        assert target(cell, 0) == 1                       # left lane (SUMO 2): solo
+        assert target(cell, 1) == 0 and target(cell, 2) == 0   # middle / closing: none, even with a wall offered
+    for cell in ('D2800_p40', 'D2400_p60', 'D2400_p40'):
+        assert all(target(cell, wm) == 0 for wm in (0, 1, 2))   # light traffic: none
