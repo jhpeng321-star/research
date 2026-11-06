@@ -156,3 +156,27 @@ def patch_globals(namespace, job):
 
 def installed_record():
     return dict(_RECORD)
+
+
+def primary_train_world(world):
+    """Registered primary TRAIN world: merge map 986000-986071 (no 'map' key, the literal checks
+    formerly inlined in bank_breadth / policy_synergy / replay_bank / launch_preparation);
+    a map world: its own TRAIN registry (process map must match)."""
+    if isinstance(world, dict) and 'map' in world:
+        try:
+            guard_world(world, 'train')
+        except ValueError:
+            return False
+        return True
+    return 986000 <= world['seed'] <= 986071
+
+
+def map_replacement_pool(failed, used, taken_ids, arm, ident):
+    """accel_runner.replacement_world for map worlds: next unused TRAIN seed of the same cell."""
+    from . import map_scenarios
+    md.for_world(failed)
+    pool = [w for w in map_scenarios.worlds('train', cell_ids=[failed['cell']])
+            if w['seed'] not in used and f'{ident}_{arm}_{w["seed"]}' not in taken_ids]
+    n = map_scenarios.TRAIN_RANGE[1]-map_scenarios.TRAIN_RANGE[0]+1
+    pool.sort(key=lambda w: ((w['repeat']-failed['repeat']) % n, w['seed']))
+    return pool[0] if pool else None

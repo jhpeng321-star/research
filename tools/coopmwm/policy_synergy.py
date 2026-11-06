@@ -95,7 +95,8 @@ class BranchRunner(sv.SubprocessBranchRunner):
 def specs_for(snapshot, receipt, update, arm, new_weights, old_weights, isolated=False):
     group = list(receipt['chosen_plan']['members'])
     if len(group)<2 or len(set(group))!=len(group):raise ValueError('invalid cooperative group')
-    if not 986000 <= snapshot['episode']['world']['seed'] <= 986071:
+    from .map_runtime import primary_train_world  # N1: merge 986000-986071 or the map's TRAIN registry
+    if not primary_train_world(snapshot['episode']['world']):
         raise ValueError('policy synergy requires registered TRAIN worlds')
     new_sha, old_sha = map(sv._state_sha, (new_weights, old_weights))
     out = []
