@@ -293,12 +293,28 @@ def test_log_parity_catches_a_perturbed_member_program(desc, frame, label, name,
     assert {m['vid'] for m in res['mismatches'] if m['cls'] == 'mismatch'} <= set(row['members'])
 
 
+def test_streams_are_deterministic_and_on_the_probe_rounding_grid(desc, frame):
+    row = _row('COOPKINDS_MOVES_B', 3)
+    program = cv.from_mined_row(row, desc)
+    for kind, seed in (('log', 0), ('random', 1)):
+        a = par.build_stream(row, program, frame=frame, stream=kind, seed=seed, desc=desc)
+        b = par.build_stream(row, program, frame=frame, stream=kind, seed=seed, desc=desc)
+        assert a.states == b.states and a.roster == b.roster
+        for st in a.states:
+            for s in st.values():
+                assert round(s['x'], 2) == s['x'] and round(s['v'], 4) == s['v'] and 0.0 <= s['v'] <= 31.29
+                assert s['edge'] in ('up', ':n1_0', 'wz')
+    other = par.build_stream(row, program, frame=frame, stream='random', seed=2, desc=desc)
+    assert other.states != b.states
+
+
 # ------------------------------------------------------------------ labels
 LABEL_KEYS = {'schema', 'vid', 't', 'el', 'session_id', 'role', 'lon', 'accel_mps2', 'lane_target', 'lane_duration_s',
               'lc_mode', 'tau', 'event', 'release_reason', 'source'}
 
 
-@pytest.mark.parametrize('name,idx', [('NEWMAP_MOVES_B', 0), ('COOPKINDS_MOVES_B', 3), ('LCMOVES_MOVES_B', 1),
+@pytest.mark.parametrize('name,idx', [('NEWMAP_MOVES_B', 0), ('COOPKINDS_MOVES_B', 3), ('COOPKINDS_MOVES_B', 0),
+                                      ('LCMOVES_MOVES_B', 1),
                                       ('PLANGEN2_MOVES_B', 0), ('PLANGEN2_MOVES_R', 15), ('LOWCAV_MOVES_B', 0)])
 def test_labels_schema_and_consistency_with_the_row(desc, frame, name, idx):
     row = par.fixture_rows(name)[idx][1]
