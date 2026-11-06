@@ -241,7 +241,7 @@ def distributional(tapes, backend, ks, rule, args, log) -> tuple[list, list, lis
         t0 = 300.0
         while t0 + HORIZON <= t_end + 1e-6:
             starts.append((world, tr, t0))
-            t0 += 120.0
+            t0 += float(getattr(args, "start_stride", 120.0) or 120.0)
     if args.max_starts:
         starts = starts[: args.max_starts]
     chunk = max(1, int(getattr(args, "batch_starts", 1) or 1))
@@ -450,6 +450,8 @@ def main(argv=None) -> int:
                     help="secondary action-response backend(s): planapi_proposer, planapi_full")
     ap.add_argument("--moment-shard", default=None, help="i/n: score moments i::n only (parallel)")
     ap.add_argument("--batch-starts", type=int, default=16, help="starts per batched WM rollout")
+    ap.add_argument("--start-stride", type=float, default=120.0,
+                    help="distributional t0 stride (s); amendment 2: 240")
     ap.add_argument("--batch-moments", type=int, default=2, help="moments per batched WM rollout")
     ap.add_argument("--max-rows", type=int, default=96,
                     help="max rows (arms x samples) per WM call; a moment is split, CRN kept")
