@@ -1,0 +1,44 @@
+{
+  "task": "c4/clean3-minedlink: fix cpuV smoke failure ValueError('no decision link for sv_op2_collect01_R_train_986061_t0455_bd791969') for a mined wall row (MINED_MOVES.jsonl rows are SUMO-verified per seed against the frozen MAPPO u0 base but have no replay-bank decision link record)",
+  "commit": "0496e758",
+  "branch": "c4/clean3-minedlink",
+  "base": "6cf4868f",
+  "worktree": "E:/agent-work/c4-clean3-minedlink",
+  "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q",
+  "cpu_only": true,
+  "what_changed": {
+    "tools/coopmwm/group_lane_bank.py": [
+      "MINED_BINDING_FIELDS + MINED_BINDING_RULE registration (walls-only clean3 owner ~07:2x)",
+      "binding(row): validated verified situation binding of a MINED_MOVES row - full binding (seed, situation_id, t0, TRAIN world, members, duration_s, profile/policy_profile/perturbation_profile, synergy_veh_s, synergy_lower95 each keyed by the row's own seed, n_reps) normalized and returned; v1 pointer rows (no binding fields) still return None; ANY partial binding raises (fail closed)",
+      "inputs() v1 pointer validation unchanged"
+    ],
+    "tools/coopmwm/replay_bank.py": [
+      "_mined_snapshot(root, arm, r, mined): the registered ingestion path - decision snapshot from the row's OWN sealed SUMO verification at <bank>/sumo_verification/branches/<vid>/SNAPSHOT.pt, guarded by the optional SNAPSHOT.sha256 sidecar, the receipt's sealed snapshot_sha256 (sv.snapshot_sha), episode identity, t0 and the binding's TRAIN world seed; every mismatch refuses",
+      "_decision_snapshot(root, arm, r, by_vid, mined=None): with no decision link and an explicitly registered mined binding, resolves via _mined_snapshot instead of raising 'no decision link'; with a link present, or mined absent, the reader is byte-identical to the legacy path (link -> snapshots/<state_id>.pt, else u3 LS label, else the unchanged 'no decision link' refusal)"
+    ],
+    "tools/coopmwm/bank_breadth.py": [
+      "_mined_row(): per-seed row binding - a walls row binds its OWN example seed exactly (example seed_index from the per_seed_v1 record; extra CRN seeds 3..N included); v1 pointer rows bind any example of their plan; ambiguous duplicates refused; admitted examples on seeds the file does not bind are skipped (not registered mined examples)",
+      "visit(): on a matched (verification_id, plan_sha256) mined key, validates group_lane_bank.binding(row), checks the binding's members/duration_s equal the verified plan it names, and attaches cfg['_mined_binding'] for downstream practice starts; partial bindings raise through the native reader",
+      "verified_restart(..., mined=None) threads the binding into replay_bank._decision_snapshot; load_verified_restart resumes from snapshot_lookup['mined_binding'] stored in the frozen practice plan; practice_pool passes cfg['_mined_binding'] through; all calls keep the legacy path when the binding is absent"
+    ],
+    "tools/coopmwm/test_mined_link_cpu.py": "new CPU-only test module (no SUMO/GPU/ssh): probe-shaped bank fixture (sealed receipts + branch tapes + per_seed_v1/all8 confirmations with an extra CRN seed 5 + SNAPSHOT.pt under sumo_verification/branches/<vid>/, NO decisions link, NO snapshots/<state_id>.pt)"
+  },
+  "tests_added": [
+    "test_mined_rows_with_full_binding_ingest_as_bank_examples_and_practice_starts: full-binding rows (seeds 1 and 5) are ingested through the native B bank reader (visit yields executable imitation targets with the binding attached) and become practice starts - practice_pool rows mined/demonstrate with plan digest binding; load_snapshot returns the branch decision snapshot for seed 1 and the exact extra-seed CRN replicate for seed 5; wave_call builds the demonstration episode",
+    "test_mined_row_missing_binding_field_refuses_fail_closed[n_reps|synergy_lower95|t0|profile]: partial binding refuses",
+    "test_mined_row_missing_branch_decision_snapshot_refuses: missing sealed branch snapshot refuses",
+    "test_mined_binding_tampering_against_the_sealed_verification_refuses: t0 / TRAIN-world tampering refuses",
+    "test_decision_link_path_stays_byte_identical_and_wins_over_the_mined_binding: a legacy bank with its decision link works unchanged even with a full binding registered (snapshot from snapshots/<state_id>.pt, branch snapshot never read); link removed and no mined row -> the unchanged 'no decision link' refusal",
+    "test_decision_snapshot_link_wins_and_legacy_refusal_stays_registered: direct reader contract (link precedence, legacy refusal, mined path)",
+    "test_binding_validator_full_partial_and_v1_pointer: binding() normalization, idempotence, v1 None, ~12 malformed mutations refused"
+  ],
+  "tests_run": {
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q",
+    "touched_suites_plus_launch_final": "438 passed in 146.19s - test_mined_link_cpu, test_group_lane_cpu, test_bank_breadth_cpu, test_clean3_restart_cpu, test_practice_starts_cpu, test_staging_closure_cpu, test_replay_ls_layout_cpu, test_bank_perseed_cpu, test_executable_labels_cpu, test_g1_certification_cpu, test_replay_bank_confirm_cpu, test_verify_perseed_cpu, test_launch_final_cpu",
+    "test_launch_final_cpu": "13 passed",
+    "full_tools_coopmwm": "77 failures, ALL pre-existing on the base tree (base archive run: the same 77 plus 8 git-show-dependent tests that cannot run without .git); no new failures introduced; 2647+ passed"
+  },
+  "lint": "ruff: no new violations in production files (43 E702 + 7 E701 pre-existing compressed-style); test module's 5 F811 fixture-parameter names follow the repo's existing imported-fixture convention (47 pre-existing in base test files)",
+  "hard_rules": "CPU only; no ssh/SUMO/GPU; only this worktree; no git reset/clean/stash/push/rebase; sealed/holdout/heldout/cal_split/chunk5/j4b/inc1/hetdata_truth/vType/driver/vehicle_params paths never opened",
+  "mined_moves_reference": "E:/research-dense/runs/active/C4-V7FT-20261017/MINED_MOVES.jsonl (keys/structure only): schema coopmwm-mined-move-v1, 3 rows, arm B, same verification_id sv_op2_collect01_R_train_986061_t0455_bd791969 + plan_sha256, seeds {1,5,6}, run_root /home/ubuntu/coopprobe20261106/minebank/bank, world seed 986061, t0 455, 4-member wall profile 4x30, per-seed synergy_veh_s/synergy_lower95, n_reps 6, base frozen MAPPO u0"
+}

@@ -925,11 +925,55 @@ def _ls_snapshot(src, key):
     return s
 
 
-def _decision_snapshot(root, arm, r, by_vid):
-    """The decision-time snapshot of a first-seed positive decision (own bank or live LS label)."""
+def _mined_snapshot(root, arm, r, mined):
+    """Decision snapshot of a MINED_MOVES example from its OWN sealed verification.
+
+    Registered walls-only clean3 path (owner ~07:2x): a mined row that carries its
+    verified situation binding needs no replay-bank decision link; the snapshot is
+    the branch decision snapshot of that exact SUMO verification
+    (<bank>/sumo_verification/branches/<vid>/SNAPSHOT.pt, sealed by its receipt's
+    snapshot_sha256 and optional SNAPSHOT.sha256 sidecar). Fail closed on every
+    identity mismatch; never read population/truth files."""
+    from . import group_lane_bank
+    value = group_lane_bank.binding(mined)
+    if value is None:
+        raise ValueError('MINED_MOVES row lacks its verified situation binding: '+r['verification_id'])
+    if value['verification_id'] != r['verification_id'] or value['arm'] != arm:
+        raise ValueError('MINED_MOVES binding does not identify this verification')
+    if int(value['t0']) != int(r['t0']):
+        raise ValueError('MINED_MOVES binding decision time differs from the verification')
+    import hashlib
+    path = bank_root(root, arm)/'sumo_verification'/'branches'/r['verification_id']/'SNAPSHOT.pt'
+    if not path.is_file():
+        raise ValueError('mined verification has no sealed decision snapshot: '+r['verification_id'])
+    sidecar = path.with_name('SNAPSHOT.sha256')
+    if sidecar.is_file() and sidecar.read_text(encoding='utf-8').strip() != \
+            hashlib.sha256(path.read_bytes()).hexdigest():
+        raise ValueError('mined decision snapshot bytes differ from their sealed sidecar')
+    snap = torch.load(path, weights_only=False)
+    if sv.snapshot_sha(snap) != r.get('snapshot_sha256'):
+        raise ValueError('mined decision snapshot differs from its sealed verification receipt')
+    if int(snap['t0']) != int(r['t0']) or snap['episode'] != r['episode']:
+        raise ValueError('mined decision snapshot identity/world/decision time mismatch')
+    world = (snap['episode'].get('world') or {})
+    if type(world.get('seed')) is not int or world['seed'] != int(value['world']['seed']):
+        raise ValueError('MINED_MOVES binding world differs from the verified situation')
+    return snap
+
+
+def _decision_snapshot(root, arm, r, by_vid, mined=None):
+    """The decision-time snapshot of a first-seed positive decision (own bank or live LS label).
+
+    ``mined`` (registered walls-only clean3): the MINED_MOVES row binding this exact
+    verification. Without a decision link the snapshot then comes from that row's own
+    sealed SUMO verification (see _mined_snapshot) instead of a replay-bank decision
+    record; with a link, or with ``mined`` absent, the path is byte-identical to the
+    legacy reader."""
     bank = bank_root(root, arm)
     link = by_vid.get(r['verification_id'])
     if link is None:
+        if mined is not None:
+            return _mined_snapshot(root, arm, r, mined)
         if r['_policy_version'] != 'u3':
             raise ValueError('no decision link for '+r['verification_id'])
         src = Path(r.get('_source', Path(r['_branches']).parent))
