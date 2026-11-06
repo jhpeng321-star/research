@@ -1096,6 +1096,14 @@ def decision_metrics(branches):
 
 # ---------------------------------------------------------------- runtimes
 
+def process_groups(items):
+    """Item indices grouped by arm (stable order of first appearance): one fresh pool per group."""
+    groups = {}
+    for i, (kind, spec, _) in enumerate(items):
+        groups.setdefault(spec.get('arm'), []).append(i)
+    return list(groups.values())
+
+
 def _worker(kind, spec, cfg, work, runner):
     module = importlib.import_module(runner)
     return getattr(module, dict(episode='episode', branch='decision_branch', parity='parity',
@@ -1148,12 +1156,20 @@ class Runtime:
         return {k: deepcopy(native.get(k)) for k in PLANT_KEYS}
 
     def run(self, items, cfg, workers):
+        """One FRESH process pool per arm (Python 3.10 has no max_tasks_per_child): a NATIVE episode imports the
+        env before any G5 binding, so a worker that ran NATIVE must never run a policy/plant episode (the
+        2026-11-07 01:09 3c failure). Groups run one after another; results keep the item order."""
         from concurrent.futures import ProcessPoolExecutor
         import multiprocessing
         os.environ['COOPMWM_G5_RUNTIME'] = '1'   # same bound runtime env as the clean3/clean4 owners
-        with ProcessPoolExecutor(max_workers=workers, mp_context=multiprocessing.get_context('spawn')) as pool:
-            futures = [pool.submit(_worker, kind, spec, cfg, work, self.runner) for kind, spec, work in items]
-            return [f.result(timeout=3600) for f in futures]
+        results = [None]*len(items)
+        for group in process_groups(items):
+            with ProcessPoolExecutor(max_workers=min(workers, len(group)),
+                                     mp_context=multiprocessing.get_context('spawn')) as pool:
+                futures = {i: pool.submit(_worker, *items[i][:2], cfg, items[i][2], self.runner) for i in group}
+                for i, f in futures.items():
+                    results[i] = f.result(timeout=3600)
+        return results
 
 
 class MirrorRuntime(Runtime):
@@ -1188,13 +1204,40 @@ def _h(*parts):
     return int(hashlib.sha256(':'.join(map(str, parts)).encode()).hexdigest()[:8], 16)
 
 
-def fake_episode(spec):
+_FAKE_LOGS = {}
+
+
+def _fake_vehicle_log(path, seed, arm, t0=WARMUP_S, t1=HORIZON_S):
+    """Dry run: one small but complete log per (arm, world class) - written once, copied (fast)."""
+    import gzip
+    import shutil
+    path.parent.mkdir(parents=True, exist_ok=True)
+    shift = (_h(arm) + seed % 3) % 7
+    key = (arm, seed % 3, t0, t1)
+    if key in _FAKE_LOGS and Path(_FAKE_LOGS[key]).is_file():
+        shutil.copyfile(_FAKE_LOGS[key], path)
+        return dict(file=VEHICLE_LOG, sha256=file_sha(path), ticks=t1-t0, vehicles=6)
+    _FAKE_LOGS[key] = str(path)
+    with gzip.open(path, 'wt', encoding='utf-8', compresslevel=1) as f:
+        for k in range(6):
+            f.write(json.dumps(dict(veh=k, id=f'main.{k}', cav=k % 2 == 0, origin='main_in' if k < 4 else 'ramp_in',
+                                    depart_delay_s=float(k), first_t=t0))+'\n')
+        for t in range(t0, t1, 1):
+            ks = list(range(6))
+            f.write(json.dumps(dict(t=t, k=ks, s=[round(-300.+30*k+(12.+shift/7)*((t-t0) % 60), 2) for k in ks],
+                                    v=[max(0., 12.-k-((t+shift) % 7)) for k in ks],
+                                    a=[round(-.5+.25*((t+k+shift) % 5), 3) for k in ks], lane=[k % 2 for k in ks]))+'\n')
+    return dict(file=VEHICLE_LOG, sha256=file_sha(path), ticks=t1-t0, vehicles=6)
+
+
+def fake_episode(spec, work=None):
     w, arm = spec['world'], spec['arm']
     u = _h(w['seed'], arm)/0xffffffff
     factor = dict(NATIVE=1.06, U0=1.0, RULE=.985, MAPPO_SPEED=.995, MAPPO_LANE=.993, A=0.99, R=0.985, B=0.975)[arm]
     record = dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='graded',
-                  vehicle_log=dict(file=VEHICLE_LOG, sha256=hashlib.sha256(spec['job_id'].encode()).hexdigest(),
-                                   ticks=HORIZON_S-WARMUP_S, vehicles=1500+_h(w['seed'], arm) % 300),
+                  vehicle_log=(_fake_vehicle_log(Path(work)/VEHICLE_LOG, w['seed'], arm) if work is not None else
+                               dict(file=VEHICLE_LOG, sha256=hashlib.sha256(spec['job_id'].encode()).hexdigest(),
+                                    ticks=HORIZON_S-WARMUP_S, vehicles=1500+_h(w['seed'], arm) % 300)),
                   J_veh_s=float(100_000*factor*(1+0.03*(u-.5))),
                   safety=dict(collisions=0, teleports=0, hard_brakes=_h(w['seed'], arm, 'b') % 7,
                               ttc_events=_h(w['seed'], arm, 't') % 11))
@@ -1244,7 +1287,7 @@ def fake_logcheck(spec, work):
                                     lane=[k % 2 for k in ks]))+'\n')
     return dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='logged', kind='logcheck',
                 vehicle_log=dict(file=VEHICLE_LOG, sha256=file_sha(path), ticks=spec['sim_s']-300, vehicles=6),
-                work=str(work))
+                work=str(work), pid=1000+len(spec['arm']))
 
 
 def fake_parity(spec):
@@ -1297,8 +1340,8 @@ class FakeRuntime:
 
     def run(self, items, cfg, workers):
         self.calls.append(('run', len(items), workers))
-        return [fake_logcheck(spec, work) if kind == 'logcheck' else
-                dict(episode=fake_episode, branch=fake_branch, parity=fake_parity)[kind](spec) for kind, spec, work in items]
+        return [fake_logcheck(spec, work) if kind == 'logcheck' else fake_episode(spec, work) if kind == 'episode' else
+                dict(branch=fake_branch, parity=fake_parity)[kind](spec) for kind, spec, work in items]
 
 
 # ---------------------------------------------------------------- waves (reserve whole wave, never replay)
@@ -1463,13 +1506,14 @@ def run_waves(waves, *, root, final_root, cfg, runtime, workers, base, chunked=F
     phase = PRERUN_PHASE if prerun else PHASE
     # the clean-run ledger AND the evaluation root's pre-run ledger: an interrupted wave never replays
     charged = {r['id'] for r in fe.ledger_rows(root)} | {r['id'] for r in fe.ledger_rows(final_root)}
+    replay = replay_authorized(final_root) - {i.split('#')[0] for i in charged if '#r1' in i}
     for name, kind, specs in waves:
         check_ = CHECKS[kind]
         records, source, covered = published(final_root, name, specs, check_)
         if covered == len(specs):
             out[name], sources[name] = records, source
             continue
-        if {s['job_id'] for s in specs[covered:]} & charged:
+        if ({s['job_id'] for s in specs[covered:]} & charged)-replay:
             raise Blocked(f'{name}: interrupted wave in the ledger; never replay')
         n = (limit.get(name) if isinstance(limit, dict) else limit) or len(specs)
         rest = specs[covered:covered+n]
@@ -1485,12 +1529,15 @@ def run_waves(waves, *, root, final_root, cfg, runtime, workers, base, chunked=F
             raise Blocked(f'{PHASE} sub-cap {ALLOCATION_SIM_S} would be exceeded')
     for name, part, kind, specs in todo:
         if specs:
-            jobs = [dict(id=s['job_id'], sim_s=s['sim_s']) for s in specs]
+            jobs = [dict(id=s['job_id']+('#r1' if s['job_id'] in replay and s['job_id'] in charged else ''),
+                         sim_s=s['sim_s']) for s in specs]
             if prerun:
                 runtime.reserve(cfg, jobs)
             else:                     # the evaluation root's own ledger; the clean run root is never written
                 own_reserve(final_root, jobs, PHASE, clean_root=root, calls=getattr(runtime, 'calls', None))
-            publish(final_root/f'RESERVED_{part}.json', dict(name=part, wave=name, phase=phase, jobs=[j['id'] for j in jobs],
+            replayed = any('#r1' in j['id'] for j in jobs)
+            publish(final_root/(f'RESERVED_{part}.replay1.json' if replayed else f'RESERVED_{part}.json'),
+                    dict(name=part, wave=name, phase=phase, jobs=[j['id'] for j in jobs],
                     sim_s=sum(j['sim_s'] for j in jobs), ledger=str(final_root/'CHARGES.jsonl'), unix=time.time()))
     items = [(kind, s, str(final_root/'evaluation'/s['job_id'])) for _, _, kind, specs in todo for s in specs]
     results = runtime.run(items, cfg, workers) if items else []
@@ -1577,7 +1624,7 @@ def analyse_decisions(branches, bootstrap):
 
 
 def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=None, missing=None, comparators=None,
-            scope='claim3a', update=UPDATE, a_alias=False):
+            scope='claim3a', update=UPDATE, a_alias=False, final_root=None, dry_run=False):
     """episodes: {arm: {world_id: record}} complete panels of EPISODE_ARMS; BASE is an alias of U0
     (mappo_u0 base) or NATIVE (native base), never a separate run. ``comparators``: {arm: binding}."""
     bootstrap = panel['contract']['bootstrap']
@@ -1693,6 +1740,10 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
     tables['safety'] = safety
     tables['per_seed'] = per_seed_tables(panel, J, names, worlds, base_arm)
     tables['regimes'] = regime_tables(panel, have, J, names, worlds)
+    if final_root is not None:
+        alias = {'BASE': base_arm}
+        tables['secondary'] = secondary_tables(final_root=final_root, panel=panel, have=have, names=names, alias=alias,
+                                               dry_run=dry_run)
     value = dict(schema=SCHEMA+'.tables', scope=scope, map=MAP, update=update, a_alias_of_u0=bool(a_alias),
                  evaluation='PRIMARY (u12)' if update == PRIMARY_UPDATE else 'SECONDARY (u24)',
                  panel_sha256=panel['panel_sha256'], base=base,
@@ -1920,6 +1971,93 @@ def render(value):
     return '\n'.join(lines)+'\n'
 
 
+SECONDARY_METRICS = (
+    ('fairness', 'delay_gini', lambda r, rec: r['delay']['gini']),
+    ('fairness', 'delay_jain', lambda r, rec: r['delay']['jain']),
+    ('fairness', 'delay_mean_s', lambda r, rec: r['delay']['mean_s']),
+    ('fairness', 'worst10_delay_mean_s', lambda r, rec: r['delay']['worst10_mean_s']),
+    ('fairness', 'hdv_cav_delay_ratio', lambda r, rec: r['delay_by_class']['hdv_cav_ratio']),
+    ('safety', 'ttc_below_3_vs', lambda r, rec: r['ttc']['below_3_vs']),
+    ('safety', 'min_ttc_s', lambda r, rec: r['ttc']['min_s']),
+    ('safety', 'hard_brake_vs', lambda r, rec: r['accel']['hard_brake_vs']),
+    ('safety', 'emergency_decel_vs', lambda r, rec: r['accel']['emergency_vs']),
+    ('safety', 'collisions', lambda r, rec: rec['safety']['collisions']),
+    ('safety', 'teleports', lambda r, rec: rec['safety']['teleports']),
+    ('smoothness', 'accel_var', lambda r, rec: r['accel']['var']),
+    ('smoothness', 'accel_var_per_vehicle_mean', lambda r, rec: r['accel_var_per_vehicle_mean']),
+    ('smoothness', 'stop_and_go', lambda r, rec: r['stop_and_go']),
+    ('throughput', 'crossings_drop', lambda r, rec: r['crossings_drop']))
+SECONDARY_COMPARATORS = ('BASE', 'NATIVE', 'U0', 'RULE')+COMPARATOR_ARMS
+_REPORTS = {}
+
+
+REPORT_VERSION = 'vehicle_log_report/1'
+
+
+def episode_log_report(final_root, record):
+    """The sealed episode's ground-truth log -> its report (file sha re-verified every time; the report is
+    content-addressed: cached in-process and next to the log as vehicles_report.json, keyed by the log sha)."""
+    path = Path(final_root)/'evaluation'/record['job_id']/VEHICLE_LOG
+    if not path.is_file():
+        return None
+    sha = record['vehicle_log']['sha256']
+    if file_sha(path) != sha:
+        raise Blocked(f'{record["job_id"]}: vehicle log differs from its sealed record')
+    if sha not in _REPORTS:
+        cache = path.parent/'vehicles_report.json'
+        cached = read(cache) if cache.is_file() else None
+        if cached and cached.get('log_sha256') == sha and cached.get('version') == REPORT_VERSION:
+            _REPORTS[sha] = cached['report']
+        else:
+            _REPORTS[sha] = vehicle_log_report(path, t0=WARMUP_S, t1=HORIZON_S)
+            if not cache.exists():
+                publish(cache, dict(log_sha256=sha, version=REPORT_VERSION, report=_REPORTS[sha]))
+    return _REPORTS[sha]
+
+
+def secondary_tables(*, final_root, panel, have, names, alias, dry_run=False):
+    """SECONDARY, report-only (amendment 5): every arm vs every comparator present, per metric: paired whole-world
+    bootstrap CI + per-seed fractions/quartiles; per-world values per arm (the per-seed table)."""
+    bootstrap = dict(panel['contract']['bootstrap'])
+    if dry_run:                       # FAKE PHYSICS tables only: fewer resamples to keep the dry run fast
+        bootstrap['reps'] = 200
+    worlds = [r['world_id'] for r in panel['worlds']]
+    reports = {}
+    for n in names:
+        rows = {w: episode_log_report(final_root, have[n][w]) for w in worlds}
+        if any(r is None for r in rows.values()):
+            return dict(status='unavailable', reason=f'{n}: ground-truth vehicle logs not present on this host')
+        bad = [w for w, r in rows.items() if not r['ok']]
+        if bad:
+            return dict(status='unavailable', reason=f'{n}: vehicle log problems in {len(bad)} worlds',
+                        problems={w: rows[w]['problems'][:3] for w in bad[:5]})
+        reports[n] = rows
+    out = dict(status='report-only (SECONDARY; primary outcome unchanged)', convention=(
+        'diff = arm - comparator; per metric higher/lower is better as named (delay, TTC exposure, braking, '
+        'variance, stop-and-go: lower; Jain, min TTC, crossings: higher)'), bootstrap=bootstrap, metrics={})
+    for group, metric, get in SECONDARY_METRICS:
+        per = {n: [get(reports[n][w], have[n][w]) for w in worlds] for n in names}
+        entry = dict(group=group, per_world={n: v for n, v in per.items()})
+        ok = {n: v for n, v in per.items() if all(isinstance(x, (int, float)) and math.isfinite(x) for x in v)}
+        if set(ok) != set(per):
+            entry['undefined_in'] = sorted(set(per)-set(ok))
+        cmp_ = {}
+        for c in SECONDARY_COMPARATORS:
+            ref = alias.get(c, c)
+            if ref not in ok:
+                continue
+            cmp_[c] = {n: dict(mean_ci=fe.paired_stats(ok[n], ok[ref], bootstrap, pct=False),
+                               **{k: v for k, v in seed_stats(np.asarray(ok[n], float)-np.asarray(ok[ref], float),
+                                                              worlds).items() if k != 'sorted'})
+                       for n in ok if n != ref}
+        entry['vs'] = cmp_
+        out['metrics'][metric] = entry
+    origins = sorted({o for n in names for w in worlds for o in reports[n][w]['delay_by_origin_s']})
+    out['delay_by_origin_s'] = {o: {n: [reports[n][w]['delay_by_origin_s'].get(o) for w in worlds] for n in names}
+                                for o in origins}
+    return json.loads(json.dumps(out, allow_nan=False))
+
+
 def check_replicated(value, update):
     """clean3_finaleval.check_replicated for the evaluated update (u12 or u24 replicated test; descriptive)."""
     verify(value, 'receipt_sha256', f'replicated_u{int(update):03}')
@@ -1951,7 +2089,7 @@ def tables(*, root, final_root, panel, base, episodes, decisions, sources, missi
         sources['A'] = dict(alias_of='U0', rule=FROZEN_A_RULE, label=A_ALIAS_LABEL)
     value = analyse(panel=panel, base=base, episodes=episodes, decisions=decisions, replicated=replicated,
                     sources=sources, missing=missing, comparators=comparators, scope=scope, update=update,
-                    a_alias=a_alias)
+                    a_alias=a_alias, final_root=final_root, dry_run=dry_run)
     if dry_run:
         value = seal(dict(value, dry_run=True), 'analysis_sha256')
     existing = Path(final_root)/f'{stem}.json'
@@ -2195,6 +2333,75 @@ def prerun_cap():
     return len(PRERUN_ARMS)*(N_WORLDS+CLAIM3C_WORLDS)*HORIZON_S
 
 
+PRERUN_CAP_FILE = 'PRERUN_CAP.json'
+PRERUN_CAP_MAX = 480_000                     # MAIN 2026-11-07 ~01:2x: pre-run sub-cap 432,000 -> 480,000
+
+
+def effective_prerun_cap(final_root, plan):
+    path = Path(final_root)/PRERUN_CAP_FILE
+    if not path.is_file():
+        return plan['cap_sim_s']
+    value = verify(read(path), 'receipt_sha256', PRERUN_CAP_FILE)
+    if value['prerun_plan_sha256'] != plan['receipt_sha256'] or not plan['cap_sim_s'] <= value['cap_sim_s'] <= PRERUN_CAP_MAX:
+        raise Blocked('PRERUN_CAP.json does not amend this pre-run plan within the registered maximum')
+    return value['cap_sim_s']
+
+
+def amend_prerun_cap(*, final_root, cap_sim_s, authority):
+    """MAIN cap decision for the pre-run sub-cap (sealed; within v2v_final; never lowers below the plan)."""
+    plan = prerun_plan(final_root)
+    if plan is None:
+        raise Blocked('PRERUN_PLAN.json missing')
+    if not str(authority).strip() or not plan['cap_sim_s'] <= int(cap_sim_s) <= PRERUN_CAP_MAX:
+        raise Blocked(f'authority and a cap in [{plan["cap_sim_s"]}, {PRERUN_CAP_MAX}] required')
+    target = Path(final_root)/PRERUN_CAP_FILE
+    if target.is_file():
+        raise Blocked('PRERUN_CAP.json exists; never overwrite')
+    value = seal(dict(schema=SCHEMA+'.prerun_cap', prerun_plan_sha256=plan['receipt_sha256'], cap_sim_s=int(cap_sim_s),
+                      previous=plan['cap_sim_s'], authority=str(authority), utc=datetime.now(timezone.utc).isoformat()),
+                 'receipt_sha256')
+    publish(target, value)
+    return value
+
+
+def interrupted_parts(final_root):
+    """RESERVED parts without a published WAVE (failed/interrupted dispatches) -> {part: jobs}."""
+    out = {}
+    for path in Path(final_root).glob('RESERVED_*.json'):
+        value = read(path)
+        part = value.get('name')
+        if part and not (Path(final_root)/f'WAVE_{part}.json').is_file() and '.replay' not in path.name:
+            out[part] = list(value['jobs'])
+    done = replay_authorized(final_root)            # already authorised once: never listed again
+    return dict(sorted((k, v) for k, v in out.items() if not set(v) <= done))
+
+
+def authorize_replay(*, final_root, authority, reason):
+    """MAIN-authorised one-time replay of every interrupted (charged, unpublished) part: its results were never
+    published or opened; the jobs are recharged under '<job>#r1' ledger ids. Sealed; never repeated."""
+    final_root = Path(final_root)
+    parts = interrupted_parts(final_root)
+    if not parts:
+        raise Blocked('no interrupted part to replay')
+    if not str(authority).strip() or not str(reason).strip():
+        raise Blocked('authority and reason required')
+    n = len(list(final_root.glob('REPLAY_AUTHORIZED_*.json')))+1
+    if any(set(jobs) & replay_authorized(final_root) for jobs in parts.values()):
+        raise Blocked('a job was already authorised for replay once; never twice')
+    value = seal(dict(schema=SCHEMA+'.replay', parts=parts, jobs=sorted(j for v in parts.values() for j in v),
+                      authority=str(authority), reason=str(reason), results_opened=False,
+                      utc=datetime.now(timezone.utc).isoformat()), 'receipt_sha256')
+    publish(final_root/f'REPLAY_AUTHORIZED_{n:02}.json', value)
+    return value
+
+
+def replay_authorized(final_root):
+    jobs = set()
+    for path in Path(final_root).glob('REPLAY_AUTHORIZED_*.json'):
+        jobs |= set(verify(read(path), 'receipt_sha256', path.name)['jobs'])
+    return jobs
+
+
 class PrerunRuntime:
     """The same runner/plant (real or fake) with the evaluation root's OWN ledger (phase
     v2v_final_prerun, cap = PRERUN_ARMS x (96 + 24) x 1200 s); the CONFIG is the registered plant copy."""
@@ -2227,7 +2434,8 @@ class PrerunRuntime:
     def reserve(self, cfg, jobs):
         plan = prerun_plan(self.final_root)
         try:
-            own_reserve(self.final_root, jobs, PRERUN_PHASE, cap=plan['cap_sim_s'], calls=self.calls)
+            own_reserve(self.final_root, jobs, PRERUN_PHASE, cap=effective_prerun_cap(self.final_root, plan),
+                        calls=self.calls)
         except Blocked as error:
             raise Blocked(f'pre-run: {error}') from None
 
@@ -2353,7 +2561,8 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRE
                    prerun_plan_sha256=plan['receipt_sha256'], chunk=chunk, rounds=rounds,
                    coverage={k: dict(published=v[0], registered=v[1]) for k, v in cov.items()},
                    receipts={k: v['receipt_sha256'] for k, v in receipts.items()},
-                   charged_sim_s=sum(r['sim_s'] for r in fe.ledger_rows(final_root)), cap_sim_s=plan['cap_sim_s'],
+                   charged_sim_s=sum(r['sim_s'] for r in fe.ledger_rows(final_root)),
+                   cap_sim_s=effective_prerun_cap(final_root, plan),
                    resume=None if not stopped else ('remove STOP_PRERUN (or copy the whole final root to the same '
                                                     'absolute path on the other host) and run prerun-run again'))
         status(current, out['status'], out)
@@ -2364,7 +2573,9 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRE
 
 
 def vehicle_log_report(path, *, t0=WARMUP_S, t1=HORIZON_S):
-    """Zero physics: field-by-field check + the registered secondary quantities of one ground-truth vehicle log."""
+    """Zero physics: field-by-field check + the registered secondary quantities of one ground-truth vehicle log
+    (vectorised: per-vehicle delay = sum max(0, 1 - v/SPEED_LIMIT) + depart delay if inserted after t0; same-lane
+    consecutive TTC with the nominal 5 m length; stop-and-go v>=5 -> v<1; crossings of the drop s)."""
     import gzip
     heads, ticks, problems = {}, [], []
     with gzip.open(path, 'rt', encoding='utf-8') as f:
@@ -2380,45 +2591,54 @@ def vehicle_log_report(path, *, t0=WARMUP_S, t1=HORIZON_S):
         problems.append('no vehicles')
     if any(set(h) != {'veh', 'id', 'cav', 'origin', 'depart_delay_s', 'first_t'} for h in heads.values()):
         problems.append('vehicle header fields differ from the registered set')
-    delay, prev, stops, crossings = {}, {}, 0, set()
-    acc, hard, emergency, ttc_vs, pairs, min_ttc = [], 0, 0, 0, 0, None
+    cols = {c: [] for c in ('t', 'k', 's', 'v', 'a', 'lane')}
     for x in ticks:
         n = len(x.get('k', []))
         if any(len(x.get(c, [])) != n for c in ('s', 'v', 'a', 'lane')):
             problems.append(f't={x.get("t")}: column lengths differ')
             break
-        if any(k not in heads for k in x['k']):
-            problems.append(f't={x["t"]}: unknown vehicle index')
-            break
-        if any(not math.isfinite(v) or v < 0 for v in x['v']) or any(not math.isfinite(a) for a in x['a']) \
-                or any(not math.isfinite(s_) for s_ in x['s']) or any(type(ln) is not int or ln < 0 for ln in x['lane']):
-            problems.append(f't={x["t"]}: non-finite or invalid kinematics/lane')
-            break
-        lanes = {}
-        for k, s_, v, a, ln in zip(x['k'], x['s'], x['v'], x['a'], x['lane']):
-            delay[k] = delay.get(k, 0.)+max(0., 1.-v/SPEED_LIMIT_MPS)
-            acc.append(a)
-            hard += a < -3.0
-            emergency += a < -4.5
-            p_ = prev.get(k)
-            if p_ is not None:
-                stops += p_[1] >= 5.0 and v < 1.0
-                if p_[0] < DROP_S_M <= s_:
-                    crossings.add(k)
-            prev[k] = (s_, v)
-            lanes.setdefault(ln, []).append((s_, v))
-        for rows in lanes.values():
-            rows.sort()
-            for (sf, vf), (sl, vl) in zip(rows, rows[1:]):
-                pairs += 1
-                gap, closing = sl-sf-NOMINAL_LENGTH_M, vf-vl
-                if closing > 0 and gap > 0:
-                    ttc = gap/closing
-                    min_ttc = ttc if min_ttc is None else min(min_ttc, ttc)
-                    ttc_vs += ttc < 3.0
+        cols['t'].append(np.full(n, x.get('t', -1), np.int64))
+        for c in ('k', 's', 'v', 'a', 'lane'):
+            cols[c].append(np.asarray(x[c], dtype=np.float64 if c in ('s', 'v', 'a') else np.int64)
+                           if n else np.zeros(0, np.float64 if c in ('s', 'v', 'a') else np.int64))
+    T, K, S, V, A, L = (np.concatenate(cols[c]) if cols[c] else np.zeros(0) for c in ('t', 'k', 's', 'v', 'a', 'lane'))
+    K, L, T = K.astype(np.int64), L.astype(np.int64), T.astype(np.int64)
+    if K.size and (K.min() < 0 or not set(np.unique(K).tolist()) <= set(heads)):
+        problems.append('unknown vehicle index')
+    if not (np.all(np.isfinite(S)) and np.all(np.isfinite(V)) and np.all(np.isfinite(A)) and np.all(V >= 0)
+            and np.all(L >= 0)):
+        problems.append('non-finite or invalid kinematics/lane')
+    nveh = (max(heads)+1) if heads else 0
+    deficit = np.maximum(0., 1.-V/SPEED_LIMIT_MPS)
+    seen = np.bincount(K, minlength=nveh) if K.size else np.zeros(nveh, np.int64)
+    delay_v = np.bincount(K, weights=deficit, minlength=nveh) if K.size else np.zeros(nveh)
     for k, h in heads.items():
-        if h.get('first_t', -1) > t0 and isinstance(h.get('depart_delay_s'), (int, float)) and k in delay:
-            delay[k] += float(h['depart_delay_s'])
+        if seen[k] and h.get('first_t', -1) > t0 and isinstance(h.get('depart_delay_s'), (int, float)):
+            delay_v[k] += float(h['depart_delay_s'])
+    present = np.flatnonzero(seen > 0)
+    d = np.sort(delay_v[present])
+    # per-vehicle accel moments; stop-and-go and drop crossings on consecutive seconds of the same vehicle
+    n_ = np.bincount(K, minlength=nveh).astype(float) if K.size else np.zeros(nveh)
+    s1 = np.bincount(K, weights=A, minlength=nveh) if K.size else np.zeros(nveh)
+    s2 = np.bincount(K, weights=A*A, minlength=nveh) if K.size else np.zeros(nveh)
+    ok2 = n_ >= 2
+    per_vehicle_var = (s2[ok2]/n_[ok2]-(s1[ok2]/n_[ok2])**2) if ok2.any() else np.zeros(0)
+    order = np.lexsort((T, K))
+    k_, t_, v_, s_ = K[order], T[order], V[order], S[order]
+    same = (k_[1:] == k_[:-1]) & (t_[1:] == t_[:-1]+1)
+    stops = int(np.sum(same & (v_[:-1] >= 5.0) & (v_[1:] < 1.0)))
+    crossings = len(set(k_[1:][same & (s_[:-1] < DROP_S_M) & (s_[1:] >= DROP_S_M)].tolist()))
+    # same-lane consecutive pairs per second (follower = lower s)
+    order = np.lexsort((S, L, T))
+    t2, l2, s2_, v2 = T[order], L[order], S[order], V[order]
+    pair = (t2[1:] == t2[:-1]) & (l2[1:] == l2[:-1])
+    gap = s2_[1:]-s2_[:-1]-NOMINAL_LENGTH_M
+    closing = v2[:-1]-v2[1:]
+    valid = pair & (closing > 0) & (gap > 0)
+    ttc = gap[valid]/closing[valid]
+    pairs = int(pair.sum())
+    if heads and not pairs:
+        problems.append('no same-lane vehicle pair (TTC not computable)')
     cav = sum(1 for h in heads.values() if h.get('cav') is True)
     hdv = sum(1 for h in heads.values() if h.get('cav') is False)
     origins = {}
@@ -2426,31 +2646,38 @@ def vehicle_log_report(path, *, t0=WARMUP_S, t1=HORIZON_S):
         origins[h.get('origin')] = origins.get(h.get('origin'), 0)+1
     with_origin = sum(v for o, v in origins.items() if isinstance(o, str) and o)
     with_delay = sum(1 for h in heads.values() if isinstance(h.get('depart_delay_s'), (int, float)))
-    d = np.array(sorted(delay.values())) if delay else np.zeros(0)
-    a = np.array(acc) if acc else np.zeros(0)
     if heads and (not cav or not hdv):
         problems.append(f'both fleet classes required (CAV {cav}, HDV {hdv})')
     if heads and with_origin < .95*len(heads):
         problems.append(f'route origin missing for {len(heads)-with_origin}/{len(heads)} vehicles')
     if heads and with_delay < .95*len(heads):
         problems.append(f'depart delay missing for {len(heads)-with_delay}/{len(heads)} vehicles')
-    if not pairs:
-        problems.append('no same-lane vehicle pair (TTC not computable)')
-    if a.size and float(a.var()) == 0.:
+    if A.size and float(A.var()) == 0.:
         problems.append('acceleration identically constant')
     gini = float((2*np.arange(1, d.size+1)-d.size-1).dot(d)/(d.size*d.sum())) if d.size and d.sum() > 0 else None
     jain = float(d.sum()**2/(d.size*(d**2).sum())) if d.size and (d**2).sum() > 0 else None
     top = d[int(np.floor(.9*d.size)):] if d.size else d
+
+    def mean_of(keys):
+        vals = [delay_v[k] for k in keys if k < nveh and seen[k]]
+        return float(np.mean(vals)) if vals else None
+    cav_mean = mean_of([k for k, h in heads.items() if h.get('cav') is True])
+    hdv_mean = mean_of([k for k, h in heads.items() if h.get('cav') is False])
+    by_origin = {str(o): mean_of([k for k, h in heads.items() if h.get('origin') == o]) for o in origins}
     return dict(ok=not problems, problems=problems, ticks=len(ticks), vehicles=len(heads), cav=cav, hdv=hdv,
+                delay_by_class=dict(cav_mean_s=cav_mean, hdv_mean_s=hdv_mean,
+                                    hdv_cav_ratio=hdv_mean/cav_mean if cav_mean and hdv_mean is not None else None),
+                delay_by_origin_s=by_origin,
+                accel_var_per_vehicle_mean=float(per_vehicle_var.mean()) if per_vehicle_var.size else None,
                 origins={str(k): v for k, v in sorted(origins.items(), key=lambda kv: str(kv[0]))},
                 origin_coverage=round(with_origin/len(heads), 4) if heads else None,
                 depart_delay_coverage=round(with_delay/len(heads), 4) if heads else None,
                 delay=dict(mean_s=float(d.mean()) if d.size else None, max_s=float(d.max()) if d.size else None,
                            gini=gini, jain=jain, worst10_mean_s=float(top.mean()) if top.size else None),
-                ttc=dict(pairs=pairs, min_s=min_ttc, below_3_vs=int(ttc_vs)),
-                accel=dict(n=int(a.size), var=float(a.var()) if a.size else None, hard_brake_vs=int(hard),
-                           emergency_vs=int(emergency)),
-                stop_and_go=int(stops), crossings_drop=len(crossings))
+                ttc=dict(pairs=pairs, min_s=float(ttc.min()) if ttc.size else None, below_3_vs=int(np.sum(ttc < 3.0))),
+                accel=dict(n=int(A.size), var=float(A.var()) if A.size else None, hard_brake_vs=int(np.sum(A < -3.0)),
+                           emergency_vs=int(np.sum(A < -4.5))),
+                stop_and_go=stops, crossings_drop=crossings)
 
 
 def prerun_logcheck(*, final_root, runtime, panel, arms=LOGCHECK_ARMS, workers=2):
@@ -2504,6 +2731,58 @@ def prerun_logcheck(*, final_root, runtime, panel, arms=LOGCHECK_ARMS, workers=2
                       prerun_plan_sha256=plan['receipt_sha256'], rule='MAIN: one-episode check before any wave; '
                       'TRAIN world (not held-out); fields checked: ticks, fleet class, route origin, depart delay, '
                       'kinematics, per-vehicle delay, same-lane TTC, acceleration'), 'receipt_sha256')
+    publish(target, value)
+    return value
+
+
+SEQCHECK_PHASE = 'v2v_final_seqcheck'
+SEQCHECK_ARMS = ('NATIVE', 'U0', 'RULE')
+
+
+def prerun_seqcheck(*, final_root, runtime, panel):
+    """Regression check of the 01:09 failure: NATIVE -> U0 -> RULE short TRAIN episodes in ONE dispatch with ONE
+    worker (the old pool would reuse the NATIVE process for U0); each log checked field by field. Sealed
+    SEQCHECK.json; 3 x 360 = 1,080 sim-s in phase v2v_final_seqcheck."""
+    from tools.coopmwm import map_scenarios as ms
+    final_root = Path(final_root)
+    plan = prerun_plan(final_root)
+    if plan is None:
+        raise Blocked('PRERUN_PLAN.json missing')
+    target = final_root/'SEQCHECK.json'
+    if target.is_file():
+        return verify(read(target), 'receipt_sha256', 'SEQCHECK')
+    pre = runtime if isinstance(runtime, PrerunRuntime) else PrerunRuntime(runtime, final_root)
+    plant = final_root/PRERUN_PLANT
+    cfg = pre.config(plant)
+    u0 = mappo_binding(final_root, 'U0')
+    if u0 is None or (u0['residual_path'], u0['residual_sha256']) != (plan['u0']['path'], plan['u0']['sha256']):
+        raise Blocked('the U0 binding must be the pre-run u0 copy')
+    world = ms.world(LOGCHECK_SEED, PARITY_CELL['demand'], PARITY_CELL['penetration'])
+    specs = [dict(job_id=f'nmlogcheck_seq_{arm.lower()}_{LOGCHECK_SEED}', kind='logcheck', arm=arm,
+                  world_id=f'{MAP}_train_{LOGCHECK_SEED}', world=deepcopy(world),
+                  checkpoint=episode_specs(arm, panel, cfg, plant, 'mappo_frozen', None, u0)[0]['checkpoint'],
+                  sim_s=LOGCHECK_STOP_S, window=dict(start_s=WARMUP_S, end_s=LOGCHECK_STOP_S),
+                  panel_sha256='logcheck (TRAIN world)', noise_seed=LOGCHECK_SEED, deterministic=True, capture=None)
+             for arm in SEQCHECK_ARMS]
+    if {sp['job_id'] for sp in specs} & {r['id'] for r in fe.ledger_rows(final_root)}:
+        raise Blocked('an interrupted sequence check is charged; never replay')
+    own_reserve(final_root, [dict(id=sp['job_id'], sim_s=sp['sim_s']) for sp in specs], SEQCHECK_PHASE,
+                cap=len(SEQCHECK_ARMS)*LOGCHECK_STOP_S, calls=pre.calls)
+    items = [('logcheck', sp, str(final_root/'logcheck'/sp['job_id'])) for sp in specs]
+    results = pre.run(items, cfg, 1)                     # ONE worker: the old pool reused it NATIVE -> U0 -> RULE
+    reports = {}
+    for sp, rec, (_, _, work) in zip(specs, results, items):
+        path = Path(work)/VEHICLE_LOG
+        if rec.get('status') != 'logged' or file_sha(path) != rec['vehicle_log']['sha256']:
+            raise Blocked(f'sequence check {sp["arm"]}: unexpected record')
+        reports[sp['arm']] = dict(vehicle_log=rec['vehicle_log'], pid=rec.get('pid'),
+                                  check=vehicle_log_report(path, t0=WARMUP_S, t1=LOGCHECK_STOP_S))
+    pids = [r['pid'] for r in reports.values()]
+    verdict = 'PASS' if all(r['check']['ok'] for r in reports.values()) and len(set(pids)) == len(pids) else 'FAIL'
+    value = seal(dict(schema=SCHEMA+'.seqcheck', verdict=verdict, order=list(SEQCHECK_ARMS), pids=pids,
+                      world=world, sim_s=len(specs)*LOGCHECK_STOP_S, phase=SEQCHECK_PHASE, arms=reports,
+                      rule='MAIN 2026-11-07: one arm per worker process; one-episode check of the NATIVE->U0->RULE '
+                           'sequence (TRAIN world, <= 1,200 sim-s) before re-running 3c'), 'receipt_sha256')
     publish(target, value)
     return value
 
@@ -2762,7 +3041,8 @@ def _analyse_published(root, final_root, runtime, panel, panel_3c=None, update=P
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument('command', choices=('register-panel', 'register-panel-3c', 'verify-panel', 'quote', 'check', 'register',
-                                       'bind-arms', 'prerun-register', 'prerun-logcheck', 'prerun-run', 'parity',
+                                       'bind-arms', 'prerun-register', 'prerun-logcheck', 'prerun-seqcheck',
+                                       'prerun-amend-cap', 'authorize-replay', 'prerun-run', 'parity',
                                        'bind-mappo', 'declare-unavailable', 'run', 'analyse', 'dry-run'))
     p.add_argument('--root', default=ROOT)
     p.add_argument('--final-root', default=FINAL_ROOT)
@@ -2797,6 +3077,7 @@ def main(argv=None):
     p.add_argument('--u0-sha256', help='prerun-register: its sha256')
     p.add_argument('--train-config', help="bind-mappo (MAPPO_SPEED/MAPPO_LANE): the comparator's own training run "
                                           'config (N7 toml) used by the F11 training-env path')
+    p.add_argument('--cap', type=int, help='prerun-amend-cap: the new pre-run sub-cap (MAIN decision)')
     p.add_argument('--chunk', type=int, help='prerun-run: episodes per dispatch (default 2 x workers); STOP_PRERUN '
                                              'in the final root stops after the chunk in flight')
     p.add_argument('--authority', help='bind-mappo: verbatim message/decision (e.g. N7 hand-off or MAIN fallback decision)')
@@ -2863,6 +3144,14 @@ def main(argv=None):
             value = prerun_logcheck(final_root=a.final_root, runtime=Runtime(a.runner), panel=panel)
             result = dict(verdict=value['verdict'], receipt_sha256=value['receipt_sha256'],
                           arms={k: v['check'] for k, v in value['arms'].items()})
+        elif a.command == 'prerun-seqcheck':
+            value = prerun_seqcheck(final_root=a.final_root, runtime=Runtime(a.runner), panel=panel)
+            result = dict(verdict=value['verdict'], receipt_sha256=value['receipt_sha256'], pids=value['pids'],
+                          arms={k: v['check'] for k, v in value['arms'].items()})
+        elif a.command == 'prerun-amend-cap':
+            result = amend_prerun_cap(final_root=a.final_root, cap_sim_s=a.cap, authority=a.authority)
+        elif a.command == 'authorize-replay':
+            result = authorize_replay(final_root=a.final_root, authority=a.authority, reason=a.reason)
         elif a.command == 'prerun-run':
             import fcntl
             if a.workers > 16 and os.environ.get('NM_PRERUN_HOST') == 'cpuV':

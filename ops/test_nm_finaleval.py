@@ -136,7 +136,7 @@ def test_map_check_flags_an_api_that_disagrees_with_the_panel(panel):
         nm.bind_map_api('json')
 
 
-@pytest.mark.parametrize('base', ['mappo_frozen', 'mappo_u0', 'native'])
+@pytest.mark.parametrize('base', ['mappo_frozen', 'native'])
 def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     import concurrent.futures
 
@@ -188,6 +188,12 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     assert t['synergy']['per_decision']['status'] == 'unavailable'                 # F7 not built (MAIN)
     assert all(t['synergy']['decision_activity'][arm]['worlds'] == 96 for arm in ('B', 'R'))
     assert t['arms']['A']['label'].startswith('A = U0')
+    sec = t['secondary']                                              # SECONDARY report-only (amendment 5)
+    assert sec['status'].startswith('report-only') and sec['bootstrap']['reps'] == 200      # dry run: fewer reps
+    assert set(sec['metrics']) == {m for _, m, _ in nm.SECONDARY_METRICS} and set(sec['delay_by_origin_s']) == {'main_in', 'ramp_in'}
+    gini = sec['metrics']['delay_gini']
+    assert set(gini['vs']) == {'BASE', 'NATIVE', 'U0', 'RULE'} and len(gini['per_world']['B']) == 96
+    assert set(gini['vs']['NATIVE']) == set(t['arms'])-{'NATIVE'} and 'mean_ci' in gini['vs']['NATIVE']['B']
     assert t['total_benefit']['vs_RULE']['rows']['A'] == t['total_benefit']['vs_RULE']['rows']['U0']   # A is U0
     ps = t['per_seed']
     assert ps['comparators']['MAPPO_SPEED'] == dict(status='unavailable')
@@ -941,3 +947,66 @@ def test_vehicle_log_report_refuses_an_empty_or_partial_log(tmp_path):
     with gzip.open(one_class, 'wt') as f:
         f.write('\n'.join(x.replace('"cav": false', '"cav": true') for x in lines)+'\n')
     assert any('both fleet classes' in x for x in nm.vehicle_log_report(one_class, t0=300, t1=360)['problems'])
+
+
+
+# ---------------------------------------------------------------- 01:09 failure: no NATIVE -> policy process reuse
+
+def test_runtime_runs_each_arm_in_its_own_fresh_pool():
+    """Regression (3c chunk 01:09): with ONE worker the old pool reused the NATIVE process for U0 and the G5
+    binding refused; the probe runner raises exactly like that."""
+    items = [('episode', dict(job_id=f'j{i}', arm=arm), f'w{i}') for i, arm in enumerate(['NATIVE']*3+['U0']*2+['RULE'])]
+    assert nm.process_groups(items) == [[0, 1, 2], [3, 4], [5]]
+    out = nm.Runtime('tools.coopmwm._n6_pool_probe').run(items, cfg={}, workers=1)
+    assert [r['job_id'] for r in out] == [f'j{i}' for i in range(6)]
+    pids = {r['arm']: {x['pid'] for x in out if x['arm'] == r['arm']} for r in out}
+    assert not pids['NATIVE'] & pids['U0'] and not pids['NATIVE'] & pids['RULE']
+    from concurrent.futures import ProcessPoolExecutor
+    import multiprocessing
+    with ProcessPoolExecutor(max_workers=1, mp_context=multiprocessing.get_context('spawn')) as pool:   # the old pool
+        futures = [pool.submit(nm._worker, k, sp, {}, w, 'tools.coopmwm._n6_pool_probe') for k, sp, w in items]
+        with pytest.raises(ValueError, match='G5 runtime binding'):
+            [f.result() for f in futures]
+
+
+def test_failed_chunk_is_replayed_once_only_by_authorisation_and_the_cap_amendment(panel, tmp_path):
+    f = prerun_fixture(tmp_path, panel)
+    final_root = f['final_root']
+    first = nm.FakeRuntime()
+
+    def fail_second(items, cfg, workers):
+        if len([c for c in first.calls if c[0] == 'run']) == 1:
+            first.calls.append(('run', len(items), workers))
+            raise ValueError('traffic_shepherd.c4.env was imported before the G5 runtime binding')
+        return nm.FakeRuntime.run(first, items, cfg, workers)
+    first.run = fail_second
+    with pytest.raises(ValueError, match='G5'):
+        run_prerun(f, first, workers=8, chunk=20)                   # chunk 1 published; chunk 2 fails after reserving
+    assert list(nm.interrupted_parts(final_root)) == ['NATIVE__0020-0039']
+    with pytest.raises(nm.Blocked, match='never replay'):
+        run_prerun(f, nm.FakeRuntime(), workers=8, chunk=20)
+    with pytest.raises(nm.Blocked, match='authority and reason'):
+        nm.authorize_replay(final_root=final_root, authority='MAIN', reason=' ')
+    rep = nm.authorize_replay(final_root=final_root, authority='MAIN 2026-11-07: re-run 3c after the pool fix',
+                              reason='pool-worker G5 failure, nothing published or opened')
+    assert rep['jobs'] == [f'nmfinal_native_{i:04}' for i in range(20, 40)] and rep['results_opened'] is False
+    with pytest.raises(nm.Blocked, match='v2v_final_prerun cap'):
+        run_prerun(f, nm.FakeRuntime(), workers=16)                 # 432,000 cannot hold the replay + the rest
+    with pytest.raises(nm.Blocked, match='cap in'):
+        nm.amend_prerun_cap(final_root=final_root, cap_sim_s=500_000, authority='MAIN')
+    nm.amend_prerun_cap(final_root=final_root, cap_sim_s=480_000, authority='MAIN 2026-11-07: 432,000 -> 480,000')
+    out = run_prerun(f, nm.FakeRuntime(), workers=16)
+    assert out['status'] == 'PASS' and out['cap_sim_s'] == 480_000
+    assert all(v['published'] == v['registered'] for v in out['coverage'].values())
+    rows = [r['id'] for r in nm.fe.ledger_rows(final_root)]
+    assert sum(r.endswith('#r1') for r in rows) == 20 and len(list(final_root.glob('RESERVED_NATIVE__0020-*.replay1.json'))) == 1
+    with pytest.raises(nm.Blocked, match='no interrupted part'):
+        nm.authorize_replay(final_root=final_root, authority='MAIN', reason='again')
+
+
+def test_seqcheck_runs_native_u0_rule_in_one_dispatch(panel, tmp_path):
+    f = prerun_fixture(tmp_path, panel)
+    value = nm.prerun_seqcheck(final_root=f['final_root'], runtime=f['runtime'], panel=panel)
+    assert value['verdict'] == 'PASS' and value['order'] == ['NATIVE', 'U0', 'RULE'] and value['sim_s'] == 1_080
+    assert len(set(value['pids'])) == 3 and all(a['check']['ok'] for a in value['arms'].values())
+    assert {r['phase'] for r in nm.fe.ledger_rows(f['final_root'])} >= {'v2v_final_seqcheck'}

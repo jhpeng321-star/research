@@ -685,8 +685,9 @@ def logcheck(spec, cfg, work):
         vlog = out['vehicle_log']
     else:
         vlog = _policy_run(spec, cfg, work, world=world, stop=stop, role=PARITY_ROLE)['vehicle_log']
+    import os
     return dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='logged', kind='logcheck', vehicle_log=vlog,
-                work=str(work))
+                work=str(work), pid=os.getpid())
 
 
 # ---------------------------------------------------------------- F11 parity (eval plant vs training env)
