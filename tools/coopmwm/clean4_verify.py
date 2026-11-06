@@ -2227,6 +2227,131 @@ def contexts(root, arm='B'):
     return out
 
 
+# ============================================================================ fidelity (report only, zero sim)
+
+FIDELITY_SCHEMA = 'coopmwm.clean4.law_fidelity.v1'
+FIDELITY_RULE = ('report only (N5/MAIN): for every verified B move, the executed open-loop verified profile '
+                 '(plan.profile, release = plan.member_release_el) vs the closed-loop N2 law '
+                 '(lane_drop.member_command) evaluated on the ACTUAL seed-1 group-branch tape: speed v_mps and '
+                 'position s_m of each member at every hold second (controller observation rows of that second). '
+                 '|delta a| over member-seconds where both hold; release timing = first second the law releases on '
+                 'the actual tape vs the executed release. Reads only files the run wrote; writes only --out.')
+
+
+def law_fidelity(plan, steps, t0, view):
+    """Pure: compare one verified N2 plan with the closed-loop N2 law on its actual branch tape.
+
+    steps: {second: controller event (rows=[{vid, s_m, v_mps, ...}], requests={vid: a})}."""
+    from . import lane_drop as ld
+    move = ld.LaneDropMove.from_dict(plan['lane_drop_macro'])
+    members = list(plan['members'])
+    if members != list(move.members):
+        raise ValueError('plan members differ from its lane_drop_macro')
+    executed_rel = dict(zip(members, plan['member_release_el']))
+    hold_end = move.onset+move.hold
+    law_rel, deltas, requests, missing = {}, {v: [] for v in members}, {v: [] for v in members}, 0
+    only_exec, only_law = {v: 0 for v in members}, {v: 0 for v in members}
+    for k in range(hold_end):
+        step = steps.get(int(t0)+k)
+        rows = {r.get('vid'): r for r in (step or {}).get('rows') or []}
+        known = {v: float(rows[v]['s_m']) for v in members if v in rows}
+        for i, v in enumerate(members):
+            if v not in rows:
+                missing += step is not None or k < plan['duration_s']
+                law = None
+                if v not in law_rel and k >= move.onset:
+                    law_rel[v] = k                        # left the observed rows: the law no longer commands it
+            elif v in law_rel:
+                law = None
+            else:
+                law = ld.member_command(move, v, k, view, speed=float(rows[v]['v_mps']), positions=known)
+                if law is None and k >= move.onset:
+                    law_rel[v] = k
+            held = k < executed_rel[v]
+            if held and law is not None:
+                deltas[v].append(abs(float(plan['profile'][i][k])-float(law)))
+            elif held:
+                only_exec[v] += 1
+            elif law is not None:
+                only_law[v] += 1
+            req = ((step or {}).get('requests') or {}).get(v)
+            if held and req is not None:
+                requests[v].append(abs(float(req)-float(plan['profile'][i][k])))
+    for v in members:
+        law_rel.setdefault(v, hold_end)
+    flat = [d for v in members for d in deltas[v]]
+    per = {v: dict(law_release_el=law_rel[v], executed_release_el=executed_rel[v],
+                   release_diff_s=executed_rel[v]-law_rel[v], n=len(deltas[v]),
+                   max_abs_delta_a=max(deltas[v], default=None),
+                   mean_abs_delta_a=(sum(deltas[v])/len(deltas[v]) if deltas[v] else None),
+                   executed_held_law_released_s=only_exec[v], law_held_executed_released_s=only_law[v],
+                   max_abs_request_minus_profile=max(requests[v], default=None)) for v in members}
+    return dict(family=move.family, members=members, duration_s=plan['duration_s'], hold_s=move.hold,
+                n_member_seconds=len(flat), max_abs_delta_a=max(flat, default=None),
+                mean_abs_delta_a=(sum(flat)/len(flat) if flat else None), missing_member_seconds=missing,
+                per_member=per)
+
+
+def fidelity(root, out, *, arm='B', descriptor=None):
+    """Read-only report over a (possibly still running) Plan A root; writes ONLY ``out`` (outside root)."""
+    from . import bank_statistics as bs, lane_drop as ld
+    from .exact_grade import verify_sealed
+    root = Path(root).resolve()
+    out = Path(out).resolve()
+    if out == root or root in out.parents:
+        raise ValueError('--out must be outside the run root (the report never writes under it)')
+    ml = move_list(root)
+    if ml is None:
+        raise ValueError('no frozen MOVE_LIST.json')
+    view = ld.MapView.from_descriptor(descriptor or _descriptor())
+    plans_by = {r['move_id']: r['plan'] for r in _jsonl(root/'results'/'plans.jsonl')
+                if r.get('move_id') and not r.get('skipped')}
+    screen_by = {}
+    for r in _jsonl(root/'results'/'screen.jsonl'):
+        if r.get('move_id'):
+            screen_by.setdefault(r['move_id'], r)
+    rows = []
+    for m in ml['moves']:
+        if m['arm'] != arm or not m.get('in_run_list', m['status'] == 'pending'):
+            continue
+        base = dict(move_id=m['move_id'], seed=m['world']['seed'], cell_key=m['cell_key'], t0=m['t0'],
+                    variant=m['variant'], status=(move_status(root, m) or {}).get('status'))
+        plan, scr = plans_by.get(m['move_id']), screen_by.get(m['move_id'])
+        if plan is None or scr is None or scr.get('status') not in ('accepted', 'rejected'):
+            rows.append(dict(base, fidelity='not_verified'))
+            continue
+        try:
+            receipt = json.loads((Path(scr['work'])/'verifications'/(scr['verification_id']+'.json'))
+                                 .read_text(encoding='utf-8'))
+            verify_sealed(receipt, 'receipt_sha256')
+            branch = receipt['branches'][receipt['candidate_ids'].index(plan['id'])+1]
+            tape = bs._read_result(Path(scr['work'])/'branches', receipt['verification_id'], branch)
+        except (OSError, ValueError, KeyError, bs._Missing) as e:
+            rows.append(dict(base, fidelity='tape_missing', error=repr(e)))
+            continue
+        steps = {int(s['time_s']): s for s in tape.get('steps') or []}
+        if not steps:
+            rows.append(dict(base, fidelity='tape_without_steps'))
+            continue
+        rows.append(dict(base, fidelity='compared', verification_id=receipt['verification_id'],
+                         group_branch=branch['branch'], **law_fidelity(plan, steps, int(receipt['t0']), view)))
+    cmp = [r for r in rows if r['fidelity'] == 'compared']
+    report = dict(schema=FIDELITY_SCHEMA, rule=FIDELITY_RULE, root=str(root),
+                  move_list_sha256=ml['move_list_sha256'], arm=arm, moves=rows,
+                  summary=dict(compared=len(cmp), not_compared=len(rows)-len(cmp),
+                               max_abs_delta_a=max((r['max_abs_delta_a'] for r in cmp
+                                                    if r['max_abs_delta_a'] is not None), default=None),
+                               mean_abs_delta_a_over_moves=(sum(r['mean_abs_delta_a'] for r in cmp
+                                                                 if r['mean_abs_delta_a'] is not None)
+                                                             / max(1, sum(r['mean_abs_delta_a'] is not None
+                                                                          for r in cmp))),
+                               max_abs_release_diff_s=max((abs(p['release_diff_s']) for r in cmp
+                                                           for p in r['per_member'].values()), default=None)),
+                  unix=time.time())
+    _write_json(out, json.dumps(report, sort_keys=True, indent=1, default=str))
+    return report
+
+
 def status(root):
     root = _checked(root)
     reg = registration(root)
@@ -2328,6 +2453,11 @@ def main(argv=None):
     p.add_argument('--root', required=True)
     p.add_argument('--range-m', type=float, default=100.0, help='V2V range (MAIN registered 100 m)')
     p.add_argument('--cell')
+    p = sub.add_parser('fidelity', help='report only: executed open-loop profile vs closed-loop N2 law on the tapes')
+    p.add_argument('--root', required=True)
+    p.add_argument('--out', required=True, help='report path OUTSIDE the run root')
+    p.add_argument('--arm', default='B', choices=('B', 'R'))
+    p.add_argument('--map-spec', help='MAP_SPEC.json (default: COOPMWM_MAP_SPEC process map)')
     p = sub.add_parser('contexts', help='frozen-order Plan A contexts with a completed first-seed verification')
     p.add_argument('--root', required=True)
     p.add_argument('--arm', default='B', choices=('B', 'R'))
@@ -2439,6 +2569,11 @@ def main(argv=None):
                                   remaining_sim_s=remaining(root))))
     elif a.cmd == 'extract':
         print(json.dumps(extract(root, range_m=a.range_m, cell=a.cell)))
+    elif a.cmd == 'fidelity':
+        from . import map_descriptor
+        desc = map_descriptor.load(a.map_spec) if a.map_spec else None
+        rep = fidelity(root, a.out, arm=a.arm, descriptor=desc)
+        print(json.dumps(dict(out=a.out, **rep['summary'])))
     elif a.cmd == 'contexts':
         rows = contexts(root, a.arm)
         _write_json(a.out, json.dumps(rows, sort_keys=True, default=str))

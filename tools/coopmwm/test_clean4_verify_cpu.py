@@ -820,3 +820,88 @@ def test_n2_builder_plans_bind_to_lane_drop_moves(tmp_path):
     var = dict(name='pair_g', family='closing_pair', members=macro['members'], params=PG, lane_drop_macro=macro,
                descriptor=desc)
     assert cv.n2_builder(ctx_for(zone=zone[:1]), macro['members'], var) is None      # member not upstream
+
+
+def _law_tape(plan, t0, start, view, *, perturb=0.0, extra_s=5):
+    """Fake group-branch tape: members follow the plan profile exactly (perturb adds a speed offset)."""
+    s = {v: start[v][0] for v in plan['members']}
+    v_ = {v: start[v][1]+perturb for v in plan['members']}
+    steps = {}
+    for k in range(plan['duration_s']+extra_s):
+        steps[t0+k] = dict(time_s=t0+k, rows=[dict(vid=v, s_m=s[v], v_mps=v_[v], lane=1, is_cav=True, length_m=5.)
+                                              for v in plan['members']],
+                           requests={v: plan['profile'][i][k] for i, v in enumerate(plan['members'])
+                                     if k < plan['duration_s']})
+        for i, v in enumerate(plan['members']):
+            a = plan['profile'][i][k] if k < plan['duration_s'] else 0.
+            nv = max(0., v_[v]+a)
+            s[v] += 0.5*(v_[v]+nv)
+            v_[v] = nv
+    return steps
+
+
+def test_law_fidelity_pure():
+    from tools.coopmwm import lane_drop as ld, map_descriptor as md
+    desc = md.load(SPEC)
+    view = ld.MapView.from_descriptor(desc)
+    rows = write_sources_rows()
+    macro = ld.move_from_mined_row(rows[0], desc).to_dict()
+    zone = [dict(id='a1', lane=0, x=2600.0, v=30.0), dict(id='b1', lane=1, x=2590.0, v=30.0)]
+    ctx = ctx_for(zone=zone)
+    var = dict(name='pair_g', family='closing_pair', members=macro['members'], params=PG, lane_drop_macro=macro,
+               descriptor=desc)
+    plan = cv.n2_builder(ctx, macro['members'], var)
+    start = {c['id']: (c['x']-OFFSET, c['v']) for c in zone}
+    exact = cv.law_fidelity(plan, _law_tape(plan, 470, start, view), 470, view)
+    assert exact['max_abs_delta_a'] == 0.0 and exact['n_member_seconds'] > 0
+    assert all(p['release_diff_s'] == 0 for p in exact['per_member'].values())
+    assert all(p['max_abs_request_minus_profile'] == 0.0 for p in exact['per_member'].values())
+    off = cv.law_fidelity(plan, _law_tape(plan, 470, start, view, perturb=-5.0), 470, view)
+    assert off['max_abs_delta_a'] > 0.5                   # slower actual speeds: the closed-loop law differs
+    assert any(p['release_diff_s'] != 0 for p in off['per_member'].values())
+
+
+def write_sources_rows():
+    sid = 'nm2_D2800_p40_s989200_t470'
+    return [src_row('B', sid, 'D2800_p40', 2800, 0.4, 470, 'closing_pair', 'pair_g', ['a1', 'b1'], PG, 1)]
+
+
+def test_fidelity_report_reads_only_and_writes_outside(tmp_path, monkeypatch):
+    from tools.coopmwm import lane_drop as ld, map_descriptor as md
+    desc = md.load(SPEC)
+    monkeypatch.setattr(cv, '_descriptor', lambda: desc)
+    root = tmp_path/'run'
+    cv.init(root)
+    ml = cv.freeze(root, write_sources(tmp_path/'src'))
+    pg = next(m['move_id'] for m in ml['moves'] if m['variant'] == 'pair_g')
+    for j in cv.move_requests(root, 'B'):
+        cv.collect(root, j['world'], 'B', {'w': 1}, geom=GEOM, rt=FakeRT(root), windows=(), requests=j['requests'],
+                   capture_fn=snap_capture)
+    ctx = json.loads((cv.move_ctx_dir(root, ml['moves'][0])/'CONTEXT.json').read_text())
+    start = {c['id']: (c['s_m'], c['v']) for c in ctx['geometry']['zone']}
+    view = ld.MapView.from_descriptor(desc)
+
+    class TapePlant(Plant):
+        def run(self, spec, snap):
+            r = super().run(spec, snap)
+            p = spec['plan']
+            if p is not None and '__solo_' not in p['id']:
+                from tools.coopmwm.accel_storage import read, write as awrite
+                d = self.work/'branches'/spec['verification_id']/spec['branch']
+                tape = read(d/'RESULT.json')
+                tape['steps'] = list(_law_tape(p, spec['window']['start_s'], start, view).values())
+                (d/'RESULT.json').unlink()
+                (d/'RESULT.json.gz').unlink(missing_ok=True)
+                awrite(d/'RESULT.json', tape)
+                r['result_sha256'] = digest(tape)
+            return r
+    cv.run_move(root, pg, runner_factory=lambda vroot, w: TapePlant(vroot, {}), workers=1)
+    before = sorted(str(x) for x in root.rglob('*'))
+    with pytest.raises(ValueError):
+        cv.fidelity(root, root/'FID.json')                # never writes under the run root
+    rep = cv.fidelity(root, tmp_path/'FID.json')
+    assert sorted(str(x) for x in root.rglob('*')) == before
+    by = {r['move_id']: r for r in rep['moves']}
+    assert by[pg]['fidelity'] == 'compared' and by[pg]['max_abs_delta_a'] == 0.0
+    assert [r['fidelity'] for r in rep['moves'] if r['move_id'] != pg] == ['not_verified']
+    assert json.loads((tmp_path/'FID.json').read_text())['summary']['compared'] == 1
