@@ -544,13 +544,13 @@ def test_one_session_per_cav_and_ownership(cfg, wz):
     assert not proto.start(tb.TriggerMove(again), ego='c1', executor=p.executor, observable_cav_ids=['c1'], now=301)
     # A join naming a filled slot / a full session is refused; a mismatched schedule raises.
     msg = next(iter(proto.board.values()))
-    late = lf.ProgramOption('free_program_join', ('h9',), msg.session_id, 'c0', 2, msg.template, 0, 5, 0., 1, 3)
-    proto.rows['h9'] = row('h9', -1040, 1)
-    assert not proto.start(late, ego='h9', executor=p.executor, observable_cav_ids=['h9'], now=301)
+    late = lf.ProgramOption('free_program_join', ('c9',), msg.session_id, 'c0', 2, msg.template, 0, 5, 0., 1, 3)
+    proto.rows['c9'] = row('c9', -1040, 1)
+    assert not proto.start(late, ego='c9', executor=p.executor, observable_cav_ids=['c9'], now=301)
     proto.sessions[msg.session_id]['slots'].pop(2)
     proto.sessions[msg.session_id]['members'].pop('c2')
     with pytest.raises(ValueError, match='schedule'):
-        proto.start(late, ego='h9', executor=p.executor, observable_cav_ids=['h9'], now=301)
+        proto.start(late, ego='c9', executor=p.executor, observable_cav_ids=['c9'], now=301)
 
 
 # ------------------------------------------------------------------ redraw None guard (N11 F8)
@@ -727,3 +727,24 @@ def test_controller_requires_the_lc_runtime_env_and_applies_branch_release(cfg, 
     plain = Controller(Stub(), torch.Generator().manual_seed(9), True)               # no V2V lane runtime
     with pytest.raises(ValueError, match='single-writer'):
         plain.apply(e2e_rows(300), {r['vid']: 0. for r in e2e_rows(300) if r['is_cav']}, 300)
+
+
+def test_offline_open_and_admit_reconstruct_a_session_without_executors(cfg, wz):
+    """FULLPOL bank BC helpers: open_offline / admit_offline mirror start() without commitments."""
+    proto = _proto(cfg, wz)
+    rows = e2e_rows(300)
+    table = {r['vid']: r for r in rows}
+    proto.receive(300, {v: r for v, r in table.items() if r['is_cav']}, {v: rows for v in table}, {})
+    option = lf.pool('free_program_initiate', proto.state('c0', 300), table['c0'], np.random.default_rng(0))[0]
+    proto.open_offline(option, 300)
+    sid = option.session_id
+    proto.publish(300, {'c0': ObservedVehicle('c0', -1000., 1, 20., 5.)})
+    offers = proto.receive(301, {v: dict(r, s_m=r['s_m']+20) for v, r in table.items() if r['is_cav']},
+                           {v: rows for v in table}, {})
+    assert {v: [(o.session_id, o.slot) for o in opts] for v, opts in offers.items()} == dict(
+        c1=[(sid, 1)], c2=[(sid, 2)])
+    assert proto.admit_offline(offers['c2'][0], 301) and not proto.admit_offline(offers['c2'][0], 301)
+    assert proto.admit_offline(offers['c1'][0], 301)
+    session = proto.sessions[sid]
+    assert session['slots'] == {0: 'c0', 1: 'c1', 2: 'c2'} and session['executors']['c2'].p.lon.refs == ('c0', 'c1')
+    assert proto.membership == dict(c0=sid, c1=sid, c2=sid)
