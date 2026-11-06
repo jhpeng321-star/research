@@ -114,11 +114,20 @@ def episode(job, *, controller_hook=None, policy_loader=None):
         install(controller,job,prefixes,generator)
     g4_capture = None
     branch=job.get('branch')
+    vlog = None
+    if job.get('vehicle_log'):
+        # clean5b-F (opt-in, absent = unchanged): N6's eval-only ground-truth vehicle log, fed the pre-step truth by
+        # the N6 logged_tick wrapper of cf.tick; read-only getters, never a policy/controller/observation input.
+        from .fair_vehicle_log import VehicleLog
+        vlog = VehicleLog(path)
     try:
         if job.get('track2_backend') and job['arm'] != 'A':
             from .g4_runtime import BoundaryCapture
             g4_capture = BoundaryCapture.for_job(job, controller, prefixes)
-        with gzip.open(path/'observable.jsonl.gz','xt',encoding='utf-8') as trace:
+        from contextlib import nullcontext
+        from .fair_vehicle_log import logged_tick
+        with gzip.open(path/'observable.jsonl.gz','xt',encoding='utf-8') as trace, \
+                (logged_tick(vlog) if vlog is not None else nullcontext()):
             if v2v and hasattr(controller,'observe_issued'):
                 from .v2v_runtime import ObservedTrace
                 trace=ObservedTrace(trace,controller)
@@ -178,5 +187,11 @@ def episode(job, *, controller_hook=None, policy_loader=None):
             result['sumo_verification_root']=job['sumo_verify']['root']
         if g4_capture is not None:
             result.update(g4_source='ordinary_training', g4_captures=g4_capture.captures)
+        if vlog is not None:
+            from .fair_vehicle_log import per_vehicle
+            result.update(vehicle_log=vlog.close(), vehicle_table=per_vehicle(vlog.path))
         write(path/'RESULT.json',result);return result
-    finally:b.close()
+    finally:
+        if vlog is not None:
+            vlog.close()
+        b.close()

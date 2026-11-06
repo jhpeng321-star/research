@@ -220,6 +220,14 @@ def validate_clean5a(cfg, updates, fixes=None):
         if (cfg.get('clean5_ev') or {}).get('hold_lane_pin') is not True:
             raise ValueError('clean5b launches with clean5_ev.hold_lane_pin ON (MAIN 2026-11-07)')
         out['lc_families'] = dict(cap=lc['cap'], generator=lc.get('generator'), templates=0, hold_lane_pin=True)
+    from . import fullpol_fair, fullpol_ev as _fe
+    fair = fullpol_fair.settings(cfg)
+    if fair is not None:
+        # clean5b-F (owner 04:0x): wall_h banned; EV targets fairness-eligible only; reward term from the logger
+        if (run != 'clean5b' or not fair.get('reward') or not fair.get('ev_filter')
+                or fair.get('solo_variants') != ['wall_g']):
+            raise ValueError('clean5b-F needs the registered fair slot (reward + ev_filter, wall_g solos only)')
+        out['fair'] = dict(rule=fair['rule'], threshold_s=fair['threshold_s'], parity=sorted(_fe.FAIR_PARITY))
     base = cfg['newmap']['base']
     if (frozen_trunk.file_sha256(base['trunk']) != base['trunk_sha256'] or cfg['checkpoint'] != base['trunk']
             or frozen_trunk.check_process(cfg) is not None):
@@ -270,8 +278,10 @@ def validate_clean5a(cfg, updates, fixes=None):
             # programs are never BC/EV targets: every fitted record is an EV-BC solo-hold record
             ev_rec = fit.get('ev_bc') or {}
             fams = list(ev_rec.get('families') or [])
+            ok_family = ((lambda f: f in _fe.FAIR_PARITY) if fair is not None
+                         else (lambda f: __import__('re').fullmatch(r'wall_[gh]_solo[0-2]', f) is not None))
             if (fit.get('bank') not in (None, {}) or fit.get('records', 0) != ev_rec.get('records', 0)
-                    or any(not __import__('re').fullmatch(r'wall_[gh]_solo[0-2]', f) for f in fams)):
+                    or any(not ok_family(f) for f in fams)):
                 raise ValueError('clean5b BC/EV targets must be solo holds only (no program BC): '+arm)
     if cfg.get('imitation_epochs') != c5.IMITATION_EPOCHS:
         raise ValueError(f'clean5a registered imitation epochs = {c5.IMITATION_EPOCHS}')
@@ -291,6 +301,19 @@ def validate_clean5a(cfg, updates, fixes=None):
         if (learning['bank'].get('pairs_total', 0) or learning['bank'].get('optimizer_steps', 0)
                 or learning['bank_trigger'].get('contexts')):
             raise ValueError('legacy bank imitation must be OFF in clean5a: '+arm)
+    if fair is not None:
+        # the fairness reward read REAL logger output: A wrote its group file, B/R attached groups and were penalised
+        a_log = arms['A'].get('fair_vehicle_log') or {}
+        if not a_log.get('worlds') or not Path(a_log.get('path', '/nonexistent')).is_file():
+            raise ValueError('clean5b-F: A per-vehicle group summaries missing in the smoke')
+        out['fair']['A_worlds'] = a_log['worlds']
+        for arm in ('B', 'R'):
+            log = arms[arm].get('fair_vehicle_log') or {}
+            receipt = arms[arm]['learning'].get('fullpol_fair') or {}
+            if not log.get('episodes') or receipt.get('rule') != fullpol_fair.RULE or not receipt.get('episodes'):
+                raise ValueError('clean5b-F: fairness reward receipt from logger output required: '+arm)
+            out['fair'][arm] = dict(episodes=log['episodes'], unpaired=log['unpaired'],
+                                    harm_veh_s=receipt.get('total_harm_veh_s'))
     ppo = arms['A']['learning'].get('ppo') or {}
     if ppo.get('status') != 'frozen_base_no_update':
         raise ValueError('A must be the frozen base evaluation arm (no PPO)')

@@ -160,3 +160,30 @@ def test_wave_admission_memory_floor(monkeypatch):
     for bad in (7, 161, 30.0):
         with pytest.raises(ValueError):
             runner.admission(dict(load_max=40, mem_available_min_gb=bad))
+
+
+def test_clean5b_f_keys_fair_slot_guidance_and_registered_no_guidance_cell(cfg, wz):
+    """clean5b-F exact keys on the REAL MULTICRIT guidance (confirm + taskb + D3200_p40): wall_g-only fair slot,
+    fairness-eligible parity, pin ON, G4 = 5a families; D2400_p40 (no rows) is the registered no-guidance cell."""
+    from pathlib import Path
+    m = Path('E:/research-dense/runs/active/C4-V7FT-20261017/multicrit')
+    files = [m/'confirm'/'MULTICRIT_confirm.json', m/'MULTICRIT_taskb.json', m/'p40'/'MULTICRIT_confirm.json']
+    if not all(f.is_file() for f in files):
+        pytest.skip('MULTICRIT files are on the checkout host only')
+    from . import fullpol_fair as ff
+    g = ff.build_guidance([str(f) for f in files], provenance='test')
+    k = c4.levers(dict(cfg, trigger_candidates=8, trigger_partner_slots=4), lane_drop_keys={}, v2v_keys={},
+                  w2_keys={})
+    k.update(c5b.keys_f(desc=wz, guidance_doc=g, provenance='test'))
+    ev = fe.settings(k)
+    assert ev['fair']['solo_variants'] == ['wall_g'] and ev['fair']['reward'] and ev['hold_lane_pin'] is True
+    assert sorted(ev['parity_families']) == sorted(fe.FAIR_PARITY)
+    assert k['g4_extension']['families'] == sorted(c5.G4_FAMILIES) and lf.settings(k)['propose']
+    fair = {(r['regime'], r['family']) for r in g['rows'] if r['fair']}
+    assert ('D3200_p40', 'wall_g_solo2') not in fair and ('D3200_p40', 'wall_g_duo12') in fair
+    assert ('D3200_p40', 'wall_g_solo2_gate0') in fair
+    out = c5.check_guidance(k, c5b.F_NO_GUIDANCE_CELLS)
+    assert out['no_guidance_cells'] == ['D2400_p40']
+    with pytest.raises(ValueError, match='every training cell'):
+        c5.check_guidance(k)
+    assert set(c5b.VARIANT_F) == set(c5.VARIANT) and c5b.VARIANT_F['quote_file'] == 'CLEAN5BF_QUOTE.json'

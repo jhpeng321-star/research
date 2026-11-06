@@ -149,6 +149,10 @@ def update(cfg, arm, u, *, smoke=False):
     write(artifacts/f'updates/{arm}_{u:03}_STARTED.json', started)
     hooks = p1.build_arm_runtime(native, arm)
     episodes = hooks['collect_update']()
+    # clean5b-F (fair reward ON only): A writes fair/A_GROUPS_uNNN.json + labels BEFORE B/R train (B waits for
+    # A_UPDATE); B/R attach vehicle_groups from A's labels (same world, by vehicle id); fail closed when missing.
+    from .fair_vehicle_log import update_step as fair_update_step
+    fair_log = fair_update_step(native, arm, u, episodes)
     # Actual TTC events use the same public observable tape reader as prior runs.
     from .replay_bank import ttc_events
     for episode in episodes:
@@ -182,6 +186,8 @@ def update(cfg, arm, u, *, smoke=False):
     if ('clean3_budget' in cfg or 'clean4_budget' in cfg) and cfg.get('mined_moves') and arm != 'A':
         from .clean3_mined import usage
         extra['clean3_mined_usage'] = usage(native, arm, episodes, learning, artifacts)
+    if fair_log is not None:
+        extra['fair_vehicle_log'] = fair_log     # clean5b-F receipt (A: groups file; B/R: paired/unpaired counts)
     value = _seal(dict(**started, finished_unix=time.time(), checkpoint=checkpoint,
         checkpoint_sha256=rc.sha(checkpoint), practice=update_report(episodes),
         safety=safety, learning=learning, metrics=metrics,

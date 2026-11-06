@@ -66,8 +66,43 @@ VARIANT = dict(run=RUN, quote_file=QUOTE_FILE, approval_file=APPROVAL_FILE, budg
                                  hold_lane_pin='ON (MAIN 2026-11-07; FULLPOL 5cbd616e): '+HOLD_LANE_PIN_NOTE,
                                  practice_offer_note='practice_offer ON (0.5); no exact-plan demonstration slots in '
                                  'clean5b (no templates, EV-BC only), so it is inert - disclosed'),
-               requires_lc_runtime=True, authority=AUTHORITY)
+               requires_lc_runtime=True, authority=AUTHORITY, guidance_missing_ok=())
 
 
 def prepare(source, *, root=ROOT, **kwargs):
     return c5.prepare(source, root=root, variant=VARIANT, **kwargs)
+
+
+# ---------------------------------------------------------------- clean5b-F (owner REGISTRATION 04:0x / 04:2x)
+
+F_ROOT = '/home/ubuntu/coopmwm20261107_clean5bf'
+F_QUOTE_FILE = 'CLEAN5BF_QUOTE.json'
+F_NO_GUIDANCE_CELLS = ('D2400_p40',)    # no MULTICRIT rows: no EV-BC target there (registered, disclosed)
+F_DESIGN = DESIGN+(' clean5b-F: the firm 15 m/s hold (wall_h) is banned as guidance and never offered; EV-BC targets '
+                   '= fairness-eligible strategies only (every origin-lane/class group within +10 s/veh vs u0: '
+                   'wall_g_solo2 / wall_g_solo2_gate0 / wall_g_duo12); fairness reward term (excess group harm vs '
+                   'the frozen A arm on the same world beyond 10 s/veh, one-for-one veh-s, B = R) from the eval-only '
+                   'per-vehicle logger (N6 port, fair_vehicle_log).')
+F_AUTHORITY = AUTHORITY+('; owner REGISTRATION 2026-11-07 04:0x (clean5b-F fairness) + 04:2x (group label = A-arm origin '
+                         'lane/class by vehicle id); CLEAN5BF_QUOTE covered re-quote of 1bb292e1')
+
+
+def keys_f(*, desc, guidance_doc, provenance):
+    """clean5b keys with FULLPOL's fairness slot (with_fairness: fair slot, fair guidance, parity, pin ON)."""
+    from . import fullpol_ev
+    out = c5.keys(desc=desc, guidance_doc=guidance_doc, provenance=provenance)
+    out.update(fullpol_ev.with_fairness(
+        fullpol_ev.recommended_5b(provenance=provenance, regime_guidance=guidance_doc, cap=LC_CAP, templates=[]),
+        regime_guidance=guidance_doc))
+    return out
+
+
+VARIANT_F = dict(VARIANT, quote_file=F_QUOTE_FILE, keys=keys_f, design=F_DESIGN, authority=F_AUTHORITY,
+                 guidance_missing_ok=F_NO_GUIDANCE_CELLS,
+                 newmap_extra=dict(VARIANT['newmap_extra'], variant='clean5b-F',
+                                   fairness='EV targets fairness-eligible only; reward term vs frozen A; wall_h banned',
+                                   no_guidance_cells=list(F_NO_GUIDANCE_CELLS)))
+
+
+def prepare_f(source, *, root=F_ROOT, **kwargs):
+    return c5.prepare(source, root=root, variant=VARIANT_F, **kwargs)

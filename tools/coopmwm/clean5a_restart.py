@@ -77,7 +77,7 @@ def host_receipt(host):
                 inventory_sha256=setup['inventory_sha256'])
 
 
-def check_guidance(cfg):
+def check_guidance(cfg, missing_ok=()):
     """FAIRAUDIT: ASSERT (not just record) the guidance sources - FULLPOL EV-BC on, regime guidance doc with
     SHA-cited sources, rows for arm B only (R = the no-guidance arm), no verified bank rows."""
     from . import fullpol_ev, fullpol_learn
@@ -96,7 +96,7 @@ def check_guidance(cfg):
     if not rows or any(r.get('arm') != 'B' for r in rows):
         raise ValueError('clean5a guidance rows must exist and be arm B only (R = no-guidance arm)')
     regimes = sorted({r['regime'] for r in rows})
-    missing = sorted(set(CELL_KEYS)-set(regimes))
+    missing = sorted(set(CELL_KEYS)-set(regimes)-set(missing_ok))
     if missing:
         raise ValueError('clean5a guidance must cover every training cell: missing '+repr(missing))
     mappo_cells = sorted({r['regime'] for r in rows if r.get('baseline') == 'mappo'})
@@ -104,7 +104,8 @@ def check_guidance(cfg):
         raise ValueError('clean5a has no verified bank/mined guidance rows')
     return dict(rows=len(rows), table_sha256=source['sha256'], regimes=regimes, mappo_relative_cells=mappo_cells,
                 native_fallback_cells=sorted(set(regimes)-set(mappo_cells)),
-                sources=[dict(name=s.get('name'), sha256=s['sha256'], baseline=s.get('baseline')) for s in sources])
+                sources=[dict(name=s.get('name'), sha256=s['sha256'], baseline=s.get('baseline')) for s in sources],
+                **({'no_guidance_cells': sorted(set(missing_ok)-set(regimes))} if missing_ok else {}))
 
 
 def keys(*, desc, guidance_doc, provenance):
@@ -126,7 +127,7 @@ def keys(*, desc, guidance_doc, provenance):
 
 VARIANT = dict(run=RUN, quote_file=QUOTE_FILE, approval_file='BUDGET_CLEAN4.json', budget_file='CLEAN5A_BUDGET.json',
                design=DESIGN, approved=c4.APPROVED, budget_rule=None, keys=None, cfg_overrides={}, newmap_extra={},
-               requires_lc_runtime=False, authority=None)
+               requires_lc_runtime=False, authority=None, guidance_missing_ok=())
 
 
 def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtime_sim_s, host, provenance,
@@ -200,7 +201,7 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
         raise ValueError('owner symmetric augmentation-OFF design required')
     if not ev_only(cfg):
         raise ValueError('clean5a requires the registered EV-only guidance mode')
-    guidance = check_guidance(cfg)
+    guidance = check_guidance(cfg, v['guidance_missing_ok'])
     rc.check_pins(cfg)
     budget = c4.budget(quote_doc=quote_doc, approval=approval, prior_runtime_sim_s=prior_runtime_sim_s,
                        approved=v['approved'], rule=v['budget_rule'])

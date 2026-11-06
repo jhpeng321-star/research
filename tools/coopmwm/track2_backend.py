@@ -1104,6 +1104,9 @@ class ArmRuntime:
                 references = safety_reference([read(_path(Path(cfg['run_root'])/'jobs'/
                     f'{ident}_A_{w["seed"]}'/'RESULT.json')) for w in worlds])
             extras['safety_reference'] = references
+        from .fair_vehicle_log import enabled as fair_log_enabled
+        if fair_log_enabled(cfg):
+            extras['vehicle_log'] = True    # clean5b-F: eval-only per-vehicle ground-truth log (A, B and R)
         policies = {arm: self.base}
         from . import practice_starts as ps
         from .practice_weighting import effective_fraction

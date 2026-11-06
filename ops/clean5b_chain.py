@@ -84,6 +84,11 @@ class Chain:
         from tools.coopmwm.clean5b_restart import ROOT
         self.root = Path(self.inputs.get('root', ROOT))
         self.serial = 0
+        # clean5b-F (owner 04:0x): PREPARE_INPUTS variant 'F' -> clean5b_restart.prepare_f + CLEAN5BF_QUOTE.json
+        self.variant = self.inputs.get('variant')
+        if self.variant not in (None, 'F'):
+            raise ValueError('unknown clean5b variant')
+        self.quote_file = 'CLEAN5BF_QUOTE.json' if self.variant == 'F' else 'CLEAN5B_QUOTE.json'
 
     def status(self, step, state, detail=None):
         self.serial += 1
@@ -122,20 +127,20 @@ class Chain:
 
     def budget(self):
         from tools.coopmwm import clean4_budget as b
-        quote, approval = read(self.control/'CLEAN5B_QUOTE.json'), read(self.control/'BUDGET_CLEAN5B.json')
+        quote, approval = read(self.control/self.quote_file), read(self.control/'BUDGET_CLEAN5B.json')
         return b.approved(approval, quote)
 
     def prepare(self):
         from tools.coopmwm import clean5b_restart as c5
         i = self.inputs
-        c5.prepare(self.source, contexts=read(i['contexts_path']), guidance_doc=read(i['guidance_path']),
-                   quote_doc=read(self.control/'CLEAN5B_QUOTE.json'), approval=read(self.control/'BUDGET_CLEAN5B.json'),
+        (c5.prepare_f if self.variant == 'F' else c5.prepare)(self.source, contexts=read(i['contexts_path']), guidance_doc=read(i['guidance_path']),
+                   quote_doc=read(self.control/self.quote_file), approval=read(self.control/'BUDGET_CLEAN5B.json'),
                    prior_runtime_sim_s=i['prior_runtime_sim_s'], host=i['host'], provenance=i['provenance'],
                    root=self.root)
         (self.root/'chain').symlink_to(self.control, target_is_directory=True)
         with (self.root/'AUTHORITY.md').open('a', encoding='utf-8') as f:
             f.write(chr(10)+'clean5b chain: qualification -> budget binding (CLEAN5B_QUOTE '
-                    +read(self.control/'CLEAN5B_QUOTE.json')['receipt_sha256']
+                    +read(self.control/self.quote_file)['receipt_sha256']
                     +') -> prepare -> smoke (all components, hard-coded receipts) -> one 0-collision/0-teleport gate -> '
                     'u1-u24 coverage -> A(frozen)/B/R u0 x24 + monitor. Any failure stops; no automatic retry.'+chr(10))
         return read(self.root/'PREPARED.json')
