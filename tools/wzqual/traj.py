@@ -90,10 +90,16 @@ class Traj:
 
     def first_seen(self) -> np.ndarray:
         """Per vehicle: time of its first row (NaN if never present)."""
-        out = np.full(len(self.ids), np.nan)
+        return self.first_rows()[0]
+
+    def first_rows(self) -> tuple:
+        """Per vehicle: (time, WM lane) of its first row (NaN / -1 if never present)."""
+        t = np.full(len(self.ids), np.nan)
+        ln = np.full(len(self.ids), -1, np.int64)
         rev = np.arange(len(self.step))[::-1]
-        out[self.vid[rev]] = self.time_s[self.step[rev]]
-        return out
+        t[self.vid[rev]] = self.time_s[self.step[rev]]
+        ln[self.vid[rev]] = self.lane[rev]
+        return t, ln
 
 
 # ---------------------------------------------------------------------- loaders
@@ -213,6 +219,18 @@ class StartState:
     entry_times_s: np.ndarray
     backlog_t0: float
     meta: dict
+    entry_lanes: np.ndarray = None
+
+    def counter(self, *, bins: int = 30, bin_s: float = 10.0) -> np.ndarray:
+        """Entrance counter [2, bins] at t0 (bin 0 newest; entrance 1 = closing-lane insertions),
+        the WM pack ``counter`` definition (wms.data.c4_episodes.episode_counter)."""
+        out = np.zeros((2, bins), np.float32)
+        lanes = self.entry_lanes if self.entry_lanes is not None else np.zeros(len(self.entry_times_s), int)
+        for t, ln in zip(self.entry_times_s, lanes):
+            age = self.t0 - float(t)
+            if 0.0 <= age < bins * bin_s:
+                out[1 if int(ln) == F.CLOSING_LANE else 0, int(age // bin_s)] += 1.0
+        return out
 
     @property
     def key(self) -> str:
@@ -223,7 +241,7 @@ def start_state(traj: Traj, t0: float, *, history_s: float = 120.0) -> StartStat
     k = traj.step_at(t0)
     hist = traj.window(max(float(traj.time_s[0]), t0 - history_s), t0)
     upto = traj.window(float(traj.time_s[0]), t0)
-    entries = upto.first_seen()
+    entries, entry_lane = upto.first_rows()
     seed = int(traj.meta.get("seed", -1))
     demand = traj.meta.get("demand")
     if isinstance(demand, Mapping):
@@ -231,7 +249,9 @@ def start_state(traj: Traj, t0: float, *, history_s: float = 120.0) -> StartStat
     cell = traj.meta.get("cell") or (F.cell_key(demand, traj.meta.get("penetration"))
                                      if demand is not None else "unknown")
     backlog = float(traj.backlog[k]) if traj.backlog is not None else float("nan")
+    order = np.argsort(entries[np.isfinite(entries)], kind="mergesort")
     return StartState(world=f"{seed}:{cell}", seed=seed, cell=str(cell), t0=float(t0),
                       frame=traj.frame(k), history=hist,
-                      entry_times_s=np.sort(entries[np.isfinite(entries)]), backlog_t0=backlog,
-                      meta=dict(traj.meta))
+                      entry_times_s=entries[np.isfinite(entries)][order],
+                      backlog_t0=backlog, meta=dict(traj.meta),
+                      entry_lanes=entry_lane[np.isfinite(entries)][order])

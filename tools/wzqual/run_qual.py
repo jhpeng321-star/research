@@ -145,8 +145,18 @@ def make_backend(args):
         return KeepSpeedBackend()
     if args.backend == "wm":
         from .wm_backend import WmBackend
-        return WmBackend(args.checkpoint, device=args.device)
+        return WmBackend(args.checkpoint, device=args.device, map_spec=args.map_spec,
+                         physics_toml=args.physics_toml)
     raise SystemExit(f"unknown backend {args.backend}")
+
+
+def make_secondary(name, args):
+    """Secondary action-response backends (amendment 1; never gating)."""
+    if name in ("planapi_proposer", "planapi_full"):
+        from .planapi_backend import PlanApiBackend
+        return PlanApiBackend(args.checkpoint, device=args.device, map_spec=args.map_spec,
+                              observability=name.split("_", 1)[1])
+    raise SystemExit(f"unknown secondary backend {name}")
 
 
 def check_contract(start, trajs: dict) -> list:
@@ -171,7 +181,11 @@ def distributional(tapes, backend, ks, rule, args, log) -> tuple[list, list, lis
     records, car_wm, car_ks, traffic_wm = [], [], [], []
     issues = []
     n = 0
-    for world, tr in sorted(tapes.items()):
+    worlds = sorted(tapes.items())
+    if getattr(args, "start_shard", None):
+        i, n = (int(x) for x in args.start_shard.split("/"))
+        worlds = worlds[i::n]
+    for world, tr in worlds:
         t_end = float(tr.time_s[-1])
         t0 = 300.0
         while t0 + HORIZON <= t_end + 1e-6:
@@ -230,6 +244,9 @@ def action_rows(cands, tapes, backend, args, log) -> tuple[list, dict]:
     moments = sorted(by_moment)
     if args.max_moments:
         moments = moments[: args.max_moments]
+    if getattr(args, "moment_shard", None):
+        i, n = (int(x) for x in args.moment_shard.split("/"))
+        moments = moments[i::n]
     for i, mom in enumerate(moments):
         group = by_moment[mom]
         cov["n_T"] += len(group)
@@ -257,11 +274,16 @@ def action_rows(cands, tapes, backend, args, log) -> tuple[list, dict]:
                     continue
                 arms[f"{c.cid}::{name}"] = members
         seed = int(hashlib.sha256(f"wzqual:{mom}".encode()).hexdigest()[:8], 16)
-        pred = backend.rollout(st, arms, horizon_s=HORIZON, n_samples=args.samples, seed=seed)
-        mode = j_mode(backend, pred["base"])
-        jb = np.asarray([pred_J(p, st.t0, st.frame["ids"], mode) for p in pred["base"]])
+        if hasattr(backend, "evaluate_J"):
+            jd = backend.evaluate_J(st, arms, horizon_s=HORIZON, n_samples=args.samples, seed=seed)
+            mode = "backend_J"
+        else:
+            pred = backend.rollout(st, arms, horizon_s=HORIZON, n_samples=args.samples, seed=seed)
+            mode = j_mode(backend, pred["base"])
+            jd = {k: np.asarray([pred_J(p, st.t0, st.frame["ids"], mode) for p in v]) for k, v in pred.items()}
+        jb = jd["base"]
         for c in ok:
-            jg = np.asarray([pred_J(p, st.t0, st.frame["ids"], mode) for p in pred[f"{c.cid}::group"]])
+            jg = jd[f"{c.cid}::group"]
             row = dict(cid=c.cid, moment=mom, seed=c.seed, cell=c.cell, family=c.family, arm=c.arm,
                        T_true=c.T, S_true=c.S, S_lb_true=c.S_lb, admitted=c.admitted,
                        members_live_t0=all(x in live for x in c.member_ids),
@@ -269,8 +291,7 @@ def action_rows(cands, tapes, backend, args, log) -> tuple[list, dict]:
                        J_mode=mode)
             solo_names = [k for k in arms if k.startswith(f"{c.cid}::solo:")]
             if c.S is not None and solo_names:
-                js = np.stack([[pred_J(p, st.t0, st.frame["ids"], mode) for p in pred[k]]
-                               for k in solo_names])
+                js = np.stack([jd[k] for k in solo_names])
                 row["pred_S"] = float(np.mean(js.min(0) - jg))
             elif c.S is not None and len(c.members) == 1:
                 row["pred_S"] = 0.0
@@ -332,6 +353,13 @@ def main(argv=None) -> int:
     ap.add_argument("--skip-distributional", action="store_true")
     ap.add_argument("--skip-action", action="store_true")
     ap.add_argument("--device", default="cpu")
+    ap.add_argument("--map-spec", default=None, help="wz3to2 MAP_SPEC.json (binds the WM road)")
+    ap.add_argument("--physics-toml", default=None,
+                    help="training TOML whose build_physics() replaces a missing physics.json")
+    ap.add_argument("--secondary", action="append", default=[],
+                    help="secondary action-response backend(s): planapi_proposer, planapi_full")
+    ap.add_argument("--moment-shard", default=None, help="i/n: score moments i::n only (parallel)")
+    ap.add_argument("--start-shard", default=None, help="i/n: distributional worlds i::n only")
     args = ap.parse_args(argv)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=False)
@@ -364,7 +392,10 @@ def main(argv=None) -> int:
     if args.samples is None:
         args.samples = spec["samples_per_start"]["stochastic" if backend.stochastic else "deterministic"]
     metrics = dict(gate_spec_sha256=spec_sha, backend=backend.name, samples=args.samples,
-                   checkpoint=args.checkpoint, breakdown_rule=rule.record())
+                   checkpoint=args.checkpoint, breakdown_rule=rule.record(),
+                   checkpoint_sha256=getattr(backend, "checkpoint_sha256", None),
+                   physics_source=getattr(backend, "physics_source", None),
+                   shards=dict(moments=args.moment_shard, starts=args.start_shard))
     contract_issues = []
     if not args.skip_distributional:
         records, (car_wm, car_ks, traffic_wm), issues = distributional(tapes, backend, ks, rule, args, log)
@@ -384,10 +415,20 @@ def main(argv=None) -> int:
                 raise SystemExit(f"I5: restricted label seed {c.seed}")
         rows, cov = action_rows(cands, tapes, backend, args, log)
         ks_rows, _ = action_rows(cands, tapes, ks, argparse.Namespace(**{**vars(args), "samples": 1}), log)
-        write_json(out / "ACTION_ROWS.json", dict(wm=rows, keep_speed=ks_rows))
+        sec = {}
+        for name in args.secondary:
+            sb = make_secondary(name, args)
+            sr, scov = action_rows(cands, tapes, sb, args, log)
+            sec[name] = dict(rows=sr, coverage=scov)
+        write_json(out / "ACTION_ROWS.json", dict(wm=rows, keep_speed=ks_rows,
+                                                   secondary={k: v["rows"] for k, v in sec.items()}))
         metrics["role_coverage"] = cov
         from .ranking import action_response
         metrics["action_response"] = action_response(rows, ks_rows=ks_rows)
+        if sec:
+            metrics["secondary_action_response"] = {
+                k: dict(coverage=v["coverage"], metrics=action_response(v["rows"], ks_rows=ks_rows))
+                for k, v in sec.items()}
     integrity["I4_backend_contract"] = not contract_issues and getattr(backend, "closed_loop", True)
     metrics["contract_issues"] = contract_issues[:50]
     metrics["integrity"] = integrity
@@ -400,5 +441,74 @@ def main(argv=None) -> int:
     return 0
 
 
+
+
+# ------------------------------------------------------------------------ shard merge
+def merge_main(argv=None) -> int:
+    """``python -m tools.wzqual.run_qual merge --out FINAL --shards DIR ...``: recompute every metric
+    and the gate from the shards' raw records (rule, backend and checkpoint must agree)."""
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--shards", nargs="+", required=True)
+    args = ap.parse_args(argv)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=False)
+    spec, spec_sha = G.load_spec()
+    docs = [json.loads((Path(d) / "WM_QUAL_METRICS.json").read_text()) for d in args.shards]
+    keys = ("gate_spec_sha256", "backend", "checkpoint_sha256", "samples")
+    for k in keys:
+        if len({json.dumps(d.get(k)) for d in docs}) != 1:
+            raise SystemExit(f"shards disagree on {k}")
+    if len({d["breakdown_rule"]["sha256"] for d in docs}) != 1:
+        raise SystemExit("shards disagree on the breakdown rule")
+    rule = BD.BreakdownRule(**{k: v for k, v in docs[0]["breakdown_rule"].items() if k != "sha256"})
+    records, rows, ks_rows, sec = [], [], [], {}
+    for d in args.shards:
+        p = Path(d) / "DIST_RECORDS.json"
+        if p.exists():
+            records += json.loads(p.read_text())
+        a = Path(d) / "ACTION_ROWS.json"
+        if a.exists():
+            doc = json.loads(a.read_text())
+            rows += doc["wm"]
+            ks_rows += doc["keep_speed"]
+            for k, v in (doc.get("secondary") or {}).items():
+                sec.setdefault(k, []).extend(v)
+    metrics = {k: docs[0].get(k) for k in keys + ("checkpoint", "physics_source", "breakdown_rule")}
+    metrics["merged_from"] = list(args.shards)
+    metrics["integrity"] = {k: all(d.get("integrity", {}).get(k) is True for d in docs)
+                            for k in docs[0].get("integrity", {})}
+    metrics["contract_issues"] = [x for d in docs for x in d.get("contract_issues", [])][:50]
+    if records:
+        metrics["distributional"] = distributional_metrics(records, rule)
+        metrics["distributional"]["backend_models_entries"] = all(
+            d.get("distributional", {}).get("backend_models_entries", False) for d in docs if "distributional" in d)
+        cars = [d["secondary_errors"] for d in docs if "secondary_errors" in d]
+        metrics["secondary_errors"] = dict(per_shard=cars, note="per-shard pooled summaries (merge = list)")
+    if rows:
+        from .ranking import action_response
+        covs = [d["role_coverage"] for d in docs if "role_coverage" in d]
+        cov = {k: sum(c[k] for c in covs) for k in ("n_T", "n_supported", "n_no_tape", "n_no_spec")}
+        cov["fraction_T_candidates_supported"] = cov["n_supported"] / max(cov["n_T"], 1)
+        cov["supported_roles"] = covs[0]["supported_roles"]
+        metrics["role_coverage"] = cov
+        metrics["action_response"] = action_response(rows, ks_rows=ks_rows)
+        if sec:
+            metrics["secondary_action_response"] = {k: dict(metrics=action_response(v, ks_rows=ks_rows))
+                                                    for k, v in sec.items()}
+        write_json(out / "ACTION_ROWS.json", dict(wm=rows, keep_speed=ks_rows, secondary=sec))
+    if records:
+        write_json(out / "DIST_RECORDS.json", records)
+    msha = write_json(out / "WM_QUAL_METRICS.json", metrics)
+    verdict = G.evaluate(_jsonable(metrics), spec)
+    verdict.update(metrics_sha256=msha, gate_spec_sha256=spec_sha, backend=metrics["backend"],
+                   checkpoint=metrics.get("checkpoint"))
+    write_json(out / "GATE_VERDICT.json", verdict)
+    print("VERDICT", verdict["verdict"])
+    return 0
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "merge":
+        sys.exit(merge_main(sys.argv[2:]))
     sys.exit(main())
