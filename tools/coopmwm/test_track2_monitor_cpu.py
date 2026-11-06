@@ -723,3 +723,14 @@ def test_missing_legacy_total_benefit_is_unmeasured_never_zero_imputed():
     reports = monitor._metric_reports([dict(arm='B', metric=0.)])
     assert reports[monitor.TOTAL_BENEFIT]['arm_means'] == {}
     assert reports[monitor.SYNERGY]['arm_means'] == dict(B=0.)
+
+
+def test_bank_move_ce_unmeasured_only_with_zero_bank_examples():
+    """clean5a (EV-only) / clean4 R zero-guidance: no verified bank examples -> bank CE None is valid;
+    with examples (or the field absent, inherited runs) a missing bank CE still refuses."""
+    on = dict(group_credit=dict(enabled=True), dense_teacher=dict(enabled=True))
+    comps = monitor._components(on)
+    monitor.checked_metrics('B', metrics(bank_move_ce=None, bank_move_examples=0), comps)
+    for bad in (metrics(bank_move_ce=None, bank_move_examples=3), metrics(bank_move_ce=None)):
+        with pytest.raises(ValueError, match='bank_move_ce'):
+            monitor.checked_metrics('B', bad, comps)
