@@ -1,89 +1,71 @@
 {
- "adapters": {
-  "builder": "provisional_builder, plan.origin=clean4_provisional_speed_target: N2 lane_drop.LaneDropMove refuses all five frozen variants (registered hold 20-90 s, depth <= 1.0, release 30 m before the drop); verified by calling it. The N3 law is applied open loop on the seed-1 policy reference.",
-  "geometry": "DescriptorGeometry(map_descriptor.current()): WM lane 2 closing -> N3 lane 0, WM 1 -> 1, WM 0 -> 2; x = s - drop_s + 2696 (zone s in [drop_s-1800, drop_s-400]); verified on the registered N1 wz3to2 descriptor (up_0 x=2196 -> WM 2 s=-424.56 -> N3 lane 0 x=2196)",
-  "n9": "FAMILY_BUILDERS registry empty: pending_n9 moves never run and become excluded_n9_deadline once every executable move has an outcome",
-  "runtime": "Wz3to2Runtime: job_fields (mining collect2 job) + production_env (COOPMWM_MAP_SPEC must select the world map via map_descriptor.for_world; COOPMWM_G5_RUNTIME=1) + map_runtime.guard_world; accel_plant.bind_runtime installs the map; SubprocessBranchRunner workers inherit COOPMWM_MAP_SPEC / COOPMWM_G5_RUNTIME and C4NM_V2V (bank_v2v.enabled around every verification)"
- },
  "branch": "c4/nm-verify",
  "caveats": [
-  "collection samples the u0 residual (deterministic=False, mining convention) because the sv.verify branch controller always samples after t0 under CRN; --deterministic is available but makes the recorded policy reference differ from the policy-continues branch",
-  "windows follow the coopmwm convention (t0+D+120; extended later harm t0+D+600, capped at 1200), not the N3 fixed 300 s; never shortened below sv.TAIL_S",
-  "robust share in POTENTIAL_INPUTS is conditional on earlier N3/PLANGEN admission (frozen moves only)",
-  "group_lane_bank.binding accepts wz3to2 rows only in a process bound to wz3to2 (nm-train predicate)",
-  "OFF family names include platoon/vsl_rows as the COOPKINDS row names of platoon_headway/harmonize_rows"
+  "collection samples the u0 residual (branches sample after t0 under CRN); --deterministic exists",
+  "windows follow sv.verify (t0+D+120, extended t0+D+600); D = last N2 release second",
+  "OBS_TABLES lane_drop_features = not_available (needs SensorReport packets, not rows)",
+  "contexts uses the seed-1 screen receipt + move decision snapshot for every run move (no outcome filter)"
  ],
- "commit": "855fb00e35a89577f3cb3486850049e43cb065d8",
+ "commit": "93e304a9e4d5294144b3ceb45806d185e8227c42",
  "cpuv_run": {
   "commands": [
    "nice -n 19 python -m tools.coopmwm.clean4_verify init --root $R --cap 400000 --base frozen_u0",
-   "nice -n 19 python -m tools.coopmwm.clean4_verify freeze --root $R --sources $IN/NEWMAP_MOVES_B.jsonl $IN/PLANGEN_MOVES_B.jsonl $IN/PLANGEN2_MOVES_B.jsonl $IN/COOPKINDS_MOVES_B.jsonl $IN/LOWCAV_MOVES_B.jsonl $IN/NEWMAP_MOVES_R.jsonl $IN/PLANGEN_MOVES_R.jsonl $IN/PLANGEN2_MOVES_R.jsonl $IN/COOPKINDS_MOVES_R.jsonl",
-   "nice -n 19 python -m tools.coopmwm.clean4_verify status --root $R      # runnable_unstarted = the 26 executable move ids",
+   "nice -n 19 python -m tools.coopmwm.clean4_verify freeze --root $R --sources $IN/PLANGEN_MOVES_B.jsonl $IN/PLANGEN2_MOVES_B.jsonl $IN/NEWMAP_MOVES_B.jsonl $IN/COOPKINDS_MOVES_B.jsonl $IN/LOWCAV_MOVES_B.jsonl $IN/PLANGEN_MOVES_R.jsonl $IN/PLANGEN2_MOVES_R.jsonl $IN/NEWMAP_MOVES_R.jsonl $IN/COOPKINDS_MOVES_R.jsonl",
+   "nice -n 19 python -m tools.coopmwm.clean4_verify status --root $R",
    "nice -n 19 python -m tools.coopmwm.clean4_verify collect --root $R --arm B --weights $U0 --from-moves [--ident c4v_B_<cell>_s<seed>] --runtime /home/ubuntu/e3final --checkpoint /home/ubuntu/mappospeed/production2/policy_00169.pt",
-   "nice -n 19 python -m tools.coopmwm.clean4_verify collect --root $R --arm R --weights $U0 --from-moves [--ident c4v_R_<cell>_s<seed>] --runtime /home/ubuntu/e3final --checkpoint /home/ubuntu/mappospeed/production2/policy_00169.pt",
-   "nice -n 19 python -m tools.coopmwm.clean4_verify verify --root $R --move <MOVE_ID> --workers 8 --seeds 3     # fan-out: ~6 processes x 8 workers",
-   "nice -n 19 python -m tools.coopmwm.clean4_verify verify --root $R --next --count 26 --workers 8      # sequential alternative",
-   "nice -n 19 python -m tools.coopmwm.clean4_verify quote --root $R --next",
-   "nice -n 19 python -m tools.coopmwm.clean4_verify extract --root $R --range-m 200 --cell D3200_p60",
-   "touch $R/STOP   # halts new collects/screens/confirmation stages"
+   "nice -n 19 python -m tools.coopmwm.clean4_verify verify --root $R --move <MOVE_ID> --workers 8 --seeds 3   # fan-out, one move per process",
+   "nice -n 19 python -m tools.coopmwm.clean4_verify status --root $R --arm B --done      # exit 3 until every B run-list move finished",
+   "nice -n 19 python -m tools.coopmwm.clean4_verify contexts --root $R --arm B --out $R/CONTEXTS_B.json   # for clean4_restart",
+   "nice -n 19 python -m tools.coopmwm.clean4_verify extract --root $R --cell D3200_p60    # --range-m defaults to 100 (MAIN V2V range)"
   ],
-  "concurrency": "ledger + results appends + bank snapshot under fcntl locks; each move has its own O_EXCL status file (move_status/<index>.json) and screen dir; rb._confirm_charge is rebound per process (one move per process); a move that already started is refused",
   "env": [
    "export COOPMWM_MAP_SPEC=/home/ubuntu/coopmwm20261106_clean4/inputs/map/wz3to2/MAP_SPEC.json",
    "export COOPMWM_G5_RUNTIME=1 CUDA_VISIBLE_DEVICES=",
-   "source tree: same layout/PYTHONPATH as /home/ubuntu/clean4_sanity_src_e512b059 (pytools/tools = this commit tools/, symlinked coopbehav/coopplan/leverprobe/wmteach/__init__.py); cd into it",
-   "R=/home/ubuntu/clean4_prelaunch_verify_855fb00e; IN=<staged move sources>; U0=<the clean3 u0 checkpoint the sanity clean3_u0 arm used (SANITY_PLAN.json)>"
+   "source tree laid out like /home/ubuntu/clean4_sanity_src_e512b059; IN=<staged move sources>; U0=<the clean3 u0 checkpoint of the sanity clean3_u0 arm>; R=/home/ubuntu/clean4_prelaunch_verify_93e304a9"
   ],
-  "order": "collect a world (one process per --ident; 1,200 sim-s each, 24 worlds) BEFORE verify --move of its moves; verify --move refuses (without starting the move) while its world is uncollected"
- },
- "dry_freeze_on_current_sources": {
-  "b_executable": 18,
-  "executable": 26,
-  "n_moves": 45,
-  "plangen2": {
-   "B": "8 moves (5 runnable + 3 pending_n9)",
-   "R": "6 moves (3 runnable + 3 pending_n9)"
-  },
-  "r_executable": 8,
-  "status_counts": {
-   "excluded_cell": 7,
-   "excluded_family": 1,
-   "pending": 26,
-   "pending_n9": 11
-  },
-  "worlds": 24
+  "outputs": "CLEAN4_MOVES_B.jsonl, CLEAN4_NEGATIVES.jsonl, CLEAN4_NEGATIVE_FRAMES.jsonl, POTENTIAL_INPUTS.json, OBS_TABLES.jsonl (written during collect), move_status/<index>.json, results/*.jsonl, minebank/bank"
  },
  "files": {
   "tools/coopmwm/clean4_verify.py": {
-   "git_blob": "9f361ba2b6ff23ebf85afce87e9dbdce3ebf8d6e"
+   "git_blob": "c0286b1416fc3486024bf812c45a880b8e5c7642"
   },
   "tools/coopmwm/test_clean4_verify_cpu.py": {
-   "git_blob": "24b90aef84e786d2db0e67c8984d3f8c73374924"
+   "git_blob": "82991c4789b1d519327b6ddecda80324cc97574d"
   }
  },
  "merged": {
   "n1": "c4/nm-abstract b2f30091",
-  "n2": "c4/nm-moves 64825957 (F6 fixed)",
-  "nm_train": "c4/nm-train 5eb22ab4 (map-aware TRAIN predicate, extra TRAIN 989000-989099)"
+  "n2": "c4/nm-moves c7983467 + N2 final 59d8bace (via nm-train)",
+  "nm_train": "c4/nm-train 684fe30c (moves.from_plan fail-closed, smoke asserts, FAIRAUDIT F5)"
  },
- "per_move_quote_sim_s": {
-  "confirmation_upper_bound": "16,740-27,720 per surviving move (assumes admission on all 3 seeds)",
-  "note": "roughly 11-14 worst-case confirmations fit in 400k after all screens; a confirmation the remaining cap cannot cover is refused before dispatch and reported (native.jsonl / move status)",
-  "screen": "policy + group + member solos: 2,640-5,200 per move (t0 450: 2.6-3.8k; t0 800-840: 4.0-5.2k)",
-  "totals": {
-   "collects": 28800,
-   "collects_plus_screens": 130500,
-   "confirm_upper_if_all_26_survive": 556200,
-   "screens_all_26": 101700
-  }
+ "plans": {
+  "builder": "n2_builder -> lane_drop.verified_plan; lane_drop_macro from lane_drop.move_from_mined_row at freeze; moves.from_plan(plan) asserted to return a LaneDropMove for every verified plan",
+  "executed_in_branch": "the sv.verify branch Controller runs plan profiles open loop (plans.acceleration_at); no closed-loop lane-drop executor exists there, so the branch executes the N2 law (lane_drop.member_command) applied second by second on the law speed/position trajectory from the recorded t0 state (base-recorded speeds are not used: the open-loop law on them brakes for the whole hold)"
  },
- "schema": "coopmwm.clean4.nmverify_ready.v2",
- "status": "RUNNABLE (CPU-verified; first SUMO run is the cpuV run)",
- "task": "N4 clean4 Plan A pre-launch re-verification (phase clean4_prelaunch_verify)",
+ "schema": "coopmwm.clean4.nmverify_ready.v3",
+ "scope": {
+  "dry_freeze_current_sources": {
+   "collections_sim_s": 12000,
+   "cut": false,
+   "rows": 45,
+   "run_list": 11,
+   "status_counts": {
+    "excluded: R zero-guidance (option a)": 12,
+    "excluded: effort-matched sources only (FAIRAUDIT F3)": 19,
+    "excluded: no exact executor": 3,
+    "pending": 11
+   },
+   "worlds": 10,
+   "worst_case_sim_s": 294990
+  },
+  "main": "option (a): ONLY B wall/pair moves of PLANGEN_MOVES_B + PLANGEN2_MOVES_B in p40/p60 cells; R rows listed as \"excluded: R zero-guidance (option a)\" with the MAIN fact verbatim; F3/F4 recorded (interleaving moot)"
+ },
+ "status": "RUNNABLE (CPU-verified; first SUMO run = the cpuV run)",
+ "task": "N4 clean4 Plan A pre-launch re-verification, MAIN final scope option (a)",
  "tests": {
-  "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider tools/coopmwm/test_clean4_verify_cpu.py",
-  "physics": "none: fake per-second plant drives the REAL sv.verify / verify_perseed.confirm_all8 / bank_statistics; fake accel_plant episode drives the real Capture hook",
-  "result": "23 passed; with test_clean4_train_world/map_descriptor/map_scenarios/clean4_potential/clean4_budget: 64 passed; ruff clean"
+  "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider tools/coopmwm/test_clean4_verify_cpu.py tools/coopmwm/test_clean4_fairness_cpu.py",
+  "physics": "none (fake per-second plant drives the REAL sv.verify / confirm_all8 / bank statistics)",
+  "result": "30 passed; with map_descriptor/train_world/potential/lane_drop suites 84 passed (after the test update in 7a1995c7); ruff clean"
  },
- "unix": 1793956121.8153613
+ "unix": 1793962608.9678404
 }
