@@ -156,7 +156,8 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     assert result['prerun']['status'] == 'PASS' and k == -(-3*(96+24)//32)
     assert sum(r[1] for r in runs[:k]) == 3*(96+24) and all(r[1] <= 32 and r[2] == 16 for r in runs[:k])
     assert runs[k] == ('run', 3*96+2*24, 24)
-    assert runs[k+1][1] <= 2*8*(2+nm.MAX_MEMBERS) and runs[k+2:] == [('run', 96, 24)]*2
+    # each comparator: its F11 parity (2 TRAIN worlds x 2 paths) first, then its 96-world wave
+    assert runs[k+1][1] <= 2*8*(2+nm.MAX_MEMBERS) and runs[k+2:] == [('run', 4, 24), ('run', 96, 24)]*2
     assert {c[1] for c in result['calls'] if c[0] == 'reserve'} == {'v2v_final', 'v2v_final_prerun'}
     assert result['fake_prerun_sim_s'] == nm.prerun_cap() == 432_000 == result['quote']['prerun_sim_s']
     assert (result['fake_v2v_final_sim_s']+result['fake_prerun_sim_s'] <= result['quote']['total_ceiling_sim_s']
@@ -233,7 +234,7 @@ def test_runner_without_decision_branches_never_blocks_the_evaluation(panel, tmp
 
 def test_the_real_runner_module_satisfies_the_contract():
     status = nm.Runtime().runner_status()
-    assert status == dict(ok=True, native=True, decisions=False, lane=True, rule=True, reason=None)
+    assert status == dict(ok=True, native=True, decisions=False, lane=True, rule=True, parity=True, reason=None)
     status = nm.Runtime('tools.coopmwm.no_such_nm_runner').runner_status()
     assert status['ok'] is False and 'not importable' in status['reason']
 
@@ -604,7 +605,8 @@ def test_claim3a_opens_first_and_each_claim3b_only_after_its_comparator_is_bound
     nm.bind_fake_mappo(tmp_path/'dry', f['final_root'], 'MAPPO_SPEED')
     runtime = nm.FakeRuntime()
     value = nm.execute(runtime=runtime, **kw)
-    assert [c for c in runtime.calls if c[0] == 'run'] == [('run', 96, 24)]     # only the new comparator wave
+    # only the new comparator: its F11 parity (4 traces) and its wave
+    assert [c for c in runtime.calls if c[0] == 'run'] == [('run', 4, 24), ('run', 96, 24)]
     assert value['claim3a']['analysis_sha256'] == claim3a['analysis_sha256']     # 3a reproduces from its receipts
     assert value['claim3b_MAPPO_SPEED']['present'] == ['B', 'A', 'R', 'RULE', 'U0', 'MAPPO_SPEED', 'NATIVE']
     lane = json.loads((f['final_root']/'CLAIM3B_MAPPO_LANE_UNAVAILABLE.json').read_text())
@@ -793,3 +795,61 @@ def test_main_run_reuses_the_prerun_only_on_the_same_plant_and_u0(panel, tmp_pat
     again = nm._analyse_published(f['root'], f['final_root'], runtime, panel, f['panel_3c'])
     for k in ('claim3a', 'claim3c'):                  # zero-physics re-tabulation from the chunked receipts
         assert again[k]['tables'] == value[k]['tables'] and again[k]['present'] == value[k]['present']
+
+
+# ---------------------------------------------------------------- F11 parity
+
+def test_f11_parity_runs_before_each_comparator_wave_and_is_reported(panel, tmp_path):
+    result = nm.dry_run(out=tmp_path/'out', panel=panel)
+    final_root = Path(result['final_root'])
+    for arm in nm.COMPARATOR_ARMS:
+        report = nm.verify(json.loads((final_root/f'PARITY_{arm}.json').read_text()), 'receipt_sha256', 'parity')
+        assert report['verdict'] == 'IDENTICAL' and report['descriptive'] is True and set(report['worlds']) == {'989598', '989599'}
+        c = report['worlds']['989598']['compare']
+        assert c['ticks_common'] == 120 and c['agree_fraction'] == 1.0 and c['first_divergence_t'] is None
+        wave = json.loads((final_root/f'WAVE_PARITY_{arm}.json').read_text())
+        assert [r['job_id'] for r in wave['records']] == [f'nmparity_{arm.lower()}_{p}_{s}' for s in (989598, 989599)
+                                                         for p in ('plant', 'train')]
+        assert all(r['world']['seed'] in (989598, 989599) and r['world']['demand'] == 3200 for r in wave['records'])
+        tables = json.loads((final_root/f'CLAIM3B_{arm}_TABLES.json').read_text())
+        assert tables['sources'][f'PARITY_{arm}_REPORT']['verdict'] == 'IDENTICAL'
+    rows = [r for r in nm.fe.ledger_rows(Path(result['out'])/'clean4_root') if r['id'].startswith('nmparity_')]
+    assert len(rows) == 8 and sum(r['sim_s'] for r in rows) == nm.PARITY_SIM_S == 3_360
+
+
+def test_parity_compare_reports_the_first_divergence(panel, tmp_path):
+    f = make(tmp_path, panel)
+    specs = nm.parity_specs('MAPPO_SPEED', panel, f['cfg'], f['root'], 'mappo_u0', f['mappo']['MAPPO_SPEED'], f['mappo']['U0'])
+    assert [s['path'] for s in specs] == ['plant', 'train']*2 and specs[0]['checkpoint']['kind'] == 'mappo_comparator'
+    plant, train = (nm.check_parity(nm.fake_parity(s), s) for s in specs[:2])
+    assert nm.parity_compare(plant, train)['verdict'] == 'IDENTICAL'
+    shifted = deepcopy(train)
+    shifted['trace'][50]['cav']['main.2'][3] += 0.01                       # one command differs at t = 350
+    c = nm.parity_compare(plant, shifted)
+    assert c['verdict'] == 'DIFFERS' and c['first_divergence_t'] == 350 and c['max_abs']['command_mps2'] == pytest.approx(.01)
+    assert c['agree_pairs'] == c['pairs']-1
+    gone = deepcopy(train)
+    del gone['trace'][10]['cav']['main.4']
+    assert nm.parity_compare(plant, gone)['cav_set_mismatch_ticks'] == 1
+    with pytest.raises(nm.Blocked, match='never silent'):
+        nm.check_parity(dict(nm.fake_parity(specs[0]), executor_sha256_loaded='0'*64), specs[0])
+    with pytest.raises(nm.Blocked, match='train-config'):
+        nm.parity_specs('MAPPO_SPEED', panel, f['cfg'], f['root'], 'mappo_u0',
+                        dict(f['mappo']['MAPPO_SPEED'], train_config=None), f['mappo']['U0'])
+    with pytest.raises(nm.Blocked, match='no F11 parity'):
+        nm.bind_mappo(final_root=f['final_root'], path=f['mappo']['U0']['path'], sha256=f['mappo']['U0']['sha256'],
+                      kind=f['mappo']['U0']['kind'], arm='U0', authority='t', dry_run=True,
+                      residual_path=f['root']/'A_checkpoint_000.pt', residual_sha256=f['cfg']['common_checkpoint_sha256'],
+                      train_config=f['root']/'CONFIG.json')
+
+
+def test_comparator_without_train_config_runs_but_notes_missing_parity(panel, tmp_path):
+    f = make(tmp_path, panel, mappo=False)
+    nm.bind_fake_mappo(tmp_path/'dry', f['final_root'], 'U0', residual=f['root']/'A_checkpoint_000.pt')
+    path = tmp_path/'it168.pt'
+    nm.bind_mappo(final_root=f['final_root'], path=path, sha256=export(path), kind='retrained_wz3to2_it168',
+                  arm='MAPPO_SPEED', authority='N7 (no config given)')
+    nm.declare_unavailable(final_root=f['final_root'], arm='MAPPO_LANE', authority='MAIN (test)', reason='not delivered')
+    value = nm.execute(root=f['root'], final_root=f['final_root'], runtime=f['runtime'], panel=panel, poll=0, dry_run=True)
+    assert 'without --train-config' in value['claim3b_MAPPO_SPEED']['missing']['PARITY_MAPPO_SPEED']
+    assert not list(f['final_root'].glob('PARITY_*.json'))

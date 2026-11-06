@@ -103,7 +103,8 @@ def fake_plant(calls, moves_at):
 def test_runner_declares_the_contract():
     assert runner.MAP == 'wz3to2' and runner.NATIVE is True and callable(runner.episode)
     assert not hasattr(runner, 'decision_branch')            # per-decision branches not built: never faked
-    assert nm.Runtime().runner_status() == dict(ok=True, native=True, decisions=False, lane=True, rule=True, reason=None)
+    assert nm.Runtime().runner_status() == dict(ok=True, native=True, decisions=False, lane=True, rule=True, parity=True,
+                                                reason=None)
     assert runner.MAPPO_LANE is True and runner.RULE is True and runner.rule_digest() == nm.RULE_SHA256
 
 
@@ -429,3 +430,127 @@ def test_rule_arm_runs_the_exact_s_regimeu0_rule_on_the_u0_episode(env, monkeypa
     with pytest.raises(ValueError, match='differs from its registration'):
         runner.episode(spec, env['cfg'], env['tmp']/'work'/'tampered')
     assert len(calls) == 1
+
+
+# ---------------------------------------------------------------- F11 parity traces
+
+def _parity_states(t, k=4):
+    """Shared fake truth for both paths: CAV slots 0..k-1 at time t (s, v, lane) and the MAPPO command."""
+    return [dict(vid=f'main.{j}', s=-1500.0+40*j+20.0*(t-300), v=20.0+0.1*j, lane=j % 3, a=round(0.1*j-0.2, 4))
+            for j in range(k)]
+
+
+def _bind_parity(env):
+    final_root = env['tmp']/'dry'/'final_root'
+    nm.register(root=env['root'], final_root=final_root, runtime=nm.FakeRuntime(), panel=env['panel'])
+    u0 = nm.bind_fake_mappo(env['tmp']/'dry', final_root, 'U0', residual=env['root']/'A_checkpoint_000.pt')
+    speed = nm.bind_fake_mappo(env['tmp']/'dry', final_root, 'MAPPO_SPEED')
+    return nm.parity_specs('MAPPO_SPEED', env['panel'], env['cfg'], env['root'], 'mappo_u0', speed, u0), speed
+
+
+def test_parity_plant_path_records_the_mappo_speed_episode(env, monkeypatch, leverprobe):
+    from tools.coopmwm import accel_plant
+    calls = []
+
+    def episode(job, *, controller_hook=None, policy_loader=None):
+        import tools.leverprobe.backend as lp
+        lp.setup('/home/ubuntu/e3final', job['checkpoint'])
+        calls.append(job)
+        policy_loader(job['weights'])
+        controller = RuleController()
+        controller_hook(controller, job, {})
+        for t in range(300, job['stop']):
+            truth = _parity_states(t)
+            rows = [dict(vid=x['vid'], is_cav=True, s_m=x['s'], v_mps=x['v'], lane=x['lane']) for x in truth]
+            rows.append(dict(vid='main.h', is_cav=False, s_m=-1600.0, v_mps=20.0, lane=0))
+            controller.apply(rows, {x['vid']: x['a'] for x in truth}, float(t))
+            controller_hook.after_step(t, rows)
+        return dict(totals=dict(team_delay_vs=1.0, collisions=0, teleports=0, hard_brake=0))
+    monkeypatch.setattr(accel_plant, 'episode', episode)
+    specs, speed = _bind_parity(env)
+    record = runner.parity(specs[0], env['cfg'], env['tmp']/'work'/specs[0]['job_id'])
+    job = calls[-1]
+    assert (job['role'], job['sim_s'], job['stop'], job['checkpoint']) == ('check', 420, 420, speed['path'])
+    assert job['world'] == ms.world(989598, 3200, 0.6) and job['weights'] == {'arm': 'A', 'update': 0}
+    trace = record['trace']
+    assert len(trace) == 120 and trace[0]['t'] == 300 and set(trace[0]['cav']) == {f'main.{j}' for j in range(4)}
+    assert trace[0]['cav']['main.1'] == [-1460.0, 20.1, 1, -0.1, None] and 'main.h' not in trace[0]['cav']
+    checked = nm.check_parity(record, specs[0])
+    assert checked['executor_sha256_loaded'] == speed['sha256'] and checked['safety'] == dict(collisions=0, teleports=0)
+    with pytest.raises(ValueError, match='not allowed for role'):        # held-out worlds are refused for parity
+        runner.parity(dict(specs[0], world=ms.world(989600, 3200, 0.6)), env['cfg'], env['tmp']/'work'/'heldout')
+
+
+class FakeTrainEnv:
+    def __init__(self, spec):
+        self.spec, self.t, self.closed, self.steps = spec, None, False, []
+
+    @property
+    def now(self):
+        return float(self.t)
+
+    def _state(self):
+        import numpy as np
+        truth = _parity_states(self.t)
+        pad = 2                                                  # one empty slot and one HDV slot
+        s = np.array([x['s'] for x in truth]+[0.0, -1600.0])[None]
+        v = np.array([x['v'] for x in truth]+[0.0, 20.0])[None]
+        lane = np.array([x['lane'] for x in truth]+[0, 0])[None]
+        return dict(s_m=s, v_mps=v, lane=lane, present=np.array([[True]*len(truth)+[False, True]]),
+                    is_cav=np.array([[True]*len(truth)+[False]*pad]))
+
+    def reset(self, *, seed, demand_vph, penetration, warmup_s, horizon_s):
+        assert (seed, demand_vph, penetration, warmup_s, horizon_s) == (989598, 3200, 0.6, 300.0, 120.0)
+        self.t = 300
+        return self._state()
+
+    def slot_vehicle_ids(self):
+        return [f'main.{j}' for j in range(4)]+[None, 'main.h']
+
+    def step(self, accel, lanes=None):
+        self.steps.append((self.t, lanes))
+        self.t += 1
+        return self._state(), dict(interval=dict(collision_involvements=0, starting_teleports=0), done=False)
+
+    def close(self):
+        self.closed = True
+
+
+def test_parity_train_path_uses_the_n7_training_env(env, monkeypatch):
+    import numpy as np
+    specs, speed = _bind_parity(env)
+    built = []
+
+    class Exe:
+        def reset(self):
+            built.append('reset')
+
+        def __call__(self, state, with_lanes=False):
+            a = np.full(state['s_m'].shape, np.nan)
+            for j, x in enumerate(_parity_states(int(round(float(state['s_m'][0, 0]+1500.0)/20.0))+300)):
+                a[0, j] = x['a']
+            return a, None
+    sanity = types.ModuleType('tools.nm_mappo.sanity_eval')
+    sanity.load_cfg = lambda path: {'lanes': {'dwell_s': 5}}
+    sanity.resolve = lambda raw, fake: ({'env_name': 'tools.nm_mappo.n1_adapter.make_env', 'env_kwargs': {}},
+                                        types.SimpleNamespace(check_seeds=lambda seeds: built.append(('seeds', seeds))),
+                                        [(0.6, 3200)])
+    sanity.load_actor = lambda path, lanes: (built.append(('actor', path, lanes)) or Exe(), 'native')
+    rollout = types.ModuleType('wms.control.mappo.rollout')
+    envs = []
+    rollout.build_env = lambda spec: envs.append(FakeTrainEnv(spec)) or envs[-1]
+    monkeypatch.setitem(sys.modules, 'tools.nm_mappo', types.ModuleType('tools.nm_mappo'))
+    monkeypatch.setitem(sys.modules, 'tools.nm_mappo.sanity_eval', sanity)
+    monkeypatch.setitem(sys.modules, 'wms.control.mappo.rollout', rollout)
+    train = specs[1]
+    assert train['path'] == 'train' and train['train_config_sha256'] == nm.file_sha(train['train_config'])
+    value = runner.parity_train_trace(train)
+    assert built[:2] == [('seeds', [989598]), ('actor', speed['path'], {'dwell_s': 5})] and envs[0].closed
+    assert len(value['trace']) == 120 and value['executor_sha256_loaded'] == speed['sha256']
+    assert all(lanes is None for _, lanes in envs[0].steps)
+    plant = dict(trace=[dict(t=t, n=5, cav={x['vid']: [x['s'], x['v'], x['lane'], x['a'], None] for x in _parity_states(t)})
+                        for t in range(300, 420)])
+    assert nm.parity_compare(plant, value)['verdict'] == 'IDENTICAL'
+    Path(train['train_config']).write_text('# edited after binding\n')
+    with pytest.raises(ValueError, match='differs from its binding'):
+        runner.parity_train_trace(train)

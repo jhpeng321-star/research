@@ -42,6 +42,13 @@ Decisions (B/R): descriptive capture only (every new 2+-member cooperative move)
 ``decision_branch`` (a faithful branch needs the MoveExecutor state restored inside the CRN
 prefix replay; not built, never faked).
 
+F11 parity (FAIRAUDIT, registered): ``parity(spec)`` traces one bound MAPPO comparator on a TRAIN
+world (role 'check', native 0-300 s warmup + ``rollout_s`` controlled seconds) either through the
+evaluation plant (``path='plant'``: exactly the MAPPO_SPEED / MAPPO_LANE episode code) or through its
+TRAINING env path (``path='train'``: N7 ``tools.nm_mappo.sanity_eval`` resolve/build_env/load_actor in a
+fresh subprocess, as the trainer's rollout workers). Each tick records every CAV's (s, v, lane, command,
+lane target); the launcher compares the two traces (zero physics). Descriptive; never a gate.
+
 HDVs are never commanded. Never run locally except ``setup-check`` (zero SUMO steps).
 """
 from __future__ import annotations
@@ -64,6 +71,8 @@ LOG_LIMIT = 200
 MAPPO_LANE = True
 RULE = True
 RULE_STRATEGIES = ('wall_h_solo2',)
+PARITY = True
+PARITY_ROLE = 'check'
 LANE_GRID = (-1, 0, 1, 2)
 LANE_CHANGE_MODE = 513
 FROZEN_MAPPO_SHA = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca'
@@ -434,7 +443,7 @@ def cav_only(state, cmd, lanes):
     return cmd, lanes.astype(np.int64), int((flat >= 0).sum())
 
 
-def lane_tick(b, executor, trace, *, plant, cf, canonical):
+def lane_tick(b, executor, trace, *, plant, cf, canonical, recorder=None):
     """One 1 s control tick: coopfree.backend.tick with the lane-aware executor and the env lane
     path (a lanes tensor every tick -> laneChangeMode 513 on commanded CAVs; HDVs untouched)."""
     import math
@@ -453,6 +462,9 @@ def lane_tick(b, executor, trace, *, plant, cf, canonical):
     b.command_digest.update(canonical(plant.exact(cmd)).encode())
     slot = {vid: i for i, vid in enumerate(b.env.slot_vehicle_ids())}
     flat_cmd, flat_lanes = cmd.reshape(-1), lanes.reshape(-1)
+    if recorder is not None:
+        recorder.tick(now, rows, {r['vid']: float(flat_cmd[slot[r['vid']]]) for r in rows if r['is_cav']},
+                      {r['vid']: int(flat_lanes[slot[r['vid']]]) for r in rows if r['is_cav']})
     vehicles = []
     for r in rows:
         v = dict(r)
@@ -482,6 +494,10 @@ def lane_tick(b, executor, trace, *, plant, cf, canonical):
 
 
 def _mappo_lane_episode(spec, cfg, work):
+    return _mappo_lane_run(spec, cfg, work, world=_check_spec(spec), stop=HORIZON_S, role=ROLE)
+
+
+def _mappo_lane_run(spec, cfg, work, *, world, stop, role, recorder=None):
     import gzip
     import os
     from collections import Counter
@@ -489,7 +505,6 @@ def _mappo_lane_episode(spec, cfg, work):
     from .accel_storage import write
     from .rerun_tracks_backend import safety
     from .v2v_runner import patched
-    world = _check_spec(spec)
     ck = spec['checkpoint']
     if ck.get('kind') != 'mappo_lane':
         raise ValueError('MAPPO_LANE spec must carry the mappo_lane comparator binding')
@@ -497,8 +512,8 @@ def _mappo_lane_episode(spec, cfg, work):
     native = production.backend_config(cfg)
     work = Path(work)
     work.mkdir(parents=True, exist_ok=True)
-    write(work/'CLAIM.json', dict(pid=os.getpid(), id=work.name, charged_sim_s=HORIZON_S, arm='MAPPO_LANE'))
-    job = dict(id=work.name, path=str(work), world=world, role=ROLE, arm='MAPPO_LANE', runtime=native['runtime'],
+    write(work/'CLAIM.json', dict(pid=os.getpid(), id=work.name, charged_sim_s=stop, arm='MAPPO_LANE'))
+    job = dict(id=work.name, path=str(work), world=world, role=role, arm='MAPPO_LANE', runtime=native['runtime'],
                checkpoint=native['checkpoint'])
     # Same binding as every policy arm: frozen runtime (d9042cc5 pin unchanged) -> seed scope -> guard
     # -> G5 overlay -> N1 map install; the plant's own frozen executor is never used for actions here.
@@ -506,18 +521,19 @@ def _mappo_lane_episode(spec, cfg, work):
         plant = accel_plant.bind_runtime(job)
     from tools.coopfree import backend as cf
     from tools.coopfree.protocol import canonical
-    plant.guard = lambda w: protocol.guard(w, ROLE)
+    plant.guard = lambda w: protocol.guard(w, role)
     executor, meta = load_lane_executor(path, loaded)
-    b = plant.Backend(work, world, HORIZON_S, native['checkpoint'])
+    b = plant.Backend(work, world, stop, native['checkpoint'])
     lane_commands, request_ticks = Counter(), 0
     try:
         with gzip.open(work/'observable.jsonl.gz', 'xt', encoding='utf-8') as trace:
-            for _ in range(WARMUP_S, HORIZON_S):
-                requested, counts = lane_tick(b, executor, trace, plant=plant, cf=cf, canonical=canonical)
+            for _ in range(WARMUP_S, stop):
+                requested, counts = lane_tick(b, executor, trace, plant=plant, cf=cf, canonical=canonical,
+                                              recorder=recorder)
                 lane_commands.update(counts)
                 request_ticks += requested > 0
         result = dict(id=work.name, world=world, arm='MAPPO_LANE', totals=dict(b.totals), actual_sim_s=b.actual,
-                      charged_sim_s=HORIZON_S, lane_commands=dict(lane_commands), lane_request_ticks=request_ticks,
+                      charged_sim_s=stop, lane_commands=dict(lane_commands), lane_request_ticks=request_ticks,
                       executor=meta)
         write(work/'RESULT.json', result)
     finally:
@@ -535,6 +551,161 @@ def episode(spec, cfg, work):
     if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'MAPPO_SPEED'):
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')
     return _policy_episode(spec, cfg, work)
+
+
+# ---------------------------------------------------------------- F11 parity (eval plant vs training env)
+
+def _num(x):
+    import math
+    try:
+        x = float(x)
+    except (TypeError, ValueError):
+        return None
+    return x if math.isfinite(x) else None
+
+
+class ParityTrace:
+    """Per control tick: {vid: [s_m, v_mps, lane, command or None, lane target or None]} for CAVs."""
+
+    def __init__(self):
+        self.ticks = []
+
+    def tick(self, now, rows, commands, lanes=None):
+        lanes = lanes or {}
+        cav = {}
+        for r in rows:
+            if r.get('is_cav'):
+                lt = lanes.get(r['vid'])
+                cav[str(r['vid'])] = [round(float(r['s_m']), 4), round(float(r['v_mps']), 4), int(r['lane']),
+                                      _num(commands.get(r['vid'])), None if lt is None or lt < 0 else int(lt)]
+        self.ticks.append(dict(t=int(round(float(now))), n=len(rows), cav=cav))
+
+
+def _check_parity_spec(spec):
+    from . import map_descriptor as md, map_scenarios as ms
+    world = spec['world']
+    ms.guard(world, PARITY_ROLE)                      # TRAIN worlds only
+    if md.for_world(world).name != MAP:
+        raise ValueError(f'process map is not {MAP}')
+    if (spec.get('kind') != 'parity' or spec.get('path') not in ('plant', 'train')
+            or spec['arm'] not in ('MAPPO_SPEED', 'MAPPO_LANE')):
+        raise ValueError('parity spec: kind parity, path plant|train, a MAPPO comparator arm')
+    if int(spec['sim_s']) != WARMUP_S+int(spec['rollout_s']) or spec['window'] != dict(start_s=WARMUP_S,
+                                                                                         end_s=int(spec['sim_s'])):
+        raise ValueError('parity window = native warmup + rollout_s')
+    return world
+
+
+def _parity_plant(spec, cfg, work):
+    from . import accel_plant, launch_production as production, protocol, rerun_cpus as rc
+    from .v2v_runner import patched
+    world = _check_parity_spec(spec)
+    stop, recorder, ck = int(spec['sim_s']), ParityTrace(), spec['checkpoint']
+    if spec['arm'] == 'MAPPO_LANE':
+        record = _mappo_lane_run(spec, cfg, work, world=world, stop=stop, role=PARITY_ROLE, recorder=recorder)
+        return dict(trace=recorder.ticks, executor_sha256_loaded=record['executor_sha256_loaded'], safety=record['safety'])
+    native = production.backend_config(cfg)
+    path = Path(ck['path'])
+    if ck.get('kind') != 'mappo_comparator' or path.name != 'A_checkpoint_000.pt' or rc.sha(path) != ck['file_sha256']:
+        raise ValueError('MAPPO_SPEED parity = the bound executor + the bound common u0 (zero residual)')
+    native = dict(native, run_root=str(path.parent))
+    executor, loaded = bound_executor(ck)
+    weights, loader, hook, _ = eval_components(native, dict(spec, capture=None, noise_seed=world['seed']))
+    base_hook = hook
+
+    def hook(controller, job, prefixes):              # the MAPPO_SPEED episode hook + a read-only recorder
+        base_hook(controller, job, prefixes)
+        previous = controller.apply
+
+        def apply(rows, commands, now):
+            recorder.tick(now, rows, commands)
+            return previous(rows, commands, now)
+        controller.apply = apply
+    hook.after_step = base_hook.after_step
+    job = dict(id=Path(work).name, path=str(work), world=world, role=PARITY_ROLE, arm='A', weights=weights,
+               runtime=native['runtime'], checkpoint=executor, noise_seed=world['seed'], deterministic=True,
+               guided=False, v2v=True, sim_s=stop, stop=stop, warm_history=native['warm_history'],
+               accel_bounds=native['accel_bounds'])
+    with patched(accel_plant, dict(guard=protocol.guard, install_seed_scope=protocol.install_seed_scope)):
+        with comparator_setup(loaded):
+            result = accel_plant.episode(job, controller_hook=hook, policy_loader=loader)
+    totals = result['totals']
+    return dict(trace=recorder.ticks, executor_sha256_loaded=loaded,
+                safety=dict(collisions=int(totals.get('collisions', 0)), teleports=int(totals.get('teleports', 0))))
+
+
+def parity_train_trace(spec):
+    """N7's training env path in THIS (fresh) process: resolve(config) -> build_env -> reset(seed, demand,
+    penetration, warmup 300, horizon rollout_s) -> PolicyExecutor(state, with_lanes=True) -> step."""
+    import numpy as np
+    ck = spec['checkpoint']
+    if _sha(ck['executor_path']) != ck['executor_sha256'] or _sha(spec['train_config']) != spec['train_config_sha256']:
+        raise ValueError('parity train path: executor or training config differs from its binding')
+    from tools.nm_mappo.sanity_eval import load_actor, load_cfg, resolve
+    from wms.control.mappo.rollout import build_env
+    raw = load_cfg(spec['train_config'])
+    env_spec, binding, _ = resolve(raw, fake=False)
+    world, recorder = spec['world'], ParityTrace()
+    binding.check_seeds([world['seed']])
+    env = build_env(env_spec)
+    try:
+        exe, lane_control = load_actor(ck['executor_path'], raw.get('lanes'))
+        state = env.reset(seed=int(world['seed']), demand_vph=int(world['demand']), penetration=float(world['penetration']),
+                          warmup_s=float(WARMUP_S), horizon_s=float(spec['rollout_s']))
+        exe.reset()
+        collisions = teleports = 0
+        for _ in range(int(spec['rollout_s'])):
+            accel, lanes = exe(state, with_lanes=True)
+            if spec['arm'] == 'MAPPO_SPEED' and lanes is not None:
+                raise ValueError('speed-only comparator produced lane commands')
+            ids = env.slot_vehicle_ids()
+            a = np.asarray(accel.detach().cpu() if hasattr(accel, 'detach') else accel, dtype=np.float64).reshape(-1)
+            ln = (None if lanes is None else
+                  np.asarray(lanes.detach().cpu() if hasattr(lanes, 'detach') else lanes).reshape(-1))
+            cav = _flags(state['is_cav'])
+            sm, vm = (np.asarray(state[k].detach().cpu() if hasattr(state[k], 'detach') else state[k],
+                                 dtype=np.float64).reshape(-1) for k in ('s_m', 'v_mps'))
+            lane = np.asarray(state['lane'].detach().cpu() if hasattr(state['lane'], 'detach') else state['lane']).reshape(-1)
+            rows = [dict(vid=ids[i], is_cav=True, s_m=sm[i], v_mps=vm[i], lane=int(lane[i]))
+                    for i in range(len(ids)) if ids[i] is not None and cav[i]]
+            recorder.tick(env.now, rows, {ids[i]: a[i] for i in range(len(ids)) if ids[i] is not None},
+                          None if ln is None else {ids[i]: int(ln[i]) for i in range(len(ids)) if ids[i] is not None})
+            state, info = env.step(accel, lanes=lanes)
+            summary = info.get('interval') or {}
+            collisions += int(summary.get('collision_involvements', 0) or 0)
+            teleports += int(summary.get('starting_teleports', 0) or 0)
+            if info.get('done') or info.get('terminated'):
+                break
+    finally:
+        if hasattr(env, 'close'):
+            env.close()
+    return dict(trace=recorder.ticks, executor_sha256_loaded=ck['executor_sha256'], lane_control=lane_control,
+                safety=dict(collisions=collisions, teleports=teleports))
+
+
+def _parity_train(spec, work):
+    """The training path runs in a FRESH interpreter (trainer binding: map_runtime.install(leverprobe=False),
+    no G5 plant overlay) so it never shares process state with plant jobs."""
+    import os
+    import subprocess
+    import sys
+    work = Path(work)
+    work.mkdir(parents=True, exist_ok=True)
+    (work/'parity_spec.json').write_text(json.dumps(spec, sort_keys=True), encoding='utf-8')
+    env = {k: v for k, v in os.environ.items() if k != 'COOPMWM_G5_RUNTIME'}
+    with (work/'parity_train.log').open('w') as log:
+        subprocess.run([sys.executable, '-B', '-m', 'tools.coopmwm.nm_eval_runner', 'parity-train', '--spec',
+                        str(work/'parity_spec.json'), '--out', str(work/'parity_train.json')], env=env, check=True,
+                       stdout=log, stderr=subprocess.STDOUT, timeout=3600)
+    return json.loads((work/'parity_train.json').read_text(encoding='utf-8'))
+
+
+def parity(spec, cfg, work):
+    """One F11 parity trace -> record (identity + trace; never graded on J)."""
+    out = _parity_plant(spec, cfg, work) if spec['path'] == 'plant' else _parity_train(spec, work)
+    return dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='traced', kind='parity', path=spec['path'],
+                trace=out['trace'], executor_sha256_loaded=out['executor_sha256_loaded'],
+                safety={k: int(v) for k, v in out['safety'].items()})
 
 
 # ---------------------------------------------------------------- zero-physics checks
@@ -572,12 +743,23 @@ def setup_check(runtime, checkpoint, sha256, binding=None):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description='N6 eval runner zero-physics checks')
-    p.add_argument('command', choices=('setup-check', 'load-check'))
+    p.add_argument('command', choices=('setup-check', 'load-check', 'parity-train'))
     p.add_argument('--runtime', default='/home/ubuntu/e3final')
-    p.add_argument('--checkpoint', required=True)
-    p.add_argument('--sha256', required=True)
+    p.add_argument('--checkpoint')
+    p.add_argument('--sha256')
     p.add_argument('--binding', help='optional MAPPO_COMPARATOR.json to cross-check')
+    p.add_argument('--spec', help='parity-train: the parity spec JSON (written by the launcher worker)')
+    p.add_argument('--out', help='parity-train: output JSON (never overwritten)')
     a = p.parse_args(argv)
+    if a.command == 'parity-train':
+        spec = json.loads(Path(a.spec).read_text(encoding='utf-8'))
+        _check_parity_spec(spec)
+        value = parity_train_trace(spec)
+        with open(a.out, 'x', encoding='utf-8') as f:
+            json.dump(value, f, sort_keys=True)
+        return 0
+    if not a.checkpoint or not a.sha256:
+        p.error('--checkpoint and --sha256 required')
     out = (setup_check(a.runtime, a.checkpoint, a.sha256, a.binding) if a.command == 'setup-check'
            else mappo_load_check(a.checkpoint, a.sha256))
     print(json.dumps(out, indent=1, sort_keys=True))

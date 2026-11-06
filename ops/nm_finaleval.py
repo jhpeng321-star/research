@@ -118,6 +118,10 @@ REGISTERED_PANEL_QUOTE = dict(quote_mappo_u0=672_000, quote_native=556_800)
 #: 2 paths x 2 comparators x (300 s warmup + 120 s rollout)
 PARITY_WORLDS, PARITY_ROLLOUT_S = (989598, 989599), 120
 PARITY_SIM_S = len(PARITY_WORLDS)*2*len(COMPARATOR_ARMS)*(300+PARITY_ROLLOUT_S)
+PARITY_CELL = dict(demand=3200, penetration=0.6)      # the clean5a / S-MAPPOWZ training cell D3200_p60
+PARITY_TAG = 'F11 parity (TRAIN worlds; not a panel)'
+#: agreement tolerances (float32 env state vs float64 plant rows; deterministic executors)
+PARITY_TOL = dict(s_m=1e-3, v_mps=1e-3, command_mps2=1e-4)
 HORIZON_S = 1200                       # = clean4 training episode length (MAIN)
 WINDOW = dict(start_s=0, end_s=HORIZON_S)
 EVAL_RANGE = (989600, 989699)
@@ -679,12 +683,12 @@ def check_export(arm, sha256, meta):
 
 def _wave_started(final_root, arm):
     root = Path(final_root)
-    return ((root/f'RESERVED_{arm}.json').is_file() or (root/f'WAVE_{arm}.json').is_file()
-            or any(root.glob(f'RESERVED_{arm}__*.json')) or any(root.glob(f'WAVE_{arm}__*.json')))
+    return any((root/f'{kind}_{name}.json').is_file() or any(root.glob(f'{kind}_{name}__*.json'))
+               for kind in ('RESERVED', 'WAVE') for name in (arm, f'PARITY_{arm}'))
 
 
 def bind_mappo(*, final_root, path, sha256, kind, authority, arm='MAPPO_SPEED', check=None, dry_run=False,
-               residual_path=None, residual_sha256=None):
+               residual_path=None, residual_sha256=None, train_config=None):
     """Bind a comparator executor (path + sha256, re-verified at every load). Rebinding is allowed
     only before that arm's wave is reserved; earlier bindings are kept."""
     final_root, arm = Path(final_root), _arm(arm)
@@ -697,6 +701,10 @@ def bind_mappo(*, final_root, path, sha256, kind, authority, arm='MAPPO_SPEED', 
         if file_sha(residual_path) != residual_sha256:
             raise Blocked(f'{residual_path} does not hash to {residual_sha256}')
         residual = dict(residual_path=str(residual_path), residual_sha256=residual_sha256)
+    if train_config is not None:          # F11: the comparator's own training run config (N7 toml)
+        if arm == 'U0':
+            raise Blocked('U0 has no F11 parity (frozen executor, not trained on wz3to2)')
+        residual = dict(residual or {}, train_config=str(train_config), train_config_sha256=file_sha(train_config))
     if kind not in MAPPO_KINDS[arm]:
         raise Blocked(f'{arm} kind must be one of {sorted(MAPPO_KINDS[arm])}')
     if not re.fullmatch('[0-9a-f]{64}', str(sha256)):
@@ -983,7 +991,7 @@ def decision_metrics(branches):
 
 def _worker(kind, spec, cfg, work, runner):
     module = importlib.import_module(runner)
-    return getattr(module, 'episode' if kind == 'episode' else 'decision_branch')(spec, cfg, work)
+    return getattr(module, dict(episode='episode', branch='decision_branch', parity='parity')[kind])(spec, cfg, work)
 
 
 class Runtime:
@@ -1006,12 +1014,13 @@ class Runtime:
             module = importlib.import_module(self.runner)
         except ImportError as error:
             return dict(ok=False, reason=f'{self.runner} not importable: {error!r}', native=False, decisions=False,
-                        lane=False, rule=False)
+                        lane=False, rule=False, parity=False)
         ok = getattr(module, 'MAP', None) == MAP and callable(getattr(module, 'episode', None))
         return dict(ok=ok, native=ok and getattr(module, 'NATIVE', True) is not False,
                     decisions=ok and callable(getattr(module, 'decision_branch', None)),
                     lane=ok and getattr(module, 'MAPPO_LANE', False) is True,
                     rule=ok and getattr(module, 'RULE', False) is True and importlib.util.find_spec('tools.coopmwm.regimeu0') is not None,
+                    parity=ok and getattr(module, 'PARITY', False) is True and callable(getattr(module, 'parity', None)),
                     reason=None if ok else f'{self.runner} lacks MAP={MAP!r} or episode()')
 
     def plant_view(self, cfg):
@@ -1076,13 +1085,27 @@ def fake_branch(spec):
                 J_veh_s=float(J), safety=dict(collisions=0, teleports=0, hard_brakes=h % 3, ttc_events=h % 4))
 
 
+def fake_parity(spec):
+    """Dry run: both paths trace the same deterministic fake CAV states and commands (IDENTICAL)."""
+    seed = spec['world']['seed']
+    trace = []
+    for t in range(300, spec['sim_s']):
+        cav = {f'main.{j}': [round(-1500.+j*40+(t-300)*20., 4), 20., j % 3, round(-.5+(_h(seed, j, t) % 100)/100., 4),
+                             (j % 3 if spec['arm'] == 'MAPPO_LANE' else None)] for j in range(5)}
+        trace.append(dict(t=t, n=9, cav=cav))
+    return dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='traced', kind='parity', path=spec['path'],
+                trace=trace, executor_sha256_loaded=spec['checkpoint']['executor_sha256'],
+                safety=dict(collisions=0, teleports=0))
+
+
 class FakeRuntime:
     """No simulator, no process pool, fake clean4 ledger: fake physics for the dry run/tests."""
     physics = False
 
     def __init__(self, runner=None):
         self.calls = []
-        self.status = dict(dict(ok=True, native=True, decisions=True, lane=True, rule=True, reason=None), **(runner or {}))
+        self.status = dict(dict(ok=True, native=True, decisions=True, lane=True, rule=True, parity=True, reason=None),
+                           **(runner or {}))
 
     def config(self, root):
         cfg = read(Path(root)/'CONFIG.json')
@@ -1117,10 +1140,124 @@ class FakeRuntime:
 
     def run(self, items, cfg, workers):
         self.calls.append(('run', len(items), workers))
-        return [fake_episode(spec) if kind == 'episode' else fake_branch(spec) for kind, spec, _ in items]
+        return [dict(episode=fake_episode, branch=fake_branch, parity=fake_parity)[kind](spec) for kind, spec, _ in items]
 
 
 # ---------------------------------------------------------------- waves (reserve whole wave, never replay)
+
+# ---------------------------------------------------------------- F11 parity (registered; descriptive)
+
+def parity_specs(arm, panel, cfg, root, base, binding, u0):
+    """2 TRAIN worlds (D3200_p60) x 2 paths (eval plant, training env) for one bound MAPPO comparator."""
+    from tools.coopmwm import map_scenarios as ms
+    if arm not in COMPARATOR_ARMS:
+        raise Blocked('F11 parity is for the MAPPO comparators only')
+    if binding is None or not binding.get('train_config'):
+        raise Blocked(f'F11: bind {arm} with --train-config (its training run config) first')
+    checkpoint = episode_specs(arm, panel, cfg, root, base, binding, u0)[0]['checkpoint']
+    out = []
+    for seed in PARITY_WORLDS:
+        world = ms.world(seed, PARITY_CELL['demand'], PARITY_CELL['penetration'])
+        for path in ('plant', 'train'):
+            out.append(dict(job_id=f'nmparity_{arm.lower()}_{path}_{seed}', kind='parity', arm=arm, path=path,
+                            world_id=f'{MAP}_train_{seed}', world=deepcopy(world), checkpoint=deepcopy(checkpoint),
+                            sim_s=300+PARITY_ROLLOUT_S, rollout_s=PARITY_ROLLOUT_S,
+                            window=dict(start_s=300, end_s=300+PARITY_ROLLOUT_S), panel_sha256=PARITY_TAG,
+                            noise_seed=seed, deterministic=True, capture=None, train_config=binding['train_config'],
+                            train_config_sha256=binding['train_config_sha256']))
+    return out
+
+
+def check_parity(record, spec):
+    what = f'parity {spec["arm"]} {spec["path"]} {spec["world_id"]}'
+    if record.get('status') != 'traced' or record.get('kind') != 'parity' or record.get('path') != spec['path']:
+        raise Blocked(f'{what}: untraced record; never drop/impute/retry')
+    if any(record.get(k) != spec[k] for k in IDENTITY):
+        raise Blocked(f'{what}: record identity differs from its registered spec')
+    if record.get('executor_sha256_loaded') != spec['checkpoint']['executor_sha256']:
+        raise Blocked(f'{what}: comparator executor actually loaded differs from its binding (never silent)')
+    trace = record.get('trace')
+    if not isinstance(trace, list) or not trace or any(not isinstance(x.get('t'), int) or not isinstance(x.get('cav'), dict)
+                                                       for x in trace):
+        raise Blocked(f'{what}: malformed trace')
+    return dict({k: deepcopy(record[k]) for k in IDENTITY}, status='traced', kind='parity', path=spec['path'],
+                job_id=spec['job_id'], trace=deepcopy(trace), executor_sha256_loaded=record['executor_sha256_loaded'],
+                safety={k: int(v) for k, v in (record.get('safety') or {}).items()})
+
+
+def parity_compare(plant, train, tol=PARITY_TOL):
+    """Per tick and CAV: |ds|, |dv|, |d command| and lane targets between the two paths (zero physics)."""
+    P, T = {x['t']: x['cav'] for x in plant['trace']}, {x['t']: x['cav'] for x in train['trace']}
+    ticks = sorted(set(P) & set(T))
+    worst = dict(s_m=0., v_mps=0., command_mps2=0.)
+    pairs = agree = set_mismatch = presence = lane_mismatch = 0
+    first = None
+    for t in ticks:
+        a, b = P[t], T[t]
+        bad = set(a) != set(b)
+        set_mismatch += bad
+        for vid in sorted(set(a) & set(b)):
+            (sa, va, la, ca, ta), (sb, vb, lb, cb, tb) = a[vid], b[vid]
+            pairs += 1
+            ds, dv = abs(sa-sb), abs(va-vb)
+            dc = abs(ca-cb) if ca is not None and cb is not None else (0. if ca is None and cb is None else None)
+            presence += dc is None
+            lane_mismatch += (la != lb) or (ta != tb)
+            worst['s_m'], worst['v_mps'] = max(worst['s_m'], ds), max(worst['v_mps'], dv)
+            if dc is not None:
+                worst['command_mps2'] = max(worst['command_mps2'], dc)
+            ok = (ds <= tol['s_m'] and dv <= tol['v_mps'] and dc is not None and dc <= tol['command_mps2']
+                  and la == lb and ta == tb)
+            agree += ok
+            bad = bad or not ok
+        if bad and first is None:
+            first = t
+    identical = (bool(ticks) and set(P) == set(T) and not set_mismatch and agree == pairs and pairs > 0)
+    return dict(verdict='IDENTICAL' if identical else 'DIFFERS', ticks_plant=len(P), ticks_train=len(T),
+                ticks_common=len(ticks), cav_set_mismatch_ticks=set_mismatch, pairs=pairs, agree_pairs=agree,
+                agree_fraction=round(agree/pairs, 6) if pairs else None, command_presence_mismatch=presence,
+                lane_mismatch=lane_mismatch, max_abs=worst, first_divergence_t=first, tolerances=dict(tol))
+
+
+def parity_report(arm, records, specs, binding):
+    by = {(r['path'], r['world']['seed']): r for r in records}
+    worlds = {}
+    for seed in PARITY_WORLDS:
+        worlds[str(seed)] = dict(compare=parity_compare(by[('plant', seed)], by[('train', seed)]),
+                                 safety={p: by[(p, seed)]['safety'] for p in ('plant', 'train')})
+    verdict = 'IDENTICAL' if all(w['compare']['verdict'] == 'IDENTICAL' for w in worlds.values()) else 'DIFFERS'
+    return seal(dict(schema=SCHEMA+'.parity', check='F11', arm=arm, executor_sha256=binding['sha256'],
+                     binding_sha256=binding['binding_sha256'], train_config_sha256=binding['train_config_sha256'],
+                     worlds=worlds, verdict=verdict, descriptive=True,
+                     rule=('FAIRAUDIT F11: the bound comparator in the evaluation plant vs its training env path on 2 '
+                           'TRAIN worlds (native 0-300 s warmup + 120 s); reported, never a gate'),
+                     jobs=[s['job_id'] for s in specs]), 'receipt_sha256')
+
+
+def run_parity(*, root, final_root, runtime, panel, arm, cfg=None, base=None, workers=8):
+    """Zero-physics bookkeeping around the registered F11 waves (reused if published)."""
+    root, final_root = Path(root), Path(final_root)
+    plan = run_plan(final_root)
+    if plan is None:
+        raise Blocked('RUN_PLAN.json missing: run register first')
+    cfg = cfg if cfg is not None else runtime.config(root)
+    base = base or plan['binding']['base']
+    binding, u0 = mappo_binding(final_root, arm), mappo_binding(final_root, 'U0')
+    if binding is None:
+        raise Blocked(f'{arm} not bound')
+    if not runtime.runner_status().get('parity'):
+        raise Blocked('runner has no F11 parity()')
+    specs = parity_specs(arm, panel, cfg, root, base, binding, u0)
+    target = final_root/f'PARITY_{arm}.json'
+    done, more = run_waves([(f'PARITY_{arm}', 'parity', specs)], root=root, final_root=final_root, cfg=cfg,
+                           runtime=runtime, workers=workers, base=base)
+    report = parity_report(arm, done[f'PARITY_{arm}'], specs, binding)
+    if target.is_file():
+        report = verify(read(target), 'receipt_sha256', target.name)
+    else:
+        publish(target, report)
+    return report, more
+
 
 def _chunk_files(final_root, name):
     out = []
@@ -1169,7 +1306,7 @@ def run_waves(waves, *, root, final_root, cfg, runtime, workers, base, chunked=F
     # the clean-run ledger AND the evaluation root's pre-run ledger: an interrupted wave never replays
     charged = {r['id'] for r in fe.ledger_rows(root)} | {r['id'] for r in fe.ledger_rows(final_root)}
     for name, kind, specs in waves:
-        check_ = check_episode if kind == 'episode' else check_branch
+        check_ = CHECKS[kind]
         records, source, covered = published(final_root, name, specs, check_)
         if covered == len(specs):
             out[name], sources[name] = records, source
@@ -1201,7 +1338,7 @@ def run_waves(waves, *, root, final_root, cfg, runtime, workers, base, chunked=F
     for name, part, kind, specs in todo:
         records = results[position:position+len(specs)]
         position += len(specs)
-        check_ = check_episode if kind == 'episode' else check_branch
+        check_ = CHECKS[kind]
         checked = [check_(r, s) for r, s in zip(records, specs)]
         if len(checked) != len(specs):
             raise Blocked(f'{name}: incomplete wave; never drop/impute/retry')
@@ -1218,6 +1355,9 @@ def run_waves(waves, *, root, final_root, cfg, runtime, workers, base, chunked=F
                                  receipt_sha256=list(source.get('receipt_sha256') or [])+[value['receipt_sha256']],
                                  chunks=(source.get('chunks') or 0)+1)
     return out, sources
+
+
+CHECKS = dict(episode=check_episode, branch=check_branch, parity=check_parity)
 
 
 # ---------------------------------------------------------------- analysis (zero physics)
@@ -1817,13 +1957,24 @@ def execute(*, root, final_root, runtime, panel, panel_3c=None, allow_missing=()
                     raise Blocked('MAPPO_LANE bound but the runner has no lane episode (--allow-missing MAPPO_LANE)')
                 status(current, 'SKIPPED', dict(reason='runner has no lane-capable MAPPO episode'))
                 continue
+            parity_note = None
+            if report['runner'].get('parity') and bound.get('train_config'):
+                parity, more = run_parity(root=root, final_root=final_root, runtime=runtime, panel=panel, arm=arm,
+                                          cfg=cfg, base=base, workers=workers)
+                sources.update(more)
+                sources[f'PARITY_{arm}_REPORT'] = dict(source=str(final_root/f'PARITY_{arm}.json'),
+                                                       receipt_sha256=parity['receipt_sha256'], verdict=parity['verdict'])
+            else:
+                parity_note = ('F11 parity unavailable: '+('runner has no parity()' if not report['runner'].get('parity')
+                                                            else 'comparator bound without --train-config'))
             done, more = run_waves([(arm, 'episode', episode_specs(arm, panel, cfg, root, base, bound,
                                                                      bindings.get('U0')))], **kw)
             sources.update(more)
             both = dict(episodes, **{arm: {r['world_id']: r for r in done[arm]}})
             out[f'claim3b_{arm}'] = tables(
                 root=root, final_root=final_root, panel=panel, base=base, episodes=both, decisions=decisions,
-                sources=sources, missing=dict(missing, **{a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS if a != arm}),
+                sources=sources, missing=dict(missing, **{a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS if a != arm},
+                                              **({f'PARITY_{arm}': parity_note} if parity_note else {})),
                 dry_run=dry_run, comparators=dict(bindings, **{arm: bound}), scope=f'claim3b_{arm}',
                 stem=f'CLAIM3B_{arm}_TABLES')
             status(current, 'PASS', dict(analysis_sha256=out[f'claim3b_{arm}']['analysis_sha256']))
@@ -2141,6 +2292,11 @@ def bind_fake_mappo(out, final_root, arm='MAPPO_SPEED', residual=None):
     extra = {}
     if arm == 'U0':
         extra = dict(residual_path=str(residual), residual_sha256=file_sha(residual))
+    else:                                    # dry run: a stand-in training config for the F11 path
+        config = Path(out)/f'fake_{arm.lower()}_train_config.toml'
+        if not config.exists():
+            config.write_text(f'# dry-run stand-in for the {arm} training run config' + chr(10), encoding='utf-8')
+        extra = dict(train_config=config)
     return bind_mappo(final_root=final_root, path=fake, sha256=file_sha(fake), kind=kind, arm=arm,
                       authority='DRY RUN ONLY - not N7', check=dict(status='dry run'), dry_run=arm in REQUIRED_SHA,
                       **extra)
@@ -2254,7 +2410,7 @@ def _analyse_published(root, final_root, runtime, panel, panel_3c=None):
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument('command', choices=('register-panel', 'register-panel-3c', 'verify-panel', 'quote', 'check', 'register',
-                                       'bind-arms', 'prerun-register', 'prerun-run',
+                                       'bind-arms', 'prerun-register', 'prerun-run', 'parity',
                                        'bind-mappo', 'declare-unavailable', 'run', 'analyse', 'dry-run'))
     p.add_argument('--root', default=ROOT)
     p.add_argument('--final-root', default=FINAL_ROOT)
@@ -2283,6 +2439,8 @@ def main(argv=None):
     p.add_argument('--plant-config', help='prerun-register: the clean5a CONFIG.json (plant source for NATIVE/U0/RULE)')
     p.add_argument('--u0-path', help='prerun-register: the common u0 checkpoint (A_checkpoint_000.pt)')
     p.add_argument('--u0-sha256', help='prerun-register: its sha256')
+    p.add_argument('--train-config', help="bind-mappo (MAPPO_SPEED/MAPPO_LANE): the comparator's own training run "
+                                          'config (N7 toml) used by the F11 training-env path')
     p.add_argument('--chunk', type=int, help='prerun-run: episodes per dispatch (default 2 x workers); STOP_PRERUN '
                                              'in the final root stops after the chunk in flight')
     p.add_argument('--authority', help='bind-mappo: verbatim message/decision (e.g. N7 hand-off or MAIN fallback decision)')
@@ -2330,7 +2488,12 @@ def main(argv=None):
                 check_ = dict(status='not run', reason=repr(error))
             result = bind_mappo(final_root=a.final_root, path=a.mappo_path, sha256=a.mappo_sha256, kind=a.mappo_kind,
                                 arm=a.arm, authority=a.authority, check=check_, residual_path=a.residual_path,
-                                residual_sha256=a.residual_sha256)
+                                residual_sha256=a.residual_sha256, train_config=a.train_config)
+        elif a.command == 'parity':
+            report, _ = run_parity(root=a.root, final_root=a.final_root, runtime=Runtime(a.runner), panel=panel,
+                                   arm=a.arm, workers=min(a.workers, 8))
+            result = dict(verdict=report['verdict'], receipt_sha256=report['receipt_sha256'],
+                          worlds={k: v['compare'] for k, v in report['worlds'].items()})
         elif a.command == 'prerun-register':
             result = prerun_register(final_root=a.final_root, plant_config=a.plant_config, u0_path=a.u0_path,
                                      u0_sha256=a.u0_sha256, runtime=Runtime(a.runner), panel=panel,
