@@ -64,6 +64,7 @@ LATER_S = 420
 DITHER_A = -1.0
 DITHER_S = 2
 DITHER_RANGE_M = 1000.0
+DITHER_MIN_V = 5.0          # dither integrity (PLANGEN2 inert dithers; S-LCMOVES rule): moving CAVs only
 INERT_VS = 50.0
 TRAIN_RANGES = ((989200, 989599), (989000, 989099))
 FORBIDDEN = ((989600, 989699), (964000, 964199), (962000, 962999), (977000, 977999))
@@ -303,7 +304,7 @@ def _order(ms_):
                                       m['world']['cell_key'], m['t0'], m['family']))
 
 
-def build_jobs(moments_by_arm, *, include_r=True):
+def build_jobs(moments_by_arm, *, include_r=True, r0_stop=EPISODE_S):
     """Frozen job list. Each entry is an atomic PAIR {base, coop} charged together (or a single coop
     job for 'sampled', whose base is the r0 base)."""
     groups = []
@@ -321,8 +322,8 @@ def build_jobs(moments_by_arm, *, include_r=True):
         for m in _order(moments_by_arm.get(arm, ())):
             worlds.setdefault(world_key(m['world']), (m['world'], []))[1].append(m)
         for wk, (world, ms_) in worlds.items():
-            base = add(f'r0_{arm}', arm, world, 'base', None, EPISODE_S)
-            coop = add(f'r0_{arm}', arm, world, 'coop', 'greedy', EPISODE_S)
+            base = add(f'r0_{arm}', arm, world, 'base', None, r0_stop)
+            coop = add(f'r0_{arm}', arm, world, 'coop', 'greedy', r0_stop)
             groups.append(dict(stage=f'r0_{arm}', jobs=[base, coop], moments=[m['id'] for m in ms_]))
     for arm in ('B', 'R') if include_r else ('B',):
         ordered = _order(moments_by_arm.get(arm, ()))
@@ -348,7 +349,7 @@ def build_jobs(moments_by_arm, *, include_r=True):
 
 
 def plan(root, *, config, u0, sidecars, rows, only_rows=None, receipt=None, u0_sha256=None,
-         include_r=True, policy_deterministic=False):
+         include_r=True, policy_deterministic=False, r0_stop=EPISODE_S, max_moments=None):
     """Zero physics: copy/verify inputs into <root>/inputs and freeze PLAN.json."""
     import shutil
     root = guard_path(root)
@@ -401,8 +402,8 @@ def plan(root, *, config, u0, sidecars, rows, only_rows=None, receipt=None, u0_s
         ms_, ex = moments(rows.get(arm, ()), arm, only=only)
         for m in ms_:
             m['imitation_split'] = split.get(m['world']['seed'])
-        by_arm[arm], excluded[arm] = _order(ms_), ex
-    groups = build_jobs(by_arm, include_r=include_r)
+        by_arm[arm], excluded[arm] = _order(ms_)[:max_moments], ex
+    groups = build_jobs(by_arm, include_r=include_r, r0_stop=int(r0_stop))
     for g in groups:
         for j in g['jobs']:
             if not seed_allowed(j['world']['seed']):
@@ -632,15 +633,25 @@ def worker(root, ident):
     from . import map_descriptor as md
     if os.environ.get(md.ENV) is None or os.environ.get('COOPMWM_G5_RUNTIME') != '1':
         raise RuntimeError('COOPMWM_MAP_SPEC and COOPMWM_G5_RUNTIME=1 required')
-    saved = torch.load(root/'inputs'/'u0.pt', map_location='cpu', weights_only=False)
-    weights = saved['policy'] if isinstance(saved, dict) and 'policy' in saved else saved
-    cfg = worker_state = None
+    # BOTH runs use the clean4 training-path base: MAPPO u0 widened by v2v_runtime.load_checkpoint(u0,
+    # config) (zero V2V/intent columns; the warm start hashes exactly this module) with the V2V wrapper,
+    # so base and coop share every input but the cooperation layer (CRN).
+    from .coop_warmstart import state_sha256
+    from .v2v_runtime import load_checkpoint
+    cfg = _read(root/'inputs'/'CONFIG.json')
+    base_model = load_checkpoint(root/'inputs'/'u0.pt', config=cfg)[0]
+    weights = {k: v.detach().clone() for k, v in base_model.state_dict().items()}
+    base_sha = state_sha256(base_model)
+    worker_state = None
     if job['kind'] == 'coop':
-        cfg = _read(root/'inputs'/'CONFIG.json')
         payload = torch.load(root/'inputs'/f'SIDECAR_{job["arm"]}.pt', map_location='cpu', weights_only=False)
         if payload.get('arm') not in (None, job['arm']):
             raise ValueError('sidecar arm mismatch')
+        if payload.get('base_sha256') not in (None, base_sha):
+            raise ValueError('sidecar was trained on a different frozen base than this widened MAPPO u0')
         worker_state = payload['worker']
+    else:
+        cfg = None
     capture = set()
     moments_here = [moment_of(body, mid) for mid in group['moments']]
     for m in moments_here:
@@ -676,7 +687,8 @@ def worker(root, ident):
     steps = (result or {}).get('steps') or (rec.controller.events if rec.controller is not None else [])
     summary = dict(schema=SCHEMA+'.summary', id=ident, stage=job['stage'], arm=job['arm'], kind=job['kind'],
                    decode=job['decode'], world=job['world'], dither=dither, dither_log=rec.dither_log,
-                   noise_seed=accel['noise_seed'], deterministic=accel['deterministic'],
+                   noise_seed=accel['noise_seed'], deterministic=accel['deterministic'], base_sha256=base_sha,
+                   v2v=accel['v2v'],
                    totals=(result or {}).get('totals'), actual_sim_s=(result or {}).get('actual_sim_s'),
                    charged_sim_s=job['sim_s'], series_keys=list(SERIES_KEYS), series=rec.series,
                    error=error, wall_s=round(time.time()-started, 2), map_spec=os.environ.get(md.ENV),
@@ -715,7 +727,7 @@ def resolve_dither(root, moment, which, *, drop_s=None):
             excluded.update(mv.get('members') or ())
     coop_rows = {r['vid'] for r in coop['captures'].get(str(t0)) or ()}
     cands = [r for r in rows if r.get('is_cav') and r['vid'] not in excluded and r['vid'] in coop_rows
-             and isinstance(r.get('s_m'), (int, float))]
+             and isinstance(r.get('s_m'), (int, float)) and float(r.get('v_mps') or 0.) > DITHER_MIN_V]
     vid = None
     if which == 'r1':
         upstream = [r for r in cands if r['s_m'] <= drop_s]
@@ -727,12 +739,36 @@ def resolve_dither(root, moment, which, *, drop_s=None):
         if pool:
             vid = random.Random(f'imitreplay_r2:{moment["id"]}').choice(pool)['vid']
     out = dict(moment=moment['id'], which=which, vid=vid, t0=t0, drop_s_m=drop_s, candidates=len(cands),
-               excluded=sorted(excluded), rule='r1 nearest-drop upstream non-member CAV; r2 seeded random '
-               'non-member CAV within 1 km of the drop; rows = r0 base at t0, present in r0 coop at t0')
+               excluded=sorted(excluded), rule='r1 nearest-drop upstream MOVING (v>5) non-member CAV; r2 seeded '
+               'random MOVING non-member CAV within 1 km of the drop; rows = r0 base at t0, present in r0 coop at t0')
     path = root/'jobs'/'_dither'/f'{moment["id"]}_{which}.json'
     if not path.exists():
         _write_new(path, out)
     return _read(path)
+
+
+# ============================================================================ smoke inputs (zero physics)
+
+def smoke_inputs(out_dir, u0, *, provenance='S-IMITREPLAY plumbing smoke (not the clean4 config)'):
+    """An approximate clean4-like B config (W1 V2V walls, W2 pressure/release, N2 lane-drop features/
+    moves/V2V 100 m; N9 families off as in the clean4 default) and a FRESH (not warm-started) B worker state, for a plumbing
+    smoke of this harness only. Never a result about imitation."""
+    import torch
+    from . import coop_warmstart as cw, lane_drop, map_descriptor as md, track2_backend as tb, v2v_wall
+    from .v2v_runtime import load_checkpoint
+    out_dir = guard_path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=False)
+    cfg = cw.dry_config()
+    cfg.update(run_root=str(out_dir), track2_reward=dict(weight=.5, provenance=provenance))
+    cfg.update(lane_drop.config_keys(provenance=provenance, descriptor=md.current(), v2v=True, v2v_range_m=100.))
+    cfg.update(v2v_wall.config_keys(provenance=provenance, member_cap=4, range_m=100.))
+    cfg.update(wall_pressure_features=True, wall_release=True)
+    base = load_checkpoint(guard_path(u0), config=cfg)[0]
+    torch.manual_seed(int(cfg['training_seed']))
+    policy = tb.EpisodePolicy(base, cfg, 'B')
+    (out_dir/'SMOKE_CONFIG.json').write_text(json.dumps(cfg, indent=1, sort_keys=True, default=str), encoding='utf-8')
+    torch.save(dict(arm='B', update=0, worker=policy.worker_state(), smoke=True), out_dir/'SMOKE_SIDECAR_B.pt')
+    return out_dir/'SMOKE_CONFIG.json', out_dir/'SMOKE_SIDECAR_B.pt'
 
 
 # ============================================================================ dispatcher
@@ -1090,6 +1126,11 @@ def main(argv=None):
     a.add_argument('--only-rows-B', nargs='*')
     a.add_argument('--only-rows-R', nargs='*')
     a.add_argument('--policy-deterministic', action='store_true')
+    a.add_argument('--r0-stop', type=int, default=EPISODE_S)
+    a.add_argument('--max-moments', type=int)
+    a = sub.add_parser('smoke-inputs')
+    a.add_argument('--out', required=True)
+    a.add_argument('--u0', required=True)
     a = sub.add_parser('run')
     a.add_argument('--root', required=True)
     a.add_argument('--workers', type=int, default=16)
@@ -1114,10 +1155,13 @@ def main(argv=None):
         body = plan(args.root, config=args.config, u0=args.u0, u0_sha256=args.u0_sha256, sidecars=side,
                     rows=dict(B=args.rows_B, R=args.rows_R), receipt=args.receipt,
                     only_rows=dict(B=args.only_rows_B, R=args.only_rows_R),
-                    include_r=bool(args.sidecar_R and args.rows_R), policy_deterministic=args.policy_deterministic)
+                    include_r=bool(args.sidecar_R and args.rows_R), policy_deterministic=args.policy_deterministic,
+                    r0_stop=args.r0_stop, max_moments=args.max_moments)
         print(json.dumps(dict(plan_sha256=body['plan_sha256'], planned_sim_s=body['planned_sim_s'],
                               moments={k: len(v) for k, v in body['moments'].items()},
                               excluded={k: len(v) for k, v in body['excluded'].items()}), indent=1))
+    elif args.cmd == 'smoke-inputs':
+        print(smoke_inputs(args.out, args.u0))
     elif args.cmd == 'run':
         print(run(args.root, workers=args.workers, load_high=args.load_high, low_workers=args.low_workers,
                   stages=args.stages))

@@ -14,7 +14,6 @@ leverprobe, wmteach, tools/__init__.py) stay the same symlinks. Writes SOURCE_MA
 import argparse
 import gzip
 import hashlib
-import io
 import subprocess
 import sys
 from pathlib import Path
@@ -66,9 +65,11 @@ def main():
     subprocess.check_call(['scp', '-q', '-C', '-o', 'BatchMode=yes', '-o', 'ServerAliveInterval=15', str(local),
                            f'cpuV:{remote_tar}'])
     script = REMOTE.format(target=target, base=BASE, tarball=remote_tar, linked=' '.join(LINKED), commit=commit)
+    # bytes, not text: Windows text-mode stdin would turn LF into CRLF inside the bash script
     out = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ServerAliveInterval=15', 'cpuV', 'bash -s'],
-                         input=script, text=True, capture_output=True)
-    sys.stdout.write(out.stdout); sys.stderr.write(out.stderr)
+                         input=script.replace(chr(13), '').encode(), capture_output=True)
+    sys.stdout.write(out.stdout.decode(errors='replace'))
+    sys.stderr.write(out.stderr.decode(errors='replace'))
     print(dict(target=target, commit=commit, tar_sha256=hashlib.sha256(blob).hexdigest()))
     raise SystemExit(out.returncode)
 

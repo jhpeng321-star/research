@@ -250,6 +250,14 @@ def test_worker_with_fake_plant(tmp_path, monkeypatch, files):
         return dict(steps=steps, totals=dict(b.totals), actual_sim_s=job['stop']-300)
 
     monkeypatch.setattr(accel_plant, 'episode', fake_episode)
+    from . import v2v_runtime
+
+    class Fake(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            torch.manual_seed(0)
+            self.actor = torch.nn.Sequential(torch.nn.Linear(40, 4))
+    monkeypatch.setattr(v2v_runtime, 'load_checkpoint', lambda path, config=None: (Fake(), None, None, {}))
     for j in g['jobs']:
         with pytest.raises(ValueError):
             ir.worker(root, j['id'])                                       # not precharged
@@ -263,6 +271,8 @@ def test_worker_with_fake_plant(tmp_path, monkeypatch, files):
     assert not seen[base_id].get('track2_backend') and seen[coop_id]['track2_backend']
     assert seen[coop_id]['track2_state'] == {'schema': 'w'} and seen[coop_id]['greedy'] and not seen[base_id]['greedy']
     assert seen[base_id]['warm_history'] and seen[base_id]['b_replay'] and seen[base_id]['stop'] == 1200
+    assert seen[base_id]['v2v'] and seen[coop_id]['v2v']
+    assert all(torch.equal(seen[base_id]['weights'][k], seen[coop_id]['weights'][k]) for k in seen[base_id]['weights'])
     assert cfb.tick is fake_tick and (root/'jobs'/coop_id/'DONE.json').exists()
     rep = ir.analyze(root)
     assert rep['links']['B'] == {'no_fire': 1} or rep['links']['B'].get('no_fire', 0) >= 1
