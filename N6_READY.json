@@ -1,85 +1,102 @@
 {
   "task": "N6: gated final paired evaluation ported to the wz3to2 lane-drop map; evaluates the clean4 run (u24) on a registered evaluation panel (held-out range 989600-989699)",
-  "status": "READY_CPU_ONLY (physics refused until the N1 map API and the clean4 runner module land)",
+  "status": "READY_CPU_ONLY (launcher + runner built on N1_READY b2f30091; first physics is the u24 run itself; per-decision branches not built)",
   "branch": "c4/nm-finaleval",
   "worktree": "E:/agent-work/c4-nm-finaleval",
-  "base": "3e5bc9f9 + fast-forward merge of c4/clean3-finaleval 47d7b376",
-  "commit": "03f8db32",
+  "base": "3e5bc9f9 + c4/clean3-finaleval 47d7b376 (ff) + c4/nm-abstract merged at f8762a5f and b2f30091 (N1_READY)",
+  "commits": {
+    "03f8db32": "first launcher + panel v1 (superseded)",
+    "0afcd988": "panel v2 registration 3acb2b56 + supersession note; v1 b5e1cd2a superseded",
+    "93c2ecb7": "runner tools.coopmwm.nm_eval_runner + MAPPO comparator parameter (pre-N1_READY)",
+    "7054339c": "N1 map_api adapter bound, MAPPO binding, tests (HEAD code)"
+  },
   "new_sim_s": 0,
   "files_lf_sha256": {
-    "ops/nm_finaleval.py": "9ccf0a89648a8f626d87f49bf73adea3c567354398efbccf95cd918ae21ef244",
-    "ops/nm_map_stub.py": "8127473c85d100cdb9759b70b5860b268fc8113dc323ffb3291a269bfeb5a477",
-    "ops/nm_eval_panel_wz3to2.json": "61583105f76891f9bb39d5908dadf53657693aadf3bc83dbe2eea567b2a99dc3",
-    "ops/test_nm_finaleval.py": "eab48e59f70e4cff9140b994173b57cf015e0bb73e7639c7c5227c8729209153"
+    "ops/nm_finaleval.py": "07281a1b25e8cc3e0f437feb6a498e6c200b5627100d5b9b87c42df6eff9717c",
+    "ops/test_nm_finaleval.py": "888459c7e84247fa366159dc80c92f4e9a116671ea6c5b8e538f763ca3ff3ce4",
+    "ops/nm_eval_panel_wz3to2_v2.json": "251496fcf6002a96bef412552ef2216627af2d8b80b28e3b545f98f8fb84b4fc",
+    "ops/nm_eval_panel_SUPERSEDED.json": "78b3302b5587daa7b4162404eb7b7be606eb6e669d8fbe8a19b71c1aad25d582",
+    "ops/nm_eval_panel_wz3to2.json (v1, superseded, kept)": "61583105f76891f9bb39d5908dadf53657693aadf3bc83dbe2eea567b2a99dc3",
+    "tools/coopmwm/nm_eval_runner.py": "8d4e5ed7855a1e30702af602ac4356c9f13ad982bb98b9ba8e788162c636d8f0",
+    "tools/coopmwm/test_nm_eval_runner_cpu.py": "09b9b1b211e7b9e7f5df5c46aa992af5b2bdbc7efe636e228e897476c984db76"
   },
-  "existing_files_changed": [],
-  "main_decision_implemented": {
-    "source": "MAIN message to N6, 2026-11-06",
-    "only_runner": "this launcher is the ONLY clean4 final-evaluation runner (N4 switches the in-run u8/u24 evaluations off); any foreign v2v_final charge in the clean4 ledger blocks it",
-    "budget": "debited from clean4 v2v_final (690,000 sim-s) in the clean4 run-root ledger, through the clean4 owner's whole-wave reservation (track2_backend._reserve, as the clean3 lane-on baseline); hard sub-cap 690,000 on this launcher's job ids",
-    "windows": "1200 s = clean4 training episode length",
-    "worlds": "96 evaluation worlds 989600-989695",
-    "arms": 5,
-    "decision_subset": "per-decision synergy only on 24 registered worlds (panel repeat % 4 == 0: 989600, 989604, ..., 989692)"
-  },
+  "existing_files_changed": ["none outside the N6 files; ops/nm_map_stub.py (own, pre-N1 stub) removed"],
+  "main_decisions_implemented": [
+    "only clean4 final-evaluation runner; in-run u8/u24 evaluations off -> any foreign v2v_final charge blocks",
+    "spend debited from the clean4 sealed v2v_final allocation (key clean4_budget or clean3_budget, >= 690,000) in the clean4 ledger via the clean4 owner's whole-wave reservation; hard sub-cap 690,000 on nmfinal_/nmdec_ job ids",
+    "1200 s windows (= training episode; N1 EPISODE_S), 96 worlds 989600-989695, 5 arms",
+    "clean4 cell = 3200 veh/h x 0.6 (N1 cell_key D3200_p60, N3 NEWMAP2 recommendation, N11 F4); panel built from N1 map_scenarios.world; network bound to the staged probe net b6277898",
+    "MAPPO comparator = parameter (path + sha256, verified at bind and at every load): N7's wz3to2 retrain (kind retrained_wz3to2); d9042cc5 only as explicitly bound fallback (kind u0_transferred_not_retrained, reported as 'u0 transferred, not retrained'); v2v_final not grown",
+    "per-decision synergy only on a registered small subset that fits 690k (8 worlds)",
+    "a missing decision runner or an unbound MAPPO never blocks the other arms"
+  ],
   "panel": {
-    "file": "ops/nm_eval_panel_wz3to2.json",
-    "panel_sha256": "b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1",
-    "panel_sha256_kind": "sealed content digest (tools.coopmwm.protocol.digest, CRLF/LF independent); pinned as nm_finaleval.PANEL_SHA256",
-    "file_sha256_lf": "61583105f76891f9bb39d5908dadf53657693aadf3bc83dbe2eea567b2a99dc3",
-    "registered": "2026-11-06, committed in 03f8db32 before any clean4 launch (c4/nm-train head 70eee181 has no launch commit)",
-    "worlds": "96: world_id wz3to2_<seed>, world {map wz3to2, seed 989600..989695, cell 0, repeat 0..95, penetration 0.3, demand 2800, profile peak}",
-    "reserved_unused": [989696, 989699],
-    "cell": "single clean4 training cell = DEMAND_CHOSEN.json (main 2800 veh/h peak profile, penetration 0.3, departLane free)",
-    "built_from": "MAP_SPEC.json / DEMAND_CHOSEN.json / wz3to2.net.xml bytes only (digests bound in map_binding); test_panel_rebuilds_from_the_map_files_only reproduces it exactly",
-    "contract": "arms A/B/R u24 + BASE + NATIVE; comparisons B-A, R-A, B-R; total benefit vs BASE and NATIVE; J_veh_s (team delay, lower better) over [0,1200); noise seed = world seed; registered clean3 estimator (planner_eval._paired_ci, 10000 reps, seed 20261104, 95%, paired whole-world percentile); safety collisions/teleports/hard_brakes/ttc_events",
-    "primary_registered_descriptive": "B-BASE: CI95 of mean(J_B - J_BASE) entirely below 0 AND B collisions+teleports <= BASE; never gates clean4; the clean4 primary criterion (u24 replicated synergy on TRAIN states, N4) is unchanged",
-    "decisions": "B and R; first 2-3-member cooperation decision with 300 <= t <= 840 s (time order only, outcome-blind) on the 24 subset worlds; 360 s branches from the saved state: all / background (BASE controller) / each member alone; clean3 ISOLATED_TEST decomposition (delta_all = best_solo + policy_cooperation_gain)",
-    "power": "N=96 paired worlds: MDE 0.286 SD of the per-world difference (alpha .05, power .80); probe noise basis SD 3,022 veh-s per 360 s (n=126) -> ~1,580 veh-s per 1200 s world-episode if windows independent; decision subset <=24/arm -> MDE ~1,720 veh-s (descriptive)",
-    "exposure": "eval range absent from the newmap_probe ledger (989000-989006 only). DISCLOSED: integers 989600-989635 are the OLD merge-map S-COOPMWM final_test seeds (tools/coopmwm/protocol.py FINAL_START); wz3to2 streams are map-namespaced (newmap_requests_v1:{map}:{seed}, sample_driver('{map}:{seed}', id)), ids carry the wz3to2_ prefix"
+    "file": "ops/nm_eval_panel_wz3to2_v2.json",
+    "panel_sha256": "3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130",
+    "kind": "sealed content digest, pinned as nm_finaleval.PANEL_SHA256; CONFIG must bind newmap.eval_panel_sha256 to it",
+    "sent_to": "MAIN (relay to N4 requested; N4 not reachable by name)",
+    "worlds": "96 = N1 map_scenarios.world(seed, 3200, 0.6), seeds 989600-989695 (cell 8, cell_key D3200_p60, repeat = seed-989600), world_id wz3to2_<seed>; 989696-989699 reserved unused",
+    "map_binding": "net_sha256 b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa (staged raw bytes; N1 network_file_sha256), spec_sha256 ac98e73b..., network_semantic_sha256 946594c5...; descriptor_sha256_at_registration f22a6ce2 is informational (N1_READY record digest is now 6fc6be65; every binding field unchanged, rebuild test proves it)",
+    "contract": "arms A/B/R u24 + comparators; B-A, R-A, B-R; total benefit vs BASE and NATIVE; J_veh_s lower better; noise seed = world seed; role final_test; clean3 estimator planner_eval._paired_ci, 10000 reps, seed 20261104, 95%; safety collisions/teleports/hard_brakes/ttc_events; primary (descriptive) B-BASE CI95 < 0 and B collisions+teleports <= BASE",
+    "decisions": "B and R on 8 registered worlds (repeat % 12 == 0: 989600, 989612, ..., 989684): first new 2-3-member cooperation move starting at 300-840 s; branches all/background/solo_i, 360 s, clean3 ISOLATED_TEST decomposition, prefix-inclusive cost (t_s+360 per branch)",
+    "superseded": "v1 b5e1cd2a (2800 x 0.3) by sealed note ops/nm_eval_panel_SUPERSEDED.json (note_sha256 a6aba4e5...); no physics used it; a CONFIG binding to it is refused",
+    "metric_note": "J = the plant's team_delay_vs: accumulated over the controlled ticks 300-1200 s after the shared native 0-300 s warmup (identical for every arm; paired differences equal the full-window ones, % uses the control-window denominator)",
+    "exposure": "eval range unused by newmap_probe (989000-989006) and NEWMAP2 (989200-989202); integers 989600-989635 were OLD merge-map S-COOPMWM final_test seeds - map-namespaced streams and N1's guard keep them apart (disclosed)"
   },
   "budget_quote": {
     "phase": "clean4 v2v_final",
     "allocation_sim_s": 690000,
-    "base_mappo_u0": {"episodes": "5 arms x 96 x 1200 = 576,000", "decisions_ceiling": "2 arms x 24 worlds x 5 branches x 360 = 86,400", "total_ceiling": 662400, "slack": 27600},
-    "base_native": {"episodes": "4 arms x 96 x 1200 = 460,800 (BASE aliases NATIVE)", "decisions_ceiling": 86400, "total_ceiling": 547200, "slack": 142800},
-    "reservation": "planned sim-s precharged per job; every wave reserved whole before dispatch; only captured decisions reserved (closing_pair 4 branches, abreast_wall 5)",
-    "wall_time": "about 0.85-1.3 h on 24 workers (basis 6-9 sim-s/s per worker from the newmap_probe cpuV runs; policy inference may be slower)",
-    "command": "python ops/nm_finaleval.py quote [--base mappo_u0|native]"
+    "episodes": "5 arms (A, B, R, MAPPO, NATIVE) x 96 x 1200 = 576,000 (both base controllers; BASE is an alias)",
+    "decisions_ceiling": "2 arms x 8 worlds x <=5 branches x <=1200 (prefix replay from 0 to t_s+360) = 96,000; only captured decisions reserved; 0 while the runner has no decision_branch",
+    "total_ceiling": 672000,
+    "slack": "18,000 (2.6%)",
+    "note": "panel v2 recorded the earlier 4-arm native quote 556,800; MAIN's 5-arm MAPPO comparator amendment is sealed in RUN_PLAN.json (amendments) and quote() = 672,000 for either base",
+    "wall_time": "about 0.8-1.3 h on 24 workers (basis 6-9 sim-s/s per worker from newmap_probe cpuV native runs; policy throughput on wz3to2 unmeasured)",
+    "command": "python ops/nm_finaleval.py quote"
   },
-  "gate": "waits (NotReady) until A/B/R_UPDATE_024 sealed + checkpoints + *_COMPLETE + LEARNING_MONITOR_u024 and registered health clear; stops permanently (Blocked) on any PAUSE_SAFETY, any collision/teleport in LEARNING_MONITOR_u001..u024, a monitor not bound to digest(CONFIG), a tampered u24 receipt, a changed u24 checkpoint, or A_checkpoint_000.pt != common_checkpoint_sha256 (mappo_u0 base)",
-  "tables": "FINAL_TABLES.json (sealed analysis_sha256) + .md: T0 arms; primary B-BASE; T1 total benefit vs BASE and vs NATIVE (paired CIs, % on the same resamples); T2 B-A, R-A, B-R; T3 panel decomposition B-BASE = (A-BASE)+(R-A)+(B-R) and B-NATIVE = (BASE-NATIVE)+(A-BASE)+(R-A)+(B-R) (exact), per-decision decomposition for B and R + matched B-R, clean4 replicated u24 receipt if present; T4 safety totals and paired per-counter CIs vs BASE and NATIVE",
+  "arms": {
+    "A/B/R": "u24 checkpoints of the clean4 root, clean3 final-evaluation episode path (accel_plant.episode, deterministic, V2V, role final_test), N1 bind_runtime installs the map",
+    "MAPPO": "bound comparator executor (job checkpoint) + the clean4 common u0 A_checkpoint_000.pt (zero residual), same plant; sha re-verified before the plant loads it",
+    "NATIVE": "qualified true-native plant (tools.coopnative.plant) with N1 map install + CAV-report rows, identical team-delay reducer",
+    "BASE": "alias: MAPPO when CONFIG newmap.base_controller is mappo_u0, NATIVE when native"
+  },
+  "gate": "waits (NotReady) for A/B/R_UPDATE_024 sealed + checkpoints + *_COMPLETE + LEARNING_MONITOR_u024 and registered health; stops (Blocked) on PAUSE_SAFETY, any collision/teleport in LEARNING_MONITOR_u001..u024, a monitor not bound to digest(CONFIG), a tampered u24 receipt, a u24 checkpoint changed after the gate, or (mappo_u0 base) A_checkpoint_000.pt != common_checkpoint_sha256",
+  "tables": "FINAL_TABLES.json (sealed analysis_sha256) + .md: T0 arms (BASE alias marked); primary B-BASE; T1 total benefit vs BASE and vs NATIVE; T2 B-A, R-A, B-R; T3 panel decomposition B-BASE and B-NATIVE (exact), per-decision decomposition (unavailable until branches exist), descriptive decision activity from every B/R episode (worlds with a cooperative move, moves by family, median first time), clean4 replicated u24 receipt if present; T4 safety totals and paired per-counter CIs vs BASE and NATIVE; paired whole-world bootstrap CIs throughout",
   "interfaces_required": {
-    "N4_clean4_CONFIG": "newmap = {map: 'wz3to2', base_controller: 'mappo_u0'|'native', cell: {demand_vph: {main: 2800}, penetration: 0.3, profile: 'peak'}, eval_panel_sha256: 'b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1'}; sealed budget under clean4_budget (or clean3_budget) with phases.v2v_final >= 690000; in-run u8/u24 evaluations off; common_checkpoint_sha256 for a MAPPO base; monitors/update receipts as clean3. Present keys must match (else Blocked); absent keys are recorded as unbound in the sealed RUN_PLAN (register --base)",
-    "N1_map_api": "module with STUB=False, seed_ranges('wz3to2') == {train: (989200, 989599), eval: (989600, 989699)}, descriptor('wz3to2') with net_sha256 == panel map_binding.net_sha256 and stream_namespace 'wz3to2', world('wz3to2', seed, cell, repeat) == the panel world dict, check_world(world, 'eval'); pass --map-api <module> (or NM_MAP_API). Names adapt in bind_map_api only",
-    "runner_module": "tools.coopmwm.nm_eval_runner in the clean4 deployed source (N1/N4, on the map-aware plant): MAP='wz3to2', episode(spec, cfg, work), decision_branch(spec, cfg, work); full contract in nm_finaleval.RUNNER_CONTRACT. Missing native/decision support needs explicit --allow-missing NATIVE|DECISIONS"
+    "N4_clean4_CONFIG": "newmap = {map: 'wz3to2', base_controller: 'mappo_u0'|'native', cell: 'D3200_p60' (or {demand_vph: {main: 3200}, penetration: 0.6} / 8), eval_panel_sha256: '3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130'}; common_checkpoint_sha256 (needed for the MAPPO arm's zero residual); sealed phases.v2v_final >= 690000; no other v2v_final charges; no 9896xx seed in CONFIG/ISOLATED_REGISTRATION/ledger ids; monitors and u24 receipts as clean3. Absent newmap keys are recorded as unbound in the sealed RUN_PLAN (register --base)",
+    "env": "COOPMWM_MAP_SPEC=<staged wz3to2 MAP_SPEC.json, net b6277898> and COOPMWM_G5_RUNTIME=1 for the launcher and every worker (physics refused without COOPMWM_MAP_SPEC)",
+    "N1": "tools.coopmwm.map_api (merged b2f30091); map_check verifies seed ranges, raw net sha, every panel world and the final_test guard before physics",
+    "N7": "send the retrained MAPPO executor path + sha256; operator runs bind-mappo --mappo-kind retrained_wz3to2 (zero-physics hash + torch-load check). If the retrain fails, MAIN decides and binds the d9042cc5 export with --mappo-kind u0_transferred_not_retrained"
   },
   "commands_cpuV": {
-    "deploy": "copy ops/clean3_finaleval.py, ops/nm_finaleval.py, ops/nm_map_stub.py, ops/nm_eval_panel_wz3to2.json (LF bytes at 03f8db32) into one control dir CTRL",
-    "check": ". env.sh $SRC && python -B $CTRL/nm_finaleval.py check --root $ROOT --final-root $FINAL --map-api <N1 module>",
+    "deploy": "clean4 source must contain this branch's tools/coopmwm/nm_eval_runner.py and N1's modules; copy ops/clean3_finaleval.py, ops/nm_finaleval.py, ops/nm_eval_panel_wz3to2_v2.json (LF bytes at 7054339c) into a control dir CTRL",
+    "env": "export COOPMWM_MAP_SPEC=<staged>/assets/research/newmap_candidates/wz3to2/MAP_SPEC.json COOPMWM_G5_RUNTIME=1 CUDA_VISIBLE_DEVICES=",
+    "check": ". env.sh $SRC && python -B $CTRL/nm_finaleval.py check --root $ROOT --final-root $FINAL",
     "register": ". env.sh $SRC && python -B $CTRL/nm_finaleval.py register --root $ROOT --final-root $FINAL [--base mappo_u0|native]",
-    "run": "setsid bash -c '. env.sh $SRC && exec nice -n 19 python -B -u $CTRL/nm_finaleval.py run --root $ROOT --final-root $FINAL --map-api <N1 module> --workers 24' > $FINAL/launcher.log 2>&1 < /dev/null &",
-    "analyse": "python -B $CTRL/nm_finaleval.py analyse --root $ROOT --final-root $FINAL (zero physics, from published WAVE_* receipts)",
+    "bind_mappo": ". env.sh $SRC && python -B $CTRL/nm_finaleval.py bind-mappo --final-root $FINAL --mappo-path <N7 checkpoint> --mappo-sha256 <sha> --mappo-kind retrained_wz3to2 --authority '<N7 hand-off verbatim>'",
+    "run": "setsid bash -c '. env.sh $SRC && exec nice -n 19 python -B -u $CTRL/nm_finaleval.py run --root $ROOT --final-root $FINAL --workers 24 [--mappo-wait 86400]' > $FINAL/launcher.log 2>&1 < /dev/null &",
+    "rerun_after_late_mappo_binding": "the same run command: published waves are reused, only the MAPPO wave runs, tables re-published as FINAL_TABLES_<sha>.json",
+    "analyse": "python -B $CTRL/nm_finaleval.py analyse --root $ROOT --final-root $FINAL (zero physics)",
     "dry_run": "PYTHONPATH=. python -B ops/nm_finaleval.py dry-run --base mappo_u0|native --out <empty dir>"
   },
   "dry_run": {
-    "mappo_u0": {"status": "PASS", "new_sim_s": 0, "physics": false, "episodes_dispatched_fake": 480, "branches_fake": 174, "fake_v2v_final_sim_s": 638640, "analysis_sha256": "17bcabf9538680a24ad616d5205b8247518e109740553efe01bdcdc286548b93", "out": "E:/agent-work/c4-nm-finaleval/tmp/nm_dryrun_mappo_u0 (gitignored)"},
-    "native": {"status": "PASS", "new_sim_s": 0, "physics": false, "episodes_dispatched_fake": 384, "branches_fake": 174, "fake_v2v_final_sim_s": 523440, "analysis_sha256": "1ca26a20001ca1148ec1e7323b9d7d9beee9c49575c61c1e79e68f6ff51a9a59", "out": "E:/agent-work/c4-nm-finaleval/tmp/nm_dryrun_native (gitignored)"},
-    "note": "real registered panel, fake clean4 root/ledger, fake physics; never imports a simulator or opens a process pool; numbers synthetic"
+    "mappo_u0": {"status": "PASS", "new_sim_s": 0, "physics": false, "episodes_fake": 480, "branches_fake": 50, "fake_v2v_final_sim_s": 620506, "map_api": "tools.coopmwm.map_api ok, net b6277898", "analysis_sha256": "9c6b8fc42ea95aeba7a6509829b654390b56faaa265b76239eb9e4527b1a0726"},
+    "native": {"status": "PASS", "new_sim_s": 0, "physics": false, "episodes_fake": 480, "branches_fake": 50, "fake_v2v_final_sim_s": 620506, "map_api": "tools.coopmwm.map_api ok, net b6277898", "analysis_sha256": "f57af5163f4e0ecc1764761ecec6d40fa2b9b13b3546974b503c0b1d10e40314"},
+    "note": "real registered panel, fake clean4 root/ledger, fake physics (FakeRuntime also fakes branches to exercise the decomposition code); never imports a simulator or opens a process pool; outputs in tmp/ (gitignored)"
   },
   "tests": {
-    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider ops/test_nm_finaleval.py ops/test_clean3_finaleval.py",
-    "result": "38 passed (22 new + 16 clean3) in 27 s",
-    "ruff": "ruff check ops/nm_finaleval.py ops/nm_map_stub.py ops/test_nm_finaleval.py -> All checks passed",
-    "sumo_tests": "none (CPU fakes only)"
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider ops/test_nm_finaleval.py tools/coopmwm/test_nm_eval_runner_cpu.py ops/test_clean3_finaleval.py tools/coopmwm/test_map_descriptor_cpu.py tools/coopmwm/test_map_scenarios_cpu.py tools/coopmwm/test_map_runtime_cpu.py tools/coopmwm/test_newmap_sanity_cpu.py tools/coopmwm/test_map_golden_cpu.py",
+    "result": "82 passed, 1 skipped (N1's cpuV-only frozen-runtime test); N6 alone: 26 launcher + 7 runner",
+    "ruff": "clean on the four N6 python files",
+    "sumo_tests": "none"
   },
   "caveats": [
-    "N1 (c4/nm-abstract) has no commits yet: nm_map_stub is bound and the launcher refuses physics until a real map API passes map_check",
-    "The runner module tools.coopmwm.nm_eval_runner does not exist yet; it needs the N1 map-aware plant. Only its contract is defined here",
-    "The panel cell is DEMAND_CHOSEN (2800 veh/h peak, penetration 0.3). If N4 trains on a different cell, re-register the panel BEFORE clean4 launches; a mismatching CONFIG cell blocks the launcher",
-    "The per-decision subset (<=24 decisions per arm) is descriptive only, sized to fit 690,000",
-    "The clean4 replicated u24 receipt is adopted from track2_diagnostics/replicated_u024_live.json (clean3 path) if present; otherwise tabulated as missing",
-    "Wall-time basis comes from native probe runs; policy-arm throughput on wz3to2 is unmeasured"
+    "Per-decision synergy branches are NOT built: B/R decisions live inside EpisodePolicy's MoveExecutor, and a faithful branch needs that executor state restored at t0 inside the clean3 CRN prefix replay (plus MixedPolicy with the BASE background). The runner logs every cooperative move (descriptive table) but has no decision_branch, so the per-decision decomposition is reported unavailable and its 96,000 sim-s stay unspent. Building it needs N2/N4 owners of the move executor.",
+    "The runner has never touched SUMO: policy/native paths reuse the reviewed clean3 final-eval and native-plant bindings plus N1's map install; the u24 run is the first physics. N1's sanity job (clean3_u0 arm) exercises the same accel_plant path earlier.",
+    "MAPPO arm swaps only the plant's executor checkpoint; if tools.leverprobe.backend.setup pins the d9042cc5 hash, a retrained executor will be refused at load (episode fails, never retried). Check on cpuV with N7's file before u24 (setup is SUMO-free).",
+    "With a mappo_u0 base, BASE = the bound MAPPO comparator; if clean4 started from the transferred u0 but the comparator is the wz3to2 retrain, A-BASE mixes training with the base swap (the T0/T1 labels show which comparator was bound).",
+    "panel v2 contract text still lists the 4-arm native quote (556,800); the 5-arm amendment lives in RUN_PLAN.json",
+    "Wall time is extrapolated from native probe runs"
   ],
-  "hard_rules": "no ssh/SUMO/GPU; writes only in this worktree (tmp/ dry runs gitignored); read-only inputs: _sol/newmap_spec.md, FINAL_EVAL_READY.md, newmap_candidates/wz3to2 map files, newmap_probe code/results summaries; no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 path and no truth file opened; no git reset/clean/stash drop/push/rebase"
+  "hard_rules": "no ssh/SUMO/GPU; writes only in this worktree (tmp/ gitignored; read-only inputs: _sol/newmap_spec.md, FINAL_EVAL_READY.md, newmap assets/probe summaries, NEWMAP2_REPORT.md, sibling branch history); no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 path and no truth file opened; no git reset/clean/stash drop/push/rebase"
 }
