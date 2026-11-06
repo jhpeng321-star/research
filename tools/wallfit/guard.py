@@ -5,6 +5,10 @@ TRAIN_STARTS block: 986000-986071, 987000-987071, 988000-988071). Evaluation see
 962000-962999, 964000-964199 and 977000-977999 are refused explicitly (and anything else that is
 not a registered TRAIN world, e.g. final_test 9896xx or check/dev worlds).
 
+Map scope (WM-C, 2026-11-06): WALLFIT_MAP=wz3to2 makes the wz3to2 TRAIN worlds 989200-989599 the
+ONLY allowed seeds of this process (one process = one map, as the N1 descriptor); unset = the merge
+map blocks above, unchanged. The wz3to2 HELD-OUT range 989600-989699 is always refused.
+
 Paths: never opened (and directories never listed) when the path contains a forbidden token:
 holdout / heldout / cal_split / chunk5 / j4b / inc1 / sealed, or a driver-truth token
 (hetdata, truth, vehicle_params, driver_params, vtype).
@@ -12,9 +16,11 @@ holdout / heldout / cal_split / chunk5 / j4b / inc1 / sealed, or a driver-truth 
 import os
 from pathlib import Path
 
-FORBIDDEN_SEED_RANGES = ((962000, 962999), (964000, 964199), (977000, 977999))
+FORBIDDEN_SEED_RANGES = ((962000, 962999), (964000, 964199), (977000, 977999), (989600, 989699))
 # protocol.TRAIN_STARTS x (12 cells x 6 repeats) -- cross-checked by the CPU tests.
 TRAIN_SEED_BLOCKS = ((986000, 986071), (987000, 987071), (988000, 988071))
+MAP_ENV = 'WALLFIT_MAP'
+MAP_TRAIN_SEED_BLOCKS = {'wz3to2': ((989200, 989599),)}
 FORBIDDEN_PATH_TOKENS = ('holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1', 'sealed',
                          'hetdata', 'truth', 'vehicle_params', 'driver_params', 'vtype')
 # Heavy, irrelevant subtrees (SUMO branch tapes); pruned for speed, never needed for labels.
@@ -34,9 +40,19 @@ def forbidden_seed(seed):
     return any(lo <= s <= hi for lo, hi in FORBIDDEN_SEED_RANGES)
 
 
+def train_blocks():
+    """TRAIN seed blocks of this process: the merge map (default) or the map named by WALLFIT_MAP."""
+    name = os.environ.get(MAP_ENV) or None
+    if name is None:
+        return TRAIN_SEED_BLOCKS
+    if name not in MAP_TRAIN_SEED_BLOCKS:
+        raise ForbiddenSeedError(f'unknown {MAP_ENV}={name!r} (registered: {sorted(MAP_TRAIN_SEED_BLOCKS)})')
+    return MAP_TRAIN_SEED_BLOCKS[name]
+
+
 def train_seed(seed):
     s = int(seed)
-    return any(lo <= s <= hi for lo, hi in TRAIN_SEED_BLOCKS)
+    return any(lo <= s <= hi for lo, hi in train_blocks())
 
 
 def check_seed(seed, where=''):
@@ -46,7 +62,7 @@ def check_seed(seed, where=''):
     except (TypeError, ValueError):
         raise ForbiddenSeedError(f'unparseable world seed {seed!r} {where}'.strip())
     if forbidden_seed(s):
-        raise ForbiddenSeedError(f'evaluation seed {s} refused (962xxx / 964000-964199 / 977xxx) {where}'.strip())
+        raise ForbiddenSeedError(f'evaluation seed {s} refused (962xxx / 964000-964199 / 977xxx / 989600-989699) {where}'.strip())
     if not train_seed(s):
         raise ForbiddenSeedError(f'world seed {s} is not a registered TRAIN world {where}'.strip())
     return s
