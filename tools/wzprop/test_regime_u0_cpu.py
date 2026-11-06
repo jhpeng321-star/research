@@ -329,3 +329,25 @@ def test_end_to_end_score_cli_resume_and_analyze(tmp_path, wm):
     assert {r['strategy'] for r in res['table']} == {'wall_h_solo2', 'wall_h', 'wall_h_solo0'}
     assert all(r['wm_states'] == 2 for r in res['table'])
     assert 'Regime pattern' in C.markdown(res, C.horizon_check([out], SUMO_WIN))
+
+
+@pytest.mark.skipif(not SUMO_WIN.exists(), reason='SUMO windows not extracted')
+def test_analyze_cli_horizon_rule_and_by_h_table(tmp_path):
+    sumo = C.read_sumo_windows(SUMO_WIN)
+    _scores_from_sumo(sumo, tmp_path / 'perfect.jsonl')
+    C.main(['analyze', '--scores', str(tmp_path / 'perfect.jsonl'), '--sumo-windows', str(SUMO_WIN), '--label', 'P',
+            '--boot', '40', '--out', str(tmp_path / 'R.json')])
+    res = json.loads((tmp_path / 'R.json').read_text())
+    assert res['H'] == 900 and res['horizon_flag'].startswith('stable') and len(res['all_H']) == 9
+    assert res['all_H']['300']['sign_agreement'] == 1.0          # a perfect predictor agrees at every horizon
+    md = (tmp_path / 'R.md').read_text()
+    assert 'By horizon H' in md and 'Horizon check' in md
+    # a WM whose late windows blow up (x10 delay from window 5 on, every arm) loses the stable horizon there
+    rows = [json.loads(x) for x in (tmp_path / 'perfect.jsonl').read_text().splitlines()]
+    with open(tmp_path / 'blow.jsonl', 'w') as fh:
+        for r in rows:
+            for o in r['arms'].values():
+                o['road_w'] = [[x * (10.0 if j >= 4 else 1.0) for j, x in enumerate(w)] for w in o['road_w']]
+            fh.write(json.dumps(r) + '\n')
+    hz = C.horizon_check([tmp_path / 'blow.jsonl'], SUMO_WIN)
+    assert hz['H_star'] == 400
