@@ -437,7 +437,15 @@ def _propose(state, own, rng):
     view = dict(now=state['now'], map=state['map'], frame=state['frame'], cap=state['cap'],
                 range_m=state['range_m'], sensed=sensed, rows=sensed, registry=lp.REGISTRY,
                 generator_args=args, fullpol=args)
-    out = state['propose'](view, _row(own), rng) or []
+    if 'length_m' in own:
+        own_row = _row(own)
+    else:
+        # G2 (clean3 levers, on in clean5b) canonicalises the slate rows to moves._ROW_KEYS (no length_m); the
+        # protocol's own sensed row (built in receive() from the same tick's own report) carries it.
+        own_row = next((r for r in sensed if r['vid'] == own['vid']), None)
+        if own_row is None or any(own_row[k] != own[k] for k in ('vid', 'lane', 'is_cav')):
+            raise ValueError('acting CAV missing from its own LCEXEC sensed rows')
+    out = state['propose'](view, own_row, rng) or []
     return [template_of(t, cap=state['cap'], frame=state['frame'], n_lanes=state['n_lanes']) for t in out]
 
 

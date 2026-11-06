@@ -26,7 +26,7 @@ prefix = (f'. /home/ubuntu/cpus_env/env.sh {src} && export T2C_TRACK_BASE_SOURCE
           '&& unset COOPMWM_MAP_SPEC COOPMWM_FROZEN_TRUNK')
 paths = json.loads((src/'ops'/'clean4_test_selection.json').read_text())['paths']
 extra = sorted(str(q.relative_to(src/'pytools')) for q in (src/'pytools'/'tools'/'coopmwm').glob('test_*cpu.py')
-               if any(k in q.name for k in ('clean4', 'clean5a', 'g4ld', 'nm_eval', 'lane_drop', 'map_', 'fullpol')))
+               if any(k in q.name for k in ('clean4', 'clean5a', 'clean5b', 'g4ld', 'nm_eval', 'lane_drop', 'map_', 'fullpol', 'lc_')))
 paths = [q for q in dict.fromkeys(paths+extra) if (src/'pytools'/q).is_file()]
 shards = [paths[k::a.shards] for k in range(a.shards)]
 # Deselected on the DEPLOYED Linux tree, with reasons (each passes in the Windows checkout suite):

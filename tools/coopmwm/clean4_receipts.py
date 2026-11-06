@@ -27,7 +27,7 @@ def _proposed(update):
 def validate_levers(cfg, updates, fixes=None):
     from . import composite_health, coordination_opportunities as co, g4_runtime as g4, group_lane
     from . import launch_production as production, launch_training as training, wall_w2, clean4_restart as c4
-    if (cfg.get('newmap') or {}).get('run') == 'clean5a':
+    if (cfg.get('newmap') or {}).get('run') in ('clean5a', 'clean5b'):
         return validate_clean5a(cfg, updates, fixes)
     root = Path(cfg['run_root'])
     arms = {u['arm']: u for u in updates}
@@ -192,6 +192,7 @@ def mined_check(cfg, updates, artifacts):
 
 
 CLEAN5A_ALLOWED = ('abreast_wall', 'group_hold', 'lane_drop_initiate', 'lane_drop_join')
+CLEAN5B_PROGRAMS = ('free_program_initiate', 'free_program_join')      # LCEXEC per-CAV program options (clean5b)
 
 
 def validate_clean5a(cfg, updates, fixes=None):
@@ -204,8 +205,19 @@ def validate_clean5a(cfg, updates, fixes=None):
     from .bank_breadth import ev_only
     root = Path(cfg['run_root'])
     arms = {u['arm']: u for u in updates}
-    out = dict(run='clean5a')
+    run = cfg['newmap']['run']
+    allowed = CLEAN5A_ALLOWED+(CLEAN5B_PROGRAMS if run == 'clean5b' else ())
+    out = dict(run=run)
     c4.check_map(cfg)
+    if run == 'clean5b':
+        # clean5b (MAIN 23:40/23:48): LCEXEC programs offered to B and R identically, never BC/EV targets,
+        # G4 off for programs (checked below via the clean5a G4LD families), LC runtime bound in this process.
+        from . import lc_families, lc_runtime, clean5b_restart as c5b
+        lc = cfg.get('lc_families') or {}
+        if (not lc_runtime.enabled() or lc_families.settings(cfg) is None or lc.get('cap') != c5b.LC_CAP
+                or (lc.get('generator_args') or {}).get('templates') != []):
+            raise ValueError('clean5b requires the LC runtime and lc_families cap 6 with no templates (B = R)')
+        out['lc_families'] = dict(cap=lc['cap'], generator=lc.get('generator'), templates=0)
     base = cfg['newmap']['base']
     if (frozen_trunk.file_sha256(base['trunk']) != base['trunk_sha256'] or cfg['checkpoint'] != base['trunk']
             or frozen_trunk.check_process(cfg) is not None):
@@ -235,9 +247,11 @@ def validate_clean5a(cfg, updates, fixes=None):
     for arm in ('B', 'R'):
         proposed = {f: n for f, n in _proposed(arms[arm]).items() if n}
         base_family = {f.split(':', 1)[0]: n for f, n in proposed.items()}
-        illegal = sorted(f for f in base_family if f not in CLEAN5A_ALLOWED)
+        illegal = sorted(f for f in base_family if f not in allowed)
         if illegal:
-            raise ValueError('clean5a slate offered a non-N2 option: '+arm+' '+repr(illegal))
+            raise ValueError(run+' slate offered an unregistered option: '+arm+' '+repr(illegal))
+        if run == 'clean5b' and not base_family.get('free_program_initiate'):
+            raise ValueError('clean5b slate must offer LCEXEC free_program moves: '+arm+' '+repr(proposed))
         if not base_family.get('group_hold') or not (base_family.get('abreast_wall') or base_family.get('lane_drop_initiate')):
             raise ValueError('clean5a slate must offer group_hold and abreast_wall moves: '+arm+' '+repr(proposed))
         row = (arms[arm]['metrics'].get('move_proposals') or {}).get('coordination_opportunities')
@@ -250,6 +264,13 @@ def validate_clean5a(cfg, updates, fixes=None):
         if arm == 'R' and fit.get('records', 0) != 0:
             raise ValueError('R is the no-guidance arm: zero EV-BC records')
         out['ev_bc'][arm] = {k: fit.get(k) for k in ('records', 'ev_bc', 'report_bc_kl', 'report_kl_unlabelled')}
+        if run == 'clean5b':
+            # programs are never BC/EV targets: every fitted record is an EV-BC solo-hold record
+            ev_rec = fit.get('ev_bc') or {}
+            fams = list(ev_rec.get('families') or [])
+            if (fit.get('bank') not in (None, {}) or fit.get('records', 0) != ev_rec.get('records', 0)
+                    or any(not __import__('re').fullmatch(r'wall_[gh]_solo[0-2]', f) for f in fams)):
+                raise ValueError('clean5b BC/EV targets must be solo holds only (no program BC): '+arm)
     if cfg.get('imitation_epochs') != c5.IMITATION_EPOCHS:
         raise ValueError(f'clean5a registered imitation epochs = {c5.IMITATION_EPOCHS}')
     # MAIN ~21:1x registered pace: EV-BC 60 steps; trigger-PPO KL guard = per-CAV-row mean (B and R identically)

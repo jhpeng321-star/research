@@ -124,9 +124,20 @@ def keys(*, desc, guidance_doc, provenance):
     return out
 
 
+VARIANT = dict(run=RUN, quote_file=QUOTE_FILE, approval_file='BUDGET_CLEAN4.json', budget_file='CLEAN5A_BUDGET.json',
+               design=DESIGN, approved=c4.APPROVED, budget_rule=None, keys=None, cfg_overrides={}, newmap_extra={},
+               requires_lc_runtime=False, authority=None)
+
+
 def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtime_sim_s, host, provenance,
-            root=ROOT, clean2=c4.CLEAN2, u0=c4.U0, u0_sha256=c4.U0_SHA256, trunk=TRUNK, trunk_sha256=TRUNK_SHA256):
-    """Zero physics. contexts = the frozen Plan A u0-base B contexts (registration, metadata order)."""
+            root=ROOT, clean2=c4.CLEAN2, u0=c4.U0, u0_sha256=c4.U0_SHA256, trunk=TRUNK, trunk_sha256=TRUNK_SHA256,
+            variant=None):
+    """Zero physics. contexts = the frozen Plan A u0-base B contexts (registration, metadata order).
+    ``variant`` (default = clean5a, byte-identical) lets a sibling run (clean5b) reuse this prepare with its own
+    run name, quote/approval files, approved envelope, extra common B = R keys and config overrides."""
+    v = dict(VARIANT, **(variant or {}))
+    if set(v) != set(VARIANT):
+        raise ValueError('unknown prepare variant keys')
     import torch
     from . import composite_health, launch_preparation as stage, launch_clean2 as c2
     from . import launch_production as production, launch_qualification as qualification
@@ -148,6 +159,10 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
         raise ValueError('process map must be the staged wz3to2 (COOPMWM_MAP_SPEC)')
     if not g5_runtime.enabled():
         raise ValueError('clean5a requires the bound G5 runtime env (COOPMWM_G5_RUNTIME=1)')
+    if v['requires_lc_runtime']:
+        from . import lc_runtime
+        if not lc_runtime.enabled():
+            raise ValueError(v['run']+' requires the LCEXEC runtime env (COOPMWM_LC_RUNTIME=1)')
     host_rec = host_receipt(host)
     source_manifest = training.read(source/'SOURCE_MANIFEST.json')
     for name, sha in source_manifest['files'].items():
@@ -159,7 +174,8 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
         gate_attempt=1, smoke_attempt=1, resume_update=0, A_resume_update=0,
         worlds_by_update=worlds_by_update(), replay_sources={}, paired_evaluation=False, extra_final_baselines=[],
         checkpoint=trunk)
-    cfg.update(keys(desc=desc, guidance_doc=guidance_doc, provenance=provenance))
+    cfg.update((v['keys'] or keys)(desc=desc, guidance_doc=guidance_doc, provenance=provenance))
+    cfg.update(v['cfg_overrides'])
     cfg['control_arm'] = dict(arm='A', root=str(root), update=24)
     cfg['a_results']['root'] = str(root)
     cfg['single_ledger']['root'] = str(root)
@@ -168,13 +184,14 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
     cfg.pop('clean2_restart'); cfg.pop('clean2_budget')
     cfg['safety_reference'] = dict(by_world={}, unmatched_zero_event_benchmark=True,
         source='clean5a: no registered wz3to2 MAPPO check panel; unmatched TRAIN zero-event benchmark (conservative)')
-    cfg['newmap'] = dict(run=RUN, map='wz3to2', base_controller='mappo_frozen', cell=list(CELL_KEYS),
+    cfg['newmap'] = dict(run=v['run'], map='wz3to2', base_controller='mappo_frozen', cell=list(CELL_KEYS),
         eval_panel_sha256=c4.EVAL_PANEL_SHA256, descriptor_sha256=desc.digest, network_file_sha256=c4.NET_FILE_SHA256,
         map_spec=c4.MAP_SPEC, final_eval_ceiling_sim_s=FINAL_EVAL_CEILING, v2v_range_m=c4.V2V_RANGE_M, rsu=False,
         base=dict(trunk=trunk, trunk_sha256=trunk_sha256, residual=u0, residual_sha256=u0_sha256,
                   rule='every arm (A/B/R, BASE, decision branches) binds this same frozen base by path+sha'),
-        host=host_rec, design=DESIGN, practice_offer_note='practice_offer ON (0.5) for the guidance treatment; it acts '
+        host=host_rec, design=v['design'], practice_offer_note='practice_offer ON (0.5) for the guidance treatment; it acts '
         'only on exact-plan demonstration slots, of which clean5a has none (EV-BC only), so it is inert - disclosed')
+    cfg['newmap'].update(v['newmap_extra'])
     cfg['registered_state_order'] = STATE_ORDER_RULE
     cfg['g5_runtime'] = dict(flag=g5_runtime.FLAG, base=str(g5_runtime.BASE_REL),
         base_sha256=g5_runtime.BASE_SHA256, overlay_sha256=g5_runtime.OVERLAY_SHA256,
@@ -185,14 +202,16 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
         raise ValueError('clean5a requires the registered EV-only guidance mode')
     guidance = check_guidance(cfg)
     rc.check_pins(cfg)
-    budget = c4.budget(quote_doc=quote_doc, approval=approval, prior_runtime_sim_s=prior_runtime_sim_s)
-    budget = _seal(dict({k: v for k, v in budget.items() if k != 'receipt_sha256'}, run=RUN, quote_file=QUOTE_FILE),
+    budget = c4.budget(quote_doc=quote_doc, approval=approval, prior_runtime_sim_s=prior_runtime_sim_s,
+                       approved=v['approved'], rule=v['budget_rule'])
+    budget = _seal(dict({k: x for k, x in budget.items() if k != 'receipt_sha256'}, run=v['run'], quote_file=v['quote_file'],
+                        **({} if v['approval_file'] == VARIANT['approval_file'] else dict(approval_file=v['approval_file']))),
                    'receipt_sha256')
     rule = training.read(clean2/rc.RULE_FILE)
     rc.init_root(root, amendment_shas=[rule['amendment_sha256']], track2=True)
-    training.write(root/'PREPARATION_STARTED.json', dict(unix=time.time(), source_root=str(source), run=RUN,
+    training.write(root/'PREPARATION_STARTED.json', dict(unix=time.time(), source_root=str(source), run=v['run'],
         guidance=guidance, host=host_rec, new_sim_s=0))
-    for name, value in ((QUOTE_FILE, quote_doc), ('BUDGET_CLEAN4.json', approval)):
+    for name, value in ((v['quote_file'], quote_doc), (v['approval_file'], approval)):
         (root/name).write_text(json.dumps(value, indent=1, sort_keys=True), encoding='utf-8')
     stage.copy_equal(clean2/rc.RULE_FILE, root/rc.RULE_FILE)
     safety_receipts = {}
@@ -205,7 +224,7 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
             safety_receipts[name] = rc.sha(root/name)
         amendment = training.read(clean2/rule_name)['amendment_sha256']
         with (root/'AUTHORITY.md').open('a', encoding='utf-8') as f:
-            f.write('\nclean5a owner safety rule for '+arm+': composite report-only (inherited owner rule), '
+            f.write('\n'+v['run']+' owner safety rule for '+arm+': composite report-only (inherited owner rule), '
                     'amendmentSHA'+amendment+'; any collision/teleport pauses. A keeps the full rule.\n')
         if composite_health.report_only(root, arm) is not True:      # fail closed at prepare (zero physics)
             raise ValueError('clean5a report-only amendment not registered in the root: '+arm)
@@ -216,7 +235,7 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
         if rc.sha(root/f'{arm}_checkpoint_000.pt') != cfg['common_checkpoint_sha256']:
             raise ValueError('MAPPO u0 identity differs')
     cfg['clean4_budget'] = budget
-    cfg['clean4_restart'] = dict(owner_quote=RUN, clean2_root=str(clean2), inherited_safety_receipts=safety_receipts,
+    cfg['clean4_restart'] = dict(owner_quote=v['run'], clean2_root=str(clean2), inherited_safety_receipts=safety_receipts,
         inherited_safety=c4.SAFETY_RULE, source_commit=source_manifest['commit'], guidance=guidance,
         registration_contexts=len(contexts))
     native = production.backend_config(cfg)
@@ -270,19 +289,19 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
     training.write(root/'STAGING_MANIFEST.json', manifest)
     cfg.update(staging_manifest_sha256=rc.sha(root/'STAGING_MANIFEST.json'),
                isolated_registration_sha256=rc.sha(root/'ISOLATED_REGISTRATION.json'))
-    training.write(root/'CLEAN5A_BUDGET.json', budget)
+    training.write(root/v['budget_file'], budget)
     training.write(root/'CONFIG.json', cfg)
-    approval_doc = dict(approved=True, owner_quote=RUN, config_sha256=digest(cfg),
+    approval_doc = dict(approved=True, owner_quote=v['run'], config_sha256=digest(cfg),
         source_manifest_sha256=cfg['source_manifest_sha256'], budget_receipt_sha256=budget['receipt_sha256'],
         created=datetime.now().astimezone().isoformat(),
-        authority='owner 14:58 4M clean-training envelope (BUDGET_CLEAN4.json); MAIN clean5a GO 19:54 (REGISTRATION); '
-                  'launch requires FULLPOL CPU suites + N5 review + N11 integration PASS + qualification + smoke + gate')
+        authority=v['authority'] or ('owner 14:58 4M clean-training envelope (BUDGET_CLEAN4.json); MAIN clean5a GO 19:54 (REGISTRATION); '
+                  'launch requires FULLPOL CPU suites + N5 review + N11 integration PASS + qualification + smoke + gate'))
     training.write(root/'OWNER_APPROVAL.json', approval_doc)
     training.write(root/'AUGMENTATION_DISABLED.json', _seal(dict(config_sha256=digest(cfg),
         admitted=dict(B=0, R=0), owner_decision=rc.AUGMENTATION_OFF_DECISION), 'receipt_sha256'))
     with (root/'AUTHORITY.md').open('a', encoding='utf-8') as f:
         f.write('\n'+json.dumps(dict(owner_approval=approval_doc, budget=budget, quote_sha256=quote_doc['receipt_sha256'],
-            newmap=cfg['newmap'], eval_panel=c4.EVAL_PANEL, design=DESIGN, guidance=guidance,
+            newmap=cfg['newmap'], eval_panel=c4.EVAL_PANEL, design=v['design'], guidance=guidance,
             g4=dict(extension=cfg['g4_extension'], start_cap=cfg['g4_start_cap'], disclosed='budget-derived start caps 12/9/8 (from the 230,400 cap); 1-in-16 '
                     'sampling and the 10,000 veh-s scale are inherited/hand-set G4 registrations'),
             imitation=dict(epochs=IMITATION_EPOCHS, ev_bc_steps=fullpol_ev.settings(cfg)['ev_bc_steps'], kl_cap=0.045,
@@ -295,6 +314,6 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
     training.checked_config(root/'CONFIG.json')
     qualification.verify_inputs(cfg)
     training.health(root)                  # the chain's pre-smoke health check, at prepare time (zero physics)
-    training.write(root/'PREPARED.json', dict(status='STAGED_NOT_LAUNCHED', run=RUN, config_sha256=digest(cfg),
+    training.write(root/'PREPARED.json', dict(status='STAGED_NOT_LAUNCHED', run=v['run'], config_sha256=digest(cfg),
         files=len(entries), remaining_cap_sim_s=budget['remaining_sim_s'], guidance=guidance, new_sim_s=0))
     return cfg

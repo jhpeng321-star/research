@@ -1,0 +1,125 @@
+{
+ "approval_contract": "MAIN writes E:/agent-work/_sol/BUDGET_CLEAN4.json with owner_approval (verbatim owner text), total_cap_sim_s, approved_sim_s >= total_training_sim_s and quote_sha256 == this receipt_sha256; training phases are charged only after it exists",
+ "arms": [
+  "A",
+  "B",
+  "R"
+ ],
+ "available_sim_s": 3900000,
+ "created": "2026-11-07T00:19:36+08:00",
+ "final_arms": [
+  "A",
+  "B",
+  "R",
+  "base",
+  "native"
+ ],
+ "fits": true,
+ "margin_min": 0.15,
+ "new_sim_s": 0,
+ "notes": [
+  "clean5b = clean5a recipe + LCEXEC per-CAV free_program slots (MAIN 23:40/23:48); separate phase clean5b <= 3,900,000 sim-s, prior 0",
+  "approval contract: MAIN writes E:/agent-work/_sol/BUDGET_CLEAN5B.json (owner_approval, approved_sim_s 3,900,000, total_cap_sim_s, quote_sha256 = this receipt_sha256)"
+ ],
+ "own_ledger_phases": {},
+ "owner_cap_sim_s": 3900000,
+ "phases": {
+  "early_probes": {
+   "allocated_sim_s": 84000,
+   "base_sim_s": 72006,
+   "basis": "clean5a wz3to2 dry-prepare manifests 2 x 36,003 (same registration states)",
+   "margin_fraction": 0.1666,
+   "schedule": "u2,u4 probes"
+  },
+  "g4_synergy_credit": {
+   "allocated_sim_s": 230400,
+   "base_sim_s": 200000,
+   "basis": "G4LD (programs OFF) within the registered 230,400 hard cap",
+   "margin_fraction": 0.152,
+   "schedule": "u1-u24 G4 sparse synergy credit B=R"
+  },
+  "isolated_replicated": {
+   "allocated_sim_s": 151200,
+   "base_sim_s": 130572,
+   "basis": "clean5a wz3to2 dry-prepare manifests 3 x 43,524 (same registration states)",
+   "margin_fraction": 0.158,
+   "schedule": "u6,u12,u24 replicated synergy test (TRAIN states)"
+  },
+  "smoke_gate": {
+   "allocated_sim_s": 56000,
+   "base_sim_s": 48000,
+   "basis": "smoke cap 20,000 + rerun_cpus.GATE_SIM_S 35,820",
+   "margin_fraction": 0.1667,
+   "schedule": "pre-launch smoke (<=20,000) + one safety gate (<=35,820 registered gate limit)"
+  },
+  "v2v_final": {
+   "allocated_sim_s": 1340000,
+   "base_sim_s": 1165200,
+   "basis": "mirror of the clean5a v2v_final allocation 1,340,000",
+   "margin_fraction": 0.15,
+   "schedule": "u24 final evaluation (claims 3a + 3c incl. RULE arm), if registered for clean5b"
+  },
+  "v2v_lessons": {
+   "allocated_sim_s": 0,
+   "base_sim_s": 0,
+   "basis": "EV-only guidance: no verified bank lessons (registered; 0 sim-s)",
+   "margin_fraction": null,
+   "schedule": "u6,u12,u18,u24 B lessons"
+  },
+  "v2v_practice_refs": {
+   "allocated_sim_s": 398400,
+   "base_sim_s": 345600,
+   "basis": "12 matched A references/update x 1200 s",
+   "margin_fraction": 0.1528,
+   "schedule": "u1-u24 B/R practice A-references"
+  },
+  "v2v_train_waves": {
+   "allocated_sim_s": 1590000,
+   "base_sim_s": 1382400,
+   "basis": "3 arms (A frozen evaluation arm + B + R) x 16 episodes x 1200 s x 24",
+   "margin_fraction": 0.1502,
+   "schedule": "u1-u24 A/B/R training episodes"
+  }
+ },
+ "prior_registered_sim_s": {},
+ "prior_total_sim_s": 0,
+ "receipt_sha256": "1bb292e1085fad10e2d064cf6f34caf646af9e44fd32d90a35c3d1725f73097f",
+ "runtime_phases": {
+  "augment_verify": 0,
+  "early_probes": 84000,
+  "g4_synergy_credit": 230400,
+  "gate_bank_verification_ext": 36000,
+  "group_credit_verify": 0,
+  "isolated_replicated": 151200,
+  "teacher_verify": 0,
+  "track2_smoke": 20000,
+  "v2v_final": 1340000,
+  "v2v_interim": 0,
+  "v2v_lessons": 0,
+  "v2v_train": 1988400
+ },
+ "schema": "coopmwm.clean4.quote.v1",
+ "seeds": {
+  "final": [
+   989600,
+   989699
+  ],
+  "train": [
+   989200,
+   989599
+  ]
+ },
+ "shortfall_sim_s": 0,
+ "smoke_gate": {
+  "authority": "pre-approved inside phase newmap2 (owner/MAIN 2026-11-06 14:37)",
+  "cap_sim_s": 40000,
+  "phase": "newmap2_smoke",
+  "runtime_ledger_phases": [
+   "track2_smoke",
+   "gate_bank_verification_ext"
+  ],
+  "smoke_cap_sim_s": 20000
+ },
+ "total_training_sim_s": 3850000,
+ "updates": 24
+}

@@ -37,6 +37,8 @@ U0_SHA256 = '5ea2296470c2af2855f9e292b03eeaa62bafdfec08146712d7347d7ce117d734'
 SCHEMA = 'coopmwm.clean4.budget.v1'
 OWNER_CAP = 12_400_000
 APPROVED = 4_000_000
+# Per-run approved envelopes on the same budget schema (runs not listed = the clean4/clean5a 4M envelope).
+APPROVED_BY_RUN = dict(clean5b=3_900_000)   # MAIN 2026-11-06 23:40: phase clean5b <= 3,900,000 (owner: run alongside 5a)
 CELL_KEY = 'D3200_p60'
 EVAL_PANEL_SHA256 = '3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130'
 EVAL_PANEL = dict(sha256=EVAL_PANEL_SHA256, worlds='96 worlds 989600-989695', cell=CELL_KEY, episode_s=1200,
@@ -84,7 +86,7 @@ def worlds_by_update():
 
 # ---------------------------------------------------------------- budget
 
-def budget(*, quote_doc, approval, prior_runtime_sim_s):
+def budget(*, quote_doc, approval, prior_runtime_sim_s, approved=APPROVED, rule=None):
     """Sealed clean4 budget registration bound to the owner-approved quote (BUDGET_CLEAN4.json)."""
     from . import clean4_budget as b
     bound = b.approved(approval, quote_doc)
@@ -96,22 +98,23 @@ def budget(*, quote_doc, approval, prior_runtime_sim_s):
     g4_cap = phases.pop('g4_synergy_credit', 0)
     # The root ledger may spend at most the approved envelope minus the phases charged on their own ledgers
     # (base sanity, Plan A) or before (clean4 actual) - those are protected as prior.
-    remaining = APPROVED-prior_runtime_sim_s
+    remaining = approved-prior_runtime_sim_s
     if sum(phases.values())+g4_cap > remaining:
         raise ValueError('clean4 runtime phases exceed the approved envelope after sanity/Plan A')
-    return _seal(dict(schema=SCHEMA, owner_cap_sim_s=OWNER_CAP, approved_sim_s=APPROVED,
+    return _seal(dict(schema=SCHEMA, owner_cap_sim_s=OWNER_CAP, approved_sim_s=approved,
         quote_sha256=quote_doc['receipt_sha256'], quote_total_sim_s=quote_doc['total_training_sim_s'],
         owner_approval=bound['owner_approval'], phases=phases, g4_cap_sim_s=g4_cap, own_ledger_prior_sim_s=prior_runtime_sim_s,
-        protected_prior_sim_s=OWNER_CAP-APPROVED+prior_runtime_sim_s, remaining_sim_s=remaining,
+        protected_prior_sim_s=OWNER_CAP-approved+prior_runtime_sim_s, remaining_sim_s=remaining,
         smoke_gate=quote_doc['smoke_gate'],
-        rule='owner 14:58 "yes, approve the 4M budget"; re-quotes <=4M with >=15% per-phase margin '
-             '(BUDGET_CLEAN4.json requote_rule); smoke+gate inside newmap2_smoke <=40,000'), 'receipt_sha256')
+        rule=rule or ('owner 14:58 "yes, approve the 4M budget"; re-quotes <=4M with >=15% per-phase margin '
+             '(BUDGET_CLEAN4.json requote_rule); smoke+gate inside newmap2_smoke <=40,000')), 'receipt_sha256')
 
 
 def checked(cfg):
     value = cfg['clean4_budget']
     verify_sealed(value, 'receipt_sha256')
-    if (value['schema'] != SCHEMA or value['owner_cap_sim_s'] != OWNER_CAP or value['approved_sim_s'] != APPROVED
+    if (value['schema'] != SCHEMA or value['owner_cap_sim_s'] != OWNER_CAP
+            or value['approved_sim_s'] != APPROVED_BY_RUN.get(value.get('run'), APPROVED)
             or sum(value['phases'].values())+value.get('g4_cap_sim_s', 0) > value['remaining_sim_s']):
         raise ValueError('clean4 budget registration differs')
     return deepcopy(value)
@@ -130,7 +133,7 @@ def verify_previous(cfg):
     bound = checked(cfg)
     root = Path(cfg['run_root'])
     quote_doc = json.loads((root/bound.get('quote_file', 'CLEAN4_QUOTE.json')).read_text(encoding='utf-8'))
-    approval = json.loads((root/'BUDGET_CLEAN4.json').read_text(encoding='utf-8'))
+    approval = json.loads((root/bound.get('approval_file', 'BUDGET_CLEAN4.json')).read_text(encoding='utf-8'))
     b.approved(approval, quote_doc)
     if quote_doc['receipt_sha256'] != bound['quote_sha256']:
         raise ValueError('clean4 quote changed after registration')
