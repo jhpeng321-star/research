@@ -6,19 +6,22 @@
 # Sharing (agreed with WMEV): WM-C <= 8 processes total on gpuA (nice 10, mem-fraction 0.12 each), WMEV <= 6;
 # WM-D's qualification run has priority; halve if WM-E/WM-D slow down.
 set -u
-B=/root/autodl-fs/wmc_rankcheck_20261106          # gpuA work root; code_v5 = port 7138ba9a (prog + fairness trace) + wzprop
+B=/root/autodl-fs/wmc_rankcheck_20261106          # gpuA work root; code_v6 = port 7138ba9a (prog + fairness trace) + wzprop 9e1a8d01
 FINAL=${FINAL:?set FINAL=<WM-E final wm_s.pt (sha from WM-E)>}
-cd $B/code_v5
+cd $B/code_v6
 
-# 1) (G) strategy-level search vs solo2, condition gate + FAIR archive, cell order = SUMO verification cell first.
+# 1) (G) strategy-level search (owner 04:03: 15 m/s banned, 10 s/veh group bound; incumbent wall_g_solo2), three archives
+#    delay / bounded / fairer (+ strict fair flag), per-vehicle trace fairness; cell order = SUMO verification cell first.
+#    Prefer starting after WM-A's CRN fix (rows in one call CRN-paired); otherwise note it in the report.
 #    6 parallel WM workers; finals on 30 states per cell, K 6.
 PYTHONPATH=src:. nohup nice -n 10 /root/miniconda3/bin/python -B -m tools.wzprop strategy \
-  --states data/regime_STATES.json --cells D3200_p60,D2800_p60,D2400_p60,D3200_p40 --out $B/strategy_final \
+  --states data/regime_STATES.json --cells D3200_p60,D2800_p60,D2400_p60,D3200_p40 --out $B/strategy_v3_final \
   --wm wma:WMA_READY.json --wm-arg checkpoint=$FINAL --wm-arg map_spec=maps/wz3to2/MAP_SPEC.json \
   --wm-arg device=cuda --wm-arg max_rows=48 --workers 6 --mem-fraction 0.12 \
-  --config '{"n_final_states": 30, "K_final": 6}' > $B/strategy_final.log 2>&1 &
-#    -> $B/strategy_final/ARMS.json  {cell: incumbent, wm[4], wm_fair[4], structured[4], random[4], best_*, fairness}
-#       STRATEGY_SEARCH_<cell>.json (finals with gains vs base / solo2 + LCBs, per-group gains, both archives)
+  --config '{"n_final_states": 30, "K_final": 6}' > $B/strategy_v3_final.log 2>&1 &
+#    -> $B/strategy_v3_final/ARMS.json  {cell: incumbent, banned_comparator, reference[2], wm[4], wm_bounded[4], wm_fairer[4],
+#       wm_fair, structured[4], random[4], best per archive, comparators, fairness}
+#       STRATEGY_SEARCH_<cell>.json (finals: gains vs u0 / incumbent + LCBs, group_inc s/veh + UCB, CVaR90 change, flags)
 #    Hand ARMS.json to WMVERIFY (a42a3d5c086a6e51b) when the run ends (cells run in the order above).
 
 # 2) (G) final rank check, full protocol, 2 workers (PLANGEN K8 + solos for S-labelled), after step 1 or in spare slots
