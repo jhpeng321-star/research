@@ -1,0 +1,83 @@
+{
+  "id": "W3",
+  "title": "WM wall-fit: synergy head (option b) on top of the FROZEN world model",
+  "status": "BUILD READY (CPU only). Dataset build, GPU latent extraction and training NOT started; operator launches them.",
+  "branch": "c4/wm-wallfit",
+  "worktree": "E:/agent-work/c4-wm-wallfit",
+  "base": "3e5bc9f9",
+  "commits": [
+    "7f1446d8e395a92419e3dc2d69d67dccbaeccc00 C4 W3 wall-fit: synergy head on the frozen WM (dataset, head, eval, rank API)",
+    "8c9d5cc74ea6fde0de472e1bc46c2350a400b9e9 C4 W3 wall-fit: --skip-dir prunes environment clones (e.g. gpuA cpuv_home) during discovery"
+  ],
+  "package": "tools/wallfit/ (guard, dataset, features, latent, head, evaluate, rank_api, synthetic, __main__, test_wallfit_cpu)",
+  "design": {
+    "option": "(b) small residual head on the frozen WM; option (a) rollout fine-tune NOT implemented (deferred per brief)",
+    "head": "reg_k = gain_k * slog(WM prediction_k) + MLP(observable features, pooled WM latent) for k = synergy, group advantage, best-solo advantage, plus an admission logit; last layer zero-initialised so an untrained head ranks exactly like the current WM; 5-member seed ensemble; WM weights never change",
+    "loss": "Huber(slog synergy) + 0.25 Huber(aux advantages) + pairwise logistic rank loss on synergy + 0.5 BCE(admitted rate)",
+    "inputs": "observable rows of the WM query (fallback: CAV-sensed CONTEXT rows), move family/members/onset/hold/depth, WM mean synergy / saving / best-solo saving / draw std, frozen driver-encoder latent (embedding + params + uncertainty) pooled over members and neighbours; world config labels (cell/demand/penetration/variant/arm) are never inputs",
+    "labels": "per (situation, move, CRN seed identity): seed 1 shared across sources; replicates keyed by salt; dedup priority native all8 > flat examples > probe screens (native admission kept, measured synergy filled); pair target = mean synergy over measured seeds, admitted_any / admitted_rate",
+    "split": "by WORLD seed (sha256-ordered round-robin folds, salt wallfit-w3-split-v1); test = fold 0; plus grouped CV out-of-fold",
+    "comparison": "ONLY the current WM ranking (wm_mean_synergy); no black-box comparator is trained",
+    "sign_convention": "advantage = J(policy) - J(move); synergy = J(best solo) - J(group); positive = group better (veh-s)"
+  },
+  "seed_and_path_rules": "TRAIN worlds only (986000-986071, 987000-987071, 988000-988071 == protocol.worlds('train', i)); any record with 962xxx, 964000-964199, 977xxx or a non-TRAIN seed raises ForbiddenSeedError and nothing is written; directories/files containing holdout/heldout/cal_split/chunk5/j4b/inc1/sealed/hetdata/truth/vehicle_params/driver_params/vtype are pruned before listing and never opened; lowcoop (probe-only HDV variant) and non-120 s windows (wall_ext) excluded by default",
+  "tests": {
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/wallfit/test_wallfit_cpu.py",
+    "result": "33 passed (~55 s, CPU, fakes only; no SUMO/GPU/ssh)",
+    "lint": "python -m ruff check tools/wallfit: All checks passed",
+    "covers": [
+      "dataset refuses forbidden seeds (results / all8 / flat / context / query / rebuilt query / LABELS load / split) and writes nothing",
+      "guard TRAIN blocks == tools.coopmwm.protocol.worlds('train', i); forbidden path tokens refused; forbidden dirs pruned before listing",
+      "held-out split is by world seed: deterministic, outcome-blind, disjoint; HEAD_SPLIT train seeds disjoint from test seeds",
+      "head at init == WM ranking; trained head on synthetic data: Spearman > 0.5 and > WM + 0.5 on test seeds; precision@3 >= WM",
+      "rank API: default OFF output == verbatim probe_wm ranking (also JSON-identical), sort_key == old key, no torch import on the OFF path; ON keeps every WM field and adds head fields; env-var path; mining lane rows",
+      "latent extraction on a fake runtime (warm request_memory binding, slot order, no weight change); end-to-end build on a fake cpuV-like probe root (dedup, WM join, job predictions, query rebuild)"
+    ],
+    "format_check_on_real_copy": "build over the local TRAIN-only copy E:/research-dense/runs/active/C4-V7FT-20261017/coop_probe parsed 69 raw seed rows -> 46 kept (11 lowcoop, 2 wall_ext, 10 duplicates, 5 rows without outcome), 0 conflicts, 24 (situation, move) pairs, 4 with an admitted seed; pairs dropped there only because CONTEXT/query files live on cpuV/gpuA (output under git-excluded _out/)"
+  },
+  "dataset_command": {
+    "where": "CPU, on each host that holds ledgers; run from a checkout of c4/wm-wallfit (needs numpy only; torch only for --query-builder)",
+    "cpuV": "python -B -m tools.wallfit build --root /home/ubuntu/coopprobe20261106 --out /home/ubuntu/w3data/cpuV",
+    "gpuA": "python -B -m tools.wallfit build --root /root/mining20261106 --skip-dir cpuv_home --out /root/w3data/gpuA",
+    "optional_query_rebuild": "add --query-builder tools.mining.probe_wmq:build_query when tools.mining (c4/coop-probe source) and torch are importable, so context-only pairs also get WM queries + latents",
+    "then": "copy /home/ubuntu/w3data/cpuV/{LABELS.jsonl,QUERIES.jsonl.gz,BUILD_RECEIPT.json} to gpuA /root/w3data/cpuV/; check BUILD_RECEIPT pairs / skips / world_seeds before the GPU step"
+  },
+  "gpu_training_command": {
+    "stage_source": "mkdir -p /root/w3src && cp -r /root/mining20261106/wm_worker01/pytools /root/w3src/pytools && cp -r <c4/wm-wallfit checkout>/tools/wallfit /root/w3src/pytools/tools/wallfit   (use the same pytools tree/PYTHONPATH the probe_wm GPU workers used; never modify the hashed worker tree)",
+    "latent": "cd /root/w3src && PYTHONPATH=/root/w3src/pytools PYTHONDONTWRITEBYTECODE=1 /root/miniconda3/bin/python -B -m tools.wallfit latent --binding /root/mining20261106/wm_worker01/GPU_BINDING.json --queries /root/w3data/cpuV/QUERIES.jsonl.gz --queries /root/w3data/gpuA/QUERIES.jsonl.gz --out /root/w3data/LATENT.pt --fraction 0.4",
+    "train_and_evaluate": "cd /root/w3src && PYTHONPATH=/root/w3src/pytools /root/miniconda3/bin/python -B -m tools.wallfit run --labels /root/w3data/cpuV/LABELS.jsonl --labels /root/w3data/gpuA/LABELS.jsonl --latent /root/w3data/LATENT.pt --out /root/w3run --device cuda",
+    "preflight_optional": "python -B -m tools.wallfit smoke --out /root/w3smoke --device cuda (synthetic fakes; checks the GPU/torch path without ledgers)",
+    "outputs": "/root/w3run/RESULT.json (test-seed + out-of-fold Spearman and precision@1/3/5/10, head_all / head_common vs wm_common), PREDICTIONS.jsonl, HEAD_SPLIT.pt (train-split seeds), HEAD.pt (all labelled TRAIN seeds, same config); LATENT.pt.receipt.json",
+    "sumo_sim_s": 0
+  },
+  "expected_size": {
+    "labels": "probe ledger: ~24 pairs / ~46 seed rows over worlds 986060-986068 with 4 admitted pairs (measured on the local copy); mining banks on gpuA add an unknown number (likely tens). LABELS.jsonl < 2 MB",
+    "queries": "QUERIES.jsonl.gz ~5-20 MB (<= ~100 queries with 60 s history)",
+    "latent": "LATENT.pt < 5 MB",
+    "head": "HEAD.pt / HEAD_SPLIT.pt ~30-80 KB each; GPU memory < 1 GB for training (WM bootstrap for latents uses the 0.4 fraction)"
+  },
+  "expected_time": {
+    "build": "~1-3 min per host (CPU)",
+    "latent": "~2-10 s per query on the RTX 4090 D -> ~5-15 min for <= 100 queries",
+    "run": "~2-5 min (7 fits x 5-member ensemble x 300 epochs; measured 3.5-4 s per 2x200 fit on 96 synthetic pairs, 1 CPU thread)",
+    "total_gpu_host": "~10-25 min"
+  },
+  "enable_ranking_later": {
+    "default": "OFF: WALLFIT_HEAD unset/empty -> rank_api.rank_groups == current probe ranking (tested byte-identical)",
+    "enable": "WALLFIT_HEAD=/root/w3run/HEAD.pt in the probe/mining WM worker environment, after the result is reviewed",
+    "integration_lines": [
+      "tools/mining/probe_wm.py: ranked = rank_api.rank_groups(sc, d['groups'], query=query, actions=actions, H=H, rt=rt)   (replaces the inline ranking block)",
+      "tools/mining/probe_plan.py screen/auto: ranked.sort(key=rank_api.sort_key)   (replaces key=lambda r: (-r['wm_mean_synergy'], -r['wm_saving_vs_policy']))",
+      "mining lane rows: rank_api.annotate_rows(rows, query, H=300, rt=rt)"
+    ],
+    "note": "tools/mining is on c4/coop-probe, not in this base; the lines are not applied here"
+  },
+  "caveats": [
+    "Small data: only ~4 admitted pairs in the probe ledger; the fixed test fold can contain 0 admitted pairs (precision@k then None) - read the out-of-fold CV block; results are diagnostic, not a gate",
+    "Real-runtime latent path (tools.wmteach / FULL-v4 warm conditioning) is tested only with a fake runtime; if encode_drivers yields no encoder outputs the code falls back to the driver_encoder module and otherwise records per-query errors (never imputed)",
+    "Pairs whose situation comes from CONTEXT rows (no saved WM query) have no latent and slightly different row coverage than at ranking time unless --query-builder is used",
+    "Mining bank layouts on gpuA were not inspectable from here; the adapters follow verify_perseed.confirm_all8 / probe_native.extract code and count every skip in BUILD_RECEIPT.json"
+  ],
+  "hard_rules": "no ssh, SUMO or GPU used; work confined to this worktree (one read-only format check of the local coop_probe copy); no git reset/clean/stash drop/push/rebase; no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 path opened; no truth/driver-parameter files read",
+  "new_sumo_sim_s": 0
+}
