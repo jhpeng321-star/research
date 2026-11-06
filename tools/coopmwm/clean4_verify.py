@@ -1998,7 +1998,8 @@ def main(argv=None):
         _nice()
         rt = runtime(a.runtime, a.checkpoint, deterministic=a.deterministic)
         geom = geometry()
-        weights = torch.load(a.weights, weights_only=False, map_location='cpu')['policy']
+        saved = torch.load(a.weights, weights_only=False, map_location='cpu')
+        weights = saved['policy'] if isinstance(saved, dict) and 'policy' in saved else saved   # = newmap_sanity
         wsha = hashlib.sha256(Path(a.weights).read_bytes()).hexdigest()
         leads = load_leads(a.leads) if a.leads else []
         frames = _frame_times(a.frames)
