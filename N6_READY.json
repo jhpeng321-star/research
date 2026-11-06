@@ -3,7 +3,7 @@
  "status": "READY. Pre-run NATIVE/U0/RULE (3a+3c) sealed and unopened; RULE_FAIR pre-run queued for IMITREPLAY (cpuV after ~05:30). PRIMARY = clean5b-F u12 B/R; co-primary claim-3a criterion; MAPPO_SPEED unavailable; MAPPO_LANE pending S-MAPPOWZL; F7 not built.",
  "branch": "c4/nm-finaleval",
  "worktree": "E:/agent-work/c4-nm-finaleval",
- "head": "7d485dc2",
+ "head": "4397d777",
  "new_sim_s_by_n6": 0,
  "deploy": {
   "dir": "E:/agent-work/c4-nm-finaleval/tmp/n6_deploy_7d485dc2",
@@ -23,7 +23,9 @@
   "amend9": "d0a3f7de46c48badaac35e71121df970d8e85a5b301b269f05548e4a21a6ab43",
   "ledger": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
   "amend10": "e0ab843706bc7686c1c5cb306e8f9265524baa8b9055c703fb8eed5e3bd9b602",
-  "amend11": "6e0a8335498cda17a282c18c20aab546d0a3e053fc8243c58dd6baf103f41d34"
+  "amend11": "6e0a8335498cda17a282c18c20aab546d0a3e053fc8243c58dd6baf103f41d34",
+  "amend12": "b0fd0e1beb8065074c9fef2aaa4c0fb11ab021e5d23497708f84ba6b37501cf9",
+  "amend13": "8c61d899f02edd61a25f62f8e1c094c9e61d4cf0cd23bfb6024197d13092650d"
  },
  "panels": {
   "claim3a_3b": "3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130",
@@ -80,15 +82,15 @@
   "parity": "tools/coopmwm/test_nm_eval_parity_cpu.py"
  },
  "files_lf_sha256": {
-  "ops/nm_finaleval.py": "0c234e1bdd00cf8cd0b5d883d8b6d5c0954565bee0150212f67259df36c8c892",
-  "ops/test_nm_finaleval.py": "f005f27c2d8a78fc9e7087aeda999a73e562cb878d73898d40dad20203508d22",
+  "ops/nm_finaleval.py": "6497c1ee4ec5bc49f858ebda6f1e05405452bad88e68759e3615b7ab599f5c88",
+  "ops/test_nm_finaleval.py": "8a51368f77da68a4948f945a50d60382be3eb7f54b121fc50e3040e3a752e6aa",
   "ops/clean3_finaleval.py": "4c4a085580ac5575c943fdadfa79699e98e6bc948e100a8ab1f46ec37395d627",
   "ops/nm_eval_panel_wz3to2_v2.json": "251496fcf6002a96bef412552ef2216627af2d8b80b28e3b545f98f8fb84b4fc",
   "ops/nm_eval_panel_wz3to2_claim3c_D2400.json": "4d95508da907444f9ac7a2e34aebc9d974990feb29efafabd70fa9f75d0c79cb",
   "ops/nm_eval_panel_SUPERSEDED.json": "78b3302b5587daa7b4162404eb7b7be606eb6e669d8fbe8a19b71c1aad25d582",
   "tools/coopmwm/nm_eval_runner.py": "b0a966481277e4480af05db603331626e0acf1793afdf140022cec66eb6b6c28",
   "tools/coopmwm/test_nm_eval_runner_cpu.py": "747a786eba6898d60c22ce619f4b5c199bd6008fd7443228aeae0d325a024d6c",
-  "tools/coopmwm/test_nm_eval_parity_cpu.py": "d19fbb68526d8be07e8867addd492404acdd598afc3753ef13117958d8966a58",
+  "tools/coopmwm/test_nm_eval_parity_cpu.py": "39f58889c9328f523a44e5e46ad3c36f25418a29779257ebf4ac6777b5633093",
   "tools/coopmwm/regimeu0.py": "bc962b22e6fde601c2e1690c7b4ce0db17e7a79cb8a354a351bd7e6dd2999195",
   "tools/coopmwm/imitreplay.py": "319e5ee2b1211ad5580cd7933bf6c42f2fb645d5fac75067491d809a7a6704ce",
   "tools/coopmwm/_n6_pool_probe.py": "9e0a3fef4b8d3f5d9e9353149dcf8d2ba23a9e113a9a14851756d20071974f63",
@@ -104,11 +106,43 @@
   "ops/nm_finaleval_clean5a_registration_amend9.json": "a22caee8a430b749bcba0115d17e10ba3ebe56e4f800dbee0fbfaa3183e4695b",
   "ops/nm_finaleval_clean5a_registration_amend10.json": "97bd4d002b1bff2afa1ee256b1a4a0d27f1a5eb6293a65081352051080a889d5",
   "tools/coopmwm/regimeu0_multicrit.py": "3a4033a8c6bd9c540faef1f99e2c5448b63965d86c72482452fd638fa855e564",
-  "ops/nm_finaleval_clean5a_registration_amend11.json": "f0fb577c9a45937bc4e62dfab87e23f336ee8a1ff3ba1e488d9d545a42a804ed"
+  "ops/nm_finaleval_clean5a_registration_amend11.json": "f0fb577c9a45937bc4e62dfab87e23f336ee8a1ff3ba1e488d9d545a42a804ed",
+  "ops/nm_finaleval_clean5a_registration_amend12.json": "eeb17571ff740fa58d9bd0bbb053ac2efa7691cc4413d4f9785c129f55892b80",
+  "ops/nm_finaleval_clean5a_registration_amend13.json": "52c3eca13236e8ef408cd27e73b9f20a0d44a1defd32feb6ba7183f02c475659"
  },
  "clean5b_checks": {
   "plant_identity": "IDENTICAL for NATIVE/U0/RULE (amendment 10)",
   "training_parity": "b58daad8 + overlay: 8 passed incl. LCEXEC programs B/R and hold_lane_pin",
   "lc_runtime": "Runtime.run sets COOPMWM_LC_RUNTIME=1 when the CONFIG enables lc_families"
- }
+ },
+ "files_git_blob": {
+  "ops/nm_finaleval.py": "34bb06fff08aeeddf70be37aac7214e1a9a0fa8f",
+  "ops/test_nm_finaleval.py": "9c05a69d4db8d384c03c38dcd8f9b21bd4a2745e",
+  "ops/clean3_finaleval.py": "8db21b7816180838ffbc8463bec71a75677507de",
+  "ops/nm_eval_panel_wz3to2_v2.json": "01e0af61f148ed444f250af089a0c2a30d94f413",
+  "ops/nm_eval_panel_wz3to2_claim3c_D2400.json": "e53e27356bf9e8ccbd970e05331433b92ee7c8db",
+  "ops/nm_eval_panel_SUPERSEDED.json": "c2ca8e25599f1246b9985b5d8bbb88bc5034da6e",
+  "tools/coopmwm/nm_eval_runner.py": "413f44f59e1c977a802b5b0a045690c44c3ef601",
+  "tools/coopmwm/test_nm_eval_runner_cpu.py": "a8d26ea9a8c0fe3a7bae009f9f3dabffbeb37370",
+  "tools/coopmwm/test_nm_eval_parity_cpu.py": "817461826b62ceccb2145c771149746c9fa9ed15",
+  "tools/coopmwm/regimeu0.py": "2e267403989e8fc992d1e834957b5b6f87868fae",
+  "tools/coopmwm/imitreplay.py": "d5042c33b357fbe38091e0cfca182648e7c607b1",
+  "tools/coopmwm/_n6_pool_probe.py": "616d14fa5aa5b8c5e4a88375a6589cb6b0e7029f",
+  "ops/nm_finaleval_clean5a_registration.json": "e1618d89582691ea953cf36b01ff57dbad6d3bdd",
+  "ops/nm_finaleval_clean5a_registration_amend1.json": "d6e836be1326da7b565f63b2c9d01e2d4bc18228",
+  "ops/nm_finaleval_clean5a_registration_amend2.json": "d87e2ff0a1f5a3489c8d934d2b7b2cdc193f9ca3",
+  "ops/nm_finaleval_clean5a_registration_amend3.json": "fbc830bdb3a519779e2b3f8bfe65ba2601ccca16",
+  "ops/nm_finaleval_clean5a_registration_amend4.json": "2effbc57a4675999b3b2070abdab61ece1dc1633",
+  "ops/nm_finaleval_clean5a_registration_amend5.json": "e37a9c553a972db9d894a8c5f799dd27ad4af067",
+  "ops/nm_finaleval_clean5a_registration_amend6.json": "745869323e95d2d472b94159b2f2d3dfe76e9845",
+  "ops/nm_finaleval_clean5a_registration_amend7.json": "e26f5ea81f05aff5bbb0addb009205d9848eccd9",
+  "ops/nm_finaleval_clean5a_registration_amend8.json": "f65160282c877d63c7e25a664dbf4ba9172699f8",
+  "ops/nm_finaleval_clean5a_registration_amend9.json": "549086f834c6fe39fb83d6ded5d5cb7c0871c6e5",
+  "ops/nm_finaleval_clean5a_registration_amend10.json": "093eea0cba2b6c7f29802ae1c85bfcf7dd2dbe49",
+  "tools/coopmwm/regimeu0_multicrit.py": "4ff09522aac2d55ecd535518622417ca2fc9e266",
+  "ops/nm_finaleval_clean5a_registration_amend11.json": "29b5333761c58c8fdd7682183eeb20a1fadb7bc0",
+  "ops/nm_finaleval_clean5a_registration_amend12.json": "6cfb6fe047c9c021cbbbbf7d8e59d710ae087f9e",
+  "ops/nm_finaleval_clean5a_registration_amend13.json": "39f04eb110e4b91807abcfbe103d58e4e247ccde"
+ },
+ "receipt_note": "files_lf_sha256 = sha256 of the LF file content at head; files_git_blob = git blob ids at head"
 }
