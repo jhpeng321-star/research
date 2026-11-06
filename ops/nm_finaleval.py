@@ -304,36 +304,41 @@ def default_spec_path():
 
 
 class N1MapAPI:
-    """Interim adapter over N1's committed modules (map_descriptor + map_scenarios, c4/nm-abstract)
-    with the documented interface; N1's own adapter replaces it via ``--map-api`` / NM_MAP_API."""
+    """The launcher's map interface over N1's adapter ``tools.coopmwm.map_api`` (N1_READY b2f30091):
+    seed_ranges() {train, heldout}, descriptor(spec_path) -> MapDescriptor (raw net sha
+    ``network_file_sha256``), world(seed, cell_key), check_world(world, role)."""
     STUB = False
-    __name__ = 'tools.coopmwm.map_scenarios+map_descriptor'
+    __name__ = 'tools.coopmwm.map_api'
 
     def __init__(self, spec_path=None):
         self.spec_path = spec_path
 
     def seed_ranges(self, name):
-        from tools.coopmwm import map_scenarios as ms
-        return dict(train=tuple(ms.TRAIN_RANGE), eval=tuple(ms.HELDOUT_RANGE)) if name == ms.MAP else {}
+        from tools.coopmwm import map_api
+        if name != map_api.MAP:
+            return {}
+        r = map_api.seed_ranges()
+        return dict(train=tuple(r['train']), eval=tuple(r['heldout']))
 
     def descriptor(self, name):
-        from tools.coopmwm import map_descriptor as md
-        desc = md.load(self.spec_path or default_spec_path())
+        from tools.coopmwm import map_api, map_descriptor as md
+        path = self.spec_path or (None if os.environ.get(md.ENV) else default_spec_path())
+        desc = map_api.descriptor(path)
         if desc.name != name:
             raise ValueError(f'descriptor {desc.name!r} != {name!r}')
-        net = hashlib.sha256(Path(desc.network_path).read_bytes()).hexdigest()
-        return dict(name=desc.name, net_sha256=net, spec_sha256=desc.spec_sha256, network_sha256=desc.network_sha256,
-                    descriptor_sha256=desc.digest, stream_namespace=desc.name, k_slots=desc.k_slots)
+        return dict(name=desc.name, net_sha256=desc.network_file_sha256, spec_sha256=desc.spec_sha256,
+                    network_sha256=desc.network_sha256, descriptor_sha256=desc.digest, stream_namespace=desc.name,
+                    k_slots=desc.k_slots, spec_path=desc.spec_path)
 
     def world(self, name, seed, cell, repeat=None):
-        from tools.coopmwm import map_scenarios as ms
-        if name != ms.MAP:
+        from tools.coopmwm import map_api
+        if name != map_api.MAP:
             raise ValueError(f'no world registry for {name!r}')
-        return ms.world(int(seed), int(cell['demand_vph']['main']), float(cell['penetration']))
+        return map_api.world(int(seed), cell['cell_key'])
 
     def check_world(self, world, role):
-        from tools.coopmwm import map_scenarios as ms
-        return ms.guard(world, 'final_test' if role == 'eval' else role)
+        from tools.coopmwm import map_api
+        return map_api.check_world(world, 'final_test' if role == 'eval' else role)
 
 
 def bind_map_api(module=None):
@@ -354,7 +359,8 @@ def map_check(api, panel):
         out['mismatches'].append(f'seed ranges {ranges}')
     try:
         desc = api.descriptor(MAP)
-        out.update({k: desc.get(k) for k in ('net_sha256', 'spec_sha256', 'network_sha256', 'descriptor_sha256')})
+        out.update({k: desc.get(k) for k in ('net_sha256', 'spec_sha256', 'network_sha256', 'descriptor_sha256',
+                                             'spec_path')})
         if desc.get('net_sha256', desc.get('network_sha256')) != panel['map_binding']['net_sha256']:
             out['mismatches'].append('network sha differs from the panel map binding (staged probe network)')
         if desc.get('stream_namespace', MAP) != MAP:

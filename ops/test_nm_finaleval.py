@@ -2,7 +2,6 @@
 from copy import deepcopy
 import hashlib
 import json
-import math
 from pathlib import Path
 import sys
 import types
@@ -108,6 +107,12 @@ def test_panel_tampering_is_refused(panel, tmp_path):
 @pytest.mark.skipif(not STAGED_NET, reason='staged probe network bytes (CRLF copy) not in this checkout')
 def test_panel_rebuilds_from_n1_and_the_map_check_passes(panel):
     rebuilt = nm.build_panel(SPEC, panel['registered_utc'])
+    # Only the informational descriptor digest moved (N1_READY extended the descriptor record after the
+    # registration: f22a6ce2 -> 6fc6be65); worlds, cell, raw/semantic net and spec digests are identical.
+    assert panel['map_binding']['descriptor_sha256_at_registration'].startswith('f22a6ce2')
+    assert rebuilt['map_binding']['descriptor_sha256_at_registration'] == nm.N1MapAPI(SPEC).descriptor('wz3to2')['descriptor_sha256']
+    rebuilt['map_binding']['descriptor_sha256_at_registration'] = panel['map_binding']['descriptor_sha256_at_registration']
+    rebuilt = _seal({k: v for k, v in rebuilt.items() if k != 'panel_sha256'}, 'panel_sha256')
     assert rebuilt == panel and rebuilt['panel_sha256'] == nm.PANEL_SHA256
     report = nm.map_check(nm.N1MapAPI(SPEC), panel)
     assert report['ok'] and not report['stub'] and not report['mismatches'] and report['net_sha256'] == nm.NET_SHA256
