@@ -434,8 +434,9 @@ def test_prepare_with_wz_road_binding(tmp_path, monkeypatch):
     """With a wz3to2 MAP_SPEC the road is bound (stub/N1 descriptor) and its through-lane exit must
     equal the configs' loss.agg_delay.road_end_m (1379.44)."""
     from wms.core import road as road_mod
-    spec = tmp_path / "MAP_SPEC.json"
-    spec.write_text(json.dumps({"name": "wz3to2"}))
+    spec = REPO / "assets/research/newmap_candidates/wz3to2/MAP_SPEC.json"
+    if not spec.is_file():
+        pytest.skip("wz3to2 MAP_SPEC.json not in this tree")
     monkeypatch.setenv("WMS_MAP_SPEC", str(spec))
     try:
         wm2 = _fake_wm2(tmp_path)
@@ -488,3 +489,26 @@ def test_apply_roles_overrides_converter_split_by_seed(tmp_path):
     assert out["n_train"] == 1 and out["n_val"] == 1 and out["split_rule"] == "registered"
     kept = json.loads((src / "C4_EPISODES_MANIFEST.converter.json").read_text())
     assert [e["split_role"] for e in kept["episodes"]] == ["val", "train"]
+
+
+def test_derive_sources_whole_source_roles(tmp_path):
+    def src(name, rows):
+        d = tmp_path / name
+        d.mkdir()
+        doc = _manifest([(w, "train", a) for w, a in rows], k_slots=512, road_digest="r")
+        for e, (w, _) in zip(doc["episodes"], rows):
+            e["seed"] = worlds.world_seed(w)
+        (d / run.MANIFEST_NAME).write_text(json.dumps(doc))
+        return str(d)
+    tr = src("s1_train", [("w989100m2800p40t300", "native"), ("w989100m2800p40t300", "coop_native")])
+    va = src("s1_val", [("w989102m2800p60t300", "native"), ("w989102m2800p60t300", "coop_native")])
+    out = run.derive_sources([tr], [va], tmp_path / "derived")
+    assert [n for n, _ in out] == ["wz_coop_native", "wz_native"]
+    nat = run.read_manifest(dict(out)["wz_native"])
+    assert [e["split_role"] for e in nat["episodes"]] == ["train", "val"] and nat["n_val"] == 1
+    assert all(Path(e["dir"]).is_absolute() for e in nat["episodes"])
+    wm = worlds.worlds_manifest({n: run.read_manifest(p) for n, p in out})
+    assert wm["train_seeds"] == [989100] and wm["val_seeds"] == [989102]
+    both = src("s2_val", [("w989100m2800p40t300", "mappo_u0")])
+    with pytest.raises(worlds.WorldError, match="both"):
+        run.derive_sources([tr], [both], tmp_path / "derived2")

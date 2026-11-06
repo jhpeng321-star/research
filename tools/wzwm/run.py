@@ -131,6 +131,41 @@ def split_by_arm(src: str, out_root: Path) -> list[tuple[str, str]]:
     return out
 
 
+def derive_sources(train_paths, val_paths, out_root: Path) -> list[tuple[str, str]]:
+    """One derived C4 source per arm from WM-B packs whose role is the WHOLE source (``*_train`` /
+    ``*_val``, converted with --val-frac 0): entries keep every field except ``dir`` (absolute) and
+    ``split_role`` (the source's role).  Nothing is copied; a seed may not be on both sides."""
+    header, by_arm, role_of_seed, origin = None, {}, {}, []
+    for role, paths in (("train", train_paths), ("val", val_paths)):
+        for src in paths:
+            doc = read_manifest(src)
+            origin.append({"path": str(src), "role": role, "manifest_sha256": sha(Path(src) / MANIFEST_NAME)})
+            head = {k: doc.get(k) for k in ("schema", "split", "k_slots", "controller_vocab", "dt_s", "map",
+                                            "road", "road_digest")}
+            if header is None:
+                header = head
+            elif {k: v for k, v in head.items() if k != "road"} != {k: v for k, v in header.items() if k != "road"}:
+                raise ValueError(f"{src}: manifest header differs from the first source")
+            for e in doc["episodes"]:
+                seed = int(e["seed"])
+                if role_of_seed.setdefault(seed, role) != role:
+                    raise worlds.WorldError(f"seed {seed} is in both a train and a val source")
+                by_arm.setdefault(str(e.get("arm") or "policy"), []).append(
+                    {**e, "dir": str((Path(src) / e["dir"]).resolve()), "split_role": role})
+    out = []
+    for arm, entries in sorted(by_arm.items()):
+        d = Path(out_root) / f"src_{arm}"
+        d.mkdir(parents=True, exist_ok=False)
+        write(d / MANIFEST_NAME, {**header, "episodes": entries, "n_episodes": len(entries),
+                                  "n_train": sum(e["split_role"] == "train" for e in entries),
+                                  "n_val": sum(e["split_role"] == "val" for e in entries),
+                                  "val_frac": None, "split_seed": None, "derived_from": origin,
+                                  "derived_arm": arm, "split_rule": "role of the whole WM-B source "
+                                  "(*_train / *_val, registered split by seed)"})
+        out.append((f"wz_{arm}", str(d)))
+    return out
+
+
 # ------------------------------------------------------------------ pack (WM-B shards -> C4 sources) ---
 SHARD_SCHEMA = "wzwmdata.shard.v1"
 
@@ -286,14 +321,24 @@ def prepare(args) -> dict:
     specs = [plan.parse_source(s) for s in (args.source or [])]
     if args.pack:
         specs += [(s["name"], s["path"], None) for s in read(args.pack)["sources"]]
-    if not specs:
-        raise ValueError("bind sources with --source or --pack")
+    if not specs and not (args.train_source or args.val_source):
+        raise ValueError("bind sources with --source, --pack or --train-source/--val-source")
+    if args.train_source or args.val_source:
+        if specs:
+            raise ValueError("--train-source/--val-source replace --source/--pack")
+        specs = [(n, p, None) for n, p in derive_sources(args.train_source, args.val_source, root / "sources")]
     if args.split_by_arm:
         if len(specs) != 1:
             raise ValueError("--split-by-arm takes exactly one --source")
         specs = [(n, p, None) for n, p in split_by_arm(specs[0][1], root / "sources")]
     docs = {name: read_manifest(path) for name, path, _ in specs}
     wm = worlds.worlds_manifest(docs, map_name=args.map_name)
+    if args.seed_range:
+        lo, hi = (int(x) for x in args.seed_range.split("-"))
+        outside = [s for s in wm["train_seeds"] + wm["val_seeds"] if not lo <= s <= hi]
+        if outside:
+            raise worlds.WorldError(f"seeds outside the registered WM data range {lo}-{hi}: {outside[:10]}")
+        wm["registered_seed_range"] = [lo, hi]
     hit = worlds.overlap(wm)
     if hit:
         raise worlds.WorldError(f"reserved qualification worlds in the data: {hit}")
@@ -644,6 +689,9 @@ def main(argv=None) -> int:
     pr.add_argument("--init-sha", default=WM2_SHA256)
     pr.add_argument("--source", action="append", default=[], help="NAME=PATH[@MIX] (repeat)")
     pr.add_argument("--pack", default=None, help="PACK.json of tools.wzwm.run pack (adds its sources)")
+    pr.add_argument("--train-source", action="append", default=[], help="WM-B pack whose episodes are all TRAIN")
+    pr.add_argument("--val-source", action="append", default=[], help="WM-B pack whose episodes are all VAL")
+    pr.add_argument("--seed-range", default="989100-989199", help="every train/val seed must lie here ('' = off)")
     pr.add_argument("--split-by-arm", action="store_true")
     pr.add_argument("--base", default=None)
     pr.add_argument("--paired", action="store_true", help="enable paired_diff if a source has pair keys")
