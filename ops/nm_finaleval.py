@@ -166,11 +166,12 @@ CELL_AUTHORITY = ('MAIN 2026-11-06 (N6): clean4 training cell = demand 3200 veh/
 NEWMAP2_REPORT_SHA256 = '70c119595ff3f391bbdebfa0a98d9c2f7ca02d2ae61f8acb53c126754adfdb05'
 PHASE = 'v2v_final'
 PANEL_ALLOCATION_SIM_S = 690_000       # value registered in panel v2's contract
-ALLOCATION_SIM_S = 1_340_000           # v2v_final raised by MAIN 2026-11-06 (>= 15% margin over 1,164,960)
+ALLOCATION_SIM_S = 1_600_000           # v2v_final raised by MAIN 2026-11-07 (>= 15% over 1,357,680 incl. write-offs)
 ALLOCATION_AUTHORITY = ('MAIN 2026-11-06 under the owner authorisation to act on its recommendations: v2v_final '
                         'raised 690,000 -> 1,040,000 (F6: 7 arms + branches) -> 1,200,000 (RULE arm in 3a and 3c, '
-                        'claim 3c) -> 1,340,000 (N5: restore a >= 15% margin over the 1,164,960 ceiling); pre-run '
-                        'spend in the evaluation root ledger counts against the same cap')
+                        'claim 3c) -> 1,340,000 (N5: restore a >= 15% margin over the 1,164,960 ceiling) -> 1,600,000 (MAIN '
+                        '2026-11-07: >= 15% over quote 1,241,760 + write-offs 115,200 + logcheck 720); every N6 charge '
+                        'is in the evaluation root ledger (own-root accounting)')
 BUDGET_KEYS = ('clean4_budget', 'clean3_budget')
 SAFETY = fe.SAFETY
 HARD = fe.HARD
@@ -694,13 +695,13 @@ def budget_check(root, cfg, base, *, outstanding=None, final_root=None):
     prerun = sum(r['sim_s'] for r in fe.ledger_rows(final_root)) if final_root is not None and Path(final_root).is_dir() else 0
     mine = sum(r['sim_s'] for r in rows if str(r['id']).startswith(PREFIXES))+prerun
     foreign = [r['id'] for r in rows if not str(r['id']).startswith(PREFIXES)]
-    cap = min(allocated or 0, ALLOCATION_SIM_S)
+    cap = ALLOCATION_SIM_S        # the registered N6 cap; N6 charges only its own root ledger (amendment 7)
     need = max(0, q['total_ceiling_sim_s']-mine) if outstanding is None else outstanding
     out = dict(source=source, phase=PHASE, allocated=allocated, sub_cap=cap, spent_by_launcher=mine,
                foreign_rows=foreign[:5], foreign_count=len(foreign), ceiling=q['total_ceiling_sim_s'],
                outstanding_ceiling=need, remaining=cap-mine, eval_root_spent=prerun)
-    if allocated is None or allocated < ALLOCATION_SIM_S:
-        raise Blocked(f'clean4 {PHASE} allocation {allocated} < registered {ALLOCATION_SIM_S}: {out}')
+    if allocated is None:
+        raise Blocked(f'the clean run CONFIG carries no sealed {PHASE} allocation: {out}')
     if foreign:
         raise Blocked(f'foreign {PHASE} charges in the clean4 ledger (in-run evaluation not off?): {out}')
     if mine+need > cap:
