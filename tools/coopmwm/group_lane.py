@@ -160,8 +160,26 @@ def controller_targets(controller, policy, rows, now):
     """Committed plans supersede samples; counterfactual branch release applies.
 
     No separate TraCI writer: the returned tensor enters the same env.step as
-    acceleration. Replayed samples also recheck live local safety.
+    acceleration. Replayed samples also recheck live local safety. N2 lane-drop zip
+    requests and N9 family lane requests (opt-in; absent keys = the unchanged G5 path)
+    join the SAME returned targets after their own-sensing recheck; a CAV belongs to at
+    most one move.
     """
+    safe = _g5_controller_targets(controller, policy, rows, now)
+    if controller.events and ('lane_drop_lane_requests' in controller.events[-1]['sample'] or any(
+            e['plan'].get('lane_drop_macro') is not None for e in controller.active_plans)):
+        from .lane_drop import controller_lane_targets
+        extra = controller_lane_targets(controller, policy, rows, now)
+        safe = dict(safe, **{v: t for v, t in extra.items() if v not in safe})
+    if controller.events and ('nm_lane_requests' in controller.events[-1]['sample'] or any(
+            e['plan'].get('nm_move') is not None for e in controller.active_plans)):
+        from .nm_families import controller_lane_targets as nm_lane_targets
+        extra = nm_lane_targets(controller, policy, rows, now)
+        safe = dict(safe, **{v: t for v, t in extra.items() if v not in safe})
+    return safe
+
+
+def _g5_controller_targets(controller, policy, rows, now):
     if not controller.events:
         return {}
     sample = controller.events[-1]['sample']

@@ -33,7 +33,11 @@ def episode(spec, cfg, work):
         if isinstance(policy, p1.EpisodePolicy):
             original = controller.apply
             def apply(rows, commands, now):
-                policy.observe(rows, now, command_commitments=controller.active_plans)
+                if policy.lane_drop is not None:   # N2 speed law needs the own native command
+                    policy.observe(rows, now, command_commitments=controller.active_plans,
+                                   native_commands=commands)
+                else:
+                    policy.observe(rows, now, command_commitments=controller.active_plans)
                 return original(rows, commands, now)
             controller.apply = apply
     job = dict(id=Path(work).name, path=str(work), world=world, role='train', arm=spec['arm'],
@@ -117,6 +121,10 @@ def scheduled(cfg, update):
             results = _wave(cfg, pairs, 'v2v_lessons', f'lesson_u{update:03}')
             write(target, _seal(dict(status='graded', update=update, results=results), 'receipt_sha256'))
     if update not in (8, 24):
+        return
+    if cfg.get('paired_evaluation', True) is False:
+        # clean4 (MAIN 2026-11-06): in-run u8/u24 paired evaluations OFF; the final evaluation is the
+        # separate N6 launcher on the registered final panel, debited from v2v_final.
         return
     target = root/f'evaluation/PAIRED_u{update:03}.json'
     if target.exists():

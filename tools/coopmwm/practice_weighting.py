@@ -241,7 +241,7 @@ def _bound_training_parent(root, arm, example_id, prelaunch):
         raise ValueError('registered training parent snapshot changed')
     snapshot = ps.load_snapshot(root, arm, row)
     if (snapshot['episode'].get('role') != 'train' or snapshot['episode'].get('arm') != arm or
-            not 986000 <= snapshot['episode']['world']['seed'] <= 986071 or
+            not __import__('tools.coopmwm.map_runtime', fromlist=['x']).registered_train_world(snapshot['episode']['world']) or
             receipt['episode'].get('arm') != arm or sv.snapshot_sha(snapshot) != entry['snapshot_sha256']):
         raise ValueError('training parent role/arm/snapshot provenance mismatch')
     confirmation = rb.confirmations(root, arm).get(row['verification_id'], {})

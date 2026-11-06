@@ -1,0 +1,153 @@
+{
+ "empty_rows": {
+  "COOPKINDS_MOVES_R": {
+   "bytes": 0,
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "source": "runs/active/C4-V7FT-20261017/COOPKINDS_MOVES_R.jsonl"
+  },
+  "LCMOVES_MOVES_R": {
+   "bytes": 0,
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "source": "runs/active/C4-V7FT-20261017/LCMOVES_MOVES_R.jsonl"
+  }
+ },
+ "note": "Verbatim read-only copies from runs/active/C4-V7FT-20261017 (2026-11-06). rows/*.jsonl.gz = deterministic gzip (mtime 0) of the row files; sha256 = SHA256 of the ORIGINAL uncompressed bytes (gz_sha256 of the stored file). probes/<source>/*.pysrc = byte-identical copies of the probe code (.pysrc so pytest/ruff never collect them; loaded by lc_parity via importlib).",
+ "probes": {
+  "coopkinds/ck_core.pysrc": {
+   "bytes": 20636,
+   "sha256": "003311cb5debc09d2cf86d0b049854e2e967f2b85c46ae39b990958d1eb27a02",
+   "source": "runs/active/C4-V7FT-20261017/coopkinds/code/ck_core.py"
+  },
+  "coopkinds/population.pysrc": {
+   "bytes": 9463,
+   "sha256": "6af5ee232dd99f5ae0c142fdaf1b7de50f23f04d58f70def61482b76f4b2e6c6",
+   "source": "runs/active/C4-V7FT-20261017/coopkinds/code/population.py"
+  },
+  "lcmoves/lcm_core.pysrc": {
+   "bytes": 30321,
+   "sha256": "48aaae384210e1bb97e9a2c028761e01ba7fd6d4c632d70946b007319cc330db",
+   "source": "runs/active/C4-V7FT-20261017/lcmoves/code/lcm_core.py"
+  },
+  "lcmoves/lcm_families.pysrc": {
+   "bytes": 4560,
+   "sha256": "4df417f5f33f506011a3a1abdf1cfd5d29df96bb9521bcbcf6013343fe8d2c77",
+   "source": "runs/active/C4-V7FT-20261017/lcmoves/code/lcm_families.py"
+  },
+  "lcmoves/lcm_plan.pysrc": {
+   "bytes": 39095,
+   "sha256": "94ebbc933cdeceeb5e433574d52f1a3f0c192fccb0f61b2273bf7fe9cfedfb90",
+   "source": "runs/active/C4-V7FT-20261017/lcmoves/code/lcm_plan.py"
+  },
+  "lcmoves/population.pysrc": {
+   "bytes": 9463,
+   "sha256": "6af5ee232dd99f5ae0c142fdaf1b7de50f23f04d58f70def61482b76f4b2e6c6",
+   "source": "runs/active/C4-V7FT-20261017/lcmoves/code/population.py"
+  },
+  "lowcav/lc_core.pysrc": {
+   "bytes": 17760,
+   "sha256": "287a53b3d3d8d083228072203a835e7aeca3d8610ae975bb37aec9973a7ce6b2",
+   "source": "runs/active/C4-V7FT-20261017/lowcav/code/lc_core.py"
+  },
+  "lowcav/population.pysrc": {
+   "bytes": 9463,
+   "sha256": "6af5ee232dd99f5ae0c142fdaf1b7de50f23f04d58f70def61482b76f4b2e6c6",
+   "source": "runs/active/C4-V7FT-20261017/lowcav/code/population.py"
+  },
+  "newmap2/nm2_core.pysrc": {
+   "bytes": 17027,
+   "sha256": "ad6b4bd63426ca41f6ebf8b974db48eea508532f076981f652139de15fa20abb",
+   "source": "runs/active/C4-V7FT-20261017/newmap2/code/nm2_core.py"
+  },
+  "newmap2/population.pysrc": {
+   "bytes": 9463,
+   "sha256": "6af5ee232dd99f5ae0c142fdaf1b7de50f23f04d58f70def61482b76f4b2e6c6",
+   "source": "runs/active/C4-V7FT-20261017/newmap2/code/population.py"
+  },
+  "plangen/nm2_core.pysrc": {
+   "bytes": 17027,
+   "sha256": "ad6b4bd63426ca41f6ebf8b974db48eea508532f076981f652139de15fa20abb",
+   "source": "runs/active/C4-V7FT-20261017/plangen/code/nm2_core.py"
+  },
+  "plangen/population.pysrc": {
+   "bytes": 9463,
+   "sha256": "6af5ee232dd99f5ae0c142fdaf1b7de50f23f04d58f70def61482b76f4b2e6c6",
+   "source": "runs/active/C4-V7FT-20261017/plangen/code/population.py"
+  },
+  "plangen2/pg2_core.pysrc": {
+   "bytes": 22473,
+   "sha256": "fb00fe48f01dff96ef777fe053ff739f57873d936016e6c1b6f926c59b2960f9",
+   "source": "runs/active/C4-V7FT-20261017/plangen2/code/pg2_core.py"
+  },
+  "plangen2/population.pysrc": {
+   "bytes": 9463,
+   "sha256": "6af5ee232dd99f5ae0c142fdaf1b7de50f23f04d58f70def61482b76f4b2e6c6",
+   "source": "runs/active/C4-V7FT-20261017/plangen2/code/population.py"
+  }
+ },
+ "rows": {
+  "COOPKINDS_MOVES_B": {
+   "bytes": 254373,
+   "gz_sha256": "11bbb0091a9530163083f78f7dd8088cde8a91a4eb4c7e806e48ccd505f3101f",
+   "rows": 18,
+   "sha256": "317d1e6961ceee9ee2456b215569de913e10745391c9c400a3a26e41acc63bcd",
+   "source": "runs/active/C4-V7FT-20261017/COOPKINDS_MOVES_B.jsonl"
+  },
+  "LCMOVES_MOVES_B": {
+   "bytes": 61782,
+   "gz_sha256": "bbe63dcf6afb359e44e4928bcfa3a39679acdd2bed030014100640d2f38409be",
+   "rows": 3,
+   "sha256": "446bfdbb2d7f431d99698c45172006c138270323a08bffbc6235fe70511965a5",
+   "source": "runs/active/C4-V7FT-20261017/LCMOVES_MOVES_B.jsonl"
+  },
+  "LOWCAV_MOVES_B": {
+   "bytes": 132288,
+   "gz_sha256": "68adb5268a8bfc7d07de8e9aec685cb42aa0c36d813f2074962d10ada607e922",
+   "rows": 12,
+   "sha256": "f2b802b3a9e62c6e84eab6b22fb404fd991c0f4b1c8732b881e3c4f15a79eb9b",
+   "source": "runs/active/C4-V7FT-20261017/LOWCAV_MOVES_B.jsonl"
+  },
+  "NEWMAP_MOVES_B": {
+   "bytes": 342176,
+   "gz_sha256": "fe5ed5c429c8a1c4d10147799fdd625f54640a6117ec897a1c8e9ccb148cefa8",
+   "rows": 27,
+   "sha256": "88adb68aca9d9cac3537db3291abf224bdb91885914664a2419627bb63fc864b",
+   "source": "runs/active/C4-V7FT-20261017/NEWMAP_MOVES_B.jsonl"
+  },
+  "NEWMAP_MOVES_R": {
+   "bytes": 32673,
+   "gz_sha256": "bace74d20c23ac787d14af26160e133e1fecfc22e951b563031a4d7b2bf6355c",
+   "rows": 3,
+   "sha256": "d6b4b1af80d3ad08d18a1cff97be155c70de1a4f8a829577d7fbb8e636d08388",
+   "source": "runs/active/C4-V7FT-20261017/NEWMAP_MOVES_R.jsonl"
+  },
+  "PLANGEN2_MOVES_B": {
+   "bytes": 425074,
+   "gz_sha256": "35b28fb120825841973afa3d0e2a5a88ada64439e93d4f4b96a21ffa86d61920",
+   "rows": 24,
+   "sha256": "ec097835b2a4d417338901f2bd71568fa9a260a9d0dc4e04c2980d155607ade0",
+   "source": "runs/active/C4-V7FT-20261017/PLANGEN2_MOVES_B.jsonl"
+  },
+  "PLANGEN2_MOVES_R": {
+   "bytes": 429747,
+   "gz_sha256": "4e8920610a60dcfd5a8a845dbffc04feaa89c72125536ecfdfdaed531dd38a65",
+   "rows": 18,
+   "sha256": "591078b861f23925bdce5d75a2998dcb7e759bbbc928f77af0549330377c7f2f",
+   "source": "runs/active/C4-V7FT-20261017/PLANGEN2_MOVES_R.jsonl"
+  },
+  "PLANGEN_MOVES_B": {
+   "bytes": 229005,
+   "gz_sha256": "7c0cce352bb0db75f0a7246429921c972f971bf3a9b7fa2e6f63bf118a2bad8a",
+   "rows": 18,
+   "sha256": "369ccd4ff8c477554808b3a76e0cc344c0afd1ee8ad10328111467e6d56b5c93",
+   "source": "runs/active/C4-V7FT-20261017/PLANGEN_MOVES_B.jsonl"
+  },
+  "PLANGEN_MOVES_R": {
+   "bytes": 184229,
+   "gz_sha256": "93deb50e9d7a06e65051392b943a58b2bc4e02f8b9aa27ece331365b0f590cad",
+   "rows": 15,
+   "sha256": "7c43b502a1d3f9eb5d023ddc1576a79dd8c4bae63ab4b4b72384299eb9d7acea",
+   "source": "runs/active/C4-V7FT-20261017/PLANGEN_MOVES_R.jsonl"
+  }
+ },
+ "schema": "lcexec-cv-fixtures-v1"
+}

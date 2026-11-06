@@ -36,6 +36,8 @@ def bind_runtime(job):
     _g5_runtime(job['runtime'])  # clean3 opt-in (COOPMWM_G5_RUNTIME=1): bound G5 env on the frozen runtime
     from .map_runtime import install as _map_runtime
     _map_runtime(job)  # N1: world['map'] + COOPMWM_MAP_SPEC bind a registered map; original map: no-op
+    from .lc_runtime import install as _lc_runtime
+    _lc_runtime(job)  # clean5 opt-in (COOPMWM_LC_RUNTIME=1): LCEXEC knobs; flag off: no-op
     return exact
 
 

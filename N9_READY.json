@@ -1,0 +1,790 @@
+{
+ "task": "N9",
+ "status": "OFF_FOR_CLEAN4 (MAIN after N5 BLOCK REVIEW_N9_1); clean5 work moved under LCEXEC free_program",
+ "branch": "c4/nm-families",
+ "worktree": "E:/agent-work/c4-nm-families",
+ "base_commit": "3e5bc9f9",
+ "head": "954c2e8302d1a649962dc167073dd8b6fdfb0ac0",
+ "merged": {
+  "w1": "c4/wall-v2v 6908675a",
+  "w2": "c4/wall-tune b10327c5 (N11 F2; W1+W2 resolution as c4/nm-moves 7fb5cb17)",
+  "n2": "c4/nm-moves d74e0a32 (lane_drop + N1 e512b059)",
+  "n4": "clean4 integrated head 7a0f7721 (N1 b2f30091 + N2 64825957 + G4 fix)",
+  "pending": "re-merge N2 after its F6 fix (MapView WM frame) lands"
+ },
+ "commits": [
+  {
+   "sha": "9bc74dfe8b32f70fb385d62fd6571ffe45251f18",
+   "subject": "C4 N9: N11 F3 - lane-drop geometry from N1 map_descriptor.current().bottleneck (drop s=75.44, WM 2/1/0); map-aware own-sensing lane gate"
+  },
+  {
+   "sha": "6f2ecea6ab45ec8545efe8a7634447e935aa4f90",
+   "subject": "C4 N9: merge N4 clean4 integrated head 7a0f7721 (N1 b2f30091 + N2 64825957 + G4 fix)"
+  },
+  {
+   "sha": "d83c1f7ed09df5f9586a5588a4b80f0607851868",
+   "subject": "C4 N9: merge c4/nm-moves (N2 lane_drop + N1 e512b059): keep both feature sets"
+  },
+  {
+   "sha": "4b3771b358ada7717309f63fe9125c69a8608e9a",
+   "subject": "C4 N9: merge c4/wall-tune (W2) for N11 F2; keep W1+W2 resolution (as c4/nm-moves 7fb5cb17) then N9 blocks"
+  },
+  {
+   "sha": "aa863bc465690b7f1911e304f9f201cc94305f80",
+   "subject": "C4 N9: drop unused test import"
+  },
+  {
+   "sha": "2a52e2e54e0803e1c85f179a77b909b8679b6c42",
+   "subject": "C4 N9: CPU contract tests, executable-plan G5 replay/verify_tape, bank ingestion routing"
+  },
+  {
+   "sha": "429cf820fdc98ee49d15976c4c70ba4be0bf9c35",
+   "subject": "C4 N9: lane-drop move families (platoon_headway, early_merge, zipper_order, lane_balance, discharge_sync, harmonize_rows), default off"
+  },
+  {
+   "sha": "8aff1da6b470d56b578f14a133ac7ed52b31d610",
+   "subject": "C4 N9: merge c4/wall-v2v (W1 V2V initiate/join) as the protocol base for new move families"
+  }
+ ],
+ "files": {
+  "new": [
+   "tools/coopmwm/nm_families.py",
+   "tools/coopmwm/nm_map.py",
+   "tools/coopmwm/test_nm_families_cpu.py"
+  ],
+  "modified_n9_hunks": [
+   "tools/coopmwm/track2_backend.py",
+   "tools/coopmwm/feasible_proposals.py",
+   "tools/coopmwm/v2v_runtime.py (own native command -> protocol)",
+   "tools/coopmwm/group_lane.py (controller_targets: nm_lane_requests + nm_move plan replay)",
+   "tools/coopmwm/acceleration.py (lane-runtime guard)",
+   "tools/coopmwm/moves.py (nm_move never projected)",
+   "tools/coopmwm/bank_breadth.py (nm_move ingestion route)",
+   "tools/coopmwm/sparse_synergy_credit.py (G4 skips per-CAV options)"
+  ]
+ },
+ "config": {
+  "key": "nm_families",
+  "schema": {
+   "enabled": true,
+   "rule": "n9-nm-families-v1",
+   "provenance": "non-empty owner registration",
+   "map": "'wz3to2' (process bound via COOPMWM_MAP_SPEC / map_descriptor.bind) or 'merge'/'merge_original'",
+   "families": "{family: {member_cap: registered int}} (any subset)",
+   "range_m": "optional float > 0, V2V message radio range, default 100.0"
+  },
+  "helper": "tools.coopmwm.nm_families.config_keys(provenance=..., map_name='wz3to2', families={'early_merge': 4, ...}, range_m=200.)",
+  "requires": [
+   "group_lane_moves=True (clean3 B/R already set it)",
+   "process map bound to the named map (fails closed otherwise)"
+  ],
+  "b_r": "one common key for B and R (validated in track2_backend._check for B/R); A never reads it",
+  "default": "absent or False = OFF, byte-identical (overlay test vs 3e5bc9f9 sources, with and without group_lane_moves)",
+  "sidecars": "ON widens the trigger first layer by zero columns (N9 descriptor 24 + geometry 5): start B/R from u0 with fresh track2 sidecars (OFF sidecars do not strict-load)"
+ },
+ "families": {
+  "platoon_headway": {
+   "enable": {
+    "nm_families": {
+     "enabled": true,
+     "rule": "n9-nm-families-v1",
+     "provenance": "<owner registration>",
+     "map": "wz3to2",
+     "families": {
+      "platoon_headway": {
+       "member_cap": 4
+      }
+     }
+    }
+   },
+   "option_families": [
+    "platoon_headway_initiate",
+    "platoon_headway_join"
+   ],
+   "registration": {
+    "roles": [
+     "head",
+     "follower"
+    ],
+    "member_cap": [
+     2,
+     4
+    ],
+    "params": [
+     {
+      "key": "time_headway_s",
+      "kind": "float",
+      "lo": 1.1,
+      "hi": 1.4
+     }
+    ],
+    "constants": {
+     "standstill_gap_m": 2.5,
+     "kp": 0.1,
+     "kd": 0.4,
+     "kff": 0.5
+    },
+    "depth": "pinned_hi",
+    "depth_meaning": "unused (pinned to the variety depth maximum); the CACC law has full authority, bounded only by the executor feasibility clip and the 1.2 m/s^2 CAV cap",
+    "onset_window_s": [
+     0.0,
+     30.0
+    ],
+    "hold_window_s": [
+     20.0,
+     90.0
+    ],
+    "depth_window": [
+     0.3,
+     1.0
+    ],
+    "lane_roles": {},
+    "absolute_profile": true,
+    "provenance": "CACC gap regulation after Milanes & Shladover 2014 (TR-C 48): a = kp*(gap - s0 - h*v) + kd*(v_pred - v) + kff*(v_pred - v_pred[t-1 V2V packet]); gains/h range chosen by the N9 discrete-time string-stability check (1 s control tick, one-tick feed-forward delay): max_w |Gamma(e^jw)| <= 1 for h in [1.1, 1.4] s (string_gain); kff = 0 is NOT string stable there. s0 = SUMO default minGap 2.5 m. Tighter than the IDM textbook T = 1.5 s. N9 registration for owner review."
+   },
+   "roles": "head (front member, no CACC) / follower (CACC on its own sensed member predecessor)",
+   "initiate": "free through-lane CAV (WM adjacent/far) with a sensed same-lane CAV leader (role follower) or follower (role head)",
+   "join": "free CAV in the session anchor lane whose own nearest same-lane leader (-> follower) or follower (-> head) is in the t-1 roster",
+   "executor": "absolute a = kp*(gap - s0 - h*v) + kd*(v_pred - v) + kff*(v_pred - v_pred[t-1 own V2V packet]); offset = a - own native command - frozen base mean (single writer: coop-layer committed offset -> acceleration.requests -> CommandOwnership v + a*1 s); HDV cut-in / non-member predecessor -> offset 0",
+   "release": "hold expiry",
+   "lane_changes": false,
+   "executable_fields": {
+    "nm_move_family": "platoon_headway",
+    "lane_targets": "all -1",
+    "profile": "absolute executed acceleration (closed-loop law on the tape)",
+    "params": {
+     "time_headway_s": {
+      "key": "time_headway_s",
+      "kind": "float",
+      "lo": 1.1,
+      "hi": 1.4
+     }
+    }
+   }
+  },
+  "early_merge": {
+   "enable": {
+    "nm_families": {
+     "enabled": true,
+     "rule": "n9-nm-families-v1",
+     "provenance": "<owner registration>",
+     "map": "wz3to2",
+     "families": {
+      "early_merge": {
+       "member_cap": 4
+      }
+     }
+    }
+   },
+   "option_families": [
+    "early_merge_initiate",
+    "early_merge_join"
+   ],
+   "registration": {
+    "roles": [
+     "merge",
+     "yield"
+    ],
+    "member_cap": [
+     2,
+     4
+    ],
+    "params": [
+     {
+      "key": "upstream_m",
+      "kind": "float",
+      "lo": 400.0,
+      "hi": 1800.0
+     },
+     {
+      "key": "sequence_gap_s",
+      "kind": "int",
+      "lo": 2,
+      "hi": 5
+     },
+     {
+      "key": "attempt_s",
+      "kind": "int",
+      "lo": 3,
+      "hi": 10
+     }
+    ],
+    "constants": {
+     "link_m": 100.0
+    },
+    "depth": "sampled",
+    "depth_meaning": "yield-role easing depth (m/s^2 below the policy) while a pending merger is ahead within link_m",
+    "onset_window_s": [
+     0.0,
+     30.0
+    ],
+    "hold_window_s": [
+     20.0,
+     90.0
+    ],
+    "depth_window": [
+     0.3,
+     1.0
+    ],
+    "lane_roles": {
+     "merge": "adjacent"
+    },
+    "absolute_profile": false,
+    "provenance": "upstream_m = probe wall zone runs/active/C4-V7FT-20261017/newmap_probe/make_jobs.py sha256 fc3f668e (WALL_ZONE x_b-1800..x_b-400 m, WALL_SPREAD 60 m, wall v_w 15/22 m/s, merge max_s 10 s); attempt_s upper bound = probe merge max_s 10 s; sequence_gap_s lower bound = two-second rule; link_m = variety_gap_link_m. N9 registration."
+   },
+   "roles": "merge (closing-lane CAV) / yield (adjacent-lane partner)",
+   "initiate": "free closing-lane CAV upstream of the drop (role merge)",
+   "join": "free closing-lane (merge) or adjacent-lane (yield) CAV upstream of the drop within range_m of the initiator",
+   "executor": "merge: lane request closing->adjacent once to_drop <= upstream_m, front-first (no received merge mate ahead still in the closing lane), >= sequence_gap_s after the last completion, <= attempt_s request seconds; yield: offset -depth while a pending merge mate (t-1 packet) is ahead within link_m",
+   "release": "initiator passes the drop (message released) or hold expiry",
+   "lane_changes": true,
+   "executable_fields": {
+    "nm_move_family": "early_merge",
+    "lane_targets": "members x duration_s ints: -1, or the role target WM lane {'merge': 'adjacent (WM 1)'}",
+    "profile": "absolute executed acceleration (closed-loop law on the tape)",
+    "params": {
+     "upstream_m": {
+      "key": "upstream_m",
+      "kind": "float",
+      "lo": 400.0,
+      "hi": 1800.0
+     },
+     "sequence_gap_s": {
+      "key": "sequence_gap_s",
+      "kind": "int",
+      "lo": 2,
+      "hi": 5
+     },
+     "attempt_s": {
+      "key": "attempt_s",
+      "kind": "int",
+      "lo": 3,
+      "hi": 10
+     }
+    }
+   }
+  },
+  "zipper_order": {
+   "enable": {
+    "nm_families": {
+     "enabled": true,
+     "rule": "n9-nm-families-v1",
+     "provenance": "<owner registration>",
+     "map": "wz3to2",
+     "families": {
+      "zipper_order": {
+       "member_cap": 4
+      }
+     }
+    }
+   },
+   "option_families": [
+    "zipper_order_initiate",
+    "zipper_order_join"
+   ],
+   "registration": {
+    "roles": [
+     "closing",
+     "through"
+    ],
+    "member_cap": [
+     2,
+     4
+    ],
+    "params": [
+     {
+      "key": "zipper_zone_m",
+      "kind": "float",
+      "lo": 50.0,
+      "hi": 250.0
+     },
+     {
+      "key": "order_headway_s",
+      "kind": "float",
+      "lo": 1.0,
+      "hi": 2.0
+     },
+     {
+      "key": "attempt_s",
+      "kind": "int",
+      "lo": 3,
+      "hi": 10
+     },
+     {
+      "key": "order",
+      "kind": "choice",
+      "choices": [
+       "through_first",
+       "closing_first"
+      ]
+     }
+    ],
+    "constants": {
+     "standstill_gap_m": 2.5
+    },
+    "depth": "sampled",
+    "depth_meaning": "easing depth of a member not yet behind its designated predecessor",
+    "onset_window_s": [
+     0.0,
+     30.0
+    ],
+    "hold_window_s": [
+     20.0,
+     90.0
+    ],
+    "depth_window": [
+     0.3,
+     1.0
+    ],
+    "lane_roles": {
+     "closing": "adjacent"
+    },
+    "absolute_profile": false,
+    "provenance": "zipper_zone_m upper bound ~ MUTCD merging taper L = W*S (12 ft, 65 mph ~ 238 m); order_headway_s 1-2 s (two-second rule upper bound); attempt_s as early_merge. N9 registration."
+   },
+   "roles": "closing (closing-lane CAV) / through (adjacent-lane CAV); per-role cap (member_cap+1)//2",
+   "initiate": "free closing- or adjacent-lane CAV with to_drop > zipper_zone_m",
+   "join": "free closing/adjacent-lane CAV upstream of the drop, role slot free",
+   "executor": "fixed interleaved order (order param) by position; a member not yet behind its designated predecessor by s0 + order_headway_s*v eases -depth; closing members request closing->adjacent inside zipper_zone_m when behind the predecessor, ahead of the designated follower and the closing predecessor completed",
+   "release": "initiator passes the drop or hold expiry",
+   "lane_changes": true,
+   "executable_fields": {
+    "nm_move_family": "zipper_order",
+    "lane_targets": "members x duration_s ints: -1, or the role target WM lane {'closing': 'adjacent (WM 1)'}",
+    "profile": "absolute executed acceleration (closed-loop law on the tape)",
+    "params": {
+     "zipper_zone_m": {
+      "key": "zipper_zone_m",
+      "kind": "float",
+      "lo": 50.0,
+      "hi": 250.0
+     },
+     "order_headway_s": {
+      "key": "order_headway_s",
+      "kind": "float",
+      "lo": 1.0,
+      "hi": 2.0
+     },
+     "attempt_s": {
+      "key": "attempt_s",
+      "kind": "int",
+      "lo": 3,
+      "hi": 10
+     },
+     "order": {
+      "key": "order",
+      "kind": "choice",
+      "choices": [
+       "through_first",
+       "closing_first"
+      ]
+     }
+    }
+   }
+  },
+  "lane_balance": {
+   "enable": {
+    "nm_families": {
+     "enabled": true,
+     "rule": "n9-nm-families-v1",
+     "provenance": "<owner registration>",
+     "map": "wz3to2",
+     "families": {
+      "lane_balance": {
+       "member_cap": 3
+      }
+     }
+    }
+   },
+   "option_families": [
+    "lane_balance_initiate",
+    "lane_balance_join"
+   ],
+   "registration": {
+    "roles": [
+     "mover"
+    ],
+    "member_cap": [
+     1,
+     3
+    ],
+    "params": [
+     {
+      "key": "sequence_gap_s",
+      "kind": "int",
+      "lo": 2,
+      "hi": 5
+     },
+     {
+      "key": "attempt_s",
+      "kind": "int",
+      "lo": 3,
+      "hi": 10
+     }
+    ],
+    "constants": {
+     "zone_far_m": 1800.0,
+     "zone_near_m": 400.0
+    },
+    "depth": "pinned_lo",
+    "depth_meaning": "unused (pinned to the variety depth minimum); lane-only family",
+    "onset_window_s": [
+     0.0,
+     30.0
+    ],
+    "hold_window_s": [
+     20.0,
+     90.0
+    ],
+    "depth_window": [
+     0.3,
+     1.0
+    ],
+    "lane_roles": {
+     "mover": "far"
+    },
+    "absolute_profile": false,
+    "provenance": "upstream zone = probe wall zone runs/active/C4-V7FT-20261017/newmap_probe/make_jobs.py sha256 fc3f668e (WALL_ZONE x_b-1800..x_b-400 m, WALL_SPREAD 60 m, wall v_w 15/22 m/s, merge max_s 10 s). N9 registration."
+   },
+   "roles": "mover (adjacent-lane CAV)",
+   "initiate": "free adjacent-lane CAV with 400 <= to_drop <= 1800 m",
+   "join": "free adjacent-lane CAV in the same zone within range_m",
+   "executor": "lane request adjacent->far, front-first, sequence_gap_s, attempt_s; no longitudinal offset",
+   "release": "initiator leaves the zone (to_drop < 400 m) or hold expiry",
+   "lane_changes": true,
+   "executable_fields": {
+    "nm_move_family": "lane_balance",
+    "lane_targets": "members x duration_s ints: -1, or the role target WM lane {'mover': 'far (WM 0)'}",
+    "profile": "absolute executed acceleration (closed-loop law on the tape)",
+    "params": {
+     "sequence_gap_s": {
+      "key": "sequence_gap_s",
+      "kind": "int",
+      "lo": 2,
+      "hi": 5
+     },
+     "attempt_s": {
+      "key": "attempt_s",
+      "kind": "int",
+      "lo": 3,
+      "hi": 10
+     }
+    }
+   }
+  },
+  "discharge_sync": {
+   "enable": {
+    "nm_families": {
+     "enabled": true,
+     "rule": "n9-nm-families-v1",
+     "provenance": "<owner registration>",
+     "map": "wz3to2",
+     "families": {
+      "discharge_sync": {
+       "member_cap": 4
+      }
+     }
+    }
+   },
+   "option_families": [
+    "discharge_sync_initiate",
+    "discharge_sync_join"
+   ],
+   "registration": {
+    "roles": [
+     "sync"
+    ],
+    "member_cap": [
+     2,
+     4
+    ],
+    "params": [
+     {
+      "key": "queue_speed_mps",
+      "kind": "float",
+      "lo": 2.24,
+      "hi": 8.94
+     },
+     {
+      "key": "zone_m",
+      "kind": "float",
+      "lo": 50.0,
+      "hi": 300.0
+     },
+     {
+      "key": "release_speed_mps",
+      "kind": "float",
+      "lo": 15.0,
+      "hi": 22.0
+     },
+     {
+      "key": "sync_lead_s",
+      "kind": "int",
+      "lo": 2,
+      "hi": 5
+     }
+    ],
+    "constants": {
+     "time_headway_s": 1.4,
+     "standstill_gap_m": 2.5,
+     "kp": 0.1,
+     "kd": 0.4
+    },
+    "depth": "sampled",
+    "depth_meaning": "common synchronised acceleration (m/s^2), bounded per member by the CACC gap law (no feed-forward)",
+    "onset_window_s": [
+     0.0,
+     30.0
+    ],
+    "hold_window_s": [
+     20.0,
+     90.0
+    ],
+    "depth_window": [
+     0.3,
+     1.0
+    ],
+    "lane_roles": {},
+    "absolute_profile": true,
+    "provenance": "queue speed 5-20 mi/h (HCM queued-vehicle 5 mi/h lower bound); release speed = probe wall-speed range 15-22 m/s; sync_lead_s >= 2 s = t-1 message + join latency (onset = sync_lead_s); gap law = platoon CACC at its conservative h = 1.4 s. N9 registration."
+   },
+   "roles": "sync (queued through-lane CAV)",
+   "initiate": "free through-lane CAV with v <= queue_speed_mps, |to_drop| <= zone_m and its own leader absent or faster",
+   "join": "free through-lane CAV with v <= queue_speed_mps and |to_drop| <= zone_m within range_m",
+   "executor": "common start = initiation + sync_lead_s (onset); absolute a = min(depth, CACC gap law h=1.4 s, no feed-forward); member latches release at own v >= release_speed_mps",
+   "release": "initiator v >= release_speed_mps or hold expiry",
+   "lane_changes": false,
+   "executable_fields": {
+    "nm_move_family": "discharge_sync",
+    "lane_targets": "all -1",
+    "profile": "absolute executed acceleration (closed-loop law on the tape)",
+    "params": {
+     "queue_speed_mps": {
+      "key": "queue_speed_mps",
+      "kind": "float",
+      "lo": 2.24,
+      "hi": 8.94
+     },
+     "zone_m": {
+      "key": "zone_m",
+      "kind": "float",
+      "lo": 50.0,
+      "hi": 300.0
+     },
+     "release_speed_mps": {
+      "key": "release_speed_mps",
+      "kind": "float",
+      "lo": 15.0,
+      "hi": 22.0
+     },
+     "sync_lead_s": {
+      "key": "sync_lead_s",
+      "kind": "int",
+      "lo": 2,
+      "hi": 5
+     }
+    }
+   }
+  },
+  "harmonize_rows": {
+   "enable": {
+    "nm_families": {
+     "enabled": true,
+     "rule": "n9-nm-families-v1",
+     "provenance": "<owner registration>",
+     "map": "wz3to2",
+     "families": {
+      "harmonize_rows": {
+       "member_cap": 6
+      }
+     }
+    }
+   },
+   "option_families": [
+    "harmonize_rows_initiate",
+    "harmonize_rows_join"
+   ],
+   "registration": {
+    "roles": [
+     "row0",
+     "row1"
+    ],
+    "member_cap": [
+     2,
+     6
+    ],
+    "params": [
+     {
+      "key": "row_speed_mps",
+      "kind": "float",
+      "lo": 15.0,
+      "hi": 22.0
+     },
+     {
+      "key": "row_spacing_m",
+      "kind": "float",
+      "lo": 30.0,
+      "hi": 90.0
+     }
+    ],
+    "constants": {
+     "row_span_m": 60.0,
+     "zone_far_m": 1800.0,
+     "release_m": 400.0,
+     "track_time_s": 1.0
+    },
+    "depth": "sampled",
+    "depth_meaning": "speed-tracking acceleration bound |a| <= depth (probe wall a = clip((v_w - v)/1 s, -dmax, amax))",
+    "onset_window_s": [
+     0.0,
+     30.0
+    ],
+    "hold_window_s": [
+     20.0,
+     90.0
+    ],
+    "depth_window": [
+     0.3,
+     1.0
+    ],
+    "lane_roles": {},
+    "absolute_profile": true,
+    "provenance": "row speed = probe wall v_w 15/22 m/s, zone/release/row span runs/active/C4-V7FT-20261017/newmap_probe/make_jobs.py sha256 fc3f668e (WALL_ZONE x_b-1800..x_b-400 m, WALL_SPREAD 60 m, wall v_w 15/22 m/s, merge max_s 10 s); row spacing 30-90 m around the probe 60 m spread. N9 registration."
+   },
+   "roles": "row0 (initiator row) / row1 (row_spacing_m behind); one member per (row, lane) slot",
+   "initiate": "free CAV with 400 < to_drop <= 1800 m, constant-speed arrival at the release point >= 20 s (hold clipped)",
+   "join": "free CAV in the zone within row_span_m/2 of row0 (initiator position extrapolated from its t-1 message) or of row1 = row0 - row_spacing_m, slot free",
+   "executor": "absolute a = clip((row_speed_mps - v)/1 s, -depth, +depth); member latches release at to_drop <= 400 m",
+   "release": "initiator to_drop <= 400 m or hold expiry",
+   "lane_changes": false,
+   "executable_fields": {
+    "nm_move_family": "harmonize_rows",
+    "lane_targets": "all -1",
+    "profile": "absolute executed acceleration (closed-loop law on the tape)",
+    "params": {
+     "row_speed_mps": {
+      "key": "row_speed_mps",
+      "kind": "float",
+      "lo": 15.0,
+      "hi": 22.0
+     },
+     "row_spacing_m": {
+      "key": "row_spacing_m",
+      "kind": "float",
+      "lo": 30.0,
+      "hi": 90.0
+     }
+    }
+   }
+  }
+ },
+ "executable_schema": {
+  "schema": "n9-nm-move-executable-v1",
+  "plan_fields": {
+   "members": "[initiator, joiners in join order]",
+   "duration_s": "int",
+   "nm_move": {
+    "schema": "n9-nm-move-executable-v1",
+    "rule": "n9-nm-families-v1",
+    "family": "registered family",
+    "map": "lane-drop map name",
+    "initiator": "vid",
+    "members": "list",
+    "onset": "int s (variety window 0..30)",
+    "hold": "int s (20..90)",
+    "depth": "float (0.3..1.0; pinned per family)",
+    "params": "{registered params}",
+    "cap": "int",
+    "anchor_lane": "WM lane of the initiator at start",
+    "roles": "{vid: role}",
+    "slots": "{vid: slot|null}",
+    "join_s": "{vid: seconds after t0 (initiator 0)}"
+   },
+   "policy_profile": "members x duration_s recorded policy reference",
+   "profile": "members x duration_s absolute executed accel",
+   "perturbation_profile": "= profile - policy_profile exactly",
+   "lane_targets": "members x duration_s, -1 or role target lane",
+   "uses_lane_actions": "bool (any lane target)"
+  },
+  "forbidden": [
+   "knots",
+   "knot_s",
+   "perturbation_knots",
+   "perturbation_canonical",
+   "g5_move",
+   "lane_actions"
+  ],
+  "build": "nm_families.nm_move(protocol.sessions[sid], map_name=..., t0=...) + nm_families.executable_fields(move, duration, policy_profile=..., profile=<executed absolute_accels>, lane_targets=<recorded nm_lane_requests>)",
+  "validate": "nm_families.from_plan(plan) (exact; also moves.from_plan refuses nm_move plans)",
+  "admit": "nm_families.verify_tape(plan, tape, t0): executed profile on every covered member-second + per lane member one second with request, gate pass, actuator telemetry issued+completed and next sensed lane == target",
+  "replay": "controller.active_plans: plans.acceleration_at(profile) + group_lane.controller_targets -> nm_families.controller_lane_targets (recorded lane_targets through the same gate/lane_actors)",
+  "ingest": "bank_breadth.observable_contexts routes nm_move plans to nm_families.protocol_contexts: initiator -> <family>_initiate, each other member -> <family>_join at its first own receipt of the t-1 message; family_counts keys <family>_initiate / <family>_join (F3 B/R support compares these)"
+ },
+ "lane_path": "N9 lane requests -> sample[\"nm_lane_requests\"] -> group_lane.controller_targets -> nm_families.controller_lane_targets (own-sensing recheck: WM lane-1 changes only, closing lane inside the map change zone before the drop, mainline edge guard, unchanged wms LaneRules gap check) -> the same g5_lane_targets / lanes_tensor / lane_actors env writer; CAV members only. The merge-frame G5 envelope (lane 2 only in [0, 75.44]) would refuse every early merge on wz3to2, hence the map-aware recheck.",
+ "geometry": "nm_map.lane_drop(name) reads N1 map_descriptor.current(): wz3to2 closing WM 2 / adjacent 1 / far 0, drop_s_m = bottleneck drop_s_m = 75.44, change zone [-anchor_x_m, 75.44]; original map = ramp lane 2 ending at 75.44. nm_map.STUBS/bind are test-only (N11 F3).",
+ "trigger_inputs": "descriptor: family one-hot(6), initiate/join, role one-hot, member_count/cap, gap/range, normalised params(4); context: own to_drop/2 km, own lane closing/adjacent/far, own v/30 from the recorded own sensor row x[:5] + static map; all zero-initialised columns (composed after W1/N2 extension)",
+ "tests": {
+  "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q",
+  "n9_suite": {
+   "file": "tools/coopmwm/test_nm_families_cpu.py",
+   "result": "44 tests (41 at the broad run + 3 geometry tests added after; geometry tests 5/5 passed)",
+   "covers": [
+    "registration/settings/off-defaults",
+    "CACC string stability (frequency response + 0.5 s physics platoon sim; kff=0 amplifies)",
+    "executor profiles: platoon CACC request == law via the single writer, discharge common start + gap bound + release, harmonize slots/tracking/release, early_merge yield offset, zipper ordering ease, lane_balance lane-only",
+    "lane sequencing through nm_lane_requests -> controller_targets -> lanes_tensor/lane_actors (front-first, sequence gap, attempts, unsafe gap refused)",
+    "ownership: executor-owned none-only, one session per CAV, member/role/slot caps, HDVs never offered/commanded, radio range, controller-reserved members",
+    "off byte-identical: absent==False, subprocess overlay vs 3e5bc9f9 sources (with/without group_lane_moves)",
+    "B == R identical runs and identical bank supervision",
+    "zero-init trigger columns, composite with W1, W1+W2+N9 together, PPO replay",
+    "executable fields exact binding (13 mutations), plan replay lane requests, verify_tape",
+    "initiate/join bank ingestion",
+    "real N1 descriptor via bind and COOPMWM_MAP_SPEC: drop 75.44, WM lane 2; early merge 500 m upstream reaches the writer"
+   ]
+  },
+  "broad_run_before_last_3_tests": {
+   "files": [
+    "test_nm_families_cpu",
+    "test_lane_drop_cpu",
+    "test_v2v_wall_cpu",
+    "test_wall_w2_cpu",
+    "test_wall_pressure_cpu",
+    "test_wall_release_cpu",
+    "test_wall_negatives_cpu",
+    "test_wall_tune_cpu",
+    "test_track2_backend_cpu",
+    "test_feasible_proposals_cpu",
+    "test_trigger_policy_cpu",
+    "test_group_lane_cpu",
+    "test_sparse_synergy_credit_cpu",
+    "test_map_descriptor_cpu",
+    "test_map_golden_cpu",
+    "test_map_runtime_cpu",
+    "test_bank_breadth_cpu",
+    "test_launch_final_cpu",
+    "test_coop_layer_cpu"
+   ],
+   "result": "602 passed, 1 skipped (frozen cpuV runtime only) in 1059 s",
+   "log": "E:/agent-work/_sol/n9_suite_run1.log"
+  },
+  "lint": "ruff clean on nm_families.py, nm_map.py, group_lane.py; touched modules no new findings",
+  "not_run": "SUMO, GPU, full repository pytest"
+ },
+ "caveats": [
+  "All parameter ranges are N9 registrations for owner review (per-family provenance in registration).",
+  "Absolute laws (platoon_headway, discharge_sync, harmonize_rows) need each CAV's own native command: v2v_runtime passes it to the protocol; when missing the member gets offset 0 (status native_unavailable).",
+  "Joins become visible in the t-1 roster one second after joining; a full session may still be offered for one second (start() rejects over-cap joins on the ledger), as in W1.",
+  "early_merge/lane_balance requests repeat for up to attempt_s seconds (gate may refuse); G5 macros stay single-attempt.",
+  "No SUMO/GPU run: efficacy and real lane-change execution on wz3to2 are unverified (N3/N4 SUMO checks).",
+  "Re-merge N2 after its F6 fix; N2 lane_drop and N9 coexist (separate options, sample keys and receipts)."
+ ],
+ "hard_rules": "no ssh/SUMO/GPU; worktree only; no reset/clean/stash drop/push/rebase; no sealed/holdout/cal_split/chunk5/j4b/inc1 paths or truth files read; policy inputs observable only",
+ "update_2026_11_06_evening": {
+  "clean4": "N9 families stay default OFF and must not be enabled (N5 REVIEW_N9_1 BLOCK: self-registered ranges, executors differ from the verified procedures, platoon/discharge not realisable under speedMode 27).",
+  "f8": "feasible_proposals skips an infeasible re-sampled initiate (redraw -> None); test test_infeasible_initiate_redraw_is_never_offered (commit 20fb3740).",
+  "no_legacy_projection": "moves.from_plan refuses coopmwm-mined-move-v1 rows of lane_balance/early_merge/zipper(_order)/discharge/platoon/vsl_rows; 0 legacy projections on all 36 COOPKINDS/PLANGEN2 lane rows (fixtures tools/coopmwm/fixtures/n9_probe_rows, sha256 pinned).",
+  "converter_draft": "tools/coopmwm/lc_convert_probe.py convert(row, geometry) -> WM-frame command program; to_traci inverse; 36/36 lane rows convert with exact member TraCI command-sequence parity (test_lc_convert_probe_cpu.py). Schema to be aligned with LCEXEC free_program (owner of the action interface and universal converter).",
+  "map_helpers": "nm_map.LaneDrop.x_to_s / wm_lane from the N1 descriptor (drop_x_m, approach-edge lane table).",
+  "superseded": "Per-family registrations/executors in nm_families.py are NOT the verified procedures; do not enable. The probe registrations live in the probe code cited in lc_convert_probe.py."
+ }
+}

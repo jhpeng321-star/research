@@ -1,0 +1,872 @@
+"""LCMOVES (phase lcmoves, stable ID S-LCMOVES) staged job planner + shared statistics (wz3to2, cap 150,000 sim-s).
+Derived from PLANGEN2 pg2_plan.py (sha e2e69e87); statistics (boot_lb, series), fit(), rep tests and the admission
+rule are unchanged.  Registered LCMOVES differences (REGISTRATION.md S-LCMOVES block, before physics):
+  * cells D3200_p60 and D3200_p30, TRAIN worlds 989020-989099 (CRN across cells: same world seed, nested CAV sets);
+  * B lane-change + speed families (CAV-only role 'prog' in lcm_core): wall_fill, rolling_wall, gap_open_merge
+    (gom_1 single gap maker; gom_multi 2-3 gap makers + early timing), lane_redistribute, free_program (2 sampled
+    structured programs = the search); every numeric range is taken from NEWMAP2 / COOPKINDS / PLANGEN2 / WMDATA
+    registrations (see the constants block);
+  * references at the same moment: wall_g, wall_h, pair_t (nm2 'hold' role, unchanged);
+  * R (matched effort): as many random programs as the moment has B lane-change variants, sampled uniformly from
+    the same ranges without structure (random member set within 300 m, independent per-member LC/speed/timing);
+  * solos: B best-T variant per LC family (<=5 sets), reference best-T per ref family (<=2), R top-5 T (<=5);
+    identical solo specs are run once (exact, deterministic reuse);
+  * dither integrity: an ordered list of registered dithers is probed (10 s dithered base); r1 uses the first that
+    changes the dither vehicle's state vs the undithered base, r2 the next one;
+  * beyond-static arm: every replicate of a moment with a replicated LC/R candidate also runs the best-r0-T
+    reference group (if a reference exists and is not itself replicated).
+
+    python lcm_plan.py natives|screen|solos|dprobe|rep1|rep2 OUT.jsonl [--fit RESERVE]
+"""
+from __future__ import annotations
+
+import hashlib
+import itertools
+import json
+import math
+import random
+import sys
+from pathlib import Path
+
+import numpy as np
+
+HERE = Path(__file__).resolve().parent
+BASE = HERE.parent
+MAPSPEC = BASE / "maps" / "wz3to2" / "MAP_SPEC.json"
+RUNS = BASE / "runs"
+X_B = 2696.0
+WORLDS_FILE = BASE / "WORLDS.json"
+ALLOWED_CELLS = {(3200, 0.6), (3200, 0.3)}
+SEED_RANGE = (989020, 989099)                  # MAIN 17:14: PLANGEN2 extension range, unused
+LEDGER = BASE / "ledger" / "CHARGES.jsonl"
+PHASE_CAP = 150000.0                           # phase lcmoves (owner 17:14 via MAIN)
+
+
+def host_cap() -> float:
+    f = BASE / "HOST_CAP.json"
+    c = float(json.loads(f.read_text())["cap"]) if f.exists() else 0.0
+    return min(c, PHASE_CAP)
+
+
+CAP = host_cap()
+# ---------------------------------------------------------------- registered constants (sources in brackets)
+WINDOWS = [(450, 550), (800, 900)]             # [PLANGEN2 moments]
+SAVE_TIMES = [t for a, b in WINDOWS for t in range(a, b + 1, 10)]
+T_END = 900
+ZONE = (X_B - 1800.0, X_B - 400.0)            # [NEWMAP2 selection zone]
+PAIR_DX = 100.0                                # [NEWMAP2 pair]
+WALL_SPREAD = 200.0                            # [NEWMAP2 wall]
+R_SPREAD = 300.0                               # [NEWMAP2 R / COOPKINDS lane_balance spread]
+V2V = 100.0                                    # [100 m same-lane sensing; 4-slot observability rule]
+LANE_W = 3.2
+H_MAIN, H_LONG, H_EXT = 300, 420, 120          # [NEWMAP2 / PLANGEN2]
+H_REP = 300
+H_PROBE = 10                                   # dither-integrity probe (new, registered; 10 s dithered base)
+AMAX = 1.0                                     # [NEWMAP2 REL amax]
+REL = dict(release_x=X_B, amax=AMAX)
+VARIANTS = {                                   # [NEWMAP2 / PLANGEN2]
+    "pair_t": ("closing_pair", dict(v_w=22.0, hold_s=150, dmax=1.0, anchor_release_x=X_B - 150.0)),
+    "wall_g": ("abreast_wall", dict(v_w=22.0, hold_s=120, dmax=1.0)),
+    "wall_h": ("abreast_wall", dict(v_w=15.0, hold_s=90, dmax=1.5)),
+}
+WALL_H = VARIANTS["wall_h"][1]                 # most-admitted wall (NEWMAP2 4, PLANGEN 3, PLANGEN2 2, LOWCAV 2)
+R_GRID = dict(v_w=[15.0, 18.0, 22.0], hold_s=[90, 120, 180], dmax=[1.0, 1.5])   # [NEWMAP2 R grid]
+OFFSETS = [0, 20, 40, 60]                      # [WMDATA 16:11 move start 20-60 s, plus immediate]
+TRACK = dict(kp=0.15, kv=0.6, dmax=1.5, amax=1.0)   # [COOPKINDS zip_yield slot-tracking law]
+GAP = 25.0                                     # [COOPKINDS zipper B gap; also the settle distance]
+GIVEUP_OFF = 300.0                             # [COOPKINDS lane_balance giveup_off]
+FALLBACK_X = X_B - 15.0                        # [COOPKINDS zipper fallback]
+ZIP_M = (X_B - 900.0, X_B - 200.0)             # [COOPKINDS zipper merger window]
+ZIP_Y = (-120.0, 30.0)                         # [COOPKINDS zipper partner window, rel. to the merger]
+EM_D = 1200.0                                  # [COOPKINDS early_merge B trigger D]
+EM_M = (X_B - 2400.0, X_B - EM_D - 50.0)       # [COOPKINDS early_merge merger window]
+EM_ROOM = (-200.0, 100.0)                      # [COOPKINDS early_merge room-maker window]
+LB_ZONE = (X_B - 1800.0, X_B - 600.0)          # [COOPKINDS lane_balance zone]
+ROLL_REAR = (WALL_SPREAD, WALL_SPREAD + R_SPREAD)   # rear member 200-500 m behind the front (wall + R spreads)
+TAU_SET = [None, 0.6, 2.0]                     # [COOPKINDS B: platoon/discharge tau 0.6, early_merge room tau 2.0]
+LC_FAMS = ["wall_fill", "rolling_wall", "gap_open_merge", "lane_redistribute", "free_program"]
+REF_FAMS = ["abreast_wall", "closing_pair"]
+N_FREE = 2
+N_SOLO_R = 5
+N_REP_CAP = 5
+B_BOOT, L_BLOCK, RNG, ALPHA = 2000, 30, 20261103, 0.05
+MATERIAL = 1.0
+# registered dithers, in order [NEWMAP2 r1, NEWMAP2 r2, COOPKINDS amendment 2 r3, further NEWMAP2-r2 draws]
+DITHER_KINDS = [("nearest_drop", 1), ("random_1km", 3), ("nearest_drop_moving", 1), ("random_1km_b", 3),
+                ("random_1km_c", 3)]
+
+
+def cell_key(d, p):
+    return f"D{d}_p{int(round(p * 100)):02d}"
+
+
+def native_dir(d, p, s):
+    return RUNS / cell_key(d, p) / f"s{s}" / "native"
+
+
+def worlds():
+    out = []
+    for w in json.loads(WORLDS_FILE.read_text()):
+        d, p, s = int(w["demand"]), float(w["penetration"]), int(w["seed"])
+        assert (d, p) in ALLOWED_CELLS and SEED_RANGE[0] <= s <= SEED_RANGE[1], w
+        out.append((d, p, s))
+    assert len(set(out)) == len(out)
+    return out
+
+
+def load(path: Path):
+    f = path / "RESULT.json"
+    if not f.exists():
+        return None
+    r = json.loads(f.read_text())
+    return r if r.get("status") == "ok" else None
+
+
+# ----------------------------------------------------------------------------- statistics (unchanged)
+def boot_lb(x):
+    x = np.asarray(x, float)
+    n = len(x)
+    rng = np.random.default_rng(RNG)
+    lb = int(max(1, min(L_BLOCK, n // 2)))
+    nb = -(-n // lb)
+    starts = rng.integers(0, n, (B_BOOT, nb))
+    idx = ((starts[:, :, None] + np.arange(lb)[None, None, :]) % n).reshape(B_BOOT, nb * lb)[:, :n]
+    tot = x[idx].sum(1)
+    return float(np.quantile(tot, ALPHA))
+
+
+def series(r, n=None):
+    s = np.asarray(r["J_road"], float) + np.asarray(r["J_src"], float)
+    return s if n is None else s[:n]
+
+
+# ----------------------------------------------------------------------------- geometry helpers
+def dist(a, b):
+    return math.hypot(a["x"] - b["x"], (a["lane"] - b["lane"]) * LANE_W)
+
+
+def up_cavs(snap):
+    return [c for c in snap["cavs"] if c["edge"] == "up"]
+
+
+def zone_cavs(snap):
+    return [c for c in up_cavs(snap) if ZONE[0] <= c["x"] <= ZONE[1]]
+
+
+def spread(cs):
+    xs = [c["x"] for c in cs]
+    return max(xs) - min(xs)
+
+
+def pick_pair(snap):
+    z = zone_cavs(snap)
+    best = None
+    for c0 in (c for c in z if c["lane"] == 0):
+        for c1 in (c for c in z if c["lane"] == 1):
+            dx = abs(c0["x"] - c1["x"])
+            if dx <= PAIR_DX:
+                key = (dx, -c0["x"])
+                if best is None or key < best[0]:
+                    best = (key, [c0, c1])
+    return None if best is None else best[1]
+
+
+def pick_wall(snap):
+    z = zone_cavs(snap)
+    lanes = [[c for c in z if c["lane"] == ln] for ln in (0, 1, 2)]
+    if any(not x for x in lanes):
+        return None
+    best = None
+    for combo in itertools.product(*lanes):
+        sp = spread(combo)
+        if sp <= WALL_SPREAD:
+            key = (sp, -max(c["x"] for c in combo))
+            if best is None or key < best[0]:
+                best = (key, list(combo))
+    return None if best is None else best[1]
+
+
+def member_hold(c, params, anchor=None):
+    """nm2 'hold' reference member (unchanged)."""
+    p = dict(REL)
+    p.update(params)
+    if "anchor_release_x" in p:
+        p["anchor"] = anchor
+    return dict(id=c["id"], role="hold", params=p, lane=c["lane"], x=c["x"], v=c["v"])
+
+
+def prog(c, **params):
+    p = dict(release_x=X_B, amax=AMAX)
+    p.update(params)
+    return dict(id=c["id"], role="prog", params=p, lane=c["lane"], x=c["x"], v=c["v"])
+
+
+def _hold_prog(c, v_w, dmax, hold_s, sp_from=0):
+    return prog(c, speed="hold", v_w=v_w, dmax=dmax, hold_s=hold_s, sp_from=sp_from)
+
+
+def _leak_free(ab, lane_e, z):
+    """True if no CAV in the empty lane would already complete a static <=200 m wall with the two members."""
+    for c in z:
+        if c["lane"] == lane_e and spread(list(ab) + [c]) <= WALL_SPREAD:
+            return False
+    return True
+
+
+# ----------------------------------------------------------------------------- B lane-change families
+def cands_wall_fill(snap):
+    """Two lanes covered by A, B (and the filler F in the doubled lane) within a <=200 m spread; the third lane E is
+    adjacent to F's lane and has no CAV that would make a static wall with A, B.  F changes into E and aligns
+    (slot tracking of the A/B mean, settles within 25 m), A, B and the settled F hold wall_h."""
+    z = zone_cavs(snap)
+    out = []
+    for le in (0, 1, 2):
+        for lf in (0, 1, 2):
+            if lf == le or abs(lf - le) != 1:
+                continue
+            lo = [ln for ln in (0, 1, 2) if ln not in (le, lf)][0]
+            for a in (c for c in z if c["lane"] == lf):
+                for b in (c for c in z if c["lane"] == lo):
+                    if not _leak_free((a, b), le, z):
+                        continue
+                    for f in (c for c in z if c["lane"] == lf and c["id"] != a["id"]):
+                        sp = spread([a, b, f])
+                        if sp > WALL_SPREAD:
+                            continue
+                        xr = (a["x"] + b["x"]) / 2.0
+                        key = (sp, abs(f["x"] - xr), -max(a["x"], b["x"], f["x"]), a["id"], b["id"], f["id"])
+                        mem = [_hold_prog(a, WALL_H["v_w"], WALL_H["dmax"], WALL_H["hold_s"]),
+                               _hold_prog(b, WALL_H["v_w"], WALL_H["dmax"], WALL_H["hold_s"]),
+                               prog(f, lc_target=le, lc_from=0, lc_giveup_x=X_B - GIVEUP_OFF, speed="track",
+                                    track_ref=[a["id"], b["id"]], track_off=0.0, kp=TRACK["kp"], kv=TRACK["kv"],
+                                    dmax=TRACK["dmax"], settle_gap=GAP, v_w=WALL_H["v_w"],
+                                    hold_s=WALL_H["hold_s"])]
+                        out.append((key, mem))
+    return out
+
+
+def cands_rolling_wall(snap):
+    """Front A, B (distinct lanes, <=200 m) slow (hold 15 m/s, dmax 1.5) while rear R, 200-500 m behind their mean,
+    accelerates (slot tracking, amax 1.0) and, if needed, changes into the uncovered (adjacent) lane; once in lane and
+    within 25 m R holds 15 m/s.  Hold 120 s (R grid tuple 15/120/1.5)."""
+    z = zone_cavs(snap)
+    up = [c for c in up_cavs(snap) if c["x"] >= EM_M[0]]
+    out = []
+    for a, b in itertools.combinations(z, 2):
+        if a["lane"] == b["lane"] or spread([a, b]) > WALL_SPREAD:
+            continue
+        le = [ln for ln in (0, 1, 2) if ln not in (a["lane"], b["lane"])][0]
+        if not _leak_free((a, b), le, z):
+            continue
+        xf = (a["x"] + b["x"]) / 2.0
+        for r in up:
+            if r["id"] in (a["id"], b["id"]):
+                continue
+            gap = xf - r["x"]
+            if not (ROLL_REAR[0] < gap <= ROLL_REAR[1]) or abs(r["lane"] - le) > 1:
+                continue
+            key = (gap, spread([a, b]), -xf, a["id"], b["id"], r["id"])
+            lc = None if r["lane"] == le else le
+            mem = [_hold_prog(a, 15.0, 1.5, 120), _hold_prog(b, 15.0, 1.5, 120),
+                   prog(r, lc_target=lc, lc_from=0, lc_giveup_x=X_B - GIVEUP_OFF, speed="track",
+                        track_ref=[a["id"], b["id"]], track_off=0.0, kp=TRACK["kp"], kv=TRACK["kv"],
+                        dmax=TRACK["dmax"], settle_gap=GAP, v_w=15.0, hold_s=120)]
+            out.append((key, mem))
+    return out
+
+
+def cands_gom_1(snap):
+    """Single gap maker: lane-1 G (zipper partner window) tracks the slot 25 m behind the closing-lane merger M
+    (zipper merger window) until M merged; M accelerates (amax 1.0, IDM-capped) and requests changeLane(1) every
+    second from t0 (lcMode 513 executes it only into a safe gap); fallback 15 m before the drop."""
+    up = up_cavs(snap)
+    out = []
+    for m in (c for c in up if c["lane"] == 0 and ZIP_M[0] <= c["x"] <= ZIP_M[1]):
+        for g in (c for c in up if c["lane"] == 1 and m["x"] + ZIP_Y[0] <= c["x"] <= m["x"] + ZIP_Y[1]):
+            key = (abs(g["x"] - (m["x"] - GAP)), -m["x"], m["id"], g["id"])
+            mem = [prog(m, merger=True, lc_target=1, lc_from=0, lc_giveup_x=FALLBACK_X, fallback_x=FALLBACK_X,
+                        speed="accel", dmax=1.0, hold_s=300),
+                   prog(g, speed="track", track_ref=[m["id"]], track_off=-GAP, kp=TRACK["kp"], kv=TRACK["kv"],
+                        dmax=TRACK["dmax"], release_on_partner_merge=m["id"], hold_s=240)]
+            out.append((key, mem))
+    return out
+
+
+def cands_gom_multi(snap):
+    """2-3 gap makers + early timing: an upstream closing-lane merger M (early_merge merger window) accelerates and
+    requests changeLane(1) from X_B-1200 (early_merge trigger); the 2-3 nearest lane-1 CAVs in the room-maker window
+    track slots 25, 50, 75 m behind M until M merged."""
+    up = up_cavs(snap)
+    out = []
+    for m in (c for c in up if c["lane"] == 0 and EM_M[0] <= c["x"] <= EM_M[1]):
+        gs = sorted((c for c in up if c["lane"] == 1 and m["x"] + EM_ROOM[0] <= c["x"] <= m["x"] + EM_ROOM[1]),
+                    key=lambda c: (abs(c["x"] - m["x"]), c["id"]))[:3]
+        if len(gs) < 2:
+            continue
+        gs = sorted(gs, key=lambda c: -c["x"])
+        key = (-len(gs), -m["x"], m["id"])
+        mem = [prog(m, merger=True, lc_target=1, lc_from=0, lc_from_x=X_B - EM_D, lc_giveup_x=FALLBACK_X,
+                    fallback_x=FALLBACK_X, speed="accel", dmax=1.0, hold_s=300)]
+        mem += [prog(g, speed="track", track_ref=[m["id"]], track_off=-GAP * (i + 1), kp=TRACK["kp"],
+                     kv=TRACK["kv"], dmax=TRACK["dmax"], release_on_partner_merge=m["id"], hold_s=300)
+                for i, g in enumerate(gs)]
+        out.append((key, mem))
+    return out
+
+
+def _local_counts(snap, lo, hi):
+    cnt = {0: 0, 1: 0, 2: 0}
+    for lane, x, _v in snap.get("veh_up") or []:
+        if lo <= x <= hi and lane in cnt:
+            cnt[lane] += 1
+    return cnt
+
+
+def cands_lane_redistribute(snap):
+    """2-3 CAVs of the locally most loaded lane (vehicle counts within 100 m of the group, V2V sensing), 600-1,800 m
+    upstream, spread <=300 m, move to the least loaded ADJACENT lane (any lane, the closing lane 0 included; MAIN
+    17:3x: do not restrict the lane space) with speed matching to that lane (mean speed within 100 m) until the
+    change; stay there until the drop (give-up 300 m before)."""
+    up = up_cavs(snap)
+    out = []
+    for src in (0, 1, 2):
+        cs = sorted([c for c in up if c["lane"] == src and LB_ZONE[0] <= c["x"] <= LB_ZONE[1]], key=lambda c: -c["x"])
+        for k in (3, 2):
+            for i in range(len(cs) - k + 1):
+                ms = cs[i:i + k]
+                sp = ms[0]["x"] - ms[-1]["x"]
+                if sp > R_SPREAD:
+                    continue
+                cnt = _local_counts(snap, ms[-1]["x"] - V2V, ms[0]["x"] + V2V)
+                if cnt[src] < max(cnt.values()):
+                    continue
+                tg = [t for t in (0, 1, 2) if abs(t - src) == 1 and cnt[t] < cnt[src]]
+                if not tg:
+                    continue
+                t = min(tg, key=lambda q: (cnt[q], q))
+                key = (-k, cnt[t] - cnt[src], sp, -ms[0]["x"], ms[0]["id"])
+                mem = [prog(c, lc_target=t, lc_from=0, lc_giveup_x=X_B - GIVEUP_OFF, speed="match",
+                            dmax=TRACK["dmax"], hold_s=300) for c in ms]
+                out.append((key, mem))
+    return out
+
+
+def _adjacent(lane):
+    return [ln for ln in (lane - 1, lane + 1) if 0 <= ln <= 2]
+
+
+def free_programs(snap, sid, n=N_FREE):
+    """B free_program (structured search): a V2V-local group (anchor + its nearest CAVs within 100 m, 2-4 members);
+    one shared speed action (v_w, dmax, duration, start from the R grid / offsets), one shared own-tau choice
+    (none/0.6/2.0) and lane changes that spread the members over distinct lanes (a member sharing a lane moves to a
+    free adjacent lane, closing lane included, at a shared offset)."""
+    z = sorted(zone_cavs(snap), key=lambda c: c["id"])
+    out = []
+    used = set()
+    for i in range(n):
+        rng = random.Random(f"lcm_free_v1:{sid}:{i}")
+        k = rng.choice([2, 3, 4])
+        grp = None
+        for _ in range(200):
+            if not z:
+                break
+            a = rng.choice(z)
+            near = sorted((c for c in z if c["id"] != a["id"] and dist(a, c) <= V2V), key=lambda c: (dist(a, c), c["id"]))
+            g = [a] + near[:k - 1]
+            ids = frozenset(c["id"] for c in g)
+            if len(g) >= 2 and ids not in used:
+                grp = g
+                used.add(ids)
+                break
+        if grp is None:
+            continue
+        v_w, dmax, dur = rng.choice(R_GRID["v_w"]), rng.choice(R_GRID["dmax"]), rng.choice(R_GRID["hold_s"])
+        s0, lc_at = rng.choice(OFFSETS), rng.choice(OFFSETS)
+        tau = rng.choice(TAU_SET)
+        occ, mem = set(), []
+        for c in sorted(grp, key=lambda c: -c["x"]):
+            tl = None
+            if c["lane"] in occ:
+                free = [ln for ln in _adjacent(c["lane"]) if ln not in occ]
+                if free:
+                    tl = rng.choice(free)
+            occ.add(c["lane"] if tl is None else tl)
+            mem.append(prog(c, lc_target=tl, lc_from=lc_at, lc_giveup_x=X_B - GIVEUP_OFF, speed="hold", v_w=v_w,
+                            dmax=dmax, sp_from=s0, hold_s=s0 + dur, tau=tau, tau_from=s0))
+        out.append((f"free_{i}", mem, dict(v_w=v_w, dmax=dmax, dur=dur, s0=s0, lc_at=lc_at, tau=tau, k=len(grp))))
+    return out
+
+
+def r_programs(snap, sid, n, exclude_sets):
+    """R: n random programs, uniform over the same ranges, no structure: 2-4 random zone CAVs within 300 m; per member
+    independently LC target (none / any adjacent lane incl. the closing lane), LC offset, own tau (none/0.6/2.0),
+    speed v_w / dmax / duration / start."""
+    z = sorted(zone_cavs(snap), key=lambda c: c["id"])
+    out = []
+    for i in range(n):
+        rng = random.Random(f"lcm_R_v1:{sid}:{i}")
+        k = rng.choice([2, 3, 4])
+        prop = None
+        for kk in (k, 3, 2):
+            if len(z) < kk:
+                continue
+            for _ in range(400):
+                mem = rng.sample(z, kk)
+                ids = frozenset(c["id"] for c in mem)
+                if spread(mem) <= R_SPREAD and ids not in exclude_sets:
+                    prop = mem
+                    break
+            if prop:
+                break
+        if not prop:
+            continue
+        exclude_sets.add(frozenset(c["id"] for c in prop))
+        mem, prm = [], []
+        for c in prop:
+            tl = rng.choice([None] + _adjacent(c["lane"]))
+            lc_at, s0 = rng.choice(OFFSETS), rng.choice(OFFSETS)
+            v_w, dmax, dur = rng.choice(R_GRID["v_w"]), rng.choice(R_GRID["dmax"]), rng.choice(R_GRID["hold_s"])
+            tau = rng.choice(TAU_SET)
+            mem.append(prog(c, lc_target=tl, lc_from=lc_at, lc_giveup_x=X_B - GIVEUP_OFF, speed="hold", v_w=v_w,
+                            dmax=dmax, sp_from=s0, hold_s=s0 + dur, tau=tau, tau_from=s0))
+            prm.append(dict(lc_target=tl, lc_at=lc_at, v_w=v_w, dmax=dmax, dur=dur, s0=s0, tau=tau))
+        out.append((f"R{i}", mem, dict(members=prm)))
+    return out
+
+
+def _best(cs):
+    return min(cs, key=lambda kv: kv[0])[1] if cs else None
+
+
+LC_BUILDERS = [("wall_fill", "wall_fill", cands_wall_fill), ("rolling_wall", "rolling_wall", cands_rolling_wall),
+               ("gom_1", "gap_open_merge", cands_gom_1), ("gom_multi", "gap_open_merge", cands_gom_multi),
+               ("lane_redistribute", "lane_redistribute", cands_lane_redistribute)]
+
+
+def lc_availability(snap):
+    return {vid: bool(fn(snap)) for vid, _fam, fn in LC_BUILDERS}
+
+
+# ----------------------------------------------------------------------------- dithers
+def dither_candidates(snap, members_union, sid):
+    """Ordered registered dither targets (non-member CAVs on 'up' before the drop)."""
+    nm = sorted([c for c in up_cavs(snap) if c["id"] not in members_union and c["x"] < X_B], key=lambda c: c["id"])
+    if not nm:
+        return []
+    out = []
+    d1 = max(nm, key=lambda c: c["x"])
+    out.append(("nearest_drop", d1["id"], 1))
+    near = [c for c in nm if X_B - 1000 <= c["x"]]
+    for j, (kind, st) in enumerate(DITHER_KINDS):
+        if kind == "nearest_drop":
+            continue
+        if kind == "nearest_drop_moving":
+            mv = [c for c in nm if c["v"] > 5.0]
+            if mv:
+                out.append((kind, max(mv, key=lambda c: c["x"])["id"], st))
+            continue
+        draw = {"random_1km": 2, "random_1km_b": 3, "random_1km_c": 4}[kind]
+        pool = [c for c in near if c["id"] != d1["id"]] or [c for c in nm if c["id"] != d1["id"]] or [d1]
+        out.append((kind, random.Random(f"nm2_dither_v1:{sid}:{draw}").choice(pool)["id"], st))
+    seen, ded = set(), []
+    for kind, vid, st in out:
+        if vid not in seen:
+            seen.add(vid)
+            ded.append(dict(kind=kind, id=vid, start_s=st))
+    return ded
+
+
+def dither_member(d):
+    return dict(id=d["id"], role="pulse", params=dict(a=-1.0, start_s=int(d["start_s"]), dur_s=2))
+
+
+# ----------------------------------------------------------------------------- moments
+def moments():
+    """Per window: t0 = earliest save time with a wall_fill configuration AND a reference (pair or wall), else with
+    wall_fill, else with any other LC family (rolling/gom/redistribute), else with a reference (geometry only)."""
+    out = []
+    for (d, p, s) in worlds():
+        nat = load(native_dir(d, p, s))
+        if nat is None:
+            continue
+        for wi, (a, b) in enumerate(WINDOWS):
+            times = list(range(a, b + 1, 10))
+            info = {}
+            for t in times:
+                sn = nat["snapshots"][f"t{t}"]
+                av = lc_availability(sn)
+                info[t] = (av, bool(pick_pair(sn)) or bool(pick_wall(sn)))
+            t0 = next((t for t in times if info[t][0]["wall_fill"] and info[t][1]), None)
+            t0 = t0 or next((t for t in times if info[t][0]["wall_fill"]), None)
+            t0 = t0 or next((t for t in times if any(info[t][0].values())), None)
+            t0 = t0 or next((t for t in times if info[t][1]), None)
+            avail = {t: dict(info[t][0], reference=info[t][1]) for t in times}
+            row = dict(cell=cell_key(d, p), demand=d, penetration=p, seed=s, window=wi, t0=t0,
+                       valid=t0 is not None, availability=avail)
+            if t0 is None:
+                out.append(row)
+                continue
+            snap = nat["snapshots"][f"t{t0}"]
+            sid = f"lcm_{cell_key(d, p)}_s{s}_t{t0}"
+            variants = {}
+            for vid, fam, fn in LC_BUILDERS:
+                mem = _best(fn(snap))
+                if mem:
+                    variants[vid] = dict(family=fam, arm="B", lc_family=True, params={}, members=mem)
+            for vid, mem, prm in free_programs(snap, sid):
+                variants[vid] = dict(family="free_program", arm="B", lc_family=True, params=prm, members=mem)
+            n_lc = len(variants)
+            pair, wall = pick_pair(snap), pick_wall(snap)
+            if pair:
+                fam, prm = VARIANTS["pair_t"]
+                variants["pair_t"] = dict(family=fam, arm="ref", lc_family=False, params=prm,
+                                          members=[member_hold(c, prm, anchor=pair[0]["id"]) for c in pair])
+            if wall:
+                for vid in ("wall_g", "wall_h"):
+                    fam, prm = VARIANTS[vid]
+                    variants[vid] = dict(family=fam, arm="ref", lc_family=False, params=prm,
+                                         members=[member_hold(c, prm) for c in wall])
+            excl = {frozenset(mm["id"] for mm in v["members"]) for v in variants.values()}
+            for vid, mem, prm in r_programs(snap, sid, n_lc, excl):
+                variants[vid] = dict(family="R_random", arm="R", lc_family=True, r_kind="free_program_uniform",
+                                     params=prm, members=mem)
+            union = sorted({mm["id"] for v in variants.values() for mm in v["members"]})
+            dith = dither_candidates(snap, set(union), sid)
+            row.update(sid=sid, inserted_t0=snap["inserted"], approach_speed=snap["approach_speed"],
+                       closing_lane_slow=snap.get("closing_lane_slow"), n_zone_cavs=len(zone_cavs(snap)),
+                       n_lc_variants=n_lc, variants=variants, union=union, dithers=dith,
+                       all_cavs_t0=snap["cavs"], lane_counts_t0=snap.get("lane_counts"))
+            out.append(row)
+    return out
+
+
+# ----------------------------------------------------------------------------- jobs
+def mdir(m):
+    return RUNS / m["cell"] / f"s{m['seed']}" / f"m_t{m['t0']}"
+
+
+def dith_ids(m):
+    return [d["id"] for d in m.get("dithers", [])]
+
+
+def bjob(m, rep, arm, members, H, save_at=(), dither=None, arm_class="shared", sub=None):
+    d, p, s, t0 = m["demand"], m["penetration"], m["seed"], m["t0"]
+    nd = native_dir(d, p, s)
+    track = (m["union"] + dith_ids(m)) if arm == "base" else dith_ids(m)
+    j = dict(kind="branch", job_id=f"{m['sid']}_{sub or 'r' + str(rep)}_{arm}", map="wz3to2", map_spec=str(MAPSPEC),
+             seed=s, demand={"main": d}, penetration=p, t0=t0, t_load=t0,
+             state_file=str(nd / "states" / f"t{t0}.xml.gz"), inserted_load=m["inserted_t0"], native_dir=str(nd),
+             H=H, members=members, dither=dither or [], save_at=list(save_at), track_ids=track,
+             track_s=300 if arm == "base" else 200, sid=m["sid"], rep=rep, arm=arm, arm_class=arm_class,
+             out_dir=str(mdir(m) / (sub or f"r{rep}") / arm))
+    return j
+
+
+def solo_arm(mm):
+    key = hashlib.sha1(json.dumps(dict(id=mm["id"], role=mm["role"], params=mm["params"]),
+                                  sort_keys=True).encode()).hexdigest()[:12]
+    return f"s__{mm['id']}__{key}"
+
+
+def dither_choice(m):
+    """(r1 dither, r2 dither, probe record): first / second registered dither whose 10-s probe changed the dither
+    vehicle's state (x or v at any whole second) relative to the undithered r0 base; None if not decidable/none."""
+    base = load(mdir(m) / "r0" / "base")
+    rec = []
+    if base is None:
+        return None, None, rec
+    chosen = []
+    for j, d in enumerate(m.get("dithers", [])):
+        pr = load(mdir(m) / "dprobe" / f"d{j}")
+        if pr is None:
+            rec.append(dict(d, idx=j, probed=False))
+            continue
+        b = {row[0]: tuple(row[1:]) for row in base["tracks"].get(d["id"], []) if row[0] <= H_PROBE}
+        q = {row[0]: tuple(row[1:]) for row in pr["tracks"].get(d["id"], []) if row[0] <= H_PROBE}
+        common = sorted(set(b) & set(q))                   # seconds observed in both runs
+        changed = bool(common) and any(b[el] != q[el] for el in common)
+        dj = float(sum(np.asarray(pr["J_road"]) + np.asarray(pr["J_src"])) -
+                   sum((np.asarray(base["J_road"]) + np.asarray(base["J_src"]))[:len(pr["J_road"])]))
+        rec.append(dict(d, idx=j, probed=True, changed_state=changed, dJ_10s=round(dj, 4)))
+        if changed:
+            chosen.append(dict(d, idx=j))
+    r1 = chosen[0] if chosen else None
+    r2 = chosen[1] if len(chosen) > 1 else None
+    return r1, r2, rec
+
+
+def dither_spec(m, rep):
+    if rep == 0:
+        return []
+    r1, r2, _ = dither_choice(m)
+    d = r1 if rep == 1 else r2
+    return [] if d is None else [dither_member(d)]
+
+
+def charged():
+    if not LEDGER.exists():
+        return 0.0
+    return sum(float(json.loads(x)["planned_sim_s"]) for x in LEDGER.read_text().splitlines() if x.strip())
+
+
+def jcost(r):
+    return float(r["t_end"] if r["kind"] == "native" else r["H"])
+
+
+def fit(rows, reserve=0.0):
+    todo = [r for r in rows if not (Path(r["out_dir"]) / "RESULT.json").exists()]
+    left = CAP - charged() - reserve
+    units, order = {}, []
+    for r in todo:
+        k = r.get("sid", r["job_id"])
+        if k not in units:
+            units[k] = []
+            order.append(k)
+        units[k].append(r)
+    keep, skipped = [], []
+    for k in order:
+        c = sum(jcost(r) for r in units[k])
+        if c <= left + 1e-6:
+            keep += units[k]
+            left -= c
+        else:
+            skipped.append((k, c))
+    if skipped:
+        with (BASE / "BUDGET_SKIPS.jsonl").open("a") as fh:
+            for k, c in skipped:
+                fh.write(json.dumps(dict(unit=k, planned=c, left=left, reserve=reserve)) + "\n")
+    return keep
+
+
+def write(out, rows):
+    seen, uniq = set(), []
+    for r in rows:                                   # identical solo specs: one job (exact reuse)
+        if r["out_dir"] in seen:
+            continue
+        seen.add(r["out_dir"])
+        uniq.append(r)
+    with Path(out).open("a") as fh:
+        for r in uniq:
+            fh.write(json.dumps(r) + "\n")
+    print(len(uniq), "jobs", sum(jcost(r) for r in uniq), "sim-s ->", out)
+
+
+def plan_natives():
+    rows = []
+    for (d, p, s) in worlds():
+        rows.append(dict(kind="native", job_id=f"nat_{cell_key(d, p)}_{s}", map="wz3to2", map_spec=str(MAPSPEC),
+                         seed=s, demand={"main": d}, penetration=p, t_end=T_END, save_times=SAVE_TIMES,
+                         arm_class="shared", out_dir=str(native_dir(d, p, s))))
+    return rows
+
+
+def plan_screen():
+    ms = moments()
+    old = {}
+    if (BASE / "MOMENTS.json").exists():
+        old = {m.get("sid") or f"{m['cell']}_{m['seed']}_{m['window']}": m
+               for m in json.loads((BASE / "MOMENTS.json").read_text())}
+    for m in ms:                                     # moments are frozen once screened (never re-derived)
+        k = m.get("sid") or f"{m['cell']}_{m['seed']}_{m['window']}"
+        if k in old and old[k].get("valid"):
+            assert json.dumps(old[k]["variants"], sort_keys=True) == json.dumps(m["variants"], sort_keys=True), k
+    (BASE / "MOMENTS.json").write_text(json.dumps(ms))
+    rows = []
+    for m in ms:
+        if not m["valid"]:
+            continue
+        rows.append(bjob(m, 0, "base", [], H_MAIN, save_at=[H_MAIN]))
+        for vid, v in m["variants"].items():
+            rows.append(bjob(m, 0, f"g__{vid}", v["members"], H_MAIN, save_at=[H_MAIN], arm_class=v["arm"]))
+    return rows
+
+
+def moments_loaded():
+    return [m for m in json.loads((BASE / "MOMENTS.json").read_text()) if m["valid"]]
+
+
+def arm_series(m, rep, arm, n):
+    r = load(mdir(m) / f"r{rep}" / arm)
+    if r is None:
+        return None, None
+    s = series(r)
+    if rep == 0 and n > len(s):
+        e = load(mdir(m) / "r0ext" / arm)
+        if e is None:
+            return None, r
+        s = np.concatenate([s, series(e)])
+    if len(s) < n:
+        return None, r
+    return s[:n], r
+
+
+def _safety(r):
+    return dict(collisions=r["collisions"], teleports=r["teleports"], hard_brake_vs=r["hard_brake_vs"],
+                hdv_hard_brake_vs=r.get("hdv_hard_brake_vs"), min_accel=r["min_accel"],
+                emergency_steps=r["emergency_steps"], ttc3_vs=r.get("ttc3_vs"), hdv_ttc3_vs=r.get("hdv_ttc3_vs"),
+                min_ttc=r.get("min_ttc"))
+
+
+def rep_eval(m, vid, rep, n=H_MAIN, need_solos=True, group_arm=None):
+    v = m["variants"][vid]
+    jb, base = arm_series(m, rep, "base", n)
+    jg, grp = arm_series(m, rep, group_arm or f"g__{vid}", n)
+    if jb is None or jg is None:
+        return None
+    out = dict(T=float((jb - jg).sum()), T_lb=boot_lb(jb - jg),
+               safe=grp["collisions"] == 0 and grp["teleports"] == 0,
+               group=_safety(grp), base_safety=_safety(base), J_base=float(jb.sum()), J_group=float(jg.sum()),
+               lc_done=grp.get("lc_done"))
+    if not need_solos:
+        return out
+    solos = {}
+    for mm in v["members"]:
+        x, _ = arm_series(m, rep, solo_arm(mm), n)
+        if x is None:
+            return out
+        solos[mm["id"]] = x
+    best = min(solos, key=lambda k: solos[k].sum())
+    out.update(S=float((solos[best] - jg).sum()), S_lb=boot_lb(solos[best] - jg), best_solo=best,
+               J_solo={k: float(x.sum()) for k, x in solos.items()},
+               solo_gain={k: float((jb - x).sum()) for k, x in solos.items()})
+    return out
+
+
+def _passes_T(e):
+    return e is not None and e["T_lb"] > 0 and e["T"] >= MATERIAL and e["safe"]
+
+
+def best_per_family(m):
+    """Solo picks on r0 (LB95(T)>0, T>=1, safe): B best-T per LC family (<=5), ref best-T per ref family (<=2),
+    R top-5 T (<=5)."""
+    picks, rpool = {}, []
+    for vid, v in m["variants"].items():
+        e = rep_eval(m, vid, 0, need_solos=False)
+        if not _passes_T(e):
+            continue
+        if v["arm"] == "R":
+            rpool.append((e["T"], vid))
+            continue
+        fam = v["family"]
+        if fam not in picks or e["T"] > picks[fam][1]:
+            picks[fam] = (vid, e["T"])
+    rpool.sort(key=lambda x: (-x[0], x[1]))
+    return [vid for vid, _ in picks.values()] + [vid for _, vid in rpool[:N_SOLO_R]]
+
+
+def solo_jobs(m, vid, rep, H, save_at=(), sub=None):
+    v = m["variants"][vid]
+    return [bjob(m, rep, solo_arm(mm), [mm], H, save_at=save_at, dither=dither_spec(m, rep), arm_class=v["arm"],
+                 sub=sub) for mm in v["members"]]
+
+
+def r0_candidate(m, vid):
+    e = rep_eval(m, vid, 0)
+    return e is not None and "S" in e and e["T_lb"] > 0 and e["S_lb"] > 0 and e["S"] >= MATERIAL and e["safe"]
+
+
+def rep_pass(m, vid, rep):
+    e = rep_eval(m, vid, rep)
+    return e is not None and "S" in e and e["T_lb"] > 0 and e["S_lb"] > 0 and e["S"] >= MATERIAL and e["safe"]
+
+
+def rep1_picks(m):
+    """Every r0 candidate per arm class (largest LB95(S) first), capped at N_REP_CAP per class (B, ref, R)."""
+    best = {"B": [], "ref": [], "R": []}
+    for vid, v in m["variants"].items():
+        if not r0_candidate(m, vid):
+            continue
+        best[v["arm"]].append((rep_eval(m, vid, 0)["S_lb"], vid))
+    out = []
+    for arm in ("B", "ref", "R"):
+        out += [vid for _, vid in sorted(best[arm], key=lambda x: (-x[0], x[1]))[:N_REP_CAP]]
+    return out
+
+
+def ref_best(m):
+    """Best-r0-T reference variant at the moment (the static comparator for the beyond-static check)."""
+    best = None
+    for vid, v in m["variants"].items():
+        if v["arm"] != "ref":
+            continue
+        e = rep_eval(m, vid, 0, need_solos=False)
+        if e is not None and (best is None or e["T"] > best[1]):
+            best = (vid, e["T"])
+    return None if best is None else best[0]
+
+
+def plan_solos():
+    rows = []
+    for m in moments_loaded():
+        for vid in best_per_family(m):
+            rows += solo_jobs(m, vid, 0, H_MAIN, save_at=[H_MAIN])
+    return rows
+
+
+def plan_dprobe():
+    rows = []
+    for m in moments_loaded():
+        if not rep1_picks(m):
+            continue
+        for j, d in enumerate(m.get("dithers", [])):
+            rows.append(bjob(m, 0, f"d{j}", [], H_PROBE, dither=[dither_member(d)], sub="dprobe"))
+    return rows
+
+
+def _rep_rows(m, rep, cands):
+    rows = [bjob(m, rep, "base", [], H_REP, dither=dither_spec(m, rep))]
+    for vid in cands:
+        v = m["variants"][vid]
+        rows.append(bjob(m, rep, f"g__{vid}", v["members"], H_REP, dither=dither_spec(m, rep), arm_class=v["arm"]))
+        rows += solo_jobs(m, vid, rep, H_REP)
+    rb = ref_best(m)
+    if rb and rb not in cands and any(m["variants"][c]["arm"] != "ref" for c in cands):
+        rows.append(bjob(m, rep, f"g__{rb}", m["variants"][rb]["members"], H_REP, dither=dither_spec(m, rep),
+                         arm_class="ref"))
+    return rows
+
+
+def plan_rep1():
+    rows = []
+    for m in moments_loaded():
+        cands = rep1_picks(m)
+        if not cands or not dither_spec(m, 1):
+            continue
+        rows += _rep_rows(m, 1, cands)
+    return rows
+
+
+def ext_job(m, arm, arm_class="shared"):
+    src = mdir(m) / "r0" / arm
+    r = load(src)
+    sv = r["saved"][f"e{H_MAIN}"]
+    j = bjob(m, 0, arm, [], H_EXT, arm_class=arm_class)
+    j.update(kind="extend", job_id=f"{m['sid']}_r0ext_{arm}", t_load=m["t0"] + H_MAIN,
+             state_file=str(src / "states" / f"e{H_MAIN}.xml.gz"), inserted_load=sv["inserted"],
+             track_ids=[], out_dir=str(mdir(m) / "r0ext" / arm))
+    return j
+
+
+def plan_rep2():
+    rows = []
+    for m in moments_loaded():
+        cands = [vid for vid in rep1_picks(m) if rep_pass(m, vid, 1)]
+        if not cands or not dither_spec(m, 2):
+            continue
+        rows += _rep_rows(m, 2, cands)
+        rows.append(ext_job(m, "base"))
+        for vid in cands:
+            rows.append(ext_job(m, f"g__{vid}", m["variants"][vid]["arm"]))
+    return rows
+
+
+if __name__ == "__main__":
+    mode, out = sys.argv[1], sys.argv[2]
+    fn = dict(natives=plan_natives, screen=plan_screen, solos=plan_solos, dprobe=plan_dprobe, rep1=plan_rep1,
+              rep2=plan_rep2)[mode]
+    rows = fn()
+    if "--fit" in sys.argv:
+        rows = fit(rows, reserve=float(sys.argv[sys.argv.index("--fit") + 1]))
+    else:
+        rows = [r for r in rows if not (Path(r["out_dir"]) / "RESULT.json").exists()]
+    write(out, rows)

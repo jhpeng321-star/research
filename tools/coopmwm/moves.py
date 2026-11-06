@@ -68,6 +68,9 @@ CAV_ACCEL_CAP_MPS2 = 1.2   # tracks_spec.md, Move library feasibility bound
 FAMILIES = ('none', 'ease_off', 'wall', 'gap_open', 'ramp_assist')
 LANE_FAMILIES = ('yield_lane', 'open_gap_merge')  # G5 opt-in; legacy head width stays stable
 ALL_FAMILIES = FAMILIES + LANE_FAMILIES
+#: COOPKINDS/PLANGEN2 probe families that must never be projected onto this vocabulary (N9/N5).
+PROBE_LANE_FAMILIES = ('lane_balance', 'early_merge', 'zipper', 'zipper_order', 'discharge', 'platoon',
+                       'vsl_rows')
 STRUCTURED = FAMILIES[1:]          # candidates() rotates these; 'none' is the caller's baseline
 MOVE_MAX_MEMBERS = int(V2V_K)      # 1..4 nearby CAVs incl. self (the V2V partner-slot arity)
 
@@ -101,10 +104,17 @@ class Move:
     onset: int
     hold: int
     depth: float
+    # W2 (default 'step'/0 = the legacy box): registered gradual release of a wall,
+    # see wall_release. Defaults keep construction, offsets and to_dict bytes unchanged.
+    release_s: int = 0
+    release_shape: str = 'step'
 
     def __post_init__(self):
         if self.family not in ALL_FAMILIES:
             raise ValueError(f'unknown move family {self.family!r}')
+        if not (self.release_shape == 'step' and _is_second(self.release_s) and self.release_s == 0):
+            from .wall_release import validate
+            validate(self)
         members = tuple(self.members)
         object.__setattr__(self, 'members', members)
         if not 1 <= len(members) <= MOVE_MAX_MEMBERS or len(set(members)) != len(members):
@@ -141,11 +151,19 @@ class Move:
 
     def to_dict(self):
         """JSON-serialisable dict (bank labels persist this)."""
-        return dict(family=self.family, members=list(self.members),
-                    onset=int(self.onset), hold=int(self.hold), depth=float(self.depth))
+        out = dict(family=self.family, members=list(self.members),
+                   onset=int(self.onset), hold=int(self.hold), depth=float(self.depth))
+        if self.release_s:
+            # W2 gradual release only; the legacy step wall keeps its exact legacy bytes.
+            out.update(release_s=int(self.release_s), release_shape=self.release_shape)
+        return out
 
     @classmethod
     def from_dict(cls, data):
+        if 'release_s' in data or 'release_shape' in data:
+            return cls(data['family'], tuple(data['members']), data['onset'],
+                       data['hold'], data['depth'], data.get('release_s', 0),
+                       data.get('release_shape', 'step'))
         return cls(data['family'], tuple(data['members']), data['onset'],
                    data['hold'], data['depth'])
 
@@ -181,11 +199,18 @@ def offsets(move, t, state=None):
         raise ValueError('t must be a non-negative integer second')
     actors = move.actors
     active = move.family != 'none' and move.onset <= t < move.onset+move.hold
+    scale = 1.0
+    if not active and move.release_s and move.onset+move.hold <= t < move.onset+move.hold+move.release_s:
+        # W2 registered gradual release (wall only): -depth * f(k, R), f in (0, 1).
+        from .wall_release import release_fraction
+        scale = release_fraction(move.release_shape, t-move.onset-move.hold, move.release_s)
+        active = True
     if active and move.family == 'wall' and state is not None:
         positions = state.get('s_m') or {}
         if any(vid in positions and float(positions[vid]) >= _ZONE_S0 for vid in move.members):
             active = False
-    raw = {v: (-float(move.depth) if active and v in actors else 0.0) for v in move.members}
+    raw = {v: ((-float(move.depth) if scale == 1.0 else -float(move.depth)*scale)
+               if active and v in actors else 0.0) for v in move.members}
     if state is None:
         return raw
     base = state.get('base') or {}
@@ -451,6 +476,12 @@ def _project_window(m, actors):
     return (int(onsets[i]), int(holds[i]), float(depth[i])), float(improvement[i])
 
 
+RAW_LANE_DROP_FAMILIES = ('closing_pair', 'abreast_wall', 'group_hold', 'lane_balance', 'early_merge', 'zipper_order',
+                          'zipper', 'discharge_sync', 'discharge', 'platoon_headway', 'harmonize_rows',
+                          'R_random')
+RAW_NEWMAP_VARIANTS = ('pair_g', 'pair_h', 'pair_t', 'wall_g', 'wall_h')
+
+
 def from_plan(plan):
     """Project a verified bank plan onto the shared move vocabulary.
 
@@ -480,10 +511,32 @@ def from_plan(plan):
         plan = plan['plan']
     elif isinstance(plan.get('chosen_plan'), dict):
         plan = plan['chosen_plan']
+    if plan.get('nm_move') is not None:
+        # N9 closed-loop family plans are not shared-vocabulary boxes; never project them.
+        raise ValueError('N9 nm_move plans bind through nm_families.from_plan, not the move vocabulary')
+    if plan.get('schema') == 'coopmwm-mined-move-v1' and (
+            plan.get('r_kind') if plan.get('family') == 'R_random' else plan.get('family')) in PROBE_LANE_FAMILIES:
+        # N5 REVIEW_N9_1 blocker 1: verified COOPKINDS/PLANGEN2 lane-family rows (persistent lane
+        # requests, setTau room-makers, zipper slot law) are not shared-vocabulary boxes.
+        raise ValueError('COOPKINDS/PLANGEN2 lane-family rows bind only through their exact converter')
+    if plan.get('lane_drop_macro') is not None:
+        # N2 lane-drop macro (closed-loop speed law): exact executable binding.
+        from .lane_drop import from_plan as lane_drop_move
+        return lane_drop_move(plan)
     if plan.get('g5_move') or plan.get('uses_lane_actions') or any(
             any(row) for row in plan.get('lane_actions', ())):
         from .group_lane import from_plan as lane_move
         return lane_move(plan)
+    if plan.get('wall_macro') is not None:
+        # W2 registered wall macro (step or gradual release): exact executable binding.
+        from .wall_release import from_plan as wall_move
+        return wall_move(plan)
+    if (plan.get('family') in RAW_LANE_DROP_FAMILIES or plan.get('variant') in RAW_NEWMAP_VARIANTS
+            or plan.get('map') is not None or 'member_lanes' in plan):
+        # MAIN 2026-11-06 (N5 REVIEW_N9_2 fail-closed): a raw NEWMAP/lane-drop probe row WITHOUT its exact
+        # lane_drop_macro binding is refused here instead of being projected onto legacy families.
+        raise ValueError('raw lane-drop/NEWMAP plan without lane_drop_macro: bind it through '
+                         'lane_drop.plan_from_mined_row (no legacy projection)')
     members, m = _plan_offsets(plan)
     tag = plan.get('variety_family')
     best, best_gain, best_key = none_move(members[0]), 0.0, None

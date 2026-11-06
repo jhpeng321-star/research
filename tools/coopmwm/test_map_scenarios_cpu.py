@@ -98,7 +98,7 @@ def test_builder_refuses_unregistered_cases(tmp_path):
     desc = md.load(MAP_DIR)
     build = ms.scenario_builder(desc)
     for seed, demand, share, pop in ((964001, 2800, .4, 'textbook'), (962100, 2800, .4, 'textbook'),
-                                     (977010, 2800, .4, 'textbook'), (989000, 2800, .4, 'textbook'),
+                                     (977010, 2800, .4, 'textbook'), (989150, 2800, .4, 'textbook'),  # 989000-989099 TRAIN since MAIN ~16:45
                                      (989200, 2700, .4, 'textbook'), (989200, 2800, .3, 'textbook'),
                                      (989200, 2800, .4, 'legacy3')):
         with pytest.raises(ValueError):
@@ -148,6 +148,7 @@ def test_canonical_cell_and_n6_adapter_api():
     assert w == ms.world(989650, 3200, 0.6) == map_api.check_world(w, 'final_test')
     assert w['cell_key'] == 'D3200_p60' and w['map'] == 'wz3to2'
     assert map_api.seed_ranges() == dict(train=[989200, 989599], heldout=[989600, 989699],
+                                         extra_train=[[989000, 989099]],  # MAIN ~16:45 (N4)
                                          forbidden=[[964000, 964199], [962000, 962999], [977000, 977999]])
     panel = map_api.final_worlds()
     assert len(panel) == 100 and {x['cell_key'] for x in panel} == {'D3200_p60'}

@@ -101,6 +101,7 @@ def controller_class(base):
             self.trigger_intent_board = {}  # explicit wrapper opt-in; never the base publication
             self.g5_lane_targets = {}
             self.g5_lane_runtime = True
+            self.lc_requests = self.lc_issued = None  # LCEXEC (opt-in): this tick's env.lc_tick request
 
         def observe_issued(self, frame):
             self.previous_frame = frame
@@ -131,12 +132,21 @@ def controller_class(base):
                                     intent,
                                     (lambda vid: _intent_features(frame, vid, previous, DEFAULT_CFG, trigger_spec))
                                     if callable(trigger_publish) else None, trigger_publish)
+            families = getattr(saved, 'nm_families', None)
+            if families is not None:
+                # N9 absolute family laws: each CAV's OWN native command this second.
+                families.observe_native(now, commands)
             try:
                 desired = super().apply(rows, commands, now)
             finally:
                 self.policy = saved
             from .group_lane import controller_targets
             self.g5_lane_targets = controller_targets(self, saved, rows, now)
+            self.lc_requests = self.lc_issued = None
+            if self.events and self.events[-1]['sample'].get('lc_tick'):
+                # LCEXEC free_program (opt-in): the sample's env.lc_tick request (branch release applied).
+                from .lc_families import controller_requests
+                self.lc_requests = controller_requests(self, now)
             if intent is not None:
                 # Publish this second's intents (also from replayed samples); despawned or
                 # silent CAVs simply have no fresh entry and read as invalid next second.
@@ -150,18 +160,35 @@ def controller_class(base):
 
         def lane_request(self, env):
             from .group_lane import lanes_tensor
+            if getattr(self, 'lc_requests', None):
+                # LCEXEC (opt-in): stash this tick's program request for the SAME env.step.
+                tick = getattr(env, 'lc_tick', None)
+                if tick is None:
+                    raise ValueError('LCEXEC lc_tick requests need the lc_runtime env (COOPMWM_LC_RUNTIME=1)')
+                tick(self.lc_requests)
+                self.lc_issued, self.lc_requests = self.lc_requests, None
             return lanes_tensor(self.g5_lane_targets, env)
 
         def lane_actors(self):
             # G5 ownership contract: only this tick's gate-passed lane actors may be put
             # under policy lane control by the sole env writer; nonmembers stay native.
-            return frozenset(self.g5_lane_targets)
+            actors = frozenset(self.g5_lane_targets)
+            issued = getattr(self, 'lc_issued', None) or getattr(self, 'lc_requests', None)
+            if issued:
+                # LCEXEC: program members under lane control this tick (their lane_mode keys).
+                actors |= frozenset((issued.get('lane_mode') or {}))
+            return actors
 
         def observe_lane(self, info):
             if self.g5_lane_targets and self.events:
                 from .group_lane import lane_outcome
                 self.events[-1]['g5_lane_outcome'] = lane_outcome(info.get('lane_commands'),
                                                                   info.get('lane_vehicles'))
+            if getattr(self, 'lc_issued', None) and self.events:
+                # LCEXEC: per-vehicle program lane telemetry of this tick (env lc_runtime).
+                self.events[-1]['lc_lane_outcome'] = dict(vehicles=info.get('lc_lane_vehicles'),
+                                                          counts=info.get('lc_lane_commands'))
+                self.lc_issued = None
 
     return Controller
 

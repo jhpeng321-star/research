@@ -56,11 +56,14 @@ def backend_config(cfg, *, root=None, smoke=False):
     if 'clean3_budget' in cfg:
         from .clean3_restart import native_budget
         out['budget'], out['prior_charged_sim_s'] = native_budget(cfg)
+    if 'clean4_budget' in cfg:   # clean4 wz3to2 (N4): owner-approved 4M envelope, same global-cap semantics
+        from .clean4_restart import native_budget as clean4_native_budget
+        out['budget'], out['prior_charged_sim_s'] = clean4_native_budget(cfg)
     if cfg.get('g4_synergy_credit') and not smoke:
         from .g4_runtime import allocate_budget
         allocate_budget(out)
     prior = out['prior_charged_sim_s']
-    cap = out['budget']['total'] if 'clean3_budget' in cfg else rc.TOTAL_CAP_SIM_S
+    cap = out['budget']['total'] if ('clean3_budget' in cfg or 'clean4_budget' in cfg) else rc.TOTAL_CAP_SIM_S
     if sum(out['budget']['phases'].values())+prior > cap:
         raise ValueError('complete production allocations plus prior parity exceed owner cap')
     if 'clean2_budget' not in cfg and cfg['budget']['total']+960 > out['budget']['total']:
@@ -78,7 +81,7 @@ def backend_config(cfg, *, root=None, smoke=False):
         out['phase_map'] = dict(train='track2_smoke')
         out['job_namespace'] = f'clean1_smoke{attempt}'
         out['worlds_by_update'] = {'1': cfg['worlds_by_update']['1'][:2]}
-        if 'clean3_budget' in cfg and cfg.get('mined_moves'):
+        if ('clean3_budget' in cfg or 'clean4_budget' in cfg) and cfg.get('mined_moves'):
             out['practice_priority_mined'] = True  # registered clean3 smoke rule (B=R)
     return out
 
@@ -97,11 +100,23 @@ def bank_move_supervision(runtime):
         return dict(examples=0, source='A_no_bank')
     cfg, policy, records = runtime.cfg, runtime.policy, []
     contexts = []
+    from .wall_w2 import settings as w2_settings
+    w2 = w2_settings(cfg)
+    observer = policy
+    if w2['wall_pressure_features']:
+        # W2: bank readers observe from a copy WITHOUT this process's wall memory.
+        from .wall_negatives import observer as clean_observer
+        observer = clean_observer(policy)
     def consume(*, cfg, receipt, example, plan, pairs, trace):
         frames = bank_v2v.trace_frames(trace)
         for context, label, reader, weight, time in bank_breadth.observable_contexts(
-                policy, plan, pairs, frames, t0=receipt['t0'],
+                observer, plan, pairs, frames, t0=receipt['t0'],
                 certification=cfg.get('_executable_lesson')):
+            if w2['wall_pressure_features']:
+                # Same causal observer as online: the reader's own merge-pressure blocks.
+                context = dict(context, merge_pressure={v: reader.pressure_blocks[v]
+                                                        for v in context['members']
+                                                        if v in reader.pressure_blocks})
             # Same acquirability contract as online feasible_proposals: candidates only over
             # the ego's observable CAV slots. With G5 on, local rows also carry sensed CAVs
             # outside the slots (gap geometry), which must never become move members.
@@ -128,6 +143,11 @@ def bank_move_supervision(runtime):
                 example_id=(example or {}).get('example_id', receipt['verification_id']+'#s1'),
                 family=label.family, time_s=time, members=list(context['members'])))
     bank_breadth.visit(cfg, runtime.arm, consume)
+    subset = bank_breadth.subset_rule(cfg)
+    if not records and subset and runtime.arm == 'R':
+        # clean4 F5 option (a): R's matched-effort random procedure yielded no runtime-usable rows.
+        return dict(examples=0, contexts=[], final_ce=None, source='R_zero_guidance_subset_rule',
+                    rule=bank_breadth.SUBSET_RULE)
     if not records:
         raise ValueError('nonempty observable verified-plan trigger supervision required')
     # Equal mass per supported family, then per context (not legacy AWR weight).
@@ -142,7 +162,17 @@ def bank_move_supervision(runtime):
             policy, plan, pairs, frames, t0=receipt['t0'], certification=cfg.get('_executable_lesson')))
     bank_breadth.visit(cfg, 'R' if runtime.arm == 'B' else 'B', other_support)
     if set(families) != other_families:
-        raise ValueError('F3 B/R observable trigger family support differs; add verified guidance')
+        mine, other = set(families), other_families
+        if not (subset and ((runtime.arm == 'B' and other <= mine) or (runtime.arm == 'R' and mine <= other))):
+            raise ValueError('F3 B/R observable trigger family support differs; add verified guidance')
+    negatives = None
+    if w2['wall_negative_labels']:
+        # W2: this arm's OWN per-seed losing walls as do-not-wall labels (own family-mass bucket).
+        from . import wall_negatives
+        extra, extra_contexts, negatives = wall_negatives.trigger_records(cfg, runtime.arm, policy)
+        records += extra
+        contexts += extra_contexts
+        families = Counter(c['family'] for c in contexts)
     weights = [1./families[c['family']] for c in contexts]
     records = [(b, w) for (b, _), w in zip(records, weights)]
     reference = []
@@ -182,10 +212,13 @@ def bank_move_supervision(runtime):
         # Per-context fit, aligned with `contexts` (reporting only; e.g. mined-example fit).
         context_ce = [float(torch.nn.functional.cross_entropy(
             policy.trigger.distribution(b.context, b.descriptors, b.mask)[0], b.actions)) for b, _ in records]
-    return dict(initial_ce=initial, final_ce=float(loss().detach()), context_final_ce=context_ce,
+    out = dict(initial_ce=initial, final_ce=float(loss().detach()), context_final_ce=context_ce,
         examples=len(records), passes=passes, contexts=contexts, family_counts=dict(families),
         family_mass={f: 1./len(families) for f in families}, rule=bank_breadth.RULE,
         source='all usable verified bank plans and observable traces, including PLAN_FIX outputs')
+    if negatives is not None:
+        out['wall_negatives'] = negatives
+    return out
 
 
 def monitor_config(cfg, *, root=None):
@@ -234,6 +267,11 @@ def update_metrics(arm, episodes, learning, reward_envelope, *, augmented_exampl
                 for table, selected in zip(trigger['tables'], trigger['actions']):
                     move = table[selected]
                     family = 'none' if move is None else move['family']
+                    if family not in metrics['trigger_counts']:
+                        # Opt-in option families (W1/N2 protocols, N2 joint moves) are counted
+                        # in their own key; the default family list is unchanged when OFF.
+                        metrics['families'].append(family)
+                        metrics['trigger_counts'][family] = 0
                     metrics['trigger_counts'][family] += 1
                     metrics['decisions'] += 1
             for block in sample.get('track2', {}).get('merge_features', {}).values():
@@ -325,7 +363,11 @@ def run_branch(spec, snapshot, cfg, work):
             if isinstance(new, p1.EpisodePolicy):
                 # VerifyController restores its ledger at t0; refresh from the
                 # live instance so the next decision sees original expiries.
-                new.observe(rows, now, command_commitments=controller.active_plans)
+                if new.lane_drop is not None:   # N2 speed law needs the own native command
+                    new.observe(rows, now, command_commitments=controller.active_plans,
+                                native_commands=commands)
+                else:
+                    new.observe(rows, now, command_commitments=controller.active_plans)
             return original(rows, commands, now)
         controller.apply = apply
     runner = sv.LocalBranchRunner(work, controller_hook=hook, policy_loader=loader)
