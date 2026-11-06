@@ -784,6 +784,21 @@ def _bank_view(cfg):
         effective_imitation.attach_limits = attach
 
 
+FROZEN_A_RULE = ('clean5a (MAIN 2026-11-06): "A = base alone" - A is the frozen bound base (BASE = the bound '
+                 'S-MAPPOWZ snapshot or u0) evaluated as an arm every update on the same worlds; no PPO update; '
+                 'only B and R train (their cooperation layer on the same frozen base).')
+
+
+def frozen_control_arm(cfg):
+    """Registered clean5a key; absent = A trains with PPO exactly as before (byte-identical)."""
+    value = (cfg or {}).get('frozen_control_arm')
+    if value is None:
+        return False
+    if value != FROZEN_A_RULE:
+        raise ValueError('frozen_control_arm must carry the registered rule text')
+    return True
+
+
 def _load_base(cfg, arm, update):
     from .v2v_runtime import load_checkpoint
     path = _path(Path(cfg['run_root'])/f'{arm}_checkpoint_{update:03}.pt')
@@ -1028,6 +1043,10 @@ class ArmRuntime:
         from .sparse_synergy_credit import trigger_terms
         synergy_terms, synergy_receipt = trigger_terms(cfg, arm, self.update, episodes, synergy)
         if arm == 'A':
+            if frozen_control_arm(cfg):
+                # clean5a (MAIN 2026-11-06): A = the frozen bound base evaluated as an arm; no update.
+                return dict(ppo=dict(status='frozen_base_no_update', rule=FROZEN_A_RULE),
+                            bank=dict(status='A_no_bank'))
             from .accel_learner import update
             return dict(ppo=update(self.base, self.optimizer, episodes, self.generator),
                         bank=dict(status='A_no_bank'))

@@ -31,7 +31,8 @@ def bind_runtime(job):
     idempotent: the same paths are prepended again and the installed G5 env is reused.
     """
     from tools.leverprobe import backend as exact
-    exact.setup(job['runtime'],job['checkpoint']);install_seed_scope();guard(job['world'],job['role'])
+    from .frozen_trunk import setup as _trunk_setup  # clean5a bound trunk; unbound = exact.setup unchanged
+    _trunk_setup(job['runtime'],job['checkpoint'],backend=exact);install_seed_scope();guard(job['world'],job['role'])
     from .g5_runtime import install as _g5_runtime
     _g5_runtime(job['runtime'])  # clean3 opt-in (COOPMWM_G5_RUNTIME=1): bound G5 env on the frozen runtime
     from .map_runtime import install as _map_runtime

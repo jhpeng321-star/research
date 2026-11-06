@@ -30,7 +30,8 @@ def episode(job):
     path=Path(job['path']);path.mkdir(parents=True,exist_ok=True)
     write(path/'CLAIM.json',dict(pid=os.getpid(),id=job['id'],charged_sim_s=job['sim_s']))
     # Same setup, full-prefix fingerprint and bit-pattern hash as COOPFREE.
-    exact.setup(job['runtime'],job['checkpoint'])
+    from .frozen_trunk import setup as _trunk_setup  # clean5a bound trunk; unbound = exact.setup unchanged
+    _trunk_setup(job['runtime'],job['checkpoint'],backend=exact)
     install_seed_scope(); guard(job['world'],job['role'])
     exact.guard=lambda w:guard(w,job['role'])
     p=Policy();p.load_state_dict(job['weights']);p.eval()
