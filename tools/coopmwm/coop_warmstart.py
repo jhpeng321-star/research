@@ -443,6 +443,8 @@ def runtime_move(row, reader, ego, *, dry):
         group = [rows[v] for v in members]
         if family == 'abreast_wall':
             group = sorted(group, key=lambda r: int(r['lane']))
+        else:   # closing_pair role order: (closing-lane CAV, adjacent-lane CAV)
+            group = sorted(group, key=lambda r: int(r['lane']) != int(view.dropped_lane))
         target = params.get('v_w')
         if not isinstance(target, (int, float)) or not math.isfinite(target):
             raise Unrepresentable('lane-drop row without a target speed')
