@@ -224,7 +224,9 @@ def validate_clean5a(cfg, updates, fixes=None):
         raise ValueError('G4LD extension must be bound with the registered clean5a families')
     if g4.enabled(production.backend_config(cfg, root=root/'smoke', smoke=True), 1, smoke=True):
         raise ValueError('G4 must stay disabled inside smoke (TRAIN-only sampling)')
-    out['G4'] = dict(phase_sim_s=230400, extension=ext['families'])
+    if not cfg.get('g4_start_cap') or ssc.start_cap(native) is None:
+        raise ValueError('clean5a G4 budget-derived start cap must be bound')
+    out['G4'] = dict(phase_sim_s=230400, extension=ext['families'], start_cap=cfg['g4_start_cap']['rule'])
     if not group_lane.enabled(cfg) or len(group_lane.families(cfg)) != 7:
         raise ValueError('G5 seven-family lane vocabulary must stay registered')
     if not ev_only(cfg) or cfg.get('mined_moves'):

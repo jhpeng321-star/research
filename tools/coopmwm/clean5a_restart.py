@@ -116,6 +116,7 @@ def keys(*, desc, guidance_doc, provenance):
                                      v2v_range_m=c4.V2V_RANGE_M, member_cap=3))
     out.update(fullpol_ev.recommended(provenance=provenance, regime_guidance=guidance_doc))
     out['g4_extension'] = ssc.extension_keys(provenance=provenance, families=G4_FAMILIES)
+    out['g4_start_cap'] = ssc.start_cap_keys(provenance=provenance)   # 12/9/8 by arity from the 230,400 cap
     out['practice_offer'] = practice_offer.config_keys(fraction=0.5, provenance=provenance)
     out['imitation_epochs'] = IMITATION_EPOCHS
     out['frozen_control_arm'] = FROZEN_A_RULE
@@ -279,8 +280,8 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
     with (root/'AUTHORITY.md').open('a', encoding='utf-8') as f:
         f.write('\n'+json.dumps(dict(owner_approval=approval_doc, budget=budget, quote_sha256=quote_doc['receipt_sha256'],
             newmap=cfg['newmap'], eval_panel=c4.EVAL_PANEL, design=DESIGN, guidance=guidance,
-            g4=dict(extension=cfg['g4_extension'], disclosed='1-in-16 sampling, 10,000 veh-s scale and the start cap are '
-                    'inherited/hand-set G4 registrations'),
+            g4=dict(extension=cfg['g4_extension'], start_cap=cfg['g4_start_cap'], disclosed='budget-derived start caps 12/9/8 (from the 230,400 cap); 1-in-16 '
+                    'sampling and the 10,000 veh-s scale are inherited/hand-set G4 registrations'),
             imitation=dict(epochs=IMITATION_EPOCHS, kl_cap=0.045),
             seeds='TRAIN worlds 989220-989267 over 6 staged cells (16/update); final panel 989600-989695 + 3c (N6)',
             criterion=rc.criterion_document(), reporting=cfg['clean2_reporting_definition'],
