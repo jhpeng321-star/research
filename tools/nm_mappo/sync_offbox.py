@@ -96,9 +96,11 @@ def check(local: Path, milestones: dict) -> int | None:
     if int(status.get("iteration", 0)) >= 2 and not milestones.get("requote"):
         milestones["requote"] = True
         return 10
-    if any(prod.glob("EXIT_production_*.json")) and not milestones.get("exit_reported"):
-        milestones["exit_reported"] = True
-        return 0
+    seen = milestones.setdefault("exits_reported", [])
+    for path in sorted(prod.glob("EXIT_*.json")):       # every supervisor exit (stop or finish) once
+        if path.name not in seen:
+            seen.append(path.name)
+            return 0
     return None
 
 
