@@ -1,9 +1,9 @@
 import hashlib, json, os, shutil, subprocess, tarfile
 from pathlib import Path
-commit = '6cf4868f70c07c38ddffde06567750b00ce64182'
-up = Path('/home/ubuntu/cpuv_setup_20261105/clean3_upload_6cf4868f')
+commit = '673e80a7da0073af7f3011e33f079c6a4f80a513'
+up = Path('/home/ubuntu/cpuv_setup_20261105/clean3_upload_673e80a7')
 old = Path('/home/ubuntu/coopmwm20261105_clean2_src_285663a1')
-src = Path('/home/ubuntu/coopmwm20261106_clean3_src_6cf4868f')
+src = Path('/home/ubuntu/coopmwm20261106_clean3_src_673e80a7')
 assert not src.exists()
 src.mkdir()
 for name in ('pytools.tgz', 'top.tgz'):
@@ -28,7 +28,7 @@ paths = list(sel['paths']) if isinstance(sel, dict) and 'paths' in sel else list
 paths += ['tools/coopmwm/'+n for n in ('test_executable_labels_cpu.py','test_coordination_opportunities_cpu.py',
   'test_sparse_synergy_credit_cpu.py','test_g4_runtime_cpu.py','test_clean3_budget_cpu.py','test_group_lane_cpu.py',
   'test_g1_certification_cpu.py','test_bank_perseed_cpu.py','test_bank_imitation_cpu.py','test_replay_bank_v2v_cpu.py',
-  'test_clean3_restart_cpu.py','test_g5_runtime_cpu.py')]
+  'test_clean3_restart_cpu.py','test_g5_runtime_cpu.py','test_mined_link_cpu.py')]
 paths = [p for p in dict.fromkeys(paths) if (src/'pytools'/p).is_file()]
 (src/'TEST_SELECTION.json').write_text(json.dumps(dict(paths=paths), indent=1))
 files = {}
