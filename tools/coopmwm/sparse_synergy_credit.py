@@ -132,6 +132,8 @@ def _extension_row(episode, steps, index, ego, selected, trigger, members, pendi
         return ADAPTERS[family]['row'](episode, steps, index, ego, selected, trigger, members, pending)
     kind = EXTENSION_KINDS[family]
     if kind == 'n2_joint':
+        if len(selected.get('members') or ()) < 2:
+            return None   # single-member hold (e.g. a solo group_hold): not a joint start, as legacy G4
         from . import lane_drop
         move = lane_drop.LaneDropMove.from_dict(selected)
         if ego not in move.members or not set(move.members) <= set(members):
