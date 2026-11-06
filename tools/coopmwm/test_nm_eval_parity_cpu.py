@@ -234,3 +234,21 @@ def test_hold_lane_pins_identical_when_enabled(cfg, tmp_path):
             log.append(canon(dict(requests=requests, event=c.events[-1], g5=dict(c.g5_lane_targets))))
         pinned += bool(ct.events[-1]['sample'].get('hold_lane_pins'))
     assert logs[1] == logs[0] and pinned > 0                     # the same pins enter the same single lane writer
+
+
+def test_clean5b_f_fair_slate_identical_when_enabled(cfg, tmp_path):
+    pytest.importorskip(f'{__package__}.fullpol_fair', reason='clean5b-F not merged into this tree')
+    tff = importlib.import_module(f'{__package__}.test_fullpol_fair_cpu')
+    c5 = tff.fair_cfg(cfg)
+    c5 = dict(c5, clean5_ev=dict(c5['clean5_ev'], hold_lane_pin=True))
+    root, base_state, worker = write_root(tmp_path, c5, 'B')
+    native = dict(c5, run_root=str(root))
+    (pt, ct), (pe, ce) = _pair(c5, 'B', base_state, worker, native, lambda trig: trig.trigger_head, False)
+    assert pe.clean5_ev.get('fair') is not None and pe.clean5_ev == pt.clean5_ev
+    logs = ([], [])
+    for t in range(300, 330):
+        vehicles = [dict(r, v_mps=2.) for r in advance(tff.scene(), t-300, speed=2.)]
+        for log, c in zip(logs, (ct, ce)):
+            requests = c.apply(vehicles, {r['vid']: 0. for r in vehicles if r['is_cav']}, t)
+            log.append(canon(dict(requests=requests, event=c.events[-1], g5=dict(c.g5_lane_targets))))
+    assert logs[1] == logs[0]                                    # same fairness-filtered slate and commands
