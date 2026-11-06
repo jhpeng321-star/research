@@ -88,7 +88,9 @@ def report_summary(env_or_frame, desc, now_s=None):
             if b > a:
                 covered += b-a
                 end = b
-        lanes.append(dict(lane=wm_lane, zone_s_m=[lo, hi], coverage=covered/(hi-lo), missing=covered == 0.,
+        # plain Python scalars only: receipts are written with json.dumps (N11 F5)
+        lanes.append(dict(lane=wm_lane, zone_s_m=[float(lo), float(hi)], coverage=float(covered/(hi-lo)),
+                          missing=bool(covered == 0.),
                           reporters=sum(1 for i in reporters if abs(int(lane[i])-wm_lane) <= reach
                                         and s[i]+R >= lo and s[i]-R <= hi)))
     return dict(time_s=float(frame.time_s if now_s is None else now_s), source=desc.rsu.source,

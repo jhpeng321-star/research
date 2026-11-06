@@ -43,7 +43,7 @@ SCHEMA = 'coopmwm.newmap_sanity.v1'
 SIM_S = 1200
 WARMUP_S, HORIZON_S, STOP_S = 300, 901, 1200
 DEFAULT_SEEDS = (989596, 989597, 989598, 989599)          # last TRAIN seeds (NEWMAP2 uses 989200-989202)
-DEFAULT_CELLS = ((2800, 0.4), (3200, 0.4), (2800, 0.2), (3200, 0.6))
+DEFAULT_CELLS = ((3200, 0.6),)*4                         # MAIN: canonical clean4 cell D3200_p60
 RULE = dict(max_pooled_delay_ratio=0.05, exposure_factor=1.5, exposure_slack_vs=10.0,
             text='MAPPO base iff every mappo episode has 0 collisions/teleports/dropped slot-steps, pooled '
                  'sum(J_mappo-J_native)/sum(J_native) <= +0.05, and pooled TTC<3 s exposure and hard braking '
