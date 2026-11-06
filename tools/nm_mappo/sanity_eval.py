@@ -100,8 +100,13 @@ def panel_sha256(panel) -> str:
     return hashlib.sha256(json.dumps(panel, sort_keys=True).encode()).hexdigest()
 
 
-def load_actor(path):
-    """``PolicyExecutor`` (deterministic) from a MAPPO export or trainer checkpoint."""
+def load_actor(path, lanes_cfg=None):
+    """``PolicyExecutor`` (deterministic) from a MAPPO export or trainer checkpoint.
+
+    Lane rules come from the run config ``[lanes]`` (= the original MAPPO rules; a speed-only
+    actor issues no lane command, the rules only drive the dwell clock).  The payload's own
+    ``lane_rules`` may carry keys of a newer LaneRules (u0 was exported by candA-int code:
+    ``consequence_mask``/``secure_gap_hook``); shared keys must agree, extras are recorded."""
     from wms.control.lanes import LaneRules
     from wms.control.mappo.agent import build_networks
     from wms.control.policy import PolicyExecutor
@@ -115,9 +120,16 @@ def load_actor(path):
     encoder.load_state_dict(group, strict=True)
     policy.eval()
     encoder.eval()
-    rules = payload.get("lane_rules") or (payload.get("config") or {}).get("lane_rules")
-    return PolicyExecutor(policy, encoder, lane_rules=LaneRules.from_mapping(rules),
-                          deterministic=True), lane_control
+    stored = dict(payload.get("lane_rules") or (payload.get("config") or {}).get("lane_rules") or {})
+    rules = LaneRules.from_mapping(lanes_cfg if lanes_cfg is not None else
+                                   {k: v for k, v in stored.items() if k in LaneRules.__dataclass_fields__})
+    mine = {k: getattr(rules, k) for k in LaneRules.__dataclass_fields__}
+    clash = sorted(k for k in stored if k in mine and stored[k] != mine[k])
+    if clash and lane_control != "native":
+        raise ValueError(f"payload lane rules differ from the config on {clash}")
+    exe = PolicyExecutor(policy, encoder, lane_rules=rules, deterministic=True)
+    exe.payload_lane_rules_extra = sorted(set(stored) - set(mine))
+    return exe, lane_control
 
 
 def run_arm(job: dict) -> dict:
@@ -131,7 +143,8 @@ def run_arm(job: dict) -> dict:
     env = None
     try:
         env = build_env(job["spec"])
-        exe, lane_control = (None, "native") if arm == "native" else load_actor(job["policy"])
+        exe, lane_control = ((None, "native") if arm == "native"
+                             else load_actor(job["policy"], job.get("lanes")))
         state = env.reset(seed=world["seed"], demand_vph=world["demand_vph"],
                           penetration=world["penetration"], warmup_s=world["warmup_s"],
                           horizon_s=world["horizon_s"])
@@ -253,6 +266,7 @@ def main(argv=None) -> int:
     (out / "PLAN.json").write_text(json.dumps({**plan, "policy_sha256": hashes}, indent=1))
     weights = dict(cfg.get("reward_weights", {}))
     jobs = [{"world": w, "arm": arm, "spec": spec, "reward_weights": weights,
+             "lanes": dict(cfg.get("lanes", {})),
              "policy": policies.get(arm), "policy_sha256": hashes.get(arm)}
             for w in panel for arm in arms]
     if a.workers > 1:

@@ -220,7 +220,10 @@ def test_quote_numbers():
 def _fake_u0(tmp_path) -> Path:
     p, e, _ = build_networks(accel_max=2.6, lane_control="native")
     path = tmp_path / "u0.pt"
-    torch.save(export_payload(p, e, LaneRules()), path)
+    payload = export_payload(p, e, LaneRules())
+    # the real u0 (candA-int export) carries two newer LaneRules keys; loaders must accept them
+    payload["lane_rules"].update(consequence_mask=False, secure_gap_hook=None)
+    torch.save(payload, path)
     return path
 
 
