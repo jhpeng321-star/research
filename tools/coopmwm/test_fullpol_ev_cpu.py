@@ -542,3 +542,28 @@ def test_bc_kl_cap_is_a_mean_over_labelled_decision_rows():
     assert fl._mean_kl([a], [b]) == pytest.approx(kl_row)
     assert fl._mean_kl([a], [b], [torch.tensor([1., 1., 0.])]) == pytest.approx(kl_row)
     assert fl._mean_kl([a, a[:1]], [b, b[:1]], [torch.tensor([0., 0., 0.]), None]) == pytest.approx(kl_row)
+
+
+def test_g2_coordination_partner_never_reopens_legacy_families_under_clean5a(cfg):
+    """N11 F10: a G2 pair ego gets the N2-only slate (pair offered as a group_hold pair)."""
+    from . import feasible_proposals as fpp
+    p = make(ev_cfg(cfg))
+    p.observe(scene(), 300, native_commands={r['vid']: .3 for r in scene() if r['is_cav']})
+    state = dict(p.local_states['a'], acquirable_cav_ids=['a', 'b'], coordination_partner='b')
+    out = fpp.candidates(state, np.random.default_rng(0), 8)
+    fams = {o.family for o in out}
+    assert out and fams <= {'abreast_wall', 'group_hold'}, fams
+    assert any(o.family == 'group_hold' and set(o.members) == {'a', 'b'} for o in out)
+    from . import coordination_opportunities as co
+    calls = []
+    real = co.candidates
+    try:
+        co.candidates = lambda state, rng, n: calls.append(state['self']) or []
+        fpp.candidates(state, np.random.default_rng(0), 8)
+        assert calls == []                                             # clean5a: G2 legacy slate bypassed
+        off = make(ld_cfg(cfg, v2v=False))
+        off.observe(scene(), 300, native_commands={r['vid']: .3 for r in scene() if r['is_cav']})
+        fpp.candidates(dict(off.local_states['a'], coordination_partner='b'), np.random.default_rng(0), 8)
+        assert calls == ['a']                                          # OFF: G2 path unchanged
+    finally:
+        co.candidates = real
