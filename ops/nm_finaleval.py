@@ -21,7 +21,8 @@ per-decision synergy branches run only on a registered small subset that fits.
   * every wave is reserved whole in the clean4 ledger (phase v2v_final, hard sub-cap 690,000,
     no foreign v2v_final spend) BEFORE dispatch; an interrupted wave is never replayed.
 Map geometry/seed ranges/scenario worlds come from the N1 map-descriptor API
-(c4/nm-abstract); until it lands ``nm_map_stub`` is bound and physics is refused.
+(c4/nm-abstract, merged): ``map_descriptor`` digests + ``map_scenarios`` world registry; physics is
+refused unless the bound map API matches the registered panel.
 Physics goes through ONE runner module in the clean4 deployed source (``RUNNER``; contract in
 ``RUNNER_CONTRACT``), which N1/N4 provide on the map-aware plant.
 
@@ -60,11 +61,16 @@ WINDOW = dict(start_s=0, end_s=HORIZON_S)
 EVAL_RANGE = (989600, 989699)
 TRAIN_RANGE = (989200, 989599)
 N_WORLDS = 96
-DECISION_STRIDE = 4                    # registered decision subset: panel repeat % 4 == 0 (24 worlds)
+DECISION_STRIDE = 12                   # registered decision subset: panel repeat % 12 == 0 (8 worlds)
 DECISION_H = 360
 DECISION_MIN_T = 300
 DECISION_MAX_T = HORIZON_S-DECISION_H  # 840
 MIN_MEMBERS, MAX_MEMBERS = 2, 3
+#: clean4 training cell (MAIN 2026-11-06: N3 NEWMAP2_REPORT recommendation, adopted)
+CELL = dict(demand=3200, penetration=0.6)
+CELL_AUTHORITY = ('MAIN 2026-11-06 (N6): clean4 training cell = demand 3200 veh/h x CAV share 0.6 '
+                  '(N3 NEWMAP2_REPORT.md recommendation, adopted)')
+NEWMAP2_REPORT_SHA256 = '70c119595ff3f391bbdebfa0a98d9c2f7ca02d2ae61f8acb53c126754adfdb05'
 PHASE = 'v2v_final'
 ALLOCATION_SIM_S = 690_000             # clean4 v2v_final (MAIN decision for N6)
 BUDGET_KEYS = ('clean4_budget', 'clean3_budget')
@@ -72,9 +78,16 @@ SAFETY = fe.SAFETY
 HARD = fe.HARD
 BOOTSTRAP = dict(reps=10000, level=.95, seed=20261104, method='paired_percentile')
 HERE = Path(__file__).resolve().parent
-PANEL_FILE = HERE/'nm_eval_panel_wz3to2.json'
-#: sealed content digest of nm_eval_panel_wz3to2.json (registered 2026-11-06 before clean4 launch)
-PANEL_SHA256 = 'b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1'
+PANEL_FILE = HERE/'nm_eval_panel_wz3to2_v2.json'
+#: sealed content digest of nm_eval_panel_wz3to2_v2.json (registered 2026-11-06 before clean4 launch)
+PANEL_SHA256 = '3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130'
+SUPERSEDED_FILE = HERE/'nm_eval_panel_SUPERSEDED.json'
+#: superseded panels: never valid for a clean4 CONFIG binding (see SUPERSEDED_FILE)
+SUPERSEDED = {'b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1':
+              'v1 cell 2800 veh/h x 0.3 superseded by the 3200 x 0.6 clean4 cell (MAIN 2026-11-06)'}
+MAP_SPEC_REL = 'assets/research/newmap_candidates/wz3to2/MAP_SPEC.json'
+#: MAIN 2026-11-06 (N11 F4): the panel binds the staged probe network bytes (sha256 of wz3to2.net.xml)
+NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'
 ROOT = '/home/ubuntu/coopmwm_clean4_wz3to2'
 FINAL_ROOT = '/home/ubuntu/coopmwm_clean4_wz3to2_finaleval'
 PREFIXES = ('nmfinal_', 'nmdec_')
@@ -84,22 +97,26 @@ RUNNER_CONTRACT = dict(
     episode=('episode(spec, cfg, work) -> record. spec keys: job_id, arm (A|B|R|BASE|NATIVE), world_id, '
              'world (panel world dict, map wz3to2), checkpoint ({path,file_sha256,update,...} or '
              "{kind:'native'}), sim_s 1200, window {0,1200}, noise_seed = world seed, deterministic True, "
-             'panel_sha256, capture (B/R on the decision subset only, else None: save the SUMO state at the '
-             'first decision matching capture). record = spec identity keys + status graded, J_veh_s (team '
-             'delay veh-s over the window), safety {collisions,teleports,hard_brakes,ttc_events} ints, and '
-             'decision = None or {t_s, move, members[2..3 CAV ids], state_sha256, state_ref} when capture is '
-             'set. Refuse any world not in the panel; HDVs never commanded.'),
+             'panel_sha256, capture (B/R on the decision subset only, else None: at the first new 2-3-member '
+             'cooperation plan with min_t_s <= start <= max_t_s, a clean3 sumo_verify decision snapshot). '
+             'record = spec identity keys + status graded, J_veh_s (team delay veh-s, 0-1200 s), safety '
+             '{collisions,teleports,hard_brakes,ttc_events} ints, and decision = None or {t_s, move, members, '
+             'plan, state_sha256 (= sumo_verify.snapshot_sha), state_ref} when capture is set. Refuse any '
+             'world not in the panel; HDVs never commanded.'),
     decision_branch=('decision_branch(spec, cfg, work) -> record. Load decision.state_ref (verify '
-                     'state_sha256), run [t_s, t_s+360): CAVs in new_members execute the arm u24 policy '
-                     '(the decided move), every other CAV the BASE controller (background). record = spec '
-                     'identity keys + status graded, J_veh_s over the window, safety.'))
+                     'state_sha256); clean3 CRN prefix replay from t=0 to t_s (fingerprints checked), then '
+                     '[t_s, t_s+360): CAVs in new_members execute the decided plan with the arm u24 policy, '
+                     'every other CAV the BASE controller (background). Charged t_s+360 sim-s (clean3 '
+                     'sumo_verify.branch_sim_s). record = spec identity keys + status graded, J_veh_s over '
+                     '[t_s, t_s+360), safety.'))
 SEED_TOKEN = re.compile(r'(?<![\da-fA-F.])(9896\d\d)(?![\da-fA-F])')
 REPLICATED_FILE = 'track2_diagnostics/replicated_u024_live.json'
 
 
-def _world(seed, cell, repeat):
-    return dict(map=MAP, seed=int(seed), cell=0, repeat=int(repeat), penetration=float(cell['penetration']),
-                demand=int(cell['demand_vph']['main']), profile=str(cell['profile']))
+def _world(seed, cell):
+    """N1's registered world dict (tools.coopmwm.map_scenarios.world) for the panel cell."""
+    from tools.coopmwm import map_scenarios
+    return map_scenarios.world(int(seed), int(cell['demand_vph']['main']), float(cell['penetration']))
 
 
 def in_decision_subset(world):
@@ -117,7 +134,8 @@ def quote(base='mappo_u0'):
     arms = list(ARMS)+(['BASE'] if base == 'mappo_u0' else [])+['NATIVE']
     subset = N_WORLDS//DECISION_STRIDE
     need = {f'episodes_{a}': episode for a in arms}
-    need.update({f'decisions_{a}': subset*(2+MAX_MEMBERS)*DECISION_H for a in DECISION_ARMS})
+    # clean3 prefix-replay branches are charged from t=0 (sumo_verify.branch_sim_s): <= HORIZON_S each
+    need.update({f'decisions_{a}': subset*(2+MAX_MEMBERS)*(DECISION_MAX_T+DECISION_H) for a in DECISION_ARMS})
     total = sum(need.values())
     return dict(base=base, phase=PHASE, allocation_sim_s=ALLOCATION_SIM_S, need_ceiling=need,
                 episodes_sim_s=len(arms)*episode, decisions_ceiling_sim_s=total-len(arms)*episode,
@@ -135,20 +153,28 @@ def quote(base='mappo_u0'):
 
 # ---------------------------------------------------------------- panel registration (zero physics)
 
-def build_panel(asset_root, registered_utc):
-    """The registered evaluation panel, from the map files only (no outcome of any run)."""
-    root = Path(asset_root)
-    spec_bytes, demand_bytes = (root/'MAP_SPEC.json').read_bytes(), (root/'DEMAND_CHOSEN.json').read_bytes()
-    spec, chosen = json.loads(spec_bytes), json.loads(demand_bytes)
-    net = root/spec['net_file']
-    if spec['name'] != MAP or chosen['map'] != MAP or set(chosen['demand_vph']) != {'main'}:
-        raise Blocked('map files are not the single-stream wz3to2 map')
+def build_panel(spec_path, registered_utc, *, demand=CELL['demand'], penetration=CELL['penetration']):
+    """The registered evaluation panel: N1 map descriptor + N1 world registry for the clean4 cell
+    (no outcome of any run is read)."""
+    from tools.coopmwm import map_descriptor as md, map_scenarios as ms
+    spec_path = Path(spec_path)
+    desc = md.load(spec_path)
+    spec = json.loads(spec_path.read_text(encoding='utf-8'))
+    net_sha = hashlib.sha256(Path(desc.network_path).read_bytes()).hexdigest()
+    if net_sha != NET_SHA256:
+        raise Blocked(f'network bytes {net_sha} are not the staged probe network {NET_SHA256}')
+    if desc.name != MAP or set(spec['streams']) != {'main'}:
+        raise Blocked('MAP_SPEC is not the single-stream wz3to2 map')
+    registered = next((c for c in ms.cells() if c['demand'] == demand and c['penetration'] == penetration), None)
+    if registered is None:
+        raise Blocked(f'({demand}, {penetration}) is not a registered N1 wz3to2 cell')
     stream = spec['streams']['main']
-    cell = dict(demand_vph=dict(chosen['demand_vph']), penetration=float(chosen['penetration']),
-                profile=stream['profile'], depart_lane=stream['depart_lane'],
-                rate_profile_s=[[0, 300, 0.8], [300, 1500, 1.0], [1500, 1800, 0.6]])
+    cell = dict(demand_vph={'main': int(demand)}, penetration=float(penetration), cell=registered['cell'],
+                cell_key=registered['cell_key'], profile=stream['profile'], depart_lane=stream['depart_lane'],
+                rate_profile_s=[[0, 300, 0.8], [300, 1500, 1.0], [1500, 1800, 0.6]],
+                episode_s=[0, ms.EPISODE_S], authority=CELL_AUTHORITY, newmap2_report_sha256=NEWMAP2_REPORT_SHA256)
     seeds = list(range(EVAL_RANGE[0], EVAL_RANGE[0]+N_WORLDS))
-    worlds = [dict(world_id=f'{MAP}_{s}', world=_world(s, cell, i)) for i, s in enumerate(seeds)]
+    worlds = [dict(world_id=f'{MAP}_{s}', world=_world(s, cell)) for s in seeds]
     subset = [r['world_id'] for r in worlds if in_decision_subset(r['world'])]
     mde = lambda k: round(2.8016/math.sqrt(k), 3)   # noqa: E731  z(.975)+z(.80), paired two-sided
     contract = dict(
@@ -160,8 +186,8 @@ def build_panel(asset_root, registered_utc):
         metric='J_veh_s', higher_is_better=False,
         metric_definition=('team delay veh-s over the window: on-road speed deficit dt*max(0, 1-v/31.29) + '
                            'source waiting (requested, not yet inserted)'),
-        horizon_s=HORIZON_S, window=dict(WINDOW), horizon_note='= clean4 training episode length (MAIN)',
-        noise_seed='world seed', deterministic=True,
+        horizon_s=HORIZON_S, window=dict(WINDOW), horizon_note='= clean4 training episode length (MAIN; N1 EPISODE_S)',
+        noise_seed='world seed', deterministic=True, role='final_test (N1 HELDOUT_ROLES)',
         bootstrap=dict(BOOTSTRAP), estimator='tools.coopmwm.planner_eval._paired_ci (whole-world resampling, '
                                              'identical resample indices for every contrast)',
         safety_counters=list(SAFETY),
@@ -171,43 +197,53 @@ def build_panel(asset_root, registered_utc):
                           'replicated synergy test on TRAIN states, N4) is unchanged; never gates training'),
         decisions=dict(arms=list(DECISION_ARMS), worlds=subset, subset_rule=f'panel repeat % {DECISION_STRIDE} == 0',
                        per_world=1,
-                       rule=(f'first cooperation decision with {MIN_MEMBERS}..{MAX_MEMBERS} members and '
+                       rule=(f'first new cooperation plan with {MIN_MEMBERS}..{MAX_MEMBERS} members starting at '
                              f'{DECISION_MIN_T} <= t <= {DECISION_MAX_T} s in the evaluation episode; time order '
                              'only (outcome-blind); none -> world has no decision'),
                        horizon_s=DECISION_H, labels=['all', 'background', 'solo<i>'], background='BASE controller',
+                       branching=('clean3 sumo_verify decision snapshot + CRN prefix replay from t=0; charged '
+                                  't_s + 360 sim-s per branch (sumo_verify.branch_sim_s)'),
                        decomposition=('delta(all group new, background base) - max delta(one member new, '
                                       'background base) (clean3 ISOLATED_TEST)'),
                        metrics=['delta_all_new_veh_s', 'delta_only_member_new_veh_s', 'best_solo_veh_s',
                                 'policy_cooperation_gain_veh_s'], higher_is_better=True),
         budget=dict(phase=PHASE, allocation_sim_s=ALLOCATION_SIM_S, ledger='clean4 run root CHARGES.jsonl',
                     authority='MAIN decision 2026-11-06 for N6 (only clean4 final-evaluation runner)',
-                    quote_mappo_u0=quote('mappo_u0')['total_ceiling_sim_s'], quote_native=quote('native')['total_ceiling_sim_s']))
+                    quote_mappo_u0=quote('mappo_u0')['total_ceiling_sim_s'],
+                    quote_native=quote('native')['total_ceiling_sim_s']))
     power = dict(method='paired two-sided normal approximation, alpha .05, power .80; MDE in SD units of the '
                         'per-world paired difference = 2.8016/sqrt(N)',
-                 mde_sd_units={str(k): mde(k) for k in (24, 48, 64, 96, 100)},
-                 noise_basis=('newmap_probe SUMMARY_stage3 (wz3to2, 7 worlds 989000-989006, H=360 s): paired '
-                              'SD solo-vs-base 3,022 veh-s (n=126), wall-vs-base T 3,633 (W2) - 5,259 (W1), '
-                              'synergy S 3,008 (n=42)'),
+                 mde_sd_units={str(k): mde(k) for k in (8, 16, 48, 64, 96, 100)},
+                 noise_basis=('newmap_probe SUMMARY_stage3 (wz3to2 2800 x 0.3, 7 worlds 989000-989006, H=360 s): '
+                              'paired SD solo-vs-base 3,022 veh-s (n=126), wall-vs-base T 3,633 (W2) - 5,259 (W1), '
+                              'synergy S 3,008 (n=42); the 3200 x 0.6 cell is more congested, SDs likely larger'),
                  episode_assumption=('1200 s = 3.33 x 360 s windows; if independent, per-world SD ~ 1.83 x 3,022 '
                                      '~ 5,520 veh-s -> MDE(96) ~ 1,580 veh-s per world-episode'),
-                 decisions=('<= 24 decisions per arm -> MDE ~ 0.572 x 3,008 ~ 1,720 veh-s: descriptive, sized by '
-                            'the 690,000 allocation'),
+                 decisions=('<= 8 decisions per arm -> MDE ~ 0.99 SD (~3,000 veh-s): descriptive only, sized by '
+                            'the 690,000 allocation with prefix-inclusive branch cost'),
                  chosen=N_WORLDS, reason=('largest round panel inside the registered 100-seed range; same 96-world '
                                           'shape as the clean3 registered estimator; 4 seeds reserved unused'))
     panel = dict(
-        schema=SCHEMA+'.panel', map=MAP, role='evaluation only (registered by N6; never training, never selection)',
+        schema=SCHEMA+'.panel', version=2, map=MAP,
+        role='evaluation only (registered by N6; never training, never selection)',
         registered_utc=registered_utc, authority='newmap_spec.md (MAIN 2026-11-06): HELD-OUT eval 989600-989699',
+        supersedes=[dict(panel_sha256=k, reason=v) for k, v in sorted(SUPERSEDED.items())],
         seed_ranges=dict(evaluation=list(EVAL_RANGE), training=list(TRAIN_RANGE)),
         seeds_used=[seeds[0], seeds[-1]], seeds_reserved_unused=[seeds[-1]+1, EVAL_RANGE[1]],
         cell=cell, map_binding=dict(
-            asset_dir='assets/research/newmap_candidates/wz3to2', map_spec_digest=digest(spec),
-            map_spec_file_sha256=hashlib.sha256(spec_bytes).hexdigest(), demand_chosen_digest=digest(chosen),
-            demand_chosen_file_sha256=hashlib.sha256(demand_bytes).hexdigest(), net_file=spec['net_file'],
-            net_sha256=hashlib.sha256(net.read_bytes()).hexdigest(), bottleneck=dict(spec['bottleneck'])),
-        stream_rule=('map-namespaced streams (newmap_probe probe_core): requests newmap_requests_v1:{map}:{seed}:'
-                     '{stream}, CAV identity newmap_cav_v1:..., HDV parameters sample_driver("{map}:{seed}", id)'),
+            map_spec=MAP_SPEC_REL, net_file=Path(desc.network_path).name, net_sha256=net_sha,
+            net_rule='sha256 of the staged probe network bytes (MAIN 2026-11-06, N11 F4)',
+            map_spec_file_sha256=hashlib.sha256(spec_path.read_bytes()).hexdigest(),
+            spec_sha256=desc.spec_sha256, network_semantic_sha256=desc.network_sha256,
+            descriptor_sha256_at_registration=desc.digest,
+            n1_registered={k: md.REGISTERED[MAP][k] for k in ('spec_sha256', 'network_sha256')},
+            k_slots=desc.k_slots, bottleneck=desc.bottleneck, world_registry='tools.coopmwm.map_scenarios (N1)'),
+        stream_rule=('map-namespaced streams (N1 map_scenarios == newmap probe/NEWMAP2): requests '
+                     'newmap_requests_v1:{map}:{seed}:{stream}, CAV identity newmap_cav_v1:..., HDV parameters '
+                     'sample_driver("{map}:{seed}", id)'),
         exposure=dict(
-            checked=['newmap_probe ledger: seeds 989000-989006 only', 'tools/coopmwm, traffic_shepherd, ops code'],
+            checked=['newmap_probe ledger: seeds 989000-989006 only', 'NEWMAP2: TRAIN 989200-989202 only',
+                     'tools/coopmwm, traffic_shepherd, ops code'],
             disclosed=('integers 989600-989635 are the OLD merge-map S-COOPMWM final_test worlds '
                        '(tools/coopmwm/protocol.py FINAL_START); wz3to2 worlds are map-namespaced, so no wz3to2 '
                        'traffic realisation shares draws with them; job/world ids carry the wz3to2_ prefix')),
@@ -217,17 +253,21 @@ def build_panel(asset_root, registered_utc):
 
 def validate_panel(panel):
     verify(panel, 'panel_sha256', 'evaluation panel seal')
+    if panel['panel_sha256'] in SUPERSEDED:
+        raise Blocked(f'panel {panel["panel_sha256"]} is SUPERSEDED: {SUPERSEDED[panel["panel_sha256"]]}')
     worlds = panel.get('worlds') or []
     seeds = [r['world']['seed'] for r in worlds]
     if panel.get('map') != MAP or len(worlds) != N_WORLDS or len(set(seeds)) != N_WORLDS:
         raise Blocked('panel must hold 96 distinct wz3to2 worlds')
-    for i, row in enumerate(worlds):
+    for row in worlds:
         s = row['world']['seed']
         if not EVAL_RANGE[0] <= s <= EVAL_RANGE[1] or TRAIN_RANGE[0] <= s <= TRAIN_RANGE[1]:
             raise Blocked(f'panel seed {s} outside the registered evaluation range')
-        if row != dict(world_id=f'{MAP}_{s}', world=_world(s, panel['cell'], i)):
+        if row != dict(world_id=f'{MAP}_{s}', world=_world(s, panel['cell'])):
             raise Blocked(f'panel world {s} does not follow the registered cell/identity rule')
     c = panel['contract']
+    if panel['map_binding']['net_sha256'] != NET_SHA256:
+        raise Blocked('panel does not bind the staged probe network')
     if (c['bootstrap'] != BOOTSTRAP or c['horizon_s'] != HORIZON_S or c['budget']['allocation_sim_s'] != ALLOCATION_SIM_S
             or c['decisions']['worlds'] != [r['world_id'] for r in worlds if in_decision_subset(r['world'])]):
         raise Blocked('panel contract differs from the launcher constants')
@@ -243,9 +283,49 @@ def load_panel(path=PANEL_FILE, *, pinned=PANEL_SHA256):
 
 # ---------------------------------------------------------------- N1 map API / clean4 binding
 
+def default_spec_path():
+    """COOPMWM_MAP_SPEC (N1 process selection) or the MAP_SPEC.json in this source tree."""
+    from tools.coopmwm import map_descriptor as md
+    return Path(os.environ.get(md.ENV) or Path(md.__file__).resolve().parents[2]/MAP_SPEC_REL)
+
+
+class N1MapAPI:
+    """Interim adapter over N1's committed modules (map_descriptor + map_scenarios, c4/nm-abstract)
+    with the documented interface; N1's own adapter replaces it via ``--map-api`` / NM_MAP_API."""
+    STUB = False
+    __name__ = 'tools.coopmwm.map_scenarios+map_descriptor'
+
+    def __init__(self, spec_path=None):
+        self.spec_path = spec_path
+
+    def seed_ranges(self, name):
+        from tools.coopmwm import map_scenarios as ms
+        return dict(train=tuple(ms.TRAIN_RANGE), eval=tuple(ms.HELDOUT_RANGE)) if name == ms.MAP else {}
+
+    def descriptor(self, name):
+        from tools.coopmwm import map_descriptor as md
+        desc = md.load(self.spec_path or default_spec_path())
+        if desc.name != name:
+            raise ValueError(f'descriptor {desc.name!r} != {name!r}')
+        net = hashlib.sha256(Path(desc.network_path).read_bytes()).hexdigest()
+        return dict(name=desc.name, net_sha256=net, spec_sha256=desc.spec_sha256, network_sha256=desc.network_sha256,
+                    descriptor_sha256=desc.digest, stream_namespace=desc.name, k_slots=desc.k_slots)
+
+    def world(self, name, seed, cell, repeat=None):
+        from tools.coopmwm import map_scenarios as ms
+        if name != ms.MAP:
+            raise ValueError(f'no world registry for {name!r}')
+        return ms.world(int(seed), int(cell['demand_vph']['main']), float(cell['penetration']))
+
+    def check_world(self, world, role):
+        from tools.coopmwm import map_scenarios as ms
+        return ms.guard(world, 'final_test' if role == 'eval' else role)
+
+
 def bind_map_api(module=None):
-    """The N1 map-descriptor API (c4/nm-abstract) or, until it lands, ``nm_map_stub``."""
-    api = importlib.import_module(module or os.environ.get('NM_MAP_API', 'nm_map_stub'))
+    """The N1 map API (default) or an injected module with the same four functions (tests)."""
+    module = module or os.environ.get('NM_MAP_API')
+    api = N1MapAPI() if module in (None, 'n1') else importlib.import_module(module)
     missing = [f for f in ('seed_ranges', 'descriptor', 'world', 'check_world') if not callable(getattr(api, f, None))]
     if missing:
         raise Blocked(f'map API {api.__name__} lacks {missing}')
@@ -260,12 +340,12 @@ def map_check(api, panel):
         out['mismatches'].append(f'seed ranges {ranges}')
     try:
         desc = api.descriptor(MAP)
-        out['net_sha256'] = desc.get('net_sha256')
-        if desc.get('net_sha256') != panel['map_binding']['net_sha256']:
-            out['mismatches'].append('net_sha256 differs from the panel map binding')
+        out.update({k: desc.get(k) for k in ('net_sha256', 'spec_sha256', 'network_sha256', 'descriptor_sha256')})
+        if desc.get('net_sha256', desc.get('network_sha256')) != panel['map_binding']['net_sha256']:
+            out['mismatches'].append('network sha differs from the panel map binding (staged probe network)')
         if desc.get('stream_namespace', MAP) != MAP:
             out['mismatches'].append('streams are not namespaced by the map')
-    except (OSError, KeyError, ValueError) as error:
+    except (OSError, KeyError, TypeError, ValueError) as error:
         out['descriptor'] = f'unavailable: {error!r}'
     for row in panel['worlds']:
         w = row['world']
@@ -274,16 +354,24 @@ def map_check(api, panel):
                 out['mismatches'].append(f'world {w["seed"]} differs from the map API scenario world')
                 break
             api.check_world(w, 'eval')
-        except ValueError as error:
-            out['mismatches'].append(f'world {w["seed"]}: {error}')
+        except (TypeError, ValueError) as error:
+            out['mismatches'].append(f'world {w["seed"]}: {error!r}')
             break
     out['ok'] = not out['mismatches'] and 'descriptor' not in out
     return out
 
 
 def _cell_key(cell):
-    demand = cell.get('demand_vph') or ({'main': cell['demand']} if 'demand' in cell else None)
-    return (json.dumps(demand, sort_keys=True), float(cell.get('penetration', -1)), cell.get('profile', 'peak'))
+    """(demand, penetration) of a cell given as a dict ({demand_vph|demand, penetration}), an N1
+    cell key ('D3200_p60') or an N1 cell id (8)."""
+    if isinstance(cell, (str, int)) and not isinstance(cell, bool):
+        from tools.coopmwm import map_scenarios as ms
+        row = next(c for c in ms.cells() if cell in (c['cell_key'], c['cell']))
+        return int(row['demand']), round(float(row['penetration']), 6)
+    demand = cell.get('demand_vph') or ({'main': cell['demand']} if 'demand' in cell else {})
+    if cell.get('profile', 'peak') != 'peak' or set(demand) != {'main'}:
+        raise ValueError('only the single-stream peak profile is registered')
+    return int(demand['main']), round(float(cell['penetration']), 6)
 
 
 def clean4_binding(cfg, panel, declared_base=None):
@@ -297,6 +385,9 @@ def clean4_binding(cfg, panel, declared_base=None):
         bad.append(f'map {nm["map"]!r}')
     if nm.get('eval_panel_sha256') is None:
         unbound.append('eval_panel_sha256')
+    elif nm['eval_panel_sha256'] in SUPERSEDED:
+        bad.append(f'eval_panel_sha256 {nm["eval_panel_sha256"][:8]} is SUPERSEDED ({SUPERSEDED[nm["eval_panel_sha256"]]}); '
+                   f'bind {panel["panel_sha256"]}')
     elif nm['eval_panel_sha256'] != panel['panel_sha256']:
         bad.append('eval_panel_sha256 differs from the registered panel')
     if nm.get('cell') is None:
@@ -305,7 +396,7 @@ def clean4_binding(cfg, panel, declared_base=None):
         try:
             if _cell_key(nm['cell']) != _cell_key(panel['cell']):
                 bad.append(f'training cell {nm["cell"]} differs from the panel cell')
-        except (KeyError, TypeError, ValueError, AttributeError):
+        except (KeyError, TypeError, ValueError, AttributeError, StopIteration):
             bad.append('unreadable training cell')
     base = nm.get('base_controller')
     if base is None:
@@ -510,7 +601,7 @@ def decision_specs(arm, records, panel):
             out.append(dict(job_id=f'nmdec_{arm.lower()}_u{UPDATE:03}_{i:04}_{label}', arm=arm,
                             world_id=rec['world_id'], world=deepcopy(rec['world']),
                             checkpoint=deepcopy(rec['checkpoint']), decision=deepcopy(dec), label=label,
-                            new_members=new, background='BASE', sim_s=DECISION_H,
+                            new_members=new, background='BASE', sim_s=int(dec['t_s'])+DECISION_H,
                             window=dict(start_s=dec['t_s'], end_s=dec['t_s']+DECISION_H),
                             panel_sha256=panel['panel_sha256']))
     return out
@@ -1220,9 +1311,9 @@ def main(argv=None):
     p.add_argument('--root', default=ROOT)
     p.add_argument('--final-root', default=FINAL_ROOT)
     p.add_argument('--panel', default=str(PANEL_FILE))
-    p.add_argument('--assets', help='register-panel: wz3to2 map directory')
+    p.add_argument('--map-spec', help='register-panel: wz3to2 MAP_SPEC.json (default: COOPMWM_MAP_SPEC or the source tree)')
     p.add_argument('--base', choices=BASES, help='quote/register/dry-run: base controller if CONFIG lacks it')
-    p.add_argument('--map-api', help='N1 map-descriptor module (default: env NM_MAP_API or nm_map_stub)')
+    p.add_argument('--map-api', help='map API module with seed_ranges/descriptor/world/check_world (default: N1)')
     p.add_argument('--runner', default=RUNNER)
     p.add_argument('--allow-missing', default='')
     p.add_argument('--workers', type=int, default=24)
@@ -1236,7 +1327,7 @@ def main(argv=None):
         path = guard(Path(a.panel))
         if path.exists():
             p.error('panel file exists; never overwrite a registration')
-        value = build_panel(a.assets, datetime.now(timezone.utc).isoformat())
+        value = build_panel(a.map_spec or default_spec_path(), datetime.now(timezone.utc).isoformat())
         publish(path, value)
         result = dict(panel_sha256=value['panel_sha256'], file_sha256=file_sha(path), path=str(path))
     elif a.command == 'verify-panel':
