@@ -104,6 +104,7 @@ R_GRID = dict(v_w=(15.0, 18.0, 22.0), hold_s=(90, 120, 180), dmax=(1.0, 1.5))
 N_R = 2
 R_FAMILY = 'R_random'
 FAMILIES = ('closing_pair', 'abreast_wall', R_FAMILY)
+MINED_FAMILIES = FAMILIES+('group_hold',)    # N2 plan families (R hold rows -> group_hold)
 SPEED_HOLD_FAMILIES = FAMILIES                # executable by the speed-target builder in this runtime
 SPEED_HOLD_VARIANTS = ('pair_g', 'pair_h', 'pair_t', 'wall_g', 'wall_h')
 NOT_EXECUTABLE = 'not_executable_in_runtime'
@@ -134,7 +135,45 @@ MAIN_RULES = (
     'Budget: cap 400,000, phase clean4_prelaunch_verify.',
     'Executable now: N3/PLANGEN/PLANGEN2 walls and pairs (wall_g, wall_h, pair_g, pair_h, pair_t) and R_random '
     "moves (the R random-procedure variants: build the R plan from the row's members/params with the same "
-    'builder).')
+    'builder).',
+    # MAIN update (N4 URGENT, N2 exact converter c4/nm-moves c7983467) - supersedes the pending_n9 rule above:
+    'Eligible = wall/pair/hold rows (pair_g, pair_h, pair_t, wall_g, wall_h, and R group_hold) in training cells '
+    'p40/p60.',
+    "Every lane-change row (early_merge, lane_balance, zipper_order, R lane_balance) gets status 'excluded: no "
+    "exact executor' (lane_drop.NotRepresentable). Same for the pending_n9/COOPKINDS lane-family rows.",
+    'Route plan building through N2 with lane_drop_macro set; moves.from_plan(plan) must return a LaneDropMove '
+    '(zero legacy projection); what SUMO executes in the branch must be the N2 law.')
+EFFORT_MATCHED = ('PLANGEN_MOVES_B.jsonl', 'PLANGEN_MOVES_R.jsonl', 'PLANGEN2_MOVES_B.jsonl', 'PLANGEN2_MOVES_R.jsonl')
+EXCLUDED_F3 = 'excluded: effort-matched sources only (FAIRAUDIT F3)'
+EXCLUDED_F4 = 'excluded: budget cut (FAIRAUDIT F4)'
+FAIRAUDIT_RULES = (
+    'F3 (sources): freeze ONLY the effort-matched sources: PLANGEN_MOVES_B/R.jsonl and PLANGEN2_MOVES_B/R.jsonl. '
+    "NEWMAP (N3) and COOPKINDS rows are not in clean4: listed as 'excluded: effort-matched sources only "
+    "(FAIRAUDIT F3)'.",
+    'F4 (order): the frozen order interleaves B and R moves alternately (B1, R1, B2, R2, ...; the longer arm '
+    "tail continues alternation-free at the end).",
+    'F4 (budget): per-arm budget reserved pro rata to the number of executable moves per arm (share_B = '
+    'nB/(nB+nR) of the cap minus the collections). If the cap cannot cover all moves of both arms, BOTH arms are '
+    'cut by the same rule (same fraction of each arm ordered list, from the tail), never only R tail; the run '
+    'list is written here before any physics and verify refuses any move outside it.')
+EXCLUDED_R_A = 'excluded: R zero-guidance (option a)'
+OPTION_A_FACT = ('MAIN 2026-11-06 option (a): group_hold is not a runtime proposal family and not guidance; the '
+                 'matched-effort random procedure (R; PLANGEN/PLANGEN2 R mining ledgers = matched effort) yielded 0 '
+                 'runtime-executable rows; R trains with zero guidance rows (RL + team reward + G4 only).')
+OPTION_A_SCOPE = ('MAIN N4 FINAL scope (option a): Plan A re-verifies ONLY the B wall/pair moves from PLANGEN_MOVES_B + '
+                  'PLANGEN2_MOVES_B in training cells p40/p60. R moves are NOT run. F4 interleaving is moot.')
+R_PROCEDURE_FACT = ('BOOST-PRE/MAIN 2026-11-06: no R_random row maps to a runtime closing_pair/abreast_wall (15/18 lack '
+                    'the geometry, 3 are unobservable); R guidance = negatives only')
+NO_EXACT_EXECUTOR = 'excluded: no exact executor'
+ORIGIN_N2 = 'clean4_n2_law_verified_plan'
+N2_BUILDER_NOTE = ('N2 law (lane_drop.member_command: a = clip((v_w - v)/1 s, -dmax, 1.0), release at the member own '
+                   'drop crossing, hold end or the pair_t anchor 150 m before the drop) applied second by second on the '
+                   'member speed/position trajectory under the law, starting from the recorded t0 state of the '
+                   'collection episode (seed-1 CRN); bound as lane_drop.verified_plan (per-member release el, policy '
+                   'reference after release). The sv.verify branch Controller executes plan profiles open loop '
+                   '(plans.acceleration_at) - it has no closed-loop lane-drop executor - so the branch runs exactly '
+                   'this N2-law profile. Base-recorded speeds are NOT used as the law input: the open-loop law on them '
+                   'would brake every second for the whole hold (towards a stop).')
 
 # ---- runtime conventions (mining collect2 / probe / wallmine) --------------------------------------
 EPISODE_S = 1200
@@ -398,9 +437,31 @@ def remaining(root):
     return int(registration(root)['cap_sim_s'])-spent(root)
 
 
-def charge(root, ident, sim_s, *, stage='', branches=1):
+def arm_budget(root, arm):
+    """FAIRAUDIT F4 per-arm move budget (None without a frozen MOVE_LIST)."""
+    p = move_list_path(root)
+    if arm not in ('B', 'R') or not p.exists():
+        return None
+    fair = json.loads(p.read_text(encoding='utf-8')).get('fairaudit') or {}
+    return fair.get(f'budget_{arm}')
+
+
+def arm_spent(root, arm, rows=None):
+    """Move spend of one arm (collections excluded: they are reserved before the pro-rata split)."""
+    return sum(int(r['sim_s']) for r in (ledger_rows(root) if rows is None else rows)
+               if r.get('arm') == arm and r.get('stage') != 'collect')
+
+
+def left_for(root, arm):
+    """Remaining sim-s a stage of ``arm`` may use: min(global cap, the arm's F4 budget)."""
+    left = remaining(root)
+    budget = arm_budget(root, arm)
+    return left if budget is None else min(left, int(budget)-arm_spent(root, arm))
+
+
+def charge(root, ident, sim_s, *, stage='', branches=1, arm=None):
     """Durable atomic precharge on this phase's own ledger: refuses unregistered roots, duplicate ids
-    (never replayed) and anything over the registered cap."""
+    (never replayed), anything over the registered cap and (moves) anything over the arm's F4 budget."""
     from .exact_grade import BudgetBlocked
     root = Path(root)
     cap = int(registration(root)['cap_sim_s'])
@@ -415,17 +476,21 @@ def charge(root, ident, sim_s, *, stage='', branches=1):
         used = sum(int(r['sim_s']) for r in rows)
         if used+sim_s > cap:
             raise BudgetBlocked(f'{PHASE} cap {cap} reached (spent {used}, asked {sim_s})')
+        budget = arm_budget(root, arm) if stage != 'collect' else None
+        if budget is not None and arm_spent(root, arm, rows)+sim_s > int(budget):
+            raise BudgetBlocked(f'arm {arm} F4 budget {budget} reached')
         with (root/'CHARGES.jsonl').open('a', encoding='utf-8') as f:
             f.write(json.dumps(dict(id=ident, phase=PHASE, stage=stage, sim_s=sim_s, branches=int(branches),
-                                    unix=time.time()), sort_keys=True)+'\n')
+                                    arm=arm, unix=time.time()), sort_keys=True)+'\n')
             f.flush()
             os.fsync(f.fileno())
 
 
-def _charger(root, prefix, stage):
+def _charger(root, prefix, stage, arm=None):
     """sv.verify charge hook: sum(spec sim_s) of the WHOLE branch set, before dispatch."""
     def chg(vid, specs):
-        charge(root, f'{prefix}_{vid}', sum(int(s['sim_s']) for s in specs), stage=stage, branches=len(specs))
+        charge(root, f'{prefix}_{vid}', sum(int(s['sim_s']) for s in specs), stage=stage, branches=len(specs),
+               arm=arm)
     return chg
 
 
@@ -706,12 +771,21 @@ class _Capture:
     contexts, window moments and {t-1, t} frames; reads only the controller event's observable rows,
     commands and sample."""
 
-    def __init__(self, select, keeper, capture_fn, profile_s=PROFILE_S, *, geom=None, requests=None,
+    def __init__(self, select, keeper, capture_fn, profile_s=PROFILE_S, *, geom=None, requests=None, obs_sink=None,
                  frame_times=None):
         self.select, self.keeper, self.capture_fn, self.profile_s = select, keeper, capture_fn, int(profile_s)
         self.geom = geom
         self.requests = {int(r['t0']): r for r in requests or ()}
         self.frame_want = {int(t)+d for t in frame_times or () for d in (-1, 0)}
+        self.obs_sink = obs_sink
+        self.obs_times = {}
+        for r in requests or ():
+            for d in (-1, 0):
+                self.obs_times.setdefault(int(r['t0'])+d, []).append(
+                    (int(r['t0']), 'move', list(r.get('move_ids') or []), list(r.get('members') or [])))
+        for t0 in sorted({int(x) for x in frame_times or ()}):
+            for d in (-1, 0):
+                self.obs_times.setdefault(t0+d, []).append((t0, 'negative', [], []))
         self.frames = {}
         self.recording = {}          # key -> record ; key = t0 (window moment) or ('req', t0)
         self.marks = 0
@@ -740,6 +814,10 @@ class _Capture:
                 for vid in rec['vids']:
                     rec['policy_profile'][vid].append(_reference(vid, members, action, commands))
                     rec['cav_track'][vid].append(_track(by_vid.get(vid)))
+        if self.obs_sink is not None and t in self.obs_times:
+            for t0, kind, move_ids, member_ids in self.obs_times[t]:
+                self.obs_sink(obs_row(self.job, e, t0=t0, time_s=t, kind=kind, move_ids=move_ids,
+                                      member_ids=member_ids))
         if t in self.frame_want:
             self.frames[t] = rows
         if t in self.requests:
@@ -761,6 +839,65 @@ class _Capture:
                 vids = [c['id'] for c in moment.get('zone') or []] or list(moment.get('members') or [])
                 self._start(t, t, vids, rows, by_vid, members, action, commands)
         self.prev = (t, rows)
+
+
+OBS_FORBIDDEN = ('hetdata', 'driver', 'vtype', 'v_type', 'vehicle_param', 'truth')
+
+
+def _obs_ok(key):
+    k = str(key).lower()
+    return not any(f in k for f in OBS_FORBIDDEN)
+
+
+def _jsonable(x, dropped, depth=0):
+    """Tensors/arrays -> lists; dict keys whitelist-checked (OBS_FORBIDDEN dropped and recorded)."""
+    if depth > 12:
+        return repr(x)
+    if hasattr(x, 'detach') and hasattr(x, 'tolist'):
+        return x.detach().cpu().tolist()
+    if hasattr(x, 'tolist') and not isinstance(x, (str, bytes)):
+        return x.tolist()
+    if isinstance(x, dict):
+        out = {}
+        for k, v in dict.items(x):
+            if _obs_ok(k):
+                out[str(k)] = _jsonable(v, dropped, depth+1)
+            else:
+                dropped.add(str(k))
+        return out
+    if isinstance(x, (list, tuple)):
+        return [_jsonable(v, dropped, depth+1) for v in x]
+    if x is None or isinstance(x, (bool, int, float, str)):
+        return x
+    return repr(x)
+
+
+def obs_row(job, event, *, t0, time_s, kind, move_ids, member_ids):
+    """One OBS_TABLES row: the controller's exact observation rows of every CAV (incl. detected HDVs) and
+    the per-CAV sample context the base policy saw (members, MAPPO observation, V2V slots, RSU block -
+    whatever the event exposes), sensor-field whitelist-checked (no hetdata/driver/vType/truth keys)."""
+    dropped = set()
+    rows = [_jsonable(r, dropped) for r in event.get('rows') or []]
+    sample = event.get('sample') or {}
+    context = _jsonable(sample.get('context'), dropped)
+    extra = {k: _jsonable(v, dropped) for k, v in dict.items(sample)
+             if k not in ('context', 'action') and _obs_ok(k) and k in ('v2v', 'rsu', 'obs', 'x', 'slots')}
+    return dict(schema=SCHEMA+'.obs_table', world=job['world'], arm=job['arm'], t0=int(t0), time_s=int(time_s),
+                kind=kind, move_ids=list(move_ids), member_ids=list(member_ids), rows=rows, sample_context=context,
+                sample_extra=extra, lane_drop_features='not_available',
+                lane_drop_features_reason=('lane_drop.lane_drop_features needs per-CAV SensorReport packets '
+                                           '(own + V2V partner reports), not observation rows'),
+                dropped_keys=sorted(dropped), whitelist=list(OBS_FORBIDDEN))
+
+
+def _append_file(root, name, rows):
+    """Locked append to a root-level JSONL (OBS_TABLES.jsonl)."""
+    text = ''.join(json.dumps(r, sort_keys=True, default=str)+'\n' for r in rows)
+    with _locked(root, 'RESULTS.lock'):
+        with (Path(root)/name).open('a', encoding='utf-8') as f:
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
 
 
 def collect_ident(world, arm):
@@ -801,9 +938,10 @@ def collect(root, world, arm, weights, *, select=None, windows=WINDOWS, every=EV
         raise ValueError('runtime job does not carry the registered id/sim_s/noise seed')
     if (root/'STOP').exists():
         raise RuntimeError('STOP present')
-    charge(root, 'collect_'+ident, COLLECT_SIM_S, stage='collect')          # BEFORE physics
+    charge(root, 'collect_'+ident, COLLECT_SIM_S, stage='collect', arm=arm)          # BEFORE physics
     work.mkdir(parents=True, exist_ok=False)
     hook = _Capture(select, keeper, capture_fn or sv.capture, profile_s, geom=geom, requests=requests,
+                    obs_sink=lambda row: _append_file(root, 'OBS_TABLES.jsonl', [row]),
                     frame_times=frame_times)
     episode = getattr(rt, 'episode', None)
     if episode is None:
@@ -988,6 +1126,74 @@ def provisional_builder(ctx, members, variant):
                 perturbation_profile=pert, release_s=rel)
 
 
+def _descriptor():
+    """The process map descriptor (COOPMWM_MAP_SPEC -> N1 wz3to2); refuses any other map."""
+    from . import map_descriptor
+    desc = map_descriptor.current()
+    if getattr(desc, 'kind', None) != 'lane_drop':
+        raise RuntimeError('process map is not the wz3to2 lane drop (set COOPMWM_MAP_SPEC)')
+    return desc
+
+
+def n2_builder(ctx, members, variant):
+    """N2-exact builder for frozen hold moves (variant['lane_drop_macro'] from
+    lane_drop.move_from_mined_row at freeze). See N2_BUILDER_NOTE. Returns a lane_drop.verified_plan
+    (lane_drop_macro set; moves.from_plan returns the LaneDropMove) or None when a member is not
+    upstream of the drop at t0 / lacks a complete policy reference / releases at once."""
+    from . import lane_drop as ld, moves as mv
+    macro = variant.get('lane_drop_macro')
+    if not isinstance(macro, dict):
+        return None
+    move = ld.LaneDropMove.from_dict(macro)
+    desc = variant.get('descriptor') or _descriptor()
+    view = ld.MapView.from_descriptor(desc)
+    move.check_roles(view)
+    zone = {c['id']: c for c in (ctx.get('geometry') or {}).get('zone') or [] if c.get('edge', 'up') == 'up'}
+    if sorted(members) != sorted(move.members) or any(v not in zone for v in move.members):
+        return None
+    hold_end = move.onset+move.hold
+    pol = {v: _policy_rows(ctx, v, hold_end) for v in move.members}
+    if any(r is None for r in pol.values()):
+        return None
+    s = {v: float(zone[v]['s_m']) for v in move.members}
+    speed = {v: float(zone[v]['v']) for v in move.members}
+    prof = {v: list(pol[v]) for v in move.members}
+    rel = {}
+    for k in range(hold_end):
+        known = {v: s[v] for v in move.members}
+        acc = {}
+        for v in move.members:
+            if v in rel:
+                continue
+            a = ld.member_command(move, v, k, view, speed=speed[v], positions=known)
+            if a is None:
+                if k >= move.onset:
+                    rel[v] = k
+                continue
+            prof[v][k] = acc[v] = float(a)
+        for v, a in acc.items():
+            v_new = max(0.0, speed[v]+a)
+            s[v] += 0.5*(speed[v]+v_new)
+            speed[v] = v_new
+        if len(rel) == len(move.members):
+            break
+    for v in move.members:
+        rel.setdefault(v, hold_end)
+    dur = max(rel.values())
+    if dur < 1:
+        return None
+    plan = ld.verified_plan(move, view, duration_s=dur, release_el=rel,
+                            profile={v: prof[v][:dur] for v in move.members},
+                            policy_profile={v: pol[v][:dur] for v in move.members},
+                            plan_id=f'c4v_{variant["name"]}_{"_".join(move.members)}',
+                            source=dict(origin=ORIGIN_N2, builder='clean4_verify.n2_builder', move_id=variant.get('move_id'),
+                                        state_id=ctx.get('state_id'), rule=N2_BUILDER_NOTE))
+    plan['origin'] = ORIGIN_N2
+    if not isinstance(mv.from_plan(plan), ld.LaneDropMove):
+        raise ValueError('N2 plan did not bind to a LaneDropMove (legacy projection refused)')
+    return plan
+
+
 def solos(group):
     from . import replay_bank as rb
     return [rb.solo_candidate(group, m) for m in group['members']]
@@ -1015,7 +1221,8 @@ def plans(ctx, variants=None, *, builder=provisional_builder):
             continue
         if plan['id'] in meta:
             raise ValueError('duplicate plan id '+plan['id'])
-        if plan.get('family') not in FAMILIES or list(plan['members']) != list(var['members']):
+        if (plan.get('family') not in FAMILIES+('group_hold',)
+                or sorted(plan['members']) != sorted(var['members'])):
             raise ValueError('builder changed the family/members of a registered variant')
         groups.append(plan)
         out_solos[plan['id']] = solos(plan)
@@ -1058,34 +1265,40 @@ def _cell_eligible(demand, share, cells):
     return ok and (cells is None or cell_key(demand, share) in cells)
 
 
-def _row_status(row, family, variant, params, members, eligible):
-    """MAIN freeze rules -> (status, reason)."""
+def _row_status(row, family, variant, params, members, eligible, desc):
+    """MAIN freeze rules -> (status, reason, lane_drop_macro). Exactness = N2's converter
+    (lane_drop.move_from_mined_row): NotRepresentable -> 'excluded: no exact executor'."""
+    from . import lane_drop as ld
     if not eligible:
-        return 'excluded_cell', 'cell outside the training-cell rule (demand 2400/2800/3200 x share 0.4/0.6)'
+        return 'excluded_cell', 'cell outside the training-cell rule (demand 2400/2800/3200 x share 0.4/0.6)', None
     kind = row.get('r_kind') if family == R_FAMILY else family
     if family in OFF_FAMILIES or kind in OFF_FAMILIES:
-        return 'excluded_family', f'{kind} is an OFF family'
-    if family in N9_FAMILIES or kind in N9_FAMILIES:
-        return 'pending_n9', f'{kind} runs only with an N9 builder merged before the last executable move finishes'
-    if family == R_FAMILY and kind not in (None, 'hold'):
-        return NOT_EXECUTABLE, f'R kind {kind!r} has no builder in this runtime'
+        return 'excluded_family', f'{kind} is an OFF family', None
     if family in ('closing_pair', 'abreast_wall') and variant not in SPEED_HOLD_VARIANTS:
-        return NOT_EXECUTABLE, f'variant {variant!r} is not a registered speed-hold variant'
-    ok, why = _executable(family, params)
-    if ok and len(members) < 2:
-        ok, why = False, 'fewer than 2 members'
-    return ('pending' if ok else NOT_EXECUTABLE), why
+        return NOT_EXECUTABLE, f'variant {variant!r} is not a registered N3/PLANGEN hold variant', None
+    try:
+        move = ld.move_from_mined_row(dict(row, move=_move_of(row)), desc)
+    except ld.NotRepresentable as e:
+        return NO_EXACT_EXECUTOR, f'lane_drop.NotRepresentable: {e}', None
+    except (ValueError, KeyError, TypeError) as e:
+        return NOT_EXECUTABLE, f'N2 converter refused the row: {e!r}', None
+    if family in N9_FAMILIES or kind in N9_FAMILIES:
+        return NO_EXACT_EXECUTOR, f'{kind} is a lane-change family', None
+    return 'pending', '', move.to_dict()
 
 
-def freeze(root, sources, cells=None):
+def freeze(root, sources, cells=None, *, descriptor=None, effort_matched=EFFORT_MATCHED, budget_model='worst',
+           r_zero_guidance=True):
     """Sealed MOVE_LIST.json BEFORE any physics (MAIN freeze rules, MAIN_RULES verbatim): B moves of
     ``sources`` (given order, file order), then R moves the same way; a move = distinct (source, world
     seed, cell, t0, family, variant) with its per-seed rows collapsed. Every row is listed with a status:
-    pending (executable), excluded_cell, excluded_family, pending_n9 or not_executable_in_runtime.
-    ``cells`` (optional) further restricts the training-cell rule."""
+    pending (N2-exact executable: lane_drop_macro stored), excluded_cell, excluded_family,
+    'excluded: no exact executor' or not_executable_in_runtime. ``cells`` (optional) further restricts the
+    training-cell rule; ``descriptor`` defaults to the process map (COOPMWM_MAP_SPEC)."""
     from .exact_grade import _seal
     root = _checked(root)
     registration(root)
+    desc = descriptor or _descriptor()
     if move_list_path(root).exists():
         raise ValueError('MOVE_LIST.json already frozen; never rewritten')
     if ledger_rows(root):
@@ -1118,7 +1331,7 @@ def freeze(root, sources, cells=None):
                 members = list(row.get('members') or [x['id'] for x in mv.get('members', [])])
                 params = [x.get('params') for x in mv.get('members', [])] if mv.get('members') else []
                 eligible = _cell_eligible(w['demand'], w['penetration'], cells)
-                status, why = _row_status(row, family, variant, params, members, eligible)
+                status, why, macro = _row_status(row, family, variant, params, members, eligible, desc)
                 if eligible:
                     world = make_world(int(w['seed']), int(w['demand']), float(w['penetration']))
                     check_world(world)
@@ -1126,20 +1339,26 @@ def freeze(root, sources, cells=None):
                         raise ValueError(f'move world cell {ck} differs from its registry cell {world["cell_key"]}')
                 else:
                     world = dict(w)
-                idx = len(moves)
-                seen[key] = idx
-                moves.append(dict(index=idx, move_id=f'{arm}{idx:03d}_{row["situation_id"]}_{variant}', arm=arm,
+                if effort_matched is not None and s['name'] not in effort_matched:
+                    status, why, macro = EXCLUDED_F3, 'source not effort-matched', None
+                if arm == 'R' and r_zero_guidance:
+                    status, why, macro = EXCLUDED_R_A, OPTION_A_FACT, None
+                seen[key] = len(moves)
+                moves.append(dict(arm=arm,
                                   source=s['path'], source_name=s['name'], source_sha256=s['sha256'],
                                   situation_id=row['situation_id'], world=world, cell_key=ck, t0=int(row['t0']),
                                   window=window_index(int(row['t0'])), family=family, variant=variant,
                                   r_kind=row.get('r_kind'), members=members, member_lanes=row.get('member_lanes'),
                                   params=params, seeds=[int(row.get('seed', 0))], n_rows=1,
-                                  source_plan_sha256=[row.get('plan_sha256')],
+                                  source_plan_sha256=[row.get('plan_sha256')], lane_drop_macro=macro,
                                   status=status, executable=status == 'pending', reason=why))
+    moves, fair = _fair_order(moves, cap=int(registration(root)['cap_sim_s']), budget_model=budget_model)
     counts = {}
     for m in moves:
         counts[m['status']] = counts.get(m['status'], 0)+1
     body = dict(schema=MOVE_LIST_SCHEMA, phase=PHASE, order_rule=ORDER_RULE, main_rules=list(MAIN_RULES),
+                fairaudit=fair, run_list=fair['run_list'], effort_matched_sources=list(effort_matched or ()),
+                option_a=dict(fact=OPTION_A_FACT, scope=OPTION_A_SCOPE, r_zero_guidance=bool(r_zero_guidance)),
                 training_cell_rule=dict(demands=list(TRAIN_CELL_DEMANDS), shares=list(TRAIN_CELL_SHARES),
                                         cells=cells),
                 off_families=list(OFF_FAMILIES), n9_families=list(N9_FAMILIES),
@@ -1147,12 +1366,81 @@ def freeze(root, sources, cells=None):
                               b_rows=sum(r.get('arm') == 'B' for r in s['rows']),
                               r_rows=sum(r.get('arm') == 'R' for r in s['rows'])) for s in srcs],
                 moves=moves, n_moves=len(moves), n_executable=sum(m['executable'] for m in moves),
-                status_counts=counts, builder=dict(name=PROVISIONAL, origin=ORIGIN_PROVISIONAL,
-                note='N2 lane_drop.LaneDropMove refuses every frozen speed-hold variant (hold 20-90 s, depth <= 1.0, '
-                     'release 30 m before the drop); the N3 law is applied by the provisional speed-target builder'),
-                frozen_unix=time.time())
+                status_counts=counts, r_procedure_fact=R_PROCEDURE_FACT,
+                builder=dict(name='clean4_verify.n2_builder', origin=ORIGIN_N2, note=N2_BUILDER_NOTE,
+                             converter='lane_drop.move_from_mined_row (c4/nm-moves c7983467)'),
+                descriptor=dict(name=desc.name, digest=desc.digest), frozen_unix=time.time())
     _write_new(move_list_path(root), _seal(body, 'move_list_sha256'))
     return move_list(root)
+
+
+def interleave(b, r):
+    """FAIRAUDIT F4: B1, R1, B2, R2, ...; the longer arm's tail continues at the end."""
+    out = []
+    for i in range(max(len(b), len(r))):
+        out += ([b[i]] if i < len(b) else [])+([r[i]] if i < len(r) else [])
+    return out
+
+
+def fair_cut(costs_b, costs_r, available):
+    """FAIRAUDIT F4 (deterministic): per-arm budgets pro rata to the number of executable moves
+    (budget_arm = available * n_arm / (n_B + n_R)); the LARGEST common fraction f such that the first
+    floor(f * n_arm) moves of EACH arm fit that arm's budget; both arms are cut from the tail by the same
+    fraction (never only one arm)."""
+    nb, nr = len(costs_b), len(costs_r)
+    n = nb+nr
+    bud_b = available*nb/n if n else 0.
+    bud_r = available*nr/n if n else 0.
+    cands = sorted({1.0, 0.0} | {i/nb for i in range(nb+1) if nb} | {j/nr for j in range(nr+1) if nr},
+                   reverse=True)
+    for f in cands:
+        kb, kr = math.floor(f*nb+1e-9), math.floor(f*nr+1e-9)
+        cb, cr = sum(costs_b[:kb]), sum(costs_r[:kr])
+        if cb <= bud_b and cr <= bud_r:
+            return dict(fraction=f, k_B=kb, k_R=kr, n_B=nb, n_R=nr, budget_B=int(bud_b), budget_R=int(bud_r),
+                        cost_B=int(cb), cost_R=int(cr), full_cost_B=int(sum(costs_b)), full_cost_R=int(sum(costs_r)),
+                        cut=kb < nb or kr < nr)
+    raise AssertionError('f = 0 always fits')
+
+
+def move_quote(m, model='worst', seeds=DEFAULT_SEEDS):
+    """Zero-physics upper bound of one frozen hold move (duration = its registered hold)."""
+    macro = m['lane_drop_macro']
+    dur = int(macro['onset'])+int(macro['hold'])
+    plan = dict(id='q', members=list(macro['members']), duration_s=dur)
+    solo = [dict(id=f'q__solo_{v}', members=[v], duration_s=dur) for v in macro['members']]
+    cost = screen_quote(m['t0'], [plan]+solo)
+    return cost+(confirm_quote(m['t0'], [plan], seeds-2) if model == 'worst' else 0)
+
+
+def _fair_order(moves, *, cap, budget_model='worst'):
+    """Interleaved frozen order + the FAIRAUDIT F4 run list and per-arm budgets."""
+    if budget_model not in ('worst', 'screen'):
+        raise ValueError('budget_model must be worst or screen')
+    ex = {a: [m for m in moves if m['arm'] == a and m['status'] == 'pending'] for a in ('B', 'R')}
+    worlds = {(m['arm'], collect_ident(m['world'], m['arm'])) for a in ex for m in ex[a]}
+    collections = COLLECT_SIM_S*len(worlds)
+    costs = {a: [move_quote(m, budget_model) for m in ex[a]] for a in ex}
+    cut = fair_cut(costs['B'], costs['R'], cap-collections)
+    keep = {'B': cut['k_B'], 'R': cut['k_R']}
+    for a in ex:
+        for i, (m, c) in enumerate(zip(ex[a], costs[a])):
+            m['quote_sim_s'] = int(c)
+            if i >= keep[a]:
+                m['status'], m['reason'] = EXCLUDED_F4, f'budget cut by the common fraction {cut["fraction"]:.4f}'
+    run = {a: [m for m in ex[a] if m['status'] == 'pending'] for a in ex}
+    cut_moves = {a: [m for m in ex[a] if m['status'] != 'pending'] for a in ex}
+    rest = {a: [m for m in moves if m['arm'] == a and m not in ex[a]] for a in ('B', 'R')}
+    ordered = interleave(run['B'], run['R'])+interleave(cut_moves['B'], cut_moves['R'])+rest['B']+rest['R']
+    for i, m in enumerate(ordered):
+        m.update(index=i, move_id=f'{m["arm"]}{i:03d}_{m["situation_id"]}_{m["variant"]}',
+                 executable=m['status'] == 'pending', in_run_list=m['status'] == 'pending')
+    ordered = [{k: m[k] for k in ['index', 'move_id']+[k for k in m if k not in ('index', 'move_id')]}
+               for m in ordered]
+    fair = dict(rules=list(FAIRAUDIT_RULES), budget_model=budget_model, cap_sim_s=cap,
+                collections=dict(worlds=len(worlds), sim_s=collections), available_sim_s=cap-collections,
+                **cut, run_list=[m['move_id'] for m in ordered if m['in_run_list']])
+    return ordered, fair
 
 
 def move_list(root):
@@ -1284,12 +1572,12 @@ def _screen_rows(rec, groups, owner, bdir, base):
 
 
 @contextmanager
-def _confirm_charge_bound(root, tag):
+def _confirm_charge_bound(root, tag, arm=None):
     """Scoped probe_native binding: verify_perseed's confirmation verifications charge this ledger
     (kind-prefixed ids); the original replay_bank._confirm_charge is always restored."""
     from . import replay_bank as rb
     original = rb._confirm_charge
-    rb._confirm_charge = lambda run_root, phase, kind: _charger(root, f'{tag}_{kind}', kind)
+    rb._confirm_charge = lambda run_root, phase, kind: _charger(root, f'{tag}_{kind}', kind, arm)
     try:
         yield
     finally:
@@ -1322,7 +1610,7 @@ def _native(root, ctx, snap, passing, extra, workers, runner_factory, tail_s, he
                 mining=dict(phase=PHASE, selection=SELECTION_RULE, moment=(ctx.get('moment') or {}).get('kind'),
                             lead=ctx.get('lead'), base=ctx.get('base'), map=MAP, move_ids=ctx.get('move_ids'))))
     ntag = f'nat_{tag}'
-    r = sv.verify(snap, passing, runner_factory(bank/'sumo_verification', workers), _charger(root, f'{ntag}_first', 'first'),
+    r = sv.verify(snap, passing, runner_factory(bank/'sumo_verification', workers), _charger(root, f'{ntag}_first', 'first', arm),
                   'wm', workers=workers, root=bank/'sumo_verification', tail_s=tail_s)
     decision = dict(state_id=sid, verification_id=r['verification_id'], status=r['status'], policy_update=0,
                     arm=arm, available_k=len(passing), issued_unix=time.time(), matched_B=None, phase=PHASE)
@@ -1335,7 +1623,7 @@ def _native(root, ctx, snap, passing, extra, workers, runner_factory, tail_s, he
         out.update(status='first_'+r['status'], reason=r.get('reason'))
         return out
     receipt = dict(r, _branches=str(bank/'sumo_verification'/'branches'), _policy_version='u0')
-    with _confirm_charge_bound(root, ntag):
+    with _confirm_charge_bound(root, ntag, arm):
         conf = vp.confirm_all8(BANK, arm, receipt, snap, lambda work: runner_factory(work, workers), str(BANK), PHASE,
                                workers=workers, version='u0', candidates=passing, slim_rejected_tapes=False,
                                extra_seeds=int(extra), health=health)
@@ -1382,7 +1670,7 @@ def _engine(root, ctx_dir, ctx, snap, groups, *, tag, seeds, workers, runner_fac
                 cands.append(s)
             owner.setdefault(g['id'], []).append(s['id'])
     quote = screen_quote(t0, cands, tail_s, int(snap.get('end_s', EPISODE_S)))
-    left = remaining(root)
+    left = left_for(root, arm)
     if quote > left or _stop(root):
         # refused before any dispatch: no charge, no claim (a later run is not a replay)
         why = 'STOP' if _stop(root) else f'screen quote {quote} > remaining {left}'
@@ -1393,7 +1681,7 @@ def _engine(root, ctx_dir, ctx, snap, groups, *, tag, seeds, workers, runner_fac
         return dict(state_id=sid, status='skipped_claimed')
     work = root/'screen'/tag
     with bank_v2v.enabled(bool(ctx.get('v2v', True))):     # branch subprocesses inherit C4NM_V2V
-        rec = sv.verify(snap, cands, runner_factory(work, workers), _charger(root, f'scr_{tag}', 'screen'), 'wm',
+        rec = sv.verify(snap, cands, runner_factory(work, workers), _charger(root, f'scr_{tag}', 'screen', arm), 'wm',
                         workers=workers, root=work, tail_s=tail_s)
     head = dict(base, verification_id=rec['verification_id'], status=rec['status'], window_s=rec.get('window'),
                 charged_sim_s=rec.get('charged_sim_s'), screen_quote_sim_s=quote, work=str(work))
@@ -1422,7 +1710,7 @@ def _engine(root, ctx_dir, ctx, snap, groups, *, tag, seeds, workers, runner_fac
         _append(root, 'native.jsonl', [dict(base, status='refused_salt', reason=str(e))])
         return dict(out, native='refused_salt')
     cq = confirm_quote(t0, passing, ext, tail_s, int(snap.get('end_s', EPISODE_S)))
-    left = remaining(root)
+    left = left_for(root, arm)
     if cq > left or _stop(root):
         why = 'STOP' if _stop(root) else f'confirmation quote {cq} > remaining {left}'
         _append(root, 'native.jsonl', [dict(base, status='refused_budget', reason=why, confirm_quote_sim_s=cq,
@@ -1541,8 +1829,9 @@ def move_variant(m):
     params.setdefault('release_x', X_B)
     if 'anchor_release_x' in params and not params.get('anchor'):
         params['anchor'] = m['members'][0]
-    return dict(name=m['variant'], family=m['family'], members=list(m['members']), params=params,
-                move_id=m['move_id'])
+    macro = m.get('lane_drop_macro')
+    return dict(name=m['variant'], family=m['family'], params=params, move_id=m['move_id'], lane_drop_macro=macro,
+                members=list(macro['members']) if macro else list(m['members']))
 
 
 def _start_move(root, m):
@@ -1585,7 +1874,7 @@ def resolve_n9(root):
     return out
 
 
-def run_move(root, move_id, *, builder=provisional_builder, seeds=DEFAULT_SEEDS, workers=4, runner_factory=None,
+def run_move(root, move_id, *, builder=None, seeds=DEFAULT_SEEDS, workers=4, runner_factory=None,
              tail_s=TAIL_S, health=None):
     """verify --move: ONE specific frozen move (refuses unknown, excluded/not-runnable and already started
     moves). Refusals before the claim (not collected yet, budget, STOP) leave the move unstarted; everything
@@ -1625,7 +1914,7 @@ def run_move(root, move_id, *, builder=provisional_builder, seeds=DEFAULT_SEEDS,
             return dict(status='skipped_claimed', move_id=move_id)
         return _move_outcome(root, m, 'member_absent_or_past_drop', missing=missing,
                              reason='frozen member not upstream of the drop at t0 on this base')
-    use = builder if m['status'] == 'pending' else FAMILY_BUILDERS[_kind(m)]
+    use = (builder or n2_builder) if m['status'] == 'pending' else FAMILY_BUILDERS[_kind(m)]
     built = plans(ctx, [move_variant(m)], builder=use)
     extra = dict(move_id=m['move_id'], move_index=m['index'])
     if not built['groups']:
@@ -1679,7 +1968,7 @@ def moves_summary(root):
 
 # ============================================================================ 7. extract
 
-def mined_ok(example, plan, families=FAMILIES):
+def mined_ok(example, plan, families=MINED_FAMILIES):
     """probe_native.extract / wallmine rule for one per-seed all8 example."""
     syn = example.get('synergy') or {}
     win = (example.get('tape') or {}).get('branch', {}).get('window') or {}
@@ -1765,7 +2054,7 @@ def _neg_frame_row(*, kind, frames, arm, world, t0, members, family, **kw):
                 family=family, arm=arm, source=PHASE, **kw)
 
 
-def extract(root, *, range_m=200.0, cell=None, families=FAMILIES):
+def extract(root, *, range_m=200.0, cell=None, families=MINED_FAMILIES):
     """Bank records -> CLEAN4_MOVES_B/R.jsonl, CLEAN4_NEGATIVES.jsonl, CLEAN4_NEGATIVE_FRAMES.jsonl,
     POTENTIAL_INPUTS.json."""
     from . import replay_bank as rb, verify_perseed as vp
@@ -1813,6 +2102,7 @@ def extract(root, *, range_m=200.0, cell=None, families=FAMILIES):
                     dist = m.get('max_member_dist_t0_m')
                     mined.append(dict(common, schema=MINED_SCHEMA, replay_sources={}, seed=int(e['seed_index']),
                         duration_s=int(plan['duration_s']), profile=plan['profile'],
+                        lane_drop_macro=plan.get('lane_drop_macro'), member_release_el=plan.get('member_release_el'),
                         policy_profile=plan['policy_profile'], perturbation_profile=plan['perturbation_profile'],
                         synergy_veh_s={s_: syn.get('pooled_total_veh_s')},
                         synergy_lower95={s_: syn.get('lower95_one_sided_veh_s')},
@@ -1907,9 +2197,21 @@ def status(root):
         nxt = next_move(root)[1]
         out.update(moves_summary=moves_summary(root), next_move=None if nxt is None else nxt['move_id'],
                    runnable_unstarted=[m['move_id'] for m in ml['moves']
-                                       if _runnable(m) and not move_status_path(root, m).exists()])
+                                       if _runnable(m) and not move_status_path(root, m).exists()],
+                   arms={a: arm_progress(root, a, ml) for a in ('B', 'R')})
     out['stop'] = _stop(root)
     return out
+
+
+def arm_progress(root, arm, ml=None):
+    """Run-list progress of one arm: done iff every run-list move of the arm has a final outcome."""
+    ml = ml or move_list(root)
+    run = [m for m in ml['moves'] if m['arm'] == arm and m.get('in_run_list', m['status'] == 'pending')]
+    st = [(move_status(root, m) or {}).get('status') for m in run]
+    return dict(run_list=len(run), finished=sum(s not in (None, 'started') for s in st),
+                started=sum(s == 'started' for s in st), unstarted=sum(s is None for s in st),
+                done=all(s not in (None, 'started') for s in st), budget=arm_budget(root, arm),
+                spent=arm_spent(root, arm))
 
 
 # ============================================================================ 8. CLI
@@ -1970,7 +2272,7 @@ def main(argv=None):
     p.add_argument('--seeds', type=int, default=DEFAULT_SEEDS)
     p.add_argument('--workers', type=int, default=4)
     p.add_argument('--tail', type=int, default=TAIL_S)
-    p.add_argument('--builder', default='tools.coopmwm.clean4_verify:provisional_builder')
+    p.add_argument('--builder', help='MODULE:FUNCTION (default: n2_builder for --move/--next, provisional for --ctx)')
     p.add_argument('--variants', help='comma list restricting the window-moment slate')
     p = sub.add_parser('quote', help='screen/confirmation sim-s quotes (no physics, no charge)')
     p.add_argument('--root', required=True)
@@ -1984,6 +2286,8 @@ def main(argv=None):
     p.add_argument('--cell')
     p = sub.add_parser('status')
     p.add_argument('--root', required=True)
+    p.add_argument('--arm', choices=('B', 'R'))
+    p.add_argument('--done', action='store_true', help='with --arm: exit 3 unless every run-list move finished')
     a = ap.parse_args(argv)
     root = Path(a.root)
     if a.cmd == 'init':
@@ -2034,7 +2338,7 @@ def main(argv=None):
                 break
     elif a.cmd == 'verify':
         _nice()
-        builder = _load_attr(a.builder)
+        builder = _load_attr(a.builder) if a.builder else None
         if a.move:
             print(json.dumps(run_move(root, a.move, builder=builder, seeds=a.seeds, workers=a.workers, tail_s=a.tail),
                              default=str), flush=True)
@@ -2059,7 +2363,7 @@ def main(argv=None):
             d = todo[0]
             done.add(d)
             try:
-                res = run_context(root, d, builder=builder, seeds=a.seeds, workers=a.workers, tail_s=a.tail,
+                res = run_context(root, d, builder=builder or provisional_builder, seeds=a.seeds, workers=a.workers, tail_s=a.tail,
                                   names=a.variants.split(',') if a.variants else None)
                 print(json.dumps(res), flush=True)
             except Exception as e:
@@ -2076,7 +2380,7 @@ def main(argv=None):
                 print(json.dumps(dict(move_id=m['move_id'], status='not_collected')))
             else:
                 ctx, _ = load_context(move_ctx_dir(root, m))
-                groups = plans(ctx, [move_variant(m)])['groups']
+                groups = plans(ctx, [move_variant(m)], builder=n2_builder)['groups']
                 print(json.dumps(dict(move_id=m['move_id'], **quote_moment(ctx, groups, seeds=a.seeds),
                                       remaining_sim_s=remaining(root))))
         names = set(a.variants.split(',')) if a.variants else None
@@ -2088,6 +2392,12 @@ def main(argv=None):
     elif a.cmd == 'extract':
         print(json.dumps(extract(root, range_m=a.range_m, cell=a.cell)))
     elif a.cmd == 'status':
+        if a.arm:
+            prog = arm_progress(root, a.arm)
+            print(json.dumps(dict(arm=a.arm, **prog)))
+            if a.done and not prog['done']:
+                raise SystemExit(3)
+            return
         print(json.dumps(status(root)))
 
 

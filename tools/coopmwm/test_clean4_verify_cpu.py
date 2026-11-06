@@ -221,6 +221,7 @@ def ctx_for(t0=450, arm='B', zone=None, profile_s=cv.PROFILE_S):
     ident = f'c4v_{arm}_D2800_p40_s989200'
     zone = zone or [dict(id='cA', lane=0, x=1500.0, v=25.0), dict(id='cB', lane=1, x=1520.0, v=25.0),
                     dict(id='cC', lane=2, x=1560.0, v=25.0), dict(id='cD', lane=1, x=1700.0, v=25.0)]
+    zone = [dict(c, s_m=c['x']-OFFSET, edge='up') for c in zone]
     ids = [c['id'] for c in zone]
     pair = [c['id'] for c in zone if c['lane'] == 0][:1]+[c['id'] for c in zone if c['lane'] == 1][:1]
     wall = [next(c['id'] for c in zone if c['lane'] == ln) for ln in (0, 1, 2)
@@ -614,13 +615,17 @@ PG = dict(release_x=2696.0, amax=1.0, v_w=22.0, hold_s=120, dmax=1.0)
 LB = dict(target_lane=2, giveup_x=2396.0, release_x=2696.0, hold_s=300)
 
 
-def src_row(arm, sid, cell, demand, pen, t0, family, variant, members, params, rep=1, r_kind=None, as_str=False):
+def src_row(arm, sid, cell, demand, pen, t0, family, variant, members, params, rep=1, r_kind=None, as_str=False,
+            role=None, dur=10):
     mv = dict(map='wz3to2', variant=variant, family=family,
-              members=[dict(id=m, lane=i, params=params) for i, m in enumerate(members)])
+              members=[dict(id=m, lane=i, params=params, **({'role': role} if role else {}))
+                       for i, m in enumerate(members)])
     r = dict(schema='coopmwm-mined-move-v1', arm=arm, situation_id=sid, seed=rep, t0=t0, family=family,
-             variant=variant, members=members, plan_sha256=f'{sid}_{variant}_{rep}',
+             variant=variant, members=members, plan_sha256=f'{sid}_{variant}_{rep}', verification_id=f'nm2v_{sid}',
              world=dict(map='wz3to2', cell=cell, demand=demand, penetration=pen, seed=989200, repeat=0, split='TRAIN'),
-             move=json.dumps(mv) if as_str else mv)
+             move=json.dumps(mv) if as_str else mv, duration_s=dur, release_el={m: dur for m in members},
+             profile=[[0.0]*dur for _ in members], policy_profile=[[0.0]*dur for _ in members],
+             perturbation_profile=[[0.0]*dur for _ in members])
     if r_kind:
         r['r_kind'] = r_kind
     return r
@@ -636,15 +641,15 @@ def write_sources(d):
     b1 += [src_row('B', sid, 'D2800_p40', 2800, 0.4, 470, 'abreast_wall', 'wall_g', ['a1', 'b1', 'c1'], PG, k)
            for k in (1, 2)]
     b2 = [src_row('B', 'ck_a', 'D2800_p40', 2800, 0.4, 800, 'lane_balance', 'B_lane_balance', ['a1', 'b1', 'c1'],
-                  LB, as_str=True),
+                  LB, as_str=True, role='lane_to'),
           src_row('B', 'ck_b', 'D2800_p40', 2800, 0.4, 800, 'discharge', 'B_discharge', ['a1', 'b1'],
                   dict(tau=0.6, hold_s=180), as_str=True)]
     r1 = [src_row('R', 'pg2_r', 'D2800_p40', 2800, 0.4, 470, 'R_random', 'R0', ['b1', 'c1'], dict(PG, hold_s=90),
                   r_kind='hold'),
           src_row('R', 'pg2_r', 'D2800_p40', 2800, 0.4, 800, 'R_random', 'R4', ['a1', 'b1', 'c1'], LB,
-                  r_kind='lane_balance')]
+                  r_kind='lane_balance', role='lane_to')]
     out = []
-    for name, rows in (('NEWMAP_MOVES_B.jsonl', b1), ('COOPKINDS_MOVES_B.jsonl', b2),
+    for name, rows in (('PLANGEN_MOVES_B.jsonl', b1), ('COOPKINDS_MOVES_B.jsonl', b2),
                        ('PLANGEN2_MOVES_R.jsonl', r1), ('COOPKINDS_MOVES_R.jsonl', [])):
         (d/name).write_text(''.join(json.dumps(r)+'\n' for r in rows))
         out.append(d/name)
@@ -652,25 +657,54 @@ def write_sources(d):
 
 
 def test_freeze_main_rules(tmp_path):
+    from tools.coopmwm import map_descriptor as md
     cv.init(tmp_path)
     paths = write_sources(tmp_path/'src')
-    ml = cv.freeze(tmp_path, paths)
+    ml = cv.freeze(tmp_path, paths, descriptor=md.load(SPEC))
+    # option (a): B wall/pair moves only; every R row listed as zero-guidance; run moves first, then exclusions
     assert [(m['variant'], m['status']) for m in ml['moves']] == [
-        ('pair_g', 'pending'), ('wall_h', 'excluded_cell'), ('wall_g', 'pending'), ('B_lane_balance', 'pending_n9'),
-        ('B_discharge', 'excluded_family'), ('R0', 'pending'), ('R4', 'pending_n9')]
-    assert ml['moves'][0]['seeds'] == [1, 2, 3] and ml['moves'][0]['n_rows'] == 3 and ml['moves'][2]['seeds'] == [1, 2]
-    assert ml['moves'][0]['world'] == WORLD and ml['main_rules'] == list(cv.MAIN_RULES) and ml['n_executable'] == 3
+        ('pair_g', 'pending'), ('wall_g', 'pending'), ('wall_h', 'excluded_cell'),
+        ('B_lane_balance', cv.EXCLUDED_F3), ('B_discharge', cv.EXCLUDED_F3), ('R0', cv.EXCLUDED_R_A),
+        ('R4', cv.EXCLUDED_R_A)]
+    assert ml['run_list'] == [m['move_id'] for m in ml['moves'][:2]] and ml['fairaudit']['cut'] is False
+    assert [m['index'] for m in ml['moves']] == list(range(7)) and ml['moves'][5]['move_id'].startswith('R005_')
+    assert ml['option_a']['fact'] == cv.OPTION_A_FACT and ml['moves'][5]['reason'] == cv.OPTION_A_FACT
+    assert ml['r_procedure_fact'] == cv.R_PROCEDURE_FACT and ml['fairaudit']['rules'] == list(cv.FAIRAUDIT_RULES)
+    assert ml['moves'][0]['seeds'] == [1, 2, 3] and ml['moves'][0]['n_rows'] == 3 and ml['moves'][1]['seeds'] == [1, 2]
+    assert ml['moves'][0]['world'] == WORLD and ml['main_rules'] == list(cv.MAIN_RULES) and ml['n_executable'] == 2
+    assert ml['moves'][0]['lane_drop_macro']['family'] == 'closing_pair'
+    assert ml['moves'][1]['lane_drop_macro']['lanes'] == [0, 1, 2]
     assert [s['name'] for s in ml['sources']] == [p.name for p in paths]
     assert all(len(s['sha256']) == 64 for s in ml['sources'])
+    fa = ml['fairaudit']
+    assert fa['collections']['worlds'] == 1 and fa['budget_B'] == 400000-1200 and fa['budget_R'] == 0
     with pytest.raises(ValueError):
-        cv.freeze(tmp_path, paths)                        # frozen once
+        cv.freeze(tmp_path, paths, descriptor=md.load(SPEC))   # frozen once
     other = tmp_path/'other'
     cv.init(other)
     cv.charge(other, 'x', 1)
     with pytest.raises(ValueError):
-        cv.freeze(other, paths)                           # only before any physics
+        cv.freeze(other, paths, descriptor=md.load(SPEC))      # only before any physics
     with pytest.raises(ValueError):
         cv.run_context(tmp_path, tmp_path/'none', runner_factory=factory({}))   # frozen: only moves run
+    small = tmp_path/'small'                              # cap too small: BOTH arms cut (here to zero)
+    cv.init(small, cap=12000)
+    ml = cv.freeze(small, paths, descriptor=md.load(SPEC))
+    assert ml['run_list'] == [] and ml['fairaudit']['cut'] is True
+    cut = [m for m in ml['moves'] if m['status'] == cv.EXCLUDED_F4]
+    assert sorted(m['variant'] for m in cut) == ['pair_g', 'wall_g']
+    with pytest.raises(ValueError):
+        cv.run_move(small, cut[0]['move_id'], runner_factory=factory({}))
+
+
+def test_fair_cut_and_interleave():
+    c = cv.fair_cut([10]*4, [10]*4, 1000)
+    assert (c['k_B'], c['k_R'], c['cut']) == (4, 4, False)
+    c = cv.fair_cut([10]*4, [100]*4, 400)                 # R limits f -> B is cut by the same fraction
+    assert (c['fraction'], c['k_B'], c['k_R'], c['cut']) == (0.5, 2, 2, True)
+    c = cv.fair_cut([10]*10, [10]*5, 105)                 # budgets 70 / 35
+    assert (c['fraction'], c['k_B'], c['k_R'], c['budget_B'], c['budget_R']) == (0.7, 7, 3, 70, 35)
+    assert cv.interleave([1, 2, 3], ['a']) == [1, 'a', 2, 3] and cv.interleave([], ['a', 'b']) == ['a', 'b']
 
 
 def snap_capture(controller, prefixes, job, t, sample, generator):
@@ -682,45 +716,98 @@ def snap_capture(controller, prefixes, job, t, sample, generator):
                 rng=dict(generator_state_sha256='g'), committed_plans=[])
 
 
-def test_frozen_moves_collect_run_extract(tmp_path):
+def test_frozen_moves_collect_run_extract(tmp_path, monkeypatch):
+    from tools.coopmwm import lane_drop as ld, map_descriptor as md, moves as mvs
+    desc = md.load(SPEC)
+    monkeypatch.setattr(cv, '_descriptor', lambda: desc)
     cv.init(tmp_path)
     ml = cv.freeze(tmp_path, write_sources(tmp_path/'src'))
-    ids = [m['move_id'] for m in ml['moves']]
-    r = cv.run_move(tmp_path, ids[0], runner_factory=factory({}), workers=1)
+    v = {m['variant']: m['move_id'] for m in ml['moves']}
+    pg, wg = v['pair_g'], v['wall_g']
+    r = cv.run_move(tmp_path, pg, runner_factory=factory({}), workers=1)
     assert r['status'] == 'refused' and not (tmp_path/'move_status').exists()    # not collected: not started
-    for bad in (ids[1], ids[3], ids[4], 'unknown'):
+    for bad in (v['wall_h'], v['B_lane_balance'], v['B_discharge'], v['R0'], v['R4'], 'unknown'):
         with pytest.raises(ValueError):
             cv.run_move(tmp_path, bad, runner_factory=factory({}))
+    with pytest.raises(SystemExit):
+        cv.main(['status', '--root', str(tmp_path), '--arm', 'B', '--done'])      # B run list not finished
     reqs = {arm: cv.move_requests(tmp_path, arm) for arm in ('B', 'R')}
+    assert reqs['R'] == []                                # option (a): R moves are not run
     assert [(j['ident'], [(q['t0'], q['members']) for q in j['requests']]) for j in reqs['B']] == [
         ('c4v_B_D2800_p40_s989200', [(470, ['a1', 'b1', 'c1'])])]
     for arm, jobs in reqs.items():
         for j in jobs:
             cv.collect(tmp_path, j['world'], arm, {'w': 1}, geom=GEOM, rt=FakeRT(tmp_path), windows=(),
                        requests=j['requests'], frame_times=[600], capture_fn=snap_capture)
+    obs = cv._jsonl(tmp_path/'OBS_TABLES.jsonl')
+    assert sorted((o['arm'], o['kind'], o['time_s']) for o in obs) == [
+        ('B', 'move', 469), ('B', 'move', 470), ('B', 'negative', 599), ('B', 'negative', 600)]
+    for o in obs:
+        assert o['rows'] and all('driver_type' not in row for row in o['rows']) and 'driver_type' in o['dropped_keys']
+        assert any(row['is_cav'] is False for row in o['rows'])          # detected HDV rows kept
+        assert o['lane_drop_features'] == 'not_available' and o['sample_context']['members'] == ['a1']
+    assert [o['move_ids'] for o in obs if o['arm'] == 'B' and o['kind'] == 'move'][0] == [pg, wg]
     ctx = json.loads((cv.move_ctx_dir(tmp_path, ml['moves'][0])/'CONTEXT.json').read_text())
-    assert ctx['kind'] == 'requested' and ctx['move_ids'] == [ids[0], ids[2]]
+    assert ctx['kind'] == 'requested' and ctx['move_ids'] == [pg, wg]
     gains = {('c4v_pair_g_a1_b1', k): 0.6 for k in (1, 2, 3)}
-    out = cv.run_move(tmp_path, ids[0], runner_factory=factory(gains), workers=1)
-    assert out['status'] == 'confirmed_admitted' and out['origin'] == cv.ORIGIN_PROVISIONAL
+    assert cv.next_move(tmp_path)[1]['move_id'] == pg
+    out = cv.run_move(tmp_path, pg, runner_factory=factory(gains), workers=1)
+    assert out['status'] == 'confirmed_admitted' and out['origin'] == cv.ORIGIN_N2
     assert cv.move_status(tmp_path, ml['moves'][0])['status'] == 'confirmed_admitted'
     with pytest.raises(ValueError, match='already started'):
-        cv.run_move(tmp_path, ids[0], runner_factory=factory(gains), workers=1)
-    assert cv.next_move(tmp_path)[1]['move_id'] == ids[2]
-    assert cv.run_next(tmp_path, runner_factory=factory(gains), workers=1)['status'] == 'screen_rejected'
-    last = cv.run_next(tmp_path, runner_factory=factory(gains), workers=1)          # R0, the last executable move
-    assert last['move_id'] == ids[5] and last['status'] == 'screen_rejected'
-    st = {m['move_id']: (cv.move_status(tmp_path, m) or {}).get('status') for m in ml['moves']}
-    assert st[ids[3]] == st[ids[6]] == 'excluded_n9_deadline' and st[ids[1]] is None and st[ids[4]] is None
+        cv.run_move(tmp_path, pg, runner_factory=factory(gains), workers=1)
+    assert all(r.get('arm') in ('B', 'R') for r in cv.ledger_rows(tmp_path))
+    last = cv.run_next(tmp_path, runner_factory=factory(gains), workers=1)
+    assert last['move_id'] == wg and last['status'] == 'screen_rejected'
     assert cv.run_next(tmp_path, runner_factory=factory(gains))['status'] == 'no_moves_left'
-    assert len(cv._jsonl(tmp_path/'results'/'moves.jsonl')) == 5
+    assert cv.arm_progress(tmp_path, 'R')['done'] and cv.arm_progress(tmp_path, 'B')['done']
+    cv.main(['status', '--root', str(tmp_path), '--arm', 'B', '--done'])          # no SystemExit: B finished
+    assert cv.arm_spent(tmp_path, 'B') <= cv.arm_budget(tmp_path, 'B') and cv.arm_spent(tmp_path, 'R') == 0
+    st = {m['move_id']: (cv.move_status(tmp_path, m) or {}).get('status') for m in ml['moves']}
+    assert all(st[v[k]] is None for k in ('wall_h', 'B_lane_balance', 'B_discharge', 'R0', 'R4'))
+    assert len(cv._jsonl(tmp_path/'results'/'moves.jsonl')) == 2
+    verified = [r['plan'] for r in cv._jsonl(tmp_path/'results'/'plans.jsonl') if not r.get('skipped')]
+    assert len(verified) == 2
+    for plan in verified:                                 # every verified plan is N2-exact (zero legacy projection)
+        assert isinstance(mvs.from_plan(plan), ld.LaneDropMove) and plan['origin'] == cv.ORIGIN_N2
     ex = cv.extract(tmp_path, cell='D2800_p40')
     assert ex['mined_B'] == 3 and ex['mined_R'] == 0 and ex['frames_missing'] == 0
     for m in (json.loads(x) for x in (tmp_path/'CLEAN4_MOVES_B.jsonl').read_text().splitlines()):
-        assert m['move_id'] == ids[0] and m['origin'] == cv.ORIGIN_PROVISIONAL and m['situation_id'].endswith('_r470')
+        assert m['move_id'] == pg and m['origin'] == cv.ORIGIN_N2 and m['situation_id'].endswith('_r470')
+        assert m['lane_drop_macro']['family'] == 'closing_pair'
     neg = [json.loads(x) for x in (tmp_path/'CLEAN4_NEGATIVE_FRAMES.jsonl').read_text().splitlines()]
     assert sorted((n['kind'], n['arm'], str(n.get('move_id'))) for n in neg) == [
-        ('lost', 'B', ids[2]), ('lost', 'R', ids[5]), ('requested', 'B', 'None'), ('requested', 'R', 'None')]
+        ('lost', 'B', wg), ('requested', 'B', 'None')]
     assert all(set(n['frames']) == {str(n['t0']-1), str(n['t0'])} for n in neg)
-    assert ex['moves']['by_status'] == {'confirmed_admitted': 1, 'screen_rejected': 2, 'excluded_n9_deadline': 2,
-                                        'excluded_cell': 1, 'excluded_family': 1}
+    assert ex['moves']['by_status'] == {'confirmed_admitted': 1, 'screen_rejected': 1, 'excluded_cell': 1,
+                                        cv.EXCLUDED_F3: 2, cv.EXCLUDED_R_A: 2}
+
+
+def test_n2_builder_plans_bind_to_lane_drop_moves(tmp_path):
+    """Every N2-built plan binds exactly (moves.from_plan -> LaneDropMove); the provisional plan does not."""
+    from tools.coopmwm import lane_drop as ld, map_descriptor as md, moves as mvs
+    desc = md.load(SPEC)
+    rows = write_sources(tmp_path/'src')
+    src = [json.loads(x) for x in rows[0].read_text().splitlines()]
+    zone = [dict(id='a1', lane=0, x=2600.0, v=30.0), dict(id='b1', lane=1, x=2590.0, v=30.0),
+            dict(id='c1', lane=2, x=2580.0, v=30.0)]
+    ctx = ctx_for(zone=zone)
+    for row in (src[0], src[4]):                          # pair_g (closing_pair), wall_g (abreast_wall)
+        macro = ld.move_from_mined_row(row, desc).to_dict()
+        var = dict(name=row['variant'], family=row['family'], members=macro['members'], params=PG,
+                   lane_drop_macro=macro, descriptor=desc, move_id='m')
+        plan = cv.n2_builder(ctx, macro['members'], var)
+        move = mvs.from_plan(plan)
+        assert isinstance(move, ld.LaneDropMove) and plan['lane_drop_macro'] == macro
+        rel = dict(zip(plan['members'], plan['member_release_el']))
+        assert plan['duration_s'] == max(rel.values()) and all(0 < el < 10 for el in rel.values())
+        for i, v in enumerate(plan['members']):           # the N2 law while held: clip((22-v)/1, -1, 1) = -1 here
+            assert all(plan['profile'][i][k] == -1.0 for k in range(rel[v]))
+        assert plan['origin'] == cv.ORIGIN_N2 and plan['source']['origin'] == cv.ORIGIN_N2
+    legacy = cv.provisional_builder(ctx, ['a1', 'b1'], dict(name='pair_g', family='closing_pair', members=['a1', 'b1'],
+                                                            params=dict(PG)))
+    assert not isinstance(mvs.from_plan(legacy), ld.LaneDropMove)     # why frozen moves never use it
+    macro = ld.move_from_mined_row(src[0], desc).to_dict()
+    var = dict(name='pair_g', family='closing_pair', members=macro['members'], params=PG, lane_drop_macro=macro,
+               descriptor=desc)
+    assert cv.n2_builder(ctx_for(zone=zone[:1]), macro['members'], var) is None      # member not upstream
