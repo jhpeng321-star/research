@@ -36,18 +36,24 @@ CAV_LENGTH_M = 5.0
 
 
 def clean4_like_config(desc, *, training_seed=20261101):
-    """The clean3 production trigger architecture + N2 lane-drop features/moves/v2v ON.
+    """The clean3 production trigger architecture with the N4 clean4 B/R option set (17:40).
 
-    Same widths as launch_production.OPTIMIZATION (hidden 64, 8 candidates, 4 partner
-    slots), V2V intent base (v2v_dim 48, horizon 5) and G5 lane families, as the clean4 B/R
-    config is built on clean3. W1/W2/N9 add only zero-initialised columns and are left off.
+    Widths as launch_production.OPTIMIZATION (hidden 64, 8 candidates, 4 partner slots),
+    V2V intent base (v2v_dim 48, horizon 5), G5 lane families; N4: lane_drop features+moves+
+    v2v (range 200 m, member_cap 3), W1 v2v_wall (member_cap 4, range 200 m), W2 pressure
+    features + release + negative labels ON, nm_families and coop_awareness OFF, RSU off
+    (pending its smoke check; it is not a trigger-logit input).
     """
-    from . import lane_drop
+    from . import lane_drop, v2v_wall
     cfg = cw.dry_config()
     cfg.update(training_seed=int(training_seed), v2v_intent_horizon=5, v2v_intent_detach_trunk=True,
-               v2v_intent_loss_weight=1.0, group_lane_moves=True)
-    cfg.update(lane_drop.config_keys(provenance='BOOST-PRE learnability readout (clean4-like)',
-                                     descriptor=desc, features=True, moves_on=True, v2v=True))
+               v2v_intent_loss_weight=1.0, group_lane_moves=True, wall_pressure_features=True,
+               wall_release=True, wall_negative_labels=True)
+    cfg.update(lane_drop.config_keys(provenance='BOOST-PRE learnability readout (clean4 N4 17:40 option set)',
+                                     descriptor=desc, features=True, moves_on=True, v2v_range_m=200.,
+                                     member_cap=3))
+    cfg.update(v2v_wall.config_keys(provenance='BOOST-PRE learnability readout (clean4 N4 17:40 option set)',
+                                    member_cap=4, range_m=200.))
     return cfg
 
 
@@ -106,6 +112,8 @@ def build(policy, desc, frames_by_sid, rows, *, kind, slate_seed, cells=cw.TRAIN
                 reasons['negative_rule:'+why] += 1
                 continue
         moment = frames_by_sid.get(row.get('situation_id'))
+        if moment is None:
+            moment = frames_by_sid.get((cw.world_seed(row), int(row['t0'])))
         if moment is None:
             reasons['no_moment_snapshot'] += 1
             continue
@@ -208,67 +216,225 @@ def within_moment(values):
     return dict(moments=n, top1_admitted=hits/n if n else None, chance=chance/n if n else None)
 
 
-def run(*, base, out_path, k=5, training=None, rows_root=ROWS_ROOT, map_spec=MAP_SPEC):
+def runtime_frames(paths):
+    """EXACT runtime frames (Plan A replays, W2 frame format: world seed, t0, frames {t0-1, t0}
+    with sensor-whitelisted rows of ALL vehicles incl. HDVs; optional situation_id). Keys: the
+    situation id when present and (world seed, t0)."""
+    out = {}
+    for path in paths:
+        rows = cw.read_rows(path)
+        index = cw.frame_entries(rows)
+        for row in rows:
+            seed, t0 = cw.world_seed(row), int(row['t0'])
+            value = (seed, t0, index[(seed, t0)])
+            out[(seed, t0)] = value
+            if row.get('situation_id'):
+                out[row['situation_id']] = value
+    return out
+
+
+def prepare(base, *, training=None, rows_root=ROWS_ROOT, map_spec=MAP_SPEC, frames_paths=()):
+    """Decision tables built ONCE (weights-independent) on the common initial layer."""
     from .map_descriptor import load
     settings = cw.training_settings(training)
     desc = load(map_spec)
     cfg = clean4_like_config(desc)
     root = Path(rows_root)
-    frames = moment_frames([root/p for p in SOURCES['moments']], desc)
+    moments = {m['sid']: m for p in SOURCES['moments']
+               for m in json.loads(cw._guard(root/p).read_text(encoding='utf-8'))}
+    frames = (runtime_frames(frames_paths) if frames_paths else
+              moment_frames([root/p for p in SOURCES['moments']], desc))
     template = cw.build_policy(base, cfg, 'B')
-    initial = cw.state_sha256(template)
-    built, reasons = {}, {}
+    built, reasons, rows_by = {}, {}, {}
     for name, kind in (('B', 'positive'), ('R', 'positive'), ('negatives', 'negative')):
         rows = [r for p in SOURCES[name] for r in cw.read_rows(root/p)]
         if name in ('B', 'R') and any(r.get('arm') != name for r in rows):
             raise ValueError(f'{name} rows must be own-arm rows')
+        rows_by[name] = rows
         built[name], reasons[name] = build(template, desc, frames, rows, kind=kind, slate_seed=settings['slate_seed'])
-    report = dict(schema='coopmwm-boost-pre-learncheck-v1', rule=cw.RULE, negative_rule=cw.RULE_NEGATIVE,
-                  observation=__doc__.split('Observation source')[1].strip(), k_folds=k, training=settings,
-                  config=dict(hidden_dim=cfg['layer_config']['hidden_dim'], trigger_candidates=cfg['trigger_candidates'],
-                              partner_slots=cfg['trigger_partner_slots'], v2v_dim=cfg['v2v_dim'],
-                              lane_drop=dict(features=True, moves=True, v2v=True), group_lane_moves=True),
-                  base_sha256=cw.state_sha256(template.layer.base), moments=len(frames),
-                  record_counts={n: len(v) for n, v in built.items()},
-                  reasons={n: dict(v) for n, v in reasons.items()}, tasks={})
-    conflicts = Counter()
-    for name in ('B', 'R'):
-        records = cw.deduplicate(built[name]+built['negatives'])
-        labels = defaultdict(set)
-        for r in records:
-            labels[_input_key(r)].add(r['kind'])
-        conflicts[name] = sum(1 for kinds in labels.values() if len(kinds) > 1)
-        seeds = sorted({r['seed'] for r in records})
-        task = dict(records=len(records), positives=sum(r['kind'] == 'positive' for r in records),
-                    seeds=len(seeds), identical_input_conflicting_label=conflicts[name], folds=[])
-        pooled_test, pooled_train = [], []
-        for i, test in enumerate(folds(seeds, k)):
-            train = [r for r in records if r['seed'] not in test]
-            hold = [r for r in records if r['seed'] in test]
-            policy = cw.build_policy(base, cfg, name)
-            if cw.state_sha256(policy) != initial:
-                raise ValueError('fold policy does not start from the common initial layer')
-            fold = dict(fold=i, test_seeds=sorted(test), train_records=len(train), test_records=len(hold),
-                        train_positives=sum(r['kind'] == 'positive' for r in train),
-                        test_positives=sum(r['kind'] == 'positive' for r in hold))
-            if not any(r['kind'] == 'positive' for r in train):
-                fold['skipped'] = 'no positive TRAIN records in this fold'
-                task['folds'].append(fold)
-                continue
-            trained = cw.train(policy, train, settings)
-            tr, te = scores(policy, train), scores(policy, hold)
-            pooled_train += tr
-            pooled_test += te
-            fold.update(train=metrics(tr), test=metrics(te), effort_steps=trained['effort']['optimizer_steps'])
+    source = ([dict(path=str(x), sha256=cw._sha_file(x)) for x in frames_paths] if frames_paths
+              else 'MOMENTS all_cavs_t0 (CAV-only, t0-1 extrapolated)')
+    return dict(settings=settings, desc=desc, cfg=cfg, moments=moments, frames=frames, template=template,
+                frames_source=source,
+                initial=cw.state_sha256(template), built=built, reasons=reasons, rows=rows_by)
+
+
+def task_records(prep, name):
+    records = cw.deduplicate(prep['built'][name]+prep['built']['negatives'])
+    labels = defaultdict(set)
+    for r in records:
+        labels[_input_key(r)].add(r['kind'])
+    return records, sum(1 for kinds in labels.values() if len(kinds) > 1)
+
+
+def _cap_positives(train, cap):
+    """Keep whole positive moments (hash order) until at least `cap` positive records."""
+    if cap is None:
+        return train
+    order = sorted({r['situation_id'] for r in train if r['kind'] == 'positive'},
+                   key=lambda sid: hashlib.sha256(f'boost-pre-curve:{sid}'.encode()).hexdigest())
+    keep, count = set(), 0
+    for sid in order:
+        if count >= cap:
+            break
+        keep.add(sid)
+        count += sum(r['kind'] == 'positive' and r['situation_id'] == sid for r in train)
+    return [r for r in train if r['kind'] == 'negative' or r['situation_id'] in keep]
+
+
+def cross_validate(base, prep, name, *, k, positive_cap=None):
+    records, conflicts = task_records(prep, name)
+    seeds = sorted({r['seed'] for r in records})
+    task = dict(records=len(records), positives=sum(r['kind'] == 'positive' for r in records),
+                seeds=len(seeds), identical_input_conflicting_label=conflicts, positive_cap=positive_cap, folds=[])
+    pooled_test, pooled_train = [], []
+    for i, test in enumerate(folds(seeds, k)):
+        train = _cap_positives([r for r in records if r['seed'] not in test], positive_cap)
+        hold = [r for r in records if r['seed'] in test]
+        policy = cw.build_policy(base, prep['cfg'], name)
+        if cw.state_sha256(policy) != prep['initial']:
+            raise ValueError('fold policy does not start from the common initial layer')
+        fold = dict(fold=i, test_seeds=sorted(test), train_records=len(train), test_records=len(hold),
+                    train_positives=sum(r['kind'] == 'positive' for r in train),
+                    train_positive_moments=len({r['situation_id'] for r in train if r['kind'] == 'positive'}),
+                    test_positives=sum(r['kind'] == 'positive' for r in hold))
+        if not any(r['kind'] == 'positive' for r in train):
+            fold['skipped'] = 'no positive TRAIN records in this fold'
             task['folds'].append(fold)
-        task['heldout_pooled'] = metrics(pooled_test)
-        task['train_pooled'] = metrics(pooled_train)
-        task['within_admitted_moments_heldout'] = within_moment(pooled_test)
-        task['heldout_by_family'] = {f: metrics([v for v in pooled_test if v['family'] == f])
-                                     for f in sorted({v['family'] for v in pooled_test})}
-        report['tasks'][name] = task
+            continue
+        trained = cw.train(policy, train, prep['settings'])
+        tr, te = scores(policy, train), scores(policy, hold)
+        pooled_train += tr
+        pooled_test += te
+        fold.update(train=metrics(tr), test=metrics(te), effort_steps=trained['effort']['optimizer_steps'])
+        task['folds'].append(fold)
+    task['heldout_pooled'] = metrics(pooled_test)
+    task['train_pooled'] = metrics(pooled_train)
+    task['within_admitted_moments_heldout'] = within_moment(pooled_test)
+    task['heldout_by_family'] = {f: metrics([v for v in pooled_test if v['family'] == f])
+                                 for f in sorted({v['family'] for v in pooled_test})}
+    task['heldout_moment_level'] = moment_level(pooled_test)
+    return task
+
+
+def moment_level(values):
+    """Moment score = max P(act with move) over its moves; label = any admitted move there."""
+    by = defaultdict(list)
+    for v in values:
+        by[v['sid']].append(v)
+    rows = [dict(kind='positive' if any(x['kind'] == 'positive' for x in items) else 'negative',
+                 score=max(x['score'] for x in items)) for items in by.values()]
+    return dict(moments=len(rows), positive_moments=sum(r['kind'] == 'positive' for r in rows),
+                base_rate=(sum(r['kind'] == 'positive' for r in rows)/len(rows)) if rows else None, auc=auc(rows))
+
+
+def report_header(prep, k):
+    cfg = prep['cfg']
+    return dict(schema='coopmwm-boost-pre-learncheck-v1', rule=cw.RULE, negative_rule=cw.RULE_NEGATIVE,
+                observation=(__doc__.split('Observation source')[1].strip()
+                             if isinstance(prep.get('frames_source'), str) else 'EXACT runtime frames (W2 format)'),
+                frames_source=prep.get('frames_source'), k_folds=k, training=prep['settings'],
+                config={key: v for key, v in cfg.items() if key not in ('run_root',)},
+                trained_logit_parameters=[n for n, _ in cw.logit_parameters(prep['template'])],
+                base_sha256=cw.state_sha256(prep['template'].layer.base), moments=len(prep['frames']),
+                record_counts={n: len(v) for n, v in prep['built'].items()},
+                reasons={n: dict(v) for n, v in prep['reasons'].items()}, tasks={})
+
+
+def run(*, base, out_path, k=5, training=None, rows_root=ROWS_ROOT, map_spec=MAP_SPEC, prep=None):
+    prep = prep or prepare(base, training=training, rows_root=rows_root, map_spec=map_spec)
+    report = report_header(prep, k)
+    for name in ('B', 'R'):
+        report['tasks'][name] = cross_validate(base, prep, name, k=k)
     Path(out_path).write_text(json.dumps(report, indent=1, sort_keys=True, default=str)+'\n', encoding='utf-8')
     return report
+
+
+def curve(*, base, out_path, caps=(10, 20, None), k=5, prep=None, training=None):
+    """Held-out AUC vs number of TRAIN positives (whole moments; negatives unchanged)."""
+    prep = prep or prepare(base, training=training)
+    out = dict(report_header(prep, k), tasks=None, curve=[])
+    for cap in caps:
+        task = cross_validate(base, prep, 'B', k=k, positive_cap=cap)
+        out['curve'].append(dict(positive_cap=cap, heldout=task['heldout_pooled'], train=task['train_pooled'],
+                                 moment_level=task['heldout_moment_level'],
+                                 train_positives_per_fold=[f['train_positives'] for f in task['folds']],
+                                 train_positive_moments_per_fold=[f['train_positive_moments'] for f in task['folds']]))
+    Path(out_path).write_text(json.dumps(out, indent=1, sort_keys=True, default=str)+'\n', encoding='utf-8')
+    return out
+
+
+def coarse_features(moment, desc):
+    """Regime-level context of one moment (cell labels + miners' aggregates + CAV lane counts)."""
+    counts = Counter()
+    for c in moment['all_cavs_t0']:
+        edge, lane = c['edge'], int(c['lane'])
+        if edge in EDGE_OFFSET and (edge, lane) in desc.lane_table:
+            wm, s = desc.lane_and_s(f'{edge}_{lane}', float(c['x'])-EDGE_OFFSET[edge])
+            if -1000. <= s <= 75.44:
+                counts[wm] += 1
+    return dict(demand=float(moment['demand']), penetration=float(moment['penetration']),
+                queue_closing_lane=float(moment.get('closing_lane_slow') or 0.),
+                approach_speed=float(moment.get('approach_speed') or 0.),
+                n_zone_cavs=float(moment.get('n_zone_cavs') or 0.),
+                **{f'cav_lane{lane}_1km': float(counts[lane]) for lane in range(3)})
+
+
+def coarse_baseline(prep, *, k=5):
+    """Seed-grouped logistic regression: does a moment have an admitted B move (moment level),
+    and is an evaluated move admitted (row level: + family and move parameters)?"""
+    import numpy as np
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+    evaluated = defaultdict(list)
+    for name, kind in (('B', 'positive'), ('negatives', 'negative')):
+        for row in prep['rows'][name]:
+            if cw.admission(row) is not None or row.get('family') not in cw.LANE_DROP_JOINT:
+                continue
+            if kind == 'negative' and not cw.do_not_act(row)[0]:
+                continue
+            if row.get('situation_id') in prep['moments']:
+                evaluated[row['situation_id']].append((row, kind))
+
+    def fit_eval(items, featurize):
+        seeds = sorted({it['seed'] for it in items})
+        out = []
+        for test in folds(seeds, k):
+            train = [it for it in items if it['seed'] not in test]
+            hold = [it for it in items if it['seed'] in test]
+            if len({it['y'] for it in train}) < 2 or not hold:
+                continue
+            model = make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000))
+            model.fit(np.array([featurize(it) for it in train]), np.array([it['y'] for it in train]))
+            prob = model.predict_proba(np.array([featurize(it) for it in hold]))[:, 1]
+            out += [dict(kind='positive' if it['y'] else 'negative', score=float(p),
+                         correct=bool(p > .5) == bool(it['y'])) for it, p in zip(hold, prob)]
+        return metrics(out)
+
+    moments = []
+    for sid, items in evaluated.items():
+        m = prep['moments'][sid]
+        moments.append(dict(seed=int(m['seed']), y=int(any(kind == 'positive' for _, kind in items)),
+                            x=coarse_features(m, prep['desc'])))
+    names = sorted(moments[0]['x']) if moments else []
+    rows = {}
+    for sid, items in evaluated.items():
+        m = prep['moments'][sid]
+        for row, kind in items:
+            params = cw.params_of(row)
+            rows.setdefault(_key(row), dict(seed=int(m['seed']), y=int(kind == 'positive'),
+                x=dict(coarse_features(m, prep['desc']), closing_pair=float(row['family'] == 'closing_pair'),
+                       v_w=float(params.get('v_w', 0.)), hold_s=float(params.get('hold_s', 0.)),
+                       dmax=float(params.get('dmax', 0.)))))
+    row_items = list(rows.values())
+    row_names = sorted(row_items[0]['x']) if row_items else []
+    return dict(features=names, row_features=row_names, moments=len(moments),
+                positive_moments=sum(m['y'] for m in moments), rows=len(row_items),
+                moment_level=fit_eval(moments, lambda it: [it['x'][n] for n in names]),
+                row_level=fit_eval(row_items, lambda it: [it['x'][n] for n in row_names]),
+                note=('demand/penetration are cell LABELS (not runtime inputs); queue/approach speed are the '
+                      "miners' aggregates over all vehicles (RSU-like, includes HDVs); lane counts are CAVs only"))
 
 
 def verdict(task):
@@ -288,6 +454,9 @@ def main(argv=None):
     parser.add_argument('--k', type=int, default=5)
     parser.add_argument('--training')
     parser.add_argument('--threads', type=int, default=4)
+    parser.add_argument('--what', default='run', choices=('run', 'curve', 'baseline', 'all'))
+    parser.add_argument('--caps', default='10,20,all', help='TRAIN positive caps for --what curve')
+    parser.add_argument('--frames', nargs='*', default=(), help='EXACT runtime frames (W2 format) instead of MOMENTS')
     args = parser.parse_args(argv)
     torch.set_num_threads(min(4, max(1, args.threads)))
     from .map_descriptor import load
@@ -302,13 +471,31 @@ def main(argv=None):
         from .v2v_intent import IntentPolicy
         torch.manual_seed(int(cfg['training_seed']))
         base = IntentPolicy()
-    report = run(base=base, out_path=args.out, k=args.k,
-                 training=json.loads(args.training) if args.training else None)
-    for name, task in report['tasks'].items():
-        t = task['heldout_pooled']
-        print(name, verdict(task), json.dumps(dict(heldout=t, train=task['train_pooled'],
-                                                  within=task['within_admitted_moments_heldout']), default=str))
-    return report
+    prep = prepare(base, training=json.loads(args.training) if args.training else None,
+                   frames_paths=tuple(args.frames))
+    out = Path(args.out)
+    result = {}
+    if args.what in ('run', 'all'):
+        report = run(base=base, out_path=out, k=args.k, prep=prep)
+        for name, task in report['tasks'].items():
+            print(name, verdict(task), json.dumps(dict(heldout=task['heldout_pooled'], train=task['train_pooled'],
+                within=task['within_admitted_moments_heldout'], moments=task['heldout_moment_level']), default=str),
+                flush=True)
+        result['run'] = report
+    if args.what in ('baseline', 'all'):
+        baseline = coarse_baseline(prep, k=args.k)
+        out.with_name(out.stem+'_coarse.json').write_text(json.dumps(baseline, indent=1, default=str)+chr(10),
+                                                          encoding='utf-8')
+        print('coarse', json.dumps(baseline, default=str), flush=True)
+        result['baseline'] = baseline
+    if args.what in ('curve', 'all'):
+        caps = tuple(None if c == 'all' else int(c) for c in args.caps.split(','))
+        result['curve'] = curve(base=base, out_path=out.with_name(out.stem+'_curve.json'), k=args.k, prep=prep,
+                                caps=caps)
+        for point in result['curve']['curve']:
+            print('curve', point['positive_cap'], json.dumps(dict(heldout=point['heldout'],
+                  moments=point['moment_level'], train_auc=point['train'].get('auc')), default=str), flush=True)
+    return result
 
 
 if __name__ == '__main__':
