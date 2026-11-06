@@ -498,10 +498,20 @@ def _logits(policy, batches):
     return [policy.trigger.distribution(b.context, b.descriptors, b.mask)[0] for b in batches]
 
 
-def _mean_kl(before, after):
-    values = [torch.distributions.kl_divergence(torch.distributions.Categorical(logits=a),
-              torch.distributions.Categorical(logits=b)).sum() for a, b in zip(before, after)]
-    return float(torch.stack(values).mean()) if values else 0.
+def _mean_kl(before, after, row_weights=None):
+    """Mean KL over decision CONTEXTS = CAV decision rows (one row per bank/program record, every
+    labelled row of a multi-CAV EV step); unlabelled rows (weight 0) are not supervised contexts."""
+    rows, weights = [], []
+    for i, (a, b) in enumerate(zip(before, after)):
+        kl = torch.distributions.kl_divergence(torch.distributions.Categorical(logits=a),
+                                               torch.distributions.Categorical(logits=b))
+        w = torch.ones_like(kl) if row_weights is None or row_weights[i] is None else (row_weights[i] > 0).float()
+        rows.append(kl*w)
+        weights.append(w)
+    if not rows:
+        return 0.
+    total = torch.cat(weights).sum()
+    return float(torch.cat(rows).sum()/total) if float(total) > 0 else 0.
 
 
 def bc_steps(policy, records, *, epochs, kl_budget, max_grad_norm):
@@ -525,7 +535,8 @@ def bc_steps(policy, records, *, epochs, kl_budget, max_grad_norm):
         torch.nn.utils.clip_grad_norm_(policy.trigger.learning_parameters(), max_grad_norm,
                                        error_if_nonfinite=True)
         policy.trigger_optimizer.step()
-        kl = _mean_kl(reference, _logits(policy, [r['batch'] for r in records]))
+        kl = _mean_kl(reference, _logits(policy, [r['batch'] for r in records]),
+                      [r.get('row_weight') for r in records])
         accepted = math.isfinite(kl) and kl <= kl_budget
         if not accepted:
             policy.trigger.load_state_dict(state)
