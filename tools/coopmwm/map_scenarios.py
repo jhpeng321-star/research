@@ -43,7 +43,9 @@ TRAIN_RANGE = (989200, 989599)
 EXTRA_TRAIN_RANGES = ((989000, 989099),
                       # c4/imitreplay only - S-REGIMEU0 (MAIN 2026-11-06 19:2x / 19:4x): seeds of the S-REGIME range
                       # 989700-989899 (registered TRAIN-type, never evaluation); REGIME confirmed 989850-989899 unused.
-                      (989850, 989899))
+                      (989850, 989899),
+                      # S-REGIMEU0 amendment 5 (MAIN 20:0x): 989724-989819 (S-REGIME range, unused by REGIME)
+                      (989724, 989819))
 HELDOUT_RANGE = (989600, 989699)
 FORBIDDEN_RANGES = ((964000, 964199), (962000, 962999), (977000, 977999))
 EPISODE_S = 1200

@@ -388,7 +388,7 @@ def analyze(roots):
     for cell in sorted({r['cell'] for r in rep['seeds']}):
         rows = [r for r in rep['seeds'] if r['cell'] == cell]
         out = {}
-        for arm in ARMS:
+        for arm in [x for x in ARMS if any(x in r['arms'] for r in rows)]:
             recs = [r['arms'][arm] for r in rows if r['arms'].get(arm, {}).get('status') == 'ok']
             a = dict(n=len(recs), mean_J=(sum(x['J'] for x in recs)/len(recs)) if recs else None,
                      failed=sum(r['arms'].get(arm, {}).get('status') == 'failed' for r in rows))
@@ -409,10 +409,11 @@ def analyze(roots):
             if arm != 'u0' and a.get('mean_diff') is not None and base_mean:
                 a['rel_diff'] = a['mean_diff']/base_mean
                 a['rel_ci95'] = [a['ci95'][0]/base_mean, a['ci95'][1]/base_mean]
-        ok = [r for r in rows if all(r['arms'].get(x, {}).get('status') == 'ok' for x in ARMS)]
-        if ok:
+        present = [x for x in ARMS if any(x in r['arms'] for r in rows)]
+        ok = [r for r in rows if all(r['arms'].get(x, {}).get('status') == 'ok' for x in present)]
+        if ok and 'wall_h' in present and any('solo' in x for x in present):
             rng = random.Random(BOOT_SEED)
-            solos = [x for x in ARMS if 'solo' in x]
+            solos = [x for x in present if 'solo' in x]
 
             def stat(rs):
                 mean = {x: sum(r['arms'][x]['J'] for r in rs)/len(rs) for x in ('wall_h', *solos)}
@@ -422,6 +423,150 @@ def analyze(roots):
                                                 n=len(ok), solos=solos)
         rep['cells'][cell] = out
     return rep
+
+
+WINDOW_STARTS = tuple(range(WARMUP_S, EPISODE_S, 100))
+
+
+def _quantile(sorted_vals, q):
+    if not sorted_vals:
+        return None
+    pos = q*(len(sorted_vals)-1)
+    lo = int(pos)
+    hi = min(lo+1, len(sorted_vals)-1)
+    return sorted_vals[lo]+(sorted_vals[hi]-sorted_vals[lo])*(pos-lo)
+
+
+def _seed_boot(values_by_seed, *, n=BOOT, seed=BOOT_SEED):
+    """values_by_seed: {seed: [window values]} -> (mean, lo, hi) of the pooled window mean, seeds resampled."""
+    seeds = [s for s, v in values_by_seed.items() if v]
+    if not seeds:
+        return None, None, None
+    flat = [x for s in seeds for x in values_by_seed[s]]
+    point = sum(flat)/len(flat)
+    rng = random.Random(seed)
+    draws = []
+    for _ in range(n):
+        pick = [seeds[rng.randrange(len(seeds))] for _ in seeds]
+        vals = [x for s in pick for x in values_by_seed[s]]
+        draws.append(sum(vals)/len(vals))
+    draws.sort()
+    return point, draws[int(.025*n)], draws[int(.975*n)-1]
+
+
+def amendment4(roots):
+    """Registered S-REGIMEU0 amendment 4 (zero SUMO): per-seed distributions, window-level conditional effect
+    on the observable closing-lane congestion proxy (u0 arm, window start), split-seed gated estimate."""
+    roots = [Path(r) for r in ([roots] if isinstance(roots, (str, Path)) else roots)]
+    windows, proxies = {}, {}
+    for root in roots:
+        body = ir._read(root/'PLAN.json')
+        prox = ir._read(root/'PROXIES.json')['proxies'] if (root/'PROXIES.json').exists() else {}
+        for g in body['groups']:
+            if g['stage'] != 'paired':
+                continue
+            w = g['jobs'][0]['world']
+            key = (w['cell_key'], w['seed'])
+            sums = {}
+            for j in g['jobs']:
+                p = root/'jobs'/j['id']/'SUMMARY.json.gz'
+                s = ir._read(p) if p.exists() else None
+                if s is not None and not s.get('error'):
+                    sums[j['arm']] = s
+                if j['arm'] == 'u0' and j['id'] in prox:
+                    proxies[key] = prox[j['id']]['windows']
+            if 'u0' not in sums:
+                continue
+            for arm, s in sums.items():
+                if arm == 'u0':
+                    continue
+                d = {}
+                for t in WINDOW_STARTS:
+                    b = ir.window_j(sums['u0'], t, t+100)
+                    c = ir.window_j(s, t, t+100)
+                    if b and c and b[1] == c[1]:
+                        d[t] = c[0]-b[0]
+                windows.setdefault(key, {})[arm] = d
+    out = {}
+    for cell in sorted({k[0] for k in windows}):
+        seeds = sorted(k[1] for k in windows if k[0] == cell)
+        cell_out = dict(seeds=seeds, strategies={})
+        cs = [proxies[(cell, s)][str(t)]['blk_c'] for s in seeds if (cell, s) in proxies
+              for t in WINDOW_STARTS if str(t) in proxies[(cell, s)]]
+        srt = sorted(cs)
+        cuts = [_quantile(srt, 1/3), _quantile(srt, 2/3)]
+        slows = sorted(proxies[(cell, s)][str(t)]['slow_field'] for s in seeds if (cell, s) in proxies
+                       for t in WINDOW_STARTS if str(t) in proxies[(cell, s)])
+        scuts = [_quantile(slows, 1/3), _quantile(slows, 2/3)]
+        cell_out['primary_cuts'] = cuts
+        cell_out['secondary_cuts'] = scuts
+        cell_out['primary_zero_share'] = (sum(c == 0 for c in cs)/len(cs)) if cs else None
+        half = len(seeds)//2
+        train, test = seeds[:half], seeds[half:]
+        for arm in [a for a in ARMS if a != 'u0' and any(a in windows[(cell, s)] for s in seeds)]:
+            per_seed = {s: sum(windows[(cell, s)].get(arm, {}).values()) for s in seeds if arm in windows[(cell, s)]}
+            vals = sorted(per_seed.values())
+            res = dict(per_seed=dict(sorted(per_seed.items(), key=lambda kv: kv[1])),
+                       benefit=sum(v < 0 for v in vals)/len(vals) if vals else None,
+                       harm=sum(v > 0 for v in vals)/len(vals) if vals else None,
+                       quartiles=[_quantile(vals, q) for q in (.25, .5, .75)] if vals else None)
+
+            def binned(field, cut):
+                bins = {}
+                for b, (lo, hi) in enumerate(((None, cut[0]), (cut[0], cut[1]), (cut[1], None))):
+                    by = {}
+                    for s in seeds:
+                        if (cell, s) not in proxies:
+                            continue
+                        for t, dv in windows[(cell, s)].get(arm, {}).items():
+                            pv = proxies[(cell, s)].get(str(t))
+                            if pv is None:
+                                continue
+                            x = pv[field]
+                            inside = ((lo is None or x > lo) and (hi is None or x <= hi)) if b else (x <= hi)
+                            if inside:
+                                by.setdefault(s, []).append(dv)
+                    m, lo_, hi_ = _seed_boot(by)
+                    bins[f't{b+1}'] = dict(range=[lo, hi], n_windows=sum(len(v) for v in by.values()),
+                                           n_seeds=len(by), mean_dw=m, ci95=[lo_, hi_])
+                return bins
+            res['by_primary_tercile'] = binned('blk_c', cuts)
+            res['by_secondary_tercile'] = binned('slow_field', scuts)
+            # split-seed gate on the primary index
+            cand = sorted({proxies[(cell, s)][str(t)]['blk_c'] for s in train if (cell, s) in proxies
+                           for t in WINDOW_STARTS if str(t) in proxies[(cell, s)]})
+            best = None
+            for th in cand:
+                gated = [(dv if proxies[(cell, s)][str(t)]['blk_c'] >= th else 0.)
+                         for s in train if (cell, s) in proxies for t, dv in windows[(cell, s)].get(arm, {}).items()
+                         if str(t) in proxies[(cell, s)]]
+                if gated:
+                    benefit = -sum(gated)/len(gated)
+                    if best is None or benefit > best[0]:
+                        best = (benefit, th)
+            if best is not None and test:
+                th = best[1]
+                g_seed = {s: sum(dv for t, dv in windows[(cell, s)].get(arm, {}).items()
+                                 if str(t) in proxies.get((cell, s), {}) and proxies[(cell, s)][str(t)]['blk_c'] >= th)
+                          for s in test if (cell, s) in proxies}
+                a_seed = {s: sum(windows[(cell, s)].get(arm, {}).values()) for s in test}
+                gv, av = list(g_seed.values()), list(a_seed.values())
+                glo, ghi = boot_ci(gv) if gv else (None, None)
+                alo, ahi = boot_ci(av) if av else (None, None)
+                res['split_gate'] = dict(train_seeds=train, test_seeds=test, theta=th, train_mean_window_benefit=best[0],
+                                         gated_fraction_test=(sum(proxies[(cell, s)][str(t)]['blk_c'] >= th
+                                                                  for s in test if (cell, s) in proxies
+                                                                  for t in WINDOW_STARTS if str(t) in proxies[(cell, s)])
+                                                              / max(1, sum(1 for s in test if (cell, s) in proxies
+                                                                           for t in WINDOW_STARTS
+                                                                           if str(t) in proxies[(cell, s)]))),
+                                         gated_test_mean=sum(gv)/len(gv) if gv else None, gated_test_ci95=[glo, ghi],
+                                         gated_benefit=sum(v < 0 for v in gv)/len(gv) if gv else None,
+                                         gated_harm=sum(v > 0 for v in gv)/len(gv) if gv else None,
+                                         always_test_mean=sum(av)/len(av) if av else None, always_test_ci95=[alo, ahi])
+            cell_out['strategies'][arm] = res
+        out[cell] = cell_out
+    return out
 
 
 def main(argv=None):
@@ -437,6 +582,7 @@ def main(argv=None):
     a.add_argument('--u0-sha256')
     a.add_argument('--cells', nargs='*', help='demand:share:first-last, e.g. 3200:0.6:989866-989873')
     a.add_argument('--no-identity', action='store_true')
+    a.add_argument('--arms', nargs='*', default=list(ARMS))
     a = sub.add_parser('run')
     a.add_argument('--normal-priority', action='store_true', help='MAIN 19:4x: cpuV free, normal priority allowed')
     a.add_argument('--root', required=True)
@@ -449,6 +595,9 @@ def main(argv=None):
     a = sub.add_parser('analyze')
     a.add_argument('--root', required=True, nargs='+')
     a.add_argument('--out')
+    a = sub.add_parser('amend4')
+    a.add_argument('--root', required=True, nargs='+')
+    a.add_argument('--out', required=True)
     args = p.parse_args(argv)
     if args.cmd == 'init':
         print(json.dumps(init(args.root, args.cap), indent=1))
@@ -461,7 +610,7 @@ def main(argv=None):
                 lo, hi = (int(x) for x in span.split('-'))
                 cells.append((int(d), float(sh), tuple(range(lo, hi+1))))
         body = plan(args.root, config=args.config, u0=args.u0, u0_sha256=args.u0_sha256, cells=cells,
-                    identity=not args.no_identity)
+                    identity=not args.no_identity, arms=tuple(args.arms))
         print(json.dumps(dict(plan_sha256=body['plan_sha256'], planned_sim_s=body['planned_sim_s']), indent=1))
     elif args.cmd == 'run':
         print(run(args.root, workers=args.workers, load_high=args.load_high, low_workers=args.low_workers,
@@ -469,6 +618,9 @@ def main(argv=None):
     elif args.cmd == 'worker':
         s = worker(args.root, args.job)
         print(json.dumps(dict(id=s['id'], error=bool(s['error']), totals=s['totals'], acts=len(s['activations']))))
+    elif args.cmd == 'amend4':
+        Path(args.out).write_text(json.dumps(amendment4(args.root), indent=1, sort_keys=True, default=str)+chr(10),
+                                  encoding='utf-8')
     elif args.cmd == 'analyze':
         rep = analyze(args.root)
         text = json.dumps(rep, indent=1, sort_keys=True, default=str)
