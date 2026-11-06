@@ -42,6 +42,14 @@ deselect = ' '.join('--deselect='+t for t in (
     'tools/coopmwm/test_map_runtime_cpu.py::test_wz3to2_env_builder_after_install_writes_probe_identical_scenario',
     'tools/coopmwm/test_map_runtime_cpu.py::test_install_refuses_a_frame_mismatch',
     'tools/coopmwm/test_wall_w2_cpu.py::test_off_is_byte_identical_to_the_pre_w2_tree'))
+#  - clean5b: LCEXEC harness/parity tests that need CHECKOUT layout files absent from the deployed tree by design
+#    (runtime_src/baselines/circles/adapter.json for lc_writer_harness, repo-root LCEXEC_PARITY.json, run_py
+#    subprocess traffic_shepherd PYTHONPATH); every node id + cause in ops/clean5b_layout_deselect.json (classified
+#    from the 2d2d8db8 cpuV run: 172 adapter.json, 1 LCEXEC_PARITY.json, 1 traffic_shepherd); they run in the
+#    Windows checkout suite; the production LCEXEC path is exercised by the clean5b dry prepare + smoke.
+layout = src/'ops'/'clean5b_layout_deselect.json'
+if layout.is_file():
+    deselect += ' '+' '.join("'--deselect="+t+"'" for t in sorted(json.loads(layout.read_text())))
 procs = []
 started = time.time()
 for k, shard in enumerate(shards):
