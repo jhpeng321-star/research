@@ -148,6 +148,9 @@ class Controller:
             any(map(any, c['plan'].get('lane_drop_lane_actions') or ())) for c in self.active_plans)
         if lane_drop_zip and not getattr(self, 'g5_lane_runtime', False):
             raise ValueError('N2 lane-drop zip requests require the single-writer V2V lane runtime')
+        if sample.get('lc_tick') and not getattr(self, 'g5_lane_runtime', False):
+            # LCEXEC free_program (opt-in): env.lc_tick requests go through the V2V lane runtime.
+            raise ValueError('LCEXEC lc_tick requests require the single-writer V2V lane runtime')
         desired = requests(sample, commands,ignore_departed=bool(self.replay is not None
             and self.branch and now>=self.branch['time_s']))
         # Exact twins release only the selected group's whole committed plan;
