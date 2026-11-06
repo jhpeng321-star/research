@@ -1,0 +1,11 @@
+{
+  "id": "S-SUMOCREDIT-SMOKE-20261025 (stages 4-5, K-candidate check)",
+  "status": "registered",
+  "split": "TRAIN",
+  "seed_block": [967603, 967604],
+  "exclude": [[964000, 964199], [968000, 968227]],
+  "purpose": "mechanics only: K=3 learned-policy candidate calibration arms (SUMO replay of the imagined sample noise) and deploy policy_gate with the K-candidate check",
+  "budget_sim_s": 138,
+  "planned_sim_s": 135,
+  "note": "remainder of the registered 2,000 sim-s smoke cap (stages 1-3 used 1,862)"
+}

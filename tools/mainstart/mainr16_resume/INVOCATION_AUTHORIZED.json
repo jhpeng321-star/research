@@ -1,0 +1,12 @@
+{
+ "t": "2026-10-26T08:50:22Z",
+ "owner_direction": "Main direction out of WAIT_OWNER (owner-approved plan unchanged; this was an invocation error, not a scientific gate): apply your prepared invocation correction (synthetic prearm smoke without --gate-panel/--horizon-gate; separately hash-check the unchanged frozen panel; keep both for the real policy and update-10 gate), record this direction + the corrected invocation in REGISTRATION.md, clear the WAIT_OWNER receipt by archiving it (do not delete), run the corrected prearm smoke, apply the prepared migration, launch cycle 0 detached, and verify: policy updates progressing, update-10 gate result, horizon gate recomputed for the round-16 sha, and both collectors start when collection begins. For any further NON-scientific invocation/deployment error you may fix and retry once, recording it; stop in WAIT_OWNER only for scientific gate failures or a second failure. Same rules. Final message <= 8 lines.",
+ "archived_wait_owner": "/root/autodl-tmp/c4/v5/mainstart/mainr16/restart/WAIT_OWNER.pre_invocation_direction.json",
+ "frozen_panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+ "registration_sha256": "34d4c61bb05526f76c146880502b5e8b5db51dc2ea4c4633620b14142334965b",
+ "source_manifest_sha256": "69a67f3e4c67247dbd8021a4710ba7187e6417856f20b980fe885e5a542effdb",
+ "shared_register_sha256": "82a1d3b7b0cf7f2f3421c2507b79e30af0eb6e9fa641300fc48a04687ea25bb4",
+ "corrected_prearm": "policy14_cli --device cpu --max-updates 2 --compact --smoke; no --gate-panel or --horizon-gate; frozen panel hash-checked separately",
+ "retry_allowance": 1,
+ "new_failures": 0
+}

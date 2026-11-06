@@ -1,0 +1,1727 @@
+{
+ "processes": [
+  {
+   "pid": 5970,
+   "cwd": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267",
+   "cmd": "bash scripts/c4/gpub_idle_guard.sh "
+  },
+  {
+   "pid": 19704,
+   "cwd": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d",
+   "cmd": "bash /root/autodl-tmp/c4/v5/r16_autochain.sh 5855 2923218883 "
+  },
+  {
+   "pid": 20187,
+   "cwd": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d",
+   "cmd": "bash /root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round16_gpuB.sh --launch-b "
+  },
+  {
+   "pid": 27907,
+   "cwd": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d",
+   "cmd": "/root/miniconda3/bin/python -B -u -m wms train --config configs/c4_wm_v10round16_stage_b.toml --mode run --out /root/autodl-tmp/c4/v5/runs/c4_wm_v10_round16_b --set loss.loss_share_logging=false --set loss.brake_follow_cav_weight=2.0 --set optim.batch_size=4 --set runtime.device=cuda --set model.init_from=/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round16_a/wm_s.pt "
+  }
+ ],
+ "roots": [
+  "/root/autodl-tmp/c4/boxsync/newcpu",
+  "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts",
+  "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d",
+  "/root/autodl-tmp/c4/v5",
+  "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267"
+ ],
+ "scanned_files": 4250,
+ "matches": [
+  {
+   "needle": "diag_ttc",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/LOOP14_TTC_ONSET.json",
+   "line": 4,
+   "text": " \"harness\": \"gpuR diag_ttc/ttc_gate_roll_ps2.py unchanged (gate path: native-IDM-twin CAVs, entries on, trainer imagination), wrapped by diag_ttc/loop14_onset/run_onset.py setting physics.emergency_onset on every PhysicsConfig holder\","
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/LOOP14_TTC_ONSET.json",
+   "line": 7,
+   "text": " \"states\": \"24 TRAIN v5_native states (diag_emerg/train_states48.json.gz panel), 120 s, ks 0,1 (2 samples), CPU nice 19, 4 workers\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/R13C_HANDOFF.py",
+   "line": 26,
+   "text": "    assert str(ROOT / \"runs/smoke_r13c\") in argv(SMOKE)"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/R13C_HANDOFF.py",
+   "line": 42,
+   "text": "        assert (ROOT / \"runs/smoke_r13c/RUN_SUMMARY.json\").is_file()"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/R13C_HANDOFF.py",
+   "line": 63,
+   "text": "               \"--smoke-dir\", str(ROOT / \"runs/smoke_r13c\"),"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/R13C_HANDOFF.py",
+   "line": 64,
+   "text": "               \"--smoke-log\", str(ROOT / \"smoke_r13c.log\"),"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/R13C_HANDOFF.py",
+   "line": 68,
+   "text": "               \"--report\", str(ROOT / \"smoke_r13c.gate.json\")]"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/R13C_HANDOFF.py",
+   "line": 69,
+   "text": "    with (ROOT / \"smoke_r13c.verdict\").open(\"x\") as log:"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/R13C_HANDOFF.py",
+   "line": 72,
+   "text": "    print((ROOT / \"smoke_r13c.verdict\").read_text(), flush=True)"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/docs/r13y_offline_manifest.json",
+   "line": 7,
+   "text": "  \"states\": \"/root/autodl-tmp/c4/v5/chk_r10b/states192.json.gz\","
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/docs/r13e_offline/linux_tests.json",
+   "line": 5,
+   "text": "  \"stdout\": \"......................................................................   [100%]\\n=============================== warnings summary ===============================\\n../../../../miniconda3/lib/python3.12/site-packages/_pytest/config/__init__.py:1464\\n  /root/miniconda3/lib/python3.12/site-packages/_pytest/config/__init__.py:1464: PytestConfigWarning: Unknown config option: cache_dir\\n  \\n    self._warn_or_fail_if_strict(f\\\"Unknown config option: {key}\\\\n\\\")\\n\\ntests/test_r13e_offline.py::test_real_source_loader_keeps_recorded_training_split_and_never_opens_validation_arrays\\n  /root/autodl-tmp/c4/v5/repo_r13e_8c7ff0a1/src/wms/data/pack_history.py:45: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest o"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/docs/r13e_offline/offline_owned_process.json",
+   "line": 16,
+   "text": "    \"/root/autodl-tmp/c4/v5/diag_emerg/train_states48.json.gz\","
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/docs/r13e_offline/offline_owned_process.json",
+   "line": 18,
+   "text": "    \"/root/autodl-tmp/c4/v5/diag_emerg/offline_train48_workers4\","
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/docs/r13e_offline/offline_owned_process.json",
+   "line": 8,
+   "text": "    \"/root/autodl-tmp/c4/v5/repo_r13e_8c7ff0a1/tools/r13e_checks/offline.py\","
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/docs/r13e_offline/panel_receipt.json",
+   "line": 1,
+   "text": "{\"cav_teacher\":\"exact converted t0 roster; junctions retained; first exit ends identity\",\"command\":\"python tools/r13e_checks/remote_ops.py script tools/r13e_checks/prepare_train_panel.py\",\"execution\":{\"cpu_affinity_count\":1,\"cuda_visible_devices\":\"\",\"device\":\"cpu\",\"gzip_compresslevel\":6,\"gzip_filename\":\"\",\"gzip_mtime\":0,\"nice\":19,\"python\":\"3.12.3\",\"threads\":1,\"zlib\":\"1.2.13\"},\"future_frames_including_t0\":241,\"future_s\":120.0,\"history\":\"id-keyed full observed scene; pre-t0 leaders retained; no slot-reuse mixing\",\"history_rows\":121,\"history_s\":60.0,\"history_stride_s\":1.0,\"native_dt_s\":0.5,\"original_panel_audit\":{\"all_roles_checked\":true,\"path\":\"/root/autodl-tmp/c4/v5/chk_r10b/states192.json.gz\",\"records\":[{\"manifest_world\":\"w963004m1900p40t300\",\"original_index\":0,\"split_role\":\"val\",\"world\":\"w963004m1900p40t300@450\"},{\"manifest_world\":\"w963019m2700p10t300\",\"original_index\":4,\"split_role\":\"val\",\"world\":\"w963019m2700p10t300@450\"},{\"manifest_world\":\"w963043m2700p10t300\",\"original_index\":8,\"s"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/docs/r13e_offline/panel_receipt.json",
+   "line": 1,
+   "text": "{\"cav_teacher\":\"exact converted t0 roster; junctions retained; first exit ends identity\",\"command\":\"python tools/r13e_checks/remote_ops.py script tools/r13e_checks/prepare_train_panel.py\",\"execution\":{\"cpu_affinity_count\":1,\"cuda_visible_devices\":\"\",\"device\":\"cpu\",\"gzip_compresslevel\":6,\"gzip_filename\":\"\",\"gzip_mtime\":0,\"nice\":19,\"python\":\"3.12.3\",\"threads\":1,\"zlib\":\"1.2.13\"},\"future_frames_including_t0\":241,\"future_s\":120.0,\"history\":\"id-keyed full observed scene; pre-t0 leaders retained; no slot-reuse mixing\",\"history_rows\":121,\"history_s\":60.0,\"history_stride_s\":1.0,\"native_dt_s\":0.5,\"original_panel_audit\":{\"all_roles_checked\":true,\"path\":\"/root/autodl-tmp/c4/v5/chk_r10b/states192.json.gz\",\"records\":[{\"manifest_world\":\"w963004m1900p40t300\",\"original_index\":0,\"split_role\":\"val\",\"world\":\"w963004m1900p40t300@450\"},{\"manifest_world\":\"w963019m2700p10t300\",\"original_index\":4,\"split_role\":\"val\",\"world\":\"w963019m2700p10t300@450\"},{\"manifest_world\":\"w963043m2700p10t300\",\"original_index\":8,\"s"
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/docs/r13e_offline/panel_receipt.json",
+   "line": 1,
+   "text": "{\"cav_teacher\":\"exact converted t0 roster; junctions retained; first exit ends identity\",\"command\":\"python tools/r13e_checks/remote_ops.py script tools/r13e_checks/prepare_train_panel.py\",\"execution\":{\"cpu_affinity_count\":1,\"cuda_visible_devices\":\"\",\"device\":\"cpu\",\"gzip_compresslevel\":6,\"gzip_filename\":\"\",\"gzip_mtime\":0,\"nice\":19,\"python\":\"3.12.3\",\"threads\":1,\"zlib\":\"1.2.13\"},\"future_frames_including_t0\":241,\"future_s\":120.0,\"history\":\"id-keyed full observed scene; pre-t0 leaders retained; no slot-reuse mixing\",\"history_rows\":121,\"history_s\":60.0,\"history_stride_s\":1.0,\"native_dt_s\":0.5,\"original_panel_audit\":{\"all_roles_checked\":true,\"path\":\"/root/autodl-tmp/c4/v5/chk_r10b/states192.json.gz\",\"records\":[{\"manifest_world\":\"w963004m1900p40t300\",\"original_index\":0,\"split_role\":\"val\",\"world\":\"w963004m1900p40t300@450\"},{\"manifest_world\":\"w963019m2700p10t300\",\"original_index\":4,\"split_role\":\"val\",\"world\":\"w963019m2700p10t300@450\"},{\"manifest_world\":\"w963043m2700p10t300\",\"original_index\":8,\"s"
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/docs/r13e_offline/report.json",
+   "line": 29,
+   "text": "  \"config\": \"/root/autodl-tmp/c4/v5/repo_r13e_8c7ff0a1/configs/c4_wm_v10round12c.toml\","
+  },
+  {
+   "needle": "diag_brake",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/evidence_r14/move_diag.sh",
+   "line": 3,
+   "text": "# diag_brake is EXCLUDED: diag_brake/d11_run5.py + cfworker5.py are live dependencies of the running 13E gate checks."
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/r13y_bitidentity.py",
+   "line": 59,
+   "text": "        \"/root/autodl-tmp/c4/v5/chk_r10b/states192.json.gz\","
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/r13y_export_spot.py",
+   "line": 36,
+   "text": "STATES = \"/root/autodl-tmp/c4/v5/chk_r10b/states192.json.gz\""
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/r13y_run_offline.sh",
+   "line": 12,
+   "text": "  --states /root/autodl-tmp/c4/v5/chk_r10b/states192.json.gz \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_gate.sh",
+   "line": 11,
+   "text": "for artifact in \"$L/runs/smoke_r13c\" \"$L/runs/c4_wm_v10_round13c\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_gate.sh",
+   "line": 12,
+   "text": "    \"$L/smoke_r13c.log\" \"$L/smoke_r13c.verdict\" \"$L/smoke_r13c.gate.json\" \"$L/.round13c_gate.lock\"; do"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_gate.sh",
+   "line": 25,
+   "text": "    --out \"$L/runs/smoke_r13c\" \"${COMMON[@]}\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_gate.sh",
+   "line": 28,
+   "text": "    > \"$L/smoke_r13c.log\" 2>&1 || TRAIN_EXIT=$?"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_gate.sh",
+   "line": 29,
+   "text": "\"$PYTHON\" -m wms.train.round13c_gate --smoke-dir \"$L/runs/smoke_r13c\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_gate.sh",
+   "line": 30,
+   "text": "    --smoke-log \"$L/smoke_r13c.log\" --train-exit-code \"$TRAIN_EXIT\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_gate.sh",
+   "line": 32,
+   "text": "    --report \"$L/smoke_r13c.gate.json\" > \"$L/smoke_r13c.verdict\" 2>&1 || exit 3"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_gate.sh",
+   "line": 33,
+   "text": "cat \"$L/smoke_r13c.verdict\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_gate.sh",
+   "line": 34,
+   "text": "cat \"$L/smoke_r13c.verdict\" >> \"$L/smoke_r13c.log\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_production.sh",
+   "line": 11,
+   "text": "test -f \"$L/smoke_r13c.gate.json\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_production.sh",
+   "line": 13,
+   "text": "\"$PYTHON\" -c 'import json,sys; d=json.load(open(sys.argv[1])); assert d[\"ok\"] and len(d[\"checkpoints\"])==3; assert all(c[\"temporal_emission\"]==0 and c[\"core_bitwise_frozen\"] for c in d[\"checkpoints\"])' \"$L/smoke_r13c.gate.json\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_production.sh",
+   "line": 15,
+   "text": "cat \"$L/smoke_r13c.verdict\" >> \"$L/smoke_r13c.log\""
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_waiter.py",
+   "line": 196,
+   "text": "    source_path = safe_path(root / \"chk_r10b\" / \"states192.json.gz\")"
+  },
+  {
+   "needle": "diag_brake",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13c_waiter.py",
+   "line": 417,
+   "text": "        self.command(self.root / \"diag_brake/d11_run5.py\", \"--repo\", self.repo,"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13f_gate.sh",
+   "line": 36,
+   "text": "for artifact in \"$L/runs/smoke_r13f\" \"$L/runs/c4_wm_v10_round13f\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13f_gate.sh",
+   "line": 37,
+   "text": "    \"$L/smoke_r13f.log\" \"$L/smoke_r13f.verdict\" \"$L/smoke_r13f.gate.json\" \"$L/.round13f_gate.lock\"; do"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13f_gate.sh",
+   "line": 54,
+   "text": "    --out \"$L/runs/smoke_r13f\" \"${COMMON[@]}\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13f_gate.sh",
+   "line": 59,
+   "text": "    --set curriculum.max_hours=1.5 > \"$L/smoke_r13f.log\" 2>&1; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13f_gate.sh",
+   "line": 64,
+   "text": "if ! \"$PYTHON\" -m wms.train.round13f_gate --smoke-dir \"$L/runs/smoke_r13f\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13f_gate.sh",
+   "line": 65,
+   "text": "    --smoke-log \"$L/smoke_r13f.log\" --train-exit-code \"$TRAIN_EXIT\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13f_gate.sh",
+   "line": 67,
+   "text": "    --report \"$L/smoke_r13f.gate.json\" > \"$L/smoke_r13f.verdict\" 2>&1; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13m_gate.sh",
+   "line": 32,
+   "text": "for artifact in \"$L/runs/smoke_r13m\" \"$L/runs/c4_wm_v10_round13m\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13m_gate.sh",
+   "line": 33,
+   "text": "    \"$L/smoke_r13m.log\" \"$L/smoke_r13m.verdict\" \"$L/smoke_r13m.gate.json\" \"$L/.round13m_gate.lock\"; do"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13m_gate.sh",
+   "line": 50,
+   "text": "    --out \"$L/runs/smoke_r13m\" \"${COMMON[@]}\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13m_gate.sh",
+   "line": 55,
+   "text": "    --set curriculum.max_hours=1.5 > \"$L/smoke_r13m.log\" 2>&1; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13m_gate.sh",
+   "line": 60,
+   "text": "if ! \"$PYTHON\" -m wms.train.round13f_gate --smoke-dir \"$L/runs/smoke_r13m\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13m_gate.sh",
+   "line": 61,
+   "text": "    --smoke-log \"$L/smoke_r13m.log\" --train-exit-code \"$TRAIN_EXIT\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13m_gate.sh",
+   "line": 63,
+   "text": "    --report \"$L/smoke_r13m.gate.json\" > \"$L/smoke_r13m.verdict\" 2>&1; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13s_gate.sh",
+   "line": 32,
+   "text": "for artifact in \"$L/runs/smoke_r13s\" \"$L/runs/c4_wm_v10_round13s\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13s_gate.sh",
+   "line": 33,
+   "text": "    \"$L/smoke_r13s.log\" \"$L/smoke_r13s.verdict\" \"$L/smoke_r13s.gate.json\" \"$L/.round13s_gate.lock\"; do"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13s_gate.sh",
+   "line": 50,
+   "text": "    --out \"$L/runs/smoke_r13s\" \"${COMMON[@]}\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13s_gate.sh",
+   "line": 55,
+   "text": "    --set curriculum.max_hours=1.5 > \"$L/smoke_r13s.log\" 2>&1; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13s_gate.sh",
+   "line": 60,
+   "text": "if ! \"$PYTHON\" -m wms.train.round13f_gate --smoke-dir \"$L/runs/smoke_r13s\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13s_gate.sh",
+   "line": 61,
+   "text": "    --smoke-log \"$L/smoke_r13s.log\" --train-exit-code \"$TRAIN_EXIT\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/scripts/round13s_gate.sh",
+   "line": 63,
+   "text": "    --report \"$L/smoke_r13s.gate.json\" > \"$L/smoke_r13s.verdict\" 2>&1; then"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/src/wms/train/round13e_gate.py",
+   "line": 914,
+   "text": "    for path in (root / \"diag_brake/d11_run5.py\", root / \"chk_r10b/states192.json.gz\"):"
+  },
+  {
+   "needle": "diag_brake",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/src/wms/train/round13e_gate.py",
+   "line": 914,
+   "text": "    for path in (root / \"diag_brake/d11_run5.py\", root / \"chk_r10b/states192.json.gz\"):"
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/src/wms/train/round14_gate.py",
+   "line": 173,
+   "text": "        result = read_json(root / f\"chk_r13e/b/{mode}/RESULT.json\")"
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/src/wms/train/round14_gate.py",
+   "line": 175,
+   "text": "    post = read_json(root / \"chk_r13e/b/postrun/RESULT.json\")"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/src/wms/train/round14_gate.py",
+   "line": 296,
+   "text": "    for path in (REMOTE_ROOT / \"diag_brake/d11_run5.py\", REMOTE_ROOT / \"chk_r10b/states192.json.gz\"):"
+  },
+  {
+   "needle": "diag_brake",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/src/wms/train/round14_gate.py",
+   "line": 296,
+   "text": "    for path in (REMOTE_ROOT / \"diag_brake/d11_run5.py\", REMOTE_ROOT / \"chk_r10b/states192.json.gz\"):"
+  },
+  {
+   "needle": "diag_brake",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/src/wms/train/round14_gate.py",
+   "line": 469,
+   "text": "    self.command(self.root / \"diag_brake/d11_run5.py\", \"--repo\", self.repo,"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r12_checks.py",
+   "line": 316,
+   "text": "                   \"c4_wm_v10_round9/wm_s_stage300.pt\", \"chk_r10b/states192.json.gz\", \"c4_wm_v10round12.toml\","
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r13e_plan.py",
+   "line": 525,
+   "text": "    assert waiter.out == tmp_path / f\"chk_r13e/{stage}/midrun\""
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r13e_plan.py",
+   "line": 526,
+   "text": "    assert waiter.work.is_relative_to(tmp_path / \"chk_r13e\")"
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r13e_plan.py",
+   "line": 701,
+   "text": "        directory = tmp_path / \"chk_r13e/a\" / mode"
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r13e_plan.py",
+   "line": 708,
+   "text": "    (tmp_path / \"chk_r13e/a/midrun/RESULT.json\").write_text('{\"decision\":\"STOP\"}')"
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r13e_plan.py",
+   "line": 738,
+   "text": "    assert waiter.out == tmp_path / \"chk_r13e_fb/a/postrun\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r13e_plan.py",
+   "line": 677,
+   "text": "    for name in (\"smoke_r13e_a\", \"smoke_r13e_b\", \"c4_wm_v10_round13e_a\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r13e_plan.py",
+   "line": 684,
+   "text": "               \"a_sha256\": gate.digest(tmp_path / \"runs/smoke_r13e_a/wm_s.pt\"),"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r13e_plan.py",
+   "line": 685,
+   "text": "               \"b_sha256\": gate.digest(tmp_path / \"runs/smoke_r13e_b/wm_s.pt\")}"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r13e_plan.py",
+   "line": 686,
+   "text": "    path = tmp_path / \"smoke_r13e.complete.json\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r13e_plan.py",
+   "line": 690,
+   "text": "    assert calls[1][1] == tmp_path / \"runs/smoke_r13e_a/wm_s.pt\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r13e_plan.py",
+   "line": 695,
+   "text": "    receipt[\"b_sha256\"] = gate.digest(tmp_path / \"runs/smoke_r13e_b/wm_s.pt\")"
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r14_gate.py",
+   "line": 94,
+   "text": "    out = tmp_path / \"chk_r14/a/postrun\""
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r14_gate.py",
+   "line": 107,
+   "text": "    (root / \"chk_r14/a/midrun\").mkdir(parents=True)"
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r14_gate.py",
+   "line": 124,
+   "text": "    assert any(p.endswith(\"chk_r14/a/midrun/RESULT.json\") for p in reads)"
+  },
+  {
+   "needle": "smoke_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_r14_gate.py",
+   "line": 117,
+   "text": "        if Path(p).name == \"smoke_r14.complete.json\":"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13c_waiter.py",
+   "line": 247,
+   "text": "    source_path = tmp_path / \"chk_r10b\" / \"states192.json.gz\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13f_gate_launcher.py",
+   "line": 39,
+   "text": "elif [[ \"$*\" == *runs/smoke_r13f* ]]; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13f_gate_launcher.py",
+   "line": 69,
+   "text": "                     '--report \"$L/smoke_r13f.gate.json\" > \"$L/smoke_r13f.verdict\"', \"exit 3\", \"exec \"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13f_gate_launcher.py",
+   "line": 88,
+   "text": "    \"runs/smoke_r13f\", \"runs/c4_wm_v10_round13f\", \"smoke_r13f.log\", \"smoke_r13f.verdict\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13f_gate_launcher.py",
+   "line": 89,
+   "text": "    \"smoke_r13f.gate.json\", \".round13f_gate.lock\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13f_gate_launcher.py",
+   "line": 124,
+   "text": "                     \"loss.brake_follow_cav_weight=2.0\", f\"--out {shell_path(root)}/runs/smoke_r13f\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13f_gate_launcher.py",
+   "line": 126,
+   "text": "    for required in (\"-m wms.train.round13f_gate\", f\"--smoke-dir {shell_path(root)}/runs/smoke_r13f\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13f_gate_launcher.py",
+   "line": 127,
+   "text": "                     f\"--smoke-log {shell_path(root)}/smoke_r13f.log\", \"--train-exit-code 0\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13f_gate_launcher.py",
+   "line": 129,
+   "text": "                     f\"--report {shell_path(root)}/smoke_r13f.gate.json\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13f_gate_launcher.py",
+   "line": 141,
+   "text": "    assert (root / \"smoke_r13f.log\").exists() and (root / \"smoke_r13f.verdict\").exists()"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13f_gate_launcher.py",
+   "line": 228,
+   "text": "    for a, b in ((\"R13F_\", \"R12_\"), (\"smoke_r13f\", \"smoke_r12\"), (\"c4_wm_v10_round13f\", \"c4_wm_v10_round12\"),"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13m_gate_launcher.py",
+   "line": 39,
+   "text": "elif [[ \"$*\" == *runs/smoke_r13m* ]]; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13m_gate_launcher.py",
+   "line": 69,
+   "text": "                     '--report \"$L/smoke_r13m.gate.json\" > \"$L/smoke_r13m.verdict\"', \"exit 3\", \"exec \"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13m_gate_launcher.py",
+   "line": 88,
+   "text": "    \"runs/smoke_r13m\", \"runs/c4_wm_v10_round13m\", \"smoke_r13m.log\", \"smoke_r13m.verdict\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13m_gate_launcher.py",
+   "line": 89,
+   "text": "    \"smoke_r13m.gate.json\", \".round13m_gate.lock\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13m_gate_launcher.py",
+   "line": 124,
+   "text": "                     \"loss.brake_follow_cav_weight=2.0\", f\"--out {shell_path(root)}/runs/smoke_r13m\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13m_gate_launcher.py",
+   "line": 126,
+   "text": "    for required in (\"-m wms.train.round13f_gate\", f\"--smoke-dir {shell_path(root)}/runs/smoke_r13m\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13m_gate_launcher.py",
+   "line": 127,
+   "text": "                     f\"--smoke-log {shell_path(root)}/smoke_r13m.log\", \"--train-exit-code 0\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13m_gate_launcher.py",
+   "line": 129,
+   "text": "                     f\"--report {shell_path(root)}/smoke_r13m.gate.json\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13m_gate_launcher.py",
+   "line": 141,
+   "text": "    assert (root / \"smoke_r13m.log\").exists() and (root / \"smoke_r13m.verdict\").exists()"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13m_gate_launcher.py",
+   "line": 227,
+   "text": "    for a, b in ((\"R13M_\", \"R13F_\"), (\"smoke_r13m\", \"smoke_r13f\"), (\"c4_wm_v10_round13m\", \"c4_wm_v10_round13f\"),"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13s_gate_launcher.py",
+   "line": 39,
+   "text": "elif [[ \"$*\" == *runs/smoke_r13s* ]]; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13s_gate_launcher.py",
+   "line": 69,
+   "text": "                     '--report \"$L/smoke_r13s.gate.json\" > \"$L/smoke_r13s.verdict\"', \"exit 3\", \"exec \"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13s_gate_launcher.py",
+   "line": 88,
+   "text": "    \"runs/smoke_r13s\", \"runs/c4_wm_v10_round13s\", \"smoke_r13s.log\", \"smoke_r13s.verdict\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13s_gate_launcher.py",
+   "line": 89,
+   "text": "    \"smoke_r13s.gate.json\", \".round13s_gate.lock\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13s_gate_launcher.py",
+   "line": 124,
+   "text": "                     \"loss.brake_follow_cav_weight=2.0\", f\"--out {shell_path(root)}/runs/smoke_r13s\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13s_gate_launcher.py",
+   "line": 126,
+   "text": "    for required in (\"-m wms.train.round13f_gate\", f\"--smoke-dir {shell_path(root)}/runs/smoke_r13s\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13s_gate_launcher.py",
+   "line": 127,
+   "text": "                     f\"--smoke-log {shell_path(root)}/smoke_r13s.log\", \"--train-exit-code 0\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13s_gate_launcher.py",
+   "line": 129,
+   "text": "                     f\"--report {shell_path(root)}/smoke_r13s.gate.json\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13s_gate_launcher.py",
+   "line": 141,
+   "text": "    assert (root / \"smoke_r13s.log\").exists() and (root / \"smoke_r13s.verdict\").exists()"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tests/test_round13s_gate_launcher.py",
+   "line": 227,
+   "text": "    for a, b in ((\"R13S_\", \"R13F_\"), (\"smoke_r13s\", \"smoke_r13f\"), (\"c4_wm_v10_round13s\", \"c4_wm_v10_round13f\"),"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r10b_checks/analyze.py",
+   "line": 3,
+   "text": "  python analyze.py --shm /dev/shm/chk_r10b --out VERDICT_R10B_CHECKS.md [--m5 SUMMARY_R10B.md] [--meta meta.json]"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r10b_checks/auto_arm.sh",
+   "line": 5,
+   "text": "CHK=$L/chk_r10b"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r10b_checks/common.py",
+   "line": 17,
+   "text": "SHM = os.environ.get(\"R10BCHK_SHM\", \"/dev/shm/chk_r10b\")"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r10b_checks/run_all.sh",
+   "line": 8,
+   "text": "CHK=$L/chk_r10b"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r10b_checks/run_all.sh",
+   "line": 14,
+   "text": "  RUN=${R10B_RUN:-$L/runs/smoke_r10b}; OUT=/dev/shm/chk_r10b_dry; LIM_ROLL=\"--limit 6 --k 1 --steps 120\"; LIM_REM=\"--limit 6 --k 1\"; LIM_OS=\"--limit 8 --stride-eps 30\"; WORKERS=${WORKERS_DRY:-12}"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r10b_checks/run_all.sh",
+   "line": 16,
+   "text": "  RUN=${R10B_RUN:-$L/runs/smoke_r10b}; OUT=/dev/shm/chk_r10b_mid; LIM_ROLL=\"--limit 48 --k 1 --steps 240\"; LIM_REM=\"--limit 48 --k 1\"; LIM_OS=\"--limit 24 --stride-eps 10\""
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r10b_checks/run_all.sh",
+   "line": 18,
+   "text": "  OUT=/dev/shm/chk_r10b; LIM_ROLL=\"--k 2 --steps 240\"; LIM_REM=\"--k 2\"; LIM_OS=\"--stride-eps 4\""
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r11_checks/auto_arm.sh",
+   "line": 3,
+   "text": "# (chk_r10b/VERDICT_R10B_CHECKS.md exists or its auto_arm PID is gone), then run all R11 checks (CPU only, nice 10,"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r11_checks/auto_arm.sh",
+   "line": 15,
+   "text": "while [ ! -f \"$L/chk_r10b/VERDICT_R10B_CHECKS.md\" ] && kill -0 \"$R10B_ARM_PID\" 2>/dev/null; do sleep 120; done"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r11_checks/run_all.sh",
+   "line": 22,
+   "text": "STATES=${STATES:-$L/chk_r10b/states192.json.gz}"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r12_checks/run_all.sh",
+   "line": 40,
+   "text": "STATES=${STATES:-$L/chk_r10b/states192.json.gz}"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/final_audit_remote.py",
+   "line": 8,
+   "text": "out = root/'diag_emerg/offline_train48_workers4'"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/final_audit_remote.py",
+   "line": 41,
+   "text": "          'postprocess_script_sha256':study.file_digest(root/'diag_emerg/postprocess_remote.py'),"
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/final_audit_remote.py",
+   "line": 7,
+   "text": "repo = root/'repo_r13e_8c7ff0a1'"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/gs_events_small.py",
+   "line": 9,
+   "text": "      --n-states 12 --out /root/autodl-tmp/c4/v5/diag_emerg/gs_events_small_<sha8>.json"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/gs_events_small.py",
+   "line": 41,
+   "text": "    work = root / \"diag_emerg\""
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/launch_remote.py",
+   "line": 14,
+   "text": "WORK = ROOT / 'diag_emerg'"
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/launch_remote.py",
+   "line": 13,
+   "text": "REPO = ROOT / 'repo_r13e_8c7ff0a1'"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/postprocess_remote.py",
+   "line": 14,
+   "text": "WORK = ROOT/'diag_emerg'"
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/postprocess_remote.py",
+   "line": 13,
+   "text": "REPO = ROOT/'repo_r13e_8c7ff0a1'"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/prepare_train_panel.py",
+   "line": 74,
+   "text": "    path = study.checked_path(ROOT / \"chk_r10b/states192.json.gz\")"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/prepare_train_panel.py",
+   "line": 7,
+   "text": "Only the two named outputs in diag_emerg are written. Existing identical outputs"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/prepare_train_panel.py",
+   "line": 30,
+   "text": "WORK = ROOT / \"diag_emerg\""
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/prepare_train_panel.py",
+   "line": 234,
+   "text": "    require(path.parent == WORK, \"output must be directly inside diag_emerg\")"
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/prepare_train_panel.py",
+   "line": 29,
+   "text": "REPO = ROOT / \"repo_r13e_8c7ff0a1\""
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/remote_ops.py",
+   "line": 37,
+   "text": "paths=[root,root/'runs/c4_wm_v10_round12c/wm_s.pt',root/'diag_emerg',root/'repo_r13e_8c7ff0a1',root/'chk_r10b/states192.json.gz',root/'data/v5_native/C4_EPISODES_MANIFEST.json']"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/remote_ops.py",
+   "line": 12,
+   "text": "WORK = REMOTE + \"/diag_emerg\""
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/remote_ops.py",
+   "line": 37,
+   "text": "paths=[root,root/'runs/c4_wm_v10_round12c/wm_s.pt',root/'diag_emerg',root/'repo_r13e_8c7ff0a1',root/'chk_r10b/states192.json.gz',root/'data/v5_native/C4_EPISODES_MANIFEST.json']"
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/remote_ops.py",
+   "line": 11,
+   "text": "REPO = REMOTE + \"/repo_r13e_8c7ff0a1\""
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r13e_checks/remote_ops.py",
+   "line": 37,
+   "text": "paths=[root,root/'runs/c4_wm_v10_round12c/wm_s.pt',root/'diag_emerg',root/'repo_r13e_8c7ff0a1',root/'chk_r10b/states192.json.gz',root/'data/v5_native/C4_EPISODES_MANIFEST.json']"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r14_checks/sanity_roll.py",
+   "line": 10,
+   "text": "States: the first N states of diag_emerg/train_states48.json.gz (R13E panel; TRAIN role re-verified against"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r14_checks/sanity_roll.py",
+   "line": 47,
+   "text": "STATES = L5 / \"diag_emerg/train_states48.json.gz\""
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267/tools/r14_checks/sanity_roll.py",
+   "line": 49,
+   "text": "RECEIPT = L5 / \"diag_emerg/panel_receipt.json\""
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/r13y_bitidentity.py",
+   "line": 59,
+   "text": "        \"/root/autodl-tmp/c4/v5/chk_r10b/states192.json.gz\","
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/r13y_export_spot.py",
+   "line": 36,
+   "text": "STATES = \"/root/autodl-tmp/c4/v5/chk_r10b/states192.json.gz\""
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/r13y_run_offline.sh",
+   "line": 12,
+   "text": "  --states /root/autodl-tmp/c4/v5/chk_r10b/states192.json.gz \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_gate.sh",
+   "line": 11,
+   "text": "for artifact in \"$L/runs/smoke_r13c\" \"$L/runs/c4_wm_v10_round13c\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_gate.sh",
+   "line": 12,
+   "text": "    \"$L/smoke_r13c.log\" \"$L/smoke_r13c.verdict\" \"$L/smoke_r13c.gate.json\" \"$L/.round13c_gate.lock\"; do"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_gate.sh",
+   "line": 25,
+   "text": "    --out \"$L/runs/smoke_r13c\" \"${COMMON[@]}\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_gate.sh",
+   "line": 28,
+   "text": "    > \"$L/smoke_r13c.log\" 2>&1 || TRAIN_EXIT=$?"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_gate.sh",
+   "line": 29,
+   "text": "\"$PYTHON\" -m wms.train.round13c_gate --smoke-dir \"$L/runs/smoke_r13c\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_gate.sh",
+   "line": 30,
+   "text": "    --smoke-log \"$L/smoke_r13c.log\" --train-exit-code \"$TRAIN_EXIT\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_gate.sh",
+   "line": 32,
+   "text": "    --report \"$L/smoke_r13c.gate.json\" > \"$L/smoke_r13c.verdict\" 2>&1 || exit 3"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_gate.sh",
+   "line": 33,
+   "text": "cat \"$L/smoke_r13c.verdict\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_gate.sh",
+   "line": 34,
+   "text": "cat \"$L/smoke_r13c.verdict\" >> \"$L/smoke_r13c.log\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_production.sh",
+   "line": 11,
+   "text": "test -f \"$L/smoke_r13c.gate.json\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_production.sh",
+   "line": 13,
+   "text": "\"$PYTHON\" -c 'import json,sys; d=json.load(open(sys.argv[1])); assert d[\"ok\"] and len(d[\"checkpoints\"])==3; assert all(c[\"temporal_emission\"]==0 and c[\"core_bitwise_frozen\"] for c in d[\"checkpoints\"])' \"$L/smoke_r13c.gate.json\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_production.sh",
+   "line": 15,
+   "text": "cat \"$L/smoke_r13c.verdict\" >> \"$L/smoke_r13c.log\""
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_waiter.py",
+   "line": 196,
+   "text": "    source_path = safe_path(root / \"chk_r10b\" / \"states192.json.gz\")"
+  },
+  {
+   "needle": "diag_brake",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13c_waiter.py",
+   "line": 417,
+   "text": "        self.command(self.root / \"diag_brake/d11_run5.py\", \"--repo\", self.repo,"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13f_gate.sh",
+   "line": 36,
+   "text": "for artifact in \"$L/runs/smoke_r13f\" \"$L/runs/c4_wm_v10_round13f\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13f_gate.sh",
+   "line": 37,
+   "text": "    \"$L/smoke_r13f.log\" \"$L/smoke_r13f.verdict\" \"$L/smoke_r13f.gate.json\" \"$L/.round13f_gate.lock\"; do"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13f_gate.sh",
+   "line": 54,
+   "text": "    --out \"$L/runs/smoke_r13f\" \"${COMMON[@]}\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13f_gate.sh",
+   "line": 59,
+   "text": "    --set curriculum.max_hours=1.5 > \"$L/smoke_r13f.log\" 2>&1; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13f_gate.sh",
+   "line": 64,
+   "text": "if ! \"$PYTHON\" -m wms.train.round13f_gate --smoke-dir \"$L/runs/smoke_r13f\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13f_gate.sh",
+   "line": 65,
+   "text": "    --smoke-log \"$L/smoke_r13f.log\" --train-exit-code \"$TRAIN_EXIT\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13f_gate.sh",
+   "line": 67,
+   "text": "    --report \"$L/smoke_r13f.gate.json\" > \"$L/smoke_r13f.verdict\" 2>&1; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13m_gate.sh",
+   "line": 32,
+   "text": "for artifact in \"$L/runs/smoke_r13m\" \"$L/runs/c4_wm_v10_round13m\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13m_gate.sh",
+   "line": 33,
+   "text": "    \"$L/smoke_r13m.log\" \"$L/smoke_r13m.verdict\" \"$L/smoke_r13m.gate.json\" \"$L/.round13m_gate.lock\"; do"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13m_gate.sh",
+   "line": 50,
+   "text": "    --out \"$L/runs/smoke_r13m\" \"${COMMON[@]}\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13m_gate.sh",
+   "line": 55,
+   "text": "    --set curriculum.max_hours=1.5 > \"$L/smoke_r13m.log\" 2>&1; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13m_gate.sh",
+   "line": 60,
+   "text": "if ! \"$PYTHON\" -m wms.train.round13f_gate --smoke-dir \"$L/runs/smoke_r13m\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13m_gate.sh",
+   "line": 61,
+   "text": "    --smoke-log \"$L/smoke_r13m.log\" --train-exit-code \"$TRAIN_EXIT\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13m_gate.sh",
+   "line": 63,
+   "text": "    --report \"$L/smoke_r13m.gate.json\" > \"$L/smoke_r13m.verdict\" 2>&1; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13s_gate.sh",
+   "line": 32,
+   "text": "for artifact in \"$L/runs/smoke_r13s\" \"$L/runs/c4_wm_v10_round13s\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13s_gate.sh",
+   "line": 33,
+   "text": "    \"$L/smoke_r13s.log\" \"$L/smoke_r13s.verdict\" \"$L/smoke_r13s.gate.json\" \"$L/.round13s_gate.lock\"; do"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13s_gate.sh",
+   "line": 50,
+   "text": "    --out \"$L/runs/smoke_r13s\" \"${COMMON[@]}\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13s_gate.sh",
+   "line": 55,
+   "text": "    --set curriculum.max_hours=1.5 > \"$L/smoke_r13s.log\" 2>&1; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13s_gate.sh",
+   "line": 60,
+   "text": "if ! \"$PYTHON\" -m wms.train.round13f_gate --smoke-dir \"$L/runs/smoke_r13s\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13s_gate.sh",
+   "line": 61,
+   "text": "    --smoke-log \"$L/smoke_r13s.log\" --train-exit-code \"$TRAIN_EXIT\" \\"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round13s_gate.sh",
+   "line": 63,
+   "text": "    --report \"$L/smoke_r13s.gate.json\" > \"$L/smoke_r13s.verdict\" 2>&1; then"
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round14b_autochain.sh",
+   "line": 45,
+   "text": "mkdir -p \"$L/chk_r14\""
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round14b_autochain.sh",
+   "line": 47,
+   "text": "    > \"$L/chk_r14/b2_watch.log\" 2>&1 < /dev/null &"
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round14b_autochain.sh",
+   "line": 48,
+   "text": "printf '%s\\n' \"$!\" > \"$L/chk_r14/b2_watch.pid\""
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round14b_autochain.sh",
+   "line": 49,
+   "text": "for ((i=0; i<120; i++)); do [ -f \"$L/chk_r14/b2_watch_ready.json\" ] && break; sleep 1; done"
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round14b_autochain.sh",
+   "line": 50,
+   "text": "[ -f \"$L/chk_r14/b2_watch_ready.json\" ] || { log \"b2 STOP watcher did not arm; stop (fail closed)\"; exit 12; }"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/src/wms/train/round13e_gate.py",
+   "line": 914,
+   "text": "    for path in (root / \"diag_brake/d11_run5.py\", root / \"chk_r10b/states192.json.gz\"):"
+  },
+  {
+   "needle": "diag_brake",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/src/wms/train/round13e_gate.py",
+   "line": 914,
+   "text": "    for path in (root / \"diag_brake/d11_run5.py\", root / \"chk_r10b/states192.json.gz\"):"
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/src/wms/train/round14_gate.py",
+   "line": 50,
+   "text": "B2_STOP_MARKER = \"B2_POSTRUN_STOP.json\"   # under chk_r14/, written once by b2watch"
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/src/wms/train/round14_gate.py",
+   "line": 540,
+   "text": "#: name -> (watched RESULT files, R14 stages a real STOP terminates, marker under chk_r14/)."
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/src/wms/train/round14_gate.py",
+   "line": 48,
+   "text": "B_RECHECK = \"chk_r13e/b/midrun_recheck/RESULT.json\""
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/src/wms/train/round14_gate.py",
+   "line": 49,
+   "text": "B2_POSTRUN = \"chk_r13e/b2/postrun/RESULT.json\""
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/src/wms/train/round14_gate.py",
+   "line": 336,
+   "text": "    for path in (REMOTE_ROOT / \"diag_brake/d11_run5.py\", REMOTE_ROOT / \"chk_r10b/states192.json.gz\"):"
+  },
+  {
+   "needle": "diag_brake",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/src/wms/train/round14_gate.py",
+   "line": 336,
+   "text": "    for path in (REMOTE_ROOT / \"diag_brake/d11_run5.py\", REMOTE_ROOT / \"chk_r10b/states192.json.gz\"):"
+  },
+  {
+   "needle": "diag_brake",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/src/wms/train/round14_gate.py",
+   "line": 493,
+   "text": "    self.command(self.root / \"diag_brake/d11_run5.py\", \"--repo\", self.repo,"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r12_checks.py",
+   "line": 316,
+   "text": "                   \"c4_wm_v10_round9/wm_s_stage300.pt\", \"chk_r10b/states192.json.gz\", \"c4_wm_v10round12.toml\","
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r13e_plan.py",
+   "line": 525,
+   "text": "    assert waiter.out == tmp_path / f\"chk_r13e/{stage}/midrun\""
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r13e_plan.py",
+   "line": 526,
+   "text": "    assert waiter.work.is_relative_to(tmp_path / \"chk_r13e\")"
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r13e_plan.py",
+   "line": 701,
+   "text": "        directory = tmp_path / \"chk_r13e/a\" / mode"
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r13e_plan.py",
+   "line": 708,
+   "text": "    (tmp_path / \"chk_r13e/a/midrun/RESULT.json\").write_text('{\"decision\":\"STOP\"}')"
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r13e_plan.py",
+   "line": 738,
+   "text": "    assert waiter.out == tmp_path / \"chk_r13e_fb/a/postrun\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r13e_plan.py",
+   "line": 677,
+   "text": "    for name in (\"smoke_r13e_a\", \"smoke_r13e_b\", \"c4_wm_v10_round13e_a\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r13e_plan.py",
+   "line": 684,
+   "text": "               \"a_sha256\": gate.digest(tmp_path / \"runs/smoke_r13e_a/wm_s.pt\"),"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r13e_plan.py",
+   "line": 685,
+   "text": "               \"b_sha256\": gate.digest(tmp_path / \"runs/smoke_r13e_b/wm_s.pt\")}"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r13e_plan.py",
+   "line": 686,
+   "text": "    path = tmp_path / \"smoke_r13e.complete.json\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r13e_plan.py",
+   "line": 690,
+   "text": "    assert calls[1][1] == tmp_path / \"runs/smoke_r13e_a/wm_s.pt\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r13e_plan.py",
+   "line": 695,
+   "text": "    receipt[\"b_sha256\"] = gate.digest(tmp_path / \"runs/smoke_r13e_b/wm_s.pt\")"
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r14_gate.py",
+   "line": 148,
+   "text": "    record = json.loads((tmp_path / \"chk_r14/b2_watch.json\").read_text())"
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r14_gate.py",
+   "line": 150,
+   "text": "    assert (tmp_path / \"chk_r14\" / r14.B2_STOP_MARKER).exists() is stops"
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r14_gate.py",
+   "line": 166,
+   "text": "    _write(tmp_path / \"chk_r14/a/midrun/RESULT.json\","
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r14_gate.py",
+   "line": 168,
+   "text": "    _write(tmp_path / \"chk_r14/a/postrun/RESULT.json\","
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r14_gate.py",
+   "line": 171,
+   "text": "    record = json.loads((tmp_path / \"chk_r14/a_watch.json\").read_text())"
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r14_gate.py",
+   "line": 182,
+   "text": "    record = json.loads((tmp_path / \"chk_r14/b2_watch.json\").read_text())"
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r14_gate.py",
+   "line": 221,
+   "text": "    (root / \"chk_r14/a/midrun\").mkdir(parents=True)"
+  },
+  {
+   "needle": "chk_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r14_gate.py",
+   "line": 239,
+   "text": "    (root / \"chk_r14/A_CHECK_STOP.json\").write_text(\"{}\")"
+  },
+  {
+   "needle": "chk_r13e",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r14_gate.py",
+   "line": 259,
+   "text": "    assert \"chk_r13e/b2/postrun\" not in chain                     # never waits for the b2 postrun"
+  },
+  {
+   "needle": "smoke_r14",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_r14_gate.py",
+   "line": 231,
+   "text": "        if Path(p).name == \"smoke_r14.complete.json\":"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13c_waiter.py",
+   "line": 247,
+   "text": "    source_path = tmp_path / \"chk_r10b\" / \"states192.json.gz\""
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13f_gate_launcher.py",
+   "line": 39,
+   "text": "elif [[ \"$*\" == *runs/smoke_r13f* ]]; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13f_gate_launcher.py",
+   "line": 69,
+   "text": "                     '--report \"$L/smoke_r13f.gate.json\" > \"$L/smoke_r13f.verdict\"', \"exit 3\", \"exec \"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13f_gate_launcher.py",
+   "line": 88,
+   "text": "    \"runs/smoke_r13f\", \"runs/c4_wm_v10_round13f\", \"smoke_r13f.log\", \"smoke_r13f.verdict\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13f_gate_launcher.py",
+   "line": 89,
+   "text": "    \"smoke_r13f.gate.json\", \".round13f_gate.lock\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13f_gate_launcher.py",
+   "line": 124,
+   "text": "                     \"loss.brake_follow_cav_weight=2.0\", f\"--out {shell_path(root)}/runs/smoke_r13f\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13f_gate_launcher.py",
+   "line": 126,
+   "text": "    for required in (\"-m wms.train.round13f_gate\", f\"--smoke-dir {shell_path(root)}/runs/smoke_r13f\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13f_gate_launcher.py",
+   "line": 127,
+   "text": "                     f\"--smoke-log {shell_path(root)}/smoke_r13f.log\", \"--train-exit-code 0\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13f_gate_launcher.py",
+   "line": 129,
+   "text": "                     f\"--report {shell_path(root)}/smoke_r13f.gate.json\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13f_gate_launcher.py",
+   "line": 141,
+   "text": "    assert (root / \"smoke_r13f.log\").exists() and (root / \"smoke_r13f.verdict\").exists()"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13f_gate_launcher.py",
+   "line": 228,
+   "text": "    for a, b in ((\"R13F_\", \"R12_\"), (\"smoke_r13f\", \"smoke_r12\"), (\"c4_wm_v10_round13f\", \"c4_wm_v10_round12\"),"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13m_gate_launcher.py",
+   "line": 39,
+   "text": "elif [[ \"$*\" == *runs/smoke_r13m* ]]; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13m_gate_launcher.py",
+   "line": 69,
+   "text": "                     '--report \"$L/smoke_r13m.gate.json\" > \"$L/smoke_r13m.verdict\"', \"exit 3\", \"exec \"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13m_gate_launcher.py",
+   "line": 88,
+   "text": "    \"runs/smoke_r13m\", \"runs/c4_wm_v10_round13m\", \"smoke_r13m.log\", \"smoke_r13m.verdict\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13m_gate_launcher.py",
+   "line": 89,
+   "text": "    \"smoke_r13m.gate.json\", \".round13m_gate.lock\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13m_gate_launcher.py",
+   "line": 124,
+   "text": "                     \"loss.brake_follow_cav_weight=2.0\", f\"--out {shell_path(root)}/runs/smoke_r13m\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13m_gate_launcher.py",
+   "line": 126,
+   "text": "    for required in (\"-m wms.train.round13f_gate\", f\"--smoke-dir {shell_path(root)}/runs/smoke_r13m\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13m_gate_launcher.py",
+   "line": 127,
+   "text": "                     f\"--smoke-log {shell_path(root)}/smoke_r13m.log\", \"--train-exit-code 0\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13m_gate_launcher.py",
+   "line": 129,
+   "text": "                     f\"--report {shell_path(root)}/smoke_r13m.gate.json\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13m_gate_launcher.py",
+   "line": 141,
+   "text": "    assert (root / \"smoke_r13m.log\").exists() and (root / \"smoke_r13m.verdict\").exists()"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13m_gate_launcher.py",
+   "line": 227,
+   "text": "    for a, b in ((\"R13M_\", \"R13F_\"), (\"smoke_r13m\", \"smoke_r13f\"), (\"c4_wm_v10_round13m\", \"c4_wm_v10_round13f\"),"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13s_gate_launcher.py",
+   "line": 39,
+   "text": "elif [[ \"$*\" == *runs/smoke_r13s* ]]; then"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13s_gate_launcher.py",
+   "line": 69,
+   "text": "                     '--report \"$L/smoke_r13s.gate.json\" > \"$L/smoke_r13s.verdict\"', \"exit 3\", \"exec \"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13s_gate_launcher.py",
+   "line": 88,
+   "text": "    \"runs/smoke_r13s\", \"runs/c4_wm_v10_round13s\", \"smoke_r13s.log\", \"smoke_r13s.verdict\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13s_gate_launcher.py",
+   "line": 89,
+   "text": "    \"smoke_r13s.gate.json\", \".round13s_gate.lock\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13s_gate_launcher.py",
+   "line": 124,
+   "text": "                     \"loss.brake_follow_cav_weight=2.0\", f\"--out {shell_path(root)}/runs/smoke_r13s\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13s_gate_launcher.py",
+   "line": 126,
+   "text": "    for required in (\"-m wms.train.round13f_gate\", f\"--smoke-dir {shell_path(root)}/runs/smoke_r13s\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13s_gate_launcher.py",
+   "line": 127,
+   "text": "                     f\"--smoke-log {shell_path(root)}/smoke_r13s.log\", \"--train-exit-code 0\","
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13s_gate_launcher.py",
+   "line": 129,
+   "text": "                     f\"--report {shell_path(root)}/smoke_r13s.gate.json\"):"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13s_gate_launcher.py",
+   "line": 141,
+   "text": "    assert (root / \"smoke_r13s.log\").exists() and (root / \"smoke_r13s.verdict\").exists()"
+  },
+  {
+   "needle": "smoke_r13",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tests/test_round13s_gate_launcher.py",
+   "line": 227,
+   "text": "    for a, b in ((\"R13S_\", \"R13F_\"), (\"smoke_r13s\", \"smoke_r13f\"), (\"c4_wm_v10_round13s\", \"c4_wm_v10_round13f\"),"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r10b_checks/analyze.py",
+   "line": 3,
+   "text": "  python analyze.py --shm /dev/shm/chk_r10b --out VERDICT_R10B_CHECKS.md [--m5 SUMMARY_R10B.md] [--meta meta.json]"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r10b_checks/auto_arm.sh",
+   "line": 5,
+   "text": "CHK=$L/chk_r10b"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r10b_checks/common.py",
+   "line": 17,
+   "text": "SHM = os.environ.get(\"R10BCHK_SHM\", \"/dev/shm/chk_r10b\")"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r10b_checks/run_all.sh",
+   "line": 8,
+   "text": "CHK=$L/chk_r10b"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r10b_checks/run_all.sh",
+   "line": 14,
+   "text": "  RUN=${R10B_RUN:-$L/runs/smoke_r10b}; OUT=/dev/shm/chk_r10b_dry; LIM_ROLL=\"--limit 6 --k 1 --steps 120\"; LIM_REM=\"--limit 6 --k 1\"; LIM_OS=\"--limit 8 --stride-eps 30\"; WORKERS=${WORKERS_DRY:-12}"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r10b_checks/run_all.sh",
+   "line": 16,
+   "text": "  RUN=${R10B_RUN:-$L/runs/smoke_r10b}; OUT=/dev/shm/chk_r10b_mid; LIM_ROLL=\"--limit 48 --k 1 --steps 240\"; LIM_REM=\"--limit 48 --k 1\"; LIM_OS=\"--limit 24 --stride-eps 10\""
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r10b_checks/run_all.sh",
+   "line": 18,
+   "text": "  OUT=/dev/shm/chk_r10b; LIM_ROLL=\"--k 2 --steps 240\"; LIM_REM=\"--k 2\"; LIM_OS=\"--stride-eps 4\""
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r11_checks/auto_arm.sh",
+   "line": 3,
+   "text": "# (chk_r10b/VERDICT_R10B_CHECKS.md exists or its auto_arm PID is gone), then run all R11 checks (CPU only, nice 10,"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r11_checks/auto_arm.sh",
+   "line": 15,
+   "text": "while [ ! -f \"$L/chk_r10b/VERDICT_R10B_CHECKS.md\" ] && kill -0 \"$R10B_ARM_PID\" 2>/dev/null; do sleep 120; done"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r11_checks/run_all.sh",
+   "line": 22,
+   "text": "STATES=${STATES:-$L/chk_r10b/states192.json.gz}"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r12_checks/run_all.sh",
+   "line": 40,
+   "text": "STATES=${STATES:-$L/chk_r10b/states192.json.gz}"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/final_audit_remote.py",
+   "line": 8,
+   "text": "out = root/'diag_emerg/offline_train48_workers4'"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/final_audit_remote.py",
+   "line": 41,
+   "text": "          'postprocess_script_sha256':study.file_digest(root/'diag_emerg/postprocess_remote.py'),"
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/final_audit_remote.py",
+   "line": 7,
+   "text": "repo = root/'repo_r13e_8c7ff0a1'"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/gs_events_small.py",
+   "line": 9,
+   "text": "      --n-states 12 --out /root/autodl-tmp/c4/v5/diag_emerg/gs_events_small_<sha8>.json"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/gs_events_small.py",
+   "line": 41,
+   "text": "    work = root / \"diag_emerg\""
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/launch_remote.py",
+   "line": 14,
+   "text": "WORK = ROOT / 'diag_emerg'"
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/launch_remote.py",
+   "line": 13,
+   "text": "REPO = ROOT / 'repo_r13e_8c7ff0a1'"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/postprocess_remote.py",
+   "line": 14,
+   "text": "WORK = ROOT/'diag_emerg'"
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/postprocess_remote.py",
+   "line": 13,
+   "text": "REPO = ROOT/'repo_r13e_8c7ff0a1'"
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/prepare_train_panel.py",
+   "line": 74,
+   "text": "    path = study.checked_path(ROOT / \"chk_r10b/states192.json.gz\")"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/prepare_train_panel.py",
+   "line": 7,
+   "text": "Only the two named outputs in diag_emerg are written. Existing identical outputs"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/prepare_train_panel.py",
+   "line": 30,
+   "text": "WORK = ROOT / \"diag_emerg\""
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/prepare_train_panel.py",
+   "line": 234,
+   "text": "    require(path.parent == WORK, \"output must be directly inside diag_emerg\")"
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/prepare_train_panel.py",
+   "line": 29,
+   "text": "REPO = ROOT / \"repo_r13e_8c7ff0a1\""
+  },
+  {
+   "needle": "chk_r10b",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/remote_ops.py",
+   "line": 37,
+   "text": "paths=[root,root/'runs/c4_wm_v10_round12c/wm_s.pt',root/'diag_emerg',root/'repo_r13e_8c7ff0a1',root/'chk_r10b/states192.json.gz',root/'data/v5_native/C4_EPISODES_MANIFEST.json']"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/remote_ops.py",
+   "line": 12,
+   "text": "WORK = REMOTE + \"/diag_emerg\""
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/remote_ops.py",
+   "line": 37,
+   "text": "paths=[root,root/'runs/c4_wm_v10_round12c/wm_s.pt',root/'diag_emerg',root/'repo_r13e_8c7ff0a1',root/'chk_r10b/states192.json.gz',root/'data/v5_native/C4_EPISODES_MANIFEST.json']"
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/remote_ops.py",
+   "line": 11,
+   "text": "REPO = REMOTE + \"/repo_r13e_8c7ff0a1\""
+  },
+  {
+   "needle": "repo_r13e_8c7ff0a1",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r13e_checks/remote_ops.py",
+   "line": 37,
+   "text": "paths=[root,root/'runs/c4_wm_v10_round12c/wm_s.pt',root/'diag_emerg',root/'repo_r13e_8c7ff0a1',root/'chk_r10b/states192.json.gz',root/'data/v5_native/C4_EPISODES_MANIFEST.json']"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r14_checks/sanity_roll.py",
+   "line": 10,
+   "text": "States: the first N states of diag_emerg/train_states48.json.gz (R13E panel; TRAIN role re-verified against"
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r14_checks/sanity_roll.py",
+   "line": 47,
+   "text": "STATES = L5 / \"diag_emerg/train_states48.json.gz\""
+  },
+  {
+   "needle": "diag_emerg",
+   "path": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/tools/r14_checks/sanity_roll.py",
+   "line": 49,
+   "text": "RECEIPT = L5 / \"diag_emerg/panel_receipt.json\""
+  }
+ ],
+ "symlinks": []
+}

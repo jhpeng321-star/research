@@ -201,6 +201,12 @@ class SameHorizonSelection:
     stage_best: dict = field(default_factory=dict)
     stage_last: dict = field(default_factory=dict)
     final: Optional[dict] = None
+    #: V8WM (0 = off, unchanged): ramp-HDV position error / stuck-fraction terms (horizons
+    #: >= ``ramp_min_horizon_s``; validation keys of ``loss.merge_timing``).
+    ramp_weight: float = 0.0
+    stuck_weight: float = 0.0
+    ramp_min_horizon_s: float = MIN_SELECTION_HORIZON_S
+    own_ramp: dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.horizons = tuple(float(h) for h in self.horizons)
@@ -245,10 +251,50 @@ class SameHorizonSelection:
             return float("inf"), ratios
         return sum(ratios.values()) / len(ratios), ratios
 
+    @property
+    def ramp_on(self) -> bool:
+        return self.ramp_weight > 0.0 or self.stuck_weight > 0.0
+
+    def _ramp_values(self, rows: Sequence[dict]) -> dict:
+        """``{h: (ramp |ds| m, |stuck_pred - stuck_rec|)}`` of the rows at h >= the minimum."""
+        out: dict = {}
+        for row in rows:
+            i = _match(float(row["horizon_s"]), self.horizons)
+            if i is None or self.horizons[i] < self.ramp_min_horizon_s - 1e-9:
+                continue
+            ramp = float(row.get("mean_ramp_abs_ds_m", float("nan")))
+            stuck = abs(float(row.get("mean_merge_timing_stuck_pred_frac", float("nan")))
+                        - float(row.get("mean_merge_timing_stuck_rec_frac", float("nan"))))
+            out[self.horizons[i]] = (ramp, stuck)
+        return out
+
+    def ramp_extra(self, rows: Sequence[dict], horizons: Sequence[float], norms: dict) -> tuple:
+        """V8WM score addition ``w_r * mean_h(ramp_h / norm_h) + w_s * mean_h stuck_h`` over
+        ``horizons`` (>= the minimum, finite values only) and its parts."""
+        values = self._ramp_values(rows)
+        ramp = {f"{h:g}": values[h][0] / norms[h] for h in horizons
+                if h in values and math.isfinite(values[h][0]) and norms.get(h, 0.0) > 0}
+        stuck = {f"{h:g}": values[h][1] for h in horizons
+                 if h in values and math.isfinite(values[h][1])}
+        extra = 0.0
+        if self.ramp_weight > 0.0 and ramp:
+            extra += self.ramp_weight * sum(ramp.values()) / len(ramp)
+        if self.stuck_weight > 0.0 and stuck:
+            extra += self.stuck_weight * sum(stuck.values()) / len(stuck)
+        return extra, {"ramp_ratio": ramp, "stuck_abs_diff": stuck, "extra": extra}
+
     def consider_event(self, rows: Sequence[dict], *, stage_s: float, step: int,
                        stage_end: bool = False) -> dict:
         """Offer one validation event; returns ``{"global_best", "stage_best", "stage_last"}``."""
         score, ratios = self.online_score(rows)
+        ramp_parts = None
+        if self.ramp_on and math.isfinite(score):
+            # online normaliser of the ramp term: this run's first value at each horizon
+            for h, (value, _) in self._ramp_values(rows).items():
+                if math.isfinite(value) and value > 0:
+                    self.own_ramp.setdefault(h, value)
+            extra, ramp_parts = self.ramp_extra(rows, self.common_horizons, self.own_ramp)
+            score += extra
         eligible = bool(float(stage_s) >= self.eligible_stage_s and math.isfinite(score))
         entry = {"step": int(step), "stage_s": float(stage_s), "score": score,
                  "eligible": eligible, "selected": False, "stage_end": bool(stage_end),
@@ -256,6 +302,8 @@ class SameHorizonSelection:
                  "horizons_s": sorted(float(r["horizon_s"]) for r in rows),
                  "position_ratio": ratios,
                  "positions": {f"{h:g}": v for h, v in self._positions(rows).items()}}
+        if ramp_parts is not None:
+            entry["ramp_terms"] = ramp_parts
         flags = {"global_best": False, "stage_best": False, "stage_last": False}
         if eligible:
             key = float(stage_s)
@@ -316,6 +364,13 @@ class SameHorizonSelection:
             values = [c["positions"][h] for c in cands if h in c["positions"]]
             norms[h] = (self._reference(h) if self._reference(h) > 0
                         else (min(values) if values else float("nan")))
+        ramp_norms: dict = {}
+        if self.ramp_on:
+            # V8WM: final ramp normaliser = the best (lowest) candidate value at each horizon
+            for cand in cands:
+                for h, (value, _) in self._ramp_values(cand["rows"]).items():
+                    if h in full and math.isfinite(value) and value > 0:
+                        ramp_norms[h] = min(value, ramp_norms.get(h, float("inf")))
         best = None
         for cand in cands:
             ratios = {f"{h:g}": cand["positions"][h] / norms[h] for h in full
@@ -324,12 +379,16 @@ class SameHorizonSelection:
             cand["position_ratio"] = ratios
             cand["score"] = (sum(ratios.values()) / len(ratios) if cand["complete"]
                              else float("inf"))
+            if self.ramp_on and cand["complete"]:
+                extra, cand["ramp_terms"] = self.ramp_extra(cand["rows"], full, ramp_norms)
+                cand["score"] += extra
             if math.isfinite(cand["score"]) and (best is None or cand["score"] < best["score"]):
                 best = cand
         table = [{"step": c["step"], "stage_s": c["stage_s"], "kinds": c["kinds"],
                   "positions": {f"{h:g}": v for h, v in c["positions"].items()},
                   "position_ratio": c["position_ratio"], "score": c["score"],
                   "complete": c["complete"], "revalidated_s": c["revalidated_s"],
+                  **({"ramp_terms": c["ramp_terms"]} if "ramp_terms" in c else {}),
                   "selected": best is not None and c["step"] == best["step"]} for c in cands]
         self.final = {"horizons_s": list(full),
                       "normalisers": {f"{h:g}": v for h, v in norms.items()},
@@ -355,6 +414,10 @@ class SameHorizonSelection:
                 "eligible_stage_s": self.eligible_stage_s, "best_score": self.score,
                 "best_step": None if self.best is None else self.best["step"],
                 "best_stage_s": None if self.best is None else self.best["stage_s"],
+                **({"ramp_weight": self.ramp_weight, "stuck_weight": self.stuck_weight,
+                    "ramp_min_horizon_s": self.ramp_min_horizon_s,
+                    "ramp_note": "ramp |ds| / (online: first value of the run; final: best "
+                                 "candidate)"} if self.ramp_on else {}),
                 "table": [dict(e) for e in self.table], "final_comparison": self.final}
 
 

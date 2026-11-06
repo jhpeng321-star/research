@@ -1,0 +1,97 @@
+{
+ "status": "MEASURED",
+ "date": "2026-10-24",
+ "tool": "tools/r12_offline_base.py (docs/r12_offline_base.json)",
+ "data": "S-BASEDIAG TRAIN captures (E:/agent-work/c4-v10r11/tmp_basediag r8 decomposition + encoder-input capture): 96 windows x 120 s, one per TRAIN episode (v5_native + genrand_plain), 24 held out by episode",
+ "checkpoint": "round-9 final wm_s_stage300.pt (sha256 af9bc6435aef3008d73af1bd8bfba1b3f2a035ca703760f38b962b8a23f9585a) with the R12 init switches (physical encoder, head rows 0-4 zeroed -> learned centre at the physics defaults)",
+ "lr_rule": "(head scale, centre scale) in {1,10} x {10,100,300,1000} with the lowest held-out objective (one-step Huber(IDM core + round-9 gate x temporal, recorded) + production driver prior 0.05) after the PRODUCTION schedule (40 steps x 4 windows @ 5e-5*s, 70 x 2 @ 3e-5*s; Adam; global clip 1)",
+ "grid": [
+  {
+   "head_scale": 1.0,
+   "centre_scale": 10.0,
+   "held_objective": 1.0335795784588844,
+   "held_huber": 0.935007127458472,
+   "held_prior": 0.0985724510004123
+  },
+  {
+   "head_scale": 1.0,
+   "centre_scale": 100.0,
+   "held_objective": 0.8599866430305778,
+   "held_huber": 0.8080729345821678,
+   "held_prior": 0.051913708448410034
+  },
+  {
+   "head_scale": 1.0,
+   "centre_scale": 300.0,
+   "held_objective": 0.756635590079491,
+   "held_huber": 0.7456858209057422,
+   "held_prior": 0.010949769173748791
+  },
+  {
+   "head_scale": 1.0,
+   "centre_scale": 1000.0,
+   "held_objective": 0.7417758669246194,
+   "held_huber": 0.7323583060029479,
+   "held_prior": 0.00941756092167149
+  },
+  {
+   "head_scale": 10.0,
+   "centre_scale": 10.0,
+   "held_objective": 0.7792585982609836,
+   "held_huber": 0.7689764145352863,
+   "held_prior": 0.0102821837256973
+  },
+  {
+   "head_scale": 10.0,
+   "centre_scale": 100.0,
+   "held_objective": 0.7529224188037382,
+   "held_huber": 0.7423921545316942,
+   "held_prior": 0.010530264272044102
+  },
+  {
+   "head_scale": 10.0,
+   "centre_scale": 300.0,
+   "held_objective": 0.7383893916342011,
+   "held_huber": 0.7278293766893671,
+   "held_prior": 0.010560014944834014
+  },
+  {
+   "head_scale": 10.0,
+   "centre_scale": 1000.0,
+   "held_objective": 0.7320172999012327,
+   "held_huber": 0.7225617898353418,
+   "held_prior": 0.009455510065890849
+  }
+ ],
+ "chosen": {
+  "head_scale": 10.0,
+  "centre_scale": 1000.0
+ },
+ "centre_final_physical_v0_T_s0_a_b": {
+  "chosen": [
+   27.709121704101562,
+   1.4364955425262451,
+   2.6873960494995117,
+   1.4378478527069092,
+   2.398129463195801
+  ],
+  "noprior": [
+   27.791397094726562,
+   1.4715008735656738,
+   2.881704807281494,
+   1.2754216194152832,
+   2.304525852203369
+  ],
+  "weak_0.01": [
+   27.77484893798828,
+   1.4592456817626953,
+   2.8050575256347656,
+   1.3383076190948486,
+   2.349533796310425
+  ]
+ },
+ "courtesy_weight": 9.067,
+ "courtesy_lr_scale": 1000.0,
+ "courtesy_note": "R11 zero-init rule values (docs/r11_weight_rule.json): weight = fix-B weighted gradient norm 0.737 / G_courtesy(w=1) at the zero-init head; acts only through the global grad clip (rollout_grad=false, Adam per-parameter scale invariant). lr x1000 = best held-out contrast loss from the zero-init head.",
+ "limits": "one-step teacher-forced proxy of the rollout objective; used only to size how far Adam can move the centre and head within the schedule"
+}

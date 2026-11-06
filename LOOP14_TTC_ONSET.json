@@ -1,0 +1,19 @@
+{
+ "schema": "loop14_ttc_onset/1",
+ "what": "S-TTC check of physics.emergency_onset='driver_b' (learned comfortable b) vs 13E plant onset; inference only",
+ "harness": "gpuR diag_ttc/ttc_gate_roll_ps2.py unchanged (gate path: native-IDM-twin CAVs, entries on, trainer imagination), wrapped by diag_ttc/loop14_onset/run_onset.py setting physics.emergency_onset on every PhysicsConfig holder",
+ "code": "repo_loop14_68366f88 (c4/loop14 68366f88)",
+ "checkpoint": "runs/c4_wm_v10_round13e_a/wm_s.pt (13E-A, as configured: E + gs + learned yield)",
+ "states": "24 TRAIN v5_native states (diag_emerg/train_states48.json.gz panel), 120 s, ks 0,1 (2 samples), CPU nice 19, 4 workers",
+ "analysis": "c4-ttc gate_variants.py / gate_ana.py (TTC), runs/ttc_onset/onset_metrics.py (1 s tapes: HDV lane-0/1 dv/1s < -3, speed-deficit delay, merge-end crossings, ramp->lane-1 merges)",
+ "sumo": {"gate_share_1e3": 1.68, "strict_share_1e3": 0.57, "hard_brake_share_1s": 0.00029, "delay_veh_s_per_state": 4105.6, "merge_end_crossings_per_state": 73.42, "merges_per_state": 11.29},
+ "arms": {
+  "13E-A plant (original TTC.md run, 3 samples)": {"gate_ratio": [1.97, 1.52, 2.56], "strict_ratio": [5.11, 3.81, 6.67], "hard_brake_share_1s": 0.00687, "delay_veh_s_per_state": 4159.8, "merge_end_crossings_per_state": 72.29, "merges_per_state": 10.68},
+  "13E-A envB 4.5 (TTC.md inference patch)": {"gate_ratio": [0.68, 0.48, 0.95], "strict_ratio": [1.75, 1.22, 2.41], "hard_brake_share_1s": 0.00772, "delay_veh_s_per_state": 4145.4, "merge_end_crossings_per_state": 71.29, "merges_per_state": 10.25},
+  "13E-A plant, loop14 code (control)": {"gate_ratio": [2.01, 1.50, 2.65], "strict_ratio": [5.17, 3.81, 6.77], "hard_brake_share_1s": 0.00695, "delay_veh_s_per_state": 4141.5, "merge_end_crossings_per_state": 72.31, "merges_per_state": 10.38, "wm_overlap_hits": 105.5},
+  "13E-A driver_b, loop14 code": {"gate_ratio": [0.27, 0.14, 0.44], "strict_ratio": [0.67, 0.32, 1.12], "hard_brake_share_1s": 0.00078, "delay_veh_s_per_state": 4112.7, "delay_ratio_wm_over_sumo": [1.00, 0.92, 1.09], "merge_end_crossings_per_state": 71.40, "merges_per_state": 9.85, "wm_overlap_hits": 16.0}
+ },
+ "notes": ["gate-metric ratio 0.27 [0.14,0.44] now falls BELOW the gate's lower band 0.28 (SUMO hits are mostly crawling-queue overlaps the WM no longer produces); strict ratio 0.67 [0.32,1.12] lies inside the fidelity C2 band [0.23, 4.43]",
+           "the 12 C9 gate worlds and the fidelity-C2 harness were NOT run",
+           "1 s tapes: hard-brake share is a 1 s-difference proxy (TTC.md 0.5 s: 13E 0.88 %, SUMO 0.03 %)"]
+}

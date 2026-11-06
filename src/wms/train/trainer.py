@@ -6,12 +6,14 @@ chunked unroll live in ``wms.train.losses`` / ``wms.train.unroll``.
 """
 from __future__ import annotations
 
+import json
+import math
 import os
 import random
 import shutil
 import sys
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Optional
 
@@ -21,13 +23,15 @@ from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
 from wms.core.errors import WmsError
 from wms.data.collate import collate
-from wms.model.checkpoint import save_checkpoint, sha256_file
+from wms.model.checkpoint import _expand_lane_v5_inputs, save_checkpoint, sha256_file
+from wms.model.follower_courtesy import expand_head_inputs
 from wms.physics.projection import FeasibilityProjection, ProjectionConfig
 
-from .curriculum import StagePlan, stage_plan
+from .curriculum import PlateauRule, StagePlan, stage_plan
 from .logging import JsonlLog, write_json
 from .losses.compose import build_loss
 from .receipt import write_train_receipt
+from .losses.merge import METRIC_NAMES as MERGE_METRIC_NAMES
 from .selection import (MONITORS, LongHorizonSelection, MixedHorizonSchedule,
                         MultiHorizonSelection, SameHorizonSelection, eligible_stage_s,
                         validation_horizons)
@@ -78,6 +82,68 @@ def switch_window_sampler(dataset: Dataset, fraction: float) -> WeightedRandomSa
     return WeightedRandomSampler(weights, num_samples=len(dataset), replacement=True)
 
 
+def build_optimizer(model, *, lr: float, weight_decay: float,
+                    freeze_prefixes: tuple[str, ...] = (),
+                    lr_scale: Optional[dict[str, float]] = None):
+    """R5TOOLS: Adam over trainable parameter groups with optional freezing / LR scales.
+
+    ``freeze_prefixes`` match by ``name.startswith(prefix)`` and set ``requires_grad=False``
+    (the tensors are not passed to the optimizer).  ``lr_scale`` maps a prefix to a multiplier
+    of the stage learning rate; when prefixes overlap the longest one wins.  With both options
+    empty this returns exactly the single-group optimizer over ``model.parameters()``.
+    """
+    named = list(model.named_parameters())
+    scale = dict(lr_scale or {})
+    frozen = tuple(freeze_prefixes)
+    buckets: dict[str, list] = {"": []}
+    trainable_names: list[str] = []
+    frozen_tensors = frozen_parameters = 0
+    matched_freeze: set[str] = set()
+    matched_scale: set[str] = set()
+    for name, param in named:
+        hit = next((prefix for prefix in frozen if name.startswith(prefix)), None)
+        if hit is not None:
+            param.requires_grad_(False)
+            frozen_tensors += 1
+            frozen_parameters += int(param.numel())
+            matched_freeze.add(hit)
+            continue
+        if not param.requires_grad:
+            continue
+        keys = [prefix for prefix in scale if name.startswith(prefix)]
+        key = max(keys, key=len) if keys else ""
+        matched_scale.update(keys)
+        buckets.setdefault(key, []).append(param)
+        trainable_names.append(name)
+    groups = []
+    report_groups = []
+    for key in [""] + sorted(k for k in buckets if k):
+        params = buckets.get(key) or []
+        if not params:
+            continue
+        factor = float(scale.get(key, 1.0))
+        groups.append({"params": params, "lr": float(lr) * factor,
+                       "weight_decay": float(weight_decay), "lr_scale": factor})
+        report_groups.append({"prefix": key or None, "lr_scale": factor,
+                              "lr": float(lr) * factor, "tensors": len(params),
+                              "parameters": sum(int(p.numel()) for p in params)})
+    if not groups:
+        raise ValueError("optimizer has no trainable parameters after freeze_prefixes")
+    report = {
+        "groups": report_groups,
+        "freeze_prefixes": list(frozen),
+        "frozen_tensors": frozen_tensors,
+        "frozen_parameters": frozen_parameters,
+        "trainable_tensors": sum(g["tensors"] for g in report_groups),
+        "trainable_parameters": sum(g["parameters"] for g in report_groups),
+        "trainable_tensor_names": trainable_names,
+        "total_parameters": sum(int(p.numel()) for _, p in named),
+        "unmatched_freeze_prefixes": sorted(set(frozen) - matched_freeze),
+        "unmatched_lr_scale_prefixes": sorted(set(scale) - matched_scale),
+    }
+    return (torch.optim.Adam(groups, lr=lr, weight_decay=weight_decay), report)
+
+
 class WmSTrainer:
     """Train one WM-S member through the 10/30/60/120 s curriculum."""
 
@@ -98,6 +164,16 @@ class WmSTrainer:
         torch.manual_seed(int(s.seed))
         random.seed(int(s.seed))
         self.device = torch.device(s.device)
+        # Both launch lines cap the same allocator; the stricter configured cap wins.
+        fractions = [float(value) for name in ("C4_GPU_MEM_FRACTION", "WMS_GPU_MEM_FRACTION")
+                     if (value := os.environ.get(name))]
+        if any(not 0.0 < value <= 1.0 for value in fractions):
+            raise ValueError("GPU memory fractions must be in (0, 1]")
+        frac = min(fractions) if fractions else None
+        if frac and self.device.type == "cuda":
+            # The allocator API requires an explicit index (unlike model.to("cuda")).
+            index = self.device.index if self.device.index is not None else torch.cuda.current_device()
+            torch.cuda.set_per_process_memory_fraction(frac, index)
         self.model = model.to(self.device)
         if (self.model.history_s != s.history_s or (
                 s.history_s is not None and self.model.history_stride_s != s.history_stride_s)):
@@ -108,8 +184,11 @@ class WmSTrainer:
         self.composer = build_loss(s, physics=self.model.physics)
         self.runner = UnrollRunner(self.model, s, self.composer, projection=projection,
                                    device=self.device)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=s.lr,
-                                          weight_decay=s.weight_decay)
+        self.optimizer, self.optimizer_groups = build_optimizer(
+            self.model, lr=s.lr, weight_decay=s.weight_decay,
+            freeze_prefixes=tuple(s.freeze_prefixes), lr_scale=s.lr_scale)
+        print("WM-S optimizer groups: " + json.dumps(self.optimizer_groups, sort_keys=True),
+              file=sys.stderr)
         self.dataset, self.val_dataset = dataset, val_dataset
         self.out_dir = Path(out_dir)
         self.init_report = self._init_from_checkpoint(s.init_from)
@@ -121,6 +200,7 @@ class WmSTrainer:
         """Mirror the flag-gated model bounds onto the model (no-ops when unset)."""
         s, model = self.settings, self.model
         model.apply_direct_commands = False  # recorded teacher or the full dispatcher owns CAVs
+        model.checkpoint_forward = bool(getattr(s, "checkpoint_forward", False))
         if getattr(s, "lane_hazard_decouple", False):
             # LANEFIX: rollout lane CE / flip-rate do not train the hazard (event loss does).
             model.lane_hazard_detach = True
@@ -146,10 +226,21 @@ class WmSTrainer:
 
         Only same-name/same-shape tensors are copied (strict=False); the report lists
         what transferred, what was new in this model and what the checkpoint had that
-        this model lacks.  The name resolves through the data registry (an absolute
-        path is taken as already resolved), so restricted material is refused.
+        this model lacks.  A narrower lane-v5 first layer is ZERO-expanded to the model's
+        ``lane_v5_extra_features`` width first (exact identity), exactly as
+        :func:`wms.model.checkpoint.load_checkpoint` does; those tensors are reported as
+        ``expanded`` instead of shape mismatches.  The name resolves through the data
+        registry (an absolute path is taken as already resolved), so restricted material
+        is refused.
         """
         if name is None:
+            if (getattr(self.settings, "driver_param_init", "checkpoint") != "checkpoint"
+                    or bool(getattr(self.settings, "residual_accel_reinit", False))
+                    or bool(getattr(self.settings, "temporal_accel_reinit", False))
+                    or getattr(self.settings, "temporal_lane_bias_init", None) is not None
+                    or getattr(self.settings, "temporal_state_table_init", None) is not None):
+                raise CheckpointInitError("init switches (driver_param_init, residual_accel_reinit, "
+                                          "temporal_accel_reinit) need model.init_from")
             return None
         import torch as _torch
 
@@ -162,25 +253,118 @@ class WmSTrainer:
         if not isinstance(payload, dict) or payload.get("format") != "wm_s/1":
             raise CheckpointInitError(f"model.init_from: {path} is not a wm_s/1 checkpoint")
         own = self.model.state_dict()
-        source = payload.get("model") or {}
+        raw_source = payload.get("model") or {}
+        courtesy_init = None
+        if getattr(self.model, "follower_courtesy", None) is not None:
+            if bool(getattr(self.settings, "follower_courtesy_init_zero", False)):
+                # R11 switch: a fresh zero-initialised head even if the checkpoint has one.
+                raw_source = {key: value for key, value in raw_source.items()
+                              if not key.startswith("follower_courtesy.")}
+                courtesy_init = "zero"
+            else:
+                courtesy_init = ("checkpoint" if any(key.startswith("follower_courtesy.")
+                                                     for key in raw_source) else "zero")
+        source = _expand_lane_v5_inputs(raw_source, self.model)
+        # R11: a round-10b head (10 pair inputs) zero-expands exactly to the version-2 head.
+        source = expand_head_inputs(source, own)
+        expanded = sorted(key for key in set(source) & set(raw_source)
+                          if source[key].shape != raw_source[key].shape)
         matched = {key: value for key, value in source.items()
                    if key in own and own[key].shape == value.shape}
         self.model.load_state_dict(matched, strict=False)
         report = {
             "source": str(path), "sha256": sha256_file(path),
             "loaded": sorted(matched),
+            "expanded": expanded,
             "new_in_model": sorted(set(own) - set(source)),
             "shape_mismatch": sorted(key for key in set(source) & set(own)
                                      if own[key].shape != source[key].shape),
             "unused_from_checkpoint": sorted(set(source) - set(own)),
         }
+        if courtesy_init is not None:
+            report["follower_courtesy_init"] = courtesy_init
+        report.update(WmSTrainer._r12_reinit(self))   # explicit: also works on test stand-ins
         print(f"init_from {path.name}: loaded {len(report['loaded'])} tensors, "
+              f"expanded {len(report['expanded'])}, "
               f"new {len(report['new_in_model'])}, shape-mismatch "
               f"{len(report['shape_mismatch'])}, unused {len(report['unused_from_checkpoint'])}",
               file=sys.stderr)
         self.out_dir.mkdir(parents=True, exist_ok=True)
         write_json(self.out_dir / "INIT_FROM.json", report)
         return report
+
+    @torch.no_grad()
+    def _r12_reinit(self) -> dict:
+        """R12 init-only switches, applied AFTER the checkpoint tensors are loaded (no-op by default).
+
+        ``driver_param_init = "centre"`` (physical mode): zero the driver-encoder head rows that emit
+        the five longitudinal parameter MEANS (raw[..., 0, :5] = output rows 0..4), weight and bias.
+        Every driver then starts exactly at the learned shared centre (``centre_logits``) and the
+        per-driver deviation is re-learned from prediction error; a legacy-mode head's saturated
+        raw outputs would otherwise map onto the physical range bounds.  Lane-parameter means and all
+        uncertainty rows are kept.  ``residual_accel_reinit``: zero the delta row (row 0) of the
+        residual acceleration read-out ``residual_net.accel[-1]`` (tanh(0) = 0, live gradient); its
+        log-sigma row is kept.  Returns the report entries (empty when both switches are off).
+        """
+        s, model, out = self.settings, self.model, {}
+        if getattr(s, "driver_param_init", "checkpoint") == "centre":
+            enc = model.driver_encoder
+            if getattr(enc, "driver_param_mode", "legacy") != "physical":
+                raise CheckpointInitError("driver_param_init = centre needs driver_param_mode = physical")
+            last = enc.head[-1]
+            n_long = int(enc.physical_lower.numel())
+            last.weight[:n_long].zero_()
+            last.bias[:n_long].zero_()
+            out["driver_param_init"] = {"mode": "centre", "zeroed_rows": list(range(n_long)),
+                                        "tensor": "driver_encoder.head.2",
+                                        "centre_logits": [float(x) for x in enc.centre_logits]}
+        if bool(getattr(s, "residual_accel_reinit", False)):
+            last = model.residual_net.accel[-1]
+            before = float(last.weight[0].abs().sum() + last.bias[0].abs())
+            last.weight[0].zero_()
+            last.bias[0].zero_()
+            out["residual_accel_reinit"] = {"tensor": "residual_net.accel.2", "zeroed_rows": [0],
+                                            "abs_sum_before": before}
+        if bool(getattr(s, "temporal_accel_reinit", False)):
+            # R13T: the temporal read-out's acceleration row (row 0 of temporal[-1]) restarts at an exact
+            # 0 (the lane rows 1..3 are kept); the emission is then 0 with a live gradient.
+            last = model.temporal[-1]
+            before = float(last.weight[0].abs().sum() + last.bias[0].abs())
+            last.weight[0].zero_()
+            last.bias[0].zero_()
+            out["temporal_accel_reinit"] = {"tensor": "temporal.2", "zeroed_rows": [0],
+                                            "abs_sum_before": before}
+        init_bias = getattr(s, "temporal_lane_bias_init", None)
+        if init_bias is not None:
+            # R13M: the per-lane constant emission starts at the documented values (pre-gate m/s^2).
+            if getattr(model, "temporal_lane_bias", None) is None:
+                raise CheckpointInitError("temporal_lane_bias_init needs model.temporal_accel_lane_bias")
+            model.temporal_lane_bias.copy_(torch.as_tensor([float(x) for x in init_bias],
+                                                           dtype=model.temporal_lane_bias.dtype))
+            out["temporal_lane_bias_init"] = [float(x) for x in model.temporal_lane_bias]
+        table_path = getattr(s, "temporal_state_table_init", None)
+        if table_path is not None:
+            # R13S: the state-conditional mean tables start at the fitted S-FACTORIAL-style table.
+            import numpy as _np
+
+            from ..model import temporal_state_table as tst
+            from ..train.losses.accel_tail import resolve_table
+            if getattr(model, "temporal_state_mean", None) is None:
+                raise CheckpointInitError("temporal_state_table_init needs model.temporal_accel_state_table")
+            path = Path(resolve_table(table_path))
+            table = dict(_np.load(path))
+            tst.check_table(table)
+            for lv in range(len(tst.LEVELS)):
+                model.temporal_state_mean[lv].copy_(torch.as_tensor(table[f"mean{lv}"], dtype=torch.float32))
+                getattr(model, f"temporal_state_n{lv}").copy_(torch.as_tensor(table[f"n{lv}"], dtype=torch.float32))
+            out["temporal_state_table_init"] = {"path": str(path), "sha256": sha256_file(path),
+                                                "cells_used_level0": int((table["n0"] >= tst.MIN_ROWS).sum())}
+        return out
+
+    def set_stage_lr(self, lr: float) -> None:
+        """R5TOOLS: apply a stage learning rate while keeping each group's ``lr_scale``."""
+        for group in self.optimizer.param_groups:
+            group["lr"] = float(lr) * float(group.get("lr_scale", 1.0))
 
     # ------------------------------------------------------------------ steps
     def forward_backward(self, batch: dict, *, unroll_steps: int, backward: bool = True,
@@ -200,6 +384,11 @@ class WmSTrainer:
         if any(p.grad is not None and not bool(torch.isfinite(p.grad).all())
                for p in self.model.parameters()):
             raise RuntimeError("non-finite WM-S gradient")
+        # Diagnostic only: detached pre-clip L2 norm; never modify the gradients.
+        pivot = getattr(self.model, "merge_pivot", None)
+        pivot_grad_norm = (math.hypot(*(float(p.grad.detach().double().norm())
+                                      for p in pivot.parameters() if p.grad is not None))
+                           if pivot is not None else None)
         grad_norm = None
         if self.settings.grad_clip:
             grad_norm = float(torch.nn.utils.clip_grad_norm_(self.model.parameters(),
@@ -208,11 +397,20 @@ class WmSTrainer:
         if any(not bool(torch.isfinite(p).all()) for p in self.model.parameters()):
             raise RuntimeError("non-finite WM-S parameter")
         record = {**parts, "seconds": time.perf_counter() - started, "finite": True}
+        if pivot_grad_norm is not None:
+            record["merge_pivot_grad_norm"] = pivot_grad_norm
         if grad_norm is not None:
             # pre-clip global gradient norm and whether the clip was active (round 5b logging)
             record["grad_norm"] = grad_norm
             record["grad_clipped"] = bool(grad_norm > float(self.settings.grad_clip))
         record["lr"] = float(self.optimizer.param_groups[0]["lr"])
+        encoder = getattr(self.model, "driver_encoder", None)
+        if getattr(encoder, "driver_param_mode", "legacy") == "physical":
+            # R12 telemetry (review C1): the learned shared centre of the longitudinal settings, physical units.
+            with torch.no_grad():
+                lo, hi = encoder.physical_lower, encoder.physical_upper
+                centre = (lo + (hi - lo) * torch.sigmoid(encoder.centre_logits)).tolist()
+            record["driver_centre"] = dict(zip(("v0", "T", "s0", "a", "b"), (float(x) for x in centre)))
         if self.device.type == "cuda":
             record["cuda_peak_mb"] = torch.cuda.max_memory_allocated(self.device) / 2 ** 20
         return record
@@ -236,13 +434,23 @@ class WmSTrainer:
         stream is untouched.  Argmax models take the unchanged path.
         """
         if not getattr(self.model, "_samples_lanes", False):
-            return self._evaluate(val_dataset, unroll_steps=unroll_steps,
-                                  require_full_horizon=require_full_horizon)
+            teacher = getattr(self.model, "merge_teacher_frac", 0.0)
+            self.model.merge_teacher_frac = 0.0
+            try:
+                return self._evaluate(val_dataset, unroll_steps=unroll_steps,
+                                      require_full_horizon=require_full_horizon)
+            finally:
+                self.model.merge_teacher_frac = teacher
         devices = [self.device.index or 0] if self.device.type == "cuda" else []
-        with torch.random.fork_rng(devices=devices):
-            torch.manual_seed(int(self.settings.seed) + 7919)
-            return self._evaluate(val_dataset, unroll_steps=unroll_steps,
-                                  require_full_horizon=require_full_horizon)
+        teacher = getattr(self.model, "merge_teacher_frac", 0.0)
+        self.model.merge_teacher_frac = 0.0
+        try:
+            with torch.random.fork_rng(devices=devices):
+                torch.manual_seed(int(self.settings.seed) + 7919)
+                return self._evaluate(val_dataset, unroll_steps=unroll_steps,
+                                      require_full_horizon=require_full_horizon)
+        finally:
+            self.model.merge_teacher_frac = teacher
 
     def _evaluate(self, val_dataset: Dataset, *, unroll_steps: int,
                   require_full_horizon: bool = False) -> dict:
@@ -250,9 +458,21 @@ class WmSTrainer:
         self.model.eval()
         total = {"loss": 0.0, "position": 0.0, "speed": 0.0, "lane": 0.0}
         optional = ("traffic", "residual_mag", "lane_rate", "flip_rate",
-                    *self.composer.braking.log_terms, "agg_field", "agg_reward", "agg_flow")
+                    *self.composer.braking.log_terms, "brake_persist",
+                    "brake_persist_quantile", "brake_wave", "brake_wave_residual",
+                    "brake_wave_spurious", "agg_field", "agg_reward", "agg_flow",
+                    "merge_speed", "merge_discharge", "merge_timing")
         total.update({name: 0.0 for name in self.composer.names if name in optional})
+        if any(name in ("merge_speed", "merge_discharge") for name in self.composer.names):
+            # V7FT merge-zone calibration metrics (whole-unroll, per batch; mean over batches)
+            total.update({name: 0.0 for name in MERGE_METRIC_NAMES})
         total.update({name: 0.0 for name in MONITORS})
+        timing = "merge_timing" in self.composer.names
+        if timing:
+            # V8WM merge-timing metrics: pooled sums (ratios recomputed after the loop).
+            from .losses.merge_timing import ERRORS_KEY, SUM_KEYS, pooled_metrics
+            total.update({name: 0.0 for name in SUM_KEYS})
+        timing_errors: list = []
         n_batches = valid_targets = available_steps = 0
         reached_steps = None
         for batch in self._eval_loader(val_dataset):
@@ -262,8 +482,16 @@ class WmSTrainer:
             parts = self.forward_backward(batch, unroll_steps=int(unroll_steps), backward=False)
             reached_steps = (parts["unroll_steps"] if reached_steps is None
                              else min(reached_steps, parts["unroll_steps"]))
+            if n_batches == 0 and MERGE_METRIC_NAMES[0] in total:
+                # per-cell merge metrics (their number follows loss.merge.cell_edges_m)
+                total.update({key: 0.0 for key, value in parts.items()
+                              if key.startswith("merge_") and key not in total
+                              and isinstance(value, (int, float))
+                              and not isinstance(value, bool)})
             for key in total:
                 total[key] += float(parts.get(key, 0.0))
+            if timing:
+                timing_errors.extend(parts.get(ERRORS_KEY, []))
             valid_targets += int(parts["valid_targets"])
             n_batches += 1
         if was_training:
@@ -272,8 +500,12 @@ class WmSTrainer:
                 for key, value in total.items()}
         reached = ({"reached_steps": reached_steps, "available_steps": available_steps}
                    if require_full_horizon else {})
-        return {"n_batches": n_batches, "valid_targets": valid_targets, **reached,
-                "unroll_steps": int(unroll_steps), **{f"mean_{k}": v for k, v in mean.items()}}
+        result = {"n_batches": n_batches, "valid_targets": valid_targets, **reached,
+                  "unroll_steps": int(unroll_steps), **{f"mean_{k}": v for k, v in mean.items()}}
+        if timing and n_batches:
+            # pooled over all validation vehicles (ramp |ds|, stuck fractions, merge-time error)
+            result.update(pooled_metrics(result, timing_errors))
+        return result
 
     @torch.no_grad()
     def monitor(self, dataset: Dataset, *, unroll_steps: int,
@@ -291,11 +523,31 @@ class WmSTrainer:
             self.model.train()
         return float(np.mean(losses)) if losses else None
 
+    @torch.no_grad()
+    def _replay_probe(self, replay: Any, *, unroll_steps: int) -> Optional[dict]:
+        """V10HORIZON: forward-probe per-window error and update replay high-error priorities.
+
+        Probes an evenly spaced subset of ``replay_probe_windows`` training windows at the
+        stage horizon; returns the priority snapshot (or None when probing is off/empty).
+        """
+        k = int(self.settings.replay_probe_windows)
+        n = len(replay)
+        if k <= 0 or n <= 0:
+            return None
+        indices = (list(range(n)) if k >= n
+                   else sorted({int(i * (n / k)) for i in range(k)}))
+        batch = collate([replay[i] for i in indices])
+        errors = self.runner.window_errors(batch, unroll_steps=int(unroll_steps))
+        replay.update_errors(indices, errors, decay=float(self.settings.replay_error_decay))
+        return replay.error_snapshot()
+
     # -------------------------------------------------------------------- fit
-    def _make_loader(self, sampler: Optional[WeightedRandomSampler]) -> DataLoader:
+    def _make_loader(self, sampler: Optional[WeightedRandomSampler], *,
+                     batch_size: Optional[int] = None) -> DataLoader:
         s = self.settings
         workers = int(s.num_workers)
-        return DataLoader(self.dataset, batch_size=s.batch_size, shuffle=sampler is None,
+        return DataLoader(self.dataset, batch_size=int(batch_size or s.batch_size),
+                          shuffle=sampler is None,
                           sampler=sampler, collate_fn=collate, num_workers=workers,
                           persistent_workers=workers > 0, prefetch_factor=4 if workers > 0 else None,
                           drop_last=False)
@@ -303,17 +555,34 @@ class WmSTrainer:
     def _save(self, path: Path, **extra) -> None:
         save_checkpoint(path, self.model, self.cfg, extra=extra)
 
+    def _merge_teacher_fraction(self, stage_i: int, done: int, steps: int) -> float:
+        """V10NEGOT: per-stage ramp-only merge teacher fraction, decaying over the stage."""
+        schedule = tuple(float(x) for x in getattr(
+            self.settings, "merge_teacher_frac_schedule", ()))
+        if not schedule:
+            return 0.0
+        base = schedule[min(int(stage_i), len(schedule) - 1)]
+        return max(0.0, base * (1.0 - float(done) / max(int(steps), 1)))
+
     def fit(self) -> TrainResult:
         """Run every curriculum stage and write checkpoints, logs and the TRAIN receipt."""
         s = self.settings
         if s.select_by_long_horizon and self.val_dataset is None:
             raise ValueError("select-by-long-horizon requires a validation dataset")
+        if s.plateau_advance and self.val_dataset is None:
+            raise ValueError("plateau curriculum advancement requires a validation dataset "
+                             "(set selection.select_by_long_horizon or provide val windows)")
         flat = self.cfg.to_legacy_flat()
         out = self.out_dir
         out.mkdir(parents=True, exist_ok=True)
         # Checkpoints do not embed the physics switches (merge_cal, sumo_fidelity ...); the loader
         # (`wms.model.checkpoint`) finds them here, so a mid-run stage checkpoint is scoreable.
-        write_json(out / "physics.json", asdict(self.model.physics))
+        inference_physics = self.inference_physics()
+        write_json(out / "physics.json", asdict(inference_physics))
+        if inference_physics != self.model.physics:
+            # V8WM: trained with these physics; physics.json (what every loader reads) has the
+            # physics.inference values applied.
+            write_json(out / "physics_train.json", asdict(self.model.physics))
         if s.long_horizon_on:
             write_json(out / "train_config.json", flat)
         if self.composer.braking.any_on:
@@ -330,9 +599,14 @@ class WmSTrainer:
         # A mixed dataset supplies per-stage sampling weights (source mix ratio and
         # over-sampling of switch/direct windows visible at that stage's horizon).
         stage_weights = getattr(self.dataset, "stage_weights", None)
+        # V10HORIZON: the priority-replay wrapper, when the assembly built one.
+        replay = (self.dataset if (s.replay_enabled and hasattr(self.dataset, "update_errors")
+                                   and hasattr(self.dataset, "error_snapshot")) else None)
         set_paired_horizon = (getattr(self.dataset, "set_paired_horizon", None)
                               if s.paired_diff_horizon_mode == "stage" else None)
-        loader = (self._make_loader(sampler)
+        per_stage_batch = self.settings.batch_size_per_stage
+        first_batch = per_stage_batch[0] if per_stage_batch else None
+        loader = (self._make_loader(sampler, batch_size=first_batch)
                   if stage_weights is None and set_paired_horizon is None else None)
         selector = LongHorizonSelection()
         # SCHED (default off): multi-horizon selection and short mixed-horizon batches.
@@ -346,7 +620,9 @@ class WmSTrainer:
         same = (SameHorizonSelection(
             horizons=s.selection_horizons_s, references=s.selection_reference,
             eligible_stage_s=eligible_stage_s([p.stage_s for p in self.stages],
-                                              s.selection_min_stage_s))
+                                              s.selection_min_stage_s),
+            ramp_weight=float(getattr(s, "selection_ramp_weight", 0.0)),
+            stuck_weight=float(getattr(s, "selection_stuck_weight", 0.0)))
             if s.selection_mode == "multi_horizon_v2" else None)
         snapshots: dict[int, dict] = {}   # step -> CPU weights of the v2 candidates
         mixer = (MixedHorizonSchedule(s.mixed_horizon_frac, s.mixed_horizon_s,
@@ -434,11 +710,21 @@ class WmSTrainer:
         for stage_i, plan in enumerate(self.stages):
             stage_s = plan.stage_s
             if s.lr_per_stage is not None:
-                for group in self.optimizer.param_groups:
-                    group["lr"] = float(s.lr_per_stage[stage_i])
+                self.set_stage_lr(float(s.lr_per_stage[stage_i]))
             done = 0
             steps_before = global_step
             last_validation = None
+            # V10HORIZON (default off): advance the stage when its own-horizon validation
+            # error plateaus; the rule reads only validation values (no numerics change).
+            plateau = (PlateauRule(patience=s.plateau_patience, min_delta=s.plateau_min_delta,
+                                   min_steps=s.plateau_min_steps, max_steps=s.plateau_max_steps)
+                       if s.plateau_advance else None)
+            advanced = False
+            # V10HORIZON: forward-probe the per-window error at the stage horizon and refresh
+            # the replay priorities before this stage's loader is built.
+            replay_snapshot = (self._replay_probe(replay, unroll_steps=plan.unroll_steps)
+                               if replay is not None else None)
+            stage_bs = per_stage_batch[stage_i] if per_stage_batch else None
             if set_paired_horizon is not None:
                 # Retire persistent workers before changing the parent dataset. Each stage's
                 # new loader must copy the updated eligible groups and window horizon.
@@ -448,10 +734,26 @@ class WmSTrainer:
                 gen = torch.Generator().manual_seed(int(s.seed) + 1000 * stage_i)
                 loader = self._make_loader(WeightedRandomSampler(
                     torch.as_tensor(stage_weights(float(stage_s)), dtype=torch.double),
-                    num_samples=len(self.dataset), replacement=True, generator=gen))
+                    num_samples=len(self.dataset), replacement=True, generator=gen),
+                    batch_size=stage_bs)
             elif set_paired_horizon is not None:
-                loader = self._make_loader(sampler)
-            while done < plan.steps:
+                loader = self._make_loader(sampler, batch_size=stage_bs)
+            elif per_stage_batch is not None:
+                # V10HORIZON: per-horizon batch size (long-horizon memory control).
+                loader = self._make_loader(sampler, batch_size=stage_bs)
+            while done < plan.steps and not advanced:
+                if (replay is not None and s.replay_refresh_every > 0 and done > 0
+                        and done % s.replay_refresh_every == 0 and stage_weights is not None):
+                    # V10HORIZON online refresh: re-probe and rebuild the loader so the updated
+                    # high-error priorities take effect without waiting for the next stage.
+                    refreshed = self._replay_probe(replay, unroll_steps=plan.unroll_steps)
+                    if refreshed is not None:
+                        replay_snapshot = refreshed
+                    gen = torch.Generator().manual_seed(int(s.seed) + 1000 * stage_i + done)
+                    loader = self._make_loader(WeightedRandomSampler(
+                        torch.as_tensor(stage_weights(float(stage_s)), dtype=torch.double),
+                        num_samples=len(self.dataset), replacement=True, generator=gen),
+                        batch_size=stage_bs)
                 for batch in loader:
                     last_batch = batch
                     # Closed-loop shares are measured in the real pass so stateful
@@ -466,6 +768,8 @@ class WmSTrainer:
                     # aggregate ramp/normalisers are computed over the unrolled steps.
                     unroll_steps = (plan.unroll_steps if short_s is None
                                     else max(1, min(plan.unroll_steps, round(short_s / dt_s))))
+                    self.model.merge_teacher_frac = self._merge_teacher_fraction(
+                        stage_i, done, plan.steps)
                     record = self.train_batch(batch, unroll_steps=unroll_steps,
                                               truncation_steps=plan.truncation_steps
                                               or None)
@@ -483,6 +787,25 @@ class WmSTrainer:
                             global_step % s.val_every == 0 or done >= plan.steps):
                         last_validation = (validate_long(stage_s) if same is None else
                                            validate_long(stage_s, stage_end=done >= plan.steps))
+                    if plateau is not None and (
+                            global_step % s.val_every == 0 or done >= plan.steps):
+                        # V10HORIZON: validate the stage's own (shorter) horizon and advance
+                        # the curriculum once its error plateaus.  Forward-only, no grad.
+                        prow, p_horizon = evaluate_horizon(stage_s)
+                        advanced = plateau.observe(global_step, prow["mean_position"])
+                        prow.update(stage_s=float(stage_s), step=global_step, horizon_s=p_horizon,
+                                    selection=False, early_stop=False,
+                                    plateau_best=(None if not math.isfinite(plateau.best)
+                                                  else float(plateau.best)),
+                                    plateau_stale=int(plateau.stale),
+                                    plateau_observations=int(plateau.observations),
+                                    plateau_advanced=bool(advanced),
+                                    plateau_reason=(plateau.reason or None))
+                        val_by_stage.append(prow)
+                        val_log.append(prow)
+                        if advanced:
+                            last_validation = prow
+                            break
                     latest_every = int(os.environ.get("WMS_LATEST_EVERY", "0") or 0)
                     if latest_every and global_step % latest_every == 0:
                         # crash insurance: weights only, overwritten in place (2026-10-16)
@@ -510,6 +833,22 @@ class WmSTrainer:
                 share_log.append(share_record)
                 if stage_record is not None:
                     stage_record["loss_share"] = share_record["loss_share"]
+            if replay is not None and replay_snapshot is not None:
+                # V10HORIZON: priority-replay bookkeeping of the stage (error/boost stats).
+                if stage_record is not None:
+                    stage_record["replay"] = dict(replay_snapshot)
+                val_log.append({"stage_s": float(stage_s), "step": global_step,
+                                "replay": dict(replay_snapshot)})
+            if plateau is not None:
+                # V10HORIZON: the stage's plateau decision (best/stale/advanced/reason/history).
+                summary = plateau.summary()
+                if stage_record is not None:
+                    stage_record["plateau"] = dict(summary)
+                    stage_record["curriculum_advance"] = bool(plateau.advanced)
+                val_log.append({"stage_s": float(stage_s), "step": global_step,
+                                "plateau": summary,
+                                "curriculum_advance": bool(plateau.advanced),
+                                "curriculum_advance_reason": plateau.reason or None})
             if stage_record is not None and not s.select_by_long_horizon:
                 val_by_stage.append(stage_record)
                 val_log.append(stage_record)
@@ -522,7 +861,9 @@ class WmSTrainer:
         if same is not None:
             self._final_same_horizon(same, snapshots, revalidate, out)
         receipt = write_train_receipt(
-            out, settings=s, flat_config=flat, physics=self.model.physics,
+            out, settings=s, flat_config=flat, physics=inference_physics,
+            physics_train=(None if inference_physics == self.model.physics
+                           else self.model.physics),
             device=str(self.device), checkpoint=checkpoint, log_path=train_log.path,
             steps=len(self.history), val_by_stage=val_by_stage, val_log_path=val_log.path,
             has_val=self.val_dataset is not None,
@@ -536,6 +877,13 @@ class WmSTrainer:
         table = {**chosen.summary(),
                  "checkpoint": str(out / "wm_s_best.pt") if chosen.best else None}
         return TrainResult(receipt, checkpoint, self.history, val_by_stage, selection=table)
+
+    def inference_physics(self):
+        """V8WM: the physics written to ``physics.json`` (training physics + physics.inference)."""
+        overrides = dict(getattr(self.settings, "physics_inference", None) or {})
+        if not overrides:
+            return self.model.physics
+        return replace(self.model.physics, **overrides)
 
     def _cpu_weights(self) -> dict:
         return {k: v.detach().to("cpu", copy=True) for k, v in self.model.state_dict().items()}

@@ -1,0 +1,166 @@
+{
+ "torch": "2.8.0+cu128",
+ "device": "cuda",
+ "synthetic": true,
+ "threads": 1,
+ "relative_denominator_floor": 1e-08,
+ "slots": 595,
+ "present": 100,
+ "pid": 42913,
+ "affinity": [
+  0,
+  1
+ ],
+ "nice": 19,
+ "source_sha256": {
+  "tools/speed2_measure.py": "b8c524dd0fadf77be95750e03490c8a5bdb1d58ad5c628bab0b3d0a922b0bc04",
+  "src/wms/core/speed_flags.py": "a19b8da69053dfd6d42e0a3c451ed16b9c5b1c1cbf5c5302716e3a4244790fb5",
+  "src/wms/model/residual_net.py": "86d5e042fed454def0bd823745e5677339ea88bd441b6d12c474690cfc99aced",
+  "src/wms/model/merge_pivot.py": "eb89a54c7f7fae489103f2ee3f8a3c95e3e759adcea335a2ad273c9fd0b7a6fd",
+  "src/wms/model/wms.py": "d4620ecc0befe869256cbe040038f2584dcd56495f69cfb4fdb42396cb540bcd",
+  "src/wms/train/cav_drive.py": "7affb448e9f25ccfff8848b6a7376a82a75b958daae0bda21b539f726d7b47b1",
+  "src/wms/train/losses/merge_pivot.py": "f4ac94de0a339b88e5fee3c535af4b3ca89f9d8f2a6b9745b4563a5b65f253fc",
+  "src/wms/data/history.py": "f56728cb3b166040f0bb286de6e630eefb903a3655fc1632478451defbbb44fd",
+  "src/wms/control/bridge.py": "88626322b3751047844b14fbe07e0f39bf9f21214622ae0b2697e6c3f64d3a1e",
+  "src/wms/control/dreamer.py": "35e3d4b962e03d4bd02e76b7358ceca07304e27fd59412f90bff765003650044"
+ },
+ "policy": {
+  "slots": 96,
+  "present": 24,
+  "control_horizon": 10,
+  "off": {
+   "median_s": 7.012914352118969,
+   "samples_s": [
+    7.012914352118969
+   ]
+  },
+  "native_ramp_merge": "wm_law",
+  "native_cav": "head",
+  "native_lane_change": true,
+  "audit_thinned": {
+   "median_s": 2.1127071119844913,
+   "samples_s": [
+    2.1127071119844913
+   ]
+  },
+  "exact_flags": {
+   "median_s": 2.033921495079994,
+   "samples_s": [
+    2.033921495079994
+   ]
+  },
+  "compact_and_exact": {
+   "median_s": 2.2494960092008114,
+   "samples_s": [
+    2.2494960092008114
+   ]
+  },
+  "comparisons": {
+   "audit_thinned": {
+    "metrics": {
+     "actor_loss": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     },
+     "critic_loss": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     },
+     "actor_grad_norm": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     },
+     "critic_grad_norm": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     },
+     "returns": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     }
+    },
+    "weights": {
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "bit_equal": true
+    }
+   },
+   "exact_flags": {
+    "metrics": {
+     "actor_loss": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     },
+     "critic_loss": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     },
+     "actor_grad_norm": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     },
+     "critic_grad_norm": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     },
+     "returns": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     }
+    },
+    "weights": {
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "bit_equal": true
+    }
+   },
+   "compact_and_exact": {
+    "metrics": {
+     "actor_loss": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     },
+     "critic_loss": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     },
+     "actor_grad_norm": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     },
+     "critic_grad_norm": {
+      "max_abs": 7.450580596923828e-09,
+      "max_rel": 1.1637854635980127e-07,
+      "bit_equal": false
+     },
+     "returns": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+     }
+    },
+    "weights": {
+     "max_abs": 1.4901161193847656e-08,
+     "max_rel": 0.25934263347959785,
+     "bit_equal": false
+    }
+   }
+  },
+  "counterfactual_rows": 4
+ },
+ "peak_reserved_bytes": 171966464,
+ "owned_nvidia_peak_mib": 634
+}

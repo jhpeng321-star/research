@@ -1,0 +1,16 @@
+# Memory/step-time reference for the v9entry GPU smoke (2026-10-18): c4_policy_v8.toml with exactly the smoke's
+# batch/update overrides (c4_policy_v9entry_v5m_smoke.toml) and NO entry queue state.
+extends = "c4_policy_v8.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V8-GPUSMOKE"
+updates = 3
+validation_batches = 1
+
+[trainer]
+batch_size = 2
+checkpoint_every = 1000
+validation_every = 1000
+
+[counterfactual]
+max_starts = 1

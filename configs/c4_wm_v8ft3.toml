@@ -1,0 +1,47 @@
+# V8FT3 (owner-approved 2026-10-17, pre-check 3): c4_wm_v8ft.toml (v5m fine-tune, merge_timing survival
+# loss, slim/capped merge loss) with ALL merge-zone rules ON in training AND at inference (no train/infer
+# split for these), so the learned parts adapt to them:
+#   * merge_end_wait (follower s0 1.0 m / T 0.6 s) + mainline_merge_yield, scope "zone" (zipper);
+#   * forced_window_mode = "hazard", floor h0 = 0.05 per 0.5 s step (SUMO lane-end rate given a
+#     WM-feasible configuration ~0.04-0.05, RAMP_DIAG §4);
+#   * merge_impatience (V8WM3): a ramp car waiting (<= 1 m/s, last 25 m of the accel lane) raises its
+#     forced-window floor h0 -> 1 over 25 s and shrinks its merge s0 / T margins to 0.5 m / 0.1 s over
+#     25 s (LC2013 lcImpatience-like; kinematic braking terms and the no-overlap check never relaxed).
+# Why: pre-check 1 (v8ft_short2: hazard 0.02 trained, rules at inference only) over-corrected to
+# 223/368 ramp HDVs stuck (SUMO 4), median departure +16.5 s (scores_c4_wm_v8ft_short2_r2/ramp_summary.md).
+# merge_timing weight 6.0 (pre-check 1 value).
+# Launch: --set model.init_from=<abs path of the v5m checkpoint (wm_s_best_ap.pt)> --set loss.loss_share_logging=false
+schema_version = 2
+name = "WM-S-C4-V8FT3"
+extends = "c4_wm_v8ft.toml"
+
+[physics]
+merge_end_wait = true
+mainline_merge_yield = true
+
+[physics.overrides]
+forced_window_mode = "hazard"
+forced_window_min_hazard = 0.05
+mainline_merge_yield_scope = "zone"
+merge_end_wait_s0_follow_m = 1.0
+merge_end_wait_t_follow_s = 0.6
+merge_impatience = true
+merge_impatience_distance_m = 25.0
+merge_impatience_speed_mps = 1.0
+merge_impatience_hazard_tau_s = 25.0
+merge_impatience_gap_tau_s = 25.0
+merge_impatience_s0_min_m = 0.5
+merge_impatience_t_min_s = 0.1
+
+[physics.inference]
+merge_end_wait = true
+mainline_merge_yield = true
+
+[loss]
+loss_share_logging = false
+
+[loss.merge_timing]
+weight = 6.0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v8ft3"

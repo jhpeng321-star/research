@@ -1,0 +1,133 @@
+{
+ "schema": "loop14_lane_parity_probe/1",
+ "scientific_use": false,
+ "policy": "runs/loop14_smoke/cycle1/loop/policy/c00/policy_latest.pt",
+ "wm": "runs/loop14_smoke/wm0/wm_s.pt",
+ "seeds": [
+  968100,
+  968101,
+  968102
+ ],
+ "worlds": [
+  {
+   "seed": 968100,
+   "demand": 2400,
+   "penetration": 0.4,
+   "inject": false,
+   "sim_s": 661,
+   "collisions": 0,
+   "teleports": 0,
+   "branches": [
+    {
+     "arm": "POLICY",
+     "t_s": 180,
+     "collisions": 0,
+     "teleports": 0,
+     "lane_issued": 851,
+     "lane_completed": 817,
+     "J": 34833.96337545449
+    },
+    {
+     "arm": "B",
+     "t_s": 180,
+     "collisions": 0,
+     "teleports": 0,
+     "lane_issued": 0,
+     "lane_completed": 0,
+     "J": 13677.21503854411
+    }
+   ]
+  },
+  {
+   "seed": 968101,
+   "demand": 2700,
+   "penetration": 0.4,
+   "inject": false,
+   "sim_s": 661,
+   "collisions": 0,
+   "teleports": 0,
+   "branches": [
+    {
+     "arm": "POLICY",
+     "t_s": 180,
+     "collisions": 0,
+     "teleports": 0,
+     "lane_issued": 960,
+     "lane_completed": 922,
+     "J": 41585.42890185035
+    },
+    {
+     "arm": "B",
+     "t_s": 180,
+     "collisions": 0,
+     "teleports": 0,
+     "lane_issued": 0,
+     "lane_completed": 0,
+     "J": 19379.92006668054
+    }
+   ]
+  },
+  {
+   "seed": 968102,
+   "demand": 2400,
+   "penetration": 0.2,
+   "inject": true,
+   "sim_s": 661,
+   "collisions": 0,
+   "teleports": 0,
+   "branches": [
+    {
+     "arm": "POLICY",
+     "t_s": 180,
+     "collisions": 0,
+     "teleports": 0,
+     "lane_issued": 622,
+     "lane_completed": 257,
+     "J": 29519.667752375815
+    },
+    {
+     "arm": "B",
+     "t_s": 180,
+     "collisions": 0,
+     "teleports": 0,
+     "lane_issued": 0,
+     "lane_completed": 0,
+     "J": 14767.794647706964
+    }
+   ]
+  }
+ ],
+ "sim_s_total": 1983,
+ "wall_s": 422.030999999959,
+ "env_lane_command_counts_all_arms": {},
+ "policy_arm_issue_counts": {
+  "issued": 2433,
+  "deferred_edge_end": 18,
+  "refused_no_lane": 73
+ },
+ "outcome_by_class": {
+  "policy|mask_ok=True": {
+   "reached": 1912,
+   "not_issued": 7,
+   "not_reached": 43,
+   "left_network": 17
+  },
+  "rejected|mask_ok=False": {
+   "not_issued": 84,
+   "reached": 79,
+   "not_reached": 170,
+   "left_network": 7
+  }
+ },
+ "reach_lag_s_by_class": {
+  "policy|mask_ok=True": {
+   "1": 1908,
+   "2": 4
+  },
+  "rejected|mask_ok=False": {
+   "1": 71,
+   "2": 8
+  }
+ },
+ "n_rows": 2319
+}

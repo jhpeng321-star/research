@@ -4,7 +4,9 @@ from __future__ import annotations
 import copy
 import json
 import math
+import tempfile
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 import torch
@@ -14,6 +16,14 @@ from wms.control.train_cli import _read_config
 from wms.model.wms import _scale_grad
 
 from .test_c4_dreamer import FakeSampler, FakeWorldModel, _assert_equal, _seed, _trainer
+
+
+@pytest.fixture
+def workspace_tmp():
+    root = Path(__file__).resolve().parents[2] / "_out"
+    root.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="v6imag-test-", dir=root) as directory:
+        yield Path(directory)
 
 
 @pytest.fixture(autouse=True)
@@ -195,7 +205,8 @@ def test_default_never_computes_credit(monkeypatch):
     assert "credit_profile" not in toy().update()
 
 
-def test_override_checkpoint_exact_resume(tmp_path):
+def test_override_checkpoint_exact_resume(workspace_tmp):
+    tmp_path = workspace_tmp
     _seed()
     trainer = toy(imagination_grad_decay=0.98, credit_profile_every=1)
     trainer.update()
@@ -212,7 +223,8 @@ def test_override_checkpoint_exact_resume(tmp_path):
     assert resumed.world_models[0].grad_decay_per_step == 0.9
 
 
-def test_cli_v6_smoke_settings_and_resume(monkeypatch, tmp_path):
+def test_cli_v6_smoke_settings_and_resume(monkeypatch, workspace_tmp):
+    tmp_path = workspace_tmp
     from wms.control import train_cli
     from wms.control.start_states import split_start_states
     from .test_c4_dreamer import (FakeCritic, FakeGroupEncoder, FakePolicy, _dataset,

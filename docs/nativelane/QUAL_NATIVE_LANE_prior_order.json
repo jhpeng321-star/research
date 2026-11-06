@@ -1,0 +1,532 @@
+{
+ "off": {
+  "set1": {
+   "pulse_m/follower@5": {
+    "n_sumo": 20,
+    "n_clear": 17,
+    "worlds": 10,
+    "tau": 0.001,
+    "n_wm_missing_clear": 0,
+    "eligible": true,
+    "sign_rate": 0.7647058823529411,
+    "sign_ci": [
+     0.5625,
+     0.9411764705882353
+    ],
+    "majority_null_rate": 0.8823529411764706,
+    "vs_null_ci": [
+     -0.2666666666666667,
+     0.0
+    ],
+    "no_response_null_rate": 0.0,
+    "sign_rate_large_half": 1.0,
+    "sign_rate_small_half": 0.5,
+    "sign_verdict": "PASS",
+    "mag_band": [
+     0.369851866210147,
+     2.703785194453521
+    ],
+    "mag_ratio": 0.953584656677287,
+    "mag_ci": [
+     0.7536841040724173,
+     1.123129854670884
+    ],
+    "mag_verdict": "PASS",
+    "gap_ratio": 1.111575265491677,
+    "gap_ci": [
+     1.0014278812000144,
+     1.3026589503006438
+    ],
+    "gap_band": [
+     0.4533828076331617,
+     2.2056416413767366
+    ],
+    "gap_verdict": "PASS"
+   },
+   "pulse_m/follower@10": {
+    "n_sumo": 20,
+    "n_clear": 18,
+    "worlds": 10,
+    "tau": 0.001,
+    "n_wm_missing_clear": 0,
+    "eligible": true,
+    "sign_rate": 0.7777777777777778,
+    "sign_ci": [
+     0.6111111111111112,
+     0.9375919117647054
+    ],
+    "majority_null_rate": 0.5555555555555556,
+    "vs_null_ci": [
+     0.0,
+     0.42105263157894735
+    ],
+    "no_response_null_rate": 0.0,
+    "sign_rate_large_half": 1.0,
+    "sign_rate_small_half": 0.5555555555555556,
+    "sign_verdict": "PASS",
+    "mag_band": [
+     0.16014967494950236,
+     6.24415878655586
+    ],
+    "mag_ratio": 1.358191071994315,
+    "mag_ci": [
+     0.9272706349169505,
+     2.4219132996924095
+    ],
+    "mag_verdict": "PASS",
+    "gap_ratio": 1.3631591543962678,
+    "gap_ci": [
+     0.9772070405812803,
+     3.9592845282781735
+    ],
+    "gap_band": [
+     0.04348175677662182,
+     22.998150813852465
+    ],
+    "gap_verdict": "PASS"
+   },
+   "gap_open/follower@10": {
+    "n_sumo": 7,
+    "n_clear": 6,
+    "worlds": 6,
+    "tau": 0.001,
+    "n_wm_missing_clear": 0,
+    "eligible": true,
+    "sign_rate": 0.3333333333333333,
+    "sign_ci": [
+     0.0,
+     0.6666666666666666
+    ],
+    "majority_null_rate": 0.8333333333333334,
+    "vs_null_ci": [
+     -1.0,
+     0.16666666666666663
+    ],
+    "no_response_null_rate": 0.0,
+    "sign_rate_large_half": 0.6666666666666666,
+    "sign_rate_small_half": 0.0,
+    "sign_verdict": "INCONCLUSIVE",
+    "mag_band": [
+     NaN,
+     NaN
+    ],
+    "mag_ratio": -1.5996682365236263,
+    "mag_ci": [
+     -10.487512821313931,
+     12.35978223755958
+    ],
+    "mag_verdict": "REPORT-ONLY",
+    "gap_verdict": "REPORT-ONLY"
+   },
+   "gap_open/follower@30": {
+    "n_sumo": 7,
+    "n_clear": 5,
+    "worlds": 5,
+    "tau": 0.25107925415038534,
+    "n_wm_missing_clear": 0,
+    "eligible": false,
+    "sign_verdict": "REPORT-ONLY",
+    "mag_verdict": "REPORT-ONLY",
+    "gap_verdict": "REPORT-ONLY",
+    "sign_rate": 0.4
+   }
+  },
+  "set2": {
+   "pulse_m/follower@5": {
+    "n_sumo": 20,
+    "n_clear": 17,
+    "worlds": 10,
+    "tau": 0.001,
+    "n_wm_missing_clear": 0,
+    "eligible": true,
+    "sign_rate": 0.7647058823529411,
+    "sign_ci": [
+     0.5625,
+     0.9411764705882353
+    ],
+    "majority_null_rate": 0.8823529411764706,
+    "vs_null_ci": [
+     -0.2666666666666667,
+     0.0
+    ],
+    "no_response_null_rate": 0.0,
+    "sign_rate_large_half": 1.0,
+    "sign_rate_small_half": 0.5,
+    "sign_verdict": "PASS",
+    "mag_band": [
+     0.369851866210147,
+     2.703785194453521
+    ],
+    "mag_ratio": 0.9966150920124723,
+    "mag_ci": [
+     0.7880836401838637,
+     1.207014311928636
+    ],
+    "mag_verdict": "PASS",
+    "gap_ratio": 1.1026063383594462,
+    "gap_ci": [
+     0.980056730650843,
+     1.3242298582384975
+    ],
+    "gap_band": [
+     0.4533828076331617,
+     2.2056416413767366
+    ],
+    "gap_verdict": "PASS"
+   },
+   "pulse_m/follower@10": {
+    "n_sumo": 20,
+    "n_clear": 18,
+    "worlds": 10,
+    "tau": 0.001,
+    "n_wm_missing_clear": 0,
+    "eligible": true,
+    "sign_rate": 0.8333333333333334,
+    "sign_ci": [
+     0.6470588235294118,
+     0.9565217391304348
+    ],
+    "majority_null_rate": 0.5555555555555556,
+    "vs_null_ci": [
+     0.11111111111111105,
+     0.4210526315789474
+    ],
+    "no_response_null_rate": 0.0,
+    "sign_rate_large_half": 1.0,
+    "sign_rate_small_half": 0.6666666666666666,
+    "sign_verdict": "PASS",
+    "mag_band": [
+     0.16014967494950236,
+     6.24415878655586
+    ],
+    "mag_ratio": 1.41220545577301,
+    "mag_ci": [
+     0.9470666157247917,
+     2.5203354370872386
+    ],
+    "mag_verdict": "PASS",
+    "gap_ratio": 1.28336741391581,
+    "gap_ci": [
+     0.9737032417586013,
+     3.2489164711249097
+    ],
+    "gap_band": [
+     0.04348175677662182,
+     22.998150813852465
+    ],
+    "gap_verdict": "PASS"
+   },
+   "gap_open/follower@10": {
+    "n_sumo": 7,
+    "n_clear": 6,
+    "worlds": 6,
+    "tau": 0.001,
+    "n_wm_missing_clear": 0,
+    "eligible": true,
+    "sign_rate": 0.16666666666666666,
+    "sign_ci": [
+     0.0,
+     0.5
+    ],
+    "majority_null_rate": 0.8333333333333334,
+    "vs_null_ci": [
+     -1.0,
+     0.0
+    ],
+    "no_response_null_rate": 0.0,
+    "sign_rate_large_half": 0.3333333333333333,
+    "sign_rate_small_half": 0.0,
+    "sign_verdict": "FAIL",
+    "mag_band": [
+     NaN,
+     NaN
+    ],
+    "mag_ratio": -2.2316457951118767,
+    "mag_ci": [
+     -14.313995851747869,
+     17.082099745700635
+    ],
+    "mag_verdict": "REPORT-ONLY",
+    "gap_verdict": "REPORT-ONLY"
+   },
+   "gap_open/follower@30": {
+    "n_sumo": 7,
+    "n_clear": 5,
+    "worlds": 5,
+    "tau": 0.25107925415038534,
+    "n_wm_missing_clear": 0,
+    "eligible": false,
+    "sign_verdict": "REPORT-ONLY",
+    "mag_verdict": "REPORT-ONLY",
+    "gap_verdict": "REPORT-ONLY",
+    "sign_rate": 0.8
+   }
+  }
+ },
+ "on": {
+  "set1": {
+   "pulse_m/follower@5": {
+    "n_sumo": 20,
+    "n_clear": 17,
+    "worlds": 10,
+    "tau": 0.001,
+    "n_wm_missing_clear": 0,
+    "eligible": true,
+    "sign_rate": 0.7647058823529411,
+    "sign_ci": [
+     0.5625,
+     0.9411764705882353
+    ],
+    "majority_null_rate": 0.8823529411764706,
+    "vs_null_ci": [
+     -0.2666666666666667,
+     0.0
+    ],
+    "no_response_null_rate": 0.0,
+    "sign_rate_large_half": 1.0,
+    "sign_rate_small_half": 0.5,
+    "sign_verdict": "PASS",
+    "mag_band": [
+     0.369851866210147,
+     2.703785194453521
+    ],
+    "mag_ratio": 0.9536071437277688,
+    "mag_ci": [
+     0.753711871784151,
+     1.1231710432659148
+    ],
+    "mag_verdict": "PASS",
+    "gap_ratio": 1.1116029700986283,
+    "gap_ci": [
+     1.0014284196399594,
+     1.302789060083844
+    ],
+    "gap_band": [
+     0.4533828076331617,
+     2.2056416413767366
+    ],
+    "gap_verdict": "PASS"
+   },
+   "pulse_m/follower@10": {
+    "n_sumo": 20,
+    "n_clear": 18,
+    "worlds": 10,
+    "tau": 0.001,
+    "n_wm_missing_clear": 0,
+    "eligible": true,
+    "sign_rate": 0.7777777777777778,
+    "sign_ci": [
+     0.6111111111111112,
+     0.9375919117647054
+    ],
+    "majority_null_rate": 0.5555555555555556,
+    "vs_null_ci": [
+     0.0,
+     0.42105263157894735
+    ],
+    "no_response_null_rate": 0.0,
+    "sign_rate_large_half": 1.0,
+    "sign_rate_small_half": 0.5555555555555556,
+    "sign_verdict": "PASS",
+    "mag_band": [
+     0.16014967494950236,
+     6.24415878655586
+    ],
+    "mag_ratio": 1.3610660855648453,
+    "mag_ci": [
+     0.9285874386090782,
+     2.4282113583761915
+    ],
+    "mag_verdict": "PASS",
+    "gap_ratio": 1.3638277673214672,
+    "gap_ci": [
+     0.977964812148894,
+     3.962258704979708
+    ],
+    "gap_band": [
+     0.04348175677662182,
+     22.998150813852465
+    ],
+    "gap_verdict": "PASS"
+   },
+   "gap_open/follower@10": {
+    "n_sumo": 7,
+    "n_clear": 6,
+    "worlds": 6,
+    "tau": 0.001,
+    "n_wm_missing_clear": 0,
+    "eligible": true,
+    "sign_rate": 0.3333333333333333,
+    "sign_ci": [
+     0.0,
+     0.6666666666666666
+    ],
+    "majority_null_rate": 0.8333333333333334,
+    "vs_null_ci": [
+     -1.0,
+     0.16666666666666663
+    ],
+    "no_response_null_rate": 0.0,
+    "sign_rate_large_half": 0.6666666666666666,
+    "sign_rate_small_half": 0.0,
+    "sign_verdict": "INCONCLUSIVE",
+    "mag_band": [
+     NaN,
+     NaN
+    ],
+    "mag_ratio": -1.5373119567419256,
+    "mag_ci": [
+     -9.967494169159664,
+     11.539153661594039
+    ],
+    "mag_verdict": "REPORT-ONLY",
+    "gap_verdict": "REPORT-ONLY"
+   },
+   "gap_open/follower@30": {
+    "n_sumo": 7,
+    "n_clear": 5,
+    "worlds": 5,
+    "tau": 0.25107925415038534,
+    "n_wm_missing_clear": 0,
+    "eligible": false,
+    "sign_verdict": "REPORT-ONLY",
+    "mag_verdict": "REPORT-ONLY",
+    "gap_verdict": "REPORT-ONLY",
+    "sign_rate": 0.4
+   }
+  },
+  "set2": {
+   "pulse_m/follower@5": {
+    "n_sumo": 20,
+    "n_clear": 17,
+    "worlds": 10,
+    "tau": 0.001,
+    "n_wm_missing_clear": 0,
+    "eligible": true,
+    "sign_rate": 0.7647058823529411,
+    "sign_ci": [
+     0.5625,
+     0.9411764705882353
+    ],
+    "majority_null_rate": 0.8823529411764706,
+    "vs_null_ci": [
+     -0.2666666666666667,
+     0.0
+    ],
+    "no_response_null_rate": 0.0,
+    "sign_rate_large_half": 1.0,
+    "sign_rate_small_half": 0.5,
+    "sign_verdict": "PASS",
+    "mag_band": [
+     0.369851866210147,
+     2.703785194453521
+    ],
+    "mag_ratio": 0.996614593975705,
+    "mag_ci": [
+     0.7880836401963665,
+     1.207014290820315
+    ],
+    "mag_verdict": "PASS",
+    "gap_ratio": 1.102606405485146,
+    "gap_ci": [
+     0.9800567268025987,
+     1.3242302205562755
+    ],
+    "gap_band": [
+     0.4533828076331617,
+     2.2056416413767366
+    ],
+    "gap_verdict": "PASS"
+   },
+   "pulse_m/follower@10": {
+    "n_sumo": 20,
+    "n_clear": 18,
+    "worlds": 10,
+    "tau": 0.001,
+    "n_wm_missing_clear": 0,
+    "eligible": true,
+    "sign_rate": 0.8333333333333334,
+    "sign_ci": [
+     0.6470588235294118,
+     0.9565217391304348
+    ],
+    "majority_null_rate": 0.5555555555555556,
+    "vs_null_ci": [
+     0.11111111111111105,
+     0.4210526315789474
+    ],
+    "no_response_null_rate": 0.0,
+    "sign_rate_large_half": 1.0,
+    "sign_rate_small_half": 0.6666666666666666,
+    "sign_verdict": "PASS",
+    "mag_band": [
+     0.16014967494950236,
+     6.24415878655586
+    ],
+    "mag_ratio": 1.4122055134279432,
+    "mag_ci": [
+     0.9470665891513002,
+     2.5203356512652304
+    ],
+    "mag_verdict": "PASS",
+    "gap_ratio": 1.2833673698149644,
+    "gap_ci": [
+     0.9737032412450974,
+     3.2489164637152976
+    ],
+    "gap_band": [
+     0.04348175677662182,
+     22.998150813852465
+    ],
+    "gap_verdict": "PASS"
+   },
+   "gap_open/follower@10": {
+    "n_sumo": 7,
+    "n_clear": 6,
+    "worlds": 6,
+    "tau": 0.001,
+    "n_wm_missing_clear": 0,
+    "eligible": true,
+    "sign_rate": 0.16666666666666666,
+    "sign_ci": [
+     0.0,
+     0.5
+    ],
+    "majority_null_rate": 0.8333333333333334,
+    "vs_null_ci": [
+     -1.0,
+     0.0
+    ],
+    "no_response_null_rate": 0.0,
+    "sign_rate_large_half": 0.3333333333333333,
+    "sign_rate_small_half": 0.0,
+    "sign_verdict": "FAIL",
+    "mag_band": [
+     NaN,
+     NaN
+    ],
+    "mag_ratio": -2.231645360035535,
+    "mag_ci": [
+     -14.313995594651363,
+     17.08209688282876
+    ],
+    "mag_verdict": "REPORT-ONLY",
+    "gap_verdict": "REPORT-ONLY"
+   },
+   "gap_open/follower@30": {
+    "n_sumo": 7,
+    "n_clear": 5,
+    "worlds": 5,
+    "tau": 0.25107925415038534,
+    "n_wm_missing_clear": 0,
+    "eligible": false,
+    "sign_verdict": "REPORT-ONLY",
+    "mag_verdict": "REPORT-ONLY",
+    "gap_verdict": "REPORT-ONLY",
+    "sign_rate": 0.8
+   }
+  }
+ },
+ "pass_to_fail": [],
+ "complete": true
+}

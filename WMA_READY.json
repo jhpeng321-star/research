@@ -1,0 +1,138 @@
+{
+ "id": "WM-A",
+ "title": "WM-S map port to wz3to2: map-abstract WM (road binding, golden byte-identity on the merge map) + rollout->pack data pipeline + planning API for WM-C",
+ "status": "READY (CPU only; no SUMO, no GPU, no ssh used). Scope per MAIN: items (1) map-abstract WM and (2) data pipeline; fine-tune (WM-E) and qualification (WM-D) are other agents.",
+ "branch": "c4/wz-wm-port",
+ "worktree": "E:/agent-work/c4-wz-wm-port",
+ "base": "3e5bc9f9",
+ "head": "see git log -1 on c4/wz-wm-port (this file's commit)",
+ "merged": [
+  "c4/mainstart 1aee086e (round-16 WM lineage that trained WM1 5257a64c / WM2 b8797242 / WM3 41e18f09; configs/c4_wm_loop14_r16_ft.toml) via merge bd9bd5d6: the clean3 base carries the v6-era src/wms that cannot load those checkpoints; conflict-free (clean3 never touched src/wms after 571c1b8b)",
+  "c4/nm-abstract b2f30091 (N1_READY: map descriptor, wz3to2 assets, runtime binding) via merge a3fae0f1; only conflict .gitattributes (both appended blocks kept)"
+ ],
+ "not_merged": "WM-PHYS lineages (c4/wmfixmerge, c4/rb2-int).",
+ "commits": [
+  "bd9bd5d6 WM-A: merge c4/mainstart (round-16 WM lineage) into the clean3 base",
+  "e5380e4f WM-A: merge-map golden fixture captured on the unmodified merged WM code (pre-port), road + map guard modules",
+  "fb856e23 WM-A: road binding wired into exits, entries, closing-lane adjacency, first-passage scope; map-aware converter + recorder map stamp; wz3to2 tests",
+  "10a8f0b3 WM-A: seed registry v1 (superseded by 978a25ff)",
+  "978a25ff WM-A: strict wz3to2 WM seed rule (train/val 989100-989199 only) + road SUMO->frame projection",
+  "c8637e53 WM-A: planning API wms.planapi (load/observe/evaluate) + geometry digest for pack checks",
+  "6f8f6952 WM-A: WMA_READY.json",
+  "a3fae0f1 WM-A: merge c4/nm-abstract (N1_READY b2f30091)",
+  "22593a19 WM-A: current_road follows N1's programmatic map binding; READY update",
+  "2fb9d454 WM-A: junction-lane rows project natively; supported_roles declared",
+  "9edf586d WM-A: planapi hold-only golden captured before 'prog'",
+  "(this commit) WM-A: LCMOVES 'prog' executor (wms.planapi_prog); hold golden unchanged"
+ ],
+ "road_binding": {
+  "module": "wms.core.road (RoadGeometry, MERGE_ORIGINAL, current_road, bind_road, road_scope, load_road, road_from_descriptor, map_default, geometry_digest_of)",
+  "env_vars": [
+   "WMS_MAP_SPEC",
+   "COOPMWM_MAP_SPEC"
+  ],
+  "rule": "set WMS_MAP_SPEC or COOPMWM_MAP_SPEC to the wz3to2 MAP_SPEC.json in EVERY training / eval / planning process (one map per process; bind_road refuses rebinding); a process where N1's map_descriptor.bind ran is followed too; unset = the original on-ramp merge map. With N1 merged, load_road uses tools.coopmwm.map_descriptor.load (repo root on PYTHONPATH); real N1 geometry == stub geometry (tested).",
+  "wz3to2_geometry": {
+   "lane_extents_s_m": [
+    [
+     -2620.56,
+     1379.44
+    ],
+    [
+     -2620.56,
+     1379.44
+    ],
+    [
+     -2620.56,
+     75.44
+    ]
+   ],
+   "road_end_m": 1379.44,
+   "entry_s_m": [
+    -2620.56,
+    -2620.56,
+    -2620.56
+   ],
+   "closing_lane": 2,
+   "target_lane": 1,
+   "lane_end_zone_s_m": [
+    0.0,
+    75.44
+   ],
+   "closing_change_zone_s_m": [
+    -2620.56,
+    75.44
+   ],
+   "k_slots": 512,
+   "geometry_digest_prefix": "067bf8b1"
+  },
+  "what_changes_on_wz3to2": "exit at 1379.44; entry process lane starts / entrance-edge ends / speed caps; closing-lane cars may change 2->1 along the whole approach (mobil logits, physical envelope, lane_v5 mask); the first-passage merge law owns only the lane-end zone [0,75.44], upstream closing-lane cars use the lane_v5 merge head. Lane-end-zone modules (merge_pivot/merge_core/ramp_speed_adapt/forced window), sections and RSU field cells are unchanged by construction (same frame)."
+ },
+ "api": {
+  "load": "wms.planapi:load",
+  "observe": "wms.planapi:observe",
+  "evaluate": "wms.planapi:evaluate",
+  "signatures": {
+   "load": "load(checkpoint=None, *, map_spec=None, device='cpu', config='configs/c4_wm_loop14_r16_ft.toml', max_rows=64, seed=101) -> Handle",
+   "observe": "observe(handle, moment) -> state",
+   "evaluate": "evaluate(handle, state, actions, *, K=8, H=300.0, seed=0, trace=None) -> {action_id: [J_1..J_K]}"
+  },
+  "load_kwargs": {
+   "checkpoint": "<WM-E wz3to2 fine-tuned wm_s.pt with its physics.json; None = fresh weights, DRY RUNS ONLY (handle.meta['trained'] is False)>",
+   "map_spec": "<wz3to2 MAP_SPEC.json or None if WMS_MAP_SPEC/COOPMWM_MAP_SPEC is set>",
+   "device": "cuda on gpuA/gpuR, cpu for tests",
+   "max_rows": "action x draw rows per batched rollout"
+  },
+  "semantics": {
+   "observe": "RSU-observable only: moment['cavs'] CAV self-states {id, edge, lane, x (global) | pos (lane position), v[, length]}; optional moment['vehicles'] CAV-detected neighbours (same format + is_cav); optional moment['counter'] [2,30] RSU entrance counts (10 s bins newest first; 0 = through lanes, 1 = closing lane) -> Poisson entries. Projection: up lane 2/1/0 -> WM 0/1/2, wz lane 1/0 -> WM 0/1, s = x - 2620.56. No world labels are read. moment['map'] must equal the road. Rows on the drop's internal junction lane ':n1_0_i' (x 2696-2704) project onto the downstream lane i (global x kept).",
+   "evaluate": "J_k = team delay veh-s over [t0, t0+H): sum_t 0.5 s * sum_present max(0, 1 - v/31.29) of the predicted road vehicles (no source-waiting term unless an entry process is built from moment['counter']; then entrants count while on road). CRN: the WM rollout's lane-sampling uniforms for draw k are generated from sha256(seed, k, state digest) and shared by every action of the call; deterministic and repeatable (tested). Members (role 'hold'): a = clip((v_w - v)/1 s, -dmax, amax) for t in [start_s, start_s + hold_s) until the member passes release_x (global x) or the anchor passes anchor_release_x; WM native acceleration before/after; member lanes held except the WM first-passage merge in the lane-end zone (delegated). Non-member CAVs are native drivers (WM HDV law). Unknown member id / duplicate action ids / non-finite J raise wms.planapi.WMContractError.",
+   "cost": "CPU fresh model: ~0.5 s per rollout step for 6 rows x 27 vehicles (4 threads); WM-C's ~1,300-1,600 action-draws x H=300 s per moment needs the GPU (batched rows, max_rows)."
+  },
+  "supported_roles": [
+   "hold",
+   "prog"
+  ],
+  "prog": {
+   "module": "wms.planapi_prog (ProgramController subclasses HoldSpeedController; built only when an action has a 'prog' member)",
+   "semantics": "lcm_core.Arm._prog (48aaae38) in the WM frame, decided at whole seconds and executed 1 s: releases (absent, start_s+hold_s, release_x, release_on_partner_merge partner off the closing lane / unobserved, merger left lane 0 or x >= fallback_x default drop-15); lane program lc_target (SUMO up index) from lc_from s / lc_from_x while x < lc_giveup_x (default drop-300), one lane per step when legal and GAPRULE secure (speed_gap_safe); speed kinds hold / track (kp, kv, track_off, settle_gap) / match (target lane mean speed within 100 m until the change) / accel, clipped [-dmax, amax], commanded speed capped at 31.29; members must be observed CAVs; unknown params / speed kinds / lanes raise WMContractError.",
+   "limitations": [
+    "tau APPROXIMATED: only the member's native (uncommanded) acceleration uses IDM with time headway tau (WM default IDM otherwise); SUMO's tau-dependent safe-speed cap on commanded speeds (speedMode 27) is not modelled",
+    "lc_mode recorded, not interpreted (513 assumed: only programmed changes)",
+    "after release / before start: WM native acceleration, lane held except the lane-end first-passage merge (SUMO restores native lane changes)",
+    "lane changes instantaneous within one 0.5 s step; settled 'track' without v_w = native"
+   ]
+  }
+ },
+ "data_pipeline": {
+  "rollout_format": "traffic_shepherd.c4.recorder episode dirs (episode.npz schema c4_sumo_episode/1, model frame, K=512) recorded with N1's map runtime installed; recorder.map_meta() stamps meta_json map / map_descriptor_sha256 / road_digest / k_slots when the road is bound. Required meta: seed, demand_vph, penetration, warmup_s (+ map). Controllers native/direct only unless --allow-designed. WM-B used it for arms native, mappo_u0, coop_mappo_u0, coop_native (E:/agent-work/_sol/WMB_DATA_SHARDS.md).",
+  "converter_cli": "COOPMWM_MAP_SPEC=<wz3to2 MAP_SPEC.json> python -m wms.data.c4_episodes --episodes <collect dirs> --out <NEW empty dir> --map-spec <wz3to2 MAP_SPEC.json> [--val-frac 0.2 --split-seed 0]",
+  "manifest": "C4_EPISODES_MANIFEST.json schema wms_c4_episode_source/1 + map, road (record), road_digest; entries carry map, map_descriptor_sha256; arrays unchanged (veh_kin [T,K,7], counter [T,2,30] entrance 1 = closing-lane insertions, ...).",
+  "loader_checks": "read_source_manifest refuses: a source whose map != process road; a non-original source whose road GEOMETRY (geometry_digest_of(manifest['road'])) != the process road's (provenance/projection fields ignored, so WM-B's packs from 10a8f0b3 stay valid).",
+  "seed_guard": "wms.data.map_guard.check_train_seed: wz3to2 WM train/val = 989100-989199 ONLY; refused: 989000-989099 (PLANGEN2), 989200-989599 (clean4 TRAIN incl. WM-D label worlds), 989600-989699 (held-out), 964000-964199, 962xxx, 977xxx, anything else. Evaluation/qualification tapes are read through WM-D's own path."
+ },
+ "tests": {
+  "commands": [
+   "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tests/wz",
+   "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tests/golden tests/equivalence"
+  ],
+  "results": {
+   "tests/wz/test_merge_golden.py": "PASS: merge-map pipeline bit-identical to the fixture captured pre-port (484 keys: pack arrays, decoded windows, round-16 loop-FT forward/backward loss record, one optimizer step, parameter sha, physics primitives)",
+   "tests/wz/test_wz_road.py": "29 tests: all pass after the N1 merge (real N1 descriptor matches the stub; N1 programmatic binding followed); 1 env-stub test skipped when N1 is importable",
+   "related suites (golden + 23 WM unit/integration files incl. c4_loop, lanev5, lane_learnable, v8wm*, mainr16, merge_pivot*, exit_road_end, c4_sumo, v6entry, entryfix)": "409 passed, 3 skipped, 1 failed: tests/test_r9_lane_end_stop.py::test_round9_preset_pins_the_flag_and_the_fitter_physics_json (PRE-EXISTING on the merged WM lineage: the stored round-9 physics json lacks later PhysicsConfig keys emergency_onset/secure_gap_veto/lane_change_secure_gap; WM-A did not touch PhysicsConfig)",
+   "tests/golden + tests/equivalence on the merged base before any change": "60 passed, 26 skipped (data_cache packs absent)",
+   "N1 map tests after the merge (tools/coopmwm/test_map_{descriptor,golden,runtime,scenarios}_cpu.py, test_newmap_sanity_cpu.py)": "pass (with tests/wz: 60 passed, 2 skipped: frozen cpuV runtime only / env-stub)",
+   "final merge golden + test_c4_loop + test_c4_v10entzone on 6f8f6952": "19 passed",
+   "tests/wz/test_planapi_hold_golden.py": "PASS: hold-only evaluate (J draws float.hex, speed/lane traces sha) bit-identical to the pre-prog capture (9edf586d)",
+   "tests/wz/test_planapi_prog.py": "8 passed (lane change out of the closing lane, blocked change waits for a secure gap, accel capped at the limit, track, unobserved partner = native, merger release, refusals, tau native-only)"
+  }
+ },
+ "known_gaps": [
+  "Lane 1 -> 2 (entering the closing lane) is never proposed: lane_v5 has one head per lane (lane 1 = overtake 1->0). WM-D measured 3 such changes in 3,315 veh-h of SUMO wz3to2 (vs 2->1 6.07/veh-h): not material; MAIN: no head fix.",
+  "Planning API: no observed pre-t0 driver history in the contract (population settings for every driver); no source-waiting term without moment['counter']; member lanes held during holds (except the lane-end merge).",
+  "Geometry-tied learned parts WM-E may re-initialise: lane_v5 merge head (now also acts upstream), merge_pivot / merge_core / ramp_speed_adapt (lane-end-zone semantics kept), entry_learned statistics; driver settings remain learned only (no types/labels anywhere).",
+  "Config geometry defaults not yet routed through road.map_default: loss.agg_delay road_end_m 553.33 / sections (set explicitly in a wz3to2 config if that loss is enabled; it is off in c4_wm_loop14_r16_ft).",
+  "Control-side (policy) constants (wms.control.belief DEFAULT_LANE_EXTENTS, wms.control.entrance entry positions) still merge-map; not used by WM training or wms.planapi."
+ ],
+ "hard_rules_observed": "no ssh/SUMO/GPU; writes only in this worktree plus E:/agent-work/_sol/WM_PORT_API.md (MAIN request); no reset/clean/stash drop/push/rebase; no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 path opened (WM-D's reservation file was not read; MAIN supplied the ranges; one wildcard grep over E:/agent-work/_sol/*.md listed its name, content not displayed); no hetdata_truth or vType/driver truth file read; original merge-map assets untouched.",
+ "docs": "E:/agent-work/_sol/WM_PORT_API.md"
+}

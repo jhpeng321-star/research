@@ -1,0 +1,10 @@
+# V10 round 2 (2026-10-20): continue from round 1 (stage-240 checkpoint) with the road-end EXIT fix active in
+# training unrolls (physics.exit_at_road_end default true, V10EXIT) plus everything in round 1 (pairs300 paired
+# source, agg_delay 0.5/0.5 from 60 s, persist, courtesy/brake keys, fixed merge-zone replay). pairs300b stays
+# HELD OUT for the paired check. Learned negotiation / entrance fixes join in round 3 when ready.
+schema_version = 2
+name = "WM-S-C4-V10ROUND2"
+extends = "c4_wm_v10round1.toml"
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10_round2"

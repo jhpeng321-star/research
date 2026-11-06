@@ -1,0 +1,105 @@
+{
+  "schema": "c4_loop14_pairs/1",
+  "n_points": 2,
+  "decision_times_s": [
+    360,
+    420
+  ],
+  "n_branches": 4,
+  "branch_horizon_s": 60,
+  "collisions": 0,
+  "teleports": 0,
+  "base_wall_s": 15.217057499001385,
+  "branch_wall_s": 67.35477441600051,
+  "branches": [
+    {
+      "t_s": 360,
+      "arm": "POLICY",
+      "pair_key": "w967600m2700p40t300@t360",
+      "collisions": 0,
+      "teleports": 0,
+      "lane_issued": 0,
+      "lane_completed": 0,
+      "dropped_vehicle_steps": 0,
+      "J": 6396.263835468917,
+      "wall_s": 1.3547093529996346,
+      "dir": "/home/ubuntu/sumocredit/out_a2/s1/branches/v8_u600/s967600_m2700_p0400/t0360_policy",
+      "n_states": 241,
+      "n_control": 120
+    },
+    {
+      "t_s": 360,
+      "arm": "B",
+      "pair_key": "w967600m2700p40t300@t360",
+      "collisions": 0,
+      "teleports": 0,
+      "lane_issued": 0,
+      "lane_completed": 0,
+      "dropped_vehicle_steps": 0,
+      "J": 6363.772028465496,
+      "wall_s": 0.6571086819985794,
+      "dir": "/home/ubuntu/sumocredit/out_a2/s1/branches/v8_u600/s967600_m2700_p0400/t0360_native",
+      "n_states": 241,
+      "n_control": 120
+    },
+    {
+      "t_s": 420,
+      "arm": "POLICY",
+      "pair_key": "w967600m2700p40t300@t420",
+      "collisions": 0,
+      "teleports": 0,
+      "lane_issued": 0,
+      "lane_completed": 0,
+      "dropped_vehicle_steps": 0,
+      "J": 7616.146381732351,
+      "wall_s": 1.2189607370000886,
+      "dir": "/home/ubuntu/sumocredit/out_a2/s1/branches/v8_u600/s967600_m2700_p0400/t0420_policy",
+      "n_states": 241,
+      "n_control": 120
+    },
+    {
+      "t_s": 420,
+      "arm": "B",
+      "pair_key": "w967600m2700p40t300@t420",
+      "collisions": 0,
+      "teleports": 0,
+      "lane_issued": 0,
+      "lane_completed": 0,
+      "dropped_vehicle_steps": 0,
+      "J": 7639.269245684186,
+      "wall_s": 0.6983813540009578,
+      "dir": "/home/ubuntu/sumocredit/out_a2/s1/branches/v8_u600/s967600_m2700_p0400/t0420_native",
+      "n_states": 241,
+      "n_control": 120
+    }
+  ],
+  "sim_s": 1081,
+  "pair_dJ": {
+    "w967600m2700p40t300@t360": 32.491807003420945,
+    "w967600m2700p40t300@t420": -23.122863951834915
+  },
+  "sumocredit": {
+    "schema": "c4_sumocredit_extras/1",
+    "options": {
+      "credit_horizon": 30,
+      "credit_group_max": 3,
+      "credit_flips": 1,
+      "credit_imagine": true,
+      "gate_horizon": 20,
+      "gate_unit": "group",
+      "gate_reference": "hold",
+      "gate_state": "belief",
+      "gate_max_units": 2,
+      "gate_table": null,
+      "gate_decision_period": 5.0,
+      "n_driver_samples": 1,
+      "seed": 0
+    },
+    "files": {
+      "gate": 2,
+      "credit": 2
+    },
+    "sim_s": 420,
+    "wall_s": 58.430447741000535
+  }
+}

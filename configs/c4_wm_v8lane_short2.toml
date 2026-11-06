@@ -1,0 +1,21 @@
+# V8LANE pre-check: c4_wm_v8ft_short2.toml + the mainline lane fix (runs/active/C4-V7FT-20261017/
+# lane_fix/LANE_FIX.md).  Overtake / return decisions are population-matched ("budget": the
+# expected count sum P of the calibrated heads fires the highest-hazard feasible car, so the count
+# is right with about half the seed noise of independent sampling); the on-policy lane-flow loss
+# calibrates the two mainline heads on the model's own rollout states (pooled Poisson count match
+# against the recorded overtakes / returns, plus lane-0 occupancy feedback on the return target).
+# No inference logit offsets: the loss is the calibration.  Merges keep lane_decision = "gated".
+# Launch: --set model.init_from=<abs path of the v5m checkpoint>.
+schema_version = 2
+name = "WM-S-C4-V8LANE-SHORT2"
+extends = "c4_wm_v8ft_short2.toml"
+
+[model]
+lane_v5_mainline = "budget"
+
+[loss.lane_flow]
+weight = 1.0
+balance = 0.5
+
+[runtime]
+out_dir = "runs/active/c4_wm_v8lane_short2"

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -24,7 +25,20 @@ from .wms import WmSModel
 
 CHECKPOINT_FORMAT = "wm_s/1"
 #: Weights that checkpoints written before the corresponding feature legitimately lack.
-_OPTIONAL_PREFIXES = ("driver_encoder.", "command_proj.")
+_OPTIONAL_PREFIXES = ("driver_encoder.", "command_proj.",
+                      "residual_net.courtesy_proj.", "merge_negotiation.",
+                      "merge_threshold.", "merge_frailty.", "merge_core.", "merge_pivot.",
+                      "residual_net.residual_head_log_scale",
+                      "temporal_tau", "temporal_slew",
+                      # R10B learned follower courtesy head (zero last layer at creation)
+                      "follower_courtesy.")
+#: V10COURTESY: per-block attention bias keys (``residual_net.blocks.N.attn.``).
+_OPTIONAL_CONTAINS = (".courtesy_bias.",)
+#: LANERATECAL: closed-loop per-head rate calibration stored next to a checkpoint
+#: (``tools/lane_rate_calib.py``).  Absent file = no-op (bit-identical load).
+LANE_CALIB_FILE = "lane_calib.json"
+LANE_CALIB_FORMAT = "lane_rate_calib/1"
+LANE_CALIB_HEADS = ("overtake", "return", "merge")
 
 
 class CheckpointError(RuntimeError):
@@ -109,22 +123,111 @@ def _model_spec(config: Mapping[str, Any], kind: str) -> ModelSpec:
     return ModelSpec(**{**spec.__dict__, "black_box": False})
 
 
+def read_lane_rate_calib(path: str | Path) -> tuple[dict, tuple[float, float, float]]:
+    """Read and validate a ``lane_calib.json`` (format :data:`LANE_CALIB_FORMAT`).
+
+    ``offsets`` may be a length-3 list (overtake, return, merge) or a mapping by head; the
+    canonical three-value vector is returned with the document.
+    """
+    path = Path(path)
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise CheckpointError(f"{path}: unreadable lane calibration: {exc}") from exc
+    if not isinstance(doc, dict) or doc.get("format") != LANE_CALIB_FORMAT:
+        raise CheckpointError(f"{path}: not a {LANE_CALIB_FORMAT} file")
+    raw = doc.get("offset_vector")
+    if raw is None:
+        raw = doc.get("offsets")
+        if isinstance(raw, Mapping):
+            raw = [raw.get(name, 0.0) for name in LANE_CALIB_HEADS]
+    if not isinstance(raw, (list, tuple)) or len(raw) != len(LANE_CALIB_HEADS):
+        raise CheckpointError(f"{path}: calibration needs {len(LANE_CALIB_HEADS)} offsets")
+    try:
+        vector = tuple(float(x) for x in raw)
+    except (TypeError, ValueError) as exc:
+        raise CheckpointError(f"{path}: non-numeric calibration offset") from exc
+    if not all(math.isfinite(x) for x in vector):
+        raise CheckpointError(f"{path}: calibration offsets must be finite")
+    return doc, vector  # type: ignore[return-value]
+
+
+def apply_lane_rate_calib(model: WmSModel, path: str | Path,
+                          sha256: str | None = None) -> dict | None:
+    """Apply ``lane_calib.json`` next to ``path`` (no file = no-op, returns ``None``).
+
+    The calibrated offsets are additive on top of the config's ``lane_logit_offsets``.  A
+    stored ``checkpoint_sha256`` is enforced so a calibration never transfers to another
+    checkpoint that happens to share the directory (LANE_REDESIGN: calibrate per checkpoint).
+    """
+    calib_path = Path(path).with_name(LANE_CALIB_FILE)
+    if not calib_path.is_file():
+        return None
+    doc, vector = read_lane_rate_calib(calib_path)
+    expected = doc.get("checkpoint_sha256")
+    if expected:
+        digest = sha256 or sha256_file(path)
+        if str(expected).lower() != digest.lower():
+            raise CheckpointError(
+                f"{calib_path} was fitted for checkpoint sha256 {expected}, not {digest}")
+    base = tuple(float(x) for x in getattr(model, "lane_logit_offsets", (0.0, 0.0, 0.0)))
+    if len(base) != len(vector):
+        base = (0.0,) * len(vector)
+    model.lane_logit_offsets = tuple(a + b for a, b in zip(base, vector))
+    model.lane_rate_calib = {**doc, "path": str(calib_path),
+                             "offset_vector": list(vector)}
+    return model.lane_rate_calib
+
+
 def _check_keys(result, config: Mapping[str, Any], strict: bool) -> None:
     uses_encoder = (str(config.get("rollout_mode", "residual")) != "residual"
                     or str(config.get("lane_head", "off")) != "off"
                     or config.get("history_s") is not None)
     optional = tuple(p for p in _OPTIONAL_PREFIXES
                      if not (uses_encoder and p == "driver_encoder."))
-    missing = [key for key in result.missing_keys if not key.startswith(optional)]
+    missing = [key for key in result.missing_keys
+               if not key.startswith(optional)
+               and not any(part in key for part in _OPTIONAL_CONTAINS)]
     if missing:
         raise CheckpointError(f"checkpoint is missing network weights: {missing[:5]}")
     if strict and result.unexpected_keys:
         raise CheckpointError(f"checkpoint has unexpected weights: {result.unexpected_keys[:5]}")
 
 
+def _expand_lane_v5_inputs(weights: Mapping[str, Any], model: WmSModel):
+    """R5INPUTS: ZERO-expand an old lane-v5 first layer for ``model.lane_v5_extra_features``.
+
+    The checkpoint is read unchanged; only a model built with the switch ON widens the
+    input layer, so an old checkpoint keeps exact identity until trained (new columns have
+    zero weights and identity scaling).  No new key is invented and nothing is written.
+    """
+    net = getattr(model, "lane_v5", None)
+    if net is None or not bool(getattr(net, "extra_features", False)):
+        return weights
+    prefix = "lane_v5."
+    key = prefix + "trunk.0.weight"
+    weight = weights.get(key)
+    if weight is None:
+        return weights
+    n_new = int(net.trunk[0].in_features)
+    n_old = int(weight.shape[1])
+    if n_old == n_new:
+        return weights
+    if n_old > n_new:
+        raise CheckpointError(
+            f"checkpoint lane-v5 input width {n_old} exceeds the model's {n_new}; "
+            "disable model.lane_v5_extra_features for this checkpoint")
+    from . import lane_v5 as lv5
+    local = {name: weights[prefix + name] for name in
+             ("trunk.0.weight", "feature_mu", "feature_sd") if prefix + name in weights}
+    expanded = lv5.expand_input_state(local, n_old, n_new)
+    return {**weights, **{prefix + name: value for name, value in expanded.items()}}
+
+
 def load_checkpoint(path: str | Path, *, device: str = "cpu", strict: bool = True,
                     model_kind: str = "structured",
                     physics: Optional[Mapping[str, Any]] = None,
+                    model_config: Optional[Mapping[str, Any]] = None,
                     config_factory: Optional[Callable[[Mapping[str, Any]], Any]] = None
                     ) -> LoadedWms:
     """Load a ``wm_s/1`` checkpoint into an evaluation-mode model.
@@ -132,7 +235,9 @@ def load_checkpoint(path: str | Path, *, device: str = "cpu", strict: bool = Tru
     Every network weight must be present except those of features newer than the
     checkpoint (``driver_encoder.*`` for residual models, ``command_proj.*``); with
     ``strict`` unexpected keys are errors too.  ``physics`` overrides the physics
-    stored with the run.
+    stored with the run.  ``model_config`` overrides flat model keys (e.g.
+    ``{"lane_v5_extra_features": True}``) on top of the stored config; an old lane-v5
+    checkpoint is then ZERO-expanded to the wider input layer (exact identity).
     """
     if model_kind not in MODEL_KINDS:
         raise CheckpointError(
@@ -140,11 +245,28 @@ def load_checkpoint(path: str | Path, *, device: str = "cpu", strict: bool = Tru
     path = Path(path)
     payload = _read_payload(path)
     config = dict(payload.get("config") or {})
+    if model_config:
+        config.update({str(key): value for key, value in model_config.items()})
     weights = payload["model"]
     model = build_model(_model_spec(config, model_kind), _physics_config(path, config, physics),
                         kind=model_kind,
                         action_conditioned="controller_embed.weight" in weights)
+    weights = _expand_lane_v5_inputs(weights, model)
     _check_keys(model.load_state_dict(weights, strict=False), config, strict)
+    calib = payload.get("lane_v5_merge_calib")
+    if calib is not None:
+        # MERGECAL (tools/merge_calib.py): per-position merge-head offsets of a calibrated copy.
+        from . import lane_v5 as lv5
+        if getattr(model, "lane_v5", None) is None:
+            raise CheckpointError("lane_v5_merge_calib needs a hazard_v5 lane model")
+        model.lane_v5_merge_calib = lv5.check_merge_calib(
+            (calib["edges_m"], calib["offsets"]))
+    digest = None
+    if path.with_name(LANE_CALIB_FILE).is_file():
+        # LANERATECAL (tools/lane_rate_calib.py): closed-loop per-head rate offsets.  This is
+        # a no-op when the file is absent; the calibrated checkpoint is the same .pt file.
+        digest = sha256_file(path)
+        apply_lane_rate_calib(model, path, digest)
     model.to(device)
     model.eval()
     projection = None
@@ -154,8 +276,8 @@ def load_checkpoint(path: str | Path, *, device: str = "cpu", strict: bool = Tru
     meta = {key: value for key, value in payload.items() if key not in ("model", "config")}
     return LoadedWms(model=model,
                      train_cfg=None if config_factory is None else config_factory(config),
-                     payload_meta=meta, sha256=sha256_file(path), legacy_config=config,
-                     projection=projection)
+                     payload_meta=meta, sha256=digest or sha256_file(path),
+                     legacy_config=config, projection=projection)
 
 
 def save_checkpoint(path: str | Path, model: WmSModel, cfg: Any, *,
@@ -180,6 +302,10 @@ def save_checkpoint(path: str | Path, model: WmSModel, cfg: Any, *,
             flat[key] = value
         else:
             flat.pop(key, None)
+    if getattr(model, "mainline_merge_yield_learnable", False):
+        flat["mainline_merge_yield_learnable"] = True
+    if getattr(model, "ramp_speed_adapt_learnable", False):
+        flat["ramp_speed_adapt_learnable"] = True
     payload: dict[str, Any] = {"format": CHECKPOINT_FORMAT, "model": model.state_dict(),
                                "config": flat}
     if history is not None:

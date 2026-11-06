@@ -1,0 +1,10 @@
+{
+ "date": "2026-10-24",
+ "tool": "tools/r13_bit_identity.py (dump per source tree in separate processes, then compare); synthetic crowded merge sequence, CPU, fixed seeds, non-zero courtesy head and temporal read-out",
+ "old_src": "git archive 079e39ff src (round 12 1d801beb + repair A, flags default)",
+ "checks": {
+  "round12_config_old_vs_new": {"config": "configs/c4_wm_v10round12.toml", "result": "345/345 tensors bit-identical (3-step forward outputs, 6-step UnrollRunner loss, every parameter and gradient)"},
+  "round13f_vs_zerotemp_counterfactual": {"old": "079e39ff src, round-12 config + repair A overrides (state_grad, intent=pivot, absolute_weight=4.525) + model.diag_zero_temporal=True (BRAKE_DIAG arm zerotemp)", "new": "this branch, configs/c4_wm_v10round13f.toml (temporal_accel_off=true)", "result": "336/336 tensors bit-identical incl. gradients"},
+  "round13f_vs_emission_on": {"result": "235/345 identical; the 9 temporal-path gradients (history_proj, k_embedding, temporal) are absent with the switch on: in the hazard_v5 round-12 model the temporal MLP feeds only the acceleration emission, so the whole path is inert"}
+ }
+}

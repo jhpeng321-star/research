@@ -69,7 +69,7 @@ class PairedBranchSource:
                  k_slots: Optional[int] = None, heldout=None,
                  role_of: Optional[dict] = None, role: str = "train",
                   junction_fix: str = "off", command_known: bool = False, name: str = "paired",
-                  horizon_mode: str = "fixed"):
+                  horizon_mode: str = "fixed", merge_pivot_history: bool = False):
         if horizon_mode not in ("fixed", "stage"):
             raise ValueError("paired horizon_mode must be fixed or stage")
         self.horizon_mode = horizon_mode
@@ -164,6 +164,8 @@ class PairedBranchSource:
         loader_args = dict(history_s=history_s, history_stride_s=history_stride_s,
                            entries_v2=entries_v2, junction_fix=junction_fix,
                            command_known=command_known)
+        if merge_pivot_history:
+            loader_args["merge_pivot_history"] = True
         if horizon_mode == "stage":
             loader = _HorizonWindowLoader(root, entries_used, index,
                                          [available[str(e["pair_key"])] for e in entries_used],

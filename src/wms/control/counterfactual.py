@@ -64,7 +64,11 @@ class CounterfactualConfig:
     group_max_size: int = 6
     cover_group_members: bool = True  # individual rows for every member of a sampled group
     max_starts: int = 8              # counterfactual rows for at most this many starts per batch
-    native_cav: str = "idm"          # "idm" (simple IDM CAV) or "hold" (a = 0); both safety-filtered
+    # "idm" (legacy simple IDM, the default), "hold" (a = 0), or "head" (the learned
+    # native-CAV head of wms.control.native_cav fitted to TRAIN-val native episodes).
+    native_cav: str = "idm"
+    # Optional path of the learned-head JSON (default configs/native_cav_head_v5.json).
+    native_cav_head_path: Optional[str] = None
     # Group-rich start sampling (fraction of each batch whose start satisfies `group_rich`).
     group_state_fraction: float = 0.6
     group_zone_s_m: list = field(default_factory=lambda: [-800.0, MERGE_S1_M])
@@ -76,6 +80,20 @@ class CounterfactualConfig:
     w_coop: list = field(default_factory=lambda: [0.0, 0.5])
     w_team: list = field(default_factory=lambda: [0.0, 0.5])
     w_all: list = field(default_factory=lambda: [0.25, 1.0])
+    # S-COOPW (COOPW.md; every default keeps c4/loop14c bit-identical).
+    # "absolute": the curriculum position is the trainer's update_count (legacy); "first_update":
+    # update_count minus the update at which this trainer first trained with this config (saved in
+    # the checkpoint), so an adopted / resumed policy still starts the ramp at zero.
+    curriculum_anchor: str = "absolute"
+    # Training-start tilt {feature: weight} (wms.control.coopw.TiltSampler: accept a target draw
+    # with probability prod(1 + w_f f) / max); None = legacy ``group_state_fraction`` path.
+    # Needs group_state_fraction = 0.
+    start_tilt: Optional[dict] = None
+    # Validation starts from the target (uniform-window) distribution instead of oversampled.
+    validation_uniform: bool = False
+    # Per-update coverage / oversampling log, and the unit-term gradient-norm audit cadence.
+    coop_audit: bool = False
+    term_grad_audit_every: int = 0
 
     def __post_init__(self):
         for name in ("n_individual", "n_group", "n_flip", "group_min_size", "group_max_size",
@@ -94,8 +112,10 @@ class CounterfactualConfig:
         if len(zone) != 2 or not zone[0] < zone[1]:
             raise ValueError("group_zone_s_m must be [lo, hi] with lo < hi")
         self.group_zone_s_m = zone
-        if self.native_cav not in ("idm", "hold"):
-            raise ValueError("native_cav must be 'idm' or 'hold'")
+        if self.native_cav not in ("idm", "hold", "head"):
+            raise ValueError("native_cav must be 'idm', 'hold' or 'head'")
+        if self.native_cav_head_path is not None and not isinstance(self.native_cav_head_path, str):
+            raise ValueError("native_cav_head_path must be a string or null")
         names = ("curriculum_updates", "w_individual", "w_group", "w_coop", "w_team", "w_all")
         knots = [list(map(float, getattr(self, n))) for n in names]
         if len({len(k) for k in knots}) != 1 or not knots[0]:
@@ -114,6 +134,20 @@ class CounterfactualConfig:
             raise ValueError("w_coop > 0 needs cover_group_members = true (C_G needs every D_i)")
         if any(self.w_team) and self.n_flip < 1:
             raise ValueError("w_team > 0 needs n_flip >= 1 (M_i needs the flip-one rows)")
+        if self.curriculum_anchor not in ("absolute", "first_update"):
+            raise ValueError("curriculum_anchor must be 'absolute' or 'first_update'")
+        if self.start_tilt is not None:
+            from .coopw import TiltSampler
+            TiltSampler(dict(self.start_tilt))                 # validates names and weights
+            if float(self.group_state_fraction) != 0.0:
+                raise ValueError("start_tilt needs group_state_fraction = 0")
+            self.start_tilt = {str(k): float(v) for k, v in dict(self.start_tilt).items()}
+        for name in ("validation_uniform", "coop_audit"):
+            if not isinstance(getattr(self, name), bool):
+                raise ValueError(f"{name} must be a boolean")
+        value = self.term_grad_audit_every
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError("term_grad_audit_every must be a nonnegative integer")
 
     def weights(self, update: int) -> dict:
         """Piecewise-linear curriculum at ``update`` (held beyond the end knots).
@@ -172,7 +206,14 @@ def hold_native_accel(state: Mapping[str, Tensor]) -> Tensor:
     return torch.zeros_like(state["s_m"])
 
 
-def native_fn(name: str, a_max: float = None):
+def native_fn(name: str, a_max: float = None, head_path: Optional[str] = None):
+    """Native CAV behaviour: legacy IDM (default), hold, or the learned head (V10NATIVECAV)."""
+    if name == "head":
+        from .native_cav import head_native_accel
+
+        def head(state):
+            return head_native_accel(state, path=head_path)
+        return head
     if name != "idm":
         return hold_native_accel
     if a_max is None:
@@ -328,8 +369,9 @@ def row_coefficients(variants: Optional[Variants], weights: Mapping[str, float],
         c[row] += weights["individual"] * per_start
     for group in variants.groups:
         c[group["row"]] += (weights["group"] + weights["coop"]) * per_start
-        for member in group["members"]:
-            c[variants.individual_rows[(group["start"], member)]] -= weights["coop"] * per_start
+        if weights["coop"]:
+            for member in group["members"]:
+                c[variants.individual_rows[(group["start"], member)]] -= weights["coop"] * per_start
         if len(group["members"]) < 3:
             # |G| = 2: G\i is the other member ALONE, so M_i would put -w_team on a solo benefit;
             # the team term is applied to groups of >= 3 only (M_i is still logged for pairs).

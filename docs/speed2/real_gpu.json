@@ -1,0 +1,186 @@
+{
+  "checkpoint": "/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round13e_a/wm_s.pt",
+  "checkpoint_sha256": "7a7d872aaf0a1d49635b0bb1bd45c0fa3e1b3567580838f4bd5e8579e288ade2",
+  "manifest_sha256": "024c0485e511da99892bd1fde36bbf14daf1cd695ecf76e9dd88e68301436540",
+  "episode": {
+    "arm": "native",
+    "cav_rows": 23904,
+    "controller": "native",
+    "controllers_used": [
+      "native"
+    ],
+    "demand_vph": 2400,
+    "dir": "episodes/w969824m2400p40t300__native",
+    "direct_cav_steps": 0,
+    "episode": "w969824m2400p40t300__native",
+    "extra_arrays": [
+      "lane_command_target",
+      "lane_request_target",
+      "requested_acceleration_mps2"
+    ],
+    "horizon_s": 120.0,
+    "k_slots": 192,
+    "max_present": 86,
+    "n_control": 420,
+    "n_states": 841,
+    "penetration": 0.4,
+    "policy": "native",
+    "queue_arrays": {
+      "n_requests": 1358,
+      "not_inserted_by_end": 1081,
+      "queue_unknown": 0,
+      "source": "scenario/requests.rou.xml"
+    },
+    "seed": 969824,
+    "source": "/home/ubuntu/c4/runs/coop/jobs/s969824_m2400_t300/episode_native",
+    "source_sha256": "3bbab74ef4c421e6333b7f4477c7d93f552910641fb42c1ece98db1118921cbc",
+    "split_role": "train",
+    "t_start_s": 0.0,
+    "warmup_s": 300.0,
+    "world": "w969824m2400p40t300"
+  },
+  "device": "cuda",
+  "torch": "2.8.0+cu128",
+  "t0_s": 300.0,
+  "horizon_s": 300.0,
+  "slots": 595,
+  "present": 79,
+  "residual_accel_off": true,
+  "relative_denominator_floor": 1e-08,
+  "trained_residual": {
+    "off": {
+      "median_s": 0.019240375608205795,
+      "samples_s": [
+        0.019240375608205795,
+        0.025176744908094406,
+        0.01832030713558197
+      ]
+    },
+    "on": {
+      "median_s": 0.012251630425453186,
+      "samples_s": [
+        0.011350803077220917,
+        0.01700824871659279,
+        0.012251630425453186
+      ]
+    },
+    "outputs": {
+      "accel_delta_mps2": {
+        "max_abs": 0.0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "accel_log_sigma": {
+        "max_abs": 1.430511474609375e-06,
+        "max_rel": 7.98857314497343e-07,
+        "bit_equal": false
+      },
+      "lane_logit_delta": {
+        "max_abs": 0.0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "attn": {
+        "max_abs": 5.960464477539063e-08,
+        "max_rel": 3.847855782365277e-07,
+        "bit_equal": false
+      }
+    },
+    "loss": {
+      "max_abs": 2.384185791015625e-07,
+      "max_rel": 7.614288761088974e-08,
+      "bit_equal": false
+    },
+    "gradients": {
+      "max_abs": 3.814697265625e-06,
+      "max_rel": 0.8438632903562393,
+      "bit_equal": false
+    }
+  },
+  "completed_rollout_regimes": 3,
+  "rollout": {
+    "off": {
+      "median_s": 26.849222131073475,
+      "samples_s": [
+        26.849222131073475
+      ]
+    },
+    "diag_off": {
+      "median_s": 23.65172017365694,
+      "samples_s": [
+        23.65172017365694
+      ]
+    },
+    "diag_off_compact": {
+      "median_s": 22.186558816581964,
+      "samples_s": [
+        22.186558816581964
+      ]
+    },
+    "diagnostics_only_difference": {
+      "positions": {
+        "max_abs": 0.0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "speeds": {
+        "max_abs": 0.0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "accel": {
+        "max_abs": 0.0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "lanes": {
+        "max_abs": 0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "masks": {
+        "max_abs": 0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      }
+    },
+    "compact_difference": {
+      "positions": {
+        "max_abs": 0.0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "speeds": {
+        "max_abs": 0.0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "accel": {
+        "max_abs": 0.0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "lanes": {
+        "max_abs": 0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "masks": {
+        "max_abs": 0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      }
+    },
+    "diagnostics_rng": {
+      "max_abs": 0,
+      "max_rel": 0.0,
+      "bit_equal": true
+    },
+    "compact_rng": {
+      "max_abs": 0,
+      "max_rel": 0.0,
+      "bit_equal": true
+    }
+  },
+  "peak_reserved_bytes": 861929472
+}

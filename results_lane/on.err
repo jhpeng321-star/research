@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "E:\agent-work\c4-v10r9lane\tools\r9_support_reconcile.py", line 228, in <module>
+    main()
+  File "E:\agent-work\c4-v10r9lane\tools\r9_support_reconcile.py", line 174, in main
+    episodes, sources = legacy.discover(args.source)
+  File "E:\agent-work\c4-v10r9lane\tools\merge_fit_v2.py", line 270, in discover
+    path = guard(root / item["dir"])
+  File "E:\agent-work\c4-v10r9lane\tools\merge_fit_v2.py", line 49, in guard
+    raise ValueError(f"path outside workspace refused: {path}")
+ValueError: path outside workspace refused: E:\agent-work\c4-v10r9fix\data\r9_train\v5_native\episodes\w963004m1900p40t300__native

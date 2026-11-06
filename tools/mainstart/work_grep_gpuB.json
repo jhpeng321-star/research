@@ -1,0 +1,57 @@
+{
+ "processes": [
+  {
+   "pid": 5970,
+   "cwd": "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267",
+   "cmd": "bash scripts/c4/gpub_idle_guard.sh "
+  },
+  {
+   "pid": 19704,
+   "cwd": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d",
+   "cmd": "bash /root/autodl-tmp/c4/v5/r16_autochain.sh 5855 2923218883 "
+  },
+  {
+   "pid": 20187,
+   "cwd": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d",
+   "cmd": "bash /root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts/round16_gpuB.sh --launch-b "
+  },
+  {
+   "pid": 27907,
+   "cwd": "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d",
+   "cmd": "/root/miniconda3/bin/python -B -u -m wms train --config configs/c4_wm_v10round16_stage_b.toml --mode run --out /root/autodl-tmp/c4/v5/runs/c4_wm_v10_round16_b --set loss.loss_share_logging=false --set loss.brake_follow_cav_weight=2.0 --set optim.batch_size=4 --set runtime.device=cuda --set model.init_from=/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round16_a/wm_s.pt "
+  },
+  {
+   "pid": 43184,
+   "cwd": "/root/autodl-tmp/c4/boxsync/cpuP/autopilot_r10",
+   "cmd": "rsync -az --timeout=60 --exclude=cache/ --exclude=*.tgz --exclude=*.tar -e ssh -o BatchMode=yes -o ConnectTimeout=10 cpuP:/home/ubuntu/autopilot_r10/ /root/autodl-tmp/c4/boxsync/cpuP/autopilot_r10/ "
+  },
+  {
+   "pid": 43186,
+   "cwd": "/root/autodl-tmp/c4/boxsync/cpuP/autopilot_r10",
+   "cmd": "rsync -az --timeout=60 --exclude=cache/ --exclude=*.tgz --exclude=*.tar -e ssh -o BatchMode=yes -o ConnectTimeout=10 cpuP:/home/ubuntu/autopilot_r10/ /root/autodl-tmp/c4/boxsync/cpuP/autopilot_r10/ "
+  },
+  {
+   "pid": 43283,
+   "cwd": "/root/autodl-tmp/c4/boxsync/cpuP/actqual/cache",
+   "cmd": "rsync -az -e ssh cpuP:/home/ubuntu/actqual/cache/ /root/autodl-tmp/c4/boxsync/cpuP/actqual/cache/ "
+  },
+  {
+   "pid": 43285,
+   "cwd": "/root/autodl-tmp/c4/boxsync/cpuP/actqual/cache",
+   "cmd": "rsync -az -e ssh cpuP:/home/ubuntu/actqual/cache/ /root/autodl-tmp/c4/boxsync/cpuP/actqual/cache/ "
+  }
+ ],
+ "roots": [
+  "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d",
+  "/root/autodl-tmp/c4/boxsync/newcpu",
+  "/root/autodl-tmp/c4/v5/repo_r16_3b3c201d/scripts",
+  "/root/autodl-tmp/c4/v5/repo_gpubloop_7556d267",
+  "/root/autodl-tmp/c4/v5",
+  "/root/autodl-tmp/c4/boxsync/cpuP/autopilot_r10",
+  "/root/autodl-tmp/c4/boxsync/cpuP/actqual/cache",
+  "/root/autodl-tmp/c4/boxsync/cpuP/autopilot_r10/runs/r14b"
+ ],
+ "scanned_files": 4274,
+ "matches": [],
+ "symlinks": []
+}

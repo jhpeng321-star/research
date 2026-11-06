@@ -1,0 +1,60 @@
+{"waiting_s": 0, "tail": "group\": 78, \"pair_key\": \"w967066m2700p05t300@t420\"}\n{\"group\": 79, \"pair_key\": \"w967066m2700p05t300@t540\"}\n{\"group\": 80, \"pair_key\": \"w967066m2700p05t300@t780\"}\n"}
+{"waiting_s": 120, "tail": "group\": 85, \"pair_key\": \"w967070m2700p40t300@t660\"}\n{\"group\": 86, \"pair_key\": \"w967070m2700p40t300@t780\"}\n{\"group\": 87, \"pair_key\": \"w967070m2700p40t300@t900\"}\n"}
+{"waiting_s": 240, "tail": "group\": 91, \"pair_key\": \"w967076m2400p40t300@t780\"}\n{\"group\": 92, \"pair_key\": \"w967077m2400p40t300@t660\"}\n{\"group\": 93, \"pair_key\": \"w967077m2400p40t300@t780\"}\n"}
+{
+ "status": "PASS",
+ "t": "2026-10-26T09:31:00Z",
+ "wm_sha256": "5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2",
+ "groups": 96,
+ "horizons": {
+  "10": {
+   "sign_agreement": 0.9210526315789473,
+   "sign_ci95": [
+    0.8723404255319149,
+    0.9627659574468085
+   ],
+   "pearson": 0.9243308571653361,
+   "pearson_ci95": [
+    0.8919760426333657,
+    0.9470339383209047
+   ],
+   "n_pairs": 192,
+   "n_groups": 96,
+   "verdict": "BASE"
+  },
+  "30": {
+   "sign_agreement": 0.9473684210526315,
+   "sign_ci95": [
+    0.9114583333333334,
+    0.9789473684210527
+   ],
+   "pearson": 0.9007865283137458,
+   "pearson_ci95": [
+    0.8476766248581458,
+    0.9363935439105289
+   ],
+   "n_pairs": 192,
+   "n_groups": 96,
+   "verdict": "PASS"
+  },
+  "60": {
+   "sign_agreement": 0.9526315789473684,
+   "sign_ci95": [
+    0.9202127659574468,
+    0.9789473684210527
+   ],
+   "pearson": 0.7744415474620118,
+   "pearson_ci95": [
+    0.6780079349162066,
+    0.8586189315855557
+   ],
+   "n_pairs": 192,
+   "n_groups": 96,
+   "verdict": "PASS"
+  }
+ },
+ "threshold": 0.868421052631579,
+ "archived_failure": "/root/autodl-tmp/c4/v5/mainstart/mainr16/restart/horizon_5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2.deployment_failure.json",
+ "retry_output": "/root/autodl-tmp/c4/v5/mainstart/mainr16/restart/horizon_5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2.retry1.json",
+ "new_sumo_sim_s": 0
+}

@@ -1,0 +1,128 @@
+{
+ "schema": "loop14_cpu_smoke/1",
+ "scientific_use": false,
+ "what": "one full LOOP14 cycle via scripts/c4/loop14.py on a CPU laptop (tools/loop14_checks/cpu_cycle_smoke.py)",
+ "inputs": {
+  "wm": "S-R12C stand-in (sha c76c338d...); 13E B FINAL not available locally",
+  "seeds": "4107-4108 (exposed dev seeds, mechanics fixture registration)",
+  "sumo": "1.27.1",
+  "python": "rl_driving conda env (py3.10, torch 2.12 cpu)"
+ },
+ "steps": [
+  {
+   "cmd": "init",
+   "exit": 0,
+   "wall_s": 0.5
+  },
+  {
+   "cmd": "plan",
+   "exit": 0,
+   "wall_s": 0.4
+  },
+  {
+   "cmd": "next",
+   "exit": 0,
+   "wall_s": 26.8
+  },
+  {
+   "cmd": "next",
+   "exit": 0,
+   "wall_s": 89.2
+  },
+  {
+   "cmd": "next",
+   "exit": 0,
+   "wall_s": 10.4
+  },
+  {
+   "cmd": "next",
+   "exit": 0,
+   "wall_s": 721.8
+  },
+  {
+   "cmd": "next",
+   "exit": 0,
+   "wall_s": 621.0
+  },
+  {
+   "cmd": "status",
+   "exit": 0,
+   "wall_s": 0.3
+  }
+ ],
+ "policy": {
+  "updates": 2,
+  "resumed_from": null,
+  "independent_J_before": 61.48313903808594,
+  "independent_J_after": 61.48359680175781,
+  "last_actor_loss": 6.180752277374268,
+  "last_critic_loss": 3.450932025909424
+ },
+ "collect": {
+  "seeds": [
+   4107,
+   4108
+  ],
+  "sim_s_charged": 1442,
+  "episodes": 2,
+  "branches": 4,
+  "pair_sim_seconds": 1442,
+  "branch_collisions": 0,
+  "branch_teleports": 0,
+  "sumo_pairs": 2,
+  "sumo_mean_policy_minus_native_J": 30004.87229931429
+ },
+ "convert": {
+  "episodes": 4,
+  "pair_groups": 2,
+  "targets": 1
+ },
+ "wm_ft": {
+  "train_log_rows": 2,
+  "exit": 0
+ },
+ "check": {
+  "decision": "ACCEPT",
+  "reasons": [],
+  "onestep_mae": {
+   "candidate": {
+    "n": 6666,
+    "mae": 0.32683291192677
+   },
+   "reference": {
+    "n": 6666,
+    "mae": 0.3235773756059747
+   }
+  },
+  "hard_brake_share": {
+   "candidate": 0.0,
+   "reference": 0.0
+  },
+  "paired_difference": {
+   "candidate": {
+    "groups": 1,
+    "mean_abs_error_veh_s": 734.5766906738281,
+    "sign_agreement": 1.0
+   },
+   "reference": {
+    "groups": 1,
+    "mean_abs_error_veh_s": 736.4832153320312,
+    "sign_agreement": 1.0
+   }
+  }
+ },
+ "sim_s_charged": 1442,
+ "ledger_events": [
+  "init",
+  "done",
+  "done",
+  "done",
+  "done",
+  "done",
+  "cycle_decision"
+ ],
+ "notes": [
+  "smoke policy (2 CPU updates) is untrained: SUMO policy-minus-native J is large and positive (worse); no efficacy claim",
+  "separately verified: policy14_cli --resume (update_count 2 -> 3, loop-refresh path)"
+ ]
+}

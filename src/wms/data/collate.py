@@ -40,6 +40,9 @@ def collate(records: list[dict]) -> dict[str, Tensor | list]:
     if all("entry_feat" in r for r in records):
         out["entry_feat"] = torch.as_tensor(
             np.stack([r["entry_feat"] for r in records]), dtype=torch.float32)
+    if all("entry_queue" in r for r in records):      # V9ENTRY
+        out["entry_queue"] = torch.as_tensor(
+            np.stack([r["entry_queue"] for r in records]), dtype=torch.float32)
     if all("controller_id" in r for r in records):
         out["controller_id"] = torch.as_tensor(
             [int(r["controller_id"]) for r in records], dtype=torch.long)
@@ -71,4 +74,9 @@ def collate(records: list[dict]) -> dict[str, Tensor | list]:
         if all(r.get("meta", {}).get("pair_key") is not None for r in records):
             out["pair_key"] = [r["meta"]["pair_key"] for r in records]
     out["identities"] = [r.get("identities") for r in records]
+    if any("merge_pivot_prefix" in r for r in records):
+        # Ragged run prefixes are intentionally not padded into fictitious ticks.
+        out["merge_pivot_prefix"] = [r.get("merge_pivot_prefix") for r in records]
+    if any("merge_pivot_scene" in r for r in records):
+        out["merge_pivot_scene"] = [r.get("merge_pivot_scene") for r in records]
     return out

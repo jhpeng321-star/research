@@ -1,0 +1,30 @@
+{
+ "bitid": {
+  "legacy": {
+   "tensors": 55,
+   "bit_identical": true
+  },
+  "loop14c": {
+   "tensors": 55,
+   "bit_identical": true
+  }
+ },
+ "verified_source_files": {
+  "src/wms/model/wms.py": "f55ac6c3ecb4369b61232c4d014dcad34fee5ebd0390465a9165d98ced2333b4",
+  "src/wms/model/cav.py": "a64ae4a0fdb2f496214deb9c081265d7662f431d32432eb37c849bd4eff5f058",
+  "src/wms/control/bridge.py": "37c79f4a23179070b897710a5e42122e64c7e1fb7bd42f7f88b88d7e3d79fbd1",
+  "src/wms/control/dreamer.py": "2063d2120d124d4d803c258fb7dc4bbed7ef45f83c39ccb6a02372e5ee8bd03e",
+  "src/wms/control/policy.py": "a20658938d588726ebe5b2807688bd471f9f121d005477d374616ba60746b5ae",
+  "src/wms/control/policy14.py": "193489f8d3aa239e591f4fb71c6bd2fef32ddcbf9f9a29bc761513805c8bfa71",
+  "src/wms/control/policy14_cli.py": "88874f574677309bda0595ef91635fe81a707a2498109fb160fe9be2990c3d42",
+  "src/wms/control/confident_gate.py": "70788820da78638be5da19891d9bc1b5a29603234125a7cd2f0025f7ec7cbed2",
+  "tests/unit/test_native_lane.py": "3a6913bccd22fbbccf2f3fe617a8d1f6824733fb6f4a3a03224c6fd950ba5235",
+  "tests/unit/test_native_adoption.py": "8afb22b3893fb9621bc92ff1d725e235a8c51fda9ab8db7c7ddea932842535bd"
+ },
+ "tests_host": "gpuB",
+ "integrated_tests_passed": 366,
+ "verification": "366-test integrated CPU suite printed success after the native/HDV reservation regression; final two-path tensor-byte probe passed",
+ "passed": true,
+ "code_sha": "1619544e0e0df9c938d4c5d08db009941ff60056",
+ "wm_sha256": "952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8"
+}

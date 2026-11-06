@@ -1,0 +1,42 @@
+{
+ "schema": "c4_gate_reliability/1",
+ "upper": [
+  1.742976188659668,
+  29.049047470092773
+ ],
+ "lower": [
+  0.42801856994628906,
+  2.062713623046875
+ ],
+ "wins": [
+  1,
+  2
+ ],
+ "counts": [
+  2,
+  2
+ ],
+ "meta": {
+  "split": "TRAIN",
+  "unit": "group",
+  "reference": "hold",
+  "horizon_s": 20.0,
+  "state_source": "belief",
+  "outcome": "sumo_J_plan < sumo_J_ref (speed deficit + source wait, veh-s)",
+  "raw": "mean imagined J_ref - J_plan (road delay veh-s)",
+  "seeds": [
+   967600
+  ],
+  "sources": [
+   "/home/ubuntu/sumocredit/out_a2/gate_s1.jsonl"
+  ],
+  "n": 4,
+  "wins": 3,
+  "brier_in_sample": 0.15625,
+  "prior": "Beta(1,1)",
+  "method": "isotonic_pav_posterior_mean",
+  "threshold": 0.8,
+  "max_probability": 0.75,
+  "blocks_at_or_above_threshold": 0
+ }
+}

@@ -1,0 +1,61 @@
+{
+ "rule": "temporal_lane_bias_init[lane] = gate-weighted mean sum(g*e)/sum(g) of the pre-gate temporal emission e of the init checkpoint (run init transforms applied) over learned on-road HDV rows of free rollouts, by step-start lane (preserves the mean gated contribution)",
+ "config": "configs/c4_wm_v10round13f.toml",
+ "overrides": [
+  "model.temporal_accel_off=false",
+  "loss.merge_core.tf_weight=0.0",
+  "loss.merge_core.metrics=false",
+  "loss.driver_prior.weight=0.0",
+  "loss.brake_follow_cav_weight=2.0"
+ ],
+ "ckpt": "E:/agent-work/c4-v10r10/tmp_diag/r9/wm_s_stage300.pt",
+ "roots": [
+  "E:/agent-work/c4-v10r10b/tmp_r10b/roots/v5_native",
+  "E:/agent-work/c4-v10r10b/tmp_r10b/roots/genrand_plain"
+ ],
+ "n_batches": 3,
+ "batch_size": 2,
+ "unroll_s": 60.0,
+ "sampler_seed": 0,
+ "n_rows": [
+  26584.0,
+  23511.0,
+  3612.0
+ ],
+ "pregate_mean": [
+  1.7220593406989768,
+  -0.7884917127283896,
+  -1.8622942017535715
+ ],
+ "pregate_sd": [
+  7.8723514105307,
+  11.159650755802998,
+  13.802182705489447
+ ],
+ "gated_mean": [
+  0.5792093067273908,
+  0.18202606448769199,
+  0.0023834507168165693
+ ],
+ "mean_gate": [
+  0.24104060260466184,
+  0.24186047763082363,
+  0.2505292942219415
+ ],
+ "gate_weighted_mean": [
+  2.4029532803540565,
+  0.7526077276897508,
+  0.009513660764577467
+ ],
+ "temporal_lane_bias_init": [
+  2.403,
+  0.7526,
+  0.009514
+ ],
+ "notes": [
+  "init checkpoint = round-9 final (round 12 init) + round 12 init transforms (centre, residual reinit, zero courtesy head) via the trainer init_from path",
+  "windows: local val-role episodes of the r9 TRAIN pool windowed as train (--all-roles-as-train); 3 batches x 2 windows x 60 s free rollouts; re-measure on TRAIN-split windows at launch",
+  "the constant keeps the per-lane mean GATED contribution; the k-profile of the emission (unweighted pre-gate mean differs: [1.722, -0.788, -1.862]) is not kept",
+  "merge_core TF term off, driver prior off, brake_follow_cav_weight 2.0 (gate overrides) for the measurement; no backward"
+ ]
+}

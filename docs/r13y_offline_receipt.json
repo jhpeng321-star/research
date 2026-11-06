@@ -1,0 +1,62 @@
+{
+  "schema": "r13y_offline_receipt/1",
+  "status": "partial",
+  "branch": "c4/v10r13y",
+  "base_commit": "eb75010c6a2a7ef66eebc3282e03f50e37d4b202",
+  "offline_study_commit": "d4a3062d3854846f5a7028732a5930afa0b90041",
+  "checkpoint_sha256": "c76c338dea6355f85cfaee63cdb9077fb129ed25db0ab582d77eda2961822091",
+  "remote_results": "/root/autodl-tmp/c4/v5/diag_yield/r13y_offline_final",
+  "remote_code": "/root/autodl-tmp/c4/v5/diag_yield/code_final",
+  "remote_verification_log": "/root/autodl-tmp/c4/v5/diag_yield/verification_final.log",
+  "artifact_sha256": {
+    "arms.csv": "fd13e8a1e036f763625354e2b28f1565ca7e11c18c26f846b1bdea124ee28765",
+    "manifest.json": "145f442d55b031ee9fb31249d2d22a620448f1c10db2416f4e7dd092a4fbb32c",
+    "remote_summary.json": "19ffe492df3a81739a814214284297b2e45de164a6004c40d7deebb6de5d735f"
+  },
+  "execution": {
+    "device": "cpu",
+    "workers": 4,
+    "threads_per_worker": 1,
+    "nice": 19,
+    "arm_runs": 360,
+    "short": {"states": 48, "samples": [0, 1], "seconds": 120, "arm_runs": 288},
+    "spot": {"states": 12, "samples": [0, 1], "seconds": 300, "arm_runs": 72},
+    "arms": ["off", "yield", "yield+emergency9"],
+    "no_training_gpu_or_sumo_launch": true,
+    "cav_position_check": "All 360 runs passed max recorded-CAV position error <= 0.001 m.",
+    "local_model_and_harness_sha256_match_manifest": true,
+    "poststudy_metadata_only_change": "The same legacy_flat.py default-omission tuple entry was moved away from the 13E insertion site. No flag mapping/default or model/harness behavior changed. All 10 config tests and the 2238-tensor byte-identity comparison passed again after this edit."
+  },
+  "verification": {
+    "command": "sh scripts/r13y_verify.sh",
+    "tests_passed": 81,
+    "legacy_fixture_config_cases_deselected": 2,
+    "coverage": ["both yield parameter finite differences", "continuous state adjoint", "short stop-time rollout adjoint", "activation checkpoint adjoint", "synthetic crawl and release", "no-blocked-merger no-op", "CAV exclusion", "courtesy precedence and distant influence", "legacy yield regression", "strict checkpoint roundtrip"],
+    "flag_off_byte_identity": {"tensors": 2238, "rollouts": 8, "steps_each": 12, "includes": ["weights", "every forward tensor", "every captured rollout tensor"]},
+    "ruff": "passed",
+    "shell_syntax": "passed",
+    "git_diff_check": "passed"
+  },
+  "metrics": {
+    "ci": "95% paired world-cluster percentile bootstrap, 4000 draws; 48 short and 12 spot clusters, both samples retained. State-cluster results also remain in remote summary.json.",
+    "csv_zone_windows": {"short": "60-120 s", "spot": "120-300 s"},
+    "other_csv_metrics": "Complete 120 or 300 s horizon; t0 roster, entries off, native CAV replay and recorded HDV exits.",
+    "zone_speed_missingness": "Absolute speeds condition on a nonempty zone within each arm. Ratio rows use common finite WM/recorded pairs and can differ from dividing absolute columns. No missing observation is replaced by zero; n_pairs is retained in remote summary.json.",
+    "merges": "t0 ramp HDVs observed on mainline, without the original event extractor's pre/post trace-window censoring.",
+    "overlaps": "Unordered same-lane footprint-pair contact onsets involving at least one HDV, including repeat contacts and non-neighbors, below road end 553.33 m; initially overlapping pairs are not counted as new. HDV-HDV-only onsets/time are reported separately.",
+    "train_scope": "Approved outer TRAIN corpus; source-internal validation partition, matching the original BLOWUP panel. Exact pre-t0 inputs and all 241 original future frames preserved in the 601-frame spot export."
+  },
+  "acceptance": {
+    "default_off_and_byte_identity": "passed",
+    "fd_and_synthetic": "passed",
+    "offline_arms_and_300s_ci_table": "passed",
+    "no_new_overlaps": "failed",
+    "check_command": "python scripts/r13y_resulttable.py /root/autodl-tmp/c4/v5/diag_yield/r13y_offline_final --check-yield-overlaps",
+    "check_exit_code": 1,
+    "short_hdv_hdv_contacts_yield_minus_off": {"mean_per_run": 5.354166666666667, "ci95": [2.22890625, 9.125520833333335], "worse_paired_runs": 52, "paired_runs": 96},
+    "spot_hdv_hdv_contacts_yield_minus_off": {"mean_per_run": 2.5416666666666665, "ci95": [-4.876041666666667, 8.333333333333334], "worse_paired_runs": 13, "paired_runs": 24},
+    "short_hdv_hdv_contact_means": {"off": 13.0, "yield": 18.354166666666668, "yield+emergency9": 0.11458333333333333},
+    "reason": "Genuine HDV rear-end contacts increase with yield under comfortable-only braking. Replayed CAV contacts also contribute to all-pair overlap counts. Emergency9 reduces HDV-HDV failures but is only a proxy for the full 13E mechanism.",
+    "next_action": "Merge flag-off into 13E, preserve its emergency and secure-gap mechanisms, and resolve the combined safety gate before enabling. No training was launched."
+  }
+}

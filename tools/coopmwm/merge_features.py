@@ -37,12 +37,13 @@ import numpy as np
 
 from tools.coopmwm.v2v_obs import V2V_K, V2V_RANGE_M
 
-SENSOR_RANGE_M = 100.0                 # wms.control.contract.SENSOR_RANGE_M
+from tools.coopmwm.map_descriptor import FRAME  # N1 frame contract (plain values, no torch)
+
+SENSOR_RANGE_M = FRAME.sensor_range_m  # wms.control.contract.SENSOR_RANGE_M
 CONTROL_DT_S = 1.0                    # wms.control.contract.CONTROL_DT_S
-MERGE_S0_M = 0.0                      # wms.control.contract.MERGE_S0_M
-MERGE_S1_M = 75.44                    # wms.control.contract.MERGE_S1_M
+MERGE_S0_M, MERGE_S1_M = FRAME.merge_zone_s_m  # wms.control.contract.MERGE_S0_M / MERGE_S1_M
 QUEUE_SPEED_MPS = 5.0                 # wms.control.rsu_field.QUEUE_SPEED_MPS
-N_LANES = 3                          # wms.control.contract.N_LANES
+N_LANES = FRAME.n_lanes              # wms.control.contract.N_LANES
 
 MERGE_LANE_FEATURES = (
     "queue_length_veh", "approaching_count", "approaching_mean_speed_mps",

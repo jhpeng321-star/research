@@ -50,6 +50,8 @@ With no ``variety_*`` config key this module is never imported by ``mppi_search`
 import math
 import numpy as np
 
+from .map_descriptor import FRAME  # N1: model-frame geometry (map descriptor frame contract)
+
 # Registered option config (all of it; unknown variety_* keys are rejected even
 # when the option is off, mirroring coop_search.split_config). Documented
 # distances: variety_wall_span_m mirrors the wall v2.1 executor's registered
@@ -63,10 +65,10 @@ VARIETY_REGISTERED = dict(
     variety_structured_share=0.25,
     variety_wall_span_m=75.0,
     variety_wall_min_lanes=2,
-    variety_merge_zone_m=(-100., 75.44),
+    variety_merge_zone_m=FRAME.local_zone_s_m,
     variety_gap_link_m=100.,
-    variety_ramp_lane=2,
-    variety_mainline_lane=1,
+    variety_ramp_lane=FRAME.merge_lane,           # ramp (merge map) / closing lane (lane drop)
+    variety_mainline_lane=FRAME.main_lanes[1],
     variety_onset_window_s=(0., 30.),
     variety_hold_window_s=(20., 90.),
     variety_depth_window=(0.3, 1.0),

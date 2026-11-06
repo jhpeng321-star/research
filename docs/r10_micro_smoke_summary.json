@@ -1,0 +1,55 @@
+{
+ "steps": 2,
+ "cutin_values": [
+  0.9434223175048828,
+  1.1659373044967651
+ ],
+ "cutin_events": [
+  6,
+  7
+ ],
+ "cutin_event_rows": [
+  17,
+  20
+ ],
+ "cutin_control_rows": [
+  2837,
+  2936
+ ],
+ "cutin_event_loss": [
+  0.6491671204566956,
+  0.8330209255218506
+ ],
+ "cutin_control_loss": [
+  0.29425519704818726,
+  0.33291637897491455
+ ],
+ "losses": [
+  27.301228259681782,
+  22.165884163588938
+ ],
+ "all_finite": true,
+ "trainable_parameter_names": [
+  "gate_g_max_logit",
+  "gate_tau_raw",
+  "temporal.0.bias",
+  "temporal.0.weight",
+  "temporal.2.bias",
+  "temporal.2.weight"
+ ],
+ "changed_tensors": [
+  "gate_g_max_logit",
+  "gate_tau_raw",
+  "temporal.0.bias",
+  "temporal.0.weight",
+  "temporal.2.bias",
+  "temporal.2.weight"
+ ],
+ "changed_subset_of_trainable": true,
+ "frozen_changed": [],
+ "merge_pivot_changed": [],
+ "grad_norm": [
+  4.800778388977051,
+  1.4361188411712646
+ ]
+}

@@ -1,0 +1,16 @@
+# GPU smoke of c4_policy_v9entry_v5m.toml (2026-10-18): same settings, batch 2 (batch 4 exceeded the 5.2 GB smoke cap
+# next to the running WM training; batch 2 with max_starts 2 too), counterfactual max_starts 1, 3 updates, no checkpoints.
+extends = "c4_policy_v9entry_v5m.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V9ENTRY-V5M-SMOKE"
+updates = 3
+validation_batches = 1
+
+[trainer]
+batch_size = 2
+checkpoint_every = 1000
+validation_every = 1000
+
+[counterfactual]
+max_starts = 1

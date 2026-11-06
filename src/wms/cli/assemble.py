@@ -120,9 +120,22 @@ def build_physics(cfg: TrainConfig, resolver: Optional[Resolver] = None):
     model = cfg.model
     sumo_idm = not model.geometry_only
     integration = {"stop_time_integration": cfg.physics.stop_time_integration,
+                   "emergency_braking": cfg.physics.emergency_braking,
+                   "secure_gap_veto": cfg.physics.secure_gap_veto,
+                   "lane_change_secure_gap": bool(cfg.physics.lane_change_secure_gap),
+                   "emergency_onset": str(cfg.physics.emergency_onset),
                    "emergency_decel_mps2": cfg.physics.emergency_decel_mps2,
+                   "exit_at_road_end": bool(cfg.physics.exit_at_road_end),
                    "merge_end_wait": bool(cfg.physics.merge_end_wait),
-                   "mainline_merge_yield": bool(cfg.physics.mainline_merge_yield)}
+                   "mainline_merge_yield": bool(cfg.physics.mainline_merge_yield),
+                   "lane_learnable": bool(cfg.physics.lane_learnable),
+                   "ramp_lane_end_stop": bool(cfg.physics.ramp_lane_end_stop),
+                   "ramp_risk_retain": bool(cfg.physics.ramp_risk_retain),
+                   "mainline_lane_mode": str(cfg.physics.mainline_lane_mode),
+                   "mainline_courtesy_zone_m": float(cfg.physics.mainline_courtesy_zone_m)}
+    # V8WM: config-level gap-rule / lane-end parameter overrides (empty = unchanged).
+    integration.update({key: value if isinstance(value, (str, bool)) else float(value)
+                        for key, value in cfg.physics.overrides.items()})
     if model.merge_cal:
         overrides = {"sumo_fidelity": bool(model.sumo_fidelity), "sumo_idm": sumo_idm,
                      "merge_cal": True, "lane_rule": model.lane_rule,
@@ -232,6 +245,8 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
             start_shift_prob=start_shift, window_list=window_list,
             exclude_window_list=exclude, entries_v2=bool(data.entries_v2), item_filter=guard,
             history_s=data.history_s, history_stride_s=data.history_stride_s,
+            **({"merge_pivot_history": True}
+               if cfg.model.merge_decision == "first_passage" else {}),
             **_junction_kwargs(data))
 
     train = original(train_list, float(data.effective_start_shift_prob))
@@ -291,7 +306,8 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
             path(c4.path), horizon_steps=horizon, history_s=data.history_s,
             history_stride_s=data.history_stride_s, entries_v2=bool(data.entries_v2),
             stride_s=float(c4.window_stride_s), start_s=c4.start_s, k_slots=pack_k,
-            heldout=heldout)
+            heldout=heldout, **({"merge_pivot_history": True}
+                               if cfg.model.merge_decision == "first_passage" else {}))
         if not c4.use_val:
             source["val"] = None
         train, val = add_c4_source(train, val, source, mix_ratio=float(c4.mix_ratio),
@@ -303,7 +319,42 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
     if data.c4_sources:
         train, val = _add_c4_sources(cfg, train, val, path, horizon=horizon, pack_k=pack_k,
                                      heldout=heldout, curriculum=curriculum)
+    if getattr(data, "replay", None) is not None and data.replay.enabled:
+        train = _wrap_replay(train, data.replay, curriculum)
     return train, val, resolved
+
+
+def _wrap_replay(train: Any, replay_cfg: Any, curriculum: tuple) -> Any:
+    """V10HORIZON: wrap the assembled TRAIN dataset in prioritised replay."""
+    from ..data.replay_flags import compute_replay_flags
+    from ..train.replay import PriorityReplayDataset
+
+    low = float(getattr(replay_cfg, "low_share_oversample", 1.0)) > 1.0
+    flags = compute_replay_flags(
+        train, merge_end_m=float(replay_cfg.merge_zone_end_m),
+        **({"low_share_max": float(replay_cfg.low_share_max)} if low else {}))
+    replay = PriorityReplayDataset(
+        train, merge_zone=flags["merge_zone"], cav_follower=flags["cav_follower"],
+        brake_event=flags["brake_event"],
+        merge_oversample=float(replay_cfg.merge_oversample),
+        cav_oversample=float(replay_cfg.cav_follower_oversample),
+        brake_oversample=float(replay_cfg.brake_oversample),
+        error_alpha=float(replay_cfg.error_alpha),
+        error_decay=float(replay_cfg.error_decay),
+        error_max_boost=float(replay_cfg.error_max_boost),
+        **({"low_share": flags["low_share"],
+            "low_share_oversample": float(replay_cfg.low_share_oversample),
+            "low_share_min_stage_s": float(replay_cfg.low_share_min_stage_s)} if low else {}))
+    replay.receipt["replay"]["scan"] = {k: flags[k] for k in
+                                        ("n_windows", "n_merge_zone", "n_cav_follower",
+                                         "n_brake_event", "n_both", "merge_end_m",
+                                         "merge_zone_s1_m", "n_low_share", "low_share_max")
+                                        if k in flags}
+    replay.receipt["replay"]["stage_sampling"] = replay.describe_stages(curriculum)
+    print(f"priority replay: {flags['n_merge_zone']} merge-zone / "
+          f"{flags['n_cav_follower']} CAV-follower / {flags['n_brake_event']} brake-event "
+          f"of {flags['n_windows']} windows", file=sys.stderr)
+    return replay
 
 
 def _jam_min(data: Any, key: str = "jam_min_fraction") -> dict:
@@ -335,6 +386,8 @@ def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str]
                   k_slots=pack_k, heldout=heldout, role_of=roles,
                   junction_fix=getattr(data, "junction_fix", "off"),
                   command_known=getattr(data, "controller_hygiene", "off") == "strict")
+    if cfg.model.merge_decision == "first_passage":
+        common["merge_pivot_history"] = True
     mixed = []
     order = sorted(data.c4_sources, key=lambda src: src.name != base)   # base first (V5DATA)
     for src in order:

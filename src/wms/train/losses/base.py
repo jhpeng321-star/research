@@ -56,6 +56,7 @@ class UnrollTargets:
     prepared: dict[str, Any] = field(default_factory=dict)
     road: Any = None               # aggregate loss only: losses.aggregate.RoadTargets
     pair: Any = None               # paired_diff loss only: losses.paired_diff.PairTargets
+    courtesy_boost: Optional[Tensor] = None   # V10COURTESY [B, n_steps, K] or None
 
 
 @dataclass
@@ -77,6 +78,12 @@ class LossContext:
     @cached_property
     def m(self) -> Tensor:
         return self.targets.hdv_mask[:, self.c0:self.c1].to(self.w.dtype)
+
+    @cached_property
+    def courtesy_boost(self) -> Optional[Tensor]:
+        """V10COURTESY per-slot loss multiplier of this chunk (None = off)."""
+        boost = self.targets.courtesy_boost
+        return None if boost is None else boost[:, self.c0:self.c1]
 
     @cached_property
     def valid_aux(self) -> Tensor:

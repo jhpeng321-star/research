@@ -1,0 +1,75 @@
+{
+ "rule": "weight = G_brake / G_cutin(weight=1): geometric-mean accumulated gradient norm of the explicit braking terms (brake_persist + brake_persist_quantile) over the round-10 trainable parameters, divided by the gradient norm of the unweighted cut-in term; tools/r10_weight_rule.py + tools/r10_weight_combine.py",
+ "status": "MEASURED",
+ "chosen_weight": 2.174,
+ "chosen_weight_note": "weight_geomean_ratio rounded to 4 significant digits (no other adjustment)",
+ "weight_geomean_ratio": 2.173641846790268,
+ "g_brake": 0.7372478669482203,
+ "g_cutin_at_weight_1": 0.3391763312051088,
+ "geomean_grad_norm": {
+  "agg_delay_region": 0.0,
+  "agg_field": 0.05752462956200991,
+  "agg_flow": 0.07921047839855672,
+  "agg_pair": 0.0,
+  "agg_queue": 0.0,
+  "agg_reward": 0.16494559801182038,
+  "agg_throughput": 0.0,
+  "brake_persist": 0.3940314969298656,
+  "brake_persist_quantile": 0.3432163700183547,
+  "cutin_reaction": 0.3391763312051088,
+  "flip_rate": 0.00047328454196541084,
+  "lane": 0.0,
+  "lane_event": 0.0,
+  "lane_flow": 0.0,
+  "pair_agg": 0.0,
+  "pair_pos": 0.0,
+  "pair_speed": 0.0,
+  "position": 3.066048693469214,
+  "residual_mag": 0.08887731084870228,
+  "speed": 0.16718842106232157
+ },
+ "braking_terms": {
+  "brake_persist": 0.3940314969298656,
+  "brake_persist_quantile": 0.3432163700183547
+ },
+ "per_batch_ratio": [
+  2.0952811630535355,
+  3.966761965081041,
+  1.292192908408402,
+  0.6000034881908558,
+  2.4114711644342615,
+  4.211860969384282,
+  4.326590652390004
+ ],
+ "per_batch_ratio_min_max": [
+  0.6000034881908558,
+  4.326590652390004
+ ],
+ "n_batches": 7,
+ "shards": [
+  "t4.json",
+  "m1.json",
+  "m2.json",
+  "m3.json"
+ ],
+ "sampler_seeds": [
+  0,
+  1,
+  2,
+  3
+ ],
+ "method": "Sum of per-term geometric-mean accumulated weighted braking gradient norms / geometric-mean accumulated cut-in gradient norm at weight 1; real WmSTrainer.forward_backward, no optimizer steps",
+ "checkpoint": "data/r9_train/wm_s_stage300.pt (round-8 stage-300 weights; init of the round-9 draft; merge_pivot new tensors from the round-8 init report)",
+ "windows": "local TRAIN episode w963004m1900p40t300__native, 1 s stride, windows whose recorded ramp->lane-1 insertion is 24 steps after the window start (117 candidates), unroll 20 s, truncation 40 steps, batch size 2, CPU",
+ "overrides": [
+  "loss.merge_core.tf_weight=0.0",
+  "loss.merge_core.metrics=false",
+  "loss.cutin_reaction.weight=1.0 (tool default)"
+ ],
+ "caveats": [
+  "merge_pivot loss term disabled for the measurement (loss.merge_core.tf_weight=0, metrics=false): the pre-window replay made one batch cost >25 min on CPU; per-term gradient norms are measured term by term, so brake/cut-in norms do not depend on its presence",
+  "single local episode, 20 s windows (production unroll 120/300 s), CPU"
+ ],
+ "trainable_parameters": 6470,
+ "confirmation": "Re-measured the first batch of each of the 4 sampler seeds with the gate overrides loss.brake_follow_cav_weight=2.0 loss.loss_share_logging=false: the brake_persist, brake_persist_quantile and cutin_reaction gradient norms are identical to 5 digits (the override is inert on these windows), so the weight stands."
+}

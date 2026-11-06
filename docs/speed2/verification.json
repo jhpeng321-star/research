@@ -1,0 +1,48 @@
+{
+  "base_commit": "77d9e574",
+  "flag_off_identity": {
+    "tensors_compared": 178,
+    "result": "PASS: raw storage bytes, including signed zero, infinities and NaN payloads; original HEAD source exported independently, current flags explicitly off",
+    "command": "PYTHONPATH=<legacy-src> python tools/speed2_verify.py --save legacy.pt; PYTHONPATH=src python tools/speed2_verify.py --compare legacy.pt"
+  },
+  "related_tests": {
+    "passed": 604,
+    "deselected_preexisting_failures": [
+      "tests/test_r9_risk_retain.py::test_flag_default_off_and_round9_preset_pin",
+      "tests/test_r9_lane_end_stop.py::test_round9_preset_pins_the_flag_and_the_fitter_physics_json"
+    ],
+    "baseline_confirmation": "Both failures reproduced against separately exported 77d9e574 src: stored round-9 physics JSON lacks four later default fields.",
+    "selection": [
+      "tests/test_speed2_flags.py",
+      "tests/test_merge_pivot*.py",
+      "tests/test_checkpoint_forward_exact.py",
+      "tests/test_r9_risk_retain.py",
+      "tests/test_r9_lane_end_stop.py",
+      "tests/test_loop14_emergency_onset.py",
+      "tests/unit/test_c4_dreamer.py",
+      "tests/unit/test_loop14c.py",
+      "tests/unit/test_policy14*.py"
+    ]
+  },
+  "ruff": "All changed Python files pass",
+  "measurements": {
+    "host": "gpuB",
+    "directory": "/root/autodl-tmp/c4/speed2_finish_0201",
+    "cpu_threads_per_worker": 1,
+    "maximum_concurrent_workers": 2,
+    "cpu_affinity": [0, 1],
+    "nice": 19,
+    "synthetic_gpu_pid": 22734,
+    "synthetic_cpu_pid": 22732,
+    "real_gpu_pid": 23040,
+    "measurement_workers_exited": true,
+    "maximum_gpu_measurement_reserved_bytes": 1174405120,
+    "new_sumo_seconds": 0,
+    "gpu_limit": "Synthetic CUDA allocator cap 3.5 GiB; real probe 3.0 GiB; only one GPU measurement worker at a time. CPU probe CUDA context 386 MiB, observed total owned GPU usage below 4 GiB.",
+    "synthetic_method": "One warm-up then 3-5 repeats for kernels/replays; one synchronized complete run per full training step, rollout or policy update. Reset model weights and seeds between regimes. Full training step uses B=1, K=595, P=100, 240 physics ticks and TBPTT=1 under the memory cap; Policy14 uses K=96, P=24, 10 control steps, checkpointing, four counterfactual rows and active lane credit.",
+    "real_method": "13E-A frozen checkpoint and one explicit manifest-certified TRAIN state, w969824m2400p40t300__native at t=300 s, real causal 60 s history, padded to 595 slots, no entries. The production checkpoint has residual_accel_off=true; standalone trained-residual output/loss/gradient checks accompany the trajectory check.",
+    "interpretation": "Shared-host engineering timings; synthetic steps do not reproduce the running production round-16 or policy-loop training recipe. Relative differences divide by max(abs(reference), 1e-8), so tiny near-zero values can have large relative errors. No likelihood quadrature was skipped.",
+    "final_guards": "After the all-case measurements, the compact path additionally falls back when P+1 == K (no width reduction). All measured shapes have P+1 < K, so their executed operators are unchanged. The additional exact fallback regression passed with the final 604-test suite. Source hashes retain the actual measured snapshot, including documentation bytes.",
+    "loop14c": "loop14c_gpu.json separately measures the final code with native_ramp_merge=wm_law and native_cav=head, four counterfactual rows. Exact flags preserve all recorded losses, gradient norms and policy/group/critic/target weights bit-for-bit."
+  }
+}

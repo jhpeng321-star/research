@@ -1,0 +1,5 @@
+# Conditional S-NATIVELANE adoption only; the main/default config stays opt-out.
+extends = "c4_policy14_main14.toml"
+
+[policy14]
+native_lane_change = true

@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import math
 import statistics
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, Sequence
 
@@ -144,3 +144,87 @@ def project_hours(log: Path, stage_steps: Sequence[int], *, stages_s=None,
         total += hours
     return {"mode": "explicit-stage-steps", "stages_s": stages, "stage_steps": stage_steps,
             "per_stage": detail, "projected_hours": total, "estimated_hours": total}
+
+
+@dataclass
+class PlateauRule:
+    """Advance a curriculum stage when the shorter-horizon validation error plateaus.
+
+    V10HORIZON (2026-10-19, default OFF): instead of committing a fixed number of
+    optimizer steps to every horizon, a stage keeps training until the metric it is
+    supervised on stops improving (or an optional observation cap is reached).  The
+    metric is the stage's own-horizon validation ``mean_position`` -- the *shorter*
+    horizon relative to the next stage -- so the 10 s stage advances only once 10 s
+    prediction saturates, and so on to 30/60/120 s.
+
+    ``observe(step, value)`` is fed one validation value (lower is better).  A value
+    that improves the best by more than ``min_delta`` *relative* to it resets the
+    staleness counter; otherwise the counter grows.  The rule reports ``advanced``
+    once ``stale >= patience`` (and at least ``min_steps`` observations were seen) or
+    once ``max_steps`` observations were seen (``0`` = no observation cap: the stage's
+    own optimizer-step budget applies).  It never changes any numerics by itself.
+    """
+
+    patience: int = 3
+    min_delta: float = 0.01
+    min_steps: int = 2
+    max_steps: int = 0
+    minimize: bool = True
+    metric: str = "mean_position"
+    best: float = float("inf")
+    stale: int = 0
+    observations: int = 0
+    advanced: bool = False
+    reason: str = ""
+    history: list[dict] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if int(self.patience) < 1:
+            raise ValueError("plateau patience must be >= 1")
+        if int(self.min_steps) < 1:
+            raise ValueError("plateau min_steps must be >= 1")
+        if int(self.max_steps) < 0:
+            raise ValueError("plateau max_steps must be >= 0")
+        if not math.isfinite(float(self.min_delta)) or float(self.min_delta) < 0.0:
+            raise ValueError("plateau min_delta must be finite and >= 0")
+
+    def _improved(self, value: float) -> bool:
+        if not math.isfinite(self.best):
+            return True
+        if self.minimize:
+            return value < self.best * (1.0 - float(self.min_delta))
+        return value > self.best * (1.0 + float(self.min_delta))
+
+    def observe(self, step: int, value: float) -> bool:
+        """Feed one validation value; returns True as soon as the stage should advance."""
+        value = float(value)
+        if not math.isfinite(value):
+            self.history.append({"step": int(step), "value": None,
+                                 "best": (None if not math.isfinite(self.best) else self.best),
+                                 "stale": int(self.stale), "skipped": "non_finite"})
+            return self.advanced
+        self.observations += 1
+        if self.advanced:
+            self.history.append({"step": int(step), "value": value, "best": self.best,
+                                 "stale": int(self.stale), "skipped": "already_advanced"})
+            return True
+        if self._improved(value):
+            self.best, self.stale = value, 0
+        else:
+            self.stale += 1
+        self.history.append({"step": int(step), "value": value, "best": self.best,
+                             "stale": int(self.stale)})
+        if self.max_steps and self.observations >= int(self.max_steps):
+            self.advanced, self.reason = True, "max_steps"
+        elif self.observations >= int(self.min_steps) and self.stale >= int(self.patience):
+            self.advanced, self.reason = True, "plateau"
+        return self.advanced
+
+    def summary(self) -> dict:
+        """Compact decision record for the validation log and the stage record."""
+        return {"enabled": True, "metric": self.metric, "patience": int(self.patience),
+                "min_delta": float(self.min_delta), "min_steps": int(self.min_steps),
+                "max_steps": int(self.max_steps), "observations": int(self.observations),
+                "best": (None if not math.isfinite(self.best) else float(self.best)),
+                "stale": int(self.stale), "advanced": bool(self.advanced),
+                "reason": self.reason or None, "history": list(self.history)}

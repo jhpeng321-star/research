@@ -1,0 +1,8 @@
+{
+ "lookahead_m": 65.0,
+ "strength": 0.4,
+ "headway_scale": 2.0,
+ "provenance": "INITIALIZATION ONLY (training re-learns all three). Grid least-squares fit of the 1 s-ahead speed of 894,620 TRAIN-role v5_native ramp-HDV in-zone rows (384 episodes, t >= 300 s, lane-1 leader present) with the 13E b2 FINAL learned population-centre driver settings (sha256 952ec059...84c8); tools/r16_checks/ramp_adapt_init_fit.py, evidence_r16/init_fit.json (sha256 cd04e916...4b08). Speed RMSE 0.636 -> 0.470 m/s.",
+ "fit_evidence_sha256": "cd04e916dc374a991e031c713e40df1c2df0ddf6c9b09c3c0ca32b2b4ea54b08",
+ "checkpoint_sha256": "952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8"
+}

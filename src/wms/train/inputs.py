@@ -1,6 +1,7 @@
 """Batch -> unroll inputs: device placement, entries-v2 padding, t0 noise, recorded targets."""
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional
 
@@ -9,6 +10,7 @@ import torch.nn.functional as F
 from torch import Tensor
 
 from wms.data.action_timeline import CONTROLLERS
+from wms.physics.batched import road_end_exit_bound
 
 from .cav_drive import TimelineControllers
 from .losses.base import UnrollTargets
@@ -77,19 +79,42 @@ def make_entry_process(settings: TrainSettings, batch: Mapping[str, Any], presen
     dt_s = float(model.physics.dt_s)
     steps = int(present.shape[1]) - 1 if unroll_steps is None else min(
         int(unroll_steps), int(present.shape[1]) - 1)
-    pad = entry_pad_for(settings, histories, max(steps, 1) * dt_s)
+    queue_kw: dict = {}
+    if bool(getattr(settings, "entry_queue_state", False)):        # V9ENTRY
+        from wms.model.entries import EntranceQueue, with_queue_demand
+
+        if "entry_queue" not in batch:
+            raise ValueError("entry_queue_state needs windows with entry_queue (C4 sources "
+                             "converted with V9ENTRY queue arrays)")
+        if not settings.entry_pad_auto:
+            raise ValueError("entry_queue_state needs entry_pad_auto (uncapped backlog)")
+        # The entrant CAV share is NOT applied in WM training: teacher-forced training rollouts
+        # have no CAV controller, and an entrant CAV would run the native hold-speed motion
+        # (WMS.step: ``hold_teacher``) - a stop-speed entrant would then block the entrance.
+        queues = [dataclasses.replace(EntranceQueue.from_vector(row), cav_share=None)
+                  for row in batch["entry_queue"].detach().cpu().numpy()]
+        queue_kw = {"queues": queues}
+        horizon_s = max(steps, 1) * dt_s
+        pad = entry_pad_for(settings, [with_queue_demand(h, q) for h, q in zip(histories, queues)],
+                            horizon_s)
+        if settings.entry_pad_auto:
+            extra = max(int(np.ceil(min(float(np.sum(q.backlog)), 0.5 * horizon_s)
+                                    * ENTRY_PAD_SAFETY)) for q in queues)
+            pad = max(1, min(int(settings.entry_pad_max), pad + extra))
+    else:
+        pad = entry_pad_for(settings, histories, max(steps, 1) * dt_s)
     pool = np.zeros((b_n, k_n + pad), dtype=bool)
     pool[:, k_n:] = True
     cfg = EntryConfig(max_pending=10 ** 9) if settings.entry_pad_auto else None
     rule = str(getattr(settings, "entry_insert_rule", "v2"))
-    if rule != "v2":                    # ENTRYFIX; "v2" keeps the legacy construction
+    if rule != "v2" or queue_kw:        # ENTRYFIX; "v2" keeps the legacy construction
         cfg = EntryConfig(**({"max_pending": 10 ** 9} if settings.entry_pad_auto else {}),
-                          insert_rule=rule)
+                          insert_rule=rule, fresh_no_credit=bool(queue_kw))
     process = TorchEntryProcessV2(histories=histories, dt_s=dt_s,
                                   seed=int(settings.seed), batch=b_n, pool=pool, cfg=cfg,
                                    **({} if paired_random is None else
                                       {"row_seeds": paired_random.row_seeds,
-                                       "couple_draws": True}))
+                                       "couple_draws": True}), **queue_kw)
     process.train_pad = pad
     return process
 
@@ -148,6 +173,8 @@ class UnrollInputs:
     n_steps: int
     initial: dict[str, Tensor]
     paired_random: Optional[PairedRandom] = None
+    merge_pivot_prefix: Optional[list] = None
+    merge_pivot_scene: Optional[list] = None
 
 
 def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings,
@@ -195,6 +222,12 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
         raise ValueError("batch does not contain requested unroll")
     initial = state_from_kin(states[:, 0], present[:, 0])
     initial["is_cav"] = is_cav[:, 0]
+    # Plain-bug fix: vehicles predicted beyond the road end leave the unroll.  Recorded SUMO
+    # exits still end slots through ``present_seq`` (the two masks AND in the model step).
+    exit_s = road_end_exit_bound(getattr(model, "physics", None))
+    if exit_s is not None:
+        initial["exit_s_m"] = torch.full(present[:, 0].shape, float(exit_s),
+                                         dtype=states.dtype, device=device)
     _perturb_t0(initial, states, present, is_cav, model, settings, paired_random)
     controller_id = batch.get("controller_id")
     if controller_id is not None:
@@ -202,10 +235,16 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
     timeline = _device_timeline(batch.get("action_timeline"), device, entries)
     _refuse_unknown_commands(timeline, settings)
     cav_controller = None
-    if settings.cav_drive == "closed_loop":
+    if (settings.cav_drive == "closed_loop" or
+            (getattr(model, "merge_decision", None) == "first_passage" and timeline is not None)):
         if settings.black_box:
             raise ValueError("closed_loop CAV driving requires structured WM-S")
         cav_controller = TimelineControllers(model, timeline)
+        teacher = None
+    if getattr(model, "merge_decision", None) == "first_passage":
+        # S-FIX9: WmSModel.step now honours a supplied cav_teacher on the first_passage
+        # path (eval replay of the recorded arm).  Training never replayed the recorded
+        # CAV motion there (the teacher was dropped), so keep that training contract.
         teacher = None
     if not model.long_history:
         observed_hist, observed_hist_mask = hist, hist_mask
@@ -214,7 +253,11 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
         entrant_seq = entrant_seq.to(device).bool()
     return UnrollInputs(states, present, present_seq, is_cav, teacher, hist, hist_mask,
                         observed_hist, observed_hist_mask, loss_valid, entries, controller_id,
-                        timeline, cav_controller, entrant_seq, n_steps, initial, paired_random)
+                        timeline, cav_controller, entrant_seq, n_steps, initial, paired_random,
+                         batch.get("merge_pivot_prefix")
+                         if getattr(model, "merge_decision", None) == "first_passage" else None,
+                         batch.get("merge_pivot_scene")
+                         if getattr(model, "merge_decision", None) == "first_passage" else None)
 
 
 def _perturb_t0(initial: dict[str, Tensor], states: Tensor, present: Tensor, is_cav: Tensor,
@@ -273,8 +316,14 @@ def _device_timeline(timeline: Optional[Mapping[str, Any]], device: torch.device
 
 
 def build_targets(inputs: UnrollInputs, batch: Mapping[str, Any], settings: TrainSettings,
-                  dt_s: float, device: torch.device) -> UnrollTargets:
+                  dt_s: float, device: torch.device, physics: Any = None) -> UnrollTargets:
     """Recorded per-unroll targets, masks and the global valid-count normaliser."""
+    from .courtesy import courtesy_follower_boost
+
+    if physics is None:
+        from wms.physics.config import PhysicsConfig
+
+        physics = PhysicsConfig()
     n = inputs.n_steps
     states = inputs.states
     weights = step_weights(n, states.dtype, device, settings.step_weight_decay).view(1, n, 1)
@@ -289,27 +338,36 @@ def build_targets(inputs: UnrollInputs, batch: Mapping[str, Any], settings: Trai
     aux_mask = hdv_mask & ~inputs.is_cav[:, 1:n + 1] & inputs.present[:, :n]
     denom = (weights * hdv_mask.to(weights.dtype)).sum().clamp_min(1.0)
     road = None
-    if settings.aggregate_weight > 0.0:
-        # Aggregate loss (C4): recorded on-road presence -- the full road (incl. arrivals)
-        # when the entry process runs and the windows carry it, else the t0 cohort.
+    if (settings.aggregate_weight > 0.0 or getattr(settings, "merge_loss_on", False)
+            or getattr(settings, "agg_delay_on", False)):
+        # Aggregate loss (C4) / merge loss (V7FT) / agg-delay loss (A5): recorded on-road
+        # presence -- the full road (incl. arrivals) when the entry process runs and the windows
+        # carry it, else the t0 cohort.
         from .losses.aggregate import road_targets
 
         road = road_targets(batch, states, inputs.present, int(batch["states"].shape[2]),
                             entries_on=inputs.entries is not None, device=device)
     pair = None
-    if getattr(settings, "paired_diff_weight", 0.0) > 0.0 and "pair_ref" in batch:
-        # PAIRLOSS: paired batch (pair groups of GENRAND branches) -> t0-cohort pair targets.
+    if ((getattr(settings, "paired_diff_weight", 0.0) > 0.0
+         or getattr(settings, "agg_delay_paired_weight", 0.0) > 0.0)
+            and "pair_ref" in batch):
+        # PAIRLOSS / A5 paired: paired batch (pair groups of GENRAND branches) -> t0-cohort
+        # pair targets.
         from .losses.paired_diff import pair_targets
 
         pair = pair_targets(batch, states, inputs.present, int(batch["states"].shape[2]),
                             device=device)
+    courtesy_boost = courtesy_follower_boost(
+        states[:, :n], inputs.present[:, :n], physics,
+        float(getattr(settings, "courtesy_weight", 1.0)))
     targets = UnrollTargets(
         states=states, n_steps=n, weights=weights, hdv_mask=hdv_mask, aux_mask=aux_mask,
         aux_count=int(aux_mask.sum()), denom=denom,
         lane_target=states[:, 1:n + 1, :, 1:4].argmax(-1), loss_valid=inputs.loss_valid,
         is_cav=inputs.is_cav, dt_s=float(dt_s), position_delta_m=settings.position_huber_delta_m,
         speed_delta_mps=settings.speed_huber_delta_mps,
-        history_lane_head=settings.lane_head == "history", road=road)
+        history_lane_head=settings.lane_head == "history", road=road,
+        courtesy_boost=courtesy_boost)
     if pair is not None:
         targets.pair = pair
     return targets

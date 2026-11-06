@@ -30,6 +30,7 @@ from wms.control.dreamer import (
 from wms.control.start_states import (
     StartBatch, StartStateSampler, checked_path, split_start_states,
 )
+from wms.physics.batched import MODEL_FRAME_ROAD_END_M
 
 
 def _seed(seed=123):
@@ -645,6 +646,16 @@ def test_resume_refuses_changed_frozen_world_model():
         changed.world_model_ids = ["different-model"]
         with pytest.raises(ValueError, match="same frozen"):
             changed.load_checkpoint(checkpoint)
+
+
+def test_imagination_rollouts_carry_the_road_end_exit_bound():
+    trainer = _trainer(horizon=1)
+    trainer.imagine(FakeSampler().sample(1), deterministic=True)
+    model = trainer.world_models[0]
+    first = model.transitions[0][0]
+    assert "exit_s_m" in first
+    torch.testing.assert_close(first["exit_s_m"],
+                               torch.full_like(first["s_m"], MODEL_FRAME_ROAD_END_M))
 
 
 def _smoke():

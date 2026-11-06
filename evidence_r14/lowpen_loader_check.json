@@ -1,0 +1,282 @@
+{
+ "packs": {
+  "lowpen_native": {
+   "manifest_roles": {
+    "val": 7,
+    "train": 25
+   },
+   "worlds_with_both_roles_in_manifest": [],
+   "horizons": {
+    "120.0": {
+     "train": {
+      "n": 1975,
+      "worlds": 25,
+      "wrong_role_worlds": [],
+      "by_design_share": {
+       "0.05": 948,
+       "0.1": 1027
+      },
+      "decoded": 1975,
+      "realized_share_q": [
+       0.0,
+       0.023255813953488372,
+       0.07575757575757576,
+       0.1389943741209564,
+       0.19444444444444445
+      ],
+      "realized_share_gt_0p15": 53
+     },
+     "val": {
+      "n": 553,
+      "worlds": 7,
+      "wrong_role_worlds": [],
+      "by_design_share": {
+       "0.05": 316,
+       "0.1": 237
+      },
+      "decoded": 553,
+      "realized_share_q": [
+       0.0,
+       0.019157509157509158,
+       0.05319148936170213,
+       0.11744169808685935,
+       0.14130434782608695
+      ],
+      "realized_share_gt_0p15": 0
+     }
+    },
+    "300.0": {
+     "train": {
+      "n": 1525,
+      "worlds": 25,
+      "wrong_role_worlds": [],
+      "by_design_share": {
+       "0.05": 732,
+       "0.1": 793
+      },
+      "decoded": 1525,
+      "realized_share_q": [
+       0.0,
+       0.023255813953488372,
+       0.07792207792207792,
+       0.1375,
+       0.19444444444444445
+      ],
+      "realized_share_gt_0p15": 38
+     },
+     "val": {
+      "n": 427,
+      "worlds": 7,
+      "wrong_role_worlds": [],
+      "by_design_share": {
+       "0.05": 244,
+       "0.1": 183
+      },
+      "decoded": 427,
+      "realized_share_q": [
+       0.0,
+       0.019102564102564105,
+       0.05263157894736842,
+       0.11922196796338672,
+       0.14130434782608695
+      ],
+      "realized_share_gt_0p15": 0
+     }
+    }
+   }
+  },
+  "lowpen_genrand_plain": {
+   "manifest_roles": {
+    "train": 19,
+    "val": 5
+   },
+   "worlds_with_both_roles_in_manifest": [],
+   "horizons": {
+    "120.0": {
+     "train": {
+      "n": 1501,
+      "worlds": 19,
+      "wrong_role_worlds": [],
+      "by_design_share": {
+       "0.05": 869,
+       "0.1": 632
+      },
+      "decoded": 1501,
+      "realized_share_q": [
+       0.0,
+       0.023529411764705882,
+       0.07368421052631578,
+       0.14814814814814814,
+       0.19767441860465115
+      ],
+      "realized_share_gt_0p15": 68
+     },
+     "val": {
+      "n": 395,
+      "worlds": 5,
+      "wrong_role_worlds": [],
+      "by_design_share": {
+       "0.05": 79,
+       "0.1": 316
+      },
+      "decoded": 395,
+      "realized_share_q": [
+       0.013513513513513514,
+       0.03852272727272728,
+       0.1,
+       0.16342364532019701,
+       0.19658119658119658
+      ],
+      "realized_share_gt_0p15": 34
+     }
+    },
+    "300.0": {
+     "train": {
+      "n": 1159,
+      "worlds": 19,
+      "wrong_role_worlds": [],
+      "by_design_share": {
+       "0.05": 671,
+       "0.1": 488
+      },
+      "decoded": 1159,
+      "realized_share_q": [
+       0.0,
+       0.023809523809523808,
+       0.07407407407407407,
+       0.14634146341463414,
+       0.19767441860465115
+      ],
+      "realized_share_gt_0p15": 45
+     },
+     "val": {
+      "n": 305,
+      "worlds": 5,
+      "wrong_role_worlds": [],
+      "by_design_share": {
+       "0.05": 61,
+       "0.1": 244
+      },
+      "decoded": 305,
+      "realized_share_q": [
+       0.023255813953488372,
+       0.04357381748686096,
+       0.1,
+       0.15869405722670585,
+       0.19658119658119658
+      ],
+      "realized_share_gt_0p15": 22
+     }
+    }
+   }
+  },
+  "lowpen_genrand_branch": {
+   "manifest_roles": {
+    "val": 142,
+    "train": 426
+   },
+   "worlds_with_both_roles_in_manifest": [],
+   "horizons": {
+    "120.0": {
+     "train": {
+      "n": 474,
+      "worlds": 6,
+      "wrong_role_worlds": [],
+      "by_design_share": {
+       "0.05": 237,
+       "0.1": 237
+      },
+      "decoded": 474,
+      "realized_share_q": [
+       0.0,
+       0.02068452380952381,
+       0.08110171482264505,
+       0.15565656565656566,
+       0.18181818181818182
+      ],
+      "realized_share_gt_0p15": 30
+     },
+     "val": {
+      "n": 158,
+      "worlds": 2,
+      "wrong_role_worlds": [],
+      "by_design_share": {
+       "0.05": 79,
+       "0.1": 79
+      },
+      "decoded": 158,
+      "realized_share_q": [
+       0.011111111111111112,
+       0.024390243902439025,
+       0.07735042735042735,
+       0.1507892930679479,
+       0.1839080459770115
+      ],
+      "realized_share_gt_0p15": 8
+     }
+    },
+    "300.0": {
+     "train": {
+      "n": 366,
+      "worlds": 6,
+      "wrong_role_worlds": [],
+      "by_design_share": {
+       "0.05": 183,
+       "0.1": 183
+      },
+      "decoded": 366,
+      "realized_share_q": [
+       0.0,
+       0.013333333333333334,
+       0.08045977011494253,
+       0.15617832568807338,
+       0.18181818181818182
+      ],
+      "realized_share_gt_0p15": 26
+     },
+     "val": {
+      "n": 122,
+      "worlds": 2,
+      "wrong_role_worlds": [],
+      "by_design_share": {
+       "0.05": 61,
+       "0.1": 61
+      },
+      "decoded": 122,
+      "realized_share_q": [
+       0.011111111111111112,
+       0.024390243902439025,
+       0.0796039603960396,
+       0.14863221884498473,
+       0.1839080459770115
+      ],
+      "realized_share_gt_0p15": 6
+     }
+    }
+   }
+  }
+ },
+ "n_roles": 1140,
+ "overridden_to_val": [],
+ "pack_worlds_shared_with_extra": [],
+ "started": "2026-10-25 12:27:17",
+ "argv": [
+  "lowpen_loader_check.py",
+  "--packs",
+  "/home/ubuntu/c4/runs_active/S-LOWPEN-20261025/packs/lowpen_native",
+  "/home/ubuntu/c4/runs_active/S-LOWPEN-20261025/packs/lowpen_genrand_plain",
+  "/home/ubuntu/c4/runs_active/S-LOWPEN-20261025/packs/lowpen_genrand_branch",
+  "--extra-manifests",
+  "manifests/v5_native.json",
+  "manifests/genrand_plain.json",
+  "manifests/genrand_branch.json",
+  "manifests/pairs300.json",
+  "--horizons",
+  "120",
+  "300",
+  "--out",
+  "loader_check.json"
+ ],
+ "ok": true,
+ "finished": "2026-10-25 13:09:12"
+}

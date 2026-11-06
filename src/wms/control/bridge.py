@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Callable, Mapping, Optional
+from typing import Callable, Mapping, MutableMapping, Optional
 
 import torch
 from torch import Tensor
 
+from wms.core import speed_flags
 from wms.core.constants import DEFAULT_LENGTH_M
 from .contract import (ACCEL_MAX_MPS2, ACCEL_MIN_MPS2, MERGE_S0_M, MERGE_S1_M,
                        NATIVE_CAV_ACCEL_MAX_MPS2, PHYSICS_DT_S, STEPS_PER_CONTROL, CavController,
@@ -30,7 +31,12 @@ def _merge_lane(state: Mapping[str, Tensor], cav_mask: Tensor) -> Tensor:
     assigned = lane
     # K is small in the slot representation. Each iteration handles one ego
     # per batch, keeping all kinematics/device operations in Torch.
-    for i in range(s.shape[1]):
+    egos = s.shape[1]
+    if speed_flags.enabled("fast_merge_lane") and egos and s.shape[0]:
+        # S-SPEED2: candidates sort first; a non-candidate ego never merges, so every
+        # iteration past the largest per-row candidate count rewrites its own lane (no-op).
+        egos = int(candidates.sum(1).max())
+    for i in range(egos):
         ego = order[:, i:i + 1]
         ds = s - s.gather(1, ego)
         target = present & (assigned == 1)
@@ -49,7 +55,13 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
                         lane_rules=None, act_mask: Optional[Tensor] = None,
                         native: Optional[Callable[[Mapping[str, Tensor]], Tensor]] = None,
                         accel_max: Optional[float] = None,
-                        native_accel_max: Optional[float] = None) -> CavController:
+                        native_accel_max: Optional[float] = None,
+                        zone: Optional[Callable[[Mapping[str, Tensor]], Tensor]] = None,
+                        symmetric_exec_cap: bool = False,
+                        mask_forced_merge: bool = False,
+                        policy_ramp_merge: bool = False,
+                        native_ramp_merge: str = "gap6",
+                        native_lane_change: bool = False) -> CavController:
     """Create an episode-local stateful callback producing [B,K,4] motion.
 
     Rebuild the controller for independent episodes; step zero also resets its
@@ -68,29 +80,56 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
     existing forced merge of ramp-lane CAVs runs afterwards on every tick and is never
     blocked by the head.  ``act_mask`` [B,K] (counterfactual rows): only these CAVs follow
     the policy; the other CAVs follow ``native(state) -> accel [B,K]`` (re-evaluated each
-    physics step) and stay in lane (forced merge still applies).
+    physics step) and stay in lane (forced merge still applies).  ``zone(state) -> [B,K] bool``
+    (V10ENTZONE, optional) additionally releases the CAVs it marks to ``native`` on every tick
+    (their policy command and lane choice are dropped), whether or not ``act_mask`` is given; it
+    is re-evaluated each tick so a CAV entering/leaving the zone switches behaviour immediately.
 
     ``accel_max`` (ACCELCAP_NOTES.md): the upper bound of the POLICY's commands, used as the
     safety ceiling and the motion clamp of policy-driven CAVs; default ``policy.accel_max``
     (a wrapper function may expose it as an attribute), else the legacy 1.5.  Native CAVs of
     counterfactual rows use ``native_accel_max`` (default ``NATIVE_CAV_ACCEL_MAX_MPS2``).  A
     safety layer without an ``accel_max`` keyword is called unchanged.
+
+    LOOP14C ramp merges (both default off = the legacy forced 6 m rule for every CAV):
+
+    * ``policy_ramp_merge``: policy-acting CAVs are never auto-merged; a ramp CAV reaches
+      lane 1 only through its own lane head (``left`` inside the merge zone), filtered by the
+      same feasibility / consequence / optional secure-gap tiers as mainline changes.  Needs
+      ``lane_rules``.
+    * ``native_ramp_merge = "wm_law"``: every CAV whose ramp merge is still automatic (non-acting
+      CAVs; also acting ones when ``policy_ramp_merge`` is off) stays on the ramp in this callback
+      and is handed to the WM's HDV merge law (``state[WM_MERGE_KEY]``, requires a mutable
+      callback state and a first-passage WM); ``"gap6"`` keeps the fixed-threshold
+      :func:`_merge_lane`.
+    * ``native_lane_change``: non-acting CAVs use the WM's complete HDV lane path,
+      including its inferred-driver discretionary decisions and first-passage merge.
+      The callback advertises a pure ``native_lane_mask(state)`` before WM forward;
+      the WM supplies the resulting lane targets. Policy-acting lanes retain ownership.
     """
+    if native_ramp_merge not in ("gap6", "wm_law"):
+        raise ValueError("native_ramp_merge must be 'gap6' or 'wm_law'")
+    if not isinstance(native_lane_change, bool):
+        raise ValueError("native_lane_change must be a boolean")
+    if policy_ramp_merge and lane_rules is None:
+        raise ValueError("policy_ramp_merge needs lane_rules (the lane head is the only merge path)")
     # The WM dependency is needed only when constructing the rollout bridge;
     # importing standalone observation/policy/safety modules for SUMO is light.
     cav_module = import_module("wms.model.cav")
     direct_command_motion = cav_module.direct_command_motion
     apply_exec_cap = cav_module.apply_exec_cap
-    if act_mask is not None and native is None:
-        raise ValueError("act_mask requires a native CAV behaviour")
+    wm_merge_key = cav_module.WM_MERGE_KEY
+    if (act_mask is not None or zone is not None) and native is None:
+        raise ValueError("act_mask / zone requires a native CAV behaviour")
     from .safety import with_accel_max
     safety = with_accel_max(safety)
     policy_max = float(accel_max if accel_max is not None
                        else getattr(policy, "accel_max", ACCEL_MAX_MPS2))
     native_max = float(native_accel_max if native_accel_max is not None
                        else NATIVE_CAV_ACCEL_MAX_MPS2)
+    native_in_use = act_mask is not None or zone is not None
     # Motion clamp (float): the largest ceiling in use; per-slot ceilings go through target_v.
-    motion_max = policy_max if act_mask is None else max(policy_max, native_max)
+    motion_max = policy_max if not native_in_use else max(policy_max, native_max)
     dwell = None
     if lane_rules is not None:
         from .lanes import LaneDwell
@@ -101,6 +140,13 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
     # Reported to the other CAVs (owner 2026-10-12 late): each CAV's last commanded (safe)
     # acceleration and lane intent; seeded from state["cmd_accel_mps2"/"lane_intent"] if given.
     last_command = last_intent = None
+
+    def native_lane_mask(state):
+        mask = state["present"].bool() & state["is_cav"].bool() & (state["lane"] >= 0)
+        acting = mask if act_mask is None else mask & act_mask.to(mask.device).bool()
+        if zone is not None:
+            acting = acting & ~zone(state).to(mask.device).bool()
+        return mask & ~acting
 
     def controller(state: Mapping[str, Tensor]) -> Tensor:
         nonlocal held, previous_mask, internal_index, last_command, last_intent
@@ -113,6 +159,8 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         internal_index = index + 1
         mask = state["present"].bool() & state["is_cav"].bool() & (state["lane"] >= 0)
         acting = mask if act_mask is None else mask & act_mask.to(mask.device).bool()
+        if zone is not None:                       # V10ENTZONE: in-zone CAVs released to native
+            acting = acting & ~zone(state).to(mask.device).bool()
         if index == 0 or (held is not None and held.shape != state["s_m"].shape):
             held = None
             previous_mask = None
@@ -159,15 +207,57 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             held = torch.where(mask & previous_mask, held, torch.zeros_like(held))
         held = torch.where(mask, held, torch.zeros_like(held))
         previous_mask = mask
-        lane = _merge_lane({**state, "lane": lane_now}, mask)
+        native_lanes = mask & ~acting
+        if native_lane_change:
+            targets = state.get(cav_module.WM_LANE_TARGET_KEY)
+            if targets is None:
+                raise ValueError("native_lane_change requires WM-computed HDV lane targets")
+            # Ramp first passage is resolved after longitudinal execution by the WM.
+            lane_now = torch.where(native_lanes & (state["lane"] != 2), targets, lane_now)
+        # LOOP14C: CAVs whose ramp merge is automatic (all, unless the head owns acting CAVs).
+        auto = mask & ~acting if policy_ramp_merge else mask
+        if native_ramp_merge == "wm_law" or native_lane_change:
+            # Stay on the ramp here; the WM's HDV merge law decides (and may veto) the crossing.
+            if not isinstance(state, MutableMapping):
+                raise TypeError("native_ramp_merge='wm_law' needs a mutable callback state")
+            delegated = auto if native_ramp_merge == "wm_law" else native_lanes
+            state[wm_merge_key] = delegated & (lane_now == 2)
+            lane = (lane_now if native_ramp_merge == "wm_law" else
+                    _merge_lane({**state, "lane": lane_now}, auto & ~native_lanes))
+        else:
+            lane = _merge_lane({**state, "lane": lane_now}, auto)
+        if mask_forced_merge and lane_rules is not None:
+            from .lanes import apply_lane_choices, lane_feasibility
+            # The old bridge's forced ramp merge bypassed the learned head's veto.
+            forced = (lane_now == 2) & (lane == 1)
+            forced_state = {**state, "lane": lane_now}
+            feasible = lane_feasibility(forced_state, ages, lane_rules)
+            lane, _ = apply_lane_choices(forced_state, forced.long(), feasible,
+                                         lane_rules, acting=forced)
         command_accel = held
         ceiling = policy_max
-        if act_mask is not None:
-            command_accel = torch.where(acting, held, native({**state, "lane": lane}))
+        motion_lane = lane
+        if native_lane_change:
+            # The WM's HDV lane substep follows longitudinal execution. Native
+            # CAVs keep the learned head/safety evaluation in their CURRENT lane;
+            # their proposed HDV lane may still be cancelled by final conflicts.
+            motion_lane = torch.where(native_lanes, state["lane"], lane)
+        if native_in_use:
+            command_accel = torch.where(acting, held, native({**state, "lane": motion_lane}))
             command_accel = torch.where(mask, command_accel, torch.zeros_like(command_accel))
             ceiling = torch.where(acting, torch.full_like(held, policy_max),
                                   torch.full_like(held, native_max))
-        executed = safety({**state, "lane": lane}, command_accel, accel_max=ceiling)
+        executed = safety({**state, "lane": motion_lane}, command_accel, accel_max=ceiling)
+        # Deployment parity (PolicyExecutor): a change is executed by SUMO during the next
+        # physics step (and may be refused), so the command must be safe in BOTH the lane the
+        # CAV is leaving and the target lane.  Without this, imagination credited a change
+        # with an acceleration only the target lane allowed (the old-lane leader was ignored
+        # for one tick), over-crediting CAV lane changes.  Only changed slots are affected.
+        changed_now = log_entry.get("lane_changed") if log_entry is not None else None
+        if changed_now is not None and bool(changed_now.any()):
+            old_lane_safe = safety({**state, "lane": state["lane"]}, command_accel,
+                                   accel_max=ceiling)
+            executed = torch.where(changed_now, torch.minimum(executed, old_lane_safe), executed)
         if decision:
             last_command = torch.where(mask, executed, torch.zeros_like(executed))
             last_intent = intent
@@ -181,11 +271,13 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         target_v = v + ceiling * PHYSICS_DT_S
         # EXECCAP_NOTES.md: with the WM's cav_exec_cap on, policy-driven CAVs realise at most the
         # SUMO-consistent ceiling (identity when off; native counterfactual CAVs are not capped).
-        executed = apply_exec_cap(state, executed, acting)
+        executed = apply_exec_cap(state, executed, mask if symmetric_exec_cap else acting)
         command = torch.stack((executed, target_v), -1)
         next_s, next_v, applied, _ = direct_command_motion(
             s, v, command, PHYSICS_DT_S,
             ACCEL_MIN_MPS2, motion_max)
         return torch.stack((next_s, lane.to(next_s.dtype), next_v, applied), -1)
 
+    if native_lane_change:
+        controller.native_lane_mask = native_lane_mask
     return controller

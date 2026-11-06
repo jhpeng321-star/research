@@ -1,0 +1,72 @@
+{
+  "schema": "c4_loop14_pairs/1",
+  "n_points": 1,
+  "decision_times_s": [
+    360
+  ],
+  "n_branches": 2,
+  "branch_horizon_s": 30,
+  "collisions": 0,
+  "teleports": 0,
+  "base_wall_s": 9.822115215998565,
+  "branch_wall_s": 45.89039369400052,
+  "branches": [
+    {
+      "t_s": 360,
+      "arm": "POLICY",
+      "pair_key": "w967601m2700p40t300@t360",
+      "collisions": 0,
+      "teleports": 0,
+      "lane_issued": 0,
+      "lane_completed": 0,
+      "dropped_vehicle_steps": 0,
+      "J": 4209.562419056372,
+      "wall_s": 0.8270895190016745,
+      "dir": "/home/ubuntu/sumocredit/out_a2/s2/branches/v8_u600/s967601_m2700_p0400/t0360_policy",
+      "n_states": 181,
+      "n_control": 90
+    },
+    {
+      "t_s": 360,
+      "arm": "B",
+      "pair_key": "w967601m2700p40t300@t360",
+      "collisions": 0,
+      "teleports": 0,
+      "lane_issued": 0,
+      "lane_completed": 0,
+      "dropped_vehicle_steps": 0,
+      "J": 4152.941697935337,
+      "wall_s": 0.3771123830010765,
+      "dir": "/home/ubuntu/sumocredit/out_a2/s2/branches/v8_u600/s967601_m2700_p0400/t0360_native",
+      "n_states": 181,
+      "n_control": 90
+    }
+  ],
+  "sim_s": 451,
+  "pair_dJ": {
+    "w967601m2700p40t300@t360": 56.620721121034876
+  },
+  "sumocredit": {
+    "schema": "c4_sumocredit_extras/1",
+    "options": {
+      "credit_horizon": 0,
+      "credit_group_max": 3,
+      "credit_flips": 0,
+      "credit_imagine": true,
+      "gate_horizon": 0,
+      "gate_unit": "fleet",
+      "gate_reference": "hold",
+      "gate_state": "belief",
+      "gate_max_units": 4,
+      "gate_table": "/home/ubuntu/sumocredit/out_a2/GATE_TABLE_s1.json",
+      "gate_decision_period": 5.0,
+      "n_driver_samples": 1,
+      "seed": 0
+    },
+    "files": {
+      "gated": 1
+    },
+    "sim_s": 30,
+    "wall_s": 42.163405203000366
+  }
+}

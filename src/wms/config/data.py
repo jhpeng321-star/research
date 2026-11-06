@@ -111,6 +111,62 @@ class JamConfig:
 
 
 @config_dataclass
+class ReplayConfig:
+    """V10HORIZON prioritised mixed replay (all terms default 1 = OFF, unchanged).
+
+    Wraps the assembled mixed TRAIN dataset (loop + original native/random sources) so
+    merge-zone windows, CAV-follower windows, HDV-led brake-event windows and high-error
+    windows are drawn more often while the source mix ratios are preserved.  ``probe_windows`` (0 = static only)
+    forward-probes that many evenly spaced windows per stage (and every ``refresh_every``
+    optimizer steps) to update the high-error priorities; ``error_max_boost`` caps the
+    per-window oversampling multiple.
+    """
+
+    enabled: bool = False
+    merge_oversample: float = 1.0
+    #: V10ROUND1: a merge-zone window needs a present HDV in lane 2 within this many metres
+    #: of the acceleration-lane end (``physics.merge_zone_s1_m``; default 40 m).
+    merge_zone_end_m: float = 40.0
+    cav_follower_oversample: float = 1.0
+    brake_oversample: float = 1.0
+    #: R14 D3 (default 1 = OFF, bit-identical): sampling multiplier of LOW-CAV-SHARE windows
+    #: (realized CAV share of the window's first row <= ``low_share_max``) in curriculum
+    #: stages with unroll >= ``low_share_min_stage_s``.  The value is data-derived (R14_DESIGN.md:
+    #: window-count ratio of high- to low-share TRAIN windows); the share cut separates the
+    #: <= 10 % design levels from the 20 % level at their midpoint.  Sampling only, no model input.
+    low_share_oversample: float = 1.0
+    low_share_max: float = 0.15
+    low_share_min_stage_s: float = 120.0
+    error_max_boost: float = 8.0
+    error_alpha: float = 1.0
+    error_decay: float = 0.9
+    probe_windows: int = 0
+    refresh_every: int = 0
+
+    def __post_init__(self) -> None:
+        for name in ("merge_oversample", "cav_follower_oversample", "brake_oversample",
+                     "error_max_boost", "error_alpha"):
+            value = getattr(self, name)
+            require(is_finite(value) and value >= 1.0,
+                    f"data.replay.{name} must be finite and >= 1")
+        require(is_finite(self.merge_zone_end_m) and self.merge_zone_end_m > 0.0,
+                "data.replay.merge_zone_end_m must be finite and positive")
+        require(is_finite(self.low_share_oversample) and self.low_share_oversample >= 1.0,
+                "data.replay.low_share_oversample must be finite and >= 1")
+        require(is_finite(self.low_share_max) and 0.0 < self.low_share_max < 1.0,
+                "data.replay.low_share_max must be in (0, 1)")
+        require(is_finite(self.low_share_min_stage_s) and self.low_share_min_stage_s >= 0.0,
+                "data.replay.low_share_min_stage_s must be finite and >= 0")
+        require(is_finite(self.error_decay) and 0.0 <= self.error_decay < 1.0,
+                "data.replay.error_decay must be in [0, 1)")
+        require(int(self.probe_windows) >= 0, "data.replay.probe_windows must be >= 0")
+        require(int(self.refresh_every) >= 0, "data.replay.refresh_every must be >= 0")
+        if self.enabled and self.refresh_every > 0:
+            require(self.probe_windows > 0,
+                    "data.replay.refresh_every needs probe_windows > 0")
+
+
+@config_dataclass
 class C4EpisodesConfig:
     """Collected C4 SUMO episodes (Dreamer data loop) mixed into the training data.
 
@@ -207,6 +263,8 @@ class DataConfig:
     state_noise_std_m: float = 0.0
     state_noise_std_mps: float = 0.0
     jam: JamConfig = field(default_factory=JamConfig)
+    #: V10HORIZON: prioritised mixed replay (merge-zone / CAV-follower / high-error windows).
+    replay: ReplayConfig = field(default_factory=ReplayConfig)
     c4_episodes: C4EpisodesConfig = field(default_factory=C4EpisodesConfig)
     #: PAIRLOSS: further converted C4 episode sources (GENRAND plain / paired branches), mixed
     #: in after ``c4_episodes`` with their own sampling shares (empty = off, unchanged).
@@ -226,6 +284,11 @@ class DataConfig:
     #: the end of the insertion step, depart at the stop speed behind the lane's rearmost
     #: vehicle; ENTRY_DIAG.md).  Default "v2" keeps every existing run bit-identical.
     entry_insert_rule: Literal["v2", "sumo_like", "sumo_like_v2"] = "v2"
+    #: V9ENTRY: the entries-v2 process starts from the recorded SUMO entrance backlog and
+    #: draws arrivals at the recorded demand (request) rate, with no end-of-step credit for a
+    #: same-step entrant (``wms.model.entries.EntranceQueue``).  Needs windows with
+    #: ``entry_queue`` (C4 sources converted with V9ENTRY queue arrays).  Default off.
+    entry_queue_state: bool = False
     cav_drive: Literal["teacher", "closed_loop"] = "teacher"
     #: JUNCTIONFIX (JUNCTIONFIX_NOTES.md, :mod:`wms.data.junction_fix`): junction-transit rows of
     #: the pack windows.  "off" = legacy (lane clipped to 0, frozen s); "ffill" = evaluation

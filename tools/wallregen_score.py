@@ -70,11 +70,11 @@ def iter_records(path: Path, limit=None) -> list[dict]:
 
 
 def score_cached(tag: str, ckpt: Path, set_path: Path, records: list, workers: int, cache: Path,
-                 entries: bool) -> list:
+                 entries: bool, entry_queue: bool = False) -> list:
     from wms.eval.run import CheckpointPredictorFactory
     from wms.eval.score import ScoreSpec, score_states
-    cache_file = cache / f"{tag}__{set_path.stem}__{sha8(ckpt)}__{sha8(set_path)}" \
-                         f"{'__entries' if entries else ''}.json"
+    suffix = "__entriesq" if entry_queue else ("__entries" if entries else "")
+    cache_file = cache / f"{tag}__{set_path.stem}__{sha8(ckpt)}__{sha8(set_path)}{suffix}.json"
     done = {}
     if cache_file.is_file():
         try:
@@ -84,7 +84,9 @@ def score_cached(tag: str, ckpt: Path, set_path: Path, records: list, workers: i
     todo = [r for r in records if state_key(r) not in done]
     print(f"{tag} on {set_path.stem}: {len(todo)} to score, {len(done)} cached", flush=True)
     if todo:
-        factory = CheckpointPredictorFactory(str(ckpt), entries=entries, entries_v2=False)
+        factory = (CheckpointPredictorFactory(str(ckpt), entries=True, entries_v2=True,
+                                              entry_queue_state=True) if entry_queue else
+                   CheckpointPredictorFactory(str(ckpt), entries=entries, entries_v2=False))
         spec = ScoreSpec(horizons_s=HORIZONS, predict_horizon_s=120.0, seed=0)
         for row in score_states(todo, factory, spec, workers=workers, inflight=workers * 2):
             done[state_key(row)] = row
@@ -174,7 +176,9 @@ def _b_init(ckpt: str, entries: bool) -> None:
     import torch
     torch.set_num_threads(1)
     from wms.eval.predictor import RolloutFlags, WmsPredictor
-    _BW["p"] = WmsPredictor.from_checkpoint(ckpt, RolloutFlags(entries=entries, entries_v2=False))
+    _BW["p"] = WmsPredictor.from_checkpoint(
+        ckpt, RolloutFlags(entries=True, entries_v2=True, entry_queue_state=True)
+        if entries == "queue" else RolloutFlags(entries=bool(entries), entries_v2=False))
 
 
 def _b_work(payload: tuple) -> dict:
@@ -263,7 +267,8 @@ def fmt(v, d=2):
 def write_md(res: dict, path: Path) -> None:
     lines = [f"# WALLREGEN unseen-wall scoring - {res['set_dir']}", "",
              f"population: {res.get('population')}; variant: {res.get('variant')}; "
-             f"CPU, teacher-forced CAVs, entries {'ON' if res['entries'] else 'off'}; "
+             "CPU, teacher-forced CAVs, entries "
+             f"{'ON + recorded entrance queue' if res.get('entries_queue') else ('ON' if res['entries'] else 'off')}; "
              "median over states of the per-state HDV median |ds| (m).", "",
              "| set | model | n | 10 s | 30 s | 60 s | 120 s | blow-ups | errors |",
              "|---|---|---|---|---|---|---|---|---|"]
@@ -311,6 +316,9 @@ def main(argv=None) -> int:
     ap.add_argument("--limit", type=int, default=None, help="smoke: first N states per set")
     ap.add_argument("--benefit", action="store_true")
     ap.add_argument("--entries", action="store_true", help="entries v1 ON (RSU counter process)")
+    ap.add_argument("--entries-queue", action="store_true",
+                    help="V9ENTRY: entries v2 ON seeded with the recorded SUMO entrance backlog and "
+                         "demand (wms.eval.entry_queue; HDV entrants, sumo_like_v2 insertion)")
     a = ap.parse_args(argv)
     set_dir, out = Path(a.set_dir), Path(a.out)
     for p in (set_dir, out):
@@ -327,7 +335,10 @@ def main(argv=None) -> int:
     rp = set_dir / "BUILD_RECEIPT.json"
     if rp.is_file():
         receipt = json.loads(rp.read_text(encoding="utf-8"))
+    if a.entries and a.entries_queue:
+        raise SystemExit("--entries and --entries-queue are exclusive")
     res = {"schema": "c4_wallregen_score/1", "set_dir": str(set_dir), "entries": a.entries,
+           "entries_queue": a.entries_queue,
            "population": receipt.get("population"), "variant": receipt.get("variant"),
            "checkpoints": {t: {"path": str(p), "sha8": sha8(p)} for t, p in models.items()},
            "models": {}, "paired": {}, "runtimes_s": {}}
@@ -339,7 +350,8 @@ def main(argv=None) -> int:
         res["models"][set_name] = {}
         for tag, ckpt in models.items():
             t0 = time.time()
-            rows = score_cached(tag, ckpt, path, records, a.workers, out / "cache", a.entries)
+            rows = score_cached(tag, ckpt, path, records, a.workers, out / "cache", a.entries,
+                                a.entries_queue)
             scored[(set_name, tag)] = rows
             res["models"][set_name][tag] = {"n_states": len(rows), "summary": stats_for(rows),
                                             "n_worlds": len({r["world"] for r in rows})}
@@ -357,7 +369,8 @@ def main(argv=None) -> int:
         nat_records = iter_records(nat_path) if nat_path.is_file() else []
         for tag, ckpt in models.items():
             t0 = time.time()
-            items = benefit_items(ckpt, wall_records, nat_records, a.workers, a.entries)
+            items = benefit_items(ckpt, wall_records, nat_records, a.workers,
+                                  "queue" if a.entries_queue else a.entries)
             res["benefit"][tag] = {"set": bench_set, "summary": benefit_summary(items),
                                    "items": items}
             res["runtimes_s"][f"benefit__{tag}"] = round(time.time() - t0, 1)

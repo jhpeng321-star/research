@@ -1,12 +1,13 @@
 """TRAIN-derived observable sampling, with a separate immutable prior input."""
 import numpy as np
-from .protocol import TARGET_WINDOWS, digest
+from .protocol import TARGET_WINDOWS, ZONE, digest
+from tools.coopmwm.map_descriptor import FRAME
 
 
 def features(rows):
-    zone = [r for r in rows if -100 <= r['s_m'] <= 75.44]
+    zone = [r for r in rows if ZONE[0] <= r['s_m'] <= ZONE[1]]
     return dict(cav_count=sum(r['is_cav'] for r in zone),density=len(zone)/.52632,
-                ramp=any(r['lane'] == 2 for r in zone))
+                ramp=any(r['lane'] == FRAME.merge_lane for r in zone))
 
 
 def contexts(screens):

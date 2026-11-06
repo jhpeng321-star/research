@@ -105,6 +105,9 @@ def toy(cfg, monkeypatch):
     monkeypatch.setattr(accel_protocol, 'guard', lambda *args: None)
     monkeypatch.setattr(runner, 'admission', lambda cfg: None)
     monkeypatch.setattr(tb, '_approved', lambda cfg: None)
+    # The toy physics lives in THIS process: run the real run_branch in-process instead
+    # of production's spawned workers (covered by test_g4_worker_binding_cpu.py).
+    monkeypatch.setattr(runtime, 'dispatch', lambda cfg, jobs: [runtime.run_branch(job, cfg) for job in jobs])
     monkeypatch.setattr(storage, 'ledger', lambda root: [json.loads(line) for line in
         (Path(root)/'CHARGES.jsonl').read_text().splitlines()] if (Path(root)/'CHARGES.jsonl').exists() else [])
 

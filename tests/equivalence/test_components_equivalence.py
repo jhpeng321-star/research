@@ -80,7 +80,10 @@ def test_entry_v2_and_history_builders_equal():
         return state, torch.stack(masks), proc.summary()
 
     (so, mo, summo), (sn, mn, summn) = run(ent), run(entries)
-    assert torch.equal(mo, mn) and summo == summn
+    # V10INSERT adds an explicit flag even when learned insertion is disabled.
+    assert "learned_entry" not in summo
+    assert summn["learned_entry"] is False
+    assert torch.equal(mo, mn) and {**summo, "learned_entry": False} == summn
     for key in so:
         assert torch.equal(so[key], sn[key]), key
     assert int(mo.sum()) > 0

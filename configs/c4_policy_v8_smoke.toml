@@ -1,0 +1,21 @@
+# 2-update CPU smoke of c4_policy_v8.toml (same settings, tiny batch/horizon).  Needs the v7 start data
+# (WMS_DATA_V5_NATIVE, WMS_DATA_GENRAND_PLAIN) and a local frozen WM checkpoint:
+#   python -m wms.control.train_cli --config configs/c4_policy_v8_smoke.toml --wm-ckpt <ckpt>
+# (equivalent to --config configs/c4_policy_v8.toml --smoke, which also forces batch 2 / horizon 4 / CPU).
+extends = "c4_policy_v8.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V8-SMOKE"
+device = "cpu"
+updates = 2
+threads = 2
+validation_batches = 1
+
+[trainer]
+batch_size = 2
+horizon = 4
+checkpoint_every = 1
+validation_every = 1
+
+[counterfactual]
+max_starts = 2

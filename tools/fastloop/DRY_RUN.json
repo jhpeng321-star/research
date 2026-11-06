@@ -1,0 +1,21 @@
+{
+ "status": "PASS",
+ "worlds": 1,
+ "actual_sumo_sim_s": 0,
+ "gpu_used": false,
+ "collector": "synthetic recorder endpoint",
+ "real_conversion_and_return_export": true,
+ "next_phase": "wm_ft",
+ "receipt": {
+  "pairs": "/root/autodl-tmp/c4-fastloop-sfastloop/dry_run_1792987918142595000/loop/data/pairs_c00.a1",
+  "returns": "/root/autodl-tmp/c4-fastloop-sfastloop/dry_run_1792987918142595000/loop/returns/returns_c00.a1.npz",
+  "returns_sha256": "266374e3d95e42627786a02dd7ccf8dfbbe6a1d8a6eefedcef30ff2ba77b480d",
+  "episodes": 2,
+  "pair_groups": 1,
+  "targets": 1,
+  "durable_world_artifacts": [
+   "/root/autodl-tmp/c4-fastloop-sfastloop/dry_run_1792987918142595000/loop/worlds/c00/w968000.a1/artifact"
+  ]
+ },
+ "fixture_only_conservative_charge": 611
+}
