@@ -119,7 +119,7 @@ def validate(row):
         raise ValueError('negative row seed/t0')
     world = row['world']
     if not isinstance(world, dict) or type(world.get('seed')) is not int \
-            or not 986000 <= world['seed'] <= 986071:
+            or not __import__('tools.coopmwm.map_runtime', fromlist=['x']).registered_train_world(world):
         raise ValueError('negative rows come from registered TRAIN worlds only')
     move = moves.Move.from_dict(row['move'])
     if move.family != 'wall' or list(move.members) != row['members'] or len(move.members) < 2:

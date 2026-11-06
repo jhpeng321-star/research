@@ -53,8 +53,8 @@ def binding(row):
     if not isinstance(situation, str) or not situation:
         raise ValueError('MINED_MOVES binding needs a situation id')
     world = row['world']
-    if (not isinstance(world, dict) or type(world.get('seed')) is not int
-            or not 986000 <= world['seed'] <= 986071):
+    from .map_runtime import registered_train_world  # N4 (N11 F1/F7): merge range or map TRAIN registry
+    if not registered_train_world(world):
         raise ValueError('MINED_MOVES binding needs its registered TRAIN world seed')
     members = row['members']
     if (not isinstance(members, list) or not members or len(set(members)) != len(members)

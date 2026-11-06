@@ -37,6 +37,10 @@ SHARES = (0.2, 0.4, 0.6)
 #: MAIN 2026-11-06 (N11 F4): the canonical clean4 cell every agent uses (N3/PLANGEN/N4/N6).
 CANONICAL_CELL_KEY = 'D3200_p60'
 TRAIN_RANGE = (989200, 989599)
+#: MAIN 2026-11-06 ~16:45 (N4 registration): the PLANGEN2 range 989000-989099 (assigned before mining,
+#: never evaluation) is ALSO registered wz3to2 TRAIN, for guidance rows, Plan A re-verification and B/R
+#: lesson episodes. NOT 989100-989199 (WM data). Default TRAIN sampling (worlds('train')) is unchanged.
+EXTRA_TRAIN_RANGES = ((989000, 989099),)
 HELDOUT_RANGE = (989600, 989699)
 FORBIDDEN_RANGES = ((964000, 964199), (962000, 962999), (977000, 977999))
 EPISODE_S = 1200
@@ -68,7 +72,7 @@ def _forbidden(seed):
 def seed_scope(seed):
     if type(seed) is not int or _forbidden(seed):
         return None
-    if TRAIN_RANGE[0] <= seed <= TRAIN_RANGE[1]:
+    if TRAIN_RANGE[0] <= seed <= TRAIN_RANGE[1] or any(lo <= seed <= hi for lo, hi in EXTRA_TRAIN_RANGES):
         return 'train'
     if HELDOUT_RANGE[0] <= seed <= HELDOUT_RANGE[1]:
         return 'heldout'
@@ -83,7 +87,8 @@ def world(seed, demand, penetration):
     cell = next((c for c in cells() if c['demand'] == demand and c['penetration'] == penetration), None)
     if cell is None or type(demand) is not int:
         raise ValueError(f'({demand!r}, {penetration!r}) is not a registered {MAP} cell')
-    start = TRAIN_RANGE[0] if scope == 'train' else HELDOUT_RANGE[0]
+    start = (next((lo for lo, hi in EXTRA_TRAIN_RANGES if lo <= seed <= hi), TRAIN_RANGE[0]) if scope == 'train'
+             else HELDOUT_RANGE[0])
     return dict(seed=seed, cell=cell['cell'], repeat=seed-start, penetration=penetration, demand=demand,
                 map=MAP, cell_key=cell['cell_key'])
 
@@ -104,7 +109,8 @@ def worlds(role='train', *, seeds=None, cell_ids=None):
     pool = range(lo, hi+1) if seeds is None else seeds
     out = []
     for s in pool:
-        if not lo <= s <= hi:
+        extra = role in TRAIN_ROLES and seeds is not None and any(a <= s <= b for a, b in EXTRA_TRAIN_RANGES)
+        if not (lo <= s <= hi or extra):
             raise ValueError(f'seed {s} is not in the {role} range {lo}-{hi}')
         for c in cells():
             if cell_ids is None or c['cell'] in cell_ids:

@@ -134,8 +134,9 @@ def registration(root):
 
 def check_world(world):
     s = int(world['seed'])
-    if any(lo <= s <= hi for lo, hi in EVAL_RANGES) or not 986000 <= s <= 986071:
-        raise ValueError('wall tuning uses registered TRAIN worlds 986000..986071 only')
+    from .map_runtime import registered_train_world  # N4: merge 986000..986071 or the map TRAIN registry
+    if any(lo <= s <= hi for lo, hi in EVAL_RANGES) or not registered_train_world(world):
+        raise ValueError('wall tuning uses registered TRAIN worlds only (merge 986000..986071 or map TRAIN)')
 
 
 def load_situation(spec):
