@@ -427,3 +427,106 @@ def test_real_u0_analysis_excludes_base_and_derived_entries(cfg):
         assert fl.qualifying(table[cell])[0] == 'wall_h_solo2' and 'wall_h_solo0' not in fl.qualifying(table[cell])
     with pytest.raises(ValueError, match='unrecognised'):
         fl.guidance_rows_from_analysis(dict(cells={'D1_p1': {'odd': dict(point=1.)}}), baseline='mappo')
+
+
+def test_production_path_clean5a_episode_ppo_ev_bc_metrics_and_g4(cfg, monkeypatch):
+    """Real worker (episode_components + V2V controller), real ArmRuntime.train PPO on the recorded
+    N2-only slates incl. solo holds, EV-BC supervise, P3 update metrics and G4LD opportunities."""
+    from . import launch_production as launch, sparse_synergy_credit as g4
+    from .acceleration import Controller
+    from .v2v_runtime import controller_class
+    from .test_track2_backend_cpu import fake_load
+    fake_load(monkeypatch)
+    on = ev_cfg(cfg, guidance=guidance([grow('wall_h_solo2', 5000.), grow('wall_h', 3000.)]),
+                learn=dict(ev_bc=True, report_kl_unlabelled=True))
+    on['decision_interval_s'] = 10
+    runtime = tb.build_arm_runtime(on, 'B')['runtime']
+    runtime.safety_checked = True
+    p = runtime.policy
+    job = dict(track2_backend=True, track2_config=on, arm='B', track2_state=p.worker_state(), noise_seed=7)
+    worker, factory = tb.episode_components(job, p.layer.base, controller_class(Controller))
+    controller = factory(worker, torch.Generator().manual_seed(9), False)
+    slow = [dict(r, v_mps=2.) for r in scene()]
+    steps, reward_rows = [], []
+    reg = on['track2_reward']
+    for t in range(300, 361):
+        vehicles = advance(slow, t-300, speed=2.)
+        controller.apply(vehicles, {r['vid']: 0. for r in vehicles if r['is_cav']}, t)
+        s = controller.events[-1]['sample']
+        steps.append(dict(time_s=t, sample=s, reward=-1.))
+        outcomes = {r['vid']: -1. for r in vehicles}
+        for vid in s['context']['members']:
+            nb = {v: outcomes[v] for v in s['track2']['reward_neighbourhoods'][vid]}
+            reward_rows.append(dict(episode_id='ep1', time_s=t, cav_id=vid, source='sumo', own_reward=-1.,
+                                    neighbour_rewards=nb, reward=-1.+reg['weight']*(sum(nb.values())/len(nb) if nb else 0.),
+                                    weight=reg['weight'], weight_provenance=reg['provenance']))
+    picked = [m for st in steps if 'track2_trigger' in st['sample']
+              for i, m in enumerate(st['sample']['track2_trigger']['tables'])
+              for m in [m[st['sample']['track2_trigger']['actions'][i]]] if m]
+    assert picked and {m['family'] for m in picked} <= {'abreast_wall', 'group_hold'}
+    episode = dict(id='ep1', arm='B', steps=steps, actual_sim_s=361,
+                   world=dict(seed=989220, demand=3200, penetration=.6, cell_key='D3200_p60'))
+    monkeypatch.setattr(runtime, 'bank_pairs', lambda: ([], {}))
+    report = runtime.train([episode], rewards=dict(schema=tb.REWARD_SCHEMA, arm='B', update=1, rows=reward_rows))
+    assert report['trigger'] and all(np.isfinite(m['loss']) for m in report['trigger'])
+    out = fl.supervise(runtime, [episode])
+    assert out['ev_bc']['records'] > 0 and out['fit']['initial_ce'] is not None
+    metrics = launch.update_metrics('B', [dict(episode, totals=dict(collisions=0, teleports=0, hard_brake=0),
+                                               ttc_events=0)],
+                                    dict(report, bank_move_ce=None), dict(receipt={}), augmented_examples=0)
+    assert set(metrics['trigger_counts']) >= {'none'} and metrics['decisions'] > 0
+    ext = dict(enabled=True, rule=g4.EXTENSION_RULE, families=['abreast_wall', 'group_hold'], provenance=PROV)
+    rows_g4 = g4.opportunities([dict(id='ep1', steps=steps)], ext)
+    assert all(len(r['g4ld']['members']) >= 2 for r in rows_g4)
+
+
+U0_FINAL = Path('E:/research-dense/runs/active/C4-V7FT-20261017/regimeu0')
+
+
+@pytest.mark.parametrize('name', ['ANALYSIS.json', 'REGIMEU0_RESULTS.jsonl'])
+def test_final_u0_inputs_agree_and_light_cells_target_none(cfg, name):
+    path = U0_FINAL/name
+    if not path.exists():
+        pytest.skip('final S-REGIMEU0 files not present in this checkout')
+    doc = fl.build_guidance(mappo=str(path), provenance=PROV)
+    rows = {(r['regime'], r['family']): r for r in doc['rows']}
+    assert not any(f in ('u0', 'group_minus_best_solo') for _, f in rows)
+    if name.endswith('.jsonl'):
+        assert {r['j_field'] for r in doc['rows']} == {'J_300_1200_vs'}
+        raw = json.loads((U0_FINAL/'ANALYSIS.json').read_text()) if (U0_FINAL/'ANALYSIS.json').exists() else None
+        if raw is not None:
+            for (cell, fam), r in rows.items():
+                assert r['mean_veh_s'] == pytest.approx(-raw['cells'][cell][fam]['mean_diff'], rel=1e-6, abs=1e-3)
+    on = ev_cfg(cfg, guidance=doc, learn=dict(ev_bc=True))
+    table, _ = fl.ev_table(on, 'B')
+    assert fl.qualifying(table['D3200_p60'])[0] == 'wall_h_solo2'
+    for cell in ('D2400_p60', 'D2400_p40'):
+        assert fl.qualifying(table.get(cell, {})) == []       # light traffic: no metering -> none
+
+
+def test_recipe_target_table_solo_only_lane2_meters_heavy_cells(cfg):
+    """MAIN ~20:4x: EV-BC targets = lane-specific solos only; walls / pairs stay offered."""
+    rows = []
+    for cell, solo2, wall in (('D3200_p60', 15169., 11684.), ('D3200_p40', 17739., 12855.), ('D2800_p60', 1836., -2749.),
+                              ('D2800_p40', -3308., -6262.), ('D2400_p60', -5763., -10702.), ('D2400_p40', -7542., -10413.)):
+        rows += [grow('wall_h_solo2', solo2, regime=cell, baseline='mappo'),
+                 grow('wall_h', wall, regime=cell, baseline='mappo')]
+        if cell in ('D3200_p60', 'D3200_p40'):
+            rows.append(grow('wall_h_solo0', -2772., regime=cell, baseline='mappo'))
+    on = dict(ld_cfg(cfg, v2v=False), **fe.recommended(provenance=PROV, regime_guidance=guidance(rows)))
+    assert set(fe.settings(on)['families']) == {'abreast_wall', 'group_hold'}      # still offered
+    table, receipt = fl.ev_table(on, 'B')
+    assert receipt['dropped_without_parity'] == {'wall_h': 6}
+    solo = lambda vid, wm: fe.SoloHold('group_hold', (vid,), 0, 90, 1.5, 15., 0., False, (wm,)).to_dict()
+    wall = ld.LaneDropMove('abreast_wall', ('e', 'x', 'y'), 0, 90, 1.5, 15., 0., False, (0, 1, 2)).to_dict()
+    pair = ld.LaneDropMove('group_hold', ('e', 'x'), 0, 90, 1.5, 15., 0., False, (1, 0)).to_dict()
+
+    def target(cell, wm):
+        table_row = [None, solo('e', wm), wall, pair]
+        trig = dict(context=dict(members=['e']), tables=[table_row], mask=[[True]*4])
+        return fl.ev_targets(on, trig, table.get(cell, {}))[0][0]
+    for cell in ('D3200_p60', 'D3200_p40', 'D2800_p60'):
+        assert target(cell, 0) == 1                       # left lane (SUMO 2): solo
+        assert target(cell, 1) == 0 and target(cell, 2) == 0   # middle / closing: none, even with a wall offered
+    for cell in ('D2800_p40', 'D2400_p60', 'D2400_p40'):
+        assert all(target(cell, wm) == 0 for wm in (0, 1, 2))   # light traffic: none

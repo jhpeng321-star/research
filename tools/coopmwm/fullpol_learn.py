@@ -280,6 +280,16 @@ GUIDANCE_RULE = ('S-REGIME registered analysis (rg_analyze.py cell_stats): per s
                  '2.5/97.5% quantiles')
 
 
+J_FIELDS = ('J_total', 'J_300_1200_vs', 'team_delay_vs')   # S-REGIME episode J / S-REGIMEU0 control-window J
+
+
+def _j_field(rows):
+    for key in J_FIELDS:
+        if all(key in r for r in rows):
+            return key
+    raise ValueError(f'episode rows carry none of the team-delay fields {J_FIELDS}')
+
+
 def guidance_rows(results, *, arm='B', baseline='native', base_arm='base', strategies=None):
     """S-REGIME / S-REGIMEU0 episode rows -> guidance rows (gain sign, see GAIN_SIGN).
 
@@ -287,6 +297,7 @@ def guidance_rows(results, *, arm='B', baseline='native', base_arm='base', strat
     RNG and quantiles), then flips the sign: gain = -(strategy - base)."""
     ok = [r for r in results if r.get('status') == 'ok']
     E = {(r['cell'], r['seed'], r['arm']): r for r in ok}
+    J = _j_field(ok) if ok else 'J_total'
     out = []
     for cell in sorted({r['cell'] for r in ok}):
         seeds = sorted({s for (c, s, a) in E if c == cell and a == base_arm})
@@ -297,14 +308,14 @@ def guidance_rows(results, *, arm='B', baseline='native', base_arm='base', strat
             ss = [s for s in seeds if (cell, s, a) in E]
             if len(ss) < 2:
                 continue
-            d = np.asarray([E[(cell, s, a)]['J_total']-E[(cell, s, base_arm)]['J_total'] for s in ss], float)
+            d = np.asarray([E[(cell, s, a)][J]-E[(cell, s, base_arm)][J] for s in ss], float)
             rng = np.random.default_rng(20261106)
             idx = rng.integers(0, len(d), (10000, len(d)))
             m = d[idx].mean(1)
             lo, hi = float(np.quantile(m, .025)), float(np.quantile(m, .975))
             out.append(dict(arm=arm, regime=cell, family=a, baseline=baseline, n=len(ss),
                             mean_veh_s=-float(d.mean()), lb95_veh_s=-hi, ub95_veh_s=-lo,
-                            harm_rate=float((d > 0).mean())))
+                            harm_rate=float((d > 0).mean()), j_field=J))
     return out
 
 
@@ -732,10 +743,10 @@ def guidance_rows_from_analysis(analysis, *, arm='B', baseline):
         for a, v in sorted(arms.items()):
             if a in BASE_ENTRIES or a in DERIVED_ENTRIES or 'minus' in a:
                 continue
-            if not isinstance(v, dict) or not {'mean_diff', 'ci95', 'n'} <= set(v):
+            if not isinstance(v, dict) or not {'mean_diff', 'ci95'} <= set(v) or not {'n', 'n_paired'} & set(v):
                 raise ValueError(f'unrecognised ANALYSIS entry {cell}/{a}: strategy rows need mean_diff, ci95, n')
             lo, hi = v['ci95']
-            out.append(dict(arm=arm, regime=cell, family=a, baseline=baseline, n=int(v['n']),
+            out.append(dict(arm=arm, regime=cell, family=a, baseline=baseline, n=int(v.get('n_paired', v.get('n'))),
                             mean_veh_s=-float(v['mean_diff']), lb95_veh_s=-float(hi), ub95_veh_s=-float(lo),
                             harm_rate=float(v.get('harm_rate', float('nan')))))
     return out
