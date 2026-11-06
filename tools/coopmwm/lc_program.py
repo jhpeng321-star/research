@@ -55,7 +55,9 @@ CONTROL_DT_S = 1.0
 SENSING_M = 100.0                # own sensing radius (merge_features.SENSOR_RANGE_M; LCMOVES match rng)
 
 LON_KINDS = ('base', 'native', 'speed', 'track', 'match', 'accel')
-LANE_RULES = ('until_reached',   # LCMOVES prog: request while lane != target, latch done on reaching it
+LANE_RULES = ('hold',            # LCMOVES prog (final, lcm_core 3599f68e): request EVERY second while armed,
+                                 # on the approach and before give-up, also after reaching the lane (hold)
+              'until_reached',   # earlier LCMOVES draft: request while lane != target, latch on reaching it
               'right_of_target',  # COOPKINDS lane_to: request while own lane is right of the target
               'from_lane')        # merge_early / zip_merge: request while in source_lane
 MODE_ON = ('first_active',       # legacy roles: lcMode/tau at the first active second
@@ -100,10 +102,25 @@ REGISTRY = {
                  'early_merge room_tau B 2.0, R {1.6,2.0,2.4} (PLANGEN2 CK_B/CK_R)'),
     'kp': Range(.15, .15, (.15,), 'COOPKINDS zip_yield kp 0.15; LCMOVES track default'),
     'kv': Range(.6, .6, (.6,), 'COOPKINDS zip_yield kv 0.6; LCMOVES track default'),
-    'track_off_m': Range(-35., 0., (-35., -25., -15.), 'COOPKINDS zipper gap {15,25,35} (off = -gap)'),
-    'accel': Range(-1., -1., (-1.,), 'NEWMAP2 dither pulse a = -1.0'),
+    'track_off_m': Range(-75., 0., (-75., -50., -35., -25., -15., 0.),
+                         'COOPKINDS zipper gap {15,25,35} (off = -gap); S-LCMOVES gom slots 25/50/75, '
+                         'wall_fill/rolling_wall slot = A/B mean (off 0)'),
+    'accel': Range(-1., 1., (-1., 1.), 'NEWMAP2 dither pulse a = -1.0; LCMOVES prog speed accel = amax 1.0'),
     'lane_duration_s': Range(2., 2., (2.,), 'probe changeLane duration 2.0 s'),
     'lc_mode': Range(512, 513, (512, 513), 'probe LC_MODE_POLICY 513 / LC_MODE_TRACI_ONLY 512'),
+    # S-LCMOVES registration (REGISTRATION.md 2026-11-06 18:22) grids; distances upstream of the drop
+    # in m (WM s = drop_s_m - d). WMDATA move start offsets 20-60 s plus 0.
+    'offset_s': Range(0, 60, (0, 20, 40, 60), 'S-LCMOVES start/LC offsets {0,20,40,60} (WMDATA offsets)'),
+    'settle_gap_m': Range(25., 25., (25.,), 'S-LCMOVES wall_fill/rolling_wall settle within 25 m'),
+    'giveup_upstream_m': Range(300., 600., (300., 600.),
+                               'COOPKINDS lane_balance give-up 300 (R 600); LCMOVES lc_giveup X_B-300'),
+    'zone_upstream_m': Range(400., 2400., (400., 600., 1250., 1800., 2400.),
+                             'NEWMAP2 zone [X_B-1800, X_B-400]; COOPKINDS lane_balance [X_B-1800, X_B-600]; '
+                             'early_merge merger window [X_B-2400, X_B-1250]'),
+    'trigger_upstream_m': Range(800., 1600., (800., 1200., 1600.), 'COOPKINDS early_merge D {800,1200,1600}'),
+    'merge_upstream_m': Range(15., 150., (15., 60., 100., 150.),
+                              'COOPKINDS zipper merge_off {60,100,150}, fallback X_B-15'),
+    'cap': Range(2, 6, (2, 3, 4, 5, 6), 'S-LCMOVES <=4 per move; COOPKINDS early_merge 5; N9/clean3 6-member cap'),
 }
 
 
@@ -129,7 +146,7 @@ def _opt(x, name):
 @dataclass(frozen=True)
 class LaneReq:
     target: int                   # WM lane
-    rule: str = 'until_reached'
+    rule: str = 'hold'
     source_lane: int | None = None  # from_lane: the lane the member must still be in
     from_el: int = 0
     from_s: float | None = None
@@ -208,6 +225,7 @@ class MemberProgram:
     fallback_s: float | None = None
     lc_mode: int = LC_MODE_POLICY
     tau: float | None = None
+    tau_from_el: int | None = None       # LCMOVES prog: tau set at el >= tau_from_el (None = at activation)
     mode_on: str = 'first_active'
     releases: tuple = ('hold_end', 'release_s')
     role: str = 'prog'                   # label only (source role), never an executor input
@@ -229,6 +247,9 @@ class MemberProgram:
             _opt(getattr(self, k), k)
         if self.tau is not None and not _finite(self.tau, 'tau') > 0:
             raise ValueError('tau must be positive')
+        if self.tau_from_el is not None and (type(self.tau_from_el) is not int or self.tau_from_el < 0
+                                             or self.tau is None):
+            raise ValueError('tau_from_el needs a tau and a non-negative integer second')
         if self.lc_mode not in (LC_MODE_POLICY, LC_MODE_TRACI_ONLY) or self.mode_on not in MODE_ON:
             raise ValueError('lc_mode 513/512 and a registered mode_on rule')
         if any(r not in RELEASES for r in self.releases) or len(set(self.releases)) != len(self.releases):
@@ -272,6 +293,7 @@ class FreeProgram:
     join_el: tuple = ()
     duration_s: int = 300
     source: dict = field(default_factory=dict)   # provenance (row id, probe, verification id)
+    join_rules: tuple = ()                       # templates: per slot None | {lane: WM|None, ds: [lo, hi]}
 
     def __post_init__(self):
         object.__setattr__(self, 'members', tuple(self.members))
@@ -287,6 +309,17 @@ class FreeProgram:
             raise ValueError('join_el: integer seconds, initiator 0')
         if type(self.duration_s) is not int or self.duration_s <= 0:
             raise ValueError('duration_s must be a positive integer')
+        rules = tuple(None if r is None else dict(r) for r in self.join_rules)
+        object.__setattr__(self, 'join_rules', rules)
+        if rules and (len(rules) != len(self.members) or rules[0] is not None or any(
+                r is None or set(r) - {'lane', 'ds'} or 'ds' not in r or len(r['ds']) != 2
+                or not _finite(r['ds'][0], 'ds') <= _finite(r['ds'][1], 'ds')
+                or (r.get('lane') is not None and type(r['lane']) is not int) for r in rules[1:])):
+            raise ValueError('join_rules: slot 0 None, others {lane, ds: [lo, hi]}')
+
+    @property
+    def is_template(self):
+        return all(isinstance(v, str) and v.startswith('@') for v in self.members)
 
     def program(self, vid):
         return self.programs[self.members.index(vid)]
@@ -294,7 +327,8 @@ class FreeProgram:
     def to_dict(self):
         return dict(schema=SCHEMA, rule=RULE, map=self.map, members=list(self.members),
                     programs=[p.to_dict() for p in self.programs], join_el=list(self.join_el),
-                    duration_s=int(self.duration_s), source=dict(self.source))
+                    duration_s=int(self.duration_s), source=dict(self.source),
+                    join_rules=[None if r is None else dict(r, ds=list(r['ds'])) for r in self.join_rules])
 
     @classmethod
     def from_dict(cls, data):
@@ -302,7 +336,8 @@ class FreeProgram:
             raise ValueError('not a free_program record')
         return cls(tuple(data['members']), tuple(MemberProgram.from_dict(p) for p in data['programs']),
                    data.get('map', 'wz3to2'), tuple(data.get('join_el') or ()), int(data['duration_s']),
-                   dict(data.get('source') or {}))
+                   dict(data.get('source') or {}),
+                   tuple(None if r is None else dict(r, ds=tuple(r['ds'])) for r in data.get('join_rules') or ()))
 
 
 def check_registered(program, *, registry=None):
@@ -403,9 +438,9 @@ class Obs:
     refs: dict = field(default_factory=dict)   # vid -> View (anchor / partner / track refs)
 
     def ref(self, vid):
-        if vid in self.refs:
-            return self.refs[vid]
-        return next((r for r in self.sensed if r.vid == vid), None)
+        """Current own sensing first (the probe read CURRENT positions); else a t-1 packet."""
+        sensed = next((r for r in self.sensed if r.vid == vid), None)
+        return sensed if sensed is not None else self.refs.get(vid)
 
 
 # ---------------------------------------------------------------- executor
@@ -424,6 +459,9 @@ class MemberExecutor:
         self.lane_left = None
         self.was_merger_lane = False
         self.settled = None
+        self.tau_on = False
+        self.lane_requests = 0           # receipts: lane requests issued by the program
+        self.lane_reached = None         # first second in the target lane after a request
         self.last = []
 
     # ---- helpers
@@ -437,9 +475,14 @@ class MemberExecutor:
     def _activate(self, out):
         if self.p.mode_on != 'never' and not self.active:
             out.append(('lcMode', int(self.p.lc_mode)))
-            if self.p.tau is not None:
+            if self.p.tau is not None and self.p.tau_from_el is None and not self.tau_on:
                 out.append(('tau', float(self.p.tau)))
+                self.tau_on = True
             self.active = True
+
+    def _request(self, out, q):
+        out.append(('changeLane', (int(q.target), float(q.duration_s))))
+        self.lane_requests += 1
 
     def _law(self, obs, own, out, lane_ok):
         lon = self.p.lon
@@ -485,6 +528,19 @@ class MemberExecutor:
         q = self.p.lane
         if q is None:
             return
+        if q.rule == 'hold':
+            if obs.el >= q.from_el and (q.from_s is None or own.s_m >= q.from_s):
+                if self.p.mode_on == 'on_action':
+                    self._activate(out)
+                if own.on_approach and own.lane == q.target:
+                    if self.lane_done is None:
+                        self.lane_done = obs.el
+                    self.lane_left = None
+                elif own.on_approach and self.lane_done is not None and self.lane_left is None:
+                    self.lane_left = obs.el          # pushed out of the held lane (re-requested)
+                if own.on_approach and (q.giveup_s is None or own.s_m < q.giveup_s):
+                    self._request(out, q)
+            return
         if q.rule == 'until_reached':
             if self.lane_done is None:
                 armed = obs.el >= q.from_el and (q.from_s is None or own.s_m >= q.from_s)
@@ -494,7 +550,7 @@ class MemberExecutor:
                     if own.on_approach and own.lane == q.target:
                         self.lane_done = obs.el
                     elif own.on_approach and own.s_m < (q.giveup_s if q.giveup_s is not None else math.inf):
-                        out.append(('changeLane', (int(q.target), float(q.duration_s))))
+                        self._request(out, q)
             elif own.on_approach and own.lane != q.target and self.lane_left is None:
                 self.lane_left = obs.el
             return
@@ -504,9 +560,9 @@ class MemberExecutor:
         if q.rule == 'right_of_target':
             # SUMO index below the target = WM index above it (WM 0 = leftmost)
             if own.lane > q.target and (q.giveup_s is None or own.s_m < q.giveup_s):
-                out.append(('changeLane', (int(q.target), float(q.duration_s))))
+                self._request(out, q)
         elif own.lane == q.source_lane and (q.giveup_s is None or own.s_m < q.giveup_s):
-            out.append(('changeLane', (int(q.target), float(q.duration_s))))
+            self._request(out, q)
 
     # ---- one control second
     def step(self, obs):
@@ -551,7 +607,13 @@ class MemberExecutor:
                 return self._release(obs.el, 'fallback')
         if p.mode_on == 'first_active':
             self._activate(out)
+        if p.tau is not None and p.tau_from_el is not None and not self.tau_on and obs.el >= p.tau_from_el:
+            out.append(('tau', float(p.tau)))         # LCMOVES own time-gap knob (restored on release)
+            self.tau_on = True
         self._lane(obs, own, out)
+        if (p.lane is not None and self.lane_reached is None and self.lane_requests
+                and own.on_approach and own.lane == p.lane.target):
+            self.lane_reached = obs.el
         lane_ok = p.lane is None or self.lane_done is not None
         self._law(obs, own, out, lane_ok)
         return out
@@ -559,7 +621,18 @@ class MemberExecutor:
     def state(self):
         return dict(active=self.active, released=self.released, release_el=self.release_el,
                     release_reason=self.release_reason, lane_done=self.lane_done, lane_left=self.lane_left,
-                    settled=self.settled)
+                    settled=self.settled, tau_on=self.tau_on, lane_requests=self.lane_requests,
+                    lane_reached=self.lane_reached)
+
+    def receipt(self):
+        """Executor receipt: lane-request outcome (merge-request timeouts visible to learning)."""
+        q = self.p.lane
+        outcome = None
+        if q is not None:
+            outcome = ('not_requested' if not self.lane_requests else
+                       'reached' if self.lane_reached is not None or self.lane_done is not None else
+                       'timeout' if self.released else 'pending')
+        return dict(self.state(), lane_outcome=outcome)
 
 
 def step_members(executors, observations):
@@ -597,7 +670,7 @@ def tick_label(*, vid, t, el, program, executor, commands, session_id=None, sour
                 lane_target=-1 if lane is None else int(lane[0]),
                 lane_duration_s=None if lane is None else float(lane[1]),
                 lc_mode=int(program.lc_mode) if executor.active and not executor.released else None,
-                tau=(float(program.tau) if program.tau is not None and executor.active
+                tau=(float(program.tau) if program.tau is not None and executor.tau_on
                      and not executor.released else None),
                 event=event, release_reason=executor.release_reason if released else None,
                 source=source)

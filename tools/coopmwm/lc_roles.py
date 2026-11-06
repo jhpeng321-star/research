@@ -19,9 +19,11 @@ rule, speed law). Roles and their probe sources (verbatim semantics):
   the partner left SUMO lane 0 / approach;
 * ``lane_to``: native, lcMode 513, changeLane(target_lane) while own SUMO lane < target and
   x < giveup_x;
-* ``prog`` (LCMOVES lcm_core): optional lane change (lc_target, lc_from, lc_from_x,
-  lc_giveup_x default X_B-300, lc_mode) + one speed action (hold / track / match / none),
-  release_on_partner_merge, merger + fallback_x (default X_B-15); lcMode on action.
+* ``prog`` (LCMOVES lcm_core 3599f68e): optional persistent lane request with hold
+  (lc_target, lc_from, lc_from_x, lc_giveup_x default X_B-300, lc_mode; changeLane every
+  second while armed, also after reaching the lane) + optional own tau (tau, tau_from) + one
+  speed action (hold / track / match / accel / none), release_on_partner_merge, merger +
+  fallback_x (default X_B-15); lcMode on action.
 
 COOPKINDS/PLANGEN2 probe defaults are applied exactly as the probe did (hold_s absent =
 never, release_x absent = never; hold role release_x absent = X_B).
@@ -91,18 +93,20 @@ def member_program(role, params, frame, *, x_b=X_B_PROBE):
             lc_mode=LC_MODE_POLICY, mode_on='first_active', releases=('hold_end', 'release_s'), **common)
     if role == 'prog':
         kind = p.get('speed')
-        lon_kind = {'hold': 'speed', 'track': 'track', 'match': 'match', None: 'native'}[kind or None]
+        lon_kind = {'hold': 'speed', 'track': 'track', 'match': 'match', 'accel': 'accel',
+                    None: 'native'}[kind or None]
+        amax = float(p.get('amax', 1.0))
         lon = Lon(lon_kind, v_w=None if p.get('v_w') is None else float(p['v_w']),
-                  amax=float(p.get('amax', 1.0)), dmax=float(p.get('dmax', 1.0)),
+                  amax=amax, dmax=float(p.get('dmax', 1.0)), a=amax if lon_kind == 'accel' else None,
                   refs=tuple(p.get('track_ref') or ()), off=float(p.get('track_off', 0.0)),
                   kp=float(p.get('kp', 0.15)), kv=float(p.get('kv', 0.6)),
                   settle_gap=None if p.get('settle_gap') is None else float(p['settle_gap']),
                   from_el=int(p.get('sp_from', 0)))
-        if lon_kind in ('speed', 'track', 'match') and 'dmax' not in p:
+        if lon_kind in ('speed', 'track', 'match', 'accel') and 'dmax' not in p:
             raise ValueError('LCMOVES prog speed action without dmax (probe reads p["dmax"])')
         tl = p.get('lc_target')
         lane = None if tl is None else LaneReq(
-            frame.wm(int(tl)), 'until_reached', from_el=int(p.get('lc_from', 0)),
+            frame.wm(int(tl)), 'hold', from_el=int(p.get('lc_from', 0)),
             from_s=None if p.get('lc_from_x') is None else frame.s(p['lc_from_x']),
             giveup_s=frame.s(p.get('lc_giveup_x', x_b-300.0)))
         partner = p.get('release_on_partner_merge')
@@ -114,6 +118,8 @@ def member_program(role, params, frame, *, x_b=X_B_PROBE):
             merger_lane=closing if merger else None,
             fallback_s=frame.s(p.get('fallback_x', x_b-15.0)) if merger else None,
             lc_mode=int(p.get('lc_mode', LC_MODE_POLICY)), mode_on='on_action', releases=releases,
+            tau=None if p.get('tau') is None else float(p['tau']),
+            tau_from_el=None if p.get('tau') is None else int(p.get('tau_from', 0)),
             mode_logged=True, **common)
     raise ValueError(f'unknown probe role {role!r}')
 
