@@ -524,7 +524,8 @@ def _episode_row(R, ir, root, job, s, pv, base, solo):
                source_wait_vs=tot.get('source_wait_vs'), collisions=saf.get('collisions'), teleports=saf.get('teleports'),
                ttc_below_3_vs=saf.get('ttc_below_3_vs'), hard_brake_vs=saf.get('hard_brake'), activations=len(acts),
                members_per_activation=(sum(len(a.get('members') or ()) for a in acts) / len(acts)) if acts else None,
-               helpers_missing=sum(len(a.get('missing') or ()) for a in acts), diff_vs_u0=None, crn_ok=None,
+               helpers_missing=sum(len(a.get('missing') or ()) for a in acts), **_role_use(job, acts),
+               diff_vs_u0=None, crn_ok=None,
                first_divergence_s=None, first_activation_s=None)
     if job['arm'] != 'u0' and base is not None and not base.get('error'):
         rec['diff_vs_u0'] = J - R.control_j(base)
@@ -543,6 +544,27 @@ def _episode_row(R, ir, root, job, s, pv, base, solo):
     elif pv is not None:
         rec['pv_error'] = pv.get('error')
     return rec
+
+
+def _role_use(job, acts):
+    """Descriptive: role slots filled and whether delayed-onset members actually reached their onset
+    (released at el > onset_s) - a member released earlier (e.g. at the drop) never held."""
+    spec = job.get('strategy_spec')
+    if not spec or not acts:
+        return dict(role_slots=0, role_filled=0, delayed_members=0, delayed_held=0)
+    roles = spec['roles']
+    slots = filled = delayed = held = 0
+    for a in acts:
+        slots += len(roles)
+        idx = a.get('roles') or list(range(len(a.get('members') or ())))
+        filled += len(idx)
+        for i, vid in zip(idx, a.get('members') or ()):
+            o = int(roles[i]['onset_s'])
+            if o > 0:
+                delayed += 1
+                rel = (a.get('release') or {}).get(vid)
+                held += int(rel is None or rel[0] > o)
+    return dict(role_slots=slots, role_filled=filled, delayed_members=delayed, delayed_held=held)
 
 
 def collect(roots):
@@ -595,7 +617,12 @@ def arm_stats(rows, cell, arm, R):
         a.update(n_paired=len(d), mean_diff=sum(d) / len(d), ci95=[lo, hi], benefit_rate=sum(x < 0 for x in d) / len(d),
                  harm_rate=sum(x > 0 for x in d) / len(d), crn_ok=sum(bool(E[(s, arm)].get('crn_ok')) for s in seeds),
                  mean_activations=sum(x['activations'] for x in recs) / len(recs),
-                 mean_members=_mean([x.get('members_per_activation') for x in recs]))
+                 mean_members=_mean([x.get('members_per_activation') for x in recs]),
+                 role_fill_rate=(sum(x.get('role_filled', 0) for x in recs) / max(1, sum(x.get('role_slots', 0)
+                                                                                         for x in recs))),
+                 delayed_held_rate=(sum(x.get('delayed_held', 0) for x in recs) / sum(x.get('delayed_members', 0)
+                                                                                      for x in recs))
+                 if sum(x.get('delayed_members', 0) for x in recs) else None)
     if arm != 'wall_h_solo2':
         s2, d2, _ = _paired(rows, cell, arm, 'wall_h_solo2')
         if d2:
