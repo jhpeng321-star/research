@@ -631,6 +631,8 @@ def arm_stats(rows, cell, arm, R):
                                  ci_bonferroni6=_boot_np(d2, alpha=0.05 / N_CONFIRM_TESTS),
                                  beats_fraction=sum(x < 0 for x in d2) / len(d2), seeds=s2, diffs=d2)
     a['fairness'] = fairness_stats(rows, cell, arm, 'u0')
+    if arm != 'wall_h_solo2':
+        a['fairness_vs_solo2'] = fairness_stats(rows, cell, arm, 'wall_h_solo2')
     return a
 
 
