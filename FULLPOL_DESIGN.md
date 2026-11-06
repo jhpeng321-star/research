@@ -58,6 +58,45 @@ move SUMO allows, and must be able to use and learn the cooperative moves. LCEXE
 FULLPOL owns *selection and learning*. Everything is default OFF. The config key `fullpol` is
 absent or False by default, and in that case every output is byte-identical.
 
+## 0b. clean5b: free_program with lane changes (LCEXEC per-CAV initiate/join contract, ~21:3x)
+
+**Ownership.**
+- LCEXEC owns:
+  - the option/protocol (`lc_families`: `free_program_initiate` / `free_program_join`
+    ProgramOption, V2V relay, cap <= 6);
+  - the executor and the env writer;
+  - the converter.
+- FULLPOL owns:
+  - the template generator `fullpol_programs:propose` (`fullpol_templates.py`);
+  - the trigger descriptor `fullpol_head.template_descriptor`;
+  - the learning signals.
+
+**Templates.** Templates are slot programs (`@0` = initiator) with per-slot join rules
+{lane, ds}, with |ds| within the V2V range. There are four classes:
+- **verified:** the arm's own `template_from_program` rows, used as-is;
+- **structured:**
+  - abreast_wall (wall_g / wall_h);
+  - closing_pair (pair_g / pair_h / pair_t);
+  - solo hold, labelled `wall_{g,h}_solo{SUMO lane of the initiator}`;
+  - wall_fill (lane change into the empty lane, closing lane included);
+  - gap_open_merge (merger or yielder role);
+  - lane_redistribute;
+- **lcm_R_v1:** random joiner lanes, so the lane targets stay adjacent;
+- **primitive coverage.**
+
+**Validation.** Every template passes `lc_program.FreeProgram` validation and
+`check_registered`.
+
+**Descriptor.** The descriptor has 6 template slots x 37 features plus 6 group features:
+- per slot: primitives, lane target one-hot, into-closing, rule, releases, join-rule
+  lane/ds, and an own-slot flag;
+- group: initiate/join, slot count, duration, member count and gap.
+It uses absolute WM lanes (a single registered map frame) and contains no ids or labels.
+
+**Superseded.** The earlier FULLPOL group-level `free_program` option (fullpol_programs
+FreeProgramOption + `free_program_runtime` hook) is superseded by LCEXEC's per-CAV protocol. It
+stays default OFF.
+
 ## 1. What the policy can do (coverage argument)
 
 | Level | Mechanism | Covers |
