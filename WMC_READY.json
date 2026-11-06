@@ -11,7 +11,8 @@
   "commits": [
     "d484d68e2e2683494b98081a3655537d85cd516a C4 WM-C: merge c4/wm-wallfit (W3 synergy head) as the optional re-ranker base",
     "1a51968be703494237db16a5b932abb09b3113e9 C4 WM-C: world-model proposer for wz3to2 plan mining + N3/PLANGEN verification plug-in",
-    "(next commit) C4 WM-C: compare excludes budget-stranded moments; WMC_READY"
+    "a8cd4e04358f75002e3d5ba4e87a12f6b52d642d C4 WM-C: compare excludes budget-stranded moments; WMC_READY (commits, API, comparison + switch-over commands)",
+    "(follow-up) C4 WM-C: WMC_READY records the commit hashes (no code change)"
   ],
   "package": "tools/wzwm/ (geometry, families, wm_backend, proposer, n3 + n3_pipeline/, verify_plugin, runner, pipeline, compare, wallfit_bridge, fakes, __main__, test_wzwm_cpu); tools/wallfit/guard.py map scope; pyproject ruff per-file ignore for the verbatim vendored files",
   "api": {
