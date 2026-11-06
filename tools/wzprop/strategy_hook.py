@@ -8,7 +8,8 @@ whole second t >= warmup:
      (single writer, MAPPO safety downstream) once t >= start + onset, and the lane target (own lane, or the role's
      adjacent lc_target after its onset) goes through the G5 single-writer lane path (controller.g5_lane_targets);
   2. if t >= next_ok and an activation slot is free: strategy_search.select_members on the free CAV rows (WM rows ->
-     SUMO frame: x = s + 2620.56, SUMO lane = 2 - WM lane); members start at once; next_ok = t + cooldown.
+     SUMO frame: x = s + 2620.56, SUMO lane = 2 - WM lane) with the observable rows for the field / start gates and
+     phase = number of earlier activations (alternating holders); members start at once; next_ok = t + cooldown.
 CAV rows only (is_cav); HDVs are never commanded. The member selection and programs are the SAME functions the WM
 search uses (strategy_search.select_members / roles), so imagination and SUMO execute one rule.
 """
@@ -51,7 +52,7 @@ class StrategyCore:
     """Plant-independent rule state machine (tested with fake rows); the harness hook wraps it."""
 
     def __init__(self, strategy, warmup_s=300):
-        self.s = SS.validate(dict(strategy))
+        self.s = SS.validate(dict(strategy), allow_banned=True)     # executing a banned comparator is allowed
         self.warmup = int(warmup_s)
         self.active = {}             # vid -> dict(start, role, act)
         self.acts, self.issued = [], []
@@ -93,13 +94,14 @@ class StrategyCore:
         busy = len({id(m['act']) for m in self.active.values()})
         if t >= self.next_ok and busy < int(self.s.get('slots', 1)):
             free = [to_sumo_row(r) for vid, r in by.items() if vid not in self.active and vid in commands]
-            mem = SS.select_members(self.s, free, observed_rows(rows))
+            phase = len(self.acts)
+            mem = SS.select_members(self.s, free, observed_rows(rows), phase=phase)
             if mem:
-                act = dict(t=t, strategy=self.s['name'], members=[c['id'] for c in mem],
+                act = dict(t=t, strategy=self.s['name'], members=[c['id'] for c in mem], phase=phase,
                            sumo_lanes=[c['lane'] for c in mem], x=[round(c['x'], 2) for c in mem], release={})
                 self.acts.append(act)
                 self.next_ok = t + int(self.s['cooldown_s'])
-                for role, c in zip(self.s['roles'], mem):
+                for role, c in zip(SS.active_roles(self.s, phase), mem):
                     self.active[c['id']] = dict(start=t, role=role, act=act)
                     row = by[c['id']]
                     lanes[c['id']] = int(row['lane'])
@@ -113,15 +115,19 @@ class StrategyCore:
         return accel, lanes
 
 
-def make_hook(strategy, warmup_s=300):
-    """Harness hook class instance (imports the S-REGIMEU0 Recorder lazily: tools.coopmwm.imitreplay)."""
+def make_hook(strategy, warmup_s=300, per_vehicle=True):
+    """Harness hook class instance (imports the S-REGIMEU0 Recorder lazily: tools.coopmwm.imitreplay); with
+    per_vehicle the eval-only LSSEARCH / MULTICRIT per-vehicle logger (pervehicle.PerVehicle) is attached to every
+    arm, u0 included (hook.pv.finish() -> PERVEH record)."""
     from tools.coopmwm import imitreplay as ir
+    from . import pervehicle as PV
 
     class StrategyHook(ir.Recorder):
         def __init__(self):
             super().__init__()
             self.core = StrategyCore(strategy, warmup_s) if strategy is not None else None
             self.strategy = None if strategy is None else strategy['name']
+            self.pv = PV.PerVehicle() if per_vehicle else None
 
         @property
         def acts(self):
@@ -137,6 +143,8 @@ def make_hook(strategy, warmup_s=300):
 
         def __call__(self, controller, job, prefixes):
             self.controller = controller
+            if self.pv is not None:
+                PV.install_on_observe(self.pv)
             if self.core is None:
                 return
             previous = controller.apply

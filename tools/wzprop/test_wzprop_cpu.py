@@ -835,23 +835,74 @@ def test_solo2_is_the_regime_rule_and_strategies_validate(P):
     assert any(k is not None for k in kids)
 
 
-def test_strategy_search_beats_or_reports_against_solo2_in_imagination():
+def test_strategy_search_three_archives_ban_and_incumbent_in_imagination():
     from tools.wzprop import strategy_search as SS
     states = _strategy_states(6)
-    per, n = SS.evaluate(W.StubWM(), states, [SS.SOLO2] + SS.seeds()[1:3], 4, 300)
-    s2 = SS.summarize(per[SS.strategy_key(SS.SOLO2)], 0.5)
-    assert s2['gain_vs_solo2'] == 0.0 and s2['n_states'] == 6 and n > 0
+    per, n = SS.evaluate(W.StubWM(), states, [SS.INCUMBENT] + SS.seeds()[1:3], 4, 300)
+    s2 = SS.summarize(per[SS.strategy_key(SS.INCUMBENT)], 0.5)
+    assert s2['gain_vs_inc'] == 0.0 and s2['n_states'] == 6 and n > 0
     res = SS.search_cell(W.StubWM(), states, dict(n_init=10, generations=1, n_children=8, n_screen_states=4,
                                                     finalists=5, K_final=4))
-    keys = [r['key'] for r in res['final']]
-    assert SS.strategy_key(SS.SOLO2) in keys and res['archive_cells'] >= 3
-    assert all(r['gain_vs_solo2_lcb'] <= r['gain_vs_solo2'] + 1e-9 for r in res['final'])
-    picks = SS.select_for_sumo(res, 3)
-    assert len({tuple(SS.descriptor(p)) for p in picks}) == len(picks)
-    assert all(SS.strategy_key(p) != SS.strategy_key(SS.SOLO2) for p in picks)
-    assert len(SS.structured_arm()) == 4 and len(SS.random_arm()) == 4
-    if res['best_beating_solo2']:
-        assert res['best_beating_solo2']['gain_vs_solo2_lcb'] > 0
+    keys = {r['key']: r for r in res['final']}
+    assert SS.strategy_key(SS.INCUMBENT) in keys and SS.strategy_key(SS.SOLO2) in keys
+    assert keys[SS.strategy_key(SS.SOLO2)]['banned'] and keys[SS.strategy_key(SS.SOLO2)]['comparator']
+    assert res['archive_cells']['delay'] >= 3 and res['incumbent'] == 'wall_g_solo2'
+    assert all(r['gain_vs_base_lcb'] <= r['gain_vs_base'] + 1e-9 for r in res['final'])
+    # nothing banned is ever searched or selected
+    assert all(not SS.banned(r['strategy']) for r in res['final'] if not r['comparator'])
+    for arch in ('delay', 'bounded', 'fairer'):
+        picks = SS.select_for_sumo(res, 3, arch)
+        assert len({tuple(SS.descriptor(p)) for p in picks}) == len(picks)
+        assert all(SS.strategy_key(p) not in {SS.strategy_key(c) for c in SS.COMPARATORS} for p in picks)
+        assert all(not SS.banned(p) for p in picks)
+    by = {r['key']: r for r in res['final']}
+    for p in SS.select_for_sumo(res, 5, 'bounded'):
+        assert all(v <= SS.GROUP_BOUND_S for v in by[SS.strategy_key(p)]['group_inc'].values())
+    fr = [by[SS.strategy_key(p)] for p in SS.select_for_sumo(res, 5, 'fairer')]
+    assert all(r['gain_vs_base'] >= 0 for r in fr)
+    assert [tuple(r['fairer_key']) for r in fr] == sorted(tuple(r['fairer_key']) for r in fr)
+    assert len(SS.structured_arm()) == 4 and len(SS.random_arm()) == 4 and len(SS.reference_arm()) == 2
+    assert not any(SS.banned(s) for s in SS.random_arm(40, seed=5) + SS.structured_arm() + SS.seeds())
+    if res['best_beating_incumbent']:
+        assert res['best_beating_incumbent']['gain_vs_inc_lcb'] > 0
+
+
+def test_ban_start_gate_and_alternating_phases():
+    from tools.wzprop import strategy_search as SS
+    m = moment()
+    cavs = m['all_cavs_t0']
+    with pytest.raises(ValueError):
+        SS.validate(dict(SS.SOLO2))                         # the firm 15 m/s hold is banned ...
+    SS.validate(dict(SS.SOLO2), allow_banned=True)         # ... but executable as a labelled comparator
+    rng = __import__('random').Random(7)
+    assert all(15.0 not in [r['v_w'] for r in SS.random_strategy(rng)['roles']] for _ in range(60))
+    kids = [SS.mutate(rng, dict(SS.SOLO2, name='x'), 0.0) for _ in range(5)]
+    assert all(k is None or not SS.banned(k) for k in kids)
+    inc = SS.activation(SS.INCUMBENT, cavs)
+    assert inc and len(inc) == 1 and inc[0]['params']['v_w'] == 22.0 and inc[0]['params']['hold_s'] == 120
+    by = {s['name']: s for s in SS.seeds()}
+    gate0 = by['wall_g_solo2_gate0']
+    member = SS.select_members(SS.INCUMBENT, cavs)[0]
+    behind = dict(id='hb', edge='up', lane=member['lane'], x=float(member['x']) - 50.0, v=20.0)
+    ahead = dict(id='ha', edge='up', lane=member['lane'], x=float(member['x']) + 50.0, v=20.0)
+    others = [c for c in cavs if not (c['edge'] == 'up' and c['lane'] == member['lane']
+                                      and float(member['x']) - 100.0 <= float(c['x']) < float(member['x']))]
+    if len(others) == len(cavs):
+        assert SS.activation(gate0, cavs, [ahead]) == inc
+    assert SS.activation(gate0, cavs, [behind]) is None
+    alt = by['wall_g_alt21']
+    a0, a1 = SS.select_members(alt, cavs, phase=0), SS.select_members(alt, cavs, phase=1)
+    assert [c['lane'] for c in a0] == [2] and [c['lane'] for c in a1] == [1]
+    assert SS.strategy_key(alt) != SS.strategy_key(dict(alt, phases=None))
+    assert SS.strategy_key(gate0) != SS.strategy_key(SS.INCUMBENT)
+    with pytest.raises(ValueError):
+        SS.validate(dict(alt, phases=[[0, 1]]))
+    with pytest.raises(ValueError):
+        SS.validate(dict(SS.INCUMBENT, start_gate='empty50'))
+    lc = by['g2_lc01']
+    spec = SS.activation(lc, cavs)
+    if spec:
+        assert {x['role'] for x in spec} == {'prog'}
 
 
 def test_strategy_core_executes_the_rule_on_plant_rows():
@@ -880,30 +931,80 @@ def test_strategy_core_executes_the_rule_on_plant_rows():
     assert len(core.acts) >= 2
 
 
-def test_wmsearch_u0_plan_and_paired_analysis(tmp_path):
+def _pv_record(seed, arm, lane_cost):
+    rows = []
+    for i in range(30):
+        lane = i % 3
+        road = 20.0 + (i % 7) + (lane_cost.get(lane, 0.0))
+        rows.append([f'v{i}', int(i % 4 == 0), lane, road, 1.0])
+    return dict(rows=rows, error=None)
+
+
+def test_wmsearch_u0_plan_and_paired_fairness_analysis(tmp_path):
+    from tools.wzprop import pervehicle as PV
     from tools.wzprop import strategy_search as SS
     from tools.wzprop import wmsearch_u0 as WU
-    arms = dict(D3200_p60=dict(incumbent=SS.SOLO2, wm=SS.random_arm(4, seed=1), structured=SS.structured_arm(4),
+    arms = dict(D3200_p60=dict(incumbent=SS.INCUMBENT, banned_comparator=SS.SOLO2, reference=SS.reference_arm(),
+                                wm=SS.random_arm(4, seed=1), wm_bounded=SS.random_arm(4, seed=3),
+                                wm_fairer=SS.random_arm(4, seed=4), structured=SS.structured_arm(4),
                                 random=SS.random_arm(4, seed=2)))
-    specs = WU.arm_specs(arms, 'D3200_p60')
-    assert list(specs)[:2] == ['u0', 'solo2'] and len(specs) == 14
-    groups = WU.plan_jobs('D3200_p60', range(989770, 989786), specs,
+    specs = WU.arm_specs(arms, 'D3200_p60', with_banned=True, k_ref=2, k_bounded=2, k_fairer=2)
+    assert list(specs)[:5] == ['u0', 'inc', 'solo2', 'ref_0', 'ref_1'] and len(specs) == 5 + 4 + 2 + 2 + 4 + 4
+    assert specs['inc']['name'] == 'wall_g_solo2' and SS.banned(specs['solo2'])
+    assert len({SS.strategy_key(s) for s in specs.values() if s}) == len(specs) - 1
+    groups = WU.plan_jobs('D3200_p60', range(989770, 989772), specs,
                           lambda s, d, p: dict(seed=s, demand=d, penetration=p, cell_key='D3200_p60'))
-    assert sum(j['sim_s'] for g in groups for j in g['jobs']) == 16 * 14 * 1200 <= WU.CAP
+    assert sum(j['sim_s'] for g in groups for j in g['jobs']) == 2 * len(specs) * 1200
     with pytest.raises(G.ForbiddenSeedError):
         WU.plan_jobs('D3200_p60', [989650], specs, lambda s, d, p: {})
     rows = []
-    for s in range(16):
-        J = dict(u0=50000.0 + 100 * s, solo2=40000.0 + 100 * s)
+    for s in range(12):
+        J, fair = {}, {c: {} for c in PV.COMPONENTS}
         for a in specs:
-            if a.startswith('wm_'):
-                J[a] = J['solo2'] - 2000.0 + 50 * (s % 3)
-            elif a.startswith(('str_', 'rnd_')):
-                J[a] = J['solo2'] + 500.0 - 40 * (s % 4)
-        rows.append(dict(seed=989770 + s, J=J))
-    res = WU.analyze_rows(rows, specs)
-    assert res['summary']['wm']['n_beat_solo2_ci'] == 4 and res['summary']['random']['n_beat_solo2_ci'] == 0
-    assert res['arms']['solo2']['vs_u0']['mean'] == pytest.approx(-10000.0)
+            cost = {}
+            J[a] = 50000.0 + 100 * s
+            if a == 'solo2':
+                J[a] -= 9000.0
+                cost = {2: 16.0 + (s % 3)}                    # banned: lane-2 starters lose ~17 s/veh
+            elif a == 'inc':
+                J[a] -= 6000.0
+                cost = {2: 3.0}
+            elif a.startswith('wm_'):
+                J[a] -= 7000.0 + 50 * (s % 3)
+                cost = {2: 4.0 + (s % 2)}
+            elif a.startswith('frr_'):
+                J[a] -= 100.0 * (s % 3)
+                cost = {0: -2.0, 1: -1.0, 2: 0.5}
+            pv = _pv_record(s, a, cost)
+            for c in PV.COMPONENTS:
+                fair[c][a] = PV.fairness_of(pv, c)
+        rows.append(dict(seed=989770 + s, J=J, fair=fair))
+    res = WU.analyze_rows(rows, specs, n_boot=500)
+    A = res['arms']
+    assert A['solo2']['allowed'] is False and A['inc']['allowed'] is True
+    f = A['solo2']['fairness']['road']['u0']
+    assert f['worst_group'] == 'lane2' and f['groups']['lane2']['mean_per_vehicle_diff'] == pytest.approx(17.0)
+    assert f['groups']['lane2']['ci95'][0] <= 17.0 <= f['groups']['lane2']['ci95'][1] and 'cvar90' in f
+    assert A['wm_0']['fairness']['road']['inc']['groups']['lane2']['mean_per_vehicle_diff'] == pytest.approx(1.5)
+    assert res['summary']['wm']['n_allowed_lower_u0_ci'] == 4 and res['summary']['wm']['n_allowed_beat_inc_ci'] == 4
+    assert res['summary']['wm_fairer']['fairest_not_worse'] in ('frr_0', 'frr_1')
+    assert res['summary']['wm_fairer']['fairest_worst_group_diff'] == pytest.approx(0.5)
+    assert A['solo2']['vs_u0']['mean'] == pytest.approx(-9000.0)
+    rs = A['wm_0']['fairness']['road+source']['u0']['groups']['lane0']
+    assert rs['mean_per_vehicle_diff'] == pytest.approx(0.0)
+
+
+def test_pervehicle_logger_is_the_lssearch_logger_and_stats():
+    import inspect
+    from tools.wzprop import pervehicle as PV
+    src = inspect.getsource(PV.PerVehicle)
+    assert 'Eval-only per-vehicle window delay with origin lane and class' in src
+    assert PV.cvar90(list(range(1, 12))) == pytest.approx(10.5) and PV.cvar90([]) is None
+    rec = PV.fairness_of(dict(rows=[['a', 1, 0, 10.0, 2.0], ['b', 0, 2, 4.0, 0.0], ['c', 0, -1, 0.0, 5.0]],
+                              error=None))
+    assert rec['groups']['lane0']['mean_vs'] == 10.0 and rec['groups']['uninserted']['n'] == 1
+    assert rec['groups']['cav']['n'] == 1 and rec['groups']['hdv']['total_vs'] == 4.0
+    assert PV.fairness_of(dict(rows=[], error='boom')) is None
 
 
 def test_parallel_wm_equals_sequential():
@@ -942,7 +1043,7 @@ def test_condition_gate_is_observable_and_shared_by_wm_and_sumo():
     assert ids == {'c', 'h_near', 'h_lane'}
 
 
-def test_fairness_groups_archives_and_trace():
+def test_fairness_per_vehicle_groups_archives_and_trace():
     from tools.wzprop import strategy_search as SS
     states = _strategy_states(4)
     wm = W.StubWM()
@@ -956,14 +1057,17 @@ def test_fairness_groups_archives_and_trace():
         for k in range(2):
             assert sum(gg[f'lane{L}'][k] for L in (0, 1, 2)) == pytest.approx(gg['all'][k])
             assert gg['hdv'][k] + gg['cav'][k] == pytest.approx(gg['all'][k])
+            assert gg['n_hdv'][k] + gg['n_cav'][k] == gg['n_all'][k] and gg['cvar90'][k] > 0
     res = SS.search_cell(wm, states, dict(n_init=6, generations=1, n_children=6, n_screen_states=3, finalists=5,
                                           K_final=2, K_screen=2))
-    assert res['fairness'] == 'available' and all(r['fair'] is not None for r in res['final'])
+    assert res['fairness'] == 'per-vehicle' and all(r['bounded'] is not None for r in res['final'])
     for r in res['final']:
+        assert r['worst_group_inc'] == max(r['group_inc'].values())
+        assert r['bounded'] == all(v <= SS.GROUP_BOUND_S for v in r['group_inc'].values())
         if r['fair']:
             assert r['gain_vs_base_lcb'] > 0 and min(r['group_gain_vs_base_lcb'].values()) >= 0
-    assert all(f['worst_group_lcb'] >= 0 for f in res['fair_archive'])
-    # planapi-style trace -> per-group delays
+    assert all(e['worst_group_inc'] is not None for e in res['archives']['fairer'])
+    # planapi-style trace (no lanes): one vehicle per present slot
     import numpy as np
     tr = dict(rows=[(0, 0), (1, 0)], speeds=[np.array([[[31.29, 0.0], [15.645, 0.0]], [[0.0, 31.29], [0.0, 31.29]]])],
               masks=[np.array([[[1, 1], [1, 1]], [[1, 1], [1, 0]]])], is_cav=[np.array([[1, 0], [1, 0]])],
@@ -971,5 +1075,25 @@ def test_fairness_groups_archives_and_trace():
     out = W.groups_from_trace(tr, [dict(id='a'), dict(id='b')], 1)
     assert out['a']['lane2'][0] == pytest.approx(0.25) and out['a']['lane0'][0] == pytest.approx(1.0)
     assert out['b']['cav'][0] == pytest.approx(1.0) and out['b']['hdv'][0] == pytest.approx(0.0)
+    assert out['a']['n_all'][0] == 2 and out['a']['cvar90'][0] == pytest.approx(1.0)
     with pytest.raises(W.FairnessUnavailable):
         W.groups_from_trace(dict(rows=[], speeds=[]), [], 1)
+
+
+def test_trace_reused_padding_slot_counts_each_vehicle_with_its_entry_lane():
+    import numpy as np
+    # slot 0: t0 vehicle in WM lane 1 (SUMO 1) for 2 steps; slot 1: entrant at t=1 in WM lane 0 (SUMO 2), exits,
+    # a second entrant at t=3 in WM lane 2 (SUMO 0). lanes[t] = lane after step t (time t+1).
+    T = 5
+    speeds = np.zeros((T, 2))
+    masks = np.array([[1, 0], [1, 1], [0, 0], [0, 1], [0, 1]])
+    lanes = np.array([[1, 0], [1, 0], [1, 2], [1, 2], [1, 2]])
+    dl, ln, cv = W.vehicle_records(speeds, masks, lanes, np.array([1, -1]), np.array([False, True]))
+    assert len(dl) == 3 and sorted(dl.tolist()) == [0.5, 1.0, 1.0]
+    assert sorted(zip(ln.tolist(), dl.tolist())) == [(0, 1.0), (1, 1.0), (2, 0.5)]
+    assert dl.sum() == pytest.approx(0.5 * masks.sum())
+    tr = dict(rows=[(0, 0)], speeds=[speeds[None]], masks=[masks[None]], lanes=[lanes[None]],
+              is_cav=[np.array([[0, 1]])], origin_lane=[np.array([[1, 0]])])
+    out = W.groups_from_trace(tr, [dict(id='a')], 1)
+    assert out['a']['n_all'][0] == 3 and out['a']['n_lane0'][0] == 1 and out['a']['n_lane2'][0] == 1
+    assert out['a']['all'][0] == pytest.approx(2.5) and out['a']['n_cav'][0] == 2
