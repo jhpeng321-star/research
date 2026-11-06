@@ -844,7 +844,7 @@ def _thresholds(spec):
 class RandomStream:
     """Seeded plausible random stream: lanes change by one, speeds 0-30, positions move forward."""
 
-    def __init__(self, row, program, frame, desc, source, seed, n_extra=8):
+    def __init__(self, row, program, frame, desc, source, seed, n_extra=8, min_gap=8.0):
         self.geo = geo = Geo(desc, frame)
         rng = _random.Random(f'lcexec-cv-random:{row_key(row)}:{seed}')
         specs = member_specs(row)
@@ -864,8 +864,7 @@ class RandomStream:
         lanes0 = {m['id']: int(m['lane']) for m in specs}
         self.settings = {v: dict(lc_mode=rng.choice((1621, 1557, 1365)), tau=rng.choice((1.0, 1.2, 0.8, 1.5)))
                          for v, cav in vids if cav}
-        tracks = {}
-        member_x = []
+        veh, member_x = {}, []
         for v, cav in vids:
             if v.startswith('~hdv') and member_x:
                 x = rng.choice(member_x)+rng.uniform(-150.0, 150.0)
@@ -874,35 +873,50 @@ class RandomStream:
             x = min(max(x, 1.0), geo.drop-30.0)
             if cav:
                 member_x.append(x)
-            lane = lanes0.get(v, rng.randrange(geo.n_up))
-            speed = rng.uniform(3.0, V_MAX)
-            xs, ls, vs = [], [], []
-            for el in range(n):
-                xs.append(round(x*100))
-                ls.append(lane)
-                vs.append(round(speed, 4))
-                speed = min(max(speed+rng.choice((-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5)) *
-                                rng.random(), 0.0), V_MAX)
-                if rng.random() < 0.04:
-                    speed = rng.uniform(0.0, 4.0)
-                x = x+speed
-                if x < geo.drop and rng.random() < 0.12:
-                    lane = min(max(lane+rng.choice((-1, 1)), 0), geo.n_up-1)
-            tracks[v] = (xs, ls, vs, cav)
+            veh[v] = dict(x=x, lane=lanes0.get(v, rng.randrange(geo.n_up)), v=rng.uniform(3.0, V_MAX), cav=cav)
+        end = geo.end-15.0
+        self._push(veh, min_gap)
         self.states = []
-        end = cm_lt(geo.end)-1500
         for el in range(n):
-            st = {}
-            for v, (xs, ls, vs, cav) in tracks.items():
-                if xs[el] >= end:
-                    continue                            # left the network at its end
-                st[v] = geo.state(xs[el], ls[el], vs[el], cav)
+            st = {v: geo.state(round(d['x']*100), d['lane'], round(d['v'], 4), d['cav'])
+                  for v, d in veh.items() if d['x'] < end}
             self._separate(st)
             self.states.append(st)
+            for v, d in veh.items():
+                d['v'] = min(max(d['v']+rng.choice((-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5))*rng.random(), 0.0), V_MAX)
+                if rng.random() < 0.04:
+                    d['v'] = rng.uniform(0.0, 4.0)
+                d['x'] += d['v']
+            for v, d in veh.items():
+                if d['x'] < geo.drop-1.0 and rng.random() < 0.12:
+                    lane = min(max(d['lane']+rng.choice((-1, 1)), 0), geo.n_up-1)
+                    if all(o['lane'] != lane or abs(o['x']-d['x']) >= min_gap for w, o in veh.items()
+                           if w != v and o['x'] < geo.drop):
+                        d['lane'] = lane
+            self._push(veh, min_gap)
         self.roster = {}
         for st in self.states:
             self.roster.update({v: s['is_cav'] for v, s in st.items()})
         self.notes = []
+
+    def _push(self, veh, min_gap):
+        """No same-(edge, lane) pair closer than min_gap m: push the leader forward (positions never
+        move backwards; SUMO never produces overlapping vehicles and the env sensor refuses them)."""
+        geo = self.geo
+        for _ in range(8):
+            groups = defaultdict(list)
+            for v, d in veh.items():
+                st = geo.state(round(d['x']*100), d['lane'], 0.0, d['cav'])
+                groups[(st['edge'], st['sumo_lane'])].append(d)
+            moved = False
+            for g in groups.values():
+                g.sort(key=lambda d: d['x'])
+                for a, b in zip(g, g[1:]):
+                    if b['x']-a['x'] < min_gap:
+                        b['x'] = a['x']+min_gap
+                        moved = True
+            if not moved:
+                return
 
     @staticmethod
     def _separate(st):
