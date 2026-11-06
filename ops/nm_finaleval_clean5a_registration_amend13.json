@@ -1,0 +1,33 @@
+{
+ "amendment": 13,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend12.json",
+  "registration_sha256": "b0fd0e1beb8065074c9fef2aaa4c0fb11ab021e5d23497708f84ba6b37501cf9"
+ },
+ "authority": [
+  "MAIN 2026-11-07 ~05:2x (reviewer finding): mirror the clean5b-F training group-label convention exactly (c4/clean5b 1caf5c1c fairness module + logger) for the lane and HDV/CAV groups; undefined-origin vehicles in a separately reported group (still in total delay); report U0 vehicles missing from the treatment arm; labels still from U0 by vehicle id"
+ ],
+ "convention": {
+  "class_groups": "every U0-paired vehicle, labelled by its U0 fleet class",
+  "groups": [
+   "origin:L0",
+   "origin:L1",
+   "origin:L2",
+   "class:hdv",
+   "class:cav"
+  ],
+  "missing": "per arm: vehicles not in U0 and U0 vehicles not in the arm (counts)",
+  "origin": "WM lane of the vehicle's FIRST logged row mapped by ORIG {2: L0, 1: L1, 0: L2} if that row is upstream of the drop (s < 75.44 m), else undefined (D)",
+  "reported_only": [
+   "origin:undefined"
+  ],
+  "source": "c4/clean5b 1caf5c1c tools/coopmwm/fair_vehicle_log.py per_vehicle / labels / groups",
+  "total_delay": "unchanged (J = team delay over all vehicles)"
+ },
+ "registered_utc": "2026-11-06T21:11:56.649703+00:00",
+ "registration_sha256": "8c61d899f02edd61a25f62f8e1c094c9e61d4cf0cd23bfb6024197d13092650d",
+ "replaces": "amendment 11/MAIN 04:2x lane labels by first-observed WM lane regardless of position",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: no clean5b-F eval output exists; no outcome opened",
+ "verification": "test_eval_per_vehicle_equals_the_clean5b_f_training_table: per-vehicle delay, origin and A-labelled group means equal fair_vehicle_log on the 1caf5c1c tree"
+}

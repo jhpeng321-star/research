@@ -196,9 +196,10 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     assert all(t['synergy']['decision_activity'][arm]['worlds'] == 96 for arm in ('B', 'R'))
     assert t['arms']['A']['label'].startswith('A = U0')
     cp = t['co_primary']                                               # owner fairness decision (04:0x)
-    assert set(cp['groups']['groups']) == set(nm.CO_PRIMARY_GROUPS) and cp['groups']['reference'] == 'U0'
-    assert cp['groups']['vehicles_missing_from_reference'] == {'B': 0, 'A': 0}
-    assert set(cp['groups']['sensitivity_own_arm_labels']['groups']) == set(nm.CO_PRIMARY_GROUPS)
+    assert set(cp['groups']['groups']) == set(nm.REPORTED_GROUPS) and cp['groups']['reference'] == 'U0'
+    assert cp['groups']['vehicles_missing']['B'] == dict(not_in_reference=0, reference_not_in_arm=0)
+    assert not cp['groups']['groups']['origin:undefined'].get('registered', False)
+    assert set(cp['groups']['sensitivity_own_arm_labels']['groups']) == set(nm.REPORTED_GROUPS)
     assert cp['total_B_minus_A']['diff'] == pytest.approx(t['registered_B_A_R']['rows']['B-A']['diff'])
     assert cp['meets'] == (cp['total_lower'] and cp['groups']['all_pass'])
     assert 'RULE_FAIR' in t['arms'] and t['arms']['RULE_FAIR']['label'].startswith('RULE_FAIR')
@@ -1058,3 +1059,48 @@ def test_a_failed_replay_round_needs_a_new_authorisation_and_a_fresh_dir(panel, 
     assert out['status'] == 'PASS'
     assert (final_root/'evaluation'/'nmfinal_native_0001__r2'/nm.VEHICLE_LOG).is_file()
     assert sum(r['id'].endswith('#r2') for r in nm.fe.ledger_rows(final_root)) == 10
+
+
+
+def test_group_labels_mirror_the_clean5b_f_training_convention(tmp_path):
+    """Amendment 13: origin = WM lane of the FIRST logged row if upstream of the drop (else undefined); class groups
+    hold every U0-paired vehicle; labels come from U0 by id; missing vehicles are counted both ways."""
+    import gzip
+
+    def log(path, rows):
+        with gzip.open(path, 'wt', encoding='utf-8') as f:
+            for k, (vid, cav) in enumerate([('v0', True), ('v1', False), ('v2', False), ('v3', True)]):
+                f.write(json.dumps(dict(veh=k, id=vid, cav=cav, origin='e', depart_delay_s=0., first_t=300))+'\n')
+            for t in range(300, 302):
+                f.write(json.dumps(dict(t=t, **rows(t)))+'\n')
+    # v0 first seen upstream in WM lane 2 (L0); v1 upstream WM 0 (L2); v2 first seen PAST the drop (undefined);
+    # v3 only in the reference arm
+    log(tmp_path/'u0.gz', lambda t: dict(k=[0, 1, 2, 3], s=[-50., -80., 90., -10.], v=[10., 20., 30., 31.],
+                                         a=[0., .1, 0., -.1], lane=[2, 0, 1, 1]))
+    log(tmp_path/'b.gz', lambda t: dict(k=[0, 1, 2], s=[-50., -80., 90.], v=[5., 20., 30.], a=[0., .1, 0.],
+                                        lane=[1, 0, 1]))
+    u0, b = (nm.vehicle_log_report(tmp_path/n, t0=300, t1=302) for n in ('u0.gz', 'b.gz'))
+    assert u0['per_vehicle']['v0'][1] == 'L0' and u0['per_vehicle']['v1'][1] == 'L2' and u0['per_vehicle']['v2'][1] == 'D'
+    labels = nm._labels(u0['per_vehicle'])
+    assert labels['v0'] == ('class:cav', 'origin:L0') and labels['v2'] == ('class:hdv', 'origin:undefined')
+    reports = dict(U0={'w': u0}, A={'w': u0}, B={'w': b})
+    boot = dict(reps=50, seed=1, level=.95)
+    out = nm.co_primary_groups({k: {**v, 'w2': v['w']} for k, v in reports.items()}, ['w', 'w2'], boot)
+    assert out['vehicles_missing']['B'] == dict(not_in_reference=0, reference_not_in_arm=2)   # v3 x 2 worlds
+    assert out['groups']['origin:L0']['increase_mean_s'] > 0 and out['groups']['origin:undefined']['registered'] is False
+
+
+def test_eval_per_vehicle_equals_the_clean5b_f_training_table(tmp_path):
+    """Where the clean5b-F logger exists (1caf5c1c): same delay and origin per vehicle, same A-labelled groups."""
+    fvl = pytest.importorskip('tools.coopmwm.fair_vehicle_log', reason='clean5b-F logger not in this tree')
+    nm.fake_logcheck(dict(sim_s=360, arm='NATIVE', world_id='w', world={}, checkpoint={}, window={}, panel_sha256='x'),
+                     tmp_path)
+    path = tmp_path/nm.VEHICLE_LOG
+    ours = nm.vehicle_log_report(path, t0=300, t1=360)['per_vehicle']
+    theirs = fvl.per_vehicle(path, t0=300, t1=360)
+    assert set(ours) == set(theirs)
+    for vid, (cav, origin, delay) in theirs.items():
+        assert ours[vid][0] == pytest.approx(delay, abs=1e-3) and ours[vid][1] == origin and ours[vid][2] == cav
+    groups, _ = fvl.groups(theirs, fvl.labels(theirs))
+    mine = nm._group_means(ours, nm._labels(ours))
+    assert {g: v['mean_s'] for g, v in groups.items()} == pytest.approx({g: mine[g] for g in groups}, abs=1e-3)

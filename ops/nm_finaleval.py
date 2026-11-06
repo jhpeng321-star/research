@@ -2065,7 +2065,9 @@ SECONDARY_COMPARATORS = ('BASE', 'NATIVE', 'U0', 'RULE', 'RULE_FAIR')+COMPARATOR
 _REPORTS = {}
 
 
-REPORT_VERSION = 'vehicle_log_report/3'
+REPORT_VERSION = 'vehicle_log_report/4'
+#: clean5b-F training convention (fair_vehicle_log.ORIG = MULTICRIT analyze.ORIG): WM lane -> origin SUMO lane label
+ORIG = {2: 'L0', 1: 'L1', 0: 'L2'}
 
 
 def episode_log_report(final_root, record):
@@ -2100,33 +2102,44 @@ def _group_means(per_vehicle, labels):
 
 
 def _labels(per_vehicle):
-    """origin SUMO lane (2 - WM lane at first observation) and fleet class of each vehicle."""
-    return {vid: (f'origin_sumo_lane_{2-lane}' if lane in (0, 1, 2) else 'origin_unknown', 'CAV' if cav else 'HDV')
-            for vid, (_, lane, cav) in per_vehicle.items()}
+    """Training convention (c4/clean5b 1caf5c1c fair_vehicle_log.groups): every vehicle is in its class group;
+    it is in origin:L0/L1/L2 only if its origin is defined (first logged row upstream of the drop); otherwise it
+    goes to the separately reported origin:undefined group (never part of the criterion; still in total delay)."""
+    out = {}
+    for vid, (_, origin, cav) in per_vehicle.items():
+        out[vid] = ('class:cav' if cav else 'class:hdv',
+                    f'origin:{origin}' if origin in ORIG.values() else 'origin:undefined')
+    return out
 
 
-CO_PRIMARY_GROUPS = ('origin_sumo_lane_0', 'origin_sumo_lane_1', 'origin_sumo_lane_2', 'HDV', 'CAV')
+CO_PRIMARY_GROUPS = ('origin:L0', 'origin:L1', 'origin:L2', 'class:hdv', 'class:cav')
+REPORTED_GROUPS = CO_PRIMARY_GROUPS+('origin:undefined',)
 
 
 def co_primary_groups(reports, worlds, bootstrap, reference='U0'):
-    """Owner fairness criterion, part 2 (MAIN 04:2x convention): a vehicle's group = its origin SUMO lane and class
-    in the REFERENCE arm (U0) on the same world, paired by vehicle id; per group the per-world mean per-vehicle delay
-    of B minus A must average <= GROUP_DELAY_MAX_S over worlds (95% CI reported). Vehicles absent from the U0 log
-    are reported separately; own-arm labels are a sensitivity only."""
+    """Owner fairness criterion, part 2 (MAIN 04:2x + amendment 13): group labels from the REFERENCE arm (U0) on
+    the same world, paired by vehicle id, with the clean5b-F training convention (origin = WM lane of the first
+    logged row if upstream of the drop, else undefined; class groups hold every paired vehicle). Per group, the
+    per-world mean per-vehicle delay of B minus A must average <= GROUP_DELAY_MAX_S over worlds (95% CI reported)
+    for the five registered groups; origin:undefined is reported only. Vehicles of an arm absent from U0 and U0
+    vehicles absent from an arm are counted separately; own-arm labels are a sensitivity only."""
     if not {'B', 'A', reference} <= set(reports):
         return dict(status='unavailable', reason=f'needs B, A and {reference} vehicle logs')
 
     def compare(label_of):
-        groups, missing = {}, {'B': 0, 'A': 0}
-        per = {g: [] for g in CO_PRIMARY_GROUPS}
+        groups = {}
+        missing = {arm: dict(not_in_reference=0, reference_not_in_arm=0) for arm in ('B', 'A')}
+        per = {g: [] for g in REPORTED_GROUPS}
         for w in worlds:
             means = {}
+            ref = reports[reference][w]['per_vehicle']
             for arm in ('B', 'A'):
                 pv = reports[arm][w]['per_vehicle']
                 labels = label_of(arm, w)
-                missing[arm] += sum(1 for vid in pv if vid not in labels)
+                missing[arm]['not_in_reference'] += sum(1 for vid in pv if vid not in ref)
+                missing[arm]['reference_not_in_arm'] += sum(1 for vid in ref if vid not in pv)
                 means[arm] = _group_means(pv, labels)
-            for g in CO_PRIMARY_GROUPS:
+            for g in REPORTED_GROUPS:
                 if g in means['B'] and g in means['A']:
                     per[g].append((means['B'][g], means['A'][g]))
         for g, pairs in per.items():
@@ -2136,17 +2149,19 @@ def co_primary_groups(reports, worlds, bootstrap, reference='U0'):
             b, a = (np.array(x, float) for x in zip(*pairs))
             stats = fe.paired_stats(b, a, bootstrap, pct=False)
             groups[g] = dict(n_worlds=len(pairs), increase_mean_s=stats['diff'], ci95=stats['ci95'],
-                             passes=bool(stats['diff'] <= GROUP_DELAY_MAX_S))
-        ok = [v for v in groups.values() if 'passes' in v]
-        return dict(groups=groups, vehicles_missing_from_labels=missing,
-                    all_pass=bool(ok) and len(ok) == len(groups) and all(v['passes'] for v in ok))
+                             passes=bool(stats['diff'] <= GROUP_DELAY_MAX_S), registered=g in CO_PRIMARY_GROUPS)
+        ok = [groups[g] for g in CO_PRIMARY_GROUPS if 'passes' in groups[g]]
+        return dict(groups=groups, missing=missing,
+                    all_pass=len(ok) == len(CO_PRIMARY_GROUPS) and all(v['passes'] for v in ok))
     registered = compare(lambda arm, w: _labels(reports[reference][w]['per_vehicle']))
     own = compare(lambda arm, w: _labels(reports[arm][w]['per_vehicle']))
-    return dict(rule=(f'every group (origin SUMO lane 0/1/2, HDV, CAV; labels from the {reference} arm on the same '
-                      f'world, paired by vehicle id) mean per-vehicle delay increase (B - A) <= {GROUP_DELAY_MAX_S} s '
-                      '(point estimate; 95% CI reported)'), reference=reference,
+    return dict(rule=(f'every registered group (origin:L0/L1/L2, class:hdv, class:cav; labels from {reference} on the '
+                      'same world by vehicle id; origin = WM lane of the first logged row if upstream of the drop) '
+                      f'mean per-vehicle delay increase (B - A) <= {GROUP_DELAY_MAX_S} s (point estimate; 95% CI '
+                      'reported); origin:undefined reported only'), reference=reference,
+                convention='c4/clean5b 1caf5c1c tools/coopmwm/fair_vehicle_log.py per_vehicle/groups (amendment 13)',
                 groups=registered['groups'], all_pass=registered['all_pass'],
-                vehicles_missing_from_reference=registered['vehicles_missing_from_labels'],
+                vehicles_missing=registered['missing'],
                 sensitivity_own_arm_labels=dict(groups=own['groups'], all_pass=own['all_pass']))
 
 
@@ -2818,12 +2833,16 @@ def vehicle_log_report(path, *, t0=WARMUP_S, t1=HORIZON_S):
     origins = {}
     for h in heads.values():
         origins[h.get('origin')] = origins.get(h.get('origin'), 0)+1
-    first_lane = {}
-    if K.size:                                   # origin lane = WM lane at the vehicle's first logged second
+    first_lane, first_s = {}, {}
+    if K.size:                                   # the vehicle's FIRST logged row (training convention)
         o = np.lexsort((T, K))
-        kk, ll = K[o], L[o]
+        kk, ll, ss = K[o], L[o], S[o]
         first = np.r_[True, kk[1:] != kk[:-1]]
         first_lane = dict(zip(kk[first].tolist(), ll[first].tolist()))
+        first_s = dict(zip(kk[first].tolist(), ss[first].tolist()))
+
+    def origin_of(k):                            # c4/clean5b 1caf5c1c fair_vehicle_log.per_vehicle, verbatim rule
+        return (ORIG.get(first_lane[k]) if first_s[k] < DROP_S_M else 'D') if k in first_lane else None
     with_origin = sum(v for o, v in origins.items() if isinstance(o, str) and o)
     with_delay = sum(1 for h in heads.values() if isinstance(h.get('depart_delay_s'), (int, float)))
     if heads and (not cav or not hdv):
@@ -2849,7 +2868,7 @@ def vehicle_log_report(path, *, t0=WARMUP_S, t1=HORIZON_S):
                 delay_by_class=dict(cav_mean_s=cav_mean, hdv_mean_s=hdv_mean,
                                     hdv_cav_ratio=hdv_mean/cav_mean if cav_mean and hdv_mean is not None else None),
                 delay_by_origin_s=by_origin, delay_by_origin_lane_s=by_lane,
-                per_vehicle={str(heads[k]['id']): [round(float(delay_v[k]), 3), int(first_lane.get(k, -1)),
+                per_vehicle={str(heads[k]['id']): [round(float(delay_v[k]), 3), origin_of(k),
                                                    bool(heads[k].get('cav'))] for k in present.tolist() if k in heads},
                 accel_var_per_vehicle_mean=float(per_vehicle_var.mean()) if per_vehicle_var.size else None,
                 origins={str(k): v for k, v in sorted(origins.items(), key=lambda kv: str(kv[0]))},
