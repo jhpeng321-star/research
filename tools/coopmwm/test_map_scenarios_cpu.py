@@ -98,7 +98,7 @@ def test_builder_refuses_unregistered_cases(tmp_path):
     desc = md.load(MAP_DIR)
     build = ms.scenario_builder(desc)
     for seed, demand, share, pop in ((964001, 2800, .4, 'textbook'), (962100, 2800, .4, 'textbook'),
-                                     (977010, 2800, .4, 'textbook'), (989000, 2800, .4, 'textbook'),
+                                     (977010, 2800, .4, 'textbook'), (989150, 2800, .4, 'textbook'),  # 989000-989099 TRAIN since MAIN ~16:45
                                      (989200, 2700, .4, 'textbook'), (989200, 2800, .3, 'textbook'),
                                      (989200, 2800, .4, 'legacy3')):
         with pytest.raises(ValueError):

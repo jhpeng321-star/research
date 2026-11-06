@@ -90,3 +90,54 @@ def test_real_newmap_rows_all_accepted(wz):
         held = dict(row, world=dict(row['world'], seed=989650))
         with pytest.raises(ValueError):
             group_lane_bank.binding(held)
+
+
+# ---- MAIN ~16:45: PLANGEN2 range 989000-989099 registered as extra wz3to2 TRAIN (not 989100-989199)
+PLANGEN2_CASES = [(989007, 3200, 0.6), (989008, 3200, 0.6), (989013, 3200, 0.6), (989015, 3200, 0.6),
+                  (989012, 3200, 0.6)]
+
+
+def test_plangen2_range_is_train_only_and_default_sampling_unchanged():
+    from tools.coopmwm import map_scenarios as ms
+    for seed in (989000, 989007, 989099):
+        assert ms.seed_scope(seed) == 'train'
+        w = ms.world(seed, 3200, 0.6)
+        assert w['repeat'] == seed-989000 and ms.guard(w, 'train') == w and ms.guard(w, 'mining') == w
+        with pytest.raises(ValueError):
+            ms.guard(w, 'final_test')
+    for seed in (988999, 989100, 989150, 989199):
+        assert ms.seed_scope(seed) is None
+        with pytest.raises(ValueError):
+            ms.world(seed, 3200, 0.6)
+    default = ms.worlds('train', cell_ids=[8])
+    assert min(w['seed'] for w in default) == 989200 and len(default) == 400
+    explicit = ms.worlds('train', seeds=[989007, 989201], cell_ids=[8])
+    assert [w['seed'] for w in explicit] == [989007, 989201]
+    with pytest.raises(ValueError):
+        ms.worlds('final_test', seeds=[989007])
+    with pytest.raises(ValueError):
+        ms.worlds('train', seeds=[989150])
+
+
+def test_plangen2_rows_world_accepted(wz):
+    rows_path = RUN/'PLANGEN2_MOVES_B.jsonl'
+    rows = ([json.loads(line) for line in rows_path.read_text(encoding='utf-8').splitlines() if line.strip()]
+            if rows_path.is_file() else [dict(world=dict(map='wz3to2', cell='D3200_p60', demand=3200,
+                                                         penetration=0.6, seed=989007, repeat=0, split='x'))])
+    for row in rows:
+        assert mr.registered_train_world(row['world']), row['world']
+
+
+@pytest.mark.parametrize('seed,demand,share', PLANGEN2_CASES)
+def test_plangen2_scenarios_bit_identical_to_generators(tmp_path, seed, demand, share):
+    from tools.coopmwm import map_scenarios as ms
+    from tools.coopmwm.test_map_scenarios_cpu import MAP_DIR, _load, _spec
+    probe, nm2 = _load('probe/probe_core.py', 'n4_probe_core'), _load('nm2/nm2_core.py', 'n4_nm2_core')
+    spec = _spec()
+    _, ra = probe.write_scenario(tmp_path/'probe', MAP_DIR, spec, 'wz3to2', seed, {'main': demand}, share)
+    _, rb = nm2.write_scenario(tmp_path/'nm2', MAP_DIR, spec, seed, {'main': demand}, share)
+    _, rc = ms.write_scenario(tmp_path/'n1', MAP_DIR, spec, 'wz3to2', seed, {'main': demand}, share)
+    for name in ('requests.rou.xml', 'scenario.sumocfg'):
+        ref = (tmp_path/'probe'/name).read_bytes()
+        assert (tmp_path/'nm2'/name).read_bytes() == ref and (tmp_path/'n1'/name).read_bytes() == ref
+    assert ra == rb == rc and len(ra) > 500
