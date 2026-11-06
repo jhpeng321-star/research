@@ -8,7 +8,8 @@ UNALLOCATED = 44960
 CAP = 2_000_000
 TIMES = (300, 360, 420, 480, 540)
 WINDOWS = (10, 20, 30)
-ZONE = (-100., 75.44)
+from tools.coopmwm.map_descriptor import FRAME  # N1 frame contract
+ZONE = FRAME.local_zone_s_m
 MIN_WINDOWS = 150
 TARGET_WINDOWS = 156
 

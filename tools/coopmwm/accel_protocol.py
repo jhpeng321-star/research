@@ -32,6 +32,10 @@ def budget():
 
 
 def guard(world,role):
+    if isinstance(world,dict) and 'map' in world:
+        # N1: map worlds (wz3to2) have their own registry; merge-map worlds carry no 'map' key.
+        from .map_runtime import guard_world
+        guard_world(world,role);return
     if world not in worlds(role):raise ValueError('unregistered acceleration world/role')
     from traffic_shepherd.seeds import require_development_case
     from traffic_shepherd.c4.seeds import check_case
