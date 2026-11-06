@@ -115,7 +115,10 @@ def runtime_phases(phases):
     return dict(v2v_train=p['v2v_train_waves']+p['v2v_practice_refs'], v2v_lessons=p['v2v_lessons'],
                 early_probes=p['early_probes'], isolated_replicated=p['isolated_replicated'],
                 v2v_final=p['v2v_final'], v2v_interim=0, g4_synergy_credit=p['g4_synergy_credit'],
-                track2_smoke=SMOKE_CAP, gate_bank_verification_ext=SMOKE_PHASE_CAP-SMOKE_CAP,
+                track2_smoke=SMOKE_CAP,
+                # clean4: gate inside newmap2_smoke (40,000 - 20,000); a run quoting its own 'smoke_gate' phase
+                # (clean5a) gets that allocation minus the 20,000 smoke cap.
+                gate_bank_verification_ext=(p['smoke_gate'] if 'smoke_gate' in p else SMOKE_PHASE_CAP)-SMOKE_CAP,
                 teacher_verify=0, group_credit_verify=0, augment_verify=0)
 
 
@@ -158,12 +161,12 @@ def coverage(phases, need):
     return dict(need=dict(need), allocated={k: phases[k] for k in need})
 
 
-def smoke_gate_spent(rows):
-    """newmap2_smoke sub-phase spend from a clean4 ledger (smoke + gate)."""
+def smoke_gate_spent(rows, cap=SMOKE_PHASE_CAP):
+    """Smoke + gate spend from a run ledger (clean4: newmap2_smoke 40,000; clean5a: its own smoke_gate phase)."""
     spent = sum(r['sim_s'] for r in rows if r['phase'] in RUNTIME_SMOKE_PHASES)
     smoke = sum(r['sim_s'] for r in rows if r['phase'] == 'track2_smoke')
-    if smoke > SMOKE_CAP or spent > SMOKE_PHASE_CAP:
-        raise ValueError('newmap2_smoke cap exceeded (smoke <= 20000, smoke+gate <= 40000)')
+    if smoke > SMOKE_CAP or spent > cap:
+        raise ValueError(f'smoke/gate cap exceeded (smoke <= {SMOKE_CAP}, smoke+gate <= {cap})')
     return dict(smoke=smoke, gate=spent-smoke, total=spent)
 
 

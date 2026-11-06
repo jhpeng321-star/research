@@ -68,8 +68,8 @@ def coverage(cfg, *, episodes_per_update=16, episode_sim_s=1200):
     short = {k: (v, phases.get(k, 0)) for k, v in need.items() if v > phases.get(k, 0)}
     if short:
         raise ValueError('phase does not cover its u1-u24 schedule: '+json.dumps(short, sort_keys=True))
-    if r['gate_sim_s']+need['track2_smoke'] > 40000:
-        raise ValueError('smoke + gate exceed newmap2_smoke 40,000')
+    if need['track2_smoke'] > 20000 or r['gate_sim_s']+need['track2_smoke'] > phases['track2_smoke']+phases['gate_bank_verification_ext']:
+        raise ValueError('smoke + gate exceed the clean5a smoke_gate phase')
     return dict(need=need, allocated={k: phases[k] for k in need})
 
 
@@ -177,7 +177,8 @@ class Chain:
                 fixes['reporting_receipt_sha256'] != reporting['receipt_sha256'] or
                 reporting['config_sha256'] != digest(cfg)):
             raise ValueError('exact smoke/fix/lever/reporting binding or cap failed')
-        spent = b.smoke_gate_spent(ledger(root))
+        phases = cfg['clean4_budget']['phases']
+        spent = b.smoke_gate_spent(ledger(root), cap=phases['track2_smoke']+phases['gate_bank_verification_ext'])
         if action == 'gate':
             gate = receipt('GATE_PASS.json', 'PASS')
             if (gate['smoke_sha256'] != smoke['receipt_sha256'] or

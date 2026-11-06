@@ -21,8 +21,9 @@ phases = b.quote(lesson_sim_s=35_040, probe_sim_s=45_480, replicated_sim_s=143_7
                             g4='G4LD expected 192,000-230,400 within the registered 230,400 hard cap'))
 phases['v2v_final'] = b.phase('u24 final evaluation (N6): claims 3a (96 x arms) + 3c light-traffic panel', 1_020_960,
                               allocated=1_200_000, basis='MAIN 19:54/19:57: total ~1,020,960; v2v_final cap 1,200,000')
-phases['smoke_gate'] = b.phase('pre-launch smoke (<=20,000) + one safety gate (<=20,000)', 34_000, allocated=40_000,
-                               basis='clean3/clean4 measured smoke 14,400 + gate 15,160 = 29,560 -> base 34,000')
+phases['smoke_gate'] = b.phase('pre-launch smoke (<=20,000) + one safety gate (<=35,820 registered gate limit)', 48_000,
+                               allocated=56_000, basis='smoke cap 20,000 + rerun_cpus.GATE_SIM_S 35,820 (3-member '
+                               'Plan A walls: the dry prepare showed the full-window gate exceeds 20,000)')
 total = sum(p['allocated_sim_s'] for p in phases.values())
 doc = b.document(phases, prior=dict(clean4_actual=CLEAN4_SPENT), cap=ENVELOPE,
                  created=datetime.now().astimezone().isoformat(timespec='seconds'), parent_quote_sha256=PARENT,
