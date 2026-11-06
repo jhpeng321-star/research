@@ -312,3 +312,15 @@ def test_current_road_follows_n1_programmatic_binding(monkeypatch):
     finally:
         md._reset_for_tests()
         R._reset_for_tests()
+
+
+def test_junction_lane_rows_project_onto_the_downstream_lane():
+    road = wz_road()
+    assert road.junction_lanes == ((":n1_0", 0, 1, 2696.0), (":n1_0", 1, 0, 2696.0))
+    assert road.project(":n1_0", 0, x=2700.0)[0] == 1 and road.project(":n1_0", 1, x=2700.0)[0] == 0
+    assert abs(road.project(":n1_0", 1, x=2700.0)[1] - (2700.0 - 2620.56)) < 1e-9
+    assert abs(road.project(":n1_0", 0, pos=4.0)[1] - (2700.0 - 2620.56)) < 1e-9
+    with pytest.raises(ValueError):
+        road.project(":n1_0", 2, x=2700.0)
+    assert road.geometry_digest == R.geometry_digest_of(
+        {k: v for k, v in road.record().items() if k != "junction_lanes"})

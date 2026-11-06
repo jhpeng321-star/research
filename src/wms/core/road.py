@@ -72,6 +72,9 @@ class RoadGeometry:
     #: and the anchor (s = x - anchor); empty / None on the on-ramp map (traffic_shepherd geometry).
     frame_lanes: tuple = ()
     anchor_x_m: Optional[float] = None
+    #: internal junction lanes at the drop: ((internal edge, lane index, WM lane, start x), ...);
+    #: a car on ``:n1_0_i`` continues on the downstream lane i (global x is kept).
+    junction_lanes: tuple = ()
     descriptor: Optional[str] = None           # 'n1' | 'stub' | None (original constants)
     descriptor_sha256: Optional[str] = None    # N1 MapDescriptor.digest
 
@@ -107,7 +110,7 @@ class RoadGeometry:
         west->east road) or lane position ``pos``; raises for an unknown lane."""
         if self.anchor_x_m is None:
             raise ValueError("SUMO projection of the on-ramp map: use traffic_shepherd.c4.geometry")
-        for e, i, wm, x0 in self.frame_lanes:
+        for e, i, wm, x0 in tuple(self.frame_lanes) + tuple(self.junction_lanes):
             if e == str(edge) and i == int(sumo_lane):
                 gx = float(x) if x is not None else x0 + float(pos)
                 return wm, gx - float(self.anchor_x_m)
@@ -134,7 +137,8 @@ class RoadGeometry:
 
 
 #: record keys that are provenance / projection metadata, not WM geometry.
-NON_GEOMETRY_KEYS = ("descriptor", "descriptor_sha256", "frame_lanes", "anchor_x_m")
+NON_GEOMETRY_KEYS = ("descriptor", "descriptor_sha256", "frame_lanes", "anchor_x_m",
+                     "junction_lanes")
 
 
 def geometry_digest_of(record: dict) -> str:
@@ -194,8 +198,25 @@ def road_from_descriptor(desc) -> RoadGeometry:
         frame_lanes=tuple(sorted((str(e), int(i), int(wm), float(x0))
                                  for (e, i), (wm, x0) in desc.lane_table.items())),
         anchor_x_m=float(desc.here_offsets[closing]),
+        junction_lanes=_junction_lanes(desc, drop_s),
         descriptor="stub" if getattr(desc, "is_stub", False) else "n1",
         descriptor_sha256=getattr(desc, "digest", None))
+
+
+def _junction_lanes(desc, drop_s: float) -> tuple:
+    """Internal junction lanes ``:<node>_<k>_<i>`` of the drop node: lane i feeds the downstream
+    exit edge's lane i (SUMO internal-lane order = connection order); starts at the drop x."""
+    exit_edge = desc.edges.get("mainline_exit")
+    drop_x = float(desc.here_offsets[int(desc.frame.merge_lane)]) + drop_s
+    out = []
+    for lane_id in sorted(desc.lane_end_distance or {}):
+        if not lane_id.startswith(":"):
+            continue
+        edge, _sep, idx = lane_id.rpartition("_")
+        row = desc.lane_table.get((exit_edge, int(idx)))
+        if row is not None:
+            out.append((edge, int(idx), int(row[0]), drop_x))
+    return tuple(out)
 
 
 def _lane_speeds(desc, edge) -> Optional[tuple]:
@@ -239,7 +260,7 @@ def stub_descriptor(name: str = "wz3to2"):
     s = _WZ3TO2_STUB
     anchor = s["drop_x"] - 75.44
     ends = {"up_0": s["drop_x"], "up_1": s["drop_x"], "up_2": s["drop_x"],
-            "wz_0": s["wz_end_x"], "wz_1": s["wz_end_x"]}
+            "wz_0": s["wz_end_x"], "wz_1": s["wz_end_x"], ":n1_0_0": 2704.0, ":n1_0_1": 2704.0}
     frame = _StubFrame(n_lanes=3, main_lanes=(0, 1), merge_lane=2, merge_zone_s_m=(0.0, 75.44),
                        speed_limit_mps=31.29, rsu_mainline_s_m=(-800.0, 225.44),
                        rsu_ramp_s_m=(-378.66, 75.44), rsu_cell_m=50.0)

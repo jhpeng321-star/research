@@ -20,7 +20,8 @@
   "c8637e53 WM-A: planning API wms.planapi (load/observe/evaluate) + geometry digest for pack checks",
   "6f8f6952 WM-A: WMA_READY.json",
   "a3fae0f1 WM-A: merge c4/nm-abstract (N1_READY b2f30091)",
-  "(this commit) WM-A: current_road follows N1's programmatic map binding; READY update"
+  "22593a19 WM-A: current_road follows N1's programmatic map binding; READY update",
+  "(this commit) WM-A: junction-lane rows (':n1_0_i') project natively; supported_roles declared"
  ],
  "road_binding": {
   "module": "wms.core.road (RoadGeometry, MERGE_ORIGINAL, current_road, bind_road, road_scope, load_road, road_from_descriptor, map_default, geometry_digest_of)",
@@ -81,10 +82,13 @@
    "max_rows": "action x draw rows per batched rollout"
   },
   "semantics": {
-   "observe": "RSU-observable only: moment['cavs'] CAV self-states {id, edge, lane, x (global) | pos (lane position), v[, length]}; optional moment['vehicles'] CAV-detected neighbours (same format + is_cav); optional moment['counter'] [2,30] RSU entrance counts (10 s bins newest first; 0 = through lanes, 1 = closing lane) -> Poisson entries. Projection: up lane 2/1/0 -> WM 0/1/2, wz lane 1/0 -> WM 0/1, s = x - 2620.56. No world labels are read. moment['map'] must equal the road.",
+   "observe": "RSU-observable only: moment['cavs'] CAV self-states {id, edge, lane, x (global) | pos (lane position), v[, length]}; optional moment['vehicles'] CAV-detected neighbours (same format + is_cav); optional moment['counter'] [2,30] RSU entrance counts (10 s bins newest first; 0 = through lanes, 1 = closing lane) -> Poisson entries. Projection: up lane 2/1/0 -> WM 0/1/2, wz lane 1/0 -> WM 0/1, s = x - 2620.56. No world labels are read. moment['map'] must equal the road. Rows on the drop's internal junction lane ':n1_0_i' (x 2696-2704) project onto the downstream lane i (global x kept).",
    "evaluate": "J_k = team delay veh-s over [t0, t0+H): sum_t 0.5 s * sum_present max(0, 1 - v/31.29) of the predicted road vehicles (no source-waiting term unless an entry process is built from moment['counter']; then entrants count while on road). CRN: the WM rollout's lane-sampling uniforms for draw k are generated from sha256(seed, k, state digest) and shared by every action of the call; deterministic and repeatable (tested). Members (role 'hold'): a = clip((v_w - v)/1 s, -dmax, amax) for t in [start_s, start_s + hold_s) until the member passes release_x (global x) or the anchor passes anchor_release_x; WM native acceleration before/after; member lanes held except the WM first-passage merge in the lane-end zone (delegated). Non-member CAVs are native drivers (WM HDV law). Unknown member id / duplicate action ids / non-finite J raise wms.planapi.WMContractError.",
    "cost": "CPU fresh model: ~0.5 s per rollout step for 6 rows x 27 vehicles (4 threads); WM-C's ~1,300-1,600 action-draws x H=300 s per moment needs the GPU (batched rows, max_rows)."
-  }
+  },
+  "supported_roles": [
+   "hold"
+  ]
  },
  "data_pipeline": {
   "rollout_format": "traffic_shepherd.c4.recorder episode dirs (episode.npz schema c4_sumo_episode/1, model frame, K=512) recorded with N1's map runtime installed; recorder.map_meta() stamps meta_json map / map_descriptor_sha256 / road_digest / k_slots when the road is bound. Required meta: seed, demand_vph, penetration, warmup_s (+ map). Controllers native/direct only unless --allow-designed. WM-B used it for arms native, mappo_u0, coop_mappo_u0, coop_native (E:/agent-work/_sol/WMB_DATA_SHARDS.md).",
@@ -112,7 +116,8 @@
   "Planning API: no observed pre-t0 driver history in the contract (population settings for every driver); no source-waiting term without moment['counter']; member lanes held during holds (except the lane-end merge).",
   "Geometry-tied learned parts WM-E may re-initialise: lane_v5 merge head (now also acts upstream), merge_pivot / merge_core / ramp_speed_adapt (lane-end-zone semantics kept), entry_learned statistics; driver settings remain learned only (no types/labels anywhere).",
   "Config geometry defaults not yet routed through road.map_default: loss.agg_delay road_end_m 553.33 / sections (set explicitly in a wz3to2 config if that loss is enabled; it is off in c4_wm_loop14_r16_ft).",
-  "Control-side (policy) constants (wms.control.belief DEFAULT_LANE_EXTENTS, wms.control.entrance entry positions) still merge-map; not used by WM training or wms.planapi."
+  "Control-side (policy) constants (wms.control.belief DEFAULT_LANE_EXTENTS, wms.control.entrance entry positions) still merge-map; not used by WM training or wms.planapi.",
+  "Planning API roles: only 'hold' (supported_roles). The LCMOVES 'prog' role (lane change + hold/track/match/accel, lcm_core 48aaae38) is not executed; evaluate refuses it."
  ],
  "hard_rules_observed": "no ssh/SUMO/GPU; writes only in this worktree plus E:/agent-work/_sol/WM_PORT_API.md (MAIN request); no reset/clean/stash drop/push/rebase; no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 path opened (WM-D's reservation file was not read; MAIN supplied the ranges; one wildcard grep over E:/agent-work/_sol/*.md listed its name, content not displayed); no hetdata_truth or vType/driver truth file read; original merge-map assets untouched.",
  "docs": "E:/agent-work/_sol/WM_PORT_API.md"
