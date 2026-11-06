@@ -1,0 +1,43 @@
+{
+  "id": "WM-C",
+  "title": "World-model PROPOSER for SUMO-verified cooperation-plan mining on wz3to2 (WM proposes, SUMO verifies) + zero-SUMO WM checks (rank check, claim-4 regime benefit) + S-WMSEARCH (registered)",
+  "status": "BUILD READY + checks RUNNING. Package renamed tools/wzwm -> tools/wzprop (WM-E owns tools/wzwm). Bound to WM-A wms.planapi (c4/wz-wm-port 1d153d96: hold + prog roles, junction lanes native). WM2 b8797242 rank check: 8/40 PLANGEN moments on GPU (K8, solos for S-labelled) before GPU sharing was stopped to protect WM-E; full 40 running on gpuA CPU (T only, K2). WM-E interim/final: same commands. S-WMSEARCH registered (REGISTRATION.md 20:20 entry), no physics until the WM qualifies.",
+  "branch": "c4/wz-wm-propose",
+  "worktree": "E:/agent-work/c4-wz-wm-propose",
+  "base": "3e5bc9f9",
+  "merged": ["c4/wm-wallfit 7ff1438a (W3 synergy head) via merge commit d484d68e"],
+  "commits": [
+    "d484d68e merge c4/wm-wallfit", "1a51968b proposer + N3/PLANGEN plug-in", "a8cd4e04 compare excludes stranded moments",
+    "e633df48 rename to tools/wzprop; tapes enrichment; bootstrap rank check", "272f1301 junction relabel; per-moment error receipts",
+    "6d7c8ed1 --solos labelled", "41a0c985 LCMOVES families + regime_wm", "feb4994d tapes stage + --drop + cores prefix/lcm",
+    "a4fd018f S-WMSEARCH registration text", "83621bb9 open search mode + OPEN_SEARCH.md", "519fe59d --no-solos", "6398bf89 --mem-fraction",
+    "(this file) WMC_READY v2"
+  ],
+  "package": "tools/wzprop/: geometry, families (hold moves), families_lc (+ lcm_pipeline/: verbatim S-LCMOVES lcm_plan 94ebbc93, lcm_core 48aaae38, lcm_families 4df417f5), wm_backend (contract, StubWM, WM-A binding), proposer, open_search, n3 (+ n3_pipeline/: verbatim PLANGEN pg_plan/pg_analyze/nm2_core/population), tape_pipeline/ (verbatim WM-D wmd_prefix 3173e466 + nm2_core), tapes (observable enrichment), verify_plugin, runner (cores nm2 | lcm | prefix | fake), pipeline (wave, dryrun), compare, rankcheck, regime_wm, wallfit_bridge, fakes, __main__, test_wzprop_cpu",
+  "api": {
+    "wm": "WM-A wms.planapi load/observe/evaluate (WMA_READY.json api; supported_roles gates 'prog'); moment input = CAV self-states + CAV-detected neighbours (N1 cav_reports, 100 m, |dWM lane|<=1) + RSU entrance counters [2,30] from tapes.enrich; no world labels, opaque moment id",
+    "proposer": "proposer.propose_moment / propose_file: pool = hold families (walls, closing pairs, N9 harmonize_rows when importable) x grid + LCMOVES families (wall_fill, rolling_wall, gap_open_merge, lane_redistribute, free_program) when the WM executes 'prog'; staged search; score LCB of M = min(base, best solo) - group over K CRN draws; diversity; optional W3 re-rank",
+    "open_search": "open_search.search: broad free-program init (2-6 CAVs, per-member lane change + hold/accel to v_w, registered ranges) + family seeds, evolution/crossover/CEM in imagination, MAP-Elites archive (n_cavs, lanes, lane changes, mean dv, drop distance, spread), score LCB(M) - 0.5 sd(M), verification slots 50% top / 30% diverse / 20% uncertain, feedback_rows for WM training; OPEN_SEARCH.md",
+    "plugin": "verify_plugin stages init | natives | tapes | geometry-moments [--drop] | moments [--proposals | --reference] [--with-random] | screen | solos | rep1 | rep2 | analyze; member specs re-derived (pg_plan.member_spec / lcm_plan.prog) and registered ranges checked; PLANGEN admission unchanged",
+    "checks": "score (WM T/S/M of existing variants), rankmetrics / wmrank (Spearman, precision of WM-positive T, precision@k T/S, top-1, admitted hit@k, world-cluster bootstrap CIs), regime states/analyze (WM expected benefit of S-REGIME hold strategies vs measured, rank + sign agreement with CIs), compare (matched-effort verified plans per sim-s, origins + descriptor cells)"
+  },
+  "tests": {
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/wzprop/test_wzprop_cpu.py tools/wallfit/test_wallfit_cpu.py",
+    "result": "66 passed (33 wzprop + 33 wallfit), CPU, fakes only; ruff clean"
+  },
+  "commands": {
+    "rank_check_any_checkpoint_gpu": "gpuA, WM-E NOT training: bash /root/autodl-fs/wmc_rankcheck_20261106/run_ckpt.sh LABEL CKPT [NA] [NB]  (PLANGEN K8 + solos for S-labelled; regime T-only; capped small workers)",
+    "rank_check_any_checkpoint_cpu": "gpuA CPU while WM-E trains: bash /root/autodl-fs/wmc_rankcheck_20261106/run_cpu.sh LABEL CKPT data/plangen_MOMENTS_OBS.json 10 2   (and data/regime_STATES.json for the regime check)",
+    "metrics": "python -m tools.wzprop rankmetrics --summary plangen/results/PG_SUMMARY.json --scores SCORES.jsonl --label L --out RANKCHECK.json ; python -m tools.wzprop regime analyze --states regime_STATES.json --scores SCORES.jsonl --results regime/results/REGIME_RESULTS.jsonl --label L --out REGIME_WM.json",
+    "wmsearch": "after WM_QUAL_GATE PASS: verify init (fresh, WORLDS 989770-989782 D3200_p60) -> natives + tapes (cores nm2 / prefix) -> geometry-moments --drop pair_h,R4 -> enrich -> moments --reference (REF root) / propose + moments --proposals (WM root) -> wave each -> compare --moments"
+  },
+  "registration": "S-WMSEARCH: REGISTRATION.md 2026-11-06 20:20 entry; full text WMSEARCH_REGISTRATION.md sha256 43035ac1",
+  "caveats": [
+    "Real-WM rollouts are CPU-bound per process (entry process loop): GPU ~3 min / CPU ~16 min per PLANGEN moment (T only, K2); sharing the GPU slowed WM-E 3x, so GPU work waits for WM-E.",
+    "Planning API has no pre-t0 driver history (population driver settings) - a WM-A contract limit.",
+    "S-REGIME lane families (lane_balance, zipper, early_merge: COOPKINDS roles) are not evaluable by the planning API; reported, never imputed.",
+    "N4 ingestion needs group_lane_bank.binding to admit 989200-989599 / 9897xx (N11 F1)."
+  ],
+  "hard_rules": "no SUMO run by this task (zero-SUMO checks only); GPU use only while WM-E is not training; own PIDs only; no git reset/clean/stash drop/push/rebase; no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 path; no truth/vType files read",
+  "new_sumo_sim_s": 0
+}
