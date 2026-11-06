@@ -530,3 +530,15 @@ def test_recipe_target_table_solo_only_lane2_meters_heavy_cells(cfg):
         assert target(cell, 1) == 0 and target(cell, 2) == 0   # middle / closing: none, even with a wall offered
     for cell in ('D2800_p40', 'D2400_p60', 'D2400_p40'):
         assert all(target(cell, wm) == 0 for wm in (0, 1, 2))   # light traffic: none
+
+
+def test_bc_kl_cap_is_a_mean_over_labelled_decision_rows():
+    """The registered .045 cap is a mean over supervised CONTEXTS (one CAV decision row each);
+    a multi-CAV EV step must not be capped by its row-SUM (that would freeze EV-BC)."""
+    a = torch.zeros((3, 4))
+    b = torch.tensor([[2., 0., 0., 0.]]*3)
+    kl_row = float(torch.distributions.kl_divergence(torch.distributions.Categorical(logits=a[0]),
+                                                     torch.distributions.Categorical(logits=b[0])))
+    assert fl._mean_kl([a], [b]) == pytest.approx(kl_row)
+    assert fl._mean_kl([a], [b], [torch.tensor([1., 1., 0.])]) == pytest.approx(kl_row)
+    assert fl._mean_kl([a, a[:1]], [b, b[:1]], [torch.tensor([0., 0., 0.]), None]) == pytest.approx(kl_row)
