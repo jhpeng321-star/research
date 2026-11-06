@@ -65,6 +65,13 @@ def candidates(obs_state, rng, n):
         from . import lane_drop
         event = bool(ld.get('only_join')) or (wall is not None and bool(wall.get('only_join')))
         structured = lane_drop.families(structured, ld, event)
+    # clean5a (opt-in): N2 families only; group_hold solo / pair become runtime slots.
+    ev = obs_state.get('clean5_ev')
+    if ev is not None:
+        from . import fullpol_ev
+        ev_event = (bool(ld.get('only_join')) if ld is not None else False) or (
+            wall is not None and bool(wall.get('only_join')))
+        structured = fullpol_ev.families(structured, ev, ev_event)
     # FULLPOL (opt-in): free_program slots, one per enabled program class (none on event ticks).
     fp = obs_state.get('free_program')
     if fp is not None:
@@ -91,6 +98,11 @@ def candidates(obs_state, rng, n):
                 continue
             if ld is not None and lane_drop.owns(family):
                 options = lane_drop.pool(family, ld, own, partners, rng)
+                if options:
+                    pools[family] = options
+                continue
+            if ev is not None and fullpol_ev.owns(family):
+                options = fullpol_ev.pool(family, ev, ld['view'], own, partners, rng)
                 if options:
                     pools[family] = options
                 continue
@@ -122,6 +134,13 @@ def candidates(obs_state, rng, n):
             template = options[int(rng.integers(len(options)))]
             if wall is not None and family in v2v_wall.FAMILIES:
                 out.append(v2v_wall.redraw(template, wall, own, rng))
+                if len(out) == n:
+                    break
+                continue
+            if ev is not None and fullpol_ev.owns(family):
+                # clean5a: fresh registered parameters for the same pooled member set (never None).
+                option = fullpol_ev.redraw(template, family, ev, ld['view'], own, by_vid, rng)
+                out.append(template if option is None else option)
                 if len(out) == n:
                     break
                 continue

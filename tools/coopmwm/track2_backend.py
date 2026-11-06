@@ -171,6 +171,9 @@ def _option_from_dict(data):
     if data.get('family') == 'free_program':   # FULLPOL (opt-in) table entries
         from .fullpol_programs import option_from_dict
         return option_from_dict(data)
+    if data.get('family') == 'group_hold' and len(data.get('members') or ()) == 1:
+        from .fullpol_ev import SoloHold       # clean5a (opt-in) solo hold
+        return SoloHold.from_dict(data)
     return lane_drop.option_from_dict(data)
 
 
@@ -363,7 +366,10 @@ class EpisodePolicy(torch.nn.Module):
         w2 = dict(pressure=self.w2['wall_pressure_features'], release=self.w2['wall_release'])
         # FULLPOL (opt-in): free_program candidates + zero-initialised program descriptor block;
         # fullpol_head.extension(cfg) IS lane_drop.extension(cfg) when fullpol is OFF.
-        from . import fullpol_head, fullpol_programs
+        from . import fullpol_head, fullpol_programs, fullpol_ev
+        ev = fullpol_ev.settings(cfg)
+        if ev is not None:
+            self.clean5_ev = {k: ev[k] for k in ('families', 'group_sizes', 'solo_geometry')}
         self.fullpol = fullpol_programs.settings(cfg)
         if self.fullpol is not None:
             self.fp_state = fullpol_programs.runtime_state(self.fullpol, arm)
@@ -463,6 +469,9 @@ class EpisodePolicy(torch.nn.Module):
             self.pressure_blocks = self._pressure(table, cavs, reports, visible, now, command_commitments)
         if self.lane_drop is not None:
             self._observe_lane_drop(table, cavs, states, reports, visible, now, native_commands)
+        if getattr(self, 'clean5_ev', None) is not None:
+            for vid in cavs:      # clean5a (opt-in): the same N2-only slate rule for every CAV
+                states[vid]['clean5_ev'] = self.clean5_ev
         if getattr(self, 'fullpol', None) is not None:
             # Same candidate state for every CAV (the arm's own templates); offered programs
             # (practice offer mode) are visible to the next periodic decision only.

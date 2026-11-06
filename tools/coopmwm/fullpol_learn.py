@@ -44,13 +44,23 @@ def _digest(value):
                                      default=str).encode()).hexdigest()
 
 
-def learn_settings(cfg):
-    """None when FULLPOL is OFF; else the validated learning switches (all default False)."""
+def active_slot(cfg):
+    """The enabled learning slot: clean5a ``clean5_ev`` (N2 EV mode) or ``fullpol`` (programs)."""
+    from . import fullpol_ev
+    ev = fullpol_ev.settings(cfg)
+    if ev is not None:
+        return ev, 'clean5_ev'
     settings = fp.settings(cfg)
-    if settings is None:
+    return (settings, 'fullpol') if settings is not None else (None, None)
+
+
+def learn_settings(cfg):
+    """None when both clean5a and FULLPOL are OFF; else the validated switches (default False)."""
+    slot, _ = active_slot(cfg)
+    if slot is None:
         return None
     learn = dict.fromkeys(LEARN_KEYS, False)
-    raw = settings.get('learn') or {}
+    raw = slot.get('learn') or {}
     if set(raw)-set(LEARN_KEYS) or any(type(v) is not bool for v in raw.values()):
         raise ValueError(f'fullpol learn switches are booleans {LEARN_KEYS}')
     learn.update(raw)
@@ -59,23 +69,29 @@ def learn_settings(cfg):
 
 # ---------------------------------------------------------------- regime guidance (offline labels)
 
+BASELINES = ('mappo', 'native')     # MAIN 19:2x: estimates relative to the MAPPO base where available
+GAIN_SIGN = ('gain = J(base) - J(strategy) in veh-s per episode (positive = lower team delay); S-REGIME '
+             'rg_analyze reports difference = strategy - base, so gain mean = -mean_diff and '
+             'lb95(gain) = -ub95(difference)')
+
+
 def guidance(cfg):
     """Validated regime guidance or None (absent)."""
-    settings = fp.settings(cfg)
-    if settings is None or settings.get('regime_guidance') is None:
+    slot, _ = active_slot(cfg)
+    if slot is None or slot.get('regime_guidance') is None:
         return None
-    g = settings['regime_guidance']
+    g = slot['regime_guidance']
     if (not isinstance(g, dict) or g.get('schema') != GUIDANCE_SCHEMA or g.get('regime_rule') != 'cell'
             or not isinstance(g.get('rows'), list) or not isinstance(g.get('provenance'), str)
             or not g.get('source', {}).get('sha256')):
         raise ValueError('regime guidance needs schema, regime_rule=cell, rows, source sha and provenance')
     for row in g['rows']:
         if (row.get('arm') not in ('B', 'R') or not isinstance(row.get('regime'), str)
-                or not isinstance(row.get('family'), str)
+                or not isinstance(row.get('family'), str) or row.get('baseline', 'native') not in BASELINES
                 or not all(type(row.get(k)) in (int, float) and math.isfinite(row[k])
                            for k in ('mean_veh_s', 'lb95_veh_s'))
                 or type(row.get('n')) is not int or row['n'] < 1):
-            raise ValueError('regime guidance rows: arm, regime, family, mean_veh_s, lb95_veh_s, n')
+            raise ValueError('regime guidance rows: arm, regime, family, baseline, mean_veh_s, lb95_veh_s, n')
     for key in ('weight', 'clip'):
         if type(g.get(key)) not in (int, float) or not math.isfinite(g[key]) or g[key] <= 0:
             raise ValueError('regime guidance weight/clip must be registered positive numbers')
@@ -89,44 +105,55 @@ def regime_key(episode):
 
 
 def ev_table(cfg, arm):
-    """{regime: {family: row}} for this arm's OWN sweep rows, parity-passed families only."""
+    """{regime: {family: row}} from this arm's OWN sweep rows, parity-passed families only;
+    per (regime, family) the MAPPO-relative row when present, else the native-relative row."""
     g = guidance(cfg)
     if g is None:
         return None, dict(enabled=False)
-    settings = fp.settings(cfg)
-    parity = set(settings.get('parity_families') or ())
-    table, dropped = {}, Counter()
-    for row in g['rows']:
+    slot, _ = active_slot(cfg)
+    parity = set(slot.get('parity_families') or ())
+    table, dropped, used = {}, Counter(), Counter()
+    for row in sorted(g['rows'], key=lambda r: BASELINES.index(r.get('baseline', 'native'))):
         if row['arm'] != arm:
             continue
         if row['family'] not in parity:
             dropped[row['family']] += 1        # condition 1: no exact executor -> no EV term
             continue
-        table.setdefault(row['regime'], {})[row['family']] = row
-    receipt = dict(enabled=True, arm=arm, rule=EV_RULE, source=g['source'], regimes=sorted(table),
-                   families=sorted({f for r in table.values() for f in r}),
-                   dropped_without_parity=dict(dropped),
+        if row['family'] in table.setdefault(row['regime'], {}):
+            continue                           # the MAPPO-relative row already won
+        table[row['regime']][row['family']] = row
+        used[row.get('baseline', 'native')] += 1
+    table = {k: v for k, v in table.items() if v}
+    receipt = dict(enabled=True, arm=arm, rule=EV_RULE, sign=GAIN_SIGN, source=g['source'],
+                   regimes=sorted(table), families=sorted({f for r in table.values() for f in r}),
+                   baselines_used=dict(used), dropped_without_parity=dict(dropped),
                    r_without_matched_sweep=(arm == 'R' and not table))
     return table, receipt
 
 
-def best_family(rows):
-    """Registered admission convention: lb95 > 0; best by lb95 (ties: mean, name)."""
+def qualifying(rows):
+    """Registered admission convention: families with lb95 > 0, best first (lb95, mean, name)."""
     ok = [r for r in rows.values() if r['lb95_veh_s'] > 0]
-    if not ok:
-        return None
-    return max(ok, key=lambda r: (r['lb95_veh_s'], r['mean_veh_s'], r['family']))['family']
+    return [r['family'] for r in sorted(ok, key=lambda r: (-r['lb95_veh_s'], -r['mean_veh_s'], r['family']))]
 
 
-def option_labels(entry):
-    """Family labels of one recorded table entry (dict): legacy family, or the program's
-    structured family / variant / verified row family (provenance metadata, offline only)."""
+def best_family(rows):
+    q = qualifying(rows)
+    return q[0] if q else None
+
+
+def option_labels(entry, cfg=None):
+    """Strategy labels of one recorded table entry (dict); provenance metadata, offline only."""
     if entry is None:
         return ()
-    if entry.get('family') != fp.FAMILY:
-        return (entry['family'],)
-    src = entry.get('source') or {}
-    return tuple(x for x in (src.get('variant'), src.get('family')) if x)
+    if entry.get('family') == fp.FAMILY:
+        src = entry.get('source') or {}
+        return tuple(x for x in (src.get('variant'), src.get('family')) if x)
+    from . import fullpol_ev, lane_drop
+    ld = lane_drop.settings(cfg) if cfg is not None else None
+    if ld is not None and entry.get('family') in lane_drop.JOINT_FAMILIES+lane_drop.PROTOCOL_FAMILIES:
+        return fullpol_ev.labels(entry, ld['view'], fullpol_ev.settings(cfg))
+    return (entry['family'],)
 
 
 def ev_credit_terms(cfg, arm, episodes, *, eligible):
@@ -154,7 +181,7 @@ def ev_credit_terms(cfg, arm, episodes, *, eligible):
                 entry = trigger['tables'][i][trigger['actions'][i]]
                 if entry is None or not trigger.get('accepted', {}).get(vid, False):
                     continue
-                hits = [rows[f] for f in option_labels(entry) if f in rows]
+                hits = [rows[f] for f in option_labels(entry, cfg) if f in rows]
                 if not hits:
                     counts['no_guidance'] += 1
                     continue
@@ -166,12 +193,32 @@ def ev_credit_terms(cfg, arm, episodes, *, eligible):
     return terms, receipt
 
 
-def ev_bc_records(cfg, arm, episodes):
-    """EV-BC targets on RECORDED slates (the slate never depends on the regime label).
+def ev_targets(cfg, trigger, rows):
+    """Per decision row: (target slot, equivalent-slot mask) or None (the CAV had no choice).
 
-    Per accepted-or-not decision row: target = slot of the best parity-passed lb95>0 family
-    of the episode's regime when that family is in the recorded slate; ``none`` when no
-    family qualifies; skipped when the qualifying family was not offered."""
+    Target = the highest-lb95 qualifying (lb95 > 0, parity-passed) family OFFERED in this
+    recorded slate; ``none`` when no qualifying family is offered. Equivalent slots = every
+    masked slot carrying that family label (choosing any of them executes that strategy)."""
+    order = qualifying(rows)
+    out = []
+    for i in range(len(trigger['context']['members'])):
+        table, mask = trigger['tables'][i], trigger['mask'][i]
+        if not any(mask[1:]):
+            out.append(None)
+            continue
+        target, same = 0, [j == 0 for j in range(len(table))]
+        for family in order:
+            slots = [j for j, entry in enumerate(table) if j and mask[j] and family in option_labels(entry, cfg)]
+            if slots:
+                target, same = slots[0], [j in slots for j in range(len(table))]
+                break
+        out.append((target, same))
+    return out
+
+
+def ev_bc_records(cfg, arm, episodes):
+    """EV-BC records on RECORDED slates (slates never depend on the regime label): one record
+    per decision step (all CAV rows at once), per-row targets, equivalent-slot sets, row weights."""
     learn = learn_settings(cfg)
     if learn is None or not learn['ev_bc'] or arm == 'A':
         return [], None
@@ -179,48 +226,83 @@ def ev_bc_records(cfg, arm, episodes):
     if table is None:
         return [], None
     from .track2_backend import _batch
-    records, counts = [], Counter()
+    from .trigger_policy import TriggerBatch
+    records, counts, families = [], Counter(), Counter()
     for episode in episodes:
         if episode.get('practice'):
             continue
-        best = best_family(table.get(regime_key(episode), {}))
+        rows = table.get(regime_key(episode), {})
+        if not rows:
+            counts['episodes_without_regime_rows'] += 1
+            continue
         for step in episode['steps']:
             trigger = step['sample'].get('track2_trigger')
             if trigger is None:
                 continue
+            targets = ev_targets(cfg, trigger, rows)
+            if all(t is None for t in targets):
+                continue
             batch = _batch(trigger)
-            targets = []
-            for i in range(len(trigger['context']['members'])):
-                if best is None:
-                    targets.append(0)
+            width = batch.mask.shape[1]
+            actions = torch.tensor([0 if t is None else t[0] for t in targets])
+            same = torch.tensor([[j == 0 for j in range(width)] if t is None else t[1] for t in targets])
+            weight = torch.tensor([0. if t is None else 1. for t in targets])
+            for t, table_row in zip(targets, trigger['tables']):
+                if t is None:
+                    counts['no_choice'] += 1
                     continue
-                slots = [j for j, entry in enumerate(trigger['tables'][i])
-                         if trigger['mask'][i][j] and best in option_labels(entry)]
-                targets.append(slots[0] if slots else None)
-            for i, target in enumerate(targets):
-                if target is None:
-                    counts['skipped_not_offered'] += 1
-                    continue
-                counts['none' if target == 0 else 'act'] += 1
-                same = [target == 0 and j == 0 or target > 0 and trigger['mask'][i][j] and best in option_labels(e)
-                        for j, e in enumerate(trigger['tables'][i])]
-                records.append(dict(batch=_row(batch, i, target), weight=1., equivalent=torch.tensor([same]),
-                                    meta=dict(kind='ev_bc', episode_id=episode['id'], time_s=step['time_s'],
-                                              seed=episode['world']['seed'], family=best or 'none')))
-    receipt.update(records=len(records), targets=dict(counts))
+                counts['none' if t[0] == 0 else 'act'] += 1
+                if t[0]:
+                    labels = option_labels(table_row[t[0]], cfg)
+                    families[next((f for f in labels if f in rows), labels[0])] += 1
+            records.append(dict(batch=TriggerBatch(batch.context, batch.tables, batch.descriptors, batch.mask,
+                                                   actions, batch.logp, batch.values),
+                                weight=1., equivalent=same, row_weight=weight,
+                                meta=dict(kind='ev_bc', episode_id=episode['id'], time_s=step['time_s'],
+                                          seed=episode['world']['seed'], regime=regime_key(episode))))
+    receipt.update(records=len(records), rows=dict(counts), target_families=dict(families))
     return records, receipt
 
 
-def _row(batch, i, target):
-    from .trigger_policy import TriggerBatch
-    context = dict(batch.context, members=[batch.context['members'][i]],
-                   x=[batch.context['x'][i]])
-    for key, value in batch.context.items():
-        if isinstance(value, dict) and set(value) >= {batch.context['members'][i]}:
-            context[key] = {batch.context['members'][i]: value[batch.context['members'][i]]}
-    return TriggerBatch(context, (batch.tables[i],), batch.descriptors[i:i+1].clone(),
-                        batch.mask[i:i+1].clone(), torch.tensor([int(target)]), batch.logp[i:i+1],
-                        batch.values[i:i+1])
+GUIDANCE_RULE = ('S-REGIME registered analysis (rg_analyze.py cell_stats): per strategy x cell paired seed '
+                 'differences of episode team delay J_total, seed bootstrap 10,000 resamples RNG 20261106, '
+                 '2.5/97.5% quantiles')
+
+
+def guidance_rows(results, *, arm='B', baseline='native', base_arm='base', strategies=None):
+    """S-REGIME / S-REGIMEU0 episode rows -> guidance rows (gain sign, see GAIN_SIGN).
+
+    Reproduces rg_analyze.cell_stats' mean and CI (same paired differences, same bootstrap,
+    RNG and quantiles), then flips the sign: gain = -(strategy - base)."""
+    ok = [r for r in results if r.get('status') == 'ok']
+    E = {(r['cell'], r['seed'], r['arm']): r for r in ok}
+    out = []
+    for cell in sorted({r['cell'] for r in ok}):
+        seeds = sorted({s for (c, s, a) in E if c == cell and a == base_arm})
+        arms = sorted({a for (c, s, a) in E if c == cell and a != base_arm})
+        for a in arms:
+            if strategies is not None and a not in strategies:
+                continue
+            ss = [s for s in seeds if (cell, s, a) in E]
+            if len(ss) < 2:
+                continue
+            d = np.asarray([E[(cell, s, a)]['J_total']-E[(cell, s, base_arm)]['J_total'] for s in ss], float)
+            rng = np.random.default_rng(20261106)
+            idx = rng.integers(0, len(d), (10000, len(d)))
+            m = d[idx].mean(1)
+            lo, hi = float(np.quantile(m, .025)), float(np.quantile(m, .975))
+            out.append(dict(arm=arm, regime=cell, family=a, baseline=baseline, n=len(ss),
+                            mean_veh_s=-float(d.mean()), lb95_veh_s=-hi, ub95_veh_s=-lo,
+                            harm_rate=float((d > 0).mean())))
+    return out
+
+
+def guidance_doc(rows, *, sources, provenance, weight=1., clip=1.):
+    """Config value for ``regime_guidance`` (sources = [{name, sha256, baseline}])."""
+    sha = _digest(dict(rows=rows, sources=sources))
+    return dict(schema=GUIDANCE_SCHEMA, regime_rule='cell', provenance=provenance, weight=float(weight),
+                clip=float(clip), source=dict(sources=sources, sha256=sha, rule=GUIDANCE_RULE, sign=GAIN_SIGN),
+                rows=rows)
 
 
 # ---------------------------------------------------------------- exact-program BC contexts
@@ -366,13 +448,17 @@ def bank_records(policy, cfg, arm):
 # ---------------------------------------------------------------- the BC update (+ report-only receipts)
 
 def _ce(policy, record):
-    """-log P(target set): plain cross entropy when the set is the single labelled slot."""
+    """Weighted mean over rows of -log P(target set) (plain CE for a single labelled slot)."""
     b = record['batch']
     logits = policy.trigger.distribution(b.context, b.descriptors, b.mask)[0]
     same = record.get('equivalent')
-    if same is None or int(same.sum()) <= 1:
-        return torch.nn.functional.cross_entropy(logits, b.actions)
-    return (torch.logsumexp(logits, -1)-torch.logsumexp(logits.masked_fill(~same, -torch.inf), -1)).mean()
+    if same is None:
+        same = torch.nn.functional.one_hot(b.actions, logits.shape[-1]).bool()
+    nll = torch.logsumexp(logits, -1)-torch.logsumexp(logits.masked_fill(~same, -torch.inf), -1)
+    w = record.get('row_weight')
+    if w is None:
+        return nll.mean()
+    return (nll*w).sum()/w.sum().clamp_min(1e-12)
 
 
 def _mass(records):
@@ -425,13 +511,14 @@ def bc_steps(policy, records, *, epochs, kl_budget, max_grad_norm):
     return dict(initial_ce=initial, final_ce=float(loss().detach()), passes=passes)
 
 
-def unlabelled_batches(episodes):
-    """Recorded on-policy decision rows (P1 report: drift where no label exists)."""
+def unlabelled_batches(episodes, labelled_keys=()):
+    """Recorded on-policy decision steps NOT used by any BC record (P1: drift where no label exists)."""
     from .track2_backend import _batch
+    labelled = set(labelled_keys)
     out = []
     for episode in episodes:
         for step in episode['steps']:
-            if 'track2_trigger' in step['sample']:
+            if 'track2_trigger' in step['sample'] and (episode['id'], step['time_s']) not in labelled:
                 out.append(_batch(step['sample']['track2_trigger']))
     return out
 
@@ -453,39 +540,62 @@ def _slot1(policy, record):
     return float(probs[same].sum())
 
 
-def valsplit_auc(policy, records, *, epochs, kl_budget, max_grad_norm, folds=2):
-    """P2 (report-only): shadow-fit the BC procedure on seed folds, AUC on the held-back fold.
+@torch.no_grad()
+def _ev_rows(policy, record):
+    """(P(act), P(target set), target is act) for every weighted EV row of one decision step."""
+    b = record['batch']
+    probs = policy.trigger.distribution(b.context, b.descriptors, b.mask)[0].softmax(-1)
+    out = []
+    for i in range(len(b.actions)):
+        if float(record['row_weight'][i]) <= 0:
+            continue
+        out.append((float(1.-probs[i, 0]), float(probs[i][record['equivalent'][i]].sum()), int(b.actions[i]) > 0))
+    return out
 
-    Folds by world-seed hash (TRAIN seeds only - the bank never contains evaluation seeds).
-    Positives = program records, negatives = negative records. The live policy is untouched."""
-    labelled = [r for r in records if r['meta']['kind'] in ('program', 'negative')]
-    seeds = sorted({r['meta']['seed'] for r in labelled})
+
+def _scores(policy, records):
+    prog = [_slot1(policy, r) for r in records if r['meta']['kind'] == 'program']
+    neg = [_slot1(policy, r) for r in records if r['meta']['kind'] == 'negative']
+    rows = [x for r in records if r['meta']['kind'] == 'ev_bc' for x in _ev_rows(policy, r)]
+    return dict(program_auc=auc(prog, neg),
+                ev_act_auc=auc([a for a, _, t in rows if t], [a for a, _, t in rows if not t]),
+                ev_target_nll=fmean(-math.log(max(p, 1e-12)) for _, p, _ in rows) if rows else None,
+                ev_rows=len(rows), program=len(prog), negative=len(neg))
+
+
+def valsplit_auc(policy, records, *, epochs, kl_budget, max_grad_norm, folds=2):
+    """P2 (report-only): shadow-fit the BC procedure on seed folds; score the held-back fold.
+
+    Folds by world-seed hash (TRAIN seeds only). Program records: AUC of P(slot-1 program)
+    positives vs own-arm negatives. EV records: held-back target NLL and AUC of P(act) for
+    act-target rows vs none-target rows. The live policy is untouched (deepcopy)."""
+    seeds = sorted({r['meta']['seed'] for r in records})
     if len(seeds) < folds:
         return dict(auc=None, reason='fewer seeds than folds', seeds=len(seeds))
     fold = {s: int(_digest(['fullpol-valsplit-v1', s]), 16) % folds for s in seeds}
     out = []
     for k in range(folds):
-        train = [r for r in labelled if fold[r['meta']['seed']] != k]
-        test = [r for r in labelled if fold[r['meta']['seed']] == k]
+        train = [r for r in records if fold[r['meta']['seed']] != k]
+        test = [r for r in records if fold[r['meta']['seed']] == k]
+        if not train or not test:
+            out.append(dict(fold=k, train=len(train), test=len(test), skipped='empty fold'))
+            continue
         shadow = deepcopy(policy)
-        before_pos = [_slot1(shadow, r) for r in test if r['meta']['kind'] == 'program']
-        before_neg = [_slot1(shadow, r) for r in test if r['meta']['kind'] == 'negative']
+        before = _scores(shadow, test)
         fit = bc_steps(shadow, train, epochs=epochs, kl_budget=kl_budget, max_grad_norm=max_grad_norm)
-        pos = [_slot1(shadow, r) for r in test if r['meta']['kind'] == 'program']
-        neg = [_slot1(shadow, r) for r in test if r['meta']['kind'] == 'negative']
-        train_pos = [_slot1(shadow, r) for r in train if r['meta']['kind'] == 'program']
-        train_neg = [_slot1(shadow, r) for r in train if r['meta']['kind'] == 'negative']
-        out.append(dict(fold=k, train=len(train), test=len(test), auc_before=auc(before_pos, before_neg),
-                        auc_heldback=auc(pos, neg), auc_train=auc(train_pos, train_neg),
-                        mean_p_slot1_heldback_pos=fmean(pos) if pos else None,
-                        fit_final_ce=fit['final_ce']))
-    vals = [f['auc_heldback'] for f in out if f['auc_heldback'] is not None]
-    return dict(auc=fmean(vals) if vals else None, folds=out, seeds=len(seeds),
-                rule='seed-hash folds over TRAIN-seed bank contexts; shadow copy; report only')
+        out.append(dict(fold=k, train=len(train), test=len(test), heldback_before=before,
+                        heldback_after=_scores(shadow, test), train_after=_scores(shadow, train),
+                        fit_final_ce=fit['final_ce'], accepted_steps=sum(p['accepted'] for p in fit['passes'])))
+    vals = [f['heldback_after']['program_auc'] for f in out if 'heldback_after' in f
+            and f['heldback_after']['program_auc'] is not None]
+    ev = [f['heldback_after']['ev_act_auc'] for f in out if 'heldback_after' in f
+          and f['heldback_after']['ev_act_auc'] is not None]
+    return dict(auc=fmean(vals) if vals else None, ev_act_auc=fmean(ev) if ev else None, folds=out,
+                seeds=len(seeds), rule='seed-hash folds over TRAIN-seed contexts; shadow copy; report only')
 
 
 def supervise(runtime, episodes=()):
-    """FULLPOL BC update for one arm/update (after PPO, before save). Disabled -> None."""
+    """FULLPOL / clean5a BC update for one arm/update (after PPO, before save). Disabled -> None."""
     cfg, arm, policy = runtime.cfg, runtime.arm, runtime.policy
     learn = learn_settings(cfg)
     if learn is None or arm == 'A':
@@ -493,7 +603,8 @@ def supervise(runtime, episodes=()):
     records, bank = bank_records(policy, cfg, arm)
     ev, ev_receipt = ev_bc_records(cfg, arm, episodes)
     records = records+ev
-    unlabelled = unlabelled_batches(episodes) if learn['report_kl_unlabelled'] else []
+    labelled = {(r['meta']['episode_id'], r['meta']['time_s']) for r in ev}
+    unlabelled = unlabelled_batches(episodes, labelled) if learn['report_kl_unlabelled'] else []
     before = _logits(policy, unlabelled) if unlabelled else []
     valsplit = None
     epochs, budget = cfg['imitation_epochs'], policy.layer.config.kl_budget
@@ -502,12 +613,16 @@ def supervise(runtime, episodes=()):
         valsplit = valsplit_auc(policy, records, epochs=epochs, kl_budget=budget, max_grad_norm=clip)
     fit = bc_steps(policy, records, epochs=epochs, kl_budget=budget, max_grad_norm=clip)
     policy.layer._check_frozen()
+    accepted = [p['kl'] for p in fit['passes'] if p['accepted']]
     out = dict(schema=SCHEMA, arm=arm, records=len(records), bank=bank, ev_bc=ev_receipt, fit=fit,
                kl_rule='registered: mean KL over the supervised contexts <= kl_budget (unchanged)',
-               kl_budget=budget)
-    if unlabelled:
-        out['report_kl_unlabelled'] = dict(kl=_mean_kl(before, _logits(policy, unlabelled)),
-            contexts=len(unlabelled), note='P1 report only: drift on unlabelled on-policy contexts')
+               kl_budget=budget, epochs=epochs,
+               report_bc_kl=dict(kl_supervised=accepted[-1] if accepted else 0., accepted_steps=len(accepted),
+                                 note='report only: cumulative KL on the supervised contexts after the update'))
+    if learn['report_kl_unlabelled']:
+        out['report_kl_unlabelled'] = dict(
+            kl=_mean_kl(before, _logits(policy, unlabelled)) if unlabelled else None, contexts=len(unlabelled),
+            note='P1 report only: drift on on-policy decision steps that carry no BC label')
     if valsplit is not None:
         out['report_valsplit_auc'] = valsplit
     return out

@@ -25,7 +25,7 @@ from tools.coopnative.policy import encode
 
 PROV = 'FULLPOL CPU fixture (owner 2026-11-06 17:55; MAIN 18:4x approval)'
 REPO = Path(__file__).resolve().parents[2]
-BASE_COMMIT = '5b8ad8dd'   # c4/nm-train head FULLPOL branched from (no FULLPOL code)
+BASE_COMMIT = '12c80d49'   # c4/g4ld tip (contains c4/nm-train 62955c86): the merged base without FULLPOL hunks
 VIEW = dict(StubMap and {'name': 'wz3to2-stub', 'lane_drop_s_m': 0., 'lane_ids': [0, 1, 2], 'dropped_lane': 2})
 
 
@@ -447,13 +447,16 @@ def test_ev_bc_targets_recorded_slots_or_none(cfg):
     on = fp_cfg(cfg, guidance=_guidance(rows), parity=['random'], learn=dict(ev_bc=True))
     _, sample = _decision(cfg)
     records, receipt = fl.ev_bc_records(on, 'B', [_episode(sample)])
-    assert records and all(r['batch'].actions.item() > 0 for r in records)
+    assert records and receipt['rows'].get('act', 0) > 0
     for r in records:
-        entry = r['batch'].tables[0][r['batch'].actions.item()]
-        assert entry.source['family'] == 'random'
+        b = r['batch']
+        for i in range(len(b.actions)):
+            t = int(b.actions[i])
+            if float(r['row_weight'][i]) and t:
+                assert b.tables[i][t].source['family'] == 'random'
     neg = fp_cfg(cfg, guidance=_guidance([dict(rows[0], lb95_veh_s=-5.)]), parity=['random'], learn=dict(ev_bc=True))
     records, receipt = fl.ev_bc_records(neg, 'B', [_episode(sample)])
-    assert records and all(r['batch'].actions.item() == 0 for r in records)   # no lb95>0 family -> none
+    assert records and all(int(a) == 0 for r in records for a in r['batch'].actions)   # no lb95>0 -> none
 
 
 # ------------------------------------------------------------------ bank BC (exact programs)
