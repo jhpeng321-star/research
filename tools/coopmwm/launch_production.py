@@ -304,6 +304,9 @@ def update_metrics(arm, episodes, learning, reward_envelope, *, augmented_exampl
         # historical field is filled only by an explicitly measured CE supplied
         # by the cross-branch bank head adapter, never relabelled action NLL.
         metrics['bank_move_ce'] = learning['bank_move_ce']
+        bank = learning.get('bank_trigger')
+        if isinstance(bank, dict) and 'examples' in bank:
+            metrics['bank_move_examples'] = int(bank['examples'])   # 0 -> bank CE is unmeasured (None)
     return metrics
 
 

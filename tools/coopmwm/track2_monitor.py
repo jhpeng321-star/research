@@ -269,7 +269,9 @@ def checked_metrics(arm, metrics, components=None):
         nullable = key in disabled or (arm == 'A' and key != 'reward') or (
             key == 'group_credit_checked' and metrics['credit_checked_rows'] == 0) or (
             key == 'dense_checked_accuracy' and metrics['dense_checked_labels'] == 0) or (
-            key in ('dense_ce', 'dense_accuracy') and metrics['dense_eligible_labels'] == 0)
+            key in ('dense_ce', 'dense_accuracy') and metrics['dense_eligible_labels'] == 0) or (
+            # clean5a EV-only / clean4 R zero-guidance: no verified bank examples -> bank CE unmeasured
+            key == 'bank_move_ce' and metrics.get('bank_move_examples') == 0)
         if value is None and nullable:
             continue
         low = 0 if key in ('dense_ce', 'bank_move_ce', 'layer_kl') or 'share' in key or 'accuracy' in key else None
