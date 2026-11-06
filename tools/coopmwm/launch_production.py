@@ -143,6 +143,11 @@ def bank_move_supervision(runtime):
                 example_id=(example or {}).get('example_id', receipt['verification_id']+'#s1'),
                 family=label.family, time_s=time, members=list(context['members'])))
     bank_breadth.visit(cfg, runtime.arm, consume)
+    subset = bank_breadth.subset_rule(cfg)
+    if not records and subset and runtime.arm == 'R':
+        # clean4 F5 option (a): R's matched-effort random procedure yielded no runtime-usable rows.
+        return dict(examples=0, contexts=[], final_ce=None, source='R_zero_guidance_subset_rule',
+                    rule=bank_breadth.SUBSET_RULE)
     if not records:
         raise ValueError('nonempty observable verified-plan trigger supervision required')
     # Equal mass per supported family, then per context (not legacy AWR weight).
@@ -157,7 +162,9 @@ def bank_move_supervision(runtime):
             policy, plan, pairs, frames, t0=receipt['t0'], certification=cfg.get('_executable_lesson')))
     bank_breadth.visit(cfg, 'R' if runtime.arm == 'B' else 'B', other_support)
     if set(families) != other_families:
-        raise ValueError('F3 B/R observable trigger family support differs; add verified guidance')
+        mine, other = set(families), other_families
+        if not (subset and ((runtime.arm == 'B' and other <= mine) or (runtime.arm == 'R' and mine <= other))):
+            raise ValueError('F3 B/R observable trigger family support differs; add verified guidance')
     negatives = None
     if w2['wall_negative_labels']:
         # W2: this arm's OWN per-seed losing walls as do-not-wall labels (own family-mass bucket).

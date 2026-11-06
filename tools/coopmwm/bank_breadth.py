@@ -504,11 +504,29 @@ def practice_pool(cfg, arm, *, deduplicate=True):
     return sorted(unique.values(), key=lambda row: row['context_id'])
 
 
+SUBSET_RULE = ('clean4 FAIRAUDIT F5 / MAIN 2026-11-06 option (a): the matched-effort random procedure (R) may '
+               'yield a verified family support that is a SUBSET (including empty) of B's; it is never padded. '
+               'B practice capacity per family = B's own pool; R follows B's realized family sequence restricted '
+               'to its own supported families/capacity (remaining R slots are ordinary episodes); R with zero '
+               'usable rows trains with zero guidance rows (RL + team reward + G4 only).')
+
+
+def subset_rule(cfg):
+    """Registered clean4 key; absent = the original equal-support rule (byte-identical)."""
+    value = (cfg or {}).get('r_family_subset')
+    if value is None:
+        return False
+    if value != SUBSET_RULE:
+        raise ValueError('r_family_subset must carry the registered clean4 rule text')
+    return True
+
+
 def matched_pools(cfg):
     pools = {arm: practice_pool(cfg, arm) for arm in ('B', 'R')}
     supports = {arm: {r['family'] for r in pool} for arm, pool in pools.items()}
     if supports['B'] != supports['R']:
-        raise ValueError(f'F3 B/R verified family support differs: {supports}; add verified guidance')
+        if not (subset_rule(cfg) and supports['R'] <= supports['B']):
+            raise ValueError(f'F3 B/R verified family support differs: {supports}; add verified guidance')
     return pools
 
 
@@ -518,8 +536,11 @@ def practice_plan(root, arm, update, *, cfg, fraction, repeat_cap, count, traini
     pools = matched_pools(cfg)
     cap = int(repeat_cap)
     families = sorted({r['family'] for r in pools[arm]})
-    capacities = {f: min(sum(r['family'] == f for r in p) for p in pools.values())*cap
-                  for f in families}
+    if subset_rule(cfg):   # clean4 F5: each arm's own pool (R never padded, never shrinks B)
+        capacities = {f: sum(r['family'] == f for r in pools[arm])*cap for f in families}
+    else:
+        capacities = {f: min(sum(r['family'] == f for r in p) for p in pools.values())*cap
+                      for f in families}
     # Identical rotating family sequence for B/R, independent of arm RNGs.
     if families:
         shift = (int(update)-1) % len(families)
@@ -554,11 +575,20 @@ def practice_plan(root, arm, update, *, cfg, fraction, repeat_cap, count, traini
             sequence = [r['breadth']['family'] for r in report['episodes']]
         if len(sequence) != int(count):
             raise ValueError('F3 R practice family count must match B realized practice')
-        schedule = sequence
-        totals = Counter(schedule)
         own_capacity = Counter(r['family'] for r in pools[arm])
-        if any(n > own_capacity[f]*cap for f, n in totals.items()):
-            raise ValueError('F3 R verified family capacity cannot match B practice')
+        if subset_rule(cfg):
+            # clean4 F5: B's realized sequence restricted to R's own supported families/capacity.
+            taken, schedule = Counter(), []
+            for family in sequence:
+                if taken[family] < own_capacity[family]*cap:
+                    schedule.append(family)
+                    taken[family] += 1
+            totals = Counter(schedule)
+        else:
+            schedule = sequence
+            totals = Counter(schedule)
+            if any(n > own_capacity[f]*cap for f, n in totals.items()):
+                raise ValueError('F3 R verified family capacity cannot match B practice')
     prior, used = Counter(), Counter()
     for path in sorted(ps.plan_path(root, arm, 0).parent.glob(f'PRACTICE_PLAN_{arm}_*.json')):
         old = json.loads(path.read_text(encoding='utf-8'))
@@ -578,6 +608,6 @@ def practice_plan(root, arm, update, *, cfg, fraction, repeat_cap, count, traini
         fraction=float(fraction), repeat_cap=cap, requested=int(count), rows=selected,
         registry=dict(pool_examples=len(pools[arm]), cooperative_examples=len(pools[arm]),
             cooperative_capacity=len(pools[arm])*cap, empty_bank=not pools[arm], fallback_used=False),
-        breadth=dict(rule=RULE, family_counts=dict(totals),
+        breadth=dict(rule=RULE, family_counts=dict(totals), **(dict(subset_rule=SUBSET_RULE) if subset_rule(cfg) else {}),
             eligible_contexts=[r['context_id'] for r in pools[arm]],
             unique_selected=len(used), inputs_sha256=digest(inputs(cfg))), rule=RULE)
