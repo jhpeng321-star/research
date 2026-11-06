@@ -208,7 +208,8 @@ print(digest.hexdigest())
 def test_off_is_byte_identical_to_the_pre_n2_commit(cfg, tmp_path):
     """Default-off samples, lane targets and initial weights equal the pre-N2 sources."""
     touched = ('track2_backend.py', 'feasible_proposals.py', 'group_lane.py', 'moves.py', 'bank_breadth.py',
-               'v2v_wall.py', 'sparse_synergy_credit.py', 'launch_production.py', 'trigger_policy.py')
+               'v2v_wall.py', 'sparse_synergy_credit.py', 'launch_production.py', 'trigger_policy.py',
+               'launch_evaluation.py', 'acceleration.py')
     overlay = tmp_path/'overlay'
     overlay.mkdir()
     for name in touched:
