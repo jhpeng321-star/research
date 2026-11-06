@@ -384,3 +384,13 @@ def test_failed_clean3_root_spend_is_counted_once():
     assert value['spent']['failed'] == 3600
     assert value['protected_prior_sim_s'] == 1248480+1849200+3600+960+500000
     assert c3.checked(dict(clean3_budget=value))['spent']['failed'] == 3600
+
+
+def test_supervision_candidates_respect_observable_slots_with_g5_rows():
+    """Offline trigger supervision uses the online acquirability contract (r8 prepare fault)."""
+    import numpy as np
+    from tools.coopmwm import feasible_proposals
+    rows = [dict(vid=f'c{i}', s_m=500.+15*i, v_mps=20., lane=i % 2, is_cav=True, length_m=5.) for i in range(7)]
+    state = dict(self='c0', rows=rows, acquirable_cav_ids=['c0', 'c1', 'c2', 'c3'])
+    for move in feasible_proposals.candidates(state, np.random.default_rng(0), 8):
+        assert set(move.members) <= {'c0', 'c1', 'c2', 'c3'}

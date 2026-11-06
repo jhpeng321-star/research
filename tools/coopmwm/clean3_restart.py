@@ -16,21 +16,22 @@ import time
 from .exact_grade import _seal, verify_sealed
 from .protocol import digest
 
-ROOT = '/home/ubuntu/coopmwm20261106_clean3_r2'
+ROOT = '/home/ubuntu/coopmwm20261106_clean3_r3'
 # Root r1 (chain r7, source 6cf4868f) stopped at smoke on 'no decision link' (fixed by
 # c4/clean3-minedlink); kept intact as evidence and its ledger counted as prior spend.
-FAILED_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3',)
+FAILED_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3', '/home/ubuntu/coopmwm20261106_clean3_r2')  # r2: prepare fault, 0 rows
 CLEAN2 = '/home/ubuntu/coopmwm20261105_clean2'
 CLEAN1 = '/home/ubuntu/coopmwm20261105_clean1'
 # r1 (b7b74545), r2 (a0f9401d) and r3 (bf3f1d68) chains were stopped by the operator before any clean3
 # physics; each ran the same G1 selection: 0 candidates, 0 sim-s, NO-GO. Ledgers stay counted.
-G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r8'
+G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r9'
 G1_PRIOR_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3_g1cert', '/home/ubuntu/coopmwm20261106_clean3_g1cert_r2',
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r3',
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r4',  # r3/r4 stopped mid-G1: 0 rows
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r5',  # r5 NO-GO, 0 rows
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r6',  # r6 NO-GO, 0 rows
-                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r7')  # r7 NO-GO, 0 rows
+                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r7',  # r7 NO-GO, 0 rows
+                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r8')  # r8 NO-GO, 0 rows
 MINING_ROOT = '/home/ubuntu/coopmwm20261106_s_mining'
 SCHEMA = 'coopmwm.clean3.restart_budget.v1'
 

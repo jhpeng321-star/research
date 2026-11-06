@@ -102,7 +102,13 @@ def bank_move_supervision(runtime):
         for context, label, reader, weight, time in bank_breadth.observable_contexts(
                 policy, plan, pairs, frames, t0=receipt['t0'],
                 certification=cfg.get('_executable_lesson')):
-            batch = policy.trigger.decide(context, obs_states=reader.local_states,
+            # Same acquirability contract as online feasible_proposals: candidates only over
+            # the ego's observable CAV slots. With G5 on, local rows also carry sensed CAVs
+            # outside the slots (gap geometry), which must never become move members.
+            states = {v: (dict(reader.local_states[v], acquirable_cav_ids=list(reader.visible[v]))
+                          if 'acquirable_cav_ids' not in reader.local_states[v] else reader.local_states[v])
+                      for v in context['members']}
+            batch = policy.trigger.decide(context, obs_states=states,
                 observable_cavs=reader.visible, rng=np.random.default_rng(cfg['training_seed']),
                 generator=torch.Generator().manual_seed(cfg['training_seed']), deterministic=True)
             tables, descriptors, mask = list(batch.tables), batch.descriptors.clone(), batch.mask.clone()
