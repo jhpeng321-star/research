@@ -432,3 +432,14 @@ def test_an_arm_without_guidance_rows_gets_equal_steps_on_the_same_negatives(cfg
     assert arms['R']['positive_records'] == 0 and arms['B']['positive_records'] > 0
     assert report['effort_equal'] and report['negative_draws_equal']
     assert arms['R']['effort']['optimizer_steps'] == arms['B']['effort']['optimizer_steps'] == SMALL['steps']
+
+
+def test_rows_ledger_lists_every_input_row_with_its_use(cfg, tmp_path):
+    report = dry_run(cfg, tmp_path)
+    ledger = [json.loads(line) for line in open(report['rows_ledger']['path'], encoding='utf-8')]
+    assert len(ledger) == 10+3+9   # every B, R and negative input row appears exactly once
+    status = {(e['role'], e['status']) for e in ledger}
+    assert ('negative', 'excluded:negative_rule:outranked_or_unevaluated:screen') in status
+    assert ('positive_B', 'used') in status and ('negative', 'used') in status
+    assert all(e['records'] > 0 for e in ledger if e['status'] == 'used')
+    assert cw._guard(report['coop_warmstart']['B']['path']).is_absolute()

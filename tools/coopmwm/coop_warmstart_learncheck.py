@@ -461,12 +461,24 @@ def sidecars(*, base, out_dir, prep, rows_root=ROWS_ROOT):
     return report
 
 
+def auc_ci95(auc_value, n_pos, n_neg):
+    """Hanley-McNeil (1982) normal 95% interval of an AUC (tables treated as independent)."""
+    if auc_value is None or not n_pos or not n_neg:
+        return None
+    a = auc_value
+    q1, q2 = a/(2-a), 2*a*a/(1+a)
+    se = ((a*(1-a)+(n_pos-1)*(q1-a*a)+(n_neg-1)*(q2-a*a))/(n_pos*n_neg))**.5
+    return [a-1.96*se, a+1.96*se]
+
+
 def verdict(task):
+    """BEATS only if the held-out AUC 95% interval excludes 0.5 AND precision@npos > base rate."""
     test = task['heldout_pooled']
     if not test.get('n') or test.get('auc') is None:
         return 'NOT TESTABLE (no held-out positives/negatives)'
-    beats = test['auc'] > .5 and test.get('precision_at_npos', 0) > test['base_rate']
-    return 'BEATS base rate' if beats else 'DOES NOT beat base rate'
+    ci = auc_ci95(test['auc'], test['positives'], test['n']-test['positives'])
+    beats = ci[0] > .5 and test.get('precision_at_npos', 0) > test['base_rate']
+    return ('BEATS base rate' if beats else 'DOES NOT beat base rate') + f' (AUC 95% CI [{ci[0]:.3f}, {ci[1]:.3f}])'
 
 
 def main(argv=None):

@@ -703,6 +703,15 @@ def train(policy, records, settings):
 
 # ---------------------------------------------------------------- run
 
+def _entry(row, role, status, records=0, reasons=None):
+    """One WARMSTART_ROWS.jsonl line: which input row was used (and how often) or why not."""
+    return dict(role=role, source=row.get('_source'), line=row.get('_line'), arm=row.get('arm'),
+                situation_id=row.get('situation_id'), verification_id=row.get('verification_id'),
+                family=row.get('family'), variant=row.get('variant'), seed_index=row.get('seed'),
+                world_seed=world_seed(row), t0=row.get('t0'), members=row.get('members'), status=status,
+                records=int(records), reasons=dict(reasons or {}))
+
+
 def _situation(situation_frames, row):
     """Observable frames of the row's own moment (mode 'moments'); seed/t0 must agree."""
     moment = situation_frames.get(row.get('situation_id'))
@@ -714,7 +723,8 @@ def _situation(situation_frames, row):
     return frames
 
 
-def _negatives(policy, rows, frame_index, *, dry, slate_seed, split, situation_frames=None):
+def _negatives(policy, rows, frame_index, *, dry, slate_seed, split, situation_frames=None, ledger=None):
+    ledger = [] if ledger is None else ledger
     records, reasons, labels = [], Counter(), Counter()
     for row in rows:
         try:
@@ -723,6 +733,7 @@ def _negatives(policy, rows, frame_index, *, dry, slate_seed, split, situation_f
             label, why = False, 'unrepresentable'
         labels[why] += 1
         if not label:
+            ledger.append(_entry(row, 'negative', 'excluded:negative_rule:'+why))
             continue
         seed = world_seed(row)
         if dry:
@@ -735,16 +746,19 @@ def _negatives(policy, rows, frame_index, *, dry, slate_seed, split, situation_f
             frames = frame_index.get((seed, int(row['t0'])))
         if frames is None:
             reasons['no_observable_frame'] += 1
+            ledger.append(_entry(row, 'negative', 'excluded:no_observable_frame'))
             continue
         try:
             out, why = frame_records(policy, row, frames, target=0, kind='negative', seed=seed, dry=dry,
                                      slate_seed=slate_seed)
         except Unrepresentable as error:
             reasons['unrepresentable:'+str(error)[:60]] += 1
+            ledger.append(_entry(row, 'negative', 'excluded:unrepresentable', reasons={str(error)[:80]: 1}))
             continue
         reasons.update(why)
         if not out:
             reasons['row_without_usable_ego'] += 1
+        ledger.append(_entry(row, 'negative', 'used' if out else 'excluded:no_usable_ego', len(out), why))
         records += out
     return records, reasons, labels
 
@@ -762,7 +776,8 @@ def run(*, cfg, base, out_dir, positives, negatives, mode, training=None, cells=
     if (mode == 'moments') != (situation_frames is not None):
         raise ValueError("situation_frames ({sid: (seed, t0, frames)}) belong to mode 'moments' only")
     settings = training_settings(training)
-    out_dir = _guard(out_dir)
+    out_dir = _guard(out_dir).resolve()
+    ledger = []
     out_dir.mkdir(parents=True, exist_ok=True)
     targets = {arm: out_dir/f'WARMSTART_{arm}.pt' for arm in ('B', 'R')}
     if not allow_existing and any(p.exists() for p in targets.values()):
@@ -780,6 +795,7 @@ def run(*, cfg, base, out_dir, positives, negatives, mode, training=None, cells=
                 why = admission(row, cells)
                 if why is not None:
                     exclusions.setdefault(f'positives_{arm}', Counter())[why] += 1
+                    ledger.append(_entry(row, f'positive_{arm}', 'excluded:'+why))
                     continue
                 rows.append(row)
         pos_rows[arm] = rows
@@ -791,6 +807,7 @@ def run(*, cfg, base, out_dir, positives, negatives, mode, training=None, cells=
             why = admission(row, cells)
             if why is not None:
                 exclusions.setdefault('negatives', Counter())[why] += 1
+                ledger.append(_entry(row, 'negative', 'excluded:'+why))
                 continue
             neg_rows.append(row)
     frame_rows = []
@@ -826,25 +843,34 @@ def run(*, cfg, base, out_dir, positives, negatives, mode, training=None, cells=
                 frames = dry_frames(row) if dry else _situation(situation_frames, row)
                 if frames is None:
                     why['no_moment_snapshot'] += 1
+                    ledger.append(_entry(row, f'positive_{arm}', 'excluded:no_moment_snapshot'))
                     continue
                 try:
                     out, reasons = frame_records(policies[arm], row, frames, target=1, kind='positive',
                                                  seed=world_seed(row), dry=dry, slate_seed=settings['slate_seed'])
                 except Unrepresentable as error:
                     why['unrepresentable:'+str(error)[:60]] += 1
+                    ledger.append(_entry(row, f'positive_{arm}', 'excluded:unrepresentable',
+                                         reasons={str(error)[:80]: 1}))
                     continue
                 why.update(reasons)
+                ledger.append(_entry(row, f'positive_{arm}', 'used' if out else 'excluded:no_usable_ego',
+                                     len(out), reasons))
                 recs += out
         else:
             local = bank_view_config(cfg, out_dir, arm, pos_rows[arm])
             recs, why = bank_records(local, arm, policies[arm], pos_rows[arm], slate_seed=settings['slate_seed'],
                                      frame_index=frame_index)
+            used = Counter(r.get('verification_id') for r in recs)
+            for row in pos_rows[arm]:
+                n = used.get(row.get('verification_id'), 0)
+                ledger.append(_entry(row, f'positive_{arm}', 'used' if n else 'excluded:no_observable_bank_context', n))
         records[arm] = recs
         notes[arm] = dict(positive_exclusions=dict(why))
     # ONE shared negatives set, built once on the (identical) initial B layer.
     shared, neg_reasons, neg_labels = _negatives(policies['B'], neg_rows, frame_index, dry=dry,
                                                  slate_seed=settings['slate_seed'], split=split,
-                                                 situation_frames=situation_frames)
+                                                 situation_frames=situation_frames, ledger=ledger)
     shared_keys = sorted(_content_key(r) for r in deduplicate(shared))
     report = dict(schema=SCHEMA, rule=RULE, negative_rule=RULE_NEGATIVE, mode=mode, dry=dry,
                   map=MAP, train_seeds=list(TRAIN_SEEDS), refused_seeds=list(HELDOUT_EVAL_SEEDS),
@@ -902,7 +928,13 @@ def run(*, cfg, base, out_dir, positives, negatives, mode, training=None, cells=
         raise ValueError('B/R warm-start effort or frozen base differ')
     report['coop_warmstart'] = registration(report)
     text = json.dumps(report, indent=1, sort_keys=True, default=str)
-    (out_dir/'WARMSTART_RECEIPT.json').write_text(text+'\n', encoding='utf-8')
+    (out_dir/'WARMSTART_ROWS.jsonl').write_text(''.join(json.dumps(e, sort_keys=True, default=str)+chr(10)
+                                                        for e in ledger), encoding='utf-8')
+    report['rows_ledger'] = dict(path=str(out_dir/'WARMSTART_ROWS.jsonl'),
+                                 status={f'{r}|{st}': n for (r, st), n in
+                                         Counter((e['role'], e['status']) for e in ledger).most_common()})
+    text = json.dumps(report, indent=1, sort_keys=True, default=str)
+    (out_dir/'WARMSTART_RECEIPT.json').write_text(text+chr(10), encoding='utf-8')
     return report
 
 
