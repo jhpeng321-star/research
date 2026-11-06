@@ -313,6 +313,25 @@ def evaluate(handle: Handle, state: Mapping[str, Any], actions: Sequence[Mapping
             trace.setdefault("speeds", []).append(speeds.cpu())
             trace.setdefault("lanes", []).append(roll["lanes"].cpu())
             trace["ids"] = ids
+            # FAIR-cooperation groups (WM-C): J's own presence masks, CAV flags (observed CAVs,
+            # members and CAV entrants) and the WM lane at first presence (t0 lane / entry lane).
+            trace.setdefault("masks", []).append(masks.cpu())
+            obs_cav = torch.tensor([bool(r["is_cav"]) for r in state["vehicles"]] + [False] * n_pad,
+                                   dtype=torch.bool, device=dev).expand(b, n)
+            final = roll.get("state") or {}
+            entrant = roll.get("entrant")
+            cav = obs_cav | is_cav
+            if entrant is not None and "is_cav" in final:
+                cav = cav | (entrant.bool() & final["is_cav"].bool())
+            trace.setdefault("is_cav", []).append(cav.cpu())
+            rmask, rlanes = roll["masks"].bool(), roll["lanes"].long()
+            first = torch.where(rmask.any(1), rmask.float().argmax(1), torch.zeros_like(rmask[:, 0],
+                                                                                    dtype=torch.long))
+            entry_lane = torch.gather(rlanes, 1, first.unsqueeze(1)).squeeze(1)
+            entry_lane = torch.where(rmask.any(1), entry_lane, torch.full_like(entry_lane, -1))
+            origin = torch.where(present, initial["lane"].long(), entry_lane)
+            trace.setdefault("origin_lane", []).append(origin.cpu())
+            trace["n_obs"] = len(ids)
         for (a, k), value in zip(chunk, j):
             if not math.isfinite(value):
                 raise WMContractError(f"non-finite WM delay for action {aids[a]} draw {k}")

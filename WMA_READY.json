@@ -23,7 +23,8 @@
   "22593a19 WM-A: current_road follows N1's programmatic map binding; READY update",
   "2fb9d454 WM-A: junction-lane rows project natively; supported_roles declared",
   "9edf586d WM-A: planapi hold-only golden captured before 'prog'",
-  "(this commit) WM-A: LCMOVES 'prog' executor (wms.planapi_prog); hold golden unchanged"
+  "1d153d96 WM-A: LCMOVES 'prog' executor; hold golden unchanged",
+  "(this commit) WM-A: planapi trace fairness groups (masks, is_cav, origin_lane, n_obs)"
  ],
  "road_binding": {
   "module": "wms.core.road (RoadGeometry, MERGE_ORIGINAL, current_road, bind_road, road_scope, load_road, road_from_descriptor, map_default, geometry_digest_of)",
@@ -101,7 +102,8 @@
     "after release / before start: WM native acceleration, lane held except the lane-end first-passage merge (SUMO restores native lane changes)",
     "lane changes instantaneous within one 0.5 s step; settled 'track' without v_w = native"
    ]
-  }
+  },
+  "trace": "evaluate(..., trace={}) fills: rows [(action index, draw)], ids, n_obs = len(ids); per chunk lists of tensors: speeds [b,T,n] and masks [b,T,n] (exactly the speeds/presence J sums: J = 0.5 s * sum max(0, 1 - v/31.29) * mask), lanes [b,T,n] (WM lane after each step), is_cav [b,n] (observed CAVs | members | CAV entrants), origin_lane [b,n] (WM lane at first presence: t0 lane for observed rows, entry lane for entrants, -1 never present; WM lane 2 = SUMO up_0). Per-group delay = the J sum restricted to a group's slots. Note: entrants are CAVs only at the share of members in the t0 rows (the entry process copies the rollout's CAV share), so with entries on most CAV entrants count as HDVs."
  },
  "data_pipeline": {
   "rollout_format": "traffic_shepherd.c4.recorder episode dirs (episode.npz schema c4_sumo_episode/1, model frame, K=512) recorded with N1's map runtime installed; recorder.map_meta() stamps meta_json map / map_descriptor_sha256 / road_digest / k_slots when the road is bound. Required meta: seed, demand_vph, penetration, warmup_s (+ map). Controllers native/direct only unless --allow-designed. WM-B used it for arms native, mappo_u0, coop_mappo_u0, coop_native (E:/agent-work/_sol/WMB_DATA_SHARDS.md).",
@@ -123,7 +125,7 @@
    "N1 map tests after the merge (tools/coopmwm/test_map_{descriptor,golden,runtime,scenarios}_cpu.py, test_newmap_sanity_cpu.py)": "pass (with tests/wz: 60 passed, 2 skipped: frozen cpuV runtime only / env-stub)",
    "final merge golden + test_c4_loop + test_c4_v10entzone on 6f8f6952": "19 passed",
    "tests/wz/test_planapi_hold_golden.py": "PASS: hold-only evaluate (J draws float.hex, speed/lane traces sha) bit-identical to the pre-prog capture (9edf586d)",
-   "tests/wz/test_planapi_prog.py": "8 passed (lane change out of the closing lane, blocked change waits for a secure gap, accel capped at the limit, track, unobserved partner = native, merger release, refusals, tau native-only)"
+   "tests/wz/test_planapi_prog.py": "9 passed (incl. trace groups re-sum to J exactly)"
   }
  },
  "known_gaps": [

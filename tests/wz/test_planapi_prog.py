@@ -126,3 +126,29 @@ def test_tau_changes_only_native_motion(env):
     k = ids.index("m1")
     assert float(base[0, k]) == float(tau[0, k]) == 22.0
     assert not torch.equal(base[1:, k], tau[1:, k])
+
+
+def test_trace_carries_fairness_groups(env):
+    A, h, st, road = env
+    trace = {}
+    with R.road_scope(road):
+        out = A.evaluate(h, st, [{"id": "base", "members": []},
+                                 {"id": "p", "members": [prog("m0", lc_target=1)]}],
+                         K=1, H=2.0, seed=0, trace=trace)
+    masks = torch.cat(trace["masks"], 0)
+    speeds = torch.cat(trace["speeds"], 0)
+    cav = torch.cat(trace["is_cav"], 0)
+    origin = torch.cat(trace["origin_lane"], 0)
+    n = trace["n_obs"]
+    assert n == len(trace["ids"]) == len(st["vehicles"])
+    assert masks.shape == speeds.shape and cav.shape == origin.shape == masks[:, 0].shape
+    deficit = ((1.0 - speeds / 31.29).clamp_min(0.0) * masks).sum(-2) * 0.5     # [b, n]
+    for row, (a, _k) in enumerate(trace["rows"]):
+        aid = ("base", "p")[a]
+        assert float(deficit[row].sum()) == pytest.approx(out[aid][0], rel=1e-6)
+        groups = {g: float(deficit[row][origin[row] == g].sum()) for g in (0, 1, 2)}
+        assert sum(groups.values()) == pytest.approx(out[aid][0], rel=1e-6)
+    want_cav = torch.tensor([v["is_cav"] for v in st["vehicles"]])
+    assert torch.equal(cav[:, :n], want_cav.expand(cav.shape[0], n))
+    lanes0 = torch.tensor([v["lane"] for v in st["vehicles"]])
+    assert torch.equal(origin[:, :n], lanes0.expand(origin.shape[0], n))
