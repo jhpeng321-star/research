@@ -1,0 +1,888 @@
+{
+  "controls": [
+    {
+      "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_162b35c9",
+      "dispatch": {
+        "sha256": "9b978bc826de343de9850da1104c76bfaa9d4ce4ba3614bced8c9b73d0510f2c",
+        "value": {
+          "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_162b35c9",
+          "pid": 455811,
+          "source_root": "/home/ubuntu/coopmwm20261106_clean3_src_162b35c9",
+          "start_ticks": "10334650",
+          "state": "Z",
+          "status": "CHAIN_STARTED",
+          "unix": 1793913502.994363
+        }
+      },
+      "process": {
+        "exited": true,
+        "pid": 455811
+      },
+      "status": {
+        "sha256": "9b5e2411fd7c3d3dc2effcb9294cb7818b9fa0456f5a31bb54411b9982b2c5fb",
+        "value": {
+          "detail": null,
+          "pid": 455812,
+          "root": "/home/ubuntu/coopmwm20261106_clean3",
+          "schema": "coopmwm.clean3.chain.v1",
+          "sequence": 5,
+          "source_commit": "162b35c98116a6b7f4cb4af27610868c490a2d35",
+          "status": "RUNNING",
+          "step": "MINED_WAIT",
+          "timestamp": "2026-11-05T21:22:14.273208+00:00",
+          "unix": 1793913734.2732077
+        }
+      },
+      "status_process": {
+        "exited": true,
+        "pid": 455812
+      }
+    },
+    {
+      "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_673e80a7",
+      "dispatch": {
+        "sha256": "ed2e0721783b9f7362419b73ab4835153991b8d8d73e88537c7cfdd8c74d11c6",
+        "value": {
+          "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_673e80a7",
+          "pid": 519446,
+          "source_root": "/home/ubuntu/coopmwm20261106_clean3_src_673e80a7",
+          "start_ticks": "11607657",
+          "state": "Z",
+          "status": "CHAIN_STARTED",
+          "unix": 1793926233.0613
+        }
+      },
+      "process": {
+        "exited": true,
+        "pid": 519446
+      },
+      "status": {
+        "sha256": "5926dfdbb32232647c319954c4a3851570fe5c7644d655102b4f4184bd69afb7",
+        "value": {
+          "detail": {
+            "error": "ValueError('move members must be 1..4 observable CAVs including ego')",
+            "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/ops/clean3_chain.py\", line 47, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/ops/clean3_chain.py\", line 230, in prepare\n    cfg = c3.prepare(self.source, mined=self.mined)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/clean3_restart.py\", line 589, in prepare\n    supervision = production.bank_move_supervision(runtime)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/launch_production.py\", line 124, in bank_move_supervision\n    bank_breadth.visit(cfg, runtime.arm, consume)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/bank_breadth.py\", line 167, in visit\n    rb.bank_pairs(Path(local['run_root']), arm, local['training_seed'],\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/replay_bank.py\", line 626, in bank_pairs\n    example_consumer(receipt=r, example=ex, plan=plan, pairs=entry_pairs,\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/bank_breadth.py\", line 165, in consume\n    consumer(cfg=bound, receipt=receipt, example=example, plan=plan, pairs=pairs, trace=trace)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/launch_production.py\", line 105, in consume\n    batch = policy.trigger.decide(context, obs_states=reader.local_states,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n    return func(*args, **kwargs)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/trigger_policy.py\", line 236, in decide\n    _validate_move(move, ego, visible, self.families)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/trigger_policy.py\", line 62, in _validate_move\n    raise ValueError('move members must be 1..4 observable CAVs including ego')\nValueError: move members must be 1..4 observable CAVs including ego\n"
+          },
+          "pid": 519447,
+          "root": "/home/ubuntu/coopmwm20261106_clean3_r2",
+          "schema": "coopmwm.clean3.chain.v1",
+          "sequence": 10,
+          "source_commit": "673e80a7da0073af7f3011e33f079c6a4f80a513",
+          "status": "FAILED",
+          "step": "PREPARE",
+          "timestamp": "2026-11-06T01:02:14.190750+00:00",
+          "unix": 1793926934.1907454
+        }
+      },
+      "status_process": {
+        "exited": true,
+        "pid": 519447
+      }
+    },
+    {
+      "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_6cf4868f",
+      "dispatch": {
+        "sha256": "a868e7d92eb97440d1682a5cceb5dda0a9172791d0ec8298f59ddd02c76a0340",
+        "value": {
+          "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_6cf4868f",
+          "pid": 474524,
+          "source_root": "/home/ubuntu/coopmwm20261106_clean3_src_6cf4868f",
+          "start_ticks": "10618954",
+          "state": "Z",
+          "status": "CHAIN_STARTED",
+          "unix": 1793916346.0349777
+        }
+      },
+      "process": {
+        "exited": true,
+        "pid": 474524
+      },
+      "status": {
+        "sha256": "4a7dfa37db19dc3086fdbb886e651d7f73ca61731ed8e734738626247992c67b",
+        "value": {
+          "detail": {
+            "error": "RuntimeError('smoke failed; inspect log; no automatic retry')",
+            "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_6cf4868f/ops/clean3_chain.py\", line 47, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_6cf4868f/ops/clean3_chain.py\", line 400, in <lambda>\n    ('SMOKE', lambda: self.command('smoke')), ('GATE', lambda: self.command('gate')),\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_6cf4868f/ops/clean3_chain.py\", line 259, in command\n    raise RuntimeError(action+' failed; inspect log; no automatic retry')\nRuntimeError: smoke failed; inspect log; no automatic retry\n"
+          },
+          "pid": 474525,
+          "root": "/home/ubuntu/coopmwm20261106_clean3",
+          "schema": "coopmwm.clean3.chain.v1",
+          "sequence": 12,
+          "source_commit": "6cf4868f70c07c38ddffde06567750b00ce64182",
+          "status": "FAILED",
+          "step": "SMOKE",
+          "timestamp": "2026-11-05T22:37:54.375001+00:00",
+          "unix": 1793918274.3749993
+        }
+      },
+      "status_process": {
+        "exited": true,
+        "pid": 474525
+      }
+    },
+    {
+      "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_7b8cbaad",
+      "dispatch": {
+        "sha256": "94a3ccf1d5d6ac14129982621331102c9176e19742b95784a284814d59588663",
+        "value": {
+          "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_7b8cbaad",
+          "pid": 530367,
+          "source_root": "/home/ubuntu/coopmwm20261106_clean3_src_7b8cbaad",
+          "start_ticks": "11860109",
+          "state": "Z",
+          "status": "CHAIN_STARTED",
+          "unix": 1793928757.58318
+        }
+      },
+      "process": {
+        "exited": true,
+        "pid": 530367
+      },
+      "status": {
+        "sha256": "4d586a952c7115517856d1237ec0088ddd66a2409422ff964b38f0271b330ad8",
+        "value": {
+          "detail": {
+            "error": "RuntimeError('smoke failed; inspect log; no automatic retry')",
+            "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_7b8cbaad/ops/clean3_chain.py\", line 47, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_7b8cbaad/ops/clean3_chain.py\", line 400, in <lambda>\n    ('SMOKE', lambda: self.command('smoke')), ('GATE', lambda: self.command('gate')),\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_7b8cbaad/ops/clean3_chain.py\", line 259, in command\n    raise RuntimeError(action+' failed; inspect log; no automatic retry')\nRuntimeError: smoke failed; inspect log; no automatic retry\n"
+          },
+          "pid": 530368,
+          "root": "/home/ubuntu/coopmwm20261106_clean3_r3",
+          "schema": "coopmwm.clean3.chain.v1",
+          "sequence": 12,
+          "source_commit": "7b8cbaad862fffca5d3fe23a8f199c60f4d5d8dc",
+          "status": "FAILED",
+          "step": "SMOKE",
+          "timestamp": "2026-11-06T02:01:05.151228+00:00",
+          "unix": 1793930465.151224
+        }
+      },
+      "status_process": {
+        "exited": true,
+        "pid": 530368
+      }
+    },
+    {
+      "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_a0f9401d",
+      "dispatch": {
+        "sha256": "5feb8ce49f15c7265c7eaf8be85bbc1c82951cfe24f9c634ddf72b61b68c5f3e",
+        "value": {
+          "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_a0f9401d",
+          "pid": 434006,
+          "source_root": "/home/ubuntu/coopmwm20261106_clean3_src_a0f9401d",
+          "start_ticks": "9891656",
+          "state": "Z",
+          "status": "CHAIN_STARTED",
+          "unix": 1793909073.0509171
+        }
+      },
+      "process": {
+        "exited": true,
+        "pid": 434006
+      },
+      "status": {
+        "sha256": "a1834ccd2aaca7de41ebba9d4424e5eb3461aa4f950c09d075801ec819400b00",
+        "value": {
+          "detail": null,
+          "pid": 434007,
+          "root": "/home/ubuntu/coopmwm20261106_clean3",
+          "schema": "coopmwm.clean3.chain.v1",
+          "sequence": 5,
+          "source_commit": "a0f9401dd654e507c99e3e9c6df34c1c5e86d46f",
+          "status": "RUNNING",
+          "step": "MINED_WAIT",
+          "timestamp": "2026-11-05T20:08:24.356713+00:00",
+          "unix": 1793909304.356713
+        }
+      },
+      "status_process": {
+        "exited": true,
+        "pid": 434007
+      }
+    },
+    {
+      "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_b7b74545",
+      "dispatch": {
+        "sha256": "ec4d01ea5a965b5addb956730d58570162365c17b9536e54d16b2fc81032a28d",
+        "value": {
+          "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_b7b74545",
+          "pid": 428196,
+          "source_root": "/home/ubuntu/coopmwm20261106_clean3_src_b7b74545",
+          "start_ticks": "9773429",
+          "state": "Z",
+          "status": "CHAIN_STARTED",
+          "unix": 1793907890.7874954
+        }
+      },
+      "process": {
+        "exited": true,
+        "pid": 428196
+      },
+      "status": {
+        "sha256": "341ad969fa9996ccf7e6860111795b84aaef016f51cf36cdc8754320488d8998",
+        "value": {
+          "detail": null,
+          "pid": 428197,
+          "root": "/home/ubuntu/coopmwm20261106_clean3",
+          "schema": "coopmwm.clean3.chain.v1",
+          "sequence": 5,
+          "source_commit": "b7b74545475ff3b71dbef03f314487c32f44c48f",
+          "status": "RUNNING",
+          "step": "MINED_WAIT",
+          "timestamp": "2026-11-05T19:48:41.152817+00:00",
+          "unix": 1793908121.1528165
+        }
+      },
+      "status_process": {
+        "exited": true,
+        "pid": 428197
+      }
+    },
+    {
+      "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_bf3f1d68",
+      "dispatch": {
+        "sha256": "33053d99b1acaafbcec989c24dca63ea73e50fafa7279babb50c9417b32cb992",
+        "value": {
+          "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_bf3f1d68",
+          "pid": 446253,
+          "source_root": "/home/ubuntu/coopmwm20261106_clean3_src_bf3f1d68",
+          "start_ticks": "10163676",
+          "state": "Z",
+          "status": "CHAIN_STARTED",
+          "unix": 1793911793.2598782
+        }
+      },
+      "process": {
+        "exited": true,
+        "pid": 446253
+      },
+      "status": {
+        "sha256": "491b86a6a3c7bd6e14e43aac38847e7ed81aa21c88701e1adfb2af0b49e6aa73",
+        "value": {
+          "detail": null,
+          "pid": 446254,
+          "root": "/home/ubuntu/coopmwm20261106_clean3",
+          "schema": "coopmwm.clean3.chain.v1",
+          "sequence": 3,
+          "source_commit": "bf3f1d680e6d50f6b610a372d975bf857e866075",
+          "status": "RUNNING",
+          "step": "G1_CERTIFY",
+          "timestamp": "2026-11-05T20:49:50.514619+00:00",
+          "unix": 1793911790.514619
+        }
+      },
+      "status_process": {
+        "exited": true,
+        "pid": 446254
+      }
+    },
+    {
+      "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_d27b3d00",
+      "dispatch": {
+        "sha256": "7e1d9cf4d1632588b25528e7cdd94b8b25b33e3b08aabb538ef25a8b443971e7",
+        "value": {
+          "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_d27b3d00",
+          "pid": 451162,
+          "source_root": "/home/ubuntu/coopmwm20261106_clean3_src_d27b3d00",
+          "start_ticks": "10252655",
+          "state": "Z",
+          "status": "CHAIN_STARTED",
+          "unix": 1793912683.0443194
+        }
+      },
+      "process": {
+        "exited": true,
+        "pid": 451162
+      },
+      "status": {
+        "sha256": "f9ba53cf6debabedc8daad4b344819b037c9073c67ff20a7b0948c8ceed5fbf7",
+        "value": {
+          "detail": null,
+          "pid": 451163,
+          "root": "/home/ubuntu/coopmwm20261106_clean3",
+          "schema": "coopmwm.clean3.chain.v1",
+          "sequence": 3,
+          "source_commit": "d27b3d00760fef9d045e6f71ea5f3e44777a8660",
+          "status": "RUNNING",
+          "step": "G1_CERTIFY",
+          "timestamp": "2026-11-05T21:04:40.293491+00:00",
+          "unix": 1793912680.293491
+        }
+      },
+      "status_process": {
+        "exited": true,
+        "pid": 451163
+      }
+    },
+    {
+      "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_dd424702",
+      "dispatch": {
+        "sha256": "9297d77a4f92572d5f60f463f378c9e46e93cf80fb1e2e1a67f980ef4f1e4e42",
+        "value": {
+          "control": "/home/ubuntu/cpuv_setup_20261105/clean3_chain_dd424702",
+          "pid": 467290,
+          "source_root": "/home/ubuntu/coopmwm20261106_clean3_src_dd424702",
+          "start_ticks": "10527297",
+          "state": "Z",
+          "status": "CHAIN_STARTED",
+          "unix": 1793915429.4637694
+        }
+      },
+      "process": {
+        "exited": true,
+        "pid": 467290
+      },
+      "status": {
+        "sha256": "84148950ea9f17efd5aaffa5dcac451dc8da407852e4b5deb5a4fb8e6bc355ac",
+        "value": {
+          "detail": {
+            "error": "NameError(\"name 'moves' is not defined\")",
+            "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_dd424702/ops/clean3_chain.py\", line 47, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_dd424702/ops/clean3_chain.py\", line 193, in wait_mined\n    receipt = c3.admit_mined(self.mined_path, cfg, out)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_dd424702/pytools/tools/coopmwm/clean3_restart.py\", line 384, in admit_mined\n    bank_breadth.visit(local, row['arm'], consume)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_dd424702/pytools/tools/coopmwm/bank_breadth.py\", line 138, in visit\n    rb.bank_pairs(Path(local['run_root']), arm, local['training_seed'],\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_dd424702/pytools/tools/coopmwm/replay_bank.py\", line 626, in bank_pairs\n    example_consumer(receipt=r, example=ex, plan=plan, pairs=entry_pairs,\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_dd424702/pytools/tools/coopmwm/bank_breadth.py\", line 109, in consume\n    mined_move(plan)  # exact G5 macro, or an executable verified acceleration plan\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_dd424702/pytools/tools/coopmwm/bank_breadth.py\", line 165, in mined_move\n    return moves.from_plan(plan)\nNameError: name 'moves' is not defined\n"
+          },
+          "pid": 467291,
+          "root": "/home/ubuntu/coopmwm20261106_clean3",
+          "schema": "coopmwm.clean3.chain.v1",
+          "sequence": 6,
+          "source_commit": "dd42470221a80b2a134380fb751dd03658612aea",
+          "status": "FAILED",
+          "step": "MINED_WAIT",
+          "timestamp": "2026-11-05T21:54:30.723702+00:00",
+          "unix": 1793915670.723699
+        }
+      },
+      "status_process": {
+        "exited": true,
+        "pid": 467291
+      }
+    }
+  ],
+  "roots": [
+    {
+      "charged_sim_s": 3600,
+      "latest_monitor": null,
+      "ledger_rows": 3,
+      "ledger_sha256": "b6144a029a9c4fc585d12cd14aaf1c415202e947f1bc690b3422e4e16bd2471a",
+      "owners": {},
+      "phases": {
+        "track2_smoke": 3600
+      },
+      "receipts": {
+        "CHAIN_STATUS.json": {
+          "sha256": "4a7dfa37db19dc3086fdbb886e651d7f73ca61731ed8e734738626247992c67b",
+          "value": {
+            "detail": {
+              "error": "RuntimeError('smoke failed; inspect log; no automatic retry')",
+              "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_6cf4868f/ops/clean3_chain.py\", line 47, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_6cf4868f/ops/clean3_chain.py\", line 400, in <lambda>\n    ('SMOKE', lambda: self.command('smoke')), ('GATE', lambda: self.command('gate')),\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_6cf4868f/ops/clean3_chain.py\", line 259, in command\n    raise RuntimeError(action+' failed; inspect log; no automatic retry')\nRuntimeError: smoke failed; inspect log; no automatic retry\n"
+            },
+            "pid": 474525,
+            "root": "/home/ubuntu/coopmwm20261106_clean3",
+            "schema": "coopmwm.clean3.chain.v1",
+            "sequence": 12,
+            "source_commit": "6cf4868f70c07c38ddffde06567750b00ce64182",
+            "status": "FAILED",
+            "step": "SMOKE",
+            "timestamp": "2026-11-05T22:37:54.375001+00:00",
+            "unix": 1793918274.3749993
+          }
+        },
+        "CLEAN3_GO_NOGO.json": null,
+        "FAULT.json": null,
+        "GATE_PASS.json": null,
+        "LAUNCHED.json": null,
+        "PHASE_COVERAGE_PASS.json": null,
+        "SMOKE_LEVER_RECEIPTS_PASS.json": null,
+        "SMOKE_PASS.json": null,
+        "STOP.json": {
+          "sha256": "fdf9ed30aa06bf924fc1b15ccdba6cb973820de629e2b704033b0706387fba38",
+          "value": {
+            "detail": {
+              "error": "RuntimeError('smoke failed; inspect log; no automatic retry')",
+              "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_6cf4868f/ops/clean3_chain.py\", line 47, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_6cf4868f/ops/clean3_chain.py\", line 400, in <lambda>\n    ('SMOKE', lambda: self.command('smoke')), ('GATE', lambda: self.command('gate')),\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_6cf4868f/ops/clean3_chain.py\", line 259, in command\n    raise RuntimeError(action+' failed; inspect log; no automatic retry')\nRuntimeError: smoke failed; inspect log; no automatic retry\n"
+            },
+            "pid": 474525,
+            "reason": "clean3 detached chain failed; no retry",
+            "root": "/home/ubuntu/coopmwm20261106_clean3",
+            "schema": "coopmwm.clean3.chain.v1",
+            "sequence": 12,
+            "source_commit": "6cf4868f70c07c38ddffde06567750b00ce64182",
+            "status": "FAILED",
+            "step": "SMOKE",
+            "timestamp": "2026-11-05T22:37:54.375001+00:00",
+            "unix": 1793918274.3749993
+          }
+        }
+      },
+      "root": "/home/ubuntu/coopmwm20261106_clean3"
+    },
+    {
+      "charged_sim_s": 0,
+      "latest_monitor": null,
+      "ledger_rows": 0,
+      "ledger_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "owners": {},
+      "phases": {},
+      "receipts": {
+        "CHAIN_STATUS.json": null,
+        "CLEAN3_GO_NOGO.json": {
+          "sha256": "0346dab32ef0c09e73be1c751b8d0b052537ca1f30894c18a7c7c8d023296065",
+          "value": {
+            "admitted_by_arm": {
+              "B": 0,
+              "R": 0
+            },
+            "admitted_families": {
+              "B": [],
+              "R": []
+            },
+            "branches": 0,
+            "charged_sim_s": 0,
+            "decision": "NO-GO",
+            "diagnostics": 0,
+            "executable_joint_labels_ci95_low_positive": 0,
+            "jobs": 0,
+            "manifest_path": "/home/ubuntu/coopmwm20261106_clean3_g1cert/G1_MANIFEST.json",
+            "manifest_sha256": "be44cdc7af132206a2bb36f91c37ca541244d044058f15f107ad59052a1d02d9",
+            "receipt_sha256": "9a868f83becb2b03e30c7966945e68492fb514f8e24b6822a751abbccfebe6f0",
+            "rule": "GO iff >=1 admitted executable joint label (synergy CI95 low>0 on pooled and both seeds, safety holds) in BOTH B and R with identical admitted family sets; then the certificate manifest gates B/R bank lessons. Otherwise NO-GO: manifest kept as diagnostic, not bound.",
+            "runtime_sha256": "35dd544b0dd6997f7a74140cdd63b92ad74218ce7112efe2f42a69056a77eb6e",
+            "schema": "coopmwm.clean3.g1_go_nogo.v1",
+            "unix": 1793908121.1444232
+          }
+        },
+        "FAULT.json": null,
+        "GATE_PASS.json": null,
+        "LAUNCHED.json": null,
+        "PHASE_COVERAGE_PASS.json": null,
+        "SMOKE_LEVER_RECEIPTS_PASS.json": null,
+        "SMOKE_PASS.json": null,
+        "STOP.json": null
+      },
+      "root": "/home/ubuntu/coopmwm20261106_clean3_g1cert"
+    },
+    {
+      "charged_sim_s": 0,
+      "latest_monitor": null,
+      "ledger_rows": 0,
+      "ledger_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "owners": {},
+      "phases": {},
+      "receipts": {
+        "CHAIN_STATUS.json": null,
+        "CLEAN3_GO_NOGO.json": {
+          "sha256": "dd8a441c964438bb2ad17342083e49466bf5da9eae1f7809af2fb0dbf37ce00f",
+          "value": {
+            "admitted_by_arm": {
+              "B": 0,
+              "R": 0
+            },
+            "admitted_families": {
+              "B": [],
+              "R": []
+            },
+            "branches": 0,
+            "charged_sim_s": 0,
+            "decision": "NO-GO",
+            "diagnostics": 0,
+            "executable_joint_labels_ci95_low_positive": 0,
+            "jobs": 0,
+            "manifest_path": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r2/G1_MANIFEST.json",
+            "manifest_sha256": "be44cdc7af132206a2bb36f91c37ca541244d044058f15f107ad59052a1d02d9",
+            "receipt_sha256": "9bd887fb16e8d4eb52da0e1c41554202ce01fffcb467587c5f6c3bcf34227f30",
+            "rule": "GO iff >=1 admitted executable joint label (synergy CI95 low>0 on pooled and both seeds, safety holds) in BOTH B and R with identical admitted family sets; then the certificate manifest gates B/R bank lessons. Otherwise NO-GO: manifest kept as diagnostic, not bound.",
+            "runtime_sha256": "951f9d87efbbef478e8f4bfc6c0dcb41b1568bcf1c8530df133e2c742281de79",
+            "schema": "coopmwm.clean3.g1_go_nogo.v1",
+            "unix": 1793909304.349072
+          }
+        },
+        "FAULT.json": null,
+        "GATE_PASS.json": null,
+        "LAUNCHED.json": null,
+        "PHASE_COVERAGE_PASS.json": null,
+        "SMOKE_LEVER_RECEIPTS_PASS.json": null,
+        "SMOKE_PASS.json": null,
+        "STOP.json": null
+      },
+      "root": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r2"
+    },
+    {
+      "charged_sim_s": 0,
+      "latest_monitor": null,
+      "ledger_rows": 0,
+      "ledger_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "owners": {},
+      "phases": {},
+      "receipts": {
+        "CHAIN_STATUS.json": null,
+        "CLEAN3_GO_NOGO.json": null,
+        "FAULT.json": null,
+        "GATE_PASS.json": null,
+        "LAUNCHED.json": null,
+        "PHASE_COVERAGE_PASS.json": null,
+        "SMOKE_LEVER_RECEIPTS_PASS.json": null,
+        "SMOKE_PASS.json": null,
+        "STOP.json": null
+      },
+      "root": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r3"
+    },
+    {
+      "charged_sim_s": 0,
+      "latest_monitor": null,
+      "ledger_rows": 0,
+      "ledger_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "owners": {},
+      "phases": {},
+      "receipts": {
+        "CHAIN_STATUS.json": null,
+        "CLEAN3_GO_NOGO.json": null,
+        "FAULT.json": null,
+        "GATE_PASS.json": null,
+        "LAUNCHED.json": null,
+        "PHASE_COVERAGE_PASS.json": null,
+        "SMOKE_LEVER_RECEIPTS_PASS.json": null,
+        "SMOKE_PASS.json": null,
+        "STOP.json": null
+      },
+      "root": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r4"
+    },
+    {
+      "charged_sim_s": 0,
+      "latest_monitor": null,
+      "ledger_rows": 0,
+      "ledger_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "owners": {},
+      "phases": {},
+      "receipts": {
+        "CHAIN_STATUS.json": null,
+        "CLEAN3_GO_NOGO.json": {
+          "sha256": "21e709ce3578b82aea627ae6d99e6265e5ea3be53ce34aec5e7508c25075b77b",
+          "value": {
+            "admitted_by_arm": {
+              "B": 0,
+              "R": 0
+            },
+            "admitted_families": {
+              "B": [],
+              "R": []
+            },
+            "branches": 0,
+            "charged_sim_s": 0,
+            "decision": "NO-GO",
+            "diagnostics": 0,
+            "executable_joint_labels_ci95_low_positive": 0,
+            "jobs": 0,
+            "manifest_path": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r5/G1_MANIFEST.json",
+            "manifest_sha256": "be44cdc7af132206a2bb36f91c37ca541244d044058f15f107ad59052a1d02d9",
+            "receipt_sha256": "f59cd7b9cf49798247d5e129f1aa026cb564165e84d87d8fca876f3af2a6a890",
+            "rule": "GO iff >=1 admitted executable joint label (synergy CI95 low>0 on pooled and both seeds, safety holds) in BOTH B and R with identical admitted family sets; then the certificate manifest gates B/R bank lessons. Otherwise NO-GO: manifest kept as diagnostic, not bound.",
+            "runtime_sha256": "28577bdab63e4556e9f833af7154b5538418b61770d07ab7679a66d657209e26",
+            "schema": "coopmwm.clean3.g1_go_nogo.v1",
+            "unix": 1793913734.2642212
+          }
+        },
+        "FAULT.json": null,
+        "GATE_PASS.json": null,
+        "LAUNCHED.json": null,
+        "PHASE_COVERAGE_PASS.json": null,
+        "SMOKE_LEVER_RECEIPTS_PASS.json": null,
+        "SMOKE_PASS.json": null,
+        "STOP.json": null
+      },
+      "root": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r5"
+    },
+    {
+      "charged_sim_s": 0,
+      "latest_monitor": null,
+      "ledger_rows": 0,
+      "ledger_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "owners": {},
+      "phases": {},
+      "receipts": {
+        "CHAIN_STATUS.json": null,
+        "CLEAN3_GO_NOGO.json": {
+          "sha256": "ba624937076932cbad8c105127077b00dce716e4fe4213ea1592f4ed705ab4a6",
+          "value": {
+            "admitted_by_arm": {
+              "B": 0,
+              "R": 0
+            },
+            "admitted_families": {
+              "B": [],
+              "R": []
+            },
+            "branches": 0,
+            "charged_sim_s": 0,
+            "decision": "NO-GO",
+            "diagnostics": 0,
+            "executable_joint_labels_ci95_low_positive": 0,
+            "jobs": 0,
+            "manifest_path": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r6/G1_MANIFEST.json",
+            "manifest_sha256": "be44cdc7af132206a2bb36f91c37ca541244d044058f15f107ad59052a1d02d9",
+            "receipt_sha256": "ec94227b4001bbad536d561d82b3121c6541cfd8c1826056018314cf4fd26264",
+            "rule": "GO iff >=1 admitted executable joint label (synergy CI95 low>0 on pooled and both seeds, safety holds) in BOTH B and R with identical admitted family sets; then the certificate manifest gates B/R bank lessons. Otherwise NO-GO: manifest kept as diagnostic, not bound.",
+            "runtime_sha256": "83b641a944d16fd3fa5a536069705e4fd713add6a21f2b25685fb67c1f773de2",
+            "schema": "coopmwm.clean3.g1_go_nogo.v1",
+            "unix": 1793915666.1582074
+          }
+        },
+        "FAULT.json": null,
+        "GATE_PASS.json": null,
+        "LAUNCHED.json": null,
+        "PHASE_COVERAGE_PASS.json": null,
+        "SMOKE_LEVER_RECEIPTS_PASS.json": null,
+        "SMOKE_PASS.json": null,
+        "STOP.json": null
+      },
+      "root": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r6"
+    },
+    {
+      "charged_sim_s": 0,
+      "latest_monitor": null,
+      "ledger_rows": 0,
+      "ledger_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "owners": {},
+      "phases": {},
+      "receipts": {
+        "CHAIN_STATUS.json": null,
+        "CLEAN3_GO_NOGO.json": {
+          "sha256": "591283f124d43cfa3f567628e76912bd8d724f6183742ab5fd322164dd68f4e6",
+          "value": {
+            "admitted_by_arm": {
+              "B": 0,
+              "R": 0
+            },
+            "admitted_families": {
+              "B": [],
+              "R": []
+            },
+            "branches": 0,
+            "charged_sim_s": 0,
+            "decision": "NO-GO",
+            "diagnostics": 0,
+            "executable_joint_labels_ci95_low_positive": 0,
+            "jobs": 0,
+            "manifest_path": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r7/G1_MANIFEST.json",
+            "manifest_sha256": "be44cdc7af132206a2bb36f91c37ca541244d044058f15f107ad59052a1d02d9",
+            "receipt_sha256": "28b7143cde4fac472bdc8f9a3c87edd638215e5d19f60811ac226df751644015",
+            "rule": "GO iff >=1 admitted executable joint label (synergy CI95 low>0 on pooled and both seeds, safety holds) in BOTH B and R with identical admitted family sets; then the certificate manifest gates B/R bank lessons. Otherwise NO-GO: manifest kept as diagnostic, not bound.",
+            "runtime_sha256": "2c567b78063a450f9eef200e99538a9390d8f791cca76351adf1868050946bc4",
+            "schema": "coopmwm.clean3.g1_go_nogo.v1",
+            "unix": 1793916576.545716
+          }
+        },
+        "FAULT.json": null,
+        "GATE_PASS.json": null,
+        "LAUNCHED.json": null,
+        "PHASE_COVERAGE_PASS.json": null,
+        "SMOKE_LEVER_RECEIPTS_PASS.json": null,
+        "SMOKE_PASS.json": null,
+        "STOP.json": null
+      },
+      "root": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r7"
+    },
+    {
+      "charged_sim_s": 0,
+      "latest_monitor": null,
+      "ledger_rows": 0,
+      "ledger_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "owners": {},
+      "phases": {},
+      "receipts": {
+        "CHAIN_STATUS.json": null,
+        "CLEAN3_GO_NOGO.json": {
+          "sha256": "d0b4805f749cdf5dda8dfafb80ce7c01c747f9aa9da425e946bcee098d44449d",
+          "value": {
+            "admitted_by_arm": {
+              "B": 0,
+              "R": 0
+            },
+            "admitted_families": {
+              "B": [],
+              "R": []
+            },
+            "branches": 0,
+            "charged_sim_s": 0,
+            "decision": "NO-GO",
+            "diagnostics": 0,
+            "executable_joint_labels_ci95_low_positive": 0,
+            "jobs": 0,
+            "manifest_path": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r8/G1_MANIFEST.json",
+            "manifest_sha256": "be44cdc7af132206a2bb36f91c37ca541244d044058f15f107ad59052a1d02d9",
+            "receipt_sha256": "05aa8e29ebf2975e178952a33f3e0036f12858973d668e2e9be4e0cad40a903d",
+            "rule": "GO iff >=1 admitted executable joint label (synergy CI95 low>0 on pooled and both seeds, safety holds) in BOTH B and R with identical admitted family sets; then the certificate manifest gates B/R bank lessons. Otherwise NO-GO: manifest kept as diagnostic, not bound.",
+            "runtime_sha256": "06ae0a34ec47cc36ca850e4d26d2430ef5924e6aa003b99a279d702c9b11c5d5",
+            "schema": "coopmwm.clean3.g1_go_nogo.v1",
+            "unix": 1793926467.6700685
+          }
+        },
+        "FAULT.json": null,
+        "GATE_PASS.json": null,
+        "LAUNCHED.json": null,
+        "PHASE_COVERAGE_PASS.json": null,
+        "SMOKE_LEVER_RECEIPTS_PASS.json": null,
+        "SMOKE_PASS.json": null,
+        "STOP.json": null
+      },
+      "root": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r8"
+    },
+    {
+      "charged_sim_s": 0,
+      "latest_monitor": null,
+      "ledger_rows": 0,
+      "ledger_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "owners": {},
+      "phases": {},
+      "receipts": {
+        "CHAIN_STATUS.json": null,
+        "CLEAN3_GO_NOGO.json": {
+          "sha256": "d40c9c9ffac0e8edf461161495fd379199cae6c5be4360fc079c665dd69a4399",
+          "value": {
+            "admitted_by_arm": {
+              "B": 0,
+              "R": 0
+            },
+            "admitted_families": {
+              "B": [],
+              "R": []
+            },
+            "branches": 0,
+            "charged_sim_s": 0,
+            "decision": "NO-GO",
+            "diagnostics": 0,
+            "executable_joint_labels_ci95_low_positive": 0,
+            "jobs": 0,
+            "manifest_path": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r9/G1_MANIFEST.json",
+            "manifest_sha256": "be44cdc7af132206a2bb36f91c37ca541244d044058f15f107ad59052a1d02d9",
+            "receipt_sha256": "ef3f3dbb34f65005a2f1bbd3dc7403df33aeccc077d0c1aabb2ba156acfa7651",
+            "rule": "GO iff >=1 admitted executable joint label (synergy CI95 low>0 on pooled and both seeds, safety holds) in BOTH B and R with identical admitted family sets; then the certificate manifest gates B/R bank lessons. Otherwise NO-GO: manifest kept as diagnostic, not bound.",
+            "runtime_sha256": "9f1100df661ef6b2e9d60fb0d47d32e86e2b3d00211da2e509b9589fe5ac4c29",
+            "schema": "coopmwm.clean3.g1_go_nogo.v1",
+            "unix": 1793928989.306004
+          }
+        },
+        "FAULT.json": null,
+        "GATE_PASS.json": null,
+        "LAUNCHED.json": null,
+        "PHASE_COVERAGE_PASS.json": null,
+        "SMOKE_LEVER_RECEIPTS_PASS.json": null,
+        "SMOKE_PASS.json": null,
+        "STOP.json": null
+      },
+      "root": "/home/ubuntu/coopmwm20261106_clean3_g1cert_r9"
+    },
+    {
+      "charged_sim_s": 0,
+      "latest_monitor": null,
+      "ledger_rows": 0,
+      "ledger_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "owners": {},
+      "phases": {},
+      "receipts": {
+        "CHAIN_STATUS.json": {
+          "sha256": "5926dfdbb32232647c319954c4a3851570fe5c7644d655102b4f4184bd69afb7",
+          "value": {
+            "detail": {
+              "error": "ValueError('move members must be 1..4 observable CAVs including ego')",
+              "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/ops/clean3_chain.py\", line 47, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/ops/clean3_chain.py\", line 230, in prepare\n    cfg = c3.prepare(self.source, mined=self.mined)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/clean3_restart.py\", line 589, in prepare\n    supervision = production.bank_move_supervision(runtime)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/launch_production.py\", line 124, in bank_move_supervision\n    bank_breadth.visit(cfg, runtime.arm, consume)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/bank_breadth.py\", line 167, in visit\n    rb.bank_pairs(Path(local['run_root']), arm, local['training_seed'],\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/replay_bank.py\", line 626, in bank_pairs\n    example_consumer(receipt=r, example=ex, plan=plan, pairs=entry_pairs,\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/bank_breadth.py\", line 165, in consume\n    consumer(cfg=bound, receipt=receipt, example=example, plan=plan, pairs=pairs, trace=trace)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/launch_production.py\", line 105, in consume\n    batch = policy.trigger.decide(context, obs_states=reader.local_states,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n    return func(*args, **kwargs)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/trigger_policy.py\", line 236, in decide\n    _validate_move(move, ego, visible, self.families)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/trigger_policy.py\", line 62, in _validate_move\n    raise ValueError('move members must be 1..4 observable CAVs including ego')\nValueError: move members must be 1..4 observable CAVs including ego\n"
+            },
+            "pid": 519447,
+            "root": "/home/ubuntu/coopmwm20261106_clean3_r2",
+            "schema": "coopmwm.clean3.chain.v1",
+            "sequence": 10,
+            "source_commit": "673e80a7da0073af7f3011e33f079c6a4f80a513",
+            "status": "FAILED",
+            "step": "PREPARE",
+            "timestamp": "2026-11-06T01:02:14.190750+00:00",
+            "unix": 1793926934.1907454
+          }
+        },
+        "CLEAN3_GO_NOGO.json": null,
+        "FAULT.json": null,
+        "GATE_PASS.json": null,
+        "LAUNCHED.json": null,
+        "PHASE_COVERAGE_PASS.json": null,
+        "SMOKE_LEVER_RECEIPTS_PASS.json": null,
+        "SMOKE_PASS.json": null,
+        "STOP.json": {
+          "sha256": "434d2acbf07ec871bc30c9b2a92b874a46041d458443affef6d4ae8c19bc8f91",
+          "value": {
+            "detail": {
+              "error": "ValueError('move members must be 1..4 observable CAVs including ego')",
+              "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/ops/clean3_chain.py\", line 47, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/ops/clean3_chain.py\", line 230, in prepare\n    cfg = c3.prepare(self.source, mined=self.mined)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/clean3_restart.py\", line 589, in prepare\n    supervision = production.bank_move_supervision(runtime)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/launch_production.py\", line 124, in bank_move_supervision\n    bank_breadth.visit(cfg, runtime.arm, consume)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/bank_breadth.py\", line 167, in visit\n    rb.bank_pairs(Path(local['run_root']), arm, local['training_seed'],\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/replay_bank.py\", line 626, in bank_pairs\n    example_consumer(receipt=r, example=ex, plan=plan, pairs=entry_pairs,\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/bank_breadth.py\", line 165, in consume\n    consumer(cfg=bound, receipt=receipt, example=example, plan=plan, pairs=pairs, trace=trace)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/launch_production.py\", line 105, in consume\n    batch = policy.trigger.decide(context, obs_states=reader.local_states,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n    return func(*args, **kwargs)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/trigger_policy.py\", line 236, in decide\n    _validate_move(move, ego, visible, self.families)\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_673e80a7/pytools/tools/coopmwm/trigger_policy.py\", line 62, in _validate_move\n    raise ValueError('move members must be 1..4 observable CAVs including ego')\nValueError: move members must be 1..4 observable CAVs including ego\n"
+            },
+            "pid": 519447,
+            "reason": "clean3 detached chain failed; no retry",
+            "root": "/home/ubuntu/coopmwm20261106_clean3_r2",
+            "schema": "coopmwm.clean3.chain.v1",
+            "sequence": 10,
+            "source_commit": "673e80a7da0073af7f3011e33f079c6a4f80a513",
+            "status": "FAILED",
+            "step": "PREPARE",
+            "timestamp": "2026-11-06T01:02:14.190750+00:00",
+            "unix": 1793926934.1907454
+          }
+        }
+      },
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r2"
+    },
+    {
+      "charged_sim_s": 9600,
+      "latest_monitor": null,
+      "ledger_rows": 8,
+      "ledger_sha256": "c732ff2008043639973575eed7ab323c3af9a4d1bfe80378692067a4c61ac61d",
+      "owners": {},
+      "phases": {
+        "track2_smoke": 9600
+      },
+      "receipts": {
+        "CHAIN_STATUS.json": {
+          "sha256": "4d586a952c7115517856d1237ec0088ddd66a2409422ff964b38f0271b330ad8",
+          "value": {
+            "detail": {
+              "error": "RuntimeError('smoke failed; inspect log; no automatic retry')",
+              "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_7b8cbaad/ops/clean3_chain.py\", line 47, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_7b8cbaad/ops/clean3_chain.py\", line 400, in <lambda>\n    ('SMOKE', lambda: self.command('smoke')), ('GATE', lambda: self.command('gate')),\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_7b8cbaad/ops/clean3_chain.py\", line 259, in command\n    raise RuntimeError(action+' failed; inspect log; no automatic retry')\nRuntimeError: smoke failed; inspect log; no automatic retry\n"
+            },
+            "pid": 530368,
+            "root": "/home/ubuntu/coopmwm20261106_clean3_r3",
+            "schema": "coopmwm.clean3.chain.v1",
+            "sequence": 12,
+            "source_commit": "7b8cbaad862fffca5d3fe23a8f199c60f4d5d8dc",
+            "status": "FAILED",
+            "step": "SMOKE",
+            "timestamp": "2026-11-06T02:01:05.151228+00:00",
+            "unix": 1793930465.151224
+          }
+        },
+        "CLEAN3_GO_NOGO.json": null,
+        "FAULT.json": null,
+        "GATE_PASS.json": null,
+        "LAUNCHED.json": null,
+        "PHASE_COVERAGE_PASS.json": null,
+        "SMOKE_LEVER_RECEIPTS_PASS.json": null,
+        "SMOKE_PASS.json": null,
+        "STOP.json": {
+          "sha256": "46299051c4532030e62060cbc51be5fa7319804631cb66a5fb6c62ef334b0718",
+          "value": {
+            "detail": {
+              "error": "RuntimeError('smoke failed; inspect log; no automatic retry')",
+              "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_7b8cbaad/ops/clean3_chain.py\", line 47, in sequence\n    result = action()\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_7b8cbaad/ops/clean3_chain.py\", line 400, in <lambda>\n    ('SMOKE', lambda: self.command('smoke')), ('GATE', lambda: self.command('gate')),\n  File \"/home/ubuntu/coopmwm20261106_clean3_src_7b8cbaad/ops/clean3_chain.py\", line 259, in command\n    raise RuntimeError(action+' failed; inspect log; no automatic retry')\nRuntimeError: smoke failed; inspect log; no automatic retry\n"
+            },
+            "pid": 530368,
+            "reason": "clean3 detached chain failed; no retry",
+            "root": "/home/ubuntu/coopmwm20261106_clean3_r3",
+            "schema": "coopmwm.clean3.chain.v1",
+            "sequence": 12,
+            "source_commit": "7b8cbaad862fffca5d3fe23a8f199c60f4d5d8dc",
+            "status": "FAILED",
+            "step": "SMOKE",
+            "timestamp": "2026-11-06T02:01:05.151228+00:00",
+            "unix": 1793930465.151224
+          }
+        }
+      },
+      "root": "/home/ubuntu/coopmwm20261106_clean3_r3"
+    }
+  ],
+  "schema": "coopmwm.clean3.resume_readonly.v1",
+  "status": "READ_ONLY_INVENTORY",
+  "timestamp": "2026-11-06T02:09:35.214782+00:00",
+  "unix": 1793930975.214793
+}
