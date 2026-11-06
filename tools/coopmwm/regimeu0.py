@@ -569,6 +569,120 @@ def amendment4(roots):
     return out
 
 
+def _collect(roots):
+    """(cell, seed) -> {arm: {t_w: d_w}} window differences and (cell, seed) -> u0 window proxies."""
+    roots = [Path(r) for r in ([roots] if isinstance(roots, (str, Path)) else roots)]
+    windows, proxies = {}, {}
+    for root in roots:
+        body = ir._read(root/'PLAN.json')
+        prox = ir._read(root/'PROXIES.json')['proxies'] if (root/'PROXIES.json').exists() else {}
+        for g in body['groups']:
+            if g['stage'] != 'paired':
+                continue
+            w = g['jobs'][0]['world']
+            key = (w['cell_key'], w['seed'])
+            sums = {}
+            for j in g['jobs']:
+                p = root/'jobs'/j['id']/'SUMMARY.json.gz'
+                s = ir._read(p) if p.exists() else None
+                if s is not None and not s.get('error'):
+                    sums[j['arm']] = s
+                if j['arm'] == 'u0' and j['id'] in prox:
+                    proxies[key] = prox[j['id']]['windows']
+            if 'u0' not in sums:
+                continue
+            for arm, s in sums.items():
+                if arm == 'u0':
+                    continue
+                d = {}
+                for t in WINDOW_STARTS:
+                    b, c = ir.window_j(sums['u0'], t, t+100), ir.window_j(s, t, t+100)
+                    if b and c and b[1] == c[1]:
+                        d[t] = c[0]-b[0]
+                windows.setdefault(key, {})[arm] = d
+    return windows, proxies
+
+
+def pooled(roots, arms=('wall_h_solo2', 'wall_h')):
+    """Registered S-REGIMEU0 amendment 6: cross-cell pooled conditional analysis + pooled split-seed gate."""
+    windows, proxies = _collect(roots)
+    keys = sorted(k for k in windows if k in proxies)
+    cells = sorted({k[0] for k in keys})
+    out = dict(cells=cells, n_episodes=len(keys))
+    cs = sorted(proxies[k][str(t)]['blk_c'] for k in keys for t in WINDOW_STARTS if str(t) in proxies[k])
+    ss = sorted(proxies[k][str(t)]['slow_field'] for k in keys for t in WINDOW_STARTS if str(t) in proxies[k])
+    cuts, scuts = [_quantile(cs, 1/3), _quantile(cs, 2/3)], [_quantile(ss, 1/3), _quantile(ss, 2/3)]
+    out.update(primary_cuts=cuts, secondary_cuts=scuts, primary_zero_share=sum(c == 0 for c in cs)/len(cs))
+    split = {}
+    for cell in cells:
+        seeds = sorted(k[1] for k in keys if k[0] == cell)
+        half = len(seeds)//2
+        for i, s in enumerate(seeds):
+            split[(cell, s)] = 'train' if i < half else 'test'
+    out['strategies'] = {}
+    for arm in arms:
+        res = {}
+
+        def binned(field, cut):
+            bins = {}
+            for b, (lo, hi) in enumerate(((None, cut[0]), (cut[0], cut[1]), (cut[1], None))):
+                by, by_cell = {}, {}
+                for k in keys:
+                    for t, dv in windows[k].get(arm, {}).items():
+                        x = proxies[k][str(t)][field]
+                        inside = ((lo is None or x > lo) and (hi is None or x <= hi)) if b else (x <= hi)
+                        if inside:
+                            by.setdefault(k, []).append(dv)
+                            by_cell.setdefault(k[0], []).append(dv)
+                m, l_, h_ = _seed_boot(by)
+                bins[f't{b+1}'] = dict(range=[lo, hi], n_windows=sum(len(v) for v in by.values()), mean_dw=m,
+                                       ci95=[l_, h_], by_cell={c: dict(n=len(v), mean_dw=sum(v)/len(v))
+                                                              for c, v in sorted(by_cell.items())})
+            return bins
+        res['by_primary_tercile'] = binned('blk_c', cuts)
+        res['by_secondary_tercile'] = binned('slow_field', scuts)
+        train = [k for k in keys if split[k] == 'train' and arm in windows[k]]
+        test = [k for k in keys if split[k] == 'test' and arm in windows[k]]
+        cand = [('always', None), ('never', None)] + [('ge', th) for th in sorted(
+            {proxies[k][str(t)]['blk_c'] for k in train for t in WINDOW_STARTS if str(t) in proxies[k]})]
+
+        def gate(k, t, rule):
+            kind, th = rule
+            return kind == 'always' or (kind == 'ge' and proxies[k][str(t)]['blk_c'] >= th)
+
+        best = None
+        for rule in cand:
+            vals = [(dv if gate(k, t, rule) else 0.) for k in train for t, dv in windows[k][arm].items()]
+            if vals:
+                benefit = -sum(vals)/len(vals)
+                if best is None or benefit > best[0] + 1e-9:
+                    best = (benefit, rule)
+        rule = best[1]
+        g_ep = {k: sum(dv for t, dv in windows[k][arm].items() if gate(k, t, rule)) for k in test}
+        a_ep = {k: sum(windows[k][arm].values()) for k in test}
+
+        def boot(d):
+            return _seed_boot({k: [v] for k, v in d.items()})
+        gm, gl, gh = boot(g_ep)
+        am, al, ah = boot(a_ep)
+        per_cell = {}
+        for cell in cells:
+            gk = [v for k, v in g_ep.items() if k[0] == cell]
+            ak = [v for k, v in a_ep.items() if k[0] == cell]
+            if gk:
+                per_cell[cell] = dict(n=len(gk), gated_mean=sum(gk)/len(gk), always_mean=sum(ak)/len(ak),
+                                      gated_benefit=sum(v < 0 for v in gk)/len(gk), gated_harm=sum(v > 0 for v in gk)/len(gk))
+        n_win = sum(1 for k in test for t in windows[k][arm])
+        res['split_gate'] = dict(rule=list(rule), train_mean_window_benefit=best[0], n_train=len(train), n_test=len(test),
+                                 gated_share_test_windows=sum(1 for k in test for t in windows[k][arm] if gate(k, t, rule))
+                                 / max(1, n_win), gated_test_mean=gm, gated_test_ci95=[gl, gh],
+                                 gated_benefit=sum(v < 0 for v in g_ep.values())/len(g_ep),
+                                 gated_harm=sum(v > 0 for v in g_ep.values())/len(g_ep),
+                                 always_test_mean=am, always_test_ci95=[al, ah], per_cell=per_cell)
+        out['strategies'][arm] = res
+    return out
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     sub = p.add_subparsers(dest='cmd', required=True)
@@ -595,6 +709,9 @@ def main(argv=None):
     a = sub.add_parser('analyze')
     a.add_argument('--root', required=True, nargs='+')
     a.add_argument('--out')
+    a = sub.add_parser('pooled')
+    a.add_argument('--root', required=True, nargs='+')
+    a.add_argument('--out', required=True)
     a = sub.add_parser('amend4')
     a.add_argument('--root', required=True, nargs='+')
     a.add_argument('--out', required=True)
@@ -618,6 +735,8 @@ def main(argv=None):
     elif args.cmd == 'worker':
         s = worker(args.root, args.job)
         print(json.dumps(dict(id=s['id'], error=bool(s['error']), totals=s['totals'], acts=len(s['activations']))))
+    elif args.cmd == 'pooled':
+        Path(args.out).write_text(json.dumps(pooled(args.root), indent=1, sort_keys=True, default=str), encoding='utf-8')
     elif args.cmd == 'amend4':
         Path(args.out).write_text(json.dumps(amendment4(args.root), indent=1, sort_keys=True, default=str)+chr(10),
                                   encoding='utf-8')
