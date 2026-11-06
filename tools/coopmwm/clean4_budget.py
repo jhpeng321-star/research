@@ -55,9 +55,16 @@ def in_range(seed, bounds):
     return bounds[0] <= seed <= bounds[1]
 
 
-def check_seeds(train, final):
-    """TRAIN and final seeds inside their registered wz3to2 ranges, disjoint, never forbidden."""
-    train, final = list(train), list(final)
+EXTRA_TRAIN_RANGES = ((989000, 989099),)   # MAIN ~16:45: guidance rows / Plan A / lessons only
+
+
+def check_seeds(train, final, guidance=()):
+    """TRAIN episode and final seeds inside their registered wz3to2 ranges, disjoint, never forbidden;
+    guidance-row seeds may also come from the extra TRAIN range 989000-989099 (never 989100-989199)."""
+    train, final, guidance = list(train), list(final), list(guidance)
+    for seed in guidance:
+        if type(seed) is not int or not (in_range(seed, TRAIN_RANGE) or any(in_range(seed, r) for r in EXTRA_TRAIN_RANGES)):
+            raise ValueError('guidance rows must come from registered wz3to2 TRAIN seeds: '+repr(seed))
     for seed in train+final:
         if type(seed) is not int or any(in_range(seed, r) for r in FORBIDDEN_RANGES):
             raise ValueError('forbidden or non-integer seed: '+repr(seed))
@@ -67,7 +74,9 @@ def check_seeds(train, final):
         raise ValueError('clean4 final evaluation must use the registered 989600-989699 range')
     if set(train) & set(final):
         raise ValueError('TRAIN and final worlds overlap')
-    return dict(train=len(set(train)), final=len(set(final)))
+    if set(guidance) & set(final):
+        raise ValueError('guidance and final worlds overlap')
+    return dict(train=len(set(train)), final=len(set(final)), guidance=len(set(guidance)))
 
 
 def quote(*, episode_sim_s=EPISODE_SIM_S, episodes_per_update=16, practice_refs_per_update=12,

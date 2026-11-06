@@ -102,7 +102,7 @@ def test_plangen2_range_is_train_only_and_default_sampling_unchanged():
     for seed in (989000, 989007, 989099):
         assert ms.seed_scope(seed) == 'train'
         w = ms.world(seed, 3200, 0.6)
-        assert w['repeat'] == seed-989000 and ms.guard(w, 'train') == w and ms.guard(w, 'mining') == w
+        assert w["repeat"] == 400+seed-989000 and ms.guard(w, "train") == w and ms.guard(w, "mining") == w
         with pytest.raises(ValueError):
             ms.guard(w, 'final_test')
     for seed in (988999, 989100, 989150, 989199):
@@ -141,3 +141,18 @@ def test_plangen2_scenarios_bit_identical_to_generators(tmp_path, seed, demand, 
         ref = (tmp_path/'probe'/name).read_bytes()
         assert (tmp_path/'nm2'/name).read_bytes() == ref and (tmp_path/'n1'/name).read_bytes() == ref
     assert ra == rb == rc and len(ra) > 500
+
+
+def test_extra_range_repeat_identity_and_registry_listing():
+    """N11 WATCH: extra TRAIN repeats never collide with main TRAIN repeats; listed everywhere."""
+    from tools.coopmwm import map_scenarios as ms, map_api, clean4_budget as b
+    main = {ms.world(s, 3200, 0.6)['repeat'] for s in range(989200, 989600)}
+    extra = {ms.world(s, 3200, 0.6)['repeat'] for s in range(989000, 989100)}
+    assert main == set(range(400)) and extra == set(range(400, 500)) and not main & extra
+    assert ms.world(989650, 3200, 0.6)['repeat'] == 50
+    assert ms.registry_record()['extra_train_ranges'] == [[989000, 989099]]
+    assert map_api.seed_ranges()['extra_train'] == [[989000, 989099]]
+    assert b.check_seeds([989220], [989600], guidance=[989007, 989201])['guidance'] == 2
+    for bad in (989150, 989600, 964100):
+        with pytest.raises(ValueError):
+            b.check_seeds([989220], [989601], guidance=[bad])

@@ -21,6 +21,7 @@ CELLS = tuple(c['cell_key'] for c in ms.cells())
 
 def seed_ranges():
     return dict(train=list(ms.TRAIN_RANGE), heldout=list(ms.HELDOUT_RANGE),
+                extra_train=[list(r) for r in ms.EXTRA_TRAIN_RANGES],
                 forbidden=[list(r) for r in ms.FORBIDDEN_RANGES])
 
 
