@@ -110,6 +110,8 @@ def bank_move_supervision(runtime):
         from .wall_negatives import observer as clean_observer
         observer = clean_observer(policy)
     def consume(*, cfg, receipt, example, plan, pairs, trace):
+        if plan.get('free_program') is not None:
+            return  # FULLPOL: exact free_program plans are supervised by fullpol_learn, never projected
         frames = bank_v2v.trace_frames(trace)
         for context, label, reader, weight, time in bank_breadth.observable_contexts(
                 observer, plan, pairs, frames, t0=receipt['t0'],
@@ -159,6 +161,8 @@ def bank_move_supervision(runtime):
     families = Counter(c['family'] for c in contexts)
     other_families = set()
     def other_support(*, cfg, receipt, example, plan, pairs, trace):
+        if plan.get('free_program') is not None:
+            return  # FULLPOL plans: same skip as consume (B = R)
         frames = bank_v2v.trace_frames(trace)
         other_families.update(label.family for _, label, _, _, _ in bank_breadth.observable_contexts(
             policy, plan, pairs, frames, t0=receipt['t0'], certification=cfg.get('_executable_lesson')))

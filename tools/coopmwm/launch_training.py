@@ -166,6 +166,11 @@ def update(cfg, arm, u, *, smoke=False):
     if arm != 'A':
         bank = production.bank_move_supervision(hooks['runtime'])
         learning.update(bank_move_ce=bank['final_ce'], bank_trigger=bank)
+        # FULLPOL (opt-in): exact free_program BC / regime EV-BC + report-only receipts.
+        from .fullpol_learn import supervise as fullpol_supervise
+        fullpol = fullpol_supervise(hooks['runtime'], episodes)
+        if fullpol is not None:
+            learning['fullpol'] = fullpol
     checkpoint = hooks['save_checkpoint']()
     from .practice_starts import update_report
     metrics = production.update_metrics(arm, episodes, learning, envelope,

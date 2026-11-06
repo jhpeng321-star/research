@@ -80,6 +80,10 @@ class MoveAPI:
         ld = lane_drop.settings(cfg)
         if ld is not None:
             self.EXECUTABLE_FAMILIES = self.EXECUTABLE_FAMILIES+lane_drop.extension_families(ld)
+        # FULLPOL (opt-in): free_program options run closed loop on LCEXEC's executor.
+        from . import fullpol_programs
+        self.EXECUTABLE_FAMILIES = self.EXECUTABLE_FAMILIES+fullpol_programs.extension_families(
+            fullpol_programs.settings(cfg))
 
     @staticmethod
     def candidates(obs_state, rng, n):
@@ -87,6 +91,11 @@ class MoveAPI:
 
     @staticmethod
     def offsets(move, t):
+        from . import fullpol_programs
+        if fullpol_programs.is_free_program(move):
+            # FULLPOL: per-member primitives are stepped closed loop from each member's own
+            # observation (EpisodePolicy.sample -> LCEXEC runtime); no open-loop offset here.
+            return dict.fromkeys(move.move.members, 0.)
         if lane_drop.is_lane_drop(move):
             # N2 moves run a closed-loop speed law that needs the member's own speed and
             # commands: EpisodePolicy.sample applies it on the single-writer committed-offset
@@ -158,8 +167,18 @@ def _batch_dict(batch):
         actions=batch.actions.tolist(), logp=batch.logp.tolist(), values=batch.values.tolist())
 
 
+def _option_from_dict(data):
+    if data.get('family') == 'free_program':   # FULLPOL (opt-in) table entries
+        from .fullpol_programs import option_from_dict
+        return option_from_dict(data)
+    if data.get('family') == 'group_hold' and len(data.get('members') or ()) == 1:
+        from .fullpol_ev import SoloHold       # clean5a (opt-in) solo hold
+        return SoloHold.from_dict(data)
+    return lane_drop.option_from_dict(data)
+
+
 def _batch(record):
-    return TriggerBatch(record['context'], tuple(tuple(None if m is None else lane_drop.option_from_dict(m)
+    return TriggerBatch(record['context'], tuple(tuple(None if m is None else _option_from_dict(m)
         for m in table) for table in record['tables']),
         torch.tensor(record['descriptors'], dtype=torch.float32),
         torch.tensor(record['mask'], dtype=torch.bool),
@@ -345,9 +364,19 @@ class EpisodePolicy(torch.nn.Module):
         from .wall_w2 import settings as w2_settings
         self.w2 = w2_settings(cfg)
         w2 = dict(pressure=self.w2['wall_pressure_features'], release=self.w2['wall_release'])
+        # FULLPOL (opt-in): free_program candidates + zero-initialised program descriptor block;
+        # fullpol_head.extension(cfg) IS lane_drop.extension(cfg) when fullpol is OFF.
+        from . import fullpol_head, fullpol_programs, fullpol_ev
+        ev = fullpol_ev.settings(cfg)
+        if ev is not None:
+            self.clean5_ev = {k: ev[k] for k in ('families', 'group_sizes', 'solo_geometry')}
+        self.fullpol = fullpol_programs.settings(cfg)
+        if self.fullpol is not None:
+            self.fp_state = fullpol_programs.runtime_state(self.fullpol, arm)
+            self.fp_offered, self.free_program_runtime = [], None
         self.trigger = TriggerPolicy(self.layer.base, v2v_dim=cfg['v2v_dim'],
             n_candidates=cfg['trigger_candidates'], partner_slots=cfg['trigger_partner_slots'],
-            freeze_base=True, moves_api=MoveAPI(cfg), extension=lane_drop.extension(cfg),
+            freeze_base=True, moves_api=MoveAPI(cfg), extension=fullpol_head.extension(cfg),
             w2=w2 if any(w2.values()) else None)
         self.wall_ends, self.pressure_blocks = {}, {}
         self.trigger_optimizer = self.trigger.optimizer(lr=cfg['trigger_lr'])
@@ -440,6 +469,15 @@ class EpisodePolicy(torch.nn.Module):
             self.pressure_blocks = self._pressure(table, cavs, reports, visible, now, command_commitments)
         if self.lane_drop is not None:
             self._observe_lane_drop(table, cavs, states, reports, visible, now, native_commands)
+        if getattr(self, 'clean5_ev', None) is not None:
+            for vid in cavs:      # clean5a (opt-in): the same N2-only slate rule for every CAV
+                states[vid]['clean5_ev'] = self.clean5_ev
+        if getattr(self, 'fullpol', None) is not None:
+            # Same candidate state for every CAV (the arm's own templates); offered programs
+            # (practice offer mode) are visible to the next periodic decision only.
+            for vid in cavs:
+                states[vid]['free_program'] = dict(self.fp_state, offered=tuple(self.fp_offered))
+            self.fp_table = table
         self.now, self.reports = now, reports
         self.local_states, self.visible, self.blocks = states, visible, blocks
         self.local_intents = local_contexts
@@ -612,8 +650,21 @@ class EpisodePolicy(torch.nn.Module):
         if self.lane_drop is not None and self.lane_drop['moves']:
             entries = [e for e in self.executor.active if lane_drop.is_lane_drop(e['move'])]
             offsets, ld_receipt = self._lane_drop_offsets(context, entries)
+        fp_receipt = None
+        if getattr(self, 'fullpol', None) is not None:
+            from . import fullpol_programs
+            if periodic and decision is not None:
+                self.fp_offered = []
+            entries = [e for e in self.executor.active if fullpol_programs.is_free_program(e['move'])]
+            if entries:
+                if self.free_program_runtime is None:
+                    raise ValueError('free_program execution requires the LCEXEC runtime (fail closed)')
+                fp_offsets, fp_receipt = self.free_program_runtime.step(self, context, entries)
+                offsets.update(fp_offsets)
         for entry in self.executor.active:
             if self.lane_drop is not None and lane_drop.is_lane_drop(entry['move']):
+                continue
+            if getattr(self, 'fullpol', None) is not None and fullpol_programs.is_free_program(entry['move']):
                 continue
             for vid in entry['move'].members:
                 if vid in context['members']:
@@ -638,6 +689,9 @@ class EpisodePolicy(torch.nn.Module):
                 sample['g5_lane_requests'] = lane_requests
         if ld_receipt is not None and ld_receipt['lane_requests']:
             sample['lane_drop_lane_requests'] = dict(ld_receipt['lane_requests'])
+        if fp_receipt is not None:
+            # FULLPOL: per-member primitive commands for LCEXEC's single env writer.
+            sample['free_program_commands'] = fp_receipt
         if getattr(self.layer.base, 'intent_horizon', 0) and context['members']:
             published = self.trigger.publish_trigger_intent(context)
             self.trigger_board = {v: (int(self.now), values) for v, values in published.items()}
@@ -1081,6 +1135,9 @@ class ArmRuntime:
             rewards = reward_update(cfg, arm, self.update, episodes)
         targets = self._reward_targets(rewards, by_key, set(by_key))
         returns, advantages = self._temporal_targets(episodes, targets)
+        from .fullpol_learn import ev_credit_terms
+        ev_terms, ev_receipt = ev_credit_terms(cfg, arm, episodes, eligible={
+            key for key in eligible if 'track2_trigger' in by_key[key]})
         records = [dict(sample=by_key[k], returns=returns[k]) for k in sorted(eligible)]
         layer = self.policy.layer.update_rewards(records, epochs=cfg['layer_epochs'])
         reference = []
@@ -1102,6 +1159,10 @@ class ArmRuntime:
             if synergy_receipt is not None:
                 trigger_advantage = [value + synergy_terms.get((*key, vid), 0.)
                     for vid, value in zip(sample['context']['members'], advantages[key])]
+            if ev_terms:
+                # FULLPOL regime EV credit (opt-in): additive, proposer rows only.
+                trigger_advantage = [value + ev_terms.get((*key, vid), 0.)
+                    for vid, value in zip(sample['context']['members'], trigger_advantage)]
             metrics = ppo_update(self.policy.trigger, self.policy.trigger_optimizer, batch,
                 trigger_advantage, returns[key], **cfg['trigger_ppo'])
             kl = self._trigger_kl(reference)
@@ -1134,6 +1195,7 @@ class ArmRuntime:
         close_call = close_call_settings(cfg)
         return dict(**(dict(g4_synergy_credit=synergy_receipt) if synergy_receipt is not None else {}),
             **(dict(rsu=rsu_metrics) if rsu_metrics is not None else {}),
+            **(dict(fullpol_ev_credit=ev_receipt) if ev_receipt is not None else {}),
             layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),
             wm_credit=dict(enabled=False), reward=dict(schema=REWARD_SCHEMA,
                 registration=deepcopy(cfg['track2_reward']),
