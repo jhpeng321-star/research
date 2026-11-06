@@ -57,8 +57,11 @@ def main():
     commit = subprocess.check_output(['git', '-C', a.worktree, 'rev-parse', a.commit], text=True).strip()
     name = a.name or f'coopmwm20261106_clean4_src_{commit[:8]}'
     target = f'/home/ubuntu/{name}'
+    # Hard rule: no path containing a forbidden token is ever shipped/opened (e.g. tests/planner/test_holdout_guard.py).
+    excludes = [f':(exclude,glob)**/*{t}*' for t in ('sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b',
+                                                  'inc1', 'hetdata_truth')]
     tar = subprocess.check_output(['git', '-C', a.worktree, '-c', 'core.autocrlf=false', 'archive', '--format=tar',
-                                   commit, 'tools', 'tests', 'ops', 'assets/research/newmap_candidates'])
+                                   commit, '--', 'tools', 'tests', 'ops', 'assets/research/newmap_candidates', *excludes])
     blob = gzip.compress(tar, mtime=0)
     local = Path(a.worktree)/'_out'/f'{name}.tar.gz'
     local.parent.mkdir(exist_ok=True)
