@@ -52,20 +52,22 @@ def main():
     ap.add_argument('worktree')
     ap.add_argument('commit')
     ap.add_argument('--host', default='cpuV')
+    ap.add_argument('--base', default=BASE, help='clean3 source tree on the host (gpuA: own copy)')
+    ap.add_argument('--target-dir', default='/home/ubuntu/imitreplay_20261106')
     a = ap.parse_args()
     commit = subprocess.check_output(['git', '-C', a.worktree, 'rev-parse', a.commit], text=True).strip()
     name = f'src_{commit[:8]}'
-    target = f'/home/ubuntu/imitreplay_20261106/{name}'
+    target = f'{a.target_dir}/{name}'
     tar = subprocess.check_output(['git', '-C', a.worktree, '-c', 'core.autocrlf=false', 'archive', '--format=tar',
                                    commit, 'tools', 'tests', 'ops', 'assets/research/newmap_candidates'])
     blob = gzip.compress(tar, mtime=0)
     local = Path(a.worktree)/'_out'/f'{name}.tar.gz'
     local.parent.mkdir(exist_ok=True)
     local.write_bytes(blob)
-    remote_tar = f'/home/ubuntu/imitreplay_20261106/{name}.tar.gz'
+    remote_tar = f'{a.target_dir}/{name}.tar.gz'
     subprocess.check_call(['scp', '-q', '-C', '-o', 'BatchMode=yes', '-o', 'ServerAliveInterval=15', str(local),
                            f'{a.host}:{remote_tar}'])
-    script = REMOTE.format(target=target, base=BASE, tarball=remote_tar, linked=' '.join(LINKED), commit=commit)
+    script = REMOTE.format(target=target, base=a.base, tarball=remote_tar, linked=' '.join(LINKED), commit=commit)
     # bytes, not text: Windows text-mode stdin would turn LF into CRLF inside the bash script
     out = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ServerAliveInterval=15', a.host, 'bash -s'],
                          input=script.replace(chr(13), '').encode(), capture_output=True)

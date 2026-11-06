@@ -60,3 +60,15 @@ def test_base_arm_is_untouched():
     hook = ru.RuleHook(None)
     hook(ctl, {}, {})
     assert ctl.apply == original
+
+
+def test_wall_g_parameters_and_cooldown():
+    ctl = Ctl()
+    hook = ru.RuleHook('wall_g')
+    hook(ctl, {}, {})
+    rows = rows_wall()
+    cmds = {r['vid']: .2 for r in rows if r['is_cav']}
+    out = ctl.apply(rows, cmds, 300)
+    assert sorted(out) == ['a', 'b', 'c'] and hook.next_ok == 420
+    assert out['c']['requested_raw'] == pytest.approx(1.0)            # v=10 -> clip(22-10, -1, 1)
+    assert out['a']['requested_raw'] == pytest.approx(-1.0)           # v=25 -> clip(22-25, -1, 1)

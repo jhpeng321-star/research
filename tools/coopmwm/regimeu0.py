@@ -48,8 +48,14 @@ ZONE_S = (X_B-1800.0-S_OFF, X_B-400.0-S_OFF)
 WALL_SPREAD = 200.0
 RELEASE_S = X_B-S_OFF
 WALL_H = dict(v_w=15.0, hold_s=90, dmax=1.5, amax=1.0)
-STRATEGIES = {'wall_h': None, 'wall_h_solo2': 2, 'wall_h_solo0': 0, 'wall_h_solo1': 1}
+WALL_G = dict(v_w=22.0, hold_s=120, dmax=1.0, amax=1.0)          # pg2_plan VARIANTS['wall_g'] (S-LOWSHARE-U0)
+VARIANT_PARAMS = dict(wall_h=WALL_H, wall_g=WALL_G)
+# strategy -> (variant, solo SUMO lane or None)
+STRATEGIES = {f'{w}{suffix}': (w, solo) for w in ('wall_h', 'wall_g')
+              for suffix, solo in (('', None), ('_solo0', 0), ('_solo1', 1), ('_solo2', 2))}
+GROUP_ARMS = ('wall_h', 'wall_g')
 ARMS = ('u0', 'wall_h_solo2', 'wall_h', 'wall_h_solo0')
+ALL_ARMS = ('u0', 'wall_h_solo2', 'wall_h', 'wall_h_solo0', 'wall_g', 'wall_g_solo2', 'wall_g_solo0')
 SEEDS = tuple(range(989850, 989866))
 CELL = (3200, 0.6)
 IDENTITY = dict(seed=989599, demand=3200, penetration=0.6, expected_team_delay_vs=53269.32889342696)
@@ -89,6 +95,7 @@ class RuleHook(ir.Recorder):
         if strategy is not None and strategy not in STRATEGIES:
             raise ValueError(strategy)
         self.strategy = strategy
+        self.params = VARIANT_PARAMS[STRATEGIES[strategy][0]] if strategy is not None else WALL_H
         self.active = {}            # vid -> dict(start, act)
         self.acts, self.issued = [], []
         self.next_ok = -1
@@ -109,7 +116,8 @@ class RuleHook(ir.Recorder):
 
     def _law(self, row):
         v = float(row['v_mps'])
-        return max(-WALL_H['dmax'], min(WALL_H['amax'], WALL_H['v_w']-v))
+        p = self.params
+        return max(-p['dmax'], min(p['amax'], p['v_w']-v))
 
     def step(self, rows, commands, t, desired, controller):
         by = {r['vid']: r for r in rows if r.get('is_cav')}
@@ -118,7 +126,7 @@ class RuleHook(ir.Recorder):
         for vid, m in list(self.active.items()):
             el = t-m['start']
             row = by.get(vid)
-            why = ('left' if row is None or vid not in commands else 'hold_end' if el >= WALL_H['hold_s']
+            why = ('left' if row is None or vid not in commands else 'hold_end' if el >= self.params['hold_s']
                    else 'at_drop' if float(row['s_m']) >= RELEASE_S else None)
             if why is not None:
                 m['act']['release'][vid] = [el, why]
@@ -132,7 +140,7 @@ class RuleHook(ir.Recorder):
             free = [r for r in by.values() if r['vid'] not in self.active and r['vid'] in commands]
             wall = pick_wall(free)
             if wall:
-                solo = STRATEGIES[self.strategy]
+                solo = STRATEGIES[self.strategy][1]
                 members = [c for c in wall if solo is None or sumo_lane(c['lane']) == solo]
                 xs = [c['s_m'] for c in wall]
                 act = dict(t=t, strategy=self.strategy, members=[c['vid'] for c in members],
@@ -140,7 +148,7 @@ class RuleHook(ir.Recorder):
                            s=[round(c['s_m'], 2) for c in members], v=[round(c['v_mps'], 3) for c in members],
                            span=round(max(xs)-min(xs), 2), release={})
                 self.acts.append(act)
-                self.next_ok = t+WALL_H['hold_s']
+                self.next_ok = t+self.params['hold_s']
                 for c in members:
                     self.active[c['vid']] = dict(start=t, act=act)
                     a = self._law(c)
@@ -388,7 +396,7 @@ def analyze(roots):
     for cell in sorted({r['cell'] for r in rep['seeds']}):
         rows = [r for r in rep['seeds'] if r['cell'] == cell]
         out = {}
-        for arm in [x for x in ARMS if any(x in r['arms'] for r in rows)]:
+        for arm in [x for x in ALL_ARMS if any(x in r['arms'] for r in rows)]:
             recs = [r['arms'][arm] for r in rows if r['arms'].get(arm, {}).get('status') == 'ok']
             a = dict(n=len(recs), mean_J=(sum(x['J'] for x in recs)/len(recs)) if recs else None,
                      failed=sum(r['arms'].get(arm, {}).get('status') == 'failed' for r in rows))
@@ -409,18 +417,22 @@ def analyze(roots):
             if arm != 'u0' and a.get('mean_diff') is not None and base_mean:
                 a['rel_diff'] = a['mean_diff']/base_mean
                 a['rel_ci95'] = [a['ci95'][0]/base_mean, a['ci95'][1]/base_mean]
-        present = [x for x in ARMS if any(x in r['arms'] for r in rows)]
+        present = [x for x in ALL_ARMS if any(x in r['arms'] for r in rows)]
         ok = [r for r in rows if all(r['arms'].get(x, {}).get('status') == 'ok' for x in present)]
-        if ok and 'wall_h' in present and any('solo' in x for x in present):
+        solos = [x for x in present if 'solo' in x]
+        for group in [g for g in GROUP_ARMS if g in present]:
+            if not ok or not solos:
+                continue
             rng = random.Random(BOOT_SEED)
-            solos = [x for x in present if 'solo' in x]
 
-            def stat(rs):
-                mean = {x: sum(r['arms'][x]['J'] for r in rs)/len(rs) for x in ('wall_h', *solos)}
-                return mean['wall_h']-min(mean[x] for x in solos)
+            def stat(rs, group=group):
+                mean = {x: sum(r['arms'][x]['J'] for r in rs)/len(rs) for x in (group, *solos)}
+                return mean[group]-min(mean[x] for x in solos)
             draws = sorted(stat([ok[rng.randrange(len(ok))] for _ in ok]) for _ in range(BOOT))
-            out['group_minus_best_solo'] = dict(point=stat(ok), ci95=[draws[int(.025*BOOT)], draws[int(.975*BOOT)-1]],
-                                                n=len(ok), solos=solos)
+            beats = [r['arms'][group]['J'] < min(r['arms'][x]['J'] for x in solos) for r in ok]
+            key = 'group_minus_best_solo' if group == 'wall_h' else f'{group}_minus_best_solo'
+            out[key] = dict(point=stat(ok), ci95=[draws[int(.025*BOOT)], draws[int(.975*BOOT)-1]], n=len(ok),
+                            solos=solos, group=group, beats_all_solos_fraction=sum(beats)/len(beats))
         rep['cells'][cell] = out
     return rep
 

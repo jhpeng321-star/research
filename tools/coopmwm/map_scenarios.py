@@ -34,6 +34,7 @@ from pathlib import Path
 MAP = 'wz3to2'
 DEMANDS = (2400, 2800, 3200)
 SHARES = (0.2, 0.4, 0.6)
+EXTRA_CELLS = ((3200, 0.3),)        # c4/imitreplay only (S-LOWSHARE-U0)
 #: MAIN 2026-11-06 (N11 F4): the canonical clean4 cell every agent uses (N3/PLANGEN/N4/N6).
 CANONICAL_CELL_KEY = 'D3200_p60'
 TRAIN_RANGE = (989200, 989599)
@@ -45,7 +46,9 @@ EXTRA_TRAIN_RANGES = ((989000, 989099),
                       # 989700-989899 (registered TRAIN-type, never evaluation); REGIME confirmed 989850-989899 unused.
                       (989850, 989899),
                       # S-REGIMEU0 amendment 5 (MAIN 20:0x): 989724-989819 (S-REGIME range, unused by REGIME)
-                      (989724, 989819))
+                      (989724, 989819),
+                      # S-LOWSHARE-U0 (MAIN 20:3x): 989820-989849 (S-REGIME range, unused by REGIME / REGIMEU0)
+                      (989820, 989849))
 HELDOUT_RANGE = (989600, 989699)
 FORBIDDEN_RANGES = ((964000, 964199), (962000, 962999), (977000, 977999))
 EPISODE_S = 1200
@@ -67,7 +70,11 @@ def cell_key(demand, penetration):
 
 def cells():
     return [dict(cell=i*len(SHARES)+j, demand=d, penetration=p, cell_key=cell_key(d, p))
-            for i, d in enumerate(DEMANDS) for j, p in enumerate(SHARES)]
+            for i, d in enumerate(DEMANDS) for j, p in enumerate(SHARES)] + [
+        # c4/imitreplay only - S-LOWSHARE-U0 (MAIN 2026-11-06 20:3x): extra cells appended after the 9 registered
+        # ones (ids unchanged); the probe/NEWMAP2 generator accepts any share.
+        dict(cell=len(DEMANDS)*len(SHARES)+k, demand=d, penetration=p, cell_key=cell_key(d, p))
+        for k, (d, p) in enumerate(EXTRA_CELLS)]
 
 
 def _forbidden(seed):
@@ -117,7 +124,7 @@ def worlds(role='train', *, seeds=None, cell_ids=None):
         extra = role in TRAIN_ROLES and seeds is not None and any(a <= s <= b for a, b in EXTRA_TRAIN_RANGES)
         if not (lo <= s <= hi or extra):
             raise ValueError(f'seed {s} is not in the {role} range {lo}-{hi}')
-        for c in cells():
+        for c in cells()[:len(DEMANDS)*len(SHARES)]:   # default enumeration: registered cells only
             if cell_ids is None or c['cell'] in cell_ids:
                 out.append(world(s, c['demand'], c['penetration']))
     return out
