@@ -44,7 +44,7 @@ from torch import nn
 from torch.distributions import Categorical
 
 from . import lane_drop as ld
-from . import moves
+
 from .merge_features import (CONTROL_DT_S, N_LANES, QUEUE_SPEED_MPS, SENSOR_RANGE_M,
                              _local_rows, _valid_report)
 
@@ -53,7 +53,7 @@ RSU_RANGE_WINDOW_M = (100., 1000.)
 DEFAULT_RSU_RANGE_M = 1000.    # DSRC-class upper range: covers the abreast window from 400 m
 RSU_CANDIDATES = 4             # registered slate size (= the clean3 trigger_candidates)
 RSU_HIDDEN = 32
-JOIN_RADIUS_M = ld.ABREAST_SPAN_M   # joiners within the registered span of the anchor
+JOIN_RADIUS_M = ld.PAIR_DX_M       # joiners within the registered pair |dx| of the anchor
 
 LANE_FIELD = ('lane_present', 'count_veh', 'queue_veh', 'mean_speed_mps', 'coverage_frac',
               'speed_missing', 'cav_reports')
@@ -186,7 +186,7 @@ def suggestion_pools(accepted, view):
             partners = [rows[v] for v in sorted(rows) if v != vid]
             for group in ld.joint_groups(kind, view, own, partners):
                 key = tuple(r['vid'] for r in group)
-                if key in seen or ld._arrival(view, group) < moves._HOLD_LO:
+                if key in seen:
                     continue
                 seen.add(key)
                 found.append(group)
@@ -196,11 +196,9 @@ def suggestion_pools(accepted, view):
 
 
 def _suggestion(kind, group, view, rng):
-    onset, hold, depth, target, gap_dv, zipped = ld._params(rng, kind)
-    clipped = ld.clip_schedule(onset, hold, ld._arrival(view, group))
-    if clipped is None:
-        return None
-    return dict(kind=kind, onset=clipped[0], hold=clipped[1], depth=depth, target_mps=target,
+    # The RSU has no CAV anchor, so pair_t (anchor release) is not an RSU variant.
+    onset, hold, depth, target, gap_dv, zipped, _ = ld._params(rng, kind, allow_anchor=False)
+    return dict(kind=kind, onset=onset, hold=hold, depth=depth, target_mps=target,
                 gap_dv_mps=gap_dv, zip=zipped, anchor_s_m=float(np.mean([r['s_m'] for r in group])),
                 anchor_v_mps=float(np.mean([r['v_mps'] for r in group])), radius_m=JOIN_RADIUS_M,
                 group_size=len(group))
@@ -225,12 +223,11 @@ def descriptor(suggestion, view):
         return [0.]*DESCRIPTOR_DIM
     lo, hi = ld.TARGET_WINDOW_MPS
     return [float(suggestion['kind'] == 'closing_pair'), float(suggestion['kind'] == 'abreast_wall'),
-            view.distance_to_drop(suggestion['anchor_s_m'])/ld.ABREAST_WINDOW_M[1],
+            view.distance_to_drop(suggestion['anchor_s_m'])/ld.ZONE_WINDOW_M[1],
             (suggestion['target_mps']-lo)/(hi-lo), suggestion['gap_dv_mps']/ld.GAP_DV_WINDOW_MPS[1],
             float(suggestion['zip']),
-            (suggestion['onset']-moves._ONSET_LO)/(moves._ONSET_HI-moves._ONSET_LO),
-            (suggestion['hold']-moves._HOLD_LO)/(moves._HOLD_HI-moves._HOLD_LO),
-            (suggestion['depth']-moves._DEPTH_LO)/(moves._DEPTH_HI-moves._DEPTH_LO),
+            suggestion['onset']/ld.ONSET_WINDOW_S[1], suggestion['hold']/ld.HOLD_WINDOW_S[1],
+            (suggestion['depth']-ld.BRAKE_WINDOW_MPS2[0])/(ld.BRAKE_WINDOW_MPS2[1]-ld.BRAKE_WINDOW_MPS2[0]),
             suggestion['group_size']/len(view.lane_ids)]
 
 

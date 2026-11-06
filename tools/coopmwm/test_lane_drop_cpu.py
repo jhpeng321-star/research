@@ -47,7 +47,7 @@ MAP = ld.MapView.from_descriptor(StubMap()).to_dict()
 
 
 def ld_cfg(cfg, *, features=True, moves_on=True, v2v=True, range_m=None, cap=None, rsu=None, slots=4):
-    out = dict(cfg, trigger_partner_slots=slots)
+    out = dict(cfg, trigger_partner_slots=slots, trigger_candidates=8)
     out.update(ld.config_keys(provenance=PROV, descriptor=StubMap(), features=features, moves_on=moves_on,
                               v2v=v2v, v2v_range_m=range_m, member_cap=cap, rsu=rsu))
     return out
@@ -103,19 +103,20 @@ class Prefer(nn.Module):
         return sum(w*x[..., c] for c, w in self.cols)[..., None]
 
 
-FIXED = dict(onset=2, hold=40, depth=.6, target=18., gap_dv=2., zip=False)
+FIXED = dict(onset=2, hold=40, depth=1., target=18., gap_dv=2., zip=False, anchor=False)
 
 
 @pytest.fixture
 def fixed(monkeypatch):
+    """Fixed draws inside the registered windows (onset/hold shortened only to keep tests short)."""
     values = dict(FIXED)
 
-    def params(rng, kind):
-        moves._sampled(rng)   # keep the stream shape
-        if kind == 'abreast_wall':
-            return values['onset'], values['hold'], values['depth'], values['target'], 0., False
+    def params(rng, kind, *, allow_anchor=True):
+        rng.integers(3)   # keep the stream shape
+        if kind != 'closing_pair':
+            return values['onset'], values['hold'], values['depth'], values['target'], 0., False, False
         return (values['onset'], values['hold'], values['depth'], values['target'], values['gap_dv'],
-                values['zip'])
+                values['zip'], values['anchor'] and allow_anchor)
     monkeypatch.setattr(ld, '_params', params)
     monkeypatch.setattr(moves, '_sampled', lambda rng, onset=None: (2, 40, .6))
     return values
@@ -331,7 +332,7 @@ def test_episode_blocks_ignore_unsensed_vehicles_and_hidden_fields(cfg):
 
 
 def test_features_only_are_zero_init_additive_and_mappo_untouched(cfg):
-    off, on = make(dict(cfg, trigger_partner_slots=4)), make(ld_cfg(cfg, moves_on=False, v2v=False))
+    off, on = make(dict(cfg, trigger_partner_slots=4, trigger_candidates=8)), make(ld_cfg(cfg, moves_on=False, v2v=False))
     w_off, w_on = off.layer.residual[0].weight, on.layer.residual[0].weight
     assert w_on.shape[1] == w_off.shape[1]+ld.LANE_DROP_DIM
     assert torch.equal(w_on[:, :w_off.shape[1]-1], w_off[:, :-1]) and torch.equal(w_on[:, -1], w_off[:, -1])
@@ -389,7 +390,7 @@ def test_joint_candidates_roles_windows_and_hdvs(cfg, fixed):
     near_drop = dict(rows['a'], s_m=-200.)                      # outside the abreast window
     assert ld.joint_groups('abreast_wall', view, near_drop, cavs) == []
     # HDVs are never members (pools see only acquirable CAV rows); the span is registered.
-    far = dict(rows['b'], s_m=-1100.)
+    far = dict(rows['b'], s_m=-1050.)                         # |dx| 150 m > the registered 100 m
     assert ld.joint_groups('closing_pair', view, rows['a'], [far]) == []
     with pytest.raises(ValueError):
         ld.LaneDropMove('abreast_wall', ('a', 'b'), 0, 30, .5, 18., 1., False, (1, 2))
@@ -407,7 +408,7 @@ def plan_inputs(move, seconds):
 
 def test_executable_plan_binding_and_refusals():
     view = ld.MapView.from_descriptor(StubMap())
-    move = ld.LaneDropMove('closing_pair', ('a', 'b'), 3, 25, .8, 17., 2., True, (2, 1))
+    move = ld.LaneDropMove('closing_pair', ('a', 'b'), 3, 25, 1.5, 17., 2., True, (2, 1))
     base, speeds, positions = plan_inputs(move, 28)
     plan = ld.plan(move, view, policy_profile=base.tolist(), member_speeds=speeds.tolist(),
                    member_positions=positions.tolist())
@@ -415,8 +416,8 @@ def test_executable_plan_binding_and_refusals():
     profile = np.array(plan['profile'])
     assert np.allclose(profile[:, :3], base[:, :3])                       # before onset: the policy
     for t in range(3, 28):
-        assert profile[0, t] == pytest.approx(ld.law(17., speeds[0, t], .8))
-        assert profile[1, t] == pytest.approx(ld.law(15., speeds[1, t], .8))   # partner: gap_dv lower
+        assert profile[0, t] == pytest.approx(ld.law(17., speeds[0, t], 1.5))
+        assert profile[1, t] == pytest.approx(ld.law(15., speeds[1, t], 1.5))   # partner: gap_dv lower
     assert plan['lane_drop_lane_actions'][0][27] == 1 and sum(map(sum, plan['lane_drop_lane_actions'])) == 1
     for key, value in (('profile', (profile+1e-3).tolist()), ('perturbation_profile', base.tolist()),
                        ('member_speeds_mps', (speeds+1.).tolist()), ('duration_s', 27),
@@ -429,12 +430,160 @@ def test_executable_plan_binding_and_refusals():
     bad_roles = dict(plan, lane_drop_macro=dict(plan['lane_drop_macro'], lanes=[1, 2]))
     with pytest.raises(ValueError):
         ld.from_plan(bad_roles)
-    # Release: a member within the registered distance of the drop stops the law for all.
+    # NEWMAP2 release: a member releases at its OWN drop crossing; the other keeps holding.
     close = positions.copy()
-    close[1, 10:] = -20.
-    released = ld.plan(move, view, policy_profile=base.tolist(), member_speeds=speeds.tolist(),
-                       member_positions=close.tolist())
-    assert np.allclose(np.array(released['profile'])[:, 10:], base[:, 10:])
+    close[1, 10:] = 5.
+    released = np.array(ld.plan(move, view, policy_profile=base.tolist(), member_speeds=speeds.tolist(),
+                                member_positions=close.tolist())['profile'])
+    assert np.allclose(released[1, 10:], base[1, 10:])
+    assert released[0, 12] == pytest.approx(ld.law(17., speeds[0, 12], 1.5))
+    # pair_t: the closing-lane anchor 150 m before the drop releases both members.
+    anchored = ld.LaneDropMove('closing_pair', ('a', 'b'), 0, 28, 1., 22., 0., False, (2, 1), anchor=0)
+    near = positions.copy()
+    near[0, 10:] = -149.
+    out = np.array(ld.plan(anchored, view, policy_profile=base.tolist(), member_speeds=speeds.tolist(),
+                           member_positions=near.tolist())['profile'])
+    assert np.allclose(out[:, 10:], base[:, 10:]) and out[1, 9] == pytest.approx(ld.law(22., speeds[1, 9], 1.))
+    with pytest.raises(ValueError):
+        ld.LaneDropMove('closing_pair', ('a', 'b'), 0, 28, 1., 22., 0., False, (2, 1), anchor=1)
+
+
+def test_registered_values_are_the_newmap2_registration():
+    """Blocker 2: no unsourced values; online draws only from the NEWMAP2 variants / R sets."""
+    assert ld.TARGET_WINDOW_MPS == (15., 22.) and ld.BRAKE_WINDOW_MPS2 == (1., 1.5)
+    assert ld.HOLD_WINDOW_S == (20, 180) and ld.ANCHOR_RELEASE_M == 150. and ld.ZONE_WINDOW_M == (400., 1800.)
+    assert {k: (v['family'], v['target_mps'], v['hold'], v['depth'], v['anchor']) for k, v in ld.VARIANTS.items()} == {
+        'pair_g': ('closing_pair', 22., 120, 1., False), 'pair_h': ('closing_pair', 15., 90, 1.5, False),
+        'pair_t': ('closing_pair', 22., 150, 1., True), 'wall_g': ('abreast_wall', 22., 120, 1., False),
+        'wall_h': ('abreast_wall', 15., 90, 1.5, False)}
+    rng = np.random.default_rng(0)
+    seen = {k: set() for k in ld.JOINT_FAMILIES}
+    for _ in range(300):
+        for kind in ld.JOINT_FAMILIES:
+            seen[kind].add(ld._params(rng, kind))
+    variants = {k: {(0, v['hold'], v['depth'], v['target_mps'], 0., False, v['anchor'])
+                    for v in ld.VARIANTS.values() if v['family'] == k} for k in ld.KINDS}
+    assert seen['closing_pair'] == variants['closing_pair'] and seen['abreast_wall'] == variants['abreast_wall']
+    assert {(t, h, d) for _, h, d, t, *_ in seen['group_hold']} == {
+        (t, h, d) for t in (15., 18., 22.) for h in (90, 120, 180) for d in (1., 1.5)}
+    assert all(not a for *_, a in (ld._params(rng, 'closing_pair', allow_anchor=False) for _ in range(50)))
+    for bad in (dict(target_mps=25.), dict(depth=.6), dict(hold=200), dict(depth=2.)):
+        values = dict(family='abreast_wall', members=('a', 'b', 'c'), onset=0, hold=120, depth=1.,
+                      target_mps=22., lanes=(0, 1, 2), **{})
+        values.update(bad)
+        with pytest.raises(ValueError):
+            ld.LaneDropMove(**values)
+
+
+MINED = Path(__file__).resolve().parent/'fixtures'/'n2_mined_rows.jsonl.gz'
+MINED_SHA256 = {
+    'NEWMAP_MOVES_B.jsonl': '88adb68aca9d9cac3537db3291abf224bdb91885914664a2419627bb63fc864b',
+    'NEWMAP_MOVES_R.jsonl': 'd6b4b1af80d3ad08d18a1cff97be155c70de1a4f8a829577d7fbb8e636d08388',
+    'PLANGEN_MOVES_B.jsonl': '369ccd4ff8c477554808b3a76e0cc344c0afd1ee8ad10328111467e6d56b5c93',
+    'PLANGEN_MOVES_R.jsonl': '7c43b502a1d3f9eb5d023ddc1576a79dd8c4bae63ab4b4b72384299eb9d7acea',
+    'PLANGEN2_MOVES_B.jsonl': 'ec097835b2a4d417338901f2bd71568fa9a260a9d0dc4e04c2980d155607ade0',
+    'PLANGEN2_MOVES_R.jsonl': '591078b861f23925bdce5d75a2998dcb7e759bbbc928f77af0549330377c7f2f'}
+MINED_SOURCE = Path('E:/research-dense/runs/active/C4-V7FT-20261017')
+
+
+def mined_rows():
+    import gzip
+    with gzip.open(MINED, 'rt', encoding='utf-8') as stream:
+        return [json.loads(line) for line in stream]
+
+
+def test_mined_fixture_is_the_registered_rows():
+    entries = mined_rows()
+    import hashlib
+    for name, sha in MINED_SHA256.items():
+        path = MINED_SOURCE/name
+        rows = [e['row'] for e in entries if e['source'] == name]
+        if path.exists():
+            data = path.read_bytes()
+            assert hashlib.sha256(data).hexdigest() == sha
+            assert rows == [json.loads(line) for line in data.decode('utf-8').splitlines() if line.strip()]
+        assert rows
+    assert len(entries) == 27+3+18+15+24+18
+
+
+def test_all_mined_hold_rows_bind_exactly_with_zero_legacy_projection():
+    """Blocker 1: every NEWMAP2 / PLANGEN / PLANGEN2 wall/pair/hold row binds to a lane-drop
+    plan in the N1 WM frame; lane-change families (N9) are n/a; nothing reaches the legacy
+    merge-map families."""
+    from collections import Counter
+    from . import map_descriptor as md
+    desc = md.load(WZ3TO2)
+    bound, na = Counter(), Counter()
+    for entry in mined_rows():
+        row = entry['row']
+        try:
+            plan = ld.plan_from_mined_row(row, desc)
+        except ld.NotRepresentable:
+            na[(entry['source'], row['family'], row.get('r_kind'))] += 1
+            assert ({m.get('role') for m in row['move']['members']} - {None, 'hold'}) or row.get('commands')
+            continue
+        move = moves.from_plan(plan)
+        assert isinstance(move, ld.LaneDropMove) and move == ld.from_plan(plan)
+        assert move.family in ld.JOINT_FAMILIES and move.family not in moves.ALL_FAMILIES
+        params = row['move']['members'][0]['params']
+        assert (move.target_mps, move.hold, move.depth) == (params['v_w'], params['hold_s'], params['dmax'])
+        assert move.check_roles(desc) and move.onset == 0
+        if row['family'] != 'R_random':
+            assert move.family == row['family']
+        wm = {m['id']: desc.lane_table[('up', m['lane'])][0] for m in row['move']['members']}
+        assert list(move.lanes) == [wm[v] for v in move.members]
+        assert (move.anchor >= 0) == (row['variant'] == 'pair_t')
+        if move.anchor >= 0:
+            assert move.members[move.anchor] == params['anchor'] and move.lanes[move.anchor] == 2
+        order = [row['members'].index(v) for v in move.members]
+        assert plan['profile'] == [row['profile'][i] for i in order]
+        assert plan['member_release_el'] == [row['release_el'][row['members'][i]] for i in order]
+        assert ld.move_from_mined_row(row, desc) == move
+        # Inverse (N4 provisional SUMO builder API): the WM move -> the exact NEWMAP2 executor spec.
+        spec = {m['id']: m for m in ld.newmap_members(move, desc)}
+        for member in row['move']['members']:
+            assert (spec[member['id']]['lane'], spec[member['id']]['params']) == (member['lane'], member['params'])
+        again = ld.verified_plan(move, desc, duration_s=plan['duration_s'],
+            release_el=dict(zip(move.members, plan['member_release_el'])),
+            profile=dict(zip(move.members, plan['profile'])),
+            policy_profile=dict(zip(move.members, plan['policy_profile'])))
+        assert again['profile'] == plan['profile'] and moves.from_plan(again) == move
+        bound[(entry['source'], move.family)] += 1
+    assert bound == {
+        ('NEWMAP_MOVES_B.jsonl', 'abreast_wall'): 21, ('NEWMAP_MOVES_B.jsonl', 'closing_pair'): 6,
+        ('NEWMAP_MOVES_R.jsonl', 'group_hold'): 3,
+        ('PLANGEN_MOVES_B.jsonl', 'abreast_wall'): 12, ('PLANGEN_MOVES_B.jsonl', 'closing_pair'): 6,
+        ('PLANGEN_MOVES_R.jsonl', 'abreast_wall'): 3, ('PLANGEN_MOVES_R.jsonl', 'group_hold'): 12,
+        ('PLANGEN2_MOVES_B.jsonl', 'abreast_wall'): 9, ('PLANGEN2_MOVES_B.jsonl', 'closing_pair'): 6,
+        ('PLANGEN2_MOVES_R.jsonl', 'group_hold'): 9}
+    assert na == {('PLANGEN2_MOVES_B.jsonl', 'early_merge', None): 3,
+                  ('PLANGEN2_MOVES_B.jsonl', 'lane_balance', None): 3,
+                  ('PLANGEN2_MOVES_B.jsonl', 'zipper_order', None): 3,
+                  ('PLANGEN2_MOVES_R.jsonl', 'R_random', 'lane_balance'): 9}
+
+
+def test_mined_row_converter_refuses_inexact_rows():
+    from . import map_descriptor as md
+    desc = md.load(WZ3TO2)
+    row = next(e['row'] for e in mined_rows() if e['row']['variant'] == 'wall_h')
+    plan = ld.plan_from_mined_row(row, desc)
+    tampered = deepcopy(plan)
+    tampered['profile'][0][0] = -1.6                            # beyond dmax 1.5 while held
+    tampered['perturbation_profile'][0][0] = -1.6-tampered['policy_profile'][0][0]
+    for bad in (tampered, dict(plan, member_release_el=[1, 1, 1]), dict(plan, perturbation_profile=plan['profile']),
+                dict(plan, lane_drop_macro=dict(plan['lane_drop_macro'], hold=30)),
+                dict(plan, member_speeds_mps=[[0.]*plan['duration_s']]*3)):
+        with pytest.raises(ValueError):
+            ld.from_plan(bad)
+    for change in (lambda r: r['move']['members'][0]['params'].update(release_x=2600.),
+                   lambda r: r['move']['members'][0]['params'].update(v_w=25.),
+                   lambda r: r['move']['members'][1].update(lane=0),
+                   lambda r: r.update(family='closing_pair'),
+                   lambda r: r['world'].update(map='wz2to1')):
+        bad = deepcopy(row)
+        change(bad)
+        with pytest.raises(ValueError):
+            ld.plan_from_mined_row(bad, desc)
 
 
 def test_runtime_execution_matches_the_verified_profile(cfg, fixed):
@@ -531,7 +680,8 @@ def proto_scene():
 
 
 # Closing-lane CAVs initiate closing pairs; everyone joins; nobody else initiates.
-INITIATE_CP = {'ld_role_dropped_lane': 40., 'ld_kind_closing_pair': 5., 'ld_is_initiate': -5., 'ld_is_join': 50.}
+INITIATE_CP = {'ld_role_dropped_lane': 40., 'ld_kind_closing_pair': 5., 'ld_is_initiate': -25., 'ld_is_join': 50.,
+               'ld_kind_abreast_wall': -10., 'ld_kind_group_hold': -100.}
 
 
 def test_message_visible_only_at_t_plus_one_within_range_and_join_executes(cfg, fixed):
@@ -555,7 +705,7 @@ def test_message_visible_only_at_t_plus_one_within_range_and_join_executes(cfg, 
     assert offer.own_target(p.lane_drop['view']) == 16.         # partner role: target - gap_dv
     s = tick(p, advance(proto_scene(), 2), 302)
     law = s['track2']['lane_drop']['law_commands']
-    assert law == {'a': pytest.approx(ld.law(18., 20., .6)), 'b': pytest.approx(ld.law(16., 20., .6))}
+    assert law == {'a': pytest.approx(ld.law(18., 20., 1.)), 'b': pytest.approx(ld.law(16., 20., 1.))}
     assert s['context']['move_offsets']['a'] == pytest.approx(law['a']-.3)
     assert s['context']['move_offsets']['c'] == 0. and 'h1' not in s['context']['move_offsets']
     assert s['track2']['lane_drop']['protocol']['published'][0]['covered'] == [1, 2]
@@ -593,36 +743,59 @@ def test_ownership_member_cap_and_one_cav_per_lane(cfg, fixed):
     # A member is exclusively owned: no new offer, no second initiation; covered lanes get none.
     s = tick(p, advance(proto_scene()+extra, 2), 302)
     assert joined not in p.ld_protocol.offers and 'a' not in p.ld_protocol.offers
-    late = ld.LaneDropOption('lane_drop_join', ('e',), 'closing_pair', 0, 39, .6, 18., 2., False, 1,
+    late = ld.LaneDropOption('lane_drop_join', ('e',), 'closing_pair', 0, 39, 1., 18., 2., False, 1,
                              'a@300', 'a', member_count=1, cap=2, range_m=300.)
     assert joined == 'b' and not p.ld_protocol.start(tb.TriggerMove(late), ego='e', executor=p.executor,
                                                      observable_cav_ids=p.visible['e'], now=302)
-    again = ld.LaneDropOption('lane_drop_initiate', (joined,), 'closing_pair', 0, 30, .6, 18., 2., False, 1,
+    again = ld.LaneDropOption('lane_drop_initiate', (joined,), 'closing_pair', 0, 30, 1., 18., 2., False, 1,
                               f'{joined}@302', joined, cap=2, range_m=300.)
     assert not p.ld_protocol.start(tb.TriggerMove(again), ego=joined, executor=p.executor,
                                    observable_cav_ids=p.visible[joined], now=302)
     assert {v for e in p.executor.active for v in e['move'].members} == {'a', joined, 'f'}
 
 
-def test_release_when_the_initiator_nears_the_drop(cfg, fixed):
+def two(a_s, b_s):
+    return [row('a', a_s, 2), row('b', b_s, 1), row('h1', b_s-30, 1, cav=False)]
+
+
+def test_members_release_at_their_own_drop_crossing(cfg, fixed):
+    """NEWMAP2 rule: each member releases at its own drop crossing (x >= X_B) or hold end."""
     p = make(ld_cfg(cfg, range_m=300.))
     p.trigger.trigger_head = Prefer(p.trigger, INITIATE_CP)
-
-    def two(a_s, b_s):
-        return [row('a', a_s, 2), row('b', b_s, 1), row('h1', b_s-30, 1, cav=False)]
     tick(p, two(-1300, -1150), 300)
     s = tick(p, two(-1280, -1130), 301)
     assert s['track2_trigger']['accepted']['b'] is True
     s = tick(p, two(-1260, -1110), 302)
     assert set(s['track2']['lane_drop']['law_commands']) == {'a', 'b'}
-    s = tick(p, two(-25, -260), 303)                           # initiator within 30 m of the drop
-    assert 'a' not in p.execution_positions['b']               # 235 m: not sensed by b
+    s = tick(p, two(5, -260), 303)                             # the initiator crossed the drop
+    assert set(s['track2']['lane_drop']['law_commands']) == {'b'}
+    assert s['track2']['lane_drop']['protocol']['published'] == []   # closed: no new joins
+    s = tick(p, two(25, -240), 304)
+    assert set(s['track2']['lane_drop']['law_commands']) == {'b'}    # b keeps holding (no message)
+    assert p.ld_protocol.release_latch == set()
+    s = tick(p, two(45, 3), 305)                               # b crosses the drop
+    assert s['track2']['lane_drop']['law_commands'] == {}
+    assert {e['until'] for e in p.executor.active} == {342}     # ownership held to expiry
+
+
+def test_pair_t_anchor_release_message(cfg, fixed):
+    """pair_t: the closing-lane anchor 150 m before the drop releases every member (latched)."""
+    fixed['anchor'] = True
+    p = make(ld_cfg(cfg, range_m=300.))
+    p.trigger.trigger_head = Prefer(p.trigger, INITIATE_CP)
+    s = tick(p, two(-1300, -1150), 300)
+    assert s['track2']['lane_drop']['protocol']['published'][0]['anchor'] is True
+    s = tick(p, two(-1280, -1130), 301)
+    assert s['track2_trigger']['accepted']['b'] is True and p.ld_protocol.offers['b'][0].anchor is True
+    s = tick(p, two(-1260, -1110), 302)
+    assert set(s['track2']['lane_drop']['law_commands']) == {'a', 'b'}
+    s = tick(p, two(-140, -400), 303)                          # anchor within 150 m of the drop
+    assert 'a' not in p.execution_positions['b']               # 260 m: not sensed by b
     assert set(s['track2']['lane_drop']['law_commands']) == {'b'}
     assert s['track2']['lane_drop']['protocol']['published'][0]['released'] is True
-    s = tick(p, two(-5, -240), 304)                            # b receives the t-1 release message
+    s = tick(p, two(-120, -380), 304)                          # b receives the t-1 release message
     assert s['track2']['lane_drop']['law_commands'] == {}
     assert ('b', 'a@300') in p.ld_protocol.release_latch
-    assert {e['until'] for e in p.executor.active} == {342}     # ownership held to expiry
 
 
 # ------------------------------------------------------------------ B = R
@@ -666,7 +839,7 @@ def pair_frames(t0=300, seconds=4):
 
 
 def pair_bank(frames, t0=300):
-    move = ld.LaneDropMove('closing_pair', ('m1', 'm2'), 0, 30, .6, 18., 2., False, (2, 1))
+    move = ld.LaneDropMove('closing_pair', ('m1', 'm2'), 0, 30, 1., 18., 2., False, (2, 1))
     speeds = np.full((2, 30), 20.)
     positions = np.array([[-1300.+20*t for t in range(30)], [-1290.+20*t for t in range(30)]])
     plan = ld.plan(move, StubMap(), policy_profile=np.zeros((2, 30)).tolist(), member_speeds=speeds.tolist(),
@@ -776,7 +949,7 @@ def test_rsu_suggestion_broadcast_join_and_single_writer_execution(cfg, fixed):
     assert s['track2_trigger']['accepted'] == dict(a=True, b=True, c=False)
     s = tick(p, advance(rsu_scene(), 4), 304)
     law = s['track2']['lane_drop']['law_commands']
-    assert law == {'a': pytest.approx(ld.law(18., 20., .6)), 'b': pytest.approx(ld.law(16., 20., .6))}
+    assert law == {'a': pytest.approx(ld.law(18., 20., 1.)), 'b': pytest.approx(ld.law(16., 20., 1.))}
     session = p.ld_protocol.sessions['RSU@302']
     assert sorted(session['lanes'].values()) == [1, 2] and session['initiator'] == 'RSU'
 

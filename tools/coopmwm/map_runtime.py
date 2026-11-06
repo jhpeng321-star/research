@@ -178,8 +178,16 @@ def normalised_world(world):
         from . import map_scenarios
         if world['map'] != map_scenarios.MAP:
             raise ValueError(f'unregistered map {world["map"]!r}')
-        return map_scenarios.world_for_moment({k: world[k] for k in ('seed', 'demand', 'penetration', 'cell')
-                                               if k in world})
+        out = map_scenarios.world_for_moment({k: world[k] for k in ('seed', 'demand', 'penetration', 'cell')
+                                              if k in world})
+        # N5 review: a row's cell label (NEWMAP2 'D2400_p60' string, or cell_key) must agree with its
+        # demand/share; a mislabelled row is refused, never silently re-celled.
+        for key in ('cell', 'cell_key'):
+            if isinstance(world.get(key), str) and world[key] != out['cell_key']:
+                raise ValueError(f'row {key} {world[key]!r} differs from its demand/share cell {out["cell_key"]}')
+        if type(world.get('cell')) is int and world['cell'] != out['cell']:
+            raise ValueError('row cell index differs from its demand/share cell')
+        return out
     return world
 
 

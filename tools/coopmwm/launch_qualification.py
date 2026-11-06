@@ -25,8 +25,9 @@ def copy_safety_authority(cfg, output):
     root = Path(cfg['run_root'])
     shutil.copyfile(root/rc.RULE_FILE, output/rc.RULE_FILE)
     shutil.copyfile(root/'AUTHORITY.md', output/'AUTHORITY.md')
-    if 'clean2_budget' in cfg or 'clean3_budget' in cfg:
-        restart = cfg['clean2_restart'] if 'clean2_budget' in cfg else cfg['clean3_restart']
+    if 'clean2_budget' in cfg or 'clean3_budget' in cfg or 'clean4_budget' in cfg:
+        restart = (cfg['clean2_restart'] if 'clean2_budget' in cfg else cfg['clean3_restart']
+                   if 'clean3_budget' in cfg else cfg['clean4_restart'])
         for name, expected in restart['inherited_safety_receipts'].items():
             if rc.sha(root/name) != expected:
                 raise ValueError('inherited owner safety authority changed before smoke')
@@ -55,10 +56,20 @@ def smoke(cfg):
     copy_safety_authority(cfg, output)
     updates = [training.update(cfg, arm, 1, smoke=True) for arm in ('A', 'B', 'R')]
     monitor = training.monitor_update(cfg, 1, smoke=True)
+    from .bank_breadth import subset_rule
     for update in updates:
         if update['arm'] == 'A':
             continue
         m, learning = update['metrics'], update['learning']
+        if update['arm'] == 'R' and subset_rule(cfg) and learning['bank_trigger'].get('examples', 0) == 0:
+            # clean4 F5 option (a): R zero guidance - every guidance quantity must be exactly zero,
+            # every online/RL component must still produce its receipt.
+            if (update['execution']['accepted_moves'] <= 0 or m['decisions'] <= 0
+                    or m['merge_missing_share'] >= 1 or m['track2_reward']['cav_outcomes'] <= 0
+                    or learning['bank']['pairs_total'] != 0 or m['weighted_starts'] != 0
+                    or learning['bank_trigger'].get('contexts')):
+                raise ValueError('smoke R zero-guidance receipt invalid; fix and requalify')
+            continue
         if (update['execution']['accepted_moves'] <= 0 or m['decisions'] <= 0
                 or m['merge_missing_share'] >= 1 or m['weighted_starts'] <= 0
                 or (cfg['plan_augment']['enabled'] and m['augmented_examples'] <= 0)
@@ -71,15 +82,18 @@ def smoke(cfg):
     if any(r['cells'] != 10 or r['status'] != 'dry_run' or r['branches'] <= 0 for r in dry):
         raise ValueError('complete replicated-test dry grid required')
     fixes = levers = None
-    if 'clean2_budget' in cfg or 'clean3_budget' in cfg:
+    if 'clean2_budget' in cfg or 'clean3_budget' in cfg or 'clean4_budget' in cfg:
         from .clean2_receipts import reporting, validate_smoke
         validate_smoke(cfg, updates)
         if 'clean3_budget' in cfg:
             from .clean3_receipts import validate_levers
+        elif 'clean4_budget' in cfg:
+            from .clean4_receipts import validate_levers
+        if 'clean3_budget' in cfg or 'clean4_budget' in cfg:
             validate_levers(cfg, updates)  # precheck before the extra reporting branches
         measured = reporting(cfg)
         fixes = validate_smoke(cfg, updates, measured)
-        if 'clean3_budget' in cfg:
+        if 'clean3_budget' in cfg or 'clean4_budget' in cfg:
             levers = validate_levers(cfg, updates, fixes)
     charged = sum(r['sim_s'] for r in ledger(root) if r['phase'] == 'track2_smoke')
     if charged > 20000:
