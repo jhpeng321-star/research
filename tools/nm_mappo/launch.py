@@ -179,28 +179,36 @@ def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python
     }
 
 
-def load_plan(run_dir: Path) -> tuple[dict, str]:
-    path = run_dir / "PLAN.json"
+def registered_name(plan_name: str = "PLAN.json") -> str:
+    """PLAN.json -> REGISTERED.json; PLAN_A1.json (amendment) -> REGISTERED_A1.json."""
+    stem = Path(plan_name).stem
+    if not stem.startswith("PLAN"):
+        raise SystemExit(f"plan file must be PLAN*.json, got {plan_name!r}")
+    return "REGISTERED" + stem[len("PLAN"):] + ".json"
+
+
+def load_plan(run_dir: Path, plan_name: str = "PLAN.json") -> tuple[dict, str]:
+    path = run_dir / plan_name
     return json.loads(path.read_text()), sha256_file(path)
 
 
-def verify_plan(run_dir: Path, *, check_init: bool = True) -> dict:
+def verify_plan(run_dir: Path, *, check_init: bool = True, plan_name: str = "PLAN.json") -> dict:
     """PLAN + REGISTERED receipt + config/init hashes; raises SystemExit on any mismatch."""
-    plan, digest = load_plan(run_dir)
+    plan, digest = load_plan(run_dir, plan_name)
     if not plan.get("sumo_allowed"):
         raise SystemExit("PLAN.sumo_allowed is false (stub map binding): SUMO stages refused")
-    reg_path = run_dir / "REGISTERED.json"
+    reg_path = run_dir / registered_name(plan_name)
     if not reg_path.exists():
-        raise SystemExit("REGISTERED.json missing: register the PLAN sha256 first (launch.py ack)")
+        raise SystemExit(f"{reg_path.name} missing: register the PLAN sha256 first (launch.py ack)")
     reg = json.loads(reg_path.read_text())
     if reg.get("plan_sha256") != digest:
-        raise SystemExit("REGISTERED.json does not bind this PLAN.json")
+        raise SystemExit(f"{reg_path.name} does not bind {plan_name}")
     if sha256_text_lf(plan["config"]["path"]) != plan["config"]["sha256_lf"]:
         raise SystemExit("config changed since the plan")
     if check_init and plan["init"]["kind"] == "u0":
         if sha256_file(plan["init"]["path"]) != plan["init"]["sha256"]:
             raise SystemExit("init checkpoint sha256 != MAPPO u0 d9042cc5...")
-    return {"plan": plan, "plan_sha256": digest, "registered": reg}
+    return {"plan": plan, "plan_sha256": digest, "registered": reg, "plan_name": plan_name}
 
 
 def smoke_passed(run_dir: Path) -> tuple[bool, str]:
@@ -293,14 +301,33 @@ def cmd_check(a) -> int:
     return rc
 
 
+def cmd_amend(a) -> int:
+    """Registered compute-only amendment of the production argv (e.g. update threads): writes
+    ``PLAN_<name>.json`` = PLAN.json with the change + an ``amends`` record; nothing else changes."""
+    run_dir = Path(a.run_dir)
+    base, base_sha = load_plan(run_dir, a.base)
+    plan = json.loads(json.dumps(base))
+    argv = plan["argv"]["production"]
+    old = argv[argv.index("--update-threads") + 1]
+    argv[argv.index("--update-threads") + 1] = str(int(a.update_threads))
+    plan["amends"] = {"base": a.base, "base_sha256": base_sha, "name": a.name,
+                      "changes": {"update_threads": [int(old), int(a.update_threads)]},
+                      "scope": "compute only: same algorithm, data, seeds, budget, checkpoint"}
+    name = f"PLAN_{a.name}.json"
+    write_json_new(run_dir / name, plan)
+    print(json.dumps({"plan": str(run_dir / name), "plan_sha256": sha256_file(run_dir / name),
+                      "amends": plan["amends"], "sim_s": 0}))
+    return 0
+
+
 def cmd_ack(a) -> int:
     run_dir = Path(a.run_dir)
-    _, digest = load_plan(run_dir)
+    _, digest = load_plan(run_dir, a.plan)
     text = Path(a.registration).read_text(encoding="utf-8", errors="replace")
     if digest not in text:
         raise SystemExit(f"registration file does not contain the PLAN sha256 {digest}")
-    write_json_new(run_dir / "REGISTERED.json", {
-        "plan_sha256": digest, "registration": str(a.registration),
+    write_json_new(run_dir / registered_name(a.plan), {
+        "plan": a.plan, "plan_sha256": digest, "registration": str(a.registration),
         "registration_sha256": sha256_file(a.registration),
         "acked_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
     print(json.dumps({"registered": True, "plan_sha256": digest}))
@@ -322,14 +349,16 @@ def resume_argv(argv: list[str]) -> list[str]:
     return out + ["--resume"]
 
 
-def supervisor_argv(plan: dict, stage: str, run_dir: Path) -> list[str]:
+def supervisor_argv(plan: dict, stage: str, run_dir: Path, plan_name: str = "PLAN.json") -> list[str]:
     return ["setsid", "nohup", "nice", "-n", "19", plan["python"], "-u",
-            str(CODE / "tools" / "nm_mappo" / "supervise.py"), stage, str(run_dir)]
+            str(CODE / "tools" / "nm_mappo" / "supervise.py"), stage, str(run_dir), plan_name]
 
 
 def cmd_stage(a, stage: str) -> int:
     run_dir = Path(a.run_dir)
-    checked = verify_plan(run_dir, check_init=not a.dry_run)
+    checked = verify_plan(run_dir, check_init=not a.dry_run, plan_name=a.plan)
+    if stage != "resume" and a.plan != "PLAN.json":
+        raise SystemExit("an amended plan can only resume production")
     target = "production" if stage in ("run", "resume") else "smoke"
     if target == "production":
         ok, why = smoke_passed(run_dir)
@@ -339,7 +368,8 @@ def cmd_stage(a, stage: str) -> int:
         raise SystemExit("resume: no production checkpoints")
     if stage != "resume" and (run_dir / target).exists():
         raise SystemExit(f"{run_dir / target} exists: fresh stage only (use resume)")
-    argv = supervisor_argv(checked["plan"], "resume" if stage == "resume" else target, run_dir)
+    argv = supervisor_argv(checked["plan"], "resume" if stage == "resume" else target, run_dir,
+                           a.plan)
     if a.dry_run:
         trainer = checked["plan"]["argv"][target]
         if stage == "resume":
@@ -441,10 +471,17 @@ def parse(argv=None):
     p = sub.add_parser("ack")
     p.add_argument("--run-dir", required=True)
     p.add_argument("--registration", required=True)
+    p.add_argument("--plan", default="PLAN.json")
+    p = sub.add_parser("amend")
+    p.add_argument("--run-dir", required=True)
+    p.add_argument("--name", required=True)
+    p.add_argument("--base", default="PLAN.json")
+    p.add_argument("--update-threads", type=int, required=True)
     for name in ("smoke", "run", "resume"):
         p = sub.add_parser(name)
         p.add_argument("--run-dir", required=True)
         p.add_argument("--dry-run", action="store_true")
+        p.add_argument("--plan", default="PLAN.json")
     p = sub.add_parser("bind")
     p.add_argument("--run-dir", required=True)
     p.add_argument("--iteration", type=int, required=True)
@@ -459,6 +496,8 @@ def main(argv=None) -> int:
         return cmd_check(a)
     if a.cmd == "ack":
         return cmd_ack(a)
+    if a.cmd == "amend":
+        return cmd_amend(a)
     if a.cmd in ("smoke", "run", "resume"):
         return cmd_stage(a, a.cmd)
     if a.cmd == "status":

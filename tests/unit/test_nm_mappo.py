@@ -459,3 +459,36 @@ def test_real_n1_binding_and_fake_smoke_in_subprocess(tmp_path):
     assert rows[0]["meta"]["map"]["extra"]["install_record"]["rsu_field_rebound"]
     assert rows[0]["rollout"]["demands_vph"] == [3200] and rows[0]["rollout"]["penetrations"] == [0.6]
     assert [r for r in rows if r["type"] == "iter"]
+
+
+def test_compute_amendment_plan_resume(tmp_path):
+    cfg = write_cfg(tmp_path, "tests.unit.test_nm_mappo:fake_n1_loader")
+    run = tmp_path / "run"
+    run.mkdir()
+    u0 = _fake_u0(tmp_path)
+    L.write_json_new(run / "PLAN.json", L.make_plan(option="mappowz168_u0", host="cpuQ", run_dir=run,
+                                                    init=str(u0), python="py", sumo_home=None,
+                                                    config=cfg, workers=46))
+    reg = tmp_path / "REG.md"
+    reg.write_text(L.sha256_file(run / "PLAN.json"))
+    assert L.main(["ack", "--run-dir", str(run), "--registration", str(reg)]) == 0
+    assert L.main(["amend", "--run-dir", str(run), "--name", "A1", "--update-threads", "32"]) == 0
+    a1 = json.loads((run / "PLAN_A1.json").read_text())
+    base = json.loads((run / "PLAN.json").read_text())
+    diff = [(x, y) for x, y in zip(a1["argv"]["production"], base["argv"]["production"]) if x != y]
+    assert diff == [("32", "16")] and a1["amends"]["base_sha256"] == L.sha256_file(run / "PLAN.json")
+    with pytest.raises(SystemExit, match="REGISTERED_A1"):
+        L.verify_plan(run, check_init=False, plan_name="PLAN_A1.json")
+    reg.write_text(L.sha256_file(run / "PLAN_A1.json"))
+    assert L.main(["ack", "--run-dir", str(run), "--registration", str(reg), "--plan", "PLAN_A1.json"]) == 0
+    assert L.registered_name("PLAN_A1.json") == "REGISTERED_A1.json"
+    smoke = run / "smoke"
+    smoke.mkdir()
+    (smoke / "RUN_SUMMARY.json").write_text(json.dumps({"status": "completed"}))
+    (smoke / "log.jsonl").write_text(json.dumps({"type": "iter", "episodes": 2}) + "\n")
+    (run / "production" / "checkpoints").mkdir(parents=True)
+    with pytest.raises(SystemExit, match="only resume"):
+        L.main(["run", "--run-dir", str(run), "--dry-run", "--plan", "PLAN_A1.json"])
+    assert L.main(["resume", "--run-dir", str(run), "--dry-run", "--plan", "PLAN_A1.json"]) == 0
+    sup = L.supervisor_argv(a1, "resume", run, "PLAN_A1.json")
+    assert sup[-3:] == ["resume", str(run), "PLAN_A1.json"]

@@ -146,10 +146,11 @@ def trainer_env(plan: dict) -> dict:
 
 def main() -> int:
     stage, run_dir = sys.argv[1], Path(sys.argv[2])
+    plan_name = sys.argv[3] if len(sys.argv) > 3 else "PLAN.json"
     assert stage in ("smoke", "production", "resume"), stage
     assert os.getpriority(os.PRIO_PROCESS, 0) == 19, "start with nice -n 19"
     fd_limits = raise_fd_limit()
-    checked = L.verify_plan(run_dir)
+    checked = L.verify_plan(run_dir, plan_name=plan_name)
     plan = checked["plan"]
     files = verify_bundle()
     target = "smoke" if stage == "smoke" else "production"
