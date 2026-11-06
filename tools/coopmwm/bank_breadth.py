@@ -505,8 +505,9 @@ def practice_pool(cfg, arm, *, deduplicate=True):
 
 
 SUBSET_RULE = ('clean4 FAIRAUDIT F5 / MAIN 2026-11-06 option (a): the matched-effort random procedure (R) may '
-               'yield a verified family support that is a SUBSET (including empty) of B's; it is never padded. '
-               'B practice capacity per family = B's own pool; R follows B's realized family sequence restricted '
+               'yield a verified family support that is a SUBSET (including empty) of the B support; it is never '
+               'padded. B practice capacity per family = the B own pool; R follows the B realized family sequence '
+               'restricted '
                'to its own supported families/capacity (remaining R slots are ordinary episodes); R with zero '
                'usable rows trains with zero guidance rows (RL + team reward + G4 only).')
 
