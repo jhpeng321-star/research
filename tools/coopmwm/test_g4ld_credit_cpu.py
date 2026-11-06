@@ -372,3 +372,65 @@ def test_legacy_command_offsets_refuse_extension_jobs():
     _, _, plan, _ = plan_for(lambda: joint_steps('closing_pair'))
     with pytest.raises(ValueError):
         g4.command_offsets(plan['jobs'][0], 0, observable_state={'s_m': {}})
+
+
+# ---------------------------------------------------------------- budget-derived start cap (opt-in)
+
+CAP = g4.start_cap_keys(provenance='MAIN 2026-11-06 clean5a via N4: start cap derived from the G4 sim-s cap')
+
+
+def cap_plan(steps_fn, *, ext=False, state=None, update=1):
+    cfg = dict(config(), g4_start_cap=deepcopy(CAP), **({'g4_extension': deepcopy(EXT)} if ext else {}))
+    cfg['worlds_by_update'][str(update)] = cfg['worlds_by_update']['1']
+    episodes = {a: [_episode(a, steps_fn(a))] for a in ('B', 'R')}
+    plan, after = g4.plan_update(cfg, update, episodes, captures(episodes, g4.extension(cfg)),
+                                 state or g4.initial_state(cfg))
+    return cfg, episodes, plan, after
+
+
+def test_derived_caps_are_the_registered_budget_over_the_pair_effort():
+    assert g4.derived_caps() == {2: 12, 3: 9, 4: 8}
+    assert all(g4.pair_sim_s(n)*c <= g4.REGISTRATION['budget_cap_sim_s'] < g4.pair_sim_s(n)*(c+1)
+               for n, c in g4.derived_caps().items())
+
+
+@pytest.mark.parametrize('arity,cap,quote', [(2, 12, 230400), (3, 9, 216000), (4, 8, 230400)])
+def test_budget_derived_cap_per_arity(arity, cap, quote):
+    _, _, plan, state = cap_plan(lambda a: _legacy_episode(a, arity, 15))
+    assert state['starts'] == {'B': cap, 'R': cap} and len(plan['starts']) == 2*cap
+    assert plan['quote_sim_s'] == state['reserved_sim_s'] == quote <= g4.REGISTRATION['budget_cap_sim_s']
+    assert state['arity_starts'][str(arity)] == cap and plan['start_cap'] == CAP
+    g4._validate_plan(plan)
+
+
+def test_cumulative_sim_s_cap_binds_across_arities_and_updates():
+    def steps(arm):
+        return _legacy_episode(arm, 2, 10)+_legacy_episode(arm, 3, 5)
+    _, _, plan, state = cap_plan(steps)
+    # 10 two-member pairs (192000) leave 38400: one three-member pair (24000) fits, a second does not.
+    assert state['arity_starts'] == {'2': 10, '3': 1, '4': 0}
+    assert plan['quote_sim_s'] == state['reserved_sim_s'] == 10*19200+24000 == 216000
+    _, _, later, final = cap_plan(lambda a: _legacy_episode(a, 2, 10), state=state, update=2)
+    assert later['jobs'] == [] and final['reserved_sim_s'] == 216000      # 14400 left < 19200
+    tampered = deepcopy(plan)
+    tampered['reservation_after']['arity_starts']['3'] = 2
+    tampered['plan_sha256'] = g4.digest({k: v for k, v in tampered.items() if k != 'plan_sha256'})
+    with pytest.raises(ValueError):
+        g4._validate_plan(tampered)
+
+
+def test_budget_derived_cap_with_the_extension_and_journal_binding():
+    _, _, plan, state = cap_plan(lambda a: session_steps('n2', ('c1', 'c2'), count=12), ext=True)
+    assert state['starts'] == {'B': 9, 'R': 9} and plan['quote_sim_s'] == 216000
+    with pytest.raises(ValueError):          # the cap cannot be switched off mid-phase
+        g4.plan_update(ext_config(), 2, {a: [] for a in ('B', 'R')}, {'B': {}, 'R': {}}, state)
+
+
+@pytest.mark.parametrize('slot', [dict(CAP, rule='x'), dict(CAP, provenance=''), dict(CAP, extra=1),
+                                  dict(CAP, enabled=False)])
+def test_start_cap_registration_shape(slot):
+    with pytest.raises(ValueError):
+        g4.start_cap(dict(config(), g4_start_cap=slot))
+    with pytest.raises(ValueError):
+        g4.start_cap(dict(g4_start_cap=deepcopy(CAP)))       # needs the enabled G4 registration
+    assert g4.start_cap(config()) is None and 'start_cap' not in g4.initial_state(config())

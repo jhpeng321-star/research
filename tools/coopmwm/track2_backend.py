@@ -130,8 +130,10 @@ def _check(cfg, arm):
         v2v_wall.settings(cfg)            # W1 options: common B/R registration, default off
         v2v_wall.awareness_settings(cfg)
         from .sparse_synergy_credit import settings as synergy_settings, extension as synergy_extension
+        from .sparse_synergy_credit import start_cap as synergy_start_cap
         synergy_settings(cfg)
         synergy_extension(cfg)   # G4LD keys: common B = R, default OFF
+        synergy_start_cap(cfg)   # budget-derived G4 start cap: common B = R, default OFF
         from .practice_offer import settings as offer_settings
         offer_settings(cfg)      # G4LD practice offer: common B = R, default OFF
         from .track2_safety_reward import settings as close_call_settings
