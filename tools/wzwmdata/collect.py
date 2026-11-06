@@ -40,10 +40,12 @@ SCHEMA = 'wzwmdata.collect.v1'
 PHASE_CAP_SIM_S = 1_000_000
 TASK = 'WMB'
 TASK_CAP_SIM_S = 620_000
-ARMS = ('native', 'mappo', 'coop_mappo', 'coop_native')
+ARMS = ('native', 'mappo_u0', 'coop_mappo_u0', 'coop_native')
+MAPPO_ARMS = ('mappo_u0', 'coop_mappo_u0', 'mappo', 'coop_mappo')   # canary used the short tags
 DEFAULT_RUNTIME = '/home/ubuntu/e3final'
 DEFAULT_CHECKPOINT = '/home/ubuntu/mappospeed/production2/policy_00169.pt'
 LOAD_MAX = 42.0              # cpuV 48 cores: start a job only below this 1-min load (clean4 first)
+MAX_WORKERS = {'cpuV': 12, 'gpuA': 16}
 MIN_FREE_GB = 25.0
 FORBIDDEN = ('holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1', 'sealed')
 
@@ -76,9 +78,9 @@ def _guard_path(p):
 
 
 # --------------------------------------------------------------------------- plan (zero physics)
-def make_jobs(root, *, runtime, checkpoint):
+def make_jobs(root, *, runtime, checkpoint, data_root=None, skip=()):
     from . import registry as reg
-    root = Path(root)
+    root = Path(data_root or root)
     jobs = []
     order = {c: i for i, c in enumerate(reg.CELL_ORDER)}
     worlds = sorted(reg.wmdata_worlds(), key=lambda w: (order[(w['demand'], w['penetration'])], w['seed']))
@@ -100,10 +102,12 @@ def make_jobs(root, *, runtime, checkpoint):
     for j in jobs:
         j['wave'] = 'canary' if (j['block'] == 'WMDATA' and j['world']['seed'] == first) else 'main'
     next(j for j in jobs if j['block'] == 'WMQUAL')['wave'] = 'canary'
-    return jobs
+    skip = set(skip)
+    return [j for j in jobs if j['id'] not in skip and j['id'].replace('_u0', '') not in skip]
 
 
-def plan(root, *, runtime=DEFAULT_RUNTIME, checkpoint=DEFAULT_CHECKPOINT, commit=None):
+def plan(root, *, runtime=DEFAULT_RUNTIME, checkpoint=DEFAULT_CHECKPOINT, commit=None, data_root=None,
+         skip=(), prior_charged_sim_s=0.0, prior_note=None, host='cpuV'):
     from . import registry as reg
     from tools.coopmwm import map_descriptor as md
     root = Path(root)
@@ -113,9 +117,9 @@ def plan(root, *, runtime=DEFAULT_RUNTIME, checkpoint=DEFAULT_CHECKPOINT, commit
     desc = md.current()
     if desc.name != reg.MAP:
         raise ValueError(f'set {md.ENV} to the wz3to2 MAP_SPEC.json (process map is {desc.name})')
-    jobs = make_jobs(root, runtime=runtime, checkpoint=checkpoint)
+    jobs = make_jobs(root, runtime=runtime, checkpoint=checkpoint, data_root=data_root, skip=skip)
     total = sum(j['sim_s'] for j in jobs)
-    if total > TASK_CAP_SIM_S:
+    if total + float(prior_charged_sim_s) > TASK_CAP_SIM_S:
         raise ValueError(f'plan {total} sim-s exceeds the WM-B task cap {TASK_CAP_SIM_S}')
     body = dict(schema=SCHEMA, created_unix=time.time(), phase=reg.PHASE, task=TASK,
                 purpose='wz3to2 WM training raw data (WMDATA) + WM-D qualification native tapes (WMQUAL)',
@@ -126,7 +130,9 @@ def plan(root, *, runtime=DEFAULT_RUNTIME, checkpoint=DEFAULT_CHECKPOINT, commit
                             wmqual_sim_s=sum(j['sim_s'] for j in jobs if j['block'] == 'WMQUAL'),
                             task_cap_sim_s=TASK_CAP_SIM_S, phase_cap_sim_s=PHASE_CAP_SIM_S),
                 coop=dict(module='tools.wzwmdata.coop', key='wzwmdata_coop_v1:{seed}:{arm}'),
-                source_commit=commit, runtime=str(runtime), checkpoint=str(checkpoint),
+                source_commit=commit, runtime=str(runtime), checkpoint=str(checkpoint), host=host,
+                data_root=str(data_root) if data_root else None, skipped_ids=sorted(set(skip)),
+                prior_charged_sim_s=float(prior_charged_sim_s), prior_note=prior_note,
                 hard_rules='registered seeds only; WMQUAL never in WM train/val; nice 19 CPU only; '
                            'precharged per job, never retried; HDVs never commanded; own PIDs only')
     body['plan_sha256'] = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
@@ -186,7 +192,8 @@ def charge(root, job):
         if any(r.get('id') == job['id'] for r in rows):
             raise ValueError(f"{job['id']} already charged; never retried")
         phase = sum(float(r['sim_s']) for r in rows)
-        task = sum(float(r['sim_s']) for r in rows if r.get('task') == TASK)
+        prior = float(_read(Path(root) / 'PLAN.json').get('prior_charged_sim_s', 0.0))
+        task = prior + sum(float(r['sim_s']) for r in rows if r.get('task') == TASK)
         if phase + job['sim_s'] > PHASE_CAP_SIM_S or task + job['sim_s'] > TASK_CAP_SIM_S:
             raise ValueError(f'cap: phase {phase}+{job["sim_s"]} / task {task}')
         row = dict(phase='wm_wz_data', task=TASK, kind='ALLOC', id=job['id'], sim_s=job['sim_s'],
@@ -247,11 +254,11 @@ def run_episode(job, root):
         return out
     traci.simulationStep = counted
     path = Path(job['path'])
-    mappo = arm in ('mappo', 'coop_mappo')
+    mappo = arm in MAPPO_ARMS
     mode = 'native' if arm == 'native' else 'direct'
     env = exe = None
     schedule = None
-    if arm in ('coop_mappo', 'coop_native'):
+    if arm.startswith('coop_'):
         schedule = CoopSchedule(f"wzwmdata_coop_v1:{world['seed']}:{arm}",
                                 drop_s=float(desc.frame.merge_zone_s_m[1]),
                                 closing_lane=desc.frame.merge_lane,
@@ -265,13 +272,19 @@ def run_episode(job, root):
             if not exe.native_lanes or exe.residual_on_native:
                 raise ValueError('speed-only direct MAPPO required')
             exe.reset()
-        meta = dict(policy={'native': 'native', 'mappo': 'mappo_speed_u0', 'coop_mappo': 'mappo_speed_u0+coop',
-                            'coop_native': 'native+coop'}[arm],
+        meta = dict(policy={'native': 'native', 'mappo_u0': 'mappo_speed_u0',
+                            'coop_mappo_u0': 'mappo_speed_u0+coop', 'mappo': 'mappo_speed_u0',
+                            'coop_mappo': 'mappo_speed_u0+coop', 'coop_native': 'native+coop'}[arm],
                     arm=arm, collector_job=job['id'], phase=reg.PHASE, task=TASK, split=job['split'],
                     block=job['block'], map=reg.MAP, cell_key=world['cell_key'],
                     mappo_sha256=exact.MAPPO_SHA if mappo else None, map_descriptor_sha256=desc.digest)
         env = CavSumoEnv(k_slots=192, controller=mode, ttc=True, scenario_root=path / 'tmp_scenarios',
                          physics_log=False, population='textbook')
+        base_meta = env._meta                     # episode.npz meta_json also carries the map identity
+        env._meta = lambda: dict(base_meta(), map=reg.MAP, map_descriptor_sha256=desc.digest, arm=arm,
+                                 policy=meta['policy'], split=job['split'], block=job['block'],
+                                 phase=reg.PHASE, task=TASK, cell_key=world['cell_key'],
+                                 collector_job=job['id'])
         env.reset(seed=world['seed'], demand_vph=world['demand'], penetration=world['penetration'],
                   warmup_s=job['warmup_s'], horizon_s=job['end_s'] - job['warmup_s'], controller=mode,
                   episode_dir=path / 'episode', meta=meta)
@@ -348,25 +361,27 @@ def run_episode(job, root):
                 tmp.rmdir()
 
 
-def _wait_capacity(root):
+def _wait_capacity(root, data_path, load_max):
     import shutil
     while True:
         if (Path(root) / 'STOP').exists():
             return 'stop'
         load = os.getloadavg()[0]
-        free = shutil.disk_usage(str(root)).free / 1e9
-        if load < LOAD_MAX and free >= MIN_FREE_GB:
+        free = min(shutil.disk_usage(str(root)).free, shutil.disk_usage(str(data_path)).free) / 1e9
+        if (load_max <= 0 or load < load_max) and free >= MIN_FREE_GB:
             return None
         time.sleep(30)
 
 
 def run_job(arg):
-    job, root = arg
+    job, root, load_max = arg
     root = Path(root)
     path = Path(job['path'])
     if path.exists():
         return dict(id=job['id'], status='skipped_exists')
-    if _wait_capacity(root) == 'stop':
+    data_path = path.parent
+    data_path.mkdir(parents=True, exist_ok=True)
+    if _wait_capacity(root, data_path, load_max) == 'stop':
         return dict(id=job['id'], status='stopped')
     try:
         row = charge(root, job)
@@ -391,22 +406,23 @@ def run_job(arg):
         return dict(id=job['id'], status='failed', error=repr(exc))
 
 
-def run(root, *, workers=12, only=None, ids=None):
+def run(root, *, workers=12, only=None, ids=None, load_max=LOAD_MAX):
     import multiprocessing
     root = Path(root)
     _guard_path(root)
     if os.environ.get('CUDA_VISIBLE_DEVICES') != '' or os.getpriority(os.PRIO_PROCESS, 0) != 19:
         raise ValueError('run under nice 19 with CUDA_VISIBLE_DEVICES= (CPU only)')
-    if int(workers) > 12:
-        raise ValueError('cpuV WM-B limit: at most 12 workers')
+    host = _read(root / 'PLAN.json').get('host', 'cpuV')
+    if int(workers) > MAX_WORKERS.get(host, 12):
+        raise ValueError(f'{host} WM-B limit: at most {MAX_WORKERS.get(host, 12)} workers')
     jobs = [j for j in all_jobs(root) if (only is None or j['wave'] == only) and (ids is None or j['id'] in ids)]
     stamp = time.strftime('%Y%m%dT%H%M%S')
-    _write(root / f'RUN_START_{stamp}.json', dict(pid=os.getpid(), workers=workers, only=only,
+    _write(root / f'RUN_START_{stamp}.json', dict(pid=os.getpid(), workers=workers, only=only, load_max=load_max,
                                                  n_jobs=len(jobs), unix=time.time()))
     ctx = multiprocessing.get_context('spawn')
     status = []
     with ctx.Pool(processes=int(workers), maxtasksperchild=1) as pool:
-        for st in pool.imap_unordered(run_job, [(j, str(root)) for j in jobs], chunksize=1):
+        for st in pool.imap_unordered(run_job, [(j, str(root), float(load_max)) for j in jobs], chunksize=1):
             status.append(st)
             with (root / 'run_progress.jsonl').open('a', encoding='utf-8') as f:
                 f.write(json.dumps(dict(st, unix=time.time())) + '\n')
@@ -463,11 +479,17 @@ def main(argv=None):
     p.add_argument('--runtime', default=DEFAULT_RUNTIME)
     p.add_argument('--checkpoint', default=DEFAULT_CHECKPOINT)
     p.add_argument('--commit')
+    p.add_argument('--data-root')
+    p.add_argument('--skip-ids-file')
+    p.add_argument('--prior-charged', type=float, default=0.0)
+    p.add_argument('--prior-note')
+    p.add_argument('--host', default='cpuV', choices=sorted(MAX_WORKERS))
     r = sub.add_parser('run')
     r.add_argument('--root', required=True)
     r.add_argument('--workers', type=int, default=12)
     r.add_argument('--only', choices=('canary', 'main'))
     r.add_argument('--ids-file')
+    r.add_argument('--load-max', type=float, default=LOAD_MAX)
     m = sub.add_parser('amend')
     m.add_argument('--root', required=True)
     m.add_argument('--name', required=True)
@@ -477,11 +499,13 @@ def main(argv=None):
     s.add_argument('--root', required=True)
     a = ap.parse_args(argv)
     if a.cmd == 'plan':
-        out = plan(a.root, runtime=a.runtime, checkpoint=a.checkpoint, commit=a.commit)
+        skip = () if not a.skip_ids_file else Path(a.skip_ids_file).read_text().split()
+        out = plan(a.root, runtime=a.runtime, checkpoint=a.checkpoint, commit=a.commit, data_root=a.data_root,
+                   skip=skip, prior_charged_sim_s=a.prior_charged, prior_note=a.prior_note, host=a.host)
         print(json.dumps(dict(plan_sha256=out['plan_sha256'], **out['budget'])))
     elif a.cmd == 'run':
         ids = None if not a.ids_file else set(Path(a.ids_file).read_text().split())
-        out = run(a.root, workers=a.workers, only=a.only, ids=ids)
+        out = run(a.root, workers=a.workers, only=a.only, ids=ids, load_max=a.load_max)
         print(json.dumps(dict(done=out['jobs_done'], failures=len(out['failures']), ledger=out['ledger'])))
     elif a.cmd == 'amend':
         out = amend(a.root, name=a.name, reason=a.reason, commit=a.commit)

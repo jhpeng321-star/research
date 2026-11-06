@@ -109,6 +109,7 @@ def test_plan_budget(tmp_path, monkeypatch):
     b = body['budget']
     assert b['wmdata_sim_s'] == 100 * 4 * 1200 and b['wmqual_sim_s'] == 80 * 1500
     assert b['total_sim_s'] == 600_000 <= collect.TASK_CAP_SIM_S
+    assert {j['arm'] for j in body['jobs']} == {'native', 'mappo_u0', 'coop_mappo_u0', 'coop_native'}
     ids = [j['id'] for j in body['jobs']]
     assert len(ids) == len(set(ids)) == 480
     canary = [j for j in body['jobs'] if j['wave'] == 'canary']
@@ -133,3 +134,23 @@ def test_every_variant_runs_without_anchor_errors():
         for m in sch.moves:
             assert (m['anchor'] is not None) == (m['variant'] == 'pair_t')
     assert {'pair_g', 'pair_h', 'pair_t', 'wall_g', 'wall_h', 'wall_l', 'R_random'} <= seen
+
+
+def test_plan_skip_and_prior(tmp_path, monkeypatch):
+    if not SPEC.exists():
+        pytest.skip('map asset missing')
+    from tools.coopmwm import map_descriptor as md
+    from tools.wzwmdata import collect
+    monkeypatch.setenv(md.ENV, str(SPEC))
+    md._reset_for_tests()
+    try:
+        skip = ['D3200_p60_s989103_native', 'D3200_p60_s989103_mappo', 'WMQUAL_D3200_p60_s989580_native']
+        body = collect.plan(tmp_path / 'run', data_root=tmp_path / 'data', skip=skip,
+                            prior_charged_sim_s=7500, host='gpuA')
+    finally:
+        md._reset_for_tests()
+    ids = {j['id'] for j in body['jobs']}
+    assert 'D3200_p60_s989103_native' not in ids and 'D3200_p60_s989103_mappo_u0' not in ids
+    assert 'WMQUAL_D3200_p60_s989580_native' not in ids and 'D3200_p60_s989103_coop_native' in ids
+    assert all(str(tmp_path / 'data') in j['path'] for j in body['jobs'])
+    assert body['budget']['total_sim_s'] == 600_000 - 2 * 1200 - 1500 and body['host'] == 'gpuA'
