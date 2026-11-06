@@ -19,8 +19,13 @@ def encode(rows):
     rows = sorted(rows, key=lambda r: r['vid'])
     members, x, anchors = [], [], []
     rsu = []
+    # N1: the 12-feature RSU block zone per WM lane comes from the process map's RSU descriptor
+    # (original map: (-100, 75.44) for every lane, golden-tested byte-identical).
+    from tools.coopmwm.map_descriptor import current
+    zones = current().rsu.block_zone_s_m
     for lane in range(3):
-        local = [r for r in rows if r['lane'] == lane and -100 <= r['s_m'] <= 75.44]
+        lo, hi = zones[lane]
+        local = [r for r in rows if r['lane'] == lane and lo <= r['s_m'] <= hi]
         rsu.extend([len(local)/10, sum(r['v_mps'] for r in local)/max(1,len(local))/30,
                     sum(r['s_m'] for r in local)/max(1,len(local))/100,
                     sum(r['is_cav'] for r in local)/10])

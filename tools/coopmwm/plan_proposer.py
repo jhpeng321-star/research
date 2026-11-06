@@ -56,7 +56,8 @@ from . import mppi_search as ms
 
 SCHEMA = 'coopmwm.plan_proposer.receipt/1'
 ROW_FIELDS = ('vid', 's_m', 'v_mps', 'lane', 'is_cav', 'length_m')
-MERGE_ZONE = (-100., 75.44)          # same observable RSU zone as coopnative.encode
+from .map_descriptor import FRAME
+MERGE_ZONE = FRAME.local_zone_s_m   # same observable zone as coopnative.encode (N1 frame contract)
 SENSE_M = 100.                       # same-lane/any-lane neighbour sensing radius
 REGIMES = ('merge-dense', 'ordinary')
 Z_SCALE = float(ms.REGISTERED['sigma'])   # perturbations are modelled in units of 0.5 m/s^2
