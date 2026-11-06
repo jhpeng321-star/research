@@ -4,7 +4,6 @@ The OFF golden (fixtures/w2_off_golden.json) was written by ``off_fingerprint()`
 on the unchanged base tree 3e5bc9f9 BEFORE any W2 code existed, so the OFF test
 compares the W2 tree against the pre-W2 bytes, not against itself.
 """
-from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path
@@ -106,6 +105,77 @@ def test_off_is_byte_identical_to_the_pre_w2_tree():
     # Explicitly-False W2 keys are the same OFF path (no new parameters, rng draws or bytes).
     explicit = dict(wall_pressure_features=False, wall_release=False, wall_negative_labels=False)
     assert off_fingerprint(explicit) == golden
+
+
+def test_w2_settings_defaults_types_and_b_equals_r():
+    from tools.coopmwm import wall_w2
+    assert wall_w2.settings({}) == dict(wall_pressure_features=False, wall_release=False,
+                                        wall_negative_labels=False, wall_negatives=None)
+    assert not wall_w2.any_on({})
+    for bad in (dict(wall_release=1), dict(wall_pressure_features='yes'),
+                dict(wall_negatives='x.jsonl'),          # path without the option
+                dict(wall_release=True, w2_by_arm=dict(B=dict(wall_release=True), R={})),
+                dict(w2_by_arm=dict(B={})),
+                dict(w2_by_arm=dict(B={}, R=dict(wall_negative_labels=True)))):
+        with pytest.raises(ValueError):
+            wall_w2.settings(bad)
+    same = dict(wall_release=True, wall_pressure_features=True,
+                w2_by_arm=dict(B=dict(wall_release=True, wall_pressure_features=True),
+                               R=dict(wall_release=True, wall_pressure_features=True)))
+    assert wall_w2.settings(same)['wall_release'] is True
+    from tools.coopmwm import track2_backend as tb
+    with pytest.raises(ValueError, match='bool'):
+        tb._check(dict(base_cfg(), wall_release='on'), 'B')
+
+
+def _strip(value, keys=('merge_pressure',)):
+    if isinstance(value, dict):
+        return {k: _strip(v, keys) for k, v in value.items() if k not in keys}
+    if isinstance(value, (list, tuple)):
+        return [_strip(v, keys) for v in value]
+    return value
+
+
+def test_pressure_on_is_additive_zero_initialised_and_keeps_the_frozen_observation():
+    off_policy, off = run_policy(base_cfg())
+    on_policy, on = run_policy(dict(base_cfg(), wall_pressure_features=True))
+    from tools.coopmwm.wall_pressure import PRESSURE_DIM
+    # Every recorded byte except the added observable block is identical: the frozen MAPPO
+    # input (context x / v2v), the layer residual features, actions, trigger logp and draws.
+    assert [_h(_strip(s)) for s in on] == [_h(s) for s in off]
+    assert all(set(s['context']['merge_pressure']) == set(s['context']['members']) for s in on)
+    assert all(len(b) == PRESSURE_DIM for s in on for b in s['context']['merge_pressure'].values())
+    assert any('merge_pressure' in s['track2_trigger']['context'] for s in on if 'track2_trigger' in s)
+    # Additive head only: all OFF parameters equal, the new output layer starts at zero.
+    off_state, on_state = off_policy.trigger.state_dict(), on_policy.trigger.state_dict()
+    assert set(on_state)-set(off_state) == {f'w2_head.{k}' for k in
+                                           ('0.weight', '0.bias', '2.weight', '2.bias')}
+    assert all(torch.equal(off_state[k], on_state[k]) for k in off_state)
+    assert not on_state['w2_head.2.weight'].any() and not on_state['w2_head.2.bias'].any()
+    assert _h({k: v.tolist() for k, v in on_policy.layer.state_dict().items()}) == \
+        _h({k: v.tolist() for k, v in off_policy.layer.state_dict().items()})
+    # The head is trainable from the recorded decision (gradient reaches the zero layer).
+    from tools.coopmwm.track2_backend import _batch
+    record = next(s['track2_trigger'] for s in on if 'track2_trigger' in s)
+    batch = _batch(record)
+    loss = on_policy.trigger.imitation_loss(batch, torch.zeros(len(batch.actions), dtype=torch.long))
+    loss.backward()
+    assert on_policy.trigger.w2_head[2].weight.grad.abs().sum() > 0
+    assert any(p is on_policy.trigger.w2_head[2].weight for p in on_policy.trigger.learning_parameters())
+
+
+@pytest.mark.parametrize('extra', [dict(wall_pressure_features=True, wall_release=True),
+                                   dict(wall_release=True)])
+def test_b_and_r_are_identical(extra):
+    b_policy, b = run_policy(dict(base_cfg(), **extra), arm='B')
+    r_policy, r = run_policy(dict(base_cfg(), **extra), arm='R')
+    def relabel(s):
+        return json.loads(json.dumps(s, default=repr).replace('"arm": "R"', '"arm": "B"'))
+    assert [_h(relabel(s)) for s in r] == [_h(relabel(s)) for s in b]
+    assert _h({k: v.tolist() for k, v in b_policy.trigger.state_dict().items()}) == \
+        _h({k: v.tolist() for k, v in r_policy.trigger.state_dict().items()})
+    from tools.coopmwm import wall_w2
+    assert wall_w2.settings(dict(base_cfg(), **extra)) == b_policy.w2 == r_policy.w2
 
 
 if __name__ == '__main__':

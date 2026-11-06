@@ -48,10 +48,18 @@ def candidates(obs_state, rng, n):
                              and r['vid'] in available], float(own['s_m']))
     from . import group_lane
     structured = group_lane.families(obs_state)[1:]
+    release = obs_state.get('wall_release', False)
+    if type(release) is not bool:
+        raise ValueError('wall_release must be bool')
     def propose(family, group):
         if family in moves.LANE_FAMILIES:
             return group_lane.candidate(family, obs_state, own, group, rng)
-        return moves._candidate(family, own, group, rng)
+        move = moves._candidate(family, own, group, rng)
+        if release and family == 'wall':
+            # W2 (opt-in, B = R): registered gradual-release shape draw for this wall.
+            from .wall_release import with_release
+            move = with_release(move, [own]+list(group), rng)
+        return move
     pools = {}
     if n and ego in available:
         for family in structured:
@@ -161,8 +169,9 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
                 m is not None and len(m.actors) >= 2 for m in batch.tables[0]))
         move = batch.selected()[ego]
         selected = move is not None and move.family != 'none'
+        # A W2 gradual-release wall stays committed through its release ramp (0 otherwise).
         accepted[ego] = executor.start(move, ego=ego, observable_cav_ids=observable_cavs[ego],
-            now=now, until=now+move.onset_s+move.hold_s) if selected else False
+            now=now, until=now+move.onset_s+move.hold_s+getattr(move, 'release_s', 0)) if selected else False
         stats['selected_non_none'] += int(selected)
         stats['rejected_non_none'] += int(selected and not accepted[ego])
     ordered = [batches[v] for v in members]

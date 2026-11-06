@@ -115,6 +115,8 @@ def _check(cfg, arm):
         close_call_settings(cfg)
         if not cfg.get('merge_features', False):
             raise ValueError('B/R require observable merge features')
+        from .wall_w2 import settings as w2_settings
+        w2_settings(cfg)  # W2 keys: common B = R, default OFF
         if type(cfg['decision_interval_s']) is not int or cfg['decision_interval_s'] < 1:
             raise ValueError('positive registered decision interval required')
         reward = cfg.get('track2_reward', {})
@@ -275,9 +277,13 @@ class EpisodePolicy(torch.nn.Module):
         # unused by ProductionLayer, gets no gradient and cannot gate actuation.
         self.layer.trigger_gain.requires_grad_(True)
         self.layer.optimizer = torch.optim.Adam(self.layer.layer_parameters(), lr=config.learning_rate)
+        from .wall_w2 import settings as w2_settings
+        self.w2 = w2_settings(cfg)
+        w2 = dict(pressure=self.w2['wall_pressure_features'], release=self.w2['wall_release'])
         self.trigger = TriggerPolicy(self.layer.base, v2v_dim=cfg['v2v_dim'],
             n_candidates=cfg['trigger_candidates'], partner_slots=cfg['trigger_partner_slots'],
-            freeze_base=True, moves_api=MoveAPI(cfg))
+            freeze_base=True, moves_api=MoveAPI(cfg), w2=w2 if any(w2.values()) else None)
+        self.wall_ends, self.pressure_blocks = {}, {}
         self.trigger_optimizer = self.trigger.optimizer(lr=cfg['trigger_lr'])
         self.layer_rng = torch.Generator().manual_seed(int(cfg['training_seed']))
         self.candidate_rng = np.random.default_rng(int(cfg['training_seed']))
@@ -319,6 +325,8 @@ class EpisodePolicy(torch.nn.Module):
             # Only selected CAVs enter candidates; sensed HDVs are geometry only.
             local = [r for r in sensed if not r['is_cav'] or r['vid'] in [vid]+partners]
             states[vid], visible[vid] = dict(self=vid, rows=local), [vid]+partners
+            if self.w2['wall_release']:
+                states[vid]['wall_release'] = True  # W2 registered release-shape proposals
             if self.cfg.get('group_lane_moves'):
                 # Coverage comes from this own sensor packet, not an absent row.
                 # Include sensed CAVs as gap obstacles even outside partner slots.
@@ -349,6 +357,8 @@ class EpisodePolicy(torch.nn.Module):
                 # Local-only, t-1 intent board, distinct from base's RSU-conditioned board.
                 local_contexts[vid] = _intent_features(dict(time_s=now, vehicles=local), vid, {},
                     DEFAULT_CFG, dict(horizon=self.layer.base.intent_horizon, board=self.trigger_board))
+        if self.w2['wall_pressure_features']:
+            self.pressure_blocks = self._pressure(table, cavs, reports, visible, now, command_commitments)
         self.now, self.reports = now, reports
         self.local_states, self.visible, self.blocks = states, visible, blocks
         self.local_intents = local_contexts
@@ -365,11 +375,30 @@ class EpisodePolicy(torch.nn.Module):
         self.command_reservations = {ego: {v: reservations[v] for v in ids if v in reservations}
                                      for ego, ids in visible.items()}
 
+    def _pressure(self, table, cavs, reports, visible, now, command_commitments):
+        """W2 observable merge-pressure blocks (own packet at t, selected partners' t-1).
+
+        Wall memory = each ego's OWN wall commitments (executor moves it is a member of,
+        and controller wall plans it executes); never another CAV's commands.
+        """
+        from . import wall_pressure
+        entries = [(e['move'].members, e['start'], e['until']) for e in self.executor.active
+                   if e['move'].family == 'wall']
+        entries += [(c['plan']['members'], c['start_s'], c['start_s']+c['plan']['duration_s'])
+                    for c in command_commitments
+                    if c['plan'].get('family') == 'wall' or c['plan'].get('wall_macro')]
+        memory = wall_pressure.update_memory(self.wall_ends, entries, float(now))
+        return {vid: wall_pressure.pressure_features(reports[vid], vid, self.reports,
+                    now_s=float(now), partner_ids=[p for p in visible[vid] if p != vid],
+                    memory=memory.get(vid)).tolist() for vid in cavs}
+
     @torch.no_grad()
     def sample(self, context, generator, deterministic=False, memory=None):
         if self.now is None:
             raise ValueError('production layer requires controller observation before sampling')
         context = dict(context, merge_features={v: self.blocks[v] for v in context['members']})
+        if self.w2['wall_pressure_features']:
+            context['merge_pressure'] = {v: self.pressure_blocks[v] for v in context['members']}
         if getattr(self.layer.base, 'intent_horizon', 0):
             context['trigger_v2v'] = {v: self.local_intents[v] for v in context['members']}
         decision = None
@@ -426,6 +455,8 @@ class EpisodePolicy(torch.nn.Module):
             active_moves=[dict(move=e['move'].to_dict(), start=e['start'], until=e['until'])
                           for e in self.executor.active], merge_features=context['merge_features'],
             reward_neighbourhoods={v: self.neighbourhoods[v] for v in context['members']})
+        if 'merge_pressure' in context:
+            sample['track2']['merge_pressure'] = context['merge_pressure']
         return sample, memory
 
     def worker_state(self):
