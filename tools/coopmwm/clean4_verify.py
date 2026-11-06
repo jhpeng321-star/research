@@ -2054,7 +2054,7 @@ def _neg_frame_row(*, kind, frames, arm, world, t0, members, family, **kw):
                 family=family, arm=arm, source=PHASE, **kw)
 
 
-def extract(root, *, range_m=200.0, cell=None, families=MINED_FAMILIES):
+def extract(root, *, range_m=100.0, cell=None, families=MINED_FAMILIES):
     """Bank records -> CLEAN4_MOVES_B/R.jsonl, CLEAN4_NEGATIVES.jsonl, CLEAN4_NEGATIVE_FRAMES.jsonl,
     POTENTIAL_INPUTS.json."""
     from . import replay_bank as rb, verify_perseed as vp
@@ -2183,6 +2183,50 @@ def extract(root, *, range_m=200.0, cell=None, families=MINED_FAMILIES):
                 examples=len(examples), cells=sorted(pot['cells']), moves=pot['moves'])
 
 
+def contexts(root, arm='B'):
+    """Every run-list move of ``arm`` (FROZEN order) with a completed first-seed verification = its seed-1
+    screen sv.verify (every run move gets one, whatever its outcome: metadata only, never an outcome
+    filter). Items: seed, cell_key, t0, move_id, state_id, snapshot_path (the decision snapshot of the
+    move context - the same state the bank snapshot copies), receipt_path (the sealed seed-1 sv.verify
+    receipt: episode/window/verification_id), group_plan (the exact frozen N2 plan that was verified).
+    Checks: snapshot binding sha, episode role 'train', world seed = the move world seed."""
+    import torch
+    from . import sumo_verify as sv
+    from .exact_grade import verify_sealed
+    root = _checked(root)
+    ml = move_list(root)
+    if ml is None:
+        raise ValueError('no frozen MOVE_LIST.json')
+    plans_by = {r['move_id']: r for r in _jsonl(root/'results'/'plans.jsonl') if r.get('move_id') and not r.get('skipped')}
+    screen_by = {}
+    for r in _jsonl(root/'results'/'screen.jsonl'):
+        if r.get('move_id'):
+            screen_by.setdefault(r['move_id'], r)
+    out = []
+    for m in ml['moves']:
+        if m['arm'] != arm or not m.get('in_run_list', m['status'] == 'pending'):
+            continue
+        scr, plan_row = screen_by.get(m['move_id']), plans_by.get(m['move_id'])
+        if scr is None or plan_row is None or scr.get('status') not in ('accepted', 'rejected'):
+            continue                                       # no completed first-seed verification
+        receipt_path = Path(scr['work'])/'verifications'/(scr['verification_id']+'.json')
+        receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+        verify_sealed(receipt, 'receipt_sha256')
+        if receipt['status'] not in ('accepted', 'rejected') or plan_row['plan']['id'] not in receipt['candidate_ids']:
+            raise ValueError(f'{m["move_id"]}: screen receipt does not bind its frozen plan')
+        d = move_ctx_dir(root, m)
+        ctx = json.loads((d/'CONTEXT.json').read_text(encoding='utf-8'))
+        snap = torch.load(d/'SNAPSHOT.pt', weights_only=False, map_location='cpu')
+        if sv.snapshot_sha(snap) != ctx['snapshot_sha256'] or receipt['snapshot_sha256'] != ctx['snapshot_sha256']:
+            raise ValueError(f'{m["move_id"]}: snapshot binding mismatch')
+        if snap['episode'].get('role') != 'train' or snap['episode']['world']['seed'] != m['world']['seed']:
+            raise ValueError(f'{m["move_id"]}: snapshot is not a TRAIN state of its world')
+        out.append(dict(seed=int(m['world']['seed']), cell_key=m['cell_key'], t0=int(m['t0']), move_id=m['move_id'],
+                        state_id=ctx['state_id'], snapshot_path=str(d/'SNAPSHOT.pt'), receipt_path=str(receipt_path),
+                        group_plan=plan_row['plan'], screen_status=receipt['status']))
+    return out
+
+
 def status(root):
     root = _checked(root)
     reg = registration(root)
@@ -2282,8 +2326,12 @@ def main(argv=None):
     p.add_argument('--variants')
     p = sub.add_parser('extract')
     p.add_argument('--root', required=True)
-    p.add_argument('--range-m', type=float, default=200.0)
+    p.add_argument('--range-m', type=float, default=100.0, help='V2V range (MAIN registered 100 m)')
     p.add_argument('--cell')
+    p = sub.add_parser('contexts', help='frozen-order Plan A contexts with a completed first-seed verification')
+    p.add_argument('--root', required=True)
+    p.add_argument('--arm', default='B', choices=('B', 'R'))
+    p.add_argument('--out', required=True)
     p = sub.add_parser('status')
     p.add_argument('--root', required=True)
     p.add_argument('--arm', choices=('B', 'R'))
@@ -2391,6 +2439,10 @@ def main(argv=None):
                                   remaining_sim_s=remaining(root))))
     elif a.cmd == 'extract':
         print(json.dumps(extract(root, range_m=a.range_m, cell=a.cell)))
+    elif a.cmd == 'contexts':
+        rows = contexts(root, a.arm)
+        _write_json(a.out, json.dumps(rows, sort_keys=True, default=str))
+        print(json.dumps(dict(out=a.out, n=len(rows), seeds=sorted({r['seed'] for r in rows}))))
     elif a.cmd == 'status':
         if a.arm:
             prog = arm_progress(root, a.arm)

@@ -770,10 +770,18 @@ def test_frozen_moves_collect_run_extract(tmp_path, monkeypatch):
     assert len(verified) == 2
     for plan in verified:                                 # every verified plan is N2-exact (zero legacy projection)
         assert isinstance(mvs.from_plan(plan), ld.LaneDropMove) and plan['origin'] == cv.ORIGIN_N2
+    ctxs = cv.contexts(tmp_path, 'B')                     # metadata only: winner AND loser contexts
+    assert [c['move_id'] for c in ctxs] == [pg, wg] and all(c['seed'] == 989200 for c in ctxs)
+    by_plan = {r['move_id']: r['plan'] for r in cv._jsonl(tmp_path/'results'/'plans.jsonl') if r.get('move_id')}
+    for c in ctxs:
+        assert Path(c['snapshot_path']).exists() and json.loads(Path(c['receipt_path']).read_text())['episode']
+        assert c['group_plan'] == by_plan[c['move_id']] and c['group_plan']['lane_drop_macro']
+    cv.main(['contexts', '--root', str(tmp_path), '--arm', 'B', '--out', str(tmp_path/'ctx.json')])
+    assert [c['move_id'] for c in json.loads((tmp_path/'ctx.json').read_text())] == [pg, wg]
     ex = cv.extract(tmp_path, cell='D2800_p40')
     assert ex['mined_B'] == 3 and ex['mined_R'] == 0 and ex['frames_missing'] == 0
     for m in (json.loads(x) for x in (tmp_path/'CLEAN4_MOVES_B.jsonl').read_text().splitlines()):
-        assert m['move_id'] == pg and m['origin'] == cv.ORIGIN_N2 and m['situation_id'].endswith('_r470')
+        assert m['move_id'] == pg and m['range_m'] == 100.0 and m['origin'] == cv.ORIGIN_N2 and m['situation_id'].endswith('_r470')
         assert m['lane_drop_macro']['family'] == 'closing_pair'
     neg = [json.loads(x) for x in (tmp_path/'CLEAN4_NEGATIVE_FRAMES.jsonl').read_text().splitlines()]
     assert sorted((n['kind'], n['arm'], str(n.get('move_id'))) for n in neg) == [
