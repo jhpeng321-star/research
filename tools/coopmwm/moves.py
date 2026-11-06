@@ -101,10 +101,17 @@ class Move:
     onset: int
     hold: int
     depth: float
+    # W2 (default 'step'/0 = the legacy box): registered gradual release of a wall,
+    # see wall_release. Defaults keep construction, offsets and to_dict bytes unchanged.
+    release_s: int = 0
+    release_shape: str = 'step'
 
     def __post_init__(self):
         if self.family not in ALL_FAMILIES:
             raise ValueError(f'unknown move family {self.family!r}')
+        if not (self.release_shape == 'step' and _is_second(self.release_s) and self.release_s == 0):
+            from .wall_release import validate
+            validate(self)
         members = tuple(self.members)
         object.__setattr__(self, 'members', members)
         if not 1 <= len(members) <= MOVE_MAX_MEMBERS or len(set(members)) != len(members):
@@ -141,11 +148,19 @@ class Move:
 
     def to_dict(self):
         """JSON-serialisable dict (bank labels persist this)."""
-        return dict(family=self.family, members=list(self.members),
-                    onset=int(self.onset), hold=int(self.hold), depth=float(self.depth))
+        out = dict(family=self.family, members=list(self.members),
+                   onset=int(self.onset), hold=int(self.hold), depth=float(self.depth))
+        if self.release_s:
+            # W2 gradual release only; the legacy step wall keeps its exact legacy bytes.
+            out.update(release_s=int(self.release_s), release_shape=self.release_shape)
+        return out
 
     @classmethod
     def from_dict(cls, data):
+        if 'release_s' in data or 'release_shape' in data:
+            return cls(data['family'], tuple(data['members']), data['onset'],
+                       data['hold'], data['depth'], data.get('release_s', 0),
+                       data.get('release_shape', 'step'))
         return cls(data['family'], tuple(data['members']), data['onset'],
                    data['hold'], data['depth'])
 
@@ -181,11 +196,18 @@ def offsets(move, t, state=None):
         raise ValueError('t must be a non-negative integer second')
     actors = move.actors
     active = move.family != 'none' and move.onset <= t < move.onset+move.hold
+    scale = 1.0
+    if not active and move.release_s and move.onset+move.hold <= t < move.onset+move.hold+move.release_s:
+        # W2 registered gradual release (wall only): -depth * f(k, R), f in (0, 1).
+        from .wall_release import release_fraction
+        scale = release_fraction(move.release_shape, t-move.onset-move.hold, move.release_s)
+        active = True
     if active and move.family == 'wall' and state is not None:
         positions = state.get('s_m') or {}
         if any(vid in positions and float(positions[vid]) >= _ZONE_S0 for vid in move.members):
             active = False
-    raw = {v: (-float(move.depth) if active and v in actors else 0.0) for v in move.members}
+    raw = {v: ((-float(move.depth) if scale == 1.0 else -float(move.depth)*scale)
+               if active and v in actors else 0.0) for v in move.members}
     if state is None:
         return raw
     base = state.get('base') or {}
@@ -484,6 +506,10 @@ def from_plan(plan):
             any(row) for row in plan.get('lane_actions', ())):
         from .group_lane import from_plan as lane_move
         return lane_move(plan)
+    if plan.get('wall_macro') is not None:
+        # W2 registered wall macro (step or gradual release): exact executable binding.
+        from .wall_release import from_plan as wall_move
+        return wall_move(plan)
     members, m = _plan_offsets(plan)
     tag = plan.get('variety_family')
     best, best_gain, best_key = none_move(members[0]), 0.0, None
