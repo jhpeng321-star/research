@@ -644,7 +644,10 @@ def supervise(runtime, episodes=()):
     unlabelled = unlabelled_batches(episodes, labelled) if learn['report_kl_unlabelled'] else []
     before = _logits(policy, unlabelled) if unlabelled else []
     valsplit = None
-    epochs, budget = cfg['imitation_epochs'], policy.layer.config.kl_budget
+    slot, _ = active_slot(cfg)
+    # clean5a registered EV-BC steps (MAIN ~21:1x: 60); otherwise the shared imitation_epochs
+    epochs = slot.get('ev_bc_steps', cfg['imitation_epochs'])
+    budget = policy.layer.config.kl_budget
     clip = cfg['trigger_ppo']['max_grad_norm']
     if learn['report_valsplit_auc']:
         valsplit = valsplit_auc(policy, records, epochs=epochs, kl_budget=budget, max_grad_norm=clip)

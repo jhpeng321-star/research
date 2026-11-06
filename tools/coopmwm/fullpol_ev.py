@@ -39,7 +39,7 @@ def settings(cfg):
     if raw is False or raw is None:
         return None
     keys = {'enabled', 'rule', 'provenance', 'families', 'group_sizes', 'solo_geometry', 'learn',
-            'regime_guidance', 'parity_families', 'sumo_lanes'}
+            'regime_guidance', 'parity_families', 'sumo_lanes', 'ev_bc_steps', 'ppo_kl'}
     if (not isinstance(raw, dict) or raw.get('enabled') is not True or raw.get('rule') != RULE
             or set(raw)-keys or not isinstance(raw.get('provenance'), str) or not raw['provenance'].strip()):
         raise ValueError('clean5_ev requires enabled=True, the registered rule, provenance and known keys')
@@ -53,15 +53,32 @@ def settings(cfg):
         raise ValueError(f'clean5_ev solo_geometry in {SOLO_GEOMETRY}')
     if ld.settings(cfg) is None or not ld.settings(cfg)['moves']:
         raise ValueError('clean5_ev requires the N2 lane_drop moves')
+    if 'ev_bc_steps' in raw and (type(raw['ev_bc_steps']) is not int or raw['ev_bc_steps'] < 1):
+        raise ValueError('clean5_ev ev_bc_steps must be a positive integer (registered)')
+    if raw.get('ppo_kl', 'row_sum') not in PPO_KL:
+        raise ValueError(f'clean5_ev ppo_kl in {PPO_KL}')
     out = deepcopy(raw)
     out.update(families=families, group_sizes=sizes, solo_geometry=raw.get('solo_geometry', 'zone'))
     return out
 
 
+PPO_KL = ('row_sum', 'row_mean')   # trigger-PPO KL guard: inherited row-sum (OFF) / per-CAV-row mean
+EV_BC_STEPS = 60                    # MAIN ~21:1x registered: EV-BC optimiser steps per update (lr, cap unchanged)
+PACE_RULE = ('MAIN 2026-11-06 ~21:1x (pre-launch, registered): EV-BC imitation steps 60 at the registered lr 3e-4 '
+             'and KL cap 0.045 (per-row-mean semantics, 24080ea2); trigger-PPO KL guard = per-CAV-row MEAN capped '
+             'at the registered 0.045 instead of the row SUM (B and R identically; FULLPOL pace fixture: 20 steps '
+             'reached P(target) 0.8 only at u24, 60 steps by u9)')
+
+
 def config_keys(*, provenance, families=('abreast_wall', 'group_hold'), group_sizes=(1, 2), solo_geometry='zone',
-                learn=None, regime_guidance=None, parity_families=None, sumo_lanes=None):
+                learn=None, regime_guidance=None, parity_families=None, sumo_lanes=None, ev_bc_steps=None,
+                ppo_kl=None):
     out = dict(enabled=True, rule=RULE, provenance=provenance, families=list(families),
                group_sizes=list(group_sizes), solo_geometry=solo_geometry)
+    if ev_bc_steps is not None:
+        out['ev_bc_steps'] = int(ev_bc_steps)
+    if ppo_kl is not None:
+        out['ppo_kl'] = ppo_kl
     for key, value in (('learn', learn), ('regime_guidance', regime_guidance),
                        ('parity_families', None if parity_families is None else sorted(parity_families)),
                        ('sumo_lanes', sumo_lanes)):
@@ -254,5 +271,6 @@ def recommended(*, provenance, regime_guidance, learn=None):
     carry the RL part, incl. group moves); report-only receipts ON."""
     return config_keys(provenance=provenance, families=('abreast_wall', 'group_hold'), group_sizes=(1, 2),
                        solo_geometry='zone', regime_guidance=regime_guidance, parity_families=PARITY_FAMILIES,
+                       ev_bc_steps=EV_BC_STEPS, ppo_kl='row_mean',
                        learn=learn or dict(ev_bc=True, ev_credit=False, report_kl_unlabelled=True,
                                            report_valsplit_auc=True))

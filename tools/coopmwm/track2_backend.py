@@ -1205,6 +1205,13 @@ class ArmRuntime:
                 self.policy.trigger.load_state_dict(before)
                 self.policy.trigger_optimizer.load_state_dict(optimizer)
             trigger_metrics.append(dict(metrics, exact_kl=kl, accepted=accepted))
+        ppo_kl_report = None
+        if self._kl_rows():
+            # clean5a (report only): the KL actually used by trigger PPO this update (per-row mean).
+            ppo_kl_report = dict(rule='row_mean', kl_budget=self.policy.layer.config.kl_budget,
+                                 final_kl=self._trigger_kl(reference) if reference else 0.,
+                                 accepted=sum(m['accepted'] for m in trigger_metrics),
+                                 rejected=sum(not m['accepted'] for m in trigger_metrics))
         rsu_metrics = None
         if getattr(self.policy, 'rsu', None) is not None:
             # N2 RSU suggestion head: PPO on its recorded decisions (B = R), exact KL guard.
@@ -1228,6 +1235,7 @@ class ArmRuntime:
         from .track2_safety_reward import settings as close_call_settings
         close_call = close_call_settings(cfg)
         return dict(**(dict(g4_synergy_credit=synergy_receipt) if synergy_receipt is not None else {}),
+            **(dict(fullpol_ppo_kl=ppo_kl_report) if ppo_kl_report is not None else {}),
             **(dict(rsu=rsu_metrics) if rsu_metrics is not None else {}),
             **(dict(fullpol_ev_credit=ev_receipt) if ev_receipt is not None else {}),
             layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),
@@ -1349,13 +1357,26 @@ class ArmRuntime:
                 future = current  # drop departed IDs; never carry across episodes
         return returns, advantages
 
+    def _kl_rows(self):
+        """clean5a ``ppo_kl='row_mean'`` (default OFF -> the inherited per-step row SUM)."""
+        if '_kl_rows_value' not in self.__dict__:
+            from .fullpol_ev import settings
+            ev = settings(self.cfg)
+            self._kl_rows_value = ev is not None and ev.get('ppo_kl', 'row_sum') == 'row_mean'
+        return self._kl_rows_value
+
     @torch.no_grad()
     def _trigger_kl(self, reference):
         values = []
+        rows = self._kl_rows()
         for batch, logits in reference:
             after = self.policy.trigger.distribution(batch.context, batch.descriptors, batch.mask)[0]
-            values.append(torch.distributions.kl_divergence(torch.distributions.Categorical(logits=logits),
-                torch.distributions.Categorical(logits=after)).sum())
+            kl = torch.distributions.kl_divergence(torch.distributions.Categorical(logits=logits),
+                                                   torch.distributions.Categorical(logits=after))
+            values.append(kl if rows else kl.sum())
+        if rows:
+            # MAIN ~21:1x: per-CAV-row MEAN (standard PPO convention), registered cap unchanged.
+            return float(torch.cat(values).mean()) if values else 0.
         return float(torch.stack(values).mean()) if values else 0.
 
     def save(self):

@@ -567,3 +567,83 @@ def test_g2_coordination_partner_never_reopens_legacy_families_under_clean5a(cfg
         assert calls == ['a']                                          # OFF: G2 path unchanged
     finally:
         co.candidates = real
+
+
+def _wide_reference(rows=150, seed=0):
+    from .trigger_policy import TriggerBatch
+    gen = torch.Generator().manual_seed(seed)
+    logits = torch.randn((rows, 9), generator=gen)
+    after = logits+.06*torch.randn((rows, 9), generator=gen)     # a small per-CAV policy move
+    batch = TriggerBatch(dict(members=[f'c{i}' for i in range(rows)], x=[[0.]]*rows), (), torch.zeros((rows, 9, 1)),
+                         torch.ones((rows, 9), dtype=torch.bool), torch.zeros(rows, dtype=torch.long),
+                         torch.zeros(rows), torch.zeros(rows))
+    return batch, logits, after
+
+
+@pytest.mark.parametrize('mode', ['row_sum', 'row_mean'])
+def test_trigger_ppo_kl_guard_row_sum_vs_registered_row_mean_on_150_rows(cfg, monkeypatch, mode):
+    """MAIN ~21:1x: with ~150 CAV rows the inherited row-SUM guard exceeds 0.045 for a tiny per-CAV
+    move (revert every step); the clean5a row-MEAN guard admits it. OFF = row sum (unchanged)."""
+    from .test_track2_backend_cpu import fake_load
+    fake_load(monkeypatch)
+    value = ev_cfg(cfg) if mode == 'row_sum' else dict(ev_cfg(cfg), clean5_ev=dict(ev_cfg(cfg)['clean5_ev'],
+                                                                                      ppo_kl='row_mean'))
+    runtime = tb.build_arm_runtime(value, 'B')['runtime']
+    batch, logits, after = _wide_reference()
+    monkeypatch.setattr(runtime.policy.trigger, 'distribution', lambda c, d, m: (after, torch.zeros(len(after))))
+    kl = runtime._trigger_kl([(batch, logits)])
+    per_row = torch.distributions.kl_divergence(torch.distributions.Categorical(logits=logits),
+                                                torch.distributions.Categorical(logits=after))
+    if mode == 'row_sum':
+        assert kl == pytest.approx(float(per_row.sum())) and kl > .045       # would revert every step
+    else:
+        assert kl == pytest.approx(float(per_row.mean())) and kl < .045      # admitted
+    plain = tb.build_arm_runtime(ld_cfg(cfg, v2v=False), 'B')['runtime']   # clean5a OFF entirely
+    monkeypatch.setattr(plain.policy.trigger, 'distribution', lambda c, d, m: (after, torch.zeros(len(after))))
+    assert plain._trigger_kl([(batch, logits)]) == pytest.approx(float(per_row.sum()))
+
+
+def test_recipe_registers_ev_bc_steps_60_and_row_mean_ppo_kl(cfg):
+    on = dict(ld_cfg(cfg, v2v=False), **fe.recommended(provenance=PROV, regime_guidance=guidance([grow('wall_h_solo2', 9.)])))
+    s = fe.settings(on)
+    assert s['ev_bc_steps'] == 60 and s['ppo_kl'] == 'row_mean'
+    with pytest.raises(ValueError):
+        fe.settings(dict(on, clean5_ev=dict(on['clean5_ev'], ppo_kl='other')))
+    with pytest.raises(ValueError):
+        fe.settings(dict(on, clean5_ev=dict(on['clean5_ev'], ev_bc_steps=0)))
+    p = make(on)
+    eps = [_episode(s_, f'e{i}', seed=989220+i) for i, s_ in enumerate(_decisions(make(on), 3))]
+    out = fl.supervise(SimpleNamespace(cfg=dict(on, imitation_epochs=20), arm='B', policy=p), episodes=eps)
+    assert out['epochs'] == 60 and len(out['fit']['passes']) <= 60
+
+
+def test_production_train_reports_ppo_kl_only_when_clean5a_row_mean(cfg, monkeypatch):
+    from .acceleration import Controller
+    from .v2v_runtime import controller_class
+    from .test_track2_backend_cpu import fake_load
+    fake_load(monkeypatch)
+    reports = {}
+    for mode in ('row_sum', 'row_mean'):
+        on = ev_cfg(cfg)
+        on['clean5_ev'] = dict(on['clean5_ev'], ppo_kl=mode)
+        runtime = tb.build_arm_runtime(on, 'B')['runtime']
+        runtime.safety_checked = True
+        p = runtime.policy
+        controller = controller_class(Controller)(p, torch.Generator().manual_seed(9), False)
+        vehicles = [dict(r, v_mps=2.) for r in scene()]
+        p.observe(vehicles, 300, native_commands={r['vid']: 0. for r in vehicles if r['is_cav']})
+        controller.apply(vehicles, {r['vid']: 0. for r in vehicles if r['is_cav']}, 300)
+        s = controller.events[-1]['sample']
+        reg = on['track2_reward']
+        rows = []
+        for vid in s['context']['members']:
+            nb = {v: -1. for v in s['track2']['reward_neighbourhoods'][vid]}
+            rows.append(dict(episode_id='ep1', time_s=300, cav_id=vid, source='sumo', own_reward=-1., neighbour_rewards=nb,
+                             reward=-1.+reg['weight']*(sum(nb.values())/len(nb) if nb else 0.), weight=reg['weight'],
+                             weight_provenance=reg['provenance']))
+        monkeypatch.setattr(runtime, 'bank_pairs', lambda: ([], {}))
+        reports[mode] = runtime.train([dict(id='ep1', arm='B', steps=[dict(time_s=300, sample=s)])],
+                                      rewards=dict(schema=tb.REWARD_SCHEMA, arm='B', update=1, rows=rows))
+    assert 'fullpol_ppo_kl' not in reports['row_sum']
+    r = reports['row_mean']['fullpol_ppo_kl']
+    assert r['rule'] == 'row_mean' and r['kl_budget'] == .045 and r['accepted']+r['rejected'] >= 1
