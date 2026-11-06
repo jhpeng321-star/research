@@ -307,7 +307,13 @@ class TriggerPolicy(nn.Module):
             if (ego not in visible or len(set(visible)) != len(visible)
                     or len(visible) > self.partner_slots):
                 raise ValueError('observable CAV slots must be unique, bounded and include ego')
-            candidates = list(self.moves_api.candidates(obs_states[ego], rng, self.n_candidates))
+            state = obs_states[ego]
+            offered = state.get('offered') if isinstance(state, dict) else None
+            if offered is not None:
+                # G4LD practice offer (opt-in): the candidate draw is unchanged (same rng
+                # stream); the verified move then occupies slot 1, as in bank CE labels.
+                state = {k: v for k, v in state.items() if k != 'offered'}
+            candidates = list(self.moves_api.candidates(state, rng, self.n_candidates))
             if len(candidates) > self.n_candidates:
                 raise ValueError('moves.candidates exceeded requested action budget')
             table = [None]
@@ -315,6 +321,11 @@ class TriggerPolicy(nn.Module):
                 _validate_move(move, ego, visible, self.option_families)
                 if _field(move, 'family') != 'none':
                     table.append(copy.deepcopy(move))
+            if offered:
+                if len(offered) != 1:
+                    raise ValueError('one offered move per decision')
+                _validate_move(offered[0], ego, visible, self.option_families)
+                table[1:2] = [copy.deepcopy(offered[0])]
             mask = [True]*len(table)+[False]*(self.n_candidates+1-len(table))
             table += [None]*(self.n_candidates+1-len(table))
             tables.append(tuple(table))

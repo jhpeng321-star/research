@@ -75,6 +75,8 @@ def backend_config(cfg, *, root=None, smoke=False):
         if cfg.get('g4_synergy_credit'):
             # The fixed G4 registration samples ordinary TRAIN only.
             out['g4_synergy_credit'] = False
+        if cfg.get('g4_extension'):
+            out['g4_extension'] = False   # G4LD rides on G4 (off in smoke with it)
         attempt = cfg.get('smoke_attempt', 1)
         if type(attempt) is not int or attempt not in (1, 2):
             raise ValueError('at most two budgeted qualification smoke attempts')

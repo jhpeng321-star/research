@@ -129,8 +129,11 @@ def _check(cfg, arm):
         opportunity_settings(cfg)
         v2v_wall.settings(cfg)            # W1 options: common B/R registration, default off
         v2v_wall.awareness_settings(cfg)
-        from .sparse_synergy_credit import settings as synergy_settings
+        from .sparse_synergy_credit import settings as synergy_settings, extension as synergy_extension
         synergy_settings(cfg)
+        synergy_extension(cfg)   # G4LD keys: common B = R, default OFF
+        from .practice_offer import settings as offer_settings
+        offer_settings(cfg)      # G4LD practice offer: common B = R, default OFF
         from .track2_safety_reward import settings as close_call_settings
         close_call_settings(cfg)
         if not cfg.get('merge_features', False):
@@ -503,6 +506,24 @@ class EpisodePolicy(torch.nn.Module):
                     receipt['lane_requests'][vid] = lane
         return out, receipt
 
+    def _practice_offer(self, context):
+        """G4LD offer mode: one-shot slot-1 offer at the first live periodic decision."""
+        from . import practice_offer
+        spec, self.offer = self.offer, None
+        self.executor._advance(self.now)
+        occupied = {v for entry in self.executor.active for v in entry['move'].members}
+        free = {v for v in context['members'] if v not in occupied
+                and self.now >= self.command_reservations.get(v, {}).get(v, -math.inf)}
+        options = practice_offer.options(self, spec, context, self.now, free)
+        receipt = dict(rule=practice_offer.OFFER_RULE, plan_sha256=spec['plan_sha256'], time_s=self.now,
+                       offered={v: o.to_dict() for v, o in options.items()})
+        if not options:
+            return self.local_states, receipt
+        states = dict(self.local_states)
+        for ego, option in options.items():
+            states[ego] = dict(states[ego], offered=[option])
+        return states, receipt
+
     def _pressure(self, table, cavs, reports, visible, now, command_commitments):
         """W2 observable merge-pressure blocks (own packet at t, selected partners' t-1).
 
@@ -569,10 +590,13 @@ class EpisodePolicy(torch.nn.Module):
             pairs = disjoint(edges if periodic else self.approach_events.pending(edges))
             opportunity_kwargs.update(coordination=self.coordination, opportunity_pairs=pairs,
                                       event=not periodic)
+        obs_states, offer = self.local_states, None
+        if getattr(self, 'offer', None) is not None and context['members'] and periodic:
+            obs_states, offer = self._practice_offer(context)
         if context['members'] and (periodic or pairs or wall_events
                                    or opportunity_kwargs.get('lane_drop_events')):
             decision, accepted, proposal_stats = feasible_proposals.decide_and_start(
-                self.trigger, context, obs_states=self.local_states,
+                self.trigger, context, obs_states=obs_states,
                 observable_cavs=self.visible, executor=self.executor, now=self.now,
                 rng=self.candidate_rng, generator=self.layer_rng, deterministic=deterministic,
                 command_reservations=self.command_reservations, **opportunity_kwargs)
@@ -618,6 +642,8 @@ class EpisodePolicy(torch.nn.Module):
         if decision is not None:
             sample['track2_trigger'] = dict(_batch_dict(decision), accepted=accepted,
                                           proposals=proposal_stats)
+        if offer is not None:
+            sample['practice_offer'] = offer
         sample['track2'] = dict(schema=SCHEMA, arm=self.arm, time_s=self.now,
             active_moves=[dict(move=e['move'].to_dict(), start=e['start'], until=e['until'])
                           for e in self.executor.active], merge_features=context['merge_features'],
@@ -673,6 +699,8 @@ def episode_components(job, base, controller_type):
     policy.candidate_rng = np.random.default_rng(int(job['noise_seed']))
     if policy.rsu is not None:
         policy.rsu.reseed(int(job['noise_seed']))   # N2 RSU: its own per-job streams
+    if (job.get('practice') or {}).get('offer') is not None:
+        policy.offer = deepcopy(job['practice']['offer'])   # G4LD offer mode (opt-in)
 
     def controller(*args, **kwargs):
         # Practice uses a controller factory rather than a class. Wrap the
@@ -899,6 +927,9 @@ class ArmRuntime:
                     breadth_cfg=cfg,
                     **(dict(weighting=True) if cfg.get('practice_weighting') else {}))
                 rows = plan['rows']
+                if cfg.get('practice_offer'):
+                    from .practice_offer import mark_rows
+                    rows = mark_rows(cfg, u, rows)   # G4LD: B = R slot-index selection
                 for row in rows:
                     if row.get('source') == 'augmented' or row.get('parent_example_id'):
                         if (not cfg.get('augmentation_prelaunch')
