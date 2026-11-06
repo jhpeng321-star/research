@@ -1,5 +1,17 @@
 # PLANFIX CPU continuation — 2026-11-05 18:36 +08
 
+## 2026-11-06 08:44 +08 — SUPERSEDED; older continuation instructions inactive
+
+Central owner decisions at02:44 superseded S-VARIETY with G1/mining; at03:00
+the remaining566,400sim-s reservation was released. No new search, verification,
+GPU transfer, worker dispatch or switch should follow the historical sequence
+below without renewed owner/MAIN authority and explicit funding for physics.
+One read-only F6 status attempt08:44 timed out at the shared local admission gate
+before remote execution. **Current WM381108/coordinator381105 state, gate count
+and search outcome are UNKNOWN**;00:37 assertions below are historical only.
+No process was signalled or duplicated. Full recovery and attempt evidence:
+`PLANFIX_RECOVERY_20261106.md`. Bank terminal results still yield zero survivors.
+
 ## CURRENT: 2026-11-06 00:37 — corrected CPUv7 running, preserve both identities
 
 **Adopt, never duplicate, the actual live pair on cpuV:**

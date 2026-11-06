@@ -45,5 +45,32 @@ or bank/teacher change is authorized by this recovery.
 
 ## Fresh read-only audit
 
-Pending the existing `planfix_deploy_cpu_worker.py status --generation 7` path.
-Any later audit result belongs below; historical snapshots above are retained.
+At 08:44:00–08:44:49 +08, ran the existing read-only
+`planfix_deploy_cpu_worker.py status --generation 7` path once through F6.
+The shared admission lock timed out before remote command execution (rc1,
+empty stdout); no CPU_STATUS receipt was produced. Current model/coordinator
+liveness, gates and search outcome are UNKNOWN. Do not turn the old 00:37
+snapshot into a current liveness assertion. The local shared gate was preserved.
+
+Durable attempt evidence:
+`E:/Temp/opencode/PLANFIX_TRANSPORT_cpuV_1793925889348871100.json`,
+attempt1/1, code SHA
+`0f390d2a575c1a74257fdc48b8605d5bd12a0420c5f27f01f5b7a664447e5a78`.
+No retry, bypass, master change, dispatch, transfer, signal or new simulation.
+
+Read all 462 lines of the preserved central `PLAN_FIX_BANK_RESULTS.json`:
+eight source inputs, two startup failures with null translated gains, six
+measured inputs with two CRN outcomes each; all twelve gain/lower95 values are
+zero and keep/admitted/cooperative are false. Charges reconcile to
+2x2400 + 6x4800 = 33,600 sim-s. Per-plan original gains, family, move fields,
+eligibility, native receipt hashes and charge IDs are retained there.
+
+## Recovery disposition
+
+**SUPERSEDED; NOT READY; no active switch index.** New local/central status
+headers reconcile the released reservation and explicitly label worker state
+unverified. Existing scientific results, untracked files and running processes
+are preserved. This documentation-only recovery reuses prior qualification;
+verification consists of receipt inspection and git diff checks. Renewed task
+authority/budget and a successful bounded status read are prerequisites for any
+future execution. No new work is queued automatically.
