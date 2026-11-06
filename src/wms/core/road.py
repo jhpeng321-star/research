@@ -68,6 +68,10 @@ class RoadGeometry:
     #: entrance -> WM lanes (counter channel 0 = mainline/through, 1 = ramp/closing lane)
     entrances: tuple = ((0, 1), (2,))
     k_slots: int = 192
+    #: SUMO -> frame projection of a lane-drop map: ((edge, sumo lane, WM lane, lane start x), ...)
+    #: and the anchor (s = x - anchor); empty / None on the on-ramp map (traffic_shepherd geometry).
+    frame_lanes: tuple = ()
+    anchor_x_m: Optional[float] = None
     descriptor: Optional[str] = None           # 'n1' | 'stub' | None (original constants)
     descriptor_sha256: Optional[str] = None    # N1 MapDescriptor.digest
 
@@ -97,6 +101,18 @@ class RoadGeometry:
         """True when a closing-lane car can change only inside the merge zone (on-ramp map)."""
         return tuple(self.closing_change_zone_s_m) == tuple(self.merge_zone_s_m)
 
+    def project(self, edge: str, sumo_lane: int, *, x: Optional[float] = None,
+                pos: Optional[float] = None) -> tuple[int, float]:
+        """``(WM lane, s)`` of a SUMO position on a lane-drop map: global ``x`` (straight
+        west->east road) or lane position ``pos``; raises for an unknown lane."""
+        if self.anchor_x_m is None:
+            raise ValueError("SUMO projection of the on-ramp map: use traffic_shepherd.c4.geometry")
+        for e, i, wm, x0 in self.frame_lanes:
+            if e == str(edge) and i == int(sumo_lane):
+                gx = float(x) if x is not None else x0 + float(pos)
+                return wm, gx - float(self.anchor_x_m)
+        raise ValueError(f"lane {edge}_{sumo_lane} is not in the {self.name} frame")
+
     def record(self) -> dict:
         out = {"schema": SCHEMA}
         for f in fields(self):
@@ -106,7 +122,24 @@ class RoadGeometry:
 
     @property
     def digest(self) -> str:
+        """Full identity (geometry + provenance); see :attr:`geometry_digest` for data checks."""
         return hashlib.sha256(json.dumps(self.record(), sort_keys=True).encode()).hexdigest()
+
+    @property
+    def geometry_digest(self) -> str:
+        """Digest of the geometry only (no descriptor provenance, no SUMO projection table):
+        stable across stub -> N1 descriptor and across added projection fields, so packs
+        converted earlier stay valid; :func:`geometry_digest_of` recomputes it from a record."""
+        return geometry_digest_of(self.record())
+
+
+#: record keys that are provenance / projection metadata, not WM geometry.
+NON_GEOMETRY_KEYS = ("descriptor", "descriptor_sha256", "frame_lanes", "anchor_x_m")
+
+
+def geometry_digest_of(record: dict) -> str:
+    body = {k: v for k, v in dict(record).items() if k not in NON_GEOMETRY_KEYS}
+    return hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
 
 
 def _plain(value):
@@ -158,6 +191,9 @@ def road_from_descriptor(desc) -> RoadGeometry:
         rsu_mainline_s_m=tuple(float(x) for x in rsu.field_mainline_s_m),
         rsu_closing_s_m=tuple(float(x) for x in rsu.field_ramp_s_m), rsu_cell_m=float(rsu.field_cell_m),
         entrances=(main, (closing,)), k_slots=int(desc.k_slots),
+        frame_lanes=tuple(sorted((str(e), int(i), int(wm), float(x0))
+                                 for (e, i), (wm, x0) in desc.lane_table.items())),
+        anchor_x_m=float(desc.here_offsets[closing]),
         descriptor="stub" if getattr(desc, "is_stub", False) else "n1",
         descriptor_sha256=getattr(desc, "digest", None))
 

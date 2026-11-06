@@ -1,13 +1,11 @@
 """Seed / map guards of the WM data pipeline on registered non-original maps (WM-A, 2026-11-06).
 
-wz3to2 seed registry (N1 ``tools/coopmwm/map_scenarios`` + MAIN 2026-11-06):
-* WM TRAIN/val data: the registered WM-data range 989100-989199 AND N1's TRAIN range 989200-989599,
-  MINUS the qualification worlds WM-D reserved inside it (989200-989216, 989350-989353,
-  989400-989402, 989580-989599; MAIN message 2026-11-06; the reservation file itself is never
-  read here);
-* refused: the HELD-OUT range 989600-989699, WM-D's reserved worlds, anything else outside the
-  accepted ranges, and the merge-map evaluation / sealed ranges 964000-964199, 962xxx, 977xxx
-  (never on any map).
+wz3to2 seed registry (MAIN 2026-11-06, the stricter rule WM-B asked for):
+* WM TRAIN/val data = the registered WM-data range 989100-989199 ONLY;
+* refused for WM training: 989000-989099 (PLANGEN2), 989200-989599 (clean4 TRAIN, incl. WM-D's
+  label / qualification worlds; that set may grow), 989600-989699 (HELD-OUT), any other seed,
+  and the merge-map evaluation / sealed ranges 964000-964199, 962xxx, 977xxx (never on any map).
+Evaluation / qualification read their tapes through WM-D's own path, not through this guard.
 Fail closed: an episode whose seed is not accepted, or whose map differs from the process road,
 is refused before any array is written.  The original merge map keeps its existing guards
 (``wms.core.guard`` / ``wms.data.mixdata.HeldOutGuard``) and is not touched here.
@@ -16,13 +14,14 @@ from __future__ import annotations
 
 from wms.core.errors import TrainDataRefusal
 
-#: map -> seed ranges (inclusive).  ``train`` = accepted for WM training/validation;
-#: ``reserved`` = WM-D qualification worlds inside ``train`` (refused); ``heldout`` = refused.
+#: map -> seed ranges (inclusive).  ``train`` = accepted for WM training/validation; every
+#: ``refused`` range is named in the refusal message; anything outside ``train`` is refused.
 REGISTERED_SEEDS = {
     "wz3to2": {
-        "train": ((989100, 989199), (989200, 989599)),
-        "reserved": ((989200, 989216), (989350, 989353), (989400, 989402), (989580, 989599)),
-        "heldout": ((989600, 989699),),
+        "train": ((989100, 989199),),
+        "refused": {"PLANGEN2": ((989000, 989099),),
+                    "clean4 TRAIN / WM-D label worlds": ((989200, 989599),),
+                    "HELD-OUT": ((989600, 989699),)},
     },
 }
 #: Never on any map (merge-map evaluation / sealed ranges).
@@ -49,10 +48,9 @@ def check_train_seed(map_name: str, seed: int) -> None:
     ranges = REGISTERED_SEEDS.get(str(map_name))
     if ranges is None:
         raise MapDataRefusal(f"map {map_name!r} has no registered seed ranges")
-    if _any(seed, ranges["heldout"]):
-        raise MapDataRefusal(f"{map_name}: seed {seed} is HELD-OUT (refused for WM training)")
-    if _any(seed, ranges["reserved"]):
-        raise MapDataRefusal(f"{map_name}: seed {seed} is a reserved WM qualification world")
+    for label, refused in ranges["refused"].items():
+        if _any(seed, refused):
+            raise MapDataRefusal(f"{map_name}: seed {seed} is {label} (refused for WM training)")
     if not _any(seed, ranges["train"]):
         raise MapDataRefusal(f"{map_name}: seed {seed} is outside the WM TRAIN ranges "
                              f"{ranges['train']}")

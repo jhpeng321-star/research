@@ -176,7 +176,7 @@ def test_converter_writes_a_wz3to2_source_and_guards_maps_and_seeds(tmp_path):
     from wms.data.map_guard import MapDataRefusal
 
     road = wz_road(k_slots=64)
-    collect = _write(tmp_path / "a", synth.WZ3TO2, (989100, 989300), road)
+    collect = _write(tmp_path / "a", synth.WZ3TO2, (989100, 989150), road)
     with R.road_scope(road):
         doc = C4.convert([collect], tmp_path / "src", val_frac=0.5, split_seed=0)
         assert doc["map"] == "wz3to2" and doc["road_digest"] == road.digest
@@ -185,7 +185,7 @@ def test_converter_writes_a_wz3to2_source_and_guards_maps_and_seeds(tmp_path):
         ep = C4.EpisodeArrays(tmp_path / "src" / doc["episodes"][0]["dir"])
         counter = np.asarray(ep.array("counter"))
         assert counter[-1, 1].sum() > 0          # closing-lane insertions = entrance 1
-        for seed in (989600, 989200, 989580, 964000, 989099):   # held-out / reserved / forbidden
+        for seed in (989600, 989200, 989300, 989050, 964000):   # refused ranges
             held = _write(tmp_path / f"h{seed}", synth.WZ3TO2, (seed,), road)
             with pytest.raises(MapDataRefusal):
                 C4.convert([held], tmp_path / f"src_h{seed}")
@@ -207,7 +207,7 @@ def test_wz3to2_windows_train_through_the_round16_model(tmp_path):
     from wms.train.trainer import WmSTrainer
 
     road = wz_road(k_slots=64)
-    collect = _write(tmp_path, synth.WZ3TO2, (989300, 989301), road)
+    collect = _write(tmp_path, synth.WZ3TO2, (989120, 989121), road)
     torch.manual_seed(5)
     with R.road_scope(road):
         C4.convert([collect], tmp_path / "src", val_frac=0.0)
@@ -234,12 +234,10 @@ def test_wz3to2_windows_train_through_the_round16_model(tmp_path):
 
 
 @pytest.mark.parametrize("seed,ok", [
-    (989100, True), (989199, True), (989217, True), (989349, True), (989354, True),
-    (989399, True), (989403, True), (989579, True),
-    (989099, False), (989200, False), (989216, False), (989350, False), (989353, False),
-    (989400, False), (989402, False), (989580, False), (989599, False), (989600, False),
-    (989699, False), (989700, False), (964000, False), (964199, False), (962123, False),
-    (977500, False)])
+    (989100, True), (989150, True), (989199, True),
+    (989000, False), (989099, False), (989200, False), (989216, False), (989300, False),
+    (989599, False), (989600, False), (989699, False), (989700, False), (988999, False),
+    (964000, False), (964199, False), (962123, False), (977500, False)])
 def test_wz3to2_seed_registry(seed, ok):
     from wms.data.map_guard import MapDataRefusal, check_train_seed, train_seed_ok
 
@@ -248,4 +246,51 @@ def test_wz3to2_seed_registry(seed, ok):
         with pytest.raises(MapDataRefusal):
             check_train_seed("wz3to2", seed)
     with pytest.raises(MapDataRefusal):
-        check_train_seed("unregistered_map", 989300)
+        check_train_seed("unregistered_map", 989150)
+
+
+# ------------------------------------------------------------------ planning API (WM-C contract)
+def _moment():
+    cavs = [{"id": f"c{i}", "edge": "up", "lane": i % 3, "x": 1500.0 + 40 * i, "v": 25.0}
+            for i in range(3)]
+    veh = [{"id": f"h{i}", "edge": "up", "lane": i % 3, "x": 1400.0 + 37 * i, "v": 22.0}
+           for i in range(6)] + [{"id": "w1", "edge": "wz", "lane": 0, "pos": 50.0, "v": 28.0}]
+    return {"t0": 300.0, "map": "wz3to2", "cavs": cavs, "vehicles": veh}
+
+
+def test_planapi_observe_evaluate_contract():
+    from wms import planapi as A
+
+    hold = {"v_w": 15.0, "hold_s": 20.0, "dmax": 1.5, "amax": 1.0, "release_x": 2690.0}
+    actions = [{"id": "base", "kind": "base", "members": []},
+               {"id": "g", "kind": "group", "members": [{"id": "c0", "role": "hold", "params": hold},
+                                                        {"id": "c1", "role": "hold", "params": hold}]},
+               {"id": "s0", "kind": "solo", "members": [{"id": "c0", "role": "hold", "params": hold}]}]
+    with R.road_scope(wz_road()):
+        h = A.load(None, max_rows=4)
+        assert h.meta["trained"] is False and h.meta["road"] == "wz3to2"
+        st = A.observe(h, _moment())
+        assert {v["id"]: v["lane"] for v in st["vehicles"]}["c0"] == 2       # up_0 -> WM lane 2
+        w1 = next(v for v in st["vehicles"] if v["id"] == "w1")
+        assert w1["lane"] == 1 and abs(w1["s"] - (2704.0 + 50.0 - 2620.56)) < 1e-6
+        trace = {}
+        out = A.evaluate(h, st, actions, K=2, H=2.0, seed=3, trace=trace)
+        again = A.evaluate(h, st, actions, K=2, H=2.0, seed=3)
+        with pytest.raises(A.WMContractError):
+            A.evaluate(h, st, [{"id": "x", "members": [{"id": "nope", "params": hold}]}], K=1, H=1.0)
+    assert set(out) == {"base", "g", "s0"} and all(len(v) == 2 for v in out.values())
+    assert out == again and all(np.isfinite(x) for v in out.values() for x in v)
+    # member c0 follows the hold law: 25 m/s braking at dmax 1.5 for 1.5 s (speeds t0..t0+1.5 s)
+    speeds = torch.cat(trace["speeds"], 0)
+    row = trace["rows"].index((1, 0))
+    j = trace["ids"].index("c0")
+    assert torch.allclose(speeds[row, :, j], torch.tensor([25.0, 24.25, 23.5, 22.75]), atol=1e-4)
+
+
+def test_geometry_digest_ignores_provenance_and_projection():
+    stub = wz_road()
+    n1_like = R.with_overrides(stub, descriptor="n1", descriptor_sha256="ab" * 32,
+                               frame_lanes=(), anchor_x_m=None)
+    assert n1_like.digest != stub.digest and n1_like.geometry_digest == stub.geometry_digest
+    assert R.geometry_digest_of(stub.record()) == stub.geometry_digest
+    assert R.with_overrides(stub, road_end_m=1400.0).geometry_digest != stub.geometry_digest
