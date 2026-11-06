@@ -598,22 +598,19 @@ def deduplicate(records):
     return out
 
 
-def mass_weights(records, positive_mass):
-    """Registered mass rule: positives `positive_mass`, negatives the rest (all when one side
-    is empty); uniform over families within a side, uniform over records within a family."""
-    sides = {k: [r for r in records if r['kind'] == k] for k in ('positive', 'negative')}
-    present = [k for k, v in sides.items() if v]
-    share = {}
-    if len(present) == 2:
-        share = dict(positive=float(positive_mass), negative=1.-float(positive_mass))
-    elif present:
-        share = {present[0]: 1.}
-    weights = []
-    for r in records:
-        side = sides[r['kind']]
-        families = Counter(x['family'] for x in side)
-        weights.append(share[r['kind']]/len(families)/families[r['family']])
-    return torch.tensor(weights, dtype=torch.float64)
+def side_weights(records, kind):
+    """Within one side: uniform over families, then uniform over records of a family."""
+    side = [r for r in records if r['kind'] == kind]
+    families = Counter(r['family'] for r in side)
+    return [i for i, r in enumerate(records) if r['kind'] == kind], torch.tensor(
+        [1./len(families)/families[r['family']] for r in side], dtype=torch.float64)
+
+
+def batch_split(settings):
+    """Fixed per-step composition: (negative slots, positive slots); identical for B and R."""
+    batch = int(settings['batch_size'])
+    negatives = int(round(batch*(1.-float(settings['positive_mass']))))
+    return negatives, batch-negatives
 
 
 @torch.no_grad()
@@ -650,15 +647,30 @@ def train(policy, records, settings):
     named = logit_parameters(policy)
     parameters = [p for _, p in named]
     optimizer = torch.optim.Adam(parameters, lr=settings['learning_rate'])
-    weights = mass_weights(records, settings['positive_mass'])
-    generator = torch.Generator().manual_seed(int(settings['sample_seed']))
+    # Stratified, separately seeded streams: the NEGATIVE draws are identical in B and R (same
+    # shared negatives, same generator); positive slots draw only the arm's own examples and
+    # stay empty when an arm has none. Loss = sum of CE / batch_size (same formula in B and R).
+    neg_index, neg_weights = side_weights(records, 'negative')
+    pos_index, pos_weights = side_weights(records, 'positive')
+    n_neg, n_pos = batch_split(settings)
+    if not neg_index:
+        n_neg, n_pos = 0, int(settings['batch_size'])
+    neg_gen = torch.Generator().manual_seed(int(settings['sample_seed']))
+    pos_gen = torch.Generator().manual_seed(int(settings['sample_seed'])+1)
     base_before = state_sha256(policy.layer.base)
     frozen_before = dict(residual=state_sha256(policy.layer.residual),
                          trigger_value=state_sha256(policy.trigger.trigger_value))
-    log = []
+    log, drawn = [], hashlib.sha256()
     for step in range(int(settings['steps'])):
-        index = torch.multinomial(weights, int(settings['batch_size']), replacement=True, generator=generator)
-        loss = torch.stack([_record_ce(policy, records[int(i)]) for i in index]).mean()
+        chosen = []
+        if n_neg:
+            draw = torch.multinomial(neg_weights, n_neg, replacement=True, generator=neg_gen)
+            drawn.update(draw.numpy().tobytes())
+            chosen += [neg_index[int(i)] for i in draw]
+        if n_pos and pos_index:
+            chosen += [pos_index[int(i)] for i in torch.multinomial(pos_weights, n_pos, replacement=True,
+                                                                     generator=pos_gen)]
+        loss = torch.stack([_record_ce(policy, records[i]) for i in chosen]).sum()/int(settings['batch_size'])
         if not bool(torch.isfinite(loss)):
             raise ValueError('nonfinite warm-start loss')
         optimizer.zero_grad(set_to_none=True)
@@ -676,12 +688,17 @@ def train(policy, records, settings):
     if (state_sha256(policy.layer.residual) != frozen_before['residual']
             or state_sha256(policy.trigger.trigger_value) != frozen_before['trigger_value']):
         raise ValueError('residual/trigger value changed during warm start')
-    effort = dict(optimizer='torch.optim.Adam', loss='cross_entropy(trigger logits, target slot)',
-                  sampling='torch.multinomial(mass_weights, batch_size, replacement, seeded)',
+    effort = dict(optimizer='torch.optim.Adam', loss='sum cross_entropy(trigger logits, target slot) / batch_size',
+                  sampling=('stratified: round(batch*(1-positive_mass)) negative slots from the shared set '
+                            '(seed sample_seed) + the rest from own positives (seed sample_seed+1); '
+                            'families uniform within a side'),
+                  batch_composition=dict(negative_slots=batch_split(settings)[0],
+                                         positive_slots=batch_split(settings)[1]),
                   optimizer_steps=int(settings['steps']), **{k: settings[k] for k in sorted(settings)},
                   trained_parameters=[n for n, _ in named],
                   trained_parameter_count=sum(p.numel() for p in parameters))
-    return dict(effort=effort, log=log, base_sha256=base_before)
+    return dict(effort=effort, log=log, base_sha256=base_before, negative_draws_sha256=drawn.hexdigest(),
+                positive_records=len(pos_index), negative_records=len(neg_index))
 
 
 # ---------------------------------------------------------------- run
@@ -848,9 +865,18 @@ def run(*, cfg, base, out_dir, positives, negatives, mode, training=None, cells=
             split_records={k: len(v) for k, v in part.items()},
             clipped=dict(Counter(c for r in everything for c in r.get('clipped', ()))),
             effort=trained['effort'], loss_log=trained['log'], base_sha256=trained['base_sha256'],
+            negative_draws_sha256=trained['negative_draws_sha256'],
+            train_negative_records_sha256=digest(sorted(_content_key(r) for r in part['train']
+                                                        if r['kind'] == 'negative')),
             base_unchanged=state_sha256(policy.layer.base) == trained['base_sha256'],
             before=before, after=after, **notes[arm])
     report['effort_equal'] = report['arms']['B']['effort'] == report['arms']['R']['effort']
+    # Same shared negatives + same stream => the very same negative examples every step.
+    report['negative_draws_equal'] = (report['arms']['B']['negative_draws_sha256']
+                                      == report['arms']['R']['negative_draws_sha256'])
+    if (report['arms']['B']['train_negative_records_sha256'] == report['arms']['R']['train_negative_records_sha256']
+            and not report['negative_draws_equal']):
+        raise ValueError('identical shared negatives must be drawn identically in B and R')
     report['base_equal'] = report['arms']['B']['base_sha256'] == report['arms']['R']['base_sha256']
     if not report['effort_equal'] or not report['base_equal']:
         raise ValueError('B/R warm-start effort or frozen base differ')

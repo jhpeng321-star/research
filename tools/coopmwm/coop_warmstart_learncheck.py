@@ -40,20 +40,20 @@ def clean4_like_config(desc, *, training_seed=20261101):
 
     Widths as launch_production.OPTIMIZATION (hidden 64, 8 candidates, 4 partner slots),
     V2V intent base (v2v_dim 48, horizon 5), G5 lane families; N4: lane_drop features+moves+
-    v2v (range 200 m, member_cap 3), W1 v2v_wall (member_cap 4, range 200 m), W2 pressure
-    features + release + negative labels ON, nm_families and coop_awareness OFF, RSU off
-    (pending its smoke check; it is not a trigger-logit input).
+    v2v (range 100 m, member_cap 3), W1 v2v_wall (member_cap 4, range 100 m), W2 pressure
+    features + release + negative labels ON, nm_families, coop_awareness and RSU OFF
+    (N4 18:40 correction: registered 100 m V2V range, RSU off).
     """
     from . import lane_drop, v2v_wall
     cfg = cw.dry_config()
     cfg.update(training_seed=int(training_seed), v2v_intent_horizon=5, v2v_intent_detach_trunk=True,
                v2v_intent_loss_weight=1.0, group_lane_moves=True, wall_pressure_features=True,
                wall_release=True, wall_negative_labels=True)
-    cfg.update(lane_drop.config_keys(provenance='BOOST-PRE learnability readout (clean4 N4 17:40 option set)',
-                                     descriptor=desc, features=True, moves_on=True, v2v_range_m=200.,
+    cfg.update(lane_drop.config_keys(provenance='BOOST-PRE learnability readout (clean4 N4 18:40 option set)',
+                                     descriptor=desc, features=True, moves_on=True, v2v_range_m=100.,
                                      member_cap=3))
-    cfg.update(v2v_wall.config_keys(provenance='BOOST-PRE learnability readout (clean4 N4 17:40 option set)',
-                                    member_cap=4, range_m=200.))
+    cfg.update(v2v_wall.config_keys(provenance='BOOST-PRE learnability readout (clean4 N4 18:40 option set)',
+                                    member_cap=4, range_m=100.))
     return cfg
 
 

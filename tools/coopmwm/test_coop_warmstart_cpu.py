@@ -143,8 +143,9 @@ def test_B_and_R_get_identical_effort_on_unequal_data(cfg, tmp_path, monkeypatch
     assert b['effort']['optimizer_steps'] == SMALL['steps'] and len(steps) == 2*SMALL['steps']
     assert calls.count('B') == calls.count('R') == SMALL['steps']*SMALL['batch_size']
     assert b['effort']['loss'] == r['effort']['loss'] and b['effort']['learning_rate'] == r['effort']['learning_rate']
-    # One shared negatives set for both arms.
+    # One shared negatives set for both arms, drawn identically at every step.
     assert b['negative_records'] == r['negative_records'] == report['negatives']['records']
+    assert report['negative_draws_equal'] and b['train_negative_records_sha256'] == r['train_negative_records_sha256']
     payloads = {arm: torch.load(report['arms'][arm]['checkpoint'], weights_only=False) for arm in 'BR'}
     assert payloads['B']['effort'] == payloads['R']['effort']
     assert payloads['B']['initial_layer_sha256'] == payloads['R']['initial_layer_sha256']
@@ -421,3 +422,13 @@ def test_existing_checkpoints_are_never_overwritten(cfg, tmp_path):
     dry_run(cfg, tmp_path)
     with pytest.raises(ValueError, match='already exist'):
         dry_run(cfg, tmp_path)
+
+
+def test_an_arm_without_guidance_rows_gets_equal_steps_on_the_same_negatives(cfg, tmp_path):
+    b, _, n = rows_files(tmp_path)
+    report = cw.run(cfg=cfg, base=base(), out_dir=tmp_path/'noR', mode='dry', positives=dict(B=[b], R=[]),
+                    negatives=[n], training=SMALL)
+    arms = report['arms']
+    assert arms['R']['positive_records'] == 0 and arms['B']['positive_records'] > 0
+    assert report['effort_equal'] and report['negative_draws_equal']
+    assert arms['R']['effort']['optimizer_steps'] == arms['B']['effort']['optimizer_steps'] == SMALL['steps']
