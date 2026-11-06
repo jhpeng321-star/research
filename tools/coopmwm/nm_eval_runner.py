@@ -346,10 +346,13 @@ def eval_components(native, spec):
 
 
 def _policy_episode(spec, cfg, work):
+    return _policy_run(spec, cfg, work, world=_check_spec(spec), stop=HORIZON_S, role=ROLE)
+
+
+def _policy_run(spec, cfg, work, *, world, stop, role):
     from . import accel_plant, launch_production as production, protocol, rerun_cpus as rc
     from .rerun_tracks_backend import safety
     from .v2v_runner import patched
-    world = _check_spec(spec)
     native = production.backend_config(cfg)
     ck = spec['checkpoint']
     arm, update = ck['arm'], int(ck['update'])
@@ -379,9 +382,9 @@ def _policy_episode(spec, cfg, work):
             base_hook(controller, job, prefixes)
             rule_state(controller, job, prefixes)
         hook.after_step = base_hook.after_step
-    job = dict(id=Path(work).name, path=str(work), world=world, role=ROLE, arm=arm, weights=weights,
+    job = dict(id=Path(work).name, path=str(work), world=world, role=role, arm=arm, weights=weights,
                runtime=native['runtime'], checkpoint=executor, noise_seed=spec['noise_seed'],
-               deterministic=True, guided=False, v2v=True, sim_s=HORIZON_S, stop=HORIZON_S,
+               deterministic=True, guided=False, v2v=True, sim_s=stop, stop=stop,
                warm_history=native['warm_history'], accel_bounds=native['accel_bounds'])
     # As launch_evaluation.episode: the original registered guards (both route map worlds to N1).
     vlog = VehicleLog(work)
@@ -435,20 +438,23 @@ def closing_lane_regime(trace_path, *, lane=REGIME['lane'], zone=REGIME['zone_s_
 
 
 def _native_episode(spec, cfg, work):
+    return _native_run(spec, cfg, work, world=_check_spec(spec), stop=HORIZON_S, role=ROLE)
+
+
+def _native_run(spec, cfg, work, *, world, stop, role):
     from tools.coopnative import plant as native
     from tools.coopnative.policy import Policy as NativePolicy
     from . import launch_production as production
     from .map_runtime import guard_world, install as map_install, patch_globals
     from .protocol import install_seed_scope
     from .replay_bank import ttc_events
-    world = _check_spec(spec)
     if spec['checkpoint'] != dict(kind='native'):
         raise ValueError('NATIVE spec must carry the native checkpoint marker')
     runtime = production.backend_config(cfg)['runtime']
     token = f'nm_finaleval NATIVE {spec["panel_sha256"]} {spec["job_id"]}'
-    job = dict(id=Path(work).name, path=str(work), world=deepcopy(world), role=ROLE, arm='native',
+    job = dict(id=Path(work).name, path=str(work), world=deepcopy(world), role=role, arm='native',
                weights=NativePolicy().state_dict(), runtime=runtime, noise_seed=spec['noise_seed'],
-               sim_s=HORIZON_S, stop=HORIZON_S, approval_line=token)
+               sim_s=stop, stop=stop, approval_line=token)
 
     def approved(text):
         if text != token:
@@ -460,18 +466,23 @@ def _native_episode(spec, cfg, work):
         if map_install(job) is None:
             raise ValueError('NATIVE evaluation requires the wz3to2 map binding')
         patch_globals(run.__globals__, job)
-    vlog = VehicleLog(work)
-    observe = native.episode.__globals__['observations']
+        # the map binding REPLACES the plant's observations() (CAV-report rows); wrap whatever is bound now
+        # (316461a4 wrapped before this patch, so the log stayed empty)
+        observe = run.__globals__['observations']
 
-    def observations(env):                 # read-only ground-truth log, then the plant's own rows unchanged
-        vlog.tick(env)
-        return observe(env)
+        def observations(env):             # read-only ground-truth log, then the bound rows unchanged
+            vlog.tick(env)
+            return observe(env)
+        run.__globals__['observations'] = observations
+    vlog = VehicleLog(work)
     run = types.FunctionType(native.episode.__code__, dict(native.episode.__globals__,
-                             approval_line=approved, setup=setup, guard=guard_world, observations=observations))
+                             approval_line=approved, setup=setup, guard=guard_world))
     try:
         result = run(job)
     finally:
         vehicle_log = vlog.close()
+    if stop != HORIZON_S:                  # one-episode logcheck: the log is the product
+        return dict(vehicle_log=vehicle_log)
     totals = result['metrics'][str(HORIZON_S-WARMUP_S)]
     vector = dict(collisions=int(totals['collisions']), teleports=int(totals['teleports']),
                   hard_brakes=int(totals['hard_brake']),
@@ -650,6 +661,32 @@ def episode(spec, cfg, work):
     if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'MAPPO_SPEED'):
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')
     return _policy_episode(spec, cfg, work)
+
+
+# ---------------------------------------------------------------- one-episode vehicle-log check
+
+LOGCHECK_ARMS = ('NATIVE', 'U0', 'RULE')
+
+
+def logcheck(spec, cfg, work):
+    """ONE short episode (TRAIN world, role 'check', native warmup + a few controlled seconds) of a pre-run arm
+    whose only product is the ground-truth vehicle log - checked field by field by the launcher before any
+    wave is dispatched (MAIN: every new mode gets a one-episode check first)."""
+    from . import map_descriptor as md, map_scenarios as ms
+    world = spec['world']
+    ms.guard(world, PARITY_ROLE)
+    if md.for_world(world).name != MAP:
+        raise ValueError(f'process map is not {MAP}')
+    stop = int(spec['sim_s'])
+    if spec.get('kind') != 'logcheck' or spec['arm'] not in LOGCHECK_ARMS or not WARMUP_S < stop <= WARMUP_S+300:
+        raise ValueError('logcheck: a pre-run arm, TRAIN world, 300 s warmup + <= 300 s')
+    if spec['arm'] == 'NATIVE':
+        out = _native_run(spec, cfg, work, world=world, stop=stop, role=PARITY_ROLE)
+        vlog = out['vehicle_log']
+    else:
+        vlog = _policy_run(spec, cfg, work, world=world, stop=stop, role=PARITY_ROLE)['vehicle_log']
+    return dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='logged', kind='logcheck', vehicle_log=vlog,
+                work=str(work))
 
 
 # ---------------------------------------------------------------- F11 parity (eval plant vs training env)

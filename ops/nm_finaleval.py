@@ -92,6 +92,13 @@ PRERUN_FILE = 'PRERUN_PLAN.json'
 #: EVALUATION-ONLY ground-truth vehicle log written by every episode (runner VehicleLog)
 VEHICLE_LOG = 'vehicles.jsonl.gz'
 WARMUP_S = 300
+#: one-episode vehicle-log check before any pre-run wave (MAIN: every new mode gets a one-episode check first)
+LOGCHECK_PHASE = 'v2v_final_logcheck'
+LOGCHECK_SEED, LOGCHECK_STOP_S = 989598, 360            # TRAIN world D3200_p60; 300 s warmup + 60 s logged
+LOGCHECK_ARMS = ('NATIVE', 'RULE')                      # the native plant path and the policy (U0 + rule) path
+SPEED_LIMIT_MPS = 31.29                                  # traffic_shepherd.c4.env.SPEED_LIMIT_MPS (team-delay term)
+DROP_S_M = 75.44                                         # N1 descriptor lane drop (s)
+NOMINAL_LENGTH_M = 5.0
 #: operator stop: the pre-run finishes the chunk in flight, publishes it and stops (resume anywhere)
 STOP_PRERUN = 'STOP_PRERUN'
 PRERUN_PLANT = 'prerun_plant'
@@ -185,7 +192,7 @@ NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'
 ROOT = '/home/ubuntu/coopmwm_clean5a_wz3to2'            # cpuZ; pass --root explicitly
 FINAL_ROOT = '/home/ubuntu/coopmwm_clean5a_wz3to2_finaleval'
 MAX_WORKERS = 46                                          # cpuZ 48 cores (MAIN: run right after u24)
-PREFIXES = ('nmfinal_', 'nmdec_', 'nmparity_', 'nm3c_')
+PREFIXES = ('nmfinal_', 'nmdec_', 'nmparity_', 'nm3c_', 'nmlogcheck_')
 RUNNER = 'tools.coopmwm.nm_eval_runner'
 RUNNER_CONTRACT = dict(
     module=RUNNER, MAP=MAP,
@@ -1090,7 +1097,8 @@ def decision_metrics(branches):
 
 def _worker(kind, spec, cfg, work, runner):
     module = importlib.import_module(runner)
-    return getattr(module, dict(episode='episode', branch='decision_branch', parity='parity')[kind])(spec, cfg, work)
+    return getattr(module, dict(episode='episode', branch='decision_branch', parity='parity',
+                                logcheck='logcheck')[kind])(spec, cfg, work)
 
 
 class Runtime:
@@ -1219,6 +1227,25 @@ def fake_branch(spec):
                 J_veh_s=float(J), safety=dict(collisions=0, teleports=0, hard_brakes=h % 3, ttc_events=h % 4))
 
 
+def fake_logcheck(spec, work):
+    """Dry run: a small but complete ground-truth log (both classes, origins, depart delays, kinematics)."""
+    import gzip
+    path = Path(work)/VEHICLE_LOG
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with gzip.open(path, 'wt', encoding='utf-8') as f:
+        for k in range(6):
+            f.write(json.dumps(dict(veh=k, id=f'main.{k}', cav=k % 2 == 0, origin='main_in' if k < 4 else 'ramp_in',
+                                    depart_delay_s=float(k), first_t=300 if k < 4 else 310))+'\n')
+        for t in range(300, spec['sim_s']):
+            ks = [k for k in range(6) if k < 4 or t >= 310]
+            f.write(json.dumps(dict(t=t, k=ks, s=[round(-200.+30*k+12.*(t-300), 2) for k in ks],
+                                    v=[max(0., 12.-k-(t % 7)) for k in ks], a=[round(-.5+.25*((t+k) % 5), 3) for k in ks],
+                                    lane=[k % 2 for k in ks]))+'\n')
+    return dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='logged', kind='logcheck',
+                vehicle_log=dict(file=VEHICLE_LOG, sha256=file_sha(path), ticks=spec['sim_s']-300, vehicles=6),
+                work=str(work))
+
+
 def fake_parity(spec):
     """Dry run: both paths trace the same deterministic fake CAV states and commands (IDENTICAL)."""
     seed = spec['world']['seed']
@@ -1238,7 +1265,8 @@ class FakeRuntime:
 
     def __init__(self, runner=None):
         self.calls = []
-        self.status = dict(dict(ok=True, native=True, decisions=True, lane=True, rule=True, parity=True, reason=None),
+        # decisions=False like the real runner (F7 not built, MAIN decision); tests may switch branches on
+        self.status = dict(dict(ok=True, native=True, decisions=False, lane=True, rule=True, parity=True, reason=None),
                            **(runner or {}))
 
     def config(self, root):
@@ -1268,7 +1296,8 @@ class FakeRuntime:
 
     def run(self, items, cfg, workers):
         self.calls.append(('run', len(items), workers))
-        return [dict(episode=fake_episode, branch=fake_branch, parity=fake_parity)[kind](spec) for kind, spec, _ in items]
+        return [fake_logcheck(spec, work) if kind == 'logcheck' else
+                dict(episode=fake_episode, branch=fake_branch, parity=fake_parity)[kind](spec) for kind, spec, work in items]
 
 
 # ---------------------------------------------------------------- waves (reserve whole wave, never replay)
@@ -2262,6 +2291,9 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRE
     if not set(arms) <= set(PRERUN_ARMS):
         raise Blocked(f'pre-run arms are {PRERUN_ARMS}')
     pre = runtime if isinstance(runtime, PrerunRuntime) else PrerunRuntime(runtime, final_root)
+    check_ = (final_root/'LOGCHECK.json')
+    if not check_.is_file() or verify(read(check_), 'receipt_sha256', 'LOGCHECK')['verdict'] != 'PASS':
+        raise Blocked('run prerun-logcheck first: a PASS of the one-episode vehicle-log check is required')
     status = Status(final_root)
     current = 'PRERUN'
     try:
@@ -2328,6 +2360,151 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRE
     except BaseException as error:
         status(current, 'FAILED', dict(error=repr(error), traceback=traceback.format_exc()))
         raise
+
+
+def vehicle_log_report(path, *, t0=WARMUP_S, t1=HORIZON_S):
+    """Zero physics: field-by-field check + the registered secondary quantities of one ground-truth vehicle log."""
+    import gzip
+    heads, ticks, problems = {}, [], []
+    with gzip.open(path, 'rt', encoding='utf-8') as f:
+        for line in f:
+            x = json.loads(line)
+            if 'veh' in x:
+                heads[x['veh']] = x
+            else:
+                ticks.append(x)
+    if [x.get('t') for x in ticks] != list(range(t0, t1)):
+        problems.append(f'ticks {len(ticks)} != {t1-t0} consecutive seconds from {t0}')
+    if not heads:
+        problems.append('no vehicles')
+    if any(set(h) != {'veh', 'id', 'cav', 'origin', 'depart_delay_s', 'first_t'} for h in heads.values()):
+        problems.append('vehicle header fields differ from the registered set')
+    delay, prev, stops, crossings = {}, {}, 0, set()
+    acc, hard, emergency, ttc_vs, pairs, min_ttc = [], 0, 0, 0, 0, None
+    for x in ticks:
+        n = len(x.get('k', []))
+        if any(len(x.get(c, [])) != n for c in ('s', 'v', 'a', 'lane')):
+            problems.append(f't={x.get("t")}: column lengths differ')
+            break
+        if any(k not in heads for k in x['k']):
+            problems.append(f't={x["t"]}: unknown vehicle index')
+            break
+        if any(not math.isfinite(v) or v < 0 for v in x['v']) or any(not math.isfinite(a) for a in x['a']) \
+                or any(not math.isfinite(s_) for s_ in x['s']) or any(type(ln) is not int or ln < 0 for ln in x['lane']):
+            problems.append(f't={x["t"]}: non-finite or invalid kinematics/lane')
+            break
+        lanes = {}
+        for k, s_, v, a, ln in zip(x['k'], x['s'], x['v'], x['a'], x['lane']):
+            delay[k] = delay.get(k, 0.)+max(0., 1.-v/SPEED_LIMIT_MPS)
+            acc.append(a)
+            hard += a < -3.0
+            emergency += a < -4.5
+            p_ = prev.get(k)
+            if p_ is not None:
+                stops += p_[1] >= 5.0 and v < 1.0
+                if p_[0] < DROP_S_M <= s_:
+                    crossings.add(k)
+            prev[k] = (s_, v)
+            lanes.setdefault(ln, []).append((s_, v))
+        for rows in lanes.values():
+            rows.sort()
+            for (sf, vf), (sl, vl) in zip(rows, rows[1:]):
+                pairs += 1
+                gap, closing = sl-sf-NOMINAL_LENGTH_M, vf-vl
+                if closing > 0 and gap > 0:
+                    ttc = gap/closing
+                    min_ttc = ttc if min_ttc is None else min(min_ttc, ttc)
+                    ttc_vs += ttc < 3.0
+    for k, h in heads.items():
+        if h.get('first_t', -1) > t0 and isinstance(h.get('depart_delay_s'), (int, float)) and k in delay:
+            delay[k] += float(h['depart_delay_s'])
+    cav = sum(1 for h in heads.values() if h.get('cav') is True)
+    hdv = sum(1 for h in heads.values() if h.get('cav') is False)
+    origins = {}
+    for h in heads.values():
+        origins[h.get('origin')] = origins.get(h.get('origin'), 0)+1
+    with_origin = sum(v for o, v in origins.items() if isinstance(o, str) and o)
+    with_delay = sum(1 for h in heads.values() if isinstance(h.get('depart_delay_s'), (int, float)))
+    d = np.array(sorted(delay.values())) if delay else np.zeros(0)
+    a = np.array(acc) if acc else np.zeros(0)
+    if heads and (not cav or not hdv):
+        problems.append(f'both fleet classes required (CAV {cav}, HDV {hdv})')
+    if heads and with_origin < .95*len(heads):
+        problems.append(f'route origin missing for {len(heads)-with_origin}/{len(heads)} vehicles')
+    if heads and with_delay < .95*len(heads):
+        problems.append(f'depart delay missing for {len(heads)-with_delay}/{len(heads)} vehicles')
+    if not pairs:
+        problems.append('no same-lane vehicle pair (TTC not computable)')
+    if a.size and float(a.var()) == 0.:
+        problems.append('acceleration identically constant')
+    gini = float((2*np.arange(1, d.size+1)-d.size-1).dot(d)/(d.size*d.sum())) if d.size and d.sum() > 0 else None
+    jain = float(d.sum()**2/(d.size*(d**2).sum())) if d.size and (d**2).sum() > 0 else None
+    top = d[int(np.floor(.9*d.size)):] if d.size else d
+    return dict(ok=not problems, problems=problems, ticks=len(ticks), vehicles=len(heads), cav=cav, hdv=hdv,
+                origins={str(k): v for k, v in sorted(origins.items(), key=lambda kv: str(kv[0]))},
+                origin_coverage=round(with_origin/len(heads), 4) if heads else None,
+                depart_delay_coverage=round(with_delay/len(heads), 4) if heads else None,
+                delay=dict(mean_s=float(d.mean()) if d.size else None, max_s=float(d.max()) if d.size else None,
+                           gini=gini, jain=jain, worst10_mean_s=float(top.mean()) if top.size else None),
+                ttc=dict(pairs=pairs, min_s=min_ttc, below_3_vs=int(ttc_vs)),
+                accel=dict(n=int(a.size), var=float(a.var()) if a.size else None, hard_brake_vs=int(hard),
+                           emergency_vs=int(emergency)),
+                stop_and_go=int(stops), crossings_drop=len(crossings))
+
+
+def prerun_logcheck(*, final_root, runtime, panel, arms=LOGCHECK_ARMS, workers=2):
+    """ONE short episode per pre-run code path (NATIVE: native plant; RULE: U0 policy + rule) on a TRAIN world,
+    own ledger phase v2v_final_logcheck; every log checked field by field (zero physics). Sealed
+    LOGCHECK.json; prerun-run refuses without a PASS. Prints no outcome."""
+    from tools.coopmwm import map_scenarios as ms
+    final_root = Path(final_root)
+    plan = prerun_plan(final_root)
+    if plan is None:
+        raise Blocked('PRERUN_PLAN.json missing: prerun-register first')
+    target = final_root/'LOGCHECK.json'
+    if target.is_file():
+        return verify(read(target), 'receipt_sha256', 'LOGCHECK')
+    pre = runtime if isinstance(runtime, PrerunRuntime) else PrerunRuntime(runtime, final_root)
+    plant = final_root/PRERUN_PLANT
+    cfg = pre.config(plant)
+    u0 = mappo_binding(final_root, 'U0')
+    if u0 is None and set(arms) != {'NATIVE'}:
+        raise Blocked('bind-mappo --arm U0 before the logcheck (the RULE path needs it)')
+    if u0 is not None and (u0['residual_path'], u0['residual_sha256']) != (plan['u0']['path'], plan['u0']['sha256']):
+        raise Blocked('the U0 binding residual is not the pre-run u0 copy')
+    world = ms.world(LOGCHECK_SEED, PARITY_CELL['demand'], PARITY_CELL['penetration'])
+    specs = []
+    for arm in arms:
+        ck = episode_specs(arm, panel, cfg, plant, 'mappo_frozen', None, u0)[0]['checkpoint']
+        specs.append(dict(job_id=f'nmlogcheck_{arm.lower()}_{LOGCHECK_SEED}', kind='logcheck', arm=arm,
+                          world_id=f'{MAP}_train_{LOGCHECK_SEED}', world=deepcopy(world), checkpoint=ck,
+                          sim_s=LOGCHECK_STOP_S, window=dict(start_s=WARMUP_S, end_s=LOGCHECK_STOP_S),
+                          panel_sha256='logcheck (TRAIN world)', noise_seed=LOGCHECK_SEED, deterministic=True,
+                          capture=None))
+    rows = {r['id'] for r in fe.ledger_rows(final_root)}
+    if any(sp['job_id'] in rows for sp in specs):
+        raise Blocked('an interrupted logcheck is charged; never replay (register a fresh root)')
+    own_reserve(final_root, [dict(id=sp['job_id'], sim_s=sp['sim_s']) for sp in specs], LOGCHECK_PHASE,
+                cap=len(LOGCHECK_ARMS)*LOGCHECK_STOP_S, calls=pre.calls)
+    items = [('logcheck', sp, str(final_root/'logcheck'/sp['job_id'])) for sp in specs]
+    results = pre.run(items, cfg, workers)
+    reports = {}
+    for sp, rec, (_, _, work) in zip(specs, results, items):
+        if rec.get('status') != 'logged' or any(rec.get(k) != sp[k] for k in IDENTITY):
+            raise Blocked(f'logcheck {sp["arm"]}: unexpected record')
+        path = Path(work)/VEHICLE_LOG
+        if file_sha(path) != rec['vehicle_log']['sha256']:
+            raise Blocked(f'logcheck {sp["arm"]}: vehicle log differs from its record')
+        reports[sp['arm']] = dict(vehicle_log=rec['vehicle_log'],
+                                  check=vehicle_log_report(path, t0=WARMUP_S, t1=LOGCHECK_STOP_S))
+    verdict = 'PASS' if all(r['check']['ok'] for r in reports.values()) else 'FAIL'
+    value = seal(dict(schema=SCHEMA+'.logcheck', verdict=verdict, world=world, stop_s=LOGCHECK_STOP_S,
+                      phase=LOGCHECK_PHASE, sim_s=sum(sp['sim_s'] for sp in specs), arms=reports,
+                      prerun_plan_sha256=plan['receipt_sha256'], rule='MAIN: one-episode check before any wave; '
+                      'TRAIN world (not held-out); fields checked: ticks, fleet class, route origin, depart delay, '
+                      'kinematics, per-vehicle delay, same-lane TTC, acceleration'), 'receipt_sha256')
+    publish(target, value)
+    return value
 
 
 def prerun_compat(final_root, cfg, runtime):
@@ -2488,6 +2665,9 @@ def dry_run(*, out, panel, base='mappo_frozen', replicated=True, prerun=True):
                         u0_sha256=cfg['common_checkpoint_sha256'], runtime=runtime, panel=panel, panel_3c=panel_3c,
                         authority='DRY RUN ONLY')
         bind_fake_mappo(out, final_root, 'U0', residual=final_root/PRERUN_PLANT/'A_checkpoint_000.pt')
+        logcheck = prerun_logcheck(final_root=final_root, runtime=runtime, panel=panel)
+        if logcheck['verdict'] != 'PASS':
+            raise Blocked(f'dry-run logcheck failed: {logcheck["arms"]}')
         pre = prerun_execute(final_root=final_root, runtime=runtime, panel=panel, panel_3c=panel_3c, workers=16)
     plan = register(root=root, final_root=final_root, runtime=runtime, panel=panel)
     for arm in BOUND_ARMS:
@@ -2581,7 +2761,7 @@ def _analyse_published(root, final_root, runtime, panel, panel_3c=None, update=P
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument('command', choices=('register-panel', 'register-panel-3c', 'verify-panel', 'quote', 'check', 'register',
-                                       'bind-arms', 'prerun-register', 'prerun-run', 'parity',
+                                       'bind-arms', 'prerun-register', 'prerun-logcheck', 'prerun-run', 'parity',
                                        'bind-mappo', 'declare-unavailable', 'run', 'analyse', 'dry-run'))
     p.add_argument('--root', default=ROOT)
     p.add_argument('--final-root', default=FINAL_ROOT)
@@ -2678,6 +2858,10 @@ def main(argv=None):
             result = prerun_register(final_root=a.final_root, plant_config=a.plant_config, u0_path=a.u0_path,
                                      u0_sha256=a.u0_sha256, runtime=Runtime(a.runner), panel=panel,
                                      panel_3c=load_panel_3c(), authority=a.authority or PRERUN_AUTHORITY)
+        elif a.command == 'prerun-logcheck':
+            value = prerun_logcheck(final_root=a.final_root, runtime=Runtime(a.runner), panel=panel)
+            result = dict(verdict=value['verdict'], receipt_sha256=value['receipt_sha256'],
+                          arms={k: v['check'] for k, v in value['arms'].items()})
         elif a.command == 'prerun-run':
             import fcntl
             if a.workers > 16 and os.environ.get('NM_PRERUN_HOST') == 'cpuV':

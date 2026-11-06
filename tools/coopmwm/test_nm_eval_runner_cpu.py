@@ -247,7 +247,9 @@ def test_native_episode_uses_the_native_plant_with_the_map_binding(env, monkeypa
     monkeypatch.setattr(native, 'setup', lambda runtime: installed.append(('setup', runtime)))
     monkeypatch.setattr(protocol, 'install_seed_scope', lambda: installed.append(('seed_scope',)))
     monkeypatch.setattr(map_runtime, 'install', lambda job: installed.append(('map', job['world']['map'])) or 'desc')
-    monkeypatch.setattr(map_runtime, 'patch_globals', lambda ns, job: installed.append(('rows',)))
+    # like map_runtime.patch_globals: the map binding REPLACES the plant's observations() (316461a4 bug)
+    monkeypatch.setattr(map_runtime, 'patch_globals',
+                        lambda ns, job: installed.append(('rows',)) or ns.__setitem__('observations', lambda e: []))
     monkeypatch.setattr(runner, 'closing_lane_regime', lambda trace: dict(closing_lane_speed_mps=7.5, n_obs=40))
     spec = nm.episode_specs('NATIVE', env['panel'], env['cfg'], env['root'], 'mappo_u0')[5]
     record = runner.episode(spec, env['cfg'], env['tmp']/'work'/spec['job_id'])
@@ -257,6 +259,7 @@ def test_native_episode_uses_the_native_plant_with_the_map_binding(env, monkeypa
     assert [x[0] for x in installed] == ['setup', 'seed_scope', 'map', 'rows']
     assert record['J_veh_s'] == 61000.25 and record['safety'] == dict(collisions=0, teleports=0, hard_brakes=7, ttc_events=2)
     assert nm.check_episode(record, spec)['decision'] is None and record['regime']['closing_lane_speed_mps'] == 7.5
+    assert record['vehicle_log']['ticks'] == 900 and record['vehicle_log']['vehicles'] == 3
     monkeypatch.setattr(map_runtime, 'install', lambda job: None)
     with pytest.raises(ValueError, match='map binding'):
         runner.episode(spec, env['cfg'], env['tmp']/'work'/'native2')
@@ -615,3 +618,32 @@ def test_every_arm_writes_the_evaluation_only_ground_truth_vehicle_log(env, monk
         nm.check_episode(dict(record, vehicle_log=dict(log, ticks=899)), spec)
     with pytest.raises(nm.Blocked, match='vehicle log'):
         nm.check_episode({k: v for k, v in record.items() if k != 'vehicle_log'}, spec)
+
+
+
+def test_logcheck_runs_one_short_train_episode_per_path(env, monkeypatch, leverprobe):
+    from tools.coopnative import plant as native
+    from tools.coopmwm import accel_plant, map_runtime, protocol
+    monkeypatch.setattr(native, 'episode', fake_native_episode)
+    monkeypatch.setattr(native, 'setup', lambda runtime: None)
+    monkeypatch.setattr(protocol, 'install_seed_scope', lambda: None)
+    monkeypatch.setattr(map_runtime, 'install', lambda job: 'desc')
+    monkeypatch.setattr(map_runtime, 'patch_globals', lambda ns, job: ns.__setitem__('observations', lambda e: []))
+    calls = []
+    monkeypatch.setattr(accel_plant, 'episode', fake_plant(calls, []))
+    final_root = env['tmp']/'dry'/'final_root'
+    nm.register(root=env['root'], final_root=final_root, runtime=nm.FakeRuntime(), panel=env['panel'])
+    u0 = nm.bind_fake_mappo(env['tmp']/'dry', final_root, 'U0', residual=env['root']/'A_checkpoint_000.pt')
+    world = ms.world(989598, 3200, 0.6)
+    for arm in ('NATIVE', 'RULE'):
+        ck = nm.episode_specs(arm, env['panel'], env['cfg'], env['root'], 'mappo_u0', None, u0)[0]['checkpoint']
+        spec = dict(job_id=f'nmlogcheck_{arm.lower()}', kind='logcheck', arm=arm, world_id='w', world=world, checkpoint=ck,
+                    sim_s=360, window=dict(start_s=300, end_s=360), panel_sha256='logcheck', noise_seed=989598,
+                    deterministic=True, capture=None)
+        work = env['tmp']/'work'/spec['job_id']
+        rec = runner.logcheck(spec, env['cfg'], work)
+        assert rec['status'] == 'logged' and rec['vehicle_log']['sha256'] == runner._sha(work/'vehicles.jsonl.gz')
+        assert rec['vehicle_log']['ticks'] == (60 if arm == 'RULE' else 900)      # fake native ignores stop
+    assert calls[-1]['role'] == 'check' and calls[-1]['stop'] == 360 and NATIVE_JOBS[-1]['stop'] == 360
+    with pytest.raises(ValueError, match='not allowed for role'):
+        runner.logcheck(dict(spec, world=ms.world(989600, 3200, 0.6)), env['cfg'], env['tmp']/'work'/'heldout')

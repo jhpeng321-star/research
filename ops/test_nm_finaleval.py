@@ -150,24 +150,32 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     assert result['present']['claim3a'] == ['B', 'A', 'R', 'RULE', 'U0', 'NATIVE']
     assert result['present']['claim3b_MAPPO_SPEED'] == ['B', 'A', 'R', 'RULE', 'U0', 'MAPPO_SPEED', 'NATIVE']
     assert result['present']['claim3c'] == ['B', 'R', 'RULE', 'U0', 'NATIVE']
+    assert set(result['secondary']) == set(result['analyses'])                    # u24 SECONDARY, same panels
     runs = [c for c in result['calls'] if c[0] == 'run']
-    # pre-run NATIVE/U0/RULE (3a + 3c) in chunks of 2 x 16, then the main run reuses it: A/B/R + 3c B/R only
+    # pre-run NATIVE/U0/RULE (3a + 3c) in chunks of 2 x 16; u12 PRIMARY: only B/R (+ 3c B/R) - A is the frozen U0
+    # alias - then each comparator's F11 parity + its wave; u24 SECONDARY: only B/R again (everything else reused)
+    assert runs[0] == ('run', 2, 2)                                   # the one-episode logcheck (NATIVE, RULE)
+    runs = runs[1:]
     k = result['prerun']['rounds']
     assert result['prerun']['status'] == 'PASS' and k == -(-3*(96+24)//32)
     assert sum(r[1] for r in runs[:k]) == 3*(96+24) and all(r[1] <= 32 and r[2] == 16 for r in runs[:k])
-    assert runs[k] == ('run', 3*96+2*24, 24)
-    # each comparator: its F11 parity (2 TRAIN worlds x 2 paths) first, then its 96-world wave
-    assert runs[k+1][1] <= 2*8*(2+nm.MAX_MEMBERS) and runs[k+2:] == [('run', 4, 24), ('run', 96, 24)]*2
-    assert {c[1] for c in result['calls'] if c[0] == 'reserve'} == {'v2v_final', 'v2v_final_prerun'}
+    assert runs[k:] == [('run', 2*96+2*24, 24)]+[('run', 4, 24), ('run', 96, 24)]*2+[('run', 2*96+2*24, 24)]
+    assert {c[1] for c in result['calls'] if c[0] == 'reserve'} == {'v2v_final', 'v2v_final_prerun', 'v2v_final_logcheck'}
     assert result['fake_prerun_sim_s'] == nm.prerun_cap() == 432_000 == result['quote']['prerun_sim_s']
-    assert (result['fake_v2v_final_sim_s']+result['fake_prerun_sim_s'] <= result['quote']['total_ceiling_sim_s']
-            <= nm.ALLOCATION_SIM_S == 1_340_000)
+    assert (result['fake_v2v_final_sim_s']+result['fake_prerun_sim_s'] == result['quote']['total_ceiling_sim_s']
+            == 1_241_760 <= nm.ALLOCATION_SIM_S == 1_340_000)
     final_root = Path(result['final_root'])
     alias = dict(mappo_frozen='A', mappo_u0='U0', native='NATIVE')[base]
-    claim3a = json.loads((final_root/'CLAIM3A_TABLES.json').read_text())
+    claim3a = json.loads((final_root/'CLAIM3A_TABLES_u012.json').read_text())
     nm.verify(claim3a, 'analysis_sha256', 'claim3a')
     assert claim3a['scope'] == 'claim3a' and claim3a['dry_run'] is True and claim3a['panel_sha256'] == nm.PANEL_SHA256
-    assert set(claim3a['missing']) == {'MAPPO_SPEED', 'MAPPO_LANE'} and 'MAPPO_SPEED' not in claim3a['present']
+    assert claim3a['update'] == 12 and claim3a['evaluation'] == 'PRIMARY (u12)' and claim3a['a_alias_of_u0'] is True
+    assert set(claim3a['missing']) == {'MAPPO_SPEED', 'MAPPO_LANE', 'DECISIONS'} and 'MAPPO_SPEED' not in claim3a['present']
+    assert claim3a['missing']['DECISIONS'].startswith('unavailable (not built)')
+    assert claim3a['sources']['A']['alias_of'] == 'U0' and 'B_u012' in claim3a['sources']
+    secondary = json.loads((final_root/'CLAIM3A_TABLES_u024.json').read_text())
+    assert secondary['update'] == 24 and secondary['evaluation'] == 'SECONDARY (u24)' and 'B_u024' in secondary['sources']
+    assert secondary['tables']['arms']['B']['label'].startswith('B u24')
     t = claim3a['tables']
     arms = set(nm.CLAIM3A_ARMS)
     assert t['base']['alias_of'] == alias and t['arms'][alias]['label'].endswith('= BASE')
@@ -177,12 +185,10 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     assert set(t['registered_B_A_R']['rows']) == {'B-A', 'R-A', 'B-R'}
     for key in ('B-BASE', 'B-NATIVE'):
         assert t['synergy']['panel_decomposition'][key]['max_identity_error_veh_s'] < 1e-9
-    pdx = t['synergy']['per_decision']
-    assert pdx['registered_worlds'] == 8
-    for arm in ('B', 'R'):
-        assert pdx[arm]['decisions']+pdx[arm]['worlds_without_decision'] == 8
-        act = t['synergy']['decision_activity'][arm]
-        assert act['worlds'] == 96 and act['subset_captures'] == pdx[arm]['decisions']
+    assert t['synergy']['per_decision']['status'] == 'unavailable'                 # F7 not built (MAIN)
+    assert all(t['synergy']['decision_activity'][arm]['worlds'] == 96 for arm in ('B', 'R'))
+    assert t['arms']['A']['label'].startswith('A = U0')
+    assert t['total_benefit']['vs_RULE']['rows']['A'] == t['total_benefit']['vs_RULE']['rows']['U0']   # A is U0
     ps = t['per_seed']
     assert ps['comparators']['MAPPO_SPEED'] == dict(status='unavailable')
     for c in ('NATIVE', 'U0', 'RULE'):
@@ -196,9 +202,9 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     rg = t['regimes']
     assert rg['report_only'] and rg['demand_cell']['D3200_p60']['n'] == 96
     assert sum(b['n'] for b in rg['closing_lane_speed_tercile']['terciles'].values()) == 96
-    text = (final_root/'CLAIM3A_TABLES.md').read_text()
+    text = (final_root/'CLAIM3A_TABLES_u012.md').read_text()
     assert 'FAKE PHYSICS' in text and 'T5 Per-seed view' in text and 'random' not in text
-    speed = json.loads((final_root/'CLAIM3B_MAPPO_SPEED_TABLES.json').read_text())
+    speed = json.loads((final_root/'CLAIM3B_MAPPO_SPEED_TABLES_u012.json').read_text())
     assert speed['scope'] == 'claim3b_MAPPO_SPEED' and speed['analysis_sha256'] != claim3a['analysis_sha256']
     ts = speed['tables']
     assert set(ts['total_benefit']['vs_MAPPO_SPEED']['rows']) == arms
@@ -207,7 +213,7 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     assert set(ts['per_seed']['comparators']['MAPPO_SPEED']) == arms
     assert ts['registered_B_A_R'] == t['registered_B_A_R']                       # 3a rows unchanged in 3b
     status = json.loads((final_root/'STATUS.json').read_text())
-    assert status['step'] == 'DONE' and status['status'] == 'PASS'
+    assert status['step'] == 'DONE_u024' and status['status'] == 'PASS'
 
 
 def test_rerun_reuses_published_waves_and_charges_nothing(panel, tmp_path):
@@ -312,7 +318,7 @@ def test_register_records_an_operator_declared_base_for_an_unbound_config(panel,
     write_config(f, cfg)
     plan = nm.register(root=f['root'], final_root=f['final_root'], runtime=f['runtime'], panel=panel, base='native')
     assert plan['binding']['base'] == 'native' and set(plan['binding']['unbound']) == {'base_controller', 'cell'}
-    assert plan['quote']['total_ceiling_sim_s'] == 1_164_960 and plan['budget']['allocated'] == 1_340_000
+    assert plan['quote']['total_ceiling_sim_s'] == 1_241_760 and plan['budget']['allocated'] == 1_340_000
     assert plan['amendments'][0]['base_alias'] == 'NATIVE' and plan['amendments'][0]['arms'] == list(nm.EPISODE_ARMS)
     _, binding, _ = nm.preflight(f['root'], f['final_root'], f['runtime'], panel)
     assert binding['base'] == 'native'
@@ -504,13 +510,15 @@ def test_decision_branches_follow_the_registered_decomposition(panel, tmp_path):
 
 def test_budget_quote_fits_the_raised_v2v_final_allocation():
     for base in nm.BASES:
-        q = nm.quote(base)
-        assert q['episodes_sim_s'] == 8*96*1200 == 921_600 and q['decisions_ceiling_sim_s'] == 2*8*5*1200 == 96_000
-        assert q['parity_sim_s'] == 2*2*2*420 == 3_360 and q['claim3c_sim_s'] == 5*24*1200 == 144_000
-        assert q['total_ceiling_sim_s'] == 1_164_960 and q['prerun_sim_s'] == 3*(96+24)*1200 == 432_000
-        assert q['allocation_sim_s'] == 1_340_000 and q['fits'] and q['margin_over_total'] >= .15
-        assert set(q['need_ceiling']) == ({f'episodes_{a}' for a in nm.EPISODE_ARMS} | {'decisions_B', 'decisions_R', 'parity_f11'}
-                                          | {f'claim3c_{a}' for a in nm.CLAIM3C_ARMS})
+        q = nm.quote(base)                                        # clean5a: A = the frozen U0 alias
+        need = q['need_ceiling']
+        assert q['prerun_sim_s'] == 3*(96+24)*1200 == 432_000 and q['decisions_ceiling_sim_s'] == need['decisions'] == 0
+        assert need['u012_B'] == need['u024_R'] == 96*1200 and need['u012_C3_B'] == need['u024_C3_R'] == 24*1200
+        assert 'u012_A' not in need and need['episodes_MAPPO_SPEED'] == 96*1200 and q['parity_sim_s'] == 2*2*2*420 == 3_360
+        assert q['total_ceiling_sim_s'] == 432_000+2*2*(96+24)*1200+2*96*1200+3_360 == 1_241_760
+        assert q['allocation_sim_s'] == 1_340_000 and q['fits'] and q['margin_over_total'] == pytest.approx(.0791, abs=1e-4)
+        full = nm.quote(base, a_alias=False)                      # A simulated at both updates would not fit
+        assert full['total_ceiling_sim_s'] == 1_241_760+2*96*1200 and not full['fits']
     with pytest.raises(nm.Blocked):
         nm.quote('lane_on')
 
@@ -593,7 +601,7 @@ def test_claim3a_opens_first_and_each_claim3b_only_after_its_comparator_is_bound
     nm.bind_fake_mappo(tmp_path/'dry', f['final_root'], 'U0', residual=f['root']/'A_checkpoint_000.pt')
     with pytest.raises(nm.NotReady, match='pending MAPPO_SPEED'):
         nm.execute(runtime=f['runtime'], **kw)
-    claim3a = json.loads((f['final_root']/'CLAIM3A_TABLES.json').read_text())   # 3a opened, sealed on its own
+    claim3a = json.loads((f['final_root']/'CLAIM3A_TABLES_u012.json').read_text())   # 3a opened, sealed on its own
     assert claim3a['present'] == ['B', 'A', 'R', 'RULE', 'U0', 'NATIVE']
     assert not list(f['final_root'].glob('WAVE_MAPPO_*.json')) and not list(f['final_root'].glob('CLAIM3B_*'))
     with pytest.raises(nm.Blocked, match='authority and reason'):
@@ -617,18 +625,32 @@ def test_claim3a_opens_first_and_each_claim3b_only_after_its_comparator_is_bound
 
 def test_a_b_r_are_bound_by_sha_before_the_gate(panel, tmp_path):
     f = make(tmp_path, panel)
-    root, cfg = f['root'], f['cfg']
-    shas = {a: nm.file_sha(root/f'{a}_checkpoint_024.pt') for a in nm.ARMS}
+    root, cfg, final_root = f['root'], f['cfg'], f['final_root']
+    shas = {a: nm.file_sha(root/f'{a}_checkpoint_012.pt') for a in ('B', 'R')}
     with pytest.raises(nm.Blocked, match='sha256 required'):
-        nm.bind_arms(final_root=f['final_root'], shas=dict(shas, R='x'), authority='MAIN')
-    nm.bind_arms(final_root=f['final_root'], shas=shas, authority='MAIN: bind clean5a A/B/R by sha')
+        nm.bind_arms(final_root=final_root, shas=dict(shas, R='x'), authority='MAIN', update=12)
+    with pytest.raises(nm.Blocked, match='sha256 required'):
+        nm.bind_arms(final_root=final_root, shas=dict(B=shas['B']), authority='MAIN', update=12)   # R required
+    with pytest.raises(nm.Blocked, match='one of'):
+        nm.bind_arms(final_root=final_root, shas=shas, authority='MAIN', update=18)
+    nm.bind_arms(final_root=final_root, shas=shas, authority='MAIN 23:10: bind clean5a B/R by sha at u12', update=12)
     binding = nm.clean4_binding(cfg, panel)
-    assert nm.gate(root, cfg, f['runtime'], binding, f['final_root'])['checkpoint_sha256'] == shas
+    gated = nm.gate(root, cfg, f['runtime'], binding, final_root, 12)
+    assert {a: gated['checkpoint_sha256'][a] for a in ('B', 'R')} == shas and gated['update'] == 12
+    assert gated['a_alias_of_u0']['identical'] is True and gated['monitors'] == 12
     with pytest.raises(nm.Blocked, match='never rebound'):
-        nm.bind_arms(final_root=f['final_root'], shas=shas, authority='again')
-    (root/'B_checkpoint_024.pt').write_bytes(b'another B')
-    with pytest.raises(nm.Blocked, match='bound A/B/R'):
-        nm.gate(root, cfg, f['runtime'], binding, f['final_root'])
+        nm.bind_arms(final_root=final_root, shas=shas, authority='again', update=12)
+    nm.bind_arms(final_root=final_root, shas={a: nm.file_sha(root/f'{a}_checkpoint_024.pt') for a in nm.ARMS},
+                 authority='MAIN: u24 SECONDARY', update=24)                                      # A optional, separate file
+    (root/'B_checkpoint_012.pt').write_bytes(b'another B')
+    with pytest.raises(nm.Blocked, match='differ from the bound'):
+        nm.gate(root, cfg, f['runtime'], binding, final_root, 12)
+    (root/'A_COMPLETE.json').unlink()
+    with pytest.raises(nm.NotReady, match='A_COMPLETE'):                                     # COMPLETE only at u24
+        nm.gate(root, cfg, f['runtime'], binding, final_root, 24)
+    f['runtime'].frozen_a_identical = False
+    with pytest.raises(nm.Blocked, match='frozen control arm A differs'):
+        nm.gate(root, cfg, f['runtime'], binding, None, 12)
 
 
 def test_bound_lane_comparator_without_runner_support_needs_explicit_exclusion(panel, tmp_path):
@@ -637,7 +659,7 @@ def test_bound_lane_comparator_without_runner_support_needs_explicit_exclusion(p
     kw = dict(root=f['root'], final_root=f['final_root'], panel=panel, poll=0, dry_run=True)
     with pytest.raises(nm.Blocked, match='MAPPO_LANE'):
         nm.execute(runtime=runtime, **kw)
-    assert (f['final_root']/'CLAIM3A_TABLES.json').is_file()           # 3a and 3b-speed were not held back
+    assert (f['final_root']/'CLAIM3A_TABLES_u012.json').is_file()      # 3a and 3b-speed were not held back
     value = nm.execute(runtime=runtime, allow_missing=('MAPPO_LANE',), **kw)
     assert 'claim3b_MAPPO_LANE' not in value and 'claim3b_MAPPO_SPEED' in value
 
@@ -696,6 +718,7 @@ def prerun_fixture(tmp_path, panel, bind=True):
                               panel_3c=panel_3c, authority='test')
     if bind:
         nm.bind_fake_mappo(tmp_path/'dry', final_root, 'U0', residual=final_root/nm.PRERUN_PLANT/'A_checkpoint_000.pt')
+        assert nm.prerun_logcheck(final_root=final_root, runtime=runtime, panel=panel)['verdict'] == 'PASS'
     return dict(root=root, cfg=cfg, runtime=runtime, final_root=final_root, plan=plan, panel=panel, panel_3c=panel_3c)
 
 
@@ -716,21 +739,29 @@ def test_prerun_runs_native_u0_rule_sealed_in_its_own_ledger(panel, tmp_path):
         nm.prerun_register(final_root=final_root, plant_config=f['root']/'CONFIG.json', u0_path=f['root']/'A_checkpoint_000.pt',
                            u0_sha256=f['cfg']['common_checkpoint_sha256'], runtime=f['runtime'], panel=panel,
                            panel_3c=f['panel_3c'], authority='again')
-    with pytest.raises(nm.Blocked, match='bind-mappo --arm U0'):
+    with pytest.raises(nm.Blocked, match='prerun-logcheck first'):
         run_prerun(f)
+    with pytest.raises(nm.Blocked, match='bind-mappo --arm U0'):
+        nm.prerun_logcheck(final_root=final_root, runtime=f['runtime'], panel=panel)
     nm.bind_fake_mappo(tmp_path/'dry', final_root, 'U0', residual=f['root']/'A_checkpoint_000.pt')
     with pytest.raises(nm.Blocked, match='not the pre-run u0 copy'):
-        run_prerun(f)
+        nm.prerun_logcheck(final_root=final_root, runtime=f['runtime'], panel=panel)
     nm.bind_fake_mappo(tmp_path/'dry', final_root, 'U0', residual=final_root/nm.PRERUN_PLANT/'A_checkpoint_000.pt')
+    check = nm.prerun_logcheck(final_root=final_root, runtime=f['runtime'], panel=panel)
+    assert check['verdict'] == 'PASS' and set(check['arms']) == {'NATIVE', 'RULE'} and check['sim_s'] == 2*360
+    rule = check['arms']['RULE']['check']
+    assert rule['ticks'] == 60 and rule['cav'] == 3 and rule['hdv'] == 3 and rule['origin_coverage'] == 1.0
+    assert rule['delay']['mean_s'] > 0 and rule['ttc']['pairs'] > 0 and rule['accel']['var'] > 0
+    assert nm.prerun_logcheck(final_root=final_root, runtime=nm.FakeRuntime(), panel=panel) == check   # sealed, reused
     out = run_prerun(f, workers=44)
-    assert out['status'] == 'PASS' and out['sealed'] and out['chunk'] == 88 and out['charged_sim_s'] == 432_000
+    assert out['status'] == 'PASS' and out['sealed'] and out['chunk'] == 88 and out['charged_sim_s'] == 432_000+720
     assert set(out['coverage']) == {'NATIVE', 'U0', 'RULE', 'C3_NATIVE', 'C3_U0', 'C3_RULE'}
     assert all(v['published'] == v['registered'] for v in out['coverage'].values())
     assert 'J_veh_s' not in json.dumps(out) and not list(final_root.glob('CLAIM*'))          # nothing opened (F12)
     assert not [r for r in nm.fe.ledger_rows(f['root']) if r['id'].startswith(nm.PREFIXES)]   # clean ledger untouched
-    assert {r['phase'] for r in nm.fe.ledger_rows(final_root)} == {'v2v_final_prerun'}
+    assert {r['phase'] for r in nm.fe.ledger_rows(final_root)} == {'v2v_final_prerun', 'v2v_final_logcheck'}
     again = nm.FakeRuntime()
-    assert run_prerun(f, again)['charged_sim_s'] == 432_000
+    assert run_prerun(f, again)['charged_sim_s'] == 432_000+720
     assert not [c for c in again.calls if c[0] in ('run', 'reserve')]                     # never re-run
     with pytest.raises(nm.Blocked, match='already started'):
         nm.bind_fake_mappo(tmp_path/'dry', final_root, 'U0', residual=final_root/nm.PRERUN_PLANT/'A_checkpoint_000.pt')
@@ -751,14 +782,14 @@ def test_prerun_stops_at_a_chunk_boundary_and_resumes(panel, tmp_path):
         return out
     first.run = run_then_stop
     out = run_prerun(f, first, workers=8, chunk=20)
-    assert out['status'] == 'STOPPED' and out['rounds'] == 2 and out['charged_sim_s'] == 40*1200
+    assert out['status'] == 'STOPPED' and out['rounds'] == 2 and out['charged_sim_s'] == 40*1200+720
     assert out['coverage']['NATIVE'] == dict(published=40, registered=96) and out['coverage']['U0']['published'] == 0
     assert sorted(p.name for p in final_root.glob('WAVE_*.json')) == ['WAVE_NATIVE__0000-0019.json',
                                                                       'WAVE_NATIVE__0020-0039.json']
     (final_root/nm.STOP_PRERUN).unlink()
     second = nm.FakeRuntime()                         # e.g. cpuV, same absolute paths, fewer workers
     out = run_prerun(f, second, workers=16)
-    assert out['status'] == 'PASS' and out['charged_sim_s'] == 432_000
+    assert out['status'] == 'PASS' and out['charged_sim_s'] == 432_000+720
     assert [c for c in second.calls if c[0] == 'run'][0][1] == 32
     assert (final_root/'WAVE_NATIVE__0040-0071.json').is_file()
 
@@ -790,7 +821,7 @@ def test_main_run_reuses_the_prerun_only_on_the_same_plant_and_u0(panel, tmp_pat
     assert not [r for r in nm.fe.ledger_rows(f['root']) if r['id'].startswith(nm.PREFIXES)]     # clean root never written
     clean = [r['id'] for r in nm.fe.ledger_rows(f['final_root']) if r['phase'] == 'v2v_final']
     assert not [i for i in clean if i.split('_')[1] in ('native', 'u0', 'rule')]          # reused, not re-run
-    tables = json.loads((f['final_root']/'CLAIM3A_TABLES.json').read_text())
+    tables = json.loads((f['final_root']/'CLAIM3A_TABLES_u012.json').read_text())
     assert len(tables['sources']['RULE']['receipt_sha256']) >= 2                            # chunked pre-run receipts
     total = sum(r['sim_s'] for r in nm.fe.ledger_rows(f['final_root']) if r['phase'] == 'v2v_final')
     assert total+432_000 <= nm.quote('mappo_frozen')['total_ceiling_sim_s'] <= nm.ALLOCATION_SIM_S
@@ -813,7 +844,7 @@ def test_f11_parity_runs_before_each_comparator_wave_and_is_reported(panel, tmp_
         assert [r['job_id'] for r in wave['records']] == [f'nmparity_{arm.lower()}_{p}_{s}' for s in (989598, 989599)
                                                          for p in ('plant', 'train')]
         assert all(r['world']['seed'] in (989598, 989599) and r['world']['demand'] == 3200 for r in wave['records'])
-        tables = json.loads((final_root/f'CLAIM3B_{arm}_TABLES.json').read_text())
+        tables = json.loads((final_root/f'CLAIM3B_{arm}_TABLES_u012.json').read_text())
         assert tables['sources'][f'PARITY_{arm}_REPORT']['verdict'] == 'IDENTICAL'
     rows = [r for r in nm.fe.ledger_rows(final_root) if r['id'].startswith('nmparity_')]
     assert len(rows) == 8 and sum(r['sim_s'] for r in rows) == nm.PARITY_SIM_S == 3_360
@@ -883,8 +914,29 @@ def test_prerun_keeps_the_clean_config_and_accounts_in_its_own_root(panel, tmp_p
                panel_3c=f['panel_3c'], poll=0, dry_run=True)
     assert [r for r in nm.fe.ledger_rows(f['root']) if r['phase'] != 'v2v_train'] == []   # main run too
     own = nm.fe.ledger_rows(f['final_root'])
-    assert {r['phase'] for r in own} == {'v2v_final', 'v2v_final_prerun'} and sum(r['sim_s'] for r in own) <= nm.ALLOCATION_SIM_S
+    assert {r['phase'] for r in own} == {'v2v_final', 'v2v_final_prerun', 'v2v_final_logcheck'}
+    assert sum(r['sim_s'] for r in own) <= nm.ALLOCATION_SIM_S
     with pytest.raises(nm.Blocked, match='duplicate'):
         nm.own_reserve(f['final_root'], [dict(id=own[0]['id'], sim_s=1)], 'v2v_final')
     with pytest.raises(nm.Blocked, match='allocation'):
         nm.own_reserve(f['final_root'], [dict(id='nmfinal_extra_0000', sim_s=nm.ALLOCATION_SIM_S)], 'v2v_final')
+
+
+
+def test_vehicle_log_report_refuses_an_empty_or_partial_log(tmp_path):
+    import gzip
+    empty = tmp_path/'empty.jsonl.gz'
+    with gzip.open(empty, 'wt'):
+        pass                                                          # the 316461a4 NATIVE failure: 40-byte gzip
+    r = nm.vehicle_log_report(empty, t0=300, t1=360)
+    assert r['ok'] is False and any('ticks' in x for x in r['problems']) and 'no vehicles' in r['problems']
+    good = tmp_path/'good'
+    nm.fake_logcheck(dict(sim_s=360, arm='NATIVE', world_id='w', world={}, checkpoint={}, window={}, panel_sha256='x'),
+                     good)
+    r = nm.vehicle_log_report(good/nm.VEHICLE_LOG, t0=300, t1=360)
+    assert r['ok'] and r['crossings_drop'] >= 1 and r['delay']['gini'] is not None and r['ttc']['min_s'] is not None
+    lines = gzip.open(good/nm.VEHICLE_LOG, 'rt').read().splitlines()
+    one_class = tmp_path/'one_class.jsonl.gz'
+    with gzip.open(one_class, 'wt') as f:
+        f.write('\n'.join(x.replace('"cav": false', '"cav": true') for x in lines)+'\n')
+    assert any('both fleet classes' in x for x in nm.vehicle_log_report(one_class, t0=300, t1=360)['problems'])
