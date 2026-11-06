@@ -229,10 +229,10 @@ def _kind(path):
     return None
 
 
-def discover(roots, skipped=None):
+def discover(roots, skipped=None, skip_dirs=()):
     found = {k: [] for k in ('context', 'query', 'rank', 'flat', 'all8', 'results', 'job')}
     for root in roots:
-        for p in guard.walk_files(root, lambda n: n.endswith('.json') or n.endswith('.jsonl'), skipped):
+        for p in guard.walk_files(root, lambda n: n.endswith('.json') or n.endswith('.jsonl'), skipped, skip_dirs):
             k = _kind(p)
             if k:
                 found[k].append(p)
@@ -425,7 +425,7 @@ def load_builder(spec):
 
 
 def build(roots, out_dir, *, examples=(), tail_s=DEFAULT_TAIL_S, exclude_settings=DEFAULT_EXCLUDE_SETTINGS,
-          folds=5, salt=SPLIT_SALT, query_builder=None):
+          folds=5, salt=SPLIT_SALT, query_builder=None, skip_dirs=()):
     """Collect, check, join and write LABELS.jsonl + QUERIES.jsonl.gz + BUILD_RECEIPT.json.
     Raises ForbiddenSeedError (and writes nothing) if any record references a refused seed.
     query_builder (optional, callable(ctx_dir, owners)): rebuilds the causal WM query for pairs that
@@ -438,7 +438,7 @@ def build(roots, out_dir, *, examples=(), tail_s=DEFAULT_TAIL_S, exclude_setting
 
     def skip(reason, n=1):
         skips[reason] = skips.get(reason, 0) + n
-    found = discover(roots, skipped_paths)
+    found = discover(roots, skipped_paths, tuple(skip_dirs))
     found['flat'] += [guard.check_path(e) for e in examples]
 
     def root_of(p):
@@ -559,7 +559,7 @@ def build(roots, out_dir, *, examples=(), tail_s=DEFAULT_TAIL_S, exclude_setting
         f.write(payload)
     os.replace(tmp, qpath)
     receipt = dict(schema=SCHEMA, roots=[str(r) for r in roots], examples=[str(e) for e in examples],
-                   tail_s=tail_s, exclude_settings=list(exclude_settings),
+                   tail_s=tail_s, exclude_settings=list(exclude_settings), skip_dirs=list(skip_dirs),
                    files={k: len(v) for k, v in found.items()}, skipped_forbidden_paths=len(skipped_paths),
                    unreadable_aux_files=bad,
                    seed_rows_raw=n_raw, seed_rows_kept=len(kept), duplicate_conflicts=conflicts, skips=skips,
@@ -640,13 +640,15 @@ def main(argv=None):
     ap.add_argument('--include-setting', action='append', default=[],
                     help='re-include an excluded setting (default excluded: lowcoop)')
     ap.add_argument('--folds', type=int, default=5)
+    ap.add_argument('--skip-dir', action='append', default=[],
+                    help='directory name to prune (repeatable), e.g. cpuv_home on gpuA')
     ap.add_argument('--query-builder', default=None,
                     help="optional 'module:function' rebuilding WM queries for context-only pairs, e.g. "
                          "tools.mining.probe_wmq:build_query (needs the mining source + torch)")
     a = ap.parse_args(argv)
     excl = tuple(s for s in DEFAULT_EXCLUDE_SETTINGS if s not in a.include_setting)
     r = build(a.root, a.out, examples=a.examples, tail_s=a.tail_s, exclude_settings=excl, folds=a.folds,
-              query_builder=load_builder(a.query_builder))
+              query_builder=load_builder(a.query_builder), skip_dirs=a.skip_dir)
     print(json.dumps({k: r[k] for k in ('pairs', 'pairs_with_query', 'pairs_with_wm', 'pairs_measured',
                                         'pairs_admitted', 'world_seeds', 'skips', 'files')}, sort_keys=True))
     return r

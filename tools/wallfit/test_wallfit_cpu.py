@@ -170,6 +170,12 @@ def test_walk_prunes_forbidden_dirs_before_listing(tmp_path, monkeypatch):
     rec = ds.build([r], tmp_path / 'out')         # would raise ForbiddenSeedError if the file were read
     assert rec['skipped_forbidden_paths'] == 1
     assert rec['pairs'] >= 2
+    env_clone = r / 'cpuv_home' / 'results'      # --skip-dir prunes an environment clone by name
+    env_clone.mkdir(parents=True)
+    (env_clone / 'wall.jsonl').write_text(json.dumps(_probe_row('cp_wall_R_train_962010_t300', 962010)) + chr(10))
+    with pytest.raises(guard.ForbiddenSeedError):
+        ds.build([r], tmp_path / 'out2')
+    assert ds.build([r], tmp_path / 'out3', skip_dirs=('cpuv_home',))['pairs'] == rec['pairs']
 
 
 @pytest.mark.parametrize('where', ['results', 'all8', 'flat', 'context', 'query'])

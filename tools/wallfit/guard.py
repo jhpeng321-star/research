@@ -64,9 +64,10 @@ def check_path(path):
     return Path(path)
 
 
-def walk_files(root, match, skipped=None):
+def walk_files(root, match, skipped=None, skip_dirs=()):
     """Yield files under `root` for which match(name) is true. Forbidden directories are pruned
-    BEFORE they are listed and forbidden files are never yielded (counted in `skipped`)."""
+    BEFORE they are listed and forbidden files are never yielded (counted in `skipped`). `skip_dirs`
+    are extra directory names to prune (e.g. an environment clone such as gpuA 'cpuv_home')."""
     root = check_path(root)
     if root.is_file():
         if match(root.name):
@@ -75,7 +76,7 @@ def walk_files(root, match, skipped=None):
     for dirpath, dirnames, filenames in os.walk(root):
         keep = []
         for d in sorted(dirnames):
-            if d in PRUNE_DIRS:
+            if d in PRUNE_DIRS or d in skip_dirs:
                 continue
             if not path_allowed(os.path.join(dirpath, d)):
                 if skipped is not None:
