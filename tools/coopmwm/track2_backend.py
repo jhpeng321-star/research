@@ -30,6 +30,7 @@ import numpy as np
 import torch
 
 from . import moves, feasible_proposals, lane_drop, nm_families, v2v_wall
+from . import lc_families
 from .acceleration import PHI
 from .accel_learner import GAMMA, UNIT
 from .coop_layer import CooperationLayer, LayerConfig
@@ -89,6 +90,9 @@ class MoveAPI:
         if family_settings is not None:
             self.EXECUTABLE_FAMILIES += tuple(f'{n}_{k}' for n in family_settings['families']
                                               for k in nm_families.KINDS)
+        # LCEXEC free_program (opt-in): per-CAV program options, same executor.
+        if lc_families.settings(cfg) is not None:
+            self.EXECUTABLE_FAMILIES += lc_families.PROGRAM_FAMILIES
 
     @staticmethod
     def candidates(obs_state, rng, n):
@@ -112,6 +116,9 @@ class MoveAPI:
                     for v in option.members}
         if isinstance(move.move, nm_families.FamilyOption):
             return nm_families.nominal_offsets(move.move, t)   # state-dependent: EpisodePolicy path
+        if isinstance(move.move, lc_families.ProgramOption):
+            # LCEXEC: the closed loop runs in lc_families.Protocol (exact program commands).
+            return dict.fromkeys(move.move.members, 0.)
         return moves.offsets(move.move, t)
 
 
@@ -146,6 +153,7 @@ def _check(cfg, arm):
         v2v_wall.settings(cfg)            # W1 options: common B/R registration, default off
         v2v_wall.awareness_settings(cfg)
         nm_families.settings(cfg)         # N9 families: common B/R registration, default off
+        lc_families.settings(cfg)         # LCEXEC free_program: common B/R registration, default off
         from .sparse_synergy_credit import settings as synergy_settings, extension as synergy_extension
         synergy_settings(cfg)
         synergy_extension(cfg)   # G4LD keys: common B = R, default OFF
@@ -182,7 +190,7 @@ def _option_from_dict(data):
     if data.get('family') == 'group_hold' and len(data.get('members') or ()) == 1:
         from .fullpol_ev import SoloHold       # clean5a (opt-in) solo hold
         return SoloHold.from_dict(data)
-    return nm_families.option_from_dict(data)   # N9 options, else N2 / W1 / shared vocabulary
+    return lc_families.option_from_dict(data)   # LCEXEC programs, else N9 -> N2 / W1 / vocabulary
 
 
 def _batch(record):
@@ -367,6 +375,9 @@ class EpisodePolicy(torch.nn.Module):
         # N9 lane-drop move families (default off): protocol + executor profiles.
         family_settings = nm_families.settings(cfg)
         self.nm_families = None if family_settings is None else nm_families.Protocol(family_settings)
+        # LCEXEC free_program (default off): V2V program protocol + per-member executors.
+        program_settings = lc_families.settings(cfg)
+        self.lc_families = None if program_settings is None else lc_families.Protocol(program_settings)
         self.layer.actuation_receipts = 'clean2_budget' in cfg or 'clean3_budget' in cfg or 'clean4_budget' in cfg
         # Retain the legacy slot/optimizer layout for existing sidecars. It is
         # unused by ProductionLayer, gets no gradient and cannot gate actuation.
@@ -389,7 +400,8 @@ class EpisodePolicy(torch.nn.Module):
             n_candidates=cfg['trigger_candidates'], partner_slots=cfg['trigger_partner_slots'],
             freeze_base=True, moves_api=MoveAPI(cfg),
             extension=fullpol_head.extension(
-                cfg, base=nm_families.compose(lane_drop.extension(cfg), nm_families.extension(cfg))),
+                cfg, base=nm_families.compose(lane_drop.extension(cfg), nm_families.extension(cfg),
+                                              lc_families.extension(cfg))),
             w2=w2 if any(w2.values()) else None)
         self.wall_ends, self.pressure_blocks = {}, {}
         self.trigger_optimizer = self.trigger.optimizer(lr=cfg['trigger_lr'])
@@ -435,6 +447,8 @@ class EpisodePolicy(torch.nn.Module):
             ego = table[vid]
             sensed = [r for r in table.values() if abs(r['s_m']-ego['s_m']) <= SENSOR_RANGE_M]
             if self.nm_families is not None:
+                own_sensing[vid] = sensed
+            if self.lc_families is not None:
                 own_sensing[vid] = sensed
             partners = sorted((r['vid'] for r in sensed if r['is_cav'] and r['vid'] != vid),
                 key=lambda v: (abs(table[v]['s_m']-ego['s_m']), v))[:self.trigger.partner_slots-1]
@@ -490,6 +504,11 @@ class EpisodePolicy(torch.nn.Module):
             self.nm_families.receive(now, {vid: table[vid] for vid in cavs}, own_sensing, self.reports)
             for vid in cavs:
                 states[vid]['nm_families'] = self.nm_families.state(vid, now)
+        if self.lc_families is not None:
+            # LCEXEC: own row/sensing at t, intents published at t-1, teammates' own t-1 packets.
+            self.lc_families.receive(now, {vid: table[vid] for vid in cavs}, own_sensing, self.reports)
+            for vid in cavs:
+                states[vid]['lc_families'] = self.lc_families.state(vid, now)
         if getattr(self, 'clean5_ev', None) is not None:
             for vid in cavs:      # clean5a (opt-in): the same N2-only slate rule for every CAV
                 states[vid]['clean5_ev'] = self.clean5_ev
@@ -650,6 +669,17 @@ class EpisodePolicy(torch.nn.Module):
             if pending and not periodic:
                 family_events = frozenset(pending)
             opportunity_kwargs.update(families=self.nm_families, family_events=family_events)
+        program_events = None
+        if self.lc_families is not None and context['members']:
+            # LCEXEC free_program: the same one-shot event/join-only contract as N9.
+            self.executor._advance(self.now)
+            occupied = {v for entry in self.executor.active for v in entry['move'].members}
+            free = {v for v in context['members'] if v not in occupied
+                    and self.now >= self.command_reservations.get(v, {}).get(v, -math.inf)}
+            pending = self.lc_families.events(context['members'], free)
+            if pending and not periodic:
+                program_events = frozenset(pending)
+            opportunity_kwargs.update(programs=self.lc_families, program_events=program_events)
         if self.coordination is not None and context['members']:
             from .coordination_opportunities import graph, disjoint
             self.executor._advance(self.now)
@@ -663,7 +693,8 @@ class EpisodePolicy(torch.nn.Module):
         if getattr(self, 'offer', None) is not None and context['members'] and periodic:
             obs_states, offer = self._practice_offer(context)
         if context['members'] and (periodic or pairs or wall_events
-                                   or opportunity_kwargs.get('lane_drop_events') or family_events):
+                                   or opportunity_kwargs.get('lane_drop_events') or family_events
+                                   or program_events):
             decision, accepted, proposal_stats = feasible_proposals.decide_and_start(
                 self.trigger, context, obs_states=obs_states,
                 observable_cavs=self.visible, executor=self.executor, now=self.now,
@@ -705,10 +736,27 @@ class EpisodePolicy(torch.nn.Module):
             family_offsets, family_lanes = self.nm_families.commands(self.now, active, base_mean=base_mean,
                                                                      reserved=reserved)
             offsets.update(family_offsets)
+        lc_tick = None
+        if self.lc_families is not None:
+            # LCEXEC member executors: exact program commands -> env.lc_tick request (offset 0).
+            active = [(vid, entry['move'].move) for entry in self.executor.active
+                      if isinstance(entry['move'].move, lc_families.ProgramOption)
+                      for vid in entry['move'].members if vid in context['members']]
+            reserved = {v for v in context['members']
+                        if self.now < self.command_reservations.get(v, {}).get(v, -math.inf)}
+            lc_tick = self.lc_families.commands(self.now, active, reserved=reserved)
+            released = set(self.lc_families.just_released)
+            for entry in self.executor.active:
+                if (released and isinstance(entry['move'].move, lc_families.ProgramOption)
+                        and set(entry['move'].members) <= released):
+                    # A released program member is free from the next second (no idle commitment).
+                    entry['until'] = min(entry['until'], self.now+1)
         for entry in self.executor.active:
             if self.lane_drop is not None and lane_drop.is_lane_drop(entry['move']):
                 continue
             if self.nm_families is not None and isinstance(entry['move'].move, nm_families.FamilyOption):
+                continue
+            if self.lc_families is not None and isinstance(entry['move'].move, lc_families.ProgramOption):
                 continue
             if getattr(self, 'fullpol', None) is not None and fullpol_programs.is_free_program(entry['move']):
                 continue
@@ -742,6 +790,9 @@ class EpisodePolicy(torch.nn.Module):
             # N9 lane changes: own-sensing map-aware recheck, then the SAME G5 lane
             # targets / lanes tensor / lane_actors single env writer (CAV members only).
             sample['nm_lane_requests'] = dict(family_lanes)
+        if lc_tick:
+            # LCEXEC: this second's env.lc_tick request (v2v_runtime.Controller.lane_request).
+            sample['lc_tick'] = lc_tick
         if getattr(self.layer.base, 'intent_horizon', 0) and context['members']:
             published = self.trigger.publish_trigger_intent(context)
             self.trigger_board = {v: (int(self.now), values) for v, values in published.items()}
@@ -775,6 +826,10 @@ class EpisodePolicy(torch.nn.Module):
         if self.nm_families is not None:
             self.nm_families.publish(self.now, {v: r.source for v, r in self.reports.items()})
             sample['track2']['nm_families'] = self.nm_families.receipt()
+        if self.lc_families is not None:
+            # Initiator + acknowledged members broadcast AFTER this step's decisions (t+1).
+            self.lc_families.publish(self.now, {v: r.source for v, r in self.reports.items()})
+            sample['track2']['lc_families'] = self.lc_families.receipt()
         return sample, memory
 
     def worker_state(self):

@@ -156,9 +156,9 @@ def test_lcexec_descriptor_hook_width_own_lane_and_extension_untouched(cfg, monk
     d = fh.program_descriptor(option)
     assert len(d) == fh.PROGRAM_DESCRIPTOR_WIDTH and all(np.isfinite(d)) and d[-3:] == [1., 0., 0.]
     assert fh.program_descriptor(dict(family='group_hold')) == [0.]*fh.PROGRAM_DESCRIPTOR_WIDTH
-    # FULLPOL never registers the program families itself (LCEXEC lc_families is the only registrant)
-    base_cfg = ld_cfg(cfg, v2v=False)
-    on = make(dict(base_cfg, lc_families=dict(enabled=True)))
+    # FULLPOL never registers the program families itself (LCEXEC lc_families is the only registrant;
+    # see test_fullpol_clean5b_cpu for the bound-map wiring)
+    on = make(dict(ld_cfg(cfg, v2v=False), fullpol=False))
     assert not set(fh.PROGRAM_FAMILIES) & set(on.trigger.option_families)
     assert ft.labels(t)[0] in ('wall_g_solo2', 'wall_h_solo2')
 

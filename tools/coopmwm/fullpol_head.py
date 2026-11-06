@@ -240,21 +240,31 @@ PROGRAM_FAMILIES = ('free_program_initiate', 'free_program_join')   # registered
 _VIEW = None
 
 
-def _program_view():
-    """The process map's lane-drop view (production binds wz3to2; fails closed on the merge map)."""
+def _program_view(option=None):
+    """The process map's lane-drop view (production binds wz3to2; fails closed on the merge map).
+
+    Read through the option's own lc_families module when available (the same import context as
+    the protocol that bound the map), else this package's map_descriptor."""
     global _VIEW
-    if _VIEW is None:
-        from .lane_drop import MapView
+    import sys
+    from .lane_drop import MapView
+    owner = sys.modules.get(type(option).__module__) if option is not None else None
+    if owner is not None and callable(getattr(owner, '_descriptor', None)):
+        desc = owner._descriptor()
+    else:
         from .map_descriptor import current
-        _VIEW = MapView.from_descriptor(current())
-    return _VIEW
+        desc = current()
+    key = getattr(desc, 'digest', None) or getattr(desc, 'name', None)
+    if _VIEW is None or (isinstance(_VIEW, tuple) and _VIEW[0] != key):
+        _VIEW = (key, MapView.from_descriptor(desc))
+    return _VIEW[1] if isinstance(_VIEW, tuple) else _VIEW
 
 
 def program_descriptor(option):
     """LCEXEC lc_families descriptor hook (cfg['lc_families']['descriptor'] =
     'tools.coopmwm.fullpol_head:program_descriptor', descriptor_width = PROGRAM_DESCRIPTOR_WIDTH):
     FULLPOL's template descriptor of one ProgramOption (zeros for any other candidate)."""
-    return template_descriptor(option, _program_view())
+    return template_descriptor(option, _program_view(option))
 
 
 PROGRAM_DESCRIPTOR_WIDTH = TEMPLATE_CAP*len(TEMPLATE_SLOT_FEATURES)+len(TEMPLATE_GROUP_FEATURES)

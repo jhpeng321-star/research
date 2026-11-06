@@ -79,6 +79,18 @@ def candidates(obs_state, rng, n):
             structured = (tuple(structured) if reduced else ())+nm_families.join_families(families)
         else:
             structured = tuple(structured)+nm_families.slate_families(families)
+    # LCEXEC (opt-in): free_program options appended after N9 (same event/join-only contract).
+    programs = obs_state.get('lc_families')
+    if programs is not None:
+        from . import lc_families
+        event = (bool(programs.get('only_join')) or (wall is not None and bool(wall.get('only_join')))
+                 or (ld is not None and bool(ld.get('only_join')))
+                 or (families is not None and bool(families.get('only_join'))))
+        if event:
+            reduced = wall is not None or ld is not None or families is not None
+            structured = (tuple(structured) if reduced else ())+lc_families.join_families(programs)
+        else:
+            structured = tuple(structured)+lc_families.slate_families(programs)
     # clean5a (opt-in): N2 families only; group_hold solo / pair become runtime slots.
     ev = obs_state.get('clean5_ev')
     if ev is not None:
@@ -120,6 +132,11 @@ def candidates(obs_state, rng, n):
                 if options:
                     pools[family] = options
                 continue
+            if programs is not None and lc_families.is_program_family(family):
+                options = lc_families.pool(family, programs, own, rng)
+                if options:
+                    pools[family] = options
+                continue
             if ev is not None and fullpol_ev.owns(family):
                 options = fullpol_ev.pool(family, ev, ld['view'], own, partners, rng)
                 if options:
@@ -149,6 +166,8 @@ def candidates(obs_state, rng, n):
         out += fullpol_programs.offered(fp, own, partners, rng)[:n]
     while pools and len(out) < n:
         for family in rng.permutation(list(pools)):
+            if family not in pools:
+                continue   # LCEXEC: a program family without a redrawable template left this cycle
             options = pools[family]
             template = options[int(rng.integers(len(options)))]
             if wall is not None and family in v2v_wall.FAMILIES:
@@ -185,6 +204,17 @@ def candidates(obs_state, rng, n):
                 if len(out) == n:
                     break
                 continue
+            if programs is not None and lc_families.is_program_family(family):
+                # LCEXEC (N11 F8 guard): a re-drawn initiate can be None (generator has no
+                # template); never offer it, and drop the family so the slate loop terminates.
+                option = lc_families.redraw(template, programs, own, rng)
+                if option is None:
+                    pools.pop(family)
+                    continue
+                out.append(option)
+                if len(out) == n:
+                    break
+                continue
             # Gap/ramp eligibility depends on the full local pool (notably the
             # ahead-most mainline role); only walls enumerate member subsets.
             group = ([by_vid[v] for v in template.members if v != ego]
@@ -199,14 +229,15 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
                      now, rng, generator, deterministic=False, command_reservations=None,
                      coordination=None, opportunity_pairs=None, event=False,
                      wall=None, wall_events=None, lane_drop=None, lane_drop_events=None,
-                     families=None, family_events=None):
+                     families=None, family_events=None, programs=None, program_events=None):
     """Acquire in stable id order (opt-in G2: role pairs first).
 
     W1 (opt-in ``wall``): protocol options start through ``wall.start`` (atomic
     session ownership/cap + executor commitment). ``wall_events`` marks a
     non-periodic first-receipt tick: those egos get join-only slates, all others
     (outside G2 pairs) only ``none``. N9 (opt-in ``families``/``family_events``)
-    follows the identical start/event contract through ``families.start``.
+    follows the identical start/event contract through ``families.start``; LCEXEC
+    (opt-in ``programs``/``program_events``) likewise through ``programs.start``.
 
     Each slate is conditional on earlier acquisitions. PPO reuses these exact
     slates/masks/logps; it never regenerates an unconditional proposal table.
@@ -236,6 +267,10 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
     if families is not None:
         stats['nm_families'] = dict(rule=families.settings['rule'], event=family_events is not None,
             event_cavs=sorted(family_events or ()), offered_join=0, selected_initiate=0,
+            accepted_initiate=0, selected_join=0, accepted_join=0)
+    if programs is not None:
+        stats['lc_families'] = dict(rule=programs.settings['rule'], event=program_events is not None,
+            event_cavs=sorted(program_events or ()), offered_join=0, selected_initiate=0,
             accepted_initiate=0, selected_join=0, accepted_join=0)
     order = sorted(members)
     pairs = ()
@@ -281,14 +316,17 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
             if pair is not None and set(pair.members) <= set(state['acquirable_cav_ids']):
                 state['coordination_partner'] = pair.merger
         nm_tick = families is not None and family_events is not None
-        if ld_tick or nm_tick:
+        pg_tick = programs is not None and program_events is not None
+        if ld_tick or nm_tick or pg_tick:
             # N2/N9 event tick (non-periodic first receipt): only pending joins, others none.
             in_wall = (wall is not None and wall_events is not None and ego in wall_events
                        and ego not in event_members and 'v2v_wall' in state)
             in_ld = ld_tick and ego in lane_drop_events and ego not in event_members and 'lane_drop' in state
             in_nm = (nm_tick and ego in family_events and ego not in event_members
                      and 'nm_families' in state)
-            if in_wall or in_ld or in_nm:
+            in_pg = (pg_tick and ego in program_events and ego not in event_members
+                     and 'lc_families' in state)
+            if in_wall or in_ld or in_nm or in_pg:
                 state['acquirable_cav_ids'] = [ego] if free else []
                 if 'v2v_wall' in state:
                     state['v2v_wall'] = dict(state['v2v_wall'], only_join=True,
@@ -299,6 +337,9 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
                 if 'nm_families' in state:
                     state['nm_families'] = dict(state['nm_families'], only_join=True,
                                                 **({} if in_nm else dict(offers=())))
+                if 'lc_families' in state:
+                    state['lc_families'] = dict(state['lc_families'], only_join=True,
+                                                **({} if in_pg else dict(offers=())))
             elif coordination is None:
                 state['acquirable_cav_ids'] = []
         elif wall is not None and wall_events is not None:
@@ -309,6 +350,8 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
                     state['lane_drop'] = dict(state['lane_drop'], only_join=True, offers=())
                 if 'nm_families' in state:
                     state['nm_families'] = dict(state['nm_families'], only_join=True, offers=())
+                if 'lc_families' in state:
+                    state['lc_families'] = dict(state['lc_families'], only_join=True, offers=())
             elif coordination is None:
                 state['acquirable_cav_ids'] = []
         local_context = dict(context, members=[ego], x=[context['x'][index]])
@@ -339,6 +382,10 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
             stats['nm_families']['offered_join'] += sum(
                 m is not None and m.family in families.FAMILIES and m.family.endswith('_join')
                 for m in batch.tables[0])
+        if programs is not None:
+            programs.mark_offered(ego, batch.tables[0])
+            stats['lc_families']['offered_join'] += sum(
+                m is not None and m.family == 'free_program_join' for m in batch.tables[0])
         if selected and wall is not None and move.family in wall.FAMILIES:
             accepted[ego] = wall.start(move, ego=ego, executor=executor,
                                        observable_cav_ids=observable_cavs[ego], now=now)
@@ -357,6 +404,12 @@ def decide_and_start(trigger, context, *, obs_states, observable_cavs, executor,
             kind = 'join' if move.family.endswith('_join') else 'initiate'
             stats['nm_families']['selected_'+kind] += 1
             stats['nm_families']['accepted_'+kind] += int(accepted[ego])
+        elif selected and programs is not None and move.family in programs.FAMILIES:
+            accepted[ego] = programs.start(move, ego=ego, executor=executor,
+                                           observable_cav_ids=observable_cavs[ego], now=now)
+            kind = 'join' if move.family.endswith('_join') else 'initiate'
+            stats['lc_families']['selected_'+kind] += 1
+            stats['lc_families']['accepted_'+kind] += int(accepted[ego])
         else:
             # A W2 gradual-release wall stays committed through its release ramp (0 otherwise).
             accepted[ego] = executor.start(move, ego=ego, observable_cav_ids=observable_cavs[ego],

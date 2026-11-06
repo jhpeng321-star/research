@@ -351,6 +351,8 @@ def shift(prog, elapsed):
         p['lon']['from_el'] = max(0, int(p['lon']['from_el'])-e)
         if p.get('lane') is not None:
             p['lane']['from_el'] = max(0, int(p['lane']['from_el'])-e)
+        if p.get('tau_from_el') is not None:                 # LCEXEC MemberProgram (LCMOVES tau_from)
+            p['tau_from_el'] = max(0, int(p['tau_from_el'])-e)
     out['duration_s'] = max(1, int(prog['duration_s'])-e)
     return out
 
@@ -403,6 +405,62 @@ def program_contexts(policy, plan, pairs, frames, *, t0, labels=None):
             break
 
 
+def program_protocol_contexts(policy, plan, pairs, frames, *, t0):
+    """clean5b (LCEXEC lc_families): initiate/join BC contexts for one verified free_program example.
+
+    ``plan['free_program']`` = lc_convert.from_mined_row output (concrete vids, initiator first).
+    Same rule as the N2/W1 protocol BC: the initiator imitates ``free_program_initiate`` (its
+    template = lc_families.template_from_program at its own decision second) from its own causal
+    observation; every other member imitates ``free_program_join`` at the earliest second its OWN
+    receive step offers the reconstructed session at its TRUE slot (exactness: an offer for another
+    slot is not a label). Yields (context, option, reader, weight, time)."""
+    from . import lc_families as lf, lc_program as lp
+    if getattr(policy, 'lc_families', None) is None:
+        raise ValueError('clean5b program BC needs the lc_families protocol')
+    prog = lp.FreeProgram.from_dict(plan['free_program'])
+    members = list(prog.members)
+    by_t = {}
+    for sample, weight in sorted(pairs, key=lambda pair: int(pair[0]['intent_link']['t'])):
+        by_t.setdefault(int(sample['intent_link']['t']), (sample, weight))
+    reader = deepcopy(policy)
+    reader.lc_families.reset()
+    t0, initiator, sid, remaining = int(t0), members[0], None, set(members[1:])
+    window = first_activation_el(plan['free_program'], plan.get('free_program_labels'))
+    for t in range(t0-1, t0+int(prog.duration_s)):
+        if t not in frames:
+            continue
+        reader.observe(frames[t]['vehicles'], t)
+        if t < t0:
+            continue
+        pair = by_t.get(t)
+        if sid is None:
+            if pair is None or t-t0 > window or initiator not in pair[0]['context']['members']                     or initiator not in reader.local_intents:
+                continue
+            rows = {r['vid']: r for r in frames[t]['vehicles']}
+            shifted = lp.FreeProgram.from_dict(shift(plan['free_program'], t-t0))
+            template = lf.template_from_program(shifted, reader.lc_families.frame, rows)
+            sid = f'{lf.NAME}:{initiator}@{t}'
+            option = lf.ProgramOption(f'{lf.NAME}_initiate', (initiator,), sid, initiator, 0, template.to_dict(), 0,
+                                      int(template.duration_s), 0., 1, reader.lc_families.cap, 0.,
+                                      reader.lc_families.range_m, int(rows[initiator]['lane']))
+            yield _context(reader, pair[0]['context'], [initiator]), option, reader, float(pair[1]), t
+            reader.lc_families.open_offline(option, t)
+        elif pair is not None and remaining:
+            for vid in sorted(remaining):
+                slot = members.index(vid)
+                offer = next((o for o in reader.lc_families.offers.get(vid, ())
+                              if o.session_id == sid and o.slot == slot), None)
+                if (offer is None or vid not in pair[0]['context']['members'] or vid not in reader.local_intents
+                        or not reader.lc_families.admit_offline(offer, t)):
+                    continue
+                remaining.discard(vid)
+                yield _context(reader, pair[0]['context'], [vid]), offer, reader, float(pair[1]), t
+        if sid is not None:
+            reader.lc_families.publish(t, {v: r.source for v, r in reader.reports.items()})
+            if not remaining:
+                break
+
+
 def supervised_batch(policy, cfg, context, option, reader, *, target_none=False):
     """The acting CAV's own (deterministic) slate with ``option`` in slot 1; target 1 or 0."""
     from .trigger_policy import TriggerBatch
@@ -452,12 +510,17 @@ def bank_records(policy, cfg, arm):
             return
         frames = bank_v2v.trace_frames(trace)
         found = 0
-        for context, option, reader, weight, time in program_contexts(
-                policy, plan, pairs, frames, t0=receipt['t0'], labels=plan.get('free_program_labels')):
+        if getattr(policy, 'lc_families', None) is not None:      # clean5b: LCEXEC initiate/join
+            contexts = program_protocol_contexts(policy, plan, pairs, frames, t0=receipt['t0'])
+        else:                                                     # FULLPOL group option (superseded)
+            contexts = program_contexts(policy, plan, pairs, frames, t0=receipt['t0'],
+                                        labels=plan.get('free_program_labels'))
+        for context, option, reader, weight, time in contexts:
             batch, same = supervised_batch(policy, cfg, context, option, reader, target_none=negative)
             hdv = sum(1 for r in reader.local_states[context['members'][0]]['rows'] if not r['is_cav'])
             records.append(dict(batch=batch, weight=float(weight), equivalent=same, meta=dict(
                 kind='negative' if negative else 'program', verification_id=receipt['verification_id'],
+                option_family=getattr(option, 'family', None),
                 seed=int((receipt.get('world') or plan.get('world') or {}).get('seed', -1)),
                 time_s=time, members=list(option.members), hdv_rows=hdv)))
             found += 1

@@ -724,4 +724,6 @@ def propose(state, own, rng):
     """LCEXEC lc_families generator hook (config ``lc_families.generator =
     'tools.coopmwm.fullpol_programs:propose'``): clean5b slot templates, see fullpol_templates."""
     from .fullpol_templates import propose as templates
-    return templates(state, own, rng)
+    # dicts (FreeProgram.to_dict): the contract accepts dicts or objects; dicts never depend on which
+    # import path loaded lc_program in the calling process.
+    return [t.to_dict() for t in templates(state, own, rng)]
