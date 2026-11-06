@@ -1111,6 +1111,74 @@ def analyze(root):
     return report
 
 
+def _fmt(v, nd=0):
+    if v is None:
+        return '-'
+    if isinstance(v, float):
+        return f'{v:,.{nd}f}'
+    return str(v)
+
+
+def render_tables(rep):
+    """Markdown tables (zero physics) from analyze(); the verdict text is written by the analyst."""
+    out = []
+    out.append('| arm | moment | world | t0 | verified | split | +-10 s link | +-30 s link | fired | type | group | '
+               'dJ move | dJ 300 | dJ 420 | first div | attribution |')
+    out.append('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|')
+    for m in rep['moments']:
+        if 'dJ' not in m:
+            out.append(f'| {m.get("arm")} | {m["moment"]} | | | | | {m["link"]} | | | | | | | | | |')
+            continue
+        cad = m.get('cadence') or {}
+        out.append('| {arm} | {mid} | {w} | {t0} | {vt} | {sp} | {l} | {lc} | {f} | {ty} | {g} | {a} | {b} | {c} | '
+                   '{d} | {at} |'.format(arm=m['arm'], mid=m['moment'], w=m['world'], t0=m['t0'], vt=m['verified_type'],
+                                         sp=m.get('imitation_split') or '-', l=m['link'], lc=cad.get('link', '-'),
+                                         f='y' if m['fired'] else 'n', ty='y' if m['type_match'] else 'n',
+                                         g=m['group_members'], a=_fmt(m['dJ']['move']), b=_fmt(m['dJ']['h300']),
+                                         c=_fmt(m['dJ']['h420']), d=_fmt(m['first_divergence_s']),
+                                         at=m.get('attribution', '-')))
+    out.append('')
+    out.append('| world pair | dJ episode (300-1200) | first div | decision ticks | non-none picks | executed | '
+               'executed types | sessions | false triggers (dJ local sum) | TTC<3 base/coop | hard brake base/coop |')
+    out.append('|---|---|---|---|---|---|---|---|---|---|---|')
+    for w in rep['worlds']:
+        if not w.get('ran'):
+            out.append(f'| {w["coop"]} | not run | | | | | | | | | |')
+            continue
+        ft = w.get('false_triggers') or []
+        sb, sc = w.get('safety_base') or {}, w.get('safety_coop') or {}
+        out.append('| {id} | {dj} | {fd} | {nd} | {np} | {ne} | {et} | {ss} | {nf} ({fs}) | {tb}/{tc} | {hb}/{hc} |'.format(
+            id=w['coop'], dj=_fmt(w.get('dJ_episode')), fd=_fmt(w.get('first_divergence_s')),
+            nd=w.get('n_decision_ticks'), np=w.get('n_non_none_picks'), ne=w.get('n_executed'),
+            et=', '.join(f'{k} {v}' for k, v in sorted((w.get('executed_types') or {}).items())),
+            ss=w.get('sessions'), nf=len(ft), fs=_fmt(sum(x['dJ_local'] or 0. for x in ft)),
+            tb=_fmt(sb.get('ttc_below_3_vs'), 1), tc=_fmt(sc.get('ttc_below_3_vs'), 1),
+            hb=_fmt(sb.get('hard_brake'), 1), hc=_fmt(sc.get('hard_brake'), 1)))
+    if rep.get('dithers'):
+        out.append('')
+        out.append('| moment | dither | ran | applied | inert | dithered CAV | base shift vs r0 | coop shift vs r0 | link | '
+                   'dJ move |')
+        out.append('|---|---|---|---|---|---|---|---|---|---|')
+        for d in rep['dithers']:
+            out.append('| {m} | {w} | {r} | {a} | {i} | {v} | {b} | {c} | {l} | {j} |'.format(
+                m=d['moment'], w=d['which'], r=d['ran'], a=d.get('applied', '-'), i=d.get('inert', '-'),
+                v=d.get('dither_cav', '-'), b=_fmt(d.get('base_shift_vs_r0')), c=_fmt(d.get('coop_shift_vs_r0')),
+                l=d.get('link', d.get('error', '-')), j=_fmt((d.get('dJ') or {}).get('move'))))
+    if rep.get('sampled'):
+        out.append('')
+        out.append('| sampled job | dJ episode | links (+-10 s) | executed types | false triggers |')
+        out.append('|---|---|---|---|---|')
+        for x in rep['sampled']:
+            if not x.get('ran') or 'moments' not in x:
+                out.append(f'| {x["job"]} | not run / {x.get("error", "")} | | | |')
+                continue
+            out.append('| {j} | {d} | {l} | {e} | {f} |'.format(
+                j=x['job'], d=_fmt(x.get('dJ_episode')), l=', '.join(m['link'] for m in x['moments']),
+                e=', '.join(f'{k} {v}' for k, v in sorted((x.get('executed_types') or {}).items())),
+                f=len(x.get('false_triggers') or ())))
+    return chr(10).join(out)+chr(10)
+
+
 def _count(values):
     out = {}
     for v in values:
