@@ -61,7 +61,7 @@ import torch
 from torch import Tensor, nn
 
 from wms.physics.config import PhysicsConfig
-from wms.physics.mobil import (MASKED_LOGIT, anticipated_kin, impatient_margins,
+from wms.physics.mobil import (MASKED_LOGIT, anticipated_kin, closing_open, impatient_margins,
                                merge_end_waiting, merge_impatience_floor, merge_impatience_level,
                                physical_merge_envelope, secure_gaps, target_overlap)
 from wms.physics.neighbours import MIN_GAP_M, lane_neighbour, lane_of
@@ -400,7 +400,7 @@ def instant_features(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                           & secure_gaps(va, gap_l, lv_l, gap_f, fv_f, p, impatience) & ~aov)
                 safe = safe & ~(merge_end_waiting(kin, present, p) & ~secure)
         in_zone = (s >= p.merge_zone_s0_m) & (s <= p.merge_zone_s1_m)
-        allowed = (~is_ramp | in_zone) & safe
+        allowed = (~is_ramp | closing_open(s, p, in_zone)) & safe
         if p.lane_rule == "forced_merge_only":
             allowed = allowed & is_ramp
         target_feasible = allowed & present

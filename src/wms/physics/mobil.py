@@ -22,6 +22,23 @@ LEARNED_PRIOR_LOGIT = -6.0
 _DEFAULT_POLITENESS = 0.2
 
 
+def closing_open(s: Tensor, physics: PhysicsConfig, in_zone: Tensor) -> Tensor:
+    """WM-A: ``[B, K]`` positions where a closing-lane (``merge_lane``) car can physically leave
+    its lane into ``merge_target_lane``.
+
+    On the on-ramp map the closing lane is adjacent to the target lane only along the
+    acceleration lane, i.e. inside the merge zone: ``in_zone`` itself is returned (bit-identical).
+    On a lane-drop road (:mod:`wms.core.road`) the closing lane runs beside the target lane along
+    the whole approach: ``closing_change_zone_s_m[0] <= s <= merge_zone_s1_m``.
+    """
+    from wms.core.road import current_road
+
+    road = current_road()
+    if road.closing_change_restricted:
+        return in_zone
+    return (s >= float(road.closing_change_zone_s_m[0])) & (s <= physics.merge_zone_s1_m)
+
+
 def _idm(physics: PhysicsConfig, v: Tensor, leader_v: Tensor, gap: Tensor,
          params: IDMParams) -> Tensor:
     return idm_accel(v, leader_v, gap, params, accel_min=physics.accel_min_mps2,
@@ -149,7 +166,7 @@ def physical_merge_envelope(kin: Tensor, present: Tensor, physics: PhysicsConfig
     s = kin[..., 0]
     in_zone = (s >= p.merge_zone_s0_m) & (s <= p.merge_zone_s1_m)
     is_ramp = lane == p.merge_lane
-    legal = ((~is_ramp) | in_zone) & (tq != p.merge_lane) & (lane >= 0)
+    legal = ((~is_ramp) | closing_open(s, p, in_zone)) & (tq != p.merge_lane) & (lane >= 0)
     margin = float(getattr(p, "lane_physical_margin_m", 0.0))
     exempt = mid_change_exempt(p, mid_change, lane_age)
     kin_a = anticipated_kin(kin, float(p.dt_s))
@@ -491,6 +508,7 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
         min_gap = driver_params["merge_gap"]
         urgency = (urgency * driver_params["merge_urgency"]).clamp(0.0, 1.0)
     in_zone = (s >= p.merge_zone_s0_m) & (s <= p.merge_zone_s1_m)
+    leave_ok = closing_open(s, p, in_zone)     # WM-A: == in_zone on the on-ramp map
     b_safe = p.b_safe_base_mps2 + (p.b_safe_end_mps2 - p.b_safe_base_mps2) * urgency
     logits = torch.full((*s.shape, 3), MASKED_LOGIT, dtype=kin.dtype, device=kin.device)
     for target in range(3):
@@ -502,7 +520,7 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
             kin, present, lane, target_lane, a_cur, gap_f, fv_f, driver_params,
             default, p)
         adjacent = (lane - target).abs() == 1
-        ramp_ok = (lane != p.merge_lane) | (in_zone if target == p.merge_target_lane
+        ramp_ok = (lane != p.merge_lane) | (leave_ok if target == p.merge_target_lane
                                             else torch.zeros_like(in_zone))
         no_to_ramp = torch.full_like(lane, target) != p.merge_lane
         forced = (lane == p.merge_lane) & (target == p.merge_target_lane)

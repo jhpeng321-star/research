@@ -30,12 +30,14 @@ still count them.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Optional
 
 import numpy as np
 import torch
+
+from wms.core.road import current_road
 
 N_COUNTER_BINS = 30
 COUNTER_BIN_S = 10.0
@@ -308,7 +310,16 @@ class _EntryProcessBase:
                  pool) -> None:
         self.cfg = cfg or EntryConfig()
         self.dt = float(dt_s)
+        # WM-A: lane starts / entrance-edge ends / entrance lane speeds of the bound road
+        # (on-ramp map: ENTRY_S_M, the 0.0 edge end and SUMO_LANE_SPEED_MPS, unchanged).
+        road = current_road()
+        if entry_s_m is None:
+            entry_s_m = road.entry_s_m
         self.entry_s = tuple(float(x) for x in entry_s_m)
+        self.entry_edge_end = tuple(float(x) for x in road.entry_edge_end_s_m)
+        if (not road.is_original
+                and tuple(self.cfg.sumo_lane_speed_mps) == tuple(SUMO_LANE_SPEED_MPS)):
+            self.cfg = replace(self.cfg, sumo_lane_speed_mps=tuple(road.entry_lane_speed_mps))
         self.batch = int(batch)
         self.pending = np.zeros((self.batch, N_ENTRANCES), np.int64)
         self.stats = [EntryStats() for _ in range(self.batch)]
@@ -404,7 +415,7 @@ class TorchEntryProcess(_EntryProcessBase):
 
     def __init__(self, counter, *, dt_s: float = 0.5, seed: int = 0,
                  batch: int = 1, cfg: Optional[EntryConfig] = None,
-                 entry_s_m=ENTRY_S_M, pool=None) -> None:
+                 entry_s_m=None, pool=None) -> None:
         super().__init__(cfg, dt_s, entry_s_m, batch, pool)
         self.rates = observed_rates(counter, self.cfg.window_bins) \
             * float(self.cfg.rate_scale)
@@ -803,7 +814,7 @@ class TorchEntryProcessV2(_EntryProcessBase):
     def __init__(self, counter=None, *, history: Optional[EntranceHistory] = None,
                  histories: Optional[list] = None, dt_s: float = 0.5, seed: int = 0,
                  batch: int = 1, cfg: Optional[EntryConfig] = None,
-                 entry_s_m=ENTRY_S_M, pool=None,
+                 entry_s_m=None, pool=None,
                  defaults: Optional[EntranceHistory] = None,
                  row_seeds: Optional[list] = None, couple_draws: bool = False,
                  queues: Optional[list] = None) -> None:
@@ -1108,7 +1119,7 @@ class TorchEntryProcessV2(_EntryProcessBase):
     def _lane_occupancy(self, work: _Working, b: int, ln: int) -> float:
         """Vehicle-length sum on the entrance edge of ``ln`` (SUMO departLane="best" key)."""
         sel = (work.present[b] & (work.lane[b] == ln) & (work.s[b] >= self.entry_s[ln])
-               & (work.s[b] - work.length[b] <= SECTION_MERGE_START_M))
+               & (work.s[b] - work.length[b] <= self.entry_edge_end[ln]))
         return float(work.length[b, sel].sum())
 
     def _insert_sumo_like(self, work: _Working, b: int, e: int, lanes_try: list,
