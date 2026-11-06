@@ -66,7 +66,7 @@ VARIANT = dict(run=RUN, quote_file=QUOTE_FILE, approval_file=APPROVAL_FILE, budg
                                  hold_lane_pin='ON (MAIN 2026-11-07; FULLPOL 5cbd616e): '+HOLD_LANE_PIN_NOTE,
                                  practice_offer_note='practice_offer ON (0.5); no exact-plan demonstration slots in '
                                  'clean5b (no templates, EV-BC only), so it is inert - disclosed'),
-               requires_lc_runtime=True, authority=AUTHORITY, guidance_missing_ok=())
+               requires_lc_runtime=True, authority=AUTHORITY, guidance_missing_ok=(), worlds=None)
 
 
 def prepare(source, *, root=ROOT, **kwargs):
@@ -106,3 +106,41 @@ VARIANT_F = dict(VARIANT, quote_file=F_QUOTE_FILE, keys=keys_f, design=F_DESIGN,
 
 def prepare_f(source, *, root=F_ROOT, **kwargs):
     return c5.prepare(source, root=root, variant=VARIANT_F, **kwargs)
+
+
+# ---------------------------------------------------------------- clean5b-F8 (MAIN 06:37: memory restart, option a)
+
+F8_ROOT = '/home/ubuntu/coopmwm20261107_clean5bf8'
+F8_QUOTE_FILE = 'CLEAN5BF8_QUOTE.json'
+F8_EPISODES = 8                 # per arm per update (A, B, R on the same worlds); was 16
+F8_WAVE_WORKERS = 6             # 8 x 10.6 GB + a 38 GB parent left no room for G4 waves while both B and R parents
+F8_MEM_MIN_GB = 100             # are resident (~76 GB): 6 workers -> worst 1+38+38+64 = 141 GB <= 150 on cpuZ (184 GB)
+F8_NOTE = ('MAIN 06:37 (registered, memory restart option a): 8 episodes per arm per update (B = R, A on the same '
+           'worlds), wave_workers 6, MemAvailable >= 100 GB before every wave (waits). u12 (primary) and u24 now hold '
+           'HALF the episodes of the original 16-per-update design - disclosed.')
+
+
+def worlds_by_update_8():
+    """8 TRAIN worlds per update over the 6 staged cells (cell rotates with the update), seeds cycle in sixths."""
+    from . import map_scenarios as ms
+    cells = {c['cell_key']: c for c in ms.cells()}
+    out = {}
+    for u in range(1, 25):
+        offset = ((u-1) % 6)*F8_EPISODES
+        rows = []
+        for k, seed in enumerate(c5.TRAIN_SEEDS[offset:offset+F8_EPISODES]):
+            cell = cells[c5.CELL_KEYS[(k+u) % len(c5.CELL_KEYS)]]
+            rows.append(ms.world(seed, cell['demand'], cell['penetration']))
+        out[str(u)] = rows
+    return out
+
+
+VARIANT_F8 = dict(VARIANT_F, quote_file=F8_QUOTE_FILE, worlds=worlds_by_update_8,
+                  cfg_overrides=dict(load_max=LOAD_MAX, wave_workers=F8_WAVE_WORKERS, mem_available_min_gb=F8_MEM_MIN_GB),
+                  design=F_DESIGN+' '+F8_NOTE, authority=F_AUTHORITY+'; '+F8_NOTE,
+                  newmap_extra=dict(VARIANT_F['newmap_extra'], variant='clean5b-F8', episodes_per_update=F8_EPISODES,
+                                    half_episode_note=F8_NOTE))
+
+
+def prepare_f8(source, *, root=F8_ROOT, **kwargs):
+    return c5.prepare(source, root=root, variant=VARIANT_F8, **kwargs)

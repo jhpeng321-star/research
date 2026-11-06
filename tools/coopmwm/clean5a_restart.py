@@ -127,7 +127,7 @@ def keys(*, desc, guidance_doc, provenance):
 
 VARIANT = dict(run=RUN, quote_file=QUOTE_FILE, approval_file='BUDGET_CLEAN4.json', budget_file='CLEAN5A_BUDGET.json',
                design=DESIGN, approved=c4.APPROVED, budget_rule=None, keys=None, cfg_overrides={}, newmap_extra={},
-               requires_lc_runtime=False, authority=None, guidance_missing_ok=())
+               requires_lc_runtime=False, authority=None, guidance_missing_ok=(), worlds=None)
 
 
 def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtime_sim_s, host, provenance,
@@ -173,7 +173,7 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
     cfg.update(run_root=str(root), accounting_root=str(root), bank_source_root=str(root),
         source_root=str(source), source_manifest_sha256=digest(source_manifest),
         gate_attempt=1, smoke_attempt=1, resume_update=0, A_resume_update=0,
-        worlds_by_update=worlds_by_update(), replay_sources={}, paired_evaluation=False, extra_final_baselines=[],
+        worlds_by_update=(v['worlds'] or worlds_by_update)(), replay_sources={}, paired_evaluation=False, extra_final_baselines=[],
         checkpoint=trunk)
     cfg.update((v['keys'] or keys)(desc=desc, guidance_doc=guidance_doc, provenance=provenance))
     cfg.update(v['cfg_overrides'])

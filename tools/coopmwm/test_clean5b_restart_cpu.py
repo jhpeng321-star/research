@@ -97,18 +97,18 @@ def _quote(total=3_850_000):
 
 def test_clean5b_budget_envelope_is_3_9m_and_clean5a_default_unchanged():
     q = _quote()
-    approval = dict(owner_approval='run clean5b alongside clean5a', approved_sim_s=3_930_000,
+    approval = dict(owner_approval='run clean5b alongside clean5a', approved_sim_s=3_960_000,
                     total_cap_sim_s=34_318_000, quote_sha256=q['receipt_sha256'])
     rec = c4.budget(quote_doc=q, approval=approval, prior_runtime_sim_s=0, approved=c5b.APPROVED, rule='x')
-    assert rec['approved_sim_s'] == 3_930_000 and rec['remaining_sim_s'] == 3_930_000 and rec['rule'] == 'x'
+    assert rec['approved_sim_s'] == 3_960_000 and rec['remaining_sim_s'] == 3_960_000 and rec['rule'] == 'x'
     sealed = _seal(dict({k: v for k, v in rec.items() if k != 'receipt_sha256'}, run='clean5b'), 'receipt_sha256')
-    assert c4.checked(dict(clean4_budget=sealed))['approved_sim_s'] == 3_930_000
+    assert c4.checked(dict(clean4_budget=sealed))['approved_sim_s'] == 3_960_000
     as5a = _seal(dict({k: v for k, v in rec.items() if k != 'receipt_sha256'}, run='clean5a'), 'receipt_sha256')
     with pytest.raises(ValueError):
         c4.checked(dict(clean4_budget=as5a))                  # 3.9M record cannot pass as a 4M clean5a record
     with pytest.raises(ValueError):                           # quote above the clean5b envelope
-        c4.budget(quote_doc=_quote(3_950_000), approval=dict(approval, approved_sim_s=3_950_000,
-                  quote_sha256=_quote(3_950_000)['receipt_sha256']), prior_runtime_sim_s=0, approved=c5b.APPROVED)
+        c4.budget(quote_doc=_quote(3_990_000), approval=dict(approval, approved_sim_s=3_990_000,
+                  quote_sha256=_quote(3_990_000)['receipt_sha256']), prior_runtime_sim_s=0, approved=c5b.APPROVED)
     d = c4.budget(quote_doc=q, approval=dict(approval, approved_sim_s=4_000_000), prior_runtime_sim_s=0)
     assert d['approved_sim_s'] == c4.APPROVED and d['rule'].startswith('owner 14:58')    # clean5a default
     assert c5.VARIANT['approval_file'] == 'BUDGET_CLEAN4.json' and c5.VARIANT['keys'] is None
@@ -187,3 +187,21 @@ def test_clean5b_f_keys_fair_slot_guidance_and_registered_no_guidance_cell(cfg, 
     with pytest.raises(ValueError, match='every training cell'):
         c5.check_guidance(k)
     assert set(c5b.VARIANT_F) == set(c5.VARIANT) and c5b.VARIANT_F['quote_file'] == 'CLEAN5BF_QUOTE.json'
+
+
+def test_clean5b_f8_worlds_and_memory_overrides(wz):
+    """MAIN 06:37: 8 TRAIN worlds per update (all registered seeds/cells rotate), 6 wave workers, 100 GB floor."""
+    from collections import Counter
+    worlds = c5b.worlds_by_update_8()
+    assert sorted(worlds, key=int) == [str(u) for u in range(1, 25)]
+    cells, seeds = Counter(), set()
+    for rows in worlds.values():
+        assert len(rows) == 8 and len({w['seed'] for w in rows}) == 8
+        assert all(989220 <= w['seed'] <= 989267 for w in rows)
+        cells.update(w['cell_key'] for w in rows)
+        seeds |= {w['seed'] for w in rows}
+    assert set(cells) == set(c5.CELL_KEYS) and len(seeds) == 48
+    o = c5b.VARIANT_F8['cfg_overrides']
+    assert o == dict(load_max=120, wave_workers=6, mem_available_min_gb=100)
+    assert 1+38+38+o['wave_workers']*10.6 <= 150                          # registered worst-case peak (GB)
+    assert c5b.VARIANT_F8['quote_file'] == 'CLEAN5BF8_QUOTE.json' and set(c5b.VARIANT_F8) == set(c5.VARIANT)

@@ -86,9 +86,9 @@ class Chain:
         self.serial = 0
         # clean5b-F (owner 04:0x): PREPARE_INPUTS variant 'F' -> clean5b_restart.prepare_f + CLEAN5BF_QUOTE.json
         self.variant = self.inputs.get('variant')
-        if self.variant not in (None, 'F'):
+        if self.variant not in (None, 'F', 'F8'):
             raise ValueError('unknown clean5b variant')
-        self.quote_file = 'CLEAN5BF_QUOTE.json' if self.variant == 'F' else 'CLEAN5B_QUOTE.json'
+        self.quote_file = dict(F='CLEAN5BF_QUOTE.json', F8='CLEAN5BF8_QUOTE.json').get(self.variant, 'CLEAN5B_QUOTE.json')
 
     def status(self, step, state, detail=None):
         self.serial += 1
@@ -133,7 +133,7 @@ class Chain:
     def prepare(self):
         from tools.coopmwm import clean5b_restart as c5
         i = self.inputs
-        (c5.prepare_f if self.variant == 'F' else c5.prepare)(self.source, contexts=read(i['contexts_path']), guidance_doc=read(i['guidance_path']),
+        dict(F=c5.prepare_f, F8=c5.prepare_f8).get(self.variant, c5.prepare)(self.source, contexts=read(i['contexts_path']), guidance_doc=read(i['guidance_path']),
                    quote_doc=read(self.control/self.quote_file), approval=read(self.control/'BUDGET_CLEAN5B.json'),
                    prior_runtime_sim_s=i['prior_runtime_sim_s'], host=i['host'], provenance=i['provenance'],
                    root=self.root)
