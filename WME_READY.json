@@ -1,0 +1,44 @@
+{
+  "task": "WM-E: wz3to2 world-model fine-tune (build + gpuA run)",
+  "branch": "c4/wz-wm-train",
+  "base": "3e5bc9f9 + c4/wz-wm-port (WM-A, through 6f8f6952: round-16 WM lineage, road binding, map-aware converter, strict seed guard) + c4/nm-abstract (N1 map_descriptor, wz3to2 MAP_SPEC)",
+  "init_checkpoint": {
+    "name": "WM2 (accepted loop cycle-2 WM; incumbent per REGISTRATION 2026-10-29 10:50 and 2026-11-01 11:48: WM-PHYS FULL-v4 failed the switching rule, WMCOMBINED/WMLOSSONLY/W2-W8 did not qualify)",
+    "sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+    "gpuA_source": "/root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt",
+    "gpuA_copy": "/root/autodl-fs/wzwm/stage/WM2_b8797242.pt",
+    "lineage": "R16 FINAL 5b256941 -> loop FT c01 (WM1 5257a64c) -> c02 (WM2), recipe configs/c4_wm_loop14_r16_ft.toml f95f7c4c, code c4/mainstart"
+  },
+  "reinit": {
+    "prefixes": ["merge_pivot.", "merge_core.", "merge_yield.", "ramp_speed_adapt."],
+    "rule": "35 merge-map-geometry tensors take the fresh initialisation of the fine-tune model (fixed seed 20261106); the other 136 tensors are WM2 byte-for-byte (per-tensor sha proof in REINIT_RECEIPT.json); strict load into the phase A and B models",
+    "kept_learned": "driver encoder (driver settings learned from prediction error only), residual net, lane_v5, gates, courtesy",
+    "not_reinitialised_known_gap": "lane_v5 merge head (head 2) is kept from WM2 and frozen as in the WM history; on wz3to2 WM-A uses it upstream along the whole closing lane (WM_PORT_API section 4) - WM-D measures"
+  },
+  "configs": {
+    "phase_A": "configs/c4_wm_wz3to2_ft_a.toml (R16 stage A core recalibration + R9 merge_pivot x20; residual/courtesy off; 30 x 120 s)",
+    "phase_B": "configs/c4_wm_wz3to2_ft_b.toml (R16 stage B residual + courtesy, core frozen; 120 s x 40 then 300 s x 60; courtesy head kept as in the loop FTs)",
+    "profiles": {"full": "A 30; B 40+60", "night": "A 30; B 40+24", "fast": "A 16; B 24+8, B val windows 8 (used for ft_r1, owner: results ASAP)"},
+    "wz_specific": "data.c4_base/c4_sources bound by the launcher; loss.agg_delay.road_end_m 1379.44 (checked against wms.core.road); loss.paired_diff off (no paired branches)"
+  },
+  "code": {
+    "tools/wzwm/run.py": "prepare (WM2 sha check, reinit, world manifest, mix, configs validated + truth guard) | probe (truth guard on real batches) | train (smoke -> A -> B, resumable) | status | init (data-free pre-stage) | pack (WM-B shards -> sources)",
+    "tools/wzwm/worlds.py": "seed rules (989000-989599 registry minus WM-D reserved 989200-989216/989350-989353/989400-989402/989580-989599, held-out 989600-989699 and 964xxx/962xxx/977xxx refused), world-grouped split, WORLDS manifest",
+    "tools/wzwm/reinit.py": "geometry re-initialisation + receipts",
+    "tools/wzwm/guard.py": "no driver truth / vType params / restricted paths in config, sources or batch keys",
+    "tools/wzwm/plan.py": "phase overrides, profiles, resume trimming",
+    "tools/wzwm/estimate.py": "time/memory estimate (a priori from WM2 c02 log, re-based on the 2-step smoke)",
+    "ops/wzwm_deploy_gpua.sh": "slim LF git archive -> /root/autodl-fs/wzwm/code_<sha12>",
+    "ops/wzwm_gpua_run.sh": "detached runner on its own PID (disk checks; RUN_ROOT on /root/autodl-fs; re-run = resume)"
+  },
+  "split": "by world seed: WM-B registered split (VAL = per cell min sha256('wzwmdata_val_v1:<seed>')), whole *_train/*_val packs, derived per-arm sources; every seed asserted in 989100-989199; WORLDS.json + CHECKPOINT_MANIFEST.json list all train/val worlds; WM-D reserved overlap checked fail-closed",
+  "resume": "weights checkpoint every 5 steps (WMS_LATEST_EVERY) + stage checkpoints; an interrupted phase restarts from the newest weights with the remaining per-stage steps (Adam moments restart, recorded); completed phases are reused via DONE.json sha checks",
+  "tests": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/wzwm/test_wzwm_train_cpu.py -> 31 passed (with tests/wz: WM-A suite also passing at merge time)",
+  "gpuA_run": {
+    "root": "/root/autodl-fs/wzwm/ft_r1",
+    "code": "/root/autodl-fs/wzwm/code_1e3c66eb6615",
+    "chain": "/root/autodl-fs/wzwm/chain_r1.sh (prepare -> probe -> ops/wzwm_gpua_run.sh)",
+    "data": "WM-B packs /root/autodl-fs/wzwmdata20261106/packs/{shard01,shard02}_{train,val}: 87 train / 12 val worlds, 4 arms",
+    "status": "python -m tools.wzwm.run status --root /root/autodl-fs/wzwm/ft_r1"
+  }
+}
