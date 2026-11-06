@@ -660,8 +660,9 @@ class EpisodePolicy(torch.nn.Module):
         if ld_receipt is not None and ld_receipt['lane_requests']:
             sample['lane_drop_lane_requests'] = dict(ld_receipt['lane_requests'])
         if family_lanes:
-            # N9 lane changes enter the SAME G5 request/gate/actuator path (CAV members only).
-            sample['g5_lane_requests'] = dict(sample.get('g5_lane_requests') or {}, **family_lanes)
+            # N9 lane changes: own-sensing map-aware recheck, then the SAME G5 lane
+            # targets / lanes tensor / lane_actors single env writer (CAV members only).
+            sample['nm_lane_requests'] = dict(family_lanes)
         if getattr(self.layer.base, 'intent_horizon', 0) and context['members']:
             published = self.trigger.publish_trigger_intent(context)
             self.trigger_board = {v: (int(self.now), values) for v, values in published.items()}

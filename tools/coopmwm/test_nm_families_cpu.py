@@ -4,7 +4,7 @@ Real EpisodePolicy / TriggerPolicy / MoveExecutor / feasible slates / v2v_runtim
 controller / G5 group_lane gate + lanes_tensor code paths. Fakes: a test-only trigger
 scoring head, fixed registered draws and a slot-id env stub. Geometry: the nm_map
 stubs ('merge': the ramp lane as the closing lane, so the unchanged G5 envelope
-applies; 'wz3to2' for geometry-only checks).
+applies); 'wz3to2' through the REAL N1 map descriptor (WM frame: drop at s = 75.44 m).
 """
 from copy import deepcopy
 import json
@@ -126,14 +126,31 @@ def families_offered(sample, ego):
 
 # ------------------------------------------------------------------ registration
 
-def test_settings_default_off_and_registered_values(cfg):
+@pytest.fixture
+def wz_stub():
+    previous = nm_map.bind(nm_map.stub)
+    yield
+    nm_map.bind(previous)
+
+
+@pytest.fixture
+def wz_real():
+    """Bind the process to the real N1 wz3to2 descriptor (MAP_SPEC + net in assets/)."""
+    from . import map_descriptor as md
+    md._reset_for_tests()
+    desc = md.bind(md.load(REPO/'assets/research/newmap_candidates/wz3to2'))
+    yield desc
+    md._reset_for_tests()
+
+
+def test_settings_default_off_and_registered_values(cfg, wz_stub):
     assert nf.settings(cfg) is None and nf.extension(cfg) is None
     assert nf.settings(dict(cfg, nm_families=False)) is None
     on = fam_cfg(cfg, dict(platoon_headway=4, early_merge=3, zipper_order=4, lane_balance=1,
                            discharge_sync=2, harmonize_rows=6), map_name='wz3to2', range_m=200.)
     got = nf.settings(on)
     assert got['families'] == nf.FAMILY_NAMES and got['range_m'] == 200.
-    assert got['geometry'].drop_s_m == 2700. and got['geometry'].g5_executable
+    assert got['geometry'].drop_s_m == 75.44 and got['geometry'].g5_executable
     raw = on['nm_families']
     bad = [dict(raw, rule='x'), dict(raw, provenance=' '), dict(raw, enabled=1), dict(raw, extra=1),
            dict(raw, families={}), dict(raw, families=dict(walls=dict(member_cap=2))),
@@ -154,7 +171,9 @@ def test_settings_default_off_and_registered_values(cfg):
 def test_map_descriptor_binding_guards_g5_executability(cfg):
     on = fam_cfg(cfg, dict(early_merge=2, platoon_headway=2), map_name='wz3to2')
     assert nm_map.lane_drop('merge').drop_s_m == pytest.approx(75.44)
-    flipped = dict(nm_map.lane_drop('wz3to2').to_dict(), closing_lane=0, adjacent_lane=1, far_lane=2)
+    with pytest.raises(ValueError, match='not the process map'):
+        nm_map.lane_drop('wz3to2')                      # process bound to the original map
+    flipped = dict(nm_map.stub('wz3to2').to_dict(), closing_lane=0, adjacent_lane=1, far_lane=2)
     previous = nm_map.bind(lambda name: flipped)
     try:
         with pytest.raises(ValueError, match='G5-executable'):
@@ -165,7 +184,49 @@ def test_map_descriptor_binding_guards_g5_executability(cfg):
             nf.settings(fam_cfg(cfg, dict(lane_balance=1), map_name='wz2to1'))
     finally:
         nm_map.bind(previous)
-    assert nm_map.lane_drop('wz3to2').closing_lane == 2
+    assert nm_map.stub('wz3to2').closing_lane == 2
+
+
+def test_real_n1_descriptor_drives_the_family_geometry(cfg, wz_real):
+    """N11 F3: geometry comes from map_descriptor.current() (drop s = 75.44, lanes 2/1/0)."""
+    neck = wz_real.bottleneck
+    geometry = nm_map.lane_drop('wz3to2')
+    assert (geometry.closing_lane, geometry.adjacent_lane, geometry.far_lane) == (2, 1, 0)
+    assert geometry.drop_s_m == neck['drop_s_m'] == 75.44
+    assert geometry.change_zone_s_m == (-neck['anchor_x_m'], 75.44) and geometry.source.startswith('N1')
+    assert geometry.to_dict() == dict(nm_map.stub('wz3to2').to_dict(), source=geometry.source)
+    with pytest.raises(ValueError, match='not the process map'):
+        nm_map.lane_drop('merge')
+    got = nf.settings(fam_cfg(cfg, dict(early_merge=2, lane_balance=2), map_name='wz3to2'))
+    assert got['geometry'] == geometry
+    # An early merge 500 m upstream: inside the lane-drop change zone (the merge-map
+    # G5 envelope would refuse lane 2 outside [0, 75.44]); target gaps still checked.
+    rows = [row('m1', 75.44-500, 2), row('y1', 75.44-540, 1), row('h1', 75.44-400, 1, cav=False)]
+    local = {'m1': dict(self='m1', rows=rows)}
+    assert nf.safe_targets({'m1': 1}, local, {'m1', 'y1'}, geometry) == ({'m1': 1}, {})
+    from .group_lane import envelope
+    assert envelope(dict(local['m1'], observed_lanes=(0, 1, 2)), 'm1')['left'] is False
+    blocked = [dict(r, s_m=75.44-498.) if r['vid'] == 'h1' else r for r in rows]
+    assert nf.safe_targets({'m1': 1}, {'m1': dict(self='m1', rows=blocked)}, {'m1'}, geometry)[1] == dict(
+        m1='unsafe_gap_or_edge')
+    assert nf.safe_targets({'m1': 1}, {'m1': dict(self='m1', rows=[dict(r, s_m=r['s_m']+600) for r in rows])},
+                           {'m1'}, geometry)[1] == dict(m1='outside_change_zone')   # past the drop
+    assert nf.safe_targets({'y1': 0}, {'y1': dict(self='y1', rows=rows[:2])}, {'y1'}, geometry) == ({'y1': 0}, {})
+    assert nf.safe_targets({'h1': 0}, {'h1': dict(self='h1', rows=rows)}, {'m1', 'y1'}, geometry)[1] == dict(
+        h1='missing_observable_gap_or_cav')                                         # HDVs never actors
+
+
+def test_early_merge_on_the_real_wz3to2_frame_reaches_the_sole_writer(cfg, fixed, wz_real):
+    p = make(fam_cfg(cfg, dict(early_merge=4), map_name='wz3to2'))
+    p.trigger.trigger_head = Prefer(p.trigger, initiate_then_join('early_merge', 'merge'))
+    c = controller(p)
+    rows = [row('m1', 75.44-500, 2, v=20.), row('y1', 75.44-560, 1, v=20.),
+            row('h1', 75.44-700, 0, cav=False, v=20.)]
+    s, _ = step(p, c, rows, 300)
+    assert s['track2_trigger']['accepted'] == dict(m1=True, y1=False)
+    assert s['nm_lane_requests'] == dict(m1=1) and s['nm_lane_gate'] == dict(safe=dict(m1=1), blocked={})
+    assert c.g5_lane_targets == dict(m1=1) and c.lane_actors() == frozenset({'m1'})
+    assert c.lane_request(env_for(rows)).tolist() == [[1., -1., -1.]]
 
 
 def test_registry_options_and_pinned_depth():
@@ -328,8 +389,8 @@ def test_early_merge_sequenced_lane_changes_go_through_the_g5_path(cfg, fixed):
     s, _ = step(p, c, rows, 300)
     assert s['track2_trigger']['accepted'] == dict(m1=True, y1=False)
     assert 'early_merge_join' not in families_offered(s, 'y1')        # t-1 rule: not yet visible
-    assert s['g5_lane_requests'] == dict(m1=1)
-    assert s['g5_lane_gate'] == dict(safe=dict(m1=1), blocked={})
+    assert s['nm_lane_requests'] == dict(m1=1)
+    assert s['nm_lane_gate'] == dict(safe=dict(m1=1), blocked={})
     assert c.g5_lane_targets == dict(m1=1) and c.lane_actors() == frozenset({'m1'})
     assert c.lane_request(env_for(rows)).tolist() == [[1., -1., -1.]]
     # 301: m1 completed; m2 (merge) and y1 (yield) receive and join on the event tick.
@@ -343,7 +404,7 @@ def test_early_merge_sequenced_lane_changes_go_through_the_g5_path(cfg, fixed):
     assert commands['m2']['status'] == 'sequence_wait'                # m1 still ahead in lane 2 at t-1
     assert commands['m1']['status'] == 'lane_done'
     assert commands['y1']['status'] == 'yield' and s['context']['move_offsets']['y1'] == -.6
-    assert 'g5_lane_requests' not in s and c.g5_lane_targets == {}
+    assert 'nm_lane_requests' not in s and c.g5_lane_targets == {}
     # 302: m1 completion seen on its own t-1 packet; registered 2 s sequence gap not yet over.
     s, _ = step(p, c, early_rows(302, m1_lane=1), 302)
     assert s['track2']['nm_families']['commands']['m2']['status'] == 'sequence_gap_wait'
@@ -351,7 +412,7 @@ def test_early_merge_sequenced_lane_changes_go_through_the_g5_path(cfg, fixed):
     # 303: m2's turn; the request passes the SAME G5 gate (own sensed gaps) and actuator ABI.
     rows = early_rows(303, m1_lane=1)
     s, _ = step(p, c, rows, 303)
-    assert s['g5_lane_requests'] == dict(m2=1) and c.g5_lane_targets == dict(m2=1)
+    assert s['nm_lane_requests'] == dict(m2=1) and c.g5_lane_targets == dict(m2=1)
     assert c.lane_request(env_for(rows)).tolist() == [[-1., -1., -1., 1.]]
     assert c.lane_actors() == frozenset({'m2'})
     c.observe_lane(dict(lane_commands=dict(issued=1, completed=1),
@@ -367,15 +428,15 @@ def test_g5_gate_refuses_an_unsafe_family_lane_change(cfg, fixed):
     c = controller(p)
     rows = early_rows(300, with_m2=False)+[row('h2', 41, 1, cav=False)]   # HDV alongside in the target lane
     s, _ = step(p, c, rows, 300)
-    assert s['g5_lane_requests'] == dict(m1=1)
-    assert s['g5_lane_gate']['safe'] == {} and s['g5_lane_gate']['blocked'] == dict(m1='unsafe_gap_or_edge')
+    assert s['nm_lane_requests'] == dict(m1=1)
+    assert s['nm_lane_gate']['safe'] == {} and s['nm_lane_gate']['blocked'] == dict(m1='unsafe_gap_or_edge')
     assert c.lane_request(env_for(rows)) is None and c.lane_actors() == frozenset()
     # Attempts are bounded by the registered attempt_s (seconds of requests).
     for now in range(301, 306):
         s, _ = step(p, c, early_rows(now, with_m2=False)+[row('h2', 41+2*(now-300), 1, cav=False)], now)
     assert p.nm_families.sessions['early_merge:m1@300']['attempts'] == dict(m1=5)
     assert s['track2']['nm_families']['commands']['m1']['status'] == 'attempts_exhausted'
-    assert 'g5_lane_requests' not in s
+    assert 'nm_lane_requests' not in s
 
 
 # ------------------------------------------------------------------ the other lane families
@@ -390,14 +451,14 @@ def test_lane_balance_front_first_to_the_far_lane(cfg, fixed):
         out = [row('b1', -500+2*dt, b1_lane), row('h1', -560+2*dt, 1, cav=False)]
         return out+([row('b2', -520+2*dt, 1)] if t > 300 else [])
     s, _ = step(p, c, rows(300), 300)
-    assert s['g5_lane_requests'] == dict(b1=0) and c.g5_lane_targets == dict(b1=0)
+    assert s['nm_lane_requests'] == dict(b1=0) and c.g5_lane_targets == dict(b1=0)
     s, _ = step(p, c, rows(301, b1_lane=0), 301)
     assert s['track2_trigger']['accepted']['b2'] is True
     assert s['track2']['nm_families']['commands']['b2']['status'] == 'sequence_wait'
     s, _ = step(p, c, rows(302, b1_lane=0), 302)
     assert s['track2']['nm_families']['commands']['b2']['status'] == 'sequence_gap_wait'
     s, _ = step(p, c, rows(303, b1_lane=0), 303)
-    assert s['g5_lane_requests'] == dict(b2=0) and c.g5_lane_targets == dict(b2=0)
+    assert s['nm_lane_requests'] == dict(b2=0) and c.g5_lane_targets == dict(b2=0)
     assert all(v == 0. for v in s['context']['move_offsets'].values())    # lane-only family
 
 
@@ -415,14 +476,14 @@ def test_zipper_order_alternation_ease_then_merge_in_the_zone(cfg, fixed):
     commands = s['track2']['nm_families']['commands']
     # c1 is not yet behind its designated predecessor t1 by s0 + h*v: it eases, no lane request.
     assert commands['c1']['status'] == 'order_ease' and s['context']['move_offsets']['c1'] == -.6
-    assert commands['t1']['status'] == 'in_order' and 'g5_lane_requests' not in s
+    assert commands['t1']['status'] == 'in_order' and 'nm_lane_requests' not in s
     s, _ = step(p, c, rows(302, 24), 302)                     # behind t1, still upstream of the zone
     assert s['track2']['nm_families']['commands']['c1']['status'] == 'in_order'
-    assert 'g5_lane_requests' not in s
+    assert 'nm_lane_requests' not in s
     rows3 = rows(303, 26)
     s, _ = step(p, c, rows3, 303)                             # inside the 50 m zipper zone, in order
     assert s['track2']['nm_families']['commands']['c1']['status'] == 'lane_request'
-    assert s['g5_lane_requests'] == dict(c1=1) and c.g5_lane_targets == dict(c1=1)
+    assert s['nm_lane_requests'] == dict(c1=1) and c.g5_lane_targets == dict(c1=1)
     assert c.lane_request(env_for(rows3)).tolist() == [[-1., 1.]]
 
 
@@ -589,7 +650,7 @@ def test_ownership_cap_and_hdvs_never_offered_or_commanded(cfg, fixed):
     assert not any(o.session_id == 'early_merge:m1@300' for opts in p.nm_families.offers.values() for o in opts)
     for vid, command in s['track2']['nm_families']['commands'].items():
         assert vid in ('m1', 'm2')
-    assert set(s.get('g5_lane_requests', {})) <= {'m1', 'm2'}
+    assert set(s.get('nm_lane_requests', {})) <= {'m1', 'm2'}
 
 
 def test_controller_reserved_member_gets_no_offset_or_lane(cfg, fixed):
@@ -612,7 +673,7 @@ def test_controller_reserved_member_gets_no_offset_or_lane(cfg, fixed):
     p.last_decision = 300
     s, _ = p.sample(context, torch.Generator().manual_seed(1), True)
     assert s['track2']['nm_families']['commands']['m1']['status'] == 'controller_reserved'
-    assert 'g5_lane_requests' not in s
+    assert 'nm_lane_requests' not in s
 
 
 def test_join_only_within_radio_range_and_after_one_second(cfg, fixed):
@@ -779,7 +840,7 @@ def test_verify_tape_requires_executed_profile_and_lane_effect():
                          rows=[dict(vid=v, lane=lanes[v], is_cav=True) for v in plan['members']])
             requests = nf.lane_requests(plan, t)
             if requests:
-                sample.update(g5_lane_requests=requests, g5_lane_gate=dict(safe=requests, blocked={}))
+                sample.update(nm_lane_requests=requests, nm_lane_gate=dict(safe=requests, blocked={}))
                 step_['g5_lane_outcome'] = dict(vehicles={v: dict(target=g, status='issued', completed=True)
                                                           for v, g in requests.items()})
             steps.append(step_)
@@ -865,10 +926,26 @@ def test_n9_with_w1_and_w2_enabled_together(cfg, fixed):
     c = controller(p)
     s, _ = step(p, c, early_rows(300, with_m2=False), 300)
     assert s['track2_trigger']['accepted']['m1'] is True and 'merge_pressure' in s['track2']
-    assert s['g5_lane_requests'] == dict(m1=1) and c.g5_lane_targets == dict(m1=1)
+    assert s['nm_lane_requests'] == dict(m1=1) and c.g5_lane_targets == dict(m1=1)
     s, _ = step(p, c, early_rows(301, m1_lane=1), 301)
     assert s['track2_trigger']['proposals']['nm_families']['accepted_join'] == 2
     assert 'v2v_wall' in s['track2'] and 'nm_families' in s['track2']
     record = json.loads(json.dumps(s['track2_trigger']))
     logp, _, _ = p.trigger.evaluate(tb._batch(record))
     assert logp.tolist() == pytest.approx(record['logp'])
+
+
+def test_process_map_from_env_gives_n1_drop_and_closing_lane(cfg, monkeypatch):
+    """N11 F3: COOPMWM_MAP_SPEC=wz3to2 -> nm_map reads map_descriptor.current().bottleneck."""
+    from . import map_descriptor as md
+    md._reset_for_tests()
+    monkeypatch.setenv(md.ENV, str(REPO/'assets/research/newmap_candidates/wz3to2/MAP_SPEC.json'))
+    try:
+        neck = md.current().bottleneck
+        geometry = nm_map.lane_drop('wz3to2')
+        assert geometry.drop_s_m == neck['drop_s_m'] == 75.44
+        assert geometry.closing_lane == neck['closing_lane'] == 2
+        assert geometry.adjacent_lane == neck['adjacent_lane'] == 1 and geometry.far_lane == 0
+        assert nf.settings(fam_cfg(cfg, dict(early_merge=2), map_name='wz3to2'))['geometry'].drop_s_m == 75.44
+    finally:
+        md._reset_for_tests()

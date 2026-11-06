@@ -1147,6 +1147,104 @@ def from_plan(plan, geometry=None):
     return move
 
 
+def safe_targets(requests, local_states, eligible_cavs, geometry):
+    """Execution-time recheck of N9 lane requests with each commanded CAV's OWN sensing.
+
+    The G5 envelope rule on the map's own geometry: only WM ``lane - 1`` changes from the
+    closing lane (inside its change zone, before the drop) or from the adjacent lane to the
+    far lane (outside the LaneRules edge guard of the map's guard points); the target-lane
+    front/rear gaps pass the unchanged ``wms.control.lanes`` LaneRules check. Absent or
+    malformed sensing fails closed. HDVs are never actors.
+    """
+    from wms.control.lanes import LaneRules, _target_gap_ok
+    rules = LaneRules()
+    out, blocked = {}, {}
+    for vid, target in sorted(requests.items()):
+        state = local_states.get(vid) if vid in eligible_cavs else None
+        rows = (state or {}).get('rows') or []
+        by = {r['vid']: r for r in rows}
+        ego = by.get(vid)
+        if state is None or state.get('self') != vid or ego is None or ego.get('is_cav') is not True \
+                or len(by) != len(rows) or any(
+                    type(r.get('is_cav')) is not bool or r.get('lane') not in range(geometry.n_lanes)
+                    or any(isinstance(r.get(k), bool) or not isinstance(r.get(k), (int, float))
+                           or not math.isfinite(r[k]) for k in ('s_m', 'v_mps', 'length_m'))
+                    or r['v_mps'] < 0 or r['length_m'] <= 0
+                    or abs(r['s_m']-ego['s_m']) > SENSOR_RANGE_M for r in rows):
+            blocked[vid] = 'missing_observable_gap_or_cav'
+            continue
+        source, s, v = int(ego['lane']), float(ego['s_m']), float(ego['v_mps'])
+        allowed = ((source == geometry.closing_lane and target == geometry.adjacent_lane)
+                   or (source == geometry.adjacent_lane and target == geometry.far_lane))
+        if type(target) is not int or not allowed or target != source-1:
+            blocked[vid] = 'source_lane_changed'
+        elif source == geometry.closing_lane and not (
+                geometry.change_zone_s_m[0] <= s <= geometry.change_zone_s_m[1]):
+            blocked[vid] = 'outside_change_zone'
+        elif source != geometry.closing_lane and any(
+                0 <= float(p)-s < v*CONTROL_DT_S+rules.edge_guard_m for p in geometry.guard_points_s_m):
+            blocked[vid] = 'unsafe_gap_or_edge'
+        else:
+            tensor = lambda k, kind=float: torch.tensor([[kind(r[k]) for r in rows]])  # noqa: E731
+            lane = tensor('lane', int)
+            goal = lane.clone()
+            index = rows.index(ego)
+            goal[0, index] = target
+            ok = _target_gap_ok(tensor('s_m'), tensor('v_mps'), tensor('length_m'),
+                                torch.ones_like(lane, dtype=torch.bool), lane, goal, rules)[0, index]
+            if bool(ok):
+                out[vid] = target
+            else:
+                blocked[vid] = 'unsafe_gap_or_edge'
+    return out, blocked
+
+
+def controller_lane_targets(controller, policy, rows, now):
+    """N9 lane requests (live samples + committed verified plans) after the own-sensing
+    recheck; mirrors group_lane.controller_targets (branch release, CAV-only, no extra writer)."""
+    if not controller.events:
+        return {}
+    sample = controller.events[-1]['sample']
+    requests = dict(sample.get('nm_lane_requests') or {})
+    protocol = getattr(policy, 'nm_families', None)
+    geometry = protocol.geometry if protocol is not None else None
+    for entry in controller.active_plans:
+        plan = entry['plan']
+        if plan.get('nm_move') is None:
+            continue
+        move = from_plan(plan)
+        geometry = geometry or nm_map.lane_drop(move['map'])
+        for vid in plan['members']:
+            requests.pop(vid, None)
+        requests.update(lane_requests(plan, now-entry['start_s']))
+    branch = controller.branch
+    if branch and now >= branch['time_s']:
+        release = branch.get('group', ()) if now >= branch.get('until', math.inf) else branch['revert']
+        for vid in release:
+            requests.pop(vid, None)
+        if branch.get('mappo_background'):
+            allowed = set(branch['group'])-set(branch['revert']) if now < branch['until'] else set()
+            requests = {v: t for v, t in requests.items() if v in allowed}
+    if geometry is None:
+        if requests:
+            raise ValueError('N9 lane requests need the registered lane-drop geometry')
+        return {}
+    eligible = {r['vid'] for r in rows if r.get('is_cav')}
+    # Each commanded CAV's OWN sensing packet (same whitelist/radius as EpisodePolicy's
+    # sensed rows), never slot-limited candidate rows or the full scene.
+    local = {}
+    for actor in rows:
+        if actor['vid'] in requests and actor.get('is_cav'):
+            sensed = [{k: r[k] for k in ('vid', 's_m', 'v_mps', 'lane', 'is_cav', 'length_m')}
+                      for r in rows if abs(r['s_m']-actor['s_m']) <= SENSOR_RANGE_M]
+            local[actor['vid']] = dict(self=actor['vid'], rows=sensed)
+    safe, blocked = safe_targets(requests, local, eligible, geometry)
+    if requests or 'nm_lane_requests' in sample:
+        sample['nm_lane_requests'] = requests
+        sample['nm_lane_gate'] = dict(safe=safe, blocked=blocked)
+    return safe
+
+
 def lane_requests(plan, t):
     """{vid: WM target} recorded for plan second ``t`` (G5 replay input)."""
     move = from_plan(plan)
@@ -1190,8 +1288,8 @@ def verify_tape(plan, tape, t0):
             own = ((before.get('g5_lane_outcome') or {}).get('vehicles') or {}).get(vid)
             pre = {r['vid']: r for r in before.get('rows', ())}
             post = {r['vid']: r for r in after.get('rows', ())}
-            if ((sample.get('g5_lane_requests') or {}).get(vid) == target
-                    and ((sample.get('g5_lane_gate') or {}).get('safe') or {}).get(vid) == target
+            if ((sample.get('nm_lane_requests') or {}).get(vid) == target
+                    and ((sample.get('nm_lane_gate') or {}).get('safe') or {}).get(vid) == target
                     and own == dict(target=target, status='issued', completed=True)
                     and pre.get(vid, {}).get('is_cav') and post.get(vid, {}).get('is_cav')
                     and pre[vid]['lane'] != target and post[vid]['lane'] == target):

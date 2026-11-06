@@ -161,14 +161,20 @@ def controller_targets(controller, policy, rows, now):
 
     No separate TraCI writer: the returned tensor enters the same env.step as
     acceleration. Replayed samples also recheck live local safety. N2 lane-drop zip
-    requests (opt-in; absent keys = the unchanged G5 path) join the SAME returned targets
-    after their own-sensing recheck; a CAV belongs to at most one move.
+    requests and N9 family lane requests (opt-in; absent keys = the unchanged G5 path)
+    join the SAME returned targets after their own-sensing recheck; a CAV belongs to at
+    most one move.
     """
     safe = _g5_controller_targets(controller, policy, rows, now)
     if controller.events and ('lane_drop_lane_requests' in controller.events[-1]['sample'] or any(
             e['plan'].get('lane_drop_macro') is not None for e in controller.active_plans)):
         from .lane_drop import controller_lane_targets
         extra = controller_lane_targets(controller, policy, rows, now)
+        safe = dict(safe, **{v: t for v, t in extra.items() if v not in safe})
+    if controller.events and ('nm_lane_requests' in controller.events[-1]['sample'] or any(
+            e['plan'].get('nm_move') is not None for e in controller.active_plans)):
+        from .nm_families import controller_lane_targets as nm_lane_targets
+        extra = nm_lane_targets(controller, policy, rows, now)
         safe = dict(safe, **{v: t for v, t in extra.items() if v not in safe})
     return safe
 
@@ -177,8 +183,7 @@ def _g5_controller_targets(controller, policy, rows, now):
     if not controller.events:
         return {}
     sample = controller.events[-1]['sample']
-    committed_lane = any(e['plan'].get('g5_move') or e['plan'].get('nm_move')
-                         for e in controller.active_plans)
+    committed_lane = any(e['plan'].get('g5_move') for e in controller.active_plans)
     # Original one-second samples are also explicit instructions on a CRN
     # prefix replay, whose native verifier carries only the frozen base policy.
     if not enabled(getattr(policy, 'cfg', None)) and not committed_lane and not sample.get('g5_lane_requests'):
@@ -191,12 +196,6 @@ def _g5_controller_targets(controller, policy, rows, now):
             for vid in move.members:
                 requests.pop(vid, None)
             requests.update(targets(move, now-entry['start_s']))
-        elif plan.get('nm_move'):
-            # N9 executable plan replay: its recorded lane requests, same gate/actuator.
-            from .nm_families import lane_requests
-            for vid in plan['members']:
-                requests.pop(vid, None)
-            requests.update(lane_requests(plan, now-entry['start_s']))
     branch = controller.branch
     if branch and now >= branch['time_s']:
         release = branch.get('group', ()) if now >= branch.get('until', math.inf) else branch['revert']
