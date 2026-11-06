@@ -156,3 +156,67 @@ def patch_globals(namespace, job):
 
 def installed_record():
     return dict(_RECORD)
+
+
+def primary_train_world(world):
+    """Registered primary TRAIN world: merge map 986000-986071 (no 'map' key, the literal checks
+    formerly inlined in bank_breadth / policy_synergy / replay_bank / launch_preparation);
+    a map world: its own TRAIN registry (process map must match)."""
+    if isinstance(world, dict) and 'map' in world:
+        try:
+            guard_world(world, 'train')
+        except ValueError:
+            return False
+        return True
+    return 986000 <= world['seed'] <= 986071
+
+
+def normalised_world(world):
+    """N4 (N11 F1/F7): probe/mining rows carry map worlds as NEWMAP2 moments (cell key string,
+    'split', no cell_key); map them onto the exact registered world dict. Merge worlds unchanged."""
+    if isinstance(world, dict) and world.get('map'):
+        from . import map_scenarios
+        if world['map'] != map_scenarios.MAP:
+            raise ValueError(f'unregistered map {world["map"]!r}')
+        return map_scenarios.world_for_moment({k: world[k] for k in ('seed', 'demand', 'penetration', 'cell')
+                                               if k in world})
+    return world
+
+
+def registered_train_world(world):
+    """Fail-closed TRAIN predicate for every former 986000-986071 literal on the B/R bank path:
+    merge map 986000-986071 exactly as before; a map world only when it normalises to a registered
+    TRAIN world of the PROCESS map (989600+ held-out, 964000-964199, 962xxx, 977xxx refused)."""
+    if not isinstance(world, dict) or type(world.get('seed')) is not int:
+        return False
+    if world.get('map'):
+        try:
+            return primary_train_world(normalised_world(world))
+        except (ValueError, KeyError, TypeError, StopIteration):
+            return False
+    return 986000 <= world['seed'] <= 986071
+
+
+def primary_train_seed(seed):
+    """Seed-only rows (track2_monitor registration): merge 986000-986071, or a TRAIN seed of the
+    process map (never held-out/forbidden)."""
+    if type(seed) is not int:
+        return False
+    if 986000 <= seed <= 986071:
+        return True
+    desc = md.current()
+    if desc.is_original:
+        return False
+    from . import map_scenarios
+    return desc.name == map_scenarios.MAP and map_scenarios.seed_scope(seed) == 'train'
+
+
+def map_replacement_pool(failed, used, taken_ids, arm, ident):
+    """accel_runner.replacement_world for map worlds: next unused TRAIN seed of the same cell."""
+    from . import map_scenarios
+    md.for_world(failed)
+    pool = [w for w in map_scenarios.worlds('train', cell_ids=[failed['cell']])
+            if w['seed'] not in used and f'{ident}_{arm}_{w["seed"]}' not in taken_ids]
+    n = map_scenarios.TRAIN_RANGE[1]-map_scenarios.TRAIN_RANGE[0]+1
+    pool.sort(key=lambda w: ((w['repeat']-failed['repeat']) % n, w['seed']))
+    return pool[0] if pool else None

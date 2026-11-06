@@ -51,7 +51,7 @@ def test_registered_digests_fail_closed(tmp_path):
     shutil.copy(MAP_DIR/'MAP_SPEC.json', copy/'MAP_SPEC.json')
     net = (copy/'wz3to2.net.xml').read_text().replace('length="1296.00"', 'length="1290.00"', 1)
     (copy/'wz3to2.net.xml').write_text(net)
-    with pytest.raises(ValueError, match='network differs'):
+    with pytest.raises(ValueError, match='network file bytes differ'):
         md.load(copy)
     other = json.loads((MAP_DIR/'MAP_SPEC.json').read_text())
     other['name'] = 'wz2to1'
@@ -60,13 +60,24 @@ def test_registered_digests_fail_closed(tmp_path):
         md.load(copy)
 
 
-def test_line_endings_do_not_change_the_descriptor(tmp_path):
+def test_network_is_the_byte_identical_staged_file_b6277898(tmp_path):
+    """MAIN (N11 F4): clean4 binds the exact net every probe/plan used (raw sha b6277898...)."""
+    import hashlib
+    raw = (MAP_DIR/'wz3to2.net.xml').read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'
+    d = md.load(MAP_DIR)
+    assert d.network_file_sha256 == md.REGISTERED['wz3to2']['network_file_sha256'] == hashlib.sha256(raw).hexdigest()
+    assert d.record()['network_file_sha256'] == d.network_file_sha256
+    staged = Path('E:/research-dense/assets/research/newmap_candidates/wz3to2/wz3to2.net.xml')
+    if staged.exists():
+        assert staged.read_bytes() == raw
+    # The same geometry with other line endings is NOT the registered file: refused (byte identity).
     copy = tmp_path/'wz3to2'
     copy.mkdir()
     for p in MAP_DIR.iterdir():
         (copy/p.name).write_bytes(p.read_bytes().replace(b'\r\n', b'\n'))
-    assert md.load(copy).digest != '' and md.load(copy).network_sha256 == md.load(MAP_DIR).network_sha256
-    assert md.load(copy).spec_sha256 == md.load(MAP_DIR).spec_sha256
+    with pytest.raises(ValueError, match='network file bytes differ'):
+        md.load(copy)
 
 
 def test_process_selection_and_one_map_per_process(monkeypatch):

@@ -235,6 +235,9 @@ def test_wz3to2_rows_and_rsu_block_use_only_cav_reports(unbound, monkeypatch):
     moved = [r if r[0] != 'hdv.far_in_rsu' else (r[0], -450., 1, 30., False) for r in ROWS]
     assert cav_report_rows(_Env(moved), desc) == rows
     summ = report_summary(_Env(ROWS).frame, desc)
+    assert json.loads(json.dumps(summ, allow_nan=False)) == summ        # receipts: plain JSON scalars (N11 F5)
+    assert all(type(x) is bool for x in (lane['missing'] for lane in summ['lanes']))
+    assert json.loads(json.dumps(rows)) == rows
     assert summ['source'] == 'cav_reports' and summ['receipt_age_s'] == 0.0 and summ['reporting_cavs'] == 2
     cov = {lane['lane']: lane for lane in summ['lanes']}
     assert 0. < cov[0]['coverage'] <= 1. and 0. < cov[1]['coverage'] <= 1. and not cov[0]['missing']
@@ -287,3 +290,19 @@ import traffic_shepherd.c4.geometry as g
 print(json.dumps(dict(file=g.__file__, s=g.lane_and_s('up_0', 2650.)[1], k=env.CavSumoEnv(k_slots=192, sumo_binary='x').k)))
 ''', extra_env={'COOPMWM_G5_RUNTIME': '1'})
     assert out['file'].startswith('/home/ubuntu/e3final/') and abs(out['s']-29.44) < 1e-9 and out['k'] == 512
+
+
+def test_primary_train_world_and_replacement_generalise_the_merge_literals(unbound, monkeypatch):
+    from tools.coopmwm.map_runtime import primary_train_world, map_replacement_pool
+    from tools.coopmwm import accel_runner
+    monkeypatch.delenv(md.ENV, raising=False)
+    assert primary_train_world(dict(seed=986000)) and primary_train_world(dict(seed=986071))
+    assert not primary_train_world(dict(seed=985999)) and not primary_train_world(dict(seed=986072))
+    md._reset_for_tests()
+    monkeypatch.setenv(md.ENV, str(SPEC))
+    w = ms.world(989300, 2800, 0.4)
+    assert primary_train_world(w) and not primary_train_world(ms.world(989650, 2800, 0.4))
+    nxt = accel_runner.replacement_world(w, {989300, 989301}, set(), 'A', 'u001')
+    assert nxt == ms.world(989302, 2800, 0.4) == map_replacement_pool(w, {989300, 989301}, set(), 'A', 'u001')
+    last = ms.world(989599, 2800, 0.4)
+    assert accel_runner.replacement_world(last, {989599}, set(), 'A', 'u001')['seed'] == 989200

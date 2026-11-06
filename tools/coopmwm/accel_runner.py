@@ -138,6 +138,9 @@ def episode_local(error):
 
 def replacement_world(failed,used,taken_ids,arm,ident):
     """Next unused TRAIN world of the failed world's cell (repeat order); None if exhausted."""
+    if isinstance(failed,dict) and 'map' in failed:  # N1: map worlds use the map's TRAIN registry
+        from .map_runtime import map_replacement_pool
+        return map_replacement_pool(failed,used,taken_ids,arm,ident)
     pool=[w for w in worlds('train') if w['cell']==failed['cell'] and w['seed'] not in used
           and f'{ident}_{arm}_{w["seed"]}' not in taken_ids]
     pool.sort(key=lambda w:((w['repeat']-failed['repeat'])%6,w['seed']))

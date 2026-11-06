@@ -177,7 +177,8 @@ def _g5_controller_targets(controller, policy, rows, now):
     if not controller.events:
         return {}
     sample = controller.events[-1]['sample']
-    committed_lane = any(e['plan'].get('g5_move') for e in controller.active_plans)
+    committed_lane = any(e['plan'].get('g5_move') or e['plan'].get('nm_move')
+                         for e in controller.active_plans)
     # Original one-second samples are also explicit instructions on a CRN
     # prefix replay, whose native verifier carries only the frozen base policy.
     if not enabled(getattr(policy, 'cfg', None)) and not committed_lane and not sample.get('g5_lane_requests'):
@@ -190,6 +191,12 @@ def _g5_controller_targets(controller, policy, rows, now):
             for vid in move.members:
                 requests.pop(vid, None)
             requests.update(targets(move, now-entry['start_s']))
+        elif plan.get('nm_move'):
+            # N9 executable plan replay: its recorded lane requests, same gate/actuator.
+            from .nm_families import lane_requests
+            for vid in plan['members']:
+                requests.pop(vid, None)
+            requests.update(lane_requests(plan, now-entry['start_s']))
     branch = controller.branch
     if branch and now >= branch['time_s']:
         release = branch.get('group', ()) if now >= branch.get('until', math.inf) else branch['revert']

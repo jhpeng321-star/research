@@ -85,7 +85,7 @@ def full_bank_sources(cfg, arm):
             snapshot = (rb.replicate(base, receipt['verification_id']) if seed_index == 2 else
                 rb.replicate(base, receipt['verification_id']+f'#s{seed_index}') if seed_index > 2 else base)
             if (snapshot['episode'].get('role') != 'train' or snapshot['episode'].get('arm') != arm or
-                    not 986000 <= snapshot['episode']['world']['seed'] <= 986071):
+                    not __import__('tools.coopmwm.map_runtime', fromlist=['x']).registered_train_world(snapshot['episode']['world'])):
                 raise ValueError('same-arm registered TRAIN source required')
             frames = bank_v2v.trace_frames(trace)
             context = proposal_context(plan, frames, snapshot['t0'])
