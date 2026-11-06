@@ -131,6 +131,10 @@ def controller_class(base):
                                     intent,
                                     (lambda vid: _intent_features(frame, vid, previous, DEFAULT_CFG, trigger_spec))
                                     if callable(trigger_publish) else None, trigger_publish)
+            families = getattr(saved, 'nm_families', None)
+            if families is not None:
+                # N9 absolute family laws: each CAV's OWN native command this second.
+                families.observe_native(now, commands)
             try:
                 desired = super().apply(rows, commands, now)
             finally:
