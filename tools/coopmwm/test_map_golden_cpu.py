@@ -13,7 +13,6 @@ frame constants (geometry LANE_TABLE / HERE_OFFSETS / lane_and_s, state RSU zone
 wms.control.contract merge/RSU constants).
 """
 import json
-import math
 import random
 from pathlib import Path
 
