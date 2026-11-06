@@ -122,6 +122,10 @@ def scheduled(cfg, update):
             write(target, _seal(dict(status='graded', update=update, results=results), 'receipt_sha256'))
     if update not in (8, 24):
         return
+    if cfg.get('paired_evaluation', True) is False:
+        # clean4 (MAIN 2026-11-06): in-run u8/u24 paired evaluations OFF; the final evaluation is the
+        # separate N6 launcher on the registered final panel, debited from v2v_final.
+        return
     target = root/f'evaluation/PAIRED_u{update:03}.json'
     if target.exists():
         return read(target)

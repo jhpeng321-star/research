@@ -25,8 +25,9 @@ def copy_safety_authority(cfg, output):
     root = Path(cfg['run_root'])
     shutil.copyfile(root/rc.RULE_FILE, output/rc.RULE_FILE)
     shutil.copyfile(root/'AUTHORITY.md', output/'AUTHORITY.md')
-    if 'clean2_budget' in cfg or 'clean3_budget' in cfg:
-        restart = cfg['clean2_restart'] if 'clean2_budget' in cfg else cfg['clean3_restart']
+    if 'clean2_budget' in cfg or 'clean3_budget' in cfg or 'clean4_budget' in cfg:
+        restart = (cfg['clean2_restart'] if 'clean2_budget' in cfg else cfg['clean3_restart']
+                   if 'clean3_budget' in cfg else cfg['clean4_restart'])
         for name, expected in restart['inherited_safety_receipts'].items():
             if rc.sha(root/name) != expected:
                 raise ValueError('inherited owner safety authority changed before smoke')
@@ -71,15 +72,18 @@ def smoke(cfg):
     if any(r['cells'] != 10 or r['status'] != 'dry_run' or r['branches'] <= 0 for r in dry):
         raise ValueError('complete replicated-test dry grid required')
     fixes = levers = None
-    if 'clean2_budget' in cfg or 'clean3_budget' in cfg:
+    if 'clean2_budget' in cfg or 'clean3_budget' in cfg or 'clean4_budget' in cfg:
         from .clean2_receipts import reporting, validate_smoke
         validate_smoke(cfg, updates)
         if 'clean3_budget' in cfg:
             from .clean3_receipts import validate_levers
+        elif 'clean4_budget' in cfg:
+            from .clean4_receipts import validate_levers
+        if 'clean3_budget' in cfg or 'clean4_budget' in cfg:
             validate_levers(cfg, updates)  # precheck before the extra reporting branches
         measured = reporting(cfg)
         fixes = validate_smoke(cfg, updates, measured)
-        if 'clean3_budget' in cfg:
+        if 'clean3_budget' in cfg or 'clean4_budget' in cfg:
             levers = validate_levers(cfg, updates, fixes)
     charged = sum(r['sim_s'] for r in ledger(root) if r['phase'] == 'track2_smoke')
     if charged > 20000:

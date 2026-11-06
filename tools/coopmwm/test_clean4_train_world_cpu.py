@@ -156,3 +156,12 @@ def test_extra_range_repeat_identity_and_registry_listing():
     for bad in (989150, 989600, 964100):
         with pytest.raises(ValueError):
             b.check_seeds([989220], [989601], guidance=[bad])
+
+
+def test_mislabelled_cell_refused(wz):
+    good = dict(map='wz3to2', cell='D3200_p60', demand=3200, penetration=0.6, seed=989201)
+    assert mr.registered_train_world(good)
+    for bad in (dict(good, cell='D2400_p60'), dict(good, cell_key='D2800_p40'), dict(good, cell=3)):
+        assert not mr.registered_train_world(bad)
+        with pytest.raises(ValueError):
+            mr.normalised_world(bad)

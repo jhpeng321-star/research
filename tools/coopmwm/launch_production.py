@@ -56,11 +56,14 @@ def backend_config(cfg, *, root=None, smoke=False):
     if 'clean3_budget' in cfg:
         from .clean3_restart import native_budget
         out['budget'], out['prior_charged_sim_s'] = native_budget(cfg)
+    if 'clean4_budget' in cfg:   # clean4 wz3to2 (N4): owner-approved 4M envelope, same global-cap semantics
+        from .clean4_restart import native_budget as clean4_native_budget
+        out['budget'], out['prior_charged_sim_s'] = clean4_native_budget(cfg)
     if cfg.get('g4_synergy_credit') and not smoke:
         from .g4_runtime import allocate_budget
         allocate_budget(out)
     prior = out['prior_charged_sim_s']
-    cap = out['budget']['total'] if 'clean3_budget' in cfg else rc.TOTAL_CAP_SIM_S
+    cap = out['budget']['total'] if ('clean3_budget' in cfg or 'clean4_budget' in cfg) else rc.TOTAL_CAP_SIM_S
     if sum(out['budget']['phases'].values())+prior > cap:
         raise ValueError('complete production allocations plus prior parity exceed owner cap')
     if 'clean2_budget' not in cfg and cfg['budget']['total']+960 > out['budget']['total']:
@@ -78,7 +81,7 @@ def backend_config(cfg, *, root=None, smoke=False):
         out['phase_map'] = dict(train='track2_smoke')
         out['job_namespace'] = f'clean1_smoke{attempt}'
         out['worlds_by_update'] = {'1': cfg['worlds_by_update']['1'][:2]}
-        if 'clean3_budget' in cfg and cfg.get('mined_moves'):
+        if ('clean3_budget' in cfg or 'clean4_budget' in cfg) and cfg.get('mined_moves'):
             out['practice_priority_mined'] = True  # registered clean3 smoke rule (B=R)
     return out
 
