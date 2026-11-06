@@ -90,6 +90,9 @@ def release(cfg):
     if 'clean3_budget' in cfg:
         from .clean3_restart import verify_previous
         verify_previous(cfg)
+    if 'clean4_budget' in cfg:
+        from .clean4_restart import verify_previous as clean4_verify_previous
+        clean4_verify_previous(cfg)
     for name, status in (('SMOKE_PASS.json', 'SMOKE_PASS'), ('GATE_PASS.json', 'PASS')):
         receipt = read(root/name)
         verify_sealed(receipt, 'receipt_sha256')
@@ -168,10 +171,10 @@ def update(cfg, arm, u, *, smoke=False):
     metrics = production.update_metrics(arm, episodes, learning, envelope,
         augmented_examples=0 if arm == 'A' else augmentation['admitted'][arm])
     extra = {}
-    if 'clean2_budget' in cfg or 'clean3_budget' in cfg:
+    if 'clean2_budget' in cfg or 'clean3_budget' in cfg or 'clean4_budget' in cfg:
         from .clean2_receipts import update_evidence
         extra['clean2_fix_receipts'] = update_evidence(arm, episodes, learning, envelope, metrics)
-    if 'clean3_budget' in cfg and cfg.get('mined_moves') and arm != 'A':
+    if ('clean3_budget' in cfg or 'clean4_budget' in cfg) and cfg.get('mined_moves') and arm != 'A':
         from .clean3_mined import usage
         extra['clean3_mined_usage'] = usage(native, arm, episodes, learning, artifacts)
     value = _seal(dict(**started, finished_unix=time.time(), checkpoint=checkpoint,

@@ -135,7 +135,10 @@ def candidates(obs_state, rng, n):
                     break
                 continue
             if families is not None and nm_families.is_family(family):
-                out.append(nm_families.redraw(template, families, own, rng))
+                # N11 F8: a re-sampled initiate can be infeasible (None); never offer it.
+                option = nm_families.redraw(template, families, own, rng)
+                if option is not None:
+                    out.append(option)
                 if len(out) == n:
                     break
                 continue

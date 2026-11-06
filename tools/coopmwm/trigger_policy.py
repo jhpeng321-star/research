@@ -64,6 +64,8 @@ def _validate_move(move, ego, observable_cav_ids, families):
     if (not 1 <= len(members) <= 4 or len(set(members)) != len(members)
             or ego not in members or not set(members) <= set(observable_cav_ids)):
         raise ValueError('move members must be 1..4 observable CAVs including ego')
+    if getattr(getattr(move, 'move', move), 'self_validated_windows', False):
+        return   # N2 lane-drop options validate their own registered windows at construction
     for name, key in (('onset_s', 'variety_onset_window_s'),
                       ('hold_s', 'variety_hold_window_s'),
                       ('depth', 'variety_depth_window')):

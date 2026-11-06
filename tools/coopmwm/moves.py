@@ -68,6 +68,9 @@ CAV_ACCEL_CAP_MPS2 = 1.2   # tracks_spec.md, Move library feasibility bound
 FAMILIES = ('none', 'ease_off', 'wall', 'gap_open', 'ramp_assist')
 LANE_FAMILIES = ('yield_lane', 'open_gap_merge')  # G5 opt-in; legacy head width stays stable
 ALL_FAMILIES = FAMILIES + LANE_FAMILIES
+#: COOPKINDS/PLANGEN2 probe families that must never be projected onto this vocabulary (N9/N5).
+PROBE_LANE_FAMILIES = ('lane_balance', 'early_merge', 'zipper', 'zipper_order', 'discharge', 'platoon',
+                       'vsl_rows')
 STRUCTURED = FAMILIES[1:]          # candidates() rotates these; 'none' is the caller's baseline
 MOVE_MAX_MEMBERS = int(V2V_K)      # 1..4 nearby CAVs incl. self (the V2V partner-slot arity)
 
@@ -473,6 +476,12 @@ def _project_window(m, actors):
     return (int(onsets[i]), int(holds[i]), float(depth[i])), float(improvement[i])
 
 
+RAW_LANE_DROP_FAMILIES = ('closing_pair', 'abreast_wall', 'group_hold', 'lane_balance', 'early_merge', 'zipper_order',
+                          'zipper', 'discharge_sync', 'discharge', 'platoon_headway', 'harmonize_rows',
+                          'R_random')
+RAW_NEWMAP_VARIANTS = ('pair_g', 'pair_h', 'pair_t', 'wall_g', 'wall_h')
+
+
 def from_plan(plan):
     """Project a verified bank plan onto the shared move vocabulary.
 
@@ -505,6 +514,11 @@ def from_plan(plan):
     if plan.get('nm_move') is not None:
         # N9 closed-loop family plans are not shared-vocabulary boxes; never project them.
         raise ValueError('N9 nm_move plans bind through nm_families.from_plan, not the move vocabulary')
+    if plan.get('schema') == 'coopmwm-mined-move-v1' and (
+            plan.get('r_kind') if plan.get('family') == 'R_random' else plan.get('family')) in PROBE_LANE_FAMILIES:
+        # N5 REVIEW_N9_1 blocker 1: verified COOPKINDS/PLANGEN2 lane-family rows (persistent lane
+        # requests, setTau room-makers, zipper slot law) are not shared-vocabulary boxes.
+        raise ValueError('COOPKINDS/PLANGEN2 lane-family rows bind only through their exact converter')
     if plan.get('lane_drop_macro') is not None:
         # N2 lane-drop macro (closed-loop speed law): exact executable binding.
         from .lane_drop import from_plan as lane_drop_move
@@ -517,6 +531,12 @@ def from_plan(plan):
         # W2 registered wall macro (step or gradual release): exact executable binding.
         from .wall_release import from_plan as wall_move
         return wall_move(plan)
+    if (plan.get('family') in RAW_LANE_DROP_FAMILIES or plan.get('variant') in RAW_NEWMAP_VARIANTS
+            or plan.get('map') is not None or 'member_lanes' in plan):
+        # MAIN 2026-11-06 (N5 REVIEW_N9_2 fail-closed): a raw NEWMAP/lane-drop probe row WITHOUT its exact
+        # lane_drop_macro binding is refused here instead of being projected onto legacy families.
+        raise ValueError('raw lane-drop/NEWMAP plan without lane_drop_macro: bind it through '
+                         'lane_drop.plan_from_mined_row (no legacy projection)')
     members, m = _plan_offsets(plan)
     tag = plan.get('variety_family')
     best, best_gain, best_key = none_move(members[0]), 0.0, None
