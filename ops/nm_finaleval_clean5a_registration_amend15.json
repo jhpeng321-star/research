@@ -1,0 +1,24 @@
+{
+ "amendment": 15,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend14.json",
+  "registration_sha256": "ab19b58b60e4d737e8180c21fe8504a61490d2ac3580735af077377a992335c3"
+ },
+ "authority": [
+  "MAIN 2026-11-07: final relaunch head c4/clean5b 12aee752 (d12bbcd3 + restart constants wave_workers 8, memory floor 95 GB, re-quote); recheck plant identity and parity on 12aee752 + overlay 4397d777; u12 root _clean5bf8w8"
+ ],
+ "deploy": "u12 SRC = 12aee752 + overlay 4397d777; clean run root *_clean5bf8w8",
+ "plant_identity": {
+  "diff": "d12bbcd3..12aee752: CLEAN5BF8_QUOTE(.json, _SUPERSEDED_3afb325f), ops/clean5bf8_quote.py, clean5b_restart (F8_WAVE_WORKERS 6 -> 8, F8_MEM_MIN_GB 100 -> 95), its test; no plant file",
+  "head": "12aee752",
+  "verdict": "IDENTICAL to d12bbcd3 / 1caf5c1c for NATIVE/U0/RULE/RULE_FAIR"
+ },
+ "registered_utc": "2026-11-06T23:57:17.594369+00:00",
+ "registration_sha256": "7ec65e68e52b5f6229b33eb4e357d4b69a64803a921dfd31202ac865ca98b05a",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: zero-SUMO check; no eval output exists",
+ "training_parity": {
+  "result": "166 passed (parity incl. LCEXEC, hold pins, fairness slate; runner; lc_runtime byte identity; eval == training per-vehicle table)",
+  "tree": "12aee752 + overlay 4397d777"
+ }
+}
