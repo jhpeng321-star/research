@@ -167,3 +167,37 @@ def test_g4_program_session_rows_and_fail_closed_macro(cfg, wz, monkeypatch):
     g4.ADAPTERS['free_program_initiate']['check'](mine[0])
     with pytest.raises(NotImplementedError):
         g4.ADAPTERS['free_program_initiate']['macro'](dict(), None)
+
+
+def test_clean5b_is_clean5a_plus_program_slots(cfg, wz):
+    """clean5_ev families + 'free_program' keep LCEXEC's program slots next to the N2 families;
+    without it (clean5a) program slots are filtered out."""
+    from . import fullpol_ev as fe, lane_drop as ld
+    base = b_cfg(cfg)
+    base.update(ld.config_keys(provenance=PROV, descriptor=wz, features=True, moves_on=True))
+    fams = {}
+    for name, families in (('5a', ('abreast_wall', 'group_hold')), ('5b', ('abreast_wall', 'group_hold', 'free_program'))):
+        value = dict(base, **fe.config_keys(provenance=PROV, families=families))
+        p = make(value)
+        p.trigger.trigger_head = PreferPrograms(p.trigger)
+        c = controller(p)
+        rows = e2e_rows(300)
+        p.observe(rows, 300, native_commands={r['vid']: 0. for r in rows if r['is_cav']})
+        s, _ = step(p, c, rows, 300, Capture())
+        fams[name] = {m['family'] for table in s['track2_trigger']['tables'] for m in table if m}
+    assert not fams['5a'] & set(lf.PROGRAM_FAMILIES) and fams['5a'] <= {'abreast_wall', 'group_hold'}
+    assert 'free_program_initiate' in fams['5b'] and fams['5b'] <= {'abreast_wall', 'group_hold', *lf.PROGRAM_FAMILIES}
+
+
+def test_recommended_5b_recipe_binds_generator_descriptor_and_b_r_templates(cfg, wz):
+    from . import fullpol_ev as fe, lane_drop as ld
+    base = dict(cfg, trigger_partner_slots=4, trigger_candidates=4, group_lane_moves=True)
+    base.update(ld.config_keys(provenance=PROV, descriptor=wz, features=True, moves_on=True))
+    g = fl.guidance_doc([], sources=[dict(name='x', sha256='0'*64, baseline='mappo')], provenance=PROV)
+    b = dict(base, **fe.recommended_5b(provenance=PROV, regime_guidance=g, cap=3, templates=[]))
+    r = dict(base, **fe.recommended_5b(provenance=PROV, regime_guidance=g, cap=3))
+    assert fe.settings(b)['families'] == ('abreast_wall', 'group_hold', 'free_program')
+    s = lf.settings(b)
+    assert s['propose'].__name__ == 'propose' and s['descriptor_width'] == fh.PROGRAM_DESCRIPTOR_WIDTH
+    assert {k: v for k, v in b.items() if k != 'lc_families'} == {k: v for k, v in r.items() if k != 'lc_families'}
+    make(b)
