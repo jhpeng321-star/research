@@ -48,7 +48,10 @@ EXTRA_TRAIN_RANGES = ((989000, 989099),
                       # S-REGIMEU0 amendment 5 (MAIN 20:0x): 989724-989819 (S-REGIME range, unused by REGIME)
                       (989724, 989819),
                       # S-LOWSHARE-U0 (MAIN 20:3x): 989820-989849 (S-REGIME range, unused by REGIME / REGIMEU0)
-                      (989820, 989849))
+                      (989820, 989849),
+                      # c4/wmverify only - S-WMVERIFY wm_verify (MAIN 2026-11-06 night allocation; LSSEARCH has
+                      # 989900-989949): 989950-989999, TRAIN-type, never evaluation; unused in all branches/registries.
+                      (989950, 989999))
 HELDOUT_RANGE = (989600, 989699)
 FORBIDDEN_RANGES = ((964000, 964199), (962000, 962999), (977000, 977999))
 EPISODE_S = 1200
