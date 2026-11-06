@@ -7,15 +7,17 @@ situations; in both mechanism checks ONE 2-CAV pair that includes the closing-la
 reproduced the whole group effect (a moving bottleneck across the closing lane plus a through
 lane that lets the drop queue drain, then platoon release). Gap-maker + merger pairs: 0/12.
 
-Map API (N1, c4/nm-abstract, being built in parallel). This module codes against a small
-map descriptor in the SAME road frame as the runtime observation rows (``s_m``, ``lane``):
+Map API (N1, c4/nm-abstract e512b059, map_descriptor.MapDescriptor): ONE road frame, the WM
+frame of the runtime observation rows (``s_m``, ``lane``). The view needs only
     distance_to_drop(s_m) -> float   lane-drop point minus s (negative past the drop)
     lane_ids              -> ints    upstream lanes (frame lane ids)
     dropped_lane          -> int     the closing lane
-``MapView.from_descriptor`` accepts an object exposing those (``lane_drop_s_m`` or the
-``distance_to_drop`` method) or the plain mapping ``{name, lane_drop_s_m, lane_ids,
-dropped_lane}`` that the registered config stores. ``adjacent_lane`` = the through lane
-bordering the dropped lane (the merge target). Nothing reads MAP_SPEC/net files at runtime.
+``MapView.from_descriptor`` reads N1's descriptor (``bottleneck['drop_s_m']``,
+``bottleneck['closing_lane']``, ``range(frame.n_lanes)``; wz3to2: drop at s = 75.44, closing
+lane = WM lane 2), a stub exposing the three items, or the plain mapping ``{name,
+lane_drop_s_m, lane_ids, dropped_lane}`` that the registered config stores; ``from_map_spec``
+goes through ``map_descriptor.load`` only. ``adjacent_lane`` = the through lane bordering the
+dropped lane (the merge target). Nothing reads MAP_SPEC/net files at runtime.
 
 (1) ``features``: one block per CAV from its OWN sensing packet at t and the selected V2V
     partners' direct-sensing packets published at t-1 (exactly the merge_features packet
@@ -147,7 +149,13 @@ class MapView:
 
     @classmethod
     def from_descriptor(cls, desc):
-        """N1 descriptor object/mapping -> MapView (fail closed on anything ambiguous)."""
+        """N1 descriptor / mapping / stub -> MapView in the runtime (WM) frame; fail closed.
+
+        N1 ``map_descriptor.MapDescriptor`` (c4/nm-abstract e512b059): drop point
+        ``bottleneck['drop_s_m']`` (wz3to2: 75.44 = the frame's merge-zone end), closing lane
+        ``bottleneck['closing_lane']`` (WM lane 2), lanes ``range(frame.n_lanes)``; its
+        ``bottleneck['adjacent_lane']`` must agree with the derived merge target. A descriptor
+        without a lane-drop bottleneck (the original merge map) is refused."""
         if isinstance(desc, MapView):
             return desc
         if isinstance(desc, dict):
@@ -156,26 +164,32 @@ class MapView:
             return cls(desc.get('name', ''), desc.get('lane_drop_s_m'), tuple(desc.get('lane_ids') or ()),
                        desc.get('dropped_lane'))
         name = getattr(desc, 'name', None)
+        name = name if isinstance(name, str) else ''
+        if hasattr(desc, 'bottleneck') and hasattr(desc, 'frame'):
+            neck = desc.bottleneck
+            if not isinstance(neck, dict) or 'drop_s_m' not in neck or 'closing_lane' not in neck:
+                raise ValueError(f'map {name!r} has no lane-drop bottleneck in the model frame')
+            view = cls(name, neck['drop_s_m'], tuple(range(int(desc.frame.n_lanes))), neck['closing_lane'])
+            if neck.get('adjacent_lane', view.adjacent_lane) != view.adjacent_lane:
+                raise ValueError('descriptor adjacent_lane disagrees with the derived merge target')
+            if 'through_lanes' in neck and sorted(neck['through_lanes']) != list(view.through_lanes):
+                raise ValueError('descriptor through_lanes disagree with the frame lanes')
+            return view
         drop = getattr(desc, 'lane_drop_s_m', None)
         if drop is None and callable(getattr(desc, 'distance_to_drop', None)):
             drop = float(desc.distance_to_drop(0.))
             if not math.isclose(desc.distance_to_drop(1000.), drop-1000., abs_tol=1e-9):
                 raise ValueError('distance_to_drop must be linear in the road frame s')
         lanes = getattr(desc, 'lane_ids', None)
-        return cls(name if isinstance(name, str) else '', drop,
-                   tuple(lanes() if callable(lanes) else (lanes or ())), getattr(desc, 'dropped_lane', None))
+        return cls(name, drop, tuple(lanes() if callable(lanes) else (lanes or ())),
+                   getattr(desc, 'dropped_lane', None))
 
 
-def from_map_spec(spec, *, s_offset_m=0., lane_map=None):
-    """Helper for N1/N4: MAP_SPEC.json bottleneck -> descriptor mapping in a frame.
-
-    ``s_offset_m`` maps the SUMO edge x to the runtime s frame; ``lane_map`` maps SUMO lane
-    index -> frame lane id (identity by default). N1 owns the actual frame choice."""
-    b = spec['bottleneck']
-    lanes = sorted([b['dropped_lane']]+list(b['through_lanes']))
-    lane_map = dict(lane_map or {lane: lane for lane in lanes})
-    return dict(name=spec['name'], lane_drop_s_m=float(b['x_m'])+float(s_offset_m),
-                lane_ids=[lane_map[lane] for lane in lanes], dropped_lane=lane_map[b['dropped_lane']])
+def from_map_spec(path):
+    """MAP_SPEC.json (or its directory) -> registered config mapping, ONLY through N1's
+    ``map_descriptor.load`` so the lane-drop view lives in exactly one (the WM) frame."""
+    from .map_descriptor import load
+    return MapView.from_descriptor(load(path)).to_dict()
 
 
 # ---------------------------------------------------------------- settings

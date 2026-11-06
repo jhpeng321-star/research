@@ -139,3 +139,21 @@ def test_registry_roles_ranges_and_aliasing():
         assert ms.seed_scope(lo) is None and ms.seed_scope(hi) is None
     rec = ms.registry_record()
     assert rec['episode_s'] == 1200 and rec['warmup_s'] == 300 and rec['horizon_s'] == 901
+
+
+def test_canonical_cell_and_n6_adapter_api():
+    from tools.coopmwm import map_api
+    assert map_api.CANONICAL_CELL_KEY == 'D3200_p60' and 3200 in ms.DEMANDS and 0.6 in ms.SHARES
+    w = map_api.world(989650, 'D3200_p60')
+    assert w == ms.world(989650, 3200, 0.6) == map_api.check_world(w, 'final_test')
+    assert w['cell_key'] == 'D3200_p60' and w['map'] == 'wz3to2'
+    assert map_api.seed_ranges() == dict(train=[989200, 989599], heldout=[989600, 989699],
+                                         forbidden=[[964000, 964199], [962000, 962999], [977000, 977999]])
+    panel = map_api.final_worlds()
+    assert len(panel) == 100 and {x['cell_key'] for x in panel} == {'D3200_p60'}
+    assert [x['seed'] for x in map_api.train_worlds(seeds=[989200, 989201])] == [989200, 989201]
+    with pytest.raises(ValueError):
+        map_api.check_world(map_api.world(989300), 'final_test')
+    with pytest.raises(ValueError):
+        map_api.world(989300, 'D3000_p60')
+    assert map_api.descriptor(MAP_DIR).network_file_sha256.startswith('b6277898')

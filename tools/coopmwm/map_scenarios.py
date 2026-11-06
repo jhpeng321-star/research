@@ -34,6 +34,8 @@ from pathlib import Path
 MAP = 'wz3to2'
 DEMANDS = (2400, 2800, 3200)
 SHARES = (0.2, 0.4, 0.6)
+#: MAIN 2026-11-06 (N11 F4): the canonical clean4 cell every agent uses (N3/PLANGEN/N4/N6).
+CANONICAL_CELL_KEY = 'D3200_p60'
 TRAIN_RANGE = (989200, 989599)
 HELDOUT_RANGE = (989600, 989699)
 FORBIDDEN_RANGES = ((964000, 964199), (962000, 962999), (977000, 977999))
@@ -84,6 +86,14 @@ def world(seed, demand, penetration):
     start = TRAIN_RANGE[0] if scope == 'train' else HELDOUT_RANGE[0]
     return dict(seed=seed, cell=cell['cell'], repeat=seed-start, penetration=penetration, demand=demand,
                 map=MAP, cell_key=cell['cell_key'])
+
+
+def world_from_key(seed, cell_key=CANONICAL_CELL_KEY):
+    """world(seed, demand, penetration) addressed by the NEWMAP2 cell key ('D3200_p60')."""
+    cell = next((c for c in cells() if c['cell_key'] == cell_key), None)
+    if cell is None:
+        raise ValueError(f'{cell_key!r} is not a registered {MAP} cell key')
+    return world(seed, cell['demand'], cell['penetration'])
 
 
 def worlds(role='train', *, seeds=None, cell_ids=None):
@@ -267,6 +277,7 @@ def scenario_builder(desc):
 
 def registry_record():
     return dict(schema=SCHEMA, map=MAP, demands=list(DEMANDS), shares=list(SHARES), cells=cells(),
+                canonical_cell_key=CANONICAL_CELL_KEY,
                 train_range=list(TRAIN_RANGE), heldout_range=list(HELDOUT_RANGE),
                 forbidden_ranges=[list(r) for r in FORBIDDEN_RANGES], crossed=True,
                 episode_s=EPISODE_S, warmup_s=WARMUP_S, horizon_s=HORIZON_S,

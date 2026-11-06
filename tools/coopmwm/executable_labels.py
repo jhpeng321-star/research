@@ -129,7 +129,8 @@ def bind_lesson(*, arm, receipt, example, plan, snapshot_sha256, prefix_sha256,
     """
     if arm not in ('B', 'R') or receipt['episode']['role'] != 'train' or receipt['episode']['arm'] != arm:
         raise ValueError('G1 only corresponding B/R ordinary TRAIN contexts')
-    if type(receipt['episode']['world']['seed']) is not int or not 986000 <= receipt['episode']['world']['seed'] <= 986071:
+    from .map_runtime import registered_train_world  # N4: merge 986000-986071 or the map TRAIN registry
+    if not registered_train_world(receipt['episode']['world']):
         raise ValueError('G1 requires F3 registered TRAIN worlds')
     t0 = _integer(receipt['t0'], 't0')
     check({k: v for k, v in receipt.items() if not k.startswith('_')}, 'receipt_sha256')
@@ -186,8 +187,7 @@ def job_spec(lesson, seeds):
     end = _integer(lesson['window']['end_s'], 'window end', 1)
     if (lesson['arm'] not in ('B', 'R') or lesson['episode']['role'] != 'train'
             or lesson['episode']['arm'] != lesson['arm']
-            or type(lesson['episode']['world']['seed']) is not int
-            or not 986000 <= lesson['episode']['world']['seed'] <= 986071
+            or not __import__('tools.coopmwm.map_runtime', fromlist=['x']).registered_train_world(lesson['episode']['world'])
             or lesson['window']['start_s'] != t0 or not t0 < decision < end or end > 1200
             or (macro.family != 'none' and decision+macro.onset+macro.hold > end)):
         raise ValueError('G1 lesson requires ordinary TRAIN context and full executable window')

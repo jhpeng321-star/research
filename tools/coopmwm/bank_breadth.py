@@ -230,8 +230,9 @@ def verified_restart(root, arm, receipt, example, plan, mined=None):
 
     check_snapshot(first, snap)
     episode = snap['episode']
+    from .map_runtime import primary_train_world  # N1: merge 986000-986071 or the map's TRAIN registry
     if (episode.get('role') != 'train' or episode.get('arm') != arm
-            or not 986000 <= int(episode['world']['seed']) <= 986071):
+            or not primary_train_world(dict(episode['world'], seed=int(episode['world']['seed'])))):
         raise ValueError('F3 practice requires ordinary TRAIN snapshots')
     vid = first['verification_id']
     confirmation = rb.confirmations(root, arm).get(vid, {})

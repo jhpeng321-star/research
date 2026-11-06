@@ -108,6 +108,7 @@ class MapDescriptor:
     lane_end_distance: dict | None = None       # TableSensor lane map; None = frozen observation_map
     network_path: str | None = None             # None = the frozen adapter config network
     network_sha256: str | None = None           # semantic digest (lanes + connections)
+    network_file_sha256: str | None = None      # raw bytes of the net file (byte-identical binding)
     spec_sha256: str | None = None              # semantic digest of MAP_SPEC.json
     spec_path: str | None = None
     bottleneck: dict | None = None
@@ -144,6 +145,7 @@ class MapDescriptor:
                     lane_table={f'{e}|{i}': list(v) for (e, i), v in sorted(self.lane_table.items())},
                     here_offsets=list(self.here_offsets), k_slots=self.k_slots, edges=dict(self.edges),
                     frame=_dc(self.frame), rsu=_dc(self.rsu), network_sha256=self.network_sha256,
+                    network_file_sha256=self.network_file_sha256,
                     spec_sha256=self.spec_sha256, bottleneck=self.bottleneck, streams=self.streams,
                     routes=[list(r) for r in self.routes])
 
@@ -188,6 +190,9 @@ REGISTERED = {
     'wz3to2': dict(
         spec_sha256='ac98e73be605a460ff0c14288bc43a7ce2187d0a26d0b49cc42003f9871f2a8f',
         network_sha256='946594c52ac96c1e4bb44401b972d7095fdf5188f934af3be73f8b36fb615a9c',
+        # MAIN 2026-11-06 (N11 F4): the EXACT net file every probe/plan used (N3, N8, PLANGEN, LOWCAV;
+        # staged on cpuV by N10): raw-byte SHA256 of assets/research/newmap_candidates/wz3to2/wz3to2.net.xml.
+        network_file_sha256='b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa',
         k_slots=512,
         rsu=dict(source='cav_reports', block_upstream_s_m=-100.0, block_downstream_m=100.0),
     ),
@@ -249,6 +254,10 @@ def load(path, *, frame: FrameContract = FRAME) -> MapDescriptor:
     if 'dropped_lane' not in neck:
         raise ValueError(f'{name}: only lane-drop maps project into the merge frame')
     net_path = spec_path.parent/spec['net_file']
+    file_sha = hashlib.sha256(net_path.read_bytes()).hexdigest()
+    if reg.get('network_file_sha256') and file_sha != reg['network_file_sha256']:
+        raise ValueError(f'{name}: network file bytes differ from the registered net '
+                         f'{reg["network_file_sha256"][:8]} (use the byte-identical staged file)')
     net = parse_network(net_path)
     digest = network_digest(net)
     if reg.get('network_sha256') and digest != reg['network_sha256']:
@@ -295,6 +304,7 @@ def load(path, *, frame: FrameContract = FRAME) -> MapDescriptor:
         k_slots=int(reg['k_slots']), frame=frame, rsu=rsu,
         edges=dict(mainline_entry=route_edges[0], mainline_exit=route_edges[-1], ramp_entry=None),
         lane_end_distance=lane_end, network_path=str(net_path.resolve()), network_sha256=digest,
+        network_file_sha256=file_sha,
         spec_sha256=spec_digest(spec), spec_path=str(spec_path.resolve()),
         bottleneck=dict(edge=up, sumo_dropped_lane=0, drop_x_m=drop_x, drop_s_m=drop_s,
                         closing_lane=frame.merge_lane, through_lanes=list(frame.main_lanes),
