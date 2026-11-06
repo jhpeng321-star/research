@@ -49,6 +49,12 @@ TRAINING env path (``path='train'``: N7 ``tools.nm_mappo.sanity_eval`` resolve/b
 fresh subprocess, as the trainer's rollout workers). Each tick records every CAV's (s, v, lane, command,
 lane target); the launcher compares the two traces (zero physics). Descriptive; never a gate.
 
+Ground-truth vehicle log (MAIN 2026-11-06, pre-results secondaries): every episode of every arm writes
+``vehicles.jsonl.gz`` - EVALUATION-ONLY, read-only (never fed to any policy, observation or controller): per
+control second t in [300, 1200) every present vehicle's s, v, a (frame kinematics) and lane; per vehicle once
+its route origin edge, SUMO depart delay and the CAV/HDV fleet label. No driver parameters, no vType truth
+(lengths are not logged; analyses use the nominal 5 m). Logged before the step, like the observable trace.
+
 HDVs are never commanded. Never run locally except ``setup-check`` (zero SUMO steps).
 """
 from __future__ import annotations
@@ -103,6 +109,78 @@ def _check_spec(spec):
 def _record(spec, J, safety, **extra):
     return dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='graded', J_veh_s=float(J),
                 safety={k: int(v) for k, v in safety.items()}, **extra)
+
+
+# ---------------------------------------------------------------- ground-truth vehicle log (evaluation only)
+
+VEHICLE_LOG = 'vehicles.jsonl.gz'
+
+
+class VehicleLog:
+    """EVALUATION-ONLY ground truth, read-only: never returned to any policy/controller/observation path."""
+
+    def __init__(self, work):
+        import gzip
+        self.path = Path(work)/VEHICLE_LOG
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.stream = gzip.open(self.path, 'xt', encoding='utf-8')
+        self.index, self.last, self.ticks = {}, None, 0
+
+    def tick(self, env):
+        import numpy as np
+        now = int(round(float(env.now)))
+        if now == self.last or now < WARMUP_S or now >= HORIZON_S:
+            return
+        self.last = now
+        f, ids = env.frame, env.builder.vehicle_ids
+        api = getattr(env, 'api', None)
+        k, s, v, a, lane = [], [], [], [], []
+        for i in np.flatnonzero(f.present):
+            vid = ids[int(f.vid_index[i])]
+            n = self.index.get(vid)
+            if n is None:
+                n = self.index[vid] = len(self.index)
+                origin = delay = None
+                if api is not None:
+                    try:
+                        route = api.vehicle.getRoute(vid)
+                        origin = str(route[0]) if route else None
+                    except Exception:      # read-only getter; absence is logged as None
+                        origin = None
+                    try:
+                        delay = float(api.vehicle.getDepartDelay(vid))
+                    except Exception:
+                        delay = None
+                self.stream.write(json.dumps(dict(veh=n, id=str(vid), cav=bool(f.is_cav[i]), origin=origin,
+                                                  depart_delay_s=delay, first_t=now))+'\n')
+            k.append(n)
+            s.append(round(float(f.s[i]), 2))
+            v.append(round(float(f.v[i]), 3))
+            a.append(round(float(f.a[i]), 3))
+            lane.append(int(f.lane_carry[i] if f.junction[i] else f.lane[i]))
+        self.stream.write(json.dumps(dict(t=now, k=k, s=s, v=v, a=a, lane=lane))+'\n')
+        self.ticks += 1
+
+    def close(self):
+        if not self.stream.closed:
+            self.stream.close()
+        return dict(file=VEHICLE_LOG, sha256=_sha(self.path), ticks=self.ticks, vehicles=len(self.index))
+
+
+@contextmanager
+def logged_tick(log):
+    """Wrap tools.coopfree.backend.tick (the plant's 1 s step) to log the pre-step ground truth (read-only)."""
+    from tools.coopfree import backend as cf
+    original = cf.tick
+
+    def tick(b, controller=None, trace=None):
+        log.tick(b.env)
+        return original(b, controller, trace)
+    cf.tick = tick
+    try:
+        yield log
+    finally:
+        cf.tick = original
 
 
 # ---------------------------------------------------------------- MAPPO comparator binding
@@ -306,12 +384,17 @@ def _policy_episode(spec, cfg, work):
                deterministic=True, guided=False, v2v=True, sim_s=HORIZON_S, stop=HORIZON_S,
                warm_history=native['warm_history'], accel_bounds=native['accel_bounds'])
     # As launch_evaluation.episode: the original registered guards (both route map worlds to N1).
-    with patched(accel_plant, dict(guard=protocol.guard, install_seed_scope=protocol.install_seed_scope)):
-        if loaded is None:
-            result = accel_plant.episode(job, controller_hook=hook, policy_loader=loader)
-        else:
-            with comparator_setup(loaded):
+    vlog = VehicleLog(work)
+    try:
+        with patched(accel_plant, dict(guard=protocol.guard, install_seed_scope=protocol.install_seed_scope)), \
+                logged_tick(vlog):
+            if loaded is None:
                 result = accel_plant.episode(job, controller_hook=hook, policy_loader=loader)
+            else:
+                with comparator_setup(loaded):
+                    result = accel_plant.episode(job, controller_hook=hook, policy_loader=loader)
+    finally:
+        vehicle_log = vlog.close()
     extra = {}
     if spec['arm'] in ('B', 'R'):
         extra['decision_log'] = log.log
@@ -319,6 +402,7 @@ def _policy_episode(spec, cfg, work):
         extra['decision'] = log.first
     if loaded is not None:
         extra['executor_sha256_loaded'] = loaded
+    extra['vehicle_log'] = vehicle_log
     if rule is not None:
         h = rule[0]
         extra['rule_sha256_loaded'] = rule[1]
@@ -376,14 +460,24 @@ def _native_episode(spec, cfg, work):
         if map_install(job) is None:
             raise ValueError('NATIVE evaluation requires the wz3to2 map binding')
         patch_globals(run.__globals__, job)
+    vlog = VehicleLog(work)
+    observe = native.episode.__globals__['observations']
+
+    def observations(env):                 # read-only ground-truth log, then the plant's own rows unchanged
+        vlog.tick(env)
+        return observe(env)
     run = types.FunctionType(native.episode.__code__, dict(native.episode.__globals__,
-                             approval_line=approved, setup=setup, guard=guard_world))
-    result = run(job)
+                             approval_line=approved, setup=setup, guard=guard_world, observations=observations))
+    try:
+        result = run(job)
+    finally:
+        vehicle_log = vlog.close()
     totals = result['metrics'][str(HORIZON_S-WARMUP_S)]
     vector = dict(collisions=int(totals['collisions']), teleports=int(totals['teleports']),
                   hard_brakes=int(totals['hard_brake']),
                   ttc_events=int(ttc_events(Path(work)/'observable.jsonl.gz', WARMUP_S, HORIZON_S)))
-    return _record(spec, totals['team_delay_vs'], vector, regime=closing_lane_regime(Path(work)/'observable.jsonl.gz'))
+    return _record(spec, totals['team_delay_vs'], vector, regime=closing_lane_regime(Path(work)/'observable.jsonl.gz'),
+                   vehicle_log=vehicle_log)
 
 
 # ---------------------------------------------------------------- MAPPO_LANE (lane-capable comparator)
@@ -497,7 +591,7 @@ def _mappo_lane_episode(spec, cfg, work):
     return _mappo_lane_run(spec, cfg, work, world=_check_spec(spec), stop=HORIZON_S, role=ROLE)
 
 
-def _mappo_lane_run(spec, cfg, work, *, world, stop, role, recorder=None):
+def _mappo_lane_run(spec, cfg, work, *, world, stop, role, recorder=None, vehicle_log=True):
     import gzip
     import os
     from collections import Counter
@@ -525,9 +619,12 @@ def _mappo_lane_run(spec, cfg, work, *, world, stop, role, recorder=None):
     executor, meta = load_lane_executor(path, loaded)
     b = plant.Backend(work, world, stop, native['checkpoint'])
     lane_commands, request_ticks = Counter(), 0
+    vlog = VehicleLog(work) if vehicle_log else None
     try:
         with gzip.open(work/'observable.jsonl.gz', 'xt', encoding='utf-8') as trace:
             for _ in range(WARMUP_S, stop):
+                if vlog is not None:
+                    vlog.tick(b.env)
                 requested, counts = lane_tick(b, executor, trace, plant=plant, cf=cf, canonical=canonical,
                                               recorder=recorder)
                 lane_commands.update(counts)
@@ -538,8 +635,10 @@ def _mappo_lane_run(spec, cfg, work, *, world, stop, role, recorder=None):
         write(work/'RESULT.json', result)
     finally:
         b.close()
+        extra = {} if vlog is None else dict(vehicle_log=vlog.close())
     return _record(spec, result['totals']['team_delay_vs'], safety(result, work/'observable.jsonl.gz'),
-                   executor_sha256_loaded=loaded, lane_commands=dict(lane_commands), lane_request_ticks=request_ticks)
+                   executor_sha256_loaded=loaded, lane_commands=dict(lane_commands), lane_request_ticks=request_ticks,
+                   **extra)
 
 
 def episode(spec, cfg, work):
@@ -602,7 +701,8 @@ def _parity_plant(spec, cfg, work):
     world = _check_parity_spec(spec)
     stop, recorder, ck = int(spec['sim_s']), ParityTrace(), spec['checkpoint']
     if spec['arm'] == 'MAPPO_LANE':
-        record = _mappo_lane_run(spec, cfg, work, world=world, stop=stop, role=PARITY_ROLE, recorder=recorder)
+        record = _mappo_lane_run(spec, cfg, work, world=world, stop=stop, role=PARITY_ROLE, recorder=recorder,
+                                 vehicle_log=False)
         return dict(trace=recorder.ticks, executor_sha256_loaded=record['executor_sha256_loaded'], safety=record['safety'])
     native = production.backend_config(cfg)
     path = Path(ck['path'])

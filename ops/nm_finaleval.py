@@ -51,7 +51,20 @@ from clean3_finaleval import Blocked, NotReady, guard, read, publish, file_sha, 
 
 SCHEMA = 'coopmwm.nm.finaleval.v1'
 MAP = 'wz3to2'
-UPDATE = 24
+UPDATE = 24                     # the final training update (A/B/R COMPLETE receipts exist only there)
+#: MAIN registration 2026-11-06 23:10 (pre-launch, pre-results): claim 3a/3c PRIMARY = clean5a u12 (B and R
+#: bound by sha at u12; A = frozen U0), SECONDARY = u24 on the same panels; both reported, no selection.
+EVAL_UPDATES = (12, 24)
+PRIMARY_UPDATE = 12
+UPDATE_AUTHORITY = ('MAIN registration 2026-11-06 23:10 (pre-launch, pre-results; owner: answers before noon): claim '
+                    '3a/3c PRIMARY = clean5a u12 (B, R bound by sha at u12; A = frozen U0) on panel v2 + 3c with the '
+                    'sealed NATIVE/U0/RULE pre-run arms; u24 SECONDARY on the same panels; both reported, no selection')
+#: clean5a registered rule text (track2_backend.FROZEN_A_RULE): A = the frozen base, no PPO update
+FROZEN_A_RULE = ('clean5a (MAIN 2026-11-06): "A = base alone" - A is the frozen bound base (BASE = the bound '
+                 'S-MAPPOWZ snapshot or u0) evaluated as an arm every update on the same worlds; no PPO update; '
+                 'only B and R train (their cooperation layer on the same frozen base).')
+A_ALIAS_LABEL = ('A = U0: the frozen control arm (no PPO update) carries the u0 weights at every update - verified '
+                 'zero-physics at the gate (A policy weights at the update == the common u0); not re-simulated')
 ARMS = ('A', 'B', 'R')
 DECISION_ARMS = ('B', 'R')
 BASES = ('mappo_frozen', 'mappo_u0', 'native')   # clean5a: frozen S-MAPPOWZ snapshot base (A = base alone)
@@ -76,6 +89,9 @@ PRERUN_PHASE = 'v2v_final_prerun'
 #: identical at c4/imitreplay 385c4b8f, 52248a4b and d02228cf (blob 2e267403 / imitreplay d5042c33)
 RULE_SHA256 = '887285923ca0b4ac1a7f728f3d687c57b49e944d3ec7abf62bddb4249d6690b4'
 PRERUN_FILE = 'PRERUN_PLAN.json'
+#: EVALUATION-ONLY ground-truth vehicle log written by every episode (runner VehicleLog)
+VEHICLE_LOG = 'vehicles.jsonl.gz'
+WARMUP_S = 300
 #: operator stop: the pre-run finishes the chunk in flight, publishes it and stops (resume anywhere)
 STOP_PRERUN = 'STOP_PRERUN'
 PRERUN_PLANT = 'prerun_plant'
@@ -195,6 +211,31 @@ SEED_TOKEN = re.compile(r'(?<![\da-fA-F.])(9896\d\d)(?![\da-fA-F])')
 REPLICATED_FILE = 'track2_diagnostics/replicated_u024_live.json'
 
 
+def replicated_file(update):
+    return f'track2_diagnostics/replicated_u{int(update):03}_live.json'
+
+
+def check_update(update):
+    if int(update) not in EVAL_UPDATES:
+        raise Blocked(f'evaluation update must be one of {EVAL_UPDATES} (MAIN 23:10)')
+    return int(update)
+
+
+def wave_name(arm, update, prefix=''):
+    """A/B/R waves carry the evaluated update; U0/RULE/NATIVE/MAPPO waves are shared by every update."""
+    return f'{prefix}{arm}_u{int(update):03}' if arm in ARMS else f'{prefix}{arm}'
+
+
+def a_frozen(cfg):
+    """clean5a frozen control arm (registered key): A is evaluated as the alias of U0, never re-simulated."""
+    value = (cfg or {}).get('frozen_control_arm')
+    if value is None:
+        return False
+    if value != FROZEN_A_RULE:
+        raise Blocked('frozen_control_arm must carry the registered rule text')
+    return True
+
+
 def _world(seed, cell):
     """N1's registered world dict (tools.coopmwm.map_scenarios.world) for the panel cell."""
     from tools.coopmwm import map_scenarios
@@ -207,40 +248,47 @@ def in_decision_subset(world):
 
 # ---------------------------------------------------------------- budget quote (zero physics)
 
-def quote(base='mappo_u0'):
-    """Ceiling sim-s against the clean4 v2v_final allocation: 7 distinct arms for either base
-    controller (BASE is an alias), the 8-world decision branches and the F11 parity check."""
+def quote(base='mappo_u0', a_alias=True):
+    """Ceiling sim-s against v2v_final (own ledger): the sealed pre-run (NATIVE/U0/RULE on 3a + 3c), B and R at
+    each evaluation update (u12 primary, u24 secondary) on 3a + 3c, A only when it is not the frozen U0 alias,
+    the two MAPPO comparators (shared by both updates) and F11 parity; decisions are not built (0)."""
     if base not in BASES:
         raise Blocked(f'unknown base {base!r}')
-    episode = N_WORLDS*HORIZON_S
-    arms = list(EPISODE_ARMS)
-    subset = N_WORLDS//DECISION_STRIDE
-    need = {f'episodes_{a}': episode for a in arms}
-    # clean3 prefix-replay branches are charged from t=0 (sumo_verify.branch_sim_s): <= HORIZON_S each
-    need.update({f'decisions_{a}': subset*(2+MAX_MEMBERS)*(DECISION_MAX_T+DECISION_H) for a in DECISION_ARMS})
+    episode, c3 = N_WORLDS*HORIZON_S, CLAIM3C_WORLDS*HORIZON_S
+    need = {f'prerun_{a}': episode+c3 for a in PRERUN_ARMS}
+    for u in EVAL_UPDATES:
+        for a in ARMS:
+            if a == 'A' and a_alias:
+                continue
+            need[f'u{u:03}_{a}'] = episode
+            if a in CLAIM3C_ARMS:
+                need[f'u{u:03}_C3_{a}'] = c3
+    need.update({f'episodes_{a}': episode for a in COMPARATOR_ARMS})
     need['parity_f11'] = PARITY_SIM_S
-    need.update({f'claim3c_{a}': CLAIM3C_WORLDS*HORIZON_S for a in CLAIM3C_ARMS})
-    prerun = len(PRERUN_ARMS)*(N_WORLDS+CLAIM3C_WORLDS)*HORIZON_S
+    need['decisions'] = 0
     total = sum(need.values())
-    core = total-PARITY_SIM_S-len(CLAIM3C_ARMS)*CLAIM3C_WORLDS*HORIZON_S
+    prerun = sum(v for k, v in need.items() if k.startswith('prerun_'))
+    core = total-PARITY_SIM_S
+    c3_total = len(PRERUN_ARMS)*c3+sum(v for k, v in need.items() if '_C3_' in k)
     return dict(base=base, phase=PHASE, allocation_sim_s=ALLOCATION_SIM_S, allocation_authority=ALLOCATION_AUTHORITY,
-                need_ceiling=need, episodes_sim_s=len(arms)*episode,
-                claim3c_sim_s=len(CLAIM3C_ARMS)*CLAIM3C_WORLDS*HORIZON_S, prerun_sim_s=prerun,
-                prerun_arms=list(PRERUN_ARMS),
-                decisions_ceiling_sim_s=core-len(arms)*episode, parity_sim_s=PARITY_SIM_S,
+                updates=list(EVAL_UPDATES), primary_update=PRIMARY_UPDATE, a_alias_of_u0=bool(a_alias),
+                need_ceiling=need, prerun_sim_s=prerun, prerun_arms=list(PRERUN_ARMS), claim3c_sim_s=c3_total,
+                episodes_sim_s=total-PARITY_SIM_S-c3_total, decisions_ceiling_sim_s=0, parity_sim_s=PARITY_SIM_S,
                 core_ceiling_sim_s=core, total_ceiling_sim_s=total, slack_sim_s=ALLOCATION_SIM_S-total,
                 margin_over_core=round(ALLOCATION_SIM_S/core-1, 4), margin_over_total=round(ALLOCATION_SIM_S/total-1, 4),
                 fits=total <= ALLOCATION_SIM_S,
-                basis=dict(episodes=f'{len(arms)} arms x {N_WORLDS} worlds x {HORIZON_S} s',
-                           decisions=(f'{len(DECISION_ARMS)} arms x {subset} registered worlds x <=1 decision x '
-                                      f'(all + background + <={MAX_MEMBERS} solos) x <= {HORIZON_S} s (prefix replay '
-                                      'from 0 to t_s+360); only captured decisions are reserved'),
+                basis=dict(prerun=f'{len(PRERUN_ARMS)} arms (NATIVE, U0, RULE) x ({N_WORLDS} + {CLAIM3C_WORLDS}) worlds x '
+                                  f'{HORIZON_S} s, shared by both updates',
+                           per_update=(f'B, R{"" if a_alias else ", A"} x ({N_WORLDS} + {CLAIM3C_WORLDS}) worlds x '
+                                       f'{HORIZON_S} s at each of u12 (primary) and u24 (secondary)'),
+                           a=A_ALIAS_LABEL if a_alias else 'A simulated at each update',
+                           comparators=f'{len(COMPARATOR_ARMS)} MAPPO comparators x {N_WORLDS} x {HORIZON_S} s (shared)',
                            parity_f11=(f'{len(PARITY_WORLDS)} TRAIN worlds x 2 paths (eval plant, training env) x '
                                        f'{len(COMPARATOR_ARMS)} comparators x {300+PARITY_ROLLOUT_S} s'),
-                           claim3c=(f'{len(CLAIM3C_ARMS)} arms x {CLAIM3C_WORLDS} held-out D2400_p60 worlds x {HORIZON_S} s'),
-                           charging='planned sim-s precharged per job; whole wave reserved before dispatch'),
-                wall_time=dict(workers=24, sim_s_per_worker_s='6-9 (newmap_probe cpuV: ~148k sim-s in ~22-25 min '
-                                                              'on <=12 workers)',
+                           decisions='F7 not built (MAIN decision): 0',
+                           charging='planned sim-s precharged per job in the evaluation root ledger; whole wave reserved '
+                                    'before dispatch'),
+                wall_time=dict(workers=24, sim_s_per_worker_s='6-9 (newmap_probe cpuV)',
                                hours=[round(total/(24*9)/3600, 2), round(total/(24*6)/3600, 2)]))
 
 
@@ -634,7 +682,7 @@ def budget_check(root, cfg, base, *, outstanding=None, final_root=None):
     """Zero physics: the registered allocation covers this launcher's ceiling (pre-run spend in the
     evaluation root ledger included); v2v_final carries no foreign spend."""
     source, allocated = allocation(cfg)
-    q = quote(base)
+    q = quote(base, a_alias=a_frozen(cfg))
     rows = [r for r in fe.ledger_rows(root) if r.get('phase') == PHASE]
     prerun = sum(r['sim_s'] for r in fe.ledger_rows(final_root)) if final_root is not None and Path(final_root).is_dir() else 0
     mine = sum(r['sim_s'] for r in rows if str(r['id']).startswith(PREFIXES))+prerun
@@ -786,42 +834,46 @@ def declare_unavailable(*, final_root, arm, authority, reason):
     return value
 
 
-def bind_arms(*, final_root, shas, authority):
-    """MAIN: bind clean5a A/B/R u24 by sha before the evaluation; the gate refuses any other file."""
-    final_root = Path(final_root)
+def bind_arms(*, final_root, shas, authority, update=PRIMARY_UPDATE):
+    """MAIN: bind clean5a B/R (and optionally A) at the evaluated update by sha before the evaluation; the gate
+    refuses any other file. One sealed ARMS_BOUND_u<update>.json per update, never rebound."""
+    final_root, update = Path(final_root), check_update(update)
     if run_plan(final_root) is None:
         raise Blocked('RUN_PLAN.json missing: run register first')
-    if set(shas) != set(ARMS) or not all(re.fullmatch('[0-9a-f]{64}', str(v)) for v in shas.values()):
-        raise Blocked('A, B and R u24 checkpoint sha256 required')
+    shas = {k: v for k, v in shas.items() if v is not None}
+    if not {'B', 'R'} <= set(shas) <= set(ARMS) or not all(re.fullmatch('[0-9a-f]{64}', str(v)) for v in shas.values()):
+        raise Blocked(f'B and R (A optional) u{update} checkpoint sha256 required')
     if not str(authority).strip():
         raise Blocked('authority required')
-    if (final_root/'ARMS_BOUND.json').exists() or (final_root/'GATE_PASS.json').exists():
-        raise Blocked('A/B/R already bound (ARMS_BOUND or GATE_PASS exists); never rebound')
-    value = seal(dict(schema=SCHEMA+'.arms', update=UPDATE, checkpoint_sha256=dict(shas), authority=str(authority),
+    if (final_root/f'ARMS_BOUND_u{update:03}.json').exists() or (final_root/f'GATE_PASS_u{update:03}.json').exists():
+        raise Blocked(f'u{update} arms already bound (ARMS_BOUND or GATE_PASS exists); never rebound')
+    value = seal(dict(schema=SCHEMA+'.arms', update=update, checkpoint_sha256=dict(shas), authority=str(authority),
                       bound_utc=datetime.now(timezone.utc).isoformat()), 'binding_sha256')
-    publish(final_root/'ARMS_BOUND.json', value)
+    publish(final_root/f'ARMS_BOUND_u{update:03}.json', value)
     return value
 
 
 # ---------------------------------------------------------------- gate (zero physics)
 
-def gate(root, cfg, runtime, binding, final_root=None):
-    """clean4 u24 sealed AND safety clean. NotReady = wait; Blocked = never proceed automatically."""
-    root = Path(root)
-    missing = [n for arm in ARMS for n in (f'{arm}_UPDATE_{UPDATE:03}.json', f'{arm}_checkpoint_{UPDATE:03}.pt',
-                                           f'{arm}_COMPLETE.json') if not (root/n).is_file()]
-    if not (root/f'LEARNING_MONITOR_u{UPDATE:03}.json').is_file():
-        missing.append(f'LEARNING_MONITOR_u{UPDATE:03}.json')
+def gate(root, cfg, runtime, binding, final_root=None, update=UPDATE):
+    """The evaluated update sealed AND safety clean (A/B/R update receipts + checkpoints, monitors u1..u; COMPLETE
+    only at the final u24). NotReady = wait; Blocked = never proceed automatically."""
+    root, update = Path(root), int(update)
+    names = [f'{{arm}}_UPDATE_{update:03}.json', f'{{arm}}_checkpoint_{update:03}.pt']+(
+        ['{arm}_COMPLETE.json'] if update == UPDATE else [])
+    missing = [n.format(arm=arm) for arm in ARMS for n in names if not (root/n.format(arm=arm)).is_file()]
+    if not (root/f'LEARNING_MONITOR_u{update:03}.json').is_file():
+        missing.append(f'LEARNING_MONITOR_u{update:03}.json')
     try:
         runtime.health(root)
     except Exception as error:   # registered health: FAULT / PAUSE_SAFETY / STOP / unreleased PAUSE_*
         raise NotReady(f'clean4 health not clear: {error!r}')
     if missing:
-        raise NotReady('u24 not sealed: missing '+', '.join(missing))
-    updates = {arm: verify(read(root/f'{arm}_UPDATE_{UPDATE:03}.json'), 'update_sha256', f'{arm} u24 update')
+        raise NotReady(f'u{update} not sealed: missing '+', '.join(missing))
+    updates = {arm: verify(read(root/f'{arm}_UPDATE_{update:03}.json'), 'update_sha256', f'{arm} u{update} update')
                ['update_sha256'] for arm in ARMS}
     bound, events, pauses = digest(cfg), {}, []
-    for u in range(1, UPDATE+1):
+    for u in range(1, update+1):
         path = root/f'LEARNING_MONITOR_u{u:03}.json'
         if not path.is_file():
             raise NotReady(f'monitor receipt u{u:03} missing')
@@ -838,26 +890,32 @@ def gate(root, cfg, runtime, binding, final_root=None):
                     events[f'u{u:03}_{a["arm"]}_{k}'] = a['metrics']['safety'][k]
     if pauses or events:
         raise Blocked(f'safety not clean: pauses={pauses} events={events}')
-    checkpoints = {arm: file_sha(root/f'{arm}_checkpoint_{UPDATE:03}.pt') for arm in ARMS}
-    bound_arms = Path(final_root)/'ARMS_BOUND.json' if final_root is not None else None
+    checkpoints = {arm: file_sha(root/f'{arm}_checkpoint_{update:03}.pt') for arm in ARMS}
+    bound_arms = Path(final_root)/f'ARMS_BOUND_u{update:03}.json' if final_root is not None else None
     if bound_arms is not None and bound_arms.is_file():
         expected = verify(read(bound_arms), 'binding_sha256', 'ARMS_BOUND')['checkpoint_sha256']
-        if expected != checkpoints:
-            raise Blocked(f'u24 checkpoints differ from the bound A/B/R shas: {expected} vs {checkpoints}')
+        if any(checkpoints[a] != sha for a, sha in expected.items()):
+            raise Blocked(f'u{update} checkpoints differ from the bound shas: {expected} vs {checkpoints}')
     if binding['base'] == 'mappo_u0' and file_sha(root/'A_checkpoint_000.pt') != cfg['common_checkpoint_sha256']:
         raise Blocked('A_checkpoint_000.pt is not the registered common MAPPO u0')
-    return dict(schema=SCHEMA+'.gate', status='PASS', root=str(root), config_sha256=bound, update_sha256=updates,
-                checkpoint_sha256=checkpoints, monitors=UPDATE, collisions=0, teleports=0, base=binding['base'],
-                panel_sha256=binding['panel_sha256'], unix=time.time(), new_sim_s=0)
+    a_alias = None
+    if a_frozen(cfg):
+        a_alias = runtime.frozen_a_check(cfg, root, update)
+        if a_alias.get('identical') is not True:
+            raise Blocked(f'frozen control arm A differs from the common u0 at u{update}: {a_alias}')
+    return dict(schema=SCHEMA+'.gate', status='PASS', root=str(root), config_sha256=bound, update=update,
+                update_sha256=updates, checkpoint_sha256=checkpoints, monitors=update, collisions=0, teleports=0,
+                base=binding['base'], panel_sha256=binding['panel_sha256'], a_alias_of_u0=a_alias, unix=time.time(),
+                new_sim_s=0)
 
 
 # ---------------------------------------------------------------- specs and records
 
-def episode_specs(arm, panel, cfg, root, base, binding=None, u0=None):
+def episode_specs(arm, panel, cfg, root, base, binding=None, u0=None, update=UPDATE):
     root = Path(root)
     if arm in ARMS:
-        path = root/f'{arm}_checkpoint_{UPDATE:03}.pt'
-        checkpoint = dict(path=str(path), file_sha256=file_sha(path), update=UPDATE, arm=arm)
+        path = root/f'{arm}_checkpoint_{int(update):03}.pt'
+        checkpoint = dict(path=str(path), file_sha256=file_sha(path), update=int(update), arm=arm)
     elif arm in ('U0', 'RULE', 'MAPPO_SPEED'):
         if u0 is None:
             raise Blocked(f'{arm} needs the U0 binding (frozen executor + zero-residual u0): bind-mappo --arm U0')
@@ -885,7 +943,7 @@ def episode_specs(arm, panel, cfg, root, base, binding=None, u0=None):
         raise Blocked(f'no {arm} wave')
     capture = dict(rule=panel['contract']['decisions'].get('rule'), min_t_s=DECISION_MIN_T, max_t_s=DECISION_MAX_T,
                    min_members=MIN_MEMBERS, max_members=MAX_MEMBERS)
-    tag = arm.lower()+(f'_u{UPDATE:03}' if arm in ARMS else '')
+    tag = arm.lower()+(f'_u{int(update):03}' if arm in ARMS else '')
     subset = set(panel['contract']['decisions']['worlds'])
     prefix = panel.get('job_prefix', 'nmfinal')
     return [dict(job_id=f'{prefix}_{tag}_{i:04}', arm=arm, world_id=r['world_id'], world=deepcopy(r['world']),
@@ -954,9 +1012,13 @@ def check_episode(record, spec):
         raise Blocked(f'{what}: only B/R log cooperation decisions')
     else:
         log = None
+    vlog = record.get('vehicle_log')
+    if (not isinstance(vlog, dict) or vlog.get('file') != VEHICLE_LOG or vlog.get('ticks') != HORIZON_S-WARMUP_S
+            or not re.fullmatch('[0-9a-f]{64}', str(vlog.get('sha256'))) or not isinstance(vlog.get('vehicles'), int)):
+        raise Blocked(f'{what}: the ground-truth vehicle log (evaluation-only secondaries) is missing or incomplete')
     out = dict({k: deepcopy(record[k]) for k in IDENTITY}, status='graded', job_id=spec['job_id'],
                J_veh_s=fe._finite(record.get('J_veh_s'), f'{what} J_veh_s'), safety=dict(record['safety']),
-               decision=deepcopy(record.get('decision')))
+               decision=deepcopy(record.get('decision')), vehicle_log=dict(vlog))
     if log is not None:
         out['decision_log'] = log
     if spec['arm'] in EXECUTOR_ARMS:
@@ -990,7 +1052,7 @@ def decision_specs(arm, records, panel):
         labels = [('all', list(dec['members'])), ('background', [])]+[
             (f'solo{j}', [m]) for j, m in enumerate(dec['members'])]
         for label, new in labels:
-            out.append(dict(job_id=f'nmdec_{arm.lower()}_u{UPDATE:03}_{i:04}_{label}', arm=arm,
+            out.append(dict(job_id=f'nmdec_{arm.lower()}_u{int(rec["checkpoint"]["update"]):03}_{i:04}_{label}', arm=arm,
                             world_id=rec['world_id'], world=deepcopy(rec['world']),
                             checkpoint=deepcopy(rec['checkpoint']), decision=deepcopy(dec), label=label,
                             new_members=new, background='BASE', sim_s=int(dec['t_s'])+DECISION_H,
@@ -1060,6 +1122,16 @@ class Runtime:
                     parity=ok and getattr(module, 'PARITY', False) is True and callable(getattr(module, 'parity', None)),
                     reason=None if ok else f'{self.runner} lacks MAP={MAP!r} or episode()')
 
+    def frozen_a_check(self, cfg, root, update):
+        """Zero physics: A's policy weights at the update (production loader) equal the common u0's."""
+        import torch
+        from tools.coopmwm import launch_production as production
+        native = dict(production.backend_config(cfg), run_root=str(root))
+        at, u0 = (production.checkpoint_weights(native, 'A', u) for u in (int(update), 0))
+        same = set(at) == set(u0) and all(torch.equal(at[k], u0[k]) if hasattr(at[k], 'shape') else at[k] == u0[k]
+                                          for k in at)
+        return dict(identical=bool(same), tensors=len(at), update=int(update), method='launch_production.checkpoint_weights')
+
     def plant_view(self, cfg):
         """What NATIVE/U0/RULE episodes read from the plant CONFIG (validated by the production loader)."""
         from tools.coopmwm import launch_production as production
@@ -1075,6 +1147,34 @@ class Runtime:
             return [f.result(timeout=3600) for f in futures]
 
 
+class MirrorRuntime(Runtime):
+    """Evaluation host != training host (MAIN 23:10: the u12 primary runs on cpuV while clean5a trains on cpuZ):
+    the clean run root is a read-only MIRROR at the same absolute path. CONFIG = the registered file (sha given),
+    validated by the production loader; health = no FAULT/PAUSE_SAFETY/STOP receipt (processes live elsewhere);
+    A/B/R checkpoints are bound by sha (bind-arms) and the monitors are sealed to this CONFIG digest."""
+
+    def __init__(self, runner=RUNNER, config_sha256=None):
+        super().__init__(runner)
+        if not re.fullmatch('[0-9a-f]{64}', str(config_sha256 or '')):
+            raise Blocked('mirror: --config-sha256 (the registered clean run CONFIG.json file sha256) required')
+        self.config_sha256 = config_sha256
+
+    def config(self, root):
+        path = Path(root)/'CONFIG.json'
+        if file_sha(path) != self.config_sha256:
+            raise Blocked(f'mirror CONFIG.json does not hash to {self.config_sha256}')
+        cfg = read(path)
+        if Path(cfg['run_root']) != Path(root):
+            raise Blocked('the mirror must sit at the clean run root path')
+        self.plant_view(cfg)
+        return cfg
+
+    def health(self, root):
+        for name in ('FAULT.json', 'PAUSE_SAFETY.json', 'STOP.json'):
+            if (Path(root)/name).exists():
+                raise ValueError('mirror health: '+name)
+
+
 def _h(*parts):
     return int(hashlib.sha256(':'.join(map(str, parts)).encode()).hexdigest()[:8], 16)
 
@@ -1084,6 +1184,8 @@ def fake_episode(spec):
     u = _h(w['seed'], arm)/0xffffffff
     factor = dict(NATIVE=1.06, U0=1.0, RULE=.985, MAPPO_SPEED=.995, MAPPO_LANE=.993, A=0.99, R=0.985, B=0.975)[arm]
     record = dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='graded',
+                  vehicle_log=dict(file=VEHICLE_LOG, sha256=hashlib.sha256(spec['job_id'].encode()).hexdigest(),
+                                   ticks=HORIZON_S-WARMUP_S, vehicles=1500+_h(w['seed'], arm) % 300),
                   J_veh_s=float(100_000*factor*(1+0.03*(u-.5))),
                   safety=dict(collisions=0, teleports=0, hard_brakes=_h(w['seed'], arm, 'b') % 7,
                               ttc_events=_h(w['seed'], arm, 't') % 11))
@@ -1152,6 +1254,11 @@ class FakeRuntime:
 
     def runner_status(self):
         return dict(self.status)
+
+    frozen_a_identical = True
+
+    def frozen_a_check(self, cfg, root, update):
+        return dict(identical=self.frozen_a_identical, tensors=0, update=int(update), method='dry run')
 
     def plant_view(self, cfg):
         # the production loader's check_pins rule (rerun_cpus): a standalone run accounts in its OWN root
@@ -1440,7 +1547,7 @@ def analyse_decisions(branches, bootstrap):
 
 
 def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=None, missing=None, comparators=None,
-            scope='claim3a'):
+            scope='claim3a', update=UPDATE, a_alias=False):
     """episodes: {arm: {world_id: record}} complete panels of EPISODE_ARMS; BASE is an alias of U0
     (mappo_u0 base) or NATIVE (native base), never a separate run. ``comparators``: {arm: binding}."""
     bootstrap = panel['contract']['bootstrap']
@@ -1462,9 +1569,11 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
             if len(shas) > 1:
                 raise Blocked(f'{arm} episodes loaded different executors: {shas}')
             loaded[arm] = shas[0]
-    labels = dict(A='A u24 (the frozen S-MAPPOWZ base alone)' if base == 'mappo_frozen' else 'A u24 (base only)',
-                  B='B u24 (cooperation layer + SUMO-verified guidance)',
-                  R='R u24 (cooperation layer, no guidance)', NATIVE='native SUMO CAV driving', U0=U0_LABEL,
+    labels = dict(A=(A_ALIAS_LABEL if a_alias else f'A u{update} (the frozen base alone)' if base == 'mappo_frozen'
+                     else f'A u{update} (base only)'),
+                  B=f'B u{update} (cooperation layer + SUMO-verified guidance)',
+                  R=f'R u{update} (cooperation layer, no guidance = the no-guidance arm)',
+                  NATIVE='native SUMO CAV driving', U0=U0_LABEL,
                   RULE=RULE_LABEL,
                   **{a: mappo_label(loaded[a], a)[1] if a in loaded else f'{a} (not run)' for a in COMPARATOR_ARMS})
     summary = {n: dict(label=labels[n]+(' = BASE' if n == base_arm else ''), n=len(worlds), mean_J_veh_s=float(J[n].mean()),
@@ -1554,7 +1663,9 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
     tables['safety'] = safety
     tables['per_seed'] = per_seed_tables(panel, J, names, worlds, base_arm)
     tables['regimes'] = regime_tables(panel, have, J, names, worlds)
-    value = dict(schema=SCHEMA+'.tables', scope=scope, map=MAP, update=UPDATE, panel_sha256=panel['panel_sha256'], base=base,
+    value = dict(schema=SCHEMA+'.tables', scope=scope, map=MAP, update=update, a_alias_of_u0=bool(a_alias),
+                 evaluation='PRIMARY (u12)' if update == PRIMARY_UPDATE else 'SECONDARY (u24)',
+                 panel_sha256=panel['panel_sha256'], base=base,
                  bootstrap=bootstrap, metric=panel['contract']['metric'], horizon_s=HORIZON_S, worlds=len(worlds),
                  present=names, missing=missing or {}, sources=sources or {}, tables=tables,
                  claim=dict(claim3a='does learned cooperation add on top of the frozen MAPPO base: B vs A, B vs R, vs NATIVE '
@@ -1779,18 +1890,38 @@ def render(value):
     return '\n'.join(lines)+'\n'
 
 
+def check_replicated(value, update):
+    """clean3_finaleval.check_replicated for the evaluated update (u12 or u24 replicated test; descriptive)."""
+    verify(value, 'receipt_sha256', f'replicated_u{int(update):03}')
+    if value.get('update') != int(update) or value.get('kind') != 'replicated' or value.get('status') != 'complete':
+        raise Blocked(f'replicated u{update} receipt is not the complete live u{update} test')
+    reports = value['metric_reports']
+    keep = ('mean', 'ci_lo', 'ci_hi', 'n', 'level', 'reps', 'seed')
+    return dict(receipt_sha256=value['receipt_sha256'], verdict=value.get('verdict'), update=int(update),
+                criterion=value.get('criterion'), safety=value.get('safety'), safety_ok=value.get('safety_ok'),
+                synergy={k: {f: v.get(f) for f in keep} for k, v in reports[fe.SYNERGY]['comparisons'].items()},
+                total_benefit={k: {f: v.get(f) for f in keep}
+                               for k, v in reports[fe.TOTAL_BENEFIT].get('comparisons', {}).items()},
+                arm_means=dict(synergy=reports[fe.SYNERGY].get('arm_means'),
+                               total_benefit=reports[fe.TOTAL_BENEFIT].get('arm_means')))
+
+
 def tables(*, root, final_root, panel, base, episodes, decisions, sources, missing, dry_run=False, comparators=None,
-           scope='claim3a', stem='CLAIM3A_TABLES'):
+           scope='claim3a', stem='CLAIM3A_TABLES', update=UPDATE, a_alias=False):
     sources, missing = dict(sources), dict(missing)
     replicated = None
-    path = Path(root)/REPLICATED_FILE
+    path = Path(root)/replicated_file(update)
+    key = f'replicated_u{int(update):03}'
     if path.is_file():
-        replicated = fe.check_replicated(read(path))
-        sources['replicated_u024'] = dict(source=str(path), receipt_sha256=replicated['receipt_sha256'])
+        replicated = check_replicated(read(path), update)
+        sources[key] = dict(source=str(path), receipt_sha256=replicated['receipt_sha256'])
     else:
-        missing['replicated_u024'] = 'clean4 monitor receipt absent (descriptive context only)'
+        missing[key] = 'clean run monitor receipt absent (descriptive context only)'
+    if a_alias:
+        sources['A'] = dict(alias_of='U0', rule=FROZEN_A_RULE, label=A_ALIAS_LABEL)
     value = analyse(panel=panel, base=base, episodes=episodes, decisions=decisions, replicated=replicated,
-                    sources=sources, missing=missing, comparators=comparators, scope=scope)
+                    sources=sources, missing=missing, comparators=comparators, scope=scope, update=update,
+                    a_alias=a_alias)
     if dry_run:
         value = seal(dict(value, dry_run=True), 'analysis_sha256')
     existing = Path(final_root)/f'{stem}.json'
@@ -1861,20 +1992,24 @@ def _settle(final_root, arms, status, step, *, poll, timeout, sleep):
 
 def execute(*, root, final_root, runtime, panel, panel_3c=None, allow_missing=(), workers=24, poll=60,
             gate_timeout=7*86400, replicated_timeout=0, comparator_timeout=7*86400, map_module=None, dry_run=False,
-            sleep=time.sleep):
-    """CONFIG -> GATE (u24 sealed, safety clean, A/B/R bound by sha) -> U0 bound/declared -> claim 3a
-    episodes (A, B, R, U0, NATIVE) + decisions -> sealed CLAIM3A tables -> for each MAPPO comparator:
-    bound/declared -> its wave -> its own sealed CLAIM3B tables. Returns {analysis: value}."""
-    root, final_root = Path(root), Path(final_root)
+            sleep=time.sleep, update=PRIMARY_UPDATE):
+    """One evaluation update (u12 PRIMARY, u24 SECONDARY): CONFIG -> GATE (update sealed, safety clean, B/R (A)
+    bound by sha; frozen A == u0) -> U0 bound/declared -> claim 3a + 3c episodes (B, R at the update; A = U0 alias
+    for the frozen control arm; U0/RULE/NATIVE shared, reused from the sealed pre-run) -> sealed CLAIM3A/3C tables
+    of the update -> for each MAPPO comparator: bound/declared -> F11 parity -> its (shared) wave -> its own sealed
+    CLAIM3B tables of the update. Returns {analysis: value}."""
+    root, final_root, update = Path(root), Path(final_root), check_update(update)
+    sfx = f'_u{update:03}'
     if run_plan(final_root) is None:
         raise Blocked('RUN_PLAN.json missing: run register first')
     status = Status(final_root)
-    current = 'CONFIG'
+    current = f'CONFIG{sfx}'
     try:
-        status(current, 'RUNNING')
+        status(current, 'RUNNING', dict(update=update))
         cfg, binding, report = preflight(root, final_root, runtime, panel, map_module)
         base, missing = binding['base'], {}
-        arms = list(ARMS)
+        a_alias = a_frozen(cfg)
+        arms = [a for a in ARMS if not (a == 'A' and a_alias)]
         if report['runner']['native']:
             arms.append('NATIVE')
         else:
@@ -1885,12 +2020,13 @@ def execute(*, root, final_root, runtime, panel, panel_3c=None, allow_missing=()
                 raise Blocked(f'{name}: {missing[name]} (pass --allow-missing {name} to proceed without it)')
         if not do_decisions:   # never blocks the evaluation (MAIN): tabulated as unavailable
             missing['DECISIONS'] = DECISIONS_UNAVAILABLE
-        status(current, 'PASS', dict(report, arms=arms, missing=missing, comparators=comparators(final_root)))
-        current = 'GATE'
-        gated = fe.wait(current, lambda: gate(root, cfg, runtime, binding, final_root), status, poll=poll,
+        status(current, 'PASS', dict(report, update=update, arms=arms, a_alias_of_u0=a_alias, missing=missing,
+                                     comparators=comparators(final_root)))
+        current = f'GATE{sfx}'
+        gated = fe.wait(current, lambda: gate(root, cfg, runtime, binding, final_root, update), status, poll=poll,
                         timeout=gate_timeout, sleep=sleep)
-        if not (final_root/'GATE_PASS.json').is_file():
-            publish(final_root/'GATE_PASS.json', seal(gated, 'receipt_sha256'))
+        if not (final_root/f'GATE_PASS{sfx}.json').is_file():
+            publish(final_root/f'GATE_PASS{sfx}.json', seal(gated, 'receipt_sha256'))
         status(current, 'PASS', gated)
         kw = dict(root=root, final_root=final_root, cfg=cfg, runtime=runtime, workers=workers, base=base)
         # ---------------------------------------------------------------- claim 3a
@@ -1908,62 +2044,71 @@ def execute(*, root, final_root, runtime, panel, panel_3c=None, allow_missing=()
             else:
                 raise Blocked('RULE: runner has no S-REGIMEU0 rule (--allow-missing RULE)')
             compat = prerun_compat(final_root, cfg, runtime)
+        elif a_alias:
+            raise Blocked('A is the frozen U0 alias but U0 was declared unavailable')
         else:
             missing['U0'] = f'declared unavailable: {u0["declared"]["U0"]["reason"]}'
             missing['RULE'] = 'needs the U0 executor (declared unavailable)'
         status(current, 'PASS', dict(bound=sorted(bindings), declared=sorted(u0['declared']),
                                      prerun=compat if 'U0' in bindings else None))
-        current = 'EPISODES_3A'
-        specs = {arm: episode_specs(arm, panel, cfg, root, base, bindings.get(arm), bindings.get('U0')) for arm in arms}
-        if any(specs[arm][0]['checkpoint']['file_sha256'] != gated['checkpoint_sha256'][arm] for arm in ARMS):
-            raise Blocked('u24 checkpoint changed after the gate')
+        current = f'EPISODES{sfx}'
+
+        def specs_for(arm, pnl):
+            return episode_specs(arm, pnl, cfg, root, base, bindings.get(arm), bindings.get('U0'), update)
+        specs = {arm: specs_for(arm, panel) for arm in arms}
+        if any(specs[arm][0]['checkpoint']['file_sha256'] != gated['checkpoint_sha256'][arm] for arm in ARMS if arm in arms):
+            raise Blocked(f'u{update} checkpoint changed after the gate')
         arms_3c = [a for a in CLAIM3C_ARMS if a in arms] if panel_3c is not None else []
-        specs_3c = {a: episode_specs(a, panel_3c, cfg, root, base, bindings.get(a), bindings.get('U0')) for a in arms_3c}
-        status(current, 'RUNNING', dict(arms=arms, claim3c_arms=arms_3c, workers=workers))
-        # claim 3c (secondary, separate seal) runs in the same dispatch: it opens with 3a
-        done, sources = run_waves([(arm, 'episode', specs[arm]) for arm in arms]
-                                  + [(f'C3_{a}', 'episode', specs_3c[a]) for a in arms_3c], **kw)
-        episodes = {arm: {r['world_id']: r for r in done[arm]} for arm in arms}
-        episodes_3c = {a: {r['world_id']: r for r in done[f'C3_{a}']} for a in arms_3c}
-        status(current, 'PASS', dict(arms=sorted(episodes), claim3c_arms=sorted(episodes_3c)))
+        specs_3c = {a: specs_for(a, panel_3c) for a in arms_3c}
+        status(current, 'RUNNING', dict(update=update, arms=arms, claim3c_arms=arms_3c, workers=workers))
+        # claim 3c (secondary claim, separate seal) runs in the same dispatch: it opens with 3a
+        done, sources = run_waves([(wave_name(arm, update), 'episode', specs[arm]) for arm in arms]
+                                  + [(wave_name(a, update, 'C3_'), 'episode', specs_3c[a]) for a in arms_3c], **kw)
+        episodes = {arm: {r['world_id']: r for r in done[wave_name(arm, update)]} for arm in arms}
+        episodes_3c = {a: {r['world_id']: r for r in done[wave_name(a, update, 'C3_')]} for a in arms_3c}
+        if a_alias:                      # A = U0 (frozen control arm; identical weights verified at the gate)
+            episodes['A'] = episodes['U0']
+            if 'U0' in episodes_3c and 'A' in CLAIM3C_ARMS:
+                episodes_3c['A'] = episodes_3c['U0']
+        status(current, 'PASS', dict(update=update, arms=sorted(episodes), claim3c_arms=sorted(episodes_3c)))
         decisions = None
         if do_decisions:
-            current = 'DECISIONS'
+            current = f'DECISIONS{sfx}'
             dspecs = {arm: decision_specs(arm, episodes[arm], panel) for arm in DECISION_ARMS}
             status(current, 'RUNNING', {arm: len(v) for arm, v in dspecs.items()})
-            done, more = run_waves([(f'DECISIONS_{arm}', 'branch', dspecs[arm]) for arm in DECISION_ARMS], **kw)
+            done, more = run_waves([(f'DECISIONS_{arm}{sfx}', 'branch', dspecs[arm]) for arm in DECISION_ARMS], **kw)
             sources.update(more)
-            decisions = {arm: done[f'DECISIONS_{arm}'] for arm in DECISION_ARMS}
+            decisions = {arm: done[f'DECISIONS_{arm}{sfx}'] for arm in DECISION_ARMS}
             status(current, 'PASS', {arm: len(v) for arm, v in decisions.items()})
         if alias_of(base) in missing:
             missing['BASE'] = f'BASE is {alias_of(base)}: {missing[alias_of(base)]}'
 
         def replicated_receipt():
-            if not (root/REPLICATED_FILE).is_file():
-                raise NotReady('waiting for the clean run replicated u24 receipt (descriptive context)')
+            if not (root/replicated_file(update)).is_file():
+                raise NotReady(f'waiting for the clean run replicated u{update} receipt (descriptive context)')
         if replicated_timeout > 0:
             try:
                 fe.wait('MONITOR_RECEIPTS', replicated_receipt, status, poll=poll, timeout=replicated_timeout, sleep=sleep)
             except NotReady:
                 pass   # tabulated as missing; ``analyse`` re-tabulates later with zero physics
-        current = 'TABLES_3A'
+        current = f'TABLES_3A{sfx}'
+        common = dict(root=root, final_root=final_root, base=base, dry_run=dry_run, update=update, a_alias=a_alias)
         out = {}
-        out['claim3a'] = tables(root=root, final_root=final_root, panel=panel, base=base, episodes=episodes,
-                                decisions=decisions, sources=sources, missing=dict(missing, **{
-                                    a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS}),
-                                dry_run=dry_run, comparators=bindings, scope='claim3a', stem='CLAIM3A_TABLES')
+        out['claim3a'] = tables(panel=panel, episodes=episodes, decisions=decisions, sources=sources,
+                                missing=dict(missing, **{a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS}),
+                                comparators=bindings, scope='claim3a', stem=f'CLAIM3A_TABLES{sfx}', **common)
         status(current, 'PASS', dict(analysis_sha256=out['claim3a']['analysis_sha256'], present=out['claim3a']['present']))
         if panel_3c is not None:
-            current = 'TABLES_3C'
-            out['claim3c'] = tables(root=root, final_root=final_root, panel=panel_3c, base=base, episodes=episodes_3c,
-                                    decisions=None, sources={f'C3_{a}': sources[f'C3_{a}'] for a in arms_3c},
+            current = f'TABLES_3C{sfx}'
+            out['claim3c'] = tables(panel=panel_3c, episodes=episodes_3c, decisions=None,
+                                    sources={k: v for k, v in sources.items() if k.startswith('C3_')},
                                     missing={a: missing[a] for a in CLAIM3C_ARMS if a in missing},
-                                    dry_run=dry_run, comparators={a: b for a, b in bindings.items() if a == 'U0'},
-                                    scope='claim3c', stem='CLAIM3C_TABLES')
+                                    comparators={a: b for a, b in bindings.items() if a == 'U0'}, scope='claim3c',
+                                    stem=f'CLAIM3C_TABLES{sfx}', **common)
             status(current, 'PASS', dict(analysis_sha256=out['claim3c']['analysis_sha256'], present=out['claim3c']['present']))
         # ---------------------------------------------------------------- claim 3b, one comparator at a time
         for arm in COMPARATOR_ARMS:
-            current = f'COMPARATOR_{arm}'
+            current = f'COMPARATOR_{arm}{sfx}'
             state = _settle(final_root, (arm,), status, current, poll=poll, timeout=comparator_timeout, sleep=sleep)
             if arm in state['declared']:
                 d = state['declared'][arm]
@@ -1995,13 +2140,13 @@ def execute(*, root, final_root, runtime, panel, panel_3c=None, allow_missing=()
             sources.update(more)
             both = dict(episodes, **{arm: {r['world_id']: r for r in done[arm]}})
             out[f'claim3b_{arm}'] = tables(
-                root=root, final_root=final_root, panel=panel, base=base, episodes=both, decisions=decisions,
-                sources=sources, missing=dict(missing, **{a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS if a != arm},
-                                              **({f'PARITY_{arm}': parity_note} if parity_note else {})),
-                dry_run=dry_run, comparators=dict(bindings, **{arm: bound}), scope=f'claim3b_{arm}',
-                stem=f'CLAIM3B_{arm}_TABLES')
+                panel=panel, episodes=both, decisions=decisions, sources=sources,
+                missing=dict(missing, **{a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS if a != arm},
+                             **({f'PARITY_{arm}': parity_note} if parity_note else {})),
+                comparators=dict(bindings, **{arm: bound}), scope=f'claim3b_{arm}', stem=f'CLAIM3B_{arm}_TABLES{sfx}',
+                **common)
             status(current, 'PASS', dict(analysis_sha256=out[f'claim3b_{arm}']['analysis_sha256']))
-        current = 'DONE'
+        current = f'DONE{sfx}'
         status(current, 'PASS', {k: v['analysis_sha256'] for k, v in out.items()})
         return out
     except BaseException as error:
@@ -2220,8 +2365,11 @@ def register(*, root, final_root, runtime, panel, base=None):
     final_root.mkdir(parents=True, exist_ok=True)
     plan = seal(dict(schema=SCHEMA+'.plan', created=datetime.now(timezone.utc).isoformat(), clean4_root=str(root),
                      config_sha256=digest(cfg), binding=binding, panel_sha256=panel['panel_sha256'],
-                     contract_sha256=digest(panel['contract']), budget=budget, quote=quote(binding['base']),
+                     contract_sha256=digest(panel['contract']), budget=budget,
+                     quote=quote(binding['base'], a_alias=a_frozen(cfg)),
                      prerun=compat,
+                     updates=dict(evaluated=list(EVAL_UPDATES), primary=PRIMARY_UPDATE, authority=UPDATE_AUTHORITY,
+                                  a_alias_of_u0=a_frozen(cfg)),
                      amendments=[dict(rule=MAPPO_AUTHORITY, allocation=ALLOCATION_AUTHORITY, arms=list(EPISODE_ARMS),
                                       base_alias=alias_of(binding['base']),
                                       quote_note='7 distinct arms for either base + 8-world decision branches + F11 '
@@ -2234,14 +2382,14 @@ def register(*, root, final_root, runtime, panel, base=None):
     return plan
 
 
-def check(*, root, final_root, runtime, panel, map_module=None):
+def check(*, root, final_root, runtime, panel, map_module=None, update=PRIMARY_UPDATE):
     out = dict(schema=SCHEMA+'.check', panel_sha256=panel['panel_sha256'], new_sim_s=0)
     try:
         cfg, binding, report = preflight(root, final_root, runtime, panel, map_module)
-        out.update(report, quote=quote(binding['base']))
+        out.update(report, quote=quote(binding['base'], a_alias=a_frozen(cfg)), update=update)
         out['run_plan'] = (run_plan(final_root) or {}).get('receipt_sha256') if Path(final_root).is_dir() else None
         try:
-            out['gate'] = gate(root, cfg, runtime, binding, final_root)
+            out['gate'] = gate(root, cfg, runtime, binding, final_root, check_update(update))
         except (NotReady, Blocked) as error:
             out['gate'] = dict(status=type(error).__name__, reason=str(error))
         out['status'] = 'PASS'
@@ -2259,7 +2407,7 @@ def build_fake_root(out, panel, base):
     root.mkdir(parents=True)
     (root/'A_checkpoint_000.pt').write_bytes(b'dry-run fake common u0')
     cfg = dict(run_root=str(root), accounting_root=str(root), source_root=str(Path(out)/'no_source'), runtime='dry',
-               common_checkpoint_sha256=file_sha(root/'A_checkpoint_000.pt'),
+               common_checkpoint_sha256=file_sha(root/'A_checkpoint_000.pt'), frozen_control_arm=FROZEN_A_RULE,
                clean4_budget=seal(dict(phases=dict(v2v_train=6_000_000, isolated_replicated=165_600,
                                                    v2v_final=ALLOCATION_SIM_S)), 'receipt_sha256'),
                newmap=dict(map=MAP, base_controller=base, eval_panel_sha256=panel['panel_sha256'],
@@ -2270,8 +2418,9 @@ def build_fake_root(out, panel, base):
         for i in range(3):
             f.write(json.dumps(dict(id=f'clean4_train_A_{989200+i}', phase='v2v_train', sim_s=1200))+'\n')
     for arm in ARMS:
-        (root/f'{arm}_checkpoint_{UPDATE:03}.pt').write_bytes(f'dry-run fake {arm} u24'.encode())
-        publish(root/f'{arm}_UPDATE_{UPDATE:03}.json', seal(dict(arm=arm, update=UPDATE, dry_run=True), 'update_sha256'))
+        for u in EVAL_UPDATES:
+            (root/f'{arm}_checkpoint_{u:03}.pt').write_bytes(f'dry-run fake {arm} u{u}'.encode())
+            publish(root/f'{arm}_UPDATE_{u:03}.json', seal(dict(arm=arm, update=u, dry_run=True), 'update_sha256'))
         publish(root/f'{arm}_COMPLETE.json', dict(arm=arm, updates=UPDATE, dry_run=True))
     zero = {k: 0 for k in SAFETY}
     for u in range(1, UPDATE+1):
@@ -2280,7 +2429,7 @@ def build_fake_root(out, panel, base):
     return root, cfg
 
 
-def fake_replicated(root):
+def fake_replicated(root, update=UPDATE):
     from tools.coopmwm import track2_monitor as p3
     records = []
     for arm in ('B', 'R'):
@@ -2289,8 +2438,8 @@ def fake_replicated(root):
             records.append(dict(arm=arm, replicate=i, world_seed=989200+i, state_set_sha256=f's{i}', window_set_sha256=f'w{i}',
                                 metric=gain, **{fe.SYNERGY: gain, fe.TOTAL_BENEFIT: 10+gain}, safety={k: 0 for k in SAFETY},
                                 reference_safety={k: 0 for k in SAFETY}))
-    analysis = p3._analyse(records, UPDATE, dict(p3.BOOTSTRAP))
-    publish(Path(root)/REPLICATED_FILE, seal(dict(kind='replicated', update=UPDATE, status='complete', dry=False,
+    analysis = p3._analyse(records, update, dict(p3.BOOTSTRAP))
+    publish(Path(root)/replicated_file(update), seal(dict(kind='replicated', update=update, status='complete', dry=False,
             records=records, dry_run=True, **analysis), 'receipt_sha256'))
 
 
@@ -2328,7 +2477,8 @@ def dry_run(*, out, panel, base='mappo_frozen', replicated=True, prerun=True):
     out.mkdir(parents=True, exist_ok=True)
     root, cfg = build_fake_root(out, panel, base)
     if replicated:
-        fake_replicated(root)
+        for u in EVAL_UPDATES:
+            fake_replicated(root, u)
     runtime = FakeRuntime()
     final_root = out/'final_root'
     panel_3c = load_panel_3c()
@@ -2344,83 +2494,87 @@ def dry_run(*, out, panel, base='mappo_frozen', replicated=True, prerun=True):
         if arm != 'U0' or not prerun:
             bind_fake_mappo(out, final_root, arm, residual=root/'A_checkpoint_000.pt')
     value = execute(root=root, final_root=final_root, runtime=runtime, panel=panel, panel_3c=panel_3c,
-                    poll=0, dry_run=True)
+                    poll=0, dry_run=True, update=PRIMARY_UPDATE)
+    secondary = execute(root=root, final_root=final_root, runtime=runtime, panel=panel, panel_3c=panel_3c,
+                        poll=0, dry_run=True, update=UPDATE)
     charged = sum(r['sim_s'] for r in fe.ledger_rows(final_root) if r['phase'] == PHASE)
     return dict(status='PASS', new_sim_s=0, physics=False, out=str(out), final_root=str(final_root), base=base,
                 target='clean5a (dry)',
                 analyses={k: v['analysis_sha256'] for k, v in value.items()},
                 present={k: v.get('present') for k, v in value.items()}, calls=runtime.calls,
+                secondary={k: v['analysis_sha256'] for k, v in secondary.items()},
                 fake_v2v_final_sim_s=charged, quote=plan['quote'], prerun=pre,
                 fake_prerun_sim_s=sum(r['sim_s'] for r in fe.ledger_rows(final_root) if r['phase'] == PRERUN_PHASE),
-                tables=sorted(str(x) for x in final_root.glob('CLAIM3*_TABLES.md')))
+                tables=sorted(str(x) for x in final_root.glob('CLAIM3*_TABLES_u*.md')))
 
 
 # ---------------------------------------------------------------- CLI
 
-def _analyse_published(root, final_root, runtime, panel, panel_3c=None):
-    """Zero physics: re-tabulate every analysis whose arms are published (3a; each bound 3b)."""
+def _analyse_published(root, final_root, runtime, panel, panel_3c=None, update=PRIMARY_UPDATE):
+    """Zero physics: re-tabulate every analysis of one update whose arms are published (3a, 3c; each bound 3b)."""
+    update = check_update(update)
+    sfx = f'_u{update:03}'
     cfg = runtime.config(root)
     plan = run_plan(final_root)
     if plan is None:
         raise Blocked('no RUN_PLAN.json')
     base = plan['binding']['base']
+    a_alias = a_frozen(cfg)
     state = comparators(final_root)
     bindings = state['bound']
-    episodes, sources, missing = {}, {}, {}
-    for arm in EPISODE_ARMS:
-        if not (Path(final_root)/f'WAVE_{arm}.json').is_file() and not _chunk_files(final_root, arm):
-            missing[arm] = 'no published wave receipt'
-            continue
+
+    def load(arm, pnl, prefix=''):
+        name = wave_name(arm, update, prefix)
+        if not (Path(final_root)/f'WAVE_{name}.json').is_file() and not _chunk_files(final_root, name):
+            return None, 'no published wave receipt'
         if arm in BOUND_ARMS and arm not in bindings:
             raise Blocked(f'{arm} wave published without a binding')
-        specs = episode_specs(arm, panel, cfg, root, base, bindings.get(arm), bindings.get('U0'))
-        records, source, covered = published(final_root, arm, specs, check_episode)
+        specs = episode_specs(arm, pnl, cfg, root, base, bindings.get(arm), bindings.get('U0'), update)
+        records, source, covered = published(final_root, name, specs, check_episode)
         if covered < len(specs):
-            missing[arm] = f'wave incomplete ({covered}/{len(specs)} published)'
+            return None, f'wave incomplete ({covered}/{len(specs)} published)'
+        return ({r['world_id']: r for r in records}, source), None
+    episodes, sources, missing = {}, {}, {}
+    for arm in EPISODE_ARMS:
+        if arm == 'A' and a_alias:
             continue
-        episodes[arm] = {r['world_id']: r for r in records}
-        sources[arm] = source
-    if any(a in missing for a in ARMS):
-        raise Blocked(f'A/B/R waves are not all published: {missing}')
-    decisions = {}
-    for arm in DECISION_ARMS:
-        path = Path(final_root)/f'WAVE_DECISIONS_{arm}.json'
-        if path.is_file():
-            value = verify(read(path), 'receipt_sha256', path.name)
-            specs = decision_specs(arm, episodes[arm], panel)
-            decisions[arm] = [check_branch(r, s) for r, s in zip(value['records'], specs)]
-            sources[f'DECISIONS_{arm}'] = dict(source=str(path), receipt_sha256=value['receipt_sha256'])
-    decisions = decisions if len(decisions) == len(DECISION_ARMS) else None
-    if decisions is None:
-        missing['DECISIONS'] = 'no published decision waves'
+        got, why = load(arm, panel)
+        if got is None:
+            missing[arm] = why
+        else:
+            episodes[arm], sources[wave_name(arm, update)] = got
+    if a_alias and 'U0' in episodes:
+        episodes['A'] = episodes['U0']
+    if any(a in missing for a in ARMS) or not {'A', 'B', 'R'} <= set(episodes):
+        raise Blocked(f'A/B/R u{update} waves are not all published: {missing}')
+    missing['DECISIONS'] = DECISIONS_UNAVAILABLE
     if alias_of(base) in missing:
         missing['BASE'] = f'BASE is {alias_of(base)}: {missing[alias_of(base)]}'
+    common = dict(root=root, final_root=final_root, base=base, update=update, a_alias=a_alias)
     core = {a: v for a, v in episodes.items() if a in CLAIM3A_ARMS}
-    out = dict(claim3a=tables(root=root, final_root=final_root, panel=panel, base=base, episodes=core, decisions=decisions,
-                              sources=sources, missing=dict(missing, **{a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS}),
+    out = dict(claim3a=tables(panel=panel, episodes=core, decisions=None, sources=sources,
+                              missing=dict(missing, **{a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS}),
                               comparators={a: b for a, b in bindings.items() if a == 'U0'}, scope='claim3a',
-                              stem='CLAIM3A_TABLES'))
-    if panel_3c is not None and all((Path(final_root)/f'WAVE_C3_{a}.json').is_file() for a in ('B', 'R')):
-        e3c, s3c = {}, {}
+                              stem=f'CLAIM3A_TABLES{sfx}', **common))
+    if panel_3c is not None:
+        e3c, s3c, m3c = {}, {}, {}
         for arm in CLAIM3C_ARMS:
-            if (Path(final_root)/f'WAVE_C3_{arm}.json').is_file() or _chunk_files(final_root, f'C3_{arm}'):
-                specs = episode_specs(arm, panel_3c, cfg, root, base, bindings.get(arm), bindings.get('U0'))
-                records, source, covered = published(final_root, f'C3_{arm}', specs, check_episode)
-                if covered == len(specs):
-                    e3c[arm] = {r['world_id']: r for r in records}
-                    s3c[f'C3_{arm}'] = source
-        out['claim3c'] = tables(root=root, final_root=final_root, panel=panel_3c, base=base, episodes=e3c, decisions=None,
-                                sources=s3c, missing={a: 'no published wave receipt' for a in CLAIM3C_ARMS if a not in e3c},
-                                comparators={a: b for a, b in bindings.items() if a == 'U0'}, scope='claim3c',
-                                stem='CLAIM3C_TABLES')
+            got, why = load(arm, panel_3c, 'C3_')
+            if got is None:
+                m3c[arm] = why
+            else:
+                e3c[arm], s3c[wave_name(arm, update, 'C3_')] = got
+        if {'B', 'R'} <= set(e3c):
+            out['claim3c'] = tables(panel=panel_3c, episodes=e3c, decisions=None, sources=s3c, missing=m3c,
+                                    comparators={a: b for a, b in bindings.items() if a == 'U0'}, scope='claim3c',
+                                    stem=f'CLAIM3C_TABLES{sfx}', **common)
     for arm in COMPARATOR_ARMS:
         if arm in episodes:
             out[f'claim3b_{arm}'] = tables(
-                root=root, final_root=final_root, panel=panel, base=base, episodes=dict(core, **{arm: episodes[arm]}),
-                decisions=decisions, sources=sources,
+                panel=panel, episodes=dict(core, **{arm: episodes[arm]}), decisions=None, sources=sources,
                 missing=dict(missing, **{a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS if a != arm}),
                 comparators={a: b for a, b in bindings.items() if a in ('U0', arm)}, scope=f'claim3b_{arm}',
-                stem=f'CLAIM3B_{arm}_TABLES')
+                stem=f'CLAIM3B_{arm}_TABLES{sfx}', **common)
     return out
 
 
@@ -2444,9 +2598,13 @@ def main(argv=None):
     p.add_argument('--mappo-path', help='bind-mappo: MAPPO executor checkpoint (N7 retrain or the d9042cc5 fallback)')
     p.add_argument('--mappo-sha256', help='bind-mappo: its full sha256 (verified now and at every load)')
     p.add_argument('--arm', choices=BOUND_ARMS, default='MAPPO_SPEED', help='bind-mappo/declare-unavailable: U0 or a comparator')
-    p.add_argument('--a-sha', help='bind-arms: A u24 checkpoint sha256')
-    p.add_argument('--b-sha', help='bind-arms: B u24 checkpoint sha256')
-    p.add_argument('--r-sha', help='bind-arms: R u24 checkpoint sha256')
+    p.add_argument('--a-sha', help='bind-arms: A checkpoint sha256 at --update (optional: A = U0 alias when frozen)')
+    p.add_argument('--b-sha', help='bind-arms: B checkpoint sha256 at --update')
+    p.add_argument('--r-sha', help='bind-arms: R checkpoint sha256 at --update')
+    p.add_argument('--update', type=int, choices=EVAL_UPDATES,
+                   help='check/bind-arms/run/analyse: the evaluated update (12 = PRIMARY, 24 = SECONDARY); required')
+    p.add_argument('--mirror-config-sha256', help='check/register/run/analyse/parity: the clean run root at --root is a '
+                                                  'read-only mirror on this host; the registered CONFIG.json file sha256')
     p.add_argument('--mappo-kind', choices=sorted({k for v in MAPPO_KINDS.values() for k in v}),
                    help='bind-mappo: retrained_wz3to2 | u0_transferred_not_retrained (MAPPO_SPEED), lane_retrained_wz3to2 (MAPPO_LANE)')
     p.add_argument('--reason', help='declare-unavailable: why the comparator cannot be evaluated')
@@ -2464,6 +2622,11 @@ def main(argv=None):
     p.add_argument('--comparator-wait', type=int, default=7*86400,
                    help='run: seconds to wait (after the u24 gate) for every comparator to be bound or declared')
     a = p.parse_args(argv)
+    if a.command in ('check', 'bind-arms', 'run', 'analyse') and a.update is None:
+        p.error('--update 12 (PRIMARY) or 24 (SECONDARY) required')
+
+    def runtime_():
+        return MirrorRuntime(a.runner, a.mirror_config_sha256) if a.mirror_config_sha256 else Runtime(a.runner)
     if a.workers < 1 or a.workers > MAX_WORKERS:
         p.error(f'workers must be 1..{MAX_WORKERS} (cpuZ 48 cores)')
     if a.command == 'register-panel':
@@ -2492,10 +2655,10 @@ def main(argv=None):
         if a.command == 'dry-run':
             result = dry_run(out=a.out, panel=panel, base=a.base or 'mappo_frozen')
         elif a.command == 'check':
-            result = check(root=a.root, final_root=a.final_root, runtime=Runtime(a.runner), panel=panel,
-                           map_module=a.map_api)
+            result = check(root=a.root, final_root=a.final_root, runtime=runtime_(), panel=panel,
+                           map_module=a.map_api, update=a.update)
         elif a.command == 'register':
-            result = register(root=a.root, final_root=a.final_root, runtime=Runtime(a.runner), panel=panel, base=a.base)
+            result = register(root=a.root, final_root=a.final_root, runtime=runtime_(), panel=panel, base=a.base)
         elif a.command == 'bind-mappo':
             check_ = None
             try:
@@ -2507,7 +2670,7 @@ def main(argv=None):
                                 arm=a.arm, authority=a.authority, check=check_, residual_path=a.residual_path,
                                 residual_sha256=a.residual_sha256, train_config=a.train_config)
         elif a.command == 'parity':
-            report, _ = run_parity(root=a.root, final_root=a.final_root, runtime=Runtime(a.runner), panel=panel,
+            report, _ = run_parity(root=a.root, final_root=a.final_root, runtime=runtime_(), panel=panel,
                                    arm=a.arm, workers=min(a.workers, 8))
             result = dict(verdict=report['verdict'], receipt_sha256=report['receipt_sha256'],
                           worlds={k: v['compare'] for k, v in report['worlds'].items()})
@@ -2526,11 +2689,12 @@ def main(argv=None):
                 result = prerun_execute(final_root=a.final_root, runtime=Runtime(a.runner), panel=panel,
                                         panel_3c=load_panel_3c(), workers=a.workers, chunk=a.chunk)
         elif a.command == 'bind-arms':
-            result = bind_arms(final_root=a.final_root, shas=dict(A=a.a_sha, B=a.b_sha, R=a.r_sha), authority=a.authority)
+            result = bind_arms(final_root=a.final_root, shas=dict(A=a.a_sha, B=a.b_sha, R=a.r_sha), authority=a.authority,
+                               update=a.update)
         elif a.command == 'declare-unavailable':
             result = declare_unavailable(final_root=a.final_root, arm=a.arm, authority=a.authority, reason=a.reason)
         elif a.command == 'analyse':
-            value = _analyse_published(a.root, a.final_root, Runtime(a.runner), panel, load_panel_3c())
+            value = _analyse_published(a.root, a.final_root, runtime_(), panel, load_panel_3c(), update=a.update)
             result = {k: dict(analysis_sha256=v['analysis_sha256'], present=v.get('present'), missing=v.get('missing'))
                       for k, v in value.items()}
         else:
@@ -2541,8 +2705,8 @@ def main(argv=None):
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 publish(Path(a.final_root)/'LAUNCHER.json', dict(pid=os.getpid(), argv=sys.argv, unix=time.time()),
                         replace=True)
-                value = execute(root=a.root, final_root=a.final_root, runtime=Runtime(a.runner), panel=panel,
-                                panel_3c=load_panel_3c(),
+                value = execute(root=a.root, final_root=a.final_root, runtime=runtime_(), panel=panel,
+                                panel_3c=load_panel_3c(), update=a.update,
                                 allow_missing=tuple(x for x in a.allow_missing.split(',') if x), workers=a.workers,
                                 poll=a.poll, replicated_timeout=a.replicated_wait, comparator_timeout=a.comparator_wait,
                                 map_module=a.map_api)

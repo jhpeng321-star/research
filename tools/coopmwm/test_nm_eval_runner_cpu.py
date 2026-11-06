@@ -17,6 +17,33 @@ import nm_finaleval as nm  # noqa: E402
 SPEC = REPO/nm.MAP_SPEC_REL
 
 
+def log_frame(ids=('main.0', 'main.1', 'main.2'), cav=(True, False, True)):
+    import numpy as np
+    n = len(ids)
+    return types.SimpleNamespace(present=np.ones(n, bool), s=np.array([-900.0-50*i for i in range(n)]),
+                                 v=np.full(n, 20.0), a=np.full(n, -0.5), lane=np.arange(n) % 3,
+                                 lane_carry=np.arange(n) % 3, junction=np.zeros(n, bool), is_cav=np.array(cav),
+                                 vid_index=np.arange(n), length_true=np.full(n, 4.3))
+
+
+class LogEnv:
+    """Read-only frame/builder surface the ground-truth vehicle log uses."""
+    def __init__(self, t):
+        self.now, self.frame, self.api = float(t), log_frame(), None
+        self.builder = types.SimpleNamespace(vehicle_ids=['main.0', 'main.1', 'main.2'])
+
+
+def plant_tick(t):
+    """What the real plant does each control second: tools.coopfree.backend.tick(b, ...)."""
+    from tools.coopfree import backend as cf
+    cf.tick(types.SimpleNamespace(env=LogEnv(t)))
+
+
+def observations(env):
+    """Stand-in for tools.coopnative.plant.observations (the runner wraps it with the vehicle log)."""
+    return []
+
+
 @pytest.fixture
 def bound(monkeypatch):
     """The N1 process map = wz3to2 (COOPMWM_MAP_SPEC), reset afterwards."""
@@ -37,7 +64,9 @@ def env(tmp_path, bound, monkeypatch):
     built = []
     monkeypatch.setattr(runner, 'eval_policy', lambda native, arm, update, seed: built.append((arm, update, seed)) or object())
     from tools.coopmwm import replay_bank
+    from tools.coopfree import backend as cf
     monkeypatch.setattr(replay_bank, 'ttc_events', lambda trace, start, end: 2)
+    monkeypatch.setattr(cf, 'tick', lambda b, controller=None, trace=None: [])     # the plant step (fake)
     return dict(panel=panel, root=root, cfg=cfg, tmp=tmp_path, built=built)
 
 
@@ -89,6 +118,7 @@ def fake_plant(calls, moves_at):
         controller_hook(controller, job, {})
         active = []
         for t in range(300, job['stop']):
+            plant_tick(t)
             for start, family, members in moves_at:
                 if start == t:
                     active.append(dict(move=dict(family=family, members=members, onset=0, hold=60, depth=1.0),
@@ -201,6 +231,8 @@ def fake_native_episode(job):
     setup(job['runtime'])  # noqa: F821
     guard(job['world'], job['role'])  # noqa: F821
     NATIVE_JOBS.append(job)
+    for t in range(300, 1200):
+        observations(LogEnv(t))  # noqa: F821  (replaced by the runner's logged wrapper)
     return dict(metrics={'900': dict(team_delay_vs=61000.25, collisions=0, teleports=0, hard_brake=7)})
 
 
@@ -323,7 +355,9 @@ class FakeLaneExecutor:
 class FakeEnv:
     def __init__(self):
         import numpy as np
-        self.now, self.frame, self.steps = 300., types.SimpleNamespace(vid_index=np.array([0, 1, 2])), []
+        self.now, self.frame, self.steps = 300., log_frame(('c1', 'h1', 'c2')), []
+        self.builder, self.api = types.SimpleNamespace(vehicle_ids=['c1', 'h1', 'c2']), None
+        assert list(self.frame.vid_index) == [0, 1, 2] and np.all(self.frame.present)
 
     def state(self):
         return dict(is_cav=[True, False, True], present=[True, True, True])
@@ -407,6 +441,8 @@ def test_rule_arm_runs_the_exact_s_regimeu0_rule_on_the_u0_episode(env, monkeypa
         for t in (300, 301, 391):
             applied.append((t, controller.apply(rows, commands, t), dict(getattr(controller, 'g5_lane_targets', {}))))
             controller_hook.after_step(t, rows)
+        for t in range(300, 1200):
+            plant_tick(t)
         return dict(totals=dict(team_delay_vs=50000.0, collisions=0, teleports=0, hard_brake=1))
     monkeypatch.setattr(accel_plant, 'episode', episode)
     final_root = env['tmp']/'dry'/'final_root'
@@ -554,3 +590,28 @@ def test_parity_train_path_uses_the_n7_training_env(env, monkeypatch):
     Path(train['train_config']).write_text('# edited after binding\n')
     with pytest.raises(ValueError, match='differs from its binding'):
         runner.parity_train_trace(train)
+
+
+
+def test_every_arm_writes_the_evaluation_only_ground_truth_vehicle_log(env, monkeypatch):
+    import gzip
+    from tools.coopmwm import accel_plant
+    monkeypatch.setattr(accel_plant, 'episode', fake_plant([], []))
+    spec = nm.episode_specs('B', env['panel'], env['cfg'], env['root'], 'mappo_u0')[1]
+    work = env['tmp']/'work'/spec['job_id']
+    record = runner.episode(spec, env['cfg'], work)
+    log = record['vehicle_log']
+    assert log['ticks'] == 900 and log['vehicles'] == 3 and log['sha256'] == runner._sha(work/'vehicles.jsonl.gz')
+    assert nm.check_episode(record, spec)['vehicle_log'] == log
+    with gzip.open(work/'vehicles.jsonl.gz', 'rt') as f:
+        lines = [json.loads(x) for x in f]
+    heads = [x for x in lines if 'veh' in x]
+    ticks = [x for x in lines if 't' in x]
+    assert [h['id'] for h in heads] == ['main.0', 'main.1', 'main.2'] and [h['cav'] for h in heads] == [True, False, True]
+    assert set(heads[0]) == {'veh', 'id', 'cav', 'origin', 'depart_delay_s', 'first_t'}      # no vType / driver truth
+    assert [x['t'] for x in ticks] == list(range(300, 1200)) and set(ticks[0]) == {'t', 'k', 's', 'v', 'a', 'lane'}
+    assert ticks[0]['k'] == [0, 1, 2] and ticks[0]['a'] == [-0.5]*3 and ticks[0]['lane'] == [0, 1, 2]
+    with pytest.raises(nm.Blocked, match='vehicle log'):
+        nm.check_episode(dict(record, vehicle_log=dict(log, ticks=899)), spec)
+    with pytest.raises(nm.Blocked, match='vehicle log'):
+        nm.check_episode({k: v for k, v in record.items() if k != 'vehicle_log'}, spec)
