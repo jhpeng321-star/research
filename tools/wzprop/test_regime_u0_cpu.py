@@ -192,6 +192,23 @@ def test_wm2_multi_state_call_matches_single_state_calls(wm):
 
 
 @needs_wm
+def test_wm2_exact_crn_on_a_real_state_when_the_rule_never_fires(wm, monkeypatch):
+    """One arm per call: a strategy whose trigger never fires reproduces the u0 rows BIT-identically on a real
+    D2400 start state over 40 s with entries (identical rows inside one batched call diverge within ~15-30 s)."""
+    h, exe = wm
+    st = R.load_states(ROOT / 'wmev_data/u0_STATES_t300.json', sids=['rgu0_D2400_p40_s989200_t300'])
+    monkeypatch.setattr(R, 'ZONE_S', (1e9, 1e9 + 1.0))
+    tr = {}
+    r = R.evaluate_states(h, exe, st, arms=['u0', 'wall_h_solo2', 'wall_h'], K=2, H=40.0, slots=112, max_rows=8,
+                          trace=tr)[0]
+    base = tr['per_step'][0]
+    for j in (1, 2):
+        assert np.array_equal(tr['per_step'][j], base)
+    for arm in ('wall_h_solo2', 'wall_h'):
+        assert r['arms'][arm]['road_w'] == r['arms']['u0']['road_w'] and r['arms'][arm]['first_div_s'] == [None, None]
+
+
+@needs_wm
 def test_wm2_no_feasible_wall_means_identical_rows(wm):
     h, exe = wm
     r = R.evaluate_state(h, exe, _fixture(wall=False), arms=['u0', 'wall_h_solo2', 'wall_h'], K=1, H=4.0, slots=48,
@@ -290,20 +307,20 @@ def test_analysis_perfect_and_flipped_predictors(tmp_path):
 
 
 def test_cost_estimate_counts_rows(tmp_path):
-    rows = [dict(_fixture(), sid=f's{i}', cell=c) for i, c in enumerate(['D3200_p60', 'D2400_p40', 'D3200_p20'])]
+    rows = [dict(_fixture(), sid=f's{i}', cell=c) for i, c in enumerate(['D3200_p60', 'D2400_p40', 'D3200_p60'])]
     p = tmp_path / 'st.json'
     p.write_text(json.dumps(rows))
+    # one arm per call: D3200_p60 4 arms, D2400_p40 3 arms; 'auto' states/call = 32 // 8 = 4 but batches never mix
+    # slot counts or arm lists -> batches [s0], [s1], [s2]
     est = R.cost_estimate(p, K=8, H=900, max_rows=32, s_per_step=0.1, workers=2, slots=448)
-    assert est['calls'] == 3 and est['row_steps'] == (4 + 3 + 4) * 8 * 1800
-    assert est['serial_minutes'] == pytest.approx(3 * 1800 * 0.1 / 60, abs=0.1)
+    assert est['calls'] == 4 + 3 + 4 and est['row_steps'] == (4 + 3 + 4) * 8 * 1800
+    assert est['serial_minutes'] == pytest.approx(11 * 1800 * 0.1 / 60, abs=0.1)
     auto = R.cost_estimate(p, K=8, H=900, max_rows=32, s_per_step=0.1)
-    assert auto['calls_by_slots'] == {448: 2, 256: 1}
-    assert auto['effective_calls_at_max_slots'] == pytest.approx(2 + (256 / 448) ** 2, abs=0.05)
-    packed = R.cost_estimate(p, K=8, H=900, max_rows=64, states_per_call=2, s_per_step=0.1)
-    assert packed['calls'] == 3            # 'auto' slots never mix demand levels in one call: D3200 / D2400 / D3200
-    same = R.cost_estimate(p, K=8, H=900, max_rows=64, states_per_call=2, s_per_step=0.1,
-                           sids=['s0', 's2'])
-    assert same['calls'] == 1              # 4 x 8 + 4 x 8 = 64 rows, one demand level
+    assert auto['calls_by_slots'] == {448: 8, 256: 3}
+    same = R.cost_estimate(p, K=8, H=900, max_rows=32, s_per_step=0.1, sids=['s0', 's2'])
+    assert same['calls'] == 4                       # both D3200_p60 states share each arm's call (2 x 8 = 16 rows)
+    k4 = R.cost_estimate(p, K=4, H=900, max_rows=32, s_per_step=0.1, sids=['s0', 's2'], states_per_call=1)
+    assert k4['calls'] == 8
 
 
 @needs_wm
