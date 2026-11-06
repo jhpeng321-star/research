@@ -396,6 +396,8 @@ class EpisodePolicy(torch.nn.Module):
             self.clean5_ev = {k: ev[k] for k in ('families', 'group_sizes', 'solo_geometry')}
             if ev.get('hold_lane_pin'):
                 self.clean5_ev['hold_lane_pin'] = True   # registered N2 hold lcMode pin (G5 own lane)
+            if ev.get('fair'):
+                self.clean5_ev['fair'] = ev['fair']      # clean5b-F slate rules (wall_g solos, duo12, gate0)
         self.fullpol = fullpol_programs.settings(cfg)
         if self.fullpol is not None:
             self.fp_state = fullpol_programs.runtime_state(self.fullpol, arm)
@@ -1259,6 +1261,14 @@ class ArmRuntime:
                 raise RuntimeError('P2 track2_reward.reward_update integration dependency unavailable') from error
             rewards = reward_update(cfg, arm, self.update, episodes)
         targets = self._reward_targets(rewards, by_key, set(by_key))
+        from .fullpol_fair import settings as fair_settings
+        fair_receipt = None
+        if (fair_settings(cfg) or {}).get('reward'):
+            # clean5b-F (opt-in, B = R): excess group-delay harm vs the frozen A arm on the same world,
+            # added one-for-one (veh-s) to the episode cost; eval-only logger, never a policy input.
+            from . import fullpol_fair
+            harm, fair_receipt = fullpol_fair.penalties(cfg, arm, episodes, fullpol_fair.reference(cfg, self.update))
+            targets = fullpol_fair.apply(targets, harm)
         returns, advantages = self._temporal_targets(episodes, targets)
         from .fullpol_learn import ev_credit_terms
         ev_terms, ev_receipt = ev_credit_terms(cfg, arm, episodes, eligible={
@@ -1327,6 +1337,7 @@ class ArmRuntime:
         close_call = close_call_settings(cfg)
         return dict(**(dict(g4_synergy_credit=synergy_receipt) if synergy_receipt is not None else {}),
             **(dict(fullpol_ppo_kl=ppo_kl_report) if ppo_kl_report is not None else {}),
+            **(dict(fullpol_fair=fair_receipt) if fair_receipt is not None else {}),
             **(dict(rsu=rsu_metrics) if rsu_metrics is not None else {}),
             **(dict(fullpol_ev_credit=ev_receipt) if ev_receipt is not None else {}),
             layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),

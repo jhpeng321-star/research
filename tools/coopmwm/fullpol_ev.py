@@ -30,6 +30,9 @@ PROVENANCE = ('MAIN 2026-11-06 ~19:3x clean5a (speed-only EV mode on N2 families
 FAMILIES = ('abreast_wall', 'group_hold', 'closing_pair', 'free_program')   # free_program = clean5b (LCEXEC)
 PROGRAM_KEYS = ('free_program_initiate', 'free_program_join')
 SLOTS = ('group_hold:solo', 'group_hold:pair')       # one F2 slot per group size (like N2 initiate kinds)
+DUO_SLOT = 'group_hold:duo'                            # clean5b-F (fair.duo12): wall_g 2-member hold, SUMO lanes 1+2
+DUO_LANES_SUMO = (1, 2)
+GATE_BEHIND_M = 100.                                   # gate0: no vehicle within 100 m behind in own lane (sensing)
 SOLO_VARIANTS = ('wall_g', 'wall_h')                  # S-REGIME solo strategies hold these variants
 SOLO_GEOMETRY = ('zone', 'wall')
 
@@ -40,7 +43,7 @@ def settings(cfg):
     if raw is False or raw is None:
         return None
     keys = {'enabled', 'rule', 'provenance', 'families', 'group_sizes', 'solo_geometry', 'learn',
-            'regime_guidance', 'parity_families', 'sumo_lanes', 'ev_bc_steps', 'ppo_kl', 'hold_lane_pin'}
+            'regime_guidance', 'parity_families', 'sumo_lanes', 'ev_bc_steps', 'ppo_kl', 'hold_lane_pin', 'fair'}
     if (not isinstance(raw, dict) or raw.get('enabled') is not True or raw.get('rule') != RULE
             or set(raw)-keys or not isinstance(raw.get('provenance'), str) or not raw['provenance'].strip()):
         raise ValueError('clean5_ev requires enabled=True, the registered rule, provenance and known keys')
@@ -60,6 +63,15 @@ def settings(cfg):
         raise ValueError(f'clean5_ev ppo_kl in {PPO_KL}')
     if type(raw.get('hold_lane_pin', False)) is not bool:
         raise ValueError('clean5_ev hold_lane_pin must be bool')
+    fair = raw.get('fair')
+    if fair:
+        from .fullpol_fair import RULE as FAIR_RULE, THRESHOLD_S
+        if (not isinstance(fair, dict) or fair.get('rule') != FAIR_RULE
+                or float(fair.get('threshold_s', -1)) != THRESHOLD_S
+                or set(fair)-{'rule', 'threshold_s', 'solo_variants', 'duo12', 'gate0', 'ev_filter', 'reward'}
+                or any(v not in SOLO_VARIANTS for v in fair.get('solo_variants', SOLO_VARIANTS))
+                or any(type(fair.get(k, False)) is not bool for k in ('duo12', 'gate0', 'ev_filter', 'reward'))):
+            raise ValueError('clean5_ev.fair: registered rule, threshold_s 10, solo_variants and boolean switches')
     out = deepcopy(raw)
     out.update(families=families, group_sizes=sizes, solo_geometry=raw.get('solo_geometry', 'zone'))
     return out
@@ -116,9 +128,18 @@ class SoloHold(LaneDropMove):
 
     @classmethod
     def from_dict(cls, data):
-        return cls(data['family'], tuple(data['members']), int(data['onset']), int(data['hold']),
-                   float(data['depth']), float(data['target_mps']), float(data.get('gap_dv_mps', 0.)),
-                   bool(data.get('zip', False)), tuple(data.get('lanes') or ()), int(data.get('anchor', -1)))
+        out = cls(data['family'], tuple(data['members']), int(data['onset']), int(data['hold']),
+                  float(data['depth']), float(data['target_mps']), float(data.get('gap_dv_mps', 0.)),
+                  bool(data.get('zip', False)), tuple(data.get('lanes') or ()), int(data.get('anchor', -1)))
+        if data.get('gate0'):
+            object.__setattr__(out, 'gate0', True)
+        return out
+
+    def to_dict(self):
+        out = super().to_dict()
+        if getattr(self, 'gate0', False):
+            out['gate0'] = True           # clean5b-F: offered while the observable gate0 condition held
+        return out
 
 
 def is_solo(data):
@@ -173,7 +194,14 @@ def labels(entry, view, ev=None):
             lane = sumo_lane(view, entry['lanes'][0], ev)
             # Lane-specific ONLY (MAIN 22:1x): a solo carries the EV of the solo strategy of its own
             # current SUMO lane, never a generic solo/group row.
-            return (f'{v}_solo{lane}',) if v in SOLO_VARIANTS else ('solo_unregistered_params',)
+            if v not in SOLO_VARIANTS:
+                return ('solo_unregistered_params',)
+            if entry.get('gate0'):
+                return (f'{v}_solo{lane}_gate0', f'{v}_solo{lane}')
+            return (f'{v}_solo{lane}',)
+        if (ev or {}).get('fair') and len(entry['members']) == 2 and variant_of(entry, 'abreast_wall') == 'wall_g' \
+                and sorted(sumo_lane(view, x, ev) for x in entry['lanes']) == list(DUO_LANES_SUMO):
+            return ('wall_g_duo12', 'group_hold_pair', 'group_hold')
         return ('group_hold_pair', 'group_hold')
     if family in ('abreast_wall', 'closing_pair'):
         v = variant_of(entry)
@@ -205,11 +233,13 @@ def families(structured, ev, event):
         return tuple(k for k in keep if k in ('lane_drop_join', 'free_program_join'))
     if 'group_hold' in allowed:
         keep += [s for s, k in zip(SLOTS, (1, 2)) if k in ev['group_sizes']]
+        if (ev.get('fair') or {}).get('duo12'):
+            keep.append(DUO_SLOT)
     return tuple(keep)
 
 
 def owns(key):
-    return key in SLOTS
+    return key in SLOTS or key == DUO_SLOT
 
 
 def _in_zone(view, row):
@@ -224,10 +254,38 @@ def _solo_ok(ev, view, own, partners):
     return bool(ld.joint_groups('abreast_wall', view, own, partners))
 
 
-def _solo(view, own, rng):
-    v = ld.VARIANTS[SOLO_VARIANTS[int(rng.integers(len(SOLO_VARIANTS)))]]
-    return SoloHold('group_hold', (own['vid'],), ld.ONSET_S, int(v['hold']), float(v['depth']),
-                    float(v['target_mps']), 0., False, (int(own['lane']),))
+def _gate0(own, rows):
+    """Observable gate0: no vehicle (any type) within GATE_BEHIND_M behind in the own lane (own sensing)."""
+    s, lane = float(own['s_m']), int(own['lane'])
+    return not any(r['vid'] != own['vid'] and int(r['lane']) == lane and 0. < s-float(r['s_m']) <= GATE_BEHIND_M
+                   for r in rows)
+
+
+def _solo(view, own, rng, ev=None, rows=None):
+    fair = (ev or {}).get('fair') or {}
+    variants = tuple(fair.get('solo_variants', SOLO_VARIANTS))
+    v = ld.VARIANTS[variants[int(rng.integers(len(variants)))]]
+    out = SoloHold('group_hold', (own['vid'],), ld.ONSET_S, int(v['hold']), float(v['depth']),
+                   float(v['target_mps']), 0., False, (int(own['lane']),))
+    if fair.get('gate0') and rows is not None and _gate0(own, rows):
+        object.__setattr__(out, 'gate0', True)
+    return out
+
+
+def _duos(view, own, partners, ev):
+    lanes = {max(view.lane_ids)-k for k in DUO_LANES_SUMO} if (ev or {}).get('sumo_lanes') is None else {
+        ln for ln in view.lane_ids if sumo_lane(view, ln, ev) in DUO_LANES_SUMO}
+    if not _in_zone(view, own) or int(own['lane']) not in lanes:
+        return []
+    other = (lanes-{int(own['lane'])})
+    return [(own, p) for p in partners if _in_zone(view, p) and int(p['lane']) in other
+            and ld._spread((own, p)) <= ld.GROUP_SPREAD_M]
+
+
+def _duo(group):
+    v = ld.VARIANTS['wall_g']
+    return LaneDropMove('group_hold', tuple(r['vid'] for r in group), ld.ONSET_S, int(v['hold']), float(v['depth']),
+                        float(v['target_mps']), 0., False, tuple(int(r['lane']) for r in group))
 
 
 def _pairs(view, own, partners):
@@ -243,18 +301,23 @@ def _pair(view, group, rng):
                         tuple(int(r['lane']) for r in group))
 
 
-def pool(key, ev, view, own, partners, rng):
+def pool(key, ev, view, own, partners, rng, by_vid=None):
+    rows = None if by_vid is None else list(by_vid.values())
     if key == 'group_hold:solo':
-        return [_solo(view, own, rng)] if _solo_ok(ev, view, own, partners) else []
+        return [_solo(view, own, rng, ev, rows)] if _solo_ok(ev, view, own, partners) else []
     if key == 'group_hold:pair':
         return [_pair(view, g, rng) for g in _pairs(view, own, partners)]
+    if key == DUO_SLOT:
+        return [_duo(g) for g in _duos(view, own, partners, ev)]
     raise ValueError(f'unregistered clean5a slot {key!r}')
 
 
 def redraw(template, key, ev, view, own, by_vid, rng):
     """Fresh registered parameters for the same member set (never None for a pooled set)."""
     if key == 'group_hold:solo':
-        return _solo(view, own, rng)
+        return _solo(view, own, rng, ev, list(by_vid.values()))
+    if key == DUO_SLOT:
+        return _duo([by_vid[v] for v in template.members])
     return _pair(view, [by_vid[v] for v in template.members], rng)
 
 
@@ -317,3 +380,22 @@ def hold_pins(active, own_lanes, zip_members=()):
     an own lane observation are excluded. Pure function of the member's OWN state."""
     zips = set(zip_members)
     return {v: int(own_lanes[v]) for v in sorted(set(active)) if v not in zips and v in own_lanes}
+
+
+FAIR_PARITY = ('wall_g_solo2', 'wall_g_solo2_gate0', 'wall_g_duo12')
+
+
+def fair_slot(*, solo_variants=('wall_g',), duo12=True, gate0=True, ev_filter=True, reward=True):
+    """clean5b-F registered slot (owner 04:0x): wall_h (firm 15 m/s) solos never offered."""
+    from .fullpol_fair import RULE as FAIR_RULE, THRESHOLD_S
+    return dict(rule=FAIR_RULE, threshold_s=THRESHOLD_S, solo_variants=list(solo_variants), duo12=duo12, gate0=gate0,
+                ev_filter=ev_filter, reward=reward)
+
+
+def with_fairness(cfg_part, *, regime_guidance):
+    """Add clean5b-F to a clean5_ev config value (e.g. recommended_5b(...)): fair slot, fairness-flagged
+    guidance (fullpol_fair.build_guidance), parity = the fairness-eligible strategy labels, pin ON."""
+    out = deepcopy(cfg_part)
+    out[KEY].update(fair=fair_slot(), regime_guidance=deepcopy(regime_guidance),
+                    parity_families=sorted(FAIR_PARITY), hold_lane_pin=True)
+    return out

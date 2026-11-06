@@ -6,7 +6,7 @@ wall_fill program: the initiator changes lane INTO the closing lane and slot-tra
 15 m/s; the decision rows then receive BC (initiate/join contexts), PPO and the (offline) EV labels.
 No SUMO: the env writer is the LCEXEC Capture stand-in.
 """
-# ruff: noqa: F811 (imported pytest fixtures are test parameters)
+# ruff: noqa: F811, E731 (imported pytest fixtures are test parameters; small test lambdas)
 import json
 
 import numpy as np
@@ -201,3 +201,32 @@ def test_recommended_5b_recipe_binds_generator_descriptor_and_b_r_templates(cfg,
     assert s['propose'].__name__ == 'propose' and s['descriptor_width'] == fh.PROGRAM_DESCRIPTOR_WIDTH
     assert {k: v for k, v in b.items() if k != 'lc_families'} == {k: v for k, v in r.items() if k != 'lc_families'}
     make(b)
+
+
+def test_hold_lane_pin_through_the_real_env_writer_pins_513_and_restores_at_release(cfg, wz):
+    """Mechanism check on the real env writer (lc_writer_harness): own-lane pins for an active N2 hold
+    issue laneChangeMode 513 at activation and restore it at release - the plant path's lane writes
+    (WMVERIFY n2_parity) - while speed writes are unchanged; without pins no lane write appears."""
+    from .lc_writer_harness import Harness
+    frame = lp.frame_from_descriptor(wz)
+
+    def states(el):
+        return {'c0': dict(edge='up', sumo_lane=frame.sumo(0), x=1500.+20*el, v=20., allowed=31.29, is_cav=True)}
+
+    def writes(pinned):
+        h = Harness(None, {'c0': True}, desc=wz)
+        out = []
+        for el in range(0, 8):
+            active = el < 5
+            lanes = {'c0': 0} if pinned and active else None
+            calls = h.tick(el, states(el), None, base={'c0': -1.0} if active else None, lanes=lanes,
+                           lane_actors=frozenset(lanes) if lanes else None)
+            out += [(el, c[2], c[3]) for c in calls]
+        return out
+    pin, nopin = writes(True), writes(False)
+    speed = lambda w: [x for x in w if x[1] in ('slowDown', 'setSpeed')]
+    lane = lambda w: [x for x in w if x[1] == 'setLaneChangeMode']
+    assert speed(pin) == speed(nopin)
+    assert lane(nopin) == []
+    assert (0, 'setLaneChangeMode', 513) in lane(pin)
+    assert any(el >= 5 and v != 513 for el, _, v in lane(pin))         # restored at release
