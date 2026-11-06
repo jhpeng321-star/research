@@ -160,6 +160,10 @@ def option_labels(entry, cfg=None):
     if entry.get('family') == fp.FAMILY:
         src = entry.get('source') or {}
         return tuple(x for x in (src.get('variant'), src.get('family')) if x)
+    if entry.get('family') in ('free_program_initiate', 'free_program_join'):
+        # clean5b (LCEXEC ProgramOption): the template's own strategy labels (fullpol_templates)
+        src = (entry.get('template') or {}).get('source') or {}
+        return tuple(x for x in (src.get('variant'), src.get('family')) if x)
     from . import fullpol_ev, lane_drop
     ld = lane_drop.settings(cfg) if cfg is not None else None
     if ld is not None and entry.get('family') in lane_drop.JOINT_FAMILIES+lane_drop.PROTOCOL_FAMILIES:
