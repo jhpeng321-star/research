@@ -33,3 +33,14 @@ worker audit, but `PLAN_FIX_READY.json` still describes a 600,000 active
 allocation, target u12 and obsolete missing-input/clean2-not-launched blockers.
 Reconcile its metadata while retaining `ready=false`, `apply=false`, and
 `outputs=[]`; do not publish any executable bank output.
+
+## Step 2 — existing receipt consistency PASS
+
+Local Python assertions verify eight source dispositions, twelve measured
+zero-gain/zero-lower-bound outcomes, two null-gain startup exclusions, zero
+survivors, exactly 33,600 retained charges, and agreement of all six native
+confirmation hashes with `PLANFIX_BANK_TERMINAL.json`. The preserved 12:50
+CPU status has both exact identities exited and an empty gate set.
+No fresh liveness or native scientific re-verification is claimed.
+`PLANFIX_RECEIPT_CHECK_20261106_1347.json` pins the two input file hashes.
+Existing full suites remain adopted; this is bookkeeping-only verification.

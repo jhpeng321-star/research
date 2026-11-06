@@ -1,0 +1,18 @@
+{
+  "check": "PASS",
+  "scope": "Local consistency of preserved receipts; no new remote liveness or scientific verification claimed",
+  "bank_results": "E:/research-dense/runs/active/C4-V7FT-20261017/PLAN_FIX_BANK_RESULTS.json",
+  "bank_sha256": "92220ca4825a34c69c65edab577f0a70daf3e730fde912f3235ed0dc097e0c2f",
+  "cpu_status": "PLANFIX_CPU_STATUS_v7_1793940606467549300.json",
+  "cpu_status_sha256": "2fa9168ba07c5c736b47dbc9f5cc283bc46cca68885571772bb428f4c214c2d5",
+  "cpu_status_observed_unix": 1793940605.1804528,
+  "source_examples": 8,
+  "measured_outcomes": 12,
+  "startup_exclusions": 2,
+  "survivors": 0,
+  "charged_sim_s_at_bank_completion": 33600,
+  "startup_gates_completed_at_last_observation": 0,
+  "new_sim_s": 0,
+  "remote_commands_this_recovery": 0,
+  "authority": "BLOCKED: owner supersession 02:44 and released unspent reservation 03:00; no restoration found through registration 13:41"
+}
