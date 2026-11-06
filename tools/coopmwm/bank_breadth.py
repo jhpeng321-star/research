@@ -397,7 +397,8 @@ def observable_contexts(policy, plan, pairs, frames, *, t0, certification=None):
         # protocol (initiator -> wall_initiate, received members -> wall_join).
         yield from v2v_wall.protocol_contexts(policy, plan, label, pairs, frames, t0=t0)
         return
-    if getattr(policy, 'ld_protocol', None) is not None and plan.get('lane_drop_macro') is not None:
+    if (getattr(policy, 'ld_protocol', None) is not None and plan.get('lane_drop_macro') is not None
+            and plan['lane_drop_macro']['family'] in ('closing_pair', 'abreast_wall')):
         # N2 (opt-in): verified lane-drop examples are taught through the same rule
         # (initiator -> lane_drop_initiate, received members -> lane_drop_join).
         from . import lane_drop

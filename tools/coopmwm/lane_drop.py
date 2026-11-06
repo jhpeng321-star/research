@@ -30,19 +30,21 @@ dropped lane (the merge target). Nothing reads MAP_SPEC/net files at runtime.
     observation (x / v2v / rsu) is untouched.
 (2) ``moves``: joint move-library entries executed through the existing MoveExecutor
     commitment and the layer's committed-offset column (the single writer):
-    * ``closing_pair`` = (closing-lane CAV, adjacent-lane CAV) abreast within the registered
-      span: both hold a common speed (the partner ``gap_dv`` lower, opening a zip gap); with
-      ``zip`` the closing-lane CAV attempts ONE lane change into the adjacent lane at the last
-      hold second through the G5 env path (CAVs only, own-sensing gap recheck, never forced).
-    * ``abreast_wall`` = one CAV per lane, holding a common speed.
-    Law per member and second (probe rule: slowDown to the target, braking <= depth,
-    accelerating <= ACCEL_MAX): a = clip((target - v)/1 s, -depth, ACCEL_MAX). Runtime offset
-    = a - native - MAPPO mean, so the executed request is a (+ exploration noise + residual);
-    deterministic + zero residual = the law exactly. All members release when any known
-    member position is within RELEASE_BEFORE_DROP_M of the drop.
-    Executable representation (G5 convention): ``plan()`` gives policy_profile / profile /
-    perturbation_profile plus the recorded member speeds/positions; ``from_plan`` is the exact
-    binding (profile == law on the recorded speeds, base elsewhere).
+    * ``closing_pair`` = (closing-lane CAV, adjacent-lane CAV), |dx| <= 100 m (variants pair_g,
+      pair_h, pair_t; pair_t releases both when the closing-lane anchor is 150 m before the drop);
+    * ``abreast_wall`` = one CAV per lane, spread <= 200 m (wall_g, wall_h);
+    * ``group_hold`` = 2-3 CAVs in any lanes within 300 m (the R_random hold procedure).
+    All values are the NEWMAP2 registration (VARIANTS / R_SETS, zone 400..1800 m before the
+    drop). Law per member and second (NEWMAP2 rule): a = clip((v_w - v)/1 s, -dmax, amax); a
+    member releases at its own drop crossing, at the end of the hold, or by the pair_t anchor.
+    Runtime offset = a - native - MAPPO mean, so the executed request is a (+ exploration noise
+    + residual); deterministic + zero residual = the law exactly. Optional zip/gap_dv (owner
+    example, never drawn): the closing-lane CAV attempts ONE lane change at the last hold second
+    through the G5 env path (CAVs only, own-sensing gap recheck, never forced).
+    Executable representations (G5 convention): ``plan()`` with recorded member speeds and
+    positions (profile == the law exactly) and ``plan_from_mined_row`` for the verified NEWMAP2
+    / PLANGEN / PLANGEN2 rows (the row's executed profile, per-member release el, SUMO lanes
+    mapped to WM lanes by the N1 descriptor); ``from_plan`` binds both exactly.
 (3) ``v2v``: initiate/join protocol for these moves (reuses the W1 v2v_wall.Protocol ledger):
     a free CAV initiates a closing_pair or abreast_wall session; the initiator broadcasts the
     schedule and the lanes already covered at t, visible at t+1 within ``range_m``
@@ -61,7 +63,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, replace
-from itertools import product
+from itertools import combinations, product
 import math
 
 import numpy as np
@@ -75,31 +77,47 @@ from .v2v_obs import V2V_K, V2V_RANGE_M
 RULE = 'n2-lane-drop-moves-v1'
 PROVENANCE = ('N2 build (c4/nm-moves; MAIN 2026-11-06 newmap_spec N2; evidence '
               'runs/active/C4-V7FT-20261017/NEWMAP_RESEARCH.md)')
-JOINT_FAMILIES = ('closing_pair', 'abreast_wall')
+JOINT_FAMILIES = ('closing_pair', 'abreast_wall', 'group_hold')
 PROTOCOL_FAMILIES = ('lane_drop_initiate', 'lane_drop_join')
-KINDS = JOINT_FAMILIES
+KINDS = ('closing_pair', 'abreast_wall')   # protocol / RSU kinds (group_hold is joint only)
 INITIATE_SLOTS = tuple(f'lane_drop_initiate:{kind}' for kind in KINDS)   # F2 slate slots per kind
 RSU_ID = 'RSU'
 
 V2V_RANGE_WINDOW_M = (100., 300.)
 DEFAULT_V2V_RANGE_M = 200.     # W1 caveat: 100 m reaches 2 of 3 partners at 60 m spacing
-ACCEL_MAX_MPS2 = 1.0           # probe wall W1: accelerating <= 1.0 m/s^2
-TARGET_WINDOW_MPS = (15., 25.)  # probe wall rules: W1 15 m/s, W2 22 m/s
-GAP_DV_WINDOW_MPS = (0., 4.5)  # probe gap-maker: 1.5 m/s^2 for 3 s
-ABREAST_WINDOW_M = (400., 1800.)   # probe wall selection: 400-1800 m before the bottleneck
-CLOSING_WINDOW_M = (30., 1800.)    # probe gap pair 30-500 m U wall window (pairs inside walls)
-ABREAST_SPAN_M = 60.           # probe wall selection: longitudinal spread <= 60 m
-RELEASE_BEFORE_DROP_M = 30.    # probe gap pair: closest registered distance before the drop
-CLOSING_ROI_M = 500.           # probe gap pair: merger window upper bound before the drop
+# Move values are the NEWMAP2 registration (runs/active/C4-V7FT-20261017/NEWMAP2_REPORT.md
+# section 2 'Moments'/'Moves', NEWMAP2-20261106; reused unchanged by PLANGEN and PLANGEN2).
+ACCEL_MAX_MPS2 = 1.0                  # amax 1.0 (every variant)
+VARIANTS = dict(
+    pair_g=dict(family='closing_pair', target_mps=22., hold=120, depth=1.0, anchor=False),
+    pair_h=dict(family='closing_pair', target_mps=15., hold=90, depth=1.5, anchor=False),
+    pair_t=dict(family='closing_pair', target_mps=22., hold=150, depth=1.0, anchor=True),
+    wall_g=dict(family='abreast_wall', target_mps=22., hold=120, depth=1.0, anchor=False),
+    wall_h=dict(family='abreast_wall', target_mps=15., hold=90, depth=1.5, anchor=False))
+R_SETS = dict(target_mps=(15., 18., 22.), hold=(90, 120, 180), depth=(1.0, 1.5))   # R0/R1 random sets
+TARGET_WINDOW_MPS = (15., 22.)        # v_w over every registered variant / R set
+BRAKE_WINDOW_MPS2 = (1.0, 1.5)        # dmax over every registered variant / R set
+HOLD_WINDOW_S = (int(moves._HOLD_LO), 180)   # longest registered hold 180 s; lower bound = the
+#                                       registered minimum REMAINING hold of a join / relabel
+ONSET_S = 0                           # members act from el = 0 (start_s 0)
+ONSET_WINDOW_S = (int(moves._ONSET_LO), int(moves._ONSET_HI))   # remaining onset of a join / relabel
+ANCHOR_RELEASE_M = 150.               # pair_t: until the closing-lane CAV is 150 m before the drop
+ZONE_WINDOW_M = (400., 1800.)         # moment zone x in [X_B - 1800, X_B - 400]
+PAIR_DX_M = 100.                      # pair: lane-0 + lane-1 CAV, |dx| <= 100 m
+WALL_SPREAD_M = 200.                  # wall: one CAV per lane, spread <= 200 m
+GROUP_SPREAD_M = 300.                 # R0/R1: 2-3 zone CAVs within 300 m of each other
+GROUP_SIZE = (2, 3)
+GAP_DV_WINDOW_MPS = (0., 4.5)         # owner-example zip-gap extension: never drawn (needs MAIN registration)
+CLOSING_ROI_M = 500.                  # observation ROI (probe gap-pair merger window, NEWMAP_RESEARCH)
 LANE_DROP_REGISTERED = dict(
-    target_window_mps=TARGET_WINDOW_MPS, gap_dv_window_mps=GAP_DV_WINDOW_MPS,
-    brake_window_mps2=(moves._DEPTH_LO, moves._DEPTH_HI), accel_max_mps2=ACCEL_MAX_MPS2,
-    onset_window_s=(moves._ONSET_LO, moves._ONSET_HI), hold_window_s=(moves._HOLD_LO, moves._HOLD_HI),
-    abreast_window_m=ABREAST_WINDOW_M, closing_window_m=CLOSING_WINDOW_M,
-    abreast_span_m=ABREAST_SPAN_M, release_before_drop_m=RELEASE_BEFORE_DROP_M,
-    closing_roi_m=CLOSING_ROI_M, queue_speed_mps=QUEUE_SPEED_MPS, zip_choices=(False, True),
+    variants=VARIANTS, r_sets=R_SETS, target_window_mps=TARGET_WINDOW_MPS,
+    brake_window_mps2=BRAKE_WINDOW_MPS2, accel_max_mps2=ACCEL_MAX_MPS2, hold_window_s=HOLD_WINDOW_S,
+    onset_s=ONSET_S, onset_window_s=ONSET_WINDOW_S, release='own drop crossing (x >= X_B) or hold end',
+    anchor_release_m=ANCHOR_RELEASE_M, zone_window_m=ZONE_WINDOW_M, pair_dx_m=PAIR_DX_M,
+    wall_spread_m=WALL_SPREAD_M, group_spread_m=GROUP_SPREAD_M, group_size=GROUP_SIZE,
+    closing_roi_m=CLOSING_ROI_M, queue_speed_mps=QUEUE_SPEED_MPS,
     v2v_range_window_m=V2V_RANGE_WINDOW_M, default_v2v_range_m=DEFAULT_V2V_RANGE_M,
-    provenance='NEWMAP_RESEARCH.md probe rules (walls W1/W2, gap pair, situation selection)')
+    provenance='NEWMAP2_REPORT.md (NEWMAP2-20261106) moments/moves/variants; PLANGEN/PLANGEN2 reuse')
 
 
 def _finite(value):
@@ -383,25 +401,29 @@ def scaled(block):
 def _check_schedule(onset, hold, depth):
     if type(onset) is not int or type(hold) is not int:
         raise ValueError('lane-drop onset/hold must be integer seconds')
-    if (not moves._in_window(onset, moves._ONSET_LO, moves._ONSET_HI)
-            or not moves._in_window(hold, moves._HOLD_LO, moves._HOLD_HI)
-            or not _finite(depth) or not moves._in_window(depth, moves._DEPTH_LO, moves._DEPTH_HI)):
-        raise ValueError('lane-drop schedule outside the registered onset/hold/brake windows')
+    if (not ONSET_WINDOW_S[0] <= onset <= ONSET_WINDOW_S[1]
+            or not HOLD_WINDOW_S[0] <= hold <= HOLD_WINDOW_S[1]
+            or not _finite(depth) or not BRAKE_WINDOW_MPS2[0] <= float(depth) <= BRAKE_WINDOW_MPS2[1]):
+        raise ValueError(f'lane-drop schedule outside the registered windows onset {ONSET_WINDOW_S} s, '
+                         f'hold {HOLD_WINDOW_S} s, braking cap {BRAKE_WINDOW_MPS2} m/s^2')
 
 
 def _check_speeds(target, gap_dv):
     if not _finite(target) or not TARGET_WINDOW_MPS[0] <= float(target) <= TARGET_WINDOW_MPS[1]:
         raise ValueError(f'target_mps outside the registered window {TARGET_WINDOW_MPS}')
     if not _finite(gap_dv) or not GAP_DV_WINDOW_MPS[0] <= float(gap_dv) <= GAP_DV_WINDOW_MPS[1]:
-        raise ValueError(f'gap_dv_mps outside the registered window {GAP_DV_WINDOW_MPS}')
+        raise ValueError(f'gap_dv_mps outside the window {GAP_DV_WINDOW_MPS}')
 
 
 @dataclass(frozen=True)
 class LaneDropMove:
-    """Joint lane-drop move; members in role order with their observed lanes.
+    """Joint lane-drop hold move (NEWMAP2 rule); members in role order with their lanes.
 
-    closing_pair: members = (closing-lane CAV, adjacent-lane CAV).
-    abreast_wall: one member per lane, ordered by lane id."""
+    closing_pair: (closing-lane CAV, adjacent-lane CAV); ``anchor`` 0 = pair_t (all release when
+    the closing-lane CAV is ANCHOR_RELEASE_M before the drop). abreast_wall: one member per
+    lane, ordered by lane id. group_hold: 2..GROUP_SIZE[1] CAVs in any lanes (the R_random
+    hold procedure). Every member holds its target with the speed law and releases at its own
+    drop crossing or at the end of the hold."""
     family: str
     members: tuple
     onset: int
@@ -411,6 +433,8 @@ class LaneDropMove:
     gap_dv_mps: float = 0.
     zip: bool = False
     lanes: tuple = ()
+    anchor: int = -1
+    self_validated_windows = True   # trigger_policy: registered lane-drop windows, not variety
 
     def __post_init__(self):
         object.__setattr__(self, 'members', tuple(self.members))
@@ -421,19 +445,25 @@ class LaneDropMove:
         if (not 2 <= len(members) <= moves.MOVE_MAX_MEMBERS or len(set(members)) != len(members)
                 or any(not isinstance(v, str) or not v for v in members)):
             raise ValueError(f'lane-drop moves need 2..{moves.MOVE_MAX_MEMBERS} distinct CAV ids')
-        if (len(lanes) != len(members) or len(set(lanes)) != len(lanes)
-                or any(type(lane) is not int or lane not in range(N_LANES) for lane in lanes)):
-            raise ValueError('lane-drop members need one distinct observed lane each')
+        if len(lanes) != len(members) or any(type(lane) is not int or lane not in range(N_LANES)
+                                              for lane in lanes):
+            raise ValueError('lane-drop members need one observed lane each')
+        if self.family != 'group_hold' and len(set(lanes)) != len(lanes):
+            raise ValueError(f'{self.family} members are in distinct lanes')
         _check_schedule(self.onset, self.hold, self.depth)
         _check_speeds(self.target_mps, self.gap_dv_mps)
-        if type(self.zip) is not bool:
-            raise ValueError('zip must be bool')
+        if type(self.zip) is not bool or type(self.anchor) is not int:
+            raise ValueError('zip must be bool and anchor an integer index')
         if self.family == 'closing_pair' and len(members) != 2:
             raise ValueError('closing_pair is exactly (closing-lane CAV, adjacent-lane CAV)')
-        if self.family == 'abreast_wall' and (self.zip or float(self.gap_dv_mps) != 0.):
-            raise ValueError('abreast_wall holds ONE common speed and never changes lane')
+        if self.family != 'closing_pair' and (self.zip or float(self.gap_dv_mps) != 0. or self.anchor != -1):
+            raise ValueError(f'{self.family} holds ONE common speed, no zip/gap/anchor')
+        if self.family == 'closing_pair' and self.anchor not in (-1, 0):
+            raise ValueError('the pair_t anchor is the closing-lane CAV (members[0])')
         if self.family == 'abreast_wall' and list(lanes) != sorted(lanes):
             raise ValueError('abreast_wall members are ordered by lane id')
+        if self.family == 'group_hold' and len(members) > GROUP_SIZE[1]:
+            raise ValueError(f'group_hold has {GROUP_SIZE} members')
 
     @property
     def onset_s(self):
@@ -458,105 +488,117 @@ class LaneDropMove:
         if self.family == 'closing_pair':
             if self.lanes != (view.dropped_lane, view.adjacent_lane):
                 raise ValueError('closing_pair roles must be (dropped lane, adjacent lane)')
-        elif sorted(self.lanes) != sorted(view.lane_ids):
-            raise ValueError('abreast_wall needs exactly one member per lane')
+        elif self.family == 'abreast_wall':
+            if sorted(self.lanes) != sorted(view.lane_ids):
+                raise ValueError('abreast_wall needs exactly one member per lane')
+        elif not set(self.lanes) <= set(view.lane_ids):
+            raise ValueError('group_hold members must be in map lanes')
         return self
 
     def to_dict(self):
-        return dict(family=self.family, members=list(self.members), onset=int(self.onset),
-                    hold=int(self.hold), depth=float(self.depth), target_mps=float(self.target_mps),
-                    gap_dv_mps=float(self.gap_dv_mps), zip=bool(self.zip), lanes=list(self.lanes))
+        out = dict(family=self.family, members=list(self.members), onset=int(self.onset),
+                   hold=int(self.hold), depth=float(self.depth), target_mps=float(self.target_mps),
+                   gap_dv_mps=float(self.gap_dv_mps), zip=bool(self.zip), lanes=list(self.lanes))
+        if self.anchor != -1:
+            out['anchor'] = int(self.anchor)
+        return out
 
     @classmethod
     def from_dict(cls, data):
         return cls(data['family'], tuple(data['members']), int(data['onset']), int(data['hold']),
                    float(data['depth']), float(data['target_mps']), float(data.get('gap_dv_mps', 0.)),
-                   bool(data.get('zip', False)), tuple(data.get('lanes') or ()))
+                   bool(data.get('zip', False)), tuple(data.get('lanes') or ()), int(data.get('anchor', -1)))
+
+
+def resolve_family(lanes, view):
+    """closing_pair / abreast_wall when the member lanes fill those roles, else group_hold."""
+    if len(lanes) == 2 and sorted(lanes) == sorted((view.dropped_lane, view.adjacent_lane)):
+        return 'closing_pair'
+    if sorted(lanes) == sorted(view.lane_ids):
+        return 'abreast_wall'
+    return 'group_hold'
 
 
 def law(target_mps, v_mps, depth):
-    """Probe speed law: a = clip((target - v)/1 s, -depth, ACCEL_MAX)."""
+    """NEWMAP2 hold law: a = clip((v_w - v)/1 s, -dmax, amax)."""
     return min(ACCEL_MAX_MPS2, max(-float(depth), (float(target_mps)-float(v_mps))/CONTROL_DT_S))
 
 
-def released(view, positions, watched):
-    """True when any KNOWN watched position is within the registered release distance."""
-    return any(v in positions and view.distance_to_drop(positions[v]) <= RELEASE_BEFORE_DROP_M
-               for v in watched)
+def at_drop(view, positions, vid):
+    """The member's own KNOWN position has reached the drop (NEWMAP2 x >= X_B)."""
+    return vid in positions and view.distance_to_drop(positions[vid]) <= 0.
 
 
-def _params(rng, kind):
-    """Registered draws: same number of rng draws for every kind (stream-stable)."""
-    onset, hold, depth = moves._sampled(rng)
-    target = float(rng.uniform(*TARGET_WINDOW_MPS))
-    gap_dv = float(rng.uniform(*GAP_DV_WINDOW_MPS))
-    zipped = bool(rng.integers(2))
-    if kind == 'abreast_wall':
-        gap_dv, zipped = 0., False
-    return onset, hold, depth, target, gap_dv, zipped
+def anchor_passed(view, positions, vid):
+    """pair_t: the KNOWN anchor position is within ANCHOR_RELEASE_M of the drop."""
+    return vid in positions and view.distance_to_drop(positions[vid]) <= ANCHOR_RELEASE_M
 
 
-def _arrival(view, rows):
-    return min(((view.distance_to_drop(r['s_m'])-RELEASE_BEFORE_DROP_M)/float(r['v_mps'])
-                if float(r['v_mps']) > 0 else math.inf) for r in rows)
+def _params(rng, kind, *, allow_anchor=True):
+    """Registered draws -> (onset, hold, depth, target, gap_dv, zip, anchor).
 
-
-def clip_schedule(onset, hold, arrival):
-    """Release no later than the observable constant-speed arrival at the release point."""
-    if arrival < moves._HOLD_LO:
-        return None
-    onset = min(int(onset), int(min(moves._ONSET_HI, arrival-moves._HOLD_LO)))
-    hold = min(int(hold), int(min(moves._HOLD_HI, arrival-onset)))
-    return onset, hold
+    closing_pair / abreast_wall: one NEWMAP2 B variant of that family (uniform); group_hold:
+    the R_random sets. gap_dv/zip are never drawn (unregistered extensions)."""
+    if kind == 'group_hold':
+        target = float(R_SETS['target_mps'][int(rng.integers(len(R_SETS['target_mps'])))])
+        hold = int(R_SETS['hold'][int(rng.integers(len(R_SETS['hold'])))])
+        depth = float(R_SETS['depth'][int(rng.integers(len(R_SETS['depth'])))])
+        return ONSET_S, hold, depth, target, 0., False, False
+    names = [n for n, v in VARIANTS.items() if v['family'] == kind and (allow_anchor or not v['anchor'])]
+    v = VARIANTS[names[int(rng.integers(len(names)))]]
+    return ONSET_S, int(v['hold']), float(v['depth']), float(v['target_mps']), 0., False, bool(v['anchor'])
 
 
 def _in_window(view, row, window):
     return window[0] <= view.distance_to_drop(row['s_m']) <= window[1]
 
 
+def _spread(rows):
+    s = [float(r['s_m']) for r in rows]
+    return max(s)-min(s)
+
+
 def joint_groups(family, view, own, partners):
-    """Role-ordered member row tuples for one joint family; own always included."""
-    near = [p for p in partners if abs(float(p['s_m'])-float(own['s_m'])) <= ABREAST_SPAN_M]
+    """Role-ordered member row tuples for one joint family (NEWMAP2 moment geometry); own
+    always included. Partners are the ego's acquirable observable CAVs only."""
+    if not _in_window(view, own, ZONE_WINDOW_M):
+        return []
+    pool = [p for p in partners if _in_window(view, p, ZONE_WINDOW_M)]
     if family == 'closing_pair':
-        if not _in_window(view, own, CLOSING_WINDOW_M):
-            return []
-        pool = [p for p in near if _in_window(view, p, CLOSING_WINDOW_M)]
+        near = [p for p in pool if abs(float(p['s_m'])-float(own['s_m'])) <= PAIR_DX_M]
         if own['lane'] == view.dropped_lane:
-            return [(own, p) for p in pool if p['lane'] == view.adjacent_lane]
+            return [(own, p) for p in near if p['lane'] == view.adjacent_lane]
         if own['lane'] == view.adjacent_lane:
-            return [(p, own) for p in pool if p['lane'] == view.dropped_lane]
+            return [(p, own) for p in near if p['lane'] == view.dropped_lane]
         return []
     if family == 'abreast_wall':
-        if (own['lane'] not in view.lane_ids or len(view.lane_ids) > moves.MOVE_MAX_MEMBERS
-                or not _in_window(view, own, ABREAST_WINDOW_M)):
+        if own['lane'] not in view.lane_ids or len(view.lane_ids) > moves.MOVE_MAX_MEMBERS:
             return []
-        per_lane = [[own] if lane == own['lane'] else
-                    [p for p in near if p['lane'] == lane and _in_window(view, p, ABREAST_WINDOW_M)]
+        per_lane = [[own] if lane == own['lane'] else [p for p in pool if p['lane'] == lane]
                     for lane in sorted(view.lane_ids)]
+        return [tuple(group) for group in product(*per_lane) if _spread(group) <= WALL_SPREAD_M]
+    if family == 'group_hold':
         out = []
-        for group in product(*per_lane):
-            s = [float(r['s_m']) for r in group]
-            if max(s)-min(s) <= ABREAST_SPAN_M:
-                out.append(tuple(group))
+        for size in range(GROUP_SIZE[0]-1, GROUP_SIZE[1]):
+            for group in combinations(pool, size):
+                rows = (own,)+tuple(group)
+                if _spread(rows) <= GROUP_SPREAD_M:
+                    out.append(rows)
         return out
     raise ValueError(f'unregistered lane-drop family {family!r}')
 
 
 def _joint(family, view, group, rng):
-    onset, hold, depth, target, gap_dv, zipped = _params(rng, family)
-    clipped = clip_schedule(onset, hold, _arrival(view, group))
-    if clipped is None:
-        return None
-    return LaneDropMove(family, tuple(r['vid'] for r in group), *clipped, depth, target, gap_dv,
-                        zipped, tuple(int(r['lane']) for r in group))
+    onset, hold, depth, target, gap_dv, zipped, anchor = _params(rng, family)
+    return LaneDropMove(family, tuple(r['vid'] for r in group), onset, hold, depth, target, gap_dv,
+                        zipped, tuple(int(r['lane']) for r in group), 0 if anchor else -1)
 
 
 def pool(family, state, own, partners, rng):
     """Feasible options of one lane-drop family (joint or protocol) for the acting CAV."""
     view = state['view']
     if family in JOINT_FAMILIES:
-        return [m for group in joint_groups(family, view, own, partners)
-                if (m := _joint(family, view, group, rng)) is not None]
+        return [_joint(family, view, group, rng) for group in joint_groups(family, view, own, partners)]
     if family in INITIATE_SLOTS:
         if state.get('only_join'):
             return []
@@ -571,8 +613,7 @@ def redraw(template, state, own, by_vid, rng):
     """Slate entry from a chosen pool template: re-sample parameters, joins are exact."""
     view = state['view']
     if isinstance(template, LaneDropMove):
-        group = [by_vid[v] for v in template.members]
-        return _joint(template.family, view, group, rng)
+        return _joint(template.family, view, [by_vid[v] for v in template.members], rng)
     if template.family == 'lane_drop_initiate':
         return _initiate(template.kind, own, state, rng)
     return template
@@ -605,14 +646,16 @@ def owns(family):
 def member_command(move, vid, t, view, *, speed, positions, protocol=None):
     """Absolute law acceleration for ONE member at second t of its own commitment, or None.
 
-    None = no command this second (base policy). ``positions`` are the member's own
-    observable positions (own sensing + t-1 partner packets); unknown members never
-    trigger an early release (W1 convention)."""
+    None = no command (released / outside the hold: base policy). Release (NEWMAP2): own drop
+    crossing, hold end, pair_t anchor 150 m before the drop, or a received release message.
+    ``positions`` are the member's own observable positions (own sensing + t-1 partner
+    packets); an unknown anchor never triggers an early release (W1 convention)."""
     option = getattr(move, 'move', move)
     if isinstance(option, LaneDropMove):
         if vid not in option.members or not option.onset <= t < option.onset+option.hold:
             return None
-        if released(view, positions, option.members):
+        if at_drop(view, positions, vid) or (
+                option.anchor >= 0 and anchor_passed(view, positions, option.members[option.anchor])):
             return None
         return law(option.role_targets()[vid], speed, option.depth)
     if isinstance(option, LaneDropOption):
@@ -620,8 +663,7 @@ def member_command(move, vid, t, view, *, speed, positions, protocol=None):
             return None
         if protocol is not None and (vid, option.wall_id) in protocol.release_latch:
             return None
-        watched = {vid} | ({option.initiator} if option.initiator != RSU_ID else set())
-        if released(view, positions, watched):
+        if at_drop(view, positions, vid) or (option.anchor and anchor_passed(view, positions, option.initiator)):
             return None
         return law(option.own_target(view), speed, option.depth)
     return None
@@ -650,7 +692,7 @@ def _matrix(value, shape, name):
 
 
 def executed_profile(move, view, policy_profile, speeds, positions):
-    """members x duration absolute commands: law where commanded, the policy elsewhere."""
+    """members x duration absolute commands: law while held, the policy elsewhere."""
     out = np.array(policy_profile, float)
     for t in range(out.shape[1]):
         known = {v: positions[i, t] for i, v in enumerate(move.members)}
@@ -671,7 +713,7 @@ _FORBIDDEN = ('knots', 'knot_s', 'perturbation_knots', 'perturbation_canonical',
 
 
 def plan(move, view, *, policy_profile, member_speeds, member_positions, plan_id=None):
-    """Executable verified-plan dict (G5 convention) for a joint lane-drop move."""
+    """Executable plan (G5 convention) with recorded member speeds/positions (law exact)."""
     if not isinstance(move, LaneDropMove):
         raise ValueError('lane_drop.plan needs a LaneDropMove')
     view = MapView.from_descriptor(view)
@@ -691,8 +733,38 @@ def plan(move, view, *, policy_profile, member_speeds, member_positions, plan_id
                 lane_drop_lane_actions=lane_actions(move, view, positions))
 
 
+VERIFIED_TOL = 1e-6   # mined rows store issued commands rounded to 1e-4 and perturbation = profile - policy
+
+
+def _bind_verified(plan, move, view, dur):
+    """Mined/verified representation: the row's own executed profile + per-member release el."""
+    shape = (len(move.members), dur)
+    profile = _matrix(plan['profile'], shape, 'profile')
+    base = _matrix(plan['policy_profile'], shape, 'policy_profile')
+    stored = _matrix(plan['perturbation_profile'], shape, 'perturbation_profile')
+    release = plan['member_release_el']
+    if (not isinstance(release, list) or len(release) != len(move.members)
+            or any(type(el) is not int or not 0 <= el <= move.onset+move.hold for el in release)
+            or dur != max(release) or dur < 1):
+        raise ValueError('verified lane-drop plan: release el per member within the hold; duration = last release')
+    if not np.allclose(stored, profile-base, atol=VERIFIED_TOL, rtol=0):
+        raise ValueError('verified lane-drop plan: perturbation_profile != profile - policy_profile')
+    lo, hi = -float(move.depth)-VERIFIED_TOL, ACCEL_MAX_MPS2+VERIFIED_TOL
+    for i, el in enumerate(release):
+        held = profile[i, move.onset:el]
+        if held.size and (held.min() < lo or held.max() > hi):
+            raise ValueError('verified lane-drop plan: a held command exceeds the registered law bounds')
+    if plan['lane_drop_lane_actions'] != [[0]*dur for _ in move.members]:
+        raise ValueError('verified hold plans carry no lane actions')
+    return profile
+
+
 def from_plan(plan):
-    """Exact executable binding of a ``lane_drop_macro`` plan (never a lossy projection)."""
+    """Exact executable binding of a ``lane_drop_macro`` plan (never a lossy projection).
+
+    Two representations: recorded law (member_speeds_mps/member_positions_m: the profile must
+    equal the law on them) and verified mined rows (member_release_el: the row's executed
+    profile within the registered law bounds, see plan_from_mined_row)."""
     macro = plan.get('lane_drop_macro')
     if not isinstance(macro, dict):
         raise ValueError('lane-drop plan requires an explicit lane_drop_macro')
@@ -702,26 +774,35 @@ def from_plan(plan):
     if list(move.members) != plan.get('members') or plan.get('family') != move.family:
         raise ValueError('lane-drop plan member/family binding mismatch')
     dur = plan.get('duration_s')
-    if type(dur) is not int or dur != move.onset+move.hold:
-        raise ValueError('lane-drop plan duration_s must equal onset + hold')
-    for key in ('profile', 'policy_profile', 'perturbation_profile', 'member_speeds_mps',
-                'member_positions_m', 'lane_drop_lane_actions'):
-        if key not in plan:
-            raise ValueError(f'lane-drop plan requires {key} (incomplete executable representation)')
+    if type(dur) is not int:
+        raise ValueError('lane-drop plan needs an integer duration_s')
     if any(key in plan for key in _FORBIDDEN):
         raise ValueError('lane-drop plan carries a conflicting representation')
-    shape = (len(move.members), dur)
-    profile = _matrix(plan['profile'], shape, 'profile')
-    base = _matrix(plan['policy_profile'], shape, 'policy_profile')
-    stored = _matrix(plan['perturbation_profile'], shape, 'perturbation_profile')
-    speeds = _matrix(plan['member_speeds_mps'], shape, 'member_speeds_mps')
-    positions = _matrix(plan['member_positions_m'], shape, 'member_positions_m')
-    wanted = executed_profile(move, view, base, speeds, positions)
-    if not np.allclose(profile, wanted, atol=1e-8, rtol=0) \
-            or not np.allclose(stored, wanted-base, atol=1e-8, rtol=0):
-        raise ValueError('lane-drop executable profile does not equal the law on the recorded speeds')
-    if plan['lane_drop_lane_actions'] != lane_actions(move, view, positions):
-        raise ValueError('lane-drop plan lane actions do not match the executable macro')
+    verified = 'member_release_el' in plan
+    needed = ('profile', 'policy_profile', 'perturbation_profile', 'lane_drop_lane_actions')+(
+        ('member_release_el',) if verified else ('member_speeds_mps', 'member_positions_m'))
+    for key in needed:
+        if key not in plan:
+            raise ValueError(f'lane-drop plan requires {key} (incomplete executable representation)')
+    if verified:
+        if 'member_speeds_mps' in plan or 'member_positions_m' in plan:
+            raise ValueError('lane-drop plan mixes the verified and recorded-law representations')
+        profile = _bind_verified(plan, move, view, dur)
+    else:
+        if dur != move.onset+move.hold:
+            raise ValueError('lane-drop plan duration_s must equal onset + hold')
+        shape = (len(move.members), dur)
+        profile = _matrix(plan['profile'], shape, 'profile')
+        base = _matrix(plan['policy_profile'], shape, 'policy_profile')
+        stored = _matrix(plan['perturbation_profile'], shape, 'perturbation_profile')
+        speeds = _matrix(plan['member_speeds_mps'], shape, 'member_speeds_mps')
+        positions = _matrix(plan['member_positions_m'], shape, 'member_positions_m')
+        wanted = executed_profile(move, view, base, speeds, positions)
+        if not np.allclose(profile, wanted, atol=1e-8, rtol=0) \
+                or not np.allclose(stored, wanted-base, atol=1e-8, rtol=0):
+            raise ValueError('lane-drop executable profile does not equal the law on the recorded speeds')
+        if plan['lane_drop_lane_actions'] != lane_actions(move, view, positions):
+            raise ValueError('lane-drop plan lane actions do not match the executable macro')
     from .plans import acceleration_at
     for t in range(dur):
         executed = acceleration_at(plan, t)
@@ -729,6 +810,128 @@ def from_plan(plan):
                 abs(executed[v]-profile[i, t]) > 1e-8 for i, v in enumerate(move.members)):
             raise ValueError('lane-drop executor does not run the bound executable profile')
     return move
+
+
+class NotRepresentable(ValueError):
+    """A mined row whose family needs lane-change moves (N9), not a hold macro."""
+
+
+_MINED_PARAMS = {'release_x', 'amax', 'v_w', 'hold_s', 'dmax', 'anchor', 'anchor_release_x', 'start_s'}
+
+
+def plan_from_mined_row(row, descriptor):
+    """Exact converter: coopmwm-mined-move-v1 NEWMAP2 / PLANGEN / PLANGEN2 hold row -> plan.
+
+    SUMO lanes are mapped through the N1 descriptor's lane table (wz3to2: SUMO 0 = closing ->
+    WM 2); release_x must be the registered drop x and anchor_release_x the registered anchor
+    distance. closing_pair / abreast_wall rows must fill their roles (else refused); R_random
+    hold rows become closing_pair / abreast_wall when their lanes fill those roles, otherwise
+    group_hold. Rows with lane-change roles or commands raise NotRepresentable (N9). The
+    returned plan is bound exactly by from_plan (moves.from_plan never projects it)."""
+    if row.get('schema') != 'coopmwm-mined-move-v1':
+        raise ValueError('mined row schema must be coopmwm-mined-move-v1')
+    view = MapView.from_descriptor(descriptor)
+    neck = descriptor.bottleneck
+    if (row.get('world') or {}).get('map') != descriptor.name or row['move'].get('map') != descriptor.name:
+        raise ValueError('mined row map differs from the descriptor map')
+    entries = row['move']['members']
+    ids = [m['id'] for m in entries]
+    if ids != list(row['members']) or len(set(ids)) != len(ids):
+        raise ValueError('mined row move members differ from its member list')
+    roles = {m.get('role') for m in entries}
+    if not roles <= {None, 'hold'} or row.get('commands'):
+        raise NotRepresentable(f"{row['family']}/{row['variant']}: roles {sorted(map(str, roles))} or "
+                               'lane commands need N9 lane-change moves')
+    family = row['family']
+    if family not in ('closing_pair', 'abreast_wall', 'R_random'):
+        raise NotRepresentable(f'{family}: not a lane-drop hold family')
+    params = [m['params'] for m in entries]
+    if any(set(p)-_MINED_PARAMS for p in params):
+        raise NotRepresentable(f"{family}/{row['variant']}: unregistered member parameters")
+    common = {k: params[0].get(k) for k in ('v_w', 'hold_s', 'dmax', 'amax', 'release_x', 'start_s',
+                                             'anchor', 'anchor_release_x')}
+    if any({k: p.get(k) for k in common} != common for p in params):
+        raise ValueError('mined row members do not share one hold macro')
+    if float(common['release_x']) != float(neck['drop_x_m']):
+        raise ValueError('mined row release_x is not the registered drop')
+    if float(common['amax']) != ACCEL_MAX_MPS2:
+        raise ValueError('mined row amax is not the registered 1.0 m/s^2')
+    lanes = [descriptor.lane_table[(neck['edge'], int(m['lane']))][0] for m in entries]
+    resolved = resolve_family(lanes, view)
+    if family != 'R_random' and resolved != family:
+        raise ValueError(f'{family} row lanes {lanes} do not fill the {family} roles')
+    if resolved == 'closing_pair':
+        order = sorted(range(2), key=lambda i: lanes[i] != view.dropped_lane)
+    elif resolved == 'abreast_wall':
+        order = sorted(range(len(lanes)), key=lambda i: lanes[i])
+    else:
+        order = list(range(len(lanes)))
+    anchor = -1
+    if common['anchor'] is not None:
+        if float(neck['drop_x_m'])-float(common['anchor_release_x']) != ANCHOR_RELEASE_M:
+            raise ValueError('mined row anchor release is not the registered distance')
+        anchor = [ids[i] for i in order].index(common['anchor'])
+    move = LaneDropMove(resolved, tuple(ids[i] for i in order), int(common['start_s'] or 0),
+                        int(common['hold_s']), float(common['dmax']), float(common['v_w']), 0., False,
+                        tuple(lanes[i] for i in order), anchor)
+    by_id = {v: i for i, v in enumerate(ids)}
+    return verified_plan(move, view, duration_s=row['duration_s'],
+        release_el={v: row['release_el'][v] for v in ids},
+        profile={v: row['profile'][by_id[v]] for v in ids},
+        policy_profile={v: row['policy_profile'][by_id[v]] for v in ids},
+        perturbation_profile={v: row['perturbation_profile'][by_id[v]] for v in ids},
+        plan_id=f"ld_{row['verification_id']}",
+        source=dict(schema=row['schema'], arm=row.get('arm'), verification_id=row['verification_id'],
+                    plan_sha256=row.get('plan_sha256'), family=family, variant=row.get('variant'),
+                    r_kind=row.get('r_kind'), situation_id=row.get('situation_id'), t0=row.get('t0'),
+                    seed=row.get('seed'), sumo_lanes=[int(entries[i]['lane']) for i in order]))
+
+
+def move_from_mined_row(row, descriptor):
+    """The LaneDropMove (WM frame) that a mined hold row executed (see plan_from_mined_row)."""
+    return LaneDropMove.from_dict(plan_from_mined_row(row, descriptor)['lane_drop_macro'])
+
+
+def verified_plan(move, view, *, duration_s, release_el, profile, policy_profile, perturbation_profile=None,
+                  plan_id=None, source=None):
+    """Verified-run representation for a SUMO-executed lane-drop move (mined rows and N4's
+    provisional builder): per-member executed profile (issued while held, else measured),
+    policy profile, release el. Mappings are keyed by member id; bound by from_plan."""
+    view = MapView.from_descriptor(view)
+    members = list(move.members)
+    if set(release_el) != set(members) or set(profile) != set(members) or set(policy_profile) != set(members):
+        raise ValueError('verified plan needs every member release el / profile / policy profile')
+    prof = [list(profile[v]) for v in members]
+    base = [list(policy_profile[v]) for v in members]
+    pert = ([list(perturbation_profile[v]) for v in members] if perturbation_profile is not None
+            else (np.array(prof, float)-np.array(base, float)).tolist())
+    out = dict(id=plan_id or f'ld_verified_{move.family}_{"_".join(members)}', family=move.family,
+               members=members, duration_s=int(duration_s), lane_drop_macro=move.to_dict(),
+               lane_drop_map=view.to_dict(), member_release_el=[release_el[v] for v in members],
+               profile=prof, policy_profile=base, perturbation_profile=pert,
+               lane_drop_lane_actions=[[0]*int(duration_s) for _ in members], source=dict(source or {}))
+    from_plan(out)
+    return out
+
+
+def newmap_members(move, descriptor):
+    """SUMO execution spec of a WM-frame LaneDropMove in the NEWMAP2 executor format
+    (nm2_core Arm members: id, SUMO lane on the approach edge, role 'hold', params). This is the
+    API for a SUMO verification run of a proposed move (N4 provisional builder, origin
+    clean4_provisional_speed_target); the run's result returns through verified_plan."""
+    view = MapView.from_descriptor(descriptor)
+    move.check_roles(view)
+    if move.zip or float(move.gap_dv_mps) != 0. or move.onset != ONSET_S:
+        raise NotRepresentable('zip / gap_dv / delayed onset have no NEWMAP2 executor form')
+    neck = descriptor.bottleneck
+    sumo_of = {wm: idx for (edge, idx), (wm, _) in descriptor.lane_table.items() if edge == neck['edge']}
+    params = dict(release_x=float(neck['drop_x_m']), amax=ACCEL_MAX_MPS2, v_w=float(move.target_mps),
+                  hold_s=int(move.hold), dmax=float(move.depth))
+    if move.anchor >= 0:
+        params.update(anchor=move.members[move.anchor],
+                      anchor_release_x=float(neck['drop_x_m'])-ANCHOR_RELEASE_M)
+    return [dict(id=v, lane=int(sumo_of[lane]), role='hold', params=dict(params))
+            for v, lane in zip(move.members, move.lanes)]
 
 
 # ---------------------------------------------------------------- lane changes (G5 env path)
@@ -847,6 +1050,8 @@ class LaneDropOption:
     cap: int = 2
     range_m: float = DEFAULT_V2V_RANGE_M
     covered: tuple = ()
+    anchor: bool = False      # pair_t session: release when the initiator (closing-lane anchor) nears
+    self_validated_windows = True   # trigger_policy: registered lane-drop windows, not variety
 
     def __post_init__(self):
         object.__setattr__(self, 'members', tuple(self.members))
@@ -864,6 +1069,8 @@ class LaneDropOption:
         _check_speeds(self.target_mps, self.gap_dv_mps)
         if type(self.zip) is not bool or (self.kind == 'abreast_wall' and (self.zip or self.gap_dv_mps)):
             raise ValueError('abreast_wall sessions have no zip / gap offset')
+        if type(self.anchor) is not bool or (self.anchor and self.kind != 'closing_pair'):
+            raise ValueError('only closing_pair sessions carry the pair_t anchor release')
         least = 0 if self.initiator == RSU_ID else 1   # an RSU session may have no member yet
         if not 2 <= self.cap <= moves.MOVE_MAX_MEMBERS or not least <= self.member_count < self.cap:
             raise ValueError('lane-drop option membership outside the registered cap')
@@ -895,7 +1102,7 @@ class LaneDropOption:
                     gap_dv_mps=float(self.gap_dv_mps), zip=bool(self.zip), role_lane=int(self.role_lane),
                     wall_id=self.wall_id, initiator=self.initiator, gap_m=float(self.gap_m),
                     member_count=int(self.member_count), cap=int(self.cap), range_m=float(self.range_m),
-                    covered=list(self.covered))
+                    covered=list(self.covered), anchor=bool(self.anchor))
 
     @classmethod
     def from_dict(cls, data):
@@ -903,7 +1110,7 @@ class LaneDropOption:
                    int(data['hold']), float(data['depth']), float(data['target_mps']),
                    float(data['gap_dv_mps']), bool(data['zip']), int(data['role_lane']), data['wall_id'],
                    data['initiator'], float(data['gap_m']), int(data['member_count']), int(data['cap']),
-                   float(data['range_m']), tuple(data.get('covered') or ()))
+                   float(data['range_m']), tuple(data.get('covered') or ()), bool(data.get('anchor', False)))
 
 
 def option_from_dict(data):
@@ -931,17 +1138,15 @@ def role_lanes(kind, view):
 def _initiate(kind, own, state, rng):
     """Initiate option of one kind for the acting CAV, or None (own state only)."""
     view = state['view']
-    window = CLOSING_WINDOW_M if kind == 'closing_pair' else ABREAST_WINDOW_M
-    if own['lane'] not in role_lanes(kind, view) or not _in_window(view, own, window):
+    if own['lane'] not in role_lanes(kind, view) or not _in_window(view, own, ZONE_WINDOW_M):
         return None
-    onset, hold, depth, target, gap_dv, zipped = _params(rng, kind)
-    clipped = clip_schedule(onset, hold, _arrival(view, [own]))
-    if clipped is None:
-        return None
+    # pair_t anchors on the closing-lane CAV, so only a closing-lane initiator may draw it.
+    onset, hold, depth, target, gap_dv, zipped, anchor = _params(
+        rng, kind, allow_anchor=kind == 'closing_pair' and own['lane'] == view.dropped_lane)
     ego = own['vid']
-    return LaneDropOption('lane_drop_initiate', (ego,), kind, *clipped, depth, target, gap_dv, zipped,
+    return LaneDropOption('lane_drop_initiate', (ego,), kind, onset, hold, depth, target, gap_dv, zipped,
                           int(own['lane']), wall_id=f'{ego}@{state["now"]}', initiator=ego,
-                          cap=kind_cap(kind, view, state['cap']), range_m=state['range_m'])
+                          cap=kind_cap(kind, view, state['cap']), range_m=state['range_m'], anchor=anchor)
 
 
 @dataclass(frozen=True)
@@ -965,6 +1170,7 @@ class LaneDropIntent:
     cap: int
     released: bool
     radius_m: float = 0.     # RSU suggestions: join radius around the anchor (source_s_m)
+    anchor: bool = False     # pair_t session (released when the initiator nears the drop)
 
     @property
     def end_s(self):
@@ -977,7 +1183,7 @@ class LaneDropIntent:
                     hold=self.hold, depth=float(self.depth), target_mps=float(self.target_mps),
                     gap_dv_mps=float(self.gap_dv_mps), zip=bool(self.zip), covered=list(self.covered),
                     member_count=self.member_count, cap=self.cap, released=bool(self.released),
-                    radius_m=float(self.radius_m))
+                    radius_m=float(self.radius_m), anchor=bool(self.anchor))
 
 
 class Protocol(v2v_wall.Protocol):
@@ -1021,21 +1227,20 @@ class Protocol(v2v_wall.Protocol):
                     continue
                 if vid in self.membership or msg.member_count >= msg.cap:
                     continue
-                window = CLOSING_WINDOW_M if msg.kind == 'closing_pair' else ABREAST_WINDOW_M
                 if (lane not in role_lanes(msg.kind, view) or lane in msg.covered
-                        or not window[0] <= view.distance_to_drop(s) <= window[1]):
+                        or not ZONE_WINDOW_M[0] <= view.distance_to_drop(s) <= ZONE_WINDOW_M[1]):
                     continue
                 begin = msg.start_s+msg.onset
                 onset, hold = max(0, begin-now), msg.end_s-max(now, begin)
-                if hold < moves._HOLD_LO or not moves._in_window(hold, moves._HOLD_LO, moves._HOLD_HI) \
-                        or not moves._in_window(onset, moves._ONSET_LO, moves._ONSET_HI):
+                if (not HOLD_WINDOW_S[0] <= hold <= HOLD_WINDOW_S[1]
+                        or not ONSET_WINDOW_S[0] <= onset <= ONSET_WINDOW_S[1]):
                     continue
                 out.append(LaneDropOption('lane_drop_join', (vid,), msg.kind, int(onset), int(hold),
                     float(msg.depth), float(msg.target_mps), float(msg.gap_dv_mps), bool(msg.zip), lane,
                     wall_id=msg.wall_id, initiator=msg.initiator, gap_m=float(msg.source_s_m-s),
                     member_count=int(msg.member_count), cap=int(msg.cap),
                     range_m=float(msg.radius_m if msg.initiator == RSU_ID else self.range_m),
-                    covered=tuple(msg.covered)))
+                    covered=tuple(msg.covered), anchor=bool(msg.anchor)))
             if out:
                 offers[vid] = tuple(sorted(out, key=lambda o: (abs(o.gap_m), o.wall_id)))
         self.offers = offers
@@ -1054,7 +1259,8 @@ class Protocol(v2v_wall.Protocol):
         return dict(initiator=option.initiator, kind=option.kind, start_s=now, onset=option.onset,
                     hold=option.hold, depth=float(option.depth), target_mps=float(option.target_mps),
                     gap_dv_mps=float(option.gap_dv_mps), zip=bool(option.zip), cap=int(option.cap),
-                    members={option.initiator: now}, lanes={option.initiator: lane}, released=False)
+                    anchor=bool(option.anchor), members={option.initiator: now},
+                    lanes={option.initiator: lane}, released=False, closed=False)
 
     def start(self, move, *, ego, executor, observable_cav_ids, now):
         """Atomic protocol arbitration + executor commitment. Returns accepted."""
@@ -1075,14 +1281,16 @@ class Protocol(v2v_wall.Protocol):
             self.membership[ego] = option.wall_id
             return True
         session = self.sessions.get(option.wall_id)
-        if (session is None or session['released'] or len(session['members']) >= session['cap']
+        if (session is None or session['released'] or session['closed']
+                or len(session['members']) >= session['cap']
                 or option.role_lane in session['lanes'].values()
                 or option.role_lane not in role_lanes(session['kind'], self.view)):
             return False
         end = session['start_s']+session['onset']+session['hold']
         if (now+option.onset+option.hold != end or float(option.depth) != session['depth']
                 or option.kind != session['kind'] or float(option.target_mps) != session['target_mps']
-                or float(option.gap_dv_mps) != session['gap_dv_mps'] or option.zip != session['zip']):
+                or float(option.gap_dv_mps) != session['gap_dv_mps'] or option.zip != session['zip']
+                or option.anchor != session['anchor']):
             raise ValueError('join option schedule differs from the session it names')
         if not executor.start(move, ego=ego, observable_cav_ids=observable_cav_ids, now=now, until=end):
             return False
@@ -1117,7 +1325,8 @@ class Protocol(v2v_wall.Protocol):
             onset=int(suggestion['onset']), hold=int(suggestion['hold']), depth=float(suggestion['depth']),
             target_mps=float(suggestion['target_mps']), gap_dv_mps=float(suggestion['gap_dv_mps']),
             zip=bool(suggestion['zip']), cap=kind_cap(suggestion['kind'], self.view, self.member_cap),
-            members={}, lanes={}, released=False, anchor_s_m=float(suggestion['anchor_s_m']),
+            anchor=False, members={}, lanes={}, released=False, closed=False,
+            anchor_s_m=float(suggestion['anchor_s_m']),
             anchor_v_mps=float(suggestion['anchor_v_mps']), radius_m=float(suggestion['radius_m']))
         return True
 
@@ -1130,7 +1339,7 @@ class Protocol(v2v_wall.Protocol):
         self._expire(now)
         board = {}
         for wall_id, s in sorted(self.sessions.items()):
-            if s['released']:
+            if s['released'] or s['closed']:
                 continue
             known = {v: lane for v, lane in s['lanes'].items() if s['members'][v] <= now-1}
             if s['initiator'] == RSU_ID:
@@ -1139,21 +1348,27 @@ class Protocol(v2v_wall.Protocol):
                     anchor = float(np.mean([r.source.s_m for r in reports.values()]))
                 else:
                     anchor = s['anchor_s_m']+s['anchor_v_mps']*(now-s['start_s'])
-                released = any(self.view.distance_to_drop(r.source.s_m) <= RELEASE_BEFORE_DROP_M
-                               for r in reports.values()) or self.view.distance_to_drop(anchor) <= RELEASE_BEFORE_DROP_M
+                if self.view.distance_to_drop(anchor) <= 0.:
+                    s['closed'] = True    # formation passed the drop: no new joins
+                    continue
                 board[wall_id] = LaneDropIntent(wall_id, RSU_ID, s['kind'], now, anchor, -1, s['start_s'],
                     s['onset'], s['hold'], s['depth'], s['target_mps'], s['gap_dv_mps'], s['zip'],
-                    tuple(sorted(known.values())), len(known), s['cap'], released, s['radius_m'])
+                    tuple(sorted(known.values())), len(known), s['cap'], False, s['radius_m'])
             else:
                 source = sources.get(s['initiator'])
                 if source is None:
                     continue   # departed/missing initiator: no broadcast this second
-                released = self.view.distance_to_drop(source.s_m) <= RELEASE_BEFORE_DROP_M
+                distance = self.view.distance_to_drop(source.s_m)
+                if distance <= 0. and not s['anchor']:
+                    s['closed'] = True    # initiator passed the drop: no new joins (members keep own release)
+                    continue
+                # pair_t: the closing-lane anchor 150 m before the drop releases every member.
+                released = bool(s['anchor']) and distance <= ANCHOR_RELEASE_M
                 covered = dict(known, **{s['initiator']: s['lanes'][s['initiator']]})
                 board[wall_id] = LaneDropIntent(wall_id, s['initiator'], s['kind'], now, float(source.s_m),
                     int(source.lane), s['start_s'], s['onset'], s['hold'], s['depth'], s['target_mps'],
                     s['gap_dv_mps'], s['zip'], tuple(sorted(covered.values())), len(covered), s['cap'],
-                    released)
+                    released, 0., bool(s['anchor']))
             if board[wall_id].released:
                 s['released'] = True
         self.board = board
@@ -1165,7 +1380,7 @@ class Protocol(v2v_wall.Protocol):
                    offers={v: [o.wall_id for o in opts] for v, opts in sorted(self.offers.items())},
                    joins=list(self.last_joins),
                    sessions=[dict(wall_id=w, initiator=s['initiator'], kind=s['kind'],
-                                  members=len(s['members']), released=s['released'])
+                                  members=len(s['members']), released=s['released'], closed=s['closed'])
                              for w, s in sorted(self.sessions.items())])
         self.last_joins = []
         return out
@@ -1175,7 +1390,8 @@ class Protocol(v2v_wall.Protocol):
 
 LD_DESCRIPTOR = ('ld_is_initiate', 'ld_is_join', 'ld_kind_closing_pair', 'ld_kind_abreast_wall',
                  'ld_target_frac', 'ld_gap_dv_frac', 'ld_zip', 'ld_role_dropped_lane',
-                 'ld_initiator_gap_over_range', 'ld_member_count_over_cap', 'ld_rsu_initiated')
+                 'ld_initiator_gap_over_range', 'ld_member_count_over_cap', 'ld_rsu_initiated',
+                 'ld_kind_group_hold', 'ld_anchor', 'ld_depth_frac', 'ld_hold_frac')
 
 
 def ld_descriptor(move, view):
@@ -1199,9 +1415,14 @@ def ld_descriptor(move, view):
         out[8] = max(-1., min(1., float(get('gap_m'))/float(get('range_m'))))
         out[9] = int(get('member_count'))/int(get('cap'))
         out[10] = float(get('initiator') == RSU_ID)
+        out[12] = float(bool(get('anchor', False)))
     else:
         out[7] = float(view.dropped_lane in tuple(get('lanes') or ()))
         out[9] = 1.
+        out[12] = float(int(get('anchor', -1)) >= 0)
+    out[11] = float(kind == 'group_hold')
+    out[13] = (float(get('depth'))-BRAKE_WINDOW_MPS2[0])/(BRAKE_WINDOW_MPS2[1]-BRAKE_WINDOW_MPS2[0])
+    out[14] = float(get('hold'))/HOLD_WINDOW_S[1]
     return out
 
 
@@ -1291,6 +1512,8 @@ def protocol_contexts(policy, plan, label, pairs, frames, *, t0):
     weight, time) like bank_breadth.observable_contexts."""
     view = policy.lane_drop['view']
     cap = policy.ld_protocol.member_cap
+    if label.family not in KINDS:
+        return   # group_hold (R procedure) has no protocol form: taught as the joint label only
     members, onset, hold = label.members, label.onset, label.hold
     by_t = {}
     for sample, weight in sorted(pairs, key=lambda pair: int(pair[0]['intent_link']['t'])):
@@ -1330,12 +1553,19 @@ def protocol_contexts(policy, plan, label, pairs, frames, *, t0):
             def reach(v):
                 return sum(1 for m in members if m != v and m in rows
                            and abs(float(rows[m]['s_m'])-float(rows[v]['s_m'])) <= reader.ld_protocol.range_m)
-            initiator = max(candidates, key=lambda v: (reach(v), -members.index(v)))
+            if label.anchor >= 0:
+                # pair_t: the anchor (closing-lane CAV) must initiate (its position releases all).
+                if members[label.anchor] not in candidates:
+                    continue
+                initiator = members[label.anchor]
+            else:
+                initiator = max(candidates, key=lambda v: (reach(v), -members.index(v)))
             wall_id = f'{initiator}@{t}'
             option = LaneDropOption('lane_drop_initiate', (initiator,), label.family, left_onset, left_hold,
                                     label.depth, label.target_mps, label.gap_dv_mps, label.zip,
                                     lanes[initiator], wall_id=wall_id, initiator=initiator,
-                                    cap=kind_cap(label.family, view, cap), range_m=reader.ld_protocol.range_m)
+                                    cap=kind_cap(label.family, view, cap), range_m=reader.ld_protocol.range_m,
+                                    anchor=label.anchor >= 0)
             remaining = set(members)-{initiator}
             yield build(source, [initiator]), option, reader, float(pair[1]), t
             reader.ld_protocol.open_offline(option, t)
