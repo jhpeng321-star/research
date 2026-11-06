@@ -18,7 +18,7 @@ import pytest
 import torch
 from torch import nn
 
-from . import bank_breadth as breadth, group_lane, moves, nm_families as nf, nm_map
+from . import bank_breadth as breadth, moves, nm_families as nf, nm_map
 from . import track2_backend as tb, v2v_wall
 from .acceleration import Controller
 from .test_track2_backend_cpu import cfg, cpu_threads  # noqa: F401 (fixture + autouse)
