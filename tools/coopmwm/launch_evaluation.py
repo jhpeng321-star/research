@@ -8,7 +8,7 @@ import torch
 
 from . import launch_production as production, rerun_cpus as rc
 from . import track2_backend as p1
-from .exact_grade import _seal
+from .exact_grade import _seal, verify_sealed
 
 
 def episode(spec, cfg, work):
@@ -58,11 +58,22 @@ def _wave(cfg, pairs, phase, prefix, *, fixed=False):
     jobs = [dict(id=f'{prefix}_{i:04}', sim_s=int(spec['sim_s'])) for i, (spec, _) in enumerate(pairs)]
     p1._reserve(production.backend_config(cfg), jobs, phase)
     native = production.backend_config(cfg)
+    if fixed == 'laneon':
+        from . import laneon_baseline
+        runner = laneon_baseline.episode
+    elif fixed:
+        runner = episode
+    else:
+        runner = production.run_branch
     with ProcessPoolExecutor(max_workers=16, mp_context=multiprocessing.get_context('spawn')) as pool:
-        futures = [pool.submit(episode, spec, native,
-            Path(cfg['run_root'])/'evaluation'/job['id']) if fixed else pool.submit(
-            production.run_branch, spec, snapshot, native, Path(cfg['run_root'])/'evaluation'/job['id'])
-            for job, (spec, snapshot) in zip(jobs, pairs)]
+        if fixed:
+            futures = [pool.submit(runner, spec, native,
+                                   Path(cfg['run_root'])/'evaluation'/job['id'])
+                       for job, (spec, _) in zip(jobs, pairs)]
+        else:
+            futures = [pool.submit(runner, spec, snapshot, native,
+                                   Path(cfg['run_root'])/'evaluation'/job['id'])
+                       for job, (spec, snapshot) in zip(jobs, pairs)]
         results = [future.result(timeout=3600) for future in futures]
     if any(r.get('status') != 'graded' for r in results):
         raise ValueError('incomplete scheduled check; never drop/impute/retry')
@@ -120,28 +131,75 @@ def scheduled(cfg, update):
         return
     target = root/f'evaluation/PAIRED_u{update:03}.json'
     if target.exists():
+        paired = read(target)
+    else:
+        from . import planner_eval
+        registration = rc.final_world_registration(read(root/'ISOLATED_REGISTRATION.json'))
+        contract = deepcopy(cfg['final_evaluation'])
+        if update == 8:
+            contract.update(update=8, phase='v2v_interim')
+        checkpoints = {}
+        for arm in contract['arms']:
+            path = root/f'{arm}_checkpoint_{update:03}.pt'
+            checkpoints[arm] = dict(path=str(path), file_sha256=rc.sha(path), update=update,
+                components=contract['checkpoint_components'][arm])
+        # Interim uses the same registered panel and estimator, with immutable u8
+        # weights explicitly identified. It is descriptive; u24 alone is final.
+        pairs = planner_eval.prepare_track2(registration=registration, checkpoints=checkpoints, contract=contract)
+        execution = deepcopy(cfg)
+        execution['evaluation_update'] = update
+        phase = 'v2v_interim' if update == 8 else 'v2v_final'
+        # _wave translates its input but preserves this explicit update metadata.
+        results = _wave(execution, pairs, phase, f'paired_u{update:03}', fixed=True)
+        analysis = planner_eval.analyse_track2(registration=registration, checkpoints=checkpoints,
+            records=results, contract=contract)
+        paired = _seal(dict(update=update, status='graded', registration=registration,
+            checkpoints=checkpoints, results=results, analysis=analysis), 'receipt_sha256')
+        write(target, paired)
+    if update == 24:
+        return laneon_final(cfg, paired)
+    return paired
+
+
+def laneon_final(cfg, paired):
+    """Extra frozen lane-on MAPPO baseline on the SAME u24 paired worlds (descriptive).
+
+    Only runs when the clean3 registration carries ``extra_final_baselines``
+    (CLEAN3_QUOTE.json phase ``v2v_final_laneon_mappo_aecd7d70``); unregistered
+    configurations keep the unchanged two-receipt contract. The baseline charges
+    its OWN budgeted phase, never touches the primary A/B/R analysis, and reports
+    descriptive paired bootstrap CIs vs each arm plus per-world sealed receipts.
+    """
+    from . import laneon_baseline
+    from .launch_training import write, read
+    registered = [b for b in (cfg.get('extra_final_baselines') or [])
+                  if isinstance(b, dict) and b.get('name') == laneon_baseline.NAME]
+    root = Path(cfg['run_root'])
+    target = root/'evaluation/LANEON_u024.json'
+    if not registered:
+        if target.exists():
+            raise ValueError('REFUSED: lane-on receipt exists without its registration')
+        return paired
+    if target.exists():
         return read(target)
-    from . import planner_eval
+    entry = laneon_baseline.registered_entry(cfg)
+    verify_sealed(paired, 'receipt_sha256')
     registration = rc.final_world_registration(read(root/'ISOLATED_REGISTRATION.json'))
-    contract = deepcopy(cfg['final_evaluation'])
-    if update == 8:
-        contract.update(update=8, phase='v2v_interim')
-    checkpoints = {}
-    for arm in contract['arms']:
-        path = root/f'{arm}_checkpoint_{update:03}.pt'
-        checkpoints[arm] = dict(path=str(path), file_sha256=rc.sha(path), update=update,
-            components=contract['checkpoint_components'][arm])
-    # Interim uses the same registered panel and estimator, with immutable u8
-    # weights explicitly identified. It is descriptive; u24 alone is final.
-    pairs = planner_eval.prepare_track2(registration=registration, checkpoints=checkpoints, contract=contract)
-    execution = deepcopy(cfg)
-    execution['evaluation_update'] = update
-    phase = 'v2v_interim' if update == 8 else 'v2v_final'
-    # _wave translates its input but preserves this explicit update metadata.
-    results = _wave(execution, pairs, phase, f'paired_u{update:03}', fixed=True)
-    analysis = planner_eval.analyse_track2(registration=registration, checkpoints=checkpoints,
-        records=results, contract=contract)
-    value = _seal(dict(update=update, status='graded', registration=registration,
-        checkpoints=checkpoints, results=results, analysis=analysis), 'receipt_sha256')
+    if (paired.get('update') != 24 or
+            paired.get('registration', {}).get('final_worlds_sha256') !=
+            registration['final_worlds_sha256']):
+        raise ValueError('REFUSED: lane-on baseline requires the completed same-panel '
+                         'u24 paired evaluation')
+    entry['checkpoint'] = str(laneon_baseline.staged_checkpoint(entry))
+    pairs = laneon_baseline.specs(registration, entry)
+    results = _wave(cfg, pairs, laneon_baseline.PHASE, 'laneon_u024', fixed='laneon')
+    receipts = [laneon_baseline.make_receipt(spec, {k: result[k] for k in
+                                                    laneon_baseline.OUTCOME_KEYS if k in result})
+                for (spec, _), result in zip(pairs, results)]
+    analysis = laneon_baseline.analyse(registration=registration, records=results,
+        arm_records=paired['results'], contract=deepcopy(cfg['final_evaluation']))
+    value = _seal(dict(update=24, status='graded', baseline=entry,
+        lane_change_mode=laneon_baseline.LANE_CHANGE_MODE, registration=registration,
+        receipts=receipts, results=results, analysis=analysis), 'receipt_sha256')
     write(target, value)
     return value

@@ -119,7 +119,9 @@ def test_chain_coverage_asserts_full_u1_u24_schedule():
     cfg = dict(clean3_budget=budget())
     clean2, diag, lessons = coverage_inputs()
     result = chain.coverage(cfg, clean2, gate_sim_s=15160, diagnostic_quotes=diag, lesson_quotes=lessons)
-    assert result['need']['v2v_train'] == 24*72000 and result['need']['v2v_final'] == 4*96*1200
+    assert result['need']['v2v_train'] == 24*72000 and result['need']['v2v_final'] == 3*96*1200
+    assert result['need']['v2v_final_laneon_mappo_aecd7d70'] == 96*1200  # separate phase
+    assert result['allocated']['v2v_final_laneon_mappo_aecd7d70'] == 133_200
     with pytest.raises(ValueError, match='u1-u24'):
         chain.coverage(cfg, clean2, gate_sim_s=15160, diagnostic_quotes=diag,
                        lesson_quotes={k: 20000 for k in lessons})

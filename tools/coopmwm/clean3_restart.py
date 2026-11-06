@@ -14,6 +14,9 @@ import os
 import time
 
 from .exact_grade import _seal, verify_sealed
+from .laneon_baseline import (AUTHORITY as LANE_ON_AUTHORITY, CHECKPOINT_SHA256 as LANE_ON_SHA256,
+    LANE_CHANGE_MODE as LANE_ON_MODE, NAME as LANE_ON_NAME, PHASE as LANE_ON_PHASE,
+    ROLE as LANE_ON_ROLE)
 from .protocol import digest
 
 ROOT = '/home/ubuntu/coopmwm20261106_clean3_r6'
@@ -47,16 +50,18 @@ PARITY = 960
 G1_CAP = 230_400
 G4_CAP = 230_400
 # CLEAN3_QUOTE.json (full u1-u24, >=15% margin per phase). v2v_train includes
-# practice references (clean2 charged them to v2v_train); v2v_final includes
-# the descriptive lane-on MAPPO aecd7d70 baseline (96 x 1200 x 1.15).
+# practice references (clean2 charged them to v2v_train); v2v_final is the A/B/R
+# u24 paired evaluation and the descriptive lane-on MAPPO aecd7d70 baseline runs
+# as its OWN quoted phase (96 x 1200 x 1.15 = 133200), never merged into it.
 PHASES = dict(v2v_train=1_988_400, v2v_lessons=40_800, early_probes=52_800,
-    isolated_replicated=165_600, v2v_interim=398_400, v2v_final=531_600,
+    isolated_replicated=165_600, v2v_interim=398_400, v2v_final=398_400,
+    v2v_final_laneon_mappo_aecd7d70=133_200,
     gate_bank_verification_ext=18_000, track2_smoke=24_000,
     teacher_verify=0, group_credit_verify=0, augment_verify=0)
 QUOTE_TOTAL = 3_680_400
-LANE_ON_BASELINE = dict(name='mappo_laneon_aecd7d70', commit='aecd7d70', episodes=96,
-    role='extra frozen final-evaluation baseline; descriptive only; primary comparator remains speed-only MAPPO',
-    authority='owner 2026-11-06 01:16 "keep it as the baseline for now..."; MAIN 01:16')
+LANE_ON_BASELINE = dict(name=LANE_ON_NAME, commit='aecd7d70', sha256=LANE_ON_SHA256,
+    phase=LANE_ON_PHASE, episodes=96, lane_change_mode=LANE_ON_MODE, role=LANE_ON_ROLE,
+    authority=LANE_ON_AUTHORITY)
 SAFETY_RULE = ('A: full original rule. B and R: composite TTC/critical comparison reported each '
     'update, no pause. Any collision or teleport in any arm pauses. (owner 2026-11-06 02:44 "1")')
 G1_GO_RULE = ('GO iff >=1 admitted executable joint label (synergy CI95 low>0 on pooled and both '

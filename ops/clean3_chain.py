@@ -94,7 +94,8 @@ def coverage(cfg, clean2_rows, *, gate_sim_s, diagnostic_quotes, lesson_quotes):
         v2v_lessons=sum(lesson_quotes.values()),
         early_probes=diagnostic_quotes['probe_u002']+diagnostic_quotes['probe_u004'],
         isolated_replicated=sum(diagnostic_quotes[f'replicated_u{u:03}'] for u in (6, 12, 24)),
-        v2v_interim=3*96*1200, v2v_final=4*96*1200,  # A/B/R + lane-on MAPPO baseline
+        v2v_interim=3*96*1200, v2v_final=3*96*1200,  # A/B/R u24 paired evaluation
+        v2v_final_laneon_mappo_aecd7d70=96*1200,     # lane-on MAPPO baseline: its OWN phase
         gate_bank_verification_ext=gate_sim_s, track2_smoke=20000)
     short = {k: (v, phases[k]) for k, v in need.items() if v > phases[k]}
     if short:
