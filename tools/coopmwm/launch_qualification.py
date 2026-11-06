@@ -56,10 +56,20 @@ def smoke(cfg):
     copy_safety_authority(cfg, output)
     updates = [training.update(cfg, arm, 1, smoke=True) for arm in ('A', 'B', 'R')]
     monitor = training.monitor_update(cfg, 1, smoke=True)
+    from .bank_breadth import subset_rule
     for update in updates:
         if update['arm'] == 'A':
             continue
         m, learning = update['metrics'], update['learning']
+        if update['arm'] == 'R' and subset_rule(cfg) and learning['bank_trigger'].get('examples', 0) == 0:
+            # clean4 F5 option (a): R zero guidance - every guidance quantity must be exactly zero,
+            # every online/RL component must still produce its receipt.
+            if (update['execution']['accepted_moves'] <= 0 or m['decisions'] <= 0
+                    or m['merge_missing_share'] >= 1 or m['track2_reward']['cav_outcomes'] <= 0
+                    or learning['bank']['pairs_total'] != 0 or m['weighted_starts'] != 0
+                    or learning['bank_trigger'].get('contexts')):
+                raise ValueError('smoke R zero-guidance receipt invalid; fix and requalify')
+            continue
         if (update['execution']['accepted_moves'] <= 0 or m['decisions'] <= 0
                 or m['merge_missing_share'] >= 1 or m['weighted_starts'] <= 0
                 or (cfg['plan_augment']['enabled'] and m['augmented_examples'] <= 0)

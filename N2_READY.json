@@ -1,0 +1,153 @@
+{
+  "task": "N2",
+  "status": "READY (CPU-built and CPU-tested; no SUMO/GPU/ssh run). REVIEW_N2_1 blockers 1-2 fixed at c7983467",
+  "scope": "lane-drop observations; closing_pair / abreast_wall / group_hold move-library entries with the NEWMAP2-registered vocabulary; exact mined-row converter (NEWMAP2/PLANGEN/PLANGEN2) and provisional-builder API; V2V initiate/join (reusing W1); RSU-initiated suggestions (MAIN add-on); F6 single-frame MapView. Everything is observable-only and DEFAULT OFF.",
+  "branch": "c4/nm-moves",
+  "worktree": "E:/agent-work/c4-nm-moves",
+  "base_commit": "3e5bc9f9",
+  "merges": [
+    {"branch": "c4/wall-v2v (W1)", "tip": "6908675a", "merge_commit": "81c975e8", "conflicts": "none"},
+    {"branch": "c4/wall-tune (W2)", "tip": "b10327c5", "merge_commit": "7fb5cb17",
+     "conflicts": "feasible_proposals / trigger_policy / track2_backend, resolved additively: trigger descriptor = [base | W1 extension (+ N2 columns) | W2 release]; the trigger head reads base+extension (+ extension context); the W2 head reads pressure + the full descriptor; the W1 protocol start path is kept; W2 release_s commitment is on the plain executor path",
+     "tests_after_merge": "W1+W2 new suites 73 passed; touched suites 675 passed, 1 skipped (symlink privilege)"},
+    {"branch": "c4/nm-abstract (N1)", "tip": "e512b059", "merge_commit": "d74e0a32", "conflicts": "none",
+     "why": "F6: MapView must come from N1's MapDescriptor / map_descriptor.load (one WM frame)"}
+  ],
+  "commits": [
+    {"sha": "eed77e7a", "subject": "lane-drop observations, closing_pair/abreast_wall moves, V2V initiate/join and RSU suggestions (default OFF)"},
+    {"sha": "2049713d", "subject": "lane-drop options as zero-init extension families, per-kind initiate slots, RSU PPO wiring"},
+    {"sha": "e23a3d9b", "subject": "refuse lane-drop zip requests outside the single-writer V2V lane runtime"},
+    {"sha": "d74e0a32", "subject": "merge c4/nm-abstract e512b059 (N1 map descriptor / WM frame)"},
+    {"sha": "64825957", "subject": "F6: MapView from the N1 MapDescriptor; from_map_spec only via map_descriptor.load"},
+    {"sha": "c7983467", "subject": "review blockers: NEWMAP2-registered vocabulary, exact mined-row converter, provisional-builder API"}
+  ],
+  "files": {
+    "new": ["tools/coopmwm/lane_drop.py", "tools/coopmwm/lane_drop_rsu.py", "tools/coopmwm/test_lane_drop_cpu.py",
+            "tools/coopmwm/fixtures/n2_mined_rows.jsonl.gz", "N2_READY.json"],
+    "modified": {
+      "tools/coopmwm/track2_backend.py": "lane_drop settings/_check; MoveAPI executable extension families; _features lane-drop columns; EpisodePolicy: zero-init residual widening, lane-drop blocks/states, protocol receive/publish, closed-loop law offsets, zip requests, RSU decide + head/optimizer state (ON only); episode_components passes native commands when ON; ArmRuntime RSU PPO/save/restore (ON only)",
+      "tools/coopmwm/trigger_policy.py": "_validate_move: options marked self_validated_windows (lane-drop) skip the merge-map variety windows; they validate their own registered windows at construction",
+      "tools/coopmwm/feasible_proposals.py": "lane-drop pools/redraw in candidates(); decide_and_start lane_drop protocol, event ticks, stats",
+      "tools/coopmwm/group_lane.py": "controller_targets wrapper adds gate-passed lane-drop zip targets (G5 env path, same returned targets)",
+      "tools/coopmwm/moves.py": "from_plan routes lane_drop_macro plans to the exact lane-drop binding",
+      "tools/coopmwm/v2v_wall.py": "attach_context also attaches lane-drop blocks when the N2 extension is on",
+      "tools/coopmwm/bank_breadth.py": "verified closing_pair/abreast_wall plans are taught through the lane-drop protocol when it is on (group_hold as the joint label)",
+      "tools/coopmwm/sparse_synergy_credit.py": "G4 skips lane-drop options (G4LD extends this)",
+      "tools/coopmwm/launch_production.py": "trigger_counts adds opt-in families instead of KeyError; bank-practice observe hook passes native commands when ON",
+      "tools/coopmwm/launch_evaluation.py": "evaluation observe hook passes native commands when ON",
+      "tools/coopmwm/acceleration.py": "refuses lane-drop zip requests without the single-writer V2V lane runtime (same guard as G5)"
+    }
+  },
+  "map_api": {
+    "consumed": "N1 tools/coopmwm/map_descriptor.MapDescriptor (c4/nm-abstract e512b059): name, frame.n_lanes, bottleneck['drop_s_m'], bottleneck['closing_lane'] (bottleneck['adjacent_lane'] / ['through_lanes'] must agree); lane_table and bottleneck['drop_x_m'] for the mined-row converter",
+    "frame": "ONE frame: the WM frame of the runtime rows (s_m, lane). wz3to2: drop at s = 75.44, closing lane WM 2 (SUMO 0), adjacent WM 1 (SUMO 1), WM 0 = SUMO 2",
+    "MapView": "lane_drop.MapView(name, lane_drop_s_m, lane_ids, dropped_lane); from_descriptor accepts the N1 MapDescriptor, a stub (tests) or the registered mapping; descriptors without a lane-drop bottleneck are refused",
+    "from_map_spec": "lane_drop.from_map_spec(path) = MapView.from_descriptor(map_descriptor.load(path)).to_dict()"
+  },
+  "registered_vocabulary": {
+    "source": "runs/active/C4-V7FT-20261017/NEWMAP2_REPORT.md section 2 Moments/Moves (NEWMAP2-20261106), reused unchanged by PLANGEN/PLANGEN2. Nothing is hand-set.",
+    "variants": "lane_drop.VARIANTS: pair_g closing_pair 22 m/s 120 s dmax 1.0; pair_h closing_pair 15 m/s 90 s dmax 1.5; pair_t closing_pair 22 m/s 150 s dmax 1.0 + anchor; wall_g abreast_wall 22 m/s 120 s dmax 1.0; wall_h abreast_wall 15 m/s 90 s dmax 1.5",
+    "r_sets": "group_hold (R_random hold procedure): v_w {15, 18, 22}, hold {90, 120, 180}, dmax {1.0, 1.5}, 2-3 CAVs within 300 m",
+    "law": "a = clip((v_w - v)/1 s, -dmax, +1.0); positive acceleration up to amax 1.0 is allowed",
+    "release": "each member at its OWN drop crossing (distance_to_drop <= 0, NEWMAP2 x >= X_B) or at hold end; pair_t: every member when the closing-lane anchor is 150 m before the drop",
+    "windows": "target 15..22 m/s; dmax 1.0..1.5; hold 20..180 s (20 = registered minimum REMAINING hold of a join/relabel); onset 0 for proposals, 0..30 for join/relabel remainders; zone 400..1800 m before the drop; pair |dx| <= 100 m; wall spread <= 200 m",
+    "online_draws": "closing_pair: uniform over pair_g/pair_h/pair_t (pair_t only for a closing-lane initiator in the protocol); abreast_wall: wall_g/wall_h; group_hold: R sets; RSU: no pair_t (no CAV anchor)",
+    "unregistered_extensions": "gap_dv/zip (owner example) are representable but never drawn; they need MAIN registration"
+  },
+  "mined_rows": {
+    "converter": "lane_drop.plan_from_mined_row(row, desc) / move_from_mined_row(row, desc). SUMO lanes map through desc.lane_table. release_x must equal desc.bottleneck['drop_x_m'] and anchor_release_x = drop_x - 150; amax 1.0; common parameters across members. closing_pair/abreast_wall rows must fill their roles. R_random hold rows become closing_pair/abreast_wall when their lanes fill those roles, else group_hold. Lane-change roles or commands raise lane_drop.NotRepresentable (N9).",
+    "representation": "verified: the row's executed profile (issued while held, else measured), policy/perturbation profiles and member_release_el; from_plan checks shapes, perturbation = profile - policy, held commands within [-dmax, +1], release el within the hold with duration = last release, no lane actions, and that plans.acceleration_at runs the profile",
+    "fixture": "tools/coopmwm/fixtures/n2_mined_rows.jsonl.gz: all 105 rows of NEWMAP/PLANGEN/PLANGEN2_MOVES_B/R.jsonl, with source sha256 pinned (NEWMAP B 88adb68a..., R d6b4b1af...)",
+    "result": "81 of 81 hold rows bind exactly with zero legacy projection:",
+    "result_by_file": {
+      "NEWMAP_MOVES_B": "27/27 (abreast_wall 21, closing_pair 6)",
+      "NEWMAP_MOVES_R": "3/3 (group_hold)",
+      "PLANGEN_MOVES_B": "18/18 (abreast_wall 12, closing_pair 6)",
+      "PLANGEN_MOVES_R": "15/15 (abreast_wall 3, group_hold 12)",
+      "PLANGEN2_MOVES_B": "15/15 hold (abreast_wall 9, closing_pair 6)",
+      "PLANGEN2_MOVES_R": "9/9 hold (group_hold)"
+    },
+    "not_applicable_N9": "24 lane-change rows: PLANGEN2 B early_merge 3, lane_balance 3, zipper_order 3; PLANGEN2 R lane_balance 9",
+    "family_support_note": "B guidance families are {closing_pair, abreast_wall}. R guidance is mostly group_hold, plus abreast_wall when lanes fill the roles. The clean3 F3 B/R family-support check therefore needs an N4 registration decision (e.g., count-matching/subsampling, as NEWMAP2 already notes)."
+  },
+  "provisional_builder_api": {
+    "for": "N4 Plan A verify tool (origin clean4_provisional_speed_target)",
+    "to_sumo": "lane_drop.newmap_members(move, desc): NEWMAP2 executor member specs [{id, lane (SUMO, approach edge), role 'hold', params {release_x, amax, v_w, hold_s, dmax[, anchor, anchor_release_x]}}]. Round-trips exactly with every bound mined row.",
+    "from_sumo": "lane_drop.verified_plan(move, desc, duration_s=, release_el={id: el}, profile={id: [...]}, policy_profile={id: [...]}, [perturbation_profile], plan_id=, source=dict(origin='clean4_provisional_speed_target', ...)) gives a plan with lane_drop_macro that from_plan / moves.from_plan bind exactly",
+    "recorded_law_plan": "lane_drop.plan(move, view, policy_profile, member_speeds, member_positions): the profile equals the law on recorded speeds"
+  },
+  "config_keys": {
+    "lane_drop": {
+      "enabled": true,
+      "rule": "n2-lane-drop-moves-v1",
+      "provenance": "non-empty owner registration string",
+      "map": "{name, lane_drop_s_m, lane_ids, dropped_lane}; use config_keys(descriptor=N1 descriptor)",
+      "features": "bool: lane-drop observation block (trigger context + residual, zero-init columns)",
+      "moves": "bool: closing_pair / abreast_wall / group_hold joint moves (at least one of features/moves must be on)",
+      "v2v": "optional dict(range_m in [100, 300] (default 200), member_cap in 2..4 (default min(lanes, 4))); requires moves",
+      "rsu": "optional True | dict(range_m in [100, 1000] (default 1000), position_m (default: the drop point)); requires v2v"
+    },
+    "default": "lane_drop absent or False = OFF and byte-identical; validated for B/R in track2_backend._check; A never builds EpisodePolicy",
+    "helper": "tools.coopmwm.lane_drop.config_keys(provenance=..., descriptor=map_descriptor.load(<wz3to2 dir>), features=True, moves_on=True, v2v=True[, v2v_range_m=200.][, member_cap=3][, rsu=dict(range_m=1000.)])",
+    "needs_main_registration": "V2V range cap 300 m (default 200 m) and RSU range 100..1000 m (default 1000 m) if enabled (REVIEW_N2_1 note A)"
+  },
+  "how_to_enable": [
+    "Add lane_drop to the common B/R track2 config with config_keys and N1's wz3to2 descriptor. The process map must be the same wz3to2 binding: COOPMWM_MAP_SPEC / map_descriptor.bind.",
+    "Mined rows: convert wall/pair/hold rows with lane_drop.plan_from_mined_row before bank ingestion so moves.from_plan never projects them. group_lane_bank.binding still needs N4's wz3to2 seed-range extension. Lane-change rows wait for N9.",
+    "Start B/R from fresh u0 sidecars. With features ON the residual and trigger first layers gain zero-initialised columns. With rsu ON the sidecar carries worker['rsu'] and rsu_optimizer. So OFF sidecars do not strict-load into an ON config.",
+    "The runtime needs each CAV's own native command every second. episode_components, launch_evaluation and the launch_production practice hook pass it. If a caller does not, the law stays unresolved (no command; recorded in sample.track2.lane_drop.unresolved).",
+    "Zip lane changes (unregistered, never drawn) would need the single-writer V2V lane runtime.",
+    "No launch/registration/budget file was changed. N4 owns registration, budget, smoke and gates."
+  ],
+  "api": {
+    "observation_block": "lane_drop.lane_drop_features(own SensorReport at t, cav, partner reports, now_s, partner_ids, view) -> [25] float32. Inputs: the own packet at t plus the nearest V2V_K selected partners' own t-1 packets within V2V_RANGE_M. Fields: distance to drop, own lane role, closing-lane count/queue/mean speed/queue tail/coverage over [drop-500, drop] with report age and missing bits, adjacent-lane front/rear gaps and dv (own packet only), partner meta. Scaled into the trigger context and the residual (zero-init columns, after W1 awareness).",
+    "moves": "lane_drop.LaneDropMove(family in {closing_pair, abreast_wall, group_hold}, members in role order, onset, hold, depth = dmax, target_mps, gap_dv_mps=0, zip=False, lanes (WM), anchor=-1|0). Executed on the single-writer committed-offset column: offset = law - native - MAPPO mean (CommandOwnership / speedMode 27 downstream).",
+    "protocol": "lane_drop.Protocol (subclass of the W1 v2v_wall.Protocol). Options: LaneDropOption(lane_drop_initiate | lane_drop_join, kind closing_pair|abreast_wall, schedule, role_lane, covered lanes, anchor). Messages are visible at t+1 within range_m. One CAV per role lane; cap = min(member_cap, 2 | lanes). A session closes (no new joins) when its initiator passes the drop. A pair_t session publishes a release message when the anchor is 150 m before the drop; members latch it. Each initiate kind has its own F2 slot.",
+    "trigger_extension": "lane-drop families are executable extension families (one-hot and all pre-existing trigger weights unchanged). 15 descriptor columns (LD_DESCRIPTOR) and 25 context columns, all zero-initialised.",
+    "ingestion": "bank_breadth: with the protocol on, closing_pair/abreast_wall verified plans are taught as initiate/join (a pair_t anchor initiates; otherwise the reach rule); group_hold and protocol-off plans are taught as the joint label. Contexts carry the reader's own causal lane-drop blocks."
+  },
+  "rsu_option": {
+    "rule": "n2-rsu-suggest-v1 (MAIN add-on 2026-11-06)",
+    "inputs": "RSU field [30]: CAV self states plus locally detected neighbours, only from CAVs' own t-1 packets within range_m of the RSU (per lane: present, count, queue, mean speed, coverage, speed-missing, CAV reports; global: report count/age/missing, closing-lane queue/tail, open sessions, RSU session active, time since last suggestion). No ground truth or penetration.",
+    "suggestion": "At the CAV decision cadence: a slate of none + up to 4 entries 'form abreast_wall / closing_pair at anchor x' from reporting CAVs' self states (registered geometry and variants, no pair_t). The chosen entry opens session RSU@t on the lane-drop ledger and is broadcast at t, visible at t+1. CAVs in RSU range, within 100 m of the propagated anchor and in an uncovered role lane get lane_drop_join. Same single-writer law.",
+    "head": "lane_drop_rsu.RSUHead: zero-initialised output (uniform over available entries) plus a zero-init value head. ArmRuntime.train runs train_rsu: PPO on recorded decisions, return = mean per-CAV SUMO return of its own uplink CAVs, exact-KL guard at the layer budget. The optimizer is in the sidecar (ON only).",
+    "guidance_B_R": "Identical code. teacher_target maps an arm's own verified example to the nearest same-kind slate entry (B: SUMO-verified pairs/walls; R: its random-teacher examples). random_teacher_target is the R random teacher's suggestion: uniform over the same slate. supervision_batch + RSUHead.imitation_loss give the CE. Bank wiring is left to N4."
+  },
+  "tests": {
+    "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider",
+    "new_suite": {
+      "file": "tools/coopmwm/test_lane_drop_cpu.py",
+      "result": "31 passed (c7983467)",
+      "covers": [
+        "settings and refusals; N1 descriptor -> MapView 75.44 / WM 2 / WM 1 (F6); merge map refused",
+        "OFF byte-identical: keys absent vs False; subprocess overlay of the pre-N2 sources (7fb5cb17: track2_backend, feasible_proposals, group_lane, moves, bank_breadth, v2v_wall, sparse_synergy_credit, launch_production, trigger_policy, launch_evaluation, acceleration) gives an identical digest",
+        "observation block values; observable-only (stale/same-step/unselected/out-of-range packets, unsensed vehicles and hidden truth-like fields change nothing); features-only ON == OFF; MAPPO observation untouched; moves/v2v/rsu ON keep every pre-existing trigger weight",
+        "registered vocabulary: windows, VARIANTS/R_SETS, draws only registered values, refusal of 25 m/s / dmax 0.6 / hold 200",
+        "mined rows: fixture equals the registered files (sha256); all 81 hold rows bind exactly (family, WM lanes, anchor, profile, release el), round-trip through move_from_mined_row / newmap_members / verified_plan, zero legacy projection; the 24 lane-change rows are n/a; tampered and inexact rows are refused",
+        "execution matches the verified profile (native + MAPPO request == law == plan profile, nonzero MAPPO mean); per-member release at the own drop crossing; pair_t anchor release (joint and protocol message)",
+        "zip via the G5 env path (CAV only, own-sensing gap gate)",
+        "V2V: t+1 visibility, configurable range, ownership, member cap, one CAV per lane, closed sessions; B and R identical; PPO replay; G4 skip; bank ingestion generic and through the protocol; bank supervision identical for B and R",
+        "RSU: t-1 uplink field, suggestion -> broadcast -> join -> law, zero-init head, learnable (CE/PPO), teacher targets, worker state, rollout PPO with the KL guard"
+      ]
+    },
+    "touched_suites": {
+      "files": "lane_drop, v2v_wall, wall_w2/pressure/release/negatives/tune, track2_backend, trigger_policy, feasible_proposals, bank_breadth, launch_final, coop_layer, moves, group_lane, coordination_opportunities, clean3_restart, mined_link, executable_labels, launch_integration, g4_runtime, sparse_synergy_credit, N1 map_descriptor/map_golden/map_runtime/map_scenarios/newmap_sanity/g4_worker_binding, tests/unit merge_features + track2_reward",
+      "result_64825957": "894 passed, 2 skipped (symlink privilege; frozen cpuV runtime only)",
+      "result_c7983467": "899 passed, 2 skipped (same two skips)"
+    },
+    "other_suites_64825957": {
+      "result": "acceleration, awr, branch_eval, clean2_actuation_receipts, committed, coopfix_exact_gate, diagnostic_repair, exact_grade, f1_actuation, f4_safety_reward, g1_certification, lesson_quote, mppi_runtime, overlap, policy_synergy, practice_starts, sumo_verify, t2c_*, v2v_int_e2e, clean2_budget, launch_clean2, rerun_cpus",
+      "unrelated_failures": "17 failures in acceleration/committed/diagnostic_repair/mppi_runtime/overlap/sumo_verify reproduce on the 3e5bc9f9 base export (missing archived tools.leverprobe / tools.wmteach, plan_wm stubs, Windows temp dirs). The set is identical apart from 2 order/timing flakes that pass alone. One t2c_runtime 60 s subprocess timeout occurred under load; that test passes when run alone (1 passed)."
+    },
+    "not_run": "SUMO, GPU, Linux/cpuV qualification, smoke on the wz3to2 env (N4/N11)"
+  },
+  "caveats": [
+    "Fidelity vs the verified rows (REVIEW note D): NEWMAP2 members ran lane-change mode 513 during the hold. N2 members keep native lane changing, and the law gets AR noise and the residual. A deterministic run with zero residual executes the law exactly. Record this as a known deviation in N4's registration.",
+    "Release uses positions known to each member: its own position always, and the anchor when sensed or received. Bound verified plans carry each member's actual release el.",
+    "Enabling moves/v2v/rsu adds new slate options, so an untrained ON policy can select them. Pre-existing logits are unchanged at init. A zero-init RSU head suggests uniformly.",
+    "G4 skips lane-drop options (G4LD is extending this).",
+    "Base move families (wall, gap_open, ramp_assist), W1/W2 and G5 still use the frame merge-zone constants. On wz3to2 they act in N1's projected frame. Whether to keep them is an N4 registration choice.",
+    "RSU CE guidance is provided as functions only; wiring it into the bank is N4's job."
+  ],
+  "hard_rules": "CPU only; no ssh/SUMO/GPU; only this worktree (scratch in _n2_scratch/, untracked); no git reset/clean/stash drop/push/rebase; no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 path opened; no hetdata_truth or vType/driver/vehicle_params read; mined rows were read from runs/active/C4-V7FT-20261017 (registered TRAIN B/R move files); policy and RSU inputs are observables only"
+}
