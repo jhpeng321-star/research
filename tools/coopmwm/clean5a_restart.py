@@ -131,7 +131,7 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
     from . import composite_health, launch_preparation as stage, launch_clean2 as c2
     from . import launch_production as production, launch_qualification as qualification
     from . import launch_training as training, rerun_cpus as rc, track2_backend as p1, g5_runtime
-    from . import map_descriptor as md, frozen_trunk
+    from . import map_descriptor as md, frozen_trunk, fullpol_ev
     from .bank_breadth import ev_only
     from .track2_monitor import STATE_ORDER_RULE
     root, source, clean2 = Path(root), Path(source), Path(clean2)
@@ -282,7 +282,9 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
             newmap=cfg['newmap'], eval_panel=c4.EVAL_PANEL, design=DESIGN, guidance=guidance,
             g4=dict(extension=cfg['g4_extension'], start_cap=cfg['g4_start_cap'], disclosed='budget-derived start caps 12/9/8 (from the 230,400 cap); 1-in-16 '
                     'sampling and the 10,000 veh-s scale are inherited/hand-set G4 registrations'),
-            imitation=dict(epochs=IMITATION_EPOCHS, kl_cap=0.045),
+            imitation=dict(epochs=IMITATION_EPOCHS, ev_bc_steps=fullpol_ev.settings(cfg)['ev_bc_steps'], kl_cap=0.045,
+                           bc_kl='mean over labelled CAV decision rows (FULLPOL 24080ea2)',
+                           trigger_ppo_kl=fullpol_ev.settings(cfg)['ppo_kl'], pace_rule=fullpol_ev.PACE_RULE),
             seeds='TRAIN worlds 989220-989267 over 6 staged cells (16/update); final panel 989600-989695 + 3c (N6)',
             criterion=rc.criterion_document(), reporting=cfg['clean2_reporting_definition'],
             paired_evaluation='in-run u8/u24 OFF; final = N6 launcher (claims 3a/3c), debited from v2v_final',
