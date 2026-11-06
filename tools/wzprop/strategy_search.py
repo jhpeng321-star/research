@@ -224,6 +224,7 @@ def evaluate(wm, states, strategies, K, H, z=1.645):
     """Per strategy per state the CRN-paired WM draws -> gains vs base and vs solo2 (see module docstring)."""
     per = defaultdict(list)                  # key -> [(world, mean gain_base, mean gain_inc, sd_inc, feasible)]
     rollouts = 0
+    prepared = []
     for m in states:
         mi = W.moment_input(m)
         cavs = m['all_cavs_t0']
@@ -244,7 +245,11 @@ def evaluate(wm, states, strategies, K, H, z=1.645):
                 specs_seen[sk] = f'c{len(specs_seen)}'
                 acts.append(W.action(specs_seen[sk], 'group', 'strategy', sk, spec, H))
             aid_of[strategy_key(s)] = specs_seen[sk]
-        out = W.normalize(wm.evaluate(state, acts, K, H, mi['crn_seed']), acts, K, H)
+        prepared.append((m, state, acts, aid_of, inc, mi['crn_seed']))
+    calls = [(state, acts, K, H, seed) for _m, state, acts, _a, _i, seed in prepared]
+    raws = wm.map(calls) if hasattr(wm, 'map') else [wm.evaluate(*c) for c in calls]
+    for (m, state, acts, aid_of, inc, _seed), raw in zip(prepared, raws):
+        out = W.normalize(raw, acts, K, H)
         rollouts += len(acts) * K
         base = np.asarray(out['base'])
         ref = np.asarray(out['inc']) if inc else base

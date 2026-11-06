@@ -904,3 +904,16 @@ def test_wmsearch_u0_plan_and_paired_analysis(tmp_path):
     res = WU.analyze_rows(rows, specs)
     assert res['summary']['wm']['n_beat_solo2_ci'] == 4 and res['summary']['random']['n_beat_solo2_ci'] == 0
     assert res['arms']['solo2']['vs_u0']['mean'] == pytest.approx(-10000.0)
+
+
+def test_parallel_wm_equals_sequential():
+    from tools.wzprop import strategy_search as SS
+    states = _strategy_states(4)
+    strats = [SS.SOLO2] + SS.seeds()[1:4]
+    seq, _ = SS.evaluate(W.StubWM(), states, strats, 2, 300)
+    pw = W.ParallelWM('stub', 2)
+    try:
+        par, _ = SS.evaluate(pw, states, strats, 2, 300)
+    finally:
+        pw.close()
+    assert dict(seq) == dict(par) and pw.meta['parallel_workers'] == 2

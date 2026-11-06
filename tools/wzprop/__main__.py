@@ -202,14 +202,26 @@ def strategy(argv):
     ap.add_argument('--wm-arg', action='append')
     ap.add_argument('--config', help='JSON dict of strategy_search.DEFAULTS overrides')
     ap.add_argument('--k', type=int, default=4)
-    ap.add_argument('--mem-fraction', type=float)
+    ap.add_argument('--mem-fraction', type=float, help='per worker process (with --workers) or this process')
+    ap.add_argument('--workers', type=int, default=0, help='parallel WM worker processes (CPU-bound rollouts)')
     a = ap.parse_args(argv)
-    if a.mem_fraction:
-        import torch
-        torch.cuda.set_per_process_memory_fraction(float(a.mem_fraction))
     out = G.check_path(a.out)
     out.mkdir(parents=True, exist_ok=False)
-    wm = _backend(a)
+    if a.workers:
+        from . import wm_backend as W
+        kw = {}
+        for k2, v in _kv(a.wm_arg).items():
+            try:
+                kw[k2] = json.loads(v)
+            except ValueError:
+                kw[k2] = v
+        local = dict(kw, device='cpu') if 'device' in kw else kw
+        wm = W.ParallelWM(a.wm, a.workers, api=_kv(a.wm_api), local_kw=local, mem_fraction=a.mem_fraction, **kw)
+    else:
+        if a.mem_fraction:
+            import torch
+            torch.cuda.set_per_process_memory_fraction(float(a.mem_fraction))
+        wm = _backend(a)
     cfg = json.loads(a.config) if a.config else None
     states = [m for m in json.loads(G.check_path(a.states).read_text()) if m.get('valid')]
     arms = {}

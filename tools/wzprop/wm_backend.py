@@ -225,3 +225,50 @@ def load_backend(spec='auto', api=None, ready=None, **kw):
                                     '(use --wm stub only for dry runs)')
         return WMABackend(path, api=api, load_kwargs=kw or None)
     return _Factory(_resolve(spec)(**kw))
+
+
+# ------------------------------------------------------------------------------------------ parallel calls
+_CHILD = {}
+
+
+def _child_init(spec, api, kw, mem_fraction, threads):
+    if threads:
+        import torch
+        torch.set_num_threads(int(threads))
+    if mem_fraction:
+        import torch
+        torch.cuda.set_per_process_memory_fraction(float(mem_fraction))
+    _CHILD['wm'] = load_backend(spec, api=api, **kw)
+
+
+def _child_eval(state, actions, K, H, seed):
+    return _CHILD['wm'].evaluate(state, actions, K, H, seed)
+
+
+class ParallelWM:
+    """N worker processes, each holding its own backend (the real WM rollout is CPU-bound per process, so N small
+    workers fill the GPU); observe() runs on a local backend (pass a CPU device for it). evaluate() is unchanged;
+    map(calls) evaluates [(state, actions, K, H, seed)] concurrently in order."""
+
+    def __init__(self, spec, n, *, api=None, local_kw=None, mem_fraction=None, threads=1, **kw):
+        import concurrent.futures as cf
+        import multiprocessing as mp
+        self.local = load_backend(spec, api=api, **(local_kw if local_kw is not None else kw))
+        self.name = self.local.name
+        self.meta = dict(self.local.meta, parallel_workers=int(n))
+        self.supported_roles = frozenset(getattr(self.local, 'supported_roles', {'hold'}))
+        self.pool = cf.ProcessPoolExecutor(int(n), mp_context=mp.get_context('spawn'), initializer=_child_init,
+                                           initargs=(spec, api, kw, mem_fraction, threads))
+
+    def observe(self, moment):
+        return self.local.observe(moment)
+
+    def evaluate(self, state, actions, K, H, seed):
+        return self.pool.submit(_child_eval, state, actions, K, H, seed).result()
+
+    def map(self, calls):
+        futs = [self.pool.submit(_child_eval, *c) for c in calls]
+        return [f.result() for f in futs]
+
+    def close(self):
+        self.pool.shutdown(wait=True)
