@@ -22,6 +22,7 @@ from tools.coopmwm.protocol import digest
 from tools.coopnative.storage import canonical
 
 WORLD = dict(seed=989200, cell=4, repeat=0, penetration=0.4, demand=2800, map='wz3to2', cell_key='D2800_p40')
+SPEC = Path(__file__).resolve().parents[2]/'assets'/'research'/'newmap_candidates'/'wz3to2'/'MAP_SPEC.json'
 OFFSET = cv.X_B-75.44              # fake WM frame: s = 75.44 at the drop
 WM_TO_NM = {2: 0, 1: 1, 0: 2}      # fake WM lane -> NEWMAP2 lane (2 = closing lane)
 NM_TO_WM = {v: k for k, v in WM_TO_NM.items()}
@@ -47,7 +48,7 @@ def test_ledger_registration_precharge_cap_and_duplicates(tmp_path):
     with pytest.raises(ValueError):
         cv.charge(tmp_path, 'x', 10)                      # never before the registration
     with pytest.raises(ValueError):
-        cv.init(tmp_path, cap=80001)                      # hard phase cap
+        cv.init(tmp_path, cap=400001)                     # hard phase cap (MAIN: 400,000)
     reg = cv.init(tmp_path, cap=5000)
     assert reg['phase'] == 'clean4_prelaunch_verify' and reg['cap_sim_s'] == 5000 and reg['rules']['selection']
     assert cv.init(tmp_path, cap=5000)['registration_sha256'] == reg['registration_sha256']
@@ -355,6 +356,8 @@ def make_ctx_dir(root, t0=450, arm='B'):
     d.mkdir(parents=True)
     torch.save(snap, d/'SNAPSHOT.pt')
     (d/'CONTEXT.json').write_text(json.dumps(ctx))
+    frame = [cv.observable(row('cA', 1500, 0)), cv.observable(row('cB', 1520, 1))]
+    (d/'FRAMES.json').write_text(json.dumps(cv.frames_record(WORLD, t0, frame, frame)))
     return d, ctx
 
 
@@ -381,6 +384,15 @@ def test_stage_gating_seed1_fail_spends_no_confirmation(tmp_path):
     assert rec['k'] == 17 and cv.spent(tmp_path) == rec['charged_sim_s'] == 18*(450+150+120)
     assert not (tmp_path/'results'/'native.jsonl').exists() and not (tmp_path/'minebank').exists()
     assert cv.run_context(tmp_path, d, runner_factory=factory({}))['status'] == 'skipped_claimed'
+    # every lost group (W2 rule: own-seed synergy < 0) -> one negative-frame row in the W2 frame format
+    out = cv.extract(tmp_path)
+    neg = [json.loads(x) for x in (tmp_path/'CLEAN4_NEGATIVE_FRAMES.jsonl').read_text().splitlines()]
+    assert out['negative_frames'] == len(neg) == 5 and out['frames_missing'] == 0
+    for n in neg:
+        assert n['kind'] == 'lost' and n['basis'] == 'synergy' and n['synergy_veh_s']['1'] < 0
+        assert set(n['frames']) == {'449', '450'} and n['world_seed'] == 989200 and n['arm'] == 'B'
+        assert all(set(r) == set(cv.FRAME_KEYS) for rows in n['frames'].values() for r in rows)
+        assert n['frames_sha256'] == digest(n['frames']) and n['source'] == cv.PHASE and n['members']
 
 
 def test_pass_confirms_natively_and_extracts_bound_rows(tmp_path):
@@ -413,9 +425,16 @@ def test_pass_confirms_natively_and_extracts_bound_rows(tmp_path):
         assert all(k in m for k in glb.MINED_BINDING_FIELDS)
         assert m['synergy_lower95'][str(m['seed'])] > 0 and m['reachable'] is True
         with pytest.raises(ValueError, match='TRAIN world seed'):
-            glb.binding(m)                                # known blocker: 986000-986071 range (do not edit)
-        b = glb.binding(dict(m, world=dict(m['world'], seed=986000)))   # every other field binds
-        assert b['seed'] == m['seed'] and b['n_reps'] == 3
+            glb.binding(m)                                # this process is not bound to wz3to2
+    from tools.coopmwm import map_descriptor as md
+    md._reset_for_tests()
+    md.bind(md.load(SPEC))
+    try:
+        for m in moves:                                   # nm-train 7a0f7721: map-aware TRAIN predicate
+            b = glb.binding(m)
+            assert b['seed'] == m['seed'] and b['n_reps'] == 3 and b['world'] == WORLD
+    finally:
+        md._reset_for_tests()
     negs = [json.loads(x) for x in (tmp_path/'CLEAN4_NEGATIVES.jsonl').read_text().splitlines()]
     assert sorted(n['variant'] for n in negs if n['stage'] == 'screen') == ['pair_h', 'pair_t', 'wall_g', 'wall_h']
     pot = json.loads((tmp_path/'POTENTIAL_INPUTS.json').read_text())
@@ -543,8 +562,10 @@ def test_seed_ranges_and_salts_never_forbidden():
         assert cv.seed_forbidden(s)
     for s in (961999, 963000, 964200, 978000, 989599, 989700):
         assert not cv.seed_forbidden(s)
-    assert cv.check_world(WORLD).startswith('local_range_check')
+    assert cv.check_world(WORLD) == 'map_scenarios.guard'
+    assert cv.check_world(cv.make_world(989007, 3200, 0.6)) == 'map_scenarios.guard'   # PLANGEN2 extra TRAIN
     for bad in (dict(WORLD, seed=989600), dict(WORLD, seed=964100), dict(WORLD, seed=986000),
+                dict(WORLD, seed=989150), dict(WORLD, repeat=3),
                 dict(WORLD, map='merge'), dict(WORLD, cell_key='D2400_p40'), dict(WORLD, demand=2700)):
         with pytest.raises(ValueError):
             cv.check_world(bad)
@@ -565,3 +586,141 @@ def test_cli_init_and_status(tmp_path, capsys):
     out = [json.loads(x) for x in capsys.readouterr().out.splitlines()]
     assert len(out[0]['registration_sha256']) == 64
     assert out[1]['cap_sim_s'] == 40000 and out[1]['spent_sim_s'] == 0 and out[1]['remaining_sim_s'] == 40000
+
+
+# ------------------------------------------------------------------ N1 geometry, freeze rules, frozen moves
+
+class FakeDesc:
+    kind, name = 'lane_drop', 'wz3to2'
+    bottleneck = dict(drop_s_m=75.44, drop_x_m=2696.0, closing_lane=2, adjacent_lane=1, through_lanes=[0, 1])
+
+
+def test_descriptor_geometry_matches_n3_frame(monkeypatch):
+    from tools.coopmwm import map_descriptor as md
+    g = cv.DescriptorGeometry(FakeDesc())
+    rows = [row('a1', 1500, 0), row('a2', 1560, 0), row('b1', 1530, 1), row('b2', 1700, 1), row('c1', 1600, 2)]
+    assert cv.n3_select(rows, 470, geom=g) == cv.n3_select(rows, 470, geom=GEOM)
+    assert g.locate(dict(s_m=80.0, lane=0))[0] == 'past_drop'
+    desc = md.load(SPEC)                                  # the registered N1 wz3to2 descriptor (not bound)
+    lane, s = desc.lane_and_s('up_0', 2196.0)             # SUMO closing lane 500 m before the drop
+    assert cv.DescriptorGeometry(desc).locate(dict(s_m=s, lane=lane)) == ('up', 0, pytest.approx(2196.0))
+    monkeypatch.delenv('COOPMWM_MAP_SPEC', raising=False)
+    assert isinstance(cv.geometry(), cv.Wz3to2GeometryStub)
+    with pytest.raises(RuntimeError):
+        cv.production_env(WORLD)                          # COOPMWM_MAP_SPEC / COOPMWM_G5_RUNTIME required
+
+
+PG = dict(release_x=2696.0, amax=1.0, v_w=22.0, hold_s=120, dmax=1.0)
+LB = dict(target_lane=2, giveup_x=2396.0, release_x=2696.0, hold_s=300)
+
+
+def src_row(arm, sid, cell, demand, pen, t0, family, variant, members, params, rep=1, r_kind=None, as_str=False):
+    mv = dict(map='wz3to2', variant=variant, family=family,
+              members=[dict(id=m, lane=i, params=params) for i, m in enumerate(members)])
+    r = dict(schema='coopmwm-mined-move-v1', arm=arm, situation_id=sid, seed=rep, t0=t0, family=family,
+             variant=variant, members=members, plan_sha256=f'{sid}_{variant}_{rep}',
+             world=dict(map='wz3to2', cell=cell, demand=demand, penetration=pen, seed=989200, repeat=0, split='TRAIN'),
+             move=json.dumps(mv) if as_str else mv)
+    if r_kind:
+        r['r_kind'] = r_kind
+    return r
+
+
+def write_sources(d):
+    d.mkdir()
+    sid = 'nm2_D2800_p40_s989200_t470'
+    b1 = [src_row('B', sid, 'D2800_p40', 2800, 0.4, 470, 'closing_pair', 'pair_g', ['a1', 'b1'], PG, k)
+          for k in (1, 2, 3)]
+    b1.append(src_row('B', 'nm2_D2800_p20_s989200_t450', 'D2800_p20', 2800, 0.2, 450, 'abreast_wall', 'wall_h',
+                      ['a1', 'b1', 'c1'], dict(PG, v_w=15.0, hold_s=90, dmax=1.5)))
+    b1 += [src_row('B', sid, 'D2800_p40', 2800, 0.4, 470, 'abreast_wall', 'wall_g', ['a1', 'b1', 'c1'], PG, k)
+           for k in (1, 2)]
+    b2 = [src_row('B', 'ck_a', 'D2800_p40', 2800, 0.4, 800, 'lane_balance', 'B_lane_balance', ['a1', 'b1', 'c1'],
+                  LB, as_str=True),
+          src_row('B', 'ck_b', 'D2800_p40', 2800, 0.4, 800, 'discharge', 'B_discharge', ['a1', 'b1'],
+                  dict(tau=0.6, hold_s=180), as_str=True)]
+    r1 = [src_row('R', 'pg2_r', 'D2800_p40', 2800, 0.4, 470, 'R_random', 'R0', ['b1', 'c1'], dict(PG, hold_s=90),
+                  r_kind='hold'),
+          src_row('R', 'pg2_r', 'D2800_p40', 2800, 0.4, 800, 'R_random', 'R4', ['a1', 'b1', 'c1'], LB,
+                  r_kind='lane_balance')]
+    out = []
+    for name, rows in (('NEWMAP_MOVES_B.jsonl', b1), ('COOPKINDS_MOVES_B.jsonl', b2),
+                       ('PLANGEN2_MOVES_R.jsonl', r1), ('COOPKINDS_MOVES_R.jsonl', [])):
+        (d/name).write_text(''.join(json.dumps(r)+'\n' for r in rows))
+        out.append(d/name)
+    return out
+
+
+def test_freeze_main_rules(tmp_path):
+    cv.init(tmp_path)
+    paths = write_sources(tmp_path/'src')
+    ml = cv.freeze(tmp_path, paths)
+    assert [(m['variant'], m['status']) for m in ml['moves']] == [
+        ('pair_g', 'pending'), ('wall_h', 'excluded_cell'), ('wall_g', 'pending'), ('B_lane_balance', 'pending_n9'),
+        ('B_discharge', 'excluded_family'), ('R0', 'pending'), ('R4', 'pending_n9')]
+    assert ml['moves'][0]['seeds'] == [1, 2, 3] and ml['moves'][0]['n_rows'] == 3 and ml['moves'][2]['seeds'] == [1, 2]
+    assert ml['moves'][0]['world'] == WORLD and ml['main_rules'] == list(cv.MAIN_RULES) and ml['n_executable'] == 3
+    assert [s['name'] for s in ml['sources']] == [p.name for p in paths]
+    assert all(len(s['sha256']) == 64 for s in ml['sources'])
+    with pytest.raises(ValueError):
+        cv.freeze(tmp_path, paths)                        # frozen once
+    other = tmp_path/'other'
+    cv.init(other)
+    cv.charge(other, 'x', 1)
+    with pytest.raises(ValueError):
+        cv.freeze(other, paths)                           # only before any physics
+    with pytest.raises(ValueError):
+        cv.run_context(tmp_path, tmp_path/'none', runner_factory=factory({}))   # frozen: only moves run
+
+
+def snap_capture(controller, prefixes, job, t, sample, generator):
+    return dict(episode=dict(id=job['id'], world=job['world'], arm=job['arm'], update=0, role='train',
+                             training_seed=20261101),
+                policy=dict(state_dict_sha256='p'), sumo=dict(runtime='rt', checkpoint='ck', warm_history=True,
+                                                             accel_bounds=[-3., 2.6], noise_seed=job['noise_seed']),
+                t0=t, end_s=1200, prefixes={str(x): fp(x, cum0(x)) for x in range(300, t+1)}, samples={},
+                rng=dict(generator_state_sha256='g'), committed_plans=[])
+
+
+def test_frozen_moves_collect_run_extract(tmp_path):
+    cv.init(tmp_path)
+    ml = cv.freeze(tmp_path, write_sources(tmp_path/'src'))
+    ids = [m['move_id'] for m in ml['moves']]
+    r = cv.run_move(tmp_path, ids[0], runner_factory=factory({}), workers=1)
+    assert r['status'] == 'refused' and not (tmp_path/'move_status').exists()    # not collected: not started
+    for bad in (ids[1], ids[3], ids[4], 'unknown'):
+        with pytest.raises(ValueError):
+            cv.run_move(tmp_path, bad, runner_factory=factory({}))
+    reqs = {arm: cv.move_requests(tmp_path, arm) for arm in ('B', 'R')}
+    assert [(j['ident'], [(q['t0'], q['members']) for q in j['requests']]) for j in reqs['B']] == [
+        ('c4v_B_D2800_p40_s989200', [(470, ['a1', 'b1', 'c1'])])]
+    for arm, jobs in reqs.items():
+        for j in jobs:
+            cv.collect(tmp_path, j['world'], arm, {'w': 1}, geom=GEOM, rt=FakeRT(tmp_path), windows=(),
+                       requests=j['requests'], frame_times=[600], capture_fn=snap_capture)
+    ctx = json.loads((cv.move_ctx_dir(tmp_path, ml['moves'][0])/'CONTEXT.json').read_text())
+    assert ctx['kind'] == 'requested' and ctx['move_ids'] == [ids[0], ids[2]]
+    gains = {('c4v_pair_g_a1_b1', k): 0.6 for k in (1, 2, 3)}
+    out = cv.run_move(tmp_path, ids[0], runner_factory=factory(gains), workers=1)
+    assert out['status'] == 'confirmed_admitted' and out['origin'] == cv.ORIGIN_PROVISIONAL
+    assert cv.move_status(tmp_path, ml['moves'][0])['status'] == 'confirmed_admitted'
+    with pytest.raises(ValueError, match='already started'):
+        cv.run_move(tmp_path, ids[0], runner_factory=factory(gains), workers=1)
+    assert cv.next_move(tmp_path)[1]['move_id'] == ids[2]
+    assert cv.run_next(tmp_path, runner_factory=factory(gains), workers=1)['status'] == 'screen_rejected'
+    last = cv.run_next(tmp_path, runner_factory=factory(gains), workers=1)          # R0, the last executable move
+    assert last['move_id'] == ids[5] and last['status'] == 'screen_rejected'
+    st = {m['move_id']: (cv.move_status(tmp_path, m) or {}).get('status') for m in ml['moves']}
+    assert st[ids[3]] == st[ids[6]] == 'excluded_n9_deadline' and st[ids[1]] is None and st[ids[4]] is None
+    assert cv.run_next(tmp_path, runner_factory=factory(gains))['status'] == 'no_moves_left'
+    assert len(cv._jsonl(tmp_path/'results'/'moves.jsonl')) == 5
+    ex = cv.extract(tmp_path, cell='D2800_p40')
+    assert ex['mined_B'] == 3 and ex['mined_R'] == 0 and ex['frames_missing'] == 0
+    for m in (json.loads(x) for x in (tmp_path/'CLEAN4_MOVES_B.jsonl').read_text().splitlines()):
+        assert m['move_id'] == ids[0] and m['origin'] == cv.ORIGIN_PROVISIONAL and m['situation_id'].endswith('_r470')
+    neg = [json.loads(x) for x in (tmp_path/'CLEAN4_NEGATIVE_FRAMES.jsonl').read_text().splitlines()]
+    assert sorted((n['kind'], n['arm'], str(n.get('move_id'))) for n in neg) == [
+        ('lost', 'B', ids[2]), ('lost', 'R', ids[5]), ('requested', 'B', 'None'), ('requested', 'R', 'None')]
+    assert all(set(n['frames']) == {str(n['t0']-1), str(n['t0'])} for n in neg)
+    assert ex['moves']['by_status'] == {'confirmed_admitted': 1, 'screen_rejected': 2, 'excluded_n9_deadline': 2,
+                                        'excluded_cell': 1, 'excluded_family': 1}
