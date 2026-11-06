@@ -1,0 +1,35 @@
+# PLANFIX preserved-session recovery — 2026-11-06 13:47 +08
+
+## Step 1 — recover before execution
+
+Recovered task worktree `E:/agent-work/c4-variety-collect` at `737a08f3`.
+`E:/agent-work/_sol` is the harness directory, not a Git repository.
+Tracked diff is empty. Pre-existing untracked `VARCOLLECT_READY.blocked3.json`
+and `VARCOLLECT_READY.blocked4.json` are preserved.
+
+Read history/status, tracks_spec, central REGISTRATION last 200 lines
+(7657–7856), diagnosis, central bank results/readiness and the prior 12:49
+recovery plus its successful 12:50 CPU status receipt before taking action.
+The previous recovery already established terminal bank dispositions and
+exited WM/coordinator identities; no replacement status job is needed to
+decide whether the historical dispatch can resume.
+
+Owner decisions recorded at 02:44 supersede S-VARIETY with G1/mining;
+03:00 releases the 566,400 unspent plan_fix reservation. Later registrations
+through 13:41 do not restore it. Clean1 is owner-stopped at A9/B9/R9,
+clean2 stopped at u18, and clean3 is owner-stopped after its u1 fault.
+The historical clean1/clean2 u12 feed-in cannot be applied prospectively.
+
+Disposition: BLOCKED_AUTHORITY / NOT READY. No new SSH/GPU transfer, WM
+dispatch, SUMO, signal, ledger amendment or bank switch in this recovery.
+Preserve finished tests, failed inputs, source packages and result evidence.
+Continuation requires explicit restored plan_fix funding within the current
+aggregate cap, intended run/update boundary, and MAIN/owner task ownership.
+
+## Follow-up found during recovery
+
+Central `PLAN_FIX_READY.md` correctly records supersession and the 12:50
+worker audit, but `PLAN_FIX_READY.json` still describes a 600,000 active
+allocation, target u12 and obsolete missing-input/clean2-not-launched blockers.
+Reconcile its metadata while retaining `ready=false`, `apply=false`, and
+`outputs=[]`; do not publish any executable bank output.
