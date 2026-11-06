@@ -103,7 +103,8 @@ def fake_plant(calls, moves_at):
 def test_runner_declares_the_contract():
     assert runner.MAP == 'wz3to2' and runner.NATIVE is True and callable(runner.episode)
     assert not hasattr(runner, 'decision_branch')            # per-decision branches not built: never faked
-    assert nm.Runtime().runner_status() == dict(ok=True, native=True, decisions=False, reason=None)
+    assert nm.Runtime().runner_status() == dict(ok=True, native=True, decisions=False, lane=True, reason=None)
+    assert runner.MAPPO_LANE is True
 
 
 def test_policy_episode_runs_the_registered_job_and_logs_decisions(env, monkeypatch):
@@ -148,8 +149,8 @@ def test_mappo_arm_swaps_only_the_executor_and_reverifies_it(env, monkeypatch, l
     monkeypatch.setattr(accel_plant, 'episode', episode)
     final_root = env['tmp']/'dry'/'final_root'
     nm.register(root=env['root'], final_root=final_root, runtime=nm.FakeRuntime(), panel=env['panel'])
-    binding = nm.bind_fake_mappo(env['tmp']/'dry', final_root)
-    spec = nm.episode_specs('MAPPO', env['panel'], env['cfg'], env['root'], 'mappo_u0', binding)[0]
+    binding = nm.bind_fake_mappo(env['tmp']/'dry', final_root, 'MAPPO_SPEED')
+    spec = nm.episode_specs('MAPPO_SPEED', env['panel'], env['cfg'], env['root'], 'mappo_u0', binding)[0]
     original_setup = leverprobe.setup
     record = runner.episode(spec, env['cfg'], env['tmp']/'work'/spec['job_id'])
     assert calls[-1]['checkpoint'] == binding['path'] and calls[-1]['weights'] == {'arm': 'A', 'update': 0}
@@ -213,6 +214,7 @@ def test_native_episode_uses_the_native_plant_with_the_map_binding(env, monkeypa
     monkeypatch.setattr(protocol, 'install_seed_scope', lambda: installed.append(('seed_scope',)))
     monkeypatch.setattr(map_runtime, 'install', lambda job: installed.append(('map', job['world']['map'])) or 'desc')
     monkeypatch.setattr(map_runtime, 'patch_globals', lambda ns, job: installed.append(('rows',)))
+    monkeypatch.setattr(runner, 'closing_lane_regime', lambda trace: dict(closing_lane_speed_mps=7.5, n_obs=40))
     spec = nm.episode_specs('NATIVE', env['panel'], env['cfg'], env['root'], 'mappo_u0')[5]
     record = runner.episode(spec, env['cfg'], env['tmp']/'work'/spec['job_id'])
     job = NATIVE_JOBS[-1]
@@ -220,7 +222,7 @@ def test_native_episode_uses_the_native_plant_with_the_map_binding(env, monkeypa
     assert job['world'] == spec['world'] and job['noise_seed'] == spec['world']['seed']
     assert [x[0] for x in installed] == ['setup', 'seed_scope', 'map', 'rows']
     assert record['J_veh_s'] == 61000.25 and record['safety'] == dict(collisions=0, teleports=0, hard_brakes=7, ttc_events=2)
-    assert nm.check_episode(record, spec)['decision'] is None
+    assert nm.check_episode(record, spec)['decision'] is None and record['regime']['closing_lane_speed_mps'] == 7.5
     monkeypatch.setattr(map_runtime, 'install', lambda job: None)
     with pytest.raises(ValueError, match='map binding'):
         runner.episode(spec, env['cfg'], env['tmp']/'work'/'native2')
@@ -279,8 +281,103 @@ def test_bound_executor_refuses_mismatched_or_tampered_bindings(tmp_path):
         runner.bound_executor(ck)
 
 
-def test_fallback_is_never_silent_in_labels():
-    kind, label = nm.mappo_label(FAKE_MAPPO_SHA)
-    assert kind == 'u0_transferred_not_retrained' and 'u0 transferred, not retrained' in label and 'd9042cc5a05e' in label
+def test_comparator_labels_name_the_loaded_sha_and_never_a_substitute():
     kind, label = nm.mappo_label('6de2509f37fe3debdaa84b56a5ddd1df9c886381440f36bc3bf6fc605d7c7a0c')
-    assert kind == 'retrained_wz3to2' and '6de2509f37fe' in label
+    assert kind == 'retrained_wz3to2_it168' and 'S-MAPPOWZ it168' in label and '6de2509f37fe' in label
+    kind, label = nm.mappo_label('ab'*32, 'MAPPO_LANE')
+    assert kind == 'lane_retrained_wz3to2_final' and 'S-MAPPOWZL final' in label
+    assert nm.U0_LABEL.startswith('MAPPO u0 transferred')          # d9042cc5 is the U0 arm, never MAPPO_SPEED
+
+
+def test_closing_lane_regime_reads_only_the_registered_rows(tmp_path):
+    import gzip
+    trace = tmp_path/'observable.jsonl.gz'
+    rows = [dict(time_s=299, vehicles=[dict(lane=2, s_m=0., v_mps=1.)]),
+            dict(time_s=300, vehicles=[dict(lane=2, s_m=-100., v_mps=6.), dict(lane=1, s_m=-100., v_mps=30.),
+                                        dict(lane=2, s_m=-400., v_mps=30.)]),
+            dict(time_s=359, vehicles=[dict(lane=2, s_m=70., v_mps=8.)]),
+            dict(time_s=360, vehicles=[dict(lane=2, s_m=0., v_mps=99.)])]
+    with gzip.open(trace, 'wt', encoding='utf-8') as f:
+        for r in rows:
+            f.write(json.dumps(r)+'\n')
+    out = runner.closing_lane_regime(trace)
+    assert out['closing_lane_speed_mps'] == pytest.approx(7.) and out['n_obs'] == 2
+
+
+class FakeMemory:
+    present = None
+
+
+class FakeLaneExecutor:
+    memory, dwell = FakeMemory(), FakeMemory()
+
+    def __call__(self, state, with_lanes=True):
+        import numpy as np
+        cmd = np.array([[.4, np.nan, -.2]])        # slot 1 = HDV (uncommanded)
+        lanes = np.array([[1, -1, 0]])
+        return cmd, lanes
+
+
+class FakeEnv:
+    def __init__(self):
+        import numpy as np
+        self.now, self.frame, self.steps = 300., types.SimpleNamespace(vid_index=np.array([0, 1, 2])), []
+
+    def state(self):
+        return dict(is_cav=[True, False, True], present=[True, True, True])
+
+    def slot_vehicle_ids(self):
+        return ['c1', 'h1', 'c2']
+
+    def step(self, cmd, lanes=None):
+        self.steps.append((cmd.copy(), None if lanes is None else lanes.copy()))
+        self.now += 1
+        return None, dict(done=False, interval=dict(speed_deficit_vehicle_seconds=2., source_wait_vehicle_seconds=1.),
+                          lane_commands={'c1': 1})
+
+
+class FakeBackend:
+    made = []
+
+    def __init__(self, work, world, sim_s, checkpoint):
+        import hashlib as h
+        self.env, self.previous, self.command_digest = FakeEnv(), None, h.sha256()
+        self.totals = dict(team_delay_vs=0., road_delay_vs=0., source_wait_vs=0., collisions=0., teleports=0.,
+                           ttc_below_3_vs=0., hard_brake=0.)
+        self.actual, self.checkpoint = 900., checkpoint
+        FakeBackend.made.append(self)
+
+    def observe(self, env):
+        pass
+
+    def close(self):
+        pass
+
+
+def test_mappo_lane_episode_steers_cavs_only_through_the_env_lane_path(env, monkeypatch, tmp_path):
+    from tools.coopmwm import accel_plant
+    from tools.coopfree import backend as cf
+    from tools.coopmwm import rerun_tracks_backend
+    final_root = env['tmp']/'dry'/'final_root'
+    nm.register(root=env['root'], final_root=final_root, runtime=nm.FakeRuntime(), panel=env['panel'])
+    binding = nm.bind_fake_mappo(env['tmp']/'dry', final_root, 'MAPPO_LANE')
+    spec = nm.episode_specs('MAPPO_LANE', env['panel'], env['cfg'], env['root'], 'mappo_frozen', binding)[0]
+    plant = types.SimpleNamespace(Backend=FakeBackend, exact=lambda x: x.tobytes().hex())   # as leverprobe.exact
+    bound = []
+    monkeypatch.setattr(accel_plant, 'bind_runtime', lambda job: bound.append(job) or plant)
+    monkeypatch.setattr(runner, 'load_lane_executor', lambda path, sha: (FakeLaneExecutor(), dict(file_sha256=sha)))
+    monkeypatch.setattr(cf, 'observations', lambda b: [dict(vid='c1', is_cav=True), dict(vid='h1', is_cav=False),
+                                                      dict(vid='c2', is_cav=True)])
+    monkeypatch.setattr(rerun_tracks_backend, 'safety', lambda result, trace: dict(collisions=0, teleports=0,
+                                                                                    hard_brakes=0, ttc_events=0))
+    record = runner.episode(spec, env['cfg'], tmp_path/'work'/spec['job_id'])
+    b = FakeBackend.made[-1]
+    assert bound[-1]['role'] == 'final_test' and bound[-1]['checkpoint'] == '/frozen/mappo_d9042cc5.pt'
+    assert b.checkpoint == '/frozen/mappo_d9042cc5.pt' and len(b.env.steps) == 900       # 300..1200 s
+    assert all(lanes is not None and list(lanes.reshape(-1)) == [1, -1, 0] for _, lanes in b.env.steps)
+    assert record['J_veh_s'] == 900*3. and record['executor_sha256_loaded'] == binding['sha256']
+    assert record['lane_request_ticks'] == 900 and nm.check_episode(record, spec)['J_veh_s'] == 2700.
+    with pytest.raises(ValueError, match='non-CAV'):
+        runner.cav_only(dict(is_cav=[True, False]), [[.1, .2]], [[0, -1]])
+    with pytest.raises(ValueError, match='lane command for a non-CAV'):
+        runner.cav_only(dict(is_cav=[True, False]), [[.1, float('nan')]], [[0, 1]])

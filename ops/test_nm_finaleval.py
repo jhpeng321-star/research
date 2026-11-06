@@ -28,7 +28,8 @@ def make(tmp_path, panel, base='mappo_u0', register=True, mappo=True, **register
     runtime = nm.FakeRuntime()
     final_root = tmp_path/'dry'/'final_root'
     plan = nm.register(root=root, final_root=final_root, runtime=runtime, panel=panel, **register_kw) if register else None
-    bound = nm.bind_fake_mappo(tmp_path/'dry', final_root) if register and mappo else None
+    bound = ({a: nm.bind_fake_mappo(tmp_path/'dry', final_root, a) for a in nm.BOUND_ARMS}
+             if register and mappo else None)
     return dict(root=root, cfg=cfg, runtime=runtime, final_root=final_root, plan=plan, panel=panel, mappo=bound)
 
 
@@ -74,6 +75,7 @@ def test_registered_panel_v2_is_the_clean4_cell_on_n1_worlds(panel):
     assert contract['comparisons'] == ['B-A', 'R-A', 'B-R'] and contract['primary']['contrast'] == 'B-BASE'
     assert contract['decisions']['worlds'] == [f'wz3to2_{989600+12*k}' for k in range(8)]
     assert contract['budget']['quote_mappo_u0'] == 672_000 and contract['budget']['quote_native'] == 556_800
+    assert contract['budget']['allocation_sim_s'] == nm.PANEL_ALLOCATION_SIM_S == 690_000   # as registered
     assert panel['supersedes'] == [dict(panel_sha256='b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1',
                                         reason=nm.SUPERSEDED['b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1'])]
 
@@ -133,7 +135,7 @@ def test_map_check_flags_an_api_that_disagrees_with_the_panel(panel):
         nm.bind_map_api('json')
 
 
-@pytest.mark.parametrize('base', ['mappo_u0', 'native'])
+@pytest.mark.parametrize('base', ['mappo_frozen', 'mappo_u0', 'native'])
 def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     import concurrent.futures
 
@@ -143,40 +145,59 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     monkeypatch.setattr(concurrent.futures, 'ProcessPoolExecutor', Forbidden)
     result = nm.dry_run(out=tmp_path/'out', panel=panel, base=base)
     assert result['status'] == 'PASS' and result['new_sim_s'] == 0 and result['physics'] is False
-    assert result['present'] == ['B', 'A', 'R', 'MAPPO', 'NATIVE']
+    assert set(result['analyses']) == {'claim3a', 'claim3b_MAPPO_SPEED', 'claim3b_MAPPO_LANE'}
+    assert result['present']['claim3a'] == ['B', 'A', 'R', 'U0', 'NATIVE']
+    assert result['present']['claim3b_MAPPO_SPEED'] == ['B', 'A', 'R', 'U0', 'MAPPO_SPEED', 'NATIVE']
     runs = [c for c in result['calls'] if c[0] == 'run']
-    assert runs[0] == ('run', 96*5, 24)
-    assert runs[1][1] <= 2*8*(2+nm.MAX_MEMBERS)
+    assert runs[0] == ('run', 96*5, 24) and runs[1][1] <= 2*8*(2+nm.MAX_MEMBERS) and runs[2:] == [('run', 96, 24)]*2
     assert {c[1] for c in result['calls'] if c[0] == 'reserve'} == {'v2v_final'}
-    assert result['fake_v2v_final_sim_s'] <= result['quote']['total_ceiling_sim_s'] <= 690_000
+    assert result['fake_v2v_final_sim_s'] <= result['quote']['total_ceiling_sim_s'] <= nm.ALLOCATION_SIM_S == 1_040_000
     final_root = Path(result['final_root'])
-    tables = json.loads((final_root/'FINAL_TABLES.json').read_text())
-    nm.verify(tables, 'analysis_sha256', 'tables')
-    assert tables['dry_run'] is True and tables['missing'] == {} and tables['panel_sha256'] == nm.PANEL_SHA256
-    t = tables['tables']
+    alias = dict(mappo_frozen='A', mappo_u0='U0', native='NATIVE')[base]
+    claim3a = json.loads((final_root/'CLAIM3A_TABLES.json').read_text())
+    nm.verify(claim3a, 'analysis_sha256', 'claim3a')
+    assert claim3a['scope'] == 'claim3a' and claim3a['dry_run'] is True and claim3a['panel_sha256'] == nm.PANEL_SHA256
+    assert set(claim3a['missing']) == {'MAPPO_SPEED', 'MAPPO_LANE'} and 'MAPPO_SPEED' not in claim3a['present']
+    t = claim3a['tables']
+    arms = set(nm.CLAIM3A_ARMS)
+    assert t['base']['alias_of'] == alias and t['arms'][alias]['label'].endswith('= BASE')
+    assert set(t['total_benefit']['vs_NATIVE']['rows']) == arms-{'NATIVE'}
+    assert set(t['total_benefit']['vs_BASE']['rows']) == arms-{alias}
+    assert t['total_benefit']['vs_MAPPO_SPEED']['status'] == 'unavailable'      # no comparator data in 3a
     assert set(t['registered_B_A_R']['rows']) == {'B-A', 'R-A', 'B-R'}
-    alias = 'MAPPO' if base == 'mappo_u0' else 'NATIVE'
-    assert t['total_benefit']['base_is_native'] is (base == 'native') and t['base']['alias_of'] == alias
-    assert t['base']['mappo_comparator']['kind'] == 'retrained_wz3to2'
-    assert set(t['total_benefit']['vs_NATIVE']['rows']) == {'B', 'A', 'R', 'MAPPO'}
-    assert set(t['total_benefit']['vs_BASE']['rows']) == {'B', 'A', 'R', 'MAPPO', 'NATIVE'}-{alias}
-    assert t['arms'][alias]['label'].endswith('= BASE')
     for key in ('B-BASE', 'B-NATIVE'):
         assert t['synergy']['panel_decomposition'][key]['max_identity_error_veh_s'] < 1e-9
     pdx = t['synergy']['per_decision']
     assert pdx['registered_worlds'] == 8
     for arm in ('B', 'R'):
         assert pdx[arm]['decisions']+pdx[arm]['worlds_without_decision'] == 8
-        assert pdx[arm]['max_identity_error_veh_s'] < 1e-9
         act = t['synergy']['decision_activity'][arm]
         assert act['worlds'] == 96 and act['subset_captures'] == pdx[arm]['decisions']
-        assert act['cooperative_moves'] == 2*act['worlds_with_cooperative_move']
-    assert t['synergy']['registered_u24_train_states']['verdict'] == 'pass'
-    assert 'row' in t['primary'] and isinstance(t['primary']['meets_rule'], bool)
-    text = (final_root/'FINAL_TABLES.md').read_text()
-    assert 'FAKE PHYSICS' in text and 'Per-decision decomposition' in text and 'Decision activity' in text
+    ps = t['per_seed']
+    assert ps['comparators']['MAPPO_SPEED'] == dict(status='unavailable')
+    for c in ('NATIVE', 'U0'):
+        rows = ps['comparators'][c]
+        assert set(rows) == arms-{c}
+        for r in rows.values():
+            assert r['n'] == 96 and len(r['sorted']) == 96 and r['frac_benefit']+r['frac_harm']+r['frac_tie'] == pytest.approx(1)
+            assert [x['diff_veh_s'] for x in r['sorted']] == sorted(x['diff_veh_s'] for x in r['sorted'])
+    assert ps['B-R']['mean_ci']['diff'] == pytest.approx(t['registered_B_A_R']['rows']['B-R']['diff'])
+    assert len(ps['table_B']['rows']) == 96
+    rg = t['regimes']
+    assert rg['report_only'] and rg['demand_cell']['D3200_p60']['n'] == 96
+    assert sum(b['n'] for b in rg['closing_lane_speed_tercile']['terciles'].values()) == 96
+    text = (final_root/'CLAIM3A_TABLES.md').read_text()
+    assert 'FAKE PHYSICS' in text and 'T5 Per-seed view' in text and 'random' not in text
+    speed = json.loads((final_root/'CLAIM3B_MAPPO_SPEED_TABLES.json').read_text())
+    assert speed['scope'] == 'claim3b_MAPPO_SPEED' and speed['analysis_sha256'] != claim3a['analysis_sha256']
+    ts = speed['tables']
+    assert set(ts['total_benefit']['vs_MAPPO_SPEED']['rows']) == arms
+    assert ts['base']['comparators']['MAPPO_SPEED']['kind'] == 'retrained_wz3to2_it168'
+    assert 'S-MAPPOWZ it168' in ts['arms']['MAPPO_SPEED']['label']
+    assert set(ts['per_seed']['comparators']['MAPPO_SPEED']) == arms
+    assert ts['registered_B_A_R'] == t['registered_B_A_R']                       # 3a rows unchanged in 3b
     status = json.loads((final_root/'STATUS.json').read_text())
-    assert status['step'] == 'TABLES' and status['status'] == 'PASS'
+    assert status['step'] == 'DONE' and status['status'] == 'PASS'
 
 
 def test_rerun_reuses_published_waves_and_charges_nothing(panel, tmp_path):
@@ -185,15 +206,15 @@ def test_rerun_reuses_published_waves_and_charges_nothing(panel, tmp_path):
     before = (root/'CHARGES.jsonl').read_text()
     runtime = nm.FakeRuntime()
     value = nm.execute(root=root, final_root=final_root, runtime=runtime, panel=panel, poll=0, dry_run=True)
-    assert value['analysis_sha256'] == result['analysis_sha256']
+    assert {k: v['analysis_sha256'] for k, v in value.items()} == result['analyses']
     assert not [c for c in runtime.calls if c[0] in ('run', 'reserve')] and (root/'CHARGES.jsonl').read_text() == before
 
 
 def test_runner_without_decision_branches_never_blocks_the_evaluation(panel, tmp_path):
     f = make(tmp_path, panel)
     value = nm.execute(root=f['root'], final_root=f['final_root'], runtime=nm.FakeRuntime(runner=dict(decisions=False)),
-                       panel=panel, poll=0, dry_run=True)
-    assert value['present'] == ['B', 'A', 'R', 'MAPPO', 'NATIVE']
+                       panel=panel, poll=0, dry_run=True)['claim3a']
+    assert value['present'] == ['B', 'A', 'R', 'U0', 'NATIVE']
     assert value['tables']['synergy']['per_decision']['status'] == 'unavailable'
     assert value['tables']['synergy']['decision_activity']['B']['worlds'] == 96
     assert 'DECISIONS' in value['missing']
@@ -202,7 +223,7 @@ def test_runner_without_decision_branches_never_blocks_the_evaluation(panel, tmp
 
 def test_the_real_runner_module_satisfies_the_contract():
     status = nm.Runtime().runner_status()
-    assert status == dict(ok=True, native=True, decisions=False, reason=None)
+    assert status == dict(ok=True, native=True, decisions=False, lane=True, reason=None)
     status = nm.Runtime('tools.coopmwm.no_such_nm_runner').runner_status()
     assert status['ok'] is False and 'not importable' in status['reason']
 
@@ -248,6 +269,7 @@ def test_clean4_binding_refuses_mismatches_superseded_panels_and_reports_unbound
     f = make(tmp_path, panel, register=False)
     cfg = f['cfg']
     assert nm.clean4_binding(cfg, panel)['unbound'] == []
+    assert nm.clean4_binding(dict(cfg, newmap=dict(cfg['newmap'], base_controller='mappo_frozen')), panel)['base'] == 'mappo_frozen'
     for change, match in ((dict(map='weave'), 'map'), (dict(eval_panel_sha256='1'*64), 'panel'),
                           (dict(eval_panel_sha256=next(iter(nm.SUPERSEDED))), 'SUPERSEDED'),
                           (dict(cell=dict(demand_vph={'main': 2800}, penetration=0.3, profile='peak')), 'cell'),
@@ -279,8 +301,8 @@ def test_register_records_an_operator_declared_base_for_an_unbound_config(panel,
     write_config(f, cfg)
     plan = nm.register(root=f['root'], final_root=f['final_root'], runtime=f['runtime'], panel=panel, base='native')
     assert plan['binding']['base'] == 'native' and set(plan['binding']['unbound']) == {'base_controller', 'cell'}
-    assert plan['quote']['total_ceiling_sim_s'] == 672_000 and plan['budget']['allocated'] == 690_000
-    assert plan['amendments'][0]['base_alias'] == 'NATIVE' and 'MAPPO' in plan['amendments'][0]['arms']
+    assert plan['quote']['total_ceiling_sim_s'] == 905_760 and plan['budget']['allocated'] == 1_040_000
+    assert plan['amendments'][0]['base_alias'] == 'NATIVE' and plan['amendments'][0]['arms'] == list(nm.EPISODE_ARMS)
     _, binding, _ = nm.preflight(f['root'], f['final_root'], f['runtime'], panel)
     assert binding['base'] == 'native'
     with pytest.raises(nm.Blocked, match='never overwrite'):
@@ -291,8 +313,8 @@ def test_budget_is_debited_from_clean4_v2v_final_only_within_its_allocation(pane
     f = make(tmp_path, panel, register=False)
     cfg = f['cfg']
     report = nm.budget_check(f['root'], cfg, 'mappo_u0')
-    assert report['source'] == 'clean4_budget' and report['allocated'] == 690_000 and report['remaining'] == 690_000
-    small = dict(cfg, clean4_budget=_seal(dict(phases=dict(v2v_final=600_000)), 'receipt_sha256'))
+    assert report['source'] == 'clean4_budget' and report['allocated'] == 1_040_000 and report['remaining'] == 1_040_000
+    small = dict(cfg, clean4_budget=_seal(dict(phases=dict(v2v_final=690_000)), 'receipt_sha256'))   # pre-raise value
     with pytest.raises(nm.Blocked, match='allocation'):
         nm.budget_check(f['root'], small, 'mappo_u0')
     edited = deepcopy(cfg)
@@ -308,9 +330,9 @@ def test_budget_is_debited_from_clean4_v2v_final_only_within_its_allocation(pane
         nm.budget_check(f['root'], cfg, 'mappo_u0')
 
 
-def test_sub_cap_refuses_a_wave_that_would_exceed_690000(panel, tmp_path):
+def test_sub_cap_refuses_a_wave_that_would_exceed_the_allocation(panel, tmp_path):
     f = make(tmp_path, panel)
-    charge(f['root'], id='nmfinal_old_attempt_0000', phase='v2v_final', sim_s=600_000)
+    charge(f['root'], id='nmfinal_old_attempt_0000', phase='v2v_final', sim_s=1_000_000)
     specs = nm.episode_specs('NATIVE', panel, f['cfg'], f['root'], 'mappo_u0')
     with pytest.raises(nm.Blocked, match='sub-cap'):
         nm.run_waves([('NATIVE', 'episode', specs)], root=f['root'], final_root=f['final_root'], cfg=f['cfg'],
@@ -364,8 +386,9 @@ def test_missing_native_requires_explicit_exclusion(panel, tmp_path):
     with pytest.raises(nm.Blocked, match='NATIVE'):
         nm.execute(runtime=runtime, **kw)
     assert not nm.fe.ledger_rows(f['root'])[3:]          # nothing charged beyond the fake training rows
-    value = nm.execute(runtime=runtime, allow_missing=('NATIVE',), **kw)
-    assert value['present'] == ['B', 'A', 'R', 'MAPPO'] and value['tables']['total_benefit']['vs_NATIVE']['status'] == 'unavailable'
+    value = nm.execute(runtime=runtime, allow_missing=('NATIVE',), **kw)['claim3a']
+    assert value['present'] == ['B', 'A', 'R', 'U0']
+    assert value['tables']['total_benefit']['vs_NATIVE']['status'] == 'unavailable'
 
 
 def test_interrupted_waves_are_never_replayed(panel, tmp_path):
@@ -468,12 +491,14 @@ def test_decision_branches_follow_the_registered_decomposition(panel, tmp_path):
         nm.decision_specs('B', stateless, panel)
 
 
-def test_budget_quote_fits_the_clean4_v2v_final_allocation():
+def test_budget_quote_fits_the_raised_v2v_final_allocation():
     for base in nm.BASES:
         q = nm.quote(base)
-        assert q['episodes_sim_s'] == 5*96*1200 == 576_000 and q['decisions_ceiling_sim_s'] == 2*8*5*1200 == 96_000
-        assert q['total_ceiling_sim_s'] == 672_000 and q['slack_sim_s'] == 18_000 and q['fits']
-        assert set(q['need_ceiling']) == {f'episodes_{a}' for a in nm.EPISODE_ARMS} | {'decisions_B', 'decisions_R'}
+        assert q['episodes_sim_s'] == 7*96*1200 == 806_400 and q['decisions_ceiling_sim_s'] == 2*8*5*1200 == 96_000
+        assert q['parity_sim_s'] == 2*2*2*420 == 3_360 and q['total_ceiling_sim_s'] == 905_760
+        assert q['allocation_sim_s'] == 1_040_000 and q['fits'] and q['margin_over_core'] >= .15
+        assert set(q['need_ceiling']) == ({f'episodes_{a}' for a in nm.EPISODE_ARMS}
+                                          | {'decisions_B', 'decisions_R', 'parity_f11'})
     with pytest.raises(nm.Blocked):
         nm.quote('lane_on')
 
@@ -486,45 +511,115 @@ def test_forbidden_paths_are_refused_and_never_used(tmp_path):
         nm.guard(path)
 
 
-def test_mappo_comparator_is_a_bound_parameter_verified_at_load(panel, tmp_path):
+def export(path, *, iteration=168, lane_head=False, trainer='mappo'):
+    import torch
+    policy = {'actor.0.weight': torch.zeros(1)}
+    if lane_head:
+        policy['lane_head.weight'] = torch.zeros(1)
+    torch.save(dict(format='c4_dreamer/3', trainer=trainer, iteration=iteration, lane_head=lane_head, policy=policy), path)
+    return nm.file_sha(path)
+
+
+def test_comparators_follow_the_registered_binding(panel, tmp_path):
     f = make(tmp_path, panel, mappo=False)
-    fake = tmp_path/'n7_mappo.pt'
-    fake.write_bytes(b'n7 stand-in')
-    sha = nm.file_sha(fake)
-    kw = dict(final_root=f['final_root'], path=fake, authority='N7: retrain done')
-    for bad, match in ((dict(sha256='0'*64, kind='retrained_wz3to2'), 'does not hash'),
-                       (dict(sha256=sha[:12], kind='retrained_wz3to2'), 'full lowercase'),
-                       (dict(sha256=sha, kind='laneon'), 'kind'),
-                       (dict(sha256=sha, kind='u0_transferred_not_retrained'), 'd9042cc5')):
+    it168, it84 = tmp_path/'it168.pt', tmp_path/'it84.pt'
+    lane, lane_less = tmp_path/'lane_final.pt', tmp_path/'speed_only.pt'
+    sha, sha84 = export(it168), export(it84, iteration=84)
+    sha_lane, sha_less = export(lane, iteration=500, lane_head=True), export(lane_less, iteration=500)
+    kw = dict(final_root=f['final_root'], authority='N7: it168 done')
+    speed = dict(arm='MAPPO_SPEED', kind='retrained_wz3to2_it168')
+    for bad, match in ((dict(path=it168, sha256='0'*64, **speed), 'does not hash'),
+                       (dict(path=it168, sha256=sha[:12], **speed), 'full lowercase'),
+                       (dict(path=it84, sha256=sha84, **speed), 'it168 only'),                 # no it84 substitution
+                       (dict(path=it168, sha256=sha, arm='MAPPO_SPEED', kind='retrained_wz3to2'), 'kind'),
+                       (dict(path=lane, sha256=sha_lane, **speed), 'it168 only'),
+                       (dict(path=lane_less, sha256=sha_less, arm='MAPPO_LANE', kind='lane_retrained_wz3to2_final'),
+                        'lane head'),
+                       (dict(path=it168, sha256=sha, arm='MAPPO_X', kind='x'), 'comparator arm')):
         with pytest.raises(nm.Blocked, match=match):
             nm.bind_mappo(**kw, **bad)
+    for arm, prefix in (('MAPPO_SPEED', 'd9042cc5'), ('MAPPO_LANE', 'aecd7d70'), ('MAPPO_LANE', 'd9042cc5')):
+        with pytest.raises(nm.Blocked, match='never substitutes'):
+            nm.check_export(arm, prefix+'0'*56, dict(trainer='mappo', iteration=168, lane_head=arm == 'MAPPO_LANE'))
+    with pytest.raises(nm.Blocked, match='frozen d9042cc5 executor only'):
+        nm.bind_mappo(**kw, path=it168, sha256=sha, arm='U0', kind='u0_transferred_d9042cc5')
     with pytest.raises(nm.Blocked, match='authority'):
-        nm.bind_mappo(final_root=f['final_root'], path=fake, sha256=sha, kind='retrained_wz3to2', authority=' ')
-    first = nm.bind_mappo(**kw, sha256=sha, kind='retrained_wz3to2')
-    assert nm.mappo_binding(f['final_root']) == first and first['label'] == nm.MAPPO_KINDS['retrained_wz3to2']
-    second = nm.bind_mappo(**kw, sha256=sha, kind='retrained_wz3to2')
-    assert (f['final_root']/'MAPPO_COMPARATOR_superseded_001.json').is_file() and nm.mappo_binding(f['final_root']) == second
-    spec = nm.episode_specs('MAPPO', panel, f['cfg'], f['root'], 'mappo_u0', second)[0]
-    assert spec['job_id'] == 'nmfinal_mappo_0000' and spec['checkpoint']['executor_sha256'] == sha
+        nm.bind_mappo(final_root=f['final_root'], path=it168, sha256=sha, authority=' ', **speed)
+    first = nm.bind_mappo(**kw, path=it168, sha256=sha, **speed)
+    assert first['export']['iteration'] == 168 and nm.mappo_binding(f['final_root']) == first
+    second = nm.bind_mappo(**kw, path=it168, sha256=sha, **speed)
+    assert (f['final_root']/'BOUND_MAPPO_SPEED_superseded_001.json').is_file() and nm.mappo_binding(f['final_root']) == second
+    spec = nm.episode_specs('MAPPO_SPEED', panel, f['cfg'], f['root'], 'mappo_u0', second)[0]
+    assert spec['job_id'] == 'nmfinal_mappo_speed_0000' and spec['checkpoint']['executor_sha256'] == sha
     assert spec['checkpoint']['path'].endswith('A_checkpoint_000.pt') and spec['checkpoint']['update'] == 0
-    assert nm.MAPPO_KINDS['u0_transferred_not_retrained'].endswith('(u0 transferred, not retrained)')
-    nm.publish(f['final_root']/'RESERVED_MAPPO.json', dict(jobs=[]))
+    with pytest.raises(nm.Blocked, match='not bound'):
+        nm.episode_specs('U0', panel, f['cfg'], f['root'], 'mappo_frozen')
+    bound_u0 = nm.bind_fake_mappo(tmp_path/'dry', f['final_root'], 'U0')
+    assert bound_u0['dry_run'] is True and bound_u0['export']['dry_run_stand_in'] is True
+    u0 = nm.episode_specs('U0', panel, f['cfg'], f['root'], 'mappo_frozen', bound_u0)[0]
+    assert u0['job_id'] == 'nmfinal_u0_0000' and u0['checkpoint']['kind'] == 'u0'
+    bound_lane = nm.bind_mappo(**kw, path=lane, sha256=sha_lane, arm='MAPPO_LANE', kind='lane_retrained_wz3to2_final')
+    spec = nm.episode_specs('MAPPO_LANE', panel, f['cfg'], f['root'], 'mappo_u0', bound_lane)[0]
+    assert spec['job_id'] == 'nmfinal_mappo_lane_0000' and spec['checkpoint']['kind'] == 'mappo_lane'
+    nm.publish(f['final_root']/'RESERVED_MAPPO_SPEED.json', dict(jobs=[]))
     with pytest.raises(nm.Blocked, match='already started'):
-        nm.bind_mappo(**kw, sha256=sha, kind='retrained_wz3to2')
+        nm.bind_mappo(**kw, path=it168, sha256=sha, **speed)
+    with pytest.raises(nm.Blocked, match='is bound'):
+        nm.declare_unavailable(final_root=f['final_root'], arm='MAPPO_LANE', authority='MAIN', reason='x')
 
 
-def test_unbound_mappo_never_blocks_the_other_arms_and_is_added_later(panel, tmp_path):
+def test_claim3a_opens_first_and_each_claim3b_only_after_its_comparator_is_bound(panel, tmp_path):
     f = make(tmp_path, panel, mappo=False)
     kw = dict(root=f['root'], final_root=f['final_root'], panel=panel, poll=0, dry_run=True)
-    value = nm.execute(runtime=f['runtime'], **kw)
-    assert value['present'] == ['B', 'A', 'R', 'NATIVE'] and set(value['missing']) >= {'MAPPO', 'BASE'}
-    assert value['tables']['primary']['status'] == 'unavailable'
-    assert value['tables']['total_benefit']['vs_BASE']['status'] == 'unavailable'
-    charged = len(nm.fe.ledger_rows(f['root']))
-    nm.bind_fake_mappo(tmp_path/'dry', f['final_root'])
+    with pytest.raises(nm.NotReady, match='pending U0'):                    # U0 is part of claim 3a
+        nm.execute(runtime=f['runtime'], **kw)
+    assert not [c for c in f['runtime'].calls if c[0] in ('run', 'reserve')]
+    nm.bind_fake_mappo(tmp_path/'dry', f['final_root'], 'U0')
+    with pytest.raises(nm.NotReady, match='pending MAPPO_SPEED'):
+        nm.execute(runtime=f['runtime'], **kw)
+    claim3a = json.loads((f['final_root']/'CLAIM3A_TABLES.json').read_text())   # 3a opened, sealed on its own
+    assert claim3a['present'] == ['B', 'A', 'R', 'U0', 'NATIVE']
+    assert not list(f['final_root'].glob('WAVE_MAPPO_*.json')) and not list(f['final_root'].glob('CLAIM3B_*'))
+    with pytest.raises(nm.Blocked, match='authority and reason'):
+        nm.declare_unavailable(final_root=f['final_root'], arm='MAPPO_LANE', authority='MAIN', reason=' ')
+    nm.declare_unavailable(final_root=f['final_root'], arm='MAPPO_LANE', authority='MAIN 2026-11-08 (test)',
+                           reason='S-MAPPOWZL not delivered')
+    with pytest.raises(nm.Blocked, match='declared unavailable'):
+        nm.bind_fake_mappo(tmp_path/'dry', f['final_root'], 'MAPPO_LANE')
+    nm.bind_fake_mappo(tmp_path/'dry', f['final_root'], 'MAPPO_SPEED')
     runtime = nm.FakeRuntime()
     value = nm.execute(runtime=runtime, **kw)
-    assert value['present'] == ['B', 'A', 'R', 'MAPPO', 'NATIVE'] and 'MAPPO' not in value['missing']
-    assert [c for c in runtime.calls if c[0] == 'run'] == [('run', 96, 24)]          # only the MAPPO wave
-    assert len(nm.fe.ledger_rows(f['root'])) == charged+96
-    assert (f['final_root']/'FINAL_TABLES.json').is_file() and len(list(f['final_root'].glob('FINAL_TABLES_*.json'))) == 1
+    assert [c for c in runtime.calls if c[0] == 'run'] == [('run', 96, 24)]     # only the new comparator wave
+    assert value['claim3a']['analysis_sha256'] == claim3a['analysis_sha256']     # 3a reproduces from its receipts
+    assert value['claim3b_MAPPO_SPEED']['present'] == ['B', 'A', 'R', 'U0', 'MAPPO_SPEED', 'NATIVE']
+    lane = json.loads((f['final_root']/'CLAIM3B_MAPPO_LANE_UNAVAILABLE.json').read_text())
+    assert lane['status'] == 'declared unavailable' and 'S-MAPPOWZL' in lane['declaration']['reason']
+    published = nm._analyse_published(f['root'], f['final_root'], runtime, panel)
+    assert set(published) == {'claim3a', 'claim3b_MAPPO_SPEED'}
+
+
+def test_a_b_r_are_bound_by_sha_before_the_gate(panel, tmp_path):
+    f = make(tmp_path, panel)
+    root, cfg = f['root'], f['cfg']
+    shas = {a: nm.file_sha(root/f'{a}_checkpoint_024.pt') for a in nm.ARMS}
+    with pytest.raises(nm.Blocked, match='sha256 required'):
+        nm.bind_arms(final_root=f['final_root'], shas=dict(shas, R='x'), authority='MAIN')
+    nm.bind_arms(final_root=f['final_root'], shas=shas, authority='MAIN: bind clean5a A/B/R by sha')
+    binding = nm.clean4_binding(cfg, panel)
+    assert nm.gate(root, cfg, f['runtime'], binding, f['final_root'])['checkpoint_sha256'] == shas
+    with pytest.raises(nm.Blocked, match='never rebound'):
+        nm.bind_arms(final_root=f['final_root'], shas=shas, authority='again')
+    (root/'B_checkpoint_024.pt').write_bytes(b'another B')
+    with pytest.raises(nm.Blocked, match='bound A/B/R'):
+        nm.gate(root, cfg, f['runtime'], binding, f['final_root'])
+
+
+def test_bound_lane_comparator_without_runner_support_needs_explicit_exclusion(panel, tmp_path):
+    f = make(tmp_path, panel)
+    runtime = nm.FakeRuntime(runner=dict(lane=False))
+    kw = dict(root=f['root'], final_root=f['final_root'], panel=panel, poll=0, dry_run=True)
+    with pytest.raises(nm.Blocked, match='MAPPO_LANE'):
+        nm.execute(runtime=runtime, **kw)
+    assert (f['final_root']/'CLAIM3A_TABLES.json').is_file()           # 3a and 3b-speed were not held back
+    value = nm.execute(runtime=runtime, allow_missing=('MAPPO_LANE',), **kw)
+    assert 'claim3b_MAPPO_LANE' not in value and 'claim3b_MAPPO_SPEED' in value

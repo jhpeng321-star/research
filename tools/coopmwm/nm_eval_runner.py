@@ -19,11 +19,15 @@ SAME controller wrapper as the clean4 training episodes (``track2_backend.episod
   (held-out worlds), noise seed = world seed, no training-only telemetry/health/abort-on-hard-event
   flags (events are counted, not aborted - the registered clean3 final-eval convention).
 
-MAPPO comparator: the bound executor (``bind-mappo``: path + sha256, re-verified here) replaces
-the plant's frozen executor checkpoint. ``tools.leverprobe.backend.setup`` pins d9042cc5; for a
-bound non-d9042cc5 comparator ONLY that pin is swapped, inside this worker, for the bound sha
-(``comparator_setup``: same function code, every other frozen-runtime check unchanged). The
-training path's pin is never touched. Records carry the sha actually loaded.
+Comparators (MAIN F6 + clean5a registration): U0 = the transferred MAPPO u0: the bound frozen
+d9042cc5 executor (path + sha256, re-verified) with the run's common u0 (zero residual). MAPPO_SPEED = the bound speed-only
+executor (``bind-mappo``: path + sha256, re-verified here) replacing the plant's frozen executor;
+``tools.leverprobe.backend.setup`` pins d9042cc5, so for a bound non-d9042cc5 comparator ONLY that
+pin is swapped, inside this worker, for the bound sha (``comparator_setup``: same function code,
+every other frozen-runtime check unchanged; the training pin is never touched). MAPPO_LANE = the
+bound lane-capable executor driving every CAV's acceleration AND lane target through the env's
+existing lane path (the reviewed clean3 lane-on loop, c4/laneon-eval-claude e4596e74, on the same
+N1-bound plant; the plant's own frozen executor stays d9042cc5). Records carry the sha loaded.
 
 NATIVE: the qualified true-native plant (``tools.coopnative.plant``) with the N1 map install +
 CAV-report rows; J = its ``metrics['900']['team_delay_vs']`` (identical reducer).
@@ -51,6 +55,9 @@ HORIZON_S = 1200
 WARMUP_S = 300
 IDENTITY = ('arm', 'world_id', 'world', 'checkpoint', 'window', 'panel_sha256')
 LOG_LIMIT = 200
+MAPPO_LANE = True
+LANE_GRID = (-1, 0, 1, 2)
+LANE_CHANGE_MODE = 513
 FROZEN_MAPPO_SHA = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca'
 
 
@@ -228,10 +235,11 @@ def _policy_episode(spec, cfg, work):
     if Path(ck['path']) != path or rc.sha(path) != ck['file_sha256']:
         raise ValueError('evaluation checkpoint changed after registration')
     executor, loaded = native['checkpoint'], None
-    if spec['arm'] == 'MAPPO':
-        if ck.get('kind') != 'mappo_comparator' or (arm, update) != ('A', 0):
-            raise ValueError('MAPPO arm = bound comparator executor + the common u0 (zero residual)')
-        executor, loaded = bound_executor(ck)
+    if spec['arm'] in ('U0', 'MAPPO_SPEED'):
+        kind = 'u0' if spec['arm'] == 'U0' else 'mappo_comparator'
+        if ck.get('kind') != kind or (arm, update) != ('A', 0):
+            raise ValueError(f'{spec["arm"]} arm = its bound executor + the common u0 (zero residual)')
+        executor, loaded = bound_executor(ck)        # U0: the frozen d9042cc5 export (pin unchanged)
     weights, loader, hook, log = eval_components(native, spec)
     job = dict(id=Path(work).name, path=str(work), world=world, role=ROLE, arm=arm, weights=weights,
                runtime=native['runtime'], checkpoint=executor, noise_seed=spec['noise_seed'],
@@ -252,6 +260,29 @@ def _policy_episode(spec, cfg, work):
     if loaded is not None:
         extra['executor_sha256_loaded'] = loaded
     return _record(spec, result['totals']['team_delay_vs'], safety(result, Path(work)/'observable.jsonl.gz'), **extra)
+
+
+REGIME = dict(lane=2, zone_s_m=(-300., 75.44), window_s=(300, 360))
+
+
+def closing_lane_regime(trace_path, *, lane=REGIME['lane'], zone=REGIME['zone_s_m'], window=REGIME['window_s']):
+    """Report-only regime observable from the NATIVE trace: mean speed of the RSU-observable rows (CAV
+    self states + locally detected neighbours) in WM lane 2 (the closing lane) within 300 m of the drop
+    over t in [300, 360) s. The NATIVE arm is untreated, so the label never depends on a treatment."""
+    import gzip
+    speeds = []
+    with gzip.open(trace_path, 'rt', encoding='utf-8') as f:
+        for line in f:
+            row = json.loads(line)
+            t = row.get('time_s', 0)
+            if t < window[0]:
+                continue
+            if t >= window[1]:
+                break
+            speeds += [float(v['v_mps']) for v in row.get('vehicles', ())
+                       if v.get('lane') == lane and zone[0] <= float(v.get('s_m', -1e9)) <= zone[1]]
+    return dict(closing_lane_speed_mps=sum(speeds)/len(speeds) if speeds else None, n_obs=len(speeds),
+                lane=lane, zone_s_m=list(zone), window_s=list(window), source='NATIVE RSU-observable rows')
 
 
 def _native_episode(spec, cfg, work):
@@ -287,14 +318,165 @@ def _native_episode(spec, cfg, work):
     vector = dict(collisions=int(totals['collisions']), teleports=int(totals['teleports']),
                   hard_brakes=int(totals['hard_brake']),
                   ttc_events=int(ttc_events(Path(work)/'observable.jsonl.gz', WARMUP_S, HORIZON_S)))
-    return _record(spec, totals['team_delay_vs'], vector)
+    return _record(spec, totals['team_delay_vs'], vector, regime=closing_lane_regime(Path(work)/'observable.jsonl.gz'))
+
+
+# ---------------------------------------------------------------- MAPPO_LANE (lane-capable comparator)
+
+def load_lane_executor(path, sha256):
+    """Deterministic load through the C4 deployment loader AFTER the frozen runtime setup; the
+    export must carry its lane head (speed-only exports are refused here)."""
+    import os
+    import torch
+    if _sha(path) != sha256:
+        raise ValueError('MAPPO_LANE checkpoint differs from its bound sha256')
+    if os.environ.get('C4_POLICY_STOCHASTIC') == '1' or float(os.environ.get('C4_POLICY_ACCEL_NOISE', '0') or 0) != 0:
+        raise ValueError('deterministic deployment required (C4_POLICY_STOCHASTIC/ACCEL_NOISE set)')
+    payload = torch.load(path, map_location='cpu', weights_only=True)
+    if payload.get('trainer') != 'mappo' or payload.get('lane_head') is not True or not any(
+            str(k).startswith('lane_head.') for k in payload.get('policy', {})):
+        raise ValueError('MAPPO_LANE requires a mappo export with its lane head')
+    from wms.control.policy import load_policy_fn
+    executor = load_policy_fn(str(path), device='cpu')
+    if getattr(executor, 'deterministic', True) is not True:
+        raise ValueError('MAPPO_LANE executor is not deterministic')
+    executor.reset()
+    return executor, dict(format=payload.get('format'), iteration=payload.get('iteration'), file_sha256=sha256,
+                          loader='wms.control.policy.load_policy_fn', lane_change_mode=LANE_CHANGE_MODE)
+
+
+def _flags(value):
+    import numpy as np
+    if hasattr(value, 'detach'):
+        value = value.detach().cpu().numpy()
+    return np.asarray(value).reshape(-1).astype(bool)
+
+
+def cav_only(state, cmd, lanes):
+    """Executor output must command and steer present CAV slots only (clean3 lane-on rule)."""
+    import numpy as np
+    cmd, lanes = np.asarray(cmd, dtype=np.float64), np.asarray(lanes)
+    if cmd.ndim != 2 or cmd.shape[0] != 1 or lanes.shape != cmd.shape:
+        raise ValueError('MAPPO_LANE executor output must be [1,K] accel and [1,K] lanes')
+    if lanes.dtype.kind not in 'iu':
+        raise ValueError('MAPPO_LANE lane targets must be integers')
+    flat = lanes.reshape(-1)
+    if not set(np.unique(flat).tolist()) <= set(LANE_GRID):
+        raise ValueError('lane target outside the WM lane grid {-1,0,1,2}')
+    cav = _flags(state['is_cav'])
+    if 'present' in state:
+        cav = cav & _flags(state['present'])
+    if cav.shape != flat.shape:
+        raise ValueError('state/command slot count mismatch')
+    if np.isinf(cmd).any():
+        raise ValueError('infinite MAPPO_LANE command')
+    commanded = np.isfinite(cmd.reshape(-1))
+    if (commanded & ~cav).any():
+        raise ValueError('acceleration command for a non-CAV slot')
+    if (flat[~(cav & commanded)] != -1).any():
+        raise ValueError('lane command for a non-CAV/uncommanded slot')
+    return cmd, lanes.astype(np.int64), int((flat >= 0).sum())
+
+
+def lane_tick(b, executor, trace, *, plant, cf, canonical):
+    """One 1 s control tick: coopfree.backend.tick with the lane-aware executor and the env lane
+    path (a lanes tensor every tick -> laneChangeMode 513 on commanded CAVs; HDVs untouched)."""
+    import math
+    import numpy as np
+    import torch
+    now, rows = float(b.env.now), cf.observations(b)
+    ids = np.asarray(b.env.frame.vid_index)
+    keep = np.zeros(len(ids), bool) if b.previous is None else (ids == b.previous) & (ids >= 0)
+    b.previous = ids.copy()
+    for obj in (executor.memory, executor.dwell):            # slot reuse never inherits memory/dwell
+        if obj.present is not None:
+            obj.present &= torch.as_tensor(keep, device=obj.present.device)[None]
+    state = b.env.state()
+    cmd, lanes = executor(state, with_lanes=True)
+    cmd, lanes, requested = cav_only(state, cmd, lanes)
+    b.command_digest.update(canonical(plant.exact(cmd)).encode())
+    slot = {vid: i for i, vid in enumerate(b.env.slot_vehicle_ids())}
+    flat_cmd, flat_lanes = cmd.reshape(-1), lanes.reshape(-1)
+    vehicles = []
+    for r in rows:
+        v = dict(r)
+        if r['is_cav']:
+            i = slot[r['vid']]
+            a = float(flat_cmd[i])
+            v.update(controller='MAPPO_LANE' if math.isfinite(a) else 'native',
+                     issued_acceleration_mps2=a if math.isfinite(a) else None,
+                     lane_target=int(flat_lanes[i]) if flat_lanes[i] >= 0 else None, command_present=math.isfinite(a))
+        vehicles.append(v)
+    if trace is not None:
+        trace.write(canonical(dict(time_s=now, vehicles=vehicles, actions=[]))+'\n')
+    _, info = b.env.step(cmd, lanes=lanes)
+    interval = info['interval']
+    road, source = interval['speed_deficit_vehicle_seconds'], interval['source_wait_vehicle_seconds']
+    b.totals['road_delay_vs'] += road
+    b.totals['source_wait_vs'] += source
+    b.totals['team_delay_vs'] += road+source
+    for key, field in (('collisions', 'collision_involvements'), ('teleports', 'starting_teleports'),
+                       ('ttc_below_3_vs', 'ttc_below_3_vehicle_seconds'), ('hard_brake', 'braking_vehicle_seconds')):
+        b.totals[key] += interval.get(field, 0.)
+    b.observe(b.env)
+    if info['done'] or any(interval.get(k, 0) for k in ('collision_involvements', 'starting_teleports',
+                                                        'dropped_vehicle_steps')):
+        raise ValueError('early termination/safety/slot anomaly (MAPPO_LANE)')
+    return requested, dict(info.get('lane_commands', {}))
+
+
+def _mappo_lane_episode(spec, cfg, work):
+    import gzip
+    import os
+    from collections import Counter
+    from . import accel_plant, launch_production as production, protocol
+    from .accel_storage import write
+    from .rerun_tracks_backend import safety
+    from .v2v_runner import patched
+    world = _check_spec(spec)
+    ck = spec['checkpoint']
+    if ck.get('kind') != 'mappo_lane':
+        raise ValueError('MAPPO_LANE spec must carry the mappo_lane comparator binding')
+    path, loaded = bound_executor(ck)
+    native = production.backend_config(cfg)
+    work = Path(work)
+    work.mkdir(parents=True, exist_ok=True)
+    write(work/'CLAIM.json', dict(pid=os.getpid(), id=work.name, charged_sim_s=HORIZON_S, arm='MAPPO_LANE'))
+    job = dict(id=work.name, path=str(work), world=world, role=ROLE, arm='MAPPO_LANE', runtime=native['runtime'],
+               checkpoint=native['checkpoint'])
+    # Same binding as every policy arm: frozen runtime (d9042cc5 pin unchanged) -> seed scope -> guard
+    # -> G5 overlay -> N1 map install; the plant's own frozen executor is never used for actions here.
+    with patched(accel_plant, dict(guard=protocol.guard, install_seed_scope=protocol.install_seed_scope)):
+        plant = accel_plant.bind_runtime(job)
+    from tools.coopfree import backend as cf
+    from tools.coopfree.protocol import canonical
+    plant.guard = lambda w: protocol.guard(w, ROLE)
+    executor, meta = load_lane_executor(path, loaded)
+    b = plant.Backend(work, world, HORIZON_S, native['checkpoint'])
+    lane_commands, request_ticks = Counter(), 0
+    try:
+        with gzip.open(work/'observable.jsonl.gz', 'xt', encoding='utf-8') as trace:
+            for _ in range(WARMUP_S, HORIZON_S):
+                requested, counts = lane_tick(b, executor, trace, plant=plant, cf=cf, canonical=canonical)
+                lane_commands.update(counts)
+                request_ticks += requested > 0
+        result = dict(id=work.name, world=world, arm='MAPPO_LANE', totals=dict(b.totals), actual_sim_s=b.actual,
+                      charged_sim_s=HORIZON_S, lane_commands=dict(lane_commands), lane_request_ticks=request_ticks,
+                      executor=meta)
+        write(work/'RESULT.json', result)
+    finally:
+        b.close()
+    return _record(spec, result['totals']['team_delay_vs'], safety(result, work/'observable.jsonl.gz'),
+                   executor_sha256_loaded=loaded, lane_commands=dict(lane_commands), lane_request_ticks=request_ticks)
 
 
 def episode(spec, cfg, work):
     """One registered evaluation episode -> graded record (raises on any refusal/anomaly)."""
     if spec['arm'] == 'NATIVE':
         return _native_episode(spec, cfg, work)
-    if spec['arm'] not in ('A', 'B', 'R', 'MAPPO'):
+    if spec['arm'] == 'MAPPO_LANE':
+        return _mappo_lane_episode(spec, cfg, work)
+    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'MAPPO_SPEED'):
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')
     return _policy_episode(spec, cfg, work)
 

@@ -1,33 +1,32 @@
-"""clean4 (wz3to2 lane-drop) final paired evaluation on the registered evaluation panel.
+"""clean5a (wz3to2 lane-drop) final paired evaluation on the registered evaluation panel v2.
 
 Port of ops/clean3_finaleval.py (c4/clean3-finaleval 47d7b376) to the wz3to2 map
-(assets/research/newmap_candidates/wz3to2; newmap_spec.md N6). MAIN decision (2026-11-06, N6):
-this launcher is the ONLY clean4 final-evaluation runner (N4 switches the in-run u8/u24
-evaluations off); its spend is debited from clean4's ``v2v_final`` allocation (690,000 sim-s);
-1200 s windows = the training episode length; 96 evaluation worlds 989600-989695; 5 arms; the
-per-decision synergy branches run only on a registered small subset that fits.
+(assets/research/newmap_candidates/wz3to2; newmap_spec.md N6). MAIN registrations 2026-11-06
+(REGISTRATION.md 19:24/19:32 and the N6 block): the paper's final evaluation targets clean5a
+(speed-only expected-value cooperation; base = a FROZEN S-MAPPOWZ snapshot, A = that base alone),
+run on cpuZ right after clean5a u24; clean4 has no final evaluation. This launcher is the only
+final-evaluation runner; its spend is debited from the run's ``v2v_final`` allocation (<= 1,040,000).
 
-  * worlds: a NEW panel registered here BEFORE clean4 launches (``nm_eval_panel_wz3to2.json``,
-    sealed ``panel_sha256`` pinned below): seeds 989600-989695 of the registered wz3to2
-    evaluation range 989600-989699, the single clean4 training demand/share cell; never TRAIN
-    worlds (989200-989599), never an old-map seed file;
-  * arms (same paired worlds, windows and noise seeds): A, B, R at u24, BASE (N4's base
-    controller: frozen speed-only MAPPO u0 = A_checkpoint_000.pt, or native) and NATIVE. BASE
-    aliases NATIVE when the base controller is native (no duplicate physics);
-  * per-decision synergy: on the 24 registered decision worlds (panel repeat % 4 == 0), for B
-    and R, the first 2-3-member cooperation decision with 300 <= t <= 840 s (time order only,
-    outcome-blind) is branched from its saved state for 360 s: all members new / each member
-    alone new / none new (background = BASE controller) = the clean3 ISOLATED_TEST decomposition;
-  * every wave is reserved whole in the clean4 ledger (phase v2v_final, hard sub-cap 690,000,
-    no foreign v2v_final spend) BEFORE dispatch; an interrupted wave is never replayed.
-Map geometry/seed ranges/scenario worlds come from the N1 map-descriptor API
-(c4/nm-abstract, merged): ``map_descriptor`` digests + ``map_scenarios`` world registry; physics is
-refused unless the bound map API matches the registered panel.
-Physics goes through ONE runner module in the clean4 deployed source (``RUNNER``; contract in
-``RUNNER_CONTRACT``), which N1/N4 provide on the map-aware plant.
+  * worlds: panel v2 (``nm_eval_panel_wz3to2_v2.json``, sealed ``panel_sha256`` 3acb2b56 pinned
+    below): 96 held-out seeds 989600-989695, N1 cell D3200_p60, 1200 s windows; never TRAIN worlds;
+  * arms (same paired worlds, windows and noise seeds): A, B, R at u24 (bound by sha at the gate),
+    NATIVE, U0 (the transferred MAPPO u0: d9042cc5 executor + zero residual), MAPPO_SPEED (S-MAPPOWZ
+    it168 only) and MAPPO_LANE (S-MAPPOWZL final, never aecd7d70); BASE is an alias (A for the
+    frozen-snapshot base, U0 for a mappo_u0 base, NATIVE for a native base);
+  * two registered analyses with separate seals: CLAIM 3a = A, B, R, NATIVE, U0 (B vs A, B vs R,
+    vs NATIVE, vs U0), opened as soon as those arms finish; CLAIM 3b = each MAPPO comparator, run and
+    opened only after that comparator is bound (or recorded as declared unavailable);
+  * per-decision synergy: on 8 registered decision worlds (panel repeat % 12 == 0), descriptive
+    capture now; branches when the runner provides them (F7);
+  * per-seed reporting and a report-only regime split for every arm vs each comparator;
+  * every wave is reserved whole in the run ledger (phase v2v_final, hard sub-cap, no foreign
+    v2v_final spend) BEFORE dispatch; an interrupted wave is never replayed.
+Map geometry/seed ranges/scenario worlds come from the N1 map API (``tools.coopmwm.map_api``);
+physics is refused unless it matches the registered panel. Physics goes through ONE runner module
+in the deployed source (``RUNNER``; contract in ``RUNNER_CONTRACT``); R = the no-guidance arm.
 
-Commands: register-panel / verify-panel (zero physics, panel), quote, check, register, run,
-analyse, dry-run (fake physics, never imports a simulator or opens a process pool).
+Commands: register-panel / verify-panel (zero physics, panel), quote, check, register, bind-arms,
+bind-mappo, declare-unavailable, run, analyse, dry-run (fake physics, no simulator or process pool).
 """
 import argparse
 from copy import deepcopy
@@ -54,21 +53,40 @@ MAP = 'wz3to2'
 UPDATE = 24
 ARMS = ('A', 'B', 'R')
 DECISION_ARMS = ('B', 'R')
-BASES = ('mappo_u0', 'native')
-ORDER = ('B', 'A', 'R', 'MAPPO', 'NATIVE')
-EPISODE_ARMS = ('A', 'B', 'R', 'MAPPO', 'NATIVE')     # MAIN: 5 arms; BASE is an alias (MAPPO or NATIVE)
-#: MAIN 2026-11-06 (after panel v2): the MAPPO comparator is a parameter (path + sha256, verified at
-#: load): the speed-only MAPPO retrained on wz3to2 (owner-approved 7M retrain, N7 on cpuQ); the
-#: transferred d9042cc5 export only as the fallback if that run fails, reported by this name.
-MAPPO_KINDS = {'retrained_wz3to2': 'speed-only MAPPO retrained on wz3to2 (N7)',
-               'u0_transferred_not_retrained': 'speed-only MAPPO d9042cc5 (u0 transferred, not retrained)'}
+BASES = ('mappo_frozen', 'mappo_u0', 'native')   # clean5a: frozen S-MAPPOWZ snapshot base (A = base alone)
+ORDER = ('B', 'A', 'R', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
+#: MAIN 2026-11-06 (FAIRAUDIT F6): 7 arms; BASE is an alias (U0 for a mappo_u0 base, NATIVE for native)
+EPISODE_ARMS = ('A', 'B', 'R', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
+COMPARATOR_ARMS = ('MAPPO_SPEED', 'MAPPO_LANE')        # claim 3b, one seal per comparator
+BOUND_ARMS = ('U0',)+COMPARATOR_ARMS                    # executors bound by path + sha256
+CLAIM3A_ARMS = ('A', 'B', 'R', 'U0', 'NATIVE')
+FROZEN_MAPPO_SHA = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca'
+#: Comparator executors are parameters (bind-mappo: path + sha256, re-verified at load). MAPPO_SPEED =
+#: N7's wz3to2 speed-only retrain (S-MAPPOWZ), the transferred d9042cc5 export only as an explicitly
+#: bound fallback named "u0 transferred, not retrained"; MAPPO_LANE = the lane-capable wz3to2 MAPPO
+#: (S-MAPPOWZL, owner-approved). F12: no evaluation episode runs - so no result exists to be opened -
+#: until every comparator is bound or explicitly declared unavailable.
+MAPPO_KINDS = {
+    'U0': {'u0_transferred_d9042cc5': 'MAPPO u0 transferred (frozen d9042cc5 executor, zero residual)'},
+    'MAPPO_SPEED': {'retrained_wz3to2_it168': 'speed-only MAPPO retrained on wz3to2 (S-MAPPOWZ it168)'},
+    'MAPPO_LANE': {'lane_retrained_wz3to2_final': 'lane-capable MAPPO retrained on wz3to2 (S-MAPPOWZL final)'}}
+#: MAIN 2026-11-06 registered binding: MAPPO-speed = S-MAPPOWZ it168 ONLY (no it84/42/24 substitution);
+#: MAPPO-lane = the S-MAPPOWZL final export, never aecd7d70; the transferred d9042cc5 u0 is the U0 arm.
+REQUIRED_ITERATION = {'MAPPO_SPEED': 168}
+REFUSED_SHA_PREFIXES = {'U0': (), 'MAPPO_SPEED': ('d9042cc5',), 'MAPPO_LANE': ('aecd7d70', 'd9042cc5')}
+REQUIRED_SHA = {'U0': FROZEN_MAPPO_SHA}
 FALLBACK_SHA_PREFIX = 'd9042cc5'
-MAPPO_FILE = 'MAPPO_COMPARATOR.json'
-MAPPO_AUTHORITY = ('MAIN 2026-11-06: final-eval MAPPO comparator = wz3to2-retrained speed-only MAPPO (N7, '
-                   'path + sha256 verified at load); d9042cc5 only as the fallback if the retrain fails, named '
-                   '"u0 transferred, not retrained"; v2v_final stays <= 690,000')
-#: values written into panel v2 at registration (4-arm native quote); the amended 5-arm quote is quote()
+U0_LABEL = 'MAPPO u0 transferred (frozen d9042cc5 executor, zero residual)'
+MAPPO_AUTHORITY = ('MAIN 2026-11-06 registered binding: comparators are parameters (path + sha256 verified at '
+                   'bind and at every load); MAPPO_SPEED = S-MAPPOWZ it168 only (no it84 substitution); MAPPO_LANE = '
+                   'S-MAPPOWZL final, never aecd7d70; U0 = the transferred d9042cc5 u0; F12: no wave runs (nothing '
+                   'can be opened) until every comparator is bound or declared unavailable; v2v_final <= 1,040,000')
+#: values written into panel v2 at registration (4-arm native quote); the amended quote is quote()
 REGISTERED_PANEL_QUOTE = dict(quote_mappo_u0=672_000, quote_native=556_800)
+#: F11 registered parity check (MAPPO in the eval plant vs its training env path): 2 TRAIN worlds x
+#: 2 paths x 2 comparators x (300 s warmup + 120 s rollout)
+PARITY_WORLDS, PARITY_ROLLOUT_S = (989598, 989599), 120
+PARITY_SIM_S = len(PARITY_WORLDS)*2*len(COMPARATOR_ARMS)*(300+PARITY_ROLLOUT_S)
 HORIZON_S = 1200                       # = clean4 training episode length (MAIN)
 WINDOW = dict(start_s=0, end_s=HORIZON_S)
 EVAL_RANGE = (989600, 989699)
@@ -85,7 +103,11 @@ CELL_AUTHORITY = ('MAIN 2026-11-06 (N6): clean4 training cell = demand 3200 veh/
                   '(N3 NEWMAP2_REPORT.md recommendation, adopted)')
 NEWMAP2_REPORT_SHA256 = '70c119595ff3f391bbdebfa0a98d9c2f7ca02d2ae61f8acb53c126754adfdb05'
 PHASE = 'v2v_final'
-ALLOCATION_SIM_S = 690_000             # clean4 v2v_final (MAIN decision for N6)
+PANEL_ALLOCATION_SIM_S = 690_000       # value registered in panel v2's contract
+ALLOCATION_SIM_S = 1_040_000           # clean4 v2v_final raised by MAIN 2026-11-06 (FAIRAUDIT F6, owner authorisation)
+ALLOCATION_AUTHORITY = ('MAIN 2026-11-06 under the owner authorisation to act on its recommendations: v2v_final '
+                        'raised from 690,000 to <= 1,040,000 sim-s for A, B, R, NATIVE, U0, MAPPO-speed, MAPPO-lane '
+                        'x panel v2 + the 8-world decision branches (~902k, 15% margin)')
 BUDGET_KEYS = ('clean4_budget', 'clean3_budget')
 SAFETY = fe.SAFETY
 HARD = fe.HARD
@@ -101,13 +123,15 @@ SUPERSEDED = {'b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1'
 MAP_SPEC_REL = 'assets/research/newmap_candidates/wz3to2/MAP_SPEC.json'
 #: MAIN 2026-11-06 (N11 F4): the panel binds the staged probe network bytes (sha256 of wz3to2.net.xml)
 NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'
-ROOT = '/home/ubuntu/coopmwm_clean4_wz3to2'
-FINAL_ROOT = '/home/ubuntu/coopmwm_clean4_wz3to2_finaleval'
-PREFIXES = ('nmfinal_', 'nmdec_')
+ROOT = '/home/ubuntu/coopmwm_clean5a_wz3to2'            # cpuZ; pass --root explicitly
+FINAL_ROOT = '/home/ubuntu/coopmwm_clean5a_wz3to2_finaleval'
+MAX_WORKERS = 46                                          # cpuZ 48 cores (MAIN: run right after u24)
+PREFIXES = ('nmfinal_', 'nmdec_', 'nmparity_')
 RUNNER = 'tools.coopmwm.nm_eval_runner'
 RUNNER_CONTRACT = dict(
     module=RUNNER, MAP=MAP,
-    episode=('episode(spec, cfg, work) -> record. spec keys: job_id, arm (A|B|R|BASE|NATIVE), world_id, '
+    episode=('episode(spec, cfg, work) -> record. spec keys: job_id, arm (A|B|R|U0|MAPPO_SPEED|MAPPO_LANE|NATIVE), '
+             'world_id, '
              'world (panel world dict, map wz3to2), checkpoint ({path,file_sha256,update,...} or '
              "{kind:'native'}), sim_s 1200, window {0,1200}, noise_seed = world seed, deterministic True, "
              'panel_sha256, capture (B/R on the decision subset only, else None: at the first new 2-3-member '
@@ -141,8 +165,8 @@ def in_decision_subset(world):
 # ---------------------------------------------------------------- budget quote (zero physics)
 
 def quote(base='mappo_u0'):
-    """Ceiling sim-s of every wave against the clean4 v2v_final allocation: 5 distinct arms
-    (A, B, R, MAPPO comparator, NATIVE) for either base controller (BASE is an alias)."""
+    """Ceiling sim-s against the clean4 v2v_final allocation: 7 distinct arms for either base
+    controller (BASE is an alias), the 8-world decision branches and the F11 parity check."""
     if base not in BASES:
         raise Blocked(f'unknown base {base!r}')
     episode = N_WORLDS*HORIZON_S
@@ -151,15 +175,21 @@ def quote(base='mappo_u0'):
     need = {f'episodes_{a}': episode for a in arms}
     # clean3 prefix-replay branches are charged from t=0 (sumo_verify.branch_sim_s): <= HORIZON_S each
     need.update({f'decisions_{a}': subset*(2+MAX_MEMBERS)*(DECISION_MAX_T+DECISION_H) for a in DECISION_ARMS})
+    need['parity_f11'] = PARITY_SIM_S
     total = sum(need.values())
-    return dict(base=base, phase=PHASE, allocation_sim_s=ALLOCATION_SIM_S, need_ceiling=need,
-                episodes_sim_s=len(arms)*episode, decisions_ceiling_sim_s=total-len(arms)*episode,
-                total_ceiling_sim_s=total, slack_sim_s=ALLOCATION_SIM_S-total,
-                slack_fraction=round((ALLOCATION_SIM_S-total)/ALLOCATION_SIM_S, 4), fits=total <= ALLOCATION_SIM_S,
+    core = total-PARITY_SIM_S
+    return dict(base=base, phase=PHASE, allocation_sim_s=ALLOCATION_SIM_S, allocation_authority=ALLOCATION_AUTHORITY,
+                need_ceiling=need, episodes_sim_s=len(arms)*episode,
+                decisions_ceiling_sim_s=core-len(arms)*episode, parity_sim_s=PARITY_SIM_S,
+                core_ceiling_sim_s=core, total_ceiling_sim_s=total, slack_sim_s=ALLOCATION_SIM_S-total,
+                margin_over_core=round(ALLOCATION_SIM_S/core-1, 4), margin_over_total=round(ALLOCATION_SIM_S/total-1, 4),
+                fits=total <= ALLOCATION_SIM_S,
                 basis=dict(episodes=f'{len(arms)} arms x {N_WORLDS} worlds x {HORIZON_S} s',
                            decisions=(f'{len(DECISION_ARMS)} arms x {subset} registered worlds x <=1 decision x '
-                                      f'(all + background + <={MAX_MEMBERS} solos) x {DECISION_H} s ceiling; only '
-                                      'captured decisions are reserved'),
+                                      f'(all + background + <={MAX_MEMBERS} solos) x <= {HORIZON_S} s (prefix replay '
+                                      'from 0 to t_s+360); only captured decisions are reserved'),
+                           parity_f11=(f'{len(PARITY_WORLDS)} TRAIN worlds x 2 paths (eval plant, training env) x '
+                                       f'{len(COMPARATOR_ARMS)} comparators x {300+PARITY_ROLLOUT_S} s'),
                            charging='planned sim-s precharged per job; whole wave reserved before dispatch'),
                 wall_time=dict(workers=24, sim_s_per_worker_s='6-9 (newmap_probe cpuV: ~148k sim-s in ~22-25 min '
                                                               'on <=12 workers)',
@@ -222,7 +252,7 @@ def build_panel(spec_path, registered_utc, *, demand=CELL['demand'], penetration
                                       'background base) (clean3 ISOLATED_TEST)'),
                        metrics=['delta_all_new_veh_s', 'delta_only_member_new_veh_s', 'best_solo_veh_s',
                                 'policy_cooperation_gain_veh_s'], higher_is_better=True),
-        budget=dict(phase=PHASE, allocation_sim_s=ALLOCATION_SIM_S, ledger='clean4 run root CHARGES.jsonl',
+        budget=dict(phase=PHASE, allocation_sim_s=PANEL_ALLOCATION_SIM_S, ledger='clean4 run root CHARGES.jsonl',
                     authority='MAIN decision 2026-11-06 for N6 (only clean4 final-evaluation runner)',
                     **REGISTERED_PANEL_QUOTE))
     power = dict(method='paired two-sided normal approximation, alpha .05, power .80; MDE in SD units of the '
@@ -282,7 +312,7 @@ def validate_panel(panel):
     c = panel['contract']
     if panel['map_binding']['net_sha256'] != NET_SHA256:
         raise Blocked('panel does not bind the staged probe network')
-    if (c['bootstrap'] != BOOTSTRAP or c['horizon_s'] != HORIZON_S or c['budget']['allocation_sim_s'] != ALLOCATION_SIM_S
+    if (c['bootstrap'] != BOOTSTRAP or c['horizon_s'] != HORIZON_S or c['budget']['allocation_sim_s'] != PANEL_ALLOCATION_SIM_S
             or c['decisions']['worlds'] != [r['world_id'] for r in worlds if in_decision_subset(r['world'])]):
         raise Blocked('panel contract differs from the launcher constants')
     return panel
@@ -497,59 +527,145 @@ def budget_check(root, cfg, base, *, outstanding=None):
     return out
 
 
-# ---------------------------------------------------------------- MAPPO comparator (zero physics)
+# ---------------------------------------------------------------- comparators (zero physics)
 
-def mappo_binding(final_root):
-    path = Path(final_root)/MAPPO_FILE
+def _arm(arm):
+    if arm not in BOUND_ARMS:
+        raise Blocked(f'comparator arm must be one of {BOUND_ARMS}')
+    return arm
+
+
+def mappo_binding(final_root, arm='MAPPO_SPEED'):
+    path = Path(final_root)/f'BOUND_{_arm(arm)}.json'
     if not path.is_file():
         return None
-    value = verify(read(path), 'binding_sha256', 'MAPPO comparator binding')
-    if value['kind'] not in MAPPO_KINDS:
-        raise Blocked('unknown MAPPO comparator kind')
+    value = verify(read(path), 'binding_sha256', f'{arm} binding')
+    if value.get('arm') != arm or value['kind'] not in MAPPO_KINDS[arm]:
+        raise Blocked(f'{arm} binding names another arm/kind')
     return dict(value, binding_path=str(path))      # location only; the sealed record is unchanged
 
 
-def mappo_label(sha256):
-    """The arm is named by the sha actually loaded: a d9042cc5 executor is never 'retrained'."""
-    kind = 'u0_transferred_not_retrained' if str(sha256).startswith(FALLBACK_SHA_PREFIX) else 'retrained_wz3to2'
-    return kind, f'{MAPPO_KINDS[kind]} [executor {str(sha256)[:12]}]'
+def declared_unavailable(final_root, arm):
+    path = Path(final_root)/f'DECLARED_UNAVAILABLE_{_arm(arm)}.json'
+    return verify(read(path), 'declaration_sha256', f'{arm} declaration') if path.is_file() else None
 
 
-def bind_mappo(*, final_root, path, sha256, kind, authority, check=None):
-    """Bind the MAPPO comparator executor checkpoint (path + sha256, re-verified at every load).
-    Rebinding is allowed only before the MAPPO wave is reserved; earlier bindings are kept."""
-    final_root = Path(final_root)
+def comparators(final_root, arms=BOUND_ARMS):
+    bound = {a: b for a in arms if (b := mappo_binding(final_root, a)) is not None}
+    declared = {a: d for a in arms if a not in bound and (d := declared_unavailable(final_root, a)) is not None}
+    return dict(bound=bound, declared=declared, pending=[a for a in arms if a not in bound and a not in declared])
+
+
+def mappo_label(sha256, arm='MAPPO_SPEED'):
+    """A comparator is named by its registered kind plus the sha actually loaded."""
+    kind = next(iter(MAPPO_KINDS[arm]))
+    return kind, f'{MAPPO_KINDS[arm][kind]} [executor {str(sha256)[:12]}]'
+
+
+def export_meta(path):
+    """Export metadata only (weights_only load, no network construction)."""
+    import torch
+    payload = torch.load(path, map_location='cpu', weights_only=True)
+    if not isinstance(payload, dict):
+        raise Blocked(f'{path} is not a c4 export')
+    policy = payload.get('policy') or {}
+    return dict(format=payload.get('format'), trainer=payload.get('trainer'), iteration=payload.get('iteration'),
+                lane_control=payload.get('lane_control'), lane_head=payload.get('lane_head') is True
+                and any(str(k).startswith('lane_head.') for k in policy))
+
+
+def check_export(arm, sha256, meta):
+    """The registered binding rule per comparator arm (MAIN 2026-11-06)."""
+    if any(sha256.startswith(x) for x in REFUSED_SHA_PREFIXES[arm]):
+        raise Blocked(f'{arm} never substitutes {sha256[:8]} (registered binding)')
+    if arm in REQUIRED_SHA and sha256 != REQUIRED_SHA[arm]:
+        raise Blocked(f'{arm} is the frozen {REQUIRED_SHA[arm][:8]} executor only')
+    if meta.get('trainer') != 'mappo':
+        raise Blocked(f'{arm} must be a mappo export')
+    if arm == 'MAPPO_SPEED':
+        if meta.get('iteration') != REQUIRED_ITERATION[arm]:
+            raise Blocked(f'MAPPO_SPEED is S-MAPPOWZ it168 only (export iteration {meta.get("iteration")})')
+        if meta.get('lane_head'):
+            raise Blocked('MAPPO_SPEED must be speed-only (export has a lane head)')
+    if arm == 'MAPPO_LANE' and not meta.get('lane_head'):
+        raise Blocked('MAPPO_LANE must carry its lane head')
+    return meta
+
+
+def _wave_started(final_root, arm):
+    return (Path(final_root)/f'RESERVED_{arm}.json').is_file() or (Path(final_root)/f'WAVE_{arm}.json').is_file()
+
+
+def bind_mappo(*, final_root, path, sha256, kind, authority, arm='MAPPO_SPEED', check=None, dry_run=False):
+    """Bind a comparator executor (path + sha256, re-verified at every load). Rebinding is allowed
+    only before that arm's wave is reserved; earlier bindings are kept."""
+    final_root, arm = Path(final_root), _arm(arm)
     if run_plan(final_root) is None:
         raise Blocked('RUN_PLAN.json missing: run register first')
-    if kind not in MAPPO_KINDS:
-        raise Blocked(f'kind must be one of {sorted(MAPPO_KINDS)}')
+    if kind not in MAPPO_KINDS[arm]:
+        raise Blocked(f'{arm} kind must be one of {sorted(MAPPO_KINDS[arm])}')
     if not re.fullmatch('[0-9a-f]{64}', str(sha256)):
         raise Blocked('full lowercase sha256 required')
-    if kind == 'u0_transferred_not_retrained' and not sha256.startswith(FALLBACK_SHA_PREFIX):
-        raise Blocked(f'the fallback is the transferred {FALLBACK_SHA_PREFIX} export only')
-    if kind == 'retrained_wz3to2' and sha256.startswith(FALLBACK_SHA_PREFIX):
-        raise Blocked(f'{FALLBACK_SHA_PREFIX} is the transferred export, never the wz3to2 retrain')
     if not str(authority).strip():
         raise Blocked('authority (verbatim decision/message) required')
     if file_sha(path) != sha256:
         raise Blocked(f'{path} does not hash to {sha256}')
-    if (final_root/'RESERVED_MAPPO.json').is_file() or (final_root/'WAVE_MAPPO.json').is_file():
-        raise Blocked('the MAPPO wave already started; the comparator can no longer change')
-    target = final_root/MAPPO_FILE
+    meta = export_meta(path)
+    if dry_run and arm in REQUIRED_SHA:      # dry run only: a stand-in cannot hash to the frozen executor
+        meta = dict(check_export(arm, REQUIRED_SHA[arm], meta), dry_run_stand_in=True)
+    else:
+        meta = check_export(arm, sha256, meta)
+    if declared_unavailable(final_root, arm) is not None:
+        raise Blocked(f'{arm} was declared unavailable; that declaration stands')
+    if _wave_started(final_root, arm):
+        raise Blocked(f'the {arm} wave already started; the comparator can no longer change')
+    target = final_root/f'BOUND_{arm}.json'
     if target.is_file():
-        old = read(target)
-        n = len(list(final_root.glob('MAPPO_COMPARATOR_superseded_*.json')))+1
-        publish(final_root/f'MAPPO_COMPARATOR_superseded_{n:03}.json', old)
-    value = seal(dict(schema=SCHEMA+'.mappo', kind=kind, label=MAPPO_KINDS[kind], path=str(path), sha256=sha256,
-                      authority=str(authority), rule=MAPPO_AUTHORITY, load_check=check,
+        n = len(list(final_root.glob(f'BOUND_{arm}_superseded_*.json')))+1
+        publish(final_root/f'BOUND_{arm}_superseded_{n:03}.json', read(target))
+    value = seal(dict(schema=SCHEMA+'.comparator', arm=arm, kind=kind, label=MAPPO_KINDS[arm][kind], path=str(path),
+                      sha256=sha256, export=meta, authority=str(authority), rule=MAPPO_AUTHORITY, load_check=check,
+                      dry_run=bool(dry_run),
                       bound_utc=datetime.now(timezone.utc).isoformat()), 'binding_sha256')
     publish(target, value, replace=True)
     return dict(value, binding_path=str(target))
 
 
+def declare_unavailable(*, final_root, arm, authority, reason):
+    """F12: an explicit, sealed 'comparator unavailable' declaration (never implied by a timeout)."""
+    final_root, arm = Path(final_root), _arm(arm)
+    if run_plan(final_root) is None:
+        raise Blocked('RUN_PLAN.json missing: run register first')
+    if not str(authority).strip() or not str(reason).strip():
+        raise Blocked('authority and reason required')
+    if mappo_binding(final_root, arm) is not None:
+        raise Blocked(f'{arm} is bound; a bound comparator cannot be declared unavailable')
+    value = seal(dict(schema=SCHEMA+'.unavailable', arm=arm, authority=str(authority), reason=str(reason),
+                      declared_utc=datetime.now(timezone.utc).isoformat()), 'declaration_sha256')
+    publish(final_root/f'DECLARED_UNAVAILABLE_{arm}.json', value)
+    return value
+
+
+def bind_arms(*, final_root, shas, authority):
+    """MAIN: bind clean5a A/B/R u24 by sha before the evaluation; the gate refuses any other file."""
+    final_root = Path(final_root)
+    if run_plan(final_root) is None:
+        raise Blocked('RUN_PLAN.json missing: run register first')
+    if set(shas) != set(ARMS) or not all(re.fullmatch('[0-9a-f]{64}', str(v)) for v in shas.values()):
+        raise Blocked('A, B and R u24 checkpoint sha256 required')
+    if not str(authority).strip():
+        raise Blocked('authority required')
+    if (final_root/'ARMS_BOUND.json').exists() or (final_root/'GATE_PASS.json').exists():
+        raise Blocked('A/B/R already bound (ARMS_BOUND or GATE_PASS exists); never rebound')
+    value = seal(dict(schema=SCHEMA+'.arms', update=UPDATE, checkpoint_sha256=dict(shas), authority=str(authority),
+                      bound_utc=datetime.now(timezone.utc).isoformat()), 'binding_sha256')
+    publish(final_root/'ARMS_BOUND.json', value)
+    return value
+
+
 # ---------------------------------------------------------------- gate (zero physics)
 
-def gate(root, cfg, runtime, binding):
+def gate(root, cfg, runtime, binding, final_root=None):
     """clean4 u24 sealed AND safety clean. NotReady = wait; Blocked = never proceed automatically."""
     root = Path(root)
     missing = [n for arm in ARMS for n in (f'{arm}_UPDATE_{UPDATE:03}.json', f'{arm}_checkpoint_{UPDATE:03}.pt',
@@ -583,6 +699,11 @@ def gate(root, cfg, runtime, binding):
     if pauses or events:
         raise Blocked(f'safety not clean: pauses={pauses} events={events}')
     checkpoints = {arm: file_sha(root/f'{arm}_checkpoint_{UPDATE:03}.pt') for arm in ARMS}
+    bound_arms = Path(final_root)/'ARMS_BOUND.json' if final_root is not None else None
+    if bound_arms is not None and bound_arms.is_file():
+        expected = verify(read(bound_arms), 'binding_sha256', 'ARMS_BOUND')['checkpoint_sha256']
+        if expected != checkpoints:
+            raise Blocked(f'u24 checkpoints differ from the bound A/B/R shas: {expected} vs {checkpoints}')
     if binding['base'] == 'mappo_u0' and file_sha(root/'A_checkpoint_000.pt') != cfg['common_checkpoint_sha256']:
         raise Blocked('A_checkpoint_000.pt is not the registered common MAPPO u0')
     return dict(schema=SCHEMA+'.gate', status='PASS', root=str(root), config_sha256=bound, update_sha256=updates,
@@ -592,22 +713,28 @@ def gate(root, cfg, runtime, binding):
 
 # ---------------------------------------------------------------- specs and records
 
-def episode_specs(arm, panel, cfg, root, base, mappo=None):
+def episode_specs(arm, panel, cfg, root, base, binding=None):
     root = Path(root)
     if arm in ARMS:
         path = root/f'{arm}_checkpoint_{UPDATE:03}.pt'
         checkpoint = dict(path=str(path), file_sha256=file_sha(path), update=UPDATE, arm=arm)
-    elif arm == 'MAPPO':
-        if mappo is None:
-            raise Blocked('MAPPO comparator not bound (bind-mappo)')
+    elif arm in ('U0', 'MAPPO_SPEED'):
         if not cfg.get('common_checkpoint_sha256'):
-            raise Blocked('MAPPO comparator needs the clean4 common u0 (zero residual) checkpoint')
-        # frozen MAPPO executor = the bound comparator; residual = clean4 common u0 (zero residual)
-        checkpoint = dict(kind='mappo_comparator', comparator_kind=mappo['kind'], label=mappo['label'],
-                          executor_path=mappo['path'], executor_sha256=mappo['sha256'],
-                          binding_sha256=mappo['binding_sha256'], binding_path=mappo['binding_path'],
-                          path=str(root/'A_checkpoint_000.pt'),
-                          file_sha256=cfg['common_checkpoint_sha256'], update=0, arm='A')
+            raise Blocked(f'{arm} needs the run common u0 (zero residual) checkpoint')
+        if binding is None:
+            raise Blocked(f'{arm} executor not bound (bind-mappo --arm {arm})')
+        # executor = the bound frozen/comparator export; residual = the run common u0 (zero residual)
+        checkpoint = dict(kind='u0' if arm == 'U0' else 'mappo_comparator', comparator_kind=binding['kind'],
+                          label=binding['label'], executor_path=binding['path'], executor_sha256=binding['sha256'],
+                          binding_sha256=binding['binding_sha256'], binding_path=binding['binding_path'],
+                          path=str(root/'A_checkpoint_000.pt'), file_sha256=cfg['common_checkpoint_sha256'],
+                          update=0, arm='A')
+    elif arm == 'MAPPO_LANE':
+        if binding is None:
+            raise Blocked('MAPPO_LANE comparator not bound (bind-mappo --arm MAPPO_LANE)')
+        checkpoint = dict(kind='mappo_lane', comparator_kind=binding['kind'], label=binding['label'],
+                          executor_path=binding['path'], executor_sha256=binding['sha256'],
+                          binding_sha256=binding['binding_sha256'], binding_path=binding['binding_path'])
     elif arm == 'NATIVE':
         checkpoint = dict(kind='native')
     else:
@@ -673,8 +800,8 @@ def check_episode(record, spec):
         check_decision(record['decision'], what)
     elif record.get('decision') is not None:
         raise Blocked(f'{what}: decision captured outside the registered B/R decision subset')
-    if spec['arm'] == 'MAPPO' and record.get('executor_sha256_loaded') != spec['checkpoint']['executor_sha256']:
-        raise Blocked(f'{what}: MAPPO executor actually loaded differs from the bound comparator (never silent)')
+    if spec['arm'] in BOUND_ARMS and record.get('executor_sha256_loaded') != spec['checkpoint']['executor_sha256']:
+        raise Blocked(f'{what}: comparator executor actually loaded differs from its binding (never silent)')
     if spec['arm'] in DECISION_ARMS:
         log = check_decision_log(record.get('decision_log', []), what)
     elif record.get('decision_log'):
@@ -686,8 +813,14 @@ def check_episode(record, spec):
                decision=deepcopy(record.get('decision')))
     if log is not None:
         out['decision_log'] = log
-    if spec['arm'] == 'MAPPO':
+    if spec['arm'] in BOUND_ARMS:
         out['executor_sha256_loaded'] = record['executor_sha256_loaded']
+    if spec['arm'] == 'NATIVE' and record.get('regime') is not None:
+        regime = record['regime']
+        v = regime.get('closing_lane_speed_mps') if isinstance(regime, dict) else 'bad'
+        if v is not None and (isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)):
+            raise Blocked(f'{what}: malformed regime observable')
+        out['regime'] = deepcopy(regime)
     return out
 
 
@@ -764,10 +897,12 @@ class Runtime:
         try:
             module = importlib.import_module(self.runner)
         except ImportError as error:
-            return dict(ok=False, reason=f'{self.runner} not importable: {error!r}', native=False, decisions=False)
+            return dict(ok=False, reason=f'{self.runner} not importable: {error!r}', native=False, decisions=False,
+                        lane=False)
         ok = getattr(module, 'MAP', None) == MAP and callable(getattr(module, 'episode', None))
         return dict(ok=ok, native=ok and getattr(module, 'NATIVE', True) is not False,
                     decisions=ok and callable(getattr(module, 'decision_branch', None)),
+                    lane=ok and getattr(module, 'MAPPO_LANE', False) is True,
                     reason=None if ok else f'{self.runner} lacks MAP={MAP!r} or episode()')
 
     def reserve(self, cfg, jobs):
@@ -791,13 +926,15 @@ def _h(*parts):
 def fake_episode(spec):
     w, arm = spec['world'], spec['arm']
     u = _h(w['seed'], arm)/0xffffffff
-    factor = dict(NATIVE=1.06, MAPPO=1.0, A=0.99, R=0.985, B=0.975)[arm]
+    factor = dict(NATIVE=1.06, U0=1.0, MAPPO_SPEED=.995, MAPPO_LANE=.993, A=0.99, R=0.985, B=0.975)[arm]
     record = dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='graded',
                   J_veh_s=float(100_000*factor*(1+0.03*(u-.5))),
                   safety=dict(collisions=0, teleports=0, hard_brakes=_h(w['seed'], arm, 'b') % 7,
                               ttc_events=_h(w['seed'], arm, 't') % 11))
-    if arm == 'MAPPO':
+    if arm in BOUND_ARMS:
         record['executor_sha256_loaded'] = spec['checkpoint']['executor_sha256']
+    if arm == 'NATIVE':
+        record['regime'] = dict(closing_lane_speed_mps=4.+_h(w['seed'], 'regime') % 1500/100., n_obs=60)
     if arm in DECISION_ARMS:
         h = _h(w['seed'], arm, 'd')
         n = MIN_MEMBERS+h % 2
@@ -826,7 +963,7 @@ class FakeRuntime:
 
     def __init__(self, runner=None):
         self.calls = []
-        self.status = dict(dict(ok=True, native=True, decisions=True, reason=None), **(runner or {}))
+        self.status = dict(dict(ok=True, native=True, decisions=True, lane=True, reason=None), **(runner or {}))
 
     def config(self, root):
         cfg = read(Path(root)/'CONFIG.json')
@@ -968,40 +1105,44 @@ def analyse_decisions(branches, bootstrap):
     return out, by_world
 
 
-def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=None, missing=None, mappo=None):
-    """episodes: {arm: {world_id: record}} complete panels of A/B/R/MAPPO/NATIVE; BASE is an alias of
-    MAPPO (MAPPO base) or NATIVE (native base), never a separate run."""
+def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=None, missing=None, comparators=None,
+            scope='claim3a'):
+    """episodes: {arm: {world_id: record}} complete panels of EPISODE_ARMS; BASE is an alias of U0
+    (mappo_u0 base) or NATIVE (native base), never a separate run. ``comparators``: {arm: binding}."""
     bootstrap = panel['contract']['bootstrap']
     worlds = [r['world_id'] for r in panel['worlds']]
     have = dict(episodes)
     for arm, rows in have.items():
         if arm not in EPISODE_ARMS or set(rows) != set(worlds):
             raise Blocked(f'{arm}: every registered world exactly once required')
-    alias_of = 'NATIVE' if base == 'native' else 'MAPPO'
-    if alias_of in have:
-        have['BASE'] = have[alias_of]
+    base_arm = alias_of(base)
+    if base_arm in have:
+        have['BASE'] = have[base_arm]
     J = {n: np.array([have[n][w]['J_veh_s'] for w in worlds]) for n in have}
     S = {n: {k: np.array([have[n][w]['safety'][k] for w in worlds], float) for k in SAFETY} for n in have}
     names = [n for n in ORDER if n in have]
-    loaded = sorted({have['MAPPO'][w]['executor_sha256_loaded'] for w in worlds}) if 'MAPPO' in have else []
-    if len(loaded) > 1:
-        raise Blocked(f'MAPPO episodes loaded different executors: {loaded}')
-    labels = dict(A='A u24 (base only, continued training)', B='B u24 (cooperation layer + SUMO-verified guidance)',
-                  R='R u24 (same layer, random guidance)', NATIVE='native SUMO CAV driving',
-                  MAPPO=mappo_label(loaded[0])[1] if loaded else 'MAPPO comparator (not run)')
-    summary = {n: dict(label=labels[n]+(' = BASE' if n == alias_of else ''), n=len(worlds), mean_J_veh_s=float(J[n].mean()),
+    loaded = {}
+    for arm in COMPARATOR_ARMS:
+        if arm in have:
+            shas = sorted({have[arm][w]['executor_sha256_loaded'] for w in worlds})
+            if len(shas) > 1:
+                raise Blocked(f'{arm} episodes loaded different executors: {shas}')
+            loaded[arm] = shas[0]
+    labels = dict(A='A u24 (the frozen S-MAPPOWZ base alone)' if base == 'mappo_frozen' else 'A u24 (base only)',
+                  B='B u24 (cooperation layer + SUMO-verified guidance)',
+                  R='R u24 (cooperation layer, no guidance)', NATIVE='native SUMO CAV driving', U0=U0_LABEL,
+                  **{a: mappo_label(loaded[a], a)[1] if a in loaded else f'{a} (not run)' for a in COMPARATOR_ARMS})
+    summary = {n: dict(label=labels[n]+(' = BASE' if n == base_arm else ''), n=len(worlds), mean_J_veh_s=float(J[n].mean()),
                        safety_totals={k: int(S[n][k].sum()) for k in SAFETY},
                        any_collision_or_teleport=bool(S[n]['collisions'].sum()+S[n]['teleports'].sum() > 0))
                for n in names}
-    tables = dict(arms=summary, base=dict(
-        controller=base, alias_of=alias_of,
-        mappo_comparator=None if mappo is None else dict(
-            {k: mappo[k] for k in ('kind', 'label', 'sha256', 'binding_sha256')},
-            executor_sha256_loaded=loaded[0] if loaded else None,
-            kind_by_loaded_sha=mappo_label(loaded[0])[0] if loaded else None)))
-    alias = lambda n, c: c == 'BASE' and n == alias_of  # noqa: E731
+    tables = dict(arms=summary, base=dict(controller=base, alias_of=base_arm, comparators={
+        a: dict({k: b[k] for k in ('kind', 'label', 'sha256', 'binding_sha256')},
+                executor_sha256_loaded=loaded.get(a), kind_by_loaded_sha=mappo_label(loaded[a], a)[0] if a in loaded else None)
+        for a, b in (comparators or {}).items()}))
+    alias = lambda n, c: c == 'BASE' and n == base_arm  # noqa: E731
     total = {}
-    for comparator in ('BASE', 'NATIVE'):
+    for comparator in ('BASE', 'NATIVE')+COMPARATOR_ARMS:
         if comparator in have:
             total[f'vs_{comparator}'] = dict(
                 convention=f'diff = X - {comparator}; negative = X has less delay',
@@ -1010,7 +1151,7 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
         else:
             total[f'vs_{comparator}'] = dict(status='unavailable', reason=(missing or {}).get(comparator, 'not run'))
     total['base_is_native'] = base == 'native'
-    total['base_alias_of'] = alias_of
+    total['base_alias_of'] = base_arm
     tables['total_benefit'] = total
     tables['registered_B_A_R'] = dict(convention='diff = first - second; negative = first has less delay',
                                       rows={c: fe.paired_stats(J[c[0]], J[c[2]], bootstrap)
@@ -1018,20 +1159,20 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
     primary = dict(panel['contract']['primary'])
     if 'BASE' in have:
         row = fe.paired_stats(J['B'], J['BASE'], bootstrap)
-        hard = {n: sum(summary[a]['safety_totals'][k] for k in HARD) for n, a in (('B', 'B'), ('BASE', alias_of))}
+        hard = {n: sum(summary[a]['safety_totals'][k] for k in HARD) for n, a in (('B', 'B'), ('BASE', base_arm))}
         primary.update(row=row, hard_events=hard, meets_rule=bool(row['ci95'][1] < 0 and hard['B'] <= hard['BASE']))
     else:
         primary.update(status='unavailable')
     tables['primary'] = primary
     decomposition = {}
-    train = ('A-BASE', 'A', 'BASE', 'continued base-only training (A, 24 updates)')
+    train = ('A-BASE', 'A', 'BASE', 'A over BASE (identically 0 when BASE = A, the frozen base alone)')
     for comparator, chain in (('BASE', (train,)),
                               ('NATIVE', (('BASE-NATIVE', 'BASE', 'NATIVE', 'base controller over native'), train))):
         if not {comparator, 'BASE'} <= set(have):
             decomposition[f'B-{comparator}'] = dict(status=f'unavailable (needs {comparator})')
             continue
-        steps = chain+(('R-A', 'R', 'A', 'cooperation layer with random guidance'),
-                       ('B-R', 'B', 'R', 'SUMO-verified guidance (cooperation-specific effect)'))
+        steps = chain+(('R-A', 'R', 'A', 'cooperation layer without guidance (R = the no-guidance arm)'),
+                       ('B-R', 'B', 'R', 'SUMO-verified guidance (B vs the no-guidance arm R)'))
         error = float(np.max(np.abs(sum(J[t]-J[c] for _, t, c, _ in steps)-(J['B']-J[comparator]))))
         decomposition[f'B-{comparator}'] = dict(
             identity=f'B-{comparator} = '+' + '.join(f'({k})' for k, *_ in steps)+', exact per world and resample',
@@ -1076,11 +1217,81 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
             safety[f'worlds_more_hard_events_than_{comparator}'] = {
                 n: [w for i, w in enumerate(worlds) if any(S[n][k][i] > S[comparator][k][i] for k in HARD)] for n in others}
     tables['safety'] = safety
-    value = dict(schema=SCHEMA+'.tables', map=MAP, update=UPDATE, panel_sha256=panel['panel_sha256'], base=base,
+    tables['per_seed'] = per_seed_tables(panel, J, names, worlds, base_arm)
+    tables['regimes'] = regime_tables(panel, have, J, names, worlds)
+    value = dict(schema=SCHEMA+'.tables', scope=scope, map=MAP, update=UPDATE, panel_sha256=panel['panel_sha256'], base=base,
                  bootstrap=bootstrap, metric=panel['contract']['metric'], horizon_s=HORIZON_S, worlds=len(worlds),
                  present=names, missing=missing or {}, sources=sources or {}, tables=tables,
-                 primary_criterion_clean4='u24 replicated synergy test on registered TRAIN states (N4); unchanged')
+                 claim=dict(claim3a='does learned cooperation add on top of the frozen MAPPO base: B vs A, B vs R, vs NATIVE '
+                                    'and U0 (opens when those arms finish)',
+                            claim3b='vs MAPPO-speed it168 and MAPPO-lane, each opened only after it is bound')[scope[:7]],
+                 primary_criterion_training='u24 replicated synergy test on registered TRAIN states (run registration); unchanged')
     return seal(json.loads(json.dumps(value, allow_nan=False)), 'analysis_sha256')
+
+
+PER_SEED_COMPARATORS = ('NATIVE', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE')
+
+
+def seed_stats(diff, worlds):
+    """Per-seed view of X - comparator (negative = benefit): fractions, quartiles, sorted table."""
+    d = np.asarray(diff, float)
+    order = np.argsort(d, kind='stable')
+    return dict(n=len(d), frac_benefit=float(np.mean(d < 0)), frac_harm=float(np.mean(d > 0)),
+                frac_tie=float(np.mean(d == 0)), quartiles=[float(q) for q in np.quantile(d, [.25, .5, .75])],
+                min=float(d.min()), max=float(d.max()),
+                sorted=[dict(world_id=worlds[i], diff_veh_s=float(d[i])) for i in order])
+
+
+def per_seed_tables(panel, J, names, worlds, base_arm):
+    """MAIN: every arm vs each comparator (NATIVE, U0, MAPPO-speed, MAPPO-lane) - paired bootstrap mean CI
+    plus per-seed benefit/harm fractions, quartiles and a sorted table; B-R and B-A per seed."""
+    bootstrap = panel['contract']['bootstrap']
+    out = dict(convention='diff = X - comparator per held-out seed; negative = benefit (less delay)', comparators={})
+    for c in PER_SEED_COMPARATORS:
+        if c not in J:
+            out['comparators'][c] = dict(status='unavailable')
+            continue
+        out['comparators'][c] = {n: dict(mean_ci=fe.paired_stats(J[n], J[c], bootstrap), **seed_stats(J[n]-J[c], worlds))
+                                 for n in names if n != c}
+    out['B-R'] = dict(mean_ci=fe.paired_stats(J['B'], J['R'], bootstrap), **seed_stats(J['B']-J['R'], worlds))
+    out['B-A'] = dict(mean_ci=fe.paired_stats(J['B'], J['A'], bootstrap), **seed_stats(J['B']-J['A'], worlds))
+    cols = [c for c in ('A', 'R')+PER_SEED_COMPARATORS if c in J]
+    order = np.argsort(J['B']-J[base_arm], kind='stable') if base_arm in J else range(len(worlds))
+    out['table_B'] = dict(sorted_by=f'B-{base_arm}' if base_arm in J else 'panel order',
+                          rows=[dict(world_id=worlds[i], seed=panel['worlds'][[r['world_id'] for r in panel['worlds']].index(worlds[i])]['world']['seed'],
+                                     J_B=float(J['B'][i]), **{f'B-{c}': float(J['B'][i]-J[c][i]) for c in cols})
+                                for i in order])
+    return out
+
+
+def regime_tables(panel, have, J, names, worlds):
+    """Report-only regime split: demand cell, and the RSU-observable closing-lane speed tercile measured
+    on the untreated NATIVE arm (WM lane 2, 300 m before the drop, t 300-360 s)."""
+    bootstrap = panel['contract']['bootstrap']
+    cells = sorted({r['world']['cell_key'] for r in panel['worlds']})
+    pairs = [(n, c) for c in PER_SEED_COMPARATORS if c in J for n in names if n != c]
+    pairs += [('B', 'R'), ('B', 'A')]
+
+    def block(mask):
+        idx = np.flatnonzero(mask)
+        return dict(n=len(idx), rows={f'{n}-{c}': dict(mean=float(np.mean(J[n][idx]-J[c][idx])) if len(idx) else None,
+                                                      frac_benefit=float(np.mean(J[n][idx]-J[c][idx] < 0)) if len(idx) else None)
+                                      for n, c in pairs})
+    keys = [next(r['world']['cell_key'] for r in panel['worlds'] if r['world_id'] == w) for w in worlds]
+    out = dict(report_only=True, demand_cell={k: block(np.array([x == k for x in keys])) for k in cells})
+    speeds = [((have.get('NATIVE') or {}).get(w) or {}).get('regime', {}).get('closing_lane_speed_mps') for w in worlds]
+    known = np.array([v is not None for v in speeds])
+    if 'NATIVE' not in have or not known.any():
+        out['closing_lane_speed_tercile'] = dict(status='unavailable (needs the NATIVE regime observable)')
+        return dict(out, bootstrap_note=f'means only; seed {bootstrap["seed"]} CIs are in per_seed')
+    v = np.array([x if x is not None else np.nan for x in speeds], float)
+    cuts = [float(c) for c in np.nanquantile(v, [1/3, 2/3])]
+    tercile = np.where(~known, -1, np.where(v <= cuts[0], 0, np.where(v <= cuts[1], 1, 2)))
+    out['closing_lane_speed_tercile'] = dict(
+        cutpoints_mps=cuts, unknown=int((~known).sum()),
+        definition='NATIVE arm, RSU-observable rows (CAV reports), WM lane 2, s in [-300, 75.44] m, t in [300, 360) s',
+        terciles={name: block(tercile == i) for i, name in enumerate(('slow', 'middle', 'fast'))})
+    return out
 
 
 def _f(x, digits=1):
@@ -1093,10 +1304,11 @@ def _ci(pair, digits=1):
 
 def render(value):
     t = value['tables']
-    lines = [f'# clean4 wz3to2 final paired evaluation (u{value["update"]}) - registered evaluation panel', '',
+    lines = [f'# clean5a wz3to2 final paired evaluation (u{value["update"]}) - {value["scope"]} - panel v2', '',
+             f"Claim: {value['claim']}.", '',
              f"Panel: {value['worlds']} wz3to2 evaluation worlds (989600-989695), panel_sha256 `{value['panel_sha256']}`; "
-             f"base controller {value['base']} (BASE = {t['base']['alias_of']}); MAPPO comparator "
-             f"{t['arms'].get('MAPPO', {}).get('label', 'not run')}; metric {value['metric']} (veh-s, lower is better), full "
+             f"base controller {value['base']} (BASE = {t['base']['alias_of']}); comparators "
+             f"{', '.join(t['arms'][a]['label'] for a in COMPARATOR_ARMS if a in t['arms']) or 'none run'}; metric {value['metric']} (veh-s, lower is better), full "
              f"{value['horizon_s']} s; paired whole-world percentile bootstrap {value['bootstrap']['reps']} reps, seed "
              f"{value['bootstrap']['seed']}, 95% CI. analysis_sha256 `{value['analysis_sha256']}`.", '']
     if value.get('dry_run'):
@@ -1122,7 +1334,7 @@ def render(value):
     if 'row' in p:
         lines.append(f"diff {_f(p['row']['diff'])} veh-s, CI95 {_ci(p['row']['ci95'])}, hard events {p['hard_events']}: "
                      f"meets rule = **{p['meets_rule']}**.")
-    for comparator in ('BASE', 'NATIVE'):
+    for comparator in ('BASE', 'NATIVE')+COMPARATOR_ARMS:
         tb = t['total_benefit'][f'vs_{comparator}']
         if 'rows' in tb:
             lines += block(f'## T1 Total benefit vs {comparator}', {f'{k}-{comparator}': v for k, v in tb['rows'].items()},
@@ -1172,6 +1384,41 @@ def render(value):
     if 'synergy' in iso:
         lines += ['', f"clean4 registered u24 replicated test (TRAIN states): verdict **{iso['verdict']}**, "
                       f"safety_ok={iso['safety_ok']}, receipt `{iso['receipt_sha256']}`."]
+    ps = t['per_seed']
+    lines += ['', '## T5 Per-seed view (96 held-out seeds; diff = X - comparator, negative = benefit)', '',
+              '| comparator | arm | mean [95% CI] | benefit | harm | quartiles |', '|---|---|---|---:|---:|---|']
+    for c, rows in ps['comparators'].items():
+        if 'status' in rows:
+            lines.append(f"| {c} | - | {rows['status']} | | | |")
+            continue
+        for n, r in rows.items():
+            lines.append(f"| {c} | {n} | {_f(r['mean_ci']['diff'])} {_ci(r['mean_ci']['ci95'])} | {r['frac_benefit']:.2f} | "
+                         f"{r['frac_harm']:.2f} | {', '.join(_f(q) for q in r['quartiles'])} |")
+    for k in ('B-R', 'B-A'):
+        r = ps[k]
+        lines.append(f"| {k[2:]} | B | {_f(r['mean_ci']['diff'])} {_ci(r['mean_ci']['ci95'])} | {r['frac_benefit']:.2f} | "
+                     f"{r['frac_harm']:.2f} | {', '.join(_f(q) for q in r['quartiles'])} |")
+    tb = ps['table_B']
+    cols = [k for k in tb['rows'][0] if k.startswith('B-')] if tb['rows'] else []
+    lines += ['', f"Per-seed table for B (sorted by {tb['sorted_by']}):", '',
+              '| seed | J_B | '+' | '.join(cols)+' |', '|---:|---:|'+'---:|'*len(cols)]
+    for r in tb['rows']:
+        lines.append(f"| {r['seed']} | {_f(r['J_B'])} | "+' | '.join(_f(r[c]) for c in cols)+' |')
+    rg = t['regimes']
+    lines += ['', '## T6 Regimes (report-only)', '']
+    for k, b in rg['demand_cell'].items():
+        lines.append(f"Demand cell {k}: n={b['n']}; "+'; '.join(f"{p} {_f(r['mean'])}" for p, r in b['rows'].items()
+                                                                if p in ('B-R', 'B-A', 'B-NATIVE', 'B-U0')))
+    ct = rg['closing_lane_speed_tercile']
+    if 'terciles' in ct:
+        lines += ['', f"Closing-lane speed terciles (cut {', '.join(_f(c, 2) for c in ct['cutpoints_mps'])} m/s; "
+                      f"{ct['definition']}; unknown {ct['unknown']}):", '',
+                  '| tercile | n | B-R | B-A | B-NATIVE | B-U0 |', '|---|---:|---:|---:|---:|---:|']
+        for name, b in ct['terciles'].items():
+            lines.append(f"| {name} | {b['n']} | "+' | '.join(_f((b['rows'].get(p) or {}).get('mean'))
+                                                             for p in ('B-R', 'B-A', 'B-NATIVE', 'B-U0'))+' |')
+    else:
+        lines.append(f"Closing-lane speed terciles: {ct['status']}.")
     lines += ['', '## T4 Safety (panel totals and paired differences)', '',
               '| arm | collisions | teleports | hard brakes | TTC events | any collision/teleport |', '|---|---:|---:|---:|---:|---|']
     for n, s in t['safety']['totals'].items():
@@ -1188,7 +1435,8 @@ def render(value):
     return '\n'.join(lines)+'\n'
 
 
-def tables(*, root, final_root, panel, base, episodes, decisions, sources, missing, dry_run=False, mappo=None):
+def tables(*, root, final_root, panel, base, episodes, decisions, sources, missing, dry_run=False, comparators=None,
+           scope='claim3a', stem='CLAIM3A_TABLES'):
     sources, missing = dict(sources), dict(missing)
     replicated = None
     path = Path(root)/REPLICATED_FILE
@@ -1198,12 +1446,12 @@ def tables(*, root, final_root, panel, base, episodes, decisions, sources, missi
     else:
         missing['replicated_u024'] = 'clean4 monitor receipt absent (descriptive context only)'
     value = analyse(panel=panel, base=base, episodes=episodes, decisions=decisions, replicated=replicated,
-                    sources=sources, missing=missing, mappo=mappo)
+                    sources=sources, missing=missing, comparators=comparators, scope=scope)
     if dry_run:
         value = seal(dict(value, dry_run=True), 'analysis_sha256')
-    stem, existing = 'FINAL_TABLES', Path(final_root)/'FINAL_TABLES.json'
+    existing = Path(final_root)/f'{stem}.json'
     if existing.is_file() and read(existing).get('analysis_sha256') != value['analysis_sha256']:
-        stem = 'FINAL_TABLES_'+value['analysis_sha256'][:12]   # never overwrite a published table
+        stem = f'{stem}_'+value['analysis_sha256'][:12]   # never overwrite a published table
     if not (Path(final_root)/f'{stem}.json').is_file():
         publish(Path(final_root)/f'{stem}.json', value)
     guard(Path(final_root)/f'{stem}.md').write_text(render(value), encoding='utf-8')
@@ -1252,8 +1500,26 @@ def preflight(root, final_root, runtime, panel, map_module=None):
     return cfg, binding, dict(binding=binding, exposure=exposure, budget=budget, map_api=maps, runner=runner)
 
 
+def alias_of(base):
+    return dict(native='NATIVE', mappo_u0='U0', mappo_frozen='A')[base]
+
+
+def _settle(final_root, arms, status, step, *, poll, timeout, sleep):
+    """F12: wait until every named executor arm is bound or explicitly declared unavailable."""
+    def settled():
+        state = comparators(final_root, arms)
+        if state['pending']:
+            raise NotReady(f'{step}: results stay sealed until bound or declared unavailable: '
+                           'pending '+', '.join(state['pending']))
+        return state
+    return fe.wait(step, settled, status, poll=poll, timeout=timeout, sleep=sleep)
+
+
 def execute(*, root, final_root, runtime, panel, allow_missing=(), workers=24, poll=60, gate_timeout=7*86400,
-            replicated_timeout=0, mappo_timeout=0, map_module=None, dry_run=False, sleep=time.sleep):
+            replicated_timeout=0, comparator_timeout=7*86400, map_module=None, dry_run=False, sleep=time.sleep):
+    """CONFIG -> GATE (u24 sealed, safety clean, A/B/R bound by sha) -> U0 bound/declared -> claim 3a
+    episodes (A, B, R, U0, NATIVE) + decisions -> sealed CLAIM3A tables -> for each MAPPO comparator:
+    bound/declared -> its wave -> its own sealed CLAIM3B tables. Returns {analysis: value}."""
     root, final_root = Path(root), Path(final_root)
     if run_plan(final_root) is None:
         raise Blocked('RUN_PLAN.json missing: run register first')
@@ -1274,22 +1540,28 @@ def execute(*, root, final_root, runtime, panel, allow_missing=(), workers=24, p
                 raise Blocked(f'{name}: {missing[name]} (pass --allow-missing {name} to proceed without it)')
         if not do_decisions:   # never blocks the evaluation (MAIN): tabulated as unavailable
             missing['DECISIONS'] = 'runner has no decision_branch (per-decision branches not built)'
-        status(current, 'PASS', dict(report, arms=arms, missing=missing, mappo=mappo_binding(final_root)))
+        status(current, 'PASS', dict(report, arms=arms, missing=missing, comparators=comparators(final_root)))
         current = 'GATE'
-        gated = fe.wait(current, lambda: gate(root, cfg, runtime, binding), status, poll=poll, timeout=gate_timeout,
-                        sleep=sleep)
+        gated = fe.wait(current, lambda: gate(root, cfg, runtime, binding, final_root), status, poll=poll,
+                        timeout=gate_timeout, sleep=sleep)
         if not (final_root/'GATE_PASS.json').is_file():
             publish(final_root/'GATE_PASS.json', seal(gated, 'receipt_sha256'))
         status(current, 'PASS', gated)
-        current = 'EPISODES'
-        mappo = mappo_binding(final_root)
-        if mappo is not None:
-            arms.append('MAPPO')
-        specs = {arm: episode_specs(arm, panel, cfg, root, base, mappo) for arm in arms}
+        kw = dict(root=root, final_root=final_root, cfg=cfg, runtime=runtime, workers=workers, base=base)
+        # ---------------------------------------------------------------- claim 3a
+        current = 'U0'
+        u0 = _settle(final_root, ('U0',), status, current, poll=poll, timeout=comparator_timeout, sleep=sleep)
+        bindings = dict(u0['bound'])
+        if 'U0' in bindings:
+            arms.append('U0')
+        else:
+            missing['U0'] = f'declared unavailable: {u0["declared"]["U0"]["reason"]}'
+        status(current, 'PASS', dict(bound=sorted(bindings), declared=sorted(u0['declared'])))
+        current = 'EPISODES_3A'
+        specs = {arm: episode_specs(arm, panel, cfg, root, base, bindings.get(arm)) for arm in arms}
         if any(specs[arm][0]['checkpoint']['file_sha256'] != gated['checkpoint_sha256'][arm] for arm in ARMS):
             raise Blocked('u24 checkpoint changed after the gate')
         status(current, 'RUNNING', dict(arms=arms, workers=workers))
-        kw = dict(root=root, final_root=final_root, cfg=cfg, runtime=runtime, workers=workers, base=base)
         done, sources = run_waves([(arm, 'episode', specs[arm]) for arm in arms], **kw)
         episodes = {arm: {r['world_id']: r for r in done[arm]} for arm in arms}
         status(current, 'PASS', dict(arms=sorted(episodes)))
@@ -1302,39 +1574,55 @@ def execute(*, root, final_root, runtime, panel, allow_missing=(), workers=24, p
             sources.update(more)
             decisions = {arm: done[f'DECISIONS_{arm}'] for arm in DECISION_ARMS}
             status(current, 'PASS', {arm: len(v) for arm, v in decisions.items()})
-        if mappo is None:
-            current = 'MAPPO'
-
-            def bound():
-                if mappo_binding(final_root) is None:
-                    raise NotReady('waiting for the MAPPO comparator binding (N7 retrain; fallback only by decision)')
-                return mappo_binding(final_root)
-            try:
-                mappo = fe.wait(current, bound, status, poll=poll, timeout=mappo_timeout, sleep=sleep) if mappo_timeout > 0 else bound()
-            except NotReady:
-                missing['MAPPO'] = 'MAPPO comparator not bound; re-run after bind-mappo (published waves are reused)'
-            if mappo is not None:
-                done, more = run_waves([('MAPPO', 'episode', episode_specs('MAPPO', panel, cfg, root, base, mappo))], **kw)
-                sources.update(more)
-                episodes['MAPPO'] = {r['world_id']: r for r in done['MAPPO']}
-                status(current, 'PASS', dict(binding_sha256=mappo['binding_sha256'], kind=mappo['kind']))
-        alias_of = 'NATIVE' if base == 'native' else 'MAPPO'
-        if alias_of in missing:
-            missing['BASE'] = f'BASE is {alias_of}: {missing[alias_of]}'
-        current = 'TABLES'
+        if alias_of(base) in missing:
+            missing['BASE'] = f'BASE is {alias_of(base)}: {missing[alias_of(base)]}'
 
         def replicated_receipt():
             if not (root/REPLICATED_FILE).is_file():
-                raise NotReady('waiting for the clean4 replicated u24 receipt (descriptive context)')
+                raise NotReady('waiting for the clean run replicated u24 receipt (descriptive context)')
         if replicated_timeout > 0:
             try:
                 fe.wait('MONITOR_RECEIPTS', replicated_receipt, status, poll=poll, timeout=replicated_timeout, sleep=sleep)
             except NotReady:
                 pass   # tabulated as missing; ``analyse`` re-tabulates later with zero physics
-        value = tables(root=root, final_root=final_root, panel=panel, base=base, episodes=episodes,
-                       decisions=decisions, sources=sources, missing=missing, dry_run=dry_run, mappo=mappo)
-        status(current, 'PASS', dict(analysis_sha256=value['analysis_sha256'], present=value['present']))
-        return value
+        current = 'TABLES_3A'
+        out = {}
+        out['claim3a'] = tables(root=root, final_root=final_root, panel=panel, base=base, episodes=episodes,
+                                decisions=decisions, sources=sources, missing=dict(missing, **{
+                                    a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS}),
+                                dry_run=dry_run, comparators=bindings, scope='claim3a', stem='CLAIM3A_TABLES')
+        status(current, 'PASS', dict(analysis_sha256=out['claim3a']['analysis_sha256'], present=out['claim3a']['present']))
+        # ---------------------------------------------------------------- claim 3b, one comparator at a time
+        for arm in COMPARATOR_ARMS:
+            current = f'COMPARATOR_{arm}'
+            state = _settle(final_root, (arm,), status, current, poll=poll, timeout=comparator_timeout, sleep=sleep)
+            if arm in state['declared']:
+                d = state['declared'][arm]
+                note = seal(dict(schema=SCHEMA+'.claim3b', scope=f'claim3b_{arm}', status='declared unavailable',
+                                 declaration=d, panel_sha256=panel['panel_sha256']), 'analysis_sha256')
+                if not (final_root/f'CLAIM3B_{arm}_UNAVAILABLE.json').is_file():
+                    publish(final_root/f'CLAIM3B_{arm}_UNAVAILABLE.json', note)
+                out[f'claim3b_{arm}'] = note
+                status(current, 'PASS', dict(declared=d['declaration_sha256']))
+                continue
+            bound = state['bound'][arm]
+            if arm == 'MAPPO_LANE' and not report['runner'].get('lane'):
+                if arm not in allow_missing:
+                    raise Blocked('MAPPO_LANE bound but the runner has no lane episode (--allow-missing MAPPO_LANE)')
+                status(current, 'SKIPPED', dict(reason='runner has no lane-capable MAPPO episode'))
+                continue
+            done, more = run_waves([(arm, 'episode', episode_specs(arm, panel, cfg, root, base, bound))], **kw)
+            sources.update(more)
+            both = dict(episodes, **{arm: {r['world_id']: r for r in done[arm]}})
+            out[f'claim3b_{arm}'] = tables(
+                root=root, final_root=final_root, panel=panel, base=base, episodes=both, decisions=decisions,
+                sources=sources, missing=dict(missing, **{a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS if a != arm}),
+                dry_run=dry_run, comparators=dict(bindings, **{arm: bound}), scope=f'claim3b_{arm}',
+                stem=f'CLAIM3B_{arm}_TABLES')
+            status(current, 'PASS', dict(analysis_sha256=out[f'claim3b_{arm}']['analysis_sha256']))
+        current = 'DONE'
+        status(current, 'PASS', {k: v['analysis_sha256'] for k, v in out.items()})
+        return out
     except BaseException as error:
         status(current, 'FAILED', dict(error=repr(error), traceback=traceback.format_exc()))
         raise
@@ -1354,12 +1642,12 @@ def register(*, root, final_root, runtime, panel, base=None):
     plan = seal(dict(schema=SCHEMA+'.plan', created=datetime.now(timezone.utc).isoformat(), clean4_root=str(root),
                      config_sha256=digest(cfg), binding=binding, panel_sha256=panel['panel_sha256'],
                      contract_sha256=digest(panel['contract']), budget=budget, quote=quote(binding['base']),
-                     amendments=[dict(rule=MAPPO_AUTHORITY, arms=list(EPISODE_ARMS),
-                                      base_alias='NATIVE' if binding['base'] == 'native' else 'MAPPO',
-                                      quote_note='5 distinct arms for either base; supersedes the 4-arm native '
-                                                 'quote written into panel v2')],
-                     authority='MAIN decision 2026-11-06 (N6): only clean4 final-evaluation runner; debit clean4 '
-                               'v2v_final 690,000 sim-s',
+                     amendments=[dict(rule=MAPPO_AUTHORITY, allocation=ALLOCATION_AUTHORITY, arms=list(EPISODE_ARMS),
+                                      base_alias=alias_of(binding['base']),
+                                      quote_note='7 distinct arms for either base + 8-world decision branches + F11 '
+                                                 'parity; supersedes the 4-arm native quote written into panel v2')],
+                     authority=('MAIN decision 2026-11-06 (N6): only clean4 final-evaluation runner; debit clean4 '
+                                'v2v_final; '+ALLOCATION_AUTHORITY),
                      rule=('frozen u24 arms + base/native comparators on the registered wz3to2 evaluation panel; '
                            'descriptive; never gates clean4; one attempt per wave (never replayed)')), 'receipt_sha256')
     publish(final_root/'RUN_PLAN.json', plan)
@@ -1373,7 +1661,7 @@ def check(*, root, final_root, runtime, panel, map_module=None):
         out.update(report, quote=quote(binding['base']))
         out['run_plan'] = (run_plan(final_root) or {}).get('receipt_sha256') if Path(final_root).is_dir() else None
         try:
-            out['gate'] = gate(root, cfg, runtime, binding)
+            out['gate'] = gate(root, cfg, runtime, binding, final_root)
         except (NotReady, Blocked) as error:
             out['gate'] = dict(status=type(error).__name__, reason=str(error))
         out['status'] = 'PASS'
@@ -1426,16 +1714,23 @@ def fake_replicated(root):
             records=records, dry_run=True, **analysis), 'receipt_sha256'))
 
 
-def bind_fake_mappo(out, final_root):
-    """Dry run only: a stand-in executor file bound as the retrained comparator."""
-    fake = Path(out)/'fake_mappo_wz3to2.pt'
+def bind_fake_mappo(out, final_root, arm='MAPPO_SPEED'):
+    """Dry run only: a stand-in executor file bound as a retrained comparator."""
+    import torch
+    fake = Path(out)/f'fake_{arm.lower()}_wz3to2.pt'
     if not fake.exists():
-        fake.write_bytes(b'dry-run stand-in, not a MAPPO export')
-    return bind_mappo(final_root=final_root, path=fake, sha256=file_sha(fake), kind='retrained_wz3to2',
-                      authority='DRY RUN ONLY - not N7', check=dict(status='dry run'))
+        policy = {'actor.0.weight': torch.zeros(1)}
+        if arm == 'MAPPO_LANE':
+            policy['lane_head.weight'] = torch.zeros(1)
+        torch.save(dict(format='c4_dreamer/3', trainer='mappo', iteration=168 if arm == 'MAPPO_SPEED' else 999,
+                        lane_control='native' if arm == 'MAPPO_SPEED' else 'policy', lane_head=arm == 'MAPPO_LANE',
+                        policy=policy, note='dry-run stand-in, not a MAPPO export'), fake)
+    kind = next(iter(MAPPO_KINDS[arm]))
+    return bind_mappo(final_root=final_root, path=fake, sha256=file_sha(fake), kind=kind, arm=arm,
+                      authority='DRY RUN ONLY - not N7', check=dict(status='dry run'), dry_run=arm in REQUIRED_SHA)
 
 
-def dry_run(*, out, panel, base='mappo_u0', replicated=True):
+def dry_run(*, out, panel, base='mappo_frozen', replicated=True):
     """Full launcher path with fake physics on the REAL registered panel. Writes only under ``out``."""
     out = guard(Path(out))
     if out.exists() and any(out.iterdir()):
@@ -1447,30 +1742,38 @@ def dry_run(*, out, panel, base='mappo_u0', replicated=True):
     runtime = FakeRuntime()
     final_root = out/'final_root'
     plan = register(root=root, final_root=final_root, runtime=runtime, panel=panel)
-    bind_fake_mappo(out, final_root)
+    for arm in BOUND_ARMS:
+        bind_fake_mappo(out, final_root, arm)
     value = execute(root=root, final_root=final_root, runtime=runtime, panel=panel, poll=0, dry_run=True)
     charged = sum(r['sim_s'] for r in fe.ledger_rows(root) if r['phase'] == PHASE)
     return dict(status='PASS', new_sim_s=0, physics=False, out=str(out), final_root=str(final_root), base=base,
-                analysis_sha256=value['analysis_sha256'], present=value['present'], calls=runtime.calls,
-                fake_v2v_final_sim_s=charged, quote=plan['quote'], tables=str(final_root/'FINAL_TABLES.md'))
+                target='clean5a (dry)',
+                analyses={k: v['analysis_sha256'] for k, v in value.items()},
+                present={k: v.get('present') for k, v in value.items()}, calls=runtime.calls,
+                fake_v2v_final_sim_s=charged, quote=plan['quote'],
+                tables=sorted(str(x) for x in final_root.glob('CLAIM3*_TABLES.md')))
 
 
 # ---------------------------------------------------------------- CLI
 
 def _analyse_published(root, final_root, runtime, panel):
+    """Zero physics: re-tabulate every analysis whose arms are published (3a; each bound 3b)."""
     cfg = runtime.config(root)
     plan = run_plan(final_root)
     if plan is None:
         raise Blocked('no RUN_PLAN.json')
     base = plan['binding']['base']
-    mappo = mappo_binding(final_root)
+    state = comparators(final_root)
+    bindings = state['bound']
     episodes, sources, missing = {}, {}, {}
     for arm in EPISODE_ARMS:
         path = Path(final_root)/f'WAVE_{arm}.json'
         if not path.is_file():
             missing[arm] = 'no published wave receipt'
             continue
-        specs = episode_specs(arm, panel, cfg, root, base, mappo)
+        if arm in BOUND_ARMS and arm not in bindings:
+            raise Blocked(f'{arm} wave published without a binding')
+        specs = episode_specs(arm, panel, cfg, root, base, bindings.get(arm))
         value = verify(read(path), 'receipt_sha256', path.name)
         episodes[arm] = {r['world_id']: check_episode(r, s) for r, s in zip(value['records'], specs)}
         sources[arm] = dict(source=str(path), receipt_sha256=value['receipt_sha256'])
@@ -1484,20 +1787,31 @@ def _analyse_published(root, final_root, runtime, panel):
             specs = decision_specs(arm, episodes[arm], panel)
             decisions[arm] = [check_branch(r, s) for r, s in zip(value['records'], specs)]
             sources[f'DECISIONS_{arm}'] = dict(source=str(path), receipt_sha256=value['receipt_sha256'])
-    if len(decisions) != len(DECISION_ARMS):
+    decisions = decisions if len(decisions) == len(DECISION_ARMS) else None
+    if decisions is None:
         missing['DECISIONS'] = 'no published decision waves'
-    alias_of = 'NATIVE' if base == 'native' else 'MAPPO'
-    if alias_of in missing:
-        missing['BASE'] = f'BASE is {alias_of}: {missing[alias_of]}'
-    return tables(root=root, final_root=final_root, panel=panel, base=base, episodes=episodes,
-                  decisions=decisions if len(decisions) == len(DECISION_ARMS) else None, sources=sources, missing=missing,
-                  mappo=mappo)
+    if alias_of(base) in missing:
+        missing['BASE'] = f'BASE is {alias_of(base)}: {missing[alias_of(base)]}'
+    core = {a: v for a, v in episodes.items() if a in CLAIM3A_ARMS}
+    out = dict(claim3a=tables(root=root, final_root=final_root, panel=panel, base=base, episodes=core, decisions=decisions,
+                              sources=sources, missing=dict(missing, **{a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS}),
+                              comparators={a: b for a, b in bindings.items() if a == 'U0'}, scope='claim3a',
+                              stem='CLAIM3A_TABLES'))
+    for arm in COMPARATOR_ARMS:
+        if arm in episodes:
+            out[f'claim3b_{arm}'] = tables(
+                root=root, final_root=final_root, panel=panel, base=base, episodes=dict(core, **{arm: episodes[arm]}),
+                decisions=decisions, sources=sources,
+                missing=dict(missing, **{a: 'claim 3b (separate seal)' for a in COMPARATOR_ARMS if a != arm}),
+                comparators={a: b for a, b in bindings.items() if a in ('U0', arm)}, scope=f'claim3b_{arm}',
+                stem=f'CLAIM3B_{arm}_TABLES')
+    return out
 
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument('command', choices=('register-panel', 'verify-panel', 'quote', 'check', 'register', 'bind-mappo',
-                                       'run', 'analyse', 'dry-run'))
+    p.add_argument('command', choices=('register-panel', 'verify-panel', 'quote', 'check', 'register', 'bind-arms',
+                                       'bind-mappo', 'declare-unavailable', 'run', 'analyse', 'dry-run'))
     p.add_argument('--root', default=ROOT)
     p.add_argument('--final-root', default=FINAL_ROOT)
     p.add_argument('--panel', default=str(PANEL_FILE))
@@ -1512,12 +1826,19 @@ def main(argv=None):
     p.add_argument('--out', help='dry-run: empty output directory')
     p.add_argument('--mappo-path', help='bind-mappo: MAPPO executor checkpoint (N7 retrain or the d9042cc5 fallback)')
     p.add_argument('--mappo-sha256', help='bind-mappo: its full sha256 (verified now and at every load)')
-    p.add_argument('--mappo-kind', choices=sorted(MAPPO_KINDS), help='bind-mappo: retrained_wz3to2 | u0_transferred_not_retrained')
+    p.add_argument('--arm', choices=BOUND_ARMS, default='MAPPO_SPEED', help='bind-mappo/declare-unavailable: U0 or a comparator')
+    p.add_argument('--a-sha', help='bind-arms: A u24 checkpoint sha256')
+    p.add_argument('--b-sha', help='bind-arms: B u24 checkpoint sha256')
+    p.add_argument('--r-sha', help='bind-arms: R u24 checkpoint sha256')
+    p.add_argument('--mappo-kind', choices=sorted({k for v in MAPPO_KINDS.values() for k in v}),
+                   help='bind-mappo: retrained_wz3to2 | u0_transferred_not_retrained (MAPPO_SPEED), lane_retrained_wz3to2 (MAPPO_LANE)')
+    p.add_argument('--reason', help='declare-unavailable: why the comparator cannot be evaluated')
     p.add_argument('--authority', help='bind-mappo: verbatim message/decision (e.g. N7 hand-off or MAIN fallback decision)')
-    p.add_argument('--mappo-wait', type=int, default=0, help='run: seconds to wait for a MAPPO binding after the other arms')
+    p.add_argument('--comparator-wait', type=int, default=7*86400,
+                   help='run: seconds to wait (after the u24 gate) for every comparator to be bound or declared')
     a = p.parse_args(argv)
-    if a.workers < 1 or a.workers > 24:
-        p.error('workers must be 1..24 (shared 40-worker SUMO limit on cpuV)')
+    if a.workers < 1 or a.workers > MAX_WORKERS:
+        p.error(f'workers must be 1..{MAX_WORKERS} (cpuZ 48 cores)')
     if a.command == 'register-panel':
         path = guard(Path(a.panel))
         if path.exists():
@@ -1535,7 +1856,7 @@ def main(argv=None):
     else:
         panel = load_panel(a.panel)
         if a.command == 'dry-run':
-            result = dry_run(out=a.out, panel=panel, base=a.base or 'mappo_u0')
+            result = dry_run(out=a.out, panel=panel, base=a.base or 'mappo_frozen')
         elif a.command == 'check':
             result = check(root=a.root, final_root=a.final_root, runtime=Runtime(a.runner), panel=panel,
                            map_module=a.map_api)
@@ -1549,10 +1870,15 @@ def main(argv=None):
             except ImportError as error:
                 check_ = dict(status='not run', reason=repr(error))
             result = bind_mappo(final_root=a.final_root, path=a.mappo_path, sha256=a.mappo_sha256, kind=a.mappo_kind,
-                                authority=a.authority, check=check_)
+                                arm=a.arm, authority=a.authority, check=check_)
+        elif a.command == 'bind-arms':
+            result = bind_arms(final_root=a.final_root, shas=dict(A=a.a_sha, B=a.b_sha, R=a.r_sha), authority=a.authority)
+        elif a.command == 'declare-unavailable':
+            result = declare_unavailable(final_root=a.final_root, arm=a.arm, authority=a.authority, reason=a.reason)
         elif a.command == 'analyse':
             value = _analyse_published(a.root, a.final_root, Runtime(a.runner), panel)
-            result = dict(analysis_sha256=value['analysis_sha256'], present=value['present'], missing=value['missing'])
+            result = {k: dict(analysis_sha256=v['analysis_sha256'], present=v.get('present'), missing=v.get('missing'))
+                      for k, v in value.items()}
         else:
             import fcntl
             if run_plan(a.final_root) is None:
@@ -1563,9 +1889,10 @@ def main(argv=None):
                         replace=True)
                 value = execute(root=a.root, final_root=a.final_root, runtime=Runtime(a.runner), panel=panel,
                                 allow_missing=tuple(x for x in a.allow_missing.split(',') if x), workers=a.workers,
-                                poll=a.poll, replicated_timeout=a.replicated_wait, mappo_timeout=a.mappo_wait,
+                                poll=a.poll, replicated_timeout=a.replicated_wait, comparator_timeout=a.comparator_wait,
                                 map_module=a.map_api)
-                result = dict(analysis_sha256=value['analysis_sha256'], present=value['present'], missing=value['missing'])
+                result = {k: dict(analysis_sha256=v['analysis_sha256'], present=v.get('present'), missing=v.get('missing'))
+                          for k, v in value.items()}
     print(json.dumps(result, indent=1, sort_keys=True, default=str))
 
 
