@@ -147,9 +147,9 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     result = nm.dry_run(out=tmp_path/'out', panel=panel, base=base)
     assert result['status'] == 'PASS' and result['new_sim_s'] == 0 and result['physics'] is False
     assert set(result['analyses']) == {'claim3a', 'claim3b_MAPPO_SPEED', 'claim3b_MAPPO_LANE', 'claim3c'}
-    assert result['present']['claim3a'] == ['B', 'A', 'R', 'RULE', 'U0', 'NATIVE']
-    assert result['present']['claim3b_MAPPO_SPEED'] == ['B', 'A', 'R', 'RULE', 'U0', 'MAPPO_SPEED', 'NATIVE']
-    assert result['present']['claim3c'] == ['B', 'R', 'RULE', 'U0', 'NATIVE']
+    assert result['present']['claim3a'] == ['B', 'A', 'R', 'RULE', 'RULE_FAIR', 'U0', 'NATIVE']
+    assert result['present']['claim3b_MAPPO_SPEED'] == ['B', 'A', 'R', 'RULE', 'RULE_FAIR', 'U0', 'MAPPO_SPEED', 'NATIVE']
+    assert result['present']['claim3c'] == ['B', 'R', 'RULE', 'RULE_FAIR', 'U0', 'NATIVE']
     assert set(result['secondary']) == set(result['analyses'])                    # u24 SECONDARY, same panels
     runs = [c for c in result['calls'] if c[0] == 'run']
     # pre-run NATIVE/U0/RULE (3a + 3c) in chunks of 2 x 16; u12 PRIMARY: only B/R (+ 3c B/R) - A is the frozen U0
@@ -157,20 +157,20 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     assert runs[0] == ('run', 2, 2)                                   # the one-episode logcheck (NATIVE, RULE)
     runs = runs[1:]
     k = result['prerun']['rounds']
-    assert result['prerun']['status'] == 'PASS' and k == -(-3*(96+24)//32)
+    assert result['prerun']['status'] == 'PASS' and k == -(-4*(96+24)//32)
     acc, i = 0, 0
-    while acc < 3*(96+24):
+    while acc < 4*(96+24):
         acc, i = acc+runs[i][1], i+1
     pre, runs = runs[:i], runs[i:]
     # MAIN process rule: every dispatch = one canary job per arm (own processes) verified, then the rest (16 workers)
-    assert acc == 3*(96+24) and all(r[2] == 16 for r in pre[1::2]) and all(r[1] == r[2] <= 3 for r in pre[0::2])
+    assert acc == 4*(96+24) and all(r[2] == 16 for r in pre[1::2]) and all(r[1] == r[2] <= 4 for r in pre[0::2])
     assert runs == ([('run', 2, 2), ('run', 2*96+2*24-2, 24)]
                     + [('run', 1, 1), ('run', 3, 24), ('run', 1, 1), ('run', 95, 24)]*2
                     + [('run', 2, 2), ('run', 2*96+2*24-2, 24)])
     assert {c[1] for c in result['calls'] if c[0] == 'reserve'} == {'v2v_final', 'v2v_final_prerun', 'v2v_final_logcheck'}
-    assert result['fake_prerun_sim_s'] == nm.prerun_cap() == 432_000 == result['quote']['prerun_sim_s']
+    assert result['fake_prerun_sim_s'] == nm.prerun_cap() == 576_000 == result['quote']['prerun_sim_s']
     assert (result['fake_v2v_final_sim_s']+result['fake_prerun_sim_s'] == result['quote']['total_ceiling_sim_s']
-            == 1_241_760 <= nm.ALLOCATION_SIM_S == 1_600_000)
+            == 1_385_760 <= nm.ALLOCATION_SIM_S == 1_600_000)
     final_root = Path(result['final_root'])
     alias = dict(mappo_frozen='A', mappo_u0='U0', native='NATIVE')[base]
     claim3a = json.loads((final_root/'CLAIM3A_TABLES_u012.json').read_text())
@@ -195,11 +195,18 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     assert t['synergy']['per_decision']['status'] == 'unavailable'                 # F7 not built (MAIN)
     assert all(t['synergy']['decision_activity'][arm]['worlds'] == 96 for arm in ('B', 'R'))
     assert t['arms']['A']['label'].startswith('A = U0')
+    cp = t['co_primary']                                               # owner fairness decision (04:0x)
+    assert set(cp['groups']['groups']) == set(nm.CO_PRIMARY_GROUPS) and cp['groups']['reference'] == 'U0'
+    assert cp['groups']['vehicles_missing_from_reference'] == {'B': 0, 'A': 0}
+    assert set(cp['groups']['sensitivity_own_arm_labels']['groups']) == set(nm.CO_PRIMARY_GROUPS)
+    assert cp['total_B_minus_A']['diff'] == pytest.approx(t['registered_B_A_R']['rows']['B-A']['diff'])
+    assert cp['meets'] == (cp['total_lower'] and cp['groups']['all_pass'])
+    assert 'RULE_FAIR' in t['arms'] and t['arms']['RULE_FAIR']['label'].startswith('RULE_FAIR')
     sec = t['secondary']                                              # SECONDARY report-only (amendment 5)
     assert sec['status'].startswith('report-only') and sec['bootstrap']['reps'] == 200      # dry run: fewer reps
     assert set(sec['metrics']) == {m for _, m, _ in nm.SECONDARY_METRICS} and set(sec['delay_by_origin_s']) == {'main_in', 'ramp_in'}
     gini = sec['metrics']['delay_gini']
-    assert set(gini['vs']) == {'BASE', 'NATIVE', 'U0', 'RULE'} and len(gini['per_world']['B']) == 96
+    assert set(gini['vs']) == {'BASE', 'NATIVE', 'U0', 'RULE', 'RULE_FAIR'} and len(gini['per_world']['B']) == 96
     assert set(gini['vs']['NATIVE']) == set(t['arms'])-{'NATIVE'} and 'mean_ci' in gini['vs']['NATIVE']['B']
     assert t['total_benefit']['vs_RULE']['rows']['A'] == t['total_benefit']['vs_RULE']['rows']['U0']   # A is U0
     ps = t['per_seed']
@@ -244,7 +251,7 @@ def test_runner_without_decision_branches_never_blocks_the_evaluation(panel, tmp
     f = make(tmp_path, panel)
     value = nm.execute(root=f['root'], final_root=f['final_root'], runtime=nm.FakeRuntime(runner=dict(decisions=False)),
                        panel=panel, poll=0, dry_run=True)['claim3a']
-    assert value['present'] == ['B', 'A', 'R', 'RULE', 'U0', 'NATIVE']
+    assert value['present'] == ['B', 'A', 'R', 'RULE', 'RULE_FAIR', 'U0', 'NATIVE']
     assert value['tables']['synergy']['per_decision']['status'] == 'unavailable'
     assert value['tables']['synergy']['decision_activity']['B']['worlds'] == 96
     assert value['missing']['DECISIONS'].startswith('unavailable (not built): MAIN decision')
@@ -253,7 +260,7 @@ def test_runner_without_decision_branches_never_blocks_the_evaluation(panel, tmp
 
 def test_the_real_runner_module_satisfies_the_contract():
     status = nm.Runtime().runner_status()
-    assert status == dict(ok=True, native=True, decisions=False, lane=True, rule=True, parity=True, reason=None)
+    assert status == dict(ok=True, native=True, decisions=False, lane=True, rule=True, rule_fair=True, parity=True, reason=None)
     status = nm.Runtime('tools.coopmwm.no_such_nm_runner').runner_status()
     assert status['ok'] is False and 'not importable' in status['reason']
 
@@ -331,7 +338,7 @@ def test_register_records_an_operator_declared_base_for_an_unbound_config(panel,
     write_config(f, cfg)
     plan = nm.register(root=f['root'], final_root=f['final_root'], runtime=f['runtime'], panel=panel, base='native')
     assert plan['binding']['base'] == 'native' and set(plan['binding']['unbound']) == {'base_controller', 'cell'}
-    assert plan['quote']['total_ceiling_sim_s'] == 1_241_760 and plan['budget']['sub_cap'] == 1_600_000
+    assert plan['quote']['total_ceiling_sim_s'] == 1_385_760 and plan['budget']['sub_cap'] == 1_600_000
     assert plan['amendments'][0]['base_alias'] == 'NATIVE' and plan['amendments'][0]['arms'] == list(nm.EPISODE_ARMS)
     _, binding, _ = nm.preflight(f['root'], f['final_root'], f['runtime'], panel)
     assert binding['base'] == 'native'
@@ -417,7 +424,7 @@ def test_missing_native_requires_explicit_exclusion(panel, tmp_path):
         nm.execute(runtime=runtime, **kw)
     assert not nm.fe.ledger_rows(f['root'])[3:]          # nothing charged beyond the fake training rows
     value = nm.execute(runtime=runtime, allow_missing=('NATIVE',), **kw)['claim3a']
-    assert value['present'] == ['B', 'A', 'R', 'RULE', 'U0']
+    assert value['present'] == ['B', 'A', 'R', 'RULE', 'RULE_FAIR', 'U0']
     assert value['tables']['total_benefit']['vs_NATIVE']['status'] == 'unavailable'
 
 
@@ -525,14 +532,14 @@ def test_budget_quote_fits_the_raised_v2v_final_allocation():
     for base in nm.BASES:
         q = nm.quote(base)                                        # clean5a: A = the frozen U0 alias
         need = q['need_ceiling']
-        assert q['prerun_sim_s'] == 3*(96+24)*1200 == 432_000 and q['decisions_ceiling_sim_s'] == need['decisions'] == 0
+        assert q['prerun_sim_s'] == 4*(96+24)*1200 == 576_000 and q['decisions_ceiling_sim_s'] == need['decisions'] == 0
         assert need['u012_B'] == need['u024_R'] == 96*1200 and need['u012_C3_B'] == need['u024_C3_R'] == 24*1200
         assert 'u012_A' not in need and need['episodes_MAPPO_SPEED'] == 96*1200 and q['parity_sim_s'] == 2*2*2*420 == 3_360
-        assert q['total_ceiling_sim_s'] == 432_000+2*2*(96+24)*1200+2*96*1200+3_360 == 1_241_760
-        assert q['allocation_sim_s'] == 1_600_000 and q['fits'] and q['margin_over_total'] == pytest.approx(.2885, abs=1e-4)
-        assert nm.ALLOCATION_SIM_S >= 1.15*(1_241_760+115_200+720)              # MAIN: >= 15% incl. write-offs
+        assert q['total_ceiling_sim_s'] == 576_000+2*2*(96+24)*1200+2*96*1200+3_360 == 1_385_760
+        assert q['allocation_sim_s'] == 1_600_000 and q['fits'] and q['margin_over_total'] == pytest.approx(.1546, abs=1e-4)
+        assert nm.ALLOCATION_SIM_S >= q['total_ceiling_sim_s']
         full = nm.quote(base, a_alias=False)                      # A simulated at both updates
-        assert full['total_ceiling_sim_s'] == 1_241_760+2*96*1200 and full['fits']
+        assert full['total_ceiling_sim_s'] == 1_385_760+2*96*1200 and not full['fits']
     with pytest.raises(nm.Blocked):
         nm.quote('lane_on')
 
@@ -616,7 +623,7 @@ def test_claim3a_opens_first_and_each_claim3b_only_after_its_comparator_is_bound
     with pytest.raises(nm.NotReady, match='pending MAPPO_SPEED'):
         nm.execute(runtime=f['runtime'], **kw)
     claim3a = json.loads((f['final_root']/'CLAIM3A_TABLES_u012.json').read_text())   # 3a opened, sealed on its own
-    assert claim3a['present'] == ['B', 'A', 'R', 'RULE', 'U0', 'NATIVE']
+    assert claim3a['present'] == ['B', 'A', 'R', 'RULE', 'RULE_FAIR', 'U0', 'NATIVE']
     assert not list(f['final_root'].glob('WAVE_MAPPO_*.json')) and not list(f['final_root'].glob('CLAIM3B_*'))
     with pytest.raises(nm.Blocked, match='authority and reason'):
         nm.declare_unavailable(final_root=f['final_root'], arm='MAPPO_LANE', authority='MAIN', reason=' ')
@@ -630,7 +637,7 @@ def test_claim3a_opens_first_and_each_claim3b_only_after_its_comparator_is_bound
     # only the new comparator: its F11 parity (4 traces) and its wave
     assert [c for c in runtime.calls if c[0] == 'run'] == [('run', 1, 1), ('run', 3, 24), ('run', 1, 1), ('run', 95, 24)]
     assert value['claim3a']['analysis_sha256'] == claim3a['analysis_sha256']     # 3a reproduces from its receipts
-    assert value['claim3b_MAPPO_SPEED']['present'] == ['B', 'A', 'R', 'RULE', 'U0', 'MAPPO_SPEED', 'NATIVE']
+    assert value['claim3b_MAPPO_SPEED']['present'] == ['B', 'A', 'R', 'RULE', 'RULE_FAIR', 'U0', 'MAPPO_SPEED', 'NATIVE']
     lane = json.loads((f['final_root']/'CLAIM3B_MAPPO_LANE_UNAVAILABLE.json').read_text())
     assert lane['status'] == 'declared unavailable' and 'S-MAPPOWZL' in lane['declaration']['reason']
     published = nm._analyse_published(f['root'], f['final_root'], runtime, panel)
@@ -744,7 +751,8 @@ def run_prerun(f, runtime=None, **kw):
 def test_prerun_runs_native_u0_rule_sealed_in_its_own_ledger(panel, tmp_path):
     f = prerun_fixture(tmp_path, panel, bind=False)
     plan, final_root = f['plan'], f['final_root']
-    assert plan['arms'] == ['NATIVE', 'U0', 'RULE'] and plan['cap_sim_s'] == 432_000 and plan['phase'] == 'v2v_final_prerun'
+    assert plan['arms'] == ['NATIVE', 'U0', 'RULE', 'RULE_FAIR'] and plan['cap_sim_s'] == 576_000
+    assert plan['phase'] == 'v2v_final_prerun'
     assert plan['rule']['rule_sha256'] == nm.RULE_SHA256 and plan['panel_3c_sha256'] == nm.PANEL_3C_SHA256
     plant = json.loads((final_root/nm.PRERUN_PLANT/'CONFIG.json').read_text())
     source = json.loads((f['root']/'CONFIG.json').read_text())
@@ -768,14 +776,14 @@ def test_prerun_runs_native_u0_rule_sealed_in_its_own_ledger(panel, tmp_path):
     assert rule['delay']['mean_s'] > 0 and rule['ttc']['pairs'] > 0 and rule['accel']['var'] > 0
     assert nm.prerun_logcheck(final_root=final_root, runtime=nm.FakeRuntime(), panel=panel) == check   # sealed, reused
     out = run_prerun(f, workers=44)
-    assert out['status'] == 'PASS' and out['sealed'] and out['chunk'] == 88 and out['charged_sim_s'] == 432_000+720
-    assert set(out['coverage']) == {'NATIVE', 'U0', 'RULE', 'C3_NATIVE', 'C3_U0', 'C3_RULE'}
+    assert out['status'] == 'PASS' and out['sealed'] and out['chunk'] == 88 and out['charged_sim_s'] == 576_000+720
+    assert set(out['coverage']) == {'NATIVE', 'U0', 'RULE', 'RULE_FAIR', 'C3_NATIVE', 'C3_U0', 'C3_RULE', 'C3_RULE_FAIR'}
     assert all(v['published'] == v['registered'] for v in out['coverage'].values())
     assert 'J_veh_s' not in json.dumps(out) and not list(final_root.glob('CLAIM*'))          # nothing opened (F12)
     assert not [r for r in nm.fe.ledger_rows(f['root']) if r['id'].startswith(nm.PREFIXES)]   # clean ledger untouched
     assert {r['phase'] for r in nm.fe.ledger_rows(final_root)} == {'v2v_final_prerun', 'v2v_final_logcheck'}
     again = nm.FakeRuntime()
-    assert run_prerun(f, again)['charged_sim_s'] == 432_000+720
+    assert run_prerun(f, again)['charged_sim_s'] == 576_000+720
     assert not [c for c in again.calls if c[0] in ('run', 'reserve')]                     # never re-run
     with pytest.raises(nm.Blocked, match='already started'):
         nm.bind_fake_mappo(tmp_path/'dry', final_root, 'U0', residual=final_root/nm.PRERUN_PLANT/'A_checkpoint_000.pt')
@@ -803,7 +811,7 @@ def test_prerun_stops_at_a_chunk_boundary_and_resumes(panel, tmp_path):
     (final_root/nm.STOP_PRERUN).unlink()
     second = nm.FakeRuntime()                         # e.g. cpuV, same absolute paths, fewer workers
     out = run_prerun(f, second, workers=16)
-    assert out['status'] == 'PASS' and out['charged_sim_s'] == 432_000+720
+    assert out['status'] == 'PASS' and out['charged_sim_s'] == 576_000+720
     assert [c[1] for c in second.calls if c[0] == 'run'][:2] == [1, 31]          # canary, then the rest of 32
     assert (final_root/'WAVE_NATIVE__0040-0071.json').is_file()
 
@@ -830,8 +838,8 @@ def test_main_run_reuses_the_prerun_only_on_the_same_plant_and_u0(panel, tmp_pat
     runtime = nm.FakeRuntime()
     value = nm.execute(root=f['root'], final_root=f['final_root'], runtime=runtime, panel=panel,
                        panel_3c=f['panel_3c'], poll=0, dry_run=True)
-    assert value['claim3a']['present'] == ['B', 'A', 'R', 'RULE', 'U0', 'NATIVE']
-    assert value['claim3c']['present'] == ['B', 'R', 'RULE', 'U0', 'NATIVE']
+    assert value['claim3a']['present'] == ['B', 'A', 'R', 'RULE', 'RULE_FAIR', 'U0', 'NATIVE']
+    assert value['claim3c']['present'] == ['B', 'R', 'RULE', 'RULE_FAIR', 'U0', 'NATIVE']
     assert not [r for r in nm.fe.ledger_rows(f['root']) if r['id'].startswith(nm.PREFIXES)]     # clean root never written
     clean = [r['id'] for r in nm.fe.ledger_rows(f['final_root']) if r['phase'] == 'v2v_final']
     assert not [i for i in clean if i.split('_')[1] in ('native', 'u0', 'rule')]          # reused, not re-run
@@ -841,7 +849,7 @@ def test_main_run_reuses_the_prerun_only_on_the_same_plant_and_u0(panel, tmp_pat
     assert total+432_000 <= nm.quote('mappo_frozen')['total_ceiling_sim_s'] <= nm.ALLOCATION_SIM_S
     again = nm._analyse_published(f['root'], f['final_root'], runtime, panel, f['panel_3c'])
     for k in ('claim3a', 'claim3c'):                  # zero-physics re-tabulation from the chunked receipts
-        strip = lambda x: {n: v for n, v in x.items() if n != 'secondary'}  # noqa: E731  (dry run: 200 secondary reps)
+        strip = lambda x: {n: v for n, v in x.items() if n not in ('secondary', 'co_primary')}  # noqa: E731  (dry: 200 reps)
         assert strip(again[k]['tables']) == strip(value[k]['tables']) and again[k]['present'] == value[k]['present']
 
 
@@ -1002,10 +1010,10 @@ def test_failed_chunk_is_replayed_once_only_by_authorisation_and_the_cap_amendme
     with pytest.raises(nm.Blocked, match='v2v_final_prerun cap'):
         run_prerun(f, nm.FakeRuntime(), workers=16)                 # 432,000 cannot hold the replay + the rest
     with pytest.raises(nm.Blocked, match='cap in'):
-        nm.amend_prerun_cap(final_root=final_root, cap_sim_s=600_000, authority='MAIN')
-    nm.amend_prerun_cap(final_root=final_root, cap_sim_s=480_000, authority='MAIN 2026-11-07: 432,000 -> 480,000')
+        nm.amend_prerun_cap(final_root=final_root, cap_sim_s=700_000, authority='MAIN')
+    nm.amend_prerun_cap(final_root=final_root, cap_sim_s=620_000, authority='MAIN 2026-11-07: sub-cap raise')
     out = run_prerun(f, nm.FakeRuntime(), workers=16)
-    assert out['status'] == 'PASS' and out['cap_sim_s'] == 480_000
+    assert out['status'] == 'PASS' and out['cap_sim_s'] == 620_000
     assert all(v['published'] == v['registered'] for v in out['coverage'].values())
     rows = [r['id'] for r in nm.fe.ledger_rows(final_root)]
     assert sum(r.endswith('#r1') for r in rows) == 20 and len(list(final_root.glob('RESERVED_NATIVE__0000-*.replay1.json'))) == 1
@@ -1045,7 +1053,7 @@ def test_a_failed_replay_round_needs_a_new_authorisation_and_a_fresh_dir(panel, 
         run_prerun(f, nm.FakeRuntime(), workers=8, chunk=10)
     rep = nm.authorize_replay(final_root=final_root, authority='MAIN 2', reason='round-1 replay failed (fresh dirs)')
     assert set(rep['rounds'].values()) == {2} and len(rep['jobs']) == 10
-    nm.amend_prerun_cap(final_root=final_root, cap_sim_s=530_000, authority='MAIN: 530,000')
+    nm.amend_prerun_cap(final_root=final_root, cap_sim_s=640_000, authority='MAIN: 640,000')
     out = run_prerun(f, nm.FakeRuntime(), workers=8, chunk=10)
     assert out['status'] == 'PASS'
     assert (final_root/'evaluation'/'nmfinal_native_0001__r2'/nm.VEHICLE_LOG).is_file()

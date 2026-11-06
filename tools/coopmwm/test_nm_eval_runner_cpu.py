@@ -133,8 +133,8 @@ def fake_plant(calls, moves_at):
 def test_runner_declares_the_contract():
     assert runner.MAP == 'wz3to2' and runner.NATIVE is True and callable(runner.episode)
     assert not hasattr(runner, 'decision_branch')            # per-decision branches not built: never faked
-    assert nm.Runtime().runner_status() == dict(ok=True, native=True, decisions=False, lane=True, rule=True, parity=True,
-                                                reason=None)
+    assert nm.Runtime().runner_status() == dict(ok=True, native=True, decisions=False, lane=True, rule=True, rule_fair=True,
+                                                parity=True, reason=None)
     assert runner.MAPPO_LANE is True and runner.RULE is True and runner.rule_digest() == nm.RULE_SHA256
 
 
@@ -647,3 +647,38 @@ def test_logcheck_runs_one_short_train_episode_per_path(env, monkeypatch, leverp
     assert calls[-1]['role'] == 'check' and calls[-1]['stop'] == 360 and NATIVE_JOBS[-1]['stop'] == 360
     with pytest.raises(ValueError, match='not allowed for role'):
         runner.logcheck(dict(spec, world=ms.world(989600, 3200, 0.6)), env['cfg'], env['tmp']/'work'/'heldout')
+
+
+
+def test_rule_fair_runs_the_exact_s_multicrit_rule_on_the_u0_episode(env, monkeypatch, leverprobe):
+    from tools.coopmwm import accel_plant, regimeu0_multicrit as mc
+    assert runner.multicrit_digest() == nm.RULE_FAIR_SHA256 and mc.STRATEGIES['wall_g_solo2'] == ('wall_g', 2)
+    applied = []
+    rows = [dict(vid=f'main.{lane}', is_cav=True, s_m=-1000.0+10*lane, v_mps=25.0, lane=lane) for lane in (0, 1, 2)]
+
+    def episode(job, *, controller_hook=None, policy_loader=None):
+        import tools.leverprobe.backend as lp
+        lp.setup('/home/ubuntu/e3final', job['checkpoint'])
+        policy_loader(job['weights'])
+        controller = RuleController()
+        controller_hook(controller, job, {})
+        commands = {r['vid']: 0.5 for r in rows}
+        for t in (300, 419, 420):
+            applied.append(controller.apply(rows, commands, t))
+        for t in range(300, 1200):
+            plant_tick(t)
+        return dict(totals=dict(team_delay_vs=50000.0, collisions=0, teleports=0, hard_brake=1))
+    monkeypatch.setattr(accel_plant, 'episode', episode)
+    final_root = env['tmp']/'dry'/'final_root'
+    nm.register(root=env['root'], final_root=final_root, runtime=nm.FakeRuntime(), panel=env['panel'])
+    u0 = nm.bind_fake_mappo(env['tmp']/'dry', final_root, 'U0', residual=env['root']/'A_checkpoint_000.pt')
+    spec = nm.episode_specs('RULE_FAIR', env['panel'], env['cfg'], env['root'], 'mappo_u0', None, u0)[0]
+    assert spec['job_id'] == 'nmfinal_rule_fair_0000' and spec['checkpoint']['rule'] == 'wall_g_solo2'
+    record = runner.episode(spec, env['cfg'], env['tmp']/'work'/spec['job_id'])
+    # wall_g: 22 m/s target, dmax 1.0 -> clip(22 - 25, -1.0, +1.0) = -1.0; held 120 s (still held at 419, released at 420)
+    assert applied[0] == {'main.0': dict(requested_raw=-1.0, acceleration_residual=-1.5, regime_rule='wall_g_solo2')}
+    assert 'main.0' in applied[1] and record['rule']['activations'] == 2
+    assert record['rule_sha256_loaded'] == nm.RULE_FAIR_SHA256 and nm.check_episode(record, spec)['rule']['strategy'] == 'wall_g_solo2'
+    monkeypatch.setattr(mc, 'WALL_G', dict(mc.WALL_G, v_w=21.0))
+    with pytest.raises(ValueError, match='differs from its registration'):
+        runner.episode(spec, env['cfg'], env['tmp']/'work'/'tampered')

@@ -68,14 +68,15 @@ A_ALIAS_LABEL = ('A = U0: the frozen control arm (no PPO update) carries the u0 
 ARMS = ('A', 'B', 'R')
 DECISION_ARMS = ('B', 'R')
 BASES = ('mappo_frozen', 'mappo_u0', 'native')   # clean5a: frozen S-MAPPOWZ snapshot base (A = base alone)
-ORDER = ('B', 'A', 'R', 'RULE', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
+ORDER = ('B', 'A', 'R', 'RULE', 'RULE_FAIR', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
 #: MAIN 2026-11-06 (FAIRAUDIT F6): 7 arms; BASE is an alias (U0 for a mappo_u0 base, NATIVE for native)
-EPISODE_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
+EPISODE_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
 COMPARATOR_ARMS = ('MAPPO_SPEED', 'MAPPO_LANE')        # claim 3b, one seal per comparator
 BOUND_ARMS = ('U0',)+COMPARATOR_ARMS                    # executors bound by path + sha256
-CLAIM3A_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'NATIVE')
+CLAIM3A_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'NATIVE')
 #: records of these arms carry the executor sha actually loaded (bound executors)
-EXECUTOR_ARMS = ('U0', 'RULE')+COMPARATOR_ARMS
+EXECUTOR_ARMS = ('U0', 'RULE', 'RULE_FAIR')+COMPARATOR_ARMS
+RULE_ARMS = ('RULE', 'RULE_FAIR')
 #: MAIN registration (pre-results): RULE = U0 + the solo2 rule always on (one CAV holding in SUMO lane 2
 #: with wall_h parameters, cooldown = hold) = the EXACT S-REGIMEU0 implementation (c4/imitreplay
 #: tools/coopmwm/regimeu0.py RuleHook('wall_h_solo2')): the hand-designed cooperation baseline.
@@ -83,7 +84,16 @@ RULE_STRATEGY = 'wall_h_solo2'
 RULE_LABEL = ('RULE: U0 + the S-REGIMEU0 wall_h_solo2 rule (one CAV holds in SUMO lane 2 at 15 m/s for 90 s, '
               'cooldown = hold), always on')
 #: arms independent of the clean5a training: pre-run (sealed) before clean5a launches
-PRERUN_ARMS = ('NATIVE', 'U0', 'RULE')
+PRERUN_ARMS = ('NATIVE', 'U0', 'RULE', 'RULE_FAIR')
+#: owner fairness decision (REGISTRATION 2026-11-07 04:0x, pre-results): RULE_FAIR = U0 + the EXACT S-MULTICRIT
+#: wall_g_solo2 rule always on (one lane-2 CAV holds 22 m/s for 120 s, dmax 1.0; c4/multicrit blob 4ff09522)
+RULE_FAIR_STRATEGY = 'wall_g_solo2'
+RULE_FAIR_LABEL = ('RULE_FAIR: U0 + the S-MULTICRIT wall_g_solo2 rule (one CAV holds in SUMO lane 2 at 22 m/s for '
+                   '120 s, dmax 1.0, cooldown = hold), always on')
+RULE_FAIR_SHA256 = 'a5fdf1c3bf3a9d0dc82a6c296bf09ea6ad4bfa51b288e9c378b4c1ebc9e10376'   # multicrit_digest()
+#: co-primary claim-3a criterion (owner decision 04:0x): B's total held-out delay lower than A's AND every group
+#: (origin lane 0/1/2 = WM lane at first observation; HDV; CAV) has a mean per-vehicle delay increase <= 10 s vs A
+GROUP_DELAY_MAX_S = 10.0
 PRERUN_PHASE = 'v2v_final_prerun'
 #: rule_digest() of the exact S-REGIMEU0 rule (sumo_lane, pick_wall, RuleHook, Recorder, constants);
 #: identical at c4/imitreplay 385c4b8f, 52248a4b and d02228cf (blob 2e267403 / imitreplay d5042c33)
@@ -111,7 +121,7 @@ PRERUN_AUTHORITY = ('MAIN registration 2026-11-06 (pre-results): PRE-RUN NATIVE,
 #: MAIN registration (pre-results): secondary claim 3c "condition-aware: no harm in light traffic" -
 #: B, R, U0, NATIVE on 24 held-out worlds of the D2400_p60 cell (seeds 989600-989623, N1 world());
 #: separate seal, opens with 3a. clean5a's base is u0 (d9042cc5), so A = U0 (BASE alias U0).
-CLAIM3C_ARMS = ('B', 'R', 'U0', 'RULE', 'NATIVE')
+CLAIM3C_ARMS = ('B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'NATIVE')
 CLAIM3C_CELL = dict(demand=2400, penetration=0.6)
 CLAIM3C_WORLDS = 24
 FROZEN_MAPPO_SHA = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca'
@@ -924,14 +934,14 @@ def episode_specs(arm, panel, cfg, root, base, binding=None, u0=None, update=UPD
     if arm in ARMS:
         path = root/f'{arm}_checkpoint_{int(update):03}.pt'
         checkpoint = dict(path=str(path), file_sha256=file_sha(path), update=int(update), arm=arm)
-    elif arm in ('U0', 'RULE', 'MAPPO_SPEED'):
+    elif arm in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED'):
         if u0 is None:
             raise Blocked(f'{arm} needs the U0 binding (frozen executor + zero-residual u0): bind-mappo --arm U0')
-        exe = u0 if arm in ('U0', 'RULE') else binding
+        exe = u0 if arm in ('U0', 'RULE', 'RULE_FAIR') else binding
         if exe is None:
             raise Blocked(f'{arm} executor not bound (bind-mappo --arm {arm})')
         # executor = the bound frozen/comparator export; residual = the bound zero-residual u0
-        checkpoint = dict(kind=dict(U0='u0', RULE='rule', MAPPO_SPEED='mappo_comparator')[arm],
+        checkpoint = dict(kind=dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator')[arm],
                           comparator_kind=exe['kind'], label=exe['label'], executor_path=exe['path'],
                           executor_sha256=exe['sha256'], binding_sha256=exe['binding_sha256'],
                           binding_path=exe['binding_path'], path=u0['residual_path'], file_sha256=u0['residual_sha256'],
@@ -939,6 +949,9 @@ def episode_specs(arm, panel, cfg, root, base, binding=None, u0=None, update=UPD
         if arm == 'RULE':
             checkpoint.update(rule=RULE_STRATEGY, rule_sha256=RULE_SHA256, rule_module='tools.coopmwm.regimeu0',
                               rule_source='c4/imitreplay')
+        if arm == 'RULE_FAIR':
+            checkpoint.update(rule=RULE_FAIR_STRATEGY, rule_sha256=RULE_FAIR_SHA256,
+                              rule_module='tools.coopmwm.regimeu0_multicrit', rule_source='c4/multicrit 4ff09522')
     elif arm == 'MAPPO_LANE':
         if binding is None:
             raise Blocked('MAPPO_LANE comparator not bound (bind-mappo --arm MAPPO_LANE)')
@@ -1035,7 +1048,7 @@ def check_episode(record, spec):
         if not re.fullmatch(re.escape(spec['job_id'])+r'__r[0-9]+', str(record['work_dir'])):
             raise Blocked(f'{what}: work_dir is not a replay dir of this job')
         out['work_dir'] = record['work_dir']
-    if spec['arm'] == 'RULE':
+    if spec['arm'] in RULE_ARMS:
         if record.get('rule_sha256_loaded') != spec['checkpoint']['rule_sha256']:
             raise Blocked(f'{what}: S-REGIMEU0 rule actually loaded differs from its registration')
         out['rule_sha256_loaded'] = record['rule_sha256_loaded']
@@ -1134,12 +1147,14 @@ class Runtime:
             module = importlib.import_module(self.runner)
         except ImportError as error:
             return dict(ok=False, reason=f'{self.runner} not importable: {error!r}', native=False, decisions=False,
-                        lane=False, rule=False, parity=False)
+                        lane=False, rule=False, rule_fair=False, parity=False)
         ok = getattr(module, 'MAP', None) == MAP and callable(getattr(module, 'episode', None))
         return dict(ok=ok, native=ok and getattr(module, 'NATIVE', True) is not False,
                     decisions=ok and callable(getattr(module, 'decision_branch', None)),
                     lane=ok and getattr(module, 'MAPPO_LANE', False) is True,
                     rule=ok and getattr(module, 'RULE', False) is True and importlib.util.find_spec('tools.coopmwm.regimeu0') is not None,
+                    rule_fair=ok and 'wall_g_solo2' in getattr(module, 'RULE_STRATEGIES', ())
+                    and importlib.util.find_spec('tools.coopmwm.regimeu0_multicrit') is not None,
                     parity=ok and getattr(module, 'PARITY', False) is True and callable(getattr(module, 'parity', None)),
                     reason=None if ok else f'{self.runner} lacks MAP={MAP!r} or episode()')
 
@@ -1241,7 +1256,8 @@ def _fake_vehicle_log(path, seed, arm, t0=WARMUP_S, t1=HORIZON_S):
 def fake_episode(spec, work=None):
     w, arm = spec['world'], spec['arm']
     u = _h(w['seed'], arm)/0xffffffff
-    factor = dict(NATIVE=1.06, U0=1.0, RULE=.985, MAPPO_SPEED=.995, MAPPO_LANE=.993, A=0.99, R=0.985, B=0.975)[arm]
+    factor = dict(NATIVE=1.06, U0=1.0, RULE=.985, RULE_FAIR=.99, MAPPO_SPEED=.995, MAPPO_LANE=.993, A=0.99, R=0.985,
+                  B=0.975)[arm]
     record = dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='graded',
                   vehicle_log=(_fake_vehicle_log(Path(work)/VEHICLE_LOG, w['seed'], arm) if work is not None else
                                dict(file=VEHICLE_LOG, sha256=hashlib.sha256(spec['job_id'].encode()).hexdigest(),
@@ -1251,7 +1267,7 @@ def fake_episode(spec, work=None):
                               ttc_events=_h(w['seed'], arm, 't') % 11))
     if arm in EXECUTOR_ARMS:
         record['executor_sha256_loaded'] = spec['checkpoint']['executor_sha256']
-    if arm == 'RULE':
+    if arm in RULE_ARMS:
         record['rule_sha256_loaded'] = spec['checkpoint']['rule_sha256']
         record['rule'] = dict(strategy=spec['checkpoint']['rule'], activations=_h(w['seed'], 'rule') % 9+1, issued=600,
                               lane_held_steps=600, members=_h(w['seed'], 'rule') % 9+1)
@@ -1318,7 +1334,8 @@ class FakeRuntime:
     def __init__(self, runner=None):
         self.calls = []
         # decisions=False like the real runner (F7 not built, MAIN decision); tests may switch branches on
-        self.status = dict(dict(ok=True, native=True, decisions=False, lane=True, rule=True, parity=True, reason=None),
+        self.status = dict(dict(ok=True, native=True, decisions=False, lane=True, rule=True, rule_fair=True, parity=True,
+                                reason=None),
                            **(runner or {}))
 
     def config(self, root):
@@ -1699,7 +1716,7 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
                   B=f'B u{update} (cooperation layer + SUMO-verified guidance)',
                   R=f'R u{update} (cooperation layer, no guidance = the no-guidance arm)',
                   NATIVE='native SUMO CAV driving', U0=U0_LABEL,
-                  RULE=RULE_LABEL,
+                  RULE=RULE_LABEL, RULE_FAIR=RULE_FAIR_LABEL,
                   **{a: mappo_label(loaded[a], a)[1] if a in loaded else f'{a} (not run)' for a in COMPARATOR_ARMS})
     summary = {n: dict(label=labels[n]+(' = BASE' if n == base_arm else ''), n=len(worlds), mean_J_veh_s=float(J[n].mean()),
                        safety_totals={k: int(S[n][k].sum()) for k in SAFETY},
@@ -1792,6 +1809,15 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
         alias = {'BASE': base_arm}
         tables['secondary'] = secondary_tables(final_root=final_root, panel=panel, have=have, names=names, alias=alias,
                                                dry_run=dry_run)
+    if scope == 'claim3a' and {'A', 'B'} <= set(have):
+        # owner decision 04:0x (pre-results): co-primary = total delay B < A (paired CI95 upper < 0) AND groups
+        total = fe.paired_stats(J['B'], J['A'], bootstrap)
+        groups = (tables.get('secondary') or {}).get('co_primary_groups') or dict(status='unavailable')
+        tables['co_primary'] = dict(
+            rule=('B total held-out delay lower than A (paired whole-world CI95 upper bound < 0) AND every group '
+                  f'(origin lane 0/1/2, HDV, CAV) mean per-vehicle delay increase <= {GROUP_DELAY_MAX_S} s vs A'),
+            total_B_minus_A=total, total_lower=bool(total['ci95'][1] < 0), groups=groups,
+            meets=bool(total['ci95'][1] < 0 and groups.get('all_pass') is True))
     value = dict(schema=SCHEMA+'.tables', scope=scope, map=MAP, update=update, a_alias_of_u0=bool(a_alias),
                  evaluation='PRIMARY (u12)' if update == PRIMARY_UPDATE else 'SECONDARY (u24)',
                  panel_sha256=panel['panel_sha256'], base=base,
@@ -1806,8 +1832,8 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
     return seal(json.loads(json.dumps(value, allow_nan=False)), 'analysis_sha256')
 
 
-PER_SEED_COMPARATORS = ('NATIVE', 'U0', 'RULE', 'MAPPO_SPEED', 'MAPPO_LANE')
-TOTAL_COMPARATORS = ('BASE', 'NATIVE', 'RULE')+COMPARATOR_ARMS
+PER_SEED_COMPARATORS = ('NATIVE', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_LANE')
+TOTAL_COMPARATORS = ('BASE', 'NATIVE', 'RULE', 'RULE_FAIR')+COMPARATOR_ARMS
 
 
 def seed_stats(diff, worlds):
@@ -2035,11 +2061,11 @@ SECONDARY_METRICS = (
     ('smoothness', 'accel_var_per_vehicle_mean', lambda r, rec: r['accel_var_per_vehicle_mean']),
     ('smoothness', 'stop_and_go', lambda r, rec: r['stop_and_go']),
     ('throughput', 'crossings_drop', lambda r, rec: r['crossings_drop']))
-SECONDARY_COMPARATORS = ('BASE', 'NATIVE', 'U0', 'RULE')+COMPARATOR_ARMS
+SECONDARY_COMPARATORS = ('BASE', 'NATIVE', 'U0', 'RULE', 'RULE_FAIR')+COMPARATOR_ARMS
 _REPORTS = {}
 
 
-REPORT_VERSION = 'vehicle_log_report/1'
+REPORT_VERSION = 'vehicle_log_report/3'
 
 
 def episode_log_report(final_root, record):
@@ -2061,6 +2087,67 @@ def episode_log_report(final_root, record):
             if not cache.exists():
                 publish(cache, dict(log_sha256=sha, version=REPORT_VERSION, report=_REPORTS[sha]))
     return _REPORTS[sha]
+
+
+def _group_means(per_vehicle, labels):
+    """{group: mean per-vehicle delay} over the vehicles of ``per_vehicle`` that carry a label."""
+    sums = {}
+    for vid, (delay, _, _) in per_vehicle.items():
+        for g in labels.get(vid, ()):
+            n, total = sums.get(g, (0, 0.))
+            sums[g] = (n+1, total+delay)
+    return {g: total/n for g, (n, total) in sums.items()}
+
+
+def _labels(per_vehicle):
+    """origin SUMO lane (2 - WM lane at first observation) and fleet class of each vehicle."""
+    return {vid: (f'origin_sumo_lane_{2-lane}' if lane in (0, 1, 2) else 'origin_unknown', 'CAV' if cav else 'HDV')
+            for vid, (_, lane, cav) in per_vehicle.items()}
+
+
+CO_PRIMARY_GROUPS = ('origin_sumo_lane_0', 'origin_sumo_lane_1', 'origin_sumo_lane_2', 'HDV', 'CAV')
+
+
+def co_primary_groups(reports, worlds, bootstrap, reference='U0'):
+    """Owner fairness criterion, part 2 (MAIN 04:2x convention): a vehicle's group = its origin SUMO lane and class
+    in the REFERENCE arm (U0) on the same world, paired by vehicle id; per group the per-world mean per-vehicle delay
+    of B minus A must average <= GROUP_DELAY_MAX_S over worlds (95% CI reported). Vehicles absent from the U0 log
+    are reported separately; own-arm labels are a sensitivity only."""
+    if not {'B', 'A', reference} <= set(reports):
+        return dict(status='unavailable', reason=f'needs B, A and {reference} vehicle logs')
+
+    def compare(label_of):
+        groups, missing = {}, {'B': 0, 'A': 0}
+        per = {g: [] for g in CO_PRIMARY_GROUPS}
+        for w in worlds:
+            means = {}
+            for arm in ('B', 'A'):
+                pv = reports[arm][w]['per_vehicle']
+                labels = label_of(arm, w)
+                missing[arm] += sum(1 for vid in pv if vid not in labels)
+                means[arm] = _group_means(pv, labels)
+            for g in CO_PRIMARY_GROUPS:
+                if g in means['B'] and g in means['A']:
+                    per[g].append((means['B'][g], means['A'][g]))
+        for g, pairs in per.items():
+            if len(pairs) < 2:
+                groups[g] = dict(status='unavailable', n_worlds=len(pairs))
+                continue
+            b, a = (np.array(x, float) for x in zip(*pairs))
+            stats = fe.paired_stats(b, a, bootstrap, pct=False)
+            groups[g] = dict(n_worlds=len(pairs), increase_mean_s=stats['diff'], ci95=stats['ci95'],
+                             passes=bool(stats['diff'] <= GROUP_DELAY_MAX_S))
+        ok = [v for v in groups.values() if 'passes' in v]
+        return dict(groups=groups, vehicles_missing_from_labels=missing,
+                    all_pass=bool(ok) and len(ok) == len(groups) and all(v['passes'] for v in ok))
+    registered = compare(lambda arm, w: _labels(reports[reference][w]['per_vehicle']))
+    own = compare(lambda arm, w: _labels(reports[arm][w]['per_vehicle']))
+    return dict(rule=(f'every group (origin SUMO lane 0/1/2, HDV, CAV; labels from the {reference} arm on the same '
+                      f'world, paired by vehicle id) mean per-vehicle delay increase (B - A) <= {GROUP_DELAY_MAX_S} s '
+                      '(point estimate; 95% CI reported)'), reference=reference,
+                groups=registered['groups'], all_pass=registered['all_pass'],
+                vehicles_missing_from_reference=registered['vehicles_missing_from_labels'],
+                sensitivity_own_arm_labels=dict(groups=own['groups'], all_pass=own['all_pass']))
 
 
 def secondary_tables(*, final_root, panel, have, names, alias, dry_run=False):
@@ -2100,6 +2187,7 @@ def secondary_tables(*, final_root, panel, have, names, alias, dry_run=False):
                        for n in ok if n != ref}
         entry['vs'] = cmp_
         out['metrics'][metric] = entry
+    out['co_primary_groups'] = co_primary_groups(reports, worlds, bootstrap)
     origins = sorted({o for n in names for w in worlds for o in reports[n][w]['delay_by_origin_s']})
     out['delay_by_origin_s'] = {o: {n: [reports[n][w]['delay_by_origin_s'].get(o) for w in worlds] for n in names}
                                 for o in origins}
@@ -2253,18 +2341,20 @@ def execute(*, root, final_root, runtime, panel, panel_3c=None, allow_missing=()
             arms.append('U0')
             if cfg.get('common_checkpoint_sha256') not in (None, bindings['U0']['residual_sha256']):
                 raise Blocked('the run common u0 differs from the bound zero-residual u0 (pre-run U0/RULE invalid)')
-            if report['runner'].get('rule'):
-                arms.append('RULE')
-            elif 'RULE' in allow_missing:
-                missing['RULE'] = 'runner has no S-REGIMEU0 rule (tools.coopmwm.regimeu0)'
-            else:
-                raise Blocked('RULE: runner has no S-REGIMEU0 rule (--allow-missing RULE)')
+            for rarm, key, why in (('RULE', 'rule', 'S-REGIMEU0 rule (tools.coopmwm.regimeu0)'),
+                                   ('RULE_FAIR', 'rule_fair', 'S-MULTICRIT rule (tools.coopmwm.regimeu0_multicrit)')):
+                if report['runner'].get(key):
+                    arms.append(rarm)
+                elif rarm in allow_missing:
+                    missing[rarm] = f'runner has no {why}'
+                else:
+                    raise Blocked(f'{rarm}: runner has no {why} (--allow-missing {rarm})')
             compat = prerun_compat(final_root, cfg, runtime)
         elif a_alias:
             raise Blocked('A is the frozen U0 alias but U0 was declared unavailable')
         else:
             missing['U0'] = f'declared unavailable: {u0["declared"]["U0"]["reason"]}'
-            missing['RULE'] = 'needs the U0 executor (declared unavailable)'
+            missing['RULE'] = missing['RULE_FAIR'] = 'needs the U0 executor (declared unavailable)'
         status(current, 'PASS', dict(bound=sorted(bindings), declared=sorted(u0['declared']),
                                      prerun=compat if 'U0' in bindings else None))
         current = f'EPISODES{sfx}'
@@ -2382,7 +2472,7 @@ def prerun_cap():
 
 
 PRERUN_CAP_FILE = 'PRERUN_CAP.json'
-PRERUN_CAP_MAX = 530_000                     # MAIN 2026-11-07: pre-run sub-cap 432,000 -> 480,000 -> 530,000
+PRERUN_CAP_MAX = 660_000                     # MAIN 2026-11-07: 432,000 -> 480,000 -> 530,000 -> 660,000 (RULE_FAIR)
 
 
 def _cap_files(final_root):
@@ -2595,12 +2685,13 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRE
         runner = pre.runner_status()
         if pre.physics and not os.environ.get('COOPMWM_MAP_SPEC'):
             raise Blocked('set COOPMWM_MAP_SPEC to the staged wz3to2 MAP_SPEC.json (N1 process map) before physics')
-        if not runner['ok'] or ('NATIVE' in arms and not runner['native']) or ('RULE' in arms and not runner.get('rule')):
+        if not runner['ok'] or ('NATIVE' in arms and not runner['native']) or ('RULE' in arms and not runner.get('rule')) \
+                or ('RULE_FAIR' in arms and not runner.get('rule_fair')):
             raise Blocked(f'runner cannot run the pre-run arms: {runner}')
         if pre.physics:
             map_check(bind_map_api(None), panel)
         u0 = mappo_binding(final_root, 'U0')
-        if {'U0', 'RULE'} & set(arms):
+        if {'U0', 'RULE', 'RULE_FAIR'} & set(arms):
             if u0 is None:
                 raise Blocked('bind-mappo --arm U0 (frozen d9042cc5 + --residual-path <final_root>/prerun_plant/'
                               'A_checkpoint_000.pt) before the pre-run')
@@ -2727,6 +2818,12 @@ def vehicle_log_report(path, *, t0=WARMUP_S, t1=HORIZON_S):
     origins = {}
     for h in heads.values():
         origins[h.get('origin')] = origins.get(h.get('origin'), 0)+1
+    first_lane = {}
+    if K.size:                                   # origin lane = WM lane at the vehicle's first logged second
+        o = np.lexsort((T, K))
+        kk, ll = K[o], L[o]
+        first = np.r_[True, kk[1:] != kk[:-1]]
+        first_lane = dict(zip(kk[first].tolist(), ll[first].tolist()))
     with_origin = sum(v for o, v in origins.items() if isinstance(o, str) and o)
     with_delay = sum(1 for h in heads.values() if isinstance(h.get('depart_delay_s'), (int, float)))
     if heads and (not cav or not hdv):
@@ -2747,10 +2844,13 @@ def vehicle_log_report(path, *, t0=WARMUP_S, t1=HORIZON_S):
     cav_mean = mean_of([k for k, h in heads.items() if h.get('cav') is True])
     hdv_mean = mean_of([k for k, h in heads.items() if h.get('cav') is False])
     by_origin = {str(o): mean_of([k for k, h in heads.items() if h.get('origin') == o]) for o in origins}
+    by_lane = {str(ln): mean_of([k for k, x in first_lane.items() if x == ln]) for ln in (0, 1, 2)}
     return dict(ok=not problems, problems=problems, ticks=len(ticks), vehicles=len(heads), cav=cav, hdv=hdv,
                 delay_by_class=dict(cav_mean_s=cav_mean, hdv_mean_s=hdv_mean,
                                     hdv_cav_ratio=hdv_mean/cav_mean if cav_mean and hdv_mean is not None else None),
-                delay_by_origin_s=by_origin,
+                delay_by_origin_s=by_origin, delay_by_origin_lane_s=by_lane,
+                per_vehicle={str(heads[k]['id']): [round(float(delay_v[k]), 3), int(first_lane.get(k, -1)),
+                                                   bool(heads[k].get('cav'))] for k in present.tolist() if k in heads},
                 accel_var_per_vehicle_mean=float(per_vehicle_var.mean()) if per_vehicle_var.size else None,
                 origins={str(k): v for k, v in sorted(origins.items(), key=lambda kv: str(kv[0]))},
                 origin_coverage=round(with_origin/len(heads), 4) if heads else None,

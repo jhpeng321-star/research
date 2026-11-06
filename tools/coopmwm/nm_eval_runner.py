@@ -76,7 +76,9 @@ IDENTITY = ('arm', 'world_id', 'world', 'checkpoint', 'window', 'panel_sha256')
 LOG_LIMIT = 200
 MAPPO_LANE = True
 RULE = True
-RULE_STRATEGIES = ('wall_h_solo2',)
+RULE_STRATEGIES = ('wall_h_solo2', 'wall_g_solo2')
+#: strategy -> the module holding its EXACT rule code (RULE: S-REGIMEU0; RULE_FAIR: S-MULTICRIT byte copy)
+RULE_MODULES = dict(wall_h_solo2='regimeu0', wall_g_solo2='regimeu0_multicrit')
 PARITY = True
 PARITY_ROLE = 'check'
 LANE_GRID = (-1, 0, 1, 2)
@@ -230,6 +232,10 @@ def comparator_setup(expected_sha):
 # ---------------------------------------------------------------- RULE (exact S-REGIMEU0)
 
 RULE_CONSTANTS = ('X_B', 'S_OFF', 'ZONE_S', 'WALL_SPREAD', 'RELEASE_S', 'WALL_H', 'STRATEGIES')
+#: S-MULTICRIT rule: everything RuleHook reads (variant parameters, solo-lane and start-gate helpers)
+MULTICRIT_FUNCTIONS = ('sumo_lane', 'pick_wall', 'solo_lanes', 'behind_count', 'RuleHook')
+MULTICRIT_CONSTANTS = ('X_B', 'S_OFF', 'ZONE_S', 'WALL_SPREAD', 'RELEASE_S', 'WALL_H', 'WALL_G', 'WALL_M',
+                       'VARIANT_PARAMS', 'STRATEGIES', 'GATES')
 
 
 def rule_digest(module=None):
@@ -244,14 +250,26 @@ def rule_digest(module=None):
     return hashlib.sha256('\n'.join(parts).encode()).hexdigest()
 
 
+def multicrit_digest(module=None):
+    """sha256 of the S-MULTICRIT rule as executed (RULE_FAIR): every function and constant RuleHook reads."""
+    import importlib
+    import inspect
+    module = module or importlib.import_module(f'{__package__}.regimeu0_multicrit')
+    parts = [inspect.getsource(getattr(module, n)) for n in MULTICRIT_FUNCTIONS]
+    parts.append(inspect.getsource(module.ir.Recorder))
+    parts.append(json.dumps({n: getattr(module, n) for n in MULTICRIT_CONSTANTS}, sort_keys=True, default=list))
+    return hashlib.sha256('\n'.join(parts).encode()).hexdigest()
+
+
 def rule_hook(strategy, expected_sha256):
-    from . import regimeu0
+    import importlib
     if strategy not in RULE_STRATEGIES:
         raise ValueError(f'unregistered RULE strategy {strategy!r}')
-    loaded = rule_digest(regimeu0)
+    module = importlib.import_module(f'{__package__}.{RULE_MODULES[strategy]}')
+    loaded = rule_digest(module) if strategy == 'wall_h_solo2' else multicrit_digest(module)
     if loaded != expected_sha256:
-        raise ValueError('S-REGIMEU0 rule differs from its registration (rule_sha256)')
-    return regimeu0.RuleHook(strategy), loaded
+        raise ValueError(f'{RULE_MODULES[strategy]} rule differs from its registration (rule_sha256)')
+    return module.RuleHook(strategy), loaded
 
 
 # ---------------------------------------------------------------- policies (training parity)
@@ -357,8 +375,8 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     ck = spec['checkpoint']
     arm, update = ck['arm'], int(ck['update'])
     executor, loaded, rule = native['checkpoint'], None, None
-    if spec['arm'] in ('U0', 'RULE', 'MAPPO_SPEED'):
-        kind = dict(U0='u0', RULE='rule', MAPPO_SPEED='mappo_comparator')[spec['arm']]
+    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED'):
+        kind = dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator')[spec['arm']]
         if ck.get('kind') != kind or (arm, update) != ('A', 0):
             raise ValueError(f'{spec["arm"]} arm = its bound executor + the bound common u0 (zero residual)')
         # the bound zero-residual u0 (A_checkpoint_000.pt, sha re-verified), loaded by the SAME
@@ -368,7 +386,7 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
             raise ValueError('bound u0 residual changed after registration')
         native = dict(native, run_root=str(path.parent))
         executor, loaded = bound_executor(ck)        # U0/RULE: the frozen d9042cc5 export (pin unchanged)
-        if spec['arm'] == 'RULE':
+        if spec['arm'] in ('RULE', 'RULE_FAIR'):
             rule = rule_hook(ck['rule'], ck['rule_sha256'])
     else:
         path = Path(native['run_root'])/f'{arm}_checkpoint_{update:03}.pt'
@@ -658,14 +676,14 @@ def episode(spec, cfg, work):
         return _native_episode(spec, cfg, work)
     if spec['arm'] == 'MAPPO_LANE':
         return _mappo_lane_episode(spec, cfg, work)
-    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'MAPPO_SPEED'):
+    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED'):
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')
     return _policy_episode(spec, cfg, work)
 
 
 # ---------------------------------------------------------------- one-episode vehicle-log check
 
-LOGCHECK_ARMS = ('NATIVE', 'U0', 'RULE')
+LOGCHECK_ARMS = ('NATIVE', 'U0', 'RULE', 'RULE_FAIR')
 
 
 def logcheck(spec, cfg, work):
