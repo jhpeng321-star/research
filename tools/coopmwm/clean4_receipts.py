@@ -251,7 +251,18 @@ def validate_clean5a(cfg, updates, fixes=None):
             raise ValueError('R is the no-guidance arm: zero EV-BC records')
         out['ev_bc'][arm] = {k: fit.get(k) for k in ('records', 'ev_bc', 'report_bc_kl', 'report_kl_unlabelled')}
     if cfg.get('imitation_epochs') != c5.IMITATION_EPOCHS:
-        raise ValueError('clean5a registered imitation epochs = 20')
+        raise ValueError(f'clean5a registered imitation epochs = {c5.IMITATION_EPOCHS}')
+    # MAIN ~21:1x registered pace: EV-BC 60 steps; trigger-PPO KL guard = per-CAV-row mean (B and R identically)
+    from . import fullpol_ev
+    ev = fullpol_ev.settings(cfg)
+    if ev.get('ev_bc_steps') != fullpol_ev.EV_BC_STEPS or ev.get('ppo_kl') != 'row_mean':
+        raise ValueError('clean5a registered pace: clean5_ev.ev_bc_steps 60 and ppo_kl row_mean')
+    out['pace'] = dict(ev_bc_steps=ev['ev_bc_steps'], ppo_kl=ev['ppo_kl'])
+    for arm in ('B', 'R'):
+        receipt = arms[arm]['learning'].get('fullpol_ppo_kl') or {}
+        if receipt.get('rule') != 'row_mean':
+            raise ValueError('trigger-PPO row-mean KL receipt required: '+arm)
+        out['pace'][arm] = {k: receipt.get(k) for k in ('final_kl', 'accepted', 'rejected')}
     for arm in ('B', 'R'):   # ONE trust region: legacy bank imitation is off (0 contexts, 0 steps)
         learning = arms[arm]['learning']
         if (learning['bank'].get('pairs_total', 0) or learning['bank'].get('optimizer_steps', 0)
