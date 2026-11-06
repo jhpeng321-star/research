@@ -160,7 +160,7 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     assert {c[1] for c in result['calls'] if c[0] == 'reserve'} == {'v2v_final', 'v2v_final_prerun'}
     assert result['fake_prerun_sim_s'] == nm.prerun_cap() == 432_000 == result['quote']['prerun_sim_s']
     assert (result['fake_v2v_final_sim_s']+result['fake_prerun_sim_s'] <= result['quote']['total_ceiling_sim_s']
-            <= nm.ALLOCATION_SIM_S == 1_200_000)
+            <= nm.ALLOCATION_SIM_S == 1_340_000)
     final_root = Path(result['final_root'])
     alias = dict(mappo_frozen='A', mappo_u0='U0', native='NATIVE')[base]
     claim3a = json.loads((final_root/'CLAIM3A_TABLES.json').read_text())
@@ -311,7 +311,7 @@ def test_register_records_an_operator_declared_base_for_an_unbound_config(panel,
     write_config(f, cfg)
     plan = nm.register(root=f['root'], final_root=f['final_root'], runtime=f['runtime'], panel=panel, base='native')
     assert plan['binding']['base'] == 'native' and set(plan['binding']['unbound']) == {'base_controller', 'cell'}
-    assert plan['quote']['total_ceiling_sim_s'] == 1_164_960 and plan['budget']['allocated'] == 1_200_000
+    assert plan['quote']['total_ceiling_sim_s'] == 1_164_960 and plan['budget']['allocated'] == 1_340_000
     assert plan['amendments'][0]['base_alias'] == 'NATIVE' and plan['amendments'][0]['arms'] == list(nm.EPISODE_ARMS)
     _, binding, _ = nm.preflight(f['root'], f['final_root'], f['runtime'], panel)
     assert binding['base'] == 'native'
@@ -323,7 +323,7 @@ def test_budget_is_debited_from_clean4_v2v_final_only_within_its_allocation(pane
     f = make(tmp_path, panel, register=False)
     cfg = f['cfg']
     report = nm.budget_check(f['root'], cfg, 'mappo_u0')
-    assert report['source'] == 'clean4_budget' and report['allocated'] == 1_200_000 and report['remaining'] == 1_200_000
+    assert report['source'] == 'clean4_budget' and report['allocated'] == 1_340_000 and report['remaining'] == 1_340_000
     small = dict(cfg, clean4_budget=_seal(dict(phases=dict(v2v_final=1_040_000)), 'receipt_sha256'))   # pre-raise value
     with pytest.raises(nm.Blocked, match='allocation'):
         nm.budget_check(f['root'], small, 'mappo_u0')
@@ -342,7 +342,7 @@ def test_budget_is_debited_from_clean4_v2v_final_only_within_its_allocation(pane
 
 def test_sub_cap_refuses_a_wave_that_would_exceed_the_allocation(panel, tmp_path):
     f = make(tmp_path, panel)
-    charge(f['root'], id='nmfinal_old_attempt_0000', phase='v2v_final', sim_s=1_100_000)
+    charge(f['root'], id='nmfinal_old_attempt_0000', phase='v2v_final', sim_s=1_250_000)
     specs = nm.episode_specs('NATIVE', panel, f['cfg'], f['root'], 'mappo_u0')
     with pytest.raises(nm.Blocked, match='sub-cap'):
         nm.run_waves([('NATIVE', 'episode', specs)], root=f['root'], final_root=f['final_root'], cfg=f['cfg'],
@@ -507,7 +507,7 @@ def test_budget_quote_fits_the_raised_v2v_final_allocation():
         assert q['episodes_sim_s'] == 8*96*1200 == 921_600 and q['decisions_ceiling_sim_s'] == 2*8*5*1200 == 96_000
         assert q['parity_sim_s'] == 2*2*2*420 == 3_360 and q['claim3c_sim_s'] == 5*24*1200 == 144_000
         assert q['total_ceiling_sim_s'] == 1_164_960 and q['prerun_sim_s'] == 3*(96+24)*1200 == 432_000
-        assert q['allocation_sim_s'] == 1_200_000 and q['fits'] and q['margin_over_core'] >= .15
+        assert q['allocation_sim_s'] == 1_340_000 and q['fits'] and q['margin_over_total'] >= .15
         assert set(q['need_ceiling']) == ({f'episodes_{a}' for a in nm.EPISODE_ARMS} | {'decisions_B', 'decisions_R', 'parity_f11'}
                                           | {f'claim3c_{a}' for a in nm.CLAIM3C_ARMS})
     with pytest.raises(nm.Blocked):

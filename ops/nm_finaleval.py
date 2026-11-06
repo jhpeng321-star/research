@@ -135,10 +135,11 @@ CELL_AUTHORITY = ('MAIN 2026-11-06 (N6): clean4 training cell = demand 3200 veh/
 NEWMAP2_REPORT_SHA256 = '70c119595ff3f391bbdebfa0a98d9c2f7ca02d2ae61f8acb53c126754adfdb05'
 PHASE = 'v2v_final'
 PANEL_ALLOCATION_SIM_S = 690_000       # value registered in panel v2's contract
-ALLOCATION_SIM_S = 1_200_000           # v2v_final raised by MAIN 2026-11-06 (RULE arm registration)
+ALLOCATION_SIM_S = 1_340_000           # v2v_final raised by MAIN 2026-11-06 (>= 15% margin over 1,164,960)
 ALLOCATION_AUTHORITY = ('MAIN 2026-11-06 under the owner authorisation to act on its recommendations: v2v_final '
-                        'raised 690,000 -> 1,040,000 (F6: 7 arms + branches) -> <= 1,200,000 (RULE arm in 3a and 3c, '
-                        'claim 3c); pre-run spend in the evaluation root ledger counts against the same cap')
+                        'raised 690,000 -> 1,040,000 (F6: 7 arms + branches) -> 1,200,000 (RULE arm in 3a and 3c, '
+                        'claim 3c) -> 1,340,000 (N5: restore a >= 15% margin over the 1,164,960 ceiling); pre-run '
+                        'spend in the evaluation root ledger counts against the same cap')
 BUDGET_KEYS = ('clean4_budget', 'clean3_budget')
 SAFETY = fe.SAFETY
 HARD = fe.HARD
