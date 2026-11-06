@@ -1,6 +1,8 @@
 """S-WMVERIFY (phase wm_verify): SUMO paired-seed verification of WORLD-MODEL-PROPOSED strategies on the MAPPO u0
-base, solo2 incumbent in every seed group, output in EXACTLY the S-REGIMEU0 ANALYSIS schema (input of FULLPOL's
-clean5 EV builder ``fullpol_learn.build_guidance(mappo=ANALYSIS.json)``).
+base, the gentle incumbent wall_g_solo2 in every seed group, output in EXACTLY the S-REGIMEU0 ANALYSIS schema (input
+of FULLPOL's clean5 EV builder ``fullpol_learn.build_guidance(mappo=ANALYSIS.json)``) + per-group fairness (owner
+2026-11-07, REGISTRATION 04:03/04:09: ALLOWED = every origin-lane / HDV / CAV group's mean per-vehicle delay change vs
+u0 <= 10 s; ANALYSIS_ALLOWED.json keeps only the allowed families; the firm 15 m/s solo2 is BANNED).
 
 Harness = S-REGIMEU0 (tools.coopmwm.regimeu0 + imitreplay, c4/imitreplay c08ff784): same clean4 plant and wz3to2
 map, MAPPO u0 (the S-REGIMEU0 inputs, sha-checked), precharged ledger (never re-run), regimeu0.worker, native warmup
@@ -10,12 +12,14 @@ Convention: diff = J(arm) - J(reference), veh-s; NEGATIVE = the arm is better.
 
 Arms of a seed group (cell, seed):
   u0            MAPPO u0 alone
-  wall_h_solo2  the incumbent, regimeu0.RuleHook('wall_h_solo2') VERBATIM (the S-REGIMEU0 arm, same name)
-  solo2_core    SOLO2 through strategy_hook.StrategyCore (executor-parity control, first `parity_seeds` seeds/cell;
-                reported in VERIFY.json only, never an ANALYSIS family)
-  <spec name>   candidates (WM-C ARMS.json groups wm/wm_fair/structured/random, or spec files): trigger,
-                selection and timing = strategy_hook.StrategyCore; members executed by wmverify_hook: hold-only
-                strategies through the plant writer (as solo2), strategies with lane changes through the LCEXEC
+  wall_g_solo2  the incumbent (22 m/s, 120 s, dmax 1.0, cooldown 120), regimeu0.RuleHook('wall_g_solo2') VERBATIM
+  inc_core      SS.INCUMBENT through strategy_hook.StrategyCore (executor-parity control, first `parity_seeds`
+                seeds/cell; VERIFY.json only, never an ANALYSIS family)
+  wall_h_solo2  optional (--banned-seeds) BANNED firm-hold comparator via RuleHook; labelled, never a family
+  <spec name>   candidates (WM-C ARMS.json v3 groups reference / wm / wm_bounded / wm_fairer / structured / random
+                [/ wm_fair / best / best_beating_incumbent], or spec files; spec v3: start_gate, phases): trigger,
+                selection, phases and timing = strategy_hook.StrategyCore; members executed by wmverify_hook:
+                hold-only strategies through the plant writer (as the incumbent), lane-change strategies through the LCEXEC
                 POLICY executor (lc_families.Protocol + own-sensing lane gate + env.lc_tick, c4/lcexec 0fe9574e):
                 'verified' = executable by the policy executor
 Seeds: 989950-989999 only (MAIN allocation; LSSEARCH has 989900-989949). Map registry: map_scenarios.EXTRA_TRAIN_RANGES.
@@ -55,17 +59,22 @@ PHASE = 'wm_verify'
 SEED_RANGE = (989950, 989999)            # MAIN 2026-11-06 night: wm_verify 989950-989999; LSSEARCH 989900-989949
 FORBIDDEN_SEEDS = ((989600, 989699), (962000, 962999), (964000, 964199), (977000, 977999))
 BASE_ARM = 'u0'
-INCUMBENT = 'wall_h_solo2'
-PARITY_ARM = 'solo2_core'
-RESERVED = (BASE_ARM, 'base', INCUMBENT, PARITY_ARM)
-GROUPS = ('wm', 'wm_fair', 'structured', 'random')
-SINGLE_GROUPS = ('best_beating_solo2', 'best_fair')    # single specs in ARMS.json (dedup by key)
+INCUMBENT = 'wall_g_solo2'               # owner 2026-11-07 (REGISTRATION 04:03): gentle incumbent, RuleHook verbatim
+BANNED_ARM = 'wall_h_solo2'              # the firm 15 m/s solo2: BANNED, optional labelled comparator only
+PARITY_ARM = 'inc_core'                  # SS.INCUMBENT through StrategyCore (executor parity vs the RuleHook)
+RESERVED = (BASE_ARM, 'base', INCUMBENT, BANNED_ARM, PARITY_ARM, 'solo2_core')
+NOT_FAMILIES = (PARITY_ARM, BANNED_ARM)  # never ANALYSIS families (VERIFY only)
+GROUPS = ('reference', 'wm', 'wm_bounded', 'wm_fairer', 'structured', 'random')    # ARMS.json v3 lists
+OPTIONAL_GROUPS = ('wm_fair',)
+SINGLE_GROUPS = ('best_beating_incumbent', 'best')    # single spec / {archive: spec} in ARMS.json (dedup by key)
+FAIR_COMPONENT = 'road'                  # pervehicle primary component (S-MULTICRIT P4)
 EPISODE_S = 1200
 DEFAULT_LANE_EXECUTOR = 'lcexec'       # MAIN ~00:0x: lane programs through the LCEXEC policy executor
-DEFAULT_HOLD_EXECUTOR = 'plant'        # hold strategies run as S-REGIMEU0 solo2 (plant single writer)
+DEFAULT_HOLD_EXECUTOR = 'plant'        # hold strategies run as the S-REGIMEU0 RuleHook path (plant single writer)
 NAME_RE = re.compile(r'^[A-Za-z][A-Za-z0-9_.-]{0,63}$')
-SPEC_KEYS = frozenset({'name', 'trigger', 'zone', 'spread_m', 'cooldown_s', 'slots', 'gate', 'roles'})
-REQUIRED_KEYS = SPEC_KEYS - {'gate'}
+SPEC_KEYS = frozenset({'name', 'trigger', 'zone', 'spread_m', 'cooldown_s', 'slots', 'gate', 'start_gate', 'phases',
+                       'roles'})
+REQUIRED_KEYS = SPEC_KEYS - {'gate', 'start_gate', 'phases'}
 ROLE_KEYS = frozenset({'lane', 'rank', 'v_w', 'dmax', 'hold_s', 'onset_s', 'lc_target'})
 # Registered values beyond strategy_search.validate (which checks v_w/dmax/hold_s/onset_s against the NEWMAP2 R grid
 # + WMDATA offsets via lcm_plan, lanes, ranks, adjacency, gates, zones):
@@ -174,8 +183,15 @@ def check_spec(spec, lane_executor=DEFAULT_LANE_EXECUTOR):
     for k in ('cooldown_s', 'slots'):
         if type(spec[k]) is not int:
             raise ValueError(f'{k} must be an int')
-    s = dict(spec, gate=spec.get('gate'), roles=[dict(r) for r in spec['roles']])
-    SS.validate(s)
+    ph = spec.get('phases')
+    if ph is not None and (not isinstance(ph, list) or any(not isinstance(p, list) or any(type(i) is not int for i in p)
+                                                           for p in ph)):
+        raise ValueError('phases must be None or a list of lists of role indices')
+    if spec.get('start_gate') is not None and not isinstance(spec['start_gate'], str):
+        raise ValueError('start_gate must be None or a registered name')
+    s = dict(spec, gate=spec.get('gate'), start_gate=spec.get('start_gate'),
+             phases=None if ph is None else [list(p) for p in ph], roles=[dict(r) for r in spec['roles']])
+    SS.validate(s)                       # registered grids/gates/phases; the banned 15 m/s hold is rejected
     if float(s['spread_m']) not in SPREADS:
         raise ValueError(f"spread_m {s['spread_m']} not registered {SPREADS}")
     if s['slots'] not in SLOTS:
@@ -194,14 +210,25 @@ def check_spec(spec, lane_executor=DEFAULT_LANE_EXECUTOR):
 def candidates(arms_doc, cell, groups=GROUPS, k=4, extra=(), lane_executor=DEFAULT_LANE_EXECUTOR):
     """[(source, spec)] for one cell: ARMS.json groups (first k each), then extra specs; SOLO2 duplicates dropped,
     identical strategies deduplicated by strategy_key, names unique."""
-    out, keys, names = [], {SS.strategy_key(dict(SS.SOLO2)): INCUMBENT}, {}
+    out, keys, names = [], {SS.strategy_key(dict(SS.INCUMBENT)): INCUMBENT, SS.strategy_key(dict(SS.SOLO2)): BANNED_ARM}, {}
     doc = (arms_doc or {}).get(cell, {}) if arms_doc else {}
     items = []
     for grp in groups:
         got = doc.get(grp)
-        items += [(grp, s) for s in ((got or [])[:k] if grp not in SINGLE_GROUPS else ([got] if got else []))]
+        if grp == 'best':
+            items += [(f'best:{a}', s) for a, s in sorted((got or {}).items()) if s]
+        elif grp in SINGLE_GROUPS:
+            items += [(grp, got)] if got else []
+        else:
+            items += [(grp, s) for s in (got or [])[:k]]
     items += [('extra', s) for s in extra]
     for source, raw in items:
+        try:
+            pre = SS.strategy_key(raw)
+        except (KeyError, TypeError):
+            pre = None
+        if pre in keys and keys[pre] in (INCUMBENT, BANNED_ARM):
+            continue                         # the incumbent / banned comparator run as their own arms
         s = check_spec(raw, lane_executor)
         key = SS.strategy_key(s)
         if key in keys:
@@ -215,7 +242,7 @@ def candidates(arms_doc, cell, groups=GROUPS, k=4, extra=(), lane_executor=DEFAU
 
 # ------------------------------------------------------------------------------------------ plan
 def build_groups(cells, specs_by_cell, world_of, *, parity_seeds=2, identity=True,
-                 lane_executor=DEFAULT_LANE_EXECUTOR, hold_executor=DEFAULT_HOLD_EXECUTOR):
+                 lane_executor=DEFAULT_LANE_EXECUTOR, hold_executor=DEFAULT_HOLD_EXECUTOR, banned_seeds=0):
     """Identity group first, then paired seed groups round-robin over cells (seed index major) so a partial run
     covers every cell."""
     groups = []
@@ -236,9 +263,13 @@ def build_groups(cells, specs_by_cell, world_of, *, parity_seeds=2, identity=Tru
                          world=w, sim_s=EPISODE_S),
                     dict(id=f'{cell}_s{s}_{INCUMBENT}', arm=INCUMBENT, strategy=INCUMBENT, strategy_spec=None,
                          executor='regimeu0', world=w, sim_s=EPISODE_S)]
+            if i < banned_seeds:
+                jobs.append(dict(id=f'{cell}_s{s}_{BANNED_ARM}', arm=BANNED_ARM, strategy=BANNED_ARM,
+                                 strategy_spec=None, executor='regimeu0', world=w, sim_s=EPISODE_S,
+                                 label='banned comparator (owner 2026-11-07)'))
             if i < parity_seeds:
                 jobs.append(dict(id=f'{cell}_s{s}_{PARITY_ARM}', arm=PARITY_ARM, strategy=PARITY_ARM,
-                                 strategy_spec=dict(SS.SOLO2, name=PARITY_ARM, gate=None), executor='plant',
+                                 strategy_spec=dict(SS.INCUMBENT, name=PARITY_ARM), executor='plant',
                                  world=w, sim_s=EPISODE_S))
             for _source, spec in specs_by_cell[cell]:
                 jobs.append(dict(id=f'{cell}_s{s}_{spec["name"]}', arm=spec['name'], strategy=spec['name'],
@@ -282,10 +313,13 @@ def family_records(specs_by_cell, *, lane_executor=DEFAULT_LANE_EXECUTOR, hold_e
         for source, s in lst:
             if s['name'] not in out:
                 ex = VH.resolve_executor(s, lane_executor=lane_executor, hold_executor=hold_executor)
-                tpl, tsha = VH.family_template(s)
+                tpls = [VH.family_template(s, phase=p) for p in range(VH.n_phases(s))]
+                tpl, tsha = tpls[0]
                 out[s['name']] = dict(
                     spec=s, strategy_key=SS.strategy_key(s), executor=ex, cells={}, template=tpl,
                     template_sha256=tsha, offer_condition=VH.offer_condition(s),
+                    phase_templates=None if len(tpls) == 1 else [dict(phase=p, template=d, template_sha256=h)
+                                                                 for p, (d, h) in enumerate(tpls)],
                     lcexec_parity=dict(VH.LCEXEC_PARITY) if ex == 'lcexec' else None,
                     n2_parity=None if ex == 'lcexec' else N2.parity(s, executor=ex, seconds=N2_FIXTURE_S,
                                                                        n2_pin=ex == 'plant'),
@@ -301,7 +335,7 @@ def family_records(specs_by_cell, *, lane_executor=DEFAULT_LANE_EXECUTOR, hold_e
 
 def plan(root, *, regimeu0_root, arms_path, cells, cap, registration_md=None, groups=GROUPS, k=4, parity_seeds=2,
          identity=True, lane_executor=DEFAULT_LANE_EXECUTOR, hold_executor=DEFAULT_HOLD_EXECUTOR, spec_paths=(),
-         prior_roots=(), dry_run=False):
+         prior_roots=(), dry_run=False, banned_seeds=0):
     ir, R = _harness()
     root = guard_path(root)
     if (root / 'PLAN.json').exists():
@@ -323,7 +357,7 @@ def plan(root, *, regimeu0_root, arms_path, cells, cap, registration_md=None, gr
     if clash:
         raise ValueError(f'seeds already planned in a prior root: {sorted(clash)}')
     gr = build_groups(cells, specs, R.world_of, parity_seeds=parity_seeds, identity=identity,
-                      lane_executor=lane_executor, hold_executor=hold_executor)
+                      lane_executor=lane_executor, hold_executor=hold_executor, banned_seeds=banned_seeds)
     planned = sum(j['sim_s'] for g in gr for j in g['jobs'])
     if planned > int(cap):
         raise ValueError(f'planned {planned} sim-s > cap {cap}')
@@ -354,6 +388,7 @@ def plan(root, *, regimeu0_root, arms_path, cells, cap, registration_md=None, gr
     _write_new(root / 'REGISTRATION.json', reg)
     body = dict(schema=SCHEMA + '.plan', stable_id=STABLE_ID, phase=PHASE, cap_sim_s=int(cap), dry_run=bool(dry_run),
                 inputs=files, groups=gr, families=families, incumbent=INCUMBENT, parity_arm=PARITY_ARM,
+                banned_comparator=BANNED_ARM if banned_seeds else None, banned_seeds=int(banned_seeds),
                 parity_seeds=int(parity_seeds), lane_executor=lane_executor, hold_executor=hold_executor,
                 planned_sim_s=planned,
                 cells=[dict(cell=c, demand=d, share=p, seeds=list(s)) for c, d, p, s in cells],
@@ -377,9 +412,9 @@ def make_job_hook(job, R):
     if job['executor'] == 'u0':
         return R.RuleHook(None)
     if job['executor'] == 'regimeu0':
-        if job['strategy'] != INCUMBENT:
-            raise ValueError('regimeu0 executor runs the incumbent only')
-        return R.RuleHook(INCUMBENT)
+        if job['strategy'] not in (INCUMBENT, BANNED_ARM):
+            raise ValueError('regimeu0 executor runs the incumbent / the banned comparator only')
+        return R.RuleHook(job['strategy'])
     if job['executor'] in VH.EXECUTORS:
         return VH.make_hook(job['strategy_spec'], warmup_s=R.WARMUP_S, executor=job['executor'])
     raise ValueError(job['executor'])
@@ -400,21 +435,25 @@ def worker(root, ident):
         raise ValueError('dry-run plan: no physics')
     job = _find_job(body, ident)
     hook = make_job_hook(job, R)
+    from . import pervehicle as PV
+    hook.pv = PV.PerVehicle()                    # eval-only LSSEARCH/MULTICRIT logger on EVERY arm (u0 included)
     lc = needs_lc_runtime(job)
     original = (R.RuleHook, R._job, accel_plant.bind_runtime, os.environ.get('COOPMWM_LC_RUNTIME'))
     lc_record = None
+    bind = accel_plant.bind_runtime
     if lc:
         os.environ['COOPMWM_LC_RUNTIME'] = '1'
-        bind = accel_plant.bind_runtime
-
-        def bind_runtime(j):
-            exact = bind(j)
-            from tools.coopmwm import lc_runtime
-            lc_runtime.install(j)                # after map_runtime.install (LCEXEC contract); idempotent
-            return exact
-        accel_plant.bind_runtime = bind_runtime
     else:
         os.environ.pop('COOPMWM_LC_RUNTIME', None)   # u0 / incumbent / hold arms: the exact S-REGIMEU0 code path
+
+    def bind_runtime(j):
+        exact = bind(j)
+        if lc:
+            from tools.coopmwm import lc_runtime
+            lc_runtime.install(j)                # after map_runtime.install (LCEXEC contract); idempotent
+        PV.install_on_observe(hook.pv)           # tools.leverprobe.backend is imported by now (observe-time install)
+        return exact
+    accel_plant.bind_runtime = bind_runtime
     R.RuleHook = lambda _name: hook
     R._job = lambda _root, _ident: dict(job)
     try:
@@ -428,6 +467,11 @@ def worker(root, ident):
             os.environ.pop('COOPMWM_LC_RUNTIME', None)
         else:
             os.environ['COOPMWM_LC_RUNTIME'] = original[3]
+    work = root / 'jobs' / ident
+    if work.exists() and not (work / 'PERVEH.json.gz').exists():
+        import gzip
+        with gzip.open(work / 'PERVEH.json.gz', 'xt', encoding='utf-8') as f:
+            json.dump(hook.pv.finish(), f)
     side = dict(schema=SCHEMA + '.job', id=ident, arm=job['arm'], executor=job['executor'],
                 strategy_key=None if job['strategy_spec'] is None else SS.strategy_key(job['strategy_spec']),
                 activations=len(getattr(hook, 'acts', []) or []),
@@ -444,7 +488,7 @@ def run(root, phase=PHASE, **kw):
     import subprocess
     if _read(Path(root) / 'PLAN.json').get('dry_run'):
         raise ValueError('dry-run plan: no physics')
-    real, phase = subprocess.Popen, ir.PHASE
+    real, saved_phase = subprocess.Popen, ir.PHASE
 
     def popen(cmd, *a, **k2):
         if isinstance(cmd, list) and 'tools.coopmwm.regimeu0' in cmd:
@@ -456,7 +500,7 @@ def run(root, phase=PHASE, **kw):
         return R.run(root, **kw)
     finally:
         R.subprocess.Popen = real
-        ir.PHASE = phase
+        ir.PHASE = saved_phase
 
 
 # ------------------------------------------------------------------------------------------ analysis (zero physics)
@@ -468,22 +512,25 @@ def _rec(R, ir, s, base):
 
 
 WMSEARCH_SCHEMA = 'wmc.wmsearch_u0.v1.plan'      # WM-C S-WMSEARCH roots (arm ids wm_k/str_k/rnd_k, solo2 incumbent)
+WMSEARCH_SCHEMAS = (WMSEARCH_SCHEMA, 'wmc.wmsearch_u0.v2.plan')   # v2: inc (wall_g_solo2) + optional banned solo2
 
 
 def arm_alias(body):
     """Arm id -> ANALYSIS family name. wm_verify roots: identity. S-WMSEARCH roots (wmsearch_u0 PLAN with 'specs'):
     the spec name, the SOLO2-keyed arm -> 'wall_h_solo2' (StrategyCore SOLO2 on the same plant; the RuleHook /
     StrategyCore parity is what the wm_verify solo2_core arm checks in SUMO)."""
-    specs = body.get('specs') if body.get('schema') == WMSEARCH_SCHEMA else None
+    specs = body.get('specs') if body.get('schema') in WMSEARCH_SCHEMAS else None
     if not specs:
         return lambda arm: arm
-    solo = SS.strategy_key(dict(SS.SOLO2))
+    solo, inc = SS.strategy_key(dict(SS.SOLO2)), SS.strategy_key(dict(SS.INCUMBENT))
     names = {}
     for arm, spec in specs.items():
         if spec is None:
             names[arm] = BASE_ARM
-        elif SS.strategy_key(spec) == solo:
+        elif SS.strategy_key(spec) == inc:
             names[arm] = INCUMBENT
+        elif SS.strategy_key(spec) == solo:
+            names[arm] = BANNED_ARM
         else:
             names[arm] = spec['name']
     if len(set(names.values())) != len(names):
@@ -497,7 +544,7 @@ def wmsearch_families(body):
     out = {}
     alias = arm_alias(body)
     for arm, spec in (body.get('specs') or {}).items():
-        if spec is None or alias(arm) in (BASE_ARM, INCUMBENT):
+        if spec is None or alias(arm) in (BASE_ARM, INCUMBENT, BANNED_ARM):
             continue
         tpl, tsha = VH.family_template(spec)
         out[alias(arm)] = dict(spec=spec, strategy_key=SS.strategy_key(spec), executor='plant', cells={},
@@ -517,7 +564,9 @@ def collect(roots):
     """regimeu0.analyze's per-seed rows (verbatim records) + identity + parity/side records."""
     ir, R = _harness()
     roots = [Path(r) for r in ([roots] if isinstance(roots, (str, Path)) else roots)]
+    from . import pervehicle as PV
     rows, side, identity, parity, failed, arms = [], {}, None, [], [], []
+    fair, perveh = {}, []                    # fair[cell][component][seed][arm] = pervehicle.fairness_of(...)
     for root in roots:
         body = _read(root / 'PLAN.json')
         alias = arm_alias(body)
@@ -541,6 +590,24 @@ def collect(roots):
                 p = root / 'jobs' / j['id'] / 'WMVERIFY.json'
                 if p.exists():
                     side[(g['jobs'][0]['world']['seed'], alias(j['arm']))] = _read(p)
+                w0 = g['jobs'][0]['world']
+                q = root / 'jobs' / j['id'] / 'PERVEH.json.gz'
+                pv = ir._read(q) if q.exists() else None
+                summ = root / 'jobs' / j['id'] / 'SUMMARY.json.gz'
+                if summ.exists() and alias(j['arm']) != PARITY_ARM:
+                    rec_pv = dict(seed=w0['seed'], cell=w0['cell_key'], arm=alias(j['arm']),
+                                  present=pv is not None and not pv.get('error'),
+                                  error=None if pv is None else pv.get('error'))
+                    if rec_pv['present']:
+                        rec_pv.update(sum_road_vs=pv.get('sum_road_vs'), sum_source_vs=pv.get('sum_source_vs'),
+                                      road_outside_population_vs=pv.get('road_outside_population_vs'),
+                                      n=len(pv.get('rows') or ()))
+                        for comp in PV.COMPONENTS:
+                            fo = PV.fairness_of(pv, comp)
+                            if fo is not None:
+                                fair.setdefault(w0['cell_key'], {}).setdefault(comp, {}).setdefault(
+                                    w0['seed'], {})[alias(j['arm'])] = fo
+                    perveh.append(rec_pv)
             w = g['jobs'][0]['world']
             base = sums.get(BASE_ARM)
             row = dict(seed=w['seed'], cell=w['cell_key'], root=str(root), arms={})
@@ -573,7 +640,8 @@ def collect(roots):
                         first_act is not None and rec['first_divergence_s'] >= first_act)
                 row['arms'][arm] = rec
             rows.append(row)
-    return dict(roots=roots, rows=rows, side=side, identity=identity, parity=parity, failed=failed, arms=arms)
+    return dict(roots=roots, rows=rows, side=side, identity=identity, parity=parity, failed=failed, arms=arms,
+                fair=fair, perveh=perveh)
 
 
 def cells_from_rows(rows, arms):
@@ -630,15 +698,58 @@ def analysis(roots, col=None):
     """ANALYSIS.json body in EXACTLY the S-REGIMEU0 schema (keys of regimeu0.analyze)."""
     ir, R = _harness()
     col = col or collect(roots)
-    order = [BASE_ARM] + [a for a in col['arms'] if a != BASE_ARM]
+    order = [BASE_ARM] + [a for a in col['arms'] if a != BASE_ARM and a not in NOT_FAMILIES]
+    rows = [dict(r, arms={a: x for a, x in r['arms'].items() if a not in NOT_FAMILIES}) for r in col['rows']]
     rep = dict(schema=R.SCHEMA + '.analysis', roots=[str(r) for r in col['roots']],
                spent=sum(ir.spent(r) for r in col['roots']),
                plan_sha256=[_read(Path(r) / 'PLAN.json')['plan_sha256'] for r in col['roots']], cells={},
-               seeds=col['rows'])
+               seeds=rows)
     if col['identity'] is not None:
         rep['identity'] = col['identity']
-    rep['cells'] = cells_from_rows(col['rows'], order)
+    rep['cells'] = cells_from_rows(rows, order)
     return rep
+
+
+def fairness(col, arms):
+    """Per cell per arm: pervehicle.paired_fairness vs u0 and vs the incumbent for both delay components (road =
+    primary) + the owner's ALLOWED flag (every group's mean per-vehicle delay change vs u0 <= 10 s/veh, point
+    estimate, road component; the CI-upper variant is reported)."""
+    from . import pervehicle as PV
+    out = {}
+    for cell, comps in sorted(col['fair'].items()):
+        cell_out = {}
+        for arm in arms:
+            if arm == BASE_ARM:
+                continue
+            rec = {}
+            for comp in PV.COMPONENTS:
+                by_seed = comps.get(comp) or {}
+                rec[comp] = {ref: PV.paired_fairness(by_seed, arm, ref) for ref in (BASE_ARM, INCUMBENT)
+                             if ref != arm}
+            f0 = (rec.get(FAIR_COMPONENT) or {}).get(BASE_ARM)
+            cell_out[arm] = dict(fairness=rec, allowed=None if f0 is None else bool(f0['allowed_point']),
+                                 allowed_ci_upper=None if f0 is None else bool(f0['allowed_ci_upper']),
+                                 worst_group=None if f0 is None else f0['worst_group'],
+                                 worst_group_diff=None if f0 is None else f0['worst_group_diff'],
+                                 label='banned comparator' if arm == BANNED_ARM else None)
+        out[cell] = cell_out
+    return out
+
+
+def allowed_analysis(rep, fair):
+    """ANALYSIS_ALLOWED.json: the same S-REGIMEU0 schema restricted, per cell, to u0 + the families whose owner
+    fairness flag is ALLOWED (missing fairness = not allowed). The banned comparator is never a family."""
+    out = dict(rep, cells={}, seeds=[], allowed_rule='every group (origin SUMO lane 0/1/2, HDV, CAV) mean per-vehicle '
+               'road delay change vs u0 <= 10 s/veh (point estimate; owner 2026-11-07, REGISTRATION 04:03)')
+    keep = {}
+    for cell, arms in rep['cells'].items():
+        ok = {a for a, v in (fair.get(cell) or {}).items() if v.get('allowed') is True}
+        keep[cell] = {BASE_ARM} | ok
+        out['cells'][cell] = {a: v for a, v in arms.items() if a in keep[cell] or (
+            'minus' in a and v.get('group') in ok)}
+    out['seeds'] = [dict(r, arms={a: x for a, x in r['arms'].items() if a in keep.get(r['cell'], ())})
+                    for r in rep['seeds']]
+    return out
 
 
 def _mean(x):
@@ -658,7 +769,7 @@ def _paired(rows, arm, ref, field):
 
 
 def contrasts(rows, arms, ref=INCUMBENT):
-    """Per cell per strategy: paired arm - ref (solo2 by default) with the regimeu0 bootstrap; per-seed fractions;
+    """Per cell per strategy: paired arm - ref (the incumbent) with the regimeu0 bootstrap; per-seed fractions;
     safety deltas vs u0 and vs ref. diff < 0 = the strategy is better."""
     ir, R = _harness()
     out = {}
@@ -749,11 +860,14 @@ def checks(roots, col=None):
         u0 = body['inputs'].get('u0.pt') or {}
         shas.add(u0.get('sha256'))
         # wmsearch_u0.plan refuses a u0 differing from the S-REGIMEU0 base at plan time (no stored reference)
-        refs.add(u0.get('regimeu0_sha256') if body.get('schema') != WMSEARCH_SCHEMA else u0.get('sha256'))
+        refs.add(u0.get('regimeu0_sha256') if body.get('schema') not in WMSEARCH_SCHEMAS else u0.get('sha256'))
     add('inputs_u0_identical_and_equal_regimeu0', len(shas) == 1 and shas == refs and None not in shas,
         u0_sha256=sorted(x for x in shas if x))
     if col['failed']:
         warn.append(dict(name='failed_jobs', jobs=col['failed']))
+    missing = [dict(seed=p['seed'], cell=p['cell'], arm=p['arm'], error=p['error']) for p in col.get('perveh') or ()
+               if not p['present']]
+    add('perveh_present_every_episode', not missing, missing=missing[:50], n_missing=len(missing))
     lane_arms = {}
     for (seed, arm), sd in col['side'].items():
         if sd.get('executor') != 'lcexec' or not sd.get('receipts'):
@@ -822,7 +936,8 @@ def results_rows(rows):
 
 
 def analyze(roots, out_dir=None):
-    """ANALYSIS.json (S-REGIMEU0 schema), VERIFY.json (contrasts vs solo2, integrity, safety, families),
+    """ANALYSIS.json + ANALYSIS_ALLOWED.json (S-REGIMEU0 schema), VERIFY.json (contrasts vs the incumbent, fairness,
+    integrity, safety, families),
     RESULTS.jsonl, CHECK.json into a NEW directory (never overwritten)."""
     roots = [Path(r) for r in ([roots] if isinstance(roots, (str, Path)) else roots)]
     col = collect(roots)
@@ -834,20 +949,31 @@ def analyze(roots, out_dir=None):
         for name, f in (body.get('families') or wmsearch_families(body)).items():
             families.setdefault(name, f)
     order = [BASE_ARM] + [a for a in col['arms'] if a != BASE_ARM]
+    fair = fairness(col, order)
     ver = dict(schema=SCHEMA + '.verify', stable_id=STABLE_ID, phase=PHASE, roots=[str(r) for r in roots],
-               plan_sha256=rep['plan_sha256'], incumbent=INCUMBENT,
-               convention='diff = J(arm) - J(reference) over [300, 1200) s, veh-s; negative = the arm is better',
-               families=families, vs_incumbent=contrasts(col['rows'], order), integrity=chk,
+               plan_sha256=rep['plan_sha256'], incumbent=INCUMBENT, banned_comparator=BANNED_ARM,
+               convention='diff = arm - reference (same seed): J over [300, 1200) s veh-s, group mean per-vehicle '
+                          'delay change s/veh; negative = better. ALLOWED = every group change vs u0 <= 10 s/veh '
+                          '(point, road component); CI upper reported',
+               families=families, vs_incumbent=contrasts(col['rows'], order), fairness=fair, integrity=chk,
                parity=col['parity'])
+    for cell, arms in ver['vs_incumbent'].items():
+        if BANNED_ARM in arms:
+            arms[BANNED_ARM]['label'] = 'banned comparator (owner 2026-11-07); never an ANALYSIS family'
     summ = {}
     for cell, arms in ver['vs_incumbent'].items():
-        beat = sorted(a for a, v in arms.items() if v.get('beats_ref_ci'))
-        best = min((a for a in arms if arms[a].get('mean_diff') is not None), key=lambda a: arms[a]['mean_diff'],
+        fc = fair.get(cell) or {}
+        allowed = sorted(a for a in arms if a not in NOT_FAMILIES and (fc.get(a) or {}).get('allowed') is True)
+        beat = sorted(a for a in allowed if arms[a].get('beats_ref_ci'))
+        best = min((a for a in allowed if arms[a].get('mean_diff') is not None), key=lambda a: arms[a]['mean_diff'],
                    default=None)
-        summ[cell] = dict(n_strategies=len(arms), beat_incumbent_ci=beat, best=best,
-                          best_vs_incumbent=None if best is None else {k: arms[best].get(k) for k in
-                                                                       ('n', 'mean_diff', 'ci95', 'rel_diff',
-                                                                        'better_share')})
+        summ[cell] = dict(n_strategies=len([a for a in arms if a not in NOT_FAMILIES]), allowed=allowed,
+                          not_allowed=sorted(a for a in arms if a not in NOT_FAMILIES and a not in allowed),
+                          incumbent_allowed=(fc.get(INCUMBENT) or {}).get('allowed'),
+                          beat_incumbent_ci_allowed=beat, best_allowed=best,
+                          best_allowed_vs_incumbent=None if best is None else {k: arms[best].get(k) for k in
+                                                                               ('n', 'mean_diff', 'ci95', 'rel_diff',
+                                                                                'better_share')})
     ver['summary'] = summ
     if out_dir is not None:
         out = guard_path(out_dir)
@@ -855,6 +981,9 @@ def analyze(roots, out_dir=None):
         text = json.dumps(rep, indent=1, sort_keys=True, default=str) + '\n'
         (out / 'ANALYSIS.json').open('x', encoding='utf-8').write(text)
         ver['analysis_sha256'] = hashlib.sha256(text.encode('utf-8')).hexdigest()
+        allowed_text = json.dumps(allowed_analysis(rep, fair), indent=1, sort_keys=True, default=str) + '\n'
+        (out / 'ANALYSIS_ALLOWED.json').open('x', encoding='utf-8').write(allowed_text)
+        ver['analysis_allowed_sha256'] = hashlib.sha256(allowed_text.encode('utf-8')).hexdigest()
         _write_new(out / 'VERIFY.json', ver)
         _write_new(out / 'CHECK.json', chk)
         with (out / 'RESULTS.jsonl').open('x', encoding='utf-8') as f:
@@ -864,25 +993,28 @@ def analyze(roots, out_dir=None):
 
 
 # ------------------------------------------------------------------------------------------ registration text
-def budget(cells, n_candidates_by_cell, parity_seeds=2, identity=True):
+def budget(cells, n_candidates_by_cell, parity_seeds=2, identity=True, banned_seeds=0):
     total = EPISODE_S if identity else 0
     for cell, _d, _p, seeds in cells:
         arms = 2 + n_candidates_by_cell[cell]
         total += len(seeds) * arms * EPISODE_S + min(parity_seeds, len(seeds)) * EPISODE_S
+        total += min(banned_seeds, len(seeds)) * EPISODE_S
     return total
 
 
 def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, identity=True,
                       lane_executor=DEFAULT_LANE_EXECUTOR, hold_executor=DEFAULT_HOLD_EXECUTOR, arms_sha256=None,
-                      regimeu0_u0_sha256=None, smoke_seeds=1):
-    planned = budget(cells, {c: len(v) for c, v in specs_by_cell.items()}, parity_seeds, identity)
+                      regimeu0_u0_sha256=None, smoke_seeds=1, banned_seeds=0):
+    planned = budget(cells, {c: len(v) for c, v in specs_by_cell.items()}, parity_seeds, identity, banned_seeds)
     shas = module_shas()
     lines = [
         f'### {STABLE_ID} (phase {PHASE}) - registration (append BEFORE any physics)',
-        '- Question: do the WORLD-MODEL-PROPOSED strategies (WM-C S-WMSEARCH ARMS.json) beat the solo2 incumbent '
-        '(and MAPPO u0) per demand cell on fresh TRAIN-type seeds, when executed by the POLICY executor? Output = '
-        'verified EV rows for the FULLPOL clean5 EV-BC builder (S-REGIMEU0 ANALYSIS schema) + per-family LCEXEC '
-        'templates and offer conditions (VERIFY.json).',
+        '- Question: do the WORLD-MODEL-PROPOSED strategies (WM-C ARMS.json v3: delay / bounded / fairer archives, '
+        'structured, random, reference) beat the gentle incumbent wall_g_solo2 and MAPPO u0 per demand cell on fresh '
+        'TRAIN-type seeds, when executed by the POLICY executor, and are they ALLOWED under the owner fairness bound '
+        '(every origin-lane / HDV / CAV group mean per-vehicle delay change vs u0 <= 10 s, REGISTRATION 04:03)? '
+        'Output = verified EV rows for FULLPOL (ANALYSIS.json and the fairness-filtered ANALYSIS_ALLOWED.json, '
+        'S-REGIMEU0 schema) + per-family templates, offer conditions and per-group fairness (VERIFY.json).',
         '- Closest prior: S-REGIMEU0 (ANALYSIS c0b578f8): solo2 (wall_h_solo2) -24% at D3200, -14% at D2800_p60, '
         '+31-39% at D2400; walls dominated by solo2. S-WMSEARCH amendment 1 (WM/structured/random vs solo2 on '
         'REGIME seeds 989770-989785). Exact difference: fresh seeds 989950-989999, WM-proposed specs incl. lane '
@@ -893,9 +1025,11 @@ def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, identity=Tru
         'LSSEARCH has 989900-989949; 989900-989999 found unused in all 921 local branches, worktrees and run '
         'registries on 2026-11-06). Registered in map_scenarios.EXTRA_TRAIN_RANGES on c4/wmverify only.',
         '- Cells / seeds: ' + '; '.join(f'{c} {s[0]}-{s[-1]} ({len(s)})' for c, _d, _p, s in cells) + '.',
-        f'- Arms per seed group (paired CRN): u0; {INCUMBENT} (incumbent, regimeu0.RuleHook verbatim); {PARITY_ARM} '
-        f'(SOLO2 via strategy_hook.StrategyCore on the plant path, executor parity, first {parity_seeds} seeds per '
-        'cell, VERIFY only); candidates [source, strategy key, executor]:']
+        f'- Arms per seed group (paired CRN): u0; {INCUMBENT} (gentle incumbent 22 m/s / 120 s / dmax 1.0, '
+        f'regimeu0.RuleHook verbatim); {PARITY_ARM} (the same rule via strategy_hook.StrategyCore on the plant path, '
+        f'executor parity, first {parity_seeds} seeds per cell, VERIFY only); '
+        + (f'{BANNED_ARM} (BANNED firm 15 m/s solo2, labelled comparator on the first {banned_seeds} seeds per cell, '
+           'never a family); ' if banned_seeds else '') + 'candidates [source, strategy key, executor]:']
     for cell, lst in specs_by_cell.items():
         lines.append(f'  - {cell}: ' + ', '.join(
             f'{s["name"]} [{src}, {SS.strategy_key(s)}, '
@@ -924,13 +1058,17 @@ def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, identity=Tru
         'parity, ledger, inputs; warnings reviewed: LCEXEC refusals, lane programs without executed lane requests, '
         'never-activated strategies) before stage B (remaining seeds, --prior-root A --no-identity).',
         '- Analysis (fixed before results): regimeu0.analyze per cell (paired diff vs u0, bootstrap 10,000 RNG '
-        '20261106, 2.5/97.5%), strategy - solo2 paired contrasts (same bootstrap), per-seed better/worse shares, '
-        'beats-u0-and-solo2 share, safety (collisions, teleports, hard braking, TTC<3 s; deltas vs u0 and vs solo2). '
-        'diff = arm - reference; negative = better. No thresholds tuned on these seeds.',
+        '20261106, 2.5/97.5%), strategy - wall_g_solo2 paired contrasts (same bootstrap), per-seed better/worse '
+        'shares, beats-u0-and-incumbent share, safety (collisions, teleports, hard braking, TTC<3 s; deltas vs u0 and '
+        'vs the incumbent); per-group fairness with the eval-only LSSEARCH/MULTICRIT per-vehicle logger '
+        '(tools/wzprop/pervehicle.py, every arm incl. u0): groups origin SUMO lane 0/1/2 and HDV/CAV, paired mean '
+        'per-vehicle delay change vs u0 and vs the incumbent with 95% CIs (bootstrap 10,000 RNG 20261107), ALLOWED = '
+        'every group change vs u0 <= 10 s/veh (point, road component; CI upper reported), CVaR90 / p90 / Gini '
+        'changes. diff = arm - reference; negative = better. No thresholds tuned on these seeds.',
         '- Stop rules: STOP file; cap; failed integrity check -> stop and report; charged jobs are never re-run.',
-        '- Outputs: ANALYSIS.json (S-REGIMEU0 schema; FULLPOL build_guidance(mappo=...)), VERIFY.json (families: '
-        'spec, executor, LCEXEC template, offer condition, parity verdict id; contrasts; integrity), RESULTS.jsonl, '
-        'CHECK.json in a new analysis directory.',
+        '- Outputs: ANALYSIS.json and ANALYSIS_ALLOWED.json (S-REGIMEU0 schema; FULLPOL build_guidance(mappo=...)), '
+        'VERIFY.json (families: spec, executor, LCEXEC template(s), offer condition, lcexec_parity / n2_parity; '
+        'contrasts; fairness; integrity), RESULTS.jsonl, CHECK.json, PERVEH.json.gz per episode.',
     ]
     return '\n'.join(lines) + '\n', planned
 
@@ -976,11 +1114,11 @@ def dryrun(out_dir, *, arms_path, cells, groups=GROUPS, k=4, parity_seeds=2, lan
                                   receipts=hook.receipts() if hasattr(hook, 'receipts') else None)
         par = None
         if PARITY_ARM in traces:
-            a, b = traces[INCUMBENT], traces[PARITY_ARM]
+            a, b = traces[INCUMBENT], traces[PARITY_ARM]   # wall_g_solo2: RuleHook vs StrategyCore(SS.INCUMBENT)
             diff = [x['t'] for x, y in zip(a, b) if x['desired'] != y['desired'] or x['g5'] != y['g5']]
             par = dict(identical=not diff and len(a) == len(b), differing_ticks=diff[:10],
                        incumbent_command_ticks=arms[INCUMBENT]['command_ticks'])
-        report['cells'][cell] = dict(seed=seeds[0], arms=arms, solo2_parity=par)
+        report['cells'][cell] = dict(seed=seeds[0], arms=arms, incumbent_parity=par)
     _write_new(Path(out_dir) / 'DRYRUN.json', report)
     return report
 
@@ -1010,6 +1148,8 @@ def main(argv=None):
         a.add_argument('--groups', default=','.join(GROUPS))
         a.add_argument('--k', type=int, default=4)
         a.add_argument('--parity-seeds', type=int, default=2)
+        a.add_argument('--banned-seeds', type=int, default=0,
+                       help='seeds per cell with the BANNED solo2 comparator arm (labelled; never a family)')
         _executor_args(a)
         if name == 'registration':
             a.add_argument('--cap', type=int, required=True)
@@ -1045,9 +1185,12 @@ def main(argv=None):
         specs = [json.loads(guard_path(p).read_text()) for p in x.spec]
         out = {}
         for cell, d in doc.items():
-            for grp in GROUPS + SINGLE_GROUPS + ('incumbent',):
+            for grp in GROUPS + OPTIONAL_GROUPS + SINGLE_GROUPS:
                 items = d.get(grp)
+                items = list(items.values()) if isinstance(items, dict) and grp == 'best' else items
                 for s in (items if isinstance(items, list) else [items] if items else []):
+                    if not s:
+                        continue
                     try:
                         check_spec(s, x.lane_executor)
                         out.setdefault(cell, []).append(dict(group=grp, name=s.get('name'), ok=True))
@@ -1077,7 +1220,7 @@ def main(argv=None):
             u0 = _read(Path(x.regimeu0_root) / 'PLAN.json')['inputs']['u0.pt']['sha256']
         text, planned = registration_text(cells=cells, specs_by_cell=specs, cap=x.cap, parity_seeds=x.parity_seeds,
                                           identity=not x.no_identity, lane_executor=x.lane_executor,
-                                          hold_executor=x.hold_executor,
+                                          hold_executor=x.hold_executor, banned_seeds=x.banned_seeds,
                                           arms_sha256=_sha_file(x.arms) if x.arms else None, regimeu0_u0_sha256=u0)
         if planned > x.cap:
             raise SystemExit(f'planned {planned} > cap {x.cap}')
@@ -1086,14 +1229,14 @@ def main(argv=None):
         rep = dryrun(x.out, arms_path=x.arms, cells=cells, groups=groups, k=x.k, parity_seeds=x.parity_seeds,
                      lane_executor=x.lane_executor, hold_executor=x.hold_executor, fake_seconds=x.fake_seconds,
                      spec_paths=x.spec)
-        print(json.dumps({c: dict(parity=v['solo2_parity'], arms={a: dict(acts=r['activations'], executor=r['executor'])
+        print(json.dumps({c: dict(parity=v['incumbent_parity'], arms={a: dict(acts=r['activations'], executor=r['executor'])
                                                                     for a, r in v['arms'].items()})
                           for c, v in rep['cells'].items()}, indent=1))
     elif x.cmd == 'plan':
         body = plan(x.root, regimeu0_root=x.regimeu0_root, arms_path=x.arms, cells=cells, cap=x.cap,
                     registration_md=x.registration, groups=groups, k=x.k, parity_seeds=x.parity_seeds,
                     identity=not x.no_identity, lane_executor=x.lane_executor, hold_executor=x.hold_executor,
-                    spec_paths=x.spec, prior_roots=x.prior_root)
+                    spec_paths=x.spec, prior_roots=x.prior_root, banned_seeds=x.banned_seeds)
         print(json.dumps(dict(plan_sha256=body['plan_sha256'], planned_sim_s=body['planned_sim_s'],
                               arms=sorted(body['families']), groups=len(body['groups']))))
     elif x.cmd == 'run':

@@ -82,10 +82,10 @@ class _Commit:
         return True
 
 
-def build_free_program(spec, member_rows, frame, t, end_s=END_S):
-    """(ids, FreeProgram) of one activation: WM member specs -> LCEXEC member programs (lc_smoke order)."""
+def build_free_program(spec, member_rows, frame, t, end_s=END_S, phase=0):
+    """(ids, FreeProgram) of one activation (its phase's roles): WM member specs -> LCEXEC member programs."""
     from tools.coopmwm import lc_program as lp, lc_roles
-    members = SS.member_specs(spec, member_rows)
+    members = SS.member_specs(spec, member_rows, phase=phase)
     ids = tuple(m['id'] for m in members)
     programs = tuple(lc_roles.member_program(m['role'], m['params'], frame) for m in members)
     dur = max(int(p.start_el) + int(p.hold_s if p.hold_s is not None else end_s - t) for p in programs)
@@ -122,7 +122,8 @@ class LcexecExecutor:
         ids = list(act['members'])
         sid = f'{lf.NAME}:{ids[0]}@{t}'
         try:
-            ids_, fp = build_free_program(self.spec, [SH.to_sumo_row(table[v]) for v in ids], self.frame, t, self.end_s)
+            ids_, fp = build_free_program(self.spec, [SH.to_sumo_row(table[v]) for v in ids], self.frame, t, self.end_s,
+                                          phase=int(act.get('phase', 0)))
             template = lf.template_from_program(fp, self.frame, table)
             proto.receive(t, {v: table[v] for v in cavs}, sensing, self.reports_prev)
             options = []
@@ -353,23 +354,28 @@ def wz_descriptor():
     return desc if desc is not None and desc.kind == 'lane_drop' else md.load(MAP_DIR)
 
 
-def family_template(spec, frame=None):
-    """lcexec-free-program-v1 SLOT template of a strategy (FULLPOL 'wm_verified' generator): slot k = role k's
-    member program (the same member_specs -> lc_roles path the lcexec executor runs; for hold-only strategies the
-    nm2 'hold' program), join rule of slot k = role k's WM lane at activation and ds to the initiator within the
-    trigger spread. Validated by lc_families.template_of (registered grids)."""
+def n_phases(spec):
+    return len(spec.get('phases') or ()) or 1
+
+
+def family_template(spec, frame=None, phase=0):
+    """lcexec-free-program-v1 SLOT template of a strategy activation (FULLPOL 'wm_verified' generator): slot k =
+    active role k's member program (the same member_specs -> lc_roles path the lcexec executor runs; for hold-only
+    strategies the nm2 'hold' program), join rule of slot k = its WM lane at activation and ds to the initiator
+    within the trigger spread. Phased strategies (alternating holders): one template per phase. Validated by
+    lc_families.template_of (registered grids)."""
     from tools.coopmwm import lc_families as lf, lc_program as lp
     if frame is None:
         frame = lp.frame_from_descriptor(wz_descriptor())
     lo, hi = SS.ZONES[spec['zone']]
-    rows = [dict(id=f'm{k}', edge='up', lane=int(r['lane']), x=(lo + hi) / 2.0, v=20.0)
-            for k, r in enumerate(spec['roles'])]
-    _ids, fp = build_free_program(spec, rows, frame, 0, END_S)
+    roles = SS.active_roles(spec, phase)
+    rows = [dict(id=f'm{k}', edge='up', lane=int(r['lane']), x=(lo + hi) / 2.0, v=20.0) for k, r in enumerate(roles)]
+    _ids, fp = build_free_program(spec, rows, frame, 0, END_S, phase=phase)
     spread = float(G.WALL_SPREAD if spec['trigger'] == 'wall' else spec['spread_m'])
-    rules = (None,) + tuple(dict(lane=SH.wm_lane_of(r['lane']), ds=(-spread, spread)) for r in spec['roles'][1:])
+    rules = (None,) + tuple(dict(lane=SH.wm_lane_of(r['lane']), ds=(-spread, spread)) for r in roles[1:])
     programs = tuple(fp.programs)
     tpl = lp.FreeProgram(tuple(f'@{k}' for k in range(len(programs))), programs, frame.name, (0,) * len(programs),
-                         int(fp.duration_s), dict(fp.source, t0=None, template_of='strategy'),
+                         int(fp.duration_s), dict(fp.source, t0=None, template_of='strategy', phase=int(phase)),
                          rules if len(programs) > 1 else ())
     lf.template_of(tpl, cap=LC_CAP, frame=frame, n_lanes=3)
     d = tpl.to_dict()
@@ -380,7 +386,10 @@ def offer_condition(spec):
     """Trigger geometry the verification used (strategy_search.select_members), in SUMO x, WM s and distance
     upstream of the drop; the observable gate; cooldown/slots."""
     lo, hi = SS.ZONES[spec['zone']]
-    roles = [dict(slot=k, sumo_lane=int(r['lane']), wm_lane=SH.wm_lane_of(r['lane']), rank=int(r['rank']),
+    ph = spec.get('phases')
+    phase_of = {i: n for n, p in enumerate(ph) for i in p} if ph else {}
+    roles = [dict(slot=k, phase=phase_of.get(k, 0), sumo_lane=int(r['lane']), wm_lane=SH.wm_lane_of(r['lane']),
+                  rank=int(r['rank']),
                   onset_s=int(r['onset_s']), hold_s=int(r['hold_s']), v_w=float(r['v_w']), dmax=float(r['dmax']),
                   lc_target_sumo=r['lc_target'],
                   lc_target_wm=None if r['lc_target'] is None else SH.wm_lane_of(r['lc_target']))
@@ -398,5 +407,11 @@ def offer_condition(spec):
                 zone_upstream_m=[round(G.X_B - hi, 2), round(G.X_B - lo, 2)], edge='up',
                 spread_m=float(G.WALL_SPREAD if spec['trigger'] == 'wall' else spec['spread_m']), member_rule=rule,
                 roles=roles, own_wm_lanes=sorted({x['wm_lane'] for x in roles}), gate=gate,
+                start_gate=None if spec.get('start_gate') is None else dict(
+                    name=spec['start_gate'], **SS.START_GATES[spec['start_gate']],
+                    rule='start only if, for every member, at most max_behind observed vehicles (CAV self + '
+                         'CAV-detected rows) are in its lane within behind_m behind it'),
+                phases=None if not ph else dict(groups=[list(p) for p in ph], rule='activation n (counted from 0) '
+                                                'runs only the roles of phase n mod P (alternating holders)'),
                 cooldown_s=int(spec['cooldown_s']), slots=int(spec.get('slots', 1)), decision='every whole second '
                 't >= 300 s once t >= next_ok (= last activation + cooldown) and fewer than `slots` activations run')

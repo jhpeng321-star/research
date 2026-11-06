@@ -32,6 +32,7 @@ from collections import Counter
 from pathlib import Path
 
 from . import strategy_hook as SH
+from .strategy_search import active_roles as SS_active_roles
 
 N2_FILE = Path(__file__).with_name('fixtures') / 'wmverify' / 'n2_lane_drop_fullpol_e36ece92.pysrc'
 N2_SHA256 = '40515bc01f7f39933dc3e24fd999c45d9057d048bbb2c408a2534fcc324a4404'
@@ -87,10 +88,10 @@ def hold_pins(active, own_lanes, zip_members=()):
     return {v: int(own_lanes[v]) for v in sorted(set(active)) if v not in zips and v in own_lanes}
 
 
-def n2_moves(spec, members, wm_lanes, view):
-    """N2 moves of one activation (members in role order, their WM lanes at activation) or raise ValueError."""
+def n2_moves(spec, members, wm_lanes, view, phase=0):
+    """N2 moves of one activation (members in active-role order, their WM lanes at activation) or ValueError."""
     ld = load_n2()
-    roles = spec['roles']
+    roles = SS_active_roles(spec, phase)
     if any(r.get('lc_target') is not None for r in roles):
         raise ValueError('lane-change roles have no N2 hold representation')
     keys = {(float(r['v_w']), int(r['hold_s']), float(r['dmax']), int(r['onset_s'])) for r in roles}
@@ -172,11 +173,13 @@ def _parity(spec, *, executor, seed, share, seconds, max_acts, n2_pin):
         t0, members = int(act['t']), list(act['members'])
         rows0 = {r['vid']: r for r in by_t[t0]['rows']}
         try:
-            moves = n2_moves(spec, members, [int(rows0[v]['lane']) for v in members], view)
+            moves = n2_moves(spec, members, [int(rows0[v]['lane']) for v in members], view,
+                             phase=int(act.get('phase', 0)))
         except ValueError as exc:
             return dict(rec, verdict='not_representable', reason=str(exc), identical=False)
         moves_out.append([m.to_dict() for m in moves])
-        end = max(t0 + int(r['onset_s']) + int(r['hold_s']) for r in spec['roles']) + 2
+        end = max(t0 + int(r['onset_s']) + int(r['hold_s'])
+                  for r in SS_active_roles(spec, int(act.get('phase', 0)))) + 2
         plant_ticks, n2_ticks = [], []
         for t in range(t0, min(end, max(by_t) + 1)):
             rows = {r['vid']: r for r in by_t[t]['rows']}

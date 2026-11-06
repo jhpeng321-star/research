@@ -56,6 +56,7 @@ class FakeEnv:
         self.totals = Counter()
         self.done = False
         self._version, self._gap_cache = 0, None
+        self.pv_req, self.pv_origin, self.pv_road = {}, {}, {}      # fake per-vehicle record (PerVehicle fields)
         if not lc_runtime:
             self.lc_tick = None
 
@@ -163,7 +164,12 @@ class FakeEnv:
                 vid = f'v{self.n}'
                 self.n += 1
                 self.veh[vid] = dict(s=START_S, v=25.0, lane=lane, cav=self.rng.random() < self.share)
+                self.pv_req[vid] = (float(self.now), bool(self.veh[vid]['cav']))
+                self.pv_origin[vid] = ('up', 2 - lane)
         road = sum(max(0.0, V_FREE - d['v']) / V_FREE for d in self.veh.values())
+        if 300 <= self.now < 1200:
+            for vid, d in self.veh.items():
+                self.pv_road[vid] = self.pv_road.get(vid, 0.0) + max(0.0, V_FREE - d['v']) / V_FREE
         self.totals['road_delay_vs'] += road
         self.totals['team_delay_vs'] += road
         self.now += 1
@@ -212,6 +218,11 @@ def run_episode(hook, *, seed=989950, share=0.6, seconds=1200, lc_runtime=True, 
                               lc=info['lc_lane_vehicles']))
             if keep_rows:
                 trace[-1]['rows'] = rows
+    pv = getattr(hook, 'pv', None)
+    if pv is not None:                       # fill the eval-only per-vehicle record from the fake stream
+        pv.requests, pv.ins, pv.road, pv.origin = dict(env.pv_req), {v: t for v, (t, _c) in env.pv_req.items()}, \
+            dict(env.pv_road), dict(env.pv_origin)
+        pv.arrived_a, pv.error = set(), None
     return dict(totals=dict(env.totals), trace=trace, actual_sim_s=int(seconds))
 
 
