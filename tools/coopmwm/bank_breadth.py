@@ -64,6 +64,19 @@ def inputs(cfg):
     return out
 
 
+def _mined_row(rows, arm, key, seed_index):
+    """The MINED_MOVES row binding one example: a walls row binds its OWN seed exactly;
+    a v1 pointer row (no seed field) binds any example of its plan. Ambiguous
+    duplicates of one example are refused."""
+    hits = [r for r in rows if r['arm'] == arm
+            and (r['verification_id'], r['plan_sha256']) == key]
+    hits = ([r for r in hits if r.get('seed') == seed_index]
+            or [r for r in hits if 'seed' not in r])
+    if len({digest(r) for r in hits}) > 1:
+        raise ValueError('MINED_MOVES binds one example ambiguously: '+key[0])
+    return hits[0] if hits else None
+
+
 def visit(cfg, arm, consumer):
     """Visit ALL usable verified examples, including legacy and imported banks.
 
@@ -96,10 +109,12 @@ def visit(cfg, arm, consumer):
         mined = {(r['verification_id'], r['plan_sha256'])
                  for r in local.get('_g5_mined', ()) if r['arm'] == arm}
         matched_mined = set()
+
         def consume(*, receipt, example, plan, pairs, trace):
             # bank_pairs has already checked legacy admission/cooperation too.
             if not pairs:
                 return
+            bound = local
             if '_g5_mined' in local:
                 mined_key = (receipt['verification_id'], digest(plan))
                 # per_seed_v1 may admit DIFFERENT plans on different seeds of
@@ -107,7 +122,20 @@ def visit(cfg, arm, consumer):
                 if mined_key not in mined:
                     return
                 mined_move(plan)  # exact G5 macro, or an executable verified acceleration plan
+                from . import group_lane_bank
+                row = _mined_row(local['_g5_mined'], arm, mined_key,
+                                 int((example or {}).get('seed_index', 1)))
+                if row is None:
+                    # An admitted example on a seed the file does not bind is not a
+                    # registered mined example; only bound rows are ingested.
+                    return
                 matched_mined.add(mined_key)
+                value = group_lane_bank.binding(row)
+                if value is not None:
+                    if (set(value['members']) != set(plan['members'])
+                            or int(value['duration_s']) != int(plan['duration_s'])):
+                        raise ValueError('MINED_MOVES binding differs from the verified plan it names')
+                    bound = dict(local, _mined_binding=value)
             if plan.get('g5_move') and not local.get('group_lane_moves'):
                 return
             ident = (example or {}).get('example_id', receipt['verification_id']+'#s1')
@@ -119,7 +147,6 @@ def visit(cfg, arm, consumer):
                 return
             seen.add(key)
             p1._path(trace)
-            bound = local
             # MINED_MOVES rows are admitted by the mining operator's own full-window
             # group/base/each-solo CRN verification (group>best-solo CI95 low>0); the
             # G1 manifest certifies the existing bank lessons only.
@@ -170,12 +197,14 @@ class UnboundContext(ValueError):
     """An old source has no immutable snapshot binding; never certify its current file."""
 
 
-def verified_restart(root, arm, receipt, example, plan):
+def verified_restart(root, arm, receipt, example, plan, mined=None):
     """Restore ONLY a context bound by original sealed first/own-seed evidence.
 
     Called at pool construction and dispatch. No freshly measured hash can stand
     in for a missing receipt hash, including for legacy and imported LS sources.
-    """
+    ``mined`` (walls-only clean3): the validated MINED_MOVES binding of this exact
+    example; without a decision link the restart snapshot comes from that row's own
+    sealed SUMO verification. None keeps the byte-identical decision-link path."""
     import hashlib
     from . import replay_bank as rb, practice_starts as ps, sumo_verify as sv
     from . import exact_grade as xg, verify_perseed as vp
@@ -184,7 +213,7 @@ def verified_restart(root, arm, receipt, example, plan):
     xg.verify_sealed(first, 'receipt_sha256')
     if not first.get('snapshot_sha256'):
         raise UnboundContext('original verification has no immutable snapshot_sha256')
-    snap = rb._decision_snapshot(root, arm, receipt, ps._links(root, arm))
+    snap = rb._decision_snapshot(root, arm, receipt, ps._links(root, arm), mined)
 
     def check_snapshot(evidence, snapshot):
         if (evidence.get('snapshot_sha256') != sv.snapshot_sha(snapshot)
@@ -277,7 +306,8 @@ def load_verified_restart(arm, lookup):
                         and r['receipt_sha256'] == expected['receipt_sha256']), None)
         if current is None:
             raise ValueError('verified restart original receipt evidence changed/missing')
-        snapshot, binding = verified_restart(root, arm, current, lookup['example'], lookup['plan'])
+        snapshot, binding = verified_restart(root, arm, current, lookup['example'], lookup['plan'],
+                                             lookup.get('mined_binding'))
         if binding != lookup.get('verification_binding'):
             raise ValueError('verified restart immutable verification evidence changed')
         if lookup['bank_cfg'].get('executable_label_manifest'):
@@ -403,7 +433,8 @@ def practice_pool(cfg, arm):
         root = cfg['run_root']
         links = ps._links(root, arm)
         try:
-            snap, binding = verified_restart(root, arm, receipt, example, plan)
+            snap, binding = verified_restart(root, arm, receipt, example, plan,
+                                             cfg.get('_mined_binding'))
         except UnboundContext as error:
             warnings.warn(f'F3 excludes {arm}/{receipt["verification_id"]}: {error}', RuntimeWarning)
             return
@@ -422,6 +453,9 @@ def practice_pool(cfg, arm):
                 receipt=receipt, example=example, plan=plan, verification_binding=binding),
             snapshot_sha256=sv.snapshot_sha(snap),
             context_id=digest(dict(snapshot=sv.snapshot_sha(snap), family=family)))
+        if cfg.get('_mined_binding') is not None:
+            # The binding is revalidated on resume from the frozen plan itself.
+            row['snapshot_lookup']['mined_binding'] = cfg['_mined_binding']
         if '_g5_mined' in cfg:
             # Owner 05:05: mined (move, seed) situations are shown, not only imitated.
             row['mined'] = True
