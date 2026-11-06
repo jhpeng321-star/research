@@ -473,6 +473,12 @@ def _project_window(m, actors):
     return (int(onsets[i]), int(holds[i]), float(depth[i])), float(improvement[i])
 
 
+RAW_LANE_DROP_FAMILIES = ('closing_pair', 'abreast_wall', 'group_hold', 'lane_balance', 'early_merge', 'zipper_order',
+                          'zipper', 'discharge_sync', 'discharge', 'platoon_headway', 'harmonize_rows',
+                          'R_random')
+RAW_NEWMAP_VARIANTS = ('pair_g', 'pair_h', 'pair_t', 'wall_g', 'wall_h')
+
+
 def from_plan(plan):
     """Project a verified bank plan onto the shared move vocabulary.
 
@@ -514,6 +520,12 @@ def from_plan(plan):
         # W2 registered wall macro (step or gradual release): exact executable binding.
         from .wall_release import from_plan as wall_move
         return wall_move(plan)
+    if (plan.get('family') in RAW_LANE_DROP_FAMILIES or plan.get('variant') in RAW_NEWMAP_VARIANTS
+            or plan.get('map') is not None or 'member_lanes' in plan):
+        # MAIN 2026-11-06 (N5 REVIEW_N9_2 fail-closed): a raw NEWMAP/lane-drop probe row WITHOUT its exact
+        # lane_drop_macro binding is refused here instead of being projected onto legacy families.
+        raise ValueError('raw lane-drop/NEWMAP plan without lane_drop_macro: bind it through '
+                         'lane_drop.plan_from_mined_row (no legacy projection)')
     members, m = _plan_offsets(plan)
     tag = plan.get('variety_family')
     best, best_gain, best_key = none_move(members[0]), 0.0, None

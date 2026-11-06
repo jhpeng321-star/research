@@ -46,13 +46,22 @@ TRAIN_SEEDS = tuple(range(989220, 989268))
 EPISODES_PER_UPDATE = 16
 SAFETY_RULE = ('A: full original rule. B and R: composite TTC/critical comparison reported each update, no '
                'pause. Any collision or teleport in any arm pauses. (owner 2026-11-06 02:44 "1"; clean4 spec 14:37)')
-FAMILIES_ON = ('closing_pair', 'abreast_wall', 'lane_balance', 'early_merge', 'zipper_order')
-FAMILIES_OFF = ('platoon_headway', 'harmonize_rows', 'discharge_sync')
-FAMILY_RULE = ('MAIN 2026-11-06: B/R move families ON = abreast walls, closing-lane pairs (N2) and, if N9 is '
-               'merged, lane_balance / early_merge / zipper_order; OFF = platoon_headway, harmonize_rows, '
-               'discharge_sync. The clean3 vocabulary (wall/easing/gap_open/ramp_assist/G5 lane families) stays '
-               'on unchanged for B and R (WM lane 2 = closing lane plays the ramp role).')
-V2V_RANGE_M = 200.0
+FAMILIES_ON = ('closing_pair', 'abreast_wall')
+FAMILIES_OFF = ('lane_balance', 'early_merge', 'zipper_order', 'platoon_headway', 'harmonize_rows',
+                'discharge_sync', 'group_hold')
+FAMILY_RULE = ('MAIN 2026-11-06: B/R lane-drop move families ON = closing_pair + abreast_wall (N2 exact, '
+               'N5 PASS 59d8bace) + W1 V2V walls; N9 families (lane_balance/early_merge/zipper_order/...) OFF and '
+               'not merged (REVIEW_N9_1 BLOCK; no exact executor); group_hold registered but NOT a runtime '
+               'proposal family and NOT guidance (option a). The clean3 vocabulary (wall/easing/gap_open/'
+               'ramp_assist/G5 lane families) stays on unchanged for B and R (WM lane 2 = closing lane).')
+# MAIN registration of N2 open defaults: V2V initiate/join range = 100 m (registered sensing range);
+# RSU-initiated suggestions OFF in clean4 (untested head).
+V2V_RANGE_M = 100.0
+RSU_ON = False
+R_GUIDANCE = ('MAIN 2026-11-06 option (a): the matched-effort random procedure (R; PLANGEN/PLANGEN2 R mining '
+              'ledgers = matched effort) yielded 0 runtime-executable rows; R trains with ZERO guidance rows '
+              '(same layer and procedure: RL + team reward + G4 only) - the clean "learns cooperation on its own" arm.')
+GUIDANCE_SOURCES = ('PLANGEN_MOVES_B.jsonl', 'PLANGEN2_MOVES_B.jsonl')   # FAIRAUDIT F3: effort-matched only
 
 
 def worlds_by_update():
@@ -281,7 +290,10 @@ def prepare(source, *, plan_a, quote_doc, approval, prior_runtime_sim_s, lane_dr
     cfg['newmap'] = dict(map='wz3to2', base_controller='mappo_u0', cell=CELL_KEY, eval_panel_sha256=EVAL_PANEL_SHA256,
         descriptor_sha256=desc.digest, network_file_sha256=NET_FILE_SHA256, map_spec=MAP_SPEC,
         sanity='/home/ubuntu/clean4_sanity_e512b059_r2/SANITY_SUMMARY.json (MAPPO PASS, REGISTRATION 16:22)',
-        family_rule=FAMILY_RULE, v2v_range_m=V2V_RANGE_M)
+        family_rule=FAMILY_RULE, v2v_range_m=V2V_RANGE_M, rsu=RSU_ON, r_guidance=R_GUIDANCE,
+        guidance_sources=list(GUIDANCE_SOURCES))
+    from .bank_breadth import SUBSET_RULE
+    cfg['r_family_subset'] = SUBSET_RULE
     cfg['g5_runtime'] = dict(flag=g5_runtime.FLAG, base=str(g5_runtime.BASE_REL),
         base_sha256=g5_runtime.BASE_SHA256, overlay_sha256=g5_runtime.OVERLAY_SHA256,
         rule='accepted G5 env change bound onto the frozen e3final env; wz3to2 bound by map_runtime.install')

@@ -84,24 +84,19 @@ def validate_levers(cfg, updates, fixes=None):
             raise ValueError('N2 lane-drop V2V initiate never proposed: '+arm)
         row['lane_drop_initiate_all'] = initiate
         if ld.get('rsu'):
-            rsu = arms[arm]['learning'].get('rsu')
-            if not rsu or not rsu.get('decisions', 0):
-                raise ValueError('N2 RSU head has no recorded decisions: '+arm)
-            row['rsu'] = {k: rsu.get(k) for k in ('decisions', 'accepted', 'exact_kl') if k in rsu}
+            raise ValueError('RSU-initiated suggestions must be OFF in clean4 (MAIN registration)')
         out['N2'][arm] = row
-    families = cfg.get('nm_families') or {}
-    if families.get('enabled'):
-        out['N9'] = {}
-        for arm in ('B', 'R'):
-            proposed = _proposed(arms[arm])
-            live = [f for f in families.get('families', ()) if f in proposed]
-            if sorted(live) != sorted(families.get('families', ())):
-                raise ValueError('N9 registered families missing from the live vocabulary: '+arm)
-            out['N9'][arm] = {f: proposed[f] for f in live}
+    # MAIN: N9 not merged / OFF; group_hold is not a runtime proposal family.
+    for arm in ('B', 'R'):
+        offered = [f for f, n in _proposed(arms[arm]).items() if n and f in c4.FAMILIES_OFF]
+        if offered:
+            raise ValueError('OFF family offered at runtime: '+arm+' '+repr(offered))
+    if cfg.get('nm_families'):
+        raise ValueError('N9 families must be absent from the clean4 config')
     if not cfg.get('mined_moves'):
         raise ValueError('clean4 launches only with Plan A guidance rows')
-    from .clean3_mined import smoke_check
-    out['mined'] = smoke_check(cfg, updates, root/'smoke')
+    out['mined'] = mined_check(cfg, updates, root/'smoke')
+    out['supervision'] = supervision_check(arms)
     out['guidance_rows'] = cfg['clean4_restart']['guidance_rows']
     if fixes is None:
         return dict(status='LEVER_PRECHECK_ONLY', **out)
@@ -110,3 +105,85 @@ def validate_levers(cfg, updates, fixes=None):
     training.write(root/'SMOKE_LEVER_RECEIPTS_PASS.json', receipt)
     verify_sealed(receipt, 'receipt_sha256')
     return receipt
+
+
+FORBIDDEN_POSITIVE = ('none', 'wall', 'ease_off', 'wall_initiate', 'wall_join')
+
+
+def _lane_drop_family(label, family):
+    return label == family or label == 'lane_drop_initiate:'+family
+
+
+def supervision_check(arms):
+    """LEARNAUDIT pre-launch assert on the smoke's real bank supervision: B positive contexts cover BOTH
+    lane-drop families (direct or via the N2 initiate protocol) and no positive context is a legacy label;
+    R has exactly zero guidance contexts (option a)."""
+    from collections import Counter
+    out = {}
+    for arm in ('B', 'R'):
+        contexts = arms[arm]['learning']['bank_trigger'].get('contexts') or []
+        positives = Counter(c['family'] for c in contexts if c.get('family') != 'wall_negative')
+        out[arm] = dict(positive_family_counts=dict(positives), contexts=len(contexts))
+    b = out['B']['positive_family_counts']
+    for family in ('closing_pair', 'abreast_wall'):
+        if not any(_lane_drop_family(label, family) for label in b):
+            raise ValueError('LEARNAUDIT: B supervision lacks lane-drop family '+family+': '+repr(b))
+    bad = sorted(label for label in b if label in FORBIDDEN_POSITIVE)
+    if bad:
+        raise ValueError('LEARNAUDIT: B positive contexts carry legacy labels (projection): '+repr(bad))
+    if out['R']['contexts'] != 0:
+        raise ValueError('option (a): R must have zero guidance contexts')
+    return out
+
+
+def mined_check(cfg, updates, artifacts):
+    """Owner exposure (a)-(d) for B's Plan A rows (as clean3), every row bound with ZERO legacy projection
+    (exact N2 LaneDropMove, ON family), and R zero guidance (option a: no rows, no practice starts)."""
+    from . import bank_breadth, launch_production as production, lane_drop, clean4_restart as c4
+    from .clean3_mined import examples, observability, rows
+    native = production.backend_config(cfg, root=artifacts, smoke=True)
+    arms = {u['arm']: u for u in updates}
+    if any(r['arm'] != 'B' for r in rows(native)):
+        raise ValueError('option (a): clean4 guidance rows are B only')
+    found, wanted = examples(native, 'B')
+    if not wanted or [e for e in found if not e['executable']] or             {(e['verification_id'], e['plan_sha256']) for e in found} != wanted:
+        raise ValueError('(a) every admitted Plan A row must load as an executable B bank example')
+    projected = []
+    def consume(*, cfg, receipt, example, plan, pairs, trace):
+        move = bank_breadth.mined_move(plan)
+        if not isinstance(move, lane_drop.LaneDropMove) or move.family not in c4.FAMILIES_ON:
+            projected.append((receipt['verification_id'], type(move).__name__, getattr(move, 'family', None)))
+    bank_breadth.visit(native, 'B', consume)
+    if projected:
+        raise ValueError('LEARNAUDIT zero legacy projection violated: '+repr(projected[:5]))
+    pool = bank_breadth.practice_pool(native, 'B')
+    demo_ctx = {r['context_id']: r for r in pool if r.get('demonstrate')}
+    contexts = {(c['verification_id'], c['example_id']) for c in arms['B']['learning']['bank_trigger'].get('contexts', [])}
+    targets = {(e['verification_id'], e['example_id']) for e in found}
+    every = {(r['verification_id'], r['example_id']): r['context_id']
+             for r in bank_breadth.practice_pool(native, 'B', deduplicate=False) if r.get('mined')}
+    pool_ids = {r['context_id'] for r in pool}
+    if not targets <= set(every) or any(every[t] not in pool_ids for t in targets)             or len({every[t] for t in targets}) != len(targets):
+        raise ValueError('(b) Plan A seed situations missing from the B practice pool')
+    started = [e for e in arms['B']['practice']['episodes']
+               if (e.get('breadth') or {}).get('context_id') in demo_ctx and demo_ctx[e['breadth']['context_id']].get('mined')]
+    if not started:
+        raise ValueError('(b) smoke practice did not start from a Plan A seed situation: B')
+    demos = arms['B']['clean3_mined_usage']['demonstrations']
+    passed = [d for d in demos if d['executed'].get('passed')]
+    if not passed:
+        raise ValueError('(c) no demonstrated Plan A move executed its verified profile: B')
+    if not {d['family'] for d in passed} & set(native.get('demonstrate_families') or ()):
+        raise ValueError('(c) demonstrated family must be a Plan A family: B')
+    credit = arms['B']['clean3_mined_usage']['g4_credit']
+    if not credit:
+        raise ValueError('(d) G4-format measured synergy rows missing for demonstrated moves: B')
+    r_found, r_wanted = examples(native, 'R')
+    r_practice = [e for e in arms['R']['practice']['episodes'] if e.get('breadth')]
+    if r_found or r_wanted or bank_breadth.practice_pool(native, 'R') or r_practice:
+        raise ValueError('option (a): R must have zero guidance rows, pool and practice starts')
+    return dict(B=dict(examples=len(found), observability=observability(found, contexts),
+                       imitation_targets=len(targets & contexts), practice_starts=len(started),
+                       demonstrations=[{k: d[k] for k in ('id', 'family', 'executed')} for d in demos],
+                       g4_credit=len(credit)),
+                R=dict(examples=0, practice_starts=0, rule=c4.R_GUIDANCE))
