@@ -128,8 +128,6 @@ def _state(seed, k=64, junction=2):
 
 def test_vector_gate_parity_with_per_ego_reference_and_binding():
     from tools.nm_mappo import lane_actions as LA
-    with pytest.raises(LA.LaneBindingError):
-        LA.lcexec()
     rules = LA.provisional_rules()
     vec = LA.VectorLaneGate(rules)
     res = LA.parity(vec, LA.per_ego_reference(rules), [_state(s) for s in range(12)])
@@ -167,7 +165,7 @@ def test_actorstep_uses_provider_and_trainer_plumbs_it(tmp_path):
 def test_lane_writer_binding_delegates_and_unbound_raises():
     from tools.nm_mappo import n1_adapter as A
     with pytest.raises(RuntimeError, match="LCEXEC lane writer"):
-        A.resolve_writer()
+        A.resolve_writer("tools.coopmwm.lc_runtime:no_such_writer")
 
     class Base:
         def _issue_lane_commands(self, targets, policy_cavs, statuses=None):
@@ -222,3 +220,50 @@ def test_sanity_lane_arm_on_fake_env(tmp_path):
     assert {r["lane_control"] for r in rows if r["arm"] == "wzl"} == {"learned"}
     summary = json.loads((out / "SUMMARY.json").read_text())
     assert summary["flags"]["S1_safety"] and summary["failed_rows"] == 0
+
+
+# ------------------------------------------------------------------ LCEXEC final exports (subprocess: real N1 map)
+_LCEXEC_PROBE = r"""
+import json, math, torch
+from tools.nm_mappo import n1_adapter as A, lane_actions as LA
+A.install("wz3to2")
+from tools.coopmwm import lc_families, lc_runtime
+from wms.control.mappo.fakeenv import FakeCavEnv
+vec = LA.lcexec()                                     # binds lc_runtime.mappo_lane_rules
+assert isinstance(vec.rules, LA.GateRules) and "LCEXEC" in vec.rules.source
+states = []
+for seed in range(24):
+    env = FakeCavEnv(k_slots=160, min_vehicles=90)
+    st = env.reset(seed=seed, demand_vph=3200, penetration=0.6, warmup_s=0, horizon_s=5)
+    g = torch.Generator().manual_seed(seed)
+    s = -300 + 420 * torch.rand(st["s_m"].shape, generator=g)
+    lane = torch.randint(0, 3, st["lane"].shape, generator=g)
+    lane = torch.where((lane == 2) & (s >= 75.44), torch.ones_like(lane), lane)   # closing lane ends at the drop
+    if seed % 3 == 0:
+        lane[0, torch.nonzero(st["present"][0]).flatten()[:2]] = -1               # junction rows block nearby
+    st["s_m"] = torch.where(st["present"], s, st["s_m"])
+    st["lane"] = torch.where(st["present"], lane, st["lane"])
+    st["v_mps"] = torch.where(st["present"], 5 + 25 * torch.rand(st["v_mps"].shape, generator=g), st["v_mps"])
+    states.append(st)
+res = LA.parity(vec, lc_families.mappo_lane_gate, states)
+writer = A.resolve_writer()
+from traffic_shepherd.c4 import env as E
+inst = object.__new__(A.lane_writer_class(E.CavSumoEnv, writer))
+glob = lc_runtime._frozen_globals(inst)
+print(json.dumps({**res, "writer": writer.__name__, "frozen_writer_found": "LANE_TABLE" in glob,
+                  "transitions": [[t.source, t.target, t.guard] for t in vec.rules.transitions]}))
+"""
+
+
+def test_lcexec_final_exports_parity_and_writer(tmp_path):
+    import os
+    import subprocess
+    env = dict(os.environ, PYTHONPATH=os.pathsep.join([str(ROOT / "src"), str(ROOT)]))
+    env.pop("COOPMWM_MAP_SPEC", None)
+    out = subprocess.run([sys.executable, "-c", _LCEXEC_PROBE], cwd=ROOT, env=env, capture_output=True,
+                         text=True, timeout=1200)
+    assert out.returncode == 0, out.stderr[-3000:]
+    res = json.loads(out.stdout.strip().splitlines()[-1])
+    assert res["checked"] > 2000 and res["mismatched"] == 0, res
+    assert res["writer"] == "mappo_lane_writer" and res["frozen_writer_found"]
+    assert sorted(map(tuple, res["transitions"])) == [(0, 1, True), (1, 0, True), (1, 2, True), (2, 1, False)]
