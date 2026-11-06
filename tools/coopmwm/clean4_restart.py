@@ -358,9 +358,12 @@ def prepare(source, *, plan_a, quote_doc, approval, prior_runtime_sim_s, lane_dr
         for name in (rule_name, pause_name):
             stage.copy_equal(clean2/name, root/name)
             safety_receipts[name] = rc.sha(root/name)
+        amendment = training.read(clean2/rule_name)['amendment_sha256']
         with (root/'AUTHORITY.md').open('a', encoding='utf-8') as f:
-            f.write('\nclean4 owner safety rule for '+arm+': composite report-only (inherited owner rule); any '
-                    'collision/teleport pauses. A keeps the full rule.\n')
+            f.write('\nclean4 owner safety rule for '+arm+': composite report-only (inherited owner rule), '
+                    'amendmentSHA'+amendment+'; any collision/teleport pauses. A keeps the full rule.\n')
+        if composite_health.report_only(root, arm) is not True:
+            raise ValueError('clean4 report-only amendment not registered in the root: '+arm)
     for arm in ('B', 'R'):
         (root/'replay_bank'/arm).mkdir(parents=True)
     for arm in ('A', 'B', 'R'):

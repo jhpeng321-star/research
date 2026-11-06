@@ -203,9 +203,12 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
         for name in (rule_name, pause_name):
             stage.copy_equal(clean2/name, root/name)
             safety_receipts[name] = rc.sha(root/name)
+        amendment = training.read(clean2/rule_name)['amendment_sha256']
         with (root/'AUTHORITY.md').open('a', encoding='utf-8') as f:
-            f.write('\nclean5a owner safety rule for '+arm+': composite report-only (inherited owner rule); any '
-                    'collision/teleport pauses. A keeps the full rule.\n')
+            f.write('\nclean5a owner safety rule for '+arm+': composite report-only (inherited owner rule), '
+                    'amendmentSHA'+amendment+'; any collision/teleport pauses. A keeps the full rule.\n')
+        if composite_health.report_only(root, arm) is not True:      # fail closed at prepare (zero physics)
+            raise ValueError('clean5a report-only amendment not registered in the root: '+arm)
     for arm in ('B', 'R'):
         (root/'replay_bank'/arm).mkdir(parents=True)
     for arm in ('A', 'B', 'R'):
@@ -291,6 +294,7 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
             registered_state_order=c4.STATE_ORDER_RULE_TEXT, safety=c4.SAFETY_RULE), sort_keys=True)+'\n')
     training.checked_config(root/'CONFIG.json')
     qualification.verify_inputs(cfg)
+    training.health(root)                  # the chain's pre-smoke health check, at prepare time (zero physics)
     training.write(root/'PREPARED.json', dict(status='STAGED_NOT_LAUNCHED', run=RUN, config_sha256=digest(cfg),
         files=len(entries), remaining_cap_sim_s=budget['remaining_sim_s'], guidance=guidance, new_sim_s=0))
     return cfg
