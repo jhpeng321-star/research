@@ -26,7 +26,8 @@ import math
 from . import fullpol_programs as fp
 
 CLASSES = ('verified', 'structured', 'random_r', 'random_prim')
-STRUCTURED = ('abreast_wall', 'closing_pair', 'solo_hold', 'wall_fill', 'gap_open_merge', 'lane_redistribute')
+STRUCTURED = ('abreast_wall', 'closing_pair', 'solo_hold', 'wall_fill', 'rolling_wall', 'gap_open_merge',
+              'lane_redistribute')
 
 
 def _lc():
@@ -146,6 +147,39 @@ def _wall_fill(view, own, rows, rng, range_m):
                      source=dict(family='wall_fill'))
 
 
+def _rolling_wall(view, own, rng, range_m):
+    """S-LCMOVES rolling_wall with the initiator as the rear R: front A, B (distinct lanes) 200-500 m
+    ahead hold 15 m/s (dmax 1.5, 120 s); R slot-tracks their mean (amax 1.0), changes into the lane
+    the front leaves uncovered when its own lane is covered, settles within 25 m, then holds 15.
+    The front window must intersect the V2V range (None otherwise: not representable)."""
+    lo, hi = fp.registered('rolling_rear_m')
+    ds = _ds(lo, hi, range_m)
+    if ds is None or not _in_zone(view, own):
+        return None
+    lane = int(own['lane'])
+    lanes = fp.lanes_at(view, own['s_m'])
+    options = []
+    for uncovered in lanes:
+        front = [l for l in lanes if l != uncovered]
+        if len(front) != 2:
+            continue
+        if uncovered == lane:
+            options.append((front, None))
+        elif uncovered in fp.adjacent_targets(view, own):
+            options.append((front, uncovered))
+    if not options:
+        return None
+    front, target = options[int(rng.integers(len(options)))]
+    h, tr = fp.registered('rolling_hold')[0], fp.registered('track')[0]
+    giveup = fp._drop(view)-fp.registered('lane_giveup_to_drop_m')[0]
+    rear = fp.member(fp.lon('track', v_w=h['v_w'], amax=fp.registered('amax')[0], dmax=tr['dmax'], refs=('@1', '@2'),
+                            off=0., kp=tr['kp'], kv=tr['kv'], settle_gap=fp.registered('settle_m')[0]),
+                     lane=None if target is None else fp.lane_req(target, giveup_s=giveup), hold_s=h['hold_s'],
+                     release_s=fp._drop(view), role='rolling_rear', mode_on='on_action')
+    fronts = [_speed(view, v_w=h['v_w'], hold_s=h['hold_s'], dmax=h['dmax'], role='rolling_front') for _ in front]
+    return _template([rear]+fronts, [dict(lane=l, ds=ds) for l in front], source=dict(family='rolling_wall'))
+
+
 def _gap_open_merge(view, own, rng, range_m):
     lane = int(own['lane'])
     lo, hi = fp.registered('zipper_yield_rel_m')
@@ -207,6 +241,8 @@ def structured(family, view, own, rows, rng, range_m):
         return _wall_like(family, view, own, rng, range_m)
     if family == 'wall_fill':
         return _wall_fill(view, own, rows, rng, range_m)
+    if family == 'rolling_wall':
+        return _rolling_wall(view, own, rng, range_m)
     if family == 'gap_open_merge':
         return _gap_open_merge(view, own, rng, range_m)
     if family == 'lane_redistribute':

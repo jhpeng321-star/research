@@ -142,7 +142,6 @@ def extension(cfg, base=None):
     if base is None:
         from . import lane_drop
         base = lane_drop.extension(cfg)
-    base = program_extension(cfg, base)      # clean5b (lc_families on): template descriptor block
     settings = fp.settings(cfg)
     if settings is None:
         return base
@@ -163,7 +162,7 @@ TEMPLATE_SLOT_FEATURES = (
     'release_relative', 'release_position', 'join_any_lane', 'join_lane_0', 'join_lane_1', 'join_lane_2',
     'join_ds_lo_frac', 'join_ds_hi_frac', 'is_own_slot')
 TEMPLATE_GROUP_FEATURES = ('is_initiate', 'is_join', 'slots_frac', 'duration_frac', 'member_count_frac',
-                           'gap_over_range')
+                           'gap_over_range', 'own_lane_0', 'own_lane_1', 'own_lane_2')
 TEMPLATE_RULES = ('hold', 'until_reached', 'right_of_target', 'from_lane')
 
 
@@ -229,49 +228,33 @@ def template_descriptor(option, view):
         out[k*n:(k+1)*n] = _template_slot(view, p, rules[k] if k < len(rules) else None, k == own_slot)
     cap = float(get('cap', len(t['programs'])) or len(t['programs']))
     rng_m = float(get('range_m', SENSING_M) or SENSING_M)
-    out[TEMPLATE_CAP*n:] = [float(family == 'free_program_initiate'), float(family == 'free_program_join'),
+    out[TEMPLATE_CAP*n:-3] = [float(family == 'free_program_initiate'), float(family == 'free_program_join'),
                             len(t['programs'])/float(TEMPLATE_CAP), float(t['duration_s'])/HOLD_MAX_S,
                             float(get('member_count', 1) or 1)/cap, max(-1., min(1., float(get('gap_m', 0.) or 0.)/rng_m))]
+    own_lane = get('lane')
+    out[-3:] = [float(own_lane == l) for l in (0, 1, 2)]
     return out
 
 
-PROGRAM_FAMILIES = ('free_program_initiate', 'free_program_join')   # LCEXEC lc_families option families
+PROGRAM_FAMILIES = ('free_program_initiate', 'free_program_join')   # registered by LCEXEC lc_families only
+_VIEW = None
 
 
-class ProgramExtension:
-    """Base (W1/N2/N9) extension + the LCEXEC free_program option families with FULLPOL's
-    zero-initialised template descriptor block (no context columns)."""
-
-    def __init__(self, base, view):
-        self.base, self.view = base, view
-        self.families = (tuple(base.families) if base is not None else ())+PROGRAM_FAMILIES
-        self.descriptor_width = (base.descriptor_width if base is not None else 0)+template_width()
-        self.context_width = base.context_width if base is not None else 0
-        self.wall = getattr(base, 'wall', None)
-        self.aware = getattr(base, 'aware', None)
-        self.lane_drop = getattr(base, 'lane_drop', None)
-
-    def __getattr__(self, name):
-        if 'base' not in self.__dict__ or self.__dict__['base'] is None:
-            raise AttributeError(name)
-        return getattr(self.__dict__['base'], name)
-
-    def descriptor(self, move):
-        out = list(self.base.descriptor(move)) if self.base is not None else []
-        return out+template_descriptor(move, self.view)
-
-    def context_features(self, context):
-        if self.base is not None and self.base.context_width:
-            return self.base.context_features(context)
-        return torch.zeros((len(context['members']), 0))
+def _program_view():
+    """The process map's lane-drop view (production binds wz3to2; fails closed on the merge map)."""
+    global _VIEW
+    if _VIEW is None:
+        from .lane_drop import MapView
+        from .map_descriptor import current
+        _VIEW = MapView.from_descriptor(current())
+    return _VIEW
 
 
-def program_extension(cfg, base):
-    """``base`` unchanged unless ``lc_families`` is on (clean5b): then the program families + block."""
-    if not cfg.get('lc_families'):
-        return base
-    from . import lane_drop
-    ld = lane_drop.settings(cfg)
-    if ld is None:
-        raise ValueError('clean5b free_program options need the N2 lane-drop map view (lane_drop key)')
-    return ProgramExtension(base, ld['view'])
+def program_descriptor(option):
+    """LCEXEC lc_families descriptor hook (cfg['lc_families']['descriptor'] =
+    'tools.coopmwm.fullpol_head:program_descriptor', descriptor_width = PROGRAM_DESCRIPTOR_WIDTH):
+    FULLPOL's template descriptor of one ProgramOption (zeros for any other candidate)."""
+    return template_descriptor(option, _program_view())
+
+
+PROGRAM_DESCRIPTOR_WIDTH = TEMPLATE_CAP*len(TEMPLATE_SLOT_FEATURES)+len(TEMPLATE_GROUP_FEATURES)

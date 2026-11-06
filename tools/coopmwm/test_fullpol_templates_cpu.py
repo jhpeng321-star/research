@@ -145,24 +145,29 @@ def test_random_template_slot_lanes_make_lane_targets_adjacent(cls):
                 assert abs(p.lane.target-lane) == 1
 
 
-def test_program_extension_zero_init_families_and_off_identity(cfg):
-    import torch
+def test_lcexec_descriptor_hook_width_own_lane_and_extension_untouched(cfg, monkeypatch):
     from .test_lane_drop_cpu import ld_cfg, make
-    base_cfg = ld_cfg(cfg, v2v=False)
-    off, on = make(base_cfg), make(dict(base_cfg, lc_families=dict(enabled=True)))
-    assert off.trigger.option_families[-2:] != fh.PROGRAM_FAMILIES
-    assert on.trigger.option_families[-2:] == fh.PROGRAM_FAMILIES
-    assert on.trigger.descriptor_width == off.trigger.descriptor_width+fh.template_width()
-    w_on, w_off = on.trigger.trigger_head[0].weight, off.trigger.trigger_head[0].weight
-    hidden = on.trigger.base_policy.actor[-1].in_features
-    start = hidden+off.trigger.descriptor_width
-    block = w_on[:, start:start+fh.template_width()]
-    assert torch.equal(block, torch.zeros_like(block))
-    assert torch.equal(torch.cat((w_on[:, :start], w_on[:, start+fh.template_width():]), 1), w_off)
+    monkeypatch.setattr(fh, '_VIEW', VIEW)
+    assert fh.PROGRAM_DESCRIPTOR_WIDTH == fh.template_width()
     own = row('ego', -900., 0)
     t = ft.structured('solo_hold', VIEW, own, [], np.random.default_rng(0), 100.)
     option = dict(family='free_program_initiate', members=['ego'], template=t.to_dict(), cap=1, member_count=1,
-                  gap_m=0., range_m=100.)
-    desc = on.trigger.extension.descriptor(option)
-    assert len(desc) == on.trigger.extension.descriptor_width and any(desc[-fh.template_width():])
-    assert ft.labels(t) == ('wall_g_solo2', 'solo_hold') or ft.labels(t) == ('wall_h_solo2', 'solo_hold')
+                  gap_m=0., range_m=100., lane=0, slot=0)
+    d = fh.program_descriptor(option)
+    assert len(d) == fh.PROGRAM_DESCRIPTOR_WIDTH and all(np.isfinite(d)) and d[-3:] == [1., 0., 0.]
+    assert fh.program_descriptor(dict(family='group_hold')) == [0.]*fh.PROGRAM_DESCRIPTOR_WIDTH
+    # FULLPOL never registers the program families itself (LCEXEC lc_families is the only registrant)
+    base_cfg = ld_cfg(cfg, v2v=False)
+    on = make(dict(base_cfg, lc_families=dict(enabled=True)))
+    assert not set(fh.PROGRAM_FAMILIES) & set(on.trigger.option_families)
+    assert ft.labels(t)[0] in ('wall_g_solo2', 'wall_h_solo2')
+
+
+def test_rolling_wall_needs_its_registered_rear_window_inside_the_v2v_range():
+    own = row('ego', -900., 1)
+    rng = np.random.default_rng(4)
+    assert ft.structured('rolling_wall', VIEW, own, [], rng, 100.) is None      # 200-500 m > 100 m radio
+    t = ft.structured('rolling_wall', VIEW, own, [], rng, 300.)
+    assert t is not None and len(t.members) == 3 and lc.check_registered(t) == []
+    assert all(r['ds'] == (200., 300.) for r in t.join_rules[1:])
+    assert t.programs[0].lon.kind == 'track' and t.programs[0].lon.refs == ('@1', '@2')

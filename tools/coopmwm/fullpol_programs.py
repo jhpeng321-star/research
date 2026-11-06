@@ -86,7 +86,10 @@ REGISTERED = dict(
     accel_pulse=dict(values=(dict(a=-1.0, hold_s=2),), source=_NM2+' dither pulse -1.0 m/s^2 for 2 s '
                      '(LCEXEC REGISTRY accel)'),
     track_off_m=dict(values=(-35., -25., -15.), source=_CK+' zipper gap {15,25,35} (LCEXEC REGISTRY track_off_m)'),
-    sensing_m=dict(values=(100.,), source='merge_features.SENSOR_RANGE_M (own sensing radius)'))
+    sensing_m=dict(values=(100.,), source='merge_features.SENSOR_RANGE_M (own sensing radius)'),
+    rolling_rear_m=dict(values=(200., 500.), source=_LCM+' rolling_wall rear R 200-500 m behind the front mean'),
+    rolling_hold=dict(values=(dict(v_w=15., hold_s=120, dmax=1.5),), source=_LCM+' rolling_wall front hold 15 m/s '
+                      'dmax 1.5 for 120 s; rear settles within 25 m then holds 15'))
 
 
 def registered(key):
