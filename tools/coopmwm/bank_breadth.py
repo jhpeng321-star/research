@@ -230,8 +230,9 @@ def verified_restart(root, arm, receipt, example, plan, mined=None):
 
     check_snapshot(first, snap)
     episode = snap['episode']
+    from .map_runtime import primary_train_world  # N1: merge 986000-986071 or the map's TRAIN registry
     if (episode.get('role') != 'train' or episode.get('arm') != arm
-            or not 986000 <= int(episode['world']['seed']) <= 986071):
+            or not primary_train_world(dict(episode['world'], seed=int(episode['world']['seed'])))):
         raise ValueError('F3 practice requires ordinary TRAIN snapshots')
     vid = first['verification_id']
     confirmation = rb.confirmations(root, arm).get(vid, {})
@@ -370,6 +371,8 @@ def _certified_contexts(policy, pairs, frames, certification):
             anchors=[encoded['anchors'][index]], rsu=[0.]*len(encoded['rsu']),
             trigger_v2v={ego: reader.local_intents[ego]},
             observed_at_s=observed_at, decision_s=time)
+        from .v2v_wall import attach_context
+        attach_context(context, reader, [ego])  # W1 extension inputs; no-op when off
         yield context, label, reader, float(weight), time
         return  # only this exact proposer/decision is certified
 
@@ -387,8 +390,27 @@ def observable_contexts(policy, plan, pairs, frames, *, t0, certification=None):
     if certification is not None:
         yield from _certified_contexts(policy, pairs, frames, certification)
         return
-    from . import moves
+    from . import moves, v2v_wall
+    if plan.get('nm_move') is not None:
+        # N9 (opt-in): verified family examples are taught through their V2V protocol
+        # (recorded initiator -> <family>_initiate, received members -> <family>_join).
+        if getattr(policy, 'nm_families', None) is None:
+            raise ValueError('N9 nm_move examples require nm_families enabled for this policy')
+        from . import nm_families
+        yield from nm_families.protocol_contexts(policy, plan, pairs, frames, t0=t0)
+        return
     label = moves.from_plan(plan)
+    if getattr(policy, 'wall', None) is not None and label.family == 'wall':
+        # W1 (opt-in): every verified wall example is taught through the V2V
+        # protocol (initiator -> wall_initiate, received members -> wall_join).
+        yield from v2v_wall.protocol_contexts(policy, plan, label, pairs, frames, t0=t0)
+        return
+    if getattr(policy, 'ld_protocol', None) is not None and plan.get('lane_drop_macro') is not None:
+        # N2 (opt-in): verified lane-drop examples are taught through the same rule
+        # (initiator -> lane_drop_initiate, received members -> lane_drop_join).
+        from . import lane_drop
+        yield from lane_drop.protocol_contexts(policy, plan, label, pairs, frames, t0=t0)
+        return
     remaining = set(label.members)
     reader = deepcopy(policy)
     observed = set()
@@ -421,6 +443,7 @@ def observable_contexts(policy, plan, pairs, frames, *, t0, certification=None):
         context = dict(source, members=keep,
             x=[source['x'][source['members'].index(v)] for v in keep],
             trigger_v2v={v: reader.local_intents[v] for v in keep})
+        v2v_wall.attach_context(context, reader, keep)  # W1 extension inputs; no-op when off
         yield context, target, reader, float(weight), time
         remaining.difference_update(keep)
         if not remaining:

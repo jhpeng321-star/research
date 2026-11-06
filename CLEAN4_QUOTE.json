@@ -1,0 +1,133 @@
+{
+ "approval_contract": "MAIN writes E:/agent-work/_sol/BUDGET_CLEAN4.json with owner_approval (verbatim owner text), total_cap_sim_s, approved_sim_s >= total_training_sim_s and quote_sha256 == this receipt_sha256; training phases are charged only after it exists",
+ "arms": [
+  "A",
+  "B",
+  "R"
+ ],
+ "available_sim_s": 3107800,
+ "created": "2026-11-06T14:57:09+08:00",
+ "final_arms": [
+  "A",
+  "B",
+  "R",
+  "base",
+  "native"
+ ],
+ "fits": false,
+ "margin_min": 0.15,
+ "new_sim_s": 0,
+ "notes": [
+  "status=ESTIMATE",
+  "interim u8 paired evaluation OFF: the registered final range is evaluated once, at u24",
+  "smoke+gate charged to newmap2_smoke (<=40,000, pre-approved); not part of the training total",
+  "owner cap ambiguity: coop_probe 250,000 (05:10 entry 7.3M->7.55M) is not in the 12:46-14:37 cap chain (7.3M->7.6M->...->8.2M); it is counted here as prior; coopkinds 200,000 counted as prior",
+  "if short: drop B lessons (-61200) or base/native final arms (-138000 each)"
+ ],
+ "owner_cap_sim_s": 8200000,
+ "phases": {
+  "early_probes": {
+   "allocated_sim_s": 79200,
+   "base_sim_s": 68220,
+   "basis": "ESTIMATE: clean3 native 2 x 22740 x1.5",
+   "margin_fraction": 0.1609,
+   "schedule": "u2,u4 probes"
+  },
+  "g4_synergy_credit": {
+   "allocated_sim_s": 230400,
+   "base_sim_s": 153600,
+   "basis": "G4 two-actor full quote 153600 (clean3); registered hard cap 230400",
+   "margin_fraction": 0.5,
+   "schedule": "u1-u24 G4 sparse synergy credit B=R"
+  },
+  "isolated_replicated": {
+   "allocated_sim_s": 248400,
+   "base_sim_s": 215640,
+   "basis": "ESTIMATE: clean3 native 3 x 47920 x1.5",
+   "margin_fraction": 0.1519,
+   "schedule": "u6,u12,u24 replicated synergy test (TRAIN states)"
+  },
+  "v2v_final": {
+   "allocated_sim_s": 690000,
+   "base_sim_s": 600000,
+   "basis": "A/B/R u24 + base (frozen MAPPO u0) + native on the 100 registered final-range worlds 989600-989699",
+   "margin_fraction": 0.15,
+   "schedule": "u24 paired evaluation on the registered final range, arms A/B/R/base/native"
+  },
+  "v2v_lessons": {
+   "allocated_sim_s": 61200,
+   "base_sim_s": 52560,
+   "basis": "ESTIMATE: clean3 merge-map native 4 x 8760 x1.5 (wz3to2 manifests pending)",
+   "margin_fraction": 0.1644,
+   "schedule": "u6,u12,u18,u24 B lessons"
+  },
+  "v2v_practice_refs": {
+   "allocated_sim_s": 398400,
+   "base_sim_s": 345600,
+   "basis": "12 matched A references/update x 1200 s",
+   "margin_fraction": 0.1528,
+   "schedule": "u1-u24 B/R practice A-references"
+  },
+  "v2v_train_waves": {
+   "allocated_sim_s": 1590000,
+   "base_sim_s": 1382400,
+   "basis": "3 arms x 16 episodes x 1200 s x 24",
+   "margin_fraction": 0.1502,
+   "schedule": "u1-u24 A/B/R training episodes"
+  }
+ },
+ "prior_registered_sim_s": {
+  "clean1+clean2+parity (ledgers)": 3098640,
+  "clean3 G1 certification (actual)": 0,
+  "clean3 stopped pre-launch roots r1-r4 (ledgers)": 22800,
+  "clean3_r6 (ledger, owner-paused)": 120760,
+  "coop_probe (phase cap; actual 240,078)": 250000,
+  "coopkinds N8 (phase cap)": 200000,
+  "hicav_probe (phase cap)": 150000,
+  "mining s_mining (reserved phase)": 500000,
+  "newmap2 incl. newmap2_smoke 40,000 (phase cap)": 300000,
+  "newmap_probe (phase cap; actual 148,520)": 150000,
+  "upper_bound (phase cap; actual 148,995)": 150000,
+  "wallmine (phase cap; actual 147,550)": 150000
+ },
+ "prior_total_sim_s": 5092200,
+ "receipt_sha256": "903e2be27145f7da0e25cf7dfcd0303f0b0db0ce327badd007d0bad6a3a8a7eb",
+ "runtime_phases": {
+  "augment_verify": 0,
+  "early_probes": 79200,
+  "g4_synergy_credit": 230400,
+  "gate_bank_verification_ext": 20000,
+  "group_credit_verify": 0,
+  "isolated_replicated": 248400,
+  "teacher_verify": 0,
+  "track2_smoke": 20000,
+  "v2v_final": 690000,
+  "v2v_interim": 0,
+  "v2v_lessons": 61200,
+  "v2v_train": 1988400
+ },
+ "schema": "coopmwm.clean4.quote.v1",
+ "seeds": {
+  "final": [
+   989600,
+   989699
+  ],
+  "train": [
+   989200,
+   989599
+  ]
+ },
+ "shortfall_sim_s": 189800,
+ "smoke_gate": {
+  "authority": "pre-approved inside phase newmap2 (owner/MAIN 2026-11-06 14:37)",
+  "cap_sim_s": 40000,
+  "phase": "newmap2_smoke",
+  "runtime_ledger_phases": [
+   "track2_smoke",
+   "gate_bank_verification_ext"
+  ],
+  "smoke_cap_sim_s": 20000
+ },
+ "total_training_sim_s": 3297600,
+ "updates": 24
+}

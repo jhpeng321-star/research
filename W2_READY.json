@@ -1,0 +1,80 @@
+{
+  "task": "W2 (c4/wall-tune): merge-pressure trigger features, gradual-release wall macro, per-situation wall tuning job builder, do-not-wall negative labels; everything default OFF",
+  "status": "READY (CPU-built and CPU-tested; no SUMO/GPU/ssh run)",
+  "branch": "c4/wall-tune",
+  "worktree": "E:/agent-work/c4-wall-tune",
+  "base": "3e5bc9f9 (clean3 source)",
+  "commits": [
+    {"sha": "ded9e419", "subject": "OFF golden fingerprint written on the unchanged base before any W2 code (tools/coopmwm/fixtures/w2_off_golden.json)"},
+    {"sha": "7a0c7798", "subject": "W2 implementation + tests (all default OFF)"}
+  ],
+  "files": {
+    "new": ["tools/coopmwm/wall_w2.py", "tools/coopmwm/wall_pressure.py", "tools/coopmwm/wall_release.py",
+            "tools/coopmwm/wall_negatives.py", "tools/coopmwm/wall_tune.py"],
+    "changed": ["tools/coopmwm/moves.py (Move.release_s/release_shape defaults 0/'step'; offsets ramp; from_plan exact wall_macro binding)",
+                "tools/coopmwm/feasible_proposals.py (release-shape draw only when obs_state wall_release; commitment until += release_s)",
+                "tools/coopmwm/trigger_policy.py (optional additive zero-init w2_head; release descriptor columns only when ON)",
+                "tools/coopmwm/track2_backend.py (W2 settings check; pressure blocks + wall memory in observe; merge_pressure in trigger context)",
+                "tools/coopmwm/launch_production.py (bank supervision: reader pressure blocks; own-arm negatives in their own family-mass bucket)",
+                "tools/coopmwm/clean3_restart.py (stage wall_negatives file when configured)"]
+  },
+  "config_keys": {
+    "wall_pressure_features": {"type": "bool", "default": false, "effect": "17-dim observable merge-pressure block per CAV (wall_pressure.PRESSURE_FEATURES) into an additive zero-initialised trigger head; frozen MAPPO obs and coop-layer residual features untouched"},
+    "wall_release": {"type": "bool", "default": false, "effect": "wall proposals draw shape uniformly from (step, linear, cosine), R uniform in registered 5..30 s, ramp must end before observable zone arrival (hold may shrink, never below 20 s); executor commitment = onset+hold+R; release descriptor (4 cols) into the w2 head"},
+    "wall_negative_labels": {"type": "bool", "default": false, "effect": "bank supervision CE adds the arm's OWN do-not-wall rows (target none vs the losing wall in slot 1), family bucket 'wall_negative'"},
+    "wall_negatives": {"type": "path", "default": "<run_root>/WALL_NEGATIVES.jsonl (absent -> zero rows)", "requires": "wall_negative_labels=true; a configured path must exist"},
+    "w2_by_arm": {"type": "optional mapping", "rule": "accepted only when B == R == the common keys"},
+    "B_R": "one key set for B and R (track2 config is common); R reads only arm=R negative rows"
+  },
+  "registered_values": {
+    "release": "wall_release.WALL_RELEASE_REGISTERED: shapes linear (1-(k+.5)/R) and cosine ((1+cos(pi(k+.5)/R))/2), R 5..30 s, depth = variety window 0.3..1.0, onset/hold = variety windows",
+    "pressure_scale": "wall_pressure.PRESSURE_SCALE (counts/10, speeds/30, distances/1000, time/600)",
+    "w2_head": "trigger_policy.W2_HIDDEN = 32; input = scaled pressure block + full candidate descriptor",
+    "tuning": "wall_tune.REGISTERED: screen 12 candidates (onset 0, hold 20/30, depth 0.6/1.0, step|linear20|cosine20, full wall) group-vs-policy on CRN seeds 1,2,3; refine top-2 + one-coordinate neighbours (release shape/R +-10, depth +-0.2, hold +-10, onset +-5, leave-one-out members), max 4 candidates, group+solos on seeds 1,2,3; confirm top-1 via verify_perseed.confirm_all8 with extra_seeds=4; caps situation 120000, screen 30000, refine 50000, confirm 45000 sim-s; root cap set at init (default 250000)"
+  },
+  "tuning_job_command": {
+    "where": "cpuV, from a deployed checkout of c4/wall-tune at 7a0c7798 (tools.coopmwm only; no tools.mining needed), nice -n 19",
+    "situation_json": "{\"situation_id\": \"lead_986061_t455\", \"ctx_dir\": \"<probe collection ctx dir with CONTEXT.json + SNAPSHOT.pt, labelled with the tuning arm (CONTEXT arm and snapshot episode arm == arm), as the probe's native B verification used>\", \"arm\": \"B\", \"members\": [\"mainline.191\", \"mainline.176\", \"mainline.192\", \"mainline.193\"]}",
+    "steps": [
+      "python -m tools.coopmwm.wall_tune init <ROOT> 250000",
+      "python -m tools.coopmwm.wall_tune screen <ROOT> <situation.json>",
+      "nice -n 19 python -m tools.coopmwm.wall_tune run <ROOT> <ROOT>/plans/<sid>_screen0.json 14",
+      "python -m tools.coopmwm.wall_tune refine <ROOT> <situation.json> 1",
+      "nice -n 19 python -m tools.coopmwm.wall_tune run <ROOT> <ROOT>/plans/<sid>_refine1.json 14",
+      "python -m tools.coopmwm.wall_tune confirm-job <ROOT> <situation.json>",
+      "nice -n 19 python -m tools.coopmwm.wall_tune confirm <ROOT> <ROOT>/plans/<sid>_confirm0.json 16",
+      "python -m tools.coopmwm.wall_tune emit <ROOT> <ROOT>/minebank/bank B --stage-negatives   -> <ROOT>/emit/MINED_MOVES_B.jsonl, WALL_NEGATIVES_B.jsonl, EMIT_RECEIPT_B.json"
+    ],
+    "probe_negatives_now": "python -m tools.coopmwm.wall_tune emit <ROOT> /home/ubuntu/coopprobe20261106/minebank/bank B  (zero sim-s: the probe's native B losing seeds -> WALL_NEGATIVES_B.jsonl; positives re-derived, not a replacement for the existing MINED_MOVES.jsonl)",
+    "quote_only": "python -m tools.coopmwm.wall_tune quote <t0> <n_members>"
+  },
+  "expected_sim_s_per_situation": {
+    "lead_wall_t0_455_4_cav": {"screen": 24375, "refine": 39375, "confirm_upper_bound": 39510, "total": 103260},
+    "hp_wall_t0_340_3_cav": {"screen": 19890, "refine": 26010, "confirm_upper_bound": 30240, "total": 76140},
+    "hard_caps": "120000 per situation (stage caps 30000/50000/45000), root cap registered at init; builder drops lowest-priority candidates to fit, executor refuses any charge != quote, replay or over-cap",
+    "note": "branch sim-s charged from t=0 as sv.quote; confirm is the all-admitted-all-cooperative upper bound; a second refine round does not fit the default refine cap"
+  },
+  "tests": {
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q -p no:cacheprovider <suites>",
+    "new": {"test_wall_w2_cpu": 5, "test_wall_pressure_cpu": 8, "test_wall_release_cpu": 15, "test_wall_negatives_cpu": 16, "test_wall_tune_cpu": 12},
+    "batch_1": "376 passed: the 5 new modules + test_moves, test_feasible_proposals, test_trigger_policy, test_track2_backend, test_group_lane, test_coordination_opportunities",
+    "batch_2": "379 passed, 1 skipped (symlink privilege, cpuV-only): test_bank_breadth, test_clean3_restart, test_mined_link, test_executable_labels, test_launch_integration, test_g4_runtime, test_launch_final (13 passed), test_coop_layer, test_practice_starts, test_staging_closure",
+    "covers": [
+      "off byte-identical: W2 keys absent and explicitly False reproduce the golden written on the unchanged base (policy samples over 8 ticks incl. an executed wall, trigger/layer weights, executor, moves candidates/offsets/from_plan, G5 executable fields)",
+      "pressure ON: all recorded bytes except the added block identical at init; new params only w2_head.* with zero output layer; head receives gradient",
+      "features observable-only: own t + selected partners t-1 within radio range; stale/same-step/unselected/out-of-range packets ignored; unsensed vehicles and unwhitelisted fields never read; missing bits + report ages; own wall memory with missing bit",
+      "release: exact hold box then monotone ramp (linear/cosine), merge-zone guard, registered-range refusals, legacy step bytes, exact executable binding through G5 executable fields / acceleration_at / mined_move, MoveExecutor and decide_and_start commit onset+hold+release, proposals end before zone arrival",
+      "tuning builder: registration before jobs, TRAIN-only worlds, arm checks, identical per-seed slates, registered CRN salts outside eval ranges, exact quotes, cap truncation by priority then BudgetBlocked, per-seed ranking (never pooled, missing seed or collision -> ineligible), ledger charges == quote, no replay, hard stage caps, refine/confirm follow the ranking, emit -> clean3 binding-valid MINED rows + own-seed negatives",
+      "negatives: per-seed rule and basis, fail-closed validation, only exactly-representable walls, unobservable rows counted not labelled, CE moves mass from the losing wall to none, bank supervision unchanged when OFF and adds an own family bucket when ON",
+      "B and R identical: same settings, same trigger weights and decisions (arm label aside), same negative rule/observer/batches"
+    ],
+    "lint": "ruff: no new findings in changed production files (pre-existing counts unchanged); new modules clean except the repo's imported-fixture F811 convention in test_wall_negatives_cpu"
+  },
+  "caveats": [
+    "Within one situation the decision-time observable state is identical on every CRN seed (seeds differ only after t0), so negative and positive labels of the same wall share their trigger input; the CE learns the situation's wall probability, not a per-seed oracle.",
+    "Enabling wall_pressure_features or wall_release adds trigger parameters (w2_head.*, descriptor width): start from a fresh/u0 trigger state, not by strict-restoring an OFF trigger checkpoint mid-run.",
+    "The executors (run/confirm) and emit's real tape/branch layout were exercised only with CPU fakes; first cpuV use should be a single small screen job.",
+    "Tuning seeds use fresh salts walltune#<state_id>#r<k> (not the probe's selection seeds); confirmation seeds are verify_perseed's own."
+  ],
+  "hard_rules": "CPU only; no ssh/SUMO/GPU; only this worktree; no git reset/clean/stash drop/push/rebase; no sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 path opened; no hetdata_truth or vType/driver/vehicle_params read; policy inputs observable only"
+}

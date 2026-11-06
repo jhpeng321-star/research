@@ -37,12 +37,13 @@ import numpy as np
 
 from tools.coopmwm.v2v_obs import V2V_K, V2V_RANGE_M
 
-SENSOR_RANGE_M = 100.0                 # wms.control.contract.SENSOR_RANGE_M
+from tools.coopmwm.map_descriptor import FRAME  # N1 frame contract (plain values, no torch)
+
+SENSOR_RANGE_M = FRAME.sensor_range_m  # wms.control.contract.SENSOR_RANGE_M
 CONTROL_DT_S = 1.0                    # wms.control.contract.CONTROL_DT_S
-MERGE_S0_M = 0.0                      # wms.control.contract.MERGE_S0_M
-MERGE_S1_M = 75.44                    # wms.control.contract.MERGE_S1_M
+MERGE_S0_M, MERGE_S1_M = FRAME.merge_zone_s_m  # wms.control.contract.MERGE_S0_M / MERGE_S1_M
 QUEUE_SPEED_MPS = 5.0                 # wms.control.rsu_field.QUEUE_SPEED_MPS
-N_LANES = 3                          # wms.control.contract.N_LANES
+N_LANES = FRAME.n_lanes              # wms.control.contract.N_LANES
 
 MERGE_LANE_FEATURES = (
     "queue_length_veh", "approaching_count", "approaching_mean_speed_mps",
@@ -144,6 +145,8 @@ def merge_features(
     now_s: float,
     partner_ids: Sequence[str] = (),
     cfg: MergeFeaturesConfig | None = None,
+    k: int = V2V_K,
+    range_m: float = V2V_RANGE_M,
 ) -> np.ndarray:
     """Return ``[MERGE_DIM]`` float32, default-off zeros.
 
@@ -154,7 +157,8 @@ def merge_features(
     observable packets only. Same-step, stale, future, misidentified and
     malformed partner packets are unavailable. Time is compared exactly in
     seconds, without truncation, so fractional control times are supported.
-    The function does not mutate or cache any input.
+    The function does not mutate or cache any input. ``k``/``range_m`` default to the
+    registered V2V contract; only the opt-in W1 coop awareness block passes others.
     """
     cfg = cfg if cfg is not None else MergeFeaturesConfig()
     out = np.zeros(MERGE_DIM, dtype=np.float32)
@@ -178,10 +182,10 @@ def merge_features(
         if not _valid_report(report, vid, now_s - CONTROL_DT_S):
             continue
         distance = abs(report.source.s_m - ego.s_m)
-        if distance <= V2V_RANGE_M:
+        if distance <= range_m:
             partners.append((distance, vid, report))
     partners.sort(key=lambda item: (item[0], item[1]))
-    accepted = [own] + [item[2] for item in partners[:V2V_K]]
+    accepted = [own] + [item[2] for item in partners[:k]]
     sources[2] = len(accepted) - 1
     if len(accepted) > 1:
         sources[1] = 0.0
